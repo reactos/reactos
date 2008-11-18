@@ -1,0 +1,70 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Terry Weissman <terry@mozilla.org>
+  #                 Gervase Markham <gerv@gerv.net>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% INCLUDE global/header.html.tmpl title = "Voting" %]
+
+<p>[% terms.Bugzilla %] has a "voting" feature. Each product allows users to 
+have a certain number of votes. (Some products may not allow any, which means 
+you can't vote on things in those products at all.) With your vote, you 
+indicate which [% terms.bugs %] you think are the most important and 
+would like to see fixed. Note that voting is nowhere near as effective 
+as providing a fix yourself.</p>
+
+<p>Depending on how the administrator has configured the relevant product,
+you may be able to vote for the same [% terms.bug %] more than once.
+Remember that you have a limited number of votes. When weighted voting 
+is allowed and a limited number of votes are available to you, you will 
+have to decide whether you want to distribute your votes among a large 
+number of [% terms.bugs %] indicating your minimal interest or focus on 
+a few [% terms.bugs %] indicating your strong support for them.
+</p>
+
+<p>To look at votes:</p>
+
+<ul>
+  <li>Go to the query page. Do a normal query, but enter 1 in the "At least
+  ___ votes" field. This will show you items that match your query that
+  have at least one vote.</li>
+</ul>
+
+<p>To vote for [% terms.abug %]:</p>
+
+<ul>
+  <li>Bring up the [% terms.bug %] in question.</li>
+
+  <li>Click on the "Vote for this [% terms.bug %]" link that appears just 
+  above the "Additional Comments" field. (If no such link appears, then voting 
+  may not be allowed in this [% terms.bug %]'s product.)</li>
+
+  <li>Indicate how many votes you want to give this [% terms.bug %]. This page 
+  also displays how many votes you've given to other [% terms.bugs %], so you 
+  may rebalance your votes as necessary.</li>
+</ul>
+
+<p>You will automatically get email notifying you of any changes that occur
+on [% terms.bugs %] you vote for.</p>
+
+<p>You may review your votes at any time by clicking on the "<a href=
+"votes.cgi?action=show_user">My Votes</a>" link in the page footer.</p>
+
+[% INCLUDE global/footer.html.tmpl %]

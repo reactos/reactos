@@ -1,0 +1,79 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Lawrence <dkl@redhat.com>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Change Columns"
+%]
+
+<p>
+  Select the columns you wish to appear in your [% terms.bug %] lists. Note that
+  this feature requires cookies to work.
+</p>
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+[% field_descs.short_short_desc     = "Summary (first 60 characters)" %]
+[% field_descs.short_desc           = "Full Summary" %]
+[% field_descs.assigned_to_realname = "Assignee Realname" %]
+[% field_descs.reporter_realname    = "Reporter Realname" %]
+[% field_descs.qa_contact_realname  = "QA Contact Realname" %]
+
+<form action="colchange.cgi">
+  <input type="hidden" name="rememberedquery" value="[% buffer FILTER html %]">
+  [% FOREACH column = masterlist %]
+    <input type="checkbox" id="[% column %]" name="column_[% column %]"
+      [% "checked='checked'" IF lsearch(collist, column) != -1 %]>
+    <label for="[% column %]">
+      [% (field_descs.${column} || column) FILTER html %]
+    </label>
+    <br>
+  [% END %]
+
+  <p>
+    <input id="nosplitheader" type="radio" name="splitheader" value="0"
+      [% "checked='checked'" IF NOT splitheader %]>
+    <label for="nosplitheader">
+      Normal headers (prettier)
+    </label>
+    <br>
+
+    <input id="splitheader" type="radio" name="splitheader" value="1"
+      [% "checked='checked'" IF splitheader %]>
+    <label for="splitheader">
+      Stagger headers (often makes list more compact)
+    </label>
+  </p>
+
+  <p>
+    <input type="submit" id="change" value="Change Columns">
+  </p>
+</form>
+
+<form action="colchange.cgi">
+  <input type="hidden" name="rememberedquery" value="[% buffer FILTER html %]">
+  <input type="hidden" name="resetit" value="1">
+  <input type="submit" id="reset" 
+         value="Reset to [% terms.Bugzilla %] default">
+</form>
+
+[% PROCESS global/footer.html.tmpl %]
+

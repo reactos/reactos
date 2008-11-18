@@ -1,0 +1,515 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_DELETE -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+
+	<form id="acp_styles" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_TITLE}</legend>
+	<dl>
+		<dt><label>{L_NAME}:</label></dt>
+		<dd><strong>{NAME}</strong></dd>
+	</dl>
+	<dl>
+		<dt><label for="new_id">{L_REPLACE}:</label><br /><span>{L_REPLACE_EXPLAIN}</span></dt>
+		<dd><select name="new_id">{S_REPLACE_OPTIONS}</select></dd>
+	</dl>
+
+	<p class="quick">
+		<input class="button1" type="submit" name="update" value="{L_DELETE}" />
+		{S_FORM_TOKEN}
+	</p>
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_EDIT_IMAGESET -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+
+	<!-- IF SUCCESS -->
+		<div class="successbox">
+			<p>{L_IMAGESET_UPDATED}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<!-- IF ERROR -->
+		<div class="errorbox">
+			<p>{L_NO_IMAGE}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<script type="text/javascript" defer="defer">
+	// <![CDATA[
+		function update_image(newimage)
+		{
+			document.getElementById('newimg').src = (newimage) ? '../styles/{A_NAME}/imageset/' + encodeURI(newimage) : 'images/no_image.png';
+		}
+	// ]]>
+	</script>
+	<script type="text/javascript">
+	// <![CDATA[
+		/**
+		* Handle displaying/hiding the dimension fields
+		*/
+		function display_options(value)
+		{
+			if (value == 0)
+			{
+				dE('img_dimensions', -1);
+			}
+			else
+			{
+				dE('img_dimensions', 1);
+			}
+		}
+
+		/**
+		* Init the wanted display functionality if javascript is enabled.
+		* If javascript is not available, the user is still able to properly administrate.
+		*/
+		onload = function()
+		{
+			<!-- IF not IMAGE_SIZE -->
+				dE('img_dimensions', -1);
+			<!-- ENDIF -->
+		}
+	// ]]>
+	</script>
+
+	<form method="post" action="{U_ACTION}">
+
+	<fieldset class="quick" style="text-align: left;">
+		<legend>{L_SELECT_IMAGE}</legend>
+		{L_SELECT_IMAGE}: <select name="imgname" onchange="this.form.submit();">
+		<!-- BEGIN category -->
+			<option class="sep" value="" disabled="disabled">{category.NAME}</option>
+				<!-- BEGIN images --><option value="{category.images.VALUE}"<!-- IF category.images.SELECTED--> selected="selected"<!-- ENDIF -->>&nbsp;&nbsp;&nbsp;&nbsp;{category.images.TEXT}</option>
+				<!-- END images -->
+			<!-- END category -->
+		</select>&nbsp; <input class="button1" type="submit" value="{L_SELECT}" tabindex="100" />
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_EDIT_IMAGESET}</legend>
+	<dl>
+		<dt><label>{L_CURRENT_IMAGE}:</label></dt>
+		<dd><img src="<!-- IF IMAGE_REQUEST -->{IMAGE_REQUEST}<!-- ELSE -->images/no_image.png<!-- ENDIF -->" alt="" /></dd>
+	</dl>
+	<dl>
+		<dt><label>{L_SELECTED_IMAGE}:</label></dt>
+		<dd><img src="{IMG_SRC}" id="newimg" alt="" /></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset>
+	<legend>{L_IMAGE}</legend>
+	<dl>
+		<dt><label for="imgpath">{L_IMAGE}:</label></dt>
+		<dd><select id="imgpath" name="imgpath" onchange="update_image(this.options[selectedIndex].value);"><option value=""<!-- IF not IMAGE_SELECT--> selected="selected"<!-- ENDIF -->>{L_NO_IMAGE}</option>
+			<!-- BEGIN imagesetlist -->
+			<option class="sep" value=""><!-- IF imagesetlist.TYPE -->{L_LOCALISED_IMAGES}<!-- ELSE -->{L_GLOBAL_IMAGES}<!-- ENDIF --></option>
+				<!-- BEGIN images -->
+				<option value="{imagesetlist.images.VALUE}"<!-- IF imagesetlist.images.SELECTED--> selected="selected"<!-- ENDIF -->>{imagesetlist.images.TEXT}</option>
+				<!-- END images -->
+			<!-- END imagesetlist -->
+			</select>
+		</dd>
+	</dl>
+	<dl>
+		<dt><label for="imgsize">{L_INCLUDE_DIMENSIONS}:</label><br /><span>{L_DIMENSIONS_EXPLAIN}</span></dt>
+		<dd><label><input type="radio" class="radio" name="imgsize" id="imgsize" onclick="display_options(1);" value="1"<!-- IF IMAGE_SIZE --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="imgsize" onclick="display_options(0);" value="0"<!-- IF not IMAGE_SIZE --> checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<div id="img_dimensions">
+		<dl>
+			<dt><label for="imgwidth">{L_IMAGE_WIDTH}:</label><br /><span>{L_AUTOMATIC_EXPLAIN}</span></dt>
+			<dd><input type="text" name="imgwidth" value="{IMAGE_SIZE}" /></dd>
+		</dl>
+		<dl>
+			<dt><label for="imgheight">{L_IMAGE_HEIGHT}:</label><br /><span>{L_AUTOMATIC_EXPLAIN}</span></dt>
+			<dd><input type="text" name="imgheight" value="{IMAGE_HEIGHT}" /></dd>
+		</dl>
+	</div>
+	</fieldset>
+
+	<fieldset class="submit-buttons">
+		<legend>{L_SUBMIT}</legend>
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />&nbsp;&nbsp;<input class="button2" type="reset" value="{L_RESET}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_EDIT_TEMPLATE or S_EDIT_THEME -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_EDIT}</h1>
+
+	<p>{L_EDIT_EXPLAIN}</p>
+
+	<p>{L_SELECTED}: <strong>{SELECTED_TEMPLATE}</strong></p>
+
+	<form id="acp_styles" method="post" action="{U_ACTION}">
+
+	<!-- IF S_EDIT_TEMPLATE or (S_EDIT_THEME and not S_THEME_IN_DB) -->
+	<fieldset>
+		<legend>{L_SELECT}</legend>
+	<dl>
+		<dt><label for="template_file">{L_FILE}:</label></dt>
+		<dd><select id="template_file" name="template_file" onchange="if (this.options[this.selectedIndex].value != '') this.form.submit();">{S_TEMPLATES}</select> <input class="button2" type="submit" value="{L_SELECT}" /></dd>
+	</dl>
+	{S_FORM_TOKEN}
+	</fieldset>
+	<!-- ENDIF -->
+	</form>
+
+	<!-- IF TEMPLATE_FILE or (S_EDIT_THEME and S_THEME_IN_DB) -->
+		<script type="text/javascript" defer="defer">
+		// <![CDATA[
+
+			function change_editor_height(height)
+			{
+				height = Number(height);
+
+				if (isNaN(height))
+				{
+					return;
+				}
+
+				editor = document.getElementById('template_data');
+				editor.rows = Math.max(5, Math.min(height, 999));
+
+				append_text_rows('acp_styles', height);
+				append_text_rows('acp_template', height);
+			}
+
+			function append_text_rows(form_name, value)
+			{
+				value = Number(value);
+
+				if (isNaN(value))
+				{
+					return;
+				}
+
+				url = document.getElementById(form_name).action;
+
+				// Make sure &amp; is actually... &
+				url = url.replace(/&amp;/g, '&');
+
+				var_start = url.indexOf('&text_rows=');
+				if (var_start == -1)
+				{
+					document.getElementById(form_name).action = url + "&text_rows=" + value;
+				}
+				else
+				{
+					url_start = url.substring(0, var_start + 1);
+					var_end = url.substring(var_start + 1).indexOf('&');
+					if (var_end == -1)
+					{
+						document.getElementById(form_name).action = url_start + "text_rows=" + value;
+					}
+					else
+					{
+						document.getElementById(form_name).action = url_start + url.substring(var_end + var_start + 2) + "&text_rows=" + value;
+					}
+				}
+			}
+
+		// ]]>
+		</script>
+
+		<form id="acp_template" method="post" action="{U_ACTION}">
+
+		<fieldset>
+			<legend>{L_EDITOR}</legend>
+		<!-- IF S_EDIT_TEMPLATE or (S_EDIT_THEME and not S_THEME_IN_DB) -->
+		<dl>
+			<dt><label>{L_SELECTED_FILE}:</label></dt>
+			<dd>{TEMPLATE_FILE}</dd>
+		</dl>
+		<!-- ENDIF -->
+		<dl>
+			<dt><label for="text_rows">{L_EDITOR_HEIGHT}:</label></dt>
+			<dd><input id="text_rows" type="text" maxlength="3" value="{TEXT_ROWS}" /> <input class="button2" type="button" name="update" onclick="change_editor_height(this.form.text_rows.value);" value="{L_UPDATE}" /></dd>
+		</dl>
+		<textarea id="template_data" name="template_data" style="font-family:'Courier New', monospace;font-size:9pt;line-height:125%;width:100%;" cols="80" rows="{TEXT_ROWS}">{TEMPLATE_DATA}</textarea>
+		</fieldset>
+
+		<fieldset class="submit-buttons">
+			<legend>{L_SUBMIT}</legend>
+			{S_HIDDEN_FIELDS}
+			{S_FORM_TOKEN}
+			<input class="button1" id="save" type="submit" name="save" value="{L_SUBMIT}" />
+		</fieldset>
+		</form>
+	<!-- ENDIF -->
+
+<!-- ELSEIF S_CACHE -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+	
+	<h1>{L_TEMPLATE_CACHE}</h1>
+	
+	<p>{L_TEMPLATE_CACHE_EXPLAIN}</p>
+	
+	<form name="acp_styles" method="post" action="{U_ACTION}">
+	<fieldset class="tabulated">
+	<legend>{L_TEMPLATE_CACHE}</legend>
+
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_CACHE_FILENAME}</th>
+		<th>{L_CACHE_FILESIZE}</th>
+		<th>{L_CACHE_CACHED}</th>
+		<th>{L_CACHE_MODIFIED}</th>
+		<th>{L_MARK}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN file -->
+		<!-- IF file.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+			<td><a href="{file.U_VIEWSOURCE}" onclick="popup(this.href, 750, 550, '_source'); return false;">{file.FILENAME}</a></td>
+			<td>{file.FILESIZE}</td>
+			<td>{file.CACHED}</td>
+			<td>{file.MODIFIED}</td>
+			<td><input type="checkbox" class="radio" name="delete[]" value="{file.FILENAME}" /></td>
+		</tr>
+	<!-- BEGINELSE -->
+		<tr class="row1">
+			<td colspan="5">{L_TEMPLATE_CACHE_EMPTY}</td>
+		</tr>
+	<!-- END file -->
+	</tbody>
+	</table>
+
+	<p class="quick">
+		<span class="small"><a href="#" onclick="marklist('acp_styles', 'delete', true); return false;">{L_MARK_ALL}</a> :: <a href="#" onclick="marklist('acp_styles', 'delete', false); return false;">{L_UNMARK_ALL}</a></span><br />
+		{S_FORM_TOKEN}
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_DELETE_MARKED}" />
+	</p>
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_EXPORT -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+
+	<!-- IF S_ERROR_MSG -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="acp_styles" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_TITLE}</legend>
+	<dl>
+		<dt><label>{L_NAME}:</label></dt>
+		<dd><strong>{NAME}</strong></dd>
+	</dl>
+	<!-- IF S_STYLE -->
+		<dl>
+			<dt><label for="inc_template">{L_INCLUDE_TEMPLATE}:</label></dt>
+			<dd><label><input type="radio" class="radio" id="inc_template" name="inc_template" value="1" checked="checked" /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="inc_template" value="0" /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="inc_theme">{L_INCLUDE_THEME}:</label></dt>
+			<dd><label><input type="radio" class="radio" id="inc_theme" name="inc_theme" value="1" checked="checked" /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="inc_theme" value="0" /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="inc_imageset">{L_INCLUDE_IMAGESET}:</label></dt>
+			<dd><label><input type="radio" class="radio" id="inc_imageset" name="inc_imageset" value="1" checked="checked" /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="inc_imageset" value="0" /> {L_NO}</label></dd>
+		</dl>
+	<!-- ENDIF -->
+	<dl>
+		<dt><label for="store">{L_DOWNLOAD_STORE}:</label><br /><span>{L_DOWNLOAD_STORE_EXPLAIN}</span></dt>
+		<dd><label><input type="radio" class="radio" id="store" name="store" value="1" checked="checked" /> {L_EXPORT_STORE}</label>
+			<label><input type="radio" class="radio" name="store" value="0" /> {L_EXPORT_DOWNLOAD}</label></dd>
+	</dl>
+	<dl>
+		<dt><label for="format">{L_ARCHIVE_FORMAT}:</label></dt>
+		<dd>{FORMAT_BUTTONS}</dd>
+	</dl>
+
+	<p class="quick">
+		{S_FORM_TOKEN}
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+	</p>
+	</fieldset>
+
+	
+	</form>
+
+<!-- ELSEIF S_FRONTEND -->
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+
+	<!-- IF S_STYLE --> <!-- DEFINE $COLSPAN = 5 --> <!-- ELSE --> <!-- DEFINE $COLSPAN = 4 --> <!-- ENDIF -->
+
+	<table cellspacing="1">
+		<col class="row1" /><!-- IF S_STYLE --><col class="row1" /><!-- ENDIF --><col class="row2" /><col class="row2" />
+	<thead>
+	<tr>
+		<th>{L_NAME}</th>
+		<!-- IF S_STYLE --><th>{L_STYLE_USED_BY}</th><!-- ENDIF -->
+		<th>{L_OPTIONS}</th>
+		<th>{L_ACTIONS}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td class="row3" colspan="{$COLSPAN}"><strong>{L_INSTALLED}</strong></td>
+	</tr>
+	<!-- BEGIN installed -->
+	<tr>
+		<td><strong>{installed.NAME}</strong><!-- IF installed.S_DEFAULT_STYLE --> *<!-- ENDIF --></td>
+		<!-- IF S_STYLE -->
+			<td style="text-align: center;">{installed.STYLE_COUNT}</td>
+		<!-- ENDIF -->
+		<td style="text-align: center;">
+			{installed.S_OPTIONS}
+		</td>
+		<td style="text-align: center;">
+			<!-- IF S_STYLE -->
+				<a href="{installed.U_STYLE_ACT_DEACT}">{installed.L_STYLE_ACT_DEACT}</a> |
+			<!-- ENDIF -->
+			{installed.S_ACTIONS}
+			<!-- IF S_STYLE -->
+				| <a href="{installed.U_PREVIEW}">{L_PREVIEW}</a>
+			<!-- ENDIF -->
+		</td>
+	</tr>
+	<!-- END installed -->
+	<tr>
+		<td class="row3" colspan="{$COLSPAN}"><strong>{L_UNINSTALLED}</strong></td>
+	</tr>
+	<!-- IF not .uninstalled -->
+		<tr>
+			<td class="row1" colspan="{$COLSPAN}" style="text-align: center;">{L_NO_UNINSTALLED}</td>
+		</tr>
+	<!-- ENDIF -->
+	<!-- BEGIN uninstalled -->
+		<tr>
+			<td<!-- IF S_STYLE --> colspan="2"<!-- ENDIF -->><strong>{uninstalled.NAME}</strong><br /><span>{L_COPYRIGHT}: {uninstalled.COPYRIGHT}</span></td>
+			<td style="text-align: center;" colspan="2"><a href="{uninstalled.U_INSTALL}">{L_INSTALL}</a></td>
+		</tr>
+	<!-- END uninstalled -->
+	</tbody>
+	</table>
+
+	<!-- IF S_STYLE -->
+		<form id="acp_styles" method="post" action="{U_ACTION}">
+
+		<fieldset class="quick">
+			<legend>{L_CREATE}</legend>
+			{L_CREATE}: <input type="text" name="name" value="" /> {L_FROM} <select name="basis">{S_BASIS_OPTIONS}</select> <input class="button2" type="submit" name="add" value="{L_SUBMIT}" />
+		</fieldset>
+
+		</form>
+	<!-- ENDIF -->
+
+<!-- ELSEIF S_DETAILS -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+
+	<!-- IF S_ERROR_MSG -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="acp_styles" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_TITLE}</legend>
+	<dl>
+		<dt><label for="name">{L_NAME}:</label></dt>
+		<dd><!-- IF S_INSTALL --><b id="name">{NAME}</b><!-- ELSE --><input type="text" id="name" name="name" value="{NAME}" /><!-- ENDIF --></dd>
+	</dl>
+	<dl>
+		<dt><label for="copyright">{L_COPYRIGHT}:</label></dt>
+		<dd><!-- IF S_INSTALL --><b id="copyright">{COPYRIGHT}</b><!-- ELSE --><input type="text" id="copyright" name="copyright" value="{COPYRIGHT}" /><!-- ENDIF --></dd>
+	</dl>
+	<!-- IF S_STYLE and not S_BASIS -->
+		<dl>
+			<dt><label for="template_id">{L_STYLE_TEMPLATE}:</label></dt>
+			<dd><!-- IF S_INSTALL --><b id="template_id">{TEMPLATE_NAME}</b><!-- ELSE --><select id="template_id" name="template_id">{S_TEMPLATE_OPTIONS}</select><!-- ENDIF --></dd>
+		</dl>
+		<dl>
+			<dt><label for="theme_id">{L_STYLE_THEME}:</label></dt>
+			<dd><!-- IF S_INSTALL --><b id="theme_id">{THEME_NAME}</b><!-- ELSE --><select id="theme_id" name="theme_id">{S_THEME_OPTIONS}</select><!-- ENDIF --></dd>
+		</dl>
+		<dl>
+			<dt><label for="imageset_id">{L_STYLE_IMAGESET}:</label></dt>
+			<dd><!-- IF S_INSTALL --><b id="imageset_id">{IMAGESET_NAME}</b><!-- ELSE --><select id="imageset_id" name="imageset_id">{S_IMAGESET_OPTIONS}</select><!-- ENDIF --></dd>
+		</dl>
+	<!-- ENDIF -->
+	<!-- IF S_TEMPLATE or S_THEME -->
+		<dl>
+			<dt><label for="store_db">{L_LOCATION}:</label><br /><span>{L_LOCATION_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="store_db" value="0"<!-- IF not S_STORE_DB --> id="store_db" checked="checked"<!-- ENDIF --> /> {L_STORE_FILESYSTEM}</label>
+				<label><input type="radio" class="radio" name="store_db" value="1"<!-- IF S_STORE_DB --> id="store_db" checked="checked"<!-- ENDIF --> /> {L_STORE_DATABASE}</label></dd>
+		</dl>
+	<!-- ENDIF -->
+	<!-- IF S_STYLE -->
+		</fieldset>
+
+		<fieldset>
+			<legend>{L_OPTIONS}</legend>
+		<dl>
+			<dt><label for="style_active">{L_STYLE_ACTIVE}:</label></dt>
+			<dd><label><input type="radio" class="radio" name="style_active" value="1"<!-- IF S_STYLE_ACTIVE --> id="style_active" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="style_active" value="0"<!-- IF not S_STYLE_ACTIVE --> id="style_active" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<!-- IF not S_STYLE_DEFAULT -->
+			<dl>
+				<dt><label for="style_default">{L_STYLE_DEFAULT}:</label></dt>
+				<dd><label><input type="radio" class="radio" name="style_default" value="1" /> {L_YES}</label>
+					<label><input type="radio" class="radio" id="style_default" name="style_default" value="0" checked="checked" /> {L_NO}</label></dd>
+			</dl>
+		<!-- ENDIF -->
+	<!-- ENDIF -->
+	</fieldset>
+
+	<fieldset class="submit-buttons">
+		<legend>{L_SUBMIT}</legend>
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

@@ -1,0 +1,38 @@
+
+<!-- BEGIN role_mask -->
+
+	<table cellspacing="1">
+		<caption><!-- IF role_mask.FORUM_ID -->{L_FORUM}: <!-- ENDIF -->{role_mask.NAME}</caption>
+	<tbody>
+	<tr>
+		<th>{L_USERS}</th>
+	</tr>
+	<tr>
+		<td class="row1">
+			<!-- BEGIN users -->
+				<a href="{role_mask.users.U_PROFILE}">{role_mask.users.USERNAME}</a><!-- IF not role_mask.users.S_LAST_ROW --> :: <!-- ENDIF -->
+			<!-- BEGINELSE -->
+				{L_USERS_NOT_ASSIGNED}
+			<!-- END users -->
+		</td>
+	</tr>
+	<tr>
+		<th>{L_GROUPS}</th>
+	</tr>
+	<tr>
+		<td class="row2">
+			<!-- BEGIN groups -->
+				<a href="{role_mask.groups.U_PROFILE}">{role_mask.groups.GROUP_NAME}</a><!-- IF not role_mask.groups.S_LAST_ROW --> :: <!-- ENDIF -->
+			<!-- BEGINELSE -->
+				{L_GROUPS_NOT_ASSIGNED}
+			<!-- END users -->
+		</td>
+	</tr>
+	</tbody>
+	</table>
+
+<!-- BEGINELSE -->
+	
+	<p>{L_ROLE_NOT_ASSIGNED}</p>
+
+<!-- END role_mask -->

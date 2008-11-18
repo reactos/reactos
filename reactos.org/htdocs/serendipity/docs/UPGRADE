@@ -1,0 +1,106 @@
+########################################################################
+# UPDATING                                                             #
+########################################################################
+
+The automatic update script should find and execute any necessary
+changes to the database layout made in different s9y versions beginning
+from 0.5. The upgrader will perform its automatic actions, as soon as you
+have copied the new s9y files over your old installation and access the start
+page of your blog.
+You can speed up the process of backing up your data and copying the files by
+using the supplied "upgrade.sh" script. Be sure to edit the file and change
+the variables to your needs.
+
+Usually all DB schema upgrades in previous versions will be used. So
+when you upgrade from 0.5 to 0.7 you will get upgrades from 0.5 -> 0.6
+and 0.6 -> 0.7.
+
+However, you are always advised to look at the corresponding
+SQL update file in sql/db_update* to see which changes were made.
+
+Please bear in mind that the automatic update script is executable by
+any user visiting your blog at the time of updating. You should modify
+your .htaccess file before upgradding and include this directives:
+
+---- .htaccess
+AuthType Basic
+AuthName "Authorisation: Serendipity Upgrade IN PROGRESS"
+AuthUserFile /absolute/path/to/your/s9y/.htpasswd
+require valid-user
+----
+
+Then create a file .htpasswd using a simple 'username:cryptpasswd'
+combination. Look at http://www.advancehost.com/htpasswd.html for an
+online generator for .htpasswd files.
+
+---- .htpasswd
+s9y:s9QXoc9dcFOT2
+----
+
+This would create a user "s9y" with password "s9y" with which you'd have
+to log into your blog.
+
+A proper backup of BOTH the file system and your database is suggested.
+Whenever you made changes to the distributed files (or to the files like
+xml.gif or the smilies) you have to make sure to copy them over the
+distributed files after updating.
+
+########################################################################
+# NOTES ON UPDATING FROM 0.5/0.5.1 -> 0.6                              #
+########################################################################
+
+* [The 0.5.1 release was renamed to 0.6, but there will still be DB
+  layout changes applied which are labelled as 0.5.1 - just ignore it.
+  It's only to easy migration to CVS-Snapshot users using the
+  0.5.1-version]
+
+* The structure of the content_rewrite plugin has changed. It will get
+  rewritten automatically by the update script, but if you had output on
+  your sidebar before, you need to do this:
+
+  - Add the 'serendipity_plugin_eventwrapper' to the sidebar plugins.
+  - Configure the 'serendipity_plugin_eventwrapper' and set it to use
+    your existing 'serendpity_event_contentrewrite' plugin.
+
+* Smilies and the XML-button where moved from the '/pixel' subdirectory
+  into per-template 'img/' subdirectories. If you modified the original
+  files, you need to copy your versions inside the
+  'templates/default/img/' directory.
+
+* A home-link has been added to the page headers. For that, two new CSS
+  classes have been introduced: .homelink1 (header), .homelink2 (
+  subheader). If you have a custom template, you need to adapt to those
+  changes. To make them look like your header previously has, insert
+  this in your style.css:
+
+  a.homelink1,
+  a.homelink1:hover,
+  a.homelink1:link,
+  a.homelink1:visited,
+  #serendipity_banner h1 {
+    ... your css-definitions ...
+    text-decoration: none;
+  }
+
+  a.homelink2,
+  a.homelink2:hover,
+  a.homelink2:link,
+  a.homelink2:visited,
+  #serendipity_banner h2 {
+    ... your css-definitions ...
+    text-decoration: none;
+  }
+
+########################################################################
+# NOTES ON UPDATING FROM 0.4 -> 0.5                                    #
+########################################################################
+
+No changes where made to the database scheme in this version.
+
+########################################################################
+# NOTES ON UPDATING FROM 0.3 -> 0.4                                    #
+########################################################################
+
+Run the file 'sql/db_update_0.3_0.4_mysql.sql' or
+'sql/db_update_0.3_0.4_pgsql.sql' to update your database. Apart from
+that, just copy over the new files of the distribution.

@@ -1,0 +1,62 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@syndicomm.com>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #%]
+
+[%# INTERFACE:
+  # remove_all: boolean int. Is 1 if the action was remove_all,
+  #         and 0 if the action was remove_all_regexp.
+  # name: string. The place where removal is performed.
+  # regexp: string. The regexp according to which the removal is performed.
+  # users: array with group objects having the properties:
+  #   - login: string. The login which is removed.
+  #%]
+
+
+[% IF remove_all %]
+  [% title = BLOCK %]
+    Removing All Explicit Group Memberships from '[% name FILTER html %]'
+  [% END %]
+[% ELSE %]
+  [% title = BLOCK %]
+    Removing All Explicit Group Memberships Matching Group RegExp from '[% name FILTER html %]'
+  [% END %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% IF remove_all %]
+  <p><b>Removing explicit membership</b></p>
+[% ELSE %]
+  <p><b>Removing explicit memberships of users matching
+  '[% regexp FILTER html %]'...</b></p>
+[% END %]
+    
+[% FOREACH user = users %]
+  [% user.login FILTER html %] removed<br>
+[% END %]
+
+<p><b>Done</b>.</p>
+
+<p>Back to the <a href="editgroups.cgi">group list</a>.</p>
+
+[% PROCESS global/footer.html.tmpl %] 

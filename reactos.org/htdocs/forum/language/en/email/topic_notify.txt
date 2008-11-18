@@ -1,0 +1,20 @@
+Subject: Topic reply notification - "{TOPIC_TITLE}"
+
+Hello {USERNAME},
+
+You are receiving this notification because you are watching the topic, "{TOPIC_TITLE}" at "{SITENAME}". This topic has received a reply since your last visit. You can use the following link to view the replies made, no more notifications will be sent until you visit the topic.
+
+If you want to view the newest post made since your last visit, click the following link:
+{U_NEWEST_POST}
+
+If you want to view the topic, click the following link:
+{U_TOPIC}
+
+If you want to view the forum, click the following link:
+{U_FORUM}
+
+If you no longer wish to watch this topic you can either click the "Unsubscribe topic" link found at the bottom of the topic above, or by clicking the following link:
+
+{U_STOP_WATCHING_TOPIC}
+
+{EMAIL_SIG}

@@ -1,0 +1,8 @@
+Subject: Report closed - "{POST_SUBJECT}"
+
+Hello {USERNAME},
+
+You are receiving this notification because the report you filed on the post "{POST_SUBJECT}" in "{TOPIC_TITLE}" at "{SITENAME}" was handled by a moderator or by an administrator. The report was afterwards closed. If you have further questions contact {CLOSER_NAME} with a personal message.
+
+
+{EMAIL_SIG}

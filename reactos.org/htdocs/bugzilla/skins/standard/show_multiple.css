@@ -1,0 +1,52 @@
+hr {margin: 20px auto 40px}
+
+.bz_private { color:darkred }
+
+h1 {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+/* bugfields is table of all fields and values */
+.bugfields {
+  font-size: small;
+  background: #eee;
+  padding: 5px;
+  border: 1px solid silver;
+  width: 100%;
+}
+
+.bugfields tr {
+  vertical-align: top;
+}
+
+.bugfields th {
+  width: 10em;
+  text-align: left;
+  font-weight: normal;
+  line-height: 150%;
+}
+
+.bugfields td {
+  font-weight: bold;
+  line-height: 150%;
+}
+
+.bugfields .rightcell {
+  padding-left: 10px;
+}
+
+/* set line-height to normal for nested tables of bugfields table */
+.bugfields table th, .bugfields table td {
+  line-height: 100%;
+  width: auto;
+}
+
+.bugfields table.timetracking th, .bugfields table.timetracking td {
+  width: 10em;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}

@@ -1,2 +1,0 @@
-@ stub CreateAssemblyCache
-@ stub CreateAssemblyNameObject

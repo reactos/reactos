@@ -1,0 +1,57 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "LDAP"
+   desc = "Configure this first before choosing LDAP as an authentication method"
+%]
+
+[% param_descs = {
+  LDAPserver => "The name (and optionally port) of your LDAP server " _
+                "(e.g. ldap.company.com, or ldap.company.com:portnum). " _
+                "URI syntax can also be used, such as "_
+                "ldaps://ldap.company.com (for a secure connection) or " _
+                "ldapi://%2fvar%2flib%2fldap_sock (for a socket-based " _
+                "local connection.",
+
+  LDAPstartls => "Whether to require encrypted communication once normal " _
+                 "LDAP connection achieved with the server.",
+
+  LDAPbinddn => "If your LDAP server requires that you use a binddn and password " _
+                "instead of binding anonymously, enter it here " _
+                "(e.g. cn=default,cn=user:password). " _
+                "Leave this empty for the normal case of an anonymous bind.",
+
+  LDAPBaseDN => "The BaseDN for authenticating users against " _
+                "(e.g. ou=People,o=Company).",
+
+  LDAPuidattribute => "The name of the attribute containing the user's login name.",
+
+  LDAPmailattribute => "The name of the attribute of a user in your " _
+                       "directory that contains the email address, to be " _
+                       "used as $terms.Bugzilla username. If this parameter " _
+                       "is empty, $terms.Bugzilla will use the LDAP username"_
+                       " as the $terms.Bugzilla username. You may also want" _
+                       " to set the \"emailsuffix\" parameter, in this case.",
+
+  LDAPfilter => "LDAP filter to AND with the <tt>LDAPuidattribute</tt> for " _
+                "filtering the list of valid users." }
+%]

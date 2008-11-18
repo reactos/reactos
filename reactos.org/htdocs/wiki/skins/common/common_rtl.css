@@ -1,0 +1,47 @@
+/*
+ * This file contains CSS settings common to RTL wikis use the old
+ * pre-Monobook skins Wikistandard, Nostalgia and CologneBlue
+ */
+
+/* js pref toc */
+#preftoc { float: right; }
+/* workaround for moz bug, displayed bullets on left side */
+#preftoc li { list-style: none; }
+#prefcontrol { float: right; }
+fieldset.prefsection,
+fieldset.operaprefsection { 
+    margin-left: 0;
+    margin-right: 18em;
+}
+/* page history */
+#pagehistory .history-user { 
+    margin-right: 1.4em;
+    margin-left: 0.4em;
+}
+.editsection {
+	float: left;
+	margin-right: 5px;
+}
+div.tright, div.floatright {
+	clear: none;
+}
+div.tleft, div.floatleft {
+	clear: left;
+}
+/* Convenience links to edit block and delete reasons */
+p.mw-ipb-conveniencelinks, p.mw-filedelete-editreasons, p.mw-delete-editreasons {
+	float: left;
+}
+table.filehistory th {
+	text-align: right;
+}
+
+/**
+ * Lists:
+ * The following lines don't have a visible effect on non-Gecko browsers
+ * They fix a problem ith Gecko browsers rendering lists to the right of
+ * left-floated objects in an RTL layout.
+ */
+html > body div#article ul {
+	display: table;
+}

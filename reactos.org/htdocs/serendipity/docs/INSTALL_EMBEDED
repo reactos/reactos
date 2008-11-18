@@ -1,0 +1,77 @@
+########################################################################
+# THE 'embed' CONFIGURATION DIRECTIVE                                  #
+########################################################################
+
+In your serendipity configuration, you can set an 'embed' option to true
+or false.
+
+This defines, whether you use your blog as a standalone webpage - or if
+you have different content wrapped around your blog, like the menu of
+your usual homepage.
+
+By setting the 'embed' option to true, you have to make sure the
+following things to get everything to work well:
+
+1. 'indexFile' option.
+
+   This configuration option needs to be set to the wrapper file you
+   want to use. Let's say you normally have a 'content.php' file for
+   your webpage. This 'content.php' file sets up your internal
+   templates, your menu structure and such.
+   Now you want this file to be used to include your weblog. A simple
+   content.php could look like this:
+
+   <?php
+   $homepage = new Template_Class;
+   $homepage->set_template($_REQUEST['page']);
+   $homepage->output_header();
+   $homepage->output_content();
+   $homepage->output_footer();
+   $homepage->track_statistics();
+   ?>
+
+   So normally your file would be called with 'content.php?page=about'
+   to display your 'about' page of your personal homepage.
+
+   Now we want this file to be displayed, having the 'page' variable
+   being set to 'blog'.
+
+   For this, we set up a 'wrapper.php' file:
+
+   <?php
+   $_REQUEST['page'] = 'blog';
+   // Let serendipity generate our content:
+   ob_start();
+   require 'index.php';
+   $blog_data = ob_get_contents();
+   ob_end_clean();
+
+   // Now we include our normal content building file.
+   // This one has to make use of your $blog_data variable to print
+   // the content where appropriate!
+   require 'content.php';
+   ?>
+
+   You would then set your 'indexFile' serendipity-option to the
+   'wrapper.php' file.
+
+  2. Plugin panes & HTML-headers
+
+   With the example above, we only get the main blog data printed. One
+   of the most visible actions when using the 'embed' option is that the
+   plugin panes are not generated. And HTML headers/foooters are also
+   not provided by s9y in this case, as this should be done by your
+   'content.php' file.
+
+   So you have to include them in your 'content.php' file, to have them
+   visible in your embedded setup.
+
+   You can use this snippet:
+   <?php
+   serendipity_plugin_api::generate_plugins('left','div');
+   serendipity_plugin_api::generate_plugins('right','div');
+   ?>
+   somewhere in your 'content.php' file.
+
+The 'embed' option is therefore only recommended to be used by advanced
+users going for a most flexible setup!

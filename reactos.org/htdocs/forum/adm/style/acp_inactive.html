@@ -1,0 +1,71 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<h2>{L_INACTIVE_USERS}</h2>
+
+<p>{L_INACTIVE_USERS_EXPLAIN}</p>
+
+<form id="inactive" method="post" action="{U_ACTION}">
+
+<div class="clearfix"></div>
+
+<!-- IF PAGINATION -->
+<div class="pagination">
+		<a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span>
+</div>
+<!-- ENDIF -->
+
+<table cellspacing="1">
+<thead>
+<tr>
+	<th>{L_USERNAME}</th>
+	<th>{L_JOINED}</th>
+	<th>{L_INACTIVE_DATE}</th>
+	<th>{L_INACTIVE_REASON}</th>
+	<th>{L_LAST_VISIT}</th>
+	<th>{L_MARK}</th>
+</tr>
+</thead>
+<tbody>
+<!-- BEGIN inactive -->
+	<!-- IF inactive.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+
+		<td><a href="{inactive.U_USER_ADMIN}">{inactive.USERNAME}</a></td>
+		<td>{inactive.JOINED}</td>
+		<td>{inactive.INACTIVE_DATE}</td>
+		<td>{inactive.REASON}</td>
+		<td>{inactive.LAST_VISIT}</td>
+		<td>&nbsp;<input type="checkbox" class="radio" name="mark[]" value="{inactive.USER_ID}" />&nbsp;</td>
+	</tr>
+<!-- BEGINELSE -->
+	<tr>
+		<td colspan="6" style="text-align: center;">{L_NO_INACTIVE_USERS}</td>
+	</tr>
+<!-- END inactive -->
+</tbody>
+</table>
+
+	<fieldset class="display-options">
+		{L_DISPLAY_LOG}: &nbsp;{S_LIMIT_DAYS}&nbsp;{L_SORT_BY}: {S_SORT_KEY} {S_SORT_DIR}
+		<input class="button2" type="submit" value="{L_GO}" name="sort" />
+	</fieldset>
+	<hr />
+	<!-- IF PAGINATION -->
+	<div class="pagination">
+			<a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span>
+	</div>
+	<!-- ENDIF -->
+
+	<fieldset class="quick">
+		<select name="action">{S_INACTIVE_OPTIONS}</select>
+		<input class="button2" type="submit" name="submit" value="{L_SUBMIT}" />
+		<p class="small"><a href="#" onclick="marklist('inactive', 'mark', true); return false;">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('inactive', 'mark', false); return false;">{L_UNMARK_ALL}</a></p>		
+		{S_FORM_TOKEN}
+	</fieldset>
+
+
+
+</form>
+
+<!-- INCLUDE overall_footer.html -->

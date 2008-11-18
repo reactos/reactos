@@ -1,0 +1,45 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Shane H. W. Travis <travis@sedsystems.ca>
+  #
+  #%]
+
+[%# Remember to PROCESS rather than INCLUDE this template. %]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% setting_descs = { 
+   "comment_sort_order"               => "When viewing $terms.abug, show comments in this order",
+   "csv_colsepchar"                   => "Field separator character for CSV files",
+   "display_quips"                    => "Show a quip at the top of each $terms.bug list",
+   "zoom_textareas"                   => "Zoom textareas large when in use (requires JavaScript)",
+   "newest_to_oldest"                 => "Newest to Oldest",
+   "newest_to_oldest_desc_first"      => "Newest to Oldest, but keep Description at the top",
+   "off"                              => "Off",
+   "oldest_to_newest"                 => "Oldest to Newest",
+   "on"                               => "On",
+   "per_bug_queries"                  => "Enable tags for $terms.bugs",
+   "post_bug_submit_action"           => "After changing $terms.abug",
+   "next_bug"                         => "Show next $terms.bug in my list",
+   "same_bug"                         => "Show the updated $terms.bug",
+   "standard"                         => "Classic",
+   "skin"                             => "$terms.Bugzilla's general appearance (skin)",
+   "nothing"                          => "Do Nothing",
+   "state_addselfcc"                  => "Automatically add me to the CC list of $terms.bugs I change",
+   "always"                           => "Always",
+   "never"                            => "Never",
+   "cc_unless_role"                   => "Only if I have no role on them",
+   "lang"                             => "Language used in email",
+                   } 
+%]

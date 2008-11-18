@@ -1,0 +1,124 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<p>{L_ACP_BAN_EXPLAIN}</p>
+
+<h1>{L_TITLE}</h1>
+
+<p>{L_EXPLAIN}</p>
+
+<script type="text/javascript">
+// <![CDATA[
+
+	var ban_length = new Array();
+		ban_length[-1] = '';
+	<!-- BEGIN ban_length -->
+		ban_length['{ban_length.BAN_ID}'] = '{ban_length.A_LENGTH}';
+	<!-- END ban_length -->
+
+	var ban_reason = new Array();
+		ban_reason[-1] = '';
+	<!-- BEGIN ban_reason -->
+		ban_reason['{ban_reason.BAN_ID}'] = '{ban_reason.A_REASON}';
+	<!-- END ban_reason -->
+
+	var ban_give_reason = new Array();
+		ban_give_reason[-1] = '';
+	<!-- BEGIN ban_give_reason -->
+		ban_give_reason['{ban_give_reason.BAN_ID}'] = '{ban_give_reason.A_REASON}';
+	<!-- END ban_give_reason -->
+
+	function display_details(option)
+	{
+		document.getElementById('acp_unban').unbangivereason.value = ban_give_reason[option];
+		document.getElementById('acp_unban').unbanreason.value = ban_reason[option];
+		document.getElementById('acp_unban').unbanlength.value = ban_length[option];
+	}
+
+// ]]>
+</script>
+
+<form id="acp_ban" method="post" action="{U_ACTION}">
+
+<fieldset>
+	<legend>{L_TITLE}</legend>
+<dl>
+	<dt><label for="ban">{L_BAN_CELL}:</label></dt>
+	<dd><textarea name="ban" cols="40" rows="3" id="ban"></textarea></dd>
+	<!-- IF S_USERNAME_BAN --><dd>[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</dd><!-- ENDIF -->
+</dl>
+<dl>
+	<dt><label for="banlength">{L_BAN_LENGTH}:</label></dt>
+	<dd><label for="banlength"><select name="banlength" id="banlength" onchange="if(this.value==-1){document.getElementById('banlengthother').style.display = 'block';}else{document.getElementById('banlengthother').style.display='none';}">{S_BAN_END_OPTIONS}</select></label></dd>
+	<dd id="banlengthother" style="display: none;"><label><input type="text" name="banlengthother" class="inputbox" /><br /><span>{L_YEAR_MONTH_DAY}</span></label></dd>
+</dl>
+<dl>
+	<dt><label for="banexclude">{L_BAN_EXCLUDE}:</label><br /><span>{L_BAN_EXCLUDE_EXPLAIN}</span></dt>
+	<dd><label><input type="radio" name="banexclude" value="1" class="radio" /> {L_YES}</label>
+		<label><input type="radio" name="banexclude" id="banexclude" value="0" checked="checked" class="radio" /> {L_NO}</label></dd>
+</dl>
+<dl>
+	<dt><label for="banreason">{L_BAN_REASON}:</label></dt>
+	<dd><input name="banreason" type="text" class="text medium" maxlength="255" id="banreason" /></dd>
+</dl>
+<dl>
+	<dt><label for="bangivereason">{L_BAN_GIVE_REASON}:</label></dt>
+	<dd><input name="bangivereason" type="text" class="text medium" maxlength="255" id="bangivereason" /></dd>
+</dl>
+
+<p class="submit-buttons">
+	<input class="button1" type="submit" id="bansubmit" name="bansubmit" value="{L_SUBMIT}" />&nbsp;
+	<input class="button2" type="reset" id="banreset" name="banreset" value="{L_RESET}" />
+</p>
+{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<br /><br />
+
+<h1>{L_UNBAN_TITLE}</h1>
+
+<p>{L_UNBAN_EXPLAIN}</p>
+
+<form id="acp_unban" method="post" action="{U_ACTION}">
+
+<fieldset>
+	<legend>{L_UNBAN_TITLE}</legend>
+
+<!-- IF S_BANNED_OPTIONS -->
+	<dl>
+		<dt><label for="unban">{L_BAN_CELL}:</label></dt>
+		<dd><select id="unban" name="unban[]" multiple="multiple" size="10" style="width: 50%" onchange="if (this.selectedIndex > -1) display_details(this.options[this.selectedIndex].value); else display_details(-1);">{BANNED_OPTIONS}</select></dd>
+	</dl>
+	<dl>
+		<dt><label for="unbanlength">{L_BAN_LENGTH}:</label></dt>
+		<dd><input style="border: 0;" type="text" class="text full" disabled="disabled" name="unbanlength" id="unbanlength" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="unbanreason">{L_BAN_REASON}:</label></dt>
+		<dd><input style="border: 0;" type="text" class="text full" disabled="disabled" name="unbanreason" id="unbanreason" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="unbangivereason">{L_BAN_GIVE_REASON}:</label></dt>
+		<dd><input style="border: 0;" type="text" class="text full" disabled="disabled" name="unbangivereason" id="unbangivereason" /></dd>
+	</dl>
+
+	<p class="submit-buttons">
+		<input class="button1" type="submit" id="unbansubmit" name="unbansubmit" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="unbanreset" name="unbanreset" value="{L_RESET}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+
+<!-- ELSE -->
+
+	<p>{L_NO_BAN_CELL}</p>
+	{S_FORM_TOKEN}
+</fieldset>
+
+<!-- ENDIF -->
+
+</form>
+
+<!-- INCLUDE overall_footer.html -->

@@ -1,8 +1,0 @@
-#include "resource.h"
-
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DllNotLoaded,   "LoadLibrary fallita '%s'"
-    IDS_MissingEntry, "Manca:%s\nIn %s"
-END

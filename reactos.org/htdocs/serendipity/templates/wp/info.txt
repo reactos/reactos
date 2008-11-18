@@ -1,0 +1,4 @@
+Name: WP-compat
+Author: Evan Nemerson
+Date: 20/11-2004
+Engine: yes

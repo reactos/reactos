@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>HTMLArea examples index</title>
+</head>
+
+<body>
+<h1>HTMLArea: auto-generated examples index</h1>
+
+<ul>
+% while (<*.html>) {
+% next if /^index.html$/;
+  <li>
+    <a href="<% $_ %>"><% $_ %></a>
+  </li>
+% }
+</ul>
+
+<hr />
+<address>mihai_bazon@yahoo.com</address>
+<!-- hhmts start --> Last modified: Sun Feb  1 13:30:39 EET 2004 <!-- hhmts end -->
+</body> </html>
+
+<%INIT>
+my $dir = $m->interp->comp_root;
+$dir =~ s{/+$}{}g;
+#$dir =~ s{/[^/]+$}{}g;
+$dir .= $m->current_comp->dir_path;
+chdir $dir;
+</%INIT>

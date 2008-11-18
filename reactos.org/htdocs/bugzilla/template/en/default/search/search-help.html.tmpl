@@ -1,0 +1,108 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+  
+[% help_html = [ 
+{ id => "short_desc_type", 
+  html => "The type of summary search you would like" },   
+{ id => "short_desc", 
+  html => "The $terms.bug summary is a short sentence which succinctly  
+           describes <br> what the $terms.bug is about." },   
+{ id => "classification", 
+  html => "$terms.Bugs are categorised into Classifications, Products and Components. classifications is the<br>
+           top-level categorisation." },   
+{ id => "product", 
+  html => Param('useclassification') ?
+       "$terms.Bugs are categorised into Products and Components. Select a Classification to narrow down this list" :
+       "$terms.Bugs are categorised into Products and Components. Product is 
+           the<br>top-level categorisation." },   
+{ id => "component", 
+  html => "Components are second-level categories; each belongs to a<br> 
+           particular Product. Select a Product to narrow down this list." },   
+{ id => "version", 
+  html => "The version field defines the version of the software the 
+           $terms.bug<br>was found in." },   
+{ id => "target_milestone", 
+  html => "The target_milestone field is used to define when the engineer<br>
+           the $terms.bug is assigned to expects to fix it." },   
+{ id => "long_desc", 
+  html => "$terms.Bugs have comments added to them by $terms.Bugzilla users.  
+           You can<br>search for some text in those comments." },   
+{ id => "long_desc_type", 
+  html => "The type of comment search you would like" },   
+{ id => "bug_file_loc", 
+  html => "$terms.Bugs can have a URL associated with them - for example, a 
+           pointer<br>to a web site where the problem is seen." },   
+{ id => "bug_file_loc_type", 
+  html => "The type of URL search you would like" },   
+{ id => "status_whiteboard", 
+  html => "Each $terms.bug has a free-form single line text entry box for 
+           adding<br>tags and status information." },   
+{ id => "status_whiteboard_type", 
+  html => "The type of whiteboard search you would like" },   
+{ id => "keywords", 
+  html => "You can add keywords from a defined list to $terms.bugs, in order 
+           to<br>tag and group them." },   
+{ id => "keywords_type", 
+  html => "The type of keyword search you would like" },   
+{ id => "bug_status", 
+  html => "$terms.Abug may be in any of a number of states." },
+{ id => "resolution", 
+  html => "If $terms.abug is in a resolved state, then one of these reasons
+           will<br>be given for its resolution." },   
+{ id => "bug_severity", 
+  html => "How severe the $terms.bug is, or whether it's an enhancement." },   
+{ id => "priority", 
+  html => "Engineers prioritize their $terms.bugs using this field." },   
+{ id => "rep_platform", 
+  html => "The hardware platform the $terms.bug was observed on." },   
+{ id => "op_sys", 
+  html => "The operating system the $terms.bug was observed on." },   
+{ id => "email1", 
+  html => "Every $terms.bug has people associated with it in different 
+           roles.<br>Here, you can search on what people are in what role." },
+{ id => "email2", 
+  html => "Every $terms.bug has people associated with it in different 
+           roles.<br>Here, you can search on what people are in what role." },
+{ id => "bug_id", 
+  html => "You can limit your search to a specific set of $terms.bugs ." },   
+{ id => "votes", 
+  html => "Some $terms.bugs can be voted for, and you can limit your search to 
+           $terms.bugs<br>with more than a certain number of votes." },   
+{ id => "chfield", 
+  html => "You can search for specific types of change - this field define <br>
+           which field you are interested in changes for." },   
+{ id => "chfieldfrom", 
+  html => "Specify the start and end dates either in YYYY-MM-DD format<br>
+           (optionally followed by HH:mm, in 24 hour clock), or in relative<br>
+           dates such as 1h, 2d, 3w, 4m, 5y, which respectively mean one hour,<br>
+           two days, three weeks, four months, or five years ago. 0d is last<br>
+           midnight, and 0h, 0w, 0m, 0y is the beginning of this hour, week,<br>
+           month, or year." },
+{ id => "chfieldto", 
+  html => "Specify the start and end dates either in YYYY-MM-DD format<br>
+           (optionally followed by HH:mm, in 24 hour clock), or in relative<br>
+           dates such as 1h, 2d, 3w, 4m, 5y, which respectively mean one hour,<br>
+           two days, three weeks, four months, or five years ago. 0d is last<br>
+           midnight, and 0h, 0w, 0m, 0y is the beginning of this hour, week,<br>
+           month, or year." },
+{ id => "chfieldvalue", 
+  html => "The value the field defined above changed to during that time." },   
+] %]

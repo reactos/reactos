@@ -1,7 +1,0 @@
-/* $Id: vbemp.rc 21844 2006-05-07 19:34:23Z ion $ */
-
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"DXG DirectX interface Device Driver\0"
-#define REACTOS_STR_INTERNAL_NAME	"dxg\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"dxg.sys\0"
-#include <reactos/version.rc>

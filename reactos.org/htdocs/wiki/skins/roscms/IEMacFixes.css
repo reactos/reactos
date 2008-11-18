@@ -1,0 +1,44 @@
+/* IE/Mac only fix stylesheet, imported from main.css */
+#portal-column-content {
+	margin: 0 0 4.8em 0;
+	float: none;
+}
+#portal-column-content #content {
+	z-index: 0;
+}
+#portal-column-one {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 3;
+}
+#portal-footer {
+	margin-left: 12em; 
+}
+/*
+#portlet-contentViews {
+	top: 0.6em !important;
+	left: 14.5em !important;
+}
+*/
+#portlet-contentViews li,
+#portlet-contentViews .selected {
+	border: none !important;
+}
+#portlet-contentViews li a   {
+	border: 1px solid #aaaaaa;
+	border-bottom: none;
+}
+#portlet-contentViews li.selected a {
+	border: 1px solid #fabd23;
+	border-bottom: none;
+}
+/* no background images */
+li#personaltools-userpage,
+li#personaltools-login/* */ {
+	background: none;
+	padding-left: none;
+}
+#mactest {
+	color: green;
+}

@@ -1,0 +1,44 @@
+body {
+    font-size: 10pt;
+    padding: 10px;
+    color: #333333;
+    background-color: #FAFFFF;
+    font-size: 9.5pt;
+    font-weight: normal;
+    font-family: verdana, arial, geneva, helvetica, sans-serif;
+}
+
+/** Embedded images with the s9y image manager **/
+.serendipity_imageComment_center,
+.serendipity_imageComment_left,
+.serendipity_imageComment_right {
+    border: 1px solid black;
+    background-color: #EFEFEF;
+    margin: 3px;
+}
+
+.serendipity_imageComment_center {
+}
+
+.serendipity_imageComment_left {
+    float: left;
+}
+
+.serendipity_imageComment_right {
+    float: right;
+}
+
+.serendipity_imageComment_img,
+.serendipity_imageComment_img img {
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+}
+
+.serendipity_imageComment_txt {
+    margin: 0px;
+    padding: 3px;
+    clear: both;
+    font-size: 9pt;
+}
+

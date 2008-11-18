@@ -1,9 +1,0 @@
-#include "resource.h"
-
-LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
-STRINGTABLE DISCARDABLE
-BEGIN
-
-STRING_WelcomeMsg,      "Dukungan ReactOS Virtual DOS Machine.\n"
-STRING_PromptMsg,       "Ketik r<cr> untuk menjalankan, s<cr> untuk mematikan atau q<cr> untuk keluar sekarang."
-END

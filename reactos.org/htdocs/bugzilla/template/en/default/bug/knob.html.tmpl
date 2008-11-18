@@ -1,0 +1,208 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[%# *** Knob *** %]
+
+<br>
+<div id="knob">
+  <div id="knob-options">
+
+  [% knum = 1 %]
+  [% initial_action_shown = 0 %]
+
+  [% IF bug.isunconfirmed && bug.user.canconfirm %]
+    [% PROCESS initial_action %]
+    <input type="radio" id="knob-confirm" name="knob" value="confirm">
+    <label for="knob-confirm">
+      Confirm [% terms.bug %] (change status to <b>[% status_descs.NEW FILTER html %]</b>)
+    </label>
+    <br>
+    [% knum = knum + 1 %]
+  [% END %]
+
+  [% IF bug.isopened && bug.bug_status != "ASSIGNED" && bug.user.canedit
+        && (!bug.isunconfirmed || bug.user.canconfirm) %]
+    [% PROCESS initial_action %]
+    <input type="radio" id="knob-accept" name="knob" value="accept">
+    <label for="knob-accept">
+      Accept [% terms.bug %] (
+      [% IF bug.isunconfirmed %]confirm [% terms.bug %], and [% END %]change
+      status to <b>[% status_descs.ASSIGNED FILTER html %]</b>)
+    </label>
+    <br>
+    [% knum = knum + 1 %]
+  [% END %]
+
+  [% IF bug.user.canedit || bug.user.isreporter %]
+    [% IF bug.isopened %]
+      [% IF bug.resolution %]
+        [% PROCESS initial_action %]
+        <input type="radio" id="knob-clear" name="knob" value="clearresolution">
+        <label for="knob-clear">
+          Clear the resolution (remove the current resolution of
+          <b>[% get_resolution(bug.resolution) FILTER html %]</b>)
+        </label>
+        <br>
+        [% knum = knum + 1 %]
+      [% END %]
+
+      [% PROCESS initial_action %]
+      <input type="radio" id="knob-resolve" name="knob" value="resolve">
+      <label for="knob-resolve">
+        Resolve [% terms.bug %], changing 
+        <a href="page.cgi?id=fields.html#resolution">resolution</a> to
+      </label>  
+      [% PROCESS select_resolution %]
+
+      [% PROCESS duplicate %]
+
+      [% IF bug.user.canedit %]
+        <input type="radio" id="knob-reassign" name="knob" value="reassign">
+        <label for="knob-reassign">
+          <a href="page.cgi?id=fields.html#assigned_to">Reassign</a> 
+          [% terms.bug %] to
+        </label>
+        [% safe_assigned_to = FILTER js; bug.assigned_to.login; END %]
+        [% INCLUDE global/userselect.html.tmpl
+             id => "assigned_to"
+             name => "assigned_to"
+             value => bug.assigned_to.login
+             size => 32
+             onchange => "if ((this.value != '$safe_assigned_to') && (this.value != '')) {
+                               document.changeform.knob[$knum].checked=true;
+                          }"
+        %]
+        <br>
+        [% IF bug.isunconfirmed && bug.user.canconfirm %]
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="andconfirm" name="andconfirm">
+          <label for="andconfirm">
+            and confirm [% terms.bug %] (change status to <b>[% status_descs.NEW FILTER html %]</b>)
+          </label>
+          <br>
+        [% END %]
+        [% knum = knum + 1 %]
+
+        <input type="radio" id="knob-reassign-cmp" name="knob" value="reassignbycomponent">
+        <label for="knob-reassign-cmp">
+          Reassign [% terms.bug %] to default assignee
+          [% " and QA contact," IF Param('useqacontact') %]
+          and add Default CC of selected component
+        </label>
+        <br>
+        [% IF bug.isunconfirmed && bug.user.canconfirm %]
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="compconfirm" name="compconfirm">
+          <label for="compconfirm">
+            and confirm [% terms.bug %] (change status to <b>[% status_descs.NEW FILTER html %]</b>)
+          </label>
+          <br>
+        [% END %]
+        [% knum = knum + 1 %]
+      [% END %]
+    [% ELSE %]
+      [% IF bug.resolution != "MOVED" ||
+           (bug.resolution == "MOVED" && bug.user.canmove) %]
+        [% PROCESS initial_action %]
+        <input type="radio" id="knob-change-resolution" name="knob" value="change_resolution">
+        <label for="knob-change-resolution">
+          Change <a href="page.cgi?id=fields.html#resolution">resolution</a> to
+        </label>
+        [% PROCESS select_resolution %]
+
+        [% PROCESS duplicate %]
+
+        <input type="radio" id="knob-reopen" name="knob" value="reopen">
+        <label for="knob-reopen">
+          Reopen [% terms.bug %]
+        </label>
+        <br>
+        [% knum = knum + 1 %]
+      [% END %]
+      [% IF bug.bug_status == "RESOLVED" %]
+        [% PROCESS initial_action %]
+        <input type="radio" id="knob-verify" name="knob" value="verify">
+        <label for="knob-verify">
+          Mark [% terms.bug %] as <b>[% status_descs.VERIFIED FILTER html %]</b>
+        </label>
+        <br>
+        [% knum = knum + 1 %]
+      [% END %]
+      [% IF bug.bug_status != "CLOSED" %]
+        [% PROCESS initial_action %]
+        <input type="radio" id="knob-close" name="knob" value="close">
+        <label for="knob-close">
+          Mark [% terms.bug %] as <b>[% status_descs.CLOSED FILTER html %]</b>
+        </label>
+        <br>
+        [% knum = knum + 1 %]
+      [% END %]
+    [% END %]
+  [% END %]
+  </div>
+
+  <div id="knob-buttons">
+  <input type="submit" value="Commit" id="commit">
+    [% IF bug.user.canmove %]
+      &nbsp; <font size="+1"><b> | </b></font> &nbsp;
+      <input type="submit" name="action" id="action"
+             value="[% Param("move-button-text") %]">
+    [% END %]
+  </div>
+</div>
+
+[%# Common actions %]
+
+[% BLOCK initial_action %]
+  [%# Only show 'Leave as' action in combination with another knob %]
+  [% IF !initial_action_shown %]
+    <input type="radio" id="knob-leave" name="knob" value="none" checked="checked">
+    <label for="knob-leave">
+      Leave as <b>[% status_descs.${bug.bug_status} FILTER html %]&nbsp;
+                  [% get_resolution(bug.resolution) FILTER html %]</b>
+    </label>
+    <br>
+    [% initial_action_shown = 1 %]
+  [% END %]
+[% END %]
+
+[% BLOCK select_resolution %]
+  <select name="resolution"
+          onchange="document.changeform.knob[[% knum %]].checked=true">
+    [% FOREACH r = bug.choices.resolution %]
+      <option value="[% r FILTER html %]">[% get_resolution(r) FILTER html %]</option>
+    [% END %]
+  </select>
+  <br>
+  [% knum = knum + 1 %]
+[% END %]
+
+[% BLOCK duplicate %]
+  <input type="radio" id="knob-duplicate" name="knob" value="duplicate">
+  <label for="knob-duplicate">
+    Mark the [% terms.bug %] as duplicate of [% terms.bug %] #
+  </label>
+  <input name="dup_id" size="6"
+         onchange="if (this.value != '') {document.changeform.knob[[% knum %]].checked=true}">
+  <br>
+  [% knum = knum + 1 %]
+[% END %]

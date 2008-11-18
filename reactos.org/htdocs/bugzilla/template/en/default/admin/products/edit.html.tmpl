@@ -1,0 +1,148 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Jack Nerad     <jnerad@bellsouth.net>
+  #                 Tiago R. Mello <tiago@async.com.br>
+  #                 Gabriel S. Oliveira <gabriel@async.com.br>
+  #%]
+
+[%# INTERFACE:
+  # product: Bugzilla::Product object; The product
+  #
+  # (classification fields available if Param('useclassification') is enabled:)
+  #
+  # classification: Bugzilla::Classification object; The classification 
+  #                                                  the product is in
+  #
+  # groups_controls: a hash of group controls related to the product.
+  #%]
+
+[% title = BLOCK %]Edit Product[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  style_urls = ['skins/standard/admin.css']
+%]
+
+<form method="post" action="editproducts.cgi">
+  <table border="0" cellpadding="4" cellspacing="0">
+
+    [% PROCESS "admin/products/edit-common.html.tmpl" %]
+
+    <tr>
+      <th align="right" valign="top">
+        <a href="editcomponents.cgi?product=[% product.name FILTER url_quote %]">
+        Edit components:
+        </a>
+      </th>
+      <td>
+        [% IF product.components.size -%]
+          [% FOREACH component = product.components %]
+            <b>[% component.name FILTER html %]:</b>&nbsp;
+            [% IF component.description %]
+              [% component.description FILTER html_light %]
+            [% ELSE %]
+              <font color="red">description missing</font>
+            [% END %]
+            <br>
+          [% END %]
+        [% ELSE %]
+          <font color="red">missing</font>
+        [% END %]
+      </td>
+    </tr>
+    <tr>
+      <th align="right" valign="top">
+        <a href="editversions.cgi?product=[% product.name FILTER url_quote %]">Edit
+versions:</a>
+      </th>
+      <td>
+        [%- IF product.versions.size -%]
+          [% FOREACH v = product.versions %]
+            [% v.name FILTER html %]
+            <br>
+          [% END %]
+        [% ELSE %]
+          <font color="red">missing</font>
+        [% END %]
+      </td>
+    </tr>
+    [% IF Param('usetargetmilestone') %]
+      <tr>
+        <th align="right" valign="top">
+          <a href="editmilestones.cgi?product=[% product.name FILTER url_quote %]">
+          Edit milestones:</a>
+        </th>
+        <td>
+          [%- IF product.milestones.size -%]
+            [%- FOREACH m = product.milestones -%]
+              [% m.name FILTER html %]
+            <br>
+            [% END %]
+          [% ELSE %]
+            <font color="red">missing</font>
+          [% END %]
+        </td>
+      </tr>
+    [% END %]
+    <tr>
+      <th align="right" valign="top">
+        <a href="editproducts.cgi?action=editgroupcontrols&product=
+          [%- product.name FILTER url_quote %]&classification=
+          [%- classification.name FILTER url_quote %]">
+          Edit Group Access Controls:
+        </a>
+      </th>
+      <td>
+        [% IF group_controls.size %]
+          [% FOREACH g = group_controls.values %]
+            <b>[% g.group.name FILTER html %]:</b>&nbsp;
+            [% IF g.group.isactive %]
+              [% g.membercontrol FILTER html %]/
+              [% g.othercontrol FILTER html %]
+              [% IF g.entry %], ENTRY[% END %]
+              [% IF g.canedit %], CANEDIT[% END %]
+              [% IF g.editcomponents %], editcomponents[% END %]
+              [% IF g.canconfirm %], canconfirm[% END %]
+              [% IF g.editbugs %], editbugs[% END %]
+            [% ELSE %]
+              DISABLED
+            [% END %]
+            <br>
+          [% END %]
+        [% ELSE %]
+          no groups
+        [% END %]
+      </td>
+    </tr>
+    <tr>
+      <th align="right">[% terms.Bugs %]:</th>
+      <td><a href="buglist.cgi?product=[% product.name FILTER url_quote %]">
+            [% product.bug_count FILTER html %]</a></td>
+    </tr>
+  </table>
+  
+  <input type="hidden" name="product_old_name" 
+        value="[% product.name FILTER html %]">
+  <input type="hidden" name="action" value="update">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+  <input type="hidden" name="classification"
+         value="[% classification.name FILTER html %]">
+  <input type="submit" name="submit" value="Update">
+</form>
+  
+[% PROCESS "admin/products/footer.html.tmpl"
+   no_add_product_link = 1 
+   no_edit_product_link = 1 %]
+
+[% PROCESS global/footer.html.tmpl %]

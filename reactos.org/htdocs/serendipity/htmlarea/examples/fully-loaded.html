@@ -1,0 +1,262 @@
+<html>
+<head>
+<title>Example of HTMLArea 3.0</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- Configure the path to the editor.  We make it relative now, so that the
+    example ZIP file will work anywhere, but please NOTE THAT it's better to
+    have it an absolute path, such as '/htmlarea/'. -->
+<script type="text/javascript">
+  _editor_url = "../";
+  _editor_lang = "en";
+</script>
+
+<!-- load the main HTMLArea file, this will take care of loading the CSS and
+    other required core scripts. -->
+<script type="text/javascript" src="../htmlarea.js"></script>
+
+<!-- load the plugins -->
+<script type="text/javascript">
+      // WARNING: using this interface to load plugin
+      // will _NOT_ work if plugins do not have the language
+      // loaded by HTMLArea.
+
+      // In other words, this function generates SCRIPT tags
+      // that load the plugin and the language file, based on the
+      // global variable HTMLArea.I18N.lang (defined in the lang file,
+      // in our case "lang/en.js" loaded above).
+
+      // If this lang file is not found the plugin will fail to
+      // load correctly and NOTHING WILL WORK.
+
+      HTMLArea.loadPlugin("TableOperations");
+      HTMLArea.loadPlugin("SpellChecker");
+      HTMLArea.loadPlugin("FullPage");
+      HTMLArea.loadPlugin("CSS");
+      HTMLArea.loadPlugin("ContextMenu");
+      //HTMLArea.loadPlugin("HtmlTidy");
+      HTMLArea.loadPlugin("ListType");
+      HTMLArea.loadPlugin("CharacterMap");
+HTMLArea.loadPlugin("DynamicCSS");
+</script>
+
+<style type="text/css">
+html, body {
+  font-family: Verdana,sans-serif;
+  background-color: #fea;
+  color: #000;
+}
+a:link, a:visited { color: #00f; }
+a:hover { color: #048; }
+a:active { color: #f00; }
+
+textarea { background-color: #fff; border: 1px solid 00f; }
+</style>
+
+<script type="text/javascript">
+var editor = null;
+
+function initEditor() {
+
+  // create an editor for the "ta" textbox
+  editor = new HTMLArea("ta");
+
+  // register the FullPage plugin
+  editor.registerPlugin(FullPage);
+
+  // register the SpellChecker plugin
+  editor.registerPlugin(TableOperations);
+
+  // register the SpellChecker plugin
+  editor.registerPlugin(SpellChecker);
+  
+  // register the HtmlTidy plugin
+  //editor.registerPlugin(HtmlTidy);
+
+  // register the ListType plugin
+  editor.registerPlugin(ListType);
+
+  editor.registerPlugin(CharacterMap);
+editor.registerPlugin(DynamicCSS);
+
+  // register the CSS plugin
+  editor.registerPlugin(CSS, {
+    combos : [
+      { label: "Syntax:",
+                   // menu text       // CSS class
+        options: { "None"           : "",
+                   "Code" : "code",
+                   "String" : "string",
+                   "Comment" : "comment",
+                   "Variable name" : "variable-name",
+                   "Type" : "type",
+                   "Reference" : "reference",
+                   "Preprocessor" : "preprocessor",
+                   "Keyword" : "keyword",
+                   "Function name" : "function-name",
+                   "Html tag" : "html-tag",
+                   "Html italic" : "html-helper-italic",
+                   "Warning" : "warning",
+                   "Html bold" : "html-helper-bold"
+                 },
+        context: "pre"
+      },
+      { label: "Info:",
+        options: { "None"           : "",
+                   "Quote"          : "quote",
+                   "Highlight"      : "highlight",
+                   "Deprecated"     : "deprecated"
+                 }
+      }
+    ]
+  });
+
+  // add a contextual menu
+  editor.registerPlugin("ContextMenu");
+
+  // load the stylesheet used by our CSS plugin configuration
+  editor.config.pageStyle = "@import url(custom.css);";
+
+  editor.generate();
+  return false;
+}
+
+HTMLArea.onload = initEditor;
+
+function insertHTML() {
+  var html = prompt("Enter some HTML code here");
+  if (html) {
+    editor.insertHTML(html);
+  }
+}
+function highlight() {
+  editor.surroundHTML('<span style="background-color: yellow">', '</span>');
+}
+</script>
+
+</head>
+
+<!-- use <body onload="HTMLArea.replaceAll()" if you don't care about
+     customizing the editor.  It's the easiest way! :) -->
+<body onload="HTMLArea.init();">
+
+<h1>HTMLArea 3.0</h1>
+
+<p>A replacement for <code>TEXTAREA</code> elements.  &copy; <a
+href="http://interactivetools.com">InteractiveTools.com</a>, 2003-2004.</p>
+
+<form action="test.cgi" method="post" id="edit" name="edit">
+
+<textarea id="ta" name="ta" style="width:100%" rows="24" cols="80">
+&lt;!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.2//EN"&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+&lt;title&gt;Passing parameters to JavaScript code&lt;/title&gt;
+&lt;link rel="stylesheet" href="custom.css" /&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+&lt;h1&gt;Passing parameters to JavaScript code&lt;/h1&gt;
+
+&lt;p&gt;Sometimes we need to pass parameters to some JavaScript function that we
+wrote ourselves.  But sometimes it's simply more convenient to include the
+parameter not in the function call, but in the affected HTML elements.
+Usually, all JavaScript calls affect some element, right? ;-)&lt;/p&gt;
+
+&lt;p&gt;Well, here's an original way to do it.  Or at least, I think it's
+original.&lt;/p&gt;
+
+&lt;h2&gt;But first...&lt;/h2&gt;
+
+&lt;p&gt;... an example.  Why would I need such thing?  I have a JS function that
+is called on &lt;code&gt;BODY&lt;/code&gt; &lt;code&gt;onload&lt;/code&gt; handler.  This function
+tries to retrieve the element with the ID "conttoc" and, if present, it will
+&lt;a href="toc.epl" title="Automatic TOC generation"&gt;generate an index&lt;/a&gt;.
+The problem is, this function exists in some external JavaScript library
+that it's loaded in page.  I only needed to pass the parameter from
+&lt;em&gt;one&lt;/em&gt; page.  Thus, it makes sense to pass the parameter from the HTML
+code on &lt;em&gt;that&lt;/em&gt; page, not to affect the others.&lt;/p&gt;
+
+&lt;p&gt;The first idea that came to me was to use some attribute, like "id" or
+"class".  But "id" was locked already, it &lt;em&gt;had&lt;/em&gt; to be "conttoc".  Use
+"class"?  It's not elegant.. what if I really wanted to give it a class, at
+some point?&lt;/p&gt;
+
+&lt;h2&gt;The idea&lt;/h2&gt;
+
+&lt;p&gt;So I thought: what are the HTML elements that do not affect the page
+rendering in any way?  Well, comments.  I mean, &lt;em&gt;comments&lt;/em&gt;, HTML
+comments.  You know, like &lt;code&gt;&amp;lt;!-- this is a comment --&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Though comments do not normally affect the way browser renders the page,
+they are still parsed and are part of the DOM, as well as any other node.
+But this mean that we can access comments from JavaScript code, just like we
+access any other element, right?  Which means that they &lt;em&gt;can&lt;/em&gt; affect
+the way that page finally appears ;-)&lt;/p&gt;
+
+&lt;h2&gt;The code&lt;/h2&gt;
+
+&lt;p&gt;The main part was the idea.  The code is simple ;-)  Suppose we have the
+following HTML code:&lt;/p&gt;
+
+&lt;pre class="code"&gt;&lt;span class="function-name"&gt;&amp;lt;&lt;/span&gt;&lt;span class="html-tag"&gt;div&lt;/span&gt; &lt;span class="variable-name"&gt;id=&lt;/span&gt;&lt;span class="string"&gt;&amp;quot;conttoc&amp;quot;&lt;/span&gt;&lt;span class="paren-face-match"&gt;&amp;gt;&lt;/span&gt;&lt;span class="function-name"&gt;&amp;lt;&lt;/span&gt;&lt;span class="html-tag"&gt;/div&lt;/span&gt;&lt;span class="function-name"&gt;&amp;gt;&lt;/span&gt;&lt;/pre&gt;
+
+&lt;p&gt;and our function checks for the presence an element having the ID
+"conttoc", and generates a table of contents into it.  Our code will also
+check if the "conttoc" element's first child is a comment node, and if so
+will parse additional parameters from there, for instance, a desired prefix
+for the links that are to be generated into it.  Why did I need it?  Because
+if the page uses a &lt;code&gt;&amp;lt;base&amp;gt;&lt;/code&gt; element to specify the default
+link prefix, then links like "#gen1" generated by the &lt;a href="toc.epl"&gt;toc
+generator&lt;/a&gt; will not point to that same page as they should, but to the
+page reffered from &lt;code&gt;&amp;lt;base&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;So the HTML would now look like this:&lt;/p&gt;
+
+&lt;pre class="code"&gt;&lt;span class="function-name"&gt;&amp;lt;&lt;/span&gt;&lt;span class="html-tag"&gt;div&lt;/span&gt; &lt;span class="variable-name"&gt;id=&lt;/span&gt;&lt;span class="string"&gt;&amp;quot;conttoc&amp;quot;&lt;/span&gt;&lt;span class="function-name"&gt;&amp;gt;&lt;/span&gt;&lt;span class="comment"&gt;&amp;lt;!-- base:link/prefix.html --&amp;gt;&lt;/span&gt;&lt;span class="paren-face-match"&gt;&amp;lt;&lt;/span&gt;&lt;span class="html-tag"&gt;/div&lt;/span&gt;&lt;span class="paren-face-match"&gt;&amp;gt;&lt;/span&gt;&lt;/pre&gt;
+
+&lt;p&gt;And our TOC generation function does something like this:&lt;/p&gt;
+
+&lt;pre class="code"&gt;&lt;span class="keyword"&gt;var&lt;/span&gt; &lt;span class="variable-name"&gt;element&lt;/span&gt; = getElementById(&amp;quot;&lt;span class="string"&gt;conttoc&lt;/span&gt;&amp;quot;);
+&lt;span class="keyword"&gt;if&lt;/span&gt; (element.firstChild &amp;amp;&amp;amp; element.firstChild.nodeType == 8) {
+  &lt;span class="comment"&gt;// 8 means Node.COMMENT_NODE.  We're using numeric values
+&lt;/span&gt;  &lt;span class="comment"&gt;// because IE6 does not support constant names.
+&lt;/span&gt;  &lt;span class="keyword"&gt;var&lt;/span&gt; &lt;span class="variable-name"&gt;parameters&lt;/span&gt; = element.firstChild.data;
+  &lt;span class="comment"&gt;// at this point &amp;quot;parameters&amp;quot; contains base:link/prefix.html
+&lt;/span&gt;  &lt;span class="comment"&gt;// ...
+&lt;/span&gt;}&lt;/pre&gt;
+
+&lt;p&gt;So we retrieved the value passed to the script from the HTML code.  This
+was the goal of this article.&lt;/p&gt;
+
+&lt;hr /&gt;
+&lt;address&gt;&lt;a href="http://students.infoiasi.ro/~mishoo/"&gt;Mihai Bazon&lt;/a&gt;&lt;/address&gt;
+&lt;!-- hhmts start --&gt; Last modified on Thu Apr  3 20:34:17 2003
+&lt;!-- hhmts end --&gt;
+&lt;!-- doc-lang: English --&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</textarea>
+
+<p />
+
+<input type="submit" name="ok" value="  submit  " />
+<input type="button" name="ins" value="  insert html  " onclick="return insertHTML();" />
+<input type="button" name="hil" value="  highlight text  " onclick="return highlight();" />
+
+<a href="javascript:mySubmit()">submit</a>
+
+<script type="text/javascript">
+function mySubmit() {
+// document.edit.save.value = "yes";
+document.edit.onsubmit(); // workaround browser bugs.
+document.edit.submit();
+};
+</script>
+
+</form>
+
+</body>
+</html>

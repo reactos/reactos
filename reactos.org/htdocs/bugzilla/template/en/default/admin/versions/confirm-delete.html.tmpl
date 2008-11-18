@@ -1,0 +1,102 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the version belongs.
+  # version: object; Bugzilla::Version object representing the
+  #                    version the user wants to delete.
+  #%]
+
+[% title = BLOCK %]Delete Version of Product '[% product.name FILTER html %]'
+  [% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+<table border="1" cellpadding="4" cellspacing="0">
+<tr bgcolor="#6666FF">
+  <th valign="top" align="left">Field</th>
+  <th valign="top" align="left">Value</th>
+</tr>
+<tr>
+  <td valign="top">Version:</td>
+  <td valign="top">[% version.name FILTER html %]</td>
+</tr>
+<tr>
+  <td valign="top">Version of Product:</td>
+  <td valign="top">[% product.name FILTER html %]</td>
+</tr>
+<tr>
+  <td valign="top">[% terms.Bugs %]:</td>
+  <td valign="top">
+[% IF version.bug_count %]
+  <a title="List of [% terms.bugs %] targetted at version '
+           [%- version.name FILTER html %]'"
+     href="buglist.cgi?version=[% version.name FILTER url_quote %]&amp;product=
+          [%- product.name FILTER url_quote %]">
+          [%- version.bug_count FILTER none %]</a>
+[% ELSE %]
+  None
+[% END %]
+  </td>
+</tr>
+</table>
+
+<h2>Confirmation</h2>
+
+[% IF version.bug_count %]
+  <p>
+  Sorry, there
+  [% IF version.bug_count > 1 %] 
+    are [% version.bug_count FILTER none %] [%+ terms.bugs %] 
+  [% ELSE %]
+    is [% version.bug_count FILTER none %] [%+ terms.bug %] 
+  [% END %]
+
+  outstanding for this version. You must move 
+
+  [% IF version.bug_count > 1 %]
+     those [% terms.bugs %] 
+  [% ELSE %]
+     that [% terms.bug %]
+  [% END %]
+  to another version before you can delete this one.
+  </p>
+[% ELSE %]
+
+  <p>Do you really want to delete this version?</p>
+  
+  <form method="post" action="editversions.cgi">
+    <input type="submit" id="delete" value="Yes, delete">
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="product" value="[% product.name FILTER html %]">
+    <input type="hidden" name="version" value="[% version.name FILTER html %]">
+    <input type="hidden" name="token" value="[% token FILTER html %]">
+  </form>
+
+[% END %]
+
+[% PROCESS admin/versions/footer.html.tmpl %]
+
+[% PROCESS global/footer.html.tmpl %] 

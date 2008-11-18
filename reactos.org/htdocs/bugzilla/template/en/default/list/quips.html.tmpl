@@ -1,0 +1,166 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # added_quip: string. Defined if the CGI added a quip data before
+  #                displaying anything; if defined, its value is that quip.
+  # show_quips: boolean. True if we are showing the entire quip list.
+  # quips: list of strings. Defined if and only if show_quips is true.
+  #                List of all quips.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+           title = "$terms.Bugzilla Quip System"
+           header = "Add your own clever headline"
+ %]
+
+[% IF added_quip %]
+  <p>
+    <font color="red">
+      Your quip '<tt>[% added_quip FILTER html %]</tt>' has been added.
+      [% IF Param("quip_list_entry_control") == "moderated" AND !user.groups.admin %]
+        It will be used as soon as it gets approved.
+      [% END %]
+    </font>
+  </p>
+[% END %]
+
+[% IF deleted_quip %]
+  <p>
+    <font color="red">
+      The quip '<tt>[% deleted_quip FILTER html %]</tt>' has been deleted.
+    </font>
+  </p>
+[% END %]
+
+[% IF approved or unapproved %]
+  <p>[% approved.size %] quips approved and [% unapproved.size %] quips unapproved</p>
+[% END %]
+
+
+<p>
+  [% terms.Bugzilla %] will pick a random quip for the headline on each 
+  [% terms.bug %] list.
+</p>
+
+[% IF Param("quip_list_entry_control") != "closed" %]
+  <p>
+    You can extend the quip list. Type in something clever or funny or boring
+    (but not obscene or offensive, please) and bonk on the button.
+    [% IF Param("quip_list_entry_control") == "moderated" AND !user.groups.admin %]
+      Note that your quip has to be approved before it is used.
+    [% END %]
+  </p>
+
+  <form method="post" action="quips.cgi">
+    <input type="hidden" name="action" value="add">
+    <input size="80" name="quip">
+    <p>
+      <input type="submit" id="add" value="Add This Quip">
+    </p>
+  </form>
+[% ELSE %]
+  <p>No new entries may be submitted at this time.
+  </p>
+[% END %]
+
+[% IF show_quips %]
+  [% IF !user.in_group('admin') %]
+    <h2>
+      Existing quips:
+    </h2>
+    <ul>
+      [% FOREACH quipid = quipids %]
+        [% NEXT IF NOT quips.$quipid.approved %]
+        <li>[% quips.$quipid.quip FILTER html %]</li>
+      [% END %]
+    </ul>
+  [% ELSE %]
+    <h2>Edit existing quips:</h2>
+    <p>
+      <strong>Note:</strong> Only approved quips will be shown.
+      If the parameter 'quip_list_entry_control' is set to <q>open</q>, 
+      entered quips are automatically approved.
+    </p>
+    <form name="editform" method="post" action="quips.cgi">
+      <input type="hidden" name="action" value="approve">
+      <table border="1">
+        <thead><tr>
+          <th>Quip</th>
+          <th>Author</th>
+          <th>Action</th>
+          <th>Approved</th>
+        </tr></thead><tbody>
+        [% FOREACH quipid = quipids %]
+          <tr>
+            <td>[% quips.$quipid.quip FILTER html %]</td>
+            <td>
+              [% userid = quips.$quipid.userid  %]
+              [% users.$userid FILTER html      %]
+              [% "Unknown" IF NOT users.$userid %]
+            </td>
+            <td>
+              <a href="quips.cgi?action=delete&amp;quipid=[% quipid FILTER url_quote %]">
+                Delete
+              </a>
+            </td>
+            <td>
+              <input type="checkbox" name="quipid_[% quipid FILTER html %]"
+                     id="quipid_[% quipid FILTER html %]"
+                     [%- ' checked="checked"' IF quips.$quipid.approved %]>
+            </td>
+          </tr>
+        [% END %]
+        </tbody>
+      </table>
+      <script type="text/javascript"><!--
+        var numelements = document.forms.editform.elements.length;
+        function SetCheckboxes(value) {
+          var item;
+          for (var i=0 ; i<numelements ; i++) {
+            item = document.forms.editform.elements[i];
+            item.checked = value;
+          }
+        }
+        document.write(' <input type="button" name="uncheck_all" '
+                      +'value="Uncheck All" onclick="SetCheckboxes(false);">');
+        document.write(' <input type="button" name="check_all" '
+                      +'value="Check All" onclick="SetCheckboxes(true);">');
+        //--></script>
+
+      <input type="submit" id="update" value="Update">
+    </form>
+    <br>
+  [% END %]
+[% ELSE %]
+  <p>
+    Those who like their wisdom in large doses can
+    <a href="quips.cgi?action=show">view
+    [% IF user.in_group('admin') %]
+      and edit
+    [% END %]
+    the whole quip list</a>.
+  </p>
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

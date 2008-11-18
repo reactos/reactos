@@ -1,0 +1,91 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Jacob Steenhagen <jake@bugzilla.org>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[%# Use the current script name. If an empty name is returned,
+  # then we are accessing the home page. %]
+
+[% script_name = cgi.url(Relative => 1) %]
+[% IF !script_name %]
+ [% script_name = "index.cgi" %]
+[% END %]
+
+[%# If SSL is in use, use 'sslbase', else use 'urlbase'. %]
+[% IF Param("sslbase") != "" && Param("ssl") != "never" %]
+  [% script_name = Param("sslbase") _ script_name %]
+[% ELSE %]
+  [% script_name = Param("urlbase") _ script_name %]
+[% END %]
+
+<form name="login" action="[% script_name FILTER html %]" method="POST">
+  <table id="login-small">
+    <tr>
+      <th align="right"><label for="Bugzilla_login">Login:</label></th>
+      <td><input size="20" id="Bugzilla_login" name="Bugzilla_login">
+          [% Param('emailsuffix') FILTER html %]</td>
+    </tr>
+    <tr>
+      <th align="right"><label for="Bugzilla_password">Password:</label></th>
+      <td>
+        <input type="password" size="20" id="Bugzilla_password" name="Bugzilla_password">
+      </td>
+    </tr>
+
+    [% IF Param('rememberlogin') == 'defaulton' || 
+          Param('rememberlogin') == 'defaultoff' %]
+      <tr>
+        <th>&nbsp;</th>
+        <td>
+          <input type="checkbox" id="Bugzilla_remember" name="Bugzilla_remember" value="on"
+                 [% "checked" IF Param('rememberlogin') == "defaulton" %]>
+          <label for="Bugzilla_remember">Remember my Login</label>
+        </td>
+      </tr>
+    [% END %]
+
+    [% IF Param('loginnetmask') < 32 %]
+      <tr>
+        <th>&nbsp;</th>
+        <td>
+          <input type="checkbox" id="Bugzilla_restrictlogin" name="Bugzilla_restrictlogin"
+                 checked="checked">
+          <label for="Bugzilla_restrictlogin">Restrict this session to this IP address
+          (using this option improves security)</label>
+        </td>
+      </tr>
+    [% END %]
+
+    <tr>
+      <td><input type="submit" name="GoAheadAndLogIn" value="Login"
+                 id="log_in"></td>
+
+      [%# For now, password change requests only apply to the DB
+        # verification method #%]
+
+      [% IF user.authorizer.can_change_password %]
+        <td>[ <a href="index.cgi?GoAheadAndLogIn=1#forgot">Forgot my Password</a> ]</td>
+      [% END %]
+    </tr>
+  </table>
+
+</form>
+

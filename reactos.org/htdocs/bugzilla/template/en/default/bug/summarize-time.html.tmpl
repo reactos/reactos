@@ -1,0 +1,321 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Christian Reis <kiko@async.com.br>
+  #%]
+
+[% USE date %]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% title = "Time Summary " %]
+[% IF do_depends %]
+    [% title = title _ "for " %]
+    [% header = title _ "$terms.Bug $ids.0" FILTER bug_link(ids.0) FILTER none %]
+    [% title = title _ "$terms.Bug $ids.0: " %]
+    [% header = (header _ " (and $terms.bugs blocking it)") IF do_depends %]
+[% ELSE %]
+    [% title = title _ "($ids.size $terms.bugs selected)" %]
+    [% header = title %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl 
+    title = title 
+    header = header 
+    style_urls = ["skins/standard/summarize-time.css"]
+    %]
+
+[% IF ids.size == 0 %]
+
+    <p>No [% terms.bugs %] specified or visible.</p>
+
+[% ELSE %]
+
+    [% INCLUDE query_form %]
+
+    [% IF do_report %]
+
+        [% global.grand_total = 0 %]
+
+        [% FOREACH workdata = part_list %]
+            [% part = parts.shift %]
+            <div align="right">
+              <h4 style="padding-right: 2em; margin: 0;">
+            [% IF part.0 or part.1 %]
+               [% part.0 OR "Up" FILTER html %] to [% part.1 OR "now" FILTER html %]
+            [% ELSE %]
+               Full summary (no period specified)
+            [% END %]
+              </h4>
+            </div>
+            [% IF group_by == "number" %]
+                [% INCLUDE number_report %]
+            [% ELSE %]
+                [% INCLUDE owner_report %]
+            [% END %]
+        [% END %]
+
+        [% IF monthly %]
+            <h4 style="margin: 0">Total of [% global.grand_total FILTER format("%.2f") %] hours worked</h4>
+            <hr noshade size="1">
+        [% END %]
+
+        [% IF null.keys.size > 0 %] 
+            [% INCLUDE inactive_report %]
+            <h4 style="margin: 0">Total of [% null.keys.size %]
+                inactive [% terms.bugs %]</h4>
+        [% END %]
+
+    [% END %]
+
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]
+
+[%#
+  #
+  # Developer reporting
+  #
+  #%]
+
+[% BLOCK owner_report %]
+    [% global.total = 0 global.bug_count = {} global.owner_count = {}%]
+    <table cellpadding="4" cellspacing="0" width="90%" class="realitems owner">
+        [% FOREACH owner = workdata.keys.sort %]
+            [% INCLUDE do_one_owner owner=owner ownerdata=workdata.$owner
+                                    detailed=detailed %]
+        [% END %]
+
+    [% additional = "$global.owner_count.size developers @
+                     $global.bug_count.size $terms.bugs" %] 
+    [% INCLUDE section_total colspan=3 additional=additional %]
+    </table>
+[% END %]
+
+[% BLOCK do_one_owner %]
+    [% global.owner_count.$owner = 1 %]
+    <tr><td colspan="5" class="owner_header">
+        <b>[% owner FILTER html %]</b>
+    </td></tr>
+    [% col = 0 subtotal = 0%]
+    [% FOREACH bugdata=ownerdata.nsort("bug_id") %]
+        [% bug_id = bugdata.bug_id %]
+        [% global.bug_count.$bug_id = 1 %]
+        [% IF detailed %]
+            [%# XXX oy what a hack %]
+            [% timerow = '<td width="100" align="right" valign="top">' _ bugdata.total_time _ '</td>' %]
+            [% INCLUDE bug_header cid=col id=bug_id bug_status=bugdata.bug_status
+                                  short_desc=bugdata.short_desc extra=timerow %]
+             [% col = col + 1 %]
+        [% END %]
+        [% subtotal = subtotal + bugdata.total_time %]
+    [% END %]
+    <tr>
+      <td colspan="3">&nbsp;</td>
+      <td align="right">
+      <b>Total</b>:
+      </td>
+      <td align="right" class="subtotal" width="100">
+        <b>[% subtotal FILTER format("%.2f") %]</b></td>
+        [% global.total = global.total + subtotal %]
+    </tr>
+[% END %]
+
+[%#
+  #
+  # Bug Number reporting
+  #
+  #%]
+
+[% BLOCK number_report %]
+    [% global.total = 0 global.owner_count = {} global.bug_count = {} %]
+
+    <table cellpadding="4" cellspacing="0" width="90%" class="realitems number">
+    [% keys = sort_bug_keys(workdata.keys) %]
+    [% FOREACH bug = keys %]
+        [% INCLUDE do_one_bug bug=bug bugdata=workdata.$bug
+                              detailed=detailed %]
+    [% END %]
+
+    [% additional = "$global.bug_count.size $terms.bugs &amp; 
+                     $global.owner_count.size developers" %]
+    [% INCLUDE section_total additional=additional colspan=2 %]
+    </table>
+[% END %]
+
+[% BLOCK do_one_bug %]
+    [% subtotal = 0.00 cid = 0 %]
+
+    [%# hack apart the ID and summary. Sad. %]
+    [% items = bug.split(";") %]
+    [% id = items.shift %]
+    [% status = items.shift %]
+    [% global.bug_count.$id = 1 %]
+    [% INCLUDE bug_header id=id bug_status=status short_desc=items.join(";") %]
+
+    [% FOREACH owner = bugdata.sort("login_name") %]
+        [% work_time = owner.total_time %]
+        [% subtotal = subtotal + work_time %]
+        [% login_name = owner.login_name %]
+        [% global.owner_count.$login_name = 1 %]
+        [% IF detailed %] 
+            [% cid = cid + 1 %]
+            <tr class="owner_header[% 2 FILTER none IF cid % 2 %]">
+                <td>&nbsp;</td>
+                <td colspan="2"><b>[% login_name FILTER html %]</b></td>
+                <td align="right">
+                [% work_time FILTER format("%.2f") %]</td>
+            </tr>
+        [% END %]
+    [% END %]
+    <tr>
+      <td colspan="2">&nbsp;</td>
+      <td align="right">
+      <b>Total</b>:
+      </td>
+      <td align="right" class="subtotal" width="100">
+        <b>[% subtotal FILTER format("%.2f") %]</b>
+      </td></tr>
+      [% global.total = global.total + subtotal %]
+[% END %]
+
+[% BLOCK bug_header %]
+    <tr class="bug_header[% '2' IF cid % 2 %]">
+        <td width="10" valign="top">
+        [% INCLUDE buglink id=id %]</td>
+        <td width="10"><b>[% status_descs.${bug_status} FILTER html %]</b></td>
+        <td colspan="2">[% short_desc FILTER html %]</td>
+        [% extra FILTER none %]
+    </tr>
+[% END %]
+
+
+[% BLOCK inactive_report %]
+    <h3>Inactive [% terms.bugs %]</h3>
+    <table cellpadding="4" cellspacing="0" width="90%" class="zeroitems">
+    [% cid = 0 %]
+    [% FOREACH bug_id = null.keys.nsort %]
+        [% INCLUDE bug_header id=bug_id bug_status=null.$bug_id.1 
+                   short_desc=null.$bug_id.0 cid=cid %]
+        [% cid = cid + 1 %]
+    [% END %]
+    </table>
+[% END %]
+
+
+[% BLOCK section_total %]
+    [% IF global.total > 0 %]
+    <tr class="section_total">
+        <td align="left" width="10">
+        <b>Totals</b></td>
+    <td colspan="[% colspan FILTER none %]" align="right"><b>[% additional FILTER none %]</b></td>
+    <td align="right">&nbsp;&nbsp; 
+        <b>[% global.total FILTER format("%.2f") %]</b>
+    </td></tr>
+    [% ELSE %]
+        <tr><td>
+        No time allocated during the specified period.
+        </td></tr>
+    [% END %]
+    [% global.grand_total = global.grand_total + global.total %]
+[% END %]
+
+[%#
+  #
+  # The query form
+  #
+  #%]
+
+[% BLOCK query_form %]
+<hr noshade size=1>
+<form method="post" name="summary" style="display: inline" action="summarize_time.cgi">
+<input type="hidden" name="do_depends" value="[% do_depends FILTER html %]">
+<input type="hidden" name="id" value="[% ids.join(",") FILTER html %]">
+<input type="hidden" name="do_report" value="1">
+
+[% IF warn_swap_dates %]
+    <h4 style="border: 1px solid red; margin: 1em; padding: 0.5em">The
+    end date specified occurs before the start date, which doesn't
+    make sense; the dates below have therefore been swapped.</h4>
+[% END %]
+
+<table>
+<tr>
+<td align="right">
+  <b><label accesskey="s" 
+             for="start_date">Period <u>s</u>tarting</label></b>: 
+</td><td colspan="3">
+  <input type="text" id="start_date" name="start_date" size="11"
+  align="right" value="[% start_date FILTER html %]" maxlength="10">
+  &nbsp;
+  <b>and <label accesskey="e" for="end_date"><u>e</u>nding</label></b>: 
+  <input type="text" name="end_date" size="11" id="end_date"
+  align="right" value ="[% end_date FILTER html %]" maxlength="10">
+</td><td align="right">
+  <input type="submit" id="summarize" value="Summarize">
+</td></tr>
+<tr>
+<td>&nbsp;</td><td colspan="4">
+  <small>(Dates are optional, and in YYYY-MM-DD format)</small>
+</td>
+<tr><td align="right">
+  <b>Group by</b>:
+</td><td colspan="2">
+  <input type="radio" name="group_by" id="number" value="number" [%
+    'checked="checked"' IF group_by == "number"
+  %]><label 
+  for="number" accesskey="n">[% terms.Bug %] <u>N</u>umber</label>
+  <input type="radio" name="group_by" id="owner" value="owner" [%
+    'checked="checked"' IF group_by == "owner"
+  %]><label 
+  for="owner" accesskey="d"><u>D</u>eveloper</label>
+</td><td colspan="2">
+  <label for="ctype"><b>Format</b></label>: <select name="ctype" id="ctype">
+    <option value="html">HTML Report</option>
+  </select>
+</td></tr><tr>
+<td>&nbsp;</td><td colspan="4">
+  <input type="checkbox" name="monthly" [% 'checked="checked"' IF
+      monthly %] id="monthly">
+  <label for="monthly" accesskey="m">Split by <u>m</u>onth</label>
+  [%# XXX: allow splitting by other intervals %]
+  &nbsp;
+  <input type="checkbox" name="detailed" [% 'checked="checked"' IF
+      detailed %] id="detailed">
+  <label for="detailed" accesskey="t">De<u>t</u>ailed summaries</label>
+  &nbsp;
+  <input type="checkbox" name="inactive" [% 'checked="checked"' IF
+      inactive %] id="inactive">
+  <label for="inactive" accesskey="i">Also show <u>i</u>nactive
+  [%+ terms.bugs %]</label>
+</td>
+</tr></table>
+
+</form>
+<script type="application/x-javascript">
+<!--
+   document.forms['summary'].start_date.focus()
+//--></script>
+<hr noshade size=1>
+[% END %]
+
+[%#
+  #
+  # Utility
+  #
+  #%]
+
+[% BLOCK buglink %]
+    <a href="show_bug.cgi?id=[% id FILTER url_quote %]"><b>[% terms.Bug %]&nbsp;[% id FILTER html %]</b></a>
+[% END %]
+

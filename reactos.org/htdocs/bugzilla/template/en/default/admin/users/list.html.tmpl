@@ -1,0 +1,118 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  #
+  # listselectionvalues: selection values to recreate the current user list.
+  # editusers:           is viewing user member of editusers?
+  # users:               list of user information (id, login_name, realname,
+  #                      disabledtext).
+  #%]
+
+[% PROCESS global/header.html.tmpl
+  title = "Select user"
+  style_urls = ['skins/standard/editusers.css']
+%]
+
+[% PROCESS admin/users/listselectvars.html.tmpl
+  listselectionvalues = listselectionvalues
+%]
+
+[% listselectionurlparams = INCLUDE listselectionurlparams %]
+
+[% columns =
+  [{name               => 'login_name'
+    heading            => 'Edit user...'
+    contentlink        => 'editusers.cgi?action=edit&amp;userid=%%userid%%' _
+                          listselectionurlparams
+   }
+   {name               => 'realname'
+    heading            => 'Real name'
+   }
+   {heading            => 'User Account Log'
+    content            => 'View'
+    contentlink        => 'editusers.cgi?action=activity' _
+                                  '&amp;userid=%%userid%%' _
+                                  listselectionurlparams
+   }
+  ]
+%]
+
+[% IF Param('allowuserdeletion') && editusers %]
+  [% columns.push({heading     => 'Action'
+                   content     => 'Delete'
+                   contentlink => 'editusers.cgi?action=del' _
+                                  '&amp;userid=%%userid%%' _
+                                  listselectionurlparams
+                  }
+                 )
+  %]
+[% END %]
+
+[%# Disabled users are crossed out. Missing realnames are noticed in red. %]
+[% overrides.login_name = [] %]
+[% overrides.realname = [] %]
+
+[% FOREACH thisuser = users %]
+  [% IF !thisuser.realname %]
+    [%# We cannot pass one class now and one class later. %]
+    [% SET classes = (thisuser.disabledtext ? "bz_inactive missing" : "missing") %]
+    [% overrides.realname.push({
+        match_value      => "$thisuser.login_name"
+        match_field      => 'login_name'
+        content          => "missing"
+        override_content => 1
+        class            => "$classes"
+        override_class   => 1 })
+    %]
+  [% END %]
+
+  [% IF thisuser.disabledtext %]
+    [% overrides.login_name.push({
+        match_value    => "$thisuser.login_name"
+        match_field    => 'login_name'
+        class          => "bz_inactive"
+        override_class => 1 })
+    %]
+
+    [% overrides.realname.push({
+        match_value    => "$thisuser.login_name"
+        match_field    => 'login_name'
+        class          => "bz_inactive"
+        override_class => 1 })
+    %]
+  [% END %]
+[% END %]
+
+<p>[% users.size %] user[% "s" UNLESS users.size == 1 %] found.</p>
+
+[% PROCESS admin/table.html.tmpl
+  columns = columns
+  data    = users
+  overrides = overrides
+%]
+
+<p>
+  If you do not wish to modify a user account at this time, you can
+  <a href="editusers.cgi">find other users</a>
+  [% IF editusers %]
+    or
+    <a href="editusers.cgi?action=add[% INCLUDE listselectionurlparams %]">add
+    a new user</a>
+  [% END %].
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

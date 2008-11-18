@@ -1,0 +1,102 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% filtered_summary = bugsummary FILTER html %]
+[% header = BLOCK %]View All Attachments for
+  [%+ "$terms.Bug $bug.bug_id" FILTER bug_link(bug.bug_id) FILTER none %][% END %]
+
+[% title = BLOCK %]
+  View All Attachments for [% terms.Bug %] [%+ bug.bug_id FILTER html %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  header = header
+  subheader = filtered_summary
+%]
+
+<br>
+
+[% FOREACH a = attachments %]
+
+  <div align="center">
+  <table class="attachment_info" cellspacing="0" cellpadding="4" border="1" width="75%">
+    <tr>
+      <td valign="top" bgcolor="#cccccc" colspan="6">
+        <big><b>Attachment #[% a.id %]</b></big>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">
+        [% a.description FILTER html FILTER obsolete(a.isobsolete) %]
+      </td>
+
+      <td valign="top">
+        [% IF a.ispatch %]
+          <i>patch</i>
+        [% ELSE %]
+          [% a.contenttype FILTER html %]
+        [% END %]
+      </td>
+
+      <td valign="top">[% a.attached FILTER time %]</td>
+      <td valign="top">[% a.datasize FILTER unitconvert %]</td>
+
+      <td valign="top">
+        [% IF a.flags.size == 0 %]
+          <i>no flags</i>
+        [% ELSE %]
+          [% FOREACH flag = a.flags %]
+            [% flag.setter.nick FILTER html %]:
+            [%+ flag.type.name FILTER html %][% flag.status %]
+            [% IF flag.status == "?" && flag.requestee %]
+              ([% flag.requestee.nick FILTER html %])
+            [% END %]
+            [% ", " IF !loop.last %]
+          [% END %]
+        [% END %]
+      </td>
+
+      <td valign="top">
+        <a href="attachment.cgi?id=[% a.id %]&amp;action=edit">Details</a>
+      </td>
+    </tr>
+  </table>
+
+  [% IF a.isviewable %]
+    <iframe src="attachment.cgi?id=[% a.id %]" width="75%" height="350">
+      <b>You cannot view the attachment on this page because your browser does not support IFRAMEs.
+      <a href="attachment.cgi?id=[% a.id %]">View the attachment on a separate page</a>.</b>
+    </iframe>
+  [% ELSE %]
+    <p><b>
+      Attachment cannot be viewed because its MIME type is not text/*, image/*, or application/vnd.mozilla.*.
+      <a href="attachment.cgi?id=[% a.id %]">Download the attachment instead</a>.
+    </b></p>
+  [% END %]
+  </div>
+
+  <br><br>
+
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

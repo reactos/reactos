@@ -1,0 +1,63 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="ucp" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<!-- IF S_FORCE_PASSWORD -->
+		<p>{L_FORCE_PASSWORD_EXPLAIN}</p>
+	<!-- ENDIF -->
+
+	<fieldset>
+	<!-- IF ERROR --><p class="error">{ERROR}</p><!-- ENDIF -->
+	<dl>
+		<dt><label <!-- IF S_CHANGE_USERNAME -->for="username"<!-- ENDIF -->>{L_USERNAME}:</label><br /><span>{L_USERNAME_EXPLAIN}</span></dt>
+		<dd><!-- IF S_CHANGE_USERNAME --><input type="text" name="username" id="username" value="{USERNAME}" class="inputbox" title="{L_USERNAME}" /><!-- ELSE --><strong>{USERNAME}</strong><!-- ENDIF --></dd>
+	</dl>
+	<dl>
+		<dt><label for="email">{L_EMAIL_ADDRESS}:</label></dt>
+		<dd><!-- IF S_CHANGE_EMAIL --><input type="text" name="email" id="email" maxlength="100" value="{EMAIL}" class="inputbox" title="{L_EMAIL_ADDRESS}" /><!-- ELSE --><strong>{EMAIL}</strong><!-- ENDIF --></dd>
+	</dl>
+	<!-- IF S_CHANGE_EMAIL -->
+		<dl>
+			<dt><label for="email_confirm">{L_CONFIRM_EMAIL}:</label><br /><span>{L_CONFIRM_EMAIL_EXPLAIN}</span></dt>
+			<dd><input type="text" name="email_confirm" id="email_confirm" maxlength="100" value="{CONFIRM_EMAIL}" class="inputbox" title="{L_CONFIRM_EMAIL}" /></dd>
+		</dl>
+	<!-- ENDIF -->
+	<!-- IF S_CHANGE_PASSWORD -->
+		<dl>
+			<dt><label for="new_password">{L_NEW_PASSWORD}:</label><br /><span>{L_CHANGE_PASSWORD_EXPLAIN}</span></dt>
+			<dd><input type="password" name="new_password" id="new_password" maxlength="255" value="{NEW_PASSWORD}" class="inputbox" title="{L_CHANGE_PASSWORD}" /></dd>
+		</dl>
+		<dl>
+			<dt><label for="password_confirm">{L_CONFIRM_PASSWORD}:</label><br /><span>{L_CONFIRM_PASSWORD_EXPLAIN}</span></dt>
+			<dd><input type="password" name="password_confirm" id="password_confirm" maxlength="255" value="{PASSWORD_CONFIRM}" class="inputbox" title="{L_CONFIRM_PASSWORD}" /></dd>
+		</dl>
+	<!-- ENDIF -->
+	</fieldset>
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<fieldset>
+	<dl>
+		<dt><label for="cur_password">{L_CURRENT_PASSWORD}:</label><br /><span>{L_CURRENT_PASSWORD_EXPLAIN}</span></dt>
+		<dd><input type="password" name="cur_password" id="cur_password" maxlength="255" value="{CUR_PASSWORD}" class="inputbox" title="{L_CURRENT_PASSWORD}" /></dd>
+	</dl>
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<fieldset class="submit-buttons">
+	{S_HIDDEN_FIELDS}<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp; 
+	<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<!-- INCLUDE ucp_footer.html -->

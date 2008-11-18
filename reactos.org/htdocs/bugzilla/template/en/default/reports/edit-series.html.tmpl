@@ -1,0 +1,74 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[% title = "Edit Series" %]
+[% subheader = BLOCK %]
+  [% default.category FILTER html %] / 
+  [%+ default.subcategory FILTER html %] /
+  [%+ default.name FILTER html %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% IF changes_saved %]
+  <p>
+    <font color="red">
+      Series updated.
+    </font>
+  </p>
+[% END %]
+
+<form method="get" action="chart.cgi" name="chartform">
+  
+  [% PROCESS reports/series.html.tmpl 
+     button_name = "Change Data Set" %]
+  <input type="hidden" name="action" value="alter">
+  
+  [% IF default.series_id %]
+    <input type="hidden" name="series_id" value="[% default.series_id %]">
+  [% END %]
+</form>
+
+<p>
+  <b>Creator</b>: 
+  [% IF creator.email %]
+    <a href="mailto:[% creator.email FILTER html %]">
+    [% creator.email FILTER html %]</a>
+  [% ELSE %]
+    (automatically created by [% terms.Bugzilla %])
+  [% END %]
+</p>
+
+<p>Note: it is not yet possible to edit the search associated with this data
+set.
+</p>
+
+<p>
+  <a href="query.cgi?[% default.query FILTER html %]">View 
+    series search parameters</a> |
+  <a href="buglist.cgi?cmdtype=dorem&amp;namedcmd=
+    [% default.category FILTER url_quote %]-
+    [% default.subcategory FILTER url_quote %]-
+    [% default.name FILTER url_quote %]&amp;remaction=runseries&amp;series_id=
+    [% default.series_id %]">Run series search</a>
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

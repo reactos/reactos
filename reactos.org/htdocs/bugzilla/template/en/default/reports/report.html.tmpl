@@ -1,0 +1,179 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+  
+[%# INTERFACE:
+  # col_field: string. Name of the field being plotted as columns.
+  # row_field: string. Name of the field being plotted as rows.
+  # tbl_field: string. Name of the field being plotted as tables.
+  # tbl_names: array. List of values for the field being plotted as tables.
+  # time: integer. Seconds since the epoch.
+  # data: <depends on format>. Data to plot. 
+  # format: string. Format of the individual reports.
+  # width: integer. For image charts, height of the image.
+  # height: integer. For image charts, width of the image.
+  # imagebase: string. Base URL for chart image.
+  # switchbase: string. Base URL for format switching.
+  # cumulate: boolean. For bar/line charts, whether to cumulate data sets.
+  #%]
+
+[% DEFAULT width = 600
+           height = 350 
+%]
+
+[% IF min_width AND width < min_width %]
+  [% width = min_width %]
+[% END %]
+
+[%# We ignore row_field for pie charts %]
+[% IF format == "pie" %]
+  [% row_field = "" %]
+[% END %]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% tbl_field_disp = field_descs.$tbl_field || tbl_field %]
+[% col_field_disp = field_descs.$col_field || col_field %]
+[% row_field_disp = field_descs.$row_field || row_field %]
+[% switchbase     = switchbase FILTER html %]
+
+[% title = BLOCK %]
+  Report: 
+  [% IF tbl_field %]
+    [% tbl_field_disp FILTER html %]
+  [% END %]
+  [% " / " IF tbl_field AND (col_field OR row_field) %]
+  [% IF row_field %]
+    [% row_field_disp FILTER html %]
+  [% END %]
+  [% " / " IF col_field AND row_field %]
+  [% col_field_disp FILTER html %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl 
+  style = "
+    .t1     { background-color: #ffffff } /* white       */
+    .t2     { background-color: #dfefff } /* light blue  */
+    .t3     { background-color: #dddddd } /* grey        */
+    .t4     { background-color: #c3d3ed } /* darker blue */
+    .ttotal { background-color: #cfffdf } /* light green */
+  "
+  header_addl_info = time2str("%Y-%m-%d %H:%M:%S", time)
+%]
+
+[% IF debug %]
+  <p>[% query FILTER html %]</p>
+[% END %]
+
+<div align="center">
+
+  [% FOREACH tbl = tbl_names %]    
+    [% IF tbl == "-total-" %]
+      [% tbl_disp = "Total" %]
+    [% ELSE %]
+      [% tbl_disp = tbl %]
+    [% END %]
+
+    [% IF format == "table" %]
+      [% PROCESS "reports/report-table.html.tmpl" %]
+    [% ELSE %]
+      [% IF tbl %]
+        <h2>[% tbl_disp FILTER html %]</h2>
+      [% END %]
+      
+      [% imageurl = BLOCK %]report.cgi?[% imagebase FILTER html %]&amp;format=
+        [% format FILTER url_quote %]&amp;ctype=png&amp;action=plot&amp;
+        [% IF tbl_field %]
+          [% IF tbl != "-total-" %]
+            [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %]&amp;
+          [% ELSE %]
+            [% FOREACH tblname = tbl_names %]
+              [% IF tblname != "-total-" %]
+                [% tbl_field FILTER url_quote %]=[% tblname FILTER url_quote %]&amp;
+              [% END %]
+            [% END %]
+          [% END %]
+        [% END %]width=[% width %]&amp;height=[% height %]      
+      [% END %]
+      
+      <img alt="Graphical report results" src="[% imageurl %]"
+        width="[% width %]" height="[% height %]">
+    [% END %]
+    <br>
+  [% END %]  
+
+  <table>
+    <tr>
+      <td>
+        [% formats = [ { name => "pie",   description => "Pie" },
+                       { name => "bar",   description => "Bar" },
+                       { name => "line",  description => "Line" },
+                       { name => "table", description => "Table" } ] %]
+
+        [% formaturl = "report.cgi?$switchbase&amp;width=$width" _ 
+                       "&amp;height=$height&amp;action=wrap" %]
+        [% FOREACH other_format = formats %]
+          [% NEXT IF other_format.name == "pie" AND row_field AND col_field %]
+          [% UNLESS other_format.name == format %]
+            <a href="[% formaturl %]&amp;format=[% other_format.name %]">
+          [% END %]
+          [% other_format.description FILTER html %]
+          [% "</a>" UNLESS other_format.name == format %] | 
+        [% END %]
+        <a href="[% formaturl %]&amp;ctype=csv&amp;format=table">CSV</a> 
+      </td>
+      
+      [% IF format != "table" %]
+        <td>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </td>
+
+        [% sizeurl = BLOCK %]report.cgi?
+          [% switchbase %]&amp;action=wrap&amp;format=
+          [% format FILTER html %][% END %]
+        <td align="center">
+          <a href="[% sizeurl %]&amp;width=[% width %]&amp;height=
+                   [% height + 100 %]">Taller</a><br>
+          <a href="[% sizeurl %]&amp;width=[% width - 100 %]&amp;height=
+                   [% height %]">Thinner</a> * 
+          <a href="[% sizeurl %]&amp;width=[% width + 100 %]&amp;height=
+                   [% height %]">Fatter</a>&nbsp;&nbsp;&nbsp;&nbsp;<br>
+          <a href="[% sizeurl %]&amp;width=[% width %]&amp;height=
+                   [% height - 100 %]">Shorter</a><br>
+        </td>
+      [% END %]
+    </tr>
+  </table>
+
+  <p>
+    [% IF format == "table" %]
+      <a href="query.cgi?[% switchbase %]&amp;format=report-table">Edit 
+      this report</a>
+    [% ELSE %]
+      <a href="query.cgi?[% switchbase %]&amp;chart_format=
+        [% format %]&amp;format=report-graph&amp;cumulate=[% cumulate %]">
+        Edit this report
+      </a>
+    [% END %]
+  </p>
+ 
+</div>
+
+[% PROCESS global/footer.html.tmpl %]

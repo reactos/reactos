@@ -1,0 +1,97 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF MODE eq 'restore' -->
+	<h1>{L_ACP_RESTORE}</h1>
+
+	<p>{L_ACP_RESTORE_EXPLAIN}</p>
+
+	<!-- IF .files -->
+	<form id="acp_backup" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_RESTORE_OPTIONS}</legend>
+	<dl>
+		<dt><label for="file">{L_SELECT_FILE}:</label></dt>
+		<dd><select id="file" name="file" size="10"><!-- BEGIN files --><option value="{files.FILE}"<!-- IF files.S_LAST_ROW --> selected="selected"<!-- ENDIF -->>{files.NAME}</option><!-- END files --></select></dd>
+	</dl>
+
+	<p class="submit-buttons">
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_START_RESTORE}" />&nbsp;
+		<input class="button2" type="submit" id="delete" name="delete" value="{L_DELETE_BACKUP}" />&nbsp;
+		<input class="button2" type="submit" id="download" name="download" value="{L_DOWNLOAD_BACKUP}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+	<!-- ELSE -->
+		<div class="errorbox">
+			<p>{L_ACP_NO_ITEMS}</p>
+		</div>
+	<!-- ENDIF -->
+
+<!-- ELSE -->
+	<h1>{L_ACP_BACKUP}</h1>
+
+	<p>{L_ACP_BACKUP_EXPLAIN}</p>
+
+	<script type="text/javascript">
+	// <![CDATA[
+
+		function selector(bool)
+		{
+			var table = document.getElementById('table');
+
+			for (var i = 0; i < table.options.length; i++)
+			{
+				table.options[i].selected = bool;
+			}
+		}
+
+	// ]]>
+	</script>
+
+	<form id="acp_backup" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_BACKUP_OPTIONS}</legend>
+	<dl>
+		<dt><label for="type">{L_BACKUP_TYPE}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="type" value="full" id="type" checked="checked" /> {L_FULL_BACKUP}</label>
+			<label><input type="radio" name="type" class="radio" value="structure" /> {L_STRUCTURE_ONLY}</label>
+			<label><input type="radio" class="radio" name="type" value="data" /> {L_DATA_ONLY}</label></dd>
+	</dl>
+	<dl>
+		<dt><label for="method">{L_FILE_TYPE}:</label></dt>
+		<dd><!-- BEGIN methods -->
+		<label><input name="method"<!-- IF methods.S_FIRST_ROW --> id="method" checked="checked"<!-- ENDIF --> type="radio" class="radio" value="{methods.TYPE}" /> {methods.TYPE}</label>
+		<!-- END methods --></dd>
+	</dl>
+	<dl>
+		<dt><label for="where">{L_ACTION}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="where" value="store_and_download" id="where" checked="checked" /> {L_STORE_AND_DOWNLOAD}</label>
+			<label><input type="radio" class="radio" name="where" value="store" /> {L_STORE_LOCAL}</label>
+			<label><input type="radio" class="radio" name="where" value="download" /> {L_DOWNLOAD}</label></dd>
+	</dl>
+	<dl>
+		<dt><label for="table">{L_TABLE_SELECT}:</label></dt>
+		<dd><select id="table" name="table[]" size="10" multiple="multiple">
+		<!-- BEGIN tables -->
+			<option value="{tables.TABLE}">{tables.TABLE}</option>
+		<!-- END tables -->
+		</select></dd>
+		<dd><a href="#" onclick="selector(true); return false;">{L_SELECT_ALL}</a> :: <a href="#" onclick="selector(false); return false;">{L_DESELECT_ALL}</a></dd>
+	</dl>
+
+	<p class="submit-buttons">
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

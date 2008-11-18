@@ -1,0 +1,69 @@
+body, p, br, th, td {
+ font-family: "Verdana", "Arial", "Geneva";
+ font-size: 12px;
+}
+
+th {
+ font-weight: bold;
+ background: black;
+ color: white;
+}
+
+h1 {
+ font-size: 30px;
+ font-family: "Arial Narrow", "N Helvectica Narrow", "Tahoma";
+ font-weight: bold;
+}
+
+h2 {
+ font-size: 24px;
+ font-family: "Arial Narrow", "N Helvectica Narrow", "Tahoma";
+ font-weight: bold;
+}
+
+h3 {
+ font-size: 18px;
+ font-family: "Arial Narrow", "N Helvectica Narrow", "Tahoma";
+ font-weight: bold;
+}
+
+h4 {
+ font-size: 16px;
+ font-family: "Arial Narrow", "N Helvectica Narrow", "Tahoma";
+ font-weight: bold;
+}
+
+h5 {
+ font-size: 14px;
+ font-family: "Arial Narrow", "N Helvectica Narrow", "Tahoma";
+ font-weight: bold;
+}
+
+h6 {
+ font-size: 12px;
+ font-family: "Arial Narrow", "N Helvectica Narrow", "Tahoma";
+ font-weight: bold;
+}
+
+a:link {
+ color: blue;
+ text-decoration: none;
+}
+
+a:visited {
+ color: blue;
+ text-decoration: none;
+}
+
+a:hover {
+ color: red;
+ text-decoration: underline;
+}
+
+pre {
+ border: 1px dashed #003366;
+ background: #eeeeee;
+ padding: 6px;
+ font-family: Profont, Monaco, Courier, "Andale Mono", monospace;
+}
+

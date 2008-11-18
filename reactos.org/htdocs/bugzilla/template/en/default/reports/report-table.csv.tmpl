@@ -1,0 +1,73 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+[%# INTERFACE:
+  # See report-table.html.tmpl.
+  #%]
+[% PROCESS global/variables.none.tmpl %]
+
+[% colsepchar = user.settings.csv_colsepchar.value %]
+
+[% num_bugs = BLOCK %]Number of [% terms.bugs %][% END %]
+[% tbl_field_disp = field_descs.$tbl_field || tbl_field %]
+[% col_field_disp = field_descs.$col_field || col_field %]
+[% row_field_disp = field_descs.$row_field || row_field %]
+
+[% IF tbl_field %]
+  [% tbl_field_disp FILTER csv %]: [% tbl FILTER csv %]
+[% END %]
+[% IF row_field %]
+  [% row_field_disp FILTER csv %]
+[% END %]
+[% " / " IF col_field AND row_field %]
+[% col_field_disp FILTER csv %]
+[% IF col_field -%]
+  [% FOREACH col = col_names -%]
+    [% colsepchar %]
+    [% IF col_field == 'bug_status' %]
+      [% status_descs.$col FILTER csv -%]
+    [% ELSIF col_field == 'resolution' %]
+      [% get_resolution(col) FILTER csv -%]
+    [% ELSE %]
+      [% col FILTER csv -%]
+    [% END %]
+  [% END -%]
+[% ELSE -%]
+  [% colsepchar %][% num_bugs FILTER csv %]
+[% END %]
+
+[% FOREACH row = row_names %]
+  [% IF row_field == 'bug_status' %]
+    [% status_descs.$row FILTER csv -%]
+  [% ELSIF row_field == 'resolution' %]
+    [% get_resolution(row) FILTER csv -%]
+  [% ELSE %]
+    [% row FILTER csv -%]
+  [% END %]
+  [% FOREACH col = col_names %]
+    [% colsepchar %]
+    [% IF data.$tbl AND data.$tbl.$col AND data.$tbl.$col.$row %]
+      [% data.$tbl.$col.$row -%]
+    [% ELSE %]
+      [% -%]0
+    [% END %]
+  [% END %]
+
+[% END %]

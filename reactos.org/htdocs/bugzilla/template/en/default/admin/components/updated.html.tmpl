@@ -1,0 +1,98 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Akamai Technologies <bugzilla-dev@akamai.com>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  #
+  # 'updated_XXX' variables are booleans, and are defined if the
+  # 'XXX' field was updated during the edit just being handled.
+  #
+  # updated_name: the name of the component updated
+  #
+  # updated_description: the component description updated
+  #
+  # updated_initialowner: the default assignee updated
+  #
+  # updated_initialqacontact: the default qa contact updated
+  #
+  # updated_initialcc: the default initial cc list
+  #
+  # comp: object; Bugzilla::Component object representing the component 
+  #               user updated.
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the component belongs.
+  #
+  # initial_cc_names: a comma-separated list of the login names of
+  #                   the Initial CC, if it was updated.
+  #%]
+  
+[% title = BLOCK %]Updating Component '[% comp.name FILTER html %]' of Product
+                   '[% product.name FILTER html %]'[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+[% IF updated_description %]
+  <table>
+    <tr>
+      <td>Updated description to:</td>
+      <td>'[% comp.description FILTER html_light %]'</td>
+    </tr>
+  </table>
+[% END %]
+
+[% IF updated_initialowner %]
+  <p>Updated Default Assignee to: '[% comp.default_assignee.login FILTER html %]'.</p>
+[% END %]
+
+[% IF updated_initialqacontact %]
+  <p>
+  [% IF comp.default_qa_contact.id %]
+    Updated Default QA Contact to '[% comp.default_qa_contact.login FILTER html %]'.
+  [% ELSE %]
+    Removed Default QA Contact.
+  [% END %]
+  </p>
+[% END %]
+
+[% IF updated_name %]
+  <p>Updated Component name to: '[% comp.name FILTER html %]'.</p>
+[% END %]
+
+[% IF updated_initialcc %]
+  [% IF initial_cc_names %]
+    <p>Updated Default CC list to:
+      '[% initial_cc_names FILTER html %]'.</p>
+  [% ELSE %]
+    <p>Removed the Default CC list.</p>
+  [% END %]
+[% END %]
+
+[% UNLESS updated_description || updated_initialowner || 
+          updated_initialqacontact || updated_name  ||
+          updated_initialcc %]
+  <p>Nothing changed for component '[% comp.name FILTER html %]'.</p>
+[% END %]
+
+[% PROCESS admin/components/footer.html.tmpl %]
+
+[% PROCESS global/footer.html.tmpl %]

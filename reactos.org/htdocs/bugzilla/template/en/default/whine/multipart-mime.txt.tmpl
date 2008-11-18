@@ -1,0 +1,53 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Erik Stambaugh <erik@dasbistro.com>
+  #%]
+
+[%# INTERFACE:
+  # subject: subject line of message
+  # alternatives: array of hashes containing:
+  #     type: MIME type
+  #     content: verbatim content
+  # boundary: a string that has been generated to be a unique boundary
+  # recipient: user object for the intended recipient of the message
+  # from: Bugzilla system email address
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+From: [% from %]
+To: [% recipient.email %]
+Subject: [[% terms.Bugzilla %]] [% subject %]
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="[% boundary %]"
+
+
+This is a MIME multipart message.  It is possible that your mail program
+doesn't quite handle these properly.  Some or all of the information in this
+message may be unreadable.
+
+
+[% FOREACH part=alternatives %]
+
+--[% boundary %]
+Content-type: [% part.type +%]
+
+[%+ part.content %]
+[%+ END %]
+--[% boundary %]--

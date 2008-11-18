@@ -1,0 +1,644 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Chris Lahey <clahey@ximian.com> [javascript fixes]
+  #                 Christian Reis <kiko@async.com.br> [javascript rewrite]
+  #                 Gervase Markham <gerv@gerv.net>
+  #%]
+
+<script type="text/javascript">
+
+var first_load = true;         [%# is this the first time we load the page? %]
+var last_sel = new Array();    [%# caches last selection %]
+
+[% IF Param('useclassification') %]
+var useclassification = true;
+var prods = new Array();
+[% ELSE %]
+var useclassification = false;
+[% END %]
+var cpts = new Array();
+var vers = new Array();
+[% IF Param('usetargetmilestone') %]
+var tms = new Array();
+[% END %]
+
+[%# Create an array of products, indexed by the classification #%]
+
+[% nclass = 0 %]
+[% FOREACH c = classification %]
+  prods[[% nclass FILTER js %]] = [
+    [% sep = '' %]
+    [%- FOREACH item = user.get_selectable_products(c.id) -%]
+      [%- IF item.components.size -%]
+        [%- sep FILTER js %]'[% item.name FILTER js %]'
+        [%- sep = ',' -%] 
+      [%- END -%]
+    [%- END -%] ];
+  [% nclass = nclass+1 %]
+[% END %]
+
+[%# Create three arrays of components, versions and target milestones, indexed
+  # numerically according to the product they refer to. #%]
+
+[% n = 0 %]
+[% FOREACH p = product %]
+  [% NEXT IF NOT p.components.size %]
+  [% IF Param('useclassification') %]
+  prods['[% p.name FILTER js %]'] = [% n %]
+  [% END %]
+  cpts[[% n %]] = [
+    [%- FOREACH item = p.components %]'[% item.name FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  vers[[% n %]] = [
+    [%- FOREACH item = p.versions -%]'[%  item.name FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  [% IF Param('usetargetmilestone') %]
+  tms[[% n %]]  = [
+     [%- FOREACH item = p.milestones %]'[% item.name FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  [% END %]
+  [% n = n+1 %]
+[% END %]
+
+/*
+ * doOnSelectProduct determines which selection should get updated 
+ *
+ * - selectmode = 0  - init
+ *   selectmode = 1  - classification selected
+ *   selectmode = 2  - product selected
+ *
+ * globals:
+ *   queryform - string holding the name of the selection form
+ */
+function doOnSelectProduct(selectmode) {
+    var f = document.forms[queryform];
+    var milestone = (typeof(f.target_milestone) == "undefined" ? 
+                                               null : f.target_milestone);
+    if (selectmode == 0) {
+        // If there is no classification selected, give us a chance to fill
+        // the select fields with values from the possibly selected product.
+        if (useclassification && f.classification.selectedIndex > -1) {
+            selectClassification(f.classification, f.product, f.component, f.version, milestone);
+        } else {
+            selectProduct(f.product, f.component, f.version, milestone);
+        }
+    } else if (selectmode == 1) {
+        selectClassification(f.classification, f.product, f.component, f.version, milestone);
+    } else {
+        selectProduct(f.product, f.component, f.version, milestone);
+    }
+}
+
+</script>
+
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% query_variants = [
+  { value => "allwordssubstr", description => "contains all of the words/strings" },
+  { value => "anywordssubstr", description => "contains any of the words/strings" },
+  { value => "substring", description => "contains the string" },
+  { value => "casesubstring", description => "contains the string (exact case)" },
+  { value => "allwords", description => "contains all of the words" },
+  { value => "anywords", description => "contains any of the words" },
+  { value => "regexp", description => "matches the regexp" },
+  { value => "notregexp", description => "doesn't match the regexp" } ] %]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[%# If we resubmit to ourselves, we need to know if we are using a format. %]
+[% thisformat = query_format != '' ? query_format : format %]
+<input type="hidden" name="query_format" value="[% thisformat FILTER html %]">
+
+[%# *** Summary *** %]
+
+<table>
+  <tr>
+    <th align="right">
+      <label for="short_desc" accesskey="s"><u>S</u>ummary</label>:
+    </th>
+    <td>
+      <select name="short_desc_type">
+      [% FOREACH qv = query_variants %]
+        <option value="[% qv.value %]"
+          [% " selected" IF default.short_desc_type.0 == qv.value %]>[% qv.description %]</option>
+      [% END %]
+      </select>
+    </td>
+    <td>
+      <input name="short_desc" id="short_desc" size="40"
+             value="[% default.short_desc.0 FILTER html %]">
+      <script type="text/javascript"> <!--
+          document.forms[queryform].short_desc.focus(); 
+      // -->
+      </script>
+    </td>
+    <td>
+      [% IF button_name %]
+        <input type="submit" id="[% button_name.replace (' ' , '_') FILTER html %]"
+               value="[% button_name FILTER html %]">
+      [% END %]
+    </td>
+  </tr>
+
+[%# *** Classification Product Component Version Target *** %]
+  <tr>
+    <td colspan="4">
+      <table>
+        <tr>
+        [% IF Param('useclassification') %]
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left">
+                  <label for="classification">Classification</label>:
+                </th>
+              </tr>
+              <tr valign="top">
+                <td align="left">
+                  <select name="classification" multiple="multiple" size="5" id="classification"
+                          onchange="doOnSelectProduct(1);">
+                    [% FOREACH cat = classification %]
+                      <option value="[% cat.name FILTER html %]"
+                        [% " selected" IF lsearch(default.classification, cat.name) != -1 %]>
+                        [% cat.name FILTER html %]
+                      </option>
+                    [% END %]
+                  </select>
+                </td>
+              </tr>
+            </table>
+          </td>
+        [% END %]
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left">
+                  <label for="product" accesskey="p"><u>P</u>roduct</label>:
+                </th>
+              </tr>
+              <tr valign="top">
+                [%# Can't use the select block here because of the onChange %]
+                <td align="left">
+                  <select name="product" multiple="multiple" size="5" id="product"
+                          onchange="doOnSelectProduct(2);">
+                    [% FOREACH p = product %]
+                      [% IF p.components.size %]
+                      <option value="[% p.name FILTER html %]"
+                        [% " selected" IF lsearch(default.product, p.name) != -1 %]>
+                        [% p.name FILTER html %]</option>
+                      [% END %]
+                    [% END %]
+                  </select>
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left">
+                  <label for="component" accesskey="m"><a href="describecomponents.cgi">Co<u>m</u>ponent</a></label>:
+                </th>
+              </tr>
+              <tr valign="top">
+                [%# Can't use the select block here because 'component' is a toolkit
+                    reserved word - we use 'component_' instead. %]
+                <td align="left">
+                  <select name="component" id="component"
+                          multiple="multiple" size="5">
+                    [% FOREACH c = component_ %]
+                      <option value="[% c FILTER html %]"
+                        [% " selected" IF lsearch(default.component, c) != -1 %]>
+                        [% c FILTER html %]</option>
+                    [% END %]
+                  </select>
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left">
+                  <label for="version">Version</label>:
+                </th>
+              </tr>
+              <tr valign="top">
+                [% PROCESS select sel = { name => 'version',
+                                          size => 5 } %]
+              </tr>
+            </table>
+          </td>
+        [% IF Param('usetargetmilestone') %]
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left">
+                  <label for="target_milestone">Target</label>:
+                </th>
+              </tr>
+              <tr valign="top">
+                [% PROCESS select sel = { name => 'target_milestone',
+                                          size => 5 } %]
+              </tr>
+            </table>
+          </td>
+        [% END %]
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+[%# *** Comment URL Whiteboard Keywords *** %]
+
+  [% FOREACH field = [
+    { name => "long_desc", description => "A&nbsp;<u>C</u>omment",
+      accesskey => 'c' },
+    { name => "bug_file_loc", description => "The&nbsp;<u>U</u>RL",
+      accesskey => 'u' },
+    { name => "status_whiteboard", description => "<u>W</u>hiteboard",
+      accesskey => 'w' } ] %]
+
+    [% UNLESS field.name == 'status_whiteboard' AND NOT Param('usestatuswhiteboard') %]
+    <tr>
+      <th align="right">
+        <label for="[% field.name %]" accesskey="[% field.accesskey %]">[% field.description %]</label>:
+      </th>
+      <td>
+        <select name="[% field.name %]_type">
+        [% FOREACH qv = query_variants %]
+          [% type = "${field.name}_type" %]
+          <option value="[% qv.value %]"
+            [% " selected" IF default.$type.0 == qv.value %]>[% qv.description %]</option>
+        [% END %]
+        </select>
+      </td>
+      <td><input name="[% field.name %]" id="[% field.name %]" size="40"
+                 value="[% default.${field.name}.0 FILTER html %]">
+      </td>
+      <td></td>
+    </tr>
+    [% END %]
+  [% END %]
+
+  [% IF have_keywords %]
+    <tr>
+      <th align="right">
+        <label for="keywords" accesskey="k"><a href="describekeywords.cgi"><u>K</u>eywords</a></label>:
+      </th>
+      <td>
+        <select name="keywords_type">
+        [% FOREACH qv = [
+          { name => "allwords", description => "contains all of the keywords" },
+          { name => "anywords", description => "contains any of the keywords" },
+          { name => "nowords",  description => "contains none of the keywords" } ] %]
+
+          <option value="[% qv.name %]"
+            [% " selected" IF default.keywords_type.0 == qv.name %]>
+            [% qv.description %]</option>
+        [% END %]
+        </select>
+      </td>
+      <td>
+        <input name="keywords" id="keywords" size="40"
+               value="[% default.keywords.0 FILTER html %]">
+      </td>
+    </tr>
+  [% END %]
+
+  [%# Deadline %]
+  [% IF user.in_group(Param("timetrackinggroup")) %]
+    <tr>
+      <th align="right">
+        <label for="deadlinefrom" accesskey="l">Dead<u>l</u>ine</label>:
+      </th>
+      <td>
+        from <input name="deadlinefrom" id="deadlinefrom" size="10" maxlength="10"
+                    value="[% default.deadlinefrom.0 FILTER html %]">
+        to <input name="deadlineto" size="10" maxlength="10"
+                  value="[% default.deadlineto.0 FILTER html %]">
+      </td>
+      <td>
+        <small>(YYYY-MM-DD)</small>
+      </td>
+    </tr>
+  [% END %]
+  
+</table>
+
+<hr>
+
+[%# *** Status Resolution Severity Priority Hardware OS *** %]
+
+<table>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th align="left">
+            <label for="bug_status" accesskey="a">St<u>a</u>tus</label>:
+          </th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'bug_status',
+                                    size => 7 } %]
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left">
+            <label for="resolution" accesskey="r"><u>R</u>esolution</label>:
+          </th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'resolution',
+                                    size => 7 } %]
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left">
+            <label for="bug_severity">Severity</label>:
+          </th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'bug_severity',
+                                    size => 7 }%]
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left">
+            <label for="priority" accesskey="i">Pr<u>i</u>ority</label>:
+          </th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'priority',
+                                    size => 7 } %]
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left">
+            <label for="rep_platform" accesskey="h"><u>H</u>ardware</label>:
+          </th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'rep_platform',
+                                    size => 7 } %]
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left">
+            <label for="op_sys" accesskey="o"><u>O</u>S</label>:
+          </th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'op_sys',
+                                    size => 7 } %]
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+[%# *** Email Numbering Votes *** %]
+
+<table>
+  <tr>
+    <td>
+      <fieldset>
+        <legend>
+          <strong>
+            [% IF Param('usevotes') %]
+              Email Addresses, [% terms.Bug %] Numbers, and Votes
+            [% ELSE %]
+              Email Addresses and [% terms.Bug %] Numbers
+            [% END %]
+          </strong>
+        </legend>
+
+
+<table>
+  <tr>
+  [% FOREACH n = [1, 2] %]
+    <td>
+
+
+<table cellspacing="0" cellpadding="0">
+  <tr>
+    <td>
+      Any one of:
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <input type="checkbox" name="emailassigned_to[% n %]"
+             id="emailassigned_to[% n %]" value="1"
+             [% " checked" IF default.emailassigned_to.$n %]>
+      <label for="emailassigned_to[% n %]">
+        the [% terms.bug %] assignee
+      </label>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <input type="checkbox" name="emailreporter[% n %]"
+             id="emailreporter[% n %]" value="1"
+             [% " checked" IF default.emailreporter.$n %]>
+      <label for="emailreporter[% n %]">
+        the reporter
+      </label>
+    </td>
+  </tr>
+  [% IF Param('useqacontact') %]
+  <tr>
+    <td>
+      <input type="checkbox" name="emailqa_contact[% n %]"
+             id="emailqa_contact[% n %]" value="1"
+             [% " checked" IF default.emailqa_contact.$n %]>
+      <label for="emailqa_contact[% n %]">
+        the QA contact
+      </label>
+    </td>
+  </tr>
+  [% END %]
+  <tr>
+    <td>
+      <input type="checkbox" name="emailcc[% n %]"
+             id="emailcc[% n %]" value="1"
+             [% " checked" IF default.emailcc.$n %]>
+      <label for="emailcc[% n %]">
+        a CC list member
+      </label>
+    </td>
+  </tr>
+  <tr>
+    <td>
+        <input type="checkbox" name="emaillongdesc[% n %]"
+               id="emaillongdesc[% n %]" value="1"
+               [% " checked" IF default.emaillongdesc.$n %]>
+      <label for="emaillongdesc[% n %]">
+        a commenter
+      </label>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <select name="emailtype[% n %]">
+      [% FOREACH qv = [
+        { name => "substring", description => "contains" },
+        { name => "exact", description => "is" },
+        { name => "regexp", description => "matches regexp" },
+        { name => "notregexp", description => "doesn't match regexp" } ] %]
+
+        <option value="[% qv.name %]"
+          [% " selected" IF default.emailtype.$n == qv.name %]>[% qv.description %]</option>
+      [% END %]
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <input name="email[% n %]" size="25" value="[% default.email.$n FILTER html %]">
+    </td>
+  </tr>
+</table>
+
+
+    </td>
+  [% END %]
+  </tr>
+</table>
+<hr>
+<table>
+  <tr>
+    <td>
+      <select name="bugidtype">
+        <option value="include"[% " selected" IF default.bugidtype.0 == "include" %]>Only include</option>
+        <option value="exclude"[% " selected" IF default.bugidtype.0 == "exclude" %]>Exclude</option>
+      </select>
+      <label for="bug_id">[% terms.bugs %] numbered</label>:
+    </td>
+    <td>
+      <input type="text" name="bug_id" id="bug_id"
+             value="[% default.bug_id.0 FILTER html %]" size="20">
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>(comma-separated list)</td>
+  </tr>
+  [% IF Param('usevotes') %]
+    <tr>
+      <td align="right">
+        <label for="votes">Only [% terms.bugs %] with at least</label>:
+      </td>
+      <td>
+        <input name="votes" id="votes" size="3"
+               value="[% default.votes.0 FILTER html %]">
+        votes
+      </td>
+    </tr>
+  [% END %]
+</table>
+
+
+      </fieldset>
+    </td>
+   
+[%# *** Bug Changes *** %]
+
+    <td valign="top">
+      <fieldset>
+        <legend><strong>[% terms.Bug %] Changes</strong></legend>
+
+
+<dl class="bug_changes">
+  <dt>
+    <label for="chfieldfrom">Only [% terms.bugs %] changed between</label>:
+  </dt>
+  <dd>
+    <input name="chfieldfrom" id="chfieldfrom"
+           size="10" value="[% default.chfieldfrom.0 FILTER html %]">
+    and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
+    <br>(YYYY-MM-DD or relative dates)
+  </dd>
+  <dt>
+    <label for="chfield">where one or more of the following changed</label>:
+  </dt>
+  <dd>
+    [%# Create array, so we can sort it by description #%]
+    [% chfields = [] %]
+    [% FOREACH field = chfield %]
+      [% chfields.push({value => field, desc => (field_descs.$field || field) }) %]
+    [% END %]
+
+    <select name="chfield" id="chfield" multiple="multiple" size="4">
+    [% FOREACH field = chfields.sort('desc') %]
+      <option value="[% field.value FILTER html %]"
+        [% " selected" IF lsearch(default.chfield, field.value) != -1 %]>
+        [% field.desc FILTER html %]</option>
+    [% END %]
+    </select>
+  </dd>
+  <dt>and <label for="chfieldvalue">the new value was</label>:</dt>
+  <dd>
+    <input name="chfieldvalue" id="chfieldvalue"
+           size="20" value="[% default.chfieldvalue.0 FILTER html %]">
+  </dd>
+</dl>
+
+       </fieldset>
+     </td>
+  </tr>
+</table>
+
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]
+  <td align="left">
+    <select name="[% sel.name %]" id="[% sel.name %]"
+            multiple="multiple" size="[% sel.size %]">
+      [% FOREACH name = ${sel.name} %]
+        <option value="[% name FILTER html %]"
+          [% " selected" IF lsearch(default.${sel.name}, name) != -1 %]>
+          [% IF sel.name == "bug_status" %]
+            [% status_descs.${name} FILTER html %]
+          [% ELSIF sel.name == "resolution" %]
+            [% get_resolution(name) FILTER html %]
+          [% ELSE %]
+            [% name FILTER html %]
+          [% END %]
+        </option>
+      [% END %]
+    </select>
+  </td>
+[% END %]

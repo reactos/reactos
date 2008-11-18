@@ -1,0 +1,21 @@
+<div class="panel bg3" id="attach-panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<p>{L_ADD_ATTACHMENT_EXPLAIN}</p>
+	
+	<fieldset class="fields2">
+	<dl>
+		<dt><label for="fileupload">{L_FILENAME}:</label></dt>
+		<dd>
+			<input type="file" name="fileupload" id="fileupload" maxlength="{FILESIZE}" value="" class="inputbox autowidth" /> 
+			<input type="submit" name="add_file" value="{L_ADD_FILE}" class="button2" onclick="upload = true;" />
+		</dd>
+	</dl>
+	<dl>
+		<dt><label for="filecomment">{L_FILE_COMMENT}:</label></dt>
+		<dd><textarea name="filecomment" id="filecomment" rows="1" cols="40" class="inputbox autowidth">{FILE_COMMENT}</textarea></dd>
+	</dl>
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>

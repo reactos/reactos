@@ -1,0 +1,76 @@
+	<form id="list" method="post" action="{U_ACTION}">
+
+	<!-- IF PAGINATION -->
+	<div class="pagination">
+			<a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span>
+	</div>
+	<!-- ENDIF -->
+
+	<!-- IF .log -->
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_REPORT_BY}</th>
+		<th>{L_IP}</th>
+		<th>{L_TIME}</th>
+		<th>{L_FEEDBACK}</th>
+		<th>{L_MARK}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN log -->
+		<!-- IF log.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+
+			<td>{log.USERNAME}</td>
+			<td style="text-align: center;">{log.IP}</td>
+			<td style="text-align: center;">{log.DATE}</td>
+			<td>
+				{log.ACTION}
+				<!-- IF log.DATA --><br />&#187; <span class="gensmall">[ {log.DATA} ]</span><!-- ENDIF -->
+			</td>
+			<td style="text-align: center;"><input type="checkbox" class="radio" name="mark[]" value="{log.ID}" /></td>
+		</tr>
+	<!-- END log -->
+	</tbody>
+	</table>
+	<!-- ELSE -->
+		<div class="errorbox">
+			<p>{L_NO_ENTRIES}</p>
+		</div>
+	<!-- ENDIF -->
+	
+	<fieldset class="display-options">
+		{L_DISPLAY_LOG}: &nbsp;{S_LIMIT_DAYS}&nbsp;{L_SORT_BY}: {S_SORT_KEY} {S_SORT_DIR}
+		<input class="button2" type="submit" value="{L_GO}" name="sort" />
+	</fieldset>
+	<hr />
+	<!-- IF PAGINATION -->
+	<div class="pagination">
+			<a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span>
+	</div>
+	<!-- ENDIF -->
+
+	<!-- IF S_CLEARLOGS -->
+		<fieldset class="quick">
+			<input class="button2" type="submit" name="delall" value="{L_DELETE_ALL}" />&nbsp;
+			<input class="button2" type="submit" name="delmarked" value="{L_DELETE_MARKED}" />
+			<p class="small"><a href="#" onclick="marklist('list', 'mark', true);">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('list', 'mark', false);">{L_UNMARK_ALL}</a></p>
+		</fieldset>
+	<!-- ENDIF -->
+
+	<h1>{L_ADD_FEEDBACK}</h1>
+
+	<p>{L_ADD_FEEDBACK_EXPLAIN}</p>
+
+	<fieldset>
+		<legend>{L_ACP_USER_FEEDBACK}</legend>
+		<dl>
+			<dd class="full"><textarea name="message" id="message" rows="10" cols="76"></textarea></dd>
+		</dl>
+	</fieldset>
+
+	<fieldset class="quick">
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+	</fieldset>
+	{S_FORM_TOKEN}
+	</form>

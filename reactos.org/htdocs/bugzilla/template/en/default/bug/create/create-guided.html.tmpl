@@ -1,0 +1,553 @@
+[%# 1.0@mozilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Christine Begle <cbegle@mozilla.org>
+  #%]
+
+[%# INTERFACE:
+  # This template has the same interface as create.html.tmpl
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
+[% PROCESS global/header.html.tmpl
+   title = "Enter $terms.ABug"
+   onload = "PutDescription()"
+   style = "#somebugs { width: 100%; height: 500px }"
+ %]
+
+<p>
+  <font color="red">
+    This is a template used on mozilla.org.  This template, and the
+    comment-guided.txt.tmpl template that formats the data submitted via 
+    the form in this template, are included as a demo of what it's
+    possible to do with custom templates in general, and custom [% terms.bug %]
+    entry templates in particular. As much of the text will not apply, 
+    you should alter it 
+    if you want to use this form on your [% terms.Bugzilla %] installation.
+  </font>
+</p>
+
+[% tablecolour = "#FFFFCC" %]
+
+[%# This script displays the descriptions for selected components. %]
+<script type="text/javascript">
+var descriptions = [
+[% FOREACH c = product.components %]
+  '[% c.description FILTER js %]',
+[% END %]
+];
+
+function PutDescription() {
+    if ((document.getElementById) && (document.body.innerHTML)) {
+        var componentIndex = document.getElementById('component').selectedIndex;
+        if (componentIndex != -1) {
+            var description = document.getElementById('description');
+            description.innerHTML = descriptions[componentIndex];
+        }
+    }
+}
+</script>
+
+[%# Browser sniff to try and reduce the incidence of Netscape 6/7 bugs %]
+
+[% IF cgi.user_agent('Netscape(\d)') %]
+  [% matches = cgi.user_agent().match('Netscape(\d)') %]
+  <div style="background-color: lightgrey;
+              border: 1px solid black;
+              padding: 2px">
+    <font color="#990000">
+      <b>
+        You are using Netscape [% matches.0 %].
+        Report [% terms.bugs %] with this browser to the
+        <a href="http://home.netscape.com/browsers/[% matches.0 %]/feedback/index.html">
+         Netscape [% matches.0 %] Feedback Center.</a>
+      </b>
+    </font>
+    This form is only for reporting [% terms.bugs %] in the Mozilla web browser
+    and other products from mozilla.org. To report [% terms.abug %] you find 
+    in Netscape [% matches.0 %] with this form, you must reproduce it first in 
+    a recent build of
+    <a href="http://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/latest/">Mozilla</a>,
+    <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Firefox</a>,
+<a href="http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly/latest-trunk/">Thunderbird</a> or
+    <a href="http://ftp.mozilla.org/pub/mozilla.org/camino/nightly/latest/">Camino</a>
+    to make sure the problem hasn't been fixed already.
+  </div>
+[% END %]
+
+[% IF cgi.user_agent('Gecko/') %]
+  [% matches = cgi.user_agent().match('Gecko/(\d+)') %]
+  
+[% END %]
+
+<!-- @@@ Need UA checking here -->
+
+<a name="step1"></a>
+<h3>Step 1 of 3 - has your [% terms.bug %] already been reported?</h3>
+
+<p>
+  <font color="red">Please don't skip this step - half of all 
+  [% terms.bugs %] filed are
+  reported already.</font>
+    Check the two lists of frequently-reported [% terms.bugs %]:
+</p>
+
+[%# Include other products if sensible %]
+[% IF product.name == "Firefox" %]
+  [% productstring = "product=Mozilla%20Application%20Suite&amp;product=Firefox" %]
+[% ELSIF product.name == "Thunderbird" %]
+  [% productstring = "product=Mozilla%20Application%20Suite&amp;product=Thunderbird" %]
+[% ELSE %]
+  [% productstring = BLOCK %]product=[% product.name FILTER url_quote %][% END %]
+[% END %]
+
+<p>
+    <a href="duplicates.cgi?[% productstring %]&format=simple" target="somebugs">All-time Top 100</a> (loaded initially) |
+    <a href="duplicates.cgi?[% productstring %]&format=simple&sortby=delta&reverse=1&maxrows=100&changedsince=14" target="somebugs">Hot in the last two weeks</a>  
+</p>
+
+<iframe name="somebugs" id="somebugs"
+  style="border: 2px black solid"
+  src="duplicates.cgi?[% productstring %]&format=simple">
+</iframe>
+
+<p>
+    If your [% terms.bug %] isn't there, search [% terms.Bugzilla %] by entering
+    a few key words having to do with your [% terms.bug %] in this box.
+    For example: <tt><b>pop3 mail</b></tt> or <tt><b>copy paste</b></tt>.
+    The results will appear above.
+  </p>
+
+[%# All bugs opened inside the past six months %]
+  <form action="buglist.cgi" method="get" target="somebugs">
+    <input type="hidden" name="format" value="simple">
+    <input type="hidden" name="order" value="relevance desc">
+    <input type="hidden" name="bug_status" value="__all__">
+    <input type="hidden" name="product" value="[% product.name FILTER html %]">
+    [% IF product.name == "Firefox" OR 
+          product.name == "Thunderbird" OR 
+          product.name == "Mozilla Application Suite" OR
+          product.name == "Camino" %]
+      <input type="hidden" name="product" value="Core">
+      <input type="hidden" name="product" value="Toolkit">
+      <input type="hidden" name="product" value="PSM">
+      <input type="hidden" name="product" value="NSPR">
+      <input type="hidden" name="product" value="NSS">
+    [% END %]      
+    <input type="hidden" name="chfieldfrom" value="-6m">
+    <input type="hidden" name="chfieldto" value="Now">
+    <input type="hidden" name="chfield" value="[Bug creation]">
+    <input type="text" name="content" size="40">
+    <input type="submit" id="search" value="Search">
+  </form>
+
+<p>
+  Look through the search results. If you get the
+  <tt><b>[% terms.zeroSearchResults %]</b></tt> message, [% terms.Bugzilla %]
+  found no [% terms.bugs %] that
+  match. Check for typing mistakes, or try fewer or different keywords.
+  If you find [% terms.abug %] that looks the same as yours, please add
+  any useful extra information you have to it, rather than opening a new one.
+</p>
+
+
+<a name="step2"></a>
+<h3>Step 2 of 3 - give information</h3>
+
+<p>
+  If you've tried a few searches and your [% terms.bug %] really isn't in 
+  there, tell us all about it.
+</p>
+
+<form method="post" action="post_bug.cgi">
+  <input type="hidden" name="format" value="guided">
+  <input type="hidden" name="assigned_to" value="">
+  <input type="hidden" name="priority"
+         value="[% default.priority FILTER html %]">
+  <input type="hidden" name="version"
+         value="[% default.version FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+
+<table valign="top" cellpadding="5" cellspacing="5" border="0">
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="top">
+      <b>Product</b>
+    </td>
+    <td valign="top">
+      <input type="hidden" name="product" value="[% product.name FILTER html %]">
+      [% product.name FILTER html %]
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="top">
+      <b>Component</b>
+    </td>
+    <td valign="top">
+      <table border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td valign="top">
+            <select name="component" id="component"
+                    size="5" onchange="PutDescription()">
+              [% FOREACH c = product.components %]
+                <option value="[% c.name FILTER html %]"
+                  [% " selected=\"selected\"" IF c.name == default.component_ %]>
+                  [% c.name FILTER html %]
+                </option>
+              [% END %]
+            </select>
+          </td>
+          <td valign="top" width="100%">
+              <div id="description" style="color: green; margin-left: 10px;
+                                           height: 5em; overflow: auto;">
+                <script type="text/javascript">
+                  if ((document.getElementById) && (document.body.innerHTML)) {
+                    document.write("\
+                    Select a component to see its description here.");
+                  }
+                </script>
+              </div>
+          </td>
+        </tr>
+      </table>
+      
+      <p>
+        The area where the problem occurs.
+        To pick the right component, you could use the same one as
+        similar [% terms.bugs %] you found in your search, or read the full list of
+        <a target="_blank" href="describecomponents.cgi?product=
+            [% product.name FILTER url_quote %]">component
+        descriptions</a> (opens in new window) if you need more help.
+      </p>
+    </td>
+  </tr>
+
+  [%# We override rep_platform and op_sys for simplicity. The values chosen
+      are based on which are most common in the b.m.o database %]
+  [% rep_platform = [ "PC", "Macintosh", "All", "Other" ] %]
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="top">
+      <b>Hardware Platform</b>
+    </td>
+    <td valign="top">
+      [% PROCESS select sel = 'rep_platform' %]
+    </td>
+  </tr>
+
+  [% op_sys = [ "Windows 98", "Windows NT", "Windows 2000", "Windows XP",
+                "Mac System 9.x", "MacOS X",
+                "Linux", "All", "other" ] %]
+
+  <tr>
+    <td align="right" valign="top">
+      <b>Operating System</b>
+    </td>
+    <td valign="top">
+      [% PROCESS select sel = 'op_sys' %]
+    </td>
+  </tr>
+
+  [% IF product.name.match("Firefox|Camino|Mozilla Application Suite") %]
+    [% matches = cgi.user_agent('Gecko/(\d+)') %]
+    [% buildid = cgi.user_agent() IF matches %]
+  [% END %]
+  
+  [%# Accept URL parameter build ID for non-browser products %]
+  [% IF cgi.param("buildid") %]
+    [% buildid = cgi.param("buildid") %]
+  [% END %]
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="top">
+      <b>Build Identifier</b>
+    </td>
+    <td valign="top">
+      <input type="text" size="80" name="buildid" value="[% buildid FILTER html %]">
+      <p>
+        This should identify the exact version of the product you were using.  
+        If the above field is blank or you know it is incorrect, copy the 
+        version text from the product's Help | 
+        About menu (for browsers this will begin with "Mozilla/5.0...").  
+        If the product won't start, instead paste the complete URL you downloaded 
+        it from.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="top">
+      <b>URL</b>
+    </td>
+    <td valign="top">
+      <input type="text" size="80" name="bug_file_loc" value="http://">
+      <p>
+        URL that demonstrates the problem you are seeing (optional).<br>
+        <b>IMPORTANT</b>: if the problem is with a broken web page, you need
+        to report it
+        <a href="https://bugzilla.mozilla.org/page.cgi?id=broken-website.html">a different way</a>.
+      </p>
+   </td>
+  </tr>
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="top">
+      <b>Summary</b>
+    </td>
+    <td valign="top">
+      <input type="text" size="80" name="short_desc" id="short_desc" 
+             maxlength="255">
+      <p>
+        A sentence which summarises the problem.
+        Please be descriptive and use lots of keywords.
+      </p>
+      <p>
+        <tt>
+          <font color="#990000">Bad example</font>: mail crashed
+        </tt>
+        <br>
+        <tt>
+          <font color="#009900">Good example</font>:
+          crash if I close the mail window while checking for new POP mail
+        </tt>
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="top">
+      <b>Details</b>
+    </td>
+    <td valign="top">
+      [% INCLUDE global/textarea.html.tmpl
+        name    = 'comment'
+        minrows = 6
+        cols    = constants.COMMENT_COLS
+      %]
+      <p>
+        Expand on the Summary. Please be
+        as specific as possible about what is wrong.
+      </p>
+      <p>
+        <tt>
+          <font color="#990000">Bad example</font>: Mozilla crashed.
+          You suck!
+        </tt>
+        <br>
+        <tt>
+          <font color="#009900">Good example</font>: After a crash which
+          happened when I was sorting in the Bookmark Manager,<br> all of my
+          top-level bookmark folders beginning with the letters Q to Z are 
+          no longer present.
+        </tt>
+      </p>
+    </td>
+  </tr>
+
+  <tr bgcolor="[% tablecolour %]">
+    <td align="right" valign="top">
+      <b>Reproducibility</b>
+    </td>
+    <td valign="top">
+      <select name="reproducible">
+        <option name="AlwaysReproducible" value="Always">
+          Happens every time.
+        </option>
+        <option name="Sometimes" value="Sometimes">
+          Happens sometimes, but not always.
+        </option>
+        <option name="DidntTry" value="Didn't try">
+          Haven't tried to reproduce it.
+        </option>
+        <option name="NotReproducible" value="Couldn't Reproduce">
+          Tried, but couldn't reproduce it.
+        </option>
+      </select>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="top">
+      <b>Steps to Reproduce</b>
+    </td>
+    <td valign="top">
+      [% INCLUDE global/textarea.html.tmpl
+        name           = 'reproduce_steps'
+        minrows        = 4
+        cols           = constants.COMMENT_COLS
+        defaultcontent = "1.\n2.\n3."
+      %]
+      <p>
+        Describe how to reproduce the problem, step by
+        step. Include any special setup steps.
+      </p>
+    </td>
+  </tr>
+
+  <tr bgcolor="[% tablecolour %]">
+    <td valign="top" align="right">
+      <b>Actual Results</b>
+    </td>
+    <td valign="top">
+      [% INCLUDE global/textarea.html.tmpl
+        name    = 'actual_results'
+        minrows = 4
+        cols    = constants.COMMENT_COLS
+      %]
+      <p>
+        What happened after you performed the steps above?
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top" align="right">
+      <b>Expected Results</b>
+    </td>
+    <td valign="top">
+      [% INCLUDE global/textarea.html.tmpl
+        name    = 'expected_results'
+        minrows = 4
+        cols    = constants.COMMENT_COLS
+      %]
+      <p>
+        What should the software have done instead?
+      </p>
+    </td>
+  </tr>
+
+  <tr bgcolor="[% tablecolour %]">
+    <td valign="top" align="right">
+      <b>Additional Information</b>
+    </td>
+    <td valign="top">
+      [% INCLUDE global/textarea.html.tmpl
+        name    = 'additional_info'
+        minrows = 8
+        cols    = constants.COMMENT_COLS
+      %]
+      <p>
+        Add any additional information you feel may be
+        relevant to this [% terms.bug %], such as the <b>theme</b> you were
+        using (does the [% terms.bug %] still occur
+        with the default theme?), a <b>Talkback crash ID</b>, or special
+        information about <b>your computer's configuration</b>. Any information
+        longer than a few lines, such as a <b>stack trace</b> or <b>HTML
+        testcase</b>, should be added
+        using the "Create a new Attachment" link on the [% terms.bug %], after
+        it is filed. If you believe that it's relevant, please also include
+        your build configuration, obtained by typing <tt>about:buildconfig</tt>
+        into your URL bar.
+        <br>
+        <br>
+        If you are reporting a crash, note the module in
+        which the software crashed (e.g., <tt>Application Violation in
+        gkhtml.dll</tt>).
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="top" align="right">
+      <b>Severity</b>
+    </td>
+    <td valign="top">
+      <select name="bug_severity">
+        <option name="critical" value="critical">
+          Critical: The software crashes, hangs, or causes you to
+          lose data.
+        </option>
+        <option name="major" value="major">
+          Major: A major feature is broken.
+        </option>
+        <option name="normal" value="normal" selected="selected">
+          Normal: It's [% terms.abug %] that should be fixed.
+        </option>
+        <option name="minor" value="minor">
+          Minor: Minor loss of function, and there's an easy workaround.
+        </option>
+        <option name="trivial" value="trivial">
+          Trivial: A cosmetic problem, such as a misspelled word or
+          misaligned text.
+        </option>
+        <option name="enhancement" value="enhancement">
+          Enhancement: Request for new feature or enhancement.
+        </option>
+      </select>
+      <p>
+        Say how serious the problem is, or if your [% terms.bug %] is a 
+        request for a new feature.
+      </p>
+    </td>
+  </tr>
+</table>
+
+
+<a name="step3"></a>
+<h3>Step 3 of 3 - submit the [% terms.bug %] report</h3>
+
+<p>
+  <input type="submit" id="report" value="    Submit [% terms.Bug %] Report    "
+   onclick="if (this.form.comment.value == '')
+   { alert('Please enter some details about this [% terms.bug %].');
+     this.form.comment.focus();
+     return false; } return true;">
+</p>
+
+<p>
+  That's it! Thanks very much. You'll be notified by email about any
+  progress that is made on fixing your [% terms.bug %]. 
+
+<p>  
+  Please be warned
+  that we get a lot of [% terms.bug %] reports filed - it may take quite a 
+  while to get around to yours. You can help the process by making sure your 
+  [%+ terms.bug %] is
+  complete and easy to understand, and by quickly replying to any questions
+  which may arrive by email.
+</p>
+
+    </form>
+
+[% PROCESS global/footer.html.tmpl %]
+
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]
+  <select name="[% sel %]">
+    [%- IF default.$sel %]
+      <option value="[% default.$sel FILTER html %]" selected="selected">
+        [% default.$sel FILTER html -%]
+      </option>
+    [% END %]
+    [%- FOREACH x = $sel %]
+      [% NEXT IF x == default.$sel %]
+      <option value="[% x FILTER html %]">
+        [% x FILTER html -%]
+      </option>
+    [%- END %]
+  </select>
+[% END %]

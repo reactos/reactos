@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.2//EN">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title><% $basename %> release notes</title>
+    <style>
+      .fixme { color: red; }
+    </style>
+  </head>
+
+  <body>
+
+    <h1><% $basename %> release notes</h1>
+
+    <p>This release was compiled on <% $time %>.</p>
+
+    <h2>3.0-rc1</h2>
+
+    <p>Changes since 3.0-Beta:</p>
+
+    <ul>
+      <li>
+        <b>New plugins</b>
+        <ul>
+          <li>
+            ContextMenu plugin (provides a nice context menu with common
+            operations, including table ops, link ops, etc.)
+          </li>
+          <li>
+            CSS plugin (provides an easy way to insert/change CSS classes)
+          </li>
+          <li>
+            FullPage plugin (allows HTMLArea to edit a whole HTML file,
+            not only the content within &lt;body&gt;.)
+          </li>
+        </ul>
+      </li>
+      <li>
+        <b>Changes in the SpellChecker plugin</b>
+        <ul>
+          <li>
+            Many bugfixes: now it works ;-)  Fully Unicode-safe.
+          </li>
+          <li>
+            Speed and bandwidth optimization: reports the list of
+            suggestions only once for each mispelled word; this helps
+            in cases where you have, for instance, the word “HTMLArea”
+            in 10 places all over the document; the list of
+            suggestions for it--which is kind of huge--will only be
+            included <em>once</em>.
+          </li>
+          <li>
+            User interface improvements: the highlighted word will
+            remain in view; in cases where it's normally outside, the
+            window will be scrolled to it.
+          </li>
+          <li>
+            Added a "Revert" button for those that change their minds ;-)
+          </li>
+          <li>
+            Added a "Info" button which reports information about the
+            document, retrieved by the server-side spell checker:
+            total number of words, total number of mispelled words,
+            number of suggestions made, spell check time, etc.  More
+            can be easily added.  <span class="fixme">FIXME: this part
+            is not yet internationalized.</span>
+          </li>
+          <li>
+            The server-side spell checker now uses XML::DOM instead of
+            HTML::Parser, which means that it will be unable to parse
+            “tag-soup” HTML.  It needs valid code.  Usually HTMLArea
+            generates valid code, but on rare occasions it might fail
+            and the spell checker will report a gross error message.
+            This gonna have to be fixed, but instead of making the
+            spell checker accept invalid HTML I prefer to make
+            HTMLArea generate valid code, so changes are to be done in
+            other places ;-)
+          </li>
+        </ul>
+      </li>
+      <li>
+        <b>Changes in the core editor</b>
+        <ul>
+          <li>
+            Easier to setup: you only need to load
+            <tt>htmlarea.js</tt>; other scripts will be loaded
+            automatically.  <a href="reference.html">Documentation</a>
+            and <a href="examples/">examples</a> updated.
+          </li>
+          <li>
+            Better plugin support (they register information about
+            themselves with the editor; can register event handlers for
+            the editor, etc.)
+          </li>
+          <li>
+            New about box; check it out, it's cool ;-)
+          </li>
+          <li>
+            Word cleaner (can be enabled to automatically kill Word crap
+            on paste (see Config.killWordOnPaste); otherwise accessible by
+            pressing CTRL-0 in the editor; a toolbar button will come up
+            soon)
+          </li>
+          <li>
+            Image preview in "insert image" dialog.  Also allows
+            modification of current image, if selected.
+          </li>
+          <li>
+            New "insert link" dialog, allows target and title
+            specification, allows editing links.
+          </li>
+          <li>
+            Implemented support for text direction (left-to-right or
+            right-to-left).
+          </li>
+          <li>
+            Lots of bug fixes!  ... and more, I guess ;-) an
+            automatically generated <a href="ChangeLog">change log</a>
+            is now available.
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    <p>I don't have the power to go through the <a
+href="http://sourceforge.net/tracker/?atid=525656&group_id=69750&func=browse">bug
+system</a> at SourceForge
+    now.  Some of the bugs reported there may be fixed; I'll update
+    their status, some other time.  If you reported bugs there and now
+    find them to be fixed, please let me know.</p>
+
+    <h2>3.0-Beta</h2>
+
+    <p>Changes since 3.0-Alpha:</p>
+
+    <ul>
+
+      <li>Performance improvements.</li>
+
+      <li>Many bugs fixed.</li>
+
+      <li>Plugin infrastructure.</li>
+
+      <li>TableOperations plugin.</li>
+
+      <li>SpellChecker plugin.</li>
+
+      <li>Status bar.</li>
+
+      <li>API for registering custom buttons and drop-down boxes in the
+        toolbar.</li>
+
+      <li>Toolbar can contain text labels.</li>
+
+      <li>Cut, copy, paste, undo, redo buttons.</li>
+
+    </ul>
+<%doc>
+    <h2>Rationale for Beta</h2>
+
+    <p>Why was this released as "Beta"?  The code is quite stable and it
+    didn't deserve a "Beta" qualification.  However, there are some things
+    left to do for the real 3.0 version.  These things will not affect the
+    API to work with HTMLArea, in other words, you can install the Beta
+    right now and then install the final release without modifying your
+    code.  That's if you don't modify HTMLArea itself.  ;-)</p>
+
+    <h2>To-Do before 3.0 final</h2>
+
+    <ol>
+
+      <li>We should use a single popup interface.  Currently there are two:
+      dialog.js and popupwin.js; dialog.js emulates modal dialogs, which
+      sucks when you want to open "select-color" from another popup and not
+      from the editor itself.  Very buggy in IE.  We should probably use only
+      modeless dialogs (that is, popupwin.js).</li>
+
+      <li>Internationalization for the SpellChecker plugin.</li>
+
+      <li>Internationalization for the TableOperations plugin.</li>
+
+      <li>People who sent translations are invited to re-iterate through
+        their work and make it up-to-date with lang/en.js which is the main
+        lang file for HTMLArea-3.0.  Some things have changed but not all
+        translations are updated.</li>
+
+      <li><strong>Documentation</strong>.</li>
+
+    </ol>
+</%doc>
+    <hr />
+    <address><a href="http://dynarch.com/mishoo/">Mihai Bazon</a></address>
+<!-- Created: Sun Aug  3 16:55:08 EEST 2003 -->
+<!-- hhmts start --> Last modified: Wed Mar 31 19:18:26 EEST 2004 <!-- hhmts end -->
+<!-- doc-lang: English -->
+  </body>
+</html>
+
+<%ARGS>
+  $project => 'HTMLArea'
+  $version => '3.0'
+  $release => 'rc1'
+  $basename => 'HTMLArea-3.0-rc1'
+</%ARGS>
+
+<%INIT>;
+use POSIX qw(strftime);
+my $time = strftime '%b %e, %Y [%H:%M] GMT', gmtime;
+</%INIT>

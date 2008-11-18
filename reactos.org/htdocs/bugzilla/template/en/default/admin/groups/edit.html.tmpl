@@ -1,0 +1,226 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@syndicomm.com>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #%]
+
+[%# INTERFACE:
+  # group_id: number. The group ID.
+  # name: string. The name of the group. [grantor]
+  # description: string. The description of the group.
+  # regexp: string. The regular expression for the users of the group.
+  # isactive: boolean int. Shows if the group is still active.
+  # isbuggroup: boolean int. Is 1 if this is a bug group.
+  # groups: array with group objects having the properties:
+  #   - grpid: number. The ID of the group.
+  #   - grpname: string. The name of the group. [member]
+  #   - grpdesc: string. The description of the group.
+  #   - grpmember: boolean int. Is 1 if members of the group are to inherit
+  #                membership in the group being edited.
+  #   - blessmember: boolean int. Is 1 if members of the group are to be able
+  #                  to bless users into the group being edited.
+  #   - membercansee: boolean int. Is 1 if the members of the group are to
+  #                   be aware of the group being edited and its members.
+  #%]
+
+[% title = BLOCK %]Change Group: [% name FILTER html %][% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  style = "tr.odd_row {
+               background: #e9e9e9; 
+           }
+           .permissions th {
+               background: #000000;
+               color: #ffffff;
+           }
+          "
+%]
+
+<form method="post" action="editgroups.cgi">
+  <table border="1" cellpadding="4">
+    <tr>
+      <th>Group:</th>
+      <td>
+        [% IF isbuggroup %]
+          <input type="hidden" name="oldname" value="[% name FILTER html %]">
+          <input type="text" name="name" size="60" value="[% name FILTER html %]">
+        [% ELSE %]
+          [% name FILTER html %]
+        [% END %]
+      </td>
+    </tr>
+
+    <tr>
+      <th>Description:</th>
+      <td>
+        [% IF isbuggroup %]
+          <input type="hidden" name="olddesc" value="[% description FILTER html %]">
+          <input type="text" name="desc" size="70" value="[% description FILTER html %]">
+        [% ELSE %]
+          [% description FILTER html %]
+        [% END %]
+      </td>
+    </tr>
+
+    <tr>
+      <th>User Regexp:</th>
+      <td>
+        <input type="hidden" name="oldregexp" value="[% regexp FILTER html %]">
+        <input type="text" name="regexp" size="40" value="[% regexp FILTER html %]">
+      </td>
+    </tr>
+
+    [% IF isbuggroup %]
+      <tr>
+        <th>Use For [% terms.Bugs %]:</th>
+        <td>
+          <input type="checkbox" name="isactive" value="1" [% (isactive == 1) ? "checked" : "" %]>
+          <input type="hidden" name="oldisactive" value="[% isactive FILTER html %]">
+        </td>
+      </tr>
+    [% END %]
+  </table>
+
+  <p>Users become members of this group in one of three ways:</p>
+    <ul>
+      <li> by being explicity included when the user is edited.
+      <li> by matching the user regexp above.
+      <li> by being a member of one of the groups included in this group
+           by checking the boxes below.
+    </ul>
+
+  [% usevisibility = Param('usevisibilitygroups') %]
+
+    <h4>Group Permissions</h4>
+  <table class="permissions" cellspacing="0" cellpadding="2">
+    <tr>     
+      [% IF usevisibility %]
+        <th>
+          Visible
+        </th>
+      [% END %]
+      <th>
+        Grant
+      </th>
+      <th>
+        Inherit
+      </th>
+      <th>
+        Group
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+    [% row = 0 %]
+    [% FOREACH group = groups %]
+      [% row = row + 1 %]
+      <tr [% 'class="odd_row"' IF row % 2 %]>
+        [% IF usevisibility %]
+          <td align="center">
+            <input type="checkbox" name="cansee-[% group.grpid FILTER none %]" 
+              [% group.membercansee ? "checked " : "" %]value="1">
+            <input type="hidden" name="oldcansee-[% group.grpid FILTER none %]"
+              value="[% group.membercansee FILTER none %]">
+          </td>
+        [% END %]
+        [% IF group_id != group.grpid %]
+          <td align="center">
+            <input type="checkbox" name="bless-[% group.grpid FILTER html %]" [% group.blessmember ? "checked " : "" %]value="1">
+            <input type="hidden" name="oldbless-[% group.grpid FILTER html %]" value="[% group.blessmember FILTER html %]">
+          </td>
+          <td align="center">
+            <input type="checkbox" name="grp-[% group.grpid FILTER html %]" [% group.grpmember ? "checked " : "" %]value="1">
+            <input type="hidden" name="oldgrp-[% group.grpid FILTER html %]" value="[% group.grpmember FILTER html %]">
+          </td>
+          <td align="left" class="groupname">
+            <a href="[% "editgroups.cgi?action=changeform&group=${group.grpid}" FILTER html %]">
+              [% group.grpnam FILTER html %]
+            </a>
+          </td>
+        [% ELSE %]
+          <td>
+            <input type="hidden" name="oldbless-[% group.grpid FILTER html %]" value="0">
+          </td>
+          <td>
+            <input type="hidden" name="oldgrp-[% group.grpid FILTER html %]" value="0">
+          </td>
+          <td align="left" class="groupname">
+            <em>
+              [% group.grpnam FILTER html %]
+            </em>
+          </td>
+        [% END %]
+        <td align="left" class="groupdesc">[% group.grpdesc FILTER html_light %]</td>
+      </tr>
+    [% END %]
+  </table>
+
+  <input type="submit" id="update" value="Save Changes">
+  <br>
+  <dl>
+    [% IF usevisibility %]
+      <dt>Visibility:</dt>
+      <dd>
+        Members of the selected groups can be aware of the 
+        "[% name FILTER html %]" group
+      </dd>
+    [% END %]
+    <dt>Grant:</dt>
+    <dd>
+    Members of the selected groups can grant membership to the
+    "[% name FILTER html %]" group
+    </dd>
+    <dt>Inherit:</dt>
+    <dd>
+      Members of the selected groups are automatically members of the
+      "[% name FILTER html %]" group
+    </dd>
+  </dl>
+  <table width="76%" border="0">
+    <tr>
+      <td>
+        <h4>Conversion of groups created with [% terms.Bugzilla %]
+        versions 2.16 and prior:</h4>
+
+        <ul>
+          <li>Remove all explicit memberships from this group: 
+            <input name="remove_explicit_members" type="submit" id="remove_explicit_members" value="Remove Memberships">
+          </li>
+
+          <li>Remove all explicit memberships that are included in the above
+            regular expression: 
+            <input name="remove_explicit_members_regexp" type="submit" id="remove_explicit_members_regexp" value="Remove memberships included in regular expression"> 
+          </li>
+        </ul>
+      </td>
+    </tr>
+  </table>
+
+  <input type="hidden" name="action" value="postchanges">
+  <input type="hidden" name="group" value="[% group_id FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+</form>
+
+<p>Back to the <a href="editgroups.cgi">group list</a>.</p>
+
+[% PROCESS global/footer.html.tmpl %] 

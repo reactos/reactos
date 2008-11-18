@@ -1,0 +1,84 @@
+/* proSilver Style Sheet Tweaks
+
+These style definitions are mainly IE specific 
+tweaks required due to its poor CSS support.
+-------------------------------------------------*/
+
+* html table, * html select, * html input { font-size: 100%; }
+* html hr { margin: 0; }
+* html span.corners-top, * html span.corners-bottom { background-image: url("{T_THEME_PATH}/images/corners_left.gif"); }
+* html span.corners-top span, * html span.corners-bottom span { background-image: url("{T_THEME_PATH}/images/corners_right.gif"); }
+
+table.table1 {
+	width: 99%;		/* IE < 6 browsers */
+	/* Tantek hack */
+	voice-family: "\"}\"";
+	voice-family: inherit;
+	width: 100%;
+}
+html>body table.table1 { width: 100%; }	/* Reset 100% for opera */
+
+* html ul.topiclist li { position: relative; }
+* html .postbody h3 img { vertical-align: middle; }
+
+/* Form styles */
+html>body dd label input { vertical-align: text-bottom; }	/* Align checkboxes/radio buttons nicely */
+
+* html input.button1, * html input.button2 {
+	padding-bottom: 0;
+	margin-bottom: 1px;
+}
+
+/* Misc layout styles */
+* html .column1, * html .column2 { width: 45%; }
+
+/* Nice method for clearing floated blocks without having to insert any extra markup (like spacer above)
+   From http://www.positioniseverything.net/easyclearing.html 
+#tabs:after, #minitabs:after, .post:after, .navbar:after, fieldset dl:after, ul.topiclist dl:after, ul.linklist:after, dl.polls:after {
+	content: "."; 
+	display: block; 
+	height: 0; 
+	clear: both; 
+	visibility: hidden;
+}*/
+
+.clearfix, #tabs, #minitabs, fieldset dl, ul.topiclist dl, dl.polls {
+	height: 1%;
+	overflow: hidden;
+}
+
+/* viewtopic fix */
+* html .post {
+	height: 25%;
+	overflow: hidden;
+}
+
+/* navbar fix */
+* html .clearfix, * html .navbar, ul.linklist {
+	height: 4%;
+	overflow: hidden;
+}
+
+/* Simple fix so forum and topic lists always have a min-height set, even in IE6
+	From http://www.dustindiaz.com/min-height-fast-hack */
+dl.icon {
+	min-height: 35px;
+	height: auto !important;
+	height: 35px;
+}
+
+* html #search-box {
+	width: 25%;
+}
+
+/* Correctly clear floating for details on profile view */
+*:first-child+html dl.details dd {
+	margin-left: 30%;
+	float: none;
+}
+
+* html dl.details dd {
+	margin-left: 30%;
+	float: none;
+}
+

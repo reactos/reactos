@@ -1,0 +1,59 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<h1>{L_ACP_PRUNE_USERS}</h1>
+
+<p>{L_ACP_PRUNE_USERS_EXPLAIN}</p>
+
+<form id="acp_prune" method="post" action="{U_ACTION}">
+	
+<fieldset>
+	<legend>{L_ACP_PRUNE_USERS}</legend>
+<dl>
+	<dt><label for="username">{L_USERNAME}:</label></dt>
+	<dd><input type="text" id="username" name="username" /></dd>
+</dl>
+<dl>
+	<dt><label for="email">{L_EMAIL}:</label></dt>
+	<dd><input type="text" id="email" name="email" /></dd>
+</dl>
+<dl>
+	<dt><label for="joined">{L_JOINED}:</label><br /><span>{L_JOINED_EXPLAIN}</span></dt>
+	<dd><select name="joined_select">{S_JOINED_OPTIONS}</select> <input type="text" id="joined" name="joined" /></dd>
+</dl>
+<dl>
+	<dt><label for="active">{L_LAST_ACTIVE}:</label><br /><span>{L_LAST_ACTIVE_EXPLAIN}</span></dt>
+	<dd><select name="active_select">{S_ACTIVE_OPTIONS}</select> <input type="text" id="active" name="active" /></dd>
+</dl>
+<dl>
+	<dt><label for="count">{L_POSTS}:</label></dt>
+	<dd><select name="count_select">{S_COUNT_OPTIONS}</select> <input type="text" id="count" name="count" /></dd>
+</dl>
+<dl>
+	<dt><label for="users">{L_ACP_PRUNE_USERS}:</label><br /><span>{L_SELECT_USERS_EXPLAIN}</span></dt>
+	<dd><textarea id="users" name="users" cols="40" rows="5"></textarea></dd>
+	<dd>[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</dd>
+</dl>
+<dl>
+	<dt><label for="deleteposts">{L_DELETE_USER_POSTS}:</label><br /><span>{L_DELETE_USER_POSTS_EXPLAIN}</span></dt>
+	<dd><label><input type="radio" class="radio" name="deleteposts" value="1" /> {L_YES}</label>
+		<label><input type="radio" class="radio" id="deleteposts" name="deleteposts" value="0" checked="checked" /> {L_NO}</label></dd>
+</dl>
+<dl>
+	<dt><label for="deactivate">{L_DEACTIVATE_DELETE}:</label><br /><span>{L_DEACTIVATE_DELETE_EXPLAIN}</span></dt>
+	<dd><label><input type="radio" class="radio" name="action" value="delete" /> {L_DELETE_USERS}</label>
+		<label><input type="radio" class="radio" id="deactivate" name="action" value="deactivate" checked="checked" /> {L_DEACTIVATE}</label></dd>
+</dl>
+
+<p class="submit-buttons">
+	<input type="hidden" name="prune" value="1" />
+
+	<input class="button1" type="submit" id="update" name="update" value="{L_SUBMIT}" />&nbsp;
+	<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+	{S_FORM_TOKEN}
+</p>
+</fieldset>
+</form>
+
+<!-- INCLUDE overall_footer.html -->

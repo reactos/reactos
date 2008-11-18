@@ -1,0 +1,601 @@
+body {
+	font-family: Verdana;
+	font-size: 12px;
+	margin: 0 0 1em 0;
+	padding: 0; /* Only affects Opera */
+	background: #FFFFFF url('http://localhost/reactos.org/images/topbar.jpg') repeat-x scroll top left;
+	min-width:600px;
+}
+ 
+hr {
+	margin: 5px 0 5px 0;
+	color: #8D8D8D;
+}
+ 
+address {
+	font-size: 9px;
+}
+ 
+address p {
+	margin: 0;
+}
+address a {
+	font-size: 9px;
+	text-decoration:none;
+}
+address a:hover {
+	font-size: 9px;
+	text-decoration:underline;
+}
+
+ 
+ 
+h1, .contentSmallTitle {
+	display: block;
+	line-height: normal;
+	font-size: 14px;
+	font-weight: bold;
+	color: #FFFFFF;
+	background-color: #5984C3;
+	padding: 0px 0px 1px 10px;
+	margin-top: 0;
+}
+h1 a {
+	font-size: 14px;
+	font-weight: bold;
+	color: #FFFFFF;
+	background-color: #5984C3;
+	text-decoration:none;
+}
+h1 a:hover {
+	font-size: 14px;
+	font-weight: bold;
+	color: #FFFFFF;
+	background-color: #5984C3;
+	text-decoration:underline;
+}
+ 
+h2 {
+	font-size: 22px;
+	color: #5984C3;
+	font-weight: bold;
+	margin-top: 15px;
+}
+ 
+h3 {
+	font-size: 18px;
+	color: #5984C3;
+	font-weight: bold;
+	margin-top: 10px;
+}
+
+h4 {
+	font-size: 16px;
+	color: #5984C3;
+	font-weight: bold;
+	margin-top: 5px;
+}
+
+h5 {
+	font-size: 14px;
+	color: #5984C3;
+	font-weight: bold;
+	margin-top: 5px;
+}
+
+h6 {
+	font-size: 12px;
+	color: #5984C3;
+	font-weight: bold;
+}
+ 
+a {
+	font-size: 12px;
+	color: #006090;
+}
+ 
+a:hover {
+	background-color: #DDEEFF;
+	color: #000000;
+}
+ 
+/* set by the generator */
+a.extern { 
+	background: url('http://localhost/reactos.org/wiki/stylesheets/monobook/external.png') no-repeat center right;
+	padding-right: 14px; 
+} 
+ 
+#content, .contentSmall {
+	padding-right: 3px;
+	font-size: 12px;
+	text-align: justify;
+}
+ 
+#content li {
+	list-style-image: url('http://localhost/reactos.org/images/bullet.png')
+}
+ 
+#top {
+	margin: 0;
+	background: url('http://localhost/reactos.org/translate/images/logo_lang.jpg') no-repeat scroll 35px 0;
+	padding: 103px 0 26px 0;
+	color: #FFFFFF;
+	text-align: right;
+}
+ 
+#top a {
+	font-size: 13px;
+	color: #FFFFFF;
+	text-decoration: none;
+	padding: 1px 5px 1px 5px;
+}
+ 
+#top a:hover {
+	color: #000000;
+	background-color: #FFCC33;
+}
+ 
+#topMenu {
+	font-size: 13px;
+	margin-left: 300px;
+	background-color: #5984C3;
+}
+ 
+#topMenu p {
+	text-align: left;
+	margin: 0;
+}
+ 
+#leftNav {
+	padding: 0px 10px 10px 7px;
+}
+ 
+#rightNav {
+	padding: 0px 3px 0px 5px;
+	width: 270px;
+	line-height: 150%;
+}
+ 
+#rightNav img {
+	border: 1px solid #000000;
+	height: 200px;
+	width: 266px;
+}
+ 
+#leftNav ol {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	background-color: #EEEEEE;
+	border-top: #3F3849 0px solid;
+	border-right: #3F3849 1px solid;
+	border-left: #3F3849 1px solid;
+}
+ 
+#leftNav ol li {
+	font-size: 13px;
+	font-weight: bold;
+	border-bottom: #3f3849 1px solid;
+}
+ 
+#leftNav ol li a {
+	display: block;
+	width: 145px;
+	padding: 2px 4px 2px 4px;
+ 
+	color: #3F3849;
+	text-decoration: none;
+	background-color: #EEEEEE;
+}
+ 
+#leftNav ol li a:hover {
+	color: #000000;
+	background-color: #FFCC33;
+}
+ 
+#leftNav ol li a.extern {
+	background: none;
+	padding-right: 0px; 
+}
+ 
+#leftNav .navTitle {
+	padding-left: 12px;
+	border-top: #3F3849 1px solid;
+	border-right: #3F3849 1px solid;
+	border-bottom: #3F3849 1px solid;
+	border-left: #3F3849 1px solid;
+ 
+	font-weight: bold;
+	font-size: 14px;
+	color: #FFFFFF;
+	background-color: #5984c3;
+}
+
+#leftNav .navBox {
+        text-align: center;
+        padding: 2px;
+        background-color: #EEEEEE;
+        border-right: 1px solid #3F3849;
+        border-bottom: 1px solid #3F3849;
+        border-left: 1px solid #3F3849;
+        font-size: 13px;
+}
+
+
+#bugzillaContent {
+	font-size: 12px;
+}
+ 
+#bugzillaContent table {
+	font-size: 12px;
+}
+
+
+
+#sectionMenu {
+	margin: 0;
+	font-size: 13px;
+	background-color: #5984C3;
+}
+#sectionMenu a {
+	font-size: 13px;
+	color: #FFFFFF;
+	text-decoration: none;
+	padding: 1px 5px 1px 5px;
+}
+#sectionMenu a:hover {
+	color: #000000;
+	background-color: #FFCC33;
+}
+
+
+/* Maintainer Bar */
+
+table.maintainer {
+	background-color: #ddddee;
+	padding:4px 8px;
+	border:1px solid #ccccdd;
+	text-align: Center;
+}
+
+table.maintainer td {
+	background-color: #ddddee;
+	font-family: Verdana;
+	font-size: 15px;
+}
+
+table.maintainer a {
+	font-size: 15px;
+}
+
+table.maintainer a:hover {
+	background:#eeeeff;
+	color: #000000; 
+	font-family: Verdana; 
+	font-size: 15px;
+}
+
+
+/* Admin Bar */
+
+table.admin {
+	background-color: #FEE3CB;
+	padding:4px 8px;
+	border:1px solid #FBBB95;
+	text-align: Center;
+}
+
+table.admin td {
+	background-color: #FEE3CB;
+	font-family: Verdana;
+	font-size: 15px;
+}
+
+table.admin a {
+	font-size: 15px;
+}
+
+table.admin a:hover {
+	background:#eeeeff;
+	color: #000000; 
+	font-family: Verdana; 
+	font-size: 15px;
+}
+
+/* Message Bar */
+
+table.message {
+	background-color: #FFCC00;
+	padding:4px 8px;
+	border: 1px solid #FF6600;
+	text-align: Center;
+}
+
+table.message td {
+	background-color: #FFCC00;
+	font-family: Verdana;
+	font-size: 15px;
+}
+
+table.message a {
+	font-size: 15px;
+}
+
+table.message a:hover {
+	background:#eeeeff;
+	color: #000000; 
+	font-family: Verdana; 
+	font-size: 15px;
+}
+
+
+/* Forum Bar */
+
+table.forumbar {
+	background-color: #99CCCC;
+	padding:4px 8px;
+	border: 1px solid #5984C3;
+	text-align: Center;
+}
+
+table.forumbar td {
+	background-color: #DDEEFF;
+	font-family: Verdana;
+	font-size: 15px;
+}
+
+table.forumbar a {
+	font-size: 15px;
+}
+
+table.forumbar a:hover {
+	background:#eeeeff;
+	color: #000000; 
+	font-family: Verdana; 
+	font-size: 15px;
+}
+
+
+.button
+{
+	 background-color: #5984C3; color: white;
+	 font-family: "verdana bitstream vera sans", verdana, sans-serif; font-size: 13px;
+	 border-width:1px; border-style:solid; border-color: #C0C0C0;
+	 font-weight: bold; padding: 0;
+}
+
+
+
+UL.simple {
+	PADDING-RIGHT: 0px;
+	PADDING-LEFT: 20px;
+	PADDING-BOTTOM: 0px;
+	PADDING-TOP: 0px;
+	MARGIN: 0px 0px 1em;
+	LIST-STYLE-TYPE: none;
+	FONT-SIZE: 12px;
+}
+SPAN.simple {
+	font-size: 15px;
+	font-weight: bold;	
+}
+
+
+
+/* Graphical Buttons */
+
+div.center { 
+	text-align:center;
+}
+
+/* Picture Button Big */
+#picbutton {
+	margin-left:auto;
+	margin-right:auto;
+	text-align:left;
+	width:370px;
+}
+
+#picbutton span {
+	display: block;
+	height: 110px;
+	padding-left: 65px;
+	padding-top: 25px;
+	padding-bottom: 3px;
+	font-style: normal;
+	letter-spacing: 0px;
+	
+	font-size: 18px;
+	color: #367d10;
+}
+
+#picbutton span:hover {
+	font-size: 18px;
+	color: #3A935B;
+	cursor: pointer;
+}
+
+#picbutton a.pb_download_link {
+	BACKGROUND-POSITION: 0px 0px;
+	display: block;
+	height: 110px;
+	padding-left: 50px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	font-style: normal;
+	letter-spacing: 0px;
+	
+	font-size: 18px;
+	color: #367d10;
+}
+
+#picbutton a.pb_download_link:hover {
+	BACKGROUND-POSITION: 0px 0px;
+	CURSOR: pointer;
+	color: #3A935B;
+}
+#picbutton a.pb_download_link:hover SPAN {
+	BACKGROUND-POSITION: 0px 0px;
+	CURSOR: pointer;
+	color: #3A935B;
+}
+#picbutton a.pb_download_link:hover STRONG {
+	BACKGROUND-POSITION: 0px 0px;
+	CURSOR: pointer;
+	color: #3A935B;
+	text-decoration:underline;
+}
+
+
+#picbutton .pb_smalltext {
+	padding-top: 5px;
+	font-size: 10px;
+	text-decoration:none;
+}
+
+#picbutton a.pb_smalltext {
+	font-size: 10px;
+	text-decoration:none;
+}
+
+#picbutton a.pb_smalltext em {
+	font-style: normal;
+	color: #367d10;
+	letter-spacing: 0;
+	display: block;
+	padding-top: 3px;
+	font-size: 10px;
+	text-decoration:none;
+}
+
+/* Picture Button Small */
+
+
+
+
+/* Button Pictures */
+
+#b_download a {
+	padding-left: 30px;
+	font-size: 14px;
+	color: #367d10;
+	background: url('http://localhost/reactos.org/support/images/button_reactos_big.jpg') no-repeat 0px 100%;
+}
+
+#b_download a:hover {
+	font-size: 18px;
+	color: #3A935B;
+	background-color: transparent;
+	background: url('http://localhost/reactos.org/support/images/button_reactos_big_m.jpg') no-repeat 0px 100%;
+	cursor: pointer;
+}
+
+
+#b_downloadsmall a {
+	BACKGROUND-POSITION: 0px 0px;
+	display: block;
+	text-align:center;
+	margin-left:auto;
+	margin-right:auto;
+	font-style: normal;
+	letter-spacing: 0;
+	width:235px;
+	height: 49px;
+	
+	font-size: 16px;
+	color: #367d10;
+	background: url('http://localhost/reactos.org/support/images/button_download.jpg') no-repeat 0px 100%;
+}
+
+#b_downloadsmall a:hover {
+	font-size: 16px;
+	color: #3A935B;
+	background-color: transparent;
+	background: url('http://localhost/reactos.org/support/images/button_download_m.jpg') no-repeat 0px 100%;
+	cursor: pointer;
+}
+
+#b_downloadsmall .placeholder {
+	padding-top: 5px;
+	font-size: 5px;
+	text-decoration:none;
+}
+
+#b_downloadsmall .sb_margin {
+	letter-spacing: 0;
+	padding-top: 10px;
+	text-decoration:none;
+}
+
+#b_donate a {
+	BACKGROUND-POSITION: 0px 0px;
+	display: block;
+	text-align:center;
+	margin-left:auto;
+	margin-right:auto;
+	font-style: normal;
+	letter-spacing: 0;
+	width:235px;
+	height: 49px;
+	
+	font-size: 16px;
+	color: #367d10;
+	background: url('http://localhost/reactos.org/support/images/button_donate.jpg') no-repeat 0px 100%;
+}
+
+#b_donate a:hover {
+	font-size: 16px;
+	color: #3A935B;
+	background-color: transparent;
+	background: url('http://localhost/reactos.org/support/images/button_donate_m.jpg') no-repeat 0px 100%;
+	cursor: pointer;
+}
+
+#b_donate .placeholder {
+	padding-top: 5px;
+	font-size: 5px;
+	text-decoration:none;
+}
+
+#b_donate .sb_margin {
+	letter-spacing: 0;
+	padding-top: 10px;
+	text-decoration:none;
+}
+
+
+#b_compatibility a {
+	BACKGROUND-POSITION: 0px 0px;
+	display: block;
+	text-align:center;
+	margin-left:auto;
+	margin-right:auto;
+	font-style: normal;
+	letter-spacing: 0;
+	width:232px;
+	height: 49px;
+	
+	font-size: 16px;
+	color: #367d10;
+	background: url('http://localhost/reactos.org/support/media/icons/buttons/button_comp_home.jpg') no-repeat 0px 100%;
+}
+
+#b_compatibility a:hover {
+	font-size: 16px;
+	color: #3A935B;
+	background-color: transparent;
+	background: url('http://localhost/reactos.org/support/media/icons/buttons/button_comp_home_m.jpg') no-repeat 0px 100%;
+	cursor: pointer;
+}
+
+#b_compatibility .sb_margin {
+	letter-spacing: 0;
+	padding-top: 10px;
+	text-decoration:none;
+}
+
+#sb_search {
+	font-size: 10px;
+	color: #367d10;
+}
+

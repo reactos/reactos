@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/*
+ *  Notepad (German resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */]]></obj>
+</group>
+<group name="LANGUAGE">
+  <obj type="LANGUAGE" sublang="SUBLANG_GERMAN">LANG_GERMAN</obj>
+</group>
+<group name="ACCELERATORS">
+  <obj type="ACCELERATORS" rc_name="ID_ACCEL"></obj>
+  <obj type="ACCELERATORS" command="BEGIN" />
+  <obj type="KEY" rc_name="CMD_SELECT_ALL"><![CDATA[^A]]></obj>
+  <obj type="KEY" rc_name="CMD_COPY"><![CDATA[^C]]></obj>
+  <obj type="KEY" rc_name="CMD_SEARCH"><![CDATA[^F]]></obj>
+  <obj type="KEY" rc_name="CMD_GOTO"><![CDATA[^G]]></obj>
+  <obj type="KEY" rc_name="CMD_REPLACE  VIRTKEY  CONTROL"><![CDATA[H]]></obj>
+  <obj type="KEY" rc_name="CMD_OPEN"><![CDATA[^O]]></obj>
+  <obj type="KEY" rc_name="CMD_SAVE"><![CDATA[^S]]></obj>
+  <obj type="KEY" rc_name="CMD_PASTE"><![CDATA[^V]]></obj>
+  <obj type="KEY" rc_name="CMD_CUT"><![CDATA[^X]]></obj>
+  <obj type="KEY" rc_name="CMD_UNDO"><![CDATA[^Z]]></obj>
+  <obj type="ACCELERATORS" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="MAIN_MENU"></obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["&Datei"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="CMD_NEW"><![CDATA["&Neu..."]]></obj>
+<obj type="MENUITEM" rc_name="CMD_OPEN"><![CDATA["Ö&ffnen..."]]></obj>
+<obj type="MENUITEM" rc_name="CMD_SAVE"><![CDATA["&Speichern"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_SAVE_AS"><![CDATA["Speichern &unter..."]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="CMD_PAGE_SETUP"><![CDATA["Seite ein&richten..."]]></obj>
+<obj type="MENUITEM" rc_name="CMD_PRINT"><![CDATA["&Drucken"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_PRINTER_SETUP"><![CDATA["Drucker&einrichtung..."]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="CMD_EXIT"><![CDATA["&Beenden"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Bearbeiten"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="CMD_UNDO"><![CDATA["&Rückgängig\tStrg+Z"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="CMD_CUT"><![CDATA["&Ausschneiden\tStrg+X"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_COPY"><![CDATA["&Kopieren\tStrg+C"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_PASTE"><![CDATA["&Einfügen\tStrg+V"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_DELETE"><![CDATA["&Löschen\tEntf"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="CMD_SEARCH"><![CDATA["Suchen..."]]></obj>
+<obj type="MENUITEM" rc_name="CMD_SEARCH_NEXT"><![CDATA["&Weitersuchen\tF3"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_REPLACE"><![CDATA["&Ersetzen\tCtrl+H"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_GOTO"><![CDATA["Gehe zu...\tCtrl+G"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="CMD_SELECT_ALL"><![CDATA["Alles &markieren"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_TIME_DATE"><![CDATA["&Uhrzeit/Datum\tF5"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["F&ormat"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="CMD_WRAP"><![CDATA["&Zeilenumbruch"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_FONT"><![CDATA["&Schriftart..."]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Ansicht"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="CMD_STATUSBAR"><![CDATA["Status&leiste"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Hilfe"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="CMD_HELP_CONTENTS"><![CDATA["&Inhalt"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_HELP_SEARCH"><![CDATA["&Suchen..."]]></obj>
+<obj type="MENUITEM" rc_name="CMD_HELP_ON_HELP"><![CDATA["&Hilfe benutzen"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="CMD_ABOUT"><![CDATA["&Über"]]></obj>
+<obj type="MENUITEM" rc_name="CMD_ABOUT_WINE"><![CDATA["Inf&o"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/* Dialog `Page setup' */]]></obj>
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="DIALOG_PAGESETUP" left="0" top="0" width="225" height="95">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="CAPTION"><![CDATA[Seite einrichten]]></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="LTEXT" rc_name="0x140" left="10" top="07" width="40" height="15" style=""><![CDATA["&Kopfzeile:"]]></obj>
+  <obj type="EDITTEXT" rc_name="0x141" left="60" top="05" width="110" height="12" style="WS_BORDER | WS_TABSTOP"></obj>
+  <obj type="LTEXT" rc_name="0x142" left="10" top="24" width="40" height="15" style=""><![CDATA["&Fußzeile:"]]></obj>
+  <obj type="EDITTEXT" rc_name="0x143" left="60" top="22" width="110" height="12" style="WS_BORDER | WS_TABSTOP"></obj>
+  <obj type="GROUPBOX" rc_name="0x144" left="10" top="43" width="160" height="45" style=""><![CDATA["Ränder"]]></obj>
+  <obj type="LTEXT" rc_name="0x145" left="20" top="55" width="30" height="10" style="WS_CHILD"><![CDATA["&Links:"]]></obj>
+  <obj type="EDITTEXT" rc_name="0x147" left="50" top="55" width="35" height="11" style="WS_CHILD | WS_BORDER | WS_TABSTOP"></obj>
+  <obj type="LTEXT" rc_name="0x148" left="20" top="73" width="30" height="10" style="WS_CHILD"><![CDATA["&Oben:"]]></obj>
+  <obj type="EDITTEXT" rc_name="0x14A" left="50" top="73" width="35" height="11" style="WS_CHILD | WS_BORDER | WS_TABSTOP"></obj>
+  <obj type="LTEXT" rc_name="0x14B" left="100" top="55" width="30" height="10" style="WS_CHILD"><![CDATA["&Rechts:"]]></obj>
+  <obj type="EDITTEXT" rc_name="0x14D" left="130" top="55" width="35" height="11" style="WS_CHILD | WS_BORDER | WS_TABSTOP"></obj>
+  <obj type="LTEXT" rc_name="0x14E" left="100" top="73" width="30" height="10" style="WS_CHILD"><![CDATA["&Unten:"]]></obj>
+  <obj type="EDITTEXT" rc_name="0x150" left="130" top="73" width="35" height="11" style="WS_CHILD | WS_BORDER | WS_TABSTOP"></obj>
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="180" top="3" width="40" height="15" style="WS_TABSTOP"><![CDATA["OK"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDCANCEL" left="180" top="21" width="40" height="15" style="WS_TABSTOP"><![CDATA["Abbrechen"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="0x153" left="180" top="39" width="40" height="15" style="WS_TABSTOP"><![CDATA["&Hilfe"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/* Dialog 'Gehe zu...' */]]></obj>
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="DIALOG_GOTO" left="0" top="0" width="165" height="50">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="CAPTION"><![CDATA[Gehe zu Zeile]]></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="EDITTEXT" rc_name="ID_LINENUMBER" left="54" top="10" width="106" height="12" style="WS_CHILD | WS_BORDER | WS_TABSTOP"></obj>
+  <obj type="LTEXT" rc_name="0x155" left="5" top="12" width="45" height="12" style="WS_CHILD | WS_TABSTOP | ES_NUMBER"><![CDATA["Zeile Nummer:"]]></obj>
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="75" top="30" width="40" height="15" style="WS_CHILD | WS_TABSTOP"><![CDATA["OK"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDCANCEL" left="120" top="30" width="40" height="15" style="WS_CHILD | WS_TABSTOP"><![CDATA["Abbrechen"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_ABOUTBOX" left="22" top="16" width="284" height="170">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Über ReactOS Notepad]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="-1" prop="Static" style="SS_LEFTNOWORDWRAP | WS_GROUP" left="46" top="7" width="232" height="39"><![CDATA["ReactOS Notepad v1.0\r\nCopyright 1997 98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n"]]></obj>
+  <obj type="CONTROL" rc_name="-1" prop="Static" style="0x50000000" left="8" top="48" width="272" height="11"><![CDATA[""]]></obj>
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="114" top="149" width="44" height="15" style="WS_GROUP"><![CDATA["Schließen"]]></obj>
+  <obj type="ICON" rc_name="IDI_NPICON" left="-1" top="12" width="9" height="20" style="30"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_LICENSE" left="8" top="64" width="272" height="81" style="ES_MULTILINE |ES_READONLY | WS_VSCROLL"></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="STRING_LICENSE"><![CDATA["Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="STRING_PAGESETUP_HEADERVALUE"><![CDATA["&n"]]></obj>
+  <obj type="STRING" rc_name="STRING_PAGESETUP_FOOTERVALUE"><![CDATA["Seite &s"]]></obj>
+  <obj type="STRING" rc_name="STRING_PAGESETUP_LEFTVALUE"><![CDATA["20 mm"]]></obj>
+  <obj type="STRING" rc_name="STRING_PAGESETUP_RIGHTVALUE"><![CDATA["20 mm"]]></obj>
+  <obj type="STRING" rc_name="STRING_PAGESETUP_TOPVALUE"><![CDATA["25 mm"]]></obj>
+  <obj type="STRING" rc_name="STRING_PAGESETUP_BOTTOMVALUE"><![CDATA["25 mm"]]></obj>
+  <obj type="STRING" rc_name="STRING_NOTEPAD"><![CDATA["Editor"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR"><![CDATA["Fehler"]]></obj>
+  <obj type="STRING" rc_name="STRING_WARNING"><![CDATA["Achtung"]]></obj>
+  <obj type="STRING" rc_name="STRING_INFO"><![CDATA["Information"]]></obj>
+  <obj type="STRING" rc_name="STRING_UNTITLED"><![CDATA["(unbenannt)"]]></obj>
+  <obj type="STRING" rc_name="STRING_ALL_FILES"><![CDATA["Alle Dateien (*.*)"]]></obj>
+  <obj type="STRING" rc_name="STRING_TEXT_FILES_TXT"><![CDATA["Textdateien (*.txt)"]]></obj>
+  <obj type="STRING" rc_name="STRING_TOOLARGE"><![CDATA["Die Datei '%s' ist zu groß für den Editor\n \
+Benutzen Sie bitte einen anderen Editor, um diese Datei zu bearbeiten."]]></obj>
+  <obj type="STRING" rc_name="STRING_NOTEXT"><![CDATA["Sie haben keinen Text eingegeben, der \
+gespeichert\n werden könnte. Geben Sie Text ein, und versuchen Sie es \
+\nerneut."]]></obj>
+  <obj type="STRING" rc_name="STRING_DOESNOTEXIST"><![CDATA["Die Datei '%s'\nexistiert nicht.\n\n \
+Möchten Sie eine neue Datei erstellen ?"]]></obj>
+  <obj type="STRING" rc_name="STRING_NOTSAVED"><![CDATA["Datei %s\n wurde geändert.\n\n \
+Möchten Sie die Änderungen speichern ?"]]></obj>
+  <obj type="STRING" rc_name="STRING_NOTFOUND"><![CDATA["'%s' kann nicht gefunden werden."]]></obj>
+  <obj type="STRING" rc_name="STRING_OUT_OF_MEMORY"><![CDATA["Nicht genügend Arbeitsspeicher, \
+um diese Funktion \nabzuschließen. Beenden Sie eine oder mehrere \
+\nAnwendungen, um den verfügbaren Arbeitsspeicher zu \nerhöhen."]]></obj>
+  <obj type="STRING" rc_name="STRING_CANNOTFIND"><![CDATA["'%s' wurde nicht gefunden."]]></obj>
+  <obj type="STRING" rc_name="STRING_ANSI"><![CDATA["ANSI"]]></obj>
+  <obj type="STRING" rc_name="STRING_UNICODE"><![CDATA["Unicode"]]></obj>
+  <obj type="STRING" rc_name="STRING_UNICODE_BE"><![CDATA["Unicode (big endian)"]]></obj>
+  <obj type="STRING" rc_name="STRING_UTF8"><![CDATA["UTF-8"]]></obj>
+  <obj type="STRING" rc_name="STRING_CRLF"><![CDATA["Windows"]]></obj>
+  <obj type="STRING" rc_name="STRING_LF"><![CDATA["Unix"]]></obj>
+  <obj type="STRING" rc_name="STRING_CR"><![CDATA["Mac"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+</resource>

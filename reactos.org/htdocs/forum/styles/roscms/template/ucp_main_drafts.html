@@ -1,0 +1,73 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="postform" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<p>{L_DRAFTS_EXPLAIN}</p>
+
+<!-- IF S_EDIT_DRAFT -->
+
+		<!-- INCLUDE posting_editor.html -->
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+			<fieldset class="submit-buttons">
+				{S_HIDDEN_FIELDS}<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp;
+				<input type="submit" name="submit" value="{L_SAVE}" class="button1" />
+				{S_FORM_TOKEN}
+			</fieldset>
+
+<!-- ELSE -->
+
+	<!-- IF .draftrow -->
+		<ul class="topiclist">
+			<li class="header">
+				<dl>
+					<dt>{L_DRAFT_TITLE}</dt>
+					<dd class="info"><span>{L_SAVE_DATE}</span></dd>
+					<dd class="mark">{L_MARK}</dd>
+				</dl>
+			</li>
+		</ul>
+		<ul class="topiclist cplist">
+
+		<!-- BEGIN draftrow -->
+			<li class="row<!-- IF draftrow.S_ROW_COUNT is odd --> bg1<!-- ELSE --> bg2<!-- ENDIF -->">
+				<dl>
+					<dt>
+						<a class="topictitle" href="{draftrow.U_VIEW_EDIT}">{draftrow.DRAFT_SUBJECT}</a><br />
+						<!-- IF draftrow.S_LINK_TOPIC -->{L_TOPIC}: <a href="{draftrow.U_VIEW}">{draftrow.TITLE}</a>
+						<!-- ELSEIF draftrow.S_LINK_FORUM -->{L_FORUM}: <a href="{draftrow.U_VIEW}">{draftrow.TITLE}</a>
+						<!-- ELSEIF S_PRIVMSGS -->
+						<!-- ELSE -->{L_NO_TOPIC_FORUM}<!-- ENDIF -->
+					</dt>
+					<dd class="info"><span>{draftrow.DATE}<br /><!-- IF draftrow.U_INSERT --><a href="{draftrow.U_INSERT}">{L_LOAD_DRAFT}</a> &bull; <!-- ENDIF --><a href="{draftrow.U_VIEW_EDIT}">{L_VIEW_EDIT}</a></span></dd>
+					<dd class="mark"><input type="checkbox" name="d[{draftrow.DRAFT_ID}]" id="d{draftrow.DRAFT_ID}" /></dd>
+				</dl>
+			</li>
+		<!-- END draftrow -->
+		</ul>
+	<!-- ELSE -->
+		<p><strong>{L_NO_SAVED_DRAFTS}</strong></p>
+	<!-- ENDIF -->
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<!-- IF .draftrow -->
+		<fieldset class="display-actions">
+			<input class="button2" type="submit" name="delete" value="{L_DELETE_MARKED}" />
+			<div><a href="#" onclick="marklist('postform', '', true); return false;">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('postform', '', false); return false;">{L_UNMARK_ALL}</a></div>
+			{S_FORM_TOKEN}
+		</fieldset>
+	<!-- ENDIF -->
+
+<!-- ENDIF -->
+
+</form>
+
+<!-- INCLUDE ucp_footer.html -->

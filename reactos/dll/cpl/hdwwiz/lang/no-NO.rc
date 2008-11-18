@@ -1,7 +1,0 @@
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-	IDS_CPLNAME "Legg til maskinvare"
-	IDS_CPLDESCRIPTION "Legg til maskinvare for din datamaskin."
-END

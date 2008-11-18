@@ -1,0 +1,140 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>{$lang_devkit_title}</title>
+	<script language="javascript" type="text/javascript" src="../../tiny_mce_popup.js"></script>
+	<script language="javascript" type="text/javascript" src="../../utils/mctabs.js"></script>
+	<script language="javascript" type="text/javascript" src="../../utils/form_utils.js"></script>
+	<script language="javascript" type="text/javascript" src="jscripts/devkit.js"></script>
+	<script language="javascript" type="text/javascript" src="jscripts/diff.js"></script>
+	<link href="css/devkit.css" rel="stylesheet" type="text/css" />
+	<base target="_self" />
+</head>
+<body id="devkit" onload="tinyMCEPopup.executeOnLoad('init();');" style="display: none">
+    <form action="#">
+		<h1>{$lang_devkit_title}</h1>
+
+		<div class="tabs">
+			<ul>
+				<li id="log_tab" class="current"><span><a href="javascript:mcTabs.displayTab('log_tab','log_panel');" onmousedown="return false;">{$lang_devkit_log_tab}</a></span></li>
+				<li id="info_tab"><span><a href="javascript:mcTabs.displayTab('info_tab','info_panel');" onmousedown="return false;">{$lang_devkit_info_tab}</a></span></li>
+				<li id="settings_tab"><span><a href="javascript:mcTabs.displayTab('settings_tab','settings_panel');" onmousedown="return false;">{$lang_devkit_settings_tab}</a></span></li>
+				<li id="content_tab"><span><a href="javascript:mcTabs.displayTab('content_tab','content_panel');" onmousedown="return false;">{$lang_devkit_content_tab}</a></span></li>
+				<!-- <li id="command_states_tab"><span><a href="javascript:mcTabs.displayTab('command_states_tab','command_states_panel');" onmousedown="return false;">{$lang_devkit_command_states_tab}</a></span></li> -->
+				<li id="undo_redo_tab"><span><a href="javascript:mcTabs.displayTab('undo_redo_tab','undo_redo_panel');" onmousedown="return false;">{$lang_devkit_undo_redo_tab}</a></span></li>
+				<li id="misc_tab"><span><a href="javascript:mcTabs.displayTab('misc_tab','misc_panel');" onmousedown="return false;">{$lang_devkit_misc_tab}</a></span></li>
+			</ul>
+		</div>
+
+		<div class="panel_wrapper">
+			<div id="log_panel" class="panel current">
+				<fieldset>
+					<legend>{$lang_devkit_log_tab}</legend>
+
+					<div style="float: left">
+						<label>{$lang_devkit_filter} </label><input type="text" id="logfilter" name="logfilter" value="" onchange="changeFilter(this.value);" />
+					</div>
+
+					<div style="float: left">
+						<input type="checkbox" id="logenabled" name="logenabled" value="true" checked="checked" onclick="toggleLog(this.checked);" />
+					</div>
+
+					<div style="float: right">
+						<a href="javascript:clearLog();">[{$lang_devkit_clear_log}]</a>
+					</div>
+
+					<br style="clear: both" />
+
+					<div id="log">
+					</div>
+
+					<input type="checkbox" id="debug_events" name="debug_events" class="checkbox" onclick="toggleDebugEvents(this.checked);" /><label for="debug_events" onclick="toggleDebugEvents(this.form.debug_events.checked);">{$lang_devkit_debug_events}</label>
+				</fieldset>
+			</div>
+
+			<div id="info_panel" class="panel">
+				<fieldset>
+					<legend>{$lang_devkit_info_tab}</legend>
+
+					<span><a href="javascript:renderInfo();">[{$lang_devkit_refresh}]</a></span>
+
+					<div id="info" class="data">
+						<p>{$lang_devkit_info_help}</p>
+					</div>
+				</fieldset>
+			</div>
+
+			<div id="settings_panel" class="panel">
+			<fieldset>
+					<legend>{$lang_devkit_settings_tab}</legend>
+
+					<span><a href="javascript:renderSettings();">[{$lang_devkit_refresh}]</a></span>
+
+					<div id="settings" class="data">
+						<p>{$lang_devkit_settings_help}</p>
+					</div>
+				</fieldset>
+			</div>
+
+			<div id="content_panel" class="panel">
+			<fieldset>
+					<legend>{$lang_devkit_content_tab}</legend>
+
+					<span><a href="javascript:renderContent();">[{$lang_devkit_refresh}]</a></span>
+
+					<div id="content" class="data">
+						<p>{$lang_devkit_content_help}</p>
+					</div>
+				</fieldset>
+			</div>
+
+			<div id="command_states_panel" class="panel">
+			<fieldset>
+					<legend>{$lang_devkit_command_states_tab}</legend>
+
+					<span><a href="javascript:renderCommandStates();">[{$lang_devkit_refresh}]</a></span>
+
+					<div id="command_states" class="data">
+						<p>{$lang_devkit_command_states_help}</p>
+					</div>
+				</fieldset>
+			</div>
+
+			<div id="undo_redo_panel" class="panel">
+				<fieldset>
+					<legend>{$lang_devkit_undo_redo_tab}</legend>
+
+					<span><a href="javascript:renderUndoRedo();">[{$lang_devkit_refresh}]</a></span>
+
+					<div id="undo_redo" class="data">
+						<p>{$lang_devkit_undo_redo_help}</p>
+					</div>
+
+					<input type="checkbox" id="undo_diff" name="undo_diff" class="checkbox" /><label for="undo_diff">{$lang_devkit_undo_diff}</label>
+				</fieldset>
+			</div>
+
+			<div id="misc_panel" class="panel">
+				<fieldset>
+					<legend>{$lang_devkit_misc_tab}</legend>
+
+					<div class="data">
+						<p>{$lang_devkit_misc_help}</p>
+						<hr />
+						<p>Selection: <a href="#" onmousedown="return storeSelection();">[Store selection]</a> <a href="#" onmousedown="return restoreSelection();">[Restore selection]</a></p>
+						<hr />
+						<div><strong>Insert custom HTML content</strong></div>
+						<div><textarea id="htmlcont" name="htmlcont" style="width: 90%" rows="5"></textarea></div>
+						<div><a href="#" onclick="return tinyMCE.execCommand('mceInsertContent',false,document.getElementById('htmlcont').value);">[Insert content]</a></div>
+						<hr />
+						<div><strong>Eval JS:</strong></div>
+						<div><textarea id="jscont" name="jscont" style="width: 90%" rows="5">tinyMCE.execCommand('Bold',false,null);</textarea></div>
+						<div><a href="#" onclick="return parent.window.eval(document.getElementById('jscont').value);">[Evaluate]</a></div>
+					</div>
+				</fieldset>
+			</div>
+		</div>
+    </form>
+
+	<div id="flip"><a href="javascript:toggleFlip();" onmousedown="return false;"><img id="flipbtn" src="images/flip_down.gif" border="0" /></a></div>
+</body>
+</html>

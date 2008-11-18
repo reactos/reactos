@@ -1,0 +1,48 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Jeff Hedlund <jeff.hedlund@matrixsi.com>
+  #
+  #%]
+                                      
+[% BLOCK formattimeunit %]
+  [%# INTERFACE:
+    # time_unit:  the number converting, converts to 2 decimal places
+    #             unless the last character is a 0, then it truncates to 
+    #             1 decimal place
+    #%]
+  [% time_unit = time_unit FILTER format('%.2f') %]
+  [% IF time_unit.match('0\Z') %]
+    [% time_unit FILTER format('%.1f') %]
+  [% ELSE %]
+    [% time_unit FILTER format('%.2f') %]
+  [% END %]
+[% END %]
+
+[% BLOCK calculatepercentage %]
+  [%# INTERFACE:
+    # act:   actual time  
+    # rem:   remaining time
+    # %]
+  [% IF (act + rem) > 0 %]
+    [% (act / (act + rem)) * 100 
+       FILTER format("%d") %]
+  [% ELSE %]
+    0
+  [% END %]
+[% END %]

@@ -1,0 +1,4 @@
+Name: Mozilla Modern Tribute
+Author: Garvin Hicking
+Date: 2004-03-02
+Require Serendipity: 0.8

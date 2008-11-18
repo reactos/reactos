@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+<group>
+<obj type="COMMENT"><![CDATA[/*
+ *  Notepad (English resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
+ *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */]]></obj>
+</group>
+<group>
+<obj type="LANGUAGE" sublang="SUBLANG_ENGLISH_US">LANG_ENGLISH</obj>
+</group>
+<group>
+<obj type="ACCELERATORS" rc_name="ID_ACCEL"></obj>
+<obj type="ACCELERATORS" command="BEGIN" />
+<obj type="KEY" rc_name="CMD_SELECT_ALL"><![CDATA["^A"]]></obj>
+<obj type="KEY" rc_name="CMD_COPY"><![CDATA["^C"]]></obj>
+<obj type="KEY" rc_name="CMD_SEARCH"><![CDATA["^F"]]></obj>
+<obj type="KEY" rc_name="CMD_GOTO"><![CDATA["^G"]]></obj>
+<obj type="KEY" rc_name="CMD_REPLACE  VIRTKEY  CONTROL"><![CDATA["H"]]></obj>
+<obj type="KEY" rc_name="CMD_OPEN"><![CDATA["^O"]]></obj>
+<obj type="KEY" rc_name="CMD_SAVE"><![CDATA["^S"]]></obj>
+<obj type="KEY" rc_name="CMD_PASTE"><![CDATA["^V"]]></obj>
+<obj type="KEY" rc_name="CMD_CUT"><![CDATA["^X"]]></obj>
+<obj type="KEY" rc_name="CMD_UNDO"><![CDATA["^Z"]]></obj>
+<obj type="ACCELERATORS" command="END" />
+</group>
+<group>
+<obj type="MENU" rc_name="MAIN_MENU"></obj>
+<group>
+<obj type="COMMENT"><![CDATA[/* Dialog `Page setup' */]]></obj>
+</group>
+<group>
+<obj type="COMMENT"><![CDATA[/* Dialog `Encoding' */]]></obj>
+</group>
+<group>
+<obj type="COMMENT"><![CDATA[/* Dialog 'Go To' */]]></obj>
+</group>
+<group>
+<obj type="DIALOG" rc_name="IDD_ABOUTBOX" top="22" left="16" right="284" bottom="170">DISCARDABLE</obj>
+<obj type="STYLE">DS_MODALFRAME | WS_CAPTION | WS_SYSMENU</obj>
+<obj type="CAPTION">"About ReactOS Notepad"</obj>
+<obj type="FONT" size="8 name="MS She"></obj>
+<obj type="DIALOG" command="BEGIN" />
+<obj type="CONTROL" rc_name="-1" prop="Static" style="SS_LEFTNOWORDWRAP | WS_GROUP" top="46" left="7" right="232" bottom="39"><![CDATA[ReactOS Notepad v1.0\r\nCopyright 1997 98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n]]></obj>
+<obj type="CONTROL" rc_name="-1" prop="Static" style="0x50000000" top="8" left="48" right="272" bottom="11"></obj>
+<obj type="DEFPUSHBUTTON" rc_name="IDOK" top="114" left="149" right="44" bottom="15" style="WS_GROUP"><![CDATA[Close]]></obj>
+<obj type="ICON" rc_name="IDI_NPICON" top="-1" left="12" right="9" bottom="20" style="30"></obj>
+<obj type="EDITTEXT" rc_name="IDC_LICENSE" top="8" left="64" right="272" bottom="81" style="ES_MULTILINE |ES_READONLY | WS_VSCROLL"></obj>
+<obj type="DIALOG" command="END" />
+</group>
+<group>
+<obj type="STRINGTABLE">DISCARDABLE</obj>
+</group>
+<obj type="STRINGTABLE" command="BEGIN" />
+<obj type="STRING" rc_name="STRING_LICENSE"><![CDATA[This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License  or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful  but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not  write to the Free Software Foundation  Inc.  675 Mass Ave  Cambridge  MA 02139  USA.]]></obj>
+<obj type="STRINGTABLE" command="END" />
+</group>
+<group>
+<obj type="STRINGTABLE">DISCARDABLE</obj>
+</group>
+<obj type="STRINGTABLE" command="BEGIN" />
+<obj type="STRING" rc_name="STRING_PAGESETUP_HEADERVALUE"><![CDATA[&n]]></obj>
+<obj type="STRING" rc_name="STRING_PAGESETUP_FOOTERVALUE"><![CDATA[Page &s]]></obj>
+<obj type="STRING" rc_name="STRING_PAGESETUP_LEFTVALUE"><![CDATA[20 mm]]></obj>
+<obj type="STRING" rc_name="STRING_PAGESETUP_RIGHTVALUE"><![CDATA[20 mm]]></obj>
+<obj type="STRING" rc_name="STRING_PAGESETUP_TOPVALUE"><![CDATA[25 mm]]></obj>
+<obj type="STRING" rc_name="STRING_PAGESETUP_BOTTOMVALUE"><![CDATA[25 mm]]></obj>
+<obj type="STRING" rc_name="STRING_NOTEPAD"><![CDATA[Notepad]]></obj>
+<obj type="STRING" rc_name="STRING_ERROR"><![CDATA[ERROR]]></obj>
+<obj type="STRING" rc_name="STRING_WARNING"><![CDATA[WARNING]]></obj>
+<obj type="STRING" rc_name="STRING_INFO"><![CDATA[Information]]></obj>
+<obj type="STRING" rc_name="STRING_UNTITLED"><![CDATA[(untitled)]]></obj>
+<obj type="STRING" rc_name="STRING_ALL_FILES"><![CDATA[All files (*.*)]]></obj>
+<obj type="STRING" rc_name="STRING_TEXT_FILES_TXT"><![CDATA[Text files (*.txt)]]></obj>
+<obj type="STRING" rc_name="STRING_TOOLARGE"><![CDATA[File '%s' is too large for notepad.\n \
+Please use a different editor.]]></obj>
+<obj type="STRING" rc_name="STRING_NOTEXT"><![CDATA[You didn't enter any text. \
+\nPlease type something and try again]]></obj>
+<obj type="STRING" rc_name="STRING_DOESNOTEXIST"><![CDATA[File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?]]></obj>
+<obj type="STRING" rc_name="STRING_NOTSAVED"><![CDATA[File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?]]></obj>
+<obj type="STRING" rc_name="STRING_NOTFOUND"><![CDATA['%s' can not be found.]]></obj>
+<obj type="STRING" rc_name="STRING_OUT_OF_MEMORY"><![CDATA[Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree \
+memory.]]></obj>
+<obj type="STRING" rc_name="STRING_CANNOTFIND"><![CDATA[Cannot find '%s']]></obj>
+<obj type="STRING" rc_name="STRING_ANSI"><![CDATA[ANSI]]></obj>
+<obj type="STRING" rc_name="STRING_UNICODE"><![CDATA[Unicode]]></obj>
+<obj type="STRING" rc_name="STRING_UNICODE_BE"><![CDATA[Unicode (big endian)]]></obj>
+<obj type="STRING" rc_name="STRING_UTF8"><![CDATA[UTF-8]]></obj>
+<obj type="STRING" rc_name="STRING_CRLF"><![CDATA[Windows]]></obj>
+<obj type="STRING" rc_name="STRING_LF"><![CDATA[Unix]]></obj>
+<obj type="STRING" rc_name="STRING_CR"><![CDATA[Mac]]></obj>
+<obj type="STRINGTABLE" command="END" />
+</group>
+</resource>

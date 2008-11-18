@@ -1,0 +1,61 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>{$lang_insert_advhr_desc}</title>
+	<script language="javascript" type="text/javascript" src="../../tiny_mce_popup.js"></script>
+	<script language="javascript" type="text/javascript" src="jscripts/rule.js"></script>
+	<script language="javascript" type="text/javascript" src="../../utils/mctabs.js"></script>
+	<link href="css/advhr.css" rel="stylesheet" type="text/css" />
+	<base target="_self" />
+</head>
+<body onload="tinyMCEPopup.executeOnLoad('init();');">
+<form onsubmit="insertHR();return false;" action="#">
+	<div class="tabs">
+		<ul>
+			<li id="general_tab" class="current"><span><a href="javascript:mcTabs.displayTab('general_tab','general_panel');" onmousedown="return false;">{$lang_insert_advhr_desc}</a></span></li>
+		</ul>
+	</div>
+
+	<div class="panel_wrapper">
+		<div id="general_panel" class="panel current">
+			<table border="0" cellpadding="4" cellspacing="0">
+                    <tr>
+                        <td><label for="width">{$lang_insert_advhr_width}</label></td>
+                        <td nowrap="nowrap">
+                            <input id="width" name="width" type="text" value="" />
+                            <select name="width2" id="width2">
+                                <option value="">px</option>
+                                <option value="%">%</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="size">{$lang_insert_advhr_size}</label></td>
+                        <td><select id="size" name="size">
+                            <option value="">Normal</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select></td>
+                    </tr>
+                    <tr>
+                        <td><label for="noshade">{$lang_insert_advhr_noshade}</label></td>
+                        <td><input type="checkbox" name="noshade" id="noshade" class="radio" /></td>
+                    </tr>
+            </table>
+		</div>
+	</div>
+
+	<div class="mceActionPanel">
+		<div style="float: left">
+			<input type="button" id="insert" name="insert" value="{$lang_insert}" onclick="insertHR();" />
+		</div>
+
+		<div style="float: right">
+			<input type="button" id="cancel" name="cancel" value="{$lang_cancel}" onclick="tinyMCEPopup.close();" />
+		</div>
+	</div>
+</form>
+</body>
+</html>

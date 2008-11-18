@@ -1,0 +1,19 @@
+<?php
+# Your class extension is defined there.
+#
+# Do NOT use PHPTal with this sample, if you want PHPTal support have a look at
+# the other sample : SkinPHPTal.sample.
+#
+# The class name MUST begin with 'Skin' and the rest is the name of the file
+# excluding '.php'
+# This file is named Skin.sample (but it should end with php). So the
+# class name will be 'Skin' . 'Skin'
+
+class SkinSkin extends Skin {
+# Override method below
+#
+
+}
+
+}
+?>

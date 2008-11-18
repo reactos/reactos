@@ -1,0 +1,37 @@
+This directory contains data files in the format of PHP's serialize() function. 
+The source data are typically array literals in PHP source files. We have 
+observed that unserialize(file_get_contents(...)) is faster than executing such 
+a file from an oparray cache like APC, and very much faster than loading it by 
+parsing the source file without such a cache. It should also be faster than 
+loading the data across the network with memcached, as long as you are careful 
+to put your MediaWiki root directory on a local hard drive rather than on NFS. 
+This is a good idea for performance in any case.
+
+To generate all data files:
+
+   cd /path/to/wiki/serialized
+   make
+
+This requires GNU Make. At present, the only serialized data file which is 
+strictly required is Utf8Case.ser. This contains UTF-8 case conversion tables, 
+which have essentially never changed since MediaWiki was invented. 
+
+The Messages*.ser files are localisation files, containing user interface text 
+and various other data related to language-specific behaviour. Because they 
+are merged with the fallback language (usually English) before caching, they 
+are all quite large, about 140 KB each at the time of writing. If you generate 
+all of them, they take up about 20 MB. Hence, I don't expect we will include 
+all of them in the release tarballs. However, to obtain optimum performance, 
+YOU SHOULD GENERATE ALL THE LOCALISATION FILES THAT YOU WILL BE USING ON YOUR 
+WIKIS.
+
+You can generate individual files by typing a command such as:
+   cd /path/to/wiki/serialized
+   make MessagesAr.ser
+
+If you change a Messages*.php source file, you must recompile any serialized 
+data files which are present. If you change MessagesEn.php, this will 
+invalidate *all* Messages*.ser files. 
+
+I think we should distribute a few Messages*.ser files in the release tarballs,
+specifically the ones created by "make dist". 

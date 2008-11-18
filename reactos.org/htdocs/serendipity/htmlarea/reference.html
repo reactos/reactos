@@ -1,0 +1,523 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.2//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>HTMLArea-3.0 Reference</title>
+
+<style type="text/css">
+  @import url(htmlarea.css);
+  body { font: 14px verdana,sans-serif; background: #fff; color: #000; }
+  h1, h2 { font-family:tahoma,sans-serif; }
+  h1 { border-bottom: 2px solid #000; }
+  h2 { border-bottom: 1px solid #aaa; }
+  h3, h4 { margin-bottom: 0px; font-family: Georgia,serif; font-style: italic; }
+  h4 { font-size: 90%; margin-left: 1em; }
+  acronym { border-bottom: 1px dotted #063; color: #063; }
+  p { margin-left: 2em; margin-top: 0.3em; }
+  li p { margin-left: 0px; }
+  .abstract { padding: 5px; margin: 0px 10em; font-size: 90%; border: 1px dashed #aaa; background: #eee;}
+  li { margin-left: 2em; }
+  em { color: #042; }
+  a { color: #00f; }
+  a:hover { color: #f00; }
+  a:active { color: #f80; }
+  span.browser { font-weight: bold; color: #864; }
+  .fixme { font-size: 20px; font-weight: bold; color: red; background: #fab;
+padding: 5px; text-align: center; }
+  .code {
+   background: #e4efff; padding: 5px; border: 1px dashed #abc; margin-left: 2em; margin-right: 2em;
+   font-family: fixed,"lucidux mono","andale mono","courier new",monospace;
+  }
+  .note, .warning { font-weight: bold; color: #0a0; font-variant: small-caps; }
+  .warning { color: #a00; }
+
+.string {
+  color: #06c;
+} /* font-lock-string-face */
+.comment {
+  color: #840;
+} /* font-lock-comment-face */
+.variable-name {
+  color: #000;
+} /* font-lock-variable-name-face */
+.type {
+  color: #008;
+  font-weight: bold;
+} /* font-lock-type-face */
+.reference {
+  color: #048;
+} /* font-lock-reference-face */
+.preprocessor {
+  color: #808;
+} /* font-lock-preprocessor-face */
+.keyword {
+  color: #00f;
+  font-weight: bold;
+} /* font-lock-keyword-face */
+.function-name {
+  color: #044;
+} /* font-lock-function-name-face */
+.html-tag {
+  font-weight: bold;
+} /* html-tag-face */
+.html-helper-italic {
+  font-style: italic;
+} /* html-helper-italic-face */
+.html-helper-bold {
+  font-weight: bold;
+} /* html-helper-bold-face */
+
+</style>
+
+<script type="text/javascript">
+  _editor_url = './';
+  _editor_lang = 'en';
+</script>
+<script type="text/javascript" src="htmlarea.js"></script>
+<script type="text/javascript" src="dialog.js"></script>
+<script tyle="text/javascript" src="lang/en.js"></script>
+
+</head>
+
+<body onload="HTMLArea.replace('TA')">
+
+
+<h1>HTMLArea-3.0 Documentation</h1>
+
+<div class="abstract" style="color: red; font-weight: bold">
+
+      This documentation contains valid information, but is outdated in the
+      terms that it does not covers all the features of HTMLArea.  A new
+      documentation project will be started, based on LaTeX.
+
+</div>
+
+
+<h2>Introduction</h2>
+
+<h3>What is HTMLArea?</h3>
+
+<p>HTMLArea is a free <acronym title="What You See Is What You Get"
+>WYSIWYG</acronym> editor replacement for <code>&lt;textarea&gt;</code>
+fields.  By adding a few simple lines of JavaScript code to your web page
+you can replace a regular textarea with a rich text editor that lets your
+users do the following:</p>
+
+<ul>
+  <li>Format text to be bold, italicized, or underlined.</li>
+  <li>Change the face, size, style and color.</li>
+  <li>Left, center, or right-justify paragraphs.</li>
+  <li>Make bulleted or numbered lists.</li>
+  <li>Indent or un-indent paragraphs.</li>
+  <li>Insert a horizontal line.</li>
+  <li>Insert hyperlinks and images.</li>
+  <li>View the raw HTML source of what they're editing.</li>
+  <li>and much more...</li>
+</ul>
+
+<p>Some of the interesting features of HTMLArea that set's it apart from
+other web based WYSIWYG editors are as follows:</p>
+
+<ul>
+  <li>It's lightweight, fast loading and can transform a regular textarea
+  into a rich-text editor with a single line of JavaScript.</li>
+  <li>Generates clean, valid HTML.</li>
+  <li>It degrades gracefully to older or non-supported browsers
+  (they get the original textarea field).</li>
+  <li>It's free and can be incorporated into any free or commercial
+  program.</li>
+  <li>It works with any server-side languages (ASP, PHP, Perl, Java,
+  etc).</li>
+  <li>It's written in JavaScript and can be easily viewed, modified or
+  extended.</li>
+  <li>It remembers entered content when a user navigates away and then hits
+  "back" in their browser.</li>
+  <li>Since it replaces existing textareas it doesn't require a lot of code
+  to add it to your pages (just one line).</li>
+  <li>Did we mention it was free? ;-)</li>
+</ul>
+
+<h3>Is it really free?  What's the catch?</h3>
+
+<p>Yes! It's really free. You can use it, modify it, distribute it with your
+software, or do just about anything you like with it.</p>
+
+<h3>What are the browser requirements?</h3>
+
+<p>HTMLArea requires <span class="browser"><a
+href="http://www.microsoft.com/ie">Internet Explorer</a> &gt;= 5.5</span>
+(Windows only), or <span class="browser"><a
+href="http://mozilla.org">Mozilla</a> &gt;= 1.3-Beta</span> on any platform.
+Any browser based on <a href="http://mozilla.org/newlayout">Gecko</a> will
+also work, provided that Gecko version is at least the one included in
+Mozilla-1.3-Beta (for example, <a
+href="http://galeon.sf.net">Galeon-1.2.8</a>).  However, it degrades
+gracefully to other browsers. They will get a regular textarea field
+instead of a WYSIWYG editor.</p>
+
+<h3>Can I see an example of what it looks like?</h3>
+
+<p>Just make sure you're using one of the browsers mentioned above and see
+below.</p>
+
+<form onsubmit="return false;">
+<textarea id="TA" style="width: 100%; height: 15em;">
+<p>Here is some sample text in textarea that's been transformed with <font
+color="#0000CC"><b>HTMLArea</b></font>.<br />
+You can make things <b>bold</b>, <i>italic</i>, <u>underline</u>.  You can change the
+<font size="3">size</font> and <b><font color="#0000CC">c</font><font color="#00CC00">o</font><font color="#00CCCC">l</font><font color="#CC0000">o</font><font color="#CC00CC">r</font><font color="#CCCC00">s</font><font color="#CCCCCC">!</font></b>
+And lots more...</p>
+
+<p align="center"><font size="4" color="#ff0000"><b><u>Try HTMLArea
+today!</u></b></font><br /></p>
+</textarea>
+</form>
+
+<h3>Where can I find out more info, download the latest version and talk to
+other HTMLArea users?</h3>
+
+<p>You can find out more about HTMLArea and download the latest version on
+the <a href="http://dynarch.com/htmlarea/">HTMLArea
+homepage</a> and you can talk to other HTMLArea users and post any comments
+or suggestions you have in the <a
+href="http://www.interactivetools.com/iforum/Open_Source_C3/htmlArea_v3.0_-_Alpha_Release_F14/"
+>HTMLArea forum</a>.</p>
+
+<h2>Keyboard shortcuts</h2>
+
+<p>The editor provides the following key combinations:</p>
+
+<ul>
+  <li>CTRL-A -- select all</li>
+  <li>CTRL-B -- bold</li>
+  <li>CTRL-I -- italic</li>
+  <li>CTRL-U -- underline</li>
+  <li>CTRL-S -- strikethrough</li>
+  <li>CTRL-L -- justify left</li>
+  <li>CTRL-E -- justify center</li>
+  <li>CTRL-R -- justify right</li>
+  <li>CTRL-J -- justify full</li>
+  <li>CTRL-1 .. CTRL-6 -- headings (&lt;h1&gt; .. &lt;h6&gt;)</li>
+  <li>CTRL-0 (zero) -- clean content pasted from Word</li>
+</ul>
+
+<h2>Installation</h2>
+
+<h3>How do I add HTMLArea to my web page?</h3>
+
+<p>It's easy.  First you need to upload HTMLArea files to your website.
+Just follow these steps.</p>
+
+<ol>
+  <li>Download the latest version from the <a
+  href="http://www.interactivetools.com/products/htmlarea/">htmlArea
+  homepage</a>.</li>
+  <li>Unzip the files onto your local computer (making sure to maintain the
+  directory structure contained in the zip).</li>
+  <li>Create a new folder on your website called /htmlarea/ (make sure it's
+  NOT inside the cgi-bin).</li>
+  <li>Transfer all the HTMLArea files from your local computer into the
+  /htmlarea/ folder on your website.</li>
+  <li>Open the example page /htmlarea/examples/core.html with your browser to make
+  sure everything works.</li>
+</ol>
+
+<p>Once htmlArea is on your website all you need to do is add some
+JavaScript to any pages that you want to add WYSIWYG editors to.  Here's how
+to do that.</p>
+
+<ol>
+
+  <li>Define some global variables.  "_editor_url" has to be the absolute
+  URL where HTMLArea resides within your
+  website; as we discussed, this would be “/htmlarea/”.  "_editor_lang" must
+  be the language code in which you want HTMLArea to appear.  This defaults
+  to "en" (English); for a list of supported languages, please look into
+  the "lang" subdirectory in the distribution.
+  <pre class="code"
+  ><span class="function-name">&lt;</span><span class="html-tag">script</span> <span class="variable-name">type=</span><span class="string">&quot;text/javascript&quot;</span><span class="function-name">&gt;</span>
+   _editor_url = <span class="string">&quot;/htmlarea/&quot;</span>;
+   _editor_lang = <span class="string">&quot;en&quot;</span>;
+<span class="function-name">&lt;</span><span class="html-tag">/script</span><span class="function-name">&gt;</span></pre>
+
+  <li>Include the "htmlarea.js" script:
+  <pre class="code"
+  ><span class="function-name">&lt;</span><span class="html-tag">script</span> <span class="variable-name">type=</span><span class="string">&quot;text/javascript&quot;</span> <span class="variable-name">src=</span><span class="string">&quot;/htmlarea/htmlarea.js&quot;</span><span class="function-name">&gt;</span><span class="paren-face-match">&lt;</span><span class="html-tag">/script</span><span class="paren-face-match">&gt;</span></pre>
+  </li>
+
+  <li><p>If you want to change all your &lt;textarea&gt;-s into
+  HTMLArea-s then you can use the simplest way to create HTMLArea:</p>
+  <pre class="code"
+  ><span class="function-name">&lt;</span><span class="html-tag">script</span> <span class="variable-name">type=</span><span class="string">&quot;text/javascript&quot;</span> <span class="variable-name">defer=</span><span class="string">&quot;1&quot;</span><span class="function-name">&gt;</span>
+    HTMLArea.replaceAll<span class="function-name">()</span>;
+<span class="paren-face-match">&lt;</span><span class="html-tag">/script</span><span class="paren-face-match">&gt;</span></pre>
+  <p><span class="note">Note:</span> you can also add the
+  <code>HTMLArea.replaceAll()</code> code to the <code>onload</code>
+  event handler for the <code>body</code> element, if you find it more appropriate.</p>
+
+  <p>A different approach, if you have more than one textarea and only want
+  to change one of them, is to use <code>HTMLArea.replace("id")</code> --
+  pass the <code>id</code> of your textarea.  Do not use the
+  <code>name</code> attribute anymore, it's not a standard solution!</p>
+
+</ol>
+
+<p>This section applies to HTMLArea-3.0 release candidate 1 or later; prior
+to this version, one needed to include more files; however, now HTMLArea is
+able to include other files too (such as stylesheet, language definition
+file, etc.) so you only need to define the editor path and load
+"htmlarea.js".  Nice, eh? ;-)</p>
+
+<h3>I want to change the editor settings, how do I do that?</h3>
+
+<p>While it's true that all you need is one line of JavaScript to create an
+htmlArea WYSIWYG editor, you can also specify more config settings in the
+code to control how the editor works and looks.  Here's an example of some of
+the available settings:</p>
+
+<pre class="code"
+><span class="keyword">var</span> <span class="variable-name">config</span> = <span class="keyword">new</span> HTMLArea.Config(); <span class="comment">// create a new configuration object
+</span>                                    <span class="comment">// having all the default values
+</span>config.width = '<span class="string">90%</span>';
+config.height = '<span class="string">200px</span>';
+
+<span class="comment">// the following sets a style for the page body (black text on yellow page)
+// and makes all paragraphs be bold by default
+</span>config.pageStyle =
+  '<span class="string">body { background-color: yellow; color: black; font-family: verdana,sans-serif } </span>' +
+  '<span class="string">p { font-width: bold; } </span>';
+
+<span class="comment">// the following replaces the textarea with the given id with a new
+// HTMLArea object having the specified configuration
+</span>HTMLArea.replace('<span class="string">id</span>', config);</pre>
+
+<p><span class="warning">Important:</span> It's recommended that you add
+custom features and configuration to a separate file.  This will ensure you
+that when we release a new official version of HTMLArea you'll have less
+trouble upgrading it.</p>
+
+<h3>How do I customize the toolbar?</h3>
+
+<p>Using the configuration object introduced above allows you to completely
+control what the toolbar contains.  Following is an example of a one-line,
+customized toolbar, much simpler than the default one:</p>
+
+<pre class="code"
+><span class="keyword">var</span> <span class="variable-name">config</span> = <span class="keyword">new</span> HTMLArea.Config();
+config.toolbar = [
+  ['<span class="string">fontname</span>', '<span class="string">space</span>',
+   '<span class="string">fontsize</span>', '<span class="string">space</span>',
+   '<span class="string">formatblock</span>', '<span class="string">space</span>',
+   '<span class="string">bold</span>', '<span class="string">italic</span>', '<span class="string">underline</span>']
+];
+HTMLArea.replace('<span class="string">id</span>', config);</pre>
+
+<p>The toolbar is an Array of Array objects.  Each array in the toolbar
+defines a new line.  The default toolbar looks like this:</p>
+
+<pre class="code"
+>config.toolbar = [
+[ &quot;<span class="string">fontname</span>&quot;, &quot;<span class="string">space</span>&quot;,
+  &quot;<span class="string">fontsize</span>&quot;, &quot;<span class="string">space</span>&quot;,
+  &quot;<span class="string">formatblock</span>&quot;, &quot;<span class="string">space</span>&quot;,
+  &quot;<span class="string">bold</span>&quot;, &quot;<span class="string">italic</span>&quot;, &quot;<span class="string">underline</span>&quot;, &quot;<span class="string">separator</span>&quot;,
+  &quot;<span class="string">strikethrough</span>&quot;, &quot;<span class="string">subscript</span>&quot;, &quot;<span class="string">superscript</span>&quot;, &quot;<span class="string">separator</span>&quot;,
+  &quot;<span class="string">copy</span>&quot;, &quot;<span class="string">cut</span>&quot;, &quot;<span class="string">paste</span>&quot;, &quot;<span class="string">space</span>&quot;, &quot;<span class="string">undo</span>&quot;, &quot;<span class="string">redo</span>&quot; ],
+		
+[ &quot;<span class="string">justifyleft</span>&quot;, &quot;<span class="string">justifycenter</span>&quot;, &quot;<span class="string">justifyright</span>&quot;, &quot;<span class="string">justifyfull</span>&quot;, &quot;<span class="string">separator</span>&quot;,
+  &quot;<span class="string">insertorderedlist</span>&quot;, &quot;<span class="string">insertunorderedlist</span>&quot;, &quot;<span class="string">outdent</span>&quot;, &quot;<span class="string">indent</span>&quot;, &quot;<span class="string">separator</span>&quot;,
+  &quot;<span class="string">forecolor</span>&quot;, &quot;<span class="string">hilitecolor</span>&quot;, &quot;<span class="string">textindicator</span>&quot;, &quot;<span class="string">separator</span>&quot;,
+  &quot;<span class="string">inserthorizontalrule</span>&quot;, &quot;<span class="string">createlink</span>&quot;, &quot;<span class="string">insertimage</span>&quot;, &quot;<span class="string">inserttable</span>&quot;, &quot;<span class="string">htmlmode</span>&quot;, &quot;<span class="string">separator</span>&quot;,
+  &quot;<span class="string">popupeditor</span>&quot;, &quot;<span class="string">separator</span>&quot;, &quot;<span class="string">showhelp</span>&quot;, &quot;<span class="string">about</span>&quot; ]
+];</pre>
+
+<p>Except three strings, all others in the examples above need to be defined
+in the <code>config.btnList</code> object (detailed a bit later in this
+document).  The three exceptions are: 'space', 'separator' and 'linebreak'.
+These three have the following meaning, and need not be present in
+<code>btnList</code>:</p>
+
+<ul>
+  <li>'space' -- Inserts a space of 5 pixels (the width is configurable by external
+  <acronym title="Cascading Style Sheets">CSS</acronym>) at the current
+  position in the toolbar.</li>
+  <li>'separator' -- Inserts a small vertical separator, for visually grouping related
+  buttons.</li>
+  <li>'linebreak' -- Starts a new line in the toolbar.  Subsequent controls will be
+  inserted on the new line.</li>
+</ul>
+
+<p><span class="warning">Important:</span> It's recommended that you add
+custom features and configuration to a separate file.  This will ensure you
+that when we release a new official version of HTMLArea you'll have less
+trouble upgrading it.</p>
+
+<h3>How do I create custom buttons?</h3>
+
+<p>By design, the toolbar is easily extensible.  For adding a custom button
+one needs to follow two steps.</p>
+
+<h4 id="regbtn">1. Register the button in <code>config.btnList</code>.</h4>
+
+<p>For each button in the toolbar, HTMLArea needs to know the following
+information:</p>
+<ul>
+  <li>a name for it (we call it the ID of the button);</li>
+  <li>the path to an image to be displayed in the toolbar;</li>
+  <li>a tooltip for it;</li>
+  <li>whether the button is enabled or not in text mode;</li>
+  <li>what to do when the button is clicked;</li>
+</ul>
+<p>You need to provide all this information for registering a new button
+too.  The button ID can be any string identifier and it's used when
+defining the toolbar, as you saw above.  We recommend starting
+it with "my-" so that it won't clash with the standard ID-s (those from
+the default toolbar).</p>
+
+<p class="note">Register button example #1</p>
+
+<pre class="code"
+><span class="comment">// get a default configuration
+</span><span class="keyword">var</span> <span class="variable-name">config</span> = <span class="keyword">new</span> HTMLArea.Config();
+<span class="comment">// register the new button using Config.registerButton.
+// parameters:        button ID,   tooltip,          image,           textMode,
+</span>config.registerButton(&quot;<span class="string">my-hilite</span>&quot;, &quot;<span class="string">Highlight text</span>&quot;, &quot;<span class="string">my-hilite.gif</span>&quot;, <span class="keyword">false</span>,
+<span class="comment">// function that gets called when the button is clicked
+</span>  <span class="keyword">function</span>(editor, id) {
+    editor.surroundHTML('<span class="string">&lt;span class=&quot;hilite&quot;&gt;</span>', '<span class="string">&lt;/span&gt;</span>');
+  }
+);</pre>
+
+<p>An alternate way of calling registerButton is exemplified above.  Though
+the code might be a little bit larger, using this form makes your code more
+maintainable.  It doesn't even needs comments as it's pretty clear.</p>
+
+<p class="note">Register button example #2</p>
+
+<pre class="code"
+><span class="keyword">var</span> <span class="variable-name">config</span> = <span class="keyword">new</span> HTMLArea.Config();
+config.registerButton({
+  id        : &quot;<span class="string">my-hilite</span>&quot;,
+  tooltip   : &quot;<span class="string">Highlight text</span>&quot;,
+  image     : &quot;<span class="string">my-hilite.gif</span>&quot;,
+  textMode  : <span class="keyword">false</span>,
+  action    : <span class="keyword">function</span>(editor, id) {
+                editor.surroundHTML('<span class="string">&lt;span class=&quot;hilite&quot;&gt;</span>', '<span class="string">&lt;/span&gt;</span>');
+              }
+});</pre>
+
+<p>You might notice that the "action" function receives two parameters:
+<b>editor</b> and <b>id</b>.  In the examples above we only used the
+<b>editor</b> parameter.  But it could be helpful for you to understand
+both:</p>
+
+<ul>
+  <li><b>editor</b> is a reference to the HTMLArea object.  Since our entire
+  code now has an <acronym title="Object Oriented Programming">OOP</acronym>-like
+  design, you need to have a reference to
+  the editor object in order to do things with it.  In previous versions of
+  HTMLArea, in order to identify the object an ID was used -- the ID of the
+  HTML element.  In this version ID-s are no longer necessary.</li>
+
+  <li><b>id</b> is the button ID.  Wondering why is this useful?  Well, you
+  could use the same handler function (presuming that it's not an anonymous
+  function like in the examples above) for more buttons.  You can <a
+  href="#btnex">see an example</a> a bit later in this document.</li>
+</ul>
+
+<h4>2. Inserting it into the toolbar</h4>
+
+<p>At this step you need to specify where in the toolbar to insert the
+button, or just create the whole toolbar again as you saw in the previous
+section.  You use the button ID, as shown in the examples of customizing the
+toolbar in the previous section.</p>
+
+<p>For the sake of completion, following there are another examples.</p>
+
+<p class="note">Append your button to the default toolbar</p>
+
+<pre class="code"
+>config.toolbar.push([ &quot;<span class="string">my-hilite</span>&quot; ]);</pre>
+
+<p class="note">Customized toolbar</p>
+
+<pre class="code"
+>config.toolbar = [
+  ['<span class="string">fontname</span>', '<span class="string">space</span>',
+   '<span class="string">fontsize</span>', '<span class="string">space</span>',
+   '<span class="string">formatblock</span>', '<span class="string">space</span>',
+   '<span class="string">separator</span>', '<span class="string">my-hilite</span>', '<span class="string">separator</span>', '<span class="string">space</span>', <span class="comment">// here's your button
+</span>   '<span class="string">bold</span>', '<span class="string">italic</span>', '<span class="string">underline</span>', '<span class="string">space</span>']
+];</pre>
+
+<p><span class="note">Note:</span> in the example above our new button is
+between two vertical separators.  But this is by no means required.  You can
+put it wherever you like.  Once registered in the btnList (<a
+href="#regbtn">step 1</a>) your custom button behaves just like a default
+button.</p>
+
+<p><span class="warning">Important:</span> It's recommended that you add
+custom features and configuration to a separate file.  This will ensure you
+that when we release a new official version of HTMLArea you'll have less
+trouble upgrading it.</p>
+
+<h4 id="btnex">A complete example</h4>
+
+<p>Please note that it is by no means necessary to include the following
+code into the htmlarea.js file.  On the contrary, it might not work there.
+The configuration system is designed such that you can always customize the
+editor <em>from outside files</em>, thus keeping the htmlarea.js file
+intact.  This will make it easy for you to upgrade your HTMLArea when we
+release a new official version.  OK, I promise it's the last time I said
+this. ;)</p>
+
+<pre class="code"
+><span class="comment">// All our custom buttons will call this function when clicked.
+// We use the <b>buttonId</b> parameter to determine what button
+// triggered the call.
+</span><span class="keyword">function</span> <span class="function-name">clickHandler</span>(editor, buttonId) {
+  <span class="keyword">switch</span> (buttonId) {
+    <span class="keyword">case</span> &quot;<span class="string">my-toc</span>&quot;:
+      editor.insertHTML(&quot;<span class="string">&lt;h1&gt;Table Of Contents&lt;/h1&gt;</span>&quot;);
+      <span class="keyword">break</span>;
+    <span class="keyword">case</span> &quot;<span class="string">my-date</span>&quot;:
+      editor.insertHTML((<span class="keyword">new</span> Date()).toString());
+      <span class="keyword">break</span>;
+    <span class="keyword">case</span> &quot;<span class="string">my-bold</span>&quot;:
+      editor.execCommand(&quot;<span class="string">bold</span>&quot;);
+      editor.execCommand(&quot;<span class="string">italic</span>&quot;);
+      <span class="keyword">break</span>;
+    <span class="keyword">case</span> &quot;<span class="string">my-hilite</span>&quot;:
+      editor.surroundHTML(&quot;<span class="string">&lt;span class=\&quot;hilite\&quot;&gt;</span>&quot;, &quot;<span class="string">&lt;/span&gt;</span>&quot;);
+      <span class="keyword">break</span>;
+  }
+};
+
+<span class="comment">// Create a new configuration object
+</span><span class="keyword">var</span> <span class="variable-name">config</span> = <span class="keyword">new</span> HTMLArea.Config();
+
+<span class="comment">// Register our custom buttons
+</span>config.registerButton(&quot;<span class="string">my-toc</span>&quot;,  &quot;<span class="string">Insert TOC</span>&quot;, &quot;<span class="string">my-toc.gif</span>&quot;, <span class="keyword">false</span>, clickHandler);
+config.registerButton(&quot;<span class="string">my-date</span>&quot;, &quot;<span class="string">Insert date/time</span>&quot;, &quot;<span class="string">my-date.gif</span>&quot;, <span class="keyword">false</span>, clickHandler);
+config.registerButton(&quot;<span class="string">my-bold</span>&quot;, &quot;<span class="string">Toggle bold/italic</span>&quot;, &quot;<span class="string">my-bold.gif</span>&quot;, <span class="keyword">false</span>, clickHandler);
+config.registerButton(&quot;<span class="string">my-hilite</span>&quot;, &quot;<span class="string">Hilite selection</span>&quot;, &quot;<span class="string">my-hilite.gif</span>&quot;, <span class="keyword">false</span>, clickHandler);
+
+<span class="comment">// Append the buttons to the default toolbar
+</span>config.toolbar.push([&quot;<span class="string">linebreak</span>&quot;, &quot;<span class="string">my-toc</span>&quot;, &quot;<span class="string">my-date</span>&quot;, &quot;<span class="string">my-bold</span>&quot;, &quot;<span class="string">my-hilite</span>&quot;]);
+
+<span class="comment">// Replace an existing textarea with an HTMLArea object having the above config.
+</span>HTMLArea.replace(&quot;<span class="string">textAreaID</span>&quot;, config);</pre>
+
+
+<hr />
+<address>&copy; <a href="http://interactivetools.com" title="Visit our website"
+>InteractiveTools.com</a> 2002-2004.
+<br />
+© <a href="http://dynarch.com">dynarch.com</a> 2003-2004<br />
+HTMLArea v3.0 developed by <a
+href="http://dynarch.com/mishoo/">Mihai Bazon</a>.
+<br />
+Documentation written by Mihai Bazon.
+</address>
+<!-- hhmts start --> Last modified: Wed Jan 28 12:18:23 EET 2004 <!-- hhmts end -->
+<!-- doc-lang: English -->
+</body> </html>

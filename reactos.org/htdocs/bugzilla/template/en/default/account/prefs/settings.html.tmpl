@@ -1,0 +1,78 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Shane H. W. Travis <travis@sedsystems.ca>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #
+  #%]
+
+[%# INTERFACE:
+  # setting_names: an array of strings
+  # settings:      a hash of hashes, keyed by setting_name.
+  #                Each hash contains:
+  #                 is_enabled    - boolean
+  #                 default_value - string (global default for this setting)
+  #                 value         - string (user-defined preference)
+  #                 is_default    - boolean (true if user has no preference)
+  # has_settings_enabled : boolean; is true if there is at least one user pref
+  #                        enabled by the maintainer.
+  #%]
+
+[% PROCESS "global/setting-descs.none.tmpl" %]
+
+[% IF settings.size %]
+  [% UNLESS has_settings_enabled %]
+    <p class="criticalmessages">
+      All user preferences have been disabled by the
+      <a href="mailto:[% Param("maintainer") %]">maintainer</a>
+      of this installation, and so you cannot customize any.
+    </p>
+  [% END %]
+
+  <table border="0" cellpadding="8">
+    [% FOREACH name = setting_names %]
+      [% default_name = name _ '-isdefault' %]
+      [% default_val = settings.${name}.default_value %]
+      <tr>
+        <td align="right">
+          [% setting_descs.$name OR name FILTER html %]
+        </td>
+        <td>
+          [% IF settings.${name}.is_enabled %]
+            <select name="[% name FILTER html %]" id="[% name FILTER html %]">
+              <option value="[% default_name FILTER html %]"
+                [% ' selected="selected"' IF settings.${name}.is_default %]>
+                Site Default ([% setting_descs.${default_val} OR default_val FILTER html %])
+              </option>
+              [% FOREACH x = settings.${name}.legal_values %]
+                <option value="[% x FILTER html %]"
+                  [% ' selected="selected"' 
+                    IF x == settings.${name}.value
+                    AND NOT settings.${name}.is_default %]>
+                  [% setting_descs.${x} OR x FILTER html %]
+                </option>
+              [% END %]
+            </select>
+          [% ELSE %]
+            <select name="[% name FILTER html %]" id="[% name FILTER html %]" disabled="disabled">
+              <option value="[% default_name FILTER html %]">
+                Site Default ([% setting_descs.${default_val} OR default_val FILTER html %])
+              </option>
+            </select>
+          [% END %]
+        </td>
+      </tr>
+    [% END %]
+  </table>
+[% END %]
+<br>

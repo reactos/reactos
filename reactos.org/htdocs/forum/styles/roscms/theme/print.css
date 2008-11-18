@@ -1,0 +1,129 @@
+/* proSilver Print Style Sheet
+-------------------------------------------------
+	Author: subBlue  ( http://www.subBlue.com/ )
+	Version: 25 August 2004
+
+	Copyright 2004 phpBB Group
+-------------------------------------------------*/
+
+
+/* Lots still TODO here! */
+
+/* General markup styles */
+* {
+	padding: 0;
+	margin: 0;
+}
+
+body {
+	font: 11pt Verdana, Arial, Helvetica, sans-serif;
+	color:#000000;
+}
+
+a:link		{ color: #000000; text-decoration: none; }
+a:visited	{ color: #000000; text-decoration: none; }
+a:active	{ color: #000000; text-decoration: none; }
+
+img, .noprint, #sub-header, #sub-footer, .navbar, .box1, .divider, .signature { display: none; }
+
+/* Container for the main body */
+#wrap {
+	margin: 0 2em;
+}
+
+p { font-size: 85%; }
+.copyright { font-size: 75%; }
+.page-number { float:right; width: auto; text-align: right; font-size: 75%; }
+
+h1, h2, h3, h1 a, h2 a, h3 a {
+	font-family: "Trebuchet MS",georgia,Verdana,Sans-serif;
+	color: #000000;
+	background: none;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+h1 { font-size: 20pt; }
+h2 { font-size: 16pt; margin-top: 1em; }
+h3 { font-size: 14pt; margin-top: 1em; }
+
+.content {
+	font-size: 11pt;
+	line-height: 14pt;
+	margin-bottom: 1em;
+	font-family: "Lucida Grande", "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+	overflow: hidden;
+}
+
+/* CSS2 Print tip from: http://www.alistapart.com/articles/goingtoprint/ */
+.postbody a:link, .postbody a:visited, .postbody a:active, .postbody a:hover {
+	text-decoration: underline;
+	padding: 0.1em 0.2em;
+	margin: -0.1em -0.2em;
+	color: #666;
+	background: none;
+	font-size: 100%;
+}
+
+html>body .postbody a:link:after, html>body .postbody a:visited:after {
+	content: " (" attr(href) ") ";
+	font-size: 90%;
+	text-decoration: none;
+}
+
+hr {
+	height: 1px;
+	background-color: #999999;
+	border-width: 0;
+}
+
+.author {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 75%;
+	margin-bottom: 0.6em;
+}
+
+.date {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	float: right;
+	position: relative;
+	text-align: right;
+	font-size: 75%;
+}
+
+/* Dont want to print url for names or titles in content area */
+.postbody .author a:link, .postbody .author a:visited, 
+html>body .postbody .author a:link:after, 
+html>body .postbody .author a:visited:after,
+.postquote .quote-by a:link, .postquote .quote-by a:visited, 
+html>body .postquote .quote-by a:link:after, 
+html>body .postquote .quote-by a:visited:after,
+html>body .postbody h1 a:link:after, html>body .postbody h2 a:link:after {
+	text-decoration: none;
+	content: "";
+}
+
+/* Poster profile */
+.postprofile { display: none; }
+.grip-show { display:none; }
+
+/* Quote */
+.postquote {
+	font-size: 85%;
+	margin: 1em 18% 1em 4%;
+	padding: 0.5em;
+	position: relative;
+	line-height: 1.5em;
+	border: 1px #999999 solid;
+}
+
+.postquote img { display: none; }
+.postquote span { display: block; }
+.postquote span .postquote { font-size: 100%; }
+.quote-by { font-weight: bold; }
+
+/* Misc page elements */
+div.spacer { clear: both; }
+
+/* Accessibility tweaks: Mozilla.org */
+.skip_link { display: none; }

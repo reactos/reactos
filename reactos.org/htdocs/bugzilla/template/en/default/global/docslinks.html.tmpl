@@ -1,0 +1,53 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # docslinks: hash. Hash keys will be used as text of the documentation links,
+  #            hash values will be used as links to the document, relative to
+  #            the main Bugzilla documentation directory.
+  #            Example: If you want a 'FAQ' link to point to, the "faq-general"
+  #            named anchor on faq.html, assign
+  #               { 'FAQ' => "faq.html#faq-general" }
+  #            to docslinks.
+  #            You may only link to sections by their given ID; it is not allowed
+  #            to link to a section which is not given an ID (thus getting
+  #            assigned an automatically generated ID). Otherwise, the link
+  #            would break on a recompilation of the documentation.
+  # admindocslinks: hash. Same as docslinks, but will only be displayed to
+  #                 members of the admin group.
+  #%]
+
+[% IF Param('docs_urlbase') &&
+      docslinks.keys.size || (admindocslinks.keys.size && user.in_group('admin')) %]
+  <div id="docslinks">
+    <h2>Related documentation</h2>
+    <ul>
+      [% IF user.in_group('admin') %]
+        [% PROCESS docslinkslist docstype = admindocslinks %]
+      [% END %]
+      [% PROCESS docslinkslist docstype = docslinks %]
+    </ul>
+  </div>
+[% END %]
+
+[% BLOCK docslinkslist %]
+  [% FOREACH docslink = docstype.keys %]
+    <li>
+      <a href="[% Param('docs_urlbase') %]
+               [% docslink FILTER none %]">[% docstype.$docslink FILTER html %]</a>
+    </li>
+  [% END %]
+[% END %]

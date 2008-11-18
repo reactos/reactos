@@ -1,0 +1,95 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[%# INTERFACE:
+  # operations: array; bug activity since the user last displayed the bug form,
+  #   used by bug/activity/table.html.tmpl to display recent changes that will
+  #   be overwritten if the user submits these changes.  See that template
+  #   for further documentation.
+  # start_at: number; the comment at which show/comments.tmpl should begin
+  #   displaying comments, either the index of the last comment (if the user
+  #   entered a comment along with their change) or a number less than that
+  #   (if they didn't), in which case no comments are displayed.
+  # comments: array; all the comments on the bug.
+  # bug_id: number; the ID of the bug being changed.
+  #%]
+
+[%# The global Bugzilla->cgi object is used to obtain form variable values. %]
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% UNLESS header_done %]
+  [% PROCESS bug/process/header.html.tmpl %]
+[% END %]
+
+<h1>Mid-air collision detected!</h1>
+
+<p>
+  Someone else has made changes to
+  [%+ "$terms.bug $bug_id" FILTER bug_link(bug_id) FILTER none %]
+  at the same time you were trying to.
+  The changes made were:
+</p>
+
+<p>
+  [% PROCESS "bug/activity/table.html.tmpl" incomplete_data=0 %]
+</p>
+
+[% IF comments.size > start_at %]
+<p>
+  Added the comment(s):
+  <blockquote>
+    [% PROCESS "bug/comments.html.tmpl" bug = { 'bug_id' => bug_id } %]
+  </blockquote>
+</p>
+[% END %]
+
+[% IF cgi.param("comment") %]
+<p>
+  Your comment was:<br>
+  <blockquote><pre class="bz_comment_text">
+    [% cgi.param("comment") FILTER wrap_comment FILTER html %]
+  </pre></blockquote>
+</p>
+[% END %]
+
+<p>
+You have the following choices:
+</p>
+
+<ul>
+  <li>
+    <form method="post" action="process_bug.cgi">
+      [% PROCESS "global/hidden-fields.html.tmpl" exclude="^Bugzilla_(login|password)$" %]
+      <input type="submit" id="process" value="Submit my changes anyway">
+        This will cause all of the above changes to be overwritten
+        [% ", except for the added comment(s)" IF comments.size > start_at %].
+    </form>
+  </li>
+  <li>
+    Throw away my changes, and
+    [%+ "revisit $terms.bug $bug_id" FILTER bug_link(bug_id) FILTER none %]
+  </li>
+</ul>
+
+[% PROCESS global/footer.html.tmpl %]

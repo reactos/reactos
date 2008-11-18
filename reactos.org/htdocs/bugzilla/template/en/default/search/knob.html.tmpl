@@ -1,0 +1,82 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Tobias Burnus <burnus@net-b.de>
+  #                 Jouni Heikniemi <jouni@heikniemi.net>
+  #%]
+
+[%# INTERFACE:
+  # (incomplete!)
+  # ...
+  # known_name: string. Possibly known stored name for the query being 
+  #                     edited. This value is just passed through in a
+  #                     hidden field.
+  #%]
+        
+        
+[% PROCESS global/variables.none.tmpl %]
+
+[%# This is not necessary for English templates, but useful for localizers. %]
+[% ordersdesc = {
+   "Reuse same sort as last time" => "Reuse same sort as last time",
+   "Bug Number"   => "$terms.Bug Number",
+   "Importance"   => "Importance",
+   "Assignee"     => "Assignee",
+   "Last Changed" => "Last Changed" } %]
+
+<input type="hidden" name="cmdtype" value="doit">
+
+<p>
+  <label for="order">Sort results by</label>:
+  <select name="order" id="order">
+  [% FOREACH order = orders %]
+    <option value="[% order FILTER html %]"
+      [% " selected" IF default.order.0 == order %]>
+         [% ordersdesc.$order FILTER html %]</option>
+  [% END %]
+  </select>
+</p>
+
+<p>  
+  <input type="submit" id="[% button_name FILTER html %]"
+         value="[% button_name FILTER html %]">
+  [% IF known_name %]
+    [%# We store known_name in case the user add a boolean chart. %]
+    <input type="hidden" name="known_name" value="[% known_name FILTER html %]">
+
+    [%# The name of the existing query will be passed to buglist.cgi. %]
+    <input type="hidden" name="query_based_on" value="[% known_name FILTER html %]">
+  [% END %]
+</p>
+
+<p>
+  &nbsp;&nbsp;&nbsp;
+  <input type="checkbox" id="remasdefault"
+         name="remtype" value="asdefault">
+  <label for="remasdefault">
+    and remember these as my default search options
+  </label>
+</p>
+        
+[% IF userdefaultquery %]
+  <p>
+    <a href="query.cgi?nukedefaultquery=1">
+      Set my default search back to the system default</a>.
+  </p>
+[% END %]

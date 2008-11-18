@@ -1,0 +1,183 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Jouni Heikniemi <jouni@heikniemi.net>
+  #
+  #%]
+
+[%# INTERFACE:
+  #
+  # columns: 
+  #   array of hashes representing the columns in the table. 
+  #   Each hash contains data for a single column. Hash keys:
+  #     name: Name of the field in the data param
+  #     heading: The text to print at the header cell
+  #     contentlink: URI to which the content of a data cell shall be linked to.
+  #                  Expressions of format %%xxx%% are replaced with value
+  #                  with the key xxx in data hash of the current row.
+  #     content: If specified, the content of this variable is used
+  #              instead of the data pulled from the current row. 
+  #              NOTE: This value is only partially HTML filtered!
+  #     content_use_field: If defined and true, then each value in the 
+  #                        column corresponds with a key in the
+  #                        field_descs field, and that value from the 
+  #                        field_descs hash will be used instead of "content."
+  #                        See fieldvalues/select-field for an example of use.
+  #                        This content WILL be HTML-filtered in this case.
+  #     align: left/center/right. Controls the horizontal alignment of the
+  #            text in the column.
+  #     allow_html_content: if defined, then this column allows some html content
+  #                         and so it will be only partially filtered.
+  #     yesno_field: Turn the data from 0/!0 into Yes/No
+  #
+  # data:
+  #   array of hashes representing the data for the table.
+  #   Each hash contains data for a single row of data. The
+  #   keys are column names from columns subhashes name field.
+  #
+  # overrides:
+  #   Provides a method for overriding individual table cells. This is
+  #   a hash, whose key is the column name, so the column must be
+  #   named for one of it's cells to be overwritten. The hash value is
+  #   an array. Each item in this array is a hash specifying
+  #   row-matching criteria, and any overridden values. The
+  #   row-matching criteria consist of keys:
+  #     match_field: The name of the row value we want to match
+  #     match_value: The value to match against
+  #   Each column value mentioned in the 'columns' documentation above
+  #   can be overwritten (apart from name and heading). To override a
+  #   table-cell value 'xxx', specify a new 'xxx' value, and specify a
+  #   'override_xxx' value as well. See
+  #   admin/milestones/list.html.tmpl for example
+  #
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[%###################  TABLE HEADER   ######################%]
+
+<table border="1" cellpadding="4" cellspacing="0">
+  <tr bgcolor="#6666FF">
+    [% FOREACH c = columns %]
+      [%# Default to align left for headers %]
+      <th align="[% (c.align || 'left') FILTER html %]">
+        [% c.heading FILTER html %]
+      </th>
+    [% END %]
+  </tr>
+
+
+[%###################  TABLE CONTENT  ######################%]
+
+[% FOREACH row = data %]
+
+  <tr>
+    [% FOREACH c = columns %]
+
+      [%# Copy to local variables, as we may update these %]
+      [% contentlink = c.contentlink
+         content = c.content
+         content_use_field = c.content_use_field
+         align = c.align
+         class = c.class
+         allow_html_content = c.allow_html_content
+         yesno_field = c.yesno_field
+       %]
+
+      [%# Are there any specific overrides for this column? %]
+      [% FOREACH override = overrides.${c.name} %]
+
+        [%# Is the override for this row? %]
+        [% IF override.match_value == row.${override.match_field} %]
+
+          [% SET contentlink = override.contentlink 
+             IF override.override_contentlink %]
+          [% SET content = override.content
+             IF override.override_content %]
+          [% SET content_use_field = override.content_use_field
+             IF override.override_content_use_field %]
+          [% SET align = override.align
+             IF override.override_align %]
+          [% SET class = override.class
+             IF override.override_class %]
+          [% SET allow_html_content = override.allow_html_content
+             IF override.override_allow_html_content %]
+          [% SET yesno_field = override.yesno_field
+             IF override.override_yesno_field %]
+
+          [% LAST %]
+
+        [% END %]
+      [% END %]
+
+      <td [% IF align %] align="[% align FILTER html %]" [% END %]
+          [% IF class %] class="[% class FILTER html %]" [% END %]>
+
+        [% IF contentlink %]
+          [% link_uri = contentlink %]
+          [% WHILE link_uri.search('%%(.+?)%%')%]
+            [% FOREACH m = link_uri.match('%%(.+?)%%') %]
+              [% IF row.$m %]
+                [% replacement_value = FILTER url_quote; row.$m; END %]
+              [% ELSE %]
+                [% replacement_value = "" %]
+              [% END %]
+              [% link_uri = link_uri.replace("%%$m%%", replacement_value) %]
+            [% END %]
+          [% END %]
+          <a href="[% link_uri %]">
+        [% END %]
+        
+        [% IF content_use_field %]
+           [% colname = row.${c.name} %]
+           [% field_descs.${colname} FILTER html %]
+        [% ELSIF content %]
+            [% content FILTER html_light %]
+        [% ELSE %]
+          [% IF yesno_field %]
+            [% IF row.${c.name} %]
+              Yes
+            [% ELSE %]
+              No
+            [% END %]
+          [% ELSE %]
+            [% IF allow_html_content %]
+              [% row.${c.name} FILTER html_light %]
+            [% ELSE %]
+              [% row.${c.name} FILTER html %]
+            [% END %]
+          [% END %]
+        [% END %]
+        
+        [% IF contentlink %]
+          </a>
+        [% END %]
+         
+      </td>
+    [% END %]
+  </tr>
+[% END %]
+
+[% IF data.size == 0 %]
+  <tr><td colspan="[% columns.size %]" align="center"><i>&lt;none&gt;</i></td></tr>
+[% END %]
+
+
+[%###################  TABLE FOOTER   ######################%]
+
+</table>

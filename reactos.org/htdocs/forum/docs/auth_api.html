@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en" xml:lang="en">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-language" content="en" />
+<meta http-equiv="imagetoolbar" content="no" />
+<meta name="resource-type" content="document" />
+<meta name="distribution" content="global" />
+<meta name="copyright" content="2007 phpBB Group" />
+<meta name="keywords" content="" />
+<meta name="description" content="This is an explanation of how to use the phpBB auth/acl API" />
+<title>phpBB3 &bull; Auth API</title>
+
+<link href="stylesheet.css" rel="stylesheet" type="text/css" media="screen, projection" />
+
+</head>
+
+<body id="phpbb" class="section-docs">
+
+<div id="wrap">
+	<a id="top" name="top" accesskey="t"></a>
+	<div id="page-header">
+		<div class="headerbar">
+			<div class="inner"><span class="corners-top"><span></span></span>
+
+			<div id="doc-description">
+				<a href="../index.php" id="logo"><img src="site_logo.gif" alt="" /></a>
+				<h1>Auth API</h1>
+				<p>This is an explanation of how to use the phpBB auth/acl API</p>
+				<p style="display: none;"><a href="#start_here">Skip</a></p>
+			</div>
+
+			<span class="corners-bottom"><span></span></span></div>
+		</div>
+	</div>
+
+	<a name="start_here"></a>
+
+	<div id="page-body">
+
+<!-- BEGIN DOCUMENT -->
+
+	<p>This is an explanation of how to use the phpBB auth/acl API.</p>
+
+	<h1>Auth API</h1>
+
+	<div class="paragraph menu">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+<ol>
+	<li><a href="#intro">Introduction</a></li>
+	<li><a href="#methods">Methods</a>
+	<ol style="list-style-type: lower-roman;">
+		<li><a href="#acl">acl</a></li>
+		<li><a href="#acl_get">acl_get</a></li>
+		<li><a href="#acl_gets">acl_gets</a></li>
+		<li><a href="#acl_getf">acl_getf</a></li>
+		<li><a href="#acl_getf_global">acl_getf_global</a></li>
+		<li><a href="#acl_cache">acl_cache</a></li>
+	</ol>
+	</li>
+	<li><a href="#admin_related">Admin related functions</a></li>
+	<li><a href="#disclaimer">Copyright and disclaimer</a></li>
+</ol>
+
+		</div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="intro"></a><h2>1. Introduction</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<h4>What is it?</h4>
+
+	<p>The <code>auth</code> class contains methods related to authorisation users to access various board functions, e.g. posting, viewing, replying, logging in (and out), etc. If you need to check whether a user can carry out a task or handle user login/logouts this class is required.</p>
+
+	<h4>Initialisation</h4>
+
+	<p>To use any methods contained with the <code>auth</code> class it first needs to be instantiated. This is best achieved early in the execution of the script in the following manner:</p>
+
+	<div class="codebox"><pre>
+$auth = new auth();
+	</pre></div>
+
+	<p>Once an instance of the class has been created you are free to call the various methods it contains. Please note that should you wish to use the <code>auth_admin</code> methods you will need to instantiate this separately but in the same way.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="methods"></a><h2>2. Methods</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>Following are the methods you are able to use.</p>
+
+	<a name="acl"></a><h3>2.i. acl</h3>
+	
+	<p>The <code>acl</code> method is the initialisation routine for all the acl functions. If you intend calling any acl method you must first call this. The method takes as its one and only required parameter an associative array containing user information as stored in the database. This array must contain at least the following information; user_id, user_permissions and user_type. It is called in the following way:</p>
+
+	<div class="codebox"><pre>
+$auth-&gt;acl(<code>userdata</code>);
+	</pre></div>
+
+	<p>Where userdata is the array containing the aforementioned data.</p>
+
+	<a name="acl_get"></a><h3>2.ii. acl_get</h3>
+
+	<p>This method is the primary way of determining what a user can and cannot do for a given option globally or in a given forum. The method should be called in the following way:</p>
+
+	<div class="codebox"><pre>
+$result = $auth-&gt;acl_get(<code>option</code>[, <code>forum</code>]);
+	</pre></div>
+
+	<p>Where option is a string representing the required option, e.g. 'f_list', 'm_edit', 'a_adduser', etc. By adding a ! in front of the option, e.g. '!f_list' the result of this method will be negated. The optional forum term is the integer forum_id.</p>
+
+	<p>The method returns a positive integer when the user is allowed to carry out the option and a zero if denied or the other way around if the option is prefixed with an exclamation mark.</p>
+
+	<p>If you specify a forum and there is also a global setting for the specified option then this method will return a positive integer if one of them evaluates to a positive integer. An example would be the m_approve option which can be set per forum but also globally. If a user has the global option he will automatically have m_approve in every forum.</p>
+
+	<p>There are some special options or <em>flags</em> which are used as prefixes for other options, e.g. 'f_' or 'm_'. These flags will automatically be set to a positive integer if the user has one or more permissions with the given prefix. A local setting will result in the flag being set only locally (so it will require a forum id to retrieve). If a user has one or more global permissions with the prefix acl_get will return a positive integer regardless of the forum id.</p>
+
+	<a name="acl_gets"></a><h3>2.iii. acl_gets</h3>
+
+	<p>This method is funtionally similar to <code>acl_get</code> in that it returns information on whether a user can or cannot carry out a given task. The difference here is the ability to test several different options in one go. This may be useful for testing whether a user is a moderator or an admin in one call. Rather than having to call and check <code>acl_get</code> twice.</p>
+
+	<p>The method should be called thus:</p>
+
+	<div class="codebox"><pre>
+$result = $auth-&gt;acl_gets(<code>option1</code>[, <code>option2</code>, ..., <code>optionN</code>, <code>forum</code>]);
+	</pre></div>
+
+	<p>As with the <code>acl_get</code> method the options are strings representing the required permissions to check. The forum again is an integer representing a given forum_id.</p>
+
+	<p>The method will return a positive integer if <code>acl_get</code> for one of the options evaluates to a positive integer (combines permissions with OR).</p>
+
+	<a name="acl_getf"></a><h3>2.iv. acl_getf</h3>
+
+	<p>This method is used to find out in which forums a user is allowed to carry out an operation or to find out in which forums he is not allowed to carry out an operation. The method should be called in the following way:</p>
+
+	<div class="codebox"><pre>
+$result = $auth-&gt;acl_getf(<code>option</code>[, <code>clean</code>]);
+	</pre></div>
+
+	<p>Just like in the <code>acl_get</code> method the option is a string specifying the permission which has to be checked (negation using ! is allowed). The second parameter is a boolean. If it is set to false this method returns all forums with either zero or a positive integer. If it is set to true only those forums with a positive integer as the result will be returned.</p>
+
+	<p>The method returns an associative array of the form:</p>
+
+	<div class="codebox"><pre>
+array(<em>forum_id1</em> =&gt; array(<em>option</em> =&gt; <em>integer</em>), <em>forum_id2</em> =&gt; ...)
+	</pre></div>
+
+	<p>Where option is the option passed to the method and integer is either zero or a positive integer and the same <code>acl_get(option, forum_id)</code> would return.</p>
+
+	<a name="acl_getf_global"></a><h3>2.v. acl_getf_global</h3>
+
+	<p>This method is used to find out whether a user has a permission in at least one forum or globally. This method is similar to checking whether <code>acl_getf(option, true)</code> returned one or more forums but it's faster. It should be called in the following way:</p>
+
+	<div class="codebox"><pre>
+$result = acl_getf_global(<code>option</code>)
+	</pre></div>
+
+	<p>As with the previous methods option is a string specifying the permission which has to be checked.</p>
+
+	<p>This method returns either zero or a positive integer.</p>
+
+	<a name="acl_cache"></a><h3>2.vi. acl_cache</h3>
+
+	<p>This should be considered a private method and not be called externally. It handles the generation of the user_permissions data from the basic user and group authorisation data. When necessary this method is called automatically by <code>acl</code>.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="admin_related"></a><h2>3. Admin related functions</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>A number of additional methods are available related to <code>auth</code>. These handle more basic functions such as adding user and group permissions, new options and clearing the user cache. These methods are contained within a separate class, <code>auth_admin</code>. This can be found in <code>includes/acp/auth.php</code>.</p>
+
+	<p>To use any methods this class contains it first needs to be instantiated separately from <code>auth</code>. This is achieved in the same way as <code>auth</code>:</p>
+
+	<div class="codebox"><pre>
+$auth_admin = new auth_admin();
+	</pre></div>
+
+	<p>This instance gives you access to both the methods of this specific class and that of <code>auth</code>.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="disclaimer"></a><h2>4. Copyright and disclaimer</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>This application is opensource software released under the <a href="http://opensource.org/licenses/gpl-license.php">GPL</a>. Please see source code and the docs directory for more details. This package and its contents are Copyright (c) 2000, 2002, 2005, 2007 <a href="http://www.phpbb.com/">phpBB Group</a>, All Rights Reserved.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+<!-- END DOCUMENT -->
+
+	<div id="page-footer">
+		<div class="version"> $Id: auth_api.html 8479 2008-03-29 00:22:48Z naderman $ </div>
+	</div>
+</div></div>
+
+<div>
+	<a id="bottom" name="bottom" accesskey="z"></a>
+</div>
+
+</body>
+</html>

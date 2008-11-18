@@ -1,0 +1,5 @@
+If uploads are enabled in the wiki, files will be put in subdirectories
+under here.
+
+Note to upgraders: as of MediaWiki 1.5, the images used in the user
+interface have been moved to skins/common/images.

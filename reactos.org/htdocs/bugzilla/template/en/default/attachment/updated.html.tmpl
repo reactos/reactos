@@ -1,0 +1,46 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # bugid: integer. ID of the bug we are updating.
+  # attachid: integer. ID of the attachment we just attached.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Changes Submitted"
+%]
+
+<dl>
+  <dt>Changes to
+    <a href="attachment.cgi?id=[% attachid %]&amp;action=edit">attachment [% attachid %]</a>
+    of [% "$terms.bug $bugid" FILTER bug_link(bugid) %] submitted
+  </dt>
+  <dd>
+    [% PROCESS "bug/process/bugmail.html.tmpl" mailing_bugid = bugid %]
+    [%# Links to more information about the changed bug. %]
+    [% Hook.process("links") %]
+  </dd>
+</dl>
+
+[% PROCESS global/footer.html.tmpl %]

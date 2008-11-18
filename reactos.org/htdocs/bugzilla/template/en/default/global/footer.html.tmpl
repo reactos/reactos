@@ -1,0 +1,67 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Svetlana Harisova <light@rathedg.com>
+  #%]
+
+[%# INTERFACE:
+  # This template has no interface. However, you must fulfill the interface to
+  # global/useful-links.html.tmpl.
+  #%]
+
+[% INCLUDE "global/help.html.tmpl" %]
+
+</div>
+
+[%# Migration note: below this point, this file corresponds to the old Param
+  # 'footerhtml'
+  #%]
+
+<div id="footer">
+  <div class="intro"></div>
+
+[%# Migration note: the old param 'blurbhtml' goes here %]
+
+[%# Migration note: useful-links.html.tmpl corresponds to %commandmenu% %]
+
+           [% PROCESS "global/useful-links.html.tmpl" %]
+
+  <div class="outro"></div>
+</div>
+
+</div>
+</td>
+</tr>
+</table>
+
+<!--
+     links/lynx/etc.. dont handle css (atleast not external
+     files by default) so dont overly depend on it.
+ -->
+<hr size="1">
+
+<address>
+ <p align="center">
+  ReactOS is a trademark of ReactOS Foundation in the United States and other countries.
+ </p>
+</address>
+
+</body>
+</html>
+

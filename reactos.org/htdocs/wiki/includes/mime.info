@@ -1,0 +1,79 @@
+# Mime type info file.
+# the first mime type in each line is the "main" mime type,
+# the others are aliases for this type
+# the media type is given in upper case and square brackets,
+# like [BITMAP], and must indicate a media type as defined by
+# the MEDIATYPE_xxx constants in Defines.php
+
+
+image/gif	[BITMAP]
+image/png image/x-png	[BITMAP]
+image/ief	[BITMAP]
+image/jpeg	[BITMAP]
+image/xbm	[BITMAP]
+image/tiff	[BITMAP]
+image/x-icon	[BITMAP]
+image/x-rgb	[BITMAP]
+image/x-portable-pixmap		[BITMAP]
+image/x-portable-graymap image/x-portable-greymap	[BITMAP]
+image/x-bmp image/bmp application/x-bmp application/bmp	[BITMAP]
+image/x-photoshop image/psd image/x-psd image/photoshop	[BITMAP]
+image/vnd.djvu image/x.djvu image/x-djvu [BITMAP]
+
+image/svg+xml application/svg+xml application/svg image/svg	[DRAWING]
+application/postscript	[DRAWING]
+application/x-latex	[DRAWING]
+application/x-tex	[DRAWING]
+application/x-dia-diagram [DRAWING]
+
+
+audio/mp3 audio/mpeg3 audio/mpeg	[AUDIO]
+audio/wav audio/x-wav audio/wave	[AUDIO]
+audio/midi audio/mid	[AUDIO]
+audio/basic		[AUDIO]
+audio/x-aiff		[AUDIO]
+audio/x-pn-realaudio	[AUDIO]
+audio/x-realaudio	[AUDIO]
+
+video/mpeg application/mpeg	[VIDEO]
+video/ogg			[VIDEO]
+video/x-sgi-video		[VIDEO]
+video/x-flv			[VIDEO]
+
+application/ogg application/x-ogg audio/ogg audio/x-ogg video/ogg video/x-ogg		[MULTIMEDIA]
+
+application/x-shockwave-flash	[MULTIMEDIA]
+audio/x-pn-realaudio-plugin	[MULTIMEDIA]
+model/iges	[MULTIMEDIA]
+model/mesh	[MULTIMEDIA]
+model/vrml	[MULTIMEDIA]
+video/quicktime	[MULTIMEDIA]
+video/x-msvideo	[MULTIMEDIA]
+
+text/plain	[TEXT]
+text/html application/xhtml+xml	[TEXT]
+application/xml text/xml	[TEXT]
+text	[TEXT]
+
+application/zip application/x-zip	[ARCHIVE]
+application/x-gzip	[ARCHIVE]
+application/x-bzip	[ARCHIVE]
+application/x-tar	[ARCHIVE]
+application/x-stuffit	[ARCHIVE]
+
+
+text/javascript application/x-javascript application/x-ecmascript text/ecmascript	[EXECUTABLE]
+application/x-bash	[EXECUTABLE]
+application/x-sh	[EXECUTABLE]
+application/x-csh	[EXECUTABLE]
+application/x-tcsh	[EXECUTABLE]
+application/x-tcl	[EXECUTABLE]
+application/x-perl	[EXECUTABLE]
+application/x-python	[EXECUTABLE]
+
+application/pdf application/acrobat	[OFFICE]
+application/msword		[OFFICE]
+application/vnd.ms-excel	[OFFICE]
+application/vnd.ms-powerpoint	[OFFICE]
+application/x-director		[OFFICE]
+text/rtf			[OFFICE]

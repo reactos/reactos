@@ -1,0 +1,24 @@
+ins {
+	border-bottom: 1px solid green;
+	text-decoration: none;
+	color: green;
+}
+
+del {
+	color: Red;
+	text-decoration: line-through;
+}
+
+cite {
+	border-bottom: 1px dashed blue;
+}
+
+acronym {
+	border-bottom: 1px dotted #CCC;
+	cursor: help;
+}
+
+abbr, html\:abbr {
+	border-bottom: 1px dashed #CCC;
+	cursor: help;
+}

@@ -1,0 +1,61 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[%# INTERFACE:
+  # id: number; the ID of the bug that was changed/checked.
+  #
+  # type: string; the type of change/check that was made: "bug" when a bug
+  #   is changed, "dupe" when a duplication notation is added to a bug,
+  #   and "dep" when a bug is checked for changes to its dependencies.
+  #
+  # mailrecipients: hash; BugMail recipient params. Optional.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% UNLESS header_done %]
+  [% PROCESS bug/process/header.html.tmpl %]
+[% END %]
+
+[% DEFAULT type="bug" %]
+
+[% Link = BLOCK %][% "$terms.Bug $id" FILTER bug_link(id) %][% END %]
+[% link = BLOCK %][% "$terms.bug $id" FILTER bug_link(id) %][% END %]
+
+[%
+  title = {
+    'bug' => "Changes submitted for $link" ,
+    'dupe' => "Duplicate notation added to $link" ,
+    'dep' => "Checking for dependency changes on $link" ,
+    'votes' => "$Link confirmed by number of votes" ,
+    'created' => "$Link has been added to the database" ,
+    'move' => "$Link has been moved to another database" ,
+  }
+%]
+
+<dl>
+  <dt>[% title.$type %]</dt>
+  <dd>
+    [% PROCESS "bug/process/bugmail.html.tmpl" mailing_bugid = id %]
+    [%# Links to more information about the changed bug. %]
+    [% Hook.process("links") %]
+  </dd>
+</dl>

@@ -1,0 +1,17 @@
+/* CSS file for cell dialog in the table plugin */
+
+.panel_wrapper div.current {
+	height: 200px;
+}
+
+.advfield {
+	width: 200px;
+}
+
+#action {
+	margin-bottom: 3px;
+}
+
+#class {
+	width: 150px;
+}

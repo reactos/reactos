@@ -1,0 +1,1 @@
+ALTER TABLE {PREFIX}comments ADD COLUMN referer varchar(200);

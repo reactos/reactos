@@ -1,0 +1,13 @@
+- Replace: 
+SURBL.php
+require_once 'Cache/Lite.php';
+require_once dirname(__FILE__) . '/../../Cache/Lite.php';
+
+require_once 'HTTP/Request.php';
+require_once dirname(__FILE__) . '/../../HTTP/Request.php';
+
+require_once 'Net/CheckIP.php';
+require_once dirname(__FILE__) . '/../CheckIP.php';
+
+require_once 'Net/DNSBL.php';
+require_once dirname(__FILE__) . '/../DNSBL.php';

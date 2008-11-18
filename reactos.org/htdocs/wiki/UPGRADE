@@ -1,0 +1,339 @@
+This file provides an overview of the MediaWiki upgrade process. For help with
+specific problems, check
+
+* the documentation at http://www.mediawiki.org
+* the mediawiki-l mailing list archive at
+  http://lists.wikimedia.org/pipermail/mediawiki-l/
+* the bug tracker at https://bugzilla.wikimedia.org
+
+for information and workarounds to common issues.
+
+== Overview ==
+
+Comprehensive documentation on upgrading to the latest version of the software
+is available at http://www.mediawiki.org/wiki/Manual:Upgrading.
+
+=== Consult the release notes ===
+
+Before doing anything, stop and consult the release notes supplied with the new
+version of the software. These detail bug fixes, new features and functionality,
+and any particular points that may need to be noted during the upgrade
+procedure.
+
+=== Backup first ===
+
+It is imperative that, prior to attempting an upgrade of the database schema,
+you take a complete backup of your wiki database and files and verify it. While
+the upgrade scripts are somewhat robust, there is no guarantee that things will
+not fail, leaving the database in an inconsistent state.
+
+http://www.mediawiki.org/wiki/Manual:Backing_up_a_wiki provides an overview of
+the upgrade process. You should also refer to the documentation for your
+database management system for information on backing up a database, and to
+your operating system documentation for information on making copies of files.
+
+=== Perform the file upgrade ===
+
+Download the files for the new version of the software. These are available
+as a compressed "tar" archive from the Wikimedia Download Service
+(http://download.wikimedia.org/mediawiki).
+
+You can also obtain the new files directly from our Subversion source code
+repository, via a checkout or export operation.
+
+Replace the existing MediaWiki files with the new. You should preserve the
+LocalSettings.php file, AdminSettings.php file (if present), and the
+"extensions" and "images" directories.
+
+Depending upon your configuration, you may also need to preserve additional
+directories, including a custom upload directory ($wgUploadDirectory),
+deleted file archives, and any custom skins.
+
+=== Perform the database upgrade ===
+
+You will need an AdminSettings.php file set up in the correct format; see
+AdminSettings.sample in the wiki root for more information and examples.
+
+From the command line, browse to the "maintenance" directory and run the 
+update.php script to check and update the schema. This will insert missing
+tables, update existing tables, and move data around as needed. In most cases,
+this is successful and nothing further needs to be done.
+
+=== Check configuration settings ===
+
+The names of configuration variables, and their default values and purposes,
+can change between release branches, e.g. $wgDisableUploads in 1.4 is replaced
+with $wgEnableUploads in later versions. When upgrading, consult the release
+notes to check for configuration changes which would alter the expected
+behaviour of MediaWiki.
+
+=== Test ===
+
+It makes sense to test your wiki immediately following any kind of maintenance
+procedure, and especially after upgrading; check that page views and edits work
+normally and that special pages continue to function, etc. and correct errors
+and quirks which reveal themselves.
+
+You should also test any extensions, and upgrade these if necessary.
+
+== Upgrading from 1.8 wikis ==
+
+MediaWiki 1.9 and later no longer keep default localized message text
+in the database; 'MediaWiki:'-namespace pages that do not exist in the
+database are simply transparently filled-in on demand.
+
+The upgrade process will delete any 'MediaWiki:' pages which are left
+in the default state (last edited by 'MediaWiki default'). This may
+take a few moments, similar to the old initial setup.
+
+Note that the large number of deletions may cause older edits to expire
+from the list on Special:Recentchanges, although the deletions themselves
+will be hidden by default. (Click "show bot edits" to list them.)
+
+
+See RELEASE-NOTES for more details about new and changed options.
+
+
+== Upgrading from 1.7 wikis ==
+
+$wgDefaultUserOptions now contains all the defaults, not only overrides.
+If you're setting this as a complete array(), you may need to change it
+to set only specific items as recommended in DefaultSettings.php.
+
+== Upgrading from 1.6 wikis ==
+
+$wgLocalTZoffset was in hours, it is now using minutes.
+Link autonumbering got fixed (#5918) for protocols other than http.
+ - 'irc://irc.server.tld/' render as a link with a chat icon
+ - '[irc://irc.server.tld]' render as an autonumbered link: [1]
+
+== Upgrading from pre-1.5 wikis ==
+
+Major changes have been made to the schema from 1.4.x. The updater
+has not been fully tested for all conditions, and might well break.
+
+On a large site, the schema update might take a long time. It might
+explode, or leave your database half-done or otherwise badly hurting.
+
+Among other changes, note that Latin-1 encoding (ISO-8859-1) is
+no longer supported. Latin-1 wikis will need to be upgraded to
+UTF-8; an experimental command-line upgrade helper script,
+'upgrade1_5.php', can do this -- run it prior to 'update.php' or
+the web upgrader.
+
+If you absolutely cannot make the UTF-8 upgrade work, you can try
+doing it by hand: dump your old database, convert the dump file
+using iconv as described here: 
+http://portal.suse.com/sdb/en/2004/05/jbartsh_utf-8.html
+and then reimport it. You can also convert filenames using convmv,
+but note that the old directory hashes will no longer be valid,
+so you will also have to move them to new destinations.
+
+Message changes:
+* A number of additional UI messages have been changed from HTML to
+  wikitext, and will need to be manually fixed if customized.
+
+=== Configuration changes from 1.4.x: ===
+
+$wgDisableUploads has been replaced with $wgEnableUploads.
+
+$wgWhitelistAccount has been replaced by the 'createaccount' permission
+key in $wgGroupPermissions. To emulate the old effect of setting:
+  $wgWhitelistAccount['user'] = 0;
+set:
+  $wgGroupPermissions['*']['createaccount'] = false;
+
+$wgWhitelistEdit has been replaced by the 'edit' permission key.
+To emulate the old effect of setting:
+  $wgWhitelistEdit = true;
+set:
+  $wgGroupPermissions['*']['edit'] = false;
+
+If $wgWhitelistRead is set, you must also disable the 'read' permission
+for it to take affect on anonymous users:
+  $wgWhitelistRead = array( "Main Page", "Special:Userlogin" );
+  $wgGroupPermissions['*']['read'] = false;
+
+Note that you can disable/enable several other permissions by modifying
+this configuration array in your LocalSettings.php; see DefaultSettings.php
+for the complete default permission set.
+
+If using Memcached, you must enabled it differently now:
+  $wgUseMemCached = true;
+should be replaced with:
+  $wgMainCacheType = CACHE_MEMCACHED;
+
+
+=== Web installer ===
+
+You can use the web-based installer wizard if you first remove the
+LocalSettings.php (and AdminSettings.php, if any) files; be sure to
+give the installer the same information as you did on the original
+install (language/encoding, database name, password, etc). This will
+also generate a fresh LocalSettings.php, which you may need to customize.
+
+You may change some settings during the install, but be very careful!
+Changing the encoding in particular will generally leave you with a
+lot of corrupt pages, particularly if your wiki is not in English.
+
+=== Command-line upgrade ===
+
+Additionally, as of 1.4.0 you can run an in-place upgrade script from
+the command line, keeping your existing LocalSettings.php. This requires
+that you create an AdminSettings.php giving an appropriate database user
+and password with privileges to modify the database structure.
+
+Once the new files are in place, go into the maintenance subdirectory and
+run the script:
+
+  php update.php
+
+See caveats below on upgrading from 1.3.x or earlier.
+
+
+== Backups! ==
+
+To upgrade an existing MediaWiki installation, first BACK UP YOUR WIKI!
+If something goes wrong, you want to be able to start again.
+
+Your image files, configuration, etc can simply be copied or archived as
+you would any other files. (Make sure that the contents of your
+LocalSettings.php are not accidentally made public, as this contains
+a database password.)
+
+To back up the database, use the tools provided by your service provider
+(if applicable) or the standard mysqldump or pg_dump programs.
+
+For general help on mysqldump:
+http://dev.mysql.com/doc/mysql/en/mysqldump.html
+
+WARNING: If using MySQL 4.1.x, mysqldump's charset conversion may in
+some cases damage data in your wiki. If necessary, set the charset
+option to 'latin1' to avoid the conversion.
+
+For general help on pg_dump:
+http://www.postgresql.org/docs/current/static/app-pgdump.html
+
+
+== Caveats ==
+
+=== Postgres ===
+
+Postgres support is new, and much of the upgrade instructions may 
+not apply. The schema was changed significantly from 1.7 to 1.8, 
+so you will need to at least use the update.php or web installer, 
+as described above.
+
+
+=== Upgrading from 1.4.2 or earlier ===
+
+1.4.3 has added new fields to the sitestats table. These fields are
+optional and help to speed Special:Statistics on large sites. If you
+choose not to run the database upgrades, everything will continue to
+work in 1.4.3.
+
+You can apply the update by running maintenance/update.php, or
+manually run the SQL commands from this file:
+  maintenance/archives/patch-ss_total_articles.sql
+
+
+=== Upgrading from 1.4rc1 or earlier betas ===
+
+The logging table has been altered from 1.4beta4 to 1.4beta5
+and again in 1.4.0 final. Copy in the new files and use the web
+installer to upgrade, or the command-line maintenance/update.php.
+
+If you cannot use the automated installers/updaters, you may
+update the table by manually running the SQL commands in these
+files:
+   maintenance/archives/patch-log_params.sql
+   maintenance/archives/patch-logging-title.sql
+
+
+=== Upgrading from 1.3.x ===
+
+This should generally go smoothly.
+
+If you keep your LocalSettings.php, you may need to change the style paths
+to match the newly rearranged skin modules. Change these lines:
+  $wgStylePath        = "$wgScriptPath/stylesheets";
+  $wgStyleDirectory   = "$IP/stylesheets";
+  $wgLogo             = "$wgStylePath/images/wiki.png";
+
+to this:
+  $wgStylePath        = "$wgScriptPath/skins";
+  $wgStyleDirectory   = "$IP/skins";
+  $wgLogo             = "$wgStylePath/common/images/wiki.png";
+
+As well as new messages, the processing of some messages has changed.
+If you have customized them, please compare the new format using
+Special:Allmessages or the relevant LanguageXX.php files:
+  copyrightwarning
+  dberrortext
+  editingcomment  (was named commentedit)
+  editingsection  (was named sectionedit)
+  numauthors
+  numedits
+  numtalkauthors
+  numtalkedits
+  numwatchers
+  protectedarticle
+  searchresulttext
+  showhideminor
+  unprotectedarticle
+
+Note that the 1.3 beta releases included a potential vulnerability if PHP
+is configured with register_globals on and the includes directory is
+served to the web. For general safety, turn register_globals *off* if you
+don't _really_ need it for another package.
+
+If your hosting provider turns it on and you can't turn it off yourself,
+send them a kind note explaining that it can expose their servers and their
+customers to attacks.
+
+
+=== Upgrading from 1.2.x ===
+
+If you've been using the MediaWiki: namespace for custom page templates,
+note that things are a little different. The Template: namespace has been
+added which is more powerful -- templates can include parameters for
+instance.
+
+If you were using custom MediaWiki: entries for text inclusions, they
+will *not* automatically be moved to Template: entries at upgrade time.
+Be sure to go through and check that everything is working properly;
+you can move them manually or you can try using moveCustomMessages.php
+in maintenance/archives to do it automatically, but this might break things.
+
+Also, be sure to pick the correct character encoding -- some languages were
+only available in Latin-1 on 1.2.x and are now available for Unicode as well.
+If you want to upgrade an existing wiki from Latin-1 to Unicode you'll have
+to dump the database to SQL, run it through iconv or another conversion tool,
+and restore it. Sorry.
+
+
+=== Upgrading from 1.1.x or earlier ===
+
+This is less thoroughly tested, but should work.
+
+You need to specify the *admin* database username and password to the
+installer in order for it to successfully upgrade the database structure.
+You may wish to manually change the GRANTs later.
+
+If you have a very old database (earlier than organized MediaWiki releases
+in late August 2003) you may need to manually run some of the update SQL
+scripts in maintenance/archives before the installer is able to pick up
+with remaining updates.
+
+
+=== Upgrading from UseModWiki or old "phase 2" Wikipedia code ===
+
+There is a semi-maintained UseModWiki to MediaWiki conversion script at
+maintenance/importUseModWiki.php; it may require tweaking and customization
+to work for you.
+
+Install a new MediaWiki first, then use the conversion script which will
+output SQL statements; direct these to a file and then run that into your
+database.
+
+You will have to rebuild the links tables etc after importing.

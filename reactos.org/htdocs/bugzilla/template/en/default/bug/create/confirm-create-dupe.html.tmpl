@@ -1,0 +1,58 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Olav Vitters.
+  #
+  # Contributor(s): Olav Vitters <olav@bkor.dhs.org>
+  #%]
+
+[%# INTERFACE:
+  # bugid: integer. ID of the bug previously used to create a bug.
+  # allow_override: boolean int. Is 1 if the user may submit the bug again.
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Already filed $terms.bug"
+%]
+
+[% USE Bugzilla %]
+
+<table cellpadding="20">
+  <tr>
+    <td bgcolor="#ff0000">
+      <font size="+2">
+        You already used the form to file [% "$terms.bug $bugid" FILTER bug_link(bugid) FILTER none %].
+      </font>
+    </td>
+  </tr>
+</table>
+
+<p><font size="big">You are highly encouraged to visit [% "$terms.bug $bugid"
+FILTER bug_link(bugid) FILTER none %].</font></p>
+
+[% IF allow_override %]
+  <p>If you are sure you used the same form to submit a new [% terms.bug %],
+  click 'File [% terms.bug %] again'.<p>
+
+  <form name="create" id="create" method="post" action="post_bug.cgi"
+  [%- IF Bugzilla.cgi.param("data") %] enctype="multipart/form-data"[% END %]>
+    [% PROCESS "global/hidden-fields.html.tmpl"
+               exclude="^(Bugzilla_login|Bugzilla_password|ignore_token)$" %]
+    <input type="hidden" name="ignore_token" value="[% bugid FILTER html %]">
+    <input type="submit" value="File [% terms.bug %] again" id="file_bug_again">
+  </form>
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

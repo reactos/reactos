@@ -1,0 +1,268 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_EDIT -->
+
+	<script type="text/javascript" defer="defer">
+	// <![CDATA[
+	<!-- IF S_ADD_CODE -->
+	
+			var smiley = Array();
+			<!-- BEGIN smile -->
+				smiley['{smile.SMILEY_URL}'] = Array();
+				smiley['{smile.SMILEY_URL}']['code'] = '{smile.CODE}';
+				smiley['{smile.SMILEY_URL}']['emotion'] = '{smile.EMOTION}';
+				smiley['{smile.SMILEY_URL}']['width'] = {smile.WIDTH};
+				smiley['{smile.SMILEY_URL}']['height'] = {smile.HEIGHT};
+				smiley['{smile.SMILEY_URL}']['order'] = {smile.ORDER};
+			<!-- END smile -->
+
+			function update_image(newimage)
+			{
+				var use_element = smiley[newimage];
+
+				document.getElementById('add_image_src').src = '{PHPBB_ROOT_PATH}{IMG_PATH}/' + encodeURI(newimage);
+				document.getElementById('add_code').value = use_element['code'];
+				document.getElementById('add_emotion').value = use_element['emotion'];
+				document.getElementById('add_width').value = use_element['width'];
+				document.getElementById('add_height').value = use_element['height'];
+
+				element = document.getElementById('add_order');
+				for (var i = 0; i < element.length; i++)
+				{
+					if (element.options[i].value == use_element['order'])
+					{
+						document.getElementById('add_order').options.selectedIndex = i;
+					}
+				}
+			}
+		
+	<!-- ENDIF -->
+
+	
+	function toggle_select(icon, display, select)
+	{
+		var disp = document.getElementById('order_disp_' + select);
+		var nodisp = document.getElementById('order_no_disp_' + select);
+		disp.disabled = !display;
+		nodisp.disabled = display;
+		if (display)
+		{
+			document.getElementById('order_' + select).selectedIndex = 0;
+			nodisp.className = 'disabled-options';
+			disp.className = '';
+		}
+		else
+		{
+			document.getElementById('order_' + select).selectedIndex = {S_ORDER_LIST_DISPLAY_COUNT};
+			disp.className = 'disabled-options';
+			nodisp.className = '';
+		}
+	}
+	// ]]>
+	</script>
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+
+	<form id="acp_icons" method="post" action="{U_ACTION}">
+
+	<fieldset class="tabulated">
+	<legend>{L_TITLE}</legend>
+
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th colspan="{COLSPAN}">{L_CONFIG}</th>
+	</tr>
+	<!-- IF .items or S_ADD_CODE -->
+	<tr class="row3">
+		<td>{L_URL}</td>
+		<td>{L_LOCATION}</td>
+	<!-- IF S_SMILIES -->
+		<td>{L_SMILIES_CODE}</td>
+		<td>{L_SMILIES_EMOTION}</td>
+	<!-- ENDIF -->
+		<td>{L_WIDTH}</td>
+		<td>{L_HEIGHT}</td>
+		<td>{L_DISPLAY_ON_POSTING}</td>
+	<!-- IF ID or S_ADD -->
+		<td>{L_ORDER}</td>
+	<!-- ENDIF -->
+	<!-- IF S_ADD -->
+		<td>{L_ADD}</td>
+	<!-- ENDIF -->
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN items -->
+		<!-- IF items.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+	
+		<td style="text-align: center;"><img src="{items.IMG_SRC}" alt="" title="" /><input type="hidden" name="image[{items.IMG}]" value="1" /></td>
+		<td style="vertical-align: top;">[{items.IMG}]</td>
+		<!-- IF S_SMILIES -->
+			<td><input class="text post" type="text" name="code[{items.IMG}]" value="{items.CODE}" size="10" maxlength="50" /></td>
+			<td><input class="text post" type="text" name="emotion[{items.IMG}]" value="{items.EMOTION}" size="10" maxlength="50" /></td>
+		<!-- ENDIF -->
+		<td><input class="text post" type="text" size="3" name="width[{items.IMG}]" value="{items.WIDTH}" /></td>
+		<td><input class="text post" type="text" size="3" name="height[{items.IMG}]" value="{items.HEIGHT}" /></td>
+		<td>
+			<input type="checkbox" class="radio" name="display_on_posting[{items.IMG}]"{items.POSTING_CHECKED} onclick="toggle_select('{items.A_IMG}', this.checked, '{items.S_ROW_COUNT}');"/>
+			<!-- IF items.S_ID -->
+				<input type="hidden" name="id[{items.IMG}]" value="{items.ID}" />
+			<!-- ENDIF -->
+		</td>
+		<!-- IF ID or S_ADD -->
+			<td><select id="order_{items.S_ROW_COUNT}" name="order[{items.IMG}]">
+				<optgroup id="order_disp_{items.S_ROW_COUNT}" label="{L_DISPLAY_POSTING}" <!-- IF not items.POSTING_CHECKED -->disabled="disabled" class="disabled-options" <!-- ENDIF -->>{S_ORDER_LIST_DISPLAY}</optgroup>
+				<optgroup id="order_no_disp_{items.S_ROW_COUNT}" label="{L_DISPLAY_POSTING_NO}" <!-- IF  items.POSTING_CHECKED -->disabled="disabled" class="disabled-options" <!-- ENDIF -->>{S_ORDER_LIST_UNDISPLAY}</optgroup>
+			</select></td>
+		<!-- ENDIF -->	
+		<!-- IF S_ADD -->
+			<td><input type="checkbox" class="radio" name="add_img[{items.IMG}]" value="1" /></td>
+		<!-- ENDIF -->
+		</tr>
+	<!-- END items -->
+	<!-- IF S_ADD_CODE -->
+	<tr>
+		<th colspan="{COLSPAN}">{L_ADD_SMILEY_CODE}</th>
+	</tr>
+	<tr class="row1">
+		<td style="text-align: center;"><select name="add_image" id="add_image" onchange="update_image(this.options[selectedIndex].value);">{S_IMG_OPTIONS}</select></td>
+		<td style="vertical-align: top;"><img src="{IMG_SRC}" id="add_image_src" alt="" title="" /></td>
+		<td><input class="text post" type="text" name="add_code" id="add_code" value="{CODE}" size="10" maxlength="50" /></td>
+		<td><input class="text post" type="text" name="add_emotion" id="add_emotion" value="{EMOTION}" size="10" maxlength="50" /></td>
+		<td><input class="text post" type="text" size="3" name="add_width" id="add_width" value="{WIDTH}" /></td>
+		<td><input class="text post" type="text" size="3" name="add_height" id="add_height" value="{HEIGHT}" /></td>
+		<td><input type="checkbox" class="radio" name="add_display_on_posting" checked="checked" onclick="toggle_select('add', this.checked, 'add_order');"/></td>
+ 		<td><select id="add_order" name="add_order">
+				<optgroup id="order_disp[add]" label="{L_DISPLAY_POSTING}">{S_ADD_ORDER_LIST_DISPLAY}</optgroup>
+				<optgroup id="order_no_disp[add]" label="{L_DISPLAY_POSTING_NO}" disabled="disabled" class="disabled-options" >{S_ADD_ORDER_LIST_UNDISPLAY}</optgroup>
+		</select></td>
+		<td><input type="checkbox" class="radio" name="add_additional_code" value="1" /></td>
+	</tr>
+	<!-- ENDIF -->
+	<!-- ELSE -->
+	<tr class="row3">
+		<td colspan="{COLSPAN}">{L_NO_ICONS}</td>
+	</tr>
+	<!-- ENDIF -->
+	</tbody>
+	</table>
+
+	<p class="submit-buttons">
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_CHOOSE_PAK -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+
+	<form id="acp_icons" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_IMPORT}</legend>
+	
+	<!-- IF not S_PAK_OPTIONS -->
+		<p>{L_NO_PAK_OPTIONS}</p>
+
+	<!-- ELSE -->
+		<dl>
+			<dt><label for="pak">{L_SELECT_PACKAGE}</label></dt>
+			<dd><select id="pak" name="pak">{S_PAK_OPTIONS}</select></dd>
+		</dl>
+			<dt><label for="current">{L_CURRENT}</label><br /><span>{L_CURRENT_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" id="current" name="current" value="keep" checked="checked" /> {L_KEEP_ALL}</label>
+				<label><input type="radio" class="radio" name="current" value="replace" /> {L_REPLACE_MATCHES}</label>
+				<label><input type="radio" class="radio" name="current" value="delete" /> {L_DELETE_ALL}</label></dd>
+		</dl>
+
+	<p class="quick">
+		<input class="button1" type="submit" id="import" name="import" value="{L_IMPORT_SUBMIT}" />
+	</p>
+	<!-- ENDIF -->
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSE -->
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+
+	<!-- IF NOTICE -->
+		<div class="successbox">
+			<h3>{L_NOTIFY}</h3>
+			<p>{NOTICE}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="acp_icons" method="post" action="{U_ACTION}">
+
+	<div style="text-align: right;"><a href="{U_IMPORT}">{L_IMPORT}</a> | <a href="{U_EXPORT}">{L_EXPORT}</a></div>
+
+	<fieldset class="tabulated">
+
+	<legend>{L_TITLE}</legend>
+
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_TITLE}</th>
+		<!-- IF S_SMILIES -->
+		<th>{L_CODE}</th>
+		<th>{L_EMOTION}</th>
+		<!-- ENDIF -->
+		<th>{L_OPTIONS}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN items -->
+		<!-- IF items.S_SPACER -->
+			<tr>
+				<td class="row3" colspan="{COLSPAN}" style="text-align: center;">{L_NOT_DISPLAYED}</td>
+			</tr>
+		<!-- ENDIF -->
+		<!-- IF items.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+			<td style="width: 85%; text-align: center;"><img src="{items.IMG_SRC}" width="{items.WIDTH}" height="{items.HEIGHT}" alt="{items.ALT_TEXT}" title="{items.ALT_TEXT}" /></td>
+			<!-- IF S_SMILIES -->
+				<td style="text-align: center;">{items.CODE}</td>
+				<td style="text-align: center;">{items.EMOTION}</td>
+			<!-- ENDIF -->
+			<td style="text-align: right; white-space: nowrap;">
+				<!-- IF items.S_FIRST_ROW -->{ICON_MOVE_UP_DISABLED}<!-- ELSE --><a href="{items.U_MOVE_UP}">{ICON_MOVE_UP}</a><!-- ENDIF -->&nbsp;
+				<!-- IF items.S_LAST_ROW -->{ICON_MOVE_DOWN_DISABLED}<!-- ELSE --><a href="{items.U_MOVE_DOWN}">{ICON_MOVE_DOWN}</a><!-- ENDIF -->
+				&nbsp;<a href="{items.U_EDIT}">{ICON_EDIT}</a> <a href="{items.U_DELETE}">{ICON_DELETE}</a>
+			</td>
+		</tr>
+	<!-- BEGINELSE -->
+		<tr class="row3">
+			<td colspan="{COLSPAN}">{L_ACP_NO_ITEMS}</td>
+		</tr>
+	<!-- END items -->
+	</tbody>
+	</table>
+
+	<p class="quick">
+		<input class="button2" name="add" type="submit" value="{L_ICON_ADD}" />&nbsp; &nbsp;<input class="button2" type="submit" name="edit" value="{L_ICON_EDIT}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

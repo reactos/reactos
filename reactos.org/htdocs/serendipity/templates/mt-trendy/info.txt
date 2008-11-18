@@ -1,0 +1,3 @@
+Name: MT - Trendy
+Author: Sebastian Bergmann
+Date: 16/02/2004

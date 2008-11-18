@@ -1,0 +1,372 @@
+/* The contents of this file are subject to the Mozilla Public
+  * License Version 1.1 (the "License"); you may not use this file
+  * except in compliance with the License. You may obtain a copy of
+  * the License at http://www.mozilla.org/MPL/
+  *
+  * Software distributed under the License is distributed on an "AS
+  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing
+  * rights and limitations under the License.
+  *
+  * The Original Code is the Bugzilla Bug Tracking System.
+  *
+  * The Initial Developer of the Original Code is Netscape Communications
+  * Corporation. Portions created by Netscape are
+  * Copyright (C) 1998 Netscape Communications Corporation. All
+  * Rights Reserved.
+  *
+  * Contributor(s): Byron Jones <bugzilla@glob.com.au>
+  *                 Christian Reis <kiko@async.com.br>
+  *                 Vitaly Harisov <vitaly@rathedg.com>
+  *                 Svetlana Harisova <light@rathedg.com>
+  *                 Marc Schumann <wurblzap@gmail.com>
+  */
+
+/* header (begin) */
+    #header {
+        margin-bottom: 1em;
+        padding-bottom: 2px;
+    }
+
+    #header form {
+        display: inline;
+    }
+
+    #header .btn,
+    #header .txt {
+        font-size: 9pt;
+    }
+
+    #header .links {
+        border-left: 1px solid silver;
+        border-right: 1px solid silver;
+        border-bottom: 1px solid silver;
+        -moz-border-radius-bottomleft: 5px;
+        -moz-border-radius-bottomright: 5px;
+        padding: 0.5em;
+    }
+
+    #message {
+        border: 1px solid red;
+        margin: 0.3em 0em;
+        padding: 0.3em;
+        color: green;
+    }
+
+/* header (end)   */
+
+/* banner (begin) */
+    #banner {
+    }
+
+/* banner (end) */
+
+/* titles (begin) */
+    #titles {
+        width: 100%;
+        background-color: #404D6C;
+        color: #fff;
+        -moz-border-radius-topleft: 5px;
+        -moz-border-radius-topright: 5px;
+        font-size: 110%;
+        margin: 0;
+        padding: 0.5em;
+        vertical-align: bottom;
+    }
+
+    #titles a {
+        color: #fff;
+    }
+
+    #titles p {
+        margin: 0;
+        padding: 0;
+    }
+
+    #titles #title {
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    #titles #subtitle {
+        font-weight: normal;
+        width: 100%;
+        text-align: center;
+    }
+
+    #titles #information {
+        font-weight: normal;
+        text-align: right;
+        font-size: 90%;
+        white-space: nowrap;
+    }
+
+/* titles (end) */
+
+/* footer (begin) */
+    #footer {
+        margin-top: 5px;
+        width: 100%;
+        background: #edf2f2;
+        border-top: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+    }
+
+    #footer form {
+        display: inline;
+    }
+
+    #footer .btn,
+    #footer .txt {
+        font-size: 9pt;
+    }
+
+    #footer #useful-links {
+        display: table;
+        padding-left: 1ex;
+        padding-right: 1ex;
+    }
+
+    #footer #links-actions,
+    #footer #links-edit,
+    #footer #links-saved,
+    #footer #links-special {
+        display: table-row;
+        list-style-type: none;
+    }
+
+    #footer .label {
+        display: table-cell;
+        white-space: nowrap;
+        vertical-align: top;
+    }
+
+    #footer .links {
+        display: table-cell;
+        vertical-align: top;
+    }
+/* footer (end) */
+
+/* link lists (begin) */
+    ul.links {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+    }
+
+    ul.links li {
+        display: inline;
+        white-space: nowrap;
+    }
+/* link lists (end) */
+
+/* tabs (begin) */
+    .tabs td {
+        background: #eee;
+        text-align: center;
+        border-style: solid;
+        border-color: black;
+        border-width: 0px 0px 2px 0px;
+    }
+        
+    .tabs td.selected {
+        background: white;
+        border-width: 2px 2px 0px 2px;
+    }
+
+    .tabs td.spacer {
+        background: white;
+    }
+/* tabs (end) */
+
+/* generic (begin) */
+    :link {
+        color: #039;
+    }
+
+    :visited {
+        color: #636;
+    }
+
+    :link:hover, :visited:hover {
+        color: #333;
+    }
+
+    :link:active, :link:active {
+        color: #000;
+    }
+
+    .clickable_area {
+        cursor: pointer;
+    }
+/* generic (end) */
+
+div#docslinks {
+    float: right;
+    border: 1px solid black;
+    padding: 1ex;
+    font-size: 80%;
+}
+
+#docslinks h2 {
+    margin: 0;
+}
+
+.bz_obsolete {
+    text-decoration: line-through;
+}
+.bz_inactive {
+    text-decoration: line-through;
+}
+.bz_closed,
+.bz_CLOSED td {
+    text-decoration: line-through;
+}
+.bz_private {
+    color: darkred;
+    background: #f3eeee;
+}
+.bz_disabled {
+    color: #a0a0a0;
+}
+
+.bz_comment {
+    margin-bottom: 2em;
+}
+
+/* The rules for these classes make international text wrap correctly,
+   even for languages like Japanese that have no spaces. */
+.bz_comment_text {
+     font-family: monospace;
+    /* Note that these must all be on separate lines or they stop
+       working in Konqueror. */
+     white-space: pre-wrap;      /* CSS 3 & 2.1 */
+     white-space: -moz-pre-wrap; /* Gecko */
+     white-space: -pre-wrap;     /* Opera 4-6 */
+     white-space: -o-pre-wrap;   /* Opera 7 */
+}
+
+.bz_comment_text {
+     width: 50em;
+}
+
+.bz_comment_head {
+    background-color: #e0e0e0;
+}
+.bz_comment_hilite pre {
+    background-color: lightgreen;
+    margin: 0;
+    padding: 1em 0;
+}
+
+span.quote {
+    color: #65379c;
+    /* Make quoted text not wrap. */
+    white-space: pre;
+}
+
+table#flags th,
+table#flags td {
+    vertical-align: baseline;
+    text-align: left;
+}
+
+.flag_select {
+    min-width: 3em;
+}
+
+.throw_error {
+    background-color: #ff0000;
+    color: black;
+    font-size: 120%;
+    margin: 1em;
+    padding: 0.5em 1em;
+}
+
+dt {
+    font-weight: bolder;
+}
+body > dl > dt {
+    border-top: dotted gray thin;
+}
+dl dl > dt {
+    border-top: none;
+}
+
+/* Style of the attachment table */
+#attachment_table {
+    border-collapse: collapse;
+    width: 47em;
+    border: 1px solid #333333;
+}
+
+#attachment_table th, .bz_attach_footer {
+    background-color: #E0E0E0;
+    color: black;
+}
+
+#attachment_table td {
+    border: 1px solid #333333;
+}
+
+.bz_attach_extra_info {
+    font-size: smaller;
+}
+
+.bz_attach_flags, .bz_attach_footer {
+    white-space: nowrap;
+}
+
+.bz_attach_view_hide {
+    float: right;
+    padding-left: 1em;
+}
+
+table.attachment_info th {
+    text-align: right;
+    vertical-align: top;
+}
+
+table.attachment_info td {
+    text-align: left;
+    vertical-align: top;
+}
+
+/* Text displayed when the attachment is not viewable by the web browser */
+#noview {
+    text-align: left;
+    vertical-align: middle;
+}
+
+div.user_match {
+    margin-bottom: 1em;
+}
+
+.box {
+    border: 1px solid black;
+    color: black;
+    background-color: #ffc;
+    margin: 1em;
+    padding: 0.5em 1em;
+}
+
+/* Rules specific for printing */
+@media print {
+    #header, #footer {
+        display: none;
+    }
+
+    body {
+        background-image: none;
+        background-color: #fff;
+    }
+}
+
+.field_label {
+    text-align: right;
+    vertical-align: top;
+    font-weight: bold;
+}
+.field_value {
+    vertical-align: top;
+}

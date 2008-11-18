@@ -1,0 +1,51 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #%]
+
+[%# INTERFACE:
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the milestone belongs.
+  #
+  # 'updated_XXX' variables are booleans, and are defined if the
+  # 'XXX' field was updated during the edit just being handled.
+  #%]
+
+[% title = BLOCK %]Updating Milestone '[% milestone.name FILTER html %]' of Product
+                   '[% product.name FILTER html %]'[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+[% IF updated_name %]
+  <p>Updated Milestone name to: '[% milestone.name FILTER html %]'.</p>
+[% END %]
+
+[% IF updated_sortkey %]
+  <p>Updated Milestone sortkey to: '[% milestone.sortkey FILTER html %]'.</p>
+[% END %]
+
+[% UNLESS updated_sortkey || updated_name %]
+  <p>Nothing changed for milestone '[% milestone.name FILTER html %]'.</p>
+
+[% END %]
+
+[% PROCESS admin/milestones/footer.html.tmpl %]
+
+[% PROCESS global/footer.html.tmpl %]

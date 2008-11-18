@@ -1,0 +1,248 @@
+This documents the change of filestructure between version 0.7 and 0.8:
+
+Where functions from serendipity_config.inc.php went to:
+------------------------------------------------------------------------
+./include/functions_comments.inc.php
+    * serendipity_rememberComment() {
+    * serendipity_rememberCommentDetails()
+    * serendipity_forgetCommentDetails()
+    * serendipity_displayCommentForm()
+    * serendipity_fetchComments()
+    * serendipity_generateCommentList()
+    * serendipity_printComments()
+    * serendipity_deleteComment()
+    * serendipity_allowCommentsToggle()
+    * serendipity_approveComment()
+    * serendipity_saveComment()
+    * serendipity_mailSubscribers()
+    * serendipity_cancelSubscription()
+    * serendipity_sendComment()
+
+./include/functions_trackbacks.inc.php
+    * serendipity_fetchTrackbacks()
+    * serendipity_printTrackbacks()
+    * serendipity_trackback_is_success()
+    * serendipity_pingback_autodiscover()
+    * _serendipity_send()
+    * serendipity_trackback_autodiscover()
+    * serendipity_reference_autodiscover()
+    * add_trackback()
+    * add_pingback()
+    * serendipity_trackback_excerpt()
+    * report_trackback_success()
+    * report_trackback_failure()
+    * report_pingback_success()
+    * report_pingback_failure()
+    * serendipity_handle_references()
+
+./include/functions_smarty.inc.php
+    * serendipity_smarty_fetch()
+    * serendipity_emptyPrefix()
+    * serendipity_smarty_hookPlugin()
+    * serendipity_smarty_printSidebar()
+    * serendipity_smarty_getFile()
+    * serendipity_smarty_formatTime()
+    * serendipity_smarty_printComments()
+    * serendipity_smarty_printTrackbacks()
+
+./include/functions_entries.inc.php
+    * serendipity_fetchCategoryRange()
+    * serendipity_fetchCategoryInfo()
+    * serendipity_fetchEntryCategories()
+    * serendipity_fetchEntries()
+    * serendipity_fetchEntry()
+    * serendipity_fetchEntryProperties()
+    * serendipity_fetchCategories()
+    * serendipity_rebuildCategoryTree()
+    * serendipity_searchEntries()
+    * serendipity_printEntryFooter()
+    * serendipity_getTotalEntries()
+    * serendipity_printEntries()
+    * serendipity_printEntries_rss()
+    * serendipity_purgeEntry()
+    * serendipity_updertEntry()
+    * serendipity_deleteEntry()
+    * serendipity_generateCategoryList()
+    * serendipity_printEntryForm()
+    * serendipity_emit_htmlarea_code()
+    * serendipity_updateEntryCategories()
+    * serendipity_printArchives()
+
+./include/functions.inc.php (remaining)
+    * serendipity_truncateString()
+    * serendipity_formatTime()
+    * serendipity_logout()
+    * serendipity_login()
+    * serendipity_userLoggedIn()
+    * serendipity_fetchTemplates()
+    * serendipity_fetchTemplateInfo()
+    * serendipity_setCookie()
+    * serendipity_deleteCookie()
+    * serendipity_fetchUsers()
+    * serendipity_makeFilename()
+    * serendipity_fetchReferences()
+    * serendipity_utf8_encode()
+    * serendipity_rss_getguid()
+    * xhtml_cleanup()
+    * serendipity_rewriteURL()
+    * serendipity_archiveURL()
+    * serendipity_archiveDateUrl()
+    * serendipity_maxfileuploadsize()
+    * serendipity_fetchAuthor()
+    * serendipity_parseFileName()
+    * serendipity_authenticate_author()
+    * serendipity_track_referrer()
+    * serendipity_track_referrer_gc()
+    * serendipity_track_url()
+    * serendipity_displayTopReferrers()
+    * serendipity_displayTopExits()
+    * serendipity_displayTopUrlList()
+    * serendipity_discover_rss()
+    * serendipity_isResponseClean()
+    * serendipity_printLogin()
+
+Moved functions:
+------------------------------------------------------------------------
+serendipity_saveTemplateSelection()
+    -> OBSOLETE
+
+serendipity_importWP()
+    -> ./include/admin/rss_exchange.inc.php
+
+serendipity_importMT()
+    -> ./include/admin/rss_exchange.inc.php
+
+serendipity_load_configuration()
+    -> ./include/functions_config.inc.php
+
+Removed files:
+------------------------------------------------------------------------
+./serendipity.inc.php
+./serendipity_layout.inc.php
+./serendipity_layout_table.inc.php
+
+Moved/Renamed files:
+------------------------------------------------------------------------
+./serendipity_entries_overview.inc.php
+    -> ./include/admin/entries_overview.inc.php
+
+./serendipity_rss_exchange.inc.php
+    -> ./include/admin/rss_exchange.inc.php
+
+./serendipity_admin_category.inc.php
+    -> ./include/admin/category.inc.php
+
+./serendipity_admin_comments.inc.php
+    -> ./include/admin/comments.inc.php
+
+./serendipity_admin_entries.inc.php
+    -> ./include/admin/entries.inc.php
+
+./serendipity_admin_images.inc.php
+    -> ./include/admin/images.inc.php
+
+./serendipity_admin_installer.inc.php
+    -> ./include/admin/installer.inc.php
+
+./serendipity_admin_interop.inc.php
+    -> ./include/admin/interop.inc.php
+
+./serendipity_admin_overview.inc.php
+    -> ./include/admin/overview.inc.php
+
+./serendipity_admin_plugins.inc.php
+    -> ./include/admin/plugins.inc.php
+
+./serendipity_admin_templates.inc.php
+    -> ./include/admin/templates.inc.php
+
+./serendipity_admin_upgrader.inc.php
+    -> ./include/admin/upgrader.inc.php
+
+./serendipity_admin_users.inc.php
+    -> ./include/admin/users.inc.php
+
+
+./compat.php
+    -> ./include/compat.inc.php
+
+./serendipity_functions_config.inc.php
+    -> ./include/functions_config.inc.php
+
+./serendipity_functions_images.inc.php
+    -> ./include/functions_images.inc.php
+
+./serendipity_functions_installer.inc.php
+    -> ./include/functions_installer.inc.php
+
+./serendipity_genpage.inc.php
+    -> ./include/genpage.inc.php
+
+./serendipity_lang.inc.php
+    -> ./include/lang.inc.php
+
+./serendipity_plugin_api.php
+    -> ./include/plugin_api.inc.php
+
+./serendipity_sidebar_items.php
+    -> ./include/plugin_internal.inc.php
+
+
+./serendipity_db.inc.php
+    -> ./include/db/db.inc.php
+
+./serendipity_db_mysql.inc.php
+    -> ./include/db/mysql.inc.php
+
+./serendipity_db_mysqli.inc.php
+    -> ./include/db/mysqli.inc.php
+
+./serendipity_db_postgres.inc.php
+    -> ./include/db/postgres.inc.php
+
+./serendipity_db_sqlite.inc.php
+    -> ./include/db/sqlite.inc.php
+
+
+./htaccess.cgi.errordocs.tpl
+    -> ./include/tpl/htaccess_cgi_errordocs.tpl
+
+./htaccess.cgi.normal.tpl
+    -> ./include/tpl/htaccess_cgi_normal.tpl
+
+./htaccess.cgi.rewrite.tpl
+    -> ./include/tpl/htaccess_cgi_rewrite.tpl
+
+./htaccess.errordocs.tpl
+    -> ./include/tpl/htaccess_errordocs.tpl
+
+./htaccess.normal.tpl
+    -> ./include/tpl/htaccess_normal.tpl
+
+./htaccess.rewrite.tpl
+    -> ./include/tpl/htaccess_rewrite.tpl
+
+./serendipity_config_local.tpl
+    -> ./include/tpl/config_local.tpl
+
+./serendipity_config_user.tpl
+    -> ./include/tpl/config_user.tpl
+
+
+./INSTALL
+    -> ./docs/INSTALL
+
+./LICENSE
+    -> ./docs/LICENSE
+
+./NEWS
+    -> ./docs/NEWS
+
+./README
+    -> ./docs/README
+
+./TODO
+    -> ./docs/TODO
+
+./upgrade.sh
+    -> ./docs/upgrade.sh

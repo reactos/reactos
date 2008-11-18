@@ -1,0 +1,392 @@
+<!--
+
+(c) dynarch.com, 2003-2004
+Author: Mihai Bazon, http://dynarch.com/mishoo
+Distributed as part of HTMLArea 3.0
+
+"You are not expected to understand this...  I don't neither."
+
+                      (from The Linux Kernel Source Code,
+                            ./arch/x86_64/ia32/ptrace.c:90)
+
+;-)
+
+-->
+
+<html style="height: 100%">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>About HTMLArea</title>
+<script type="text/javascript" src="popup.js"></script>
+<script type="text/javascript">
+window.resizeTo(450, 250);
+var TABS = [];
+var CURRENT_TAB = 0;
+var CONTENT_HEIGHT_DIFF = 0;
+var CONTENT_WIDTH_DIFF = 0;
+function selectTab(idx) {
+  var ct = TABS[CURRENT_TAB];
+  ct.className = ct.className.replace(/\s*tab-current\s*/, ' ');
+  ct = TABS[CURRENT_TAB = idx];
+  ct.className += ' tab-current';
+  for (var i = TABS.length; --i >= 0;) {
+    var area = document.getElementById("tab-area-" + i);
+    if (CURRENT_TAB == i) {
+      area.style.display = "block";
+    } else {
+      area.style.display = "none";
+    }
+  }
+  document.body.style.visibility = "hidden";
+  document.body.style.visibility = "visible";
+  document.cookie = "HTMLAREA-ABOUT-TAB=" + idx;
+}
+var editor = null;
+function initDocument() {
+  editor = window.dialogArguments;
+  HTMLArea = window.opener.HTMLArea;
+
+  var plugins = document.getElementById("plugins");
+  var j = 0;
+  var html = "<table width='99%' cellpadding='0' style='margin-top: 1em; collapse-borders: collapse; border: 1px solid #8b8;'>" +
+	  "<thead><tr>" +
+	  "<td>Name</td>" +
+	  "<td>Developer</td>" +
+	  "<td>Sponsored by</td>" +
+	  "<td>License<sup>*</sup></td>" +
+	  "</tr></thead><tbody>";
+  for (var i in editor.plugins) {
+    var info = editor.plugins[i];
+    html += "<tr><td>" + info.name + " v" + info.version + "</td>" + 
+            "<td><a href='" + info.developer_url + "' target='_blank' title='Visit developer website'>" +
+	    info.developer + "</a></td>" +
+	    "<td><a href='" + info.sponsor_url + "' target='_blank' title='Visit sponsor website'>" +
+	    info.sponsor + "</a></td>" +
+	    "<td>" + info.license + "</td></tr>";
+    ++j;
+  }
+
+  if (j) {
+          html += "</tbody></table>" +
+		  "<p><sup>*</sup> License \"htmlArea\" means that the plugin is distributed under the same terms " +
+		  "as HTMLArea itself.  Such plugins are likely to be those included in the official " +
+		  "HTMLArea distribution</p>";
+	  plugins.innerHTML = "<p>The following plugins have been loaded.</p>" + html;
+  } else {
+	  plugins.innerHTML = "<p>No plugins have been loaded</p>";
+  }
+
+  plugins.innerHTML += "<p>User agent reports:<br/>" + navigator.userAgent + "</p>";
+
+  var content = document.getElementById("content");
+  if (window.innerHeight) {
+    CONTENT_HEIGHT_DIFF = window.innerHeight - 250;
+    CONTENT_WIDTH_DIFF = window.innerWidth - content.offsetWidth;
+  } else {
+    CONTENT_HEIGHT_DIFF = document.body.offsetHeight - 250;
+    CONTENT_WIDTH_DIFF = document.body.offsetWidth - 400;
+  }
+  window.onresize();
+  var bar = document.getElementById("tabbar");
+  j = 0;
+  for (var i = bar.firstChild; i; i = i.nextSibling) {
+    TABS.push(i);
+    i.__msh_tab = j;
+    i.onmousedown = function(ev) { selectTab(this.__msh_tab); HTMLArea._stopEvent(ev || window.event); };
+    var area = document.getElementById("tab-area-" + j);
+    if (/tab-current/.test(i.className)) {
+      CURRENT_TAB = j;
+      area.style.display = "block";
+    } else {
+      area.style.display = "none";
+    }
+    ++j;
+  }
+  if (document.cookie.match(/HTMLAREA-ABOUT-TAB=([0-9]+)/))
+    selectTab(RegExp.$1);
+}
+window.onresize = function() {
+  var content = document.getElementById("content");
+  if (window.innerHeight) {
+    content.style.height = (window.innerHeight - CONTENT_HEIGHT_DIFF) + "px";
+    content.style.width = (window.innerWidth - CONTENT_WIDTH_DIFF) + "px";
+  } else {
+    content.style.height = (document.body.offsetHeight - CONTENT_HEIGHT_DIFF) + "px";
+    //content.style.width = (document.body.offsetWidth - CONTENT_WIDTH_DIFF) + "px";
+  }
+}
+</script>
+<style>
+  html,body,textarea,table { font-family: tahoma,verdana,arial; font-size: 11px;
+padding: 0px; margin: 0px; }
+  tt { font-size: 120%; }
+  body { padding: 0px; background: #cea; color: 000; }
+  a:link, a:visited { color: #00f; }
+  a:hover { color: #f00; }
+  a:active { color: #f80; }
+  button { font: 11px tahoma,verdana,sans-serif; background-color: #cea;
+      border-width: 1px; }
+
+  p { margin: 0.5em 0px; }
+
+  h1 { font: bold 130% georgia,"times new roman",serif; margin: 0px; border-bottom: 1px solid #6a6; }
+  h2 { font: bold 110% georgia,"times new roman",serif; margin: 0.7em 0px; }
+
+  thead {
+    font-weight: bold;
+    background-color: #dfb;
+  }
+
+  .logo, .logo-hover {
+    white-space: nowrap;
+    background-color: #8f4; color: #040; padding: 3px; border-bottom: 1px solid #555;
+    height: 5em;
+  }
+  .logo .brand, .logo-hover .brand {
+    margin-left: 0.5em; margin-right: 0.5em; padding-bottom: 0.1em;
+    font-family: impact,'arial black',arial,sans-serif; font-size: 28px;
+    border-bottom: 1px solid #595; text-align: center;
+    cursor: pointer;
+  }
+  .logo-hover {
+    background-color: #fff;
+  }
+  .logo-hover .brand {
+    color: #800;
+    border-color: #04f;
+  }
+  .logo .letter, .logo-hover .letter { position: relative; font-family: monospace; }
+  .logo .letter1 { top: 0.1em; }
+  .logo .letter2 { top: 0.05em; }
+  .logo .letter3 { top: -0.05em; }
+  .logo .letter4 { top: -0.1em; }
+
+  .logo-hover .letter1 { top: -0.1em; }
+  .logo-hover .letter2 { top: -0.05em; }
+  .logo-hover .letter3 { top: 0.05em; }
+  .logo-hover .letter4 { top: 0.1em; }
+  .logo .version, .logo-hover .version { font-family: georgia,"times new roman",serif; }
+  .logo .release {
+    font-size: 90%; margin-bottom: 1em;
+    text-align: center; color: #484;
+  }
+  .logo .visit { display: none; }
+  .logo-hover .release { display: none; }
+  .logo-hover .visit {
+    font-size: 90%; margin-bottom: 1em;
+    text-align: center; color: #448;
+  }
+  .buttons {
+    text-align: right; padding: 3px; background-color: #8f4;
+    border-top: 1px solid #555;
+  }
+  #tabbar {
+    position: relative;
+    left: 10px;
+  }
+  .tab {
+    color: #454;
+    cursor: pointer;
+    margin-left: -5px;
+    float: left; position: relative;
+    border: 1px solid #555;
+    top: -3px; left: -2px;
+    padding: 2px 10px 3px 10px;
+    border-top: none; background-color: #9b7;
+    -moz-border-radius: 0px 0px 4px 4px;
+    z-index: 0;
+  }
+  .tab-current {
+    color: #000;
+    top: -4px;
+    background-color: #cea;
+    padding: 3px 10px 4px 10px;
+    z-index: 10;
+  }
+  table.sponsors { border-top: 1px solid #aca; }
+  table.sponsors td {
+    border-bottom: 1px solid #aca; vertical-align: top;
+  }
+  table.sponsors tr td { padding: 2px 0px; }
+  table.sponsors tr td.sponsor { text-align: right; padding-right: 0.3em; white-space: nowrap; }
+  li, ol, ul { margin-top: 0px; margin-bottom: 0px; }
+</style></head>
+<body onload="__dlg_init(); initDocument();"
+><table cellspacing="0" cellpadding="0" style="border-collapse: collapse;
+      width: 100%; height: 100%;">
+
+<tr style="height: 1em"><td id="tdheader">
+
+<div class="logo">
+<div class="brand"
+onmouseover="this.parentNode.className='logo-hover';"
+onmouseout="this.parentNode.className='logo';"
+onclick="window.open('http://dynarch.com/htmlarea/');">
+<span class="letter letter1">&lt;H</span><span
+class="letter letter2">T</span><span
+class="letter letter3">M</span><span
+class="letter letter4">L</span>Area <span class="letter">/&gt;</span>
+<span class="version"><% $version.$release %></span></div>
+<div class="release">Compiled on <% $time %></div>
+<div class="visit">Go to http://dynarch.com/htmlarea/ [latest milestone release]</div>
+</div>
+
+</td></tr>
+<tr><td id="tdcontent" style="padding: 0.5em;">
+
+<div style="overflow: auto; height: 250px;" id="content">
+<div id="tab-areas">
+
+<div id="tab-area-0">
+
+  <h1>HTMLArea</h1>
+  
+  <p>A free WYSIWYG editor replacement for <tt>&lt;textarea&gt;</tt> fields.<br />
+  For Mozilla 1.3+ (any platform) or Internet Explorer 5.5+ (Windows).
+  </p>
+
+  <p style="text-align: center"
+  >&copy; 2002-2004 <a href="http://interactivetools.com" target="_blank">interactivetools.com</a>, inc.<br />
+  &copy; 2003-2004 <a href="http://dynarch.com" target="_blank">dynarch.com</a> LLC.<br />
+  All Rights Reserved.</p>
+
+  <h2>Project resources</h2>
+
+  <ul>
+  <li><a href="http://sourceforge.net/projects/itools-htmlarea/" target="_blank"
+  >Project page</a> (@ sourceforge.net)</li>
+  <li><a href="http://sourceforge.net/cvs/?group_id=69750" target="_blank"
+  >Anonymous CVS access</a> (@ sourceforge.net)</li>
+  <li><a href="http://sourceforge.net/tracker/?atid=525656&group_id=69750&func=browse" target="_blank"
+  >Bug system</a> (@ sourceforge.net)</li>
+  <li><a href="http://www.interactivetools.com/forum/gforum.cgi?forum=14;" target="_blank"
+  >Forum</a> (@ interactivetools.com)</li>
+  <li><a href="http://www.dynarch.com/htmlarea/" target="_blank"
+  >Last public release</a> (@ dynarch.com)</li>
+  </ul>
+
+  <p>
+  For download section please see the <a href="http://sourceforge.net/projects/itools-htmlarea/" target="_blank"
+  >project page @ SourceForge</a>.
+  </p>
+
+<p style="margin-top: 1em; text-align: center;">Version 3.0 developed and maintained by <a
+href="http://dynarch.com/mishoo/" title="http://dynarch.com/mishoo/" target="_blank">Mihai Bazon</a> / <a
+href="http://dynarch.com" title="http://dynarch.com/" target="_blank">dynarch.com</a></p>
+
+</div>
+
+<div id="tab-area-1">
+<h1>Thank you</h1>
+
+  <p>
+  <a href="http://dynarch.com" target="_blank">dynarch.com</a> would like to thank the following
+  companies/persons for their <em>donations</em> to support development of HTMLArea (listed alphabetically):
+  </p>
+
+  <ul>
+    <li><a href="http://www.computerlove.co.uk" target="_blank">Code Computer Love Ltd.</a> (UK)</li>
+    <li><a href="http://www.neomedia.ro" target="_blank">Neomedia</a> (Romania)</li>
+    <li><a href="http://www.os3.it" target="_blank">OS3</a> (Italy)</li>
+    <li><a href="http://www.softwerk.net" target="_blank">SoftWerk</a> (Italy)</li>
+  </ul>
+
+  <p>Also many thanks to all people at InteractiveTools.com
+  <a href="http://www.interactivetools.com/forum/gforum.cgi?forum=14;">HTMLArea forums</a> for
+  contributing translations, feedback, bug reports and fixes.</p>
+
+  <p>
+  Last but not least, this project wouldn't have existed without
+  <a href="http://interactivetools.com" target="_blank">InteractiveTools.com</a>.
+  </p>
+
+</div>
+
+<div id="tab-area-2">
+<h1>htmlArea License (based on BSD license)</h1>
+
+<p style="text-align: center">© 2002-2004, interactivetools.com, inc.<br />
+  © 2003-2004 dynarch.com LLC<br />
+  All rights reserved.</p>
+
+<p>
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+</p>
+
+<ol>
+<li>
+Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+</li>
+
+<li>
+Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+</li>
+
+<li>
+Neither the name of interactivetools.com, inc. nor the names of its
+contributors may be used to endorse or promote products derived from this
+software without specific prior written permission.
+</li>
+</ol>
+
+<p>
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+</p>
+
+</div>
+
+<div id="tab-area-3">
+<h1>Plugins</h1>
+<div id="plugins">
+</div>
+</div>
+
+</div></div>
+
+
+</tr></td>
+<tr style="height: 1em"><td id="tdfooter">
+
+
+<div class="buttons">
+<div id="tabbar"
+><div class="tab tab-current"
+>About</div><div class="tab"
+>Thanks</div><div class="tab"
+>License</div><div class="tab"
+>Plugins</div></div>
+<button type="button" onclick="__dlg_close(null);">I agree it's cool</button>
+</div>
+
+</td></tr></table>
+
+</body></html>
+
+<%ARGS>
+  $version => '3.0'
+  $release => 'beta+'
+  $basename => 'HTMLArea-3.0-beta'
+</%ARGS>
+
+<%INIT>;
+if ($release =~ /\S/) {
+    $release = ' <span style="position: relative; top: -0.6em; font-size: 50%; font-weight: normal">[ rev. '.$release.' ]</span>';
+}
+
+use POSIX qw(strftime);
+my $time = strftime '%b %e, %Y %H:%M GMT', gmtime;
+</%INIT>

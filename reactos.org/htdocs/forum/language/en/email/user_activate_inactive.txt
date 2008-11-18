@@ -1,0 +1,7 @@
+Subject: Your account has been deactivated
+
+Hello {USERNAME},
+
+Your account on "{SITENAME}" has been deactivated, most likely due to changes made to your profile. The administrator of the board will need to activate it before you can log in. You will receive another notification when this has occurred.
+
+{EMAIL_SIG}

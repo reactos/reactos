@@ -1,0 +1,77 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_EDIT_WORD -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_ACP_WORDS}</h1>
+
+	<p>{L_ACP_WORDS_EXPLAIN}</p>
+
+	<form id="acp_words" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_EDIT_WORD}</legend>
+		<dl>
+			<dt><label for="word">{L_WORD}</label></dt>
+			<dd><input id="word" type="text" name="word" value="{WORD}" maxlength="255" /></dd>
+		</dl>
+		<dl>
+			<dt><label for="replacement">{L_REPLACEMENT}</label></dt>
+			<dd><input id="replacement" type="text" name="replacement" value="{REPLACEMENT}" maxlength="255" /></dd>
+		</dl>
+		{S_HIDDEN_FIELDS}
+
+	<p class="submit-buttons">
+		<input class="button1" type="submit" id="submit" name="save" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+		{S_FORM_TOKEN}
+	</p>
+	</fieldset>
+	</form>
+
+<!-- ELSE -->
+
+	<h1>{L_ACP_WORDS}</h1>
+
+	<p>{L_ACP_WORDS_EXPLAIN}</p>
+
+	<form id="acp_words" method="post" action="{U_ACTION}">
+
+	<fieldset class="tabulated">
+	<legend>{L_ACP_WORDS}</legend>
+	<p class="quick">
+		{S_HIDDEN_FIELDS}
+		<input class="button2" name="add" type="submit" value="{L_ADD_WORD}" />
+	</p>
+
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_WORD}</th>
+		<th>{L_REPLACEMENT}</th>
+		<th>{L_ACTION}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN words -->
+		<!-- IF words.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+		<td style="text-align: center;">{words.WORD}</td>
+		<td style="text-align: center;">{words.REPLACEMENT}</td>
+		<td>&nbsp;<a href="{words.U_EDIT}">{ICON_EDIT}</a>&nbsp;&nbsp;<a href="{words.U_DELETE}">{ICON_DELETE}</a>&nbsp;</td>
+	</tr>
+	<!-- BEGINELSE -->
+	<tr class="row3">
+		<td colspan="3">{L_ACP_NO_ITEMS}</td>
+	</tr>
+	<!-- END words -->
+	</tbody>
+	</table>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

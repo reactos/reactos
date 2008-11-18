@@ -1,0 +1,113 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Erik Stambaugh <erik@dasbistro.com>
+  #                 Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[%# Define strings that will serve as the title and header of this page %]
+[% title = BLOCK %]Create New Attachment for [% terms.Bug %] #[% bug.bug_id %][% END %]
+[% header = BLOCK %]Create New Attachment for
+  [%+ "$terms.Bug $bug.bug_id" FILTER bug_link(bug.bug_id) FILTER none %][% END %]
+[% subheader = BLOCK %][% bug.short_desc FILTER html %][% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  header = header
+  subheader = subheader
+  onload="setContentTypeDisabledState(document.entryform);"
+  style_urls = [ 'skins/standard/create_attachment.css' ]
+  javascript_urls = [ "js/attachment.js" ]
+%]
+
+<form name="entryform" method="post" action="attachment.cgi" enctype="multipart/form-data">
+  <input type="hidden" name="bugid" value="[% bug.bug_id %]">
+  <input type="hidden" name="action" value="insert">
+
+  <table class="attachment_entry">
+    [% PROCESS attachment/createformcontents.html.tmpl %]
+
+    [%# Additional fields for attachments on existing bugs: %]
+    <tr>
+      <th>Obsoletes:</th>
+      <td>
+        <em>(optional) Check each existing attachment made obsolete by your new attachment.</em><br>
+        [% IF attachments.size %]
+          [% FOREACH attachment = attachments %]
+            [% IF ((attachment.isprivate == 0) || (Param("insidergroup")
+              && user.in_group(Param("insidergroup")))) %]
+              <input type="checkbox" id="[% attachment.id %]"
+                   name="obsolete" value="[% attachment.id %]">
+              <a href="attachment.cgi?id=[% attachment.id %]&amp;action=edit">[% attachment.id %]: [% attachment.description FILTER html %]</a><br>
+            [% END %]
+          [% END %]
+        [% ELSE %]
+            [no attachments can be made obsolete]
+        [% END %]
+      </td>
+    </tr>
+
+    [% IF (user.id != bug.assigned_to.id) AND user.in_group("editbugs", bug.product_id) %]
+      <tr>
+        <th>Reassignment:</th>
+        <td>
+          <em>If you want to assign this [% terms.bug %] to yourself,
+              check the box below.</em><br>
+          <input type="checkbox" id="takebug" name="takebug" value="1">
+          <label for="takebug">take [% terms.bug %]</label>
+        </td>
+      </tr>
+    [% END %]
+    <tr>
+      <th><label for="comment">Comment:</label></th>
+      <td>
+        <em>(optional) Add a comment about this attachment to the [% terms.bug %].</em><br>
+        [% INCLUDE global/textarea.html.tmpl
+          name    = 'comment'
+          id      = 'comment'
+          minrows = 6
+          maxrows = 15
+          cols    = constants.COMMENT_COLS
+          wrap    = 'soft'
+        %]
+      </td>
+    </tr>
+    [% IF (Param("insidergroup") && user.in_group(Param("insidergroup"))) %]
+      <tr>
+        <th>Privacy:</th>
+        <td>
+          <em>If the attachment is private, check the box below.</em><br>
+          <input type="checkbox" name="isprivate" id="isprivate"
+          value="1" onClick="updateCommentPrivacy(this)">
+        <label for="isprivate">Private</label>
+        </td>
+      </tr>
+    [% END %]
+    <tr>
+      <th>&nbsp;</th>
+      <td><input type="submit" id="create" value="Submit"></td>
+    </tr>
+  </table>
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

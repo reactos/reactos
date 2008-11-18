@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <title>Test of CSS plugin</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript">
+      _editor_url = "../";
+      _editor_lang = "en";
+    </script>
+
+    <!-- load the main HTMLArea files -->
+    <script type="text/javascript" src="../htmlarea.js"></script>
+
+    <script type="text/javascript">
+      HTMLArea.loadPlugin("CSS");
+
+      function initDocument() {
+        var editor = new HTMLArea("editor");
+        editor.config.pageStyle = "@import url(custom.css);";
+        editor.registerPlugin(CSS, {
+          combos : [
+            { label: "Syntax",
+                         // menu text       // CSS class
+              options: { "None"           : "",
+                         "Code" : "code",
+                         "String" : "string",
+                         "Comment" : "comment",
+                         "Variable name" : "variable-name",
+                         "Type" : "type",
+                         "Reference" : "reference",
+                         "Preprocessor" : "preprocessor",
+                         "Keyword" : "keyword",
+                         "Function name" : "function-name",
+                         "Html tag" : "html-tag",
+                         "Html italic" : "html-helper-italic",
+                         "Warning" : "warning",
+                         "Html bold" : "html-helper-bold"
+                       },
+              context: "pre"
+            },
+            { label: "Info",
+              options: { "None"           : "",
+                         "Quote"          : "quote",
+                         "Highlight"      : "highlight",
+                         "Deprecated"     : "deprecated"
+                       }
+            }
+          ]
+        });
+        editor.generate();
+      }
+    </script>
+
+  </head>
+
+  <body onload="initDocument()">
+    <h1>Test of FullPage plugin</h1>
+
+    <textarea id="editor" style="height: 30em; width: 100%;"
+>&lt;h1&gt;&lt;tt&gt;registerDropdown&lt;/tt&gt;&lt;/h1&gt;
+
+&lt;p&gt;Here's some sample code that adds a dropdown to the toolbar.  Go on, do
+        syntax highlighting on it ;-)&lt;/p&gt;
+
+&lt;pre&gt;var the_options = {
+	"Keyword"          : "keyword",
+	"Function name"    : "function-name",
+	"String"           : "string",
+	"Numeric"          : "integer",
+	"Variable name"    : "variable"
+};
+var css_class = {
+	id                 : "CSS-class",
+	tooltip            : i18n["tooltip"],
+	options            : the_options,
+	action             : function(editor) { self.onSelect(editor, this); }
+};
+cfg.registerDropdown(css_class);
+toolbar[0].unshift(["CSS-class"]);&lt;/pre&gt;
+
+&lt;p&gt;Easy, eh? ;-)&lt;/p&gt;</textarea>
+
+    <hr />
+    <address><a href="http://dynarch.com/mishoo/">Mihai Bazon</a></address>
+<!-- Created: Wed Oct  1 19:55:37 EEST 2003 -->
+<!-- hhmts start --> Last modified: Wed Jan 28 11:10:16 EET 2004 <!-- hhmts end -->
+<!-- doc-lang: English -->
+  </body>
+</html>

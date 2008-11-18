@@ -1,0 +1,47 @@
+
+<h3 id="review">
+	<span class="right-box"><a href="#review" onclick="viewableArea(getElementById('topicreview'), true); var rev_text = getElementById('review').getElementsByTagName('a').item(0).firstChild; if (rev_text.data == '{LA_EXPAND_VIEW}'){rev_text.data = '{LA_COLLAPSE_VIEW}'; } else if (rev_text.data == '{LA_COLLAPSE_VIEW}'){rev_text.data = '{LA_EXPAND_VIEW}'};">{L_EXPAND_VIEW}</a></span>
+	{L_TOPIC_REVIEW}: {TOPIC_TITLE}
+</h3>
+
+<div id="topicreview">
+	<!-- BEGIN topic_review_row -->
+	<div class="post <!-- IF topic_review_row.S_ROW_COUNT is odd -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
+		<div class="inner"><span class="corners-top"><span></span></span>
+		
+		<div class="postbody" id="pr{topic_review_row.POST_ID}">
+			<!-- IF topic_review_row.POSTER_QUOTE and topic_review_row.DECODED_MESSAGE -->
+			<ul class="profile-icons">
+				<li class="quote-icon"><a href="#postingbox" onclick="addquote({topic_review_row.POST_ID}, '{topic_review_row.POSTER_QUOTE}');" title="{L_QUOTE} {topic_review_row.POST_AUTHOR}"><span>{L_QUOTE} {topic_review_row.POST_AUTHOR}</span></a></li>
+			</ul>
+			<!-- ENDIF -->
+			<!-- IF topic_review_row.U_MCP_DETAILS --><div class="right-box"><a href="{topic_review_row.U_MCP_DETAILS}">{L_POST_DETAILS}</a></div><!-- ENDIF -->
+			<h3><a href="#pr{topic_review_row.POST_ID}">{topic_review_row.POST_SUBJECT}</a></h3>
+			<p class="author"><!-- IF S_IS_BOT -->{topic_review_row.MINI_POST_IMG}<!-- ELSE --><a href="{topic_review_row.U_MINI_POST}">{topic_review_row.MINI_POST_IMG}</a><!-- ENDIF --> {L_POST_BY_AUTHOR} <strong>{topic_review_row.POST_AUTHOR_FULL}</strong> {L_POSTED_ON_DATE} {topic_review_row.POST_DATE}  </p>
+			<div class="content">{topic_review_row.MESSAGE}</div>
+
+			<!-- IF topic_review_row.S_HAS_ATTACHMENTS -->
+				<dl class="attachbox">
+					<dt>{L_ATTACHMENTS}</dt>
+					<!-- BEGIN attachment -->
+						<dd>{topic_review_row.attachment.DISPLAY_ATTACHMENT}</dd>
+					<!-- END attachment -->
+				</dl>
+			<!-- ENDIF -->
+
+			<!-- IF topic_review_row.POSTER_QUOTE and topic_review_row.DECODED_MESSAGE -->
+				<div id="message_{topic_review_row.POST_ID}" style="display: none;">{topic_review_row.DECODED_MESSAGE}</div>
+			<!-- ENDIF -->
+		</div>
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+	<!-- END topic_review_row -->
+</div>
+
+<hr />
+
+<!-- IF S_MCP_REPORT -->
+	<p><a href="#report" class="top2">{L_BACK_TO_TOP}</a></p>
+<!-- ELSE -->
+	<p><a href="#postingbox" class="top2">{L_BACK_TO_TOP}</a></p>
+<!-- ENDIF -->

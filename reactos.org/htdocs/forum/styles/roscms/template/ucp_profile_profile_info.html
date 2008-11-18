@@ -1,0 +1,79 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="ucp" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+	<p>{L_PROFILE_INFO_NOTICE}</p>
+
+	<fieldset>
+	<!-- IF ERROR --><p class="error">{ERROR}</p><!-- ENDIF -->
+	<dl>
+		<dt><label for="icq">{L_UCP_ICQ}:</label></dt>
+		<dd><input type="text" name="icq" id="icq" maxlength="15" value="{ICQ}" class="inputbox" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="aim">{L_UCP_AIM}:</label></dt>
+		<dd><input type="text" name="aim" id="aim" maxlength="255" value="{AIM}" class="inputbox" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="msn">{L_UCP_MSNM}:</label></dt>
+		<dd><input type="text" name="msn" id="msn" maxlength="255" value="{MSN}" class="inputbox" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="yim">{L_UCP_YIM}:</label></dt>
+		<dd><input type="text" name="yim" id="yim" maxlength="255" value="{YIM}" class="inputbox" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="jabber">{L_UCP_JABBER}:</label></dt>
+		<dd><input type="text" name="jabber" id="jabber" maxlength="255" value="{JABBER}" class="inputbox" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="website">{L_WEBSITE}:</label></dt>
+		<dd><input type="text" name="website" id="website" maxlength="255" value="{WEBSITE}" class="inputbox" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="location">{L_LOCATION}:</label></dt>
+		<dd><input type="text" name="location" id="location" maxlength="255" value="{LOCATION}" class="inputbox" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="occupation">{L_OCCUPATION}:</label></dt>
+		<dd><textarea name="occupation" id="occupation" class="inputbox" rows="3" cols="30">{OCCUPATION}</textarea></dd>
+	</dl>
+	<dl>
+		<dt><label for="interests">{L_INTERESTS}:</label></dt>
+		<dd><textarea name="interests" id="interests" class="inputbox" rows="3" cols="30">{INTERESTS}</textarea></dd>
+	</dl>
+	<!-- IF S_BIRTHDAYS_ENABLED -->
+		<dl>
+			<dt><label for="bday_day">{L_BIRTHDAY}:</label><br /><span>{L_BIRTHDAY_EXPLAIN}</span></dt>
+			<dd>
+				<label for="bday_day">{L_DAY}: <select name="bday_day" id="bday_day" style="width: 4em;">{S_BIRTHDAY_DAY_OPTIONS}</select></label> 
+				<label for="bday_month">{L_MONTH}: <select name="bday_month" id="bday_month" style="width: 4em;">{S_BIRTHDAY_MONTH_OPTIONS}</select></label> 
+				<label for="bday_year">{L_YEAR}: <select name="bday_year" id="bday_year" style="width: 6em;">{S_BIRTHDAY_YEAR_OPTIONS}</select></label>
+			</dd>
+		</dl>
+	<!-- ENDIF -->
+	<!-- BEGIN profile_fields -->
+		<dl>
+			<dt><label<!-- IF profile_fields.FIELD_ID --> for="{profile_fields.FIELD_ID}"<!-- ENDIF -->>{profile_fields.LANG_NAME}:<!-- IF profile_fields.S_REQUIRED --> *<!-- ENDIF --></label>
+			<!-- IF profile_fields.LANG_EXPLAIN --><br /><span>{profile_fields.LANG_EXPLAIN}</span><!-- ENDIF --></dt>
+			<!-- IF profile_fields.ERROR --><dd class="error">{profile_fields.ERROR}</dd><!-- ENDIF -->
+			<dd>{profile_fields.FIELD}</dd>
+		</dl>
+	<!-- END profile_fields -->
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<fieldset class="submit-buttons">
+	{S_HIDDEN_FIELDS}<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp; 
+	<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<!-- INCLUDE ucp_footer.html -->

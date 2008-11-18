@@ -1,0 +1,42 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # login: string. The user's Bugzilla login email address.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]
+  Request for new user account '[% login FILTER html %]' submitted
+[% END %]
+
+[% PROCESS global/header.html.tmpl title = title %]
+
+<p>
+  To confirm the creation of the user account <tt>[% login FILTER html %]</tt>,
+  use the URL given in the email you will receive. If you take no action in the
+  next [% constants.MAX_TOKEN_AGE FILTER html %] days, this request will
+  automatically be canceled.
+</p>
+
+[% PROCESS global/footer.html.tmpl %] 

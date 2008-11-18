@@ -1,0 +1,101 @@
+<!-- INCLUDE overall_header.html -->
+
+<h2>{L_UCP}</h2>
+
+<div id="tabs">
+	<ul>
+		<!-- BEGIN t_block1 -->
+		<li <!-- IF t_block1.S_SELECTED -->class="activetab"<!-- ENDIF -->><a href="{t_block1.U_TITLE}"><span>{t_block1.L_TITLE}</span></a></li>
+		<!-- END t_block1 -->
+	</ul>
+</div>
+
+<!-- IF S_COMPOSE_PM -->
+<form id="postform" method="post" action="{S_POST_ACTION}"{S_FORM_ENCTYPE}>
+<!-- ENDIF -->
+
+<div class="panel bg3">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<div style="width: 100%;">
+
+	<div id="cp-menu">
+		<div id="navigation">
+
+		<!-- IF S_PRIVMSGS -->
+			<!-- BEGIN t_block2 -->
+				<!-- IF S_PRIVMSGS and not t_block2.S_LAST_ROW -->
+				<ul>
+					<!-- IF t_block2.S_SELECTED -->
+						<li id="active-subsection"><a href="{t_block2.U_TITLE}"><span>{t_block2.L_TITLE}</span></a></li>
+					<!-- ELSE -->
+						<li><a href="{t_block2.U_TITLE}"><span>{t_block2.L_TITLE}</span></a></li>
+					<!-- ENDIF -->
+				</ul>
+				<!-- ENDIF -->
+			<!-- END t_block2 -->
+
+			<hr />
+			<!-- BEGIN folder -->
+				<!-- IF folder.S_FIRST_ROW --><ul><!-- ENDIF -->
+				<!-- IF folder.S_CUR_FOLDER -->
+					<li id="active-subsection"><a href="{folder.U_FOLDER}"><!-- IF folder.UNREAD_MESSAGES > 0 --><strong>{folder.FOLDER_NAME} ({folder.UNREAD_MESSAGES})</strong><!-- ELSE -->{folder.FOLDER_NAME}<!-- ENDIF --></a></li>
+				<!-- ELSE -->
+					<li><a href="{folder.U_FOLDER}"><span><!-- IF folder.UNREAD_MESSAGES > 0 --><strong>{folder.FOLDER_NAME} ({folder.UNREAD_MESSAGES})</strong><!-- ELSE -->{folder.FOLDER_NAME}<!-- ENDIF --></span></a></li>
+				<!-- ENDIF -->
+				<!-- IF folder.S_LAST_ROW --></ul><!-- ENDIF -->
+			<!-- END folder -->
+			<hr />
+		<!-- ENDIF -->
+
+			<ul>
+		<!-- BEGIN t_block2 -->
+			<!-- IF (S_PRIVMSGS and t_block2.S_LAST_ROW) or not S_PRIVMSGS -->
+				<!-- IF t_block2.S_SELECTED -->
+					<li id="active-subsection"><a href="{t_block2.U_TITLE}"><span>{t_block2.L_TITLE}</span></a></li>
+				<!-- ELSE -->
+					<li><a href="{t_block2.U_TITLE}"><span>{t_block2.L_TITLE}</span></a></li>
+				<!-- ENDIF -->
+			<!-- ENDIF -->
+		<!-- END t_block2 -->
+			</ul>
+		</div>
+
+		<!-- IF .friends_online or .friends_offline -->
+		<div class="cp-mini">
+			<div class="inner"><span class="corners-top"><span></span></span>
+
+			<dl class="mini">
+				<dt>{L_FRIENDS}</dt>
+
+				<!-- BEGIN friends_online -->
+					<dd class="friend-online" title="{L_FRIENDS_ONLINE}">{friends_online.USERNAME_FULL} <!-- IF S_SHOW_PM_BOX --> <input type="submit" name="add_to[{friends_online.USER_ID}]" value="{L_ADD}" class="button2" /><!-- ENDIF --><!-- IF friends_online.S_LAST_ROW and .friends_offline --><hr /><!-- ENDIF --></dd>
+				<!-- END friends_online -->
+
+				<!-- BEGIN friends_offline -->
+					<dd class="friend-offline" title="{L_FRIENDS_OFFLINE}">{friends_offline.USERNAME_FULL} <!-- IF S_SHOW_PM_BOX --><input type="submit" name="add_to[{friends_offline.USER_ID}]" value="{L_ADD}" class="button2" /><!-- ENDIF --></dd>
+				<!-- END friends_offline -->
+			</dl>
+
+			<span class="corners-bottom"><span></span></span></div>
+		</div>
+		<!-- ENDIF -->
+
+		<!-- IF S_SHOW_COLOUR_LEGEND -->
+		<div class="cp-mini">
+			<div class="inner"><span class="corners-top"><span></span></span>
+
+			<dl class="mini">
+				<dt>{L_MESSAGE_COLOURS}</dt>
+				<!-- BEGIN pm_colour_info -->
+					<dd class="pm-legend<!-- IF pm_colour_info.CLASS --> {pm_colour_info.CLASS}<!-- ENDIF -->"><!-- IF pm_colour_info.IMG -->{pm_colour_info.IMG} <!-- ENDIF -->{pm_colour_info.LANG}</dd>
+				<!-- END pm_colour_info -->
+			</dl>
+
+			<span class="corners-bottom"><span></span></span></div>
+		</div>
+		<!-- ENDIF -->
+
+	</div>
+
+	<div id="cp-main" class="ucp-main">

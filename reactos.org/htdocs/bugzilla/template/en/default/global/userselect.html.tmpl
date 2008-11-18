@@ -1,0 +1,67 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Byron Jones <bugzilla@glob.com.au>
+  #%]
+
+[%# INTERFACE:
+  # userlist: select only; array reference with list of users and identities
+  #                        userlist is built by Bugzilla::User::get_userlist()
+  # name: mandatory; field name
+  # id: optional; field id
+  # value: optional; default field value/selection
+  # onchange: optional; onchange attribute value
+  # disabled: optional; if true, the field is disabled
+  # accesskey: optional, input only; accesskey attribute value
+  # size: optional, input only; size attribute value
+  # emptyok: optional, select only;  if true, prepend menu option to start of select
+  # multiple: optional, do multiselect box, value is size (height) of box
+  #
+  #%]
+
+[% IF Param("usemenuforusers") %]
+<select name="[% name FILTER html %]"
+  [% IF id %] id="[% id FILTER html %]" [% END %]
+  [% IF onchange %] onchange="[% onchange FILTER html %]" [% END %]
+  [% IF disabled %] disabled="[% disabled FILTER html %]" [% END %]
+  [% IF accesskey %] accesskey="[% accesskey FILTER html %]" [% END %]
+  [% IF multiple %] multiple="multiple" size="[% multiple FILTER html %]" [% END %]
+>
+  [% IF emptyok %]
+    <option value=""></option>
+  [% END %]
+  [% SET selected = {} %]
+  [% FOREACH selected_value IN value.split(', ') %]
+    [% SET selected.$selected_value = 1 %]
+  [% END %]
+  [% FOREACH tmpuser = user.get_userlist %]
+    [% IF tmpuser.visible OR selected.${tmpuser.login} == 1 %]
+      <option value="[% tmpuser.login FILTER html %]"
+        [% " selected=\"selected\"" IF selected.${tmpuser.login} == 1 %]
+      >[% tmpuser.identity FILTER html %]</option>
+    [% END %]
+  [% END %]
+</select>
+[% ELSE %]
+<input
+  name="[% name FILTER html %]"
+  value="[% value FILTER html %]"
+  [% IF onchange %] onchange="[% onchange FILTER html %]" [% END %]
+  [% IF disabled %] disabled="[% disabled FILTER html %]" [% END %]
+  [% IF accesskey %] accesskey="[% accesskey FILTER html %]" [% END %]
+  [% IF size %] size="[% size FILTER html %]" [% END %]
+  [% IF id %] id="[% id FILTER html %]" [% END %]
+>
+[% END %]
+
+

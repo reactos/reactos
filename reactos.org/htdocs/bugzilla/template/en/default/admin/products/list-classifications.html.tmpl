@@ -1,0 +1,73 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #%]
+
+[%# INTERFACE:
+  # classifications: array of hashes having the following properties:
+  #   - name: string; The name of the classification
+  #   - description: string; The classification description (html allowed)
+  #   - product_count: number; The number of products in this classification
+  #
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Select Classification"
+%]
+
+[% edit_contentlink = BLOCK %]
+  editproducts.cgi?classification=%%name%%
+[% END %]
+[% add_contentlink = BLOCK %]
+  editproducts.cgi?action=add&amp;classification=%%name%%
+[% END %]
+
+[% columns = [
+     { 
+       name => "name"
+       heading => "Edit products of..."
+       contentlink => edit_contentlink
+     },
+     { 
+       name => "description"
+       heading => "Description"
+       allow_html_content => 1
+     },
+     { 
+       name => "product_count"
+       align => "right"
+       heading => "Product Count"
+     }
+   ]
+%]
+
+[% IF user.in_group('editcomponents') %]
+  [% columns.push({
+       heading => "Action..."
+       content => "Add product"
+       contentlink => add_contentlink })
+  %]
+[% END %]
+
+[% PROCESS admin/table.html.tmpl
+     columns = columns
+     data = classifications
+%]
+
+[%# No need for the standard edit products footer, as we have an 'add'
+    link in the table %]
+
+[% PROCESS global/footer.html.tmpl %]

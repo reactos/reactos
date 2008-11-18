@@ -1,0 +1,52 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  # field: string; name of the field the value is being created for
+  #%]
+  
+[% title = BLOCK %]Add Value for the '[% field FILTER html %]' field[% END %]
+[% subheader = BLOCK %]This page allows you to add a new value for the
+                '[% field FILTER html %]' field.[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+  subheader = subheader
+%]
+
+<form method="post" action="editvalues.cgi">
+  <table border="0" cellpadding="4" cellspacing="0">
+    <tr>
+      <th align="right"><label for="value">Value:</label></th>
+      <td><input id="value" size="30" maxlength="60" name="value"
+                 value=""></td>
+    </tr>
+    <tr>
+      <th align="right"><label for="sortkey">Sortkey:</label></th>
+      <td><input id="sortkey" size="10" maxlength="20" name="sortkey"
+                 value=""></td>
+    </tr>
+  </table>
+  <input type="submit" id="create" value="Add">
+  <input type="hidden" name="action" value="new">
+  <input type="hidden" name='field' value="[% field FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+</form>
+
+[% PROCESS admin/fieldvalues/footer.html.tmpl
+    no_add_link = 1
+ %]
+
+[% PROCESS global/footer.html.tmpl %]

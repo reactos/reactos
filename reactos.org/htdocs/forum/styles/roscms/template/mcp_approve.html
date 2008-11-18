@@ -1,0 +1,53 @@
+<!-- INCLUDE overall_header.html -->
+
+<form id="confirm" action="{S_CONFIRM_ACTION}" method="post">
+<div class="panel">
+	{S_FORM_TOKEN}
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<div class="content">
+
+		<h2>{MESSAGE_TITLE}</h2>
+		<!-- IF ADDITIONAL_MSG --><p>{ADDITIONAL_MSG}</p><!-- ENDIF -->
+
+		<fieldset>
+		<!-- IF S_NOTIFY_POSTER -->
+			<dl class="panel">
+				<dt>&nbsp;</dt>
+				<dd><label><input type="checkbox" name="notify_poster" checked="checked" /> <!-- IF S_APPROVE -->{L_NOTIFY_POSTER_APPROVAL}<!-- ELSE -->{L_NOTIFY_POSTER_DISAPPROVAL}<!-- ENDIF --></label></dd>
+			</dl>
+		<!-- ENDIF -->
+
+		<!-- IF not S_APPROVE -->
+			<dl class="fields2 nobg">
+				<dt><label>{L_DISAPPROVE_REASON}:</label></dt>
+				<dd><select name="reason_id">
+					<!-- BEGIN reason --><option value="{reason.ID}"<!-- IF reason.S_SELECTED --> selected="selected"<!-- ENDIF -->>{reason.DESCRIPTION}</option><!-- END reason -->
+					</select>
+				</dd>
+			</dl>
+			<dl class="fields2 nobg">
+				<dt><label for="reason">{L_MORE_INFO}:</label><br /><span>{L_CAN_LEAVE_BLANK}</span></dt>
+				<dd><textarea class="inputbox" name="reason" id="reason" rows="4" cols="40">{REASON}</textarea></dd>
+			</dl>
+		<!-- ENDIF -->
+
+		<dl class="fields2 nobg">
+			<dt>&nbsp;</dt>
+			<dd><strong>{MESSAGE_TEXT}</strong></dd>
+		</dl>
+		</fieldset>
+
+		<fieldset class="submit-buttons">
+			{S_HIDDEN_FIELDS}<input type="submit" name="confirm" value="{YES_VALUE}" class="button1" />&nbsp; 
+			<input type="submit" name="cancel" value="{L_NO}" class="button2" />
+		</fieldset>
+
+	</div>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+</form>
+
+<!-- INCLUDE overall_footer.html -->

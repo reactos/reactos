@@ -1,0 +1,158 @@
+<script type="text/javascript">
+// <![CDATA[
+	var default_dateformat = '{A_DEFAULT_DATEFORMAT}';
+// ]]>
+</script>
+
+	<form id="user_prefs" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_UCP_PREFS_PERSONAL}</legend>
+	<dl> 
+		<dt><label for="viewemail">{L_SHOW_EMAIL}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="viewemail" value="1"<!-- IF VIEW_EMAIL --> id="viewemail" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="viewemail" value="0"<!-- IF not VIEW_EMAIL --> id="viewemail" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="massemail">{L_ADMIN_EMAIL}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="massemail" value="1"<!-- IF MASS_EMAIL --> id="massemail" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="massemail" value="0"<!-- IF not MASS_EMAIL --> id="massemail" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="allowpm">{L_ALLOW_PM}:</label><br /><span>{L_ALLOW_PM_EXPLAIN}</span></dt>
+		<dd><label><input type="radio" class="radio" name="allowpm" value="1"<!-- IF ALLOW_PM --> id="allowpm" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="allowpm" value="0"<!-- IF not ALLOW_PM --> id="allowpm" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="hideonline">{L_HIDE_ONLINE}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="hideonline" value="1"<!-- IF HIDE_ONLINE --> id="hideonline" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="hideonline" value="0"<!-- IF not HIDE_ONLINE --> id="hideonline" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="notifymethod">{L_NOTIFY_METHOD}:</label><br /><span>{L_NOTIFY_METHOD_EXPLAIN}</span></dt>
+		<dd><label><input type="radio" class="radio" name="notifymethod" value="0"<!-- IF NOTIFY_EMAIL --> id="notifymethod" checked="checked"<!-- ENDIF --> /> {L_NOTIFY_METHOD_EMAIL}</label>
+			<label><input type="radio" class="radio" name="notifymethod" value="1"<!-- IF NOTIFY_IM --> id="notifymethod" checked="checked"<!-- ENDIF --><!-- IF S_JABBER_DISABLED --> disabled="disabled"<!-- ENDIF --> /> {L_NOTIFY_METHOD_IM}</label>
+			<label><input type="radio" class="radio" name="notifymethod" value="2"<!-- IF NOTIFY_BOTH --> id="notifymethod" checked="checked"<!-- ENDIF --> /> {L_NOTIFY_METHOD_BOTH}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="notifypm">{L_NOTIFY_ON_PM}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="notifypm" value="1"<!-- IF NOTIFY_PM --> id="notifypm" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="notifypm" value="0"<!-- IF not NOTIFY_PM --> id="notifypm" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="popuppm">{L_POPUP_ON_PM}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="popuppm" value="1"<!-- IF POPUP_PM --> id="popuppm" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="popuppm" value="0"<!-- IF not POPUP_PM --> id="popuppm" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="lang">{L_BOARD_LANGUAGE}:</label></dt>
+		<dd><select id="lang" name="lang">{S_LANG_OPTIONS}</select></dd>
+	</dl>
+	<dl> 
+		<dt><label for="style">{L_BOARD_STYLE}:</label></dt>
+		<dd><select id="style" name="style">{S_STYLE_OPTIONS}</select></dd>
+	</dl>
+	<dl> 
+		<dt><label for="tz">{L_BOARD_TIMEZONE}:</label></dt>
+		<dd><select id="tz" name="tz" style="width: 100%;">{S_TZ_OPTIONS}</select></dd>
+	</dl>
+	<dl> 
+		<dt><label for="dst">{L_BOARD_DST}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="dst" value="1"<!-- IF DST --> id="dst" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="dst" value="0"<!-- IF not DST --> id="dst" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="dateoptions">{L_BOARD_DATE_FORMAT}:</label><br /><span>{L_BOARD_DATE_FORMAT_EXPLAIN}</span></dt>
+		<dd><select name="dateoptions" id="dateoptions" onchange="if(this.value=='custom'){dE('custom_date',1);}else{dE('custom_date',-1);} if (this.value == 'custom') { document.getElementById('dateformat').value = default_dateformat; } else { document.getElementById('dateformat').value = this.value; }">{S_DATEFORMAT_OPTIONS}</select></dd>
+		<dd><div id="custom_date"<!-- IF not S_CUSTOM_DATEFORMAT --> style="display:none;"<!-- ENDIF -->><input type="text" name="dateformat" id="dateformat" value="{DATE_FORMAT}" maxlength="30" /></div></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_UCP_PREFS_POST}</legend>
+	<dl> 
+		<dt><label for="bbcode">{L_DEFAULT_BBCODE}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="bbcode" value="1"<!-- IF BBCODE --> id="bbcode" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="bbcode" value="0"<!-- IF not BBCODE --> id="bbcode" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="smilies">{L_DEFAULT_SMILIES}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="smilies" value="1"<!-- IF SMILIES --> id="smilies" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="smilies" value="0"<!-- IF not SMILIES --> id="smilies" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="sig">{L_DEFAULT_ADD_SIG}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="sig" value="1"<!-- IF ATTACH_SIG --> id="sig" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="sig" value="0"<!-- IF not ATTACH_SIG --> id="sig" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="notify">{L_DEFAULT_NOTIFY}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="notify" value="1"<!-- IF NOTIFY --> id="notify" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="notify" value="0"<!-- IF not NOTIFY --> id="notify" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_UCP_PREFS_VIEW}</legend>
+	<dl> 
+		<dt><label for="view_images">{L_VIEW_IMAGES}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="view_images" value="1"<!-- IF VIEW_IMAGES --> id="view_images" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="view_images" value="0"<!-- IF not VIEW_IMAGES --> id="view_images" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="view_flash">{L_VIEW_FLASH}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="view_flash" value="1"<!-- IF VIEW_FLASH --> id="view_flash" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="view_flash" value="0"<!-- IF not VIEW_FLASH --> id="view_flash" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="view_smilies">{L_VIEW_SMILIES}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="view_smilies" value="1"<!-- IF VIEW_SMILIES --> id="view_smilies" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="view_smilies" value="0"<!-- IF not VIEW_SMILIES --> id="view_smilies" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="view_sigs">{L_VIEW_SIGS}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="view_sigs" value="1"<!-- IF VIEW_SIGS --> id="view_sigs" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="view_sigs" value="0"<!-- IF not VIEW_SIGS --> id="view_sigss" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="view_avatars">{L_VIEW_AVATARS}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="view_avatars" value="1"<!-- IF VIEW_AVATARS --> id="view_avatars" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="view_avatars" value="0"<!-- IF not VIEW_AVATARS --> id="view_avatars" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label for="view_wordcensor">{L_DISABLE_CENSORS}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="view_wordcensor" value="1"<!-- IF VIEW_WORDCENSOR --> id="view_wordcensor" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="view_wordcensor" value="0"<!-- IF not VIEW_WORDCENSOR --> id="view_wordcensor" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<dl> 
+		<dt><label>{L_VIEW_TOPICS_DAYS}:</label></dt>
+		<dd>{S_TOPIC_SORT_DAYS}</dd>
+	</dl>
+	<dl> 
+		<dt><label>{L_VIEW_TOPICS_KEY}:</label></dt>
+		<dd>{S_TOPIC_SORT_KEY}</dd>
+	</dl>
+	<dl> 
+		<dt><label>{L_VIEW_TOPICS_DIR}:</label></dt>
+		<dd>{S_TOPIC_SORT_DIR}</dd>
+	</dl>
+	<dl> 
+		<dt><label>{L_VIEW_POSTS_DAYS}:</label></dt>
+		<dd>{S_POST_SORT_DAYS}</dd>
+	</dl>
+	<dl> 
+		<dt><label>{L_VIEW_POSTS_KEY}:</label></dt>
+		<dd>{S_POST_SORT_KEY}</dd>
+	</dl>
+	<dl> 
+		<dt><label>{L_VIEW_POSTS_DIR}:</label></dt>
+		<dd>{S_POST_SORT_DIR}</dd>
+	</dl>
+	</fieldset>
+
+	<fieldset class="quick">
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+
+	</form>

@@ -1,0 +1,48 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+  #
+  #%]
+
+[%# INTERFACE:
+  #    fields: Array of hashes. Each hash contains only one key, "name."
+  #            The names are the same as the keys from field_descs 
+  #            (see global/field-descs.html.tmpl).
+  #%]
+
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Edit values for which field?"
+%]
+
+[% columns = [
+     { 
+       name => "name"
+       heading => "Edit field values for..."
+       content_use_field = 1
+       contentlink => "editvalues.cgi?field=%%name%%"
+     }
+   ]
+%]
+
+[% PROCESS admin/table.html.tmpl
+     columns = columns
+     data = fields
+%]
+
+[% PROCESS global/footer.html.tmpl %]

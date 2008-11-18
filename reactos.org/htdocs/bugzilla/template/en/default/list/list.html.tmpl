@@ -1,0 +1,240 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[%# INTERFACE:
+  # searchtype: string. Type of search - either "series", "saved" or undef.
+  # ...
+  # defaultsavename: string. The default name for saving the query.
+  #%]
+
+[%############################################################################%]
+[%# Template Initialization                                                  #%]
+[%############################################################################%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "$terms.Bug List" %]
+[% IF searchname || defaultsavename %]
+  [% title = title _ ": " _ (searchname OR defaultsavename) FILTER html %]
+[% END %]
+
+[% style_urls = [ "skins/standard/buglist.css" ] %]
+[% qorder = order FILTER url_quote IF order %]
+[% message = "buglist_sorted_by_relevance" IF sorted_by_relevance %]
+
+
+[%############################################################################%]
+[%# Page Header                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  style = style
+  atomlink = "buglist.cgi?$urlquerypart&title=$title&ctype=atom" 
+%]
+
+<div align="center">
+  [% IF Param('timezone') %]
+    <b>[% time2str("%a %b %e %Y %T %Z", currenttime, Param('timezone')) %]</b><br>
+  [% ELSE %]
+    <b>[% time2str("%a %b %e %Y %T", currenttime) %]</b><br>
+  [% END %]
+
+  [% IF debug %]
+    <p>
+      [% FOREACH debugline = debugdata %]
+        [% debugline FILTER html %]<br>
+      [% END %]
+    </p>
+    <p>[% query FILTER html %]</p>
+  [% END %]
+
+  [% IF user.settings.display_quips.value == 'on' %]
+    [% DEFAULT quip = "$terms.Bugzilla would like to put a random quip here, but no one has entered any." %]
+    <a href="quips.cgi"><i>[% quip FILTER html %]</i></a>
+  [% END %]
+
+</div>
+
+[% IF toolong %]
+  <h2>
+    This list is too long for [% terms.Bugzilla %]'s little mind; the
+    Next/Prev/First/Last buttons won't appear on individual [% terms.bugs %].
+  </h2>
+[% END %]
+
+<hr>
+
+[%############################################################################%]
+[%# Preceding Status Line                                                    #%]
+[%############################################################################%]
+
+[% IF bugs.size > 9 %]
+  [% bugs.size %] [%+ terms.bugs %] found.
+[% END %]
+
+[%############################################################################%]
+[%# Start of Change Form                                                     #%]
+[%############################################################################%]
+
+[% IF dotweak %]
+  <form name="changeform" method="post" action="process_bug.cgi">
+[% END %]
+
+[%############################################################################%]
+[%# Bug Table                                                                #%]
+[%############################################################################%]
+
+[% FLUSH %]
+[% PROCESS list/table.html.tmpl %]
+
+[%############################################################################%]
+[%# Succeeding Status Line                                                   #%]
+[%############################################################################%]
+
+[% IF bugs.size == 0 %]
+  [% terms.zeroSearchResults %].
+[% ELSIF bugs.size == 1 %]
+  One [% terms.bug %] found.
+[% ELSE %]
+  [% bugs.size %] [%+ terms.bugs %] found.
+[% END %]
+
+<br>
+
+[%############################################################################%]
+[%# Rest of Change Form                                                      #%]
+[%############################################################################%]
+
+[% IF dotweak %]
+  [% PROCESS "list/edit-multiple.html.tmpl" %]
+  </form>
+  <hr>
+[% END %]
+
+[%############################################################################%]
+[%# Navigation Bar                                                           #%]
+[%############################################################################%]
+
+<table>
+  <tr>
+    [% IF bugs.size > 0 %]
+      <td valign="middle">
+        <form method="post" action="show_bug.cgi">
+          [% FOREACH id = buglist %]
+            <input type="hidden" name="id" value="[% id FILTER html %]">
+          [% END %]
+          <input type="hidden" name="format" value="multiple">
+          <input type="submit" id="long_format" value="Long Format">
+        </form>
+        <form method="post" action="show_bug.cgi">
+            <input type="hidden" name="ctype" value="xml">
+          [% FOREACH id = buglist %]
+            <input type="hidden" name="id" value="[% id FILTER html %]">
+          [% END %]
+            <input type="hidden" name="excludefield" value="attachmentdata">
+            <input type="submit" value="XML" id="xml">
+        </form>
+
+        [% IF user.in_group(Param('timetrackinggroup')) %]
+          <form method="post" action="summarize_time.cgi">
+            <input type="hidden" name="id" value="[% buglist_joined FILTER html %]">
+            <input type="submit" id="timesummary" value="Time Summary">
+          </form>
+        [% END %]
+      </td>
+      
+      <td>&nbsp;</td>
+      
+      <td valign="middle">
+        <a href="buglist.cgi?
+        [% urlquerypart FILTER html %]&amp;ctype=csv">CSV</a> |
+        <a href="buglist.cgi?
+        [% urlquerypart FILTER html %]&amp;title=
+        [%- title FILTER html %]&amp;ctype=atom">Feed</a> |
+        <a href="buglist.cgi?
+        [% urlquerypart FILTER html %]&amp;ctype=ics">iCalendar</a> |
+        <a href="colchange.cgi?
+        [% urlquerypart FILTER html %]&amp;query_based_on=
+          [% defaultsavename OR searchname FILTER url_quote %]">Change&nbsp;Columns</a> |
+
+        [% IF bugs.size > 1 && caneditbugs && !dotweak %]
+          <a href="buglist.cgi?[% urlquerypart FILTER html %]
+            [%- "&order=$qorder" FILTER html IF order %]&amp;tweak=1"
+            >Change&nbsp;Several&nbsp;[% terms.Bugs %]&nbsp;at&nbsp;Once</a>
+          |
+        [% END %]
+
+        [% IF bugowners %]
+          <a href="mailto:
+            [% bugowners FILTER html %]">Send&nbsp;Mail&nbsp;to&nbsp;[% terms.Bug %]&nbsp;Assignees</a> |
+        [% END %]
+
+        [%# Links to more things users can do with this bug list. %]
+        [% Hook.process("links") %]
+      </td>
+    [% END %]
+    
+    <td valign="middle">
+      [% editqueryname = searchname OR defaultsavename OR '' %]
+      <a href="query.cgi?[% urlquerypart FILTER html %]
+      [% IF editqueryname != '' %]&amp;known_name=
+        [% editqueryname FILTER url_quote %]
+      [% END %]">Edit&nbsp;Search</a>
+    </td>
+      
+    [% IF searchtype == "saved" %]
+      <td valign="middle" nowrap="nowrap">
+        |
+        <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
+                [% searchname FILTER url_quote %]">Forget&nbsp;Search&nbsp;'
+                [% searchname FILTER html %]'</a>
+      </td>
+    [% ELSE %]
+      <td>&nbsp;</td>
+      
+      <td valign="middle">
+        <form method="get" action="buglist.cgi">
+          <input type="submit" id="remember" value="Remember search"> as 
+          <input type="hidden" name="newquery" 
+                 value="[% urlquerypart FILTER html %][% "&order=$qorder" FILTER html IF order %]">
+          <input type="hidden" name="cmdtype" value="doit">
+          <input type="hidden" name="remtype" value="asnamed">
+          <input type="text" id="save_newqueryname" name="newqueryname" size="20"
+                 value="[% defaultsavename FILTER html %]"> 
+        </form> 
+      </td>
+    [% END %]  
+  </tr>
+</table>
+
+[% IF cgi.param('product').size == 1 && cgi.param('product') != "" %]
+  <p>
+    <a href="enter_bug.cgi?product=[% cgi.param('product') FILTER url_quote %]">File
+      a new [% terms.bug %] in the "[% cgi.param('product') FILTER html %]" product</a>
+  </p>
+[% END %]
+
+[%############################################################################%]
+[%# Page Footer                                                              #%]
+[%############################################################################%]
+
+[% PROCESS global/footer.html.tmpl %]

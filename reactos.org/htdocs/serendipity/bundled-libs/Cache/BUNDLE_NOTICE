@@ -1,0 +1,8 @@
+- Replace: 
+Lite.php:
+include_once('PEAR.php');
+include_once dirname(__FILE__) . '/../PEAR.php';
+
+Output.php, Function.php:
+require_once('Cache/Lite.php');
+require_once(dirname(__FILE__) . '/../Lite.php';

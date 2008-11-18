@@ -1,0 +1,352 @@
+/*
+	The original "prosilver" theme for phpBB3
+	Created by subBlue design :: http://www.subBlue.com
+*/
+
+* { margin: 0; padding: 0; }
+
+html { font-size: 100%; height: 100%; margin-bottom: 1px; }
+
+body {
+	font-family: Verdana, Helvetica, Arial, sans-serif;
+	color: #828282;
+	background-color: #FFFFFF;
+	font-size: 12px;
+	margin: 0;
+	padding: 12px 0;
+}
+
+img { border-width: 0; }
+
+p {
+	line-height: 1.3em;
+	font-size: 1.1em;
+	margin-bottom: 1.5em;
+}
+
+hr {
+	border: 0 none #FFFFFF;
+	border-top: 1px solid #CCCCCC;
+	height: 1px;
+	margin: 5px 0;
+	display: block;
+	clear: both;
+}
+
+html, body {
+	color: #536482;
+	background-color: #FFFFFF;
+}
+
+#doc-description h1 {
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	margin-right: 200px;
+	color: #FFFFFF;
+	margin-top: 15px;
+	font-weight: bold;
+	font-size: 2em;
+	color: #fff;
+}
+
+h1 {
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	color: #000;
+	font-size: 2em;
+	margin: 0.8em 0 0.2em 0;
+}
+
+h2 {
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	color: #28313F;
+	font-size: 1.5em;
+	margin: 0.8em 0 0.2em 0;
+}
+
+h3 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	border-bottom: 1px solid #CCCCCC;
+	margin-bottom: 3px;
+	padding-bottom: 2px;
+	font-size: 1.05em;
+	color: #115098;
+	margin-top: 20px;
+}
+
+h4 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	margin-bottom: 3px;
+	padding-bottom: 2px;
+	font-size: 1.05em;
+	color: #115098;
+	margin-top: 20px;
+}
+
+.good { color: green; }
+.bad { color: red; }
+
+.version {
+	margin-top: 20px;
+	text-align: left;
+	font-size: 70%;
+	color: #006600;
+	border-top: 1px solid #ccc;
+}
+
+code { 
+	color: #006600; 
+	font-weight: normal; 
+	font-family: 'Courier New', monospace; 
+	border-color: #D1D7DC; 
+	border-width: 1px; 
+	border-style: solid; 
+	background-color: #FAFAFA; 
+}
+
+#wrap {
+	padding: 0 20px;
+	min-width: 650px;
+}
+
+#simple-wrap {
+	padding: 6px 10px;
+}
+
+#page-body {
+	margin: 4px 0;
+	clear: both;
+}
+
+#page-footer {
+	clear: both;
+}
+
+#logo {
+	float: left;
+	width: auto;
+	padding: 10px 13px 0 10px;
+}
+
+a#logo:hover {
+	text-decoration: none;
+}
+
+#doc-description {
+	float: left;
+	width: 70%;
+}
+
+#doc-description h1 {
+	margin-right: 0;
+}
+
+.headerbar {
+	background: #ebebeb none repeat-x 0 0;
+	color: #FFFFFF;
+	margin-bottom: 4px;
+	padding: 0 5px;
+}
+
+span.corners-top, span.corners-bottom, span.corners-top span, span.corners-bottom span {
+	font-size: 1px;
+	line-height: 1px;
+	display: block;
+	height: 5px;
+	background-repeat: no-repeat;
+}
+
+span.corners-top {
+	background-image: none;
+	background-position: 0 0;
+	margin: 0 -5px;
+}
+
+span.corners-top span {
+	background-image: none;
+	background-position: 100% 0;
+}
+
+span.corners-bottom {
+	background-image: none;
+	background-position: 0 100%;
+	margin: 0 -5px;
+	clear: both;
+}
+
+span.corners-bottom span {
+	background-image: none;
+	background-position: 100% 100%;
+}
+
+.paragraph {
+	padding: 0 10px;
+	margin-bottom: 4px;
+	background-repeat: no-repeat;
+	background-position: 100% 0;
+	background-color: #ECF3F7;
+}
+
+.paragraph:target .content {
+	color: #000000;
+}
+
+.paragraph:target h3 a {
+	color: #000000;
+}
+
+.content {
+	color: #333333;
+}
+
+.content h2, .panel h2 {
+	color: #115098;
+	border-bottom-color:  #CCCCCC;
+}
+
+a:link	{ color: #898989; text-decoration: none; }
+a:visited	{ color: #898989; text-decoration: none; }
+a:hover	{ color: #d3d3d3; text-decoration: underline; }
+a:active	{ color: #d2d2d2; text-decoration: none; }
+
+hr {
+	border-color: #FFFFFF;
+	border-top-color: #CCCCCC;
+}
+
+.menu {
+	background-color: #cadceb;
+}
+
+.headerbar {
+	background-color: #12A3EB;
+	background-image: url("bg_header.gif");
+	color: #FFFFFF;
+}
+
+.panel {
+	background-color: #ECF1F3;
+	color: #28313F;
+}
+
+
+span.corners-top {
+	background-image: url("corners_left.png");
+}
+
+span.corners-top span {
+	background-image: url("corners_right.png");
+}
+
+span.corners-bottom {
+	background-image: url("corners_left.png");
+}
+
+span.corners-bottom span {
+	background-image: url("corners_right.png");
+}
+
+.error {
+	color: #BC2A4D;
+}
+
+a:link	{ color: #105289; }
+a:visited	{ color: #105289; }
+a:hover	{ color: #D31141; }
+a:active	{ color: #368AD2; }
+
+.paragraph span.corners-top, .paragraph span.corners-bottom {
+	margin: 0 -10px;
+}
+
+.content {
+	padding: 0;
+	line-height: 1.48em;
+	color: #333333;
+}
+
+.content h2, .panel h2 {
+	color: #115098;
+	border-bottom-color:  #CCCCCC;
+}
+
+.notice {
+	border-top-color:  #CCCCCC;
+}
+
+.codebox {
+	padding: 3px;
+	background-color: #FFFFFF;
+	border: 1px solid #C9D2D8;
+	font-size: 1em;
+	margin-bottom: 10px;
+	display: block;
+	font: 0.9em Monaco, "Andale Mono","Courier New", Courier, mono;
+	line-height: 1.3em;
+}
+
+* html hr { margin: 0; }
+* html span.corners-top, * html span.corners-bottom { background-image: url("corners_left.gif"); }
+* html span.corners-top span, * html span.corners-bottom span { background-image: url("corners_right.gif"); }
+
+.back2top {
+	clear: both;
+	height: 11px;
+	text-align: right;
+}
+
+.content ol, .content ul {
+	margin-left: 25px;
+	margin-top: 0;
+}
+
+.content ul + p, .content ul + div {
+	margin-top: 20px;
+}
+
+.comment {
+	color: green;
+}
+
+.indent {
+	margin-left: 20px;
+}
+
+.paragraph table  {
+	font-size:	8pt;
+	border-collapse: collapse;
+	border: 1px solid #cfcfcf;
+	margin-bottom: 20px;
+}
+
+.paragraph table caption  {
+	display: none;
+}
+
+.paragraph table thead  {
+	background-color: #cadceb;
+	color: #000;
+}
+
+.paragraph table td, .paragraph table th {
+	border: 1px solid #006699;
+	padding: 0.5em;
+	background-color: #e1ebf2;
+}
+
+.paragraph table th {
+	background-color: #cadceb;
+}
+
+.paragraph table td dl {
+	margin: 0;
+	padding: 0;
+}
+
+.paragraph table td dl dt {
+	float: left;
+	clear: both;
+	margin-right: 1em;
+}

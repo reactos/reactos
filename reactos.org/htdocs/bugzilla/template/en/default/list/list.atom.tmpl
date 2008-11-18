@@ -1,0 +1,88 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Walter Hoehn <wassa@columbia.edu>
+  #                 John Belmonte <john@neggie.net>
+  #                 Jason Remillard <jremillardshop@letterboxes.org>
+  #                 Phil Ringnalda <bugzilla@philringnalda.com>
+  #
+  # This is a template for generating an Atom representation of a buglist. 
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% USE date %]
+
+[% DEFAULT title = "$terms.Bugzilla $terms.Bugs" %]
+
+<?xml version="1.0"[% IF Param('utf8') %] encoding="UTF-8"[% END %]?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>[% title FILTER xml %]</title>
+  <link rel="alternate" type="text/html"
+        href="[% Param('urlbase') %]buglist.cgi?
+        [%- urlquerypart.replace('ctype=atom[&]?','') FILTER xml %]"/>
+  <link rel="self" type="application/atom+xml"
+        href="[% Param('urlbase') %]buglist.cgi?
+        [%- urlquerypart FILTER xml %]"/>
+  <updated>[% date.format(format=>"%Y-%m-%dT%H:%M:%SZ",
+              time=>bugs.nsort('changedtime').last.changedtime,
+              gmt=>1) FILTER xml %]</updated>
+  <id>[% Param('urlbase') %]buglist.cgi?[% urlquerypart FILTER xml %]</id>
+
+  [% FOREACH bug = bugs %]
+  <entry>
+    <title>[% "@" IF bug.secure_mode %][[% terms.Bug %] [%+ bug.bug_id FILTER xml %]] [% bug.short_desc FILTER xml %]</title>
+    <link rel="alternate" type="text/html"
+          href="[% Param('urlbase') FILTER xml %]show_bug.cgi?id=
+          [%- bug.bug_id FILTER xml %]"/>
+    <id>[% Param('urlbase') FILTER xml %]show_bug.cgi?id=[% bug.bug_id FILTER xml %]</id>
+    <author>
+      <name>[% bug.reporter_realname FILTER xml %]</name>
+    </author>
+    <updated>[% date.format(format=>"%Y-%m-%dT%H:%M:%SZ",time=>bug.changedtime,
+                gmt=>1) FILTER xml %]</updated> 
+    <summary type="html">
+      [%# Filter out the entire block, so that we don't need to escape the html code out %]
+      [% FILTER xml %]
+      <table>
+      <tr>
+        <th>Field</th><th>Value</th>
+      </tr><tr>
+        <td>[% columns.opendate.title FILTER html %]</td>
+        <td>[% bug.opendate FILTER html %]</td>
+      </tr><tr>
+        <td>[% columns.assigned_to_realname.title FILTER html %]</td>
+        <td>[% bug.assigned_to_realname FILTER html %]</td>
+      </tr><tr>
+        <td>[% columns.priority.title FILTER html %]</td>
+        <td>[% bug.priority FILTER html %]</td>
+      </tr><tr>
+        <td>[% columns.bug_severity.title FILTER html %] </td>
+        <td>[% bug.bug_severity FILTER html %]</td>
+      </tr><tr>
+        <td>[% columns.bug_status.title FILTER html %]</td>
+        <td>[% bug.bug_status FILTER html %]</td>
+      </tr><tr>
+        <td>[% columns.changeddate.title FILTER html %]</td>
+        <td>[% bug.changeddate FILTER html -%]</td>
+      </tr>
+      </table>
+      [% END %]
+    </summary>
+  </entry>
+  [% END %]
+</feed>

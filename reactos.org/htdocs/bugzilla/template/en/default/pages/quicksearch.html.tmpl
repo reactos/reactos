@@ -1,0 +1,190 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): N.N.
+  #                 Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% INCLUDE global/header.html.tmpl
+   title  = "$terms.Bugzilla QuickSearch",
+   style  = 'ul {margin-bottom: 2ex}
+             ul li {margin-top: 2ex}
+             ul li ul li {margin-top: 0}'
+   onload = 'document.forms[\'f\'].quicksearch.focus()'
+ %]
+
+<p style="font-size: 80%">
+  If you are already familiar with the original
+  <a href="query.cgi">[% terms.Bugzilla %] Search Form</a>,
+  you may prefer <a href="page.cgi?id=quicksearchhack.html">this form</a>.
+</p>
+
+<p>
+  Type in one or more words (or word fragments) to search for:
+</p>
+
+<form name="f" action="buglist.cgi" method="get"
+      onsubmit="if (this.quicksearch.value == '')
+                { alert('Please enter one or more search terms first.');
+                  return false; } return true;">
+  <input type="text" size="40" name="quicksearch">
+  <input type="submit" value="Find" id="find">
+</form>
+
+<h2>Getting Started</h2>
+
+<ul>
+  <li>
+    This is <strong>case-insensitive</strong> search:<br />
+    <ul>
+      <li><tt>table</tt>, <tt>Table</tt> and <tt>TABLE</tt> are all the same.</li>
+    </ul>
+  </li>
+  <li>
+    This is <strong>all words as substrings</strong>
+    search.<br />
+    Therefore you should <strong>use stems</strong> to get better results:
+    <ul>
+      <li>
+        Use <tt>localiz</tt> instead of <tt>localize</tt> or
+        <tt>localization</tt>.
+      </li>
+     <li>
+       Use <tt>bookmark</tt> instead of <tt>bookmarks</tt> or
+       <tt>bookmarking</tt>.
+     </li>
+   </ul>
+  </li>
+</ul>
+
+<h2><a name="features">Features</a></h2>
+
+<ul>
+  <li>
+    Boolean operations: &ldquo;<tt>-foo</tt>&rdquo;&nbsp;(NOT),
+    &ldquo;<tt>foo&nbsp;bar</tt>&rdquo;&nbsp;(AND),
+    &ldquo;<tt>foo|bar</tt>&rdquo;&nbsp;(OR).
+    <ul>
+      <li>
+        <strong>NOT</strong>:<br />
+        Use <tt><b>-</b><i>foo</i></tt> to exclude [% terms.bugs %]
+        with <tt><i>foo</i></tt> in the summary.
+      </li>
+      <li>
+        <strong>AND</strong>:<br />
+        Space-separated words are treated as a conjunction.
+      </li>
+      <li>
+        <strong>OR</strong>:<br />
+        Within a word, "|"-separated parts denote alternatives.
+      </li>
+      <li>
+        Besides "|", a comma can be used to separate alternatives.
+      </li>
+      <li>
+        OR has higher precedence than AND; AND is the top level operation.
+      </li>
+    </ul>
+    <i>Example:</i>
+    <tt>url,location bar,field -focus</tt> means
+    (<tt>url</tt> OR <tt>location</tt>) AND (<tt>bar</tt> OR <tt>field</tt>)
+    AND (NOT <tt>focus</tt>)
+  </li>
+  <li>
+    Use <tt>+foo</tt> to search for [% terms.bugs %] where the
+    <strong>summary</strong> contains <tt>foo</tt> as a
+    <strong>substring</strong>.<br/>
+    Use <tt>#foo</tt> to search for [% terms.bugs %] where the
+    <strong>summary</strong> contains the <strong>word</strong> <tt>foo</tt>.
+    <ul>
+      <li>
+        <tt>+brow</tt> does not find all [% terms.bugs %] in the
+        <tt>Browser</tt> product.
+      </li>
+      <li>
+        <tt>#title</tt> does not find [% terms.bugs %] with <tt>titlebar</tt>
+        or <tt>titled</tt>.
+      </li>
+    </ul>
+    Phrases with special chars (space, comma, +, -, #, &hellip;) can be
+    <strong>quoted</strong>:
+    <ul>
+      <li>
+        <tt>"lock icon"</tt>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <strong>Open vs. Resolved [% terms.Bugs %]</strong>:<br />
+    By default, only open (i.e. unresolved) [% terms.bugs %] are shown.
+    Use <tt>+DUP</tt> as first word in your search to include duplicate
+    [%+ terms.bugs %] in your search,
+    <tt>FIXED</tt> to search for fixed [%+ terms.bugs %] only,
+    or <tt>ALL</tt> to search all [% terms.bugs %],
+    regardless of status or resolution.
+    Searching for duplicates is recommended if you can't find an open
+    [%+ terms.bug %] directly.
+    <ul>
+      <li>
+        <tt>+DUP,FIXED table border</tt>
+      </li>
+      <li>
+        <tt>ALL mouse wheel</tt>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <strong>Focus the Search with Products &amp;
+    Components</strong>:<br />
+    To search for [% terms.bugs %] in product "Foo Bar" only, add
+    <tt>:foo</tt> or <tt>:bar</tt> or both to your search.
+    You can do this with any substring of a
+    <a href="describecomponents.cgi">product or component</a> to focus the
+    search.
+  </li>
+</ul>
+
+<h2>More Tips</h2>
+
+<ul>
+  <li>
+    You can also use this tool to <strong>lookup</strong> a [% terms.bug %] by
+    its number:<br />
+    <ul>
+      <li><tt>12345</tt></li>
+    </ul>
+  </li>
+  <li>
+    A comma-separated list of [% terms.bug %] numbers gives you a list of these
+    [%+ terms.bugs %]:<br />
+    <ul>
+      <li><tt>12345,23456,34567</tt></li>
+    </ul>
+  </li>
+</ul>
+
+<p>
+  By default, the following fields are searched: Summary, Keywords, Product,
+  Component, Status Whiteboard. If a word looks like a part of a URL, that field
+  is included in the search, too.
+</p>
+<hr>
+
+<p>
+  Use the powerful <a href="query.cgi">[% terms.Bugzilla %] Search Form</a>
+  for advanced queries.
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

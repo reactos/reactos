@@ -1,0 +1,3 @@
+Name: Kubrick 1.2.6 port
+Author: Tom Sommer
+Date: 12/8-2004

@@ -1,0 +1,78 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="ucp" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+	
+	<p>{L_ATTACHMENTS_EXPLAIN}</p>
+
+	<!-- IF .attachrow -->
+		<ul class="linklist">
+			<li class="rightside pagination">
+				<!-- IF TOTAL_ATTACHMENTS -->{TOTAL_ATTACHMENTS} {L_TITLE}<!-- ENDIF -->
+				<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+			</li>
+		</ul>	
+		
+		<ul class="topiclist">
+			<li class="header">
+				<dl>
+					<dt style="width: 40%"><a href="{U_SORT_FILENAME}">{L_FILENAME}</a></dt>
+					<dd class="extra"><a href="{U_SORT_DOWNLOADS}">{L_DOWNLOADS}</a></dd>
+					<dd class="time"><span><a href="{U_SORT_POST_TIME}">{L_POST_TIME}</a></span></dd>
+					<dd class="mark">{L_MARK}</dd>
+				</dl>
+			</li>
+		</ul>
+		<ul class="topiclist cplist">
+
+		<!-- BEGIN attachrow -->
+		<li class="row<!-- IF attachrow.S_ROW_COUNT is odd --> bg1<!-- ELSE --> bg2<!-- ENDIF -->">
+			<dl>
+				<dt style="width: 40%"><a href="{attachrow.U_VIEW_ATTACHMENT}" class="topictitle">{attachrow.FILENAME}</a> ({attachrow.SIZE})<br />
+					<!-- IF attachrow.S_IN_MESSAGE -->{L_PM}: <!-- ELSE -->{L_TOPIC}: <!-- ENDIF --><a href="{attachrow.U_VIEW_TOPIC}">{attachrow.TOPIC_TITLE}</a></dt>
+				<dd class="extra">{attachrow.DOWNLOAD_COUNT}</dd>
+				<dd class="time"><span>{attachrow.POST_TIME}</span></dd>
+				<dd class="mark"><input type="checkbox" name="attachment[{attachrow.ATTACH_ID}]" value="1" /></dd>
+			</dl>
+		</li>
+		<!-- END attachrow -->
+		</ul>
+
+		<fieldset class="display-options">
+			<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" class="right-box {S_CONTENT_FLOW_END}">{L_NEXT}</a><!-- ENDIF -->
+			<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" class="left-box {S_CONTENT_FLOW_BEGIN}">{L_PREVIOUS}</a><!-- ENDIF -->
+			<label for="sk">{L_SORT_BY}: <select name="sk" id="sk">{S_SORT_OPTIONS}</select></label> 
+			<label><select name="sd" id="sd">{S_ORDER_SELECT}</select></label>
+			<input class="button2" type="submit" name="sort" value="{L_SORT}" />
+			{S_FORM_TOKEN}
+		</fieldset>
+
+		<hr />
+		
+		<ul class="linklist">
+			<li class="rightside pagination">
+				<!-- IF TOTAL_ATTACHMENTS -->{TOTAL_ATTACHMENTS} {L_TITLE}<!-- ENDIF -->
+				<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+			</li>
+		</ul>
+	<!-- ELSE -->
+		<p><strong>{L_UCP_NO_ATTACHMENTS}</strong></p>
+	<!-- ENDIF -->
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+	
+<!-- IF S_ATTACHMENT_ROWS -->
+	<fieldset class="display-actions">	
+		<input class="button2" type="submit" name="delete" value="{L_DELETE_MARKED}" />
+		<div><a href="#" onclick="marklist('ucp', 'attachment', true); return false;">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('ucp', 'attachment', false); return false;">{L_UNMARK_ALL}</a></div>
+		{S_FORM_TOKEN}
+	</fieldset>
+<!-- ENDIF -->
+</form>
+
+<!-- INCLUDE ucp_footer.html -->

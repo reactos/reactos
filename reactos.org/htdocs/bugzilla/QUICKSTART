@@ -1,0 +1,84 @@
+Bugzilla Quick Start Guide 
+==========================
+(or, how to get Bugzilla up and running in 10 steps)
+Christian Reis <kiko@async.com.br>
+
+This express installation guide is for "normal" Bugzilla installations,
+which means a Linux or Unix system on which Apache, Perl, MySQL or PostgreSQL
+and a Sendmail compatible MTA are available. For other configurations, please
+see Section 4 of the Bugzilla Guide in the docs/ directory. 
+
+1. Decide from which URL and directory under your webserver root you
+   will be serving the Bugzilla webpages.
+
+2. Unpack the distribution into the chosen directory (there is no copying or
+   installation involved). 
+
+3. Run ./checksetup.pl, look for unsolved requirements, and install them.
+   You can run checksetup as many times as necessary to check if
+   everything required has been installed.
+
+   These will usually include assorted Perl modules, MySQL or PostgreSQL,
+   and a MTA.
+
+   After a successful dependency check, checksetup should complain that
+   localconfig needs to be edited.
+
+4. Edit the localconfig file, in particular the $webservergroup and 
+   $db_* variables. In particular, $db_name and $db_user will define
+   your database setup in step 5.
+
+5. Using the name you provided as $db_name above, create a MySQL database
+   for Bugzilla. You should also create a user permission for the name
+   supplied as $db_user with read/write access to that database.
+
+   If you are not familiar with MySQL permissions, it's a good idea to
+   use the mysql_setpermission script that is installed with the MySQL
+   distribution, and be sure to read Bugzilla Security - MySQL section
+   in the Bugzilla Guide or PostgreSQL documentation.
+
+6. Run checksetup.pl once more; if all goes well, it should set up the
+   Bugzilla database for you. If not, return to step 5.
+
+   checksetup.pl should ask you, this time, for the administrator's
+   email address and password. These will be used for the initial
+   Bugzilla administrator account.
+
+7. Configure Apache (or install and configure, if you don't have it up
+   yet) to point to the Bugzilla directory. You should enable and
+   activate mod_cgi, and add the configuration entries
+
+        Options +ExecCGI
+        AllowOverride Limit 
+        DirectoryIndex index.cgi
+
+   to your Bugzilla <Directory> block. You may also need
+
+        AddHandler cgi-script .cgi
+
+   if you don't have that in your Apache configuration file yet.
+
+8. Visit the URL you chose for Bugzilla. Your browser should display the
+   default Bugzilla home page. You should then log in as the
+   administrator by following the "Log in" link and supplying the
+   account information you provided in step 6.
+
+9. Scroll to the bottom of the page after logging in, and select
+   "Parameters". Set up the relevant parameters for your local setup. 
+
+   See section 4.2 of the Bugzilla Guide for a in-depth description of
+   some of the configuration parameters available.
+
+10. That's it. If anything unexpected comes up:
+
+    - read the error message carefully,
+    - backtrack through the steps above, 
+    - check the official installation guide, which is section 4 in the
+      Bugzilla Guide, included in the docs/ directory in various
+      formats.
+
+Support and installation questions should be directed to the
+mozilla-webtools@mozilla.org mailing list -- don't write to the
+developer mailing list: your post *will* be ignored if you do.
+
+Further support information is at http://www.bugzilla.org/support/

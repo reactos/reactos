@@ -1,0 +1,146 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # bugs: list of hashes. May be empty. Each hash has nine members:
+  #   id: integer. The bug number
+  #   count: integer. The number of dupes
+  #   delta: integer. The change in count in the last $changedsince days
+  #   component: string. The bug's component
+  #   bug_severity: string. The bug's severity.
+  #   op_sys: string. The bug's reported OS.
+  #   target_milestone: string. The bug's TM.
+  #   short_desc: string. The bug's summary.
+  #   bug_status: string. The bug's status.
+  #   resolution: string. The bug's resolution, if any.
+  #
+  # bug_ids: list of integers. May be empty. The IDs of the bugs in $bugs.
+  #
+  # sortby: string. the column on which we are sorting the buglist.
+  # reverse: boolean. True if we are reversing the current sort.
+  # maxrows: integer. Max number of rows to display.
+  # changedsince: integer. The number of days ago for the changedsince column.
+  # openonly: boolean. True if we are only showing open bugs.
+  # query_products: list of strings. Restrict to these products only.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[%# *** Column Headers *** %]
+
+[% IF bug_ids.size > 0 %]
+  <table border>
+    <thead>
+      <tr bgcolor="#CCCCCC">
+        [% FOREACH column = [ { name => "id", description => "$terms.Bug #" },
+                              { name => "count", description => "Dupe<br>Count" },
+                              { name => "delta",
+                                description => "Change in last<br>$changedsince day(s)" },
+                              { name => "component", description => "Component" },
+                              { name => "bug_severity", description => "Severity" },
+                              { name => "op_sys", description => "Op Sys" },
+                              { name => "target_milestone",
+                                description => "Target<br>Milestone" },
+                              { name => "short_desc", description => "Summary" } ]
+         %]
+
+          [%# Small hack to keep delta column out if we don't need it %]
+          [% NEXT IF column.name == "delta" AND NOT dobefore %]
+
+          <th>
+            [% bug_ids_string = bug_ids.join(',') %]
+            <a href="duplicates.cgi?sortby=[% column.name %]
+              [% IF sortby == column.name %]
+                [% "&amp;reverse=1" IF NOT reverse %]
+              [% ELSE %]
+                [%-# Some columns start off reversed %]
+                [% "&amp;reverse=1" IF column.name.match('delta|count') %]
+              [% END %]
+              [% IF maxrows %]&amp;maxrows=[% maxrows FILTER html %][% END %]
+              [% IF changedsince %]&amp;changedsince=[% changedsince FILTER html %][% END %]
+              [% "&amp;openonly=1" IF openonly %]
+              [% FOREACH p = query_products %]&amp;product=[% p FILTER html %][% END %]
+              [% IF format %]&amp;format=[% format FILTER html %][% END %]
+              [% IF sortvisible %]&amp;bug_id=[% bug_ids_string FILTER html %]&amp;sortvisible=1[% END %]">
+              [% column.description %]</a>
+          </th>
+        [% END %]
+      </tr>
+    </thead>
+
+    [% IF NOT sortby %]
+      [% sortby = "count"; reverse = "1" %]
+    [% END %]
+
+    [% IF sortby == "id" OR sortby == "count" OR sortby == "delta" %]
+      [%# Numeric sort %]
+      [% sortedbugs = bugs.nsort(sortby) %]
+    [% ELSE %]
+      [% sortedbugs = bugs.sort(sortby) %]
+    [% END %]
+
+    [% IF reverse %]
+      [% bugs = sortedbugs.reverse %]
+    [% ELSE %]
+      [% bugs = sortedbugs %]
+    [% END %]
+
+    [%# *** Buglist *** %]
+    <tbody>
+
+      [%# We need to keep track of the bug IDs we are actually displaying, because
+        # if the user decides to sort the visible list, we need to know what that
+        # list actually is. %]
+      [% vis_bug_ids = [] %]
+
+      [% FOREACH bug = bugs %]
+        [% LAST IF loop.index() >= maxrows %]
+        [% vis_bug_ids.push(bug.id) %]
+
+        <tr [% "class='resolved'" IF bug.resolution != "" %]>
+          <td>
+            <center>
+              [% bug.id FILTER bug_link(bug.id) FILTER none %]
+            </center>
+          </td>
+
+          <td>
+            <center>
+              [% bug.count %]
+            </center>
+          </td>
+
+          [% IF dobefore %]
+            <td><center>[% bug.delta %]</center></td>
+          [% END %]
+
+          <td>[% bug.component FILTER html %]</td>
+          <td><center>[% bug.bug_severity FILTER html %]</center></td>
+          <td><center>[% bug.op_sys FILTER html %]</center></td>
+          <td><center>[% bug.target_milestone FILTER html %]</center></td>
+          <td>[% bug.short_desc FILTER html %]</td>
+        </tr>
+      [% END %]
+    </tbody>
+  </table>
+[% ELSE %]
+  <h3>No duplicate [% terms.bugs %] found.</h3>
+[% END %]

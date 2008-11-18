@@ -1,0 +1,66 @@
+<!-- INCLUDE mcp_header.html -->
+
+<form method="post" id="mcp" action="{U_POST_ACTION}">
+
+<h2>{L_WARNED_USERS}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<p>{L_WARNED_USERS_EXPLAIN}</p>
+
+	<!-- IF .user -->
+		<ul class="linklist">
+			<li class="rightside pagination">
+				<!-- IF TOTAL_USERS -->{TOTAL_USERS} <!-- ENDIF -->
+				<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+			</li>
+		</ul>
+		
+		<table class="table1" cellspacing="0">
+		<thead>
+			<tr>
+				<th class="name">{L_USERNAME}</th>
+				<th class="name">{L_WARNINGS}</th>
+				<th class="name">{L_LATEST_WARNING_TIME}</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+
+		<!-- BEGIN user -->
+			<tr class="<!-- IF user.S_ROW_COUNT is even -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
+				<td>{user.USERNAME_FULL}</td>
+				<td>{user.WARNINGS}</td>
+				<td>{user.WARNING_TIME}</td>
+				<td><a href="{user.U_NOTES}">{L_VIEW_NOTES}</a></td>
+			</tr>
+		<!-- END user -->
+		</tbody>
+		</table>
+
+		<fieldset class="display-options">
+			<label>{L_DISPLAY_POSTS}: {S_SELECT_SORT_DAYS}</label>
+			<label>{L_SORT_BY} {S_SELECT_SORT_KEY}</label><label>{S_SELECT_SORT_DIR}</label>
+			<input type="submit" name="sort" value="{L_GO}" class="button2" />
+		</fieldset>
+		<hr />
+
+		<ul class="linklist">
+			<li class="rightside pagination">
+				<!-- IF TOTAL_USERS -->{TOTAL_USERS} <!-- ENDIF -->
+				<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+			</li>
+		</ul>
+	<!-- ELSE -->
+		<p><strong>{L_WARNINGS_ZERO_TOTAL}</strong></p>
+	<!-- ENDIF -->
+
+	<span class="corners-bottom"><span></span></span></div>
+
+{S_FORM_TOKEN}
+</div>
+
+</form>
+
+<!-- INCLUDE mcp_footer.html -->

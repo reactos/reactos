@@ -1,0 +1,70 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Erik Stambaugh <erik@dasbistro.com>
+  #%]
+
+[%# INTERFACE:
+  # subject: subject line of message
+  # body: message body, shown before the query tables
+  # queries: array of hashes containing:
+  #     bugs: array containing hashes of fieldnames->values for each bug
+  #     title: the title given in the whine scheduling mechanism
+  # author: user object for the person who scheduled this whine
+  # recipient: user object for the intended recipient of the message
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% PROCESS 'global/field-descs.none.tmpl' %]
+
+[%# assignee_login_string is a literal string used for getting the 
+  # assignee's name out of the bug data %]
+[% SET assignee_login_string="map_assigned_to.login_name" %]
+
+[% body %]
+
+[% IF author.login == recipient.login %]
+  To edit your whine schedule, visit the following URL:
+  [%+ Param('urlbase') %]editwhines.cgi
+[% ELSE %]
+  This search was scheduled by [% author.login %].
+[% END %]
+
+
+[% FOREACH query=queries %]
+
+[%+ query.title +%]
+[%+ "-" FILTER repeat(query.title.length) %]
+
+ [% FOREACH bug=query.bugs %]
+  [% terms.Bug +%] [%+ bug.bug_id %]:
+  [%+ Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id +%]
+  Priority: [%+ bug.priority -%]
+  Severity: [%+ bug.bug_severity -%]
+  Platform: [%+ bug.rep_platform %]
+  Assignee: [%+ bug.$assignee_login_string %]
+    Status: [%+ status_descs.${bug.bug_status} %]
+            [%- IF bug.resolution -%] Resolution: [% get_resolution(bug.resolution) -%]
+                                [%- END %]
+   Summary: [% bug.short_desc %]
+
+ [% END %]
+
+[% END %]
+
+

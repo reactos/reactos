@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<!--
+   -
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is the Bugzilla Bug Tracking System.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corporation. Portions created by Netscape are
+   - Copyright (C) 1998 Netscape Communications Corporation. All
+   - Rights Reserved.
+   -
+   - Contributor(s): Myk Melez <myk@mozilla.org>
+   -
+   -->
+
+<!DOCTYPE window [
+  <!ENTITY idColumn.label               "ID">
+  <!ENTITY duplicateCountColumn.label   "Count">
+  <!ENTITY duplicateDeltaColumn.label   "Delta">
+  <!ENTITY componentColumn.label        "Component">
+  <!ENTITY severityColumn.label         "Severity">
+  <!ENTITY osColumn.label               "OS">
+  <!ENTITY targetMilestoneColumn.label  "Milestone">
+  <!ENTITY summaryColumn.label          "Summary">
+]>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="skins/standard/duplicates.css" type="text/css"?>
+
+<window id="duplicates_report"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Duplicates Report">
+
+  // Code for populating the tree from the RDF data source
+  // and loading bug reports when the user selects rows in the tree.
+  <script type="application/x-javascript" src="js/duplicates.js" />
+
+  <tree id="results-tree" flex="1"
+        flags="dont-build-content"
+        enableColumnDrag="true"
+        datasources="rdf:null"
+        ref=""
+        onselect="loadBugInPane();"
+        ondblclick="loadBugInWindow();">
+    <treecols>
+      <treecol id="id_column" label="&idColumn.label;" primary="true" sort="?id" 
+               persist="width hidden sortActive sortDirection ordinal" />
+      <splitter class="tree-splitter"/> 
+
+      <treecol id="duplicate_count_column" label="&duplicateCountColumn.label;" sort="?duplicate_count" 
+               sortActive="true" sortDirection="descending" 
+               persist="width hidden sortActive sortDirection ordinal" />
+      <splitter class="tree-splitter" /> 
+      
+      <treecol id="duplicate_delta_column" label="&duplicateDeltaColumn.label;" sort="?duplicate_delta" 
+               persist="width hidden sortActive sortDirection ordinal" />
+      <splitter class="tree-splitter"/>
+      
+      <treecol id="component_column" label="&componentColumn.label;" flex="3" sort="?component" 
+               persist="width hidden sortActive sortDirection ordinal" />
+      <splitter class="tree-splitter"/> 
+
+      <treecol id="severity_column" label="&severityColumn.label;" flex="1" sort="?severity" 
+               persist="width hidden sortActive sortDirection ordinal" />
+      <splitter class="tree-splitter"/> 
+
+      <treecol id="os_column" label="&osColumn.label;" flex="2" sort="?os" 
+               persist="width hidden sortActive sortDirection ordinal" />
+      <splitter class="tree-splitter"/> 
+
+      <treecol id="target_milestone_column" label="&targetMilestoneColumn.label;" flex="1" sort="?target_milestone" 
+               persist="width hidden sortActive sortDirection ordinal" />
+      <splitter class="tree-splitter"/> 
+
+      <treecol id="summary_column" label="&summaryColumn.label;" flex="12" sort="?summary" 
+               persist="width hidden sortActive sortDirection ordinal" />
+    </treecols>
+    <template>
+      <rule>
+        <conditions>
+          <treeitem uri="?uri" />
+          <triple subject="?uri" predicate="http://www.bugzilla.org/rdf#bugs" object="?bugs" />
+          <member container="?bugs" child="?bug" />
+          <triple subject="?bug" predicate="http://www.bugzilla.org/rdf#id" object="?id" />
+        </conditions>
+        <bindings>
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#duplicate_count"  object="?duplicate_count" />
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#duplicate_delta"  object="?duplicate_delta" />
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#component"        object="?component" />
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#severity"         object="?severity" />
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#priority"         object="?priority" />
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#os"               object="?os" />
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#target_milestone" object="?target_milestone" />
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#summary"          object="?summary" />
+          <binding subject="?bug" predicate="http://www.bugzilla.org/rdf#resolution"       object="?resolution" />
+        </bindings>
+        <action>
+          <treechildren>
+            <treeitem uri="?bug">
+              <treerow properties="resolution-?resolution">
+                <treecell ref="id_column"               label="?id"               properties="resolution-?resolution" />
+                <treecell ref="duplicate_count_column"  label="?duplicate_count"  properties="resolution-?resolution" />
+                <treecell ref="duplicate_delta_column"  label="?duplicate_delta"  properties="resolution-?resolution" />
+                <treecell ref="component_column"        label="?component"        properties="resolution-?resolution" />
+                <treecell ref="severity_column"         label="?severity"         properties="resolution-?resolution" />
+                <treecell ref="os_column"               label="?os"               properties="resolution-?resolution" />
+                <treecell ref="target_milestone_column" label="?target_milestone" properties="resolution-?resolution" />
+                <treecell ref="summary_column"          label="?summary"          properties="resolution-?resolution" />
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </action>
+      </rule>
+    </template>
+  </tree>
+  
+  <splitter id="report-content-splitter" collapse="after" state="open" persist="state">
+    <grippy/>
+  </splitter>
+  
+  <iframe id="content-browser" src="about:blank" flex="2" persist="height" />
+
+</window>

@@ -1,0 +1,35 @@
+<!-- INCLUDE overall_header.html -->
+
+<h2 class="solo">{L_LOGIN} {FORUM_NAME}</h2>
+
+<form id="login_forum" method="post" action="{S_LOGIN_ACTION}">
+{S_FORM_TOKEN}
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<p>{L_LOGIN_FORUM}</p>
+
+	<fieldset class="fields2">
+	<!-- IF LOGIN_ERROR -->
+		<dl>
+			<dt>&nbsp;</dt>
+			<dd class="error">{LOGIN_ERROR}</dd>
+		</dl>
+	<!-- ENDIF -->
+	<dl>
+		<dt><label for="password">{L_PASSWORD}:</label></dt>
+		<dd><input class="inputbox narrow" type="password" name="password" id="password" size="25" tabindex="1" /></dd>
+	</dl>
+	<dl class="fields2">
+		<dt>&nbsp;</dt>
+		<dd>{S_HIDDEN_FIELDS}<input type="submit" name="login" id="login" class="button1" value="{L_LOGIN}" tabindex="2" /></dd>
+	</dl>
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+</form>
+
+<!-- INCLUDE jumpbox.html -->
+<!-- INCLUDE overall_footer.html -->

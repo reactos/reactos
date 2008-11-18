@@ -1,0 +1,424 @@
+/* proSilver Control Panel Styles
+---------------------------------------- */
+
+
+/* Main CP box
+----------------------------------------*/
+#cp-menu {
+	float:left;
+	width: 19%;
+	margin-top: 1em;
+	margin-bottom: 5px;
+}
+
+#cp-main {
+	float: left;
+	width: 81%;
+}
+
+#cp-main .content {
+	padding: 0;
+}
+
+#cp-main h3, #cp-main hr, #cp-menu hr {
+	border-color: #bfbfbf;
+}
+
+#cp-main .panel p {
+	font-size: 1.1em;
+}
+
+#cp-main .panel ol {
+	margin-left: 2em;
+	font-size: 1.1em;
+}
+
+#cp-main .panel li.row {
+	border-bottom: 1px solid #cbcbcb;
+	border-top: 1px solid #F9F9F9;
+}
+
+ul.cplist {
+	margin-bottom: 5px;
+	border-top: 1px solid #cbcbcb;
+}
+
+#cp-main .panel li.header dd, #cp-main .panel li.header dt {
+	color: #000000;
+	margin-bottom: 2px;
+}
+
+#cp-main table.table1 {
+	margin-bottom: 1em;
+}
+
+#cp-main table.table1 thead th {
+	color: #333333;
+	font-weight: bold;
+	border-bottom: 1px solid #333333;
+	padding: 5px;
+}
+
+#cp-main table.table1 tbody th {
+	font-style: italic;
+	background-color: transparent !important;
+	border-bottom: none;
+}
+
+#cp-main .pagination {
+	float: right;
+	width: auto;
+	padding-top: 1px;
+}
+
+#cp-main .postbody p {
+	font-size: 1.1em;
+}
+
+#cp-main .pm-message {
+	border: 1px solid #e2e2e2;
+	margin: 10px 0;
+	background-color: #FFFFFF;
+	width: auto;
+	float: none;
+}
+
+.pm-message h2 {
+	padding-bottom: 5px;
+}
+
+#cp-main .postbody h3, #cp-main .box2 h3 {
+	margin-top: 0;
+}
+
+#cp-main .buttons {
+	margin-left: 0;
+}
+
+#cp-main ul.linklist {
+	margin: 0;
+}
+
+/* MCP Specific tweaks */
+.mcp-main .postbody {
+	width: 100%;
+}
+
+/* CP tabbed menu
+----------------------------------------*/
+#tabs {
+	line-height: normal;
+	margin: 20px 0 -1px 7px;
+	min-width: 570px;
+}
+
+#tabs ul {
+	margin:0;
+	padding: 0;
+	list-style: none;
+}
+
+#tabs li {
+	display: inline;
+	margin: 0;
+	padding: 0;
+	font-size: 1em;
+	font-weight: bold;
+}
+
+#tabs a {
+	float: left;
+	background: none no-repeat 0% -35px;
+	margin: 0 1px 0 0;
+	padding: 0 0 0 5px;
+	text-decoration: none;
+	position: relative;
+	cursor: pointer;
+}
+
+#tabs a span {
+	float: left;
+	display: block;
+	background: none no-repeat 100% -35px;
+	padding: 6px 10px 6px 5px;
+	color: #828282;
+	white-space: nowrap;
+}
+
+#tabs a:hover span {
+	color: #bcbcbc;
+}
+
+#tabs .activetab a {
+	background-position: 0 0;
+	border-bottom: 1px solid #ebebeb;
+}
+
+#tabs .activetab a span {
+	background-position: 100% 0;
+	padding-bottom: 7px;
+	color: #333333;
+}
+
+#tabs a:hover {
+	background-position: 0 -70px;
+}
+
+#tabs a:hover span {
+	background-position:100% -70px;
+}
+
+#tabs .activetab a:hover {
+	background-position: 0 0;
+}
+
+#tabs .activetab a:hover span {
+	color: #000000;
+	background-position: 100% 0;
+}
+
+/* Mini tabbed menu used in MCP
+----------------------------------------*/
+#minitabs {
+	line-height: normal;
+	margin: -20px 7px 0 0;
+}
+
+#minitabs ul {
+	margin:0;
+	padding: 0;
+	list-style: none;
+}
+
+#minitabs li {
+	display: block;
+	float: right;
+	padding: 0 10px 4px 10px;
+	font-size: 1em;
+	font-weight: bold;
+	background-color: #f2f2f2;
+	margin-left: 2px;
+}
+
+#minitabs a {
+}
+
+#minitabs a:hover {
+	text-decoration: none;
+}
+
+#minitabs li.activetab {
+	background-color: #F9F9F9;
+}
+
+#minitabs li.activetab a, #minitabs li.activetab a:hover {
+	color: #333333;
+}
+
+/* UCP navigation menu
+----------------------------------------*/
+/* Container for sub-navigation list */
+#navigation {
+	width: 100%;
+	padding-top: 36px;
+}
+
+#navigation ul {
+	list-style:none;
+}
+
+/* Default list state */
+#navigation li {
+	margin: 1px 0;
+	padding: 0;
+	font-weight: bold;
+	display: inline;
+}
+
+/* Link styles for the sub-section links */
+#navigation a {
+	display: block;
+	padding: 5px;
+	margin: 1px 0;
+	text-decoration: none;
+	font-weight: bold;
+	color: #333;
+	background: #cfcfcf none repeat-y 100% 0;
+}
+
+#navigation a:hover {
+	text-decoration: none;
+	background-color: #c6c6c6;
+	color: #bcbcbc;
+	background-image: none;
+}
+
+#navigation #active-subsection a {
+	display: block;
+	color: #d3d3d3;
+	background-color: #F9F9F9;
+	background-image: none;
+}
+
+#navigation #active-subsection a:hover {
+	color: #d3d3d3;
+}
+
+/* Preferences pane layout
+----------------------------------------*/
+#cp-main h2 {
+	border-bottom: none;
+	padding: 0;
+	margin-left: 10px;
+	color: #333333;
+}
+
+#cp-main .panel {
+	background-color: #F9F9F9;
+}
+
+#cp-main .pm {
+	background-color: #FFFFFF;
+}
+
+#cp-main span.corners-top, #cp-menu span.corners-top {
+	background-image: none;
+}
+
+#cp-main span.corners-top span, #cp-menu span.corners-top span {
+	background-image: none;
+}
+
+#cp-main span.corners-bottom, #cp-menu span.corners-bottom {
+	background-image: none;
+}
+
+#cp-main span.corners-bottom span, #cp-menu span.corners-bottom span {
+	background-image: none;
+}
+
+/* Topicreview */
+#cp-main .panel #topicreview span.corners-top, #cp-menu .panel #topicreview span.corners-top {
+	background-image: none;
+}
+
+#cp-main .panel #topicreview span.corners-top span, #cp-menu .panel #topicreview span.corners-top span {
+	background-image: none;
+}
+
+#cp-main .panel #topicreview span.corners-bottom, #cp-menu .panel #topicreview span.corners-bottom {
+	background-image: none;
+}
+
+#cp-main .panel #topicreview span.corners-bottom span, #cp-menu .panel #topicreview span.corners-bottom span {
+	background-image: none;
+}
+
+/* Friends list */
+.cp-mini {
+	background-color: #f9f9f9;
+	padding: 0 5px;
+	margin: 10px 15px 10px 5px;
+}
+
+.cp-mini span.corners-top, .cp-mini span.corners-bottom {
+	margin: 0 -5px;
+}
+
+dl.mini dt {
+	font-weight: bold;
+	color: #676767;
+}
+
+dl.mini dd {
+	padding-top: 4px;
+}
+
+.friend-online {
+	font-weight: bold;
+}
+
+.friend-offline {
+	font-style: italic;
+}
+
+/* PM Styles
+----------------------------------------*/
+#pm-menu {
+	line-height: 2.5em;
+}
+
+/* PM Message history */
+.current {
+	color: #999999;
+}
+
+/* Defined rules list for PM options */
+ol.def-rules {
+	padding-left: 0;
+}
+
+ol.def-rules li {
+	line-height: 180%;
+	padding: 1px;
+}
+
+/* PM marking colours */
+.pmlist li.bg1 {
+	border: solid 3px transparent;
+	border-width: 0 3px;
+}
+
+.pmlist li.bg2 {
+	border: solid 3px transparent;
+	border-width: 0 3px;
+}
+
+.pmlist li.pm_message_reported_colour, .pm_message_reported_colour {
+	border-left-color: #bcbcbc;
+	border-right-color: #bcbcbc;
+}
+
+.pmlist li.pm_marked_colour, .pm_marked_colour {
+	border: solid 3px #ffffff;
+	border-width: 0 3px;
+}
+
+.pmlist li.pm_replied_colour, .pm_replied_colour {
+	border: solid 3px #c2c2c2;
+	border-width: 0 3px;	
+}
+
+.pmlist li.pm_friend_colour, .pm_friend_colour {
+	border: solid 3px #bdbdbd;
+	border-width: 0 3px;
+}
+
+.pmlist li.pm_foe_colour, .pm_foe_colour {
+	border: solid 3px #000000;
+	border-width: 0 3px;
+}
+
+.pm-legend {
+	border-left-width: 10px;
+	border-left-style: solid;
+	border-right-width: 0;
+	margin-bottom: 3px;
+	padding-left: 3px;
+}
+
+/* Avatar gallery */
+#gallery label {
+	position: relative;
+	float: left;
+	margin: 10px;
+	padding: 5px;
+	width: auto;
+	background: #FFFFFF;
+	border: 1px solid #CCC;
+	text-align: center;
+}
+
+#gallery label:hover {
+	background-color: #EEE;
+}

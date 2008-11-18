@@ -1,0 +1,63 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "Group Security"
+   desc = "Decide how you will use Security Groups"
+%]
+
+[% param_descs = {
+  makeproductgroups => "If this is on, $terms.Bugzilla will associate a $terms.bug group " _
+                       "with each product in the database, and use it for querying ${terms.bugs}.",
+
+  useentrygroupdefault => "If this is on, $terms.Bugzilla will use product $terms.bug groups " _
+                          "by default to restrict who can enter ${terms.bugs}. If this is on, " _
+                          "users can see any product to which they have entry access in search menus. " _
+                          "If this is off, users can see any product to which they have not " _
+                          "been excluded by a mandatory restriction.",
+
+  chartgroup => "The name of the group of users who can use the 'New Charts' " _
+                "feature. Administrators should ensure that the public categories " _
+                "and series definitions do not divulge confidential information " _
+                "before enabling this for an untrusted population. If left blank, " _
+                "no users will be able to use New Charts.",
+
+  insidergroup => "The name of the group of users who can see/change private " _
+                  "comments and attachments.",
+
+  timetrackinggroup => "The name of the group of users who can see/change time tracking " _
+                       "information.",
+
+  querysharegroup => "The name of the group of users who can share their " _
+                     "saved searches with others.",
+
+  usevisibilitygroups => "Do you wish to restrict visibility of users to members of " _
+                         "specific groups?",
+  
+  strict_isolation => "Don't allow users to be assigned to, " _
+                      "be qa-contacts on, " _
+                      "be added to CC list, " _
+                      "or make or remove dependencies " _
+                      "involving any bug that is in a product on which that " _
+                      "user is forbidden to edit.", 
+
+ }
+%]

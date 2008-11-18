@@ -1,0 +1,109 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # none
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% title = BLOCK %]
+  Edit the Custom Field '[% field.name FILTER html %]' ([% field.description FILTER html %])
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+           title = title
+           onload = "toggleCheckbox(document.getElementById('enter_bug'), 'new_bugmail');" %]
+
+<script type="text/javascript">
+  <!--
+  // Disable a checkbox based on the state of another one.
+  function toggleCheckbox(this_checkbox, other_checkbox_id) {
+    var other_checkbox = document.getElementById(other_checkbox_id);
+    other_checkbox.disabled = !this_checkbox.checked;
+  }
+  //-->
+</script>
+
+<p>
+  Descriptions are a very short string describing the field and will be used as
+  the label for this field in the user interface.
+</p>
+
+<form id="edit_field" action="editfields.cgi" method="GET">
+  <table border="0" cellspacing="0" cellpadding="5">
+    <tr>
+      <th align="right">Name:</th>
+      <td>[% field.name FILTER html %]</td>
+
+      <th align="right">
+        <label for="enter_bug">Can be set on [% terms.bug %] creation:</label>
+      </th>
+      <td><input type="checkbox" id="enter_bug" name="enter_bug" value="1"
+                 [%- " checked" IF field.enter_bug %]
+                 onchange="toggleCheckbox(this, 'new_bugmail');"></td>
+    </tr>
+    <tr>
+      <th align="right"><label for="desc">Description:</label></th>
+      <td><input type="text" id="desc" name="desc" size="40"
+                 value="[% field.description FILTER html %]"></td>
+
+      <th align="right">
+        <label for="new_bugmail">Displayed in [% terms.bug %]mail for new [% terms.bugs %]:</label>
+      </th>
+      <td><input type="checkbox" id="new_bugmail" name="new_bugmail" value="1"
+                 [%- " checked" IF field.mailhead %]></td>
+    </tr>
+    <tr>
+      <th align="right">Type:</th>
+      <td>[% field_types.${field.type} FILTER html %]</td>
+
+      <th align="right"><label for="obsolete">Is obsolete:</label></th>
+      <td><input type="checkbox" id="obsolete" name="obsolete" value="1"
+                 [%- " checked" IF field.obsolete %]></td>
+    </tr>
+    <tr>
+      <th align="right"><label for="sortkey">Sortkey:</label></th>
+      <td>
+        <input type="text" id="sortkey" name="sortkey" size="6" maxlength="6"
+               value="[% field.sortkey FILTER html %]">
+      </td>
+
+      <th>&nbsp;</th>
+      <td>&nbsp;</td>
+    </tr>
+    [% IF field.type == constants.FIELD_TYPE_SINGLE_SELECT %]
+      <tr>
+        <th>&nbsp;</th>
+        <td colspan="3">
+          <a href="editvalues.cgi?field=[% field.name FILTER url_quote %]">Edit
+            legal values for this field</a>.
+        </td>
+      </tr>
+    [% END %]
+  </table>
+  <br>
+  <input type="hidden" name="action" value="update">
+  <input type="hidden" name="name" value="[% field.name FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+  <input type="submit" id="edit" value="Submit">
+</form>
+
+<p>
+  <a href="editfields.cgi">Back to the list of existing custom fields</a>
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

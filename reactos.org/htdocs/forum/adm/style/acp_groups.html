@@ -1,0 +1,346 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_EDIT -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_ACP_GROUPS_MANAGE}</h1>
+
+	<p>{L_GROUP_EDIT_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="settings" method="post" action="{U_ACTION}"<!-- IF S_CAN_UPLOAD --> enctype="multipart/form-data"<!-- ENDIF -->>
+
+	<fieldset>
+		<legend>{L_GROUP_DETAILS}</legend>
+	<dl>
+		<dt><label<!-- IF not S_SPECIAL_GROUP --> for="group_name"<!-- ENDIF -->>{L_GROUP_NAME}:</label></dt>
+		<dd><!-- IF S_SPECIAL_GROUP --><strong>{GROUP_NAME}</strong><!-- ENDIF --><input name="group_name" type="<!-- IF S_SPECIAL_GROUP -->hidden<!-- ELSE -->text<!-- ENDIF -->" id="group_name" value="{GROUP_INTERNAL_NAME}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="group_desc">{L_GROUP_DESC}:</label></dt>
+		<dd><textarea id="group_desc" name="group_desc" rows="5" cols="45">{GROUP_DESC}</textarea></dd>
+		<dd><label><input type="checkbox" class="radio" name="desc_parse_bbcode"<!-- IF S_DESC_BBCODE_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_BBCODE}</label>
+			<label><input type="checkbox" class="radio" name="desc_parse_smilies"<!-- IF S_DESC_SMILIES_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_SMILIES}</label>
+			<label><input type="checkbox" class="radio" name="desc_parse_urls"<!-- IF S_DESC_URLS_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_URLS}</label></dd>
+	</dl>
+	<!-- IF not S_SPECIAL_GROUP -->
+		<dl>
+			<dt><label for="group_type">{L_GROUP_TYPE}:</label><br /><span>{L_GROUP_TYPE_EXPLAIN}</span></dt>
+			<dd>
+				<label><input name="group_type" type="radio" class="radio" id="group_type" value="{GROUP_TYPE_FREE}"{GROUP_FREE} /> {L_GROUP_OPEN}</label>
+				<label><input name="group_type" type="radio" class="radio" value="{GROUP_TYPE_OPEN}"{GROUP_OPEN} /> {L_GROUP_REQUEST}</label>
+				<label><input name="group_type" type="radio" class="radio" value="{GROUP_TYPE_CLOSED}"{GROUP_CLOSED} /> {L_GROUP_CLOSED}</label>
+				<label><input name="group_type" type="radio" class="radio" value="{GROUP_TYPE_HIDDEN}"{GROUP_HIDDEN} /> {L_GROUP_HIDDEN}</label>
+			</dd>
+		</dl>
+	<!-- ELSE -->
+		<input name="group_type" type="hidden" value="{GROUP_TYPE_SPECIAL}" />
+	<!-- ENDIF -->
+
+	<!-- IF S_ADD_GROUP and S_GROUP_PERM -->
+		<dl>
+			<dt><label for="group_perm_from">{L_COPY_PERMISSIONS}:</label><br /><span>{L_COPY_PERMISSIONS_EXPLAIN}</span></dt>
+			<dd><select id="group_perm_from" name="group_perm_from"><option value="0">{L_NO_PERMISSIONS}</option>{S_GROUP_OPTIONS}</select></dd>
+		</dl>
+	<!-- ENDIF -->
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_GROUP_SETTINGS_SAVE}</legend>
+	<!-- IF S_USER_FOUNDER -->
+	<dl>
+		<dt><label for="group_founder_manage">{L_GROUP_FOUNDER_MANAGE}:</label><br /><span>{L_GROUP_FOUNDER_MANAGE_EXPLAIN}</span></dt>
+		<dd><input name="group_founder_manage" type="checkbox" class="radio" id="group_founder_manage"{GROUP_FOUNDER_MANAGE} /></dd>
+	</dl>
+	<!-- ENDIF -->
+	<dl>
+		<dt><label for="group_legend">{L_GROUP_LEGEND}:</label></dt>
+		<dd><input name="group_legend" type="checkbox" class="radio" id="group_legend"{GROUP_LEGEND} /></dd>
+	</dl>
+	<dl>
+		<dt><label for="group_receive_pm">{L_GROUP_RECEIVE_PM}:</label><br /><span>{L_GROUP_RECEIVE_PM_EXPLAIN}</span></dt>
+		<dd><input name="group_receive_pm" type="checkbox" class="radio" id="group_receive_pm"{GROUP_RECEIVE_PM} /></dd>
+	</dl>
+	<dl>
+		<dt><label for="group_message_limit">{L_GROUP_MESSAGE_LIMIT}:</label><br /><span>{L_GROUP_MESSAGE_LIMIT_EXPLAIN}</span></dt>
+		<dd><input name="group_message_limit" type="text" id="group_message_limit" maxlength="4" size="4" value="{GROUP_MESSAGE_LIMIT}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="group_colour">{L_GROUP_COLOR}:</label><br /><span>{L_GROUP_COLOR_EXPLAIN}</span></dt>
+		<dd><input name="group_colour" type="text" id="group_colour" value="{GROUP_COLOUR}" size="6" maxlength="6" />&nbsp;&nbsp;<span>[ <a href="{U_SWATCH}" onclick="popup(this.href, 636, 150, '_swatch'); return false">{L_COLOUR_SWATCH}</a> ]</span></dd>
+	</dl>
+	<dl>
+		<dt><label for="group_rank">{L_GROUP_RANK}:</label></dt>
+		<dd><select name="group_rank" id="group_rank">{S_RANK_OPTIONS}</select></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_GROUP_AVATAR}</legend>
+	<dl>
+		<dt><label>{L_CURRENT_IMAGE}:</label><br /><span>{L_AVATAR_EXPLAIN}</span></dt>
+		<dd>{AVATAR_IMAGE}</dd>
+		<dd><label><input type="checkbox" class="radio" name="delete" /> {L_DELETE_AVATAR}</label></dd>
+	</dl>
+	<!-- IF not S_IN_AVATAR_GALLERY -->
+		<!-- IF S_CAN_UPLOAD -->
+			<dl> 
+				<dt><label for="uploadfile">{L_UPLOAD_AVATAR_FILE}:</label></dt>
+				<dd><input type="file" id="uploadfile" name="uploadfile" /></dd>
+			</dl>
+			<dl>
+				<dt><label for="uploadurl">{L_UPLOAD_AVATAR_URL}:</label><br /><span>{L_UPLOAD_AVATAR_URL_EXPLAIN}</span></dt>
+				<dd><input name="uploadurl" type="text" id="uploadurl" value="" /></dd>
+			</dl>
+		<!-- ENDIF -->
+		<dl>
+			<dt><label for="remotelink">{L_LINK_REMOTE_AVATAR}:</label><br /><span>{L_LINK_REMOTE_AVATAR_EXPLAIN}</span></dt>
+			<dd><input name="remotelink" type="text" id="remotelink" value="" /></dd>
+		</dl>
+		<dl>
+			<dt><label for="width">{L_LINK_REMOTE_SIZE}:</label><br /><span>{L_LINK_REMOTE_SIZE_EXPLAIN}</span></dt>
+			<dd><input name="width" type="text" id="width" size="3" value="{AVATAR_WIDTH}" /> <span>px X </span> <input type="text" name="height" size="3" value="{AVATAR_HEIGHT}" /> <span>px</span></dd>
+		</dl>
+		<!-- IF S_DISPLAY_GALLERY -->
+			<dl> 
+				<dt><label>{L_AVATAR_GALLERY}:</label></dt>
+				<dd><input class="button2" type="submit" name="display_gallery" value="{L_DISPLAY_GALLERY}" /></dd>
+			</dl>
+		<!-- ENDIF -->
+	<!-- ELSE -->
+		</fieldset>
+
+		<fieldset>
+			<legend>{L_AVATAR_GALLERY}</legend>
+		<dl>
+			<dt><label for="category">{L_AVATAR_CATEGORY}:</label></dt>
+			<dd><select name="category" id="category">{S_CAT_OPTIONS}</select>&nbsp;<input class="button2" type="submit" value="{L_GO}" name="display_gallery" /></dd>
+		</dl>
+		<dl>
+			<table cellspacing="1">
+			<!-- BEGIN avatar_row -->
+			<tr> 
+				<!-- BEGIN avatar_column -->
+					<td class="row1" style="text-align: center;"><img src="{avatar_row.avatar_column.AVATAR_IMAGE}" alt="{avatar_row.avatar_column.AVATAR_NAME}" title="{avatar_row.avatar_column.AVATAR_NAME}" /></td>
+				<!-- END avatar_column -->
+			</tr>
+			<tr>
+				<!-- BEGIN avatar_option_column -->
+					<td class="row2" style="text-align: center;"><input type="radio" class="radio" name="avatar_select" value="{avatar_row.avatar_option_column.S_OPTIONS_AVATAR}" /></td>
+				<!-- END avatar_option_column -->
+			</tr>
+			<!-- END avatar_row -->
+			</table>
+		</dl>
+		</fieldset>
+		
+		<fieldset class="quick" style="margin-top: -15px;">
+			<input class="button2" type="submit" name="cancel" value="{L_CANCEL}" />
+		</fieldset>
+	
+	<!-- ENDIF -->
+	</fieldset>
+
+	<fieldset class="submit-buttons">
+		<legend>{L_SUBMIT}</legend>
+		<input class="button1" type="submit" id="submit" name="update" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_LIST -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_GROUP_MEMBERS} :: {GROUP_NAME}</h1>
+
+	<p>{L_GROUP_MEMBERS_EXPLAIN}</p>
+
+	<form id="list" method="post" action="{U_ACTION}">
+
+	<fieldset class="quick">
+		<a href="{U_DEFAULT_ALL}">&raquo; {L_MAKE_DEFAULT_FOR_ALL}</a>
+	</fieldset>
+
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_USERNAME}</th>
+		<th>{L_GROUP_DEFAULT}</th>
+		<th>{L_JOINED}</th>
+		<th>{L_POSTS}</th>
+		<th>{L_MARK}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td class="row3" colspan="5"><strong>{L_GROUP_LEAD}</strong></td>
+	</tr>
+	<!-- BEGIN leader -->
+		<!-- IF leader.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+			<td><a href="{leader.U_USER_EDIT}">{leader.USERNAME}</a></td>
+			<td style="text-align: center;"><!-- IF leader.S_GROUP_DEFAULT -->{L_YES}<!-- ELSE -->{L_NO}<!-- ENDIF --></td>
+			<td style="text-align: center;">{leader.JOINED}</td>
+			<td style="text-align: center;">{leader.USER_POSTS}</td>
+			<td style="text-align: center;"><input type="checkbox" class="radio" name="mark[]" value="{leader.USER_ID}" /></td>
+		</tr>
+	<!-- BEGINELSE -->
+		<tr>
+			<td class="row1" colspan="5" style="text-align: center;">{L_GROUPS_NO_MODS}</td>
+		</tr>
+	<!-- END leader -->
+	<tr>
+		<td class="row3" colspan="5"><strong>{L_GROUP_APPROVED}</strong></td>
+	</tr>
+	<!-- BEGIN member -->
+		<!-- IF member.S_PENDING -->
+		<tr>
+			<td class="row3" colspan="5"><strong>{L_GROUP_PENDING}</strong></td>
+		</tr>
+		<!-- ELSE -->
+			<!-- IF member.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+			<td><a href="{member.U_USER_EDIT}">{member.USERNAME}</a></td>
+			<td style="text-align: center;"><!-- IF member.S_GROUP_DEFAULT -->{L_YES}<!-- ELSE -->{L_NO}<!-- ENDIF --></td>
+			<td style="text-align: center;">{member.JOINED}</td>
+			<td style="text-align: center;">{member.USER_POSTS}</td>
+			<td style="text-align: center;"><input type="checkbox" class="radio" name="mark[]" value="{member.USER_ID}" /></td>
+		</tr>
+		<!-- ENDIF -->
+	<!-- BEGINELSE -->
+		<tr>
+			<td class="row1" colspan="5" style="text-align: center;">{L_GROUPS_NO_MEMBERS}</td>
+		</tr>
+	<!-- END member -->
+	</tbody>
+	</table>
+	<!-- IF PAGINATION -->
+	<div class="pagination">
+			<a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span>
+	</div>
+	<!-- ENDIF -->	
+
+	<fieldset class="quick">
+		<select name="action"><option class="sep" value="">{L_SELECT_OPTION}</option>{S_ACTION_OPTIONS}</select>
+		<input class="button2" type="submit" name="update" value="{L_SUBMIT}" />
+		<p class="small"><a href="#" onclick="marklist('list', 'mark', true); return false;">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('list', 'mark', false); return false;">{L_UNMARK_ALL}</a></p>		
+	</fieldset>
+
+	<h1>{L_ADD_USERS}</h1>
+
+	<p>{L_ADD_USERS_EXPLAIN}</p>
+
+	<fieldset>
+		<legend>{L_ADD_USERS}</legend>
+	<dl>
+		<dt><label for="leader">{L_USER_GROUP_LEADER}:</label></dt>
+		<dd><label><input name="leader" type="radio" class="radio" value="1" /> {L_YES}</label>
+			<label><input name="leader" type="radio" class="radio" id="leader" value="0" checked="checked" /> {L_NO}</label></dd>
+	</dl>
+	<dl>
+		<dt><label for="default">{L_USER_GROUP_DEFAULT}:</label><br /><span>{L_USER_GROUP_DEFAULT_EXPLAIN}</span></dt>
+		<dd><label><input name="default" type="radio" class="radio" value="1" /> {L_YES}</label>
+			<label><input name="default" type="radio" class="radio" id="default" value="0" checked="checked" /> {L_NO}</label></dd>
+	</dl>
+	<dl>
+		<dt><label for="usernames">{L_USERNAME}:</label><br /><span>{L_USERNAMES_EXPLAIN}</span></dt>
+		<dd><textarea id="usernames" name="usernames" cols="40" rows="5"></textarea></dd>
+		<dd>[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</dd>
+	</dl>
+
+	<p class="quick">
+		<input class="button2" type="submit" name="addusers" value="{L_SUBMIT}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSE -->
+
+	<h1>{L_ACP_GROUPS_MANAGE}</h1>
+
+	<p>{L_ACP_GROUPS_MANAGE_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<h1>{L_USER_DEF_GROUPS}</h1>
+
+	<p>{L_USER_DEF_GROUPS_EXPLAIN}</p>
+
+	<form id="acp_groups" method="post" action="{U_ACTION}">
+
+	<table cellspacing="1">
+		<col class="col1" /><col class="col1" /><col class="col2" /><col class="col2" /><col class="col2" />
+	<thead>
+	<tr>
+		<th style="width: 50%">{L_GROUP}</th>
+		<th>{L_TOTAL_MEMBERS}</th>
+		<th colspan="2">{L_OPTIONS}</th>
+		<th>{L_ACTION}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN groups -->
+		<!-- IF groups.S_SPECIAL -->
+		<!-- IF groups.S_FIRST_ROW -->
+			<tr>
+				<td colspan="5" class="row3">{L_NO_GROUPS_CREATED}</td>
+			</tr>
+		<!-- ENDIF -->
+	</tbody>
+	</table>
+
+	<fieldset class="quick">
+		<!-- IF S_GROUP_ADD -->
+			{L_CREATE_GROUP}: <input type="text" name="group_name" value="" /> <input class="button2" type="submit" name="submit" value="{L_SUBMIT}" />
+			<input type="hidden" name="add" value="1" />
+		<!-- ENDIF -->
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+	<h1>{L_SPECIAL_GROUPS}</h1>
+
+	<p>{L_SPECIAL_GROUPS_EXPLAIN}</p>
+
+	<table cellspacing="1">
+		<col class="col1" /><col class="col1" /><col class="col2" /><col class="col2" /><col class="col2" />
+	<thead>
+	<tr>
+		<th style="width: 50%">{L_GROUP}</th>
+		<th>{L_TOTAL_MEMBERS}</th>
+		<th colspan="2">{L_OPTIONS}</th>
+		<th>{L_ACTION}</th>
+	</tr>
+	</thead>
+	<tbody>
+		<!-- ELSE -->
+		<tr>
+			<td><strong>{groups.GROUP_NAME}</strong></td>
+			<td style="text-align: center;">{groups.TOTAL_MEMBERS}</td>
+			<td style="text-align: center;"><a href="{groups.U_EDIT}">{L_SETTINGS}</a></td>
+			<td style="text-align: center;"><a href="{groups.U_LIST}">{L_MEMBERS}</a></td>
+			<td style="text-align: center;"><!-- IF not groups.S_GROUP_SPECIAL and groups.U_DELETE --><a href="{groups.U_DELETE}">{L_DELETE}</a><!-- ELSE -->{L_DELETE}<!-- ENDIF --></td>
+		</tr>
+		<!-- ENDIF -->
+	<!-- END groups -->
+	</tbody>
+	</table>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

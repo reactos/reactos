@@ -1,0 +1,124 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_EDIT_BBCODE -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_ACP_BBCODES}</h1>
+
+	<p>{L_ACP_BBCODES_EXPLAIN}</p>
+
+	<form id="acp_bbcodes" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_BBCODE_USAGE}</legend>
+		<p>{L_BBCODE_USAGE_EXPLAIN}</p>
+	<dl>
+		<dt><label for="bbcode_match">{L_EXAMPLES}</label><br /><br /><span>{L_BBCODE_USAGE_EXAMPLE}</span></dt>
+		<dd><textarea id="bbcode_match" name="bbcode_match" cols="60" rows="5">{BBCODE_MATCH}</textarea></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_HTML_REPLACEMENT}</legend>
+		<p>{L_HTML_REPLACEMENT_EXPLAIN}</p>
+	<dl>
+		<dt><label for="bbcode_tpl">{L_EXAMPLES}</label><br /><br /><span>{L_HTML_REPLACEMENT_EXAMPLE}</span></dt>
+		<dd><textarea id="bbcode_tpl" name="bbcode_tpl" cols="60" rows="8">{BBCODE_TPL}</textarea></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_BBCODE_HELPLINE}</legend>
+		<p>{L_BBCODE_HELPLINE_EXPLAIN}</p>
+	<dl>
+		<dt><label for="bbcode_helpline">{L_BBCODE_HELPLINE_TEXT}</label></dt>
+		<dd><input type="text" id="bbcode_helpline" name="bbcode_helpline" size="60" maxlength="255" value="{BBCODE_HELPLINE}" /></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>{L_SETTINGS}</legend>
+	<dl>
+		<dt><label for="display_on_posting">{L_DISPLAY_ON_POSTING}</label></dt>
+		<dd><input type="checkbox" class="radio" name="display_on_posting" id="display_on_posting" value="1"<!-- IF DISPLAY_ON_POSTING --> checked="checked"<!-- ENDIF --> /></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset class="submit-buttons">
+		<legend>{L_SUBMIT}</legend>
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	
+	<br />
+
+	<table cellspacing="1" id="down">
+	<thead>
+	<tr>
+		<th colspan="2">{L_TOKENS}</th>
+	</tr>
+	<tr>
+		<td class="row3" colspan="2">{L_TOKENS_EXPLAIN}</td>
+	</tr>
+	<tr>
+		<th>{L_TOKEN}</th>
+		<th>{L_TOKEN_DEFINITION}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN token -->
+		<tr valign="top">
+			<td class="row1">{token.TOKEN}</td>
+			<td class="row2">{token.EXPLAIN}</td>
+		</tr>
+	<!-- END token -->
+	</tbody>
+	</table>
+	</form>
+
+<!-- ELSE -->
+
+	<h1>{L_ACP_BBCODES}</h1>
+
+	<p>{L_ACP_BBCODES_EXPLAIN}</p>
+	
+	<form id="acp_bbcodes" method="post" action="{U_ACTION}">
+	<fieldset class="tabulated">
+	<legend>{L_ACP_BBCODES}</legend>
+
+	<table cellspacing="1" id="down">
+	<thead>
+	<tr>
+		<th>{L_BBCODE_TAG}</th>
+		<th>{L_ACTION}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN bbcodes -->
+		<!-- IF bbcodes.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+			<td style="text-align: center;">{bbcodes.BBCODE_TAG}</td>
+			<td style="text-align: right; width: 40px;"><a href="{bbcodes.U_EDIT}">{ICON_EDIT}</a> <a href="{bbcodes.U_DELETE}">{ICON_DELETE}</a></td>
+		</tr>
+	<!-- BEGINELSE -->
+		<tr class="row3">
+			<td colspan="2">{L_ACP_NO_ITEMS}</td>
+		</tr>
+	<!-- END bbcodes -->
+	</tbody>
+	</table>
+
+	<p class="quick">
+		<input class="button2" name="submit" type="submit" value="{L_ADD_BBCODE}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

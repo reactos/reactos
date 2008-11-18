@@ -1,0 +1,93 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
+  #%]
+
+[%# INTERFACE:
+  # product: object. The product for which we want to display component descriptions.
+  #%]
+
+[% title = BLOCK %]
+  Components for [% product.name FILTER html %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl title = title %]
+
+[% IF Param("useqacontact") %]
+  [% numcols = 3 %]
+[% ELSE %]
+  [% numcols = 2 %]
+[% END %]
+
+<p>
+  [% product.description FILTER html_light %]
+</p>
+
+<table>
+  <tr>
+    <th align="left">Component</th>
+    <th align="left">Default Assignee</th>
+    [% IF Param("useqacontact") %]
+      <th align="left">Default QA Contact</th>
+    [% END %]
+  </tr>
+
+  [% FOREACH comp = product.components %]
+    [% INCLUDE describe_comp %]
+  [% END %]
+  <tr>
+    <td colspan="[% numcols %]">
+      <hr>
+    </td>
+  </tr>
+</table>
+
+[% PROCESS global/footer.html.tmpl %]
+
+[%############################################################################%]
+[%# BLOCK for components                                                      %]
+[%############################################################################%]
+
+[% BLOCK describe_comp %]
+  <tr>
+    <td colspan="[% numcols %]">
+      <hr>
+    </td>
+  </tr>
+  <tr>
+    <td rowspan="2">
+      <a name="[% comp.name FILTER html %]">[% comp.name FILTER html %]</a>
+    </td>
+    <td>
+      <a href="mailto:[% comp.default_assignee.email FILTER html %]">
+      [% comp.default_assignee.login FILTER html %]</a>
+    </td>
+    [% IF Param("useqacontact") %]
+      <td>
+        <a href="mailto:[% comp.default_qa_contact.email FILTER html %]">
+        [% comp.default_qa_contact.login FILTER html %]</a>
+      </td>
+    [% END %]
+  </tr>
+  <tr>
+    <td colspan="[% numcols - 1 %]">
+      [% comp.description FILTER html_light %]
+    </td>
+  </tr>
+[% END %]

@@ -1,0 +1,161 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  #
+  # message:             message tag specifying a global/messages.html.tmpl
+  #                      message
+  # listselectionvalues: selection values to recreate the current user list.
+  # editusers:           is viewing user member of editusers?
+  # otheruser:           Bugzilla::User object of viewed user.
+  # groups:              array of group information (name, grant type,
+  #                      canbless) for viewed user.
+  #%]
+
+[% title = BLOCK %]Edit user [% otheruser.identity FILTER html %][% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  message = message
+  style_urls = ['skins/standard/editusers.css']
+%]
+
+[% PROCESS admin/users/listselectvars.html.tmpl
+  listselectionvalues = listselectionvalues
+%]
+
+<form method="post" action="editusers.cgi">
+<table class="main">
+  [% PROCESS admin/users/userdata.html.tmpl
+    editform  = 1
+    editusers = editusers
+    otheruser = otheruser
+  %]
+  [% IF groups.size %]
+    <tr>
+      <th>Group access:</th>
+      <td>
+        <table class="groups">
+          <tr>
+            [% IF editusers %]
+              <th colspan="3">
+                Can turn these [% terms.bits %] on for other users
+              </th>
+            [% END %]
+          </tr>
+          <tr>
+            [% IF editusers %]
+              <td style="text-align: center; font-weight: bold">|</td>
+            [% END %]
+            <th colspan="2">User is a member of these groups</th>
+          </tr>
+          [% FOREACH group = groups %]
+            [% perms = permissions.${group.id} %]
+            <tr class="[% 'in' IF perms.regexpmember || perms.derivedmember %]direct">
+              [% IF editusers %]
+                <td class="checkbox">
+                  [% '[' IF perms.indirectbless %]
+                  [% %]<input type="checkbox"
+                              name="bless_[% group.id %]"
+                              value="1"
+                              [% ' checked="checked"' IF perms.directbless %] />
+                  [% ']' IF perms.indirectbless %]
+                [% %]<input type="hidden" name="oldbless_[% group.id %]"
+                            value="[% perms.directbless %]" /></td>
+              [% END %]
+              <td class="checkbox">
+                [% '[' IF perms.derivedmember %]
+                [% '*' IF perms.regexpmember %]
+                [%%]<input type="checkbox"
+                           id="group_[% group.id %]"
+                           name="group_[% group.id %]"
+                           value="1"
+                           [% ' checked="checked"' IF perms.directmember %] />
+                [% '*' IF perms.regexpmember %]
+                [% ']' IF perms.derivedmember %]
+              [% %]<input type="hidden" name="oldgroup_[% group.id %]"
+                          value="[% perms.directmember %]" /></td>
+              <td class="groupname">
+                <label for="group_[% group.id %]">
+                  <strong>[% group.name FILTER html %]:</strong>
+                  [%+ group.description FILTER html_light %]
+                </label>
+              </td>
+            </tr>
+          [% END %]
+        </table>
+      </td>
+    </tr>
+  [% END %]
+</table>
+
+<p>
+  <input type="submit" id="update" value="Update" />
+  <input type="hidden" name="userid" value="[% otheruser.id %]" />
+  <input type="hidden" name="action" value="update" />
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+  [% INCLUDE listselectionhiddenfields %]
+
+  or <a href="editusers.cgi?action=activity&amp;userid=[% otheruser.id %]"
+        title="View the account log for user '
+        [%- otheruser.login FILTER html %]'">View this user's account log</a>
+</p>
+</form>
+<p>
+  User is a member of any groups shown with a check or grey bar.
+  A grey bar indicates indirect membership, either derived from other
+  groups (marked with square brackets) or via regular expression
+  (marked with '*').
+</p>
+[% IF editusers %]
+  <p>
+    Square brackets around the bless checkbox indicate the ability
+    to bless users (grant them membership in the group) as a result
+    of membership in another group.
+  </p>
+[% END %]
+
+[% IF Param('allowuserdeletion') && editusers %]
+  <form method="post" action="editusers.cgi">
+  <p>
+    <input type="submit" id="delete" value="Delete User" />
+    <input type="hidden" name="action" value="del" />
+    <input type="hidden" name="userid" value="[% otheruser.id %]" />
+    [% INCLUDE listselectionhiddenfields %]
+  </p>
+  </form>
+[% END %]
+
+<p>
+  You can also
+  [% IF editusers %]
+    <a href="editusers.cgi?action=add[% INCLUDE listselectionurlparams %]">add
+    a new user</a>
+    [% IF listselectionvalues %],
+    [% END %]
+  [% END %]
+  [% IF listselectionvalues.matchtype != 'exact' %]
+    go
+    <a href="editusers.cgi?action=list[% INCLUDE listselectionurlparams %]">back
+    to the user list</a>,
+  [% END %]
+  [% IF editusers OR listselectionvalues %]
+    or
+  [% END %]
+  <a href="editusers.cgi">find other users</a>.
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

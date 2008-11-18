@@ -1,0 +1,46 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "User Matching"
+   desc = "Set up your user matching policies"
+%]
+
+[% param_descs = {
+  usemenuforusers => "If this option is set, $terms.Bugzilla will offer you a list " _
+                     "to select from (instead of a text entry field) where a user " _
+                     "needs to be selected. This option should not be enabled on " _
+                     "sites where there are a large number of users.",
+
+  usermatchmode => "Allow match strings to be entered for user names when entering " _
+                   "and editing ${terms.bugs}.<p> " _
+                   "'off' disables matching,<br> " _
+                   "'wildcard' allows only wildcards,<br> " _
+                   "and 'search' allows both wildcards and substring (freetext) matches.",
+
+  maxusermatches => "Search for no more than this many matches.<br> " _
+                    "If set to '1', no users will be displayed on ambiguous matches. " _
+                    "This is useful for user privacy purposes.<br> " _
+                    "A value of zero means no limit.",
+
+  confirmuniqueusermatch => "Whether a confirmation screen should be displayed when only " _
+                            "one user matches a search entry." }
+%]

@@ -1,7 +1,0 @@
-/* $Id: midimap.rc 11297 2004-10-16 20:27:43Z gvg $ */
-
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS/WINE MIDI Mapper\0"
-#define REACTOS_STR_INTERNAL_NAME	"midimap\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"midimap.drv\0"
-#include <reactos/version.rc>

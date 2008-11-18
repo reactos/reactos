@@ -1,0 +1,380 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% dontchange = "--do_not_change--" %]
+<input type="hidden" name="dontchange" value="[% dontchange FILTER html %]">
+
+<script type="text/javascript">
+  var numelements = document.forms.changeform.elements.length;
+  function SetCheckboxes(value) {
+      var item;
+      for (var i=0 ; i<numelements ; i++) {
+          item = document.forms.changeform.elements[i];
+          item.checked = value;
+      }
+  }
+  document.write(' <input type="button" name="uncheck_all" value="Uncheck All" onclick="SetCheckboxes(false);">');
+  document.write(' <input type="button" name="check_all" value="Check All" onclick="SetCheckboxes(true);">');
+</script>
+
+<hr>
+
+<p style="font-size:smaller">
+ To change multiple [% terms.bugs %]:</p>
+<ol style="font-size:smaller">
+  <li>Check the [% terms.bugs %] you want to change above.</li>
+  <li>Make your changes in the form fields below.  If the change
+   you are making requires an explanation, include it in
+   the comments box.</li>
+  <li>Click the <em>Commit</em> button.</li>
+</ol>
+
+<table id="form">
+  <tr>
+
+    <th><label for="product">Product:</label></th>
+    <td>
+      [% PROCESS selectmenu menuname = "product"
+                            menuitems = products
+                            property = "name" %]
+    </td>
+
+    <th><label for="version">Version:</label></th>
+    <td>
+      [% PROCESS selectmenu menuname = "version"
+                            menuitems = versions
+                            property = "" %]
+    </td>
+
+  </tr>
+  <tr>
+
+    <th><label for="component">Component:</label></th>
+    <td>
+      [% PROCESS selectmenu menuname = "component"
+                            menuitems = components %]
+    </td>
+
+    <th>
+      <label for="priority">
+        <a href="page.cgi?id=fields.html#priority">Priority</a>:
+      </label>
+    </th>
+    <td>
+      [% PROCESS selectmenu menuname = "priority"
+                            menuitems = priorities %]
+    </td>
+
+  </tr>
+  <tr>
+
+    <th>
+      <label for="rep_platform">
+        <a href="page.cgi?id=fields.html#rep_platform">Platform</a>:
+      </label>
+    </th>
+    <td>
+      [% PROCESS selectmenu menuname = "rep_platform"
+                            menuitems = platforms %]
+    </td>
+
+    <th>
+      <label for="bug_severity">
+        <a href="page.cgi?id=fields.html#bug_severity">Severity</a>:
+      </label>
+    </th>
+    <td>
+      [% PROCESS selectmenu menuname = "bug_severity"
+                            menuitems = severities %]
+    </td>
+
+  </tr>
+
+  <tr>
+    <th>
+      <label for="op_sys">
+        <a href="page.cgi?id=fields.html#op_sys">OS</a>:
+      </label>
+    </th>
+    <td [% " colspan=\"3\"" IF !Param("usetargetmilestone") %]>
+      [% PROCESS selectmenu menuname = "op_sys"
+                            menuitems = op_sys %]
+    </td>
+
+    [% IF Param("usetargetmilestone") %]
+      <th><label for="target_milestone">Target Milestone:</label></th>
+      <td>
+        [% PROCESS selectmenu menuname = "target_milestone"
+                              menuitems = targetmilestones %]
+      </td>
+    [% END %]
+  </tr>
+
+  [% IF user.in_group(Param("timetrackinggroup")) %]
+    <tr>
+      <th><label for="estimated_time">Estimated Hours:</label></th>
+      <td>
+        <input id="estimated_time"
+               name="estimated_time"
+               value="[% dontchange FILTER html %]"
+               size="6">
+      </td>
+      <th><label for="remaining_time">Remaining Hours:</label></th>
+      <td>
+        <input id="remaining_time"
+               name="remaining_time"
+               value="[% dontchange FILTER html %]"
+               size="6">
+      </td>
+    </tr>
+  [% END %]
+
+  [% IF Param("useqacontact") %]
+    <tr>
+      <th><label for="qa_contact">QA Contact:</label></th>
+      <td colspan="3">
+        <input id="qa_contact"
+               name="qa_contact"
+               value="[% dontchange FILTER html %]"
+               size="32">
+      </td>
+    </tr>
+  [% END %]
+
+  <tr>
+
+    <th><label for="masscc">CC List:</label></th>
+    <td colspan="3">
+      <input id="masscc" name="masscc" size="32">
+      <select name="ccaction">
+        <option value="add">Add these to the CC List</option>
+        <option value="remove">Remove these from the CC List</option>
+      </select>
+    </td>
+
+  </tr>
+
+  [% IF use_keywords %]
+    <tr>
+
+      <th>
+        <label for="keywords">
+          <a href="describekeywords.cgi">Keywords</a>:
+        </label>
+      </th>
+      <td colspan="3">
+        <input id="keywords" name="keywords" size="32">
+        <select name="keywordaction">
+          <option value="add">Add these keywords</option>
+          <option value="delete">Delete these keywords</option>
+          <option value="makeexact">Make the keywords be exactly this list</option>
+        </select>
+      </td>
+
+    </tr>
+  [% END %]
+
+  [% IF Param('usestatuswhiteboard') %]
+    <tr>
+      <td align="right">
+        <b>Status Whiteboard:</b>
+      </td>
+      <td colspan="7">
+        <input name="status_whiteboard" 
+               value="[% dontchange FILTER html %]" size="60">
+      </td>
+    </tr>
+  [% END %]
+
+  [% USE Bugzilla %]
+  [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
+    <tr>
+      [% PROCESS bug/field.html.tmpl value = dontchange
+                                     editable = 1
+                                     allow_dont_change = 1 %]
+    </tr>
+  [% END %]
+
+</table>
+
+<b><label for="comment">Additional Comments:</label></b><br>
+[% INCLUDE global/textarea.html.tmpl
+  name    = 'comment'
+  id      = 'comment'
+  minrows = 5
+  maxrows = 25
+  cols    = constants.COMMENT_COLS
+%]<br>
+
+[% IF groups.size > 0 %]
+
+  <b>Groupset:</b><br>
+  <table border="1">
+    <tr>
+      <th>Don't<br>change<br>this group<br>restriction</th>
+      <th>Remove<br>[% terms.bugs %]<br>from this<br>group</th>
+      <th>Add<br>[% terms.bugs %]<br>to this<br>group</th>
+      <th>Group Name:</th>
+    </tr>
+
+    [% FOREACH group = groups %]
+    <tr>
+      <td align="center">
+        <input type="radio" name="bit-[% group.id %]" value="-1" checked="checked">
+      </td>
+      <td align="center">
+        <input type="radio" name="bit-[% group.id %]" value="0">
+      </td>
+      [% IF group.isactive %]
+        <td align="center">
+          <input type="radio" name="bit-[% group.id %]" value="1">
+        </td>
+      [% ELSE %]
+        <td>&nbsp;</td>
+        [% foundinactive = 1 %]
+      [% END %]
+
+      <td>
+        [% SET inactive = !group.isactive %]
+        [% group.description FILTER html_light FILTER inactive(inactive) %]
+      </td>
+
+    </tr>
+    [% END %]
+
+  </table>
+
+  [% IF foundinactive %]
+    <p style="font-size:smaller">(Note: [% terms.Bugs %] may not be added to [% FILTER inactive %]inactive
+    groups[% END %], only removed.)</p>
+  [% END %]
+
+[% END %]
+
+
+
+[% knum = 0 %]
+<input id="knob-none" type="radio" name="knob" value="none" checked="checked">
+<label for="knob-none">Do nothing else</label><br>
+
+[% IF bugstatuses.size == 1 && bugstatuses.0 == unconfirmedstate %]
+  [% knum = knum + 1 %]
+  <input id="knob-confirm" type="radio" name="knob" value="confirm">
+  <label for="knob-confirm">
+    Confirm [% terms.bugs %] (change status to <b>[% status_descs.NEW FILTER html %]</b>)
+  </label><br>
+[% END %]
+
+[%# If all the bugs being changed are open, allow the user to accept them,
+    clear their resolution or resolve them. %]
+[% IF !bugstatuses.containsany(closedstates) %]
+  [% knum = knum + 1 %]
+  <input id="knob-accept" type="radio" name="knob" value="accept">
+  <label for="knob-accept">
+    Accept [% terms.bugs %] (change status to <b>[% status_descs.ASSIGNED FILTER html %]</b>)
+  </label><br>
+
+  [% knum = knum + 1 %]
+  <input id="knob-clearresolution" type="radio" name="knob" value="clearresolution">
+  <label for="knob-clearresolution">Clear the resolution</label><br>
+
+  [% knum = knum + 1 %]
+  <input id="knob-resolve" type="radio" name="knob" value="resolve">
+  <label for="knob-resolve">
+    Resolve [% terms.bugs %], changing <a href="page.cgi?id=fields.html#resolution">resolution</a> to
+  </label>
+  <select name="resolution" onchange="document.forms.changeform.knob[[% knum %]].checked=true">
+    [% FOREACH resolution = resolutions %]
+      [% NEXT IF !resolution %]
+      <option value="[% resolution FILTER html %]">
+        [% get_resolution(resolution) FILTER html %]
+      </option>
+    [% END %]
+  </select><br>
+
+[% END %]
+
+[%# If all the bugs are closed, allow the user to reopen them. %]
+[% IF !bugstatuses.containsany(openstates) %]
+  [% knum = knum + 1 %]
+  <input id="knob-reopen" type="radio" name="knob" value="reopen">
+  <label for="knob-reopen">Reopen [% terms.bugs %]</label><br>
+[% END %]
+
+[% IF bugstatuses.size == 1 %]
+  [% IF bugstatuses.contains('RESOLVED') %]
+    [% knum = knum + 1 %]
+    <input id="knob-verify" type="radio" name="knob" value="verify">
+    <label for="knob-verify">Mark [% terms.bugs %] as <b>[% status_descs.VERIFIED FILTER html %]</b></label><br>
+  [% END %]
+[% END %]
+
+[% IF !bugstatuses.containsany(openstates) AND !bugstatuses.contains('CLOSED') %]
+  [% knum = knum + 1 %]
+  <input id="knob-close" type="radio" name="knob" value="close">
+  <label for="knob-close">Mark [% terms.bugs %] as <b>[% status_descs.CLOSED FILTER html %]</b></label><br>
+[% END %]
+
+[% knum = knum + 1 %]
+<input id="knob-reassign" type="radio" name="knob" value="reassign">
+<label for="knob-reassign"><a href="page.cgi?id=fields.html#assigned_to">
+  Reassign</a> [% terms.bugs %] to
+</label>
+[% INCLUDE global/userselect.html.tmpl
+   name => "assigned_to"
+   value => user.login
+   size => 32
+   onchange => "document.forms.changeform.knob[$knum].checked=true;"
+%]<br>
+
+[% knum = knum + 1 %]
+<input id="knob-reassignbycomponent"
+       type="radio"
+       name="knob"
+       value="reassignbycomponent">
+<label for="knob-reassignbycomponent">
+  Reassign [% terms.bugs %] to default assignee of selected component
+</label><br>
+
+<input type="submit" id="commit" value="Commit">
+
+[% IF Param('move-enabled') && user.is_mover %]
+  <input type="submit" name="action" id="action" value="[% Param('move-button-text') %]">
+[% END %]
+
+[%############################################################################%]
+[%# Select Menu Block                                                        #%]
+[%############################################################################%]
+
+[% BLOCK selectmenu %]
+  <select id="[% menuname %]" name="[% menuname %]">
+    <option value="[% dontchange FILTER html %]" selected="selected">
+      [% dontchange FILTER html %]
+    </option>
+    [% FOREACH menuitem = menuitems %]
+      [% IF property %][% menuitem = menuitem.$property %][% END %]
+      <option value="[% menuitem FILTER html %]">[% menuitem FILTER html %]</option>
+    [% END %]
+  </select>
+[% END %]

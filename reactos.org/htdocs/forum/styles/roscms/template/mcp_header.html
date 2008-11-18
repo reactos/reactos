@@ -1,0 +1,67 @@
+<!-- INCLUDE overall_header.html -->
+
+<h2>{L_MCP}</h2>
+
+<!-- IF U_MCP -->
+	<p class="linkmcp">
+		[ <a href="{U_MCP}">{L_MCP}</a><!-- IF U_MCP_FORUM --> | <a href="{U_MCP_FORUM}">{L_MODERATE_FORUM}</a><!-- ENDIF -->
+		<!-- IF U_MCP_TOPIC --> | <a href="{U_MCP_TOPIC}">{L_MODERATE_TOPIC}</a><!-- ENDIF -->
+		<!-- IF U_MCP_POST --> | <a href="{U_MCP_POST}">{L_MODERATE_POST}</a><!-- ENDIF --> ]
+	</p>
+<!-- ENDIF -->
+
+<div id="tabs">
+	<ul>
+		<!-- BEGIN l_block1 -->
+		<li<!-- IF l_block1.S_SELECTED --> class="activetab"<!-- ENDIF -->><a href="{l_block1.U_TITLE}"><span>{l_block1.L_TITLE}</span></a></li>
+		<!-- END l_block1 -->
+	</ul>
+</div>
+
+<div class="panel bg3">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<div style="width: 100%;">
+
+	<div id="cp-menu">
+		<div id="navigation">
+			<ul>
+			<!-- BEGIN l_block1 -->
+			<!-- IF l_block1.S_SELECTED -->
+				<!-- BEGIN l_block2 -->
+				<!-- IF l_block1.l_block2.S_SELECTED -->
+				<li id="active-subsection"><a href="{l_block1.l_block2.U_TITLE}"><span>{l_block1.l_block2.L_TITLE}<!-- IF l_block1.l_block2.ADD_ITEM --> ({l_block1.l_block2.ADD_ITEM})<!-- ENDIF --></span></a></li>
+				<!-- ELSE -->
+				<li><a href="{l_block1.l_block2.U_TITLE}"><span>{l_block1.l_block2.L_TITLE}<!-- IF l_block1.l_block2.ADD_ITEM --> ({l_block1.l_block2.ADD_ITEM})<!-- ENDIF --></span></a></li>
+				<!-- ENDIF -->
+				<!-- END l_block2 -->
+			<!-- ENDIF -->
+			<!-- END l_block1 -->
+			</ul>
+		</div>
+	</div>
+
+	<div id="cp-main" class="mcp-main">
+		<!-- IF MESSAGE -->
+		<div class="content">
+			<h2>{L_MESSAGE}</h2>
+			<p>{MESSAGE}</p>
+			<p><!-- BEGIN return_links -->{return_links.MESSAGE_LINK}<br /><br /><!-- END return_links --></p>
+		</div>
+		<!-- ENDIF -->
+
+		<!-- IF CONFIRM_MESSAGE -->
+			<form id="confirm" method="post" action="{S_CONFIRM_ACTION}"{S_FORM_ENCTYPE}>
+
+			<div class="content">
+				<h2>{L_PLEASE_CONFIRM}</h2>
+				<p>{CONFIRM_MESSAGE}</p>
+			
+				<fieldset class="submit-buttons">
+					{S_HIDDEN_FIELDS}<input class="button1" type="submit" name="submit" value="{L_YES}" />&nbsp; 
+					<input class="button2" type="cancel" value="{L_NO}" />
+				</fieldset>
+			</div>
+
+			</form>
+		<!-- ENDIF -->

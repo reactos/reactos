@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <title>Test of FullPage plugin</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript">
+      _editor_url = "../";
+      _editor_lang = "en";
+    </script>
+
+    <!-- load the main HTMLArea files -->
+    <script type="text/javascript" src="../htmlarea.js"></script>
+
+    <script type="text/javascript">
+      HTMLArea.loadPlugin("FullPage");
+
+      function initDocument() {
+        var editor = new HTMLArea("editor");
+        editor.registerPlugin(FullPage);
+        editor.generate();
+      }
+
+      HTMLArea.onload = initDocument;
+    </script>
+
+  </head>
+
+  <body onload="HTMLArea.init()">
+    <h1>Test of FullPage plugin</h1>
+
+    <textarea id="editor" style="height: 30em; width: 100%;">
+      &lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"&gt;
+      &lt;html&gt;
+        &lt;head&gt;
+          &lt;title&gt;FullPage plugin for HTMLArea&lt;/title&gt;
+          &lt;link rel="alternate stylesheet" href="http://dynarch.com/mishoo/css/dark.css" /&gt;
+          &lt;link rel="stylesheet" href="http://dynarch.com/mishoo/css/cool-light.css" /&gt;
+        &lt;/head&gt;
+        &lt;body style="background-color: #ddddee; color: #000077;"&gt;
+          &lt;table style="width:60%; height: 90%; margin: 2% auto 1% auto;" align="center" border="0" cellpadding="0" cellspacing="0"&gt;
+            &lt;tr&gt;
+              &lt;td style="background-color: #ddeedd; border: 2px solid #002; height: 1.5em; padding: 2px; font: bold 24px Verdana;"&gt;
+                FullPage plugin
+              &lt;/td&gt;
+            &lt;/tr&gt;
+            &lt;tr&gt;
+              &lt;td style="background-color: #fff; border: 1px solid #aab; padding: 1em 3em; font: 12px Verdana;"&gt;
+                &lt;p&gt;
+                  This plugin enables one to edit a full HTML file in &lt;a
+                    href="http://dynarch.com/htmlarea/"&gt;HTMLArea&lt;/a&gt;.  This is not
+                  normally possible with just the core editor since it only
+                  retrieves the HTML inside the &lt;code&gt;body&lt;/code&gt; tag.
+                &lt;/p&gt;
+                &lt;p&gt;
+                  It provides the ability to change the &lt;code&gt;DOCTYPE&lt;/code&gt; of
+                  the document, &lt;code&gt;body&lt;/code&gt; &lt;code&gt;bgcolor&lt;/code&gt; and
+                  &lt;code&gt;fgcolor&lt;/code&gt; attributes as well as to add additional
+                  &lt;code&gt;link&lt;/code&gt;-ed stylesheets.  Cool, eh?
+                &lt;/p&gt;
+                &lt;p&gt;
+                  The development of this plugin was initiated and sponsored by
+                  &lt;a href="http://thycotic.com"&gt;Thycotic Software Ltd.&lt;/a&gt;.
+                  That's also cool, isn't it? ;-)
+                &lt;/p&gt;
+              &lt;/td&gt;
+            &lt;/tr&gt;
+          &lt;/table&gt;
+        &lt;/body&gt;
+      &lt;/html&gt;
+    </textarea>
+
+    <hr />
+    <address><a href="http://dynarch.com/mishoo/">Mihai Bazon</a></address>
+<!-- Created: Wed Oct  1 19:55:37 EEST 2003 -->
+<!-- hhmts start --> Last modified: Wed Aug 11 13:59:07 CEST 2004 <!-- hhmts end -->
+<!-- doc-lang: English -->
+  </body>
+</html>

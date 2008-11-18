@@ -1,0 +1,501 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # header_done: boolean. True if the header has already been printed.
+  # error: string. The tag of the error.
+  # variables: hash. Useful data about the problem. The keys are the variable
+  #  names, and the values the variable values.
+  #%]
+
+[%# This is a list of all the possible code errors. Please keep them in
+  # alphabetical order by error tag, and leave a blank line between errors.
+  #
+  # Note that you must explicitly filter every single template variable
+  # in this file; if you do not wish to change it, use the "none" filter.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% DEFAULT title = "Internal Error" %]
+
+[% error_message = BLOCK %]
+  [% IF    error == "action_unrecognized" %]
+    [% docslinks = {'query.html' => "Searching for $terms.bugs",
+                    'query.html#list' => "$terms.Bug lists"} %]
+    I don't recognize the value (<em>[% action FILTER html %]</em>)
+    of the <em>action</em> variable.
+  
+  [% ELSIF error == "attachment_already_obsolete" %]
+    Attachment #[% attach_id FILTER html %] ([% description FILTER html %]) 
+    is already obsolete.
+
+  [% ELSIF error == "auth_invalid_email" %]
+    [% title = "Invalid Email Address" %]
+    We received an email address (<b>[% addr FILTER html %]</b>)
+    that didn't pass our syntax checking for a legal email address,
+    when trying to create or update your account.
+    [% IF default %]
+      A legal address must contain exactly one '@',
+      and at least one '.' after the @.
+    [% ELSE %]
+      [%+ Param('emailregexpdesc') %]
+    [% END %]
+    It must also not contain any of these special characters:
+    <tt>\ ( ) &amp; &lt; &gt; , ; : &quot; [ ]</tt>, or any whitespace.
+
+  [% ELSIF error == "authres_unhandled" %]
+    The result value of [% value FILTER html %] was not handled by
+    the login code.
+
+  [% ELSIF error == "bad_page_cgi_id" %]
+    [% title = "Invalid Page ID" %]
+    The ID <code>[% page_id FILTER html %]</code> is not a
+    valid page identifier.
+
+  [% ELSIF error == "bad_arg" %]
+    Bad argument <code>[% argument FILTER html %]</code> sent to
+    <code>[% function FILTER html %]</code> function.
+
+  [% ELSIF error == "bug_error" %]
+    Trying to retrieve [% terms.bug %] [%+ bug.bug_id FILTER html %] returned 
+    the error [% bug.error FILTER html %].
+    
+  [% ELSIF error == "chart_data_not_generated" %]
+    [% admindocslinks = {'extraconfig.html' => 'Setting up Charting'} %]
+    [% IF product %]
+      Charts for the <em>[% product FILTER html %]</em> product are not
+      available yet because no charting data has been collected for it since it
+      was created.
+    [% ELSE %]
+      No charting data has been collected yet.
+    [% END %]
+    Please wait a day and try again.
+    If you're seeing this message after a day, then you should contact
+    <a href="mailto:[% Param('maintainer') %]">[% Param('maintainer') %]</a>
+    and reference this error.
+
+  [% ELSIF error == "chart_datafile_corrupt" %]
+    The chart data file [% file FILTER html %] is corrupt.
+        
+  [% ELSIF error == "chart_dir_nonexistent" %]
+    One of the directories <tt>[% dir FILTER html %]</tt> and 
+    <tt>[% graph_dir FILTER html %]</tt> does not exist.
+  
+  [% ELSIF error == "chart_file_open_fail" %]
+    Unable to open the chart datafile <tt>[% filename FILTER html %]</tt>.
+  
+  [% ELSIF error == "chart_lines_not_installed" %]
+    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing Perl modules necessary for Charting'} %]
+    Charts will not work without the Chart::Lines Perl module being installed.
+    Run checksetup.pl for installation instructions.
+
+  [% ELSIF error == "column_not_null_without_default" %]
+    Failed adding the column [% name FILTER html %]:
+    You cannot add a NOT NULL column with no default to an existing table
+    unless you specify something for the <code>$init_value</code> argument.
+
+  [% ELSIF error == "column_not_null_no_default_alter" %]
+    You cannot alter the [% name FILTER html %] column to be NOT NULL 
+    without specifying a default or something for $set_nulls_to, because
+    there are NULL values currently in it.
+
+  [% ELSIF error == "db_rename_conflict" %]
+    Name conflict: Cannot rename [% old FILTER html %] to
+    [% new FILTER html %] because [% new FILTER html %] already exists.
+
+  [% ELSIF error == "cookies_need_value" %]
+    Every cookie must have a value.
+
+  [% ELSIF error == "env_no_email" %]
+    [% terms.Bugzilla %] did not receive an email address from the 
+    environment.
+    [% IF Param("auth_env_email") %]
+      This means that the '[% Param("auth_env_email") FILTER html %]'
+      environment variable was empty or did not exist.
+    [% ELSE %]
+      You need to set the "auth_env_email" parameter to the name of
+      the environment variable that will contain the user's email
+      address.
+    [% END %]
+
+  [% ELSIF error == "extension_invalid" %]
+    An error occurred processing hook [% name FILTER html %] in
+    extension [% extension FILTER html %]: [% errstr FILTER html %]
+
+  [% ELSIF error == "extern_id_conflict" %]
+    The external ID '[% extern_id FILTER html %]' already exists
+    in the database for '[% username FILTER html %]', but your
+    account source says that '[% extern_user FILTER html %]' has that ID.
+
+  [% ELSIF error == "field_type_mismatch" %]
+    Cannot seem to handle <code>[% field FILTER html %]</code>
+    and <code>[% type FILTER html %]</code> together.
+
+  [% ELSIF error == "gd_not_installed" %]
+    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing Perl modules necessary for Charting'} %]
+    Charts will not work without the GD Perl module being installed.
+    Run checksetup.pl for installation instructions.
+
+  [% ELSIF error == "illegal_content_type_method" %]
+    Your form submission got corrupted somehow.  The <em>content
+    method</em> field, which specifies how the content type gets determined,
+    should have been either <em>autodetect</em>, <em>list</em>,
+    or <em>manual</em>, but was instead
+    <em>[% contenttypemethod FILTER html %]</em>.
+
+  [% ELSIF error == "illegal_field" %]
+    A legal [% field FILTER html %] was not set.
+
+  [% ELSIF error == "inactive_group" %]
+    Attempted to add [% terms.bug %] to the '[% name FILTER html %]'
+    group, which is not used for [% terms.bugs %].
+
+  [% ELSIF error == "invalid_attach_id_to_obsolete" %]
+     The attachment number of one of the attachments you wanted to obsolete,
+     [% attach_id FILTER html %], is invalid.
+          
+  [% ELSIF error == "invalid_column_name_cookie" %]
+    [% title = "Invalid Column Name" %]
+     The custom sort order specified in your cookie contains an invalid
+     column name <em>[% fragment FILTER html %]</em>. 
+     The cookie has been cleared.
+         
+  [% ELSIF error == "invalid_column_name_form" %]
+    [% title = "Invalid Column Name" %]
+     The custom sort order specified in your form submission contains an
+     invalid column name <em>[% fragment FILTER html %]</em>.
+
+  [% ELSIF error == "invalid_customfield_type" %]
+    [% title = "Invalid Field Type" %]
+    The type <em>[% type FILTER html %]</em> is not a valid field type.
+
+  [% ELSIF error == "invalid_dimensions" %]
+    [% title = "Invalid Dimensions" %]
+    The width or height specified is not a positive integer.
+
+  [% ELSIF error == "invalid_flag_association" %]
+    [% title = "Invalid Flag Association" %]
+    Some flags do not belong to
+    [% IF attach_id %]
+      attachment [% attach_id FILTER html %].
+    [% ELSE %]
+      [%+ terms.bug %] [%+ bug_id FILTER html %].
+    [% END %]
+
+  [% ELSIF error == "invalid_series_id" %]
+    [% title = "Invalid Series" %]
+    The series_id [% series_id FILTER html %] is not valid. It may be that
+    this series has been deleted.
+
+  [% ELSIF error == "invalid_webservergroup" %]
+    There is no such group: [% group FILTER html %]. Check your $webservergroup
+    setting in [% constants.bz_locations.localconfig FILTER html %].
+
+  [% ELSIF error == "list_comparison_error" %]
+    Unexpected error in list comparing code.
+
+  [% ELSIF error == "mismatched_bug_ids_on_obsolete" %]
+    Attachment [% attach_id FILTER html %] ([% description FILTER html %]) 
+    is attached to [% terms.bug %] [%+ attach_bug_id FILTER html %], 
+    but you tried to flag it as obsolete while creating a new attachment to 
+    [% terms.bug %] [%+ my_bug_id FILTER html %].
+
+  [% ELSIF error == "flags_not_available" %]
+    [% title = "Flag Editing not Allowed" %]
+    [% IF type == "b" %]
+      Flags cannot be set or changed when
+      changing several [% terms.bugs %] at once.
+    [% ELSE %]
+      References to existing flags when creating
+      a new attachment are invalid.
+    [% END %] 
+
+  [% ELSIF error == "flag_requestee_disabled" %]
+    [% title = "Flag not Requestable from Specific Person" %]
+    You can't ask a specific person for
+    <em>[% type.name FILTER html %]</em>.
+  
+  [% ELSIF error == "flag_status_invalid" %]
+    The flag status <em>[% status FILTER html %]</em>
+    [% IF id %]
+      for flag ID #[% id FILTER html %]
+    [% END %]
+    is invalid.
+
+  [% ELSIF error == "flag_type_inactive" %]
+    [% title = "Inactive Flag Type" %]
+    The flag type [% type FILTER html %] is inactive and cannot be used
+    to create new flags.
+
+  [% ELSIF error == "flag_type_nonexistent" %]
+    There is no flag type with the ID <em>[% id FILTER html %]</em>.
+
+  [% ELSIF error == "flag_type_target_type_invalid" %]
+    The target type was neither <em>[% terms.bug %]</em> nor <em>attachment</em>
+    but rather <em>[% target_type FILTER html %]</em>.
+  
+  [% ELSIF error == "invalid_field_name" %]
+    Can't use [% field FILTER html %] as a field name.
+
+  [% ELSIF error == "invalid_keyword_id" %]
+    The keyword ID <em>[% id FILTER html %]</em> couldn't be
+    found.
+
+  [% ELSIF error == "invalid_user" %]
+    [% title = "Invalid User" %]
+    There is no user account
+    [% IF user_id %]
+      with ID <em>[% user_id FILTER html %]</em>.
+    [% ELSIF user_login %]
+      with login name <em>[% user_login FILTER html %]</em>.
+    [% ELSE %]
+      given.
+    [% END %]
+
+  [% ELSIF error == "ldap_bind_failed" %]
+    Failed to bind to the LDAP server. The error message was: 
+    <code>[% errstr FILTER html %]</code>
+
+  [% ELSIF error == "ldap_cannot_retreive_attr" %]
+    The specified LDAP attribute [% attr FILTER html %] was not found.
+
+  [% ELSIF error == "ldap_connect_failed" %]
+    Could not connect to the LDAP server <code>[% server FILTER html %]</code>.
+
+  [% ELSIF error == "ldap_start_tls_failed" %]
+    Could not start TLS with LDAP server: <code>[% error FILTER html %]</code>.
+
+  [% ELSIF error == "ldap_search_error" %]
+    An error occurred while trying to search LDAP for 
+    &quot;[% username FILTER html %]&quot;: 
+   <code>[% errstr FILTER html %]</code>
+
+  [% ELSIF error == "ldap_server_not_defined" %]
+    The LDAP server for authentication has not been defined.
+
+  [% ELSIF error == "mail_send_error" %]
+    There was an error sending mail from '[% mail.header('From') FILTER html %]'
+    to '[% mail.header('To') FILTER html %]':
+    [% msg FILTER html %]
+
+  [% ELSIF error == "missing_bug_id" %]
+    No [% terms.bug %] ID was given.
+    
+  [% ELSIF error == "missing_series_id" %]
+    Having inserted a series into the database, no series_id was returned for
+    it. Series: [% series.category FILTER html %] / 
+    [%+ series.subcategory FILTER html %] / 
+    [%+ series.name FILTER html %].
+    
+  [% ELSIF error == "need_quipid" %]
+    A valid quipid is needed.
+
+  [% ELSIF error == "param_must_be_numeric" %]
+    [% title = "Invalid Parameter" %]
+    Invalid parameter passed to [% function FILTER html %].
+    It must be numeric.
+
+  [% ELSIF error == "param_required" %]
+    [% title = "Missing Parameter" %]
+    The function <code>[% function FILTER html %]</code> requires
+    a <code>[% param FILTER html %]</code> argument, and that
+    argument was not set.
+
+  [% ELSIF error == "protection_violation" %]
+    The function <code>[% function FILTER html %]</code> was called
+
+    [% IF argument %]
+        with the argument <code>[% argument FILTER html %]</code>
+    [% END %]
+
+    from
+   
+    [% IF caller %]
+        <code>[%+ caller FILTER html %]</code>, which is
+    [% END %]
+
+    outside the package. This function may only be called from
+    a subclass of <code>[% superclass FILTER html %]</code>.
+
+
+  [% ELSIF error == "unknown_comparison_type" %]
+    Specified comparison type is not supported.
+
+  [% ELSIF error == "request_queue_group_invalid" %]
+    The group field <em>[% group FILTER html %]</em> is invalid.
+
+  [% ELSIF error == "report_axis_invalid" %]
+    <em>[% val FILTER html %]</em> is not a valid value for 
+    [%+ IF    fld == "x" %]the horizontal axis
+    [%+ ELSIF fld == "y" %]the vertical axis
+    [%+ ELSIF fld == "z" %]the multiple tables/images
+    [%+ ELSE %]a report axis[% END %] field.
+
+  [% ELSIF error == "setting_info_invalid" %]
+    To create a new setting, you must supply a setting name, a list of 
+    value/sortindex pairs, and the devault value.
+
+  [% ELSIF error == "setting_name_invalid" %]
+    The setting name <em>[% name FILTER html %]</em> is not a valid
+    option. Setting names must begin with a letter, and contain only
+    letters, digits, or the symbols '_', '-', '.', or ':'.
+
+  [% ELSIF error == "setting_subclass_invalid" %]
+    There is no such Setting subclass as
+    <code>[% subclass FILTER html %]</code>.
+
+  [% ELSIF error == "setting_value_invalid" %]
+    The value "<code>[% value FILTER html %]</code>" is not in the list of
+    legal values for the <em>[% name FILTER html %]</em> setting.
+
+  [% ELSIF error == "soap_not_installed" %]
+    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing Perl modules'} %]
+    The XMLRPC interface will not work without the SOAP::Lite Perl module being
+    installed.
+    Run checksetup.pl for installation instructions.
+
+  [% ELSIF error == "token_generation_error" %]
+    Something is seriously wrong with the token generation system.
+
+  [% ELSIF error == "template_error" %]
+    [% template_error_msg FILTER html %]
+
+  [% ELSIF error == "template_invalid" %]
+    Template with invalid file name found in hook call: [% name FILTER html %].
+
+  [% ELSIF error == "unable_to_retrieve_password" %]
+     I was unable to retrieve your old password from the database.
+
+  [% ELSIF error == "undefined_field" %]
+    Form field [% field FILTER html %] was not defined.
+    [%# Useful message if browser did not select show_bug radio button %]
+    [% IF field == "knob" %]
+      Check that the "Leave as..." radio button was selected.
+    [% END %]
+
+  [% ELSIF error == "unknown_action" %]
+    [% IF action %]
+       Unknown action [% action FILTER html %]!
+    [% ELSE %]
+       I could not figure out what you wanted to do.
+    [% END %]
+
+  [% ELSIF error == "usage_mode_invalid" %]
+    '[% invalid_usage_mode FILTER html %]' is not a valid usage mode.
+
+  [% ELSIF error == "must_be_patch" %]
+    [% title = "Attachment Must Be Patch" %]
+    Attachment #[% attach_id FILTER html %] must be a patch.
+
+  [% ELSIF error == "nested_transaction" %]
+    Attempted to start a new transaction without finishing previous one first.
+
+  [% ELSIF error == "not_in_transaction" %]
+    Attempted to end transaction without starting one first.
+
+  [% ELSIF error == "already_locked" %]
+    Attempted to lock a table without releasing previous lock first:
+    <p>Tables already locked:<br>[% current FILTER html %]
+    <p>Tables requesting locking:<br>[% new FILTER html %]
+
+  [% ELSIF error == "no_matching_lock" %]
+    Attempted to unlock tables without locking them first.
+
+  [% ELSIF error == "comma_operator_deprecated" %]
+    [% title = "SQL query generator internal error" %]
+    There is an internal error in the SQL query generation code,
+    creating queries with implicit JOIN.
+
+  [% ELSIF error == "invalid_post_bug_submit_action" %]
+    Invalid setting for post_bug_submit_action
+
+  [% ELSE %]
+    [%# Try to find hooked error messages %]
+    [% error_message = Hook.process("errors") %]
+    [% IF NOT error_message %]
+      [% title = "Internal error" %]
+      An internal error has occurred, but [% terms.Bugzilla %] doesn't know
+      what <code>[% error FILTER html %]</code> means.
+
+      If you are a [% terms.Bugzilla %] end-user seeing this message, please save
+      this page and send it to [% Param('maintainer') %].
+    [% ELSE %]
+      [% error_message FILTER none %]
+    [% END %]
+  [% END %]
+[% END %]
+
+[%# We only want HTML error messages for ERROR_MODE_WEBPAGE %]
+[% USE Bugzilla %]
+[% IF Bugzilla.error_mode != constants.ERROR_MODE_WEBPAGE %]
+  [% IF Bugzilla.usage_mode == constants.USAGE_MODE_BROWSER %]
+    [% error_message FILTER none %]
+  [% ELSE %]
+    [% error_message FILTER txt %]
+  [% END %]
+  [% RETURN %]
+[% END %]
+
+[% UNLESS header_done %]
+  [% PROCESS global/header.html.tmpl %]
+[% END %]
+
+[% PROCESS global/docslinks.html.tmpl
+   docslinks      = docslinks
+   admindocslinks = admindocslinks
+%]
+
+<tt>
+  <p>
+    [% terms.Bugzilla %] has suffered an internal error. Please save this page and send
+    it to [% Param("maintainer") %] with details of what you were doing at
+    the time this message appeared.
+  </p>
+  <script type="text/javascript"> <!--
+    document.write("<p>URL: " + 
+                    document.location.href.replace(/&/g,"&amp;")
+                                          .replace(/</g,"&lt;")
+                                          .replace(/>/g,"&gt;") + "</p>");
+  // -->
+  </script>
+</tt>
+
+<table cellpadding="20">
+  <tr>
+    <td bgcolor="#ff0000">
+      <font size="+2">
+        [% error_message FILTER none %]
+      </font>
+    </td>
+  </tr>
+</table>
+
+[% IF variables %]
+  <pre>
+Variables:
+  [% FOREACH key = variables.keys %]
+    [%+ key FILTER html %]: [%+ variables.$key FILTER html %]
+  [% END %]
+  </pre>
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

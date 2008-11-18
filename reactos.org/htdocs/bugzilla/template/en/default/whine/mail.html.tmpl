@@ -1,0 +1,97 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Erik Stambaugh <erik@dasbistro.com>
+  #%]
+
+[%# INTERFACE:
+  # subject: subject line of message
+  # body: message body, shown before the query tables
+  # queries: array of hashes containing:
+  #     bugs: array containing hashes of fieldnames->values for each bug
+  #     title: the title given in the whine scheduling mechanism
+  # author: user object for the person who scheduled this whine
+  # recipient: user object for the intended recipient of the message
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% PROCESS 'global/field-descs.none.tmpl' %]
+
+[%# assignee_login_string is a literal string used for getting the 
+  # assignee's name out of the bug data %]
+[% SET assignee_login_string="map_assigned_to.login_name" %]
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>
+      [[% terms.Bugzilla %]] [% subject FILTER html %]
+    </title>
+  </head>
+  <body bgcolor="#FFFFFF">
+
+    <p align="left">
+      [% body FILTER html %]
+    </p>
+
+    <p align="left">
+      [% IF author.login == recipient.login %]
+        <a href="[%+ Param('urlbase') FILTER html %]editwhines.cgi">Click
+            here to edit your whine schedule</a>
+      [% ELSE %]
+        This search was scheduled by [% author.login FILTER html %].
+      [% END %]
+    </p>
+
+
+[% FOREACH query=queries %]
+
+  <h2>[%+ query.title FILTER html %]</h2>
+
+  <table width="100%">
+    <tr>
+      <th align="left">ID</th>
+      <th align="left">Sev</th>
+      <th align="left">Pri</th>
+      <th align="left">Plt</th>
+      <th align="left">Assignee</th>
+      <th align="left">Status</th>
+      <th align="left">Resolution</th>
+      <th align="left">Summary</th>
+    </tr>
+
+    [% FOREACH bug=query.bugs %]
+      <tr>
+        <td align="left"><a href="[%+ Param('urlbase') FILTER html %]show_bug.cgi?id=
+            [%- bug.bug_id %]">[% bug.bug_id %]</a></td>
+        <td align="left">[% bug.bug_severity FILTER html %]</td>
+        <td align="left">[% bug.priority FILTER html %]</td>
+        <td align="left">[% bug.rep_platform FILTER html %]</td>
+        <td align="left">[% bug.$assignee_login_string FILTER html %]</td>
+        <td align="left">[% status_descs.${bug.bug_status} FILTER html %]</td>
+        <td align="left">[% get_resolution(bug.resolution) FILTER html %]</td>
+        <td align="left">[% bug.short_desc FILTER html %]</td>
+      </tr>
+    [% END %]
+  </table>
+[% END %]
+
+  </body>
+</html>
+
+

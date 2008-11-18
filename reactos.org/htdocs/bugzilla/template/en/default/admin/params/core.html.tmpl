@@ -1,0 +1,112 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[% 
+   title = "Required Settings"
+   desc = "Settings that are required for proper operation of $terms.Bugzilla" 
+%]
+
+[% param_descs = {
+  maintainer => "The email address of the person who maintains this installation " _
+                "of ${terms.Bugzilla}.",
+
+  urlbase => "The URL that is the common initial leading part of all $terms.Bugzilla " _
+             "URLs.",
+
+  docs_urlbase => "The URL that is the common initial leading part of all " _
+                  "$terms.Bugzilla documentation URLs. " _
+                  "It may be an absolute URL, or a URL relative to urlbase " _
+                  "above. " _
+                  "Leave this empty to suppress links to the documentation.",
+
+  sslbase => "The URL that is the common initial leading part of all HTTPS " _
+             "(SSL) $terms.Bugzilla URLs.",
+
+  ssl => "Controls when $terms.Bugzilla should enforce sessions to use HTTPS by " _
+         "using <tt>sslbase</tt>.",
+
+  cookiedomain => "The domain for $terms.Bugzilla cookies. Normally blank. " _
+                  "If your website is at 'www.foo.com', setting this to " _
+                  "'.foo.com' will also allow 'bar.foo.com' to access " _
+                  "$terms.Bugzilla cookies. This is useful if you have more than " _
+                  "one hostname pointing at the same web server, and you " _
+                  "want them to share the $terms.Bugzilla cookie.",
+
+  cookiepath => "Path, relative to your web document root, to which to restrict " _
+                "$terms.Bugzilla cookies. Normally this is the URI portion of your URL " _
+                "base. Begin with a / (single slash mark). For instance, if " _
+                "$terms.Bugzilla serves from 'http://www.somedomain.com/bugzilla/', set " _
+                "this parameter to /bugzilla/. Setting it to / will allow " _
+                "all sites served by this web server or virtual host to read " _
+                "$terms.Bugzilla cookies.",
+
+  timezone => "The timezone that your database server lives in. If set to '', " _
+              "then the timezone will not be displayed with the timestamps.",
+
+  utf8 => "Use UTF-8 (Unicode) encoding for all text in ${terms.Bugzilla}. New " _
+          "installations should set this to true to avoid character encoding " _
+          "problems. <strong>Existing databases should set this to true " _
+          " only after the data has been converted from existing legacy " _
+          " character encodings to UTF-8, using the " _
+          " <kbd>contrib/recode.pl</kbd> script</strong>. <br><br> Note " _
+          " that if you  turn this parameter from &quot;off&quot; to " _
+          " &quot;on&quot;, you must re-run checksetup.pl immediately " _
+          " afterward.",
+
+  shutdownhtml => "If this field is non-empty, then $terms.Bugzilla will be completely " _
+                  "disabled and this text will be displayed instead of all the " _
+                  "$terms.Bugzilla pages.",
+
+  announcehtml => "If this field is non-empty, then $terms.Bugzilla will " _
+                  "display whatever is in this field at the top of every " _
+                  "HTML page.  The HTML you put in this field is not " _
+                  "wrapped or enclosed in anything; you might want to " _
+                  "wrap it inside a <tt>&lt;div&gt;</tt>.  Give the div " _
+                  "<em>id=message</em> to get green text inside a " _
+                  "red box, or <em>class=bz_private</em> for dark " _
+                  "red on a red background.  Anything defined in " _
+                  "<tt>skins/standard/global.css</tt> or " _
+                  "<tt>skins/custom/global.css</tt> will work.  To get " _
+                  "centered text, use <em>style=\"text-align: " _
+                  "center;\"</em>.",
+
+  proxy_url => "$terms.Bugzilla may have to access the web to get notifications about new " _
+               "releases, see the <tt>upgrade_notification</tt> parameter. In case you are " _
+               "behind a proxy, it may be necessary to enter its URL if the web server " _
+               "group cannot access the HTTP_PROXY environment variable. If you have to " _
+               "authenticate, use the <code>http://user:pass@proxy_url/</code> syntax.",
+
+  upgrade_notification => "<p>$terms.Bugzilla can inform you when a new release is available. " _
+                          "The notification will appear on the $terms.Bugzilla homepage, " _
+                          "for administrators only.</p>" _
+                          "<ul><li>'development_snapshot' notifies you about the latest " _
+                          "release on the trunk, i.e. development snapshots.</li>" _
+                          "<li>'latest_stable_release' notifies you about the most recent release " _
+                          "available on the most recent stable branch. This branch may be " _
+                          "different from the branch your installation is based on.</li>" _
+                          "<li>'stable_branch_release' notifies you only about new releases " _
+                          "corresponding to the branch your installation is based on. " _
+                          "If you are running a release candidate, you will get " _
+                          "a notification for newer release candidates too.</li>" _
+                          "<li>'disabled' will never notify you about new releases and no " _
+                          "connection will be established to a remote server.</li></ul>" }
+%]

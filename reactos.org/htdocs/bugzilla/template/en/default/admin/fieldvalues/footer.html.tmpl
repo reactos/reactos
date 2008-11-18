@@ -1,0 +1,56 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  # value: string; the value being inserted/edited.
+  # field: string; the name of the field which the value
+  #                  belongs/belonged to
+  #
+  # no_XXX_link: boolean; if defined, then don't show the corresponding
+  #                       link. Supported parameters are:
+  #
+  # no_edit_link
+  # no_edit_other_link
+  # no_add_link
+  #%]
+
+<hr>
+
+<p>
+
+[% UNLESS no_add_link %]
+  <a title="Add a value for the '[% field FILTER html %]' field."
+     href="editvalues.cgi?action=add&amp;field=
+          [%- field FILTER url_quote %]">Add</a> a value.
+[% END %]
+
+[% IF value && !no_edit_link %]
+  Edit value <a 
+  title="Edit value '[% value FILTER html %]' for the '
+         [%- field FILTER html %]' field"
+  href="editvalues.cgi?action=edit&amp;field=
+        [%- field FILTER url_quote %]&amp;value=[% value FILTER url_quote %]">
+        '[% value FILTER html %]'</a>.
+[% END %]
+
+[% UNLESS no_edit_other_link %]
+  Edit other values for the <a 
+  href="editvalues.cgi?field=
+        [%- field FILTER url_quote %]">'[% field FILTER html %]'</a> field.
+
+[% END %]
+
+</p>

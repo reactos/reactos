@@ -1,0 +1,176 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@syndicomm.com>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #%]
+
+[%# INTERFACE:
+  # groups: array with group objects having the properties:
+  #   - id: number. The ID of the group.
+  #   - name: string. The name of the group.
+  #   - description: string. The description of the group.
+  #   - userregexp: string. The user regexp for the given group.
+  #   - isactive: boolean int. Specifies if the group is active or not.
+  #   - isbuggroup: boolean int. Specifies if it can be used for bugs.
+  #%]
+
+[% PROCESS global/header.html.tmpl
+  title = "Edit Groups"
+  subheader = "This lets you edit the groups available to put users in."
+%]
+
+[% edit_contentlink = "editgroups.cgi?action=changeform&amp;group=%%id%%" %]
+[% del_contentlink = "editgroups.cgi?action=del&amp;group=%%id%%" %]
+
+[% columns =
+  [{name               => 'name'
+    heading            => 'Name'
+    contentlink        => edit_contentlink
+   }
+   {name               => 'description'
+    heading            => 'Description'
+    allow_html_content => 1
+   }
+   {name               => 'userregexp'
+    heading            => 'User RegExp'
+   }
+   {name               => 'is_active_bug_group'
+    heading            => "Use For $terms.Bugs"
+    align              => 'center'
+   }
+   {name               => 'type'
+    heading            => 'Type'
+    align              => 'center'
+   }
+   {name               => 'action'
+    heading            => 'Action'
+   }
+  ]
+%]
+
+[% overrides.is_active_bug_group = [ {
+     match_value => "0"
+     match_field => 'is_active_bug_group'
+     override_content => 1
+     content => "&nbsp;"
+   },
+   {
+     match_value => "1"
+     match_field => 'is_active_bug_group'
+     override_content => 1
+     content => "X"
+   }]
+   overrides.userregexp = [ {
+     match_value => ""
+     match_field => 'userregexp'
+     override_content => 1
+     content => "&nbsp;"
+   }]
+   overrides.action = [ {
+     match_value => Param("chartgroup")
+     match_field => 'name'
+     override_content => 1
+     content => "(used as the 'chartgroup')"
+   },
+   {
+     match_value => Param("insidergroup")
+     match_field => 'name'
+     override_content => 1
+     content => "(used as the 'insidergroup')"
+   },
+   {
+     match_value => Param("timetrackinggroup")
+     match_field => 'name'
+     override_content => 1
+     content => "(used as the 'timetrackinggroup')"
+   },
+   {
+     match_value => Param("querysharegroup")
+     match_field => 'name'
+     override_content => 1
+     content => "(used as the 'querysharegroup')"
+   },
+   {
+     match_value => "1"
+     match_field => 'isbuggroup'
+     override_content => 1
+     content => "Delete"
+     override_contentlink => 1
+     contentlink => del_contentlink
+   }]
+   overrides.type = [ {
+     match_value => "0"
+     match_field => 'isbuggroup'
+     override_content => 1
+     content => "system"
+   },
+   {
+     match_value => "1"
+     match_field => 'isbuggroup'
+     override_content => 1
+     content => "user"
+   }]
+%] 
+
+[% PROCESS admin/table.html.tmpl
+  columns = columns
+  data    = groups
+  overrides = overrides
+%]
+
+<p><a href="editgroups.cgi?action=add">Add Group</a></p>
+
+<p>
+  <b>Name</b> is what is used with the B<!-- blah -->ugzilla->user->in_group()
+function in any customized cgi files you write that use a given group.
+It can also be used by people submitting [% terms.bugs %] by email to
+limit [% terms.abug %] to a certain set of groups.
+</p>
+
+<p>
+  <b>Description</b> is what will be shown in the [% terms.bug %] reports
+to members of the group where they can choose whether the [% terms.bug %]
+will be restricted to others in the same group.
+</p>
+
+<p>
+  <b>User RegExp</b> is optional, and if filled in, will automatically
+grant membership to this group to anyone with an email address
+that matches this perl regular expression. Do not forget
+the trailing '$'.  Example '@mycompany\.com$'
+</p>
+
+<p>
+  The <b>Use For [% terms.Bugs %]</b> flag determines whether or not
+the group is eligible to be used for [% terms.bugs %]. If you remove
+this flag, it will no longer be possible for users to add [% terms.bugs %]
+to this group, although [% terms.bugs %] already in the group will remain
+in the group. Doing so is a much less drastic way to stop a group
+from growing than deleting the group as well as a way to maintain
+lists of users without cluttering the lists of groups used
+for [% terms.bug %] restrictions.
+</p>
+
+<p>
+  The <b>Type</b> field identifies system groups.
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

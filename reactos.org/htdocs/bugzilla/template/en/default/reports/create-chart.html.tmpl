@@ -1,0 +1,268 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # chart: Chart object representing the currently assembled chart.
+  # category: hash (keyed by category) of hashes (keyed by subcategory) of
+  #           hashes (keyed by name), with value being the series_id of the
+  #           series. Contains details of all series the user can see.
+  #%]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Create Chart"
+%]
+
+[% PROCESS "reports/series-common.html.tmpl" 
+  donames = 1 
+%]
+
+<script type="text/javascript">
+[%# This function takes necessary action on selection of a subcategory %]
+function subcatSelected() {
+  var cat = document.chartform.category.value;
+  var subcat = document.chartform.subcategory.value;
+  var names = series[cat][subcat];
+  
+  var namewidget = document.chartform.name;
+
+  namewidget.options.length = 0;
+  var i = 0;
+
+  for (x in names) {
+    namewidget.options[i] = new Option(x, names[x]);
+    i++;
+  }
+
+  namewidget.options[0].selected = true;
+  
+  checkNewState();
+}
+</script>
+  
+[% gttext = "Grand Total" %]
+
+<form method="get" action="chart.cgi" name="chartform">  
+  
+  <table cellpadding="2" cellspacing="2" border="0">
+    [% IF NOT category OR category.size == 0 %]
+      <tr>
+        <td>
+          <i>No data sets exist, or none are visible to you.</i>
+        </td>
+      </tr>
+    [% ELSE %]
+      <tr>
+        <th><label for="category">Category</label>:</th>
+        <th></th>
+        <th><label for="subcategory">Sub-category</label>:</th>
+        <th></th>
+        <th><label for="name" accesskey="N">Name</label>:</th>
+        <th><br>
+        </th>
+      </tr>
+      <tr>
+      
+        [% PROCESS series_select sel = { name => 'category', 
+                                         size => 5,
+                                         onchange = "catSelected();
+                                                     subcatSelected();" } %]
+                                   
+        <td>
+          <noscript>
+            <input type="submit" name="action-assemble" value="Update --&gt;"
+                   id="action-assemble">
+          </noscript>
+        </td>
+        
+        [% PROCESS series_select sel = { name => 'subcategory', 
+                                         size => 5,
+                                         onchange = "subcatSelected()" } %]
+                                   
+        <td>
+          <noscript>
+            <input type="submit" name="action-assemble" value="Update --&gt;"
+                   id="action-assemble">
+          </noscript>
+        </td>
+        
+        <td align="left">
+          <select name="name" id="name" style="width: 15em"
+                  size="5" multiple="multiple"
+                  [%+ "disabled=\"disabled\"" UNLESS name.keys.size %]>
+            [% FOREACH x = name.keys.sort %]
+              <option value="[% name.$x FILTER html %]">
+                [% x FILTER html %]</option>
+            [% END %]
+            [% UNLESS name.keys.size %]
+              <option value="" disabled="disabled"></option>
+            [% END %]
+          </select>
+        </td>
+
+        <td align="center" valign="middle"> 
+          <input type="submit" name="action-add" value="Add To List"
+                 id="action-add"><br>
+        </td>
+      </tr>
+    [% END %]
+  </table>
+
+  <script type="text/javascript">
+    document.chartform.category[0].selected = true;
+    document.chartform.subcategory.disabled = '';
+    document.chartform.name.disabled = '';
+    catSelected();
+    subcatSelected();
+  </script>
+
+  <h3>List Of Data Sets To Plot</h3>
+
+  [% IF chart.lines.size > 0 %]
+    <table cellspacing="2" cellpadding="2">
+      <tr>
+        <th style="width: 5em;">Select</th>
+        <th>Label</th>
+        <th></th>
+        <th>Data Set</th>
+        <th></th>
+      </tr>
+      
+      [%# The external loop has two counters; one which keeps track of where we
+        #  are in the old labels array, and one which keeps track of the new
+        #  indexes for the form elements. They are different if chart.lines has
+        #  empty slots in it. 
+        #%]
+      [% labelidx = 0 %]
+      [% newidx = 0 %]
+      
+      [% FOREACH line = chart.lines %]
+        [% IF NOT line %]
+          [%# chart.lines has an empty slot, so chart.labels will too. We
+            # increment labelidx only to keep the labels in sync with the data.
+            #%]
+          [% labelidx = labelidx + 1 %]
+          [% NEXT %]
+        [% END %]
+        
+        [% FOREACH series = line %]
+          <tr>
+            [% IF loop.first %]
+              <td align="center" rowspan="[% line.size %]">
+                <input type="checkbox" value="1" name="select[% newidx %]">
+              </td>
+              <td rowspan="[% line.size %]">
+                <input type="text" size="20" name="label[% newidx %]"
+                       value="[% (chart.labels.$labelidx OR series.name) 
+                                                               FILTER html %]">
+              </td>
+            [% END %]
+
+            <td>
+              [% "{" IF line.size > 1 %]
+            </td>
+
+            <td>
+              [% series.category FILTER html %] / 
+              [%+ series.subcategory FILTER html %] /
+              [%+ series.name FILTER html %]
+              <input type="hidden" name="line[% newidx %]" 
+                     value="[% series.series_id %]">
+            </td>
+
+            <td align="center">
+              [% IF user.id == series.creator OR user.in_group("admin") %]
+               <a href="chart.cgi?action=edit&amp;series_id=
+                       [% series.series_id %]">Edit</a> |
+              [% END %]
+              <a href="buglist.cgi?cmdtype=dorem&amp;namedcmd=
+                [% series.category FILTER url_quote %]%20/%20
+                [% series.subcategory FILTER url_quote %]%20/%20
+                [% series.name FILTER url_quote -%]&amp;series_id=
+                [% series.series_id %]&amp;remaction=runseries">Run Search</a>
+            </td>        
+          </tr>
+        [% END %]
+        [% labelidx = labelidx + 1 %]
+        [% newidx = newidx + 1 %]
+      [% END %]
+
+      [% IF chart.gt %]
+        <tr>
+          <td align="center">
+            <input type="checkbox" value="1" name="select65536">
+            <input type="hidden" value="1" name="gt">
+          </td>
+          <td>
+            <input type="text" size="20" name="labelgt"
+                   value="[% (chart.labelgt OR gttext) FILTER html %]">
+          </td>
+          <td></td>
+          <td>
+            <i>[% gttext FILTER html %]</i>
+          </td>
+          <td></td>
+        </tr>
+      [% END %]
+      <tr>
+        <td colspan="6">&nbsp;</td>
+      </tr>
+
+      <tr>
+        <td valign="bottom" style="text-align: center;">
+          <input type="submit" name="action-sum" value="Sum" 
+                 style="width: 5em;" id="action-sum"><br>
+          <input type="submit" name="action-remove" value="Remove"
+                 style="width: 5em;" id="action-remove">
+        </td>
+
+        <td style="text-align: right; vertical-align: bottom;">
+          <label for="cumulate"><b>Cumulate</b></label>:
+          <input type="checkbox" name="cumulate" id="cumulate" value="1"
+          [% " checked" IF chart.cumulate %]>
+        </td>
+
+        <td></td>
+        <td valign="bottom">
+          <label for="datefrom"><b>Date Range</b></label>:
+          <input type="text" size="12" name="datefrom" id="datefrom"
+            value="[% time2str("%Y-%m-%d", chart.datefrom) IF chart.datefrom%]">
+          <label for="dateto"><b>to</b></label>
+          <input type="text" size="12" name="dateto" id="dateto"
+            value="[% time2str("%Y-%m-%d", chart.dateto) IF chart.dateto %]">
+        </td>
+
+        <td style="text-align: right" valign="bottom">
+          <input type="submit" name="action-wrap" value="Chart This List"
+                 id="action-wrap">
+        </td>
+      </tr>
+    </table>
+  [% ELSE %]
+  <p><i>None</i></p>
+  [% END %]  
+</form>
+
+[% IF user.in_group('editbugs') %]
+  <h3><a href="query.cgi?format=create-series">Create New Data Set</a></h3>
+[% END %]                 
+
+[% PROCESS global/footer.html.tmpl %]
+

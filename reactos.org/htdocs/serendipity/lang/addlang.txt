@@ -1,0 +1,2 @@
+@define('AUTHORS_SHOW_ARTICLE_COUNT', 'Show number of articles next to author name?');
+@define('AUTHORS_SHOW_ARTICLE_COUNT_DESC', 'If this option is enabled, the number of articles by this author is shown next to the authors name in parentheses.');

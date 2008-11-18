@@ -1,7 +1,0 @@
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
-
-STRINGTABLE
-BEGIN
-	IDS_CPLNAME "Aggiungi hardware"
-	IDS_CPLDESCRIPTION "Aggiungi hardware al computer."
-END

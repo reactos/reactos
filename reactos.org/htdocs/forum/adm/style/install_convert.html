@@ -1,0 +1,134 @@
+<!-- INCLUDE install_header.html -->
+
+<!-- IF S_NOT_INSTALLED -->
+
+	<h1>{TITLE}</h1>
+
+	<p>{BODY}</p>
+
+<!-- ELSE -->
+
+	<form id="install_convert" method="post" action="{U_ACTION}">
+
+	<h1>{TITLE}</h1>
+
+	<p>{BODY}</p>
+
+	<!-- IF S_ERROR_BOX -->
+	<div class="errorbox">
+		<h3>{ERROR_TITLE}</h3>
+		<p>{ERROR_MSG}</p>
+	</div>
+	<!-- ENDIF -->
+
+	<!-- IF S_LIST -->
+		<table cellspacing="1">
+			<caption>{L_AVAILABLE_CONVERTORS}</caption>
+			<col class="col1" /><col class="col2" /><col class="col1" /><col class="col2" />
+		<thead>
+		<tr>
+			<th>{L_SOFTWARE}</th>
+			<th>{L_VERSION}</th>
+			<th>{L_AUTHOR}</th>
+			<th>{L_OPTIONS}</th>
+		</tr>
+		</thead>
+		<tbody>
+		<!-- IF .convertors -->
+			<!-- BEGIN convertors -->
+			<tr>
+				<td>{convertors.SOFTWARE}</td>
+				<td>{convertors.VERSION}</td>
+				<td>{convertors.AUTHOR}</td>
+				<td><a href="{convertors.U_CONVERT}">{L_CONVERT}</a></td>
+			</tr>
+			<!-- END convertors -->
+		<!-- ELSE -->
+			<tr>
+				<td>{L_NO_CONVERTORS}</td>
+				<td>-</td>
+				<td>-</td>
+				<td>-</td>
+			</tr>
+		<!-- ENDIF -->
+		</tbody>
+		</table>
+	<!-- ENDIF -->
+
+	<!-- IF S_CONTINUE -->
+		</form>
+
+		<fieldset class="submit-buttons">
+			<form method="post" action="{U_NEW_ACTION}">
+				<input class="button1" type="submit" name="submit_new" value="{L_NEW}" />
+			</form>
+			<br />
+			<form method="post" action="{U_CONTINUE_ACTION}">
+				<input class="button1" type="submit" name="submit_cont" value="{L_CONTINUE}" />
+			</form>
+		</fieldset>
+
+		<form method="post" action="{U_ACTION}">
+	<!-- ENDIF -->
+
+	<!-- IF .checks -->
+		<fieldset>
+
+		<!-- BEGIN checks -->
+			<!-- IF checks.S_LEGEND -->
+				<!-- IF not checks.S_FIRST_ROW -->
+				</fieldset>
+
+				<fieldset>
+				<!-- ENDIF -->
+					<legend>{checks.LEGEND}</legend>
+					<!-- IF checks.LEGEND_EXPLAIN --><p>{checks.LEGEND_EXPLAIN}</p><!-- ENDIF -->
+			<!-- ELSE -->
+
+				<dl>
+					<dt><label>{checks.TITLE}:</label><!-- IF checks.S_EXPLAIN --><br /><span class="explain">{checks.TITLE_EXPLAIN}</span><!-- ENDIF --></dt>
+					<dd>{checks.RESULT}</dd>
+				</dl>
+			<!-- ENDIF -->
+		<!-- END checks -->
+
+		</fieldset>
+	<!-- ENDIF -->
+
+	<!-- IF .options -->
+		<fieldset>
+
+		<!-- BEGIN options -->
+			<!-- IF options.S_LEGEND -->
+				<!-- IF not options.S_FIRST_ROW -->
+					</fieldset>
+
+					<fieldset>
+				<!-- ENDIF -->
+					<legend>{options.LEGEND}</legend>
+			<!-- ELSE -->
+
+				<dl>
+					<dt><label for="{options.KEY}">{options.TITLE}:</label><!-- IF options.S_EXPLAIN --><br /><span class="explain">{options.TITLE_EXPLAIN}</span><!-- ENDIF --></dt>
+					<dd>{options.CONTENT}</dd>
+				</dl>
+
+			<!-- ENDIF -->
+		<!-- END options -->
+
+		</fieldset>
+	<!-- ENDIF -->
+
+	<!-- IF L_SUBMIT -->
+		<!-- IF L_MESSAGE --><p>{L_MESSAGE}</p><!-- ENDIF -->
+
+		<fieldset class="submit-buttons">
+			{S_HIDDEN}
+			<!-- IF L_SUBMIT --><input class="button1<!-- IF S_REFRESH --> disabled<!-- ENDIF -->" type="submit" id="submit" <!-- IF S_REFRESH -->disabled="disabled" <!-- ELSE --> onclick="this.className = 'button1 disabled';" onsubmit="this.disabled = 'disabled';" <!-- ENDIF -->name="submit" value="{L_SUBMIT}" /><!-- ENDIF -->
+		</fieldset>
+	<!-- ENDIF -->
+
+	</form>
+<!-- ENDIF -->
+
+<!-- INCLUDE install_footer.html -->

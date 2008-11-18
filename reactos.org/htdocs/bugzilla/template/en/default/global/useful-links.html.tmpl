@@ -1,0 +1,145 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Svetlana Harisova <light@rathedg.com>
+  #                 Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[%# Migration note: this whole file corresponds to the old %commandmenu% 
+    substitution param in 'footerhtml' %]
+
+[% PROCESS global/variables.none.tmpl %]
+
+<ul id="useful-links">
+  <li id="links-actions">
+    <div class="label">Actions: </div>
+      [% PROCESS "global/common-links.html.tmpl" btn_id = "find_bottom" %]
+  </li>
+
+  [%# We have no other choices than enumerating all required privileges to have
+    # at least one link in this section. %]
+  [% IF user.login
+     && (user.groups.tweakparams || user.groups.editusers || user.can_bless
+         || (Param('useclassification') && user.groups.editclassifications)
+         || user.groups.editcomponents || user.groups.admin || user.groups.creategroups
+         || user.get_products_by_permission("editcomponents").size
+         || user.groups.editkeywords || user.groups.bz_canusewhines) %]
+
+    [% print_pipe = 0 %]
+    <li id="links-edit">
+      <div class="label">Edit: </div>
+      <ul class="links">
+        [% IF user.groups.tweakparams %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editparams.cgi">Parameters</a></li>
+          [% print_pipe = 1 %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editsettings.cgi">Default Preferences</a></li>
+        [% END %]
+        [% IF user.groups.editcomponents %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="sanitycheck.cgi">Sanity Check</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+        [% IF user.groups.editusers || user.can_bless %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editusers.cgi">Users</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+        [% IF Param('useclassification') && user.groups.editclassifications %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editclassifications.cgi">Classifications</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+        [% IF user.groups.editcomponents || user.get_products_by_permission("editcomponents").size %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editproducts.cgi">Products</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+        [% IF user.groups.editcomponents %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editflagtypes.cgi">Flags</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+        [% IF user.groups.admin %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editfields.cgi">Custom Fields</a></li>
+          [% print_pipe = 1 %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editvalues.cgi">Field Values</a></li>
+        [% END %]
+        [% IF user.groups.creategroups %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editgroups.cgi">Groups</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+        [% IF user.groups.editkeywords %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editkeywords.cgi">Keywords</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+        [% IF user.groups.bz_canusewhines %]
+          <li>[% '<span class="separator">| </span>' IF print_pipe %]<a href="editwhines.cgi">Whining</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+      </ul>
+    </li>
+  [% END %]
+    
+    [%# Saved searches %]
+    
+  [% IF user.showmybugslink OR user.queries.size 
+        OR user.queries_subscribed.size 
+  %]
+    [% print_pipe = 0 %]
+    <li id="links-saved">
+      <div class="label">
+        Saved Searches:
+      </div>
+      <ul class="links">
+        [% IF user.showmybugslink %]
+          [% filtered_username = user.login FILTER url_quote %]
+          <li><a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My [% terms.Bugs %]</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+
+        [% FOREACH q = user.queries %]
+          [% IF q.link_in_footer %]
+            <li>[% '<span class="separator">| </span>' IF print_pipe %]
+            <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">[% q.name FILTER html %]</a></li>
+            [% print_pipe = 1 %]
+          [% END %]
+        [% END %]
+        [% new_line = print_pipe %]
+        [% print_pipe = 0 %]
+        [% FOREACH q = user.queries_subscribed %]
+          [% IF new_line %]
+            <br>
+            [% new_line = 0 %]
+          [% END %]
+          <li>
+            [% '<span class="separator">| </span>' IF print_pipe %]
+            <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
+                     [% q.name FILTER url_quote %]&amp;sharer_id=
+                     [% q.user.id FILTER url_quote %]"
+               class="shared"
+               title="Shared by [% q.user.identity FILTER html %]"
+               >[% q.name FILTER html FILTER no_break %]</a></li>
+          [% print_pipe = 1 %]
+        [% END %]
+      </ul>
+    </li>
+  [% END %]
+
+  [%# Individual bugs addition %]
+
+  [% PROCESS "global/per-bug-queries.html.tmpl" %]
+
+  [%# Sections of links to more things users can do on this installation. %]
+  [% Hook.process("end") %]
+</ul>

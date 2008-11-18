@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="{S_CONTENT_DIRECTION}" lang="{S_USER_LANG}" xml:lang="{S_USER_LANG}">
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset={S_CONTENT_ENCODING}" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Language" content="{S_USER_LANG}" />
+<meta http-equiv="imagetoolbar" content="no" />
+<!-- IF META -->{META}<!-- ENDIF -->
+<title>{PAGE_TITLE}</title>
+
+<link href="style/admin.css" rel="stylesheet" type="text/css" media="screen" />
+
+<script type="text/javascript">
+// <![CDATA[
+var jump_page = '{LA_JUMP_PAGE}:';
+var on_page = '{ON_PAGE}';
+var per_page = '{PER_PAGE}';
+var base_url = '{A_BASE_URL}';
+
+/**
+* Window popup
+*/
+function popup(url, width, height, name)
+{
+	if (!name)
+	{
+		name = '_popup';
+	}
+
+	window.open(url.replace(/&amp;/g, '&'), name, 'height=' + height + ',resizable=yes,scrollbars=yes, width=' + width);
+	return false;
+}
+
+/**
+* Jump to page
+*/
+function jumpto()
+{
+	var page = prompt(jump_page, on_page);
+
+	if (page !== null && !isNaN(page) && page > 0)	
+	{
+		document.location.href = base_url.replace(/&amp;/g, '&') + '&start=' + ((page - 1) * per_page);
+	}
+}
+
+/**
+* Set display of page element
+* s[-1,0,1] = hide,toggle display,show
+*/
+function dE(n, s, type)
+{
+	if (!type)
+	{
+		type = 'block';
+	}
+
+	var e = document.getElementById(n);
+	if (!s)
+	{
+		s = (e.style.display == '') ? -1 : 1;
+	}
+	e.style.display = (s == 1) ? type : 'none';
+}
+
+/**
+* Mark/unmark checkboxes
+* id = ID of parent container, name = name prefix, state = state [true/false]
+*/
+function marklist(id, name, state)
+{
+	var parent = document.getElementById(id);
+	if (!parent)
+	{
+		return;
+	}
+
+	var rb = parent.getElementsByTagName('input');
+	
+	for (var r = 0; r < rb.length; r++)
+	{
+		if (rb[r].name.substr(0, name.length) == name)
+		{
+			rb[r].checked = state;
+		}
+	}
+}
+
+/**
+* Find a member
+*/
+function find_username(url)
+{
+	popup(url, 760, 570, '_usersearch');
+	return false;
+}
+
+// ]]>
+</script>
+</head>
+
+<body class="{S_CONTENT_DIRECTION}">
+
+<div id="page-body" class="simple-page-body">

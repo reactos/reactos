@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+  <group>
+    <obj type="LANGUAGE" sublang="SUBLANG_ENGLISH_US"><![CDATA[LANG_ENGLISH]]></obj>
+  </group>
+  <group>
+    <obj type="ACCELERATORS" rc_name="ID_ACCEL"></obj>
+    <obj type="ACCELERATORS" command="BEGIN" />
+    <obj type="KEY" rc_name="CMD_SELECT_ALL"><![CDATA[^A]]></obj>
+    <obj type="KEY" rc_name="CMD_COPY"><![CDATA[^C]]></obj>
+    <obj type="KEY" rc_name="CMD_SEARCH"><![CDATA[^F]]></obj>
+    <obj type="ACCELERATORS" command="END" />
+  </group>
+  <group>
+    <obj type="MENU" rc_name="IDM_MDIFRAME"><![CDATA[DISCARDABLE]]></obj>
+  </group>
+  <group>
+    <obj type="MENU" rc_name="MAIN_MENU"></obj>
+    <obj type="MENU" command="BEGIN" />
+    <obj type="POPUP"><![CDATA[&File]]></obj>
+    <obj type="POPUP" command="BEGIN" />
+    <obj type="MENUITEM" rc_name="CMD_NEW" prop=""><![CDATA[&New...]]></obj>
+    <obj type="MENUITEM" rc_name="CMD_OPEN" prop=""><![CDATA[&Open\tCtrl+O]]></obj>
+    <obj type="POPUP" command="END" />
+    <obj type="MENU" command="END" />
+  </group>
+  <group>
+    <obj type="comment"><![CDATA[/* Dialog `Page setup' */]]></obj>
+  </group>
+  <group>
+    <obj type="comment"><![CDATA[/* Dialog `Encoding' */]]></obj>
+  </group>
+  <group>
+    <obj type="comment"><![CDATA[/* Dialog 'Go To' */]]></obj>
+  </group>
+  <group>
+    <obj type="DIALOG" rc_name="IDD_ABOUTBOX" top="22" left="16" height="284" width="170">DISCARDABLE</obj>
+    <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_CAPTION | WS_SYSMENU]]></obj>
+    <obj type="CAPTION"><![CDATA["About ReactOS Notepad"]]></obj>
+    <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+    <obj type="DIALOG" command="BEGIN" />
+    <obj type="CONTROL" rc_name="-1" prop="Static" style="SS_LEFTNOWORDWRAP | WS_GROUP" top="46" left="7" height="232" width="39"><![CDATA["ReactOS Notepad v1.0\r\nCopyheight 1997 98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyheight 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyheight 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyheight 2002 Andriy Palamarchuk\r\n"]]></obj>
+    <obj type="CONTROL" rc_name="-1" prop="Static" style="0x50000000" top="8" left="48" height="272" width="11"><![CDATA[" "]]></obj>
+    <obj type="DEFPUSHBUTTON" rc_name="IDOK" top="114" left="149" height="44" width="15" style="WS_GROUP"><![CDATA["Close"]]></obj>
+    <obj type="ICON" rc_name="IDI_NPICON" top="-1" left="12" height="9" width="20" style="30"></obj>
+    <obj type="EDITTEXT" rc_name="IDC_LICENSE" top="8" left="64" height="272" width="81" style="ES_MULTILINE |ES_READONLY | WS_VSCROLL"></obj>
+    <obj type="DIALOG" command="END" />
+</group>
+  <group>
+    <obj type="STRINGTABLE"><![CDATA[DISCARDABLE]]></obj>
+    <obj type="STRINGTABLE" command="BEGIN" />
+    <obj type="STRING" rc_name="STRING_LICENSE"><![CDATA[This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License  or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful  but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not  write to the Free Software Foundation  Inc.  675 Mass Ave  Cambridge  MA 02139  USA.]]></obj>
+    <obj type="STRINGTABLE" command="END" />
+  </group>
+  <group>
+    <obj type="STRINGTABLE"><![CDATA[DISCARDABLE]]></obj>
+    <obj type="STRINGTABLE" command="BEGIN" />
+    <obj type="STRING" rc_name="STRING_CANNOTFIND"><![CDATA[Cannot find '%s']]></obj>
+    <obj type="STRING" rc_name="STRING_ANSI"><![CDATA[ANSI]]></obj>
+    <obj type="STRING" rc_name="STRING_UNICODE"><![CDATA[Unicode]]></obj>
+    <obj type="STRING" rc_name="STRING_UNICODE_BE"><![CDATA[Unicode (big endian)]]></obj>
+    <obj type="STRING" rc_name="STRING_UTF8"><![CDATA[UTF-8]]></obj>
+    <obj type="STRING" rc_name="STRING_CRLF"><![CDATA[Windows]]></obj>
+    <obj type="STRING" rc_name="STRING_LF"><![CDATA[Unix]]></obj>
+    <obj type="STRING" rc_name="STRING_CR"><![CDATA[Mac]]></obj>
+    <obj type="STRINGTABLE" command="END" />
+  </group>
+</resource>

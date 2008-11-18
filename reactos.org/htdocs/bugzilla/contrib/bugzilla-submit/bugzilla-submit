@@ -1,0 +1,301 @@
+#!/usr/bin/env python 
+#
+# bugzilla-submit: a command-line script to post bugs to a Bugzilla instance
+#
+# Authors: Christian Reis <kiko@async.com.br>
+#          Eric S. Raymond <esr@thyrsus.com>
+#
+# This is version 0.5.
+# 
+# For a usage hint run bugzilla-submit --help
+#
+# TODO: use RDF output to pick up valid options, as in
+#   http://www.async.com.br/~kiko/mybugzilla/config.cgi?ctype=rdf
+
+import sys, string
+
+def error(m):
+    sys.stderr.write("bugzilla-submit: %s\n" % m)
+    sys.stderr.flush()
+    sys.exit(1)
+
+version = string.split(string.split(sys.version)[0], ".")[:2]
+if map(int, version) < [2, 3]:
+    error("you must upgrade to Python 2.3 or higher to use this script.")
+
+import urllib, re, os, netrc, email.Parser, optparse
+
+class ErrorURLopener(urllib.URLopener):
+    """URLopener that handles HTTP 404s"""
+    def http_error_404(self, url, fp, errcode, errmsg, headers, *extra):
+        raise ValueError, errmsg # 'File Not Found'
+
+# Set up some aliases -- partly to hide the less friendly fieldnames
+# behind the names actually used for them in the stock web page presentation,
+# and partly to provide a place for mappings if the Bugzilla fieldnames
+# ever change.
+field_aliases = (('hardware', 'rep_platform'),
+                 ('os', 'op_sys'),
+                 ('summary', 'short_desc'),
+                 ('description', 'comment'),
+                 ('depends_on', 'dependson'),
+                 ('status', 'bug_status'),
+                 ('severity', 'bug_severity'),
+                 ('url', 'bug_file_loc'),)
+
+def header_to_field(hdr):
+    hdr = hdr.lower().replace("-", "_")
+    for (alias, name) in field_aliases:
+        if hdr == alias:
+            hdr = name
+            break
+    return hdr
+
+def field_to_header(hdr):
+    hdr = "-".join(map(lambda x: x.capitalize(), hdr.split("_")))
+    for (alias, name) in field_aliases:
+        if hdr == name:
+            hdr = alias
+            break
+    return hdr
+
+def setup_parser():
+    # Take override values from the command line
+    parser = optparse.OptionParser(usage="usage: %prog [options] bugzilla-url")
+    parser.add_option('-b', '--status', dest='bug_status',
+                      help='Set the Status field.')
+    parser.add_option('-u', '--url', dest='bug_file_loc',
+                      help='Set the URL field.')
+    parser.add_option('-p', '--product', dest='product',
+                      help='Set the Product field.')
+    parser.add_option('-v', '--version', dest='version',
+                      help='Set the Version field.')
+    parser.add_option('-c', '--component', dest='component',
+                      help='Set the Component field.')
+    parser.add_option('-s', '--summary', dest='short_desc',
+                      help='Set the Summary field.')
+    parser.add_option('-H', '--hardware', dest='rep_platform',
+                      help='Set the Hardware field.')
+    parser.add_option('-o', '--os', dest='op_sys',
+                      help='Set the Operating System field.')
+    parser.add_option('-r', '--priority', dest='priority',
+                      help='Set the Priority field.')
+    parser.add_option('-x', '--severity', dest='bug_severity',
+                      help='Set the Severity field.')
+    parser.add_option('-d', '--description', dest='comment',
+                      help='Set the Description field.')
+    parser.add_option('-a', '--assigned-to', dest='assigned_to',
+                      help='Set the Assigned-To field.')
+    parser.add_option('-C', '--cc', dest='cc',
+                      help='Set the Cc field.')
+    parser.add_option('-k', '--keywords', dest='keywords',
+                      help='Set the Keywords field.')
+    parser.add_option('-D', '--depends-on', dest='dependson',
+                      help='Set the Depends-On field.')
+    parser.add_option('-B', '--blocked', dest='blocked',
+                      help='Set the Blocked field.')
+    parser.add_option('-n', '--no-stdin', dest='read',
+                      default=True, action='store_false',
+                      help='Suppress reading fields from stdin.')
+    return parser
+
+# Fetch user's credential for access to this Bugzilla instance.
+def get_credentials(bugzilla):
+    # Work around a quirk in the Python implementation.
+    # The URL has to be quoted, otherwise the parser barfs on the colon.
+    # But the parser doesn't strip the quotes.
+    authenticate_on = '"' + bugzilla + '"'
+    try:
+        credentials = netrc.netrc()
+    except netrc.NetrcParseError, e:
+        error("ill-formed .netrc: %s:%s %s" % (e.filename, e.lineno, e.msg))
+    except IOError, e:
+        error("missing .netrc file %s" % str(e).split()[-1])
+    ret = credentials.authenticators(authenticate_on)
+    if not ret:
+        # Okay, the literal string passed in failed. Just to make sure,
+        # try adding/removing a slash after the address and looking
+        # again. We don't know what format was used in .netrc, which is
+        # why this rather hackish approach is necessary.
+        if bugzilla[-1] == "/":
+            authenticate_on = '"' + bugzilla[:-1] + '"'
+        else:
+            authenticate_on = '"' + bugzilla + '/"'
+        ret = credentials.authenticators(authenticate_on)
+    if not ret:
+        # Apparently, an invalid machine URL will cause credentials == None
+        error("no credentials for Bugzilla instance at %s" % bugzilla)
+    return ret
+
+def process_options(options):
+    data = {}
+    # Initialize bug report fields from message on standard input
+    if options.read:
+        message_parser = email.Parser.Parser()
+        message = message_parser.parse(sys.stdin)
+        for (key, value) in message.items():
+            data.update({header_to_field(key) : value})
+        if not 'comment' in data:
+            data['comment'] = message.get_payload() 
+
+    # Merge in options from the command line; they override what's on stdin.
+    for (key, value) in options.__dict__.items():
+        if key != 'read' and value != None:
+            data[key] = value
+    return data
+
+def ensure_defaults(data):
+    # Provide some defaults if the user did not supply them.
+    if 'op_sys' not in data:
+        if sys.platform.startswith('linux'):
+            data['op_sys'] = 'Linux'
+    if 'rep_platform' not in data:
+        data['rep_platform'] = 'PC'
+    if 'bug_status' not in data:
+        data['bug_status'] = 'NEW'
+    if 'bug_severity' not in data:
+        data['bug_severity'] = 'normal'
+    if 'bug_file_loc' not in data:
+        data['bug_file_loc'] = 'http://'        # Yes, Bugzilla needs this
+    if 'priority' not in data:
+        data['priority'] = 'P2'
+
+def validate_fields(data):
+    # Fields for validation
+    required_fields = (
+        "bug_status", "bug_file_loc", "product", "version", "component",
+        "short_desc", "rep_platform", "op_sys", "priority", "bug_severity",
+        "comment",
+    )
+    legal_fields = required_fields + (
+        "assigned_to", "cc", "keywords", "dependson", "blocked",
+    )
+    my_fields = data.keys()
+    for field in my_fields:
+        if field not in legal_fields:
+            error("invalid field: %s" % field_to_header(field))
+    for field in required_fields:
+        if field not in my_fields:
+            error("required field missing: %s" % field_to_header(field))
+    
+    if not data['short_desc']:
+        error("summary for bug submission must not be empty")
+    
+    if not data['comment']:
+        error("comment for bug submission must not be empty")
+
+#
+# POST-specific functions
+#
+
+def submit_bug_POST(bugzilla, data):
+    # Move the request over the wire
+    postdata = urllib.urlencode(data)
+    try:
+        url = ErrorURLopener().open("%s/post_bug.cgi" % bugzilla, postdata)
+    except ValueError:
+        error("Bugzilla site at %s not found (HTTP returned 404)" % bugzilla)
+    ret = url.read()
+    check_result_POST(ret, data)
+
+def check_result_POST(ret, data):
+    # XXX We can move pre-validation out of here as soon as we pick up
+    # the valid options from config.cgi -- it will become a simple
+    # assertion and ID-grabbing step.
+    #
+    # XXX: We use get() here which may return None, but since the user
+    # might not have provided these options, we don't want to die on
+    # them.
+    version = data.get('version')
+    product = data.get('product')
+    component = data.get('component')
+    priority = data.get('priority')
+    severity = data.get('bug_severity')
+    status = data.get('bug_status')
+    assignee = data.get('assigned_to')
+    platform = data.get('rep_platform')
+    opsys = data.get('op_sys')
+    keywords = data.get('keywords')
+    deps = data.get('dependson', '') + " " + data.get('blocked', '') 
+    deps = deps.replace(" ", ", ")
+    # XXX: we should really not be using plain find() here, as it can
+    # match the bug content inadvertedly
+    if ret.find("A legal Version was not") != -1:
+        error("version %r does not exist for component %s:%s" % 
+                (version, product, component))
+    if ret.find("A legal Priority was not") != -1:
+        error("priority %r does not exist in "
+              "this Bugzilla instance" % priority)
+    if ret.find("A legal Severity was not") != -1:
+        error("severity %r does not exist in "
+              "this Bugzilla instance" % severity)
+    if ret.find("A legal Status was not") != -1:
+        error("status %r is not a valid creation status in "
+              "this Bugzilla instance" % status)
+    if ret.find("A legal Platform was not") != -1:
+        error("platform %r is not a valid platform in "
+              "this Bugzilla instance" % platform)
+    if ret.find("A legal OS/Version was not") != -1:
+        error("%r is not a valid OS in "
+              "this Bugzilla instance" % opsys)
+    if ret.find("Invalid Username") != -1:
+        error("invalid credentials submitted")
+    if ret.find("Component Needed") != -1:
+        error("the component %r does not exist in "
+              "this Bugzilla instance" % component)
+    if ret.find("Unknown Keyword") != -1:
+        error("keyword(s) %r not registered in "
+              "this Bugzilla instance" % keywords)
+    if ret.find("The product name") != -1:
+        error("product %r does not exist in this "
+              "Bugzilla instance" % product)
+    # XXX: this should be smarter
+    if ret.find("does not exist") != -1:
+        error("could not mark dependencies for bugs %s: one or "
+              "more bugs didn't exist in this Bugzilla instance" % deps)
+    if ret.find("Match Failed") != -1:
+        # XXX: invalid CC hits on this error too
+        error("the bug assignee %r isn't registered in " 
+              "this Bugzilla instance" % assignee)
+    # If all is well, return bug number posted
+    if ret.find("process_bug.cgi") == -1:
+        error("could not post bug to %s: are you sure this "
+              "is Bugzilla instance's top-level directory?" % bugzilla)
+    m = re.search("Bug ([0-9]+) Submitted", ret)
+    if not m:
+        print ret
+        error("Internal error: bug id not found; please report a bug")
+    id = m.group(1)
+    print "Bug %s posted." % id
+
+#
+#
+#
+
+if __name__ == "__main__":
+    parser = setup_parser()
+
+    # Parser will print help and exit here if we specified --help
+    (options, args) = parser.parse_args()
+
+    if len(args) != 1:
+        parser.error("missing Bugzilla host URL")
+
+    bugzilla = args[0]
+    data = process_options(options)
+
+    login, account, password = get_credentials(bugzilla)
+    if "@" not in login:   # no use even trying to submit
+        error("login %r is invalid (it should be an email address)" % login)
+
+    ensure_defaults(data)
+    validate_fields(data)
+
+    # Attach authentication information
+    data.update({'Bugzilla_login'    : login,
+                 'Bugzilla_password' : password,
+                 'GoAheadAndLogIn'   : 1,
+                 'form_name'         : 'enter_bug'})
+
+    submit_bug_POST(bugzilla, data)
+

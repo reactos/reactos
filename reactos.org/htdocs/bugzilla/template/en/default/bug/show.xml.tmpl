@@ -1,0 +1,133 @@
+[%# 1.0@bugzilla.org #%]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
+  #                 Colin Ogilvie <mozilla@colinogilvie.co.uk>
+  #
+  #%]
+[% PROCESS bug/time.html.tmpl %]
+<?xml version="1.0" [% IF Param('utf8') %]encoding="UTF-8" [% END %]standalone="yes" ?>
+<!DOCTYPE bugzilla SYSTEM "[% Param('urlbase') %]bugzilla.dtd">
+
+<bugzilla version="[% constants.BUGZILLA_VERSION %]"
+          urlbase="[% Param('urlbase') %]"
+          maintainer="[% Param('maintainer') FILTER xml %]"
+[% IF user.id %]
+          exporter="[% user.email FILTER xml %]"
+[% END %]
+>
+
+[% FOREACH bug = bugs %]
+  [% IF bug.error %]
+    <bug error="[% bug.error FILTER xml %]">
+      <bug_id>[% bug.bug_id FILTER xml %]</bug_id>
+    </bug>
+  [% ELSE %]
+    <bug>
+      [% FOREACH field = bug.fields %]
+        [% IF displayfields.$field %]
+          [%+ PROCESS bug_field %]
+        [% END %]
+      [% END %]
+
+      [%# Now handle 'special' fields #%]
+      [% IF displayfields.group %]
+        [% FOREACH g = bug.groups %]
+          [% NEXT UNLESS g.ison %]
+          <group>[% g.name FILTER xml %]</group>
+        [% END %]
+      [% END %]
+
+      [%# Bug Flags %]
+      [% FOREACH type = bug.flag_types %]
+        [% FOREACH flag = type.flags %]
+          <flag name="[% type.name FILTER xml %]"
+                status="[% flag.status FILTER xml %]"
+                setter="[% flag.setter.login FILTER xml %]"
+          [% IF flag.requestee %]
+              requestee="[% flag.requestee.login FILTER xml %]"
+          [% END %]
+          />
+        [% END %]
+      [% END %]
+      [% IF displayfields.long_desc %]
+        [% FOREACH c = bug.longdescs %]
+          [% NEXT IF c.isprivate && !user.in_group(Param("insidergroup")) %]
+          <long_desc isprivate="[% c.isprivate FILTER xml %]">
+            <who name="[% c.name FILTER xml %]">[% c.email FILTER xml %]</who>
+            <bug_when>[% c.time FILTER time FILTER xml %]</bug_when>
+            [% IF user.in_group(Param('timetrackinggroup')) && (c.work_time - 0 != 0) %]
+              <work_time>[% PROCESS formattimeunit time_unit = c.work_time FILTER xml %]</work_time>
+            [% END %]
+            <thetext>[% c.body FILTER xml %]</thetext>
+          </long_desc>
+        [% END %]
+      [% END %]
+      
+      [% IF displayfields.attachment %]
+        [% FOREACH a = bug.attachments %]
+          [% NEXT IF a.isprivate && !user.in_group(Param("insidergroup")) %]
+          <attachment
+              isobsolete="[% a.isobsolete FILTER xml %]"
+              ispatch="[% a.ispatch FILTER xml %]"
+              isprivate="[% a.isprivate FILTER xml %]"
+          >
+            <attachid>[% a.id %]</attachid>
+            <date>[% a.attached FILTER time FILTER xml %]</date>
+            <desc>[% a.description FILTER xml %]</desc>
+            <filename>[% a.filename FILTER xml %]</filename>
+            <type>[% a.contenttype FILTER xml %]</type>
+            <size>[% a.datasize FILTER xml %]</size>
+        [% IF displayfields.attachmentdata %]
+            <data encoding="base64">[% a.data FILTER base64 %]</data>
+        [% END %]        
+
+            [% FOREACH flag = a.flags %]
+              <flag name="[% flag.type.name FILTER xml %]"
+                    status="[% flag.status FILTER xml %]"
+                    setter="[% flag.setter.email FILTER xml %]"
+                    [% IF flag.status == "?" && flag.requestee %]
+                      requestee="[% flag.requestee.email FILTER xml %]"
+                    [% END %]
+               />
+            [% END %]
+          </attachment>
+        [% END %]
+      [% END %]
+    </bug>
+  [% END %]
+[% END %]
+
+</bugzilla>
+
+[% BLOCK bug_field %]
+  [% FOREACH val = bug.$field %]
+    [%# We need to handle some fields differently. This should become
+      # nicer once we have custfields, and a type attribute for the fields
+      #%]
+    [% name = '' %]
+    [% IF field == 'reporter' OR field == 'assigned_to' OR
+          field == 'qa_contact' %]
+      [% name = val.name %]
+      [% val = val.email %]
+    [% ELSIF field == 'creation_ts' OR field == 'delta_ts' %]
+      [% val = val FILTER time %]
+    [% END %]
+    <[% field %][% IF name != '' %] name="[% name FILTER xml %]"[% END -%]>[% val FILTER xml %]</[% field %]>
+  [% END %]
+[% END %]

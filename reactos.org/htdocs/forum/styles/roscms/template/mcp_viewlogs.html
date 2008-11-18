@@ -1,0 +1,53 @@
+<!-- INCLUDE mcp_header.html -->
+
+<form method="post" id="mcp" action="{S_MCP_ACTION}">
+
+<table class="tablebg" width="100%" cellspacing="1" cellpadding="2" border="0">
+<tr>
+	<th colspan="<!-- IF S_TOPIC_ID -->4<!-- ELSE -->5<!-- ENDIF -->" height="28" nowrap="nowrap">{L_DISPLAY_OPTIONS}</th>
+</tr>
+<tr>
+	<td colspan="<!-- IF S_TOPIC_ID -->4<!-- ELSE -->5<!-- ENDIF -->" class="cat" height="28" align="center"><span class="gensmall">{L_DISPLAY_LOG}:</span> {S_SELECT_SORT_DAYS}&nbsp;<span class="gensmall">{L_SORT_BY}</span> {S_SELECT_SORT_KEY} {S_SELECT_SORT_DIR}&nbsp;<input class="btnlite" type="submit" name="sort" value="{L_GO}" /></span></td>
+</tr>
+<tr>
+	<th width="15%" height="28" nowrap="nowrap">{L_USERNAME}</th>
+	<th width="12%" nowrap="nowrap">{L_IP}</th>
+	<th width="18%" nowrap="nowrap">{L_TIME}</th>
+	<th width="45%" nowrap="nowrap">{L_ACTION}</th>
+	<!-- IF not S_TOPIC_ID --><th width="8%" nowrap="nowrap"></th><!-- ENDIF -->
+</tr>
+<!-- IF S_TOPIC_ID -->
+	<tr>
+		<td class="bg3" colspan="5"><span class="gensmall">{L_LOGS_CURRENT_TOPIC} <a href="{U_VIEW_TOPIC}"><strong>{TOPIC_NAME}</strong></a></td>
+	</tr>
+<!-- ENDIF -->
+
+<!-- BEGIN log -->
+<tr>
+	<td class="bg1" nowrap="nowrap"><span class="gen">{log.USERNAME}</span></td>
+	<td class="bg1" align="center" nowrap="nowrap"><span class="gen">{log.IP}</span></td>
+	<td class="bg1" align="center" nowrap="nowrap"><span class="gensmall">{log.TIME}</span></td>
+	<td class="bg1"><span class="gen">{log.ACTION}</span></td>
+	<!-- IF not S_TOPIC_ID -->
+		<td class="bg1" align="center" nowrap="nowrap"><span class="gensmall"><!-- IF log.U_VIEW_TOPIC --><a href="{log.U_VIEW_TOPIC}">{L_VIEW_TOPIC}</a><!-- IF log.U_VIEWLOGS --> | <!-- ENDIF --><!-- ENDIF --><!-- IF log.U_VIEWLOGS --><a href="{log.U_VIEWLOGS}">{L_VIEW_TOPIC_LOGS}</a><!-- ENDIF --></span></td>
+	<!-- ENDIF -->
+</tr>
+<!-- BEGINELSE -->
+	<tr>
+		<td class="bg1" colspan="<!-- IF S_TOPIC_ID -->4<!-- ELSE -->5<!-- ENDIF -->" align="center"><span class="gen">{L_NO_ENTRIES}</span></td>
+	</tr>
+<!-- END log -->
+<div>
+	{S_FORM_TOKEN}
+</div>
+</table>
+</form>
+
+<table width="100%" cellspacing="2" cellpadding="2" border="0" align="center">
+<tr>
+	<td class="nav" align="left" valign="middle">{PAGE_NUMBER}</td>
+	<td align="right" valign="top" nowrap="nowrap"><!-- IF PAGINATION --><strong><a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{L_GOTO_PAGE}</a> <!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}">{L_PREVIOUS}</a>&nbsp;&nbsp;<!-- ENDIF -->{PAGINATION}<!-- IF NEXT_PAGE -->&nbsp;&nbsp;<a href="{NEXT_PAGE}">{L_NEXT}</a><!-- ENDIF --></strong><!-- ENDIF --></td>
+</tr>
+</table>
+
+<!-- INCLUDE mcp_footer.html -->

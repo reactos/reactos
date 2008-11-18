@@ -1,0 +1,621 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Ville Skyttä <ville.skytta@iki.fi>
+  #                 Shane H. W. Travis <travis@sedsystems.ca>
+  #                 Marc Schumann <wurblzap@gmail.com>
+  #                 Akamai Technologies <bugzilla-dev@akamai.com>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% title = BLOCK %]Enter [% terms.Bug %]: [% product.name FILTER html %][% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  style_urls = [ 'skins/standard/create_attachment.css' ]
+  javascript_urls = [ "js/attachment.js" ]
+%]
+
+<script type="text/javascript">
+<!--
+
+var initialowners = new Array([% product.components.size %]);
+var last_initialowner;
+var initialccs = new Array([% product.components.size %]);
+var components = new Array([% product.components.size %]);
+var flags = new Array([% product.components.size %]);
+[% IF Param("useqacontact") %]
+    var initialqacontacts = new Array([% product.components.size %]);
+    var last_initialqacontact;
+[% END %]
+[% count = 0 %]
+[%- FOREACH c = product.components %]
+    components[[% count %]] = "[% c.name FILTER js %]";
+    initialowners[[% count %]] = "[% c.default_assignee.login FILTER js %]";
+    [% flag_list = [] %]
+    [% FOREACH f = c.flag_types.bug %]
+      [% NEXT UNLESS f.is_active %]
+      [% flag_list.push(f.id) %]
+    [% END %]
+    [% FOREACH f = c.flag_types.attachment %]
+      [% NEXT UNLESS f.is_active %]
+      [% flag_list.push(f.id) %]
+    [% END %]
+    flags[[% count %]] = [[% flag_list.join(",") FILTER js %]];
+    [% IF Param("useqacontact") %]
+        initialqacontacts[[% count %]] = "[% c.default_qa_contact.login FILTER js %]";
+    [% END %]
+
+    [% SET initial_cc_list = [] %]
+    [% FOREACH cc_user = c.initial_cc %]
+      [% initial_cc_list.push(cc_user.login) %]
+    [% END %]
+    initialccs[[% count %]] = "[% initial_cc_list.join(', ') FILTER js %]";
+
+    [% count = count + 1 %]
+[%- END %]
+
+function set_assign_to() {
+    // Based on the selected component, fill the "Assign To:" field
+    // with the default component owner, and the "QA Contact:" field
+    // with the default QA Contact. It also selectively enables flags.
+    var form = document.Create;
+    var assigned_to = form.assigned_to.value;
+
+[% IF Param("useqacontact") %]
+    var qa_contact = form.qa_contact.value;
+[% END %]
+
+    var index = -1;
+    if (form.component.type == 'select-one') {
+        index = form.component.selectedIndex;
+    } else if (form.component.type == 'hidden') {
+        // Assume there is only one component in the list
+        index = 0;
+    }
+    if (index != -1) {
+        var owner = initialowners[index];
+        var component = components[index];
+        if (assigned_to == last_initialowner
+            || assigned_to == owner
+            || assigned_to == '') {
+            form.assigned_to.value = owner;
+            last_initialowner = owner;
+        }
+
+        document.getElementById('initial_cc').innerHTML = initialccs[index];
+
+        [% IF Param("useqacontact") %]
+            var contact = initialqacontacts[index];
+            if (qa_contact == last_initialqacontact
+                || qa_contact == contact
+                || qa_contact == '') {
+                  form.qa_contact.value = contact;
+                  last_initialqacontact = contact;
+            }
+        [% END %]
+
+        // First, we disable all flags. Then we re-enable those
+        // which are available for the selected component.
+        var inputElements = document.getElementsByTagName("select");
+        var inputElement, flagField;
+        for ( var i=0 ; i<inputElements.length ; i++ ) {
+            inputElement = inputElements.item(i);
+            if (inputElement.name.search(/^flag_type-(\d+)$/) != -1) {
+                var id = inputElement.name.replace(/^flag_type-(\d+)$/, "$1");
+                inputElement.disabled = true;
+                // Also disable the requestee field, if it exists.
+                inputElement = document.getElementById("requestee_type-" + id);
+                if (inputElement) inputElement.disabled = true;
+            }
+        }
+        // Now enable flags available for the selected component.
+        for (var i = 0; i < flags[index].length; i++) {
+            flagField = document.getElementById("flag_type-" + flags[index][i]);
+            // Do not enable flags the user cannot set nor request.
+            if (flagField && flagField.options.length > 1) {
+                flagField.disabled = false;
+                // Re-enabling the requestee field depends on the status
+                // of the flag.
+                toggleRequesteeField(flagField, 1);
+            }
+        }
+    }
+}
+
+function handleWantsAttachment(wants_attachment) {
+    if (wants_attachment) {
+        document.getElementById('attachment_false').style.display = 'none';
+        document.getElementById('attachment_true').style.display = 'block';
+    }
+    else {
+        document.getElementById('attachment_false').style.display = 'block';
+        document.getElementById('attachment_true').style.display = 'none';
+        clearAttachmentFields();
+    }
+}
+
+-->
+</script>
+
+<form name="Create" id="Create" method="post" action="post_bug.cgi"
+      enctype="multipart/form-data">
+<input type="hidden" name="product" value="[% product.name FILTER html %]">
+<input type="hidden" name="token" value="[% token FILTER html %]">
+
+<table cellspacing="2" cellpadding="0" border="0">
+
+  <tr>
+    <td>&nbsp;</td>
+    <td colspan="3">
+    [%# Migration note: The following file corresponds to the old Param
+      # 'entryheaderhtml'
+      #%]
+    [% INCLUDE 'bug/create/user-message.html.tmpl' %]
+    </td>
+  </tr>
+
+  <tr>
+    <td>&nbsp;</td>
+    <td colspan="3">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td align="right" valign="top"><strong>Reporter:</strong></td>
+    <td valign="top">[% user.login FILTER html %]</td>
+
+    <td align="right" valign="top"><strong>Product:</strong></td>
+    <td valign="top">[% product.name FILTER html %]</td>
+  </tr>
+
+  [%# We can't use the select block in these two cases for various reasons. %]
+  <tr>
+    <td align="right" valign="top">
+      <strong>Version:</strong>
+    </td>
+    <td>
+      <select name="version" size="5">
+        [%- FOREACH v = version %]
+          <option value="[% v FILTER html %]"
+            [% " selected=\"selected\"" IF v == default.version %]>[% v FILTER html -%]
+          </option>
+        [%- END %]
+      </select>
+    </td>
+
+    <td align="right" valign="top">
+      <strong>
+        <a href="describecomponents.cgi?product=[% product.name FILTER url_quote %]">
+          Component</a>:
+      </strong>
+    </td>
+    <td>
+      <select name="component" onchange="set_assign_to();" size="5">
+        [%- FOREACH c = product.components %]
+          <option value="[% c.name FILTER html %]"
+            [% " selected=\"selected\"" IF c.name == default.component_ %]>
+            [% c.name FILTER html -%]
+          </option>
+        [%- END %]
+      </select>
+    </td>
+  </tr>
+
+  <tr>
+    <td>&nbsp;</td>
+    <td colspan="3">&nbsp;</td>
+  </tr>
+
+  <tr>
+    [% sel = { description => 'Severity', name => 'bug_severity' } %]
+    [% INCLUDE select %]
+
+    [% sel = { description => 'Platform', name => 'rep_platform' } %]
+    [% INCLUDE select %]
+  </tr>
+
+  <tr>
+    [% IF Param('letsubmitterchoosepriority') %]
+      [% sel = { description => 'Priority', name => 'priority' } %]
+      [% INCLUDE select %]
+    [% ELSE %]
+      <td colspan="2">
+        <input type="hidden" name="priority" value="[% default.priority FILTER html %]">
+      </td>
+    [% END %]
+
+    [% sel = { description => 'OS', name => 'op_sys' } %]
+    [% INCLUDE select %]
+  </tr>
+
+  [% IF Param('usetargetmilestone') && Param('letsubmitterchoosemilestone') %]
+    <tr>
+      [% sel = { description => 'Target Milestone', name => 'target_milestone' } %]
+      [% INCLUDE select %]
+      <td colspan="2">&nbsp;</td>
+    </tr>
+  [% END %]
+
+  <tr>
+    <td>&nbsp;</td>
+    <td colspan="3">&nbsp;</td>
+  </tr>
+
+  <tr>
+[% IF bug_status.size <= 1 %]
+  <input type="hidden" name="bug_status" 
+         value="[% default.bug_status FILTER html %]">
+    <td align="right" valign="top"><strong>Initial State:</strong></td>
+    <td valign="top">[% status_descs.${default.bug_status} FILTER html %]</td>
+[% ELSE %]
+    [% sel = { description => 'Initial State', name => 'bug_status' } %]
+    [% INCLUDE select %]
+[% END %]
+    <td>&nbsp;</td>
+    [%# Calculate the number of rows we can use for flags %]
+    [% num_rows = 6 + (Param("useqacontact") ? 1 : 0) +
+                      (user.in_group(Param('timetrackinggroup')) ? 3 : 0) +
+                      (Param("usebugaliases") ? 1 : 0)
+    %]
+    <td rowspan="[% num_rows FILTER html %]" valign="top">
+      [% IF product.flag_types.bug.size > 0 %]
+        [% display_flag_headers = 0 %]
+        [% any_flags_requesteeble = 0 %]
+
+        [% FOREACH flag_type = product.flag_types.bug %]
+          [% NEXT UNLESS flag_type.is_active %]
+          [% display_flag_headers = 1 %]
+          [% SET any_flags_requesteeble = 1 IF flag_type.is_requestable && flag_type.is_requesteeble %]
+        [% END %]
+
+        [% IF display_flag_headers %]
+          [% PROCESS "flag/list.html.tmpl" flag_types = product.flag_types.bug
+                                           any_flags_requesteeble = any_flags_requesteeble
+                                           flag_table_id = "bug_flags"
+          %]
+        [% END %]
+      [% END %]
+    </td>
+  </tr>
+
+  <tr>
+    <td align="right">
+      <strong>
+        <a href="page.cgi?id=fields.html#assigned_to">Assign To</a>:
+      </strong>
+    </td>
+    <td colspan="2">
+      [% INCLUDE global/userselect.html.tmpl
+         name => "assigned_to"
+         value => assigned_to
+         disabled => assigned_to_disabled
+         size => 32
+         emptyok => 1
+       %]
+      <noscript>(Leave blank to assign to component's default assignee)</noscript>
+    </td>
+  </tr>
+  
+[% IF Param("useqacontact") %]
+    <tr>
+      <td align="right"><strong>QA Contact:</strong></td>
+      <td colspan="2">
+      [% INCLUDE global/userselect.html.tmpl
+         name => "qa_contact"
+         value => qa_contact
+         disabled => qa_contact_disabled
+         size => 32
+         emptyok => 1
+       %]
+        <noscript>(Leave blank to assign to default qa contact)</noscript>
+      </td>
+    </tr>
+[% END %]
+
+  <tr>
+    <td align="right"><strong>Cc:</strong></td>
+    <td colspan="2">
+      [% INCLUDE global/userselect.html.tmpl
+         name => "cc"
+         value => cc
+         disabled => cc_disabled
+         size => 45
+         multiple => 5
+       %]
+    </td>
+  </tr>
+
+  <tr>
+    <th align="right">Default CC:</th>
+    <td colspan="2">
+      <div id="initial_cc">
+          <!-- This has to happen after everything above renders,
+               and onload doesn't work. So this is as good a place
+               as any to put it. -->
+          <script type="text/javascript">set_assign_to();</script>
+      </div>
+   </td>
+  </tr>
+  
+  <tr>
+    <td>&nbsp;</td>
+    <td colspan="2"></td>
+  </tr>
+
+[% IF user.in_group(Param('timetrackinggroup')) %]
+  <tr>
+    <td align="right"><strong>Estimated Hours:</strong></td>
+    <td colspan="2">
+      <input name="estimated_time" size="6" maxlength="6" value="0.0">
+    </td>
+  </tr>
+  <tr>
+    <td align="right"><strong>Deadline:</strong></td>
+    <td colspan="2">
+      <input name="deadline" size="10" maxlength="10" value="[% deadline FILTER html %]">
+      <small>(YYYY-MM-DD)</small>
+    </td>
+  </tr>
+
+  <tr>
+    <td>&nbsp;</td>
+    <td colspan="2"></td>
+  </tr>
+[% END %]
+
+[% IF Param("usebugaliases") %]
+  <tr>
+    <td align="right"><strong>Alias:</strong></td>
+    <td colspan="2">
+      <input name="alias" size="20">
+    </td>
+  </tr>
+[% END %]
+
+  <tr>
+    <td align="right"><strong>URL:</strong></td>
+    <td colspan="2">
+      <input name="bug_file_loc" size="60"
+             value="[% bug_file_loc FILTER html %]">
+    </td>
+  </tr>
+
+  [% USE Bugzilla %]
+  [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1, 
+                                           enter_bug => 1 }) %]
+    [% SET value = ${field.name} IF ${field.name}.defined %]
+    <tr>
+      [% PROCESS bug/field.html.tmpl editable=1 value_span=2 %]
+    </tr>
+  [% END %]
+
+  <tr>
+    <td align="right"><strong>Summary:</strong></td>
+    <td colspan="2">
+      <input name="short_desc" size="60" value="[% short_desc FILTER html %]"
+             maxlength="255">
+    </td>
+  </tr>
+
+  <tr><td align="right" valign="top"><strong>Description:</strong></td>
+    <td colspan="3">
+      [% defaultcontent = BLOCK %]
+        [% IF cloned_bug_id %]
++++ This [% terms.bug %] was initially created as a clone of [% terms.Bug %] #[% cloned_bug_id %] +++
+
+
+        [% END %]
+        [%-# We are within a BLOCK. The comment will be correctly HTML-escaped
+          # by global/textarea.html.tmpl. So we must not escape the comment here. %]
+        [% comment FILTER none %]
+      [%- END %]
+      [% INCLUDE global/textarea.html.tmpl
+         name           = 'comment'
+         id             = 'comment'
+         minrows        = 10
+         maxrows        = 25
+         cols           = constants.COMMENT_COLS
+         defaultcontent = defaultcontent
+       %]
+      <br>
+    </td>
+  </tr>
+
+  [% IF Param("insidergroup") && user.in_group(Param("insidergroup")) %]
+    <tr>
+      <td></td>
+      <td colspan="3">
+        &nbsp;&nbsp;
+        <input type="checkbox" id="commentprivacy" name="commentprivacy"
+          [% " checked=\"checked\"" IF commentprivacy %]>
+        <label for="commentprivacy">
+          Initial Description is Private
+        </label>
+      </td>
+    </tr>
+  [% END %]
+
+  <tr>
+    <th align="right" valign="top">Attachment:</th>
+    <td colspan="3">
+      <script type="text/javascript">
+        <!--
+        document.write( '<div id="attachment_false">'
+                      +   '<input type="button" value="Add an attachment" '
+                      +          'onClick="handleWantsAttachment(true)"> '
+                      +   '<em style="display: none">This button has no '
+                      +   'functionality for you because your browser does '
+                      +   'not support CSS or does not use it.<\/em>'
+                      + '<\/div>'
+                      + '<div id="attachment_true" style="display: none">'
+                      +   '<input type="button" '
+                      +          'value="Don\'t add an attachment " '
+                      +          'onClick="handleWantsAttachment(false)">');
+        //-->
+      </script>
+        <fieldset>
+          <legend>Add an attachment</legend>
+          <table class="attachment_entry">
+            [% PROCESS attachment/createformcontents.html.tmpl
+                       flag_types = product.flag_types.attachment
+                       any_flags_requesteeble = 1
+                       flag_table_id ="attachment_flags" %]
+          </table>
+        </fieldset>
+      <script type="text/javascript">
+        <!--
+        document.write('<\/div>');
+        //-->
+      </script>
+    </td>
+  </tr>
+
+  [% IF user.in_group('editbugs', product.id) %]
+    [% IF use_keywords %]
+      <tr>
+        <td align="right" valign="top">
+          <strong>
+            <a href="describekeywords.cgi">Keywords</a>:
+          </strong>
+        </td>
+        <td colspan="3">
+          <input name="keywords" size="60" value="[% keywords FILTER html %]"> (optional)
+        </td>
+      </tr>
+    [% END %]
+    <tr>
+      <td align="right">
+        <strong>Depends on:</strong>
+      </td>
+      <td>
+        <input name="dependson" accesskey="d" value="[% dependson FILTER html %]">
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <strong>Blocks:</strong>
+      </td>
+      <td>
+        <input name="blocked" accesskey="b" value="[% blocked FILTER html %]">
+      </td>
+    </tr>
+  [% END %]
+
+  <tr>
+    <td></td>
+    <td colspan="3">
+    [% IF group.size %]
+      <br>
+        <strong>
+          Only users in all of the selected groups can view this [% terms.bug %]:
+        </strong>
+      <br>
+      <font size="-1">
+        (Leave all boxes unchecked to make this a public [% terms.bug %].)
+      </font>
+      <br>
+      <br>
+
+      <!-- Checkboxes -->
+      [% FOREACH g = group %]
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="checkbox" id="bit-[% g.bit %]"
+          name="bit-[% g.bit %]" value="1"
+          [% " checked=\"checked\"" IF g.checked %]>
+          <label for="bit-[% g.bit %]">[% g.description FILTER html_light %]</label><br>
+      [% END %]
+      <br>
+    [% END %]
+    </td>
+  </tr>
+
+  [%# Form controls for entering additional data about the bug being created. %]
+  [% Hook.process("form") %]
+
+  <tr>
+    <td></td>
+    <td colspan="3">
+      <input type="submit" id="commit" value="    Commit    "
+             onclick="if (this.form.short_desc.value == '')
+             { alert('Please enter a summary sentence for this [% terms.bug %].');
+               return false; } return true;">
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <input type="submit" name="maketemplate" id="maketemplate"
+             value="Remember values as bookmarkable template">
+    </td>
+  </tr>
+
+[% UNLESS (Param('defaultplatform') && Param('defaultopsys')) %]
+  <tr>
+    <td></td>
+    <td colspan="3">
+      <br>
+      We've made a guess at your
+  [% IF Param('defaultplatform') %]
+      operating system. Please check it
+  [% ELSIF Param('defaultopsys') %]
+      platform. Please check it
+  [% ELSE %]
+      operating system and platform. Please check them
+  [% END %]
+      and, if we got it wrong, email
+      [%+ Param('maintainer') %].
+    </td>
+  </tr>
+[% END %]
+
+  </table>
+  <input type="hidden" name="form_name" value="enter_bug">
+</form>
+
+[%# Links or content with more information about the bug being created. %]
+[% Hook.process("end") %]
+
+[% PROCESS global/footer.html.tmpl %]
+
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]
+  [% IF sel.description %]
+  <td align="right">
+    <strong>
+      <a href="page.cgi?id=fields.html#[% sel.name %]">
+        [% sel.description %]</a>:
+    </strong>
+  </td>
+  [% END %]
+
+  <td>
+    <select name="[% sel.name %]">
+    [%- FOREACH x = ${sel.name} %]
+      <option value="[% x FILTER html %]"
+        [% " selected=\"selected\"" IF x == default.${sel.name} %]>
+        [% IF sel.name == "bug_status" %]
+          [% status_descs.$x FILTER html %]
+        [% ELSE %]
+          [% x FILTER html %]
+        [% END %]</option>
+    [% END %]
+    </select>
+  </td>
+[% END %]

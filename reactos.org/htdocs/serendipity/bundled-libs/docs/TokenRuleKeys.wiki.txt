@@ -1,0 +1,57 @@
++ Token Rule Keys
+
+|| '''Rule Name'''       || '''Description'''                                 || '''Options''' ||
+|| {{blockquote}}        || Block-quoted text.                                || {{type:[start|end] }} ||
+|| {{bold}}              || Bold text.                                        || {{type:[start|end]}} ||
+|| {{code}}              || A block of generic computer code.                 || {{text}} ||
+|| {{deflist}}           || Definition list element.                          || {{type:[list|term|narr]_[start|end]}} ||
+|| {{delimiter}}         || An existing delimiter.                            || - ||
+|| {{emphasis}}          || Emphasized (usually italic) text.                 || {{type:[start|end]}} ||
+|| {{freelink}}          || A local !WikiPage reference in free link format.  || {{page}}, {{text}}, {{anchor}} ||
+|| {{heading}}           || A heading.                                        || {{type:[start|end], level, text}} ||
+|| {{horiz}}             || A horizontal rule.                                || - ||
+|| {{html}}              || A block of HTML text to be displayed as-is.       || {{text}}  ||
+|| {{interwiki}}         || An !InterWiki reference.                          || {{site}}, {{page}} ||
+|| {{italic}}            || Italic text.                                      || {{type:[start|end]}} ||
+|| {{list}}              || Bullet or number list elements.                   || {{type:[bullet|number|item]_[start|end], level, count}} ||
+|| {{newline}}           || A new line or line break.                         || - ||
+|| {{phpcode}}           || A block of PHP code to be colorized.              || {{text}} ||
+|| {{phplookup}}         || A function name to link to at php.net             || {{text}} ||
+|| {{raw}}               || Raw or plain text to be displayed as-is.          || {{text}} ||
+|| {{strong}}            || Strong (usually bold) text.                       || {{type:[start|end]}} ||
+|| {{superscript}}       || Superscript text.                                 || {{type:[start|end]}} ||
+|| {{table}}             || Table elements.                                   || {{type:[table|row|cell]_[start|end], colspan}} ||
+|| {{tt}}                || Teletype (monospaced) text.                 || {{type:[start|end]}} ||
+|| {{url}}               || A page URL.                                       || {{type:[inline|footnote|descr]}}, {{href}}, {{text}} ||
+|| {{wikilink}}          || A local !WikiPage reference.                      || {{page}}, {{anchor}} ||
+|| {{toc}}               || Table of contents.                                || {{type:[list_start|list_end|item_start|item_end|target], level, count}} ||
+
+++ Tokens Entry Format
+
+Simple format (no options).
+
+<code>
+$_tokens[] = Array
+    (
+        [0] => 'rule_name'
+        [1] => array
+            (
+            )
+    )
+</code>
+
+Complex format (with options).
+
+<code>
+$_tokens[] = Array
+    (
+        [0] => 'rule_name'
+        [1] => Array
+            (
+                ['opt0'] => 'value 0'
+                ['opt1'] => 'value 1'
+                ...
+                ['optN'] => 'value N'
+            )
+    )
+</code>

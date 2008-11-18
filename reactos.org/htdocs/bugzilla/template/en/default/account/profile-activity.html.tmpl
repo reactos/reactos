@@ -1,0 +1,86 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Vlad Dascalu <jocuri@softhome.net>
+  #                 Gavin Shelley <bugzilla@chimpychompy.org>
+  #%]
+
+[%# INTERFACE:
+  # otheruser: Bugzilla User Object; The user whose profile activity
+  #                                  we are viewing.
+  #
+  # listselectionvalues: selection values to recreate the current user list.
+  #
+  # profile_changes: An array of hashes containing the following fields:
+  # 
+  #   who: string; login name of who made the change
+  #   activity_when: string; when the change was made
+  #   what: string; the description of the field which was changed
+  #   removed: string; the removed value (maybe empty string)
+  #   added: string; the added value (maybe empty string)
+  #%]
+
+[% title = BLOCK %]
+  View User Account Log for '[% otheruser.login FILTER html %]'
+[% END %]
+
+
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+[% PROCESS admin/users/listselectvars.html.tmpl
+  listselectionvalues = listselectionvalues
+%]
+
+[% columns =
+  [{name               => 'who'
+    heading            => 'Who'
+   }
+   {name               => 'activity_when'
+    heading            => 'When'
+   }
+   {name               => 'what'
+    heading            => 'What'
+   }
+   {name               => 'removed'
+    heading            => 'Removed'
+   }
+   {name               => 'added'
+    heading            => 'Added'
+   }
+  ]
+%]
+
+[% PROCESS admin/table.html.tmpl
+  columns = columns
+  data    = profile_changes
+%]
+
+<p><a href="editusers.cgi?action=edit&amp;userid=
+  [%- otheruser.id FILTER url_quote %]"
+  title="Edit user '[% otheruser.login FILTER html %]'">Edit this user</a> or
+  <a title="Search For Users" href="editusers.cgi">find other accounts</a>
+  [% IF listselectionvalues.matchtype != 'exact' %]
+    or go <a title="Return to the user list"
+       href="editusers.cgi?action=list[% INCLUDE listselectionurlparams %]">back
+    to the user list</a>
+  [% END %]
+</p>
+
+[% PROCESS global/footer.html.tmpl %] 

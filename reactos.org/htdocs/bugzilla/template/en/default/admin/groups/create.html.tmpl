@@ -1,0 +1,87 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@syndicomm.com>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #%]
+
+[%# INTERFACE:
+  # none
+  #%]
+
+[% PROCESS global/header.html.tmpl
+  title = "Add group"
+  subheader = "This page allows you to define a new user group."
+%]
+
+<form method="post" action="editgroups.cgi">
+  <table border="1" cellpadding="4" cellspacing="0"><tr>
+    <th>New Name</th>
+    <th>New Description</th>
+    <th>New User RegExp</th>
+    <th>Use For [% terms.Bugs %]</th>
+  </tr><tr>
+    <td><input size="20" name="name"></td>
+    <td><input size="40" name="desc"></td>
+    <td><input size="30" name="regexp"></td>
+    <td><input type="checkbox" name="isactive" value="1" checked></td>
+  </tr></table><hr>
+
+  <input type="checkbox" name="insertnew" value="1"
+    [% IF Param("makeproductgroups") %] checked[% END %]>
+    Insert new group into all existing products.<p>
+  <input type="submit" id="create" value="Add">
+  <input type="hidden" name="action" value="new">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+</form>
+
+<p><b>Name</b> is what is used with the B<!-- blah -->ugzilla->user->in_group()
+function in any customized cgi files you write that use a given group.
+It can also be used by people submitting [% terms.bugs %] by email to
+limit [% terms.abug %] to a certain set of groups. It may not contain
+any spaces.</p>
+
+<p><b>Description</b> is what will be shown in the [% terms.bug %] reports
+to members of the group where they can choose whether
+the [% terms.bug %] will be restricted to others in the same group.</p>
+
+<p>The <b>Use For [% terms.Bugs %]</b> flag determines whether or not the
+group is eligible to be used for [% terms.bugs %]. If you clear this, it will
+no longer be possible for users to add [% terms.bugs %] to this group,
+although [% terms.bugs %] already in the group will remain in the group.
+Doing so is a much less drastic way to stop a group from growing
+than deleting the group would be. <b>Note: If you are creating
+a group, you probably want it to be usable for [% terms.bugs %], in which
+case you should leave this checked.</b></p>
+
+<p><b>User RegExp</b> is optional, and if filled in, will 
+automatically grant membership to this group to anyone with an 
+email address that matches this regular expression.</p>
+
+<p>By default, the new group will be associated with existing 
+products. Unchecking the "Insert new group into all existing 
+products" option will prevent this and make the group become 
+visible only when its controls have been added to a product.</p>
+
+<p>Back to the <a href="./">main [% terms.bugs %] page</a>
+
+or to the <a href="editgroups.cgi">group list</a>.
+
+[% PROCESS global/footer.html.tmpl %] 

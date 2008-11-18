@@ -1,0 +1,51 @@
+[% template_version = "1.0@bugzilla.org" %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+<?xml version="1.0"[% IF Param('utf8') %] encoding="UTF-8"[% END %]?>
+<!-- [% template_version %] -->
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:bz="http://www.bugzilla.org/rdf#"
+     xmlns:nc="http://home.netscape.com/NC-rdf#">
+
+<bz:duplicates_report rdf:about="[% Param('urlbase') %]data/duplicates.rdf">
+  <bz:bugs>
+    <Seq>
+      [% FOREACH bug = bugs %]
+        <li>
+          <bz:bug rdf:about="[% Param('urlbase') %]show_bug.cgi?id=[% bug.id %]">
+            <bz:id nc:parseType="Integer">[% bug.id %]</bz:id>
+            <bz:resolution>[% bug.resolution FILTER html %]</bz:resolution>
+            <bz:duplicate_count nc:parseType="Integer">[% bug.count %]</bz:duplicate_count>
+            <bz:duplicate_delta nc:parseType="Integer">[% bug.delta %]</bz:duplicate_delta>
+            <bz:component>[% bug.component FILTER html %]</bz:component>
+            <bz:severity>[% bug.bug_severity FILTER html %]</bz:severity>
+            <bz:os>[% bug.op_sys FILTER html %]</bz:os>
+            <bz:target_milestone>[% bug.target_milestone FILTER html %]</bz:target_milestone>
+            <bz:summary>[% bug.short_desc FILTER html %]</bz:summary>
+          </bz:bug>
+        </li>
+      [% END %]
+    </Seq>
+  </bz:bugs>
+</bz:duplicates_report>
+
+</RDF>

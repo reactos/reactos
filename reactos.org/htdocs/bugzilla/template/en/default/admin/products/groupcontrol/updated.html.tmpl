@@ -1,0 +1,53 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): André Batosti <batosti@async.com.br> 
+  #
+  #%]
+
+[%# INTERFACE:
+  #      removed_na: array of hashes; groups not applicable for the product.  
+  # added_mandatory: array of hashes; groups mandatory for the product.  
+  #  classification: Bugzilla::Classification object;  product classification.
+  #         product: Bugzilla::Product object; the product.
+  #%]
+
+[% title = BLOCK %]
+    Update group access controls for [% product.name FILTER html %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+<p>
+[% IF removed_na.size > 0 %]
+  [% FOREACH g = removed_na %]
+    Removing [% terms.bugs %] from group '[% g.name FILTER html %]' which
+    no longer applies to this product<p>
+    [% g.bug_count FILTER html %] [%+ terms.bugs %] removed<p>
+  [% END %]
+[% END %]
+
+[% IF added_mandatory.size > 0 %]
+  [% FOREACH g = added_mandatory %]
+    Adding [% terms.bugs %] to group '[% g.name FILTER html %]' which is 
+    mandatory for this product<p>
+    [% g.bug_count FILTER html %] [%+ terms.bugs %] added<p>
+  [% END %]
+[% END %]
+
+Group control updates done<p>
+
+[% PROCESS admin/products/footer.html.tmpl %]
+
+[% PROCESS global/footer.html.tmpl %]

@@ -1,0 +1,123 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  # value: string; The field value being deleted.
+  # bug_count: number; The number of bugs that have this field value.
+  # value_count: number; The number of values left for this field, including
+  #              this value.
+  # field: string; The name of the field.
+  # param_name: string; The name of the parameter (defaultxxx) associated
+  #             with the field.
+  #%]
+
+[% title = BLOCK %]Delete Value '[% value FILTER html %]' from the 
+  '[% field FILTER html %]' field[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  style_urls = ['skins/standard/admin.css']
+%]
+
+<table border="1" cellpadding="4" cellspacing="0">
+<tr bgcolor="#6666FF">
+  <th valign="top" align="left">Field</th>
+  <th valign="top" align="left">Value</th>
+</tr>
+<tr>
+  <td valign="top">Field Name:</td>
+  <td valign="top">[% field FILTER html %]</td>
+</tr>
+<tr>
+  <td valign="top">Field Value:</td>
+  <td valign="top">[% value FILTER html %]</td>
+</tr>
+<tr>
+  <td valign="top">[% terms.Bugs %]:</td>
+  <td valign="top">
+[% IF bug_count %]
+  <a title="List of [% terms.bugs %] where '[% field FILTER html %]' is '
+            [% value FILTER html %]'"
+     href="buglist.cgi?[% field FILTER url_quote %]=[%- value FILTER url_quote %]">[% bug_count FILTER html %]</a>
+[% ELSE %]
+  None
+[% END %]
+  </td>
+</tr>
+</table>
+
+<h2>Confirmation</h2>
+
+[% IF (param_name.defined && Param(param_name) == value) || bug_count || (value_count == 1) %]
+
+  <p>Sorry, but the '[% value FILTER html %]' value cannot be deleted
+  from the '[% field FILTER html %]' field for the following reason(s):</p>
+
+  <ul class="warningmessages">
+    [% IF param_name.defined && Param(param_name) == value %]
+      <li>'[% value FILTER html %]' is the default value for
+          the '[% field FILTER html %]' field.
+          [% IF user.groups.tweakparams %]
+            You first have to <a href="editparams.cgi?section=bugfields#
+            [%- param_name FILTER url_quote %]">change the default value</a> for
+            this field before you can delete this value.
+          [% END %]
+    [% END %]
+
+    [% IF bug_count %]
+      <li>There
+          [% IF bug_count > 1 %] 
+            are [% bug_count FILTER html %] [%+ terms.bugs %] 
+          [% ELSE %]
+            is 1 [% terms.bug %] 
+          [% END %]
+          with this field value. You must change the field value on
+          <a title="List of [% terms.bugs %] where '[% field FILTER html %]' is '[% value FILTER html %]'"
+             href="buglist.cgi?[% field FILTER url_quote %]=[% value FILTER url_quote %]">
+            [% IF bug_count > 1 %]
+              those [% terms.bugs %] 
+            [% ELSE %]
+              that [% terms.bug %]
+            [% END %]
+          </a>
+          to another value before you can delete this value.
+    [% END %]
+
+    [% IF value_count == 1 %]
+      <li>'[% value FILTER html %]' is the last value for
+          '[%- field FILTER html %]', and so it can not be deleted.
+    [% END %]
+  </ul>
+
+[% ELSE %]
+
+  <p>Do you really want to delete this value?</p>
+
+  <form method="post" action="editvalues.cgi">
+    <input type="submit" value="Yes, delete" id="delete">
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="field" value="[% field FILTER html %]">
+    <input type="hidden" name="value" value="[% value FILTER html %]">
+    <input type="hidden" name="token" value="[% token FILTER html %]">
+  </form>
+
+[% END %]
+
+[% PROCESS admin/fieldvalues/footer.html.tmpl
+  no_edit_link = 1
+ +%]
+
+[% PROCESS global/footer.html.tmpl %] 

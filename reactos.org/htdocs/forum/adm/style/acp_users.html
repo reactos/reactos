@@ -1,0 +1,230 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_SELECT_USER -->
+
+	<h1>{L_USER_ADMIN}</h1>
+
+	<p>{L_USER_ADMIN_EXPLAIN}</p>
+
+	<form id="select_user" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_SELECT_USER}</legend>
+	<dl>
+		<dt><label for="username">{L_FIND_USERNAME}:</label></dt>
+		<dd><input class="text medium" type="text" id="username" name="username" /></dd>
+		<dd>[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</dd>
+		<dd class="full" style="text-align: left;"><label><input type="checkbox" class="radio" id="anonymous" name="u" value="{ANONYMOUS_USER_ID}" /> {L_SELECT_ANONYMOUS}</label></dd>
+	</dl>
+
+	<p class="quick">
+		<input type="submit" name="submituser" value="{L_SUBMIT}" class="button1" />
+	</p>
+	</fieldset>
+
+	</form>
+
+<!-- ELSEIF S_SELECT_FORUM -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_USER_ADMIN}</h1>
+
+	<p>{L_USER_ADMIN_EXPLAIN}</p>
+
+	<form id="select_forum" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_USER_ADMIN_MOVE_POSTS}</legend>
+	<dl>
+		<dt><label for="new_forum">{L_USER_ADMIN_MOVE_POSTS}</label><br /><span>{L_MOVE_POSTS_EXPLAIN}</span></dt>
+		<dd><select id="new_forum" name="new_f">{S_FORUM_OPTIONS}</select></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset class="quick">
+		<input type="submit" name="update" value="{L_SUBMIT}" class="button1" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSE -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_USER_ADMIN} :: {MANAGED_USERNAME}</h1>
+
+	<p>{L_USER_ADMIN_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="mode_select" method="post" action="{U_MODE_SELECT}">
+
+	<fieldset class="quick">
+		{L_SELECT_FORM}: <select name="mode" onchange="if (this.options[this.selectedIndex].value != '') this.form.submit();">{S_FORM_OPTIONS}</select> <input class="button2" type="submit" value="{L_GO}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ENDIF -->
+
+<!-- IF S_OVERVIEW -->
+
+<!-- INCLUDE acp_users_overview.html -->
+
+<!-- ELSEIF S_FEEDBACK -->
+
+<!-- INCLUDE acp_users_feedback.html -->
+
+<!-- ELSEIF S_PROFILE -->
+
+<!-- INCLUDE acp_users_profile.html -->
+
+<!-- ELSEIF S_PREFS -->
+
+<!-- INCLUDE acp_users_prefs.html -->
+
+<!-- ELSEIF S_AVATAR -->
+
+<!-- INCLUDE acp_users_avatar.html -->
+
+<!-- ELSEIF S_RANK -->
+
+	<form id="user_prefs" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_ACP_USER_RANK}</legend>
+	<dl>
+		<dt><label for="user_rank">{L_USER_RANK}:</label></dt>
+		<dd><select name="user_rank" id="user_rank">{S_RANK_OPTIONS}</select></dd>
+	</dl>
+	</fieldset>
+
+	<fieldset class="quick">
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_SIGNATURE -->
+
+<!-- INCLUDE acp_users_signature.html -->
+
+<!-- ELSEIF S_GROUPS -->
+
+	<form id="user_groups" method="post" action="{U_ACTION}">
+
+	<table cellspacing="1">
+	<tbody>
+	<!-- BEGIN group -->
+		<!-- IF group.S_NEW_GROUP_TYPE -->
+		<tr>
+			<td class="row3" colspan="4"><strong>{group.GROUP_TYPE}</strong></td>
+		</tr>
+		<!-- ELSE -->
+			<!-- IF group.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+				<td><a href="{group.U_EDIT_GROUP}">{group.GROUP_NAME}</a></td>
+				<td><!-- IF group.S_NO_DEFAULT --><a href="{group.U_DEFAULT}">{L_GROUP_DEFAULT}</a><!-- ELSE --><strong>{L_GROUP_DEFAULT}</strong><!-- ENDIF --></td>
+				<td><!-- IF not group.S_SPECIAL_GROUP --><a href="{group.U_DEMOTE_PROMOTE}">{group.L_DEMOTE_PROMOTE}</a><!-- ELSE -->&nbsp;<!-- ENDIF --></td>
+				<td><a href="{group.U_DELETE}">{L_GROUP_DELETE}</a></td>
+			</tr>
+		<!-- ENDIF -->
+	<!-- END group -->
+	</tbody>
+	</table>
+
+	<!-- IF S_GROUP_OPTIONS -->
+		<fieldset class="quick">
+			{L_USER_GROUP_ADD}: <select name="g">{S_GROUP_OPTIONS}</select> <input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+			{S_FORM_TOKEN}
+		</fieldset>
+	<!-- ENDIF -->
+	</form>
+
+<!-- ELSEIF S_ATTACHMENTS -->
+
+	<form id="user_attachments" method="post" action="{U_ACTION}">
+
+
+	<!-- IF PAGINATION -->
+	<div class="pagination">
+		<a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span>
+	</div>
+	<!-- ENDIF -->
+
+	<!-- IF .attach -->
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_FILENAME}</th>
+		<th>{L_POST_TIME}</th>
+		<th>{L_FILESIZE}</th>
+		<th>{L_DOWNLOADS}</th>
+		<th>{L_MARK}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN attach -->
+		<!-- IF attach.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+		<td><a href="{attach.U_DOWNLOAD}">{attach.REAL_FILENAME}</a><br /><span class="small"><!-- IF attach.S_IN_MESSAGE --><strong>{L_PM}: </strong><!-- ELSE --><strong>{L_POST}: </strong><!-- ENDIF --><a href="{attach.U_VIEW_TOPIC}">{attach.TOPIC_TITLE}</a></span></td>
+		<td style="text-align: center">{attach.POST_TIME}</td>
+		<td style="text-align: center">{attach.SIZE}</td>
+		<td style="text-align: center">{attach.DOWNLOAD_COUNT}</td>
+		<td style="text-align: center"><input type="checkbox" class="radio" name="mark[]" value="{attach.ATTACH_ID}" /></td>
+	</tr>
+	<!-- END attach -->
+	</tbody>
+	</table>
+	<!-- ELSE -->
+	<div class="errorbox">
+		<p>{L_USER_NO_ATTACHMENTS}</p>
+	</div>
+	<!-- ENDIF -->
+	<fieldset class="display-options">
+		{L_SORT_BY}: <select name="sk">{S_SORT_KEY}</select> <select name="sd">{S_SORT_DIR}</select>
+		<input class="button2" type="submit" value="{L_GO}" name="sort" />
+	</fieldset>
+	<hr />
+	<!-- IF PAGINATION -->
+	<div class="pagination">
+		<a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{S_ON_PAGE}</a> &bull; <span>{PAGINATION}</span>
+	</div>
+	<!-- ENDIF -->
+	
+	<fieldset class="quick">
+		<input class="button2" type="submit" name="delmarked" value="{L_DELETE_MARKED}" />
+		<p class="small"><a href="#" onclick="marklist('user_attachments', 'mark', true);">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('user_attachments', 'mark', false);">{L_UNMARK_ALL}</a></p>
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_PERMISSIONS -->
+
+	<div style="float: {S_CONTENT_FLOW_END};">
+		<a href="{U_USER_PERMISSIONS}">&raquo; {L_SET_USERS_PERMISSIONS}</a><br />
+		<a href="{U_USER_FORUM_PERMISSIONS}">&raquo; {L_SET_USERS_FORUM_PERMISSIONS}</a>
+	</div>
+
+	<form id="select_forum" method="post" action="{U_ACTION}">
+
+		<fieldset class="quick" style="text-align: left;">
+			{L_SELECT_FORUM}: <select name="f">{S_FORUM_OPTIONS}</select> 
+			<input class="button2" type="submit" value="{L_GO}" name="select" />
+			{S_FORM_TOKEN}
+		</fieldset>
+	</form>
+
+	<div class="clearfix">&nbsp;</div>
+
+	<!-- INCLUDE permission_mask.html -->
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

@@ -1,0 +1,92 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Albert Ting <alt@sonic.net>
+  #%]
+
+[% PROCESS global/header.html.tmpl
+  title = "Reclassify products"
+%]
+
+<form method=post action="editclassifications.cgi">
+  <table border=0 cellpadding=4 cellspacing=0>
+    <tr>
+      <td valign="top">Classification:</td>
+      <td valign="top" colspan=3>[% classification.name FILTER html %]</td>
+
+    </tr><tr>
+      <td valign="top">Description:</td>
+      <td valign="top" colspan=3>
+        [% IF classification.description %]
+          [% classification.description FILTER html_light %]
+        [% ELSE %]
+          <font color="red">description missing</font>
+        [% END %]
+      </td>
+
+    </tr><tr>
+      <td valign="top">Sortkey:</td>
+      <td valign="top" colspan=3>[% classification.sortkey FILTER html %]</td>
+
+    </tr><tr>
+      <td valign="top">Products:</td>
+      <td valign="top">Other Classifications</td>
+      <td></td>
+      <td valign="top">This Classification</td>
+
+    </tr><tr>
+      <td></td>
+      <td valign="top">
+      <select name="prodlist" id="prodlist" multiple="multiple" size="20">
+        [% FOREACH class = classifications %]
+          [% IF class.id != classification.id %]
+            [% FOREACH product = class.products %]
+              <option value="[% product.name FILTER html %]">
+                [[% class.name FILTER html %]]&nbsp;[% product.name FILTER html %]
+              </option>
+            [% END %]
+          [% END %]
+        [% END %]
+      </select></td>
+
+      <td align="center">
+        <input type=submit value="     Add &gt;&gt;  " name="add_products"><br><br>
+        <input type=submit value="&lt;&lt; Remove" name="remove_products">
+      </td>
+
+      <td valign="middle" rowspan=2>
+        <select name="myprodlist" id="myprodlist" multiple="multiple" size="20">
+          [% FOREACH product = classification.products %]
+            <option value="[% product.name FILTER html %]">
+              [% product.name FILTER html %]
+            </option>
+          [% END %]
+      </select></td>
+    </tr>
+  </table>
+
+  <input type=hidden name="action" value="reclassify">
+  <input type=hidden name="classification" value="[% classification.name FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+</form>
+
+<p>Back to the <a href="./">main [% terms.bugs %] page</a>,
+or <a href="editclassifications.cgi"> edit</a> more classifications.
+
+[% PROCESS global/footer.html.tmpl %]
+

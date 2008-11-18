@@ -1,0 +1,141 @@
+[%# 1.0@bugzilla.org %]
+[%# -*- mode: html -*- %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Terry Weissman <terry@mozilla.org>
+  #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vitaly Harisov  <vitaly@rathedg.com>
+  #%]
+
+[%# INTERFACE:
+  # release: a hash containing data about new releases, if any.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+
+[% PROCESS global/header.html.tmpl
+   title = "$terms.Bugzilla Main Page"
+   header = "Main Page" 
+   header_addl_info = "version $constants.BUGZILLA_VERSION"
+   style_urls = [ 'skins/standard/index.css' ]
+   onload = 'document.forms[\'f\'].quicksearch.focus();'
+%]
+
+
+<script type="text/javascript">
+<!--
+function addSidebar() {
+  if ((typeof window.sidebar == "object") && (typeof window.sidebar.addPanel == "function"))
+  {
+    var sidebarname=window.location.host;
+    if (!/bug/i.test(sidebarname))
+      sidebarname="[% terms.Bugzilla %] "+sidebarname;
+    window.sidebar.addPanel (sidebarname, "[% Param('urlbase') %]sidebar.cgi", "");
+  }
+  else
+  {
+    var rv = window.confirm ("Your browser does not support the sidebar extension.  " + "Would you like to upgrade now?");
+    if (rv)
+      document.location.href = "http://www.mozilla.org/";
+  }
+}
+//-->
+</script>
+
+[% IF release %]
+  <div id="new_release">
+    [% IF release.data %]
+      [% IF release.deprecated %]
+        <p>[% terms.Bugzilla %] [%+ release.deprecated FILTER html %] is no longer
+        supported. You are highly encouraged to upgrade in order to keep your
+        system secure.</p>
+      [% END %]
+
+      <p>A new [% terms.Bugzilla %] version ([% release.data.latest_ver FILTER html %])
+      is available at
+      <a href="[% release.data.url FILTER html %]">[% release.data.url FILTER html %]</a>.<br>
+      Release date: [% release.data.date FILTER html %]</p>
+
+      <p class="notice">This message is only shown to logged in users with admin privs.
+      You can configure this notification from the
+      <a href="editparams.cgi?section=core#upgrade_notification">Parameters</a> page.</p>
+    [% ELSIF release.error == "missing_package" %]
+      <p>Missing package '[% release.package FILTER html %]'. This package is required to
+      <a href="editparams.cgi?section=core#upgrade_notification">notify you about new releases</a>.</p>
+    [% ELSIF release.error == "cannot_download" %]
+      <p>The local XML file '[% release.xml_file FILTER html %]' cannot be created.
+      Please make sure the web server can write in this directory and that you can access
+      the web. If you are behind a proxy, set the
+      <a href="editparams.cgi?section=core#proxy_url">proxy_url</a> parameter correctly.</p>
+    [% ELSIF release.error == "no_update" %]
+      <p>The local XML file '[% release.xml_file FILTER html %]' cannot be updated.
+      Please make sure the web server can edit this file.</p>
+    [% ELSIF release.error == "no_access" %]
+      <p>The local XML file '[% release.xml_file FILTER html %]' cannot be read.
+      Please make sure this file has the correct rights set on it.</p>
+    [% ELSIF release.error == "corrupted" %]
+      <p>The local XML file '[% release.xml_file FILTER html %]' has an invalid XML format.
+      Please delete it and try accessing this page again.</p>
+    [% ELSIF release.error == "unknown_parameter" %]
+      <p>'[% Param("upgrade_notification") FILTER html %]' is not a valid notification
+      parameter. Please check this parameter in the
+      <a href="editparams.cgi?section=core#upgrade_notification">Parameters</a> page.</p>
+    [% END %]
+  </div>
+[% END %]
+
+<div id="page-index">
+  <div class="intro"></div>
+
+  <p>Welcome to [% terms.Bugzilla %]. To see what's new in this version
+    of [% terms.Bugzilla %], see the 
+    <a href="page.cgi?id=release-notes.html">release notes</a>!</p>
+
+  <p>Most common actions:</p>
+  <ul>
+    <li id="query"><a href="query.cgi">Search existing [% terms.bug %] reports</a></li>
+    <li id="enter-bug"><a href="enter_bug.cgi">Enter a new [% terms.bug %] report</a></li>
+    <li id="report"><a href="report.cgi">Summary reports and charts</a></li>
+[% IF NOT user.id %]
+    <li id="login"><a href="/roscms/?page=login&amp;target=%2Fbugzilla">Log in to an existing account</a></li>
+    <li id="register"><a href="/roscms/?page=register&amp;target=%2Fbugzilla">Register a new account</a></li>
+[% END %]
+    <li id="sidebar"><a href="javascript:addSidebar()">Add to Sidebar</a> (requires a Mozilla browser like Mozilla Firefox)</li>
+    <li id="quick_search_plugin">
+      <a href="javascript:window.external.AddSearchProvider('[% Param('urlbase') %]search_plugin.cgi')">Install
+      the Quick Search plugin</a> (requires Firefox 2 or Internet Explorer 7)
+    </li>
+  </ul>
+
+  <form id="f" name="f" action="buglist.cgi" method="get"
+        onsubmit="if (this.quicksearch.value == '')
+                  { alert('Please enter one or more search terms first.');
+                    return false; } return true;">
+  <div>
+    <p>Enter [% terms.abug %] # or some search terms:</p>
+    <input id="quicksearch" type="text" name="quicksearch">
+    <input id="find" type="submit" value="Find">
+    <a href="page.cgi?id=quicksearch.html">[Help]</a>
+  </div>
+  </form>
+
+  <div class="outro"></div>
+</div>
+
+[% PROCESS global/footer.html.tmpl %]

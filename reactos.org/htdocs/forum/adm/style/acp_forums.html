@@ -1,0 +1,500 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_EDIT_FORUM -->
+
+	<script type="text/javascript">
+	// <![CDATA[
+		/**
+		* Handle displaying/hiding several options based on the forum type
+		*/
+		function display_options(value)
+		{
+			<!-- IF not S_ADD_ACTION and S_FORUM_ORIG_POST -->
+				if (value == {FORUM_POST})
+				{
+					dE('type_actions', -1);
+				}
+				else
+				{
+					dE('type_actions', 1);
+				}
+			<!-- ENDIF -->
+
+			<!-- IF not S_ADD_ACTION and S_FORUM_ORIG_CAT and S_HAS_SUBFORUMS -->
+				if (value == {FORUM_LINK})
+				{
+					dE('cat_to_link_actions', 1);
+				}
+				else
+				{
+					dE('cat_to_link_actions', -1);
+				}
+			<!-- ENDIF -->
+
+			if (value == {FORUM_POST})
+			{
+				dE('forum_post_options', 1);
+				dE('forum_link_options', -1);
+				dE('forum_rules_options', 1);
+				dE('forum_cat_options', -1);
+			}
+			else if (value == {FORUM_LINK})
+			{
+				dE('forum_post_options', -1);
+				dE('forum_link_options', 1);
+				dE('forum_rules_options', -1);
+				dE('forum_cat_options', -1);
+			}
+			else if (value == {FORUM_CAT})
+			{
+				dE('forum_post_options', -1);
+				dE('forum_link_options', -1);
+				dE('forum_rules_options', 1);
+				dE('forum_cat_options', 1);
+			}
+		}
+
+		/**
+		* Init the wanted display functionality if javascript is enabled.
+		* If javascript is not available, the user is still able to properly administrate.
+		*/
+		onload = function()
+		{
+			<!-- IF not S_ADD_ACTION and S_FORUM_ORIG_POST -->
+				<!-- IF S_FORUM_POST -->
+					dE('type_actions', -1);
+				<!-- ENDIF -->
+			<!-- ENDIF -->
+
+			<!-- IF not S_ADD_ACTION and S_FORUM_ORIG_CAT and S_HAS_SUBFORUMS -->
+				<!-- IF S_FORUM_CAT -->
+					dE('cat_to_link_actions', -1);
+				<!-- ENDIF -->
+			<!-- ENDIF -->
+
+			<!-- IF not S_FORUM_POST -->
+				dE('forum_post_options', -1);
+			<!-- ENDIF -->
+
+			<!-- IF not S_FORUM_CAT -->
+				dE('forum_cat_options', -1);
+			<!-- ENDIF -->
+
+			<!-- IF not S_FORUM_LINK -->
+				dE('forum_link_options', -1);
+			<!-- ENDIF -->
+
+			<!-- IF S_FORUM_LINK -->
+			dE('forum_rules_options', -1);
+			<!-- ENDIF -->
+		}
+
+	// ]]>
+	</script>
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE} :: {FORUM_NAME}</h1>
+
+	<p>{L_FORUM_EDIT_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="forumedit" method="post" action="{U_EDIT_ACTION}">
+
+	<fieldset>
+		<legend>{L_FORUM_SETTINGS}</legend>
+	<dl>
+		<dt><label for="forum_type">{L_FORUM_TYPE}:</label></dt>
+		<dd><select id="forum_type" name="forum_type" onchange="display_options(this.options[this.selectedIndex].value);">{S_FORUM_TYPE_OPTIONS}</select></dd>
+	</dl>
+	<!-- IF not S_ADD_ACTION and S_FORUM_ORIG_POST -->
+	<div id="type_actions">
+		<dl>
+			<dt><label for="type_action">{L_DECIDE_MOVE_DELETE_CONTENT}:</label></dt>
+			<dd><label><input type="radio" class="radio" name="type_action" value="delete"<!-- IF not S_MOVE_FORUM_OPTIONS --> checked="checked" id="type_action"<!-- ENDIF --> /> {L_DELETE_ALL_POSTS}</label></dd>
+			<!-- IF S_MOVE_FORUM_OPTIONS --><dd><label><input type="radio" class="radio" name="type_action" id="type_action" value="move" checked="checked" /> {L_MOVE_POSTS_TO}</label> <select name="to_forum_id">{S_MOVE_FORUM_OPTIONS}</select></dd><!-- ENDIF -->
+		</dl>
+	</div>
+	<!-- ENDIF -->
+	<!-- IF not S_ADD_ACTION and S_FORUM_ORIG_CAT and S_HAS_SUBFORUMS -->
+	<div id="cat_to_link_actions">
+		<dl>
+			<dt><label for="action_subforums">{L_DECIDE_MOVE_DELETE_SUBFORUMS}:</label></dt>
+			<!-- IF S_FORUMS_LIST -->
+				<dd><label><input type="radio" class="radio" id="action_subforums" name="action_subforums" value="move" checked="checked" /> {L_MOVE_SUBFORUMS_TO}</label> <select name="subforums_to_id">{S_FORUMS_LIST}</select></dd>
+			<!-- ELSE -->
+				<dd><label><input type="radio" class="radio" id="action_subforums" name="action_subforums" value="delete" checked="checked" /> {L_DELETE_SUBFORUMS}</label></dd>
+			<!-- ENDIF -->
+		</dl>
+	</div>
+	<!-- ENDIF -->
+	<dl>
+		<dt><label for="parent">{L_FORUM_PARENT}:</label></dt>
+		<dd><select id="parent" name="forum_parent_id"><option value="0"<!-- IF not S_FORUM_PARENT_ID --> selected="selected"<!-- ENDIF -->>{L_NO_PARENT}</option>{S_PARENT_OPTIONS}</select></dd>
+	</dl>
+	<dl>
+		<dt><label for="forum_name">{L_FORUM_NAME}:</label></dt>
+		<dd><input class="text medium" type="text" id="forum_name" name="forum_name" value="{FORUM_NAME}" maxlength="255" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="forum_desc">{L_FORUM_DESC}:</label><br /><span>{L_FORUM_DESC_EXPLAIN}</span></dt>
+		<dd><textarea id="forum_desc" name="forum_desc" rows="5" cols="45">{FORUM_DESC}</textarea></dd>
+		<dd><label><input type="checkbox" class="radio" name="desc_parse_bbcode"<!-- IF S_DESC_BBCODE_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_BBCODE}</label>
+			<label><input type="checkbox" class="radio" name="desc_parse_smilies"<!-- IF S_DESC_SMILIES_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_SMILIES}</label>
+			<label><input type="checkbox" class="radio" name="desc_parse_urls"<!-- IF S_DESC_URLS_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_URLS}</label></dd>
+	</dl>
+	<dl>
+		<dt><label for="forum_image">{L_FORUM_IMAGE}:</label><br /><span>{L_FORUM_IMAGE_EXPLAIN}</span></dt>
+		<dd><input class="text medium" type="text" id="forum_image" name="forum_image" value="{FORUM_IMAGE}" maxlength="255" /></dd>
+		<!-- IF FORUM_IMAGE_SRC -->
+			<dd><img src="{FORUM_IMAGE_SRC}" alt="{L_FORUM_IMAGE}" /></dd>
+		<!-- ENDIF -->
+	</dl>
+	<dl>
+		<dt><label for="forum_password">{L_FORUM_PASSWORD}:</label><br /><span>{L_FORUM_PASSWORD_EXPLAIN}</span></dt>
+		<dd><input type="password" id="forum_password" name="forum_password" value="<!-- IF S_FORUM_PASSWORD_SET -->&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;<!-- ENDIF -->" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="forum_password_confirm">{L_FORUM_PASSWORD_CONFIRM}:</label><br /><span>{L_FORUM_PASSWORD_CONFIRM_EXPLAIN}</span></dt>
+		<dd><input type="password" id="forum_password_confirm" name="forum_password_confirm" value="<!-- IF S_FORUM_PASSWORD_SET -->&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;<!-- ENDIF -->" /></dd>
+	</dl>
+	<!-- IF S_FORUM_PASSWORD_SET -->
+	<dl>
+		<dt><label for="forum_password_unset">{L_FORUM_PASSWORD_UNSET}:</label><br /><span>{L_FORUM_PASSWORD_UNSET_EXPLAIN}</span></dt>
+		<dd><input id="forum_password_unset" name="forum_password_unset" type="checkbox" /></dd>
+	</dl>
+	<!-- ENDIF -->
+	<dl>
+		<dt><label for="forum_style">{L_FORUM_STYLE}:</label></dt>
+		<dd><select id="forum_style" name="forum_style"><option value="0">{L_DEFAULT_STYLE}</option>{S_STYLES_OPTIONS}</select></dd>
+	</dl>
+	<!-- IF S_CAN_COPY_PERMISSIONS -->
+		<dl>
+			<dt><label for="forum_perm_from">{L_COPY_PERMISSIONS}:</label><br /><span>{L_COPY_PERMISSIONS_EXPLAIN}</span></dt>
+			<dd><select id="forum_perm_from" name="forum_perm_from"><option value="0">{L_NO_PERMISSIONS}</option>{S_FORUM_OPTIONS}</select></dd>
+		</dl>
+	<!-- ENDIF -->
+	</fieldset>
+
+	<div id="forum_cat_options">
+		<fieldset>
+			<legend>{L_GENERAL_FORUM_SETTINGS}</legend>
+		<dl>
+			<dt><label for="display_active">{L_DISPLAY_ACTIVE_TOPICS}:</label><br /><span>{L_DISPLAY_ACTIVE_TOPICS_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="display_active" value="1"<!-- IF S_DISPLAY_ACTIVE_TOPICS --> id="display_active" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="display_active" value="0"<!-- IF not S_DISPLAY_ACTIVE_TOPICS --> id="display_active" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		</fieldset>
+	</div>
+
+	<div id="forum_post_options">
+		<fieldset>
+			<legend>{L_GENERAL_FORUM_SETTINGS}</legend>
+		<dl>
+			<dt><label for="forum_status">{L_FORUM_STATUS}:</label></dt>
+			<dd><select id="forum_status" name="forum_status">{S_STATUS_OPTIONS}</select></dd>
+		</dl>
+		<dl>
+			<dt><label for="display_subforum_list">{L_LIST_SUBFORUMS}:</label><br /><span>{L_LIST_SUBFORUMS_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="display_subforum_list" value="1"<!-- IF S_DISPLAY_SUBFORUM_LIST --> id="display_subforum_list" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="display_subforum_list" value="0"<!-- IF not S_DISPLAY_SUBFORUM_LIST --> id="display_subforum_list" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="display_on_index">{L_LIST_INDEX}:</label><br /><span>{L_LIST_INDEX_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="display_on_index" value="1"<!-- IF S_DISPLAY_ON_INDEX --> id="display_on_index" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="display_on_index" value="0"<!-- IF not S_DISPLAY_ON_INDEX --> id="display_on_index" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="enable_post_review">{L_ENABLE_POST_REVIEW}:</label><br /><span>{L_ENABLE_POST_REVIEW_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="enable_post_review" value="1"<!-- IF S_ENABLE_POST_REVIEW --> id="enable_post_review" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="enable_post_review" value="0"<!-- IF not S_ENABLE_POST_REVIEW --> id="enable_post_review" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="enable_indexing">{L_ENABLE_INDEXING}:</label><br /><span>{L_ENABLE_INDEXING_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="enable_indexing" value="1"<!-- IF S_ENABLE_INDEXING --> id="enable_indexing" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="enable_indexing" value="0"<!-- IF not S_ENABLE_INDEXING --> id="enable_indexing" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="enable_icons">{L_ENABLE_TOPIC_ICONS}:</label></dt>
+			<dd><label><input type="radio" class="radio" name="enable_icons" value="1"<!-- IF S_TOPIC_ICONS --> id="enable_icons" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="enable_icons" value="0"<!-- IF not S_TOPIC_ICONS --> id="enable_icons" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="display_recent">{L_ENABLE_RECENT}:</label><br /><span>{L_ENABLE_RECENT_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="display_recent" value="1"<!-- IF S_DISPLAY_ACTIVE_TOPICS --> id="display_recent" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="display_recent" value="0"<!-- IF not S_DISPLAY_ACTIVE_TOPICS --> id="display_recent" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="topics_per_page">{L_FORUM_TOPICS_PAGE}:</label><br /><span>{L_FORUM_TOPICS_PAGE_EXPLAIN}</span></dt>
+			<dd><input type="text" id="topics_per_page" name="topics_per_page" value="{TOPICS_PER_PAGE}" size="4" maxlength="4" /></dd>
+		</dl>
+		</fieldset>
+
+		<fieldset>
+			<legend>{L_FORUM_PRUNE_SETTINGS}</legend>
+		<dl>
+			<dt><label for="enable_prune">{L_FORUM_AUTO_PRUNE}:</label><br /><span>{L_FORUM_AUTO_PRUNE_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="enable_prune" value="1"<!-- IF S_PRUNE_ENABLE --> id="enable_prune" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="enable_prune" value="0"<!-- IF not S_PRUNE_ENABLE --> id="enable_prune" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="prune_freq">{L_AUTO_PRUNE_FREQ}:</label><br /><span>{L_AUTO_PRUNE_FREQ_EXPLAIN}</span></dt>
+			<dd><input type="text" id="prune_freq" name="prune_freq" value="{PRUNE_FREQ}" maxlength="4" size="4" /> {L_DAYS}</dd>
+		</dl>
+		<dl>
+			<dt><label for="prune_days">{L_AUTO_PRUNE_DAYS}:</label><br /><span>{L_AUTO_PRUNE_DAYS_EXPLAIN}</span></dt>
+			<dd><input type="text" id="prune_days" name="prune_days" value="{PRUNE_DAYS}" maxlength="4" size="4" /> {L_DAYS}</dd>
+		</dl>
+		<dl>
+			<dt><label for="prune_viewed">{L_AUTO_PRUNE_VIEWED}:</label><br /><span>{L_AUTO_PRUNE_VIEWED_EXPLAIN}</span></dt>
+			<dd><input type="text" id="prune_viewed" name="prune_viewed" value="{PRUNE_VIEWED}" maxlength="4" size="4" /> {L_DAYS}</dd>
+		</dl>
+		<dl>
+			<dt><label for="prune_old_polls">{L_PRUNE_OLD_POLLS}:</label><br /><span>{L_PRUNE_OLD_POLLS_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="prune_old_polls" value="1"<!-- IF S_PRUNE_OLD_POLLS --> id="prune_old_polls" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="prune_old_polls" value="0"<!-- IF not S_PRUNE_OLD_POLLS --> id="prune_old_polls" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="prune_announce">{L_PRUNE_ANNOUNCEMENTS}:</label></dt>
+			<dd><label><input type="radio" class="radio" name="prune_announce" value="1"<!-- IF S_PRUNE_ANNOUNCE --> id="prune_announce" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="prune_announce" value="0"<!-- IF not S_PRUNE_ANNOUNCE --> id="prune_announce" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="prune_sticky">{L_PRUNE_STICKY}:</label></dt>
+			<dd><label><input type="radio" class="radio" name="prune_sticky" value="1"<!-- IF S_PRUNE_STICKY --> id="prune_sticky" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="prune_sticky" value="0"<!-- IF not S_PRUNE_STICKY --> id="prune_sticky" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		</fieldset>
+	</div>
+
+	<div id="forum_link_options">
+		<fieldset>
+			<legend>{L_GENERAL_FORUM_SETTINGS}</legend>
+		<dl>
+			<dt><label for="link_display_on_index">{L_LIST_INDEX}:</label><br /><span>{L_LIST_INDEX_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="link_display_on_index" value="1"<!-- IF S_DISPLAY_ON_INDEX --> id="link_display_on_index" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="link_display_on_index" value="0"<!-- IF not S_DISPLAY_ON_INDEX --> id="link_display_on_index" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="forum_link">{L_FORUM_LINK}:</label><br /><span>{L_FORUM_LINK_EXPLAIN}</span></dt>
+			<dd><input class="text medium" type="text" id="forum_link" name="forum_link" value="{FORUM_DATA_LINK}" maxlength="255" /></dd>
+		</dl>
+		<dl>
+			<dt><label for="forum_link_track">{L_FORUM_LINK_TRACK}:</label><br /><span>{L_FORUM_LINK_TRACK_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="forum_link_track" value="1"<!-- IF S_FORUM_LINK_TRACK --> id="forum_link_track" checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="forum_link_track" value="0"<!-- IF not S_FORUM_LINK_TRACK --> id="forum_link_track" checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		</fieldset>
+	</div>
+
+	<div id="forum_rules_options">
+		<fieldset>
+			<legend>{L_FORUM_RULES}</legend>
+		<dl>
+			<dt><label for="forum_rules_link">{L_FORUM_RULES_LINK}:</label><br /><span>{L_FORUM_RULES_LINK_EXPLAIN}</span></dt>
+			<dd><input class="text medium" type="text" id="forum_rules_link" name="forum_rules_link" value="{FORUM_RULES_LINK}" maxlength="255" /></dd>
+		</dl>
+	<!-- IF FORUM_RULES_PREVIEW -->
+		<dl>
+			<dt><label>{L_FORUM_RULES_PREVIEW}:</label></dt>
+			<dd>{FORUM_RULES_PREVIEW}</dd>
+		</dl>
+	<!-- ENDIF -->
+		<dl>
+			<dt><label for="forum_rules">{L_FORUM_RULES}:</label><br /><span>{L_FORUM_RULES_EXPLAIN}</span></dt>
+			<dd><textarea id="forum_rules" name="forum_rules" rows="4" cols="70">{FORUM_RULES_PLAIN}</textarea></dd>
+			<dd><label><input type="checkbox" class="radio" name="rules_parse_bbcode"<!-- IF S_BBCODE_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_BBCODE}</label>
+				<label><input type="checkbox" class="radio" name="rules_parse_smilies"<!-- IF S_SMILIES_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_SMILIES}</label>
+				<label><input type="checkbox" class="radio" name="rules_parse_urls"<!-- IF S_URLS_CHECKED --> checked="checked"<!-- ENDIF --> /> {L_PARSE_URLS}</label></dd>
+		</dl>
+		</fieldset>
+	</div>
+
+	<fieldset class="submit-buttons">
+		<legend>{L_SUBMIT}</legend>
+		<input class="button1" type="submit" id="submit" name="update" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_DELETE_FORUM -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_FORUM_DELETE}</h1>
+
+	<p>{L_FORUM_DELETE_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="acp_forum" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_FORUM_DELETE}</legend>
+	<dl>
+		<dt><label>{L_FORUM_NAME}:</label></dt>
+		<dd><strong>{FORUM_NAME}</strong></dd>
+	</dl>
+	<!-- IF S_FORUM_POST -->
+		<dl>
+			<dt><label for="delete_action">{L_ACTION}:</label></dt>
+			<dd><label><input type="radio" class="radio" id="delete_action" name="action_posts" value="delete" checked="checked" /> {L_DELETE_ALL_POSTS}</label></dd>
+			<!-- IF S_MOVE_FORUM_OPTIONS -->
+				<dd><label><input type="radio" class="radio" name="action_posts" value="move" /> {L_MOVE_POSTS_TO}</label> <select name="posts_to_id">{S_MOVE_FORUM_OPTIONS}</select></dd>
+			<!-- ENDIF -->
+		</dl>
+	<!-- ENDIF -->
+	<!-- IF S_HAS_SUBFORUMS -->
+		<dl>
+			<dt><label for="sub_delete_action">{L_ACTION}:</label></dt>
+			<dd><label><input type="radio" class="radio" id="sub_delete_action" name="action_subforums" value="delete" checked="checked" /> {L_DELETE_SUBFORUMS}</label></dd>
+			<!-- IF S_FORUMS_LIST -->
+				<dd><label><input type="radio" class="radio" name="action_subforums" value="move" /> {L_MOVE_SUBFORUMS_TO}</label> <select name="subforums_to_id">{S_FORUMS_LIST}</select></dd>
+			<!-- ENDIF -->
+		</dl>
+	<!-- ENDIF -->
+
+	<p class="quick">
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSEIF S_CONTINUE_SYNC -->
+
+	<script type="text/javascript">
+	// <![CDATA[
+		var close_waitscreen = 0;
+		// no scrollbars...
+		popup('{UA_PROGRESS_BAR}', 400, 240, '_sync');
+	// ]]>
+	</script>
+
+	<h1>{L_FORUM_ADMIN}</h1>
+
+	<p>{L_FORUM_ADMIN_EXPLAIN}</p>
+
+	<p>{L_PROGRESS_EXPLAIN}</p>
+
+<!-- ELSE -->
+
+	<script type="text/javascript">
+	// <![CDATA[
+		/**
+		* Popup search progress bar
+		*/
+		function popup_progress_bar()
+		{
+			var close_waitscreen = 0;
+			// no scrollbars...
+			popup('{UA_PROGRESS_BAR}', 400, 240, '_sync');
+		}
+	// ]]>
+	</script>
+
+	<h1>{L_FORUM_ADMIN}</h1>
+
+	<p>{L_FORUM_ADMIN_EXPLAIN}</p>
+
+	<!-- IF ERROR_MSG -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<!-- IF S_RESYNCED -->
+		<script type="text/javascript">
+		// <![CDATA[
+			var close_waitscreen = 1;
+		// ]]>
+		</script>
+
+		<div class="successbox">
+			<h3>{L_NOTIFY}</h3>
+			<p>{L_FORUM_RESYNCED}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<p><strong>{NAVIGATION}<!-- IF S_NO_FORUMS --> [<a href="{U_EDIT}">{L_EDIT}</a> | <a href="{U_DELETE}">{L_DELETE}</a><!-- IF not S_LINK --> | <a href="{U_SYNC}">{L_RESYNC}</a><!-- ENDIF --->]<!-- ENDIF --></strong></p>
+
+	<!-- IF .forums -->
+		<table cellspacing="1">
+			<col class="row1" /><col class="row1" /><col class="row2" />
+		<tbody>
+		<!-- BEGIN forums -->
+			<tr>
+				<td style="width: 5%; text-align: center;">{forums.FOLDER_IMAGE}</td>
+				<td>
+					<!-- IF forums.FORUM_IMAGE --><div style="float: {S_CONTENT_FLOW_BEGIN}; margin-right: 5px;">{forums.FORUM_IMAGE}</div><!-- ENDIF -->
+					<strong><!-- IF forums.S_FORUM_LINK -->{forums.FORUM_NAME}<!-- ELSE --><a href="{forums.U_FORUM}">{forums.FORUM_NAME}</a><!-- ENDIF --></strong>
+					<!-- IF forums.FORUM_DESCRIPTION --><br /><span>{forums.FORUM_DESCRIPTION}</span><!-- ENDIF -->
+					<!-- IF forums.S_FORUM_POST --><br /><br /><span>{L_TOPICS}: <strong>{forums.FORUM_TOPICS}</strong> / {L_POSTS}: <b>{forums.FORUM_POSTS}</b></span><!-- ENDIF -->
+				</td>
+				<td style="vertical-align: top; width: 100px; text-align: right; white-space: nowrap;">
+					<!-- IF forums.S_FIRST_ROW && not forums.S_LAST_ROW -->
+						{ICON_MOVE_UP_DISABLED}
+						<a href="{forums.U_MOVE_DOWN}">{ICON_MOVE_DOWN}</a>
+					<!-- ELSEIF not forums.S_FIRST_ROW && not forums.S_LAST_ROW -->
+						<a href="{forums.U_MOVE_UP}">{ICON_MOVE_UP}</a>
+						<a href="{forums.U_MOVE_DOWN}">{ICON_MOVE_DOWN}</a>
+					<!-- ELSEIF forums.S_LAST_ROW && not forums.S_FIRST_ROW -->
+						<a href="{forums.U_MOVE_UP}">{ICON_MOVE_UP}</a>
+						{ICON_MOVE_DOWN_DISABLED}
+					<!-- ELSE -->
+						{ICON_MOVE_UP_DISABLED}
+						{ICON_MOVE_DOWN_DISABLED}
+					<!-- ENDIF -->
+					<a href="{forums.U_EDIT}">{ICON_EDIT}</a>
+					<!-- IF not forums.S_FORUM_LINK -->
+						<a href="{forums.U_SYNC}" onclick="popup_progress_bar();">{ICON_SYNC}</a>
+					<!-- ELSE -->
+						{ICON_SYNC_DISABLED}
+					<!-- ENDIF -->
+					<a href="{forums.U_DELETE}">{ICON_DELETE}</a>
+				</td>
+			</tr>
+		<!-- END forums -->
+		</tbody>
+		</table>
+	<!-- ENDIF -->
+
+	<form id="fselect" method="post" action="{U_SEL_ACTION}">
+
+	<fieldset class="quick">
+		{L_SELECT_FORUM}: <select name="parent_id" onchange="if(this.options[this.selectedIndex].value != -1){ this.form.submit(); }">{FORUM_BOX}</select>
+
+		<input class="button2" type="submit" value="{L_GO}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+	<form id="forums" method="post" action="{U_ACTION}">
+
+	<fieldset class="quick">
+		<input type="hidden" name="action" value="add" />
+
+		<input type="text" name="forum_name" value="" maxlength="255" />
+		<input class="button2" name="addforum" type="submit" value="{L_CREATE_FORUM}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

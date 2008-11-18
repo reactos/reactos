@@ -1,0 +1,124 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "User Authentication"
+   desc = "Set up your authentication policies"
+%]
+
+[% param_descs = {
+  auth_env_id => "Environment variable used by external authentication system " _
+                 "to store a unique identifier for each user. Leave it blank " _
+                 "if there isn't one or if this method of authentication " _
+                 "is not being used.",
+
+  auth_env_email => "Environment variable used by external authentication system " _
+                    "to store each user's email address. This is a required " _
+                    "field for environmental authentication. Leave it blank " _
+                    "if you are not going to use this feature.",
+
+  auth_env_realname => "Environment variable used by external authentication system " _
+                       "to store the user's real name. Leave it blank if there " _
+                       "isn't one or if this method of authentication is not being " _
+                       "used.",
+
+  user_info_class => "Mechanism(s) to be used for gathering a user's login information.
+                      More than one may be selected. If the first one returns nothing,
+                      the second is tried, and so on.<br>
+                      The types are:
+                      <dl>
+                        <dt>CGI</dt>
+                        <dd>
+                          Asks for username and password via CGI form interface.
+                        </dd>
+                        <dt>Env</dt>
+                        <dd>
+                          Info for a pre-authenticated user is passed in system
+                          environment variables.
+                        </dd>
+                      </dl>",
+
+  user_verify_class => "Mechanism(s) to be used for verifying (authenticating) information
+                        gathered by user_info_class.
+                        More than one may be selected. If the first one cannot find the
+                        user, the second is tried, and so on.<br>
+                        The types are:
+                        <dl>
+                          <dt>DB</dt>
+                          <dd>
+                            ${terms.Bugzilla}'s built-in authentication. This is the most common
+                            choice.
+                          </dd>
+                          <dt>LDAP</dt>
+                          <dd>
+                            LDAP authentication using an LDAP server.
+                            Please see the $terms.Bugzilla documentation
+                            for more information. Using this method requires
+                            additional parameters to be set above.
+                          </dd>
+                        </dl>",
+
+  rememberlogin => "Controls management of session cookies
+                    <ul>
+                      <li>
+                        on - Session cookies never expire (the user has to login only
+                        once per browser).
+                      </li>
+                      <li>
+                        off - Session cookies last until the users session ends (the user
+                        will have to login in each new browser session).
+                      </li>
+                      <li>
+                        defaulton/defaultoff - Default behavior as described
+                        above, but user can choose whether $terms.Bugzilla will remember his
+                        login or not.
+                      </li>
+                    </ul>",
+
+  loginnetmask => "The number of bits for the netmask used if a user chooses to " _
+                  "allow a login to be valid for more than a single IP. Setting " _
+                  "this to 32 disables this feature.<br> " _
+                  "Note that enabling this may decrease the security of your system.",
+
+  requirelogin => "If this option is set, all access to the system beyond the " _
+                  "front page will require a login. No anonymous users will " _
+                  "be permitted.",
+
+  emailregexp => "This defines the regexp to use for legal email addresses. The " _
+                 "default tries to match fully qualified email addresses. Another " _
+                 "popular value to put here is <tt>^[^@]+$</tt>, which means " _
+                 "'local usernames, no @ allowed.'",
+
+  emailregexpdesc => "This describes in English words what kinds of legal addresses " _
+                     "are allowed by the <tt>emailregexp</tt> param.",
+
+  emailsuffix => "This is a string to append to any email addresses when actually " _
+                 "sending mail to that address. It is useful if you have changed " _
+                 "the <tt>emailregexp</tt> param to only allow local usernames, " _
+                 "but you want the mail to be delivered to username@my.local.hostname.",
+
+  createemailregexp => "This defines the regexp to use for email addresses that are " _
+                       "permitted to self-register using a 'New Account' feature. The " _
+                       "default (.*) permits any account matching the emailregexp " _
+                       "to be created. If this parameter is left blank, no users " _
+                       "will be permitted to create their own accounts and all accounts " _
+                       "will have to be created by an administrator." }
+%]

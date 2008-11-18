@@ -1,0 +1,122 @@
+
+<!-- BEGIN _file -->
+	<!-- IF _file.S_DENIED -->
+	<p>[{_file.DENIED_MESSAGE}]</p>
+	<!-- ELSE -->
+
+		<!-- IF _file.S_THUMBNAIL -->
+		<dl class="thumbnail">
+			<dt><a href="{_file.U_DOWNLOAD_LINK}"><img src="{_file.THUMB_IMAGE}" alt="{_file.DOWNLOAD_NAME}" title="{_file.DOWNLOAD_NAME} ({_file.FILESIZE} {_file.SIZE_LANG}) {_file.L_DOWNLOAD_COUNT}" /></a></dt>
+			<!-- IF _file.COMMENT --><dd> {_file.COMMENT}</dd><!-- ENDIF -->
+		</dl>
+		<!-- ENDIF -->
+
+
+		<!-- IF _file.S_IMAGE -->
+		<dl class="file">
+			<dt class="attach-image"><img src="{_file.U_INLINE_LINK}" alt="{_file.DOWNLOAD_NAME}" onclick="viewableArea(this);" /></dt>
+			<!-- IF _file.COMMENT --><dd><em>{_file.COMMENT}</em></dd><!-- ENDIF -->
+			<dd>{_file.DOWNLOAD_NAME} ({_file.FILESIZE} {_file.SIZE_LANG}) {_file.L_DOWNLOAD_COUNT}</dd>
+		</dl>
+		<!-- ENDIF -->
+
+		<!-- IF _file.S_FILE -->
+		<dl class="file">
+			<dt><!-- IF _file.UPLOAD_ICON -->{_file.UPLOAD_ICON} <!-- ENDIF --><a class="postlink" href="{_file.U_DOWNLOAD_LINK}">{_file.DOWNLOAD_NAME}</a></dt>
+			<!-- IF _file.COMMENT --><dd><em>{_file.COMMENT}</em></dd><!-- ENDIF -->
+			<dd>({_file.FILESIZE} {_file.SIZE_LANG}) {_file.L_DOWNLOAD_COUNT}</dd>
+		</dl>
+		<!-- ENDIF -->
+
+
+
+		<!-- IF _file.S_WM_FILE -->
+			<!-- method used here from http://alistapart.com/articles/byebyeembed / autosizing seems to not work always, this will not fix -->
+			<object width="320" height="285" classid="CLSID:6BF52A52-394A-11d3-B153-00C04F79FAA6" id="wmstream_{_file.ATTACH_ID}">
+				<param name="url" value="{_file.U_DOWNLOAD_LINK}" />
+				<param name="showcontrols" value="1" />
+				<param name="showdisplay" value="0" />
+				<param name="showstatusbar" value="0" />
+				<param name="autosize" value="1" />
+				<param name="autostart" value="0" />
+				<param name="visible" value="1" />
+				<param name="animationstart" value="0" />
+				<param name="loop" value="0" />
+				<param name="src" value="{_file.U_DOWNLOAD_LINK}" />
+				<!--[if !IE]>-->
+					<object width="320" height="285" type="video/x-ms-wmv" data="{_file.U_DOWNLOAD_LINK}">
+						<param name="src" value="{_file.U_DOWNLOAD_LINK}" />
+						<param name="controller" value="1" />
+						<param name="showcontrols" value="1" />
+						<param name="showdisplay" value="0" />
+						<param name="showstatusbar" value="0" />
+						<param name="autosize" value="1" />
+						<param name="autostart" value="0" />
+						<param name="visible" value="1" />
+						<param name="animationstart" value="0" />
+						<param name="loop" value="0" />
+					</object>
+				<!--<![endif]-->
+			</object>
+
+		<!-- ELSEIF _file.S_FLASH_FILE -->
+			<object classid="clsid:D27CDB6E-AE6D-11CF-96B8-444553540000" codebase="http://active.macromedia.com/flash2/cabs/swflash.cab#version=5,0,0,0" width="{_file.WIDTH}" height="{_file.HEIGHT}">
+				<param name="movie" value="{_file.U_DOWNLOAD_LINK}" />
+				<param name="play" value="true" />
+				<param name="loop" value="true" />
+				<param name="quality" value="high" />
+				<param name="allowScriptAccess" value="never" />
+				<param name="allowNetworking" value="internal" />
+				<embed src="{_file.U_DOWNLOAD_LINK}" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash" width="{_file.WIDTH}" height="{_file.HEIGHT}" play="true" loop="true" quality="high" allowscriptaccess="never" allownetworking="internal"></embed>
+			</object>
+		<!-- ELSEIF _file.S_QUICKTIME_FILE -->
+			<object id="qtstream_{_file.ATTACH_ID}" classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B" codebase="http://www.apple.com/qtactivex/qtplugin.cab#version=6,0,2,0" width="0" height="16">
+				<param name="src" value="{_file.U_DOWNLOAD_LINK}" />
+				<param name="controller" value="true" />
+				<param name="autoplay" value="false" />
+				<param name="type" value="video/quicktime" />
+				<embed name="qtstream_{_file.ATTACH_ID}" src="{_file.U_DOWNLOAD_LINK}" pluginspage="http://www.apple.com/quicktime/download/" enablejavascript="true" controller="true" width="0" height="16" type="video/quicktime" autoplay="false"></embed>
+			</object>
+		<!-- ELSEIF _file.S_RM_FILE -->
+			<object id="rmstream_{_file.ATTACH_ID}" classid="clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA" width="200" height="50">
+				<param name="src" value="{_file.U_DOWNLOAD_LINK}" />
+				<param name="autostart" value="false" />
+				<param name="controls" value="ImageWindow" />
+				<param name="console" value="ctrls_{_file.ATTACH_ID}" />
+				<param name="prefetch" value="false" />
+				<embed name="rmstream_{_file.ATTACH_ID}" type="audio/x-pn-realaudio-plugin" src="{_file.U_DOWNLOAD_LINK}" width="0" height="0" autostart="false" controls="ImageWindow" console="ctrls_{_file.ATTACH_ID}" prefetch="false"></embed>
+			</object>
+			<br />
+			<object id="ctrls_{_file.ATTACH_ID}" classid="clsid:CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA" width="0" height="36">
+				<param name="controls" value="ControlPanel" />
+				<param name="console" value="ctrls_{_file.ATTACH_ID}" />
+				<embed name="ctrls_{_file.ATTACH_ID}" type="audio/x-pn-realaudio-plugin" width="200" height="36" controls="ControlPanel" console="ctrls_{_file.ATTACH_ID}"></embed>
+			</object>
+
+			<script type="text/javascript">
+			// <![CDATA[
+				if (document.rmstream_{_file.ATTACH_ID}.GetClipWidth)
+				{
+					while (!document.rmstream_{_file.ATTACH_ID}.GetClipWidth())
+					{
+					}
+
+					var width = document.rmstream_{_file.ATTACH_ID}.GetClipWidth();
+					var height = document.rmstream_{_file.ATTACH_ID}.GetClipHeight();
+
+					document.rmstream_{_file.ATTACH_ID}.width = width;
+					document.rmstream_{_file.ATTACH_ID}.height = height;
+					document.ctrls_{_file.ATTACH_ID}.width = width;
+				}
+			// ]]>
+			</script>
+		<!-- ENDIF -->
+
+		<!-- IF _file.S_WM_FILE or _file.S_RM_FILE or _file.S_FLASH_FILE or _file.S_QUICKTIME_FILE -->
+			<p>
+			<!-- IF _file.S_QUICKTIME_FILE --><a href="#" onclick="play_qt_file(document.qtstream_{_file.ATTACH_ID}); return false;">[ {L_PLAY_QUICKTIME_FILE} ]</a> <!-- ENDIF -->
+			<a href="{_file.U_DOWNLOAD_LINK}">{_file.DOWNLOAD_NAME}</a> [ {_file.FILESIZE} {_file.SIZE_LANG} | {_file.L_DOWNLOAD_COUNT} ]</p>
+		<!-- ENDIF -->
+
+	<!-- ENDIF -->
+<!-- END _file -->

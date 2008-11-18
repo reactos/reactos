@@ -1,0 +1,130 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Find a Specific " _ terms.Bug
+%]
+
+[% WRAPPER search/tabs.html.tmpl %]
+
+<p>
+Find a specific [% terms.bug %] by entering words that describe it.  
+[% terms.Bugzilla %] will search [% terms.bug %] descriptions and comments
+for those words and return a list of matching [% terms.bugs %] sorted
+by relevance.
+</p>
+
+<p>
+For example, if the [% terms.bug %] you are looking for is a browser crash when you go to a secure web site with an embedded Flash animation, you might search
+for "crash secure SSL flash".
+</p>
+
+<form name="queryform" method="get" action="buglist.cgi">
+<input type="hidden" name="query_format" value="specific">
+<input type="hidden" name="order" value="relevance desc">
+
+<table>
+  <tr>
+    <td align="right" valign="baseline">
+      <b><label for="bug_status">Status:</label></b>
+    </td>
+    <td>
+      <select name="bug_status" id="bug_status">
+        [% statuses = [ { name = 'open', label = "Open" },
+                        { name = 'closed', label = "Closed" },
+                        { name = 'all', label = "All" } ] %]
+        [% FOREACH status = statuses %]
+            <option value="__[% status.name %]__" 
+                  [% " selected" IF default.bug_status.0 == "__${status.name}__" %]>
+            [% status.label FILTER html %]
+          </option>
+        [% END %]
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td align="right" valign="baseline">
+      <b><label for="product">Product:</label></b>
+    </td>
+    <td>
+      <select name="product" id="product">
+        <option value="">All</option>
+        [% IF Param('useclassification') %]
+          [% FOREACH c = classification %]
+            <optgroup label="[% c.name FILTER html %]">
+            [% FOREACH p = user.get_selectable_products(c.id) %]
+              [% IF p.components.size %]
+                <option value="[% p.name FILTER html %]"
+                  [% " selected" IF lsearch(default.product, p.name) != -1 %]>
+                  [% p.name FILTER html %]
+                </option>
+              [% END %]
+            [% END %]
+            </optgroup>
+          [% END %]
+        [% ELSE %]
+          [% FOREACH p = product %]
+            <option value="[% p.name FILTER html %]"
+              [% " selected" IF lsearch(default.product, p.name) != -1 %]>
+              [% p.name FILTER html %]
+            </option>
+          [% END %]
+        [% END %]
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td align="right" valign="baseline">
+      <b><label for="content">Words:</label></b>
+    </td>
+    <td>
+      <input name="content" size="40" id="content"
+             value="[% default.content.0 FILTER html %]">
+      <script type="text/javascript"> <!--
+          document.forms['queryform'].content.focus(); 
+      // -->
+      </script>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+    
+      [% IF Param('specific_search_allow_empty_words') %]
+        <input type="submit" id="search" value="Search">
+      [% ELSE %]
+        <input type="submit" id="search" value="Search"
+             onclick="if (this.form.content.value == '')
+                      {alert('The Words field cannot be empty. You have to ' +
+                             'enter at least one word in your search criteria.');
+                       return false;} return true;">
+      [% END %]
+    </td>
+  </tr>
+</table>
+</form>
+
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]
+

@@ -1,0 +1,55 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  #
+  # 'updated_XXX' variables are booleans, and are defined if the
+  # 'XXX' field was updated during the edit just being handled.
+  # Variables called just 'XXX' are strings, and are the _new_ contents
+  # of the fields.
+  #
+  # value & updated_value: the name of the field value
+  # sortkey & updated_sortkey: the field value sortkey
+  # field: string; the field that the value belongs to
+  # default_value_updated: boolean; whether the default value for
+  #                        this field has been updated
+  #%]
+  
+[% title = BLOCK %]Updating Value '[% value FILTER html %]' of the
+                   '[% field FILTER html %]' Field[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+[% IF updated_value %]
+  <p>Updated field value to: '[% value FILTER html %]'.</p>
+  [% IF default_value_updated %]
+    <p>Note that this value is the default for this field.
+    All references to the default value will now point to this new value.</p>
+  [% END %]
+[% END %]
+
+[% IF updated_sortkey %]
+  <p>Updated field value sortkey to: '[% sortkey FILTER html %]'.</p>
+[% END %]
+
+[% UNLESS (updated_sortkey || updated_value) %]
+  <p>Nothing changed for field value '[% value FILTER html %]'.</p>
+[% END %]
+
+[% PROCESS admin/fieldvalues/footer.html.tmpl %]
+
+[% PROCESS global/footer.html.tmpl %]

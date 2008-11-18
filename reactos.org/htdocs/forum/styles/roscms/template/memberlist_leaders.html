@@ -1,0 +1,76 @@
+<!-- INCLUDE overall_header.html -->
+
+<h2 class="solo">{PAGE_TITLE}</h2>
+
+<form method="post" action="{S_MODE_ACTION}">
+
+<div class="forumbg">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<table class="table1" cellspacing="1">
+	<thead>
+	<tr>
+		<th class="name"><span class="rank-img">{L_RANK}&nbsp;</span>{L_ADMINISTRATORS}</th>
+		<th class="info">{L_PRIMARY_GROUP}</th>
+		<th class="info">{L_FORUMS}</th>
+	</tr>
+	</thead>
+	<tbody>
+<!-- BEGIN admin -->
+	<tr class="<!-- IF admin.S_ROW_COUNT is even -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
+		<td><!-- IF admin.RANK_IMG --><span class="rank-img">{admin.RANK_IMG}</span><!-- ELSE --><span class="rank-img">{admin.RANK_TITLE}</span><!-- ENDIF -->{admin.USERNAME_FULL}</td>
+		<td class="info"><!-- IF admin.U_GROUP -->
+			<a<!-- IF admin.GROUP_COLOR --> style="font-weight: bold; color:#{admin.GROUP_COLOR}"<!-- ENDIF --> href="{admin.U_GROUP}">{admin.GROUP_NAME}</a>
+			<!-- ELSE -->
+				{admin.GROUP_NAME}
+			<!-- ENDIF --></td>
+		<td class="info">-</td>
+	</tr>
+<!-- BEGINELSE -->
+	<tr class="bg1">
+		<td colspan="3"><strong>{L_NO_MEMBERS}</strong></td>
+	</tr>
+<!-- END admin -->
+	</tbody>
+	</table>
+	
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<div class="forumbg">
+	<div class="inner"><span class="corners-top"><span></span></span>
+	 
+	<table class="table1" cellspacing="1">
+	<thead>
+	<tr>
+		<th class="name">{L_MODERATORS}</th>
+		<th class="info">&nbsp;</th>
+		<th class="info">&nbsp;</th>
+	</tr>
+	</thead>
+	<tbody>
+<!-- BEGIN mod -->
+	<tr class="<!-- IF mod.S_ROW_COUNT is even -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
+		<td><!-- IF mod.RANK_IMG --><span class="rank-img">{mod.RANK_IMG}</span><!-- ELSE --><span class="rank-img">{mod.RANK_TITLE}</span><!-- ENDIF -->{mod.USERNAME_FULL}</td>
+		<td class="info"><!-- IF mod.U_GROUP -->
+			<a<!-- IF mod.GROUP_COLOR --> style="font-weight: bold; color:#{mod.GROUP_COLOR}"<!-- ENDIF --> href="{mod.U_GROUP}">{mod.GROUP_NAME}</a>
+			<!-- ELSE -->
+				{mod.GROUP_NAME}
+			<!-- ENDIF --></td>
+		<td class="info"><!-- IF not mod.FORUMS -->{L_ALL_FORUMS}<!-- ELSE --><select style="width: 100%;">{mod.FORUMS}</select><!-- ENDIF --></td>
+	</tr>
+<!-- BEGINELSE -->
+	<tr class="bg1">
+		<td colspan="3"><strong>{L_NO_MEMBERS}</strong></td>
+	</tr>
+<!-- END mod -->
+	</tbody>
+	</table>
+	
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+	
+</form>
+
+<!-- INCLUDE jumpbox.html -->
+<!-- INCLUDE overall_footer.html -->

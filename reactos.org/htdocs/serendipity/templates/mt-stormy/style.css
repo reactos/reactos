@@ -1,0 +1,163 @@
+/* HTML Elements */
+
+body {
+  background: #333333;
+  margin: 0px 0px 10px 0px;
+}
+
+a,
+a:link,
+a:visited {
+  color: #99ccff;
+  text-decoration: none;
+}
+
+a:active,
+a:hover {
+  color: #99cc66;
+}
+
+h3, h4 {
+  margin: 0px;
+  padding: 0px;
+}
+
+/* Banner */
+
+#serendipity_banner {
+  background: #000000;
+  border-bottom: 1px dotted #999999;
+  border-top: 3px dotted #999999;
+  color: #ffffff;
+  font-family: Verdana, Arial, sans-serif;
+  font-weight: normal;
+  padding: 15px;
+  letter-spacing: .2em;
+}
+
+#serendipity_banner h1 {
+  font-size: x-large;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+#serendipity_banner h2 {
+  font-size: x-small;
+  font-weight: bold;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Calendar */
+
+table.serendipity_calendar a,
+table.serendipity_calendar a:link,
+table.serendipity_calendar a:visited,
+table.serendipity_calendar a:hover {
+}
+
+table.serendipity_calendar td {
+}
+
+td.serendipity_weekDayName {
+}
+
+td.serendipity_calendarHeader a:link,
+td.serendipity_calendarHeader a:visited,
+td.serendipity_calendarHeader a:hover {
+}
+
+/* Sidebars */
+
+#serendipityLeftSideBar,
+#serendipityRightSideBar {
+  display: block;
+  padding: 15px;
+  vertical-align: top;
+}
+
+.serendipitySideBarTitle {
+  color: #999999;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: x-small;
+  font-weight: bold;
+  letter-spacing: .2em;
+  line-height: 140%;
+  margin-top: 10px;
+  padding: 2px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+div.serendipitySideBarItem {
+  background: #333333;
+  color: #003366;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: x-small;
+  font-weight: normal;
+  line-height: 140%;
+  padding: 2px;
+}
+
+/* Entries */
+
+div.serendipity_Entry_Date {
+}
+
+.serendipity_date {
+}
+
+.serendipity_title,
+.serendipity_Admin_title {
+}
+
+.serendipity_entry,
+.serendipity_admin {
+}
+
+div.serendipity_entryFooter {
+  clear: both;
+}
+
+/* Comments */
+
+.serendipity_comment {
+  overflow: auto;
+}
+
+.serendipity_commentsLabel {
+}
+
+.serendipity_commentsTitle {
+}
+
+/* Admin */
+
+.serendipity_admin td {
+}
+
+/* Misc */
+
+#content {
+  width: 100%;
+}
+
+img.serendipity_entryIcon {
+    float: right;
+    border: 0px;
+}
+
+.serendipity_msg_important {
+    color: red;
+}
+
+.serendipity_msg_notice {
+    color: green;
+}
+
+.serendipity_entry_author_self {
+}
+
+.serendipity_comment_author_self {
+    background-color: #efefef;
+}

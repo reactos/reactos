@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Swedish (SE) resources]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/*
+ * Copyright 2005 David Nordenberg
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_SWE)]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef _WIN32]]></obj>
+</group>
+<group name="LANGUAGE">
+  <obj type="LANGUAGE" sublang="SUBLANG_SWEDISH">LANG_SWEDISH</obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#pragma code_page(850)]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif //_WIN32]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Menu]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_TASKMANAGER">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["&Arkiv"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_FILE_NEW"><![CDATA["&Ny Aktivitet (Kör...)"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_FILE_EXIT"><![CDATA["&Avsluta Aktivitetshanteraren"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Alternativ"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_OPTIONS_ALWAYSONTOP  CHECKED"><![CDATA["&Alltid överst"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_MINIMIZEONUSE  CHECKED"><![CDATA["&Minimera vid användning"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_HIDEWHENMINIMIZED  CHECKED"><![CDATA["&Göm minimerad"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_SHOW16BITTASKS  CHECKED"><![CDATA["&Visa 16-bitarsaktiviteter"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Visa"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_REFRESH"><![CDATA["&Uppdatera"]]></obj>
+<obj type="POPUP"><![CDATA["U&ppdateringshastighet"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_HIGH"><![CDATA["&Hög"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_NORMAL  CHECKED"><![CDATA["&Normal"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_LOW"><![CDATA["&Låg"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_PAUSED"><![CDATA["&Fryst"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_LARGE"><![CDATA["&Stora ikoner"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SMALL"><![CDATA["S&må ikoner"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_DETAILS  CHECKED"><![CDATA["&Detaljer"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SELECTCOLUMNS"><![CDATA["&Välj kolumner..."]]></obj>
+<obj type="POPUP"><![CDATA["&CPU Historik"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHALL"><![CDATA["En visare för &alla processorer"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU  CHECKED"><![CDATA["&En visare per processor"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEM" rc_name="ID_VIEW_SHOWKERNELTIMES"><![CDATA["&Visa kernel-tider"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Fönster"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Ordna &horizontellt"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Ordna &vertikalt"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["&Minimera"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Ma&ximera"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Överlappande"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["&För till förgrunden"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Hjälp"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_HELP_TOPICS"><![CDATA["Aktivitetshanteraren &hjälpavsnitt"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_HELP_ABOUT"><![CDATA["&Om Aktivitetshanteraren"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_WINDOWSMENU">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Ordna &horizontellt"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Ordna &vertikalt"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["&Minimera"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Ma&ximera"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Överlappande"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["&För till förgrunden"]]></obj>
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_APPLICATION_PAGE_CONTEXT1">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_FILE_NEW"><![CDATA["&Ny aktivitet (Kör...)"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_LARGE"><![CDATA["&Stora ikoner"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SMALL"><![CDATA["S&må ikoner"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_DETAILS  CHECKED"><![CDATA["&Detaljer"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_APPLICATION_PAGE_CONTEXT2">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_SWITCHTO"><![CDATA["&Växla till"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["&För till förgrunden"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Ordna &horizontellt"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Ordna &vertikalt"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["&Minimera"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Ma&ximera"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Överlappande"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_ENDTASK"><![CDATA["&Avsluta aktiviteten"]]></obj>
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_GOTOPROCESS"><![CDATA["&Gå till process"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_TRAY_POPUP">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_RESTORE"><![CDATA["&Återställ"]]></obj>
+<obj type="MENUITEM" rc_name="ID_FILE_EXIT"><![CDATA["&Stäng"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_ALWAYSONTOP"><![CDATA["&Alltid överst"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_PROCESS_PAGE_CONTEXT">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_ENDPROCESS"><![CDATA["&Avsluta process"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_ENDPROCESSTREE"><![CDATA["Avsluta process&träd"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_DEBUG"><![CDATA["&Felsök"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="POPUP"><![CDATA["Ändra &prioritet"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_REALTIME"><![CDATA["&Realtid"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_HIGH"><![CDATA["&Hög"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL"><![CDATA["&Över normal"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_NORMAL"><![CDATA["&Normal"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL"><![CDATA["&Under normal"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_LOW"><![CDATA["&Låg"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETAFFINITY"><![CDATA["Välj &källa (FIXME)..."]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_DEBUGCHANNELS"><![CDATA["Ändra felsökningskanaler..."]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Dialog]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_ABOUTBOX" left="22" top="17" width="259" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Om Aktivitetshanteraren]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_STATIC" prop="Static" style="SS_LEFTNOWORDWRAP | WS_GROUP" left="53" top="28" width="122" height="26"><![CDATA["Aktivitetshanteraren v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)"]]></obj>
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="183" top="189" width="44" height="14" style="WS_GROUP"><![CDATA["OK"]]></obj>
+  <obj type="ICON" rc_name="IDI_TASKMANAGER" left="IDC_STATIC" top="19" width="30" height="20" style="20"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_LICENSE_EDIT" left="53" top="63" width="174" height="107" style="ES_MULTILINE |ES_READONLY | WS_VSCROLL"></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_TASKMGR_DIALOG" left="0" top="0" width="264" height="246">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |WS_THICKFRAME]]></obj>
+  <obj type="CAPTION"><![CDATA[Aktivitetshanteraren"MENU IDR_TASKMANAGER]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_TAB" prop="SysTabControl32" style="WS_TABSTOP" left="3" top="3" width="257" height="228"><![CDATA["Tab1"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_APPLICATION_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_APPLIST" prop="SysListView32" style="LVS_REPORT |LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_NEWTASK" left="175" top="189" width="65" height="14" style=""><![CDATA["&Ny aktivitet..."]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_SWITCHTO" left="120" top="189" width="53" height="14" style="WS_DISABLED"><![CDATA["&Växla till"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_ENDTASK" left="34" top="189" width="83" height="14" style="WS_DISABLED"><![CDATA["&Avsluta aktiviteten"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_PROCESS_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_PROCESSLIST" prop="SysListView32" style="LVS_REPORT |LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |WS_BORDER | WS_TABSTOP" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_ENDPROCESS" left="171" top="189" width="69" height="14" style=""><![CDATA["&Avsluta process"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_SHOWALLPROCESSES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="191" width="156" height="10"><![CDATA["&Visa processer från alla användare"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210]]></obj>
+</group>
+<group name="DIALOGEX">
+  <obj type="DIALOGEX" rc_name="IDD_PERFORMANCE_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOGEX" command="BEGIN" />
+  <obj type="GROUPBOX" rc_name="IDC_CPU_USAGE_FRAME" left="5" top="5" width="60" height="54" style="WS_TABSTOP  WS_EX_TRANSPARENT"><![CDATA["Processoranv."]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_MEM_USAGE_FRAME" left="5" top="63" width="60" height="54" style="BS_LEFTTEXT  WS_EX_TRANSPARENT"><![CDATA["Minnesanv."]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_TOTALS_FRAME" left="5" top="122" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Totalt"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_COMMIT_CHARGE_FRAME" left="5" top="166" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Upptaget minne (K)"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_PHYSICAL_MEMORY_FRAME" left="131" top="122" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Fysiskt minne (K)"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_KERNEL_MEMORY_FRAME" left="131" top="166" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Kernel minne (K)"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_HANDLE_COUNT" left="12" top="131" width="41" height="8" style=""><![CDATA["Referenser"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_THREAD_COUNT" left="12" top="140" width="27" height="8" style=""><![CDATA["Trådar"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_PROCESS_COUNT" left="12" top="149" width="36" height="8" style=""><![CDATA["Processer"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_HANDLE_COUNT" left="65" top="131" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_THREAD_COUNT" left="65" top="140" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_PROCESS_COUNT" left="65" top="149" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_TOTAL" left="12" top="175" width="27" height="8" style=""><![CDATA["Totalt"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_LIMIT" left="12" top="184" width="21" height="8" style=""><![CDATA["Gräns"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_PEAK" left="12" top="193" width="34" height="8" style=""><![CDATA["Topp"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_TOTAL" left="65" top="174" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_LIMIT" left="65" top="184" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_PEAK" left="65" top="193" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_TOTAL" left="137" top="131" width="27" height="8" style=""><![CDATA["Totalt"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_AVAILABLE" left="137" top="140" width="46" height="8" style=""><![CDATA["Tillgängligt"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_SYSTEM_CACHE" left="137" top="149" width="46" height="8" style=""><![CDATA["Systemcache"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_TOTAL" left="185" top="131" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_AVAILABLE" left="185" top="140" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_SYSTEM_CACHE" left="185" top="149" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_TOTAL" left="137" top="175" width="27" height="8" style=""><![CDATA["Totalt"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_PAGED" left="137" top="184" width="56" height="8" style=""><![CDATA["Fysiskt / virtuellt"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_NONPAGED" left="137" top="193" width="44" height="8" style=""><![CDATA["Fysiskt"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_TOTAL" left="185" top="174" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_PAGED" left="190" top="184" width="43" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_NONPAGED" left="185" top="193" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="GROUPBOX" rc_name="IDC_CPU_USAGE_HISTORY_FRAME" left="74" top="5" width="168" height="54" style="0 WS_EX_TRANSPARENT"><![CDATA["Processorhistorik"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_MEMORY_USAGE_HISTORY_FRAME" left="74" top="63" width="168" height="54" style="0 WS_EX_TRANSPARENT"><![CDATA["Minneshistorik"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_CPU_USAGE_GRAPH" left="12" top="17" width="47" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["Processoranvändning"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_MEM_USAGE_GRAPH" left="12" top="75" width="47" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["Minnesanvändning"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_CPU_USAGE_HISTORY_GRAPH" left="81" top="17" width="153" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["Processorhistorik"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_MEM_USAGE_HISTORY_GRAPH" left="81" top="75" width="153" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["Minneshistorik"]]></obj>
+  <obj type="DIALOGEX" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_DEBUG_CHANNELS_DIALOG" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Felsökningskanaler]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_DEBUG_CHANNELS_LIST" prop="SysListView32" style="LVS_REPORT |LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |LVS_SORTASCENDING" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDOK" left="171" top="189" width="69" height="14" style=""><![CDATA["Stäng"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_AFFINITY_DIALOG" left="0" top="0" width="231" height="154">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Processorsamhörighet]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="120" top="133" width="50" height="14" style=""><![CDATA["OK"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDCANCEL" left="174" top="133" width="50" height="14" style=""><![CDATA["Avbryt"]]></obj>
+  <obj type="LTEXT" rc_name="IDC_STATIC" left="5" top="5" width="220" height="16" style=""><![CDATA["Processorsamhörighets-inställningen bestämmer vilka processorer processen tillåts exekvera på"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU0" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="6" top="28" width="55" height="10"><![CDATA["Processor 0"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU1" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="6" top="41" width="55" height="10"><![CDATA["Processor 1"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU2" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="6" top="54" width="55" height="10"><![CDATA["Processor 2"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU3" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="6" top="67" width="55" height="10"><![CDATA["Processor 3"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU4" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="6" top="80" width="55" height="10"><![CDATA["Processor 4"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU5" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="6" top="93" width="55" height="10"><![CDATA["Processor 5"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU6" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="6" top="106" width="55" height="10"><![CDATA["Processor 6"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU7" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="6" top="119" width="55" height="10"><![CDATA["Processor 7"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU8" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="61" top="28" width="55" height="10"><![CDATA["Processor 8"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU9" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="61" top="41" width="55" height="10"><![CDATA["Processor 9"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU10" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="54" width="55" height="10"><![CDATA["Processor 10"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU11" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="67" width="55" height="10"><![CDATA["Processor 11"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU12" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="80" width="55" height="10"><![CDATA["Processor 12"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU13" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="93" width="55" height="10"><![CDATA["Processor 13"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU14" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="106" width="55" height="10"><![CDATA["Processor 14"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU15" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="119" width="55" height="10"><![CDATA["Processor 15"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU16" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="28" width="55" height="10"><![CDATA["Processor 16"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU17" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="41" width="55" height="10"><![CDATA["Processor 17"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU18" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="54" width="55" height="10"><![CDATA["Processor 18"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU19" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="67" width="55" height="10"><![CDATA["Processor 19"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU20" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="80" width="55" height="10"><![CDATA["Processor 20"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU21" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="93" width="55" height="10"><![CDATA["Processor 21"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU22" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="106" width="55" height="10"><![CDATA["Processor 22"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU23" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="119" width="55" height="10"><![CDATA["Processor 23"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU24" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="28" width="55" height="10"><![CDATA["Processor 24"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU25" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="41" width="55" height="10"><![CDATA["Processor 25"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU26" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="54" width="55" height="10"><![CDATA["Processor 26"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU27" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="67" width="55" height="10"><![CDATA["Processor 27"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU28" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="80" width="55" height="10"><![CDATA["Processor 28"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU29" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="93" width="55" height="10"><![CDATA["Processor 29"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU30" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="106" width="55" height="10"><![CDATA["Processor 30"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU31" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="119" width="55" height="10"><![CDATA["Processor 31"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_COLUMNS_DIALOG" left="0" top="0" width="275" height="199">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Välj kolumner]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="84" top="178" width="50" height="14" style=""><![CDATA["OK"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDCANCEL" left="138" top="178" width="50" height="14" style=""><![CDATA["Avbryt"]]></obj>
+  <obj type="LTEXT" rc_name="IDC_STATIC" left="7" top="7" width="181" height="17" style=""><![CDATA["Välj de kolumner som skall synas på process-sidan i Aktivitetshanteraren."]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IMAGENAME" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="7" top="28" width="60" height="10"><![CDATA["&Processnamn"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PID" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="39" width="119" height="10"><![CDATA["P&ID (Processidentifierare)"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPUUSAGE" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="50" width="89" height="10"><![CDATA["Processoranvändnin&g"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPUTIME" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="61" width="62" height="10"><![CDATA["Pro&cessortid"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_MEMORYUSAGE" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="72" width="77" height="10"><![CDATA["&Minnesanvändning"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_MEMORYUSAGEDELTA" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="83" width="121" height="10"><![CDATA["Minnesanvändnings&förändring"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PEAKMEMORYUSAGE" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="94" width="121" height="10"><![CDATA["T&oppvärde minnesanvändning"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEFAULTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="105" width="56" height="10"><![CDATA["&Sidfel"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_USEROBJECTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="116" width="64" height="10"><![CDATA["&USER Objekt"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOREADS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="127" width="88" height="10"><![CDATA["Antal I/O-l&äsningar"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOREADBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="138" width="119" height="10"><![CDATA["I/O  anta&l tecken lästa"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_SESSIONID" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="149" width="58" height="10"><![CDATA["Sessions-I&D"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_USERNAME" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="160" width="62" height="10"><![CDATA["Användar&namn"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEFAULTSDELTA" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="133" top="28" width="82" height="10"><![CDATA["Sidfelsf&örändring"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_VIRTUALMEMORYSIZE" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="133" top="39" width="116" height="10"><![CDATA["Storl&ek i virtuella minnet"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEDPOOL" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="133" top="50" width="76" height="10"><![CDATA["Växlings&bar pool"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_NONPAGEDPOOL" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="133" top="61" width="96" height="10"><![CDATA["Ic&ke växlingsbar pool"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_BASEPRIORITY" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="133" top="72" width="60" height="10"><![CDATA["&Basprioritet"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_HANDLECOUNT" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="133" top="83" width="117" height="10"><![CDATA["Antal referenser (&handles)"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_THREADCOUNT" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="133" top="94" width="60" height="10"><![CDATA["Antal tr&ådar"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_GDIOBJECTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="133" top="105" width="52" height="10"><![CDATA["GDI-ob&jekt"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOWRITES" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="133" top="116" width="97" height="10"><![CDATA["An&tal I/O-Skrivningar"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOWRITEBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="133" top="127" width="113" height="10"><![CDATA["I/O  &antal tecken skrivna"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOOTHER" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="133" top="138" width="89" height="10"><![CDATA["And&ra I/O åtgärder"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOOTHERBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="133" top="149" width="141" height="10"><![CDATA["Antal tecken  andra I/O åtgärder"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// TEXTINCLUDE]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// DESIGNINFO]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// String Table]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="IDS_APP_TITLE"><![CDATA["Aktivitetshanteraren"]]></obj>
+  <obj type="STRING" rc_name="IDC_TASKMGR"><![CDATA["Aktivitetshanteraren"]]></obj>
+  <obj type="STRING" rc_name="IDS_IDLE_PROCESS"><![CDATA["Systemets lediga resurser"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_FILE_NEW"><![CDATA["Kör ett nytt program"]]></obj>
+  <obj type="STRING" rc_name="ID_OPTIONS_ALWAYSONTOP"><![CDATA["Aktivitetshanteraren förblir i förgrunden om den inte minimeras"]]></obj>
+  <obj type="STRING" rc_name="Aktivitetshanteraren"><![CDATA[minimeras när en Växla till operation utförs"]]></obj>
+  <obj type="STRING" rc_name="ID_OPTIONS_HIDEWHENMINIMIZED"><![CDATA["Göm Aktivitetshanteraren när den minimeras"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_REFRESH"><![CDATA["Tvinga Aktivitetshanteraren att uppdatera nu, oavsätt vald uppdateringshastighet"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_LARGE"><![CDATA["Visa aktiviteter med stora ikoner"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SMALL"><![CDATA["Visa aktiviteter med små ikoner"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_DETAILS"><![CDATA["Visa information om varje aktivitet"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_HIGH"><![CDATA["Uppdaterar värden två gånger per sekund"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_NORMAL"><![CDATA["Uppdaterar värden varannan sekund"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_LOW"><![CDATA["Uppdaterar värden var 4:e sekund"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_PAUSED"><![CDATA["Uppdaterar inte automatiskt"]]></obj>
+  <obj type="STRING" rc_name="Ordna"><![CDATA[fönstren horizontellt på skrivbordet"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Ordna fönstren vertikalt på skrivbordet"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["Minimerar fönstret"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Maximerar fönstret"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_CASCADE"><![CDATA["Ordna fönstren diagonalt överlappande på skrivbordet"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["För fönstret till förgrunden men växla inte till det"]]></obj>
+  <obj type="STRING" rc_name="ID_HELP_TOPICS"><![CDATA["Visa Aktivitetshanterarens hjälpavsnitt"]]></obj>
+  <obj type="STRING" rc_name="ID_HELP_ABOUT"><![CDATA["Visa programinformation, versionsnummer, och upphovsrätt"]]></obj>
+  <obj type="STRING" rc_name="ID_FILE_EXIT"><![CDATA["Avsluta Aktivitetshanteraren"]]></obj>
+  <obj type="STRING" rc_name="Visa"><![CDATA[16-bitarsprocesser under tillhörande ntvdm.exe"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SELECTCOLUMNS"><![CDATA["Välj de kolumner som ska synas på process-sidan"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SHOWKERNELTIMES"><![CDATA["Visar kernel-tider i prestandagrafer"]]></obj>
+  <obj type="STRING" rc_name="En"><![CDATA[enda historik-graf visar totala processoranvändningen"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU"><![CDATA["Varje processor har sin egen historik-graf"]]></obj>
+  <obj type="STRING" rc_name="För"><![CDATA[aktiviteten till förgrunden och växla till den"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_ENDTASK"><![CDATA["Ber de valda aktiviteterna att avslutas"]]></obj>
+  <obj type="STRING" rc_name="ID_GOTOPROCESS"><![CDATA["Ändrar fokus till den valda aktivitetens process"]]></obj>
+  <obj type="STRING" rc_name="ID_RESTORE"><![CDATA["Återställer Aktivitetshanteraren från sitt gömda tillstånd"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_ENDPROCESS"><![CDATA["Tar bort processen från systemet"]]></obj>
+  <obj type="STRING" rc_name="Tar"><![CDATA[bort den här processen och underprocesser från systemet"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_DEBUG"><![CDATA["Kopplar felsökaren till den här processen"]]></obj>
+  <obj type="STRING" rc_name="Kontrollerar"><![CDATA[vilka processorer processen tillåts att köras på"]]></obj>
+  <obj type="STRING" rc_name="Ändrar"><![CDATA[processens prioritet till realtidsläge"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_SETPRIORITY_HIGH"><![CDATA["Ändrar processens prioritet till hög"]]></obj>
+  <obj type="STRING" rc_name="Ändrar"><![CDATA[processens prioritet till över normal"]]></obj>
+  <obj type="STRING" rc_name="Ändrar"><![CDATA[processens prioritet till normal"]]></obj>
+  <obj type="STRING" rc_name="Ändrar"><![CDATA[processens prioritet till under normal"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_SETPRIORITY_LOW"><![CDATA["Ändrar processens prioritet till låg"]]></obj>
+  <obj type="STRING" rc_name="IDS_LICENSE"><![CDATA["This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="IDS_TAB_APPS"><![CDATA["Program"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PROCESSES"><![CDATA["Processer"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PERFORMANCE"><![CDATA["Prestanda"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_TASK"><![CDATA["Aktivitet"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_STATUS"><![CDATA["Status"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IMAGENAME"><![CDATA["Processnamn"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PID"><![CDATA["PID"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_USERNAME"><![CDATA["Användarnamn"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_SESSIONID"><![CDATA["Sessions-ID"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_CPU"><![CDATA["Processor"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_CPUTIME"><![CDATA["Processortid"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_MEMUSAGE"><![CDATA["Minnesanvändning"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PEAKMEMUSAGE"><![CDATA["Toppvärde minne"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_MEMDELTA"><![CDATA["Minnesvärdesförändring"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PAGEFAULT"><![CDATA["Sidfel"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PFDELTA"><![CDATA["Sidfelsförändring"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_VMSIZE"><![CDATA["VM Storlek"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PAGEDPOOL"><![CDATA["Växlingsbar pool"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_NPPOOL"><![CDATA["Oväxlingsbar pool"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_BASEPRI"><![CDATA["Basprioritet"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_HANDLES"><![CDATA["Referenser"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_THREADS"><![CDATA["Trådar"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_USERPBJECTS"><![CDATA["USER Objekt"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_GDIOBJECTS"><![CDATA["GDI Objekt"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOREADS"><![CDATA["I/O-läsningar"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOWRITES"><![CDATA["I/O-skrivningar"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOOTHER"><![CDATA["I/O-övriga"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOREADBYTES"><![CDATA["Antal tecken lästa, andra I/O-åtgärder"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOWRITESBYTES"><![CDATA["Antal tecken skrivna, andra I/O-åtgärder"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOOTHERBYTES"><![CDATA["I/O, antal tecken"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SELECTCOLUMNS"><![CDATA["&Välj kolumner..."]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_16BITTASK"><![CDATA["&Visa 16-bitsprocesser"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_WINDOWS"><![CDATA["&Fönster"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_LARGEICONS"><![CDATA["&Stora ikoner"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SMALLICONS"><![CDATA["S&må ikoner"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_DETAILS"><![CDATA["&Detaljer"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_ONEGRAPHALLCPUS"><![CDATA["En visare för &alla processorer"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_ONEGRAPHPERCPU"><![CDATA["&En visare per processor"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_CPUHISTORY"><![CDATA["&Processorhistorik"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SHOWKERNELTIMES"><![CDATA["&Visa kerneltider"]]></obj>
+  <obj type="STRING" rc_name="IDS_CREATENEWTASK"><![CDATA["Ny aktivitet"]]></obj>
+  <obj type="STRING" rc_name="IDS_CREATENEWTASK_DESC"><![CDATA["Skriv namnet på ett program, en mapp, en web-adress eller ett dokument för att öppna det."]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_ACCESSPROCESSAFF"><![CDATA["Kunde inte komma åt eller ändra processorsamhörigheten"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_PROCESSONEPRO"><![CDATA["Processen måste ha samhörighet med minst en processor."]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_INVALIDOPTION"><![CDATA["Ogiltigt val"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLEDEBUGPROCESS"><![CDATA["Kunde inte felsöka processen"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGDEBUG"><![CDATA["VARNING: Felsökning av den här processen kan resultera i förlorad data.\nÄr du säker på att du vill ansluta felsökaren?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_TASKMGRWARNING"><![CDATA["Aktivitetshanteraren varning"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGTERMINATING"><![CDATA["VARNING: Ett avslutande av en process kan orsaka\noönskade effekter och påverka systemets stabilitet. Processen\nkommer inte att ges chans att spara sitt arbete innan\nden avslutas. Är du säker på att du vill avsluta processen?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLETERMINATEPRO"><![CDATA["Kunde inte avsluta processen"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLECHANGEPRIORITY"><![CDATA["Kunde inte ändra prioritet"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGCHANGEPRIORITY"><![CDATA["VARNING: Ändring av prioritetsklassen hos den här processen kan\norsaka oönskade effekter och påverka systemets stabilitet. Är du\nsäker på att du vill ändra prioritetsklassen?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_TRAYICONCPUUSAGE"><![CDATA["Processoranvändning: %d%%"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_MEMUSAGE"><![CDATA["Minnesanv: %dK / %dK"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_CPUUSAGE"><![CDATA["Processoranv: %3d%%"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_PROCESSES"><![CDATA["Processer: %d"]]></obj>
+  <obj type="STRING" rc_name="IDS_Not_Responding"><![CDATA["Svarar inte"]]></obj>
+  <obj type="STRING" rc_name="IDS_Running"><![CDATA["Igång"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // Swedish (SE) resources]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+</resource>

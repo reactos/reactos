@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// English (U.S.) resources]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef _WIN32]]></obj>
+</group>
+<group name="LANGUAGE">
+  <obj type="LANGUAGE" sublang="SUBLANG_ENGLISH_US">LANG_ENGLISH</obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#pragma code_page(1252)]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif //_WIN32]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Menu]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_TASKMANAGER">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["&File"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_FILE_NEW"><![CDATA["&New Task (Run...)"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_FILE_EXIT"><![CDATA["E&xit Task Manager"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Options"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_OPTIONS_ALWAYSONTOP  CHECKED"><![CDATA["&Always On Top"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_MINIMIZEONUSE  CHECKED"><![CDATA["&Minimize On Use"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_HIDEWHENMINIMIZED  CHECKED"><![CDATA["&Hide When Minimized"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_SHOW16BITTASKS  CHECKED"><![CDATA["&Show 16-bit tasks"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&View"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_REFRESH"><![CDATA["&Refresh Now"]]></obj>
+<obj type="POPUP"><![CDATA["&Update Speed"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_HIGH"><![CDATA["&High"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_NORMAL  CHECKED"><![CDATA["&Normal"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_LOW"><![CDATA["&Low"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_PAUSED"><![CDATA["&Paused"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_LARGE"><![CDATA["Lar&ge Icons"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SMALL"><![CDATA["S&mall Icons"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_DETAILS  CHECKED"><![CDATA["&Details"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SELECTCOLUMNS"><![CDATA["&Select Columns..."]]></obj>
+<obj type="POPUP"><![CDATA["&CPU History"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHALL"><![CDATA["&One Graph, All CPUs"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU  CHECKED"><![CDATA["One Graph &Per CPU"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEM" rc_name="ID_VIEW_SHOWKERNELTIMES"><![CDATA["&Show Kernel Times"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Windows"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Tile &Horizontally"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Tile &Vertically"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["&Minimize"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Ma&ximize"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Cascade"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["&Bring To Front"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Help"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_HELP_TOPICS"><![CDATA["Task Manager &Help Topics"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_HELP_ABOUT"><![CDATA["&About Task Manager"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_WINDOWSMENU">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Tile &Horizontally"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Tile &Vertically"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["&Minimize"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Ma&ximize"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Cascade"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["&Bring To Front"]]></obj>
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_APPLICATION_PAGE_CONTEXT1">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_FILE_NEW"><![CDATA["&New Task (Run...)"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_LARGE"><![CDATA["Lar&ge Icons"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SMALL"><![CDATA["S&mall Icons"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_DETAILS  CHECKED"><![CDATA["&Details"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_APPLICATION_PAGE_CONTEXT2">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_SWITCHTO"><![CDATA["&Switch To"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["&Bring To Front"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Tile &Horizontally"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Tile &Vertically"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["&Minimize"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Ma&ximize"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Cascade"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_ENDTASK"><![CDATA["&End Task"]]></obj>
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_GOTOPROCESS"><![CDATA["&Go To Process"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_TRAY_POPUP">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_RESTORE"><![CDATA["&Restore"]]></obj>
+<obj type="MENUITEM" rc_name="ID_FILE_EXIT"><![CDATA["&Close"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_ALWAYSONTOP"><![CDATA["&Always On Top"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_PROCESS_PAGE_CONTEXT">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_ENDPROCESS"><![CDATA["&End Process"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_ENDPROCESSTREE"><![CDATA["End Process &Tree"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_DEBUG"><![CDATA["&Debug"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="POPUP"><![CDATA["Set &Priority"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_REALTIME"><![CDATA["&Realtime"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_HIGH"><![CDATA["&High"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL"><![CDATA["&AboveNormal"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_NORMAL"><![CDATA["&Normal"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL"><![CDATA["&BelowNormal"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_LOW"><![CDATA["&Low"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETAFFINITY"><![CDATA["Set &Affinity..."]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_DEBUGCHANNELS"><![CDATA["Edit Debug &Channels..."]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Dialog]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_ABOUTBOX" left="22" top="17" width="259" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[About Task Manager]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_STATIC" prop="Static" style="SS_LEFTNOWORDWRAP | WS_GROUP" left="53" top="28" width="122" height="26"><![CDATA["Task Manager v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)"]]></obj>
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="183" top="189" width="44" height="14" style="WS_GROUP"><![CDATA["OK"]]></obj>
+  <obj type="ICON" rc_name="IDI_TASKMANAGER" left="IDC_STATIC" top="19" width="30" height="20" style="20"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_LICENSE_EDIT" left="53" top="63" width="174" height="107" style="ES_MULTILINE |ES_READONLY | WS_VSCROLL"></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_TASKMGR_DIALOG" left="0" top="0" width="264" height="246">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |WS_THICKFRAME]]></obj>
+  <obj type="CAPTION"><![CDATA[Task Manager"MENU IDR_TASKMANAGER]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_TAB" prop="SysTabControl32" style="WS_TABSTOP" left="3" top="3" width="257" height="228"><![CDATA["Tab1"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_APPLICATION_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_APPLIST" prop="SysListView32" style="LVS_REPORT |LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_NEWTASK" left="187" top="189" width="53" height="14" style=""><![CDATA["&New Task..."]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_SWITCHTO" left="131" top="189" width="53" height="14" style="WS_DISABLED"><![CDATA["&Switch To"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_ENDTASK" left="75" top="189" width="53" height="14" style="WS_DISABLED"><![CDATA["&End Task"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_PROCESS_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_PROCESSLIST" prop="SysListView32" style="LVS_REPORT |LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |WS_BORDER | WS_TABSTOP" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_ENDPROCESS" left="171" top="189" width="69" height="14" style=""><![CDATA["&End Process"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_SHOWALLPROCESSES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="191" width="111" height="10"><![CDATA["&Show processes from all users"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210]]></obj>
+</group>
+<group name="DIALOGEX">
+  <obj type="DIALOGEX" rc_name="IDD_PERFORMANCE_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOGEX" command="BEGIN" />
+  <obj type="GROUPBOX" rc_name="IDC_CPU_USAGE_FRAME" left="5" top="5" width="60" height="54" style="WS_TABSTOP  WS_EX_TRANSPARENT"><![CDATA["CPU Usage"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_MEM_USAGE_FRAME" left="5" top="63" width="60" height="54" style="BS_LEFTTEXT  WS_EX_TRANSPARENT"><![CDATA["MEM Usage"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_TOTALS_FRAME" left="5" top="122" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Totals"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_COMMIT_CHARGE_FRAME" left="5" top="166" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Commit Charge (K)"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_PHYSICAL_MEMORY_FRAME" left="131" top="122" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Physical Memory (K)"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_KERNEL_MEMORY_FRAME" left="131" top="166" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Kernel Memory (K)"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_HANDLE_COUNT" left="12" top="131" width="27" height="8" style=""><![CDATA["Handles"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_THREAD_COUNT" left="12" top="140" width="27" height="8" style=""><![CDATA["Threads"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_PROCESS_COUNT" left="12" top="149" width="34" height="8" style=""><![CDATA["Processes"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_HANDLE_COUNT" left="65" top="131" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_THREAD_COUNT" left="65" top="140" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_PROCESS_COUNT" left="65" top="149" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_TOTAL" left="12" top="175" width="27" height="8" style=""><![CDATA["Total"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_LIMIT" left="12" top="184" width="15" height="8" style=""><![CDATA["Limit"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_PEAK" left="12" top="193" width="34" height="8" style=""><![CDATA["Peak"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_TOTAL" left="65" top="174" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_LIMIT" left="65" top="184" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_PEAK" left="65" top="193" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_TOTAL" left="137" top="131" width="27" height="8" style=""><![CDATA["Total"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_AVAILABLE" left="137" top="140" width="30" height="8" style=""><![CDATA["Available"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_SYSTEM_CACHE" left="137" top="149" width="46" height="8" style=""><![CDATA["System Cache"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_TOTAL" left="185" top="131" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_AVAILABLE" left="185" top="140" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_SYSTEM_CACHE" left="185" top="149" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_TOTAL" left="137" top="174" width="27" height="8" style=""><![CDATA["Total"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_PAGED" left="137" top="184" width="21" height="8" style=""><![CDATA["Paged"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_NONPAGED" left="137" top="193" width="34" height="8" style=""><![CDATA["Nonpaged"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_TOTAL" left="185" top="174" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_PAGED" left="185" top="184" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_NONPAGED" left="185" top="193" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="GROUPBOX" rc_name="IDC_CPU_USAGE_HISTORY_FRAME" left="74" top="5" width="168" height="54" style="0 WS_EX_TRANSPARENT"><![CDATA["CPU Usage History"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_MEMORY_USAGE_HISTORY_FRAME" left="74" top="63" width="168" height="54" style="0 WS_EX_TRANSPARENT"><![CDATA["Memory Usage History"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_CPU_USAGE_GRAPH" left="12" top="17" width="47" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["CPU Usage Display"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_MEM_USAGE_GRAPH" left="12" top="75" width="47" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["MEM Usage Display"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_CPU_USAGE_HISTORY_GRAPH" left="81" top="17" width="153" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["CPU Usage History"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_MEM_USAGE_HISTORY_GRAPH" left="81" top="75" width="153" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["MEM Usage History"]]></obj>
+  <obj type="DIALOGEX" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_DEBUG_CHANNELS_DIALOG" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Debug Channels]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_DEBUG_CHANNELS_LIST" prop="SysListView32" style="LVS_REPORT |LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |LVS_SORTASCENDING" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDOK" left="171" top="189" width="69" height="14" style=""><![CDATA["Close"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_AFFINITY_DIALOG" left="0" top="0" width="231" height="154">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Processor Affinity]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="120" top="133" width="50" height="14" style=""><![CDATA["OK"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDCANCEL" left="174" top="133" width="50" height="14" style=""><![CDATA["Cancel"]]></obj>
+  <obj type="LTEXT" rc_name="IDC_STATIC" left="5" top="5" width="220" height="16" style=""><![CDATA["The Processor Affinity setting controls which CPUs the process will be allowed to execute on."]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU0" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="11" top="28" width="37" height="10"><![CDATA["CPU 0"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU1" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="41" width="37" height="10"><![CDATA["CPU 1"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU2" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="54" width="37" height="10"><![CDATA["CPU 2"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU3" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="67" width="37" height="10"><![CDATA["CPU 3"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU4" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="80" width="37" height="10"><![CDATA["CPU 4"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU5" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="93" width="37" height="10"><![CDATA["CPU 5"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU6" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="106" width="37" height="10"><![CDATA["CPU 6"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU7" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="119" width="37" height="10"><![CDATA["CPU 7"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU8" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="61" top="28" width="37" height="10"><![CDATA["CPU 8"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU9" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="61" top="41" width="37" height="10"><![CDATA["CPU 9"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU10" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="54" width="41" height="10"><![CDATA["CPU 10"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU11" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="67" width="41" height="10"><![CDATA["CPU 11"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU12" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="80" width="41" height="10"><![CDATA["CPU 12"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU13" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="93" width="41" height="10"><![CDATA["CPU 13"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU14" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="106" width="41" height="10"><![CDATA["CPU 14"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU15" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="119" width="41" height="10"><![CDATA["CPU 15"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU16" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="28" width="41" height="10"><![CDATA["CPU 16"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU17" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="41" width="41" height="10"><![CDATA["CPU 17"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU18" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="54" width="41" height="10"><![CDATA["CPU 18"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU19" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="67" width="41" height="10"><![CDATA["CPU 19"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU20" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="80" width="41" height="10"><![CDATA["CPU 20"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU21" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="93" width="41" height="10"><![CDATA["CPU 21"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU22" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="106" width="41" height="10"><![CDATA["CPU 22"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU23" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="119" width="41" height="10"><![CDATA["CPU 23"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU24" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="28" width="41" height="10"><![CDATA["CPU 24"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU25" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="41" width="41" height="10"><![CDATA["CPU 25"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU26" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="54" width="41" height="10"><![CDATA["CPU 26"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU27" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="67" width="41" height="10"><![CDATA["CPU 27"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU28" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="80" width="41" height="10"><![CDATA["CPU 28"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU29" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="93" width="41" height="10"><![CDATA["CPU 29"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU30" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="106" width="41" height="10"><![CDATA["CPU 30"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU31" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="119" width="41" height="10"><![CDATA["CPU 31"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_COLUMNS_DIALOG" left="0" top="0" width="195" height="199">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Select Columns]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="84" top="178" width="50" height="14" style=""><![CDATA["OK"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDCANCEL" left="138" top="178" width="50" height="14" style=""><![CDATA["Cancel"]]></obj>
+  <obj type="LTEXT" rc_name="IDC_STATIC" left="7" top="7" width="181" height="17" style=""><![CDATA["Select the columns that will appear on the Process page of the Task Manager."]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IMAGENAME" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="7" top="28" width="56" height="10"><![CDATA["&Image Name"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PID" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="39" width="88" height="10"><![CDATA["&PID (Process Identifier)"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPUUSAGE" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="50" width="53" height="10"><![CDATA["&CPU Usage"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPUTIME" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="61" width="48" height="10"><![CDATA["CPU Tim&e"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_MEMORYUSAGE" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="72" width="63" height="10"><![CDATA["&Memory Usage"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_MEMORYUSAGEDELTA" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="83" width="82" height="10"><![CDATA["Memory Usage &Delta"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PEAKMEMORYUSAGE" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="94" width="82" height="10"><![CDATA["Pea&k Memory Usage"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEFAULTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="105" width="53" height="10"><![CDATA["Page &Faults"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_USEROBJECTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="116" width="62" height="10"><![CDATA["&USER Objects"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOREADS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="127" width="49" height="10"><![CDATA["I/O Reads"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOREADBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="138" width="65" height="10"><![CDATA["I/O Read Bytes"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_SESSIONID" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="149" width="50" height="10"><![CDATA["&Session ID"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_USERNAME" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="160" width="51" height="10"><![CDATA["User &Name"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEFAULTSDELTA" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="28" width="72" height="10"><![CDATA["Page F&aults Delta"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_VIRTUALMEMORYSIZE" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="39" width="77" height="10"><![CDATA["&Virtual Memory Size"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEDPOOL" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="50" width="53" height="10"><![CDATA["Pa&ged Pool"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_NONPAGEDPOOL" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="61" width="67" height="10"><![CDATA["N&on-paged Pool"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_BASEPRIORITY" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="72" width="55" height="10"><![CDATA["Base P&riority"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_HANDLECOUNT" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="83" width="59" height="10"><![CDATA["&Handle Count"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_THREADCOUNT" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="94" width="59" height="10"><![CDATA["&Thread Count"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_GDIOBJECTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="105" width="55" height="10"><![CDATA["GDI Objects"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOWRITES" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="116" width="49" height="10"><![CDATA["I/O Writes"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOWRITEBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="127" width="65" height="10"><![CDATA["I/O Write Bytes"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOOTHER" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="138" width="46" height="10"><![CDATA["I/O Other"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOOTHERBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="149" width="65" height="10"><![CDATA["I/O Other Bytes"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// TEXTINCLUDE]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// DESIGNINFO]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// String Table]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="IDS_APP_TITLE"><![CDATA["Task Manager"]]></obj>
+  <obj type="STRING" rc_name="IDC_TASKMGR"><![CDATA["Task Manager"]]></obj>
+  <obj type="STRING" rc_name="IDS_IDLE_PROCESS"><![CDATA["System Idle Process"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_FILE_NEW"><![CDATA["Runs a new program"]]></obj>
+  <obj type="STRING" rc_name="ID_OPTIONS_ALWAYSONTOP"><![CDATA["Task Manager remains in front of all other windows unless minimized"]]></obj>
+  <obj type="STRING" rc_name="Task"><![CDATA[Manager is minimized when a SwitchTo operation is performed"]]></obj>
+  <obj type="STRING" rc_name="ID_OPTIONS_HIDEWHENMINIMIZED"><![CDATA["Hide the Task Manager when it is minimized"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_REFRESH"><![CDATA["Force Task Manager to update now, regardless of Update Speed setting"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_LARGE"><![CDATA["Displays tasks by using large icons"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SMALL"><![CDATA["Displays tasks by using small icons"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_DETAILS"><![CDATA["Displays information about each task"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_HIGH"><![CDATA["Updates the display twice per second"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_NORMAL"><![CDATA["Updates the display every two seconds"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_LOW"><![CDATA["Updates the display every four seconds"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_PAUSED"><![CDATA["Does not automatically update"]]></obj>
+  <obj type="STRING" rc_name="Tiles"><![CDATA[the windows horizontally on the desktop"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Tiles the windows vertically on the desktop"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["Minimizes the windows"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Maximizes the windows"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_CASCADE"><![CDATA["Cascades the windows diagonally on the desktop"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["Brings the window front, but does not switch to it"]]></obj>
+  <obj type="STRING" rc_name="ID_HELP_TOPICS"><![CDATA["Displays Task Manager help topics"]]></obj>
+  <obj type="STRING" rc_name="ID_HELP_ABOUT"><![CDATA["Displays program information, version number, and copyright"]]></obj>
+  <obj type="STRING" rc_name="ID_FILE_EXIT"><![CDATA["Exits the Task Manager application"]]></obj>
+  <obj type="STRING" rc_name="Shows"><![CDATA[16-bit tasks under the associated ntvdm.exe"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SELECTCOLUMNS"><![CDATA["Select which columns will be visible on the Process page"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SHOWKERNELTIMES"><![CDATA["Displays kernel time in the performance graphs"]]></obj>
+  <obj type="STRING" rc_name="A"><![CDATA[single history graph shows total CPU usage"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU"><![CDATA["Each CPU has its own history graph"]]></obj>
+  <obj type="STRING" rc_name="Brings"><![CDATA[a task to the foreground, switch focus to that task"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_ENDTASK"><![CDATA["Tells the selected tasks to close"]]></obj>
+  <obj type="STRING" rc_name="ID_GOTOPROCESS"><![CDATA["Switches the focus to the process of the selected task"]]></obj>
+  <obj type="STRING" rc_name="ID_RESTORE"><![CDATA["Restores the Task Manager from its hidden state"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_ENDPROCESS"><![CDATA["Removes the process from the system"]]></obj>
+  <obj type="STRING" rc_name="Removes"><![CDATA[this process and all descendants from the system"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_DEBUG"><![CDATA["Attaches the debugger to this process"]]></obj>
+  <obj type="STRING" rc_name="Controls"><![CDATA[which processors the process will be allowed to run on"]]></obj>
+  <obj type="STRING" rc_name="Sets"><![CDATA[process to the REALTIME priority class"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_SETPRIORITY_HIGH"><![CDATA["Sets process to the HIGH priority class"]]></obj>
+  <obj type="STRING" rc_name="Sets"><![CDATA[process to the ABOVE NORMAL priority class"]]></obj>
+  <obj type="STRING" rc_name="Sets"><![CDATA[process to the NORMAL priority class"]]></obj>
+  <obj type="STRING" rc_name="Sets"><![CDATA[process to the BELOW NORMAL priority class"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_SETPRIORITY_LOW"><![CDATA["Sets process to the LOW priority class"]]></obj>
+  <obj type="STRING" rc_name="IDS_LICENSE"><![CDATA["This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="IDS_TAB_APPS"><![CDATA["Applications"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PROCESSES"><![CDATA["Processes"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PERFORMANCE"><![CDATA["Performance"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_TASK"><![CDATA["Task"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_STATUS"><![CDATA["Status"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IMAGENAME"><![CDATA["Image Name"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PID"><![CDATA["PID"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_USERNAME"><![CDATA["Username"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_SESSIONID"><![CDATA["Session ID"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_CPU"><![CDATA["CPU"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_CPUTIME"><![CDATA["CPU Time"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_MEMUSAGE"><![CDATA["Mem Usage"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PEAKMEMUSAGE"><![CDATA["Peak Mem Usage"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_MEMDELTA"><![CDATA["Mem Delta"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PAGEFAULT"><![CDATA["Page Faults"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PFDELTA"><![CDATA["PF Delta"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_VMSIZE"><![CDATA["VM Size"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PAGEDPOOL"><![CDATA["Paged Pool"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_NPPOOL"><![CDATA["NP Pool"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_BASEPRI"><![CDATA["Base Pri"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_HANDLES"><![CDATA["Handles"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_THREADS"><![CDATA["Threads"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_USERPBJECTS"><![CDATA["USER Objects"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_GDIOBJECTS"><![CDATA["GDI Objects"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOREADS"><![CDATA["I/O Reads"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOWRITES"><![CDATA["I/O Writes"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOOTHER"><![CDATA["I/O Other"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOREADBYTES"><![CDATA["I/O Read Bytes"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOWRITESBYTES"><![CDATA["I/O Write Bytes"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOOTHERBYTES"><![CDATA["I/O Other Bytes"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SELECTCOLUMNS"><![CDATA["&Select Columns..."]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_16BITTASK"><![CDATA["&Show 16-bit tasks"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_WINDOWS"><![CDATA["&Windows"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_LARGEICONS"><![CDATA["Lar&ge Icons"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SMALLICONS"><![CDATA["S&mall Icons"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_DETAILS"><![CDATA["&Details"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_ONEGRAPHALLCPUS"><![CDATA["&One Graph, All CPUs"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_ONEGRAPHPERCPU"><![CDATA["One Graph &Per CPU"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_CPUHISTORY"><![CDATA["&CPU History"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SHOWKERNELTIMES"><![CDATA["&Show Kernel Times"]]></obj>
+  <obj type="STRING" rc_name="IDS_CREATENEWTASK"><![CDATA["Create New Task"]]></obj>
+  <obj type="STRING" rc_name="IDS_CREATENEWTASK_DESC"><![CDATA["Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you."]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_ACCESSPROCESSAFF"><![CDATA["Unable to Access or Set Process Affinity"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_PROCESSONEPRO"><![CDATA["The process must have affinity with at least one processor."]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_INVALIDOPTION"><![CDATA["Invalid Option"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLEDEBUGPROCESS"><![CDATA["Unable to Debug Process"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGDEBUG"><![CDATA["WARNING: Debugging this process may result in loss of data.\nAre you sure you wish to attach the debugger?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_TASKMGRWARNING"><![CDATA["Task Manager Warning"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGTERMINATING"><![CDATA["WARNING: Terminating a process can cause undesired\nresults including loss of data and system instability. The\nprocess will not be given the chance to save its state or\ndata before it is terminated. Are you sure you want to\nterminate the process?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLETERMINATEPRO"><![CDATA["Unable to Terminate Process"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLECHANGEPRIORITY"><![CDATA["Unable to Change Priority"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGCHANGEPRIORITY"><![CDATA["WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_TRAYICONCPUUSAGE"><![CDATA["CPU Usage: %d%%"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_MEMUSAGE"><![CDATA["Mem Usage: %dK / %dK"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_CPUUSAGE"><![CDATA["CPU Usage: %3d%%"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_PROCESSES"><![CDATA["Processes: %d"]]></obj>
+  <obj type="STRING" rc_name="IDS_Not_Responding"><![CDATA["Not Responding"]]></obj>
+  <obj type="STRING" rc_name="IDS_Running"><![CDATA["Running"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // English (U.S.) resources]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifndef APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Generated from the TEXTINCLUDE 3 resource.]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // not APSTUDIO_INVOKED]]></obj>
+</group>
+</resource>

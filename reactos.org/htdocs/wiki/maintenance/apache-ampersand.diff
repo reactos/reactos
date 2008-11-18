@@ -1,0 +1,53 @@
+--- orig/apache_1.3.26/src/modules/standard/mod_rewrite.h	Wed Mar 13 13:05:34 2002
++++ apache_1.3.26/src/modules/standard/mod_rewrite.h	Tue Oct 15 14:07:21 2002
+@@ -447,6 +447,7 @@
+ static char *rewrite_mapfunc_toupper(request_rec *r, char *key);
+ static char *rewrite_mapfunc_tolower(request_rec *r, char *key);
+ static char *rewrite_mapfunc_escape(request_rec *r, char *key);
++static char *rewrite_mapfunc_ampescape(request_rec *r, char *key);
+ static char *rewrite_mapfunc_unescape(request_rec *r, char *key);
+ static char *select_random_value_part(request_rec *r, char *value);
+ static void  rewrite_rand_init(void);
+--- orig/apache_1.3.26/src/modules/standard/mod_rewrite.c	Wed May 29 10:39:23 2002
++++ apache_1.3.26/src/modules/standard/mod_rewrite.c	Tue Oct 15 14:07:49 2002
+@@ -502,6 +502,9 @@
+         else if (strcmp(a2+4, "unescape") == 0) {
+             new->func = rewrite_mapfunc_unescape;
+         }
++        else if (strcmp(a2+4, "ampescape") == 0) {
++            new->func = rewrite_mapfunc_ampescape;
++        }
+         else if (sconf->state == ENGINE_ENABLED) {
+             return ap_pstrcat(cmd->pool, "RewriteMap: internal map not found:",
+                               a2+4, NULL);
+@@ -2982,6 +2985,30 @@
+ 
+     value = ap_escape_uri(r->pool, key);
+     return value;
++}
++
++static char *rewrite_mapfunc_ampescape(request_rec *r, char *key)
++{
++    /* We only need to escape the ampersand */
++    char *copy = ap_palloc(r->pool, 3 * strlen(key) + 3);
++    const unsigned char *s = (const unsigned char *)key;
++    unsigned char *d = (unsigned char *)copy;
++    unsigned c;
++
++    while ((c = *s)) {
++	if (c == '&') {
++	    *d++ = '%';
++	    *d++ = '2';
++	    *d++ = '6';
++	}
++	else {
++	    *d++ = c;
++	}
++	++s;
++    }
++    *d = '\0';
++    
++    return copy;
+ }
+ 
+ static char *rewrite_mapfunc_unescape(request_rec *r, char *key)

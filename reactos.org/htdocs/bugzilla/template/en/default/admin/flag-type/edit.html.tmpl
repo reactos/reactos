@@ -1,0 +1,245 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Mark Bickford <markhb@maine.rr.com>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS "global/js-products.html.tmpl" %]
+
+[% IF type.target_type == "bug" %]
+  [% title = BLOCK %]Create Flag Type for [% terms.Bugs %][% END %]
+  [% typeLabelLowerPlural = BLOCK %][% terms.bugs %][% END %]
+  [% typeLabelLowerSingular = BLOCK %][% terms.bug %][% END %]
+[% ELSE %]
+  [% title = "Create Flag Type for Attachments" %]
+  [% typeLabelLowerPlural = BLOCK %]attachments[% END %]
+  [% typeLabelLowerSingular = BLOCK %]attachment[% END %]
+[% END %]
+
+[% IF last_action == "copy" %]
+  [% title = BLOCK %]Create Flag Type Based on [% type.name FILTER html %][% END %]
+[% ELSIF last_action == "edit" %]
+  [% title = BLOCK %]Edit Flag Type [% type.name FILTER html %][% END %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+  style = "
+    table#form th { text-align: right; vertical-align: baseline; white-space: nowrap; }
+    table#form td { text-align: left; vertical-align: baseline; }
+  "
+  onload="selectProduct(document.forms[0], 'product', 'component', '__Any__');"
+  javascript_urls=["productmenu.js"]
+%]
+
+<form method="post" action="editflagtypes.cgi">
+  <input type="hidden" name="action" value="[% action %]">
+  <input type="hidden" name="id" value="[% type.id %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+  <input type="hidden" name="target_type" value="[% type.target_type %]">
+  [% FOREACH category = type.inclusions %]
+    <input type="hidden" name="inclusions" value="[% category.value FILTER html %]">
+  [% END %]
+  [% FOREACH category = type.exclusions %]
+    <input type="hidden" name="exclusions" value="[% category.value FILTER html %]">
+  [% END %]
+
+  [%# Add a hidden button at the top of the form so that the user pressing "return"
+    # really submit the form, as expected. %]
+  <input type="submit" id="commit" value="Submit" style="display: none;">
+
+  <table id="form" cellspacing="0" cellpadding="4" border="0">
+    <tr>
+      <th>Name:</th>
+      <td>
+        a short name identifying this type<br>
+        <input type="text" name="name" value="[% type.name FILTER html %]"
+               size="50" maxlength="50">
+      </td>
+    </tr>
+
+    <tr>
+      <th>Description:</th>
+      <td>
+        a comprehensive description of this type<br>
+        [% INCLUDE global/textarea.html.tmpl
+          name           = 'description'
+          minrows        = 4
+          cols           = 80
+          defaultcontent = type.description
+        %]
+      </td>
+    </tr>
+
+    <tr>
+      <th>Category:</th>
+
+      <td>
+        the products/components to which [% typeLabelLowerPlural %] must
+        (inclusions) or must not (exclusions) belong in order for users
+        to be able to set flags of this type for them
+        <table>
+          <tr>
+            <td style="vertical-align: top;">
+              <b>Product/Component:</b><br>
+              <select name="product" onchange="selectProduct(this.form, 'product', 'component', '__Any__');">
+                <option value="">__Any__</option>
+                [% FOREACH prod = products %]
+                  <option value="[% prod.name FILTER html %]" 
+                          [% "selected" IF type.product.name == prod.name %]>
+                          [% prod.name FILTER html %]</option>
+                [% END %]
+              </select><br>
+              <select name="component">
+                <option value="">__Any__</option>
+                [% FOREACH comp = components %]
+                  <option value="[% comp FILTER html %]" 
+                          [% "selected" IF type.component.name == comp %]>
+                          [% comp FILTER html %]</option>
+                [% END %]
+              </select><br>
+              <input type="submit" name="categoryAction-include" value="Include">
+              <input type="submit" name="categoryAction-exclude" value="Exclude">
+            </td>
+            <td style="vertical-align: top;">
+              <b>Inclusions:</b><br>
+              [% PROCESS "global/select-menu.html.tmpl" name="inclusion_to_remove" multiple="1" size="7" options=type.inclusions %]<br>
+              <input type="submit" name="categoryAction-removeInclusion" value="Remove Inclusion">
+            </td>
+            <td style="vertical-align: top;">
+              <b>Exclusions:</b><br>
+              [% PROCESS "global/select-menu.html.tmpl" name="exclusion_to_remove" multiple="1" size="7" options=type.exclusions %]<br>
+              <input type="submit" name="categoryAction-removeExclusion" value="Remove Exclusion">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr>
+      <th>Sort Key:</th>
+      <td>
+        a number between 1 and 32767 by which this type will be sorted
+        when displayed to users in a list; ignore if you don't care
+        what order the types appear in or if you want them to appear
+        in alphabetical order<br>
+        <input type="text" name="sortkey" value="[% type.sortkey || 1 %]" size="5" maxlength="5">
+      </td>
+    </tr>
+
+    <tr>
+      <th>&nbsp;</th>
+      <td>
+        <input type="checkbox" name="is_active" [% "checked" IF type.is_active || !type.is_active.defined %]>
+        active (flags of this type appear in the UI and can be set)
+      </td>
+    </tr>
+
+    <tr>
+      <th>&nbsp;</th>
+      <td>
+        <input type="checkbox" name="is_requestable" [% "checked" IF type.is_requestable || !type.is_requestable.defined %]>
+        requestable (users can ask for flags of this type to be set)
+      </td>
+    </tr>
+
+    <tr>
+      <th>CC List:</th>
+      <td>
+        if requestable, who should get carbon copied on email notification of requests.
+        This is a comma-separated list of full e-mail addresses which do not
+        need to be [% terms.Bugzilla %] logins.
+        [% IF Param('emailsuffix') %]
+          Note that the configured emailsuffix
+          <kbd>[% Param('emailsuffix') %]</kbd> will <em>not</em> be appended
+          to these addresses, so you should add it explicitly if so desired.
+        [% END %]<br>
+        <input type="text" name="cc_list" value="[% type.cc_list FILTER html %]" size="80" maxlength="200">
+      </td>
+    </tr>
+
+    <tr>
+      <th>&nbsp;</th>
+      <td>
+        <input type="checkbox" name="is_requesteeble" [% "checked" IF type.is_requesteeble || !type.is_requesteeble.defined %]>
+        specifically requestable (users can ask specific other users to set flags of this type as opposed to just asking the wind)
+      </td>
+    </tr>
+
+    <tr>
+      <th>&nbsp;</th>
+      <td>
+        <input type="checkbox" name="is_multiplicable" [% "checked" IF type.is_multiplicable || !type.is_multiplicable.defined %]>
+        multiplicable (multiple flags of this type can be set on the same [% typeLabelLowerSingular %])
+      </td>
+    </tr>
+
+    <tr>
+      <th>Grant Group:</th>
+      <td>
+        the group allowed to grant/deny flags of this type
+        (to allow all users to grant/deny these flags, select no group)<br>
+        [% PROCESS select selname = "grant_group" %]
+      </td>
+    </tr>
+
+    <tr>
+      <th>Request Group:</th>
+      <td>
+        if flags of this type are requestable, the group allowed to request them
+        (to allow all users to request these flags, select no group)<br>
+        Note that the request group alone has no effect if the grant group is not defined!<br>
+        [% PROCESS select selname = "request_group" %]
+      </td>
+    </tr>
+
+    <tr>
+      <th></th>
+      <td>
+        <input type="submit" id="save" value="
+          [%- IF (last_action == "enter" || last_action == "copy") %]Create
+          [%- ELSE %]Save Changes
+          [%- END %]">
+      </td>
+    </tr>
+
+  </table>
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]
+
+
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]
+  <select name="[% selname %]" id="[% selname %]">
+    <option value="">(no group)</option>
+    [% FOREACH group = groups %]
+      <option value="[% group.name FILTER html %]"
+        [% " selected" IF (type.${selname} && type.${selname}.name == group.name) %]>
+      [%- group.name FILTER html %]
+      </option>
+    [% END %]
+  </select>
+[% END %]

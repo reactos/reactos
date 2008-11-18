@@ -1,0 +1,133 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@syndicomm.com>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #%]
+
+[%# INTERFACE:
+  # gid: number. The group ID.
+  # name: string. The name of the group.
+  # description: string. The description of the group.
+  # hasusers: boolean int. True if the group includes users in it.
+  # hasbugs: boolean int. True if the group includes bugs in it.
+  # hasproduct: boolean int. True if the group is binded to a product.
+  # hasflags: boolean int. True if the group is used by a flag type.
+  # shared_queries: int. Number of saved searches being shared with this group.
+  # buglist: string. The list of bugs included in this group.
+  #%]
+
+
+[% PROCESS global/header.html.tmpl
+  title = "Delete group"
+%]
+
+<table border="1">
+  <tr>
+    <th>Id</th>
+    <th>Name</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>[% gid FILTER html %]</td>
+    <td>[% name FILTER html %]</td>
+    <td>[% description FILTER html_light %]</td>
+  </tr>
+</table>
+
+<form method="post" action="editgroups.cgi">
+  [% IF hasusers %]
+    <p><b>One or more users belong to this group. You cannot delete
+    this group while there are users in it.</b>
+
+    <br><a href="editusers.cgi?action=list&groupid=[% gid FILTER html %]&grouprestrict=1">Show
+    me which users</a> - <input type="checkbox" name="removeusers">Remove
+    all users from this group for me.</p>
+  [% END %]
+
+  [% IF hasbugs %]
+    <p><b>One or more [% terms.bug %] reports are visible only to this group.
+    You cannot delete this group while any [% terms.bugs %] are using it.</b>
+
+    <br><a href="buglist.cgi?bug_id=[% buglist FILTER html %]">Show me
+    which [% terms.bugs %]</a> - <input type="checkbox" name="removebugs">Remove
+    all [% terms.bugs %] from this group restriction for me.</p>
+
+    <p><b>NOTE:</b> It's quite possible to make confidential [% terms.bugs %]
+    public by checking this box.  It is <B>strongly</B> suggested
+    that you review the [% terms.bugs %] in this group before checking
+    the box.</p>
+  [% END %]
+
+  [% IF hasproduct %]
+    <p><b>This group is tied to the <U>[% name FILTER html %]</U> product.
+    You cannot delete this group while it is tied to a product.</b>
+
+    <br><input type="checkbox" name="unbind">Delete this group anyway,
+    and make the product <U>[% name FILTER html %]</U> publicly visible.</p>
+  [% END %]
+  
+  [% IF hasflags %]
+    <p><b>This group restricts who can make changes to flags of certain types.
+    You cannot delete this group while there are flag types using it.</b>
+
+    <br><a href="editflagtypes.cgi?action=list&group=[% gid FILTER html %]">Show
+    me which types</a> - <input type="checkbox" name="removeflags">Remove all
+    flag types from this group for me.</p>
+  [% END %]
+
+  [% IF shared_queries %]
+    <p>
+      <b>There
+      [% IF shared_queries > 1 %]
+        are [% shared_queries %] saved searches
+      [% ELSE %]
+        is a saved search
+      [% END %]
+      being shared with this group.</b>
+      If you delete this group,
+      [% IF shared_queries > 1 %]
+        these saved searches
+      [% ELSE %]
+        this saved search
+      [% END %]
+      will fall back to being private again.
+    </p>
+  [% END %]
+
+  <h2>Confirmation</h2>
+
+  <p>Do you really want to delete this group?</p>
+  [% IF (hasusers || hasbugs || hasproduct || hasflags) %]
+    <p><b>You must check all of the above boxes or correct the
+          indicated problems first before you can proceed.</b></p>
+  [% END %]
+
+  <p>
+    <input type="submit" id="delete" value="Yes, delete">
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="group" value="[% gid FILTER html %]">
+    <input type="hidden" name="token" value="[% token FILTER html %]">
+  </p>
+</form>
+
+Go back to the <a href="editgroups.cgi">group list</a>.
+
+[% PROCESS global/footer.html.tmpl %] 

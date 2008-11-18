@@ -1,0 +1,95 @@
+<html>
+  <head>
+    <title>Test of ContextMenu plugin</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript">
+      _editor_url = "../";
+      _editor_lang = "en";
+    </script>
+
+    <!-- load the main HTMLArea file -->
+    <script type="text/javascript" src="../htmlarea.js"></script>
+
+    <script type="text/javascript">
+      HTMLArea.loadPlugin("ContextMenu");
+      HTMLArea.loadPlugin("TableOperations");
+
+      function initDocument() {
+        var editor = new HTMLArea("editor");
+        editor.registerPlugin(ContextMenu);
+        editor.registerPlugin(TableOperations);
+        editor.generate();
+      }
+    </script>
+
+  </head>
+
+  <body onload="initDocument()">
+    <h1>Test of ContextMenu plugin</h1>
+
+
+<textarea id="editor" style="height: 30em; width: 100%;">
+&lt;table border="1" style="border: 1px dotted rgb(0, 102, 255); width:
+100%; background-color: rgb(255, 204, 51); background-image: none; float:
+none; text-align: left; vertical-align: top; border-collapse: collapse;"
+summary="" cellspacing="" cellpadding="" frame="box"
+rules="all"&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td style="border: 1px solid
+rgb(255, 0, 0); background-color: rgb(0, 51, 51); background-image: none;
+text-align: left; vertical-align: top;"&gt;&lt;a
+href="http://dynarch.com/mishoo/articles.epl?art_id=430"&gt;&lt;img
+src="http://127.0.0.1/~mishoo/htmlarea/examples/pieng.png" alt="" align=""
+border="0" hspace="0" vspace="0" /&gt;&lt;/a&gt;&lt;/td&gt;&lt;td
+style="border: 1px solid rgb(255, 0, 0); background-color: rgb(255, 255, 0);
+background-image: none; text-align: left; vertical-align: top;"&gt;The
+article linked on the left image presents a script that allows Internet
+Explorer to use PNG images.  We hope to be able to implement IE PNG support
+in HTMLArea soon.&lt;br /&gt; &lt;br /&gt; Go on, right-click everywhere and
+test our new context menus.  And be thankful to &lt;a
+href="http://www.americanbible.org/"&gt;American Bible Society&lt;/a&gt; who
+sponsored the development, &lt;a
+href="http://dynarch.com/mishoo/"&gt;mishoo&lt;/a&gt; who made it happen and
+God, Who keeps mishoo alife. ;-)&lt;br /&gt; &lt;br /&gt;&lt;span
+style="font-style: italic;"&gt;P.S.&lt;/span&gt; No animals were harmed
+while producing this movie.&lt;br /&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="border-style: none;
+background-color: rgb(255, 255, 51); background-image: none; text-align:
+left; vertical-align: top;"&gt;Welcome to HTMLArea, the best online
+editor.&lt;br /&gt;&lt;/td&gt;&lt;td&gt;HTMLArea is a project initiated by
+&lt;a href="http://interactivetools.com/"&gt;InteractiveTools.com&lt;/a&gt;.
+Other companies contributed largely by sponsoring the development of
+additional extensions.  Many thanks to:&lt;br /&gt; &lt;br
+style="font-family: courier new,courier,monospace;" /&gt; &lt;div
+style="margin-left: 40px;"&gt;&lt;a href="http://www.zapatec.com/"
+style="font-family: courier
+new,courier,monospace;"&gt;http://www.zapatec.com&lt;/a&gt;&lt;br
+style="font-family: courier new,courier,monospace;" /&gt; &lt;a
+href="http://www.americanbible.org/" style="font-family: courier
+new,courier,monospace;"&gt;http://www.americanbible.org&lt;/a&gt;&lt;br
+style="font-family: courier new,courier,monospace;" /&gt; &lt;a
+href="http://www.neomedia.ro/" style="font-family: courier
+new,courier,monospace;"&gt;http://www.neomedia.ro&lt;/a&gt;&lt;br
+style="font-family: courier new,courier,monospace;" /&gt; &lt;a
+href="http://www.os3.it/" style="font-family: courier
+new,courier,monospace;"&gt;http://www.os3.it&lt;/a&gt;&lt;br
+style="font-family: courier new,courier,monospace;" /&gt; &lt;a
+href="http://www.miro.com.au/" style="font-family: courier
+new,courier,monospace;"&gt;http://www.miro.com.au&lt;/a&gt;&lt;br
+style="font-family: courier new,courier,monospace;" /&gt; &lt;a
+href="http://www.thycotic.com/" style="font-family: courier
+new,courier,monospace;"&gt;http://www.thycotic.com&lt;/a&gt;&lt;br /&gt;
+&lt;/div&gt; &lt;br /&gt; and to all the posters at <a
+href="http://www.interactivetools.com/iforum/Open_Source_C3/htmlArea_v3.0_-_Alpha_Release_F14/
+">InteractiveTools</a> HTMLArea forums, whose feedback is continually
+useful in polishing HTMLArea.&lt;br /&gt; &lt;br /&gt;&lt;div
+style="text-align: right;"&gt;-- developers and maintainers of version 3,
+&lt;a href="http://dynarch.com/"&gt;dynarch.com&lt;/a&gt;.&lt;br
+/&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+    </textarea>
+
+    <hr />
+    <address><a href="http://dynarch.com/mishoo/">Mihai Bazon</a></address>
+<!-- Created: Wed Oct  1 19:55:37 EEST 2003 -->
+<!-- hhmts start --> Last modified: Wed Jan 28 11:10:29 EET 2004 <!-- hhmts end -->
+<!-- doc-lang: English -->
+  </body>
+</html>

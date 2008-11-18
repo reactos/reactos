@@ -1,0 +1,58 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  #
+  # listselectionvalues: selection values to recreate the current user list.
+  # editusers:           is viewing user member of editusers?
+  #%]
+
+[% PROCESS global/header.html.tmpl
+  title = "Add user"
+  style_urls = ['skins/standard/editusers.css']
+  onload = "document.forms['f'].login.focus()"
+%]
+
+[% PROCESS admin/users/listselectvars.html.tmpl
+  listselectionvalues = listselectionvalues
+%]
+
+<form name="f" method="post" action="editusers.cgi">
+<table class="main">
+  [% PROCESS admin/users/userdata.html.tmpl
+    editform  = 0
+    editusers = editusers
+    otheruser = []
+  %]
+</table>
+<p>
+  <input type="submit" id="add" value="Add"/>
+  <input type="hidden" name="action" value="new" />
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+  [% INCLUDE listselectionhiddenfields %]
+</p>
+</form>
+
+<p>
+  You can also <a href="editusers.cgi">find a user</a>
+  [% IF listselectionvalues %],
+    or
+    <a href="editusers.cgi?action=list[% INCLUDE listselectionurlparams %]">go
+    back to the user list</a>
+  [% END %].
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

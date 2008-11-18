@@ -1,0 +1,55 @@
+###############################################################################
+# INSTALLATION                                                                #
+###############################################################################
+
+1. Decompress and put this folder somewhere inside your document root
+2. If you want the directory to be called something other than "serendipity",
+change the directory name now
+3. Open serendipity in your browser (installer will say hi to you)
+4. Serendipity ships world-writeable (777) to make installation easier.
+After the install is complete,  you should change the permissions to allow
+only your web-server user (e.g. Nobody) to access the serendipity directory.
+If you have enabled file-upload and/or caching, you need to do something
+like this:
+  chown -R Nobody serendipity/
+  chmod -R 744 serendipity/
+because the web server needs to be able to write to directories inside the
+distribution.  Otherwise, you should probably chmod -R 644 serendipity.
+5. Done!
+
+###############################################################################
+# UPGRADE                                                                     #
+###############################################################################
+
+See README file for detailed actions.
+
+###############################################################################
+# REQUIREMENTS                                                                #
+###############################################################################
+
+1. The Apache Webserver (Linux suggested; s9y runs on Windows with some
+   directory-related drawbacks and system locale issues. You'll need to
+   take care that when installing on windows you always use '/' slashes
+   for directories and no '\' slashes anywhere. Also make sure your apache
+   DocumentRoot is set to a directory with '/'.)
+2. .htaccess support allowing overrides for DirectoryIndex (if rewriting is
+   wanted)
+3. PHP Version 4.3 or greater, required
+   modules are listed on the installer page.
+4. php.ini options:
+   - error_reporting E_ALL & ~E_NOTICE (or lower)
+   - file_uploads on (For import/image upload features)
+5. Any of the following database engines:
+   - Mysql(i)
+   - PostGreSQL
+   - SQLite (not quite!)
+
+###############################################################################
+
+For more information please read our Documentation on http://www.s9y.org!
+
+Serendipity Weblog - http://s9y.org
+
+Licensed under the BSD License
+
+# $Id$

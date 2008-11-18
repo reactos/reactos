@@ -1,0 +1,103 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): William Jon McCann <mccann@jhu.edu>
+  #%]
+[% PROCESS global/variables.none.tmpl %]
+BEGIN:VCALENDAR
+CALSCALE:GREGORIAN
+[%+ PROCESS ics_prodid +%]
+VERSION:2.0
+[% FOREACH bug = bugs %]
+BEGIN:VTODO
+[%+ PROCESS ics_dtstart +%]
+[%+ PROCESS ics_summary +%]
+[%+ PROCESS ics_uid base_url=Param('urlbase') bug_id=bug.bug_id +%]
+[%+ PROCESS ics_url base_url=Param('urlbase') bug_id=bug.bug_id +%]
+[%+ PROCESS ics_status bug_status = bug.bug_status +%]
+[%+ PROCESS ics_dtstamp +%]
+[% IF bug.changeddate %]
+[%+ time2str("%Y%m%dT%H%M%SZ", bug.changedtime, "UTC") FILTER ics('LAST-MODIFIED') +%]
+[% END %]
+[% IF bug.percentage_complete %]
+[%+ bug.percentage_complete FILTER format('%d') FILTER ics('PERCENT-COMPLETE') +%]
+[% END %]
+[% IF bug.product %]
+[%+ bug.product FILTER ics('X-BUGZILLA-PRODUCT') +%]
+[% END %]
+[% IF bug.component %]
+[%+ bug.component FILTER ics('X-BUGZILLA-COMPONENT') +%]
+[% END %]
+[% IF bug.version %]
+[%+ bug.version FILTER ics('X-BUGZILLA-VERSION') +%]
+[% END %]
+[% IF bug.keywords %]
+[%+ bug.keywords FILTER ics('X-BUGZILLA-KEYWORDS') +%]
+[% END %]
+END:VTODO
+[% END %]
+END:VCALENDAR
+
+[% BLOCK ics_prodid %]
+  [% "-//Mozilla/Bugzilla $constants.BUGZILLA_VERSION//EN" FILTER ics('PRODID') %]
+[% END %]
+
+[% BLOCK ics_uid %]
+  [% "${bug_id}@${base_url}" FILTER url_quote FILTER ics('UID') %]
+[% END %]
+
+[% BLOCK ics_url %]
+  [% "${base_url}show_bug.cgi?id=${bug_id}" FILTER url_quote FILTER ics('URL;VALUE=URI') %]
+[% END %]
+
+[% BLOCK ics_dtstart %]
+  [% time2str("%Y%m%dT%H%M%SZ", bug.opentime, "UTC") FILTER ics('DTSTART') %]
+[% END %]
+
+[% BLOCK ics_dtstamp %]
+  [% time2str("%Y%m%dT%H%M%SZ", currenttime, "UTC") FILTER ics('DTSTAMP') %]
+[% END %]
+
+[% BLOCK ics_status %]
+  [% status = "" %]
+  [% FOREACH state = closedstates %]
+    [% IF bug_status == state %]
+      [% status = 'COMPLETED' %]
+      [% LAST %]
+    [% END %]
+  [% END %]
+  [% IF NOT status %]
+    [% IF bug_status == 'ASSIGNED' %]
+      [% status = 'IN-PROGRESS' %]
+    [% ELSE %]
+      [% status = 'NEEDS-ACTION' %]
+    [% END %]
+  [% END %]
+  [% status FILTER ics('STATUS') %]
+[% END %]
+
+[% BLOCK ics_summary %]
+  [% IF bug.short_desc %]
+    [% summary = bug.short_desc %]
+  [% ELSIF bug.short_short_desc %]
+    [% summary = bug.short_short_desc %]
+  [% ELSE %]
+    [% summary = "$terms.Bug $bug.bug_id" %]
+  [% END %]
+  [% summary FILTER ics('SUMMARY') %]
+[% END %]

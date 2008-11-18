@@ -1,0 +1,121 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%# INTERFACE:
+  # panels: array of hashes representing the panels available.
+  # param_changed: array of parameters which have been changed.
+  # shutdown_is_active: boolean; is true when 'shutdownhtml' has been turned on.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% curpanel = -1 %]
+[% panels = panels.sort('sortkey') %]
+
+[% FOREACH panel = panels %]
+  [% PROCESS "admin/params/${panel.name}.html.tmpl"
+             params = panel.param_list %]
+  [% panel.title = title %]
+  [% panel.desc = desc %]
+  [% panel.param_descs = param_descs %]
+  [% IF panel.current %][% curpanel = loop.index %][% END %]
+[% END %]
+
+[% current_panel = panels.$curpanel %]
+
+[%# We cannot call header.html.tmpl earlier as we have to know
+    which panel is active first, in order to get its title %]
+
+[% title = BLOCK %]
+  [% IF curpanel == -1 %]
+    Parameters: Index
+  [% ELSE %]
+    Configuration:
+    [%+ current_panel.title FILTER html %]
+  [% END %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+   title = title
+   message = message
+   style_urls = ['skins/standard/params.css']
+%]
+
+<table border="0" width="100%">
+  <tr>
+    <td>
+      [%# NAVIGATION BAR %]
+      <table id="menu">
+        <tr>
+          <td class="index">
+            <a href="editparams.cgi?section=index" title="Show all parameters">Index</a>
+          </td>
+        </tr>
+        [% FOREACH panel = panels %]
+          <tr>
+            [% IF panel.current %]
+              <td class="selected_section">
+                <span title="[% panel.desc FILTER html %]">[% panel.title FILTER html %]</span>
+              </td>
+            [% ELSE %]
+              <td>
+                <a href="editparams.cgi?section=[% panel.name FILTER url_quote %]"
+                   title="[% panel.desc FILTER html %]">[% panel.title FILTER html %]</a>
+              </td>
+            [% END %]
+          </tr>
+        [% END %]
+      </table>
+    </td>
+    <td>
+      [% IF curpanel == -1 %]
+        [% PROCESS admin/params/index.html.tmpl panels = panels %]
+      [% ELSE %]
+
+        <div class="contribute"><strong>Note:</strong>
+          [%+ terms.Bugzilla %] is developed entirely by volunteers. The
+          best way to give back to the [% terms.Bugzilla %] project is
+          to <a href="http://www.bugzilla.org/contribute/">contribute</a>
+          yourself! You don't have to be a programmer to contribute, there are
+          lots of things that we need.
+        </div>
+
+        <p>
+          This lets you edit the basic operating parameters of [% terms.Bugzilla %].
+          Be careful!<br>
+          Any item you check "Reset" on will get reset to its default value.
+        </p>
+
+        [%# CONTENT PANEL %]
+        <form method="post" action="editparams.cgi">
+          [% PROCESS admin/params/common.html.tmpl panel = current_panel %]
+          <input type="hidden" name="section" value="[% current_panel.name FILTER html %]">
+          <input type="hidden" name="action" value="save">
+          <input type="hidden" name="token" value="[% token FILTER html %]">
+          <input type="reset" value="Reset form">
+          <input type="submit" name="action" value="Save Changes">
+        </form>
+      [% END %]
+    </td>
+  </tr>
+</table>
+
+[% INCLUDE global/footer.html.tmpl %]

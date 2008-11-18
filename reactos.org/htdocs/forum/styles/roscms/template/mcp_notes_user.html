@@ -1,0 +1,122 @@
+<!-- INCLUDE mcp_header.html -->
+
+<form method="post" id="mcp" action="{U_POST_ACTION}">
+
+<h2>{L_TITLE}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<h3><!-- IF USER_COLOR --><span style="color: #{USER_COLOR}">{USERNAME}</span><!-- ELSE -->{USERNAME}<!-- ENDIF --></h3>
+
+	<div>
+		<div class="column1">
+			<!-- IF AVATAR_IMG --><div>{AVATAR_IMG}</div><!-- ENDIF -->
+		</div>
+
+		<div class="column2">
+			<dl class="details">
+				<!-- IF RANK_TITLE --><dt>{L_RANK}:</dt><dd>{RANK_TITLE}</dd><!-- ENDIF -->
+				<!-- IF RANK_IMG --><dt><!-- IF RANK_TITLE -->&nbsp;<!-- ELSE -->{L_RANK}:<!-- ENDIF --></dt><dd>{RANK_IMG}</dd><!-- ENDIF -->
+				<dt>{L_JOINED}:</dt><dd>{JOINED}</dd>
+				<dt>{L_TOTAL_POSTS}:</dt><dd>{POSTS}</dd>
+				<dt>{L_WARNINGS}: </dt><dd>{WARNINGS}</dd>
+			</dl>
+		</div>
+	</div>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<h3>{L_ADD_FEEDBACK}</h3>
+	<p>{L_ADD_FEEDBACK_EXPLAIN}</p>
+
+	<fieldset>
+		<textarea name="usernote" id="usernote" class="inputbox" cols="40" rows="3"></textarea>
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<fieldset class="submit-buttons">
+	{S_HIDDEN_FIELDS}<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp; 
+	<input type="submit" name="action[add_feedback]" value="{L_SUBMIT}" class="button1" />
+	{S_FORM_TOKEN}
+</fieldset>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>		
+
+	<ul class="linklist">
+		<li class="rightside pagination">
+			<!-- IF TOTAL_REPORTS -->{TOTAL_REPORTS} <!-- ENDIF -->
+			<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+		</li>
+	</ul>
+
+	<table cellspacing="1" class="table1">
+	<thead>
+	<tr>
+		<th>{L_REPORT_BY}</th>
+		<th style="text-align: center">{L_IP}</th>
+		<th style="text-align: center">{L_TIME}</th>
+		<th>{L_ACTION_NOTE}</th>
+		<!-- IF S_CLEAR_ALLOWED --><th>{L_MARK}</th><!-- ENDIF -->
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN usernotes -->
+	<!-- IF usernotes.S_ROW_COUNT is even --><tr class="bg1"><!-- ELSE --><tr class="bg2"><!-- ENDIF -->
+		<td>{usernotes.REPORT_BY}</td>
+		<td style="text-align: center">{usernotes.IP}</td>
+		<td style="text-align: center">{usernotes.REPORT_AT}</td>
+		<td>{usernotes.ACTION}</td>
+
+		<!-- IF S_CLEAR_ALLOWED --><td width="5%" align="center"><input type="checkbox" name="marknote[]" id="note-{usernotes.ID}" value="{usernotes.ID}" /></td><!-- ENDIF -->
+	</tr>
+	<!-- BEGINELSE -->
+	<tr>
+		<td class="bg1" colspan="<!-- IF S_CLEAR_ALLOWED -->5<!-- ELSE -->4<!-- ENDIF -->" align="center"><span class="gen">{L_NO_ENTRIES}</span></td>
+	</tr>
+	<!-- END usernames -->
+	</tbody>
+	</table>
+
+	<hr />
+
+	<fieldset class="display-options">
+		<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" class="right-box {S_CONTENT_FLOW_END}">{L_NEXT}</a><!-- ENDIF -->
+		<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" class="left-box {S_CONTENT_FLOW_BEGIN}">{L_PREVIOUS}</a><!-- ENDIF -->
+		<label>{L_DISPLAY_POSTS}: {S_SELECT_SORT_DAYS}</label>
+		<label>{L_SORT_BY} {S_SELECT_SORT_KEY}</label><label>{S_SELECT_SORT_DIR}</label>		
+		<input type="submit" name="sort" value="{L_GO}" class="button2" />
+	</fieldset>
+
+	<hr />
+
+	<ul class="linklist">
+		<li class="rightside pagination">
+			<!-- IF TOTAL_REPORTS -->{TOTAL_REPORTS}<!-- ENDIF -->
+			<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+		</li>
+	</ul>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>	
+
+<!-- IF S_CLEAR_ALLOWED -->
+<fieldset class="display-actions">
+	<input class="button2" type="submit" name="action[del_all]" value="{L_DELETE_ALL}" />
+	&nbsp;<input class="button1" type="submit" name="action[del_marked]" value="{L_DELETE_MARKED}" />
+</fieldset>
+
+<fieldset class="display-actions">
+	<div><a href="#" onclick="marklist('mcp', 'marknote', true); return false;">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('mcp', 'marknote', false); return false;">{L_UNMARK_ALL}</a></div>		
+</fieldset>
+<!-- ENDIF -->
+</form>
+
+<!-- INCLUDE mcp_footer.html -->

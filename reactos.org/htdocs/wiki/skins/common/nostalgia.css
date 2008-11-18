@@ -1,0 +1,17 @@
+body {
+	/* Background color is set separately on page type */
+	color: black;
+}
+#specialform { display: inline; }
+#powersearch {
+  background: #DDEEFF; border-style: solid; border-width: 1px; padding: 2px;
+}
+a.interwiki, a.external { color: #3366BB; }
+a.printable { text-decoration: underline; }
+a.stub { color:#772233; text-decoration:none; }
+h1.pagetitle { padding-top: 0; margin-top: 0; padding-bottom: 0; margin-bottom: 0; }
+h2, h3, h4, h5, h6 { margin-bottom: 0; }
+textarea { overflow: auto; }
+p.subtitle { padding-top: 0; margin-top: 0; }
+
+

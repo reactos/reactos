@@ -1,0 +1,61 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[% y_label = "$terms.Bugs" %]
+[% x_label = "Time" %]
+
+[% IF chart.cumulate %]
+  [% USE graph = GD.Graph.area(width, height) %]
+  [% graph.set(cumulate => "true") %]
+[% ELSE %]
+  [% USE graph = GD.Graph.lines(width, height) %]
+[% END %]
+
+[% FILTER null;
+  x_label_skip = (30 * chart.data.0.size / width);
+  
+  graph.set(x_label           => x_label,
+            y_label           => y_label,
+            y_tick_number     => 8, 
+            y_max_value       => chart.y_max_value,
+            x_label_position  => 0.5,
+            x_labels_vertical => 1,
+            x_label_skip      => x_label_skip,
+            legend_placement  => "RT",
+            line_width        => 2,
+            dclrs             => ["lred", "lgreen", "lblue", "lyellow",
+                                  "lpurple", "lorange", "black", "green",
+                                  "blue", "dpink", "lbrown", "gray", 
+                                  "red", "dpurple", "gold", "marine"]);
+   
+  # Workaround for the fact that set_legend won't take chart.labels directly, 
+  # because chart.labels is an array reference rather than an array.
+  graph.set_legend(chart.labels.0, chart.labels.1, chart.labels.2,
+                   chart.labels.3, chart.labels.4, chart.labels.5,
+                   chart.labels.6, chart.labels.7, chart.labels.8,
+                   chart.labels.9, chart.labels.10, chart.labels.11,
+                   chart.labels.12, chart.labels.13, chart.labels.14,
+                   chart.labels.15);
+                      
+  graph.plot(chart.data).png | stdout(1);
+  END;
+-%]
+

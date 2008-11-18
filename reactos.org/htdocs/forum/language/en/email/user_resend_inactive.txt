@@ -1,0 +1,20 @@
+Subject: Welcome to "{SITENAME}"
+
+{WELCOME_MSG}
+
+Please keep this e-mail for your records. Your account information is as follows:
+
+----------------------------
+Username: {USERNAME}
+----------------------------
+
+Your password has been encrypted in our database. Should you forget your password you can request a new one which will be activated in the same way as this account.
+
+Your account is currently inactive. You cannot use it until you visit the following link:
+
+{U_ACTIVATE}
+
+
+Thank you for registering.
+
+{EMAIL_SIG}

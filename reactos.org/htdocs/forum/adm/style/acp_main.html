@@ -1,0 +1,216 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_RESTORE_PERMISSIONS -->
+
+	<h1>{L_PERMISSIONS_TRANSFERRED}</h1>
+
+	<p>{L_PERMISSIONS_TRANSFERRED_EXPLAIN}</p>
+
+<!-- ELSE -->
+
+	<h1>{L_WELCOME_PHPBB}</h1>
+
+	<p>{L_ADMIN_INTRO}</p>
+
+	<!-- IF S_REMOVE_INSTALL -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{L_REMOVE_INSTALL}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<table cellspacing="1">
+		<caption>{L_FORUM_STATS}</caption>
+		<col class="col1" /><col class="col2" /><col class="col1" /><col class="col2" />
+	<thead>
+	<tr>
+		<th>{L_STATISTIC}</th>
+		<th>{L_VALUE}</th>
+		<th>{L_STATISTIC}</th>
+		<th>{L_VALUE}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>{L_NUMBER_POSTS}: </td>
+		<td><strong>{TOTAL_POSTS}</strong></td>
+		<td>{L_POSTS_PER_DAY}: </td>
+		<td><strong>{POSTS_PER_DAY}</strong></td>
+	</tr>
+	<tr>
+		<td>{L_NUMBER_TOPICS}: </td>
+		<td><strong>{TOTAL_TOPICS}</strong></td>
+		<td>{L_TOPICS_PER_DAY}: </td>
+		<td><strong>{TOPICS_PER_DAY}</strong></td>
+	</tr>
+	<tr>
+		<td>{L_NUMBER_USERS}: </td>
+		<td><strong>{TOTAL_USERS}</strong></td>
+		<td>{L_USERS_PER_DAY}: </td>
+		<td><strong>{USERS_PER_DAY}</strong></td>
+	</tr>
+	<tr>
+		<td>{L_NUMBER_FILES}: </td>
+		<td><strong>{TOTAL_FILES}</strong></td>
+		<td>{L_FILES_PER_DAY}: </td>
+		<td><strong>{FILES_PER_DAY}</strong></td>
+	</tr>
+
+
+	<tr>
+		<td>{L_BOARD_STARTED}: </td>
+		<td><strong>{START_DATE}</strong></td>
+		<td>{L_AVATAR_DIR_SIZE}: </td>
+		<td><strong>{AVATAR_DIR_SIZE}</strong></td>
+	</tr>
+	<tr>
+		<td>{L_DATABASE_SIZE}: </td>
+		<td><strong>{DBSIZE}</strong></td>
+		<td>{L_UPLOAD_DIR_SIZE}: </td>
+		<td><strong>{UPLOAD_DIR_SIZE}</strong></td>
+	</tr>
+	<tr>
+		<td>{L_DATABASE_SERVER_INFO}: </td>
+		<td><strong>{DATABASE_INFO}</strong></td>
+		<td>{L_GZIP_COMPRESSION}: </td>
+		<td><strong>{GZIP_COMPRESSION}</strong></td>
+	</tr>
+	<tr>
+		<td>{L_BOARD_VERSION}: </td>
+		<td><strong>{BOARD_VERSION}</strong></td>
+	<!-- IF S_TOTAL_ORPHAN -->
+		<td>{L_NUMBER_ORPHAN}: </td>
+		<td><strong>{TOTAL_ORPHAN}</strong></td>
+	<!-- ELSE -->
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	<!-- ENDIF -->
+	</tr>
+	</tbody>
+	</table>
+
+	<!-- IF S_ACTION_OPTIONS -->
+		<fieldset>
+			<legend>{L_STATISTIC_RESYNC_OPTIONS}</legend>
+
+			<form id="action_online_form" method="post" action="{U_ACTION}">
+				<dl>
+					<dt><label for="action_online">{L_RESET_ONLINE}</label><br /><span>&nbsp;</span></dt>
+					<dd><input type="hidden" name="action" value="online" /><input class="button2" type="submit" id="action_online" name="action_online" value="{L_RUN}" /></dd>
+				</dl>
+			</form>
+
+			<form id="action_date_form" method="post" action="{U_ACTION}">
+				<dl>
+					<dt><label for="action_date">{L_RESET_DATE}</label><br /><span>&nbsp;</span></dt>
+					<dd><input type="hidden" name="action" value="date" /><input class="button2" type="submit" id="action_date" name="action_date" value="{L_RUN}" /></dd>
+				</dl>
+			</form>
+
+			<form id="action_stats_form" method="post" action="{U_ACTION}">
+				<dl>
+					<dt><label for="action_stats">{L_RESYNC_STATS}</label><br /><span>{L_RESYNC_STATS_EXPLAIN}</span></dt>
+					<dd><input type="hidden" name="action" value="stats" /><input class="button2" type="submit" id="action_stats" name="action_stats" value="{L_RUN}" /></dd>
+				</dl>
+			</form>
+
+			<form id="action_user_form" method="post" action="{U_ACTION}">
+				<dl>
+					<dt><label for="action_user">{L_RESYNC_POSTCOUNTS}</label><br /><span>{L_RESYNC_POSTCOUNTS_EXPLAIN}</span></dt>
+					<dd><input type="hidden" name="action" value="user" /><input class="button2" type="submit" id="action_user" name="action_user" value="{L_RUN}" /></dd>
+				</dl>
+			</form>
+
+			<form id="action_db_track_form" method="post" action="{U_ACTION}">
+				<dl>
+					<dt><label for="action_db_track">{L_RESYNC_POST_MARKING}</label><br /><span>{L_RESYNC_POST_MARKING_EXPLAIN}</span></dt>
+					<dd><input type="hidden" name="action" value="db_track" /><input class="button2" type="submit" id="action_db_track" name="action_db_track" value="{L_RUN}" /></dd>
+				</dl>
+			</form>
+
+			<!-- IF S_FOUNDER -->
+			<form id="action_purge_cache_form" method="post" action="{U_ACTION}">
+				<dl>
+					<dt><label for="action_purge_cache">{L_PURGE_CACHE}</label><br /><span>{L_PURGE_CACHE_EXPLAIN}</span></dt>
+					<dd><input type="hidden" name="action" value="purge_cache" /><input class="button2" type="submit" id="action_purge_cache" name="action_purge_cache" value="{L_RUN}" /></dd>
+				</dl>
+			</form>
+			<!-- ENDIF -->
+  		</fieldset>
+	<!-- ENDIF -->
+
+	<!-- IF .log -->
+		<h2>{L_ADMIN_LOG}</h2>
+
+		<p>{L_ADMIN_LOG_INDEX_EXPLAIN}</p>
+
+		<div style="text-align: right;"><a href="{U_ADMIN_LOG}">&raquo; {L_VIEW_ADMIN_LOG}</a></div>
+
+		<table cellspacing="1">
+		<thead>
+		<tr>
+			<th>{L_USERNAME}</th>
+			<th>{L_IP}</th>
+			<th>{L_TIME}</th>
+			<th>{L_ACTION}</th>
+		</tr>
+		</thead>
+		<tbody>
+		<!-- BEGIN log -->
+			<!-- IF log.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+
+				<td>{log.USERNAME}</td>
+				<td style="text-align: center;">{log.IP}</td>
+				<td style="text-align: center;">{log.DATE}</td>
+				<td>{log.ACTION}</td>
+			</tr>
+		<!-- END log -->
+		</tbody>
+		</table>
+
+		<br />
+
+	<!-- ENDIF -->
+
+	<!-- IF S_INACTIVE_USERS -->
+		<h2>{L_INACTIVE_USERS}</h2>
+
+		<p>{L_INACTIVE_USERS_EXPLAIN_INDEX}</p>
+
+		<div style="text-align: right;"><a href="{U_INACTIVE_USERS}">&raquo; {L_VIEW_INACTIVE_USERS}</a></div>
+
+		<table cellspacing="1">
+		<thead>
+		<tr>
+			<th>{L_USERNAME}</th>
+			<th>{L_JOINED}</th>
+			<th>{L_INACTIVE_DATE}</th>
+			<th>{L_INACTIVE_REASON}</th>
+			<th>{L_LAST_VISIT}</th>
+		</tr>
+		</thead>
+		<tbody>
+		<!-- BEGIN inactive -->
+			<!-- IF inactive.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+
+				<td><a href="{inactive.U_USER_ADMIN}">{inactive.USERNAME}</a></td>
+				<td>{inactive.JOINED}</td>
+				<td>{inactive.INACTIVE_DATE}</td>
+				<td>{inactive.REASON}</td>
+				<td>{inactive.LAST_VISIT}</td>
+			</tr>
+		<!-- BEGINELSE -->
+			<tr>
+				<td colspan="5" style="text-align: center;">{L_NO_INACTIVE_USERS}</td>
+			</tr>
+		<!-- END inactive -->
+		</tbody>
+		</table>
+
+	<!-- ENDIF -->
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

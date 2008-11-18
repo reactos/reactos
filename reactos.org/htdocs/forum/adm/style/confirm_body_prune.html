@@ -1,0 +1,30 @@
+<!-- INCLUDE overall_header.html -->
+
+<form id="confirm" method="post" action="{S_CONFIRM_ACTION}">
+
+<fieldset>
+	<h1>{MESSAGE_TITLE}</h1>
+	<p>{MESSAGE_TEXT}</p>
+
+	{S_HIDDEN_FIELDS}
+
+	<div style="text-align: center;">
+		<input type="submit" name="confirm" value="{L_YES}" class="button2" />&nbsp; 
+		<input type="submit" name="cancel" value="{L_NO}" class="button2" />
+	</div>
+
+	<h2>{L_PRUNE_USERS_LIST}</h2>
+	<!-- IF S_DEACTIVATE --><p>{L_PRUNE_USERS_LIST_DEACTIVATE}</p><!-- ELSE --><p>{L_PRUNE_USERS_LIST_DELETE}</p><!-- ENDIF -->
+
+	<br />
+	<!-- BEGIN users -->
+	&raquo; <a href="{users.U_PROFILE}">{users.USERNAME}</a><!-- IF users.U_USER_ADMIN --> [<a href="{users.U_USER_ADMIN}">{L_USER_ADMIN}</a>]<!-- ENDIF --><br />
+	<!-- END users -->
+
+	<br /><br />
+
+</fieldset>
+
+</form>
+
+<!-- INCLUDE overall_footer.html -->

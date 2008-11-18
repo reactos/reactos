@@ -1,0 +1,102 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  # values: array of hashes having the following properties:
+  #   - name: string; The value.
+  #   - sortkey: number; The sortkey used to order the value when 
+  #              displayed to the user in a list.
+  #
+  # field: string; the name of the field we are editing values for.
+  # static: array; list of values which cannot be renamed nor deleted.
+  #%]
+
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]Select value for the
+                   '[% field FILTER html %]' field[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+[% edit_contentlink = BLOCK %]editvalues.cgi?action=edit&amp;field=
+  [%- field FILTER url_quote %]&amp;value=%%name%%[% END %]
+[% delete_contentlink = BLOCK %]editvalues.cgi?action=del&amp;field=
+  [%- field FILTER url_quote %]&amp;value=%%name%%[% END %]
+
+
+[% columns = [
+     { 
+       name => "name"
+       heading => "Edit field value..."
+       contentlink => edit_contentlink
+     },
+     { 
+       name => "sortkey"
+       heading => "Sortkey"
+     },
+     {
+       name => "action"
+       heading => "Action"
+       content => "Delete"
+       contentlink => delete_contentlink
+     } ]
+%]
+
+[% IF default.defined %]
+  [% overrides.action = [ {
+       match_value => "$default"
+       match_field => 'name'
+       override_content => 1
+       content => "(Default value)"
+       override_contentlink => 1
+       contentlink => undef
+     } ]
+  %]
+[% END %]
+
+[% IF static.size %]
+  [% UNLESS overrides.action.size %]
+    [% overrides.action = [] %]
+  [% END %]
+
+  [% FOREACH static_value = static %]
+    [% overrides.action.push({
+         match_value => "$static_value"
+         match_field => 'name'
+         override_content => 1
+         content => "(Non-deletable value)"
+         override_contentlink => 1
+         contentlink => undef
+       })
+    %]
+  [% END %]
+[% END %]
+
+[% PROCESS admin/table.html.tmpl
+     columns = columns
+     data = values
+     overrides = overrides
+%]
+
+[% PROCESS admin/fieldvalues/footer.html.tmpl
+  no_edit_other_link = 1
+ %]
+
+[% PROCESS global/footer.html.tmpl %]

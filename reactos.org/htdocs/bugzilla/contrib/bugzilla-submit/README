@@ -1,0 +1,46 @@
+bugzilla-submit
+===============
+
+Authors: Christian Reis <kiko@async.com.br>
+         Eric Raymond <esr@thyrsus.com>
+
+bugzilla-submit is a simple Python program that creates bugs in a Bugzilla
+instance. It takes as input text resembling message headers (RFC-822
+formatted) via standard input, or optionally a number of commandline
+parameters. It communicates using HTTP, which allows it to work over a
+network.
+
+Requirements
+------------
+
+Its only requirement is Python 2.3 or higher; you should have the
+"python" executable in your path.
+
+Usage Notes
+-----------
+
+* Please constrain testing to your own installation of Bugzilla, or use
+* http://landfill.bugzilla.org/ for testing purposes -- opening test
+* bugs on production instances of Bugzilla is definitely not a good idea
+
+Run "bugzilla-submit --help" for a description of the possible options.
+
+An example input file, named bugdata.txt, is provided. You can pipe it
+in as standard input to bugzilla-submit, providing a Bugzilla URI through
+the command-line.
+
+Note that you must create a ~/.netrc entry to authenticate against the
+Bugzilla instance. The entry's machine field is a *quoted* Bugzilla URI,
+the login field is your ID on that host, and the password field is the
+your password password. An example entry follows:
+
+    machine "http://bugzilla.mozilla.org/"
+    login foo@bar.loo
+    password snarf
+
+Documentation
+-------------
+
+Documentation for bugzilla-submit is provided in Docbook format; see
+bugzilla-submit.xml.
+

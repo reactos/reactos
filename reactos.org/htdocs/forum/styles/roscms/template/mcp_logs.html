@@ -1,0 +1,87 @@
+<!-- INCLUDE mcp_header.html -->
+
+<h2>{L_TITLE}</h2>
+
+<form method="post" id="mcp" action="{U_POST_ACTION}">
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<ul class="linklist">
+		<li class="rightside pagination">
+			<!-- IF TOTAL -->{TOTAL} <!-- ENDIF -->
+			<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+		</li>
+	</ul>
+
+	<table cellspacing="1" class="table1">
+	<thead>
+	<tr>
+		<th>{L_USERNAME}</th>
+		<th style="text-align: center">{L_IP}</th>
+		<th style="text-align: center">{L_TIME}</th>
+		<th>{L_ACTION}</th>
+		<!-- IF S_CLEAR_ALLOWED --><th>{L_MARK}</th><!-- ENDIF -->
+	</tr>
+	</thead>
+		<tbody>
+	<!-- IF S_LOGS -->
+		<!-- BEGIN log -->
+		<!-- IF log.S_ROW_COUNT is even --><tr class="bg1"><!-- ELSE --><tr class="bg2"><!-- ENDIF -->
+			<td>{log.USERNAME}</td>
+			<td style="text-align: center">{log.IP}</td>
+			<td style="text-align: center">{log.DATE}</td>
+			<td>{log.ACTION}<br />
+			{log.DATA}
+		</td>
+			<!-- IF S_CLEAR_ALLOWED --><td style="width: 5%" align="center"><input type="checkbox" name="mark[]" value="{log.ID}" /></td><!-- ENDIF -->
+		</tr>
+		<!-- END log -->
+	<!-- ELSE -->
+		<tr>
+			<td class="bg1" colspan="<!-- IF S_CLEAR_ALLOWED -->5<!-- ELSE -->4<!-- ENDIF -->" align="center"><span class="gen">{L_NO_ENTRIES}</span></td>
+		</tr>
+	<!-- ENDIF -->
+	</tbody>
+	</table>
+
+	<!-- IF .log -->
+		<fieldset class="display-options">
+			<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" class="right-box {S_CONTENT_FLOW_END}">{L_NEXT}</a><!-- ENDIF -->
+			<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" class="left-box {S_CONTENT_FLOW_BEGIN}">{L_PREVIOUS}</a><!-- ENDIF -->
+			<label>{L_DISPLAY_POSTS}: {S_SELECT_SORT_DAYS}</label>
+			<label>{L_SORT_BY} {S_SELECT_SORT_KEY}</label>
+			<label>{S_SELECT_SORT_DIR}</label>
+			<input type="submit" name="sort" value="{L_GO}" class="button2" />
+		</fieldset>
+
+		<hr />
+
+		<ul class="linklist">
+			<li class="rightside pagination">
+				<!-- IF TOTAL -->{TOTAL} <!-- ENDIF -->
+				<!-- IF PAGE_NUMBER --><!-- IF PAGINATION --> &bull; <a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE --> &bull; {PAGE_NUMBER}<!-- ENDIF --><!-- ENDIF -->
+			</li>
+		</ul>
+		{S_FORM_TOKEN}
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+		<!-- IF S_CLEAR_ALLOWED -->
+			<fieldset class="display-actions">
+				<input class="button2" type="submit" name="action[del_all]" value="{L_DELETE_ALL}" />
+				&nbsp;<input class="button1" type="submit" value="{L_DELETE_MARKED}" name="action[del_marked]" />
+	
+				<div><a href="#" onclick="marklist('mcp', 'mark', true); return false;">{L_MARK_ALL}</a> :: <a href="#" onclick="marklist('mcp', 'mark', false); return false;">{L_UNMARK_ALL}</a></div>
+			</fieldset>
+		<!-- ENDIF -->
+	<!-- ELSE -->
+			{S_FORM_TOKEN}
+			<span class="corners-bottom"><span></span></span></div>
+		</div>
+	<!-- ENDIF -->
+</form>
+
+<br />
+
+<!-- INCLUDE mcp_footer.html -->

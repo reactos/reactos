@@ -1,0 +1,33 @@
+<!-- INCLUDE overall_header.html -->
+
+<p class="{S_CONTENT_FLOW_END}<!-- IF S_USER_LOGGED_IN --> rightside<!-- ENDIF -->"><!-- IF S_USER_LOGGED_IN -->{LAST_VISIT_DATE}<!-- ELSE -->{CURRENT_TIME}<!-- ENDIF --></p>
+<!-- IF U_MCP --><p>{CURRENT_TIME} <br />[&nbsp;<a href="{U_MCP}">{L_MCP}</a>&nbsp;]</p><!-- ELSEIF S_USER_LOGGED_IN --><p>{CURRENT_TIME}</p><!-- ENDIF -->
+
+<!-- IF S_DISPLAY_SEARCH or (S_USER_LOGGED_IN and not S_IS_BOT) -->
+<ul class="linklist">
+	<!-- IF S_DISPLAY_SEARCH -->
+		<li><a href="{U_SEARCH_UNANSWERED}">{L_SEARCH_UNANSWERED}</a><!-- IF S_USER_LOGGED_IN --> &bull; <a href="{U_SEARCH_NEW}">{L_SEARCH_NEW}</a><!-- ENDIF --> &bull; <a href="{U_SEARCH_ACTIVE_TOPICS}">{L_SEARCH_ACTIVE_TOPICS}</a></li>
+	<!-- ENDIF -->
+	<!-- IF not S_IS_BOT and U_MARK_FORUMS --><li class="rightside"><a href="{U_MARK_FORUMS}" accesskey="m">{L_MARK_FORUMS_READ}</a></li><!-- ENDIF -->
+</ul>
+<!-- ENDIF -->
+
+<!-- INCLUDE forumlist_body.html -->
+
+<!-- IF S_DISPLAY_ONLINE_LIST -->
+	<!-- IF U_VIEWONLINE --><h3><a href="{U_VIEWONLINE}">{L_WHO_IS_ONLINE}</a></h3><!-- ELSE --><h3>{L_WHO_IS_ONLINE}</h3><!-- ENDIF -->
+	<p>{TOTAL_USERS_ONLINE} ({L_ONLINE_EXPLAIN})<br />{RECORD_USERS}<br /> <br />{LOGGED_IN_USER_LIST}
+	<!-- IF LEGEND --><br /><em>{L_LEGEND}: {LEGEND}</em><!-- ENDIF --></p>
+<!-- ENDIF -->
+
+<!-- IF S_DISPLAY_BIRTHDAY_LIST and BIRTHDAY_LIST -->
+	<h3>{L_BIRTHDAYS}</h3>
+	<p><!-- IF BIRTHDAY_LIST -->{L_CONGRATULATIONS}: <strong>{BIRTHDAY_LIST}</strong><!-- ELSE -->{L_NO_BIRTHDAYS}<!-- ENDIF --></p>
+<!-- ENDIF -->
+
+<!-- IF NEWEST_USER -->
+	<h3>{L_STATISTICS}</h3>
+	<p>{TOTAL_POSTS} &bull; {TOTAL_TOPICS} &bull; {TOTAL_USERS} &bull; {NEWEST_USER}</p>
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

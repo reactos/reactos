@@ -1,0 +1,425 @@
+/*
+ * oldshared.css
+ * This file contains CSS settings common to Wikistandard, Nostalgia and
+ * CologneBlue, the old pre-Monobook skins
+ */
+
+/* For clarity, explicitly state some recommendations from <http://www.w3.org/
+   TR/CSS21/sample.html> to make sure the editsection links scale right */
+
+h1 { font-size: 2em; }
+h2 { font-size: 1.5em; }
+h3 { font-size: 1.17em; }
+h5 { font-size: .83em; }
+h6 { font-size: .75em; }
+h1, h2, h3, h4, h5, h6 { font-weight: bolder }
+
+/* Now the custom parts */
+
+/* Make edit sections (which are inside h# tags) normal-sized */
+.editsection {
+	font-weight: normal;
+}
+h1 .editsection { font-size: 50% }
+h2 .editsection { font-size: 66.7% }
+h3 .editsection { font-size: 85.5% }
+h5 .editsection { font-size: 120% }
+h6 .editsection { font-size: 133% }
+
+#footer { clear: both }
+/* images */
+div.floatright { float: right; clear: right; margin: 0 0 1em 1em; }
+div.floatright p { font-style: italic; }
+div.floatleft { float: left; clear: left; margin: 0.3em 0.5em 0.5em 0; }
+div.floatleft p { font-style: italic; }
+
+
+/* Print-specific things to hide */
+.printfooter {
+        display: none;
+}
+
+/* table standards */
+table.rimage {
+        float:right;
+        margin-left:1em;
+        margin-bottom:1em;
+        text-align:center;
+        font-size:smaller;
+}
+
+/* thumbnails */
+div.thumb {
+	margin-bottom: .5em;
+	border-style: solid;
+	border-color: white;
+	width: auto;
+}
+div.thumbinner {
+	border: 1px solid #ccc;
+	padding: 3px !important;
+	background-color: #f9f9f9;
+	font-size: 94%;
+	text-align: center;
+	overflow: hidden;
+}
+html .thumbimage {
+	border: 1px solid #ccc;
+}
+html .thumbcaption {
+	border: none;
+	text-align: left;
+	line-height: 1.4em;
+	padding: 3px !important;
+	font-size: 94%;
+}
+div.magnify {
+	float: right;
+	border: none !important;
+	background: none !important;
+}
+div.magnify a, div.magnify img {
+	display: block;
+	border: none !important;
+	background: none !important;
+}
+div.tright {
+	clear: right;
+	float: right;
+	border-width: .5em 0 .8em 1.4em;
+}
+div.tleft {
+	float: left;
+	clear: left;
+	margin-right: .5em;
+	border-width: .5em 1.4em .8em 0;
+}
+img.thumbborder {
+	border: 1px solid #dddddd;
+}
+
+/* Page history styling */
+/* the auto-generated edit comments */
+.autocomment { color: #4b4b4b; }
+
+img { border: none; }
+
+#toc,
+.toc {
+	border: 1px solid #bba;
+	background-color: #f7f8ff;
+	padding: 5px;
+	font-size: 95%;
+	text-align: center;
+}
+#toc h2,
+.toc h2 {
+	display: inline;
+	border: none;
+	padding: 0;
+	font-size: 100%;
+	font-weight: bold;
+}
+#toc ul,
+.toc ul {
+	list-style-type: none;
+	list-style-image: none;
+	margin-left: 0;
+	padding-left: 0;
+	text-align: left;
+}
+#toc ul ul,
+.toc ul ul {
+	margin: 0 0 0 2em;
+}
+#toc .toctoggle,
+.toc .toctoggle {
+	font-size: 94%;
+}
+
+
+.error {
+	color: red;
+	font-size: larger;
+}
+
+/* preference page with js-genrated toc */
+#preftoc {
+    float: left;
+    margin: 1em 1em 1em 1em;
+    width: 13em;
+}
+#preftoc li { border: 1px solid White; }
+#preftoc li.selected {
+    background-color:#f9f9f9;
+    border:1px dashed #aaaaaa;
+}
+#preftoc a,
+#preftoc a:active {
+    display: block;
+    color: #005189;
+}
+#prefcontrol {
+    clear: left;
+    float: left;
+    margin-top: 1em;
+}
+div.prefsectiontip {
+    font-size: 94%;
+    margin-top: 0.4em;
+    color: #666;
+}
+fieldset.prefsection { margin-top: 1em }
+fieldset.operaprefsection { margin-left: 15em }
+
+/* emulate center */
+.center {
+    width: 100%;
+    text-align: center;
+}
+*.center * {
+    margin-left: auto;
+    margin-right: auto;
+}
+/* small for tables and similar */
+.small, .small * { font-size: 94%; }
+table.small { font-size: 100% }
+
+/* use this instead of #toc for page content */
+.toccolours {
+    border:1px solid #aaaaaa;
+    background-color:#f9f9f9;
+    padding:5px;
+    font-size: 95%;
+}
+#siteNotice {
+    border:1px solid #aaaaaa;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+.redirectText {
+	font-size:150%;
+	margin:5px;
+}
+.searchmatch {
+	color: red;
+	font-weight: bold;
+}
+.sharedUploadNotice {
+	font-style: italic;
+}
+span.unpatrolled {
+	font-weight:bold;
+	color:red;
+}
+
+span.updatedmarker {
+	color:black;
+	background-color:#00FF00;
+}
+
+table.gallery {
+        border:  1px solid #cccccc;
+        margin:  2px;
+        padding: 2px;
+        background-color:#ffffff;
+}
+
+table.gallery tr {
+    vertical-align:top;
+}
+
+table.gallery td {
+      vertical-align:top;
+      background-color:#f9f9f9;
+      border: solid 2px white;
+}
+
+div.gallerybox {
+        margin: 2px;
+        width:  150px;
+}
+
+div.gallerybox div.thumb {
+        text-align: center;
+        border: 1px solid #cccccc;
+        margin: 2px;
+}
+
+div.gallerytext {
+	overflow: hidden;
+        font-size: 94%;
+        padding: 2px 4px;
+}
+
+span.comment {
+	font-style: italic;
+}
+
+span.changedby {
+	font-size: 95%;
+}
+
+.previewnote {
+	text-align: center;
+	color: #cc0000;
+}
+.editExternally {
+        border-style:solid;
+        border-width:1px;
+        border-color:gray;
+        background: #ffffff;
+        padding:3px;
+        margin-top:0.5em;
+        float:left;
+        font-size:small;
+        text-align:center;
+}
+.editExternallyHelp {
+        font-style:italic;
+        color:gray;
+}
+
+li span.deleted {
+	text-decoration: line-through;
+	color: #888;
+	font-style: italic;
+}
+
+/* Classes for EXIF data display */
+table.mw_metadata {
+	margin-left: 0.5em;
+}
+
+table.mw_metadata caption { font-weight: bold; }
+table.mw_metadata th { font-weight: normal; }
+table.mw_metadata td { padding: 0.1em; }
+
+table.mw_metadata {
+	border: none;
+	border-collapse: collapse;
+}
+table.mw_metadata td, table.mw_metadata th {
+	border: 1px solid #aaaaaa;
+	padding-left: 4px;
+	padding-right: 4px;
+}
+table.mw_metadata th {
+	background-color: #f9f9f9;
+}
+table.mw_metadata td {
+	background-color: #fcfcfc;
+}
+table.mw_metadata td.spacer {
+	background: inherit;
+	border-top: none;
+	border-bottom: none;
+}
+table.collapsed tr.collapsable {
+	display: none;
+}
+
+.visualClear {
+    clear: both;
+}
+
+#mw_trackbacks {
+	border: solid 1px #bbbbff;
+	background-color: #eeeeff;
+	padding: 0.2em;
+}
+
+/* Allmessages table */
+
+#allmessagestable th {
+	background-color: #b2b2ff;
+}
+
+#allmessagestable tr.orig {
+	background-color: #ffe2e2;
+}
+
+#allmessagestable tr.new {
+	background-color: #e2ffe2;
+}
+
+#allmessagestable tr.def {
+	background-color: #f0f0ff;
+}
+
+#jump-to-nav {
+  display: none;
+}
+
+/* Keep this temporarily so that cached pages will display right */
+table.gallery td.galleryheader {
+    text-align: center;
+	font-weight: bold;
+}
+table.gallery caption {
+	font-weight: bold;
+}
+
+div.multipageimagenavbox {
+   border: solid 1px silver;
+   padding: 4px;
+   margin: 1em;
+   background: #f0f0f0;
+}
+
+div.multipageimagenavbox div.thumb {
+   border: none;
+   margin-left: 2em;
+   margin-right: 2em;
+}
+
+div.multipageimagenavbox hr {
+   margin: 6px;
+}
+
+table.multipageimage td {
+   text-align: center;
+}
+
+/*
+  Table pager (e.g. Special:Imagelist)
+  - remove underlines from the navigation link
+  - collapse borders
+  - set the borders to outsets (similar to Special:Allmessages)
+  - remove line wrapping for all td and th, set background color
+  - restore line wrapping for the last two table cells (description and size)
+*/
+.TablePager_nav a { text-decoration: none; }
+.TablePager { border-collapse: collapse; }
+.TablePager, .TablePager td, .TablePager th { 
+	border: 0.15em solid #777777;
+	padding: 0 0.15em 0 0.15em;
+}
+.TablePager th { background-color: #eeeeff }
+.TablePager td { background-color: #ffffff }
+.TablePager tr:hover td { background-color: #eeeeff }
+
+.imagelist td, .imagelist th { white-space: nowrap }
+.imagelist .TablePager_col_links { background-color: #eeeeff }
+.imagelist .TablePager_col_img_description { white-space: normal }
+.imagelist th.TablePager_sort { background-color: #ccccff }
+
+.templatesUsed { margin-top: 1em; }
+
+/* Recreating-deleted-page/reupload file warning and log entries */
+div#mw-upload-deleted-warn ul li,
+div#mw-recreate-deleted-warn ul li {
+	font-size: 95%;
+}
+
+
+.MediaTransformError {
+	border: thin solid #777;
+	background-color: #ccc;
+	padding: 0.1em;
+}
+.MediaTransformError td {
+	text-align: center;
+	vertical-align: middle;
+	font-size: 90%;
+}

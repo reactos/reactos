@@ -1,0 +1,22 @@
+<!-- INCLUDE simple_header.html -->
+
+<script type="text/javascript">
+// <![CDATA[
+	var form_name = 'postform';
+	var text_name = 'message';
+// ]]>
+</script>
+<script type="text/javascript" src="{T_TEMPLATE_PATH}/editor.js"></script>
+
+<h2>{L_SMILIES}</h2>
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+		<!-- BEGIN smiley --> 
+			<a href="#" onclick="insert_text('{smiley.A_SMILEY_CODE}', true, true); return false;"><img src="{smiley.SMILEY_IMG}" width="{smiley.SMILEY_WIDTH}" height="{smiley.SMILEY_HEIGHT}" alt="{smiley.SMILEY_CODE}" title="{smiley.SMILEY_DESC}" /></a> 
+		<!-- END smiley	-->
+	
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+<a  href="#" onclick="window.close(); return false;">{L_CLOSE_WINDOW}</a>
+
+<!-- INCLUDE simple_footer.html -->

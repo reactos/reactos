@@ -1,0 +1,33 @@
+
+<h3 id="review">
+	<span class="right-box"><a href="#review" onclick="viewableArea(getElementById('topicreview'), true); var rev_text = getElementById('review').getElementsByTagName('a').item(0).firstChild; if (rev_text.data == '{LA_EXPAND_VIEW}'){rev_text.data = '{LA_COLLAPSE_VIEW}'; } else if (rev_text.data == '{LA_COLLAPSE_VIEW}'){rev_text.data = '{LA_EXPAND_VIEW}'};">{L_EXPAND_VIEW}</a></span>
+	{L_MESSAGE_HISTORY}: {HISTORY_TITLE}
+</h3>
+
+<div id="topicreview">
+	<!-- BEGIN history_row -->
+	<div class="post <!-- IF history_row.S_ROW_COUNT is even -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="postbody" id="pr{history_row.U_MSG_ID}">
+			<!-- IF history_row.U_QUOTE -->
+			<ul class="profile-icons">
+				<li class="quote-icon"><a href="{history_row.U_QUOTE}" title="{L_QUOTE} {history_row.MESSAGE_AUTHOR}"><span>{L_QUOTE} {history_row.MESSAGE_AUTHOR}</span></a></li>
+			</ul>
+			<!-- ENDIF -->
+
+			<h3><a href="{history_row.U_VIEW_MESSAGE}" <!-- IF history_row.S_CURRENT_MSG -->class="current"<!-- ENDIF -->>{history_row.SUBJECT}</a></h3>
+			<p class="author<!-- IF history_row.S_CURRENT_MSG --> current<!-- ENDIF -->">{history_row.MINI_POST_IMG} {L_SENT_AT}: <strong>{history_row.SENT_DATE}</strong><br />
+				{L_MESSAGE_BY_AUTHOR} {history_row.MESSAGE_AUTHOR_FULL}</p>
+			<div class="content<!-- IF history_row.S_CURRENT_MSG --> current<!-- ENDIF -->" id="message_{history_row.U_MSG_ID}">
+				{history_row.MESSAGE}
+			</div>
+		</div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+	<!-- END history_row -->
+</div>
+
+<hr />
+<p><a href="#cp-main" class="top2">{L_BACK_TO_TOP}</a></p>

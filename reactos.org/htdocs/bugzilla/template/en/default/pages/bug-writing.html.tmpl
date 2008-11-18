@@ -1,0 +1,182 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Eli Goldberg <eli@prometheus-music.com>
+  #                 Gervase Markham <gerv@gerv.net>
+  #                 Vera Horiuchi
+  #                 Claudius Gayle
+  #                 Peter Mock
+  #                 Chris Pratt
+  #                 Tom Schutter
+  #                 Chris Yeh
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% INCLUDE global/header.html.tmpl title = "$terms.Bug Writing Guidelines" %]
+
+  <p>Effective [% terms.bug %] reports are the most likely to be fixed. 
+  These guidelines explain how to write such reports.
+
+<h3>Principles</h3>
+
+  <ul>
+    <li>Be precise</li>
+    <li>Be clear - explain it so others can reproduce the [% terms.bug %]</li>
+    <li>One [% terms.bug %] per report</li>
+    <li>No [% terms.bug %] is too trivial to report - 
+    small [% terms.bugs %] may hide big [% terms.bugs %]</li>
+    <li>Clearly separate fact from speculation</li>
+  </ul>
+
+<h3>Preliminaries</h3>
+
+<ol>
+  <li>Reproduce your [% terms.bug %] using a recent build of the
+  software, to see whether it has already been fixed.
+  </li>
+
+  <li><a href="query.cgi?format=specific">Search</a> 
+  [% terms.Bugzilla %], to see whether your [% terms.bug %] has
+  already been reported.</li>
+</ol>
+
+<h3>Reporting a New [% terms.Bug %]</h3>
+
+<p>If you have reproduced the [% terms.bug %] in a recent build and 
+no-one else appears to have reported it, then:</p>
+
+<ol>
+ <li>Choose 
+ "<a href="enter_bug.cgi">Enter a new [% terms.bug %]</a>"</li>
+ <li>Select the product in which you've found the [% terms.bug %]</li>
+ <li>Fill out the form. Here is some help understanding it:</li>
+</ol>
+
+  <blockquote>
+    <p><b>Component:</b> In which sub-part of the software does it 
+          exist?<br>
+    This field is required.
+    Click the word "Component" to see a description of each 
+    component. If none seems appropriate, look for a "General" component.</p>
+
+    <p><b>OS:</b> On which operating system (OS) did you find 
+          it?
+    (e.g. Linux, Windows XP, Mac OS X.)<br>
+    If you know the [% terms.bug %] happens on more than one type of 
+    operating system, choose "All". 
+    If your OS isn't listed, choose Other.</p>
+
+    <p><b>Summary:</b> How would you describe the [% terms.bug %], in 
+    approximately 60 or fewer characters?<br>
+     A good summary should <b>quickly and uniquely identify [% terms.abug %]
+    report</b>. It should explain the problem, not your suggested solution.<br>
+    <ul>
+     <li>Good: "<tt>Cancelling a File Copy dialog crashes 
+     File Manager</tt>"</li>
+     <li>Bad: "<tt>Software crashes</tt>"</li>
+     <li>Bad: "<tt>Browser should work with my web site</tt>"</li>
+    </ul>
+    
+    <b>Description:</b>
+    The details of your problem report, including:</p>
+
+    <blockquote>
+      <p><b>Overview:</b> More detailed restatement of
+      summary.</p>
+
+      <blockquote>
+<pre>
+Drag-selecting any page crashes Mac builds in the NSGetFactory function.
+</pre>
+      </blockquote>
+
+      <p><b>Steps to Reproduce:</b> Minimized, easy-to-follow steps that
+      will trigger the [% terms.bug %]. Include any special setup steps.</p>
+
+      <blockquote>
+<pre>
+1) View any web page. (I used the default sample page, 
+resource:/res/samples/test0.html)
+
+2) Drag-select the page. (Specifically, while holding down 
+the mouse button, drag the mouse pointer downwards from any 
+point in the browser's content region to the bottom of the 
+browser's content region.)
+</pre>
+      </blockquote>
+
+      <p><b>Actual Results:</b> What the application did after performing
+      the above steps.</p>
+
+      <blockquote>
+<pre>
+The application crashed.
+</pre>
+      </blockquote>
+
+      <p><b>Expected Results:</b> What the application should have done,
+      were the [% terms.bug %] not present.</p>
+
+      <blockquote>
+<pre>
+The window should scroll downwards. Scrolled content should be selected. 
+(Or, at least, the application should not crash.)
+</pre>
+      </blockquote>
+
+      <p><b>Build Date &amp; Platform:</b> Date and platform of the build
+      in which you first encountered the [% terms.bug %].</p>
+
+      <blockquote>
+<pre>
+Build 2006-08-10 on Mac OS 10.4.3
+</pre>
+      </blockquote>
+
+      <p><b>Additional Builds and Platforms:</b> Whether or not 
+      the [% terms.bug %] takes place on other platforms (or browsers, 
+      if applicable).</p>
+
+      <blockquote>
+<pre>
+Doesn't Occur On Build 2006-08-10 on Windows XP Home (Service Pack 2)
+</pre>
+      </blockquote>
+
+      <p><b>Additional Information:</b> Any other useful information.
+      <br><br>For crashing [% terms.bugs %]:</p>
+
+      <ul>
+        <li><b>Windows:</b> Note the type of the crash, and the module that the
+        application crashed in (e.g. access violation in apprunner.exe).</li>
+
+        <li><b>Mac OS X:</b> Attach the "Crash Reporter" log that appears
+        upon crash.
+        Only include the section directly below the crashing thread, usually 
+        titled "Thread 0 Crashed". Please do not paste the entire log!</li>
+      </ul>
+    </blockquote>
+
+  <p>Double-check your report for errors and omissions, then press "Commit".
+  Your [% terms.bug %] report will now be in 
+  the [% terms.Bugzilla %] database.<br>
+  </p>
+</blockquote>
+
+[% INCLUDE global/footer.html.tmpl %]

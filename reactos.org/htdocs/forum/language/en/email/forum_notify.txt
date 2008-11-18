@@ -1,0 +1,19 @@
+Subject: Forum post notification - "{FORUM_NAME}"
+
+Hello {USERNAME},
+
+You are receiving this notification because you are watching the forum, "{FORUM_NAME}" at "{SITENAME}". This forum has received a new reply to the topic "{TOPIC_TITLE}" since your last visit. You can use the following link to view the last unread reply, no more notifications will be sent until you visit the topic.
+
+{U_NEWEST_POST}
+
+If you want to view the topic, click the following link:
+{U_TOPIC}
+
+If you want to view the forum, click the following link:
+{U_FORUM}
+
+If you no longer wish to watch this forum you can either click the "Unsubscribe forum" link found in the forum above, or by clicking the following link:
+
+{U_STOP_WATCHING_FORUM}
+
+{EMAIL_SIG}

@@ -1,0 +1,56 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Terry Weissman <terry@mozilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  # action: string; the current action (either "update" or "delete").
+  # keyword: A Bugzilla::Keyword object
+  #%]
+  
+[% IF action == "update" %]
+  [% title = "Update keyword"%]
+  [% status = "updated" %]
+[% ELSIF action == "delete" %]
+  [% title = "Delete keyword" %]
+  [% status = "deleted" %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl %]
+
+Keyword [% keyword.name FILTER html %] [%+ status FILTER html %].
+
+<p>
+  <b>After you have finished deleting or modifying keywords,
+  you need to rebuild the keyword cache.</b><br>
+  
+  Warning: on a very large installation of [% terms.Bugzilla %],
+  this can take several minutes.
+</p>
+
+<p>
+  <b><a href="sanitycheck.cgi?rebuildkeywordcache=1">Rebuild
+  keyword cache</a></b>
+</p>
+
+<p><a href="editkeywords.cgi">Edit more keywords</a>.</p>
+
+[% PROCESS global/footer.html.tmpl %] 

@@ -1,0 +1,78 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+  #                 David Lawrence <dkl@redhat.com>
+  #%]
+
+[%# INTERFACE:
+  #
+  # editusers:          is viewing user member of editusers?
+  # restrictablegroups: list of groups visible to the user:
+  #                     id: group id
+  #                     name: group name
+  #%]
+ 
+
+[% PROCESS global/header.html.tmpl
+  title = "Search users"
+  style_urls = ['skins/standard/editusers.css']
+  onload = "document.forms['f'].matchstr.focus()"
+%]
+
+[% PROCESS admin/users/listselectvars.html.tmpl
+  listselectionvalues = listselectionvalues
+%]
+
+<form name="f" method="get" action="editusers.cgi">
+<input type="hidden" name="action" value="list" />
+<p><label for="matchvalue">List users with</label>
+<select id="matchvalue" name="matchvalue">
+  <option value="login_name">login name</option>
+  <option value="realname">real name</option>
+  <option value="userid">user id</option>
+</select>
+<label for="matchstr">matching</label>
+<input size="32" name="matchstr" id="matchstr" />
+<select name="matchtype">
+  <option value="substr" selected="selected">case-insensitive substring</option>
+  <option value="regexp">case-insensitive regexp</option>
+  <option value="notregexp">not (case-insensitive regexp)</option>
+  <option value="exact">exact (find this user)</option>
+</select>
+<input type="submit" id="search" value="Search" /></p>
+
+[% IF restrictablegroups.size %]
+  <p><input type="checkbox" name="grouprestrict" value="1" id="grouprestrict" />
+  <label for="grouprestrict">Restrict to users belonging to group</label>
+  <select name="groupid"
+          onchange="document.forms['f'].grouprestrict.checked=true">
+    [% FOREACH group = restrictablegroups %]
+      <option value="[% group.id FILTER html %]">[% group.name FILTER html %]</option>
+    [% END %]
+  </select></p>
+[% END %]
+</form>
+
+[% IF editusers %]
+  <p>
+    You can also <a href="editusers.cgi?action=add">add a new user</a>
+    [%- IF listselectionvalues %],
+      or
+      <a href="editusers.cgi?action=list[% INCLUDE listselectionurlparams %]">show
+      the user list again</a>
+    [%- END %].
+  </p>
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

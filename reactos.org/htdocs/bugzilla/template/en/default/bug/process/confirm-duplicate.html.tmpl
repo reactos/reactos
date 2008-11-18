@@ -1,0 +1,76 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[%# INTERFACE:
+  # original_bug_id: number; the bug number for the bug
+  #   against which a bug is being duped
+  # duplicate_bug_id: number; the bug number for the bug
+  #   being duped
+  # cclist_accessible: boolean; whether or not users on the cc: list
+  #   of the original bug can access that bug.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% PROCESS global/header.html.tmpl title="Duplicate Warning" %]
+[% orig_bug = "$terms.bug $original_bug_id"
+     FILTER bug_link(original_bug_id) %]
+
+<p>
+  When marking [% terms.abug %] as a duplicate, the reporter of the duplicate
+  is normally added to the CC list of the original. The permissions
+  on [% orig_bug FILTER none %] (the original) are currently set
+  such that the reporter would not normally be able to see it.
+</p>
+
+<p>
+  <b>Adding the reporter to the CC list of [% orig_bug FILTER none %]
+  [% IF cclist_accessible %]
+    will immediately
+  [% ELSE %]
+    might, in the future,
+  [% END %]
+  allow him/her access to view this [% terms.bug %].</b>
+  Do you wish to do this?
+</p>
+
+<form method="post" action="process_bug.cgi">
+
+[% PROCESS "global/hidden-fields.html.tmpl" exclude="^Bugzilla_(login|password)$" %]
+
+<p>
+  <input type="radio" name="confirm_add_duplicate" value="1">
+    Yes, add the reporter to CC list on [% orig_bug FILTER none %]
+</p>
+<p>
+  <input type="radio" name="confirm_add_duplicate" value="0" checked="checked">
+    No, do not add the reporter to CC list on [% orig_bug FILTER none %]
+</p>
+<p>
+  [% "Throw away my changes, and revisit $terms.bug $duplicate_bug_id"
+     FILTER bug_link(duplicate_bug_id) FILTER none %]
+</p>
+<p>
+  <input type="submit" id="process" value="Submit">
+</p>
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

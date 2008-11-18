@@ -1,0 +1,95 @@
+/*
+Make RSS and Atom feeds at least semi-legible to folk who accidentally
+load them in a browser...
+
+Compatibility:
+* Mozilla is fine.
+* Safari 1.2: the RSS <link> text isn't shown
+* Opera 7.5 uses the style sheet instead of its native RSS mode.
+* IE/Mac 5.2: none of the :before content works; doesn't get the charset right and displays garbage for non-ASCII.
+* IE/Win 6.0: No background color, borders, font size, font weight, or :before content.
+
+*/
+
+/* RSS: */ rss, channel, title, link, description, language, generator, lastBuildDate, item, pubDate, author, comments, creator,
+/* Atom: */ feed, id, modified, tagline, entry, issued, created, updated, summary, comment {
+	display: block;
+}
+
+rss, feed {
+	background: white;
+	color: black;
+	margin: 1em;
+	font-family: "Verdana", "Tahoma", "Arial", "Helvetica", sans-serif;
+	line-height: 1.5em;
+	font-size: 76%;
+}
+
+rss:before {
+	content: "This RSS feed is meant to be read in a syndicated news reader, and isn't ideal for a web browser.";
+}
+
+feed:before {
+	content: "This Atom feed is meant to be read in a syndicated news reader, and isn't ideal for a web browser.";
+}
+rss:before, feed:before {
+	color: red;
+	text-align: center;
+	line-height: 2em;
+}
+
+channel>title,
+item>title,
+feed>title,
+entry>title {
+	font-weight: bold;
+	border-bottom: solid 1px #aaa;
+	margin-left: -0.5em;
+}
+channel>title, feed>title {
+	font-size: larger;
+}
+item>title, entry>title {
+	font-size: large;
+}
+item, entry {
+	margin-top: 1em;
+	margin-left: 2em;
+}
+
+item>description, entry>summary {
+	white-space: pre;
+	overflow: auto;
+	background: #f8f8ff;
+}
+
+pubDate:before { content: "Date: " }
+link:before { content: "Link: " }
+author:before, creator:before { content: "Author: " }
+description:before { content: "Description: " }
+id:before { content: "Id: " }
+
+generator:before { content: "Generator: " }
+language:before { content: "Language: " }
+lastBuildDate:before { content: "Updated: " }
+comments:before { content: "Comments page: " }
+
+tagline:before { content: "Tagline: " }
+issued:before { content: "Issued: " }
+created:before { content: "Created: " }
+modified:before { content: "Modified: " }
+updated:before { content: "Updated: " }
+summary:before { content: "Summary: " }
+comment:before { content: "Comment: " }
+
+pubDate:before, link:before, author:before, description:before,
+language:before, generator:before, lastBuildDate:before, comments:before,
+tagline:before, issued:before, created:before, modified:before,
+summary:before, comment:before, creator:before, id:before, updated:before {
+	color: #224;
+	font-weight: bold;
+}
+
+feed link:after {
+	content: attr(href);
+}

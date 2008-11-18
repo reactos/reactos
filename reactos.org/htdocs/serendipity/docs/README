@@ -1,0 +1,121 @@
+########################################################################
+# README                                                               #
+########################################################################
+
+For the most up-to-date information on documentation, creating styles,
+plugins and so on, please visit our Wiki on http://www.s9y.org/!
+
+########################################################################
+# NOTES FOR CONDITIONAL GET IN RSS FEEDS                               #
+########################################################################
+
+Serendipity supports an HTTP-cache compatible way of only showing items
+in an RSS feed which where modified since the last request from a
+client.
+
+Typically, an RSS reader fetches your RSS feeds (15 items, per default).
+It then remembers the timestamp when those items where fetched. By the
+time your RSS reader updates the feed (typically after 1 hour)
+Serendipity will now only serve all new or modified items since the last
+time of refresh. If no entries where updated since then, serendipity
+will only serve the 304 Header (Not Modified) and saves a lot of
+bandwidth for both client and server on periodical updates.
+
+Technically an RSS reader catches the "Last-Modified" Header of the RSS
+output as well as a special "ETag"-Header. Both are set to the last
+modification time of your article base. On the next fetch, those
+received headers are sent as "IF_MODIFIED_SINCE" (= Last-Modified) and
+"IF_NONE_MATCH" (= ETag) Headers and will affect your rss feed. This
+saves a lot of bandwidth on both client and server side.
+
+Users who have been watching your feed and where not able to catch up
+the latest articles may miss some of them, because you usually only get
+15 items per feed. In case your reader provides the IF_MODIFIED_SINCE
+header the client can now catch all items (resp. a maximum of 50
+articles to prevent abuse).
+
+If you want to permanently disable that feature (whatever the reasons
+are) you can either set a "$_REQUEST['nocache'] = true" inside your
+rss.php file (first line) or append the '&nocache=true' request variable
+to your feed so that it looks like:
+http://example.host/serendipity/rss.php?version=2.0&nocache=true.
+
+Of course, the usual feed behaviour is not affected if none of the
+caching headers are provided. So if you use syndication methods to embed
+content from a blog inside an application, just tune your application to
+either send the 'nocache'-Variable to a Serendipity blog, or to not send
+the caching headers.
+
+The syndication plugin can be configured to append that variable to your
+feed URLs from your blog.
+
+########################################################################
+# USER MANAGEMENT                                                      #
+########################################################################
+
+New users can be created by inserting them to the 'authors' table.
+
+The field 'userlevel' is a special field describing which actions a
+user may have:
+
+- Userlevel 0:   Standard editor. Cannot apply many administrative tasks
+
+- Userlevel 1:   Chief editor. Can apply some administrative tasks (like
+                 title of the blog, ...
+
+- Userlevel 255: Admin. Can change everything.
+
+Userlevels are cumulative, thus a user with level '30' can do anything
+which users of a lower level can do. Currently only the levels mentioned
+above are used.
+
+Here is a short chart of what users can do:
+
+ACTION                                               |editor|chief|admin
+-----------------------------------------------------|------|-----|-----
+Manage private plugins                               |   -     +     +
+Manage global plugins                                |   -     -     +
+Manage order of plugins                              |   -     +     +
+Manage configuration of private plugins              |   -     +     +
+Manage configuration of all protected plugins        |   -     -     +
+Manage configuration of private protected plugins    |   +     +     +
+
+Manage all categories                                |   -     +     +
+Manage public categories                             |   +     +     +
+Manage private categories                            |   +     +     +
+Manage global configuration                          |   -     -     +
+
+Manage basic configuration                           |   -     +     +
+Manage private configuration                         |   +     +     +
+
+Manage templates                                     |   -     +     +
+
+Manage 'admin' users                                 |   -     -     +
+Manage 'chief' users                                 |   -     +     +
+Manage 'editor' users                                |   -     +     +
+
+Manage private entries                               |   +     +     +
+Manage others entries                                |   -     +     +
+Manage comments/trackbacks to private entries        |   +     +     +
+Manage comments/trackbacks to others entries         |   -     +     +
+
+View/Link/Upload all pictures                        |   +     +     +
+View/Link/Upload private pictures                    |   +     +     +
+View/Link/Upload public pictures                     |   +     +     +
+
+Edit all pictures                                    |   -     +     +
+Edit public pictures                                 |   +     +     +
+Edit private pictures                                |   +     +     +
+------------------------------------------------------------------------
+
+It is advised that in shared setups only the webmaster has an admin-
+access. The users should be given a chief-login, and them theirselves
+can distribute user logins.
+
+########################################################################
+
+Serendipity Weblog - http://s9y.org
+
+Licensed under the BSD License
+
+# $Id$

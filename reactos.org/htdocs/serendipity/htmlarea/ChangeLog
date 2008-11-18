@@ -1,0 +1,1185 @@
+2004-02-17  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/el.js, plugins/ContextMenu/lang/el.js, plugins/TableOperations/lang/el.js:
+	updated headers
+
+	* lang/no.js: updated (thanks havardw)
+
+2004-02-09  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/EnterParagraphs/enter-paragraphs.js:
+	Plugin that enables Mozilla to create a <p> instead of <br /> at ENTER.
+	Code contributed by Adam Wright.
+
+	* htmlarea.js: code to call onKeyPress for plugins that define it
+	code that keeps single spaces as &nbsp;
+	(thanks to hipikat @ IT forums (Adam Wright))
+
+	* ChangeLog:
+	ChangeLog is acutally automatically generated so there's no point keep it in CVS
+
+2004-02-08  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: fixed possible bug
+
+	* images/ed_align_center.gif, images/ed_align_justify.gif, images/ed_align_left.gif, images/ed_align_right.gif, images/ed_blank.gif, images/ed_charmap.gif, images/ed_color_bg.gif, images/ed_color_fg.gif, images/ed_copy.gif, images/ed_custom.gif, images/ed_cut.gif, images/ed_delete.gif, images/ed_format_bold.gif, images/ed_format_italic.gif, images/ed_format_strike.gif, images/ed_format_sub.gif, images/ed_format_sup.gif, images/ed_format_underline.gif, images/ed_help.gif, images/ed_hr.gif, images/ed_html.gif, images/ed_image.gif, images/ed_indent_less.gif, images/ed_indent_more.gif, images/ed_left_to_right.gif, images/ed_link.gif, images/ed_list_bullet.gif, images/ed_list_num.gif, images/ed_paste.gif, images/ed_redo.gif, images/ed_right_to_left.gif, images/ed_save.gif, images/ed_show_border.gif, images/ed_splitcel.gif, images/ed_undo.gif, images/fullscreen_maximize.gif, images/fullscreen_minimize.gif, images/insert_table.gif, images/ed_about.gif:
+	optimized images (thanks to Alexander Kandzior and OpenCMS group)
+
+2004-02-01  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* project-config.xml: release candidate 1
+
+	* release-notes.html: updated release notes
+
+	* examples/index.html, examples/makefile.xml:
+	added examples directory index
+
+	* release-notes.html: fix
+
+2004-01-31  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* makefile.xml: ensure correct file permissions
+
+	* plugins/SpellChecker/spell-check-logic.cgi, plugins/SpellChecker/spell-check-ui.html, plugins/SpellChecker/spell-check-ui.js:
+	spell checker now reports some document information (such as total number of
+	words, number of mispelled words, number of suggestions, etc)
+
+	* htmlarea.js: removed some custom attributes
+
+	* plugins/SpellChecker/spell-check-ui.js:
+	fixed bug (frame scroll in IE)
+
+2004-01-30  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* ChangeLog, release-notes.html: updated release notes, changelog
+
+	* plugins/SpellChecker/readme-tech.html:
+	updated text about Aspell Unicode support
+
+	* plugins/SpellChecker/spell-check-style.css: - lorem ipsum
+
+	* plugins/SpellChecker/spell-check-logic.cgi: - optimization
+
+	* plugins/SpellChecker/spell-check-logic.cgi:
+	- bugfix (removed <spellchecker> tags)
+
+	* plugins/SpellChecker/spell-check-logic.cgi:
+	bleah.. this version seems to be safer; no mo' HTML::Parser; DOM rulz.
+
+	* plugins/SpellChecker/spell-check-logic.cgi:
+	seems to be better now :-\  hell knows how perl & unicode works :-/
+
+	* plugins/SpellChecker/spell-check-logic.cgi, plugins/SpellChecker/spell-check-ui.js:
+	- big performance improvement (suggestion is now passed only once for each
+	  mispelled word)
+	- bugs fixed (text already corrected in Unicode is now correctly decoded)
+
+	* plugins/SpellChecker/lang/en.js: - added word "Revert"
+
+	* plugins/SpellChecker/spell-checker.js: - lorem ipsum
+	- window is a bit higher now (450px)
+
+	* plugins/SpellChecker/spell-check-ui.js:
+	- fixed IE bug ("undefined is undefined or undefined", or something..)
+	- the highlighted word will now remain in view (window scrolls if necessary)
+	- functionality for "Revert"
+	- (tried to) eliminate some of the screen blinking in Mozilla
+	- select the current dictionary on first display
+
+	* plugins/SpellChecker/spell-check-ui.html:
+	added "Revert" button (reverts the current word to the mispelled original)
+
+	* plugins/SpellChecker/spell-check-style.css: *** empty log message ***
+
+	* plugins/SpellChecker/spell-check-logic.cgi:
+	- fixed (hopefully) unicode support (by the way, it seems that Aspell _does_
+	  in fact know Unicode!!)
+	- remembers the selected dictionary in a cookie
+	- removed debug code
+
+2004-01-28  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* index.html: updated main page
+
+	* release-notes.html: updated release notes
+
+	* htmlarea.js: jscrunch-safe
+
+	* popups/about.html:
+	stop tab click event so that they don't get selected
+
+	* reference.html: some parts updated
+
+	* popups/about.html, examples/2-areas.html, examples/context-menu.html, examples/core.html, examples/css.html, examples/full-page.html, examples/fully-loaded.html, examples/spell-checker.html, examples/table-operations.html, plugins/SpellChecker/readme-tech.html, ChangeLog, dialog.js, htmlarea.js, index.html, license.txt, popupwin.js, release-notes.html:
+	ChangeLog updated; copyright years/info updated
+
+2004-01-27  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js:
+	Included an workaround for a strange IE problem: IE's getElementById can
+	return a field having the _name_ attribute equal to the searched ID, even if
+	it's not having any ID at all.  This can sometimes lead to taking a
+	different field (even if it's not a textarea) as the replacement field which
+	trashes the whole layout, look, feel, and functionality :-(  Need to say it
+	again, IE SUCKS.
+
+	Thanks goes to Mike Dick for the bug report and for the patch ;-)
+
+2004-01-18  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/SpellChecker/spell-check-ui.js:
+	fixed bug (thanks Bill Sechrist for report):
+	when you "ignore"-ed the last mispelled word, no changes were applied
+
+2004-01-16  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: border: 0px on body,html in pageStyle
+
+	* popups/about.html: report userAgent in plugins tab
+
+2004-01-12  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/ru.js: updated (thanks to Yulya Shtyryakova)
+
+2004-01-03  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/ContextMenu/lang/de.js: updated
+
+2004-01-02  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/ContextMenu/lang/de.js:
+	DE translation, thanks to Martin Jaggi
+
+2003-12-22  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/ee.js: Estonian translation
+
+2003-12-05  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: word cleaner: now it actually works ;-)
+
+	* plugins/ContextMenu/lang/el.js, lang/el.js, plugins/TableOperations/lang/el.js:
+	added Greek translation (thanks to Dimitris Glezos)
+
+	* htmlarea.js:
+	call an onGenerate handler, if found on the editor object
+
+	* popups/about.html, popups/popup.js: updated about box
+
+	* plugins/SpellChecker/spell-check-ui.js: *** empty log message ***
+
+	* plugins/ContextMenu/context-menu.js:
+	open the normal insert_link dialog on modify link
+
+2003-11-28  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.css: -moz-opacity got back
+
+	* popups/about.html: *** empty log message ***
+
+	* htmlarea.js: added Word cleaner code (thanks weeezl)
+	fixed the bug concerning the url of relative link/images
+
+2003-11-24  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/CSS/css.js:
+	allows updation of parent element's class (no span).  thanks goes to Michael (pepl @ IT forums)
+
+2003-11-22  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/ContextMenu/lang/nl.js, plugins/TableOperations/lang/nl.js:
+	translation thanks to mmcw /IT forums
+
+	* lang/nl.js: updated (thanks to mmcw /IT forums)
+
+2003-11-21  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* makefile.xml: added ChangeLog to project dist
+
+	* ChangeLog: Updated ChangeLog
+
+	* examples/context-menu.html, examples/fully-loaded.html, examples/pieng.png, index.html, plugins/ContextMenu/1.pl, plugins/ContextMenu/context-menu.js, plugins/ContextMenu/lang/en.js, plugins/ContextMenu/lang/makefile.xml, plugins/ContextMenu/makefile.xml, plugins/ContextMenu/menu.css, plugins/makefile.xml:
+	Added ContextMenu plugin (work sponsored by American Bible Society)
+
+2003-11-11  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/en.js, lang/ro.js: support for the link dialog
+
+	* plugins/FullPage/popups/docprop.html, popups/popup.js:
+	support for I18N of core dialogs, added function to select a value in a <select>, all dialogs close on ESC
+
+	* htmlarea.js:
+	support for insert link popup, minor bug-fix in Mozilla (catch exception)
+
+	* examples/fully-loaded.html:
+	workaround some IE problems (it appears that it's definitely better to wait half a second before generate()-ing the editor
+
+	* popups/link.html: allow ling target, title, edit link
+
+	* plugins/TableOperations/lang/no.js, lang/no.js:
+	Norwegian translation (thanks to Svein Sando)
+
+2003-11-10  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/es.js: fixed (thanks to Jorge)
+
+2003-11-07  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/about.html:
+	changed to Unix encoding; Credits page needs to be redesigned
+
+2003-11-06  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/lt.js: Lithuanian translation, thanks to Jaroslav Satkevic
+
+2003-11-05  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/he.js: Hebrew language definition (thanks to Liron Newman)
+
+2003-11-04  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/vn.js: updated vietnamese translation, thanks to Nguyen Dinh Nam
+
+2003-11-03  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/nl.js: updated (thanks to ephemeros)
+
+	* images/ed_left_to_right.gif, images/ed_right_to_left.gif:
+	text direction icons
+
+	* htmlarea.js, lang/en.js:
+	implemented text direction support (LTR or RTL)
+	workaround for a serious bug in IE (looses selection? bleah..)
+
+2003-10-31  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* examples/2-areas.cgi, examples/2-areas.html:
+	added sample that demonstrates how to create more editors in the same page and form
+
+	* htmlarea.js:
+	- increased the initial timeout after creating the iframe
+	- apply the timeout to IE too (actually we need a better idea that will only
+	  create the editor _after_ all images are loaded; it seems that IE has
+	  serious problems about it: if HTMLArea is initialized while loading images,
+	  the rest of images will never be loaded and functionality will miss [IE only])
+	- custom undo queue disabled by default as it's still buggy
+
+2003-10-28  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/about.html: only loaded plugins
+
+	* plugins/CSS/css.js: copyright notices updated
+
+	* examples/core.html, examples/css.html, examples/full-page.html, examples/spell-checker.html, examples/table-operations.html:
+	updated to new style (load only htmlarea.js, define _editor_lang)
+
+	* dialog.js, htmlarea.js, popups/popup.js, popupwin.js:
+	copyright notices updated
+
+	* htmlarea.js: Text "Path: " back in the status bar
+
+	* popups/fullscreen.html:
+	correctly loads all scripts and registers plugins
+
+	* plugins/SpellChecker/spell-checker.js:
+	dropped config.editorURL in favor if _editor_url
+
+	* lang/en.js:
+	- IE sucks in full screen message (not yet used but might be if users
+	  complain; I'm sick of IE, that sick that I will start charging 4 times more
+	  for IE compatibility; I might get a ulcer because of it... no kiddin')
+
+	* htmlarea.js: - support _editor_lang
+	- loads all required files
+	- correct loading of plugins in full-screen mode
+	- config.editorURL was permanently dropped in favor of _editor_url
+
+	* popups/fullscreen.html, htmlarea.js:
+	config.editorURL removed, better handling of _editor_url
+
+2003-10-27  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/fullscreen.html:
+	bugfix: setting the BASE tag to the caller document's URL so we have no other
+	problems like editor or button images not loading.  Ha HA! >:-)
+
+	* plugins/CSS/css.js:
+	CSS plugin drop-down boxes appear on the second toolbar line by default
+
+	* popupwin.js: added position for the opening window
+
+	* lang/en.js: Insert Image ==> Insert/Modify Image
+
+	* htmlarea.js:
+	- Insert Image command patched to allow modification of a current image, if
+	  it's selected
+	- Correct handling of selection for IE (test for ControlRange object) which
+	  fixes a lot of bugs (IMG elements is now present in Path, no more table
+	  props failures when an IMG or floating element is selected, etc.)
+
+2003-10-25  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/insert_image.html, htmlarea.js:
+	insert image can now modify the properties of an existing image
+
+	* htmlarea.js:
+	Cut/copy/paste -- show hint of where to find information to enable it in Gecko
+
+	* examples/core.html, examples/css.html, examples/full-page.html, examples/fully-loaded.html, examples/spell-checker.html, examples/table-operations.html:
+	removed @import url(../htmlarea.css) -- HTMLArea takes care of loading the CSS by itself how
+
+	* htmlarea.js:
+	bugfix: catched some exceptions that otherwise would have led Mozilla to crash
+	removed Path text from the statusbar
+
+	* htmlarea.js:
+	call onGenerate() for plugins that implement it; added loadStyle helper for easier stylesheet loading
+
+2003-10-24  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/FullPage/test.html, examples/css.html, examples/full-page.html:
+	removed unused code
+
+	* plugins/makefile.xml, plugins/CSS/lang/makefile.xml, plugins/CSS/makefile.xml:
+	CSS plugin added to distribution
+
+	* examples/custom.css, htmlarea.js: removed default styles
+
+	* popups/about.html:
+	fixed resizable window (Moz fix only, IE worked fine)
+
+	* plugins/CSS/css.js, plugins/CSS/lang/en.js, plugins/FullPage/full-page.js, examples/css.html, examples/custom.css, examples/fully-loaded.html:
+	added the CSS plugin (sponsored by www.miro.com.au)
+
+	* htmlarea.js:
+	bugfix: sometimes getHTML failed as root.tagName was undefined (for DocumentFragment nodes)
+
+	* project-config.xml: switching to CVS snapshot releases
+
+2003-10-23  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* examples/test.cgi: moved from ../
+
+	* test.cgi: moved to examples/
+
+	* makefile.xml: added examples subdir
+
+	* examples/makefile.xml: distribute example files
+
+	* examples/full-page.html: FullPage plugin demo
+
+	* examples/fully-loaded.html: added FullPage plugin
+
+	* index.html: added link to FullPage plugin demo
+
+	* examples/core.html, examples/fully-loaded.html, examples/spell-checker.html, examples/table-operations.html, popups/fullscreen.html, index.html:
+	fixed example files, added _editor_url (REQUIREDcvs -q update -d .), fixed problems with the full-screen editor
+
+	* examples/core.html, examples/fully-loaded.html, examples/spell-checker.html, examples/table-operations.html:
+	examples previously found in ../
+
+	* example-fully-loaded.html, example-spell-checker.html, example-table-operations.html, example.html:
+	moved to examples/
+
+	* popups/about.html: minor
+
+2003-10-18  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/si.js: Slovenian translation (thanks to Tomaz Kregar)
+
+2003-10-15  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/fr.js: updated French translation (thanks to Jonathan Ernst)
+
+2003-10-07  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/FullPage/full-page.js, plugins/FullPage/img/docprop.gif, plugins/FullPage/img/makefile.xml, plugins/FullPage/lang/en.js, plugins/FullPage/lang/makefile.xml, plugins/FullPage/lang/ro.js, plugins/FullPage/makefile.xml, plugins/FullPage/popups/docprop.html, plugins/FullPage/popups/makefile.xml, plugins/FullPage/test.html, plugins/makefile.xml:
+	FullPage plugin (allows configuring document properties)
+
+	* lang/en.js: fixed typo
+
+2003-10-06  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/about.html: Released=>Compiled
+
+	* popups/about.html: plugins credits only in plugins page
+
+	* popups/popup.js: added ability to translate popup dialogs
+
+	* htmlarea.css:
+	small fix for Mozilla/XHTML mode (buttons have now correct size)
+
+	* plugins/SpellChecker/spell-checker.js, plugins/TableOperations/table-operations.js:
+	fixed plugin images paths
+
+	* htmlarea.js: fixed doctype support
+	fixed support for full page editing (did I mention that IE sucks?)
+	avoids retrieving the contenteditable tag for body (IE only)
+	fixed _colorToRgb function (returns '' for empty or null color)
+	fixed editor/plugin images paths
+
+	* popups/popup.js:
+	allow __dlg_init to resize the window to cover a certain element
+
+	* popups/fullscreen.html: save the doctype too in the new editor
+
+	* popupwin.js:
+	fixed bug: now functions correctly for absolute _editor_url
+
+2003-10-05  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js:
+	full page editing facility; better interface for plugins popup dialogs
+
+2003-10-03  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: calls the plugin update function, if supplied
+
+	* popups/insert_image.html:
+	added nice image preview (submitted by rickroot on the interactivetools
+	forums, thanks!)
+
+2003-10-02  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: implemented proprietary undo/redo system (still buggy)
+
+	* popups/about.html: no bold on tabs
+
+2003-10-01  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: undo/redo are removed only if IE and config.statusBar
+
+	* popups/about.html: larger about box
+
+	* htmlarea.js: registers the plugin instance too (where was my head?)
+
+	* htmlarea.js: registers the plugin instance too
+
+	* htmlarea.js: fixed bug: opening the help window from the right place
+
+	* htmlarea.js:
+	don't use eval to register new plugins (allows better plugin arguments handling)
+
+2003-09-29  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* project-config.xml: beta+CVS
+
+	* popups/about.html: more "space" between tabs
+
+	* popups/about.html: the coolest about box ;-)
+
+	* dialog.js, popups/insert_image.html, popups/insert_table.html, popups/popup.js, popups/select_color.html:
+	fixed popups display under IE/Win
+
+	* plugins/SpellChecker/spell-checker.js, plugins/TableOperations/table-operations.js, htmlarea.js:
+	plugins will now register information about themselves
+
+	* popups/popup.js:
+	fixed an infantile mistake ;-) (popup windows are now centered correctly in
+	Moz too)
+
+2003-09-28  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* makefile.xml: mason args not needed
+
+	* popups/about.html: better about box ;-)
+
+	* project-config.xml: version beta+
+
+	* htmlarea.js: support passing parameters to plugins
+
+	* plugins/TableOperations/lang/en.js, plugins/TableOperations/lang/ro.js, popups/about.html, lang/en.js, lang/lv.js, lang/ro.js, plugins/SpellChecker/lang/en.js, plugins/SpellChecker/lang/ro.js, plugins/SpellChecker/readme-tech.html, plugins/SpellChecker/spell-check-logic.cgi, plugins/SpellChecker/spell-check-ui.html, plugins/SpellChecker/spell-check-ui.js, plugins/SpellChecker/spell-checker.js, plugins/TableOperations/table-operations.js, release-notes.html, example-spell-checker.html, htmlarea.js, index.html, make-release.pl, reference.html:
+	updated links
+
+2003-09-27  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/fullscreen.html: dont load null scripts ;-)
+
+	* htmlarea.js: undo/redo buttons removed for IE
+
+2003-09-25  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* images/ed_save.gif, images/ed_save.png: added save icon
+
+	* plugins/SpellChecker/lang/da.js: Danish translation available
+
+2003-09-19  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/SpellChecker/lang/de.js:
+	DE translation added (thanks to broxx.com)
+
+	* plugins/TableOperations/lang/da.js:
+	danish translation provided by Steen Sønderup
+
+	* plugins/TableOperations/lang/de.js:
+	DE translation provided by broxx.com
+
+	* lang/de.js: up-to-date by broxx.com
+
+2003-09-16  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/SpellChecker/lang/hu.js:
+	added Hungarian translation for the SpellChecker plugin
+
+2003-09-15  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/hu.js, plugins/TableOperations/lang/hu.js:
+	added Hungarian translation (thanks to Miklós Somogyi)
+
+2003-09-14  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/lv.js: added Latvian translation (thanks to Janis Klavins)
+
+2003-09-02  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js:
+	added helper function for removing stuff from the configuration toolbar
+
+	* popupwin.js:
+	fixed bug that prevented TableOperation popups to show up in IE
+
+2003-08-25  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: fixed status-bar behavior (can be hidden if desired)
+
+	* lang/es.js: fixed structure
+
+2003-08-21  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popupwin.js:
+	bugfix: use _editor_url to allow the editor to be some place else
+
+2003-08-14  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/SpellChecker/lang/it.js: utf-8-ified
+
+	* lang/it.js: Italian translation updated (thanks to Fabio Rotondo)
+
+	* plugins/TableOperations/lang/it.js:
+	Italian translation, thanks to Fabio Rotondo
+
+2003-08-13  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/SpellChecker/lang/it.js:
+	Added Italian translation (thanks to Fabio Rotondo)
+
+2003-08-12  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/SpellChecker/lang/cz.js, plugins/TableOperations/lang/cz.js, lang/cz.js:
+	CZ translation
+
+	* htmlarea.js:
+	fixed bug when more HTMLAreas were present in the same <FORM> -- get each
+	one's text onsubmit. (thanks Fabio Rotondo for report and test case)
+
+2003-08-11  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* index.html: added brief installation notes
+
+2003-08-10  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* index.html, makefile.xml, release-notes.html:
+	added version/release to index.html
+
+	* lang/da.js, lang/de.js, lang/en.js, lang/es.js, lang/fi.js, lang/fr.js, lang/gb.js, lang/it.js, lang/ja-euc.js, lang/ja-jis.js, lang/ja-sjis.js, lang/ja-utf8.js, lang/makefile.xml, lang/nb.js, lang/nl.js, lang/pl.js, lang/pt_br.js, lang/ro.js, lang/ru.js, lang/se.js, lang/vn.js, plugins/SpellChecker/img/makefile.xml, plugins/SpellChecker/img/spell-check.gif, plugins/SpellChecker/lang/en.js, plugins/SpellChecker/lang/makefile.xml, plugins/SpellChecker/lang/ro.js, plugins/SpellChecker/makefile.xml, plugins/SpellChecker/readme-tech.html, plugins/SpellChecker/spell-check-logic.cgi, plugins/SpellChecker/spell-check-style.css, plugins/SpellChecker/spell-check-ui.html, plugins/SpellChecker/spell-check-ui.js, plugins/SpellChecker/spell-checker.js, plugins/TableOperations/img/cell-delete.gif, plugins/TableOperations/img/cell-insert-after.gif, plugins/TableOperations/img/cell-insert-before.gif, plugins/TableOperations/img/cell-merge.gif, plugins/TableOperations/img/cell-prop.gif, plugins/TableOperations/img/cell-split.gif, plugins/TableOperations/img/col-delete.gif, plugins/TableOperations/img/col-insert-after.gif, plugins/TableOperations/img/col-insert-before.gif, plugins/TableOperations/img/col-split.gif, plugins/TableOperations/img/makefile.xml, plugins/TableOperations/img/row-delete.gif, plugins/TableOperations/img/row-insert-above.gif, plugins/TableOperations/img/row-insert-under.gif, plugins/TableOperations/img/row-prop.gif, plugins/TableOperations/img/row-split.gif, plugins/TableOperations/img/table-prop.gif, plugins/TableOperations/lang/en.js, plugins/TableOperations/lang/fi.js, plugins/TableOperations/lang/makefile.xml, plugins/TableOperations/lang/ro.js, plugins/TableOperations/makefile.xml, plugins/TableOperations/table-operations.js, plugins/makefile.xml, popups/about.html, popups/fullscreen.html, popups/makefile.xml, example-fully-loaded.html, example-spell-checker.html, example-table-operations.html, example.html, htmlarea-lang-b5.js, htmlarea-lang-da.js, htmlarea-lang-de.js, htmlarea-lang-en.js, htmlarea-lang-es.js, htmlarea-lang-fr.js, htmlarea-lang-gb.js, htmlarea-lang-it.js, htmlarea-lang-ja-euc.js, htmlarea-lang-ja-jis.js, htmlarea-lang-ja-sjis.js, htmlarea-lang-ja-utf8.js, htmlarea-lang-nb.js, htmlarea-lang-nl.js, htmlarea-lang-pl.js, htmlarea-lang-pt_br.js, htmlarea-lang-ru.js, htmlarea-lang-se.js, htmlarea-lang-vn.js, htmlarea.css, htmlarea.js, images/ed_paste.gif, images/ed_show_border.gif, images/ed_splitcel.gif, images/makefile.xml, index.html, lang/b5.js, make-release.pl, makefile.xml, popupdiv.js, popupwin.js, project-config.xml, readme.html, reference.html, release-notes.html:
+	Merged from table-devel branch.  Development back on main trunk.
+
+	* plugins/SpellChecker/readme-tech.html: added I18N file to description
+
+	* plugins/SpellChecker/spell-check-ui.html, plugins/SpellChecker/spell-check-ui.js:
+	internationalization now supported
+
+	* plugins/TableOperations/table-operations.js:
+	fixed bug icons inside dialogs
+
+	* popups/about.html:
+	nicer dialog, + automatic version/release management
+
+	* htmlarea.js, lang/en.js, plugins/SpellChecker/lang/en.js, plugins/TableOperations/lang/en.js:
+	I18N for some messages that were left out, small IMG bug fixed, added loadPlugin static function
+
+	* example-fully-loaded.html, example-spell-checker.html, example-table-operations.html, example.html:
+	UTF-8 charset by default
+
+	* lang/ro.js, plugins/SpellChecker/lang/ro.js, plugins/TableOperations/lang/ro.js:
+	New file.
+
+	* lang/ro.js, plugins/SpellChecker/lang/ro.js, plugins/TableOperations/lang/ro.js:
+	Romanian translation (thanks to My Self)
+
+	* release-notes.html: New file.
+
+	* release-notes.html: release notes
+
+	* lang/makefile.xml, plugins/SpellChecker/img/makefile.xml, plugins/SpellChecker/lang/makefile.xml, plugins/SpellChecker/makefile.xml, plugins/TableOperations/img/makefile.xml, plugins/TableOperations/lang/makefile.xml, plugins/TableOperations/makefile.xml, plugins/makefile.xml, popups/makefile.xml:
+	New file.
+
+	* lang/makefile.xml, plugins/SpellChecker/img/makefile.xml, plugins/SpellChecker/lang/makefile.xml, plugins/SpellChecker/makefile.xml, plugins/TableOperations/img/makefile.xml, plugins/TableOperations/lang/makefile.xml, plugins/TableOperations/makefile.xml, plugins/makefile.xml, popups/makefile.xml:
+	automatic release management (a la makefile)
+
+	* images/makefile.xml, make-release.pl, makefile.xml, project-config.xml:
+	New file.
+
+	* images/makefile.xml, make-release.pl, makefile.xml, project-config.xml:
+	automatic release management (a la makefile)
+
+2003-08-03  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* lang/fi.js, plugins/TableOperations/lang/fi.js:
+	Finnish translation added (thanks bestis)
+
+	* lang/fi.js, plugins/TableOperations/lang/fi.js, index.html: New file.
+
+	* index.html: short description, copyright, links
+
+	* reference.html:
+	LAST VERSION OF THIS DOCUMENT.  IT WILL BE SOON DELETED.
+
+	* lang/b5.js, lang/da.js, lang/de.js, lang/en.js, lang/es.js, lang/fr.js, lang/gb.js, lang/it.js, lang/ja-euc.js, lang/ja-jis.js, lang/ja-sjis.js, lang/ja-utf8.js, lang/nb.js, lang/nl.js, lang/pl.js, lang/pt_br.js, lang/ru.js, lang/se.js, lang/vn.js:
+	added lang in I18N, so that we can load automatically plugin's lang file
+
+	* example-fully-loaded.html: New file.
+
+	* example-fully-loaded.html: loads all plugins
+
+	* example-spell-checker.html: removed TableOperations from this example
+
+2003-08-01  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* readme.html: documentation for 2.x is heavily outdated... removed.
+
+	* example-spell-checker.html, plugins/SpellChecker/img/spell-check.gif, plugins/SpellChecker/lang/en.js, plugins/SpellChecker/readme-tech.html, plugins/SpellChecker/spell-check-logic.cgi, plugins/SpellChecker/spell-check-style.css, plugins/SpellChecker/spell-check-ui.html, plugins/SpellChecker/spell-check-ui.js, plugins/SpellChecker/spell-checker.js:
+	New file.
+
+	* example-spell-checker.html, plugins/SpellChecker/img/spell-check.gif, plugins/SpellChecker/lang/en.js, plugins/SpellChecker/readme-tech.html, plugins/SpellChecker/spell-check-logic.cgi, plugins/SpellChecker/spell-check-style.css, plugins/SpellChecker/spell-check-ui.html, plugins/SpellChecker/spell-check-ui.js, plugins/SpellChecker/spell-checker.js:
+	added the SpellChecker plugin (sponsored by www.AmericanBible.org)
+
+	* example.html, example-table-operations.html:
+	* moved lang files to separate directory
+
+	* htmlarea-lang-en.js, htmlarea-lang-es.js, htmlarea-lang-fr.js, htmlarea-lang-gb.js, htmlarea-lang-it.js, htmlarea-lang-ja-euc.js, htmlarea-lang-ja-jis.js, htmlarea-lang-ja-sjis.js, htmlarea-lang-ja-utf8.js, htmlarea-lang-nb.js, htmlarea-lang-nl.js, htmlarea-lang-pl.js, htmlarea-lang-pt_br.js, htmlarea-lang-ru.js, htmlarea-lang-se.js, htmlarea-lang-vn.js, htmlarea-lang-b5.js, htmlarea-lang-da.js, htmlarea-lang-de.js:
+	moved to lang/
+
+	* lang/b5.js, lang/da.js, lang/de.js, lang/en.js, lang/es.js, lang/fr.js, lang/gb.js, lang/it.js, lang/ja-euc.js, lang/ja-jis.js, lang/ja-sjis.js, lang/ja-utf8.js, lang/nb.js, lang/nl.js, lang/pl.js, lang/pt_br.js, lang/ru.js, lang/se.js, lang/vn.js:
+	New file.
+
+	* lang/b5.js, lang/da.js, lang/de.js, lang/en.js, lang/es.js, lang/fr.js, lang/gb.js, lang/it.js, lang/ja-euc.js, lang/ja-jis.js, lang/ja-sjis.js, lang/ja-utf8.js, lang/nb.js, lang/nl.js, lang/pl.js, lang/pt_br.js, lang/ru.js, lang/se.js, lang/vn.js:
+	lang files separated
+
+	* htmlarea.js, htmlarea.css:
+	* added registerDropdown -- for adding custom drop-down boxes to the toolbar
+	* registerDropdown and registerButton verify for existing ID-s first (alert
+	  if that's the case)
+	* support for text labels in the toolbar
+	* fixed some bugs in insertHTML (Mozilla specific)
+
+2003-07-16  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* example-table-operations.html:
+	TableOperations lang file moved to 'lang' directory
+
+	* plugins/TableOperations/lang/en.js: New file.
+
+	* plugins/TableOperations/lang/en.js, plugins/TableOperations/table-operations-lang-en.js:
+	lang files in dedicated directory [lang]
+
+	* htmlarea.js: [IE] no status bar on fullscreen editor
+
+2003-07-15  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js:
+	[IE] fixed annoying bug: displacement of the separators within the toolbar;
+	     IE assigns a random image width/height, if not explicitely stated ;-)
+
+2003-07-13  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/fullscreen.html: moved plugin images to ../plugins
+	fixed bug that only applied to Moz-1.4 or newer Geckos (script.src is always
+	an absolute URL)
+
+	* htmlarea.js: restructuration concerning images
+
+	* plugins/TableOperations/table-operations.js:
+	images moved to the plugin directory
+
+	* plugins/TableOperations/img/cell-delete.gif, plugins/TableOperations/img/cell-insert-after.gif, plugins/TableOperations/img/cell-insert-before.gif, plugins/TableOperations/img/cell-merge.gif, plugins/TableOperations/img/cell-prop.gif, plugins/TableOperations/img/cell-split.gif, plugins/TableOperations/img/col-delete.gif, plugins/TableOperations/img/col-insert-after.gif, plugins/TableOperations/img/col-insert-before.gif, plugins/TableOperations/img/col-split.gif, plugins/TableOperations/img/row-delete.gif, plugins/TableOperations/img/row-insert-above.gif, plugins/TableOperations/img/row-insert-under.gif, plugins/TableOperations/img/row-prop.gif, plugins/TableOperations/img/row-split.gif, plugins/TableOperations/img/table-prop.gif:
+	New file.
+
+	* plugins/TableOperations/img/cell-delete.gif, plugins/TableOperations/img/cell-insert-after.gif, plugins/TableOperations/img/cell-insert-before.gif, plugins/TableOperations/img/cell-merge.gif, plugins/TableOperations/img/cell-prop.gif, plugins/TableOperations/img/cell-split.gif, plugins/TableOperations/img/col-delete.gif, plugins/TableOperations/img/col-insert-after.gif, plugins/TableOperations/img/col-insert-before.gif, plugins/TableOperations/img/col-split.gif, plugins/TableOperations/img/row-delete.gif, plugins/TableOperations/img/row-insert-above.gif, plugins/TableOperations/img/row-insert-under.gif, plugins/TableOperations/img/row-prop.gif, plugins/TableOperations/img/row-split.gif, plugins/TableOperations/img/table-prop.gif:
+	moved TableOperations icons here
+
+	* images/ed_splitcell.gif:
+	moved to ../plugins/TableOperations/img/cell-split.gif
+
+	* images/ed_mergecels.gif:
+	moved to ../plugins/TableOperations/img/cell-merge.gif
+
+	* images/ed_delcel.gif:
+	moved to ../plugins/TableOperations/img/cell-delete.gif
+
+	* images/ed_inscelrgt.gif:
+	moved to ../plugins/TableOperations/img/cell-insert-after.gif
+
+	* images/ed_inscellft.gif:
+	moved to ../plugins/TableOperations/img/cell-insert-before.gif
+
+	* images/ed_cellprop.gif:
+	moved to ../plugins/TableOperations/img/cell-prop.gif
+
+	* images/ed_splitcol.gif:
+	moved to ../plugins/TableOperations/img/col-split.gif
+
+	* images/ed_delcol.gif:
+	moved to ../plugins/TableOperations/img/col-delete.gif
+
+	* images/ed_insright.gif:
+	moved to ../plugins/TableOperations/img/col-insert-after.gif
+
+	* images/ed_insleft.gif:
+	moved to ../plugins/TableOperations/img/col-insert-before.gif
+
+	* images/ed_splitrow.gif:
+	moved to ../plugins/TableOperations/img/row-split.gif
+
+	* images/ed_delrow.gif:
+	moved to ../plugins/TableOperations/img/row-delete.gif
+
+	* images/ed_insunder.gif:
+	moved to ../plugins/TableOperations/img/row-insert-under.gif
+
+	* images/ed_insabove.gif:
+	moved to ../plugins/TableOperations/img/row-insert-above.gif
+
+	* images/ed_rowprop.gif:
+	moved to ../plugins/TableOperations/img/row-prop.gif
+
+	* images/ed_tableprop.gif:
+	moved to ../plugins/TableOperations/img/table-prop.gif
+
+2003-06-11  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations.js:
+	revamped code for table "border", "frame" and "rules" attributes
+
+2003-06-08  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations.js:
+	added focusEditor() calls (editor lost focus in IE after some operations)
+
+	* plugins/TableOperations/table-operations.js:
+	fixed 2 bugs (correct title in row/cell properties dialog, clear cell
+	contents when inserting new row in Internet Explorer)
+
+2003-06-02  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/fullscreen.html:
+	[IE] fixed problem that caused toolbar buttons to be unusable
+
+	* popups/fullscreen.html:
+	[IE] fixed bug when copying the click handler.  Editor is now functional in
+	fullscreen.
+
+	* plugins/TableOperations/table-operations-lang-en.js, plugins/TableOperations/table-operations.js:
+	1. Removed code that selects the table/row/cell before displaying the
+	dialog.
+
+	2. Focus back the table after closing the dialog box (was causing some
+	problems in IE).
+
+	3. Implemented merge cells for IE (user will be prompted for number of
+	cols/rows to span the current cell).
+
+	* htmlarea.js:
+	1. Display an alert if cut/copy/paste is not supported, when one of the buttons
+	is clicked.  The button will also be removed from the toolbar.
+
+	2. Fixed bug when clicking on some table/image margin in IE.
+
+2003-05-31  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations.js:
+	[IE5.5] IE5.5 doesn't support createDocumentFragment; workarounded.
+
+	* htmlarea.css: Better looking dialogs
+
+	* htmlarea.js: Fixed IE5.5 compatibility issues.
+
+	* htmlarea.js: Now IE5.5 compatible.
+
+2003-05-27  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: workaround for a horrible bug (thanks Dror!)
+
+	* htmlarea.js: oops... ;-)
+
+	* htmlarea.js: workaround for a horrible bug (thanks Dror!)
+
+2003-05-18  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations-lang-en.js:
+	added some comment notes for translators
+
+	* plugins/TableOperations/table-operations.js: bugfix:
+	  - border-style changes are updated correctly in Mozilla
+	  - do not show Float for td, th, tr elements
+	feature (eye-candy)
+	  - added small icons on each dialog
+
+	* popupwin.js: added baseURL to the object (useful in dialogs)
+
+	* plugins/TableOperations/table-operations-lang-en.js, plugins/TableOperations/table-operations.js:
+	modified dialogs (more css-friendly, trying to avoid deprecated HTML
+	attributes).  fixed some bugs.
+
+	* htmlarea.js:
+	added oncontextmenu for status-bar elements (displays inline style)
+	fixed problem with textindicator (background-color in Mozilla)
+
+	* htmlarea.css: tables in dialogs have border-collapse: collapse
+
+	* example-table-operations.html:
+	modified example HTML (more colorful, blah blah)
+
+2003-05-14  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations.js:
+	(trying to) force redraw after table/row/cell properties dialogs close with
+	OK
+
+2003-05-13  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations-lang-en.js, plugins/TableOperations/table-operations.js, popupwin.js:
+	some fixes for IE; implemented border-collapse style properties (tables only)
+
+2003-05-12  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations-lang-en.js, plugins/TableOperations/table-operations.js, example-table-operations.html, htmlarea.css, popupwin.js:
+	improvements of the color selector button, added row properties and cell properties dialogs, fixes, etc.
+
+2003-05-08  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations.js:
+	border properties now functional
+
+	* plugins/TableOperations/table-operations-lang-en.js:
+	CSS Style -> Style [CSS]
+
+	* popupwin.js: smaller padding.. looks better.
+
+	* htmlarea.css, plugins/TableOperations/table-operations-lang-en.js, plugins/TableOperations/table-operations.js:
+	added functionality (style properties, changed BUTTON to DIV for color
+	selection widget, added border properties [not completed yed])
+
+2003-05-07  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations.js:
+	fixed small bug; added some comments
+
+2003-05-06  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js:
+	fixed small bug (user might close the select_color dialog by pressing "X"
+	button, case in which the selection is now ignored)
+
+	* htmlarea.js: debug code can sometimes be annoying -- commented out.
+
+	* htmlarea.js: bug #730593 fixed
+
+	* plugins/TableOperations/table-operations-lang-en.js, plugins/TableOperations/table-operations.js:
+	added first dialog (table properties) + other useful stuff like generic style properties that should eventually make it into a separated plugin
+
+	* popupdiv.js, popupwin.js: New file.
+
+	* popupdiv.js, popupwin.js:
+	files for handling some popup dialogs generated from JS code
+
+	* example-table-operations.html: credit modified
+
+2003-05-05  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea-lang-en.js:
+	I18N for 2 very common text-s ("ok" and "cancel")
+
+	* htmlarea.css: style for new popups
+
+	* htmlarea.js:
+	added new variable (_mdoc which keeps a reference to the document that
+	contains the HTMLArea.  it's sometimes useful (mainly in popups))
+
+2003-04-25  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations.js:
+	modified credit (bloki.com instead of zapatec.com)
+
+2003-04-24  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* plugins/TableOperations/table-operations.js:
+	fixed code to work if editor used in fullscreen
+
+	* popups/fullscreen.html:
+	added nice code that automagically loads all scripts in the parent page (opener)
+
+	* plugins/TableOperations/table-operations.js:
+	- fixes for IE (IE doesn't need the BR inside empty TD-s)
+	- when called in fullscreen mode it doesn't update the toolbar
+
+	* htmlarea.js:
+	small fix for IE (getAllAncestors sometimes returned the HTML and Document element too)
+
+2003-04-23  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/fullscreen.html: small bug fixed
+
+	* htmlarea.css:
+	changed bg for disabled buttons (this is for debug, I repeat ;-)
+
+	* htmlarea.js: - API support for external plugins
+	- support for context-enabled buttons
+	- performance improvement: cancelling updateToolbar requests if made in less
+	  than 50ms -- in other words, only honor the last one
+
+	* example.html: test for context-enabled buttons
+
+	* plugins/TableOperations/table-operations.js: New file.
+
+	* plugins/TableOperations/table-operations.js:
+	added TableOperations plugin
+	several new toolbar buttons + fixes to some existent ones
+	file that demonstrate usage of the TableOperations plugin
+
+	* plugins/TableOperations/table-operations-lang-en.js: New file.
+
+	* plugins/TableOperations/table-operations-lang-en.js:
+	added TableOperations plugin
+	several new toolbar buttons + fixes to some existent ones
+	file that demonstrate usage of the TableOperations plugin
+
+	* images/ed_splitcell.gif, images/ed_splitcol.gif: New file.
+
+	* images/ed_splitcell.gif, images/ed_splitcol.gif, images/ed_splitrow.gif, images/ed_paste.gif, images/ed_insunder.gif, images/ed_mergecels.gif, images/ed_inscellft.gif, images/ed_inscelrgt.gif, images/ed_insleft.gif, images/ed_insright.gif, images/ed_insabove.gif, images/ed_delcol.gif, images/ed_delrow.gif:
+	added TableOperations plugin
+	several new toolbar buttons + fixes to some existent ones
+	file that demonstrate usage of the TableOperations plugin
+
+	* example-table-operations.html: New file.
+
+	* example-table-operations.html, images/ed_delcel.gif:
+	added TableOperations plugin
+	several new toolbar buttons + fixes to some existent ones
+	file that demonstrate usage of the TableOperations plugin
+
+2003-04-21  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: added status bar (cool B-)
+
+	* htmlarea.css: various improvements for the status bar
+
+	* example.html: minor fix (background-color instead of background)
+
+2003-04-20  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: fix: IE parsing problem
+
+	* htmlarea.css, htmlarea.js, popups/fullscreen.html: added statusbar
+
+	* images/ed_tableprop.gif: New file.
+
+	* images/ed_tableprop.gif: added images for table operations buttons
+
+	* images/ed_cellprop.gif, images/ed_delcel.gif, images/ed_delcol.gif, images/ed_delrow.gif, images/ed_insabove.gif, images/ed_inscellft.gif, images/ed_inscelrgt.gif, images/ed_insleft.gif, images/ed_insright.gif, images/ed_insunder.gif, images/ed_mergecels.gif, images/ed_paste.gif, images/ed_rowprop.gif, images/ed_show_border.gif, images/ed_splitcel.gif, images/ed_splitrow.gif:
+	New file.
+
+	* images/ed_cellprop.gif, images/ed_delcel.gif, images/ed_delcol.gif, images/ed_delrow.gif, images/ed_insabove.gif, images/ed_inscellft.gif, images/ed_inscelrgt.gif, images/ed_insleft.gif, images/ed_insright.gif, images/ed_insunder.gif, images/ed_mergecels.gif, images/ed_paste.gif, images/ed_rowprop.gif, images/ed_show_border.gif, images/ed_splitcel.gif, images/ed_splitrow.gif:
+	added images for table operations buttons
+
+	* example.html:
+	even more examples of customization, but commented out so that the example
+	page looks initially with the editor defaults
+
+	* htmlarea-lang-en.js:
+	Added tooltips for cut, copy, paste, undo, redo buttons
+
+	* htmlarea.js: new features:
+
+	  - cut, copy, paste, undo, redo buttons
+	  - added functions: getParentElement, getAllAncestors
+	  - buttons can now be enabled/disabled function of the context (i.e. caret
+	    is inside a table)
+	  - iframe border removed on Mozilla (looks better)
+
+	* htmlarea.css:
+	minor fix [padding]; also contains some debugging stuff that needs to be
+	removed (disabled buttons have red background, that's because Mozilla
+	doesn't seem to support opacity any longer)
+
+2003-04-19  itools  <itools@mishoo>
+
+	* test.cgi: ..
+
+	* test.cgi: ...
+
+2003-04-15  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: added address: block-level element
+
+2003-04-02  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* popups/fullscreen.html: fixed small issue
+
+2003-03-24  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea-lang-pt_br.js: brasilian translation
+
+2003-03-19  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea-lang-nb.js: norwegian translation added
+
+	* reference.html: fixed typo
+
+2003-03-15  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js:
+	fixed bug (createlink needs UI -> true, otherwise we get a link to nowhere)
+
+2003-03-04  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea-lang-ja-euc.js, htmlarea-lang-ja-jis.js, htmlarea-lang-ja-sjis.js, htmlarea-lang-ja-utf8.js, htmlarea-lang-pl.js:
+	new translations: japanese and polish
+
+2003-03-03  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* example.html, htmlarea.js: example.html: now validates (hopefully)
+	htmlarea.js: opening help in a named window
+
+2003-03-02  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* reference.html:
+	minor fix: showing how to include the "dialog.js" file
+
+2003-02-27  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* reference.html: fixes, improvements
+	new sections on creating custom buttons
+
+	* example.html:
+	example on how to submit the form from something that's not a submit button
+
+	* htmlarea.js: added "onsubmit" handler with usual syntax.
+
+	* example.html: examples now using registerButton
+
+	* popups/fullscreen.html:
+	[fix] using now the new btnList layout; removed _textArea2
+
+	* htmlarea.js: - added helper function HTMLArea.Config.registerButton
+	- _editor_url is back
+	- fixed a problem that might disturb JS compressors ('"' character in
+	regexp)
+
+2003-02-26  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: iframe border back..
+
+	* example.html: fixes -- new btnList style
+
+	* htmlarea.js:
+	changed btnList order -- tooltip, icon, textmode, action.
+
+	* example.html: demo fix
+
+	* example.html: [minor] validity
+
+	* htmlarea.js:
+	BUG FIX: now it remembers textarea content on page reload.  Got rid of the
+	         secondary textarea.
+
+	* htmlarea-lang-it.js: Italian translation -- from TeddyZ
+
+2003-02-24  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea-lang-vn.js: Vietnamese lang module
+
+2003-02-22  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js:
+	Reorganized the btnList.  Now it uses direct function calls.
+
+	* reference.html: minor: use replace() instead of replaceAll()
+
+	* htmlarea.js:
+	- fixed bug: HTMLArea.replace() needs to call generate() (thanks Dlo)
+	- adding the onsubmit handler -- check if the form is there first
+	- added onunload handler that saves the HTML content, just in case user
+	  presses Back/Fwd or Refresh.
+
+	* htmlarea-lang-se.js: swedish translation
+
+2003-02-21  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea.js: done some of the changes suggested by Dlo
+	bodyStyle -> pageStyle and allows other elements' styles too
+
+	* example.html: example: how to add a custom button
+
+	* reference.html: started documentation project
+
+2003-02-20  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea-lang-da.js, htmlarea-lang-gb.js, htmlarea-lang-b5.js:
+	added new lang files
+
+2003-02-19  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* htmlarea-lang-de.js: added credits
+
+	* htmlarea-lang-nl.js: credit for redspider ;)
+
+	* htmlarea-lang-de.js: added german translation (from atk)
+
+	* htmlarea-lang-nl.js: dutch translation, from redspider
+
+	* htmlarea-lang-ru.js: RU translation (from Frol, itools forums)
+
+	* htmlarea-lang-es.js:
+	added ES translation from itools forums (thanks Luis)
+
+	* htmlarea-lang-fr.js:
+	added french translation, from Ronan (interactivetools.com forums)
+
+2003-02-17  Mihai Bazon  <mishoo@localhost.localdomain>
+
+	* images/.xvpics/ed_align_justify.gif: not needed
+
+	* htmlarea.js:
+	-- made HTMLArea constructor to work with object instead of ID (if type of
+	   argument is not string)
+	-- a simpler "replaceAll" function (2 lines)
+	-- fixed a major bug that prevented IE6 to correctly retrieve the HTML (it
+	   seems that it was ignoring attribute values and only displaying "")
+	-- used various techniques to reduce the code size (currently only 37K, 10K
+	   less than the original editor.js code [v 2.03])
+
+	* htmlarea.js:
+	removed NodeIterator code -- was only used in one place and I found a
+	different way to accomplish that task; code smaller by about 5K
+
+	* dialog.js, images/.xvpics/ed_align_justify.gif, images/ed_about.gif, images/ed_align_center.gif, images/ed_align_justify.gif, images/ed_align_left.gif, images/ed_align_right.gif, images/ed_blank.gif, images/ed_charmap.gif, images/ed_color_bg.gif, images/ed_color_fg.gif, images/ed_copy.gif, images/ed_custom.gif, images/ed_cut.gif, images/ed_delete.gif, images/ed_format_bold.gif, images/ed_format_italic.gif, images/ed_format_strike.gif, images/ed_format_sub.gif, images/ed_format_sup.gif, images/ed_format_underline.gif, images/ed_help.gif, images/ed_hr.gif, images/ed_html.gif, images/ed_image.gif, images/ed_indent_less.gif, images/ed_indent_more.gif, images/ed_link.gif, images/ed_list_bullet.gif, images/ed_list_num.gif, images/ed_redo.gif, images/ed_undo.gif, images/fullscreen_maximize.gif, images/fullscreen_minimize.gif, images/insert_table.gif, popups/about.html, popups/blank.html, popups/custom2.html, popups/editor_help.html, popups/fullscreen.html, popups/insert_image.html, popups/insert_table.html, popups/old-fullscreen.html, popups/old_insert_image.html, popups/popup.js, popups/select_color.html:
+	New file.
+
+	* dialog.js, images/.xvpics/ed_align_justify.gif, images/ed_about.gif, images/ed_align_center.gif, images/ed_align_justify.gif, images/ed_align_left.gif, images/ed_align_right.gif, images/ed_blank.gif, images/ed_charmap.gif, images/ed_color_bg.gif, images/ed_color_fg.gif, images/ed_copy.gif, images/ed_custom.gif, images/ed_cut.gif, images/ed_delete.gif, images/ed_format_bold.gif, images/ed_format_italic.gif, images/ed_format_strike.gif, images/ed_format_sub.gif, images/ed_format_sup.gif, images/ed_format_underline.gif, images/ed_help.gif, images/ed_hr.gif, images/ed_html.gif, images/ed_image.gif, images/ed_indent_less.gif, images/ed_indent_more.gif, images/ed_link.gif, images/ed_list_bullet.gif, images/ed_list_num.gif, images/ed_redo.gif, images/ed_undo.gif, images/fullscreen_maximize.gif, images/fullscreen_minimize.gif, images/insert_table.gif, popups/about.html, popups/blank.html, popups/custom2.html, popups/editor_help.html, popups/fullscreen.html, popups/insert_image.html, popups/insert_table.html, popups/old-fullscreen.html, popups/old_insert_image.html, popups/popup.js, popups/select_color.html:
+	first moved to CVS (close to release 3.0-beta)
+
+	* htmlarea.js, test.cgi: New file.
+
+	* htmlarea.js, test.cgi: first moved to CVS (close to release 3.0-beta)
+
+	* htmlarea-lang-en.js, readme.html: New file.
+
+	* htmlarea-lang-en.js, readme.html:
+	first moved to CVS (close to release 3.0-beta)
+
+	* example.html, htmlarea.css, license.txt: New file.
+
+	* example.html, htmlarea.css, license.txt:
+	first moved to CVS (close to release 3.0-beta)
+

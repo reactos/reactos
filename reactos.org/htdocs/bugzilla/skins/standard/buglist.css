@@ -1,0 +1,62 @@
+/* The contents of this file are subject to the Mozilla Public
+  * License Version 1.1 (the "License"); you may not use this file
+  * except in compliance with the License. You may obtain a copy of
+  * the License at http://www.mozilla.org/MPL/
+  *
+  * Software distributed under the License is distributed on an "AS
+  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing
+  * rights and limitations under the License.
+  *
+  * The Original Code is the Bugzilla Bug Tracking System.
+  *
+  * The Initial Developer of the Original Code is Netscape Communications
+  * Corporation. Portions created by Netscape are
+  * Copyright (C) 1998 Netscape Communications Corporation. All
+  * Rights Reserved.
+  *
+  * Contributor(s): Myk Melez <myk@mozilla.org>
+  */
+
+.bz_id_column {
+}
+
+.bz_row_odd {
+    background-color: #F7F7F7;
+    color: #000000;
+}
+
+.bz_row_even {
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
+/* Style bug rows according to severity. */
+.bz_blocker { color: red; font-weight: bold; }
+.bz_critical { color: red; }
+.bz_enhancement { color: #666; background-color: white; }
+
+/* Align columns in the "change multiple bugs" form to the right. */
+table#form tr th { text-align: right; }
+
+table.bz_buglist td, table.bz_buglist th { 
+}
+
+/* we use a first-child class and not the pseudo-class because IE
+ * doesn't support it :-( */
+tr.bz_secure td.first-child { 
+  background-image: url("../../images/padlock.png");
+  background-position: center left;
+  background-repeat: no-repeat;
+  background-color: inherit;
+}
+
+th.first-child, td.first-child {
+  padding-left: 20px;
+}
+
+tr.bz_secure_mode_implied td.first-child {
+}
+
+tr.bz_secure_mode_manual td.first-child {
+}

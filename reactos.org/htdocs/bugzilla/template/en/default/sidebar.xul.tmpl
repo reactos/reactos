@@ -1,0 +1,131 @@
+[%# 1.0@bugzilla.org %]
+[%# -*- mode: sgml -*- %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Jacob Steenhagen <jake@bugzilla.org>
+  #                 Scott Collins <scc@mozilla.org>
+  #                 Christopher A. Aillon <christopher@aillon.com>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="[% Param('urlbase') %]skins/standard/panel.css" type="text/css"?>
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  orient="vertical"
+  onload="document.getElementById('query-field').addEventListener('keypress', initial_keypress_handler, true)">
+
+<script type="application/x-javascript"><![CDATA[
+
+function load_absolute_url( aAbsoluteURL ) {
+    content.location = aAbsoluteURL;
+}
+
+function load_relative_url( aRelativeURL ) {
+    aRelativeURL = '[% Param('urlbase') %]' + aRelativeURL;
+    _content.location = aRelativeURL;
+}
+
+function initial_keypress_handler( aEvent ) {
+    this.removeAttribute("class");
+    this.addEventListener("keypress", normal_keypress_handler, true);
+    this.removeEventListener("keypress", initial_keypress_handler, true);
+}
+
+function normal_keypress_handler( aEvent ) {
+    if ( aEvent.keyCode == 13 )
+      load_relative_url('buglist.cgi?quicksearch=' + this.value);
+}
+
+]]></script>
+
+  <textbox id="query-field" class="descriptive-content" value="enter search" onfocus="this.setSelectionRange(0,this.value.length)"/>
+
+  <separator class="groove"/>
+
+  <box autostretch="never" valign="top">
+    <box orient="vertical" flex="1">
+      <text class="text-link" onclick="load_relative_url('query.cgi')" value="new search"/>
+      <text class="text-link" onclick="load_relative_url('report.cgi')" value="reports"/>
+      <text class="text-link" onclick="load_relative_url('enter_bug.cgi')" value="new [% terms.bug %]"/>
+      <separator class="thin"/>
+
+[% IF user.id %]
+      <text class="text-link" onclick="load_relative_url('userprefs.cgi')" value="edit prefs"/>
+  [%- IF user.groups.tweakparams %]
+      <text class="text-link" onclick="load_relative_url('editparams.cgi')" value="edit params"/>
+      <text class="text-link" onclick="load_relative_url('editsettings.cgi')" value="edit default preferences"/>
+  [%- END %]
+  [%- IF user.groups.editusers || user.can_bless %]
+      <text class="text-link" onclick="load_relative_url('editusers.cgi')" value="edit users"/>
+  [%- END %]
+  [%- IF Param('useclassification') && user.groups.editclassifications %]
+      <text class="text-link" onclick="load_relative_url('editclassifications.cgi')" value="edit classifications"/>
+  [%- END %]
+  [%- IF user.groups.editcomponents %]
+      <text class="text-link" onclick="load_relative_url('editcomponents.cgi')" value="edit components"/>
+      <text class="text-link" onclick="load_relative_url('editflagtypes.cgi')" value="edit flags"/>
+      <text class="text-link" onclick="load_relative_url('editvalues.cgi')" value="edit field values"/>
+  [%- END %]
+  [%- IF user.groups.creategroups %]
+      <text class="text-link" onclick="load_relative_url('editgroups.cgi')" value="edit groups"/>
+  [%- END %]
+  [%- IF user.groups.editkeywords %]
+      <text class="text-link" onclick="load_relative_url('editkeywords.cgi')" value="edit keywords"/>
+  [%- END %]
+  [%- IF user.groups.bz_canusewhines %]
+      <text class="text-link" onclick="load_relative_url('editwhines.cgi')" value="edit whining"/>
+  [%- END %]
+  [%- IF user.groups.editcomponents %]
+      <text class="text-link" onclick="load_relative_url('sanitycheck.cgi')" value="sanity check"/>
+  [%- END %]
+  [%- IF user.authorizer.can_logout %]
+      <text class="text-link" onclick="load_relative_url('relogin.cgi')" value="log out [% user.login FILTER html %]"/>
+  [%- END %]
+      <separator class="thin"/>
+  [%- IF user.showmybugslink %]
+      [% filtered_username = user.login FILTER url_quote %]
+      <text class="text-link" onclick="load_relative_url('[% Param('mybugstemplate').replace('%userid%', filtered_username) FILTER js FILTER html %]')" value="my [% terms.bugs %]"/>
+  [%- END %]
+  [%- IF Param('usevotes') %]
+      <text class="text-link" onclick="load_relative_url('votes.cgi?action=show_user')" value="my votes"/>
+  [%- END %]
+
+  [%- FOREACH q = user.queries %]
+      <text class="text-link" onclick="load_relative_url('buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]')" value="[% q.name FILTER html %]"/>
+  [% END %]
+
+[% ELSE %]
+      <text class="text-link" onclick="load_relative_url('createaccount.cgi')" value="new user"/>
+      <text class="text-link" onclick="load_relative_url('index.cgi?GoAheadAndLogIn=1')" value="log in"/>
+[% END %]
+
+    </box>
+  </box>
+
+  <spring flex="1"/>
+  <box orient="horizontal">
+    <spring flex="1"/>
+    <html align="right">
+      <html:a class="text-link" href="[% Param('urlbase') %]sidebar.cgi">reload</html:a>
+    </html>
+  </box>
+</window>

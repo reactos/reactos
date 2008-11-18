@@ -1,0 +1,151 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # verify_fields: boolean; whether or not to verify
+  #   the version, component, and target milestone fields
+  # versions: array; versions for the new product.
+  # components: array; components for the new product.
+  # milestones: array; milestones for the new product.
+  # defaults: hash; keys are names of fields, values are defaults for
+  #   those fields
+  # verify_bug_group: boolean; whether or not to ask the user
+  #   if they want to add the bug to its new product's group
+  # use_target_milestone: boolean; whether or not to use
+  #   the target milestone field
+  # old_groups: a list of group objects which are not available
+  #   for the new product.
+  #%]
+
+[%# The global Bugzilla->cgi object is used to obtain form variable values. %]
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = 'Verify New Product Details...' %]
+
+<form action="process_bug.cgi" method="post">
+
+[% PROCESS "global/hidden-fields.html.tmpl"
+     exclude=(verify_fields ? "^version|component|target_milestone$" : "") %]
+
+<input type="hidden" name="confirm_product_change" value="1">
+[%# Verify the version, component, and target milestone fields. %]
+[% IF verify_fields %]
+  <h3>Verify Version, Component[% ", Target Milestone" IF use_target_milestone %]</h3>
+
+  <p>
+  [% IF use_target_milestone %]
+    You are moving the [% terms.bug %](s) to the product 
+    <b>[% cgi.param("product") FILTER html %]</b>,
+    and the version, component, and/or target milestone fields are no longer
+    correct.  Please set the correct version, component, and target milestone now:
+  [% ELSE %]
+    You are moving the [% terms.bug %](s) to the product 
+    <b>[% cgi.param("product") FILTER html %]</b>,
+    and the version and component fields are no longer correct.
+    Please set the correct version and component now:
+  [% END %]
+  </p>
+
+  <table>
+    <tr>
+      <td>
+        <b>Version:</b><br>
+        [% PROCESS "global/select-menu.html.tmpl" 
+                   name="version"
+                   options=versions
+                   default=defaults.version
+                   size=10 %]
+      </td>
+      <td>
+        <b>Component:</b><br>
+        [% PROCESS "global/select-menu.html.tmpl"
+                   name="component"
+                   options=components
+                   default=defaults.component
+                   size=10 %]
+      </td>
+      [% IF use_target_milestone %]
+        <td>
+          <b>Target Milestone:</b><br>
+        [% PROCESS "global/select-menu.html.tmpl"
+                   name="target_milestone"
+                   options=milestones
+                   default=defaults.target_milestone
+                   size=10 %]
+        </td>
+      [% END %]
+    </tr>
+  </table>
+
+[% END %]
+
+[% IF verify_bug_group || old_groups.size %]
+  <h3>Verify [% terms.Bug %] Group</h3>
+
+  [% IF old_groups.size %]
+    <p>The following groups are not legal for the <b>[% cgi.param("product") FILTER html %]</b>
+    product or you are not allowed to restrict [% terms.bugs %] to these groups:</p>
+    <ul>
+      [% FOREACH group = old_groups %]
+        <li>[% group.name FILTER html %]: [% group.description FILTER html %]</li>
+      [% END %]
+    </ul>
+    <p><b>[%+ terms.Bugs %] will no longer be restricted to these groups and may become
+    public if no other group applies.</b></p>
+  [% END %]
+
+  [% IF verify_bug_group %]
+    <p>
+      This new product has default groups associated to it. Do you want to add the
+      [%+ terms.bug %] to them?<br>
+      <input type="radio" id="add_no" name="addtonewgroup" value="no"><label for="add_no">no</label><br>
+      <input type="radio" id="add_yes" name="addtonewgroup" value="yes"><label for="add_yes">yes</label><br>
+      <input type="radio" id="add_yesifinold" name="addtonewgroup" value="yesifinold" checked="checked">
+        <label for="add_yesifinold">yes, but only if the [% terms.bug %] was in any of
+        its old product's default groups</label>
+    </p>
+  [% END %]
+[% END %]
+
+<p>
+  <input type="submit" id="change_product" value="Commit">
+</p>
+
+</form>
+<hr>
+
+[%# If 'id' is defined, then we are editing a single bug.
+  # Else we are editing several bugs at once. %]
+
+[% IF cgi.param('id') AND cgi.param('id').match('^\d+$') %]
+  [% id = cgi.param('id') %]
+  Cancel and Return to [% "$terms.bug $id" FILTER bug_link(id) FILTER none %]
+[% ELSE %]
+  Cancel and Return to <a href="buglist.cgi?regetlastlist=1">the last search results</a>
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]
+

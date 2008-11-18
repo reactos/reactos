@@ -1,0 +1,255 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_SELECT_METHOD -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_SELECT_DOWNLOAD_FORMAT}</h1>
+
+	<form id="selectmethod" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_DOWNLOAD_AS}</legend>
+	<dl>
+		<dt><label for="use_method">{L_DOWNLOAD_AS}:</label></dt>
+		<dd>{RADIO_BUTTONS}</dd>
+	</dl>
+
+	<p class="quick">
+		<input type="submit" class="button2" value="{L_DOWNLOAD}" name="download" />
+	</p>
+	</fieldset>
+
+	</form>
+
+<!-- ELSEIF S_DETAILS -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_LANGUAGE_PACK_DETAILS}</h1>
+
+	<form id="details" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{LANG_LOCAL_NAME}</legend>
+	<dl>
+		<dt><label for="lang_english_name">{L_LANG_ENGLISH_NAME}:</label></dt>
+		<dd><input type="text" id="lang_english_name" name="lang_english_name" value="{LANG_ENGLISH_NAME}" maxlength="100" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="lang_local_name">{L_LANG_LOCAL_NAME}:</label></dt>
+		<dd><input type="text" id="lang_local_name" name="lang_local_name" value="{LANG_LOCAL_NAME}" maxlength="255" /></dd>
+	</dl>
+	<dl>
+		<dt><label>{L_LANG_ISO_CODE}:</label></dt>
+		<dd><strong>{LANG_ISO}</strong></dd>
+	</dl>
+	<dl>
+		<dt><label for="lang_author">{L_LANG_AUTHOR}:</label></dt>
+		<dd><input type="text" id="lang_author" name="lang_author" value="{LANG_AUTHOR}" maxlength="255" /></dd>
+	</dl>
+
+	<p class="quick" style="margin-top: -15px;">
+		<input type="submit" name="update_details" class="button2" value="{L_SUBMIT}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+	<br /><br />
+
+	<!-- IF S_MISSING_FILES -->
+		<div class="errorbox">
+			<h3>{L_MISSING_FILES}</h3>
+			<p>{MISSING_FILES}</p>
+		</div>
+		<br /><br />
+	<!-- ENDIF -->
+
+	<!-- IF S_MISSING_VARS -->
+		<h1>{L_MISSING_LANG_VARIABLES}</h1>
+
+		<p>{L_MISSING_VARS_EXPLAIN}</p>
+
+		<form id="missing" method="post" action="{U_MISSING_ACTION}">
+
+		<table cellspacing="1">
+		<thead>
+		<tr>
+			<th>{L_LANGUAGE_KEY}</th>
+			<th>{L_LANGUAGE_VARIABLE}</th>
+		</tr>
+		</thead>
+		<tbody>
+		<!-- BEGIN missing -->
+			<tr class="row4">
+				<td><strong>{missing.FILE}</strong></td>
+				<td style="text-align: right;"><input type="submit" name="missing_file[{missing.KEY}]" value="{L_SELECT}" class="button2" /></td>
+			</tr>
+			{missing.TPL}
+		<!-- END missing -->
+		</tbody>
+		</table>
+		<div>{S_FORM_TOKEN}</div>
+		</form>
+
+		<br /><br />
+	<!-- ENDIF -->
+
+	<a name="entries"></a>
+
+	<h1>{L_LANGUAGE_ENTRIES}</h1>
+
+	<p>{L_LANGUAGE_ENTRIES_EXPLAIN}</p>
+
+	<form id="lang_entries" method="post" action="{U_ENTRY_ACTION}">
+
+	<!-- IF S_FROM_STORE -->
+		<fieldset class="quick" style="float: {S_CONTENT_FLOW_BEGIN};">
+			<input type="submit" name="remove_store" value="{L_REMOVE_FROM_STORAGE_FOLDER}" class="button2" /> 
+		</fieldset>
+	<!-- ENDIF -->
+
+	<fieldset class="quick" style="float: {S_CONTENT_FLOW_END};">
+		<select name="language_file">{S_LANG_OPTIONS}</select>&nbsp;<input type="submit" class="button2" name="change" value="{L_SELECT}" />
+	</fieldset>
+
+	<p>&nbsp;<br />&nbsp;</p>
+
+
+	<!--[if lt IE 8]>
+	<style type="text/css">
+	/* <![CDATA[ */
+		input.langvalue, textarea.langvalue {
+		width: 450px;
+		}
+	/* ]]> */
+	</style>
+	<![endif]-->
+
+	<table cellspacing="1">
+	<thead>
+	<!-- IF S_EMAIL_FILE -->
+		<tr>
+			<th colspan="2">{L_FILE_CONTENTS}</th>
+		</tr>
+	<!-- ELSE -->
+		<tr>
+			<th>{L_LANGUAGE_KEY}</th>
+			<th>{L_LANGUAGE_VARIABLE}</th>
+		</tr>
+	<!-- ENDIF -->
+	<tr>
+		<td rowspan="2" class="row3"><strong>{PRINT_MESSAGE}<!-- IF S_FROM_STORE --><br /><span style="color: red;">{L_FILE_FROM_STORAGE}</span><!-- ENDIF --></strong></td>
+		<td class="row3" style="text-align: right;"><input type="submit" name="download_file" class="button2" value="{L_SUBMIT_AND_DOWNLOAD}" />&nbsp;&nbsp;<input type="submit" name="submit_file" class="button2" value="{L_SUBMIT}" /></td>
+	</tr>
+	<tr>
+		<td class="row3" style="text-align: right;">	
+		<!-- IF ALLOW_UPLOAD -->&nbsp;&nbsp;{L_UPLOAD_METHOD}:&nbsp;<!-- BEGIN buttons--><input type="radio" class="radio"<!-- IF buttons.S_FIRST_ROW --> id="method" checked="checked"<!-- ENDIF --> value="{buttons.VALUE}" name="method" />&nbsp;{buttons.VALUE}&nbsp;<!-- END buttons --><input type="submit" name="upload_file" class="button2" value="{L_SUBMIT_AND_UPLOAD}" /><!-- ENDIF --></td>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- IF S_EMAIL_FILE -->
+		<tr>
+			<td class="row2" colspan="2" style="text-align: center;"><textarea name="entry" id="entry" cols="80" rows="20">{LANG}</textarea></td>
+		</tr>
+	<!-- ELSE -->
+		{TPL}
+	<!-- ENDIF -->
+	<tr>
+		<td class="row3" colspan="3" style="text-align: right;">{S_FORM_TOKEN}<input type="submit" name="download_file" class="button2" value="{L_SUBMIT_AND_DOWNLOAD}" />&nbsp;&nbsp;<input type="submit" name="submit_file" class="button2" value="{L_SUBMIT}" /></td>
+	</tr>
+	</tbody>
+	</table>
+	</form>
+
+<!-- ELSEIF S_UPLOAD -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_UPLOAD_SETTINGS}</h1>
+
+	<form id="upload" method="post" action="{U_ACTION}">
+
+	<!-- IF S_CONNECTION_SUCCESS -->
+		<div class="successbox">
+			<p>{L_CONNECTION_SUCCESS}</p>
+		</div>
+	<!-- ELSEIF S_CONNECTION_FAILED -->
+		<div class="errorbox">
+			<p>{L_CONNECTION_FAILED}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<fieldset>
+		<legend>{L_UPLOAD_SETTINGS}</legend>
+	<dl>
+		<dt><label>{L_UPLOAD_METHOD}:</label></dt>
+		<dd><strong>{NAME}</strong></dd>
+	</dl>
+	<!-- BEGIN data -->
+	<dl>
+		<dt><label for="{data.DATA}">{data.NAME}:</label><br /><span>{data.EXPLAIN}</span></dt>
+		<dd><input type="<!-- IF data.DATA == 'password' -->password<!-- ELSE -->text<!-- ENDIF -->" id="{data.DATA}" name="{data.DATA}" value="{data.DEFAULT}" /></dd>
+	</dl>
+	<!-- END data -->
+	</fieldset>
+	
+	<fieldset class="quick">
+		{HIDDEN}
+		{S_FORM_TOKEN}
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+		<input class="button1" type="submit" name="test_connection" value="{L_TEST_CONNECTION}" />
+	</fieldset>
+	</form>
+
+<!-- ELSE -->
+
+	<h1>{L_ACP_LANGUAGE_PACKS}</h1>
+
+	<p>{L_ACP_LANGUAGE_PACKS_EXPLAIN}</p>
+
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_LANGUAGE_PACK_NAME}</th>
+		<th>{L_LANGUAGE_PACK_LOCALNAME}</th>
+		<th>{L_LANGUAGE_PACK_ISO}</th>
+		<th>{L_LANGUAGE_PACK_USED_BY}</th>
+		<th>{L_OPTIONS}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td class="row3" colspan="5"><strong>{L_INSTALLED_LANGUAGE_PACKS}</strong></td>
+	</tr>
+	<!-- BEGIN lang -->
+		<!-- IF lang.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+		<td><a href="{lang.U_DETAILS}">{lang.ENGLISH_NAME}</a> {lang.TAG}</td>
+		<td>{lang.LOCAL_NAME}</td>
+		<td style="text-align: center;"><strong>{lang.ISO}</strong></td>
+		<td style="text-align: center;">{lang.USED_BY}</td>
+		<td style="text-align: center;">&nbsp;<a href="{lang.U_DOWNLOAD}">{L_DOWNLOAD}</a>&nbsp;|&nbsp;<a href="{lang.U_DELETE}">{L_DELETE}</a></td>
+	</tr>
+	<!-- END lang -->
+	<!-- IF .notinst -->
+	<tr>
+		<td class="row3" colspan="5"><strong>{L_UNINSTALLED_LANGUAGE_PACKS}</strong></td>
+	</tr>
+	<!-- ENDIF -->
+	<!-- BEGIN notinst -->
+		<!-- IF notinst.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+		<td>{notinst.NAME}</td>
+		<td>{notinst.LOCAL_NAME}</td>
+		<td style="text-align: center;"><strong>{notinst.ISO}</strong></td>
+		<td colspan="2" style="text-align: center;"><a href="{notinst.U_INSTALL}">{L_INSTALL}</a></td>
+	</tr>
+	<!-- END notinst -->
+	</tbody>
+	</table>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

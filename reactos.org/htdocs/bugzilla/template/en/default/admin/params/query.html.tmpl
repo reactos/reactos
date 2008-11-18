@@ -1,0 +1,61 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "Query Defaults"
+   desc = "Default options for query and buglists"
+%]
+
+[% param_descs = {
+  quip_list_entry_control => "Controls how easily users can add entries to the quip list.
+                              <ul>
+                                <li>
+                                  open - Users may freely add to the quip list, and
+                                  their entries will immediately be available for viewing.
+                                </li>
+                                <li>
+                                  moderated - quips can be entered, but need to be approved
+                                  by an admin before they will be shown.
+                                </li>
+                                <li>
+                                  closed - no new additions to the quips list are allowed.
+                                </li>
+                              </ul>",
+
+  mostfreqthreshold => "The minimum number of duplicates $terms.abug needs to show up on the " _
+                       "<a href=\"duplicates.cgi\">most frequently reported $terms.bugs page</a>. " _
+                       "If you have a large database and this page takes a long time to " _
+                       "load, try increasing this number.",
+
+  mybugstemplate => "This is the URL to use to bring up a simple 'all of my $terms.bugs' " _
+                    "list for a user. %userid% will get replaced with the login name of a user.",
+
+  defaultquery => "This is the default query that initially comes up when you " _
+                  "access the advanced query page. It's in URL parameter " _
+                  "format, which makes it hard to read. Sorry!",
+
+  quicksearch_comment_cutoff => "The maximum number of search terms for a QuickSearch " _
+                                "to search comments. If the QuickSearch query contains " _
+                                "more terms than this value, QuickSearch will not search comments.",
+
+  specific_search_allow_empty_words => "Whether to allow a search on the 'Find a Specific " _
+                                       "Bug' page with an empty 'Words' field." }
+%]

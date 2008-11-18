@@ -1,0 +1,104 @@
+
+<script type="text/javascript">
+// <![CDATA[
+	var form_name = 'postform';
+	var text_name = <!-- IF $SIG_EDIT -->'signature'<!-- ELSE -->'message'<!-- ENDIF -->;
+	var load_draft = false;
+	var upload = false;
+
+	// Define the bbCode tags
+	var bbcode = new Array();
+	var bbtags = new Array('[b]','[/b]','[i]','[/i]','[u]','[/u]','[quote]','[/quote]','[code]','[/code]','[list]','[/list]','[list=]','[/list]','[img]','[/img]','[url]','[/url]','[flash=]', '[/flash]','[size=]','[/size]'<!-- BEGIN custom_tags -->, {custom_tags.BBCODE_NAME}<!-- END custom_tags -->);
+	var imageTag = false;
+
+	// Helpline messages
+	var help_line = {
+		b: '{LA_BBCODE_B_HELP}',
+		i: '{LA_BBCODE_I_HELP}',
+		u: '{LA_BBCODE_U_HELP}',
+		q: '{LA_BBCODE_Q_HELP}',
+		c: '{LA_BBCODE_C_HELP}',
+		l: '{LA_BBCODE_L_HELP}',
+		o: '{LA_BBCODE_O_HELP}',
+		p: '{LA_BBCODE_P_HELP}',
+		w: '{LA_BBCODE_W_HELP}',
+		a: '{LA_BBCODE_A_HELP}',
+		s: '{LA_BBCODE_S_HELP}',
+		f: '{LA_BBCODE_F_HELP}',
+		e: '{LA_BBCODE_E_HELP}',
+		d: '{LA_BBCODE_D_HELP}'
+		<!-- BEGIN custom_tags -->
+			,cb_{custom_tags.BBCODE_ID}: '{custom_tags.A_BBCODE_HELPLINE}'
+		<!-- END custom_tags -->
+	}
+
+	var panels = new Array('options-panel', 'attach-panel', 'poll-panel');
+	var show_panel = 'options-panel';
+
+
+// ]]>
+</script>
+<script type="text/javascript" src="{T_TEMPLATE_PATH}/editor.js"></script>
+
+<!-- IF S_BBCODE_ALLOWED -->
+<div id="colour_palette" style="display: none;">
+	<dl style="clear: left;">
+		<dt><label>{L_FONT_COLOR}:</label></dt>
+		<dd>
+		<script type="text/javascript">
+		// <![CDATA[
+			function change_palette()
+			{
+				dE('colour_palette');
+				e = document.getElementById('colour_palette');
+				
+				if (e.style.display == 'block')
+				{
+					document.getElementById('bbpalette').value = '{LA_FONT_COLOR_HIDE}';
+				}
+				else
+				{
+					document.getElementById('bbpalette').value = '{LA_FONT_COLOR}';
+				}
+			}
+
+			colorPalette('h', 15, 10);
+		// ]]>
+		</script>
+		</dd>
+	</dl>
+</div>
+
+<div id="format-buttons">
+	<input type="button" class="button2" accesskey="b" name="addbbcode0" value=" B " style="font-weight:bold; width: 30px" onclick="bbstyle(0)" title="{L_BBCODE_B_HELP}" />
+	<input type="button" class="button2" accesskey="i" name="addbbcode2" value=" i " style="font-style:italic; width: 30px" onclick="bbstyle(2)" title="{L_BBCODE_I_HELP}" />
+	<input type="button" class="button2" accesskey="u" name="addbbcode4" value=" u " style="text-decoration: underline; width: 30px" onclick="bbstyle(4)" title="{L_BBCODE_U_HELP}" />
+	<!-- IF S_BBCODE_QUOTE -->
+		<input type="button" class="button2" accesskey="q" name="addbbcode6" value="Quote" style="width: 50px" onclick="bbstyle(6)" title="{L_BBCODE_Q_HELP}" />
+	<!-- ENDIF -->
+	<input type="button" class="button2" accesskey="c" name="addbbcode8" value="Code" style="width: 40px" onclick="bbstyle(8)" title="{L_BBCODE_C_HELP}" />
+	<input type="button" class="button2" accesskey="l" name="addbbcode10" value="List" style="width: 40px" onclick="bbstyle(10)" title="{L_BBCODE_L_HELP}" />
+	<input type="button" class="button2" accesskey="o" name="addbbcode12" value="List=" style="width: 40px" onclick="bbstyle(12)" title="{L_BBCODE_O_HELP}" />
+	<input type="button" class="button2" accesskey="t" name="addlitsitem" value="[*]" style="width: 40px" onclick="bbstyle(-1)" title="{L_BBCODE_LISTITEM_HELP}" />
+	<!-- IF S_BBCODE_IMG -->
+		<input type="button" class="button2" accesskey="p" name="addbbcode14" value="Img" style="width: 40px" onclick="bbstyle(14)" title="{L_BBCODE_P_HELP}" />
+	<!-- ENDIF -->
+	<!-- IF S_LINKS_ALLOWED -->
+		<input type="button" class="button2" accesskey="w" name="addbbcode16" value="URL" style="text-decoration: underline; width: 40px" onclick="bbstyle(16)" title="{L_BBCODE_W_HELP}" />
+	<!-- ENDIF -->
+	<!-- IF S_BBCODE_FLASH -->
+		<input type="button" class="button2" accesskey="d" name="addbbcode18" value="Flash" onclick="bbstyle(18)" title="{L_BBCODE_D_HELP}" />
+	<!-- ENDIF -->
+	<select name="addbbcode20" onchange="bbfontstyle('[size=' + this.form.addbbcode20.options[this.form.addbbcode20.selectedIndex].value + ']', '[/size]');this.form.addbbcode20.selectedIndex = 2;" title="{L_BBCODE_F_HELP}">
+		<option value="50">{L_FONT_TINY}</option>
+		<option value="85">{L_FONT_SMALL}</option>
+		<option value="100" selected="selected">{L_FONT_NORMAL}</option>
+		<option value="150">{L_FONT_LARGE}</option>
+		<option value="200">{L_FONT_HUGE}</option>
+	</select>
+	<input type="button" class="button2" name="bbpalette" id="bbpalette" value="{L_FONT_COLOR}" onclick="change_palette();" title="{L_BBCODE_S_HELP}" />
+	<!-- BEGIN custom_tags -->
+		<input type="button" class="button2" name="addbbcode{custom_tags.BBCODE_ID}" value="{custom_tags.BBCODE_TAG}" onclick="bbstyle({custom_tags.BBCODE_ID})" title="{custom_tags.BBCODE_HELPLINE}" />
+	<!-- END custom_tags -->
+</div>
+<!-- ENDIF -->

@@ -1,0 +1,55 @@
+#menu {
+  width: 10em;
+  margin-top: 1em;
+  margin-right: 0.5em;
+  border: solid thin;
+  border-spacing: 0px;
+  border-collapse: collapse;
+  text-align: center;
+  color: black;
+  background-color: #edf2f2;
+  font-weight: normal;
+}
+
+#menu a:link, #menu a:visited {
+  color: #039;
+  background-color: transparent;
+}
+
+#menu a:hover, #menu a:active {
+  color: red;
+  background-color: transparent;
+}
+
+#menu td {
+  border: solid thin;
+  padding: 0.2em 0.5em;
+}
+
+table td {
+  vertical-align: top;
+}
+
+td.selected_section {
+  color: #090;
+  background-color: white;
+}
+
+td.index {
+  color: black;
+  background-color: #edf;
+}
+
+dt {
+  font-weight: bold;
+}
+
+dd {
+  margin-bottom: 1.5em;
+}
+
+.contribute {
+    border: 1px dotted black;
+    padding: .5em;
+    font-size: small;
+}

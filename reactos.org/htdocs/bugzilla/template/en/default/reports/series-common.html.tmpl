@@ -1,0 +1,118 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # donames: boolean. True if we have a multi-select for names as well as
+  #          categories and subcategories. 
+  # category: hash (keyed by category) of hashes (keyed by subcategory) of
+  #           hashes (keyed by name), with value being the series_id of the
+  #           series. Contains details of all series the user can see.
+  #%]
+
+[% subcategory = category.${default.category} %]
+[% name = subcategory.${default.subcategory} %]
+
+<script type="text/javascript">
+[%# This structure holds details of the series the user can select from. %]
+var series = {
+[% FOREACH c = category.keys.sort %]
+  "[%+ c FILTER js %]" : {
+    [% FOREACH s = category.$c.keys.sort %]
+      "[%+ s FILTER js %]" : {
+        [% IF donames %]
+          [% FOREACH n = category.$c.$s.keys.sort %]
+            "[% n FILTER js %]": 
+             [% category.$c.$s.$n FILTER js %][% ", " UNLESS loop.last %]
+          [% END %]
+        [% END %]
+      }[% ", " UNLESS loop.last %]
+    [% END %]
+  }[% ", " UNLESS loop.last %]
+[% END %] 
+};
+
+[%# Should attempt to preserve selection across invocations @@@ %]
+[%# This function takes necessary action on selection of a category %]
+function catSelected() {
+  var cat = document.chartform.category.value;
+  var subcats = series[cat];
+  
+  var subcatwidget = document.chartform.subcategory;
+  
+  subcatwidget.options.length = 0;
+  var i = 0;
+  
+  for (x in subcats) {
+    subcatwidget.options[i] = new Option(x, x);
+    i++;
+  }
+  
+  [% IF newtext %]
+    subcatwidget.options[i] = new Option("[% newtext FILTER js %]", "");
+  [% END %]  
+  
+  subcatwidget.options[0].selected = true;
+  
+  if (document.chartform.action[1]) {
+    [%# On the query form, select the right radio button. %]
+    document.chartform.action[1].checked = true;
+  }
+  
+  checkNewState();  
+}
+
+[%# This function updates the disabled state of the two "new" textboxes %]
+function checkNewState() {
+  var fm = document.chartform;
+  if (fm.newcategory) {
+    fm.newcategory.disabled = 
+                       (fm.category.value != "" || 
+                        fm.action[1] && fm.action[1].checked == false);
+    fm.newsubcategory.disabled = 
+                    (fm.subcategory.value != "" || 
+                     fm.action[1] && fm.action[1].checked == false);
+  }
+}
+</script>
+
+[%###########################################################################%]
+[%# Block for SELECT fields - pinched from search/form.html.tmpl            #%]
+[%###########################################################################%]
+
+[% BLOCK series_select %]
+  <td align="left">
+    <select name="[% sel.name %]" id="[% sel.name %]"
+            size="[% sel.size %]" style="width: 15em"
+            [%+ "disabled=\"disabled\"" UNLESS ${sel.name}.keys.size || newtext %]
+            [%+ "onchange=\"$sel.onchange\"" IF sel.onchange %]>
+      [% FOREACH x = ${sel.name}.keys.sort %]
+        <option value="[% x FILTER html %]"
+          [% " selected" IF default.${sel.name} == x %]>
+          [% x FILTER html %]</option>
+      [% END %]
+      [% IF newtext %]
+        <option value="">[% newtext FILTER html %]</option>
+      [% ELSIF NOT ${sel.name}.keys.size %]
+        <option value="" disabled="disabled"></option>
+      [% END %]
+    </select>
+  </td>
+[% END %]

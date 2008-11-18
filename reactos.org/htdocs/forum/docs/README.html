@@ -1,0 +1,363 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en" xml:lang="en">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-language" content="en" />
+<meta http-equiv="imagetoolbar" content="no" />
+<meta name="resource-type" content="document" />
+<meta name="distribution" content="global" />
+<meta name="copyright" content="2007 phpBB Group" />
+<meta name="keywords" content="" />
+<meta name="description" content="phpBB 3.0.x Readme" />
+<title>phpBB3 &bull; Readme</title>
+
+<link href="stylesheet.css" rel="stylesheet" type="text/css" media="screen, projection" />
+
+</head>
+
+<body id="phpbb" class="section-docs">
+
+<div id="wrap">
+	<a id="top" name="top" accesskey="t"></a>
+	<div id="page-header">
+		<div class="headerbar">
+			<div class="inner"><span class="corners-top"><span></span></span>
+
+			<div id="doc-description">
+				<a href="../index.php" id="logo"><img src="site_logo.gif" alt="" /></a>
+				<h1>phpBB 3.0.x Readme</h1>
+				<p style="display: none;"><a href="#start_here">Skip</a></p>
+			</div>
+
+			<span class="corners-bottom"><span></span></span></div>
+		</div>
+	</div>
+
+	<a name="start_here"></a>
+
+	<div id="page-body">
+
+<!-- BEGIN DOCUMENT -->
+
+	<p>Thank you for downloading phpBB3. This README will guide through the basics of installation and operation of phpBB3. Please ensure you read this and the accompanying documentation fully <strong>before</strong> proceeding with the installation.</p>
+
+	<h1>Readme</h1>
+
+	<div class="paragraph menu">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+			<ol>
+				<li><a href="#install">Installing phpBB3</a></li>
+				<li><a href="#run">Running phpBB3</a>
+				<ol style="list-style-type: lower-roman;">
+					<li><a href="#i18n">Internationalisation (i18n)</a></li>
+					<li><a href="#styles">Styles</a></li>
+					<li><a href="#mods">Modifications</a></li>
+				</ol>
+				</li>
+				<li><a href="#help">Getting help with phpBB3</a>
+				<ol style="list-style-type: lower-roman;">
+					<li><a href="#docs">Documentation</a></li>
+					<li><a href="#website">Community Forums</a></li>
+					<li><a href="#irc">Internet Relay Chat</a></li>
+				</ol>
+				</li>
+				<li><a href="#status">Status of this version</a></li>
+				<li><a href="#bugs">Reporting Bugs</a>
+				<ol style="list-style-type: lower-roman;">
+					<li><a href="#securitybugs">Security related bugs</a></li>
+				</ol>
+				</li>
+				<li><a href="#curbugs">Overview of current bug list</a></li>
+				<li><a href="#php">PHP compatibility issues</a></li>
+				<li><a href="#disclaimer">Disclaimer</a></li>
+			</ol>
+
+		</div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+	<a name="install"></a><h2>1. Installing phpBB3</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>Installation, update and conversion instructions can be found in the <a href="INSTALL.html">INSTALL</a> document contained in this distribution. If you are intending to convert from a previous phpBB 2.0.x installation we highly recommend you backup any existing data before proceeding!</p>
+
+	<p>Users of phpBB3 Beta versions cannot directly update.</p>
+
+	<p>Please note that we won't support the following installation types:</p>
+	<ul>
+		<li>Updates from phpBB3 Beta versions to phpBB3 RC1 and higher</li>
+		<li>Conversions from phpBB 2.0.x to phpBB3 Beta versions</li>
+		<li>phpBB3 Beta installations</li>
+	</ul>
+
+	<p>We give support for the following installation types:</p>
+
+	<ul>
+		<li>Updates from phpBB3 RC1 to the latest version</li>
+		<li>Conversions from phpBB 2.0.x to the latest version</li>
+		<li>New installations of phpBB3 - always only the latest released version</li>
+	</ul>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+	<a name="run"></a><h2>2. Running phpBB3</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>Once installed phpBB is easily managed by both admin and moderator control panels. If you need help or advice with phpBB please see <a href="#help">Section 3</a> below.</p>
+
+	<a name="i18n"></a><h3>2.i. Internationalisation (i18n)</h3>
+
+	<p>A number of language packs and style localisations are available. You can find them on our official download page:</p>
+
+	<p><a href="http://www.phpbb.com/downloads/">http://www.phpbb.com/downloads/</a></p>
+
+	<p>This is the <em>official</em> location for all supported language sets. If you download a package from a 3rd party site you do so with the understanding that we cannot offer support. So please, do not ask for help in these cases!</p>
+
+	<p>Installation of these packages is straightforward, simply download the required language pack and unarchive it into the <samp>languages/</samp> folder. Please ensure you retain the directory structure when doing this! Once uploaded go to the <code>Admin-&gt;System-&gt;Language Packs</code> and install the now appeared new language pack. To install the style imageset you should download the imageset for your language and unarchive the file/s into the relevant imageset directory (styles/prosilver/imageset or styles/subsilver2/imageset), again you must retain the directory structure. Once installed the imageset will become immediately available.</p>
+
+	<p>If your language is not available please visit our forums where you will find a topic listing translations currently available or in preparation. This topic also gives you information should you wish to volunteer to translate a language not currently listed.</p>
+
+	<a name="styles"></a><h3>2.ii. Styles</h3>
+
+	<p>Although phpBB Group are rather proud of the included styles we realise that it may not be to everyones tastes. Therefore phpBB3 allows styles to be switched with relative ease. Firstly you need to locate and download a style you like. We maintain such a site at</p>
+
+	<p><a href="http://www.phpbb.com/styles/">http://www.phpbb.com/styles/</a></p>
+
+	<p><strong>Please note</strong> that 3rd party styles downloaded for versions of phpBB2 will <strong>not</strong> work in phpBB3.</p>
+
+	<p>Once you have downloaded a style the usual next step is to unarchive (or upload the unarchived contents of) the package into your <samp>styles/</samp> directory. You then need to visit <code>Administration -&gt; Styles</code>, you should see the new style available, click install and it will become available for all your users.</p>
+
+	<p><strong>Please note</strong> that if you create your own style or modify existing ones, please remember to enable the &quot;Recompile stale style components&quot; setting within the <code>Admin-&gt;General-&gt;Load Settings</code> screen. This setting allows the cache to detect changes made to the style and automatically refresh it. If this setting is disabled, you will not see your changes taking effect.</p>
+
+	<a name="mods"></a><h3>2.iii. Modifications</h3>
+
+	<p>Although not officially supported by phpBB Group, phpBB has a thriving modification scene. These third party modifications to the standard phpBB extend its capabilities still further and can be found at:</p>
+
+	<p><a href="http://www.phpbb.com/mods/">http://www.phpbb.com/mods/</a></p>
+
+	<p><strong>Please remember</strong> that any bugs or other issues that occur after you have added any modification should <strong>NOT</strong> be reported to the bug tracker (see below). First remove the modification and see if the problem is resolved.</p>
+
+	<p>Also remember that any modifications which modify the database in any way may render upgrading your forum to future versions more difficult unless we state otherwise. With all this said many users have and continue to utilise many of the mods already available with great success.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="help"></a><h2>3. Getting help with phpBB3</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>phpBB3 can seem a little daunting to new users in places, particularly with regard the permission system. The first thing you should do is check the <a href="FAQ.html">FAQ</a> which covers a few basic getting started questions. If you need additional help there are several places you should look.</p>
+
+	<a name="docs"></a><h3>3.i. phpBB3 Documentation</h3>
+
+	<p>A comprehensive documentation is now available online and can be accessed from the following location:</p>
+
+	<p><a href="http://www.phpbb.com/support/documentation/3.0/">http://www.phpbb.com/support/documentation/3.0/</a></p>
+
+	<p>This covers everything from installation through setting permissions and managing users.</p>
+
+	<a name="website"></a><h3>3.ii. Community Forums</h3>
+
+	<p>phpBB Group maintains a thriving community where a number of people have generously decided to donate their time to help support users. This site can be found at:</p>
+
+	<p><a href="http://www.phpbb.com/">http://www.phpbb.com/</a></p>
+
+	<p>If you do seek help via our forums please be sure to do a Search before posting. This may well save both you and us time and allow the developer, moderator and support groups to spend more time responding to people with unknown issues and problems. Please also remember that phpBB is an entirely volunteer effort, no one receives any compensation for the time they give, this includes moderators as well as developers. So please be respectful and mindful when awaiting responses.</p>
+
+	<a name="irc"></a><h3>3.iii Internet Relay Chat</h3>
+
+	<p>Another place you may find help is our IRC channel. This operates on the Freenode IRC network, <em>irc.freenode.net</em> and the channel is <em>#phpbb</em> and can be accessed by any good IRC client such as mIRC, XChat, etc. Again, please do not abuse this service and be respectful of other users.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="status"></a><h2>4. Status of this version</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>This is the third stable release of phpBB. The 3.0.x line is essentially feature frozen, with only point releases seeing fixes for bugs and security issues, though feature alterations and minor feature additions may be done if deemed absolutely required. Our next major release will be phpBB 3.2 and the planning phase has begun (the unstable development version is 3.1). Please do not post questions asking when 3.2 will be available, no release date has been set.</p>
+
+	<p>For those interested in the development of phpBB should keep an eye on the community forums to see how things are progressing:</p>
+
+	<p><a href="http://area51.phpbb.com/phpBB/">http://area51.phpbb.com/phpBB/</a></p>
+
+	<p>Please note that this forum should <strong>NOT</strong> be used to obtain support for or ask questions about phpBB 2.0.x or phpBB 3.0.x, the main community forums are the place for this. Any such posts will be locked and go unanswered.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="bugs"></a><h2>5. Reporting Bugs</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>The phpBB Group uses a bug tracking system to store, list and manage all reported bugs, it can be found at the location listed below. Please <strong>DO NOT</strong> post bug reports to our forums, they will be locked. In addition please <strong>DO NOT</strong> use the bug tracker for support requests. Posting such a request will only see you directed to the support forums (while taking time away from working on real bugs).</p>
+
+	<p><a href="http://www.phpbb.com/bugs/">http://www.phpbb.com/bugs/</a></p>
+
+	<p>While we very much appreciate receiving bug reports (the more reports the more stable phpBB will be) we ask you carry out a few steps before adding new entries:</p>
+
+	<ul>
+		<li>Firstly determine if your bug is reproduceable, how to determine this depends on the bug in question. Only if the bug is reproduceable it is likely to be a problem with phpBB3 (or in some way connected). If something cannot be reproduced it may turn out to have been your hosting provider working on something, a user doing something silly, etc. Bug reports for non-reproduceable events can slow down our attempts to fix real, reproduceable issues<br /><br /></li>
+		<li>Next please read or search through the existing bug reports to see if <em>your</em> bug (or one very similar to it) is already listed. If it is please add to that existing bug rather than creating a new duplicate entry (all this does is slow us down).<br /><br /></li>
+		<li>Check the forums (use search!) to see if people have discussed anything that sounds similar to what you are seeing. However, as noted above please <strong>DO NOT</strong> post your particular bug to the forum unless it's non-reproduceable or you are sure it's related to something you have done rather phpBB3<br /><br /></li>
+		<li>If no existing bug exists then please feel free to add it</li>
+	</ul>
+
+	<p>If you do post a new bug (i.e. one that isn't already listed in the bug tracker) firstly make sure you have logged in (your username and password are the same as for the community forums) then please include the following details:</p>
+
+	<ul>
+		<li>Your server type/version, e.g. Apache 1.3.28, IIS 4, Sambar, etc.</li>
+		<li>PHP version and mode of operation, e.g. PHP 5.1.1 as a module, PHP 4.4.4 running as CGI, etc.</li>
+		<li>DB type/version, e.g. MySQL 4.0.1, PostgreSQL 7.3.2, MSSQL Server 2000 SP1, etc.</li>
+	</ul>
+
+	<p>The relevant database type/version is listed within the administration control panel</p>
+
+	<p>Please also be as detailed as you can in your report, if possible list the steps required to duplicate the problem. If you have a fix which you are <strong>VERY SURE</strong> works (and is consistent with our <a href="coding-guidelines.html">coding guidelines</a>) and does not introduce further problems or incompatibilities please let us know. However only include it in the bug report if you really must, if we need it we'll ask you for it.</p>
+
+	<p>Once a bug has been submitted you will be emailed any follow up comments added to it. <strong>Please</strong> if you are requested to supply additional information, do so! It is frustrating for us to receive bug reports, ask for additional information but get nothing. In these cases we have a policy of closing the bug, which may leave a very real problem in place. Obviously we would rather not have this situation arise.</p>
+
+<a name="securitybugs"></a><h3>5.i. Security related bugs</h3>
+
+	<p>If you find a potential security related vulnerability in phpBB please <strong>DO NOT</strong> post it to the bug tracker, public forums, etc.! Doing so may allow unscrupulous users to take advantage of it before we have time to put a fix in place. All security related bugs should be sent to our security tracker:</p>
+
+	<p><a href="http://www.phpbb.com/security/">http://www.phpbb.com/security/</a></p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="curbugs"></a><h2>6. Overview of current bug list</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>This list is not complete but does represent those bugs which may effect users on a wider scale. Other bugs listed in the tracker have typically been shown to be limited to certain setups or methods of installation, updating and/or conversions.</p>
+
+	<ul>
+		<li>Conversions may fail to complete on large boards under some hosts</li>
+		<li>Updates may fail to complete on large update sets under some hosts</li>
+		<li>Smilies placed directly after bbcode tags will not get parsed. Smilies always need to be separated by spaces.</li>
+	</ul>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="php"></a><h2>7. PHP compatibility issues</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>phpBB is no longer supported on PHP3 due to several compatibility issues and we recommend that you upgrade to the latest stable release of PHP5 to run phpBB. The minimum version required is PHP 4.3.3.</p>
+
+	<p>Please remember that running any application on a developmental version of PHP can lead to strange/unexpected results which may appear to be bugs in the application (which may not be true). Therefore we recommend you upgrade to the newest stable version of PHP before running phpBB3. If you are running a developmental version of PHP please check any bugs you find on a system running a stable release before submitting.</p>
+
+	<p>This board has been developed and tested under Linux and Windows (amongst others) running Apache using MySQL 3.23, 4.x, 5.x, MSSQL Server 2000, PostgreSQL 7.x, Oracle 8, SQLite and Firebird. Versions of PHP used range from 4.3.3 to 6.0.0-dev without problem. </p>
+
+<a name="phpsec"></a><h3>7.i. Notice on PHP security issues</h3>
+
+<p>Currently there are no known issues regarding PHP security.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="disclaimer"></a><h2>8. Copyright and disclaimer</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>This application is opensource software released under the <a href="http://opensource.org/licenses/gpl-license.php">GPL</a>. Please see source code and the docs directory for more details. This package and its contents are Copyright (c) 2000, 2002, 2005, 2007 <a href="http://www.phpbb.com/">phpBB Group</a>, All Rights Reserved.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+<!-- END DOCUMENT -->
+
+	<div id="page-footer">
+		<div class="version">&nbsp;</div>
+	</div>
+</div></div>
+
+<div>
+	<a id="bottom" name="bottom" accesskey="z"></a>
+</div>
+
+</body>
+</html>

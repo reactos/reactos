@@ -1,0 +1,312 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Myk Melez <myk@mozilla.org>
+  #                 Shane H. W. Travis <travis@sedsystems.ca>
+  #%]
+
+[%# INTERFACE:
+  # watchedusers: string.
+  #               Comma-separated list of email addresses this user watches.
+  # watchers:     array.
+  #               Array of users watching this user's account.
+  # excludeself:  boolean.
+  #               True if user is not receiving self-generated mail.
+  # <rolename>:   Multiple hashes, one for each rolename (e.g. assignee; see
+  #               below), keyed by reasonname (e.g. comments; again, see
+  #               below). The value is a boolean - true if the user is
+  #               receiving mail for that reason when in that role.
+  # Also references the 'supportwatchers' Param.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% useqacontact = Param('useqacontact') %]
+[% usevotes = Param('usevotes') %]
+
+<p>
+  If you don't like getting a notification for "trivial"
+  changes to [% terms.bugs %], you can use the settings below to
+  filter some or all notifications.
+</p>
+
+<script type="text/javascript">
+<!--
+function SetCheckboxes(setting) {
+  for (var count = 0; count < document.userprefsform.elements.length; count++) {
+    var theinput = document.userprefsform.elements[count];
+    if (theinput.type == "checkbox" && !theinput.disabled) {
+      if (theinput.name.match("neg")) {
+        theinput.checked = false;
+      }
+      else {
+        theinput.checked = setting;
+      }
+    }
+  }
+}
+
+document.write('<input type="button" value="Enable All Mail" onclick="SetCheckboxes(true); return false;">\n');
+document.write('<input type="button" value="Disable All Mail" onclick="SetCheckboxes(false); return false;">\n');
+// -->
+</script>
+
+<hr>
+
+<table>
+  <tr>
+    <td colspan="2">
+      <b>Global options:</b>
+    </td>
+  </tr>
+
+  <tr>
+    <td width="150"></td>
+    <td>
+      [% prefname = "email-$constants.REL_ANY-$constants.EVT_FLAG_REQUESTED" %]
+      <input type="checkbox" name="[% prefname %]" id="[% prefname %]" 
+        value="1"
+        [% " checked" IF 
+                  mail.${constants.REL_ANY}.${constants.EVT_FLAG_REQUESTED} %]>
+      <label for="[% prefname %]">Email me when someone asks me to set a flag</label>
+      <br>
+    </td>
+  </tr>
+  <tr>
+    <td width="150"></td>
+    <td>
+      [% prefname = "email-$constants.REL_ANY-$constants.EVT_REQUESTED_FLAG" %]
+      <input type="checkbox" name="[% prefname %]" id="[% prefname %]" 
+        value="1"
+        [% " checked" IF 
+                  mail.${constants.REL_ANY}.${constants.EVT_REQUESTED_FLAG} %]>
+      <label for="[% prefname %]">Email me when someone sets a flag I asked for</label>
+      <br>
+    </td>
+  </tr>
+[% IF user.is_global_watcher %]
+  <tr>
+    <td width="150"></td>
+    <td>
+      You are watching all [% terms.bugs %]. To be removed from this role,
+      contact
+      <a href="mailto:[% Param("maintainer") %]">[% Param("maintainer") %]</a>.
+    </td>
+  </tr>
+[% END %]
+</table>
+
+<hr>
+<b>Field/recipient specific options:</b>
+<br>
+<br>
+
+[% events = [
+    { id = constants.EVT_ADDED_REMOVED,
+      description = "I'm added to or removed from this capacity" },
+    { id = constants.EVT_OPENED_CLOSED,
+      description = "The $terms.bug is resolved or reopened" },
+    { id = constants.EVT_PROJ_MANAGEMENT,
+      description = "The priority, status, severity, or milestone changes" },
+    { id = constants.EVT_COMMENT,
+      description = "New comments are added" },
+    { id = constants.EVT_ATTACHMENT,
+      description = "New attachments are added" },
+    { id = constants.EVT_ATTACHMENT_DATA,
+      description = "Some attachment data changes" },
+    { id = constants.EVT_KEYWORD,
+      description = "The keywords field changes" },
+    { id = constants.EVT_CC,
+      description = "The CC field changes" },
+    { id = constants.EVT_DEPEND_BLOCK,
+      description = "The dependency tree changes" },
+    { id = constants.EVT_OTHER,
+      description = "Any field not mentioned above changes" },
+] %]
+
+[% neg_events = [
+    { id = constants.EVT_UNCONFIRMED,
+      description = "The $terms.bug is in the UNCONFIRMED state" },
+    { id = constants.EVT_CHANGED_BY_ME,
+      description = "The change was made by me" },
+] %]
+
+[% relationships = [
+    { id = constants.REL_ASSIGNEE,
+      description = "Assignee" },
+    { id = constants.REL_QA,
+      description = "QA Contact" },
+    { id = constants.REL_REPORTER,
+      description = "Reporter" },
+    { id = constants.REL_CC,
+      description = "CCed" },
+    { id = constants.REL_VOTER,
+      description = "Voter" },
+] %]
+
+<table class="bz_emailprefs" border="1">
+  <tr>
+    <td colspan="[% (useqacontact AND usevotes) ? '5' : 
+                     ((useqacontact OR usevotes) ? '4' : '3') %]" 
+        align="center" width="50%">
+      <b>When my relationship to this [% terms.bug %] is:</b>
+    </td>
+    <td rowspan="2" width="40%">
+      <b>I want to receive mail when:</b>
+    </td>
+  </tr>
+
+  <tr>
+    [% FOREACH relationship = relationships %]
+      [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+                 (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+      <th align="center" width="9%">
+        [% relationship.description FILTER html %]
+      </th>
+    [% END %]
+  </tr>
+  
+  [% FOREACH event = events %]  
+    [% count = loop.count() %]
+    <tr class="bz_row_[% count % 2 == 1 ? "odd" : "even" %]">
+      [% FOREACH relationship = relationships %]
+      [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+                 (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+        <td align="center">
+          <input type="checkbox" 
+            name="email-[% relationship.id %]-[% event.id %]"
+            value="1"
+            [%# The combinations don't always make sense; disable a couple %]
+            [% IF event.id == constants.EVT_ADDED_REMOVED AND 
+                 (relationship.id == constants.REL_REPORTER OR
+                  relationship.id == constants.REL_VOTER) %]
+               disabled
+            [% ELSIF mail.${relationship.id}.${event.id} %]
+               checked
+            [% END %]>
+        </td>
+      [% END %]
+      <td>
+        [% event.description FILTER html %]
+      </td>
+    </tr>
+  [% END %]
+  
+  <tr>
+    <td colspan="[% (useqacontact AND usevotes) ? '5' : 
+                     ((useqacontact OR usevotes) ? '4' : '3') %]" 
+        align="center" width="50%">
+      &nbsp;
+    </td>
+    <td width="40%">
+      <b>but not when (overrides above):</b>
+    </td>
+  </tr>
+
+  [% FOREACH event = neg_events %]  
+    [% count = loop.count() %]
+    <tr class="bz_row_[% count % 2 == 1 ? "odd" : "even" %]">
+      [% FOREACH relationship = relationships %]
+        [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+                   (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+        <td align="center">
+          <input type="checkbox" 
+            name="neg-email-[% relationship.id %]-[% event.id %]"
+            value="1"
+            [% " checked" IF NOT mail.${relationship.id}.${event.id} %]>
+        </td>
+      [% END %]
+      <td>
+        [% event.description FILTER html %]
+      </td>
+    </tr>
+  [% END %]
+  
+</table>
+
+[%# Add hidden form fields for fields not used %]
+[% FOREACH event = events %]  
+  [% FOREACH relationship = relationships %]
+    [% IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+          (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+      <input type="hidden" 
+        name="email-[% relationship.id %]-[% event.id %]"
+        value="[% mail.${relationship.id}.${event.id} ? "1" : "0" %]">
+    [% END %]
+  [% END %]
+[% END %]
+
+[% FOREACH event = neg_events %]  
+  [% FOREACH relationship = relationships %]
+    [% IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
+          (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
+      <input type="hidden" 
+        name="neg-email-[% relationship.id %]-[% event.id %]"
+        value="[% mail.${relationship.id}.${event.id} ? "0" : "1" %]">
+    [% END %]
+  [% END %]
+[% END %]
+
+[% IF Param('supportwatchers') %]
+<hr>
+<b>User Watching</b>
+
+<p>
+If you watch a user, it is as if you are standing in their shoes for the 
+purposes of getting email. Email is sent or not according to <u>your</u>
+preferences for <u>their</u> relationship to the [% terms.bug %] 
+(e.g. Assignee).
+</p>
+
+<p>
+[% IF watchedusers.size %]
+You are watching everyone in the following list:
+  </p>
+  <p>
+    <select id="watched_by_you" name="watched_by_you" multiple="multiple" size="5">
+        [% FOREACH w = watchedusers %]
+           <option value="[% w FILTER html %]">[% w FILTER html %]</option>
+        [% END %]
+    </select> <br />
+    <input type="checkbox" id="remove_watched_users" name="remove_watched_users">
+    <label for="remove_watched_users">Remove selected users from my watch list</label>
+[% ELSE %]
+You are currently not watching any users.
+[% END %]
+</p>
+
+<p><a name="new_watched_by_you" id="new_watched_by_you">Add users to my watch list (comma separated list)</a>:
+  <input size="60" name="new_watchedusers" value="">
+</p>            
+
+<p><a name="watching_you" id="watching_you">Users watching you</a>:<br>
+  [% IF watchers.size %]
+    [% FOREACH watcher = watchers %]
+      [% watcher FILTER html %] <br>
+    [% END %]
+  [% ELSE %]
+    <i>No one</i>
+  [% END %]
+</p>
+
+[% END %]
+
+<hr>
+
+<br>

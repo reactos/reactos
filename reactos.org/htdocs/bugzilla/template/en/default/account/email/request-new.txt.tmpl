@@ -1,0 +1,45 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # token: random string used to authenticate the transaction.
+  # token_ts: creation date of the token.
+  # email: email address of the new account.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% expiration_ts = token_ts + (constants.MAX_TOKEN_AGE * 86400) %]
+From: [% Param('mailfrom') %]
+To: [% email %]
+Subject: [% terms.Bugzilla %]: confirm account creation
+X-Bugzilla-Type: admin
+
+[%+ terms.Bugzilla %] has received a request to create a user account
+using your email address ([% email %]).
+
+To confirm that you want to create an account using that email address,
+visit the following link:
+
+[%+ Param('urlbase') %]token.cgi?t=[% token FILTER url_quote %]&a=request_new_account
+
+If you are not the person who made this request, or you wish to cancel
+this request, visit the following link:
+
+[%+ Param('urlbase') %]token.cgi?t=[% token FILTER url_quote %]&a=cancel_new_account
+
+If you do nothing, the request will lapse after [%+ constants.MAX_TOKEN_AGE %] days
+(on [%+ time2str("%B %o, %Y at %H:%M %Z", expiration_ts) %]).

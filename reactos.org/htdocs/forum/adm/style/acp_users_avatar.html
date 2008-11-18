@@ -1,0 +1,76 @@
+	<form id="avatar_settings" method="post" action="{U_ACTION}"<!-- IF S_CAN_UPLOAD --> enctype="multipart/form-data"<!-- ENDIF -->>
+
+	<fieldset>
+		<legend>{L_ACP_USER_AVATAR}</legend>
+	<dl>
+		<dt><label>{L_CURRENT_IMAGE}:</label><br /><span>{L_AVATAR_EXPLAIN}</span></dt>
+		<dd>{AVATAR_IMAGE}</dd>
+		<dd><label><input type="checkbox" class="radio" name="delete" /> {L_DELETE_AVATAR}</label></dd>
+	</dl>
+	<!-- IF not S_IN_AVATAR_GALLERY -->
+		<!-- IF S_CAN_UPLOAD -->
+			<dl> 
+				<dt><label for="uploadfile">{L_UPLOAD_AVATAR_FILE}:</label></dt>
+				<dd><input type="hidden" name="MAX_FILE_SIZE" value="{AVATAR_MAX_FILESIZE}" /><input type="file" id="uploadfile" name="uploadfile" /></dd>
+			</dl>
+			<dl>
+				<dt><label for="uploadurl">{L_UPLOAD_AVATAR_URL}:</label><br /><span>{L_UPLOAD_AVATAR_URL_EXPLAIN}</span></dt>
+				<dd><input name="uploadurl" type="text" id="uploadurl" value="" /></dd>
+			</dl>
+		<!-- ENDIF -->
+		<!-- IF S_ALLOW_REMOTE -->
+			<dl>
+				<dt><label for="remotelink">{L_LINK_REMOTE_AVATAR}:</label><br /><span>{L_LINK_REMOTE_AVATAR_EXPLAIN}</span></dt>
+				<dd><input name="remotelink" type="text" id="remotelink" value="" /></dd>
+			</dl>
+			<dl>
+				<dt><label for="width">{L_LINK_REMOTE_SIZE}:</label><br /><span>{L_LINK_REMOTE_SIZE_EXPLAIN}</span></dt>
+				<dd><input name="width" type="text" id="width" size="3" value="{USER_AVATAR_WIDTH}" /> <span>px X </span> <input type="text" name="height" size="3" value="{USER_AVATAR_HEIGHT}" /> <span>px</span></dd>
+			</dl>
+		<!-- ENDIF -->
+		<!-- IF S_DISPLAY_GALLERY -->
+			<dl> 
+				<dt><label>{L_AVATAR_GALLERY}:</label></dt>
+				<dd><input class="button2" type="submit" name="display_gallery" value="{L_DISPLAY_GALLERY}" /></dd>
+			</dl>
+		<!-- ENDIF -->
+	<!-- ELSE -->
+		</fieldset>
+
+		<fieldset>
+			<legend>{L_AVATAR_GALLERY}</legend>
+		<dl>
+			<dt><label for="category">{L_AVATAR_CATEGORY}:</label></dt>
+			<dd><select name="category" id="category">{S_CAT_OPTIONS}</select>&nbsp;<input class="button2" type="submit" value="{L_GO}" name="display_gallery" /></dd>
+		</dl>
+		<dl>
+			<table cellspacing="1">
+			<!-- BEGIN avatar_row -->
+			<tr> 
+				<!-- BEGIN avatar_column -->
+					<td class="row1" style="text-align: center;"><img src="{avatar_row.avatar_column.AVATAR_IMAGE}" alt="{avatar_row.avatar_column.AVATAR_NAME}" title="{avatar_row.avatar_column.AVATAR_NAME}" /></td>
+				<!-- END avatar_column -->
+			</tr>
+			<tr>
+				<!-- BEGIN avatar_option_column -->
+					<td class="row2" style="text-align: center;"><input type="radio" class="radio" name="avatar_select" value="{avatar_row.avatar_option_column.S_OPTIONS_AVATAR}" /></td>
+				<!-- END avatar_option_column -->
+			</tr>
+			<!-- END avatar_row -->
+			</table>
+		</dl>
+		</fieldset>
+		
+		<fieldset class="quick" style="margin-top: -15px;">
+			<input class="button2" type="submit" name="cancel" value="{L_CANCEL}" />
+		</fieldset>
+	
+	<!-- ENDIF -->
+	</fieldset>
+
+	<fieldset class="quick">
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	
+	</form>

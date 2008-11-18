@@ -1,0 +1,110 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Akamai Technologies <bugzilla-dev@akamai.com>
+  #%]
+
+[%# INTERFACE:
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the component belongs.
+  #%]
+  
+[% title = BLOCK %]Add component to Product '[% product.name FILTER html %]'[% END %]
+[% subheader = BLOCK %]This page allows you to add a new component to product
+                '[% product.name FILTER html %]'.[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+  subheader = subheader
+%]
+
+<form method="post" action="editcomponents.cgi">
+  <table border="0" cellpadding="4" cellspacing="0">
+    <tr>
+      <th align="right">Component:</th>
+      <td><input size="64" maxlength="64" name="component" value=""></td>
+    </tr>
+    <tr>
+      <th align="right">Description:</th>
+      <td>
+        [% INCLUDE global/textarea.html.tmpl
+          name    = 'description'
+          minrows = 4
+          cols    = 64
+          wrap    = 'virtual'
+        %]
+      </td>
+    </tr>
+    <tr>
+      <th align="right"><label for="initialowner">Default Assignee:</label></th>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name => "initialowner"
+           id => "initialowner"
+           value => ""
+           size => 64
+           emptyok => 1
+         %]
+      </td>
+    </tr>
+[% IF Param('useqacontact') %]
+    <tr>
+      <th align="right">
+        <label for="initialqacontact">Default QA Contact:</label></th>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name => "initialqacontact"
+           id => "initialqacontact"
+           value => ""
+           size => 64
+           emptyok => 1
+         %]
+      </td>
+    </tr>
+[% END %]
+    <tr>
+      <th align="right">
+        <label for="initialcc">Default CC List:</label>
+      </th>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name => "initialcc"
+           id => "initialcc"
+           value => ""
+           size => 64
+           multiple => 5
+        %]
+        <br>
+        [% IF !Param("usemenuforusers") %]
+          <em>Enter user names for the CC list as a comma-separated list.</em>
+        [% END %]
+      </td>
+    </tr>
+  </table>
+  <hr>
+  <input type="submit" id="create" value="Add">
+  <input type="hidden" name="action" value="new">
+  <input type="hidden" name='open_name' value='All Open'>
+  <input type="hidden" name='nonopen_name' value='All Closed'>
+  <input type="hidden" name='product' value="[% product.name FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+</form>
+
+[% PROCESS admin/components/footer.html.tmpl %]
+
+[% PROCESS global/footer.html.tmpl %]

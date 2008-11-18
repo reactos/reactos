@@ -1,0 +1,67 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Albert Ting <alt@sonic.net>
+  #%]
+
+[% PROCESS global/header.html.tmpl
+  title = "Select classification"
+%]
+
+<table border=1 cellpadding=4 cellspacing=0>
+  <tr bgcolor="#6666ff">
+    <th align="left">Edit Classification ...</th>
+    <th align="left">Description</th>
+    <th align="left">Sortkey</th>
+    <th align="left">Products</th>
+    <th align="left">Action</th>
+  </tr>
+
+  [% FOREACH cl = classifications %]
+    <tr>
+      <td valign="top"><a href="editclassifications.cgi?action=edit&amp;classification=[% cl.name FILTER url_quote %]"><b>[% cl.name FILTER html %]</b></a></td>
+      <td valign="top"> 
+      [% IF cl.description %]
+        [% cl.description FILTER html_light %]
+      [% ELSE %]
+        <font color="red">none</font>
+      [% END %]
+      </td>
+      <td valign="top">[% cl.sortkey FILTER html %]</td>
+      [% IF (cl.id == 1) %]
+        <td valign="top">[% cl.product_count FILTER html %]</td>
+      [% ELSE %]
+        <td valign="top"><a href="editclassifications.cgi?action=reclassify&amp;classification=[% cl.name FILTER url_quote %]">reclassify ([% cl.product_count FILTER html %])</a></td>
+      [% END %]
+
+      [%# don't allow user to delete the default id. %]
+      [% IF (cl.id == 1) %]
+        <td valign="top">&nbsp;</td>
+      [% ELSE %]
+        <td valign="top"><a href="editclassifications.cgi?action=del&amp;classification=[% cl.name FILTER url_quote %]">delete</a></td>
+      [% END %]
+    </tr>
+  [% END %]
+
+  <tr>
+    <td valign="top" colspan=4>Add a new classification</td>
+    <td valign="top" align="center"><a href="editclassifications.cgi?action=add">Add</a></td>
+  </tr>
+</table>
+
+[% PROCESS global/footer.html.tmpl %] 

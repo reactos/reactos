@@ -1,0 +1,46 @@
+/* MediaWiki print stylesheet */
+
+body {
+	color: #000000; background: #ffffff;
+}
+
+
+/* MSIE/Win doesn't understand 'inherit' */
+a, a.external, a.new, a.stub {
+	color: black ! important;
+	text-decoration: none ! important;
+}
+#article {
+	margin: 0 ! important;
+}
+
+/* Continue ... */
+a, a.external, a.new, a.stub {
+	color: inherit ! important;
+	text-decoration: inherit ! important;
+}
+
+/* Hide ugly UI stuff */
+#quickbar, #topbar, #footer, #siteNotice,
+.editsection, .toctoggle {
+	display: none;
+}
+
+/* */
+#article {
+	position: relative;
+	margin: inherit ! important;
+}
+
+.printfooter {
+	border-top: solid 1px black;
+	display: block ! important;
+}
+
+/* Old stuff, fixme:
+a.CBlink { color: #0000AA; text-decoration: none; font-size: 12pt; }
+a.interwiki, a.external { color: #3333BB; text-decoration: none; }
+h1.pagetitle { padding-bottom: 0; margin-bottom: 0; }
+i.link, u.link { color: #000066; }
+p.subtitle { padding-top: 0; margin-top: 0; }
+*/

@@ -1,0 +1,29 @@
+body { background-color: #234; color: #dd8; font-family: tahoma; font-size: 12px; }
+
+a:link, a:visited { color: #8cf; }
+a:hover { color: #ff8; }
+
+h1 { background-color: #456; color: #ff8; padding: 2px 5px; border: 1px solid; border-color: #678 #012 #012 #678; }
+
+/* syntax highlighting (used by the first combo defined for the CSS plugin) */
+
+pre { margin: 0px 1em; padding: 5px 1em; background-color: #000; border: 1px dotted #02d; border-left: 2px solid #04f; }
+.code { color: #f5deb3; }
+.string { color: #00ffff; }
+.comment { color: #8fbc8f; }
+.variable-name { color: #fa8072; }
+.type { color: #90ee90; font-weight: bold; }
+.reference { color: #ee82ee; }
+.preprocessor { color: #faf; }
+.keyword { color: #ffffff; font-weight: bold; }
+.function-name { color: #ace; }
+.html-tag { font-weight: bold; }
+.html-helper-italic { font-style: italic; }
+.warning { color: #ffa500; font-weight: bold; }
+.html-helper-bold { font-weight: bold; }
+
+/* info combo */
+
+.quote { font-style: italic; color: #ee9; }
+.highlight { background-color: yellow; color: #000; }
+.deprecated { text-decoration: line-through; color: #aaa; }

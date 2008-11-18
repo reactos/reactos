@@ -1,0 +1,125 @@
+/* CSS derived from rafb.net */
+
+BODY {
+	MARGIN: 0px; FONT-FAMILY: Verdana, Geneva, Arial, Helvetica, sans-serif; BACKGROUND-COLOR: white
+}
+A {
+	COLOR: #0000cc
+}
+A:visited {
+	COLOR: #0000cc
+}
+A:hover {
+	COLOR: #cc9900; TEXT-DECORATION: underline
+}
+.content_body {
+	PADDING-RIGHT: 20px; PADDING-LEFT: 20px; WIDTH: 90%; PADDING-TOP: 20px
+}
+.intro_heading {
+	FONT-WEIGHT: bold; COLOR: #330099; FONT-STYLE: italic; FONT-FAMILY: Georgia, Times New Roman, Times
+}
+.intro_text {
+	FONT-SIZE: smaller; FONT-FAMILY: Verdana, Geneva, Arial, Helvetica, sans-serif
+}
+.menu {
+	LEFT: 0px; VERTICAL-ALIGN: middle; PADDING-TOP: 5px; BORDER-BOTTOM: ghostwhite 10px outset; TOP: 0px
+}
+.button {
+	BORDER-RIGHT: black 1px outset; PADDING-RIGHT: 3px; BORDER-TOP: black 1px outset; PADDING-LEFT: 3px; FONT-WEIGHT: bold; FONT-SIZE: 14pt; PADDING-BOTTOM: 3px; BORDER-LEFT: black 1px outset; COLOR: gray; PADDING-TOP: 3px; BORDER-BOTTOM: black 1px outset; FONT-FAMILY: Arial, sans-serif; BACKGROUND-COLOR: whitesmoke
+}
+.button#selected {
+	BORDER-RIGHT: black 1px outset; PADDING-RIGHT: 3px; BORDER-TOP: black 1px outset; PADDING-LEFT: 3px; FONT-WEIGHT: bold; PADDING-BOTTOM: 3px; BORDER-LEFT: black 1px outset; COLOR: ghostwhite; PADDING-TOP: 3px; BORDER-BOTTOM: black 1px outset; BACKGROUND-COLOR: gray
+}
+.button A {
+	TEXT-DECORATION: none
+}
+.content {
+	FONT-SIZE: medium
+}
+.links {
+	FONT-SIZE: small
+}
+.footer {
+	FONT-SIZE: xx-small; TEXT-ALIGN: center
+}
+.listent {
+	FONT-SIZE: small
+}
+.title {
+	FONT-WEIGHT: bold; FONT-SIZE: large
+}
+.subtitle {
+	FONT-WEIGHT: bold; FONT-SIZE: small
+}
+.subpage {
+	LEFT: 0px; VERTICAL-ALIGN: middle; BORDER-BOTTOM: ghostwhite 10px outset; TOP: 0px
+}
+.pasteinfo {
+	MARGIN-TOP: 5px; MARGIN-LEFT: 5px
+}
+.blockdef {
+	BORDER-RIGHT: darkgray 2px inset; PADDING-RIGHT: 10px; BORDER-TOP: darkgray 2px inset; MARGIN-TOP: 30px; PADDING-LEFT: 10px; PADDING-BOTTOM: 5px; BORDER-LEFT: darkgray 2px inset; PADDING-TOP: 5px; BORDER-BOTTOM: darkgray 2px inset; BACKGROUND-COLOR: #fafafa
+}
+.contentblock {
+	
+}
+.ruledef {
+	TEXT-DECORATION: underline
+}
+.code {
+	BORDER-RIGHT: ghostwhite 2px outset; PADDING-RIGHT: 3px; BORDER-TOP: ghostwhite 2px outset; PADDING-LEFT: 3px; PADDING-BOTTOM: 3px; BORDER-LEFT: ghostwhite 2px outset; WIDTH: 100%; PADDING-TOP: 3px; BORDER-BOTTOM: ghostwhite 2px outset; BACKGROUND-COLOR: #f6f6f6
+}
+.code2 {
+	PADDING-RIGHT: 0px; MARGIN-RIGHT: 0px; FONT-FAMILY: Fixedsys, "Lucida Console", monospace; BACKGROUND-COLOR: #b2b2ae
+}
+.action {
+	COLOR: #efefef
+}
+.desc {
+	FONT-SIZE: x-small
+}
+.bookdesc {
+	FONT-SIZE: 70%
+}
+.html_entity {
+	COLOR: red
+}
+.xml_pi {
+	COLOR: blue
+}
+.xml_tag {
+	COLOR: mediumblue
+}
+.keyword {
+	COLOR: mediumblue
+}
+.comment {
+	COLOR: green
+}
+.literal {
+	COLOR: purple
+}
+.sch_literal {
+	COLOR: green
+}
+.quotenum {
+	BORDER-RIGHT: black 1px solid; COLOR: ghostwhite; BACKGROUND-COLOR: gray
+}
+.quotenum A {
+	COLOR: ghostwhite; TEXT-DECORATION: none
+}
+.quotenum A:visited {
+	COLOR: ghostwhite; TEXT-DECORATION: none
+}
+.kicked {
+	MARGIN: 4px; COLOR: darkred
+}
+.mode {
+	MARGIN: 4px; COLOR: darkred
+}
+.joined {
+	MARGIN: 4px; COLOR: darkblue
+}
+.listitem {
+	BORDER-RIGHT: ghostwhite 2px outset; BORDER-TOP: ghostwhite 2px outset; BORDER-LEFT: ghostwhite 2px outset; BORDER-BOTTOM: ghostwhite 2px outset
+}

@@ -1,7 +1,0 @@
-<package>
-  <name>Putty</name>
-  <version>beta 0.58</version>
-  <description>SSH and Telnet client.</description>
-  <scripts inst="putty.inst.rps"/>
-</package>
-

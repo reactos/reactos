@@ -1,0 +1,54 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<h1>{L_ACP_MASS_EMAIL}</h1>
+
+<p>{L_ACP_MASS_EMAIL_EXPLAIN}</p>
+
+<!-- IF S_WARNING -->
+	<div class="errorbox">
+		<h3>{L_WARNING}</h3>
+		<p>{WARNING_MSG}</p>
+	</div>
+<!-- ENDIF -->
+
+<form id="acp_email" method="post" action="{U_ACTION}">
+
+<fieldset>
+	<legend>{L_COMPOSE}</legend>
+<dl>
+	<dt><label for="group">{L_SEND_TO_GROUP}:</label></dt>
+	<dd><select id="group" name="g">{S_GROUP_OPTIONS}</select></dd>
+</dl>
+<dl>
+	<dt><label for="usernames">{L_SEND_TO_USERS}:</label><br /><span>{L_SEND_TO_USERS_EXPLAIN}</span></dt>
+	<dd><textarea name="usernames" id="usernames" rows="5" cols="40">{USERNAMES}</textarea></dd>
+	<dd>[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</dd>
+</dl>
+<dl>
+	<dt><label for="subject">{L_SUBJECT}:</label></dt>
+	<dd><input name="subject" type="text" id="subject" value="{SUBJECT}" /></dd>
+</dl>
+<dl>
+	<dt><label for="message">{L_MASS_MESSAGE}:</label><br /><span>{L_MASS_MESSAGE_EXPLAIN}</span></dt>
+	<dd><textarea id="message" name="message" rows="10" cols="60">{MESSAGE}</textarea></dd>
+</dl>
+<dl>
+	<dt><label for="priority">{L_MAIL_PRIORITY}:</label></dt>
+	<dd><select id="priority" name="mail_priority_flag">{S_PRIORITY_OPTIONS}</select></dd>
+</dl>
+<dl>
+	<dt><label for="send">{L_SEND_IMMEDIATELY}:</label></dt>
+	<dd><input id="send" type="checkbox" class="radio" name="send_immediately" checked="checked" /></dd>
+</dl>
+
+<p class="submit-buttons">
+	<input class="button1" type="submit" id="submit" name="submit" value="{L_EMAIL}" />&nbsp;
+	<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+</p>
+{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<!-- INCLUDE overall_footer.html -->

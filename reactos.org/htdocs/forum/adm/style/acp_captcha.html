@@ -1,0 +1,70 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<h1>{L_ACP_VC_SETTINGS}</h1>
+
+<p>{L_ACP_VC_SETTINGS_EXPLAIN}</p>
+
+
+<form id="acp_captcha" method="post" action="{U_ACTION}">
+
+<fieldset>
+<legend>{L_GENERAL_OPTIONS}</legend>
+
+<dl>
+	<dt><label for="enable_confirm">{L_VISUAL_CONFIRM_REG}:</label><br /><span>{L_VISUAL_CONFIRM_REG_EXPLAIN}</span></dt>
+	<dd><label><input type="radio" class="radio" id="enable_confirm" name="enable_confirm" value="1"<!-- IF REG_ENABLE --> checked="checked"<!-- ENDIF --> /> {L_ENABLED}</label>
+		<label><input type="radio" class="radio" name="enable_confirm" value="0"<!-- IF not REG_ENABLE --> checked="checked"<!-- ENDIF --> /> {L_DISABLED}</label></dd>
+</dl>
+<dl>
+	<dt><label for="enable_post_confirm">{L_VISUAL_CONFIRM_POST}:</label><br /><span>{L_VISUAL_CONFIRM_POST_EXPLAIN}</span></dt>
+	<dd><label><input type="radio" class="radio" id="enable_post_confirm" name="enable_post_confirm" value="1"<!-- IF POST_ENABLE --> checked="checked"<!-- ENDIF --> /> {L_ENABLED}</label>
+		<label><input type="radio" class="radio" name="enable_post_confirm" value="0"<!-- IF not POST_ENABLE --> checked="checked"<!-- ENDIF --> /> {L_DISABLED}</label></dd>
+</dl>
+<!-- IF GD -->
+<dl>
+	<dt><label for="captcha_gd">{L_CAPTCHA_GD}:</label><br /><span>{L_CAPTCHA_GD_EXPLAIN}</span></dt>
+	<dd><label><input id="captcha_gd" name="captcha_gd" value="1" class="radio" type="radio"<!-- IF CAPTCHA_GD --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+		<label><input name="captcha_gd" value="0" class="radio" type="radio"<!-- IF not CAPTCHA_GD --> checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+</dl>
+<dl>
+	<dt><label for="captcha_gd_foreground_noise">{L_CAPTCHA_GD_FOREGROUND_NOISE}:</label><br /><span>{L_CAPTCHA_GD_FOREGROUND_NOISE_EXPLAIN}</span></dt>
+	<dd><label><input id="captcha_gd_foreground_noise" name="captcha_gd_foreground_noise" value="1" class="radio" type="radio"<!-- IF CAPTCHA_GD_FOREGROUND_NOISE --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+		<label><input name="captcha_gd_foreground_noise" value="0" class="radio" type="radio"<!-- IF not CAPTCHA_GD_FOREGROUND_NOISE --> checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+</dl>
+<dl>
+	<dt><label for="captcha_gd_x_grid">{L_CAPTCHA_GD_X_GRID}:</label><br /><span>{L_CAPTCHA_GD_X_GRID_EXPLAIN}</span></dt>
+	<dd><input id="captcha_gd_x_grid" name="captcha_gd_x_grid" value="{CAPTCHA_GD_X_GRID}" type="text" /></dd>
+</dl>
+<dl>
+	<dt><label for="captcha_gd_y_grid">{L_CAPTCHA_GD_Y_GRID}:</label><br /><span>{L_CAPTCHA_GD_Y_GRID_EXPLAIN}</span></dt>
+	<dd><input id="captcha_gd_y_grid" name="captcha_gd_y_grid" value="{CAPTCHA_GD_Y_GRID}" type="text" /></dd>
+</dl>
+<!-- ENDIF -->
+
+</fieldset>
+<fieldset>
+	<legend>{L_PREVIEW}</legend>
+<!-- IF PREVIEW -->
+	<div class="successbox">
+		<h3>{L_WARNING}</h3>
+		<p>{L_CAPTCHA_PREVIEW_MSG}</p>
+	</div>
+<!-- ENDIF -->
+<dl>
+	<dt><label for="captcha_preview">{L_PREVIEW}:</label><br /><span>{L_CAPTCHA_PREVIEW_EXPLAIN}</span></dt>
+	<dd><img src="{CAPTCHA_PREVIEW}" alt="{L_PREVIEW}" <!-- IF CAPTCHA_GD_PREVIEWED -->width="360" height="96"<!-- ELSE --> width="320" height="50"<!-- ENDIF --> id="captcha_preview" /></dd>
+</dl>
+</fieldset>
+
+<fieldset class="submit-buttons">
+	<legend>{L_SUBMIT}</legend>
+	<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+	<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />&nbsp;
+	<input class="button2" type="submit" id="preview" name="preview" value="{L_PREVIEW}" />
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<!-- INCLUDE overall_footer.html -->

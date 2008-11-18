@@ -1,0 +1,141 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # This template has no interface. However, to use it, you need to fulfill
+  # the interfaces of the templates it contains.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% js_data = BLOCK %]
+var queryform = "reportform"
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Generate Graphical Report"
+  onload = "doOnSelectProduct(0); chartTypeChanged()"
+  javascript = js_data
+  javascript_urls = [ "js/productform.js" ]
+%]
+
+[% PROCESS "search/search-report-select.html.tmpl" %]
+
+<p>
+  Choose one or more fields as your axes, and then refine your set of 
+  [% terms.bugs %] using the rest of the form.
+</p>
+
+<script type="text/javascript"><!--
+  [%# The Y-axis fields are not used for pie charts %]
+  function chartTypeChanged() {
+    // format[2] is the pie chart radio button
+    if (document.reportform.format[2].checked == true) {
+      document.reportform.y_axis_field.disabled = true;
+      document.reportform.cumulate[0].disabled = true;
+      document.reportform.cumulate[1].disabled = true;
+    } else {
+      document.reportform.y_axis_field.disabled = false;
+      document.reportform.cumulate[0].disabled = false;
+      document.reportform.cumulate[1].disabled = false;
+    }
+  }
+// -->
+</script>
+
+[% button_name = "Generate Report" %]
+
+<form method="get" action="report.cgi" name="reportform">
+
+<table align="center">
+  <tr>
+    <td valign="middle">
+      <b>Vertical Axis:</b><br>
+      <noscript><small>(not for pie charts)</small><br></noscript>
+      [% PROCESS select name = 'y_axis_field' %]<br>
+      <br>
+        <b>Plot Data Sets:</b><br>
+        <input type="radio" name="cumulate" value="0"
+        [% " checked" IF default.cumulate.0 != "1" %]>
+        Individually<br>
+        <input type="radio" name="cumulate" value="1"
+        [% " checked" IF default.cumulate.0 == "1" %]>
+        Stacked
+    </td>
+    <td width="150" height="150">
+      <table border="1" width="100%" height="100%">
+        <tr>
+          <td align="center" valign="middle">
+            <b>Multiple Images:</b><br>
+            [% PROCESS select name = 'z_axis_field' %]
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td rowspan="2">
+      <b>Format:</b><br>
+      [% chart_formats = [
+        { name => "line", description => "Line Graph" },
+        { name => "bar",  description => "Bar Chart" },
+        { name => "pie",  description => "Pie Chart" } ] %]
+      [% default.chart_format.0 = default.chart_format.0 || "bar" %]
+
+      [% FOREACH chart_format = chart_formats %]
+        <input type="radio" name="format"
+               value="[% chart_format.name FILTER html %]"
+               onchange="chartTypeChanged()"
+          [% " checked" IF default.chart_format.0 == chart_format.name %]>
+          [% chart_format.description FILTER html %]<br>
+      [% END %]
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+    </td>
+    <td align="left">
+      <b>Horizontal Axis:</b>
+      [% PROCESS select name = 'x_axis_field' %]<br>
+      <label for="x_labels_vertical"><b>Vertical labels:</b></label>
+      <input type="checkbox" name="x_labels_vertical" id="x_labels_vertical"
+             value="1"
+         [% " checked" IF default.x_labels_vertical.0 == "1" %]>
+     </td>
+    <td>
+    </td>
+  </tr>
+</table>
+
+<hr>
+
+[% PROCESS search/form.html.tmpl %]
+
+<br>
+<input type="submit" id="[% button_name FILTER html %]"
+       value="[% button_name FILTER html %]">
+<input type="hidden" name="action" value="wrap">
+<hr>
+
+[% PROCESS "search/boolean-charts.html.tmpl" %]
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

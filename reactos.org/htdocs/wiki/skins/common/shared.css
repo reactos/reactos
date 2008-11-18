@@ -1,0 +1,249 @@
+/**
+ * CSS in this file is used by *all* skins (that have any CSS at all).  Be
+ * careful what you put in here, since what looks good in one skin may not in
+ * another, but don't ignore the poor non-Monobook users either.
+ */
+.mw-plusminus-null { color: #aaa; }
+
+.texvc { direction: ltr; unicode-bidi: embed; }
+img.tex { vertical-align: middle; }
+span.texhtml { font-family: serif; }
+
+/* Stop floats from intruding into edit area in previews */
+#toolbar, #wpTextbox1 { clear: both; }
+
+div#mw-js-message {
+	margin: 1em 5%;
+	padding: 0.5em 2.5%;
+	border: solid 1px #ddd;
+	background-color: #fcfcfc;
+}
+
+/* Edit section links */
+.editsection {
+	float: right;
+	margin-left: 5px;
+}
+
+/**
+ * File histories
+ */
+table.filehistory {
+	border:1px solid #ccc;
+	border-collapse:collapse;
+}
+
+table.filehistory th,
+table.filehistory td {
+	padding: 0 0.2em 0 0.2em;
+	vertical-align:top;
+	border:1px solid #ccc;
+}
+table.filehistory th {
+	text-align: left;
+}
+table.filehistory td.mw-imagepage-filesize,
+table.filehistory th.mw-imagepage-filesize {
+	white-space:nowrap;
+}
+
+table.filehistory td.filehistory-selected {
+	font-weight: bold;
+}
+
+/*
+ * rev_deleted stuff
+ */
+li span.deleted, span.history-deleted {
+	text-decoration: line-through;
+	color: #888;
+	font-style: italic;
+}
+
+/**
+ * Forms
+ */
+body.ltr td.mw-label { text-align: right; }
+body.ltr td.mw-input { text-align: left; }
+body.ltr td.mw-submit { text-align: left; }
+body.rtl td.mw-label { text-align: left; }
+body.rtl td.mw-input { text-align: right; }
+body.rtl td.mw-submit { text-align: right; }
+
+td.mw-label { vertical-align: top; }
+td.mw-submit { white-space: nowrap; }
+
+/**
+ * Image captions
+ */
+body.rtl .thumbcaption { text-align:right; }
+body.rtl .magnify { float:left; }
+
+body.ltr .thumbcaption { text-align:left; }
+body.ltr .magnify { float:right; }
+
+/**
+ * Hidden categories
+ */
+.mw-hidden-cats-hidden { display: none; }
+.catlinks-allhidden { display: none; }
+
+/* Convenience links to edit block and delete reasons */
+p.mw-ipb-conveniencelinks, p.mw-filedelete-editreasons, p.mw-delete-editreasons {
+	font-size: 90%;
+	float: right;
+}
+
+/* Search results */
+div.searchresult {
+	font-size: 95%;
+	width:38em;
+}
+.mw-search-results li {
+	padding-bottom: 1em;
+}
+.mw-search-result-data {
+	color: green;
+	font-size: 97%;
+}
+
+div#mw-search-interwiki {
+	float: right;
+	width: 18em;
+	border-style: solid;
+	border-color: #AAAAAA;
+	border-width: 1px;
+	margin-top: 2ex;
+}
+
+div#mw-search-interwiki li {
+	font-size: 95%;
+}
+
+.mw-search-interwiki-more {
+	float: right;
+	font-size: 90%;
+}
+
+span.searchalttitle {
+	font-size: 95%;
+}
+
+div.searchdidyoumean {
+	font-size: 127%;
+	padding-bottom:1ex;
+	padding-top:1ex; 
+}
+
+/*
+ * UserRights stuff
+ */
+.mw-userrights-disabled {
+	color: #888;
+}
+
+table.mw-userrights-groups * td,table.mw-userrights-groups * th {
+	padding-right: 1.5em;
+}
+
+/* 
+ * OpenSearch ajax suggestions
+ */
+.os-suggest {
+	overflow: auto; 
+	overflow-x: hidden; 
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 0px;
+	background-color: white; 
+	border-style: solid;
+	border-color: #AAAAAA;
+	border-width: 1px;
+	z-index:99; 
+	visibility:hidden; 
+	font-size:95%;	
+}
+
+table.os-suggest-results {
+	font-size: 95%;
+	cursor: pointer; 
+	border: 0;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+td.os-suggest-result, td.os-suggest-result-hl {
+	white-space: nowrap;
+	background-color: white; 
+	background-color: Window;
+	color: black;
+	color: WindowText;
+	padding: 2px;
+}
+td.os-suggest-result-hl,
+td.os-suggest-result-hl-webkit {
+	background-color: #4C59A6; 
+	color: white;
+}
+td.os-suggest-result-hl {
+	/* System colors are misimplemented in Safari 3.0 and earlier,
+	   making highlighted text illegible... */
+	background-color: Highlight;
+	color: HighlightText;
+}
+
+.os-suggest-toggle {
+	position: relative; 
+	left: 1ex;
+	font-size: 65%;
+}
+.os-suggest-toggle-def {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	font-size: 65%;
+	visibility: hidden;
+}
+
+/* Page history styling */
+/* the auto-generated edit comments */
+.autocomment { color: gray; }
+#pagehistory .history-user {
+    margin-left: 0.4em;
+    margin-right: 0.2em;
+}
+#pagehistory span.minor { font-weight: bold; }
+#pagehistory li { border: 1px solid white; }
+#pagehistory li.selected {
+    background-color: #f9f9f9;
+    border: 1px dashed #aaa;
+}
+
+table.mw-listgrouprights-table  {
+	border: 1px solid #ccc;
+	border-collapse: collapse;
+}
+
+table.mw-listgrouprights-table tr  {
+	vertical-align: top;
+}
+
+table.mw-listgrouprights-table td, table.mw-listgrouprights-table th {
+	padding: 0.5em 0.2em 0.5em 0.2em;
+	border: 1px solid #ccc;
+}
+
+/* Special:SpecialPages styling */
+h4.mw-specialpagesgroup {
+	background-color: #dcdcdc;
+	padding: 2px;
+	margin: .3em 0em 0em 0em;
+}
+.mw-specialpagerestricted {
+	font-weight: bold;
+}
+
+#shared-image-dup, #shared-image-conflict {
+	font-style: italic;
+}

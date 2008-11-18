@@ -1,0 +1,374 @@
++ Sample Page for Text_Wiki Default Markup
+
+%%TOC%%
+
+----
+
+++ General Notes
+
+The markup described on this page is for the default {{Text_Wiki}} rules; \
+it is a combination of the [http://tavi.sourceforge.net WikkTikkiTavi] \
+and [http://develnet.org/ coWiki] markup styles.
+
+All text is entered as plain text, and will be converted to HTML entities as \
+necessary.  This means that {{<}}, {{>}}, {{&}}, and so on are converted for \
+you (except in special situations where the characters are Wiki markup; \
+Text_Wiki is generally smart enough to know when to convert and when not to).
+
+Just hit "return" twice to make a paragraph break.  If you want \
+to keep the same logical line but have to split it across \
+two physical lines (such as when your editor only shows a certain number \
+of characters per line), end the line with a backslash {{\}} and hit \
+return once.  This will cause the two lines to be joined on display, and the \
+backslash will not show.  (If you end a line with a backslash and a tab \
+or space, it will ''not'' be joined with the next line, and the backslash \
+will be printed.)
+
+
+----
+
+++ Inline Formatting
+
+|| {{```''italic text''```}}                      || ''italic text'' ||
+|| {{```'''bold text'''```}}                      || '''bold text''' ||
+|| {{```'''''italic and bold'''''```}}            || '''''italic and bold''''' ||
+|| {{```//emphasis//```}} || //emphasis// ||
+|| {{```**strong**```}} || **strong** ||
+|| {{```//**emphasis and strong**//```}} || //**emphasis and strong**// ||
+|| {{```**//strong and emphasis//**```}} || **//strong and emphasis//** ||
+|| {{```{{teletype text}}```}}                    || {{teletype text}} ||
+|| {{<```php:function()```>}}                     || <php:function()> ||
+|| {{```@@--- delete text +++ insert text @@```}} || @@--- delete text +++ insert text @@ ||
+|| {{```@@--- delete only @@```}}                 || @@--- delete only @@ ||
+|| {{```@@+++ insert only @@```}}                 || @@+++ insert only @@ ||
+|| {{```super ^^1^^ script```}}                   || super ^^1^^ script ||
+
+----
+
+++ Literal Text
+
+If you don't want Text_Wiki to parse some text, enclose it in 3 backticks (not 3 single-quotes).
+
+<code>
+
+This '''text''' gets {{parsed}}.
+
+```This '''text''' does not get {{parsed}}.```
+
+</code>
+
+This '''text''' gets {{parsed}}.
+
+```This '''text''' does not get {{parsed}}.```
+
+----
+
+++ Headings
+
+You can make various levels of heading by putting \
+equals-signs before and after the text (all on its \
+own line):
+
+<code>
++++ Level 3 Heading
+++++ Level 4 Heading
++++++ Level 5 Heading
+++++++ Level 6 Heading
+</code>
+
++++ Level 3 Heading
+++++ Level 4 Heading
++++++ Level 5 Heading
+++++++ Level 6 Heading
+
+----
+
+++ Table of Contents
+
+To create a list of every heading, with a link to that heading, put a table of contents tag on its own line.
+
+<code>
+%%TOC%%
+</code>
+----
+
+++ Horizontal Rules
+
+Use four dashes ({{```----```}}) to create a horizontal rule.
+
+----
+
+++ Lists
+
++++ Bullet Lists
+
+You can create bullet lists by starting a paragraph with one or \
+more asterisks.
+
+<code>
+* Bullet one
+ * Sub-bullet
+</code>
+
+* Bullet one
+ * Sub-bullet
+
++++ Numbered Lists
+
+Similarly, you can create numbered lists by starting a paragraph \
+with one or more hashes.
+
+<code>
+# Numero uno
+# Number two
+ # Sub-item
+</code>
+
+# Numero uno
+# Number two
+ # Sub-item
+
+
++++ Mixing Bullet and Number List Items
+
+You can mix and match bullet and number lists:
+
+<code>
+# Number one
+ * Bullet
+ * Bullet
+# Number two
+ * Bullet
+ * Bullet
+  * Sub-bullet
+   # Sub-sub-number
+   # Sub-sub-number
+# Number three
+ * Bullet
+ * Bullet
+</code>
+
+# Number one
+ * Bullet
+ * Bullet
+# Number two
+ * Bullet
+ * Bullet
+  * Sub-bullet
+   # Sub-sub-number
+   # Sub-sub-number
+# Number three
+ * Bullet
+ * Bullet
+
+
+
++++ Definition Lists
+
+You can create a definition (description) list with the following syntax:
+
+<code>
+:Item 1: Something
+:Item 2: Something else
+</code>
+
+:Item 1: Something
+:Item 2: Something else
+
+----
+
+++ Block Quotes
+
+You can mark a blockquote by starting a line with one or more '>' \
+characters, followed by a space and the text to be quoted.
+
+<code>
+This is normal text here.
+
+> Indent me! The quick brown fox jumps over the lazy dog. \ 
+Now this the time for all good men to come to the aid of \ 
+their country. Notice how we can continue the block-quote \ 
+in the same "paragraph" by using a backslash at the end of \ 
+the line.
+>
+> Another block, leading to...
+>> Second level of indenting.  This second is indented even \ 
+more than the previous one.
+
+Back to normal text.
+</code>
+
+This is normal text here.
+
+> Indent me! The quick brown fox jumps over the lazy dog. \
+Now this the time for all good men to come to the aid of \
+their country. Notice how we can continue the block-quote \
+in the same "paragraph" by using a backslash at the end of \
+the line.
+>
+> Another block, leading to...
+>> Second level of indenting.  This second is indented even \
+more than the previous one.
+
+Back to normal text.
+
+
+----
+
+++ Links and Images
+
++++ Wiki Links
+
+SmashWordsTogether to create a page link.
+
+You can force a WikiPage name '''not''' to be clickable by putting \
+an exclamation mark in front of it.
+
+<code>
+WikiPage !WikiPage
+</code>
+
+WikiPage !WikiPage
+
+(Note: existing wiki pages must be in the Text_Wiki {{pages}} option array, \
+and the {{view_url}} option must be set for the linking to work.)
+
++++ Free Links
+
+Freelinks are "non-standard" Wiki links.
+
+* You can refer to named anchors within pages like this: \
+{{```((WikiPage#NamedAnchor))```}} becomes ((WikiPage#NamedAnchor)).
+* You can create nice-looking links from WordsSmashedTogether like this: \
+{{```((WordsSmashedTogether|Nice Link))```}} becomes \
+((WordsSmashedTogether|Nice Link)).
+* Refer to named anchors within nice-looking links like this: \
+{{```((WikiPage|Nice Link#Anchor))```}} becomes \
+((WikiPage|Nice Link#Anchor)).
+* You can also create links that aren't WordsSmashedTogether \
+(i.e., that have spaces) like this: {{```((free links))```}} \
+becomes ((free links)).
+
+(Note: existing wiki pages must be in the Text_Wiki {{pages}} option array, \
+and the {{view_url}} option must be set for the linking to work.)
+
++++ Interwiki Links
+
+Interwiki links are links to pages on other Wiki sites. \
+Type the {{```SiteName:PageName```}} like this:
+
+* MeatBall:RecentChanges
+* Advogato:proj/WikkiTikkiTavi
+* Wiki:WorseIsBetter
+
+(Note: the interwiki site must be in the Text_Wiki {{interwiki}} option array.)
+
++++ URLs
+
+Create a remote link simply by typing its URL: http://ciaweb.net.
+
+If you like, enclose it in brackets to create a numbered reference \
+and avoid cluttering the page; {{```[http://ciaweb.net/free/]```}} becomes [http://ciaweb.net/free/].
+
+Or you can have a described-reference instead of a numbered reference:
+<code>
+[http://pear.php.net PEAR]
+</code>
+[http://pear.php.net PEAR]
+
++++ Images
+
+You can put a picture in a page by typing the URL to the picture \
+(it must end in gif, jpg, or png).
+<code>
+http://c2.com/sig/wiki.gif
+</code>
+
+http://c2.com/sig/wiki.gif
+
+You can use the described-reference URL markup to give the image an ALT tag:
+<code>
+[http://www.netropolisusa.biz/billthemarmet/MT/index/images/sunset_07_10_03.jpg Sunset]
+</code>
+
+[http://www.netropolisusa.biz/billthemarmet/MT/index/images/sunset_07_10_03.jpg Sunset]
+
+
+----
+++ Code Blocks
+
+Create code blocks by using {{<code>...</code>}} tags (each on its own line).
+
+<code>
+This is an example code block!
+</code>
+
+
+To create PHP blocks that get automatically colorized when you use PHP tags, \
+simply surround the code with {{<php>...</php>}} tags (the tags themselves \
+should each be on their own lines, and no need for the {{&lt;?php ... ?&gt;}} tags).
+
+<code>
+<php>
+// Set up the wiki options
+$options = array();
+$options['view_url'] = "index.php?page=";
+
+// load the text for the requested page
+$text = implode('', file($page . '.wiki.txt'));
+
+// create a Wiki objext with the loaded options
+$wiki = new Text_Wiki($options);
+
+// transform the wiki text.
+echo $wiki->transform($text);
+</php>
+</code>
+
+<php>
+// Set up the wiki options
+$options = array();
+$options['view_url'] = "index.php?page=";
+
+// load the text for the requested page
+$text = implode('', file($page . '.wiki.txt'));
+
+// create a Wiki objext with the loaded options
+$wiki = new Text_Wiki($options);
+
+// transform the wiki text.
+echo $wiki->transform($text);
+</php>
+
+----
+
+++ Tables
+
+You can create tables using pairs of vertical bars:
+
+<code>
+|| cell one || cell two ||
+|||| big ol' line ||
+|| cell four || cell five ||
+|| cell six || here's a very long cell ||
+</code>
+
+|| cell one || cell two ||
+|||| big ol' line ||
+|| cell four || cell five ||
+|| cell six || here's a very long cell ||
+
+<code>
+|| lines must start and end || with double vertical bars || nothing ||
+|| cells are separated by || double vertical bars || nothing ||
+|||| you can span multiple columns by || starting each cell ||
+|| with extra cell |||| separators ||
+|||||| but perhaps an example is the easiest way to see ||
+</code>
+
+|| lines must start and end || with double vertical bars || nothing ||
+|| cells are separated by || double vertical bars || nothing ||
+|||| you can span multiple columns by || starting each cell ||
+|| with extra cell |||| separators ||
+|||||| but perhaps an example is the easiest way to see ||
+

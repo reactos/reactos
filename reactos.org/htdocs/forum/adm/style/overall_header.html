@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="{S_CONTENT_DIRECTION}" lang="{S_USER_LANG}" xml:lang="{S_USER_LANG}">
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset={S_CONTENT_ENCODING}" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Language" content="{S_USER_LANG}" />
+<meta http-equiv="imagetoolbar" content="no" />
+<!-- IF META -->{META}<!-- ENDIF -->
+<title>{PAGE_TITLE}</title>
+
+<link href="style/admin.css" rel="stylesheet" type="text/css" media="screen" />
+
+<script type="text/javascript">
+// <![CDATA[
+var jump_page = '{LA_JUMP_PAGE}:';
+var on_page = '{ON_PAGE}';
+var per_page = '{PER_PAGE}';
+var base_url = '{A_BASE_URL}';
+
+var menu_state = 'shown';
+
+
+/**
+* Jump to page
+*/
+function jumpto()
+{
+	var page = prompt(jump_page, on_page);
+
+	if (page !== null && !isNaN(page) && page > 0)	
+	{
+		document.location.href = base_url.replace(/&amp;/g, '&') + '&start=' + ((page - 1) * per_page);
+	}
+}
+
+/**
+* Set display of page element
+* s[-1,0,1] = hide,toggle display,show
+*/
+function dE(n, s, type)
+{
+	if (!type)
+	{
+		type = 'block';
+	}
+
+	var e = document.getElementById(n);
+	if (!s)
+	{
+		s = (e.style.display == '') ? -1 : 1;
+	}
+	e.style.display = (s == 1) ? type : 'none';
+}
+
+/**
+* Mark/unmark checkboxes
+* id = ID of parent container, name = name prefix, state = state [true/false]
+*/
+function marklist(id, name, state)
+{
+	var parent = document.getElementById(id);
+	if (!parent)
+	{
+		eval('parent = document.' + id);
+	}
+
+	if (!parent)
+	{
+		return;
+	}
+
+	var rb = parent.getElementsByTagName('input');
+	
+	for (var r = 0; r < rb.length; r++)
+	{
+		if (rb[r].name.substr(0, name.length) == name)
+		{
+			rb[r].checked = state;
+		}
+	}
+}
+
+/**
+* Find a member
+*/
+function find_username(url)
+{
+	popup(url, 760, 570, '_usersearch');
+	return false;
+}
+
+/**
+* Window popup
+*/
+function popup(url, width, height, name)
+{
+	if (!name)
+	{
+		name = '_popup';
+	}
+
+	window.open(url.replace(/&amp;/g, '&'), name, 'height=' + height + ',resizable=yes,scrollbars=yes, width=' + width);
+	return false;
+}
+
+/**
+* Hiding/Showing the side menu
+*/
+function switch_menu()
+{
+	var menu = document.getElementById('menu');
+	var main = document.getElementById('main');
+	var toggle = document.getElementById('toggle');
+	var handle = document.getElementById('toggle-handle');
+
+	switch (menu_state)
+	{
+		// hide
+		case 'shown':
+			main.style.width = '93%';
+			menu_state = 'hidden';
+			menu.style.display = 'none';
+			toggle.style.width = '20px';
+			handle.style.backgroundImage = 'url(images/toggle.gif)';
+			handle.style.backgroundRepeat = 'no-repeat';
+
+			<!-- IF S_CONTENT_DIRECTION eq 'rtl' -->
+				handle.style.backgroundPosition = '0% 50%';
+				toggle.style.left = '96%';
+			<!-- ELSE -->
+				handle.style.backgroundPosition = '100% 50%';
+				toggle.style.left = '0';
+			<!-- ENDIF -->
+		break;
+
+		// show
+		case 'hidden':
+			main.style.width = '76%';
+			menu_state = 'shown';
+			menu.style.display = 'block';
+			toggle.style.width = '5%';
+			handle.style.backgroundImage = 'url(images/toggle.gif)';
+			handle.style.backgroundRepeat = 'no-repeat';
+
+			<!-- IF S_CONTENT_DIRECTION eq 'rtl' -->
+				handle.style.backgroundPosition = '100% 50%';
+				toggle.style.left = '75%';
+			<!-- ELSE -->
+				handle.style.backgroundPosition = '0% 50%';
+				toggle.style.left = '15%';
+			<!-- ENDIF -->
+		break;
+	}
+}
+
+// ]]>
+</script>
+</head>
+
+<body class="{S_CONTENT_DIRECTION}">
+
+<div id="wrap">
+	<div id="page-header">
+		<h1>{L_ADMIN_PANEL}</h1>
+		<p><a href="{U_ADM_INDEX}">{L_ADMIN_INDEX}</a> &bull; <a href="{U_INDEX}">{L_FORUM_INDEX}</a></p>
+		<p id="skip"><a href="#acp">{L_SKIP}</a></p>
+	</div>
+	
+	<div id="page-body">
+		<div id="tabs">
+			<ul>
+			<!-- BEGIN t_block1 -->
+				<li<!-- IF t_block1.S_SELECTED --> id="activetab"<!-- ENDIF -->><a href="{t_block1.U_TITLE}"><span>{t_block1.L_TITLE}</span></a></li>
+			<!-- END t_block1 -->
+			</ul>
+		</div>
+
+		<div id="acp">
+		<div class="panel">
+			<span class="corners-top"><span></span></span>
+				<div id="content">
+					<!-- IF not S_USER_NOTICE --> 
+					<div id="toggle">						
+						<a id="toggle-handle" accesskey="m" title="{L_MENU_TOGGLE}" onclick="switch_menu(); return false;" href="#"></a></div>
+					<!-- ENDIF -->
+					<div id="menu">
+						<p>{L_LOGGED_IN_AS}<br /><strong>{USERNAME}</strong> [&nbsp;<a href="{U_LOGOUT}">{L_LOGOUT}</a>&nbsp;]</p>
+						<ul>
+						<!-- BEGIN l_block1 -->
+							<!-- IF l_block1.S_SELECTED -->
+	
+						<!-- BEGIN l_block2 -->
+							<!-- IF .l_block1.l_block2.l_block3 -->
+							<li class="header">{l_block1.l_block2.L_TITLE}</li>
+							<!-- ENDIF -->
+	
+							<!-- BEGIN l_block3 -->
+								<li<!-- IF l_block1.l_block2.l_block3.S_SELECTED --> id="activemenu"<!-- ENDIF -->><a href="{l_block1.l_block2.l_block3.U_TITLE}"><span>{l_block1.l_block2.l_block3.L_TITLE}</span></a></li>
+							<!-- END l_block3 -->
+						<!-- END l_block2 -->
+						
+							<!-- ENDIF -->
+						<!-- END l_block1 -->
+						</ul>
+					</div>
+	
+					<div id="main">

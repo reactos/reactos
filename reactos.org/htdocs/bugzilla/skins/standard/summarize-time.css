@@ -1,0 +1,46 @@
+/* The contents of this file are subject to the Mozilla Public
+  * License Version 1.1 (the "License"); you may not use this file
+  * except in compliance with the License. You may obtain a copy of
+  * the License at http://www.mozilla.org/MPL/
+  *
+  * Software distributed under the License is distributed on an "AS
+  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing
+  * rights and limitations under the License.
+  *
+  * The Original Code is the Bugzilla Bug Tracking System.
+  *
+  * Contributor(s): Christian Reis <kiko@async.com.br>
+  */
+
+td { vertical-align: top }
+
+table.zeroitems, table.realitems {
+    margin-left: 2.0em;
+    margin-top: 2px;
+    border: 1px solid black;
+    border: 1px solid black;
+}
+
+tr.section_total {
+    background: #000000;
+    color: #ffffff;
+}
+
+td.subtotal {
+    background: #B0C0D9;
+}
+
+.zeroitems .bug_header { background: #d0e0f0 }
+.zeroitems .bug_header2 { background: #f9f9f9 }
+
+/* the fixed headers -- .number uses bug_header so hack it here */
+.number .bug_header, .number .bug_header2 { background: #d0e0f0 }
+.owner_header { background: #d0e0f0 }
+
+
+/* the details headers */
+.number .owner_header, .owner .bug_header { background: #ffffff }
+.number .owner_header2, .owner .bug_header2 { background: #EFEFEF }
+
+

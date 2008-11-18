@@ -1,0 +1,25 @@
+<!-- INCLUDE simple_header.html -->
+
+<script type="text/javascript">
+// <![CDATA[
+/**
+* Jump to inbox
+*/
+function jump_to_inbox(url)
+{
+	opener.document.location.href = url.replace(/&amp;/g, '&');
+	window.close();
+}
+// ]]>
+</script>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+	<div class="content">
+		<p><!-- IF S_NOT_LOGGED_IN -->{L_LOGIN_CHECK_PM}<!-- ELSE -->{MESSAGE}<br /><br />{CLICK_TO_VIEW}<!-- ENDIF --></p>
+		<p class="small"><a href="#" onclick="window.close(); return false;">{L_CLOSE_WINDOW}</a></p>
+	</div>
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<!-- INCLUDE simple_footer.html -->

@@ -1,0 +1,355 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_INTRO -->
+	
+	<h1>{L_ACP_PERMISSIONS}</h1>
+
+	{L_ACP_PERMISSIONS_EXPLAIN}
+
+<!-- ENDIF -->
+
+<!-- IF S_SELECT_VICTIM -->
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_EXPLAIN}</p>
+	
+	<!-- IF S_FORUM_NAMES -->
+		<p><strong>{L_FORUMS}:</strong> {FORUM_NAMES}</p>
+	<!-- ENDIF -->
+
+	<!-- IF S_SELECT_FORUM -->
+
+		<form id="select_victim" method="post" action="{U_ACTION}">
+
+		<fieldset>
+			<legend>{L_LOOK_UP_FORUM}</legend>
+			<!-- IF S_FORUM_MULTIPLE --><p>{L_LOOK_UP_FORUMS_EXPLAIN}</p><!-- ENDIF -->
+		<dl>
+			<dt><label for="forum">{L_LOOK_UP_FORUM}:</label></dt>
+			<dd><select id="forum" name="forum_id[]"<!-- IF S_FORUM_MULTIPLE --> multiple="multiple"<!-- ENDIF --> size="10">{S_FORUM_OPTIONS}</select></dd>
+			<!-- IF S_FORUM_ALL --><dd><label><input type="checkbox" class="radio" name="all_forums" value="1" /> {L_ALL_FORUMS}</label></dd><!-- ENDIF -->
+		</dl>
+
+		<p class="quick">
+			{S_HIDDEN_FIELDS}
+			{S_FORM_TOKEN}
+			<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+		</p>
+
+		</fieldset>
+		</form>
+
+		<!-- IF S_FORUM_MULTIPLE -->
+
+			<form id="select_subforum" method="post" action="{U_ACTION}">
+
+			<fieldset>
+				<legend>{L_LOOK_UP_FORUM}</legend>
+				<p>{L_SELECT_FORUM_SUBFORUM_EXPLAIN}</p>
+			<dl>
+				<dt><label for="sforum">{L_LOOK_UP_FORUM}:</label></dt>
+				<dd><select id="sforum" name="subforum_id">{S_SUBFORUM_OPTIONS}</select></dd>
+			</dl>
+
+			<p class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+			</p>
+
+			</fieldset>
+			</form>
+			
+		<!-- ENDIF -->
+
+	<!-- ELSEIF S_SELECT_USER and S_CAN_SELECT_USER -->
+
+		<form id="select_victim" method="post" action="{U_ACTION}">
+
+		<fieldset>
+			<legend>{L_LOOK_UP_USER}</legend>
+		<dl>
+			<dt><label for="username">{L_FIND_USERNAME}:</label></dt>
+			<dd><input class="text medium" type="text" id="username" name="username[]" /></dd>
+			<dd>[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</dd>
+			<dd class="full" style="text-align: left;"><label><input type="checkbox" class="radio" id="anonymous" name="user_id[]" value="{ANONYMOUS_USER_ID}" /> {L_SELECT_ANONYMOUS}</label></dd>
+		</dl>
+
+		<p class="quick">
+			{S_HIDDEN_FIELDS}
+			{S_FORM_TOKEN}
+			<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+		</p>
+		</fieldset>
+		</form>
+
+	<!-- ELSEIF S_SELECT_GROUP and S_CAN_SELECT_GROUP -->
+
+		<form id="select_victim" method="post" action="{U_ACTION}">
+
+		<fieldset>
+			<legend>{L_LOOK_UP_GROUP}</legend>
+		<dl>
+			<dt><label for="group">{L_LOOK_UP_GROUP}:</label></dt>
+			<dd><select name="group_id[]" id="group">{S_GROUP_OPTIONS}</select></dd>
+		</dl>
+
+		<p class="quick">
+			{S_HIDDEN_FIELDS}
+			{S_FORM_TOKEN}
+			<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+		</p>
+
+		</fieldset>
+		</form>
+
+		<!-- ELSEIF S_SELECT_USERGROUP -->
+
+		<div style="float: {S_CONTENT_FLOW_BEGIN}; width: 48%;">
+
+		<!-- IF S_CAN_SELECT_USER -->
+
+			<h1>{L_USERS}</h1>
+
+			<form id="users" method="post" action="{U_ACTION}">
+
+			<fieldset>
+				<legend>{L_MANAGE_USERS}</legend>
+			<dl>
+				<dd class="full"><select style="width: 100%;" name="user_id[]" multiple="multiple" size="5">{S_DEFINED_USER_OPTIONS}</select></dd>
+				<!-- IF S_ALLOW_ALL_SELECT --><dd class="full" style="text-align: right;"><label><input type="checkbox" class="radio" name="all_users" value="1" /> {L_ALL_USERS}</label></dd><!-- ENDIF -->
+			</dl>
+			</fieldset>
+			
+			<fieldset class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input type="submit" class="button2" name="action[delete]" value="{L_REMOVE_PERMISSIONS}" style="width: 46% !important;" /> &nbsp; <input class="button1" type="submit" name="submit_edit_options" value="{L_EDIT_PERMISSIONS}" style="width: 46% !important;" />
+			</fieldset>
+			</form>
+
+			<form id="add_user" method="post" action="{U_ACTION}">
+
+			<fieldset>
+				<legend>{L_ADD_USERS}</legend>
+				<p>{L_USERNAMES_EXPLAIN}</p>
+			<dl>
+				<dd class="full"><textarea id="username" name="usernames" rows="5" cols="5" style="width: 100%; height: 60px;"></textarea></dd>
+				<dd class="full" style="text-align: left;"><div style="float: {S_CONTENT_FLOW_END};">[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</div><label><input type="checkbox" class="radio" id="anonymous" name="user_id[]" value="{ANONYMOUS_USER_ID}" /> {L_SELECT_ANONYMOUS}</label></dd>
+			</dl>
+			</fieldset>
+
+			<fieldset class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input class="button1" type="submit" name="submit_add_options" value="{L_ADD_PERMISSIONS}" />
+			</fieldset>
+			</form>
+
+		<!-- ENDIF -->
+
+		</div>
+
+		<div style="float: {S_CONTENT_FLOW_END}; width: 48%">
+			
+		<!-- IF S_CAN_SELECT_GROUP -->
+
+			<h1>{L_USERGROUPS}</h1>
+
+			<form id="groups" method="post" action="{U_ACTION}">
+
+			<fieldset>
+				<legend>{L_MANAGE_GROUPS}</legend>
+			<dl>
+				<dd class="full"><select style="width: 100%;" name="group_id[]" multiple="multiple" size="5">{S_DEFINED_GROUP_OPTIONS}</select></dd>
+				<!-- IF S_ALLOW_ALL_SELECT --><dd class="full" style="text-align: right;"><label><input type="checkbox" class="radio" name="all_groups" value="1" /> {L_ALL_GROUPS}</label></dd><!-- ENDIF -->
+			</dl>
+			</fieldset>
+			
+			<fieldset class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input class="button2" type="submit" name="action[delete]" value="{L_REMOVE_PERMISSIONS}" style="width: 46% !important;" /> &nbsp; <input class="button1" type="submit" name="submit_edit_options" value="{L_EDIT_PERMISSIONS}" style="width: 46% !important;" />
+			</fieldset>
+			</form>
+
+			<form id="add_groups" method="post" action="{U_ACTION}">
+			
+			<fieldset>
+				<legend>{L_ADD_GROUPS}</legend>
+			<dl>
+				<dd class="full"><select name="group_id[]" style="width: 100%; height: 107px;" multiple="multiple">{S_ADD_GROUP_OPTIONS}</select></dd>
+			</dl>
+			</fieldset>
+
+			<fieldset class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input type="submit" class="button1" name="submit_add_options" value="{L_ADD_PERMISSIONS}" />
+			</fieldset>
+			</form>
+
+		<!-- ENDIF -->
+
+		</div>
+
+	<!-- ELSEIF S_SELECT_USERGROUP_VIEW -->
+
+		<div style="float: {S_CONTENT_FLOW_BEGIN}; width: 48%;">
+		
+			<h1>{L_USERS}</h1>
+
+			<form id="users" method="post" action="{U_ACTION}">
+
+			<fieldset>
+				<legend>{L_MANAGE_USERS}</legend>
+			<dl>
+				<dd class="full"><select style="width: 100%;" name="user_id[]" multiple="multiple" size="5">{S_DEFINED_USER_OPTIONS}</select></dd>
+			</dl>
+			</fieldset>
+			
+			<fieldset class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input class="button1" type="submit" name="submit" value="{L_VIEW_PERMISSIONS}" />
+			</fieldset>
+			</form>
+
+			<form id="add_user" method="post" action="{U_ACTION}">
+
+			<fieldset>
+				<legend>{L_LOOK_UP_USER}</legend>
+			<dl>
+				<dt><label for="username">{L_FIND_USERNAME}:</label></dt>
+				<dd><input type="text" id="username" name="username[]" /></dd>
+				<dd>[ <a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a> ]</dd>
+				<dd class="full" style="text-align: left;"><label><input type="checkbox" class="radio" id="anonymous" name="user_id[]" value="{ANONYMOUS_USER_ID}" /> {L_SELECT_ANONYMOUS}</label></dd>
+			</dl>
+			</fieldset>
+
+			<fieldset class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input type="submit" name="submit" value="{L_VIEW_PERMISSIONS}" class="button1" />
+			</fieldset>
+			</form>
+
+		</div>
+
+		<div style="float: {S_CONTENT_FLOW_END}; width: 48%">
+			
+			<h1>{L_USERGROUPS}</h1>
+
+			<form id="groups" method="post" action="{U_ACTION}">
+
+			<fieldset>
+				<legend>{L_MANAGE_GROUPS}</legend>
+			<dl>
+				<dd class="full"><select style="width: 100%;" name="group_id[]" multiple="multiple" size="5">{S_DEFINED_GROUP_OPTIONS}</select></dd>
+			</dl>
+			</fieldset>
+			
+			<fieldset class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input class="button1" type="submit" name="submit" value="{L_VIEW_PERMISSIONS}" />
+			</fieldset>
+			</form>
+
+			<form id="group" method="post" action="{U_ACTION}">
+
+			<fieldset>
+				<legend>{L_LOOK_UP_GROUP}</legend>
+			<dl>
+				<dt><label for="group_select">{L_LOOK_UP_GROUP}:</label></dt>
+				<dd><select name="group_id[]" id="group_select">{S_ADD_GROUP_OPTIONS}</select></dd>
+				<dd>&nbsp;</dd>
+			</dl>
+			</fieldset>
+
+			<fieldset class="quick">
+				{S_HIDDEN_FIELDS}
+				{S_FORM_TOKEN}
+				<input type="submit" name="submit" value="{L_VIEW_PERMISSIONS}" class="button1" />
+			</fieldset>
+			</form>
+
+		</div>
+
+	<!-- ENDIF -->
+
+<!-- ENDIF -->
+
+<!-- IF S_VIEWING_PERMISSIONS -->
+
+	<h1>{L_ACL_VIEW}</h1>
+
+	<p>{L_ACL_VIEW_EXPLAIN}</p>
+
+	<fieldset class="quick">
+		<strong>&raquo; {L_PERMISSION_TYPE}</strong>
+	</fieldset>
+
+	<!-- INCLUDE permission_mask.html -->
+
+<!-- ENDIF -->
+
+<!-- IF S_SETTING_PERMISSIONS -->
+
+	<h1>{L_ACL_SET}</h1>
+
+	<p>{L_ACL_SET_EXPLAIN}</p>
+
+	<br />
+
+	<fieldset class="quick" style="float: {S_CONTENT_FLOW_END};">
+		<strong>&raquo; {L_PERMISSION_TYPE}</strong>
+	</fieldset>
+
+	<!-- IF S_PERMISSION_DROPDOWN -->
+		<form id="pselect" method="post" action="{U_ACTION}">
+	
+		<fieldset class="quick" style="float: {S_CONTENT_FLOW_BEGIN};">
+			{S_HIDDEN_FIELDS}
+			{S_FORM_TOKEN}
+			{L_SELECT_TYPE}: <select name="type">{S_PERMISSION_DROPDOWN}</select> 
+
+			<input class="button2" type="submit" name="submit" value="{L_GO}" />
+		</fieldset>
+		</form>
+	<!-- ENDIF -->
+
+	<br /><br />
+
+	<!-- include tooltip file -->
+	<script type="text/javascript" src="style/tooltip.js"></script>
+	<script type="text/javascript">
+	// <![CDATA[
+		window.onload = function(){enable_tooltips_select('set-permissions', '{LA_ROLE_DESCRIPTION}', 'role')};
+	// ]]>
+	</script>
+
+	<form id="set-permissions" method="post" action="{U_ACTION}">
+
+	{S_HIDDEN_FIELDS}
+
+	<!-- INCLUDE permission_mask.html -->
+
+	<br /><br />
+
+	<fieldset class="quick" style="float: {S_CONTENT_FLOW_END};">
+		<input class="button1" type="submit" name="action[apply_all_permissions]" value="{L_APPLY_ALL_PERMISSIONS}" />
+		<input class="button2" type="button" name="cancel" value="{L_RESET}" onclick="document.forms['set-permissions'].reset(); init_colours(active_pmask + active_fmask);" />
+		{S_FORM_TOKEN}
+	</fieldset>
+
+	<br /><br />
+	
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

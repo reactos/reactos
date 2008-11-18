@@ -1,0 +1,1637 @@
+/*  phpBB 3.0 Admin Style Sheet
+	------------------------------------------------------------------------
+	Original author:	subBlue ( http://www.subblue.com/ )
+	Copyright 2007 phpBB Group ( http://www.phpbb.com/ )
+	------------------------------------------------------------------------
+*/
+
+/* General markup styles
+---------------------------------------- */
+* {
+	/* Reset browsers default margin, padding and font sizes */
+	margin: 0;
+	padding: 0;
+	font-size: 100%;
+}
+
+body, div, p, th, td, li, dd {
+	font-size: x-small;
+	voice-family: "\"}\"";
+	voice-family: inherit;
+	font-size: small
+}
+
+html>body, html>div, html>p, html>th, html>td, html>li, html>dd {
+	font-size: small
+}
+
+html {
+	color: #536482;
+	background: #DBD7D1;
+	/* Always show a scrollbar for short pages - stops the jump when the scrollbar appears. non-ie browsers */
+	height: 100%;
+	margin-bottom: 1px;
+}
+
+body {
+	/* Text-Sizing with ems: http://www.clagnut.com/blog/348/ */
+	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
+	color: #536482;
+	background: #DBD7D1;
+	font-size: 62.5%;	/* This sets the default font size to be equivalent to 10px */
+	margin: 10px 15px;
+}
+
+img {
+	border: 0;
+}
+
+h1 {
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+	font-size: 1.70em;
+	font-weight: normal;
+	color: #333333;
+}
+
+h2, caption {
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+	font-size: 1.40em;
+	font-weight: normal;
+	color: #115098;
+	text-align: left;
+	margin-top: 25px;
+}
+
+.rtl h2, .rtl caption {
+	text-align: right;
+}
+
+h3, h4 {
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+	font-size: 1.20em;
+	text-decoration: none; 
+	line-height: 1.20em; 
+	margin-top: 25px;
+}
+
+p {
+	margin-bottom: 0.7em;
+	line-height: 1.40em;
+	font-size: 0.90em;
+}
+
+ul {
+	list-style: disc;
+	margin: 0 0 1em 2em;
+}
+
+.rtl ul {
+	margin: 0 2em 1em 0;
+}
+
+hr {
+	border: 0 none;
+	border-top: 1px dashed #999999;
+	margin-bottom: 5px;
+	padding-bottom: 5px;
+	height: 1px;
+}
+
+.small { 
+	font-size: 0.85em; 
+}
+
+/* General links  */
+a:link, a:visited {
+	color: #105289;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #BC2A4D;
+	text-decoration: underline;
+}
+
+a:active {
+	color: #368AD2;
+	text-decoration: none;
+}
+
+.install-body p a {
+	font-weight: bold;
+}
+
+/* Main blocks
+---------------------------------------- */
+#wrap {
+	padding: 0 0 15px 0;
+	min-width: 615px;
+}
+
+#page-header {
+	clear: both;
+	text-align: right;
+	background: url("../images/phpbb_logo.gif") top left no-repeat;
+	height: 49px;
+	font-size: 0.85em;
+	margin-bottom: 10px;
+}
+
+.rtl #page-header {
+	text-align: left;
+	background: url("../images/phpbb_logo.gif") top right no-repeat;
+}
+
+#page-header h1 {
+	color: #767676;
+	font-family: "Trebuchet MS",Helvetica,sans-serif;
+	font-size: 1.70em;
+	padding-top: 10px;
+}
+
+#page-header p {
+	font-size: 1.00em;
+}
+
+#page-header p#skip {
+	display: none;
+}
+
+#page-body {
+	clear: both;
+	min-width: 700px;
+}
+
+#page-footer {
+	clear: both;
+	font-size: 0.75em;
+	text-align: center;
+}
+
+#content {
+	padding: 30px 10px 10px;
+	position: relative;
+}
+
+#content h1 {
+	color: #115098;
+	line-height: 1.2em;
+	margin-bottom: 0;
+}
+
+#main {
+	float: left;
+	width: 76%;
+	margin: 0 0 0 3%;
+	min-height: 350px;
+}
+
+.rtl #main {
+	float: right;
+	margin: 0 3% 0 0;
+}
+
+* html #main { 
+	height: 350px; 
+}
+
+#page-body.simple-page-body {
+	padding: 0;
+	padding-right: 10px;
+	min-width: 0;
+}
+
+/* Tabbed menu
+	Based on: http://www.alistapart.com/articles/slidingdoors2/
+----------------------------------------*/
+#tabs {
+	line-height: normal;
+	margin: 0 0 -6px 7px;
+	min-width: 600px;
+}
+
+.rtl #tabs {
+	margin: 0 7px -6px 0;
+}
+
+#tabs ul {
+	margin:0;
+	padding: 0;
+	list-style: none;
+}
+
+#tabs li {
+	display: inline;
+	margin: 0;
+	padding: 0;
+	font-size: 0.85em;
+	font-weight: bold;
+}
+
+#tabs a {
+	float: left;
+	background:url("../images/bg_tabs1.gif") no-repeat 0% -34px;
+	margin: 0 1px 0 0;
+	padding: 0 0 0 7px;
+	text-decoration: none;
+	position: relative;
+}
+
+.rtl #tabs a {
+	float: right;
+}
+
+#tabs a span {
+	float: left;
+	display: block;
+	background: url("../images/bg_tabs2.gif") no-repeat 100% -34px;
+	padding: 7px 10px 4px 4px;
+	color: #767676;
+	white-space: nowrap;
+	font-family: Arial, Helvetica, sans-serif;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+
+.rtl #tabs a span {
+	float: right;
+}
+
+/* Commented Backslash Hack hides rule from IE5-Mac \*/
+#tabs a span, .rtl #tabs a span { float:none;}
+/* End hack */
+
+#tabs a:hover span {
+	color: #BC2A4D;
+}
+
+#tabs #activetab a {
+	background-position: 0 0;
+	border-bottom: 1px solid #DCDEE2;
+}
+
+#tabs #activetab a span {
+	background-position: 100% 0;
+	padding-bottom: 5px;
+	color: #23649F;
+}
+
+#tabs a:hover {
+	background-position: 0 -69px;
+}
+
+#tabs a:hover span {
+	background-position: 100% -69px;
+}
+
+#tabs #activetab a:hover span {
+	color: #115098;
+}
+
+
+/* Main Panel
+---------------------------------------- */
+#acp {
+	margin: 4px 0;
+	padding: 3px 1px;
+	min-width: 550px;
+	background-color: #FFFFFF;
+	border: 1px #999999 solid;
+}
+
+.panel {
+	background: #F3F3F3 url("../images/innerbox_bg.gif") repeat-x top;
+	padding: 0;
+}
+
+span.corners-top, span.corners-bottom, 
+span.corners-top span, span.corners-bottom span {
+	font-size: 1px;
+	line-height: 1px;
+	display: block;
+	height: 5px;
+	background-repeat: no-repeat;
+}
+
+span.corners-top {
+	background-image: url("../images/corners_left.gif");
+	background-position: 0 0;
+	margin: -4px -2px 0;
+}
+
+span.corners-top span {
+	background-image: url("../images/corners_right.gif");
+	background-position: 100% 0;
+}
+
+span.corners-bottom {
+	background-image: url("../images/corners_left.gif");
+	background-position: 0 100%;
+	margin: 0 -2px -4px;
+	clear: both;
+}
+
+span.corners-bottom span {
+	background-image: url("../images/corners_right.gif");
+	background-position: 100% 100%;
+}
+
+/* WinIE tweaks \*/
+* html span.corners-top, * html span.corners-bottom { background-image: url("../images/corners_left.gif"); }
+* html span.corners-top span, * html span.corners-bottom span { background-image: url("../images/corners_right.gif"); }
+/* End tweaks */
+
+/* Sub-navigation Menu
+---------------------------------------- */
+
+/* Toggle */
+#toggle {
+	padding: 5px;
+	width: 5%;
+	height: 100px;
+	position: absolute;
+	left: 15%;
+	top: 28px;
+	margin-left: 2px;
+}
+
+.rtl #toggle {
+	left: 75%;
+	margin-right: 0;
+	margin-left: 6px;
+}
+
+#toggle-handle {
+	display: block;
+	width: 18px;
+	height: 19px;
+	float: right;
+	background-image: url(../images/toggle.gif);
+}
+
+.rtl #toggle-handle {
+	background-image: url(../images/toggle.gif);
+	background-position: 100% 50%;
+}
+
+/* Menu */
+#menu {
+	float: left;
+	width: 20%;
+	font-size: 1.00em;
+	padding: 0;
+	border-right: 1px solid #CCCFD3;
+}
+
+.rtl #menu {
+	float: right;
+	border: none;
+	border-left: 1px solid #CCCFD3;
+}
+
+#menu p {
+	font-size: 0.85em;
+}
+
+#menu ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+/* Default list state */
+#menu li {
+	padding: 0;
+	margin: 0;
+	font-size: 0.85em;
+	font-weight: bold;
+	display: inline;
+}
+
+/* Link styles for the sub-section links */
+#menu li span {
+	display: block;
+	padding: 3px 3px 3px 8px;
+	margin: 1px 0;
+	text-decoration: none;
+	font-weight: normal;
+	color: #138ECB;
+}
+
+.rtl #menu li span {
+	padding: 3px 8px 3px 3px;
+}
+
+#menu li a:hover, #menu li a:hover span {
+	text-decoration: none;
+	background-color: #FFFFFF;
+	color: #BC2A4D;
+}
+
+#menu li a:active, #menu li a:active span {
+	color: #F632A0;
+}
+
+#menu li#activemenu a span {
+	text-decoration: none;
+	font-weight: bold;
+	color: #1180B7;
+	background: transparent url("../images/arrow_right.gif") 0% 50% no-repeat;
+}
+
+.rtl #menu li#activemenu a span {
+	background: transparent url("../images/arrow_left.gif") 100% 50% no-repeat;
+}
+
+#menu li#activemenu a:hover span, #menu li#activemenu span {
+	text-decoration: none;
+	font-weight: bold;
+	color: #BC2A4D;
+	background: #FFFFFF url("../images/arrow_right.gif") 1% 50% no-repeat;
+}
+
+.rtl #menu li#activemenu a:hover span, .rtl #menu li#activemenu span {
+	background: #FFFFFF url("../images/arrow_left.gif") 99% 50% no-repeat;
+}
+
+#menu li a:active, #menu li a:active span, #menu li#activemenu a:active span {
+	color: #F632A0;
+}
+
+#menu li span.completed {
+	text-decoration: none;
+	padding: 3px 3px 3px 12px;
+	background: url("../images/arrow_down.gif") 1% 50% no-repeat;
+}
+
+.rtl #menu li span.completed {
+	text-decoration: none;
+	padding: 3px 12px 3px 3px;
+	background: url("../images/arrow_down.gif") 99% 50% no-repeat;
+}
+
+#menu li.header {
+	font-family: Tahoma, Helvetica, sans-serif;
+	display: block;
+	font-weight: bold;
+	color: #115098;
+	border-bottom: 1px solid #327AA5;
+	padding: 4px 0 2px;
+	margin-top: 15px;
+	text-transform: uppercase;
+	font-size: 0.75em;
+}
+
+/* Table styles
+---------------------------------------- */
+
+table {
+	width: 100%;
+	border: 1px solid #CCCFD3;
+	background-color: #FFFFFF;
+	padding: 1px;
+}
+
+th {
+	padding: 3px 4px;
+	color: #FFFFFF;
+	background: #70AED3 url("../images/gradient2b.gif") bottom left repeat-x;
+	border-top: 1px solid #6DACD2;
+	border-bottom: 1px solid #327AA5;
+	text-align: left;
+	font-size: 0.75em;
+	text-transform: uppercase;
+}
+
+td {
+	text-align: left;
+	font-size: 0.85em;
+	padding: 4px;
+	line-height: 1.20em;
+}
+
+.rtl th, .rtl td {
+	text-align: right;
+}
+
+table.type2 {
+	border: none;
+	background: none;
+	padding: 0;
+}
+
+table.type2 th {
+	background: none;
+	border-top: none;
+	text-align: center;
+	color: #115098;
+	padding: 2px 0;
+}
+
+table.type2 td {
+	padding: 0;
+	font-size: 1em;
+}
+
+table.type2 td.name {
+	padding: 2px;
+	vertical-align: middle;
+}
+
+table.type3  {
+	float: right;
+	width: 300px;
+	border: none;
+	background-color: transparent;
+	padding: 0;
+}
+
+.rtl table.type3 {
+	float: left;
+}
+
+table.type3 thead th {
+	background-color: transparent;
+	border-top: none;
+	text-align: center;
+	color: #115098;
+	padding: 0 3px;
+	font-size: 0.85em;
+	font-weight: normal;
+	text-transform: none;
+}
+
+table.type3 tbody th {
+	border-top: none;
+	text-align: left;
+	text-transform: none;
+	padding: 0;
+	border: none;
+	font-size: 0.90em;
+	font-weight: normal;
+	width: 100%;
+}
+
+.rtl table.type3 tbody th {
+	text-align: right;
+}
+
+table.type3 td {
+	text-align: center;
+	padding: 1px;
+}
+
+th.name {
+	text-align: left;
+	width: auto;
+}
+
+.rtl th.name {
+	text-align: right;
+}
+
+td.name {
+	text-align: left;
+	font-weight: bold;
+}
+
+.rtl td.name {
+	text-align: right;
+}
+
+.entry {
+	text-align: left;
+	font-weight: normal;
+}
+
+.rtl .entry {
+	text-align: right;
+}
+
+.row1 { background-color: #F9F9F9; }
+.row2 { background-color: #DCEBFE; }
+.row3 { background-color: #DBDFE2; }
+.row4 { background-color: #E4E8EB; }
+.col1 { background-color: #DCEBFE; }
+.col2 { background-color: #F9F9F9; }
+
+.spacer {
+	background-color: #DBDFE2;
+	height: 1px;
+	line-height: 1px;
+}
+
+/* General form styles
+----------------------------------------*/
+fieldset {
+	margin: 15px 0;
+	padding: 10px;
+	border-top: 1px solid #D7D7D7;
+	border-right: 1px solid #CCCCCC;
+	border-bottom: 1px solid #CCCCCC;
+	border-left: 1px solid #D7D7D7;
+	background-color: #FFFFFF;
+	position: relative;
+}
+
+.rtl fieldset {
+	border-top: 1px solid #D7D7D7;
+	border-right: 1px solid #D7D7D7;
+	border-bottom: 1px solid #CCCCCC;
+	border-left: 1px solid #CCCCCC;
+}
+
+* html fieldset {
+	padding: 0 10px 5px 10px;
+}
+
+fieldset p {
+	font-size: 0.85em;
+}
+
+legend {
+	padding: 1px 0;
+	font-family: Tahoma,arial,Verdana,Sans-serif;
+	font-size: .9em;
+	font-weight: bold;
+	color: #115098;
+	margin-top: -.4em;
+	position: relative;
+	text-transform: none;
+	line-height: 1.2em;
+	top: 0;
+	vertical-align: middle;
+}
+
+/* Hide from macIE \*/
+legend { top: -1.2em; }
+/* end */
+
+* html legend {
+	margin: 0 0 -10px -7px;
+	line-height: 1em;
+	font-size: .85em;
+}
+
+/* Holly hack, .rtl comes after html */
+* html .rtl legend {
+	margin: 0;
+	margin-right: -7px;
+}
+
+input, textarea {
+	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-size: 0.90em;
+	font-weight: normal;
+	cursor: text;
+	vertical-align: middle;
+	padding: 2px;
+	color: #111111;
+	border-left: 1px solid #AFAEAA;
+	border-top: 1px solid #AFAEAA;
+	border-right: 1px solid #D5D5C8;
+	border-bottom: 1px solid #D5D5C8;
+	background-color: #E3DFD8;
+}
+
+.rtl input, .rtl textarea {
+	border-left: 1px solid #D5D5C8;
+	border-top: 1px solid #AFAEAA;
+	border-right: 1px solid #AFAEAA;
+	border-bottom: 1px solid #D5D5C8;
+}
+
+input:hover, textarea:hover {
+	border-left: 1px solid #AFAEAA;
+	border-top: 1px solid #AFAEAA;
+	border-right: 1px solid #AFAEAA;
+	border-bottom: 1px solid #AFAEAA;
+	background-color: #E9E9E2;
+}
+
+input.langvalue, textarea.langvalue {
+	width: 90%;
+}
+
+optgroup, select {
+	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-size: 0.85em;
+	font-weight: normal;
+	font-style: normal;
+	cursor: pointer;
+	vertical-align: middle;
+	width: auto;
+	color: #000;
+}
+
+optgroup {
+	font-size: 1.00em;
+	font-weight: bold;
+}
+
+optgroup.disabled-options {
+	display: none;
+	background-color: gray;
+}
+
+option {
+	padding: 0 1em 0 0;
+	color: #000;
+}
+
+option.disabled-option {
+	color: graytext;
+}
+
+.rtl option {
+	padding: 0 0 0 1em;
+}
+
+.sep {
+	font-weight: bold;
+}
+
+.username-coloured {
+	font-weight: bold;
+}
+
+textarea {
+	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-size: 0.85em;
+	width: 60%;
+	padding: 2px;
+}
+
+label {
+	cursor: pointer;
+	font-size: 0.85em;
+	padding: 0 5px 0 0;
+}
+
+.rtl label {
+	padding: 0 0 0 5px;
+}
+
+label input {
+	font-size: 1.00em;
+	vertical-align: middle;
+}
+
+label img {
+	vertical-align: middle;
+}
+
+fieldset.quick, p.quick {
+	margin: 0 0 5px;
+	padding: 5px 0 0; 
+	border: none;
+	background-color: transparent;
+	text-align: right;
+}
+
+.rtl fieldset.quick, .rtl p.quick {
+	text-align: left;
+}
+
+fieldset.quick legend {
+	display: none;
+}
+
+fieldset.tabulated {
+	background: none;
+	margin: 0;
+	padding: 0;
+	padding-top: 5px;
+	border: 0;
+}
+
+fieldset.tabulated legend {
+	display: none;
+}
+
+fieldset.nobg {
+	margin: 15px 0 0 0;
+	padding: 0;
+	border: none;
+	background-color: transparent;
+}
+
+fieldset.display-options {
+	margin: 15px 0 2px 0;
+	padding: 0 0 4px 0;
+	border: none;
+	background-color: transparent;
+	text-align: center;
+	font-size: 0.75em;
+}
+
+fieldset.display-options select, fieldset.display-options input, fieldset.display-options label {
+	font-size: 1.00em;
+	vertical-align: middle;
+}
+
+select option.disabled {
+	background-color: #bbb;
+	color: #fff;
+}
+
+/* Special case inputs */
+select#board_timezone, 
+select#full_folder_action {
+	width: 95%;
+}
+
+/* Definition list layout for forms
+	Other general def. list properties defined in prosilver_main.css
+---------------------------------------- */
+dl {
+	font-family: Verdana, Helvetica, Arial, sans-serif;
+	font-size: 1.00em;
+}
+
+dt {
+	float: left;
+	width: auto;
+}
+
+.rtl dt {
+	float: right;
+}
+
+dd { color: #666666;}
+dd + dd { padding-top: 5px;}
+dt span { padding: 0 5px 0 0;}
+.rtl dt span { padding: 0 0 0 5px;}
+
+dt .explain { font-style: italic;}
+
+dt label {
+	font-size: 1.00em;
+	text-align: left;
+	font-weight: bold;
+	color: #4A5A73;
+}
+
+.rtl dt label {
+	text-align: right;
+}
+
+dd label {
+	font-size: 1.00em;
+	white-space: nowrap;
+	margin: 0 10px 0 0;
+	color: #4A5A73;
+}
+
+.rtl dd label {
+	margin: 0 0 0 10px;
+}
+
+html>body dd label input { vertical-align: text-bottom;}	/* Tweak for Moz to align checkboxes/radio buttons nicely */
+
+dd input {
+	font-size: 1.00em;
+	max-width: 100%;
+}
+
+dd select {
+	font-size: 100%;
+	width: auto;
+	max-width: 100%;
+}
+
+dd textarea {
+	font-size: 0.90em;
+	width: 90%;
+}
+
+dd select {
+	width: auto;
+	font-size: 1.00em;
+}
+
+fieldset dl {
+	margin-bottom: 10px;
+	font-size: 0.85em;
+}
+
+fieldset dt {
+	width: 45%;
+	text-align: left;
+	border: none;
+	border-right: 1px solid #CCCCCC;
+	padding-top: 3px;
+}
+
+.rtl fieldset dt {
+	text-align: right;
+	border: none;
+	border-left: 1px solid #CCCCCC;
+}
+
+fieldset dd {
+	margin: 0 0 0 45%;
+	padding: 0 0 0 5px;
+	border: none;
+	border-left: 1px solid #CCCCCC;
+	vertical-align: top;
+	font-size: 1.00em;
+}
+
+.rtl fieldset dd {
+	margin: 0 45% 0 0;
+	padding: 0 5px 0 0;
+	border: none;
+	border-right: 1px solid #CCCCCC;
+}
+
+dd.full, .rtl dd.full {
+	margin: 0;
+	border: 0;
+	padding: 0;
+	padding-top: 3px;
+	text-align: center;
+	width: 95%;
+}
+
+/* Hover highlights for form rows */
+fieldset dl:hover dt, fieldset dl:hover dd {
+	border-color: #666666;
+}
+
+fieldset dl:hover dt label {
+	color: #000000;
+}
+
+fieldset dl dd label:hover {
+	color: #BC2A4D;
+}
+
+input:focus, textarea:focus {
+	border: 1px solid #BC2A4D;
+	background-color: #E9E9E2;
+	color: #BC2A4D;
+}
+
+/* Submit button fieldset or paragraph
+---------------------------------------- */
+fieldset.submit-buttons {
+	text-align: center;
+	border: none;
+	background-color: transparent;
+	margin: 0;
+	padding: 4px;
+	margin-top: -1px;
+}
+
+p.submit-buttons {
+	text-align: center;
+	margin: 0;
+	padding: 4px;
+	margin-top: 10px;
+}
+
+fieldset.submit-buttons input, p.submit-buttons input {
+	padding: 3px 2px;
+}
+
+fieldset.submit-buttons legend {
+	display: none;
+}
+
+/* Input field styles
+---------------------------------------- */
+
+input.radio, input.permissions-checkbox {
+	width: auto !important;
+	background-color: transparent;
+	border: none;
+	cursor: default;
+}
+
+input.full,
+textarea.full {
+	width: 99%;
+}
+
+* html input.full, * html textarea.full { width: 95%;}
+input.medium { width: 50%;}
+input.narrow { width: 25%;}
+input.tiny { width: 10%;}
+input.autowidth { width: auto !important;}
+.box2 .inputbox { background-color: #E9E9E9;}
+
+/* Form button styles
+---------------------------------------- */
+a.button1, input.button1, input.button3,
+a.button2, input.button2 {
+	width: auto !important;
+	padding: 1px 3px 0 3px;
+	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
+	color: #000;
+	font-size: 0.85em;
+	background: #EFEFEF url("../images/bg_button.gif") repeat-x top;
+	cursor: pointer;
+}
+
+a.button1, input.button1 {
+	font-weight: bold;
+	border: 1px solid #666666;
+}
+
+/* Alternative button */
+a.button2, input.button2 {
+	border: 1px solid #666666;
+}
+
+/* <a> button in the style of the form buttons */
+a.button1, a.button1:link, a.button1:visited, a.button1:active,
+a.button2, a.button2:link, a.button2:visited, a.button2:active {
+	text-decoration: none;
+	color: #000000;
+	padding: 4px 8px;
+}
+
+/* Hover states */
+a.button1:hover, input.button1:hover,
+a.button2:hover, input.button2:hover {
+	border: 1px solid #BC2A4D;
+	background: #EFEFEF url("../images/bg_button.gif") repeat bottom;
+	color: #BC2A4D;
+}
+
+input.disabled {
+	font-weight: normal;
+	color: #666666;
+}
+
+/* Pagination
+---------------------------------------- */
+.pagination {
+	height: 1%; /* IE tweak (holly hack) */
+	width: auto;
+	text-align: right;
+	margin-top: 5px;
+	font-size: 0.85em;
+	padding-bottom: 2px;
+}
+
+.rtl .pagination {
+	text-align: left;
+}
+
+.pagination strong,
+.pagination b {
+	font-weight: normal;
+}
+
+.pagination span.page-sep {
+	display:none;
+}
+
+.pagination span strong {
+	padding: 0 2px;
+	margin: 0 2px;
+	font-weight: normal;
+	font-size: 0.85em;
+	color: #FFFFFF;
+	background: #4692BF;
+	border: 1px solid #4692BF;
+}
+
+.pagination span a, .pagination span a:link, .pagination span a:visited, .pagination span a:active {
+	font-weight: normal;
+	font-size: 0.85em;
+	text-decoration: none;
+	color: #5C758C;
+	margin: 0 2px;
+	padding: 0 2px;
+	background: #ECEDEE;
+	border: 1px solid #B4BAC0;
+}
+
+.pagination span a:hover {
+	border-color: #368AD2;
+	background: #368AD2;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+
+.pagination img {
+	vertical-align: middle;
+}
+
+
+/* Action Highlighting
+---------------------------------------- */
+.successbox, .errorbox {
+	padding: 8px;
+	margin: 10px 0;
+	color: #FFFFFF;
+	text-align: center;
+}
+
+.success {
+	color: #228822;
+}
+
+.error {
+	color: #BC2A4D;
+}
+
+.successbox {
+	background-color: #228822;
+}
+
+.errorbox {
+	background-color: #BC2A4D;
+}
+
+* html .errorbox, * html .successbox { height: 1%; } /* Pixel shift fix for IE */
+
+.successbox h3, .errorbox h3 {
+	color: #FFFFFF;
+	margin: 0 0 0.5em;
+	font-size: 1.10em;
+	font-family: "Lucida Grande",Verdana,Helvetica,Arial,sans-serif;
+}
+
+.successbox p, .errorbox p {
+	color: #FFFFFF;
+	font-size: 0.85em;
+	margin-bottom: 0;
+}
+
+.errorbox a:link, .errorbox a:active, .errorbox a:visited,
+.successbox a:link, .successbox a:active, .successbox a:visited {
+	color: #DBD7D1;
+	text-decoration: underline;
+	font-weight: bold;
+}
+
+.errorbox a:hover, .successbox a:hover {
+	color: #FFFFFF;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+/* Special cases for the error page */
+#errorpage #page-header a {
+	font-weight: bold;
+	line-height: 6em;
+}
+
+#errorpage #content {
+	padding-top: 10px;
+}
+
+#errorpage #content h1 {
+	color: #DF075C;
+}
+
+#errorpage #content h2 {
+	margin-top: 20px;
+	margin-bottom: 5px;
+	border-bottom: 1px solid #CCCCCC;
+	padding-bottom: 5px;
+	color: #333333;
+}
+
+/* Tooltip for permission roles */
+.tooltip {
+	width: 200px;
+	color: #000;
+	text-align: center;
+	border: 1px solid #AAA;
+}
+
+.tooltip span.top {
+	background: #EFEFEF;
+	font-weight: bold;
+	padding: 2px;
+}
+
+.tooltip span.bottom {
+	padding: 5px;
+	color: #000000;
+	background: #FFFFFF;
+}
+
+/*
+ Format Buttons for signature editor
+*/
+#format-buttons {
+	margin: 15px 0 2px 0;
+}
+
+#format-buttons input, #format-buttons select {
+	vertical-align: middle;
+}
+
+/* Nice method for clearing floated blocks without having to insert any extra markup
+	From http://www.positioniseverything.net/easyclearing.html 
+.clearfix:after, #tabs:after, .row:after, #content:after, fieldset dl:after, #page-body:after {
+	content: "."; 
+	display: block; 
+	height: 0; 
+	clear: both; 
+	visibility: hidden;
+}*/
+
+.clearfix, #tabs, .row, #content, fieldset dl, #page-body {
+	height: 1%;
+	overflow: hidden;
+}
+
+/* Syntax Highlighting
+---------------------------------------- */
+.sourcenum {
+	color: gray;
+	font-family: Monaco, 'Courier New', monospace;
+	font-size: 1.25em;
+	font-weight: bold;
+	line-height: 1.20em;
+	text-align: right;
+	padding: 0;
+}
+
+.rtl .sourcenum {
+	text-align: left;
+}
+
+.source {
+	font-family: Monaco, 'Courier New', monospace;
+	font-size: 1.25em;
+	line-height: 1.20em;
+	padding: 0;
+}
+
+.syntaxbg {
+	color: #FFFFFF;
+}
+
+.syntaxcomment {
+	color: #FF8000;
+}
+
+.syntaxdefault {
+	color: #0000BB;
+}
+
+.syntaxhtml {
+	color: #000000;
+}
+
+.syntaxkeyword {
+	color: #007700;
+}
+
+.syntaxstring {
+	color: #DD0000;
+}
+
+/* Permission interface
+---------------------------------------- */
+
+fieldset.permissions legend {
+	text-transform: none;
+}
+
+fieldset.permissions legend input{
+	height: 1.1em;
+}
+
+/* Permission sections */ 
+fieldset.permissions .permissions-simple {
+	text-align: left;
+	padding-top: 3px;
+}
+
+.rtl fieldset.permissions .permissions-simple {
+	text-align: right;
+}
+
+fieldset.permissions .permissions-advanced {
+	padding: 10px 0 0 5px;
+	vertical-align: top;
+	clear: right;
+}
+
+.rtl fieldset.permissions .permissions-advanced {
+	padding: 10px 5px 0 0;
+	clear: left;
+}
+
+fieldset.permissions .permissions-switch {
+	float: right;
+}
+
+.rtl fieldset.permissions .permissions-switch {
+	float: left;
+}
+
+fieldset.permissions .padding {
+}
+
+.permissions-switch a {
+	text-decoration: underline;
+	font-size: 0.90em;
+}
+
+.permissions-reset {
+	margin-top: -6px;
+	padding-bottom: 10px;
+}
+
+.permissions-reset a {
+	font-size: .8em;
+}
+
+/* Tabbed menu */
+.permissions-category {
+	line-height: normal;
+	margin: 0 0 -1px 7px;
+	min-width: 570px;
+	font-size: 0.85em;
+}
+
+.rtl .permissions-category {
+	margin: 0 7px -1px 0;
+}
+
+.permissions-category ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.permissions-category li {
+	display: inline;
+	margin: 0;
+	padding: 0;
+	font-size: 1em;
+	font-weight: bold;
+}
+
+.permissions-category a {
+	float: left;
+	background: url("../images/bg_tabs_alt1.gif") no-repeat 0% -35px;
+	margin: 0 1px 0 0;
+	padding: 0 0 0 6px;
+	text-decoration: none;
+	position: relative;
+}
+
+.rtl .permissions-category a {
+	float: right;
+}
+
+.permissions-category a span.tabbg {
+	float: left;
+	display: block;
+	background: url("../images/bg_tabs_alt2.gif") no-repeat 100% -35px;
+	padding: 7px 12px 6px 6px;
+	color: #536482;
+	white-space: nowrap;
+}
+
+.rtl .permissions-category a span.tabbg {
+	float: right;
+}
+
+/* Commented Backslash Hack hides rule from IE5-Mac \*/
+.permissions-category a span.tabbg, .rtl .permissions-category a span.tabbg { float: none;}
+/* End hack */
+
+.permissions-category a:hover span.tabbg {
+	color: #DD6900;
+}
+
+.permissions-category .activetab a {
+	background-position: 0 0;
+}
+
+.permissions-category .activetab a span.tabbg {
+	background-position: 100% 0;
+	padding-bottom: 7px;
+	color: #333333;
+}
+
+.permissions-category a:hover {
+	background-position: 0 -70px;
+}
+
+.permissions-category a:hover span.tabbg {
+	background-position: 100% -70px;
+}
+
+.permissions-category .activetab a:hover span.tabbg {
+	color: #333333;
+	background-position: 100% 0;
+}
+
+.permissions-category .activetab a:hover {
+	background-position: 0 0;
+}
+
+.permissions-category a span.colour {
+	border: 1px solid #536482;
+	display: block;
+	float: left;
+	width: 10px;
+	height: 10px;
+	margin: 0 5px 0 0;
+}
+
+/* Most browsers will have to live with a left aligned icon in RTL mode, as (currently) only Firefox 3.0 Alpha 3 renders it correctly without destroying it
+.rtl .permissions-category a span.colour {
+	float: right;
+	margin: 0 0 0 5px;
+}
+*/
+
+.permissions-category .activetab span.colour {
+	border-color: #333333;
+}
+
+.permissions-category a:hover span.colour {
+	border-color: #DD6900;
+}
+
+.permissions-category .activetab a:hover span.colour {
+	border-color: #333333;
+}
+
+/* Permission preset colours */
+.permissions-preset-yes span.colour,
+.yes {
+	background-color: #86F786;
+}
+
+.permissions-preset-custom span.colour {
+	background-color: #B2BBDD;
+}
+
+.permissions-preset-never span.colour {
+	background-color: #DD0000;
+}
+
+.permissions-preset-no span.colour,
+.never {
+	background-color: #EFB0B2;
+}
+
+/* Permission panel
+---------------------------------------- */
+.permissions-panel {
+	float: left;
+	background-color: #CADCEB;
+	width: 100%;
+}
+
+.rtl .permissions-panel {
+	float: right;
+}
+
+.permissions-panel span.corners-top {
+	background-image: url("../images/corners_left2.gif");
+}
+
+.permissions-panel span.corners-top span {
+	background-image: url("../images/corners_right2.gif");
+}
+
+.permissions-panel span.corners-bottom {
+	background-image: url("../images/corners_left2.gif");
+}
+
+.permissions-panel span.corners-bottom span {
+	background-image: url("../images/corners_right2.gif");
+}
+
+.permissions-panel span.corners-top, .permissions-panel span.corners-bottom, 
+.permissions-panel span.corners-top span, .permissions-panel span.corners-bottom span {
+	font-size: 1px;
+	line-height: 1px;
+	display: block;
+	height: 5px;
+	background-repeat: no-repeat;
+}
+
+.permissions-panel span.corners-top {
+	background-image: url("../images/corners_left2.gif");
+	background-position: 0 0;
+	margin: 0 0;
+}
+
+.permissions-panel span.corners-top span {
+	background-image: url("../images/corners_right2.gif");
+	background-position: 100% 0;
+}
+
+.permissions-panel span.corners-bottom {
+	background-image: url("../images/corners_left2.gif");
+	background-position: 0 100%;
+	margin: 0 0;
+	clear: both;
+}
+
+.permissions-panel span.corners-bottom span {
+	background-image: url("../images/corners_right2.gif");
+	background-position: 100% 100%;
+}
+
+/* Permission table
+---------------------------------------- */
+.permissions-panel .tablewrap {
+	margin: 0 10px;
+}
+
+.permissions-panel table {
+	width: 100%;
+}
+
+.permissions-panel th {
+	text-transform: none;
+}
+
+.permissions-panel th.value {
+	text-align: center;
+}
+
+.permissions-panel th.name {
+	text-align: left;
+	width: auto;
+	text-transform: none;
+}
+
+.rtl .permissions-panel th.name {
+	text-align: right;
+}
+
+.permissions-panel th.permissions-name {
+	border: none;
+	color: #536482;
+	font-weight: normal;
+}
+
+.permissions-panel th.permissions-name a.trace {
+	display: inline;
+}
+
+.permissions-panel th.row3 {
+	background-image: none;
+	background-color: #D1D7DC;
+	color: #536482;
+	border: none;
+}
+
+.permissions-panel th.row4 {
+	background-image: none;	
+	background-color: #E4E8EB;
+	color: #536482;
+	border: none;
+}
+
+.permissions-panel th a:link, .permissions-panel th a:hover, .permissions-panel th a:visited {
+	display: block;
+	color: #FFFFFF; 
+	text-decoration: underline; 
+}
+
+.permissions-panel td.permissions-yes label:hover {
+	background-color: #86F786;
+}
+
+.permissions-panel td.permissions-no label:hover {
+	background-color: #EFB0B2;
+}
+
+.permissions-panel td.permissions-never label:hover {
+	background-color: #DD0000;
+}
+
+.permissions-panel td {
+	padding: 0;
+	text-align: center;
+	width: 10%;
+}
+
+.permissions-panel td label {
+	display: block;
+	margin: 0;
+	padding: 0;
+}
+
+/* Classes for additional tasks
+---------------------------------------- */
+
+.phpinfo {
+	overflow: auto;
+	width: 99%;
+	direction: ltr;
+}
+
+.phpinfo td, .phpinfo th, .phpinfo h2, .phpinfo h1 {
+	text-align: left;
+}

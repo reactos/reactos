@@ -1,0 +1,412 @@
+This file contains only important changes made to Bugzilla before release
+2.8.  If you are upgrading from version older than 2.8, please read this file.
+If you are upgrading from 2.8 or newer, please read the Installation and
+Upgrade instructions in The Bugzilla Guide, found with this distribution in
+docs/html, docs/txt, and docs/sgml.
+
+Please note that the period in our version numbers is a place separator, not
+a decimal point.  The 14 in version 2.14 is newer than the 8 in 2.8, for
+example.  You should only be using this file if you have a single digit
+after the period in the version 2.x Bugzilla you are upgrading from.
+
+For a complete list of what changes, use Bonsai
+(http://cvs-mirror.mozilla.org/webtools/bonsai/cvsqueryform.cgi) to
+query the CVS tree.  For example,
+
+    http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?module=all&branch=HEAD&branchtype=match&dir=mozilla%2Fwebtools%2Fbugzilla&file=&filetype=match&who=&whotype=match&sortby=Date&hours=2&date=week&mindate=&maxdate=&cvsroot=%2Fcvsroot 
+
+will tell you what has been changed in the last week.
+
+
+10/12/99 The CHANGES file is now obsolete!  There is a new file called
+checksetup.pl.  You should get in the habit of running that file every time
+you update your installation of Bugzilla.  That file will be constantly 
+updated to automatically update your installation to match any code changes.
+If you're curious as to what is going on, changes are commented in that file, 
+at the end.
+
+Many thanks to Holger Schurig <holgerschurig@nikocity.de> for writing this
+script!
+
+
+
+10/11/99 Restructured voting database to add a cached value in each
+bug recording how many total votes that bug has.  While I'm at it, I
+removed the unused "area" field from the bugs database.  It is
+distressing to realize that the bugs table has reached the maximum
+number of indices allowed by MySQL (16), which may make future
+enhancements awkward.
+
+You must feed the following to MySQL:
+
+	alter table bugs drop column area;
+	alter table bugs add column votes mediumint not null, add index (votes);
+
+You then *must* delete the data/versioncache file when you make this
+change, as it contains references to the "area" field.  Deleting it is safe,
+bugzilla will correctly regenerate it.
+
+If you have been using the voting feature at all, then you will then
+need to update the voting cache.  You can do this by visiting the
+sanitycheck.cgi page, and taking it up on its offer to rebuild the
+votes stuff.
+
+
+10/7/99 Added voting ability.  You must run the new script
+"makevotestable.sh".  You must also feed the following to mysql:
+
+	alter table products add column votesperuser smallint not null;
+
+
+
+9/15/99 Apparently, newer alphas of MySQL won't allow you to have
+"when" as a column name.  So, I have had to rename a column in the
+bugs_activity table.  You must feed the below to mysql or you won't
+work at all.
+
+	alter table bugs_activity change column when bug_when datetime not null;
+
+
+8/16/99 Added "OpenVMS" to the list of OS's. Feed this to mysql:
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "Mac System 8.6", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "FreeBSD", "OSF/1", "Solaris", "SunOS", "Neutrino", "OS/2", "BeOS", "OpenVMS", "other") not null;
+
+6/22/99 Added an entry to the attachments table to record who the submitter
+was.  Nothing uses this yet, but it still should be recorded.
+
+	alter table attachments add column submitter_id mediumint not null;
+
+You should also run this script to populate the new field:
+
+#!/usr/bin/perl -w
+use diagnostics;
+use strict;
+require "globals.pl";
+$|=1;
+ConnectToDatabase();
+SendSQL("select bug_id, attach_id from attachments order by bug_id");
+my @list;
+while (MoreSQLData()) {
+    my @row = FetchSQLData();
+    push(@list, \@row);
+}
+foreach my $ref (@list) {
+    my ($bug, $attach) = (@$ref);
+    SendSQL("select long_desc from bugs where bug_id = $bug");
+    my $comment = FetchOneColumn() . "Created an attachment (id=$attach)";
+
+    if ($comment =~ m@-* Additional Comments From ([^ ]*)[- 0-9/:]*\nCreated an attachment \(id=$attach\)@) {
+	print "Found $1\n";
+	SendSQL("select userid from profiles where login_name=" .
+		SqlQuote($1));
+	my $userid = FetchOneColumn();
+	if (defined $userid && $userid > 0) {
+	    SendSQL("update attachments set submitter_id=$userid where attach_id = $attach");
+	}
+    } else {
+	print "Bug $bug can't find comment for attachment $attach\n";
+    }
+}
+
+
+
+
+
+
+6/14/99 Added "BeOS" to the list of OS's. Feed this to mysql:
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "Mac System 8.6", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "FreeBSD", "OSF/1", "Solaris", "SunOS", "Neutrino", "OS/2", "BeOS", "other") not null;
+
+
+5/27/99 Added support for dependency information.  You must run the new
+"makedependenciestable.sh" script.  You can turn off dependencies with the new
+"usedependencies" param, but it defaults to being on.  Also, read very
+carefully the description for the new "webdotbase" param; you will almost
+certainly need to tweak it.
+
+
+5/24/99 Added "Mac System 8.6" and "Neutrino" to the list of OS's.
+Feed this to mysql:
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "Mac System 8.6", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "FreeBSD", "OSF/1", "Solaris", "SunOS", "Neutrino", "OS/2", "other") not null;
+
+
+5/12/99 Added a pref to control how much email you get.  This needs a new
+column in the profiles table, so feed the following to mysql:
+
+	alter table profiles add column emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges";
+
+5/5/99 Added the ability to search by creation date.  To make this perform
+well, you ought to do the following:
+
+	alter table bugs change column creation_ts creation_ts datetime not null, add index (creation_ts);
+
+
+4/30/99 Added a new severity, "blocker".  To get this into your running
+Bugzilla, do the following:
+
+	alter table bugs change column bug_severity bug_severity enum("blocker", "critical", "major", "normal", "minor", "trivial", "enhancement") not null;
+
+
+4/22/99 There was a bug where the long descriptions of bugs had a variety of
+newline characters at the end, depending on the operating system of the browser
+that submitted the text.  This bug has been fixed, so that no further changes
+like that will happen.  But to fix problems that have already crept into your
+database, you can run the following perl script (which is slow and ugly, but
+does work:)
+#!/usr/bin/perl -w
+use diagnostics;
+use strict;
+require "globals.pl";
+$|=1;
+ConnectToDatabase();
+SendSQL("select bug_id from bugs order by bug_id");
+my @list;
+while (MoreSQLData()) {
+    push(@list, FetchOneColumn());
+}
+foreach my $id (@list) {
+    if ($id % 50 == 0) {
+	print "\n$id ";
+    }
+    SendSQL("select long_desc from bugs where bug_id = $id");
+    my $comment = FetchOneColumn();
+    my $orig = $comment;
+    $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
+    $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
+    if ($comment ne $orig) {
+	SendSQL("update bugs set long_desc = " . SqlQuote($comment) .
+		" where bug_id = $id");
+	print ".";
+    } else {
+	print "-";
+    }
+}
+
+
+
+4/8/99 Added ability to store patches with bugs.  This requires a new table
+to store the data, so you will need to run the "makeattachmenttable.sh" script.
+
+3/25/99 Unfortunately, the HTML::FromText CPAN module had too many bugs, and
+so I had to roll my own.  We no longer use the HTML::FromText CPAN module.
+
+3/24/99 (This entry has been removed.  It used to say that we required the
+HTML::FromText CPAN module, but that's no longer true.)
+
+3/22/99 Added the ability to query by fields which have changed within a date
+range.  To make this perform a bit better, we need a new index:
+
+	alter table bugs_activity add index (field);
+
+3/10/99 Added 'groups' stuff, where we have different group bits that we can
+put on a person or on a bug.  Some of the group bits control access to bugzilla
+features.  And a person can't access a bug unless he has every group bit set
+that is also set on the bug.  See the comments in makegroupstable.sh for a bit
+more info.
+
+The 'maintainer' param is now used only as an email address for people to send
+complaints to.  The groups table is what is now used to determine permissions.
+
+You will need to run the new script "makegroupstable.sh".  And then you need to
+feed the following lines to MySQL (replace XXX with the login name of the
+maintainer, the person you wish to be all-powerful).
+
+	alter table bugs add column groupset bigint not null;
+	alter table profiles add column groupset bigint not null;
+	update profiles set groupset=0x7fffffffffffffff where login_name = XXX;
+
+
+
+3/8/99 Added params to control how priorities are set in a new bug.  You can
+now choose whether to let submitters of new bugs choose a priority, or whether
+they should just accept the default priority (which is now no longer hardcoded
+to "P2", but is instead a param.)  The default value of the params will cause
+the same behavior as before.
+
+3/3/99 Added a "disallownew" field to the products table.  If non-zero, then
+don't let people file new bugs against this product.  (This is for when a 
+product is retired, but you want to keep the bug reports around for posterity.)
+Feed this to MySQL:
+
+	alter table products add column disallownew tinyint not null;
+
+
+2/8/99 Added FreeBSD to the list of OS's.  Feed this to MySQL:
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "FreeBSD", "OSF/1", "Solaris", "SunOS", "OS/2", "other") not null;
+
+
+2/4/99 Added a new column "description" to the components table, and added 
+links to a new page which will use this to describe the components of a 
+given product.  Feed this to MySQL:
+
+	alter table components add column description mediumtext not null;
+
+
+2/3/99 Added a new column "initialqacontact" to the components table that gives
+an initial QA contact field.  It may be empty if you wish the initial qa
+contact to be empty.  If you're not using the QA contact field, you don't need
+to add this column, but you might as well be safe and add it anyway:
+
+	alter table components add column initialqacontact tinytext not null;
+
+
+2/2/99 Added a new column "milestoneurl" to the products table that gives a URL
+which is to describe the currently defined milestones for a product.  If you
+don't use target milestone, you might be able to get away without adding this
+column, but you might as well be safe and add it anyway:
+
+	alter table products add column milestoneurl tinytext not null;
+
+
+1/29/99 Whoops; had a misspelled op_sys.  It was "Mac System 7.1.6"; it should
+be "Mac System 7.6.1".  It turns out I had no bugs with this value set, so I
+could just do the below simple command.  If you have bugs with this value, you
+may need to do something more complicated.
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "OSF/1", "Solaris", "SunOS", "OS/2", "other") not null;
+
+
+
+1/20/99 Added new fields: Target Milestone, QA Contact, and Status Whiteboard.
+These fields are all optional in the UI; there are parameters to turn them on.
+However, whether or not you use them, the fields need to be in the DB.  There
+is some code that needs them, even if you don't.
+
+To update your DB to have these fields, send the following to MySQL:
+
+        alter table bugs add column target_milestone varchar(20) not null,
+                add column qa_contact mediumint not null,
+                add column status_whiteboard mediumtext not null,
+                add index (target_milestone), add index (qa_contact);
+
+
+
+1/18/99 You can now query by CC.  To make this perform reasonably, the CC table
+needs some indices.  The following MySQL does the necessary stuff:
+
+	alter table cc add index (bug_id), add index (who);
+
+
+1/15/99 The op_sys field can now be queried by (and more easily tweaked).
+To make this perform reasonably, it needs an index.  The following MySQL 
+command will create the necessary index:
+
+	alter table bugs add index (op_sys);
+
+
+12/2/98 The op_sys and rep_platform fields have been tweaked.  op_sys
+is now an enum, rather than having the legal values all hard-coded in
+perl.  rep_platform now no longer allows a value of "X-Windows".
+
+Here's how I ported to the new world.  This ought to work for you too.
+Actually, it's probably overkill.  I had a lot of illegal values for op_sys
+in my tables, from importing bugs from strange places.  If you haven't done 
+anything funky, then much of the below will be a no-op.
+
+First, send the following commands to MySQL to make sure all your values for
+rep_platform and op_sys are legal in the new world..
+
+	update bugs set rep_platform="Sun" where rep_platform="X-Windows" and op_sys like "Solaris%";
+	update bugs set rep_platform="SGI" where rep_platform="X-Windows" and op_sys = "IRIX";
+	update bugs set rep_platform="SGI" where rep_platform="X-Windows" and op_sys = "HP-UX";
+	update bugs set rep_platform="DEC" where rep_platform="X-Windows" and op_sys = "OSF/1";
+	update bugs set rep_platform="PC" where rep_platform="X-Windows" and op_sys = "Linux";
+	update bugs set rep_platform="other" where rep_platform="X-Windows";
+	update bugs set rep_platform="other" where rep_platform="";
+	update bugs set op_sys="Mac System 7" where op_sys="System 7";
+	update bugs set op_sys="Mac System 7.5" where op_sys="System 7.5";
+	update bugs set op_sys="Mac System 8.0" where op_sys="8.0";
+	update bugs set op_sys="OSF/1" where op_sys="Digital Unix 4.0";
+	update bugs set op_sys="IRIX" where op_sys like "IRIX %";
+	update bugs set op_sys="HP-UX" where op_sys like "HP-UX %";
+	update bugs set op_sys="Windows NT" where op_sys like "NT %";
+	update bugs set op_sys="OSF/1" where op_sys like "OSF/1 %";
+	update bugs set op_sys="Solaris" where op_sys like "Solaris %";
+	update bugs set op_sys="SunOS" where op_sys like "SunOS%";
+	update bugs set op_sys="other" where op_sys = "Motif";
+	update bugs set op_sys="other" where op_sys = "Other";
+
+Next, send the following commands to make sure you now have only legal
+entries in your table.  If either of the queries do not come up empty, then
+you have to do more stuff like the above.
+
+	select bug_id,op_sys,rep_platform from bugs where rep_platform not regexp "^(All|DEC|HP|Macintosh|PC|SGI|Sun|X-Windows|Other)$";
+	select bug_id,op_sys,rep_platform from bugs where op_sys not regexp "^(All|Windows 3.1|Windows 95|Windows 98|Windows NT|Mac System 7|Mac System 7.5|Mac System 7.1.6|Mac System 8.0|AIX|BSDI|HP-UX|IRIX|Linux|OSF/1|Solaris|SunOS|other)$";
+
+Finally, once that's all clear, alter the table to make enforce the new legal
+entries:
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.1.6", "Mac System 8.0", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "OSF/1", "Solaris", "SunOS", "other") not null, change column rep_platform rep_platform enum("All", "DEC", "HP", "Macintosh", "PC", "SGI", "Sun", "Other");
+
+
+
+
+
+11/20/98 Added searching of CC field.  To better support this, added
+some indexes to the CC table.  You probably want to execute the following
+mysql commands:
+
+	alter table cc add index (bug_id);
+	alter table cc add index (who);
+
+
+10/27/98 security check for legal products in place. bug charts are not
+available as an option if collectstats.pl has never been run. all products 
+get daily stats collected now. README updated: Chart::Base is listed as
+a requirement, instructions for using collectstats.pl included as 
+an optional step. also got silly and added optional quips to bug
+reports. 
+
+10/17/98 modified README installation instructions slightly. 
+
+10/7/98 Added a new table called "products".  Right now, this is used
+only to have a description for each product, and that description is
+only used when initially adding a new bug.  Anyway, you *must* create
+the new table (which you can do by running the new makeproducttable.sh
+script).  If you just leave it empty, things will work much as they
+did before, or you can add descriptions for some or all of your
+products.
+
+
+9/15/98 Everything has been ported to Perl.  NO MORE TCL.  This
+transition should be relatively painless, except for the "params"
+file.  This is the file that contains parameters you've set up on the
+editparams.cgi page.  Before changing to Perl, this was a tcl-syntax
+file, stored in the same directory as the code; after the change to
+Perl, it becomes a perl-syntax file, stored in a subdirectory named
+"data".  See the README file for more details on what version of Perl
+you need.
+
+So, if updating from an older version of Bugzilla, you will need to
+edit data/param, change the email address listed for
+$::param{'maintainer'}, and then go revisit the editparams.cgi page
+and reset all the parameters to your taste.  Fortunately, your old
+params file will still be around, and so you ought to be able to
+cut&paste important bits from there.
+
+Also, note that the "whineatnews" script has changed name (it now has
+an extension of .pl instead of .tcl), so you'll need to change your
+cron job.
+
+And the "comments" file has been moved to the data directory.  Just do
+"cat comments >> data/comments" to restore any old comments that may
+have been lost.
+
+
+
+9/2/98 Changed the way password validation works.  We now keep a
+crypt'd version of the password in the database, and check against
+that.  (This is silly, because we're also keeping the plaintext
+version there, but I have plans...)  Stop passing the plaintext
+password around as a cookie; instead, we have a cookie that references
+a record in a new database table, logincookies.
+
+IMPORTANT: if updating from an older version of Bugzilla, you must run
+the following commands to keep things working:
+
+ ./makelogincookiestable.sh
+ echo "alter table profiles add column cryptpassword varchar(64);" | mysql bugs
+ echo "update profiles set cryptpassword = encrypt(password,substring(rand(),3, 4));" | mysql bugs
+

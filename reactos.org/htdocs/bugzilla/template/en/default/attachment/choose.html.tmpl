@@ -1,0 +1,44 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+   title = "Locate attachment",
+   onload = "document.forms['choose-id'].id.focus()"
+ %]
+
+<form name="choose-id" method="get" action="attachment.cgi">
+  <p>Access an attachment by entering its ID into the form below:</p>
+  <p>Attachment ID: <input name="id" size="6">
+  <button name="action" value="edit" id="edit">Details</button>
+  <button name="action" value="view" id="view">View</button>
+  </p>
+</form>
+
+<form method="get" action="show_bug.cgi">
+  <p>Or, access it from the list of attachments in its associated [% terms.bug %] report:</p>
+  <p>[% terms.Bug %] ID: <input name="id" size="6">
+  <input type="submit" name="action" value="View" id="action">
+  </p>
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

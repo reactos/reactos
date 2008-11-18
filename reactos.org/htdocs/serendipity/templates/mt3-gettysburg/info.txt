@@ -1,0 +1,3 @@
+Name: MT3 - Gettysburg
+Author: Kaustubh Srikanth & Tom Sommer
+Date: 31-06-2004

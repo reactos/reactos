@@ -1,0 +1,13 @@
+Product: FoodReplicator
+Component: Salt
+Version: 1.0
+Priority: P2
+Hardware: PC
+OS: Linux
+Severity: critical
+Summary: Impending electron shortage
+Depends-on: 8
+URL: http://www.google.com/
+
+We need an emergency supply of electrons.
+

@@ -1,7 +1,0 @@
-LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-	IDS_CPLNAME "Πρόσθεση συσκευών"
-	IDS_CPLDESCRIPTION "Πρόσθεση συσκευών στον υπολογιστή σας."
-END

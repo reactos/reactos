@@ -1,0 +1,135 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): John Keiser <jkeiser@netscape.com>
+  #%]
+
+[%# This line is really long for a reason: to get rid of any possible textnodes
+  # between the elements.  This is necessary because DOM parent-child-sibling
+  # relations can change and screw up the javascript for restoring, collapsing
+  # and expanding.  Do not change without testing all three of those.
+  #%]
+<table class="file_table"><thead><tr><td class="file_head" colspan="2"><a href="#" onclick="return twisty_click(this)">[% collapsed ? '(+)' : '(-)' %]</a><input type="checkbox" name="[% file.filename FILTER html %]"[% collapsed ? '' : ' checked' %] style="display: none"> 
+  [% IF lxr_prefix && !file.is_add %]
+    <a href="[% lxr_prefix %]">[% file.filename FILTER html %]</a>
+  [% ELSE %]
+    [% file.filename FILTER html %]
+  [% END %]
+  [% IF file.plus_lines %]
+    [% IF file.minus_lines %]
+      (-[% file.minus_lines %]&nbsp;/&nbsp;+[% file.plus_lines %]&nbsp;lines)
+    [% ELSE %]
+      (+[% file.plus_lines %]&nbsp;lines)
+    [% END %]
+  [% ELSE %]
+    [% IF file.minus_lines %]
+      (-[% file.minus_lines %]&nbsp;lines)
+    [% END %]
+  [% END %]
+</td></tr></thead><tbody class="[% collapsed ? 'file_collapse' : 'file' %]">
+<script type="text/javascript">
+incremental_restore()
+</script>
+
+[% section_num = 0 %]
+[% FOREACH section = sections %]
+  [% section_num = section_num + 1 %]
+  <tr><th colspan="2" class="section_head">
+    <table cellpadding="0" cellspacing="0">
+    <tr><th width="95%" align="left">
+  [% IF file.is_add %]
+    Added
+  [% ELSIF file.is_remove %]
+    [% IF bonsai_prefix %]
+      <a href="[% bonsai_prefix %]">Removed</a>
+    [% ELSE %]
+      Removed
+    [% END %]
+  [% ELSE %]
+    [% IF bonsai_prefix %]
+      <a href="[% bonsai_prefix %]#[% section.old_start %]">
+    [% END %]
+    [% IF section.old_lines > 1 %]
+      &nbsp;Lines&nbsp;[% section.old_start %]-[% section.old_start + 
+                                             section.old_lines - 1 %]
+    [% ELSE %]
+      Line&nbsp;[% section.old_start %]
+    [% END %]
+    [% IF bonsai_prefix %]
+      </a>
+    [% END %]
+    &nbsp;&nbsp;[% section.func_info FILTER html IF section.func_info %]
+  [% END %] 
+    </th><th>
+  <a name="[% file.filename FILTER html %]_sec[% section_num %]" href="#[% file.filename FILTER html %]_sec[% section_num %]">Link&nbsp;Here</a>&nbsp;
+    </th></tr></table>
+  </th></tr>
+  [% FOREACH group = section.groups %]
+    [% IF group.context %]
+      [% FOREACH line = group.context %]
+        <tr><td><pre>[% line FILTER html %]</pre></td><td><pre>[% line FILTER html %]</pre></td></tr>
+      [% END %]
+    [% END %]
+    [% IF group.plus.size %]
+      [% IF group.minus.size %]
+        [% i = 0 %]
+        [% WHILE (i < group.plus.size || i < group.minus.size) %]
+          [% currentloop = 0 %]
+          [% WHILE currentloop < 500 && (i < group.plus.size || i < group.minus.size) %]
+            <tr class="changed">
+              <td><pre>[% group.minus.$i FILTER html %]</pre></td>
+              <td><pre>[% group.plus.$i FILTER html %]</pre></td>
+            </tr>
+            [% currentloop = currentloop + 1 %]
+            [% i = i + 1 %]
+          [% END %]
+        [% END %]
+      [% ELSE %]
+        [% FOREACH line = group.plus %]
+          [% IF file.is_add %]
+            <tr>
+              <td class="added" colspan="2"><pre>[% line FILTER html %]</pre></td>
+            </tr>
+          [% ELSE %]
+            <tr>
+              <td></td>
+              <td class="added"><pre>[% line FILTER html %]</pre></td>
+            </tr>
+          [% END %]
+        [% END %]
+      [% END %]
+    [% ELSE %]
+      [% IF group.minus.size %]
+        [% FOREACH line = group.minus %]
+          [% IF file.is_remove %]
+            <tr>
+              <td class="removed" colspan="2"><pre>[% line FILTER html %]</pre></td>
+            </tr>
+          [% ELSE %]
+            <tr>
+              <td class="removed"><pre>[% line FILTER html %]</pre></td>
+              <td></td>
+            </tr>
+          [% END %]
+        [% END %]
+      [% END %]
+    [% END %]
+  [% END %]
+[% END %]
+
+</table>

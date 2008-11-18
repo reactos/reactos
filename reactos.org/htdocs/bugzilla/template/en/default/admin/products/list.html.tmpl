@@ -1,0 +1,134 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #%]
+
+[%# INTERFACE:
+  # products: array of Bugzilla::Product objects 
+  #
+  # classification: Bugzilla::Classification object; If classifications
+  #                         are enabled, then this is 
+  #                         the currently selected classification
+  # showbugcounts: boolean; true if bug counts should be included in the table
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% IF classification %]
+  [% classification_url_part = BLOCK %]&amp;classification=
+    [%- classification.name FILTER url_quote %]
+  [%- END %]
+  [% classification_title = BLOCK %] 
+    in classification '[% classification.name FILTER html %]'
+  [% END %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Select product $classification_title"
+%]
+
+[% edit_contentlink = BLOCK %]
+  editproducts.cgi?action=edit&amp;product=%%name%%
+  [%- classification_url_part %]
+[% END %]
+[% delete_contentlink = BLOCK %]
+  editproducts.cgi?action=del&amp;product=%%name%%
+  [%- classification_url_part %]
+[% END %]
+[% bug_count_contentlink = BLOCK %]buglist.cgi?product=%%name%%
+  [%- classification_url_part %][% END %]
+
+
+[% columns = [
+     { 
+       name => "name"
+       heading => "Edit product..."
+       contentlink => edit_contentlink
+     },
+     { 
+       name => "description"
+       heading => "Description"
+       allow_html_content => 1
+     },
+     { 
+       name => "disallow_new"
+       heading => "Open For New $terms.Bugs"
+     },
+     { 
+       name => "votesperuser"
+       heading => "Votes Per User"
+       align => 'right'
+     },
+     { 
+       name => "maxvotesperbug"
+       heading => "Maximum Votes Per $terms.Bug"
+       align => 'right'
+     },
+     { 
+       name => "votestoconfirm"
+       heading => "Votes To Confirm"
+       align => 'right'
+     } ]
+%]
+
+[% IF showbugcounts %]
+
+  [% columns.push({
+       name => "bug_count"
+       heading => "$terms.Bug Count"
+       align => 'right'
+       contentlink => bug_count_contentlink
+     })
+  %]
+
+[% END %]
+
+[% columns.push({
+       heading => "Action"
+       content => "Delete"
+       contentlink => delete_contentlink
+     })
+%]
+
+[% overrides.disallow_new = [ {
+     match_value => "1"
+     match_field => 'disallow_new'
+     override_content => 1
+     content => "No"
+   },
+   {
+     match_value => 0
+     match_field => 'disallow_new'
+     override_content => 1
+     content => "Yes"
+   }]
+%] 
+
+[% PROCESS admin/table.html.tmpl
+     columns = columns
+     data = products
+%]
+
+[% IF !showbugcounts %]
+
+  <p><a href="editproducts.cgi?showbugcounts=1[% classification_url_part %]">
+      Redisplay table with [% terms.bug %] counts (slower)</a></p>
+
+[% END %]
+
+[% PROCESS admin/products/footer.html.tmpl
+    no_edit_other_products_link = 1
+ %]
+
+[% PROCESS global/footer.html.tmpl %]

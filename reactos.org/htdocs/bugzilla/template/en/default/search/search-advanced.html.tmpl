@@ -1,0 +1,88 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # This template has no interface. However, to use it, you need to fulfill
+  # the interfaces of search/form.html.tmpl, search/knob.html.tmpl and
+  # search/boolean-charts.html.tmpl.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
+
+[% js_data = BLOCK %]
+var queryform = "queryform"
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Search for $terms.bugs"
+  onload = "doOnSelectProduct(0); initHelp();"
+  javascript = js_data
+  javascript_urls = [ "js/productform.js" ]
+  style = "dl.bug_changes dt {
+             margin-top: 15px;
+           }"
+%]
+
+[% WRAPPER search/tabs.html.tmpl %]
+
+[% button_name = "Search" %]
+
+[%# The decent help requires Javascript %]
+[% IF NOT cgi.param("help") %]
+  [% IF cgi.user_agent("Mozilla/5") %]
+    <script type="text/javascript"> <!--
+      document.write("<p><a href='query.cgi?help=1&amp;format=advanced'>Give me some help<\/a> (reloads page).<\/p>");
+      // -->
+    </script>
+  [% END %]
+[% ELSE %]
+  <p>
+      For help, mouse over the page elements.
+      <font color="red">
+      [% IF cgi.user_agent("Mozilla/5") %]
+        Note that if the help popups are hidden by form element scroll bars,
+        this is a b<!-- word broken up to pass test 009 -->ug in your browser,
+        not in [% terms.Bugzilla %].
+      [% END %]
+    </font>
+  </p>
+[% END %]
+<form method="get" action="buglist.cgi" name="queryform">
+
+[% PROCESS search/form.html.tmpl %]
+
+[% PROCESS search/knob.html.tmpl %]
+
+<hr>
+
+[% PROCESS "search/boolean-charts.html.tmpl" %]
+
+</form>
+
+[% PROCESS "search/search-help.html.tmpl" IF cgi.param("help") %]
+
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

@@ -1,0 +1,19 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="ucp" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+
+<!-- INCLUDE ucp_avatar_options.html -->
+
+<fieldset class="submit-buttons">
+	{S_HIDDEN_FIELDS}
+	<!-- IF S_DISPLAY_GALLERY --><input type="submit" name="display_gallery" value="{L_DISPLAY_GALLERY}" class="button2" />&nbsp; <!-- ENDIF -->
+	<!-- IF S_IN_AVATAR_GALLERY --><input type="submit" name="cancel" value="{L_CANCEL}" class="button2" />&nbsp; <!-- ELSE -->
+	<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp; <!-- ENDIF -->
+	<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<!-- INCLUDE ucp_footer.html -->

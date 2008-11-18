@@ -1,0 +1,52 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # This template has no interface.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+           title = "Remove your votes?"
+ %]
+
+<p>
+  You are about to remove all of your [% terms.bug %] votes. Are you sure you wish to
+  remove your vote from every [% terms.bug %] you've voted on?
+</p>
+
+<form action="votes.cgi" method="post">
+    <input type="hidden" name="action" value="vote">
+  <p>
+    <input type="radio" name="delete_all_votes" value="1">
+    Yes, delete all my votes
+  </p>
+  <p>
+    <input type="radio" name="delete_all_votes" value="0" checked="checked">
+    No, go back and review my votes
+  </p>
+  <p>
+    <input type="submit" id="vote" value="Submit">
+  </p>
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

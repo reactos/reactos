@@ -1,0 +1,311 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Terry Weissman <terry@mozilla.org>
+  #                 Gervase Markham <gerv@gerv.net>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% PROCESS "global/field-descs.none.tmpl" %]
+[% INCLUDE global/header.html.tmpl title = "A $terms.Bug's Life Cycle" %]
+
+<p>
+The <b>status</b> and <b>resolution</b> fields define and track the life
+cycle of [% terms.abug %].  
+</p>
+
+<a name="status"></a>
+<a name="resolution"></a>
+
+<table border="1" cellpadding="4">
+  <tr align="center" valign="top">
+    <td width="50%">
+      <h1>STATUS</h1>
+    </td>
+
+    <td>
+      <h1>RESOLUTION</h1>
+    </td>
+  </tr>
+
+  <tr valign="top">
+    <td>The <b>status</b> field indicates the general health of a 
+    [% terms.bug %]. Only certain status transitions are allowed.</td>
+
+    <td>The <b>resolution</b> field indicates what happened to this
+    [%+ terms.bug %].</td>
+  </tr>
+
+  <tr valign="top">
+    <td>
+      <dl>
+        <dt>
+          <b>[% status_descs.UNCONFIRMED FILTER html %]</b>
+        </dt>
+        <dd>
+          This [% terms.bug %] has recently been added to the database. 
+          Nobody has validated that this [% terms.bug %] is true. Users
+          who have the "canconfirm" permission set may confirm
+          this [% terms.bug %], changing its state to [% status_descs.NEW FILTER html %]. Or, it may be
+          directly resolved and marked [% status_descs.RESOLVED FILTER html %].
+        </dd>
+
+        <dt>
+          <b>[% status_descs.NEW FILTER html %]</b>
+        </dt>
+        <dd>
+          This [% terms.bug %] has recently been added to the assignee's
+          list of [% terms.bugs %] and must be processed. [% terms.Bugs %] in
+          this state may be accepted, and become <b>[% status_descs.ASSIGNED FILTER html %]</b>, passed
+          on to someone else, and remain <b>[% status_descs.NEW FILTER html %]</b>, or resolved and marked
+          <b>[% status_descs.RESOLVED FILTER html %]</b>.
+        </dd>
+
+        <dt>
+          <b>[% status_descs.ASSIGNED FILTER html %]</b>
+        </dt>
+        <dd>
+          This [% terms.bug %] is not yet resolved, but is assigned to the 
+          proper person. From here [% terms.bugs %] can be given to another 
+          person and become <b>[% status_descs.NEW FILTER html %]</b>, or resolved and become <b>[% status_descs.RESOLVED FILTER html  %]</b>.
+        </dd>
+
+        <dt>
+          <b>[% status_descs.REOPENED FILTER html %]</b>
+        </dt>
+        <dd>
+          This [% terms.bug %] was once resolved, but the resolution was 
+          deemed incorrect. For example, a <b>[% get_resolution("WORKSFORME") FILTER html %]</b> [% terms.bug %] is
+          <b>[% status_descs.REOPENED FILTER html %]</b> when more information shows up and
+          the [% terms.bug %] is now reproducible. From here [% terms.bugs %] are
+          either marked <b>[% status_descs.ASSIGNED FILTER html %]</b> or <b>[% status_descs.RESOLVED FILTER html %]</b>.
+        </dd>
+      </dl>
+    </td>
+
+    <td>
+      <dl>
+        <dd>
+          No resolution yet. All [% terms.bugs %] which are in one of 
+          these "open" states have the resolution set to blank. All 
+          other [% terms.bugs %] will be marked with one of the following 
+          resolutions.
+        </dd>
+      </dl>
+    </td>
+  </tr>
+
+  <tr valign="top">
+    <td>
+      <dl>
+        <dt>
+          <b>[% status_descs.RESOLVED FILTER html %]</b>
+        </dt>
+        <dd>
+          A resolution has been taken, and it is awaiting verification by
+          QA. From here [% terms.bugs %] are either re-opened and become 
+          <b>[% status_descs.REOPENED FILTER html %]</b>, are marked <b>[% status_descs.VERIFIED FILTER html %]</b>, or are closed for
+          good and marked <b>[% status_descs.CLOSED FILTER html %]</b>.
+        </dd>
+
+        <dt>
+          <b>[% status_descs.VERIFIED FILTER html %]</b>
+        </dt>
+        <dd>
+          QA has looked at the [% terms.bug %] and the resolution and 
+          agrees that the appropriate resolution has been taken. [% terms.Bugs %] remain
+          in this state until the product they were reported
+          against actually ships, at which point they become
+          <b>[% status_descs.CLOSED FILTER html %]</b>.
+        </dd>
+
+        <dt>
+          <b>[% status_descs.CLOSED FILTER html %]</b>
+        </dt>
+        <dd>
+          The [% terms.bug %] is considered dead, the resolution is correct. 
+          Any zombie [% terms.bugs %] who choose to walk the earth again must 
+          do so by becoming <b>[% status_descs.REOPENED FILTER html %]</b>.
+        </dd>
+      </dl>
+    </td>
+
+    <td>
+      <dl>
+        <dt>
+          <b>[% get_resolution("FIXED") FILTER html %]</b>
+        </dt>
+        <dd>
+          A fix for this [% terms.bug %] is checked into the tree and 
+          tested.
+        </dd>
+
+        <dt>
+          <b>[% get_resolution("INVALID") FILTER html %]</b>
+        </dt>
+        <dd>
+          The problem described is not [% terms.abug %].
+        </dd>
+
+        <dt>
+          <b>[% get_resolution("WONTFIX") FILTER html %]</b>
+        </dt>
+        <dd>
+          The problem described is [% terms.abug %] which will never be 
+          fixed.
+        </dd>
+
+        <dt>
+         <b>[% get_resolution("DUPLICATE") FILTER html %]</b>
+        </dt>
+        <dd>
+          The problem is a duplicate of an existing [% terms.bug %].
+          Marking [% terms.abug %] duplicate requires the [% terms.bug %]#
+          of the duplicating [% terms.bug %] and will at least put
+          that [% terms.bug %] number in the description field.
+        </dd>
+
+        <dt>
+          <b>[% get_resolution("WORKSFORME") FILTER html %]</b>
+        </dt>
+        <dd>
+          All attempts at reproducing this [% terms.bug %] were futile, 
+          and reading the code produces no clues as to why the described
+          behavior would occur. If more information appears later,
+          the [% terms.bug %] can be reopened.
+        </dd>
+
+        <dt>
+          <b>[% get_resolution("MOVED") FILTER html %]</b>
+        </dt>
+        <dd>
+          The problem was specific to a related product 
+          whose [% terms.bugs %] are tracked in
+          another [% terms.bug %] database.
+          The [% terms.bug %] has been moved to that database.
+        </dd>
+      </dl>
+    </td>
+  </tr>
+</table>
+
+<h2><a name="bug_severity">Severity</a></h2>
+This field describes the impact of [% terms.abug %]. 
+
+<table>
+  <tr>
+    <th>Blocker</th>
+
+    <td>Blocks development and/or testing work</td>
+  </tr>
+
+  <tr>
+    <th>Critical</th>
+
+    <td>crashes, loss of data, severe memory leak</td>
+  </tr>
+
+  <tr>
+    <th>Major</th>
+
+    <td>major loss of function</td>
+  </tr>
+
+  <tr>
+    <th>Normal</th>
+
+    <td>regular issue, some loss of functionality under specific circumstances</td>
+  </tr>
+
+
+  <tr>
+    <th>Minor</th>
+
+    <td>minor loss of function, or other problem where easy
+    workaround is present</td>
+  </tr>
+
+  <tr>
+    <th>Trivial</th>
+
+    <td>cosmetic problem like misspelled words or misaligned
+    text</td>
+  </tr>
+
+  <tr>
+    <th>Enhancement</th>
+
+    <td>Request for enhancement</td>
+</table>
+
+<h2><a name="priority">Priority</a></h2>
+This field describes the importance and order in which [% terms.abug %]
+should be fixed. This field is utilized by the
+programmers/engineers to prioritize their work to be done. The
+available priorities range from <b>P1</b> (most important) to 
+<b>P5</b> (least important). 
+
+
+<h2><a name="rep_platform">Platform</a></h2>
+This is the hardware platform against which the [% terms.bug %] was
+reported. Legal platforms include: 
+
+<ul>
+  <li>All (happens on all platforms; cross-platform [% terms.bug %])</li>
+
+  <li>Macintosh</li>
+
+  <li>PC</li>
+</ul>
+<b>Note:</b> When searching, selecting the option "All" does not 
+select [% terms.bugs %]
+assigned against any platform. It merely selects [% terms.bugs %] that are
+marked as occurring on all platforms, i.e. are designated "All". 
+
+<h2><a name="op_sys">Operating System</a></h2>
+This is the operating system against which the [% terms.bug %] was
+reported. Legal operating systems include: 
+
+<ul>
+  <li>All (happens on all operating systems; cross-platform
+  [% terms.bug %])</li>
+
+  <li>Windows</li>
+
+  <li>Mac OS</li>
+
+  <li>Linux</li>
+</ul>
+Sometimes the operating system implies the platform, but not
+always. For example, Linux can run on PC and Macintosh and
+others. 
+
+<h2><a name="assigned_to">Assigned To</a></h2>
+
+<p>
+This is the person in charge of resolving the [% terms.bug %]. Every time
+this field changes, the status changes to <b>[% status_descs.NEW FILTER html %]</b> to make it
+easy to see which new [% terms.bugs %] have appeared on a person's list.</p>
+
+<p>
+The default status for queries is set to [% status_descs.NEW FILTER html %], [% descs.bug_status_descs.ASSIGNED FILTER html %] and 
+[% status_descs.REOPENED FILTER html %]. When searching for [% terms.bugs %] that have been resolved or
+verified, remember to set the status field appropriately. 
+</p>
+
+[% INCLUDE global/footer.html.tmpl %]

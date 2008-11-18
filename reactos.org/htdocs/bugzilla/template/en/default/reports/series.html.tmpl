@@ -1,0 +1,98 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # default: hash. Defaults for category, subcategory, name etc.
+  # button_name: string. What the button will say. 
+  # category: hash (keyed by category) of hashes (keyed by subcategory) of
+  #           hashes (keyed by name), with value being the series_id of the
+  #           series. Contains details of all series the user can see.
+  #%]
+
+[% PROCESS "reports/series-common.html.tmpl"
+   newtext = "New (name below)" 
+ %]
+  
+<table cellpadding="2" cellspacing="2" border="0"
+       style="text-align: left; margin-left: 20px">
+  <tbody>
+    <tr>
+      <th>Category:</th>
+      <th></th>
+      <th>Sub-category:</th>
+      <th>Name:</th>
+      <td></td>
+    </tr>
+    <tr>
+      [% PROCESS series_select sel = { name => 'category',
+                                       size => 5,
+                                       onchange => "catSelected()" } %]
+        <td>
+          <noscript>
+            <input type="submit" name="action-edit" value="Update --&gt;"
+                   id="action-edit">
+          </noscript>
+        </td>
+        
+      [% PROCESS series_select sel = { name => 'subcategory', 
+                                       size => 5,
+                                       onchange => "checkNewState()" } %]
+        
+      <td valign="top" name="name">
+        <input type="text" name="name" maxlength="64" 
+               value="[% default.name.0 FILTER html %]" size="25">
+      </td>
+
+      <td valign="top">
+        <span style="font-weight: bold;">Run every</span> &nbsp;
+        <input type="text" size="2" name="frequency"
+               value="[% (default.frequency.0 OR 7) FILTER html %]">
+        <span style="font-weight: bold;">&nbsp;day(s)</span><br>
+        [%# Change 'admin' here and in Series.pm, or remove the check
+            completely, if you want to change who can make series public. %]
+        [% IF user.in_group('admin') %]      
+          <input type="checkbox" name="public"
+                 [% "checked='checked'" IF default.public.0 %]>
+          <span style="font-weight: bold;">Visible to all<br>
+          (within group restrictions)</span> 
+        [% END %]
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <input type="text" style="width: 100%" name="newcategory" 
+               maxlength="64" value="[% default.newcategory.0 FILTER html %]">
+      </td>
+        <td></td>
+      <td>
+        <input type="text" style="width: 100%" name="newsubcategory"
+               maxlength="64" 
+               value="[% default.newsubcategory.0 FILTER html %]">
+      </td>
+      <td></td>
+      <td>
+        <input type="submit" name="submit-button" id="submit-button"
+               value="[% button_name FILTER html %]">
+      </td>
+    </tr>
+  </tbody>
+</table>

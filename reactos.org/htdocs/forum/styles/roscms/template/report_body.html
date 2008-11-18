@@ -1,0 +1,51 @@
+<!-- INCLUDE overall_header.html -->
+
+<h2 class="titlespace"><!-- IF S_REPORT_POST -->{L_REPORT_POST}<!-- ELSE -->{L_REPORT_MESSAGE}<!-- ENDIF --></h2>
+
+<form method="post" action="{S_REPORT_ACTION}" id="report">
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<div class="content">
+		<p><!-- IF S_REPORT_POST -->{L_REPORT_POST_EXPLAIN}<!-- ELSE -->{L_REPORT_MESSAGE_EXPLAIN}<!-- ENDIF --></p>
+		
+		<fieldset>
+		<dl class="fields2">
+			<dt><label for="reason_id">{L_REASON}:</label></dt>
+			<dd><select name="reason_id" id="reason_id" class="full"><!-- BEGIN reason --><option value="{reason.ID}"<!-- IF reason.S_SELECTED --> selected="selected"<!-- ENDIF -->>{reason.DESCRIPTION}</option><!-- END reason --></select></dd>
+		</dl>
+		<!-- IF S_CAN_NOTIFY -->
+			<dl class="fields2">
+				<dt><label for="notify1">{L_REPORT_NOTIFY}:</label><br /><span>{L_REPORT_NOTIFY_EXPLAIN}</span></dt>
+				<dd>
+					<label for="notify1"><input type="radio" name="notify" id="notify1" value="1" <!-- IF not S_NOTIFY -->checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+					<label for="notify0"><input type="radio" name="notify" id="notify0" value="0" <!-- IF S_NOTIFY -->checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+				</dd>
+			</dl>
+		<!-- ENDIF -->
+		<dl class="fields2">
+			<dt><label for="report_text">{L_MORE_INFO}:</label><br /><span>{L_CAN_LEAVE_BLANK}</span></dt>
+			<dd><textarea name="report_text" id="report_text" rows="10" cols="76" class="inputbox">{REPORT_TEXT}</textarea></dd>
+		</dl>
+		</fieldset>
+	</div>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<div class="content">
+		<fieldset class="submit-buttons">
+			<input type="submit" name="submit" class="button1" value="{L_SUBMIT}" />&nbsp;
+			<input type="submit" name="cancel" class="button2" value="{L_CANCEL}" />
+			{S_FORM_TOKEN}
+		</fieldset>
+	</div>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+</form>
+
+<!-- INCLUDE overall_footer.html -->

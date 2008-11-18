@@ -1,0 +1,136 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Akamai Technologies <bugzilla-dev@akamai.com>
+  #%]
+
+[%# INTERFACE:
+  # comp: object; Bugzilla::Component object representing the component the
+  #               user wants to edit.
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the component belongs.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]
+  Edit component '[% comp.name FILTER html %]' of product '[% product.name FILTER html %]'
+[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+<form method="post" action="editcomponents.cgi">
+  <table border="0" cellpadding="4" cellspacing="0">
+
+    <tr>
+      <td valign="top">Component:</td>
+      <td><input size="64" maxlength="64" name="component" value="
+      [%- comp.name FILTER html %]"></td>
+    </tr>
+    <tr>
+      <td valign="top">Component Description:</td>
+      <td>
+        [% INCLUDE global/textarea.html.tmpl
+          name           = 'description'
+          minrows        = 4
+          cols           = 64
+          wrap           = 'virtual'
+          defaultcontent = comp.description
+        %]
+      </td>
+    </tr>
+    <tr>
+      <td valign="top"><label for="initialowner">Default Assignee:</label></td>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name => "initialowner"
+           id => "initialowner"
+           value => comp.default_assignee.login
+           size => 64
+           emptyok => 1
+         %]
+      </td>
+  
+[% IF Param('useqacontact') %]
+    </tr>
+    <tr>
+      <td valign="top"><label for="initialqacontact">Default QA contact:</label></td>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name => "initialqacontact"
+           id => "initialqacontact"
+           value => comp.default_qa_contact.login
+           size => 64
+           emptyok => 1
+         %]
+      </td>
+[% END %]
+  
+    </tr>
+    <tr>
+      <td valign="top">
+        <label for="initialcc">Default CC List:</label>
+      </td>
+      <td>
+        [% INCLUDE global/userselect.html.tmpl
+           name     => "initialcc"
+           id       => "initialcc"
+           value    => initial_cc_names
+           size     => 64
+           multiple => 5
+        %]
+        <br>
+        [% IF !Param("usemenuforusers") %]
+          <em>Enter user names for the CC list as a comma-separated list.</em>
+        [% END %]
+      </td>
+    </tr>
+    <tr>
+      <td>[% terms.Bugs %]:</td>
+      <td>
+[% IF comp.bug_count > 0 %]
+        <a title="[% terms.Bugs %] in component '[% comp.name FILTER html %]'"
+           href="buglist.cgi?component=
+                [%- comp.name FILTER url_quote %]&amp;product=
+                [%- product.name FILTER url_quote %]">[% comp.bug_count %]</a>
+[% ELSE %]
+        None
+[% END %]
+      </td>
+    </tr>
+
+  </table>
+
+   <input type="hidden" name="action" value="update">
+   <input type="hidden" name="componentold" value="[% comp.name FILTER html %]">
+   <input type="hidden" name="product" value="[% product.name FILTER html %]">
+   <input type="hidden" name="token" value="[% token FILTER html %]">
+   <input type="submit" value="Update" id="update"> or <a 
+        href="editcomponents.cgi?action=del&amp;product=
+        [%- product.name FILTER url_quote %]&amp;component=
+        [%- comp.name FILTER url_quote %]">Delete</a> this component.
+
+</form>
+
+[% PROCESS admin/components/footer.html.tmpl
+  no_edit_component_link = 1
+%]
+
+[% PROCESS global/footer.html.tmpl %]

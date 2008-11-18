@@ -1,0 +1,91 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # a: attachment object; attachment the user wants to delete.
+  # token: string; The token used to identify the session.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]
+  Delete Attachment [% a.id FILTER html %] of
+  [%+ "$terms.Bug " _ a.bug_id FILTER bug_link(a.bug_id) FILTER none %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl title = title %]
+
+<table border="1" cellpadding="4" cellspacing="0">
+  <tr bgcolor="#6666FF">
+    <th valign="top" align="left">Field</th>
+    <th valign="top" align="left">Value</th>
+  </tr>
+  <tr>
+    <td valign="top">Attachment ID:</td>
+    <td valign="top">
+      <a href="attachment.cgi?id=[% a.id FILTER html %]">[% a.id FILTER html %]</a>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">File name:</td>
+    <td valign="top">[% a.filename FILTER html %]</td>
+  </tr>
+  <tr>
+    <td valign="top">Description:</td>
+    <td valign="top">[% a.description FILTER html %]</td>
+  </tr>
+  <tr>
+    <td valign="top">Contained in [% terms.Bug %]:</td>
+    <td valign="top">[% a.bug_id FILTER bug_link(a.bug_id) FILTER none %]</td>
+  </tr>
+  <tr>
+    <td valign="top">Creator:</td>
+    <td valign="top">[% a.attacher.identity FILTER html %]</td>
+  </tr>
+  <tr>
+    <td valign="top">Creation Date:</td>
+    <td valign="top">[% a.attached FILTER time %]</td>
+  </tr>
+</table>
+
+<h2>Confirmation</h2>
+
+<table border="0" cellpadding="20" width="70%" bgcolor="red">
+  <tr>
+    <td>
+      The content of this attachment will be deleted in an <b>irreversible</b> way.
+    </td>
+  </tr>
+</table>
+
+<p>Do you really want to delete this attachment?</p>
+
+<form action="attachment.cgi" method="POST">
+  <label for="reason">Reason of the deletion:</label>
+  <input type="text" id="reason" name="reason" value="" size="80" maxlength="200">
+  <br>
+  <input type="submit" value="Yes, delete" id="delete">
+  <input type="hidden" name="action" value="delete">
+  <input type="hidden" name="id" value="[% a.id FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+</form>
+
+<p>
+  No, cancel this deletion and return to
+  [%+ "$terms.bug " _ a.bug_id FILTER bug_link(a.bug_id) FILTER none %].
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

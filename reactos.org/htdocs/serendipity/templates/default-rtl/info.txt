@@ -1,0 +1,4 @@
+Name: RTL-Languages v0.1
+Author: Tom Sommer, Omid Mottaghi
+Date: 28/2/2005
+Require Serendipity: 0.8

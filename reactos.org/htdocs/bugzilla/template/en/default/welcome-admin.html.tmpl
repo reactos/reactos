@@ -1,0 +1,90 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # none
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]Welcome to [% terms.Bugzilla %][% END %]
+
+[% PROCESS global/header.html.tmpl
+   title = title
+   header_addl_info = "version $constants.BUGZILLA_VERSION"
+   style_urls = [ 'skins/standard/index.css' ]
+%]
+
+<div id="welcome-admin">
+  <p>Welcome, [% user.identity FILTER html %].</p>
+
+  <p>You are seeing this page because some of the core parameters have not been set up yet.
+  The goal of this page is to inform you about the last steps required to set up
+  your installation correctly.</p>
+
+  <p>As an administrator, several administrative links are available at the bottom of
+  this page. These links will always be visible, on all pages. Among these links,
+  you must visit at least the <a href="editparams.cgi">Parameters</a> one,
+  which is the page from where you can set all important parameters for this installation.
+  By clicking this link, you will be able to set among others:</p>
+
+  <ul>
+    <li><a href="editparams.cgi?section=core#maintainer">maintainer</a>, the person
+    responsible for this installation if something is running wrong.</li>
+
+    <li><a href="editparams.cgi?section=core#urlbase">urlbase</a>, which is the URL
+    pointing to this installation and which will be used in emails (which is also the
+    reason you see this page: as long as this parameter is not set, you will see this
+    page again and again).</li>
+
+    <li><a href="editparams.cgi?section=core#cookiepath">cookiepath</a> is important
+    for your browser to manage your cookies correctly.</li>
+
+    <li><a href="editparams.cgi?section=core#utf8">utf8</a> will let you encode all
+    texts into UTF-8, if desired (it is strongly recommended to keep this parameter
+    turned on).</li>
+  </ul>
+
+  <p>Also important are the following parameters:</p>
+
+  <ul>
+    <li><a href="editparams.cgi?section=auth#requirelogin">requirelogin</a>, if turned
+    on, will protect your installation from users having no account on this installation.
+    In other words, users who are not explicitly authenticated with a valid account
+    cannot see any data. This is what you want if you want to keep your data private.</li>
+
+    <li><a href="editparams.cgi?section=auth#createemailregexp">createemailregexp</a>
+    defines which users are allowed to create an account on this installation. If set
+    to ".*" (the default), everybody is free to create his own account. If set to
+    "@mycompany.com$", only users having an account @mycompany.com will be allowed to
+    create an account. If left blank, users will not be able to create accounts themselves;
+    only an administrator will be able to create one for them. If you want a private
+    installation, you must absolutely set this parameter to something different from
+    the default.</li>
+
+    <li><a href="editparams.cgi?section=mta#mail_delivery_method">mail_delivery_method</a>
+    defines the method used to send emails, such as sendmail or SMTP. You have to set
+    it correctly to send emails.</li>
+  </ul>
+
+  <p>
+    After having set up all this, we recommend looking at [% terms.Bugzilla %]'s other
+    parameters as well at some time so that you understand what they do and whether you
+    want to modify their settings for your installation.
+  </p>
+</div>
+
+[% PROCESS global/footer.html.tmpl %]

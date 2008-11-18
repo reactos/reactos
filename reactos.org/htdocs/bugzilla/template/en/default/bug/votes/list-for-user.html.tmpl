@@ -1,0 +1,175 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # voting_user: hash containing a 'login' field
+  #
+  # products: list of hashes containing details of products relating to
+  #           voting: 
+  #            name: name of product
+  #            bugs: list of bugs the user has voted for
+  #            onevoteonly: one or more votes allowed per bug?
+  #            total: users current vote count for the product
+  #            maxvotes: max votes allowed for a user in this product
+  #            maxperbug: max votes per bug allowed for a user in this product
+  #
+  # bug_id: number; if the user is voting for a bug, this is the bug id
+  #
+  # canedit: boolean; Should the votes be presented in a form, or readonly? 
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% IF !header_done %]
+  [% subheader = voting_user.login FILTER html %]
+  [% IF canedit %]
+    [% title = "Change Votes" %]
+    [% IF bug_id %]
+      [%# We .select and .focus the input so it works for textbox and 
+          checkbox %]
+      [% onload = "document.forms['voting_form'].bug_" _ bug_id _
+                  ".select();document.forms['voting_form'].bug_" _ bug_id _
+                  ".focus()" %]
+    [% END %]
+  [% ELSE %]
+    [% title = "Show Votes" %]
+  [% END %]
+  [% PROCESS global/header.html.tmpl
+             style_urls = [ "skins/standard/voting.css" ] 
+  %]
+[% ELSE %]
+  <hr>
+[% END %]
+
+[% IF votes_recorded %]
+  <p>
+    <font color="red">
+      The changes to your votes have been saved.
+    </font>
+  </p>
+[% ELSE %]
+  <br>
+[% END %]
+
+[% IF products.size %]
+  <form name="voting_form" method="post" action="votes.cgi">
+    <input type="hidden" name="action" value="vote">
+    <table cellspacing="4">
+      <tr>
+        <td></td>
+        <th>Votes</th>
+        <th>[% terms.Bug %] #</th>
+        <th>Summary</th>
+      </tr>
+
+      [% onevoteproduct = 0 %]
+      [% multivoteproduct = 0 %]
+      [% FOREACH product = products %]
+        [% IF product.onevoteonly %]
+          [% onevoteproduct = 1 %]
+        [% ELSE %]
+          [% multivoteproduct = 1 %]
+        [% END %]
+        <tr>
+          <th>[% product.name FILTER html %]</th>
+          <td colspan="3">
+            [% IF product.maxperbug < product.maxvotes AND
+                  product.maxperbug > 1 %]
+              <font size="-1">
+                (Note: only [% product.maxperbug %] vote
+                [% "s" IF product.maxperbug != 1 %] allowed per [% terms.bug %] in
+                this product.)
+              </font>
+            [% END %]
+          </td>
+        </tr>
+
+        [% FOREACH bug = product.bugs %]
+          <tr [% IF bug.id == bug_id && canedit %] 
+            class="bz_bug_being_voted_on" [% END %]>
+            <td>[% IF bug.id == bug_id && canedit %]Enter New Vote here &rarr;
+              [%- END %]</td>
+            <td align="right"><a name="vote_[% bug.id %]">
+              [% IF canedit %]
+                [% IF product.onevoteonly %]
+                  <input type="checkbox" name="[% bug.id %]" value="1"
+                    [% " checked" IF bug.count %] id="bug_[% bug.id %]">
+                [% ELSE %]
+                  <input name="[% bug.id %]" value="[% bug.count %]"
+                         size="2" id="bug_[% bug.id %]">
+                [% END %]
+              [% ELSE %]
+                [% bug.count %]
+              [% END %]
+            </a></td>
+            <td align="center">
+              [% bug.id FILTER bug_link(bug.id) FILTER none %]
+            </td>
+            <td>
+              [% bug.summary FILTER html %]
+              (<a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.id %]">Show Votes</a>)
+            </td>
+          </tr>
+        [% END %]
+
+        <tr>
+          <td></td>
+          <td colspan="3">[% product.total %] vote
+            [% "s" IF product.total != 1 %] used out of [% product.maxvotes %]
+            allowed.
+            <br>
+            <br>
+          </td>
+        </tr>
+      [% END %]
+    </table>
+
+    [% IF canedit %]
+      <input type="submit" value="Change My Votes" id="change">
+      <br>
+      <br>
+      To change your votes,
+      [% IF multivoteproduct %]
+        type in new numbers (using zero to mean no votes)
+        [% " or " IF onevoteproduct %]
+      [% END %]
+      [% IF onevoteproduct %]
+        change the checkbox
+      [% END %]
+      and then click <b>Change My Votes</b>.
+    [% END %]
+  </form>
+[% ELSE %]
+  <p>
+    [% IF canedit %]
+    You are
+    [% ELSE %]
+    This user is
+    [% END %]
+    currently not voting on any [% terms.bugs %].
+  </p>
+[% END %]
+
+<p>
+  <a href="page.cgi?id=voting.html">Help with voting</a>.
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

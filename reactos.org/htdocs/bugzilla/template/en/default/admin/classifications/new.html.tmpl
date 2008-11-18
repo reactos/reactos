@@ -1,0 +1,32 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Albert Ting <alt@sonic.net>
+  #%]
+
+[% PROCESS global/header.html.tmpl
+  title = "Adding new classification"
+%]
+
+OK, done.
+
+<p>Back to the <a href="./">main [% terms.bugs %] page</a>,
+<a href="editproducts.cgi?action=add&amp;classification=[% classification FILTER url_quote %]">add</a> products to this new classification, 
+or <a href="editclassifications.cgi"> edit</a> more classifications.
+
+[% PROCESS global/footer.html.tmpl %] 

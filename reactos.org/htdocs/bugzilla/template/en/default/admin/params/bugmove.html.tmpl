@@ -1,0 +1,50 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "$terms.Bug Moving"
+   desc = "Set up parameters to move $terms.bugs to/from another installation"
+%]
+
+[% param_descs = {
+  "move-enabled" => "If this is on, $terms.Bugzilla will allow certain people " _
+                    "to move $terms.bugs to the defined database.",
+
+  "move-button-text" => "The text written on the Move button. Explain where the $terms.bug is " _
+                        "being moved to.",
+
+  "move-to-url" => "The URL of the database we allow some of our $terms.bugs to be moved to.",
+
+  "move-to-address" => "To move ${terms.bugs}, an email is sent to the target database. This is " _
+                       "the email address that database uses to listen for incoming ${terms.bugs}.",
+
+  "moved-from-address" => "To move ${terms.bugs}, an email is sent to the target database. This is " _
+                          "the email address from which this mail, and error messages are sent.",
+
+  movers => "A list of people with permission to move $terms.bugs and reopen moved " _
+            "${terms.bugs} (in case the move operation fails).",
+
+  "moved-default-product" => "$terms.Bugs moved from other databases to here are assigned " _
+                             "to this product.",
+
+  "moved-default-component" => "$terms.Bugs moved from other databases to here are assigned " _
+                               "to this component." }
+%]

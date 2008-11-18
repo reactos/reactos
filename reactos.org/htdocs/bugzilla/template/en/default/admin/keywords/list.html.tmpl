@@ -1,0 +1,71 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Terry Weissman <terry@mozilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #                 Jouni Heikniemi <jouni@heikniemi.net>
+  #%]
+
+[%# INTERFACE:
+  # keywords: array keyword objects having the properties:
+  #   - id: number. The ID of the keyword.
+  #   - name: string. The name of the keyword.
+  #   - description: string. The description of the keyword.
+  #   - bug_count: number. The number of bugs with the keyword.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Select keyword"
+%]
+
+[% columns = [
+     { 
+       name => "name"
+       heading => "Edit keyword..."
+       contentlink => "editkeywords.cgi?action=edit&amp;id=%%id%%" 
+     },
+     { 
+       name => "description"
+       heading => "Description"
+       allow_html_content => 1
+     },
+     { 
+       name => "bug_count"
+       heading => "$terms.Bugs"
+       align => "right"
+       contentlink => "buglist.cgi?keywords=%%name%%"
+     },
+     { 
+       heading => "Action" 
+       content => "Delete"
+       contentlink => "editkeywords.cgi?action=delete&amp;id=%%id%%"
+     }
+   ]
+%]
+
+[% PROCESS admin/table.html.tmpl
+     columns = columns
+     data = keywords
+     footer = footer_row
+%]
+
+<p><a href="editkeywords.cgi?action=add">Add a new keyword</a></p>
+
+[% PROCESS global/footer.html.tmpl %]

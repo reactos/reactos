@@ -1,0 +1,232 @@
+/*
+Right-to-left fixes for MonoBook.
+Places sidebar on right, tweaks various alignment issues.
+
+Works mostly ok nicely on Safari 1.2.1; fine in Mozilla.
+
+Safari bugs (1.2.1):
+* Tabs are still appearing in left-to-right order. (Try after localizing)
+
+Opera bugs (7.23 linux):
+* Some bits of ltr text (sidebar box titles) have forward and backward versions overlapping each other
+
+IE/mac bugs:
+* The thing barfs on Hebrew and Arabic anyway, so no point testing.
+
+Missing features due to lack of support:
+* external link icons
+
+To test:
+* Opera6
+* IE 5.0
+* etc
+
+*/
+body {
+	direction: rtl;
+	unicode-bidi: embed;
+}
+#column-content {
+	margin: 0 -12.2em 0 0;
+	float: left;
+}
+#column-content #content{
+	margin-left: 0;
+	margin-right: 12.2em;
+	border-right: 1px solid #aaaaaa;
+	border-left: none;
+}
+html > body .portlet {
+	float: right;
+	clear: right;
+}
+.editsection {
+	float: left;
+	margin-right: 5px;
+	margin-left: 0; /* bug 9122: undo default LTR */
+}
+/* recover IEMac (might be fine with the float, but usually it's close to IE */
+*>body .portlet {
+	float: none;
+	clear: none;
+}
+.pBody {
+	padding-right: 0.8em;
+	padding-left: 0.5em;
+}
+
+/* Fix alignment */
+.documentByLine,
+.portletDetails,
+.portletMore,
+#p-personal {
+	text-align: left;
+}
+
+div div.thumbcaption {
+	text-align: right;
+}
+
+div.magnify,
+#p-logo {
+	left: auto;
+	right: 0;
+}
+#p-personal {
+	left: auto;
+	right: 0;
+}
+
+#p-cactions {
+	left: auto;
+	right: 11.5em;
+	padding-left: 0;
+	padding-right: 1em;
+}
+#p-cactions li {
+	margin-left: 0.3em;
+	margin-right: 0;
+	float: right;
+}
+* html #p-cactions li a {
+	display: block;
+	padding-bottom: 0;
+}
+* html #p-cactions li a:hover {
+	padding-bottom: 0.2em;
+}
+/* offsets to distinguish the tab groups */
+li#ca-talk {
+	margin-right: auto;
+	margin-left: 1.6em;
+}
+li#ca-watch,li#ca-unwatch {
+	margin-right: 1.6em !important;
+}
+
+/* Fix margins for non-css2 browsers */
+/* top right bottom left */
+
+ul {
+	margin-left: 0;
+	margin-right: 1.5em;
+}
+ol {
+	margin-left: 0;
+	margin-right: 2.4em;
+}
+dd {
+	margin-left: 0;
+	margin-right: 1.6em;
+}
+#contentSub {
+	margin-right: 1em;
+	margin-left: 0;
+}
+.tocindent {
+	margin-left: 0;
+	margin-right: 2em;
+}
+div.tright, div.floatright, table.floatright {
+	clear: none;
+}
+div.tleft, div.floatleft, table.floatleft {
+	clear: left;
+}
+#p-personal li {
+	margin-left: 0;
+	margin-right: 1em;
+}
+
+li#ca-talk,
+li#ca-watch {
+	margin-right: auto;
+	margin-left: 1.6em;
+}
+
+#p-personal li {
+	float: left;
+}
+/* Fix link icons */
+.external {
+	padding: 0 !important;
+	background: none !important;
+}
+#footer {
+	clear: both;
+}
+* html #footer {
+	margin-left: 0;
+	margin-right: 13.6em;
+	border-left: 0;
+	border-right: 1px solid #fabd23;
+} 
+* html #column-content { 
+	float: none;
+	margin-left: 0;
+	margin-right: 0;
+}
+* html #column-content #content {
+	margin-left: 0;
+	margin-top: 3em;
+}
+* html #column-one { right: 0; }
+
+/* js pref toc */
+
+#preftoc {
+	margin-right: 1em;
+}
+
+.errorbox, .successbox, #preftoc li, .prefsection fieldset {
+	float: right;
+}
+
+.prefsection {
+	padding-right: 2em;
+}
+
+/* workaround for moz bug, displayed bullets on left side */
+
+#toc ul {
+	text-align: right;
+}
+
+#toc ul ul {
+	margin: 0 2em 0 0;
+}
+
+input#wpSave, input#wpDiff {
+	margin-right: 0;
+	margin-left: .33em;
+}
+
+#userlogin {
+	float: right;
+	margin: 0 0 1em 3em;
+}
+/* Convenience links to edit block and delete reasons */
+p.mw-ipb-conveniencelinks, p.mw-filedelete-editreasons, p.mw-delete-editreasons {
+	float: left;
+}
+
+.toggle {
+	margin-left: 0em;
+	margin-right: 2em;
+}
+table.filehistory th {
+	text-align: right;
+}
+
+/**
+ * Lists:
+ * The following lines don't have a visible effect on non-Gecko browsers
+ * They fix a problem ith Gecko browsers rendering lists to the right of
+ * left-floated objects in an RTL layout.
+ */
+html > body div#bodyContent ul {
+	display: table;
+}
+html > body div#bodyContent ul#filetoc {
+	display: block;
+}

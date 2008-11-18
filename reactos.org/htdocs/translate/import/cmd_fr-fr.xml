@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#include "windows.h"]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#include "resource.h"]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/*
+ * French resources
+ * Sylvain Pétréolle  2005
+ */]]></obj>
+</group>
+<group name="LANGUAGE">
+  <obj type="LANGUAGE" sublang="SUBLANG_FRENCH">LANG_FRENCH</obj>
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="STRING_ATTRIB_HELP"><![CDATA["Affiche ou change des attributs de fichiers.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
+       [/S [/D]]\n\n\
+  +   Positionne un attribut\n\
+  -   Enlève un attribut\n\
+  R   Fichier en lecture seule\n\
+  A   Fichier archive\n\
+  S   Fichier système\n\
+  H   Fichier caché\n\
+  /S  Traite les fichiers correspondants dans le répertoire courant\n\
+        et tous les sous-répertoires\n\
+  /D  Traite également les répertoires\n\n\
+Taper ATTRIB sans paramètre pour afficher les attributs de tous les fichiers."]]></obj>
+  <obj type="STRING" rc_name="STRING_ALIAS_HELP"><![CDATA["Positionne, enlève ou affiche les alias.\n\n\
+ALIAS [alias=[commande]]\n\n\
+  alias     Nom de l'alias.\n\
+  commande  Texte à substituer à l'alias.\n\n\
+Pour afficher tous les alias:\n\
+  ALIAS\n\n\
+Pour créer ou remplacer un alias existant:\n\
+  ALIAS da=dir a:\n\n\
+Pour effacer un alias de la liste des alias :\n\
+  ALIAS da="]]></obj>
+  <obj type="STRING" rc_name="STRING_BEEP_HELP"><![CDATA["Emet un bip par le haut-parleur système.\n\nBEEP"]]></obj>
+  <obj type="STRING" rc_name="STRING_CALL_HELP"><![CDATA["Appelle un programme batch depuis un autre.\n\n\
+CALL [lecteur:][chemin]fichier [paramètre-batch]\n\n\
+  paramètre-batch  Spécifie les paramètres nécessaires au \n\
+                   programme batch."]]></obj>
+  <obj type="STRING" rc_name="STRING_CD_HELP"><![CDATA["Change ou affiche le répertoire courant\n\n\
+  CHDIR [lecteur:][chemin]\n\
+  CHDIR[..|-]\n\
+  CD [lecteur:][chemin]\n\
+  CD[..|-]\n\n\
+  ..   répertoire parent\n\
+  -    répertoire précédent\n\n\
+Taper CD lecteur: pour affiche le répertoire courant sur le disque indiqué.\n\
+Taper CD sans paramètre pour afficher le répertoire courant du disque actuel.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CHCP_HELP"><![CDATA["Affiche ou change la page de codes active.\n\n\
+CHCP [nnn]\n\n\
+  nnn   Indique la page de codes .\n\n\
+Taper CHCP sans paramètre pour afficher la page de codes active."]]></obj>
+  <obj type="STRING" rc_name="STRING_CHOICE_HELP"><![CDATA["Demande à l'utilisateur de choisir parmi plusieurs choix.\n\n\
+CHOICE  [/C[:]choix][/N][/S][/T[:]c,nn][texte]\n\n\
+  /C[:]choix    Spécifier les touches disponibles. Choix par défaut: ON.\n\
+  /N            Ne pas afficher les choix disponibles et ? à la fin\n\
+                du texte d'invite.\n\
+  /S            Traiter les touches comme différentes si ce sont\n\
+                des majuscules ou minuscules.\n\
+  /T[:]c,nn     Choix par défaut après nn secondes.\n\
+  texte         Texte d'invite à afficher.\n\n\
+ERRORLEVEL est modifié à l'offset de la touche enfoncée parmi les choix."]]></obj>
+  <obj type="STRING" rc_name="STRING_CLS_HELP"><![CDATA["Efface l'écran.\n\nCLS"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_HELP1"><![CDATA["\nCommandes internes disponibles :\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_HELP2"><![CDATA["\nFonctions disponibles :"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_HELP3"><![CDATA["  [alias]"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_HELP4"><![CDATA["  [historique]"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_HELP5"><![CDATA["  [complétion des noms de fichiers façon unix]"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_HELP6"><![CDATA["  [pile de répertoires]"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_HELP7"><![CDATA["  [redirections et piping]"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_HELP8"><![CDATA["Démarre une nouvelle instance de l'interpréteur de commandes de ReactOS.\n\n\
+CMD [/[C|K] commande][/P][/Q][/T:ap]\n\n\
+  /C commande  Lance la commande spécifiée et se termine.\n\
+  /K commande  Lance la commande spécifiée et reste en mémoire.\n\
+  /P           CMD devient permanent et lance autoexec.bat\n\
+               (ne peut être terminé).\n\
+  /T:ap        Changer la couleur d'arrière/premier plan\n\
+               (voir la commande COLOR.)"]]></obj>
+  <obj type="STRING" rc_name="STRING_COLOR_HELP1"><![CDATA["Change les couleurs de premier et d'arrière plan.\n\n\
+COLOR [attr [/F]] \n\n\
+  attr        Spécifie l'attribut des couleurs de la console\n\
+  /F          remplit la console avec l'attribut de couleur\n\n\
+Il y a trois façons de spécifier les couleurs :\n\
+1) [bright] nom on [bright] nom (seules les trois premières lettres \n\
+sont nécessaires)\n\
+2) décimal on décimal\n\
+3) deux chiffres hexadécimaux\n\n\
+Les couleurs sont:\n\
+déc  hex  nom           déc  hex  nom\n\
+0    0    Black(Noir)    8   8    Gray(Bright black)\n\
+1    1    Blue(Bleu)     9   9    Bright Blue\n\
+2    2    Green(Vert)   10   A    Bright Green\n\
+3    3    Cyan          11   B    Bright Cyan\n\
+4    4    Red(Rouge)    12   C    Bright Red\n\
+5    5    Magenta       13   D    Bright Magenta\n\
+6    6    Yellow(Jaune) 14   E    Bright Yellow\n\
+7    7    White(Blanc)  15   F    Bright White"]]></obj>
+  <obj type="STRING" rc_name="STRING_COPY_HELP1"><![CDATA["Ecraser %s (Oui/Non/Tous)? "]]></obj>
+  <obj type="STRING" rc_name="STRING_COPY_HELP2"><![CDATA["Copie un ou plusieurs fichiers vers une autre destination.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n\
+     [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n\n\
+  source       Indique le ou les fichiers à copier.\n\
+  /A           Spécifie qu'il s'agit d'un fichier texte ASCII.\n\
+  /B           Spécifie qu'il s'agit d'un fichier binaire.\n\
+  destination  Indique le répertoire ou le nom de fichier\n\
+               pour le(s) nouveau(x) fichier(s).\n\
+  /V           Vérifie que les fichier ont été copiés correctement.\n\
+  /Y           Supprime l'invite de confirmation en cas d'écrasement\n\
+               d'un fichier destination existant.\n\
+  /-Y          Affiche un invite de confirmation en cas d'écrasement\n\
+               d'un fichier destination existant.\n\n\
+Le switch /Y peut être présent dans la variable d'environnement COPYCMD.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DATE_HELP1"><![CDATA["\nEntrer la nouvelle date (mm%cdd%cyyyy): "]]></obj>
+  <obj type="STRING" rc_name="STRING_DATE_HELP2"><![CDATA["\nEntrer la nouvelle date (dd%cmm%cyyyy): "]]></obj>
+  <obj type="STRING" rc_name="STRING_DATE_HELP3"><![CDATA["\nEntrer la nouvelle date (yyyy%cmm%cdd): "]]></obj>
+  <obj type="STRING" rc_name="STRING_DATE_HELP4"><![CDATA["Affiche ou règle la date.\n\n\
+DATE [/T][date]\n\n\
+  /T    affiche seulement\n\n\
+Taper DATE sans paramètre pour afficher la date courante\n\
+et une invite pour entrer la nouvelle date.\n\
+Appuyer sur ENTREE pour conserver la même date."]]></obj>
+  <obj type="STRING" rc_name="STRING_DEL_HELP1"><![CDATA["Efface un ou plusieurs fichiers.\n\n\
+DEL [/N /P /T /Q /W /Y /Z] fichier ...\n\
+DELETE [/N /P /T /Q /W /Y /Z] fichier ...\n\
+ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
+  fichier  Specifie le(s) fichier(s) à effacer.\n\n\
+  /N    Rien.\n\
+  /P    Demande. Demande avant d'effacer pour chaque fichier.\n\
+  /T    Total. Affiche le total de fichiers effacés et l'espace disque libéré.\n\
+  /Q    Silencieux.\n\
+  /W    Wipe. Ecrase le fichier avec des nombres aléatoire avant d'effacer.\n\
+  /Y    Oui. Efface, même *.*, sans demander.\n\
+  /Z    Zap. Efface les fichiers cachés, en lecture seule et systèmes.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DEL_HELP2"><![CDATA["Tous les fichiers du répertoire seront effacés!\n\
+Etes vous sûr(e) (O/N)?"]]></obj>
+  <obj type="STRING" rc_name="STRING_DEL_HELP3"><![CDATA["    %lu fichier effacé\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DEL_HELP4"><![CDATA["    %lu fichiers effacés\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DELAY_HELP"><![CDATA["Attend pendant n secondes ou millisecondes\n\
+DELAY [/m]n\n\n\
+  /m          spécifie que n est en millisecondes\n\
+              sinon n est en secondes"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIR_HELP1"><![CDATA["DIR [lecteur:][chemin][fichier] [/A[[:]attributs]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]ordredetri]] [/P] [/Q] [/S] [/T[[:]heure]] [/W] [/X] [/4]\n\n\
+  [lecteur:][chemin][fichier]\n\
+         Spécifie le disque, le répertoire, et/ou les fichiers à lister.\n\n\
+  /A          Affiche les fichiers avec les attributs indiqués.\n\
+  attributs    D  Répertoires           R  Fichiers en lecture seule\n\
+               H  Fichiers cachés       A  Fichiers prêts à etre archivés\n\
+               S  Fichiers systèmes     -  Préfixe signifiant non\n\
+  /B          Utilise le format court (pas d'informations ni de résumé).\n\
+  /C          Affiche le séparateur de milliers dans les tailles de fichier.\n\
+              C'est l'option par défaut. Utiliser /-C pour désactiver \n\
+              l'affichage du séparateur.\n\
+  /D          Identique au format large mais les fichiers sont triés\n\
+              par colonne.\n\
+  /L          Utilise les minuscules.\n\
+  /N          Nouveau format de liste longue où les noms de fichiers sont \n\
+              sur la droite.\n\
+  /O          Lister les fichier de façon triée.\n\
+  ordre de     N  Par nom (alphabétique) S  Par taille (plus petit d'abord)\n\
+  tri          E  Par extension tique)   D  Par date (plus vieux d'abord)\n\
+               G  Répertoires d'abord    -  Préfixe pour inverser l'ordre\n\
+  /P          S'arrête après chaque page d'information.\n\
+  /Q          Affiche le propriétaire du fichier.\n\
+  /S          Affiche les fichiers dans le répertoire indiqué et\n\
+              tous les sous-répertoires.\n\
+  /T          Contrôle quel champ de temps sera affiché ou utilisé\n\
+              pour le tri\n\
+              C  Création\n\
+              A  Dernier accès\n\
+              W  Dernière modification\n\
+  /W          Utilise le format de liste large.\n\
+  /X          Ceci affiche les noms de fichiers courts pour les noms \n\
+              de fichiers longs. Le format est comme pour /N avec\n\
+              le nom de fichier court inséré avant le nom de fichier long.\n\
+              S'il n'y a pas de nom court, des espaces seront affichés.\n\
+  /4          Affiche l'année sur quatre chiffres.\n\n\
+Les paramètres peuvent être mémorisés dans la variable d'environnement DIRCMD.\n\
+Modifier les paramètres mémorisés avec un - (tiret)--par exemple, /-W.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIR_HELP2"><![CDATA[" Le nom de volume du lecteur %c est %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIR_HELP3"><![CDATA[" Le lecteur %c n'a pas de nom de volume\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIR_HELP4"><![CDATA[" Le numéro de série du volume est %04X-%04X\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIR_HELP5"><![CDATA["\n   Total de fichiers listés :\n%16i Fichier(s)% 14s octets\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIR_HELP6"><![CDATA["%16i fichier(s)% 15s octets\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIR_HELP7"><![CDATA["\n Répertoire de %s\n\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIR_HELP8"><![CDATA["%16i Rep(s)% 14s octets\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIRSTACK_HELP1"><![CDATA["Stocke le répertoire courant pour utilisation avec la commande POPD,\n\
+ensuite change de répertoire vers le répertoire spécifié.\n\n\
+PUSHD [chemin | ..]\n\n\
+  chemin      Spécifie le répertoire qui deviendra le répertoire courant"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIRSTACK_HELP2"><![CDATA["Change de réperoire vers le répertoire stocké par la commande PUSHD\n\nPOPD"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIRSTACK_HELP3"><![CDATA["Affiche le contenu de la pile de répertoires.\n\nDIRS"]]></obj>
+  <obj type="STRING" rc_name="STRING_DIRSTACK_HELP4"><![CDATA["Pile de répertoires vide."]]></obj>
+  <obj type="STRING" rc_name="STRING_ECHO_HELP1"><![CDATA["Affiche un message sans retour chariot ni passage à la ligne.\n\n\
+  ECHOS message"]]></obj>
+  <obj type="STRING" rc_name="STRING_ECHO_HELP2"><![CDATA["Affiche un message sur le canal d'erreur.\n\n\
+  ECHOERR message\n\
+  ECHOERR.           Affiche une ligne vide sur le canal d'erreur."]]></obj>
+  <obj type="STRING" rc_name="STRING_ECHO_HELP3"><![CDATA["Affiche un message sur le canal d'erreur sans retour chariot\n\
+ni passage à la ligne.\n\n\
+  ECHOSERR message"]]></obj>
+  <obj type="STRING" rc_name="STRING_ECHO_HELP4"><![CDATA["Affiche un message ou bascule l'affichage des commandes sur on ou off.\n\n\
+  ECHO [ON | OFF]\n\
+  ECHO [message]\n\
+  ECHO.             Affiche une ligne vide.\n\n\
+Taper ECHO sans paramètre pour afficher le réglage ECHO courant."]]></obj>
+  <obj type="STRING" rc_name="STRING_ECHO_HELP5"><![CDATA["ECHO est %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_EXIT_HELP"><![CDATA["Sort de de l'interpréteur de commandes.\n\nEXIT"]]></obj>
+  <obj type="STRING" rc_name="STRING_FOR_HELP1"><![CDATA["Exécute une commande donnée pour chaque fichier d'un ensemble de fichiers.\n\
+FOR %variable IN (ensemble) do commande [paramètres]\n\n\
+  %variable  Spécife un paramètre remplaçable.\n\
+  (ensemble) Spécifie un ensemble d'un ou plusieurs fichiers.\n\
+             Des jokers peuvent être utilisés.\n\
+  commande   Spécifie la commande à éxécuter pour chaque fichier.\n\
+  paramètres Spécifie les paramètres ou switchs pour la commande spécifiée.\n\n\
+Pour utiliser la comamnde FOR dans un programme batch,\n\
+utiliser %%variable au lieu de %variable."]]></obj>
+  <obj type="STRING" rc_name="STRING_FREE_HELP1"><![CDATA["\nLe nom de volume du lecteur %s est %-11s\n\
+Le numéro de série est %s\n\
+  %16s octets d'espace disque total\n\
+  %16s octets utilisés\n\
+  %16s octets libres\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_FREE_HELP2"><![CDATA["Affiche les information d'un disque.\n\nFREE [lecteur: ...]"]]></obj>
+  <obj type="STRING" rc_name="STRING_GOTO_HELP1"><![CDATA["Dirige CMD vers une ligne nommée dans un script batch.\n\n\
+GOTO label\n\n\
+  label  Spécifie un champ texte utilisé dans un script batch comme un label.\n\n\
+Vous écrivez un label seul sur une ligne commençant par un deux-points.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_IF_HELP1"><![CDATA["Exécute un traitement conditionnel dans des programmes batch.\n\n\
+  IF [NOT] ERRORLEVEL nombre commande\n\
+  IF [NOT] chaine1==chaine2 commande\n\
+  IF [NOT] EXIST nomfichier commande\n\
+  IF [NOT] DEFINED variable commande\n\n\
+NOT               CMD ne lancera la commande que si la condition est fausse.\n\
+ERRORLEVEL nombre La condition sera vraie si le dernier programme lancé\n\
+                  a retourné un code sortie égal ou supérieur à celui indiqué.\n\
+commande          Indique la commande à lancer si la condition est vérifiée.\n\
+chaine1==chaine2  La condition sera vraie si les deux chaines sont identiques.\n\
+EXIST nomfichier  La condition sera vraie si le fichier spécifié existe.\n\
+DEFINED variable  La condition sera vraie si la variable indiquée est définie."]]></obj>
+  <obj type="STRING" rc_name="STRING_LABEL_HELP1"><![CDATA["Affiche ou change le nom de volume du disque.\n\nLABEL [disque:][nomdevolume]\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_LABEL_HELP2"><![CDATA["Le nom de volume du disque %c: est %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_LABEL_HELP3"><![CDATA["Le disque %c: n'a pas de nom de volume\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_LABEL_HELP4"><![CDATA["Le numéro de serie du volume est %04X-%04X\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_LABEL_HELP5"><![CDATA["Nom de volume (11 Caractères, ENTREE si aucun)? "]]></obj>
+  <obj type="STRING" rc_name="STRING_LOCALE_HELP1"><![CDATA["L'heure actuelle est "]]></obj>
+  <obj type="STRING" rc_name="STRING_MKDIR_HELP"><![CDATA["Crée un répertoire.\n\n\
+MKDIR [lecteur:]chemin\nMD [lecteur:]chemin"]]></obj>
+  <obj type="STRING" rc_name="STRING_MEMMORY_HELP1"><![CDATA["Affiche la quantité de mémoire système.\n\nMEMORY"]]></obj>
+  <obj type="STRING" rc_name="STRING_MEMMORY_HELP2"><![CDATA["\n  %12s%% de charge mémoire.\n\n\
+  %13s octets de RAM physique au total.\n\
+  %13s octets de RAM physique disponible.\n\n\
+  %13s octets de fichier d'échange au total.\n\
+  %13s octets de fichier d'échange disponible.\n\n\
+  %13s octets de mémoire virtuelle au total.\n\
+  %13s octets de mémoire virtuelle disponible.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_MISC_HELP1"><![CDATA["Appuyer sur une touche pour continuer...\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_MOVE_HELP1"><![CDATA["Ecraser %s (Oui/Non/Tous)? "]]></obj>
+  <obj type="STRING" rc_name="STRING_MOVE_HELP2"><![CDATA["Déplace des fichiers ou renomme des fichiers et des répertoires.\n\n\
+Pouur déplacer un ou plusieurs fichiers:\n\
+MOVE [/N][lecteur:][nomfich1[,...] destination\n\n\
+Pour renommer un répertoire:\n\
+MOVE [/N][lecteur:][chemin]nomrep1 nomrep2\n\n\
+  [lecteur:][chemin]nomfich1  Indique l'endroit et le nom du ou des fichiers\n\
+                              que vous voulez déplacer.\n\
+  /N                          Nothing. Do everything but move files or directories.\n\n\
+Limitations actuelles :\n\
+  - Vous ne pouvez pas déplacer un fichier/répertoire d'un disque à un autre.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_MSGBOX_HELP"><![CDATA["Affiche une boite de dialogue et retourne la réponse de l'utilisateur\n\n\
+MSGBOX type ['titre'] prompt\n\n\
+type          boutons affichés\n\
+              les valeurs possibles sont: OK, OKCANCEL,\n\
+              YESNO, YESNOCANCEL\n\
+titre         titre de la boite de message\n\
+prompt        texte affiché par la boite de dialogue \n\n\n\
+ERRORLEVEL est modifié suivant le bouton pressé:\n\n\
+YES  :  10    |  NO      :  11\n\
+OK   :  10    |  CANCEL  :  12\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_PATH_HELP1"><![CDATA["Affiche ou modifie le chemin de recherche pour les fichiers éxécutables.\n\n\
+PATH [[lecteur:][chemin;...]]\nPATH ;\n\n\
+Taper PATH ; pour effacer tous les réglages courants\n\
+et indiquer à l'interpréteur de commandes\n\
+de chercher seulement dans le répertoire courant.\n\
+Taper PATH sans paramètres pour afficher le chemin courant.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_PAUSE_HELP1"><![CDATA["Stoppe l'éxécution d'un fichier batch et affiche le message suivant:\n\
+'Appuyer sur une touche pour continuer...' ou un message défini\n\
+par l'utilisateur.\n\n\
+PAUSE\n\
+PAUSE [message]"]]></obj>
+  <obj type="STRING" rc_name="STRING_PROMPT_HELP1"><![CDATA["Change l'invite de commandes.\n\n\
+PROMPT [texte]\n\n\
+  texte   Indique le nouvel invite de commandes.\n\n\
+L'invite de commandes peut être composé de caractères normaux et\n\
+des caractères spéciaux suivants:\n\n\
+  $A   & (Et commercial)\n\
+  $B   | (pipe)\n\
+  $C   ( (parenthèse ouvrante)\n\
+  $D   Date courante\n\
+  $E   Code Escape (code ASCII 27)\n\
+  $F   ) (parenthèse fermante)\n\
+  $G   > (signe supérieur à)\n\
+  $H   Backspace (efface le caractère précédent)\n\
+  $L   < (signe inférieur à)\n\
+  $N   Lecteur courant\n\
+  $P   Lecteur et chemin courants\n\
+  $Q   = (signe égale)\n\
+  $T   Heure courante\n\
+  $V   Numéro de version de ReactOS\n\
+  $_   Retour chariot/saut de ligne\n\
+  $$   $ (signe dollar)"]]></obj>
+  <obj type="STRING" rc_name="STRING_PROMPT_HELP2"><![CDATA["  $+   Affiche la hauteur de la pile de répertoires"]]></obj>
+  <obj type="STRING" rc_name="STRING_PROMPT_HELP3"><![CDATA["\nTaper PROMPT sans paramètres pour changer l'invite à celui défini par défaut."]]></obj>
+  <obj type="STRING" rc_name="STRING_REM_HELP"><![CDATA["Démarrer une ligne de commentaire dans un fichier batch.\n\nREM [Commentaire]"]]></obj>
+  <obj type="STRING" rc_name="STRING_REN_HELP1"><![CDATA["Renomme un(des) fichier(s)/répertoire(s)\n\
+RENAME [/E /N /P /Q /S /T] ancien_nom ... nouveau_nom\n\
+REN [/E /N /P /Q /S /T] ancien_nom ... nouveau_nom\n\n\
+  /E    Pas de messages d'erreur.\n\
+  /N    Rien.\n\
+  /P    Demande de confirmation avant de renommer chaque fichier.\n\
+        (Non implémenté!)\n\
+  /Q    Silencieux.\n\
+  /S    Renommer les sous-répertoires.\n\
+  /T    Affiche le nombre total de fichiers renommés.\n\n\
+Vous ne pouvez indiquez un autre lecteur/chemin pour la destination.\n\
+Utiliser la commande MOVE dans ce but."]]></obj>
+  <obj type="STRING" rc_name="STRING_REN_HELP2"><![CDATA["    %lu fichier renommé\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_REN_HELP3"><![CDATA["    %lu fichiers renommés\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_RMDIR_HELP"><![CDATA["Efface un répertoire.\n\n\
+RMDIR [lecteur:]chemin\nRD [lecteur:]chemin"]]></obj>
+  <obj type="STRING" rc_name="STRING_RMDIR_HELP2"><![CDATA["Le répertoire n'est pas vide !\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_SCREEN_HELP"><![CDATA["Déplace le curseur, optionnellement affiche du texte\n\n\
+SCREEN lig col [texte]\n\n\
+  lig         ligne à laquelle déplacer le curseur\n\
+  col         colonne à laquelle déplacer le curseur"]]></obj>
+  <obj type="STRING" rc_name="STRING_SET_HELP"><![CDATA["Affiche, modifie ou efface des variables d'environnement.\n\n\
+SET [variable[=][chaine]]\n\n\
+  variable  Indique le nom de la variable d'environnement.\n\
+  chaine    Indique une série de caractères à assigner à la variable.\n\n\
+Taper SET sans paramètres pour afficher les variables d'environnement courantes.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_SHIFT_HELP"><![CDATA["Change la position de paramètres remplaçables dans un fichier batch.\n\n\
+SHIFT [DOWN]"]]></obj>
+  <obj type="STRING" rc_name="STRING_START_HELP1"><![CDATA["Lance une commande.\n\n\
+START commande\n\n\
+  commande    Indique la commande à lancer.\n\n\
+Pour le moment toutes les commandes sont lancées de façon asynchrone.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_TITLE_HELP"><![CDATA["Change le titre de la fenêtre de l'invite de commandes.\n\n\
+TITLE [chaine]\n\n\
+chaine       Indique le titre de la fenêtre de l'invite de commandes."]]></obj>
+  <obj type="STRING" rc_name="STRING_TIME_HELP1"><![CDATA["Affiche ou modifie l'heure système.\n\n\
+TIME [/T][heure]\n\n\
+  /T    affiche seulement\n\n\
+Taper TIME sans paramètres pour afficher l'heure courante et une invite\n\
+pour la modifier.  Presser la touche ENTREE pour garder la même heure."]]></obj>
+  <obj type="STRING" rc_name="STRING_TIME_HELP2"><![CDATA["Entrer la nouvelle heure: "]]></obj>
+  <obj type="STRING" rc_name="STRING_TIMER_HELP1"><![CDATA["Ecoulé %d msecs\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_TIMER_HELP2"><![CDATA["Ecoulé %02d%c%02d%c%02d%c%02d\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_TIMER_HELP3"><![CDATA["Permet l'utilisation de dix chronomètres.\n\n\
+TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
+  ON          Démarre le chronomètre\n\
+  OFF         Stoppe le chronomètre\n\
+  /S          Split time. Return stopwach split\n\
+              time without changing its value\n\
+  /n          Indique le numéro du chronomètre.\n\
+              Les chronomètres disponibles vont de 0 à 10.\n\
+              Si non spécifié, le chronomètre par défaut est 1\n\
+  /Fn         Format de sortie\n\
+              n peut être :\n\
+                    0    millisecondes\n\
+                    1    hh%cmm%css%cdd\n\n\
+Si aucun de ON, OFF or /S n'est spécifié la commande\n\
+changera l'état du chronomètre sélectionné\n\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_TYPE_HELP1"><![CDATA["Affiche le contenu de fichiers textes.\n\nTYPE [lecteur:][chemin]nomfich"]]></obj>
+  <obj type="STRING" rc_name="STRING_VERIFY_HELP1"><![CDATA["Cette commande ne fait rien!!\n\
+Spécifie s'il faut verifier que vos fichiers sont écrits correctement.\
+\n\n\
+VERIFY [ON | OFF]\n\n\
+Taper VERIFY sans paramètres pour afficher le réglage de VERIFY."]]></obj>
+  <obj type="STRING" rc_name="STRING_VERIFY_HELP2"><![CDATA["VERIFY est %s.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_VERIFY_HELP3"><![CDATA["Vous devez indiquer ON ou OFF."]]></obj>
+  <obj type="STRING" rc_name="STRING_VERSION_HELP1"><![CDATA["Affiche les information de version du shell\n\n\
+VER [/C][/R][/W]\n\n\
+  /C  Displays credits.\n\
+  /R  Displays redistribution information.\n\
+  /W  Displays warranty information."]]></obj>
+  <obj type="STRING" rc_name="STRING_VERSION_HELP2"><![CDATA[" comes with ABSOLUTELY NO WARRANTY; for details\n\
+type: `ver /w'. This is free software, and you are welcome to redistribute\n\
+it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n\
+listing of credits."]]></obj>
+  <obj type="STRING" rc_name="STRING_VERSION_HELP3"><![CDATA["\n This program is distributed in the hope that it will be useful,\n\
+ but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
+ GNU General Public License for more details."]]></obj>
+  <obj type="STRING" rc_name="STRING_VERSION_HELP4"><![CDATA["\n This program is free software; you can redistribute it and/or modify\n\
+ it under the terms of the GNU General Public License as published by\n\
+ the Free Software Foundation; either version 2 of the License, or\n\
+ (at your option) any later version.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_VERSION_HELP5"><![CDATA["\nEnvoyer les rapports d'erreur à <ros-dev@reactos.org>.\n\
+Les mises à jour sont disponibles à : http://www.reactos.org"]]></obj>
+  <obj type="STRING" rc_name="STRING_VERSION_HELP6"><![CDATA["\nVersion FreeDOS écrite par:\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_VERSION_HELP7"><![CDATA["\nVersion ReactOS écrite par:\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_VOL_HELP1"><![CDATA[" Le nom de volume du lecteur %c: est %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_VOL_HELP2"><![CDATA[" Le volume dans le lecteur %c: n'a pas de nom\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_VOL_HELP3"><![CDATA[" Le numéro de série du volume est %04X-%04X\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_VOL_HELP4"><![CDATA["Affiche le nom de volume et le numéro de série du disque s'ils existent.\n\nVOL [lecteur:]\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_WINDOW_HELP1"><![CDATA["Change l'aspect de la fenêtre de la console\n\n\
+WINDOW [/POS[=]gauche,haut,largeur,hauteur]\n\
+              [MIN|MAX|RESTORE] ['titre']\n\n\
+/POS          indique la position et les dimensions de la fenêtre\n\
+MIN           minimise la fenêtre\n\
+MAX           maximise la fenêtre\n\
+RESTORE       restaure la fenêtre"]]></obj>
+  <obj type="STRING" rc_name="STRING_WINDOW_HELP2"><![CDATA["Change l'aspect de la fenêtre de la console\n\n\
+WINDOW [/POS[=]gauche,haut,largeur,hauteur]\n\
+              [MIN|MAX|RESTORE] ['titre']\n\n\
+/POS          indique la position et les dimensions de la fenêtre\n\
+MIN           minimise la fenêtre\n\
+MAX           maximise la fenêtre\n\
+RESTORE       restaure la fenêtre\n\
+titre         titre de la fenêtre"]]></obj>
+  <obj type="STRING" rc_name="STRING_HELP1"><![CDATA["List of all available commands (+ description)\n\n\
+  command /?     For more information on a specific command\n\n\
+?        List all available commands without description).\n\
+ALIAS    Sets, removes or shows aliases.\n\
+ATTRIB   Displays or changes file attributes.\n\
+BEEP     Beep the speaker.\n\
+CALL     Calls one batch program from another.\n\
+CD       Displays the name of or changes the current directory.\n\
+CHCP     Displays or sets the active code page number.\n\
+CHOICE   Waits for the user to choose one of a set of choices.\n\
+CLS      Clears the screen.\n\
+CMD      Starts a new instance of the ReactOS command interpreter.\n\
+COLOR    Sets the default console foreground and background colors.\n\
+COPY     Copies one or more files to another location.\n\
+DATE     Displays or sets the date.\n\
+DELETE   Deletes one or more files.\n\
+DIR      Displays a list of files and subdirectories in a directory.\n\
+ECHO     Displays messages, or turns command echoing on or off.\n\
+ERASE    Deletes one or more files.\n\
+EXIT     Quits the CMD.EXE program (command interpreter).\n\
+FOR      Runs a specified command for each file in a set of files.\n\
+FREE     (free) disc space.\n\
+GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
+         a batch program.\n\
+HELP     Provides Help information for ReactOS commands.\n\
+HISTORY  List alle commands which has been used\n\
+IF       Performs conditional processing in batch programs.\n\
+LABEL    Creates, changes, or deletes the volume label of a disk.\n\
+MD       Creates a directory.\n\
+MKDIR    Creates a directory.\n\
+MOVE     Moves one or more files from one directory to another\n\
+         directory.\n\
+PATH     Displays or sets a search path for executable files.\n\
+PAUSE    Suspends processing of a batch file and displays a message.\n\
+POPD     Restores the previous value of the current directory saved by\n\
+         PUSHD.\n\
+PROMPT   Changes the command prompt.\n\
+PUSHD    Saves the current directory then changes it.\n\
+RD       Removes a directory.\n\
+REM      Records comments (remarks) in batch files.\n\
+REN      Renames a file or files.\n\
+RENAME   Renames a file or files.\n\
+RMDIR    Removes a directory.\n\
+SCREEN   Move cursor and optionally print text.\n\
+SET      Displays, sets, or removes ReactOS environment variables.\n\
+SHIFT    Shifts the position of replaceable parameters in batch files.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_HELP2"><![CDATA["START    Starts a separate window to run a specified program or command.\n\
+         Executes command.\n\
+TIME     Displays or sets the system time.\n\
+TIMER    Allow the use of ten stopwaches.\n\
+TITLE    Sets the window title for a CMD.EXE session.\n\
+TYPE     Displays the contents of a text file.\n\
+VER      Displays the ReactOS version.\n\
+VERIFY   Tells ReactOS whether to verify that your files are written\n\
+         correctly to a disk.\n\
+VOL      Displays a disk volume label and serial number.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CHOICE_OPTION"><![CDATA["ON"]]></obj>
+  <obj type="STRING" rc_name="STRING_COPY_OPTION"><![CDATA["ONT"]]></obj>
+  <obj type="STRING" rc_name="STRING_ALIAS_ERROR"><![CDATA["Ligne de commande trop longue après remplacement de l'alias!\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_BATCH_ERROR"><![CDATA["Erreur à l'ouverture du fichier batch\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CHCP_ERROR1"><![CDATA["Page de codes actuelle : %u\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CHCP_ERROR4"><![CDATA["Page de code invalide \n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CHOICE_ERROR"><![CDATA["Option invalide. Format attendu: /C[:]options"]]></obj>
+  <obj type="STRING" rc_name="STRING_CHOICE_ERROR_TXT"><![CDATA["Option invalide. Format attendu: /T[:]c,nn"]]></obj>
+  <obj type="STRING" rc_name="STRING_CHOICE_ERROR_OPTION"><![CDATA["Option invalide : %s"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_ERROR1"><![CDATA["Ne peut rediriger l'entrée depuis le fichier %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_ERROR2"><![CDATA["Erreur à la création du fichier temporaire pour les données du pipe\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_ERROR3"><![CDATA["Ne peut rediriger vers le fichier %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_ERROR4"><![CDATA["Lance %s...\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_ERROR5"><![CDATA["Lance cmdexit.bat...\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_COLOR_ERROR1"><![CDATA["L'arrière plan et l'avant plan ne peuvent être de la même couleur"]]></obj>
+  <obj type="STRING" rc_name="STRING_COLOR_ERROR2"><![CDATA["Erreur dans la spécification des couleurs"]]></obj>
+  <obj type="STRING" rc_name="STRING_COLOR_ERROR3"><![CDATA["Couleur %x\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_COLOR_ERROR4"><![CDATA["Erreur: même couleur!"]]></obj>
+  <obj type="STRING" rc_name="STRING_CONSOLE_ERROR"><![CDATA["Erreur inconnue: %d\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_COPY_ERROR1"><![CDATA["Erreur: Ne peut ouvrir la source - %s!\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_COPY_ERROR2"><![CDATA["Erreur: Ne peut copier le fichier sur lui-même!\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_COPY_ERROR3"><![CDATA["Erreur à l'écriture de la destination!\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_COPY_ERROR4"><![CDATA["Erreur: Non implémenté actuellement!\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DATE_ERROR"><![CDATA["Date invalide."]]></obj>
+  <obj type="STRING" rc_name="STRING_DEL_ERROR5"><![CDATA["Le fichier %s va être effacé ! "]]></obj>
+  <obj type="STRING" rc_name="STRING_DEL_ERROR6"><![CDATA["Etes vous sûr (O/N)?"]]></obj>
+  <obj type="STRING" rc_name="STRING_DEL_ERROR7"><![CDATA["Efface : %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_ERROR1"><![CDATA["Erreur inconnue! Code d'erreur : 0x%lx\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_ERROR2"><![CDATA["Erreur de syntaxe"]]></obj>
+  <obj type="STRING" rc_name="STRING_FOR_ERROR1"><![CDATA["'in' manquant."]]></obj>
+  <obj type="STRING" rc_name="STRING_FOR_ERROR2"><![CDATA["pas de parenthèse trouvée."]]></obj>
+  <obj type="STRING" rc_name="STRING_FOR_ERROR3"><![CDATA["'do' manquant."]]></obj>
+  <obj type="STRING" rc_name="STRING_FOR_ERROR4"><![CDATA["pas de commande après 'do'."]]></obj>
+  <obj type="STRING" rc_name="STRING_FREE_ERROR1"><![CDATA["Lecteur invalide"]]></obj>
+  <obj type="STRING" rc_name="STRING_FREE_ERROR2"><![CDATA["sans nom"]]></obj>
+  <obj type="STRING" rc_name="STRING_GOTO_ERROR1"><![CDATA["Pas de label indiqué pour GOTO"]]></obj>
+  <obj type="STRING" rc_name="STRING_GOTO_ERROR2"><![CDATA["Label '%s' non trouvé\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_MOVE_ERROR1"><![CDATA["[OK]\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_MOVE_ERROR2"><![CDATA["[Erreur]\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_REN_ERROR1"><![CDATA["MoveFile() a échoué. Erreur: %lu\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_START_ERROR1"><![CDATA["No batch support at the moment!"]]></obj>
+  <obj type="STRING" rc_name="STRING_TIME_ERROR1"><![CDATA["Heure invalide."]]></obj>
+  <obj type="STRING" rc_name="STRING_TYPE_ERROR1"><![CDATA["Option invalide '/%s'\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_WINDOW_ERROR1"><![CDATA["Fenêtre non trouvée"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_PARAMETERF_ERROR"><![CDATA["Format du paramètre incorrect - %c\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_INVALID_SWITCH"><![CDATA["Paramètre invalide - /%c\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_TOO_MANY_PARAMETERS"><![CDATA["Trop de paramètres - %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_PATH_NOT_FOUND"><![CDATA["Chemin non trouvé\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_FILE_NOT_FOUND"><![CDATA["Fichier non trouvé\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_REQ_PARAM_MISSING"><![CDATA["Paramètre requis manquant\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_INVALID_DRIVE"><![CDATA["Lecteur spécifié introuvable\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_INVALID_PARAM_FORMAT"><![CDATA["Format de paramètre incorrect - %s\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_BADCOMMAND"><![CDATA["Commande ou nom de fichier inconnu\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_OUT_OF_MEMORY"><![CDATA["Erreur Pas assez de mémoire.\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_CANNOTPIPE"><![CDATA["Error!  Cannot pipe!  Cannot open temporary file!\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_D_PAUSEMSG"><![CDATA["Appuyez sur une touche pour continuer . . ."]]></obj>
+  <obj type="STRING" rc_name="STRING_ERROR_DRIVER_NOT_READY"><![CDATA["Lecteur non prêt"]]></obj>
+  <obj type="STRING" rc_name="STRING_PATH_ERROR"><![CDATA["CMD: Pas dans l'environnement '%s'\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_CMD_SHELLINFO"><![CDATA["\n Interpréteur de ligne de commandes ReactOS"]]></obj>
+  <obj type="STRING" rc_name="STRING_VERSION_RUNVER"><![CDATA[" tournant sur %s"]]></obj>
+  <obj type="STRING" rc_name="STRING_COPY_FILE"><![CDATA["        %d fichier(s) copié(s)\n"]]></obj>
+  <obj type="STRING" rc_name="STRING_DELETE_WIPE"><![CDATA["effacé(s)"]]></obj>
+  <obj type="STRING" rc_name="STRING_FOR_ERROR"><![CDATA["mauvaise variable spécifiée."]]></obj>
+  <obj type="STRING" rc_name="STRING_SCREEN_COL"><![CDATA["valeur invalide pour col"]]></obj>
+  <obj type="STRING" rc_name="STRING_SCREEN_ROW"><![CDATA["valeur invalide pour lig"]]></obj>
+  <obj type="STRING" rc_name="STRING_TIMER_TIME"><![CDATA["Le timer n°%d est %s: "]]></obj>
+  <obj type="STRING" rc_name="STRING_INVALID_OPERAND"><![CDATA["Opérande invalide."]]></obj>
+  <obj type="STRING" rc_name="STRING_EXPECTED_CLOSE_PAREN"><![CDATA["Attendu ')'."]]></obj>
+  <obj type="STRING" rc_name="STRING_EXPECTED_NUMBER_OR_VARIABLE"><![CDATA["Attendu nombre ou nom de variable."]]></obj>
+  <obj type="STRING" rc_name="STRING_SYNTAX_COMMAND_INCORRECT"><![CDATA["La syntaxe the la commande est incorrecte."]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+</resource>

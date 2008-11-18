@@ -1,0 +1,99 @@
+---
+Installing MediaWiki
+---
+
+Starting with MediaWiki 1.2.0, it's possible to install and configure the wiki
+"in-place", as long as you have the necessary prerequisites available.
+
+Required software:
+* Web server with PHP 5.x or higher.
+* A MySQL server, 4.0.14 or higher OR a Postgres server, 8.1 or higher
+
+MediaWiki is developed and tested mainly on Unix/Linux platforms, but should
+work on Windows as well.
+
+If your PHP is configured as a CGI plug-in rather than an Apache module you may
+experience problems, as this configuration is not well tested. safe_mode is also
+not tested and unlikely to work. 
+
+If you want math support see the instructions in math/README
+
+Don't forget to check the RELEASE-NOTES file...
+
+
+Additional documentation is available online, which may include more detailed
+notes on particular operating systems and workarounds for difficult hosting
+environments:
+
+http://www.mediawiki.org/wiki/Manual:Installation_guide
+
+
+******************* WARNING *******************
+
+REMEMBER: ALWAYS BACK UP YOUR DATABASE BEFORE 
+ATTEMPTING TO INSTALL OR UPGRADE!!!
+
+******************* WARNING *******************
+
+----
+In-place web install
+----
+
+Decompress the MediaWiki installation archive either on your server, or on your
+local machine and upload the directory tree. Rename it from "mediawiki-1.x.x" to
+something nice, like "wiki", since it'll be in your URL.
+
+  +--------------------------------------------------------------------------+
+  |  Hint: If you plan to use a fancy URL-rewriting scheme to prettify your  |
+  |  URLs, you should put the files in a *different* directory from the      |
+  |  virtual path where page names will appear.                              |
+  |                                                                          |
+  |    See: http://www.mediawiki.org/wiki/Manual:Short_URL                   |
+  +--------------------------------------------------------------------------+
+
+To run the install script, you'll need to temporarily make the 'config'
+subdirectory writable by the web server. The simplest way to do this on a
+Unix/Linux system is to make it world-writable:
+
+  chmod a+w config
+
+Hop into your browser and surf into the wiki directory. It'll direct you into
+the config script. Fill out the form... remember you're probably not on an
+encrypted connection.
+Gaaah! :)
+
+If all goes well, you should soon be told that it's set up your wiki database
+and written a configuration file. There should now be a 'LocalSettings.php' in
+the config directory; move it back up to the main wiki directory, and the wiki
+should now be working.
+
+  +-------------------------------------------------------------------------+
+  |  Security hint: if you have limited access on your server and cannot    |
+  |  change ownership of files, you might want to *copy* instead of *move*  |
+  |  LocalSettings.php.                                                     |
+  |                                                                         |
+  |  This will make the file owned by your user account instead of by       |
+  |  the web server, which is safer in case another user's account is       |
+  |  compromised.                                                           |
+  +-------------------------------------------------------------------------+
+
+Once the wiki is set up, you should remove the config directory, or at least
+make it not world-writable (though it will refuse to config again if the wiki
+is set up).
+
+
+----
+
+Don't forget that this is free software under development! Chances are good
+there's a crucial step that hasn't made it into the documentation. You should
+probably sign up for the MediaWiki developers' mailing list; you can ask for
+help (please provide enough information to work with, and preferably be aware of
+what you're doing!) and keep track of major changes to the software, including
+performance improvements and security patches.
+
+http://lists.wikimedia.org/mailman/listinfo/mediawiki-announce (low traffic)
+
+http://lists.wikimedia.org/mailman/listinfo/mediawiki-l (site admin support)
+
+http://lists.wikimedia.org/mailman/listinfo/wikitech-l (development)
+

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE refentry PUBLIC 
+   "-//OASIS//DTD DocBook XML V4.1.2//EN"
+   "docbook/docbookx.dtd">
+<refentry id='bugzilla-submit.1'>
+<refmeta>
+<refentrytitle>bugzilla-submit</refentrytitle>
+<manvolnum>1</manvolnum>
+<refmiscinfo class='date'>Oct 30, 2003</refmiscinfo>
+</refmeta>
+<refnamediv id='name'>
+<refname>bugzilla-submit</refname>
+<refpurpose>post bugs to a Bugzilla instance</refpurpose>
+</refnamediv>
+<refsynopsisdiv id='synopsis'>
+
+<cmdsynopsis>
+  <command>bugzilla-submit</command>
+  <arg choice='opt'>--status <replaceable>bug_status</replaceable></arg>
+  <arg choice='opt'>--url <replaceable>bug_file_loc</replaceable></arg>
+  <arg choice='opt'>--product <replaceable>product</replaceable></arg>
+  <arg choice='opt'>--version <replaceable>version</replaceable></arg>
+  <arg choice='opt'>--component <replaceable>component</replaceable></arg>
+  <arg choice='opt'>--summary <replaceable>short_desc</replaceable></arg>
+  <arg choice='opt'>--hardware <replaceable>rep_platform</replaceable></arg>
+  <arg choice='opt'>--os <replaceable>op_sys</replaceable></arg>
+  <arg choice='opt'>--priority <replaceable>priority</replaceable></arg>
+  <arg choice='opt'>--severity <replaceable>bug_severity</replaceable></arg>
+  <arg choice='opt'>--assigned-to <replaceable>assigned-to</replaceable></arg>
+  <arg choice='opt'>--cc <replaceable>cc</replaceable></arg>
+  <arg choice='opt'>--keywords <replaceable>keywords</replaceable></arg>
+  <arg choice='opt'>--depends-on <replaceable>dependson</replaceable></arg>
+  <arg choice='opt'>--blocked <replaceable>blocked</replaceable></arg>
+  <arg choice='opt'>--description <replaceable>comment</replaceable></arg>
+  <arg choice='opt'>--no-stdin </arg>
+  <arg choice='plain'><replaceable>bugzilla-url</replaceable></arg>
+</cmdsynopsis>
+
+</refsynopsisdiv>
+
+<refsect1 id='description'><title>DESCRIPTION</title>
+
+<para><application>bugzilla-submit</application> is a command-line tool
+for posting bug reports to any instance of Bugzilla.  It accepts on
+standard input text resembling an RFC-822 message.  The headers of
+that message, and its body, are used to set error-report field values.
+More field values are merged in from command-line options. If required
+fields have not been set, <application>bugzilla-submit</application>
+tries to compute them.  Finally, the resulting error report is
+validated.  If all required fields are present, and there are no
+illegal fields or values, the report is shipped off to the Mozilla
+instance specified by the single positional argument.  Login/password
+credentials are read from the calling user's <filename>~/.netrc</filename> 
+file.</para>
+
+<para>bugzilla-submit accepts a single argument:
+<replaceable>bugzilla-url</replaceable>. Its value must match the
+relevant Bugzilla instance's base URL (technically, its
+<replaceable>urlbase</replaceable> param). The program also accepts the
+following options to set or override fields:</para>
+<variablelist>
+<varlistentry>
+<term>-b, --status</term>
+<listitem>
+<para>Set the bug_status field, overriding the Status header from
+standard input if present.  (The stock Bugzilla web presentation
+identifies this field as <quote>Status</quote>.)</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-u, --url</term>
+<listitem>
+<para>Set the bug_file_loc field, overriding the URL header from
+standard input if present. (The stock Bugzilla web presentation
+identifies this field as <quote>URL</quote>.)</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-p, --product</term>
+<listitem>
+<para>Set the product field, overriding the Product header from
+standard input if necessary.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-v, --version</term>
+<listitem><para>Set the version field, overriding the Version header
+from standard input if necessary.</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-c, --component</term>
+<listitem><para>Set the component field, overriding the Component header
+from standard input if necessary.</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-s, --summary</term>
+<listitem><para>Set the short_desc field, overriding the Summary header
+from standard input if necessary. (The stock Bugzilla web presentation
+identifies this field as <quote>Summary</quote>.)</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-H, --hardware</term>
+<listitem><para>Set the rep_platform field, overriding the Hardware header
+from standard input if necessary. (The stock Bugzilla web presentation
+identifies this field as <quote>Hardware</quote>.)</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-o, --os</term>
+<listitem><para>Set the op_sys field, overriding the OS (Operating
+System) header from standard input if necessary. (The stock Bugzilla web
+presentation also identifies this field as
+<quote>OS</quote>.)</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-r, --priority</term>
+<listitem><para>Set the priority field, overriding the Priority header
+from standard input if necessary.</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-x, --severity</term>
+<listitem><para>Set the severity field, overriding the Severity header
+from standard input if necessary.</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-d, --description</term>
+<listitem><para>Set the comment field, overriding the Description header
+from standard input if necessary. (The stock Bugzilla web presentation
+identifies this field as <quote>Description</quote>.)  If there is a
+message body and no Description field and this option is not
+specified, the message body is used as a description.
+</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-a, --assigned-to</term>
+<listitem>
+<para>Set the optional assigned_to field, overriding the Assigned-To
+header from standard input if necessary.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-C, --cc</term>
+<listitem>
+<para>Set the optional cc field, overriding the Cc
+header from standard input if necessary.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-k, --keywords</term>
+<listitem>
+<para>Set the optional keywords field, overriding the Keywords
+header from standard input if necessary.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-D, --depends-on</term>
+<listitem>
+<para>Set the optional dependson field, overriding the Depends-On
+header from standard input if necessary.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-B, --assigned-to</term>
+<listitem>
+<para>Set the optional blocked field, overriding the Blocked
+header from standard input if necessary.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-n, --no-stdin</term>
+<listitem><para>Suppress reading fields from standard input.</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>-h, --help</term>
+<listitem><para>Print usage help and exit.</para></listitem>
+</varlistentry>
+</variablelist>
+
+<para>This program will try to deduce OS and Hardware if those are not
+specified.  If it fails, validation will fail before shipping the
+report.</para>
+
+<para>There is expected to be a single positional argument following
+any options. It should be the URL of the Bugzilla instance to which
+the bug is to be submitted.</para>
+
+</refsect1>
+<refsect1 id='files'><title>FILES</title> 
+<variablelist>
+<varlistentry>
+<term><filename>~/.netrc</filename></term>
+<listitem><para>Must contain an entry in which the machine field is
+the Bugzilla instance URL, the login field is your ID on that host, and the 
+password field is the right password.  The URL in the machine field
+must be enclosed in double quotes.</para>
+
+<para>For example, if your Bugzilla instance is at
+"http://landfill.bugzilla.org/bztest/", and your login and password
+there are "john@doe.com" and "foo", respectively, your
+<filename>.netrc</filename> entry should look something like:</para>
+
+<screen>
+    machine "http://landfill.bugzilla.org/bztest/"
+    login john@doe.com
+    password foo
+
+</screen>
+
+<para>Note that the machine entry should match exactly the instance URL
+specified to <application>bugzilla-submit</application>.</para>
+
+</listitem>
+</varlistentry>
+</variablelist>
+
+</refsect1>
+<refsect1 id='author'><title>AUTHORS</title> 
+<para>Christian Reis &lt;kiko@async.com.br&gt;, Eric S. Raymond
+&lt;esr@thyrsus.com&gt;.</para> 
+</refsect1> 
+</refentry>
+

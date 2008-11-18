@@ -1,0 +1,131 @@
+<html>
+<head><title>Fullscreen Editor</title>
+<style type="text/css"> body {	margin: 0px; border: 0px; background-color: buttonface; } </style>
+
+<script>
+
+// if we pass the "window" object as a argument and then set opener to
+// equal that we can refer to dialogWindows and popupWindows the same way
+if (window.dialogArguments) { opener = window.dialogArguments; }
+
+var _editor_url = "../";
+document.write('<scr'+'ipt src="' +_editor_url+ 'editor.js" language="Javascript1.2"></scr'+'ipt>');
+
+var parent_objname = location.search.substring(1,location.search.length);  // parent editor objname
+var parent_config  = opener.document.all[parent_objname].config;
+
+var config         = cloneObject( parent_config );
+var objname        = 'editor'; // name of this editor
+
+//  DOMViewerObj = config;
+//  DOMViewerName = 'config';
+//  window.open('/innerHTML/domviewer.htm');  
+
+/* ---------------------------------------------------------------------- *\
+  Function    : 
+  Description : 
+\* ---------------------------------------------------------------------- */
+
+function _CloseOnEsc() {
+  if (event.keyCode == 27) {
+    update_parent();
+    window.close();
+    return;
+  }
+}
+
+/* ---------------------------------------------------------------------- *\
+  Function    : cloneObject
+  Description : copy an object by value instead of by reference
+  Usage       : var newObj = cloneObject(oldObj);
+\* ---------------------------------------------------------------------- */
+
+function cloneObject(obj) {
+  var newObj          = new Object; 
+
+  // check for array objects
+  if (obj.constructor.toString().indexOf('function Array(') == 1) {
+    newObj = obj.constructor();
+  }
+
+  for (var n in obj) {
+    var node = obj[n];
+    if (typeof node == 'object') { newObj[n] = cloneObject(node); }
+    else                         { newObj[n] = node; }
+  }
+  
+  return newObj;
+}
+
+/* ---------------------------------------------------------------------- *\
+  Function    : resize_editor
+  Description : resize the editor when the user resizes the popup
+\* ---------------------------------------------------------------------- */
+
+function resize_editor() {  // resize editor to fix window
+  var editor = document.all['_editor_editor'];
+
+  newWidth  = document.body.offsetWidth;
+  newHeight = document.body.offsetHeight - editor.offsetTop;
+
+  if (newWidth < 0) { newWidth = 0; }
+  if (newHeight < 0) { newHeight = 0; }
+
+  editor.style.width  = newWidth;
+  editor.style.height = newHeight;
+}
+
+/* ---------------------------------------------------------------------- *\
+  Function    : init
+  Description : run this code on page load
+\* ---------------------------------------------------------------------- */
+
+function init() {
+  // change maximize button to minimize button
+  config.btnList["popupeditor"] = ['popupeditor', 'Minimize Editor',  'update_parent(); window.close();', 'fullscreen_minimize.gif'];
+
+  // set htmlmode button to refer to THIS editor
+  config.btnList["htmlmode"]    = ['HtmlMode',    'View HTML Source', 'editor_setmode(\'editor\')',  'ed_html.gif'];
+
+  // change image url to be relative to current path
+  config.imgURL = "../images/";
+  
+  // generate editor and resize it
+  editor_generate('editor', config);
+  resize_editor();
+
+  // switch mode if needed
+  if (parent_config.mode == 'textedit') { editor_setmode(objname, 'textedit'); }
+
+  // set child window contents
+  var parentHTML = opener.editor_getHTML(parent_objname);
+  editor_setHTML(objname, parentHTML);
+
+  // continuously update parent editor window
+  window.setInterval(update_parent, 333);
+
+  // setup event handlers
+  document.body.onkeypress = _CloseOnEsc;
+  window.onresize = resize_editor;
+}
+
+/* ---------------------------------------------------------------------- *\
+  Function    : update_parent
+  Description : update parent window editor field with contents from child window
+\* ---------------------------------------------------------------------- */
+
+function update_parent() {
+  var childHTML = editor_getHTML(objname);
+  opener.editor_setHTML(parent_objname, childHTML);
+}
+
+
+</script>
+</head>
+<body scroll="no" onload="init()" onunload="update_parent()">
+
+<div style="margin: 0 0 0 0; border-width: 1; border-style: solid; border-color: threedshadow threedhighlight threedhighlight threedshadow; "></div>
+
+<textarea name="editor" style="width:100%; height:300px"></textarea><br>
+
+</body></html>

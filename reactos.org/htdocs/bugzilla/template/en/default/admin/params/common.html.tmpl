@@ -1,0 +1,79 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%# INTERFACE:
+  # panel: hash representing the current panel.
+  #%]
+
+<dl>
+  [% FOREACH param = panel.param_list %]
+    <dt><a name="[% param.name FILTER html %]">[% param.name FILTER html %]</a></dt>
+    <dd>[% panel.param_descs.${param.name} FILTER none %]
+      <p>
+      [% IF param.type == "t" %]
+        <input size="80" name="[% param.name FILTER html %]"
+               value="[% Param(param.name) FILTER html %]">
+      [% ELSIF param.type == "l" %]
+        <textarea name="[% param.name FILTER html %]" rows="10" cols="80">
+            [% Param(param.name) FILTER html %]</textarea>
+      [% ELSIF param.type == "b" %]
+        <input type="radio" name="[% param.name FILTER html %]" id="[% param.name FILTER html %]-on"
+               value=1 [% "checked=\"checked\"" IF Param(param.name) %]>
+        <label for="[% param.name FILTER html %]-on">On</label>
+        <input type="radio" name="[% param.name FILTER html %]" id="[% param.name FILTER html %]-off"
+               value=0 [% "checked=\"checked\"" IF !Param(param.name) %]>
+        <label for="[% param.name FILTER html %]-off">Off</label>
+      [% ELSIF param.type == "m" %]
+        [% boxSize = 5 %]
+        [% boxSize = param.choices.size IF param.choices.size < 5 %]
+
+        <select multiple="multiple" size="[% boxSize FILTER html %]"
+                name="[% param.name FILTER html %]">
+          [% FOREACH item = param.choices %]
+            <option value="[% item FILTER html %]"
+                    [% " selected=\"selected\"" IF lsearch(Param(param.name), item) != -1 %]>
+              [% item FILTER html %]
+            </option>
+          [% END %]
+        </select>
+      [% ELSIF param.type == "s" %]
+        <select name="[% param.name FILTER html %]">
+          [% FOREACH item = param.choices %]
+            <option value="[% item FILTER html %]"
+                    [% " selected=\"selected\"" IF item == Param(param.name) %]>
+              [% item FILTER html %]
+            </option>
+          [% END %]
+        </select>
+      [% ELSE %]
+        <font color="red">
+          <blink>Unknown param type [% param.type FILTER html %]!!!</blink>
+        </font>
+      [% END %]  
+      </p>
+      <p>
+        <input type="checkbox" name="reset-[% param.name FILTER html %]"
+               id="reset-[% param.name FILTER html %]">
+        <label for="reset-[% param.name FILTER html %]">Reset</label>
+      </p>
+      <hr>
+    </dd>
+  [% END %]
+</dl>

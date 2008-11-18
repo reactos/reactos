@@ -1,0 +1,67 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Albert Ting
+  #
+  # Contributor(s): Albert Ting <alt@sonic.net>
+  #%]
+
+[%# INTERFACE:
+  # classifications: an array of classification objects containing
+  #                  at least one product accessible by the user.
+  #%]
+
+[% IF target == "enter_bug.cgi" %]
+  [% title = "Select Classification" %]
+  [% subheader = "Please select the classification." %]
+[% END %]
+
+[% DEFAULT title = "Choose the classification" %]
+[% PROCESS global/header.html.tmpl %]
+
+<table>
+        
+[% IF Param('showallproducts') %]
+  <tr>
+    <th align="right">
+      <a href="[% target FILTER url_quote %]?classification=__all
+            [% IF cloned_bug_id %]&amp;cloned_bug_id=[% cloned_bug_id FILTER url_quote %][% END -%] 
+            [%- IF format %]&amp;format=[% format FILTER url_quote %][% END %]">
+      All</a>:
+    </th>
+
+    <td valign="top">&nbsp;Show all products</td>
+  </tr>
+  <tr>
+    <th colspan="2">&nbsp;</th>
+  </tr>
+[% END %]
+
+[% FOREACH class = classifications %]
+  <tr>
+    <th align="right">
+      <a href="[% target FILTER url_quote %]?classification=[% class.name FILTER url_quote -%]
+            [%- IF cloned_bug_id %]&amp;cloned_bug_id=[% cloned_bug_id FILTER url_quote %][% END -%] 
+            [%- IF format %]&amp;format=[% format FILTER url_quote %][% END %]">
+      [% class.name FILTER html %]</a>:
+    </th>
+
+    [% IF class.description %]
+      <td valign="top">&nbsp;[% class.description FILTER html_light %]</td>
+    [% END %]
+  </tr>
+[% END %]
+
+</table>
+
+[% PROCESS global/footer.html.tmpl %]

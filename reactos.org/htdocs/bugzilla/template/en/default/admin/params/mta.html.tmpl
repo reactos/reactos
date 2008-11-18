@@ -1,0 +1,71 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "Email"
+   desc = "How will outgoing mail be delivered?"
+%]
+
+[% param_descs = {
+  mail_delivery_method => "Defines how email is sent, or if it is sent at all.<br>
+                           <ul>
+                             <li>
+                               'Sendmail', 'SMTP' and 'Qmail' are all MTAs.
+                               You need to install a third-party sendmail replacement if
+                               you want to use sendmail on Windows.
+                             </li>
+                             <li>
+                               'Test' is useful for debugging: all email is stored
+                               in 'data/mailer.testfile' instead of being sent.
+                             </li>
+                             <li>
+                               'none' will completely disable email. $terms.Bugzilla continues
+                               to act as though it is sending mail, but nothing is sent or
+                               stored.
+                             </li>
+                           </ul>",
+
+  mailfrom => "The email address of the $terms.Bugzilla mail daemon.  Some email systems " _
+              "require this to be a valid email address.",
+
+  sendmailnow => "Sites using anything older than version 8.12 of 'sendmail' " _
+                 "can achieve a significant performance increase in the " _
+                 "UI -- at the cost of delaying the sending of mail -- by " _
+                 "disabling this parameter. Sites using 'sendmail' 8.12 or " _
+                 "higher should leave this on, as they will see no benefit from " _
+                 "turning it off. Sites using an MTA other than 'sendmail' " _
+                 "<b>must</b> leave it on, or no $terms.bug mail will be sent.",
+
+  smtpserver => "The SMTP server address (if using SMTP for mail delivery).",
+
+  smtp_debug => "If enabled, this will print detailed information to your" _
+                " web server's error log about the communication between" _
+                " $terms.Bugzilla and your SMTP server. You can use this to" _
+                " troubleshoot email problems.",
+
+  whinedays => "The number of days that we'll let a $terms.bug sit untouched in a NEW " _
+               "state before our cronjob will whine at the owner.<br> " _
+               "Set to 0 to disable whining.",
+
+  globalwatchers => "A comma-separated list of users who should receive a " _
+                    "copy of every notification mail the system sends." }
+
+%]

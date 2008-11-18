@@ -1,0 +1,37 @@
+body
+  {
+    font-family:       sans-serif;
+    font-size:        10pt;
+    background-color:  white;
+  }
+
+ul
+  {
+    padding-left: 12px;
+  }
+
+radio
+  {
+    -moz-user-select: ignore;
+  }
+
+.text-link
+  {
+    margin-left:      3px;
+  }
+
+.text-link:hover
+  {
+    text-decoration:  underline;
+    cursor:           pointer;
+  }
+
+.descriptive-content
+  {
+    color:            #AAAAAA;
+  }
+
+.descriptive-content[focused=true]
+  {
+    color:            black;
+  }

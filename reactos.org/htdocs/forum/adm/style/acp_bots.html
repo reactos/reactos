@@ -1,0 +1,102 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_EDIT_BOT -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE}</h1>
+
+	<p>{L_BOT_EDIT_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="acp_bots" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_TITLE}</legend>
+	<dl>
+		<dt><label for="bot_name">{L_BOT_NAME}:</label><br /><span>{L_BOT_NAME_EXPLAIN}</span></dt>
+		<dd><input name="bot_name" type="text" id="bot_name" value="{BOT_NAME}" maxlength="255" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="bot_style">{L_BOT_STYLE}:</label><br /><span>{L_BOT_STYLE_EXPLAIN}</span></dt>
+		<dd><select id="bot_style" name="bot_style">{S_STYLE_OPTIONS}</select></dd>
+	</dl>
+	<dl>
+		<dt><label for="bot_lang">{L_BOT_LANG}:</label><br /><span>{L_BOT_LANG_EXPLAIN}</span></dt>
+		<dd><select id="bot_lang" name="bot_lang">{S_LANG_OPTIONS}</select></dd>
+	</dl>
+	<dl>
+		<dt><label for="bot_active">{L_BOT_ACTIVE}:</label></dt>
+		<dd><select id="bot_active" name="bot_active">{S_ACTIVE_OPTIONS}</select></dd>
+	</dl>
+	<dl>
+		<dt><label for="bot_agent">{L_BOT_AGENT}:</label><br /><span>{L_BOT_AGENT_EXPLAIN}</span></dt>
+		<dd><input name="bot_agent" type="text" id="bot_agent" value="{BOT_AGENT}" maxlength="255" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="bot_ip">{L_BOT_IP}:</label><br /><span>{L_BOT_IP_EXPLAIN}</span></dt>
+		<dd><input name="bot_ip" type="text" id="bot_ip" value="{BOT_IP}" maxlength="255" /></dd>
+	</dl>
+
+	<p class="submit-buttons">
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+		{S_FORM_TOKEN}
+	</p>
+	</fieldset>
+	</form>
+
+<!-- ELSE -->
+
+	<h1>{L_BOTS}</h1>
+
+	<p>{L_BOTS_EXPLAIN}</p>
+
+	<form id="acp_bots" method="post" action="{U_ACTION}">
+
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_BOT_NAME}</th>
+		<th>{L_BOT_LAST_VISIT}</th>
+		<th colspan="3">{L_OPTIONS}</th>
+		<th>{L_MARK}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN bots -->
+		<!-- IF bots.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+			<td style="width: 50%;">{bots.BOT_NAME}</td>
+			<td style="width: 15%; white-space: nowrap;" align="center">&nbsp;{bots.LAST_VISIT}&nbsp;</td>
+			<td style="text-align: center;">&nbsp;<a href="{bots.U_ACTIVATE_DEACTIVATE}">{bots.L_ACTIVATE_DEACTIVATE}</a>&nbsp;</td>
+			<td style="text-align: center;">&nbsp;<a href="{bots.U_EDIT}">{L_EDIT}</a>&nbsp;</td>
+			<td style="text-align: center;">&nbsp;<a href="{bots.U_DELETE}">{L_DELETE}</a>&nbsp;</td>
+			<td style="text-align: center;"><input type="checkbox" class="radio" name="mark[]" value="{bots.BOT_ID}" /></td>
+		</tr>
+	<!-- END bots -->
+	</tbody>
+	</table>
+
+	<fieldset class="quick" style="float: {S_CONTENT_FLOW_BEGIN};">
+		<input class="button2" name="add" type="submit" value="{L_BOT_ADD}" />
+	</fieldset>
+
+	<fieldset class="quick" style="float: {S_CONTENT_FLOW_END};">
+		<select name="action">{S_BOT_OPTIONS}</select>
+		<input class="button2" name="submit" type="submit" value="{L_SUBMIT}" />
+		<p class="small"><a href="#" onclick="marklist('acp_bots', 'mark', true);">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('acp_bots', 'mark', false);">{L_UNMARK_ALL}</a></p>
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

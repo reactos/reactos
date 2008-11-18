@@ -1,0 +1,84 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # custom_fields: a list of Bugzilla::Field objects, representing custom fields.
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% PROCESS global/header.html.tmpl title = "Custom Fields" %]
+
+[% columns = [
+     {
+       name => "name"
+       heading => "Edit custom field..."
+       contentlink => "editfields.cgi?action=edit&amp;name=%%name%%"
+     },
+     {
+       name => "description"
+       heading => "Description"
+     },
+     {
+       name => "sortkey"
+       heading => "Sortkey"
+     },
+     {
+       name => "type"
+       heading => "Type"
+     },
+     {
+       name => "enter_bug"
+       heading => "Editable on $terms.Bug Creation"
+     },
+     {
+       name => "mailhead"
+       heading => "In ${terms.Bug}mail on $terms.Bug Creation"
+     },
+     {
+       name => "obsolete"
+       heading => "Is Obsolete"
+     }
+   ]
+%]
+
+[% USE Bugzilla %]
+[% custom_fields = Bugzilla.get_fields({ custom => 1 }) %]
+
+[%# We want to display the type name of fields, not their type ID. %]
+[% overrides.type = [] %]
+
+[% FOREACH field_type = field_types.keys %]
+  [% overrides.type.push({
+       match_value => field_type
+       match_field => 'type'
+       override_content => 1
+       content => field_types.${field_type}
+    })
+  %]
+[% END %]
+
+[% PROCESS admin/table.html.tmpl
+     columns = columns
+     overrides = overrides
+     data = custom_fields
+%]
+
+<p>
+  <a href="editfields.cgi?action=add">Add a new custom field</a>
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

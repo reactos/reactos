@@ -1,9 +1,0 @@
-// Don't translate this file at current time
-
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
-STRINGTABLE
-BEGIN
-    IDS_REACTOS_FONTS_FOLDER "ReactOS Font Folder"
-END
-

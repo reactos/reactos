@@ -1,8 +1,0 @@
-LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Labirintas"
-    IDS_TITLE       "Apie"
-    IDS_TEXT        "Nëra keièiamø parametrø."
-END

@@ -1,0 +1,66 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Emmanuel Seyman <eseyman@linagora.com>
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+From: [% Param("mailfrom") %]
+To: [% email %][% Param("emailsuffix") %]
+Subject: Your [% terms.Bugzilla %] buglist needs attention.
+X-Bugzilla-Type: whine
+
+[This e-mail has been automatically generated.]
+
+You have one or more [% terms.bugs %] assigned to you in the [% terms.Bugzilla %] 
+[% terms.bug %] tracking system ([% Param("urlbase") %]) that require
+attention.
+
+All of these [% terms.bugs %] are in the [% status_descs.NEW %] or 
+[% status_descs.REOPENED %] state, and have not been
+touched in [% Param("whinedays") %] days or more.
+You need to take a look at them, and decide on an initial action.
+
+Generally, this means one of three things:
+
+(1) You decide this [% terms.bug %] is really quick to deal with (like, it's [% get_resolution("INVALID") %]),
+    and so you get rid of it immediately.
+(2) You decide the [% terms.bug %] doesn't belong to you, and you reassign it to
+    someone else. (Hint: if you don't know who to reassign it to, make
+    sure that the Component field seems reasonable, and then use the
+    "Reassign [% terms.bug %] to default assignee of selected component" option.)
+(3) You decide the [% terms.bug %] belongs to you, but you can't solve it this moment.
+    Just use the "Accept [% terms.bug %]" command.
+
+To get a list of all [% status_descs.NEW %]/[% status_descs.REOPENED %] [%+ terms.bugs %], you can use this URL (bookmark
+it if you like!):
+
+ [% Param("urlbase") %]buglist.cgi?bug_status=NEW&bug_status=REOPENED&assigned_to=[% email %]
+
+Or, you can use the general query page, at 
+[%+ Param("urlbase") %]query.cgi
+
+Appended below are the individual URLs to get to all of your [% status_descs.NEW %] [%+ terms.bugs %]
+that haven't been touched for a week or more.
+
+You will get this message once a day until you've dealt with these [% terms.bugs %]!
+
+[% FOREACH bug = bugs %]
+ [%+ bug.summary %]
+    -> [% Param("urlbase") %]show_bug.cgi?id=[% bug.id %]
+[% END %]

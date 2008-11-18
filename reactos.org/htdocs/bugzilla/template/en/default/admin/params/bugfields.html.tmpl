@@ -1,0 +1,64 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "$terms.Bug Fields"
+   desc = "Choose fields you want to display"
+%]
+
+[% param_descs = {
+  useclassification => "If this is on, $terms.Bugzilla will associate each product with a " _
+                       "specific classification. But you must have 'editclassification' " _
+                       "permissions enabled in order to edit classifications.",
+
+  showallproducts => "If this is on and useclassification is set, $terms.Bugzilla will add a " _
+                     "'All' link in the 'New $terms.Bug' page to list all available products.",
+
+  usetargetmilestone => "Do you wish to use the Target Milestone field?",
+
+  useqacontact => "Do you wish to use the QA Contact field?",
+
+  usestatuswhiteboard => "Do you wish to use the Status Whiteboard field?",
+
+  usevotes => "Do you wish to allow users to vote for ${terms.bugs}? Note that in order " _
+              "for this to be effective, you will have to change the maximum " _
+              "votes allowed in a product to be non-zero in " _
+              "<a href=\"editproducts.cgi\">the product edit page</a>.",
+
+  usebugaliases => "Do you wish to use $terms.bug aliases, which allow you to assign " _
+                   "$terms.bugs an easy-to-remember name by which you can refer to them?",
+
+  defaultpriority => "This is the priority that newly entered $terms.bugs are set to.",
+
+  defaultseverity => "This is the severity that newly entered $terms.bugs are set to.",
+
+  defaultplatform => "This is the platform that is preselected on the $terms.bug " _
+                     "entry form.<br> " _
+                     "You can leave this empty: " _
+                     "$terms.Bugzilla will then use the platform that the browser " _
+                     "reports to be running on as the default.",
+
+  defaultopsys => "This is the operating system that is preselected on the $terms.bug " _
+                  "entry form.<br> " _
+                  "You can leave this empty: " _
+                  "$terms.Bugzilla will then use the operating system that the browser " _
+                  "reports to be running on as the default." }
+%]

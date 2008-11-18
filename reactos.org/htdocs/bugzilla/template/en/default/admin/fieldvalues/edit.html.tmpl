@@ -1,0 +1,65 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  # value: string; The field value we are editing.
+  # sortkey: number; Sortkey of the field value we are editing.
+  # field: string; The field this value belongs to.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]Edit Value '[% value FILTER html %]'  '
+                   [%- field FILTER html %]'[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+<form method="post" action="editvalues.cgi">
+  <table border="0" cellpadding="4" cellspacing="0">
+
+    <tr>
+      <th valign="top"><label for="value">Field Value:</label></th>
+      <td>
+        [% IF is_static %]
+          <input type="hidden" name="value" value="[% value FILTER html %]">
+          [% value FILTER html %]
+        [% ELSE %]
+          <input id="value" size="20" maxlength="60" name="value" value="
+          [%- value FILTER html %]">
+        [% END %]
+      </td>
+    </tr>
+    <tr>
+      <th align="right"><label for="sortkey">Sortkey:</label></th>
+      <td><input id="sortkey" size="20" maxlength="20" name="sortkey" value="
+      [%- sortkey FILTER html %]"></td>
+    </tr>
+
+  </table>
+
+  <input type="hidden" name="valueold" value="[% value FILTER html %]">
+  <input type="hidden" name="sortkeyold" value="[% sortkey FILTER html %]">
+  <input type="hidden" name="action" value="update">
+  <input type="hidden" name="field" value="[% field FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+  <input type="submit" id="update" value="Update">
+</form>
+
+[% PROCESS admin/fieldvalues/footer.html.tmpl
+  no_edit_link = 1 %]
+
+[% PROCESS global/footer.html.tmpl %]

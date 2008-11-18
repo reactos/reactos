@@ -1,0 +1,615 @@
+/* General roscms Markup Styles
+---------------------------------------- */
+
+* {
+	/* Reset browsers default margin, padding and font sizes */
+	margin: 0;
+	padding: 0;
+}
+
+p {
+	/* Set the margin again for the separator elements for the menu items */
+	margin-bottom: 1em;
+}
+
+#wrap h1 {
+	/* Forum name */
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	margin-right: 200px;
+	color: #FFFFFF;
+	margin-top: 15px;
+	font-weight: bold;
+	font-size: 2em;
+}
+
+#wrap h2 {
+	/* Forum header titles */
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+	font-weight: normal;
+	color: #3f3f3f;
+	font-size: 2em;
+	margin: 0.8em 0 0.2em 0;
+}
+
+#wrap h2.solo {
+	margin-bottom: 1em;
+}
+
+#wrap h3 {
+	/* Sub-headers (also used as post headers, but defined later) */
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	text-transform: uppercase;
+	border-bottom: 1px solid #CCCCCC;
+	margin-bottom: 3px;
+	padding-bottom: 2px;
+	font-size: 1.05em;
+	color: #989898;
+	margin-top: 20px;
+}
+
+#wrap h4 {
+	/* Forum and topic list titles */
+	font-family: "Trebuchet MS", Verdana, Helvetica, Arial, Sans-serif;
+	font-size: 1.3em;
+}
+
+#wrap p {
+	line-height: 1.3em;
+	font-size: 1.1em;
+	margin-bottom: 1.5em;
+}
+
+#wrap img {
+	border-width: 0;
+}
+
+#wrap hr {
+	/* Also see tweaks.css */
+	border: 0 none #FFFFFF;
+	border-top: 1px solid #CCCCCC;
+	height: 1px;
+	margin: 5px 0;
+	display: block;
+	clear: both;
+}
+
+#wrap hr.dashed {
+	border-top: 1px dashed #CCCCCC;
+	margin: 10px 0;
+}
+
+#wrap hr.divider {
+	display: none;
+}
+
+#wrap p.right {
+	text-align: right;
+}
+
+/* Main blocks
+---------------------------------------- */
+#wrap {
+	font-family: Verdana, Helvetica, Arial, sans-serif;
+	color: #828282;
+	background-color: #FFFFFF;
+	font-size: 10px;
+	padding-right: 5px;
+}
+
+#simple-wrap {
+	padding: 6px 10px;
+}
+
+#page-body {
+	margin: 4px 0;
+	clear: both;
+}
+
+#page-footer {
+	clear: both;
+}
+
+#page-footer h3 {
+	margin-top: 20px;
+}
+
+#logo {
+	float: left;
+	width: auto;
+	padding: 10px 13px 0 10px;
+}
+
+a#logo:hover {
+	text-decoration: none;
+}
+
+/* Search box
+--------------------------------------------- */
+#search-box {
+	color: #FFFFFF;
+	position: relative;
+	margin-top: 30px;
+	margin-right: 5px;
+	display: block;
+	float: right;
+	text-align: right;
+	white-space: nowrap; /* For Opera */
+}
+
+#search-box #keywords {
+	width: 95px;
+	background-color: #FFF;
+}
+
+#search-box input {
+	border: 1px solid #b0b0b0;
+}
+
+/* .button1 style defined later, just a few tweaks for the search button version */
+#search-box input.button1 {
+	padding: 1px 5px;
+}
+
+#search-box li {
+	text-align: right;
+	margin-top: 4px;
+}
+
+#search-box img {
+	vertical-align: middle;
+	margin-right: 3px;
+}
+
+/* Site description and logo */
+#site-description {
+	float: left;
+	width: 70%;
+}
+
+#site-description h1 {
+	margin-right: 0;
+}
+
+/* Round cornered boxes and backgrounds
+---------------------------------------- */
+.headerbar {
+	background: #ebebeb none repeat-x 0 0;
+	color: #FFFFFF;
+	margin-bottom: 4px;
+	padding: 0 5px;
+}
+
+.navbar {
+	background-color: #ebebeb;
+	padding: 0 10px;
+}
+
+.forabg {
+	background: #b1b1b1 none repeat-x 0 0;
+	margin-bottom: 4px;
+	padding: 0 5px;
+	clear: both;
+}
+
+.forumbg {
+	background: #ebebeb none repeat-x 0 0;
+	margin-bottom: 4px;
+	padding: 0 5px;
+	clear: both;
+}
+
+.panel {
+	margin-bottom: 4px;
+	padding: 0 10px;
+	background-color: #f3f3f3;
+	color: #3f3f3f;
+}
+
+.post {
+	padding: 0 10px;
+	margin-bottom: 4px;
+	background-repeat: no-repeat;
+	background-position: 100% 0;
+}
+
+.post:target .content {
+	color: #000000;
+}
+
+.post:target h3 a {
+	color: #000000;
+}
+
+.bg1	{ background-color: #f7f7f7;}
+.bg2	{ background-color: #f2f2f2; }
+.bg3	{ background-color: #ebebeb; }
+
+.rowbg {
+	margin: 5px 5px 2px 5px;
+}
+
+.ucprowbg {
+	background-color: #e2e2e2;
+}
+
+.fieldsbg {
+	/*border: 1px #DBDEE2 solid;*/
+	background-color: #eaeaea;
+}
+
+span.corners-top, span.corners-bottom, span.corners-top span, span.corners-bottom span {
+	font-size: 1px;
+	line-height: 1px;
+	display: block;
+	height: 5px;
+	background-repeat: no-repeat;
+}
+
+span.corners-top {
+	background-image: none;
+	background-position: 0 0;
+	margin: 0 -5px;
+}
+
+span.corners-top span {
+	background-image: none;
+	background-position: 100% 0;
+}
+
+span.corners-bottom {
+	background-image: none;
+	background-position: 0 100%;
+	margin: 0 -5px;
+	clear: both;
+}
+
+span.corners-bottom span {
+	background-image: none;
+	background-position: 100% 100%;
+}
+
+.headbg span.corners-bottom {
+	margin-bottom: -1px;
+}
+
+.post span.corners-top, .post span.corners-bottom, .panel span.corners-top, .panel span.corners-bottom, .navbar span.corners-top, .navbar span.corners-bottom {
+	margin: 0 -10px;
+}
+
+.rules span.corners-top {
+	margin: 0 -10px 5px -10px;
+}
+
+.rules span.corners-bottom {
+	margin: 5px -10px 0 -10px;
+}
+
+/* Horizontal lists
+----------------------------------------*/
+ul.linklist {
+	display: block;
+	margin: 0;
+}
+
+ul.linklist li {
+	display: block;
+	list-style-type: none;
+	float: left;
+	width: auto;
+	margin-right: 5px;
+	font-size: 1.1em;
+	line-height: 2.2em;
+}
+
+ul.linklist li.rightside, p.rightside {
+	float: right;
+	margin-right: 0;
+	margin-left: 5px;
+	text-align: right;
+}
+
+ul.navlinks {
+	margin-bottom: 1px;
+	font-weight: bold;
+}
+
+ul.leftside {
+	float: left;
+	margin-left: 0;
+	margin-right: 5px;
+	text-align: left;
+}
+
+ul.rightside {
+	float: right;
+	margin-left: 5px;
+	margin-right: -5px;
+	text-align: right;
+}
+
+/* Table styles
+----------------------------------------*/
+table.table1 {
+	/* See tweaks.css */
+}
+
+#ucp-main table.table1 {
+	padding: 2px;
+}
+
+table.table1 thead th {
+	font-weight: normal;
+	text-transform: uppercase;
+	color: #FFFFFF;
+	line-height: 1.3em;
+	font-size: 1em;
+	padding: 0 0 4px 3px;
+}
+
+table.table1 thead th span {
+	padding-left: 7px;
+}
+
+table.table1 tbody tr {
+	border: 1px solid #cfcfcf;
+}
+
+table.table1 tbody tr:hover, table.table1 tbody tr.hover {
+	background-color: #f6f6f6;
+	color: #000;
+}
+
+table.table1 td {
+	color: #6a6a6a;
+	font-size: 1.1em;
+}
+
+table.table1 tbody td {
+	padding: 5px;
+	border-top: 1px solid #FAFAFA;
+}
+
+table.table1 tbody th {
+	padding: 5px;
+	border-bottom: 1px solid #000000;
+	text-align: left;
+	color: #333333;
+	background-color: #FFFFFF;
+}
+
+/* Specific column styles */
+table.table1 .name		{ text-align: left; }
+table.table1 .posts		{ text-align: center !important; width: 7%; }
+table.table1 .joined	{ text-align: left; width: 15%; }
+table.table1 .active	{ text-align: left; width: 15%; }
+table.table1 .mark		{ text-align: center; width: 7%; }
+table.table1 .info		{ text-align: left; width: 30%; }
+table.table1 .info div	{ width: 100%; white-space: nowrap; overflow: hidden; }
+table.table1 .autocol	{ line-height: 2em; white-space: nowrap; }
+table.table1 thead .autocol { padding-left: 1em; }
+
+table.table1 span.rank-img {
+	float: right;
+	width: auto;
+}
+
+table.info td {
+	padding: 3px;
+}
+
+table.info tbody th {
+	padding: 3px;
+	text-align: right;
+	vertical-align: top;
+	color: #000000;
+	font-weight: normal;
+}
+
+.forumbg table.table1 {
+	margin: 0 -2px -1px -1px;
+}
+
+/* Misc layout styles
+---------------------------------------- */
+/* column[1-2] styles are containers for two column layouts 
+   Also see tweaks.css */
+.column1 {
+	float: left;
+	clear: left;
+	width: 49%;
+}
+
+.column2 {
+	float: right;
+	clear: right;
+	width: 49%;
+}
+
+/* General classes for placing floating blocks */
+.left-box {
+	float: left;
+	width: auto;
+	text-align: left;
+}
+
+.right-box {
+	float: right;
+	width: auto;
+	text-align: right;
+}
+
+dl.details {
+	/*font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;*/
+	font-size: 1.1em;
+}
+
+dl.details dt {
+	float: left;
+	clear: left;
+	width: 30%;
+	text-align: right;
+	color: #000000;
+	display: block;
+}
+
+dl.details dd {
+	margin-left: 0;
+	padding-left: 5px;
+	margin-bottom: 5px;
+	color: #828282;
+	float: left;
+	width: 65%;
+}
+
+/* Pagination
+---------------------------------------- */
+.pagination {
+	height: 1%; /* IE tweak (holly hack) */
+	width: auto;
+	text-align: right;
+	margin-top: 5px;
+	float: right;
+}
+
+.pagination span.page-sep {
+	display: none;
+}
+
+li.pagination {
+	margin-top: 0;
+}
+
+.pagination strong, .pagination b {
+	font-weight: normal;
+}
+
+.pagination span strong {
+	padding: 0 2px;
+	margin: 0 2px;
+	font-weight: normal;
+	color: #FFFFFF;
+	background-color: #bfbfbf;
+	border: 1px solid #bfbfbf;
+	font-size: 0.9em;
+}
+
+.pagination span a, .pagination span a:link, .pagination span a:visited, .pagination span a:active {
+	font-weight: normal;
+	text-decoration: none;
+	color: #747474;
+	margin: 0 2px;
+	padding: 0 2px;
+	background-color: #eeeeee;
+	border: 1px solid #bababa;
+	font-size: 0.9em;
+	line-height: 1.5em;
+}
+
+.pagination span a:hover {
+	border-color: #d2d2d2;
+	background-color: #d2d2d2;
+	color: #FFF;
+	text-decoration: none;
+}
+
+.pagination img {
+	vertical-align: middle;
+}
+
+/* Pagination in viewforum for multipage topics */
+.row .pagination {
+	display: block;
+	float: right;
+	width: auto;
+	margin-top: 0;
+	padding: 1px 0 1px 15px;
+	font-size: 0.9em;
+	background: none 0 50% no-repeat;
+}
+
+.row .pagination span a, li.pagination span a {
+	background-color: #FFFFFF;
+}
+
+.row .pagination span a:hover, li.pagination span a:hover {
+	background-color: #d2d2d2;
+}
+
+/* Miscellaneous styles
+---------------------------------------- */
+#forum-permissions {
+	float: right;
+	width: auto;
+	padding-left: 5px;
+	margin-left: 5px;
+	margin-top: 10px;
+	text-align: right;
+}
+
+.copyright {
+	padding: 5px;
+	text-align: center;
+	color: #555555;
+}
+
+.small {
+	font-size: 0.9em !important;
+}
+
+.titlespace {
+	margin-bottom: 15px;
+}
+
+.headerspace {
+	margin-top: 20px;
+}
+
+.error {
+	color: #bcbcbc;
+	font-weight: bold;
+	font-size: 1em;
+}
+
+.reported {
+	background-color: #f7f7f7;
+}
+
+li.reported:hover {
+	background-color: #ececec;
+}
+
+div.rules {
+	background-color: #ececec;
+	color: #bcbcbc;
+	padding: 0 10px;
+	margin: 10px 0;
+	font-size: 1.1em;
+}
+
+div.rules ul {
+	margin-left: 20px;
+}
+
+p.rules {
+	background-color: #ececec;
+	background-image: none;
+	padding: 5px;
+}
+
+p.rules img {
+	vertical-align: middle;
+}
+
+p.rules a {
+	vertical-align: middle;
+	clear: both;
+}
+
+.clear {
+	display: block;
+	clear: both;
+	font-size: 1px;
+	line-height: 1px;
+	background: transparent;
+}

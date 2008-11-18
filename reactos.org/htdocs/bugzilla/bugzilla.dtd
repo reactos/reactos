@@ -1,0 +1,81 @@
+<!ELEMENT bugzilla (bug+)>
+<!ATTLIST bugzilla
+	version CDATA #REQUIRED
+	urlbase CDATA #REQUIRED
+	maintainer CDATA #REQUIRED
+	exporter CDATA #IMPLIED
+>
+<!ELEMENT bug (bug_id, (alias?, creation_ts, short_desc, delta_ts, reporter_accessible, cclist_accessible, classification_id, classification, product, component, version, rep_platform, op_sys, bug_status, resolution?, dup_id?, bug_file_loc?, status_whiteboard?, keywords*, priority, bug_severity, target_milestone?, dependson*, blocked*, votes?, everconfirmed, reporter, assigned_to, qa_contact?, cc*, (estimated_time, remaining_time, actual_time, deadline)?, group*, flag*, long_desc*, attachment*)?)>
+<!ATTLIST bug
+	error (NotFound | NotPermitted | InvalidBugId) #IMPLIED
+>
+<!ELEMENT bug_id (#PCDATA)>
+<!ELEMENT alias (#PCDATA)>
+<!ELEMENT reporter_accessible (#PCDATA)>
+<!ELEMENT cclist_accessible (#PCDATA)>
+<!ELEMENT exporter (#PCDATA)>
+<!ELEMENT urlbase (#PCDATA)>
+<!ELEMENT bug_status (#PCDATA)>
+<!ELEMENT classification_id (#PCDATA)>
+<!ELEMENT classification (#PCDATA)>
+<!ELEMENT product (#PCDATA)>
+<!ELEMENT priority (#PCDATA)>
+<!ELEMENT version (#PCDATA)>
+<!ELEMENT rep_platform (#PCDATA)>
+<!ELEMENT assigned_to (#PCDATA)>
+<!ELEMENT delta_ts (#PCDATA)>
+<!ELEMENT component (#PCDATA)>
+<!ELEMENT reporter (#PCDATA)>
+<!ELEMENT target_milestone (#PCDATA)>
+<!ELEMENT bug_severity (#PCDATA)>
+<!ELEMENT creation_ts (#PCDATA)>
+<!ELEMENT qa_contact (#PCDATA)>
+<!ELEMENT status_whiteboard (#PCDATA)>
+<!ELEMENT op_sys (#PCDATA)>
+<!ELEMENT resolution (#PCDATA)>
+<!ELEMENT dup_id (#PCDATA)>
+<!ELEMENT bug_file_loc (#PCDATA)>
+<!ELEMENT short_desc (#PCDATA)>
+<!ELEMENT keywords (#PCDATA)>
+<!ELEMENT dependson (#PCDATA)>
+<!ELEMENT blocked (#PCDATA)>
+<!ELEMENT votes (#PCDATA)>
+<!ELEMENT everconfirmed (#PCDATA)>
+<!ELEMENT cc (#PCDATA)>
+<!ELEMENT group (#PCDATA)>
+<!ELEMENT estimated_time (#PCDATA)>
+<!ELEMENT remaining_time (#PCDATA)>
+<!ELEMENT actual_time (#PCDATA)>
+<!ELEMENT deadline (#PCDATA)>
+<!ELEMENT long_desc (who, bug_when, work_time?, thetext)>
+<!ATTLIST long_desc
+          encoding (base64) #IMPLIED
+          isprivate (0|1) #IMPLIED
+ >
+<!ELEMENT who (#PCDATA)>
+<!ELEMENT bug_when (#PCDATA)>
+<!ELEMENT work_time (#PCDATA)>
+<!ELEMENT thetext (#PCDATA)>
+<!ELEMENT attachment (attachid, date, desc, filename?, type?, size?, data?, flag*)>
+<!ATTLIST attachment
+          isobsolete (0|1) #IMPLIED
+          ispatch (0|1) #IMPLIED
+          isprivate (0|1) #IMPLIED
+>
+<!ELEMENT attachid (#PCDATA)>
+<!ELEMENT date (#PCDATA)>
+<!ELEMENT desc (#PCDATA)>
+<!ELEMENT filename (#PCDATA)>
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT size (#PCDATA)>
+<!ELEMENT data (#PCDATA)>
+<!ATTLIST data
+          encoding (base64) #IMPLIED
+>
+<!ELEMENT flag EMPTY>
+<!ATTLIST flag
+          name CDATA #REQUIRED
+          status CDATA #REQUIRED
+          setter CDATA #IMPLIED
+          requestee CDATA #IMPLIED
+>

@@ -1,0 +1,136 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+//
+// This file contains installation specific values for third-party clients.
+//
+// Note: this interface is experimental and under development.
+// We may and probably will make breaking changes to it in the future.
+
+// the global bugzilla url
+var installation = {
+  base_url        : '[% Param('urlbase') FILTER js %]',
+  install_version : '[% constants.BUGZILLA_VERSION FILTER js %]',
+  maintainer      : '[% Param('maintainer') FILTER js %]'
+};
+
+
+// Status and Resolution
+// =====================
+var status        = [ [% FOREACH x = status %]'[% x FILTER js %]', [% END %] ];
+var status_open   = [ [% FOREACH x = open_status %]'[% x FILTER js %]', [% END %] ];
+var status_closed = [ [% FOREACH x = closed_status %]'[% x FILTER js %]', [% END %] ];
+var resolution    = [ [% FOREACH x = resolution %]'[% x FILTER js %]', [% END %] ];
+
+
+// Keywords
+// ========
+
+var keyword       = [ [% FOREACH x = keyword %]'[% x FILTER js %]', [% END %] ];
+
+
+// Platforms
+// =========
+
+var platform      = [ [% FOREACH x = platform %]'[% x FILTER js %]', [% END %] ];
+
+
+// Severities
+// ==========
+
+var severity      = [ [% FOREACH x = severity %]'[% x FILTER js %]', [% END %] ];
+
+
+// Custom Fields
+// =============
+
+[% FOREACH cf = custom_fields %]
+var [% cf.name FILTER js %] = [ [% FOREACH x = cf.legal_values %]'[% x FILTER js %]', [% END %] ];
+[% END %]
+
+
+// Products and Components
+// =======================
+//
+// It is not necessary to list all products and components here.
+// Instead, you can define a "blacklist" for some commonly used words
+// or word fragments that occur in a product or component name
+// but should _not_ trigger product/component search.
+
+
+// A list of all products and their components, versions, and target milestones:
+  
+var component = new Object();
+var version = new Object();
+var target_milestone = new Object();
+
+[% FOREACH p = products %]
+  component['[% p.name FILTER js %]'] = [ [% FOREACH x = p.components %]'[% x.name FILTER js %]', [% END %] ];
+  version['[% p.name FILTER js %]'] = [ [% FOREACH x = p.versions %]'[% x.name FILTER js %]', [% END %] ];
+  target_milestone['[% p.name FILTER js %]'] = [ [% FOREACH x = p.milestones %]'[% x.name FILTER js %]', [% END %] ];
+[% END %]
+
+// Product and Component Exceptions
+// ================================
+//
+// A blacklist for some commonly used words or word fragments 
+// that occur in a product or component name but should *not*
+// trigger product/component search in QuickSearch.
+
+var product_exceptions = new Array(
+  // Example:
+  //"row"   // [Browser]
+  //        //   ^^^
+  //,"new"  // [MailNews]
+  //        //      ^^^
+);
+
+var component_exceptions = new Array(
+  // Example:
+  //"hang"  // [mozilla.org] Bugzilla: Component/Keyword Changes
+  //        //                                            ^^^^
+);
+
+// Queryable Fields
+// ================
+[% PROCESS "global/field-descs.none.tmpl" %]
+var field = [
+[% FOREACH x = field %]
+  { name:        '[% x.name FILTER js %]', 
+    description: '[% (field_descs.${x.name} OR x.description) FILTER js %]' },
+[% END %]
+];
+
+// Deprecated Variables
+// ====================
+//
+// Other names for various variables.  These are deprecated
+// and could go away at any time.  Use them at your own risk!
+
+var bugzilla = installation.base_url;
+var statuses = status;
+var statuses_resolved = status_closed;
+var resolutions = resolution;
+var keywords = keyword;
+var platforms = platform;
+var severities = severity;
+var cpts = component;
+var vers = version;
+var tms = target_milestone;

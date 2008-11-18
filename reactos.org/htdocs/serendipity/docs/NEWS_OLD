@@ -1,0 +1,523 @@
+# $Id$
+
+(The latest changes are documented in the NEWS-file)
+
+Version 0.5-pl1 (February, 14th 2004)
+------------------------------------------------------------------------
+
+    * Fixed XHTML-invalid anchor name (garvinhicking)
+
+    * Fixed installation problems [file_get_contents, htacces
+      copy&paste] for PHP < 4.3.0 (garvinhicking)
+
+    * Fix leaking draft entries by directly entering URL or using
+      quicksearch (garvinhicking)
+
+    * Fixed output of an empty external stylesheet on admin panel
+      (garvinhicking)
+
+    * Do not output comment-type ("NORMAL") on entry view
+      (garvinhicking)
+
+    * Fixed RSS 0.91 feed (was not printing any entries) (garvinhicking)
+
+Version 0.5 (February 6th, 2004)
+------------------------------------------------------------------------
+
+    * Fixed bug not showing comment or entry admin-tools on apparently
+      static pages (garvinhicking, tomsommer)
+
+    * RSS 1.0 feed supported (garvinhicking)
+
+    * Redirection after a comment has been added to prevent users
+      refreshing a page and double-submitting. (garvinhicking)
+
+    * Fixed RSS feed to only show comments when they are associated with
+      an entry_id (garvinhicking)
+
+    * Fixed page counter to count pages depending on the entries per
+      page, and not hardcoded 15 entries (garvinhicking)
+
+    * Atom 0.3 feed supported (with xml-stylesheet display)
+      (garvinhicking)
+
+    * Fixed format of mail to not send invalid mails (garvinhicking)
+
+    * Added Yahoo! blog ping (garvinhicking)
+
+    * Format trackbacks with link to the originating blog in comments
+      plugin (garvinhicking)
+
+    * The items of the comment-RSS feeds now have their GUID per
+      comment, not per entry. This allows feedreaders to properly
+      display updated to that feed. (garvinhicking)
+
+    * Do not output our own trackbacks inside the comments plugin. Use
+      anchors on the title-link to each comment. (garvinhicking)
+
+    * Moved languages to its own folder and added available languages as
+      a dropdown in the installer (tomsommer)
+
+    * Added spanish translation (Luis Cervantes)
+
+    * Added input box to admin entry panel where you can provide an
+      entry id to be directly edited. (garvinhicking)
+
+    * Edit an entry directly from your frontend (link beside trackbacks)
+      (garvinhicking)
+
+    * Made pinging blogs configurable/changeable per-entry. Added
+      "blogg.de" to RPC-ping list (garvinhicking)
+
+    * Fixed referrer and exit tracking on PostgreSQL (jtate)
+
+    * Added support for pinging weblogs.com, blo.gs, blogrolling.com and
+      technorati.com to announce new entries. (jimwinstead &
+      sebastianbergmann)
+
+    * Added mod_rewrite rules to .htaccess templates (garvinhicking)
+
+    * Changed installer to allow selection of desired rewrite rule, if
+      any. (tomsommer)
+
+    * Used patch from Craig O'Shannessy (modified and expanded to all
+      occurences) to allow usage of s9y without mod_rewrite/
+      ErrorDocument Handlers. (garvinhicking)
+
+    * Created a clickable label for the autologin, german translation
+      (garvinhicking)
+
+    * Allow Autologin, saving login information in a cookie (tomsommer
+      & jtate)
+
+    * HTML-Nugget can now be configured to preserve textformatting.
+      Default is 'apply textformatting' to stay backwards-compatible.
+      (garvinhicking)
+
+Version 0.4 (December 12th, 2003)
+------------------------------------------------------------------------
+
+    * Fixed bug #841972 - Remove reference to leer.png (tomsommer)
+
+    * RSS2.0-feed now contains wfw:comments link for per-entry comments.
+      Is interpreted by SharpReader i.e. (garvinhicking)
+
+    * XHTML1 compatibility fixes, missing <tr> from the calendar fixed.
+      Thanks to casper/jedijab79 from the forums (garvinhicking)
+
+    * Reworked Syndication plugin to allow future embedding of new RSS-
+      fields depending with individual content.
+
+      First example is the pubDate-field for the 'channel'-context, as
+      suggested by Justin Alcorn (garvinhicking)
+
+    * Added ability to close (and re-open) comments for certain entries
+      [needs DB update!] (garvinhicking)
+
+    * Fixes for comments-plugin (for 0 comments, dateformat) (tomsommer)
+
+    * Fixes for mt-XMLRPC API (gschlossnagle)
+
+    * Fixed embed-check for more strict type comparison (garvinhicking)
+
+    * Relative links inside the RSS-feed will get converted to absolute
+      ones (garvinhicking)
+
+    * Fixed trackbacks sending HTML tags and registering unslashed text
+      in excerpt (tomsommer)
+
+    * Fix bug #816499 - Serendipity should search for `convert` binary
+      in /usr/bin (tomsommer)
+
+    * Corrected path to entries printed in the comment plugin
+      (tomsommer)
+
+Version 0.3 (October 7th, 2003)
+------------------------------------------------------------------------
+
+    * Fixed evaluation of the 'embed' variable and added a small 'HowTo'
+      to the INSTALL file (garvinhicking)
+
+    * Fixed problem with escaping single quotes during installation
+      (tomsommer)
+
+    * Fixed problem with dual-trailing slashes in paths during
+      installation (tomsommer)
+
+    * Configuration/installation will now save the current s9y version
+      to the config file... Thereby allowing upgrades at a later point
+      (tomsommer)
+
+    * Include <slash:comments> in RSS-Feed. Shows amount of comments
+      available
+
+    * Differentiate subscription mails between regular comment and
+      trackback and adjust the mail's content corresponding to this
+      (garvinhicking)
+
+    * Added verbose output for DB creation on installation, PostgreSQL
+      DB-setup fixes (jtate)
+
+    * Made XHTML-compatibility fix to radio buttons of the installer
+      (garvinhicking)
+
+    * Allow for browseing of categories (on multiple pages) and have
+      per-category RSS-feed (garvinhicking & sbergmann)
+
+    * Fixed display of category in full article (garvinhicking)
+
+    * Expand all config categories in installer when s9y is first
+      installed (garvinhicking)
+
+    * Added select-dropdown configuration directive for the plugins
+      (garvinhicking)
+
+    * Prepended language defines with a '@' to suppress error messages
+      for fallback-language (garvinhicking)
+
+    * Fixed search results not displaying all content (garvinhicking)
+
+    * Fixed some undefined indexes/constants (garvinhicking)
+
+    * Support manual editing of the publish date on articles, can be
+      disallowed via $serendipity['allowDateManipulation'] (
+      garvinhicking)
+
+    * Added SQL upgrade files from 0.2 to 0.3 (troutgirl)
+
+    * Fixed a number of bugs with language detection and display during
+      installation (tomsommer)
+
+    * Fixed bug for fetching entries on a certain date. Now s9y dies
+      with an error message if MySQL errors occur (garvinhicking)
+
+    * Display link to trackbacks on single-article view (garvinhicking)
+
+    * Enable preview to include extended body (garvinhicking)
+
+    * Display author in previewed entry (tomsommer)
+
+    * Resize images based on original image proportions, not by fixed
+      width & height (tomsommer)
+
+    * Added option to preview entries (jhermanns)
+
+    * Added ability to save drafts of entries (jhermanns)
+
+    * Fixed some links not being formatted for exit-tracking, if the
+      link appeared more than once in an entry (tomsommer)
+
+    * Added radio-button and "spacer" configuration directives for the
+      plugins (garvinhicking)
+
+    * RSS-feeds and fields can now be customized within the plugin
+      configuration (garvinhicking
+
+    * Send X-Powered-By and X-Engine mail-headers with each mail
+      Serendipity sends, for easier debugging (tomsommer)
+
+    * Added Powered-By META tag to identify Serendipity Blogs even if
+      the admin has disabled the power-by plugin (tomsommer)
+
+    * Allow for descriptions of each configuration-category (tomsommer)
+
+    * Timestamps in comments are now shown in 24-hour format (tomsommer)
+
+    * Send X-Powered-By and X-Engine mail-headers with each mail
+      Serendipity sends, for easier debugging (tomsommer)
+
+    * Trackback pings where only accepted on a POST method. Moveable
+      Type uses GET, so we now accept both. (garvinhicking)
+
+    * Fixed issue where trackbackpings were only sent to links in
+      extended entry, if one existed, discarding the standard body
+      (garvinhicking)
+
+    * Fixed issue where two users sharing same username & password would
+      not be able to log in correctly, causing errors on the admin pages
+      (tomsommer)
+
+    * Fixed issue where installation would execute SQL instructions even
+      if a table already existed, creating "ghost"-authors (tomsommer)
+
+    * Allow unsubscription of already subscribed entries (tomsommer)
+
+    * Allow subscription of blog-visitors to receive comments for an
+      entry (tomsommer)
+
+    * Restrict calendar to only browse between the dates you have
+      comments available for (garvinhicking)
+
+    * Added external plugin to display the latest comments on a sidebar
+      (experimental, garvinhicking)
+
+    * Add Link to extended entry in RSS-feed, if existing
+      (garvinhicking)
+
+    * Unified and optimized admin login functionality (tomsommer)
+
+    * Fixed trackback functionality (tomsommer)
+
+    * Send User-Agent "Serendipity/v" when trackbacking (tomsommer)
+
+    * New default theme (tomsommer)
+
+    * New config section ('Appearance') and new option to block certain
+      hosts from being put into the referer table (garvinhicking)
+
+    * Installer/configuration categories can now be folded in DHTML-
+      compatible browsers (garvinhicking, tomsommer)
+
+    * Conserve linebreaks in RSS comments. (garvinhicking)
+
+    * Allow deleting categories (moving articles to another category)
+      (garvinhicking)
+
+    * Autodetect language on installation (garvinhicking)
+
+    * RSS feeds properly utf8encoded, added <webMaster>,
+      <managingEditor>,<comments>,<category> and <generator> tag
+      (garvinhicking)
+
+    * RSS feed now contains <image> link to pixel/rss_banner.png (if
+      existing), otherwise use pixel/s9y_banner_tiny.png (garvinhicking)
+
+    * External Plugin for hotword/acronym replacements, as well as any
+      other content-rewriting plugin (garvinhicking)
+
+    * Show updated values after submit, remove config entries when a
+      plugin is removed (garvinhicking)
+
+    * Added an RSS-feed for comments to entries only (garvinhicking)
+
+    * Fixed archives to not properly show entries from the first/last
+      day of a month (garvinhicking)
+
+    * Fixed the database by separating primary key from {AUTOINCREMENT}
+      (jtate)
+
+    * Rewrote installer (tomsommer)
+
+    * Added support for postgres (jtate)
+
+    * Fixed replacement of {TEMPLATE_PATH} to be relative (tomsommer)
+
+    * Major codestyle, HTML and XHTML cleanup (garvinhicking)
+
+    * Removed lots of static non-translated text (garvinhicking)
+
+    * Remove config entries when a plugin is removed (garvinhicking)
+
+    * After plugin update, show the new values for the plugin instead
+      the old ones (garvinhicking)
+
+    * After submitting a comment, redirect back to the actual previous
+      page (tomsommer)
+
+    * Fixed inclusion of templates vs. database-CSS (tomsommer)
+
+    * Fixed CSS not being showed during installation (tomsommer)
+
+    * Cleaned up the comment-form (tomsommer)
+
+    * Fixes a bug that the last day of a month was not taken into
+      account of the archives (garvinhicking)
+
+    * Allow embeding of serendipity in your custom homepage (wrapFile
+      directive - see http://blog.supergarv.de/ for example)
+      (garvinhicking)
+
+    * Added a new file serendipity_define.js.php which can be pre-
+      included to a Java-script to set some variables (garvinhicking)
+
+    * alt tag with '' instead of "" (garvinhicking)
+
+    * Added CVS ID tags to file-headers (garvinhicking)
+
+    * Added 'Force XHTML11' config option [not used yet] (garvinhicking)
+
+    * Made direct links to each comment, actually point to the right URI
+      (tomsommer)
+
+    * Inserted htmlentities() for comments output. Was vulnerable to
+      cross-site scripting attacks (garvinhicking)
+
+    * Fixed the "categories listing" so that if there were no
+      categories, it didn't display garbage (jtate)
+
+    * XML header should be utf-8, not ISO-8859-1.  This should fix the
+      encoding problems (sterling)
+
+    * Use ISO-8859-1 Charset to display pages (tomsommer)
+
+    * serendipity_date is now an H3, serendipity_title is now an H4
+      (troutgirl)
+
+    * Import stylesheets using @import (troutgirl)
+
+    * Made "H" in 'Posted by X in Y at H' a link, like in movabletype
+      (tomsommer)
+
+    * The line trailing each entry is now adapted to the "common format"
+      'Posted by xx in xx at xx | comments (n) | trackbacks (n)'
+      (jhermanns)
+
+    * Fixed minor problem with case in generated filenames (jhermanns)
+
+    * Removed all short tags '<?=' (jtate)
+
+    * Shortened the search field a little (jhermanns)
+
+    * Updated INSTALL instructions (troutgirl)
+
+    * Solved linebreak problem in "posted by..." via CSS (mueslix)
+
+    * Changed CSS class of "View Extended Entry" and "Posted by..." to
+      serendipity_entryFooter (mueslix)
+
+    * Default template is now set in the DB during installation
+      (jhermanns)
+
+    * Moved includes out of the templates (jhermanns)
+
+    * Fixed some problems with CSS not loading a first try (tomsommer)
+
+    * Saved lots of SQL queries when fetching config variables from the
+      database (tomsommer)
+
+    * Added new template system (tomsommer)
+
+    * Enhanced the insertion of emoticons (jhermanns)
+
+    * Removed static text and made some RSS regexps case-insensitive
+      (jhermanns)
+
+    * Added link to entry in emails, sent when comments or trackbacks
+      are made (tomsommer)
+
+    * Escape potential HTML characters in <title> in RSS feeds (Joyce P
+      & gschlossnagle)
+
+    * HTML is no longer allowed in comments, all HTML is formatted to
+      plain-text (tomsommer)
+
+    * Added direct link, to an entry, in the trackback dialog
+      (tomsommer)
+
+    * Top Referrers and Exits are now click-able (tomsommer)
+
+    * Admin area now uses the same styles as the rest of the blog
+      (tomsommer)
+
+    * New layout in the installer/configuration section (tomsommer)
+
+    * Fixed bug not showing the 6th row in the calendar, if the first
+      day of the month was a Sunday (tomsommer)
+
+    * Both emails and URLs, submitted with comments, are now shown.
+      E-mails are spam-secured, and URLs are checked for validity
+      (tomsommer)
+
+    * Avoid removing static files if pregenerate is not set (Joyce P &
+      tomsommer)
+
+    * Beautified the archives (jhermanns)
+
+    * RSS 2.0 is now default type of feed (sterling)
+
+    * Submitted mails in comments are now click-able (tomsommer)
+
+    * Added support for using *.gif in Image Manager, even if PHP is
+      compiled with read-only gif (tomsommer)
+
+    * Fixing bug #720632 (exit-links in html_nuggets plugin aren't
+      counted) (tomsommer)
+
+    * We now send different notification emails if the comment is a
+      trackback. (tomsommer)
+
+    * Stripped mail from HTML tags (tomsommer)
+
+    * When viewing a single entry, page <title> becomes entry's title.
+      (jhermanns)
+
+    * Links to entries are now called /archives/id_title_of_entry.html
+      (used to be /archives/e_id.html) (jhermanns)
+
+    * Time-ranges are now accessed like this: /archives/200203.html
+      (used to be /archives/d_200203.html) (jhermanns)
+
+    * Better non-WYSIWYG editor for Mozilla and IE users (tomsommer)
+
+    * Added validation to trackback-detection (tomsommer)
+
+    * You can now delete comments and trackbacks if you are logged in
+      (tomsommer)
+
+    * New logo in "Powered By" plugin (jhermanns & tomsommer)
+
+    * Sorting Comments & trackbacks by ID (tomsommer)
+
+    * We now remember comment details in cookies if requested, and
+      delete them if wanted (tomsommer)
+
+    * Added link back to main page (tomsommer)
+
+    * Added support for deletion in blogger and metaweblog APIs
+      (gschlossnagle)
+
+    * Added lots of error-handling to image manager (tomsommer)
+
+    * We now show trackbacks in a separate window, and count them
+      separately (jhermanns)
+
+    * Superuser-login initially sends you to authoring suit now
+      (jhermanns)
+
+    * Beautified mails (tomsommer)
+
+    * In Admin-module 'Edit entries' is now called 'Authoring Suite'
+      (tomsommer)
+
+    * Improved imagick thumbnail generation (jhermanns)
+
+    * You can now delete images in image manager (tomsommer)
+
+    * Fixed lots of missing translations (jhermanns)
+
+    * Added notice if search-string is smaller than 4 chars (tomsommer)
+
+    * Link to the archives is now /archive (jhermanns)
+
+    * Disallow empty comments (tomsommer)
+
+    * Fixed broken auto-trackback discovery (gschlossnagle)
+
+    * Fixed problem with echoing of .htaccess and paths, if installation
+      fails (tomsommer)
+
+    * Added CSS to installation-screen (tomsommer)
+
+    * Fixed bug when displaying individual days by clicking on the
+      calendar (tomsommer)
+
+    * Fixed bug #719016 - (entry-title does not escape correctly)
+      (tomsommer)
+
+    * Allow the showing of *complete* archived months (tomsommer)
+
+    * Fixed typo in serendipity_getCSS_avail() mysql-query (tomsommer)
+
+    * Prevent the Admin interface to be logged as referrer when using
+      the 'Back to Blog' link (bergmann)
+
+    * Added full language support - English, German (jhermanns)
+
+    * Keep track of which blog entry was linked from or referred to
+      (bergmann)
+
+    * Regenerate the .htaccess file, if installation fails (sterling &
+      muesli)
+
+Version 0.2 (April 4th, 2003)
+------------------------------------------------------------------------

@@ -1,0 +1,29 @@
+<h3>{L_POST_REVIEW}</h3>
+
+<p>{L_POST_REVIEW_EXPLAIN}</p>
+
+<!-- BEGIN post_review_row -->
+<div id="ppr{post_review_row.POST_ID}" class="post <!-- IF post_review_row.S_ROW_COUNT is odd -->bg1<!-- ELSE -->bg2<!-- ENDIF --><!-- IF post_review_row.ONLINE_STATUS --> online<!-- ENDIF -->">
+	<div class="inner"><span class="corners-top"><span></span></span>
+	
+	<div class="postbody">
+		<h3><a href="#ppr{post_review_row.POST_ID}">{post_review_row.POST_SUBJECT}</a></h3>
+		<p class="author"><!-- IF S_IS_BOT -->{post_review_row.MINI_POST_IMG}<!-- ELSE --><a href="{post_review_row.U_MINI_POST}">{post_review_row.MINI_POST_IMG}</a><!-- ENDIF --> {L_POST_BY_AUTHOR}<strong>  {post_review_row.POST_AUTHOR_FULL}</strong> {L_POSTED_ON_DATE} {post_review_row.POST_DATE}</p>
+		<div class="content">{post_review_row.MESSAGE}</div>
+
+		<!-- IF post_review_row.S_HAS_ATTACHMENTS -->
+			<dl class="attachbox">
+				<dt>{L_ATTACHMENTS}</dt>
+				<!-- BEGIN attachment -->
+					<dd>{post_review_row.attachment.DISPLAY_ATTACHMENT}</dd>
+				<!-- END attachment -->
+			</dl>
+		<!-- ENDIF -->
+
+	</div>
+	
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+<!-- END post_review_row -->
+
+<hr />

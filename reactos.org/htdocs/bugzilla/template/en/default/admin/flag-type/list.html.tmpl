@@ -1,0 +1,148 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS "global/js-products.html.tmpl" %]
+
+[% PROCESS global/header.html.tmpl
+  title = 'Administer Flag Types'
+  style = "
+    table#flag_types_bugs tr th,
+    table#flag_types_attachments tr th { text-align: left; }
+    .inactive { color: #787878; }
+    .multiplicable { display: block; }
+  "
+  onload="selectProduct(document.forms[0], 'product', 'component', '__All__');"
+  javascript_urls=["productmenu.js"]
+%]
+
+<p>
+  Flags are markers that identify whether [% terms.abug %] or attachment has been granted
+  or denied some status.  Flags appear in the UI as a name and a status symbol
+  ("+" for granted, "-" for denied, and "?" for statuses requested by users).
+</p>
+
+<p>
+  For example, you might define a "review" status for users to request review
+  for their patches.  When a patch writer requests review, the string "review?"
+  will appear in the attachment.  When a patch reviewer reviews the patch,
+  either the string "review+" or the string "review-" will appear in the patch,
+  depending on whether the patch passed or failed review.
+</p>
+
+<p>
+  You can restrict the list of flag types to those available for a given product
+  and component. If a product is selected with no component, only flag types
+  which are available to at least one component of the product are shown.
+</p>
+
+<form action="editflagtypes.cgi" method="get">
+  <table>
+    <tr>
+      <th><label for="product">Product:</label></th>
+      <td>
+        <select name="product" onchange="selectProduct(this.form, 'product', 'component', '__Any__');">
+          <option value="">__Any__</option>
+          [% FOREACH prod = products %]
+            <option value="[% prod.name FILTER html %]"
+                    [% " selected" IF selected_product == prod.name %]>
+                    [% prod.name FILTER html %]</option>
+          [% END %]
+        </select>
+      </td>
+      <th><label for="component">Component:</label></th>
+      <td>
+        <select name="component">
+          <option value="">__Any__</option>
+          [% FOREACH comp = components %]
+            <option value="[% comp FILTER html %]"
+                    [% " selected" IF selected_component == comp %]>
+                    [% comp FILTER html %]</option>
+          [% END %]
+        </select>
+      </td>
+      <td><input type="submit" id="submit" value="Filter"></td>
+    </tr>
+  </table>
+</form>
+
+<h3>Flag Types for [% terms.Bugs %]</h3>
+
+[% PROCESS display_flag_types types=bug_types types_id='bugs' %]
+
+<p>
+  <a href="editflagtypes.cgi?action=enter&amp;target_type=bug">Create Flag Type for [% terms.Bugs %]</a>
+</p>
+
+<h3>Flag Types for Attachments</h3>
+
+[% PROCESS display_flag_types types=attachment_types types_id='attachments' %]
+
+<p>
+  <a href="editflagtypes.cgi?action=enter&amp;target_type=attachment">Create Flag Type For Attachments</a>
+</p>
+
+[% PROCESS global/footer.html.tmpl %]
+
+
+[% BLOCK display_flag_types %]
+  <table id="flag_types_[% types_id FILTER html %]" cellspacing="0" cellpadding="4" border="1">
+
+    <tr>
+      <th>Edit name ...</th>
+      <th>Description</th>
+      <th>Sortkey</th>
+      <th>Properties</th>
+      <th>Grant group</th>
+      <th>Request group</th>
+      <th>Actions</th>
+    </tr>
+
+    [% FOREACH type = types %]
+
+      <tr class="[% IF type.is_active %]active[% ELSE %]inactive[% END %]">
+        <td><a href="editflagtypes.cgi?action=edit&amp;id=[% type.id %]">[% type.name FILTER html FILTER no_break %]</a></td>
+        <td>[% type.description FILTER html %]</td>
+        <td align="right">[% type.sortkey FILTER html %]</td>
+        <td>
+          [% IF type.is_requestable %]
+            <span class="requestable">requestable</span>
+          [% END %]
+          [% IF type.is_requestable && type.is_requesteeble %]
+            <span class="requesteeble">(specifically)</span>
+          [% END %]
+          [% IF type.is_multiplicable %]
+            <span class="multiplicable">multiplicable</span>
+          [% END %]
+        </td>
+        <td>[% IF type.grant_group %][% type.grant_group.name FILTER html %][% END %]</td>
+        <td>[% IF type.request_group %][% type.request_group.name FILTER html %][% END %]</td>
+        <td>
+          <a href="editflagtypes.cgi?action=copy&amp;id=[% type.id %]">Copy</a>
+          | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]">Delete</a>
+        </td>
+      </tr>
+
+    [% END %]
+
+  </table>
+[% END %]

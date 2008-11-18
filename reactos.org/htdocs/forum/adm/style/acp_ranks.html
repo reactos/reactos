@@ -1,0 +1,98 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_EDIT -->
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<script type="text/javascript">
+	// <![CDATA[
+		function update_image(newimage)
+		{
+			document.getElementById('image').src = (newimage) ? "{RANKS_PATH}/" + encodeURI(newimage) : "./images/spacer.gif";
+		}
+
+	// ]]>
+	</script>
+
+	<h1>{L_ACP_MANAGE_RANKS}</h1>
+
+	<p>{L_ACP_RANKS_EXPLAIN}</p>
+
+	<form id="acp_ranks" method="post" action="{U_ACTION}">
+	
+	<fieldset>
+		<legend>{L_ACP_RANKS}</legend>
+	<dl>
+		<dt><label for="title">{L_RANK_TITLE}:</label></dt>
+		<dd><input name="title" type="text" id="title" value="{RANK_TITLE}" maxlength="255" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="rank_image">{L_RANK_IMAGE}:</label></dt>
+		<dd><select name="rank_image" id="rank_image" onchange="update_image(this.options[selectedIndex].value);">{S_FILENAME_LIST}</select></dd>
+		<dd><img src="{RANK_IMAGE}" id="image" alt="" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="special_rank">{L_RANK_SPECIAL}:</label></dt>
+		<dd><label><input onchange="dE('posts', -1)" type="radio" class="radio" name="special_rank" value="1" id="special_rank"<!-- IF S_SPECIAL_RANK --> checked="checked"<!-- ENDIF --> />{L_YES}</label>
+			<label><input onchange="dE('posts', 1)" type="radio" class="radio" name="special_rank" value="0"<!-- IF not S_SPECIAL_RANK --> checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<!-- IF S_SPECIAL_RANK --><div id="posts" style="display: none;"><!-- ELSE --><div id="posts"><!-- ENDIF -->
+	<dl>
+		<dt><label for="min_posts">{L_RANK_MINIMUM}:</label></dt>
+		<dd><input name="min_posts" type="text" id="min_posts" maxlength="10" value="{MIN_POSTS}" /></dd>
+	</dl>
+	</div>
+
+	<p class="submit-buttons">
+		<input type="hidden" name="action" value="save" />
+
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+		{S_FORM_TOKEN}
+	</p>
+	</fieldset>
+	</form>
+
+<!-- ELSE -->
+
+	<h1>{L_ACP_MANAGE_RANKS}</h1>
+
+	<p>{L_ACP_RANKS_EXPLAIN}</p>
+
+	<form id="acp_ranks" method="post" action="{U_ACTION}">
+	<fieldset class="tabulated">
+	<legend>{L_ACP_MANAGE_RANKS}</legend>
+
+	<table cellspacing="1">
+	<thead>
+	<tr>
+		<th>{L_RANK_IMAGE}</th>
+		<th>{L_RANK_TITLE}</th>
+		<th>{L_RANK_MINIMUM}</th>
+		<th>{L_ACTION}</th>
+	</tr>
+	</thead>
+	<tbody>
+	<!-- BEGIN ranks -->
+		<!-- IF ranks.S_ROW_COUNT is even --><tr class="row1"><!-- ELSE --><tr class="row2"><!-- ENDIF -->
+		<td style="text-align: center;"><!-- IF ranks.S_RANK_IMAGE --><img src="{ranks.RANK_IMAGE}" alt="{ranks.RANK_TITLE}" title="{ranks.RANK_TITLE}" /><!-- ELSE -->&nbsp; - &nbsp;<!-- ENDIF --></td>
+		<td style="text-align: center;">{ranks.RANK_TITLE}</td>
+		<td style="text-align: center;"><!-- IF ranks.S_SPECIAL_RANK -->&nbsp; - &nbsp;<!-- ELSE -->{ranks.MIN_POSTS}<!-- ENDIF --></td>
+		<td style="text-align: center;"><a href="{ranks.U_EDIT}">{ICON_EDIT}</a> <a href="{ranks.U_DELETE}">{ICON_DELETE}</a></td>
+	</tr>
+	<!-- END ranks -->
+	</tbody>
+	</table>
+
+	<p class="quick">
+		<input class="button2" name="add" type="submit" value="{L_ADD_RANK}" />
+		{S_FORM_TOKEN}
+	</p>
+	</fieldset>
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

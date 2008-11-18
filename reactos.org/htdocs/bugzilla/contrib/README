@@ -1,0 +1,73 @@
+This directory contains contributed software related to Bugzilla.
+Things in here have not necessarily been tested or tried by anyone
+except the original contributor, so tread carefully.  But it may still
+be useful to you. Read the files themselves for detailed usage information
+on any specific script.
+
+This file is encoded in UTF8 for purposes of contributor names.
+
+This directory includes:
+
+bugzilla_ldapsync.rb --  Script that can be run via Cron that queries an LDAP
+                         server for e-mail addresses to add Bugzilla users
+                         for. Will optionally disable Bugzilla users with
+                         no matching LDAP record. Contributed by Thomas
+                         Stromberg <thomas+bugzilla@stromberg.org>.
+
+    bugzilla-submit/ --  A standalone bug submission program.
+
+         bzdbcopy.pl --  A script to copy data from an installation running 
+                         on one DB platform to an installation running on 
+                         another DB platform.
+
+bz_webservice_demo.p --  An example script that demonstrates how to talk to
+                         Bugzilla via XMLRPC.
+
+             cmdline/ -- Various commands for querying your Bugzilla 
+                         installation.
+
+       cvs-update.pl --  Script to keep a record of all CVS updates made 
+                         from a given directory. The log is useful when
+                         changes need to be backed out.
+
+         gnatsparse/ --  A Python script used to import a GNATS database
+                         into Bugzilla.
+
+         gnats2bz.pl --  A Perl script to help import bugs from a GNATS 
+                         database into a Bugzilla database.  Contributed by
+                         Tom Schutter <tom@platte.com>.
+
+            jb2bz.py --  Script to import bugs from JitterBug to Bugzilla.
+
+      merge-users.pl --  Script to merge two user accounts. The activities
+                         from one account are moved to the another. Specify
+                         both accounts on the command line. The new account
+                         must already exist. 
+
+   mysqld-watcher.pl --  This script can be installed as a frequent Cron 
+                         job to clean up stalled/dead queries.
+
+           recode.pl --  Script to convert a database from one encoding 
+                         (or multiple encodings)  to UTF-8.
+
+      sendbugmail.pl --  This script is a drop-in replacement for the
+                         'processmail' script which used to be shipped
+                         with Bugzilla, but was replaced by the
+                         Bugzilla/BugMail.pm Perl module. This script can 
+                         be used if 'processmail' was previously called
+                         from other scripts external to
+                         Bugzilla.  See the comments at the top of
+                         the file for usage information. Contributed
+                         by Nick Barnes of Ravenbrook Limited.
+
+sendunsentbugmail.pl --  Script to find bugs with un-sent mail and to
+                         send all unsent messages.
+
+         syncLDAP.pl --  Script that can be run via Cron that queries an LDAP
+                         server for users and e-mail addresses and adds
+                         missing users to Bugzilla. Can disable/update 
+                         non-existing/changed information. Contributed by
+                         Andreas Höfler <andreas.hoefler@bearingpoint.com>.
+
+        yp_nomail.sh --  Script that can be run via Cron that regularly updates
+                         the nomail file for terminated employees. 

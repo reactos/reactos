@@ -1,0 +1,46 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "Administrative Policies"
+   desc = "Set up account policies"
+%]
+
+[% param_descs = {
+  allowbugdeletion => "The pages to edit products and components can delete all " _
+                      "associated $terms.bugs when you delete a product (or component). " _
+                      "Since that is a pretty scary idea, you have to turn on " _
+                      "this option before any such deletions will ever happen.",
+
+  allowemailchange => "Users can change their own email address through the preferences. " _
+                      "Note that the change is validated by emailing both addresses, so " _
+                      "switching this option on will not let users use an invalid address.",
+
+  allowuserdeletion => "The user editing pages are capable of letting you delete user accounts. " _
+                       "$terms.Bugzilla will issue a warning in case you'd run into inconsistencies " _
+                       "when you're about to do so, but such deletions remain kinda scary. " _
+                       "So, you have to turn on this option before any such deletions " _
+                       "will ever happen.",
+
+  supportwatchers => "Support one user watching (ie getting copies of all related " _
+                     "email about) another's ${terms.bugs}. Useful for people going on " _
+                     "vacation, and QA folks watching particular developers' ${terms.bugs}." }
+%]

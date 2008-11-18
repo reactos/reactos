@@ -1,0 +1,1 @@
+<?php require './thumb.php'; 

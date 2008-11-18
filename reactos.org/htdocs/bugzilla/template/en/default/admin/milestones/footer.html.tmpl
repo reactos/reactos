@@ -1,0 +1,68 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #%]
+
+[%# INTERFACE:
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the milestone belongs.
+  #
+  # milestone: object; Bugzilla::Milestone object representing the
+  #                    milestone.
+  #
+  # no_XXX_link: boolean; if defined, then don't show the corresponding
+  #                       link. Supported parameters are:
+  #
+  # no_edit_milestone_link
+  # no_edit_other_milestones_link
+  # no_add_milestone_link
+  #%]
+
+<hr>
+
+<p>
+
+[% UNLESS no_add_milestone_link %]
+  <a title="Add a milestone to product '[% product.name FILTER html %]'"
+     href="editmilestones.cgi?action=add&amp;product=
+          [%- product.name FILTER url_quote %]">Add</a> a milestone. 
+[% END %]
+
+[% IF milestone.name && !no_edit_milestone_link %]
+  Edit milestone <a 
+  title="Edit Milestone '[% milestone.name FILTER html %]' of product '
+         [%- product.name FILTER html %]'"
+  href="editmilestones.cgi?action=edit&amp;product=
+        [%- product.name FILTER url_quote %]&amp;milestone=
+        [%- milestone.name FILTER url_quote %]">
+        '[% milestone.name FILTER html %]'</a>.
+[% END %]
+
+[% UNLESS no_edit_other_milestones_link %]
+  Edit other milestones of product <a 
+  href="editmilestones.cgi?product=
+        [%- product.name FILTER url_quote %]">'[% product.name FILTER html %]'</a>.
+
+[% END %]
+
+  Edit product <a 
+  href="editproducts.cgi?action=edit&amp;product=
+        [%- product.name FILTER url_quote %]">'[% product.name FILTER html %]'</a>.
+
+</p>

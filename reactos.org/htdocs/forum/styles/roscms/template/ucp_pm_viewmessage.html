@@ -1,0 +1,112 @@
+<!-- INCLUDE ucp_header.html -->
+
+<!-- INCLUDE ucp_pm_message_header.html -->
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<!-- IF S_DISPLAY_HISTORY and (U_VIEW_PREVIOUS_HISTORY or U_VIEW_NEXT_HISTORY) -->
+	<fieldset class="display-options clearfix">
+		<!-- IF U_VIEW_PREVIOUS_HISTORY --><a href="{U_VIEW_PREVIOUS_HISTORY}" class="left-box {S_CONTENT_FLOW_BEGIN}">{L_VIEW_PREVIOUS_HISTORY}</a><!-- ENDIF -->
+		<!-- IF U_VIEW_NEXT_HISTORY --><a href="{U_VIEW_NEXT_HISTORY}" class="right-box {S_CONTENT_FLOW_END}">{L_VIEW_NEXT_HISTORY}</a><!-- ENDIF -->
+	</fieldset>
+<!-- ENDIF -->
+
+
+<div id="post-{MESSAGE_ID}" class="post pm<!-- IF S_POST_UNAPPROVED or S_POST_REPORTED --> reported<!-- ENDIF --><!-- IF S_ONLINE --> online<!-- ENDIF -->">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<div class="postbody">
+
+		<!-- IF U_DELETE or U_EDIT or U_QUOTE -->
+		<ul class="profile-icons">
+			<!-- IF U_EDIT --><li class="edit-icon"><a href="{U_EDIT}" title="{L_POST_EDIT_PM}"><span>{L_POST_EDIT_PM}</span></a></li><!-- ENDIF -->
+			<!-- IF U_DELETE --><li class="delete-icon"><a href="{U_DELETE}" title="{L_DELETE_MESSAGE}"><span>{L_DELETE_MESSAGE}</span></a></li><!-- ENDIF -->
+			<!-- IF U_QUOTE --><li class="quote-icon"><a href="{U_QUOTE}" title="{L_POST_QUOTE_PM}"><span>{L_POST_QUOTE_PM}</span></a></li><!-- ENDIF -->
+		</ul>
+		<!-- ENDIF -->
+
+		<h3 class="first">{SUBJECT}</h3>
+
+		<p class="author">
+			<strong>{L_SENT_AT}:</strong> {SENT_DATE}
+			<br /><strong>{L_PM_FROM}:</strong> {MESSAGE_AUTHOR_FULL}
+			<!-- IF S_TO_RECIPIENT --><br /><strong>{L_TO}:</strong> <!-- BEGIN to_recipient --><!-- IF to_recipient.NAME_FULL -->{to_recipient.NAME_FULL}<!-- ELSE --><a href="{to_recipient.U_VIEW}" style="color:<!-- IF to_recipient.COLOUR -->{to_recipient.COLOUR}<!-- ELSEIF to_recipient.IS_GROUP -->#0000FF<!-- ENDIF -->;">{to_recipient.NAME}</a><!-- ENDIF -->&nbsp;<!-- END to_recipient --><!-- ENDIF -->
+			<!-- IF S_BCC_RECIPIENT --><br /><strong>{L_BCC}:</strong> <!-- BEGIN bcc_recipient --><!-- IF bcc_recipient.NAME_FULL -->{bcc_recipient.NAME_FULL}<!-- ELSE --><a href="{bcc_recipient.U_VIEW}" style="color:<!-- IF bcc_recipient.COLOUR -->{bcc_recipient.COLOUR}<!-- ELSEIF bcc_recipient.IS_GROUP -->#0000FF<!-- ENDIF -->;">{bcc_recipient.NAME}</a><!-- ENDIF -->&nbsp;<!-- END bcc_recipient --><!-- ENDIF -->
+		</p>
+
+
+		<div class="content">{MESSAGE}</div>
+
+		<!-- IF S_HAS_ATTACHMENTS -->
+		<dl class="attachbox">
+			<dt>{L_ATTACHMENTS}</dt>
+			<!-- BEGIN attachment -->
+			<dd>{attachment.DISPLAY_ATTACHMENT}</dd>
+			<!-- END attachment -->
+		</dl>
+		<!-- ENDIF -->
+
+		<!-- IF S_DISPLAY_NOTICE -->
+			<div class="rules">{L_DOWNLOAD_NOTICE}</div>
+		<!-- ENDIF -->
+
+		<!-- IF EDITED_MESSAGE or EDIT_REASON -->
+		<div class="notice">{EDITED_MESSAGE}
+			<!-- IF EDIT_REASON --><br /><strong>{L_REASON}:</strong> <em>{EDIT_REASON}</em><!-- ENDIF -->
+		</div>
+		<!-- ENDIF -->
+
+		<!-- IF SIGNATURE -->
+			<div id="sig{MESSAGE_ID}" class="signature">{SIGNATURE}</div>
+		<!-- ENDIF -->
+	</div>
+
+	<dl class="postprofile" id="profile{MESSAGE_ID}">
+		<dt><!-- IF AUTHOR_AVATAR --><a href="{U_MESSAGE_AUTHOR}">{AUTHOR_AVATAR}</a><br /><!-- ENDIF -->{MESSAGE_AUTHOR_FULL}</dt>
+		<!-- IF RANK_TITLE --><dd>{RANK_TITLE}</dd><!-- ENDIF -->
+		<!-- IF RANK_IMG --><dd>{RANK_IMG}</dd><!-- ENDIF -->
+		<dd>&nbsp;</dd>
+		<!-- IF AUTHOR_POSTS --><dd><strong>{L_POSTS}:</strong> {AUTHOR_POSTS}</dd><!-- ENDIF -->
+		<!-- IF AUTHOR_JOINED --><dd><strong>{L_JOINED}:</strong> {AUTHOR_JOINED}</dd><!-- ENDIF -->
+		<!-- IF AUTHOR_FROM --><dd><strong>{L_LOCATION}:</strong> {AUTHOR_FROM}</dd><!-- ENDIF -->
+		
+		<!-- IF U_PM or U_EMAIL or U_WWW or U_MSN or U_ICQ or U_YIM or U_AIM -->
+		<dd>
+			<ul class="profile-icons">
+			<!-- IF U_PM --><li class="pm-icon"><a href="{U_PM}" title="{L_PRIVATE_MESSAGE}"><span>{L_PRIVATE_MESSAGE}</span></a></li><!-- ENDIF -->
+			<!-- IF U_EMAIL --><li class="email-icon"><a href="{U_EMAIL}" title="{L_EMAIL}"><span>{L_EMAIL}</span></a></li><!-- ENDIF -->
+			<!-- IF U_WWW --><li class="web-icon"><a href="{U_WWW}" title="{L_VISIT_WEBSITE}: {U_WWW}"><span>{L_WEBSITE}</span></a></li><!-- ENDIF -->
+			<!-- IF U_MSN --><li class="msnm-icon"><a href="{U_MSN}" title="{L_MSNM}"><span>{L_MSNM}</span></a></li><!-- ENDIF -->
+			<!-- IF U_ICQ --><li class="icq-icon"><a href="{U_ICQ}" title="{L_ICQ}"><span>{L_ICQ}</span></a></li><!-- ENDIF -->
+			<!-- IF U_YIM --><li class="yahoo-icon"><a href="{U_YIM}" title="{L_YIM}"><span>{L_YIM}</span></a></li><!-- ENDIF -->
+			<!-- IF U_AIM --><li class="aim-icon"><a href="{U_AIM}" title="{L_AIM}"><span>{L_AIM}</span></a></li><!-- ENDIF -->
+			<!-- IF U_JABBER --><li class="jabber-icon"><a href="{U_JABBER}" onclick="popup(this.href, 550, 320); return false;" title="{L_JABBER}"><span>{L_JABBER}</span></a></li><!-- ENDIF -->
+			</ul>
+		</dd>
+		<!-- ENDIF -->
+	</dl>
+
+	<div class="back2top"><a href="#top" class="top" title="{L_BACK_TO_TOP}">{L_BACK_TO_TOP}</a></div>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<!-- IF S_VIEW_MESSAGE -->
+<fieldset class="display-options">
+	<!-- IF U_PREVIOUS_PM --><a href="{U_PREVIOUS_PM}" class="left-box {S_CONTENT_FLOW_BEGIN}">{L_VIEW_PREVIOUS_PM}</a><!-- ENDIF -->
+	<!-- IF U_NEXT_PM --><a href="{U_NEXT_PM}" class="right-box {S_CONTENT_FLOW_END}">{L_VIEW_NEXT_PM}</a><!-- ENDIF -->
+
+	<!-- IF S_MARK_OPTIONS --><label for="mark_option"><select name="mark_option" id="mark_option">{S_MARK_OPTIONS}</select></label>&nbsp;<input class="button2" type="submit" name="submit_mark" value="{L_GO}" /><!-- ENDIF -->
+	<!-- IF not S_UNREAD and not S_SPECIAL_FOLDER --><label for="dest_folder"><!-- IF S_VIEW_MESSAGE -->{L_MOVE_TO_FOLDER}: <!-- ELSE -->{L_MOVE_MARKED_TO_FOLDER}<!-- ENDIF --> <select name="dest_folder" id="dest_folder">{S_TO_FOLDER_OPTIONS}</select></label> <input class="button2" type="submit" name="move_pm" value="{L_GO}" /><!-- ENDIF -->
+	<input type="hidden" name="marked_msg_id[]" value="{MSG_ID}" />
+	<input type="hidden" name="cur_folder_id" value="{CUR_FOLDER_ID}" />
+	<input type="hidden" name="p" value="{MSG_ID}" />
+</fieldset>
+<!-- ENDIF -->
+
+<!-- INCLUDE ucp_pm_message_footer.html -->
+
+<!-- IF S_DISPLAY_HISTORY --><!-- INCLUDE ucp_pm_history.html --><!-- ENDIF -->
+
+<!-- INCLUDE ucp_footer.html -->

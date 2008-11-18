@@ -1,0 +1,94 @@
+/* The contents of this file are subject to the Mozilla Public
+  * License Version 1.1 (the "License"); you may not use this file
+  * except in compliance with the License. You may obtain a copy of
+  * the License at http://www.mozilla.org/MPL/
+  *
+  * Software distributed under the License is distributed on an "AS
+  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing
+  * rights and limitations under the License.
+  *
+  * The Original Code is the Bugzilla Bug Tracking System.
+  *
+  * The Initial Developer of the Original Code is Netscape
+  * Communications
+  * Corporation. Portions created by Netscape are
+  * Copyright (C) 1998 Netscape Communications Corporation. All
+  * Rights Reserved.
+  *
+  * Contributor(s): Christian Reis <kiko@async.com.br>
+  *                 André Batosti <batosti@async.com.br>
+  */
+
+ul.tree {
+    padding-left: 0em;
+    margin-left: 1em;
+    display: block;
+}
+
+ul.tree ul {
+    padding-top: 3px;
+    display: block;
+}
+
+ul.tree li { 
+    /* see http://www.kryogenix.org/code/browser/aqlists/ for idea */
+    padding-top: 3px; 
+    text-indent: -1.2em; 
+    padding-left: 0.5em; 
+    padding-bottom: 3px;
+    list-style-type: none;
+    background: url("dependency-tree/bug-item.png") no-repeat;
+}
+
+ul.tree li a.b {
+    padding-left: 30px; 
+    margin-right: -14px; 
+    text-decoration: none;
+}
+
+ul.tree li a.b_open {
+    background: url("dependency-tree/tree-open.png") center no-repeat;
+    cursor: pointer;
+}
+
+ul.tree li a.b_closed {
+    background: url("dependency-tree/tree-closed.png") center no-repeat;
+    cursor: pointer;
+}
+
+ul.tree a.tree_link img {
+    border: 0;
+}
+
+.summ_info {
+    /* change to inline if you would like to see the full bug details
+     * displayed in the list */
+    display: none; 
+    font-size: 75%;
+}
+
+.hint {
+    font-size: 90%;
+    margin: 0.2em;
+    padding: 0.1em;
+}
+
+.hint h3, .hint ul {
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
+}
+
+.summ A, .summ_deep A {
+    text-decoration: none;
+    color: darkblue;
+}
+
+.summ_deep {
+}
+
+.summ_h A {
+    background-color: #ffffaa;
+    color: #333;
+    font-weight: bold;
+}

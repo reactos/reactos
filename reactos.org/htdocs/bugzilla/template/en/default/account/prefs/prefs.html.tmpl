@@ -1,0 +1,110 @@
+﻿[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # tabs: List of hashes. May not be empty. Each hash has three members:
+  #   name: string. Name of the tab (used internally.)
+  #   description: string. Description of the tab (used in tab title).
+  #   saveable: boolean. True if tab has a form which can be submitted.
+  #               True if user is not receiving self-generated mail.
+  # Note: For each tab name, a template "prefs/${tab.name}.tmpl" must exist, 
+  # and its interface must be fulfilled.
+  # current_tab: A direct reference to one of the hashes in the tabs list.
+  #              This tab will be displayed.
+  # changes_saved: boolean/string. True if the CGI processed form data before 
+  #                displaying anything, and can contain an optional custom
+  #                message if required (which Perl still evaluates as True).
+  # dont_show_button: boolean. Prevent the display of the "Submit Changes" button.
+  #%]
+
+[% filtered_login = user.login FILTER html %]
+[% PROCESS global/header.html.tmpl
+   title = "User Preferences"
+   subheader = filtered_login
+   style_urls = ['skins/standard/admin.css']
+ %]
+
+[% tabs = [{ name => "settings", label => "General Preferences",
+              link => "userprefs.cgi?tab=settings", saveable => "1" },
+            { name => "email", label => "Email Preferences", 
+              link => "userprefs.cgi?tab=email", saveable => "1" },
+            { name => "saved-searches", label => "Saved Searches", 
+              link => "userprefs.cgi?tab=saved-searches", saveable => "1" },
+            { name => "account", label => "Name and Password",
+              link => "userprefs.cgi?tab=account", saveable => "0" },
+            { name => "permissions", label => "Permissions", 
+              link => "userprefs.cgi?tab=permissions", saveable => "0" } ] %]
+
+[% FOREACH tab IN tabs %]
+  [% IF tab.name == current_tab_name %]
+    [% current_tab = tab %]
+    [% LAST %]
+  [% END %]
+[% END %]
+
+[% WRAPPER global/tabs.html.tmpl
+   tabs        = tabs
+   current_tab = current_tab
+%]
+
+[% IF changes_saved %]
+  <div id="message">
+    The changes to your [% current_tab.label FILTER lower %] have been saved.
+
+    [% IF email_changes_saved %]
+      <p>
+        An email has been sent to both old and new email
+        addresses to confirm the change of email address.
+      </p>
+    [% END %]
+  </div>
+[% END %]
+
+<h3>[% current_tab.label %]</h3>
+
+[% IF current_tab.saveable %]
+  <form name="userprefsform" method="post" action="userprefs.cgi">
+    <input type="hidden" name="tab" value="[% current_tab.name %]">
+[% END %]
+
+[% PROCESS "account/prefs/${current_tab.name}.html.tmpl" 
+                                     IF current_tab.name.defined %]
+
+[% IF current_tab.saveable %]
+    <input type="hidden" name="dosave" value="1">
+
+    [% UNLESS dont_show_button %]
+      <table>
+        <tr>
+          <td width="150">&nbsp;</td>
+          <td>
+            <input type="submit" id="update" value="Submit Changes">
+          </td>
+        </tr>
+      </table>
+    [% END %]
+  </form>
+[% END %]
+
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

@@ -1,0 +1,328 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Joel Peshkin <bugreport@peshkin.net>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]
+    Edit Group Controls for [% product.name FILTER html %]
+[% END %]
+[% PROCESS global/header.html.tmpl 
+   title = title 
+%]
+
+<form method="post" action="editproducts.cgi">
+  <input type="hidden" name="action" value="updategroupcontrols">
+  <input type="hidden" name="product" value="[% product.name FILTER html %]">
+  <input type="hidden" name="token" value="[% token FILTER html %]">
+  <input type="hidden" name="classification" 
+         value="[% classification.name FILTER html %]">
+
+  <table id="form" cellspacing="0" cellpadding="4" border="1">
+    <tr bgcolor="#6666ff">
+      <th>Group</th>
+      <th>Entry</th>
+      <th>MemberControl</th>
+      <th>OtherControl</th>
+      <th>Canedit</th>
+      <th>editcomponents</th>
+      <th>canconfirm</th>
+      <th>editbugs</th>
+      <th>[% terms.Bugs %]</th>
+    </tr>
+    [% FOREACH group = groups %]
+      [% IF group.isactive == 0 AND group.bugcount > 0 %]
+        <tr bgcolor="#bbbbbb">
+          <td>
+            [% group.name FILTER html %]
+          </td>
+          <td align="center" colspan=7>
+            Disabled
+          </td>
+          <td>
+            [% group.bugcount %]
+          </td>
+        <tr>
+      [% ELSIF group.isactive != 0 %]
+        <tr>
+          <td>
+            [% group.name FILTER html %]
+          </td>
+          <td>
+            <input type=checkbox value=1 name=entry_[% group.id %]
+            [% " checked=\"checked\"" IF group.entry %]>
+          </td>
+          <td>
+            <select name="membercontrol_[% group.id %]">
+              <option value=[% const.CONTROLMAPNA %]
+                [% " selected=\"selected\""
+                  IF group.membercontrol == const.CONTROLMAPNA %]
+                >NA
+              </option>
+              <option value=[% const.CONTROLMAPSHOWN %]
+                [% " selected=\"selected\""
+                  IF group.membercontrol == const.CONTROLMAPSHOWN %]
+                >Shown
+              </option>
+              <option value=[% const.CONTROLMAPDEFAULT %]
+                [% " selected=\"selected\""
+                  IF group.membercontrol == const.CONTROLMAPDEFAULT %]
+                >Default
+              </option>
+              <option value=[% const.CONTROLMAPMANDATORY %]
+                [% " selected=\"selected\""
+                  IF group.membercontrol == const.CONTROLMAPMANDATORY %]
+                >Mandatory
+              </option>
+            </select>
+          </td>
+          <td>
+            <select name="othercontrol_[% group.id %]">
+              <option value=[% const.CONTROLMAPNA %]
+                [% " selected=\"selected\""
+                  IF group.othercontrol == const.CONTROLMAPNA %]
+                >NA
+              </option>
+              <option value=[% const.CONTROLMAPSHOWN %]
+                [% " selected=\"selected\""
+                  IF group.othercontrol == const.CONTROLMAPSHOWN %]
+                >Shown
+              </option>
+              <option value=[% const.CONTROLMAPDEFAULT %]
+                [% " selected=\"selected\""
+                  IF group.othercontrol == const.CONTROLMAPDEFAULT %]
+                >Default
+              </option>
+              <option value=[% const.CONTROLMAPMANDATORY %]
+                [% " selected=\"selected\""
+                  IF group.othercontrol == const.CONTROLMAPMANDATORY %]
+                >Mandatory
+              </option>
+            </select>
+          </td>
+          <td>
+            <input type=checkbox value=1 name=canedit_[% group.id %]
+            [% " checked=\"checked\"" IF group.canedit %]>
+          </td>
+          <td>
+            <input type=checkbox value=1 name=editcomponents_[% group.id %]
+            [% " checked=\"checked\"" IF group.editcomponents %]>
+          </td>
+          <td>
+            <input type=checkbox value=1 name=canconfirm_[% group.id %]
+            [% " checked=\"checked\"" IF group.canconfirm %]>
+          </td>
+          <td>
+            <input type=checkbox value=1 name=editbugs_[% group.id %]
+            [% " checked=\"checked\"" IF group.editbugs %]>
+          </td>
+          <td>
+            [% group.bugcount %]
+          </td>
+        </tr>
+      [% END %]
+    [% END %]
+
+  </table>
+  <br>
+  <input type=submit name="submit" value="submit">
+  <br>
+</form>
+
+
+<p>
+These settings control the relationship of the groups to this
+product.
+</p>
+<p>
+If any group has <b>Entry</b> selected, then this product will
+restrict [% terms.bug %] entry to only those users who are members of all the
+groups with entry selected.
+</p>
+<p>
+If any group has <b>Canedit</b> selected, then this product
+will be read-only for any users who are not members of all of
+the groups with Canedit selected. ONLY users who are members of
+all the canedit groups will be able to edit. This is an additional
+restriction that further restricts what can be edited by a user.
+</p>
+<p>
+The following settings control let you choose privileges on a <b>per-product basis</b>.
+This is a convenient way to give privileges to some users for some products
+only, without having to give them global privileges which would affect all
+products:
+</p>
+<p>
+Any group having <b>editcomponents</b> selected allows users who are
+in this group to edit all aspects of this product, including components,
+milestones and versions.
+</p>
+<p>
+Any group having <b>canconfirm</b> selected allows users who are
+in this group to confirm [% terms.bugs %] in this product.
+</p>
+<p>
+Any group having <b>editbugs</b> selected allows users who are
+in this group to edit all fields of [% terms.bugs %] in this product.
+</p>
+<p>
+The <b>MemberControl</b> and <b>OtherControl</b> fields
+indicate which [% terms.bugs %] will be placed in
+this group according to the following definitions.
+</p>
+
+<table border=1>
+  <tr>
+    <th>
+      MemberControl
+    </th>
+    <th>
+      OtherControl
+    </th>
+    <th>
+      Interpretation
+    </th>
+  </tr>
+  <tr>
+    <td>
+      NA
+    </td>
+    <td>
+      NA
+    </td>
+    <td>
+      [% terms.Bugs %] in this product are never associated with this group.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Shown
+    </td>
+    <td>
+      NA
+    </td>
+    <td>
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group.  Users who are members of this group will be able to place [% terms.bugs %] in
+      this group.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Shown
+    </td>
+    <td>
+      Shown
+    </td>
+    <td>
+      [% terms.Bugs %] in this product can be placed in this group by anyone
+      with permission to edit the [% terms.bug %] even if they are not a member
+      of this group.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Shown
+    </td>
+    <td>
+      Default
+    </td>
+    <td>
+      [% terms.Bugs %] in this product can be placed in this group by anyone
+      with permission to edit the [% terms.bug %] even if they are not a member
+      of this group. Non-members place [% terms.bugs %] in this group by default.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Shown
+    </td>
+    <td>
+      Mandatory
+    </td>
+    <td>
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group.  Users who are members of this group will be able to place [% terms.bugs %]
+       in this group.  Non-members will be forced to restrict [% terms.bugs %] to
+       this group when they initially enter [% terms.abug %] in this product.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Default
+    </td>
+    <td>
+      NA
+    </td>
+    <td>
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group and are placed in this group by default.  Users who are members of this
+      group will be able to place [% terms.bugs %] in this group.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Default
+    </td>
+    <td>
+      Default
+    </td>
+    <td>
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group and are placed in this group by default.  Users who are members of this group
+      will be able to place [% terms.bugs %] in this group.  Non-members will be
+      able to restrict [% terms.bugs %] to this group on entry and will do so by default
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Default
+    </td>
+    <td>
+      Mandatory
+    </td>
+    <td>
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group and are placed in this group by default.  Users who are members of this group
+      will be able to place [% terms.bugs %] in this group. Non-members will be forced
+      to place [% terms.bugs %] in this group on entry.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Mandatory
+    </td>
+    <td>
+      Mandatory
+    </td>
+    <td>
+      [% terms.Bugs %] in this product are required to be restricted to this
+      group.  Users are not given any option.
+    </td>
+  </tr>
+</table>
+<p>
+Please note that the above table delineates the only allowable combinations
+for the <b>MemberControl</b> and <b>OtherControl</b> field settings.
+Attempting to submit a combination not listed there (e.g. Mandatory/NA,
+Default/Shown, etc.) will produce an error message.
+</p>
+[% PROCESS global/footer.html.tmpl %]
+

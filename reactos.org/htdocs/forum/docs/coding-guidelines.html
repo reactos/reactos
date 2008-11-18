@@ -1,0 +1,2283 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en" xml:lang="en">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-style-type" content="text/css" />
+<meta http-equiv="content-language" content="en" />
+<meta http-equiv="imagetoolbar" content="no" />
+<meta name="resource-type" content="document" />
+<meta name="distribution" content="global" />
+<meta name="copyright" content="2007 phpBB Group" />
+<meta name="keywords" content="" />
+<meta name="description" content="Olympus coding guidelines document" />
+<title>phpBB3 &bull; Coding Guidelines</title>
+
+<link href="stylesheet.css" rel="stylesheet" type="text/css" media="screen, projection" />
+
+</head>
+
+<body id="phpbb" class="section-docs">
+
+<div id="wrap">
+	<a id="top" name="top" accesskey="t"></a>
+	<div id="page-header">
+		<div class="headerbar">
+			<div class="inner"><span class="corners-top"><span></span></span>
+
+			<div id="doc-description">
+				<a href="../index.php" id="logo"><img src="site_logo.gif" alt="" /></a>
+				<h1>Coding Guidelines</h1>
+				<p>Olympus coding guidelines document</p>
+				<p style="display: none;"><a href="#start_here">Skip</a></p>
+			</div>
+
+			<span class="corners-bottom"><span></span></span></div>
+		</div>
+	</div>
+
+	<a name="start_here"></a>
+
+	<div id="page-body">
+
+<!-- BEGIN DOCUMENT -->
+
+<p>These are the phpBB Coding Guidelines for Olympus, all attempts should be made to follow them as closely as possible.</p>
+
+<h1>Coding Guidelines</h1>
+
+	<div class="paragraph menu">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+<ol>
+	<li><a href="#defaults">Defaults</a>
+	<ol style="list-style-type: lower-roman;">
+		<li><a href="#editorsettings">Editor Settings</a></li>
+		<li><a href="#fileheader">File Header</a></li>
+		<li><a href="#locations">File Locations</a></li>
+	</ol>
+	</li>
+	<li><a href="#code">Code Layout/Guidelines</a>
+	<ol style="list-style-type: lower-roman;">
+		<li><a href="#namingvars">Variable/Function Naming</a></li>
+		<li><a href="#codelayout">Code Layout</a></li>
+		<li><a href="#sql">SQL/SQL Layout</a></li>
+		<li><a href="#optimizing">Optimizations</a></li>
+		<li><a href="#general">General Guidelines</a></li>
+	</ol>
+	</li>
+	<li><a href="#styling">Styling</a></li>
+	<li><a href="#templating">Templating</a></li>
+	<li><a href="#charsets">Character Sets and Encodings</a></li>
+	<li><a href="#translation">Translation (<abbr title="Internationalisation">i18n</abbr>/<abbr title="Localisation">L10n</abbr>) Guidelines</a>
+	<ol style="list-style-type: lower-roman;">
+		<li><a href="#standardisation">Standardisation</a></li>
+		<li><a href="#otherconsiderations">Other considerations</a></li>
+		<li><a href="#writingstyle">Writing Style</a></li>
+	</ol>
+	</li>
+	<li><a href="#changes">Guidelines Changelog</a></li>
+	<li><a href="#disclaimer">Copyright and disclaimer</a></li>
+</ol>
+
+		</div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="defaults"></a><h2>1. Defaults</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+<a name="editorsettings"></a><h3>1.i. Editor Settings</h3>
+
+	<h4>Tabs vs Spaces:</h4>
+	<p>In order to make this as simple as possible, we will be using tabs, not spaces. We enforce 4 (four) spaces for one tab - therefore you need to set your tab width within your editor to 4 spaces. Make sure that when you <strong>save</strong> the file, it's saving tabs and not spaces. This way, we can each have the code be displayed the way we like it, without breaking the layout of the actual files.</p>
+	<p>Tabs in front of lines are no problem, but having them within the text can be a problem if you do not set it to the amount of spaces every one of us uses. Here is a short example of how it should look like:</p>
+
+	<div class="codebox"><pre>
+{TAB}$mode{TAB}{TAB}= request_var('mode', '');
+{TAB}$search_id{TAB}= request_var('search_id', '');
+	</pre></div>
+
+	<p>If entered with tabs (replace the {TAB}) both equal signs need to be on the same column.</p>
+
+	<h3>Linefeeds:</h3>
+	<p>Ensure that your editor is saving files in the UNIX (LF) line ending format. This means that lines are terminated with a newline, not with Windows Line endings (CR/LF combo) as they are on Win32 or Classic Mac (CR) Line endings. Any decent editor should be able to do this, but it might not always be the default setting. Know your editor. If you want advice for an editor for your Operating System, just ask one of the developers. Some of them do their editing on Win32.
+
+	<a name="fileheader"></a><h3>1.ii. File Header</h3>
+
+	<h4>Standard header for new files:</h4>
+	<p>This template of the header must be included at the start of all phpBB files: </p>
+
+	<div class="codebox"><pre>
+/**
+*
+* @package {PACKAGENAME}
+* @version &#36;Id: &#36;
+* @copyright (c) 2007 phpBB Group
+* @license http://opensource.org/licenses/gpl-license.php GNU Public License
+*
+*/
+	</pre></div>
+
+	<p>Please see the <a href="#locations">File Locations section</a> for the correct package name.</p>
+
+	<h4>Files containing inline code:</h4>
+
+	<p>For those files you have to put an empty comment directly after the header to prevent the documentor assigning the header to the first code element found.</p>
+
+	<div class="codebox"><pre>
+/**
+* {HEADER}
+*/
+
+/**
+*/
+{CODE}
+	</pre></div>
+
+	<h4>Files containing only functions:</h4>
+
+	<p>Do not forget to comment the functions (especially the first function following the header). Each function should have at least a comment of what this function does. For more complex functions it is recommended to document the parameters too.</p>
+
+	<h4>Files containing only classes:</h4>
+
+	<p>Do not forget to comment the class. Classes need a separate @package definition, it is the same as the header package name. Apart from this special case the above statement for files containing only functions needs to be applied to classes and it's methods too.</p>
+
+	<h4>Code following the header but only functions/classes file:</h4>
+
+	<p>If this case is true, the best method to avoid documentation confusions is adding an ignore command, for example:</p>
+
+	<div class="codebox"><pre>
+/**
+* {HEADER}
+*/
+
+/**
+* @ignore
+*/
+Small code snipped, mostly one or two defines or an if statement
+
+/**
+* {DOCUMENTATION}
+*/
+class ...
+	</pre></div>
+
+	<a name="locations"></a><h3>1.iii. File Locations</h3>
+
+	<p>Functions used by more than one page should be placed in functions.php, functions specific to one page should be placed on that page (at the bottom) or within the relevant sections functions file. Some files in <code>/includes</code> are holding functions responsible for special sections, for example uploading files, displaying &quot;things&quot;, user related functions and so forth.</p>
+
+	<p>The following packages are defined, and related new features/functions should be placed within the mentioned files/locations, as well as specifying the correct package name. The package names are bold within this list:</p>
+
+	<ul>
+		<li><strong>phpBB3</strong><br />Core files and all files not assigned to a separate package</li>
+		<li><strong>acm</strong><br /><code>/includes/acm</code>, <code>/includes/cache.php</code><br />Cache System</li>
+		<li><strong>acp</strong><br /><code>/adm</code>, <code>/includes/acp</code>, <code>/includes/functions_admin.php</code><br />Administration Control Panel</li>
+		<li><strong>dbal</strong><br /><code>/includes/db</code><br />Database Abstraction Layer.<br />Base class is <code>dbal</code>
+			<ul>
+				<li><code>/includes/db/dbal.php</code><br />Base DBAL class, defining the overall framework</li>
+				<li><code>/includes/db/firebird.php</code><br />Firebird/Interbase Database Abstraction Layer</li>
+				<li><code>/includes/db/msssql.php</code><br />MSSQL Database Abstraction Layer</li>
+				<li><code>/includes/db/mssql_odbc.php</code><br />MSSQL ODBC Database Abstraction Layer for MSSQL</li>
+				<li><code>/includes/db/mysql.php</code><br />MySQL Database Abstraction Layer for MySQL 3.x/4.0.x</li>
+				<li><code>/includes/db/mysql4.php</code><br />MySQL4 Database Abstraction Layer for MySQL 4.1.x/5.x</li>
+				<li><code>/includes/db/mysqli.php</code><br />MySQLi Database Abstraction Layer</li>
+				<li><code>/includes/db/oracle.php</code><br />Oracle Database Abstraction Layer</li>
+				<li><code>/includes/db/postgres.php</code><br />PostgreSQL Database Abstraction Layer</li>
+				<li><code>/includes/db/sqlite.php</code><br />Sqlite Database Abstraction Layer</li>
+			</ul>
+		</li>
+		<li><strong>diff</strong><br /><code>/includes/diff</code><br />Diff Engine</li>
+		<li><strong>docs</strong><br /><code>/docs</code><br />phpBB Documentation</li>
+		<li><strong>images</strong><br /><code>/images</code><br />All global images not connected to styles</li>
+		<li><strong>install</strong><br /><code>/install</code><br />Installation System</li>
+		<li><strong>language</strong><br /><code>/language</code><br />All language files</li>
+		<li><strong>login</strong><br /><code>/includes/auth</code><br />Login Authentication Plugins</li>
+		<li><strong>VC</strong><br /><code>/includes/captcha</code><br />CAPTCHA</li>
+		<li><strong>mcp</strong><br /><code>mcp.php</code>, <code>/includes/mcp</code>, <code>report.php</code><br />Moderator Control Panel</li>
+		<li><strong>ucp</strong><br /><code>ucp.php</code>, <code>/includes/ucp</code><br />User Control Panel</li>
+		<li><strong>utf</strong><br /><code>/includes/utf</code><br />UTF8-related functions/classes</li>
+		<li><strong>search</strong><br /><code>/includes/search</code>, <code>search.php</code><br />Search System</li>
+		<li><strong>styles</strong><br /><code>/styles</code>, <code>style.php</code><br />phpBB Styles/Templates/Themes/Imagesets</li>
+	</ul>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="code"></a><h2>2. Code Layout/Guidelines</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>Please note that these Guidelines applies to all php, html, javascript and css files.</p>
+
+	<a name="namingvars"></a><h3>2.i. Variable/Function Naming</h3>
+
+	<p>We will not be using any form of hungarian notation in our naming conventions. Many of us believe that hungarian naming is one of the primary code obfuscation techniques currently in use.</p>
+
+	<h4>Variable Names:</h4>
+	<p>Variable names should be in all lowercase, with words separated by an underscore, example:</p>
+
+	<div class="indent">
+		<p><code>$current_user</code> is right, but <code>$currentuser</code> and <code> $currentUser</code> are not.</p>
+	</div>
+
+	<p>Names should be descriptive, but concise. We don't want huge sentences as our variable names, but typing an extra couple of characters is always better than wondering what exactly a certain variable is for. </p>
+
+	<h4>Loop Indices:</h4>
+	<p>The <em>only</em> situation where a one-character variable name is allowed is when it's the index for some looping construct. In this case, the index of the outer loop should always be $i. If there's a loop inside that loop, its index should be $j, followed by $k, and so on. If the loop is being indexed by some already-existing variable with a meaningful name, this guideline does not apply, example:</p>
+
+	<div class="codebox"><pre>
+for ($i = 0; $i &lt; $outer_size; $i++)
+{
+   for ($j = 0; $j &lt; $inner_size; $j++)
+   {
+      foo($i, $j);
+   }
+}
+	</pre></div>
+
+	<h4>Function Names:</h4>
+	<p>Functions should also be named descriptively. We're not programming in C here, we don't want to write functions called things like "stristr()". Again, all lower-case names with words separated by a single underscore character. Function names should preferably have a verb in them somewhere. Good function names are <code>print_login_status()</code>, <code>get_user_data()</code>, etc. </p>
+
+	<h4>Function Arguments:</h4>
+	<p>Arguments are subject to the same guidelines as variable names. We don't want a bunch of functions like: <code>do_stuff($a, $b, $c)</code>. In most cases, we'd like to be able to tell how to use a function by just looking at its declaration. </p>
+
+	<h4>Summary:</h4>
+	<p>The basic philosophy here is to not hurt code clarity for the sake of laziness. This has to be balanced by a little bit of common sense, though; <code>print_login_status_for_a_given_user()</code> goes too far, for example -- that function would be better named <code>print_user_login_status()</code>, or just <code>print_login_status()</code>.</p>
+
+	<h4>Special Namings: </h4>
+	<p>For all emoticons use the term <code>smiley</code> in singular and <code>smilies</code> in plural.</p>
+
+	<a name="codelayout"></a><h3>2.ii. Code Layout</h3>
+
+	<h4>Always include the braces:</h4>
+	<p>This is another case of being too lazy to type 2 extra characters causing problems with code clarity. Even if the body of some construct is only one line long, do <em>not</em> drop the braces. Just don't, examples:</p>
+
+	<p class="bad">// These are all wrong. </p>
+
+	<div class="codebox"><pre>
+if (condition) do_stuff();
+
+if (condition)
+	do_stuff();
+
+while (condition)
+	do_stuff();
+
+for ($i = 0; $i &lt; size; $i++)
+	do_stuff($i);
+	</pre></div>
+
+	<p class="good">// These are all right. </p>
+	<div class="codebox"><pre>
+if (condition)
+{
+	do_stuff();
+}
+
+while (condition)
+{
+	do_stuff();
+}
+
+for ($i = 0; $i &lt; size; $i++)
+{
+	do_stuff();
+}
+	</pre></div>
+
+	<h4>Where to put the braces:</h4>
+	<p>This one is a bit of a holy war, but we're going to use a style that can be summed up in one sentence: Braces always go on their own line. The closing brace should also always be at the same column as the corresponding opening brace, examples:</p>
+
+	<div class="codebox"><pre>
+if (condition)
+{
+	while (condition2)
+	{
+		...
+	}
+}
+else
+{
+	...
+}
+
+for ($i = 0; $i &lt; $size; $i++)
+{
+	...
+}
+
+while (condition)
+{
+	...
+}
+
+function do_stuff()
+{
+	...
+}
+	</pre></div>
+
+	<h4>Use spaces between tokens:</h4>
+	<p>This is another simple, easy step that helps keep code readable without much effort. Whenever you write an assignment, expression, etc.. Always leave <em>one</em> space between the tokens. Basically, write code as if it was English. Put spaces between variable names and operators. Don't put spaces just after an opening bracket or before a closing bracket. Don't put spaces just before a comma or a semicolon. This is best shown with a few examples, examples:</p>
+
+	<p>// Each pair shows the wrong way followed by the right way. </p>
+
+	<div class="codebox"><pre>
+$i=0;
+$i = 0;
+
+if($i&lt;7) ...
+if ($i &lt; 7) ...
+
+if ( ($i &lt; 7)&amp;&amp;($j &gt; 8) ) ...
+if ($i &lt; 7 &amp;&amp; $j &gt; 8) ...
+
+do_stuff( $i, 'foo', $b );
+do_stuff($i, 'foo', $b);
+
+for($i=0; $i&lt;$size; $i++) ...
+for ($i = 0; $i &lt; $size; $i++) ...
+
+$i=($j &lt; $size)?0:1;
+$i = ($j &lt; $size) ? 0 : 1;
+	</pre></div>
+
+	<h4>Operator precedence:</h4>
+	<p>Do you know the exact precedence of all the operators in PHP? Neither do I. Don't guess. Always make it obvious by using brackets to force the precedence of an equation so you know what it does. Remember to not over-use this, as it may harden the readability. Basically, do not enclose single expressions. Examples:</p>
+
+	<p class="bad">// what's the result? who knows. </p>
+	<div class="codebox"><pre>
+$bool = ($i &lt; 7 &amp;&amp; $j &gt; 8 || $k == 4);
+	</pre></div>
+
+	<p class="bad">// now you can be certain what I'm doing here.</p>
+	<div class="codebox"><pre>
+$bool = (($i &lt; 7) &amp;&amp; (($j &lt; 8) || ($k == 4)));
+	</pre></div>
+
+	<p class="good">// But this one is even better, because it is easier on the eye but the intention is preserved</p>
+	<div class="codebox"><pre>
+$bool = ($i &lt; 7 &amp;&amp; ($j &lt; 8 || $k == 4));
+	</pre></div>
+
+	<h4>Quoting strings:</h4>
+	<p>There are two different ways to quote strings in PHP - either with single quotes or with double quotes. The main difference is that the parser does variable interpolation in double-quoted strings, but not in single quoted strings. Because of this, you should <em>always</em> use single quotes <em>unless</em> you specifically need variable interpolation to be done on that string. This way, we can save the parser the trouble of parsing a bunch of strings where no interpolation needs to be done.</p>
+	<p>Also, if you are using a string variable as part of a function call, you do not need to enclose that variable in quotes. Again, this will just make unnecessary work for the parser. Note, however, that nearly all of the escape sequences that exist for double-quoted strings will not work with single-quoted strings. Be careful, and feel free to break this guideline if it's making your code easier to read, examples:</p>
+
+	<p class="bad">// wrong </p>
+	<div class="codebox"><pre>
+$str = "This is a really long string with no variables for the parser to find.";
+
+do_stuff("$str");
+	</pre></div>
+
+	<p class="good">// right</p>
+	<div class="codebox"><pre>
+$str = 'This is a really long string with no variables for the parser to find.';
+
+do_stuff($str);
+	</pre></div>
+
+	<p class="bad">// Sometimes single quotes are just not right</p>
+	<div class="codebox"><pre>
+$post_url = $phpbb_root_path . 'posting.' . $phpEx . '?mode=' . $mode . '&amp;amp;start=' . $start;
+	</pre></div>
+
+	<p class="good">// Double quotes are sometimes needed to not overcroud the line with concentinations</p>
+	<div class="codebox"><pre>
+$post_url = "{$phpbb_root_path}posting.$phpEx?mode=$mode&amp;amp;start=$start";
+	</pre></div>
+
+	<p>In SQL Statements mixing single and double quotes is partly allowed (following the guidelines listed here about SQL Formatting), else it should be tryed to only use one method - mostly single quotes.</p>
+
+	<h4>Associative array keys:</h4>
+	<p>In PHP, it's legal to use a literal string as a key to an associative array without quoting that string. We don't want to do this -- the string should always be quoted to avoid confusion. Note that this is only when we're using a literal, not when we're using a variable, examples:</p>
+
+	<p class="bad">// wrong</p>
+	<div class="codebox"><pre>
+$foo = $assoc_array[blah];
+	</pre></div>
+
+	<p class="good">// right </p>
+	<div class="codebox"><pre>
+$foo = $assoc_array['blah'];
+	</pre></div>
+
+	<p class="bad">// wrong</p>
+	<div class="codebox"><pre>
+$foo = $assoc_array["$var"];
+	</pre></div>
+
+	<p class="good">// right </p>
+	<div class="codebox"><pre>
+$foo = $assoc_array[$var];
+	</pre></div>
+
+	<h4>Comments:</h4>
+	<p>Each complex function should be preceded by a comment that tells a programmer everything they need to know to use that function. The meaning of every parameter, the expected input, and the output are required as a minimal comment. The function's behaviour in error conditions (and what those error conditions are) should also be present - but mostly included within the comment about the output.<br /><br />Especially important to document are any assumptions the code makes, or preconditions for its proper operation. Any one of the developers should be able to look at any part of the application and figure out what's going on in a reasonable amount of time.<br /><br />Avoid using <code>/* */</code> comment blocks for one-line comments, <code>//</code> should be used for one/two-liners.</p>
+
+	<h4>Magic numbers:</h4>
+	<p>Don't use them. Use named constants for any literal value other than obvious special cases. Basically, it's ok to check if an array has 0 elements by using the literal 0. It's not ok to assign some special meaning to a number and then use it everywhere as a literal. This hurts readability AND maintainability. The constants <code>true</code> and <code>false</code> should be used in place of the literals 1 and 0 -- even though they have the same values (but not type!), it's more obvious what the actual logic is when you use the named constants. Typecast variables where it is needed, do not rely on the correct variable type (PHP is currently very loose on typecasting which can lead to security problems if a developer does not have a very close eye to it).</p>
+
+	<h4>Shortcut operators:</h4>
+	<p>The only shortcut operators that cause readability problems are the shortcut increment <code>$i++</code> and decrement <code>$j--</code> operators. These operators should not be used as part of an expression. They can, however, be used on their own line. Using them in expressions is just not worth the headaches when debugging, examples:</p>
+
+	<p class="bad">// wrong </p>
+	<div class="codebox"><pre>
+$array[++$i] = $j;
+$array[$i++] = $k;
+	</pre></div>
+
+	<p class="good">// right </p>
+	<div class="codebox"><pre>
+$i++;
+$array[$i] = $j;
+
+$array[$i] = $k;
+$i++;
+	</pre></div>
+
+	<h4>Inline conditionals:</h4>
+	<p>Inline conditionals should only be used to do very simple things. Preferably, they will only be used to do assignments, and not for function calls or anything complex at all. They can be harmful to readability if used incorrectly, so don't fall in love with saving typing by using them, examples:</p>
+
+	<p class="bad">// Bad place to use them</p>
+	<div class="codebox"><pre>
+($i &lt; $size &amp;&amp; $j &gt; $size) ? do_stuff($foo) : do_stuff($bar);
+	</pre></div>
+
+	<p class="good">// OK place to use them </p>
+	<div class="codebox"><pre>
+$min = ($i &lt; $j) ? $i : $j;
+	</pre></div>
+
+	<h4>Don't use uninitialized variables.</h4>
+	<p>For phpBB3, we intend to use a higher level of run-time error reporting. This will mean that the use of an uninitialized variable will be reported as a warning. These warnings can be avoided by using the built-in isset() function to check whether a variable has been set - but preferably the variable is always existing. For checking if an array has a key set this can come in handy though, examples:</p>
+
+	<p class="bad">// Wrong </p>
+	<div class="codebox"><pre>
+if ($forum) ...
+	</pre></div>
+
+	<p class="good">// Right </p>
+	<div class="codebox"><pre>
+if (isset($forum)) ...
+	</pre></div>
+
+	<p class="good">// Also possible</p>
+	<div class="codebox"><pre>
+if (isset($forum) &amp;&amp; $forum == 5)
+	</pre></div>
+
+	<p>The <code>empty()</code> function is useful if you want to check if a variable is not set or being empty (an empty string, 0 as an integer or string, NULL, false, an empty array or a variable declared, but without a value in a class). Therefore empty should be used in favor of <code>isset($array) &amp;&amp; sizeof($array) &gt; 0</code> - this can be written in a shorter way as <code>!empty($array)</code>.</p>
+
+	<h4>Switch statements:</h4>
+	<p>Switch/case code blocks can get a bit long sometimes. To have some level of notice and being in-line with the opening/closing brace requirement (where they are on the same line for better readability), this also applies to switch/case code blocks and the breaks. An example:</p>
+
+	<p class="bad">// Wrong </p>
+	<div class="codebox"><pre>
+switch ($mode)
+{
+	case 'mode1':
+		// I am doing something here
+		break;
+	case 'mode2':
+		// I am doing something completely different here
+		break;
+}
+	</pre></div>
+
+	<p class="good">// Good </p>
+	<div class="codebox"><pre>
+switch ($mode)
+{
+	case 'mode1':
+		// I am doing something here
+	break;
+
+	case 'mode2':
+		// I am doing something completely different here
+	break;
+
+	default:
+		// Always assume that the case got not catched
+	break;
+}
+	</pre></div>
+
+	<p class="good">// Also good, if you have more code between the case and the break </p>
+	<div class="codebox"><pre>
+switch ($mode)
+{
+	case 'mode1':
+
+		// I am doing something here
+
+	break;
+
+	case 'mode2':
+
+		// I am doing something completely different here
+
+	break;
+
+	default:
+
+		// Always assume that the case got not catched
+
+	break;
+}
+	</pre></div>
+
+	<p>Even if the break for the default case is not needed, it is sometimes better to include it just for readability and completeness.</p>
+
+	<p>If no break is intended, please add a comment instead. An example:</p>
+
+	<p class="good">// Example with no break </p>
+	<div class="codebox"><pre>
+switch ($mode)
+{
+	case 'mode1':
+
+		// I am doing something here
+
+	// no break here
+
+	case 'mode2':
+
+		// I am doing something completely different here
+
+	break;
+
+	default:
+
+		// Always assume that the case got not catched
+
+	break;
+}
+	</pre></div>
+
+	<a name="sql"></a><h3>2.iii. SQL/SQL Layout</h3>
+
+	<h4>Common SQL Guidelines: </h4>
+	<p>All SQL should be cross-DB compatible, if DB specific SQL is used alternatives must be provided which work on all supported DB's (MySQL3/4/5, MSSQL (7.0 and 2000), PostgreSQL (7.0+), Firebird, SQLite, Oracle8, ODBC (generalised if possible)).</p>
+	<p>All SQL commands should utilise the DataBase Abstraction Layer (DBAL)</p>
+
+	<h4>SQL code layout:</h4>
+	<p>SQL Statements are often unreadable without some formatting, since they tend to be big at times. Though the formatting of sql statements adds a lot to the readability of code. SQL statements should be formatted in the following way, basically writing keywords: </p>
+
+	<div class="codebox"><pre>
+$sql = 'SELECT *
+&lt;-one tab-&gt;FROM ' . SOME_TABLE . '
+&lt;-one tab-&gt;WHERE a = 1
+&lt;-two tabs-&gt;AND (b = 2
+&lt;-three tabs-&gt;OR b = 3)
+&lt;-one tab-&gt;ORDER BY b';
+	</pre></div>
+
+	<p>Here the example with the tabs applied:</p>
+
+	<div class="codebox"><pre>
+$sql = 'SELECT *
+	FROM ' . SOME_TABLE . '
+	WHERE a = 1
+		AND (b = 2
+			OR b = 3)
+	ORDER BY b';
+	</pre></div>
+
+	<h4>SQL Quotes: </h4>
+	<p>Double quotes where applicable (The variables in these examples are typecasted to integers before) ... examples: </p>
+
+	<p class="bad">// These are wrong.</p>
+	<div class="codebox"><pre>
+"UPDATE " . SOME_TABLE . " SET something = something_else WHERE a = $b";
+
+'UPDATE ' . SOME_TABLE . ' SET something = ' . $user_id . ' WHERE a = ' . $something;
+	</pre></div>
+
+	<p class="good">// These are right. </p>
+
+	<div class="codebox"><pre>
+'UPDATE ' . SOME_TABLE . " SET something = something_else WHERE a = $b";
+
+'UPDATE ' . SOME_TABLE . " SET something = $user_id WHERE a = $something";
+	</pre></div>
+
+	<p>In other words use single quotes where no variable substitution is required or where the variable involved shouldn't appear within double quotes. Otherwise use double quotes.</p>
+
+	<h4>Avoid DB specific SQL: </h4>
+	<p>The &quot;not equals operator&quot;, as defined by the SQL:2003 standard, is &quot;&lt;&gt;&quot;</p>
+
+	<p class="bad">// This is wrong.</p>
+	<div class="codebox"><pre>
+$sql = 'SELECT *
+	FROM ' . SOME_TABLE . '
+	WHERE a != 2';
+	</pre></div>
+
+	<p class="good">// This is right. </p>
+	<div class="codebox"><pre>
+$sql = 'SELECT *
+	FROM ' . SOME_TABLE . '
+	WHERE a &lt;&gt; 2';
+	</pre></div>
+
+	<h4>Common DBAL methods: </h4>
+
+	<h4>sql_escape():</h4>
+
+	<p>Always use <code>$db-&gt;sql_escape()</code> if you need to check for a string within an SQL statement (even if you are sure the variable cannot contain single quotes - never trust your input), for example:</p>
+
+	<div class="codebox"><pre>
+$sql = 'SELECT *
+	FROM ' . SOME_TABLE . "
+	WHERE username = '" . $db-&gt;sql_escape($username) . "'";
+	</pre></div>
+
+	<h4>sql_query_limit():</h4>
+
+	<p>We do not add limit statements to the sql query, but instead use <code>$db-&gt;sql_query_limit()</code>. You basically pass the query, the total number of lines to retrieve and the offset.</p>
+
+	<p><strong>Note: </strong> Since Oracle handles limits differently and because of how we implemented this handling you need to take special care if you use <code>sql_query_limit</code> with an sql query retrieving data from more than one table.</p>
+
+	<p>Make sure when using something like "SELECT x.*, y.jars" that there is not a column named jars in x; make sure that there is no overlap between an implicit column and the explicit columns.</p>
+
+	<h4>sql_build_array():</h4>
+
+	<p>If you need to UPDATE or INSERT data, make use of the <code>$db-&gt;sql_build_array()</code> function. This function already escapes strings and checks other types, so there is no need to do this here. The data to be inserted should go into an array - <code>$sql_ary</code> - or directly within the statement if one or two variables needs to be inserted/updated. An example of an insert statement would be:</p>
+
+	<div class="codebox"><pre>
+$sql_ary = array(
+	'somedata'		=&gt; $my_string,
+	'otherdata'		=&gt; $an_int,
+	'moredata'		=&gt; $another_int
+);
+
+$db-&gt;sql_query('INSERT INTO ' . SOME_TABLE . ' ' . $db-&gt;sql_build_array('INSERT', $sql_ary));
+	</pre></div>
+
+	<p>To complete the example, this is how an update statement would look like:</p>
+
+	<div class="codebox"><pre>
+$sql_ary = array(
+	'somedata'		=&gt; $my_string,
+	'otherdata'		=&gt; $an_int,
+	'moredata'		=&gt; $another_int
+);
+
+$sql = 'UPDATE ' . SOME_TABLE . '
+	SET ' . $db-&gt;sql_build_array('UPDATE', $sql_ary) . '
+	WHERE user_id = ' . (int) $user_id;
+$db-&gt;sql_query($sql);
+	</pre></div>
+
+	<p>The <code>$db-&gt;sql_build_array()</code> function supports the following modes: <code>INSERT</code> (example above), <code>INSERT_SELECT</code> (building query for <code>INSERT INTO table (...) SELECT value, column ...</code> statements), <code>MULTI_INSERT</code> (for returning extended inserts), <code>UPDATE</code> (example above) and <code>SELECT</code> (for building WHERE statement [AND logic]).</p>
+
+	<h4>sql_in_set():</h4>
+
+	<p>The <code>$db-&gt;sql_in_set()</code> function should be used for building <code>IN ()</code> and <code>NOT IN ()</code> constructs. Since (specifically) MySQL tend to be faster if for one value to be compared the <code>=</code> and <code>&lt;&gt;</code> operator is used, we let the DBAL decide what to do. A typical example of doing a positive match against a number of values would be:</p>
+
+	<div class="codebox"><pre>
+$sql = 'SELECT *
+	FROM ' . FORUMS_TABLE . '
+	WHERE ' . $db-&gt;sql_in_set('forum_id', $forum_ids);
+$db-&gt;sql_query($sql);
+	</pre></div>
+
+	<p>Based on the number of values in $forum_ids, the query can look differently.</p>
+
+	<p class="good">// SQL Statement if $forum_ids = array(1, 2, 3);</p>
+
+	<div class="codebox"><pre>
+SELECT FROM phpbb_forums WHERE forum_id IN (1, 2, 3)
+	</pre></div>
+
+	<p class="good">// SQL Statement if $forum_ids = array(1) or $forum_ids = 1</p>
+
+	<div class="codebox"><pre>
+SELECT FROM phpbb_forums WHERE forum_id = 1
+	</pre></div>
+
+	<p>Of course the same is possible for doing a negative match against a number of values:</p>
+
+	<div class="codebox"><pre>
+$sql = 'SELECT *
+	FROM ' . FORUMS_TABLE . '
+	WHERE ' . $db-&gt;sql_in_set('forum_id', $forum_ids, <strong>true</strong>);
+$db-&gt;sql_query($sql);
+	</pre></div>
+
+	<p>Based on the number of values in $forum_ids, the query can look differently here too.</p>
+
+	<p class="good">// SQL Statement if $forum_ids = array(1, 2, 3);</p>
+
+	<div class="codebox"><pre>
+SELECT FROM phpbb_forums WHERE forum_id <strong>NOT</strong> IN (1, 2, 3)
+	</pre></div>
+
+	<p class="good">// SQL Statement if $forum_ids = array(1) or $forum_ids = 1</p>
+
+	<div class="codebox"><pre>
+SELECT FROM phpbb_forums WHERE forum_id <strong>&lt;&gt;</strong> 1
+	</pre></div>
+
+	<p>If the given array is empty, an error will be produced.</p>
+
+	<h4>sql_build_query():</h4>
+
+	<p>The <code>$db-&gt;sql_build_query()</code> function is responsible for building sql statements for select and select distinct queries if you need to JOIN on more than one table or retrieving data from more than one table while doing a JOIN. This needs to be used to make sure the resulting statement is working on all supported db's. Instead of explaining every possible combination, i will give a short example:</p>
+
+	<div class="codebox"><pre>
+$sql_array = array(
+	'SELECT'	=&gt; 'f.*, ft.mark_time',
+
+	'FROM'		=&gt; array(
+		FORUMS_WATCH_TABLE	=&gt; 'fw',
+		FORUMS_TABLE		=&gt; 'f'
+	),
+
+	'LEFT_JOIN'	=&gt; array(
+		array(
+			'FROM'	=&gt; array(FORUMS_TRACK_TABLE =&gt; 'ft'),
+			'ON'	=&gt; 'ft.user_id = ' . $user-&gt;data['user_id'] . ' AND ft.forum_id = f.forum_id'
+		)
+	),
+
+	'WHERE'		=&gt; 'fw.user_id = ' . $user-&gt;data['user_id'] . '
+		AND f.forum_id = fw.forum_id',
+
+	'ORDER_BY'	=&gt; 'left_id'
+);
+
+$sql = $db-&gt;sql_build_query('SELECT', $sql_array);
+	</pre></div>
+
+	<p>The possible first parameter for sql_build_query() is SELECT or SELECT_DISTINCT. As you can see, the logic is pretty self-explaining. For the LEFT_JOIN key, just add another array if you want to join on to tables for example. The added benefit of using this construct is that you are able to easily build the query statement based on conditions - for example the above LEFT_JOIN is only necessary if server side topic tracking is enabled; a slight adjustement would be:</p>
+
+	<div class="codebox"><pre>
+$sql_array = array(
+	'SELECT'	=&gt; 'f.*',
+
+	'FROM'		=&gt; array(
+		FORUMS_WATCH_TABLE	=&gt; 'fw',
+		FORUMS_TABLE		=&gt; 'f'
+	),
+
+	'WHERE'		=&gt; 'fw.user_id = ' . $user-&gt;data['user_id'] . '
+		AND f.forum_id = fw.forum_id',
+
+	'ORDER_BY'	=&gt; 'left_id'
+);
+
+if ($config['load_db_lastread'])
+{
+	$sql_array['LEFT_JOIN'] = array(
+		array(
+			'FROM'	=&gt; array(FORUMS_TRACK_TABLE =&gt; 'ft'),
+			'ON'	=&gt; 'ft.user_id = ' . $user-&gt;data['user_id'] . ' AND ft.forum_id = f.forum_id'
+		)
+	);
+
+	$sql_array['SELECT'] .= ', ft.mark_time ';
+}
+else
+{
+	// Here we read the cookie data
+}
+
+$sql = $db-&gt;sql_build_query('SELECT', $sql_array);
+	</pre></div>
+
+	<a name="optimizing"></a><h3>2.iv. Optimizations</h3>
+
+	<h4>Operations in loop definition: </h4>
+	<p>Always try to optimize your loops if operations are going on at the comparing part, since this part is executed every time the loop is parsed through. For assignments a descriptive name should be chosen. Example:</p>
+
+	<p class="bad">// On every iteration the sizeof function is called</p>
+	<div class="codebox"><pre>
+for ($i = 0; $i &lt; sizeof($post_data); $i++)
+{
+	do_something();
+}
+	</pre></div>
+
+	<p class="good">// You are able to assign the (not changing) result within the loop itself</p>
+	<div class="codebox"><pre>
+for ($i = 0, $size = sizeof($post_data); $i &lt; $size; $i++)
+{
+	do_something();
+}
+	</pre></div>
+
+	<h4>Use of in_array(): </h4>
+	<p>Try to avoid using in_array() on huge arrays, and try to not place them into loops if the array to check consist of more than 20 entries. in_array() can be very time consuming and uses a lot of cpu processing time. For little checks it is not noticable, but if checked against a huge array within a loop those checks alone can be a bunch of seconds. If you need this functionality, try using isset() on the arrays keys instead, actually shifting the values into keys and vice versa. A call to <code>isset($array[$var])</code> is a lot faster than <code>in_array($var, array_keys($array))</code> for example.</p>
+
+
+	<a name="general"></a><h3>2.v. General Guidelines</h3>
+
+	<h4>General things:</h4>
+	<p>Never trust user input (this also applies to server variables as well as cookies).</p>
+	<p>Try to sanitize values returned from a function.</p>
+	<p>Try to sanitize given function variables within your function.</p>
+	<p>The auth class should be used for all authorisation checking.</p>
+	<p>No attempt should be made to remove any copyright information (either contained within the source or displayed interactively when the source is run/compiled), neither should the copyright information be altered in any way (it may be added to).</p>
+
+	<h4>Variables: </h4>
+	<p>Make use of the <code>request_var()</code> function for anything except for submit or single checking params. </p>
+	<p>The request_var function determines the type to set from the second parameter (which determines the default value too). If you need to get a scalar variable type, you need to tell this the request_var function explicitly. Examples:</p>
+
+	<p class="bad">// Old method, do not use it</p>
+	<div class="codebox"><pre>
+$start = (isset($HTTP_GET_VARS['start'])) ? intval($HTTP_GET_VARS['start']) : intval($HTTP_POST_VARS['start']);
+$submit = (isset($HTTP_POST_VARS['submit'])) ? true : false;
+	</pre></div>
+
+	<p class="good">// Use request var and define a default variable (use the correct type)</p>
+	<div class="codebox"><pre>
+$start = request_var('start', 0);
+$submit = (isset($_POST['submit'])) ? true : false;
+	</pre></div>
+
+	<p class="bad">// $start is an int, the following use of request_var therefore is not allowed</p>
+	<div class="codebox"><pre>
+$start = request_var('start', '0');
+	</pre></div>
+
+	<p class="good">// Getting an array, keys are integers, value defaults to 0</p>
+	<div class="codebox"><pre>
+$mark_array = request_var('mark', array(0));
+	</pre></div>
+
+	<p class="good">// Getting an array, keys are strings, value defaults to 0</p>
+	<div class="codebox"><pre>
+$action_ary = request_var('action', array('' =&gt; 0));
+	</pre></div>
+
+	<h4>Login checks/redirection: </h4>
+	<p>To show a forum login box use <code>login_forum_box($forum_data)</code>, else use the <code>login_box()</code> function.</p>
+
+	<p>The <code>login_box()</code> function can have a redirect as the first parameter. As a thumb of rule, specify an empty string if you want to redirect to the users current location, else do not add the <code>$SID</code> to the redirect string (for example within the ucp/login we redirect to the board index because else the user would be redirected to the login screen).</p>
+
+	<h4>Sensitive Operations: </h4>
+	<p>For sensitive operations always let the user confirm the action. For the confirmation screens, make use of the <code>confirm_box()</code> function.</p>
+
+	<h4>Altering Operations: </h4>
+	<p>For operations altering the state of the database, for instance posting, always verify the form token, unless you are already using <code>confirm_box()</code>. To do so, make use of the <code>add_form_key()</code> and <code>check_form_key()</code> functions. </p>
+	<div class="codebox"><pre>
+	add_form_key('my_form');
+
+	if ($submit)
+	{
+		if (!check_form_key('my_form'))
+		{
+			trigger_error('FORM_INVALID');
+		}
+	}
+	</pre></div>
+
+	<p>The string passed to <code>add_form_key()</code> needs to match the string passed to <code>check_form_key()</code>. Another requirement for this to work correctly is that all forms include the <code>{S_FORM_TOKEN}</code> template variable.</p>
+
+
+	<h4>Sessions: </h4>
+	<p>Sessions should be initiated on each page, as near the top as possible using the following code:</p>
+
+	<div class="codebox"><pre>
+$user-&gt;session_begin();
+$auth-&gt;acl($user-&gt;data);
+$user-&gt;setup();
+	</pre></div>
+
+	<p>The <code>$user-&gt;setup()</code> call can be used to pass on additional language definition and a custom style (used in viewforum).</p>
+
+	<h4>Errors and messages: </h4>
+	<p>All messages/errors should be outputed by calling <code>trigger_error()</code> using the appropriate message type and language string. Example:</p>
+
+	<div class="codebox"><pre>
+trigger_error('NO_FORUM');
+	</pre></div>
+
+	<div class="codebox"><pre>
+trigger_error($user-&gt;lang['NO_FORUM']);
+	</pre></div>
+
+	<div class="codebox"><pre>
+trigger_error('NO_MODE', E_USER_ERROR);
+	</pre></div>
+
+	<h4>Url formatting</h4>
+
+	<p>All urls pointing to internal files need to be prepended by the <code>$phpbb_root_path</code> variable. Within the administration control panel all urls pointing to internal files need to be prepended by the <code>$phpbb_admin_path</code> variable. This makes sure the path is always correct and users being able to just rename the admin folder and the acp still working as intended (though some links will fail and the code need to be slightly adjusted).</p>
+
+	<p>The <code>append_sid()</code> function from 2.0.x is available too, though does not handle url alterations automatically. Please have a look at the code documentation if you want to get more details on how to use append_sid(). A sample call to append_sid() can look like this:</p>
+
+	<div class="codebox"><pre>
+append_sid(&quot;{$phpbb_root_path}memberlist.$phpEx&quot;, 'mode=group&amp;amp;g=' . $row['group_id'])
+	</pre></div>
+
+	<h4>General function usage: </h4>
+
+	<p>Some of these functions are only chosen over others because of personal preference and having no other benefit than to be consistant over the code.</p>
+
+	<ul>
+		<li>
+			<p>Use <code>sizeof</code> instead of <code>count</code></p>
+		</li>
+		<li>
+			<p>Use <code>strpos</code> instead of <code>strstr</code></p>
+		</li>
+		<li>
+			<p>Use <code>else if</code> instead of <code>elseif</code></p>
+		</li>
+		<li>
+			<p>Use <code>false</code> (lowercase) instead of <code>FALSE</code></p>
+		</li>
+		<li>
+			<p>Use <code>true</code> (lowercase) instead of <code>TRUE</code></p>
+		</li>
+	</ul>
+
+	<h4>Exiting</h4>
+
+	<p>Your page should either call <code>page_footer()</code> in the end to trigger output through the template engine and terminate the script, or alternatively at least call the <code>exit_handler()</code>. That call is necessary because it provides a method for external applications embedding phpBB to be called at the end of the script.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="styling"></a><h2>3. Styling</h2>
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+<h4>General things</h4>
+<p>Templates should be produced in a consistent manner. Where appropriate they should be based off an existing copy, e.g. index, viewforum or viewtopic (the combination of which implement a range of conditional and variable forms). Please also note that the intendation and coding guidelines also apply to templates where possible.</p>
+
+<p>The outer table class <code>forumline</code> has gone and is replaced with <code>tablebg</code>.</p>
+<p>When writing <code>&lt;table&gt;</code> the order <code>&lt;table class="" cellspacing="" cellpadding="" border="" align=""&gt;</code> creates consistency and allows everyone to easily see which table produces which "look". The same applies to most other tags for which additional parameters can be set, consistency is the major aim here.</p>
+<p>Each block level element should be indented by one tab, same for tabular elements, e.g. <code>&lt;tr&gt;</code> <code>&lt;td&gt;</code> etc., whereby the intendiation of <code>&lt;table&gt;</code> and the following/ending <code>&lt;tr&gt;</code> should be on the same line. This applies not to div elements of course.</p>
+<p>Don't use <code>&lt;span&gt;</code> more than is essential ... the CSS is such that text sizes are dependent on the parent class. So writing <code>&lt;span class="gensmall"&gt;&lt;span class="gensmall"&gt;TEST&lt;/span&gt;&lt;/span&gt;</code> will result in very very small text. Similarly don't use span at all if another element can contain the class definition, e.g.</p>
+
+<div class="codebox"><pre>
+&lt;td&gt;&lt;span class=&quot;gensmall&quot;&gt;TEST&lt;/span&gt;&lt;/td&gt;
+</pre></div>
+
+<p>can just as well become:</p>
+<div class="codebox"><pre>
+&lt;td class=&quot;gensmall&quot;&gt;TEST&lt;/td&gt;
+</pre></div>
+
+<p>Try to match text class types with existing useage, e.g. don't use the nav class where viewtopic uses gensmall for example.</p>
+
+<p>Row colours/classes are now defined by the template, use an <code>IF S_ROW_COUNT</code> switch, see viewtopic or viewforum for an example.</p>
+
+<p>Remember block level ordering is important ... while not all pages validate as XHTML 1.0 Strict compliant it is something we're trying to work too.</p>
+
+<p>Use a standard cellpadding of 2 and cellspacing of 0 on outer tables. Inner tables can vary from 0 to 3 or even 4 depending on the need.</p>
+
+<p><strong>Use div container/css for styling and table for data representation.</strong></p>
+
+<p>The separate catXXXX and thXXX classes are gone. When defining a header cell just use <code>&lt;th&gt;</code> rather than <code>&lt;th class="thHead"&gt;</code> etc. Similarly for cat, don't use <code>&lt;td class="catLeft"&gt;</code> use <code>&lt;td class="cat"&gt;</code> etc.</p>
+
+<p>Try to retain consistency of basic layout and class useage, i.e. _EXPLAIN text should generally be placed below the title it explains, e.g. <code>{L_POST_USERNAME}&lt;br /&gt;&lt;span class="gensmall"&gt;{L_POST_USERNAME_EXPLAIN}&lt;/span&gt;</code> is the typical way of handling this ... there may be exceptions and this isn't a hard and fast rule.</p>
+
+<p>Try to keep template conditional and other statements tabbed in line with the block to which they refer.</p>
+
+<p class="good">this is correct</p>
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN test --&gt;</span>
+	&lt;tr&gt;
+		&lt;td&gt;&#123;test.TEXT&#125;&lt;/td&gt;
+	&lt;/tr&gt;
+<span class="comment">&lt;!-- END test --&gt;</span>
+</pre></div>
+
+<p class="good">this is also correct:</p>
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN test --&gt;</span>
+&lt;tr&gt;
+	&lt;td&gt;&#123;test.TEXT&#125;&lt;/td&gt;
+&lt;/tr&gt;
+<span class="comment">&lt;!-- END test --&gt;</span>
+</pre></div>
+
+<p>it gives immediate feedback on exactly what is looping - decide which way to use based on the readability.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="templating"></a><h2>4. Templating</h2>
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+<h4>File naming</h4>
+<p>Firstly templates now take the suffix &quot;.html&quot; rather than &quot;.tpl&quot;. This was done simply to make the lifes of some people easier wrt syntax highlighting, etc.</p>
+
+<h4>Variables</h4>
+<p>All template variables should be named appropriately (using underscores for spaces), language entries should be prefixed with L_, system data with S_, urls with U_, javascript urls with UA_, language to be put in javascript statements with LA_, all other variables should be presented 'as is'.</p>
+
+<p>L_* template variables are automatically tried to be mapped to the corresponding language entry if the code does not set (and therefore overwrite) this variable specifically. For example <code>{L_USERNAME}</code> maps to <code>$user-&gt;lang['USERNAME']</code>. The LA_* template variables are handled within the same way, but properly escaped to be put in javascript code. This should reduce the need to assign loads of new lang vars in Modifications.
+</p>
+
+<h4>Blocks/Loops</h4>
+<p>The basic block level loop remains and takes the form:</p>
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN loopname --&gt;</span>
+	markup, {loopname&#46;X_YYYYY}, etc&#46;
+<span class="comment">&lt;!-- END loopname --&gt;</span>
+</pre></div>
+
+<p>A bit later loops will be explained further. To not irritate you we will explain conditionals as well as other statements first.</p>
+
+<h4>Including files</h4>
+<p>Something that existed in 2.0.x which no longer exists in 3.0.x is the ability to assign a template to a variable. This was used (for example) to output the jumpbox. Instead (perhaps better, perhaps not but certainly more flexible) we now have INCLUDE. This takes the simple form:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- INCLUDE filename --&gt;</span>
+</pre></div>
+
+<p>You will note in the 3.0 templates the major sources start with <code>&lt;!-- INCLUDE overall_header.html --&gt;</code> or <code>&lt;!-- INCLUDE simple_header.html --&gt;</code>, etc. In 2.0.x control of &quot;which&quot; header to use was defined entirely within the code. In 3.0.x the template designer can output what they like. Note that you can introduce new templates (i.e. other than those in the default set) using this system and include them as you wish ... perhaps useful for a common &quot;menu&quot; bar or some such. No need to modify loads of files as with 2.0.x.</p>
+
+<h4>PHP</h4>
+<p>A contentious decision has seen the ability to include PHP within the template introduced. This is achieved by enclosing the PHP within relevant tags:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- PHP --&gt;</span>
+	echo &quot;hello!&quot;;
+<span class="comment">&lt;!-- ENDPHP --&gt;</span>
+</pre></div>
+
+<p>You may also include PHP from an external file using:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- INCLUDEPHP somefile&#46;php --&gt;</span>
+</pre></div>
+
+<p>it will be included and executed inline.<br /><br />A note, it is very much encouraged that template designers do not include PHP. The ability to include raw PHP was introduced primarily to allow end users to include banner code, etc. without modifying multiple files (as with 2.0.x). It was not intended for general use ... hence <!-- w --><a href="http://www.phpbb.com">www.phpbb.com</a><!-- w --> will <strong>not</strong> make available template sets which include PHP. And by default templates will have PHP disabled (the admin will need to specifically activate PHP for a template).</p>
+
+<h4>Conditionals/Control structures</h4>
+<p>The most significant addition to 3.0.x are conditions or control structures, &quot;if something then do this else do that&quot;. The system deployed is very similar to Smarty. This may confuse some people at first but it offers great potential and great flexibility with a little imagination. In their most simple form these constructs take the form:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- IF expr --&gt;</span>
+	markup
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+</pre></div>
+
+<p>expr can take many forms, for example:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- IF loop&#46;S_ROW_COUNT is even --&gt;</span>
+	markup
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+</pre></div>
+
+<p>This will output the markup if the S_ROW_COUNT variable in the current iteration of loop is an even value (i.e. the expr is TRUE). You can use various comparison methods (standard as well as equivalent textual versions noted in square brackets) including (<code>not, or, and, eq, neq, is</code> should be used if possible for better readability):</p>
+
+<div class="codebox"><pre>
+== [eq]
+!= [neq, ne]
+&lt;&gt; (same as !=)
+!== (not equivalent in value and type)
+=== (equivalent in value and type)
+&gt; [gt]
+&lt; [lt]
+&gt;= [gte]
+&lt;= [lte]
+&amp;&amp; [and]
+|| [or]
+% [mod]
+! [not]
++
+-
+*
+/
+,
+&lt;&lt; (bitwise shift left)
+&gt;&gt; (bitwise shift right)
+| (bitwise or)
+^ (bitwise xor)
+&amp; (bitwise and)
+~ (bitwise not)
+is (can be used to join comparison operations)
+</pre></div>
+
+<p>Basic parenthesis can also be used to enforce good old BODMAS rules. Additionally some basic comparison types are defined:</p>
+
+<div class="codebox"><pre>
+even
+odd
+div
+</pre></div>
+
+<p>Beyond the simple use of IF you can also do a sequence of comparisons using the following:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- IF expr1 --&gt;</span>
+	markup
+<span class="comment">&lt;!-- ELSEIF expr2 --&gt;</span>
+	markup
+	&#46;
+	&#46;
+	&#46;
+<span class="comment">&lt;!-- ELSEIF exprN --&gt;</span>
+	markup
+<span class="comment">&lt;!-- ELSE --&gt;</span>
+	markup
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+</pre></div>
+
+<p>Each statement will be tested in turn and the relevant output generated when a match (if a match) is found. It is not necessary to always use ELSEIF, ELSE can be used alone to match &quot;everything else&quot;.<br /><br />So what can you do with all this? Well take for example the colouration of rows in viewforum. In 2.0.x row colours were predefined within the source as either row color1, row color2 or row class1, row class2. In 3.0.x this is moved to the template, it may look a little daunting at first but remember control flows from top to bottom and it's not too difficult:</p>
+
+<div class="codebox"><pre>
+&lt;table&gt;
+	<span class="comment">&lt;!-- IF loop&#46;S_ROW_COUNT is even --&gt;</span>
+		&lt;tr class=&quot;row1&quot;&gt;
+	<span class="comment">&lt;!-- ELSE --&gt;</span>
+		&lt;tr class=&quot;row2&quot;&gt;
+	<span class="comment">&lt;!-- ENDIF --&gt;</span>
+	&lt;td&gt;HELLO!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+</pre></div>
+
+<p>This will cause the row cell to be output using class row1 when the row count is even, and class row2 otherwise. The S_ROW_COUNT parameter gets assigned to loops by default. Another example would be the following: </p>
+
+<div class="codebox"><pre>
+&lt;table&gt;
+	<span class="comment">&lt;!-- IF loop&#46;S_ROW_COUNT &gt; 10 --&gt;</span>
+		&lt;tr bgcolor=&quot;#FF0000&quot;&gt;
+	<span class="comment">&lt;!-- ELSEIF loop&#46;S_ROW_COUNT &gt; 5 --&gt;</span>
+		&lt;tr bgcolor=&quot;#00FF00&quot;&gt;
+	<span class="comment">&lt;!-- ELSEIF loop&#46;S_ROW_COUNT &gt; 2 --&gt;</span>
+		&lt;tr bgcolor=&quot;#0000FF&quot;&gt;
+	<span class="comment">&lt;!-- ELSE --&gt;</span>
+		&lt;tr bgcolor=&quot;#FF00FF&quot;&gt;
+	<span class="comment">&lt;!-- ENDIF --&gt;</span>
+	&lt;td&gt;hello!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+</pre></div>
+
+<p>This will output the row cell in purple for the first two rows, blue for rows 2 to 5, green for rows 5 to 10 and red for remainder. So, you could produce a &quot;nice&quot; gradient effect, for example.<br /><br />What else can you do? Well, you could use IF to do common checks on for example the login state of a user:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- IF S_USER_LOGGED_IN --&gt;</span>
+	markup
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+</pre></div>
+
+<p>This replaces the existing (fudged) method in 2.0.x using a zero length array and BEGIN/END.</p>
+
+<h4>Extended syntax for Blocks/Loops</h4>
+
+<p>Back to our loops - they had been extended with the following additions. Firstly you can set the start and end points of the loop. For example:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN loopname(2) --&gt;</span>
+	markup
+<span class="comment">&lt;!-- END loopname --&gt;</span>
+</pre></div>
+
+<p>Will start the loop on the third entry (note that indexes start at zero). Extensions of this are:
+<br /><br />
+<code>loopname(2)</code>: Will start the loop on the 3rd entry<br />
+<code>loopname(-2)</code>: Will start the loop two entries from the end<br />
+<code>loopname(3,4)</code>: Will start the loop on the fourth entry and end it on the fifth<br />
+<code>loopname(3,-4)</code>: Will start the loop on the fourth entry and end it four from last<br />
+</p>
+
+<p>A further extension to begin is BEGINELSE:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN loop --&gt;</span>
+	markup
+<span class="comment">&lt;!-- BEGINELSE --&gt;</span>
+	markup
+<span class="comment">&lt;!-- END loop --&gt;</span>
+</pre></div>
+
+<p>This will cause the markup between <code>BEGINELSE</code> and <code>END</code> to be output if the loop contains no values. This is useful for forums with no topics (for example) ... in some ways it replaces &quot;bits of&quot; the existing &quot;switch_&quot; type control (the rest being replaced by conditionals).</p>
+
+<p>Another way of checking if a loop contains values is by prefixing the loops name with a dot:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- IF .loop --&gt;</span>
+	<span class="comment">&lt;!-- BEGIN loop --&gt;</span>
+		markup
+	<span class="comment">&lt;!-- END loop --&gt;</span>
+<span class="comment">&lt;!-- ELSE --&gt;</span>
+	markup
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+</pre></div>
+
+<p>You are even able to check the number of items within a loop by comparing it with values within the IF condition:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- IF .loop &gt; 2 --&gt;</span>
+	<span class="comment">&lt;!-- BEGIN loop --&gt;</span>
+		markup
+	<span class="comment">&lt;!-- END loop --&gt;</span>
+<span class="comment">&lt;!-- ELSE --&gt;</span>
+	markup
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+</pre></div>
+
+<p>Nesting loops cause the conditionals needing prefixed with all loops from the outer one to the inner most. An illustration of this:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN firstloop --&gt;</span>
+	{firstloop.MY_VARIABLE_FROM_FIRSTLOOP}
+
+	<span class="comment">&lt;!-- BEGIN secondloop --&gt;</span>
+		{firstloop.secondloop.MY_VARIABLE_FROM_SECONDLOOP}
+	<span class="comment">&lt;!-- END secondloop --&gt;</span>
+<span class="comment">&lt;!-- END firstloop --&gt;</span>
+</pre></div>
+
+<p>Sometimes it is necessary to break out of nested loops to be able to call another loop within the current iteration. This sounds a little bit confusing and it is not used very often. The following (rather complex) example shows this quite good - it also shows how you test for the first and last row in a loop (i will explain the example in detail further down):</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN l_block1 --&gt;</span>
+	<span class="comment">&lt;!-- IF l_block1.S_SELECTED --&gt;</span>
+		&lt;strong&gt;{l_block1.L_TITLE}&lt;/strong&gt;
+		<span class="comment">&lt;!-- IF S_PRIVMSGS --&gt;</span>
+
+			<span class="comment">&lt;!-- the ! at the beginning of the loop name forces the loop to be not a nested one of l_block1 --&gt;</span>
+			<span class="comment">&lt;!-- BEGIN !folder --&gt;</span>
+				<span class="comment">&lt;!-- IF folder.S_FIRST_ROW --&gt;</span>
+					&lt;ul class=&quot;nav&quot;&gt;
+				<span class="comment">&lt;!-- ENDIF --&gt;</span>
+
+				&lt;li&gt;&lt;a href=&quot;{folder.U_FOLDER}&quot;&gt;{folder.FOLDER_NAME}&lt;/a&gt;&lt;/li&gt;
+
+				<span class="comment">&lt;!-- IF folder.S_LAST_ROW --&gt;</span>
+					&lt;/ul&gt;
+				<span class="comment">&lt;!-- ENDIF --&gt;</span>
+			<span class="comment">&lt;!-- END !folder --&gt;</span>
+
+		<span class="comment">&lt;!-- ENDIF --&gt;</span>
+
+		&lt;ul class=&quot;nav&quot;&gt;
+		<span class="comment">&lt;!-- BEGIN l_block2 --&gt;</span>
+			&lt;li&gt;
+				<span class="comment">&lt;!-- IF l_block1.l_block2.S_SELECTED --&gt;</span>
+					&lt;strong&gt;{l_block1.l_block2.L_TITLE}&lt;/strong&gt;
+				<span class="comment">&lt;!-- ELSE --&gt;</span>
+					&lt;a href=&quot;{l_block1.l_block2.U_TITLE}&quot;&gt;{l_block1.l_block2.L_TITLE}&lt;/a&gt;
+				<span class="comment">&lt;!-- ENDIF --&gt;</span>
+			&lt;/li&gt;
+		<span class="comment">&lt;!-- END l_block2 --&gt;</span>
+		&lt;/ul&gt;
+	<span class="comment">&lt;!-- ELSE --&gt;</span>
+		&lt;a class=&quot;nav&quot; href=&quot;{l_block1.U_TITLE}&quot;&gt;{l_block1.L_TITLE}&lt;/a&gt;
+	<span class="comment">&lt;!-- ENDIF --&gt;</span>
+<span class="comment">&lt;!-- END l_block1 --&gt;</span>
+</pre></div>
+
+<p>Let us first concentrate on this part of the example:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN l_block1 --&gt;</span>
+	<span class="comment">&lt;!-- IF l_block1.S_SELECTED --&gt;</span>
+		markup
+	<span class="comment">&lt;!-- ELSE --&gt;</span>
+		&lt;a class=&quot;nav&quot; href=&quot;{l_block1.U_TITLE}&quot;&gt;{l_block1.L_TITLE}&lt;/a&gt;
+	<span class="comment">&lt;!-- ENDIF --&gt;</span>
+<span class="comment">&lt;!-- END l_block1 --&gt;</span>
+</pre></div>
+
+<p>Here we open the loop l_block1 and doing some things if the value S_SELECTED within the current loop iteration is true, else we write the blocks link and title. Here, you see <code>{l_block1.L_TITLE}</code> referenced - you remember that L_* variables get automatically assigned the corresponding language entry? This is true, but not within loops. The L_TITLE variable within the loop l_block1 is assigned within the code itself.</p>
+
+<p>Let's have a closer look to the markup:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN l_block1 --&gt;</span>
+.
+.
+	<span class="comment">&lt;!-- IF S_PRIVMSGS --&gt;</span>
+
+		<span class="comment">&lt;!-- BEGIN !folder --&gt;</span>
+			<span class="comment">&lt;!-- IF folder.S_FIRST_ROW --&gt;</span>
+				&lt;ul class=&quot;nav&quot;&gt;
+			<span class="comment">&lt;!-- ENDIF --&gt;</span>
+
+			&lt;li&gt;&lt;a href=&quot;{folder.U_FOLDER}&quot;&gt;{folder.FOLDER_NAME}&lt;/a&gt;&lt;/li&gt;
+
+			<span class="comment">&lt;!-- IF folder.S_LAST_ROW --&gt;</span>
+				&lt;/ul&gt;
+			<span class="comment">&lt;!-- ENDIF --&gt;</span>
+		<span class="comment">&lt;!-- END !folder --&gt;</span>
+
+	<span class="comment">&lt;!-- ENDIF --&gt;</span>
+.
+.
+<span class="comment">&lt;!-- END l_block1 --&gt;</span>
+</pre></div>
+
+<p>The <code>&lt;!-- IF S_PRIVMSGS --&gt;</code> statement clearly checks a global variable and not one within the loop, since the loop is not given here. So, if S_PRIVMSGS is true we execute the shown markup. Now, you see the <code>&lt;!-- BEGIN !folder --&gt;</code> statement. The exclamation mark is responsible for instructing the template engine to iterate through the main loop folder. So, we are now within the loop folder - with <code>&lt;!-- BEGIN folder --&gt;</code> we would have been within the loop <code>l_block1.folder</code> automatically as is the case with l_block2:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- BEGIN l_block1 --&gt;</span>
+.
+.
+	&lt;ul class=&quot;nav&quot;&gt;
+	<span class="comment">&lt;!-- BEGIN l_block2 --&gt;</span>
+		&lt;li&gt;
+			<span class="comment">&lt;!-- IF l_block1.l_block2.S_SELECTED --&gt;</span>
+				&lt;strong&gt;{l_block1.l_block2.L_TITLE}&lt;/strong&gt;
+			<span class="comment">&lt;!-- ELSE --&gt;</span>
+				&lt;a href=&quot;{l_block1.l_block2.U_TITLE}&quot;&gt;{l_block1.l_block2.L_TITLE}&lt;/a&gt;
+			<span class="comment">&lt;!-- ENDIF --&gt;</span>
+		&lt;/li&gt;
+	<span class="comment">&lt;!-- END l_block2 --&gt;</span>
+	&lt;/ul&gt;
+.
+.
+<span class="comment">&lt;!-- END l_block1 --&gt;</span>
+</pre></div>
+
+<p>You see the difference? The loop l_block2 is a member of the loop l_block1 but the loop folder is a main loop.</p>
+
+<p>Now back to our folder loop:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- IF folder.S_FIRST_ROW --&gt;</span>
+	&lt;ul class=&quot;nav&quot;&gt;
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+
+&lt;li&gt;&lt;a href=&quot;{folder.U_FOLDER}&quot;&gt;{folder.FOLDER_NAME}&lt;/a&gt;&lt;/li&gt;
+
+<span class="comment">&lt;!-- IF folder.S_LAST_ROW --&gt;</span>
+	&lt;/ul&gt;
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+</pre></div>
+
+<p>You may have wondered what the comparison to S_FIRST_ROW and S_LAST_ROW is about. If you haven't guessed already - it is checking for the first iteration of the loop with <code>S_FIRST_ROW</code> and the last iteration with <code>S_LAST_ROW</code>. This can come in handy quite often if you want to open or close design elements, like the above list. Let us imagine a folder loop build with three iterations, it would go this way:</p>
+
+<div class="codebox"><pre>
+&lt;ul class=&quot;nav&quot;&gt; <span class="comment">&lt;!-- written on first iteration --&gt;</span>
+	&lt;li&gt;first element&lt;/li&gt; <span class="comment">&lt;!-- written on first iteration --&gt;</span>
+	&lt;li&gt;second element&lt;/li&gt; <span class="comment">&lt;!-- written on second iteration --&gt;</span>
+	&lt;li&gt;third element&lt;/li&gt; <span class="comment">&lt;!-- written on third iteration --&gt;</span>
+&lt;/ul&gt; <span class="comment">&lt;!-- written on third iteration --&gt;</span>
+</pre></div>
+
+<p>As you can see, all three elements are written down as well as the markup for the first iteration and the last one. Sometimes you want to omit writing the general markup - for example:</p>
+
+<div class="codebox"><pre>
+<span class="comment">&lt;!-- IF folder.S_FIRST_ROW --&gt;</span>
+	&lt;ul class=&quot;nav&quot;&gt;
+<span class="comment">&lt;!-- ELSEIF folder.S_LAST_ROW --&gt;</span>
+	&lt;/ul&gt;
+<span class="comment">&lt;!-- ELSE --&gt;</span>
+	&lt;li&gt;&lt;a href=&quot;{folder.U_FOLDER}&quot;&gt;{folder.FOLDER_NAME}&lt;/a&gt;&lt;/li&gt;
+<span class="comment">&lt;!-- ENDIF --&gt;</span>
+</pre></div>
+
+<p>would result in the following markup:</p>
+
+<div class="codebox"><pre>
+&lt;ul class=&quot;nav&quot;&gt; <span class="comment">&lt;!-- written on first iteration --&gt;</span>
+	&lt;li&gt;second element&lt;/li&gt; <span class="comment">&lt;!-- written on second iteration --&gt;</span>
+&lt;/ul&gt; <span class="comment">&lt;!-- written on third iteration --&gt;</span>
+</pre></div>
+
+<p>Just always remember that processing is taking place from up to down.</p>
+
+	<h4>Forms</h4>
+		<p>If a form is used for a non-trivial operation (i.e. more than a jumpbox), then it should include the <code>{S_FORM_TOKEN}</code> template variable.</p>
+		<div class="codebox"><pre>
+&lt;form method=&quot;post&quot; id=&quot;mcp&quot; action=&quot;{U_POST_ACTION}&quot;&gt;
+
+	&lt;fieldset class="submit-buttons"&gt;
+		&lt;input type=&quot;reset&quot; value=&quot;{L_RESET}&quot; name=&quot;reset&quot; class=&quot;button2&quot; /&gt&nbsp;
+		&lt;input type=&quot;submit&quot; name=&quot;action[add_warning]&quot; value=&quot;{L_SUBMIT}&quot; class=&quot;button1&quot; /&gt
+		{S_FORM_TOKEN}
+	&lt;/fieldset&gt
+&lt;/form&gt
+		</pre></div><br />
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+
+
+<a name="charsets"></a><h2>5. Character Sets and Encodings</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+
+
+<h4>What are Unicode, UCS and UTF-8?</h4>
+<p>The <a href="http://en.wikipedia.org/wiki/Universal_Character_Set">Universal Character Set (UCS)</a> described in ISO/IEC 10646 consists of a large amount of characters. Each of them has a unique name and a code point which is an integer number. <a href="http://en.wikipedia.org/wiki/Unicode">Unicode</a> - which is an industry standard - complements the Universal Character Set with further information about the characters' properties and alternative character encodings. More information on Unicode can be found on the <a href="http://www.unicode.org/">Unicode Consortium's website</a>. One of the Unicode encodings is the <a href="http://en.wikipedia.org/wiki/UTF-8">8-bit Unicode Transformation Format (UTF-8)</a>. It encodes characters with up to four bytes aiming for maximum compatability with the <a href="http://en.wikipedia.org/wiki/ASCII">American Standard Code for Information Interchange</a> which is a 7-bit encoding of a relatively small subset of the UCS.</p>
+
+<h4>phpBB's use of Unicode</h4>
+<p>Unfortunately PHP does not faciliate the use of Unicode prior to version 6. Most functions simply treat strings as sequences of bytes assuming that each character takes up exactly one byte. This behaviour still allows for storing UTF-8 encoded text in PHP strings but many operations on strings have unexpected results. To circumvent this problem we have created some alternative functions to PHP's native string operations which use code points instead of bytes. These functions can be found in <code>/includes/utf/utf_tools.php</code>. They are also covered in the <a href="http://area51.phpbb.com/docs/code/">phpBB3 Sourcecode Documentation</a>. A lot of native PHP functions still work with UTF-8 as long as you stick to certain restrictions. For example <code>explode</code> still works as long as the first and the last character of the delimiter string are ASCII characters.</p>
+
+<p>phpBB only uses the ASCII and the UTF-8 character encodings. Still all Strings are UTF-8 encoded because ASCII is a subset of UTF-8. The only exceptions to this rule are code sections which deal with external systems which use other encodings and character sets. Such external data should be converted to UTF-8 using the <code>utf8_recode()</code> function supplied with phpBB. It supports a variety of other character sets and encodings, a full list can be found below.</p>
+
+<p>With <code>request_var()</code> you can either allow all UCS characters in user input or restrict user input to ASCII characters. This feature is controlled by the function's third parameter called <code>$multibyte</code>. You should allow multibyte characters in posts, PMs, topic titles, forum names, etc. but it's not necessary for internal uses like a <code>$mode</code> variable which should only hold a predefined list of ASCII strings anyway.</p>
+
+<div class="codebox"><pre>
+// an input string containing a multibyte character
+$_REQUEST['multibyte_string'] = 'K&#228;se';
+
+// print request variable as a UTF-8 string allowing multibyte characters
+echo request_var('multibyte_string', '', true);
+// print request variable as ASCII string
+echo request_var('multibyte_string', '');
+</pre></div>
+
+<p>This code snippet will generate the following output:</p>
+
+<div class="codebox"><pre>
+K&#228;se
+K??se
+</pre></div>
+
+<h4>Unicode Normalization</h4>
+
+<p>If you retrieve user input with multibyte characters you should additionally normalize the string using <code>utf8_normalize_nfc()</code> before you work with it. This is necessary to make sure that equal characters can only occur in one particular binary representation. For example the character &#197; can be represented either as <code>U+00C5</code> (LATIN CAPITAL LETTER A WITH RING ABOVE) or as <code>U+212B</code> (ANGSTROM SIGN). phpBB uses Normalization Form Canonical Composition (NFC) for all text. So the correct version of the above example would look like this:</p>
+
+<div class="codebox"><pre>
+$_REQUEST['multibyte_string'] = 'K&#228;se';
+
+// normalize multibyte strings
+echo utf8_normalize_nfc(request_var('multibyte_string', '', true));
+// ASCII strings do not need to be normalized
+echo request_var('multibyte_string', '');
+</pre></div>
+
+<h4>Case Folding</h4>
+
+<p>Case insensitive comparison of strings is no longer possible with <code>strtolower</code> or <code>strtoupper</code> as some characters have multiple lower case or multiple upper case forms depending on their position in a word. The <code>utf8_strtolower</code> and the <code>utf8_strtoupper</code> functions suffer from the same problem so they can only be used to display upper/lower case versions of a string but they cannot be used for case insensitive comparisons either. So instead you should use case folding which gives you a case insensitive version of the string which can be used for case insensitive comparisons. An NFC normalized string can be case folded using <code>utf8_case_fold_nfc()</code>.</p>
+
+<p class="bad">// Bad - The strings might be the same even if strtolower differs</p>
+
+<div class="codebox"><pre>
+if (strtolower($string1) == strtolower($string2))
+{
+	echo '$string1 and $string2 are equal or differ in case';
+}
+</pre></div>
+
+<p class="good">// Good - Case folding is really case insensitive</p>
+
+<div class="codebox"><pre>
+if (utf8_case_fold_nfc($string1) == utf8_case_fold_nfc($string2))
+{
+	echo '$string1 and $string2 are equal or differ in case';
+}
+</pre></div>
+
+<h4>Confusables Detection</h4>
+
+<p>phpBB offers a special method <code>utf8_clean_string</code> which can be used to make sure string identifiers are unique. This method uses Normalization Form Compatibility Composition (NFKC) instead of NFC and replaces similarly looking characters with a particular representative of the equivalence class. This method is currently used for usernames and group names to avoid confusion with similarly looking names.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="translation"></a><h2>6. Translation (<abbr title="Internationalisation">i18n</abbr>/<abbr title="Localisation">L10n</abbr>) Guidelines</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<a name="standardisation"></a><h3>6.i. Standardisation</h3>
+
+	<h4>Reason:</h4>
+
+	<p>phpBB is one of the most translated open-source projects, with the current stable version being available in over 60 localisations. Whilst the ad hoc approach to the naming of language packs has worked, for phpBB3 and beyond we hope to make this process saner which will allow for better interoperation with current and future web browsers.</p>
+
+	<h4>Encoding:</h4>
+
+	<p>With phpBB3, the output encoding for the forum in now UTF-8, a Universal Character Encoding by the Unicode Consortium that is by design a superset to US-ASCII and ISO-8859-1. By using one character set which simultaenously supports all scripts which previously would have required different encodings (eg: ISO-8859-1 to ISO-8859-15 (Latin, Greek, Cyrillic, Thai, Hebrew, Arabic); GB2312 (Simplified Chinese); Big5 (Traditional Chinese), EUC-JP (Japanese), EUC-KR (Korean), VISCII (Vietnamese); et cetera), this removes the need to convert between encodings and improves the accessibility of multilingual forums.</p>
+
+	<p>The impact is that the language files for phpBB must now also be encoded as UTF-8, with a caveat that the files must <strong>not contain</strong> a <acronym title="Byte-Order-Mark">BOM</acronym> for compatibility reasons with non-Unicode aware versions of PHP. For those with forums using the Latin character set (ie: most European languages), this change is transparent since UTF-8 is superset to US-ASCII and ISO-8859-1.</p>
+
+	<h4>Language Tag:</h4>
+
+	<p>The <abbr title="Internet Engineering Task Force">IETF</abbr> recently published <a href="http://tools.ietf.org/html/rfc4646">RFC 4646</a> for tags used to identify languages, which in combination with <a href="http://tools.ietf.org/html/rfc4647">RFC 4647</a> obseletes the older <a href="http://tools.ietf.org/html/rfc3066">RFC 3006</a> and older-still <a href="http://tools.ietf.org/html/rfc1766">RFC 1766</a>. <a href="http://tools.ietf.org/html/rfc4646">RFC 4646</a> uses <a href="http://www.loc.gov/standards/iso639-2/php/English_list.php">ISO 639-1/ISO 639-2</a>, <a href="http://www.iso.ch/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/list-en1.html">ISO 3166-1 alpha-2</a>, <a href="http://www.unicode.org/iso15924/iso15924-codes.html">ISO 15924</a> and <a href="http://unstats.un.org/unsd/methods/m49/m49.htm">UN M.49</a> to define a language tag. Each complete tag is composed of subtags which are not case sensitive and can also be empty.</p>
+
+	<p>Ordering of the subtags in the case that they are all non-empty is: <code>language</code>-<code>script</code>-<code>region</code>-<code>variant</code>-<code>extension</code>-<code>privateuse</code>. Should any subtag be empty, its corresponding hyphen would also be ommited. Thus, the language tag for English will be <code>en</code> <strong>and not</strong> <code>en-----</code>.</p>
+
+	<p>Most language tags consist of a two- or three-letter language subtag (from <a href="http://www.loc.gov/standards/iso639-2/php/English_list.php">ISO 639-1/ISO 639-2</a>). Sometimes, this is followed by a two-letter or three-digit region subtag (from <a href="http://www.iso.ch/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/list-en1.html">ISO 3166-1 alpha-2</a> or <a href="http://unstats.un.org/unsd/methods/m49/m49.htm">UN M.49</a>). Some examples are:</p>
+
+	<table summary="Examples of various possible language tags as described by RFC 4646 and RFC 4647">
+	<caption>Language tag examples</caption>
+	<thead>
+	<tr>
+		<th scope="col">Language tag</th>
+		<th scope="col">Description</th>
+		<th scope="col">Component subtags</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><code>en</code></td>
+		<td>English</td>
+		<td><code>language</code></td>
+	</tr>
+	<tr>
+		<td><code>mas</code></td>
+		<td>Masai</td>
+		<td><code>language</code></td>
+	</tr>
+	<tr>
+		<td><code>fr-CA</code></td>
+		<td>French as used in Canada</td>
+		<td><code>language</code>+<code>region</code></td>
+	</tr>
+	<tr>
+		<td><code>en-833</code></td>
+		<td>English as used in the Isle of Man</td>
+		<td><code>language</code>+<code>region</code></td>
+	</tr>
+	<tr>
+		<td><code>zh-Hans</code></td>
+		<td>Chinese written with Simplified script</td>
+		<td><code>language</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>zh-Hant-HK</code></td>
+		<td>Chinese written with Traditional script as used in Hong Kong</td>
+		<td><code>language</code>+<code>script</code>+<code>region</code></td>
+	</tr>
+	<tr>
+		<td><code>de-AT-1996</code></td>
+		<td>German as used in Austria with 1996 orthography</td>
+		<td><code>language</code>+<code>region</code>+<code>variant</code></td>
+	</tr>
+	</tbody>
+	</table>
+
+	<p>The ultimate aim of a language tag is to convey the needed <strong>useful distingushing information</strong>, whilst keeping it as <strong>short as possible</strong>. So for example, use <code>en</code>, <code>fr</code> and <code>ja</code> as opposed to <code>en-GB</code>, <code>fr-FR</code> and <code>ja-JP</code>, since we know English, French and Japanese are the native language of Great Britain, France and Japan respectively.</p>
+
+	<p>Next is the <a href="http://www.unicode.org/iso15924/iso15924-codes.html">ISO 15924</a> language script code and when one should or shouldn't use it. For example, whilst <code>en-Latn</code> is syntaxically correct for describing English written with Latin script, real world English writing is <strong>more-or-less exclusively in the Latin script</strong>. For such languages like English that are written in a single script, the <a href="http://www.iana.org/assignments/language-subtag-registry"><abbr title="Internet Assigned Numbers Authority">IANA</abbr> Language Subtag Registry</a> has a "Suppress-Script" field meaning the script code <strong>should be ommitted</strong> unless a specific language tag requires a specific script code. Some languages are <strong>written in more than one script</strong> and in such cases, the script code <strong>is encouraged</strong> since an end-user may be able to read their language in one script, but not the other. Some examples are:</p>
+
+	<table summary="Examples of using a language subtag in combination with a script subtag">
+	<caption>Language subtag + script subtag examples</caption>
+	<thead>
+	<tr>
+		<th scope="col">Language tag</th>
+		<th scope="col">Description</th>
+		<th scope="col">Component subtags</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><code>en-Brai</code></td>
+		<td>English written in Braille script</td>
+		<td><code>language</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>en-Dsrt</code></td>
+		<td>English written in Deseret (Mormon) script</td>
+		<td><code>language</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>sr-Latn</code></td>
+		<td>Serbian written in Latin script</td>
+		<td><code>language</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>sr-Cyrl</code></td>
+		<td>Serbian written in Cyrillic script</td>
+		<td><code>language</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>mn-Mong</code></td>
+		<td>Mongolian written in Mongolian script</td>
+		<td><code>language</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>mn-Cyrl</code></td>
+		<td>Mongolian written in Cyrillic script</td>
+		<td><code>language</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>mn-Phag</code></td>
+		<td>Mongolian written in Phags-pa script</td>
+		<td><code>language</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>az-Cyrl-AZ</code></td>
+		<td>Azerbaijani written in Cyrillic script as used in Azerbaijan</td>
+		<td><code>language</code>+<code>script</code>+<code>region</code></td>
+	</tr>
+	<tr>
+		<td><code>az-Latn-AZ</code></td>
+		<td>Azerbaijani written in Latin script as used in Azerbaijan</td>
+		<td><code>language</code>+<code>script</code>+<code>region</code></td>
+	</tr>
+	<tr>
+		<td><code>az-Arab-IR</code></td>
+		<td>Azerbaijani written in Arabic script as used in Iran</td>
+		<td><code>language</code>+<code>script</code>+<code>region</code></td>
+	</tr>
+	</tbody>
+	</table>
+
+	<p>Usage of the three-digit <a href="http://unstats.un.org/unsd/methods/m49/m49.htm">UN M.49</a> code over the two-letter <a href="http://www.iso.ch/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/list-en1.html">ISO 3166-1 alpha-2</a> code should hapen if a macro-geographical entity is required and/or the <a href="http://www.iso.ch/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/list-en1.html">ISO 3166-1 alpha-2</a> is ambiguous.</p>
+
+	<p>Examples of English using marco-geographical regions:</p>
+
+	<table summary="Examples for English of ISO 3166-1 alpha-2 vs. UN M.49 code">
+	<caption>Coding for English using macro-geographical regions</caption>
+	<thead>
+	<tr>
+		<th scope="col">ISO 639-1/ISO 639-2 + ISO 3166-1 alpha-2</th>
+		<th scope="col" colspan="2">ISO 639-1/ISO 639-2 + UN M.49 (Example macro regions)</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><dl><dt><code>en-AU</code></dt><dd>English as used in <strong>Australia</strong></dd></dl></td>
+		<td rowspan="2"><dl><dt><code>en-053</code></dt><dd>English as used in <strong>Australia &amp; New Zealand</strong></dd></dl></td>
+		<td rowspan="3"><dl><dt><code>en-009</code></dt><dd>English as used in <strong>Oceania</strong></dd></dl></td>
+	</tr>
+	<tr>
+		<td><dl><dt><code>en-NZ</code></dt><dd>English as used in <strong>New Zealand</strong></dd></dl></td>
+	</tr>
+	<tr>
+		<td><dl><dt><code>en-FJ</code></dt><dd>English as used in <strong>Fiji</strong></dd></dl></td>
+		<td><dl><dt><code>en-054 </code></dt><dd>English as used in <strong>Melanesia</strong></dd></dl></td>
+	</tr>
+	</tbody>
+	</table>
+
+	<p>Examples of Spanish using marco-geographical regions:</p>
+
+	<table summary="Examples for Spanish of ISO 3166-1 alpha-2 vs. UN M.49 code">
+	<caption>Coding for Spanish macro-geographical regions</caption>
+	<thead>
+	<tr>
+		<th scope="col">ISO 639-1/ISO 639-2 + ISO 3166-1 alpha-2</th>
+		<th scope="col" colspan="2">ISO 639-1/ISO 639-2 + UN M.49 (Example macro regions)</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><dl><dt><code>es-PR</code></dt><dd>Spanish as used in <strong>Puerto Rico</strong></dd></dl></td>
+		<td rowspan="3"><dl><dt><code>es-419</code></dt><dd>Spanish as used in <strong>Latin America &amp; the Caribbean</strong></dd></dl></td>
+		<td rowspan="4"><dl><dt><code>es-019</code></dt><dd>Spanish as used in <strong>the Americas</strong></dd></dl></td>
+	</tr>
+	<tr>
+		<td><dl><dt><code>es-HN</code></dt><dd>Spanish as used in <strong>Honduras</strong></dd></dl></td>
+	</tr>
+	<tr>
+		<td><dl><dt><code>es-AR</code></dt><dd>Spanish as used in <strong>Argentina</strong></dd></dl></td>
+	</tr>
+	<tr>
+		<td><dl><dt><code>es-US</code></dt><dd>Spanish as used in <strong>United States of America</strong></dd></dl></td>
+		<td><dl><dt><code>es-021</code></dt><dd>Spanish as used in <strong>North America</strong></dd></dl></td>
+	</tr>
+	</tbody>
+	</table>
+
+	<p>Example of where the <a href="http://www.iso.ch/iso/en/prods-services/iso3166ma/02iso-3166-code-lists/list-en1.html">ISO 3166-1 alpha-2</a> is ambiguous and why <a href="http://unstats.un.org/unsd/methods/m49/m49.htm">UN M.49</a> might be preferred:</p>
+
+	<table summary="Example where the ISO 3166-1 alpha-2 is ambiguous">
+	<caption>Coding for ambiguous ISO 3166-1 alpha-2 regions</caption>
+	<thead>
+	<tr>
+		<th scope="col" colspan="2"><code>CS</code> assignment pre-1994</th>
+		<th scope="col" colspan="2"><code>CS</code> assignment post-1994</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td colspan="2">
+		<dl>
+		<dt><code>CS</code></dt><dd><strong>Czechoslovakia</strong> (ISO 3166-1)</dd>
+		<dt><code>200</code></dt><dd><strong>Czechoslovakia</strong> (UN M.49)</dd>
+		</dl>
+		</td>
+		<td colspan="2">
+		<dl>
+		<dt><code>CS</code></dt><dd><strong>Serbian &amp; Montenegro</strong> (ISO 3166-1)</dd>
+		<dt><code>891</code></dt><dd><strong>Serbian &amp; Montenegro</strong> (UN M.49)</dd>
+		</dl>
+		</td>
+	</tr>
+	<tr>
+		<td>
+		<dl>
+		<dt><code>CZ</code></dt><dd><strong>Czech Republic</strong> (ISO 3166-1)</dd>
+		<dt><code>203</code></dt><dd><strong>Czech Republic</strong> (UN M.49)</dd>
+		</dl>
+		</td>
+		<td>
+		<dl>
+		<dt><code>SK</code></dt><dd><strong>Slovakia</strong> (ISO 3166-1)</dd>
+		<dt><code>703</code></dt><dd><strong>Slovakia</strong> (UN M.49)</dd>
+		</dl>
+		</td>
+		<td>
+		<dl>
+		<dt><code>RS</code></dt><dd><strong>Serbia</strong> (ISO 3166-1)</dd>
+		<dt><code>688</code></dt><dd><strong>Serbia</strong> (UN M.49)</dd>
+		</dl>
+		</td>
+		<td>
+		<dl>
+		<dt><code>ME</code></dt><dd><strong>Montenegro</strong> (ISO 3166-1)</dd>
+		<dt><code>499</code></dt><dd><strong>Montenegro</strong> (UN M.49)</dd>
+		</dl>
+		</td>
+	</tr>
+	</tbody>
+	</table>
+
+	<h4>Macro-languages &amp; Topolects:</h4>
+
+	<p><a href="http://tools.ietf.org/html/rfc4646">RFC 4646</a> anticipates features which shall be available in (currently draft) <a href="http://www.sil.org/iso639-3/">ISO 639-3</a> which aims to provide as complete enumeration of languages as possible, including living, extinct, ancient and constructed languages, whether majour, minor or unwritten. A new feature of <a href="http://www.sil.org/iso639-3/">ISO 639-3</a> compared to the previous two revisions is the concept of <a href="http://www.sil.org/iso639-3/macrolanguages.asp">macrolanguages</a> where Arabic and Chinese are two such examples. In such cases, their respective codes of <code>ar</code> and <code>zh</code> is very vague as to which dialect/topolect is used or perhaps some terse classical variant which may be difficult for all but very educated users. For such macrolanguages, it is recommended that the sub-language tag is used as a suffix to the macrolanguage tag, eg:</p>
+
+	<table summary="Examples of macrolanguages used with sub-language subtags">
+	<caption>Macrolanguage subtag + sub-language subtag examples</caption>
+	<thead>
+	<tr>
+		<th scope="col">Language tag</th>
+		<th scope="col">Description</th>
+		<th scope="col">Component subtags</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><code>zh-cmn</code></td>
+		<td>Mandarin (Putonghau/Guoyu) Chinese</td>
+		<td><code>macrolanguage</code>+<code>sublanguage</code></td>
+	</tr>
+	<tr>
+		<td><code>zh-yue</code></td>
+		<td>Yue (Cantonese) Chinese</td>
+		<td><code>macrolanguage</code>+<code>sublanguage</code></td>
+	</tr>
+	<tr>
+		<td><code>zh-cmn-Hans</code></td>
+		<td>Mandarin (Putonghau/Guoyu) Chinese written in Simplified script</td>
+		<td><code>macrolanguage</code>+<code>sublanguage</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>zh-cmn-Hant</code></td>
+		<td>Mandarin (Putonghau/Guoyu) Chinese written in Traditional script</td>
+		<td><code>macrolanguage</code>+<code>sublanguage</code>+<code>script</code></td>
+	</tr>
+	<tr>
+		<td><code>zh-nan-Latn-TW</code></td>
+		<td>Minnan (Hoklo) Chinese written in Latin script (POJ Romanisation) as used in Taiwan</td>
+		<td><code>macrolanguage</code>+<code>sublanguage</code>+<code>script</code>+<code>region</code></td>
+	</tr>
+	</tbody>
+	</table>
+
+	<a name="otherconsiderations"></a><h3>6.ii. Other considerations</h3>
+
+	<h4>Normalisation of language tags for phpBB:</h4>
+
+	<p>For phpBB, the language tags are <strong>not</strong> used in their raw form and instead converted to all lower-case and have the hyphen <code>-</code> replaced with an underscore <code>_</code> where appropriate, with some examples below:</p>
+
+	<table summary="Normalisation of language tags for usage in phpBB">
+	<caption>Language tag normalisation examples</caption>
+	<thead>
+	<tr>
+		<th scope="col">Raw language tag</th>
+		<th scope="col">Description</th>
+		<th scope="col">Value of <code>USER_LANG</code><br />in <code>./common.php</code></th>
+		<th scope="col">Language pack directory<br />name in <code>/language/</code></th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><code>en</code></td>
+		<td>British English</td>
+		<td><code>en</code></td>
+		<td><code>en</code></td>
+	</tr>
+	<tr>
+		<td><code>de-AT</code></td>
+		<td>German as used in Austria</td>
+		<td><code>de-at</code></td>
+		<td><code>de_at</code></td>
+	</tr>
+	<tr>
+		<td><code>es-419</code></td>
+		<td>Spanish as used in Latin America &amp; Caribbean</td>
+		<td><code>en-419</code></td>
+		<td><code>en_419</code></td>
+	</tr>
+	<tr>
+		<td><code>zh-yue-Hant-HK</code></td>
+		<td>Cantonese written in Traditional script as used in Hong Kong</td>
+		<td><code>zh-yue-hant-hk</code></td>
+		<td><code>zh_yue_hant_hk</code></td>
+	</tr>
+	</tbody>
+	</table>
+
+	<h4>How to use <code>iso.txt</code>:</h4>
+
+	<p>The <code>iso.txt</code> file is a small UTF-8 encoded plain-text file which consists of three lines:</p>
+
+	<ol>
+		<li><code>Language's English name</code></li>
+		<li><code>Language's local name</code></li>
+		<li><code>Authors information</code></li>
+	</ol>
+
+	<p><code>iso.txt</code> is automatically generated by the language pack submission system on phpBB.com. You don't have to create this file yourself if you plan on releasing your language pack on phpBB.com, but do keep in mind that phpBB itself does require this file to be present.</p>
+
+	<p>Because language tags themselves are meant to be machine read, they can be rather obtuse to humans and why descriptive strings as provided by <code>iso.txt</code> are needed. Whilst <code>en-US</code> could be fairly easily deduced to be "English as used in the United States", <code>de-CH</code> is more difficult less one happens to know that <code>de</code> is from "<span lang="de">Deutsch</span>", German for "German" and <code>CH</code> is the abbreviation of the official Latin name for Switzerland, "<span lang="la">Confoederatio Helvetica</span>".</p>
+
+	<p>For the English language description, the language name is always first and any additional attributes required to describe the subtags within the language code are then listed in order separated with commas and enclosed within parentheses, eg:</p>
+
+	<table summary="English language description examples of iso.txt for usage in phpBB">
+	<caption>English language description examples for iso.txt</caption>
+	<thead>
+	<tr>
+		<th scope="col">Raw language tag</th>
+		<th scope="col">English description within <code>iso.txt</code></th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><code>en</code></td>
+		<td>British English</td>
+	</tr>
+	<tr>
+		<td><code>en-US</code></td>
+		<td>English (United States)</td>
+	</tr>
+	<tr>
+		<td><code>en-053</code></td>
+		<td>English (Australia &amp; New Zealand)</td>
+	</tr>
+	<tr>
+		<td><code>de</code></td>
+		<td>German</td>
+	</tr>
+	<tr>
+		<td><code>de-CH-1996</code></td>
+		<td>German (Switzerland, 1996 orthography)</td>
+	</tr>
+	<tr>
+		<td><code>gws-1996</code></td>
+		<td>Swiss German (1996 orthography)</td>
+	</tr>
+	<tr>
+		<td><code>zh-cmn-Hans-CN</code></td>
+		<td>Mandarin Chinese (Simplified, Mainland China)</td>
+	</tr>
+	<tr>
+		<td><code>zh-yue-Hant-HK</code></td>
+		<td>Cantonese Chinese (Traditional, Hong Kong)</td>
+	</tr>
+	</tbody>
+	</table>
+
+	<p>For the localised language description, just translate the English version though use whatever appropriate punctuation typical for your own locale, assuming the language uses punctuation at all.</p>
+
+	<h4>Unicode bi-directional considerations:</h4>
+
+	<p>Because phpBB is now UTF-8, all translators must take into account that certain strings may be shown when the directionality of the document is either opposite to normal or is ambiguous.</p>
+
+	<p>The various Unicode control characters for bi-directional text and their HTML enquivalents where appropriate are as follows:</p>
+
+	<table summary="Table of the various Unicode bidirectional control characters">
+	<caption>Unicode bidirectional control characters &amp; HTML elements/entities</caption>
+	<thead>
+	<tr>
+		<th scope="col">Unicode character<br />abbreviation</th>
+		<th scope="col">Unicode<br />code-point</th>
+		<th scope="col">Unicode character<br />name</th>
+		<th scope="col">Equivalent HTML<br />markup/entity</th>
+		<th scope="col">Raw character<br />(enclosed between '')</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><code>LRM</code></td>
+		<td><code>U+200E</code></td>
+		<td>Left-to-Right Mark</td>
+		<td><code>&amp;lrm;</code></td>
+		<td>'&#x200E;'</td>
+	</tr>
+	<tr>
+		<td><code>RLM</code></td>
+		<td><code>U+200F</code></td>
+		<td>Right-to-Left Mark</td>
+		<td><code>&amp;rlm;</code></td>
+		<td>'&#x200F;'</td>
+	</tr>
+	<tr>
+		<td><code>LRE</code></td>
+		<td><code>U+202A</code></td>
+		<td>Left-to-Right Embedding</td>
+		<td><code>dir=&quot;ltr&quot;</code></td>
+		<td>'&#x202A;'</td>
+	</tr>
+	<tr>
+		<td><code>RLE</code></td>
+		<td><code>U+202B</code></td>
+		<td>Right-to-Left Embedding</td>
+		<td><code>dir=&quot;rtl&quot;</code></td>
+		<td>'&#x202B;'</td>
+	</tr>
+	<tr>
+		<td><code>PDF</code></td>
+		<td><code>U+202C</code></td>
+		<td>Pop Directional Formatting</td>
+		<td><code>&lt;/bdo&gt;</code></td>
+		<td>'&#x202C;'</td>
+	</tr>
+	<tr>
+		<td><code>LRO</code></td>
+		<td><code>U+202D</code></td>
+		<td>Left-to-Right Override</td>
+		<td><code>&lt;bdo dir=&quot;ltr&quot;&gt;</code></td>
+		<td>'&#x202D;'</td>
+	</tr>
+	<tr>
+		<td><code>RLO</code></td>
+		<td><code>U+202E</code></td>
+		<td>Right-to-Left Override</td>
+		<td><code>&lt;bdo dir=&quot;rtl&quot;&gt;</code></td>
+		<td>'&#x202E;'</td>
+	</tr>
+	</tbody>
+	</table>
+
+	<p>For <code>iso.txt</code>, the directionality of the text can be explicitly set using special Unicode characters via any of the three methods provided by left-to-right/right-to-left markers/embeds/overrides, as without them, the ordering of characters will be incorrect, eg:</p>
+
+	<table summary="Effect of using Unicode bidirectional control characters within iso.txt">
+	<caption>Unicode bidirectional control characters iso.txt</caption>
+	<thead>
+	<tr>
+		<th scope="col">Directionality</th>
+		<th scope="col">Raw character view</th>
+		<th scope="col">Display of localised<br />description in <code>iso.txt</code></th>
+		<th scope="col">Ordering</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td><code>dir=&quot;ltr&quot;</code></td>
+		<td>English (Australia &amp; New Zealand)</td>
+		<td dir="ltr">English (Australia &amp; New Zealand)</td>
+		<td class="good">Correct</td>
+	</tr>
+	<tr>
+		<td><code>dir=&quot;rtl&quot;</code></td>
+		<td>English (Australia &amp; New Zealand)</td>
+		<td dir="rtl">English (Australia &amp; New Zealand)</td>
+		<td class="bad">Incorrect</td>
+	</tr>
+	<tr>
+		<td><code>dir=&quot;rtl&quot;</code> with <code>LRM</code></td>
+		<td>English (Australia &amp; New Zealand)<code>U+200E</code></td>
+		<td dir="rtl">English (Australia &amp; New Zealand)&#x200E;</td>
+		<td class="good">Correct</td>
+	</tr>
+	<tr>
+		<td><code>dir=&quot;rtl&quot;</code> with <code>LRE</code> &amp; <code>PDF</code></td>
+		<td><code>U+202A</code>English (Australia &amp; New Zealand)<code>U+202C</code></td>
+		<td dir="rtl">&#x202A;English (Australia &amp; New Zealand)&#x202C;</td>
+		<td class="good">Correct</td>
+	</tr>
+	<tr>
+		<td><code>dir=&quot;rtl&quot;</code> with <code>LRO</code> &amp; <code>PDF</code></td>
+		<td><code>U+202D</code>English (Australia &amp; New Zealand)<code>U+202C</code></td>
+		<td dir="rtl">&#x202D;English (Australia &amp; New Zealand)&#x202C;</td>
+		<td class="good">Correct</td>
+	</tr>
+	</tbody>
+	</table>
+
+	<p>In choosing which of the three methods to use, in the majority of cases, the <code>LRM</code> or <code>RLM</code> to put a &quot;strong&quot; character to fully enclose an ambiguous punctuation character and thus make it inherit the correct directionality is sufficient.</p>
+	<p>Within some cases, there may be mixed scripts of a left-to-right and right-to-left direction, so using <code>LRE</code> &amp; <code>RLE</code> with <code>PDF</code> may be more appropriate. Lastly, in very rare instances where directionality must be forced, then use <code>LRO</code> &amp; <code>RLO</code> with <code>PDF</code>.</p>
+	<p>For further information on authoring techniques of bi-directional text, please see the W3C tutorial on <a href="http://www.w3.org/International/tutorials/bidi-xhtml/">authoring techniques for XHTML pages with bi-directional text</a>.</p>
+
+	<h4>Working with placeholders:</h4>
+
+	<p>As phpBB is translated into languages with different ordering rules to that of English, it is possible to show specific values in any order deemed appropriate. Take for example the extremely simple &quot;Page <em>X</em> of <em>Y</em>&quot;, whilst in English this could just be coded as:</p>
+
+	<div class="codebox"><pre>
+	...
+'PAGE_OF'	=&gt;	'Page %s of %s',
+		/* Just grabbing the replacements as they
+		come and hope they are in the right order */
+	...
+	</pre></div>
+
+	<p>&hellip; a clearer way to show explicit replacement ordering is to do:</p>
+
+	<div class="codebox"><pre>
+	...
+'PAGE_OF'	=&gt;	'Page %1$s of %2$s',
+		/* Explicit ordering of the replacements,
+		even if they are the same order as English */
+	...
+	</pre></div>
+
+	<p>Why bother at all? Because some languages, the string transliterated back to English might read something like:</p>
+
+	<div class="codebox"><pre>
+	...
+'PAGE_OF'	=&gt;	'Total of %2$s pages, currently on page %1$s',
+		/* Explicit ordering of the replacements,
+		reversed compared to English as the total comes first */
+	...
+	</pre></div>
+
+	<a name="writingstyle"></a><h3>6.iii. Writing Style</h3>
+
+	<h4>Miscellaneous tips &amp; hints:</h4>
+
+	<p>As the language files are PHP files, where the various strings for phpBB are stored within an array which in turn are used for display within an HTML page, rules of syntax for both must be considered. Potentially problematic characters are: <code>'</code> (straight quote/apostrophe), <code>&quot;</code> (straight double quote), <code>&lt;</code> (less-than sign), <code>&gt;</code> (greater-than sign) and <code>&amp;</code> (ampersand).</p>
+
+	<p class="bad">// Bad - The un-escapsed straight-quote/apostrophe will throw a PHP parse error</p>
+
+	<div class="codebox"><pre>
+	...
+'CONV_ERROR_NO_AVATAR_PATH'
+	=&gt;	'Note to developer: you must specify $convertor['avatar_path'] to use %s.',
+	...
+	</pre></div>
+
+	<p class="good">// Good - Literal straight quotes should be escaped with a backslash, ie: \</p>
+
+	<div class="codebox"><pre>
+	...
+'CONV_ERROR_NO_AVATAR_PATH'
+	=&gt;	'Note to developer: you must specify $convertor[\'avatar_path\'] to use %s.',
+	...
+	</pre></div>
+
+	<p>However, because phpBB3 now uses UTF-8 as its sole encoding, we can actually use this to our advantage and not have to remember to escape a straight quote when we don't have to:</p>
+
+	<p class="bad">// Bad - The un-escapsed straight-quote/apostrophe will throw a PHP parse error</p>
+
+	<div class="codebox"><pre>
+	...
+'USE_PERMISSIONS'	=&gt;	'Test out user's permissions',
+	...
+	</pre></div>
+
+	<p class="good">// Okay - However, non-programmers wouldn't type "user\'s" automatically</p>
+
+	<div class="codebox"><pre>
+	...
+'USE_PERMISSIONS'	=&gt;	'Test out user\'s permissions',
+	...
+	</pre></div>
+
+	<p class="good">// Best - Use the Unicode Right-Single-Quotation-Mark character</p>
+
+	<div class="codebox"><pre>
+	...
+'USE_PERMISSIONS'	=&gt;	'Test out user&rsquo;s permissions',
+	...
+	</pre></div>
+
+	<p>The <code>&quot;</code> (straight double quote), <code>&lt;</code> (less-than sign) and <code>&gt;</code> (greater-than sign) characters can all be used as displayed glyphs or as part of HTML markup, for example:</p>
+
+	<p class="bad">// Bad - Invalid HTML, as segments not part of elements are not entitised</p>
+
+	<div class="codebox"><pre>
+	...
+'FOO_BAR'	=&gt;	'PHP version &lt; 4.3.3.&lt;br /&gt;
+	Visit &quot;Downloads&quot; at &lt;a href=&quot;http://www.php.net/&quot;&gt;www.php.net&lt;/a&gt;.',
+	...
+	</pre></div>
+
+	<p class="good">// Okay - No more invalid HTML, but &quot;&amp;quot;&quot; is rather clumsy</p>
+
+	<div class="codebox"><pre>
+	...
+'FOO_BAR'	=&gt;	'PHP version &amp;lt; 4.3.3.&lt;br /&gt;
+	Visit &amp;quot;Downloads&amp;quot; at &lt;a href=&quot;http://www.php.net/&quot;&gt;www.php.net&lt;/a&gt;.',
+	...
+	</pre></div>
+
+	<p class="good">// Best - No more invalid HTML, and usage of correct typographical quotation marks</p>
+
+	<div class="codebox"><pre>
+	...
+'FOO_BAR'	=&gt;	'PHP version &amp;lt; 4.3.3.&lt;br /&gt;
+	Visit &ldquo;Downloads&rdquo; at &lt;a href=&quot;http://www.php.net/&quot;&gt;www.php.net&lt;/a&gt;.',
+	...
+	</pre></div>
+
+	<p>Lastly, the <code>&amp;</code> (ampersand) must always be entitised regardless of where it is used:</p>
+
+	<p class="bad">// Bad - Invalid HTML, none of the ampersands are entitised</p>
+
+	<div class="codebox"><pre>
+	...
+'FOO_BAR'	=&gt;	'&lt;a href=&quot;http://somedomain.tld/?foo=1&amp;bar=2&quot;&gt;Foo &amp; Bar&lt;/a&gt;.',
+	...
+	</pre></div>
+
+	<p class="good">// Good - Valid HTML, amperands are correctly entitised in all cases</p>
+
+	<div class="codebox"><pre>
+	...
+'FOO_BAR'	=&gt;	'&lt;a href=&quot;http://somedomain.tld/?foo=1&amp;amp;bar=2&quot;&gt;Foo &amp;amp; Bar&lt;/a&gt;.',
+	...
+	</pre></div>
+
+	<p>As for how these charcters are entered depends very much on choice of Operating System, current language locale/keyboard configuration and native abilities of the text editor used to edit phpBB language files. Please see <a href="http://en.wikipedia.org/wiki/Unicode#Input_methods">http://en.wikipedia.org/wiki/Unicode#Input_methods</a> for more information.</p>
+
+	<h4>Spelling, punctuation, grammar, et cetera:</h4>
+
+	<p>The default language pack bundled with phpBB is <strong>British English</strong> using <a href="http://www.cambridge.org/">Cambridge University Press</a> spelling and is assigned the language code <code>en</code>. The style and tone of writing tends towards formal and translations <strong>should</strong> emulate this style, at least for the variant using the most compact language code. Less formal translations or those with colloquialisms <strong>must</strong> be denoted as such via either an <code>extension</code> or <code>privateuse</code> tag within its language code.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="changes"></a><h2>7. Guidelines Changelog</h2>
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+<h3>Revision 1.31</h3>
+
+<ul>
+	<li>Added add_form_key and check_form_key. </li>
+</ul>
+
+<h3>Revision 1.24</h3>
+
+<ul>
+	<li>Added <a href="#translation">5. Character Sets and Encodings</a> section to explain the recommended treatment of strings in phpBB.</li>
+</ul>
+
+<h3>Revision 1.16</h3>
+
+<ul>
+	<li>Added <a href="#translation">6. Translation (<abbr title="Internationalisation">i18n</abbr>/<abbr title="Localisation">L10n</abbr>) Guidelines</a> section to explain expected format and authoring considerations for language packs that are to be created for phpBB.</li>
+</ul>
+
+<h3>Revision 1.11-1.15</h3>
+
+<ul>
+	<li>Various document formatting, spelling, punctuation, grammar bugs.</li>
+</ul>
+
+<h3>Revision 1.9-1.10</h3>
+
+<ul>
+	<li>Added sql_query_limit to <a href="#sql">2.iii. SQL/SQL Layout</a>.</li>
+</ul>
+
+<h3>Revision 1.8</h3>
+
+<ul>
+	<li>Some adjustements to wordings</li>
+	<li>Updated paragraph <a href="#locations">1.iii. File Locations</a> to reflect recent changes</li>
+	<li>Extended paragraph <a href="#codelayout">2.ii. Code Layout</a>.</li>
+	<li>Added sql_in_set and sql_build_query explanation to <a href="#sql">2.iii. SQL/SQL Layout</a>.</li>
+	<li>Updated paragraph <a href="#styling">3. Styling</a>.</li>
+	<li>Updated paragraph <a href="#templating">4. Templating</a> to explain loop checking, loop breaking and other changes we recently made.</li>
+</ul>
+
+<h3>Revision 1.5</h3>
+
+<ul>
+	<li>Changed General function usage paragraph in <a href="#general">2.v. General Guidelines</a></li>
+</ul>
+
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+	<hr />
+
+<a name="disclaimer"></a><h2>8. Copyright and disclaimer</h2>
+
+	<div class="paragraph">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<div class="content">
+
+	<p>This application is opensource software released under the <a href="http://opensource.org/licenses/gpl-license.php">GPL</a>. Please see source code and the docs directory for more details. This package and its contents are Copyright (c) 2000, 2002, 2005, 2007 <a href="http://www.phpbb.com/">phpBB Group</a>, All Rights Reserved.</p>
+
+		</div>
+
+		<div class="back2top"><a href="#wrap" class="top">Back to Top</a></div>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+
+<!-- END DOCUMENT -->
+
+	<div id="page-footer">
+		<div class="version"> $Id: coding-guidelines.html 8479 2008-03-29 00:22:48Z naderman $ </div>
+	</div>
+</div></div>
+
+<div>
+	<a id="bottom" name="bottom" accesskey="z"></a>
+</div>
+
+</body>
+</html>

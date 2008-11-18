@@ -1,0 +1,40 @@
+<!-- INCLUDE simple_header.html -->
+
+<script type="text/javascript">
+// <![CDATA[
+	/**
+	* Close previously opened popup
+	*/
+	function close_popup()
+	{
+		if (opener != null)
+		{
+			if (opener.close_waitscreen != null)
+			{
+				if (opener.close_waitscreen == 1)
+				{
+					opener.close_waitscreen = 0;
+					self.close();
+					return 0;
+				}
+			}
+		}
+		setTimeout("close_popup()", 1000);
+		return 0;
+	}
+// ]]>
+</script>
+
+<div class="successbox">
+	<h3>{L_PROGRESS}</h3>
+	<img src="images/progress_bar.gif" alt="{L_PROGRESS}" />
+	<p>{L_PROGRESS_EXPLAIN}</p>
+</div>
+
+<script type="text/javascript">
+// <![CDATA[
+	close_popup();
+// ]]>
+</script>
+
+<!-- INCLUDE simple_footer.html -->

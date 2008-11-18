@@ -1,0 +1,174 @@
+<!-- IF S_IN_SEARCH_POPUP -->
+	<!-- INCLUDE simple_header.html -->
+	<!-- INCLUDE memberlist_search.html -->
+	<form method="post" id="results" action="{S_MODE_ACTION}" onsubmit="insert_marked(this.user); return false">
+
+<!-- ELSEIF S_SEARCH_USER -->
+	<!-- INCLUDE overall_header.html -->	
+	<!-- INCLUDE memberlist_search.html -->
+	<form method="post" action="{S_MODE_ACTION}">
+
+<!-- ELSE -->
+	<!-- INCLUDE overall_header.html -->
+	<form method="post" action="{S_MODE_ACTION}">
+
+<!-- ENDIF -->
+
+	<!-- IF S_SHOW_GROUP -->
+
+		<h2<!-- IF GROUP_COLOR --> style="color:#{GROUP_COLOR};"<!-- ENDIF -->>{GROUP_NAME}</h2>
+		<p>{GROUP_DESC} {GROUP_TYPE}</p>
+		<p>
+			<!-- IF AVATAR_IMG -->{AVATAR_IMG}<!-- ENDIF -->
+			<!-- IF RANK_IMG -->{RANK_IMG}<!-- ENDIF -->
+			<!-- IF GROUP_RANK -->{GROUP_RANK}<!-- ENDIF -->
+		</p>
+
+	<!-- ELSE -->
+		<h2 class="solo">{PAGE_TITLE}<!-- IF SEARCH_WORDS -->: <a href="{U_SEARCH_WORDS}">{SEARCH_WORDS}</a><!-- ENDIF --></h2>
+
+		<div class="panel">
+			<div class="inner"><span class="corners-top"><span></span></span>
+
+			<ul class="linklist">
+				<li>
+
+				<!-- IF U_FIND_MEMBER and not S_SEARCH_USER --><a href="{U_FIND_MEMBER}">{L_FIND_USERNAME}</a> &bull; <!-- ELSEIF S_SEARCH_USER and U_HIDE_FIND_MEMBER and not S_IN_SEARCH_POPUP --><a href="{U_HIDE_FIND_MEMBER}">{L_HIDE_MEMBER_SEARCH}</a> &bull; <!-- ENDIF -->
+				<strong style="font-size: 0.95em;"><a href="{S_MODE_ACTION}&amp;first_char=">{L_ALL}</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=a#memberlist">A</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=b#memberlist">B</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=c#memberlist">C</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=d#memberlist">D</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=e#memberlist">E</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=f#memberlist">F</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=g#memberlist">G</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=h#memberlist">H</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=i#memberlist">I</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=j#memberlist">J</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=k#memberlist">K</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=l#memberlist">L</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=m#memberlist">M</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=n#memberlist">N</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=o#memberlist">O</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=p#memberlist">P</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=q#memberlist">Q</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=r#memberlist">R</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=s#memberlist">S</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=t#memberlist">T</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=u#memberlist">U</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=v#memberlist">V</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=w#memberlist">W</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=x#memberlist">X</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=y#memberlist">Y</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=z#memberlist">Z</a>&nbsp; 
+				<a href="{S_MODE_ACTION}&amp;first_char=other">#</a></strong>
+				</li>
+				<li class="rightside pagination">
+					{TOTAL_USERS} &bull; 
+					<!-- IF PAGINATION --><a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE -->{PAGE_NUMBER}<!-- ENDIF -->
+				</li>
+			</ul>
+
+			<span class="corners-bottom"><span></span></span></div>
+		</div>
+	<!-- ENDIF -->
+
+	<div class="forumbg forumbg-table">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<table class="table1" cellspacing="1" id="memberlist">
+		<thead>
+		<tr>
+			<th class="name"><span class="rank-img"><a href="{U_SORT_RANK}">{L_RANK}</a></span><a href="{U_SORT_USERNAME}"><!-- IF S_SHOW_GROUP -->{L_GROUP_LEADER}<!-- ELSE -->{L_USERNAME}<!-- ENDIF --></a></th>
+			<th class="posts"><a href="{U_SORT_POSTS}#memberlist">{L_POSTS}</a></th>
+			<th class="info"><a href="{U_SORT_WEBSITE}#memberlist">{L_WEBSITE}</a>{L_COMMA_SEPARATOR}<a href="{U_SORT_LOCATION}">{L_LOCATION}</a></th>
+			<th class="joined"><a href="{U_SORT_JOINED}#memberlist">{L_JOINED}</a></th>
+			<!-- IF U_SORT_ACTIVE --><th class="active"><a href="{U_SORT_ACTIVE}#memberlist">{L_LAST_ACTIVE}</a></th><!-- ENDIF -->
+		</tr>
+		</thead>
+		<tbody>
+		<!-- BEGIN memberrow -->
+			<!-- IF S_SHOW_GROUP -->
+				<!-- IF not memberrow.S_GROUP_LEADER and not $S_MEMBER_HEADER -->
+				<!-- IF memberrow.S_FIRST_ROW -->
+				<tr class="bg1">
+					<td colspan="<!-- IF U_SORT_ACTIVE -->5<!-- ELSE -->4<!-- ENDIF -->">&nbsp;</td>
+				</tr>
+				<!-- ENDIF -->
+		</tbody>
+		</table>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<div class="forumbg">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<table class="table1" cellspacing="1">
+	<thead>
+	<tr>
+		<th class="name">{L_GROUP_MEMBERS}</th>
+		<th class="posts">&nbsp;</th>
+		<th class="info">&nbsp;</th>
+		<th class="joined">&nbsp;</th>
+		<!-- IF U_SORT_ACTIVE --><th class="active">&nbsp;</th><!-- ENDIF -->
+	</tr>
+	</thead>
+	<tbody>
+					<!-- DEFINE $S_MEMBER_HEADER = 1 -->
+				<!-- ENDIF -->
+			<!-- ENDIF -->
+
+	<tr class="<!-- IF memberrow.S_ROW_COUNT is even -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
+		<td><!-- IF memberrow.RANK_IMG --><span class="rank-img">{memberrow.RANK_IMG}</span><!-- ELSE --><span class="rank-img">{memberrow.RANK_TITLE}</span><!-- ENDIF --><!-- IF S_IN_SEARCH_POPUP and not S_SELECT_SINGLE --><input type="checkbox" name="user" value="{memberrow.USERNAME}" /> <!-- ENDIF -->{memberrow.USERNAME_FULL}<!-- IF S_SELECT_SINGLE --><br />[&nbsp;<a href="#" onclick="insert_single('{memberrow.A_USERNAME}'); return false;">{L_SELECT}</a>&nbsp;]<!-- ENDIF --></td>
+		<td class="posts"><!-- IF memberrow.POSTS --><a href="{memberrow.U_SEARCH_USER}" title="{L_SEARCH_USER_POSTS}">{memberrow.POSTS}</a><!-- ELSE -->{memberrow.POSTS}<!-- ENDIF --></td>
+		<td class="info"><!-- IF memberrow.U_WWW or memberrow.LOCATION --><!-- IF memberrow.U_WWW --><div><a href="{memberrow.U_WWW}" title="{L_VISIT_WEBSITE}: {memberrow.U_WWW}">{memberrow.U_WWW}</a></div><!-- ENDIF --><!-- IF memberrow.LOCATION --><div>{memberrow.LOCATION}</div><!-- ENDIF --><!-- ELSE -->&nbsp;<!-- ENDIF --></td>
+		<td>{memberrow.JOINED}</td>
+		<!-- IF S_VIEWONLINE --><td>{memberrow.VISITED}&nbsp;</td><!-- ENDIF -->
+	</tr>
+		<!-- BEGINELSE -->
+	<tr class="bg1">
+		<td colspan="<!-- IF S_VIEWONLINE -->5<!-- ELSE -->4<!-- ENDIF -->">{L_NO_MEMBERS}</td>
+	</tr>
+		<!-- END memberrow -->
+	</tbody>
+	</table>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<!-- IF S_IN_SEARCH_POPUP and not S_SELECT_SINGLE -->
+<fieldset class="display-actions">
+	<input type="submit" name="submit" value="{L_SELECT_MARKED}" class="button2" />
+	<div><a href="#" onclick="marklist('results', 'user', true); return false;">{L_MARK_ALL}</a> &bull; <a href="#" onclick="marklist('results', 'user', false); return false;">{L_UNMARK_ALL}</a></div>
+</fieldset>
+<!-- ENDIF -->
+
+<!-- IF S_IN_SEARCH_POPUP -->
+</form>
+<form method="post" id="sort-results" action="{S_MODE_ACTION}">
+<!-- ENDIF -->
+
+<!-- IF S_IN_SEARCH_POPUP and not S_SEARCH_USER -->
+<fieldset class="display-options">
+	<!-- IF PREVIOUS_PAGE --><a href="{PREVIOUS_PAGE}" class="left-box {S_CONTENT_FLOW_BEGIN}">{L_PREVIOUS}</a><!-- ENDIF -->
+	<!-- IF NEXT_PAGE --><a href="{NEXT_PAGE}" class="right-box {S_CONTENT_FLOW_END}">{L_NEXT}</a><!-- ENDIF -->
+	<label for="sk">{L_SELECT_SORT_METHOD}: <select name="sk" id="sk">{S_MODE_SELECT}</select></label> 
+	<label for="sd">{L_ORDER} <select name="sd" id="sd">{S_ORDER_SELECT}</select> <input type="submit" name="sort" value="{L_SUBMIT}" class="button2" /></label>
+</fieldset>
+<!-- ENDIF -->
+
+</form>
+
+<hr />
+
+<ul class="linklist">
+	<li class="rightside pagination">{TOTAL_USERS} &bull; <!-- IF PAGINATION --><a href="#" onclick="jumpto(); return false;" title="{L_JUMP_TO_PAGE}">{PAGE_NUMBER}</a> &bull; <span>{PAGINATION}</span><!-- ELSE -->{PAGE_NUMBER}<!-- ENDIF --></li>
+</ul>
+
+<!-- IF S_IN_SEARCH_POPUP -->
+	<!-- INCLUDE simple_footer.html -->
+<!-- ELSE -->
+	<!-- INCLUDE jumpbox.html -->
+	<!-- INCLUDE overall_footer.html -->
+<!-- ENDIF -->

@@ -1,0 +1,47 @@
+<div class="post bg2" id="preview">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+<!-- IF S_HAS_POLL_OPTIONS -->
+	<div class="content">
+		<h2>{L_PREVIEW}: {POLL_QUESTION}</h2>
+		<p class="author"><!-- IF L_POLL_LENGTH -->{L_POLL_LENGTH}<br /><!-- ENDIF -->{L_MAX_VOTES}</p>
+
+		<fieldset class="polls">
+		<!-- BEGIN poll_option -->
+			<dl>
+				<dt><label for="vote_{poll_option.POLL_OPTION_ID}">{poll_option.POLL_OPTION_CAPTION}</label></dt>
+				<dd style="width: auto;"><!-- IF S_IS_MULTI_CHOICE --><input type="checkbox" name="vote_id[]" id="vote_{poll_option.POLL_OPTION_ID}" value="{poll_option.POLL_OPTION_ID}"<!-- IF poll_option.POLL_OPTION_VOTED --> checked="checked"<!-- ENDIF --> /><!-- ELSE --><input type="radio" name="vote_id[]" id="vote_{poll_option.POLL_OPTION_ID}" value="{poll_option.POLL_OPTION_ID}"<!-- IF poll_option.POLL_OPTION_VOTED --> checked="checked"<!-- ENDIF --> /><!-- ENDIF --></dd>
+			</dl>
+		<!-- END poll_option -->
+		</fieldset>
+	</div>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<div class="post <!-- IF S_PRIVMSGS --> pm<!-- ELSE --> bg2<!-- ENDIF -->">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+<!-- ENDIF -->
+
+	<div class="postbody">
+		<h3>{L_PREVIEW}: {PREVIEW_SUBJECT}</h3>
+		
+		<div class="content">{PREVIEW_MESSAGE}</div>
+		
+		<!-- IF .attachment -->
+		<dl class="attachbox">
+			<dt>{L_ATTACHMENTS}</dt>
+			<!-- BEGIN attachment -->
+			<dd>{attachment.DISPLAY_ATTACHMENT}</dd>
+			<!-- END attachment -->
+		</dl>
+		<!-- ENDIF -->
+		
+		<!-- IF PREVIEW_SIGNATURE --><div class="signature">{PREVIEW_SIGNATURE}</div><!-- ENDIF -->
+	</div>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<hr />

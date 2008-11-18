@@ -1,0 +1,94 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="ucp" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+		<fieldset>
+		<!-- IF ERROR --><p class="error">{ERROR}</p><!-- ENDIF -->
+		<dl>
+			<dt><label for="images1">{L_VIEW_IMAGES}:</label></dt>
+			<dd>
+				<label for="images1"><input type="radio" name="images" id="images1" value="1"<!-- IF S_IMAGES --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="images0"><input type="radio" name="images" id="images0" value="0"<!-- IF not S_IMAGES --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="flash0">{L_VIEW_FLASH}:</label></dt>
+			<dd>
+				<label for="flash1"><input type="radio" name="flash" id="flash1" value="1"<!-- IF S_FLASH --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="flash0"><input type="radio" name="flash" id="flash0" value="0"<!-- IF not S_FLASH --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="smilies1">{L_VIEW_SMILIES}:</label></dt>
+			<dd>
+				<label for="smilies1"><input type="radio" name="smilies" id="smilies1" value="1"<!-- IF S_SMILIES --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="smilies0"><input type="radio" name="smilies" id="smilies0" value="0"<!-- IF not S_SMILIES --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="sigs1">{L_VIEW_SIGS}:</label></dt>
+			<dd>
+				<label for="sigs1"><input type="radio" name="sigs" id="sigs1" value="1"<!-- IF S_SIGS --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="sigs0"><input type="radio" name="sigs" id="sigs0" value="0"<!-- IF not S_SIGS --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<dl>
+			<dt><label for="avatars1">{L_VIEW_AVATARS}:</label></dt>
+			<dd>
+				<label for="avatars1"><input type="radio" name="avatars" id="avatars1" value="1"<!-- IF S_AVATARS --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="avatars0"><input type="radio" name="avatars" id="avatars0" value="0"<!-- IF not S_AVATARS --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+		<!-- IF S_CHANGE_CENSORS -->
+			<dl>
+				<dt><label for="wordcensor1">{L_DISABLE_CENSORS}:</label></dt>
+				<dd>
+					<label for="wordcensor1"><input type="radio" name="wordcensor" id="wordcensor1" value="1"<!-- IF S_DISABLE_CENSORS --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+					<label for="wordcensor0"><input type="radio" name="wordcensor" id="wordcensor0" value="0"<!-- IF not S_DISABLE_CENSORS --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+				</dd>
+			</dl>
+		<!-- ENDIF -->
+		<hr />
+		<dl>
+			<dt><label>{L_VIEW_TOPICS_DAYS}:</label></dt>
+			<dd>{S_TOPIC_SORT_DAYS}</dd>
+		</dl>
+		<dl>
+			<dt><label>{L_VIEW_TOPICS_KEY}:</label></dt>
+			<dd>{S_TOPIC_SORT_KEY}</dd>
+		</dl>
+		<dl>
+			<dt><label>{L_VIEW_TOPICS_DIR}:</label></dt>
+			<dd>{S_TOPIC_SORT_DIR}</dd>
+		</dl>
+		<hr />
+		<dl>
+			<dt><label>{L_VIEW_POSTS_DAYS}:</label></dt>
+			<dd>{S_POST_SORT_DAYS}</dd>
+		</dl>
+		<dl>
+			<dt><label>{L_VIEW_POSTS_KEY}:</label></dt>
+			<dd>{S_POST_SORT_KEY}</dd>
+		</dl>
+		<dl>
+			<dt><label>{L_VIEW_POSTS_DIR}:</label></dt>
+			<dd>{S_POST_SORT_DIR}</dd>
+		</dl>
+		</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<fieldset class="submit-buttons">
+	{S_HIDDEN_FIELDS}<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp; 
+	<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<!-- INCLUDE ucp_footer.html -->

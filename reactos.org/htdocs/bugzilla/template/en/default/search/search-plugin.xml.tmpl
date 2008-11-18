@@ -1,0 +1,25 @@
+[%# 1.0@bugzilla.org #%]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Frédéric Buclin <LpSolit@gmail.com>
+  #
+  #%]
+[% PROCESS global/variables.none.tmpl %]
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+<ShortName>[% terms.Bugzilla %]</ShortName>
+<Description>[% terms.Bugzilla %] Quick Search</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABGdBTUEAAK%2FINwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAALBSURBVHjaYnxckcEAA3%2F%2B%2FT%2F17LUcH%2Fevf%2F8U%2BHmYGBkZMABAALEgc%2B68%2F3T227cf2tJKKhJLt59n%2FfmbnYnZV1KEhYkJrgYggBghNrz78fPIi3d8uvKBIdb%2FOaWPnzitLc97%2Bc5rFXnhnVO3%2BslLwjUABBDIhnsfPl%2Fj53VO91FX4Gfgkjxw%2Fd%2F6Q49%2FWStqyAj%2B%2B88gZqn%2B9u5rYU52iAaAAGL69%2F%2F%2F2d9%2FYiMclGT4fv76%2BZ9DbO%2FeA39%2BfJHVcvj5l%2Bnh03e%2FWThOvnwLtwEgAAAxAM7%2FBPj8%2FRYkHQYHAf3%2F%2Fv%2F%2B%2Fv8BAVNTUPX18yorLNHE2S8mB%2FT2%2Bq7a4dvu8iUSDgAAAAKICRgUv3%2F8ZGKGeIvpz6eXBvq61lZWLMwMv%2F5zMP7%2FqSAjVFyZ%2FNvZftuT10DnAAQAMQDO%2FwQIBAPz5Or6%2Ff0CBQEAAgT99ubq38z2%2BwT18%2FAM%2F%2BkNDAv6%2FQMCAA1GVVrhMze5h4kCCORpkd9%2F3n74KiHO%2B%2BffX8b%2Ff7m%2BXWP985%2Bf5R%2BPLNdfoK%2F%2F%2Ffv39%2BePj2%2FkZYR0fe0BAgikQZGX%2B9b9FzLS%2FH%2F%2B%2FGVgYGRlZWNlA7nv7z9QuDP8%2B8nw%2FRXjn68Mv4Gu%2FAwQQCCni3FxPLn7nIGZGegfNhYmNjYWZnBMASOakZER6Eumf9%2FYGT4y%2FHx%2F%2BfBFgAAC2cDGzPT99WeGvwzvv%2Fx89vrr%2F39%2FJER4pcT5Gf4z%2FP37D2jtj9%2B%2FL918fmzrKSsWNoAAgiaN%2Fz9%2Fff%2F6S4CP8%2BWbz9vWHfv54aukpAAz0Og%2Ff%2F7%2F%2Bs36668cO3ugED9QJUAAQTUArf7%2F8x87D9vRjcejhPiZhAUYcACAAGI5%2FOHH9ddvXzAxmjz%2B8P8lw4fXn5l4eRlwA4AAYmaTkBFg%2FKvJwfbkwZuXN57y%2Fv%2F34stXGR4uRmxpGwgAAgwA4%2FkfrfCWvLQAAAAASUVORK5CYII%3D</Image>
+<Url type="text/html" method="GET" template="[% Param('urlbase') %]buglist.cgi?quicksearch={searchTerms}"/>
+</OpenSearchDescription>

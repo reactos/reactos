@@ -1,0 +1,157 @@
+<!-- INCLUDE simple_header.html -->
+
+<!-- MSNM info from http://www.cdolive.net/ - doesn't seem to work with MSN Messenger -->
+<h2 class="solo">{L_SEND_IM}</h2>
+
+<form method="post" action="{S_IM_ACTION}">
+
+<div class="panel bg2">
+	<div class="inner"><span class="corners-top"><span></span></span>
+	
+	<p>{L_SEND_IM_EXPLAIN}</p>
+
+	<fieldset>
+	<dl class="fields2">
+		<dt><label>{L_IM_RECIPIENT}:</label></dt>
+		<dd><strong>{USERNAME}</strong><!-- IF S_SEND_ICQ or S_SEND_AIM or S_SEND_MSNM --> [ {IM_CONTACT} ]<!-- ENDIF --><!-- IF PRESENCE_IMG --> {PRESENCE_IMG}<!-- ENDIF --></dd>
+	</dl>
+
+	<!-- IF S_SEND_ICQ -->
+		<dl class="fields2">
+			<dt><label for="from">{L_IM_NAME}:</label></dt>
+			<dd><input class="inputbox autowidth" type="text" name="from" id="from" size="20" /></dd>
+		</dl>
+		<dl class="fields2">
+			<dt><label for="body">{L_IM_MESSAGE}:</label></dt>
+			<dd><textarea class="inputbox autowidth" name="body" id="body" rows="5" cols="45"></textarea></dd>
+		</dl>
+		<dl class="fields2">
+			<dt>&nbsp;</dt>
+			<dd><input class="button1" name="submit" type="submit" value="{L_IM_SEND}" /></dd>
+		</dl>
+		<input type="hidden" name="fromemail" value="{EMAIL}" />
+		<input type="hidden" name="subject" value="{SITENAME}" />
+		<input type="hidden" name="to" value="{IM_CONTACT}" />
+	<!-- ENDIF -->
+
+	<!-- IF S_SEND_AIM -->
+		<dl class="fields2">
+			<dt>&nbsp;</dt>
+			<dd><a href="{U_AIM_CONTACT}">{L_IM_ADD_CONTACT}</a></dd>
+			<dd><a href="{U_AIM_MESSAGE}">{L_IM_SEND_MESSAGE}</a></dd>
+			<dd><a href="http://www.aim.com/download.adp">{L_IM_DOWNLOAD_APP}</a> | <a href="http://aimexpress.oscar.aol.com/aimexpress/launch.adp?Brand=AIM">{L_IM_AIM_EXPRESS}</a></dd>
+		</dl>
+	<!-- ENDIF -->
+
+	<!-- IF S_SEND_MSNM -->
+		<dl class="fields2">
+			<dt>&nbsp;</dt>
+			<dd><object classid="clsid:B69003B3-C55E-4B48-836C-BC5946FC3B28" codetype="application/x-oleobject" id="objMessengerApp" width="0" height="0"></object></dd>
+			<dd><a href="#" onclick="add_contact('{A_IM_CONTACT}'); return false;">{L_IM_ADD_CONTACT}</a></dd>
+			<dd><a href="#" onclick="im_contact('{A_IM_CONTACT}'); return false;">{L_IM_SEND_MESSAGE}</a></dd>
+		</dl>
+	<!-- ENDIF -->
+
+	<!-- IF S_SEND_JABBER -->
+		<dl class="fields2">
+			<dt><label for="message">{L_IM_MESSAGE}:</label></dt>
+			<dd><textarea class="inputbox autowidth" name="message" id="message" rows="5" cols="45"></textarea></dd>
+		</dl>
+		<dl class="fields2">
+			<dt>&nbsp;</dt>
+			<dd><input class="button1" name="submit" type="submit" value="{L_IM_SEND}" /></dd>
+		</dl>
+	<!-- ENDIF -->
+
+	<!-- IF S_NO_SEND_JABBER -->
+		<dl class="fields2">
+			<dt>&nbsp;</dt>
+			<dd>{L_IM_NO_JABBER}</dd>
+		</dl>
+	<!-- ENDIF -->
+
+	<!-- IF S_SENT_JABBER -->
+		<dl class="fields2">
+			<dt>&nbsp;</dt>
+			<dd>{L_IM_SENT_JABBER}</dd>
+		</dl>
+	<!-- ENDIF -->
+	{S_FORM_TOKEN}
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+<a  href="#" onclick="window.close(); return false;">{L_CLOSE_WINDOW}</a>
+</form>
+
+<script type="text/javascript">
+// <![CDATA[
+
+	/** The following will not work with Windows Vista **/
+
+	var app = document.getElementById('objMessengerApp');
+
+	/**
+	* Check whether the browser supports this and whether MSNM is connected
+	*/
+	function msn_supported()
+	{
+		// Does the browser support the MSNM object?
+		if (app.MyStatus)
+		{
+			// Is MSNM connected?
+			if (app.MyStatus == 1)
+			{
+				alert('{LA_IM_MSNM_CONNECT}');
+				return false;
+			}
+		}
+		else
+		{
+			alert('{LA_IM_MSNM_BROWSER}');
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	* Add to your contact list
+	*/
+	function add_contact(address) 
+	{
+		if (msn_supported()) 
+		{
+			// Could return an error while MSNM is connecting, don't want that
+			try
+			{
+				app.AddContact(0, address);
+			}
+			catch (e)
+			{
+				return;
+			}
+	}
+}
+
+/**
+* Write IM to contact
+*/
+function im_contact(address)
+{
+	if (msn_supported())
+	{
+		// Could return an error while MSNM is connecting, don't want that
+		try
+		{
+			app.InstantMessage(address);
+		}
+		catch (e)
+		{
+			return;
+		}
+	}
+}
+// ]]>
+</script>
+
+<!-- INCLUDE simple_footer.html -->

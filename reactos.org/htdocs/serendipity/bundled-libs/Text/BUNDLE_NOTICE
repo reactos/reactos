@@ -1,0 +1,7 @@
+- Replace: 
+Wiki.php:  
+require_once 'Text/Wiki/Parse.php';  
+require_once dirname(__FILE__) . '/Text/Wiki/Parse.php';  
+
+require_once 'Text/Wiki/Render.php';  
+require_once dirname(__FILE__) . '/Wiki/Render.php';

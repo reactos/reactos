@@ -1,0 +1,57 @@
+/* The contents of this file are subject to the Mozilla Public
+  * License Version 1.1 (the "License"); you may not use this file
+  * except in compliance with the License. You may obtain a copy of
+  * the License at http://www.mozilla.org/MPL/
+  *
+  * Software distributed under the License is distributed on an "AS
+  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing
+  * rights and limitations under the License.
+  *
+  * The Original Code is the Bugzilla Bug Tracking System.
+  *
+  * Contributor(s): Marc Schumann <wurblzap@gmail.com>
+  */
+
+table.main {
+    border-spacing: 1em;
+}
+table.main tr {
+    vertical-align: top;
+    border-top: solid thin black;
+}
+table.main th {
+    text-align: right;
+    white-space: nowrap;
+}
+table.main th,
+table.main td {
+    padding: 0;
+}
+table.main ul {
+    list-style-type: none;
+    padding-left: 0
+}
+
+table.groups {
+    border-spacing: 1px;
+}
+table.groups tr.indirect {
+    background-color: #cccccc;
+}
+table.groups th {
+    text-align: left;
+    padding: 0 0 0 1ex;
+}
+table.groups td {
+    padding: 2px;
+}
+table.groups td.checkbox {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.missing {
+    color: red;
+    border-color: inherit;
+}

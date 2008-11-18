@@ -1,0 +1,4 @@
+ALTER TABLE {PREFIX}entries ADD COLUMN allow_comments BOOLEAN;
+UPDATE {PREFIX}entries SET allow_comments=TRUE;
+ALTER TABLE {PREFIX}entries ALTER COLUMN allow_comments SET NOT NULL;
+ALTER TABLE {PREFIX}entries ALTER COLUMN allow_comments SET DEFAULT TRUE;

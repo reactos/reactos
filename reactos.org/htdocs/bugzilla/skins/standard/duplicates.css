@@ -1,0 +1,34 @@
+/* The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Bugzilla Bug Tracking System.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation. Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): Myk Melez <myk@mozilla.org>
+ */
+
+tree#results-tree {
+  margin-right: 0px;
+  border-right-width: 0px;
+  margin-left: 0px;
+  border-left-width: 0px;
+}
+
+treechildren:-moz-tree-cell-text(resolution-FIXED) { 
+  text-decoration: line-through;
+}
+
+treecol#id_column { width: 6em; }
+treecol#duplicate_count_column { width: 5em; }
+treecol#duplicate_delta_column { width: 5em; }

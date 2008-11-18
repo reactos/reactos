@@ -1,0 +1,212 @@
+<!-- INCLUDE overall_header.html -->
+
+<a name="maincontent"></a>
+
+<!-- IF S_EDIT_MODULE -->
+
+	<script type="text/javascript">
+	// <![CDATA[
+		function display_options(value)
+		{
+			if (value == 'category')
+			{
+				dE('modoptions', -1);
+			}
+			else
+			{
+				dE('modoptions', 1);
+			}
+		}
+
+		function display_modes(value)
+		{
+			// Find the old select tag
+			var item = document.getElementById('module_mode');
+
+			// Create the new select tag
+			var new_node = document.createElement('select');
+			new_node.setAttribute('id', 'module_mode');
+			new_node.setAttribute('name', 'module_mode');
+
+			// Substitute it for the old one
+			item.parentNode.replaceChild(new_node, item);
+
+			// Reset the variable
+			item = document.getElementById('module_mode');
+
+			var j = 0;
+<!-- BEGIN m_names -->
+		
+			if (value == '{m_names.A_NAME}')
+			{
+	<!-- BEGIN modes -->
+				item.options[j] = new Option('{m_names.modes.A_VALUE}');
+				item.options[j].value = '{m_names.modes.A_OPTION}';
+				j++;
+	<!-- END modes -->
+			}
+<!-- END m_names -->
+
+			// select first item
+			item.options[0].selected = true;
+		}
+
+	// ]]>
+	</script>
+
+	<a href="{U_BACK}" style="float: {S_CONTENT_FLOW_END};">&laquo; {L_BACK}</a>
+
+	<h1>{L_TITLE} :: {MODULENAME}</h1>
+
+	<p>{L_EDIT_MODULE_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<form id="moduleedit" method="post" action="{U_EDIT_ACTION}">
+
+	<fieldset>
+		<legend>{L_GENERAL_OPTIONS}</legend>
+	<dl>
+		<dt><label for="module_langname">{L_MODULE_LANGNAME}:</label><br />
+		<span>{L_MODULE_LANGNAME_EXPLAIN}</span></dt>
+		<dd><input name="module_langname" type="text" class="text medium" id="module_langname" value="{MODULE_LANGNAME}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="module_type">{L_MODULE_TYPE}:</label></dt>
+		<dd><select name="module_type" id="module_type" onchange="display_options(this.value);"><option value="category"<!-- IF S_IS_CAT --> selected="selected"<!-- ENDIF -->>{L_CATEGORY}</option><option value="module"<!-- IF not S_IS_CAT --> selected="selected"<!-- ENDIF -->>{L_MODULE}</option></select></dd>
+	</dl>
+	<dl>
+		<dt><label for="parent_id">{L_PARENT}:</label></dt>
+		<dd><select name="module_parent_id" id="parent_id">{S_CAT_OPTIONS}</select></dd>
+	</dl>
+	<hr />
+	<dl>
+		<dt><label for="module_enabled">{L_MODULE_ENABLED}:</label></dt>
+		<dd><label><input type="radio" class="radio" name="module_enabled" id="module_enabled" value="1"<!-- IF MODULE_ENABLED --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+			<label><input type="radio" class="radio" name="module_enabled" value="0"<!-- IF not MODULE_ENABLED --> checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+	</dl>
+	<div id="modoptions"<!-- IF S_IS_CAT --> style="display: none;"<!-- ENDIF -->>
+		<dl>
+			<dt><label for="module_display">{L_MODULE_DISPLAYED}:</label><br /><span>{L_MODULE_DISPLAYED_EXPLAIN}</span></dt>
+			<dd><label><input type="radio" class="radio" name="module_display" id="module_display" value="1"<!-- IF MODULE_DISPLAY --> checked="checked"<!-- ENDIF --> /> {L_YES}</label>
+				<label><input type="radio" class="radio" name="module_display" value="0"<!-- IF not MODULE_DISPLAY --> checked="checked"<!-- ENDIF --> /> {L_NO}</label></dd>
+		</dl>
+		<dl>
+			<dt><label for="module_basename">{L_CHOOSE_MODULE}:</label><br />
+			<span>{L_CHOOSE_MODULE_EXPLAIN}</span></dt>
+			<dd><select name="module_basename" id="module_basename" onchange="display_modes(this.value);">{S_MODULE_NAMES}</select></dd>
+		</dl>
+		<dl>
+			<dt><label for="module_mode">{L_CHOOSE_MODE}:</label><br />
+			<span>{L_CHOOSE_MODE_EXPLAIN}</span></dt>
+			<dd><select name="module_mode" id="module_mode">{S_MODULE_MODES}</select></dd>
+		</dl>
+	</div>
+
+	<p class="submit-buttons">
+		<input type="hidden" name="action" value="{ACTION}" />
+		<input type="hidden" name="m" value="{MODULE_ID}" />
+		
+		<input class="button1" type="submit" id="submit" name="submit" value="{L_SUBMIT}" />&nbsp;
+		<input class="button2" type="reset" id="reset" name="reset" value="{L_RESET}" />
+	</p>
+	{S_FORM_TOKEN}
+	</fieldset>
+	</form>
+
+<!-- ELSE -->
+
+	<h1>{L_ACP_MODULE_MANAGEMENT}</h1>
+
+	<p>{L_ACP_MODULE_MANAGEMENT_EXPLAIN}</p>
+
+	<!-- IF S_ERROR -->
+		<div class="errorbox">
+			<h3>{L_WARNING}</h3>
+			<p>{ERROR_MSG}</p>
+		</div>
+	<!-- ENDIF -->
+
+	<table cellspacing="1">
+	<tbody>
+	<tr>
+		<td class="row3">{NAVIGATION}<!-- IF S_NO_MODULES --> [<a href="{U_EDIT}">{L_EDIT}</a> | <a href="{U_DELETE}">{L_DELETE}</a> | <!-- IF MODULE_ENABLED --><a href="{U_DISABLE}">{L_DISABLE}</a><!-- ELSE --><a href="{U_ENABLE}">{L_ENABLE}</a><!-- ENDIF -->]<!-- ENDIF --></td>
+	</tr>
+	</tbody>
+	</table>
+
+	<!-- IF .modules -->
+		<table cellspacing="1">
+			<col class="row1" /><col class="row1" /><col class="row2" /><col class="row2" />
+		<tbody>
+		<!-- BEGIN modules -->
+			<tr>
+				<td style="width: 5%; text-align: center;">{modules.MODULE_IMAGE}</td>
+				<td><a href="{modules.U_MODULE}">{modules.MODULE_TITLE}</a><!-- IF not modules.MODULE_DISPLAYED --> <span class="small">[{L_HIDDEN_MODULE}]</span><!-- ENDIF --></td>
+				<td style="width: 15%; white-space: nowrap; text-align: center; vertical-align: middle;">&nbsp;<!-- IF modules.MODULE_ENABLED --><a href="{modules.U_DISABLE}">{L_DISABLE}</a><!-- ELSE --><a href="{modules.U_ENABLE}">{L_ENABLE}</a><!-- ENDIF -->&nbsp;</td>
+				<td style="width:90px; white-space: nowrap; text-align: right; vertical-align: middle;">
+					<!-- IF modules.S_FIRST_ROW && not modules.S_LAST_ROW -->
+						{ICON_MOVE_UP_DISABLED}
+						<a href="{modules.U_MOVE_DOWN}">{ICON_MOVE_DOWN}</a>
+					<!-- ELSEIF not modules.S_FIRST_ROW && not modules.S_LAST_ROW-->
+						<a href="{modules.U_MOVE_UP}">{ICON_MOVE_UP}</a> 
+						<a href="{modules.U_MOVE_DOWN}">{ICON_MOVE_DOWN}</a> 
+					<!-- ELSEIF modules.S_LAST_ROW && not modules.S_FIRST_ROW -->
+						<a href="{modules.U_MOVE_UP}">{ICON_MOVE_UP}</a>	
+						{ICON_MOVE_DOWN_DISABLED}
+					<!-- ELSE -->
+						{ICON_MOVE_UP_DISABLED}
+						{ICON_MOVE_DOWN_DISABLED}
+					<!-- ENDIF -->
+					<a href="{modules.U_EDIT}">{ICON_EDIT}</a> 
+					<a href="{modules.U_DELETE}">{ICON_DELETE}</a>
+				</td>
+			</tr>
+		<!-- END modules -->
+		</tbody>
+		</table>
+	<!-- ENDIF -->
+
+	<div class="clearfix">&nbsp;</div>
+
+	<form id="quick" method="post" action="{U_ACTION}">
+
+	<fieldset class="quick" style="float: {S_CONTENT_FLOW_END};">
+		<input type="hidden" name="action" value="quickadd" />
+
+		<select name="quick_install">{S_INSTALL_OPTIONS}</select>
+		<input class="button2" name="quickadd" type="submit" value="{L_ADD_MODULE}" />
+	</fieldset>
+	
+	</form>
+
+	<form id="module" method="post" action="{U_ACTION}">
+
+	<fieldset class="quick" style="float: {S_CONTENT_FLOW_BEGIN};">
+		<input type="hidden" name="action" value="add" />
+		<input type="hidden" name="module_parent_id" value="{PARENT_ID}" />
+
+		<input type="text" name="module_langname" maxlength="255" /> 
+		<input class="button2" name="addmodule" type="submit" value="{L_CREATE_MODULE}" />
+	</fieldset>
+
+	</form>
+
+	<div class="clearfix">&nbsp;</div><br style="clear: both;" />
+	
+	<form id="mselect" method="post" action="{U_SEL_ACTION}">
+	<fieldset class="quick">
+		{L_SELECT_MODULE}: <select name="parent_id" onchange="if(this.options[this.selectedIndex].value != -1){ this.form.submit(); }">{MODULE_BOX}</select> 
+
+		<input class="button2" type="submit" value="{L_GO}" />
+	</fieldset>
+	</form>
+
+<!-- ENDIF -->
+
+<!-- INCLUDE overall_footer.html -->

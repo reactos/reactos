@@ -1,0 +1,108 @@
+#!/bin/sh
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Bugzilla Bug Tracking System.
+#
+# The Initial Developer of the Original Code is 
+# Andreas Franke <afranke@mathweb.org>.
+# Corporation. Portions created by Andreas Franke are
+# Copyright (C) 2001,2005 Andreas Franke. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+conf="`dirname $0`/query.conf"
+
+query="https://bugzilla.mozilla.org/buglist.cgi?ctype=csv"
+
+chart=0
+and=0
+while test "X$1" != "X"; do
+    arg="$1"
+    shift
+    if test 0 != `expr "X$arg" : 'X--[^=]*\$'`; then
+        # long option: --name val (without '=')
+        name=`expr "X$arg" : 'X--\(.*\)'`
+        val="$1"
+        shift
+    elif test 0 != `expr "X$arg" : 'X--[^=][^=]*='`; then
+        # long option: --name=val
+        name=`expr "X$arg" : 'X--\([^=]*\)'`
+        val=`expr "X$arg" : 'X--[^=]*=\(.*\)'`
+    elif test 0 != `expr "X$arg" : 'X-[a-zA-Z]\$'`; then
+        # short option like -X foo (with space in between)
+        name=`expr "X$arg" : 'X-\(.\)'`
+        val="$1"
+        shift
+    elif test 0 != `expr "X$arg" : 'X-[a-zA-Z]='`; then
+	# reject things like -X=foo
+        echo "Unrecognized option $arg" 1>&2
+        echo "Use -Xfoo or -X foo instead of -X=foo" 1>&2
+        exit 1
+    elif test 0 != `expr "X$arg" : 'X-[a-zA-Z]'`; then
+        # short option like -Xfoo (without space)
+        name=`expr "X$arg" : 'X-\(.\)'`
+        val=`expr "X$arg" : 'X-.\(.*\)'`
+    else
+        name="default"
+        val="$arg"
+        #echo "Unrecognized option $arg" 1>&2
+        #exit 1
+    fi
+
+    # plausibility check: val must not be empty, nor start with '-'
+    if test "X$val" = "X"; then
+        echo "No value found for '$name'!" 1>&2
+        exit 1
+    elif test 0 != `expr "X$val" : "X-"` && \
+         test 0 = `expr "X$val" : "X---"`; then
+        echo "Suspicious value for '$name': '$val' looks like an option!" 1>&2
+        exit 1
+    fi
+
+    # find field and comparison type for option ${name}
+    field=`grep "\"$name\"" "$conf" | awk '{printf $1}'`
+    type=`grep "\"$name\"" "$conf" | awk '{printf $2}'`
+    if test "X$field" = "X"  || test "X$type" = "X"; then
+        if test "X$name" = "Xdefault"; then
+            echo 1>&2 "Error: unexpected argument '$arg'"
+            cat 1>&2 <<EOF
+Use short options like -P1 or long options like  --priority=1 ,  
+or enable the 'default' behaviour in the 'query.conf' file.
+EOF
+        else
+            echo "Unknown field name '$name'." 1>&2
+        fi
+        exit 1
+    fi
+
+    # split val into comma-separated alternative values
+    or=0
+    while test "X$val" != "X"; do
+        # val1 gets everything before the first comma; val gets the rest
+        if test 0 != `expr "X$val" : 'X[^,]*,'`; then
+            val1=`expr "X$val" : 'X\([^,]*\),'`
+	    val=`expr "X$val" : 'X[^,]*,\(.*\)'`
+        else
+            val1="$val"
+            val=""
+        fi
+        # append to query
+        query="${query}&field${chart}-${and}-${or}=${field}"
+        query="${query}&type${chart}-${and}-${or}=${type}"
+        query="${query}&value${chart}-${and}-${or}=${val1}"
+        #echo "----- ${name} : ${field} : ${type} : ${val1} -----" 1>&2
+        or=`expr ${or} + 1`
+    done
+    chart=`expr ${chart} + 1`
+done
+
+echo "${query}"

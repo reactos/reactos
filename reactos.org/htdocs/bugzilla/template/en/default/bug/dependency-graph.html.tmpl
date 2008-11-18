@@ -1,0 +1,110 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # bug_id: integer. The number of the bug(s).
+  # multiple_bugs: boolean. True if bug_id contains > 1 bug number.
+  # doall: boolean. True if we are displaying every bug in the database.
+  # showsummary: boolean. True if we are showing bug summaries.
+  # rankdir: string. "TB" if we are ranking top-to-bottom,
+                     "LR" if left-to-right.
+  # image_url: string. The URL of the graphic showing the dependencies.
+  # map_url: string. The URL of the map file for the image.  (Optional)
+  # image_map: string. The image map for the graphic showing the
+                       dependencies. (Optional)
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = "Dependency Graph"
+   header = title
+ %]
+
+[% IF NOT multiple_bugs AND NOT doall %]
+  [% filtered_desc = short_desc FILTER html %]
+  [% title = "$title for $terms.bug $bug_id"
+     header = "$header for $terms.bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>"
+     subheader = filtered_desc
+   %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl %]
+
+[% image_map %]
+
+<p>
+  Green circles represent open [% terms.bugs %].
+</p>
+
+[% IF image_map %]
+  <img src="[% image_url %]" alt="Dependency graph" usemap="#imagemap">
+[% ELSE %]
+  <a href="[% map_url %]">
+    <img src="[% image_url %]" alt="Dependency graph" ismap="ismap">
+  </a>
+[% END %]
+
+<hr>
+
+<form action="showdependencygraph.cgi">
+  <table>
+    <tr>
+      <td>
+        [% terms.Bug %] numbers:
+        <input name="id" value="[% bug_id %]">
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <input type="checkbox" name="doall"
+        [% " checked" IF doall %]>
+        Show <b>every</b> [% terms.bug %] in the system with dependencies
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="3">
+        <input type="checkbox" name="showsummary"
+          [% " checked" IF showsummary %]>
+        Show the summaries of all displayed [% terms.bugs %]
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="3">
+        <select name="rankdir">
+          <option value="TB"
+            [% " selected" IF rankdir == "TB" %]>
+            Orient top-to-bottom
+          </option>
+          <option value="LR"
+            [% " selected" IF rankdir == "LR" %]>
+            Orient left-to-right
+          </option>
+        </select>
+      </td>
+    </tr>
+  </table>
+  <input type="submit" id="change" value="Change Parameters">
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

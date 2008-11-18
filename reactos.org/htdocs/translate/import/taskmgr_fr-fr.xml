@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// French (Fr) resources by Benoit Plante (aka cmoibenlepro)]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef _WIN32]]></obj>
+</group>
+<group name="LANGUAGE">
+  <obj type="LANGUAGE" sublang="SUBLANG_FRENCH">LANG_FRENCH</obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#pragma code_page(1252)]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif //_WIN32]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Menu]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_TASKMANAGER">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["&Fichier"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_FILE_NEW"><![CDATA["&Nouvelle tâche (Éxécuter...)"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_FILE_EXIT"><![CDATA["&Quitter le Gestionnaire des tâches"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Options"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_OPTIONS_ALWAYSONTOP  CHECKED"><![CDATA["&Toujours visible"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_MINIMIZEONUSE  CHECKED"><![CDATA["&Réduire à l'exécution"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_HIDEWHENMINIMIZED  CHECKED"><![CDATA["&Masquer l'icône réduite"]]></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_SHOW16BITTASKS  CHECKED"><![CDATA["Afficher les &tâches 16-bits"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Affichage"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_REFRESH"><![CDATA["&Actualiser maintenant"]]></obj>
+<obj type="POPUP"><![CDATA["&Fréquence d'actualisation"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_HIGH"><![CDATA["&Haute"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_NORMAL  CHECKED"><![CDATA["&Normale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_LOW"><![CDATA["&Basse"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_UPDATESPEED_PAUSED"><![CDATA["&En pause"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_LARGE"><![CDATA["&Grandes icônes"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SMALL"><![CDATA["&Petites icônes"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_DETAILS  CHECKED"><![CDATA["&Détails"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SELECTCOLUMNS"><![CDATA["&Sélectionner les colonnes..."]]></obj>
+<obj type="POPUP"><![CDATA["&Historique du processeur"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHALL"><![CDATA["&Un graphique pour tous les UC"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU  CHECKED"><![CDATA["Un graphique &par UC"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEM" rc_name="ID_VIEW_SHOWKERNELTIMES"><![CDATA["Aff&icher les temps du noyau"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Fenêtres"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Mosaïque &horizontale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Mosaïque &verticale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["Réd&uire"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Agra&ndir"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Cascade"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["Mettre au &premier plan"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="POPUP"><![CDATA["&Aide"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_HELP_TOPICS"><![CDATA["&Rubriques d'aide du Gestionnaire des tâches"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_HELP_ABOUT"><![CDATA["À &propos du Gestionnaire des tâches"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_WINDOWSMENU">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Mosaïque &horizontale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Mosaïque &verticale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["Réd&uire"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Agra&ndir"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Cascade"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["Mettre au &premier plan"]]></obj>
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_APPLICATION_PAGE_CONTEXT1">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_FILE_NEW"><![CDATA["&Nouvelle tâche (Éxécuter...)"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_LARGE"><![CDATA["&Grandes icônes"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_SMALL"><![CDATA["&Petites icônes"]]></obj>
+<obj type="MENUITEM" rc_name="ID_VIEW_DETAILS  CHECKED"><![CDATA["&Détails"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_APPLICATION_PAGE_CONTEXT2">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_SWITCHTO"><![CDATA["&Basculer vers"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["Mettre au &premier plan"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEHORIZONTALLY"><![CDATA["Mosaïque &horizontale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Mosaïque &verticale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["Réd&uire"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Agra&ndir"]]></obj>
+<obj type="MENUITEM" rc_name="ID_WINDOWS_CASCADE"><![CDATA["&Cascade"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_ENDTASK"><![CDATA["F&in de tâche"]]></obj>
+<obj type="MENUITEM" rc_name="ID_APPLICATION_PAGE_GOTOPROCESS"><![CDATA["&Aller dans le processus"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_TRAY_POPUP">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_RESTORE"><![CDATA["&Restorer"]]></obj>
+<obj type="MENUITEM" rc_name="ID_FILE_EXIT"><![CDATA["&Fermer"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="MENUITEM" rc_name="ID_OPTIONS_ALWAYSONTOP"><![CDATA["&Toujours visible"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="MENU">
+  <obj type="MENU" rc_name="IDR_PROCESS_PAGE_CONTEXT">DISCARDABLE</obj>
+<obj type="MENU" command="BEGIN" />
+<obj type="POPUP"><![CDATA["DUMMY"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_ENDPROCESS"><![CDATA["&Terminer le processus"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_ENDPROCESSTREE"><![CDATA["T&erminer l'arborescence du processus"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_DEBUG"><![CDATA["&Déboguer"]]></obj>
+<obj type="MENUITEMSEPERATOR"></obj>
+<obj type="POPUP"><![CDATA["Dé&finir la priorité"]]></obj>
+<obj type="POPUP" command="BEGIN" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_REALTIME"><![CDATA["&Temps réel"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_HIGH"><![CDATA["&Haute"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL"><![CDATA["&Supérieure à la normale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_NORMAL"><![CDATA["&Normale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL"><![CDATA["&Inférieure à la normale"]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETPRIORITY_LOW"><![CDATA["&Basse"]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_SETAFFINITY"><![CDATA["Définir l'&affinité..."]]></obj>
+<obj type="MENUITEM" rc_name="ID_PROCESS_PAGE_DEBUGCHANNELS"><![CDATA["Éditer les &canaux de débogage..."]]></obj>
+<obj type="POPUP" command="END" />
+<obj type="MENU" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Dialog]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_ABOUTBOX" left="22" top="17" width="259" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[à propos du Gestionnaire des tâches]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_STATIC" prop="Static" style="SS_LEFTNOWORDWRAP | WS_GROUP" left="53" top="28" width="122" height="26"><![CDATA["Gestionnaire des tâches v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)\nTraduit par Benoit Plante - 2005"]]></obj>
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="183" top="189" width="44" height="14" style="WS_GROUP"><![CDATA["OK"]]></obj>
+  <obj type="ICON" rc_name="IDI_TASKMANAGER" left="IDC_STATIC" top="19" width="30" height="20" style="20"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_LICENSE_EDIT" left="53" top="63" width="174" height="107" style="ES_MULTILINE |ES_READONLY | WS_VSCROLL"></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_TASKMGR_DIALOG" left="0" top="0" width="264" height="246">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |WS_THICKFRAME]]></obj>
+  <obj type="CAPTION"><![CDATA[Gestionnaire des tâches"MENU IDR_TASKMANAGER]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_TAB" prop="SysTabControl32" style="WS_TABSTOP" left="3" top="3" width="257" height="228"><![CDATA["Tab1"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_APPLICATION_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_APPLIST" prop="SysListView32" style="LVS_REPORT |LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_NEWTASK" left="187" top="189" width="53" height="14" style=""><![CDATA["&Nouvelle tâche (Exécuter...)"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_SWITCHTO" left="131" top="189" width="53" height="14" style="WS_DISABLED"><![CDATA["&Basculer vers"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_ENDTASK" left="75" top="189" width="53" height="14" style="WS_DISABLED"><![CDATA["F&in de tâche"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_PROCESS_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_PROCESSLIST" prop="SysListView32" style="LVS_REPORT |LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |WS_BORDER | WS_TABSTOP" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_ENDPROCESS" left="171" top="189" width="69" height="14" style=""><![CDATA["&Terminer le processus"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_SHOWALLPROCESSES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="191" width="111" height="10"><![CDATA["Aff&icher les processus de tous les utilisateurs"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210]]></obj>
+</group>
+<group name="DIALOGEX">
+  <obj type="DIALOGEX" rc_name="IDD_PERFORMANCE_PAGE" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOGEX" command="BEGIN" />
+  <obj type="GROUPBOX" rc_name="IDC_CPU_USAGE_FRAME" left="5" top="5" width="60" height="54" style="WS_TABSTOP  WS_EX_TRANSPARENT"><![CDATA["Util. de l'UC"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_MEM_USAGE_FRAME" left="5" top="63" width="60" height="54" style="BS_LEFTTEXT  WS_EX_TRANSPARENT"><![CDATA["Util. du fichier"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_TOTALS_FRAME" left="5" top="122" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Totaux"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_COMMIT_CHARGE_FRAME" left="5" top="166" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Charge dédiée (Ko)"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_PHYSICAL_MEMORY_FRAME" left="131" top="122" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Mémoire physique (K)"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_KERNEL_MEMORY_FRAME" left="131" top="166" width="111" height="39" style="0 WS_EX_TRANSPARENT"><![CDATA["Kernel Memory (Ko)"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_HANDLE_COUNT" left="12" top="131" width="27" height="8" style=""><![CDATA["Handles"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_THREAD_COUNT" left="12" top="140" width="27" height="8" style=""><![CDATA["Threads"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_TOTALS_PROCESS_COUNT" left="12" top="149" width="34" height="8" style=""><![CDATA["Processus"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_HANDLE_COUNT" left="65" top="131" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_THREAD_COUNT" left="65" top="140" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_TOTALS_PROCESS_COUNT" left="65" top="149" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_TOTAL" left="12" top="175" width="27" height="8" style=""><![CDATA["Total"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_LIMIT" left="12" top="184" width="15" height="8" style=""><![CDATA["Limite"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_COMMIT_CHARGE_PEAK" left="12" top="193" width="34" height="8" style=""><![CDATA["Pic"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_TOTAL" left="65" top="174" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_LIMIT" left="65" top="184" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_COMMIT_CHARGE_PEAK" left="65" top="193" width="45" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_TOTAL" left="137" top="131" width="27" height="8" style=""><![CDATA["Total"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_AVAILABLE" left="137" top="140" width="30" height="8" style=""><![CDATA["Disponible"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_PHYSICAL_MEMORY_SYSTEM_CACHE" left="137" top="149" width="46" height="8" style=""><![CDATA["Cache système"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_TOTAL" left="185" top="131" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_AVAILABLE" left="185" top="140" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_PHYSICAL_MEMORY_SYSTEM_CACHE" left="185" top="149" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_TOTAL" left="137" top="174" width="27" height="8" style=""><![CDATA["Total"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_PAGED" left="137" top="184" width="21" height="8" style=""><![CDATA["Paginée"]]></obj>
+  <obj type="LTEXT" rc_name="IDS_KERNEL_MEMORY_NONPAGED" left="137" top="193" width="34" height="8" style=""><![CDATA["Non paginée"]]></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_TOTAL" left="185" top="174" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_PAGED" left="185" top="184" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="EDITTEXT" rc_name="IDC_KERNEL_MEMORY_NONPAGED" left="185" top="193" width="48" height="8" style="ES_RIGHT |ES_READONLY | ES_NUMBER | NOT WS_BORDER"></obj>
+  <obj type="GROUPBOX" rc_name="IDC_CPU_USAGE_HISTORY_FRAME" left="74" top="5" width="168" height="54" style="0 WS_EX_TRANSPARENT"><![CDATA["Historique de l'utilisation de l'UC"]]></obj>
+  <obj type="GROUPBOX" rc_name="IDC_MEMORY_USAGE_HISTORY_FRAME" left="74" top="63" width="168" height="54" style="0 WS_EX_TRANSPARENT"><![CDATA["Historique d'utilisation du fichier d'échange"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_CPU_USAGE_GRAPH" left="12" top="17" width="47" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["Affichage de l'utilisation de l'UC"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_MEM_USAGE_GRAPH" left="12" top="75" width="47" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["Affichage de l'utilisation du fichier d'échange"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_CPU_USAGE_HISTORY_GRAPH" left="81" top="17" width="153" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["Historique de l'utilisation de l'UC"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDC_MEM_USAGE_HISTORY_GRAPH" left="81" top="75" width="153" height="37" style="0 WS_EX_CLIENTEDGE"><![CDATA["Historique d'utilisation du fichier d'échange"]]></obj>
+  <obj type="DIALOGEX" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_DEBUG_CHANNELS_DIALOG" left="0" top="0" width="247" height="210">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Cannaux de débogage]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="CONTROL" rc_name="IDC_DEBUG_CHANNELS_LIST" prop="SysListView32" style="LVS_REPORT |LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |LVS_SORTASCENDING" left="7" top="7" width="233" height="177"><![CDATA["List2"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDOK" left="171" top="189" width="69" height="14" style=""><![CDATA["Fermer"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_AFFINITY_DIALOG" left="0" top="0" width="231" height="154">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Affinité du processeur]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="120" top="133" width="50" height="14" style=""><![CDATA["OK"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDCANCEL" left="174" top="133" width="50" height="14" style=""><![CDATA["Annuler"]]></obj>
+  <obj type="LTEXT" rc_name="IDC_STATIC" left="5" top="5" width="220" height="16" style=""><![CDATA["La configuration de l'affinité du processeur contrôle l'UC sur lequel un processus sera autorisé d'être exécuté"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU0" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="11" top="28" width="37" height="10"><![CDATA["UC 0"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU1" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="41" width="37" height="10"><![CDATA["UC 1"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU2" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="54" width="37" height="10"><![CDATA["UC 2"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU3" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="67" width="37" height="10"><![CDATA["UC 3"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU4" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="80" width="37" height="10"><![CDATA["UC 4"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU5" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="93" width="37" height="10"><![CDATA["UC 5"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU6" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="106" width="37" height="10"><![CDATA["UC 6"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU7" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="11" top="119" width="37" height="10"><![CDATA["UC 7"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU8" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="61" top="28" width="37" height="10"><![CDATA["UC 8"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU9" prop="Button" style="BS_AUTOCHECKBOX | WS_DISABLED |WS_TABSTOP" left="61" top="41" width="37" height="10"><![CDATA["UC 9"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU10" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="54" width="41" height="10"><![CDATA["UC 10"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU11" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="67" width="41" height="10"><![CDATA["UC 11"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU12" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="80" width="41" height="10"><![CDATA["UC 12"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU13" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="93" width="41" height="10"><![CDATA["UC 13"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU14" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="106" width="41" height="10"><![CDATA["UC 14"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU15" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="61" top="119" width="41" height="10"><![CDATA["UC 15"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU16" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="28" width="41" height="10"><![CDATA["UC 16"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU17" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="41" width="41" height="10"><![CDATA["UC 17"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU18" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="54" width="41" height="10"><![CDATA["UC 18"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU19" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="67" width="41" height="10"><![CDATA["UC 19"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU20" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="80" width="41" height="10"><![CDATA["UC 20"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU21" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="93" width="41" height="10"><![CDATA["UC 21"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU22" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="106" width="41" height="10"><![CDATA["UC 22"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU23" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="116" top="119" width="41" height="10"><![CDATA["UC 23"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU24" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="28" width="41" height="10"><![CDATA["UC 24"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU25" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="41" width="41" height="10"><![CDATA["UC 25"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU26" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="54" width="41" height="10"><![CDATA["UC 26"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU27" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="67" width="41" height="10"><![CDATA["UC 27"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU28" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="80" width="41" height="10"><![CDATA["UC 28"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU29" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="93" width="41" height="10"><![CDATA["UC 29"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU30" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="106" width="41" height="10"><![CDATA["UC 30"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPU31" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="175" top="119" width="41" height="10"><![CDATA["UC 31"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="DIALOG">
+  <obj type="DIALOG" rc_name="IDD_COLUMNS_DIALOG" left="0" top="0" width="195" height="199">DISCARDABLE</obj>
+  <obj type="STYLE"><![CDATA[DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU]]></obj>
+  <obj type="CAPTION"><![CDATA[Sélection de colonnes]]></obj>
+  <obj type="FONT" size="8" name="MS Shell Dlg"></obj>
+  <obj type="DIALOG" command="BEGIN" />
+  <obj type="DEFPUSHBUTTON" rc_name="IDOK" left="84" top="178" width="50" height="14" style=""><![CDATA["OK"]]></obj>
+  <obj type="PUSHBUTTON" rc_name="IDCANCEL" left="138" top="178" width="50" height="14" style=""><![CDATA["Annuler"]]></obj>
+  <obj type="LTEXT" rc_name="IDC_STATIC" left="7" top="7" width="181" height="17" style=""><![CDATA["Sélectionnez les colones qui apparaîtront dans la page Processus du Gestionnaire des tâches"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IMAGENAME" prop="Button" style="BS_AUTOCHECKBOX |WS_DISABLED | WS_TABSTOP" left="7" top="28" width="56" height="10"><![CDATA["&Nom de l'image"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PID" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="39" width="88" height="10"><![CDATA["&PID (Identificateur du Processus)"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPUUSAGE" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="50" width="53" height="10"><![CDATA["Utilisation de l'UC"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_CPUTIME" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="61" width="48" height="10"><![CDATA["T&emps processeur"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_MEMORYUSAGE" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="72" width="63" height="10"><![CDATA["Utilisation de la &mémoire"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_MEMORYUSAGEDELTA" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="83" width="82" height="10"><![CDATA["Écart &d'utilisation de la mémoire"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PEAKMEMORYUSAGE" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="94" width="82" height="10"><![CDATA["Utilisation ma&ximale de la mémoire"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEFAULTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="105" width="53" height="10"><![CDATA["Erreurs de page"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_USEROBJECTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="116" width="62" height="10"><![CDATA["Objets &USER"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOREADS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="127" width="49" height="10"><![CDATA["Lectures E/S"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOREADBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="7" top="138" width="65" height="10"><![CDATA["Octets de lecture E/S"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_SESSIONID" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="149" width="50" height="10"><![CDATA["Identificateur de &session"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_USERNAME" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="7" top="160" width="51" height="10"><![CDATA["&Nom de l'utilisateur"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEFAULTSDELTA" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="28" width="72" height="10"><![CDATA["Éc&art d'erreurs de pagination"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_VIRTUALMEMORYSIZE" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="39" width="77" height="10"><![CDATA["Taille de la mémoire &virtuelle"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_PAGEDPOOL" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="50" width="53" height="10"><![CDATA["Réserve pa&ginée"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_NONPAGEDPOOL" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="61" width="67" height="10"><![CDATA["Réserve &non paginée"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_BASEPRIORITY" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="72" width="55" height="10"><![CDATA["P&riorité de base"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_HANDLECOUNT" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="83" width="59" height="10"><![CDATA["Nombre de &handles"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_THREADCOUNT" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="94" width="59" height="10"><![CDATA["Nombre de &threads"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_GDIOBJECTS" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="105" width="55" height="10"><![CDATA["Objets GDI"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOWRITES" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="116" width="49" height="10"><![CDATA["Écritures E/S"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOWRITEBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="127" width="65" height="10"><![CDATA["Octets d'écriture E/S"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOOTHER" prop="Button" style="BS_AUTOCHECKBOX |WS_TABSTOP" left="107" top="138" width="46" height="10"><![CDATA["Autres E/S"]]></obj>
+  <obj type="CONTROL" rc_name="IDC_IOOTHERBYTES" prop="Button" style="BS_AUTOCHECKBOX | WS_TABSTOP" left="107" top="149" width="65" height="10"><![CDATA["Octets d'autres E/S"]]></obj>
+  <obj type="DIALOG" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// TEXTINCLUDE]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// DESIGNINFO]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifdef APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// String Table]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="IDS_APP_TITLE"><![CDATA["Gestionnaire des tâches"]]></obj>
+  <obj type="STRING" rc_name="IDC_TASKMGR"><![CDATA["Gestionnaire des tâches"]]></obj>
+  <obj type="STRING" rc_name="IDS_IDLE_PROCESS"><![CDATA["Processus système en atente"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_FILE_NEW"><![CDATA["Exécute un nouveau programme"]]></obj>
+  <obj type="STRING" rc_name="ID_OPTIONS_ALWAYSONTOP"><![CDATA["Le Gestionnaire des tâches reste devant toutes les autres fenêtre à moins d'être réduit"]]></obj>
+  <obj type="STRING" rc_name="Le"><![CDATA[Gestionnaire des tâches est réduite lorqu'une action Basculer vers est réalisée"]]></obj>
+  <obj type="STRING" rc_name="ID_OPTIONS_HIDEWHENMINIMIZED"><![CDATA["Masquer le Gestionnaire des tâches lorsqu'il est réduit"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_REFRESH"><![CDATA["Actualise l'affichage maintenant, sans tenir compte de la fréquence d'actualisation"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_LARGE"><![CDATA["Affiche les tâches en utilisant des grandes icônes"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SMALL"><![CDATA["Affiche les tâches en utilisant des petites icônes"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_DETAILS"><![CDATA["Affiche des informations à propos de chaque tâche"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_HIGH"><![CDATA["Actualise l'écran deux fois par seconde"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_NORMAL"><![CDATA["Actualise l'écran une fois toutes les deux secondes"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_LOW"><![CDATA["Actualise l'écran toutes les quatre secondes"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_VIEW_UPDATESPEED_PAUSED"><![CDATA["L'affichage n'est pas automatiquement actualisé"]]></obj>
+  <obj type="STRING" rc_name="Dispose"><![CDATA[les fenêtres en mosaïque horizontale sur le bureau"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_TILEVERTICALLY"><![CDATA["Dispose les fenêtres en mosaïque verticale sur le bureau"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_MINIMIZE"><![CDATA["Minimise les fenêtres"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_MAXIMIZE"><![CDATA["Maximise les fenêtres"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_CASCADE"><![CDATA["Dispose les fenêtres en cascade diagonale sur le bureau"]]></obj>
+  <obj type="STRING" rc_name="ID_WINDOWS_BRINGTOFRONT"><![CDATA["Amène une fenêtre au premier plan, sans basculer vers elle"]]></obj>
+  <obj type="STRING" rc_name="ID_HELP_TOPICS"><![CDATA["Affiche les rubriques d'aide du Gestionnaire des tâches"]]></obj>
+  <obj type="STRING" rc_name="ID_HELP_ABOUT"><![CDATA["Affiche les information sur le programme, la version et le copyright"]]></obj>
+  <obj type="STRING" rc_name="ID_FILE_EXIT"><![CDATA["Quitte l'application Gestionnaire des tâches"]]></obj>
+  <obj type="STRING" rc_name="Affiche"><![CDATA[les tâches 16-bits sous le ntvdm.exe associé"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SELECTCOLUMNS"><![CDATA["Sélectionne quelles colonnes seront affichés dans la page des processus"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_SHOWKERNELTIMES"><![CDATA["Affiche les temps du noyau dans les graphiques de performances"]]></obj>
+  <obj type="STRING" rc_name="Un"><![CDATA[seul graphique montre l'usage de tous les UC"]]></obj>
+  <obj type="STRING" rc_name="ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU"><![CDATA["Chaque UC a son propre graphique"]]></obj>
+  <obj type="STRING" rc_name="Amène"><![CDATA[une tâche en avant-plan, mettre le focus sur cette tâche"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="ID_ENDTASK"><![CDATA["Ferme la tâche sélectionnée"]]></obj>
+  <obj type="STRING" rc_name="ID_GOTOPROCESS"><![CDATA["Met le focus sur le processus de la tâche sélectionnée"]]></obj>
+  <obj type="STRING" rc_name="ID_RESTORE"><![CDATA["Restaure le Gestionnaire des tâches de son état masqué"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_ENDPROCESS"><![CDATA["Enlève le processus du système"]]></obj>
+  <obj type="STRING" rc_name="Enlève"><![CDATA[ce processus et tous ses descendants du système"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_DEBUG"><![CDATA["Attache le débogueur à ce processus"]]></obj>
+  <obj type="STRING" rc_name="Contrôle"><![CDATA[le processeur sur lequel le processus sera autorisé de s'exécuter"]]></obj>
+  <obj type="STRING" rc_name="Place"><![CDATA[le processus dans la priorité TEMPS RÉEL"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_SETPRIORITY_HIGH"><![CDATA["Place le processus dans la priorité HAUTE"]]></obj>
+  <obj type="STRING" rc_name="Place"><![CDATA[le processus dans la priorité SUPÉRIEURE À LA NORMALE"]]></obj>
+  <obj type="STRING" rc_name="Place"><![CDATA[le processus dans la priorité NORMALE"]]></obj>
+  <obj type="STRING" rc_name="Place"><![CDATA[le processus dans la priorité INFÉRIRIEURE À LA NORMALE"]]></obj>
+  <obj type="STRING" rc_name="ID_PROCESS_PAGE_SETPRIORITY_LOW"><![CDATA["Place le processus dans la priorité BASSE"]]></obj>
+  <obj type="STRING" rc_name="IDS_LICENSE"><![CDATA["Ce program est un logiciel libre; vous pouvez le distribuer et/ou le modifier sous les termes de la Licence GNU Lesser General Public License telle que publiée par laFree Software Foundation; soit la version 2.1 de la Licence, ou (à votre option) toute autre version plus récente.\r\n\r\nCe program est distribué dans l'espoir qu'il vous soit util, mais sans AUCUNE GARANTIE; sans même la garantie implicite de MARCHANDISABILITÉ ou d'FONCTIONNEMENT POUR UN USAGE PARTICULIER.  Voir la GNU General Public License pour plus de détails.\r\n\r\n Vous devriez avoir reçu une copie de la GNU General Public License avec ce program; sinon, écrivez à la Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="DISCARDABLE">
+  <obj type="STRINGTABLE">DISCARDABLE</obj>
+  <obj type="STRINGTABLE" command="BEGIN" />
+  <obj type="STRING" rc_name="IDS_TAB_APPS"><![CDATA["Applications"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PROCESSES"><![CDATA["Processus"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PERFORMANCE"><![CDATA["Performance"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_TASK"><![CDATA["Tâche"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_STATUS"><![CDATA["Status"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IMAGENAME"><![CDATA["Nome d'image"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PID"><![CDATA["PID"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_USERNAME"><![CDATA["Nom d'utilisateur"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_SESSIONID"><![CDATA["Identificateur de session"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_CPU"><![CDATA["UC"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_CPUTIME"><![CDATA["Temps de l'UC"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_MEMUSAGE"><![CDATA["Utilisation du fichier"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PEAKMEMUSAGE"><![CDATA["Utilisation maximale du fichier"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_MEMDELTA"><![CDATA["Écart d'utilisation du fichier"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PAGEFAULT"><![CDATA["Erreurs de page"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PFDELTA"><![CDATA["Écart de PF"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_VMSIZE"><![CDATA["Taille du VM"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_PAGEDPOOL"><![CDATA["Réserve paginée"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_NPPOOL"><![CDATA["Réserve non paginée"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_BASEPRI"><![CDATA["Priorité de base"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_HANDLES"><![CDATA["Handles"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_THREADS"><![CDATA["Threads"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_USERPBJECTS"><![CDATA["Objets USER"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_GDIOBJECTS"><![CDATA["Objets GDI"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOREADS"><![CDATA["Lectures E/S"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOWRITES"><![CDATA["Écritures E/S"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOOTHER"><![CDATA["Autres E/S"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOREADBYTES"><![CDATA["Octets de lecture E/S"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOWRITESBYTES"><![CDATA["Octets d'écriture E/S"]]></obj>
+  <obj type="STRING" rc_name="IDS_TAB_IOOTHERBYTES"><![CDATA["Octets d'autres E/S"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SELECTCOLUMNS"><![CDATA["&Sélectionner les colonnes..."]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_16BITTASK"><![CDATA["&Afficher les tâches 16 bits"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_WINDOWS"><![CDATA["&Fenêtres"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_LARGEICONS"><![CDATA["&Grandes icônes"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SMALLICONS"><![CDATA["&Petites icônes"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_DETAILS"><![CDATA["&Détails"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_ONEGRAPHALLCPUS"><![CDATA["&Un graphique pour tous les UC"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_ONEGRAPHPERCPU"><![CDATA["Un graphique &par UC"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_CPUHISTORY"><![CDATA["Historique de l'utilisation de l'UC"]]></obj>
+  <obj type="STRING" rc_name="IDS_MENU_SHOWKERNELTIMES"><![CDATA["Aff&icher les temps du noyau"]]></obj>
+  <obj type="STRING" rc_name="IDS_CREATENEWTASK"><![CDATA["Créer une nouvelle tâche"]]></obj>
+  <obj type="STRING" rc_name="IDS_CREATENEWTASK_DESC"><![CDATA["Tapez le nom d'un programme, dossier,document, ou ressource Internet resource et le Gestionnaire des tâches l'ouvrira pour vous."]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_ACCESSPROCESSAFF"><![CDATA["Impossible d'accéder ou de mofier l'affinité du processeur."]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_PROCESSONEPRO"><![CDATA["Le processus doit avoir de l'affinité avec au moins un processeur."]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_INVALIDOPTION"><![CDATA["Option Invalide"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLEDEBUGPROCESS"><![CDATA["Impossible de déboguer le processus."]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGDEBUG"><![CDATA["ATTENTION: Déboguer ce processus peut entrîner une perte de données.\nÊtes-vous sûrs de vouloir le déboguer?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_TASKMGRWARNING"><![CDATA["Avertissement du Gestionnaire des tâches"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGTERMINATING"><![CDATA["ATTENTION: Terminer un processus peut causer des effets indésirables\nincluant une perte de donnée ou une instabilité du système.\nLe processus n'aura pas la chance de sauvegarder son état\nou les données avant de terminer.\nÊtes-vous sûr de vouloir terminer le processus?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLETERMINATEPRO"><![CDATA["Impossible de terminer le processus"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_UNABLECHANGEPRIORITY"><![CDATA["Impossible de changer la priorité"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_WARNINGCHANGEPRIORITY"><![CDATA["ATTENTION: Changer la priorité du processus peut causer des\neffets indésirables comme l'instabilité du système.\nÊtes-vous sûr de vouloir changer la priorité?"]]></obj>
+  <obj type="STRING" rc_name="IDS_MSG_TRAYICONCPUUSAGE"><![CDATA["UC utilisée: %d%%"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_MEMUSAGE"><![CDATA["Fichier d'échange utilisé: %dK / %dK"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_CPUUSAGE"><![CDATA["UC utilisée: %3d%%"]]></obj>
+  <obj type="STRING" rc_name="IDS_STATUS_PROCESSES"><![CDATA["Processus: %d"]]></obj>
+  <obj type="STRING" rc_name="IDS_Not_Responding"><![CDATA["Ne répond pas"]]></obj>
+  <obj type="STRING" rc_name="IDS_Running"><![CDATA["En cours d'exécution"]]></obj>
+  <obj type="STRINGTABLE" command="END" />
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // French (Fr) resources by Benoit Plante (aka cmoibenlepro)]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#ifndef APSTUDIO_INVOKED]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[// Generated from the TEXTINCLUDE 3 resource.]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[//]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[/////////////////////////////////////////////////////////////////////////////]]></obj>
+</group>
+<group name="COMMENT">
+  <obj type="COMMENT"><![CDATA[#endif    // not APSTUDIO_INVOKED]]></obj>
+</group>
+</resource>

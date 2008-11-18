@@ -1,0 +1,263 @@
+<fieldset class="fields1">
+	<!-- IF ERROR --><p class="error">{ERROR}</p><!-- ENDIF -->
+
+	<!-- IF S_PRIVMSGS and not S_SHOW_DRAFTS -->
+
+		<div class="column1">
+		<!-- IF S_ALLOW_MASS_PM -->
+			<!-- IF .to_recipient -->
+				<dl>
+					<dt><label>{L_TO}:</label></dt>
+					<dd>
+						<!-- BEGIN to_recipient -->
+							<!-- IF not to_recipient.S_FIRST_ROW and to_recipient.S_ROW_COUNT mod 2 eq 0 --></dd><dd><!-- ENDIF -->
+							<!-- IF to_recipient.IS_GROUP --><a href="{to_recipient.U_VIEW}"><strong>{to_recipient.NAME}</strong></a>&nbsp;<!-- ELSE -->{to_recipient.NAME_FULL}&nbsp;<!-- ENDIF -->
+							<!-- IF not S_EDIT_POST --><input type="submit" name="remove_{to_recipient.TYPE}[{to_recipient.UG_ID}]" value="x" class="button2" />&nbsp;<!-- ENDIF -->
+						<!-- END to_recipient -->
+					</dd>
+				</dl>
+			<!-- ENDIF -->
+			<!-- IF .bcc_recipient -->
+				<dl>
+					<dt><label>{L_BCC}:</label></dt>
+					<dd>
+						<!-- BEGIN bcc_recipient -->
+							<!-- IF not bcc_recipient.S_FIRST_ROW and bcc_recipient.S_ROW_COUNT mod 2 eq 0 --></dd><dd><!-- ENDIF -->
+							<!-- IF bcc_recipient.IS_GROUP --><a href="{bcc_recipient.U_VIEW}"><strong>{bcc_recipient.NAME}</strong></a><!-- ELSE -->{bcc_recipient.NAME_FULL}&nbsp;<!-- ENDIF -->
+							<!-- IF not S_EDIT_POST --><input type="submit" name="remove_{bcc_recipient.TYPE}[{bcc_recipient.UG_ID}]" value="x" class="button2" />&nbsp;<!-- ENDIF -->
+						<!-- END bcc_recipient -->
+					</dd>
+				</dl>
+			<!-- ENDIF -->
+			<!-- IF not S_EDIT_POST -->
+			<dl class="pmlist">
+				<dt><textarea id="username_list" name="username_list" class="inputbox" cols="50" rows="2"></textarea></dt>
+				<dd><span><a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a></span></dd>
+				<dd><input type="submit" name="add_to" value="{L_ADD}" class="button2" /></dd>
+				<dd><input type="submit" name="add_bcc" value="{L_ADD_BCC}" class="button2" /></dd>
+			</dl>
+			<!-- ENDIF -->
+		<!-- ELSE -->
+			<dl>
+				<dt><label for="username_list">{L_TO}:</label><!-- IF not S_EDIT_POST --><br /><span><a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false">{L_FIND_USERNAME}</a></span><!-- ENDIF --></dt>
+				<!-- IF .to_recipient -->
+					<dd>
+						<!-- BEGIN to_recipient -->
+							<!-- IF not to_recipient.S_FIRST_ROW and to_recipient.S_ROW_COUNT mod 2 eq 0 --></dd><dd><!-- ENDIF -->
+							<!-- IF to_recipient.IS_GROUP --><a href="{to_recipient.U_VIEW}"><strong>{to_recipient.NAME}</strong></a><!-- ELSE -->{to_recipient.NAME_FULL}&nbsp;<!-- ENDIF -->
+							<!-- IF not S_EDIT_POST --><input type="submit" name="remove_{to_recipient.TYPE}[{to_recipient.UG_ID}]" value="x" class="button2" />&nbsp;<!-- ENDIF -->
+						<!-- END to_recipient -->
+					</dd>
+				<!-- ENDIF -->
+
+				<!-- IF not S_EDIT_POST -->
+				<dd><input class="inputbox" type="text" name="username_list" id="username_list" size="20" value="" /> <input type="submit" name="add_to" value="{L_ADD}" class="button2" /></dd>
+				<!-- ENDIF -->
+			</dl>
+		<!-- ENDIF -->
+
+		</div>
+
+		<!-- IF S_GROUP_OPTIONS -->
+			<div class="column2">
+				<dl>
+					<dd><label for="group_list">{L_USERGROUPS}:</label> <select name="group_list[]" id="group_list "multiple="true" size="4" class="inputbox">{S_GROUP_OPTIONS}</select></dd>
+				</dl>
+			</div>
+		<!-- ENDIF -->
+
+		<div class="clear"></div>
+
+	<!-- ENDIF -->
+
+	<!-- IF S_DELETE_ALLOWED -->
+	<dl>
+		<dt><label for="delete">{L_DELETE_POST}:</label></dt>
+		<dd><label for="delete"><input type="checkbox" name="delete" id="delete" /> {L_DELETE_POST_WARN}</label></dd>
+	</dl>
+	<!-- ENDIF -->
+
+	<!-- IF S_SHOW_TOPIC_ICONS or S_SHOW_PM_ICONS -->
+	<dl>
+		<dt><label for="icon">{L_ICON}:</label></dt>
+		<dd>
+			<label for="icon"><input type="radio" name="icon" id="icon" value="0" checked="checked" /> <!-- IF S_SHOW_TOPIC_ICONS -->{L_NO_TOPIC_ICON}<!-- ELSE -->{L_NO_PM_ICON}<!-- ENDIF --></label>
+			<!-- BEGIN topic_icon --><label for="icon-{topic_icon.ICON_ID}"><input type="radio" name="icon" id="icon-{topic_icon.ICON_ID}" value="{topic_icon.ICON_ID}" {topic_icon.S_ICON_CHECKED} /><img src="{topic_icon.ICON_IMG}" width="{topic_icon.ICON_WIDTH}" height="{topic_icon.ICON_HEIGHT}" alt="" title="" /></label> <!-- END topic_icon -->
+		</dd>
+	</dl>
+	<!-- ENDIF -->
+
+	<!-- IF not S_PRIVMSGS and S_DISPLAY_USERNAME -->
+	<dl>
+		<dt><label for="username">{L_USERNAME}:</label></dt>
+		<dd><input type="text" tabindex="1" name="username" id="username" size="25" value="{USERNAME}" class="inputbox" /></dd>
+	</dl>
+	<!-- ENDIF -->
+
+	<!-- IF S_POST_ACTION or S_PRIVMSGS or S_EDIT_DRAFT -->
+	<dl style="clear: left;">
+		<dt><label for="subject">{L_SUBJECT}:</label></dt>
+		<dd><input type="text" name="subject" id="subject" size="45" maxlength="<!-- IF S_NEW_MESSAGE -->60<!-- ELSE -->64<!-- ENDIF -->" tabindex="2" value="{SUBJECT}{DRAFT_SUBJECT}" class="inputbox autowidth" /></dd>
+	</dl>
+		<!-- IF S_CONFIRM_CODE -->
+		<dl>
+			<dt><label for="confirm_code">{L_CONFIRM_CODE}:</label><br /><span>{L_CONFIRM_CODE_EXPLAIN}</span></dt>
+				<dd><input type="hidden" name="confirm_id" value="{CONFIRM_ID}" />{CONFIRM_IMAGE}</dd>
+				<dd><input type="text" name="confirm_code" id="confirm_code" size="8" maxlength="8" tabindex="3" class="inputbox narrow" title="{L_CONFIRM_CODE}" /></dd>
+		</dl>
+		<!-- ENDIF -->
+	<!-- ENDIF -->
+
+	<!-- INCLUDE posting_buttons.html -->
+
+	<div id="smiley-box">
+		<!-- IF S_SMILIES_ALLOWED and .smiley -->
+			<strong>{L_SMILIES}</strong><br />
+			<!-- BEGIN smiley -->
+				<a href="#" onclick="insert_text('{smiley.A_SMILEY_CODE}', true); return false;"><img src="{smiley.SMILEY_IMG}" width="{smiley.SMILEY_WIDTH}" height="{smiley.SMILEY_HEIGHT}" alt="{smiley.SMILEY_CODE}" title="{smiley.SMILEY_DESC}" /></a>
+			<!-- END smiley -->
+		<!-- ENDIF -->
+		<!-- IF S_SHOW_SMILEY_LINK and S_SMILIES_ALLOWED-->
+			<br /><a href="{U_MORE_SMILIES}" onclick="popup(this.href, 300, 350, '_phpbbsmilies'); return false;">{L_MORE_SMILIES}</a>
+		<!-- ENDIF -->
+
+		<!-- IF BBCODE_STATUS -->
+		<!-- IF .smiley --><hr /><!-- ENDIF -->
+		{BBCODE_STATUS}<br />
+		<!-- IF S_BBCODE_ALLOWED -->
+			{IMG_STATUS}<br />
+			{FLASH_STATUS}<br />
+			{URL_STATUS}<br />
+			{SMILIES_STATUS}
+		<!-- ENDIF -->
+		<!-- ENDIF -->
+		<!-- IF S_EDIT_DRAFT || S_DISPLAY_REVIEW -->
+			<!-- IF S_DISPLAY_REVIEW --><hr /><!-- ENDIF -->
+			<!-- IF S_EDIT_DRAFT --><strong><a href="{S_UCP_ACTION}">{L_BACK_TO_DRAFTS}</a></strong><!-- ENDIF -->
+			<!-- IF S_DISPLAY_REVIEW --><strong><a href="#review">{L_TOPIC_REVIEW}</a></strong><!-- ENDIF -->
+		<!-- ENDIF -->
+	</div>
+
+	<div id="message-box">
+		<textarea <!-- IF S_UCP_ACTION and not S_PRIVMSGS and not S_EDIT_DRAFT -->name="signature" id="signature" style="height: 9em;"<!-- ELSE -->name="message" id="message"<!-- ENDIF --> rows="15" cols="76" tabindex="3" onselect="storeCaret(this);" onclick="storeCaret(this);" onkeyup="storeCaret(this);" class="inputbox">{MESSAGE}{DRAFT_MESSAGE}{SIGNATURE}</textarea>
+	</div>
+</fieldset>
+
+<!-- IF $EXTRA_POSTING_OPTIONS eq 1 -->
+
+	<!-- IF not S_SHOW_DRAFTS -->
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+	<!-- ENDIF -->
+
+	<!-- IF S_HAS_ATTACHMENTS -->
+		<div class="panel bg2">
+			<div class="inner"><span class="corners-top"><span></span></span>
+			<h3>{L_POSTED_ATTACHMENTS}</h3>
+
+			<fieldset class="fields2">
+
+			<!-- BEGIN attach_row -->
+			<dl>
+
+				<dt><label for="comment_list[{attach_row.ASSOC_INDEX}]">{L_FILE_COMMENT}:</label></dt>
+				<dd><textarea name="comment_list[{attach_row.ASSOC_INDEX}]" id="comment_list[{attach_row.ASSOC_INDEX}]" rows="1" cols="35" class="inputbox">{attach_row.FILE_COMMENT}</textarea></dd>
+				<dd><a href="{attach_row.U_VIEW_ATTACHMENT}" class="{S_CONTENT_FLOW_END}">{attach_row.FILENAME}</a></dd>
+				<dd style="margin-top: 5px;">
+					<!-- IF S_INLINE_ATTACHMENT_OPTIONS --><input type="button" value="{L_PLACE_INLINE}" onclick="attach_inline({attach_row.ASSOC_INDEX}, '{attach_row.A_FILENAME}');" class="button2" />&nbsp; <!-- ENDIF -->
+					<input type="submit" name="delete_file[{attach_row.ASSOC_INDEX}]" value="{L_DELETE_FILE}" class="button2" />
+				</dd>
+			</dl>
+			{attach_row.S_HIDDEN}
+				<!-- IF not attach_row.S_LAST_ROW --><hr class="dashed" /><!-- ENDIF -->
+			<!-- END attach_row -->
+
+			</fieldset>
+
+			<span class="corners-bottom"><span></span></span></div>
+		</div>
+	<!-- ENDIF -->
+
+	<!-- IF not S_SHOW_DRAFTS and not $SIG_EDIT eq 1 -->
+	<div class="panel bg2">
+		<div class="inner"><span class="corners-top"><span></span></span>
+		<fieldset class="submit-buttons">
+			{S_HIDDEN_ADDRESS_FIELD}
+			{S_HIDDEN_FIELDS}
+			<!-- IF S_HAS_DRAFTS --><input type="submit" accesskey="d" tabindex="9" name="load" value="{L_LOAD}" class="button2" onclick="load_draft = true;" />&nbsp; <!-- ENDIF -->
+			<!-- IF S_SAVE_ALLOWED --><input type="submit" accesskey="k" tabindex="8" name="save" value="{L_SAVE}" class="button2" />&nbsp; <!-- ENDIF -->
+			<input type="submit" tabindex="5" name="preview" value="{L_PREVIEW}" class="button1"<!-- IF not S_PRIVMSGS --> onclick="document.getElementById('postform').action += '#preview';"<!-- ENDIF --> />&nbsp;
+			<input type="submit" accesskey="s" tabindex="6" name="post" value="{L_SUBMIT}" class="button1" />&nbsp;
+
+		</fieldset>
+
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+	<!-- ENDIF -->
+
+	<!-- IF not S_PRIVMSGS and not S_SHOW_DRAFTS and not $SIG_EDIT eq 1 -->
+		<div id="tabs">
+			<ul>
+				<li id="options-panel-tab" class="activetab"><a href="#tabs" onclick="subPanels('options-panel'); return false;"><span>{L_OPTIONS}</span></a></li>
+				<!-- IF S_SHOW_ATTACH_BOX --><li id="attach-panel-tab"><a href="#tabs" onclick="subPanels('attach-panel'); return false;"><span>{L_ADD_ATTACHMENT}</span></a></li><!-- ENDIF -->
+				<!-- IF S_SHOW_POLL_BOX || S_POLL_DELETE --><li id="poll-panel-tab"><a href="#tabs" onclick="subPanels('poll-panel'); return false;"><span>{L_ADD_POLL}</span></a></li><!-- ENDIF -->
+			</ul>
+		</div>
+	<!-- ENDIF -->
+
+	<!-- IF not S_SHOW_DRAFTS and not $SIG_EDIT eq 1 -->
+	<div class="panel bg3" id="options-panel">
+		<div class="inner"><span class="corners-top"><span></span></span>
+
+		<fieldset class="fields1">
+			<!-- IF S_BBCODE_ALLOWED -->
+				<div><label for="disable_bbcode"><input type="checkbox" name="disable_bbcode" id="disable_bbcode"{S_BBCODE_CHECKED} /> {L_DISABLE_BBCODE}</label></div>
+			<!-- ENDIF -->
+			<!-- IF S_SMILIES_ALLOWED -->
+				<div><label for="disable_smilies"><input type="checkbox" name="disable_smilies" id="disable_smilies"{S_SMILIES_CHECKED} /> {L_DISABLE_SMILIES}</label></div>
+			<!-- ENDIF -->
+			<!-- IF S_LINKS_ALLOWED -->
+				<div><label for="disable_magic_url"><input type="checkbox" name="disable_magic_url" id="disable_magic_url"{S_MAGIC_URL_CHECKED} /> {L_DISABLE_MAGIC_URL}</label></div>
+			<!-- ENDIF -->
+			<!-- IF S_SIG_ALLOWED -->
+				<div><label for="attach_sig"><input type="checkbox" name="attach_sig" id="attach_sig"{S_SIGNATURE_CHECKED} /> {L_ATTACH_SIG}</label></div>
+			<!-- ENDIF -->
+			<!-- IF S_NOTIFY_ALLOWED -->
+				<div><label for="notify"><input type="checkbox" name="notify" id="notify"{S_NOTIFY_CHECKED} /> {L_NOTIFY_REPLY}</label></div>
+			<!-- ENDIF -->
+			<!-- IF S_LOCK_TOPIC_ALLOWED -->
+				<div><label for="lock_topic"><input type="checkbox" name="lock_topic" id="lock_topic"{S_LOCK_TOPIC_CHECKED} /> {L_LOCK_TOPIC}</label></div>
+			<!-- ENDIF -->
+			<!-- IF S_LOCK_POST_ALLOWED -->
+				<div><label for="lock_post"><input type="checkbox" name="lock_post" id="lock_post"{S_LOCK_POST_CHECKED} /> {L_LOCK_POST} [{L_LOCK_POST_EXPLAIN}]</label></div>
+			<!-- ENDIF -->
+
+			<!-- IF S_TYPE_TOGGLE or S_TOPIC_TYPE_ANNOUNCE or S_TOPIC_TYPE_STICKY -->
+			<hr class="dashed" />
+			<!-- ENDIF -->
+
+			<!-- IF S_TYPE_TOGGLE -->
+			<dl>
+				<dt><label for="topic_type-0"><!-- IF S_EDIT_POST -->{L_CHANGE_TOPIC_TO}<!-- ELSE -->{L_POST_TOPIC_AS}<!-- ENDIF -->:</label></dt>
+				<dd><!-- BEGIN topic_type --><label for="topic_type-{topic_type.VALUE}"><input type="radio" name="topic_type" id="topic_type-{topic_type.VALUE}" value="{topic_type.VALUE}"{topic_type.S_CHECKED} />{topic_type.L_TOPIC_TYPE}</label> <!-- END topic_type --></dd>
+			</dl>
+			<!-- ENDIF -->
+
+			<!-- IF S_TOPIC_TYPE_ANNOUNCE or S_TOPIC_TYPE_STICKY -->
+			<dl>
+				<dt><label for="topic_time_limit">{L_STICK_TOPIC_FOR}:</label></dt>
+				<dd><label for="topic_time_limit"><input type="text" name="topic_time_limit" id="topic_time_limit" size="3" maxlength="3" value="{TOPIC_TIME_LIMIT}" class="inputbox autowidth" /> {L_DAYS}</label></dd>
+				<dd>{L_STICK_TOPIC_FOR_EXPLAIN}</dd>
+			</dl>
+			<!-- ENDIF -->
+
+			<!-- IF S_EDIT_REASON -->
+			<dl>
+				<dt><label for="edit_reason">{L_EDIT_REASON}:</label></dt>
+				<dd><input type="text" name="edit_reason" id="edit_reason" value="{EDIT_REASON}" class="inputbox" /></dd>
+			</dl>
+			<!-- ENDIF -->
+		</fieldset>
+		<!-- ENDIF -->
+
+<!-- ENDIF -->

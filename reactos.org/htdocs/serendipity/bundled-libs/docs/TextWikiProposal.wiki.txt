@@ -1,0 +1,151 @@
++ Text_Wiki Proposal
+
+This is an updated version of the proposal to PEAR group for {{Text_Wiki}} by [mailto:pmjones@ciaweb.net Paul M. Jones].
+
+%%TOC%%
+
+----
+
+++ Overview
+
+Most Wiki projects use their own internal, specialized parsing and rendering engines to transform source Wiki text to HTML.  The rule structures of different Wiki implementations are usually incompatible, leading developers to write their own engine to parse and render their own specialized Wiki markup.  This makes it difficult to extract and compare rule structure, as well as making it troublesome to add/modify/delete existing markup rules.  In addition, this makes it near-impossible to "drop in" Wiki text transformation processes to a nominally non-Wiki project.
+
+To solve the rule-modification and drop-in problems noted above, {{Text_Wiki}} abstracts the process of displaying Wiki-formatted text by using an object-oriented rule structure for parsing and rendering.
+
+A default set of parsing and rendering rule classes is provided with {{Text_Wiki}}; they serve to implement basic Wiki transformation into XHTML, and provide useful, well-commented examples of how to write a Wiki transformation rule.
+
+In addition, individual parsing and rendering rules can be added, modified, and removed with a user-defined rules directory.  Depending on the rendering method for a rule, source Wiki text may be transformed into XHTML, Latex, PDF, RTF, and so on.
+
+The properties of a {{Text_Wiki}} object determine...
+
+* which rules are applied to the source Wiki text (and in what order),
+* what the !WikiWeb URLs are for viewing and editing pages,
+* Interwiki mappings,
+* which pages exist in the !WikiWeb,
+* and much more.
+
+{{Text_Wiki}} does not implement a full !WikiWikiWeb; it only handles the transformation of Wiki source text to an output format.
+
+----
+
+++ History and Research
+
+Please note that {{Text_Wiki}} was pre-proposed earlier this year with some positive response[http://marc.theaimsgroup.com/?t=105838978200001&r=1&w=2] and that the call for votes is complete.[http://marc.theaimsgroup.com/?t=106994688000001&r=1&w=2]
+
+Primary research for {{Text_Wiki}} was based on two open-source Wiki projects, [http://tavi.sourceforge.net/ WikkiTikkiTavi] and [http://www.develnet.org/ coWiki].  Other Wiki engines and rule sets were also used in research, but these two provide sufficient examples for Wiki implementation.
+
+----
+
+++ What Is Wiki?
+
+A !WikiWikiWeb (a "Wiki") is a web-based collaboration tool in which any user can edit any page on the site.
+
+To quote C2: "Wiki is a composition system, it's a discussion medium, it's a repository, it's a mail system, it's a chat room, and it's a tool for collaboration."[http://c2.com/cgi/wiki]
+
+
++++ Wiki Markup Is Easy To Understand...
+
+Wikis allow rich text markup and automatic page linking.
+
+Because Wiki content is entered as plain text in a web environment, Wikis do not generally use HTML for rich text markup; instead, they use structured text to mark the elements of a page.
+
+For example, in HTML, one would mark a heading using {{<hN>...</hN>}} tags.
+
+<code>
+<html>
+<h3>This is a heading.</h3>
+<p>This is not.</p>
+</html>
+</code>
+
+To mark a heading in a Wiki, you put the heading on its own line and prefix it with a number of plus-signs.  Thus, the corresponding Wiki markup for the above example would look something like this:
+
+<code>
++++ This is a heading.
+This is not.
+</code>
+
+There are different structure rules for different markup elements.  For example, bold text might be enclosed in a paired sets of three single quotes, teletype text is set off my matched pairs of 2 curly braces, lists are noted by starting the like with a hash or a star, and so on.
+
+Wikis also automate the creation and linking of pages.  In a Wiki, page names are made of WordsSmashedTogether; the Wiki sees WordsSmashedTogether on a page and creates a link to the corresponding page in the Wiki.  If the page exists on the Wiki, the page name itself becomes a link; if the page does not exist, a suffix is added to the page name, usually a question mark, and that suffix is linked to the "create a new page" URL.
+
+This means that in order to translate Wiki-formatted structured text (from the source) to HTML (for display), it is necessary to do a find-and-replace on the text, looking for text lines that match the Wiki structured text rules, and convert them to HTML for display.  Most Wiki engines parse-and-render within a single class, or with a series of functions within a single include file.
+
+
++++ ...But It's Not Standardized...
+
+The problem with Wiki markup is that it is not standardized.  Different Wiki engines use different rule structures.  In general, Wiki implementors want the source text to be make sense when read by humans, and also be translatable to HTML.  What "makes sense" to one developer or community might not make sense to another.
+
+By way of example, let's take a look at headings.  In HTML, a heading is always marked the same way.  In different Wikis, headings are not always the same.  In !WikkiTikkiTavi, a heading-2 looks like this:
+
+<code>
+== My Heading ==
+</code>
+
+But in coWiki, it looks like this:
+
+<code>
+++ My Heading
+</code>
+
+And in another wiki, it might look like this:
+
+<code>
+---- My Heading
+</code>
+
+(Why four dashes instead of two?  Because the implementor decided that a heading-1 should use six dashes as the most-important, and work down to a heading-6 that uses one dash as the least-important.)
+
+It's even worse when we get to bold, italics, and so on.
+
+* Some Wikis use {{```''italic''```}}, others use {{```//italic//```}}, and others use {{```_italic_```}}.
+* Some Wikis implement partial HTML support so you can embed tables, others use a double-pipe markup style to mark cells.
+* Some Wikis implement XML-ish tags to mark elements.
+* Some Wikis implement plugins or macros to embed custom behaviors into Wiki pages.
+
+
+
++++ ...And It's Hard To Share.
+
+But what some Wikis do, others do not.  This means that if you want Wiki implementation "A" to support a rule or behavior from Wiki implementation "B", it becomes difficult or impossible, because the different implementations use different parsing and rendering routines that apply their rule structures in different ways.
+
+Not only that, but the parsing and rendering routines generally depend on the whole remainder of the Wiki implementation.  This means the Wiki transformation engine exists within a full !WikiWikiWeb system that handles page creation, versioning, storage, and linking, sometimes along with {{diff()}} functions to see the differences between page edits.
+
+----
+
+++ Text_Wiki Makes It Easy To Share
+
+{{Text_Wiki}} solves the problem of sharing rules and behaviors by using a unified parsing and rendering mechanism with an object-oriented system of rules for transforming Wiki markup elements.
+
+Each Wiki element gets its own rule class.  The rule class handles its own parsing and rendering within the context of the primary {{Text_Wiki}} object, but has full access to the primary {{Text_Wiki}} object properties (the source text, the elements that have already been parsed, and so on).
+
+This means that you can add, change, and remove rules for any specific Wiki markup set you happen to like.  It also means that if you see a Wiki behavior that you like, you can easily write a new rule that mimics the behavior and plug it into the {{Text_Wiki}} engine without rewriting the parser or renderer.
+
+Thus, instead of implementing a full !WikiWikiWeb system, {{Text_Wiki}} only deals with the transformation of Wiki source text to an output format.  (Incidentally, it needs to know whether a page exists within a !WikiWeb, but that is abstracted and does not depend on any specific storage or retrieval system.)
+
+
++++ How Does This Work?
+
+In general, {{Text_Wiki}} uses a replace-with-token methodology to mark source text matching a Wiki rule.  Any source text matching a rule (usually found through a regular expression) is replaced with a pair of delimiters surrounding a token number, and a matching token number is entered into the {{Text_Wiki}} {{$_tokens}} array property.  Any optional information about the matching text, and sometimes the matching text itself, is stored in the token entry.  After parsing, the tokens are rendered into a target format depending on the rule's render() method.
+
+As a side-benefit, this means that once the source text has been parsed and tokenized, the combination of the source text and replacement tokens allows you to target any output format, not just XHTML.  If a rule supports it, that rule can render a token into Latex, PDF, RTF, and so on.
+
+
++++ Examples
+
+The best example of {{Text_Wiki}} is the {{Text_Wiki}} sample page, included in the package documentation.  After you use PEAR to install {{Text_Wiki}}, look in the docs/ directory.  The index.php file show how to instantiate a {{Text_Wiki}} object with a set of custom options, and Sample.wiki.txt shows how to write up Wiki source text.  Finally, open index.php in your browser to see the Wiki source text transformed into HTML.
+
+----
+
+++ Download the Package
+
+http://pear.php.net/package/Text_Wiki
+
++++ Known Issues
+
+Need to create full documentation, including how to write a rule.
+
+{{Text_Wiki}} should return {{PEAR_Error}} objects and error codes, not echo errors to output.
+
+Should add {{renderLatex()}} method for all default rules (from !WikkiTikkiTavi?)
+

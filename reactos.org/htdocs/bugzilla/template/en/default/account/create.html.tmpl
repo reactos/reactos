@@ -1,0 +1,65 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE
+  # none
+  # 
+  # Param("maintainer") is used to display the maintainer's email.
+  # Param("emailsuffix") is used to pre-fill the email field.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]
+  Create a new [% terms.Bugzilla %] account
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+           title = title
+           onload = "document.forms['account_creation_form'].login.focus();" %]
+
+<p>
+  To create a [% terms.Bugzilla %] account, all you need to do is to enter
+  a legitimate e-mail address. You will receive an email at this address
+  to confirm the creation of your account. <b>You will not be able to log
+  in until you receive the email.</b> If it doesn't arrive within a
+  reasonable amount of time, you can contact the maintainer of
+  this [% terms.Bugzilla %] installation
+  at <a href="mailto:[% Param("maintainer") %]">[% Param("maintainer") %]</a>.
+</p>
+
+<form id="account_creation_form" method="get" action="createaccount.cgi">
+  <table>
+    <tr>
+      <td align="right">
+        <b>E-mail address:</b>
+      </td>
+      <td>
+        <input size="35" id="login" name="login">
+        [% Param('emailsuffix') FILTER html %]
+      </td>
+    </tr>
+  </table>
+  <br>
+  <input type="submit" id="send" value="Send">
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

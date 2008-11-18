@@ -1,0 +1,1892 @@
+# $Id$
+
+Version 0.9.1 (November 23rd, 2005)
+------------------------------------------------------------------------
+
+    * Fix renaming authors and categories to also properly update permalinks
+      that have no %id% column (garvinhicking)
+
+    * Fix configuration for non-admins to not properly store values like
+      blog Title (garvinhicking)
+
+    * Fix RSS import's timezone detection for ISO-8601 dates
+      (garvinhicking)
+
+    * Fix htmlarea when using UTF-8 charset on a ISO-8859-1 language
+      (garvinhicking)
+
+    * Statistics plugin now contains entries per author. Patch #1347639
+      by SvOlli
+
+    * Fix thumbnail generation for imageMagick when target image is
+      smaller than the target size, it should not be blown up
+      (garvinhicking)
+
+    * Fix spartacus plugin to not properly indicate updatable versions
+      of plugins (garvinhicking)
+
+    * Fix multi-media upload in Safari browser (jhermanns)
+
+    * Make calendar plugin also accept links to external events
+      (garvinhicking)
+
+    * Fix mod_rewrite rules to not differentiate on case-sensitivity for
+      authors, archives and category URLs (garvinhicking)
+
+    * Fix a bug in the serendipity_currentURL function when Serendipity
+      is installed in your HTTP root. This bug only effects the plugins karma,
+      entrysplit and multilingual on these installations.
+      Thanks to Richard Davey for spotting this! (garvinhicking)
+
+    * Fix showing preview image of hotlinked images. Thanks to Thomas
+      and RobA from the forums! (garvinhicking)
+
+    * Make Onyx RSS parser interpret HTTP redirecty. (Kristian Köhntopp)
+
+    * Added blogger.com importer by Jawish Hameed
+
+    * Fix visitor tracking in statistics plugin (garvinhicking)
+
+    * Fix incorrect entry count in categories sidebar plugin (was also
+      counting drafts)
+
+    * Set the correct reply-to name when sending comment mails, thanks
+      to RobA from the forums (garvinhicking)
+
+Version 0.9 (October 28th, 2005)
+------------------------------------------------------------------------
+
+    * Spamblock plugin can now check domains against the blogg.de
+      blacklist (http://spam.blogg.de/blacklist.txt). Deactivated by
+      default, the blacklist will be cached for 60 minutes before
+      being queried again. Thanks to the guys of blogg.de for notifying
+      us about their service! (garvinhicking)
+
+    * Fix categories plugin to properly work on pgsql installations.
+      Thanks to CaptainCrunch!
+
+    * Make serendipity_makeFilename function be UTF-8 aware.
+
+    * Fix syndication plugin not allowing to configure Atom 1.0 feed.
+      Thanks to Boris from the forums!
+
+    * Fix an issue of privilege escalation for non-admins (garvinhicking)
+
+    * Fix a parse error in the Importer, introduced in beta3
+      (garvinhicking)
+
+    * Show installed plugin versions in plugin overview (garvinhicking)
+
+Version 0.9-beta3 (October 21st, 2005)
+------------------------------------------------------------------------
+
+    * Syndication plugin: Do not show E-Mail adress in RSS feed by default
+      (garvinhicking)
+
+    * Fix Bug where siteConfiguration was not available to chief
+      editors. Thanks to Jannis! :) (garvinhicking)
+
+    * Fix Bug with category/author RSS feeds not properly recognize
+      their content when URL rewriting is off (garvinhicking)
+
+    * Enhanced entryproperties plugin to support entering custom field-
+      names (RFE #1328773) (garvinhicking)
+
+    * Also fetch and display entryproperties in the results of a search.
+      Fixes bug #1329379 (garvinhicking)
+
+    * Fix some dreaded "only variables can be returned by referenced"
+      PHP 4.4 notices on some minor occasions (garvinhicking)
+
+    * Fix problem with b2evo importer when db was not in the same db
+      as serendipity. Thanks to Judebert from the forums! (garvinhicking)
+
+Version 0.9-beta2 (October 13th, 2005)
+------------------------------------------------------------------------
+
+    * Fix "easy installation" leading to an error with language charsets.
+      Thanks to Heddesheimer from the forums for spotting this!
+      (garvinhicking)
+
+    * Improve Spamblock plugin to allow configuring author/url filters
+      straight from the "Comments" interface. (garvinhicking)
+
+    * Fix a bug in the fetchEntry() function which can lead to wrong
+      author/authorid settings when editing an existing entry. Thanks to
+      Martin Eichenberg! (garvinhicking)
+
+    * The output of the category plugin can now be styled via Smarty
+      templating (plugin_categories.tpl). Also you can now enable showing
+      the number of entries per category. (garvinhicking)
+
+    * Admin entry overview: Show pagination on bottom of the list and
+      allow filtering for showing drafts/publishs (garvinhicking)
+
+    * Fix spartacus plugin to be able to upgrade plugins (garvinhicking)
+
+    * Fix track exits plugin to redirect to the right URL when no URL-ID
+      was found. (garvinhicking)
+
+    * "Recent comments" plugin can be configured whether to show
+       trackbacks, comments or both. (garvinhicking)
+
+    * Spartacus can be configured to set file owner/permissions of
+      downloaded files via chown/chmod. Also fix UTF-8 problems in
+      non-UTF-8 environments. (garvinhicking)
+
+    * Allow per-author XML feeds, added bundled sidebar plugin to show
+      (multiple) authors. (jtate)
+
+    * Enhance entryproperties plugin so that single entries can hide
+      their content from the RSS feeds. (garvinhicking)
+
+    * Fix using the "realname" of the author in entry preview instead of
+      username. Also fix printing category info when no category was
+      assigned. Thanks to Manuel Charisius! (garvinhicking)
+
+Version 0.9-beta1 (September 29th, 2005)
+------------------------------------------------------------------------
+
+    * Change Onyx RSS parser and xml_parser_* functions to already specify
+      the source charset, so that PHP functions can do the recoding on
+      their own. Functionality differed on PHP4 and PHP5, this has now
+      been unified. Thanks a lot to W-Mark Kubacki!
+
+    * Enhance XHTML Cleanup plugin to recode double-encoded UTF-8 HTML
+      entities on NON-UTF8 blogs. Patch thanks to W-Mark Kubacki!
+
+    * Fix not showing thumbnail images in media database when thumbSuffix
+      is empty. Thanks to Brian J. France!
+
+    * Spamblock plugin can now define required comment fields. Also fix
+      parameter order in mt_rand() call, thanks to Jens Kubieziel
+      (garvinhicking)
+
+    * Plugin API now allows to validate config options via a "validate"
+      method, used by the plugin configuration panel. Need to set "validate"
+      and "validate_error" property bag attributes in your custom
+      introspect_config_item() calls, documented on
+      http://www.s9y.org/index.php?node=43#A13 (garvinhicking)
+
+    * Read/Write permissions for user-groups for specific categories.
+      (garvinhicking)
+
+    * Reduce memory usage by splitting up function files, optimizing
+      spartacus parsing. New files:
+        include/functions_rss.inc.php
+        include/functions_entries_admin.inc.php
+      (garvinhicking)
+
+    * Inserting links via the Serendipity Toolbar over the entry area
+      now also asks for a link tooltip/title.
+
+    * Plugin API no longer queries the filename of a plugin if it is internal
+      (increases performance because of less SQL queries) (garvinhicking)
+
+    * Onyx RSS parser now uses PEAR::HTTP_Request instead of fopen wrappers
+      to work on allow_url_fopen disabled hosts. Plugins like remoterss and
+      aggregator can now properly fetch RSS feeds on those hosts.
+      (garvinhicking)
+
+    * Make "/archive" view also recognize selected category. Sidebar
+      archive and calendar plugins also pay strict attention to which
+      category is selected. Helps "semi-multiple" blogs based on categories
+      a lot. (garvinhicking)
+
+    * Make media insertion dialog remember settings (via Cookies) and
+      insert return of the media database on cursor position.
+      (garvinhicking)
+
+    * Admin comment panels shows comments with their content and escaped HTML
+      instead of stripping all HTML. Only summary, if longer than 200 characters
+      will have stripped HTML because of otherwise invalid markup. (garvinhicking)
+
+    * Updated statistics plugin to track seperate visitor/referrer statistics.
+      Patch by Fredrik Sandberg, thanks a lot! (garvinhicking)
+
+    * Make category selector be nicer to Opera. Load the handling functions
+      only after the DOM load is completed. Add new "addLoadEvent"
+      functionality for future use to stack onload events. (garvinhicking)
+
+    * New Plugin API Hook "frontend_calendar" which allows to hook into
+      sidebar calendar creation. Needs to be enabled in the calendar
+      plugin configuration and needs a patch to the plugin_calendar.tpl
+      file which is done in all bundled themes. (Anthem)
+
+    * Atom 1.0 feed support (garvinhicking)
+
+    * MoveableType importer now also recognizes comments and trackbacks.
+      Tested with MT 3.17. (garvinhicking)
+
+    * Make template directory allow to contain subdirectories with more
+      templates. This allows you to symbolically link the "additional_themes"
+      CVS directory within your templates path, just like you can do
+      with the "additional_plugins" directory already (garvinhicking)
+
+    * Allow UTF-8 recoding using mb_* functions (Tadashi Jokagi)
+
+    * Allow to switch charsets ("Native" / "UTF-8"). (garvinhicking)
+
+    * Permissions: The permission "adminImagesViewOthers" now controls
+      whether an author is allowed to view images or not. In older Serendipity
+      versions, any author could always view any images, but only modify those
+      belonging to him. (garvinhicking)
+
+    * Plugin API: Added plugin hooks for category properties, made smarty
+      init function accept plugin values. See the plugin "Properties for
+      Categories" for example usage. The plugin allows to create sub-blogs
+      based on categories (garvinhicking)
+
+    * Categories plugin can be configured to only show specific sub-
+      categories and hide other categories when descending the tree
+      (garvinhicking)
+
+    * "Edit entries" panel can now delete entries and returns to the
+      originating panel. Also it now utilizes Cookies (via JS) to remember
+      the last used settings (sortorder, filters) (garvinhicking)
+
+    * Added WordPress-PostgreSQL importer, by Devrim Gunduz
+
+    * RFE #1231423: Allow to change the author of an entry with the
+      "entryproperties" plugin. (garvinhicking)
+
+    * Templates can now be handled via Spartacus (garvinhicking)
+
+    * Plugin Manager: Improve Spartacus interface and include plugin
+      categories (garvinhicking)
+
+    * Support different WYSIWYG editors via new plugin hooks. TinyMCE
+      plugin available. (garvinhicking)
+
+    * Allow language files to define $i18n_filename_from and _to array
+      so that each language can individually rewrite URL characters.
+      Only the Russian language currently makes use of this.
+      (garvinhicking)
+
+    * fixed serendipity_traversePath() -  PHP5 issue with array_merge()
+      Thanks to jdhawk for the fix (flotsam)
+
+    * fixed wrong display of "found X entries matching your search" in
+      genpage.inc.php (flotsam)
+
+    * Added fix for wrong language in permission groups (were created in the
+      language that the browser of the installing user has (flotsam)
+
+    * Added Voodoo Wiki/XML importer, hooks into static page plugin.
+      (Tim Putnam)
+
+    * Make comment deletion return to the originating page, allow to
+      display trackbacks and normal comments at once (new default).
+      Bugs #1226440, #1226439 (garvinhicking)
+
+    * Fix multi-category selector for Konqueror (garvinhicking)
+
+    * Support use of Boolean search mode in MySQL. Is activated when using
+      special characters like "()~*+-<>. Syntax see
+      http://dev.mysql.com/doc/mysql/en/fulltext-boolean.html.
+      (garvinhicking)
+
+    * Apply patch to allow usage of Feedburner RSS feeds, by Anders Clerwall
+
+    * Fixed using "_" instead of "-" in the approve trackback/comments
+      URLs. (garvinhicking)
+
+    * Introduce permission groups with customizable permission sets.
+      (garvinhicking)
+
+    * Make bblog importer recognize trackbacks. Thanks to Hanno!
+
+    * Spartacus plugin can now properly handle plugins which contain both
+      sidebar and event plugins in one directory (garvinhicking)
+
+    * TEMPLATES: Added div.serendipity_section_(comments|trackbacks|commentform)
+      containers inside the Default Template's entries.tpl file to be
+      able to customize certain containers via CSS.
+      Solves RFE #1210889 (garvinhicking)
+
+    * TEMPLATES: Added div.serendipity_search_* wrapping elements to be
+      able to style the search result messages specifically. Added new
+      Smarty variables $searchresult_* (default/content.tpl).
+      Solves RFE #1210676 (garvinhicking)
+
+    * Fix editing a draft article to be properly displayed as draft
+      in PostgreSQL setups. Thanks to Penny Leach! (garvinhicking)
+
+    * Localized the string "Reply" which occured inside some templates.
+      (s/Reply/{$CONST.REPLY}/) (garvinhicking)
+
+    * Added swedish translation by Torbjörn Hedberg, Added european
+      portugues translation by Joao Palhoto Matos, Added hungarian
+      translation by Posz Marton
+
+    * New configuration item: Gregorian or Jalali Calendar output.
+      Patch by Omid Mottaghi
+
+    * New personal configuration item: "Forbid creating entries" to
+      allow authors to be logged in, but not create any entries. Meant
+      to be used in conjunction with serendipity_plugin_adduser for
+      user self-registration where you want to allow posting comments
+      to registered users only. (garvinhicking)
+
+    * Added Custom Permalink URL days, months, years, etc. to the
+      Serendipity Configuration ("Paths") panel.
+      If you use the external plugin serendipity_plugin_authors or
+      serendipity_event_linktoolbar, you need to update those to
+      their latest versions to work with the new changes.
+      (garvinhicking, tomsommer)
+
+    * Importers can now properly import data if the source database is
+      not the same as the target database (garvinhicking)
+
+    * Use $smarty.const. to access constants instead of $CONST within
+      Smarty templates; this is replaced using a Smarty prefilter, so
+      that within templates you can still use the $CONST shortcut
+      (garvinhicking)
+
+    * Added new event hook to the trackback sending facility so that
+      plugins like serendipity_event_trackback (additional_plugins)
+      can send trackbacks to Blogs without RDF-metadata (garvinhicking)
+
+    * Allow to view and fetch multiple categories. Categories plugin
+      can allow viewers to select multiple categories to view.
+      (garvinhicking)
+
+    * Added hooks into the image selector admin popup for plugins to
+      support additional options. serendipity_event_imageselectorplus
+      accesses those hooks already. (garvinhicking)
+
+    * Categories plugin now offers to sort by category name, description
+      or creation date. (garvinhicking)
+
+    * Give HTML Nugget the option for a second "description" attribute
+      that is used in the Plugin Configuration section, so that HTML
+      nuggets with an empty title still display additional information
+      to distinct multiple nuggets from another (garvinhicking)
+
+    * New entryproperties plugin option: Hide an entry from the frontpage
+      (garvinhicking)
+
+    * Media manager: Allow to upload as many files as you want via
+      JavaScript interaction and "add more images" button. (garvinhicking)
+
+    * "Comments" Sidebar plugin can now have a custom title
+      (garvinhicking)
+
+Version 0.8.5 (September 29th, 2005)
+------------------------------------------------------------------------
+
+    * More Security: When changing the password in your personal preferences,
+      you need to insert the old password. Secure backend forms with extra
+      token checks to bypass XSRF attacks. Thanks to Nenad Jovanovic for
+      contacting me about this issue! (garvinhicking)
+
+    * Fix JS errors in admin comment overview for IE6 (garvinhicking)
+
+    * Fix showing any entry-id related sidebar plugins, when a selected
+      entry is not visible (permissions/drafts/...) by unsetting the
+      global $serendipity['GET']['id'] in that case. (garvinhicking)
+
+    * Fix "DATA_TRACKBACK_APPROVED" showing of constants when approving
+      trackbacks/comments instead of the properly formatted message.
+      (Would've required a template change for a "pretty solution", but
+       the current fix is a BC-compatible fix by defining constants a bit
+       differently) (garvinhicking)
+
+    * Default Admin Stylesheet no longer uses direct height: assignment,
+      but padding instead. This should get rid of occasional overlapping
+      of menu items. Thanks a lot to Ognyan Kulev for the solution to this!
+
+    * Fix putting sticky entry on the last page in postgreSQL setups.
+      Thanks to Nate Johnston for working this out! (garvinhicking)
+
+    * Fix file upload bug which limited upload filesize to 3 million bytes
+      (2.86MB) regardless of PHP configuration. Maximum upload filesize
+      should now be properly bound by PHP configuration settings.
+      (wesley)
+
+    * Fix cosmetic warning message about missing S9Y_PEAR_PATH when
+      installing. (garvinhicking)
+
+Version 0.8.4 (August 19th, 2005)
+------------------------------------------------------------------------
+
+    * Add HTML information about calendar arrows image size to bypass
+      large sizing in Internet Explorer. Thanks to frodeste from the
+      Forums!
+
+    * Hide title of an entry in the frontend, if entry is draft and not
+      displayed. Fixes Bug #1260667 (garvinhicking)
+
+    * Unbundle Serendipity XML-RPC functions from the bundled distribution.
+      You will now need to install the additional plugin "Post via XML-RPC"
+      (serendipity_event_xmlrpc) to make entry posts via this interface.
+      The ongoing security issues with this interface and the little usage
+      of this functionality by the broad public have forced this move.
+      After installing this plugin you can use the same URL and nothing
+      will change for XML-RPC users. (garvinhicking)
+
+   * Optionally allow using a local PEAR installation. Set
+     $serendipity['use_PEAR'] = true
+     in your serendipity_config_local.inc.php or serendipity_config.inc.php
+     file. The required packages can be found in the
+     bundled-libs/.current_version file. (garvinhicking)
+
+   * Append the comment id to the mail that is sent to subscribers of
+     an entry, so that they can jump to the submitted comment immediately.
+     (garvinhicking)
+
+Version 0.8.3 (August 4th, 2004)
+------------------------------------------------------------------------
+
+   * Upgraded bundled libs:
+	Cache_Lite 	to 1.5.1
+	HTTP_Request 	to 1.2.4
+	Net_CheckIP     to 1.1
+	Net_Socket      to 1.0.6
+	Net_URL         to 1.0.14
+	PEAR		to 1.3.5
+	Text_Wiki	to 0.25.0
+	XML_RPC		to 1.3.3
+     Fixing several bugs and vulnerabilities. (nohn)
+
+   * Make categories sidebar plugin show categories' description, not the
+     name on mouse over (garvinhicking)
+
+   * Added new config option "blogMail" that specifies the blog's used
+     From: E-Mail address. If not given, falls back to not specifying
+     From: field and using mailserver default ("wwwrun", "nobody", ...)
+     (garvinhicking)
+
+   * Fix possible exploit that sends comments to the blog owner and others
+     with arbitrary mailheaders and a link to invalid entries. Thanks to
+     Sebastian Raible! (garvinhicking)
+
+   * Allow plugins to contain more than one HTML nuggets which can be
+     WYSIWYGized. (garvinhicking)
+
+   * Fix editing a draft article to be properly displayed as draft
+     in PostgreSQL setups. Thanks to Penny Leach! (garvinhicking)
+
+   * Fixed possible XSS in comment input validation, thanks to
+     Ilia  Alshanetsky
+
+   * Full Korean language support available! Translations done for:
+      - main language file
+      - all core plugins
+      - Kubrick template
+     (wesley)
+
+   * TEMPLATES: New core hook "frontend_footer" is introduced and is
+     added to index.tpl:
+      {serendipity_hookPlugin hook="frontend_footer"}
+     (wesley)
+
+   * TEMPLATES: Added plugin hooks "entries_header" and "entries_footer"
+     to the files entries_archives.tpl and entries_summary.tpl:
+      {serendipity_hookPlugin hook="entries_header"}
+      <div class='serendipity_entryFooter' style="text-align: center">
+        {serendipity_hookPlugin hook="entries_footer"}
+      </div>
+     (wesley)
+
+Version 0.8.2 (June 29th, 2005)
+------------------------------------------------------------------------
+
+    * fixed remote code execution vulnerability. Thanks to Gulftech
+      Research for pointing out that bug and Stefan Esser for helping
+      fix it (nohn)
+
+    * Updated Spartacus to most recent version (nohn)
+
+    * fixed serendipity_traversePath() -  PHP5 issue with array_merge()
+      Thanks to jdhawk for the fix (flotsam)
+
+    * CSS does no longer emit cache-restricting headers, so that the
+      stylesheets can be cached by the browser for followup-requests
+      Thanks to Sencer for pointing this out! (garvinhicking)
+
+    * Patch/Bug #1209410 by swiesinger: When using shortcut admin URL,
+      use https:// when specified by user
+
+    * Fix deleting categories when having privileges but not being
+      administrator (Patch #1205347, many thanks to Penny Leach)
+
+    * Increased level of output message from the Spartacus plugin
+      (garvinhicking)
+
+    * Patched XML-RPC functions, thanks to Tim Putnam. This should enable
+      XML-RPC services to properly fetch existing articles and edit them.
+
+    * Fix Plugin API call performing too many unneeded SQL queries
+      (garvinhicking)
+
+    * Fix missing authorname when previewing entry. Thanks to winkiller,
+      aquatic, thomas, wurstprinz and hansi for fixing this!
+
+Version 0.8.1 (May 17th, 2005)
+------------------------------------------------------------------------
+
+    * Fix missing PDF thumbnail creation (imagemagick only)
+      (garvinhicking)
+
+    * Fix possible arbitrary media file upload for editors
+      (garvinhicking, sesser, nohn)
+
+    * Fix possible XSS when using the templatedropdown or shoutbox
+      plugins (garvinhicking)
+
+    * Fix pagination of "Entries by Author" (garvinhicking)
+
+    * Fix RSS 1.0 missing top-level namespace (garvinhicking)
+
+    * Deactivated gzip compression by default, as in certain server
+      setups it creates problem with double-encoding or missing
+      ob_gzhandlers. (garvinhicking)
+
+    * Allow the serendipity_event_trackback additional trackbacks plugin
+      to send trackbacks even if your entry did not contain at least one
+      link. Also fix not sending trackbacks containing "#" fragments
+      (garvinhicking)
+
+    * Do not display Sidebar titles if they are not set for the bundled
+      default, kubrick and wp templates (sidebar.tpl) (garvinhicking)
+
+    * Fix error "Warning: ob_start(): output handler 'ob_gzhandler'
+      cannot be used after 'URL-Rewriter'" which can occur on installations
+      where session.use_trans_sid is activated and Serendipity's gzip
+      compression is used. (garvinhicking)
+
+    * Adjusted checking for "convert" binary in installation for
+      Windows servers. Thanks to BobRock! (garvinhicking)
+
+    * BBCode plugin: Allow =, ~ and ! URL characters (garvinhicking)
+
+    * Added romanian translation by Alexandru Szasz
+
+    * Some IIS webserver compatibility for $_SERVER variables. This should
+      ensure most basic operations. (garvinhicking)
+
+    * RSS feed does no longer initialize a session and thus now causes
+      proper cachability for Conditional Get (garvinhicking)
+
+    * Fix issues on Windows installations: %T strftime-Option not known
+      when saving a plugin and emitting timestamp (was empty),
+      redirecting to a wrong URL for installation with '\' instead of
+      '/' path indicators. Thanks to Hendy Irawan! (garvinhicking)
+
+Version 0.8 (April, 15th 2005)
+------------------------------------------------------------------------
+
+    * Added icelandic translation by Örn Arnarson
+
+    * Fixed a possible SQL injection issue in Tracking methods. Also
+      fixed possible XSS exploit in BBCode markup, if enabled for
+      comments. Thanks to ADZ Security Team for detecting this. Next
+      time please give us more time to respond to your public announced
+      exploits. ;) (garvinhicking)
+
+    * Reverted more JavaScript-patches introduced in beta5 to make
+      the extended body text visible when using WYSIWYG editor
+      (garvinhicking)
+
+    * Fix SQLite bug when fetching authorname in quicksearch. Thanks to
+      Sven Oliver Moll!
+
+Version 0.8-beta6 (April 8th, 2005)
+------------------------------------------------------------------------
+
+    * Remove unique constraint for url_idx on the referrer suppress table
+      and replaced it by a simple index. Fixes fatal errors on postgresql
+      (garvinhicking)
+
+    * Fix inserting media manager items: Non-images were not properly
+      detected (garvinhicking)
+
+    * Fix broken SQL for inserting comments which showed in SQLite/PGSql
+      and got introduced in beta5. (garvinhicking)
+
+    * Reverted JavaScript-patches from nohn introduced in beta5 to make
+      IE6 again show the category and extended entry toggle buttons
+      (garvinhicking)
+
+Version 0.8-beta5 (April 1st, 2005)
+------------------------------------------------------------------------
+
+    * Fix XMLRPC problems for getting existing posts. Thanks a lot to
+      TimothyP from the forums! (garvinhicking)
+
+    * Fix directory creation error; the mode 1777 failed on several setups,
+      so we use 0777 again (garvinhicking)
+
+    * Fix installer not being able to go above page 2 on special setups
+      with register_globals On (garvinhicking)
+
+    * Fixed buggy referrer tracking for MySQL (Bug #1170251)
+
+    * Upgrade Smarty to v2.6.9 (tomsommer)
+
+    * Added 'Cache-Control: no-cache' header to our CSS file; this may
+      fix IE bugs where CSS was only loaded after 1-2 reloads.
+      (TomSommer)
+
+    * Fixed a XMLRPC problem for metaWeblog_newMediaObject() to properly
+      save a binary file. Thanks to marco from the forums! (garvinhicking)
+
+    * Fixed possible SQL-Injection in Pingbacks (nohn; reported by Stefan
+      Esser)
+
+    * Kubrick template: Fix comments always printed as 'Anonymous',
+      put entry/extended parts not together (garvinhicking)
+
+    * Fix installer: Serendipity does not run with magic_quotes_runtime
+      set to on. Emit warning and try to switch off the directive.
+      (garvinhicking)
+
+    * Updated chinese language files, thanks to Andrew Huang
+
+Version 0.8-beta3/4 (March 15th, 2005)
+------------------------------------------------------------------------
+
+    * Drop SQL index on comment's body. This was not used in our code,
+      and caused trouble with large comments on pgsql and MySQL.
+      (garvinhicking)
+
+    * Monthly entry summary shows correct date header (garvinhicking)
+
+    * RSS / Syndication plugin now offers to hide E-Mail adresses from
+      XML feeds (garvinhicking)
+
+    * After installing a plugin you will be either redirected to
+      plugin config or to plugin overview, so that an accidental
+      browser refresh does not install the plugin twice
+      (garvinhicking)
+
+    * Fixed wrong date format in portuguese and czech languages
+      (garvinhicking)
+
+    * Fix buggy wordfiltering of spamblock plugin (garvinhicking)
+
+    * Fixed variable name for all markup plugins. They previously used
+      localized versions like 'Extended entry' and now use a proper
+      language independent string. The upgrader takes care of replacing
+      the variables so that no options will get lost (garvinhicking)
+
+    * Fixed bug with Markup plugins not getting their right settings
+      under certain circumstances (only for autologin cookie users)
+      (garvinhicking)
+
+    * Correctly detect 500 Internal Server Error when installing
+      (garvinhicking)
+
+    * Emitting language headers only if no headers were sent yet.
+      This fixes problems with embedded serendipity installations.
+      (garvinhicking)
+
+    * Fix postgresql query problem, when using the entryproperties
+      plugin and browsing the calendar with category restriction(s).
+      Thanks to Larry Rosenman for helping out with this!
+      (garvinhicking)
+
+    * Introduce "div.container_X" CSS class for sidebar plugin items.
+      X is substituted with the plugin classname, like
+      "serendipity_plugin_categories". This class is contained in the
+      'default' template and all templates based on the sidebar.tpl
+      file. (garvinhicking)
+
+    * Fixed broken category pagination for "Newspaper" template
+      (garvinhicking)
+
+    * Bundle Tom Sommer's port of the Kubrick template
+
+    * Fix hardcoded "templates" directory reference inside the admin
+      style selector.
+
+    * Updated czech language files, thanks to Josef Klimosz
+
+    * Updated persian language files, thanks to Omid Mottaghi
+
+    * Do not display rotation/resize image manipulation methods for
+      hotlinked images (garvinhicking)
+
+    * Do not use "layout.php" in Default template for upgrading users
+      who did not delete that file from their directory (because the
+      upgrade may not have sufficient write privileges to remove the
+      file) (garvinhicking)
+
+    * Make RSS import parse ISO-8601 dates (like
+      '2004-11-24T22:43:08-05:00'), as PHPs strtotime() does not parse
+      that. (garvinhicking)
+
+Version 0.8-beta2 (March 5th, 2005)
+------------------------------------------------------------------------
+
+    * Show "create entry" toolbar for plugins like the Emoticon Chooser
+      also when WYSIWYG editor is enabled (garvinhicking)
+
+    * Do not display template engines in the template selector
+      (tomsommer)
+
+    * Fix HTML escaping of special characters for comments
+      (garvinhicking)
+
+    * Fix wrong username displayed in RSS comment feeds (garvinhicking)
+
+    * Fixed bug that may occur on few plugins executing other plugins,
+      like serendipity_event_entrypaging [this is the only bundled or
+      internal plugin affected by the issue] (garvinhicking)
+
+Version 0.8-beta1 (March 4th, 2005)
+------------------------------------------------------------------------
+
+    * Added Persian language and template for RTL-Languages by Omid
+      Mottaghi
+
+    * Fixed Windows path problems when synching with media manager.
+      Thanks to Thomas Klinger for helping!
+      (garvinhicking)
+
+    * Media files can now be hotlinked to foreign servers and thus not
+      using bandwidth from your own server. Media files can now also
+      be searched by name. Thanks to Chris Chan for this feature!
+
+    * Added ability to define a real name for each author. This is the
+      name seen by readers of the blog. The username is now only used for
+      logging into the administration suite (tomsommer)
+
+    * Added ability to toggle the amounts of comments per page within
+      a dropdown instead of needing to edit a Serendipity core file.
+      (garvinhicking)
+
+    * New configuration directive to tell Serendipity if the baseURL
+      shall be autodetected. This can be useful if you use multiple
+      domainnames listening on one blog installation. (Note: This auto-
+      detection was previously already enabled if using 'embedded mode')
+      (garvinhicking)
+
+    * Fixed bug for postgreSQL: Comments for entries within multiple
+      categories showed up as many times as the entry was within multiple
+      categories. Thanks to rickmans from the forums for detecting this.
+      (garvinhicking)
+
+    * Added configuration directive to allow visitor language negotiation
+      via browser language. (garvinhicking)
+
+    * Added native importers to migrate entries, comments,
+      categories and authors for:
+      - geeklog 1.3.11
+      - sunlog 0.4.4
+      - b2Evolution "Paris"
+      - boastMachine 3.0
+      - Textpattern 1.0rc1
+      - pMachine Pro 2.4
+      - bBlog 0.7.4
+      - Nucleus 3.15
+      - WordPress 1.5 / 1.2
+      - phpBB
+      (garvinhicking)
+
+    * Remember last state of media library (sort order, files per page,
+      directory, sortfield), via JavaScript+Cookies (garvinhicking)
+
+    * The config option 'extCSS' has been removed. It is now re-
+      commended to set external stylesheets in the template's index.tpl
+      file, or to @import it within the templates style.css file.
+      (garvinhicking)
+
+    * Personal Configuration allows to set defaults for creating new
+      entries (allow comments, moderate comments, publish/draft)
+      (garvinhicking)
+
+    * When deleting a comment with nested comments, move nested ones
+      to the parent of the deleted comment (fixes Bug #1079349)
+      (garvinhicking)
+
+    * Spamblock plugin allows to moderate/reject comments made via APIs
+      like wfw:commentApi or trackbacks, but still allow normal comments
+      (garvinhicking)
+
+    * Fixed SQL index key creation on fresh installation (garvinhicking)
+
+    * Upgraded htmlarea WYSIWYG editor to latest version. Entering
+      links now properly works, as finally does Copy+Paste from Mozilla!
+      (garvinhicking)
+
+    * New pretty URLs "/blog/serendipity.css" and
+      "/blog/serendipity_admin.css" as links to the Stylesheets.
+      (garvinhicking)
+
+    * Chief users are not allowed to hide plugins installed by other
+      users. (garvinhicking)
+
+    * Forbid uploading of active content files (.php, .shtml, ...) as
+      user without Administrator privileges (garvinhicking)
+
+    * Allow searching of the blog with pretty URLs, allow pagination
+      of searched entries (garvinhicking)
+
+    * Added handling of CONVERT BREAKS-directive in MT-Importer. Do the
+      whole importing process in a transaction to ensure either all or
+      no entires are imported. (pilif)
+
+    * Added hook for external authentication. First implementation draft
+      of LDAP auth added to additional_plugins CVS (garvinhicking)
+
+    * Added an extended property to disable nl2br() for specific
+      entries (pilif)
+
+    * Added korean language by Erich Iseli (garvinhicking)
+
+    * Change RSS feed's <guid> element to contain isPermaLink=false.
+      Only the link of the <link> element should be used as Permalink.
+      This fixes problems with copying links to send a trackback to from
+      RSS readers/clients that used the <guid> element as Permalink.
+      (garvinhicking)
+
+    * Fixed flaw in the function used to validate path-names.
+      Thanks to raperu2000 from the forums! (garvinhicking)
+
+    * Added Finnish language by Mauri Sahlberg (garvinhicking)
+
+    * Added Japanese language by Tadashi Jokagi (garvinhicking)
+
+    * Add ability to see all entries made by a single user (tomsommer)
+
+    * The "edit entry" overview will now highlight entries to be
+      published in the future (garvinhicking)
+
+    * Allow authors to easier reset the time for each entry, by clicking
+      an icon (tomsommer)
+
+    * Added new plugin, enabled by default, to enforce maximum browser
+      compatibility. The only thing which 'serendipity_event_browsercompatibility'
+      currently does is to add the transparent PNG Behaviour for IE.
+      (garvinhicking)
+
+    * 'Track Exits' plugin will no longer be enabled by default, as
+      requested and discussed on the Mailinglist. (garvinhicking)
+
+    * Added Simplified Chinese (GB2312, UTF-8) and Traditional Chinese
+      (Big5, UTF-8) languages, thanks to skyroam!
+
+    * Split up the configuration and the installer. Add a diagnostic
+      page to the installer. Allow for simple or expert installation
+      (tomsommer)
+
+    * Fix problem in Imagemagick detection when checking the apache PATH,
+      added /usr/local/bin to possible locations of Imagemagick
+      (tomsommer)
+
+    * Spam Protector can now log failed comments to either plaintext-
+      file or database. Dedicated to all those trigger-happy logfile-
+      statistic-hunters out there... (garvinhicking)
+
+    * When using ImageMagick, create a thumbnail of a PDF for media
+      browsing (nohn, garvinhicking)
+
+    * More than one plugin cannow be saved per plugin/ subdirectory,
+      event + sidebar plugins can be put together in one directory.
+      Names of subdirectores are irrelevant now, but the filenames
+      need to match 'serendipity_(event|plugin)_*.php'. (garvinhicking)
+
+    * When entering a comment, the referring URL to the blog is saved
+      (garvinhicking)
+
+    * Use mbstring extension where available to correctly utilize PHPs
+      string functions for multibyte chars. This is needed for UTF-8
+      only languages like Chinese (garvinhicking)
+
+    * Move the page where you change your details out of the
+      configuration and into its own menuitem and page (tomsommer)
+
+    * Allow the usage of persistent database connections (tomsommer)
+
+    * New configuration directive to let user choose if entries in the
+      future are hidden (default) or displayed. (garvinhicking)
+
+    * Add ability to gzip compress pages (tomsommer)
+
+    * Separate administration CSS layout from the rest of the blog
+      (tomsommer)
+
+    * Merge Administration and Author suite into one (tomsommer)
+
+    * Allow $plugin->get_config([var]) to return the default value from
+      introspect_config_item() if no value is found (tomsommer)
+
+    * Preview/Saving entries now utilizes iframe techniques to faster
+      send visual feedback and properly be able to style the entry
+      preview independent from the Admin CSS code. [For older browsers,
+      this can be turned of in serendipity_config.inc.php]
+      (garvinhicking)
+
+    * Allow sending trackbacks and tracking links of https URLs. Fix
+      "Entry's Links" plugin to properly display trackable links.
+      (garvinhicking)
+
+    * Spamblock plugin can be configured to hide E-Mail adresses when
+      displaying comments. (garvinhicking)
+
+    * FIX: CSS classes in the comment manager was always set to uneven
+      (tomsommer)
+
+    * When a document does not exist and Serendipity has no idea how
+      to create it, a 404 (not found) is sent instead of a 200 (OK)
+      (tadpole9)
+
+    * serendipity_config_local.inc.php can now contain user-defined
+      variables, which are not overwritten when changing Configuration.
+      (garvinhicking)
+
+    * Improved overall performance of Plugin API, code improvements,
+      query optimizing. Added with the entryproperties caching plugin,
+      this boosts performance by about 15-30%. You are also adwised
+      to use opcode-caches, if available [APC, Zend Cache, Turck, ...]
+      (garvinhicking)
+
+    * Entries can be cached by the 'entryproperties' plugins. This
+      caching interacts with other plugins: When cacheable plugins are
+      added, the cache is updated, as well as when an entry is modified.
+      When the plugin is first installed, it creates the cache for the
+      latest 15 entries; you can create a cache of all entries using
+      the admin interface. (garvinhicking)
+
+    * New CSS classes for distinction of authors within entries/comments:
+      .serendipity_entry_(author|comment)_USERNAME, applied to each
+      entry container, where USERNAME is replaced with the name of the
+      author.
+      .serendipity_entry_author_self, applied to the entry container if
+      the currently logged in user is the author of an entry
+      .serendipity_comment_author_self, applied if the commenting user-
+      name matches the owner of the entry.
+      (garvinhicking)
+
+    * Rewrote importer to use import modules and class framework
+      (tomsommer)
+
+    * New language: Traditional Chinese (Big5). Thanks to Andrew Huang!
+
+    * Recent Entries plugin: New configuration directive to not display
+      items already shown on frontpage. Thanks to Sebastian Raible!
+      (garvinhicking)
+
+    * Articles per page (default 15) can now be set within Configuration
+      (garvinhicking)
+
+    * Plugin API: Event plugins using the 'entry_display' hook to set
+      an entries page to not render (via 'clean_page') now need to use
+      the new hook 'entries_header' for their output; the 'clean_page'
+      variable still needs to be set within the hook 'entry_display'
+      though. (garvinhicking)
+
+    * Support for adding timezone offsets in configuration
+      (garvinhicking)
+
+    * Serendipity cannow be used with "JustBlogIt" extension. Just use
+      this URL:
+      http://yourblog/serendipity_admin.php?serendipity[adminModule]=entries&serendipity[adminAction]=new&serendipity[title]=%TITLE%&serendipity[body]=%TEXT%&serendipity[url]=%URL%
+      (garvinhicking)
+
+    * Plugin serendipity_event_spamblock: Added SURBL
+      (http://www.surbl.org/) Support. Will now reject any comment that
+      contains a blacklisted URL, if enabled. (nohn)
+
+    * Do not allow to view extended article when item is set to "publish"
+      but timestamp is in the future (garvinhicking)
+
+    * RSS Export orders entries in reverse ID order for easier
+      importing (garvinhicking)
+
+    * Cleaned up directory structure, created new subdirectories,
+      split up functions file. See docs/CHANGED_FILES for details if
+      you have external dependencies on removed files (like custom
+      plugins, themes, or special embedded usage) (garvinhicking)
+
+    * "Recent Entries" Plugin can now have userdefined title and only
+      show entries of a specific category (+ subcategories).
+      (garvinhicking)
+
+    * Media browser now allows to immediately upload a file from the
+      entry creation screen and use that file/image easily
+      (garvinhicking)
+
+    * exit.php redirection will emit a 301 Moved Permanently header for
+      the new location. (garvinhicking)
+
+    * Reworked plugin manager for easier plugin installation (tomsommer)
+
+    * Karma plugin works with enabled entryproperties plugin and can
+      be configured to only show Hit-statistics for an entry without
+      the voting ability (garvinhicking)
+
+    * Routine for autodetecting links within an entry will now also
+      allow images to be used as description. (garvinhicking)
+
+    * Implement plugin install() and uninstall() methods that are called
+      on installation and removal of a plugin (tomsommer)
+
+    * Improve overall rewrite path syntax (tomsommer)
+
+    * Allow the display of month, weeks and days in archive sidebar
+      (tomsommer)
+
+    * Add ability to display entries based on week (tomsommer)
+
+    * Use rewrite paths in the syndication plugin (tomsommer)
+
+    * Added import tool for Movable Type data files and WordPress
+      databases. (tadpole9)
+
+    * Syndication plugin offers to show full feed including extended
+      entry (garvinhicking)
+
+    * serendipity_event_entryproperties now supports entry caching to
+      pregenerate the full article and display that instead of
+      assigning event plugins time and again (garvinhicking)
+
+    * New plugin serendipity_event_entryproperties: You can now define
+      any property to an entry and query it. Currently implemented
+      are "sticky posts" and "private/public/members-only" entries.
+      (garvinhicking)                  [DB Layout change - > 0.8-alpha2]
+
+    * Fixed bug #1031059 - Trackbacks to a link will not be sent more
+      than once (garvinhicking)
+
+    * Added "Ping-o-Matic!" to weblogping plugin (garvinhicking)
+
+    * RSS Feed export will not contain rewritten URLs using event
+      plugins (garvinhicking)
+
+    * Updated upgrader to use MySQL as fallback when looking for
+      appropriate database updates and none was found for the selected
+      database type (tomsommer)
+
+    * Added support for Smarty Templating. (garvinhicking, tomsommer)
+
+Version 0.7.1 (December 2nd, 2004)
+------------------------------------------------------------------------
+
+    * Fixed captcha string variation on some setups by explicitly seeding
+      the randomness (garvinhicking)
+
+    * Fixed cross site scripting vulnerability. Thanks to Stefan Esser
+      for reporting this issue. (nohn, garvinhicking)
+
+    * Do not show entries of the future when entering their direct URL
+      (garvinhicking)
+
+Version 0.7 (November 8th, 2004)
+------------------------------------------------------------------------
+
+    * Fixed concatenation syntax on PostgreSQL, only used by plugin
+      "Entrylinks". (garvinhicking)
+
+    * SQLite database name was not saved properly and could get set to
+      a wrong value when updating configuration (garvinhicking)
+
+    * Better detection if Apache ErrorDocument can be used
+      (garvinhicking)
+
+    * Fixed PostgreSQL index key names (names are now unique, and
+      combined indizes on the entries text-columns are no longer set)
+      (jtate, garvinhicking)
+
+    * Fixed bug with MySQL 3.x where the category was not properly set
+      when editing (garvinhicking)
+
+    * Fixed karma plugin to not track clicks when previewing an entry
+      (garvinhicking)
+
+    * Fixed some counting problems in statistics plugin (garvinhicking)
+
+    * Fixed comment counter for deleting non-approved comments
+      (tomsommer, griffinn)
+
+Version 0.7-rc1 (October 20th, 2004)
+------------------------------------------------------------------------
+
+    * Fixed possible HTTP Response Splitting security issue. Thanks to
+      ChaoticEvil for reporting! (jannis, garvinhicking)
+
+Version 0.7-beta4 (October 14th, 2004)
+------------------------------------------------------------------------
+
+    * Bug #1016342 - Fixed RSS UTF8 decoding for remote RSS plugin.
+      (garvinhicking)
+
+    * Fixed some wrong calculations in the statistics plugin, thanks
+      to David DeLauro! (garvinhicking)
+
+    * Fixed entry count and category association bugs using SQLite
+      (garvinhicking)
+
+    * Fixed some error notices for installation with postgreSQL regarding
+      field index names (garvinhicking)
+
+    * Fixed wrong mod_rewrite rules to properly redirect to pages.
+      (garvinhicking)
+
+    * Trackback moderation support in admin panel, make captcha plugin
+      only work for comments (garvinhicking)
+
+    * Bug #1037122: BlogPDF plugin will me less strict in file inclusion
+      (garvinhicking)
+
+    * Fixed wrong entry id displayed in RSS comment feed. Thanks to
+      romulus! (garvinhicking)
+
+    * Fixed file permission checks when removing images inside media
+      manager. Thanks to Thomas from the forums! (garvinhicking)
+
+    * RSS Import: New option 'full body only', so that imported RSS
+      contents can be forced to only show up in the full body. Fixed
+      buggy substr() logic which may cause nasty splitting from entry
+      body to extended entry. (garvinhicking)
+
+    * Extend filter in commment moderation to allow the user to select
+      which types of comments he wants displayed "All", "Only approved",
+      "Need approval" (tomsommer)
+
+    * Upgraded Spam Protector event plugin. Optionally:
+      - use Captchas - images with string sequences which a
+        user has to enter before his comment is accepted.
+      - restrict captchas to entries older than X days
+      - auto-moderate comments to entries older than X days
+      - auto-moderate comments depending on their amount of
+        contained links.
+      - reject comments depending on their amount of
+        contained links.
+      - able to log rejected/moderated comments to a plaintext file
+      - fallback method for non-gdlib-enabled hosts
+      (garvinhicking)
+
+    * Fixed wrong implode() arguments for error reporting in installer
+      (garvinhicking)
+
+    * Fixed windows detection for stripping backslashes out of
+      uploaded files. Thanks to Thomas! (garvinhicking)
+
+Version 0.7-beta3 (September 21st, 2004)
+------------------------------------------------------------------------
+
+    * Bug #1031444 - Fixed postgreSQL error (for older versions of
+      pgsql) when creating categories (garvinhicking)
+
+    * Fixed wrong XHTML entities in remoterss and shoutbox plugin. Thanks
+      to Stephan van Beerschoten! (garvinhicking)
+
+    * Fixed bug #1030581: Category sidebar plugin now properly displays
+      only categories of selected author (garvinhicking)
+
+    * Fixed XML RPC API to set categories when posting via BlogJet
+      or other interfaces (garvinhicking)
+
+    * Fixed invalid standard-SQL 'CURRENT_DATE' to use a real date
+      string. Fixes Exit-Tracking with SQLite. (garvinhicking)
+
+    * Fixed footer printing wrong amount of entries when entry was
+      assigned to more than one category. Thanks to Kris/weigon for
+      helping. (garvinhicking)
+
+    * Use htmlspecialchars/strip_tags for escaping user input on comment
+      moderation/viewing. (garvinhicking)
+
+    * Fixed warning message from emoticon plugin when emoticons.inc.php
+      does not exist (garvinhicking)
+
+    * Fixed entries pagination for special cases where quickump calendar
+      was displayed on the left sidebar (garvinhicking)
+
+Version 0.7-beta2 (September 15th, 2004)
+------------------------------------------------------------------------
+
+    * Fixed entries pagination for special cases where quickump calendar
+      was displayed on the left sidebar (garvinhicking)
+
+    * Added Italian translations, thanks to Alessandro Pellizzari
+
+    * Fixed missing CSS-class for BBCode Event-Plugin (Jez Hancock)
+
+    * Fixed possible SQL injections. Thanks to aCiDBiTS!
+
+    * Fixed postgreSQL quicksearch, thanks to Mauri Sahlberg!
+
+    * Added Norwegian translations, thanks to Jo Christian
+
+    * Fixed postgreSQL bugs for viewing comment moderation panel
+      (garvinhicking)
+
+    * Fixed postgresql bug for fetching the last entry id. Will fix bug
+      with comment counter always reporting zero and trouble with
+      assigning multiple categories. (garvinhicking)
+
+    * Fixed  "no entry to display" bug when previewing entry
+      (garvinhicking)
+
+    * Fix several postgreSQL update errors. Thanks to daFool from the
+      forums! (garvinhicking)
+
+Version 0.7-beta1 (September 6th, 2004)
+------------------------------------------------------------------------
+
+    * Disable the use of popups by default (tomsommer)
+
+    * BBCode plugin can now pretty print code/php style blocks.
+      (Jez Hancock, garvinhicking)
+
+    * Threaded/Linear view of comments can be toggled by the
+      visitor. (garvinhicking, tomsommer)
+
+    * Plugin serendipity_event_spamblock: Will reject any double
+      comments, if enabled. Stub for enhancing other spam-protections
+      (kaptchas, spamassassin-integration, IP-Blacklists, whatever)
+      (garvinhicking)
+
+    * When using mod_rewrite, make use of RewriteBase for correct
+      subdirectory matching. Thanks to Martin Roell! (garvinhicking)
+
+    * Don't use the title of an entry in the RSS feed <guid></guid> tags
+      (tomsommer)
+
+    * Use '-' as separator for IDs and words in our "nice" URLs, so
+      Google and others can recognize 'a-nifty-word' as 'a nifty word'.
+      Previously this was indexed as one single word.
+      (tomsommer, garvinhicking)
+
+    * Pagination now properly works for browsing months and categories.
+      Previously paging worked through all entries and not a filter
+      by date/category. [Bug #1009715] (garvinhicking)
+
+    * Remote RSS feed can now contain a bullet image, skip blank head-
+      lines and toggle the display of the date. Thanks to Joseph Guhlin!
+      (garvinhicking)
+
+    * Karma-Plugin disallows clicking from Googlebots following java-
+      script links (garvinhicking)
+
+    * Improved link detection routine for sending trackbacks, fixes
+      problems with bbcode-transformed URLs (garvinhicking)
+
+    * Fixed missing image display for rescaling images, when file was
+      outside of parent upload directory [Bug #1007003] (garvinhicking)
+
+    * Fixed some postgreSQL-issues, thanks to Ilya A. Volynets-Evenbakh!
+
+    * Improved and fixed XHTML-Cleanup Event plugin (garvinhicking)
+
+    * Fixed .htaccess update/creation errors for shared installation
+      (garvinhicking)
+
+    * RFE #832040 - Allow for easier handling of Calendar CSS classes
+      and remove hardcoded attributes for "today" (tomsommer)
+
+    * Add detection for support of php_value directives in .htaccess
+      files (tomsommer)
+
+    * Installation will report an error, if the needed db-extension for
+      a specific database-type are not available within PHP
+      (garvinhicking)
+
+    * Added bulgariang language, thanks to Bogomil Shopov
+
+    * Fix calendar bug to not show entries available for the 1st day
+      of a month if on the first day on the next month an entry was
+      posted (garvinhicking)
+
+    * UTF-8 Encoding (for RSS-feeds) will make use of iconv-library, if
+      available (garvinhicking)
+
+    * Quicksearch no longer shows results for entries in the future
+      (garvinhicking)
+
+    * Removed {dbPrefix}css table, since it was not used for anything
+      (tomsommer)                          [DB Layout change - > 0.6.11]
+
+    * Redesign entry list (tomsommer)
+
+    * Display subtitle (usually blogname) in <title> tags (tomsommer)
+
+    * Don't embed comments, trackbacks and comment-form in entry CSS
+      class (tomsommer)
+
+    * RFE #996320: Added https-option to login sidebar-plugin
+      (garvinhicking)
+
+    * Removed full plaintext URI from trackback section and replaced it
+      with a link to that URI (tomsommer, garvinhicking)
+
+    * Several German spelling mistakes corrected (thanks to Timbalu)
+
+    * Show trackbacks on the full-entry page if popups are disabled
+      (tomsommer)
+
+    * If popups are disabled, link to the full-page entry, with comments
+      and trackbacks as page-anchors (tomsommer)
+
+    * Use DIV tags for trackback layout, just like comments (tomsommer)
+
+    * Make sure that the file/image manager can never remove the upload
+      directory, but all files in it (garvinhicking)
+
+    * Changed database key 'mime' to varchar(255) instead of varchar(15)
+      (garvinhicking)                       [DB Layout change - > 0.6.9]
+
+    * New CSS classes 'serendipity_msg_notice' and
+      'serendipity_msg_important'. (garvinhicking)
+
+    * Added a new theme, "Idea" (tadpole9)
+
+    * Changed 'View extended entry' to 'Continue reading "[title]"'
+      (tomsommer)
+
+    * Make the non-WYSIWYG link-insertion and text-formatters work in
+      the extended entry textarea (tomsommer)
+
+    * Allow authors to toggle the extended entry textarea in the entry
+      composer when using the non-WYSIWYG editor (tomsommer)
+
+    * Better handling of unsubscriptions from entries, only show message
+      if the user was indeed unsubscribed (tomsommer)
+
+    * Added ability to moderate comments and trackbacks:
+        * Moderate by email
+        * Moderate and view comments from within Authoring Suite
+        * Mass delete of comments from administration
+      (tomsommer)                           [DB Layout change - > 0.6.7]
+
+    * An entries' LastModified timestamp will get updated if a comment
+      is made to it, but only if the article is newer than 7 days.
+      Make the conditional Get RSS-feed a lot more usable because old
+      entries no longer come up again. The limit of days can be set
+      within serendipity_config.inc.php. (garvinhicking)
+
+    * Plugins can register the event-hook 'external_plugin' to spawn
+      individual content outside of the blog layout (garvinhicking)
+
+    * Fixed link insertion in non-WYSIWYG-mode for Internet Explorer
+      (garvinhicking)
+
+    * Fixed retrieving multiple stored categories for Internet Explorer
+      when editing existing entry (garvinhicking)
+
+    * Added Bitflux Livesearch Javascript as plugin
+      (serendipity_event_livesearch). It will immediately search your
+      articlebase and offer an autocomplete dropdown to the quicksearch
+      box. Users with the embedded mode need to add the call to the
+      .js file manually into their headers. (chregu, garvinhicking)
+
+    * Added new versions of mt-clean, mt-georgiablue, mt-gettysburg,
+      mt-plainjane, and mt-rusty and activated them.
+
+    * RSS Import: Allow toggling of draft/publish import, category
+      association, more description. (garvinhicking)
+
+    * Allow HTML nugget to be displayable on extended article only, over-
+      view only or both (default) (garvinhicking)
+
+    * New plugin 'serendipity_event_blogpdf'. Will export your blog
+      as PDF file. Proof-of-concept, no nice formatting, no images yet.
+      If you're using 'mod_rewrite' you need to update your .htaccess
+      file. (garvinhicking)
+
+    * Fixed bug causing the .htaccess file to never get updated when
+      changing rewrite method (tomsommer)
+
+    * Track Exits plugin: Now only uses the link id for link referral.
+      Reduces URI length and makes random exit.php calling useless for
+      spammers, as no URL is tracked, which the author didn't refer to
+      (garvinhicking, isotopp)
+
+    * Actually log the IP of users who submit comments and blogs which
+      trackback (tomsommer)
+
+    * Plugin hook 'backend_publish' now executed on entries saved as
+      draft first and after that as a public. Fixes weblogpings not sent
+      to those entries. (garvinhicking)
+
+    * Added the ability to toggle the display of the Serendipity logo and
+      text in the "Powered by" plugin (tomsommer)
+
+    * Fixed problem with booleans not checking the correct radiobuttons in
+      the plugin manager (tomsommer)
+
+    * Fixed bug #983242: Missing entity encoding for blogtitle/subtitle
+      for RSS feeds, thanks to Christian Wenz!
+
+    * Added dutch and Portuguese language. Thanks to Paul de Bruyne and
+      Ranulfo Netto!
+
+    * Multi User: Fixed bug #977695 where simple editors couldn't re-edit
+      their entries (garvinhicking)
+
+    * Auto-Trackback from serendipity will now only fetch links smaller
+      than 150kb. Use socket connections instead of URL wrappers for
+      better control. (garvinhicking)
+
+    * Fixed HTTP requests from installer and htmlvalidator plugin to
+      send "\r\n" headers instead of only "\n". IIS-Servers didn't
+      respond to the latter (garvinhicking)
+
+    * Updated plugins to show default values in plugin configuration
+      immediately. New bag property 'default' introduced to Plugin API,
+      backwards compatible. (garvinhicking)
+
+    * Remaining XHTML 1.1 issues fixed:
+      - Use <div> instead of <span> for entry's contents.
+      - Removed obsolete javascript-function for comments
+      - Removed 'align' attribute from <div> tags, replaced with new
+        CSS class 'serendipity_align'
+      - Show the pingback-link element in the HEAD area. Embedded blogs
+        need to do that on their own.
+      - New plugin 'serendipity_event_xhtmlcleanup' to correct most
+        common XHTML errors (unclosed single tags, missing 'alt'
+        attribute, unescaped ampersands)
+        (garvinhicking)
+
+    * SQLite support now works. (garvinhicking)
+
+    * Fixed Bug #963248 - Calendar cannot calculate LastRow CSS class if
+      there are more than 4 rows (tomsommer)
+
+    * Use the right HTML code for trackback-link detection when using
+      markup plugins like Text_Wiki (garvinhicking)
+
+    * Display information when sending/searching for trackbacks
+      (garvinhicking)
+
+    * Add support for MySQLi (tadpole9)
+
+    * Alphabetically sort list of plugins (tadpole9)
+
+    * Tweaks to plugin configuration design (tomsommer)
+
+    * Added small comments to serendipity_functions.inc.php on how
+      to enable the spellchecker module of the WYSIWYG editor.
+      (Suggestion by Randall)
+
+    * Plugin API: Now each sidebar plugin item will get a CSS class
+      name added to the default "serendipitySideBarContent" one, which
+      is called 'sidebar_wrap_', 'sidebar_title_', 'sidebar_content_'
+      and then the original class name of the plugin appended. I.e.:
+      'sidebar_wrap_serendipity_html_nugget_plugin'. This allows special
+      customization of any individual sidebar item. (garvinhicking)
+
+    * Finally a OPML-based blogroll importing feature added to
+      the serendipity_plugin_remoterss plugin (Richard Harrison,
+      garvinhicking)
+
+    * Simple OPML 1.0 outline feed (Richard Harrison, garvinhicking)
+
+    * Fixed variable namespace problems in Textile Event plugin
+      (Reimer Behrends, garvinhicking)
+
+    * Implemented "visitor/hits" counter for karma-plugin. Hook into
+      Statistics plugin for showing additional data of karmavotes
+      (garvinhicking)
+
+    * Fixed receiving trackbacks of an intermediate s9y CVS release,
+      which submitted wrong variables. Allow logging of incoming
+      trackbacks to a file (for developers) (garvinhicking)
+
+    * Post to multiple categories and subcategories implemented.
+      (Evan Nemerson, garvinhicking)
+
+    * Threaded comments.
+      (Evan Nemerson)                       [DB Layout change - > 0.6.5]
+
+    * Minor https fixes, when https is used as links from commenting
+      users or in referring/exit links. Fix for RPC-ping function submitting
+      double http://http:// URLs. (garvinhicking)
+
+    * New sidebar plugin "eventlinks". Displays all links to the
+      currently viewed article (only on full article view).
+      (garvinhicking)
+
+    * Plugin API: The method 'generate_content' of a sidebar plugin
+      can now return false to instruct the plugin API to NOT display
+      the sidebar. Allows optional sidebar plugins to be only shown
+      on specific parameters (garvinhicking)
+
+    * Updated upgrade.sh script for better checks (Jez Hancock)
+
+    * Fixed javascript error when submitting comments with "remember me"
+      checkbox. (garvinhicking)
+
+    * XML-RPC methods updated to includer blogger.getRecentPosts and
+      blogger.getPost (Till Adam)
+
+    * Upgraded karma-plugin to allow logging (IP/User-Agent) of votes
+     (garvinhicking)
+
+    * User manager: New user right 'publish' which controls whether a
+      user is allowed to publish entries or only drafts.
+      (garvinhicking)                        [DB Layout change -> 0.6.4]
+
+    * Added new plugin "serendipity_event_karma": Allows karma voting
+      for each article with a flexible voting period. (garvinhicking)
+
+    * Added event hook-variable for displaying an article footer.
+      Enhanced Plugin API to allow passing a second array of data to the
+      hook_event() function (backwards-compatible). Added hook for
+      embedding CSS data from within a event plugin. (garvinhicking)
+
+    * When sending trackbacks, the excerpt will now be stripped of HTML
+      code BEFORE selecting the 255 characters to be sent.
+      (garvinhicking)
+
+    * Upgraded image manager to now also accept files (pdf, doc, ...)
+      and manage/upload to/sync/browse subdirectories. Improved SQL-
+      query for fetching list of images.
+      (garvinhicking)                        [DB Layout change -> 0.6.3]
+
+    * PHP pre-4.3.0 compatibility: Define PATH_SEPARATOR if not available
+      (garvinhicking)
+
+    * Upgraded PEAR::Text_Wiki and serendipity_event_textwiki plugin.
+      Configuration options for wiki rules, options to use wiki/freelinks.
+      (Tobias Schlitt)
+
+    * Made RSS-feed compatible to sites running with UTF8-charset.
+      (garvinhicking)
+
+    * Fixed wrong proportions when resizing small images (tomsommer)
+
+    * Fixed bug #940239 - Wrong message printed when deleting a category
+      without any entries (tomsommer)
+
+    * Bugfix for serendipity_plugin_remoterss: Wrong caching.
+      (Richard Thomas Harrison)
+
+    * Added new CSS class .serendipity_comments for the comments block
+      on full article view (garvinhicking)
+
+    * Added new CSS class .serendipity_admin_filters for the redesigned
+      editing entries interface (tomsommer, garvinhicking)
+
+    * Plugin API: Introduced function 'is_event_plugin' for easier
+      integration (Jonathan Arkell)
+
+    * New event hook 'entry_display' inside of serendipity_printEntries().
+      Can be used to force entries not being shown by setting the
+      $eventData['clean_page'] variable to 'true'. (Jonathan Arkell)
+
+    * Don't show "expand"/"toggle all" buttons if there is only one section
+      availiable (tomsommer)
+
+    * Redesigned admin interface for editing entries: Adjust items per
+      page, sort order, filter mode, combined EDIT+DELETE interface into
+      one. Introduced new css classes "serendipity_admin_list_item_even"
+      and "serendipity_admin_list_item_uneven" for displaying entries.
+      Can now search for entries in admin panel, can edit entries with
+      empty titles. (garvinhicking)
+
+    * Fixed image comment manager's "center" alignment mode and use
+      image width/height from the image manager to format the <img>-Tag,
+      with regards to Lewe.
+      (garvinhicking)
+
+    * Plugin 'serendipity_event_weblogping' now takes manually defined
+      pinging service as parameter. (garvinhicking)
+
+    * Modified plugin 'serendipity_event_trackexits': New config
+      directive to deflect any links from commenting users using a
+      HTTP redirect. This destroys common search engine ranking and
+      will not benefit comment spammers. Notice that it also disables
+      the common linking to non-spammer authors, so use with caution.
+      (garvinhicking)
+
+    * New plugin 'serendipity_plugin_remoterss' - Can display a foreign
+      remote feed. Results are cached for a custom period of time.
+      Contributed by Udo Gerhards. (garvinhicking)
+
+    * Fixed Bug #941922 - strftime %e does not work on windows platform
+      (tomsommer)
+
+    * Fix template chooser plugin to reflect new location of template
+      variable (tadpole9)
+
+    * Image upload now strips all characters not suggested for filename
+      use (garvinhicking)
+
+    * Categories can now have a fixed image which is embedded for
+      every article. Can be styled via CSS (.serendipity_entryIcon).
+      Integrated with s9y image manager.
+      (Evan Nemerson, garvinhicking)         [DB Layout change -> 0.6.2]
+
+    * Published entries from the future will only be displayed on the
+      frontend when not in the future. They will get automagically
+      displayed as soon as the publish time is effectively reached.
+      #RFE 939867 (garvinhicking)
+
+    * Exit/Referrer plugin can now limit the number of elements
+      (garvinhicking)
+
+    * Added possibility to embed a comment to an image when inserting
+      it via the s9y image manager (garvinhicking)
+
+    * Added czech language (ISO-8859-2 and Win-1250), translated by
+      Josef Klimosz.
+
+    * Added french language, translated by Renaud Lavigne.
+
+    * Fixed some issues on windows servers. Patch by Richard Thomas
+      Harrison
+
+    * Improvements for multi-user interface:
+       - Configuration is stored per-user (language, WYSIWYG-preference,
+         and possibly others)
+       - passwords/usernames/E-Mail adresses can be changed
+       - introduction of userlevels (admin, chief, editor)
+       - public/private categories
+       - plugins are stored per-user. Admin-created plugins cannot be
+         removed by chiefs/users, protected plugins (HTML nuggets) can
+         only be configured by the owner or admin users
+       - manage/create users
+       - entries are stored per-user and can only be changed by the
+         author or chief/admin users. Comments can only be toggled on/
+         off and removed by the author or chief/admin users.
+       - public/private images
+       (garvinhicking)                       [DB Layout change -> 0.6.1]
+
+    * Configuration is now language-dependant. (garvinhicking)
+
+Version 0.6-pl3 (June 20th, 2004)
+------------------------------------------------------------------------
+
+    * WYSIWYG-Editor: Links were prefixed with '/' wrongly (IE only).
+      Now all entered links will be put to an absolute URL consistently.
+      Fix always inserting extended body with empty '<br />'
+      (garvinhicking)
+
+    * Fix bug during installation, which can cause an endless loop
+      of connections (tomsommer)
+
+    * Removed german blogbot pinging service, it was shut down (nohn)
+
+    * Allow pinging of blogbot.dk (tomsommer)
+
+Version 0.6-pl2 (May 24th, 2004)
+------------------------------------------------------------------------
+
+    * Fixed security vulnerability on servers with Register_Globals On.
+      (garvinhicking, gschlossnagle, tomsommer)
+
+Version 0.6-pl1 (May 15th, 2004)
+------------------------------------------------------------------------
+
+    * Fixed trackbacks not associated to the right entry id (garvinhicking)
+
+    * Fixed typo in Creative Common Plugin (Jonathan Arkell)
+
+Version 0.6 (May 12th, 2004)
+------------------------------------------------------------------------
+
+    [changes since 0.6-rc2]
+    * Creative Commons plugin bugfix (wrong 'non-commercial' case)
+      (garvinhicking)
+
+    * Fixed wrong doctype header (garvinhicking)
+
+    * Fix %e date issue on windows systems. (garvinhicking, tomsommer)
+
+    * Fix serendipity_makefilename() to replace some more foreign
+      characters (garvinhicking)
+
+    * Shoutbox plugin bugfix (errors using '%' in shouts) (garvinhicking)
+
+    * Error with non-absolute image paths in RSS feed (garvinhicking)
+
+    * Fixed installer problems timeouting (garvinhicking)
+
+    * Removed possible error message about session_start for categories
+      admin page (garvinhicking)
+
+    * Fixed postgresql limit error when browsing pages (garvinhicking)
+
+    [changes before 0.6-rc2]
+    * Image upload now strips all characters not suggested for filename
+      use (garvinhicking)
+
+    * Language Charset Header are now used throughout s9y which make it
+      completely foreign-language compatible (garvinhicking)
+
+    * German translation fix (garvinhicking)
+
+    * Upgrader kills the current session for possible changes inside
+      session data on upgrade (garvinhicking)
+
+    * Fixed wrong comparison operator - bug reported by tom, where nl2br
+      plugin has "reversed" logic. (garvinhicking)
+
+    * Fixed textile plugin not enabled by default after adding it as a
+      plugin (garvinhicking)
+
+    * Comments plugin now correctly wordwraps (garvinhicking)
+
+    * Fixed wrong HTML links for WYSIWYG-editor in Internet Explorer
+      (garvinhicking)
+
+    * Fixed htmlentites acceptance for foreign language entry titles
+      (garvinhicking)
+
+    * Relaxed dependency on WIKI plugin, if the inclusion fails.
+      (garvinhicking)
+
+    * PostgreSQL SQL update files (jtate)
+
+    * Better detection of serendipityPath variable (garvinhicking)
+
+    * Adjustable WYSIWYG-language for foreign languages (garvinhicking)
+
+    * Fixed special characters for WYSIWYG-htmlarea.css file
+      (garvinhicking)
+
+    * Fixed WYSIWYG-editing error for HTML Nugget plugin (garvinhicking)
+
+    * newline fixes inside the files (cosmetic issues) (isotopp)
+
+    * Fixed losing commenting user details when previewing a comment
+     (garvinhicking)
+
+    * Added plugin for usage of CreativeCommons (creativecommons.org)
+      license for the blog's contents (Evan Nemerson)
+
+    * Templates with an "inactive.txt" or no "info.txt" inside their
+      directory are not selectable for s9y. Usable for "work in progress"
+      templates. (garvinhicking)
+
+    * Fixed $su link for users with no URL rewriting (garvinhicking)
+
+    * Fixed invalid XML for RDF trackback:ping (garvinhicking)
+
+    * Added plugin 'serendipity_event_statistics'. Hooks into the
+      admin entry-panel. (garvinhicking)
+
+    * Do some "common XHTML-mistakes" fixing for output of RSS feeds
+      (jalcorn)
+
+    * Updated WYSIWYG-Editor (htmlarea) to latest version. Integrated
+      s9y image manager in htmlarea window. Template file 'htmlarea.css'
+      can be used to adjust the editor's look to your template.
+      (garvinhicking)
+
+    * Templates: New CSS classes for better customization
+      - 'serendipity_entry_body_folded' for the entry body on the
+         weblog index page
+      - 'serendipity_entry_body_unfolded' for the entry body on
+         article page
+      - 'serendipity_entry_extended' for the extended body on article
+         page
+      (garvinhicking)
+
+    * Image upload: Can now specify alternate file name. Renamed
+      input field to not cause confusion with COOKIE-variable
+      (garvinhicking, isotopp)
+
+    * Image manager popup-window now resizable and with scrollbars
+      (garvinhicking)
+
+    * Serendipity can now be used in shared environments and act as a
+      library for VirtualHost'ed Blogs. See README. (garvinhicking)
+
+    * Fixed installer on hosts with non-standard (80) HTTP ports
+      (garvinhicking)
+
+    * Relaxed umask/chmod file and directory creation
+      (garvinhicking)
+
+    * Abstract archives/URL locations and regex-patterns in a central
+      place for easier maintenance (zem)
+
+    * Optimized db indizes on 'entries' (zem)
+
+    * Added shoutbox plugin (Matthias Lange, garvinhicking)
+
+    * Renamed "0.5.1" to "0.6" because of changes. Updated upgrade-
+      script (garvinhicking)
+
+    * Added home-link in templates for the header/subheader
+      (garvinhicking)
+
+    * Bugfix: With mod_rewrite redirection parameters to browse pages/
+      calendar was not working in non-embedded blogs
+      (garvinhicking)
+
+    * Added many new templates (several MoveableType imitations,
+      moz-modern) (sebastianbergmann, tomsommer, garvinhicking)
+
+    * Added backwards-compatible CSS ids to admin panel for better CSS
+      customization (garvinhicking)
+
+    * Moved smilies/xml buttons to template directory (img/) to be
+      customized per-template (garvinhicking)
+
+    * Added plugin to switch themes on the frontend (Evan Nemerson,
+      garvinhicking)
+
+    * Allow (multiple) dependencies for plugin API to allow pairing of
+      event/ sidebar plugins (garvinhicking)
+
+    * Added an upgrade-script to allow for easier upgrade of an existing
+      s9y installation (tomsommer)
+
+    * Redesigned the plugin manager (tomsommer)
+
+    * Added RFE #827945 - Allow for custom selection of calendar
+      beginning on week (tomsommer)
+
+    * Markup can be applied individually from a list of available
+      transformations: BBCode, Wiki, Textile, s9y markup, Emoticons,
+      nl2br. Multiple transformations are possible. (Colin Viebrock,
+      garvinhicking)
+
+    * Allow for each language to have its own charset (tomsommer)
+
+    * Now able to preview comments. (garvinhicking)
+
+    * Fixed bug that removed admin-cookie when you didn't check the
+      "remember comment" box on submitting comments to your own blog
+      (garvinhicking)
+
+    * Conditional GET logic for RSS feeds using HTTP caching methods.
+      See README for instructions, needs database schema update
+      [db_update-0.5-0.5.1.sql] (garvinhicking)
+
+    * Small XHTML-compliance fixes. (garvinhicking)
+
+    * Image manager: Allow sorting by date/file attributes, changing
+      sort order and choosing items displayed per page (garvinhicking)
+
+    * Fixed wrong link to entry when not using any rewrite rule
+      (tomsommer & AlfaTeK)
+
+    * Changed type of DB password to 'protected' to avoid it being
+      displayed as plaintext (tomsommer)
+
+    * Added danish language file (tomsommer & Jeppe Lund)
+
+    * Added notice when using a wrong username or password to gain
+      access to admin/author suites (tomsommer)
+
+    * Added date & time translation using strftime() and setlocale()
+      (tomsommer)
+
+    * HTML Validator event plugin. Can be used to validate your entry
+      upon preview (garvinhicking)
+
+    * Create example events: mailer, weblogping, contentrewrite,
+      eventwrapper (garvinhicking)
+
+    * Created event plugin API to hook on certain serendipity actions
+      (garvinhicking)
+
+    * Redesigned image manager. (tomsommer)
+
+    * Added image syncronization with database. IMPORTANT: Click on
+      "rebuild thumbs" to re-import your file-based images! (tomsommer)
+
+    * Now able to use CommentAPI to post entries to an RSS/Atom feed,
+      like from RSS Bandit (garvinhicking)
+
+    * Renamed "sebastian's weblog" theme to "blue" (sebastianbergmann)
+
+(Older NEWS see file NEWS_OLD)

@@ -1,0 +1,78 @@
+== Syntax differences between MySQL and MSSQL ==
+{| border cellspacing=0 cellpadding=4
+!MySQL!!MSSQL
+|-
+
+|AUTO_INCREMENT
+|IDENTITY(1,1)
+|-
+
+|binary
+|varchar NULL ''(MSSQL doesn't allow setting of binary's to string values, and won't implicitly allow NULL's)''
+|-
+
+|bool
+|bit
+|-
+
+|[UN]SIGNED
+|''not valid''
+|-
+
+|SELECT * FROM foo LIMIT x
+|SELECT TOP x * FROM foo
+|-
+
+|SELECT * FROM foo LIMIT x,y|
+''not sure how to implement yet because it must be applied from within '''DatabaseMssql::limitResult'''''
+|-
+
+|INSERT IGNORE INTO foo (foo_id,bar) VALUES ('1','xyz')
+|IF NOT EXISTS (SELECT * FROM foo WHERE foo_id = '1') INSERT INTO foo (foo_id,bar) VALUES ('1','xyz')
+|-
+
+|IF(cond,trueVal,falseVal)
+|CASE WHEN cond THEN trueVal ELSE falseVal END
+|-
+
+|SHOW TABLES
+|SELECT * FROM INFORMATION_SCHEMA.TABLES
+|-
+
+|ENUM
+|''not natively supported, change to text''
+|}
+
+== MSSQL Variables ==
+{| border cellspacing=0 cellpadding=4
+
+|@@VERSION
+|Server version information
+|-
+
+|@@IDENTITY
+|Last inserted row
+|-
+
+|@@ERROR
+|Last error number
+|}
+
+== Changes to INSERT wrapper ==
+=== AUTOINCREMENT vs IDENTITY ===
+MySQL style ''AUTOINCREMENT'' columns are inplemented in MSSQL using ''IDENTITY(x,y)'' where ''x'' is the initial value and ''y'' is the amount to add on each insert. The last value resulting from an insert into an IDENTITY column is stored in the ''@@IDENTITY'' variable. These kinds of columns are usually used as primary keys and are therefore assigned the ''NOT NULL'' property.
+
+In MySQL the standard way of inserting data into rows exhibiting AUTOINCREMENT columns is simply to use a ''NULL'' value which will be ignored. In MSSQL however assigning a ''NULL'' to an ''IDENTITY'' column is not allowed, instead the best way is not to include those items in the list of columns to be updated at all.
+
+To get round this in the MediaWiki MSSQL layer, I've modified the insert wrapper in the ''DatabaseMssql'' class to check if the primary key is used in the insert and remove it if so. It checks this by assuming that the primary key will be of the same name as the table but with ''_id'' on the end, and that it will the first item in the list of columns to update.
+
+=== IGNORE ===
+As you can see from the comparison table above, the MySQL ''INSERT IGNORE'' option takes quite a different form in MSSQL. This is handled in the ''insert'' wrapper method. In the case of multiple row inserts, a separate conditional insert query is performed for each item.
+
+== NULL values and NOT NULL columns ==
+MySQL implicitly casts NULL assignments to NOT NULL columns to an empty string or zero value accordingly, but MSSQL raises an error instead. This is a big problem within the MediaWiki environment because the code relies heavily on this implicit NULL casting. I've tried to get round the problem by replacing NULL's with empty strings from update and insert queries, and MSSQL is happy to cast the empty string to a numeric zero if necessary.
+
+== See also ==
+*[http://msdn.microsoft.com/en-us/library/ms188783.aspx MSSQL reference]
+*[http://doc.ddart.net/mssql/sql70/ca-co_1.htm Type casting]
+*[http://msdn.microsoft.com/en-us/library/ms187752.aspx TransactSQL datatypes]

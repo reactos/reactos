@@ -1,0 +1,145 @@
+/* Serendipity WP default
+   By Evan Nemerson
+   December 11, 2004
+
+   This is just a simple template modeled after the default one. It is
+   meant mostly as something to collect dust while you use a custom WP
+   theme, but it can also be used to guide you in creating your own.
+   It is licensed under the BSD license, like the rest of Serendipity,
+   and unlike most WP themes (which are GPL). */
+
+#content {
+    border-right: 1px dashed #000000;
+    border-bottom: 1px solid #000000;
+    border-top: 0px;
+    background-color: #FFFFFF;
+    position: absolute;
+    margin-right: 16em;
+}
+
+#menu {
+    vertical-align: top;
+    background: white;
+    width: 16em;
+    position: absolute;
+    right: 0;
+}
+
+#content > * {
+    padding: 10px;
+    margin: 10px;
+    width: auto;
+}
+
+#menu > ul {
+    display: block;
+    list-style: none;
+    padding-left: 0;
+    margin: 1em;
+}
+
+#menu > ul > li {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 1em;
+  padding-bottom: 1em;
+  border-bottom: solid 2px #36558C;
+}
+
+#menu > ul > li > * {
+  font-size: 0.83em;
+  font-weight: normal;
+}
+
+body {
+    font-size: 10pt;
+    margin: 0;
+    font-size: 10px;
+    font-family: verdana, arial, helvetica, sans-serif;
+    margin-bottom: 30px;
+}
+
+input, textarea {
+    font-size: 10pt;
+    font-family: verdana, arial, helvetica, sans-serif;
+}
+
+th, td {
+    font-size: 10pt;
+}
+
+p, td, th, div, span {
+    font-family: verdana, arial, helvetica, sans-serif;
+}
+
+#header {
+    margin: auto;
+    width: 100%;
+    padding: 1em;
+    background-image: url(../default/img/background.png);
+    border-bottom: 1px solid #000000;
+}
+
+#header a,
+#header a:hover,
+#header a:link,
+#header a:visited {
+    color: #FFFFFF;
+    font-family: Verdana, Arial, Geneva, Helvetica, sans-serif;
+    text-decoration: none;
+}
+
+h2 {
+    font-family: Verdana, Arial, Geneva, Helvetica, sans-serif;
+    font-size: large;
+    color: #333333;
+    margin: 0;
+    margin-top: 20px;
+    text-align: right;
+}
+
+.storytitle {
+    font-family: Verdana, Arial, Geneva, Helvetica, sans-serif;
+    font-size: medium;
+    font-weight: bold;
+    margin-top: 1em;
+    color: #333333;
+    border-bottom: 2px solid #36558C;
+}
+
+.storytitle a:link,
+.storytitle a:visited {
+   text-decoration: none;
+   border: 0;
+   color: #000000;
+}
+
+.meta > ul > li, ul.post-meta li {
+    display: inline;
+}
+
+.meta > ul {
+    display: inline;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.storytitle {
+    margin: auto;
+}
+
+.storytitle a:hover {
+   color: #FF0000;
+}
+
+.storycontent {
+    font-family:Verdana, Arial, Geneva, Helvetica, sans-serif;
+    color: #333333;
+    font-size: 1.3em;
+    font-weight: normal;
+    padding-right: 10px;
+    width: 95%;
+    margin: auto;
+    margin-top: 1em;
+}

@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"Ext2 File System Management\0"
-#define REACTOS_STR_INTERNAL_NAME	"uext2\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"uext2.dll\0"
-#include <reactos/version.rc>

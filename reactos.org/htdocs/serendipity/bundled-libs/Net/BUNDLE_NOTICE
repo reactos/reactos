@@ -1,0 +1,9 @@
+- Replace: 
+DNSBL.php
+require_once 'Net/CheckIP.php';
+require_once dirname(__FILE__) . '/CheckIP.php';
+
+Socket.php
+require_once('PEAR.php');
+require_once(dirname(__FILE__) . '/../PEAR.php');
+

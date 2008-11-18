@@ -1,0 +1,849 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #                 Olav Vitters <olav@bkor.dhs.org>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% PROCESS bug/time.html.tmpl %]
+
+  <script type="text/javascript">
+  <!--
+
+  /* Outputs a link to call replyToComment(); used to reduce HTML output */
+  function addReplyLink(id) {
+      /* XXX this should really be updated to use the DOM Core's
+       * createElement, but finding a container isn't trivial.
+       */
+      document.write('[<a href="#add_comment" onclick="replyToComment(' + 
+                     id + ');">reply<' + '/a>]');
+  }
+
+  /* Adds the reply text to the `comment' textarea */
+  function replyToComment(id) {
+      /* pre id="comment_name_N" */
+      var text_elem = document.getElementById('comment_text_'+id);
+      var text = getText(text_elem);
+
+      /* make sure we split on all newlines -- IE or Moz use \r and \n
+       * respectively.
+       */
+      text = text.split(/\r|\n/);
+
+      var replytext = "";
+      for (var i=0; i < text.length; i++) {
+          replytext += "> " + text[i] + "\n"; 
+      }
+
+      replytext = "(In reply to comment #" + id + ")\n" + replytext + "\n";
+
+    [% IF Param("insidergroup") && user.in_group(Param("insidergroup")) %]
+      if (document.getElementById('isprivate-'+id).checked) {
+          document.getElementById('newcommentprivacy').checked = 'checked';
+      }
+    [% END %]
+
+      /* <textarea id="comment"> */
+      var textarea = document.getElementById('comment');
+      textarea.value += replytext;
+
+      textarea.focus();
+  }
+
+  if (typeof Node == 'undefined') {
+      /* MSIE doesn't define Node, so provide a compatibility object */
+      window.Node = {
+          TEXT_NODE: 3,
+          ENTITY_REFERENCE_NODE: 5
+      };
+  }
+
+  /* Concatenates all text from element's childNodes. This is used
+   * instead of innerHTML because we want the actual text (and
+   * innerText is non-standard).
+   */
+  function getText(element) {
+      var child, text = "";
+      for (var i=0; i < element.childNodes.length; i++) {
+          child = element.childNodes[i];
+          var type = child.nodeType;
+          if (type == Node.TEXT_NODE || type == Node.ENTITY_REFERENCE_NODE) {
+              text += child.nodeValue;
+          } else {
+              /* recurse into nodes of other types */
+              text += getText(child);
+          }
+      }
+      return text;
+  }
+
+[% IF user.in_group(Param('timetrackinggroup')) %]
+  var fRemainingTime = [% bug.remaining_time %]; // holds the original value
+  function adjustRemainingTime() {
+      // subtracts time spent from remaining time
+      var new_time;
+
+      // prevent negative values if work_time > fRemainingTime
+      new_time =
+          Math.max(fRemainingTime - document.changeform.work_time.value, 0.0);
+      // get upto 2 decimal places
+      document.changeform.remaining_time.value =
+          Math.round(new_time * 100)/100;
+  }
+
+  function updateRemainingTime() {
+      // if the remaining time is changed manually, update fRemainingTime
+      fRemainingTime = document.changeform.remaining_time.value;
+  }
+
+[% END %]
+
+  function updateCommentTagControl(checkbox, form) {
+      if (checkbox.checked) {
+          form.comment.className='bz_private';
+      } else {
+          form.comment.className='';
+      }
+  }
+
+  //-->
+  </script>
+
+<form name="changeform" method="post" action="process_bug.cgi">
+
+  <input type="hidden" name="delta_ts" value="[% bug.delta_ts %]">
+  <input type="hidden" name="longdesclength" value="[% bug.longdescs.size %]">
+  <input type="hidden" name="id" value="[% bug.bug_id %]">
+
+  [%# That's the main table, which contains all editable fields. %]
+  <table>
+    <tr>
+      <td valign="top">
+        <fieldset>
+          <legend>Details</legend>
+          <table>
+
+            [%# *** Summary *** %]
+            <tr>
+              <td align="right">
+                <label for="short_desc" accesskey="s"><b><u>S</u>ummary</b></label>:
+              </td>
+              [% PROCESS input inputname => "short_desc" size => "60" colspan => 2
+                               maxlength => 255 %]
+            </tr>
+
+            <tr>
+              <td colspan="3">
+                <table>
+                  <tr>
+                    [%# *** ID, product, component, status and resolution *** %]
+                    <td valign="top">[% PROCESS section_details1 %]</td>
+
+                    [%# *** Platform, OS, severity, priority, version and milestone *** %]
+                    <td valign="top">[% PROCESS section_details2 %]</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="3"><hr size="1"></td>
+            </tr>
+
+            [%# *** URL Whiteboard Keywords *** %]
+
+            <tr>
+              <td align="right">
+                <label for="bug_file_loc" accesskey="u"><b>
+                  [% IF bug.bug_file_loc 
+                     AND NOT bug.bug_file_loc.match("^(javascript|data)") %]
+                    <a href="[% bug.bug_file_loc FILTER html %]"><u>U</u>RL</a>
+                  [% ELSE %]
+                    <u>U</u>RL
+                  [% END %]
+                [%%]</b></label>:
+              </td>
+              [% PROCESS input inputname => "bug_file_loc" size => "60" colspan => 2 %]
+            </tr>
+
+            [% IF Param('usestatuswhiteboard') %]
+              <tr>
+                <td align="right">
+                  <label for="status_whiteboard" accesskey="w"><b><u>W</u>hiteboard</b></label>:
+                </td>
+                [% PROCESS input inputname => "status_whiteboard" size => "60" colspan => 2 %]
+              </tr>
+            [% END %]
+
+            [% IF use_keywords %]
+              <tr>
+                <td align="right">
+                  <label for="keywords" accesskey="k">
+                    <b><a href="describekeywords.cgi"><u>K</u>eywords</a></b></label>:
+                </td>
+                [% PROCESS input inputname => "keywords" size => 60 colspan => 2
+                                 value => bug.keywords.join(', ') %]
+              </tr>
+            [% END %]
+
+            [%# *** Custom Fields *** %]
+
+            [% USE Bugzilla %]
+            [% fields = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
+            [% IF fields %]
+              [% FOREACH field = fields %]
+                <tr>
+                  [% PROCESS bug/field.html.tmpl value=bug.${field.name}
+                                                 editable = bug.check_can_change_field(field.name, 0, 1)
+                                                 value_span = 2 %]
+                </tr>
+              [% END %]
+            [% END %]
+
+            [%# *** Dependencies *** %]
+
+            <tr>
+              [% PROCESS dependencies
+                         dep = { title => "Depends&nbsp;on", fieldname => "dependson" } %]
+            </tr>
+
+            <tr>
+              [% PROCESS dependencies accesskey = "b"
+                         dep = { title => "<u>B</u>locks", fieldname => "blocked" } %]
+            </tr>
+
+            <tr>
+              <th>&nbsp;</th>
+
+              <td colspan="2">
+                <a href="showdependencytree.cgi?id=[% bug.bug_id %]&amp;hide_resolved=1">Show
+                   dependency tree</a>
+
+                [% IF Param('webdotbase') %]
+                  - <a href="showdependencygraph.cgi?id=[% bug.bug_id %]">Show
+                       dependency graph</a>
+                [% END %]
+              </td>
+            </tr>
+          </table>
+        </fieldset>
+      </td>
+
+      [%# Force the layout to be displayed now, before drawing the second column of the table.
+        # This should prevent bug 370739 when using Firefox 2. %]
+      <script type="text/javascript">
+        <!--
+        var v = document.body.offsetHeight;
+        //-->
+      </script>
+
+      <td valign="top">
+        [%# *** Reporter, owner and QA contact *** %]
+        <fieldset>
+          <legend>People</legend>
+          [% PROCESS section_people %]
+        </fieldset>
+
+        [%# *** Flags *** %]
+        [% show_bug_flags = 0 %]
+        [% FOREACH type = bug.flag_types %]
+          [% IF (type.flags && type.flags.size > 0) || (user.id && type.is_active) %]
+            [% show_bug_flags = 1 %]
+            [% LAST %]
+          [% END %]
+        [% END %]
+        [% IF show_bug_flags %]
+          <fieldset>
+            <legend>Flags</legend>
+            <table cellspacing="1" cellpadding="1">
+              <tr>
+                <td colspan="2" valign="top">
+                  [% IF user.id %]
+                    [% IF bug.flag_types.size > 0 %]
+                      [% PROCESS "flag/list.html.tmpl" flag_no_header = 1
+                                                       flag_types = bug.flag_types
+                                                       any_flags_requesteeble = bug.any_flags_requesteeble %]
+                    [% END %]
+                  [% ELSE %]
+                    [% FOREACH type = bug.flag_types %]
+                      [% FOREACH flag = type.flags %]
+                          [% flag.setter.nick FILTER html %]:
+                          [%+ type.name FILTER html FILTER no_break %][% flag.status %]
+                          [%+ IF flag.requestee %]
+                            ([% flag.requestee.nick FILTER html %])
+                          [% END %]<br>
+                      [% END %]
+                    [% END %]
+                  [% END %]
+                </td>
+              </tr>
+            </table>
+          </fieldset>
+        [% END %]
+      </td>
+    </tr>
+  </table>
+
+  [% IF user.in_group(Param('timetrackinggroup')) %]
+    <br>
+    <table cellspacing="0" cellpadding="4" border="1">
+      <tr>
+        <th align="center" bgcolor="#cccccc">
+          <label for="estimated_time">Orig. Est.</label>
+        </th>
+        <th align="center" bgcolor="#cccccc">
+          Current Est.
+        </th>
+        <th align="center" bgcolor="#cccccc">
+          <label for="work_time">Hours Worked</label>
+        </th>
+        <th align="center" bgcolor="#cccccc">
+          <label for="remaining_time">Hours Left</label>
+        </th>
+        <th align="center" bgcolor="#cccccc">
+          %Complete
+        </th>
+        <th align="center" bgcolor="#cccccc">
+          Gain
+        </th>
+        <th align="center" bgcolor="#cccccc">
+          <label for="deadline">Deadline</label>
+        </th>
+      </tr>
+      <tr>
+        <td align="center">
+          <input name="estimated_time" id="estimated_time"
+                 value="[% PROCESS formattimeunit
+                                   time_unit=bug.estimated_time %]"
+                 size="6" maxlength="6">
+        </td>
+        <td align="center">
+          [% PROCESS formattimeunit
+                     time_unit=(bug.actual_time + bug.remaining_time) %]
+        </td>
+        <td align="center">
+          [% PROCESS formattimeunit time_unit=bug.actual_time %] +
+          <input name="work_time" id="work_time"
+                 value="0" size="3" maxlength="6"
+                 onchange="adjustRemainingTime();">
+        </td>
+        <td align="center">
+          <input name="remaining_time" id="remaining_time"
+                 value="[% PROCESS formattimeunit
+                                   time_unit=bug.remaining_time %]"
+                 size="6" maxlength="6" onchange="updateRemainingTime();">
+        </td>
+        <td align="center">
+          [% PROCESS calculatepercentage act=bug.actual_time
+                                         rem=bug.remaining_time %]
+        </td>
+        <td align="center">
+          [% PROCESS formattimeunit time_unit=bug.estimated_time - (bug.actual_time + bug.remaining_time) %]
+        </td>
+         <td align="center">
+           <input name="deadline" id="deadline" value="[% bug.deadline %]"
+                  size="10" maxlength="10"><br />
+           <small>(YYYY-MM-DD)</small>
+        </td>        
+      </tr>
+      <tr>
+        <td colspan="7" align="right">
+          <a href="summarize_time.cgi?id=[% bug.bug_id %]&amp;do_depends=1">
+          Summarize time (including time for [% terms.bugs %]
+          blocking this [% terms.bug %])</a>
+        </td>
+      </tr>
+    </table>
+  [% END %]
+
+[%# *** Attachments *** %]
+
+  [% PROCESS attachment/list.html.tmpl
+             attachments = bug.attachments
+             bugid       = bug.bug_id
+             num_attachment_flag_types = bug.num_attachment_flag_types
+             show_attachment_flags = bug.show_attachment_flags
+   %]
+
+
+[%# *** Comments Groups *** %]
+
+  <br>
+  <table cellpadding="1" cellspacing="1">
+    <tr>
+      <td>
+        [% IF user.id %]
+          <label for="comment" accesskey="c"><b>Additional <u>C</u>omments</b></label>:
+          [% IF Param("insidergroup") && user.in_group(Param("insidergroup")) %]
+            <input type="checkbox" name="commentprivacy" value="1"
+                   id="newcommentprivacy"
+                   onClick="updateCommentTagControl(this, form)">
+            <label for="newcommentprivacy">Private</label>
+          [% END %]
+          <br>
+          <a name="add_comment"></a>
+          [% INCLUDE global/textarea.html.tmpl
+                     name      = 'comment'
+                     id        = 'comment'
+                     minrows   = 10
+                     maxrows   = 25
+                     cols      = constants.COMMENT_COLS
+          %]
+
+          [% IF NOT bug.cc || NOT bug.cc.contains(user.login) %]
+            [% has_role = bug.user.isreporter
+                          || bug.assigned_to.id == user.id
+                          || (Param('useqacontact')
+                              && bug.qa_contact
+                              && bug.qa_contact.id == user.id) %]
+
+            <br>
+            <input type="checkbox" id="addselfcc" name="addselfcc"
+              [% " checked=\"checked\""
+                   IF user.settings.state_addselfcc.value == 'always'
+                      || (!has_role
+                          && user.settings.state_addselfcc.value == 'cc_unless_role') %]>
+            <label for="addselfcc">Add [% user.identity FILTER html %] to CC list</label>
+          [% END %]
+        [% ELSE %]
+          <fieldset>
+            <legend>Note</legend>
+            <p>
+              You need to
+              <a href="show_bug.cgi?id=[% bug.bug_id %]&amp;GoAheadAndLogIn=1">log in</a>
+              before you can comment on or make changes to this [% terms.bug %].
+            </p>
+          </fieldset>
+        [% END %]
+      </td>
+
+      <td valign="top">
+        <fieldset>
+          <legend>Related actions</legend>
+          <ul>
+            <li><a href="show_activity.cgi?id=[% bug.bug_id %]">View [% terms.Bug %] Activity</a></li>
+            <li><a href="show_bug.cgi?format=multiple&amp;id=[% bug.bug_id %]">Format For Printing</a></li>
+            <li><a href="show_bug.cgi?ctype=xml&amp;id=[% bug.bug_id %]">XML</a></li>
+            <li><a href="enter_bug.cgi?cloned_bug_id=[% bug.bug_id %]">Clone This [% terms.Bug %]</a></li>
+          </ul>
+
+          [% IF bug.use_votes %]
+            <br>
+            <b><a href="page.cgi?id=voting.html">Votes</a></b>: [% bug.votes %]
+            <ul>
+              [% IF bug.votes %]
+                <li><a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.bug_id %]">Show
+                             votes for this [% terms.bug %]</a></li>
+              [% END %]
+              <li><a href="votes.cgi?action=show_user&amp;bug_id=[% bug.bug_id %]#vote_[% bug.bug_id %]">Vote
+                           for this [% terms.bug %]</a></li>
+            </ul>
+          [% END %]
+
+          [%# Links to more things users can do with this bug. %]
+          [% Hook.process("links") %]
+        </fieldset>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  [% IF bug.groups.size > 0 %]
+    [% inallgroups = 1 %]
+    [% inagroup = 0 %]
+    [% FOREACH group = bug.groups %]
+      [% SET inallgroups = 0 IF NOT group.ingroup %]
+      [% SET inagroup = 1 IF group.ison %]
+
+      [% IF NOT group.mandatory %]
+        [% IF NOT emitted_description %]
+          [% emitted_description = 1 %]
+          <br>
+          <b>Only users in all of the selected groups can view this [% terms.bug %]:</b>
+          <br>
+          <font size="-1">
+            (Unchecking all boxes makes this a more public [% terms.bug %].)
+          </font>
+          <br>
+          <br>
+        [% END %]
+
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <input type="checkbox" value="1"
+             name="bit-[% group.bit %]" id="bit-[% group.bit %]"
+             [% " checked=\"checked\"" IF group.ison %]
+             [% " disabled=\"disabled\"" IF NOT group.ingroup %]>
+      <label for="bit-[% group.bit %]">[% group.description FILTER html_light %]</label>
+      <br>
+      [% END %]
+    [% END %]
+
+    [% IF NOT inallgroups %]
+      <b>
+        Only members of a group can change the visibility of [% terms.abug %] for
+        that group
+      </b>
+    <br>
+    [% END %]
+
+    [% IF inagroup %]
+      <p>
+        <b>Users in the roles selected below can always view this [% terms.bug %]:</b>
+        <br>
+        <small>
+          (The assignee
+          [% IF (Param('useqacontact')) %]
+             and QA contact
+          [% END %]
+          can always see [% terms.abug %], and this section does not take effect unless
+          the [% terms.bug %] is restricted to at least one group.)
+        </small>
+      </p>
+
+      <p>
+        <input type="checkbox" value="1"
+               name="reporter_accessible" id="reporter_accessible"
+               [% " checked" IF bug.reporter_accessible %]
+               [% " disabled=\"disabled\"" UNLESS bug.check_can_change_field("reporter_accessible", 0, 1) %]>
+        <label for="reporter_accessible">Reporter</label>
+        <input type="checkbox" value="1"
+               name="cclist_accessible" id="cclist_accessible"
+               [% " checked" IF bug.cclist_accessible %]
+               [% " disabled=\"disabled\"" UNLESS bug.check_can_change_field("cclist_accessible", 0, 1) %]>
+        <label for="cclist_accessible">CC List</label>
+      </p>
+    [% END %]
+  [% END %]
+
+[% PROCESS bug/knob.html.tmpl IF user.id %]
+
+[%# *** Additional Comments *** %]
+
+<hr>
+
+<div id="comments">
+[% PROCESS bug/comments.html.tmpl
+   comments = bug.longdescs
+   mode = user.id ? "edit" : "show"
+ %]
+</div>
+
+</form>
+
+[%############################################################################%]
+[%# Block for the first table in the "Details" section                       #%]
+[%############################################################################%]
+
+[% BLOCK section_details1 %]
+  <table cellspacing="1" cellpadding="1">
+    <tr>
+      <td align="right">
+        [% IF Param('useclassification') && bug.classification_id != 1 %]
+          <b>[[% bug.classification FILTER html %]]</b>
+        [% END %]
+        <b>[% terms.Bug %]#</b>:
+      </td>
+      <td>
+        <a href="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
+           [% bug.bug_id %]</a>
+      </td>
+    </tr>
+
+    [% IF Param("usebugaliases") %]
+      <tr>
+        <td align="right">
+          <label for="alias" title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies"><b>Alias</b></label>:
+        </td>
+        [% PROCESS input inputname => "alias" size => "20" maxlength => "20" %]
+      </tr>
+    [% END %]
+
+    <tr>
+      <td align="right">
+        <label for="product" accesskey="p"><b><u>P</u>roduct</b></label>:
+      </td>
+      [% PROCESS select selname => "product" %]
+    </tr>
+
+    <tr>
+      <td align="right">
+        <label for="component" accesskey="m"><b><a href="describecomponents.cgi?product=[% bug.product FILTER url_quote %]">Co<u>m</u>ponent</a></b></label>:
+      </td>
+      [% PROCESS select selname => "component" %]
+    </tr>
+
+    <tr>
+      <td align="right">
+        <b><a href="page.cgi?id=fields.html#status">Status</a></b>:
+      </td>
+      <td>[% status_descs.${bug.bug_status} FILTER html %]</td>
+    </tr>
+
+    <tr>
+      <td align="right">
+        <b><a href="page.cgi?id=fields.html#resolution">Resolution</a></b>:
+      </td>
+      <td>
+        [% get_resolution(bug.resolution) FILTER html %]
+        [% IF bug.resolution == "DUPLICATE" %]
+          of [% terms.bug %] [%+ "${bug.dup_id}" FILTER bug_link(bug.dup_id) FILTER none %]
+        [% END %]
+      </td>
+    </tr>
+  </table>
+[% END %]
+
+[%############################################################################%]
+[%# Block for the second table in the "Details" section                      #%]
+[%############################################################################%]
+
+[% BLOCK section_details2 %]
+  <table cellspacing="1" cellpadding="1">
+    <tr>
+      <td align="right">
+        <label for="rep_platform" accesskey="h"><b><u>H</u>ardware</b></label>:
+      </td>
+      [% PROCESS select selname => "rep_platform" %]
+    </tr>
+
+    <tr>
+      <td align="right">
+        <label for="op_sys" accesskey="o"><b><u>O</u>S</b></label>:
+      </td>
+      [% PROCESS select selname => "op_sys" %]
+    </tr>
+
+    <tr>
+      <td align="right">
+        <label for="version"><b>Version</b></label>:
+      </td>
+      [% PROCESS select selname => "version" %]
+    </tr>
+
+    <tr>
+      <td align="right">
+        <label for="priority" accesskey="i"><b><a href="page.cgi?id=fields.html#priority">Pr<u>i</u>ority</a></b></label>:
+      </td>
+      [% PROCESS select selname => "priority" %]
+    </tr>
+
+    <tr>
+      <td align="right">
+        <label for="bug_severity"><b><a href="page.cgi?id=fields.html#bug_severity">Severity</a></b></label>:
+      </td>
+      [% PROCESS select selname = "bug_severity" %]
+    </tr>
+
+    [% IF Param("usetargetmilestone") && bug.target_milestone %]
+      <tr>
+        <td align="right">
+          <label for="target_milestone"><b>
+            [% IF bug.milestoneurl %]
+              <a href="[% bug.milestoneurl FILTER html %]">
+            [% END %]
+            Target Milestone[% "</a>" IF bug.milestoneurl %]
+          [%%]</b></label>:
+        </td>
+        [% PROCESS select selname = "target_milestone" %]
+      </tr>
+    [% END %]
+  </table>
+[% END %]
+
+[%############################################################################%]
+[%# Block for the table in the "People" section                              #%]
+[%############################################################################%]
+
+[% BLOCK section_people %]
+  <table cellpadding="1" cellspacing="1">
+    <tr>
+      <td align="right">
+        <b>Reporter</b>:
+      </td>
+      <td>
+        <a href="mailto:[% bug.reporter.email FILTER html %]">
+          [% bug.reporter.identity FILTER html %]</a>
+      </td>
+    </tr>
+
+    <tr>
+      <td align="right">
+        <b><a href="page.cgi?id=fields.html#assigned_to">Assigned&nbsp;To</a></b>:
+      </td>
+      <td>
+        <a href="mailto:[% bug.assigned_to.email FILTER html %]">
+           [% bug.assigned_to.identity FILTER html %]</a>
+      </td>
+    </tr>
+
+    [% IF Param('useqacontact') %]
+    <tr>
+      <td align="right">
+        <label for="qa_contact" accesskey="q"><b><u>Q</u>A Contact</b></label>:
+      </td>
+      <td colspan="7">
+        [% IF bug.check_can_change_field("qa_contact", 0, 1) %]
+          [% INCLUDE global/userselect.html.tmpl
+              id => "qa_contact"
+              name => "qa_contact"
+              value => bug.qa_contact.login
+              size => 30
+              emptyok => 1
+          %]
+        [% ELSE %]
+          <input type="hidden" name="qa_contact" id="qa_contact"
+                 value="[% bug.qa_contact.login FILTER html %]">
+          <a href="mailto:[% bug.qa_contact.email FILTER html %]">
+            [% IF bug.qa_contact.login && bug.qa_contact.login.length > 30 %]
+              <span title="[% bug.qa_contact.login FILTER html %]">
+                [% bug.qa_contact.identity FILTER truncate(30) FILTER html %]
+              </span>
+            [% ELSE %]
+              [% bug.qa_contact.identity FILTER html %]
+            [% END %]
+          </a>
+        [% END %]
+      </td>
+    </tr>
+    [% END %]
+
+    [% IF user.id %]
+      <tr>
+        <td align="right" valign="top">
+          <label for="newcc" accesskey="a"><b><u>A</u>dd&nbsp;CC</b></label>:
+        </td>
+        <td>
+           [% INCLUDE global/userselect.html.tmpl
+              id => "newcc"
+              name => "newcc"
+              value => ""
+              size => 30
+              multiple => 5
+            %]
+        </td>
+      </tr>
+    [% END %]
+
+    <tr>
+      [% IF bug.cc %]
+        <td align="right" valign="top">
+          <label for="cc"><b>CC</b></label>:
+        </td>
+        <td valign="top">
+          <select id="cc" name="cc" multiple="multiple" size="5">
+          [% FOREACH c = bug.cc %]
+            <option value="[% c FILTER html %]">[% c FILTER html %]</option>
+          [% END %]
+          </select>
+          [% IF user.id %]
+            <br>
+            <input type="checkbox" id="removecc" name="removecc">
+            [%%]<label for="removecc">Remove selected CCs</label>
+            <br>
+          [% END %]
+        </td>
+      [% ELSE %]
+        <td colspan="2"><input type="hidden" name="cc" value=""></td>
+      [% END %]
+    </tr>
+  </table>
+[% END %]
+
+[%############################################################################%]
+[%# Block for dependencies                                                   #%]
+[%############################################################################%]
+
+[% BLOCK dependencies %]
+  <th align="right">
+    <label for="[% dep.fieldname %]"[% " accesskey=\"$accesskey\"" IF accesskey %]>
+    [% dep.title %]</label>:
+  </th>
+  <td>
+  [% FOREACH depbug = bug.${dep.fieldname} %]
+    [% depbug FILTER bug_link(depbug) FILTER none %][% " " %]
+  [% END %]
+  </td>
+  <td>
+    [% IF bug.check_can_change_field(dep.fieldname, 0, 1) %]
+      <input name="[% dep.fieldname %]" id="[% dep.fieldname %]"
+             value="[% bug.${dep.fieldname}.join(', ') %]">
+    [% ELSE %]
+      <input type="hidden" id="[% dep.fieldname %]" name="[% dep.fieldname %]"
+             value="[% bug.${dep.fieldname}.join(', ') %]">
+    [% END %]
+  </td>
+  [% accesskey = undef %]
+[% END %]
+
+
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]
+  <td>
+    [% IF bug.check_can_change_field(selname, 0, 1) AND bug.choices.${selname}.size > 1 %]
+      <select id="[% selname %]" name="[% selname %]">
+        [% FOREACH x = bug.choices.${selname} %]
+          <option value="[% x FILTER html %]"
+            [% " selected" IF x == bug.${selname} %]>[% x FILTER html %]
+          </option>
+        [% END %]
+      </select>
+    [% ELSE %]
+      <input type="hidden" id="[% selname %]" name="[% selname %]" value="[% bug.${selname} FILTER html %]">
+      [% bug.${selname} FILTER html %]
+    [% END %]
+  </td>
+[% END %]
+
+[%############################################################################%]
+[%# Block for INPUT fields                                                   #%]
+[%############################################################################%]
+
+[% BLOCK input %]
+  <td[% " colspan=\"$colspan\"" IF colspan %]>
+    [% val = value ? value : bug.$inputname %]
+    [% IF bug.check_can_change_field(inputname, 0, 1) %]
+       <input id="[% inputname %]" name="[% inputname %]"
+              value="[% val FILTER html %]"[% " size=\"$size\"" IF size %]
+              [% " maxlength=\"$maxlength\"" IF maxlength %]>
+    [% ELSE %]
+       <input type="hidden" name="[% inputname %]" id="[% inputname %]"
+              value="[% val FILTER html %]">
+      [% IF size && val.length > size %]
+        <span title="[% val FILTER html %]">
+          [% val FILTER truncate(size) FILTER html %]
+        </span>
+      [% ELSE %]
+        [% val FILTER html %]
+      [% END %]
+    [% END %]
+  </td>
+  [% maxlength = 0 %]
+  [% colspan = 0 %]
+  [% size = 0 %]
+  [% value = undef %]
+[% END %]

@@ -1,0 +1,199 @@
+/* proSilver Link Styles
+---------------------------------------- */
+
+#wrap a:link	{ color: #898989; text-decoration: none; }
+#wrap a:visited	{ color: #898989; text-decoration: none; }
+#wrap a:hover	{ color: #d3d3d3; text-decoration: underline; }
+#wrap a:active	{ color: #d2d2d2; text-decoration: none; }
+
+/* Coloured usernames */
+.username-coloured {
+	font-weight: bold;
+	display: inline !important;
+}
+
+/* Links on gradient backgrounds */
+#search-box a:link, .navbg a:link, .forumbg .header a:link, .forabg .header a:link, th a:link {
+	color: #FFFFFF;
+	text-decoration: none;
+}
+
+#search-box a:visited, .navbg a:visited, .forumbg .header a:visited, .forabg .header a:visited, th a:visited {
+	color: #FFFFFF;
+	text-decoration: none;
+}
+
+#search-box a:hover, .navbg a:hover, .forumbg .header a:hover, .forabg .header a:hover, th a:hover {
+	color: #ffffff;
+	text-decoration: underline;
+}
+
+#search-box a:active, .navbg a:active, .forumbg .header a:active, .forabg .header a:active, th a:active {
+	color: #ffffff;
+	text-decoration: none;
+}
+
+/* Links for forum/topic lists */
+a.forumtitle {
+	font-family: "Trebuchet MS", Helvetica, Arial, Sans-serif;
+	font-size: 1.2em;
+	font-weight: bold;
+	color: #898989;
+	text-decoration: none;
+}
+
+/* a.forumtitle:visited { color: #898989; } */
+
+a.forumtitle:hover {
+	color: #bcbcbc;
+	text-decoration: underline;
+}
+
+a.forumtitle:active {
+	color: #898989;
+}
+
+a.topictitle {
+	font-family: "Trebuchet MS", Helvetica, Arial, Sans-serif;
+	font-size: 1.2em;
+	font-weight: bold;
+	color: #898989;
+	text-decoration: none;
+}
+
+/* a.topictitle:visited { color: #d2d2d2; } */
+
+a.topictitle:hover {
+	color: #bcbcbc;
+	text-decoration: underline;
+}
+
+a.topictitle:active {
+	color: #898989;
+}
+
+/* Post body links */
+.postlink {
+	text-decoration: none;
+	color: #d2d2d2;
+	border-bottom: 1px solid #d2d2d2;
+	padding-bottom: 0;
+}
+
+.postlink:visited {
+	color: #bdbdbd;
+	border-bottom-style: dotted;
+	border-bottom-color: #666666;
+}
+
+.postlink:active {
+	color: #d2d2d2;
+}
+
+.postlink:hover {
+	background-color: #f6f6f6;
+	text-decoration: none;
+	color: #404040;
+}
+
+.signature a, .signature a:visited, .signature a:active, .signature a:hover {
+	border: none;
+	text-decoration: underline;
+	background-color: transparent;
+}
+
+/* Profile links */
+.postprofile a:link, .postprofile a:active, .postprofile a:visited, .postprofile dt.author a {
+	font-weight: bold;
+	color: #898989;
+	text-decoration: none;
+}
+
+.postprofile a:hover, .postprofile dt.author a:hover {
+	text-decoration: underline;
+	color: #d3d3d3;
+}
+
+
+/* Profile searchresults */	
+.search .postprofile a {
+	color: #898989;
+	text-decoration: none; 
+	font-weight: normal;
+}
+
+.search .postprofile a:hover {
+	color: #d3d3d3;
+	text-decoration: underline; 
+}
+
+/* Back to top of page */
+.back2top {
+	clear: both;
+	height: 11px;
+	text-align: right;
+}
+
+a.top {
+	background: none no-repeat top left;
+	text-decoration: none;
+	width: {IMG_ICON_BACK_TOP_WIDTH}px;
+	height: {IMG_ICON_BACK_TOP_HEIGHT}px;
+	display: block;
+	float: right;
+	overflow: hidden;
+	letter-spacing: 1000px;
+	text-indent: 11px;
+}
+
+a.top2 {
+	background: none no-repeat 0 50%;
+	text-decoration: none;
+	padding-left: 15px;
+}
+
+/* Arrow links  */
+a.up		{ background: none no-repeat left center; }
+a.down		{ background: none no-repeat right center; }
+a.left		{ background: none no-repeat 3px 60%; }
+a.right		{ background: none no-repeat 95% 60%; }
+
+a.up, a.up:link, a.up:active, a.up:visited {
+	padding-left: 10px;
+	text-decoration: none;
+	border-bottom-width: 0;
+}
+
+a.up:hover {
+	background-position: left top;
+	background-color: transparent;
+}
+
+a.down, a.down:link, a.down:active, a.down:visited {
+	padding-right: 10px;
+}
+
+a.down:hover {
+	background-position: right bottom;
+	text-decoration: none;
+}
+
+a.left, a.left:active, a.left:visited {
+	padding-left: 12px;
+}
+
+a.left:hover {
+	color: #d2d2d2;
+	text-decoration: none;
+	background-position: 0 60%;
+}
+
+a.right, a.right:active, a.right:visited {
+	padding-right: 12px;
+}
+
+a.right:hover {
+	color: #d2d2d2;
+	text-decoration: none;
+	background-position: 100% 60%;
+}

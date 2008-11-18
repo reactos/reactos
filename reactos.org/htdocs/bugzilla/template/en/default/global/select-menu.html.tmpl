@@ -1,0 +1,65 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[%# INTERFACE:
+  # name: string; the name of the menu.
+  #
+  # multiple: boolean; whether or not the menu is multi-select
+  #
+  # size: integer; the number of items to display at once
+  # 
+  # options: array or hash; the items with which to populate the array.
+  #   If a hash is passed, the hash keys become the names displayed
+  #   to the user while the hash values become the value of the item.
+  # 
+  # default: string; the item selected in the menu by default.
+  # 
+  # onchange: code; JavaScript to be run when the user changes the value
+  #   selected in the menu.
+  #%]
+ 
+[%# Get the scalar representation of the options reference, 
+  # which looks like "ARRAY(0xA352BA3F)" or "HASH(0xA352BA3F)",
+  # so we can figure out whether it is a reference to an array
+  # or a hash.
+  #%]
+[% options_type = BLOCK %][% options %][% END %]
+
+<select name="[% name FILTER html %]" 
+        [% IF onchange %]onchange="[% onchange FILTER html %]"[% END %]
+        [% IF multiple %] multiple [% END %]
+        [% IF size %] size="[% size %]" [% END %]>
+  [% IF options_type.search("ARRAY") %]
+    [% FOREACH value = options %]
+      <option value="[% value FILTER html %]"
+              [% " selected" IF value == default %]>
+        [% value FILTER html %]
+      </option>
+    [% END %]
+  [% ELSIF options_type.search("HASH") %]
+    [% FOREACH option = options %]
+      <option value="[% option.value FILTER html %]" 
+              [% " selected" IF option.value == default %]>
+        [% option.key FILTER html %]
+      </option>
+    [% END %]
+  [% END %]
+</select>

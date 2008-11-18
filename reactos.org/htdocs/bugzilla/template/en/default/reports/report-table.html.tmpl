@@ -1,0 +1,167 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 <rdean@cambianetworks.com>
+  #%]
+
+[%# INTERFACE:
+  # buglistbase: The base query for this table, in URL form
+  # col_field: string. Name of the field being plotted as columns.
+  # row_field: string. Name of the field being plotted as rows.
+  # tbl_field: string. Name of the field being plotted as tables.
+  # col_names: array. List of values for the field being plotted as columns.
+  # row_names: array. List of values for the field being plotted as rows.
+  # data: <depends on format>. Data to plot. Only data.$tbl is accessed. 
+  # tbl: Name of a hash in data which is the table to be plotted.
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% col_field_disp = field_descs.$col_field || col_field %]
+[% row_field_disp = field_descs.$row_field || row_field %]
+  
+[% IF tbl == "-total-" %]
+  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase FILTER html %]
+  [% "&amp;$tbl_vals" IF tbl_vals %][% END %]
+[% ELSE %]
+  [% urlbase = BLOCK %]buglist.cgi?[% buglistbase FILTER html %]&amp;
+  [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %][% END %]
+[% END %]
+
+[% IF tbl_field %]
+  <h2>[% tbl_disp FILTER html %]</h2>
+[% END %]
+
+<table>
+  <tr>
+    <td>
+    </td>
+    <td align="center">
+      <strong>[% col_field_disp FILTER html %]</strong>
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="middle">
+      <strong>[% row_field_disp FILTER html %]</strong>
+    </td>
+    <td>
+
+
+[% classes = [ [ "t1", "t2" ] , [ "t3", "t4" ] ] %]
+[% col_idx = 0 %]
+[% row_idx = 0 %]
+[% grand_total = 0 %]
+
+<table border="1">
+  [% IF col_field %]
+    <tr>
+      <td class="[% classes.$row_idx.$col_idx %]">
+      </td>
+      [% FOREACH col = col_names %]
+        [% col_totals.$col = 0 %]
+        [% NEXT IF col == "" %]
+        
+        [% col_idx = 1 - col_idx %]
+        <td class="[% classes.$row_idx.$col_idx %]">
+          [% IF col_field == 'bug_status' %]
+            [% status_descs.$col FILTER html FILTER replace('^ $','&nbsp;') %]
+          [% ELSIF col_field == 'resolution' %]
+            [% get_resolution(col) FILTER html FILTER replace('^ $','&nbsp;') %]
+          [% ELSE %]
+            [% col FILTER html FILTER replace('^ $','&nbsp;') %]
+          [% END %]
+        </td>
+      [% END %]
+      <td class="ttotal">
+        Total
+      </td>
+    </tr>
+  [% END %]
+  
+  [% FOREACH row = row_names %]
+    [% row_total = 0 %]
+    
+    [% row_idx = 1 - row_idx %]
+    <tr>
+      <td class="[% classes.$row_idx.$col_idx %]" align="right">
+        [% IF row_field == 'bug_status' %]
+          [% status_descs.$row FILTER html FILTER replace('^ $','&nbsp;') %]
+        [% ELSIF row_field == 'resolution' %]
+          [% get_resolution(row) FILTER html FILTER replace('^ $','&nbsp;') %]
+        [% ELSE %]
+          [% row FILTER html FILTER replace('^ $','&nbsp;') %]
+        [% END %]
+      </td>
+      [% FOREACH col = col_names %]
+        [% row_total = row_total + data.$tbl.$col.$row %]
+        [% NEXT IF col == "" %]
+        [% col_totals.$col = col_totals.$col + data.$tbl.$col.$row %]
+        
+        [% col_idx = 1 - col_idx %]
+        <td class="[% classes.$row_idx.$col_idx %]" align="center">
+          [% IF data.$tbl.$col.$row AND data.$tbl.$col.$row > 0 %]
+            <a href="[% urlbase %]&amp;
+              [% row_field FILTER url_quote %]=[% row FILTER url_quote %]&amp;
+              [% col_field FILTER url_quote %]=[% col FILTER url_quote %]">
+              [% data.$tbl.$col.$row %]</a>
+          [% ELSE %]
+            .
+          [% END %]
+        </td>
+      [% END %] 
+      <td class="ttotal" align="right">
+        <a href="[% urlbase %]&amp;
+          [% row_field FILTER url_quote %]=[% row FILTER url_quote %]
+          [% "&amp;$col_vals" IF col_vals %]">
+        [% row_total %]</a>
+        [% grand_total = grand_total + row_total %]
+      </td>
+    </tr>
+  [% END %]
+  
+  <tr>
+    [% row_idx = 1 - row_idx %]
+    <td class="ttotal">
+      Total
+    </td>
+    [% FOREACH col = col_names %]
+      [% NEXT IF col == "" %]
+      
+      <td class="ttotal" align="center">
+        <a href="[% urlbase %]&amp;
+          [% col_field FILTER url_quote %]=[% col FILTER url_quote %]
+          [% "&amp;$row_vals" IF row_vals %]">
+        [% col_totals.$col %]</a>
+      </td> 
+    [% END %]
+    <td class="ttotal" align="right">
+      <strong>
+        <a href="[% urlbase %]
+          [% "&amp;$row_vals" IF row_vals %]
+          [% "&amp;$col_vals" IF col_vals %]">[% grand_total %]</a>
+      </strong>
+    </td>
+  </tr>
+</table>
+
+      
+    </td>
+  </tr>
+</table>    

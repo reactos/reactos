@@ -1,0 +1,48 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s):     John Vandenberg <zeroj@null.net>
+  #%]
+[%# INTERFACE:
+  # emailaddress: string. The user's old Bugzilla login email address.
+  # newemailaddress: string. The user's new Bugzilla login email address.
+  # token: string. The token associated with this change.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% expiration_ts = token_ts + (max_token_age * 86400) %]
+From: [% Param('mailfrom') %]
+To: [% emailaddress %]
+Subject: [% terms.Bugzilla %] Change Email Address Request
+Importance: High
+X-MSMail-Priority: High
+X-Priority: 1
+X-Bugzilla-Type: admin
+
+[%+ terms.Bugzilla %] has received a request to change the email address
+for your account to [%+ newemailaddress %].
+
+If you are not the person who made this request, or you wish to cancel
+this request, visit the following link:
+
+[%+ Param('urlbase') %]token.cgi?t=[% token FILTER url_quote %]&a=cxlem
+
+If you do nothing, and [%+ newemailaddress %] confirms this request,
+the change will be made permanent after [%+ max_token_age %] days
+(on [%+ time2str("%B %o, %Y at %H:%M %Z", expiration_ts) %]).

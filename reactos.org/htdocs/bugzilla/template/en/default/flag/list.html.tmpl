@@ -1,0 +1,230 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+<script type="text/javascript">
+<!-- 
+  // Enables or disables a requestee field depending on whether or not
+  // the user is requesting the corresponding flag.
+  function toggleRequesteeField(flagField, no_focus)
+  {
+    // Convert the ID of the flag field into the ID of its corresponding
+    // requestee field and then use the ID to get the field.
+    var id = flagField.name.replace(/flag(_type)?-(\d+)/, "requestee$1-$2");
+    var requesteeField = document.getElementById(id);
+    if (!requesteeField) return;
+    
+    // Enable or disable the requestee field based on the value
+    // of the flag field.
+    if (flagField.value == "?") {
+        requesteeField.disabled = false;
+        if (!no_focus) requesteeField.focus();
+    } else                         
+        requesteeField.disabled = true;
+  }
+  
+  // Disables requestee fields when the window is loaded since they shouldn't
+  // be enabled until the user requests that flag type.
+  function disableRequesteeFields()
+  {
+    var inputElements = document.getElementsByTagName("input");
+    var inputElement, id, flagField;
+    for ( var i=0 ; i<inputElements.length ; i++ )
+    {
+      inputElement = inputElements.item(i);
+      if (inputElement.name.search(/^requestee(_type)?-(\d+)$/) != -1)
+      {
+        // Convert the ID of the requestee field into the ID of its corresponding
+        // flag field and then use the ID to get the field.
+        id = inputElement.name.replace(/requestee(_type)?-(\d+)/, "flag$1-$2");
+        flagField = document.getElementById(id);
+        if (flagField && flagField.value != "?")
+            inputElement.disabled = true;
+      }
+    }
+  }
+  window.onload = disableRequesteeFields;
+// -->
+</script>
+
+[%# We list flags by looping twice over the flag types relevant for the bug.
+  # In the first loop, we display existing flags and then, for active types,
+  # we display UI for adding new flags.  In the second loop, we display UI 
+  # for adding additional new flags for those types for which a flag already
+  # exists but which are multiplicable (can have multiple flags of the type
+  # on a single bug/attachment).
+  #%]
+
+[% DEFAULT flag_table_id = "flags" %]
+
+<table id="[% flag_table_id FILTER html %]">
+  [% UNLESS flag_no_header %]
+    <tr>
+      <th colspan="3">
+        Flags:
+      </th>
+      [% IF any_flags_requesteeble %]
+        <th>
+          Requestee:
+        </th>
+      [% END %]
+    </tr>
+  [% END %]
+
+  [%# Step 1: Display every flag type (except inactive types with no flags). %]
+  [% FOREACH type = flag_types %]
+    
+    [%# Step 1a: Display existing flag(s). %]
+    [% FOREACH flag = type.flags %]
+      <tr>
+        <td>
+          [% flag.setter.nick FILTER html %]:
+        </td>
+        <td>
+          <label title="[% type.description FILTER html %]"
+                 for="flag-[% flag.id %]">
+            [%- type.name FILTER html FILTER no_break -%]</label>
+        </td>
+        <td>
+          <select id="flag-[% flag.id %]" name="flag-[% flag.id %]" 
+                  title="[% type.description FILTER html %]"
+                  onchange="toggleRequesteeField(this);"
+                  class="flag_select">
+            [%# Only display statuses the user is allowed to set. %]
+            [% IF user.can_request_flag(type) %]
+              <option value="X"></option>
+            [% END %]
+            [% IF type.is_active %]
+              [% IF (type.is_requestable && user.can_request_flag(type)) || flag.status == "?" %]
+                <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
+              [% END %]
+              [% IF user.can_set_flag(type) || flag.status == "+" %]
+                <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
+              [% END %]
+              [% IF user.can_set_flag(type) || flag.status == "-" %]
+                <option value="-" [% "selected" IF flag.status == "-" %]>-</option>
+              [% END %]
+            [% ELSE %]
+              <option value="[% flag.status %]" selected="selected">[% flag.status %]</option>
+            [% END %]
+          </select>
+        </td>
+        [% IF any_flags_requesteeble %]
+          <td>
+            [% IF (type.is_active && type.is_requestable && type.is_requesteeble) || flag.requestee %]
+              <span style="white-space: nowrap;">
+                (<input type="text" size="30" maxlength="255"
+                        id="requestee-[% flag.id %]" 
+                        name="requestee-[% flag.id %]"
+                        [% IF flag.status == "?" && flag.requestee %]
+                          value="[% flag.requestee.login FILTER html %]"
+                        [% END %]
+                 >)
+              </span>
+            [% END %]
+          </td>
+        [% END %]
+      </tr>
+    [% END %]
+    
+    [%# Step 1b: Display UI for setting flag. %]
+    [% IF (!type.flags || type.flags.size == 0) && type.is_active %]
+      <tr>
+        <td>&nbsp;</td>
+        <td>
+          <label title="[% type.description FILTER html %]"
+                 for="flag_type-[% type.id %]">
+            [%- type.name FILTER html FILTER no_break %]</label>
+        </td>
+        <td>
+          <select id="flag_type-[% type.id %]" name="flag_type-[% type.id %]" 
+                  title="[% type.description FILTER html %]"
+                  [% " disabled=\"disabled\"" UNLESS user.can_request_flag(type) %]
+                  onchange="toggleRequesteeField(this);"
+                  class="flag_select">
+            <option value="X"></option>
+            [% IF type.is_requestable && user.can_request_flag(type) %]
+              <option value="?">?</option>
+            [% END %]
+            [% IF user.can_set_flag(type) %]
+              <option value="+">+</option>
+              <option value="-">-</option>
+            [% END %]
+          </select>
+        </td>
+        [% IF any_flags_requesteeble %]
+          <td>
+            [% IF type.is_requestable && type.is_requesteeble %]
+              <span style="white-space: nowrap;">
+                (<input type="text" size="30" maxlength="255"
+                        id="requestee_type-[% type.id %]" 
+                        name="requestee_type-[% type.id %]">)
+              </span>
+            [% END %]
+          </td>
+        [% END %]
+      </tr>
+    [% END %]
+  [% END %]
+
+  [%# Step 2: Display flag type again (if type is multiplicable). %]
+  [% FOREACH type = flag_types %]
+    [% NEXT UNLESS type.flags && type.flags.size > 0 && type.is_multiplicable && type.is_active %]
+    [% IF !separator_displayed %]
+        <tr><td colspan="3"><hr></td></tr>
+        [% separator_displayed = 1 %]
+    [% END %]
+    <tr>
+      <td colspan="2">
+        addl. <label title="[% type.description FILTER html %]"
+                     for="flag_type-[% type.id %]">
+          [%- type.name FILTER html FILTER no_break %]</label>
+      </td>
+      <td>
+        <select id="flag_type-[% type.id %]" name="flag_type-[% type.id %]" 
+                title="[% type.description FILTER html %]"
+                [% " disabled=\"disabled\"" UNLESS user.can_request_flag(type) %]
+                onchange="toggleRequesteeField(this);"
+                class="flag_select">
+          <option value="X"></option>
+          [% IF type.is_requestable && user.can_request_flag(type) %]
+            <option value="?">?</option>
+          [% END %]
+          [% IF user.can_set_flag(type) %]
+            <option value="+">+</option>
+            <option value="-">-</option>
+          [% END %]
+        </select>
+      </td>
+      [% IF any_flags_requesteeble %]
+        <td>
+          [% IF type.is_requestable && type.is_requesteeble %]
+              <span style="white-space: nowrap;">
+                (<input type="text" size="30" maxlength="255"
+                        id="requestee_type-[% type.id %]" 
+                        name="requestee_type-[% type.id %]">)
+              </span>
+          [% END %]
+        </td>
+      [% END %]
+    </tr>
+  [% END %]
+
+</table>

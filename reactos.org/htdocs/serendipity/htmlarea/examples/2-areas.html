@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Example with 2 HTMLAreas in the same form</title>
+    <script type="text/javascript">
+      // the _editor_url is REQUIRED!  don't forget to set it.
+      _editor_url = "../";
+      // implicit language will be "en", but let's set it for brevity
+      _editor_lang = "en";
+    </script>
+    <script type="text/javascript" src="../htmlarea.js"></script>
+    <script type="text/javascript">
+      // load the plugins that we will use
+      // loading is necessary ONLY ONCE, regardless on how many editors you create
+      // basically calling the following functions will load the plugin files as if
+      // we would have wrote script src="..." but with easier and cleaner code
+      HTMLArea.loadPlugin("TableOperations");
+      HTMLArea.loadPlugin("SpellChecker");
+      HTMLArea.loadPlugin("CSS");
+
+      // this function will get called at body.onload
+      function initDocument() {
+        // cache these values as we need to pass it for both editors
+        var css_plugin_args = {
+          combos : [
+            { label: "Syntax",
+                         // menu text       // CSS class
+              options: { "None"           : "",
+                         "Code" : "code",
+                         "String" : "string",
+                         "Comment" : "comment",
+                         "Variable name" : "variable-name",
+                         "Type" : "type",
+                         "Reference" : "reference",
+                         "Preprocessor" : "preprocessor",
+                         "Keyword" : "keyword",
+                         "Function name" : "function-name",
+                         "Html tag" : "html-tag",
+                         "Html italic" : "html-helper-italic",
+                         "Warning" : "warning",
+                         "Html bold" : "html-helper-bold"
+                       },
+              context: "pre"
+            },
+            { label: "Info",
+              options: { "None"           : "",
+                         "Quote"          : "quote",
+                         "Highlight"      : "highlight",
+                         "Deprecated"     : "deprecated"
+                       }
+            }
+          ]
+        };
+
+        //---------------------------------------------------------------------
+        // GENERAL PATTERN
+        //
+	//  1. Instantitate an editor object.
+	//  2. Register plugins (note, it's required to have them loaded).
+	//  3. Configure any other items in editor.config.
+	//  4. generate() the editor
+	//
+	// The above are steps that you use to create one editor.  Nothing new
+	// so far.  In order to create more than one editor, you just have to
+	// repeat those steps for each of one.  Of course, you can register any
+	// plugins you want (no need to register the same plugins for all
+	// editors, and to demonstrate that we'll skip the TableOperations
+	// plugin for the second editor).  Just be careful to pass different
+	// ID-s in the constructor (you don't want to _even try_ to create more
+	// editors for the same TEXTAREA element ;-)).
+	//
+	// So much for the noise, see the action below.
+	//---------------------------------------------------------------------
+
+
+        //---------------------------------------------------------------------
+        // CREATE FIRST EDITOR
+        //
+        var editor1 = new HTMLArea("text-area-1");
+
+        // plugins must be registered _per editor_.  Therefore, we register
+        // plugins for the first editor here, and we will also do this for the
+        // second editor.
+        editor1.registerPlugin(TableOperations);
+        editor1.registerPlugin(SpellChecker);
+        editor1.registerPlugin(CSS, css_plugin_args);
+
+        // custom config must be done per editor.  Here we're importing the
+        // stylesheet used by the CSS plugin.
+        editor1.config.pageStyle = "@import url(custom.css);";
+
+        // generate first editor
+        editor1.generate();
+        //---------------------------------------------------------------------
+
+
+        //---------------------------------------------------------------------
+        // CREATE SECOND EDITOR
+        //
+        var editor2 = new HTMLArea("text-area-2");
+
+        // we are using the same plugins
+        editor2.registerPlugin(TableOperations);
+        editor2.registerPlugin(SpellChecker);
+        editor2.registerPlugin(CSS, css_plugin_args);
+
+        // import the CSS plugin styles
+        editor2.config.pageStyle = "@import url(custom.css);";
+
+        // generate the second editor
+        // IMPORTANT: if we don't give it a timeout, the first editor will
+        // not function in Mozilla.  Soon I'll think about starting to
+        // implement some kind of event that will fire when the editor
+        // finished creating, then we'll be able to chain the generate()
+        // calls in an elegant way.  But right now there's no other solution
+        // than the following.
+        setTimeout(function() {
+          editor2.generate();
+        }, 500);
+        //---------------------------------------------------------------------
+      };
+    </script>
+  </head>
+
+  <body onload="initDocument()">
+    <h1>Example with 2 HTMLAreas in the same form</h1>
+
+    <form action="2-areas.cgi" method="post" target="_blank">
+
+      <input type="submit" value=" Submit " />
+      <br />
+
+      <textarea id="text-area-1" name="text1" style="width: 100%; height: 12em">
+        &lt;h3&gt;HTMLArea #1&lt;/h3&gt;
+        &lt;p&gt;This will submit a field named &lt;em&gt;text1&lt;/em&gt;.&lt;/p&gt;
+      </textarea>
+
+      <br />
+
+      <textarea id="text-area-2" name="text2" style="width: 100%; height: 12em">
+        &lt;h3&gt;Second HTMLArea&lt;/h3&gt; &lt;p&gt;&lt;em&gt;text2&lt;/em&gt; submission.  Both are
+        located in the same FORM element and the script action is
+        2-areas.cgi (see it in the examples directory)&lt;/p&gt;
+      </textarea>
+
+      <br />
+      <input type="submit" value=" Submit " />
+
+    </form>
+
+    <hr>
+    <address><a href="http://dynarch.com/mishoo/">Mihai Bazon</a></address>
+<!-- Created: Fri Oct 31 09:37:10 EET 2003 -->
+<!-- hhmts start --> Last modified: Wed Jan 28 11:10:40 EET 2004 <!-- hhmts end -->
+<!-- doc-lang: English -->
+  </body>
+</html>

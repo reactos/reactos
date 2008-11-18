@@ -1,0 +1,71 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s):     Myk Melez <myk@mozilla.org>
+  #                     Jeff Hedlund <jeff.hedlund@matrixsi.com>
+  #                     Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% bugidsummary = bug.bug_id _ ': ' _ bug.short_desc %]
+[% attidsummary = attachment.id _ ': ' _ attachment.description %]
+[% statuses = { '+' => "granted" , '-' => 'denied' , 'X' => "canceled" ,
+                '?' => "asked" } %]
+
+[% to_identity = "" %]
+[% IF flag.status == '?' %]
+  [% to_identity = flag.requestee.identity _ " for" %]
+  [% subject_status = "requested" %]
+[% ELSE %]
+  [% IF flag.requester %]
+    [% to_identity = flag.requester.identity _ "'s request for" %]
+  [% END %]
+  [% subject_status = statuses.${flag.status} %]
+[% END %]
+From: [% Param('mailfrom') %]
+To: [% to %]
+Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %] [%+ bug.bug_id %]] [% bug.short_desc %]
+[%- IF attachment %] :
+  [Attachment [% attachment.id %]] [% attachment.description %][% END %]
+X-Bugzilla-Type: request
+
+[%+ USE wrap -%]
+[%- FILTER bullet = wrap(80) -%]
+
+[% user.identity %] has [% statuses.${flag.status} %] [%+ to_identity %] [%+ flag.type.name %]:
+
+[% terms.Bug %] [%+ bugidsummary %]
+[% END %]
+[%+ Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]
+[% IF attachment %]
+
+[% FILTER bullet = wrap(80) %]
+Attachment [% attidsummary %]
+[%- END %]
+[%+ Param('urlbase') %]attachment.cgi?id=[% attachment.id %]&action=edit
+[%- END %]
+[%- FILTER bullet = wrap(80) %]
+
+[% USE Bugzilla %]
+[% IF Bugzilla.cgi.param("comment") && Bugzilla.cgi.param("comment").length > 0 %]
+------- Additional Comments from [% user.identity %]
+[%+ Bugzilla.cgi.param("comment") %]
+[% END %]
+
+[%- END %]

@@ -1,0 +1,77 @@
+<!-- INCLUDE install_header.html -->
+
+<form id="install_install" method="post" action="{U_ACTION}" onsubmit="submit.disabled = 'disabled';">
+
+<!-- IF TITLE --><h1>{TITLE}</h1><!-- ENDIF -->
+<!-- IF BODY --><p>{BODY}</p><!-- ENDIF -->
+
+<!-- IF .checks -->
+	<fieldset>
+
+	<!-- BEGIN checks -->
+		<!-- IF checks.S_LEGEND -->
+			<!-- IF not checks.S_FIRST_ROW -->
+			</fieldset>
+
+			<fieldset>
+			<!-- ENDIF -->
+				<legend>{checks.LEGEND}</legend>
+				<!-- IF checks.LEGEND_EXPLAIN --><p>{checks.LEGEND_EXPLAIN}</p><!-- ENDIF -->
+		<!-- ELSE -->
+
+			<dl>
+				<dt>{checks.TITLE}:<!-- IF checks.S_EXPLAIN --><br /><span class="explain">{checks.TITLE_EXPLAIN}</span><!-- ENDIF --></dt>
+				<dd>{checks.RESULT}</dd>
+			</dl>
+		<!-- ENDIF -->
+	<!-- END checks -->
+
+	</fieldset>
+<!-- ENDIF -->
+
+<!-- IF .options -->
+	<fieldset>
+
+	<!-- BEGIN options -->
+		<!-- IF options.S_LEGEND -->
+			<!-- IF not options.S_FIRST_ROW -->
+				</fieldset>
+		
+				<fieldset>
+			<!-- ENDIF -->
+				<legend>{options.LEGEND}</legend>
+		<!-- ELSE -->
+
+			<dl>
+				<dt><label for="{options.KEY}">{options.TITLE}:</label><!-- IF options.S_EXPLAIN --><br /><span class="explain">{options.TITLE_EXPLAIN}</span><!-- ENDIF --></dt>
+				<dd>{options.CONTENT}</dd>
+			</dl>
+
+		<!-- ENDIF -->
+	<!-- END options -->
+
+	</fieldset>
+<!-- ENDIF -->
+
+<!-- IF S_SHOW_DOWNLOAD -->
+	<h1>{L_DL_CONFIG}</h1>
+	<p>{L_DL_CONFIG_EXPLAIN}</p>
+
+	<fieldset class="submit-buttons">
+		<legend>{L_DL_CONFIG}</legend>
+		{S_HIDDEN}
+		<input class="button1" type="submit" id="dlconfig" name="dlconfig" value="{L_DL_DOWNLOAD}" />&nbsp;<input class="button1" type="submit" id="dldone" name="dldone" value="{L_DL_DONE}" />
+	</fieldset>
+<!-- ENDIF -->
+
+<!-- IF L_SUBMIT -->
+	<fieldset class="submit-buttons">
+		<legend>{L_SUBMIT}</legend>
+		{S_HIDDEN}
+		<!-- IF L_SUBMIT --><input class="button1" type="submit" id="submit" onclick="this.className = 'button1 disabled';" name="submit" value="{L_SUBMIT}" /><!-- ENDIF -->
+	</fieldset>
+<!-- ENDIF -->
+
+</form>
+
+<!-- INCLUDE install_footer.html -->

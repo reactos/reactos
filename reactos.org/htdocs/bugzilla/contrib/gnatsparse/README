@@ -1,0 +1,62 @@
+gnatsparse
+==========
+
+Author: Daniel Berlin <dan@dberlin.org>
+
+gnatsparse is a simple Python program that imports a GNATS database
+into a Bugzilla system. It is based on the gnats2bz.pl Perl script
+but it's a rewrite at the same time. Its parser is based on gnatsweb,
+which gives a 10 times speed improvement compared to the previous code.
+
+Features
+--------
+
+* Chunks audit trail into separate comments, with the right From's, times, etc.
+
+* Handles followup emails that are in the report, with the right From's, times,
+etc.
+
+* Properly handles duplicates, adding the standard bugzilla duplicate message.
+
+* Extracts and handles gnatsweb attachments, as well as uuencoded attachments
+appearing in either followup emails, the how-to-repeat field, etc.  Replaces
+them with a message to look at the attachments list, and adds the standard
+"Created an attachment" message that bugzilla uses.  Handling them includes
+giving them the right name and mime-type. "attachments" means multiple
+uuencoded things/gnatsweb attachments are handled properly.
+
+* Handles reopened bug reports.
+
+* Builds the cc list from the people who have commented on the report,
+and the reporter.
+
+Requirements
+------------
+
+It requires python 2.2+, it won't work with 1.5.2 (Linux distributions
+ship with 2.2+ these days, so that shouldn't be an issue).
+
+Documentation
+-------------
+
+Documentation can be found inside the scripts. The source code is self
+documenting.
+
+Issues for someone trying to use it to convert a gnats install
+-----------------------------------
+
+1. We have three custom fields bugzilla doesn't ship with, 
+gcchost, gcctarget, and gccbuild. 
+We removed two bugzilla fields, rep_platform and op_sys.
+If you use the latter instead of the former, you'll need to
+update the script to account for this.
+2. Because gcc attachments consist of preprocessed source, all attachments
+inserted into the attachment database are compressed with zlib.compress.
+This requires associated bugzilla changes to decompress before sending to
+the browser.
+Unless you want to make those changes (it's roughly 3 lines), you'll
+need to remove the zlib.compress call.
+3. You will need to come up with your own release to version mapping and
+install it.
+4. Obviously, any extra gnats fields you have added will have to
+be handled in some manner.

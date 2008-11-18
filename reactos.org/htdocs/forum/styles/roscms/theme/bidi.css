@@ -1,0 +1,722 @@
+/* proSilver RTL definitions
+---------------------------------------- */
+
+/**
+* common.css 
+*/
+.rtl h1 {
+	margin-right: 0;
+	margin-left: 200px;
+}
+
+.rtl p.right {
+	text-align: left;
+}
+
+.rtl div.rules ul {
+	margin-left: 0;
+	margin-right: 20px;
+}
+
+/* Main blocks
+---------------------------------------- */
+.rtl #logo {
+	float: right;
+	padding: 10px 10px 0 13px;
+}
+
+/* Search box
+--------------------------------------------- */
+.rtl #search-box {
+	float: left;
+	text-align: left;
+	margin-right: 0;
+	margin-left: 5px;
+}
+
+.rtl #search-box li {
+	text-align: left;
+}
+
+.rtl #search-box img {
+	margin-right: 0;
+	margin-left: 3px;
+}
+
+.rtl #site-description {
+	float: right;
+}
+
+.rtl #site-description h1 {
+	margin-left: 0;
+}
+
+/* Round cornered boxes and backgrounds
+---------------------------------------- */
+.rtl .post {
+	background-position: 0 0;
+}
+
+/* Horizontal lists
+----------------------------------------*/
+.rtl ul.linklist li {
+	float: right;
+	margin-right: 0;
+	margin-left: 5px;
+}
+
+.rtl ul.linklist li.rightside, .rtl p.rightside {
+	float: left;
+	margin-right: 5px;
+	margin-left: 0;
+	text-align: left;
+}
+
+.rtl ul.leftside li, .rtl ul.rightside li {
+	float: left;
+}
+
+.rtl ul.leftside {
+	float: right;
+	margin-left: 5px;
+	margin-right: 0;
+	text-align: right;
+}
+
+.rtl ul.rightside {
+	float: left;
+	margin-left: -5px;
+	margin-right: 5px;
+	text-align: left;
+}
+
+/* Table styles
+----------------------------------------*/
+.rtl table.table1 thead th {
+	padding: 0 3px 4px 0;
+}
+
+.rtl table.table1 thead th span {
+	padding-left: 0;
+	padding-right: 7px;
+}
+
+.rtl table.table1 tbody th {
+	text-align: right;
+}
+
+/* Specific column styles */
+.rtl table.table1 .name		{ text-align: right; }
+.rtl table.table1 .joined	{ text-align: right; }
+.rtl table.table1 .active	{ text-align: right; }
+.rtl table.table1 .info		{ text-align: right; }
+.rtl table.table1 thead .autocol { padding-left: 0; padding-right: 1em; }
+
+.rtl table.table1 span.rank-img {
+	float: left;
+}
+
+.rtl table.info tbody th {
+	text-align: left;
+}
+
+.rtl .forumbg table.table1 {
+	margin: 0 -1px -1px -2px;
+}
+
+/* Misc layout styles
+---------------------------------------- */
+/* column[1-2] styles are containers for two column layouts 
+   Also see tweaks.css */
+.rtl .column1 {
+	float: right;
+	clear: right;
+}
+
+.rtl .column2 {
+	float: left;
+	clear: left;
+}
+
+/* General classes for placing floating blocks */
+.rtl .left-box {
+	float: right;
+	text-align: right;
+}
+
+.rtl .right-box {
+	float: left;
+	text-align: left;
+}
+
+.rtl dl.details dt {
+	float: right;
+	clear: right;
+	text-align: left;
+}
+
+.rtl dl.details dd {
+	margin-right: 0;
+	margin-left: 0;
+	padding-right: 5px;
+	padding-left: 0;
+	float: right;
+}
+
+*:first-child+html dl.details dd {
+	margin-right: 30%;
+	float: none;
+}
+
+* html dl.details dd {
+	margin-right: 30%;
+	float: none;
+}
+
+/* Pagination
+---------------------------------------- */
+.rtl .pagination {
+	text-align: left;
+	float: left;
+	padding-left: 5px;
+}
+
+/* Pagination in viewforum for multipage topics */
+.rtl .row .pagination {
+	float: left;
+	padding: 1px 0 1px 15px;
+}
+
+.rtl .pagination span {
+	direction: ltr;
+}
+
+.rtl .pagination span.page-sep {
+	display: inline;
+	visibility: hidden;
+	position: absolute;
+}
+
+/* Miscellaneous styles
+---------------------------------------- */
+.rtl #forum-permissions {
+	float: left;
+	padding-right: 5px;
+	padding-left: 0;
+	margin-right: 5px;
+	margin-left: 0;
+	text-align: left;
+}
+
+.rtl .forabg {
+	width: 99%;	/* fix for IE6 */
+}
+
+.rtl .forumbg {
+	width: 99%;	/* fix for IE6 */
+}
+
+/**
+* links.css
+*/
+
+/* Back to top of page */
+.rtl .back2top {
+	text-align: left;
+}
+
+.rtl a.top {
+	float: left;
+}
+
+.rtl a.top2 {
+	padding-left: 0;
+	padding-right: 15px;
+}
+
+/**
+* content.css
+*/
+.rtl ul.topiclist dt {
+	float: right;
+}
+
+.rtl ul.topiclist dl {
+	position: static;	/* fix for IE6 */
+}
+
+.rtl ul.topiclist dd {
+	float: right;
+	border-right-width: 1px;
+	border-right-style: solid;
+	border-left: none;
+}
+
+.rtl ul.topiclist li.row dt a.subforum {
+	padding: 0 0 0 12px;
+	background-position: 100% 100%;
+	position: static;
+}
+
+.rtl .forum-image {
+	float: right;
+	margin-right: 0;
+	margin-left: 5px;
+}
+
+.rtl li.header dt, .rtl li.header dd {
+	border-right-width: 0;
+}
+
+.rtl li.header dd {
+	margin-left: 0;
+	margin-right: 1px;
+}
+
+.rtl dl.icon {
+	background-position: 99.5% 50%;
+}
+
+.rtl li.header dl.icon dt {
+	/* Tweak for headers alignment when folder icon used */
+	padding-right: 0;
+	padding-left: 50px;
+}
+
+.rtl dl.icon dt {
+	padding-left: 0;
+	padding-right: 45px;					/* Space for folder icon */
+	background-position: 99.5% 95%;			/* Position of topic icon */
+}
+
+.rtl dd.lastpost span, .rtl ul.topiclist dd.searchby span, .rtl ul.topiclist dd.info span, .rtl ul.topiclist dd.time span, .rtl dd.redirect span, .rtl dd.moderation span {
+	padding-left: 0;
+	padding-right: 5px;
+}
+
+.rtl dd.mark {
+	float: left !important;
+}
+
+.rtl ul.topiclist dd.searchextra {
+	margin-left: 0;
+	margin-right: 5px;
+	border-right: none;
+}
+
+/* Post body styles
+----------------------------------------*/
+.rtl .postbody {
+	float: right;
+}
+
+/* Topic review panel
+----------------------------------------*/
+.rtl #topicreview {
+	padding-right: 0;
+	padding-left: 5px;
+}
+
+/* Content container styles
+----------------------------------------*/
+.rtl .content ul, .rtl .content ol {
+	margin-right: 3em;
+	margin-left: 0;
+}
+
+/* Post author */
+.rtl p.author {
+	margin: 0 0 0.6em 15em;
+}
+
+.rtl .signature {
+	clear: right;
+}
+
+.rtl .notice {
+	clear: right;
+}
+
+/* Jump to post link for now */
+.rtl ul.searchresults {
+	text-align: left;
+}
+
+/* BB Code styles
+----------------------------------------*/
+/* Quote block */
+.rtl blockquote {
+	margin: 0.5em 25px 0 1px;
+}
+
+.rtl blockquote blockquote {
+	/* Nested quotes */
+	margin: 0.5em 15px 0 1px;	
+}
+
+.rtl blockquote cite {
+	/* Username/source of quoter */
+	margin-right: 20px;
+	margin-left: 0;
+}
+
+.rtl blockquote dl.codebox {
+	margin-right: 0;
+}
+
+.rtl code {
+	direction: ltr;
+}
+
+/* Attachments
+----------------------------------------*/
+.rtl .attachbox {
+	float: right;
+	margin: 5px 0 5px 5px;
+	clear: right;
+}
+
+.rtl .attachbox dd {
+	clear: right;
+}
+
+.rtl .attachbox p {
+	clear: right;
+}
+
+.rtl .attachbox p.stats {
+	clear: right;
+}
+
+/* Post poll styles
+----------------------------------------*/
+.rtl fieldset.polls dt {
+	text-align: right;
+	float: right;
+	border-left: none;
+}
+
+.rtl fieldset.polls dd {
+	float: right;
+	border-right: none;
+	margin-right: 0;
+}
+
+.rtl fieldset.polls dd div {
+	text-align: left;
+}
+
+.rtl .pollbar1, .rtl .pollbar2, .rtl .pollbar3, .rtl .pollbar4, .rtl .pollbar5 {
+	border-left-width: 1px;
+	border-left-style: solid;
+	border-right: none;
+}
+
+/* Poster profile block
+----------------------------------------*/
+.rtl .postprofile {
+	border-left: none;
+	border-right-width: 1px;
+	border-right-style: solid;
+	float: left;
+/*	text-align: right; */
+}
+
+.rtl .pm .postprofile {
+	border-right-width: 1px;
+	border-right-style: solid;
+	border-left: none;
+}
+
+.rtl .postprofile dd, .rtl .postprofile dt {
+	margin-left: 0;
+	margin-right: 8px;
+}
+
+.rtl .online {
+	background-position: 0 0;
+}
+
+.rtl dl.pmlist dd {
+	margin-right: 61% !important;
+	margin-left: 0 !important;
+}
+
+/**
+* buttons.css
+*/
+/* Rollover buttons
+   Based on: http://wellstyled.com/css-nopreload-rollovers.html
+----------------------------------------*/
+.rtl .buttons {
+	float: right;
+}
+
+/* Rollover state */
+.rtl .buttons div {
+	margin: 0 1px 0 5px;
+}
+
+/* Sub-header (navigation bar)
+--------------------------------------------- */
+.rtl a.print, .rtl a.sendemail, .rtl a.fontsize {
+	text-align: right;
+}
+
+/* Icon images
+---------------------------------------- */
+.rtl .sitehome, .rtl .icon-faq, .rtl .icon-members, .rtl .icon-home, .rtl .icon-ucp, .rtl .icon-register, .rtl .icon-logout,
+.rtl .icon-bookmark, .rtl .icon-bump, .rtl .icon-subscribe, .rtl .icon-unsubscribe, .rtl .icon-pages, .rtl .icon-search {
+	background-position: 100% 50%;
+	padding: 1px 17px 0 0;
+}
+
+/* Poster profile icons
+----------------------------------------*/
+/* Rollover state */
+.rtl .postprofile ul.profile-icons li {
+	float: right;
+	margin: 0 0 3px 6px;
+}
+
+/* Positioning of moderator icons */
+.rtl .postbody ul.profile-icons {
+	float: left;
+}
+
+/**
+* cp.css
+*/
+/* proSilver Control Panel Styles
+---------------------------------------- */
+
+
+/* Main CP box
+----------------------------------------*/
+.rtl #cp-menu {
+	float: right;
+}
+
+.rtl #cp-main {
+	float: right;
+}
+
+.rtl #cp-main .panel ol {
+	margin-right: 2em;
+	margin-left: 0;
+}
+
+.rtl #cp-main .pagination {
+	float: left;
+}
+
+.rtl #cp-main .buttons {
+	margin-right: 0;
+	margin-left: 0;
+}
+
+/* CP tabbed menu
+----------------------------------------*/
+.rtl #tabs {
+	margin: 20px 7px -1px 0;
+}
+
+.rtl #tabs a {
+	float: right;
+}
+
+/*.rtl #tabs a span {
+	float: right;
+}*/
+
+/* Mini tabbed menu used in MCP
+----------------------------------------*/
+.rtl #minitabs {
+	margin: -20px 0 0 7px;
+}
+
+.rtl #minitabs li {
+	float: left;
+	margin-right: 2px;
+	margin-left: 0;
+}
+
+/* UCP navigation menu
+----------------------------------------*/
+
+/* Preferences pane layout
+----------------------------------------*/
+.rtl #cp-main h2 {
+	margin-left: 0;
+	margin-right: 10px;
+}
+
+/* Friends list */
+.rtl .cp-mini {
+	margin: 10px 5px 10px 15px;
+}
+
+/* PM Styles
+----------------------------------------*/
+
+/* Defined rules list for PM options */
+.rtl ol.def-rules {
+	padding-right: 0;
+}
+
+/* PM marking colours */
+.rtl .pm-legend {
+	border-right-width: 10px;
+	border-right-style: solid;
+	border-left-width: 0;
+	padding-left: 0;
+	padding-right: 3px;
+}
+
+/* Avatar gallery */
+.rtl #gallery label {
+	float: right;
+}
+
+/**
+* forms.css
+*/
+
+/* General form styles
+----------------------------------------*/
+
+.rtl option {
+	padding-right: 0;
+	padding-left: 1em;
+}
+
+.rtl label {
+	padding-right: 0;
+	padding-left: 5px;
+}
+
+/* Definition list layout for forms
+---------------------------------------- */
+.rtl fieldset dt {
+	float: right;
+	text-align: right;
+}
+
+.rtl fieldset dd {
+	margin-left: 0;
+	margin-right: 41%;
+}
+
+/* Specific layout 1 */
+.rtl fieldset.fields1 dt {
+	border-left-width: 0;
+	border-right-width: 1px;
+}
+
+.rtl fieldset.fields1 dd {
+	margin-right: 10em;
+	margin-left: 0;
+	border-right-width: 0;
+	border-left-width: 1px;
+}
+
+/* Specific layout 2 */
+.rtl fieldset.fields2 dt {
+	border-right-width: 1px;
+	border-left-width: 0;
+}
+
+.rtl fieldset.fields2 dd {
+	margin-right: 16em;
+	margin-left: 0;
+	border-left-width: 1px;
+	border-right-width: 0;
+}
+
+/* Form elements */
+.rtl dt label {
+	text-align: right;
+}
+
+.rtl dd input, .rtl dd textarea {
+	margin-left: 3px;
+	margin-right: 0;
+}
+
+/* Quick-login on index page */
+.rtl fieldset.quick-login input.inputbox {
+	margin-left: 5px;
+	margin-right: 0;
+}
+
+.rtl fieldset.quick-login label {
+	padding-left: 2px;
+	padding-right: 0;
+}
+
+/* Display options on viewtopic/viewforum pages  */
+.rtl fieldset.display-options label {
+	padding-left: 2px;
+	padding-right: 0;
+}
+
+/* Display actions for ucp and mcp pages */
+.rtl fieldset.display-actions {
+	text-align: left;
+	padding-left: 1em;
+	padding-right: 0;
+}
+
+.rtl fieldset.display-actions label {
+	padding-left: 2px;
+	padding-right: 0;
+}
+
+/* MCP forum selection*/
+.rtl fieldset.forum-selection {
+	float: left;
+}
+
+.rtl fieldset.forum-selection2 {
+	float: left;
+}
+
+/* Jumpbox */
+.rtl fieldset.jumpbox {
+	text-align: left;
+}
+
+.rtl fieldset.quickmod {
+	float: left;
+	text-align: left;
+}
+
+/* Posting page styles
+----------------------------------------*/
+
+/* Emoticons panel */
+.rtl #smiley-box {
+	float: left;
+}
+
+/* Form button styles
+---------------------------------------- */
+
+/* Topic and forum Search */
+.rtl .search-box {
+	margin-right: 5px;
+	margin-left: 0;
+	float: right;
+}
+
+.rtl input.search {
+	background-position: right 1px;
+	padding-right: 17px;
+	padding-left: 0;
+}
+
+/**
+* tweaks.css
+*/
+
+

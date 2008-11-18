@@ -1,8 +1,0 @@
-/* Automatically generated -- do not edit! */
-#include "resource.h"
-STRINGTABLE {
-0 "advapi32_winetest.exe"
-1 "comctl32_winetest.exe"
-}
-0 TESTRES "output-i386/modules/rostests/winetests/advapi32/advapi32_winetest.exe"
-1 TESTRES "output-i386/modules/rostests/winetests/comctl32/comctl32_winetest.exe"

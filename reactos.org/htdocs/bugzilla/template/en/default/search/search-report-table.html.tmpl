@@ -1,0 +1,94 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # This template has no interface. However, to use it, you need to fulfill
+  # the interfaces of the templates it contains.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% js_data = BLOCK %]
+var queryform = "reportform"
+[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Generate Tabular Report"
+  onload = "doOnSelectProduct(0)"
+  javascript = js_data
+  javascript_urls = [ "js/productform.js" ]
+%]
+
+[% PROCESS "search/search-report-select.html.tmpl" %]
+
+<p>
+  Choose one or more fields as your axes, and then refine your set of 
+  [% terms.bugs %] using the rest of the form.
+</p>
+
+[% button_name = "Generate Report" %]
+
+<form method="get" action="report.cgi" name="reportform">
+
+<table align="center">
+  <tr>
+    <td>
+    </td>
+    <td align="center">
+      <b>Horizontal Axis:</b>
+      [% PROCESS select name = 'x_axis_field' %]
+    </td>
+  </tr>
+
+  <tr>
+    <td valign="middle" align="center">
+      <b>Vertical Axis:</b><br>
+      [% PROCESS select name = 'y_axis_field' %]
+    </td>
+    <td width="150" height="150">
+      <table border="1" width="100%">
+        <tr>
+          <td align="center" valign="middle" height="150">
+            <b>Multiple Tables:</b><br>
+            [% PROCESS select name = 'z_axis_field' %]
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<hr>
+
+[% PROCESS search/form.html.tmpl %]
+
+<br>
+<input type="submit" id="[% button_name.replace (' ' , '_') FILTER html %]"
+       value="[% button_name FILTER html %]">
+<input type="hidden" name="format" value="table">
+<input type="hidden" name="action" value="wrap">
+<hr>
+
+[% PROCESS "search/boolean-charts.html.tmpl" %]
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

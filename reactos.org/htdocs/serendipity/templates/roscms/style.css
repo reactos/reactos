@@ -1,0 +1,22 @@
+h2 a {
+        font-size: 22px;
+        color: #5984C3;
+        font-weight: bold;
+        margin-top: 15px;
+        text-decoration:none;
+}
+
+h2 a:hover {
+        font-size: 22px;
+        color: #5984C3;
+        font-weight: bold;
+        margin-top: 15px;
+        text-decoration:underline;
+}
+
+h2 {
+        font-size: 22px;
+        color: #5984C3;
+        font-weight: bold;
+        margin-top: 15px;
+}

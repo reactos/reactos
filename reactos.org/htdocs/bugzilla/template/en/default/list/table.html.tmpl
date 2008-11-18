@@ -1,0 +1,216 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[%############################################################################%]
+[%# Initialization                                                           #%]
+[%############################################################################%]
+
+[%# Columns whose titles or values should be abbreviated to make the list
+  # more compact.  For columns whose titles should be abbreviated,
+  # the shortened title is included.  For columns whose values should be
+  # abbreviated, a maximum length is provided along with the ellipsis that
+  # should be added to an abbreviated value, if any.
+  # wrap is set if a column's contents should be allowed to be word-wrapped
+  # by the browser.
+  #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
+[% field_descs.short_short_desc     = field_descs.short_desc  %]
+[% field_descs.assigned_to_realname = field_descs.assigned_to %]
+[% field_descs.reporter_realname    = field_descs.reporter    %]
+[% field_descs.qa_contact_realname  = field_descs.qa_contact  %]
+
+[% abbrev = 
+  {
+    "bug_severity"         => { maxlength => 3 , title => "Sev" } , 
+    "priority"             => { maxlength => 3 , title => "Pri" } , 
+    "rep_platform"         => { maxlength => 3 , title => "Plt" } , 
+    "bug_status"           => { maxlength => 4 } , 
+    "assigned_to"          => { maxlength => 30 , ellipsis => "..." } , 
+    "assigned_to_realname" => { maxlength => 20 , ellipsis => "..." } , 
+    "reporter"             => { maxlength => 30 , ellipsis => "..." } , 
+    "reporter_realname"    => { maxlength => 20 , ellipsis => "..." } , 
+    "qa_contact"           => { maxlength => 30 , ellipsis => "..." , title => "QAContact" } , 
+    "qa_contact_realname"  => { maxlength => 20 , ellipsis => "..." , title => "QAContact" } , 
+    "resolution"        => { maxlength => 4 } , 
+    "short_desc"        => { wrap => 1 } ,
+    "short_short_desc"  => { maxlength => 60 , ellipsis => "..." , wrap => 1 } ,
+    "status_whiteboard" => { title => "Whiteboard" , wrap => 1 } , 
+    "keywords"          => { wrap => 1 } ,
+    "component"         => { maxlength => 8 , title => "Comp" } , 
+    "product"           => { maxlength => 8 } , 
+    "version"           => { maxlength => 5 , title => "Vers" } , 
+    "op_sys"            => { maxlength => 4 } , 
+    "target_milestone"  => { title => "TargetM" } , 
+    "percentage_complete" => { format_value => "%d %%" } , 
+  }
+%]
+
+[% PROCESS bug/time.html.tmpl %]
+
+[%############################################################################%]
+[%# Table Header                                                             #%]
+[%############################################################################%]
+
+[% tableheader = BLOCK %]
+  <table class="bz_buglist" cellspacing="0" cellpadding="4" width="100%">
+    <colgroup>
+      [% IF dotweak %]
+        <col class="bz_checkbox_column">
+      [% END %]
+      <col class="bz_id_column">
+      [% FOREACH id = displaycolumns %]
+      <col class="bz_[% id FILTER css_class_quote %]_column">
+      [% END %]
+    </colgroup>
+
+    <tr align="left">
+      [% IF dotweak %]
+      <th>&nbsp;</th>
+      [% END %]
+      <th colspan="[% splitheader ? 2 : 1 %]" class="first-child">
+        [% IF sorted_by_relevance %]
+          ID
+        [% ELSE %]
+          <a href="buglist.cgi?
+                    [% urlquerypart FILTER html %]&amp;order=bugs.bug_id
+                    [%-#%]&amp;query_based_on=
+                    [% defaultsavename OR searchname FILTER url_quote %]">ID</a>
+        [% END %]
+      </th>
+
+      [% IF splitheader %]
+
+        [% FOREACH id = displaycolumns %]
+          [% NEXT UNLESS loop.count() % 2 == 0 %]
+          [% column = columns.$id %]
+          [% PROCESS columnheader %]
+        [% END %]
+
+        </tr><tr align="left">
+        [% IF dotweak %]
+          <th>&nbsp;</th>
+        [% END %]
+        <th>&nbsp;</th>
+
+        [% FOREACH id = displaycolumns %]
+          [% NEXT IF loop.count() % 2 == 0 %]
+          [% column = columns.$id %]
+          [% PROCESS columnheader %]
+        [% END %]
+
+      [% ELSE %]
+
+        [% FOREACH id = displaycolumns %]
+          [% column = columns.$id %]
+          [% PROCESS columnheader %]
+        [% END %]
+
+      [% END %]
+
+    </tr>
+[% END %]
+
+[% BLOCK columnheader %]
+  <th colspan="[% splitheader ? 2 : 1 %]">
+    [% IF sorted_by_relevance %]
+      [%- abbrev.$id.title || field_descs.$id || column.title -%]
+    [% ELSE %]
+      [% IF column.name.match('\s+AS\s+') %]
+        [%# For aliased columns, use their ID for sorting. %]
+        [% column.sortalias = id %]
+      [% ELSE %]
+        [%# Other columns may sort on their name directly. %]
+        [% column.sortalias = column.name %]
+      [% END %]
+      <a href="buglist.cgi?[% urlquerypart FILTER html %]&amp;order=
+        [% column.sortalias FILTER url_quote %]
+        [% ",$order" FILTER url_quote IF order %]
+        [%-#%]&amp;query_based_on=
+        [% defaultsavename OR searchname FILTER url_quote %]">
+          [%- abbrev.$id.title || field_descs.$id || column.title -%]</a>
+    [% END %]
+  </th>
+[% END %]
+
+
+[%############################################################################%]
+[%# Bug Table                                                                #%]
+[%############################################################################%]
+
+[% FOREACH bug = bugs %]
+  [% count = loop.count() %]
+  [% FLUSH IF count % 10 == 1 %]
+
+  [%# At the beginning of every hundred bugs in the list, start a new table. %]
+  [% IF count % 100 == 1 %]
+    [% tableheader %]
+  [% END %]
+
+  <tr class="bz_bugitem
+             bz_[% bug.bug_severity FILTER css_class_quote -%]
+             bz_[% bug.priority FILTER css_class_quote -%]
+             bz_[% bug.bug_status FILTER css_class_quote -%]
+             [%+ "bz_$bug.resolution" FILTER css_class_quote IF bug.resolution -%]
+             [%+ "bz_secure" IF bug.secure_mode -%]
+             [%+ "bz_secure_mode_$bug.secure_mode" FILTER css_class_quote IF bug.secure_mode -%]
+             [%+ count % 2 == 1 ? "bz_row_odd" : "bz_row_even" -%]
+             ">
+
+    [% IF dotweak %]
+    <td>
+      <input type="checkbox" name="id_[% bug.bug_id %]">
+    </td>
+    [% END %]
+    <td class="first-child">
+      <a name="b[% bug.bug_id %]"
+         href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
+      <span style="display: none">[%+ '[SEC]' IF bug.secure_mode %]</span>
+    </td>
+
+    [% FOREACH column = displaycolumns %]
+    <td [% 'style="white-space: nowrap"' IF NOT abbrev.$column.wrap %]>
+      [% IF abbrev.$column.format_value %] 
+        [%- bug.$column FILTER format(abbrev.$column.format_value) FILTER html -%] 
+      [% ELSIF column == 'actual_time' ||
+               column == 'remaining_time' ||
+               column == 'estimated_time' %]
+        [% PROCESS formattimeunit time_unit=bug.$column %] 
+      [% ELSIF column == 'bug_status' %]
+        [%- status_descs.${bug.$column}.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
+      [% ELSIF column == 'resolution' %]
+        [%- get_resolution(bug.$column).truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
+      [% ELSE %]
+        [%- bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html -%]
+      [% END %]
+    </td>
+    [% END %]
+
+  </tr>
+
+  [%# At the end of every hundred bugs in the list, or at the end of the list,
+    # end the current table. 
+    #%]
+  [% IF loop.last() || loop.count() % 100 == 0 %]
+    </table>
+  [% END %]
+
+[% END %]

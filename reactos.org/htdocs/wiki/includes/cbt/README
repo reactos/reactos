@@ -1,0 +1,108 @@
+Overview
+--------
+
+CBT (callback-based templates) is an experimental system for improving skin
+rendering time in MediaWiki and similar applications. The fundamental concept is
+a template language which contains tags which pull text from PHP callbacks.
+These PHP callbacks do not simply return text, they also return a description of
+the dependencies -- the global data upon which the returned text depends. This
+allows a compiler to produce a template optimised for a certain context. For
+example, a user-dependent template can be produced, with the username replaced
+by static text, as well as all user preference dependent text.
+
+This was an experimental project to prove the concept -- to explore possible
+efficiency gains and techniques. TemplateProcessor was the first element of this
+experiment. It is a class written in PHP which parses a template, and produces
+either an optimised template with dependencies removed, or the output text
+itself. I found that even with a heavily optimised template, this processor was
+not fast enough to match the speed of the original MonoBook.
+
+To improve the efficiency, I wrote TemplateCompiler, which takes a template,
+preferably pre-optimised by TemplateProcessor, and generates PHP code from it.
+The generated code is a single expression, concatenating static text and
+callback results. This approach turned out to be very efficient, making
+significant time savings compared to the original MonoBook.
+
+Despite this success, the code has been shelved for the time being. There were
+a number of unresolved implementation problems, and I felt that there were more
+pressing priorities for MediaWiki development than solving them and bringing
+this module to completion. I also believe that more research is needed into
+other possible template architectures. There is nothing fundamentally wrong with
+the CBT concept, and I would encourage others to continue its development.
+
+The problems I saw were:
+
+* Extensibility. Can non-Wikimedia installations easily extend and modify CBT
+  skins? Patching seems to be necessary, is this acceptable? MediaWiki
+  extensions are another problem. Unless the interfaces allow them to return
+  dependencies, any hooks will have to be marked dynamic and thus inefficient.
+
+* Cache invalidation. This is a simple implementation issue, although it would
+  require extensive modification to the MediaWiki core.
+
+* Syntax. The syntax is minimalistic and easy to parse, but can be quite ugly.
+  Will generations of MediaWiki users curse my name?
+
+* Security. The code produced by TemplateCompiler is best stored in memcached
+  and executed with eval(). This allows anyone with access to the memcached port
+  to run code as the apache user.
+
+
+Template syntax
+---------------
+
+There are two modes: text mode and function mode. The brace characters "{"
+and "}" are the only reserved characters. Either one of them will switch from
+text mode to function mode wherever they appear, no exceptions.
+
+In text mode, all characters are passed through to the output. In function
+mode, text is split into tokens, delimited either by whitespace or by
+matching pairs of braces. The first token is taken to be a function name. The
+other tokens are first processed in function mode themselves, then they are
+passed to the named function as parameters. The return value of the function
+is passed through to the output.
+
+Example:
+   {escape {"hello"}}
+
+First brace switches to function mode. The function name is escape, the first
+and only parameter is {"hello"}. This parameter is executed. The braces around
+the parameter cause the parser to switch to text mode, thus the string "hello",
+including the quotes, is passed back and used as an argument to the escape
+function.
+
+Example:
+   {if title {<h1>{title}</h1>}}
+
+The function name is "if". The first parameter is the result of calling the
+function "title". The second parameter is a level 1 HTML heading containing
+the result of the function "title". "if" is a built-in function which will
+return the second parameter only if the first is non-blank, so the effect of
+this is to return a heading element only if a title exists.
+
+As a shortcut for generation of HTML attributes, if a function mode segment is
+surrounded by double quotes, quote characters in the return value will be
+escaped. This only applies if the quote character immediately precedes the
+opening brace, and immediately follows the closing brace, with no whitespace.
+
+User callback functions are defined by passing a function object to the
+template processor. Function names appearing in the text are first checked
+against built-in function names, then against the method names in the function
+object. The function object forms a sandbox for execution of the template, so
+security-conscious users may wish to avoid including functions that allow
+arbitrary filesystem access or code execution.
+
+The callback function will receive its parameters as strings. If the
+result of the function depends only on the arguments, and certain things
+understood to be "static", such as the source code, then the callback function
+should return a string. If the result depends on other things, then the function
+should call cbt_value() to get a return value:
+
+   return cbt_value( $text, $deps );
+
+where $deps is an array of string tokens, each one naming a dependency. As a
+shortcut, if there is only one dependency, $deps may be a string.
+
+
+---------------------
+Tim Starling 2006

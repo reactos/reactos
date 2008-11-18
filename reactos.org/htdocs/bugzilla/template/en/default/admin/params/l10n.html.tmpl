@@ -1,0 +1,46 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "Localization"
+   desc = "Define what languages you want made available to your users"
+%]
+
+[%# Get the list of available languages %]
+[% available_languages = "unknown" %]
+[% FOREACH param = params %]
+  [% IF param.name == "languages" %]
+    [% available_languages = param.extra_desc.available_languages FILTER html %]
+  [% END %]
+[% END %]
+
+[% param_descs = {
+  languages => "A comma-separated list of RFC 1766 language tags. These " _
+               "identify the languages in which you wish $terms.Bugzilla output " _
+               "to be displayed. Note that you must install the appropriate " _
+               "language pack before adding a language to this Param. The " _
+               "language used is the one in this list with the highest " _
+               "q-value in the user's Accept-Language header.<br> " _
+               "Available languages: $available_languages" ,
+
+  defaultlanguage => "The UI language $terms.Bugzilla falls back on if no suitable " _
+                     "language is found in the user's Accept-Language header." }
+%]

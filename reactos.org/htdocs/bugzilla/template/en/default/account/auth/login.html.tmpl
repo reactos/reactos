@@ -1,0 +1,124 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Toms Baugis <toms@myrealbox.com>
+  #%]
+
+[%# INTERFACE:
+  # target: string. URL to go to after login.
+  #%]
+
+[% IF !target %]
+ [% target = "index.cgi" %]
+[% END %]
+  
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Log in to $terms.Bugzilla",
+  onload = "document.forms['login'].Bugzilla_login.focus()"
+%]
+
+[% USE Bugzilla %]
+
+<p>
+  I need a legitimate login and password to continue.
+</p>
+
+<form name="login" action="[% target FILTER html %]" method="POST"
+[%- IF Bugzilla.cgi.param("data") %] enctype="multipart/form-data"[% END %]>
+  <table>
+    <tr>
+      <th align="right"><label for="Bugzilla_login">Login:</label></th>
+      <td>
+        <input size="35" id="Bugzilla_login" name="Bugzilla_login">
+        [% Param('emailsuffix') FILTER html %]
+      </td>
+    </tr>
+    <tr>
+      <th align="right"><label for="Bugzilla_password">Password:</label></th>
+      <td>
+        <input type="password" size="35" id="Bugzilla_password" name="Bugzilla_password">
+      </td>
+    </tr>
+
+    [% IF Param('rememberlogin') == 'defaulton' || 
+          Param('rememberlogin') == 'defaultoff' %]
+      <tr>
+        <th>&nbsp;</th>
+        <td>
+          <input type="checkbox" id="Bugzilla_remember" name="Bugzilla_remember" value="on"
+                 [% "checked" IF Param('rememberlogin') == "defaulton" %]>
+          <label for="Bugzilla_remember">Remember my Login</label>
+        </td>
+      </tr>
+    [% END %]
+
+    [% IF Param('loginnetmask') < 32 %]
+      <tr>
+        <th>&nbsp;</th>
+        <td>
+          <input type="checkbox" id="Bugzilla_restrictlogin" name="Bugzilla_restrictlogin"
+                 checked="checked">
+          <label for="Bugzilla_restrictlogin">Restrict this session to this IP address
+          (using this option improves security)</label>
+        </td>
+      </tr>
+    [% END %]
+  </table>
+
+  [% PROCESS "global/hidden-fields.html.tmpl"
+     exclude="^Bugzilla_(login|password|restrictlogin)$" %]
+
+  <input type="submit" name="GoAheadAndLogIn" value="Log in" id="log_in">
+  
+  <p>
+    (Note: you should make sure cookies are enabled for this site. 
+    Otherwise, you will be required to log in frequently.)
+  </p>
+</form>
+
+[%# Allow the user to create a new account, or request a token to change
+  # their password, assuming that our auth method allows that.
+  #%]
+
+  [% IF Param("createemailregexp") && user.authorizer.user_can_create_account %]
+    <hr>
+
+    <p>
+      If you don't have a [% terms.Bugzilla %] account, you can
+      <a href="createaccount.cgi">create a new account</a>.
+    </p>
+  [% END %]
+
+  [% IF user.authorizer.can_change_password %]
+    <hr>
+
+    <a name="forgot"></a>
+    <form method="get" action="token.cgi">
+      <input type="hidden" name="a" value="reqpw">
+      If you have an account, but have forgotten your password,
+      enter your login name below and submit a request
+      to change your password.<br>
+      <input size="35" name="loginname">
+      <input type="submit" id="request" value="Submit Request">
+    </form>
+  [% END %]
+
+[% PROCESS global/footer.html.tmpl %]

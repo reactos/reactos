@@ -1,0 +1,106 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# Remember to PROCESS rather than INCLUDE this template. %]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% field_descs = { "[Bug creation]"       => "[$terms.Bug creation]",
+                   "actual_time"          => "Actual Hours"
+                   "alias"                => "Alias",
+                   "assigned_to"          => "Assignee",
+                   "blocked"              => "Blocks",
+                   "bug_file_loc"         => "URL",
+                   "bug_id"               => "$terms.Bug ID",
+                   "bug_severity"         => "Severity",
+                   "bug_status"           => "Status",
+                   "changeddate"          => "Changed",
+                   "cc"                   => "CC",
+                   "classification"       => "Classification",
+                   "cclist_accessible"    => "CC list accessible?",
+                   "component_id"         => "Component ID",
+                   "component"            => "Component",
+                   "creation_ts"          => "$terms.Bug Creation time",
+                   "deadline"             => "Deadline",
+                   "delta_ts"             => "Changed",
+                   "dependson"            => "Depends on",
+                   "dup_id"               => "Duplicate",
+                   "estimated_time"       => "Orig. Est.",
+                   "everconfirmed"        => "Ever confirmed?",
+                   "groupset"             => "Groupset",
+                   "keywords"             => "Keywords",
+                   "newcc"                => "CC",
+                   "op_sys"               => "OS",
+                   "opendate"             => "Opened",
+                   "percentage_complete"  => "%Complete",
+                   "priority"             => "Priority",
+                   "product_id"           => "Product ID",
+                   "product"              => "Product",
+                   "qa_contact"           => "QA Contact",
+                   "remaining_time"       => "Hours Left",
+                   "rep_platform"         => "Hardware",
+                   "reporter"             => "Reporter",
+                   "reporter_accessible"  => "Reporter accessible?",
+                   "resolution"           => "Resolution",
+                   "setting"              => "Setting",
+                   "settings"             => "Settings",
+                   "short_desc"           => "Summary",
+                   "status_whiteboard"    => "Whiteboard",
+                   "target_milestone"     => "Target Milestone",
+                   "version"              => "Version",
+                   "votes"                => "Votes",
+                   "work_time"            => "Hours Worked"} %]
+
+[%# Also include any custom fields or fields which don't have a
+    Description here, by copying their Description from the
+    database. If you want to override this for your language
+    or your installation, just use a hook. %]
+
+[% USE Bugzilla %]
+[% FOREACH bz_field = Bugzilla.get_fields() %]
+  [% SET field_descs.${bz_field.name} = bz_field.description
+     IF !field_descs.${bz_field.name}.defined %]
+[% END %]
+
+[% field_types = { ${constants.FIELD_TYPE_UNKNOWN}       => "Unknown Type",
+                   ${constants.FIELD_TYPE_FREETEXT}      => "Free Text",
+                   ${constants.FIELD_TYPE_SINGLE_SELECT} => "Drop Down" } %]
+
+[% status_descs = { "UNCONFIRMED" => "UNCONFIRMED",
+                    "NEW"         => "NEW",
+                    "ASSIGNED"    => "ASSIGNED",
+                    "REOPENED"    => "REOPENED",
+                    "RESOLVED"    => "RESOLVED",
+                    "VERIFIED"    => "VERIFIED",
+                    "CLOSED"      => "CLOSED" } %]
+
+[% resolution_descs = { "FIXED"      => "FIXED",
+                        "INVALID"    => "INVALID",
+                        "WONTFIX"    => "WONTFIX",
+                        "DUPLICATE"  => "DUPLICATE",
+                        "WORKSFORME" => "WORKSFORME",
+                        "MOVED"      => "MOVED",
+                        "---"        => "---",
+                        " "          => " " } %]
+
+[% MACRO get_resolution(res) GET resolution_descs.$res || res %]
+
+[% Hook.process("end") %]

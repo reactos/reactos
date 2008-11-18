@@ -1,0 +1,118 @@
+body {
+	font-family: Verdana;
+	font-size: 12px;
+	margin: 0 0 1em 0;
+	padding: 0; /* Only affects Opera */
+	background: #FFFFFF url('http://www.reactos.org/images/topbar.jpg') repeat-x scroll top left;
+}
+
+.contentSmallTitle {
+	font-size: 14px;
+	font-weight: bold;
+	color: white;
+	background-color: #5984C3;
+	padding: 0px 0px 1px 10px;
+	margin-bottom: 3px;
+}
+
+.contentSmallTitle a {
+	color: white;
+	text-decoration: none;
+}
+
+.contentSmallTitle a:hover {
+	text-decoration: underline;
+}
+
+#top {
+	margin: 0;
+	background: url('http://www.reactos.org/images/logo.jpg') no-repeat scroll 35px 0;
+	padding: 103px 0 26px 0;
+	color: #FFFFFF;
+	text-align: right;
+}
+
+#top a {
+	font-size: 13px;
+	color: #FFFFFF;
+	text-decoration: none;
+	padding: 1px 5px 1px 5px;
+}
+
+#top a:hover {
+	color: #000000;
+	background-color: #FFCC33;
+}
+
+#topMenu {
+	font-size: 13px;
+	margin-left: 300px;
+	background-color: #5984C3;
+}
+
+#topMenu p {
+	text-align: left;
+	margin: 0;
+}
+
+#leftNav {
+	padding: 0px 10px 10px 7px;
+}
+
+#leftNav ol {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	background-color: #EEEEEE;
+	border-top: #3F3849 0px solid;
+	border-right: #3F3849 1px solid;
+	border-left: #3F3849 1px solid;
+}
+
+#leftNav ol li {
+	font-size: 12px;
+	font-weight: bold;
+	border-bottom: #3f3849 1px solid;
+}
+
+#leftNav ol li a {
+	display: block;
+	width: 137px;
+	padding: 2px 4px 2px 4px;
+
+	color: #3F3849;
+	text-decoration: none;
+	background-color: #EEEEEE;
+}
+
+#leftNav ol li a:hover {
+	color: #000000;
+	background-color: #FFCC33;
+}
+
+#leftNav ol li a.extern {
+	background: none;
+	padding-right: 0px; 
+}
+
+#leftNav .navTitle {
+	padding-left: 12px;
+	border-top: #3F3849 1px solid;
+	border-right: #3F3849 1px solid;
+	border-bottom: #3F3849 1px solid;
+	border-left: #3F3849 1px solid;
+	font-weight: bold;
+	font-size: 14px;
+	color: #FFFFFF;
+	background-color: #5984c3;
+}
+
+#leftNav .navBox {
+	text-align: center;
+	padding: 2px;
+	background-color: #EEEEEE;
+	border-right: 1px solid #3F3849;
+	border-bottom: 1px solid #3F3849;
+	border-left: 1px solid #3F3849;
+	font-size: 13px;
+}

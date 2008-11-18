@@ -1,0 +1,123 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 David D. Kilzer <ddkilzer@kilzer.net>
+  #%]
+
+[%# INTERFACE:
+  # operations: array of hashes. May be empty. Each has has three members:
+  #   who: string. who performed the operation
+  #   when: string. when they performed it
+  #   changes: hash. Details of what they changed. This hash has three
+  #            compulsory and one optional member:
+  #     field: string. The name of the field
+  #     removed: string. What was removed from the field
+  #     added: string. What was added to the field
+  #     attach_id: integer. If the change was adding an attachment, its id.
+  # incomplete_data: boolean. True if some of the data is incomplete (because
+  #                  it was affected by an old Bugzilla bug.)
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+[% PROCESS "global/field-descs.none.tmpl" %]
+
+[% PROCESS bug/time.html.tmpl %]
+
+[% IF incomplete_data %]
+  <p>
+    There used to be an issue in <a href="http://www.bugzilla.org/">Bugzilla</a>
+    which caused activity data to be lost if there were a large number of cc's
+    or dependencies.  That has been fixed, but some data was already lost in
+    your activity table that could not be regenerated.  The changes that the
+    script could not reliably determine are prefixed by '?'.
+  </p>
+[% END %]
+
+[% IF operations.size > 0 %]
+  <table border cellpadding="4">
+    <tr>
+      <th>Who</th>
+      <th>When</th>
+      <th>What</th>
+      <th>Removed</th>
+      <th>Added</th>
+    </tr>
+
+    [% FOREACH operation = operations %]
+      <tr>
+        <td rowspan="[% operation.changes.size %]" valign="top">
+          [% operation.who FILTER html %]
+        </td>
+        <td rowspan="[% operation.changes.size %]" valign="top">
+          [% operation.when FILTER time %]
+        </td>
+        [% FOREACH change = operation.changes %]
+          [% "</tr><tr>" IF loop.index > 0 %]
+            <td>
+              [% IF change.attachid %]
+                <a href="attachment.cgi?id=[% change.attachid %]">
+                Attachment #[% change.attachid %]</a>
+              [% END %]
+              [%+ change.field %]
+            </td>
+            <td>
+              [% IF change.removed.defined %]
+                [% IF change.fieldname == 'estimated_time' ||
+                      change.fieldname == 'remaining_time' ||
+                      change.fieldname == 'work_time' %]
+                  [% PROCESS formattimeunit time_unit=change.removed %]
+                [% ELSIF change.fieldname == 'bug_status' %]
+                  [% status_descs.${change.removed} FILTER html %]
+                [% ELSIF change.fieldname == 'resolution' %]
+                  [% get_resolution(change.removed) FILTER html %]
+                [% ELSIF change.fieldname == 'blocked' ||
+                         change.fieldname == 'dependson' %]
+                  [% change.removed FILTER bug_list_link FILTER none %]
+                [% ELSE %]
+                  [% change.removed FILTER html %]
+                [% END %]
+              [% ELSE %]
+                &nbsp;
+              [% END %]
+            </td>
+            <td>
+              [% IF change.added.defined %]
+                [% IF change.fieldname == 'estimated_time' ||
+                      change.fieldname == 'remaining_time' ||
+                      change.fieldname == 'work_time' %]
+                  [% PROCESS formattimeunit time_unit=change.added %]
+                [% ELSIF change.fieldname == 'bug_status' %]
+                  [% status_descs.${change.added} FILTER html %]
+                [% ELSIF change.fieldname == 'resolution' %]
+                  [% get_resolution(change.added) FILTER html %]
+                [% ELSIF change.fieldname == 'blocked' ||
+                         change.fieldname == 'dependson' %]
+                  [% change.added FILTER bug_list_link FILTER none %]
+                [% ELSE %]
+                  [% change.added FILTER html %]
+                [% END %]
+              [% ELSE %]
+                &nbsp;
+              [% END %]
+            </td>
+        [% END %]
+      </tr>
+    [% END %]
+  </table>
+[% END %]

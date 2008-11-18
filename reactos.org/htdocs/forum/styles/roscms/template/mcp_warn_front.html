@@ -1,0 +1,97 @@
+<!-- INCLUDE mcp_header.html -->
+
+<form method="post" id="mcp" action="{U_POST_ACTION}">
+
+<h2>{L_WARN_USER}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<h3>{L_SELECT_USER}</h3>
+
+	<fieldset>
+	<dl>
+		<dt><label for="username">{L_SELECT_USER}:</label></dt>
+		<dd><input name="username" id="username" type="text" class="inputbox" /></dd>
+		<dd><strong><a href="{U_FIND_USERNAME}" onclick="find_username(this.href); return false;">{L_FIND_USERNAME}</a></strong></dd>
+	</dl>
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<fieldset class="submit-buttons">
+	<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp; 
+	<input type="submit" name="submituser" value="{L_SUBMIT}" class="button1" />
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<h3>{L_MOST_WARNINGS}</h3>
+
+	<!-- IF .highest -->
+		<table class="table1" cellspacing="0">
+		<thead>
+			<tr>
+				<th class="name">{L_USERNAME}</th>
+				<th class="name">{L_WARNINGS}</th>
+				<th class="name">{L_LATEST_WARNING_TIME}</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+
+		<!-- BEGIN highest -->
+			<tr class="<!-- IF highest.S_ROW_COUNT is even -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
+				<td>{highest.USERNAME_FULL}</td>
+				<td>{highest.WARNINGS}</td>
+				<td>{highest.WARNING_TIME}</td>
+				<td><a href="{highest.U_NOTES}">{L_VIEW_NOTES}</a></td>
+			</tr>
+		<!-- END latest -->
+		</tbody>
+		</table>
+	<!-- ELSE -->
+		<p><strong>{L_WARNINGS_ZERO_TOTAL}</strong></p>
+	<!-- ENDIF -->
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<h3>{L_LATEST_WARNINGS}</h3>
+
+	<!-- IF .latest -->
+		<table class="table1" cellspacing="0">
+		<thead>
+			<tr>
+				<th class="name">{L_USERNAME}</th>
+				<th class="name">{L_TIME}</th>
+				<th class="name">{L_TOTAL_WARNINGS}</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+		<!-- BEGIN latest -->
+			<tr class="<!-- IF latest.S_ROW_COUNT is even -->bg1<!-- ELSE -->bg2<!-- ENDIF -->">
+				<td>{latest.USERNAME_FULL}</td>
+				<td>{latest.WARNING_TIME}</td>
+				<td>{latest.WARNINGS}</td>
+				<td><a href="{latest.U_NOTES}">{L_VIEW_NOTES}</a></td>
+			</tr>
+		<!-- END latest -->
+		</tbody>
+		</table>
+	<!-- ELSE -->
+		<p><strong>{L_WARNINGS_ZERO_TOTAL}</strong></p>
+	<!-- ENDIF -->
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<!-- INCLUDE mcp_footer.html -->

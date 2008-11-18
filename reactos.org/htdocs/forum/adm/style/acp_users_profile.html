@@ -1,0 +1,66 @@
+	<form id="user_profile" method="post" action="{U_ACTION}">
+
+	<fieldset>
+		<legend>{L_USER_PROFILE}</legend>
+	<dl>
+		<dt><label for="icq">{L_UCP_ICQ}:</label></dt>
+		<dd><input type="text" id="icq" name="icq" value="{ICQ}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="aim">{L_UCP_AIM}:</label></dt>
+		<dd><input type="text" id="aim" name="aim" value="{AIM}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="msn">{L_UCP_MSNM}:</label></dt>
+		<dd><input type="text" id="msn" name="msn" value="{MSN}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="yim">{L_UCP_YIM}:</label></dt>
+		<dd><input type="text" id="yim" name="yim" value="{YIM}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="jabber">{L_UCP_JABBER}:</label></dt>
+		<dd><input type="text" id="jabber" name="jabber" value="{JABBER}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="website">{L_WEBSITE}:</label></dt>
+		<dd><input type="text" id="website" name="website" value="{WEBSITE}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="location">{L_LOCATION}:</label></dt>
+		<dd><input type="text" id="location" name="location" value="{LOCATION}" /></dd>
+	</dl>
+	<dl>
+		<dt><label for="occupation">{L_OCCUPATION}:</label></dt>
+		<dd><textarea id="occupation" name="occupation" rows="3" cols="30">{OCCUPATION}</textarea></dd>
+	</dl>
+	<dl>
+		<dt><label for="interests">{L_INTERESTS}:</label></dt>
+		<dd><textarea id="interests" name="interests" rows="3" cols="30">{INTERESTS}</textarea></dd>
+	</dl>
+	<dl> 
+		<dt><label for="birthday">{L_BIRTHDAY}:</label><br /><span>{L_BIRTHDAY_EXPLAIN}</span></dt>
+		<dd>{L_DAY}: <select id="birthday" name="bday_day">{S_BIRTHDAY_DAY_OPTIONS}</select> {L_MONTH}: <select name="bday_month">{S_BIRTHDAY_MONTH_OPTIONS}</select> {L_YEAR}: <select name="bday_year">{S_BIRTHDAY_YEAR_OPTIONS}</select></dd>
+	</dl>
+	</fieldset>
+
+	<!-- IF .profile_fields -->
+		<fieldset>
+			<legend>{L_USER_CUSTOM_PROFILE_FIELDS}</legend>
+		<!-- BEGIN profile_fields -->
+		<dl> 
+			<dt><label<!-- IF profile_fields.FIELD_ID --> for="{profile_fields.FIELD_ID}"<!-- ENDIF -->>{profile_fields.LANG_NAME}:</label><!-- IF profile_fields.LANG_EXPLAIN --><br /><span>{profile_fields.LANG_EXPLAIN}</span><!-- ENDIF --></dt>
+			<dd>{profile_fields.FIELD}</dd>
+			<!-- IF profile_fields.ERROR -->
+				<dd><span class="small" style="color: red;">{profile_fields.ERROR}</span></dd>
+			<!-- ENDIF -->
+		</dl>
+		<!-- END profile_fields -->
+		</fieldset>
+	<!-- ENDIF -->
+
+	<fieldset class="quick">
+		<input class="button1" type="submit" name="update" value="{L_SUBMIT}" />
+		{S_FORM_TOKEN}
+	</fieldset>
+	</form>

@@ -1,0 +1,10 @@
+- Replace: 
+Request.php:
+require_once('PEAR.php');
+require_once(dirname(__FILE__) . '/../PEAR.php');
+
+require_once('Net/Socket.php');
+require_once(dirname(__FILE__) . '/../Net/Socket.php');
+
+require_once('Net/URL.php');
+require_once(dirname(__FILE__) . '/../Net/URL.php');

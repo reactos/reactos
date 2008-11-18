@@ -1,7 +1,0 @@
-LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION "Logotipo ReactOS"
-    IDS_TEXT        "Ninguna opción necesita ser configurada."
-END

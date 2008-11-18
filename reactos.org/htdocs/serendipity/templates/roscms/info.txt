@@ -1,0 +1,3 @@
+Name: roscms
+Author: Ge van Geldorp (based on Kubrick 1.2.6 port by Tom Sommer)
+Date: 18/1-2006

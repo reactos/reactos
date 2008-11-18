@@ -1,0 +1,19 @@
+* This README is no longer used to house installation instructions.  Instead,
+it contains pointers to where you may find the information you need.
+
+* A quick installation guide is provided in the QUICKSTART file.
+
+* Complete installation instructions are found in docs/, with a
+variety of document types available.  Please refer to these documents
+when installing, configuring, and maintaining your Bugzilla
+installation.  A helpful starting point is docs/txt/Bugzilla-Guide.txt,
+or with a web browser at docs/html/index.html.
+
+* Release notes for people upgrading to a new version of Bugzilla are
+available at docs/rel_notes.txt.
+
+* If you wish to contribute to the documentation, please read docs/README.docs.
+
+* The Bugzilla web site is at "http://www.bugzilla.org/".  This site will
+contain the latest Bugzilla information, including how to report bugs and how
+to get help with Bugzilla.

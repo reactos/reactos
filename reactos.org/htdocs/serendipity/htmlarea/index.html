@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.2//EN">
+<html>
+  <head>
+    <title>HTMLArea -- the free, customizable online editor</title>
+
+    <style type="text/css">
+      html, body { font-family: georgia,"times new roman",serif; background-color: #fff; color: #000; }
+      .label { text-align: right; padding-right: 0.3em; }
+      .bline { border-bottom: 1px solid #aaa; }
+    </style>
+  </head>
+
+  <body>
+    <div style="float: right; border: 1px solid #aaa; background-color: #eee; padding: 3px; margin-left: 10px; margin-bottom: 10px;">
+      <table cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td class="label">Version:</td><td><% $version %></td>
+        </tr>
+        <tr>
+          <td class="label">Release:</td><td><% $release %> (<a href="release-notes.html">release notes</a>)</td>
+        </tr>
+        <tr>
+          <td class="label bline">Compiled at:</td><td class="bline"><% $time %></td>
+        </tr>
+        <tr>
+          <td class="label">SourceForge page:</td><td><a href="http://sf.net/projects/itools-htmlarea/">http://sf.net/projects/itools-htmlarea/</a></td>
+      </table>
+    </div>
+    <h1>HTMLArea -- the free<br/>customizable online editor</h1>
+
+    <p>
+      HTMLArea is a free, customizable online editor.  It works inside your
+      browser.  It uses a non-standard feature implemented in Internet
+      Explorer 5.5 or better for Windows and Mozilla 1.3 or better (any
+      platform), therefore it will only work in one of these browsers.
+    </p>
+
+    <p>
+      HTMLArea is copyright <a
+      href="http://interactivetools.com">InteractiveTools.com</a> and <a
+      href="http://dynarch.com">Dynarch.com</a> and it is
+      released under a BSD-style license.  HTMLArea is created and developed
+      upto version 2.03 by InteractiveTools.com.  Version 3.0 developed by
+      <a href="http://dynarch.com/mishoo/">Mihai Bazon</a> for
+      InteractiveTools.  It contains code sponsored by third-party companies as well.
+      Please see our About Box for details about who sponsored what plugins.
+    </p>
+
+    <h2><a href="examples/">Online demos</a></h2>
+
+    <ul>
+
+      <li><a href="examples/core.html">HTMLArea standard</a> -- contains the core
+        editor.</li>
+
+      <li><a href="examples/table-operations.html">HTMLArea + tables</a> --
+        loads the <tt>TableOperations</tt> plugin which provides some extra
+        editing features for tables.</li>
+
+      <li><a href="examples/spell-checker.html">HTMLArea + spell checher</a>
+        -- loads the <tt>SpellChecker</tt> plugin which provides what its
+        name says: a spell checker.  This one requires additional support on
+        the server-side.</li>
+
+      <li><a href="examples/full-page.html">HTMLArea Full HTML Editor</a> --
+        loads the <tt>FullPage</tt> plugin which allows you to edit a full
+        HTML page, including &lt;title&gt;, &lt;!DOCTYPE...&gt; and some
+        other options.</li>
+
+      <li><a href="examples/context-menu.html">HTMLArea with Context
+          Menu</a> -- this plugin provides a nice and useful context menu.</li>
+
+      <li><a href="examples/fully-loaded.html">HTMLArea fully loaded</a> --
+        all of the above. ;-)</li>
+
+    </ul>
+
+    <h2>Installation</h2>
+
+    <p>
+      Installation is (or should be) easy.  You need to unpack the ZIP file
+      in a directory accessible through your webserver.  Supposing you
+      unpack in your <tt>DocumentRoot</tt> and your <tt>DocumentRoot</tt> is
+      <tt>/var/www/html</tt> as in a standard RedHat installation, you need
+      to acomplish the following steps: (the example is for a Unix-like
+      operating system)
+    </p>
+
+    <pre style="margin-left: 2em"
+>
+cd /var/www/html
+unzip /path/to/archive/<% $basename %>.zip
+mv <% $basename %> htmlarea
+find htmlarea/ -type f -exec chmod 644 {} \;
+find htmlarea/ -type d -exec chmod 755 {} \;
+find htmlarea/ -name "*.cgi" -exec chmod 755 {} \;</pre>
+
+    <p>
+      <strong>Notes.</strong> You may chose to symlink "htmlarea" to "<%
+      $basename %>", in which case your server needs to be configured to
+      "<tt>FollowSymLinks</tt>".  You need to make sure that *.cgi files are
+      interpreted as CGI scripts.  If you want to use the SpellChecker
+      plugin you need to have a recent version of Perl installed (I
+      recommend 5.8.0) on the server, and the module Text::Aspell, available
+      from CPAN.  More info in "<a
+      href="plugins/SpellChecker/readme-tech.html">plugins/SpellChecker/readme-tech.html</a>".
+    </p>
+
+    <p>About how to setup your pages to use the editor, please read the
+      [outdated yet generally valid] <a
+        href="reference.html">documentation</a>.</p>
+
+    <h2>Status and links</h2>
+
+    <p>HTMLArea has reached version 3.0.  As of this version, it
+      supports:</p>
+
+    <ul>
+
+      <li>Customizable toolbar</li>
+
+      <li>Easy internationalization</li>
+
+      <li>Plugin-based infrastructure</li>
+
+      <li>Delivers W3-compliant HTML (with few exceptions)</li>
+
+      <li>Has a subset of Microsoft Word's keyboard shortcuts</li>
+
+      <li>Full-screen editor</li>
+
+      <li>Advanced table operations (by external plugin
+        "TableOperations")</li>
+
+      <li>Spell checker (by external plugin "SpellChecker")</li>
+
+      <li>probably more... ;-)</li>
+
+    </ul>
+
+    <p>We have a <a
+    href="http://sourceforge.net/projects/itools-htmlarea/">project page</a>
+    at <a href="http://sourceforge.net">SourceForge.net</a>.  There you can
+    also find out <a href="http://sourceforge.net/cvs/?group_id=69750">how
+    to retrieve the code from CVS</a>, or you can <a
+    href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/itools-htmlarea">browse
+    the CVS online</a>.  We also have a <a
+    href="http://sourceforge.net/tracker/?atid=525656&group_id=69750&func=browse">bug
+    system</a>, a <a
+    href="http://sourceforge.net/tracker/?atid=525658&group_id=69750&func=browse">patch
+    tracking system</a> and a <a
+    href="http://sourceforge.net/tracker/?atid=525659&group_id=69750&func=browse">feature
+    request page</a>.</p>
+
+    <p>We invite you to say everything you want about HTMLArea <a
+    href="http://www.interactivetools.com/forum/gforum.cgi?forum=14;">on the
+    forums</a> at InteractiveTools.com.  There you should also find the
+    latest news.</p>
+
+    <p>Sometimes I post news about the latest developments on <a
+    href="http://dynarch.com/mishoo/">my personal homepage</a>.</p>
+
+    <h2>"It doesn't work, what's wrong?"</h2>
+
+    <p>If it doesn't work, you have several options:</p>
+
+    <ul>
+
+      <li>Post a message to the forum.  Describe your problem in as much
+      detail as possible.  Include errors you might find in the JavaScript
+      console (if you are a Mozilla user), or errors displayed by IE (though
+      they're most of the times useless).</li>
+
+      <li>If you're positive that you discovered a bug in HTMLArea then feel
+      free to fill a bug report in our bug system.  If you have the time you
+      should check to see if a similar bug was reported or not; it might be
+      fixed already in the CVS ;-) If you're positive that a similar bug was
+      not yet reported, do fill a bug report and please include as much
+      detail as possible, such as your browser, OS, errors from JavaScript
+      console, etc.</li>
+
+      <li>If you want a new feature to be implemented, post it on the
+      features request and someone will hopefully take care of it.</li>
+
+    </ul>
+
+    <p>You can <a href="mailto:mihai_bazon@yahoo.com">contact me directly</a>
+    <em>only</em> if you want to pay me for implementing custom features to
+    HTMLArea.  If you want to sponsor these features (that is, allow them to
+    get back into the public HTMLArea distribution) I'll be cheaper. ;-)</p>
+
+    <hr />
+    <address><a href="http://dynarch.com/mishoo/">Mihai Bazon</a></address>
+<!-- Created: Sun Aug  3 14:11:26 EEST 2003 -->
+<!-- hhmts start --> Last modified: Wed Jul 14 13:20:53 CEST 2004 <!-- hhmts end -->
+<!-- doc-lang: English -->
+  </body>
+</html>
+
+<%ARGS>
+  $project => 'HTMLArea'
+  $version => '3.0'
+  $release => 'rc1'
+  $basename => 'HTMLArea-3.0-rc1'
+</%ARGS>
+
+<%INIT>;
+use POSIX qw(strftime);
+my $time = strftime '%b %e, %Y [%H:%M] GMT', gmtime;
+</%INIT>

@@ -1,4 +1,0 @@
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Audio Service"
-#define REACTOS_STR_INTERNAL_NAME	"audiosrv\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"audiosrv.dll\0"
-#include <reactos/version.rc>

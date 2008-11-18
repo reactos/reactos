@@ -1,0 +1,118 @@
+== About texvc ==
+
+texvc takes LaTeX-compatible equations and produces formatted output in HTML,
+MathML, and (via LaTeX/dvipng) rasterized PNG images.
+Input data is parsed and scrutinized for safety, and the output includes an
+estimate of whether the code is simple enough that HTML rendering will look
+acceptable.
+
+The program was written by Tomasz Wegrzanowski for use with MediaWiki; it's
+included as part of the MediaWiki package (http://www.mediawiki.org) and is
+under the GPL license.
+
+Please report bugs at: https://bugzilla.wikimedia.org/ (under "MediaWiki")
+
+== Setup ==
+
+=== Requirements ===
+
+OCaml 3.06 or later is required to compile texvc; this can be acquired from
+http://caml.inria.fr/ if your system doesn't have it available.
+
+The makefile requires GNU make.
+
+Rasterization is done via LaTeX, dvipng. These need to be installed and in
+the PATH: latex, dvipng
+
+AMS* packages for LaTeX also need to be installed. Without AMS* some equations
+will render correctly while others won't render. Most distributions of TeX
+already contain AMS*. In Debian/Ubuntu you need to install tetex-extra.
+
+To work properly with rendering non-ASCII Unicode characters, a supplemental TeX
+package is needed (cjk-latex in Debian)
+
+=== Installation ===
+
+Run 'make' (or 'gmake' if GNU make is not your default make). This should
+produce the texvc executable.
+
+Then you'll need to set $wgUseTeX to true in your LocalSettings.php. By default,
+MediaWiki will search in this directory for texvc, if you moved it elsewhere,
+you'll have to modify $wgTexvc and set it to the path of the texvc executable.
+
+== Usage ==
+
+Normally texvc is called from MediaWiki's Math.php modules and everything
+Just Works. It can be run manually for testing or for use in another app.
+
+=== Command-line parameters ===
+
+    texvc <temp directory> <output directory> <TeX code> <encoding>
+
+Be sure to properly quote the TeX code!
+
+Example:
+
+    texvc /home/wiki/tmp /home/wiki/math "y=x+2" iso-8859-1
+
+=== Output format ===
+
+Status codes and HTML/MathML transformations are returned on stdout.
+A rasterized PNG file will be written to the output directory, named
+for the MD5 hash code.
+
+texvc output format is like this:
+    +%5		ok, but not html or mathml
+    c%5%h	ok, conservative html, no mathml
+    m%5%h	ok, moderate html, no mathml
+    l%5%h	ok, liberal html, no mathml
+    C%5%h\0%m	ok, conservative html, with mathml
+    M%5%h\0%m	ok, moderate html, with mathml
+    L%5%h\0%m	ok, liberal html, with mathml
+    X%5%m	ok, no html, with mathml
+    S		syntax error
+    E		lexing error
+    F%s		unknown function %s
+    -		other error
+
+ \0 - null character
+ %5 - md5, 32 hex characters
+ %h - html code, without \0 characters
+ %m - mathml code, without \0 characters
+
+
+== Troubleshooting ==
+
+Unforunately, many error conditions with rasterization are not well reported.
+texvc will return as though everything is successful, and the only obvious
+sign of problems for the user is a big X on a wiki page where an equation
+should be.
+
+Try running texvc from the command line to ensure that the software it relies
+upon is all set up.
+
+Ensure that the temporary and math directories exist and can be written to by
+the user account the web server runs under; if you don't control the server,
+you may have to make them world-writable.
+
+If some equations render correctly while others don't, you probably don't have
+AMS* packages for LaTeX installed. Most distributions of TeX come with AMS*.
+In Debian/Ubuntu AMS* is in tetex-extra package.
+To check if that is the problem you can try those two equations:
+    x + y
+    x \implies y
+The first uses only standard LaTeX, while the second uses symbol \implies from AMS*.
+If the first renders, but the second doesn't, you need to install AMS*.
+
+== Hacking ==
+
+Before you start hacking on the math package its good to know the workflow,
+which is basically:
+
+1. texvc gets called by includes/Math.php (check out the line begining with "$cmd")
+2. texvc does its magic, which is basically to check for invalid latex code.
+3. texvc takes the user input if valid and creates a latex file containing it, see
+   get_preface in texutil.ml
+4. dvipng(1) gets called to create a .png file
+   See render.ml for this process (commenting out the removal of
+   the temporary file is useful for debugging).

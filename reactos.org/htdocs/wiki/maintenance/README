@@ -1,0 +1,109 @@
+== MediaWiki Maintenance ==
+
+The .sql scripts in this directory are not intended to be run standalone,
+although this is appropriate in some cases, e.g. manual creation of blank tables
+prior to an import.
+
+Most of the PHP scripts need to be run from the command line. Prior to doing so,
+ensure that the LocalSettings.php file in the directory above points to the
+proper installation.
+
+Certain scripts will require elevated access to the database. In order to
+provide this, first create a MySQL user with "all" permissions on the wiki
+database, and then place their username and password in an AdminSettings.php
+file in the directory above. See AdminSettings.sample for specifics on this.
+
+=== Brief explanation of files ===
+
+A lot of the files in this directory are PHP scripts used to perform various
+maintenance tasks on the wiki database, e.g. rebuilding link tables, updating
+the search indices, etc. The files in the "archives" directory are used to
+upgrade the database schema when updating the software. Some schema definitions
+for alternative (as yet unsupported) database management systems are stored
+here too.
+
+The "storage" directory contains scripts and resources useful for working with
+external storage clusters, and are not likely to be particularly useful to the
+vast majority of installations. This directory does contain the compressOld
+scripts, however, which can be useful for compacting old data.
+
+=== Maintenance scripts ===
+
+As noted above, these should be run from the command line. Not all scripts are
+listed, as some are Wikimedia-specific, and some are not applicable to most
+installations.
+
+	changePassword.php
+	Reset the password of a specified user
+
+	cleanupSpam.php
+	Mass-revert insertion of linkspam
+
+	createAndPromote.php
+	Create a user with administrator (and optionally, bureaucrat) permissions
+
+	deleteOldRevisions.php
+	Erase old revisions of pages from the database
+
+	dumpBackup.php
+	Backup dump script
+
+	edit.php
+	Edit a page to change its content
+
+	findhooks.php
+	Find hooks that aren't documented in docs/hooks.txt
+
+	importDump.php
+	XML dump importer
+	
+	importImages.php
+	Import images into the wiki
+	
+	importTextFile.php
+	Import the contents of a text file into a wiki page
+
+	moveBatch.php
+	Move a batch of pages 
+
+	namespaceDupes.php
+	Check articles name to see if they conflict with new/existing namespaces
+
+	nukePage.php
+	Wipe a page and all revisions from the database
+
+	reassignEdits.php
+	Reassign edits from one user to another
+
+	rebuildImages.php
+	Update image metadata records
+
+	rebuildMessages.php
+	Update the MediaWiki namespace after changing site language
+
+	rebuildtextindex.php
+	Rebuild the fulltext search indices
+
+	refreshLinks.php
+	Rebuild the link tables
+
+	removeUnusedAccounts.php
+	Remove user accounts which have made no edits
+
+	runJobs.php
+	Immediately complete all jobs in the job queue
+
+	stats.php
+	Show all statistics stored in memcached
+
+	undelete.php
+	Undelete all revisions of a page
+
+	update.php
+	Check and upgrade the database schema to the current version
+
+	updateRestrictions.php
+	Update pages restriction to the new schema
+
+	userOptions.php
+	Change user options

@@ -1,0 +1,132 @@
+<html>
+<head>
+<title>Example of HTMLArea 3.0</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- Configure the path to the editor.  We make it relative now, so that the
+    example ZIP file will work anywhere, but please NOTE THAT it's better to
+    have it an absolute path, such as '/htmlarea/'. -->
+<script type="text/javascript">
+  _editor_lang = "en";
+  _editor_url = "../";
+</script>
+<!-- load the main HTMLArea files -->
+<script type="text/javascript" src="../htmlarea.js"></script>
+
+<style type="text/css">
+html, body {
+  font-family: Verdana,sans-serif;
+  background-color: #fea;
+  color: #000;
+}
+a:link, a:visited { color: #00f; }
+a:hover { color: #048; }
+a:active { color: #f00; }
+
+textarea { background-color: #fff; border: 1px solid 00f; }
+</style>
+
+<script type="text/javascript">
+HTMLArea.loadPlugin("SpellChecker");
+var editor = null;
+function initEditor() {
+  // create an editor for the "ta" textbox
+  editor = new HTMLArea("ta");
+
+  // register the SpellChecker plugin
+  editor.registerPlugin(SpellChecker);
+
+  editor.generate();
+  return false;
+}
+
+function insertHTML() {
+  var html = prompt("Enter some HTML code here");
+  if (html) {
+    editor.insertHTML(html);
+  }
+}
+function highlight() {
+  editor.surroundHTML('<span style="background-color: yellow">', '</span>');
+}
+</script>
+
+</head>
+
+<!-- use <body onload="HTMLArea.replaceAll()" if you don't care about
+     customizing the editor.  It's the easiest way! :) -->
+<body onload="initEditor()">
+
+<h1>HTMLArea 3.0</h1>
+
+<p>A replacement for <code>TEXTAREA</code> elements.  &copy; <a
+href="http://interactivetools.com">InteractiveTools.com</a>, 2003-2004.</p>
+
+<p>Plugins:
+      <tt>SpellChecker</tt> (sponsored by <a
+        href="http://americanbible.org">American Bible Society</a>).
+</p>
+
+<form action="test.cgi" method="post" id="edit" name="edit">
+
+<textarea id="ta" name="ta" style="width:100%" rows="24" cols="80">
+
+<h1>The <tt>SpellChecker</tt> plugin</h1>
+
+      <p>This file deminstrates the <tt>SpellChecker</tt> plugin of
+      HTMLArea.  To inwoke the spell checkert you need to press the
+      <em>spell-check</em> buton in the toolbar.</p>
+
+      <p>The spell-checker uses a serverside script written in Perl.  The
+        Perl script calls <a href="http://aspell.net">aspell</a> for any
+        word in the text and reports wordz that aren't found in the
+        dyctionari.</p>
+
+      <p>The document that yu are reading now <b>intentionaly</b> containes
+        some errorz, so that you have something to corect ;-)</p>
+
+      <p>Credits for the <tt>SpellChecker</tt> plugin go to:</p>
+
+      <ul>
+
+        <li><a href="http://aspell.net">Aspell</a> -- spell
+          checker</li>
+
+        <li>The <a href="http://perl.org">Perl</a> programming language</li>
+
+        <li><tt><a
+              href="http://cpan.org/modules/by-module/Text/Text-Aspell-0.02.readme">Text::Aspell</a></tt>
+          -- Perl interface to Aspell</li>
+
+        <li><a href="http://americanbible.org">American Bible Society</a> --
+          for sponsoring the <tt>SpellChecker</tt> plugin for
+          <tt>HTMLArea</tt></li>
+
+        <li><a href="http://dynarch.com/mishoo/">Your humble servant</a> for
+          implementing it ;-)</li>
+
+      </ul>
+
+</textarea>
+
+<p />
+
+<input type="submit" name="ok" value="  submit  " />
+<input type="button" name="ins" value="  insert html  " onclick="return insertHTML();" />
+<input type="button" name="hil" value="  highlight text  " onclick="return highlight();" />
+
+<a href="javascript:mySubmit()">submit</a>
+
+<script type="text/javascript">
+function mySubmit() {
+// document.edit.save.value = "yes";
+document.edit.onsubmit(); // workaround browser bugs.
+document.edit.submit();
+};
+</script>
+
+</form>
+
+</body>
+</html>

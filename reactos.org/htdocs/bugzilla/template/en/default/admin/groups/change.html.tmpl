@@ -1,0 +1,111 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@syndicomm.com>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Jacob Steenhagen <jake@bugzilla.org>
+  #                 Vlad Dascalu <jocuri@softhome.net>
+  #%]
+
+[%# INTERFACE:
+  # action: integer. Can be 1, 2 or 3, depending on the action
+  #         performed:
+  #         1 - remove_explicit_members
+  #         2 - remove_explicit_members_regexp
+  #         3 - no conversion, just save the changes
+  # changes: boolean int. Is 1 if changes occurred.
+  # gid: integer. The ID of the group.
+  # name: the name of the product where removal is performed.
+  # regexp: the regexp according to which the update is performed.
+  #%]
+
+[% IF (action == 1) %]
+  [% title = "Confirm: Remove All Explicit Members?" %]
+[% ELSIF (action == 2) %]
+  [% title = "Confirm: Remove Explicit Members in the Regular Expression?" %]
+[% ELSE %]
+  [% title = "Updating group hierarchy" %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl %]
+
+<p>
+  Checking....
+
+  [% IF changes %]
+    changed.
+  [% END %]
+</p>
+    
+[% IF (action == 1) || (action == 2) %]
+  [% IF changes %]
+    <p>Group updated, please confirm removal:</p>
+  [% END %]
+
+  [% IF (action == 1) %]
+    <p>This option will remove all explicitly defined users
+  [% ELSIF regexp %]
+    <p>This option will remove all users included in the regular expression:
+    [% regexp FILTER html %]
+  [% ELSE %]
+    <p>
+      <b>There is no regular expression defined.</b>
+      No users will be removed.
+    </p>
+  [% END %]
+  
+  [% IF ((action == 1) || regexp) %]
+    from group [% name FILTER html %].</p>
+    
+    <p>
+      Generally, you will only need to do this when upgrading groups
+      created with [% terms.Bugzilla %] versions 2.16 and prior. Use
+      this option with <b>extreme care</b> and consult the documentation
+      for further information.
+    </p>
+    
+    <form method="post" action="editgroups.cgi">
+      <input type="hidden" name="group" value="[% gid FILTER html %]">
+    
+      [% IF (action == 2) %]
+        <input type="hidden" name="action" value="remove_all_regexp">
+      [% ELSE %]
+        <input type="hidden" name="action" value="remove_all">
+      [% END %]
+    
+      <input name="confirm" type="submit" value="Confirm">
+      <p>Or <a href="editgroups.cgi">return to the Edit Groups page</a>.</p>
+    </form>
+  [% END %]
+[% ELSE %]
+  [%# if we got this far, the admin doesn't want to convert, so just save
+    # their changes %]
+
+  [% IF changes %]
+    <p>Done.</p>
+  [% ELSE %]
+    <p>
+      You didn't change anything! If you really meant it, hit the <b>Back</b>
+      button and try again.
+    </p>
+  [% END %]
+    
+  <p>Back to the <a href="editgroups.cgi">group list</a>.</p>
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %] 

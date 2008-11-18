@@ -1,0 +1,91 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
+[% IF cgi.param("help") %]
+  [% IF cgi.user_agent("Mozilla/5") %]
+    <style type="text/css">
+    .help {
+        border-style: solid;
+        border-color: #F0A000;
+        background-color: #FFFFFF;
+        padding: 5;
+        position: absolute;
+    }
+    </style>
+
+    <script type="text/javascript">
+    var currentHelp;
+
+    function initHelp() {
+        for (var i = 0; i < document.forms.length; i++) {
+            for (var j = 0; j < document.forms[i].elements.length; j++) {
+                [%# MS decided to add fieldsets to the elements array; and 
+                  # Mozilla decided to copy this brokenness. Grr. 
+                  #%]
+                if (document.forms[i].elements[j].tagName != 'FIELDSET') {
+                    document.forms[i].elements[j].onmouseover = showHelp;
+                }
+            }
+        }
+
+        document.body.onclick = hideHelp;
+    }
+
+    function showHelp() {      
+        hideHelp();
+        var newHelp = document.getElementById(this.name + '_help');
+        if (newHelp) {
+            currentHelp = newHelp;
+
+            var mytop = this.offsetTop;
+            var myleft = this.offsetLeft;
+            var myparent = this.offsetParent;
+            while (myparent.tagName != 'BODY') {
+                mytop = mytop + myparent.offsetTop;
+                myleft = myleft + myparent.offsetLeft;
+                myparent = myparent.offsetParent;
+            }
+
+            currentHelp.style.top = mytop + this.offsetHeight + 5 + "px";
+            currentHelp.style.left = myleft + "px";
+            currentHelp.style.display='';
+        }
+    }
+
+    function hideHelp() {
+        if (currentHelp) {
+            currentHelp.style.display='none';
+        }
+    }
+    </script>
+  [% END %]
+[% ELSE %]
+  <script type="text/javascript">
+  <!--
+  [%# Avoid warnings by having a dummy function %]
+  function initHelp() {}
+  // -->
+  </script>
+[% END %]
+

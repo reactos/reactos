@@ -1,0 +1,37 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Matthew Tuck <matty@chariot.net.au>
+  #%]
+
+[%# Migration note: this file corresponds to the old Param
+  # 'entryheaderhtml'
+  #%]
+
+[%# You can make the output of this template product-specific by using
+  # Template Toolkit IF statements.  The current product name is stored in
+  # the 'product' variable.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+<b>Before reporting [% terms.abug %], please read the 
+<a href="http://www.reactos.org/wiki/index.php/File_Bugs">
+[% terms.bug %] writing guidelines</a>, please look at the list of
+<a href="duplicates.cgi">most frequently reported [% terms.bugs %]</a>, and please
+<a href="query.cgi">search</a> for the [% terms.bug %]!</b>

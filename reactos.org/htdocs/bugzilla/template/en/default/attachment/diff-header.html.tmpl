@@ -1,0 +1,325 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): John Keiser <jkeiser@netscape.com>
+  #%]
+
+[%# Define strings that will serve as the title and header of this page %]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]
+  [% IF attachid %]
+Attachment #[% attachid %] for [% terms.bug %] #[% bugid %]
+  [% ELSE %]
+Interdiff of #[% oldid %] and #[% newid %] for [% terms.bug %] #[% bugid %]
+  [% END %]
+[% END %]
+
+[% style = BLOCK %]
+.file_head {
+  font-weight: bold;
+  font-size: 1em;
+  background-color: #c3c3c3;
+  border: 1px solid black;
+  width: 100%;
+}
+
+.file_head a {
+  text-decoration: none; 
+  font-family: monospace; 
+  font-size: 1.1em;
+}
+
+.file_collapse {
+  display: none;
+}
+
+.section_head {
+  width: 100%;
+  background-color: #f0f0f0;
+  border: 1px solid black;
+  text-align: left;
+}
+
+table.file_table {
+  table-layout: fixed;
+  width: 100%;
+  empty-cells: show;
+  border-spacing: 0px;
+  border-collapse: collapse;
+  /* draw border below last open context section in listing */
+  border-bottom: 1px solid black;
+}
+
+tbody.file td {
+  border-left: 1px dashed black;
+  border-right: 1px dashed black;
+  width: 50%;
+}
+
+tbody.file pre {
+  display: inline;
+  white-space: -moz-pre-wrap;
+  font-size: 0.9em;
+}
+
+tbody.file pre:empty {
+  display: block;
+}
+
+.changed {
+  background-color: lightblue;
+}
+
+.added {
+  background-color: lightgreen;
+}
+
+.removed {
+  background-color: #FFCC99;
+}
+
+.warning {
+  color: red
+}
+[% END %]
+
+[%# SCRIPT FUNCTIONS %]
+[% javascript = BLOCK %]
+  function collapse_all() {
+    var elem = document.checkboxform.firstChild;
+    while (elem != null) {
+      if (elem.firstChild != null) {
+        var tbody = elem.firstChild.nextSibling;
+        if (tbody.className == 'file') {
+          tbody.className = 'file_collapse';
+          twisty = get_twisty_from_tbody(tbody);
+          twisty.firstChild.nodeValue = '(+)';
+          twisty.nextSibling.checked = false;
+        }
+      }
+      elem = elem.nextSibling;
+    }
+    return false;
+  }
+
+  function expand_all() {
+    var elem = document.checkboxform.firstChild;
+    while (elem != null) {
+      if (elem.firstChild != null) {
+        var tbody = elem.firstChild.nextSibling;
+        if (tbody.className == 'file_collapse') {
+          tbody.className = 'file';
+          twisty = get_twisty_from_tbody(tbody);
+          twisty.firstChild.nodeValue = '(-)';
+          twisty.nextSibling.checked = true;
+        }
+      }
+      elem = elem.nextSibling;
+    }
+    return false;
+  }
+
+  var current_restore_elem;
+
+  function restore_all() {
+    current_restore_elem = null;
+    incremental_restore();
+  }
+
+  function incremental_restore() {
+    if (!document.checkboxform.restore_indicator.checked) {
+      return;
+    }
+    var next_restore_elem;
+    if (current_restore_elem) {
+      next_restore_elem = current_restore_elem.nextSibling;
+    } else {
+      next_restore_elem = document.checkboxform.firstChild;
+    }
+    while (next_restore_elem != null) {
+      current_restore_elem = next_restore_elem;
+      if (current_restore_elem.firstChild != null) {
+        restore_elem(current_restore_elem.firstChild.nextSibling);
+      }
+      next_restore_elem = current_restore_elem.nextSibling;
+    }
+  }
+
+  function restore_elem(elem, alertme) {
+    if (elem.className == 'file_collapse') {
+      twisty = get_twisty_from_tbody(elem);
+      if (twisty.nextSibling.checked) {
+        elem.className = 'file';
+        twisty.firstChild.nodeValue = '(-)';
+      }
+    } else if (elem.className == 'file') {
+      twisty = get_twisty_from_tbody(elem);
+      if (!twisty.nextSibling.checked) {
+        elem.className = 'file_collapse';
+        twisty.firstChild.nodeValue = '(+)';
+      }
+    }
+  }
+
+  function twisty_click(twisty) {
+    tbody = get_tbody_from_twisty(twisty);
+    if (tbody.className == 'file') {
+      tbody.className = 'file_collapse';
+      twisty.firstChild.nodeValue = '(+)';
+      twisty.nextSibling.checked = false;
+    } else {
+      tbody.className = 'file';
+      twisty.firstChild.nodeValue = '(-)';
+      twisty.nextSibling.checked = true;
+    }
+    return false;
+  }
+
+  function get_tbody_from_twisty(twisty) {
+    return twisty.parentNode.parentNode.parentNode.nextSibling;
+  }
+  function get_twisty_from_tbody(tbody) {
+    return tbody.previousSibling.firstChild.firstChild.firstChild;
+  }
+[% END %]
+
+[% onload = 'restore_all(); document.checkboxform.restore_indicator.checked = true' %]
+
+[% BLOCK viewurl %]attachment.cgi?id=[% id %][% END %]
+[% BLOCK editurl %][% PROCESS viewurl %]&amp;action=edit[% END %]
+[% BLOCK diffurl %][% PROCESS viewurl %]&amp;action=diff[% END %]
+
+[% IF headers %]
+  [% header = BLOCK %]
+    [% IF attachid %]
+      Attachment #[% attachid %]: [% description FILTER html %]
+    [% ELSE %]
+      Diff Between 
+       #[% oldid %]: <a href="[% PROCESS diffurl id=oldid %]">[% old_desc FILTER html %]</a>
+      and 
+       #[% newid %]: <a href="[% PROCESS diffurl id=newid %]">[% new_desc FILTER html %]</a>
+    [% END %]
+    for <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %] #[% bugid %]</a>
+  [% END %]
+  [% subheader = BLOCK %]
+    [% bugsummary FILTER html %]
+  [% END %]
+  [% PROCESS global/header.html.tmpl %]
+[% ELSE %]
+  <html>
+  <head>
+  <style type="text/css">
+  [% style %]
+  </style>
+  <script type="text/javascript">
+  <!--
+  [% javascript %]
+  -->
+  </script>
+  </head>
+  <body onload="[% onload FILTER html %]">
+[% END %]
+  
+[%# If we have attachid, we are in diff, otherwise we're in interdiff %]
+[% IF attachid %]
+  [%# HEADER %]
+  [% IF headers %]
+    <a href="[% PROCESS viewurl id=attachid %]">View</a>
+    | <a href="[% PROCESS editurl id=attachid %]">Details</a>
+    | <a href="[% PROCESS diffurl id=attachid %]&amp;context=[% context FILTER url_quote %]&amp;collapsed=[% collapsed FILTER url_quote %]&amp;headers=[% headers FILTER url_quote %]&amp;format=raw">Raw&nbsp;Unified</a>
+  [% END %]
+  [% IF other_patches.size > 0 %]
+    [% IF headers %] |[%END%]
+    Differences between
+    <form style="display: inline" action="attachment.cgi">
+      <select name="oldid">
+      [% FOREACH patch = other_patches %]
+        <option value="[% patch.id %]"
+        [% IF patch.selected %] selected[% END %]
+        >[% patch.desc FILTER html %]</option>
+      [% END %]
+      </select>
+      and this patch
+      <input type="submit" id="diff" value="Diff">
+      <input type="hidden" name="action" value="interdiff">
+      <input type="hidden" name="newid" value="[% attachid %]">
+      <input type="hidden" name="headers" value="[% headers FILTER html %]">
+    </form>
+  [% END %]
+  <br>
+[% ELSE %]
+  [% IF headers %]
+    <a href="attachment.cgi?oldid=[% oldid %]&amp;newid=[% newid %]&amp;action=interdiff&amp;format=raw">Raw Unified</a>
+    |
+  [% END %]
+[% END %]
+  
+[%# Collapse / Expand %]
+<a href="#"
+   onmouseover="lastStatus = window.status; window.status='Collapse All'; return true"
+   onmouseout="window.status = lastStatus; return true"
+   onclick="return collapse_all()">Collapse All</a> | 
+<a href="#"
+   onmouseover="lastStatus = window.status; window.status='Expand All'; return true"
+   onmouseout="window.status = lastStatus; return true"
+   onclick="return expand_all()">Expand All</a>
+
+[% IF do_context %]
+  [%# only happens for normal viewing, not interdiff %]
+  | <span style='font-weight: bold'>Context:</span>
+  [% IF context == "patch" %]
+    (<strong>Patch</strong> / 
+  [% ELSE %]
+    (<a href="[% PROCESS diffurl id=attachid %]&amp;headers=[% headers FILTER url_quote %]">Patch</a> / 
+  [% END %]
+  [% IF context == "file" %]
+    <strong>File</strong> /
+  [% ELSE %]
+    <a href="[% PROCESS diffurl id=attachid %]&amp;headers=[% headers FILTER url_quote %]&amp;context=file">File</a> / 
+  [% END %]
+
+  [% IF context == "patch" || context == "file" %]
+    [% context = 3 %]
+  [% END %]
+  [%# textbox for context %]
+  <form style="display: inline" action="attachment.cgi"><input type="hidden" name="action" value="diff"><input type="hidden" name="id" value="[% attachid %]"><input type="hidden" name="collapsed" value="[% collapsed FILTER html %]"><input type="hidden" name="headers" value="[% headers FILTER html %]"><input type="text" name="context" value="[% context FILTER html %]" size="3"></form>)
+[% END %]
+
+[% IF warning %]
+<h2 class="warning">Warning: 
+  [% IF warning == "interdiff1" %]
+  this difference between two patches may show things in the wrong places due
+  to a limitation in [% terms.Bugzilla %] when comparing patches with different
+  sets of files.
+  [% END %]
+  [% IF warning == "interdiff2" %]
+  this difference between two patches may be inaccurate due to a limitation in
+  [%+ terms.Bugzilla %] when comparing patches made against different revisions.
+  [% END %]
+</h2>
+[% ELSE %]
+    <br><br>
+[% END %]
+ 
+[%# Restore Stuff %]
+<form name="checkboxform" action="attachment.cgi">
+<input type="checkbox" name="restore_indicator" style="display: none">
+
+

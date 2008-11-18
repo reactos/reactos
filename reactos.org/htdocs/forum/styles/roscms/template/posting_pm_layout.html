@@ -1,0 +1,35 @@
+<!-- INCLUDE ucp_header.html -->
+
+<!-- IF S_DRAFT_LOADED -->
+	<div class="panel">
+		<div class="inner"><span class="corners-top"><span></span></span>
+		
+		<h3>{L_INFORMATION}</h3>
+		<p>{L_DRAFT_LOADED_PM}</p>
+		
+		<span class="corners-bottom"><span></span></span></div>
+	</div>
+<!-- ENDIF -->
+
+<!-- IF S_SHOW_DRAFTS --><!-- INCLUDE drafts.html --><!-- ENDIF -->
+
+<!-- IF S_DISPLAY_PREVIEW --><!-- INCLUDE posting_preview.html --><!-- ENDIF -->
+
+<h2>{L_TITLE}</h2>
+
+<div class="panel" id="postingbox">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<!-- DEFINE $EXTRA_POSTING_OPTIONS = 1 -->
+	<!-- INCLUDE posting_editor.html -->
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+
+<!-- IF S_SHOW_ATTACH_BOX --><!-- INCLUDE posting_attach_body.html --><!-- ENDIF -->
+
+<!-- IF S_DISPLAY_REVIEW --><!-- INCLUDE posting_topic_review.html --><!-- ENDIF -->
+
+<!-- IF S_DISPLAY_HISTORY --><!-- INCLUDE ucp_pm_history.html --><!-- ENDIF -->
+
+<!-- INCLUDE ucp_footer.html -->

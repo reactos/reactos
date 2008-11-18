@@ -1,0 +1,85 @@
+ /* The contents of this file are subject to the Mozilla Public
+  * License Version 1.1 (the "License"); you may not use this file
+  * except in compliance with the License. You may obtain a copy of
+  * the License at http://www.mozilla.org/MPL/
+  *
+  * Software distributed under the License is distributed on an "AS
+  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing
+  * rights and limitations under the License.
+  *
+  * The Original Code is the Bugzilla Bug Tracking System.
+  *
+  * Contributor(s): Vitaly Harisov <vitaly@rathedg.com>
+  */
+
+/* index page (begin) */
+
+    #page-index
+    {
+        padding: 0.2em 0.2em 0.15em 0.2em;
+    }
+
+    #page-index ul, #page-index li,
+    #page-index p, #page-index form p
+    {
+        margin: 0;
+        padding: 0;
+    }
+
+    #page-index ul
+    {
+        padding-bottom: 1em;
+    }
+
+    #page-index li
+    {
+        list-style: none;
+    }
+
+    #page-index p
+    {
+        padding-bottom: 0.5em;
+    }
+
+    /* Hide from NN4 */
+    div#page-index .intro
+    {
+        width: 250px;
+        height: 200px;
+
+        margin-top: -15px;
+        margin-right: 5px;
+        float: right;
+        background: transparent no-repeat url(index/front.png);
+    }
+
+    #page-index #report
+    {
+        padding-bottom: 1em;
+    }
+
+    #page-index #sidebar
+    {
+        padding-top: 1em;
+    }
+
+    #new_release
+    {
+        border: 2px solid red;
+        padding: 0.5em 1em;
+        margin: 1em;
+        font-weight: bold;
+    }
+
+    #new_release .notice
+    {
+        font-size: 80%;
+        font-weight: normal;
+    }
+
+    #welcome-admin a
+    {
+        font-weight: bold;
+    }
+/* index page (end) */

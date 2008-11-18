@@ -1,0 +1,103 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Shane H. W. Travis <travis@sedsystems.ca>
+  #
+  #%]
+
+[%# INTERFACE:
+  # setting_names: an array of strings
+  # settings:      a hash of hashes, keyed by setting_name.
+  #                Each hash contains:
+  #                 is_enabled    - boolean
+  #                 default_value - string (global default for this setting)
+  #                 value         - string (user-defined preference)
+  #                 is_default    - boolean (true if user has no preference)
+  #%]
+
+[% PROCESS global/header.html.tmpl
+   title = "Default Preferences"
+ %]
+
+[% PROCESS "global/setting-descs.none.tmpl" %]
+
+<p>
+This lets you edit the default preferences values.
+</p>
+<p>
+The Default Value displayed for each preference will apply to all users who
+do not choose their own value, and to anyone who is not logged in.
+</p>
+<p>
+The 'Enabled' checkbox controls whether or not this preference is available
+to users.<br>
+If it is checked, users will see this preference on their User Preferences page,
+and will be allowed to choose their own value if they desire.<br>
+If it is not checked, this preference will not appear on the User Preference
+page, and the Default Value will automatically apply to everyone.
+</p>
+<hr>
+
+[% IF settings.size %]
+    <form name="adminsettingform" method="post" action="editsettings.cgi">
+      <table border="1" cellpadding="4">
+      <tr>
+        <th>Preference Text</th>
+        <th>Default Value</th>
+        <th>Enabled</th>
+      </tr>
+
+      [% FOREACH name = setting_names %]
+          [% checkbox_name = name _ '-enabled' %]
+          <tr>
+            <td align="right">
+              [% setting_descs.$name OR name FILTER html %]
+            </td>
+            <td>
+              <select name="[% name FILTER html %]" id="[% name FILTER html %]">
+                [% FOREACH x = settings.${name}.legal_values %]
+                    <option value="[% x FILTER html %]"
+                      [% " selected=\"selected\"" IF x == settings.${name}.default_value %]>
+                      [% setting_descs.${x} OR x FILTER html %]
+                    </option>
+                [% END %]
+              </select>
+            </td>
+            <td align="center">
+              <input type="checkbox"
+                name="[% checkbox_name FILTER html %]"
+                id="[% checkbox_name FILTER html %]"
+                [% " checked=\"checked\"" IF settings.${name}.is_enabled %]>
+              <br>
+            </td>
+          </tr>
+      [% END %]
+      </table>
+
+    <input type="hidden" name="action" value="update">
+    <input type="hidden" name="token" value="[% token FILTER html %]">
+    <table>
+      <tr>
+        <td width="150"></td>
+        <td>
+          <input type="submit" id="update" value="Submit Changes">
+        </td>
+      </tr>
+    </table>
+  
+  </form>
+[% ELSE %]
+  There are no preferences to edit.
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

@@ -1,0 +1,161 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+  #                 Shane H. W. Travis <travis@sedsystems.ca>
+  #%]
+
+[% PROCESS bug/time.html.tmpl %]
+
+  <script type="text/javascript">
+  <!--
+  function updateCommentPrivacy(checkbox, id) {
+    var comment_elem = document.getElementById('comment_text_'+id).parentNode;
+    if (checkbox.checked) {
+      if (!comment_elem.className.match('bz_private')) {
+        comment_elem.className = comment_elem.className.concat(' bz_private');
+      }
+    }
+    else {
+      comment_elem.className =
+        comment_elem.className.replace(/(\s*|^)bz_private(\s*|$)/, '$2');
+    }
+  }
+  //-->
+  </script>
+
+
+[% DEFAULT start_at = 0 mode = "show" %]
+[% isinsider = Param("insidergroup") && user.in_group(Param("insidergroup")) %]
+[% sort_order = user.settings.comment_sort_order.value %]
+
+[%# NOTE: (start_at > 0) means we came here from a midair collision,
+  #       in which case we don't care what the user's preference is.
+ %]
+[% IF (start_at > 0) %]
+    [% sort_order = "oldest_to_newest" %]
+[% END %]
+
+
+[%# Set up the variables as needed, depending on the sort order %]
+[% IF sort_order == "oldest_to_newest" %]
+    [% count = 0 %]
+    [% description = 0 %]
+    [% increment = 1 %]
+[% ELSE %]
+    [% increment = -1 %]
+    [% IF sort_order == "newest_to_oldest" %]
+        [% count = comments.size - 1 %]
+        [% description = 0 %]
+    [% ELSIF sort_order == "newest_to_oldest_desc_first" %]
+        [% count = comments.size %]
+        [% description = comments.size %]
+    [% END %]
+[% END %]
+
+
+[% FOREACH comment = comments %]
+  [% IF count >= start_at %]
+    [% PROCESS a_comment %]
+  [% END %]
+  
+  [% count = count + increment %]
+[% END %]
+
+[%# Note: this template is used in multiple places; if you use this hook,
+  # make sure you are aware of this fact.
+  #%]  
+[% Hook.process("aftercomments") %]
+
+[%############################################################################%]
+[%# Block for individual comments                                            #%]
+[%############################################################################%]
+
+[% BLOCK a_comment %]
+  [% IF NOT comment.isprivate || isinsider %]
+    <div class="bz_comment[% " bz_private" IF comment.isprivate %]
+                [% " bz_comment_hilite" IF marks.$count %]">
+      [% IF count == description %]
+        <table>
+          <tr>
+            <th align="left">
+              <b><a name="c0" href="show_bug.cgi?id=[% bug.bug_id %]#c0">
+                Description</a>:</b>&nbsp;&nbsp;
+                [% IF mode == "edit" %]
+                  [%%]<script type="text/javascript"><!-- 
+                    addReplyLink(0);
+                  //--></script>
+                [% END %]
+            </th>
+            <td align="left" width="30%">
+              <b>Opened:</b> [% bug.creation_ts FILTER time %]
+            </td>
+          </tr>
+        </table>
+      [% ELSE %]
+        <span class="bz_comment_head">
+          <span class="comment_rule">-------</span> <i>Comment
+          <a name="c[% count %]" href="show_bug.cgi?id=[% bug.bug_id %]#c[% count %]">
+            #[% count %]</a> From 
+          <a href="mailto:[% comment.email FILTER html %]">
+            [% comment.name FILTER html %]</a>
+          [%+ comment.time FILTER time %] 
+          </i>
+          [% IF mode == "edit" %]
+          <script type="text/javascript"><!-- 
+            addReplyLink([% count %]); //--></script>
+          [% END %]
+          <span class="comment_rule">-------</span>
+        </span>
+      [% END %]
+        
+      [% IF mode == "edit" && isinsider %]
+        <i>
+          <input type="hidden" name="oisprivate-[% count %]" 
+                 value="[% comment.isprivate %]">
+          <input type="hidden" name="when-[% count %]" value="[% comment.time %]">
+          <input type="checkbox" name="isprivate-[% count %]" value="1"
+                 onClick="updateCommentPrivacy(this, [% count %])"
+                 id="isprivate-[% count %]"
+                 [% " checked=\"checked\"" IF comment.isprivate %]>
+          <label for="isprivate-[% count %]">Private</label>
+        </i>
+      [% END %]
+      [% IF user.in_group(Param('timetrackinggroup')) &&
+            (comment.work_time > 0 || comment.work_time < 0) %]
+         <br>
+         Additional hours worked: 
+         [% PROCESS formattimeunit time_unit=comment.work_time %]
+      [% END %]
+
+[%# Don't indent the <pre> block, since then the spaces are displayed in the
+  # generated HTML
+  #%]
+[% IF comment.already_wrapped %]
+    [% wrapped_comment = comment.body %]
+[% ELSE %]
+    [% wrapped_comment = comment.body FILTER wrap_comment %]
+[% END %]
+<pre class="bz_comment_text" 
+     [% ' id="comment_text_' _ count _ '"' IF mode == "edit" %]>
+  [%- wrapped_comment FILTER quoteUrls(bug.bug_id) -%]
+</pre>
+    </div>
+  [% END %]
+[% END %]

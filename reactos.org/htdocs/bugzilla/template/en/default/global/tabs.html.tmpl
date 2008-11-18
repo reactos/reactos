@@ -1,0 +1,53 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Myk Melez <myk@mozilla.org>
+  #                 Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # tabs: List of hashes. Must have at least one item.  Each hash has:
+  #   name: string. Name of the tab.
+  #   link: string. relative URL to the tab's resource on this installation.
+  #   label: string. text displayed in the tab.
+  # current_tab_name: string. name of the currently selected tab
+  #%]
+
+<div class="tabbed">
+  <table class="tabs" cellspacing="0" cellpadding="10" border="0" width="100%">
+    <tr>
+      <td class="spacer">&nbsp;</td>
+
+      [% FOREACH tab = tabs %]
+        [% IF tab.name == current_tab_name %]
+          <td class="selected">[% tab.label FILTER html %]</td>
+        [% ELSE %]
+          <td class="clickable_area" onClick="document.location='[% tab.link FILTER html %]'"><a href="[% tab.link FILTER html %]">[% tab.label FILTER html %]</a></td>
+        [% END %]
+      [% END %]
+
+      <td class="spacer">&nbsp;</td>
+    </tr>
+  </table>
+
+  <div class="tabbody">
+    [% content %]
+  </div>
+
+</div>

@@ -1,0 +1,37 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+  #%]
+
+[%# INTERFACE:
+  # value: string; the name of the newly created field value
+  # field: string; the name of the field the value belongs to
+  #%]
+  
+[% title = BLOCK %]New Value '[% value FILTER html %]' added to 
+  '[% field FILTER html %]' field[% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+<p>The value '<a title="Edit value '[% value FILTER html %]' of 
+   for the '[% field FILTER html %]' field"
+   href="editvalues.cgi?action=edit&amp;field=
+   [%- field FILTER url_quote %]&amp;value=[% value FILTER url_quote %]">
+   [%- value FILTER html %]</a>' has been added as a valid choice for
+   the '[% field FILTER html %]' field.</p>
+
+[% PROCESS admin/fieldvalues/footer.html.tmpl %]
+
+[% PROCESS global/footer.html.tmpl %]

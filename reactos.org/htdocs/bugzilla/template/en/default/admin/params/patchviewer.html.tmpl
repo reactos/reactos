@@ -1,0 +1,65 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "Patch Viewer"
+   desc = "Set up third-party applications to run with PatchViewer"
+%]
+
+[% param_descs = {
+  cvsroot => "The <a href=\"http://www.cvshome.org\">CVS</a> root that most " _
+             "users of your system will be using for 'cvs diff'. Used in " _
+             "Patch Viewer ('Diff' option on patches) to figure out where " _
+             "patches are rooted even if users did the 'cvs diff' from " _
+             "different places in the directory structure. (NOTE: if your " _
+             "CVS repository is remote and requires a password, you must " _
+             "either ensure the $terms.Bugzilla user has done a 'cvs login' or " _
+             "specify the password " _
+             "<a href=\"http://www.cvshome.org/docs/manual/cvs_2.html#SEC26\">as " _
+             "part of the CVS root</a>.) Leave this blank if you have no " _
+             "CVS repository.",
+
+  cvsroot_get => "The CVS root $terms.Bugzilla will be using to get patches from. " _
+                 "Some installations may want to mirror their CVS repository on " _
+                 "the $terms.Bugzilla server or even have it on that same server, and " _
+                 "thus the repository can be the local file system (and much " _
+                 "faster). Make this the same as cvsroot if you don't " _
+                 "understand what this is (if cvsroot is blank, make this blank too).",
+
+  bonsai_url => "The URL to a <a href=\"http://www.mozilla.org/bonsai.html\">Bonsai</a> " _
+                "server containing information about your CVS repository. " _
+                "Patch Viewer will use this information to create links to " _
+                "bonsai's blame for each section of a patch (it will append " _
+                "'/cvsblame.cgi?...' to this url). Leave this blank if you " _
+                "don't understand what this is.",
+
+  lxr_url => "The URL to an <a href=\"http://sourceforge.net/projects/lxr\">LXR</a> server " _
+             "that indexes your CVS repository. Patch Viewer will use this " _
+             "information to create links to LXR for each file in a patch. " _
+             "Leave this blank if you don't understand what this is.",
+
+  lxr_root => "Some LXR installations do not index the CVS repository from the root -- " _
+              "<a href=\"http://lxr.mozilla.org/mozilla\">Mozilla's</a>, for " _
+              "example, starts indexing under <code>mozilla/</code>. This " _
+              "means URLs are relative to that extra path under the root. " _
+              "Enter this if you have a similar situation. Leave it blank " _
+              "if you don't know what this is." }
+%]

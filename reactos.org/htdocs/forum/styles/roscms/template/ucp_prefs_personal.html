@@ -1,0 +1,144 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="ucp" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+
+<div class="panel">
+	<div class="inner"><span class="corners-top"><span></span></span>
+
+	<fieldset>
+	<!-- IF ERROR --><p class="error">{ERROR}</p><!-- ENDIF -->
+	<dl>
+		<dt><label for="viewemail0">{L_SHOW_EMAIL}:</label></dt>
+		<dd>
+			<label for="viewemail1"><input type="radio" name="viewemail" id="viewemail1" value="1"<!-- IF S_VIEW_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+			<label for="viewemail0"><input type="radio" name="viewemail" id="viewemail0" value="0"<!-- IF not S_VIEW_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+		</dd>
+	</dl>
+	<dl>
+		<dt><label for="massemail1">{L_ADMIN_EMAIL}:</label></dt>
+		<dd>
+			<label for="massemail1"><input type="radio" name="massemail" id="massemail1" value="1"<!-- IF S_MASS_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+			<label for="massemail0"><input type="radio" name="massemail" id="massemail0" value="0"<!-- IF not S_MASS_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+		</dd>
+	</dl>
+	<dl>
+		<dt><label for="allowpm1">{L_ALLOW_PM}:</label><br /><span>{L_ALLOW_PM_EXPLAIN}</span></dt>
+		<dd>
+			<label for="allowpm1"><input type="radio" name="allowpm" id="allowpm1" value="1"<!-- IF S_ALLOW_PM --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+			<label for="allowpm0"><input type="radio" name="allowpm" id="allowpm0" value="0"<!-- IF not S_ALLOW_PM --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+		</dd>
+	</dl>
+	<!-- IF S_CAN_HIDE_ONLINE -->
+		<dl>
+			<dt><label for="hideonline0">{L_HIDE_ONLINE}:</label><br /><span>{L_HIDE_ONLINE_EXPLAIN}</span></dt>
+			<dd>
+				<label for="hideonline1"><input type="radio" name="hideonline" id="hideonline1" value="1"<!-- IF S_HIDE_ONLINE --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+				<label for="hideonline0"><input type="radio" name="hideonline" id="hideonline0" value="0"<!-- IF not S_HIDE_ONLINE --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+			</dd>
+		</dl>
+	<!-- ENDIF -->		
+	<!-- IF S_SELECT_NOTIFY -->
+		<dl>
+			<dt><label for="notifymethod0">{L_NOTIFY_METHOD}:</label></dt>
+			<dd>
+				<label for="notifymethod0"><input type="radio" name="notifymethod" id="notifymethod0" value="0"<!-- IF S_NOTIFY_EMAIL --> checked="checked"<!-- ENDIF --> /> {L_NOTIFY_METHOD_EMAIL}</label> 
+				<label for="notifymethod1"><input type="radio" name="notifymethod" id="notifymethod1" value="1"<!-- IF S_NOTIFY_IM --> checked="checked"<!-- ENDIF --> /> {L_NOTIFY_METHOD_IM}</label> 
+				<label for="notifymethod2"><input type="radio" name="notifymethod" id="notifymethod2" value="2"<!-- IF S_NOTIFY_BOTH --> checked="checked"<!-- ENDIF --> /> {L_NOTIFY_METHOD_BOTH}</label>
+			</dd>
+		</dl>
+	<!-- ENDIF -->
+	<dl>
+		<dt><label for="notifypm1">{L_NOTIFY_ON_PM}:</label></dt>
+		<dd>
+			<label for="notifypm1"><input type="radio" name="notifypm" id="notifypm1" value="1"<!-- IF S_NOTIFY_PM --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+			<label for="notifypm0"><input type="radio" name="notifypm" id="notifypm0" value="0"<!-- IF not S_NOTIFY_PM --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+		</dd>
+	</dl>
+	<dl>
+		<dt><label for="popuppm0">{L_POPUP_ON_PM}:</label></dt>
+		<dd>
+			<label for="popuppm1"><input type="radio" name="popuppm" id="popuppm1" value="1"<!-- IF S_POPUP_PM --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+			<label for="popuppm0"><input type="radio" name="popuppm" id="popuppm0" value="0"<!-- IF not S_POPUP_PM --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+		</dd>
+	</dl>
+	<dl>
+		<dt><label for="lang">{L_BOARD_LANGUAGE}:</label></dt>
+		<dd><select name="lang" id="lang">{S_LANG_OPTIONS}</select></dd>
+	</dl>
+	<!-- IF S_STYLE_OPTIONS -->
+		<dl>
+			<dt><label for="style">{L_BOARD_STYLE}:</label></dt>
+			<dd><select name="style" id="style">{S_STYLE_OPTIONS}</select></dd>
+		</dl>
+	<!-- ENDIF -->
+	<dl>
+		<dt><label for="timezone">{L_BOARD_TIMEZONE}:</label></dt>
+		<dd><select name="tz" id="timezone" class="autowidth">{S_TZ_OPTIONS}</select></dd>
+	</dl>
+	<dl>
+		<dt><label for="dst1">{L_BOARD_DST}:</label></dt>
+		<dd>
+			<label for="dst1"><input type="radio" name="dst" id="dst1" value="1"<!-- IF S_DST --> checked="checked"<!-- ENDIF --> /> {L_YES}</label> 
+			<label for="dst0"><input type="radio" name="dst" id="dst0" value="0"<!-- IF not S_DST --> checked="checked"<!-- ENDIF --> /> {L_NO}</label>
+		</dd>
+	</dl>
+	<dl>
+		<dt><label for="dateformat">{L_BOARD_DATE_FORMAT}:</label><br /><span>{L_BOARD_DATE_FORMAT_EXPLAIN}</span></dt>
+		<dd>
+			<select name="dateoptions" id="dateoptions" onchange="if(this.value=='custom'){dE('custom_date',1);}else{dE('custom_date',-1);} if (this.value == 'custom') { document.getElementById('dateformat').value = default_dateformat; } else { document.getElementById('dateformat').value = this.value; }">
+				{S_DATEFORMAT_OPTIONS}
+			</select>
+		</dd>
+		<dd id="custom_date" style="display:none;"><input type="text" name="dateformat" id="dateformat" value="{DATE_FORMAT}" maxlength="30" class="inputbox narrow" style="margin-top: 3px;" /></dd>
+	</dl>
+	</fieldset>
+
+	<span class="corners-bottom"><span></span></span></div>
+</div>
+	
+<fieldset class="submit-buttons">
+	{S_HIDDEN_FIELDS}<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp; 
+	<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<script type="text/javascript">
+// <![CDATA[
+	var date_format = '{A_DATE_FORMAT}';
+	var default_dateformat = '{A_DEFAULT_DATEFORMAT}';
+
+	function customDates()
+	{
+		var e = document.getElementById('dateoptions');
+	
+		e.selectedIndex = e.length - 1;
+	
+		// Loop and match date_format in menu
+		for (var i = 0; i < e.length; i++)
+		{
+			if (e.options[i].value == date_format)
+			{
+				e.selectedIndex = i;
+				break;
+			}
+		}
+	
+		// Show/hide custom field
+		if (e.selectedIndex == e.length - 1)
+		{
+			dE('custom_date',1);
+		}
+		else
+		{
+			dE('custom_date',-1);
+		}
+	}
+
+	customDates();
+// ]]>
+</script>
+
+<!-- INCLUDE ucp_footer.html -->

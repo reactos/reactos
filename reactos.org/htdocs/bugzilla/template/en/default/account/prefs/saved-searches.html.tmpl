@@ -1,0 +1,210 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # queryshare_groups: list of groups the user may share queries with
+  #                    (id, name).
+  # bless_group_ids: list of group ids the user may bless.
+  #%]
+
+[% IF user.can_bless %]
+  <script type="text/javascript"><!--
+    function update_checkbox(group) {
+      var bless_groups = [[% bless_group_ids.join(",") FILTER js %]];
+      var checkbox = document.getElementById(group.name.replace(/share_(\d+)/, "force_$1"));
+
+      // Check if the selected group is in the bless group array
+      var found = false;
+      for (var i = 0; i < bless_groups.length; i++) {
+        if (bless_groups[i] == group.value) {
+          found = true;
+          break;
+        }
+      }
+
+      // Enable or disable checkbox
+      if (found) {
+        checkbox.disabled = false;
+      } else {
+        checkbox.disabled = true;
+        checkbox.checked = false;
+      }
+    } //-->
+  </script>
+[% END %]
+
+<p>Your saved searches are as follows:</p>
+
+<blockquote>
+  <table border="1" cellpadding="3">  
+    <tr>
+      <th>
+        Search
+      </th>
+      <th>
+        Run
+      </th>
+      <th>
+        Edit
+      </th>
+      <th>
+        Forget
+      </th>
+      <th>
+        Show in
+        Footer
+      </th>
+      [% may_share = user.in_group(Param('querysharegroup')) && queryshare_groups.size %]
+      [% IF may_share %]
+        <th>
+          Share With a Group
+        </th>
+      [% END %]
+    </tr>
+    <tr>
+      <td>My [% terms.Bugs %]</td>
+      <td>
+        [% filtered_username = user.login FILTER url_quote %]
+        <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">Run</a>
+      </td>
+      <td>
+        &nbsp;
+      </td>
+      <td>
+        &nbsp;
+      </td>
+      <td align="center">
+        <input type="checkbox" 
+               name="showmybugslink"
+               value="1"
+               [% " checked" IF user.showmybugslink %]>
+      </td>
+      [% IF may_share %]
+        <td>
+          &mdash;
+        </td>
+      [% END %]
+    </tr>
+    [% FOREACH q = user.queries %]
+      <tr>
+        <td>[% q.name FILTER html %]</td>
+        <td>
+          <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">Run</a>
+        </td>
+        <td>
+          <a href="query.cgi?[% q.edit_link FILTER html %]&amp;known_name=
+                   [% q.name FILTER url_quote %]">Edit</a>
+        </td>
+        <td>
+          [% IF q.used_in_whine %]
+            Remove from <a href="editwhines.cgi">whining</a> first
+          [% ELSE %]
+            <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
+                     [% q.name FILTER url_quote %]">Forget</a>
+          [% END %]
+        </td>
+        <td align="center">
+          <input type="checkbox" 
+                 name="link_in_footer_[% q.id FILTER html %]"
+                 value="1"
+                 alt="[% q.name FILTER html %]"
+                 [% " checked" IF q.link_in_footer %]>
+        </td>
+        [% IF may_share %]
+          <td>
+            <select name="share_[% q.id FILTER html %]"
+              [% IF user.can_bless %] onchange="update_checkbox(this);"[% END %]>
+              <option value="">Don't share</option>
+              [% FOREACH group = queryshare_groups %]
+                <option value="[% group.id %]"
+                        [% ' selected="selected"' 
+                           IF q.shared_with_group.id == group.id %]
+                >[% group.name FILTER html %]</option>
+              [% END %]
+            </select>
+            [% IF user.can_bless %]
+              <input type="checkbox" id="force_[% q.id FILTER html %]"
+                     name="force_[% q.id FILTER html %]" value="1"
+                     [% " disabled"
+                        IF !bless_group_ids.grep("^$q.shared_with_group.id\$").0
+                     %]>
+              <label for="force_[% q.id FILTER html %]">Add to footer</label>
+            [% END %]
+          </td>
+        [% END %]
+      </tr>
+    [% END %]
+  </table>
+[% IF user.can_bless %]
+  <p>Note that for every search that has the "Add to footer" selected, a
+     link to the shared search is added to the footer of every user that is
+     a direct member of the group at the time you click Submit Changes.</p>
+[% END %]
+</blockquote>
+
+<p>You may use these searches saved and shared by others:</p>
+
+<blockquote>
+  <table border="1" cellpadding="3">  
+    <tr>
+      <th>
+        Search
+      </th>
+      <th>
+        Shared By
+      </th>
+      <th>
+        Run
+      </th>
+      <th>
+        Show in
+        Footer
+      </th>
+    </tr>
+    [% found_shared_query = 0 %]
+    [% FOREACH q = user.queries_available %]
+      [% found_shared_query = 1 %]
+      <tr>
+        <td>[% q.name FILTER html %]</td>
+        <td>[% q.user.identity FILTER html %]</td>
+        <td>
+          <a href="buglist.cgi?cmdtype=dorem&amp;remaction=run&amp;namedcmd=
+                   [% q.name FILTER url_quote %]&amp;sharer_id=
+                   [% q.user.id FILTER url_quote %]">Run</a>
+        </td>
+        <td align="center">
+          <input type="checkbox" 
+                 name="link_in_footer_[% q.id FILTER html %]"
+                 value="1"
+                 alt="[% q.name FILTER html %]"
+                 [% " checked" IF q.link_in_footer %]>
+        </td>
+      </tr>
+    [% END %]
+    [% IF !found_shared_query %]
+      <tr>
+        <td colspan="4" style="text-align: center">
+          &lt;None&gt;
+        </td>
+      </tr>
+    [% END %]
+  </table>
+</blockquote>

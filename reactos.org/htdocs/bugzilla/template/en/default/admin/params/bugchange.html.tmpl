@@ -1,0 +1,76 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Dave Miller <justdave@bugzilla.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
+  #%]
+[%
+   title = "$terms.Bug Change Policies"
+   desc = "Set up $terms.bug change policies"
+%]
+
+[% param_descs = {
+  letsubmitterchoosepriority => "If this is on, then people submitting $terms.bugs can " _
+                                "choose an initial priority for that ${terms.bug}. " _
+                                "If off, then all $terms.bugs initially have the default " _
+                                "priority selected below.",
+
+  letsubmitterchoosemilestone => "If this is on, then people submitting $terms.bugs can " _
+                                 "choose the Target Milestone for that ${terms.bug}. " _
+                                 "If off, then all $terms.bugs initially have the default " _
+                                 "milestone for the product being filed in.",
+
+  musthavemilestoneonaccept => "If you are using Target Milestone, do you want to require that " _
+                               "the milestone be set in order for a user to ACCEPT a ${terms.bug}?",
+
+  commentoncreate => "If this option is on, the user needs to enter a description " _
+                     "when entering a new ${terms.bug}.",
+
+  commentonaccept => "If this option is on, the user needs to enter a short comment if " _
+                     "he accepts the ${terms.bug}.",
+
+  commentonclearresolution => "If this option is on, the user needs to enter a short comment if " _
+                              "the ${terms.bug}'s resolution is cleared.",
+
+  commentonconfirm => "If this option is on, the user needs to enter a short comment " _
+                      "when confirming a ${terms.bug}.",
+
+  commentonresolve => "If this option is on, the user needs to enter a short comment if " _
+                      "the $terms.bug is resolved.",
+
+  commentonreassign => "If this option is on, the user needs to enter a short comment if " _
+                       "the $terms.bug is reassigned.",
+
+  commentonreassignbycomponent => "If this option is on, the user needs to enter a short comment if " _
+                                  "the $terms.bug is reassigned by component.",
+
+  commentonreopen => "If this option is on, the user needs to enter a short comment if " _
+                     "the $terms.bug is reopened.",
+
+  commentonverify => "If this option is on, the user needs to enter a short comment if " _
+                     "the $terms.bug is verified.",
+
+  commentonclose => "If this option is on, the user needs to enter a short comment if " _
+                    "the $terms.bug is closed.",
+
+  commentonduplicate => "If this option is on, the user needs to enter a short comment " _
+                        "if the $terms.bug is marked as duplicate.",
+
+  noresolveonopenblockers => "Don\'t allow $terms.bugs to be resolved as fixed " _
+                             "if they have unresolved dependencies." }
+%]

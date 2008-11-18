@@ -1,0 +1,13 @@
+
+IDD_ABOUTBOX DIALOGEX 66,61,286,167
+CAPTION "About ReactOS Notepad"
+FONT 8,"MS Shell Dlg",0,0
+STYLE 0x00C80080
+BEGIN
+  CONTROL "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",-1,"Static",NOT 0x10000000|0x0002000C,46,7,232,39
+  CONTROL " ",-1,"Static",0x50000000,8,48,272,11
+  CONTROL "Close",IDOK,"Button",0x50030001,122,149,44,15
+  CONTROL "",IDI_NPICON,"Static",0x50000203,-1,12,9,20
+  CONTROL "",IDC_LICENSE,"Edit",0x50210804,0,0,274,146,0x00000200
+  CONTROL "IDC_BTN",IDC_BTN1,"Button",0x50010000,200,-18,34,19
+END

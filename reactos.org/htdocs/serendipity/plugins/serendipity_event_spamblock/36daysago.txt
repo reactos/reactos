@@ -1,0 +1,85 @@
+__________________________________
+36 days ago  Created by Brian Kent
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+Thanks for Downloading 36 days ago.
+
+-36 days ago
+-36 days ago Thick
+
+These fonts are best used/viewed with Kerning ON
+
+
+There are some alternative extra characters included in this font.
+
+[KEY]
+EXTRA CHARACTER = ACTUAL CHARACTER = ALT# CODE
+
+J = È = ALT+0200
+f = É = ALT+0201
+i = Ê = ALT+0202
+i = Ë = ALT+0203
+j = Ì = ALT+0204
+j = Í = ALT+0205
+l = Î = ALT+0206
+l = Ï = ALT+0207
+t = Ð = ALT+0208
+7 = Ñ = ALT+0209
+
+
+To type the extra characters, Press and Hold the ALT key, then
+on the Number Pad type in the 4 numbers.  When you release the
+ALT key the character will appear.
+
+
+
+If you have any questions or comments, you can e-mail me at
+kentpw@norwich.net
+
+You can visit my Homepage <ÆNIGMA GAMES & FONTS> at
+http://www.aenigmafonts.com/
+
+________________
+INSTALLING FONTS
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+  There's a couple of ways to install Fonts. The 'easy' way to
+install fonts is to just Unzip/place the font file [.ttf] into your
+Windows\Fonts directory (I always use this method). If you're unable
+to do it the 'easy' way, then try to do it this way (for Windows
+95/98/NT):
+
+1] Unzip the Font(s) to a folder (or somewhere, just remember where
+you unzipped it) on your Computer.
+
+2] Next, click on the START button, then select SETTINGS then
+CONTROL PANEL.
+
+3] When the Control Panel Window pops up, Double Click on FONTS.
+
+4] When the FONTS window pops up, select File then Install New Font...
+
+5] A Add Fonts window will pop up, just go to the folder that you
+unzipped the Font(s) to, select the Font(s) and then click on OK.
+Now the Font(s) are installed.
+
+  Now you can use the Font(s) in programs that utilize Fonts.  Make
+sure that you install the font(s) first, then open up your apps
+(so the app will recognize the font).    Sometimes you'll have to
+wait until you computer 'auto-refreshes' for programs to recognize
+fonts (Windows is sometimes slow to do that).  You can refresh your
+computer quicker by going into Windows Explorer -or- My Computer and
+press F5 (or in the menubar select VIEW then REFRESH).
+
+
+__________
+DISCLAIMER
+¯¯¯¯¯¯¯¯¯¯
+-The font(s) in this zip file were created by me (Brian Kent).  All
+of my Fonts are Freeware, you can use them any way you want to
+(Personal use, Commercial use, or whatever).
+
+-If you have a Font related site and would like to offer my fonts on
+your site, go right ahead. All I ask is that you keep this text file
+intact with the Font.
+
+-You may not Sell or Distribute my Fonts for profit or alter them in
+any way without asking me first.  [e-mail -  kentpw@norwich.net]

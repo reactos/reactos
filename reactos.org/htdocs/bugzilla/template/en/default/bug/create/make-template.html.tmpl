@@ -1,0 +1,47 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Marc Schumann <wurblzap@gmail.com>
+  #%]
+
+[%# INTERFACE:
+  # url: URL to a pre-filled bug entry form.
+  # short_desc: Bug summary as entered in the form.
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Bookmarks are your friend"
+  header = "Template constructed"
+%]
+
+<p>
+  You can bookmark this link:
+  &ldquo;<a href="enter_bug.cgi?[% url FILTER html %]">
+  [% IF short_desc %]
+    [% short_desc FILTER html %]
+  [% ELSE %]
+    [% terms.Bug %] entry template
+  [% END %]</a>&rdquo;.
+  This bookmark will bring up the <em>Enter [% terms.Bug %]</em> page with the
+  fields initialized as you've requested.
+</p>
+
+[% PROCESS global/footer.html.tmpl %]

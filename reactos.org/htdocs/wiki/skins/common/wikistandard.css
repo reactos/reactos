@@ -1,0 +1,48 @@
+#article { padding: 4px; }
+#content { margin: 0; padding: 0; }
+#footer { padding: 4px;font-size:95%;clear: both; }
+#pagestats { font-size: 9pt; }
+#powersearch {
+  background: #DDEEFF; border-style: solid; border-width: 1px; padding: 2px;
+}
+#quickbar { width: 140px; padding: 4px; visibility: visible; z-index:99;font-size:95%;}
+#topbar { padding: 4px;font-size:95%; }
+
+
+/* Table of contents */
+.toctoggle, .editsection { font-size: smaller; }
+
+/* ... */
+#toolbar { padding:0px; }
+#infobox { background:#eeeeff;color:black;}
+#editform { margin-top:1px; }
+a.interwiki, a.external { color: #3366BB; }
+a.printable { text-decoration: underline; }
+a.stub { color:#772233; text-decoration:none; }
+a:visited { color: #5A3696; }
+body { margin: 0px; padding: 4px; color: black; }
+form.inline { display: inline; }
+textarea { overflow: auto; }
+
+
+h1.pagetitle { padding-top: 0; margin-top: 0; padding-bottom: 0; margin-bottom: 0;
+font-size:150%; }
+h1.pagetitle .editsection { font-size: 66.7%; }
+h2 { font-size: 120%; }
+h2 .editsection { font-size: 83.3%; }
+h2, h3, h4, h5, h6 { margin-bottom: 0;}
+h3 { font-size: 106.25%; }
+h3 .editsection { font-size: 94.1%; }
+h4 { font-size: 103.125%; }
+h4 .editsection { font-size: 97.0%; }
+h5 { font-size: 100%; }
+h5 .editsection { font-size: 100%; }
+h6 { font-size: 95%; }
+h6 .editsection { font-size: 105.3%; }
+hr.sep { color:gray;height:1px;background-color:gray;}
+p.subpages { font-size:small;}
+p.subtitle { padding-top: 0; margin-top: 0;}
+.catlinks { font-size:small; margin-top:0; text-align:right;}
+td { empty-cells:show; }
+td.bottom { border-top: 1px solid gray; }
+td.top { border-bottom: 1px solid gray; }

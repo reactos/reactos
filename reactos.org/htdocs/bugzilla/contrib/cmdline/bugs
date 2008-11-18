@@ -1,0 +1,6 @@
+#!/bin/sh
+
+thisdir=`dirname "$0"`
+bugids=`$thisdir/bugids "$@"` || echo "$bugids" 1>&2 && exit 1
+
+echo "$bugids" | sed -e 's/ /\,/g'

@@ -1,0 +1,143 @@
+<html>
+
+<head>
+  <title>Document properties</title>
+
+<script type="text/javascript" src="../../../popups/popup.js"></script>
+
+<script type="text/javascript">
+
+FullPage = window.opener.FullPage; // load the FullPage plugin and lang file ;-)
+window.resizeTo(400, 100);
+
+  var accepted = {
+      f_doctype       : true,
+      f_title         : true,
+      f_body_bgcolor  : true,
+      f_body_fgcolor  : true,
+      f_base_style    : true,
+      f_alt_style     : true,
+      f_charset       : true
+  };
+
+var editor = null;
+function Init() {
+  __dlg_translate(FullPage.I18N);
+  __dlg_init();
+  var params = window.dialogArguments;
+  for (var i in params) {
+      if (i in accepted) {
+        var el = document.getElementById(i);
+        el.value = params[i];
+      }
+  }
+  editor = params.editor;
+  document.getElementById("f_title").focus();
+  document.getElementById("f_title").select();
+};
+
+function onOK() {
+  var required = {
+  };
+  for (var i in required) {
+    var el = document.getElementById(i);
+    if (!el.value) {
+      alert(required[i]);
+      el.focus();
+      return false;
+    }
+  }
+
+  var param = {};
+  for (var i in accepted) {
+    var el = document.getElementById(i);
+    param[i] = el.value;
+  }
+  __dlg_close(param);
+  return false;
+};
+
+function onCancel() {
+  __dlg_close(null);
+  return false;
+};
+
+</script>
+
+<style type="text/css">
+html, body {
+  background: ButtonFace;
+  color: ButtonText;
+  font: 11px Tahoma,Verdana,sans-serif;
+  margin: 0px;
+  padding: 0px;
+}
+body { padding: 5px; }
+table {
+  font: 11px Tahoma,Verdana,sans-serif;
+}
+select, input, button { font: 11px Tahoma,Verdana,sans-serif; }
+button { width: 70px; }
+table .label { text-align: right; width: 12em; }
+
+.title { background: #ddf; color: #000; font-weight: bold; font-size: 120%; padding: 3px 10px; margin-bottom: 10px;
+border-bottom: 1px solid black; letter-spacing: 2px;
+}
+
+#buttons {
+      margin-top: 1em; border-top: 1px solid #999;
+      padding: 2px; text-align: right;
+}
+</style>
+
+  </head>
+
+  <body onload="Init()">
+
+    <div class="title"><span>Document properties</span></div>
+
+    <table style="width: 100%">
+      <tr>
+        <td class="label"><span>Document title:</span></td>
+        <td><input type="text" id="f_title" style="width: 100%" /></td>
+      </tr>
+      <tr>
+        <td class="label"><span>DOCTYPE:</span></td>
+        <td><input type="text" id="f_doctype" style="width: 100%" /></td>
+      </tr>
+      <tr>
+        <td class="label"><span>Primary style-sheet:</span></td>
+        <td><input type="text" id="f_base_style" style="width: 100%" /></td>
+      </tr>
+      <tr>
+        <td class="label"><span>Alternate style-sheet:</span></td>
+        <td><input type="text" id="f_alt_style" style="width: 100%" /></td>
+      </tr>
+      <tr>
+        <td class="label"><span>Background color:</span></td>
+        <td><input type="text" id="f_body_bgcolor" size="7" /></td>
+      </tr>
+      <tr>
+        <td class="label"><span>Text color:</span></td>
+        <td><input type="text" id="f_body_fgcolor" size="7" /></td>
+      </tr>
+      <tr>
+        <td class="label"><span>Character set:</span></td>
+        <td><select id="f_charset">
+          <option value=""></option>
+          <option value="utf-8">UTF-8 (recommended)</option>
+          <option value="windows-1251">cyrillic (WINDOWS-1251)</option>
+          <option value="koi8-r">cyrillic (KOI8-R)</option>
+          <option value="iso-8859-5">cyrillic (ISO-8859-5)</option>
+          <option value="iso-8859-1">western (ISO-8859-1)</option>
+        </select></td>
+      </tr>
+    </table>
+
+    <div id="buttons">
+      <button type="button" name="ok" onclick="return onOK();"><span>OK</span></button>
+      <button type="button" name="cancel" onclick="return onCancel();"><span>Cancel</span></button>
+    </div>
+
+  </body>
+</html>
