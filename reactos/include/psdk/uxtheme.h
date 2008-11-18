@@ -1,8 +1,5 @@
 #ifndef _UXTHEME_H
 #define _UXTHEME_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #include <commctrl.h>
 

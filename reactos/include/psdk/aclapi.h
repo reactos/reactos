@@ -1,8 +1,5 @@
 #ifndef _ACLAPI_H
 #define _ACLAPI_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #include <windows.h>
 #include <accctrl.h>

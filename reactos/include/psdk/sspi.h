@@ -18,10 +18,6 @@
 #ifndef __WINE_SSPI_H__
 #define __WINE_SSPI_H__
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include <wtypes.h>
 
 #ifdef __cplusplus

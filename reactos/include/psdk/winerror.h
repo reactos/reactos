@@ -1,8 +1,5 @@
 #ifndef _WINERROR_H
 #define _WINERROR_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define FACILITY_NULL                         0
 #define FACILITY_RPC                          1

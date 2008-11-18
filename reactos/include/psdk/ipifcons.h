@@ -1,8 +1,5 @@
 #ifndef _IPIFCONS_H
 #define _IPIFCONS_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define IF_ADMIN_STATUS_UP              1
 #define IF_ADMIN_STATUS_DOWN            2
