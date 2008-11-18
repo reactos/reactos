@@ -435,6 +435,19 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 
 #endif
 
+#ifdef _AMD64_
+VOID
+NTAPI
+RtlpGetStackLimits(
+    OUT PULONG_PTR LowLimit,
+    OUT PULONG_PTR HighLimit)
+{
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+    *HighLimit = (ULONG_PTR)CurrentThread->InitialStack;
+    *LowLimit = (ULONG_PTR)CurrentThread->StackLimit;
+}
+#endif
+
 /* RTL Atom Tables ************************************************************/
 
 NTSTATUS

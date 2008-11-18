@@ -205,6 +205,19 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
     return TRUE;
 }
 
+#ifdef _AMD64_
+VOID
+NTAPI
+RtlpGetStackLimits(
+    OUT PULONG_PTR LowLimit,
+    OUT PULONG_PTR HighLimit)
+{
+    *LowLimit = (ULONG_PTR)NtCurrentTeb()->Tib.StackLimit;
+    *HighLimit = (ULONG_PTR)NtCurrentTeb()->Tib.StackBase;
+    return;
+}
+#endif
+
 /* RTL Atom Tables ************************************************************/
 
 typedef struct _RTL_ATOM_HANDLE
