@@ -1,9 +1,6 @@
 #ifndef _WINGDI_H
 #define _WINGDI_H
 #define _WINGDI_
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {

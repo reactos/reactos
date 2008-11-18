@@ -19,8 +19,6 @@
 WINUSERAPI UINT WINAPI PrivateExtractIconsA(LPCSTR,int,int,int,HICON*,UINT*,UINT,UINT);
 WINUSERAPI UINT WINAPI PrivateExtractIconsW(LPCWSTR,int,int,int,HICON*,UINT*,UINT,UINT);
 
-typedef struct tagCWPSTRUCT *LPCWPSTRUCT;
-
 #define WM_ALTTABACTIVE         0x0029
 
 #define UNICODE_NOCHAR          0xFFFF

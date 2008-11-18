@@ -1,8 +1,5 @@
 #ifndef _WINBASE_
 #define _WINBASE_
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #if !defined(_KERNEL32_)
 #define WINBASEAPI DECLSPEC_IMPORT
