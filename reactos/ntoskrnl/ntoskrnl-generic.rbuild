@@ -36,9 +36,6 @@
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>
-	<if property="ARCH" value="amd64">
-		<file>amd64stubs.c</file>
-	</if>
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -93,12 +90,15 @@
 		<if property="ARCH" value="amd64">
 			<directory name="amd64">
 				<file first="true">boot.S</file>
+				<file>context.c</file>
 				<file>cpu.c</file>
 				<file>ctxswitch.S</file>
 				<file>except.c</file>
+				<file>interrupt.c</file>
 				<file>irql.c</file>
 				<file>kiinit.c</file>
 				<file>spinlock.c</file>
+				<file>stubs.c</file>
 				<file>thrdini.c</file>
 				<file>trap.S</file>
 			</directory>
@@ -343,6 +343,11 @@
 				</if>
 				<file>kdbg.c</file>
 			</directory>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>kd.c</file>
+				</directory>
+			</if>
 			<file>kdinit.c</file>
 			<file>kdio.c</file>
 			<file>kdmain.c</file>
@@ -448,6 +453,11 @@
 		</if>
 		<if property="ARCH" value="arm">
 			<directory name="arm">
+				<file>psctx.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
 				<file>psctx.c</file>
 			</directory>
 		</if>

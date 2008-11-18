@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/kdbg/kdb.c
+ * FILE:            ntoskrnl/kdbg/amd64/kdb.c
  * PURPOSE:         Kernel Debugger
- *
  * PROGRAMMERS:     Gregor Anich
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -43,5 +43,29 @@ KdbpGetCommandLineSettings(PCHAR p1)
 
         p1 = p2;
     }
+}
+
+KD_CONTINUE_TYPE
+KdbEnterDebuggerException(
+   IN PEXCEPTION_RECORD ExceptionRecord  OPTIONAL,
+   IN KPROCESSOR_MODE PreviousMode,
+   IN PCONTEXT Context,
+   IN OUT PKTRAP_FRAME TrapFrame,
+   IN BOOLEAN FirstChance)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+VOID
+KdbpCliModuleLoaded(IN PUNICODE_STRING Name)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+KdbpCliInit()
+{
+    UNIMPLEMENTED;
 }
 
