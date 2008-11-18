@@ -4242,6 +4242,7 @@ NtQuerySection(IN HANDLE SectionHandle,
                                         sizeof(ExSectionInfoClass) / sizeof(ExSectionInfoClass[0]),
                                         SectionInformation,
                                         SectionInformationLength,
+                                        NULL,
                                         ResultLength,
                                         PreviousMode);
 

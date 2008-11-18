@@ -657,10 +657,10 @@ KdbSymProcessSymbols(IN PANSI_STRING AnsiFileName, IN PKD_SYMBOLS_INFO SymbolInf
         KdbpSymAddCachedFile(&LdrEntry->FullDllName, LdrEntry->PatchInformation);
     }
 
-    DPRINT("Installed symbols: %wZ@%08x-%08x %p\n",
+    DPRINT("Installed symbols: %wZ@%p-%p %p\n",
            &LdrEntry->BaseDllName,
            LdrEntry->DllBase,
-           LdrEntry->SizeOfImage + (ULONG)LdrEntry->DllBase,
+           (PVOID)(LdrEntry->SizeOfImage + (ULONG_PTR)LdrEntry->DllBase),
            LdrEntry->PatchInformation);
 
 }

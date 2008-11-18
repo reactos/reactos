@@ -36,9 +36,9 @@ InterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
     {
         Entry->Next = FirstEntry;
         NextEntry = FirstEntry;
-        FirstEntry = (PVOID)_InterlockedCompareExchange((PLONG)Head,
-                                                        (LONG)Entry,
-                                                        (LONG)FirstEntry);
+        FirstEntry = InterlockedCompareExchangePointer((PVOID*)Head,
+                                                       (PVOID)Entry,
+                                                       (PVOID)FirstEntry);
     } while (FirstEntry != NextEntry);
     
     return FirstEntry;
@@ -56,9 +56,9 @@ InterlockedPopEntrySList(IN PSLIST_HEADER ListHead)
         if (!FirstEntry) return NULL;
 
         NextEntry = FirstEntry;
-        FirstEntry = (PVOID)_InterlockedCompareExchange((PLONG)Head,
-                                                        (LONG)FirstEntry->Next,
-                                                        (LONG)FirstEntry);
+        FirstEntry = InterlockedCompareExchangePointer((PVOID*)Head,
+                                                       (PVOID)FirstEntry->Next,
+                                                       (PVOID)FirstEntry);
     } while (FirstEntry != NextEntry);
 
     return FirstEntry;    
@@ -68,7 +68,7 @@ PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedFlushSList(IN PSLIST_HEADER ListHead)
 {
-    return (PVOID)_InterlockedExchange((PLONG)&ListHead->Next.Next, (LONG)NULL);
+    return InterlockedExchangePointer((PVOID*)&ListHead->Next.Next, NULL);
 }
 
 PSLIST_ENTRY

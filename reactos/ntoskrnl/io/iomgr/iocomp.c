@@ -404,6 +404,7 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
                                          IoCompletionInformation,
                                          IoCompletionInformationLength,
                                          ResultLength,
+                                         NULL,
                                          PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -506,11 +507,11 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
         ListEntry = KeRemoveQueue(Queue, PreviousMode, Timeout);
 
         /* If we got a timeout or user_apc back, return the status */
-        if (((NTSTATUS)ListEntry == STATUS_TIMEOUT) ||
-            ((NTSTATUS)ListEntry == STATUS_USER_APC))
+        if (((NTSTATUS)(ULONG_PTR)ListEntry == STATUS_TIMEOUT) ||
+            ((NTSTATUS)(ULONG_PTR)ListEntry == STATUS_USER_APC))
         {
             /* Set this as the status */
-            Status = (NTSTATUS)ListEntry;
+            Status = (NTSTATUS)(ULONG_PTR)ListEntry;
         }
         else
         {

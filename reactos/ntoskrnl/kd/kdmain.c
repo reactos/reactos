@@ -52,7 +52,7 @@ KdpServiceDispatcher(ULONG Service,
 #ifdef DBG
         case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
         {
-            switch ((ULONG)Buffer1)
+            switch ((ULONG_PTR)Buffer1)
             {
                 case DumpNonPagedPool:
                     MiDebugDumpNonPagedPool(FALSE);

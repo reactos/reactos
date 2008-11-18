@@ -213,6 +213,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
                             PVOID Buffer,
                             ULONG BufferLength,
                             PULONG ReturnLength,
+                            PULONG_PTR ReturnLengthLong,
                             KPROCESSOR_MODE PreviousMode)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -248,6 +249,10 @@ DefaultQueryInfoBufferCheck(ULONG Class,
                     if (ReturnLength != NULL)
                     {
                         ProbeForWriteUlong(ReturnLength);
+                    }
+                    if (ReturnLengthLong != NULL)
+                    {
+                        ProbeForWrite(ReturnLengthLong, sizeof(ULONG_PTR), sizeof(ULONG_PTR));
                     }
                 }
                 _SEH_HANDLE

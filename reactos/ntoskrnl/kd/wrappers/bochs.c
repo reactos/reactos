@@ -45,7 +45,7 @@ KdpBochsInit(PKD_DISPATCH_TABLE DispatchTable,
     if (BootPhase == 0)
     {
         Value = READ_PORT_UCHAR(BOCHS_LOGGER_PORT);
-        if (Value != (ULONG)BOCHS_LOGGER_PORT)
+        if (Value != (ULONG_PTR)BOCHS_LOGGER_PORT)
         {
            KdpDebugMode.Bochs = FALSE;
            return;
