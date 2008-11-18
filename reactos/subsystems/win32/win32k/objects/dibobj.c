@@ -317,7 +317,7 @@ NtGdiSetDIBits(
       DC_UnlockDc(Dc);
       return 0;
     }
-
+  // Need SEH to check Bits and bmi. BTW bmi was converted in gdi.
   Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
 
   DC_UnlockDc(Dc);
@@ -399,7 +399,7 @@ NtGdiSetDIBitsToDeviceInternal(
     ptSource.y = YSrc;
 
     /* Enter SEH, as the bits are user mode */
-    _SEH_TRY
+    _SEH_TRY // Look at NtGdiStretchDIBitsInternal
     {
         SourceSize.cx = bmi->bmiHeader.biWidth;
         SourceSize.cy = ScanLines;
@@ -541,8 +541,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
     /* fill out the BITMAPINFO struct */
     if (Bits == NULL)
     {
-        _SEH_TRY
-        {
+        _SEH_TRY // Look at NtGdiStretchDIBitsInternal
+        {   // Why check for anything, we converted in gdi!
             if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
             {
                 BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
@@ -806,10 +806,28 @@ NtGdiStretchDIBitsInternal(
    HDC hdcMem;
    HPALETTE hPal = NULL;
    PDC pDC;
+   BOOL Hit = FALSE;
 
    if (!Bits || !BitsInfo)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+
+   _SEH_TRY
+   {
+      ProbeForRead(BitsInfo, cjMaxInfo, 1);
+      ProbeForRead(Bits, cjMaxBits, 1);
+   }
+   _SEH_HANDLE
+   {
+      Hit = TRUE;
+   }
+   _SEH_END
+
+   if (Hit)
+   {
+      DPRINT1("NtGdiStretchDIBitsInternal fail to read BitMapInfo: %x or Bits: %x\n",BitsInfo,Bits);
       return 0;
    }
 
@@ -993,6 +1011,7 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
 {
   PDC Dc;
   HBITMAP Bmp;
+  UINT bpp;
 
   if (!hDc)
   {  // Should use System Bitmap DC hSystemBM, with CreateCompatibleDC for this.
@@ -1010,9 +1029,8 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return NULL;
      }
-
-     cjMaxInitInfo = 1;
-     Bmp = IntCreateDIBitmap(Dc, cx, cy, cjMaxInitInfo, fInit, pjInit, pbmi, iUsage);
+     bpp = IntGdiGetDeviceCaps(Dc, BITSPIXEL);     
+     Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
 
      DC_UnlockDc(Dc);
      NtGdiDeleteObjectApp(hDc);
@@ -1025,8 +1043,16 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return NULL;
      }
+    /* pbmi == null
+       First create an un-initialised bitmap.  The depth of the bitmap
+       should match that of the hdc and not that supplied in bmih.
+     */
+     if (pbmi)
+        bpp = pbmi->bmiHeader.biBitCount;
+     else
+        bpp = IntGdiGetDeviceCaps(Dc, BITSPIXEL);
 
-     Bmp = IntCreateDIBitmap(Dc, cx, cy, cjMaxInitInfo, fInit, pjInit, pbmi, iUsage);
+     Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
      DC_UnlockDc(Dc);
   }
   return Bmp;

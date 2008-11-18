@@ -231,6 +231,7 @@ STDCALL
 GdiSetLastError( DWORD dwErrCode );
 
 DWORD STDCALL GdiGetCodePage(HDC);
+UINT FASTCALL DIB_BitmapBitsSize( PBITMAPINFO );
 
 /* EOF */
 

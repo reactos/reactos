@@ -1789,28 +1789,6 @@ CombineRgn(HRGN  hDest,
 /*
  * @unimplemented
  */
-HBITMAP STDCALL
-CreateBitmap(INT  Width,
-             INT  Height,
-             UINT  Planes,
-             UINT  BitsPixel,
-             PCVOID pUnsafeBits)
-{
-    /* FIXME some part should be done in user mode */
-    if (Width && Height)
-    {
-        return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
-    }
-    else
-    {
-        /* Return 1x1 bitmap */
-        return GetStockObject(DEFAULT_BITMAP);
-    }
-}
-
-/*
- * @unimplemented
- */
 ULONG STDCALL
 XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
                 ULONG Color)
