@@ -585,7 +585,11 @@ SetDIBits(HDC hdc,
           CONST BITMAPINFO *lpbmi,
           UINT fuColorUse)
 {
+  PBITMAPINFO pConvertedInfo;
+  UINT ConvertedInfoSize;
   INT LinesCopied = 0;
+  UINT cjBmpScanSize = 0;
+  PVOID pvSafeBits = (PVOID)lpvBits;
 
 // This needs to be almost the sames as SetDIBitsToDevice
 
@@ -595,14 +599,32 @@ SetDIBits(HDC hdc,
   if ( fuColorUse && fuColorUse != DIB_PAL_COLORS && fuColorUse != DIB_PAL_COLORS+1 )
      return 0;
 
+  pConvertedInfo = ConvertBitmapInfo(lpbmi, fuColorUse,
+                                      &ConvertedInfoSize, FALSE);
+  if (!pConvertedInfo)
+     return 0;
+
+  cjBmpScanSize = DIB_BitmapMaxBitsSize((LPBITMAPINFO)lpbmi, cScanLines);
+
+  if ( lpvBits )
+  {
+     pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
+     if (pvSafeBits)
+        RtlCopyMemory( pvSafeBits, lpvBits, cjBmpScanSize);
+  }
+
   LinesCopied = NtGdiSetDIBits( hdc,
                                hbmp,
                          uStartScan,
                          cScanLines,
-                            lpvBits,
-                              lpbmi,
+                         pvSafeBits,
+                     pConvertedInfo,
                          fuColorUse);
 
+  if ( lpvBits != pvSafeBits)
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
+  if (lpbmi != pConvertedInfo)
+     RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
   return LinesCopied;
 }
 
@@ -725,7 +747,7 @@ SetDIBitsToDevice(
                                                  TRUE,
                                                  NULL);
   }
-  if ( Bits )
+  if ( Bits != pvSafeBits)
      RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
   if (lpbmi != pConvertedInfo)
      RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
