@@ -336,11 +336,14 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     PVOID HandlerData;
     INT i;
     PRUNTIME_FUNCTION FunctionEntry;
-DPRINT1("RtlWalkFrameChain called\n");
-    RtlCaptureContext(&Context);
 
+    DPRINT("Enter RtlWalkFrameChain\n");
+
+    /* Capture the current Context */
+    RtlCaptureContext(&Context);
     ControlPc = Context.Rip;
 
+    /* Get the stack limits */
     RtlpGetStackLimits(&StackLow, &StackHigh);
 
     /* Check if we want the user-mode stack frame */
@@ -374,13 +377,24 @@ DPRINT1("RtlWalkFrameChain called\n");
             DPRINT("normal funtion, new Rip = %p, new Rsp = %p\n", (PVOID)Context.Rip, (PVOID)Context.Rsp);
         }
 
+        /* Check if new Rip is valid */
+        if (!Context.Rip)
+        {
+            break;
+        }
+
+        /* Check, if we have left our stack */
+        if ((Context.Rsp < StackLow) || (Context.Rsp > StackHigh))
+        {
+            break;
+        }
+
+        /* Save this frame and continue with new Rip */
         ControlPc = Context.Rip;
-        /* Save this frame */
-
         Callers[i] = (PVOID)ControlPc;
-
     }
 
+    DPRINT("RtlWalkFrameChain returns %ld\n", i);
     return i;
 }
 
