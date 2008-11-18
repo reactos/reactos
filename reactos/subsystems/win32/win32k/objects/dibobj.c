@@ -275,7 +275,9 @@ IntSetDIBits(
   // If it succeeded, return number of scanlines copies
   if(copyBitsResult == TRUE)
   {
-    result = SourceSize.cy - 1;
+    result = SourceSize.cy;
+// or
+//    result = abs(bmi->bmiHeader.biHeight) - StartScan;
   }
 
   // Clean up
