@@ -1,0 +1,414 @@
+    /*
+    RosCMS - ReactOS Content Management System
+    Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    */
+    
+									
+										.frmeditheadline {
+											color: #5984C3;
+											font-weight: bold;
+											font-size: 120%;
+											padding-right: 25px;
+										}
+										
+										.frmeditheader {
+											color: #00681C;
+											font-weight: bold;
+										}												
+	
+		.roscms_container {
+			position:				relative;
+			top:					0px; 
+			left:					0px;
+			min-width: 350px;
+		}
+	
+		.datatable {
+			/*border:1px dashed red;*/
+			overflow: 				hidden;
+			min-width: 350px;
+			width: 100%;
+			cursor: pointer;
+			table-layout: fixed; /* without this, IE's trident engine went nuts and forget about "overflow" and "white-space" !!! */
+		}
+		
+		.datatable tr.head th,
+		.datatable tr.head {
+			background-image:   none;
+			background:         #5984C3;
+			color:				#FFFFFF;
+			font-family: 		Verdana, Arial, Helvetica, sans-serif;
+			/*font-size:			80%;*/
+			font-style:			normal;
+			text-align:         left;
+			cursor: default;
+		}
+		
+		.datatable tr.new td,
+		.datatable tr.draft td,
+		.datatable tr.transg td,
+		.datatable tr.transb td,
+		.datatable tr.transr td,
+		.datatable tr.unknown td,
+		.datatable tr.odd td,
+		.datatable tr.even td {
+			color:				#000000;
+			font-family: 		Verdana, Arial, Helvetica, sans-serif;
+			font-style:			normal;	
+			border-bottom:		1px solid #bbb;
+			border-bottom-width: 	1px;
+			background-image:   	none;
+			overflow: 				hidden;
+			border-bottom-style: 	solid;
+			border-bottom-color: 	#bbbbbb;
+			/*font-size: 			80%;*/
+			empty-cells: 		show;
+			
+			
+			empty-cells: 		show;
+			/*white-space: 		nowrap;*/
+			overflow-x: 		hidden;
+			overflow-y: 		hidden;
+			overflow:			hidden;
+			
+		}		
+	
+		.datatable tr.odd td,
+		.datatable tr.odd {
+			background-color: #E2E2E2;
+		}
+		.datatable tr.even td,
+		.datatable tr.even {
+			background-color: #EEEEEE;
+		}
+		
+		.datatable tr.new td,
+		.datatable tr.new {
+			background-color: #B5EDA3;
+		}
+		
+		.datatable tr.draft td,
+		.datatable tr.daft {
+			background-color: #FFE4C1;
+		}
+
+		.datatable tr.unknown td,
+		.datatable tr.unknown {
+			background-color: #FFCCFF;
+		}
+		
+		.datatable tr.transg td,
+		.datatable tr.transg {
+			background-color: #A3EDB4;
+		}
+
+		.datatable tr.transb td,
+		.datatable tr.transb {
+			background-color: #D6CAE4;
+		}
+		
+		.datatable tr.transr td,
+		.datatable tr.transr {
+			background-color: #FAA5A5;
+		}
+		
+	
+		.cMark {
+			width: 30px;
+			text-align:         right;
+			/*max-width:			50px;*/
+			/* border: 1px dashed red; */
+		}
+		
+		.cStar {
+			/*overflow:			hidden;*/
+			width: 				18px;
+			/* border: 1px dashed red; */
+		}
+	
+		.cCid {
+			width: 				180px;
+			overflow: 			hidden;
+			/* border: 1px dashed red; */
+		}
+	
+		.cExtraCol {
+			width: 				75px;
+			overflow: 			hidden;
+			/* border: 1px dashed red; */
+		}
+		
+		.cRev {
+			/*width: 40%; */
+			overflow: hidden;
+			/* border: 1px dashed red; */
+		}
+		
+		.cDate {
+			width: 				90px;
+			overflow: 			hidden;
+			/* border: 1px dashed red; */
+		}
+	
+		.cSpace {
+			width: 10px;
+			overflow: hidden;
+			/* border: 1px dashed red; */
+		}
+		
+		.tcp { /*table content preview*/
+			color: #777777;
+		}
+		
+		.cell-height {
+			overflow: hidden;
+			white-space: nowrap;
+			/*height: 14px;*/
+			display: block;
+			vertical-align: middle;
+			text-align: left;
+			width: 100%;
+			float: left;
+		}
+		
+		.cStarOn {
+			/*background:			url('images/star_on.gif') no-repeat left;
+			display: 			block;*/
+			border: 0px;
+			background-x-position: 	1px;
+			background-y-position: 	3px;
+			background-repeat: 		no-repeat;
+			background-image: 		url('images/star_on.gif');
+			cursor: pointer;
+		}
+		
+		.cStarOff {
+			border: 0px;
+			background-x-position: 	1px;
+			background-y-position: 	3px;
+			background-repeat: 		no-repeat;
+			background-image: 		url('images/star_off.gif');
+			cursor: pointer;
+		}
+		
+		.tabselect {
+			/*font-size: 80%;	*/
+			padding-top: 4px;
+			padding-right: 0px;
+			padding-bottom: 2px;
+			padding-left: 0px;
+			background-color: #C9DAF8;
+		}
+		
+		.listxofy {
+			float:right;
+			text-align:right;
+			padding-top:2px;
+		}
+		
+		.tableswhitespace {		
+			font-size: 			80%;
+			text-align: 		center;
+			padding-top: 		0px;
+			padding-right: 		20px;
+			padding-bottom:		0px;
+			padding-left: 		20px;
+			/*height:				50px;*/
+			background-color:	#FFFFFF;
+		}
+				
+		.bubble_bg {
+			background:#C9DAF8 none repeat scroll 0%;
+			/*margin-bottom:0.6em;*/
+		}
+		.rounded_ul {
+			background:transparent url(images/ul.gif) no-repeat scroll left top;
+		}
+		.rounded_ur {
+			background:transparent url(images/ur.gif) no-repeat scroll right top;
+		}
+		.rounded_ll {
+			background:transparent url(images/ll.gif) no-repeat scroll left bottom;
+		}
+		.rounded_lr {
+			background:transparent url(images/lr.gif) no-repeat scroll right bottom;
+		}
+		.bubble {
+			padding:8px;
+		}
+		
+		
+		.subma {
+			background:#C9DAF8 none repeat scroll 0%;
+		}
+		.submb {
+			background: #FFFFFF none repeat scroll 0%;
+		}
+	
+		.tabmenu {
+			margin-top: 10px;
+		}
+		
+		.subm1 {
+			background:transparent url(images/ul.gif) no-repeat scroll left top;
+		}
+		.subm2 {
+			background:transparent url(images/ll.gif) no-repeat scroll left bottom;
+			padding-top: 3px;
+			padding-bottom: 3px;
+			padding-left: 10px;
+			color: #006090;
+			text-decoration: underline;
+			cursor: pointer;
+		}
+		.subm3 {
+			color: #006090;
+			cursor: pointer;
+		}
+		
+		
+		.laba {
+			background: #C9DAF8 none repeat scroll 0%;
+			width: 140px;
+		}
+		
+		.lab1 {
+			background:transparent url(images/ul.gif) no-repeat scroll left top;
+		}
+		.lab2 {
+			background:transparent url(images/ll.gif) no-repeat scroll left bottom;
+		}
+		.lab3 {
+			background:transparent url(images/ur.gif) no-repeat scroll right top;
+		}
+		.lab4 {
+			background:transparent url(images/lr.gif) no-repeat scroll right bottom;
+		}
+
+		.labtitel {
+			cursor:	pointer;
+			padding-top: 2px;
+			padding-left: 4px;
+			padding-right: 4px;
+		}
+		.labcontent {
+			padding-bottom: 4px;
+			padding-left: 4px;
+			padding-right: 4px;
+		}
+		
+		.lablinks {
+			background: #FFFFFF none repeat scroll 0%;
+			padding-top: 3px;
+			padding-bottom: 3px;
+			padding-left: 10px;
+			padding-right: 3px;
+			text-decoration: underline;
+		}
+
+		.lablinks2 {
+			background: #FFFFFF none repeat scroll 0%;
+			padding-top: 3px;
+			padding-bottom: 3px;
+			padding-left: 10px;
+			padding-right: 3px;
+		}
+
+		.filterbar {
+			padding-bottom: 5px;
+			border-bottom: 1px;
+			border-bottom-style: solid;
+			border-bottom-color: #bbbbbb;
+		}
+		
+		.filterbar2 {
+			padding-top: 4px;
+		}
+		
+		.filterbutton {
+			/*border: 1px solid #bbbbbb;*/
+			padding-top: 2px;
+			padding-bottom: 2px;
+			padding-right: 3px;
+			padding-left: 3px;
+			cursor:pointer;
+			color:#006090;
+		}
+		
+		.tfind {
+			color:#999999;
+		}
+		
+		.infobox {
+			background: #FAD163 none repeat scroll 0%;
+			width: 400px;
+		}
+		
+		.infoboxc {
+			padding-top: 4px;
+			padding-bottom: 4px;
+			padding-left: 4px;
+			padding-right: 4px;
+			text-align: center;;
+		}
+		
+		.l {
+			text-decoration:underline;
+			color: #006090;
+			font-family: Verdana, Arial, Helvetica, sans-serif;
+			font-style: normal;
+			cursor: pointer;
+		}
+		
+		
+		/* data_edit */
+
+		.edittagbody {
+			border-bottom: 1px solid #bbb; 
+			border-bottom-width: 1px; 
+			border-right: 1px solid #bbb; 
+			border-right-width: 1px; 
+			background: #F2F2F2 none repeat scroll 0%;
+		}
+		.edittagbody2 {
+			margin:10px;
+		}
+
+		.detailbody {
+			background: #FAE7B2 none repeat scroll 0%; 
+			width: 100%; 
+			height: 30px; 
+			vertical-align: middle;
+		}
+		
+		.detailmenubody {
+			padding: 5px; 
+			font-size: 105%; 
+			text-decoration:none;
+		}
+		
+		.detailmenu {
+			color: #006090;
+			text-decoration: underline;
+			cursor: pointer;
+		}
+		
+		.frmeditbutton {
+			cursor:pointer;
+			color:#006090;
+		}
+		

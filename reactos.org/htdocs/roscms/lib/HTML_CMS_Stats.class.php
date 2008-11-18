@@ -1,7 +1,7 @@
 <?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2005  Klemens Friedl <frik85@reactos.org>
+    Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,12 +19,37 @@
     */
 
 
-// Database:
-define('DB_HOST', "localhost");
-define('DB_USER', "lev-db");
-define('DB_PASS', "DangerGround");
-define('DB_NAME', "roscms");
+/**
+ * class HTML_CMS_Stats
+ * 
+ */
+class HTML_CMS_Stats extends HTML_CMS
+{
 
 
+  /**
+   *
+   *
+   * @access public
+   */
+  public function __construct( $page_title = '', $page_css = 'roscms' )
+  {
+    $this->branch = 'stats';
 
+    parent::__construct( $page_title, $page_css);
+  }
+
+
+  /**
+   *
+   *
+   * @access protected
+   */
+  protected function body( )
+  {
+    include('../stats/admin/view_stats.php');
+  }
+
+
+} // end of HTML_CMS_Stats
 ?>

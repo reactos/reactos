@@ -4,7 +4,7 @@
  * @file
  */
 
-require_once(ROSCMS_PATH . "logon/subsys_login.php");
+require_once(ROSCMS_PATH . "lib/RosCMS_Autoloader.class.php");
 
 # Number of characters in user_token field
 define( 'USER_TOKEN_LENGTH', 32 );
@@ -750,7 +750,7 @@ class User {
 		if(session_id() == '')
 			wfSetupSession();
 		
-		$this->mId = roscms_subsys_login('wiki', ROSCMS_LOGIN_OPTIONAL, "");
+		$this->mId = Subsystem_Wiki::in(Login::OPTIONAL, '');
 		
 		if(!$this->mId)
 		{

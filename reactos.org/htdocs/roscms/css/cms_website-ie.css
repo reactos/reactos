@@ -1,7 +1,6 @@
-<?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2005  Klemens Friedl <frik85@reactos.org>
+    Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,12 +18,17 @@
     */
 
 
-// Database:
-define('DB_HOST', "localhost");
-define('DB_USER', "lev-db");
-define('DB_PASS', "DangerGround");
-define('DB_NAME', "roscms");
+/* fix IE glitch */
+.bubble_bg {
+  margin-bottom: -35px;
+}
 
+.filterbutton {
+  padding-top: 4px;
+  padding-bottom: 0px;
+}
 
-
-?>
+/* fix IE glitch */
+.spacer {
+  margin-bottom: -18px;
+  }

@@ -1,7 +1,7 @@
 <?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2005  Klemens Friedl <frik85@reactos.org>
+    Copyright (C) 2008  Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,13 +18,19 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
+/**
+ * class Export
+ * 
+ */
+abstract class Export
+{
 
-// Database:
-define('DB_HOST', "localhost");
-define('DB_USER', "lev-db");
-define('DB_PASS', "DangerGround");
-define('DB_NAME', "roscms");
+
+  public function __construct( )
+  {
+    require('login.php');
+  }
 
 
-
+} // end of Export
 ?>

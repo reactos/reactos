@@ -1,0 +1,31 @@
+
+
+ Structure Information
+========================
+
+  * js/ contains files written partly in php, because it needs some stuff from the DB
+  * lib/ contains classes
+    * inherited classes are prefixed with its name and an underscore
+    * HTML_* classes give direct output
+    * Export_*, CMSWebsite* and Editor_*  classes give output only via AJAX Request
+      * Export_HTML also generates new html pages
+      * Export_XML gives the entry overview in Website Interface
+      * Export_Page gives output of a page, for e.g. preview, or generating process
+    * DB* classes are extensions to the PDO calling interface
+    * PDO* classes emulate partly PDO syntax and behavior, for systems without access to native PDO
+    * Subsystem_* classes are used to keep Subsystems up to date, the function to sync all subsystems is in ROSUser::syncSubsystems
+    * Tag, Data classes managing Database content
+    * RosCMS_Autoloader cares about loading classes automatically, it try to append our own autoloader, or define a new one, or if both fails, it does staticly include all files needed for subsystems
+
+ Some Sourcecode Information
+=============================
+  * .php
+    * echo_strip removes whitespace (lonely spaces stay where they are)
+    * output HTML content via echo enclosed by '
+    * javascript inside HTML is enclosed by "
+    * output is not stopped between them instead a '." or ".' is used
+    * intendation with 2 spaces
+    * functions, classes hava a seperate line for { and }
+    * structure commands as if, switch, while, for, ... hava a own line for } but the { is put into the same line as the command
+
+

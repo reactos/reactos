@@ -13,7 +13,7 @@ if (!defined('IN_PHPBB'))
 }
 
 define("ROSCMS_PATH", "$phpbb_root_path/../roscms/");
-require_once(ROSCMS_PATH . "logon/subsys_login.php");
+require_once(ROSCMS_PATH . "lib/RosCMS_Autoloader.class.php");
 
 /**
 * Login function
@@ -26,7 +26,7 @@ function login_roscms(&$username, &$password)
 	
 	// We ignore both username and password here and retrieve the login data on our own using roscms_subsys_login
 	// This will either retrieve the phpbb user ID of the user currently logged in or redirect us to the RosCMS login page.
-	$userid = (int)roscms_subsys_login("phpbb", ROSCMS_LOGIN_REQUIRED, "/forum");
+	$userid = (int)Subsystem_PHPBB::in(Login::REQUIRED, $config['script_path']);
 	
 	// Now get the user row based on this ID
 	$sql = "SELECT * FROM " . USERS_TABLE . " WHERE user_id = $userid";
@@ -64,8 +64,10 @@ function login_roscms(&$username, &$password)
 /* This function is called, when a session cookie already exists and we try to verify if it's valid. */
 function validate_session_roscms(&$user)
 {
+	global $config;
+
 	// Check if our current RosCMS login is (still) valid, check the session expiration time and perform session cleanups.
-	$valid_login = (roscms_subsys_login("phpbb", ROSCMS_LOGIN_OPTIONAL, "") != 0);
+	$valid_login = (Subsystem_PHPBB::in(Login::REQUIRED, $config['script_path']) != 0);
 	
 	// If we have a valid login, but the phpBB user ID is still ANONYMOUS, the user was logged in to RosCMS, but not yet to phpBB.
 	// So do that now.
@@ -78,10 +80,10 @@ function validate_session_roscms(&$user)
 /* This function is called, when no phpBB session exists and we're in the process of creating the session cookie. */
 function autologin_roscms()
 {
-	global $db;
+	global $db, $config;
 	
 	// Get the User ID of the logged in user (if any), check the session expiration time and perform session cleanups.
-	$userid = (int)roscms_subsys_login("phpbb", ROSCMS_LOGIN_OPTIONAL, "");
+	$userid = (int)Subsystem_PHPBB::in(Login::REQUIRED, $config['script_path']);
 	
 	if($userid)
 	{

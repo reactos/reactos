@@ -18,13 +18,23 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
+/**
+ * class HTML_Nopermission
+ * 
+ */
+class HTML_Nopermission extends HTML
+{
 
-// Database:
-define('DB_HOST', "localhost");
-define('DB_USER', "lev-db");
-define('DB_PASS', "DangerGround");
-define('DB_NAME', "roscms");
+  public function body( )
+  {
+    echo_strip('
+      <h1>No Permission</h1>
+      <h2>No Permission</h2> 
+      <p>You have <strong>no permission</strong> to use this part of the homepage!</p>
+      <p>You <strong>need a higher account level</strong> to access this page. Please contact a member of the administrator group if you want more information.</p>
+      <a href="');echo @$_SERVER['HTTP_REFERER'].'">Back</a>';
+  }
 
 
-
+} // end of HTML_Nopermissions
 ?>

@@ -1,0 +1,82 @@
+
+	.roscms_page {
+		padding-bottom:		1ex;
+		padding-left:		1ex;
+		padding-right:		1ex;
+		padding-top:		1ex;
+	}
+
+	#myReactOS {
+		text-align:			right;
+	}
+	
+	.tc1 {
+		background:transparent url(images/corner_tl_sharp.gif) no-repeat scroll left top;
+		height:4px;
+	}
+	.tc2 {
+		background:transparent url(images/corner_tr_sharp.gif) no-repeat scroll right top;
+		height:4px;
+		padding:1px 6px;
+	}
+	.tc3 {
+		cursor:pointer;
+		font-weight:bold;
+		text-align:center;
+	}
+	
+	table#mt th {
+		background-color:#E5ECF9;
+		cursor:pointer;
+		font-weight:bold;
+		text-align:center;
+	}	
+	
+	table#mt div.tblbl {
+		font-family:arial,sans-serif;
+		font-size:small;
+		padding:0px 1em 2px;
+	}
+	
+	#mt {
+		margin-top:0.5ex;
+	}
+	
+	table {
+		border-collapse:separate;
+	}
+	
+	table#mt div.tblbl a {
+		color: #000000;
+		text-decoration: none;
+	}
+	 
+	table#mt div.tblbl a:hover {
+		color: #000000;
+		background-color: #E5ECF9;
+		text-decoration: none;
+	}
+	
+	table#mt th.int2 {
+		background-color: #C9DAF8;
+	}	
+	
+	table#mt th.int2 a:hover {
+		color: #000000;
+		background-color: #C9DAF8;
+	}	
+	
+	.submenu {
+		margin-left: -6px; /* fix FF glitch */
+		margin-right: -5.5px; /* fix FF glitch */
+		padding-top: 4px;
+		padding-right: 3px;
+		padding-bottom: 3px;
+		padding-left: 4px;
+		background-color: #C9DAF8;
+		background-image: none;
+		background-repeat: repeat;
+		background-attachment: scroll;
+		background-x-position: 0%;
+		background-y-position: 0%;
+	}

@@ -18,22 +18,19 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 	
-	global $rpm_page;
-	
 	$roscms_extern_brand = "RosCMS";
 	$roscms_extern_version = "v3";
-	$roscms_extern_version_detail = "v3.0730";
+	$roscms_extern_version_detail = "v3.1.0";
+	  
+	$roscms_intern_webserver_pages = "/reactos/";
 	
-	$roscms_intern_webserver_pages = "http://www.reactos.org/";
-	
-	$roscms_intern_webserver_roscms = "http://www.reactos.org/roscms/";
+	$roscms_intern_webserver_roscms = "/reactos/roscms/";
+	$roscms_SET_path_ex = $roscms_intern_webserver_roscms."index.php/";
 	$roscms_intern_page_link = $roscms_intern_webserver_roscms . "?page=";
-	$roscms_intern_script_name =  $roscms_intern_page_link . $rpm_page;
-	
-	$roscms_intern_script_branch = $roscms_intern_script_name. "&branch=";
 
 	$roscms_standard_language="en"; // en/de/fr/...
 	$roscms_standard_language_full="English"; // English/German/...
 	$roscms_standard_language_trans="de"; // en/de/fr/...
+  
 
 ?>
