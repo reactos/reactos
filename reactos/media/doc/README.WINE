@@ -26,7 +26,7 @@ reactos/tools/wpp                 # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/winebuild           # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/wmc                 # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/wrc                 # Synced to Wine-20081105 (~Wine-1.1.7)
-reactos/tools/widl                # Synced to Wine-1_1_1
+reactos/tools/widl                # Synced to Wine-1_1_0
 
 The following libraries are shared with Wine.
 

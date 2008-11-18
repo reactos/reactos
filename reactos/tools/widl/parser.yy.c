@@ -565,7 +565,6 @@ char *yytext;
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #define YY_STACK_USED 1
-#define YY_NO_INPUT 1
 #define YY_NO_UNPUT 1
 #define YY_NO_TOP_STATE 1
 #define YY_NEVER_INTERACTIVE 1
@@ -646,7 +645,7 @@ UUID *parse_uuid(const char *u)
  * The flexer starts here
  **************************************************************************
  */
-#line 650 "parser.yy.c"
+#line 649 "parser.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -802,7 +801,7 @@ YY_DECL
 
 #line 112 "parser.l"
 
-#line 806 "parser.yy.c"
+#line 805 "parser.yy.c"
 
 	if ( yy_init )
 		{
@@ -1096,7 +1095,7 @@ YY_RULE_SETUP
 #line 187 "parser.l"
 ECHO;
 	YY_BREAK
-#line 1100 "parser.yy.c"
+#line 1099 "parser.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
