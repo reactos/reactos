@@ -69,7 +69,7 @@ PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
     /* If we don't have one, grab it from the stack */
     if (!TrapFrame)
     {
-        FPRINT1("FIXME!!!!\n");
+        DPRINT1("FIXME!!!!\n");
         /* Trap frame is right under our initial stack */
 //        TrapFrame = (PKTRAP_FRAME)((ULONG_PTR)Thread->InitialStack -
 //                                   ROUND_UP(sizeof(KTRAP_FRAME), KTRAP_FRAME_ALIGN) -
