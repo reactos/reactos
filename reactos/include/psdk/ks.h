@@ -32,10 +32,6 @@
 
 #define _KS_
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,11 +45,10 @@ seem to compile without this...
 #ifdef BUILDING_KS
     #define KSDDKAPI
 #else
-    #define KSDDKAPI DECLSPEC_IMPORT
+    #define KSDDKAPI //DECLSPEC_IMPORT /* TODO */
 #endif
 
-/* TODO */
-#define KSDDKAPI
+
 
 
 #define KSSTRING_Filter L"{9B365890-165F-11D0-A195-0020AFD156E4}"
