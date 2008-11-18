@@ -30,7 +30,9 @@ typedef struct _LSAPR_ACL {
     [size_is(AclSize - 4)] BYTE Dummy1[*];
 } LSAPR_ACL, *PLSAPR_ACL;
 
+cpp_quote("#ifndef _WINNT_H")
 typedef WORD SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
+cpp_quote("#endif")
 
 typedef struct _LSAPR_SECURITY_DESCRIPTOR {
     BYTE Revision;
