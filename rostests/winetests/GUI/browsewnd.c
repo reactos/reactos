@@ -53,7 +53,7 @@ GetListOfTestExes(PMAIN_WND_INFO pInfo)
     INT numFiles = 0;
     INT len;
 
-    len = GetCurrentDirectory(MAX_PATH, szExePath);
+    len = GetCurrentDirectoryW(MAX_PATH, szExePath);
     if (!len) return 0;
 
     wcsncat(szExePath, EXE_SEARCH_DIR, MAX_PATH - (len + 1));
@@ -205,8 +205,8 @@ InsertIntoTreeView(HWND hTreeView,
 }
 
 static PTEST_ITEM
-BuildTestItemData(LPWSTR lpExe,
-                  LPWSTR lpRun)
+BuildTestItemData(LPWSTR lpName,
+                  LPWSTR lpRunCmd)
 {
     PTEST_ITEM pItem;
 
@@ -215,10 +215,14 @@ BuildTestItemData(LPWSTR lpExe,
                                   sizeof(TEST_ITEM));
     if (pItem)
     {
-        if (lpExe)
-            wcsncpy(pItem->szSelectedExe, lpExe, MAX_PATH);
-        if (lpRun)
-            wcsncpy(pItem->szRunString, lpRun, MAX_RUN_CMD);
+        if (lpName)
+        {
+            wcsncpy(pItem->szName, lpName, MAX_PATH);
+        }
+        if (lpRunCmd)
+        {
+            wcsncpy(pItem->szRunCmd, lpRunCmd, MAX_RUN_CMD);
+        }
     }
 
     return pItem;
@@ -248,7 +252,7 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
                                 hImgList,
                                 TVSIL_NORMAL);
 
-    pTestItem = BuildTestItemData(L"", L"Full");
+    pTestItem = BuildTestItemData(L"Full", L"runall");
 
     /* insert the root item into the tree */
     hRoot = InsertIntoTreeView(pInfo->hBrowseTV,
@@ -275,7 +279,7 @@ PopulateTreeView(PMAIN_WND_INFO pInfo)
             {
                 //FIXME: Query the test name from the exe directly
 
-                pTestItem = BuildTestItemData(lpExePath, lpTestName);
+                pTestItem = BuildTestItemData(lpTestName, lpExePath);
 
                 hParent = InsertIntoTreeView(pInfo->hBrowseTV,
                                              hRoot,
