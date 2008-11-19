@@ -159,9 +159,6 @@ extern "C" {
 #define PARTITION_PREP                0x41
 #define PARTITION_LDM                 0x42
 #define PARTITION_UNIX                0x63
-#define PARTITION_LINUX_SWAP          0x82
-#define PARTITION_LINUX               0x83
-#define PARTITION_LINUX_LVM           0x8E
 #define PARTITION_NTFT                128
 #define VALID_NTFT                    0xC0
 #define METHOD_BUFFERED               0
