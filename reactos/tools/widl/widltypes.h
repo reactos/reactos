@@ -283,6 +283,7 @@ struct _type_t {
   unsigned int typestring_offset;
   unsigned int ptrdesc;           /* used for complex structs */
   int typelib_idx;
+  loc_info_t loc_info;
   unsigned int declarray : 1;     /* if declared as an array */
   unsigned int ignore : 1;
   unsigned int defined : 1;
@@ -418,6 +419,8 @@ int is_union(unsigned char tc);
 var_t *find_const(const char *name, int f);
 type_t *find_type(const char *name, int t);
 type_t *make_type(unsigned char type, type_t *ref);
+
+void init_loc_info(loc_info_t *);
 
 static inline type_t *get_func_return_type(const func_t *func)
 {
