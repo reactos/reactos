@@ -5924,7 +5924,12 @@ static void check_remoting_fields(const var_t *var, type_t *type)
     type->checked = TRUE;
 
     if (is_struct(type->type))
-        fields = type->fields_or_args;
+    {
+        if (type->defined)
+            fields = type->fields_or_args;
+        else
+            error_loc_info(&var->loc_info, "undefined type declaration %s\n", type->name);
+    }
     else if (is_union(type->type))
     {
         if (type->type == RPC_FC_ENCAPSULATED_UNION)
