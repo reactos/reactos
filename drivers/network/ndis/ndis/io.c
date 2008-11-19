@@ -55,26 +55,27 @@ BOOLEAN NTAPI ServiceRoutine(
  * FUNCTION: Interrupt service routine
  * ARGUMENTS:
  *     Interrupt      = Pointer to interrupt object
- *     ServiceContext = Pointer to context information (LOGICAL_ADAPTER)
+ *     ServiceContext = Pointer to context information (PNDIS_MINIPORT_INTERRUPT)
  * RETURNS
  *     TRUE if a miniport controlled device generated the interrupt
  */
 {
   BOOLEAN InterruptRecognized = FALSE;
   BOOLEAN QueueMiniportHandleInterrupt = FALSE;
-  PLOGICAL_ADAPTER Adapter = ServiceContext;
+  PNDIS_MINIPORT_INTERRUPT NdisInterrupt = ServiceContext;
+  PNDIS_MINIPORT_BLOCK NdisMiniportBlock = NdisInterrupt->Miniport;
 
-  NDIS_DbgPrint(MAX_TRACE, ("Called. Adapter (0x%X)\n", Adapter));
+  NDIS_DbgPrint(MAX_TRACE, ("Called. Interrupt (0x%X)\n", NdisInterrupt));
 
-  if (Adapter->NdisMiniportBlock.Interrupt->IsrRequested) {
-      (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.ISRHandler)(
+  if (NdisInterrupt->IsrRequested) {
+      (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.ISRHandler)(
           &InterruptRecognized,
           &QueueMiniportHandleInterrupt,
-          Adapter->NdisMiniportBlock.MiniportAdapterContext);
+          NdisMiniportBlock->MiniportAdapterContext);
 
-  } else if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.DisableInterruptHandler) {
-      (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.DisableInterruptHandler)(
-          Adapter->NdisMiniportBlock.MiniportAdapterContext);
+  } else if (NdisMiniportBlock->DriverHandle->MiniportCharacteristics.DisableInterruptHandler) {
+      (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.DisableInterruptHandler)(
+          NdisMiniportBlock->MiniportAdapterContext);
        QueueMiniportHandleInterrupt = TRUE;
        InterruptRecognized = TRUE;
   }
@@ -83,7 +84,7 @@ BOOLEAN NTAPI ServiceRoutine(
   if (QueueMiniportHandleInterrupt)
   {
       NDIS_DbgPrint(MAX_TRACE, ("Queuing DPC.\n"));
-      KeInsertQueueDpc(&Adapter->NdisMiniportBlock.Interrupt->InterruptDpc, NULL, NULL);
+      KeInsertQueueDpc(&NdisInterrupt->InterruptDpc, NULL, NULL);
   }
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
@@ -777,6 +778,7 @@ NdisMRegisterInterrupt(
 
   Interrupt->SharedInterrupt = SharedInterrupt;
   Interrupt->IsrRequested = RequestIsr;
+  Interrupt->Miniport = &Adapter->NdisMiniportBlock;
 
   Adapter->NdisMiniportBlock.Interrupt = Interrupt;
 
@@ -786,7 +788,7 @@ NdisMRegisterInterrupt(
 
   NDIS_DbgPrint(MAX_TRACE, ("Connecting to interrupt vector (0x%X)  Affinity (0x%X).\n", MappedIRQ, Affinity));
 
-  Status = IoConnectInterrupt(&Interrupt->InterruptObject, ServiceRoutine, Adapter, &Interrupt->DpcCountLock, MappedIRQ,
+  Status = IoConnectInterrupt(&Interrupt->InterruptObject, ServiceRoutine, Interrupt, &Interrupt->DpcCountLock, MappedIRQ,
       DIrql, DIrql, InterruptMode, SharedInterrupt, Affinity, FALSE);
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X).\n", Status));

@@ -432,21 +432,15 @@ NdisCloseAdapter(
  *     NdisBindingHandle = Handle returned by NdisOpenAdapter
  */
 {
-    KIRQL OldIrql;
     PADAPTER_BINDING AdapterBinding = GET_ADAPTER_BINDING(NdisBindingHandle);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     /* Remove from protocol's bound adapters list */
-    KeAcquireSpinLock(&AdapterBinding->ProtocolBinding->Lock, &OldIrql);
-    RemoveEntryList(&AdapterBinding->ProtocolListEntry);
-    KeReleaseSpinLock(&AdapterBinding->ProtocolBinding->Lock, OldIrql);
+    ExInterlockedRemoveEntryList(&AdapterBinding->ProtocolListEntry, &AdapterBinding->ProtocolBinding->Lock);
 
     /* Remove protocol from adapter's bound protocols list */
-    NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
-    KeAcquireSpinLock(&AdapterBinding->Adapter->NdisMiniportBlock.Lock, &OldIrql);
-    RemoveEntryList(&AdapterBinding->AdapterListEntry);
-    KeReleaseSpinLock(&AdapterBinding->Adapter->NdisMiniportBlock.Lock, OldIrql);
+    ExInterlockedRemoveEntryList(&AdapterBinding->AdapterListEntry, &AdapterBinding->Adapter->NdisMiniportBlock.Lock);
 
     ExFreePool(AdapterBinding);
 
@@ -469,7 +463,6 @@ NdisDeregisterProtocol(
  *     NdisProtocolHandle = Handle returned by NdisRegisterProtocol
  */
 {
-    KIRQL OldIrql;
     PPROTOCOL_BINDING Protocol = GET_PROTOCOL_BINDING(NdisProtocolHandle);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -477,9 +470,7 @@ NdisDeregisterProtocol(
     /* FIXME: Make sure no adapter bindings exist */
 
     /* Remove protocol from global list */
-    KeAcquireSpinLock(&ProtocolListLock, &OldIrql);
-    RemoveEntryList(&Protocol->ListEntry);
-    KeReleaseSpinLock(&ProtocolListLock, OldIrql);
+    ExInterlockedRemoveEntryList(&Protocol->ListEntry, &ProtocolListLock);
 
     ExFreePool(Protocol);
 

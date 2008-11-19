@@ -1764,17 +1764,12 @@ NdisIPnPStopDevice(
  */
 {
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
-  KIRQL OldIrql;
 
   /* Remove adapter from adapter list for this miniport */
-  KeAcquireSpinLock(&Adapter->NdisMiniportBlock.DriverHandle->Lock, &OldIrql);
-  RemoveEntryList(&Adapter->MiniportListEntry);
-  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.DriverHandle->Lock, OldIrql);
+  ExInterlockedRemoveEntryList(&Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
 
   /* Remove adapter from global adapter list */
-  KeAcquireSpinLock(&AdapterListLock, &OldIrql);
-  RemoveEntryList(&Adapter->ListEntry);
-  KeReleaseSpinLock(&AdapterListLock, OldIrql);
+  ExInterlockedRemoveEntryList(&Adapter->ListEntry, &AdapterListLock);
 
   KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
 
@@ -2385,6 +2380,7 @@ NdisTerminateWrapper(
 
   ExFreePool(Miniport->RegistryPath->Buffer);
   ExFreePool(Miniport->RegistryPath);
+  ExInterlockedRemoveEntryList(&Miniport->ListEntry, &MiniportListLock);
   ExFreePool(Miniport);
 }
 
