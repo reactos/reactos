@@ -26,7 +26,9 @@ class Export_QuickInfo extends Export
 {
 
 
-  public function __construct(){
+  public function __construct()
+  {
+    parent::__construct();
 
     // check if everything was given, we need to get the quick info
     if (!isset($_GET['d_id']) || !isset($_GET['d_r_id'])) {

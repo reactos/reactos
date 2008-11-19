@@ -53,6 +53,7 @@ class HTML_User_ProfileEdit extends HTML_User
     global $rdf_name;
     global $rdf_register_user_pwd_min;
     global $rdf_register_user_pwd_max;
+    global $rdf_register_user_name_max;
     global $roscms_intern_webserver_pages;
 
     $activation_code = $rdf_uri_3;
@@ -237,8 +238,7 @@ class HTML_User_ProfileEdit extends HTML_User
           <br />
           <span style="color:#817A71;">You cannot change your username.</span>
         </div>
-v>
-        
+
         <div class="login-form">
           <label for="userpwd3"'.((isset($_POST['registerpost']) && isset($_POST['userpwd3']) && $_POST['userpwd3'] != '') ? ' style="color:red;"' : '').'>Current Password *</label>
           <input name="userpwd3" type="password" class="input" tabindex="1" id="userpwd3" size="50" maxlength="50" />

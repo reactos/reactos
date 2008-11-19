@@ -51,10 +51,12 @@ class Export_Page extends Export
    */
   public function page( )
   {
-    parent::__construct();
+    global $RosCMS_GET_d_value, $RosCMS_GET_d_value2,$RosCMS_GET_d_value3;
+    global $RosCMS_GET_d_r_lang;
+    global $roscms_standard_language;
 
-    $export_html = new Export_HTML();
-    
+    $dynamic_num = $RosCMS_GET_d_value3;
+
     switch (@$_GET['d_u']) {
       case 'output':
         // @TODO
@@ -63,7 +65,7 @@ class Export_Page extends Export
       case 'show':
       default:
         if (empty($_GET['d_r_id']) || strpos($_GET['d_r_id'], 'tr') >= 0) {
-          // translation mode (contains "tr")		
+          // translation mode (contains "tr")
           $RosCMS_GET_d_value2 = $RosCMS_GET_d_r_lang;
         }
 
@@ -71,11 +73,11 @@ class Export_Page extends Export
         $RosCMS_GET_d_value = str_replace('tr', '', $RosCMS_GET_d_value);
 
         if ( is_numeric($RosCMS_GET_d_value) ) {
-          $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, r.rev_id, d.data_id, r.rev_language FROM data_ d, data_revision r WHERE r.data_id = d.data_id  AND r.rev_id = ".DBConnection::getInstance()->quote()."  ORDER BY r.rev_version DESC LIMIT 1");
+          $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, r.rev_id, d.data_id, r.rev_language FROM data_ d, data_revision r WHERE r.data_id = d.data_id  AND r.rev_id = :rev_id  ORDER BY r.rev_version DESC LIMIT 1");
           $stmt->bindParam('rev_id',$RosCMS_GET_d_value,PDO::PARAM_INT);
         }
         else {
-        $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, r.rev_id, d.data_id, r.rev_language FROM data_ d, data_revision r WHERE r.data_id = d.data_id  AND d.data_name = :data_name AND (r.rev_language = lang_one OR r.rev_language = :lang_two) ORDER BY r.rev_version DESC LIMIT 1");
+          $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, r.rev_id, d.data_id, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id = d.data_id WHERE d.data_name = :data_name AND (r.rev_language = lang_one OR r.rev_language = :lang_two) ORDER BY r.rev_version DESC LIMIT 1");
           $stmt->bindParam('data_name',$RosCMS_GET_d_value,PDO::PARAM_STR);
           $stmt->bindParam('lang_one',$RosCMS_GET_d_value2,PDO::PARAM_STR);
           $stmt->bindParam('lang_two',$roscms_standard_language,PDO::PARAM_STR);
@@ -83,14 +85,14 @@ class Export_Page extends Export
 
         $stmt->execute();
         $revision = $stmt->fetchOnce();
-        if ($RosCMS_GET_d_value3 == '') {
-          $tmp_nbr = Tag::getValue($revision['data_id'], $revision['rev_id'], 'number');
+        if ($dynamic_num == '') {
+          $dynamic_num = Tag::getValueByUser($revision['data_id'], $revision['rev_id'], 'number', -1);
         }
-        else {
-          $tmp_nbr = $RosCMS_GET_d_value3;
-        }
-        Log::writeGenerateLow('preview page: generate_page('.$tmp_name.', '.$tmp_lang.', '.$tmp_nbr.', '.$_GET['d_u'].')'); 
-        echo $export_html->processTextByName($revision['data_name'], $RosCMS_GET_d_value2, $tmp_nbr, $_GET['d_u']);
+
+        Log::writeGenerateLow('preview page: generate_page('.$revision['data_name'].', '.$revision['rev_language'].', '.$dynamic_num.', '.$_GET['d_u'].')');
+
+        $export_html = new Export_HTML();
+        echo $export_html->processText($revision['rev_id'], $_GET['d_u']);
         break;
     }
   }

@@ -289,10 +289,6 @@ class Export_HTML extends Export
    */
   public function processTextByName( $page_name, $lang = '', $dynamic_num = 0, $output_type = '' )
   {
-    global $roscms_intern_account_id;
-    global $roscms_standard_language_full;
-    global $roscms_intern_webserver_pages;
-    global $roscms_intern_webserver_roscms;
     global $roscms_standard_language;
 
     // use class vars instead of give them every method as param
@@ -301,13 +297,16 @@ class Export_HTML extends Export
     $this->dynamic_num = intval($dynamic_num);
     $this->output_type = $output_type;
 
-    // try to force unlimited script runtime
-    @set_time_limit(0);
-
     //
-    $stmt=DBConnection::getInstance()->prepare("SELECT r.rev_id, r.rev_version, r.rev_usrid, r.rev_datetime, r.rev_date, r.rev_time, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id = d.data_id WHERE data_name = :name AND data_type = 'page' AND r.rev_version > 0 AND (r.rev_language = :lang_one OR r.rev_language = :lang_two) ORDER BY r.rev_version DESC LIMIT 2");
-    $stmt->bindParam('name',$this->page_name,PDO::PARAM_STR);
-    $stmt->bindParam('lang_one',$this->lang,PDO::PARAM_STR);
+    if ($dynamic_num > 0) {
+      $stmt=DBConnection::getInstance()->prepare("SELECT r.rev_id, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id = d.data_id JOIN data_tag t ON t.data_rev_id=r.rev_id JOIN data_tag_name n ON t.tag_name_id=n.tn_id JOIN data_tag_value v ON t.tag_value_id=v.tv_id WHERE data_name = :name AND data_type = 'page' AND r.rev_version > 0 AND (r.rev_language = :lang_one OR r.rev_language = :lang_two) AND n.tn_name = 'number' AND t.tag_usrid = '-1' AND v.tv_value = :dynamic_num ORDER BY r.rev_version DESC LIMIT 2");
+      $stmt->bindParam('dynamic_num',$dynamic_num,PDO::PARAM_INT);
+    }
+    else {
+      $stmt=DBConnection::getInstance()->prepare("SELECT r.rev_id, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id = d.data_id WHERE data_name = :name AND data_type = 'page' AND r.rev_version > 0 AND (r.rev_language = :lang_one OR r.rev_language = :lang_two) ORDER BY r.rev_version DESC LIMIT 2");
+    }
+    $stmt->bindParam('name',$page_name,PDO::PARAM_STR);
+    $stmt->bindParam('lang_one',$lang,PDO::PARAM_STR);
     $stmt->bindParam('lang_two',$roscms_standard_language,PDO::PARAM_STR);
     $stmt->execute();
     $results=$stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -318,72 +317,105 @@ class Export_HTML extends Export
       $page = $results[1];
     }
 
-    // replace first dynamic and then static tags
-    if ($page['rev_id'] > 0) {
+    $this->processText($page['rev_id'], $output_type);
+  }
 
-      // get content and replace with other contents
-      $content = Data::getText($page['rev_id'], 'content');
-      $content = preg_replace_callback('/(\[#templ_[^][#[:space:]]+\])/', array($this,'insertTemplate'), $content);
-      $content = preg_replace_callback('/(\[#cont_[^][#[:space:]]+\])/', array($this,'insertContent'), $content);
-      $content = preg_replace_callback('/(\[#inc_[^][#[:space:]]+\])/', array($this,'insertScript'), $content);
-      $content = preg_replace_callback('/(\[#link_[^][#[:space:]]+\])/', array($this,'insertHyperlink'), $content);
 
-      // website url
-      $content = str_replace('[#roscms_path_homepage]', $roscms_intern_webserver_pages, $content);
+  /**
+   * processes the content
+   * need to call this in object context
+   *
+   * @return content
+   * @access public
+   */
+  public function processText( $rev_id, $output_type = '' )
+  {
+    global $roscms_intern_account_id;
+    global $roscms_standard_language_full;
+    global $roscms_intern_webserver_pages;
+    global $roscms_intern_webserver_roscms;
+    global $roscms_standard_language;
 
-      // replace roscms constants dependent from dynamic number
-      if ($this->dynamic_num > 0) {
-        $content = str_replace('[#roscms_filename]', $this->page_name.'_'.$this->dynamic_num.'.html', $content);
-        $content = str_replace('[#roscms_pagename]', $this->page_name.'_'.$this->dynamic_num, $content); 
-        $content = str_replace('[#roscms_pagetitle]', ucfirst(get_stext($page['rev_id'], 'title')).' #'.$this->dynamic_num, $content); 
-      }
-      // take care of dynamic number independent entries
-      else {
-        $content = str_replace('[#roscms_filename]', $this->page_name.'.html', $content); 
-        $content = str_replace('[#roscms_pagename]', $this->page_name, $content); 
-        $content = str_replace('[#roscms_pagetitle]', ucfirst(Data::getSText($page['rev_id'], 'title')), $content); 
-      }
+    // try to force unlimited script runtime
+    @set_time_limit(0);
 
-        // replace current language stuff
-        $stmt=DBConnection::getInstance()->prepare("SELECT lang_name FROM languages WHERE lang_id = :lang LIMIT 1");
-        $stmt->bindParam('lang',$this->lang);
-        $stmt->execute();
-        $content = str_replace('[#roscms_language]', $stmt->fetchColumn(), $content); 
-        $content = str_replace('[#roscms_language_short]', $this->lang, $content); 
+    $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, d.data_id, r.rev_id, r.rev_version, r.rev_usrid, r.rev_datetime, r.rev_date, r.rev_time, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id = d.data_id WHERE r.rev_id = :rev_id ORDER BY r.rev_version DESC LIMIT 2");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    $page=$stmt->fetch(PDO::FETCH_ASSOC);
 
-        // @REMOVEME if it is no more present in Database
-        $content = str_replace('[#roscms_format]', 'html', $content); 
-
-        // replace date and time
-        $content = str_replace('[#roscms_date]', date('Y-m-d'), $content); 
-        $localtime = localtime(time() , 1);
-        $content = str_replace('[#roscms_time]', sprintf('%02d:%02d', $localtime['tm_hour'],$localtime['tm_min']), $content);
-
-        // replace with user_name
-        // @FIXME broken logic, or one link too much, which should be removed from Database
-        $stmt=DBConnection::getInstance()->prepare("SELECT user_name FROM users WHERE user_id = :user_id LIMIT 1");
-        $stmt->bindParam('user_id',$roscms_intern_account_id);
-        $stmt->execute();
-        $user_name = $stmt->fetchColumn();
-        $content = str_replace('[#roscms_user]', $user_name, $content); // account that generate
-        $content = str_replace("[#roscms_inc_author]", $user_name, $content); // account that changed the include text
-
-        // page version
-        $content = str_replace('[#roscms_page_version]', $page['rev_version'], $content); 
-
-        // page edit link
-        $content = str_replace('[#roscms_page_edit]', $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit', $content); 
-
-        // translation info
-        if ($this->lang == $roscms_standard_language) {
-          $content = str_replace('[#roscms_trans]', '<p><a href="'.$roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit" style="font-size:10px !important;">Edit page content</a> (RosCMS translator account membership required, visit the <a href="'.$roscms_intern_webserver_pages.'forum/" style="font-size:10px !important;">website forum</a> for help)</p><br />', $content); 
-        }
-        else {
-          $content = str_replace('[#roscms_trans]', '<p><em>If the translation of the <a href="'.$roscms_intern_webserver_pages.'?page='.$this->page_name.'&amp;lang='.$roscms_standard_language.'" style="font-size:10px !important;">'.$roscms_standard_language_full.' language</a> of this page appears to be outdated or incorrect, please check-out the <a href="'.$roscms_intern_webserver_pages.'?page='.$this->page_name.'&amp;lang='.$roscms_standard_language.'" style="font-size:10px !important;">'.$roscms_standard_language_full.'</a> page and <a href="'.$roscms_intern_webserver_pages.'forum/viewforum.php?f=18" style="font-size:10px !important;">report</a> or <a href="'.$roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit" style="font-size:10px !important;">update the content</a>.</em></p><br />', $content); 
-        }
-
-      return $content;
+    if ($page['rev_id'] === false) {
+      return; // nothing found
     }
+
+    $this->page_name = $page['data_name'];
+    $this->lang = $page['rev_language'];
+    $this->dynamic_num = Tag::getValueByUser($page['data_id'], $page['rev_id'], 'number', -1);
+    $this->output_type = $output_type;
+    // replace dynamic tags first and then static
+
+    // get content and replace with other contents
+    $content = Data::getText($page['rev_id'], 'content');
+    $content = preg_replace_callback('/(\[#templ_[^][#[:space:]]+\])/', array($this,'insertTemplate'), $content);
+    $content = preg_replace_callback('/(\[#cont_[^][#[:space:]]+\])/', array($this,'insertContent'), $content);
+    $content = preg_replace_callback('/(\[#inc_[^][#[:space:]]+\])/', array($this,'insertScript'), $content);
+    $content = preg_replace_callback('/(\[#link_[^][#[:space:]]+\])/', array($this,'insertHyperlink'), $content);
+
+    // website url
+    $content = str_replace('[#roscms_path_homepage]', $roscms_intern_webserver_pages, $content);
+
+    // replace roscms constants dependent from dynamic number
+    if ($this->dynamic_num > 0) {
+      $content = str_replace('[#roscms_filename]', $this->page_name.'_'.$this->dynamic_num.'.html', $content);
+      $content = str_replace('[#roscms_pagename]', $this->page_name.'_'.$this->dynamic_num, $content); 
+      $content = str_replace('[#roscms_pagetitle]', ucfirst(Data::getSText($page['rev_id'], 'title')).' #'.$this->dynamic_num, $content); 
+    }
+    // take care of dynamic number independent entries
+    else {
+      $content = str_replace('[#roscms_filename]', $this->page_name.'.html', $content); 
+      $content = str_replace('[#roscms_pagename]', $this->page_name, $content); 
+      $content = str_replace('[#roscms_pagetitle]', ucfirst(Data::getSText($page['rev_id'], 'title')), $content); 
+    }
+
+    // replace current language stuff
+    $stmt=DBConnection::getInstance()->prepare("SELECT lang_name FROM languages WHERE lang_id = :lang LIMIT 1");
+    $stmt->bindParam('lang',$this->lang);
+    $stmt->execute();
+    $content = str_replace('[#roscms_language]', $stmt->fetchColumn(), $content); 
+    $content = str_replace('[#roscms_language_short]', $this->lang, $content); 
+
+    // @REMOVEME if it is no more present in Database
+    $content = str_replace('[#roscms_format]', 'html', $content); 
+
+    // replace date and time
+    $content = str_replace('[#roscms_date]', date('Y-m-d'), $content); 
+    $localtime = localtime(time() , 1);
+    $content = str_replace('[#roscms_time]', sprintf('%02d:%02d', $localtime['tm_hour'],$localtime['tm_min']), $content);
+
+    // replace with user_name
+    // @FIXME broken logic, or one link too much, which should be removed from Database
+    $stmt=DBConnection::getInstance()->prepare("SELECT user_name FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt->bindParam('user_id',$roscms_intern_account_id);
+    $stmt->execute();
+    $user_name = $stmt->fetchColumn();
+    $content = str_replace('[#roscms_user]', $user_name, $content); // account that generate
+    $content = str_replace("[#roscms_inc_author]", $user_name, $content); // account that changed the include text
+
+    // page version
+    $content = str_replace('[#roscms_page_version]', $page['rev_version'], $content); 
+
+    // page edit link
+    $content = str_replace('[#roscms_page_edit]', $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit', $content); 
+
+    // translation info
+    if ($this->lang == $roscms_standard_language) {
+      $content = str_replace('[#roscms_trans]', '<p><a href="'.$roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit" style="font-size:10px !important;">Edit page content</a> (RosCMS translator account membership required, visit the <a href="'.$roscms_intern_webserver_pages.'forum/" style="font-size:10px !important;">website forum</a> for help)</p><br />', $content); 
+    }
+    else {
+      $content = str_replace('[#roscms_trans]', '<p><em>If the translation of the <a href="'.$roscms_intern_webserver_pages.'?page='.$this->page_name.'&amp;lang='.$roscms_standard_language.'" style="font-size:10px !important;">'.$roscms_standard_language_full.' language</a> of this page appears to be outdated or incorrect, please check-out the <a href="'.$roscms_intern_webserver_pages.'?page='.$this->page_name.'&amp;lang='.$roscms_standard_language.'" style="font-size:10px !important;">'.$roscms_standard_language_full.'</a> page and <a href="'.$roscms_intern_webserver_pages.'forum/viewforum.php?f=18" style="font-size:10px !important;">report</a> or <a href="'.$roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit" style="font-size:10px !important;">update the content</a>.</em></p><br />', $content); 
+    }
+
+    return $content;
   } // end of member function generate_content
 
 

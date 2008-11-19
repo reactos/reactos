@@ -322,8 +322,6 @@ class Editor_Website extends Editor
       echo '<span id="elmcount" class="'.$text_num.'">&nbsp;</span>';
     }
 
-    echo '</form>';
-
     if (Security::hasRight($this->data_id, 'write')) {
       echo_strip('
         <button type="button" id="bsavedraft" onclick="'."edit_form_submit_draft(".$this->data_id.",".$this->rev_id.")".'">Save as Draft</button> &nbsp;
@@ -409,8 +407,11 @@ class Editor_Website extends Editor
     }
 
     echo_strip('
-      &nbsp;&nbsp;<span id="mefasi">&nbsp;</span>
-      </div></div>
+              </form>
+            &nbsp;&nbsp;<span id="mefasi">&nbsp;</span>
+          </div>
+        </div>
+      </div>
       <div id="frmdiff" style="display:none;"></div>');
   }
 
@@ -577,7 +578,7 @@ class Editor_Website extends Editor
     echo_strip('
       </span> &nbsp;
       <span style="white-space: nowrap;">type: <span class="frmeditheader">'.$revision['data_type'].'</span></span> &nbsp; 
-      <span style="white-space: nowrap;">version: <span  id="mefrverid" class="frmeditheader">'.$revision['rev_version'].'</span></span> &nbsp; 
+      <span style="white-space: nowrap;">version: <span id="mefrverid" class="frmeditheader">'.$revision['rev_version'].'</span></span> &nbsp; 
       <span style="white-space: nowrap;">language: <span id="mefrlang" class="frmeditheader">'.$revision['rev_language'].'</span></span> &nbsp; 
       <span style="white-space: nowrap;">user: <span id="mefrusrid" class="frmeditheader">'.$revision['user_name'].'</span></span> &nbsp; ');
 
