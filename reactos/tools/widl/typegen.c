@@ -2032,6 +2032,34 @@ static size_t write_union_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
             error("union switch type must be an integer, char, or enum\n");
         }
     }
+    else if (is_attr(type->attrs, ATTR_SWITCHTYPE))
+    {
+        static const expr_t dummy_expr;  /* FIXME */
+        const type_t *st = get_attrp(type->attrs, ATTR_SWITCHTYPE);
+
+        switch (st->type)
+        {
+        case RPC_FC_CHAR:
+        case RPC_FC_SMALL:
+        case RPC_FC_USMALL:
+        case RPC_FC_SHORT:
+        case RPC_FC_USHORT:
+        case RPC_FC_LONG:
+        case RPC_FC_ULONG:
+        case RPC_FC_ENUM16:
+        case RPC_FC_ENUM32:
+            print_file(file, 2, "0x%x,\t/* %s */\n", type->type, string_of_type(type->type));
+            print_file(file, 2, "0x%x,\t/* Switch type= %s */\n",
+                       st->type, string_of_type(st->type));
+            *tfsoff += 2;
+            break;
+        default:
+            error("union switch type must be an integer, char, or enum\n");
+        }
+
+        *tfsoff += write_conf_or_var_desc(file, NULL, *tfsoff, st, &dummy_expr );
+    }
+
     print_file(file, 2, "NdrFcShort(0x%x),\t/* %d */\n", size, size);
     print_file(file, 2, "NdrFcShort(0x%x),\t/* %d */\n", nbranch, nbranch);
     *tfsoff += 4;
