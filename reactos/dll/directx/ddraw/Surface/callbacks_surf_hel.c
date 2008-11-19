@@ -130,6 +130,9 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
                 /* Get the bitmap bits */
                 GetBitmapBits(hImage,cbBuffer,pixels);
 
+                /* Fixme HACK check which member that store the hel bitmap buffer */
+                lpLockData->lpDDSurface->lpSurfMore->lpDDRAWReserved2 = pixels;
+
                 /* Setup return value */
                 lpLockData->ddRVal = DD_OK;
                 lpLockData->lpSurfData = pixels;
@@ -191,48 +194,62 @@ DWORD CALLBACK HelDdSurfSetPalette(LPDDHAL_SETPALETTEDATA lpSetPaletteData)
 DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData)
 {
     HDC hDC;
-    BITMAP bm;
-    PDWORD pixels = NULL;
-    HGDIOBJ hBmp;
-    BITMAPINFO bmi;
-    int retvalue = 0;
+    HBITMAP hImage = NULL;
+
+    HDC hMemDC = NULL;
+    HBITMAP hDCBmp = NULL;
+    BITMAP bm = {0};
+
+    DX_WINDBG_trace();
 
     /* Get our hdc for the surface */
-    hDC = (HDC)lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hDC;
+    hDC = (HDC) lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hDC;
 
-    /* Get our bitmap handle from hdc, we need it if we want extract the Bitmap pixel data */
-    hBmp = GetCurrentObject(hDC, OBJ_BITMAP);
-
-    /* Get our bitmap information from hBmp, we need it if we want extract the Bitmap pixel data */
-    if (GetObject(hBmp, sizeof(BITMAP), &bm) )
+    if (hDC != NULL)
     {
-        /* Zero out all members in bmi so no junk data are left */
-        ZeroMemory(&bmi, sizeof(BITMAPINFO));
+        /* Create a memory bitmap to store a copy of current hdc surface */
 
-        /* Setup BITMAPINFOHEADER for bmi header */
-        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        bmi.bmiHeader.biWidth = bm.bmWidth;
-        bmi.bmiHeader.biHeight = bm.bmHeight;
-        bmi.bmiHeader.biPlanes = bm.bmPlanes;
-        bmi.bmiHeader.biBitCount = bm.bmBitsPixel;
-        bmi.bmiHeader.biCompression = BI_RGB;
+        /* fixme the rcarea are not store in the struct yet so the data will look corupted */
+        hImage = CreateCompatibleBitmap (hDC, lpUnLockData->lpDDSurface->lpGbl->wWidth, lpUnLockData->lpDDSurface->lpGbl->wHeight);
 
-        /* Check if it the bitmap is palete or not */
-        if ( bm.bmBitsPixel <= 8)
+        /* Create a memory hdc so we can draw on our current memory bitmap */
+        hMemDC = CreateCompatibleDC(hDC);
+
+        if (hMemDC != NULL)
         {
-            /* Upload the bitmap bits data from palete bitmap */
-            retvalue = SetDIBits(hDC, hBmp, 0, bm.bmHeight, pixels, &bmi, DIB_PAL_COLORS);
-        }
-        else
-        {
-            /* Upload the bitmap bits data from RGB bitmap */
-            retvalue = SetDIBits(hDC, hBmp, 0, bm.bmHeight, pixels, &bmi, DIB_RGB_COLORS);
+            /* Select our memory bitmap to our memory hdc */
+            hDCBmp = (HBITMAP) SelectObject (hMemDC, hImage);
+
+            /* Get our memory bitmap information */
+            GetObject(hImage, sizeof(BITMAP), &bm);
+
+            SetBitmapBits(hImage,bm.bmWidthBytes * bm.bmHeight, lpUnLockData->lpDDSurface->lpSurfMore->lpDDRAWReserved2);
+
+            BitBlt (hDC, 0, 0, bm.bmWidth, bm.bmHeight, hMemDC, 0, 0, SRCCOPY);
+
+            SelectObject (hMemDC, hDCBmp);
+
+            /* Setup return value */
+             lpUnLockData->ddRVal = DD_OK;
         }
     }
-    if (retvalue)
+
+    /* Cleanup after us */
+    if (hImage != NULL)
     {
-        lpUnLockData->ddRVal = DD_OK;
+        DeleteObject (hImage);
     }
+
+    if (hMemDC != NULL)
+    {
+        DeleteDC (hMemDC);
+    }
+
+    if (lpUnLockData->lpDDSurface->lpSurfMore->lpDDRAWReserved2 != NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, lpUnLockData->lpDDSurface->lpSurfMore->lpDDRAWReserved2 );
+    }
+
     return DDHAL_DRIVER_HANDLED;
 }
 
