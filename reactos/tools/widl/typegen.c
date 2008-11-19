@@ -1437,6 +1437,14 @@ static int write_varying_array_pointer_descriptions(
             if (offset_in_memory && offset_in_buffer)
             {
                 size_t padding;
+
+                if (is_array(v->type) && v->type->length_is)
+                {
+                    *offset_in_buffer = ROUND_SIZE(*offset_in_buffer, 4);
+                    /* skip over variance and offset in buffer */
+                    *offset_in_buffer += 8;
+                }
+
                 align = 0;
                 type_memsize(v->type, &align);
                 padding = ROUNDING(*offset_in_memory, align);
@@ -1470,19 +1478,13 @@ static void write_pointer_description(FILE *file, type_t *type,
 {
     size_t offset_in_buffer;
     size_t offset_in_memory;
-    size_t conformance = 0;
-
-    if (type->type == RPC_FC_CVSTRUCT)
-        conformance = 8;
-    else if (type->type == RPC_FC_CSTRUCT || type->type == RPC_FC_CPSTRUCT)
-        conformance = 4;
 
     /* pass 1: search for single instance of a pointer (i.e. don't descend
      * into arrays) */
     if (!is_array(type))
     {
         offset_in_memory = 0;
-        offset_in_buffer = conformance;
+        offset_in_buffer = 0;
         write_no_repeat_pointer_descriptions(
             file, type,
             &offset_in_memory, &offset_in_buffer, typestring_offset);
@@ -1490,7 +1492,7 @@ static void write_pointer_description(FILE *file, type_t *type,
 
     /* pass 2: search for pointers in fixed arrays */
     offset_in_memory = 0;
-    offset_in_buffer = conformance;
+    offset_in_buffer = 0;
     write_fixed_array_pointer_descriptions(
         file, NULL, type,
         &offset_in_memory, &offset_in_buffer, typestring_offset);
@@ -1512,7 +1514,7 @@ static void write_pointer_description(FILE *file, type_t *type,
 
     /* pass 4: search for pointers in varying arrays */
     offset_in_memory = 0;
-    offset_in_buffer = conformance;
+    offset_in_buffer = 0;
     write_varying_array_pointer_descriptions(
             file, NULL, type,
             &offset_in_memory, &offset_in_buffer, typestring_offset);
