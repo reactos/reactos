@@ -802,27 +802,27 @@ typedef struct
 
 typedef struct
 {
-    ULONG Length;
+    unsigned long Length;
     char *Next;
     char *CiePointer;
-    ULONG PcBegin;
-    ULONG PcRange;
-    ULONG AugLength;
+    unsigned long PcBegin;
+    unsigned long PcRange;
+    unsigned long AugLength;
     char *AugData;
     char *Instructions;
 } DW2FDE, *PDW2FDE;
 
 typedef struct _CFSTATE
 {
-    ULONG Location;
-    ULONG Code;
-    ULONG Reg;
-    ULONG Reg2;
-    ULONG FramePtr;
-    ULONG FramePtrDiff;
-    ULONG Offset;
-    ULONG IsUwop;
-    ULONG Scope;
+    unsigned long Location;
+    unsigned long Code;
+    unsigned long Reg;
+    unsigned long Reg2;
+    long FramePtr;
+    long FramePtrDiff;
+    long Offset;
+    unsigned long IsUwop;
+    unsigned long Scope;
 } DW2CFSTATE, *PDW2CFSTATE;
 
 #define NextCIE(p) ((void*)((char*)p + p->Length + 4))

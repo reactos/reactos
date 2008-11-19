@@ -131,7 +131,7 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
     {
         State->Code = DW_CFA_offset;
         State->Reg = Code & 0x3f;
-        Length += DwDecodeUleb128(&State->Offset, pc + 1);
+        Length += DwDecodeUleb128((unsigned long*)&State->Offset, pc + 1);
         State->Offset *= 8; // fixme data alignment
         State->IsUwop = 1;
     }
@@ -162,7 +162,12 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
             break;
         case DW_CFA_offset_extended:
             Length += DwDecodeUleb128(&State->Reg, pc + Length);
-            Length += DwDecodeUleb128(&State->Offset, pc + Length);
+            Length += DwDecodeUleb128((unsigned long*)&State->Offset, pc + Length);
+            State->IsUwop = 1;
+            break;
+        case DW_CFA_offset_extended_sf:
+            Length += DwDecodeUleb128(&State->Reg, pc + Length);
+            Length += DwDecodeSleb128(&State->Offset, pc + Length);
             State->IsUwop = 1;
             break;
         case DW_CFA_restore_extended:
@@ -184,19 +189,19 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
             break;
         case DW_CFA_def_cfa:
             Length += DwDecodeUleb128(&State->Reg, pc + Length);
-            Length += DwDecodeUleb128(&State->FramePtr, pc + Length);
+            Length += DwDecodeUleb128((unsigned long*)&State->FramePtr, pc + Length);
             State->IsUwop = 1;
             break;
         case DW_CFA_def_cfa_register:
             Length += DwDecodeUleb128(&State->Reg, pc + Length);
             break;
         case DW_CFA_def_cfa_offset:
-            Length += DwDecodeUleb128(&State->FramePtr, pc + Length);
+            Length += DwDecodeUleb128((unsigned long*)&State->FramePtr, pc + Length);
             State->IsUwop = 1;
             break;
         case DW_CFA_def_cfa_sf:
             Length += DwDecodeUleb128(&State->Reg, pc + Length);
-            Length += DwDecodeSleb128((LONG*)&State->FramePtr, pc + Length);
+            Length += DwDecodeSleb128(&State->FramePtr, pc + Length);
             State->FramePtr *= 8; // data alignment
             State->IsUwop = 1;
             break;
