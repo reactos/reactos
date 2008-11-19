@@ -34,6 +34,9 @@ class HTML_User_Login extends HTML_User
   public function __construct( )
   {
     session_start();
+
+    // register js files
+    $this->register_js('md5.js');
     parent::__construct();
   }
 
@@ -215,7 +218,6 @@ class HTML_User_Login extends HTML_User
     if (isset($_GET['sec']) && $_GET['sec'] == "security") { 
       $random_string_security = self::makeKey();
       setcookie($rdf_login_cookie_seckey, $random_string_security, 0, '/', Cookie::getDomain());
-      echo '<script language="javascript" src="js/md5.js"></script>';
     } 
     else {
       setcookie($rdf_login_cookie_seckey, '', time() - 3600, '/', Cookie::getDomain());
@@ -229,24 +231,27 @@ class HTML_User_Login extends HTML_User
     echo '<form action="'.$roscms_SET_path_ex.'login/" method="post">';
 
     if ($target_clean != '' ) {
-      echo '<input type="hidden" name="target" value="'.$target_clean.'" />';
+      echo_strip('
+        <div style="display:none;">
+          <input type="hidden" name="target" value="'.$target_clean.'" />
+        </div>');
     }
 
     echo_strip('
       <h1>Login</h1>
       <div class="u-h1">Login to '.$rdf_name.'</div>
       <div class="u-h2">You don\'t have a '.$rdf_name.' account yet? <a href="'.$roscms_SET_path_ex.'register/">Join now</a>, it\'s free and just takes a minute.</div>
-      <div align="center">
-      <div style="background: #e1eafb none repeat scroll 0%; width: 300px;">
-        <div class="corner1">
-          <div class="corner2">
-            <div class="corner3">
-              <div class="corner4">
-                <div style="text-align:center; padding: 4px;">
-                  <div class="login-title">'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'Secure ' : '').'Login</div>
-                  <div class="login-form">
-                    <label for="'.$rdf_login_cookie_usrname.'">Username</label>
-                    <input name="'.$rdf_login_cookie_usrname.'" type="text" class="input" tabindex="1" id="'.$rdf_login_cookie_usrname.'" ');
+      <div>
+        <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
+          <div class="corner1">
+            <div class="corner2">
+              <div class="corner3">
+                <div class="corner4">
+                  <div style="text-align:center; padding: 4px;">
+                    <div class="login-title">'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'Secure ' : '').'Login</div>
+                    <div class="login-form">
+                      <label for="'.$rdf_login_cookie_usrname.'">Username</label>
+                      <input name="'.$rdf_login_cookie_usrname.'" type="text" class="input" tabindex="1" id="'.$rdf_login_cookie_usrname.'" ');
     if (isset($_POST[$rdf_login_cookie_usrname])) {
       echo 'value="'.$_POST[$rdf_login_cookie_usrname].'"';
     }
@@ -299,7 +304,7 @@ class HTML_User_Login extends HTML_User
         </div>');
     }
 
-    echo '<div style="margin:10px">';
+    echo '<div style="margin:10px;text-align:center;">';
 
     if (isset($_GET['sec']) && ($_GET['sec'] == '' || $_GET['sec'] == 'standard')) {
       echo '<a href="'.$roscms_SET_path_ex.'login/?sec=security'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use enhanced security</a>';
@@ -309,8 +314,9 @@ class HTML_User_Login extends HTML_User
     }
     
     echo_strip('
-            </div>
-          <a href="'.$roscms_SET_path_ex.'login/lost/">Lost username or password?</a>
+            <br />
+            <a href="'.$roscms_SET_path_ex.'login/lost/">Lost username or password?</a>
+          </div>
         </div>
       </form>');
   } // end of member function

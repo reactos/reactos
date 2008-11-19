@@ -36,6 +36,10 @@ class HTML_CMS_Maintain extends HTML_CMS
   {
     $this->branch = 'maintain';
 
+    // register css & js files
+    $this->register_css('cms_maintain.css');
+    $this->register_js('cms_maintain.js.php');
+
     parent::__construct( $page_title, $page_css);
   }
 
@@ -89,8 +93,8 @@ class HTML_CMS_Maintain extends HTML_CMS
       </div>
 
       <p><a href="javascript:genpages()">Generate All Pages</a></p>
-      <div id="maintainarea" style="border: 1px dashed red;" style="display:none;"></div>
-      <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" />
+      <div id="maintainarea" style="border: 1px dashed red;display:none;"></div>
+      <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" />
       <br />');
 
     if (ROSUser::isMemberOfGroup('ros_sadmin')) {
@@ -100,24 +104,24 @@ class HTML_CMS_Maintain extends HTML_CMS
         <br />
         <h2>RosCMS Global Log</h2>
         <h3>High Security Log - '.date('Y-W').'</h3>
-        <textarea name="logviewerhigh" cols="75" rows="7" wrap="off">');echo Log::read('high');echo_strip('</textarea><br />
+        <textarea name="logviewerhigh" cols="75" rows="7">');echo Log::read('high');echo_strip('</textarea><br />
         <br />
         <h3>Medium Security Log - '.date('Y-W').'</h3>
-        <textarea name="logviewermed" cols="75" rows="5" wrap="off">');echo Log::read('medium');echo_strip('</textarea><br />
+        <textarea name="logviewermed" cols="75" rows="5">');echo Log::read('medium');echo_strip('</textarea><br />
         <br /><h3>Low Security Log - '.date('Y-W').'</h3>
-        <textarea name="logviewerlow" cols="75" rows="3" wrap="off">');echo Log::read('low');echo_strip('</textarea><br />
+        <textarea name="logviewerlow" cols="75" rows="3">');echo Log::read('low');echo_strip('</textarea><br />
         <br />
         <br />
         <br />
         <h2>RosCMS Generator Log</h2>
         <h3>High Security Log - '.date('Y-W').'</h3>
-        <textarea name="logviewerhigh2" cols="75" rows="7" wrap="off">');echo Log::read('high','generate');echo_strip('</textarea><br />
+        <textarea name="logviewerhigh2" cols="75" rows="7">');echo Log::read('high','generate');echo_strip('</textarea><br />
         <br />
         <h3>Medium Security Log - '.date('Y-W').'</h3>
-        <textarea name="logviewermed2" cols="75" rows="5" wrap="off">');echo Log::read('medium','generate');echo_strip('</textarea><br />
+        <textarea name="logviewermed2" cols="75" rows="5">');echo Log::read('medium','generate');echo_strip('</textarea><br />
         <br />
         <h3>Low Security Log - '.date('Y-W').'</h3>
-        <textarea name="logviewerlow2" cols="75" rows="3" wrap="off">');echo Log::read('low','generate');echo_strip('</textarea><br />
+        <textarea name="logviewerlow2" cols="75" rows="3">');echo Log::read('low','generate');echo_strip('</textarea><br />
         <br />
         <br />
         <br />
@@ -130,26 +134,18 @@ class HTML_CMS_Maintain extends HTML_CMS
         echo_strip('
           <h3>'.$language['lang_name'].'</h3>
           <h4>High Security Log - '.date('Y-W').'</h4>
-          <textarea name="logviewerhigh'.$language['lang_id'].'" cols="75" rows="5" wrap="off">');echo Log::read('high', $language['lang_id']);echo_strip('</textarea><br />
+          <textarea name="logviewerhigh'.$language['lang_id'].'" cols="75" rows="5">');echo Log::read('high', $language['lang_id']);echo_strip('</textarea><br />
           <br />
           <h4>Medium Security Log - '.date('Y-W').'</h4>
-          <textarea name="logviewermed'.$language['lang_id'].'" cols="75" rows="4" wrap="off">');echo Log::read('medium', $language['lang_id']);echo_strip('</textarea><br />
+          <textarea name="logviewermed'.$language['lang_id'].'" cols="75" rows="4">');echo Log::read('medium', $language['lang_id']);echo_strip('</textarea><br />
           <br />
           <h4>Low Security Log - '.date('Y-W').'</h4>
-        <textarea name="logviewerlow'.$language['lang_id'].'" cols="75" rows="3" wrap="off">');echo Log::read('low', $language['lang_id']);echo_strip('</textarea><br />
+        <textarea name="logviewerlow'.$language['lang_id'].'" cols="75" rows="3">');echo Log::read('low', $language['lang_id']);echo_strip('</textarea><br />
         <br />
         <br />');
       }
     } // end of ros_admin only
 
-    echo '
-      <script type="text/javascript" language="javascript">
-      <!--
-      ';
-      include('js/cms_maintain.js.php');
-      echo '
-       -->
-      </script>';
   }
 
 

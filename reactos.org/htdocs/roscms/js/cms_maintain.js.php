@@ -1,3 +1,4 @@
+<?php include('../custom.php'); ?>
 
 			function optimizedb() {
 				makeRequest('?page=data_out&d_f=maintain&d_u=optimize', 'optimize', 'maintainarea');

@@ -74,8 +74,8 @@ class HTML_User_LostPassword extends HTML_User
 
     echo_strip('
       <form action="'.$roscms_SET_path_ex.'login/lost/" method="post">
-        <div align="center">
-          <div style="background: #e1eafb none repeat scroll 0%; width: 300px;">
+        <div style="text-align: center;">
+          <div style="margin:0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
             <div class="corner1">
               <div class="corner2">
                 <div class="corner3">
@@ -223,7 +223,6 @@ class HTML_User_LostPassword extends HTML_User
     }
 
     echo_strip('
-                </div>
               </div>
             </div>
           </div>

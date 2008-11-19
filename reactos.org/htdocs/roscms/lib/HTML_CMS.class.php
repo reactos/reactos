@@ -42,22 +42,26 @@ abstract class HTML_CMS extends HTML
       header('location:?page=nopermission');
     }
 
+    // register css & js files
+    $this->register_css('cms_navigation.css');
+    $this->register_js('cms_navigation.js.php');
+
     parent::__construct( $page_title, 'roscms');
   }
   
   protected function build()
   {
-    parent::header();
+    $this->header();
     $this->navigation();
     $this->body();
-    parent::footer();
+    $this->footer();
   }
 
 
   /**
    *
    *
-   * @access public
+   * @access private
    */
   private function navigation( )
   {
@@ -66,26 +70,6 @@ abstract class HTML_CMS extends HTML
     global $roscms_intern_login_check_username;
     global $roscms_intern_page_link;
     global $roscms_intern_webserver_pages, $roscms_intern_page_link;
-
-    // get CSS
-    echo '
-      <style type="text/css">
-      <!--
-      ';
-      include('css/cms_navigation.css');
-      echo '
-      -->
-      </style>';
-
-    // Javascript
-    echo '
-      <script language="javascript" type="text/javascript">
-      <!--
-      ';
-      include('js/cms_navigation.js.php');
-      echo '
-      -->
-      </script>';
 
     // get selected navigation entry
     echo_strip('
@@ -101,7 +85,7 @@ abstract class HTML_CMS extends HTML
         <a href="'.$roscms_intern_page_link.'logout">Sign out</a>
       </div>
       <div class="roscms_page">
-        <table id="mt" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <table id="mt" border="0" cellpadding="0" cellspacing="0" style="width:100%">
           <tbody>
             <tr>
               <th class="int'.(($this->branch == 'welcome') ? '2' : '1').'" onclick="'."roscms_mainmenu('welcome')".'">
@@ -126,52 +110,52 @@ abstract class HTML_CMS extends HTML
 
     if (ROSUser::isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
       echo_strip('
-              <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."roscms_mainmenu('user')".'">
-                <div class="tc1">
-                  <div class="tc2">
-                    <div class="tc3"></div>
-                  </div>
-                </div>
-                <div class="tblbl">User</div>
-              </th>
-              <td>&nbsp;&nbsp;</td>');
+        <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."roscms_mainmenu('user')".'">
+          <div class="tc1">
+            <div class="tc2">
+              <div class="tc3"></div>
+            </div>
+          </div>
+          <div class="tblbl">User</div>
+        </th>
+        <td>&nbsp;&nbsp;</td>');
     }
 
     if ($roscms_security_level == 3) {
       echo_strip('
-              <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."roscms_mainmenu('maintain')".'">
-                <div class="tc1">
-                  <div class="tc2">
-                    <div class="tc3"></div>
-                  </div>
-                </div>
-                <div class="tblbl">Maintain</div>
-              </th>
-              <td>&nbsp;&nbsp;</td>
-              
-              <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."roscms_mainmenu('stats')".'">
-                <div class="tc1">
-                  <div class="tc2">
-                    <div class="tc3"></div>
-                  </div>
-                </div>
-                <div class="tblbl">Statistics</div>
-              </th>
-              <td>&nbsp;&nbsp;</td>');
+        <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."roscms_mainmenu('maintain')".'">
+          <div class="tc1">
+            <div class="tc2">
+              <div class="tc3"></div>
+            </div>
+          </div>
+          <div class="tblbl">Maintain</div>
+        </th>
+        <td>&nbsp;&nbsp;</td>
+
+        <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."roscms_mainmenu('stats')".'">
+          <div class="tc1">
+            <div class="tc2">
+              <div class="tc3"></div>
+            </div>
+          </div>
+          <div class="tblbl">Statistics</div>
+        </th>
+        <td>&nbsp;&nbsp;</td>');
     }
 
     echo_strip('
-              <td width="100%">
-                <div align="right" id="ajaxloadinginfo" style="visibility:hidden;">
-                  <img src="images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            <td style="width:100%">
+              <div id="ajaxloadinginfo" style="visibility:hidden; text-align: center;">
+                <img src="images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-        <div class="tc2" style="background-color:#C9DAF8;">
-          <div class="submenu" style="font-family:Verdana, Arial, Helvetica, sans-serif; font-size:10px;">');
+      <div class="tc2" style="background-color:#C9DAF8;">
+        <div class="submenu" style="font-family:Verdana, Arial, Helvetica, sans-serif; font-size:10px;">');
 
     switch ($this->branch) {
       case 'welcome';
@@ -197,9 +181,20 @@ abstract class HTML_CMS extends HTML
         break;
     }
     echo_strip('
-          </div>
-        </div>');
+        </div>
+      </div>');
   } // end of member function navigation
+
+
+  /**
+   *
+   *
+   * @access protected
+   */
+  protected function footer() {
+    echo '</div>';
+    parent::footer();
+  }
 
 } // end of HTML_CMS
 ?>

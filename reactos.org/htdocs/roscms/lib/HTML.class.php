@@ -27,12 +27,20 @@ abstract class HTML
 
   protected $page_start; // start time of page generation
   protected $title; 
-  protected $css; 
+  protected $css_files=array(); 
+  protected $js_files=array(); 
 
   public function __construct( $page_title = '', $page_css = 'roscms' )
   {
+    // get page title and register css files
     $this->title = $page_title;
-    $this->css = $page_css;
+    if ($page_css == 'roscms'){
+      $this->register_css('style_v3.css');
+    }
+    else {
+      $this->register_css('style.css');
+      $this->register_css('logon.css');
+    }
     
     // this page was generated in ...
     $roscms_gentime = explode(' ',microtime()); 
@@ -73,7 +81,7 @@ abstract class HTML
 
     // output header
     echo_strip( '
-      <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
       <html lang="'.$roscms_langres['lang_code'].'">
       <head>
         <title>ReactOS '.(($this->title!=='') ? '- '.$this->title : '').'</title>
@@ -83,15 +91,21 @@ abstract class HTML
         <meta name="generator" content="RosCMS" />
         <meta name="Content-language" content="'.$roscms_langres['lang_code'].'" />
         <meta name="Robots" content="noindex,nofollow" />
+        <meta http-equiv="Content-Script-Type" content="text/javascript" />
+        <meta http-equiv="Content-Style-Type" content="text/css" />
         <link rel="SHORTCUT ICON" href="../favicon.ico" />');
 
-    if ($this->css == 'roscms') {
-      echo '<link href="'.$roscms_intern_webserver_roscms.'css/style_v3.css" type="text/css" rel="stylesheet" />';
+    // link css & js files (use register_* methods)
+    foreach($this->css_files as $file) {
+      if ($file['condition'] === false) {
+        echo '<link href="'.$roscms_intern_webserver_roscms.'css/'.$file['name'].'" type="text/css" rel="stylesheet" />';
+      }
+      else {
+        echo '<!--[if '.$file['condition'].']<link href="'.$roscms_intern_webserver_roscms.'css/'.$file['name'].'" type="text/css" rel="stylesheet" /><![endif]-->';
+      }
     }
-    else {
-      echo_strip('
-        <link href="'.$roscms_intern_webserver_roscms.'css/style.css" type="text/css" rel="stylesheet" />
-        <link href="'.$roscms_intern_webserver_roscms.'css/logon.css" type="text/css" rel="stylesheet" />');
+    foreach($this->js_files as $file) {
+      echo '<script src="'.$roscms_intern_webserver_roscms.'js/'.$file.'" type="text/javascript"></script>';
     }
 
     echo_strip('
@@ -99,17 +113,15 @@ abstract class HTML
       <body>
       <div id="top">
         <div id="topMenu"> 
-          <p align="center" style="color: white;"> 
+          <p style="color: white;text-align: center;"> 
             <a href="'.$roscms_intern_webserver_pages.'?page=index">'.$roscms_langres['Home'].'</a> <span>|</span>
             <a href="'.$roscms_intern_webserver_pages.'?page=about">'.$roscms_langres['Info'].'</a> <span>|</span>
             <a href="'.$roscms_intern_webserver_pages.'?page=community">'.$roscms_langres['Community'].'</a> <span>|</span>
             <a href="'.$roscms_intern_webserver_pages.'?page=dev">'.$roscms_langres['Dev'].'</a> <span>|</span>
             <a href="'.$roscms_intern_webserver_roscms.'?page=user">'.$roscms_langres['myReactOS'].'</a>
-           </p>
-       </div>
-      </div>
-
-      <!-- Start of Navigation Bar -->');
+          </p>
+        </div>
+      </div>');
   } // end of member function header
 
 
@@ -129,17 +141,37 @@ abstract class HTML
 
     // footer information
     echo_strip('
-      <hr size="1" />
-
+      <hr />
       <div id="footer" style="text-align:center;">
         '.$roscms_extern_brand.' '.$roscms_extern_version_detail.' - (c) 2005-2007 Klemens Friedl<br />
         <br />
         Page generated in '.$page_time.' seconds
       </div>
-
       </body>
       </html>');
   } // end of member function footer
+
+
+  /**
+   * register a css file to be included in the header
+   *
+   * @access protected
+   */
+  protected function register_css( $name, $condition = false )
+  {
+    $this->css_files[] = array('name'=>$name, 'condition'=>$condition);
+  } // end of member function register_css
+
+
+  /**
+   * register a javascript file to be included in the header
+   *
+   * @access protected
+   */
+  protected function register_js( $name )
+  {
+    $this->js_files[] = $name;
+  } // end of member function register_css
 
 } // end of HTML
 ?>

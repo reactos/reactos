@@ -31,11 +31,11 @@ class HTML_User_ProfileEdit extends HTML_User
    *
    * @access public
    */
-  public function __construct( $page_title = '')
+  public function __construct()
   {
     require('login.php');
     session_start();
-    parent::__construct( $page_title);
+    parent::__construct();
   }
 
 
@@ -64,10 +64,10 @@ class HTML_User_ProfileEdit extends HTML_User
 
     if ($activation_code != '' && strlen($activation_code) > 6) {
       echo_strip('
-        <h1><a href="<?php echo $roscms_SET_path_ex; ?>my/">myReactOS</a> &gt; <a href="<?php echo $roscms_SET_path_ex; ?>my/edit/">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
+        <h1><a href="'.$roscms_SET_path_ex.'my/">myReactOS</a> &gt; <a href="'.$roscms_SET_path_ex.'my/edit/">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
         <div class="u-h1">Activate E-Mail Address</div>
         <div class="u-h2">
-          So you have a new email address and would like to keep your <?php echo $rdf_name; ?> account up-to-date? That is a very good idea. To confirm your email address change, please enter your new email address again.
+          So you have a new email address and would like to keep your '.$rdf_name.' account up-to-date? That is a very good idea. To confirm your email address change, please enter your new email address again.
         </div>');
     }
     else {
@@ -79,8 +79,8 @@ class HTML_User_ProfileEdit extends HTML_User
     
     echo_strip('
       <form action="'.$roscms_SET_path_ex.'my/edit/" method="post">
-        <div align="center">
-          <div style="background: #e1eafb none repeat scroll 0%; width: 300px;">
+        <div style="text-align:center;">
+          <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
             <div class="corner1">
               <div class="corner2">
                 <div class="corner3">
@@ -207,7 +207,7 @@ class HTML_User_ProfileEdit extends HTML_User
         echo '<div>Password changed.</div>';
       }
 
-      echo '<div><a href="'.$roscms_SET_path_ex.'my/" style="color:#FF0000 !important; text-decoration:underline;">My Profile</a></div>';
+      echo '<div><a href="'.$roscms_SET_path_ex.'my/" style="color:red !important; text-decoration:underline;">My Profile</a></div>';
 
       ROSUser::syncSubsystems($profile['user_id']);
 
@@ -217,13 +217,13 @@ class HTML_User_ProfileEdit extends HTML_User
       echo_strip('
         <div class="login-title">Activate E-Mail Address</div>
         <div class="login-form">
-          <label for="useremail"'.(isset($_POST['registerpost']) ? ' style="color:#FF0000;"' : '').'>New E-Mail Address</label>
+          <label for="useremail"'.(isset($_POST['registerpost']) ? ' style="color:red;"' : '').'>New E-Mail Address</label>
           <input name="useremail" type="text" class="input" tabindex="4" id="useremail" value="" size="50" maxlength="50" />
         </div>
         <div class="login-button">
           <input type="submit" name="submit" value="Save" tabindex="16" />
           <br />
-          <input type="button" onclick="'."window.location='".$roscms_SET_path_ex."'".' tabindex="17" value="Cancel" name="cancel" style="color:#777777;" />
+          <input type="button" onclick="'."window.location='".$roscms_SET_path_ex."'".'" tabindex="17" value="Cancel" name="cancel" style="color:#777777;" />
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
         </div>');
     }
@@ -233,9 +233,10 @@ class HTML_User_ProfileEdit extends HTML_User
         <div style="font-style:italic">* not required</div>
         <div class="login-form">
           <label for="username">Username</label>
-          <input name="username" type="text" class="input" id="username" value="'.$profile['user_name'].'" size="50" maxlength="50" disabled="disabled" value="Klemens Friedl" />
+          <input name="username" type="text" class="input" id="username" value="'.$profile['user_name'].'" size="50" maxlength="50" disabled="disabled" />
           <br />
           <span style="color:#817A71;">You cannot change your username.</span>
+        </div>
 v>
         
         <div class="login-form">
@@ -340,22 +341,22 @@ v>
         </div>
         <div class="login-form">
           <label for="useroccupation">Location *</label>
-          <a href="'.$roscms_intern_webserver_pages.'peoplemap/" target="_blank" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">My Location on the Map</a>
+          <a href="'.$roscms_intern_webserver_pages.'peoplemap/" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">My Location on the Map</a>
         </div>
 
         <div class="login-options">
           <fieldset>
             <legend style="color:#817A71;margin-bottom: 10px;">&nbsp;Login Settings&nbsp;</legend>
-            <input name="loginoption1" style="width:auto;" type="checkbox" id="loginoption1" value="true"'.(isset($_POST['loginoption1']) || (empty($_POST['registerpost']) && $profile['user_setting_multisession'] == 'true') ? 'checked' : '').' tabindex="11" />
+            <input name="loginoption1" style="width:auto;" type="checkbox" id="loginoption1" value="true"'.(isset($_POST['loginoption1']) || (empty($_POST['registerpost']) && $profile['user_setting_multisession'] == 'true') ? ' checked="checked"' : '').' tabindex="11" />
             <label style="display:inline;" for="loginoption1">Multisession</label>
             <br />
-            <input name="loginoption2" style="width:auto;" type="checkbox" id="loginoption2" value="true"'.(isset($_POST['loginoption2']) || (empty($_POST['registerpost']) && $profile['user_setting_browseragent'] == 'true') ? 'checked' : '').' tabindex="12" /> 
+            <input name="loginoption2" style="width:auto;" type="checkbox" id="loginoption2" value="true"'.(isset($_POST['loginoption2']) || (empty($_POST['registerpost']) && $profile['user_setting_browseragent'] == 'true') ? ' checked="checked"' : '').' tabindex="12" /> 
             <label style="display:inline;" for="loginoption2">Browser Agent Check</label>
             <br />
-            <input name="loginoption3" style="width:auto;" type="checkbox" id="loginoption3" value="true"'.((isset($_POST['loginoption3']) || (empty($_POST['registerpost']) && $profile['user_setting_ipaddress'] == 'true')) ? 'checked' : '').' tabindex="13" /> 
+            <input name="loginoption3" style="width:auto;" type="checkbox" id="loginoption3" value="true"'.((isset($_POST['loginoption3']) || (empty($_POST['registerpost']) && $profile['user_setting_ipaddress'] == 'true')) ? ' checked="checked"' : '').' tabindex="13" /> 
             <label style="display:inline;" for="loginoption3">IP Address Check</label>
             <br />
-            <input name="loginoption4" style="width:auto;" type="checkbox" id="loginoption4" value="true"'.((isset($_POST['loginoption4']) || (empty($_POST['registerpost']) && $profile['user_setting_timeout'] == 'true')) ? 'checked' : '').' tabindex="14" /> 
+            <input name="loginoption4" style="width:auto;" type="checkbox" id="loginoption4" value="true"'.((isset($_POST['loginoption4']) || (empty($_POST['registerpost']) && $profile['user_setting_timeout'] == 'true')) ? ' checked="checked"' : '').' tabindex="14" /> 
             <label style="display:inline;" for="loginoption4">Log me on automatically</label>
           </fieldset>
         </div>

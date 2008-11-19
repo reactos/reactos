@@ -1,3 +1,6 @@
+<?php
+  include_once('../custom.php'); ?>
+
 	function pagerefresh() {
 		exitmsg = '';
 		window.location.href = '<?php echo $roscms_intern_page_link."data&branch=".urldecode(@$_GET['branch']); ?>';

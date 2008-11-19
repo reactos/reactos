@@ -38,7 +38,7 @@ class HTML_User_Profile extends HTML_User
   {
     require('login.php');
     $this->search = $search;
-    parent::__construct( $page_title);
+    parent::__construct( $page_title );
   }
 
 
@@ -149,17 +149,17 @@ class HTML_User_Profile extends HTML_User
 
     // begin output
     echo_strip('
-      <h1>myReactOS Profile</h1>
+      <div class="contentSmall"><h1>myReactOS Profile</h1></div>
       <div class="u-h1">'.(($profile['user_fullname'] != '') ? $profile['user_fullname'].' ('.$profile['user_name'].')' : $profile['user_name']).'</div>
       <div class="u-h2">A person who joined '.$rdf_name.' on '.Date::getLocal($profile['user_register']).'.</div>
       <br />
-      <div align="center">
-        <div style="background: #e1eafb none repeat scroll 0%; width: 300px;">
+      <div style="text-align:center;">
+        <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
           <div class="corner1">
             <div class="corner2">
               <div class="corner3">
                 <div class="corner4">
-                  <div style="text-align:center; padding-top: 4px; padding-bottom: 4px; padding-left: 4px; padding-right: 4px;">
+                  <div style="text-align:center; padding: 4px;">
                     <div class="login-title">myReactOS Profile</div>
 
                     <div class="login-form">
@@ -227,7 +227,7 @@ class HTML_User_Profile extends HTML_User
       echo_strip('
         <div class="login-form">
           <div class="u-desc">Private Website</div>
-          <div class="u-title"><a href="'.$profile['user_website'].'" target="_blank" rel="nofollow">.'.htmlspecialchars($profile['user_website']).'</a></div>
+          <div class="u-title"><a href="'.$profile['user_website'].'" rel="nofollow">.'.htmlspecialchars($profile['user_website']).'</a></div>
         </div>');
     }
 
@@ -261,8 +261,7 @@ class HTML_User_Profile extends HTML_User
     // Location
     echo_Strip('
         <div class="login-form">
-          <label for="useroccupation">Location</label>
-          <a href="'.$roscms_intern_webserver_pages.'peoplemap/" target="_blank" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">'.($profile['user_id']==$roscms_intern_account_id ? 'My ' : '').'Location on the Map</a>
+          <a href="'.$roscms_intern_webserver_pages.'peoplemap/" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">'.($profile['user_id']==$roscms_intern_account_id ? 'My ' : '').'Location on the Map</a>
         </div>
       </div>');
 

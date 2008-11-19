@@ -36,6 +36,15 @@ class HTML_CMS_Website extends HTML_CMS
   {
     $this->branch = 'website';
 
+    // register css
+    $this->register_css('cms_website.css');
+    $this->register_css('cms_website-ie.css','IE');
+
+    $this->register_js('cms_website.js');
+    $this->register_js('cms_website.js.php');
+    $this->register_js('diffv3.js');
+    $this->register_js('../editor/jscripts/tiny_mce/tiny_mce_src.js');
+    $this->register_js('../editor/jscripts/mef.js');
     parent::__construct( $page_title, $page_css);
   }
 
@@ -61,7 +70,7 @@ class HTML_CMS_Website extends HTML_CMS
         <p>It does work fine in Internet Explorer 5.5+, Mozilla Firefox 1.5+, Opera 9.1+, Safari 3.2+ and probably every client with basic Javascript (+AJAX) support.</p>
       </noscript>');
     echo '
-      <script type="text/javascript" language="javascript">
+      <script type="text/javascript">
       <!--'."
         // Navigation Data
         var roscms_current_page = 'new';
@@ -123,28 +132,9 @@ class HTML_CMS_Website extends HTML_CMS
         
         var exitmsg = ".'"Click Cancel to continue with RosCMS, click OK to leave RosCMS.\n\nThanks for using RosCMS!"'."
       -->
-      </script>";
-    echo_strip('
-      <script language="javascript" type="text/javascript" src="'.$roscms_intern_webserver_roscms.'js/cms_website.js"></script>
-      <script language="javascript" type="text/javascript" src="'.$roscms_intern_webserver_roscms.'js/cms_website.js.php"></script>
-      <script language="javascript" type="text/javascript" src="'.$roscms_intern_webserver_roscms.'editor/jscripts/tiny_mce/tiny_mce_src.js"></script>
-      <script language="javascript" type="text/javascript" src="'.$roscms_intern_webserver_roscms.'editor/jscripts/mef.js"></script>
-      <script language="javascript" type="text/javascript" src="'.$roscms_intern_webserver_roscms.'js/diffv3.js"></script>');
-
-    echo '
-      <style type="text/css">
-      <!--';
-
-    include('css/cms_website.css');
-     
-    echo '--><!--[if IE]>';
-    include('css/cms_website-ie.css');
-    echo '<![endif]-->
-      </style>';
-
-    echo_strip('
+      </script>";echo_strip('
       <div class="spacer">&nbsp;</div>
-      <div align="center" style="padding-top: 8px; padding-bottom: 5px;">
+      <div style="padding-top: 8px; padding-bottom: 5px;text-align: center">
         <div id="alertb" class="infobox" style="visibility:hidden;">
           <div class="lab1">
             <div class="lab2">
@@ -290,7 +280,7 @@ class HTML_CMS_Website extends HTML_CMS
                 <div class="rounded_ul">
                   <div class="rounded_ur">
                     <div class="bubble" id="bub">
-                      <div id="frametable" name="frametable" style="border: 0px dashed white;">
+                      <div id="frametable" style="border: 0px dashed white;">
                         <div class="filterbar">
                           <input id="txtfind" type="text" accesskey="f" tabindex="1" title="Search &amp; Filters" onfocus="'."textbox_hint(this.id, this.value, 'Search &amp; Filters', 1)".'" onblur="'."textbox_hint(this.id, this.value, 'Search &amp; Filters', 0)".'" onkeyup="filtsearchbox()" value="Search &amp; Filters" size="39" maxlength="250" class="tfind" />&nbsp;
                           <span id="filters" class="filterbutton" onclick="TabOpenClose(this.id)"><img id="filtersi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Filters</span>&nbsp;
@@ -303,7 +293,7 @@ class HTML_CMS_Website extends HTML_CMS
                               &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="filtsearch()"><img src="images/search.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Search</span>
                             </div>
                           </div>');echo '
-                          <script type="text/javascript" language="javascript">
+                          <script type="text/javascript">
                           <!--
                             // add first filter entry (default)
                             filtentryclear(); 
@@ -358,44 +348,43 @@ class HTML_CMS_Website extends HTML_CMS
           <p><strong>Table Legend</strong></p>
           <table id="legend" cellspacing="5">
             <tr>
-              <td class="lbox" bgcolor="#dddddd">&nbsp;</td>
-              <td width="205" rowspan="2">
+              <td class="lbox" style="background-color:#ddd">&nbsp;</td>
+              <td style="width:205px" rowspan="2">
                 Standard<br />
                 <span class="style2">(odd/even)</span>
               </td>
-              <td width="50" rowspan="5">&nbsp;</td>
-              <td class="lbox" bgcolor="#ffcc99">&nbsp;</td>
-              <td width="205">Selected</td>
+              <td style="width:50px" rowspan="5">&nbsp;</td>
+              <td class="lbox" style="background-color:#ffcc99">&nbsp;</td>
+              <td style="width:205px">Selected</td>
             </tr>
             <tr>
-              <td class="lbox" bgcolor="#eeeeee">&nbsp;</td>
-              <td class="lbox" bgcolor="#A3EDB4">&nbsp;</td>
+              <td class="lbox" style="background-color:#eeeeee">&nbsp;</td>
+              <td class="lbox" style="background-color:#A3EDB4">&nbsp;</td>
               <td>Translation  up to date</td>
             </tr>
             <tr>
-              <td class="lbox" bgcolor="#B5EDA3">&nbsp;</td>
+              <td class="lbox" style="background-color:#B5EDA3">&nbsp;</td>
               <td>New</td>
-              <td class="lbox" bgcolor="#D6CAE4">&nbsp;</td>
+              <td class="lbox" style="background-color:#D6CAE4">&nbsp;</td>
               <td>Translation doesn\'t exist</td>
             </tr>
             <tr>
-              <td class="lbox" bgcolor="#FFE4C1">&nbsp;</td>
+              <td class="lbox" style="background-color:#FFE4C1">&nbsp;</td>
               <td>Draft</td>
-              <td class="lbox" bgcolor="#FAA5A5">&nbsp;</td>
+              <td class="lbox" style="background-color:#FAA5A5">&nbsp;</td>
               <td>Translation  outdated</td>
             </tr>
             <tr>
-              <td class="lbox" bgcolor="#ffffcc">&nbsp;</td>
+              <td class="lbox" style="background-color:#ffffcc">&nbsp;</td>
               <td>Mouse hover</td>
-              <td class="lbox" bgcolor="#FFCCFF">&nbsp;</td>
+              <td class="lbox" style="background-color:#FFCCFF">&nbsp;</td>
               <td>Unknown</td>
             </tr>
           </table>
         </div>
       </div>
-    </div>
-    <br />
-    <script type="text/javascript" language="javascript" src="'.$roscms_intern_webserver_roscms.'js/cms_website-init.js"></script>');
+      <br />
+      <script type="text/javascript" src="'.$roscms_intern_webserver_roscms.'js/cms_website-init.js"></script>');
   }
 
 

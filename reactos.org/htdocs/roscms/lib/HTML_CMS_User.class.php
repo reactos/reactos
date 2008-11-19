@@ -36,6 +36,10 @@ class HTML_CMS_User extends HTML_CMS
   {
     $this->branch = 'user';
 
+    // register css & js files
+    $this->register_css('cms_user.css');
+    $this->register_js('cms_user.js');
+
     parent::__construct( $page_title, $page_css);
   }
 
@@ -53,14 +57,6 @@ class HTML_CMS_User extends HTML_CMS
       return;
     }
 
-    echo '
-      <style type="text/css">
-      <!--
-      ';
-      include('css/cms_user.css');
-      echo '
-      -->
-      </style>';
     echo_strip('
       <br />
       <h2>User</h2>
@@ -84,7 +80,7 @@ class HTML_CMS_User extends HTML_CMS
         <input name="searchopt" type="radio" id="searchopt3" value="email" onclick="getuser()" /><label>email address</label>
         <input name="searchopt" type="radio" id="searchopt4" value="website" onclick="getuser()" /><label>website</label>
         <input name="searchopt" type="radio" id="searchopt5" value="language" onclick="getuser()" /><label>language</label>
-        <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" /><br />
+        <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" /><br />
         <br />
       </div>
       <div id="userarea"></div>
@@ -104,14 +100,6 @@ class HTML_CMS_User extends HTML_CMS
     echo_strip('
       </ul>
       <br />');
-    echo '
-      <script type="text/javascript" language="javascript">
-      <!--
-      ';
-      include('js/cms_user.js');
-      echo '
-      -->
-      </script>';
   }
 
 

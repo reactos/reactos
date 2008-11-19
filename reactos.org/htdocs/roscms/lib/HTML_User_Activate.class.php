@@ -119,7 +119,7 @@ class HTML_User_Activate extends HTML_User
         </div>
 
         <div class="login-form">
-          <label for="useremail"'.((isset($_POST['registerpost']) && (EMail::isValid($_POST['useremail']) || !$mail_exists)) ? ' style="color:#FF0000;"' : '').'>Your E-Mail Address</label>
+          <label for="useremail"'.((isset($_POST['registerpost']) && (EMail::isValid($_POST['useremail']) || !$mail_exists)) ? ' style="color:red;"' : '').'>Your E-Mail Address</label>
           <input name="useremail" type="text" class="input" tabindex="4" id="useremail"'.(isset($_POST['useremail']) ? 'value="'.$_POST['useremail'].'"' : '').' size="50" maxlength="50" />
         </div>
 

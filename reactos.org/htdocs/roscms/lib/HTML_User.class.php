@@ -66,7 +66,7 @@ abstract class HTML_User extends HTML
 
     echo_strip('
       <table style="border:0" width="100%" cellpadding="0" cellspacing="0">
-        <tr valign="top">
+        <tr style="vertical-align: top;">
           <td style="width:147px" id="leftNav"> 
             <div class="navTitle">Navigation</div>
             <ol>
@@ -85,9 +85,9 @@ abstract class HTML_User extends HTML
           <li title="'.$roscms_intern_login_check_username.'">&nbsp;Nick:&nbsp;'.substr($roscms_intern_login_check_username, 0, 9).'</li>
           <li><a href="'.$roscms_SET_path_ex.'my/">My Profile</a></li>
           <li><a href="'.$roscms_SET_path_ex.'search/">User Search</a></li>
-          <li><a href="'.$roscms_intern_webserver_pages.'peoplemap/" target="_blank">User Map</a></li>');
+          <li><a href="'.$roscms_intern_webserver_pages.'peoplemap/">User Map</a></li>');
       if ($roscms_security_level > 0) {
-        echo '<li><a href="'.$roscms_intern_webserver_roscms.'?page=data&branch=welcome">RosCMS Interface</a></li>';
+        echo '<li><a href="'.$roscms_intern_webserver_roscms.'?page=data&amp;branch=welcome">RosCMS Interface</a></li>';
       }
       echo_strip('
           <li><a href="?page=logout">'.$roscms_langres['Logout'].'</a></li>
@@ -121,7 +121,7 @@ abstract class HTML_User extends HTML
       <div class="navTitle">Language</div>
       <ol>
         <li> 
-          <div align="center"> 
+          <div style="text-align:center;"> 
             <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$roscms_SET_path_ex.$rdf_uri_str."?lang=' + this.options[this.selectedIndex].value".'">
               <optgroup label="current language">'); 
  
@@ -156,8 +156,7 @@ abstract class HTML_User extends HTML
         </ol>
         <br />
       </td>
-      <td id="content">
-        <div class="contentSmall">');
+      <td id="content">');
   } // end of member function navigation
 
 } // end of HTML_User

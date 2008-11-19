@@ -67,8 +67,8 @@ class HTML_User_Register extends HTML_User
       </ul>
 
       <form action="'.$roscms_SET_path_ex.'register/" method="post">
-        <div align="center">
-          <div style="background: #e1eafb none repeat scroll 0%; width: 300px;">
+        <div>
+          <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
             <div class="corner1">
               <div class="corner2">
                 <div class="corner3">
@@ -231,6 +231,7 @@ class HTML_User_Register extends HTML_User
           <input name="usercaptcha" type="text" class="input" tabindex="7" id="usercaptcha" size="50" maxlength="50" />
           <script type="text/javascript">');echo "
           <!--
+            
             var BypassCacheNumber = 0;
 
             function CaptchaReload()
@@ -239,7 +240,8 @@ class HTML_User_Register extends HTML_User
               document.getElementById('captcha').src = '".$roscms_SET_path_ex.">register/captcha/' + BypassCacheNumber;
             }
 
-            document.write('<br /><span style=\"color:#817A71; \">If you can't read this, try <a href=\"javascript:CaptchaReload()\">another one</a>.</span>');
+            document.write(<![CDATA['<br /><span style=\"color:#817A71; \">If you can't read this, try <a href=\"javascript:CaptchaReload()\">another one</a>.</span>']]>);
+          
           -->";echo_strip('
           </script>
           <img id="captcha" src="'.$roscms_SET_path_ex.'register/captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$rdf_support_email_str.' for help." title="Are you human?" />
