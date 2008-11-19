@@ -82,8 +82,8 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
     /* ToDo add support for dwFlags */
 
 
-    /* Get our hdc for the surface */
-    hDC = (HDC)lpLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hDC;
+    /* Get our hdc for the active windows */
+    hDC = GetDC(lpLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
 
     if (hDC != NULL)
     {
@@ -202,8 +202,8 @@ DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData)
 
     DX_WINDBG_trace();
 
-    /* Get our hdc for the surface */
-    hDC = (HDC) lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hDC;
+    /* Get our hdc for the active windows */
+    hDC = GetDC(lpUnLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hFocusWnd);
 
     if (hDC != NULL)
     {
