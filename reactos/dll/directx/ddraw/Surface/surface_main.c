@@ -415,6 +415,12 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
      /* Zero out members in DDHAL_LOCKDATA */
     ZeroMemory(&mdLock, sizeof(DDHAL_LOCKDATA));
 
+    if ( (ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags &
+        DDHAL_SURFCB32_UNLOCK) == DDHAL_SURFCB32_UNLOCK)
+    {
+        ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags -=DDHAL_SURFCB32_UNLOCK;
+        ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags -=DDHAL_SURFCB32_LOCK;
+    }
      /* Check if we got HAL support for this api */
     if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags &
         DDHAL_SURFCB32_LOCK) == DDHAL_SURFCB32_LOCK)
@@ -463,7 +469,7 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
     if (!DdResetVisrgn(ThisDest->lpLcl->lpSurfMore->slist[0], NULL))
     {
       DX_STUB_str("Here DdResetVisrgn lock");
-      return DDERR_UNSUPPORTED;
+      // return DDERR_UNSUPPORTED;
     }
 
     if (mdLock.Lock(&mdLock)!= DDHAL_DRIVER_HANDLED)
@@ -518,6 +524,12 @@ HRESULT WINAPI Main_DDrawSurface_Unlock (LPDDRAWI_DDRAWSURFACE_INT This, LPRECT 
     ZeroMemory(&mdUnLock, sizeof(DDHAL_UNLOCKDATA));
 
      /* Check if we got HAL support for this api */
+    if ( (This->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags &
+        DDHAL_SURFCB32_UNLOCK) == DDHAL_SURFCB32_UNLOCK)
+    {
+        This->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags -=DDHAL_SURFCB32_UNLOCK;
+        This->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags -=DDHAL_SURFCB32_LOCK;
+    }
     if (( This->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags &
         DDHAL_SURFCB32_UNLOCK) == DDHAL_SURFCB32_UNLOCK)
     {

@@ -16,6 +16,8 @@ DWORD CALLBACK HelDdSurfAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA lpDest
 
 DWORD CALLBACK HelDdSurfBlt(LPDDHAL_BLTDATA lpBltData)
 {
+    DX_WINDBG_trace();
+
     if (lpBltData->dwFlags & DDBLT_COLORFILL)
     {
         HBRUSH hbr = CreateSolidBrush(lpBltData->bltFX.dwFillColor );
@@ -63,77 +65,95 @@ DWORD CALLBACK HelDdSurfGetFlipStatus(LPDDHAL_GETFLIPSTATUSDATA lpGetFlipStatusD
 
 DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 {
+
     HDC hDC;
-    BITMAP bm;
-    PDWORD pixels = NULL;
-    HGDIOBJ hBmp;
-    BITMAPINFO bmi;
-    int retvalue = 0;
+    HBITMAP hImage = NULL;
+
+    LONG cbBuffer = 0;
+    LPDWORD pixels = NULL;
+
+    HDC hMemDC = NULL;
+    HBITMAP hDCBmp = NULL;
+    BITMAP bm = {0};
+
+    DX_WINDBG_trace();
 
     /* ToDo tell ddraw internal this surface are locked */
     /* ToDo add support for dwFlags */
 
+
     /* Get our hdc for the surface */
     hDC = (HDC)lpLockData->lpDDSurface->lpSurfMore->lpDD_lcl->hDC;
 
-    /* Get our bitmap handle from hdc, we need it if we want extract the Bitmap pixel data */
-    hBmp = GetCurrentObject(hDC, OBJ_BITMAP);
-
-    /* Get our bitmap information from hBmp, we need it if we want extract the Bitmap pixel data */
-    if (GetObject(hBmp, sizeof(BITMAP), &bm) )
+    if (hDC != NULL)
     {
-        /* Alloc memory buffer at usermode for the bitmap pixel data  */
-        pixels = (PDWORD) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bm.bmWidth * bm.bmHeight * (bm.bmBitsPixel*bm.bmBitsPixel ) );
+        /* Create a memory bitmap to store a copy of current hdc surface */
 
-        if (pixels != NULL)
+        if (!lpLockData->bHasRect)
         {
-            /* Zero out all members in bmi so no junk data are left */
-            ZeroMemory(&bmi, sizeof(BITMAPINFO));
+            
+            hImage = CreateCompatibleBitmap (hDC, lpLockData->lpDDSurface->lpGbl->wWidth, lpLockData->lpDDSurface->lpGbl->wHeight);
+        }
+        else
+        {
+            hImage = CreateCompatibleBitmap (hDC, lpLockData->rArea.right, lpLockData->rArea.bottom);
+        }
 
-            /* Setup BITMAPINFOHEADER for bmi header */
-            bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-            bmi.bmiHeader.biWidth = bm.bmWidth;
-            bmi.bmiHeader.biHeight = bm.bmHeight;
-            bmi.bmiHeader.biPlanes = bm.bmPlanes;
-            bmi.bmiHeader.biBitCount = bm.bmBitsPixel;
-            bmi.bmiHeader.biCompression = BI_RGB;
+        /* Create a memory hdc so we can draw on our current memory bitmap */
+        hMemDC = CreateCompatibleDC(hDC);
 
-            /* Check if it the bitmap is palete or not */
-            if ( bm.bmBitsPixel <= 8)
+        if (hMemDC != NULL)
+        {
+            /* Select our memory bitmap to our memory hdc */
+            hDCBmp = (HBITMAP) SelectObject (hMemDC, hImage);
+
+            /* Get our memory bitmap information */
+            GetObject(hImage, sizeof(BITMAP), &bm);
+
+            if (!lpLockData->bHasRect)
             {
-                /* Extract the bitmap bits data from palete bitmap */
-                retvalue = GetDIBits(hDC, hBmp, 0, bm.bmHeight, pixels, &bmi, DIB_PAL_COLORS);
+                BitBlt (hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, hDC, 0, 0, SRCCOPY);
             }
             else
             {
-                /* Extract the bitmap bits data from RGB bitmap */
-                retvalue = GetDIBits(hDC, hBmp, 0, bm.bmHeight, pixels, &bmi, DIB_RGB_COLORS);
+                BitBlt (hMemDC, lpLockData->rArea.top, lpLockData->rArea.left, lpLockData->rArea.right, lpLockData->rArea.bottom, hDC, 0, 0, SRCCOPY);
             }
 
-            /* Check see if we susccess it to get the memory pointer and fill it for the bitmap pixel data */
-            if (retvalue)
+            SelectObject (hMemDC, hDCBmp);
+
+            /* Alloc memory buffer at usermode for the bitmap pixel data  */
+            cbBuffer = bm.bmWidthBytes * bm.bmHeight ;
+            pixels = (PDWORD) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbBuffer );
+
+            if (pixels != NULL)
             {
-                /* Check see if the are special area it should have been extracted or not */
-                if (!lpLockData->bHasRect)
-                {
-                    /* The all bitmap pixel data must return */
-                    lpLockData->lpSurfData = pixels;
-                    lpLockData->ddRVal = DD_OK;
-                }
-                else
-                {
-                    /* Only the lpLockData->rArea bitmap data should be return */
-                    DX_STUB;
-                }
+                /* Get the bitmap bits */
+                GetBitmapBits(hImage,cbBuffer,pixels);
+
+                /* Setup return value */
+                lpLockData->ddRVal = DD_OK;
+                lpLockData->lpSurfData = pixels;
             }
         }
     }
+
 
     /* Free the pixels buffer if we fail */
     if ( (pixels != NULL) &&
          (lpLockData->ddRVal != DD_OK) )
     {
         HeapFree(GetProcessHeap(), 0, pixels );
+    }
+
+    /* Cleanup after us */
+    if (hImage != NULL)
+    {
+        DeleteObject (hImage);
+    }
+
+    if (hMemDC != NULL)
+    {
+        DeleteDC (hMemDC);
     }
 
     return DDHAL_DRIVER_HANDLED;
