@@ -163,10 +163,146 @@ RtlLookupFunctionEntry(
 
 void
 FORCEINLINE
-SetReg(PCONTEXT Context, UCHAR Reg, ULONG64 Value)
+SetReg(PCONTEXT Context, BYTE Reg, DWORD64 Value)
 {
-    ((PULONG64)(&Context->Rax))[Reg] = Value;
+    ((DWORD64*)(&Context->Rax))[Reg] = Value;
 }
+
+DWORD64
+FORCEINLINE
+GetReg(PCONTEXT Context, BYTE Reg)
+{
+    return ((DWORD64*)(&Context->Rax))[Reg];
+}
+
+void
+FORCEINLINE
+PopReg(PCONTEXT Context, BYTE Reg)
+{
+    DWORD64 Value = *(DWORD64*)Context->Rsp;
+    Context->Rsp += 8;
+    SetReg(Context, Reg, Value);
+}
+
+/* Helper function that tries to unwind epilog instructions.
+ * Returns TRUE we have been in an epilog and it could be unwound.
+ *         FALSE if the instructions were not allowed for an epilog.
+ * References:
+ *  http://msdn.microsoft.com/en-us/library/8ydc79k6(VS.80).aspx
+ *  http://msdn.microsoft.com/en-us/library/tawsa7cb.aspx
+ * TODO:
+ *  - Test and compare with Windows behaviour
+ */
+BOOLEAN
+static
+inline
+RtlpTryToUnwindEpilog(
+    PCONTEXT Context,
+    ULONG64 ImageBase,
+    PRUNTIME_FUNCTION FunctionEntry)
+{
+    CONTEXT LocalContext;
+    BYTE *InstrPtr;
+    DWORD Instr;
+    BYTE Reg, Mod;
+    ULONG64 EndAddress;
+
+    /* Make a local copy of the context */
+    LocalContext = *Context;
+
+    InstrPtr = (BYTE*)LocalContext.Rip;
+
+    /* Check if first instruction of epilog is "add rsp, x" */
+    Instr = *(DWORD*)InstrPtr;
+    if ( (Instr & 0x00fffdff) == 0x00c48148 )
+    {
+        if ( (Instr & 0x0000ff00) == 0x8300 )
+        {
+            /* This is "add rsp, 0x??" */
+            LocalContext.Rsp += Instr >> 24;
+            InstrPtr += 4;
+        }
+        else
+        {
+            /* This is "add rsp, 0x???????? */
+            LocalContext.Rsp += *(DWORD*)(InstrPtr + 3);
+            InstrPtr += 7;
+        }
+    }
+    /* Check if first instruction of epilog is "lea rsp, ..." */
+    else if ( (Instr & 0x38fffe) == 0x208d48 )
+    {
+        /* Get the register */
+        Reg = ((Instr << 8) | (Instr >> 16)) & 0x7;
+
+        LocalContext.Rsp = GetReg(&LocalContext, Reg);
+
+        /* Get adressing mode */
+        Mod = (Instr >> 22) & 0x3;
+        if (Mod == 0)
+        {
+            /* No displacement */
+            InstrPtr += 3;
+        }
+        else if (Mod == 1)
+        {
+            /* 1 byte displacement */
+            LocalContext.Rsp += Instr >> 24;
+            InstrPtr += 4;
+        }
+        else if (Mod == 2)
+        {
+            /* 4 bytes displacement */
+            LocalContext.Rsp += *(DWORD*)(InstrPtr + 3);
+            InstrPtr += 7;
+        }
+    }
+
+    /* Loop the following instructions */
+    EndAddress = FunctionEntry->EndAddress + ImageBase;
+    while((DWORD64)InstrPtr < EndAddress)
+    {
+        Instr = *(DWORD*)InstrPtr;
+
+        /* Check for a simple pop */
+        if ( (Instr & 0xf8) == 0x58 )
+        {
+            /* Opcode pops a basic register from stack */
+            Reg = Instr & 0x7;
+            PopReg(&LocalContext, Reg);
+            InstrPtr++;
+            continue;
+        }
+
+        /* Check for REX + pop */
+        if ( (Instr & 0xf8fb) == 0x5841 )
+        {
+            /* Opcode is pop r8 .. r15 */
+            Reg = (Instr & 0x7) + 8;
+            PopReg(&LocalContext, Reg);
+            InstrPtr += 2;
+            continue;
+        }
+
+        /* Check for retn / retf */
+        if ( (Instr & 0xf7) == 0xc3 )
+        {
+            /* We are finished */
+            break;
+        }
+
+        /* Opcode not allowed for Epilog */
+        return FALSE;
+    }
+
+    /* Unwind is finished, pop new Rip from Stack */
+    LocalContext.Rip = *(DWORD64*)LocalContext.Rsp;
+    LocalContext.Rsp += sizeof(DWORD64);
+
+    *Context = LocalContext;
+    return TRUE;
+}
+
 
 PEXCEPTION_ROUTINE
 NTAPI
@@ -184,7 +320,7 @@ RtlVirtualUnwind(
     ULONG CodeOffset;
     ULONG i;
     UNWIND_CODE UnwindCode;
-    UCHAR Reg;
+    BYTE Reg;
 
     /* Use relative virtual address */
     ControlPc -= ImageBase;
@@ -201,6 +337,16 @@ RtlVirtualUnwind(
 
     /* Calculate relative offset to function start */
     CodeOffset = ControlPc - FunctionEntry->BeginAddress;
+
+    /* Check if we are in the function epilog and try to finish it */
+    if (CodeOffset > UnwindInfo->SizeOfProlog)
+    {
+        if (RtlpTryToUnwindEpilog(Context, ImageBase, FunctionEntry))
+        {
+            /* There's no exception routine */
+            return NULL;
+        }
+    }
 
     /* Skip all Ops with an offset greater than the current Offset */
     i = 0;
