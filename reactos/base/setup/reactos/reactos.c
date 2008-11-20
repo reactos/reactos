@@ -344,6 +344,10 @@ LangSelDlgProc(HWND hwndDlg,
 			if (tindex != CB_ERR)
 			{
 				SetupData.SelectedLangId = SendMessage(hList,CB_GETITEMDATA, (WPARAM)tindex, (LPARAM)0);
+				WORD LangID=strtol(SetupData.pLanguages[SetupData.SelectedLangId].LangId,NULL,16);
+				SetThreadLocale(MAKELCID(LangID,SORT_DEFAULT));
+				// FIXME: need to reload all resource to force
+				// the new language setting
 			}
 			hList =GetDlgItem(hwndDlg, IDC_KEYLAYOUT); 
 			tindex = SendMessage(hList,CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
@@ -909,6 +913,7 @@ void LoadSetupData()
     		// get default for keyboard and language
 		SetupData.DefaultKBLayout = -1;
 		SetupData.DefaultLang = -1;
+		// TODO: get defaults from underlaying running system
 		if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"),_T("DefaultLayout"),&InfContext))
 		{
 			SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
@@ -1078,7 +1083,6 @@ WinMain(HINSTANCE hInst,
   psp.pfnDlgProc = LangSelDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_LANGSELPAGE);
   ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-  // Change language with "SetThreadLocale(langid)"
 
   /* Create install type selection page */
   psp.dwSize = sizeof(PROPSHEETPAGE);
