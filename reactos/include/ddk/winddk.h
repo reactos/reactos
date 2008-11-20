@@ -6696,12 +6696,18 @@ NTAPI
 RtlFreeUnicodeString(
   IN PUNICODE_STRING  UnicodeString);
 
+#if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
+#define RtlGetCallersAddress(CallersAddress, CallersCaller) \
+    *CallersAddress = (PVOID)_ReturnAddress(); \
+    *CallersCaller = NULL;
+#else
 NTSYSAPI
 VOID
 NTAPI
 RtlGetCallersAddress(
   OUT PVOID  *CallersAddress,
   OUT PVOID  *CallersCaller);
+#endif
 
 NTSYSAPI
 NTSTATUS
