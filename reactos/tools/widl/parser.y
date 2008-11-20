@@ -309,7 +309,7 @@ static func_list_t *append_func_from_statement(func_list_t *list, statement_t *s
 %type <type> dispinterface dispinterfacehdr dispinterfacedef
 %type <type> module modulehdr moduledef
 %type <type> base_type int_std
-%type <type> enumdef structdef uniondef
+%type <type> enumdef structdef uniondef typedecl
 %type <type> type
 %type <ifref> coclass_int
 %type <ifref_list> coclass_ints
@@ -399,7 +399,7 @@ semicolon_opt:
 
 statement:
 	  cppquote				{ $$ = make_statement_cppquote($1); }
-	| enumdef ';'				{ $$ = make_statement_type_decl($1);
+	| typedecl ';'				{ $$ = make_statement_type_decl($1);
 						  if (!parse_only && do_header) {
 						    write_type_def_or_decl(header, $1, FALSE, NULL);
 						    fprintf(header, ";\n\n");
@@ -409,19 +409,13 @@ statement:
 						  if (!parse_only && do_header) write_declaration($1, is_in_interface);
 						}
 	| import				{ $$ = make_statement_import($1); }
-	| structdef ';'				{ $$ = make_statement_type_decl($1);
-						  if (!parse_only && do_header) {
-						    write_type_def_or_decl(header, $1, FALSE, NULL);
-						    fprintf(header, ";\n\n");
-						  }
-						}
 	| typedef ';'				{ $$ = $1; }
-	| uniondef ';'				{ $$ = make_statement_type_decl($1);
-						  if (!parse_only && do_header) {
-						    write_type_def_or_decl(header, $1, FALSE, NULL);
-						    fprintf(header, ";\n\n");
-						  }
-						}
+	;
+
+typedecl:
+	  enumdef
+	| structdef
+	| uniondef
 	;
 
 cppquote: tCPPQUOTE '(' aSTRING ')'		{ $$ = $3; if (!parse_only && do_header) fprintf(header, "%s\n", $3); }
