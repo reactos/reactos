@@ -48,6 +48,7 @@ class Editor_Website extends Editor
   protected function evalAction( $action )
   {
     global $roscms_security_level;
+    global $roscms_standard_language;
     global $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4;
     global $RosCMS_GET_d_id, $RosCMS_GET_d_r_id;
     global $RosCMS_GET_d_r_lang;
@@ -78,18 +79,18 @@ class Editor_Website extends Editor
 
       // single entry - save entry
       case 'newentry2': 
-        Data::add(true, false);
+        Data::add(@$_GET['d_type'], @$_GET['d_r_lang'],true);
         break;
 
       // dynamic entry - save entry
       case 'newentry4':
-        Data::add(true, true);
+        Data::add('content', $roscms_standard_language,true, true);
         break;
 
       // page & content - save entry
       case 'newentry3': 
-        Data::add(false, false, 'stable', htmlspecialchars(@$_GET['d_template']));
-        Data::add(true);
+        Data::add('page', $roscms_standard_language, false, false, 'stable', htmlspecialchars(@$_GET['d_template']));
+        Data::add('content', $roscms_standard_language, true);
         break;
 
       // show Metadata details

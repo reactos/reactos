@@ -529,13 +529,11 @@ class Data
    * @return bool
    * @access public
    */
-  public static function add( $show_output = false, $dynamic_content = false, $entry_status = 'draft', $layout_template = '')
+  public static function add($data_type = null, $lang = null, $show_output = false, $dynamic_content = false, $entry_status = 'draft', $layout_template = '')
   {
     global $roscms_intern_account_id;
 
     $data_name = @htmlspecialchars($_GET['d_name']);
-    $data_type = @$_GET['d_type'];
-    $lang = @$_GET['d_r_lang'];
 
     $stmt=DBConnection::getInstance()->prepare("SELECT data_id FROM data_ WHERE data_name = :name AND data_type = :type LIMIT 1");
     $stmt->bindParam('name',$data_name,PDO::PARAM_STR);
@@ -599,8 +597,8 @@ class Data
         $stmt->execute();
       }
 
-      if ($layout_template != '' && $layout_template != 'no') {
-        $content = " '[#templ_".$layout_template."]' ";
+      if ($layout_template != '' && $layout_template != 'none') {
+        $content = '[#templ_'.$layout_template.']';
       }
       else {
         $content = '';
@@ -645,12 +643,7 @@ class Data
         new Editor_Website($data_id, $rev_id, 'show');
       }
     }
-    
-    // nothing todo, even revision entry is already there
-    elseif ($show_output == true) {
-      echo '<p>Entry already exist.</p>';
-      Editor_Website::showAddEntry();
-    }
+
   } // end of member function getCookieDomain
 
 
