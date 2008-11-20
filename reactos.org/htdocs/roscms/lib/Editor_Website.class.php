@@ -50,8 +50,8 @@ class Editor_Website extends Editor
     global $roscms_security_level;
     global $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4;
     global $RosCMS_GET_d_id, $RosCMS_GET_d_r_id;
-    global $RosCMS_GET_d_name, $RosCMS_GET_d_type, $RosCMS_GET_d_r_lang;
-  
+    global $RosCMS_GET_d_r_lang;
+
     switch ($action) {
 
       // create entry - show interface
@@ -78,18 +78,18 @@ class Editor_Website extends Editor
 
       // single entry - save entry
       case 'newentry2': 
-        Data::add($RosCMS_GET_d_name, $RosCMS_GET_d_type, $RosCMS_GET_d_r_lang, true, 'draft', '', false);
+        Data::add(true, false);
         break;
 
       // dynamic entry - save entry
       case 'newentry4':
-        Data::add($RosCMS_GET_d_name, $RosCMS_GET_d_type, $RosCMS_GET_d_r_lang, true, 'draft', '', true);
+        Data::add(true, true);
         break;
 
       // page & content - save entry
       case 'newentry3': 
-        Data::add($RosCMS_GET_d_name, $RosCMS_GET_d_type, $RosCMS_GET_d_r_lang, false, 'stable', htmlspecialchars(@$_GET['d_template']), false);
-        Data::add($RosCMS_GET_d_name, $RosCMS_GET_d_type, $RosCMS_GET_d_r_lang, true);
+        Data::add(false, false, 'stable', htmlspecialchars(@$_GET['d_template']));
+        Data::add(true);
         break;
 
       // show Metadata details
@@ -225,8 +225,10 @@ class Editor_Website extends Editor
           $stmt->bindParam('date',date('Y-m-d'),PDO::PARAM_STR);
           $stmt->execute();
           $translation = $stmt->fetchOnce();
-
-          $this->show( $translation['data_id'], $translation['rev_id'], $translation['rev_language'] );
+          
+          $this->data_id = $translation['data_id'];
+          $this->rev_id = $translation['rev_id'];
+          $this->show();
         }
         else {
           die('Translation not successful, due entry-copy problem. If this happens more than once or twice please contact the website admin.');
@@ -244,13 +246,8 @@ class Editor_Website extends Editor
    *
    * @access private
    */
-  protected function show( $lang = null)
+  protected function show( )
   {
-    global $roscms_standard_language;
-
-    // if no value is given, try to omnit GET vars
-    if ($lang === null) $lang = (isset($_GET['d_r_lang']) ? $_GET['d_r_lang'] : $roscms_standard_language);
-  
     $this->showEntryData();
     $this->showEntryDetails(self::METADATA);
     echo '</div></div>';  // close elements opened in showEntryData
@@ -421,7 +418,7 @@ class Editor_Website extends Editor
    *
    * @access protected
    */
-  protected function showAddEntry($tmode = self::SINGLE)
+  public function showAddEntry($tmode = self::SINGLE)
   {
     echo_strip('
       <div id="frmadd" style="border-bottom: 1px solid #bbb; border-right: 1px solid #bbb; background: #FFFFFF none repeat scroll 0%;">
@@ -436,7 +433,7 @@ class Editor_Website extends Editor
     else {
       echo '<span class="detailmenu" onclick="'."changecreateinterface('single')".'">Single Entry</span>';
     }
-    echo "&nbsp;|&nbsp;";
+    echo '&nbsp;|&nbsp;';
 
     // is dynamic
     if ($tmode == self::DYNAMIC) {
@@ -445,7 +442,7 @@ class Editor_Website extends Editor
     else {
       echo '<span class="detailmenu" onclick="'."changecreateinterface('dynamic')".'">Dynamic Entry</span>';
     }
-    echo "&nbsp;|&nbsp;";
+    echo '&nbsp;|&nbsp;';
 
     // is page & content
     if ($tmode == self::TEMPLATE) {

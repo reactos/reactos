@@ -32,8 +32,7 @@ class Export_QuickInfo extends Export
 
     // check if everything was given, we need to get the quick info
     if (!isset($_GET['d_id']) || !isset($_GET['d_r_id'])) {
-      echo 'No entry was found.';
-      return;
+      die('No entry was found.');
     }
     $this->getInfo();
   }
@@ -58,6 +57,11 @@ class Export_QuickInfo extends Export
     $stmt->bindParam('rev_id',$_GET['d_r_id'],PDO::PARAM_INT);
     $stmt->execute();
     $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+
+    // abort if no entry was found
+    if ($revision === false) {
+      die('No entry was found.');
+    }
 
     // helper vars
     $t_s = '<span style="color:#FF6600;">'; // tag start

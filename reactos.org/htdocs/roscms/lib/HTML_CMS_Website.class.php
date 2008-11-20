@@ -345,8 +345,8 @@ class HTML_CMS_Website extends HTML_CMS
             </div>
           </div>
           <br />
-          <p><strong>Table Legend</strong></p>
           <table id="legend" cellspacing="5">
+            <caption style="font-weight:bold;text-align:left;">Table Legend</caption>
             <tr>
               <td class="lbox" style="background-color:#ddd">&nbsp;</td>
               <td style="width:205px" rowspan="2">
@@ -372,7 +372,7 @@ class HTML_CMS_Website extends HTML_CMS
               <td class="lbox" style="background-color:#FFE4C1">&nbsp;</td>
               <td>Draft</td>
               <td class="lbox" style="background-color:#FAA5A5">&nbsp;</td>
-              <td>Translation  outdated</td>
+              <td>Translation outdated</td>
             </tr>
             <tr>
               <td class="lbox" style="background-color:#ffffcc">&nbsp;</td>

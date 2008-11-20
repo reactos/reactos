@@ -163,9 +163,9 @@ abstract class HTML_CMS extends HTML
         break;
 
       case 'website':
-        echo_strip('Quick Links: <a href="'.$roscms_intern_page_link.'data&branch=welcome#web_news_langgroup">Translation Group News</a>
-          | <a href="'.$roscms_intern_webserver_pages.'?page=tutorial_roscms" target="_blank">Text- &amp; Video-Tutorials</a>
-          | <a href="'.$roscms_intern_webserver_pages.'/forum/viewforum.php?f=18" target="_blank">Website Forum</a>');
+        echo_strip('Quick Links: <a href="'.$roscms_intern_page_link.'data&amp;branch=welcome#web_news_langgroup">Translation Group News</a>
+          | <a href="'.$roscms_intern_webserver_pages.'?page=tutorial_roscms">Text- &amp; Video-Tutorials</a>
+          | <a href="'.$roscms_intern_webserver_pages.'/forum/viewforum.php?f=18">Website Forum</a>');
         break;
         
       case 'user':

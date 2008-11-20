@@ -26,12 +26,6 @@
 class Data
 {
 
-  /** Aggregations: */
-
-  /** Compositions: */
-
-   /*** Attributes: ***/
-
 
   /**
    * 
@@ -535,9 +529,13 @@ class Data
    * @return bool
    * @access public
    */
-  public static function add( $data_name, $data_type, $lang, $show_output = false, $entry_status = 'draft', $layout_template = '', $dynamic_content = false)
+  public static function add( $show_output = false, $dynamic_content = false, $entry_status = 'draft', $layout_template = '')
   {
     global $roscms_intern_account_id;
+
+    $data_name = @htmlspecialchars($_GET['d_name']);
+    $data_type = @$_GET['d_type'];
+    $lang = @$_GET['d_r_lang'];
 
     $stmt=DBConnection::getInstance()->prepare("SELECT data_id FROM data_ WHERE data_name = :name AND data_type = :type LIMIT 1");
     $stmt->bindParam('name',$data_name,PDO::PARAM_STR);
