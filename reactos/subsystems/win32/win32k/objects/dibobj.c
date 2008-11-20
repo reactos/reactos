@@ -404,7 +404,7 @@ NtGdiSetDIBitsToDeviceInternal(
     _SEH_TRY // Look at NtGdiStretchDIBitsInternal
     {
         SourceSize.cx = bmi->bmiHeader.biWidth;
-        SourceSize.cy = ScanLines;
+        SourceSize.cy = ScanLines; // this one --> abs(bmi->bmiHeader.biHeight) - StartScan
         DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
         ProbeForRead(Bits, DIBWidth * abs(bmi->bmiHeader.biHeight), 1);
@@ -479,8 +479,8 @@ NtGdiSetDIBitsToDeviceInternal(
 
     if (NT_SUCCESS(Status))
     {
-        /* FIXME: Should probably be only the number of lines actually copied */
-        ret = ScanLines;
+         /* FIXME: Should probably be only the number of lines actually copied */
+        ret = ScanLines; // this one --> abs(Info->bmiHeader.biHeight) - StartScan;
     }
 
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
@@ -555,7 +555,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 coreheader->bcWidth = BitmapObj->SurfObj.sizlBitmap.cx;
                 coreheader->bcPlanes = 1;
                 coreheader->bcBitCount = BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
-                /* Resulting height may be smaller than original height */
+                /* Resulting height may be smaller than original height */ // You think!
                 coreheader->bcHeight = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
                 coreheader->bcSize = DIB_GetDIBWidthBytes(coreheader->bcWidth,
                     coreheader->bcBitCount) * coreheader->bcHeight;
@@ -566,6 +566,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
             if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
             {
                 ProbeForWrite(Info, sizeof(BITMAPINFO), 1);
+
+         if (!ScanLines) ScanLines = abs(Info->bmiHeader.biHeight) - StartScan;
 
                 Info->bmiHeader.biWidth = BitmapObj->SurfObj.sizlBitmap.cx;
                 /* Resulting height may be smaller than original height */
@@ -683,16 +685,18 @@ NtGdiGetDIBitsInternal(HDC hDC,
             if (bPaletteMatch)
                 PALETTE_UnlockPalette(DestPalette);
 
+         if (!ScanLines) ScanLines = abs(Info->bmiHeader.biHeight) - StartScan;
+
             /* Create the destination bitmap to for the copy operation */
             if (StartScan > BitmapObj->SurfObj.sizlBitmap.cy)
             {
                 _SEH_YIELD(goto cleanup);
             }
             else
-            {
+            {  // Here again! ScanLine can be zero!
                 ScanLines = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
                 DestSize.cx = BitmapObj->SurfObj.sizlBitmap.cx;
-                DestSize.cy = ScanLines;
+                DestSize.cy = ScanLines; // this one ---> abs(Info->bmiHeader.biHeight) - StartScan;
 
                 hDestBitmap = NULL;
 
@@ -762,6 +766,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
                             &DestRect,
                             &SourcePoint))
             {
+                DPRINT("GetDIBits %d \n",abs(Info->bmiHeader.biHeight) - StartScan);
+//                Result = abs(Info->bmiHeader.biHeight) - StartScan;
                 Result = ScanLines;
             }
 
@@ -1131,6 +1137,7 @@ DIB_CreateDIBSection(
   HBITMAP res = 0;
   BITMAPOBJ *bmp = NULL;
   DIBSECTION *dib = NULL;
+  void *mapBits = NULL;
 
   // Fill BITMAP32 structure with DIB data
   BITMAPINFOHEADER *bi = &bmi->bmiHeader;
@@ -1167,17 +1174,50 @@ DIB_CreateDIBSection(
 
   if (section)
   {
-/*    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
-			      0L, offset, totalSize); */
-    DbgPrint("DIB_CreateDIBSection: Cannot yet handle section DIBs\n");
-    SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+     SYSTEM_BASIC_INFORMATION Sbi;
+     NTSTATUS Status;
+     DWORD mapOffset;
+     LARGE_INTEGER SectionOffset;
+     SIZE_T mapSize;
+
+     Status = ZwQuerySystemInformation ( SystemBasicInformation,
+                                         &Sbi,
+                                         sizeof Sbi,
+                                         0);
+     if (!NT_SUCCESS(Status))
+     {
+        return NULL;
+     }
+
+     mapOffset = offset - (offset % Sbi.AllocationGranularity);
+     mapSize = dib->dsBmih.biSizeImage + (offset - mapOffset);
+
+     SectionOffset.LowPart  = mapOffset;
+     SectionOffset.HighPart = 0;
+
+     Status = ZwMapViewOfSection ( section,
+                                   NtCurrentProcess(),
+                                   &mapBits,
+                                   0,
+                                   0,
+                                   &SectionOffset,
+                                   &mapSize,
+                                   ViewShare,
+                                   0,
+                                   PAGE_READWRITE);
+     if (!NT_SUCCESS(Status))
+     {
+        return NULL;
+     }
+
+     if (mapBits) bm.bmBits = (char *)mapBits + (offset - mapOffset);
   }
   else if (ovr_pitch && offset)
     bm.bmBits = (LPVOID) offset;
-  else {
-    offset = 0;
-    bm.bmBits = EngAllocUserMem(totalSize, 0);
+  else
+  {
+     offset = 0;
+     bm.bmBits = EngAllocUserMem( totalSize, 0 );
   }
 
   if(usage == DIB_PAL_COLORS)
@@ -1202,20 +1242,16 @@ DIB_CreateDIBSection(
     }
     else switch(bi->biBitCount)
     {
+      case 15:
       case 16:
-        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB : 0x7c00;
+        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB       : 0x7c00;
         dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x03e0;
         dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x001f;
         break;
 
       case 24:
-        dib->dsBitfields[0] = 0xff0000;
-        dib->dsBitfields[1] = 0x00ff00;
-        dib->dsBitfields[2] = 0x0000ff;
-        break;
-
       case 32:
-        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB : 0xff0000;
+        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB       : 0xff0000;
         dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x00ff00;
         dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x0000ff;
         break;
@@ -1226,38 +1262,41 @@ DIB_CreateDIBSection(
     // Create Device Dependent Bitmap and add DIB pointer
     Size.cx = bm.bmWidth;
     Size.cy = abs(bm.bmHeight);
-    res = IntCreateBitmap(Size, bm.bmWidthBytes,
-                          BitmapFormat(bi->biBitCount * bi->biPlanes, bi->biCompression),
-                          BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
-                          (bi->biHeight < 0 ? BMF_TOPDOWN : 0),
-                          bm.bmBits);
-    if (! res)
-      {
+    res = IntCreateBitmap( Size,
+                           bm.bmWidthBytes,
+                           BitmapFormat(bi->biBitCount * bi->biPlanes, bi->biCompression),
+                           BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
+                           (bi->biHeight < 0 ? BMF_TOPDOWN : 0),
+                           bm.bmBits);
+    if ( !res )
+    {
         if (lpRGB != bmi->bmiColors)
-          {
+        {
             ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
-          }
+        }
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 	return NULL;
-      }
+    }
     bmp = BITMAPOBJ_LockBitmap(res);
     if (NULL == bmp)
-      {
+    {
         if (lpRGB != bmi->bmiColors)
-          {
+        {
             ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
-          }
+        }
 	SetLastWin32Error(ERROR_INVALID_HANDLE);
 	NtGdiDeleteObject(bmp);
 	return NULL;
-      }
+    }
     bmp->dib = (DIBSECTION *) dib;
     bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
 
-    /* WINE NOTE: WINE makes use of a colormap, which is a color translation table between the DIB and the X physical
-                  device. Obviously, this is left out of the ReactOS implementation. Instead, we call
-                  NtGdiSetDIBColorTable. */
+    /* WINE NOTE: WINE makes use of a colormap, which is a color translation
+                  table between the DIB and the X physical device. Obviously,
+                  this is left out of the ReactOS implementation. Instead,
+                  we call NtGdiSetDIBColorTable. */
     bi->biClrUsed = 0;
+    /* set number of entries in bmi.bmiColors table */
     if(bi->biBitCount == 1) { bi->biClrUsed = 2; } else
     if(bi->biBitCount == 4) { bi->biClrUsed = 16; } else
     if(bi->biBitCount == 8) { bi->biClrUsed = 256; }
@@ -1278,13 +1317,17 @@ DIB_CreateDIBSection(
   if (!res || !bmp || !dib || !bm.bmBits)
   {
     DPRINT("got an error res=%08x, bmp=%p, dib=%p, bm.bmBits=%p\n", res, bmp, dib, bm.bmBits);
-/*      if (bm.bmBits)
+      if (bm.bmBits)
       {
-      if (section)
-        UnmapViewOfFile(bm.bmBits), bm.bmBits = NULL;
-      else if (!offset)
-      VirtualFree(bm.bmBits, 0L, MEM_RELEASE), bm.bmBits = NULL;
-    } */
+         if (section)
+         {
+            ZwUnmapViewOfSection(NtCurrentProcess(), mapBits);
+            bm.bmBits = NULL;
+         }
+         else
+            if (!offset)
+               EngFreeUserMem(bm.bmBits), bm.bmBits = NULL;
+    }
 
     if (dib) { ExFreePoolWithTag(dib, TAG_DIB); dib = NULL; }
     if (bmp) { bmp = NULL; }
@@ -1292,20 +1335,20 @@ DIB_CreateDIBSection(
   }
 
   if (lpRGB != bmi->bmiColors)
-    {
+  {
       ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
-    }
+  }
 
   if (bmp)
-    {
+  {
       BITMAPOBJ_UnlockBitmap(bmp);
-    }
+  }
 
   // Return BITMAP handle and storage location
   if (NULL != bm.bmBits && NULL != bits)
-    {
+  {
       *bits = bm.bmBits;
-    }
+  }
 
   return res;
 }
