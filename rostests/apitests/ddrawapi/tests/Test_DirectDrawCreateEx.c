@@ -451,7 +451,7 @@ Test_DirectDrawCreateEx(PTESTINFO pti)
 #if DUMP_ON
     if (pIntDirectDraw7 != NULL)
     {
-        dump_DDRAWI_DIRECTDRAW_INT("PDraw->", pIntDirectDraw7, 0);
+        dump_DDRAWI_DIRECTDRAW_INT("PDraw->\0", pIntDirectDraw7, 0);
     }
 #endif
 
