@@ -2770,7 +2770,7 @@ void print_phase_basetype(FILE *file, int indent, enum remoting_phase phase,
 
 /* returns whether the MaxCount, Offset or ActualCount members need to be
  * filled in for the specified phase */
-static inline int is_size_needed_for_phase(enum remoting_phase phase)
+static inline int is_conformance_needed_for_phase(enum remoting_phase phase)
 {
     return (phase != PHASE_UNMARSHAL);
 }
@@ -2791,6 +2791,67 @@ expr_t *get_size_is_expr(const type_t *t, const char *name)
         }
 
     return x;
+}
+
+static void write_parameter_conf_or_var_exprs(FILE *file, int indent,
+                                              enum remoting_phase phase,
+                                              const var_t *var)
+{
+    const type_t *type = var->type;
+    /* get fundamental type for the argument */
+    for (;;)
+    {
+        if (is_attr(type->attrs, ATTR_WIREMARSHAL))
+            break;
+        else if (is_attr(type->attrs, ATTR_CONTEXTHANDLE))
+            break;
+        else if (is_array(type) || is_string_type(var->attrs, type))
+        {
+            if (is_conformance_needed_for_phase(phase))
+            {
+                if (type->size_is)
+                {
+                    print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
+                    write_expr(file, type->size_is, 1, 1, NULL, NULL);
+                    fprintf(file, ";\n\n");
+                }
+                if (type->length_is)
+                {
+                    print_file(file, indent, "_StubMsg.Offset = (unsigned long)0;\n"); /* FIXME */
+                               print_file(file, indent, "_StubMsg.ActualCount = (unsigned long)");
+                               write_expr(file, type->length_is, 1, 1, NULL, NULL);
+                               fprintf(file, ";\n\n");
+                }
+            }
+            break;
+        }
+        else if (type->type == RPC_FC_NON_ENCAPSULATED_UNION)
+        {
+            if (is_conformance_needed_for_phase(phase))
+            {
+                print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
+                write_expr(file, get_attrp(var->attrs, ATTR_SWITCHIS), 1, 1, NULL, NULL);
+                fprintf(file, ";\n\n");
+            }
+            break;
+        }
+        else if (type->type == RPC_FC_IP)
+        {
+            expr_t *iid;
+
+            if (is_conformance_needed_for_phase(phase) && (iid = get_attrp( var->attrs, ATTR_IIDIS )))
+            {
+                print_file( file, indent, "_StubMsg.MaxCount = (unsigned long) " );
+                write_expr( file, iid, 1, 1, NULL, NULL );
+                fprintf( file, ";\n\n" );
+            }
+            break;
+        }
+        else if (is_ptr(type))
+            type = type->ref;
+        else
+            break;
+    }
 }
 
 static void write_remoting_arg(FILE *file, int indent, const func_t *func,
@@ -2824,6 +2885,7 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
             break;
         }
 
+    write_parameter_conf_or_var_exprs(file, indent, phase, var);
     rtype = type->type;
 
     if (is_context_handle(type))
@@ -2879,13 +2941,6 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
             print_phase_function(file, indent, "NonConformantString", phase, var, start_offset);
         else
         {
-            if (type->size_is && is_size_needed_for_phase(phase))
-            {
-                print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
-                write_expr(file, type->size_is, 1, 1, NULL, NULL);
-                fprintf(file, ";\n");
-            }
-
             if (phase == PHASE_FREE || pass == PASS_RETURN || pointer_type == RPC_FC_UP)
                 print_phase_function(file, indent, "Pointer", phase, var,
                                      start_offset - (type->size_is ? 4 : 2));
@@ -2908,43 +2963,14 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
 
         if (tc == RPC_FC_SMVARRAY || tc == RPC_FC_LGVARRAY)
         {
-            if (is_size_needed_for_phase(phase))
-            {
-                print_file(file, indent, "_StubMsg.Offset = (unsigned long)0;\n"); /* FIXME */
-                print_file(file, indent, "_StubMsg.ActualCount = (unsigned long)");
-                write_expr(file, type->length_is, 1, 1, NULL, NULL);
-                fprintf(file, ";\n\n");
-            }
             array_type = "VaryingArray";
         }
         else if (tc == RPC_FC_CARRAY)
         {
-            if (is_size_needed_for_phase(phase))
-            {
-                print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
-                write_expr(file, type->size_is, 1, 1, NULL, NULL);
-                fprintf(file, ";\n\n");
-            }
             array_type = "ConformantArray";
         }
         else if (tc == RPC_FC_CVARRAY || tc == RPC_FC_BOGUS_ARRAY)
         {
-            if (is_size_needed_for_phase(phase))
-            {
-                if (type->size_is)
-                {
-                    print_file(file, indent, "_StubMsg.MaxCount = (unsigned long)");
-                    write_expr(file, type->size_is, 1, 1, NULL, NULL);
-                    fprintf(file, ";\n");
-                }
-                if (type->length_is)
-                {
-                    print_file(file, indent, "_StubMsg.Offset = (unsigned long)0;\n"); /* FIXME */
-                    print_file(file, indent, "_StubMsg.ActualCount = (unsigned long)");
-                    write_expr(file, type->length_is, 1, 1, NULL, NULL);
-                    fprintf(file, ";\n\n");
-                }
-            }
             array_type = (tc == RPC_FC_BOGUS_ARRAY
                           ? "ComplexArray"
                           : "ConformantVaryingArray");
@@ -3029,21 +3055,6 @@ static void write_remoting_arg(FILE *file, int indent, const func_t *func,
         }
         else
         {
-            expr_t *iid;
-            expr_t *sx = get_size_is_expr(type, var->name);
-
-            if ((iid = get_attrp( var->attrs, ATTR_IIDIS )))
-            {
-                print_file( file, indent, "_StubMsg.MaxCount = (unsigned long) " );
-                write_expr( file, iid, 1, 1, NULL, NULL );
-                fprintf( file, ";\n\n" );
-            }
-            else if (sx)
-            {
-                print_file(file, indent, "_StubMsg.MaxCount = (unsigned long) ");
-                write_expr(file, sx, 1, 1, NULL, NULL);
-                fprintf(file, ";\n\n");
-            }
             if (var->type->ref->type == RPC_FC_IP)
                 print_phase_function(file, indent, "InterfacePointer", phase, var, start_offset);
             else
