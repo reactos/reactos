@@ -4,7 +4,6 @@
 //
 #define IDC_MYICON                      2
 #define IDNEXT                          3
-#define IDHELP							4
 #define IDD_EVENTVWR_DIALOG             102
 #define IDD_PROGRESSBOX					150
 #define IDS_APP_TITLE                   103
