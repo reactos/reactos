@@ -182,15 +182,7 @@ typedef struct IAVIEditStream *PAVIEDITSTREAM;
 #define TWOCCFromFOURCC(fcc) HIWORD(fcc)
 #define ToHex(n) ((BYTE)(((n)>9)?((n)-10+'A'):((n)+'0')))
 #define MAKEAVICKID(tcc, stream) MAKELONG((ToHex((stream)&0x0f)<<8)|(ToHex(((stream)&0xf0)>>4)),tcc)
-#define AVIF_HASINDEX	0x10
-#define AVIF_MUSTUSEINDEX	0x20
-#define AVIF_ISINTERLEAVED	0x100
-#define AVIF_TRUSTCKTYPE	0x800
-#define AVIF_WASCAPTUREFILE	0x10000
-#define AVIF_COPYRIGHTED	0x20000
 #define AVI_HEADERSIZE	2048
-#define AVISF_DISABLED	0x01
-#define AVISF_VIDEO_PALCHANGES	0x10000
 #define	AVIGETFRAMEF_BESTDISPLAYFMT	1
 #define AVISTREAMINFO_DISABLED	0x01
 #define AVISTREAMINFO_FORMATCHANGES	0x10000
@@ -518,6 +510,15 @@ typedef struct {
 	LPVOID lpState;
 	LONG cbState;
 } COMPVARS, *PCOMPVARS;
+
+/* flags for dwFlags member of MainAVIHeader */
+#define AVIF_HASINDEX       0x00000010
+#define AVIF_MUSTUSEINDEX   0x00000020
+#define AVIF_ISINTERLEAVED  0x00000100
+#define AVIF_TRUSTCKTYPE    0x00000800
+#define AVIF_WASCAPTUREFILE 0x00010000
+#define AVIF_COPYRIGHTED    0x00020000
+
 typedef struct _MainAVIHeader
 {
 	DWORD dwMicroSecPerFrame;
@@ -532,6 +533,11 @@ typedef struct _MainAVIHeader
 	DWORD dwHeight;
 	DWORD dwReserved[4];
 } MainAVIHeader;
+
+/* flags for dwFlags member of AVIStreamHeader */
+#define AVISF_DISABLED         0x00000001
+#define AVISF_VIDEO_PALCHANGES 0x00010000
+
 typedef struct {
 	FOURCC fccType;
 	FOURCC fccHandler;
