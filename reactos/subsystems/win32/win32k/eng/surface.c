@@ -362,6 +362,7 @@ IntCreateBitmap(IN SIZEL Size,
             {
                 BITMAPOBJ_UnlockBitmap(BitmapObj);
                 BITMAPOBJ_FreeBitmapByHandle(NewBitmap);
+                SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
                 return 0;
             }
         }

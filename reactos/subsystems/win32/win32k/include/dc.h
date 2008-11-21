@@ -185,12 +185,12 @@ typedef struct _GDIDEVICE
 
   PVOID         pvGammaRamp;    // Gamma ramp pointer.
 
-  DHPDEV        hPDev;          // DHPDEV for device.
-
   HSURF         FillPatterns[HS_DDI_MAX];
 
   ULONG         DxDd_nCount;
 
+  DHPDEV        hPDev;          // DHPDEV for device.
+  PVOID         ppalSurf;       // PEPALOBJ/PPALGDI for this device.
   DEVINFO       DevInfo;
   GDIINFO       GDIInfo;
   HSURF         pSurface;       // SURFACE for this device.

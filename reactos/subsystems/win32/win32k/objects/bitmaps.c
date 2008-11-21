@@ -110,26 +110,25 @@ NtGdiCreateBitmap(
     UINT  BitsPixel,
     IN OPTIONAL LPBYTE pUnsafeBits)
 {
-   HBITMAP hBitmap;
-
-   _SEH_TRY
+   if (pUnsafeBits)
    {
-      if (pUnsafeBits)
+      BOOL Hit = FALSE;
+      UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * abs(Height);
+
+      _SEH_TRY
       {
-         UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * abs(Height);
          ProbeForRead(pUnsafeBits, cjBits, 1);
       }
+      _SEH_HANDLE
+      {
+         Hit = TRUE;
+      }
+      _SEH_END
 
-      hBitmap = IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
-
+      if (Hit) return 0;
    }
-   _SEH_HANDLE
-   {
-      hBitmap = 0;
-   }
-   _SEH_END
 
-   return hBitmap;
+   return IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
 }
 
 BOOL INTERNAL_CALL
@@ -195,6 +194,12 @@ NtGdiCreateCompatibleBitmap(
 {
 	HBITMAP Bmp;
 	PDC Dc;
+
+	if ( Width <= 0 || Height <= 0 || (Width * Height) > 0x3FFFFFFF )
+	{
+           SetLastWin32Error(ERROR_INVALID_PARAMETER);
+           return NULL;
+        }
 
 	Dc = DC_LockDc(hDC);
 

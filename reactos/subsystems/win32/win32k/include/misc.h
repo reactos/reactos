@@ -37,5 +37,7 @@ SHORT FASTCALL IntGdiGetLanguageID();
 ULONG FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
 DWORD STDCALL IntGetQueueStatus(BOOL ClearChanges);
 VOID FASTCALL IntUserManualGuiCheck(LONG Check);
+PVOID NTAPI HackSecureVirtualMemory(IN PVOID,IN SIZE_T,IN ULONG,OUT PVOID *);
+VOID NTAPI HackUnsecureVirtualMemory(IN PVOID);
 
 #endif /* __WIN32K_MISC_H */
