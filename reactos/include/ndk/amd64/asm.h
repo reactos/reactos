@@ -132,6 +132,62 @@ Author:
 #define CONTEXT_LastExceptionFromRip 0x4c8
 
 //
+// KTRAP_FRAME Offsets
+//
+#define KTRAP_FRAME_P1Home 0x00
+#define KTRAP_FRAME_P2Home 0x08
+#define KTRAP_FRAME_P3Home 0x10
+#define KTRAP_FRAME_P4Home 0x18
+#define KTRAP_FRAME_P5 0x20
+#define KTRAP_FRAME_PreviousMode 0x28
+#define KTRAP_FRAME_PreviousIrql 0x29
+#define KTRAP_FRAME_FaultIndicator 0x2A
+#define KTRAP_FRAME_ExceptionActive 0x2B
+#define KTRAP_FRAME_MxCsr 0x2C
+#define KTRAP_FRAME_Rax 0x30
+#define KTRAP_FRAME_Rcx 0x38
+#define KTRAP_FRAME_Rdx 0x40
+#define KTRAP_FRAME_R8 0x48
+#define KTRAP_FRAME_R9 0x50
+#define KTRAP_FRAME_R10 0x58
+#define KTRAP_FRAME_R11 0x60
+#define KTRAP_FRAME_Spare0 0x68
+#define KTRAP_FRAME_Xmm0 0x70
+#define KTRAP_FRAME_Xmm1 0x80
+#define KTRAP_FRAME_Xmm2 0x90
+#define KTRAP_FRAME_Xmm3 0xA0
+#define KTRAP_FRAME_Xmm4 0xB0
+#define KTRAP_FRAME_Xmm5 0xC0
+#define KTRAP_FRAME_FaultAddress 0xD0
+#define KTRAP_FRAME_Dr0 0xD8
+#define KTRAP_FRAME_Dr1 0xE0
+#define KTRAP_FRAME_Dr2 0xE8
+#define KTRAP_FRAME_Dr3 0xF0
+#define KTRAP_FRAME_Dr6 0xF8
+#define KTRAP_FRAME_Dr7 0x100
+#define KTRAP_FRAME_DebugControl 0x108
+#define KTRAP_FRAME_LastBranchToRip 0x110
+#define KTRAP_FRAME_LastBranchFromRip 0x118
+#define KTRAP_FRAME_LastExceptionToRip 0x120
+#define KTRAP_FRAME_LastExceptionFromRip 0x128
+#define KTRAP_FRAME_SegDs 0x130
+#define KTRAP_FRAME_SegEs 0x132
+#define KTRAP_FRAME_SegFs 0x134
+#define KTRAP_FRAME_SegGs 0x136
+#define KTRAP_FRAME_TrapFrame 0x138
+#define KTRAP_FRAME_Rbx 0x140
+#define KTRAP_FRAME_Rdi 0x148
+#define KTRAP_FRAME_Rsi 0x150
+#define KTRAP_FRAME_Rbp 0x158
+#define KTRAP_FRAME_ErrorCode 0x160
+#define KTRAP_FRAME_Rip 0x168
+#define KTRAP_FRAME_SegCs 0x170
+#define KTRAP_FRAME_EFlags 0x178
+#define KTRAP_FRAME_Rsp 0x180
+#define KTRAP_FRAME_SegSs 0x188
+#define SIZE_KTRAP_FRAME 0x190
+
+//
 // CR0
 //
 #define CR0_PE                                  0x1
