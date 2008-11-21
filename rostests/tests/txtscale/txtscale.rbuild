@@ -4,6 +4,7 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comctl32</library>
+	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 	<file>txtscale.cpp</file>
 	<file>mk_font.cpp</file>
 </module>
