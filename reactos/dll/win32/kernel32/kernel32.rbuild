@@ -123,6 +123,7 @@
 
 		<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
 		<compilerflag compiler="cpp">-fno-rtti</compilerflag>
+        <compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 
 		<directory name="misc">
 			<file>icustubs.cpp</file>
