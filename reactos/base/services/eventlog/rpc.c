@@ -41,6 +41,101 @@ DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
     return 0;
 }
 
+IELF_HANDLE ElfCreateEventLogHandle(WCHAR *Name)
+{
+    PEVENTSOURCE EventSourceHandle;
+    PLOGFILE currentLogFile = NULL;
+    HKEY hLogSourceNameKey = NULL;
+	WCHAR *SourceNameRegKey = NULL;
+    DWORD dwError, dwSize;
+    INT i, LogsActive;
+
+    EventSourceHandle = HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTSOURCE));
+    if (!EventSourceHandle)
+    {
+        DPRINT1("Failed to allocate Heap!\n");
+        return NULL;
+    }
+
+    EventSourceHandle->Name = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY ,(wcslen(Name) + 1) * sizeof(WCHAR));
+    if (!EventSourceHandle->Name)
+    {
+        HeapFree(GetProcessHeap(),0, EventSourceHandle);
+        DPRINT1("Failed to allocate Heap!\n");
+        return NULL;
+    }
+
+    wcscpy(EventSourceHandle->Name, Name);
+
+    /* Get the number of Log Files the EventLog service found */
+    LogsActive = LogfListItemCount();
+    if (LogsActive == 0)
+    {
+        DPRINT1("EventLog service reports no log files!\n");
+        goto Cleanup;
+    }
+
+    /* Default to the Application Log, as documented on MSDN */
+    EventSourceHandle->LogFile = LogfListItemByName(L"Application");
+
+    for (i = 1; i <= LogsActive; i++)
+    {
+        currentLogFile = LogfListItemByIndex(i);
+        //DPRINT1("LogFile = %S\n",currentLogFile->LogName);
+
+        dwSize = 90;
+        dwSize += (wcslen(currentLogFile->LogName) + 3) * sizeof(WCHAR);
+        dwSize += (wcslen(Name) + 1) * sizeof(WCHAR);
+
+        SourceNameRegKey = HeapAlloc(GetProcessHeap(), 0, dwSize);
+
+        wcscpy(SourceNameRegKey, L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\");
+        wcsncat(SourceNameRegKey, currentLogFile->LogName, wcslen(currentLogFile->LogName));
+        wcsncat(SourceNameRegKey, L"\\",2);
+        wcsncat(SourceNameRegKey, Name, wcslen(Name));
+
+        dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                SourceNameRegKey,
+                                0,
+                                KEY_READ,
+                                &hLogSourceNameKey);
+
+        HeapFree(GetProcessHeap(), 0, SourceNameRegKey);
+
+        if (dwError == ERROR_SUCCESS)
+        {
+            EventSourceHandle->LogFile = currentLogFile;
+            break;
+        }
+    }
+
+    /* If hLogSourceRegKey is NULL */
+    if (!hLogSourceNameKey)
+    {
+        DPRINT1("Could not find subkey %S under any of the eventlog logfiles in registry. Using default of Application.\n",Name);
+    }
+
+    if (hLogSourceNameKey) RegCloseKey(hLogSourceNameKey);
+
+    return EventSourceHandle;
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, EventSourceHandle->Name);
+    HeapFree(GetProcessHeap(), 0, EventSourceHandle);
+    return NULL;
+}
+
+BOOL ElfDeleteEventLogHandle(IELF_HANDLE EventLogHandle)
+{
+    PEVENTSOURCE pHandle = (PEVENTSOURCE) EventLogHandle;
+
+    if (pHandle->LogFile->Header.Signature != LOGFILE_SIGNATURE)
+        return FALSE;
+
+    HeapFree(GetProcessHeap(),0,pHandle->Name);
+    HeapFree(GetProcessHeap(),0,pHandle);
+    return TRUE;
+}
 
 /* Function 0 */
 NTSTATUS ElfrClearELFW(

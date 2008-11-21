@@ -94,6 +94,11 @@ typedef struct
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
+typedef struct
+{
+    PLOGFILE LogFile;
+    WCHAR *Name;
+} EVENTSOURCE, *PEVENTSOURCE;
 
 /* file.c */
 VOID LogfListInitialize(VOID);
