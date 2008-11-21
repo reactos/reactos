@@ -1109,6 +1109,17 @@ IntMouseInput(MOUSEINPUT *mi)
    Msg.wParam = CurInfo->ButtonsDown;
    Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
    Msg.pt = MousePos;
+
+   if (gQueueKeyStateTable[VK_SHIFT] & 0xc0)
+   {
+      Msg.wParam |= MK_SHIFT;
+   }
+
+   if (gQueueKeyStateTable[VK_CONTROL] & 0xc0)
+   {
+      Msg.wParam |= MK_CONTROL;
+   }
+
    if(DoMove)
    {
       Msg.message = WM_MOUSEMOVE;
