@@ -1,5 +1,8 @@
 #ifndef _VFW_H
 #define _VFW_H
+#if __GNUC__ >= 3
+#pragma GCC system_header
+#endif
 
 #ifndef _WINDOWS_H
 #include <windows.h>
