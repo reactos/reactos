@@ -49,7 +49,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return CLASS_E_NOAGGREGATION;
     }
 
-    if(!pDDSD->dwFlags & DDSD_CAPS)
+    if(!(pDDSD->dwFlags & DDSD_CAPS))
     {
         return DDERR_INVALIDPARAMS;
     }
@@ -64,14 +64,14 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return DDERR_INVALIDCAPS;
     }
 
-    if(!(pDDSD->dwFlags & DDSD_HEIGHT) && !(pDDSD->dwFlags & DDSD_HEIGHT)
-        && !(pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
+    if((!(pDDSD->dwFlags & DDSD_HEIGHT) || !(pDDSD->dwFlags & DDSD_WIDTH))
+       && !(pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
     {
         return DDERR_INVALIDPARAMS;
     }
 
-    else if(pDDSD->dwFlags & DDSD_HEIGHT && pDDSD->dwFlags & DDSD_HEIGHT
-        && pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
+    else if(((pDDSD->dwFlags & DDSD_HEIGHT) || (pDDSD->dwFlags & DDSD_WIDTH))
+       && (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
     {
         return DDERR_INVALIDPARAMS;
     }
