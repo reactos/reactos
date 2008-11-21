@@ -18,9 +18,6 @@
 
 #ifndef _NTSECPKG_H
 #define _NTSECPKG_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 /* Flags for the MachineState field in SECPKG_PARAMETERS */
 #define SECPKG_STATE_ENCRYPTION_PERMITTED               0x01
