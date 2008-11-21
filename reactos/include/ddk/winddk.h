@@ -4926,11 +4926,6 @@ typedef enum _LOCK_OPERATION {
   IoModifyAccess
 } LOCK_OPERATION;
 
-typedef ULONG PFN_COUNT;
-
-typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
-typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
-
 #define FLUSH_MULTIPLE_MAXIMUM 32
 
 typedef enum _MM_SYSTEM_SIZE {
@@ -5423,6 +5418,8 @@ typedef VOID
 
 #ifdef _X86_
 
+typedef ULONG PFN_COUNT;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
@@ -5527,6 +5524,10 @@ KeGetCurrentThread(
 #define KI_USER_SHARED_DATA               0xffdf0000
 
 #elif defined(__x86_64__)
+
+typedef ULONG PFN_COUNT;
+typedef LONG64 SPFN_NUMBER, *PSPFN_NUMBER;
+typedef ULONG64 PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
 #define LOW_LEVEL                          0
@@ -5641,6 +5642,8 @@ KeGetCurrentProcessorNumber(VOID)
 
 #elif defined(__PowerPC__)
 
+typedef ULONG PFN_COUNT;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
@@ -5714,6 +5717,8 @@ KeGetCurrentProcessorNumber(VOID)
 
 #error MIPS Headers are totally incorrect
 
+typedef ULONG PFN_COUNT;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
