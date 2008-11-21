@@ -1,8 +1,5 @@
 #ifndef _WINNT_H
 #define _WINNT_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifdef __GNUC__
 #include <msvctarget.h>
@@ -40,10 +37,6 @@ extern "C" {
 
 #include <basetsd.h>
 #include <guiddef.h>
-
-#ifndef __cplusplus
-    typedef unsigned short wchar_t;
-#endif
 
 #include <ctype.h>
 #undef __need_wchar_t
