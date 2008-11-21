@@ -1,70 +1,91 @@
-/*
- * Implementation of DCIMAN32 - DCI Manager
- * "Device Context Interface" ?
- *
- * Copyright 2000 Marcus Meissner
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
 
-#include <stdarg.h>
-#include <stdio.h> 
+#include <windows.h>
+#include <dciman.h>
 
-#include "windows.h"
-#include "dciman.h"
-#include "wine/debug.h"
+CRITICAL_SECTION ddcs;
 
-WINE_DEFAULT_DEBUG_CHANNEL(dciman);
-
-/***********************************************************************
- *           DllEntryPoint (DCIMAN32.@)
- *
- * DCIMAN32 initialisation routine.
- */
-BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
+BOOL
+WINAPI
+DllMain( HINSTANCE hModule, DWORD ul_reason_for_call, LPVOID reserved )
 {
-    if (reason == DLL_PROCESS_ATTACH) DisableThreadLibraryCalls( inst );
+    switch(ul_reason_for_call)
+    {
+        case DLL_PROCESS_DETACH:
+            DeleteCriticalSection( &ddcs );
+            break;
+
+        case DLL_PROCESS_ATTACH:
+            InitializeCriticalSection( &ddcs );
+            break;
+    }
     return TRUE;
 }
 
+/*++
+* @name HDC WINAPI DCIOpenProvider(void)
+* @implemented
+*
+* The function DCIOpenProvider are almost same as CreateDC, it is more simple to use,
+* you do not need type which monitor or graphic card you want to use, it will use
+*  the current one that the program is running on, so it simple create a hdc, and
+*  you can use gdi32 api without any problem
 
-/***********************************************************************
- *		DCIOpenProvider (DCIMAN32.@)
- */
+* @return
+* Returns a hdc that it have create by gdi32.dll CreateDC
+*
+* @remarks.
+* None
+*
+*--*/
 HDC WINAPI
-DCIOpenProvider(void) {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return NULL;
+DCIOpenProvider(void)
+{
+    HDC hDC;
+    if (GetSystemMetrics(SM_CMONITORS) > 1)
+    {
+        /* FIXME we need add more that one mointor support for DCIOpenProvider, need exaime how */
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return NULL;
+    }
+    else
+    {
+        /* Note Windows using the word "Display" not with big letter to create the hdc
+         * MS gdi32 does not care if the Display spell with big or small letters */
+
+        /* Note it only create a hDC handle and send it back. */
+        hDC = CreateDCW(L"Display",NULL, NULL, NULL);
+    }
+
+    return hDC;
 }
 
-/***********************************************************************
- *		DCICloseProvider (DCIMAN32.@)
- */
+/*++
+* @name void WINAPI DCICloseProvider(HDC hdc)
+* @implemented
+*
+* Same as DeleteDC, it call indirecly to DeleteDC, it simple free and destory the hdc.
+
+* @return
+* None
+*
+* @remarks.
+* None
+*
+*--*/
 void WINAPI
-DCICloseProvider(HDC hdc) {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return;
+DCICloseProvider(HDC hDC)
+{
+    /* Note it only delete the hdc */
+    DeleteDC(hDC);
 }
 
-/**************************************************************************
- *                 DCICreatePrimary (DCIMAN32.@)
- */
+
 int WINAPI 
 DCICreatePrimary(HDC hdc, LPDCISURFACEINFO *pDciSurfaceInfo)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    FIXME("%p %p\n", hdc, pDciSurfaceInfo);
     return DCI_FAIL_UNSUPPORTED;
 }
+
+
+
