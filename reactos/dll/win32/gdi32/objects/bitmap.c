@@ -341,8 +341,6 @@ CreateCompatibleBitmap(
 }
 
 
-
-
 INT
 STDCALL
 GetDIBits(
@@ -392,7 +390,7 @@ GetDIBits(
                                uUsage,
                                cjBmpScanSize,
                                0);
-  if ( lpvBits )
+  if ( lpvBits != pvSafeBits)
   {
      RtlCopyMemory( lpvBits, pvSafeBits, cjBmpScanSize);
      RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
