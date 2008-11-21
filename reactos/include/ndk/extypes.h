@@ -49,7 +49,9 @@ Author:
 //
 // Atom and Language IDs
 //
-typedef USHORT LANGID, *PLANGID;
+#ifndef NTOS_MODE_USER
+typedef USHORT LANGID;
+#endif
 typedef USHORT RTL_ATOM, *PRTL_ATOM;
 
 #ifndef NTOS_MODE_USER

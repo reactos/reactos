@@ -29,7 +29,7 @@ LCID PsDefaultThreadLocaleId = LANGIDFROMLCID(0x00000409);
 NTSTATUS
 NTAPI
 ExpGetCurrentUserUILanguage(IN PWSTR MuiName,
-                            OUT PLANGID LanguageId)
+                            OUT LANGID* LanguageId)
 {
     UCHAR ValueBuffer[256];
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
@@ -313,7 +313,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
  */
 NTSTATUS
 NTAPI
-NtQueryInstallUILanguage(OUT PLANGID LanguageId)
+NtQueryInstallUILanguage(OUT LANGID* LanguageId)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
@@ -347,7 +347,7 @@ NtQueryInstallUILanguage(OUT PLANGID LanguageId)
  */
 NTSTATUS
 NTAPI
-NtQueryDefaultUILanguage(OUT PLANGID LanguageId)
+NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
