@@ -301,7 +301,7 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
               hel_ret = StartDirectDrawHel(iface, reenable);
               break;
     }
-DX_STUB_str("here\n");
+
     if (hal_ret!=DD_OK)
     {
         if (hel_ret!=DD_OK)
@@ -367,10 +367,6 @@ StartDirectDrawHel(LPDIRECTDRAW iface, BOOL reenable)
                 return DD_FALSE;
             }
         }
-    }
-    else
-    {
-        RtlZeroMemory(ddgbl.lpDDCBtmp,sizeof(DDHAL_CALLBACKS));
     }
 
     ddgbl.lpDDCBtmp->HELDD.CanCreateSurface     = HelDdCanCreateSurface;

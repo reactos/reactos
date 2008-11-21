@@ -134,6 +134,19 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
     return retVal;
 }
 
+/*++
+* @name DDraw->AddRef
+* @implemented
+*
+* The function DDraw->AddRef count of all ref counter in the COM object DDraw->
+
+* @return
+* Returns the local Ref counter value for the COM object
+*
+* @remarks.
+* none
+*
+*--*/
 ULONG WINAPI
 Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This)
 {
@@ -141,13 +154,20 @@ Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This)
 
     DX_WINDBG_trace();
 
+    /* Lock the thread so nothing can change the COM while we updating it */
+    AcquireDDThreadLock();
+
     _SEH_TRY
     {
+        /* Count up the internal ref counter */
         This->dwIntRefCnt++;
+
+        /* Count up the internal local ref counter */
         This->lpLcl->dwLocalRefCnt++;
 
         if (This->lpLcl->lpGbl != NULL)
         {
+            /* Count up the internal gobal ref counter */
             This->lpLcl->lpGbl->dwRefCnt++;
         }
     }
@@ -166,6 +186,10 @@ Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This)
     }
     _SEH_END;
 
+    /* Release the thread lock */
+    ReleaseDDThreadLock();
+
+    /* Return the local Ref counter */
     return retValue;
 }
 
@@ -178,6 +202,10 @@ Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This)
     ULONG Counter = 0;
 
     DX_WINDBG_trace();
+
+    /* Lock the thread so nothing can change the COM while we updating it */
+    AcquireDDThreadLock();
+
     _SEH_TRY
     {
         if (This!=NULL)
@@ -213,8 +241,13 @@ Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This)
     {
     }
     _SEH_END;
+
+    /* Release the thread lock */
+    ReleaseDDThreadLock();
+
     return Counter;
 }
+
 
 HRESULT WINAPI
 Main_DirectDraw_Initialize (LPDDRAWI_DIRECTDRAW_INT This, LPGUID lpGUID)
@@ -222,21 +255,34 @@ Main_DirectDraw_Initialize (LPDDRAWI_DIRECTDRAW_INT This, LPGUID lpGUID)
 	return DDERR_ALREADYINITIALIZED;
 }
 
-/*
- * Main_DirectDraw_Compact
- * ms say this one is not implement but it return  DDERR_NOEXCLUSIVEMODE
- * when no exclusive owner are set in corpativelevel
- */
+
+/*++
+* @name DDraw->Compact
+* @implemented
+*
+* The function DDraw->Compact only return two diffent return value, they are DD_OK and DERR_NOEXCLUSIVEMODE
+* if we are in Exclusive mode we return DERR_NOEXCLUSIVEMODE, other wise we return DD_OK
+
+* @return
+* Returns only Error code DD_OK or DERR_NOEXCLUSIVEMODE
+*
+* @remarks.
+*  Microsoft say Compact is not implement in ddraw.dll, but Compact return  DDERR_NOEXCLUSIVEMODE or DD_OK
+*
+*--*/
 HRESULT WINAPI
 Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This)
 {
     HRESULT retVal = DD_OK;
 
     DX_WINDBG_trace();
-    // EnterCriticalSection(&ddcs);
+
+    /* Lock the thread so nothing can change the COM while we updating it */
+    AcquireDDThreadLock();
 
     _SEH_TRY
     {
+        /* Check see if Exclusive mode have been activate */
         if (This->lpLcl->lpGbl->lpExclusiveOwner != This->lpLcl)
         {
             retVal = DDERR_NOEXCLUSIVEMODE;
@@ -246,7 +292,10 @@ Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This)
     {
     }
     _SEH_END;
-    // LeaveCriticalSection(&ddcs);
+
+    /* Release the thread lock */
+    ReleaseDDThreadLock();
+
     return retVal;
 }
 
