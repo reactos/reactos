@@ -92,6 +92,37 @@ typedef int DCIRVAL; /* DCI callback return type */
 #define DCI_CAN_STRETCHXYN     (DCI_CAN_STRETCHXN | DCI_CAN_STRETCHYN)
 #define DCI_CANOVERLAY         0x00010000
 
+#if (WINVER < 0x0400)
+    #ifndef RDH_RECTANGLES
+
+        #define RDH_RECTANGLES  0
+
+        typedef struct tagRECTL
+        {
+            LONG left;
+            LONG top;
+            LONG right;
+            LONG bottom;
+        } RECTL, *PRECTL, *NPRECTL, *LPRECTL,  const *LPCRECTL;
+
+        typedef struct tagRGNDATAHEADER
+        {
+            DWORD dwSize;
+            DWORD iType;
+            DWORD nCount;
+            DWORD nRgnSize;
+            RECTL rcBound;
+        } RGNDATAHEADER *PRGNDATAHEADER, *NPRGNDATAHEADER, *LPRGNDATAHEADER, const RGNDATAHEADER * LPCRGNDATAHEADER;
+
+        typedef struct tagRGNDATA
+        {
+            RGNDATAHEADER   rdh;
+            char            Buffer[1];
+        } RGNDATA, *PRGNDATA, *NPRGNDATA, *LPRGNDATA, const RGNDATA *LPCRGNDATA;
+
+    #endif
+#endif
+
 /* FOURCC codes */
 #ifndef YVU9
 #define YVU9    mmioFOURCC('Y','V','U','9')
