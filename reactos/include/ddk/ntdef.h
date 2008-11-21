@@ -1,8 +1,5 @@
 #ifndef _NTDEF_H
 #define _NTDEF_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #include <stdarg.h>
 #include <windef.h>
@@ -114,11 +111,11 @@ typedef LIST_ENTRY64 *PLIST_ENTRY64;
 #define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
 #define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
 #define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
-#endif
 #ifdef ENABLE_RTL_NUMBER_OF_V2
 #define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
 #else
 #define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
+#endif
 #define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
 #define MINCHAR   0x80
 #define MAXCHAR   0x7f

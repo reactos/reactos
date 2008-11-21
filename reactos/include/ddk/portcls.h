@@ -123,7 +123,6 @@
 #ifndef PORTCLS_H
 #define PORTCLS_H
 
-//#include <windef.h>
 #include <ks.h>
 #include <punknown.h>
 #include <ntddk.h>
