@@ -85,8 +85,8 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
            CcPurgeCacheSection(FileObject->SectionObjectPointer, NULL, 0, FALSE);
         }
 
-        /* Uninitialize file cache if. */
-        CcUninitializeCacheMap (FileObject, &pFcb->RFCB.FileSize, NULL);
+        /* Uninitialize the cache (should be done even if caching was never initialized) */
+        CcUninitializeCacheMap(FileObject, &pFcb->RFCB.FileSize, NULL);
 
         if (pFcb->OpenHandleCount != 0)
         {
