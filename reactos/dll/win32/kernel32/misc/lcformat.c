@@ -346,6 +346,8 @@ static const NLS_FORMAT_NODE *NLS_GetFormats(LCID lcid, DWORD dwFlags)
  */
 BOOL NLS_IsUnicodeOnlyLcid(LCID lcid)
 {
+  lcid = ConvertDefaultLocale(lcid);
+
   switch (PRIMARYLANGID(lcid))
   {
   case LANG_ARMENIAN:
@@ -374,10 +376,10 @@ BOOL NLS_IsUnicodeOnlyLcid(LCID lcid)
 #define IsTimeFmtChar(p)   (p == 'H'||p == 'h'||p == 'm'||p == 's'||p == 't')
 
 /* Only the following flags can be given if a date/time format is specified */
-#define DATE_FORMAT_FLAGS (DATE_DATEVARSONLY|LOCALE_NOUSEROVERRIDE)
+#define DATE_FORMAT_FLAGS (DATE_DATEVARSONLY)
 #define TIME_FORMAT_FLAGS (TIME_TIMEVARSONLY|TIME_FORCE24HOURFORMAT| \
                            TIME_NOMINUTESORSECONDS|TIME_NOSECONDS| \
-                           TIME_NOTIMEMARKER|LOCALE_NOUSEROVERRIDE)
+                           TIME_NOTIMEMARKER)
 
 /******************************************************************************
  * NLS_GetDateTimeFormatW <internal>
@@ -755,7 +757,7 @@ GetDateTimeFormatA_InvalidParameter:
   if (lpStr)
   {
     if (szOut[0])
-      WideCharToMultiByte(cp, 0, szOut, -1, lpStr, cchOut, 0, 0);
+      WideCharToMultiByte(cp, 0, szOut, iRet ? -1 : cchOut, lpStr, cchOut, 0, 0);
     else if (cchOut && iRet)
       *lpStr = '\0';
   }
