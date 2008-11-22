@@ -112,8 +112,10 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
     DDHALINFO HalInfo;
     DDHAL_DDPALETTECALLBACKS DDPaletteCallbacks;
 
+    /* Alloc memory for the internal struct, rember this internal struct are not compatible with windows xp */
     if ( (pDciSurface_int = (LPDCISURFACE_INT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DCISURFACE_INT) )) == NULL )
     {
+        /* Fail alloc memmory */
         retvalue = DCI_ERR_OUTOFMEMORY;
     }
     else
@@ -135,15 +137,51 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
                                         NULL,
                                         NULL) == FALSE) )
         {
+            /* Fail to get importment Directx informations */
             retvalue = DCI_FAIL_UNSUPPORTED;
         }
         else
         {
+            /* We got all informations to start create our primary surface */
+
+            /* Will be use later, it check see if we lost the surface or not */
             pDciSurface_int->DciSurface_lcl.LostSurface = FALSE;
 
             /* FIXME Add the real code now to create the primary surface after we create the dx hal interface */
 
+            /* Fill in the size of DCISURFACEINFO struct */
             pDciSurface_int->DciSurfaceInfo.dwSize = sizeof(DCISURFACEINFO);
+
+            /* Fill in the surface is visible, for it always are the primary surface and it is visible */
+            pDciSurface_int->DciSurfaceInfo.dwDCICaps = DCI_VISIBLE;
+
+            /* for primary screen res lower that 256Color, ms dciman.dll set this value to BI_RGB 
+             * old note I found in ddk header comment follow dwMask is type for BI_BITMASK surfaces
+             * and for dwCompression it was which format the surface was create in, I also tested with older graphic card like S3
+             * that support 16Color or lower for the primary display. and saw this member change betwin 0 (BI_RGB) and 3 (BI_BITFIELDS).
+             */
+            if (HalInfo.vmiData.ddpfDisplay.dwRGBBitCount >= 8)
+            {
+                pDciSurface_int->DciSurfaceInfo.dwCompression = BI_BITFIELDS;
+            }
+            else
+            {
+                pDciSurface_int->DciSurfaceInfo.dwCompression = BI_RGB;
+            }
+
+            /* Fill in the RGB mask */
+            pDciSurface_int->DciSurfaceInfo.dwMask[0] = HalInfo.vmiData.ddpfDisplay.dwRBitMask;
+            pDciSurface_int->DciSurfaceInfo.dwMask[1] = HalInfo.vmiData.ddpfDisplay.dwGBitMask;
+            pDciSurface_int->DciSurfaceInfo.dwMask[2] = HalInfo.vmiData.ddpfDisplay.dwBBitMask;
+
+            /* Fill in the width and height of the primary surface */
+            pDciSurface_int->DciSurfaceInfo.dwWidth = HalInfo.vmiData.dwDisplayWidth;
+            pDciSurface_int->DciSurfaceInfo.dwHeight = HalInfo.vmiData.dwDisplayHeight;
+
+            /* Fill in the color deep and stride of the primary surface */
+            pDciSurface_int->DciSurfaceInfo.dwBitCount = HalInfo.vmiData.ddpfDisplay.dwRGBBitCount;
+            pDciSurface_int->DciSurfaceInfo.lStride = HalInfo.vmiData.lDisplayPitch;
+
             *pDciSurfaceInfo = (LPDCISURFACEINFO) &pDciSurface_int->DciSurfaceInfo;
         }
     }
