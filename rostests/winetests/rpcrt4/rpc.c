@@ -28,7 +28,7 @@
 #include <winbase.h>
 #include <winnt.h>
 #include <winerror.h>
-#include <ntdef.h>
+#include <ntsecapi.h>
 
 #include "rpc.h"
 #include "rpcdce.h"
