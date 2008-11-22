@@ -1,6 +1,13 @@
 
 #include <windows.h>
+#include <ndk/ntndk.h>
+#include <stdio.h>
 #include <dciman.h>
+#include <ddraw.h>
+#include <ddrawi.h>
+#include <d3dhal.h>
+#include <ddrawgdi.h>
+#include <pseh/pseh.h>
 
 CRITICAL_SECTION ddcs;
 
@@ -80,11 +87,82 @@ DCICloseProvider(HDC hDC)
 }
 
 
-int WINAPI 
-DCICreatePrimary(HDC hdc, LPDCISURFACEINFO *pDciSurfaceInfo)
+typedef struct _DCISURFACE_LCL
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return DCI_FAIL_UNSUPPORTED;
+    BOOL LostSurface;
+    DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
+    DDRAWI_DDRAWSURFACE_LCL SurfaceLocal;
+    DDHAL_DDCALLBACKS DDCallbacks;
+    DDHAL_DDSURFACECALLBACKS DDSurfaceCallbacks;
+} DCISURFACE_LCL, *LPDCISURFACE_LCL;
+
+typedef struct _DCISURFACE_INT
+{
+    DCISURFACE_LCL DciSurface_lcl;
+    DCISURFACEINFO DciSurfaceInfo;
+} DCISURFACE_INT, *LPDCISURFACE_INT;
+
+
+int WINAPI 
+DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
+{
+    int retvalue = DCI_OK;
+    BOOL bNewMode = FALSE;
+    LPDCISURFACE_INT pDciSurface_int;
+    DDHALINFO HalInfo;
+    DDHAL_DDPALETTECALLBACKS DDPaletteCallbacks;
+
+    if ( (pDciSurface_int = (LPDCISURFACE_INT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DCISURFACE_INT) )) == NULL )
+    {
+        retvalue = DCI_ERR_OUTOFMEMORY;
+    }
+    else
+    {
+        /* Activate the DirectX support from HAL, if any of these function fail, we was not avail setup infomrations we need to create our frame */
+        if ( ( DdCreateDirectDrawObject( &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal,
+                                         hDC) == FALSE) ||
+             ( DdReenableDirectDrawObject(&pDciSurface_int->DciSurface_lcl.DirectDrawGlobal,
+                                      &bNewMode) == FALSE) ||
+             ( DdQueryDirectDrawObject( &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal,
+                                        &HalInfo,
+                                        &pDciSurface_int->DciSurface_lcl.DDCallbacks, 
+                                        &pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks,
+                                        &DDPaletteCallbacks,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        NULL) == FALSE) )
+        {
+            retvalue = DCI_FAIL_UNSUPPORTED;
+        }
+        else
+        {
+            pDciSurface_int->DciSurface_lcl.LostSurface = FALSE;
+
+            /* FIXME Add the real code now to create the primary surface after we create the dx hal interface */
+
+            pDciSurface_int->DciSurfaceInfo.dwSize = sizeof(DCISURFACEINFO);
+            *pDciSurfaceInfo = (LPDCISURFACEINFO) &pDciSurface_int->DciSurfaceInfo;
+        }
+    }
+
+/* Cleanup code when we fail */
+    if (retvalue < DCI_OK)
+    {
+        if (pDciSurface_int->DciSurface_lcl.DirectDrawGlobal.hDD != 0)
+        {
+            DdDeleteDirectDrawObject(&pDciSurface_int->DciSurface_lcl.DirectDrawGlobal);
+        }
+
+        if (pDciSurface_int != NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, pDciSurface_int);
+        }
+    }
+
+    return retvalue;
 }
 
 
