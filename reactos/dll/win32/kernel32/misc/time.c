@@ -378,6 +378,8 @@ SystemTimeToFileTime(
      lpFileTime->dwHighDateTime = liTime.u.HighPart;
      return TRUE;
   }
+
+  SetLastError(ERROR_INVALID_PARAMETER);
   return FALSE;
 }
 
