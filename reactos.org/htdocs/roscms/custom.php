@@ -32,5 +32,6 @@
 	$roscms_standard_language_full="English"; // English/German/...
 	$roscms_standard_language_trans="de"; // en/de/fr/...
   
+  $roscms_subsystem_wiki_path = '/reactos/wiki/index.php/'; // base adress for wiki pages
 
 ?>

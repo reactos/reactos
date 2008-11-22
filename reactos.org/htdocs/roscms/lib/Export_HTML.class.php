@@ -335,6 +335,7 @@ class Export_HTML extends Export
     global $roscms_intern_webserver_pages;
     global $roscms_intern_webserver_roscms;
     global $roscms_standard_language;
+    global $roscms_subsystem_wiki_path;
 
     // try to force unlimited script runtime
     @set_time_limit(0);
@@ -405,7 +406,10 @@ class Export_HTML extends Export
     $content = str_replace('[#roscms_page_version]', $page['rev_version'], $content); 
 
     // page edit link
-    $content = str_replace('[#roscms_page_edit]', $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit', $content); 
+    $content = str_replace('[#roscms_page_edit]', $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit', $content);
+
+    // Subsystem Links
+    $content = preg_replace('/\[#wiki_([^]]+)\]/', $roscms_subsystem_wiki_path.'$1', $content);
 
     // translation info
     if ($this->lang == $roscms_standard_language) {
