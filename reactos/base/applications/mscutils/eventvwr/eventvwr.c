@@ -35,18 +35,18 @@
     #define _CRT_SECURE_NO_DEPRECATE // all deprecated 'unsafe string functions
 #endif
 
-static const LPSTR EVENT_SOURCE_APPLICATION = "Application";
-static const LPSTR EVENT_SOURCE_SECURITY    = "Security";
-static const LPSTR EVENT_SOURCE_SYSTEM      = "System";
-static const TCHAR szWindowClass[]          = _T("EVENTVWR"); // the main window class name
+static const LPTSTR EVENT_SOURCE_APPLICATION = _TEXT("Application");
+static const LPTSTR EVENT_SOURCE_SECURITY    = _TEXT("Security");
+static const LPTSTR EVENT_SOURCE_SYSTEM      = _TEXT("System");
+static const TCHAR szWindowClass[]          = _TEXT("EVENTVWR"); // the main window class name
 
 //MessageFile message buffer size
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER  1024*10
 #define EVENT_MESSAGE_FILE_BUFFER       1024*10
-#define EVENT_DLL_SEPARATOR             ";"
-#define EVENT_MESSAGE_FILE              "EventMessageFile"
-#define EVENT_CATEGORY_MESSAGE_FILE     "CategoryMessageFile"
-#define EVENT_PARAMETER_MESSAGE_FILE    "ParameterMessageFile"
+#define EVENT_DLL_SEPARATOR             _TEXT(";")
+#define EVENT_MESSAGE_FILE              _TEXT("EventMessageFile")
+#define EVENT_CATEGORY_MESSAGE_FILE     _TEXT("CategoryMessageFile")
+#define EVENT_PARAMETER_MESSAGE_FILE    _TEXT("ParameterMessageFile")
 
 #define MAX_LOADSTRING 255
 
@@ -139,16 +139,16 @@ EventTimeToSystemTime(DWORD EventTime,
 
 
 void
-TrimNulls(LPSTR s)
+TrimNulls(LPTSTR s)
 {
-    char *c;
+    TCHAR *c;
 
-    if ( s != (char *) NULL )
+    if (s != NULL)
     {
-        c = s + strlen ( s ) - 1;
-        while ( c >= s && isspace ( *c ) )
+        c = s + _tcslen(s) - 1;
+        while (c >= s && _istspace(*c))
             --c;
-        *++c = '\0';
+        *++c = _TEXT('\0');
     }
 }
 
@@ -157,7 +157,7 @@ BOOL
 GetEventMessageFileDLL(IN LPCTSTR lpLogName,
                        IN LPCTSTR SourceName,
                        IN LPCTSTR EntryName,
-                       OUT LPSTR ExpandedName)
+                       OUT LPTSTR ExpandedName)
 {
     DWORD dwSize;
     BYTE szModuleName[MAX_PATH];
@@ -166,8 +166,8 @@ GetEventMessageFileDLL(IN LPCTSTR lpLogName,
     HKEY hSourceKey = NULL;
     BOOL bReturn = FALSE; // Return
 
-    _tcscpy(szKeyName, TEXT("SYSTEM\\CurrentControlSet\\Services\\EventLog"));
-    _tcscat(szKeyName, _T("\\"));
+    _tcscpy(szKeyName, _TEXT("SYSTEM\\CurrentControlSet\\Services\\EventLog"));
+    _tcscat(szKeyName, _TEXT("\\"));
     _tcscat(szKeyName, lpLogName);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -191,7 +191,7 @@ GetEventMessageFileDLL(IN LPCTSTR lpLogName,
                                 &dwSize) == ERROR_SUCCESS)
             {
                 // Returns a string containing the requested substituted environment variable.
-                ExpandEnvironmentStrings ((LPCTSTR)szModuleName, ExpandedName, MAX_PATH);
+                ExpandEnvironmentStrings((LPCTSTR)szModuleName, ExpandedName, MAX_PATH);
 
                 // Succesfull
                 bReturn = TRUE;
@@ -245,19 +245,19 @@ GetEventCategory(IN LPCTSTR KeyName,
                 if (lpMsgBuf)
                 {
                     // Trim the string
-                    TrimNulls((LPSTR)lpMsgBuf);
+                    TrimNulls((LPTSTR)lpMsgBuf);
 
                     // Copy the category name
-                    strcpy(CategoryName, (LPCTSTR)lpMsgBuf);
+                    _tcscpy(CategoryName, (LPCTSTR)lpMsgBuf);
                 }
                 else
                 {
-                    strcpy(CategoryName, (LPCTSTR)lpMsgBuf);
+                    _tcscpy(CategoryName, (LPCTSTR)lpMsgBuf);
                 }
             }
             else
             {
-                strcpy(CategoryName, "None");
+                _tcscpy(CategoryName, _TEXT("None"));
             }
 
             if (hLibrary != NULL)
@@ -271,7 +271,7 @@ GetEventCategory(IN LPCTSTR KeyName,
         }
     }
 
-    strcpy(CategoryName, "None");
+    _tcscpy(CategoryName, _TEXT("None"));
 
     return FALSE;
 }
@@ -285,8 +285,8 @@ GetEventMessage(IN LPCTSTR KeyName,
 {
     DWORD i;
     HANDLE hLibrary = NULL;
-    char SourceModuleName[1000];
-    char ParameterModuleName[1000];
+    TCHAR SourceModuleName[1000];
+    TCHAR ParameterModuleName[1000];
     LPTSTR lpMsgBuf = NULL;
     TCHAR szStringIDNotFound[MAX_LOADSTRING];
     LPTSTR szDll;
@@ -301,7 +301,7 @@ GetEventMessage(IN LPCTSTR KeyName,
         szMessage = (LPTSTR)((LPBYTE)pevlr + pevlr->StringOffset);
 
         // Allocate space for parameters
-        szArguments = (LPTSTR*)malloc(sizeof(LPVOID)* pevlr->NumStrings);
+        szArguments = (LPTSTR*)malloc(sizeof(LPVOID) * pevlr->NumStrings);
         if (!szArguments)
         {
             return FALSE;
@@ -309,7 +309,7 @@ GetEventMessage(IN LPCTSTR KeyName,
 
         for (i = 0; i < pevlr->NumStrings ; i++)
         {
-            if (strstr(szMessage , "%%"))
+            if (_tcsstr(szMessage , _TEXT("%%")))
             {
                 if (GetEventMessageFileDLL(KeyName , SourceName, EVENT_PARAMETER_MESSAGE_FILE, ParameterModuleName))
                 {
@@ -317,16 +317,16 @@ GetEventMessage(IN LPCTSTR KeyName,
                 }
 
                 szArguments[i] = szMessage;
-                szMessage += strlen(szMessage) + 1;
+                szMessage += _tcslen(szMessage) + 1;
             }
             else
             {
                 szArguments[i] = szMessage;
-                szMessage += strlen(szMessage) + 1;
+                szMessage += _tcslen(szMessage) + 1;
             }
         }
 
-        szDll = strtok(SourceModuleName, EVENT_DLL_SEPARATOR);
+        szDll = _tcstok(SourceModuleName, EVENT_DLL_SEPARATOR);
         while ((szDll != NULL) && (!bDone))
         {
             hLibrary = LoadLibraryEx(szDll,
@@ -335,7 +335,7 @@ GetEventMessage(IN LPCTSTR KeyName,
             if (hLibrary == NULL)
             {
                 // The DLL could not be loaded try the next one (if any)
-                szDll = strtok(NULL, EVENT_DLL_SEPARATOR);
+                szDll = _tcstok(NULL, EVENT_DLL_SEPARATOR);
             }
             else
             {
@@ -349,10 +349,10 @@ GetEventMessage(IN LPCTSTR KeyName,
                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                                   (LPTSTR)&lpMsgBuf,
                                   0,
-                                  szArguments) == 0)
+                                  (va_list*)szArguments) == 0)
                 {
                     // We haven't found the string , get next DLL (if any)
-                    szDll = strtok (NULL, EVENT_DLL_SEPARATOR);
+                    szDll = _tcstok(NULL, EVENT_DLL_SEPARATOR);
                 }
                 else
                 {
@@ -362,10 +362,10 @@ GetEventMessage(IN LPCTSTR KeyName,
                         bDone = TRUE;
 
                         // Trim the string
-                        TrimNulls((LPSTR)lpMsgBuf);
+                        TrimNulls((LPTSTR)lpMsgBuf);
 
                         // Copy the event text
-                        strcpy(EventText ,lpMsgBuf);
+                        _tcscpy(EventText ,lpMsgBuf);
                     }
                 }
 
@@ -394,7 +394,7 @@ GetEventMessage(IN LPCTSTR KeyName,
 
 VOID
 GetEventType(IN WORD dwEventType,
-             OUT LPSTR eventTypeText)
+             OUT LPTSTR eventTypeText)
 {
     switch (dwEventType)
     {
@@ -423,11 +423,12 @@ GetEventType(IN WORD dwEventType,
 }
 
 BOOL
-GetEventUserName(EVENTLOGRECORD *pelr, OUT LPSTR pszUser)
+GetEventUserName(EVENTLOGRECORD *pelr,
+                 OUT LPTSTR pszUser)
 {
     PSID lpSid;
-    char szName[1024];
-    char szDomain[1024];
+    TCHAR szName[1024];
+    TCHAR szDomain[1024];
     SID_NAME_USE peUse;
     DWORD cbName = 1024;
     DWORD cbDomain = 1024;
@@ -446,7 +447,7 @@ GetEventUserName(EVENTLOGRECORD *pelr, OUT LPSTR pszUser)
                              &cbDomain,
                              &peUse))
         {
-            strcpy(pszUser, szName);
+            _tcscpy(pszUser, szName);
             return TRUE;
         }
     }
@@ -494,22 +495,22 @@ QueryEventMessages(LPTSTR lpMachineName,
     EVENTLOGRECORD *pevlr;
     BYTE bBuffer[MAX_PATH];
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords, dwCurrentRecord = 1, dwRecordsToRead = 0, dwFlags;
-    LPSTR lpSourceName;
-    LPSTR lpComputerName;
-    LPSTR lpEventStr;
-    LPSTR lpData;
+    LPTSTR lpSourceName;
+    LPTSTR lpComputerName;
+    LPTSTR lpEventStr;
+    LPTSTR lpData;
     BOOL bResult = TRUE; // Read succeeded.
 
-    char szWindowTitle[MAX_PATH];
-    char szStatusText[MAX_PATH];
-    char szLocalDate[MAX_PATH];
-    char szLocalTime[MAX_PATH];
-    char szEventID[MAX_PATH];
-    char szEventTypeText[MAX_PATH];
-    char szCategoryID[MAX_PATH];
-    char szUsername[MAX_PATH];
-    char szEventText[EVENT_MESSAGE_FILE_BUFFER];
-    char szCategory[MAX_PATH];
+    TCHAR szWindowTitle[MAX_PATH];
+    TCHAR szStatusText[MAX_PATH];
+    TCHAR szLocalDate[MAX_PATH];
+    TCHAR szLocalTime[MAX_PATH];
+    TCHAR szEventID[MAX_PATH];
+    TCHAR szEventTypeText[MAX_PATH];
+    TCHAR szCategoryID[MAX_PATH];
+    TCHAR szUsername[MAX_PATH];
+    TCHAR szEventText[EVENT_MESSAGE_FILE_BUFFER];
+    TCHAR szCategory[MAX_PATH];
 
     SYSTEMTIME time;
     LVITEM lviEventItem;
@@ -583,21 +584,21 @@ QueryEventMessages(LPTSTR lpMachineName,
 
         while (dwRead > 0)
         {
-            strcpy(szUsername , "N/A");
-            strcpy(szEventText , "N/A");
-            strcpy(szCategory , "None");
+            _tcscpy(szUsername , _TEXT("N/A"));
+            _tcscpy(szEventText , _TEXT("N/A"));
+            _tcscpy(szCategory , _TEXT("None"));
 
             // Get the event source name.
-            lpSourceName = (LPSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
+            lpSourceName = (LPTSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
 
             // Get the computer name
-            lpComputerName = (LPSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + lstrlen(lpSourceName) + 1);
+            lpComputerName = (LPTSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + (_tcslen(lpSourceName) + 1) * sizeof(TCHAR));
 
             // This ist the data section of the current event
-            lpData = (LPSTR)((LPBYTE)pevlr + pevlr->DataOffset);
+            lpData = (LPTSTR)((LPBYTE)pevlr + pevlr->DataOffset);
 
             // This is the text of the current event
-            lpEventStr = (LPSTR)((LPBYTE) pevlr + pevlr->StringOffset);
+            lpEventStr = (LPTSTR)((LPBYTE)pevlr + pevlr->StringOffset);
 
             // Compute the event type
             EventTimeToSystemTime(pevlr->TimeWritten, &time);
@@ -611,8 +612,8 @@ QueryEventMessages(LPTSTR lpMachineName,
             GetEventType(pevlr->EventType, szEventTypeText);
             GetEventCategory(lpLogName, lpSourceName, pevlr, szCategory);
 
-            wsprintf(szEventID, "%u", (DWORD)(pevlr->EventID & 0xFFFF));
-            wsprintf(szCategoryID, "%u", (DWORD)(pevlr->EventCategory));
+            wsprintf(szEventID, _TEXT("%u"), (DWORD)(pevlr->EventID & 0xFFFF));
+            wsprintf(szCategoryID, _TEXT("%u"), (DWORD)(pevlr->EventCategory));
 
             lviEventItem.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM;
             lviEventItem.iItem = 0;
@@ -671,8 +672,8 @@ QueryEventMessages(LPTSTR lpMachineName,
     // All events loaded
     EndDialog(hwndDlg, 0);
 
-    wsprintf(szWindowTitle, "%s - %s Log on \\\\%s", szTitle , lpLogName , lpComputerName);
-    wsprintf(szStatusText, "%s has %d event(s)",  lpLogName , dwTotalRecords);
+    wsprintf(szWindowTitle, _TEXT("%s - %s Log on \\\\%s"), szTitle, lpLogName, lpComputerName);
+    wsprintf(szStatusText, _TEXT("%s has %d event(s)"), lpLogName, dwTotalRecords);
 
     // Update the status bar
     SendMessage(hwndStatus, SB_SETTEXT, (WPARAM)0, (LPARAM)szStatusText);
@@ -766,7 +767,7 @@ InitInstance(HINSTANCE hInstance,
 
     hwndStatus = CreateWindowEx(0,                                  // no extended styles
                                 STATUSCLASSNAME,                    // status bar
-                                "Done.",                            // no text
+                                _TEXT("Done."),                     // no text
                                 WS_CHILD | WS_BORDER | WS_VISIBLE,  // styles
                                 0, 0, 0, 0,                         // x, y, cx, cy
                                 hwndMainWindow,                     // parent window
@@ -779,7 +780,7 @@ InitInstance(HINSTANCE hInstance,
     // LVS_EX_ styles cannot be set in CreateWindowEx().
     hwndListView = CreateWindowEx(WS_EX_CLIENTEDGE,
                                   WC_LISTVIEW,
-                                  _T(""),
+                                  _TEXT(""),
                                   LVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | LVS_REPORT,
                                   0,
                                   0,
@@ -1013,23 +1014,23 @@ About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 VOID
 DisplayEvent(HWND hDlg)
 {
-    char szEventType[MAX_PATH];
-    char szTime[MAX_PATH];
-    char szDate[MAX_PATH];
-    char szUser[MAX_PATH];
-    char szComputer[MAX_PATH];
-    char szSource[MAX_PATH];
-    char szCategory[MAX_PATH];
-    char szEventID[MAX_PATH];
-    char szEventText[EVENT_MESSAGE_EVENTTEXT_BUFFER];
-    char szEventData[MAX_PATH];
+    TCHAR szEventType[MAX_PATH];
+    TCHAR szTime[MAX_PATH];
+    TCHAR szDate[MAX_PATH];
+    TCHAR szUser[MAX_PATH];
+    TCHAR szComputer[MAX_PATH];
+    TCHAR szSource[MAX_PATH];
+    TCHAR szCategory[MAX_PATH];
+    TCHAR szEventID[MAX_PATH];
+    TCHAR szEventText[EVENT_MESSAGE_EVENTTEXT_BUFFER];
+    TCHAR szEventData[MAX_PATH];
     BOOL bEventData = FALSE;
     LVITEM li;
     EVENTLOGRECORD* pevlr;
     int iIndex;
 
     // Get index of selected item
-    iIndex = (int)SendMessage (hwndListView ,LVM_GETNEXTITEM, -1 , LVNI_SELECTED | LVNI_FOCUSED);
+    iIndex = (int)SendMessage (hwndListView, LVM_GETNEXTITEM, -1, LVNI_SELECTED | LVNI_FOCUSED);
 
     li.mask = LVIF_PARAM;
     li.iItem = iIndex;
@@ -1049,9 +1050,18 @@ DisplayEvent(HWND hDlg)
         ListView_GetItemText(hwndListView, iIndex, 5, szEventID, sizeof(szEventID));
         ListView_GetItemText(hwndListView, iIndex, 6, szUser, sizeof(szUser));
         ListView_GetItemText(hwndListView, iIndex, 7, szComputer, sizeof(szComputer));
-        ListView_GetItemText(hwndListView, iIndex, 8, szEventData, sizeof(szEventData));
 
-        bEventData = !(strlen(szEventData) == 0);
+        bEventData = !(pevlr->DataLength == 0);
+
+        if (pevlr->DataLength > 0)
+        {
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                (LPCSTR)((LPBYTE)pevlr + pevlr->DataOffset),
+                                pevlr->DataLength,
+                                szEventData,
+                                MAX_PATH);
+        }
 
         GetEventMessage(lpSourceLogName, szSource, pevlr, szEventText);
 
@@ -1072,8 +1082,8 @@ DisplayEvent(HWND hDlg)
     else
     {
         MessageBox(NULL,
-                   "No Items in ListView",
-                   "Error",
+                   _TEXT("No Items in ListView"),
+                   _TEXT("Error"),
                    MB_OK | MB_ICONINFORMATION);
     }
 }
@@ -1113,47 +1123,42 @@ EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             return (INT_PTR)TRUE;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+            switch (LOWORD(wParam))
             {
-                EndDialog(hDlg, LOWORD(wParam));
-                return (INT_PTR)TRUE;
-            }
+                case IDOK:
+                case IDCANCEL:
+                    EndDialog(hDlg, LOWORD(wParam));
+                    return (INT_PTR)TRUE;
 
-            if (LOWORD(wParam) == IDPREVIOUS)
-            {
-                SendMessage(hwndListView, WM_KEYDOWN, VK_UP, 0);
+                case IDPREVIOUS:
+                    SendMessage(hwndListView, WM_KEYDOWN, VK_UP, 0);
 
-                // Show event info on dialog box
-                DisplayEvent(hDlg);
-                return (INT_PTR)TRUE;
-            }
+                    // Show event info on dialog box
+                    DisplayEvent(hDlg);
+                    return (INT_PTR)TRUE;
 
-            if (LOWORD(wParam) == IDNEXT)
-            {
-                SendMessage(hwndListView, WM_KEYDOWN, VK_DOWN, 0);
+                case IDNEXT:
+                    SendMessage(hwndListView, WM_KEYDOWN, VK_DOWN, 0);
 
-                // Show event info on dialog box
-                DisplayEvent(hDlg);
-                return (INT_PTR)TRUE;
-            }
+                    // Show event info on dialog box
+                    DisplayEvent(hDlg);
+                    return (INT_PTR)TRUE;
 
-            if (LOWORD(wParam) == IDC_BYTESRADIO)
-            {
-                return (INT_PTR)TRUE;
-            }
+                case IDC_BYTESRADIO:
+                    return (INT_PTR)TRUE;
 
-            if (LOWORD(wParam) == IDC_WORDRADIO)
-            {
-                return (INT_PTR)TRUE;
-            }
+                case IDC_WORDRADIO:
+                    return (INT_PTR)TRUE;
 
-            if (LOWORD(wParam) == IDHELP)
-            {
-                MessageBox(NULL,
-                           _TEXT("Help not implemented yet!"),
-                           _TEXT("Event Log"),
-                           MB_OK | MB_ICONINFORMATION);
-                return (INT_PTR)TRUE;
+                case IDHELP:
+                    MessageBox(NULL,
+                               _TEXT("Help not implemented yet!"),
+                               _TEXT("Event Log"),
+                               MB_OK | MB_ICONINFORMATION);
+                    return (INT_PTR)TRUE;
+
+                default:
+                    break;
             }
             break;
     }
