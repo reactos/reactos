@@ -82,12 +82,7 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
                 ObDereferenceObject(tmpFileObject);
            }
 
-#if 0
-           /* FIXME:
-            *  CcPurgeCacheSection is unimplemented.
-            */
            CcPurgeCacheSection(FileObject->SectionObjectPointer, NULL, 0, FALSE);
-#endif
         }
         /* Uninitialize file cache if. */
         if (FileObject->SectionObjectPointer->SharedCacheMap)

@@ -91,7 +91,7 @@ VfatGetStandardInformation(PVFATFCB FCB,
       StandardInfo->EndOfFile = FCB->RFCB.FileSize;
       StandardInfo->Directory = FALSE;
     }
-  StandardInfo->NumberOfLinks = 0;
+  StandardInfo->NumberOfLinks = 1;
   StandardInfo->DeletePending = FCB->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
 
   *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
@@ -271,7 +271,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
 #endif
 
-   DPRINT ("FsdSetDispositionInformation()\n");
+   DPRINT ("FsdSetDispositionInformation(<%wZ>, Delete %d)\n", &FCB->PathNameU, DispositionInfo->DeleteFile);
 
    ASSERT(DeviceExt != NULL);
    ASSERT(DeviceExt->FatInfo.BytesPerCluster != 0);
@@ -338,15 +338,33 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
  * FUNCTION: Retrieve the file name information
  */
 {
+  ULONG BytesToCopy;
   ASSERT(NameInfo != NULL);
   ASSERT(FCB != NULL);
 
-  NameInfo->FileNameLength = FCB->PathNameU.Length;
-  if (*BufferLength < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + FCB->PathNameU.Length)
+  /* If buffer can't hold at least the file name length, bail out */
+  if (*BufferLength < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
     return STATUS_BUFFER_OVERFLOW;
 
-  RtlCopyMemory(NameInfo->FileName, FCB->PathNameU.Buffer, FCB->PathNameU.Length);
+  /* Save file name length, and as much file len, as buffer length allows */
+  NameInfo->FileNameLength = FCB->PathNameU.Length;
 
+  /* Calculate amount of bytes to copy not to overflow the buffer */
+  BytesToCopy = min(FCB->PathNameU.Length,
+                    *BufferLength - FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]));
+
+  /* Fill in the bytes */
+  RtlCopyMemory(NameInfo->FileName, FCB->PathNameU.Buffer, BytesToCopy);
+
+  /* Check if we could write more but are not able to */
+  if (*BufferLength < FCB->PathNameU.Length + FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
+  {
+    /* Return number of bytes written */
+    *BufferLength -= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + BytesToCopy;
+    return STATUS_BUFFER_OVERFLOW;
+  }
+
+  /* We filled up as many bytes, as needed */
   *BufferLength -= (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + FCB->PathNameU.Length);
 
   return STATUS_SUCCESS;
@@ -551,7 +569,8 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   ULONG NCluster;
   BOOLEAN AllocSizeChanged = FALSE;
 
-  DPRINT("VfatSetAllocationSizeInformation()\n");
+  DPRINT("VfatSetAllocationSizeInformation(File <%wZ>, AllocationSize %d %d)\n", &Fcb->PathNameU,
+      AllocationSize->HighPart, AllocationSize->LowPart);
 
   if (Fcb->Flags & FCB_IS_FATX_ENTRY)
     OldSize = Fcb->entry.FatX.FileSize;
@@ -748,7 +767,7 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
   FILE_INFORMATION_CLASS FileInformationClass;
   PVFATFCB FCB = NULL;
 
-  NTSTATUS RC = STATUS_SUCCESS;
+  NTSTATUS Status = STATUS_SUCCESS;
   PVOID SystemBuffer;
   ULONG BufferLength;
 
@@ -779,44 +798,44 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
   switch (FileInformationClass)
     {
     case FileStandardInformation:
-      RC = VfatGetStandardInformation(FCB,
+      Status = VfatGetStandardInformation(FCB,
 				      SystemBuffer,
 				      &BufferLength);
       break;
     case FilePositionInformation:
-      RC = VfatGetPositionInformation(IrpContext->FileObject,
+      Status = VfatGetPositionInformation(IrpContext->FileObject,
 				      FCB,
 				      IrpContext->DeviceObject,
 				      SystemBuffer,
 				      &BufferLength);
       break;
     case FileBasicInformation:
-      RC = VfatGetBasicInformation(IrpContext->FileObject,
+      Status = VfatGetBasicInformation(IrpContext->FileObject,
 				   FCB,
 				   IrpContext->DeviceObject,
 				   SystemBuffer,
 				   &BufferLength);
       break;
     case FileNameInformation:
-      RC = VfatGetNameInformation(IrpContext->FileObject,
+      Status = VfatGetNameInformation(IrpContext->FileObject,
 				  FCB,
 				  IrpContext->DeviceObject,
 				  SystemBuffer,
 				  &BufferLength);
       break;
     case FileInternalInformation:
-      RC = VfatGetInternalInformation(FCB,
+      Status = VfatGetInternalInformation(FCB,
 				      SystemBuffer,
 				      &BufferLength);
       break;
     case FileNetworkOpenInformation:
-      RC = VfatGetNetworkOpenInformation(FCB,
+      Status = VfatGetNetworkOpenInformation(FCB,
 					 IrpContext->DeviceExt,
 					 SystemBuffer,
 					 &BufferLength);
       break;
     case FileAllInformation:
-      RC = VfatGetAllInformation(IrpContext->FileObject,
+      Status = VfatGetAllInformation(IrpContext->FileObject,
 				 FCB,
 				 IrpContext->DeviceObject,
 				 SystemBuffer,
@@ -824,7 +843,7 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
       break;
 
     case FileEaInformation:
-      RC = VfatGetEaInformation(IrpContext->FileObject,
+      Status = VfatGetEaInformation(IrpContext->FileObject,
 				FCB,
 				IrpContext->DeviceObject,
 				SystemBuffer,
@@ -832,18 +851,18 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
       break;
 
     case FileAlternateNameInformation:
-      RC = STATUS_NOT_IMPLEMENTED;
+      Status = STATUS_NOT_IMPLEMENTED;
       break;
     default:
-      RC = STATUS_INVALID_PARAMETER;
+      Status = STATUS_INVALID_PARAMETER;
     }
 
   if (!(FCB->Flags & FCB_IS_PAGE_FILE))
   {
      ExReleaseResourceLite(&FCB->MainResource);
   }
-  IrpContext->Irp->IoStatus.Status = RC;
-  if (NT_SUCCESS(RC))
+  IrpContext->Irp->IoStatus.Status = Status;
+  if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW)
     IrpContext->Irp->IoStatus.Information =
       IrpContext->Stack->Parameters.QueryFile.Length - BufferLength;
   else
@@ -851,7 +870,7 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
   IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
   VfatFreeIrpContext(IrpContext);
 
-  return RC;
+  return Status;
 }
 
 NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)

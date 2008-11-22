@@ -175,7 +175,7 @@ VfatAcquireForModWrite(IN PFILE_OBJECT FileObject,
 					   IN PDEVICE_OBJECT DeviceObject)
 {
    DPRINT("VfatAcquireForModWrite\n");
-   return STATUS_UNSUCCESSFUL;
+   return STATUS_INVALID_DEVICE_REQUEST;
 }
 
 static BOOLEAN NTAPI
@@ -289,23 +289,41 @@ VfatReleaseForModWrite(IN PFILE_OBJECT FileObject,
 					   IN PDEVICE_OBJECT DeviceObject)
 {
    DPRINT("VfatReleaseForModWrite\n");
-   return STATUS_UNSUCCESSFUL;
+   return STATUS_INVALID_DEVICE_REQUEST;
 }
 
 static NTSTATUS NTAPI
 VfatAcquireForCcFlush(IN PFILE_OBJECT FileObject,
 					  IN PDEVICE_OBJECT DeviceObject)
 {
+   PVFATFCB Fcb = (PVFATFCB)FileObject->FsContext;
+
    DPRINT("VfatAcquireForCcFlush\n");
-   return STATUS_UNSUCCESSFUL;
+
+   /* Make sure it is not a volume lock */
+   ASSERT(!(Fcb->Flags & FCB_IS_VOLUME));
+
+   /* Acquire the resource */
+   ExAcquireResourceExclusiveLite(&(Fcb->MainResource), TRUE);
+
+   return STATUS_SUCCESS;
 }
 
 static NTSTATUS NTAPI
 VfatReleaseForCcFlush(IN PFILE_OBJECT FileObject,
 					  IN PDEVICE_OBJECT DeviceObject)
 {
+   PVFATFCB Fcb = (PVFATFCB)FileObject->FsContext;
+
    DPRINT("VfatReleaseForCcFlush\n");
-   return STATUS_UNSUCCESSFUL;
+
+   /* Make sure it is not a volume lock */
+   ASSERT(!(Fcb->Flags & FCB_IS_VOLUME));
+
+   /* Release the resource */
+   ExReleaseResourceLite(&(Fcb->MainResource));
+
+   return STATUS_SUCCESS;
 }
 
 BOOLEAN NTAPI
@@ -378,7 +396,6 @@ VfatInitFastIoRoutines(PFAST_IO_DISPATCH FastIoDispatch)
    FastIoDispatch->ReleaseFileForNtCreateSection = VfatReleaseFileForNtCreateSection;
    FastIoDispatch->FastIoDetachDevice = VfatFastIoDetachDevice;
    FastIoDispatch->FastIoQueryNetworkOpenInfo = VfatFastIoQueryNetworkOpenInfo;
-   FastIoDispatch->AcquireForModWrite = VfatAcquireForModWrite;
    FastIoDispatch->MdlRead = VfatMdlRead;
    FastIoDispatch->MdlReadComplete = VfatMdlReadComplete;
    FastIoDispatch->PrepareMdlWrite = VfatPrepareMdlWrite;
@@ -388,6 +405,7 @@ VfatInitFastIoRoutines(PFAST_IO_DISPATCH FastIoDispatch)
    FastIoDispatch->MdlReadCompleteCompressed = VfatMdlReadCompleteCompressed;
    FastIoDispatch->MdlWriteCompleteCompressed = VfatMdlWriteCompleteCompressed;
    FastIoDispatch->FastIoQueryOpen = VfatFastIoQueryOpen;
+   FastIoDispatch->AcquireForModWrite = VfatAcquireForModWrite;
    FastIoDispatch->ReleaseForModWrite = VfatReleaseForModWrite;
    FastIoDispatch->AcquireForCcFlush = VfatAcquireForCcFlush;
    FastIoDispatch->ReleaseForCcFlush = VfatReleaseForCcFlush;

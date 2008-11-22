@@ -156,11 +156,6 @@ NTSTATUS NTAPI VfatBuildRequest (
    }
    else
    {
-      if (KeGetCurrentIrql() > PASSIVE_LEVEL)
-      {
-         DPRINT1("Vfat is entered at irql = %d\n", KeGetCurrentIrql());
-      }
-
       FsRtlEnterFileSystem();
       Status = VfatDispatchRequest (IrpContext);
       FsRtlExitFileSystem();
