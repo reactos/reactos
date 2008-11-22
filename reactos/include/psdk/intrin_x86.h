@@ -457,8 +457,9 @@ static __inline__ __attribute__((always_inline)) long _InterlockedAddLargeStatis
 		"jae LABEL%=;"
 		"lock; adc $0, %[Hi32];"
 		"LABEL%=:;" :
-		[Lo32] "=m" (*((volatile long *)(Addend) + 0)), [Hi32] "=m" (*((volatile long *)(Addend) + 1)) :
-		[Value] "ir" (Value)
+		[Lo32] "+m" (*((volatile long *)(Addend) + 0)), [Hi32] "+m" (*((volatile long *)(Addend) + 1)) :
+		[Value] "ir" (Value) :
+		"memory"
 	);
 
 	return Value;
@@ -499,7 +500,7 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedIncrement
 static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandreset(volatile long * a, const long b)
 {
 	unsigned char retval;
-	__asm__("lock; btrl %[b], %[a]; setb %b[retval]" : [retval] "=r" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
+	__asm__("lock; btrl %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
 	return retval;
 }
 
@@ -515,7 +516,7 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandset(volatile long * a, const long b)
 {
 	unsigned char retval;
-	__asm__("lock; btsl %[b], %[a]; setc %b[retval]" : [retval] "=r" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
+	__asm__("lock; btsl %[b], %[a]; setc %b[retval]" : [retval] "=q" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
 	return retval;
 }
 
