@@ -75,7 +75,6 @@ typedef struct _NDIS_WRAPPER_CONTEXT {
 typedef struct _LOGICAL_ADAPTER
 {
     NDIS_MINIPORT_BLOCK         NdisMiniportBlock;      /* NDIS defined fields */
-    BOOLEAN                     MiniportBusy;           /* A MiniportXxx routine is executing */
     PNDIS_MINIPORT_WORK_ITEM    WorkQueueHead;          /* Head of work queue */
     PNDIS_MINIPORT_WORK_ITEM    WorkQueueTail;          /* Tail of work queue */
     LIST_ENTRY                  ListEntry;              /* Entry on global list */
@@ -84,8 +83,6 @@ typedef struct _LOGICAL_ADAPTER
     ULONG                       MediumHeaderSize;       /* Size of medium header */
     HARDWARE_ADDRESS            Address;                /* Hardware address of adapter */
     ULONG                       AddressLength;          /* Length of hardware address */
-    PUCHAR                      LookaheadBuffer;        /* Pointer to lookahead buffer */
-    ULONG                       LookaheadLength;        /* Length of lookahead buffer */
     PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;        /* Adapter's shutdown handler */
 } LOGICAL_ADAPTER, *PLOGICAL_ADAPTER;
 
@@ -130,12 +127,13 @@ MiniQueryInformation(
     PVOID               Buffer,
     PULONG              BytesWritten);
 
-NDIS_STATUS
+VOID
 FASTCALL
 MiniQueueWorkItem(
     PLOGICAL_ADAPTER    Adapter,
     NDIS_WORK_ITEM_TYPE WorkItemType,
-    PVOID               WorkItemContext);
+    PVOID               WorkItemContext,
+    BOOLEAN             Top);
 
 NDIS_STATUS
 FASTCALL
@@ -161,7 +159,9 @@ NdisStartDevices();
 
 VOID
 NTAPI
-MiniportWorker(IN PVOID WorkItem);
+MiniportWorker(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID WorkItem);
 
 VOID NTAPI
 MiniSendComplete(

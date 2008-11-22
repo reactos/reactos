@@ -551,6 +551,10 @@ NdisMDeregisterInterrupt(
 {
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
     IoDisconnectInterrupt(Interrupt->InterruptObject);
+    Interrupt->Miniport->RegisteredInterrupts--;
+
+    if (Interrupt->Miniport->Interrupt == Interrupt)
+        Interrupt->Miniport->Interrupt = NULL;
 }
 
 
@@ -780,8 +784,6 @@ NdisMRegisterInterrupt(
   Interrupt->IsrRequested = RequestIsr;
   Interrupt->Miniport = &Adapter->NdisMiniportBlock;
 
-  Adapter->NdisMiniportBlock.Interrupt = Interrupt;
-
   MappedIRQ = HalGetInterruptVector(Adapter->NdisMiniportBlock.BusType, Adapter->NdisMiniportBlock.BusNumber,
                                     InterruptLevel, InterruptVector, &DIrql,
                                     &Affinity);
@@ -793,8 +795,11 @@ NdisMRegisterInterrupt(
 
   NDIS_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X).\n", Status));
 
-  if (NT_SUCCESS(Status))
-    return NDIS_STATUS_SUCCESS;
+  if (NT_SUCCESS(Status)) {
+      Adapter->NdisMiniportBlock.Interrupt = Interrupt;
+      Adapter->NdisMiniportBlock.RegisteredInterrupts++;
+      return NDIS_STATUS_SUCCESS;
+  }
 
   if (Status == STATUS_INSUFFICIENT_RESOURCES)
     {
