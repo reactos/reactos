@@ -77,6 +77,7 @@
 #define TAG_CLIPOBJ     TAG('C', 'L', 'P', 'O') /* clip object */
 #define TAG_DRIVEROBJ   TAG('D', 'R', 'V', 'O') /* driver object */
 #define TAG_DFSM        TAG('D', 'f', 's', 'm') /* Eng event allocation */
+#define TAG_EPATH       TAG('G', 'p', 'a', 't') /* path object */
 #define TAG_FONT        TAG('F', 'N', 'T', 'E') /* font entry */
 #define TAG_FONTOBJ     TAG('G', 'f', 'n', 't') /* font object */
 #define TAG_WNDOBJ      TAG('W', 'N', 'D', 'O') /* window object */

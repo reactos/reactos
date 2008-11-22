@@ -2099,6 +2099,10 @@ NtGdiSelectBitmap(
     /* Release the old bitmap, lock the new one and convert it to a SURF */
     pDC->w.hBitmap = hBmp;
 
+    // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
+    pDC->DcLevel.pSurface = pBmp;
+    pBmp->hDC = hDC;
+
     // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
     if(pBmp->dib)
     {
