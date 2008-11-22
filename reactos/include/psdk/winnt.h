@@ -4812,7 +4812,7 @@ BitScanReverse(OUT ULONG *Index,
 #if defined(_M_IX86)
 	__asm__ __volatile__("bsrl %2,%0\n\t"
 	                     "setnz %1\n\t"
-	                     :"=&r" (*Index), "=r" (BitPosition)
+	                     :"=&r" (*Index), "=q" (BitPosition)
 	                     :"rm" (Mask)
 	                     :"memory");
 	return BitPosition;
