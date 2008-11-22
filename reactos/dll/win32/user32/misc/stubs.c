@@ -25,8 +25,7 @@ AttachThreadInput(
   DWORD idAttachTo,
   BOOL fAttach)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserAttachThreadInput(idAttach, idAttachTo, fAttach);
 }
 
 
