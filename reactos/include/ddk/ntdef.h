@@ -1,10 +1,6 @@
 #ifndef _NTDEF_H
 #define _NTDEF_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 #include <stdarg.h>
 #include <windef.h>
 #include <excpt.h>
