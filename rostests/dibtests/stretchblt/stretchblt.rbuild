@@ -3,5 +3,6 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
+	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 	<file>stretchblt.cpp</file>
 </module>
