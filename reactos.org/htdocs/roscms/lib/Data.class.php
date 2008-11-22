@@ -232,6 +232,69 @@ class Data
 
 
   /**
+   * deletes files from generated entries
+   *
+   * @param int rev_id
+   * @access public
+   */
+  public static function deleteFile( $rev_id )
+  {
+    global $roscms_security_level;
+    // only for admins
+    if ($roscms_security_level < 3) {
+      return;
+    }
+
+    $stmt=DBConnection::getInstance()->prepare("SELECT d.data_id, d.data_name, d.data_type, r.rev_id, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id=d.data_id WHERE r.rev_id = :rev_id LIMIT 1");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    $page = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+
+    // only for entries of type page
+    if ($page === false) {
+      return;
+    }
+
+    //if data_type is page -> delete file in all languages
+    if ($page['data_type'] == 'page'){
+      $stmt=DBConnection::getInstance()->prepare("SELECT lang_id FROM languages");
+    }
+
+    //if data_type is content (only for dynamic) -> delete only selected one
+    elseif ($page['data_type'] == ''){
+      $dynamic_num = Tag::getValueByUser($page['data_id'],$page['rev_id'],'number',-1);
+      if ($dynamic_num > 0) {
+        $stmt=DBConnection::getInstance()->prepare("SELECT lang_id FROM languages WHERE lang_id = :lang_id LIMIT 1");
+        $stmt->bindParam('lang_id',$page['rev_language'],PDO::PARAM_STR);
+      }
+      // entry is not dynamic
+      else {
+        return;
+      }
+    }
+
+    // neither page or content -> nothing to do
+    else {
+      return;
+    }
+    
+    // get file name
+    $file_extension = Tag::getValueByUser($page['data_id'], $page['rev_id'], 'extension', -1);
+    $file_name = $page['data_name'].(isset($dynamic_num) ? '_'.$dynamic_num : '').'.'.$file_extension;
+
+    // delete entries for selected language packs
+    $stmt->execute();
+    while ($lang = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+      // delete file if it exists
+      if ( file_exists('../'.$lang['lang_id'].'/'.$file_name)) {
+        unlink('../'.$lang['lang_id'].'/'.$file_name);
+      }
+    }
+  }
+
+
+  /**
    *
    *
    * @param int rev_id
@@ -846,6 +909,7 @@ class Data
               if ($roscms_security_level < 3) {
                 Data::copy($revision['data_id'], $revision['rev_id'], 0, $lang);
               }
+              Data::deleteFile($revision['rev_id']);
               Data::deleteRevision($revision['rev_id']);
             }
             else {
@@ -856,6 +920,7 @@ class Data
           // move to archiv
           case 'va':
             Data::copy($revision['data_id'], $revision['rev_id'], 0, $lang);
+            Data::deleteFile($revision['rev_id']);
             Data::deleteRevision($revision['rev_id']);
             break;
         } // switch
