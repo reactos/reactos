@@ -84,16 +84,23 @@ class Export_User extends Export
           $user_lang = false;
         }
 
+        // do some actions
         switch ($flag) {
           case 'addmembership':
-            $stmt=DBConnection::getInstance()->prepare("INSERT INTO usergroup_members ( usergroupmember_userid , usergroupmember_usergroupid ) VALUES ( :user_id, :group_id )");
-            $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
-            $stmt->bindParam('group_id',$group_id,PDO::PARAM_INT);
-            $stmt->execute();
-            if ($user_lang !== false) {
-              Log::writeLangMedium("add user account membership: user-id=".$user_id.", group-id=".$RosCMS_GET_d_value2." done by ".$roscms_intern_account_id." {data_user_out}", $user_lang);
+            // check if user is already member, so we don't add him twice
+            if (!ROSUser::isMemberOfGroup($user_id,$group_id)) {
+            
+              // insert new membership
+              $stmt=DBConnection::getInstance()->prepare("INSERT INTO usergroup_members ( usergroupmember_userid , usergroupmember_usergroupid ) VALUES ( :user_id, :group_id )");
+              $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+              $stmt->bindParam('group_id',$group_id,PDO::PARAM_INT);
+              $stmt->execute();
+              if ($user_lang !== false) {
+                Log::writeLangMedium("add user account membership: user-id=".$user_id.", group-id=".$RosCMS_GET_d_value2." done by ".$roscms_intern_account_id." {data_user_out}", $user_lang);
+              }
+              Log::writeMedium('add user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}');
             }
-            Log::writeMedium('add user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}');
+            // preselect displayed content
             $flag = 'detail';
             break;
 
@@ -106,6 +113,7 @@ class Export_User extends Export
               Log::writeLangMedium('delete user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}', $user_lang);
             }
             Log::writeMedium('delete user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}');
+            // preselect displayed content
             $flag = 'detail';
             break;
 
@@ -118,7 +126,8 @@ class Export_User extends Export
               Log::writeLangMedium('change user account language: user-id='.$user_id.', lang-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}', $user_lang);
             }
             Log::writeMedium('change user account language: user-id='.$user_id.', lang-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}');
-            $flag = "detail";
+            // preselect displayed content
+            $flag = 'detail';
             break;
         }
 
