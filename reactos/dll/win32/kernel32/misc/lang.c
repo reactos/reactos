@@ -1910,7 +1910,7 @@ INT WINAPI FoldStringW(DWORD dwFlags, LPCWSTR src, INT srclen,
 /*
  * @implemented
  */
-/* Synced to Wine-20102004 */
+/* Synced to Wine-22112008 */
 int
 STDCALL
 CompareStringA (
@@ -1926,7 +1926,7 @@ CompareStringA (
     WCHAR *buf2W = buf1W + 130;
     LPWSTR str1W, str2W;
     INT len1W, len2W, ret;
-    UINT locale_cp;
+    UINT locale_cp = CP_ACP;
 
     if (!lpString1 || !lpString2)
     {
@@ -1936,7 +1936,7 @@ CompareStringA (
     if (cchCount1 < 0) cchCount1 = strlen(lpString1);
     if (cchCount2 < 0) cchCount2 = strlen(lpString2);
 
-    locale_cp = get_lcid_codepage(Locale);
+    if (!(dwCmpFlags & LOCALE_USE_CP_ACP)) locale_cp = get_lcid_codepage(Locale);
 
     len1W = MultiByteToWideChar(locale_cp, 0, lpString1, cchCount1, buf1W, 130);
     if (len1W)
@@ -1976,85 +1976,84 @@ CompareStringA (
 }
 
 
-static int compare_unicode_string(
-    PUNICODE_STRING String1,
-    PUNICODE_STRING String2,
+static int
+LANG_CompareUnicodeString(
+    LPCWSTR s1,
+	ULONG len1,
+    LPCWSTR s2,
+	ULONG len2,
     DWORD Flags
     )
 {
-    ULONG len1, len2;
-    PWCHAR s1, s2;
     WCHAR c1, c2;
 
-    if (String1 && String2)
+    while (len1 > 0 && len2 > 0)
     {
-        len1 = String1->Length / sizeof(WCHAR);
-        len2 = String2->Length / sizeof(WCHAR);
-        s1 = String1->Buffer;
-        s2 = String2->Buffer;
-
-        while (len1 > 0 && len2 > 0)
+        if (Flags & NORM_IGNORESYMBOLS)
         {
-            if (Flags & NORM_IGNORESYMBOLS)
+            int skip = 0;
+            /* FIXME: not tested */
+            if (iswctype(*s1, _SPACE | _PUNCT))
             {
-                int skip = 0;
-                /* FIXME: not tested */
-                if (iswctype(*s1, _SPACE | _PUNCT))
+                s1++;
+                len1--;
+                skip = 1;
+            }
+            if (iswctype(*s2, _SPACE | _PUNCT))
+            {
+                s2++;
+                len2--;
+                skip = 1;
+            }
+            if (skip) continue;
+        }
+
+        /* hyphen and apostrophe are treated differently depending on
+         * whether SORT_STRINGSORT specified or not
+         */
+        if (!(Flags & SORT_STRINGSORT))
+        {
+            if (*s1 == '-' || *s1 == '\'')
+            {
+                if (*s2 != '-' && *s2 != '\'')
                 {
                     s1++;
                     len1--;
-                    skip = 1;
-                }
-                if (iswctype(*s2, _SPACE | _PUNCT))
-                {
-                    s2++;
-                    len2--;
-                    skip = 1;
-                }
-                if (skip) continue;
-            }
-
-            /* hyphen and apostrophe are treated differently depending on
-             * whether SORT_STRINGSORT specified or not
-             */
-            if (!(Flags & SORT_STRINGSORT))
-            {
-                if (*s1 == '-' || *s1 == '\'')
-                {
-                    if (*s2 != '-' && *s2 != '\'')
-                    {
-                        s1++;
-                        len1--;
-                        continue;
-                    }
-                }
-                else if (*s2 == '-' || *s2 == '\'')
-                {
-                    s2++;
-                    len2--;
                     continue;
                 }
             }
-            if (Flags & NORM_IGNORECASE)
+            else if (*s2 == '-' || *s2 == '\'')
             {
-                c1 = len1-- ? RtlUpcaseUnicodeChar(*s1++) : 0;
-                c2 = len2-- ? RtlUpcaseUnicodeChar(*s2++) : 0;
-                if (!c1 || !c2 || c1 != c2)
-                return c1 - c2;
-            }
-            else
-            {
-                c1 = len1-- ? *s1++ : 0;
-                c2 = len2-- ? *s2++ : 0;
-                if (!c1 || !c2 || c1 != c2)
-                return c1 - c2;
+                s2++;
+                len2--;
+                continue;
             }
         }
-        return (int) len1 - (int) len2;
+        if (Flags & NORM_IGNORECASE)
+        {
+            c1 = len1-- ? RtlUpcaseUnicodeChar(*s1++) : 0;
+            c2 = len2-- ? RtlUpcaseUnicodeChar(*s2++) : 0;
+            if (!c1 || !c2 || c1 != c2)
+                return c1 - c2;
+        }
+        else
+        {
+            c1 = len1-- ? *s1++ : 0;
+            c2 = len2-- ? *s2++ : 0;
+            if (!c1 || !c2 || c1 != c2)
+                return c1 - c2;
+        }
     }
-    return 0;
+
+    return (int) (len1 - len2);
 }
 
+static int
+LANG_GetRealLength(const WCHAR *str, int len)
+{
+    while (len && !str[len - 1]) len--;
+    return len;
+}
 
 /*
  * @unimplemented
@@ -2071,7 +2070,6 @@ CompareStringW (
     )
 {
     INT Result;
-    UNICODE_STRING String1, String2;
 
     if (!lpString1 || !lpString2)
     {
@@ -2081,30 +2079,23 @@ CompareStringW (
 
     if (dwCmpFlags & ~(NORM_IGNORECASE | NORM_IGNORENONSPACE |
         NORM_IGNORESYMBOLS | SORT_STRINGSORT | NORM_IGNOREKANATYPE |
-        NORM_IGNOREWIDTH | 0x10000000))
+        NORM_IGNOREWIDTH | LOCALE_USE_CP_ACP | 0x10000000))
     {
         SetLastError(ERROR_INVALID_FLAGS);
         return 0;
     }
 
-    if (cchCount1 < 0) cchCount1 = lstrlenW(lpString1);
-    if (cchCount2 < 0) cchCount2 = lstrlenW(lpString2);
+    /* this style is related to diacritics in Arabic, Japanese, and Hebrew */
+    if (dwCmpFlags & 0x10000000)
+        DPRINT1("Ignoring unknown style 0x10000000\n");
 
-    String1.Length = String1.MaximumLength = cchCount1 * sizeof(WCHAR);
-    String1.Buffer = (LPWSTR)lpString1;
-    String2.Length = String2.MaximumLength = cchCount2 * sizeof(WCHAR);
-    String2.Buffer = (LPWSTR)lpString2;
+    if (cchCount1 < 0) cchCount1 = wcslen(lpString1);
+    if (cchCount2 < 0) cchCount2 = wcslen(lpString2);
 
+	cchCount1 = LANG_GetRealLength(lpString1, cchCount1);
+	cchCount2 = LANG_GetRealLength(lpString2, cchCount2);
 
-    if (dwCmpFlags & ~NORM_IGNORECASE)
-    {
-        DPRINT("CompareString: STUB flags - 0x%x\n", dwCmpFlags);
-	Result = compare_unicode_string(&String1, &String2, dwCmpFlags);
-    }
-    else
-        Result = RtlCompareUnicodeString(
-                      &String1, &String2, (BOOLEAN)(dwCmpFlags & NORM_IGNORECASE));
-
+	Result = LANG_CompareUnicodeString(lpString1, cchCount1, lpString2, cchCount2, dwCmpFlags);
 
     if (Result) /* need to translate result */
         return (Result < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
