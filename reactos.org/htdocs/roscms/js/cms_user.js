@@ -91,4 +91,12 @@
 				// to prevent memory leak
 				http_request = null;
 			}
-			
+
+// enables or disables useraccounts
+function setaccount(userid, enable) {
+  var uf_check = confirm("Do you want to "+enable+" this membership?");
+
+  if (uf_check == true) {
+    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=account'+enable+'&d_val='+encodeURIComponent(userid), 'usrtbl', 'userarea');
+  }
+}

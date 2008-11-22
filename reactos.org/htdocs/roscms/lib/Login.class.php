@@ -71,10 +71,10 @@ class Login
 
       // Now, see if we have a valid login session
       if ($subsys == '') {
-        $stmt=DBConnection::getInstance()->prepare("SELECT u.user_id, s.usersession_expires AS session_expires FROM user_sessions s JOIN users u ON u.user_id = s.usersession_user_id WHERE s.usersession_id = :session_id AND (u.user_setting_ipaddress = 'false' OR s.usersession_ipaddress=:ip ) AND (u.user_setting_browseragent = 'false' OR s.usersession_browseragent = :agent)");
+        $stmt=DBConnection::getInstance()->prepare("SELECT u.user_id, s.usersession_expires AS session_expires FROM user_sessions s JOIN users u ON u.user_id = s.usersession_user_id WHERE s.usersession_id = :session_id AND (u.user_setting_ipaddress = 'false' OR s.usersession_ipaddress=:ip ) AND (u.user_setting_browseragent = 'false' OR s.usersession_browseragent = :agent) AND u.user_account_enabled = 'yes' LIMIT 1");
       }
       else{
-        $stmt=DBConnection::getInstance()->prepare("SELECT m.map_subsys_userid AS user_id, s.usersession_expires AS session_expires FROM user_sessions s JOIN users u ON u.user_id = s.usersession_user_id JOIN subsys_mappings m ON m.map_roscms_userid = s.usersession_user_id WHERE s.usersession_id = :session_id AND (u.user_setting_ipaddress = 'false' OR s.usersession_ipaddress = :ip) AND (u.user_setting_browseragent = 'false' OR s.usersession_browseragent = :agent) AND m.map_subsys_name = :subsys");
+        $stmt=DBConnection::getInstance()->prepare("SELECT m.map_subsys_userid AS user_id, s.usersession_expires AS session_expires FROM user_sessions s JOIN users u ON u.user_id = s.usersession_user_id JOIN subsys_mappings m ON m.map_roscms_userid = s.usersession_user_id WHERE s.usersession_id = :session_id AND (u.user_setting_ipaddress = 'false' OR s.usersession_ipaddress = :ip) AND (u.user_setting_browseragent = 'false' OR s.usersession_browseragent = :agent) AND m.map_subsys_name = :subsys AND u.user_account_enabled = 'yes' LIMIT 1");
           $stmt->bindParam('subsys',$subsys,PDO::PARAM_STR);
       }
       $stmt->bindParam('session_id',$session_id_clean,PDO::PARAM_INT);

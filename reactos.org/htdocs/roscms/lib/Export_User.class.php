@@ -117,6 +117,29 @@ class Export_User extends Export
             $flag = 'detail';
             break;
 
+          case 'accountdisable':
+            // only with admin rights
+            if ($roscms_security_level == 3) {
+              $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_account_enabled = 'no' WHERE user_id = :user_id");
+              $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+              $stmt->execute();
+            }
+            // preselect displayed content
+            $flag = 'detail';
+            break;
+
+          case 'accountenable':
+            // enable account only with admin rights
+            if ($roscms_security_level == 3) {
+              // enable account only, if he has already activated his account
+              $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_account_enabled = 'yes' WHERE user_register_activation = '' AND user_id = :user_id");
+              $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+              $stmt->execute();
+            }
+            // preselect displayed content
+            $flag = 'detail';
+            break;
+
           case 'upateusrlang':
             $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_timestamp_touch2 = NOW(), user_language = :lang WHERE user_id = :user_id LIMIT 1");
             $stmt->bindParam('lang',$group_id);
@@ -184,7 +207,7 @@ class Export_User extends Export
             break;
 
           case 'detail':
-            $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_timestamp_touch2 AS visit, user_login_counter AS visitcount, user_register, user_fullname, user_email, user_language FROM users WHERE user_id = :user_id LIMIT 1");
+            $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_timestamp_touch2 AS visit, user_login_counter AS visitcount, user_register, user_fullname, user_email, user_language, user_account_enabled FROM users WHERE user_id = :user_id LIMIT 1");
             $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
             $stmt->execute();
             $user = $stmt->fetchOnce();
@@ -198,7 +221,12 @@ class Export_User extends Export
               echo_strip('
                 <p><strong>E-Mail:</strong> '.$user['user_email'].'</p>
                 <p><strong>Latest Login:</strong> '.$user['visit'].'; '.$user['visitcount'].' logins</p>
-                <p><strong>Registered:</strong> '.$user['user_register'].'</p>');
+                <p><strong>Registered:</strong> '.$user['user_register'].'</p>
+                <p>Account is '.($user['user_account_enabled']=='yes'?'enabled':'disabled').'
+                  &nbsp;(
+                  <span class="frmeditbutton" onclick="'."setaccount(".$user_id.", '".($user['user_account_enabled']=='yes'?'disable':'enable')."')".'">&nbsp;'.($user['user_account_enabled']=='yes'?'disable':'enable').'</span> 
+                  it)
+                </p>');
             }
             echo_strip('
                 <fieldset>
