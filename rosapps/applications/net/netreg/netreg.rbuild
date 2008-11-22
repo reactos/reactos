@@ -4,7 +4,7 @@
 	<library>user32</library>
 	<library>ws2_32</library>
 	<library>advapi32</library>
-
+	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 	<file>netreg.cpp</file>
 	<file>netreg.rc</file>
 </module>
