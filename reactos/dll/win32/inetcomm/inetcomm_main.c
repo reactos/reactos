@@ -139,6 +139,7 @@ static cf mime_body_cf      = { &cf_vtbl, MimeBody_create };
 static cf mime_allocator_cf = { &cf_vtbl, MimeAllocator_create };
 static cf mime_message_cf   = { &cf_vtbl, MimeMessage_create };
 static cf mime_security_cf  = { &cf_vtbl, MimeSecurity_create };
+static cf virtual_stream_cf = { &cf_vtbl, VirtualStream_create };
 
 /***********************************************************************
  *              DllGetClassObject (INETCOMM.@)
@@ -176,6 +177,10 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     else if( IsEqualCLSID( rclsid, &CLSID_IMimeAllocator ))
     {
         cf = (IClassFactory*) &mime_allocator_cf.lpVtbl;
+    }
+    else if( IsEqualCLSID( rclsid, &CLSID_IVirtualStream ))
+    {
+        cf = (IClassFactory*) &virtual_stream_cf.lpVtbl;
     }
 
     if ( !cf )
