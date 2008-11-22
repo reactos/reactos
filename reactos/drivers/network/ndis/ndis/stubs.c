@@ -1063,13 +1063,3 @@ NdisScheduleWorkItem(
     ExQueueWorkItem(pntWorkItem, CriticalWorkQueue);
     return NDIS_STATUS_SUCCESS;
 }
-
-/*
- * @unimplemented
- */
-VOID
-NTAPI
-NdisReEnumerateProtocolBindings(IN NDIS_HANDLE NdisProtocolHandle)
-{
-    UNIMPLEMENTED;
-}
