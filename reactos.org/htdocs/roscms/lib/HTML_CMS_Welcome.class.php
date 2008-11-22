@@ -47,7 +47,6 @@ class HTML_CMS_Welcome extends HTML_CMS
    */
   protected function body( )
   {
-    global $roscms_intern_account_id;
     global $roscms_standard_language;
 
     echo_strip('
@@ -65,10 +64,10 @@ class HTML_CMS_Welcome extends HTML_CMS
       <p style="font-weight: bold;">');echo Data::getContent('web_news', 'system', 'en', 'heading', 'stext').'</p>'.
       Data::getContent('web_news', 'system', 'en', 'content', 'text').'<br />';
 
-      if (ROSUser::isMemberOfGroup('translator', 'transmaint')) {
+      if (ThisUser::getInstance()->isMemberOfGroup('translator', 'transmaint')) {
     
         $stmt=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
-        $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+        $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
         $stmt->execute();
         $user_lang = $stmt->fetchColumn();
 

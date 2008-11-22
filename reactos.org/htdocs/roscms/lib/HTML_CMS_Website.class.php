@@ -56,13 +56,12 @@ class HTML_CMS_Website extends HTML_CMS
    */
   protected function body( )
   {
-    global $roscms_intern_account_id;
-    global $roscms_intern_login_check_username;
-    global $roscms_security_level;
     global $roscms_standard_language;
     global $roscms_standard_language_trans;
     global $roscms_intern_webserver_roscms;
     global $roscms_intern_page_link;
+
+    $thisuser = &ThisUser::getInstance();
 
     echo_strip('
       <noscript>
@@ -98,21 +97,21 @@ class HTML_CMS_Website extends HTML_CMS
         var roscms_page_load_finished = false;
 
         // map php vars
-        var roscms_intern_account_id = ".$roscms_intern_account_id.";
+        var roscms_intern_account_id = ".$thisuser->id().";
         var roscms_standard_language = '".$roscms_standard_language."';
         var roscms_standard_language_trans = '".$roscms_standard_language_trans."';
-        var roscms_intern_login_check_username = '".$roscms_intern_login_check_username."';
+        var roscms_intern_login_check_username = '".$thisuser->name()."';
         var roscms_intern_webserver_roscms = '".$roscms_intern_webserver_roscms."';
         var roscms_intern_page_link = '".$roscms_intern_page_link."';
         var roscms_get_edit = '".(isset($_GET['edit']) ? $RosCMS_GET_cms_edit : '')."';
-        var roscms_access_level = ".$roscms_security_level.";
-        var roscms_cbm_hide = '".(($roscms_security_level > 1) ? '' : ' disabled="disabled" style="color:#CCCCCC;"')."'; // disable combobox entries for novice user
+        var roscms_access_level = ".$thisuser->securityLevel().";
+        var roscms_cbm_hide = '".(($thisuser->securityLevel() > 1) ? '' : ' disabled="disabled" style="color:#CCCCCC;"')."'; // disable combobox entries for novice user
 
         // favorite user language
         ";
 
     $stmt=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
-    $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute();
     $user_lang = $stmt->fetchColumn();
 
@@ -150,13 +149,13 @@ class HTML_CMS_Website extends HTML_CMS
 
       <div class="roscms_container" style="border: 1px dashed white; z-index: 2;">
         <div class="tabmenu" style="position: absolute; top: 0px; width: 150px; left: 0px; border: 0px; z-index:1;">
-          <div id="smenutab1" class="submb" onclick="smenutab_open(this.id)"'.(($roscms_security_level == 1 || ROSUser::isMemberOfGroup("transmaint")) ? ' style="display:none;"' : '').'>
+          <div id="smenutab1" class="submb" onclick="smenutab_open(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc1" class="subm2" style="font-weight: bold;">New Entry</div>
             </div>
           </div>');
 
-    if ($roscms_security_level > 1) {
+    if ($thisuser->securityLevel() > 1) {
       echo '<div style="background: white none repeat scroll 0%;">&nbsp;</div>';
     }
 
@@ -167,7 +166,7 @@ class HTML_CMS_Website extends HTML_CMS
             </div>
           </div>
 
-          <div id="smenutab3" class="submb" onclick="smenutab_open(this.id)"'.(($roscms_security_level == 1 || ROSUser::isMemberOfGroup("transmaint")) ? ' style="display:none;"' : '').'>
+          <div id="smenutab3" class="submb" onclick="smenutab_open(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc3" class="subm2">Page</div>
             </div>
@@ -177,12 +176,12 @@ class HTML_CMS_Website extends HTML_CMS
               <div id="smenutabc4" class="subm2">Content</div>
             </div>
           </div>
-          <div id="smenutab5" class="submb" onclick="smenutab_open(this.id)"'.(($roscms_security_level == 1 || ROSUser::isMemberOfGroup("transmaint")) ? ' style="display:none;"' : '').'>
+          <div id="smenutab5" class="submb" onclick="smenutab_open(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc5" class="subm2">Template</div>
             </div>
           </div>
-          <div id="smenutab6" class="submb" onclick="smenutab_open(this.id)"'.(($roscms_security_level == 1 || ROSUser::isMemberOfGroup("transmaint")) ? ' style="display:none;"' : '').'>
+          <div id="smenutab6" class="submb" onclick="smenutab_open(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc6" class="subm2">Script</div>
             </div>
@@ -303,7 +302,7 @@ class HTML_CMS_Website extends HTML_CMS
                       <div style="border: 0px dashed red; position: absolute; top: 9px; right: 13px; text-align:right; white-space: nowrap;">
                         <select name="favlangopt" id="favlangopt" style="vertical-align: top; width: 22ex;" onchange="setlang(this.value)">');
 
-    $user_lang = ROSUser::getLanguage($roscms_intern_account_id, true);
+    $user_lang = ROSUser::getLanguage($thisuser->id(), true);
 
     $stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_name FROM languages WHERE lang_level > '0' ORDER BY lang_name ASC");
     $stmt->execute();

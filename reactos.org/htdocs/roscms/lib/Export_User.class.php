@@ -51,13 +51,12 @@ class Export_User extends Export
    */
   public function search( )
   {
-    global $roscms_security_level;
-    global $roscms_intern_account_id;
-
     global $RosCMS_GET_d_use;
     global $RosCMS_GET_d_flag;
     global $RosCMS_GET_d_value;
     global $RosCMS_GET_d_value2;
+
+    $thisuser = &ThisUser::getInstance();
 
     $usage = $RosCMS_GET_d_use;
     $flag = $RosCMS_GET_d_flag;
@@ -67,12 +66,12 @@ class Export_User extends Export
     $new_lang = $RosCMS_GET_d_value2;
     $search_type = $RosCMS_GET_d_value2;
 
-    if (ROSUser::isMemberOfGroup('transmaint') || $roscms_security_level == 3) {
+    if ($thisuser->isMemberOfGroup('transmaint') || $thisuser->securityLevel() == 3) {
       if ($usage == 'usrtbl') {
 
-        if (ROSUser::isMemberOfGroup('transmaint')) {
+        if ($thisuser->isMemberOfGroup('transmaint')) {
           $stmt=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
-          $stmt->bindParam('user_id',$roscms_intern_account_id);
+          $stmt->bindParam('user_id',$thisuser->id());
           $stmt->execute();
           $user_lang = $stmt->fetchColumn();
 
@@ -88,17 +87,23 @@ class Export_User extends Export
         switch ($flag) {
           case 'addmembership':
             // check if user is already member, so we don't add him twice
-            if (!ROSUser::isMemberOfGroup($user_id,$group_id)) {
-            
+            // also check that you don't give accounts a higher seclevel
+            $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM usergroup_members m JOIN usergroups g ON m.usergroupmember_usergroupid = g.usrgroup_name_id WHERE usergroupmember_userid = :user_id AND usergroupmember_usergroupid = :group_id AND usrgroup_seclev <= :security_level LIMIT 1");
+            $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+            $stmt->bindParam('group_id',$group_id,PDO::PARAM_STR);
+            $stmt->bindParam('security_level',$thisuser->securityLevel(),PDO::PARAM_INT);
+            $stmt->execute();
+            if ($stmt->fetchColumn() === false) {
+
               // insert new membership
               $stmt=DBConnection::getInstance()->prepare("INSERT INTO usergroup_members ( usergroupmember_userid , usergroupmember_usergroupid ) VALUES ( :user_id, :group_id )");
               $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
               $stmt->bindParam('group_id',$group_id,PDO::PARAM_INT);
               $stmt->execute();
               if ($user_lang !== false) {
-                Log::writeLangMedium("add user account membership: user-id=".$user_id.", group-id=".$RosCMS_GET_d_value2." done by ".$roscms_intern_account_id." {data_user_out}", $user_lang);
+                Log::writeLangMedium("add user account membership: user-id=".$user_id.", group-id=".$RosCMS_GET_d_value2." done by ".$thisuser->id()." {data_user_out}", $user_lang);
               }
-              Log::writeMedium('add user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}');
+              Log::writeMedium('add user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}');
             }
             // preselect displayed content
             $flag = 'detail';
@@ -110,16 +115,16 @@ class Export_User extends Export
             $stmt->bindParam('group_id',$group_id,PDO::PARAM_INT);
             $stmt->execute();
             if ($user_lang !== false) {
-              Log::writeLangMedium('delete user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}', $user_lang);
+              Log::writeLangMedium('delete user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}', $user_lang);
             }
-            Log::writeMedium('delete user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}');
+            Log::writeMedium('delete user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}');
             // preselect displayed content
             $flag = 'detail';
             break;
 
           case 'accountdisable':
             // only with admin rights
-            if ($roscms_security_level == 3) {
+            if ($thisuser->securityLevel() == 3) {
               $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_account_enabled = 'no' WHERE user_id = :user_id");
               $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
               $stmt->execute();
@@ -130,7 +135,7 @@ class Export_User extends Export
 
           case 'accountenable':
             // enable account only with admin rights
-            if ($roscms_security_level == 3) {
+            if ($thisuser->securityLevel() == 3) {
               // enable account only, if he has already activated his account
               $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_account_enabled = 'yes' WHERE user_register_activation = '' AND user_id = :user_id");
               $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
@@ -146,9 +151,9 @@ class Export_User extends Export
             $stmt->bindParam('user_id',$user_id);
             $stmt->execute();
             if ($user_lang) {
-              Log::writeLangMedium('change user account language: user-id='.$user_id.', lang-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}', $user_lang);
+              Log::writeLangMedium('change user account language: user-id='.$user_id.', lang-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}', $user_lang);
             }
-            Log::writeMedium('change user account language: user-id='.$user_id.', lang-id='.$group_id.' done by '.$roscms_intern_account_id.' {data_user_out}');
+            Log::writeMedium('change user account language: user-id='.$user_id.', lang-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}');
             // preselect displayed content
             $flag = 'detail';
             break;
@@ -217,7 +222,7 @@ class Export_User extends Export
                 <legend>Details for \''.$user['user_name'].'\'</legend>
                 <p><strong>Name:</strong> '.$user['user_name'].' ('.$user['user_fullname'].') ['.$user['user_id'].']</p>
                 <p><strong>Lang:</strong> '.$user['user_language'].'</p>');
-            if ($roscms_security_level == 3) {
+            if ($thisuser->securityLevel() == 3) {
               echo_strip('
                 <p><strong>E-Mail:</strong> '.$user['user_email'].'</p>
                 <p><strong>Latest Login:</strong> '.$user['visit'].'; '.$user['visitcount'].' logins</p>
@@ -239,7 +244,7 @@ class Export_User extends Export
             while ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
               echo '<li>'.$user['usrgroup_name'].' ';
-              if ($roscms_security_level == 3) {
+              if ($thisuser->securityLevel() == 3) {
                 echo_strip('
                   &nbsp;
                   <span class="frmeditbutton" onclick="'."delmembership(".$user_id.", '".$user['usrgroup_name_id']."')".'">
@@ -251,15 +256,15 @@ class Export_User extends Export
             } // end while
             echo '</ul>';
 
-            if ($roscms_security_level == 3) {
+            if ($thisuser->securityLevel() == 3) {
               echo '<select id="cbmmemb" name="cbmmemb">';
               $stmt=DBConnection::getInstance()->prepare("SELECT usrgroup_name_id, usrgroup_name FROM usergroups WHERE usrgroup_seclev  <= :sec_level ORDER BY usrgroup_name ASC");
-              $stmt->bindParam('sec_level',$roscms_security_level,PDO::PARAM_INT);
+              $stmt->bindParam('sec_level',$thisuser->securityLevel(),PDO::PARAM_INT);
               $stmt->execute();
               while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
                 // only super admin can give super admin rights
-                if (ROSUser::isMemberOfGroup('ros_sadmin') || $group['usrgroup_name_id'] != 'ros_sadmin') {
+                if ($group['usrgroup_name'] != 'sadmin' || $thisuser->isMemberOfGroup('ros_sadmin')) {
                   echo '<option value="'.$group['usrgroup_name_id'].'">'.$group['usrgroup_name'].'</option>';
                 }
               }
@@ -276,12 +281,12 @@ class Export_User extends Export
               echo_strip('</select>
               <input type="button" name="addusrlang" id="addusrlang" value="Update User language" onclick="'."updateusrlang(".$user_id.", document.getElementById('cbmusrlang').value)".'" /><br />');
             }
-            elseif (ROSUser::isMemberOfGroup('transmaint')) {
+            elseif ($thisuser->isMemberOfGroup('transmaint')) {
               echo_strip('<input type="button" name="addmemb" id="addmemb" value="Make this User a Translator" onclick="'."addmembership(".$user_id.", 'translator')".'" />
                 <br />
                 <br />');
               $stmt=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
-              $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+              $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
               $stmt->execute();
               $user_lang = $stmt->fetchColumn();
 

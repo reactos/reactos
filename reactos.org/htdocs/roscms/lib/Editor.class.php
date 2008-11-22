@@ -36,7 +36,7 @@ abstract class Editor
    */
   public function __construct( $data_id, $rev_id, $action = null )
   {
-    require('login.php');
+    Login::required();
     $this->preventCaching();
     if (!empty($data_id) && !empty($rev_id)) {
       $this->data_id = $data_id;

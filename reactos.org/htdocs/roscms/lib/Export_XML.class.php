@@ -89,9 +89,6 @@ class Export_XML extends Export
    */
   public function page_table_main( $data_name, $filter, $page_offset = 0 )
   {
-    global $roscms_intern_account_id;
-    global $roscms_security_level;
-
     // set headers, do not cache !
     header('Content-type: text/xml');
     header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');    // Date in the past
@@ -124,12 +121,18 @@ class Export_XML extends Export
    */
   private function generateXML( $page_offset = 0 )
   {
-    global $roscms_intern_account_id;
-    global $roscms_security_level;
+    $thisuser = &ThisUser::getInstance();
 
     $tdata = '';
     $row_counter = 1;
-    $column_array = explode('|', substr($this->column_list,1,-1)); // prevent from additional entries caused by '|' at start and end
+    $this->column_list = substr($this->column_list,1,-1);// prevent from additional entries caused by '|' at start and end
+    if ($this->column_list === '') {
+      $column_array = array();
+    }
+    else {
+      $column_array = explode('|', $this->column_list);
+    
+    }
 
     // check if there are entries which are found by filter settings
     $stmt=DBConnection::getInstance()->prepare("SELECT COUNT('d.data_id') FROM data_revision".$this->a." r, data_".$this->a2." d ".$this->sql_from." , data_security y WHERE r.rev_version >= 0 AND r.data_id = d.data_id  AND d.data_acl = y.sec_name AND y.sec_branch = 'website' ". Security::getACL('read') ." ". $this->sql_where);
@@ -145,7 +148,7 @@ class Export_XML extends Export
       echo $ptm_entries.'<table>';
 
       // start table header
-      $tdata .= "    <view curpos=\"".$page_offset."\" pagelimit=\"".$this->page_limit."\" pagemax=\"".$ptm_entries."\" tblcols=\"".$this->column_list."\" /> \n";
+      $tdata .= "    <view curpos=\"".$page_offset."\" pagelimit=\"".$this->page_limit."\" pagemax=\"".$ptm_entries."\" tblcols=\"|".$this->column_list."|\" /> \n";
 
       // prepare for usage in loop
       $stmt_trans=DBConnection::getInstance()->prepare("SELECT d.data_id, d.data_name, d.data_type, r.rev_id, r.rev_version, r.rev_language, r.rev_datetime, r.rev_date, r.rev_usrid FROM data_".$this->a2." d, data_revision".$this->a." r WHERE d.data_id = :data_id AND r.rev_version > 0 AND d.data_id = r.data_id AND r.rev_language = :lang LIMIT 1");
@@ -166,7 +169,7 @@ class Export_XML extends Export
       }
 
       // proceed entries
-      $stmt=DBConnection::getInstance()->prepare("SELECT d.data_id, d.data_name, d.data_type, d.data_acl, r.rev_id, r.rev_version, r.rev_language, r.rev_datetime, r.rev_date, r.rev_usrid  ".$this->sql_select." , y.sec_lev".$roscms_security_level."_write FROM data_revision".$this->a." r, data_".$this->a2." d ".$this->sql_from." , data_security y WHERE r.rev_version >= 0 AND r.data_id = d.data_id AND d.data_acl = y.sec_name AND y.sec_branch = 'website' ". Security::getACL('read') ." ". $this->sql_where ." ". $this->sql_order ." LIMIT :limit OFFSET :offset");
+      $stmt=DBConnection::getInstance()->prepare("SELECT d.data_id, d.data_name, d.data_type, d.data_acl, r.rev_id, r.rev_version, r.rev_language, r.rev_datetime, r.rev_date, r.rev_usrid  ".$this->sql_select." , y.sec_lev".$thisuser->securityLevel()."_write FROM data_revision".$this->a." r, data_".$this->a2." d ".$this->sql_from." , data_security y WHERE r.rev_version >= 0 AND r.data_id = d.data_id AND d.data_acl = y.sec_name AND y.sec_branch = 'website' ". Security::getACL('read') ." ". $this->sql_where ." ". $this->sql_order ." LIMIT :limit OFFSET :offset");
       $stmt->bindValue('limit',0+$this->page_limit,PDO::PARAM_INT);
       $stmt->bindValue('offset',0+$page_offset,PDO::PARAM_INT);
       $stmt->execute();
@@ -250,10 +253,10 @@ class Export_XML extends Export
         }
 
         // care about bookmark visibility
-        if (Tag::getValueByUser($row['data_id'], $row['rev_id'], 'star', $roscms_intern_account_id) == 'on') {
+        if (Tag::getValueByUser($row['data_id'], $row['rev_id'], 'star', $thisuser->id()) == 'on') {
           $star_state = '1';
         }
-        $star_id = Tag::getIdByUser($row['data_id'], $row['rev_id'], 'star', $roscms_intern_account_id);
+        $star_id = Tag::getIdByUser($row['data_id'], $row['rev_id'], 'star', $thisuser->id());
 
         // get page title
         $stmt_stext->bindParam('rev_id',$row['rev_id'],PDO::PARAM_INT);
@@ -346,9 +349,8 @@ class Export_XML extends Export
    */
   private function generateFilterSQL( $filter )
   {
-    global $roscms_intern_account_id;
-    global $roscms_security_level;
-
+    $thisuser = &ThisUser::getInstance();
+  
     // check if there is something to do
     if ($filter == '') {
       return;
@@ -672,12 +674,12 @@ class Export_XML extends Export
     if ($entries_private <= 0 && $entries_system <= 0 && $entries_public <= 0) { 
 
       // everything except draft
-      if ($roscms_security_level == 3) { 
+      if ($thisuser->securityLevel() == 3) { 
         $this->sql_where .= " AND (n.tn_name = 'status' AND v.tv_value != 'draft') ";
       }
 
       // new, stable and unknown (if more than translator)
-      if ($roscms_security_level == 2) { 
+      if ($thisuser->securityLevel() == 2) { 
         $this->sql_where .= " AND (n.tn_name = 'status' AND (v.tv_value = 'new' OR v.tv_value = 'stable' OR v.tv_value = 'unknown')) ";
       }
       else {
@@ -687,7 +689,7 @@ class Export_XML extends Export
       // set additional needed sql
       $this->sql_select .= ", n.tn_name, v.tv_value ";
       $this->sql_from .= ", data_tag".$this->a." a, data_tag_name".$this->a." n, data_tag_value".$this->a." v ";
-      $this->sql_where .= " AND r.data_id = a.data_id AND r.rev_id = a.data_rev_id AND a.tag_usrid IN(-1, 0, ".DBConnection::getInstance()->quote($roscms_intern_account_id,PDO::PARAM_INT).") AND a.tag_name_id = n.tn_id AND a.tag_value_id  = v.tv_id ";
+      $this->sql_where .= " AND r.data_id = a.data_id AND r.rev_id = a.data_rev_id AND a.tag_usrid IN(-1, 0, ".DBConnection::getInstance()->quote($thisuser->id(),PDO::PARAM_INT).") AND a.tag_name_id = n.tn_id AND a.tag_value_id  = v.tv_id ";
     }
 
     // construct additioanl sql for tag-usage from filter
@@ -695,17 +697,17 @@ class Export_XML extends Export
       for ($i = 1; $i <= $tag_counter; $i++) {
         $this->sql_select .= ", n".$i.".tn_name, v".$i.".tv_value ";
         $this->sql_from .= ", data_tag".$this->a." a".$i.", data_tag_name".$this->a." n".$i.", data_tag_value".$this->a." v".$i." ";
-        $this->sql_where .= " AND r.data_id = a".$i.".data_id AND r.rev_id = a".$i.".data_rev_id AND (a".$i.".tag_usrid = '-1' OR a".$i.".tag_usrid = '0' OR a".$i.".tag_usrid = ".DBConnection::getInstance()->quote($roscms_intern_account_id,PDO::PARAM_INT).") AND a".$i.".tag_name_id = n".$i.".tn_id AND a".$i.".tag_value_id  = v".$i.".tv_id ";
+        $this->sql_where .= " AND r.data_id = a".$i.".data_id AND r.rev_id = a".$i.".data_rev_id AND (a".$i.".tag_usrid = '-1' OR a".$i.".tag_usrid = '0' OR a".$i.".tag_usrid = ".DBConnection::getInstance()->quote($thisuser->id(),PDO::PARAM_INT).") AND a".$i.".tag_name_id = n".$i.".tn_id AND a".$i.".tag_value_id  = v".$i.".tv_id ";
       }
     }
 
     // make sure only private drafts are visible
-    if ($roscms_security_level < 3 && $entries_private > 0) {
-      $this->sql_where .= " AND r.rev_usrid = '".$roscms_intern_account_id."' ";
+    if ($thisuser->securityLevel() < 3 && $entries_private > 0) {
+      $this->sql_where .= " AND r.rev_usrid = '".$thisuser->id()."' ";
     }
 
     // either show draft (private) OR stable & new (public) entries,   private AND public entries together are NOT allowed => block 
-    if ($roscms_security_level < 2 && (($entries_private > 0 && $entries_public > 0) || $entries_system > 0)) {
+    if ($thisuser->securityLevel() < 2 && (($entries_private > 0 && $entries_public > 0) || $entries_system > 0)) {
       $this->sql_select = "";
       $this->sql_from   = "";
       $this->sql_where  = " FALSE ";

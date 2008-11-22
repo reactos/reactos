@@ -330,7 +330,6 @@ class Export_HTML extends Export
    */
   public function processText( $rev_id, $output_type = '' )
   {
-    global $roscms_intern_account_id;
     global $roscms_standard_language_full;
     global $roscms_intern_webserver_pages;
     global $roscms_intern_webserver_roscms;
@@ -396,7 +395,7 @@ class Export_HTML extends Export
     // replace with user_name
     // @FIXME broken logic, or one link too much, which should be removed from Database
     $stmt=DBConnection::getInstance()->prepare("SELECT user_name FROM users WHERE user_id = :user_id LIMIT 1");
-    $stmt->bindParam('user_id',$roscms_intern_account_id);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id());
     $stmt->execute();
     $user_name = $stmt->fetchColumn();
     $content = str_replace('[#roscms_user]', $user_name, $content); // account that generate
@@ -470,7 +469,6 @@ class Export_HTML extends Export
    */
   private function insertHyperlink( $matches )
   {
-    global $roscms_intern_account_id;
     global $roscms_intern_webserver_pages;
     global $roscms_intern_webserver_roscms;
 
@@ -617,8 +615,6 @@ class Export_HTML extends Export
    */
   private function insertTemplate( $matches )
   {
-    global $roscms_intern_account_id;
-
     // extract the name, e.g. [#templ_about] -> 'about'
     $content_name = substr($matches[0], 8, (strlen($matches[0])-9)); 
 

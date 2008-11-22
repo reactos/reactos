@@ -151,36 +151,6 @@ class ROSUser
 
 
   /**
-   * checks if the user is member of at least in one of the groups
-   *
-   * @param string group_name 
-   * @param string group_name2 
-   * @param string group_name3 
-   * @return bool
-   * @access public
-   */
-  public static function isMemberOfGroup( $group_name, $group_name2 = null, $group_name3 = null )
-  {
-    global $roscms_intern_account_id;
-
-    // construct SQL for group membership check
-    $group = DBConnection::getInstance()->quote($group_name,PDO::PARAM_STR);
-    if ($group_name2 !== null) {
-      $group .= ",".DBConnection::getInstance()->quote($group_name2,PDO::PARAM_STR);
-    }
-    if ($group_name3 !== null) {
-      $group .= ",".DBConnection::getInstance()->quote($group_name3,PDO::PARAM_STR);
-    }
-
-    $stmt=DBConnection::getInstance()->prepare("SELECT TRUE FROM usergroup_members WHERE usergroupmember_userid = :user_id AND usergroupmember_usergroupid IN(".$group.") LIMIT 1");
-    $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
-    $stmt->execute();
-
-    return ($stmt->fetchColumn() !== false);
-  } // end of member isGroupMember
-
-
-  /**
    * 
    *
    * @param string email

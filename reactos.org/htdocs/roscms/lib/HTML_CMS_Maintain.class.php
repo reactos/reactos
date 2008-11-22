@@ -52,10 +52,9 @@ class HTML_CMS_Maintain extends HTML_CMS
   protected function body( )
   {
     global $roscms_intern_page_link;
-    global $roscms_security_level;
 
     // check if user has rights for this area
-    if ($roscms_security_level > 3) {
+    if (ThisUser::getInstance()->securityLevel() < 3) {
       return;
     }
 
@@ -97,7 +96,7 @@ class HTML_CMS_Maintain extends HTML_CMS
       <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" />
       <br />');
 
-    if (ROSUser::isMemberOfGroup('ros_sadmin')) {
+    if (ThisUser::getInstance()->isMemberOfGroup('ros_sadmin')) {
 
       // display logs
       echo_strip('

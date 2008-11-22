@@ -52,8 +52,10 @@ class HTML_CMS_User extends HTML_CMS
   protected function body( )
   {
     global $roscms_standard_language;
-  
-    if (!ROSUser::isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
+
+    $thisuser = &ThisUser::getInstance();
+
+    if (!$thisuser->isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
       return;
     }
 
@@ -63,10 +65,10 @@ class HTML_CMS_User extends HTML_CMS
       <p style="font-weight: bold;">User Account Management Interface</p>
       <br />');
       
-    if (ROSUser::isMemberOfGroup('ros_admin','ros_sadmin')) {
+    if ($thisuser->isMemberOfGroup('ros_admin','ros_sadmin')) {
       echo '<h3>Administrator</h3>';
     }
-    elseif (ROSUser::isMemberOfGroup('transmaint')) {
+    elseif ($thisuser->isMemberOfGroup('transmaint')) {
       echo '<h3>Language Maintainer</h3>';
       $stmt=DBConnection::getInstance()->prepare("SELECT d.data_id, u.user_id, u.user_name, u.user_fullname, u.user_language, COUNT(r.data_id) as 'editcounter' FROM data_a d, data_revision r, users u WHERE r.data_id = d.data_id AND r.rev_usrid = u.user_id AND rev_version  > 0  AND r.rev_language = :lang GROUP BY u.user_name ORDER BY editcounter DESC, u.user_name");
       $stmt->bindParam('lang',$roscms_standard_language,PDO::PARAM_STR);

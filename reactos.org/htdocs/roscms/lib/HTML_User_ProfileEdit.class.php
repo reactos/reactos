@@ -33,7 +33,7 @@ class HTML_User_ProfileEdit extends HTML_User
    */
   public function __construct()
   {
-    require('login.php');
+    Login::required();
     session_start();
     parent::__construct();
   }
@@ -46,7 +46,6 @@ class HTML_User_ProfileEdit extends HTML_User
    */
   protected function body( )
   {
-    global $roscms_intern_account_id;
     global $roscms_SET_path_ex;
     global $rdf_uri_3;
     global $rdf_name_long;
@@ -89,7 +88,7 @@ class HTML_User_ProfileEdit extends HTML_User
                     <div style="text-align:center; padding: 4px; ">');
 
     $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_fullname, user_email, user_email_activation, user_website, user_country, user_timezone, user_occupation, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress, user_setting_timeout FROM users WHERE user_id = :user_id LIMIT 1");
-    $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
     $profile = $stmt->fetchOnce();
 

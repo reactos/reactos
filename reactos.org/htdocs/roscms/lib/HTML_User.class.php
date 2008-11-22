@@ -54,15 +54,14 @@ abstract class HTML_User extends HTML
    */
   private function navigation( )
   {
-    global $roscms_intern_account_id;
     global $roscms_intern_webserver_pages;
     global $roscms_intern_webserver_roscms;
     global $roscms_SET_path_ex;
     global $rdf_uri_str;
     global $rpm_lang;
     global $roscms_langres;
-    global $roscms_intern_login_check_username;
-    global $roscms_security_level;
+
+    $thisuser = &ThisUser::getInstance();
 
     echo_strip('
       <table style="border:0" width="100%" cellpadding="0" cellspacing="0">
@@ -78,15 +77,15 @@ abstract class HTML_User extends HTML
             </ol>
             <br />');
 
-    if ($roscms_intern_account_id > 0) {
+    if ($thisuser->id() > 0) {
       echo_strip('
         <div class="navTitle">'.$roscms_langres['Account'].'</div>
         <ol>
-          <li title="'.$roscms_intern_login_check_username.'">&nbsp;Nick:&nbsp;'.substr($roscms_intern_login_check_username, 0, 9).'</li>
+          <li title="'.$thisuser->name().'">&nbsp;Nick:&nbsp;'.substr($thisuser->name(), 0, 9).'</li>
           <li><a href="'.$roscms_SET_path_ex.'my/">My Profile</a></li>
           <li><a href="'.$roscms_SET_path_ex.'search/">User Search</a></li>
           <li><a href="'.$roscms_intern_webserver_pages.'peoplemap/">User Map</a></li>');
-      if ($roscms_security_level > 0) {
+      if ($thisuser->securityLevel() > 0) {
         echo '<li><a href="'.$roscms_intern_webserver_roscms.'?page=data&amp;branch=welcome">RosCMS Interface</a></li>';
       }
       echo_strip('

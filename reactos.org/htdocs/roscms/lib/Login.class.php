@@ -2,6 +2,7 @@
     /*
     RosCMS - ReactOS Content Management System
     Copyright (C) 2005  Ge van Geldorp <gvg@reactos.org>
+                  2005  Klemens Friedl <frik85@reactos.org>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -149,6 +150,61 @@ class Login
     header('Location: '.$roscms_SET_path_ex);
     exit;
   } // end of member function login
+
+
+  /**
+   * User Settings:
+   * user_setting_multisession == "true" (default: false) [multi sessions are allowed for this user]
+   * user_setting_browseragent == "true" (default: true) [no one should deactivate ("false") this option or only if he change the user agent very often (e.g. in opera: IE <=> Opera)]
+   * user_setting_ipaddress == "true" (default: true) [IP address check; avoid this setting if the user is behind a proxy or use more than one pc the same time (a possible security risk, but some persons wanted that behavior ...); Note: this is a per user setting, everyone can change it!]
+   * user_setting_timeout == "true" (default: false) [NO timeout; so user can use the ros homepage systems without to login everytime]
+   *
+   * @access public
+   */
+  public static function required( )
+  {
+
+    // check if user wants to logout
+    if (isset($_POST['logout'])) {
+      header('location:?page=logout');
+    }
+
+    // get current location (for redirection, if the login succeds)
+    $target = $_SERVER[ 'PHP_SELF' ];
+    if ( IsSet( $_SERVER[ 'QUERY_STRING' ] ) ) {
+      $target .= '?'.$_SERVER[ 'QUERY_STRING' ];
+    }
+
+    // get information about script executer
+    $user_id = Login::in(Login::REQUIRED, $target);
+    if ($user_id == 0) {
+      die('Could not Login.');
+    }
+
+    // get user data
+    $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_roscms_password, user_timestamp_touch, user_setting_timeout, user_login_counter, user_account_enabled, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
+    $stmt->execute() or die('DB error (login script #1)!');
+    $user = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+    if($user === false) {
+      die('DB error (login script #2)');
+    }
+
+    // if the account is NOT enabled; e.g. a reason could be that a member of the admin group has disabled this account because of spamming, etc.
+    if ($user['user_account_enabled'] != 'yes') { 
+      die('Account is not enabled!<br /><br />System message: '.$user['user_account_enabled']);
+    }
+
+    // collect memberships for current user
+    $stmt=DBConnection::getInstance()->prepare("SELECT m.usergroupmember_usergroupid AS name, usrgroup_seclev AS security_level FROM usergroup_members m JOIN usergroups g ON m.usergroupmember_usergroupid = g.usrgroup_name_id WHERE usergroupmember_userid = :user_id");
+    $stmt->bindparam('user_id',$user['user_id'],PDO::PARAM_INT);
+    $stmt->execute();
+    while($membership = $stmt->fetch()) {
+      ThisUser::getInstance()->addGroup($membership);
+    }
+
+    ThisUser::getInstance()->setData($user);
+  } // end of member function require
 
 } // end of Login
 ?>

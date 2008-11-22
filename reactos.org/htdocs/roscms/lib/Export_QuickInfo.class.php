@@ -45,9 +45,6 @@ class Export_QuickInfo extends Export
    */
   private function getInfo( )
   {
-    global $roscms_intern_account_id;
-    global $roscms_security_level;
-
     global $h_a;
     global $h_a2;
 
@@ -79,14 +76,14 @@ class Export_QuickInfo extends Export
     $stmt=DBConnection::getInstance()->prepare("SELECT n.tn_name, v.tv_value  FROM data_tag".$h_a." a JOIN data_".$h_a2." d ON a.data_id = d.data_id JOIN data_revision".$h_a." r ON a.data_rev_id = r.rev_id JOIN data_tag_name".$h_a." n ON a.tag_name_id = n.tn_id JOIN data_tag_value".$h_a." v ON a.tag_value_id  = v.tv_id WHERE a.data_id IN(0, :data_id) AND a.data_rev_id IN(0, :rev_id) AND a.tag_usrid IN(-1, 0, :user_id) ORDER BY tag_usrid ASC, tn_name ASC");
     $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
     $stmt->bindParam('rev_id',$revision['rev_id'],PDO::PARAM_INT);
-    $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
     while ($tag = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo $t_s.ucfirst($tag['tn_name']).$t_e . $tag['tv_value'].$t_lb;
     }
 
     // show additional data for security level > 1
-    if ($roscms_security_level > 1) {
+    if (ThisUser::getInstance()->securityLevel() > 1) {
       echo $t_s.'Rev-ID'.$t_e.$revision['rev_id'].$t_lb;
       echo $t_s.'Data-ID'.$t_e.$revision['data_id'].$t_lb;
       echo $t_s.'ACL'.$t_e.$revision['data_acl'].$t_lb;

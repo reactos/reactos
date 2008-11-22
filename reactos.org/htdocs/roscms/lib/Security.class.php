@@ -42,18 +42,17 @@ class Security
    */
   public function getACL( $kind )
   {
-    global $roscms_intern_account_id;
-    global $roscms_security_level;
+    $thisuser = &ThisUser::getInstance();
 
     $acl = '';
     $sec_access = false;  // security access already granted ?
 
     // only if user has rights to access the interface
-    if ($roscms_security_level > 0) {
+    if ($thisuser->securityLevel() > 0) {
 
       // for usage in the while loop
       $stmt=DBConnection::getInstance()->prepare("SELECT usergroupmember_usergroupid FROM usergroup_members WHERE usergroupmember_userid = :user_id");
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
       $usergroups = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -63,7 +62,7 @@ class Security
       while ($sec_entry = $stmt->fetch(PDO::FETCH_ASSOC)) {
       
         // add entries, remove them if they're on the deny list
-        if ($sec_entry['sec_lev'.$roscms_security_level.'_'.$kind] == 1) {
+        if ($sec_entry['sec_lev'.$thisuser->securityLevel().'_'.$kind] == 1) {
           if ($sec_access) {
             $acl .= " OR";
           }
@@ -143,11 +142,10 @@ class Security
   {
     global $h_a2;
 
-    global $roscms_intern_account_id;
-    global $roscms_security_level;
+    $thisuser = &ThisUser::getInstance();
 
     // roscms interface access ?
-    if ($roscms_security_level < 1) {
+    if ($thisuser->securityLevel() < 1) {
       return;
     }
 
@@ -163,7 +161,7 @@ class Security
 
     // check for membership in allowed groups
     $stmt=DBConnection::getInstance()->prepare("SELECT usergroupmember_usergroupid FROM usergroup_members WHERE usergroupmember_userid = :user_id");
-    $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute();
     while($usergroup = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
@@ -176,7 +174,7 @@ class Security
 
     // check for membership in denied list
     $stmt=DBConnection::getInstance()->prepare("SELECT usergroupmember_usergroupid FROM usergroup_members WHERE usergroupmember_userid = :user_id");
-    $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute();
     while($usergroup = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
@@ -189,19 +187,19 @@ class Security
 
     // create a list with rights
     //@CHECKME is this type of checks a good idea ??
-    if (($rights['sec_lev'.$roscms_security_level.'_read'] == 1 || $acl_allow === true) && $acl_deny === false) {
+    if (($rights['sec_lev'.$thisuser->securityLevel().'_read'] == 1 || $acl_allow === true) && $acl_deny === false) {
       $rights_list .= 'read|';
     }
-    if (($rights['sec_lev'.$roscms_security_level.'_write'] == 1 || $acl_allow === true) && $acl_deny === false) {
+    if (($rights['sec_lev'.$thisuser->securityLevel().'_write'] == 1 || $acl_allow === true) && $acl_deny === false) {
       $rights_list .= 'write|';
     }
-    if (($rights['sec_lev'.$roscms_security_level.'_add'] == 1 || ($acl_allow === true && $roscms_security_level == 3)) && $acl_deny === false) {
+    if (($rights['sec_lev'.$thisuser->securityLevel().'_add'] == 1 || ($acl_allow === true && $thisuser->securityLevel() == 3)) && $acl_deny === false) {
       $rights_list .= 'add|';
     }
-    if (($rights['sec_lev'.$roscms_security_level.'_pub'] == 1 || ($acl_allow === true && $roscms_security_level == 3)) && $acl_deny === false) {
+    if (($rights['sec_lev'.$thisuser->securityLevel().'_pub'] == 1 || ($acl_allow === true && $thisuser->securityLevel() == 3)) && $acl_deny === false) {
       $rights_list .= 'pub|';
     }
-    if (($rights['sec_lev'.$roscms_security_level.'_trans'] == 1 || ($acl_allow === true && $roscms_security_level == 3)) && $acl_deny === false) {
+    if (($rights['sec_lev'.$thisuser->securityLevel().'_trans'] == 1 || ($acl_allow === true && $thisuser->securityLevel() == 3)) && $acl_deny === false) {
       $rights_list .= 'trans|';
     }
 
@@ -218,11 +216,8 @@ class Security
    */
   public function hasRight( $data_id, $kind )
   {
-    global $roscms_security_level;
-
     // only if roscms interface access is granted
-    if ($roscms_security_level < 1) {
-echo $roscms_security_level;
+    if (ThisUser::getInstance()->securityLevel() < 1) {
       return false;
     }
 
@@ -241,10 +236,8 @@ echo $roscms_security_level;
    */
   public function rightsOverview( $data_id )
   {
-    global $roscms_security_level;
-
     // only if roscms interface access is granted
-    if ($roscms_security_level < 1) {
+    if (ThisUser::getInstance()->securityLevel() < 1) {
       return;
     }
 
@@ -259,7 +252,7 @@ echo $roscms_security_level;
     $explanation .= (strpos($rights_list, '|trans|') === false)   ? '-' : 'p';
 
     // add also security level
-    $explanation .= ' '.$roscms_security_level;
+    $explanation .= ' '.ThisUser::getInstance()->securityLevel();
 
     return $explanation;
   } // end of member function rightsOverview

@@ -44,9 +44,7 @@ class Log
    */
   public static function prepareInfo( $data_id,  $rev_id )
   {
-    global $roscms_intern_account_id;
-
-    return ' [dataid: '.$data_id.'; revid: '.$rev_id.'; userid: '.$roscms_intern_account_id.'; security: '.Security::rightsOverview($data_id).'] ';
+    return ' [dataid: '.$data_id.'; revid: '.$rev_id.'; userid: '.ThisUser::getInstance()->id().'; security: '.Security::rightsOverview($data_id).'] ';
   } // end of member function prepare_info
 
 
@@ -170,7 +168,6 @@ class Log
    */
   private function write( $log_str,  $log_mode = 3,  $log_entry = 'log_website_' )
   {
-    global $roscms_intern_account_id;
     global $roscms_standard_language;
 
     // get current log id
@@ -204,7 +201,7 @@ class Log
       $stmt=DBConnection::getInstance()->prepare("INSERT INTO data_revision_a ( rev_id , data_id , rev_version , rev_language , rev_usrid , rev_datetime , rev_date , rev_time ) VALUES ( NULL, :data_id, '1', :lang, :user_id, NOW(), CURDATE(), CURTIME() )");
       $stmt->bindParam('data_id',$log_id,PDO::PARAM_INT);
       $stmt->bindParam('lang',$roscms_standard_language,PDO::PARAM_STR);
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
       $stmt->execute();
 
       // get the new log revison id
@@ -261,7 +258,7 @@ class Log
 
       // get a username, who is responsible for this log
       $stmt=DBConnection::getInstance()->prepare("SELECT user_name FROM users WHERE user_id = :user_id LIMIT 1");
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
       $stmt->execute();
       $username = $stmt->fetchColumn();
 

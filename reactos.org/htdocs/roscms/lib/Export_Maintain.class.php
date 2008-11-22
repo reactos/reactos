@@ -51,9 +51,6 @@ class Export_Maintain extends Export
    */
   public function maintain( )
   {
-    global $roscms_security_level;
-    global $roscms_intern_account_id;
-
     global $RosCMS_GET_d_use;
     global $RosCMS_GET_d_value;
     global $RosCMS_GET_d_value2;
@@ -66,13 +63,13 @@ class Export_Maintain extends Export
       case 'optimize':
         $stmt=DBConnection::getInstance()->prepare("OPTIMIZE TABLE data_, data_a, data_revision, data_revision_a, data_security, data_stext, data_stext_a, data_tag, data_tag_a, data_tag_name, data_tag_name_a, data_tag_value, data_tag_value_a, data_text, data_text_a, data_user_filter, languages, subsys_mappings, usergroups, usergroup_members, users, user_sessions");
         $stmt->execute();
-        Log::writeHigh('optimize database tables: done by '.$roscms_intern_account_id.' {data_maintain_out}');
+        Log::writeHigh('optimize database tables: done by '.ThisUser::getInstance()->id().' {data_maintain_out}');
         break;
 
       case 'analyze':
         $stmt=DBConnection::getInstance()->exec("ANALYZE TABLE data_, data_a, data_revision, data_revision_a, data_security, data_stext, data_stext_a, data_tag, data_tag_a, data_tag_name, data_tag_name_a, data_tag_value, data_tag_value_a, data_text, data_text_a, data_user_filter, languages, subsys_mappings, usergroups, usergroup_members, users, user_sessions");
         $stmt->execute();
-        Log::writeHigh('analyze database tables: done by '.$roscms_intern_account_id.' {data_maintain_out}');
+        Log::writeHigh('analyze database tables: done by '.ThisUser::getInstance()->id().' {data_maintain_out}');
         break;
 
       case 'genpages':

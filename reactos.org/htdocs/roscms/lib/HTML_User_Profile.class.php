@@ -36,7 +36,7 @@ class HTML_User_Profile extends HTML_User
    */
   public function __construct( $page_title = '', $search = false)
   {
-    require('login.php');
+    Login::required();
     $this->search = $search;
     parent::__construct( $page_title );
   }
@@ -49,7 +49,6 @@ class HTML_User_Profile extends HTML_User
    */
   protected function body( )
   {
-    global $roscms_intern_account_id;
     global $rdf_uri_2;
     global $roscms_SET_path_ex;
 
@@ -115,7 +114,7 @@ class HTML_User_Profile extends HTML_User
       }
     }
     else {
-      $this->profile($roscms_intern_account_id);
+      $this->profile(ThisUser::getInstance()->id());
     }
   }
 
@@ -126,11 +125,11 @@ class HTML_User_Profile extends HTML_User
    */
   private function profile( $user_id = null )
   {
-    global $roscms_intern_account_id;
     global $roscms_SET_path_ex;
     global $roscms_intern_webserver_pages;
     global $rdf_name;
-    global $roscms_security_level;
+
+    $thisuser = &ThisUser::getInstance();
 
     $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_register, user_fullname, user_email, user_email_activation, user_website, user_country, user_timezone, user_occupation, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress, user_setting_timeout, user_language FROM users WHERE user_id = :user_id LIMIT 1");
     $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
@@ -177,7 +176,7 @@ class HTML_User_Profile extends HTML_User
     }
 
     // email only for the user itself or admins
-    if ($profile['user_id'] == $roscms_intern_account_id || $roscms_security_level == 3) {
+    if ($profile['user_id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
       echo_strip('
         <div class="login-form">
           <div class="u-desc">E-Mail Address </div>
@@ -241,7 +240,7 @@ class HTML_User_Profile extends HTML_User
     }
 
     // Groups (only for user itself) and admins
-    if ($profile['user_id'] == $roscms_intern_account_id || $roscms_security_level == 3) {
+    if ($profile['user_id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
       echo_strip('
         <div class="login-form">
           <div class="u-desc">User Groups</div>
@@ -261,12 +260,12 @@ class HTML_User_Profile extends HTML_User
     // Location
     echo_Strip('
         <div class="login-form">
-          <a href="'.$roscms_intern_webserver_pages.'peoplemap/" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">'.($profile['user_id']==$roscms_intern_account_id ? 'My ' : '').'Location on the Map</a>
+          <a href="'.$roscms_intern_webserver_pages.'peoplemap/" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">'.($profile['user_id']==$thisuser->id() ? 'My ' : '').'Location on the Map</a>
         </div>
       </div>');
 
     // show edit or search link (depending if the current user is searched user)
-    if ($profile['user_id'] == $roscms_intern_account_id) {
+    if ($profile['user_id'] == $thisuser->id()) {
       echo_strip('
         <div>&nbsp;</div>
         <div class="u-link"><a href="'.$roscms_SET_path_ex.'my/edit/">Edit My Profile</a></div>

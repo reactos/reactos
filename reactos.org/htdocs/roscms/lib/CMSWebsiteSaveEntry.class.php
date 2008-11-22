@@ -28,8 +28,8 @@ class CMSWebsiteSaveEntry
 
   public function __construct()
   {
-    require('login.php');
-  
+    Login::required();
+
     if (!isset($_GET['d_id']) || !isset($_GET['d_r_lang'])){
       echo 'Missing params';
       return;
@@ -51,7 +51,7 @@ class CMSWebsiteSaveEntry
    */
   private function save( $tag_value = 'no' )
   {
-    global $roscms_intern_account_id;
+    $thisuser = &ThisUser::getInstance();
 
     $type = (isset($_GET['d_val3']) ? $_GET['d_val3'] : '');
     $tag_value = (isset($_GET['d_val4']) ? $_GET['d_val4'] : 'no');
@@ -68,7 +68,7 @@ class CMSWebsiteSaveEntry
         $stmt=DBConnection::getInstance()->prepare("SELECT rev_id FROM data_revision WHERE data_id = :data_id AND rev_usrid = :user_id AND rev_date = :date AND rev_language = :lang ORDER BY rev_id DESC LIMIT 1");
       }
       $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->bindValue('date',date("Y-m-d"),PDO::PARAM_STR);
       $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_STR);
       $stmt->execute();
@@ -87,14 +87,14 @@ class CMSWebsiteSaveEntry
       $stmt=DBConnection::getInstance()->prepare("INSERT INTO data_revision ( rev_id , data_id , rev_version , rev_language , rev_usrid , rev_datetime , rev_date , rev_time ) VALUES ( NULL, :data_id, 0, :lang, :user_id, NOW(), CURDATE(), CURTIME() )");
       $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
       $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_STR);
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
 
       // get inserted rev_id
       $stmt=DBConnection::getInstance()->prepare("SELECT rev_id FROM data_revision WHERE data_id = :data_id AND rev_version = 0 AND rev_language = :lang AND rev_usrid = :user_id ORDER BY rev_datetime DESC;");
       $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
       $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_STR);
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
       $rev_id = $stmt->fetchColumn();
 

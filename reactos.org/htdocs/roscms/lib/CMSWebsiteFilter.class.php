@@ -30,9 +30,8 @@ class CMSWebsiteFilter
 
   public function __construct(  )
   {
-    require('login.php');
-  
-  
+    Login::required();
+
     $this->manage();
   } // end of member function __construct
 
@@ -49,7 +48,7 @@ class CMSWebsiteFilter
    */
   private function manage( )
   {
-    global $roscms_intern_account_id;
+    $thisuser = &ThisUser::getInstance();
 
     // they need some standard values
     $action = (isset($_GET['d_val']) ? $_GET['d_val'] : '');
@@ -66,7 +65,7 @@ class CMSWebsiteFilter
 
       // check if filter already exists
       $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM data_user_filter WHERE filt_usrid = :user_id AND filt_title = :title AND filt_type = :type LIMIT 1");
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->bindParam('title',$filter_title,PDO::PARAM_STR); 
       $stmt->bindParam('type',$this->type_num,PDO::PARAM_INT);
       $stmt->execute();
@@ -74,7 +73,7 @@ class CMSWebsiteFilter
 
         // insert new filter
         $stmt=DBConnection::getInstance()->prepare("INSERT INTO data_user_filter ( filt_id , filt_usrid , filt_title , filt_type , filt_string , filt_datetime , filt_usage , filt_usagedate ) VALUES ( NULL, :user_id, :title, :type, :string, NOW(), 1, NOW() )");
-        $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+        $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
         $stmt->bindParam('title',$filter_title,PDO::PARAM_STR); 
         $stmt->bindParam('type',$this->type_num,PDO::PARAM_INT);
         $stmt->bindParam('string',$filter_string,PDO::PARAM_STR);
@@ -85,13 +84,13 @@ class CMSWebsiteFilter
       // delete a label
       $stmt=DBConnection::getInstance()->prepare("DELETE FROM data_user_filter WHERE filt_id = :filter_id AND filt_usrid = :user_id LIMIT 1");
       $stmt->bindParam('filter_id',$filter_title,PDO::PARAM_INT);
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
     }
 
     // echo current list of filters
     $stmt=DBConnection::getInstance()->prepare("SELECT filt_id, filt_title, filt_string FROM data_user_filter WHERE filt_usrid = :user_id AND filt_type = :type ORDER BY filt_title ASC");
-    $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->bindParam('type',$this->type_num,PDO::PARAM_INT);
     $stmt->execute();
     while ($filter = $stmt->fetch(PDO::FETCH_ASSOC)) {

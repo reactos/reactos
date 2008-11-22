@@ -28,7 +28,7 @@ abstract class Export
 
   public function __construct( )
   {
-    require('login.php');
+    Login::required();
   }
 
 

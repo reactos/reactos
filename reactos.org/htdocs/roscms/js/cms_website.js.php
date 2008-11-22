@@ -20,8 +20,7 @@
 
   define('ROSCMS_PATH', '../');
   require('../lib/RosCMS_Autoloader.class.php');
-  require('../login.php');
-  global $roscms_intern_account_id;
+  Login::required();
 ?>
 										function filtpopulatehelper(objidval, objidval2, filterid) {
 											var filtentryselstr = '';
@@ -72,7 +71,7 @@
 														filtentryselstrs1 = '<select id="sfb'+filterid+'"><option value="is">is</option><option value="no">is not</option></select>';
 														filtentryselstrs2 = '<select id="sfc'+filterid+'"><?php
 
-  $user_lang = ROSUser::getLanguage($roscms_intern_account_id, true);
+  $user_lang = ROSUser::getLanguage(ThisUser::getInstance()->id(), true);
 
   $stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_name FROM languages WHERE lang_level > '0' ORDER BY lang_name ASC");
   $stmt->execute();

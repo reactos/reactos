@@ -46,10 +46,6 @@
 	// Global Vars:
 	$rpm_page="";
 	$rpm_lang="";
-		
-	
-	// this vars will be removed soon
-	$roscms_intern_login_check_username="";
 
 	if (array_key_exists("page", $_GET)) $rpm_page=htmlspecialchars($_GET["page"]);
 	if (array_key_exists("lang", $_GET)) $rpm_lang=htmlspecialchars($_GET["lang"]);
@@ -112,7 +108,7 @@ function echo_strip( $text ) {
   $text = str_replace('  ','',$text);
   $text = str_replace("\t",'',$text);
   $text = str_replace("\n",'',$text);
-  echo str_replace("\n",'',$text);
+  echo   str_replace("\r",'',$text);
 }
 
 

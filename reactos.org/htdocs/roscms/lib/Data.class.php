@@ -239,9 +239,8 @@ class Data
    */
   public static function deleteFile( $rev_id )
   {
-    global $roscms_security_level;
     // only for admins
-    if ($roscms_security_level < 3) {
+    if (ThisUser::getInstance()->securityLevel() < 3) {
       return;
     }
 
@@ -594,7 +593,7 @@ class Data
    */
   public static function add($data_type = null, $lang = null, $show_output = false, $dynamic_content = false, $entry_status = 'draft', $layout_template = '')
   {
-    global $roscms_intern_account_id;
+    $thisuser = &ThisUser::getInstance();
 
     $data_name = @htmlspecialchars($_GET['d_name']);
 
@@ -628,13 +627,13 @@ class Data
       $stmt=DBConnection::getInstance()->prepare("INSERT INTO data_revision ( rev_id , data_id , rev_version , rev_language , rev_usrid , rev_datetime , rev_date , rev_time ) VALUES ( NULL, :data_id, 0, :lang, :user_id, NOW(), CURDATE(), CURTIME() )");
       $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang,PDO::PARAM_STR);
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
       
       $stmt=DBConnection::getInstance()->prepare("SELECT rev_id FROM data_revision WHERE data_id = :data_id AND rev_version = '0' AND rev_language = :lang AND rev_usrid = :user_id ORDER BY rev_datetime DESC");
       $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang,PDO::PARAM_STR);
-      $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
       $rev_id = $stmt->fetchColumn();
 
@@ -695,7 +694,7 @@ class Data
         Tag::add($data_id, $rev_id, 'number', $dynamic_number, -1);
         Tag::add($data_id, $rev_id, 'number_sort', str_pad($dynamic_number, 5, '0', STR_PAD_LEFT), -1); // padding with '0'
         Tag::add($data_id, $rev_id, 'pub_date', date('Y-m-d'), -1);
-        Tag::add($data_id, $rev_id, 'pub_user', $roscms_intern_account_id, -1);
+        Tag::add($data_id, $rev_id, 'pub_user', $thisuser->id(), -1);
       }
 
       if ($data_type == 'page') {
@@ -716,8 +715,8 @@ class Data
    */
   public static function evalAction( $id_list, $action, $lang = null, $label_name = null )
   {
-    global $roscms_intern_account_id;
-    global $roscms_security_level;
+    $thisuser = &ThisUser::getInstance();
+
     global $roscms_standard_language;
 
     $id_list = preg_replace('/(^|-)[0-9]+\_([0-9]+)/','$2|',$id_list);
@@ -740,7 +739,7 @@ class Data
     
       // get user language
       $stmt_lang=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
-      $stmt_lang->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+      $stmt_lang->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt_lang->execute();
       $user_lang = $stmt_lang->fetchColumn();
 
@@ -762,7 +761,7 @@ class Data
 
           // mark as stable
           case 'ms':
-            if ($roscms_security_level > 1 && ROSUser::isMemberOfGroup('transmaint')) {
+            if ($thisuser->securityLevel() > 1 && $thisuser->isMemberOfGroup('transmaint')) {
 
               // check for user language
               if ($user_lang == '') {
@@ -779,7 +778,7 @@ class Data
             // renew tag
             $tag_id = Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'status', -1);
             if ($tag_id > 0) {
-              Tag::deleteById($tag_id, $roscms_intern_account_id);
+              Tag::deleteById($tag_id, $thisuser->id());
             }
             Tag::add($revision['data_id'], $revision['rev_id'], 'status', 'stable', -1);
 
@@ -855,7 +854,7 @@ class Data
 
           // mark as new
           case 'mn':
-            if ($roscms_security_level > 1 && ROSUser::isMemberOfGroup('transmaint')) {
+            if ($thisuser->securityLevel() > 1 && $thisuser->isMemberOfGroup('transmaint')) {
 
               // check for user language
               if ($user_lang == '') {
@@ -870,7 +869,7 @@ class Data
             //
             $tag_id = Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'status', -1);
             if ($tag_id > 0) {
-              Tag::deleteById($tag_id, $roscms_intern_account_id);
+              Tag::deleteById($tag_id, $thisuser->id());
             }
             Tag::add($revision['data_id'], $revision['rev_id'], 'status', 'new', -1);
 
@@ -881,32 +880,32 @@ class Data
 
           // add star
           case 'as':
-            $tag_id = Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $roscms_intern_account_id);
+            $tag_id = Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id());
             if ($tag_id > 0) {
-              Tag::deleteById($t_tagid, $roscms_intern_account_id);
+              Tag::deleteById($t_tagid, $thisuser->id());
             }
-            Tag::add($revision['data_id'], $revision['rev_id'], 'star', 'on', $roscms_intern_account_id);
+            Tag::add($revision['data_id'], $revision['rev_id'], 'star', 'on', $thisuser->id());
             break;
 
           // delete star
           case 'xs':
-            $tag_id = Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $roscms_intern_account_id);
+            $tag_id = Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id());
             if ($tag_id > 0) {
-              Tag::deleteById($tag_id, $roscms_intern_account_id);
+              Tag::deleteById($tag_id, $thisuser->id());
             }
             break;
 
           // add label
           case 'tg':
-            Tag::add($revision['data_id'], $revision['rev_id'], 'tag', $label_name, $roscms_intern_account_id);
+            Tag::add($revision['data_id'], $revision['rev_id'], 'tag', $label_name, $thisuser->id());
             break;
 
           // delete entry
           case 'xe':
-            if ($roscms_security_level > 1 || $revision['rev_usrid'] == $roscms_intern_account_id) {
+            if ($thisuser->securityLevel() > 1 || $revision['rev_usrid'] == $thisuser->id()) {
 
               // copy to Archive if no admin
-              if ($roscms_security_level < 3) {
+              if ($thisuser->securityLevel() < 3) {
                 Data::copy($revision['data_id'], $revision['rev_id'], 0, $lang);
               }
               Data::deleteFile($revision['rev_id']);
@@ -941,8 +940,6 @@ class Data
    */
   public static function copy( $data_id, $rev_id, $archive_mode, $lang = '' )
   {
-    global $roscms_intern_account_id;
-
     // set archive mode dependent vars
     if ($archive_mode == 0) {
       // copy to archive
@@ -1006,7 +1003,7 @@ class Data
     if ($archive_mode === false) {
       $revision = array(
         'rev_version' => '0',
-        'rev_usrid' => $roscms_intern_account_id,
+        'rev_usrid' => ThisUser::getInstance()->id(),
         'rev_language' => $lang,
         'rev_datetime' => date('Y-m-d H:i:s'),
         'rev_date' => date('Y-m-d'),

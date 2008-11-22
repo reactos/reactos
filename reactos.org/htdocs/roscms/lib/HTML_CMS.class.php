@@ -37,8 +37,8 @@ abstract class HTML_CMS extends HTML
   public function __construct( $page_title = '' )
   {
     // need to have a logged in user with minimum security level 1
-    require('login.php');
-    if ($roscms_security_level == 0) {
+    Login::required();
+    if (ThisUser::getInstance()->securityLevel() == 0) {
       header('location:?page=nopermission');
     }
 
@@ -65,17 +65,26 @@ abstract class HTML_CMS extends HTML
    */
   private function navigation( )
   {
-    global $roscms_security_level;
-    global $roscms_security_memberships;
-    global $roscms_intern_login_check_username;
     global $roscms_intern_page_link;
     global $roscms_intern_webserver_pages, $roscms_intern_page_link;
+
+    $thisuser = &ThisUser::getInstance();
+
+    // generate list of memberships
+    $group_list = '';
+    $groups = $thisuser->getGroups();
+    foreach($groups as $group_name => $security_level) {
+      $group_list .= ($group_list!=''?',':'').$group_name;
+    }
+
+    // get security level
+    $security_level = $thisuser->securityLevel();
 
     // get selected navigation entry
     echo_strip('
       <div id="myReactOS" style="padding-right: 10px;">
-        <strong>'.$roscms_intern_login_check_username.'</strong>
-        '.(($roscms_security_level > 1) ? '| SecLev: '.$roscms_security_level.' ('. str_replace('|', ', ', substr($roscms_security_memberships, 1, -2)) .')' : '').'
+        <strong>'.$thisuser->name().'</strong>
+        '.(($security_level > 1) ? '| SecLev: '.$security_level.' ('. $group_list .')' : '').'
         |
         <span onclick="pagerefresh()" style="color:#006090; cursor:pointer;">
           <img src="images/reload.gif" alt="reload page" width="16" height="16" />
@@ -108,7 +117,7 @@ abstract class HTML_CMS extends HTML
               </th>
               <td>&nbsp;&nbsp;</td>');
 
-    if (ROSUser::isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
+    if ($thisuser->isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
       echo_strip('
         <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."roscms_mainmenu('user')".'">
           <div class="tc1">
@@ -121,7 +130,7 @@ abstract class HTML_CMS extends HTML
         <td>&nbsp;&nbsp;</td>');
     }
 
-    if ($roscms_security_level == 3) {
+    if ($thisuser->securityLevel() == 3) {
       echo_strip('
         <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."roscms_mainmenu('maintain')".'">
           <div class="tc1">

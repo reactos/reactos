@@ -43,10 +43,9 @@ class Date
     global $rdf_user_timezone;
     global $rdf_user_timezone_name;
     global $rdf_server_timezone;
-    global $roscms_intern_account_id;
 
     // calculate only for registered users
-    if ($roscms_intern_account_id > 1) {
+    if (ThisUser::getInstance()->id() > 0) {
       $basedate = strtotime($date);
       $date_new = strtotime(($rdf_user_timezone+$rdf_server_timezone).' hours', $basedate);
       return date($format, $date_new).' '.$rdf_user_timezone_name;

@@ -47,7 +47,8 @@ class Editor_Website extends Editor
    */
   protected function evalAction( $action )
   {
-    global $roscms_security_level;
+    $thisuser = &ThisUser::getInstance();
+
     global $roscms_standard_language;
     global $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4;
     global $RosCMS_GET_d_id, $RosCMS_GET_d_r_id;
@@ -59,7 +60,7 @@ class Editor_Website extends Editor
       case 'newentry':
 
         // add a new entry only with higher security level
-        if ($roscms_security_level > 1) {
+        if ($thisuser->securityLevel() > 1) {
           switch ($RosCMS_GET_d_value) {
             case 'dynamic':
               $this->showAddEntry(self::DYNAMIC);
@@ -146,7 +147,7 @@ class Editor_Website extends Editor
       case 'deltag':
       
         // only delete, if user has a higher level than translator, or it's requested by the user itself
-        if ($roscms_security_level > 1 || $RosCMS_GET_d_value2 == $roscms_intern_account_id) {
+        if ($thisuser->securityLevel() > 1 || $RosCMS_GET_d_value2 == $thisuser->id()) {
           Tag::deleteById($RosCMS_GET_d_value, $RosCMS_GET_d_value2);
         }
 
@@ -158,7 +159,7 @@ class Editor_Website extends Editor
       case 'changetag':
         Tag::deleteById($RosCMS_GET_d_value4, $RosCMS_GET_d_value3);
         Tag::add($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
-        echo Tag::getIdByUser($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value, $roscms_intern_account_id);
+        echo Tag::getIdByUser($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value, $thisuser->id());
         break;
 
       // update tag by name/user
@@ -200,7 +201,6 @@ class Editor_Website extends Editor
   protected function performDefaultAction()
   {
     global $RosCMS_GET_d_r_lang;
-    global $roscms_intern_account_id;
 
     // normal (contains NO "tr")
     if (!isset($_GET['d_r_id']) || strpos($_GET['d_r_id'], 'tr') === false) {
@@ -221,7 +221,7 @@ class Editor_Website extends Editor
         if (Data::copy($revision['data_id'], $revision['rev_id'], 1 /* copy mode */, $RosCMS_GET_d_r_lang)) {
           $stmt=DBConnection::getInstance()->prepare("SELECT data_id, rev_id, rev_language FROM data_revision WHERE data_id = :data_id AND rev_usrid = :user_id AND rev_version = 0 AND rev_language = :lang AND rev_date = :date ORDER BY rev_id DESC LIMIT 1");
           $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_STR);
-          $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+          $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
           $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_STR);
           $stmt->bindParam('date',date('Y-m-d'),PDO::PARAM_STR);
           $stmt->execute();
@@ -265,7 +265,6 @@ class Editor_Website extends Editor
   {
     global $roscms_standard_language;
     global $roscms_standard_language_full;
-    global $roscms_security_level;
     global $h_a,$h_a2;
 
     echo_strip('
@@ -543,9 +542,10 @@ class Editor_Website extends Editor
    */
   protected function showEntryData( )
   {
-    global $roscms_intern_account_id;
     global $h_a;
     global $h_a2;
+
+    $thisuser = &ThisUser::getInstance();
 
     // get Database Entry
     $stmt=DBConnection::getInstance()->prepare("SELECT d.data_id, d.data_name, d.data_type, r.rev_id, r.rev_version, r.rev_language, r.rev_datetime, u.user_name FROM data_".$h_a2." d JOIN data_revision".$h_a." r ON  r.data_id = d.data_id JOIN users u ON r.rev_usrid = u.user_id WHERE r.rev_id = :rev_id LIMIT 1");
@@ -556,8 +556,8 @@ class Editor_Website extends Editor
     echo_strip('
       <div style="padding-bottom: 3px;">
         <span class="frmeditheader">
-          <span onclick="'."bchangestar(".$revision['data_id'].",".$revision['rev_id'].",'star','addtagn', ".$roscms_intern_account_id.", 'editstar')".'" style="cursor: pointer;">
-           <img id="editstar" class="'.Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $roscms_intern_account_id).'" src="images/star_'.Tag::getValueByUser($revision['data_id'], $revision['rev_id'], 'star', $roscms_intern_account_id).'_small.gif" alt="" style="width:13px; height:13px; border:0px;" />
+          <span onclick="'."bchangestar(".$revision['data_id'].",".$revision['rev_id'].",'star','addtagn', ".$thisuser->id().", 'editstar')".'" style="cursor: pointer;">
+           <img id="editstar" class="'.Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id()).'" src="images/star_'.Tag::getValueByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id()).'_small.gif" alt="" style="width:13px; height:13px; border:0px;" />
           </span>
           &nbsp;');
     echo $revision['data_name'];
@@ -600,11 +600,10 @@ class Editor_Website extends Editor
 
   protected function showEntryDetails( $mode = self::METADATA)
   {
-    global $roscms_intern_account_id;
-    global $roscms_security_level;
-
     global $h_a;
     global $h_a2;
+
+    $thisuser = &ThisUser::getInstance();
 
     echo_strip('
       <div class="detailbody">
@@ -615,7 +614,7 @@ class Editor_Website extends Editor
       echo '<strong>Metadata</strong>';
     }
     else {
-      echo '<span class="detailmenu" onclick="'."bshowtag(".$this->data_id.",".$this->rev_id.",'a','b', '".$roscms_intern_account_id."')".'">Metadata</span>';
+      echo '<span class="detailmenu" onclick="'."bshowtag(".$this->data_id.",".$this->rev_id.",'a','b', '".$thisuser->id()."')".'">Metadata</span>';
     }
     echo "&nbsp;|&nbsp;";
 
@@ -624,7 +623,7 @@ class Editor_Website extends Editor
       echo '<strong>History</strong>';
     }
     else {
-      echo '<span class="detailmenu" onclick="'."bshowhistory(".$this->data_id.",".$this->rev_id.",'a','b', '".$roscms_intern_account_id."')".'">History</span>';
+      echo '<span class="detailmenu" onclick="'."bshowhistory(".$this->data_id.",".$this->rev_id.",'a','b', '".$thisuser->id()."')".'">History</span>';
     }
 
     // allowed only for someone with "add" rights
@@ -636,7 +635,7 @@ class Editor_Website extends Editor
         echo '<strong>Fields</strong>';
       }
       else {
-        echo '<span class="detailmenu" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".$roscms_intern_account_id."')".'">Fields</span>';
+        echo '<span class="detailmenu" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Fields</span>';
       }
       echo "&nbsp;|&nbsp;";
 
@@ -644,19 +643,19 @@ class Editor_Website extends Editor
         echo '<strong>Entry</strong>';
       }
       else {
-        echo '<span class="detailmenu" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".$roscms_intern_account_id."')".'">Entry</span>';
+        echo '<span class="detailmenu" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Entry</span>';
       }
     }
 
     // allowed only for related super administrators
-    if (ROSUser::isMemberOfGroup("ros_sadmin") || (Security::hasRight($this->data_id, 'add') && ROSUser::isMemberOfGroup('ros_admin'))) { 
+    if ($thisuser->isMemberOfGroup('ros_sadmin') || (Security::hasRight($this->data_id, 'add') && $thisuser->isMemberOfGroup('ros_admin'))) { 
       echo "&nbsp;|&nbsp;";
 
       if ($mode == self::SECURITY) {
         echo '<strong>Security</strong>';
       }
       else {
-        echo '<span class="detailmenu" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".$roscms_intern_account_id."')".'">Security</span>';
+        echo '<span class="detailmenu" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Security</span>';
       }
     }
     echo_strip('
@@ -692,14 +691,14 @@ class Editor_Website extends Editor
    */
   private function showEntryDetailsMetadata( )
   {
-    global $roscms_security_level;
-    global $roscms_intern_account_id;
     global $h_a,$h_a2;
+
+    $thisuser = &ThisUser::getInstance();
 
     // helper vars
     $last_user = null; // used in first while, to recognize the last type
 
-    if ($roscms_security_level > 1) {
+    if ($thisuser->securityLevel() > 1) {
       $stmt=DBConnection::getInstance()->prepare("SELECT a.tag_id, a.tag_usrid, n.tn_name, v.tv_value FROM data_".$h_a2." d, data_revision".$h_a." r, data_tag".$h_a." a, data_tag_name".$h_a." n, data_tag_value".$h_a." v WHERE (a.data_id = 0 OR (a.data_id = :data_id AND a.data_id = d.data_id) ) AND (a.data_rev_id = 0 OR (a.data_rev_id = :rev_id AND a.data_rev_id = r.rev_id) ) AND a.tag_usrid IN(-1, 0,:user_id) AND a.tag_name_id = n.tn_id AND a.tag_value_id  = v.tv_id ORDER BY tag_usrid ASC, tn_name ASC");
     }
     else {
@@ -707,7 +706,7 @@ class Editor_Website extends Editor
     }
     $stmt->bindParam('data_id',$this->data_id,PDO::PARAM_INT);
     $stmt->bindParam('rev_id',$this->rev_id,PDO::PARAM_INT);
-    $stmt->bindParam('user_id',$roscms_intern_account_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute();
     while($tag = $stmt->fetch()) {
       if ($tag['tag_usrid'] != $last_user) {
@@ -724,7 +723,7 @@ class Editor_Website extends Editor
             echo 'Labels';
             break;
           default:
-            if ($tag['tag_usrid'] == $roscms_intern_account_id) {
+            if ($tag['tag_usrid'] == $thisuser->id()) {
               echo 'Private Labels';
             }
         } // end switch
@@ -738,9 +737,9 @@ class Editor_Website extends Editor
         // allow to delete label if SecLev > 1
         // allow to delete sys metadata if user has the rights
         // allow someone to delete his metadata he set and the user-id > 0
-      if (($roscms_security_level > 1 && $tag['tag_usrid'] == 0) || (Security::hasRight($this->data_id, 'add') && $tag['tag_usrid'] == -1) || ($tag['tag_usrid'] == $roscms_intern_account_id && $tag['tag_usrid'] > 0)) {
+      if (($thisuser->securityLevel() > 1 && $tag['tag_usrid'] == 0) || (Security::hasRight($this->data_id, 'add') && $tag['tag_usrid'] == -1) || ($tag['tag_usrid'] == $thisuser->id() && $tag['tag_usrid'] > 0)) {
         echo_strip('&nbsp;&nbsp;
-          <span class="frmeditbutton" onclick="'."bdeltag(".$this->data_id.",".$this->rev_id.",'".$tag['tag_id']."', '".$roscms_intern_account_id."')".'">
+          <span class="frmeditbutton" onclick="'."bdeltag(".$this->data_id.",".$this->rev_id.",'".$tag['tag_id']."', '".$thisuser->id()."')".'">
             <img src="images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
             &nbsp;Delete
           </span>');
@@ -756,10 +755,10 @@ class Editor_Website extends Editor
       <div class="frmeditheadline">Add Private Label</div>
       <label for="addtagn"><b>Tag:</b></label>&nbsp;
       <input type="text" id="addtagn" size="15" maxlength="100" value="" />&nbsp;
-      <button type="button" onclick="'."baddtag(".$this->data_id.",".$this->rev_id.",'tag','addtagn', '".$roscms_intern_account_id."')".'">Add</button>
+      <button type="button" onclick="'."baddtag(".$this->data_id.",".$this->rev_id.",'tag','addtagn', '".$thisuser->id()."')".'">Add</button>
       <br />');
 
-    if ($roscms_security_level > 1) {
+    if ($thisuser->securityLevel() > 1) {
       echo_strip('
         <br />
         <div class="frmeditheadline">Add Label'.(Security::hasRight($this->data_id, 'add') ? ' or System Metadata' : '').'</div>
@@ -823,7 +822,6 @@ class Editor_Website extends Editor
    */
   private function showEntryDetailsSecurity( )
   {
-    global $roscms_intern_account_id;
     global $h_a2;
 
     $stmt=DBConnection::getInstance()->prepare("SELECT data_id, data_name, data_type, data_acl FROM data_".$h_a2." WHERE data_id = :data_id LIMIT 1");
@@ -865,7 +863,7 @@ class Editor_Website extends Editor
       <br />
       <br />
       <button type="button" id="beditsavefields" onclick="'."editsavesecuritychanges('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
-      <button type="button" id="beditclear" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".$roscms_intern_account_id."')".'">Clear</button>');
+      <button type="button" id="beditclear" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Clear</button>');
   }
 
 
@@ -877,7 +875,6 @@ class Editor_Website extends Editor
   private function showEntryDetailsFields( )
   {
     global $h_a;
-    global $roscms_intern_account_id;
   
     echo_strip(
       '<br />
@@ -934,7 +931,7 @@ class Editor_Website extends Editor
       </span>
       <br /><br /><br />
       <button type="button" id="beditsavefields" onclick="'."editsavefieldchanges('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
-      <button type="button" id="beditclear" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".$roscms_intern_account_id."')".'">Clear</button>');
+      <button type="button" id="beditclear" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Clear</button>');
   }
 
 
@@ -995,7 +992,7 @@ class Editor_Website extends Editor
       <br />
       <br />
       <button type="button" id="beditsaveentry" onclick="editsaveentrychanges('.$this->data_id.','.$this->rev_id.')">Save Changes</button> &nbsp;
-      <button type="button" id="beditclear" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".$roscms_intern_account_id."')".'">Clear</button>');
+      <button type="button" id="beditclear" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Clear</button>');
   }
 
 
@@ -1034,7 +1031,6 @@ class Editor_Website extends Editor
    */
   private function showDifference( $rev_id1, $rev_id2 )
   {
-    global $roscms_security_level;
 
     // get archive mode for entry 1
     if (substr($rev_id1, 0, 2) == 'ar') {
@@ -1129,7 +1125,7 @@ class Editor_Website extends Editor
               <li>Type: '.$revision1['data_type'].'</li>
               <li>Language: '.$revision1['lang_name'].'</li>
               <li>User: '.$revision1['user_name'].'</li>');
-    if ($roscms_security_level > 1) {
+    if (ThisUser::getInstance()->securityLevel() > 1) {
       echo '<li>ID: '.$revision1['rev_id'].'</li>';
     }
     echo_strip('
@@ -1141,7 +1137,7 @@ class Editor_Website extends Editor
               <li>Type: '.$revision2['data_type'].'</li>
               <li>Language: '.$revision2['lang_name'].'</li>
               <li>User: '.$revision2['user_name'].'</li>');
-    if ($roscms_security_level > 1) {
+    if (ThisUser::getInstance()->securityLevel() > 1) {
       echo '<li>ID: '.$revision2['rev_id'].'</li>';
     }
     echo_strip('

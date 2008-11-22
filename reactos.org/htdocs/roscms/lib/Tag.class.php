@@ -83,10 +83,9 @@ class Tag
   public static function deleteById( $tag_id, $user_id )
   {
     global $h_a;
-    global $roscms_intern_account_id;
 
     // @unimplemented: account group membership check
-    if ($user_id == $roscms_intern_account_id || $user_id == 0 || $user_id == -1) {
+    if ($user_id == ThisUser::getInstance()->id() || $user_id == 0 || $user_id == -1) {
 
       // get tag data
       $stmt=DBConnection::getInstance()->prepare("SELECT tag_name_id, tag_value_id FROM data_tag".$h_a." WHERE tag_id = :tag_id LIMIT 1");
@@ -139,10 +138,9 @@ class Tag
   public static function add( $data_id, $rev_id, $tag_name, $tag_value, $user_id )
   {
     global $h_a;
-    global $roscms_intern_account_id;
 
     //@ADD group membership check
-    if ($user_id != $roscms_intern_account_id && $user_id != 0 && $user_id != -1) {
+    if ($user_id != ThisUser::getInstance()->id() && $user_id != 0 && $user_id != -1) {
       die('ERROR: no rights to access this function');
     }
 
