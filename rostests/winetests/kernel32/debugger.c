@@ -20,9 +20,9 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include <ntdef.h>
 #include <windows.h>
 #include <winreg.h>
+#include <ntndk.h>
 #include "wine/test.h"
 
 #ifndef STATUS_DEBUGGER_INACTIVE
