@@ -5,18 +5,18 @@ EXPORTS
   DCICreateOffscreen@40
   DCICreateOverlay@12
   DCICreatePrimary@8
-;  DCIDestroy
+  DCIDestroy@4
   DCIDraw@4
 ;  DCIEndAccess
   DCIEnum@20
   DCIOpenProvider@0
-;  DCISetClipList 
+  DCISetClipList@8
   DCISetDestination@12
-;  DCISetSrcDestClip 
+  DCISetSrcDestClip@16
 ;  GetDCRegionData
 ;  GetWindowRegionData
 ;  WinWatchClose
 ;  WinWatchDidStatusChange
 ;  WinWatchGetClipList
-;  WinWatchNotify 
+  WinWatchNotify@12
 ;  WinWatchOpen

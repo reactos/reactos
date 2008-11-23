@@ -20,6 +20,7 @@ typedef struct _DCISURFACE_LCL
     DDRAWI_DDRAWSURFACE_LCL SurfaceLocal;
     DDHAL_DDCALLBACKS DDCallbacks;
     DDHAL_DDSURFACECALLBACKS DDSurfaceCallbacks;
+
 } DCISURFACE_LCL, *LPDCISURFACE_LCL;
 
 typedef struct _DCISURFACE_INT
@@ -181,10 +182,15 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
             lpcsd.lplpSList = SurfaceLocal_List;
             lpcsd.dwSCnt = 1;
             lpcsd.ddRVal = DDERR_GENERIC;
-            lpcsd.CreateSurface = pDciSurface_int->DciSurface_lcl.DDCallbacks.CreateSurface;
+
+            /* Check see if dx hal support CreateSurface */
+            if ( (pDciSurface_int->DciSurface_lcl.DDCallbacks.dwFlags & DDHAL_CB32_CREATESURFACE) == DDHAL_CB32_CREATESURFACE)
+            {
+                lpcsd.CreateSurface = pDciSurface_int->DciSurface_lcl.DDCallbacks.CreateSurface;
+            }
 
             /* Now try create our surface */
-            if (lpcsd.CreateSurface != NULL)
+            if (lpcsd.CreateSurface != NULL )
             {
                 retvalue = lpcsd.CreateSurface(&lpcsd);
             }
@@ -261,6 +267,44 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
     return retvalue;
 }
 
+void WINAPI DCIDestroy(LPDCISURFACEINFO pDciSurfaceInfo)
+{
+    LPDCISURFACE_INT pDciSurface_int = NULL;
+    if (pDciSurfaceInfo != NULL)
+    {
+        /* Get the internal data for our pdci struct */
+        pDciSurface_int = (LPDCISURFACE_INT) (((DWORD) pDciSurfaceInfo) - sizeof(DCISURFACE_LCL)) ;
+
+        /* If we lost the primary surface we do not destory it, */
+        if (pDciSurface_int->DciSurface_lcl.LostSurface == FALSE)
+        {
+            /* Fixme destore the primary surface */
+
+            /* Check see if dx hal support DestroySurface */
+            if ( (pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE) == DDHAL_SURFCB32_DESTROYSURFACE)
+            {
+                // lpcsd.DestroySurface = pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface;
+            }
+
+
+            /* Destroy the Ddraw object */
+            if (pDciSurface_int->DciSurface_lcl.DirectDrawGlobal.hDD != 0)
+            {
+                DdDeleteDirectDrawObject(&pDciSurface_int->DciSurface_lcl.DirectDrawGlobal);
+            }
+
+            /* Free the alloc memmory for the internal and for pDciSurfaceInfo */
+            HeapFree(GetProcessHeap(), 0, pDciSurface_int);
+        }
+    }
+}
+
+
+/***********************************************************************************************************/
+/***********************************************************************************************************/
+/***********************************************************************************************************/
+/* All function under here are not supported in windows nt / ReactOS, they only return error code or false */
+/***********************************************************************************************************/
 
 /*++
 * @name int WINAPI DCICreateOffscreen(HDC hdc)
@@ -371,6 +415,70 @@ DCIEnum(HDC hdc,
 {
     return DCI_FAIL_UNSUPPORTED;
 }
+/*++
+* @name DCIRVAL WINAPI DCISetClipList(LPDCIOFFSCREEN pdci, LPRGNDATA prd)
+* @implemented
+*
+* Not supported in windows, it only return DCI_FAIL_UNSUPPORTED.
+
+* @return
+* DCI_FAIL_UNSUPPORTED
+*
+* @remarks.
+* None
+*
+*--*/
+DCIRVAL WINAPI
+DCISetClipList(LPDCIOFFSCREEN pdci,
+               LPRGNDATA prd)
+{
+    return DCI_FAIL_UNSUPPORTED;
+}
+
+/*++
+* @name DCIRVAL WINAPI DCISetSrcDestClip(LPDCIOFFSCREEN pdci, LPRECT srcrc, LPRECT destrc, LPRGNDATA prd)
+* @implemented
+*
+* Not supported in windows, it only return DCI_FAIL_UNSUPPORTED.
+
+* @return
+* DCI_FAIL_UNSUPPORTED
+*
+* @remarks.
+* None
+*
+*--*/
+DCIRVAL WINAPI
+DCISetSrcDestClip(LPDCIOFFSCREEN pdci,
+                  LPRECT srcrc,
+                  LPRECT destrc,
+                  LPRGNDATA prd)
+{
+    return DCI_FAIL_UNSUPPORTED;
+}
+
+/*++
+* @name BOOL WINAPI WinWatchNotify(HWINWATCH hWW, WINWATCHNOTIFYPROC NotifyCallback, LPARAM NotifyParam );
+* @implemented
+*
+* Not supported in windows, it only return FALSE.
+
+* @return
+* FALSE
+*
+* @remarks.
+* None
+*
+*--*/
+BOOL WINAPI
+WinWatchNotify(HWINWATCH hWW,
+               WINWATCHNOTIFYPROC NotifyCallback,
+               LPARAM NotifyParam )
+{
+    return FALSE;
+}
+
+
 
 
 
