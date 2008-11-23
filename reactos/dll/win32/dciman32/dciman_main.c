@@ -262,4 +262,115 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
 }
 
 
+/*++
+* @name int WINAPI DCICreateOffscreen(HDC hdc)
+* @implemented
+*
+* Not supported in windows, it only return DCI_FAIL_UNSUPPORTED.
+
+* @return
+* DCI_FAIL_UNSUPPORTED
+*
+* @remarks.
+* None
+*
+*--*/
+int WINAPI 
+DCICreateOffscreen(HDC hdc,
+                   DWORD dwCompression,
+                   DWORD dwRedMask,
+                   DWORD dwGreenMask,
+                   DWORD dwBlueMask,
+                   DWORD dwWidth,
+                   DWORD dwHeight,
+                   DWORD dwDCICaps,
+                   DWORD dwBitCount,
+                   LPDCIOFFSCREEN *lplpSurface)
+{
+    return DCI_FAIL_UNSUPPORTED;
+}
+
+/*++
+* @name int WINAPI DCICreateOverlay(HDC hdc, LPVOID lpOffscreenSurf, LPDCIOVERLAY *lplpSurface)
+* @implemented
+*
+* Not supported in windows, it only return DCI_FAIL_UNSUPPORTED.
+
+* @return
+* DCI_FAIL_UNSUPPORTED
+*
+* @remarks.
+* None
+*
+*--*/
+int WINAPI 
+DCICreateOverlay(HDC hdc,
+                 LPVOID lpOffscreenSurf,
+                 LPDCIOVERLAY *lplpSurface)
+{
+    return DCI_FAIL_UNSUPPORTED;
+}
+
+/*++
+* @name DCIRVAL WINAPI DCISetDestination(LPDCIOFFSCREEN pdci, LPRECT dst, LPRECT src)
+* @implemented
+*
+* Not supported in windows, it only return DCI_FAIL_UNSUPPORTED.
+
+* @return
+* DCI_FAIL_UNSUPPORTED
+*
+* @remarks.
+* None
+*
+*--*/
+DCIRVAL WINAPI
+DCISetDestination(LPDCIOFFSCREEN pdci, LPRECT dst, LPRECT src)
+{
+    return DCI_FAIL_UNSUPPORTED;
+}
+
+/*++
+* @name DCIRVAL WINAPI DCIDraw(LPDCIOFFSCREEN pdci)
+* @implemented
+*
+* Not supported in windows, it only return DCI_FAIL_UNSUPPORTED.
+
+* @return
+* DCI_FAIL_UNSUPPORTED
+*
+* @remarks.
+* None
+*
+*--*/
+DCIRVAL WINAPI
+DCIDraw(LPDCIOFFSCREEN pdci)
+{
+    return DCI_FAIL_UNSUPPORTED;
+}
+
+/*++
+* @name int WINAPI DCIEnum(HDC hdc, LPRECT lprDst, LPRECT lprSrc, LPVOID lpFnCallback, LPVOID lpContext);
+* @implemented
+*
+* Not supported in windows, it only return DCI_FAIL_UNSUPPORTED.
+
+* @return
+* DCI_FAIL_UNSUPPORTED
+*
+* @remarks.
+* None
+*
+*--*/
+int WINAPI
+DCIEnum(HDC hdc,
+        LPRECT lprDst,
+        LPRECT lprSrc,
+        LPVOID lpFnCallback,
+        LPVOID lpContext)
+{
+    return DCI_FAIL_UNSUPPORTED;
+}
+
+
 
