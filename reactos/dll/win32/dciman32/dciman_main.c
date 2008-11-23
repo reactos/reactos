@@ -12,6 +12,14 @@
 CRITICAL_SECTION ddcs;
 
 
+/* Winwatch internal struct */
+typedef struct _WINWATCH_INT
+{
+    HWND hWnd;
+} WINWATCH_INT, *LPWINWATCH_INT;
+
+
+/* DCI internal struct */
 typedef struct _DCISURFACE_LCL
 {
     BOOL LostSurface;
@@ -392,6 +400,22 @@ GetWindowRegionData(HWND hwnd, DWORD size, LPRGNDATA prd)
 
     return retvalue;
 }
+
+HWINWATCH WINAPI
+WinWatchOpen(HWND hwnd)
+{
+    LPWINWATCH_INT pWinwatch_int;
+
+    EnterCriticalSection(&ddcs);
+
+    if ( (pWinwatch_int = (LPWINWATCH_INT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WINWATCH_INT) )) != NULL )
+    {
+        pWinwatch_int->hWnd = hwnd;
+    }
+    LeaveCriticalSection(&ddcs);
+    return (HWINWATCH) pWinwatch_int;
+}
+
 
 
 /***********************************************************************************************************/
