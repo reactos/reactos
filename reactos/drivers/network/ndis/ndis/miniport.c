@@ -270,6 +270,7 @@ MiniResetComplete(
     KIRQL OldIrql;
 
     NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_END, NULL, 0);
+    NdisMIndicateStatusComplete(Adapter);
 
     KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
