@@ -486,7 +486,7 @@ ShowStatusMessageThread(IN LPVOID lpParameter)
 }
 
 
-VOID
+BOOL
 QueryEventMessages(LPTSTR lpMachineName,
                    LPTSTR lpLogName)
 {
@@ -529,7 +529,7 @@ QueryEventMessages(LPTSTR lpMachineName,
                    _TEXT("Could not open the event log."),
                    _TEXT("Event Log"),
                    MB_OK | MB_ICONINFORMATION);
-        return;
+        return FALSE;
     }
 
     // Disable listview redraw
@@ -686,6 +686,8 @@ QueryEventMessages(LPTSTR lpMachineName,
 
     // Close the event log.
     CloseEventLog(hEventLog);
+
+    return TRUE;
 }
 
 
@@ -870,13 +872,19 @@ InitInstance(HINSTANCE hInstance,
 LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int wmId, wmEvent;
     RECT rect;
     NMHDR *hdr;
-    HMENU hMenu;
 
     switch (message)
     {
+        case WM_CREATE:
+            CheckMenuRadioItem(GetMenu(hWnd),
+                               ID_LOG_APPLICATION,
+                               ID_LOG_SYSTEM,
+                               ID_LOG_APPLICATION,
+                               MF_BYCOMMAND);
+            break;
+
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
@@ -888,7 +896,10 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                         if (lpnmitem->iItem != -1)
                         {
-                            DialogBox(hInst, MAKEINTRESOURCE(IDD_EVENTDETAILDIALOG), hWnd, EventDetails);
+                            DialogBox(hInst,
+                                      MAKEINTRESOURCE(IDD_EVENTDETAILDIALOG),
+                                      hWnd,
+                                      EventDetails);
                         }
                     }
                     break;
@@ -896,41 +907,43 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            wmId    = LOWORD(wParam);
-            wmEvent = HIWORD(wParam);
-
-            if ((wmId == ID_LOG_APPLICATION) ||
-                (wmId == ID_LOG_SYSTEM) ||
-                (wmId == ID_LOG_SECURITY))
-            {
-                hMenu = GetMenu(hWnd); // get the menu handle. Use it below
-
-                CheckMenuItem(hMenu, ID_LOG_APPLICATION, MF_UNCHECKED);
-                CheckMenuItem(hMenu, ID_LOG_SYSTEM, MF_UNCHECKED);
-                CheckMenuItem (hMenu, ID_LOG_SECURITY, MF_UNCHECKED);
-
-                if (hMenu)
-                {
-                    CheckMenuItem(hMenu, wmId, MF_CHECKED);
-                }
-            }
-
             // Parse the menu selections:
-            switch (wmId)
+            switch (LOWORD(wParam))
             {
                 case ID_LOG_APPLICATION:
-                    QueryEventMessages(lpComputerName,            // Use the local computer.
-                                       EVENT_SOURCE_APPLICATION); // The event log category
-                    break;
-
-                case ID_LOG_SYSTEM:
-                    QueryEventMessages(lpComputerName,       // Use the local computer.
-                                       EVENT_SOURCE_SYSTEM); // The event log category
+                    if (QueryEventMessages(lpComputerName,            // Use the local computer.
+                                           EVENT_SOURCE_APPLICATION)) // The event log category
+                    {
+                        CheckMenuRadioItem(GetMenu(hWnd),
+                                           ID_LOG_APPLICATION,
+                                           ID_LOG_SYSTEM,
+                                           ID_LOG_APPLICATION,
+                                           MF_BYCOMMAND);
+                    }
                     break;
 
                 case ID_LOG_SECURITY:
-                    QueryEventMessages(lpComputerName,         // Use the local computer.
-                                       EVENT_SOURCE_SECURITY); // The event log category
+                    if (QueryEventMessages(lpComputerName,         // Use the local computer.
+                                           EVENT_SOURCE_SECURITY)) // The event log category
+                    {
+                        CheckMenuRadioItem(GetMenu(hWnd),
+                                           ID_LOG_APPLICATION,
+                                           ID_LOG_SYSTEM,
+                                           ID_LOG_SECURITY,
+                                           MF_BYCOMMAND);
+                    }
+                    break;
+
+                case ID_LOG_SYSTEM:
+                    if (QueryEventMessages(lpComputerName,       // Use the local computer.
+                                           EVENT_SOURCE_SYSTEM)) // The event log category
+                    {
+                        CheckMenuRadioItem(GetMenu(hWnd),
+                                           ID_LOG_APPLICATION,
+                                           ID_LOG_SYSTEM,
+                                           ID_LOG_SYSTEM,
+                                           MF_BYCOMMAND);
+                    }
                     break;
 
                 case IDM_REFRESH:
