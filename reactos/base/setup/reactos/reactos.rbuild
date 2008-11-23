@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="reactos" type="win32gui">
+<module name="reactos" type="win32gui" unicode="yes">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="reactos">.</include>
 	<library>kernel32</library>
