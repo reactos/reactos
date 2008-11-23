@@ -16,7 +16,7 @@ EXPORTS
   GetDCRegionData@12
   GetWindowRegionData@12
   WinWatchClose@4
-;  WinWatchDidStatusChange
+  WinWatchDidStatusChange@4
 ;  WinWatchGetClipList
   WinWatchNotify@12
   WinWatchOpen@4

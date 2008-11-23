@@ -16,6 +16,7 @@ CRITICAL_SECTION ddcs;
 typedef struct _WINWATCH_INT
 {
     HWND hWnd;
+    BOOL WinWtachStatus;
 } WINWATCH_INT, *LPWINWATCH_INT;
 
 
@@ -429,6 +430,12 @@ WinWatchClose(HWINWATCH hWW)
     LeaveCriticalSection(&ddcs);
 }
 
+BOOL WINAPI
+WinWatchDidStatusChange(HWINWATCH hWW)
+{
+    LPWINWATCH_INT pWinwatch_int = (LPWINWATCH_INT)hWW;
+    return pWinwatch_int->WinWtachStatus;
+}
 
 
 /***********************************************************************************************************/
