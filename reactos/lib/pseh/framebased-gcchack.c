@@ -154,7 +154,7 @@ void __cdecl _SEH2LeaveFrame()
 		"movl %%edx, %%fs:0\n" :
 		:
 		:
-		"ecx"
+		"edx"
 	);
 }
 

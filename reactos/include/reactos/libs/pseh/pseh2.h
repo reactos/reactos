@@ -122,7 +122,7 @@ typedef struct __SEHFrame
 {
 	_SEHRegistration_t SF_Registration;
 	volatile struct __SEHTryLevel * volatile SF_TopTryLevel;
-	void * SF_FramePointer;
+	void * volatile SF_FramePointer;
 	void * volatile SF_StackPointer;
 	volatile unsigned long SF_Code;
 }
@@ -176,7 +176,7 @@ _SEHTryLevel_t;
  \
 		_SEHBeginScope: __SEH_SIDE_EFFECT; \
  \
-		static const int _SEHTopTryLevel = (_SEHScopeKind != 0); \
+		const int _SEHTopTryLevel = (_SEHScopeKind != 0); \
 		_SEHFrame_t * const _SEHCurFrameP = _SEHFrameP; \
 		volatile _SEHTryLevel_t * const _SEHPrevTryLevelP = _SEHTryLevelP; \
  \
@@ -342,7 +342,7 @@ _SEHTryLevel_t;
 	} \
 	__SEH_END_SCOPE;
 
-#define _SEH2_GetExceptionPointers() ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
+#define _SEH2_GetExceptionInformation() ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
 #define _SEH2_GetExceptionCode() ((_SEHFrameP)->SF_Code)
 
 #define _SEH2_YIELD(STMT_) \
