@@ -416,6 +416,19 @@ WinWatchOpen(HWND hwnd)
     return (HWINWATCH) pWinwatch_int;
 }
 
+void WINAPI
+WinWatchClose(HWINWATCH hWW)
+{
+    EnterCriticalSection(&ddcs);
+
+    if (hWW != NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, hWW);
+    }
+
+    LeaveCriticalSection(&ddcs);
+}
+
 
 
 /***********************************************************************************************************/
