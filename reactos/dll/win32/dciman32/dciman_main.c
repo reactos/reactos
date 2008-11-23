@@ -105,6 +105,19 @@ DCICloseProvider(HDC hDC)
     DeleteDC(hDC);
 }
 
+/*++
+* @name int WINAPI DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
+* @implemented
+*
+* Create a primary directdraw surface.
+*
+* @return
+* if it fail it return DCI_FAIL_* error codes, if it sussess it return DCI_OK.
+*
+* @remarks.
+* none
+*
+*--*/
 int WINAPI 
 DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
 {
@@ -267,7 +280,21 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
     return retvalue;
 }
 
-void WINAPI DCIDestroy(LPDCISURFACEINFO pDciSurfaceInfo)
+/*++
+* @name void WINAPI DCIDestroy(LPDCISURFACEINFO pDciSurfaceInfo)
+* @implemented
+*
+* It destory the primary surface and all data that have been alloc from DCICreatePrimary
+
+* @return
+* None
+*
+* @remarks.
+* None
+*
+*--*/
+void WINAPI
+DCIDestroy(LPDCISURFACEINFO pDciSurfaceInfo)
 {
     DDHAL_DESTROYSURFACEDATA lpcsd;
     LPDCISURFACE_INT pDciSurface_int = NULL;
@@ -308,6 +335,36 @@ void WINAPI DCIDestroy(LPDCISURFACEINFO pDciSurfaceInfo)
             HeapFree(GetProcessHeap(), 0, pDciSurface_int);
         }
     }
+}
+
+/*++
+* @name DWORD WINAPI GetDCRegionData(HDC hdc, DWORD size, LPRGNDATA prd)
+* @implemented
+*
+* it give the region data, simple it fill in the prd
+
+* @return
+* return value 0 meain it fails,
+* if the sussess the size value and return value are same, 
+* if the prd is null the return value contains the number of bytes needed for the region data. 
+*
+* @remarks.
+* None
+*/
+DWORD WINAPI
+GetDCRegionData(HDC hdc, DWORD size, LPRGNDATA prd)
+{
+    DWORD retvalue = 0;
+    HRGN hRgn = CreateRectRgn(0,0,0,0);
+
+    if (hRgn != NULL)
+    {
+        GetRandomRgn(hdc,hRgn,SYSRGN);
+        retvalue = GetRegionData(hRgn,size,prd);
+        DeleteObject(hRgn);
+    }
+
+    return retvalue;
 }
 
 
