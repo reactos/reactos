@@ -367,6 +367,32 @@ GetDCRegionData(HDC hdc, DWORD size, LPRGNDATA prd)
     return retvalue;
 }
 
+/*++
+* @name DWORD WINAPI GetWindowRegionData(HWND hwnd, DWORD size, LPRGNDATA prd);
+* @implemented
+*
+
+* @return
+*
+* @remarks.
+* None
+*/
+DWORD WINAPI
+GetWindowRegionData(HWND hwnd, DWORD size, LPRGNDATA prd)
+{
+    DWORD retvalue = 0;
+
+    HDC hDC = GetDC(hwnd);
+
+    if (hDC != NULL)
+    {
+        retvalue = GetDCRegionData(hDC,size,prd);
+        ReleaseDC(hwnd,hDC);
+    }
+
+    return retvalue;
+}
+
 
 /***********************************************************************************************************/
 /***********************************************************************************************************/

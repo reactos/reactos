@@ -14,7 +14,7 @@ EXPORTS
   DCISetDestination@12
   DCISetSrcDestClip@16
   GetDCRegionData@12
-;  GetWindowRegionData
+  GetWindowRegionData@12
 ;  WinWatchClose
 ;  WinWatchDidStatusChange
 ;  WinWatchGetClipList
