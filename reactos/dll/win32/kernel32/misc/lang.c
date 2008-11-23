@@ -50,22 +50,8 @@ typedef struct
     LONG_PTR param;
 } ENUM_UILANG_CALLBACK;
 
-static const WCHAR szLocaleKeyName[] = 
-
-{
-    'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
-    'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-    'C','o','n','t','r','o','l','\\','N','l','s','\\','L','o','c','a','l','e',0
-};
-
-static const WCHAR szLangGroupsKeyName[] = {
-    'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
-    'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-    'C','o','n','t','r','o','l','\\','N','l','s','\\',
-    'L','a','n','g','u','a','g','e',' ','G','r','o','u','p','s',0
-};
-
-extern const unsigned int CollationTable[];
+static const WCHAR szLocaleKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\NLS\\Locale";
+static const WCHAR szLangGroupsKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\NLS\\Language Groups";
 
 /******************************************************************************
  * @implemented
@@ -378,6 +364,8 @@ static BOOL NLS_GetLanguageGroupName(LGRPID lgrpid, LPWSTR szName, ULONG nameSiz
         }
         FreeResource( hResource );
     }
+    else DPRINT1("FindResourceExW() failed\n");
+
     return bRet;
 }
 
@@ -753,7 +741,7 @@ static BOOL NLS_EnumSystemLanguageGroups(ENUMLANGUAGEGROUP_CALLBACKS *lpProcs)
 
     if (!hKey)
     {
-        DPRINT1("NLS_RegOpenKey() failed\n");
+        DPRINT1("NLS_RegOpenKey() failed, KeyName='%S'\n", szLangGroupsKeyName);
         return FALSE;
     }
 
@@ -2291,82 +2279,37 @@ IsValidLanguageGroup(
     DWORD   dwFlags)
 {
     static const WCHAR szFormat[] = { '%','x','\0' };
-    UNICODE_STRING szNlsKeyName =
-        RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\System\\CurrentControlSet\\Control\\Nls");
-    UNICODE_STRING szLangGroupsKeyName =
-        RTL_CONSTANT_STRING(L"Language Groups");
-    const int MAX_VALUE_NAME = 16;
-    const int MAX_VALUE_SYMB = 128;
-
-    BOOL bNtQuery;
-    PKEY_VALUE_PARTIAL_INFORMATION kvpiInfo;
-
-    WCHAR szValueName[MAX_VALUE_NAME];
-    UNICODE_STRING ucsValueName;
-    DWORD dwRetSize;
-    PWSTR pwszValueData;
-
-    DWORD dwSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_VALUE_SYMB * sizeof(WCHAR);
-
-    OBJECT_ATTRIBUTES oaAttr;
-    HANDLE hkey, hRootKey;
+    WCHAR szValueName[16], szValue[2];
     BOOL bSupported = FALSE, bInstalled = FALSE;
+    HANDLE hKey;
 
-    DPRINT("IsValidLanguageGroup() called\n");
-
-    kvpiInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-			                  HEAP_ZERO_MEMORY,
-			                  dwSize);
 
     switch (dwFlags)
     {
-        case LGRPID_INSTALLED:
-        case LGRPID_SUPPORTED:
+    case LGRPID_INSTALLED:
+    case LGRPID_SUPPORTED:
 
-            InitializeObjectAttributes(&oaAttr, &szNlsKeyName, 0, 0, NULL);
-            if(NtOpenKey(&hRootKey, KEY_ALL_ACCESS, &oaAttr) != STATUS_SUCCESS) return FALSE;
+        hKey = NLS_RegOpenKey( 0, szLangGroupsKeyName );
 
-            InitializeObjectAttributes(&oaAttr, &szLangGroupsKeyName, 0, hRootKey, NULL);
-            if(NtOpenKey(&hkey, KEY_ALL_ACCESS, &oaAttr) != STATUS_SUCCESS) return FALSE;
+        swprintf( szValueName, szFormat, LanguageGroup );
 
-            if(hRootKey) NtClose(hRootKey);
+        if (NLS_RegGetDword( hKey, szValueName, (LPDWORD)szValue ))
+        {
+            bSupported = TRUE;
 
-            swprintf(szValueName, szFormat, (ULONG)LanguageGroup);
-            RtlInitUnicodeString(&ucsValueName, szValueName);
+            if (szValue[0] == '1')
+                bInstalled = TRUE;
+        }
 
-            bNtQuery = NtQueryValueKey(hkey,
-                                       &ucsValueName,
-                                       KeyValuePartialInformation,
-                                       kvpiInfo,
-                                       dwSize,
-                                       &dwRetSize);
-            if(hkey) NtClose(hkey);
-
-            if(bNtQuery == STATUS_SUCCESS &&
-               kvpiInfo->DataLength == sizeof(DWORD))
-            {
-                pwszValueData = (PWSTR)&kvpiInfo->Data[0];
-                bSupported = TRUE;
-                if(pwszValueData[0] == L'1') bInstalled = TRUE;
-            }
-            else
-            {
-                DPRINT("NtQueryValueKey() failed (Status %lx)\n", bNtQuery);
-                RtlFreeHeap(RtlGetProcessHeap(), 0, kvpiInfo);
-                return FALSE;
-            }
+        if (hKey)
+            NtClose( hKey );
 
         break;
     }
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, kvpiInfo);
-
-    if((dwFlags == LGRPID_SUPPORTED && bSupported) ||
-       (dwFlags == LGRPID_INSTALLED && bInstalled))
-    {
-        DPRINT("Language group is supported and installed\n");
+    if ((dwFlags == LGRPID_SUPPORTED && bSupported) ||
+        (dwFlags == LGRPID_INSTALLED && bInstalled))
         return TRUE;
-    }
 
     return FALSE;
 }
