@@ -2832,6 +2832,15 @@ LdrRelocateImageWithBias(
 #ifdef NTOS_MODE_USER
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlActivateActivationContext(
+    IN ULONG Unknown,
+    IN HANDLE Handle,
+    OUT PULONG_PTR Cookie
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlAddRefActivationContext(
@@ -2852,6 +2861,14 @@ NTSTATUS
 NTAPI
 RtlAllocateActivationContextStack(
     IN PVOID *Context
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateActivationContext(
+    OUT PHANDLE Handle,
+    IN OUT PVOID ReturnedData
 );
 
 NTSYSAPI
@@ -2903,10 +2920,10 @@ NTSTATUS
 NTAPI
 RtlFindActivationContextSectionString(
     IN ULONG dwFlags,
-    IN const GUID *lpExtensionGuid,
+    IN const GUID *ExtensionGuid,
     IN ULONG SectionType,
     IN PUNICODE_STRING SectionName,
-    IN PVOID ReturnedData
+    IN OUT PVOID ReturnedData
 );
 
 NTSYSAPI
