@@ -285,7 +285,7 @@ void WINAPI DCIDestroy(LPDCISURFACEINFO pDciSurfaceInfo)
             {
                 
                 /* Destory the surface */
-                if ( pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE) == DDHAL_SURFCB32_DESTROYSURFACE) && 
+                if ( (( pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE) == DDHAL_SURFCB32_DESTROYSURFACE) &&
                      (pDciSurface_int->DciSurface_lcl.SurfaceLocal.hDDSurface != 0) )
                 {
                     /* setup data to destory primary surface if we got one */
