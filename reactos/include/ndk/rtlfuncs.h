@@ -2902,11 +2902,11 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlFindActivationContextSectionString(
-    IN PVOID Unknown0,
-    IN PVOID Unknown1,
+    IN ULONG dwFlags,
+    IN const GUID *lpExtensionGuid,
     IN ULONG SectionType,
     IN PUNICODE_STRING SectionName,
-    IN PVOID Unknown2
+    IN PVOID ReturnedData
 );
 
 NTSYSAPI

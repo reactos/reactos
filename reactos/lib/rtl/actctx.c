@@ -58,11 +58,11 @@ RtlReleaseActivationContext(IN PVOID *Context)
 
 NTSTATUS
 NTAPI
-RtlFindActivationContextSectionString(IN PVOID Unknown0,
-                                      IN PVOID Unknown1,
+RtlFindActivationContextSectionString(IN ULONG dwFlags,
+                                      IN const GUID *lpExtensionGuid,
                                       IN ULONG SectionType,
                                       IN PUNICODE_STRING SectionName,
-                                      IN PVOID Unknown2)
+                                      IN PVOID ReturnedData)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
