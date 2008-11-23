@@ -87,7 +87,7 @@ class HTML_User_ProfileEdit extends HTML_User
                   <div class="corner4">
                     <div style="text-align:center; padding: 4px; ">');
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_fullname, user_email, user_email_activation, user_website, user_country, user_timezone, user_occupation, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress, user_setting_timeout FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_fullname, user_email, user_email_activation, user_website, user_country, user_language, user_timezone, user_occupation, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress, user_setting_timeout FROM users WHERE user_id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
     $profile = $stmt->fetchOnce();
@@ -137,9 +137,6 @@ class HTML_User_ProfileEdit extends HTML_User
 
     if (($activation_code == '' || strlen($activation_code) <= 6) && isset($_POST['registerpost']) && ($safepwd === true || $safepwd === '') && (isset($_POST['userpwd1']) && ($_POST['userpwd1'] == "" || (strlen($_POST['userpwd1']) >= $rdf_register_user_pwd_min && strlen($_POST['userpwd1']) < $rdf_register_user_pwd_max))) && isset($_POST['useremail']) && EMail::isValid($_POST['useremail']) && !$existemail) {
 
-      // user language (browser settings)
-      $userlang = Language::checkStatic($_SERVER["HTTP_ACCEPT_LANGUAGE"]);
-
       // email address activation code
       $s = '';
       for ($n=0; $n<20; $n++) {
@@ -173,7 +170,7 @@ class HTML_User_ProfileEdit extends HTML_User
       $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_timestamp_touch2 = NOW( ) , user_fullname = :fullname, user_website = :website, user_language = :language, user_country = :country, user_timezone = :timezone, user_occupation = :occupation, user_setting_multisession = :setting_multisession, user_setting_browseragent = :setting_browser, user_setting_ipaddress = :setting_ip, user_setting_timeout = :setting_timeout WHERE user_id = :user_id LIMIT 1");
       $stmt->bindParam('fullname',htmlspecialchars($_POST['userfullname']),PDO::PARAM_STR);
       $stmt->bindParam('website',$_POST['userwebsite'],PDO::PARAM_STR);
-      $stmt->bindParam('language',$userlang,PDO::PARAM_STR);
+      $stmt->bindParam('language',Language::checkStatic($_POST['language']),PDO::PARAM_STR);
       $stmt->bindParam('country',$_POST['country'],PDO::PARAM_STR);
       $stmt->bindParam('timezone',$_POST['tzone'],PDO::PARAM_STR);
       $stmt->bindParam('occupation',$_POST['useroccupation'],PDO::PARAM_STR);
@@ -286,6 +283,27 @@ class HTML_User_ProfileEdit extends HTML_User
         <div class="login-form">
           <label for="userfullname">First and Last Name *</label>
           <input name="userfullname" type="text" class="input" tabindex="5" id="userfullname" value="'.(isset($_POST['userfullname']) ? $_POST['userfullname'] : $profile['user_fullname']).'" size="50" maxlength="50" />
+        </div>
+
+        <div class="login-form">
+          <label for="language"'.(isset($_POST['registerpost']) && $_POST['language'] == '' ? ' style="color:red;"' : '').'>Language</label>
+          <select id="language" name="language" tabindex="6">
+          <option value="">Select One</option>');
+
+      $stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_name, lang_name_org FROM languages ORDER BY lang_name ASC");
+      $stmt->execute();
+      while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        echo '<option value="'.$language['lang_id'].'"';
+
+        if ((isset($_POST['language']) && $_POST['language'] == $country['lang_id']) || (empty($_POST['language']) && $language['lang_id'] == $profile['user_language'])) {
+          echo ' selected="selected"'; 
+        }
+
+        echo '>'.$language['lang_name'].' ('.$language['lang_name_org'].')</option>';
+      }
+
+      echo_strip('
+          </select>
         </div>
 
         <div class="login-form">

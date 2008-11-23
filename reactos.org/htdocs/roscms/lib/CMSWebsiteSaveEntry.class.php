@@ -98,6 +98,19 @@ class CMSWebsiteSaveEntry
       $stmt->execute();
       $rev_id = $stmt->fetchColumn();
 
+      // get stable entry
+      $stmt=DBConnection::getInstance()->prepare("SELECT r.rev_id, r.data_id FROM data_tag a JOIN data_revision r ON (r.data_id = a.data_id AND r.rev_id = a.data_rev_id) JOIN data_tag_name n ON a.tag_name_id = n.tn_id JOIN data_tag_value v ON a.tag_value_id  = v.tv_id WHERE r.data_id = :data_id AND r.rev_language = :lang AND r.rev_id = a.data_rev_id AND a.tag_usrid = '-1' AND n.tn_name = 'status' AND v.tv_value = 'stable' ORDER BY r.rev_id DESC LIMIT 1");
+      $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
+      $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_STR);
+      $stmt->execute();
+      $stable = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+      if ($stable !== false) {
+
+        // transfer from stable entry
+        Tag::copyFromData($stable['data_id'], $stable['rev_id'], $_GET['d_id'], $rev_id, false);
+        Tag::deleteByName($_GET['d_id'], $rev_id, 'status', -1);
+      }
+
       // tag the revision as new or draft
       if ($type  == 'submit') {
         Tag::add($_GET['d_id'], $rev_id, 'status', 'new', -1);

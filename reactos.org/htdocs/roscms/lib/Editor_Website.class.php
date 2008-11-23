@@ -221,7 +221,7 @@ class Editor_Website extends Editor
         if (Data::copy($revision['data_id'], $revision['rev_id'], 1 /* copy mode */, $RosCMS_GET_d_r_lang)) {
           $stmt=DBConnection::getInstance()->prepare("SELECT data_id, rev_id, rev_language FROM data_revision WHERE data_id = :data_id AND rev_usrid = :user_id AND rev_version = 0 AND rev_language = :lang AND rev_date = :date ORDER BY rev_id DESC LIMIT 1");
           $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_STR);
-          $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+          $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
           $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_STR);
           $stmt->bindParam('date',date('Y-m-d'),PDO::PARAM_STR);
           $stmt->execute();

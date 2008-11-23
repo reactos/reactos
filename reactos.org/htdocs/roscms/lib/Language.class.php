@@ -26,8 +26,6 @@ class Language
   {
     global $roscms_standard_language;
 
-    $lang_code = substr($lang_code, 0, 2);
-
     switch ($lang_code) {
       case 'ar':
       case 'bg':
@@ -58,7 +56,7 @@ class Language
       case 'uk':
       case 'vi':
       case 'zh':
-        $ret = $lang_code;
+        return $lang_code;
         break;
       case '*':
       default:

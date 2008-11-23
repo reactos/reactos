@@ -171,7 +171,7 @@ class Subsystem_Bugzilla extends Subsystem
       }
     }
     
-    foreach ($global_events as $event) {
+    foreach ($this->global_events as $event) {
       $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".self::DB_NAME.".email_setting (user_id, relationship, event) VALUES (LAST_INSERT_ID(), :relation, :event)");
       $stmt->bindValue('relation',self::REL_ANY,PDO::PARAM_INT);
       $stmt->bindParam('event',$event,PDO::PARAM_INT);
