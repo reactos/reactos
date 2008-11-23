@@ -35,6 +35,10 @@
 
 //static RTL_CRITICAL_SECTION LocalesListLock;
 
+extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
+extern int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dstlen);
+extern int wine_compare_string(int flags, const WCHAR *str1, int len1, const WCHAR *str2, int len2);
+
 typedef struct
 {
     union
@@ -60,6 +64,8 @@ static const WCHAR szLangGroupsKeyName[] = {
     'C','o','n','t','r','o','l','\\','N','l','s','\\',
     'L','a','n','g','u','a','g','e',' ','G','r','o','u','p','s',0
 };
+
+extern const unsigned int CollationTable[];
 
 /******************************************************************************
  * @implemented
@@ -1869,8 +1875,6 @@ FoldStringA_exit:
     return ret;
 }
 
-extern int wine_fold_string( int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen );
-
 /*************************************************************************
  *           FoldStringW    (KERNEL32.@)
  *
@@ -1908,9 +1912,8 @@ INT WINAPI FoldStringW(DWORD dwFlags, LPCWSTR src, INT srclen,
 
 
 /*
- * @implemented
+ * @implemented (Synced to Wine-22112008)
  */
-/* Synced to Wine-22112008 */
 int
 STDCALL
 CompareStringA (
@@ -1975,88 +1978,8 @@ CompareStringA (
     return ret;
 }
 
-
-static int
-LANG_CompareUnicodeString(
-    LPCWSTR s1,
-	ULONG len1,
-    LPCWSTR s2,
-	ULONG len2,
-    DWORD Flags
-    )
-{
-    WCHAR c1, c2;
-
-    while (len1 > 0 && len2 > 0)
-    {
-        if (Flags & NORM_IGNORESYMBOLS)
-        {
-            int skip = 0;
-            /* FIXME: not tested */
-            if (iswctype(*s1, _SPACE | _PUNCT))
-            {
-                s1++;
-                len1--;
-                skip = 1;
-            }
-            if (iswctype(*s2, _SPACE | _PUNCT))
-            {
-                s2++;
-                len2--;
-                skip = 1;
-            }
-            if (skip) continue;
-        }
-
-        /* hyphen and apostrophe are treated differently depending on
-         * whether SORT_STRINGSORT specified or not
-         */
-        if (!(Flags & SORT_STRINGSORT))
-        {
-            if (*s1 == '-' || *s1 == '\'')
-            {
-                if (*s2 != '-' && *s2 != '\'')
-                {
-                    s1++;
-                    len1--;
-                    continue;
-                }
-            }
-            else if (*s2 == '-' || *s2 == '\'')
-            {
-                s2++;
-                len2--;
-                continue;
-            }
-        }
-        if (Flags & NORM_IGNORECASE)
-        {
-            c1 = len1-- ? RtlUpcaseUnicodeChar(*s1++) : 0;
-            c2 = len2-- ? RtlUpcaseUnicodeChar(*s2++) : 0;
-            if (!c1 || !c2 || c1 != c2)
-                return c1 - c2;
-        }
-        else
-        {
-            c1 = len1-- ? *s1++ : 0;
-            c2 = len2-- ? *s2++ : 0;
-            if (!c1 || !c2 || c1 != c2)
-                return c1 - c2;
-        }
-    }
-
-    return (int) (len1 - len2);
-}
-
-static int
-LANG_GetRealLength(const WCHAR *str, int len)
-{
-    while (len && !str[len - 1]) len--;
-    return len;
-}
-
 /*
- * @unimplemented
+ * @implemented (Synced to Wine-22/11/2008)
  */
 int
 STDCALL
@@ -2092,10 +2015,7 @@ CompareStringW (
     if (cchCount1 < 0) cchCount1 = wcslen(lpString1);
     if (cchCount2 < 0) cchCount2 = wcslen(lpString2);
 
-	cchCount1 = LANG_GetRealLength(lpString1, cchCount1);
-	cchCount2 = LANG_GetRealLength(lpString2, cchCount2);
-
-	Result = LANG_CompareUnicodeString(lpString1, cchCount1, lpString2, cchCount2, dwCmpFlags);
+    Result = wine_compare_string(dwCmpFlags, lpString1, cchCount1, lpString2, cchCount2);
 
     if (Result) /* need to translate result */
         return (Result < 0) ? CSTR_LESS_THAN : CSTR_GREATER_THAN;
@@ -2571,9 +2491,8 @@ IsValidLocale(LCID Locale,
     return FALSE;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -2586,19 +2505,76 @@ LCMapStringA (
     int cchDest
     )
 {
+    WCHAR *bufW = NtCurrentTeb()->StaticUnicodeBuffer;
+    LPWSTR srcW, dstW;
+    INT ret = 0, srclenW, dstlenW;
+    UINT locale_cp = CP_ACP;
+
     if (!lpSrcStr || !cchSrc || cchDest < 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    if (!(dwMapFlags & LOCALE_USE_CP_ACP)) locale_cp = get_lcid_codepage(Locale);
+
+    srclenW = MultiByteToWideChar(locale_cp, 0, lpSrcStr, cchSrc, bufW, 260);
+    if (srclenW)
+        srcW = bufW;
+    else
+    {
+        srclenW = MultiByteToWideChar(locale_cp, 0, lpSrcStr, cchSrc, NULL, 0);
+        srcW = HeapAlloc(GetProcessHeap(), 0, srclenW * sizeof(WCHAR));
+        if (!srcW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
+        }
+        MultiByteToWideChar(locale_cp, 0, lpSrcStr, cchSrc, srcW, srclenW);
+    }
+
+    if (dwMapFlags & LCMAP_SORTKEY)
+    {
+        if (lpSrcStr == lpDestStr)
+        {
+            SetLastError(ERROR_INVALID_FLAGS);
+            goto map_string_exit;
+        }
+        ret = wine_get_sortkey(dwMapFlags, srcW, srclenW, lpDestStr, cchDest);
+        if (ret == 0)
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        goto map_string_exit;
+    }
+
+    if (dwMapFlags & SORT_STRINGSORT)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        goto map_string_exit;
+    }
+
+    dstlenW = LCMapStringW(Locale, dwMapFlags, srcW, srclenW, NULL, 0);
+    if (!dstlenW)
+        goto map_string_exit;
+
+    dstW = HeapAlloc(GetProcessHeap(), 0, dstlenW * sizeof(WCHAR));
+    if (!dstW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto map_string_exit;
+    }
+
+    LCMapStringW(Locale, dwMapFlags, srcW, srclenW, dstW, dstlenW);
+    ret = WideCharToMultiByte(locale_cp, 0, dstW, dstlenW, lpDestStr, cchDest, NULL, NULL);
+    HeapFree(GetProcessHeap(), 0, dstW);
+
+map_string_exit:
+    if (srcW != bufW) HeapFree(GetProcessHeap(), 0, srcW);
+    return ret;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -2611,6 +2587,8 @@ LCMapStringW (
     int cchDest
     )
 {
+    LPWSTR dst_ptr;
+
     if (!lpSrcStr || !cchSrc || cchDest < 0)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2629,8 +2607,98 @@ LCMapStringW (
 
     if (!cchDest) lpDestStr = NULL;
 
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    Locale = ConvertDefaultLocale(Locale);
+
+    if (dwMapFlags & LCMAP_SORTKEY)
+    {
+        INT ret;
+        if (lpSrcStr == lpDestStr)
+        {
+            SetLastError(ERROR_INVALID_FLAGS);
+            return 0;
+        }
+
+        if (cchSrc < 0) cchSrc = wcslen(lpSrcStr);
+
+        ret = wine_get_sortkey(dwMapFlags, lpSrcStr, cchSrc, (char *)lpDestStr, cchDest);
+        if (ret == 0)
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return ret;
+    }
+
+    /* SORT_STRINGSORT must be used exclusively with LCMAP_SORTKEY */
+    if (dwMapFlags & SORT_STRINGSORT)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
+    if (cchSrc < 0) cchSrc = wcslen(lpSrcStr) + 1;
+
+    if (!lpDestStr) /* return required string length */
+    {
+        INT len;
+
+        for (len = 0; cchSrc; lpSrcStr++, cchSrc--)
+        {
+            WCHAR wch = *lpSrcStr;
+            /* tests show that win2k just ignores NORM_IGNORENONSPACE,
+             * and skips white space and punctuation characters for
+             * NORM_IGNORESYMBOLS.
+             */
+            if ((dwMapFlags & NORM_IGNORESYMBOLS) && (iswctype(wch, _SPACE | _PUNCT)))
+                continue;
+            len++;
+        }
+        return len;
+    }
+
+    if (dwMapFlags & LCMAP_UPPERCASE)
+    {
+        for (dst_ptr = lpDestStr; cchSrc && cchDest; lpSrcStr++, cchSrc--)
+        {
+            WCHAR wch = *lpSrcStr;
+            if ((dwMapFlags & NORM_IGNORESYMBOLS) && (iswctype(wch, _SPACE | _PUNCT)))
+                continue;
+            *dst_ptr++ = towupper(wch);
+            cchDest--;
+        }
+    }
+    else if (dwMapFlags & LCMAP_LOWERCASE)
+    {
+        for (dst_ptr = lpDestStr; cchSrc && cchDest; lpSrcStr++, cchSrc--)
+        {
+            WCHAR wch = *lpSrcStr;
+            if ((dwMapFlags & NORM_IGNORESYMBOLS) && (iswctype(wch, _SPACE | _PUNCT)))
+                continue;
+            *dst_ptr++ = towlower(wch);
+            cchDest--;
+        }
+    }
+    else
+    {
+        if (lpSrcStr == lpDestStr)
+        {
+            SetLastError(ERROR_INVALID_FLAGS);
+            return 0;
+        }
+        for (dst_ptr = lpDestStr; cchSrc && cchDest; lpSrcStr++, cchSrc--)
+        {
+            WCHAR wch = *lpSrcStr;
+            if ((dwMapFlags & NORM_IGNORESYMBOLS) && (iswctype(wch, _SPACE | _PUNCT)))
+                continue;
+            *dst_ptr++ = wch;
+            cchDest--;
+        }
+    }
+
+    if (cchSrc)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+    }
+
+    return dst_ptr - lpDestStr;
 }
 
 
