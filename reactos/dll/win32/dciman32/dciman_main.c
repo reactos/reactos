@@ -11,6 +11,24 @@
 
 CRITICAL_SECTION ddcs;
 
+
+typedef struct _DCISURFACE_LCL
+{
+    BOOL LostSurface;
+    DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
+    DDRAWI_DDRAWSURFACE_GBL SurfaceGlobal;
+    DDRAWI_DDRAWSURFACE_LCL SurfaceLocal;
+    DDHAL_DDCALLBACKS DDCallbacks;
+    DDHAL_DDSURFACECALLBACKS DDSurfaceCallbacks;
+} DCISURFACE_LCL, *LPDCISURFACE_LCL;
+
+typedef struct _DCISURFACE_INT
+{
+    DCISURFACE_LCL DciSurface_lcl;
+    DCISURFACEINFO DciSurfaceInfo;
+} DCISURFACE_INT, *LPDCISURFACE_INT;
+
+
 BOOL
 WINAPI
 DllMain( HINSTANCE hModule, DWORD ul_reason_for_call, LPVOID reserved )
@@ -86,31 +104,17 @@ DCICloseProvider(HDC hDC)
     DeleteDC(hDC);
 }
 
-
-typedef struct _DCISURFACE_LCL
-{
-    BOOL LostSurface;
-    DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
-    DDRAWI_DDRAWSURFACE_LCL SurfaceLocal;
-    DDHAL_DDCALLBACKS DDCallbacks;
-    DDHAL_DDSURFACECALLBACKS DDSurfaceCallbacks;
-} DCISURFACE_LCL, *LPDCISURFACE_LCL;
-
-typedef struct _DCISURFACE_INT
-{
-    DCISURFACE_LCL DciSurface_lcl;
-    DCISURFACEINFO DciSurfaceInfo;
-} DCISURFACE_INT, *LPDCISURFACE_INT;
-
-
 int WINAPI 
 DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
 {
-    int retvalue = DCI_OK;
+    int retvalue = DCI_FAIL_GENERIC;
     BOOL bNewMode = FALSE;
     LPDCISURFACE_INT pDciSurface_int;
     DDHALINFO HalInfo;
     DDHAL_DDPALETTECALLBACKS DDPaletteCallbacks;
+    DDHAL_CREATESURFACEDATA lpcsd;
+    DDSURFACEDESC DDSurfaceDesc;
+    LPDDRAWI_DDRAWSURFACE_LCL SurfaceLocal_List[1];
 
     /* Alloc memory for the internal struct, rember this internal struct are not compatible with windows xp */
     if ( (pDciSurface_int = (LPDCISURFACE_INT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DCISURFACE_INT) )) == NULL )
@@ -147,42 +151,96 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
             /* Will be use later, it check see if we lost the surface or not */
             pDciSurface_int->DciSurface_lcl.LostSurface = FALSE;
 
-            /* FIXME Add the real code now to create the primary surface after we create the dx hal interface */
+            /* Setup DirectDrawGlobal */
+            memcpy(&pDciSurface_int->DciSurface_lcl.DirectDrawGlobal.vmiData,&HalInfo.vmiData,sizeof(VIDMEMINFO));
 
-            /* Fill in the size of DCISURFACEINFO struct */
-            pDciSurface_int->DciSurfaceInfo.dwSize = sizeof(DCISURFACEINFO);
+            /* Setup SurfaceLocal */
+            pDciSurface_int->DciSurface_lcl.SurfaceLocal.lpGbl = &pDciSurface_int->DciSurface_lcl.SurfaceGlobal;
+            pDciSurface_int->DciSurface_lcl.SurfaceLocal.hDDSurface = 0;
+            pDciSurface_int->DciSurface_lcl.SurfaceLocal.ddsCaps.dwCaps = DDSCAPS_VISIBLE;
 
-            /* Fill in the surface is visible, for it always are the primary surface and it is visible */
-            pDciSurface_int->DciSurfaceInfo.dwDCICaps = DCI_VISIBLE;
+            /* Setup SurfaceGlobal */
+            pDciSurface_int->DciSurface_lcl.SurfaceGlobal.lpDD = &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal;
+            pDciSurface_int->DciSurface_lcl.SurfaceGlobal.wHeight = HalInfo.vmiData.dwDisplayHeight;
+            pDciSurface_int->DciSurface_lcl.SurfaceGlobal.wWidth = HalInfo.vmiData.dwDisplayWidth;
+            pDciSurface_int->DciSurface_lcl.SurfaceGlobal.lPitch = HalInfo.vmiData.lDisplayPitch;
 
-            /* for primary screen res lower that 256Color, ms dciman.dll set this value to BI_RGB 
-             * old note I found in ddk header comment follow dwMask is type for BI_BITMASK surfaces
-             * and for dwCompression it was which format the surface was create in, I also tested with older graphic card like S3
-             * that support 16Color or lower for the primary display. and saw this member change betwin 0 (BI_RGB) and 3 (BI_BITFIELDS).
-             */
-            if (HalInfo.vmiData.ddpfDisplay.dwRGBBitCount >= 8)
+            /* Clear some internal struct before we fill them */
+            memset(&lpcsd,0,sizeof(DDHAL_CREATESURFACEDATA));
+            memset(&DDSurfaceDesc,0,sizeof(DDSURFACEDESC));
+
+            /* Setup DDSURFACEDESC for createsurface */
+            DDSurfaceDesc.dwSize = sizeof(DDSURFACEDESC);
+            DDSurfaceDesc.dwFlags = 1;
+            DDSurfaceDesc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VISIBLE ;
+
+            /* Setup DDHAL_CREATESURFACEDATA for createsurface */
+            lpcsd.lpDD = pDciSurface_int->DciSurface_lcl.SurfaceGlobal.lpDD;
+            lpcsd.lpDDSurfaceDesc = &DDSurfaceDesc;
+            SurfaceLocal_List[0] = &pDciSurface_int->DciSurface_lcl.SurfaceLocal;
+            lpcsd.lplpSList = SurfaceLocal_List;
+            lpcsd.dwSCnt = 1;
+            lpcsd.ddRVal = DDERR_GENERIC;
+            lpcsd.CreateSurface = pDciSurface_int->DciSurface_lcl.DDCallbacks.CreateSurface;
+
+            /* Now try create our surface */
+            if (lpcsd.CreateSurface != NULL)
             {
-                pDciSurface_int->DciSurfaceInfo.dwCompression = BI_BITFIELDS;
+                retvalue = lpcsd.CreateSurface(&lpcsd);
+            }
+
+            if ( (lpcsd.CreateSurface == NULL) ||
+                 (retvalue == DDHAL_DRIVER_NOTHANDLED) ||
+                 (lpcsd.ddRVal != DD_OK) )
+            {
+                /* Fail create the surface, return DCI_FAIL_GENERIC */
             }
             else
             {
-                pDciSurface_int->DciSurfaceInfo.dwCompression = BI_RGB;
+                /* Sussess to create the surface */
+                retvalue = DCI_OK;
+
+                /* Rest visrgn, with no windows */
+                DdResetVisrgn(&pDciSurface_int->DciSurface_lcl.SurfaceLocal, (HWND)-1);
+
+                /* FIXME we need deal with if DdResetVisrgn fail */
+
+                /* Fill in the size of DCISURFACEINFO struct */
+                pDciSurface_int->DciSurfaceInfo.dwSize = sizeof(DCISURFACEINFO);
+
+                /* Fill in the surface is visible, for it always are the primary surface and it is visible */
+                pDciSurface_int->DciSurfaceInfo.dwDCICaps = DCI_VISIBLE;
+
+                /* for primary screen res lower that 256Color, ms dciman.dll set this value to BI_RGB 
+                 * old note I found in ddk header comment follow dwMask is type for BI_BITMASK surfaces
+                 * and for dwCompression it was which format the surface was create in, I also tested with older graphic card like S3
+                 * that support 16Color or lower for the primary display. and saw this member change betwin 0 (BI_RGB) and 3 (BI_BITFIELDS).
+                 */
+                if (HalInfo.vmiData.ddpfDisplay.dwRGBBitCount >= 8)
+                {
+                    pDciSurface_int->DciSurfaceInfo.dwCompression = BI_BITFIELDS;
+                }
+                else
+                {
+                    pDciSurface_int->DciSurfaceInfo.dwCompression = BI_RGB;
+                }
+
+                /* Fill in the RGB mask */
+                pDciSurface_int->DciSurfaceInfo.dwMask[0] = HalInfo.vmiData.ddpfDisplay.dwRBitMask;
+                pDciSurface_int->DciSurfaceInfo.dwMask[1] = HalInfo.vmiData.ddpfDisplay.dwGBitMask;
+                pDciSurface_int->DciSurfaceInfo.dwMask[2] = HalInfo.vmiData.ddpfDisplay.dwBBitMask;
+
+                /* Fill in the width and height of the primary surface */
+                pDciSurface_int->DciSurfaceInfo.dwWidth = HalInfo.vmiData.dwDisplayWidth;
+                pDciSurface_int->DciSurfaceInfo.dwHeight = HalInfo.vmiData.dwDisplayHeight;
+
+                /* Fill in the color deep and stride of the primary surface */
+                pDciSurface_int->DciSurfaceInfo.dwBitCount = HalInfo.vmiData.ddpfDisplay.dwRGBBitCount;
+                pDciSurface_int->DciSurfaceInfo.lStride = HalInfo.vmiData.lDisplayPitch;
+
+                /* Send back only LPDCISURFACEINFO struct and other are only internal use for this object */
+                *pDciSurfaceInfo = (LPDCISURFACEINFO) &pDciSurface_int->DciSurfaceInfo;
             }
-
-            /* Fill in the RGB mask */
-            pDciSurface_int->DciSurfaceInfo.dwMask[0] = HalInfo.vmiData.ddpfDisplay.dwRBitMask;
-            pDciSurface_int->DciSurfaceInfo.dwMask[1] = HalInfo.vmiData.ddpfDisplay.dwGBitMask;
-            pDciSurface_int->DciSurfaceInfo.dwMask[2] = HalInfo.vmiData.ddpfDisplay.dwBBitMask;
-
-            /* Fill in the width and height of the primary surface */
-            pDciSurface_int->DciSurfaceInfo.dwWidth = HalInfo.vmiData.dwDisplayWidth;
-            pDciSurface_int->DciSurfaceInfo.dwHeight = HalInfo.vmiData.dwDisplayHeight;
-
-            /* Fill in the color deep and stride of the primary surface */
-            pDciSurface_int->DciSurfaceInfo.dwBitCount = HalInfo.vmiData.ddpfDisplay.dwRGBBitCount;
-            pDciSurface_int->DciSurfaceInfo.lStride = HalInfo.vmiData.lDisplayPitch;
-
-            *pDciSurfaceInfo = (LPDCISURFACEINFO) &pDciSurface_int->DciSurfaceInfo;
         }
     }
 
