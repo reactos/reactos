@@ -141,7 +141,7 @@ dll\directx\quartz\quartz.dll                       1
 dll\directx\qedit\qedit.dll                         1
 dll\directx\wine\d3d8\d3d8.dll                      1
 dll\directx\wine\wined3d\wined3d.dll                1
-dll\directx\wine\d3d9\d3d9.dll                      1
+dll\directx\d3d9\d3d9.dll                           1
 
 dll\keyboard\kbda1\kbda1.dll                        1
 dll\keyboard\kbda2\kbda2.dll                        1

@@ -7,7 +7,7 @@
 	<directory name="d3d8">
 		<xi:include href="d3d8/d3d8.rbuild" />
 	</directory>
-	<directory name="d3d9">
+<!--	<directory name="d3d9">
 		<xi:include href="d3d9/d3d9.rbuild" />
-	</directory>
+	</directory> -->
 </group>
