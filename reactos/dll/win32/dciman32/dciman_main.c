@@ -176,7 +176,7 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
             DDSurfaceDesc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VISIBLE ;
 
             /* Setup DDHAL_CREATESURFACEDATA for createsurface */
-            lpcsd.lpDD = pDciSurface_int->DciSurface_lcl.SurfaceGlobal.lpDD;
+            lpcsd.lpDD = &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal;
             lpcsd.lpDDSurfaceDesc = &DDSurfaceDesc;
             SurfaceLocal_List[0] = &pDciSurface_int->DciSurface_lcl.SurfaceLocal;
             lpcsd.lplpSList = SurfaceLocal_List;
@@ -269,6 +269,7 @@ DCICreatePrimary(HDC hDC, LPDCISURFACEINFO *pDciSurfaceInfo)
 
 void WINAPI DCIDestroy(LPDCISURFACEINFO pDciSurfaceInfo)
 {
+    DDHAL_DESTROYSURFACEDATA lpcsd;
     LPDCISURFACE_INT pDciSurface_int = NULL;
     if (pDciSurfaceInfo != NULL)
     {
@@ -278,18 +279,28 @@ void WINAPI DCIDestroy(LPDCISURFACEINFO pDciSurfaceInfo)
         /* If we lost the primary surface we do not destory it, */
         if (pDciSurface_int->DciSurface_lcl.LostSurface == FALSE)
         {
-            /* Fixme destore the primary surface */
 
-            /* Check see if dx hal support DestroySurface */
-            if ( (pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE) == DDHAL_SURFCB32_DESTROYSURFACE)
-            {
-                // lpcsd.DestroySurface = pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface;
-            }
-
-
-            /* Destroy the Ddraw object */
+            /* Check see if we have a Ddraw object or not */
             if (pDciSurface_int->DciSurface_lcl.DirectDrawGlobal.hDD != 0)
             {
+                
+                /* Destory the surface */
+                if ( pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE) == DDHAL_SURFCB32_DESTROYSURFACE) && 
+                     (pDciSurface_int->DciSurface_lcl.SurfaceLocal.hDDSurface != 0) )
+                {
+                    /* setup data to destory primary surface if we got one */
+                    lpcsd.lpDD = &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal;
+                    lpcsd.lpDDSurface = &pDciSurface_int->DciSurface_lcl.SurfaceLocal;
+                    lpcsd.ddRVal = DDERR_GENERIC;
+                    lpcsd.DestroySurface = pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface;
+
+                    /* Destory the surface */
+                    lpcsd.DestroySurface(&lpcsd);
+
+                    /* Do noting if we fail to destory the surface */
+                }
+
+                /* Destroy the Ddraw object */
                 DdDeleteDirectDrawObject(&pDciSurface_int->DciSurface_lcl.DirectDrawGlobal);
             }
 
