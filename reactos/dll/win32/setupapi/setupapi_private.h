@@ -42,6 +42,8 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+#include <pseh/pseh.h>
+
 #include <pnp_c.h>
 #include "rpc_private.h"
 #include "resource.h"

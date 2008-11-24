@@ -20,6 +20,8 @@
 #include <d3dnthal.h>
 #include <prntfont.h>
 
+#include <pseh/pseh.h>
+
 /* Public Win32K Headers */
 #include <win32k/ntgdityp.h>
 #include <ntgdi.h>
