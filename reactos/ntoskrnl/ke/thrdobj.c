@@ -815,7 +815,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
 
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Initalize the Thread Context */
         KeArchInitThreadWithContext(Thread,
@@ -824,7 +824,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
                                     StartContext,
                                     Context);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Set failure status */
         Status = STATUS_UNSUCCESSFUL;
@@ -837,7 +837,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
             Thread->InitialStack = NULL;
         }
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Set the Thread to initalized */
     Thread->State = Initialized;

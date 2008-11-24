@@ -43,6 +43,7 @@
 
 /* SEH support with PSEH */
 #include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* ReactOS Headers */
 #include <reactos/buildno.h>

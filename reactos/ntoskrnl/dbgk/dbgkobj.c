@@ -1424,16 +1424,16 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the handle */
             ProbeForWriteHandle(DebugHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception error */
-            Status = _SEH_GetExceptionCode();
-        } _SEH_END;
+            Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -1472,14 +1472,14 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                                  &hDebug);
         if (NT_SUCCESS(Status))
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 *DebugHandle = hDebug;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
-            } _SEH_END;
+                Status = _SEH2_GetExceptionCode();
+            } _SEH2_END;
         }
     }
 
@@ -1510,18 +1510,18 @@ NtDebugContinue(IN HANDLE DebugHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the handle */
             ProbeForRead(AppClientId, sizeof(CLIENT_ID), sizeof(ULONG));
             ClientId = *AppClientId;
             AppClientId = &ClientId;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception error */
-            Status = _SEH_GetExceptionCode();
-        } _SEH_END;
+            Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -1763,18 +1763,18 @@ NtSetInformationDebugObject(IN HANDLE DebugHandle,
     if (ReturnLength)
     {
         /* Enter SEH for probe */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return required length to user-mode */
             ProbeForWriteUlong(ReturnLength);
             *ReturnLength = sizeof(*DebugInfo);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             /* Get SEH Exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -1839,7 +1839,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     RtlZeroMemory(&WaitStateChange, sizeof(WaitStateChange));
 
     /* Protect probe in SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we came with a timeout */
         if (Timeout)
@@ -1866,12 +1866,12 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
             ProbeForWrite(StateChange, sizeof(*StateChange), sizeof(ULONG));
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the debug object */
@@ -2032,17 +2032,17 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     ObDereferenceObject(DebugObject);
 
     /* Protect write with SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Return our wait state change structure */
         *StateChange = WaitStateChange;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Get SEH Exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status */
     return Status;

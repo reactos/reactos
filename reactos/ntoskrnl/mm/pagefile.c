@@ -835,16 +835,16 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
    if (PreviousMode != KernelMode)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          SafeInitialSize = ProbeForReadLargeInteger(InitialSize);
          SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {

@@ -3204,18 +3204,18 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     if ((TargetHandle) && (PreviousMode != KernelMode))
     {
         /* Enter SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the handle and assume failure */
             ProbeForWriteHandle(TargetHandle);
             *TargetHandle = NULL;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception status */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -3270,17 +3270,17 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     if (TargetHandle)
     {
         /* Protect the write to user mode */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write the new handle */
             *TargetHandle = hTarget;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Otherwise, get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Dereference the processes */

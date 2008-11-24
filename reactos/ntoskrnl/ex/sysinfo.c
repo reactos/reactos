@@ -236,7 +236,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 
   if(PreviousMode != KernelMode)
   {
-    _SEH_TRY
+    _SEH2_TRY
     {
       ProbeForRead(VariableName,
                    sizeof(UNICODE_STRING),
@@ -249,11 +249,11 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
         ProbeForWriteUlong(ReturnLength);
       }
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if(!NT_SUCCESS(Status))
     {
@@ -319,23 +319,23 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
      * Convert the result to UNICODE, protect with SEH in case the value buffer
      * isn't NULL-terminated!
      */
-    _SEH_TRY
+    _SEH2_TRY
     {
       RtlInitAnsiString(&AValue, Value);
       Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, TRUE);
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if(NT_SUCCESS(Status))
     {
       /*
        * Copy the result back to the caller.
        */
-      _SEH_TRY
+      _SEH2_TRY
       {
         RtlCopyMemory(ValueBuffer, WValue.Buffer, WValue.Length);
         ValueBuffer[WValue.Length / sizeof(WCHAR)] = L'\0';
@@ -346,11 +346,11 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 
         Status = STATUS_SUCCESS;
       }
-      _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+      _SEH2_EXCEPT(ExSystemExceptionFilter())
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
     }
 
     /*
@@ -702,7 +702,7 @@ QSI_DEF(SystemProcessInformation)
 	unsigned char *pCur;
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	_SEH_TRY
+	_SEH2_TRY
 	{
 		/* scan the process list */
 
@@ -713,7 +713,7 @@ QSI_DEF(SystemProcessInformation)
 
 		if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
 		{
-			_SEH_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+			_SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 		}
 		RtlZeroMemory(Spi, Size);
 
@@ -750,7 +750,7 @@ QSI_DEF(SystemProcessInformation)
 				*ReqSize = ovlSize;
 				ObDereferenceObject(pr);
 
-				_SEH_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
+				_SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 			}
 
 			// fill system information
@@ -831,13 +831,13 @@ QSI_DEF(SystemProcessInformation)
 			ObDereferenceObject(pr);
 		Status = STATUS_SUCCESS;
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
 		if(pr != NULL)
 			ObDereferenceObject(pr);
-		Status = _SEH_GetExceptionCode();
+		Status = _SEH2_GetExceptionCode();
 	}
-	_SEH_END
+	_SEH2_END
 
 	*ReqSize = ovlSize;
 	return Status;
@@ -1199,7 +1199,7 @@ QSI_DEF(SystemInterruptInformation)
 #ifdef _M_ARM // This code should probably be done differently
     sii->ContextSwitches = Pcr->ContextSwitches;
 #else
-    sii->ContextSwitches = ((PKIPCR)Pcr)->ContextSwitches;      
+    sii->ContextSwitches = ((PKIPCR)Pcr)->ContextSwitches;
 #endif
     sii->DpcCount = Prcb->DpcData[0].DpcCount;
     sii->DpcRate = Prcb->DpcRequestRate;
@@ -1316,25 +1316,25 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 
 /* Class 27 - Unload Image */
 SSI_DEF(SystemUnloadGdiDriverInformation)
-{  
+{
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
     PVOID BaseAddr = *((PVOID*)Buffer);
-     
-    if(Size != sizeof(PVOID)) 
+
+    if(Size != sizeof(PVOID))
         return STATUS_INFO_LENGTH_MISMATCH;
-   
-    if(KeGetPreviousMode() != KernelMode) 
+
+    if(KeGetPreviousMode() != KernelMode)
         return STATUS_PRIVILEGE_NOT_HELD;
-    
-    // Scan the module list 
+
+    // Scan the module list
     NextEntry = PsLoadedModuleList.Flink;
     while(NextEntry != &PsLoadedModuleList)
     {
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
                                      InLoadOrderLinks);
-        
+
         if (LdrEntry->DllBase == BaseAddr)
         {
             // Found it.
@@ -1354,7 +1354,7 @@ SSI_DEF(SystemUnloadGdiDriverInformation)
         DPRINT1("Image 0x%x not found.\n", BaseAddr);
         return STATUS_DLL_NOT_FOUND;
     }
-    
+
 }
 
 /* Class 28 - Time Adjustment Information */
@@ -1809,15 +1809,15 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   NTSTATUS FStatus = STATUS_NOT_IMPLEMENTED;
 
   PAGED_CODE();
-  
+
   PreviousMode = ExGetPreviousMode();
-  
-  _SEH_TRY
+
+  _SEH2_TRY
     {
       if (PreviousMode != KernelMode)
         {
           /* SystemKernelDebuggerInformation needs only BOOLEAN alignment */
-          ProbeForWrite(SystemInformation, Length, 1); 
+          ProbeForWrite(SystemInformation, Length, 1);
           if (UnsafeResultLength != NULL)
             ProbeForWriteUlong(UnsafeResultLength);
         }
@@ -1827,7 +1827,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
        */
       if (SystemInformationClass >= MaxSystemInfoClass)
         {
-          _SEH_YIELD(return STATUS_INVALID_INFO_CLASS);
+          _SEH2_YIELD(return STATUS_INVALID_INFO_CLASS);
         }
 
       if (NULL != CallQS [SystemInformationClass].Query)
@@ -1851,11 +1851,11 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	    }
 	}
     }
-  _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+  _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-      FStatus = _SEH_GetExceptionCode();
+      FStatus = _SEH2_GetExceptionCode();
     }
-  _SEH_END;
+  _SEH2_END;
 
   return (FStatus);
 }

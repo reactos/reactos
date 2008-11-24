@@ -53,7 +53,7 @@ PsSuspendThread(IN PETHREAD Thread,
     PAGED_CODE();
 
     /* Guard with SEH because KeSuspendThread can raise an exception */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we're suspending ourselves */
         if (Thread == PsGetCurrentThread())
@@ -97,14 +97,14 @@ PsSuspendThread(IN PETHREAD Thread,
             }
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
 
         /* Don't fail if we merely couldn't write the handle back */
         if (Status != STATUS_SUSPEND_COUNT_EXCEEDED) Status = STATUS_SUCCESS;
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Write back the previous count */
     if (PreviousCount) *PreviousCount = OldCount;
@@ -223,17 +223,17 @@ NtAlertResumeThread(IN HANDLE ThreadHandle,
     if ((SuspendCount) && (PreviousMode != KernelMode))
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the count */
             ProbeForWriteUlong(SuspendCount);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -256,17 +256,17 @@ NtAlertResumeThread(IN HANDLE ThreadHandle,
         if (SuspendCount)
         {
             /* Enter SEH for write */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write state back */
                 *SuspendCount = PreviousState;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -289,17 +289,17 @@ NtResumeThread(IN HANDLE ThreadHandle,
     if ((SuspendCount) && (PreviousMode != KernelMode))
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the count */
             ProbeForWriteUlong(SuspendCount);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -319,17 +319,17 @@ NtResumeThread(IN HANDLE ThreadHandle,
     if (SuspendCount)
     {
         /* Enter SEH for write back */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write the count */
             *SuspendCount = Prev;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Dereference and return */
@@ -352,17 +352,17 @@ NtSuspendThread(IN HANDLE ThreadHandle,
     if ((PreviousSuspendCount) && (PreviousMode != KernelMode))
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the count */
             ProbeForWriteUlong(PreviousSuspendCount);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -381,17 +381,17 @@ NtSuspendThread(IN HANDLE ThreadHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Protect write with SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Return the Previous Count */
         if (PreviousSuspendCount) *PreviousSuspendCount = Prev;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return */
     return Status;

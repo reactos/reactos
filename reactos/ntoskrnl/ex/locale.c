@@ -166,7 +166,7 @@ NtQueryDefaultLocale(IN BOOLEAN UserProfile,
     PAGED_CODE();
 
     /* Enter SEH for probing */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we came from user mode */
         if (KeGetPreviousMode() != KernelMode)
@@ -187,12 +187,12 @@ NtQueryDefaultLocale(IN BOOLEAN UserProfile,
             *DefaultLocaleId = PsDefaultSystemLocaleId;
         }
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status */
     return Status;
@@ -319,7 +319,7 @@ NtQueryInstallUILanguage(OUT LANGID* LanguageId)
     PAGED_CODE();
 
     /* Enter SEH for probing */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we came from user mode */
         if (KeGetPreviousMode() != KernelMode)
@@ -331,12 +331,12 @@ NtQueryInstallUILanguage(OUT LANGID* LanguageId)
         /* Return it */
         *LanguageId = PsInstallUILanguageId;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status */
     return Status;
@@ -353,7 +353,7 @@ NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
     PAGED_CODE();
 
     /* Enter SEH for probing */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we came from user mode */
         if (KeGetPreviousMode() != KernelMode)
@@ -370,12 +370,12 @@ NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
             *LanguageId = PsInstallUILanguageId;
         }
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status */
     return Status;

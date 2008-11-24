@@ -181,20 +181,6 @@ ExAllocatePoolWithTagPriority(
     return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 
-_SEH_DEFINE_LOCALS(ExQuotaPoolVars)
-{
-    PVOID Block;
-};
-
-_SEH_FILTER(FreeAndGoOn)
-{
-    _SEH_ACCESS_LOCALS(ExQuotaPoolVars);
-
-    /* Couldn't charge, so free the pool and let the caller SEH manage */
-    ExFreePool(_SEH_VAR(Block));
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
 /*
  * @implemented
  */
@@ -205,13 +191,13 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
                             IN ULONG Tag)
 {
     PEPROCESS Process;
-    _SEH_DECLARE_LOCALS(ExQuotaPoolVars);
+    PVOID Block;
 
     /* Allocate the Pool First */
-    _SEH_VAR(Block) = EiAllocatePool(PoolType,
-                                     NumberOfBytes,
-                                     Tag,
-                                     &ExAllocatePoolWithQuotaTag);
+    Block = EiAllocatePool(PoolType,
+                           NumberOfBytes,
+                           Tag,
+                           &ExAllocatePoolWithQuotaTag);
 
     /* "Quota is not charged to the thread for allocations >= PAGE_SIZE" - OSR Docs */
     if (!(NumberOfBytes >= PAGE_SIZE))
@@ -220,23 +206,23 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
         Process = PsGetCurrentProcess();
 
         /* PsChargePoolQuota returns an exception, so this needs SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* FIXME: Is there a way to get the actual Pool size allocated from the pool header? */
             PsChargePoolQuota(Process,
                               PoolType & PAGED_POOL_MASK,
                               NumberOfBytes);
         }
-        _SEH_EXCEPT(FreeAndGoOn)
+        _SEH2_EXCEPT((ExFreePool(Block), EXCEPTION_CONTINUE_SEARCH))
         {
             /* Quota Exceeded and the caller had no SEH! */
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return the allocated block */
-    return _SEH_VAR(Block);
+    return Block;
 }
 
 /*

@@ -323,16 +323,16 @@ IopCompleteRequest(IN PKAPC Apc,
         }
 
         /* Use SEH to make sure we don't write somewhere invalid */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /*  Save the IOSB Information */
             *Irp->UserIosb = Irp->IoStatus;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Ignore any error */
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check if we have an event or a file object */
         if (Irp->UserEvent)
@@ -677,7 +677,7 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
             }
 
 			/* Probe and Lock */
-			_SEH_TRY
+			_SEH2_TRY
 			{
 				/* Do the probe */
 				MmProbeAndLockPages(Irp->MdlAddress,
@@ -685,14 +685,14 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
 									MajorFunction == IRP_MJ_READ ?
 									IoWriteAccess : IoReadAccess);
 			}
-			_SEH_HANDLE
+			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
 				/* Free the IRP and its MDL */
 				IoFreeMdl(Irp->MdlAddress);
 				IoFreeIrp(Irp);
 				Irp = NULL;
 			}
-			_SEH_END;
+			_SEH2_END;
 		
             /* This is how we know if we failed during the probe */
             if (!Irp) return NULL;
@@ -869,7 +869,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                 }
 
                 /* Probe and Lock */
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     /* Do the probe */
                     MmProbeAndLockPages(Irp->MdlAddress,
@@ -878,7 +878,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                                         METHOD_IN_DIRECT ?
                                         IoReadAccess : IoWriteAccess);
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     /* Free the MDL */
                     IoFreeMdl(Irp->MdlAddress);
@@ -888,7 +888,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                     IoFreeIrp(Irp);
                     Irp = NULL;
                 }
-                _SEH_END;
+                _SEH2_END;
 
                 /* This is how we know if probing failed */
                 if (!Irp) return NULL;

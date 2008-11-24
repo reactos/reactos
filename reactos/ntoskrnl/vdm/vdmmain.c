@@ -121,16 +121,16 @@ VdmpInitialize(PVOID ControlData)
     }
 
     /* Now, copy the first physical page into the first virtual page */
-    _SEH_TRY
+    _SEH2_TRY
     {
         RtlMoveMemory(NullAddress, BaseAddress, ViewSize);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the status */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {

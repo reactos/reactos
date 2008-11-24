@@ -112,7 +112,7 @@ NtAddAtom(IN PWSTR AtomName,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Check if we have a name */
             if (AtomName)
@@ -142,11 +142,11 @@ NtAddAtom(IN PWSTR AtomName,
                 if (Atom) ProbeForWriteUshort(Atom);
             }
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else
     {
@@ -162,16 +162,16 @@ NtAddAtom(IN PWSTR AtomName,
         if (NT_SUCCESS(Status) && (Atom))
         {
             /* Success and caller wants the atom back.. .enter SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the atom */
                 *Atom = SafeAtom;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -266,7 +266,7 @@ NtFindAtom(IN PWSTR AtomName,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Check if we have a name */
             if (AtomName)
@@ -296,11 +296,11 @@ NtFindAtom(IN PWSTR AtomName,
                 if (Atom) ProbeForWriteUshort(Atom);
             }
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else
     {
@@ -316,16 +316,16 @@ NtFindAtom(IN PWSTR AtomName,
         if (NT_SUCCESS(Status) && (Atom))
         {
             /* Success and caller wants the atom back.. .enter SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the atom */
                 *Atom = SafeAtom;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -388,7 +388,7 @@ NtQueryInformationAtom(RTL_ATOM Atom,
 
     PreviousMode = ExGetPreviousMode();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the parameters */
         if (PreviousMode != KernelMode)
@@ -416,7 +416,7 @@ NtQueryInformationAtom(RTL_ATOM Atom,
                     /* Fail */
                     DPRINT1("Buffer too small\n");
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 /* Prepare query */
@@ -451,7 +451,7 @@ NtQueryInformationAtom(RTL_ATOM Atom,
                     /* Fail */
                     DPRINT1("Buffer too small\n");
                     Status = STATUS_INFO_LENGTH_MISMATCH;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 /* Query the data */
@@ -481,11 +481,11 @@ NtQueryInformationAtom(RTL_ATOM Atom,
             *ReturnLength = RequiredLength;
         }
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return to caller */
     return Status;

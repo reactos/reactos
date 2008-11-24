@@ -192,17 +192,17 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     /* Check if we were called from user-mode */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Verify the time pointers */
             NewSystemTime = ProbeForReadLargeInteger(SystemTime);
             if(PreviousTime) ProbeForWriteLargeInteger(PreviousTime);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* If the pointers were invalid, bail out */
         if(!NT_SUCCESS(Status)) return Status;
@@ -233,16 +233,16 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     if(PreviousTime)
     {
         /* Enter SEH Block for return */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return the previous time */
             *PreviousTime = OldSystemTime;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return status */
@@ -266,7 +266,7 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
     /* Check if we were called from user-mode */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Verify the time pointer */
             ProbeForWriteLargeInteger(SystemTime);
@@ -278,11 +278,11 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
              */
             KeQuerySystemTime(SystemTime);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else
     {

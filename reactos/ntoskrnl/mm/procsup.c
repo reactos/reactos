@@ -380,7 +380,7 @@ MmCreatePeb(PEPROCESS Process)
             Peb->ImageProcessAffinityMask = ProcessAffinityMask;
         }
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Get the Image Config Data too */
             ImageConfigData = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
@@ -405,11 +405,11 @@ MmCreatePeb(PEPROCESS Process)
                 }
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Misc data */

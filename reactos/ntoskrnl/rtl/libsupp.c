@@ -313,7 +313,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     }
 
     /* Use a SEH block for maximum protection */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we want the user-mode stack frame */
         if (Flags == 1)
@@ -398,12 +398,12 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             Stack = NewStack;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* No index */
         i = 0;
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return frames parsed */
     return i;

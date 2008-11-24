@@ -3495,17 +3495,17 @@ NtCreateSection (OUT PHANDLE SectionHandle,
 
    if(MaximumSize != NULL && PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        /* make a copy on the stack */
        SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
        MaximumSize = &SafeMaximumSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3565,15 +3565,15 @@ NtOpenSection(PHANDLE   SectionHandle,
 
    if(PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForWriteHandle(SectionHandle);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3591,15 +3591,15 @@ NtOpenSection(PHANDLE   SectionHandle,
 
    if(NT_SUCCESS(Status))
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        *SectionHandle = hSection;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
 
    return(Status);
@@ -3750,7 +3750,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
      SafeSectionOffset.QuadPart = 0;
      SafeViewSize = 0;
 
-     _SEH_TRY
+     _SEH2_TRY
      {
        if(BaseAddress != NULL)
        {
@@ -3765,11 +3765,11 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
        ProbeForWriteSize_t(ViewSize);
        SafeViewSize = *ViewSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3840,7 +3840,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    if(NT_SUCCESS(Status))
    {
      /* copy parameters back to the caller */
-     _SEH_TRY
+     _SEH2_TRY
      {
        if(BaseAddress != NULL)
        {
@@ -3855,11 +3855,11 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
          *ViewSize = SafeViewSize;
        }
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
 
    return(Status);
@@ -4263,7 +4263,7 @@ NtQuerySection(IN HANDLE SectionHandle,
          {
             PSECTION_BASIC_INFORMATION Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
 
-            _SEH_TRY
+            _SEH2_TRY
             {
                Sbi->Attributes = Section->AllocationAttributes;
                if (Section->AllocationAttributes & SEC_IMAGE)
@@ -4283,11 +4283,11 @@ NtQuerySection(IN HANDLE SectionHandle,
                }
                Status = STATUS_SUCCESS;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-               Status = _SEH_GetExceptionCode();
+               Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             break;
          }
@@ -4296,7 +4296,7 @@ NtQuerySection(IN HANDLE SectionHandle,
          {
             PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
 
-            _SEH_TRY
+            _SEH2_TRY
             {
                memset(Sii, 0, sizeof(SECTION_IMAGE_INFORMATION));
                if (Section->AllocationAttributes & SEC_IMAGE)
@@ -4321,11 +4321,11 @@ NtQuerySection(IN HANDLE SectionHandle,
                }
                Status = STATUS_SUCCESS;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-               Status = _SEH_GetExceptionCode();
+               Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             break;
          }
@@ -4365,17 +4365,17 @@ NtExtendSection(IN HANDLE SectionHandle,
 
    if(PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        /* make a copy on the stack */
        SafeNewMaximumSize = ProbeForReadLargeInteger(NewMaximumSize);
        NewMaximumSize = &SafeNewMaximumSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
