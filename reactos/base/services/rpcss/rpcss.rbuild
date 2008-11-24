@@ -9,6 +9,7 @@
 	<library>rpcrt4</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<library>pseh</library>
 	<file>epmp.c</file>
 	<file>irotp.c</file>
 	<file>rpcss_main.c</file>

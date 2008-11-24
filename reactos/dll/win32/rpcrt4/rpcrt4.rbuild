@@ -17,6 +17,7 @@
 	<library>iphlpapi</library>
 	<library>ws2_32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<file>cproxy.c</file>
 	<file>cpsf.c</file>
 	<file>cstub.c</file>

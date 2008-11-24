@@ -1096,7 +1096,7 @@ Rule widlServerRule ( "$(source): ${$(module_name)_precondition}\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n"
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
-                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
+                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o",
@@ -1107,7 +1107,7 @@ Rule widlClientRule ( "$(source): ${$(module_name)_precondition}\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n"
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
-                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
+                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c",
                       "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o",
