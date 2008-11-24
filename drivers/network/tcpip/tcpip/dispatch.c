@@ -27,12 +27,17 @@ NTSTATUS DispPrepareIrpForCancel(
  */
 {
     KIRQL OldIrql;
+    PIO_STACK_LOCATION IrpSp;
+    PTRANSPORT_CONTEXT TransContext;
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
+    IrpSp       = IoGetCurrentIrpStackLocation(Irp);
+    TransContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
+
     IoAcquireCancelSpinLock(&OldIrql);
 
-    if (!Irp->Cancel) {
+    if (!Irp->Cancel && !TransContext->CancelIrps) {
         (void)IoSetCancelRoutine(Irp, CancelRoutine);
         IoReleaseCancelSpinLock(OldIrql);
 
