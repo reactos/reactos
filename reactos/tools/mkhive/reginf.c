@@ -158,7 +158,7 @@ AppendMultiSzValue (
 			ValueName,
 			0,
 			REG_MULTI_SZ,
-			(PCHAR)Buffer,
+			(PUCHAR)Buffer,
 			(ULONG)Total);
 	}
 
@@ -304,7 +304,7 @@ do_reg_operation(
 		{
 			ULONG dw = Str ? strtoul (Str, NULL, 0) : 0;
 
-			DPRINT("setting dword %s to %lx\n", ValueName, dw);
+			DPRINT("setting dword %s to %x\n", ValueName, dw);
 
 			RegSetValueExA (
 				KeyHandle,
@@ -343,7 +343,7 @@ do_reg_operation(
 	}
 	else  /* get the binary data */
 	{
-		PCHAR Data = NULL;
+		PUCHAR Data = NULL;
 
 		if (InfHostGetBinaryField (Context, 5, NULL, 0, &Size) != 0)
 			Size = 0;
@@ -354,8 +354,8 @@ do_reg_operation(
 			if (Data == NULL)
 				return FALSE;
 
-			DPRINT("setting binary data %s len %lu\n", ValueName, Size);
-			InfHostGetBinaryField (Context, 5, Data, (ULONG)Size, NULL);
+			DPRINT("setting binary data %s len %d\n", ValueName, Size);
+			InfHostGetBinaryField (Context, 5, Data, Size, NULL);
 		}
 
 		RegSetValueExA (
@@ -416,11 +416,11 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 		else
 		{
 			/* get flags */
-			if (InfHostGetIntField (Context, 4, (PLONG)&Flags) != 0)
+			if (InfHostGetIntField (Context, 4, &Flags) != 0)
 				Flags = 0;
 		}
 
-		DPRINT("Flags: %lx\n", Flags);
+		DPRINT("Flags: 0x%x\n", Flags);
 
 		if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
 		{
