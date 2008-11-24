@@ -3192,7 +3192,9 @@ CdRomDeviceControlCompletion(
         case IOCTL_CDROM_READ_Q_CHANNEL: {
 
             PSUB_Q_CHANNEL_DATA userChannelData = realIrp->AssociatedIrp.SystemBuffer;
+#if DBG
             PCDROM_SUB_Q_DATA_FORMAT inputBuffer = realIrp->AssociatedIrp.SystemBuffer;
+#endif
             PSUB_Q_CHANNEL_DATA subQPtr = srb->DataBuffer;
 
 #if DBG
