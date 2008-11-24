@@ -94,6 +94,12 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 /* Soft memory barrier */
 #define __SEH_BARRIER __asm__ __volatile__("#":::"memory")
 
+/* GCC doesn't know that this equals zero */
+#define __SEH_ZERO ({ int zero = 0; __asm__ __volatile__("#" : "+g" (zero)); zero; })
+
+#define __SEH_FALSE __builtin_expect(__SEH_ZERO, 0)
+#define __SEH_TRUE  __builtin_expect(!__SEH_ZERO, 1)
+
 typedef struct __SEH2Registration
 {
 	struct __SEH2Registration * SER_Prev;
@@ -251,7 +257,7 @@ _SEH2TryLevel_t;
 		__SEH_USE_NESTED_FUNCTION(_SEHFinally); \
  \
 		_SEHTryLevel.ST_FramePointer = _SEHClosureFromTrampoline((_SEHTrampoline_t *)&_SEHFinally); \
-		_SEHTryLevel.ST_Filter = NULL; \
+		_SEHTryLevel.ST_Filter = 0; \
 		_SEHTryLevel.ST_Body = _SEHFunctionFromTrampoline((_SEHTrampoline_t *)&_SEHFinally); \
  \
 		goto _SEHDoTry; \
@@ -318,8 +324,11 @@ _SEH2TryLevel_t;
 		{ \
 			__SEH_LEAVE_TRYLEVEL(); \
 		} \
-\
-		goto _SEHEndExcept; \
+ \
+		if(__SEH_FALSE) \
+			goto _SEHBeginExcept; \
+		else \
+			goto _SEHEndExcept; \
 \
 		_SEHBeginExcept: __SEH_SIDE_EFFECT; \
 		{ \
