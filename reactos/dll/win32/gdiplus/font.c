@@ -486,7 +486,7 @@ static BOOL find_installed_font(const WCHAR *name, NEWTEXTMETRICW *ntm)
     HDC hdc = GetDC(0);
     BOOL ret = FALSE;
 
-    if(!EnumFontFamiliesW(hdc, name, is_font_installed_proc, (LPARAM)ntm))
+    if(!EnumFontFamiliesW(hdc, name, (FONTENUMPROCW)is_font_installed_proc, (LPARAM)ntm))
         ret = TRUE;
 
     ReleaseDC(0, hdc);

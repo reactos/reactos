@@ -244,7 +244,7 @@ GpStatus WINGDIPAPI GdipCloneImage(GpImage *image, GpImage **cloneImage)
 {
     IStream* stream;
     HRESULT hr;
-    INT size;
+    LONG size;
 
     TRACE("%p, %p\n", image, cloneImage);
 
@@ -1060,7 +1060,7 @@ GpStatus WINGDIPAPI GdipSaveImageToStream(GpImage *image, IStream* stream,
     encode_image_func* encode_image;
     LPVOID output;
     unsigned int output_size;
-    unsigned int dummy;
+    ULONG dummy;
     int i;
 
     old_hbmp = 0;

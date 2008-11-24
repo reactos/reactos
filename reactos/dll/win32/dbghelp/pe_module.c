@@ -270,7 +270,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
                 for (j = 0; j < exports->NumberOfNames; j++)
                     if ((ordinals[j] == i) && names[j]) break;
                 if (j < exports->NumberOfNames) continue;
-                snprintf(buffer, sizeof(buffer), "%d", i + exports->Base);
+                snprintf(buffer, sizeof(buffer), "%u", (unsigned int)(i + exports->Base));
                 symt_new_public(module, NULL, buffer, base + (DWORD)functions[i], 1,
                                 TRUE /* FIXME */, TRUE /* FIXME */);
             }
