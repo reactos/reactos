@@ -45,6 +45,40 @@ IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
    }
 }
 
+VOID
+IntWriteSystemParametersSettings(PUNICODE_STRING SubKeyName, PUNICODE_STRING KeyName, ULONG Type, PVOID Data, ULONG DataSize)
+{
+    UNICODE_STRING KeyPath;
+    NTSTATUS Status;
+    HANDLE CurrentUserKey, KeyHandle;
+    OBJECT_ATTRIBUTES KeyAttributes, ObjectAttributes;
+
+    /* Get a handle to the current users settings */
+    Status = RtlFormatCurrentUserKeyPath(&KeyPath);
+    if(!NT_SUCCESS(Status))
+        return;
+
+    InitializeObjectAttributes(&ObjectAttributes, &KeyPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    /* Open the HKCU key */
+    Status = ZwOpenKey(&CurrentUserKey, KEY_WRITE, &ObjectAttributes);
+    RtlFreeUnicodeString(&KeyPath);
+    if(!NT_SUCCESS(Status))
+        return;
+
+
+    /* Open up the settings to read the values */
+    InitializeObjectAttributes(&KeyAttributes, SubKeyName, OBJ_CASE_INSENSITIVE, CurrentUserKey, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &KeyAttributes);
+    ZwClose(CurrentUserKey);
+
+    if (NT_SUCCESS(Status))
+    {
+        ZwSetValueKey(KeyHandle, KeyName, 0, Type, Data, DataSize);
+        ZwClose(KeyHandle);
+    }
+}
+
+
 
 ULONG FASTCALL
 IntSystemParametersInfo(
@@ -260,9 +294,17 @@ IntSystemParametersInfo(
                    CurInfo->MouseHoverHeight = uiParam;
                    break;
                case SPI_SETMOUSEBUTTONSWAP:
-                   CurInfo = IntGetSysCursorInfo(WinStaObject);
-                   CurInfo->SwapButtons = uiParam;
-                   break;
+                   {
+                      UNICODE_STRING SubKeyName = RTL_CONSTANT_STRING(L"Control Panel\\Mouse");
+                      UNICODE_STRING SwapMouseButtons = RTL_CONSTANT_STRING(L"SwapMouseButtons");
+                      WCHAR szBuffer[10];
+
+                      swprintf(szBuffer, L"%u", uiParam);
+                      CurInfo = IntGetSysCursorInfo(WinStaObject);
+                      CurInfo->SwapButtons = uiParam;
+                      IntWriteSystemParametersSettings(&SubKeyName, &SwapMouseButtons, REG_SZ, szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR));
+                      break;
+                   }
                case SPI_SETMOUSE:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    CurInfo->CursorAccelerationInfo = *(PCURSORACCELERATION_INFO)pvParam;
