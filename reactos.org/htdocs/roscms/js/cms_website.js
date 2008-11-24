@@ -1063,6 +1063,10 @@
 										makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showhistory&d_id='+did+'&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
 									}
 
+									function bshowdepencies(did, drid) {
+										makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showdepencies&d_id='+did+'&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+									}
+
 									function balterfields(did, drid, dusr) {
 									alertbox('Change fields only if you know what you are doing.');
 										makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=alterfields&d_id='+did+'&d_r_id='+drid+'&d_val3='+dusr, 'mef', 'frmedittagsc2', 'html', 'GET', '');

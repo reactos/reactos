@@ -32,6 +32,7 @@ class Editor_Website extends Editor
   const HISTORY  = 2;
   const SECURITY = 3;
   const ENTRY    = 4;
+  const DEPENCIES= 5;
 
   // types of new entries
   const SINGLE   = 0;
@@ -102,6 +103,11 @@ class Editor_Website extends Editor
       // show History details
       case 'showhistory':
         $this->showEntryDetails(self::HISTORY);
+        break;
+
+      // show Depencies
+      case 'showdepencies':
+        $this->showEntryDetails(self::DEPENCIES);
         break;
 
       // show Field details
@@ -616,7 +622,7 @@ class Editor_Website extends Editor
     else {
       echo '<span class="detailmenu" onclick="'."bshowtag(".$this->data_id.",".$this->rev_id.",'a','b', '".$thisuser->id()."')".'">Metadata</span>';
     }
-    echo "&nbsp;|&nbsp;";
+    echo '&nbsp;|&nbsp;';
 
     // History
     if ($mode == self::HISTORY) {
@@ -625,10 +631,19 @@ class Editor_Website extends Editor
     else {
       echo '<span class="detailmenu" onclick="'."bshowhistory(".$this->data_id.",".$this->rev_id.",'a','b', '".$thisuser->id()."')".'">History</span>';
     }
+    echo '&nbsp;|&nbsp;';
+
+    // Depencies
+    if ($mode == self::DEPENCIES) {
+      echo '<strong>Depencies</strong>';
+    }
+    else {
+      echo '<span class="detailmenu" onclick="'."bshowdepencies(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Depencies</span>';
+    }
 
     // allowed only for someone with "add" rights
     if (Security::hasRight($this->data_id, 'add')) { 
-      echo "&nbsp;|&nbsp;";
+      echo '&nbsp;|&nbsp;';
 
       // Fields
       if ($mode == self::FIELDS) {
@@ -637,7 +652,7 @@ class Editor_Website extends Editor
       else {
         echo '<span class="detailmenu" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Fields</span>';
       }
-      echo "&nbsp;|&nbsp;";
+      echo '&nbsp;|&nbsp;';
 
       if ($mode == self::ENTRY) {
         echo '<strong>Entry</strong>';
@@ -649,8 +664,9 @@ class Editor_Website extends Editor
 
     // allowed only for related super administrators
     if ($thisuser->isMemberOfGroup('ros_sadmin') || (Security::hasRight($this->data_id, 'add') && $thisuser->isMemberOfGroup('ros_admin'))) { 
-      echo "&nbsp;|&nbsp;";
+      echo '&nbsp;|&nbsp;';
 
+      // Security
       if ($mode == self::SECURITY) {
         echo '<strong>Security</strong>';
       }
@@ -658,6 +674,7 @@ class Editor_Website extends Editor
         echo '<span class="detailmenu" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Security</span>';
       }
     }
+
     echo_strip('
         </div>
       </div>');
@@ -669,6 +686,9 @@ class Editor_Website extends Editor
         break;
       case self::HISTORY:
         $this->showEntryDetailsHistory();
+        break;
+      case self::DEPENCIES:
+        $this->showEntryDepencies($this->data_id);
         break;
       case self::SECURITY:
         $this->showEntryDetailsSecurity();
@@ -814,6 +834,64 @@ class Editor_Website extends Editor
     echo '</ul>';
   }
 
+  /**
+   *
+   *
+   * @access private
+   */
+  private function showEntryDepencies( $data_id )
+  {
+    $stmt=DBConnection::getInstance()->prepare("SELECT data_name,data_type FROM data_ WHERE data_id = :data_id LIMIT 1");
+    $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+    $stmt->execute();
+    $data = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+
+    // get Data type
+    switch ($data['data_type']) {
+      case 'template':
+        $type_short = 'templ';
+        break;
+      case 'content':
+        $type_short = 'cont';
+        break;
+      case 'script':
+        $type_short = 'inc';
+        break;
+      default:
+        echo '----this should not happen.<br />';
+        var_dump($data);
+        return;
+        break;
+    }
+
+    echo_strip('
+      <br />
+      <div class="frmeditheadline">Data Depencies</div>
+      <br />');
+
+    // search for depencies
+    $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, d.data_type, r.data_id, r.rev_id, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id = d.data_id JOIN data_text t ON r.rev_id = t.data_rev_id WHERE t.text_content LIKE :content_phrase AND r.rev_version > 0 ORDER BY r.rev_language, d.data_name, d.data_type");
+    $stmt->bindValue('content_phrase','%[#'.$type_short.'_'.$data['data_name'].']%',PDO::PARAM_STR);
+    $stmt->execute();
+
+    $last_language = null;
+
+    // handle Depencies
+    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      if ($depency['rev_language'] != $last_language) {
+        if ($last_language !== null) {
+          echo '</ul>';
+        }
+
+        echo '<h3>'.$depency['rev_language'].'</h3><ul>'; 
+        $last_language = $depency['rev_language'];
+      }
+
+      echo '<li>'.$depency['data_name'].' ('.$depency['data_type'].')</li>';
+    }
+    echo '</ul>';
+  }
+
 
   /**
    *
@@ -863,7 +941,7 @@ class Editor_Website extends Editor
       <br />
       <br />
       <button type="button" id="beditsavefields" onclick="'."editsavesecuritychanges('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
-      <button type="button" id="beditclear" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Clear</button>');
+      <button type="button" id="beditclear" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
   }
 
 
@@ -931,7 +1009,7 @@ class Editor_Website extends Editor
       </span>
       <br /><br /><br />
       <button type="button" id="beditsavefields" onclick="'."editsavefieldchanges('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
-      <button type="button" id="beditclear" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Clear</button>');
+      <button type="button" id="beditclear" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
   }
 
 
@@ -992,7 +1070,7 @@ class Editor_Website extends Editor
       <br />
       <br />
       <button type="button" id="beditsaveentry" onclick="editsaveentrychanges('.$this->data_id.','.$this->rev_id.')">Save Changes</button> &nbsp;
-      <button type="button" id="beditclear" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Clear</button>');
+      <button type="button" id="beditclear" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
   }
 
 

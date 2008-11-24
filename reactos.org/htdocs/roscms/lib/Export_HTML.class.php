@@ -139,7 +139,7 @@ class Export_HTML extends Export
     while ($lang = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
       // display language
-      echo '<p><b><u>'.$lang['lang_name'].'</u></b></p>';
+      echo '<h3 style="text-decoration:underlien;>'.$lang['lang_name'].'</h3>';
 
       // switch sql statement by generation mode
       if ($mode == 'single') {
@@ -193,11 +193,11 @@ class Export_HTML extends Export
           $html_content = $this->processTextByName($page['data_name'], $lang['lang_id'], $content['dynamic_num'], 'output');
 
           // write content to filename, if possible
-          $fh = @fopen($destination_folder.$file_name, "w");
-          if ($fh!==false){
+          $fh = @fopen($destination_folder.$file_name, 'w');
+          if ($fh !== false){
             flock($fh,2);
             fputs($fh,$html_content); 
-            fputs($fh,"\n\n<!-- Generated with ".$roscms_extern_brand." ".$roscms_extern_version.' ('.$roscms_extern_version_detail.') - '.date('Y-m-d H:i:s').' [RosCMS_v3] -->');
+            fputs($fh,'<!-- Generated with '.$roscms_extern_brand.' '.$roscms_extern_version.' ('.$roscms_extern_version_detail.') - '.date('Y-m-d H:i:s').' [RosCMS_v3] -->');
             flock($fh,3);
             fclose($fh);
             
@@ -317,7 +317,7 @@ class Export_HTML extends Export
       $page = $results[1];
     }
 
-    $this->processText($page['rev_id'], $output_type);
+    return $this->processText($page['rev_id'], $output_type);
   }
 
 
@@ -399,7 +399,7 @@ class Export_HTML extends Export
     $stmt->execute();
     $user_name = $stmt->fetchColumn();
     $content = str_replace('[#roscms_user]', $user_name, $content); // account that generate
-    $content = str_replace("[#roscms_inc_author]", $user_name, $content); // account that changed the include text
+    $content = str_replace('[#roscms_inc_author]', $user_name, $content); // account that changed the include text
 
     // page version
     $content = str_replace('[#roscms_page_version]', $page['rev_version'], $content); 
@@ -495,7 +495,7 @@ class Export_HTML extends Export
         $page_link = $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val=index&amp;d_val2='.$this->lang.'&amp;d_val3=';
       }
       else {
-        $page_link = $roscms_intern_webserver_roscms."?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val=".$page_name_with_num."&amp;d_val2=".$this->lang."&amp;d_val3=".$dynamic_num;
+        $page_link = $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$page_name_with_num.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$dynamic_num;
       }
 
       if ($mode == 'edit') {
@@ -518,7 +518,7 @@ class Export_HTML extends Export
       }
 
       // get page link
-      if ($g_link_page_name == '') {
+      if ($page_name == '') {
         $page_link = $roscms_intern_webserver_pages.$this->lang.'/404.html';
       }
       else{

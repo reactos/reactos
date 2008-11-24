@@ -504,7 +504,7 @@ class Data
       $stmt->bindParam('id',$data_id,PDO::PARAM_INT);
       $stmt->execute();
 
-      Log::writeMedium('data-name changed: '.$data['data_name'].' =&gt; '.$data_name.Log::prepareInfo($data_id, $rev_id).'{altersecurityfields}');
+      Log::writeMedium('data-name changed: '.$data['data_name'].' =&gt; '.$data_name.Log::prepareInfo($data_id).'{altersecurityfields}');
 
       if ($update_links == true) {
         if ($data_type == '') {
@@ -558,7 +558,7 @@ class Data
           }
         } // while
 
-        Log::writeMedium('data-interlinks updated due data-name change'.Log::prepareInfo($data_id, $rev_id).'{altersecurityfields}');
+        Log::writeMedium('data-interlinks updated due data-name change'.Log::prepareInfo($data_id).'{altersecurityfields}');
       }
     } // end data_name changes
 
@@ -567,7 +567,7 @@ class Data
       $stmt->bindParam('type_new',$data_type,PDO::PARAM_STR);
       $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
       $stmt->execute();
-      Log::writeMedium('data-type changed: '.$data['data_type'].' =&gt; '.$data_type.Log::prepareInfo($data_id, $rev_id).'{altersecurityfields}');
+      Log::writeMedium('data-type changed: '.$data['data_type'].' =&gt; '.$data_type.Log::prepareInfo($data_id).'{altersecurityfields}');
     } // end data_type changes
 
     if ($data_acl != '' && $data_acl != $data['data_acl']) {
@@ -575,7 +575,7 @@ class Data
       $stmt->bindParam('acl_new',$data_acl);
       $stmt->bindParam('data_id',$data_id);
       $stmt->execute();
-      Log::writeMedium('data-acl changed: '.$data['data_acl'].' =&gt; '.$data_acl.Log::prepareInfo($data_id, $rev_id).'{altersecurityfields}');
+      Log::writeMedium('data-acl changed: '.$data['data_acl'].' =&gt; '.$data_acl.Log::prepareInfo($data_id).'{altersecurityfields}');
     } // end data_acl changes
 
   } // end of member function getCookieDomain

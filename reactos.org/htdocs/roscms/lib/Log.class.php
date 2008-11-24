@@ -42,7 +42,7 @@ class Log
    * @return 
    * @access public
    */
-  public static function prepareInfo( $data_id,  $rev_id )
+  public static function prepareInfo( $data_id,  $rev_id = 'unknown' )
   {
     return ' [dataid: '.$data_id.'; revid: '.$rev_id.'; userid: '.ThisUser::getInstance()->id().'; security: '.Security::rightsOverview($data_id).'] ';
   } // end of member function prepare_info
