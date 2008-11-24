@@ -29,29 +29,29 @@
 
 #include <excpt.h>
 
-extern _SEHRegistration_t * __cdecl _SEH2CurrentRegistration(void);
+extern _SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void);
 
 extern int __SEH2Except(void *, void *, void *);
 extern void __SEH2Finally(void *, void *);
 
 static
 __attribute__((always_inline))
-int _SEH2Except(_SEHFrame_t * frame, volatile _SEHTryLevel_t * trylevel, EXCEPTION_POINTERS * ep)
+int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel, EXCEPTION_POINTERS * ep)
 {
 	return __SEH2Except(trylevel->ST_Filter, trylevel->ST_FramePointer, ep);
 }
 
 static
 __attribute__((noinline))
-void _SEH2Finally(_SEHFrame_t * frame, volatile _SEHTryLevel_t * trylevel)
+void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
 	__SEH2Finally(trylevel->ST_Body, trylevel->ST_FramePointer);
 }
 
 static
-void _SEH2LocalUnwind(_SEHFrame_t * frame, volatile _SEHTryLevel_t * dsttrylevel)
+void _SEH2LocalUnwind(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * dsttrylevel)
 {
-	volatile _SEHTryLevel_t * trylevel;
+	volatile _SEH2TryLevel_t * trylevel;
 
 	for(trylevel = frame->SF_TopTryLevel; trylevel && trylevel != dsttrylevel; trylevel = trylevel->ST_Next)
 	{
@@ -66,7 +66,7 @@ extern void _SEH2GlobalUnwind(void *);
 
 static
 __attribute__((noreturn))
-void _SEH2Handle(_SEHFrame_t * frame, volatile _SEHTryLevel_t * trylevel)
+void _SEH2Handle(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
 	_SEH2GlobalUnwind(frame);
 	_SEH2LocalUnwind(frame, trylevel);
@@ -92,7 +92,7 @@ int __cdecl _SEH2FrameHandler
 	void * DispatcherContext
 )
 {
-	_SEHFrame_t * frame;
+	_SEH2Frame_t * frame;
 
 	__asm__ __volatile__("cld");
 
@@ -107,7 +107,7 @@ int __cdecl _SEH2FrameHandler
 	else
 	{
 		int ret = 0;
-		volatile _SEHTryLevel_t * trylevel;
+		volatile _SEH2TryLevel_t * trylevel;
 
 		frame->SF_Code = ExceptionRecord->ExceptionCode;
 
@@ -134,7 +134,7 @@ int __cdecl _SEH2FrameHandler
 }
 
 extern
-void __cdecl _SEH2EnterFrame(_SEHFrame_t * frame)
+void __cdecl _SEH2EnterFrame(_SEH2Frame_t * frame)
 {
 	frame->SF_Registration.SER_Handler = _SEH2FrameHandler;
 	frame->SF_Code = 0;
@@ -161,7 +161,7 @@ void __cdecl _SEH2LeaveFrame()
 extern
 void __cdecl _SEH2Return(void)
 {
-	_SEH2LocalUnwind(CONTAINING_RECORD(_SEH2CurrentRegistration(), _SEHFrame_t, SF_Registration), NULL);
+	_SEH2LocalUnwind(CONTAINING_RECORD(_SEH2CurrentRegistration(), _SEH2Frame_t, SF_Registration), NULL);
 	_SEH2LeaveFrame();
 }
 
