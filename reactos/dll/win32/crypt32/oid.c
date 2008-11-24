@@ -157,7 +157,7 @@ static char *CRYPT_GetKeyName(DWORD dwEncodingType, LPCSTR pszFuncName,
  LPCSTR pszOID)
 {
     static const char szEncodingTypeFmt[] =
-     "Software\\Microsoft\\Cryptography\\OID\\EncodingType %u\\%s\\%s";
+     "Software\\Microsoft\\Cryptography\\OID\\EncodingType %d\\%s\\%s";
     UINT len;
     char numericOID[7]; /* enough for "#65535" */
     const char *oid;
@@ -185,7 +185,7 @@ static char *CRYPT_GetKeyName(DWORD dwEncodingType, LPCSTR pszFuncName,
     szKey = CryptMemAlloc(len);
     if (szKey)
         sprintf(szKey, szEncodingTypeFmt,
-         (unsigned int)GET_CERT_ENCODING_TYPE(dwEncodingType), pszFuncName, oid);
+         GET_CERT_ENCODING_TYPE(dwEncodingType), pszFuncName, oid);
     return szKey;
 }
 

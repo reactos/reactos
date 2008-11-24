@@ -7,6 +7,7 @@
 	<linkerflag>-fno-exceptions</linkerflag>
 	<linkerflag>-fno-rtti</linkerflag>
 	-->
+	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 	<importlibrary definition="portcls.spec" />
 
 	<define name="_NTDDK_" />

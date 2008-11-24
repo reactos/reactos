@@ -277,11 +277,11 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
             surface_desc.Type = &type;
             surface_desc.Usage = &dummy_dword;
             surface_desc.Pool = &pool;
-            surface_desc.Size = (UINT*)&dummy_dword;
-            surface_desc.MultiSampleType = (WINED3DMULTISAMPLE_TYPE *)&dummy_dword;
+            surface_desc.Size = &dummy_dword;
+            surface_desc.MultiSampleType = &dummy_dword;
             surface_desc.MultiSampleQuality = &dummy_dword;
-            surface_desc.Width = (UINT*)&dummy_dword;
-            surface_desc.Height = (UINT*)&dummy_dword;
+            surface_desc.Width = &dummy_dword;
+            surface_desc.Height = &dummy_dword;
 
             IWineD3DSurface_GetDesc((IWineD3DSurface *) resource, &surface_desc);
             break;
@@ -291,10 +291,10 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
             volume_desc.Type = &type;
             volume_desc.Usage = &dummy_dword;
             volume_desc.Pool = &pool;
-            volume_desc.Size = (UINT*)&dummy_dword;
-            volume_desc.Width = (UINT*)&dummy_dword;
-            volume_desc.Height = (UINT*)&dummy_dword;
-            volume_desc.Depth = (UINT*)&dummy_dword;
+            volume_desc.Size = &dummy_dword;
+            volume_desc.Width = &dummy_dword;
+            volume_desc.Height = &dummy_dword;
+            volume_desc.Depth = &dummy_dword;
             IWineD3DVolume_GetDesc((IWineD3DVolume *) resource, &volume_desc);
             break;
 
