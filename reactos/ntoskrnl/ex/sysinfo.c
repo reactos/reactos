@@ -1794,6 +1794,9 @@ CallQS [] =
 	SI_QX(SystemSessionProcessesInformation)
 };
 
+C_ASSERT(SystemBasicInformation == 0);
+#define MIN_SYSTEM_INFO_CLASS (SystemBasicInformation)
+#define MAX_SYSTEM_INFO_CLASS (sizeof(CallQS) / sizeof(CallQS[0]))
 
 /*
  * @implemented
@@ -1825,7 +1828,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
       /*
        * Check the request is valid.
        */
-      if (SystemInformationClass >= MaxSystemInfoClass)
+      if (SystemInformationClass >= MAX_SYSTEM_INFO_CLASS)
         {
           _SEH2_YIELD(return STATUS_INVALID_INFO_CLASS);
         }
@@ -1892,8 +1895,8 @@ NtSetSystemInformation (
 	/*
 	 * Check the request is valid.
 	 */
-	if (	(SystemInformationClass >= SystemBasicInformation)
-		&& (SystemInformationClass < MaxSystemInfoClass)
+	if (	(SystemInformationClass >= MIN_SYSTEM_INFO_CLASS)
+		&& (SystemInformationClass < MAX_SYSTEM_INFO_CLASS)
 		)
 	{
 		if (NULL != CallQS [SystemInformationClass].Set)
