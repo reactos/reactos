@@ -2972,7 +2972,7 @@ CdRomDeviceControlCompletion(
 
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG)realIrpNextStack->Parameters.Others.Argument1-1))) {
 
 
             if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
@@ -3497,7 +3497,7 @@ CdRomSetVolumeIntermediateCompletion(
             retry = TRUE;
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG)realIrpNextStack->Parameters.Others.Argument1-1))) {
 
             if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
 
@@ -3823,7 +3823,7 @@ CdRomSwitchModeCompletion(
             retry = TRUE;
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG)realIrpNextStack->Parameters.Others.Argument1-1))) {
 
             if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
 
@@ -4199,7 +4199,7 @@ Return Value:
             retry = TRUE;
         }
 
-        if (retry && (irpNextStack->Parameters.Others.Argument1 = (ULONG)irpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (irpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG)irpNextStack->Parameters.Others.Argument1-1))) {
 
             if (((ULONG)irpNextStack->Parameters.Others.Argument1)) {
 
