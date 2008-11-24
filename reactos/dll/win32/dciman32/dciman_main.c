@@ -16,7 +16,9 @@ CRITICAL_SECTION ddcs;
 typedef struct _WINWATCH_INT
 {
     HWND hWnd;
-    BOOL WinWtachStatus;
+    BOOL WinWatchStatus;
+    LPRGNDATA lpRgnData;
+    UINT RgnDataSize;
 } WINWATCH_INT, *LPWINWATCH_INT;
 
 
@@ -420,10 +422,17 @@ WinWatchOpen(HWND hwnd)
 void WINAPI
 WinWatchClose(HWINWATCH hWW)
 {
+    LPWINWATCH_INT pWinwatch_int = (LPWINWATCH_INT)hWW;
+
     EnterCriticalSection(&ddcs);
 
-    if (hWW != NULL)
+    if (pWinwatch_int != NULL)
     {
+        if (pWinwatch_int->lpRgnData != NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, pWinwatch_int->lpRgnData);
+        }
+
         HeapFree(GetProcessHeap(), 0, hWW);
     }
 
@@ -434,8 +443,83 @@ BOOL WINAPI
 WinWatchDidStatusChange(HWINWATCH hWW)
 {
     LPWINWATCH_INT pWinwatch_int = (LPWINWATCH_INT)hWW;
-    return pWinwatch_int->WinWtachStatus;
+    return pWinwatch_int->WinWatchStatus;
 }
+
+UINT WINAPI
+WinWatchGetClipList(HWINWATCH hWW,
+                    LPRECT prc,
+                    UINT size,
+                    LPRGNDATA prd)
+{
+
+    LPWINWATCH_INT pWinwatch_int = (LPWINWATCH_INT) hWW;
+    DWORD BufferRequestSize;
+    DWORD NewBufferRequestSize;
+
+    /* Check see if the WinWatch status have changes, it can only be change from DciBeginAccess and DciEndAcess */
+    if (pWinwatch_int->WinWatchStatus != FALSE)
+    {
+        /* The status have change, Rest some internal value */
+        pWinwatch_int->WinWatchStatus = FALSE;
+        pWinwatch_int->RgnDataSize = 0;
+
+        /* Get the buffer size */
+        BufferRequestSize = GetWindowRegionData(pWinwatch_int->hWnd, 0, NULL);
+
+        /* We got a buffer size */
+        if (BufferRequestSize != 0)
+        {
+            /* We need endless loop to get the buffer size, for we need waiting on gdi when it is ready, to give us that */
+            while (1)
+            {
+                /* Check see if we got a buffer already for GetWindowRegionData */
+                if (pWinwatch_int->lpRgnData != NULL)
+                {
+                    /* Free our buffer for GetWindowRegionData */
+                    HeapFree(GetProcessHeap(), 0, pWinwatch_int->lpRgnData);
+                }
+
+                /* Free our buffer for GetWindowRegionData */
+                if ( (pWinwatch_int->lpRgnData = (LPRGNDATA) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, BufferRequestSize )) == NULL )
+                {
+                    /* Fail to alloc our buffer for GetWindowRegionData */
+                    break;
+                }
+
+                /* Get our data from GetWindowRegionData */
+                NewBufferRequestSize = GetWindowRegionData(pWinwatch_int->hWnd, BufferRequestSize, pWinwatch_int->lpRgnData);
+
+                /* Check see if the buffer size match */
+                if (NewBufferRequestSize == BufferRequestSize)
+                {
+                    /* The buffer size match */
+                    pWinwatch_int->RgnDataSize = BufferRequestSize;
+                    break;
+                }
+                else if (BufferRequestSize == 0)
+                {
+                    /* No buffer size was given */
+                    break;
+                }
+                BufferRequestSize = NewBufferRequestSize;
+            }
+        }
+    }
+
+    /* Setup return data */
+    if (size == pWinwatch_int->RgnDataSize)
+    {
+        if (pWinwatch_int->RgnDataSize != 0)
+        {
+            memcpy(prd,pWinwatch_int->lpRgnData,pWinwatch_int->RgnDataSize);
+        }
+    }
+
+    /* return our value */
+    return pWinwatch_int->RgnDataSize;
+}
+
 
 
 /***********************************************************************************************************/
