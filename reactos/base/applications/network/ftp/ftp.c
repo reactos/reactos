@@ -461,7 +461,7 @@ void sendrequest(const char *cmd, const char *local, const char *remote, int pri
 {
 	FILE *fin;
 	int dout = 0;
-	int (*closefunc)(), _pclose(), fclose();
+	int (*closefunc)();
 	sig_t (*oldintr)(), (*oldintp)();
 	char buf[BUFSIZ], *bufp;
 	long bytes = 0, hashbytes = HASHBYTES;
@@ -735,7 +735,7 @@ void recvrequest(const char *cmd, const char *local, const char *remote, const c
 {
 	FILE *fout = stdout;
 	int din = 0;
-	int (*closefunc)(), _pclose(), fclose();
+	int (*closefunc)();
 	void (*oldintr)(int), (*oldintp)(int);
 	int oldverbose = 0, oldtype = 0, is_retr, tcrflag, nfnd, bare_lfs = 0;
 	char msg;
@@ -748,7 +748,6 @@ void recvrequest(const char *cmd, const char *local, const char *remote, const c
 	register int c, d;
 	struct timeval start, stop;
 //	struct stat st;
-	extern void *malloc();
 
 	is_retr = strcmp(cmd, "RETR") == 0;
 	if (is_retr && verbose && printnames) {
