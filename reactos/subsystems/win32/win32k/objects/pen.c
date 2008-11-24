@@ -79,7 +79,7 @@ IntGdiExtCreatePen(
    hPen = PenObject->BaseObject.hHmgr;
 
    // If nWidth is zero, the pen is a single pixel wide, regardless of the current transformation.
-   if ((bOldStylePen) && (!dwWidth)) dwWidth = 1;
+   if ((bOldStylePen) && (!dwWidth) && (dwPenStyle & PS_STYLE_MASK) != PS_SOLID) dwWidth = 1;
 
    PenObject->ptPenWidth.x = dwWidth;
    PenObject->ptPenWidth.y = 0;
@@ -108,8 +108,6 @@ IntGdiExtCreatePen(
          break;
 
       case PS_ALTERNATE:
-         /* PS_ALTERNATE is applicable only for cosmetic pens */
-         if ((dwPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC) goto ExitCleanup;
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
          PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
          break;
@@ -135,9 +133,6 @@ IntGdiExtCreatePen(
          break;
 
       case PS_INSIDEFRAME:
-         /* FIXME: does it need some additional work? */
-         /* PS_INSIDEFRAME is applicable only for geometric pens */
-         if ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) goto ExitCleanup;
          PenObject->flAttrs |= (GDIBRUSH_IS_SOLID|GDIBRUSH_IS_INSIDEFRAME);
          break;
 
