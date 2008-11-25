@@ -1047,12 +1047,12 @@ BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name,
 		    {
 			if(dpiX == Resolutions[i])
 			    IsDefault = TRUE;
-			sprintf(buf, "%d dpi", (int)Resolutions[i]);
+			sprintf(buf, "%d dpi", Resolutions[i]);
 		    } else
 		    {
 			if(dpiX == Resolutions[i] && dpiY == Resolutions[i+1])
 			    IsDefault = TRUE;
-			sprintf(buf, "%d dpi x %d dpi", (int)Resolutions[i], (int)Resolutions[i+1]);
+			sprintf(buf, "%d dpi x %d dpi", Resolutions[i], Resolutions[i+1]);
 		    }
 
 		    Index = SendMessageA(hQuality, CB_ADDSTRING, 0, (LPARAM)buf);
@@ -2471,15 +2471,15 @@ static void
 _c_size2strA(PageSetupDataA *pda,DWORD size,LPSTR strout) {
     strcpy(strout,"<undef>");
     if (pda->dlga->Flags & PSD_INHUNDREDTHSOFMILLIMETERS) {
-	sprintf(strout,"%d",(int)(size)/100);
+	sprintf(strout,"%d",(size)/100);
 	return;
     }
     if (pda->dlga->Flags & PSD_INTHOUSANDTHSOFINCHES) {
-	sprintf(strout,"%din",(int)(size)/1000);
+	sprintf(strout,"%din",(size)/1000);
 	return;
     }
     pda->dlga->Flags |= PSD_INHUNDREDTHSOFMILLIMETERS;
-    sprintf(strout,"%d",(int)(size)/100);
+    sprintf(strout,"%d",(size)/100);
     return;
 }
 static void

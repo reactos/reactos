@@ -812,7 +812,7 @@ HRESULT assembly_get_version(ASSEMBLY *assembly, LPSTR *version)
         goto done;
     }
 
-    if (!VerQueryValueA(verdata, "\\", (LPVOID *)&ffi, (PUINT)&size))
+    if (!VerQueryValueA(verdata, "\\", (LPVOID *)&ffi, &size))
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto done;

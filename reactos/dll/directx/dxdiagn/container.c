@@ -150,7 +150,7 @@ HRESULT WINAPI IDxDiagContainerImpl_GetChildContainer(PDXDIAGCONTAINER iface, LP
     hr = IDxDiagContainerImpl_GetChildContainerInternal(pContainer, tmp, &pContainer);
     if (!SUCCEEDED(hr) || NULL == pContainer)
       goto on_error;
-    cur++; /* go after '.' (just replaced by \0) */
+    *cur++; /* go after '.' (just replaced by \0) */
     tmp = cur;
     cur = strchrW(tmp, '.');
   }

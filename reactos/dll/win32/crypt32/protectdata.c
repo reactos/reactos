@@ -404,7 +404,7 @@ BOOL unserialize(const DATA_BLOB *pSerial, struct protect_data_t *pInfo)
     }
 
     /* cipher_alg */
-    if (!unserialize_dword(ptr,&index,size,(DWORD*)&pInfo->cipher_alg))
+    if (!unserialize_dword(ptr,&index,size,&pInfo->cipher_alg))
     {
         ERR("reading cipher_alg failed!\n");
         return FALSE;
@@ -433,7 +433,7 @@ BOOL unserialize(const DATA_BLOB *pSerial, struct protect_data_t *pInfo)
     }
     
     /* hash_alg */
-    if (!unserialize_dword(ptr,&index,size,(DWORD*)&pInfo->hash_alg))
+    if (!unserialize_dword(ptr,&index,size,&pInfo->hash_alg))
     {
         ERR("reading hash_alg failed!\n");
         return FALSE;
