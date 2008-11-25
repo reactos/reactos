@@ -2,9 +2,8 @@
 	<define name="__USE_W32API" />
 	<include base="vbltest">.</include>
 	<library>kernel32</library>
-	<library>gdi32</library>
 	<library>user32</library>
-	<library>msimg32</library>
+	<library>gdi32</library>
 	<file>vbltest.c</file>
 	<file>vbltest.rc</file>
 </module>

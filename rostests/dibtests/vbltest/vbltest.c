@@ -8,7 +8,18 @@
 #include <windows.h>
 #include <tchar.h>
 
+BOOL WINAPI GdiAlphaBlend(
+                HDC hdcDst, int xDst, int yDst, int wDst, int hDst,
+                HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc,
+                BLENDFUNCTION blendFunction);
+
+BOOL WINAPI GdiTransparentBlt(
+                HDC hdcDst, int xDst, int yDst, int wDst, int hDst,
+                HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc,
+                UINT crTransparent);
+
 #define CURRENT_BMPS 4
+#define CURRENT_ICONS 1
 #define SCALE 1.5
 #define OFFSET 5
 
@@ -19,6 +30,7 @@ static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HBITMAP hbmList[CURRENT_BMPS];
+    static HICON hicList[CURRENT_ICONS];
 
     switch (message)
     {
@@ -28,6 +40,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             hbmList[1] = (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(400), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             hbmList[2] = (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(800), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             hbmList[3] = (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(2400), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            hicList[0] = (HICON)LoadIcon(hInst, MAKEINTRESOURCE(3200));
             break;
         }
 
@@ -38,7 +51,6 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             BITMAP bitmap;
             BLENDFUNCTION bfunc;
             int x = 0, y = 0, i;
-
             hdc = BeginPaint(hWnd, &ps);
             hdcMem = CreateCompatibleDC(hdc);
 
@@ -47,6 +59,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             bfunc.BlendOp = AC_SRC_OVER;
             bfunc.SourceConstantAlpha = 128;
 
+            /* bitmaps */
             for(i = 0; i < CURRENT_BMPS; i++)
             {
                 y = 0;
@@ -66,19 +79,47 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 y += bitmap.bmHeight*SCALE + OFFSET;
 
                 /* transparent blt, transparency: grey */
-                TransparentBlt(hdc, x, y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, 128*256*256+128*256+128);
+                GdiTransparentBlt(hdc, x, y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, 128*256*256+128*256+128);
                 y += bitmap.bmHeight + OFFSET;
 
                 /* transparent blt, transparency: grey, scaled */
-                TransparentBlt(hdc, x, y, bitmap.bmWidth*SCALE, bitmap.bmHeight*SCALE, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, 128*256*256+128*256+128);
+                GdiTransparentBlt(hdc, x, y, bitmap.bmWidth*SCALE, bitmap.bmHeight*SCALE, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, 128*256*256+128*256+128);
                 y += bitmap.bmHeight*SCALE + OFFSET;
-
+                
                 /* alpha blend, org size */
-                AlphaBlend(hdc, x, y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bfunc);
+                GdiAlphaBlend(hdc, x, y, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bfunc);
                 y += bitmap.bmHeight + OFFSET;
 
                 /* alpha blend, scaled */
-                AlphaBlend(hdc, x, y, bitmap.bmWidth*SCALE, bitmap.bmHeight*SCALE, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bfunc);
+                GdiAlphaBlend(hdc, x, y, bitmap.bmWidth*SCALE, bitmap.bmHeight*SCALE, hdcMem, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bfunc);
+                y += bitmap.bmHeight*SCALE + OFFSET;
+
+                x += bitmap.bmWidth*SCALE + OFFSET;
+            }
+
+            /* icons */
+            for(i = 0; i < CURRENT_ICONS; i++)
+            {
+                y = 0;
+                /* pure icon */
+                DrawIcon(hdc, x, y, hicList[i]);
+                y += bitmap.bmHeight + OFFSET;
+
+                /* normal icon using Ex */
+                DrawIconEx(hdc, x, y, hicList[i], 0, 0, 0, NULL, DI_NORMAL);
+                y += bitmap.bmHeight + OFFSET;
+
+                /* normal icon using Ex with bigger size */
+                DrawIconEx(hdc, x, y, hicList[i], bitmap.bmWidth, bitmap.bmHeight, 0, NULL, DI_NORMAL);
+                y += bitmap.bmHeight + OFFSET;
+
+                /* only icon using Ex */
+                DrawIconEx(hdc, x, y, hicList[i], 0, 0, 0, NULL, DI_IMAGE);
+                y += bitmap.bmHeight + OFFSET;
+
+                /* mask using Ex */
+                DrawIconEx(hdc, x, y, hicList[i], 0, 0, 0, NULL, DI_MASK);
+                y += bitmap.bmHeight + OFFSET;
 
                 x += bitmap.bmWidth*SCALE + OFFSET;
             }
