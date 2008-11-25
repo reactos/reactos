@@ -314,7 +314,7 @@ static BOOL import_certs_from_path(LPCSTR path, HCERTSTORE store,
 static BOOL import_certs_from_dir(LPCSTR path, HCERTSTORE store)
 {
     BOOL ret = FALSE;
-    DIR *dir;
+    //DIR *dir;
 
     TRACE("(%s, %p)\n", debugstr_a(path), store);
     /* UNIX functions = bad for reactos
@@ -752,9 +752,9 @@ PWINECRYPT_CERTSTORE CRYPT_RootOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags)
     {
         HCERTSTORE root = create_root_store();
 
-        InterlockedCompareExchangePointer((PVOID *)&CRYPT_rootStore, root,
+        HCERTSTORE Original = (HCERTSTORE)InterlockedCompareExchangePointer((PVOID *)&CRYPT_rootStore, root,
          NULL);
-        if (CRYPT_rootStore != root)
+        if (CRYPT_rootStore == Original || CRYPT_rootStore != root)
             CertCloseStore(root, 0);
     }
     CertDuplicateStore(CRYPT_rootStore);
