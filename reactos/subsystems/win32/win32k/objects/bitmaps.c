@@ -679,7 +679,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 		return 0;
 	}
 
-	BITMAP_GetObject(Bitmap, sizeof(BITMAP), &bm);
+	BITMAP_GetObject(Bitmap, sizeof(BITMAP), (PVOID)&bm);
 	bm.bmBits = NULL;
 	if (Bitmap->SurfObj.lDelta >= 0)
 		bm.bmHeight = -bm.bmHeight;

@@ -846,20 +846,20 @@ NtGdiDoPalette(
 	{
 		case GdiPalAnimate:
 			if (pEntries)
-				ret = IntAnimatePalette((HPALETTE)hObj, iStart, cEntries, pEntries);
+				ret = IntAnimatePalette((HPALETTE)hObj, iStart, cEntries, (CONST PPALETTEENTRY)pEntries);
 			break;
 
 		case GdiPalSetEntries:
 			if (pEntries)
-				ret = IntSetPaletteEntries((HPALETTE)hObj, iStart, cEntries, pEntries);
+				ret = IntSetPaletteEntries((HPALETTE)hObj, iStart, cEntries, (CONST LPPALETTEENTRY)pEntries);
 			break;
 
 		case GdiPalGetEntries:
-			ret = IntGetPaletteEntries((HPALETTE)hObj, iStart, cEntries, pEntries);
+			ret = IntGetPaletteEntries((HPALETTE)hObj, iStart, cEntries, (LPPALETTEENTRY)pEntries);
 			break;
 
 		case GdiPalGetSystemEntries:
-			ret = IntGetSystemPaletteEntries((HDC)hObj, iStart, cEntries, pEntries);
+			ret = IntGetSystemPaletteEntries((HDC)hObj, iStart, cEntries, (LPPALETTEENTRY)pEntries);
 			break;
 
 		case GdiPalSetColorTable:

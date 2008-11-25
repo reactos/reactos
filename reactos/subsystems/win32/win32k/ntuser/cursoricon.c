@@ -1524,12 +1524,12 @@ UserDrawIconEx(
    if (istepIfAniCur)
       DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
 
-   if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
+   if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), (PVOID)&bmpMask))
    {
       return FALSE;
    }
 
-   if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
+   if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), (PVOID)&bmpColor))
    {
       return FALSE;
    }
@@ -1597,7 +1597,7 @@ UserDrawIconEx(
           DPRINT1("GDIOBJ_LockObj() failed!\n");
           goto cleanup;
       }
-      BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
+      BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (PVOID)&bm);
 
       if (bm.bmBitsPixel != 32)
         bAlpha = FALSE;
@@ -1696,7 +1696,7 @@ UserDrawIconEx(
             DPRINT1("GDIOBJ_LockObj() failed!\n");
             goto cleanup;
         }
-        BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
+        BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (PVOID)&bm);
 
         pBits = ExAllocatePoolWithTag(PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
         if (pBits == NULL)
