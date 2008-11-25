@@ -97,5 +97,5 @@ typedef struct _CFFILE
 #define PELINDEX     (PUCHAR)0x3c8
 #define PELDATA      (PUCHAR)0x3c9
 
-void ScrLoadFontTable(UINT CodePage);
-NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField);
+void ScrLoadFontTable(UINT32 CodePage);
+NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField);

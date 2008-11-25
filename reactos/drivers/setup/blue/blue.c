@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 services/dd/blue/blue.c
@@ -103,7 +102,7 @@ static const UCHAR DefaultPalette[] =
 static VOID FASTCALL
 ScrSetRegisters(const VGA_REGISTERS *Registers)
 {
-    UINT i;
+    UINT32 i;
 
     /* Update misc output register */
     WRITE_PORT_UCHAR(MISC, Registers->Misc);
@@ -692,7 +691,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
         {
           PCONSOLE_DRAW ConsoleDraw;
           PUCHAR Src, Dest;
-          UINT SrcDelta, DestDelta, i, Offset;
+          UINT32 SrcDelta, DestDelta, i, Offset;
 
           ConsoleDraw = (PCONSOLE_DRAW) MmGetSystemAddressForMdl(Irp->MdlAddress);
           Src = (PUCHAR) (ConsoleDraw + 1);
@@ -725,7 +724,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 
       case IOCTL_CONSOLE_LOADFONT:
           {
-              UINT CodePage = (UINT)*(PULONG)Irp->AssociatedIrp.SystemBuffer;
+              UINT32 CodePage = (UINT32)*(PULONG)Irp->AssociatedIrp.SystemBuffer;
 
               // Upload a font for the codepage if needed
               ScrLoadFontTable(CodePage);
