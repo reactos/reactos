@@ -33,7 +33,11 @@
 	<library>bootvid</library>
 	<library>wdmguid</library>
 	<dependency>bugcodes</dependency>
-
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
+	<directory name="include">
+		<pch>ntoskrnl.h</pch>
+	</directory>
+	-->
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -465,5 +469,7 @@
 	</directory>
 	<file>ntoskrnl.rc</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
+
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
 	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </group>
