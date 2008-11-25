@@ -232,7 +232,7 @@ NtUserGetAltTabInfo(
    HWND hwnd,
    INT  iItem,
    PALTTABINFO pati,
-   LPTSTR pszItemText,
+   LPWSTR pszItemText,
    UINT   cchItemText,
    BOOL   Ansi)
 {
