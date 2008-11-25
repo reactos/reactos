@@ -166,7 +166,7 @@ class Security
     while($usergroup = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
       //
-      $pos = strpos($rights['sec_allow'], "|".$usergroup['usergroupmember_usergroupid']."|");
+      $pos = strpos($rights['sec_allow'], '|'.$usergroup['usergroupmember_usergroupid'].'|');
       if ($pos !== false) {
         $acl_allow = true;
       }
@@ -179,7 +179,7 @@ class Security
     while($usergroup = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
       //
-      $pos = strpos($rights['sec_deny'], "|".$usergroup['usergroupmember_usergroupid']."|");
+      $pos = strpos($rights['sec_deny'], '|'.$usergroup['usergroupmember_usergroupid'].'|');
       if ($pos !== false) {
         $acl_deny = true;
       }
@@ -206,6 +206,7 @@ class Security
     return $rights_list;
   } // end of member function getRightsList
 
+
   /**
    * checks if the user has the given right to do things
    *
@@ -221,11 +222,11 @@ class Security
       return false;
     }
 
-
     // return if the requested kind of right is in the rights list for the user
     $pos = strpos(self::getRightsList($data_id), '|'.$kind.'|');
     return ($pos !== false);
   } // end of member function hasRight
+
 
   /**
    * gives a short overview about user rights

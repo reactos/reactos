@@ -114,7 +114,7 @@ class Data
    * @param int rev_id
    * @access public
    */
-  public static function updateRevision( $data_id, $rev_id, $lang, $version, $user_name, $date, $time, $new_data_name, $new_data_type )
+  public static function updateRevision( $data_id, $rev_id, $lang, $version, $user_name, $date, $time )
   {
     global $h_a;
     global $h_a2;
@@ -184,7 +184,6 @@ class Data
     // date + time (check for Y-m-d and valid-date) + (H:i:s)
     if (preg_match('/^([12][0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/', $date,$date_matches) && checkdate($date_matches[2], $date_matches[3], $date_matches[1]) && preg_match('/^([01][0-9]|2[0-3])(:[0-5][0-9]){2}$/',$time) && ($data['rev_date'] != $date || $data['rev_time'] != $time) ) {
 
-
       //
       $stmt=DBConnection::getInstance()->prepare("UPDATE data_revision".$h_a." SET rev_datetime = :datetime, rev_date = :date, rev_time = :time WHERE rev_id = :rev_id LIMIT 1");
       $stmt->bindValue('datetime',$date." ".$time,PDO::PARAM_STR);
@@ -193,40 +192,6 @@ class Data
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->execute();
       Log::writeMedium('entry date+time changed: '.$data['rev_date'].' '.$data['rev_time'].' =&gt; '.$date.' '.$time.Log::prepareInfo($data_id, $rev_id).'{alterentry}');
-    }
-
-    // move revision to another data
-    //@CHECKME is that correct behaviour
-    if ($new_data_name != '' && $new_data_type != '') {
-
-      $stmt=DBConnection::getInstance()->prepare("SELECT data_id FROM data_".$h_a2." WHERE data_name = :name AND data_type = :type LIMIT 1");
-      $stmt->bindParam('name',$new_data_name,PDO::PARAM_STR);
-      $stmt->bindParam('type',$new_data_type,PDO::PARAM_STR);
-      $stmt->execute();
-      $new_data_id = $stmt->fetchColumn();
-
-      if ($new_data_id > 0) {
-        $stmt=DBConnection::getInstance()->prepare("UPDATE data_revision".$h_a." SET data_id = :new_data_id WHERE rev_id = :rev_id LIMIT 1");
-        $stmt->bindParam('new_data_id',$new_data_id,PDO::PARAM_INT);
-        $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
-        $stmt->execute();
-
-        $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM data_revision".$h_a." WHERE data_id = :data_id");
-        $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
-        $stmt->execute();
-        $data_count = $stmt->fetchColumn();
-
-
-        Log::writeMedium('entry moved to another data-id: '.$data_id.' =&gt; '.$new_data_id.Log::prepareInfo($data_id, $rev_id).'{alterentry}');
-
-
-        if ($data_count === 0) {
-          $stmt=DBConnection::getInstance()->prepare("DELETE FROM data_".$h_a2." WHERE data_id = :data_id LIMIT 1"); 
-          $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
-          $stmt->execute();
-          Log::writeMedium('unused data-id deleted: '.$data_id.Log::prepareInfo($data_id, $rev_id).'{alterentry}');
-        }
-      }
     }
   } // end of member function getCookieDomain
 
@@ -498,6 +463,17 @@ class Data
       return;
     }
 
+    // update data type
+    if ($data_type != '' && $data_type != $data['data_type']) {
+      $stmt=DBConnection::getInstance()->prepare("UPDATE data_".$h_a2." SET data_type = :type_new WHERE data_id = :data_id LIMIT 1");
+      $stmt->bindParam('type_new',$data_type,PDO::PARAM_STR);
+      $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+      $stmt->execute();
+      Log::writeMedium('data-type changed: '.$data['data_type'].' =&gt; '.$data_type.Log::prepareInfo($data_id).'{altersecurityfields}');
+      $new_data_type = $data_type;
+    }
+
+    // update data name
     if ($data_name != '' && $data_name != $data['data_name']) {
       $stmt=DBConnection::getInstance()->prepare("UPDATE data_".$h_a2." SET data_name = :name_new WHERE data_id = :id LIMIT 1");
       $stmt->bindParam('name_new',$data_name,PDO::PARAM_STR);
@@ -506,77 +482,75 @@ class Data
 
       Log::writeMedium('data-name changed: '.$data['data_name'].' =&gt; '.$data_name.Log::prepareInfo($data_id).'{altersecurityfields}');
 
+      // update dependent entries
       if ($update_links == true) {
-        if ($data_type == '') {
-          $data_type = $data['data_type'];
+        if ($new_data_type == '') {
+          $new_data_type = $data['data_type'];
         }
 
-        switch ($data_type) {
+        // old type
+        switch ($data['data_type']) {
           case 'content':
-            $type_short = 'cont';
+            $new_type_short = 'cont';
             break;
           case 'template':
-            $type_short = 'templ';
+            $new_type_short = 'templ';
             break;
           case 'script':
-            $type_short = 'inc';
+            $new_type_short = 'inc';
             break;
           case 'system':
-            $type_short = 'sys';
+            $new_type_short = 'sys';
             break;
           case 'page':
           default:
-            $type_short = 'no';
+            $new_type_short = 'no';
             break;
         }
 
-        // prepare for usage in while loop
-        $stmt_update=DBConnection::getInstance()->prepare("UPDATE data_text".$h_a." SET text_content = :content WHERE text_id = :text_id LIMIT 1");
+        // new type
+        switch ($new_data_type) {
+          case 'content':
+            $old_type_short = 'cont';
+            break;
+          case 'template':
+            $old_type_short = 'templ';
+            break;
+          case 'script':
+            $old_type_short = 'inc';
+            break;
+          case 'system':
+            $old_type_short = 'sys';
+            break;
+          case 'page':
+          default:
+            $old_type_short = 'no';
+            break;
+        }
 
         // update text content with new name
         //@ADD check, for only updating dependent entries
-        $stmt=DBConnection::getInstance()->prepare("SELECT text_id, text_content FROM data_text".$h_a." ORDER BY text_id ASC");
+        $stmt=DBConnection::getInstance()->prepare("UPDATE data_text".$h_a." SET text_content = REPLACE(REPLACE(text_content, :old_type_name, :new_type_name), :old_link, :new_link) WHERE text_content LIKE :search1 OR text_content LIKE :search2 ORDER BY text_id ASC");
+        $stmt->bindParam('search1','%[#'.$old_type_short.'_'.$data['data_name'].']%',PDO::PARAM_STR);
+        $stmt->bindParam('search2','%[#link_'.$data['data_name'].']%',PDO::PARAM_STR);
+        $stmt->bindParam('old_type_name','[#'.$old_type_short.'_'.$data['data_name'].']',PDO::PARAM_STR);
+        $stmt->bindParam('new_type_name','[#'.$new_type_short.'_'.$data_name.']',PDO::PARAM_STR);
+        $stmt->bindParam('old_link','[#link_'.$data['data_name'].']',PDO::PARAM_STR);
+        $stmt->bindParam('new_link','[#link_'.$data_name.']',PDO::PARAM_STR);
         $stmt->execute();
-        while ($text = $stmt->fetch(PDO::FETCH_ASSOC)) {
-          $text_content = $text['text_content'];
-
-          // update imports
-          if ($type_short != 'no') {
-            $text_content = str_replace('[#'.$type_short.'_'.$data['data_name'].']', '[#'.$type_short.'_'.$data_name.']', $text_content); 
-          }
-
-          // update links
-          if ($data['data_type'] == 'page') {
-            $text_content = str_replace('[#link_'.$data['data_name'].']', '[#link_'.$data_name.']', $text_content); 
-          }
-
-          // write update, if something has changed
-          if ($text['text_content'] != $text_content) {
-            $stmt_update->bindParam('content',$text_content,PDO::PARAM_STR);
-            $stmt_update->bindParam('text_id',$text['text_id'],PDO::PARAM_INT);
-            $stmt_update->execute();
-          }
-        } // while
 
         Log::writeMedium('data-interlinks updated due data-name change'.Log::prepareInfo($data_id).'{altersecurityfields}');
       }
     } // end data_name changes
 
-    if ($data_type != '' && $data_type != $data['data_type']) {
-      $stmt=DBConnection::getInstance()->prepare("UPDATE data_".$h_a2." SET data_type = :type_new WHERE data_id = :data_id LIMIT 1");
-      $stmt->bindParam('type_new',$data_type,PDO::PARAM_STR);
-      $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
-      $stmt->execute();
-      Log::writeMedium('data-type changed: '.$data['data_type'].' =&gt; '.$data_type.Log::prepareInfo($data_id).'{altersecurityfields}');
-    } // end data_type changes
-
+    // change ACL
     if ($data_acl != '' && $data_acl != $data['data_acl']) {
       $stmt=DBConnection::getInstance()->prepare("UPDATE data_".$h_a2." SET data_acl = :acl_new WHERE data_id = :data_id LIMIT 1");
       $stmt->bindParam('acl_new',$data_acl);
       $stmt->bindParam('data_id',$data_id);
       $stmt->execute();
       Log::writeMedium('data-acl changed: '.$data['data_acl'].' =&gt; '.$data_acl.Log::prepareInfo($data_id).'{altersecurityfields}');
-    } // end data_acl changes
+    } 
 
   } // end of member function getCookieDomain
 
@@ -595,7 +569,7 @@ class Data
   {
     $thisuser = &ThisUser::getInstance();
 
-    $data_name = @htmlspecialchars($_GET['d_name']);
+    $data_name = trim(@htmlspecialchars($_GET['d_name']));
 
     $stmt=DBConnection::getInstance()->prepare("SELECT data_id FROM data_ WHERE data_name = :name AND data_type = :type LIMIT 1");
     $stmt->bindParam('name',$data_name,PDO::PARAM_STR);

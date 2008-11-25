@@ -47,7 +47,7 @@ class HTML_User_Register extends HTML_User
   {
     global $rdf_name;
     global $rdf_logon_system_name;
-    global $roscms_SET_path_ex;
+    global $roscms_intern_page_link, $roscms_intern_webserver_roscms;
     global $rdf_support_email_str;
     global $rdf_register_user_name_min, $rdf_register_user_name_max;
 
@@ -62,11 +62,11 @@ class HTML_User_Register extends HTML_User
       <div class="u-h1">Register to '.$rdf_name.'</div>
       <span class="u-h2">Become a member of the '.$rdf_name.' Community. </span>  The  <span class="u-h2">'.$rdf_logon_system_name.'</span> account offers single sign-on for all <span class="u-h2">'.$rdf_name.'</span> web services.
       <ul>
-        <li>Already a member? <a href="'.$roscms_SET_path_ex.'login/">Login now</a>! </li>
-        <li><a href="'.$roscms_SET_path_ex.'login/lost/">Lost username or password?</a></li>
+        <li>Already a member? <a href="'.$roscms_intern_page_link.'login">Login now</a>! </li>
+        <li><a href="'.$roscms_intern_page_link.'login&amp;subpage=lost">Lost username or password?</a></li>
       </ul>
 
-      <form action="'.$roscms_SET_path_ex.'register/" method="post">
+      <form action="'.$roscms_intern_page_link.'register" method="post">
         <div>
           <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
             <div class="corner1">
@@ -160,7 +160,7 @@ class HTML_User_Register extends HTML_User
           $subject = $rdf_name_long." - Account Activation";
 
           // message
-          $message = $rdf_name_long." - Account Activation\n\n\nYou have registered an account on ".$rdf_name.". The next step in order to enable the account is to activate it by using the hyperlink below.\n\nYou haven't registered an account? Oops, then someone has tried to register an account with your email address. Just ignore this email, no one can use it anyway as it is not activated and the account will get deleted soon.\n\n\nUsername: ".$_POST['username']."\nPassword: ".$_POST['userpwd1']."\n\nActivation-Hyperlink: ".$roscms_SET_path_ex."login/activate/".$account_act_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
+          $message = $rdf_name_long." - Account Activation\n\n\nYou have registered an account on ".$rdf_name.". The next step in order to enable the account is to activate it by using the hyperlink below.\n\nYou haven't registered an account? Oops, then someone has tried to register an account with your email address. Just ignore this email, no one can use it anyway as it is not activated and the account will get deleted soon.\n\n\nUsername: ".$_POST['username']."\nPassword: ".$_POST['userpwd1']."\n\nActivation-Hyperlink: ".$roscms_intern_page_link."login&subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
           // send the mail
           if (Email::send($_POST['useremail'], $subject, $message)) {
@@ -221,7 +221,7 @@ class HTML_User_Register extends HTML_User
       if (isset($_POST['registerpost']) && $mail_exists) {
         echo_strip('
           <br />
-          <em>That email address is already with an account. Please <a href="'.$roscms_SET_path_ex.'login/" style="color:red !important; font-weight: bold; text-decoration:underline;">login</a>!</em>');
+          <em>That email address is already with an account. Please <a href="'.$roscms_intern_page_link.'login" style="color:red !important; font-weight: bold; text-decoration:underline;">login</a>!</em>');
       }
 
       echo_strip('
@@ -237,14 +237,14 @@ class HTML_User_Register extends HTML_User
             function CaptchaReload()
             {
               ++BypassCacheNumber;
-              document.getElementById('captcha').src = '".$roscms_SET_path_ex.">register/captcha/' + BypassCacheNumber;
+              document.getElementById('captcha').src = '".$roscms_intern_page_link."captcha' + BypassCacheNumber;
             }
 
-            document.write(<![CDATA['<br /><span style=\"color:#817A71; \">If you can't read this, try <a href=\"javascript:CaptchaReload()\">another one</a>.</span>']]>);
+            document.write('<br /><span style=\"color:#817A71; \">If you can't read this, try <a href=\"javascript:CaptchaReload()\">another one</a>.</span>');
           
           -->";echo_strip('
           </script>
-          <img id="captcha" src="'.$roscms_SET_path_ex.'register/captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$rdf_support_email_str.' for help." title="Are you human?" />
+          <img id="captcha" src="'.$roscms_intern_page_link.'captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$rdf_support_email_str.' for help." title="Are you human?" />
           <br />');
       if (isset($_POST['registerpost'])) { 
         echo_strip('
@@ -256,7 +256,7 @@ class HTML_User_Register extends HTML_User
         </div>
         <div class="login-button">
           <input type="submit" name="submit" value="Register" tabindex="8" />
-          <input type="button" onclick="'."window.location='".$roscms_SET_path_ex."'".'" tabindex="9" value="Cancel" name="cancel" style="color:#777777;" />
+          <input type="button" onclick="'."window.location='".$roscms_intern_webserver_roscms."'".'" tabindex="9" value="Cancel" name="cancel" style="color:#777777;" />
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
         </div>');
     } // end registration form

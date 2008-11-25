@@ -31,7 +31,7 @@ class Editor_Website extends Editor
   const FIELDS   = 1;
   const HISTORY  = 2;
   const SECURITY = 3;
-  const ENTRY    = 4;
+  const REVISION = 4;
   const DEPENCIES= 5;
 
   // types of new entries
@@ -52,8 +52,6 @@ class Editor_Website extends Editor
 
     global $roscms_standard_language;
     global $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4;
-    global $RosCMS_GET_d_id, $RosCMS_GET_d_r_id;
-    global $RosCMS_GET_d_r_lang;
 
     switch ($action) {
 
@@ -117,18 +115,18 @@ class Editor_Website extends Editor
 
       // update Field details
       case 'alterfields2':
-        Data::updateText($RosCMS_GET_d_r_id, $RosCMS_GET_d_value, $RosCMS_GET_d_value2, @$_GET['d_arch']);
+        Data::updateText($_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, @$_GET['d_arch']);
         $this->show();
         break;
 
-      // show entry details
+      // show revision details
       case 'showentry':
-        $this->showEntryDetails(self::ENTRY);
+        $this->showEntryDetails(self::REVISION);
         break;
 
-      // update Entry details
+      // update revision details
       case 'alterentry':
-        Data::updateRevision($RosCMS_GET_d_id, $RosCMS_GET_d_r_id,$RosCMS_GET_d_value,$RosCMS_GET_d_value2,$RosCMS_GET_d_value3,$RosCMS_GET_d_value4,htmlspecialchars(@$_GET["d_val5"]),htmlspecialchars(@$_GET["d_val6"]),htmlspecialchars(@$_GET["d_val7"]));
+        Data::updateRevision($_GET['d_id'], $_GET['d_r_id'],$RosCMS_GET_d_value,$RosCMS_GET_d_value2,$RosCMS_GET_d_value3,$RosCMS_GET_d_value4,htmlspecialchars(@$_GET["d_val5"]));
         $this->show();
         break;
 
@@ -139,13 +137,13 @@ class Editor_Website extends Editor
 
       // update Security details
       case 'altersecurity':
-        Data::update($RosCMS_GET_d_id, $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4);
+        Data::update($_GET['d_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4);
         $this->show();
         break;
 
       // add new tag
       case 'addtag':
-        Tag::add($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
+        Tag::add(, $_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
         $this->showEntryDetails(self::METADATA);
         break;
 
@@ -164,23 +162,23 @@ class Editor_Website extends Editor
       // update tag by id
       case 'changetag':
         Tag::deleteById($RosCMS_GET_d_value4, $RosCMS_GET_d_value3);
-        Tag::add($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
-        echo Tag::getIdByUser($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value, $thisuser->id());
+        Tag::add($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
+        echo Tag::getIdByUser($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value, $thisuser->id());
         break;
 
       // update tag by name/user
       case 'changetag2':
       case 'changetag3':
-        Tag::deleteByName($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value , $RosCMS_GET_d_value3);
-        Tag::add($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value , $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
-        echo Tag::getIdByName($RosCMS_GET_d_id, $RosCMS_GET_d_r_id, $RosCMS_GET_d_value, $RosCMS_GET_d_value3);
+        Tag::deleteByName($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value , $RosCMS_GET_d_value3);
+        Tag::add($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value , $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
+        echo Tag::getIdByName($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value3);
         break;
 
       // Change Tags around Data entry
       case 'changetags':
         // only call function if some entries are given ($_GET['d_val'] holds number of id's)
         if ($_GET['d_val'] > 0) {
-          Data::evalAction($RosCMS_GET_d_value2 /* entry rev_id's */, $RosCMS_GET_d_value3 /* action */, $RosCMS_GET_d_r_lang, $RosCMS_GET_d_value4);
+          Data::evalAction($RosCMS_GET_d_value2 /* entry rev_id's */, $RosCMS_GET_d_value3 /* action */, $_GET['d_r_lang'], $RosCMS_GET_d_value4);
         }
         break;
 
@@ -206,8 +204,6 @@ class Editor_Website extends Editor
    */
   protected function performDefaultAction()
   {
-    global $RosCMS_GET_d_r_lang;
-
     // normal (contains NO "tr")
     if (!isset($_GET['d_r_id']) || strpos($_GET['d_r_id'], 'tr') === false) {
       $this->show();
@@ -224,7 +220,7 @@ class Editor_Website extends Editor
       if (Security::hasRight($revision['data_id'], 'trans')) {
 
         // copy existing entry to new language
-        if (Data::copy($revision['data_id'], $revision['rev_id'], 1 /* copy mode */, $RosCMS_GET_d_r_lang)) {
+        if (Data::copy($revision['data_id'], $revision['rev_id'], 1 /* copy mode */, $_GET['d_r_lang'])) {
           $stmt=DBConnection::getInstance()->prepare("SELECT data_id, rev_id, rev_language FROM data_revision WHERE data_id = :data_id AND rev_usrid = :user_id AND rev_version = 0 AND rev_language = :lang AND rev_date = :date ORDER BY rev_id DESC LIMIT 1");
           $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_STR);
           $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
@@ -290,7 +286,7 @@ class Editor_Website extends Editor
         $stext_num++;
 
         echo_strip('
-          <label for="estext"'.$stext_num.'" class="frmeditheadline" style="font-weight: bold;">'); echo ucfirst($stext['stext_name']);echo_strip(':</label>
+          <label for="estext"'.$stext_num.'" class="frmeditheadline" style="font-weight: bold;">'.$stext['stext_name'].':</label>
           <span id="edstext'.$stext_num.'" style="display:none;">'.$stext['stext_name'].'</span><br />
           <input name="estext"'.$stext_num.'" type="text" id="estext'.$stext_num.'" size="50" maxlength="250" value="');echo $stext['stext_content'].'" /><br /><br />';
       }
@@ -311,7 +307,7 @@ class Editor_Website extends Editor
         $text_num++;
 
         echo_strip('
-          <label class="frmeditheadline" for="elm'.$text_num.'">');echo ucfirst($text['text_name']); echo_strip('</label>
+          <label class="frmeditheadline" for="elm'.$text_num.'">'.$text['text_name'].'</label>
           <button type="button" id="butRTE'.$text_num.'" onclick="'."toggleEditor('elm".$text_num."', this.id)".'">Rich Text</button>
           <span id="swraped'.$text_num.'">
           <input id="wraped'.$text_num.'" type="checkbox" onclick="'."toggleWordWrap(this.id, 'elm".$text_num."');".'" checked="checked" />
@@ -654,11 +650,11 @@ class Editor_Website extends Editor
       }
       echo '&nbsp;|&nbsp;';
 
-      if ($mode == self::ENTRY) {
-        echo '<strong>Entry</strong>';
+      if ($mode == self::REVISION) {
+        echo '<strong>Revision</strong>';
       }
       else {
-        echo '<span class="detailmenu" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Entry</span>';
+        echo '<span class="detailmenu" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Revision</span>';
       }
     }
 
@@ -696,8 +692,8 @@ class Editor_Website extends Editor
       case self::FIELDS:
         $this->showEntryDetailsFields();
         break;
-      case self::ENTRY:
-        $this->showEntryDetailsEntry();
+      case self::REVISION:
+        $this->showEntryDetailsRevision();
         break;
     }
 
@@ -1018,7 +1014,7 @@ class Editor_Website extends Editor
    *
    * @access private
    */
-  private function showEntryDetailsEntry( )
+  private function showEntryDetailsRevision( )
   {
     global $h_a, $h_a2;
 
@@ -1057,16 +1053,6 @@ class Editor_Website extends Editor
       <div class="frmeditheadline">Time</div><br />
       <input type="text" name="vertime" id="vertime" size="8" maxlength="8" value="'.$revision['rev_time'].'" /> (hour:minute:second)
       <img src="images/attention.gif" width="22" height="22" /><br />
-      <br />
-      <div class="frmeditheadline">Move Entry</div><br />
-      <input type="text" name="chgdataname" id="chgdataname" size="25" maxlength="100" value="'.$revision['data_name'].'" />
-      <select id="cbmchgdatatype">
-        <option value="page"'.(($revision['data_type'] == 'page') ? ' selected="selected"' : '').'>Page</option>
-        <option value="content"'.(($revision['data_type'] == 'content') ? ' selected="selected"' : '').'>Content</option>
-        <option value="template"'.(($revision['data_type'] == 'template') ? ' selected="selected"' : '').'>Template</option>
-        <option value="script"'.(($revision['data_type'] == 'script') ? ' selected="selected"' : '').'>Script</option>
-        <option value="system"'.(($revision['data_type'] == 'system') ? ' selected="selected"' : '').'>System</option>
-      </select> <img src="images/attention.gif" width="22" height="22" /><br />
       <br />
       <br />
       <button type="button" id="beditsaveentry" onclick="editsaveentrychanges('.$this->data_id.','.$this->rev_id.')">Save Changes</button> &nbsp;

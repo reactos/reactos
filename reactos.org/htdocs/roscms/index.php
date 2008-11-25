@@ -47,28 +47,13 @@
 	$rpm_page="";
 	$rpm_lang="";
 
-	if (array_key_exists("page", $_GET)) $rpm_page=htmlspecialchars($_GET["page"]);
 	if (array_key_exists("lang", $_GET)) $rpm_lang=htmlspecialchars($_GET["lang"]);
 	
   
 	require("lang.php"); // lang code outsourced
 	require("custom.php"); // custom on-screen information
 	
-	
-	$rdf_URI_tree = $_SERVER['REQUEST_URI'];
-	$rdf_URI_tree = str_replace($roscms_intern_webserver_roscms,'',$rdf_URI_tree);
-	$rdf_URI_tree = str_replace('index.php/','',$rdf_URI_tree);
-	
-	$rdf_URI_tree_split = explode('/', $rdf_URI_tree);
-	
-	$rdf_uri_2 = @$rdf_URI_tree_split[1];
-	$rdf_uri_3 = @$rdf_URI_tree_split[2];
 
-	if ($rpm_page != "") {
-		$rdf_URI_tree_split[0] = $rpm_page;
-	}
-	
-	$rdf_uri_str = $rdf_URI_tree_split[0]."/";
   
   
 	$RosCMS_GET_d_use = ""; // data usage (where the data will be used)
@@ -77,10 +62,6 @@
 	$RosCMS_GET_d_value2 = ""; // data transport value
 	$RosCMS_GET_d_value3 = ""; // data transport value
 	$RosCMS_GET_d_value4 = ""; // data transport value
-	
-	$RosCMS_GET_d_id = ""; // data_id
-	$RosCMS_GET_d_r_id = ""; // data rev id
-	$RosCMS_GET_d_r_lang = ""; // data rev language (e.g. "en", "de", etc.)
 
 	if (array_key_exists("d_u", $_GET)) $RosCMS_GET_d_use=htmlspecialchars($_GET["d_u"]);
 	if (array_key_exists("d_fl", $_GET)) $RosCMS_GET_d_flag=htmlspecialchars($_GET["d_fl"]);
@@ -88,10 +69,6 @@
 	if (array_key_exists("d_val2", $_GET)) $RosCMS_GET_d_value2=htmlspecialchars($_GET["d_val2"]);
 	if (array_key_exists("d_val3", $_GET)) $RosCMS_GET_d_value3=htmlspecialchars($_GET["d_val3"]);
 	if (array_key_exists("d_val4", $_GET)) $RosCMS_GET_d_value4=htmlspecialchars($_GET["d_val4"]);
-
-	if (array_key_exists("d_id", $_GET)) $RosCMS_GET_d_id=htmlspecialchars($_GET["d_id"]);
-	if (array_key_exists("d_r_id", $_GET)) $RosCMS_GET_d_r_id=htmlspecialchars($_GET["d_r_id"]);
-	if (array_key_exists("d_r_lang", $_GET)) $RosCMS_GET_d_r_lang=htmlspecialchars($_GET["d_r_lang"]);
   
   
 if (isset($_GET['d_arch']) && $_GET['d_arch'] == true) {
@@ -111,12 +88,12 @@ function echo_strip( $text ) {
   echo   str_replace("\r",'',$text);
 }
 
-
-switch ($rdf_URI_tree_split[0]) {
+// select page
+switch (@$_GET['page']) {
 
   // Login user
   case 'login':
-    switch (@$rdf_URI_tree_split[1]) {
+    switch (@$_GET['subpage']) {
       case 'lost':
         new HTML_User_LostPassword();
         break;
@@ -136,12 +113,12 @@ switch ($rdf_URI_tree_split[0]) {
 
   // Register new user
   case 'register':
-    if (@$rdf_URI_tree_split[1] == 'captcha') {
-      new CaptchaSecurityImages();
-    }
-    else {
-      new HTML_User_Register();
-    }
+    new HTML_User_Register();
+    break;
+
+  // Captcha
+  case 'captcha':
+    new CaptchaSecurityImages();
     break;
 
   // User Profile (view | edit)
@@ -149,7 +126,7 @@ switch ($rdf_URI_tree_split[0]) {
   case 'user':
   default:
     // select action
-    switch (@$rdf_URI_tree_split[1]) {
+    switch (@$_GET['subpage']) {
       case 'edit':
       case 'activate':
         new HTML_User_ProfileEdit();

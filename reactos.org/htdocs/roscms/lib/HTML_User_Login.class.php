@@ -48,7 +48,7 @@ class HTML_User_Login extends HTML_User
    */
   protected function body( )
   {
-    global $roscms_SET_path_ex;
+    global $roscms_intern_page_link;
     global $rdf_login_cookie_usrkey;
     global $rdf_login_cookie_seckey;
     global $rdf_login_cookie_usrname;
@@ -192,7 +192,7 @@ class HTML_User_Login extends HTML_User
         exit;
       }
 
-      header('Location: '.$roscms_SET_path_ex.'my/');
+      header('Location: '.$roscms_intern_page_link.'my');
       exit;
     }
   } // end of member function body
@@ -210,12 +210,12 @@ class HTML_User_Login extends HTML_User
     global $rdf_login_cookie_usrpwd;
     global $rdf_login_cookie_loginname;
     global $rdf_name;
-    global $roscms_SET_path_ex;
+    global $roscms_intern_page_link;
 
     //@ADD comment -> why do we need this
     $random_string_security = ''; 
 
-    if (isset($_GET['sec']) && $_GET['sec'] == "security") { 
+    if (isset($_GET['sec']) && $_GET['sec'] == 'security') { 
       $random_string_security = self::makeKey();
       setcookie($rdf_login_cookie_seckey, $random_string_security, 0, '/', Cookie::getDomain());
     } 
@@ -228,7 +228,7 @@ class HTML_User_Login extends HTML_User
       $target_clean = $matches[1];
     }
 
-    echo '<form action="'.$roscms_SET_path_ex.'login/" method="post">';
+    echo '<form action="'.$roscms_intern_page_link.'login" method="post">';
 
     if ($target_clean != '' ) {
       echo_strip('
@@ -240,7 +240,7 @@ class HTML_User_Login extends HTML_User
     echo_strip('
       <h1>Login</h1>
       <div class="u-h1">Login to '.$rdf_name.'</div>
-      <div class="u-h2">You don\'t have a '.$rdf_name.' account yet? <a href="'.$roscms_SET_path_ex.'register/">Join now</a>, it\'s free and just takes a minute.</div>
+      <div class="u-h2">You don\'t have a '.$rdf_name.' account yet? <a href="'.$roscms_intern_page_link.'register">Join now</a>, it\'s free and just takes a minute.</div>
       <div>
         <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
           <div class="corner1">
@@ -266,7 +266,7 @@ class HTML_User_Login extends HTML_User
         <input name="'.$rdf_login_cookie_usrpwd.'" type="password" class="input" tabindex="2" id="'.$rdf_login_cookie_usrpwd.'" size="50" maxlength="50" />
       </div>');
 
-    if (isset($_GET['sec']) && ($_GET['sec'] == '' || $_GET['sec'] == 'standard')) {
+    if (empty($_GET['sec']) || $_GET['sec'] == 'standard') {
       echo_strip('
         <div class="login-options">
           <input name="loginoption1" type="checkbox" id="loginoption1" value="save"'.(isset($_COOKIE[$rdf_login_cookie_loginname]) ? 'checked' : '').' tabindex="3" />
@@ -306,16 +306,16 @@ class HTML_User_Login extends HTML_User
 
     echo '<div style="margin:10px;text-align:center;">';
 
-    if (isset($_GET['sec']) && ($_GET['sec'] == '' || $_GET['sec'] == 'standard')) {
-      echo '<a href="'.$roscms_SET_path_ex.'login/?sec=security'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use enhanced security</a>';
+    if (empty($_GET['sec']) || $_GET['sec'] == 'standard') {
+      echo '<a href="'.$roscms_intern_page_link.'login&amp;sec=security'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use enhanced security</a>';
     }
     else {
-      echo '<a href="'.$roscms_SET_path_ex.'login/?sec=standard'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use standard security</a>';
+      echo '<a href="'.$roscms_intern_page_link.'login&amp;sec=standard'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use standard security</a>';
     }
     
     echo_strip('
             <br />
-            <a href="'.$roscms_SET_path_ex.'login/lost/">Lost username or password?</a>
+            <a href="'.$roscms_intern_page_link.'login&amp;subpage=lost">Lost username or password?</a>
           </div>
         </div>
       </form>');

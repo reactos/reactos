@@ -49,8 +49,7 @@ class HTML_User_Profile extends HTML_User
    */
   protected function body( )
   {
-    global $rdf_uri_2;
-    global $roscms_SET_path_ex;
+    global $roscms_intern_page_link;
 
     if ($this->search) {
 
@@ -73,13 +72,14 @@ class HTML_User_Profile extends HTML_User
       }
 
       // more than one user was found (or none)
-      if ($users_found != 1 && ($rdf_uri_2 == '' || isset($_GET['search']) && $_GET['search'] != '')) {
+      if ($users_found != 1 && (empty($_GET['user_name']) || !empty($_GET['search']))) {
         echo_strip('
-          <h1><a href="'.$roscms_SET_path_ex.'my/">myReactOS</a> &gt; Profile Search</h1>
+          <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; Profile Search</h1>
           <div class="u-h1">Profile Search</div>
-          <form id="form1" name="form1" method="get" action="'.$roscms_SET_path_ex.'search/">
+          <form id="form1" method="get" action="'.$roscms_intern_page_link.'search">
+            <input type="hidden" name="page" id="page" value="search" />
             <input name="search" type="text" id="search" value="'.@htmlentities($_GET['search']).'" />
-            <input name="cmdsearch" type="submit" id="cmdsearch" value="Search" />
+            <button type="submit">Search</button>
           </form>
           <br />');
 
@@ -93,7 +93,7 @@ class HTML_User_Profile extends HTML_User
           $stmt->execute();
 
           while ($search = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            echo '<li><a style="font-weight:bold;" href="'.$roscms_SET_path_ex.'search/'.$search['user_name'].'">'.$search['user_name'].'</a>';
+            echo '<li><a style="font-weight:bold;" href="'.$roscms_intern_page_link.'search&amp;phrase'.$search['user_name'].'">'.$search['user_name'].'</a>';
             if ($search['user_fullname']) {
               echo '<br />'.$search['user_fullname'];
             }
@@ -106,7 +106,7 @@ class HTML_User_Profile extends HTML_User
       else {
         if (empty($user_id)|| $user_id === false) {
           $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM users WHERE user_name = :user_name LIMIT 1");
-          $stmt->bindParam('user_name',rawurldecode($rdf_uri_2));
+          $stmt->bindParam('user_name',rawurldecode(@$_GET['user_name']));
           $stmt->execute();
           $user_id = $stmt->fetchColumn();
         }
@@ -125,7 +125,7 @@ class HTML_User_Profile extends HTML_User
    */
   private function profile( $user_id = null )
   {
-    global $roscms_SET_path_ex;
+    global $roscms_intern_page_link;
     global $roscms_intern_webserver_pages;
     global $rdf_name;
 
@@ -226,7 +226,7 @@ class HTML_User_Profile extends HTML_User
       echo_strip('
         <div class="login-form">
           <div class="u-desc">Private Website</div>
-          <div class="u-title"><a href="'.$profile['user_website'].'" rel="nofollow">.'.htmlspecialchars($profile['user_website']).'</a></div>
+          <div class="u-title"><a href="'.$profile['user_website'].'" rel="nofollow">'.htmlspecialchars($profile['user_website']).'</a></div>
         </div>');
     }
 
@@ -268,14 +268,14 @@ class HTML_User_Profile extends HTML_User
     if ($profile['user_id'] == $thisuser->id()) {
       echo_strip('
         <div>&nbsp;</div>
-        <div class="u-link"><a href="'.$roscms_SET_path_ex.'my/edit/">Edit My Profile</a></div>
+        <div class="u-link"><a href="'.$roscms_intern_page_link.'my&amp;subpage=edit">Edit My Profile</a></div>
         <div>&nbsp;</div>');
     }
     else {
       echo_strip('
         <div>&nbsp;</div>
           <div>
-            <a href="'.$roscms_SET_path_ex.'search/" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">
+            <a href="'.$roscms_intern_page_link.'search" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">
               <strong>&raquo; Profile Search</strong>
             </a>
           </div>

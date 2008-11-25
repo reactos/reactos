@@ -56,8 +56,7 @@ abstract class HTML_User extends HTML
   {
     global $roscms_intern_webserver_pages;
     global $roscms_intern_webserver_roscms;
-    global $roscms_SET_path_ex;
-    global $rdf_uri_str;
+    global $roscms_intern_page_link;
     global $rpm_lang;
     global $roscms_langres;
 
@@ -82,8 +81,8 @@ abstract class HTML_User extends HTML
         <div class="navTitle">'.$roscms_langres['Account'].'</div>
         <ol>
           <li title="'.$thisuser->name().'">&nbsp;Nick:&nbsp;'.substr($thisuser->name(), 0, 9).'</li>
-          <li><a href="'.$roscms_SET_path_ex.'my/">My Profile</a></li>
-          <li><a href="'.$roscms_SET_path_ex.'search/">User Search</a></li>
+          <li><a href="'.$roscms_intern_page_link.'my">My Profile</a></li>
+          <li><a href="'.$roscms_intern_page_link.'search">User Search</a></li>
           <li><a href="'.$roscms_intern_webserver_pages.'peoplemap/">User Map</a></li>');
       if ($thisuser->securityLevel() > 0) {
         echo '<li><a href="'.$roscms_intern_webserver_roscms.'?page=data&amp;branch=welcome">RosCMS Interface</a></li>';
@@ -97,8 +96,8 @@ abstract class HTML_User extends HTML
       echo_strip('
         <div class="navTitle">'.$roscms_langres['Account'].'</div>
         <ol> 
-          <li><a href="'.$roscms_SET_path_ex.'login/">Login</a></li>
-          <li><a href="'.$roscms_SET_path_ex.'register/">Register</a></li>
+          <li><a href="'.$roscms_intern_page_link.'login">Login</a></li>
+          <li><a href="'.$roscms_intern_page_link.'register">Register</a></li>
         </ol>
         <br />');
     }
@@ -121,7 +120,7 @@ abstract class HTML_User extends HTML
       <ol>
         <li> 
           <div style="text-align:center;"> 
-            <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$roscms_SET_path_ex.$rdf_uri_str."?lang=' + this.options[this.selectedIndex].value".'">
+            <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$roscms_intern_webserver_roscms.'?'.$_SERVER['QUERY_STRING']."&lang=' + this.options[this.selectedIndex].value".'">
               <optgroup label="current language">'); 
  
     $stmt=DBConnection::getInstance()->prepare("SELECT lang_name FROM languages WHERE lang_id = :lang_id");

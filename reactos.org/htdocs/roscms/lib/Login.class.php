@@ -123,7 +123,7 @@ class Login
   public static function out( $target = '' )
   {
     global $rdf_login_cookie_usrkey;
-    global $roscms_SET_path_ex;
+    global $roscms_intern_page_link;
 
     if (isset($_COOKIE[$rdf_login_cookie_usrkey])) 
     {
@@ -147,7 +147,7 @@ class Login
       exit;
     }
 
-    header('Location: '.$roscms_SET_path_ex);
+    header('Location: '.$roscms_intern_page_link.'my');
     exit;
   } // end of member function login
 

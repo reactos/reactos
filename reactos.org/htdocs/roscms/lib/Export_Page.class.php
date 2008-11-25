@@ -52,7 +52,6 @@ class Export_Page extends Export
   public function page( )
   {
     global $RosCMS_GET_d_value, $RosCMS_GET_d_value2,$RosCMS_GET_d_value3;
-    global $RosCMS_GET_d_r_lang;
     global $roscms_standard_language;
 
     $dynamic_num = $RosCMS_GET_d_value3;
@@ -66,7 +65,7 @@ class Export_Page extends Export
       default:
         if (empty($_GET['d_r_id']) || strpos($_GET['d_r_id'], 'tr') >= 0) {
           // translation mode (contains "tr")
-          $RosCMS_GET_d_value2 = $RosCMS_GET_d_r_lang;
+          $RosCMS_GET_d_value2 = $_GET['d_r_lang'];
         }
 
         // remove "tr" so that it also work in translation view

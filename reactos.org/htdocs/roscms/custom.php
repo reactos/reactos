@@ -25,7 +25,6 @@
 	$roscms_intern_webserver_pages = "/reactos/";
 	
 	$roscms_intern_webserver_roscms = "/reactos/roscms/";
-	$roscms_SET_path_ex = $roscms_intern_webserver_roscms."index.php/";
 	$roscms_intern_page_link = $roscms_intern_webserver_roscms . "?page=";
 
 	$roscms_standard_language="en"; // en/de/fr/...

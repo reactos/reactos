@@ -34,7 +34,6 @@ class HTML_User_ProfileEdit extends HTML_User
   public function __construct()
   {
     Login::required();
-    session_start();
     parent::__construct();
   }
 
@@ -46,8 +45,7 @@ class HTML_User_ProfileEdit extends HTML_User
    */
   protected function body( )
   {
-    global $roscms_SET_path_ex;
-    global $rdf_uri_3;
+    global $roscms_intern_page_link;
     global $rdf_name_long;
     global $rdf_name;
     global $rdf_register_user_pwd_min;
@@ -55,16 +53,15 @@ class HTML_User_ProfileEdit extends HTML_User
     global $rdf_register_user_name_max;
     global $roscms_intern_webserver_pages;
 
-    $activation_code = $rdf_uri_3;
+    $activation_code = @$_GET['code'];
 
-    $err_message = ''; // error message box text
     $existemail = false; // email already exists in the database (true = email exists)
     $safepwd = ''; // unsafe password, common cracked passwords ("" = not checked; "true" = fine; "false" =  match with a db entry => protected name)
     $password_change = false; // new password
 
     if ($activation_code != '' && strlen($activation_code) > 6) {
       echo_strip('
-        <h1><a href="'.$roscms_SET_path_ex.'my/">myReactOS</a> &gt; <a href="'.$roscms_SET_path_ex.'my/edit/">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
+        <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; <a href="'.$roscms_intern_page_link.'my&amp;subpage=edit">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
         <div class="u-h1">Activate E-Mail Address</div>
         <div class="u-h2">
           So you have a new email address and would like to keep your '.$rdf_name.' account up-to-date? That is a very good idea. To confirm your email address change, please enter your new email address again.
@@ -72,13 +69,13 @@ class HTML_User_ProfileEdit extends HTML_User
     }
     else {
       echo_strip('
-        <h1><a href="'.$roscms_SET_path_ex.'my/">myReactOS</a> &gt; Edit My Profile</h1>
+        <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; Edit My Profile</h1>
         <div class="u-h1">Edit My Profile</div>
         <div class="u-h2">Update your user account profile data to reflect the current state.</div>');
     }
     
     echo_strip('
-      <form action="'.$roscms_SET_path_ex.'my/edit/" method="post">
+      <form action="'.$roscms_intern_page_link.'my&amp;subpage=edit" method="post">
         <div style="text-align:center;">
           <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
             <div class="corner1">
@@ -104,7 +101,7 @@ class HTML_User_ProfileEdit extends HTML_User
       echo_strip('
         <div class="login-title">E-Mail Address Changed</div>
         <div>
-          <a href="'.$roscms_SET_path_ex.'my/" style="color: red !important; text-decoration:underline;">My Profile</a>
+          <a href="'.$roscms_intern_page_link.'my" style="color: red !important; text-decoration:underline;">My Profile</a>
         </div>');
       return;
     }
@@ -166,6 +163,11 @@ class HTML_User_ProfileEdit extends HTML_User
         $stmt->execute();
       }
 
+      // validate website
+      if (!preg_match('#://#',$_POST['userwebsite'])) {
+        $_POST['userwebsite'] = 'http://'.$_POST['userwebsite'];
+      }
+
       // update account data
       $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_timestamp_touch2 = NOW( ) , user_fullname = :fullname, user_website = :website, user_language = :language, user_country = :country, user_timezone = :timezone, user_occupation = :occupation, user_setting_multisession = :setting_multisession, user_setting_browseragent = :setting_browser, user_setting_ipaddress = :setting_ip, user_setting_timeout = :setting_timeout WHERE user_id = :user_id LIMIT 1");
       $stmt->bindParam('fullname',htmlspecialchars($_POST['userfullname']),PDO::PARAM_STR);
@@ -189,7 +191,7 @@ class HTML_User_ProfileEdit extends HTML_User
         $subject = $rdf_name_long." - Email Address Activation";
 
         // message
-        $message = $rdf_name_long." - Email Address Activation\n\n\nYou have requested an email address change for your account on ".$rdf_name.". The next step in order to enable the new email address for the account is to activate it by using the hyperlink below.\n\n\nCurrent E-Mail Address: ".$profile['user_email']."\nNew E-Mail Address: ".$_POST['useremail']."\n\nActivation-Hyperlink: ".$roscms_SET_path_ex."my/activate/".$account_act_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
+        $message = $rdf_name_long." - Email Address Activation\n\n\nYou have requested an email address change for your account on ".$rdf_name.". The next step in order to enable the new email address for the account is to activate it by using the hyperlink below.\n\n\nCurrent E-Mail Address: ".$profile['user_email']."\nNew E-Mail Address: ".$_POST['useremail']."\n\nActivation-Hyperlink: ".$roscms_intern_page_link."my&amp;subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
         // send the mail
         if (EMail::send($_POST['useremail'], $subject, $message)) {
@@ -204,11 +206,9 @@ class HTML_User_ProfileEdit extends HTML_User
         echo '<div>Password changed.</div>';
       }
 
-      echo '<div><a href="'.$roscms_SET_path_ex.'my/" style="color:red !important; text-decoration:underline;">My Profile</a></div>';
+      echo '<div><a href="'.$roscms_intern_page_link.'my" style="color:red !important; text-decoration:underline;">My Profile</a></div>';
 
       ROSUser::syncSubsystems($profile['user_id']);
-
-      unset($_SESSION['rdf_security_code']);
     }
     elseif ($activation_code != '' && strlen($activation_code) > 6) {
       echo_strip('
@@ -220,7 +220,7 @@ class HTML_User_ProfileEdit extends HTML_User
         <div class="login-button">
           <input type="submit" name="submit" value="Save" tabindex="16" />
           <br />
-          <input type="button" onclick="'."window.location='".$roscms_SET_path_ex."'".'" tabindex="17" value="Cancel" name="cancel" style="color:#777777;" />
+          <input type="button" onclick="'."window.location='".$roscms_intern_webserver_pages."'".'" tabindex="17" value="Cancel" name="cancel" style="color:#777777;" />
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
         </div>');
     }
@@ -274,7 +274,7 @@ class HTML_User_ProfileEdit extends HTML_User
       if (isset($_POST['registerpost']) && $existemail && $_POST['useremail'] != $profile['user_email']) {
         echo_strip('
           <br />
-          <em>That email address is already with an account. Do you have several accounts? Please <a href="'.$roscms_SET_path_ex.'login/" style="color:red !important; text-decoration:underline;"><strong>login</strong></a>!</em>');
+          <em>That email address is already with an account. Do you have several accounts? Please <a href="'.$roscms_intern_page_link.'login" style="color:red !important; text-decoration:underline;"><strong>login</strong></a>!</em>');
       }
 
       echo_strip('
@@ -380,7 +380,7 @@ class HTML_User_ProfileEdit extends HTML_User
 
         <div class="login-button">
           <input type="submit" name="submit" value="Save" tabindex="16" />
-          <input type="button" onclick="'.("window.location='".$roscms_SET_path_ex."'").'" tabindex="17" value="Cancel" name="cancel" style="color:#777777;" />
+          <input type="button" onclick="'.("window.location='".$roscms_intern_webserver_roscms."'").'" tabindex="17" value="Cancel" name="cancel" style="color:#777777;" />
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
         </div>');
     }

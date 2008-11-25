@@ -45,8 +45,7 @@ class HTML_User_LostPassword extends HTML_User
    */
   protected function body( )
   {
-    global $rdf_uri_3;
-    global $roscms_SET_path_ex;
+    global $roscms_intern_page_link, $roscms_intern_webserver_roscms;
     global $rdf_name, $rdf_name_long;
     global $rdf_register_user_pwd_min, $rdf_register_user_pwd_max;
     global $rdf_support_email_str;
@@ -55,25 +54,25 @@ class HTML_User_LostPassword extends HTML_User
     $mail_exists = false; // email already exists in the database (true = email exists)
     $password_id_exists = null; // pwd-id exists in the database (true = pwd-id exists)
 
-    $activation_code = $rdf_uri_3;
+    $activation_code = @$_GET['code'];
     $mail_exists = isset($_POST['registerpost']) && isset($_POST['useremail']) && $_POST['useremail'] != '' && ROSUser::hasEmail($_POST['useremail']);
     $password_id_exists =  ROSUser::hasPasswordReset($activation_code);
 
     if (strlen($activation_code > 6)) {
       echo_strip('
-        <h1><a href="'.$roscms_SET_path_ex.'login/">Login</a> &gt; Reset your Password</h1>
+        <h1><a href="'.$roscms_intern_page_link.'login">Login</a> &gt; Reset your Password</h1>
         <div class="u-h1">Reset your Password</div>
         <div class="u-h2">Have you forgotten your password of your '.$rdf_name.' account? Don\'t panic. You have already requested us that we reset your password. Now it\'s your turn to enter a new password for your '.$rdf_name.' account.</div>');
     }
     else {
       echo_strip('
-        <h1><a href="'.$roscms_SET_path_ex.'login/">Login</a> &gt; Lost Username or Password?</h1>
+        <h1><a href="'.$roscms_intern_page_link.'login">Login</a> &gt; Lost Username or Password?</h1>
         <div class="u-h1">Lost Username or Password?</div>
         <div class="u-h2">Have you forgotten your username and/or password of your '.$rdf_name.' account? Don\'t panic. We can send you your username and let you reset your password. All you need is your email address.</div>');
     }
 
     echo_strip('
-      <form action="'.$roscms_SET_path_ex.'login/lost/" method="post">
+      <form action="'.$roscms_intern_page_link.'login&amp;subpage=lost" method="post">
         <div style="text-align: center;">
           <div style="margin:0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
             <div class="corner1">
@@ -105,7 +104,7 @@ class HTML_User_LostPassword extends HTML_User
 
       echo_strip('
         <div class="login-title">Password changed</div>
-        <div><a href="'.$roscms_SET_path_ex.'login/" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
+        <div><a href="'.$roscms_intern_page_link.'login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
 
     }
     elseif (strlen($activation_code) < 6 && isset($_POST['registerpost']) && !empty($_POST['useremail']) && EMail::isValid($_POST['useremail']) && !empty($_POST['usercaptcha']) && !empty($_SESSION['rdf_security_code']) && strtolower($_SESSION['rdf_security_code']) == strtolower($_POST['usercaptcha']) && $mail_exists) {
@@ -128,7 +127,7 @@ class HTML_User_LostPassword extends HTML_User
       $subject = $rdf_name_long.' - Lost username or password?';
 
       // Email message
-      $message = $rdf_name_long." - Lost username or password?\n\n\nYou have requested your ".$rdf_name." account login data.\n\nYou haven't requested your account login data? Oops, then someone has tried the 'Lost username or password?' function with your email address, just ignore this email.\n\n\nUsername: ".$user['user_name']."\n\n\nLost your password? Reset your password: ".$roscms_SET_path_ex."login/lost/".$activation_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
+      $message = $rdf_name_long." - Lost username or password?\n\n\nYou have requested your ".$rdf_name." account login data.\n\nYou haven't requested your account login data? Oops, then someone has tried the 'Lost username or password?' function with your email address, just ignore this email.\n\n\nUsername: ".$user['user_name']."\n\n\nLost your password? Reset your password: ".$roscms_intern_page_link."login&subpage=lost&code=".$activation_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
       // send the Email
       if (EMail::send($_POST['useremail'], $subject, $message)) {
@@ -197,14 +196,14 @@ class HTML_User_LostPassword extends HTML_User
             function CaptchaReload()
             {
               ++BypassCacheNumber;
-              document.getElementById('captcha').src = '".$roscms_SET_path_ex."register/captcha/' + BypassCacheNumber;
+              document.getElementById('captcha').src = '".$roscms_intern_page_link."captcha' + BypassCacheNumber;
             }
 
             document.write('".'<br /><span style="color:#817A71;">If you can\'t read this, try <a href="javascript:CaptchaReload()">another one</a>.</span>'."');
           -->".'
           </script>';
       echo_strip('
-          <img id="captcha" src="'.$roscms_SET_path_ex.'register/captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$rdf_support_email_str.' for help." title="Are you human?" />
+          <img id="captcha" src="'.$roscms_intern_page_link.'captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$rdf_support_email_str.' for help." title="Are you human?" />
           <br />');
 
       if (isset($_POST['registerpost'])) { 
@@ -217,7 +216,7 @@ class HTML_User_LostPassword extends HTML_User
         </div>
         <div class="login-button">
           <input type="submit" name="submit" value="Send" tabindex="8" /><br />
-          <input type="button" onclick="'."window.location=".$roscms_SET_path_ex."'".'" tabindex="9" value="Cancel" name="cancel" style="color:#777777;" />
+          <input type="button" onclick="'."window.location=".$roscms_intern_webserver_roscms."'".'" tabindex="9" value="Cancel" name="cancel" style="color:#777777;" />
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
         </div>');
     }

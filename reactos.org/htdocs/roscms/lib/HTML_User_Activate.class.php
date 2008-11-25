@@ -45,22 +45,21 @@ class HTML_User_Activate extends HTML_User
    */
   protected function body( )
   {
-    global $rdf_uri_3;
-    global $roscms_SET_path_ex;
+    global $roscms_intern_page_link;
     global $rdf_logon_system_name;
 
     $err_message = ''; // error message box text
     $mail_exists = false; // email already exists in the database (true = email exists)
     $activation_code_exists = false; // pwd-id exists in the database (true = pwd-id exists)
 
-    $activation_code = $rdf_uri_3;
+    $activation_code = @$_GET['code'];
 
     echo_strip('
       <h1>Activate myReactOS Account</h1>
       <div class="u-h1">Activate myReactOS Account</div>
-      <div class="u-h2">Already a member? <a href="'.$roscms_SET_path_ex.'login/">Login now</a>!<br />
-        Don\'t have a '.$rdf_logon_system_name.' account yet? <a href="'.$roscms_SET_path_ex.'register/">Join now</a>, it\'s free and just takes a minute.</div>
-      <form action="'.$roscms_SET_path_ex.'login/activate/" method="post">
+      <div class="u-h2">Already a member? <a href="'.$roscms_intern_page_link.'login">Login now</a>!<br />
+        Don\'t have a '.$rdf_logon_system_name.' account yet? <a href="'.$roscms_intern_page_link.'register">Join now</a>, it\'s free and just takes a minute.</div>
+      <form action="'.$roscms_intern_page_link.'login&amp;subpage=activate" method="post">
         <div align="center">
           <div style="background: #e1eafb none repeat scroll 0%; width: 300px;">
             <div class="corner1">
@@ -111,7 +110,7 @@ class HTML_User_Activate extends HTML_User
 
       echo_strip('
         <div class="login-title">Account activated</div>
-        <div><a href="'.$roscms_SET_path_ex.'login/" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
+        <div><a href="'.$roscms_intern_page_link.'login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
     }
     elseif ($activation_code_exists) {
       echo_strip('
