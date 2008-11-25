@@ -119,5 +119,4 @@
 		<xi:include href="tools/tools.rbuild" />
 	</directory>
 
-	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 </group>

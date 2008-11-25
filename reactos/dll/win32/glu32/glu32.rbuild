@@ -9,6 +9,7 @@
 	<define name="RESOLVE_3D_TEXTURE_SUPPORT" />
 	<define name="BUILD_GL32" />
 	<define name="LIBRARYBUILD" />
+	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 	<library>ntdll</library>
 	<library>opengl32</library>
 	<library>kernel32</library>

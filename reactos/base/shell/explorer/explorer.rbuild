@@ -2,6 +2,7 @@
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true" unicode="yes">
+	<compilerflag compiler="cpp">-Wno-non-virtual-dtor</compilerflag>
 	<include base="explorer">.</include>
 	<define name="WIN32" />
 	<define name="__WINDRES__" />

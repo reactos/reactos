@@ -752,7 +752,7 @@ MingwModuleHandler::GenerateMacros (
 {
 	fprintf ( fMakefile, "# MACROS\n" );
 	GenerateMacro ( assignmentOperation,
-	                commonflagsMacro,
+	                cflagsMacro,
 	                data,
 	                &used_defs,
 	                true );
@@ -1118,7 +1118,7 @@ Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n"
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                       "\t$(ECHO_CC)\n"
-                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
+                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
@@ -1141,12 +1141,12 @@ Rule gccHostRule ( "$(source): ${$(module_name)_precondition}\n"
 Rule gppRule ( "$(source): ${$(module_name)_precondition}\n"
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                "\t$(ECHO_CC)\n"
-               "\t${gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
+               "\t${gpp} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
 Rule gppHostRule ( "$(source): ${$(module_name)_precondition}\n"
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_CC)\n"
-                   "\t${host_gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
+                   "\t${host_gpp} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
 Rule emptyRule ( "", NULL );
 
@@ -1658,7 +1658,7 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		          "\t%s -o %s %s %s -g %s\n\n",
 		          module.cplusplus ? cppc.c_str() : cc.c_str(),
 		          backend->GetFullName ( *pchFilename ).c_str(),
-		          module.cplusplus ? cxxflagsMacro.c_str() : cflagsMacro.c_str(),
+		          cflagsMacro.c_str(),
 				  GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, module.cplusplus ? CompilerTypeCPP : CompilerTypeCC ).c_str(),
 		          backend->GetFullName ( baseHeaderFile ).c_str() );
 		delete pchFilename;
@@ -1709,6 +1709,13 @@ MingwModuleHandler::GenerateArchiveTarget ()
 	fprintf ( fMakefile, "\n" );
 
 	return archiveFilename;
+}
+
+string
+MingwModuleHandler::GetCFlagsMacro () const
+{
+	return ssprintf ( "$(%s_CFLAGS)",
+	                  module.name.c_str () );
 }
 
 /*static*/ string
@@ -1840,9 +1847,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	fprintf ( fMakefile, "# OTHER MACROS\n" );
 
-	commonflagsMacro = ssprintf ("%s_COMMONFLAGS", module.name.c_str ());
 	cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
-	cxxflagsMacro = ssprintf ("%s_CXXFLAGS", module.name.c_str ());
 	nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
 	windresflagsMacro = ssprintf ("%s_RCFLAGS", module.name.c_str ());
 	widlflagsMacro = ssprintf ("%s_WIDLFLAGS", module.name.c_str ());
@@ -1885,10 +1890,10 @@ MingwModuleHandler::GenerateOtherMacros ()
 		fprintf ( fMakefile, "\n" );
 	}
 
-	string globalCflags = " ";
-	globalCflags += ssprintf ("$(%s)", commonflagsMacro.c_str ());
+	string globalCflags = "";
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
 	{
+		globalCflags += " $(PROJECT_CFLAGS)";
 		if ( module.dynamicCRT )
 			globalCflags += " -D_DLL -D__USE_CRTIMP";
 	}
@@ -1921,20 +1926,14 @@ MingwModuleHandler::GenerateOtherMacros ()
 	// (TODO: Move to version-specific once this bug is fixed in GCC)
 	globalCflags += " -fno-optimize-sibling-calls";
 
+	fprintf (
+		fMakefile,
+		"%s +=%s\n",
+		cflagsMacro.c_str (),
+		globalCflags.c_str () );
+
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse )
 	{
-		fprintf (
-			fMakefile,
-			"%s +=%s\n",
-			cflagsMacro.c_str (),
-			(" $(PROJECT_CFLAGS)" + globalCflags).c_str () );
-
-		fprintf (
-			fMakefile,
-			"%s +=%s\n",
-			cxxflagsMacro.c_str (),
-			(" $(PROJECT_CXXFLAGS)" + globalCflags).c_str () );
-
 		fprintf (
 			fMakefile,
 			"%s += $(PROJECT_RCFLAGS)\n",
@@ -1956,18 +1955,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 	{
 		fprintf (
 			fMakefile,
-			"%s +=%s\n",
-			cflagsMacro.c_str (),
-			globalCflags.c_str () );
-
-		fprintf (
-			fMakefile,
-			"%s +=%s\n",
-			cxxflagsMacro.c_str (),
-			globalCflags.c_str () );
-
-		fprintf (
-			fMakefile,
 			"%s_LFLAGS += $(HOST_LFLAGS)\n",
 			module.name.c_str () );
 	}
@@ -1984,10 +1971,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 		fprintf ( fMakefile,
 		          "%s += %s\n\n",
 		          cflagsMacro.c_str (),
-		          cflags );
-		fprintf ( fMakefile,
-		          "%s += %s\n\n",
-		          cxxflagsMacro.c_str (),
 		          cflags );
 	}
 
@@ -2014,17 +1997,12 @@ MingwModuleHandler::GenerateOtherMacros ()
 		fprintf ( fMakefile,
 		          "%s += -Wno-main\n\n",
 		          cflagsMacro.c_str () );
-		fprintf ( fMakefile,
-		          "%s += -Wno-main\n\n",
-		          cxxflagsMacro.c_str () );
 	}
 
 	fprintf ( fMakefile, "\n\n" );
 
 	// future references to the macros will be to get their values
-	commonflagsMacro = ssprintf ("$(%s)", commonflagsMacro.c_str ());
 	cflagsMacro = ssprintf ("$(%s)", cflagsMacro.c_str ());
-	cxxflagsMacro = ssprintf ("$(%s)", cxxflagsMacro.c_str ());
 	nasmflagsMacro = ssprintf ("$(%s)", nasmflagsMacro.c_str ());
 	widlflagsMacro = ssprintf ("$(%s)", widlflagsMacro.c_str ());
 }
