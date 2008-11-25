@@ -38,15 +38,6 @@ typedef PGDI_TABLE_ENTRY (CALLBACK * GDIQUERYPROC) (void);
 /** Not really an object type. Forces GDI_FreeObj to be silent. */
 #define GDI_OBJECT_TYPE_SILENT      0x80000000
 
-
-
-/* Number Representation */
-
-typedef LONG FIX;
-
-
-
-
 HDC WINAPI GdiConvertBitmap(HDC hdc);
 HBRUSH WINAPI GdiConvertBrush(HBRUSH hbr);
 HDC WINAPI GdiConvertDC(HDC hdc);
