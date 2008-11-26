@@ -748,6 +748,33 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   return STATUS_SUCCESS;
 }
 
+NTSTATUS
+VfatSetRenameInformation(PVFAT_IRP_CONTEXT IrpContext)
+{
+  PIRP Irp;
+  PVFATFCB FCB, NewFCB;
+  PIO_STACK_LOCATION Stack;
+  PFILE_OBJECT FileObject, NewFileObject;
+
+  DPRINT1("VfatSetRenameInformation is stubplemented!\n");
+
+  Irp = IrpContext->Irp;
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+
+  FileObject = IrpContext->FileObject;
+  FCB = FileObject->FsContext;
+
+  NewFileObject = Stack->Parameters.SetFile.FileObject;
+  NewFCB = NewFileObject->FsContext;
+
+  if (FsRtlAreNamesEqual(&(FCB->LongNameU), &(NewFCB->LongNameU), FALSE, NULL))
+  {
+    return STATUS_SUCCESS;
+  }
+
+  return STATUS_NOT_IMPLEMENTED;
+}
+
 NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Retrieve the specified file information
@@ -925,7 +952,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 				   SystemBuffer);
       break;
     case FileRenameInformation:
-      RC = STATUS_NOT_IMPLEMENTED;
+      RC = VfatSetRenameInformation(IrpContext);
       break;
     default:
       RC = STATUS_NOT_SUPPORTED;
