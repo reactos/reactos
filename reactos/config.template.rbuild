@@ -85,4 +85,10 @@
 -->
 <property name="_ELF_" value="0" />
 
+<!--
+	Activate OpenGL emulations for ReactX in GDI32
+-->
+<property name="REACTX_EMU" value="0" />
+
+
 </group>
