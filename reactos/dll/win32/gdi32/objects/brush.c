@@ -29,7 +29,7 @@ ExtCreatePen(DWORD dwPenStyle,
          SetLastError(ERROR_INVALID_PARAMETER);
          return 0;
       }
-   }
+   } // This is an enhancement and prevents a call to kernel space.
    else if ((dwPenStyle & PS_STYLE_MASK) == PS_INSIDEFRAME &&
             (dwPenStyle & PS_TYPE_MASK) != PS_GEOMETRIC)
    {
