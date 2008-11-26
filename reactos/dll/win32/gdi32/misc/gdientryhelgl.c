@@ -17,6 +17,19 @@
 #include <ntgdi.h>
 #include <d3dhal.h>
 
+
+/* For opengl support */
+#define __WINESRC__
+#define USE_WIN32_OPENGL
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#define D3D_SDK_VERSION 220
+#include "wine/config.h"
+#include "wine/wined3d_interface.h"
+
+
+
+
 /* DATA **********************************************************************/
 
 HANDLE ghDirectDraw;
@@ -57,12 +70,14 @@ DWORD
 WINAPI
 DdBlt(LPDDHAL_BLTDATA Blt)
 {
-    HANDLE Surface = 0;
+
 
     /* Fixme for opengl hel emulations */
     return 0;
 
 #if 0
+    HANDLE Surface = 0;
+
     /* Use the right surface */
     if (Blt->lpDDSrcSurface) 
     {
@@ -1632,9 +1647,7 @@ WINAPI
 DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                          HDC hdc)
 {
-    /* Fixme for opengl hel emulations */
-    return 0;
-#if 0
+
     BOOL Return = FALSE;
 
     /* Check if the global hDC (hdc == 0) is being used */
@@ -1647,7 +1660,8 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             if ((hdc = CreateDCW(L"Display", NULL, NULL, NULL)))
             {
                 /* Create the DDraw Object */
-                ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
+                //ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
+                ghDirectDraw = (HANDLE) WineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
 
                 /* Delete our DC */
                 DeleteDC(hdc);
@@ -1668,7 +1682,8 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     else
     {
         /* Using the per-process object, so create it */
-         pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc);
+         //pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc);
+        pDirectDrawGlobal->hDD = (ULONG_PTR) WineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
 
         /* Set the return value */
         Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
@@ -1676,7 +1691,6 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
     /* Return to caller */
     return Return;
-#endif
 }
 
 /*
@@ -2308,5 +2322,6 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
 
 
 
-
+#undef __WINESRC__
+#undef USE_WIN32_OPENGL
 

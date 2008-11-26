@@ -3,6 +3,9 @@
 	<include base="gdi32">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="LANGPACK" />
+
+
+
 	<library>user32</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
@@ -11,6 +14,13 @@
 	<library>dxguid</library>
 	<library>ntdll</library>
 
+	<if property="REACTX_EMU" value="1">
+		<library>uuid</library>
+		<library>wine</library>		
+		<library>opengl32</library>
+		<library>wined3d</library>
+	</if>
+	
 	<directory name="include">
 		<pch>precomp.h</pch>
 	</directory>
