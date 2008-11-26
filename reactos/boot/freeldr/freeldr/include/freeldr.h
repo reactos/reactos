@@ -22,9 +22,6 @@
 
 #define UINT64_C(val) val##ULL
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
 #define NTOSAPI
 #define printf TuiPrintf
 #include <ntddk.h>
@@ -32,6 +29,12 @@
 #include <arc/arc.h>
 #include <ketypes.h>
 #include <mmtypes.h>
+#include <ndk/asm.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/ldrtypes.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
 #include <rosldr.h>
 #include <arch.h>
 #include <rtl.h>
@@ -46,10 +49,6 @@
 #include <inffile.h>
 #include <video.h>
 #include <ramdisk.h>
-/* NDK, needed for ReactOS/Windows loaders */
-#include <ndk/asm.h>
-#include <ndk/rtlfuncs.h>
-#include <ndk/ldrtypes.h>
 #include <reactos.h>
 #include <registry.h>
 #include <winldr.h>
