@@ -19,7 +19,11 @@
 	</directory>
 	<directory name="misc">
 		<file>heap.c</file>
+	<if property="REACTX_EMU" value="1">		
+		<file>gdientryhelgl.c</file>
+	<else>
 		<file>gdientry.c</file>
+	</if>		
 		<file>hacks.c</file>
 		<file>historic.c</file>
 		<file>misc.c</file>
