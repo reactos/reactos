@@ -967,7 +967,7 @@ static MUI_ENTRY plPLFileCopyEntries[] =
     {
         50,
         0,
-        "\xB3 Please wait...    ",
+        "\xB3 Prosz© czeka†...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1087,7 +1087,7 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Prosz© wybra† domy˜lnie instalowany ukˆad klawiatury.",
         TEXT_STYLE_NORMAL
     },
     {
