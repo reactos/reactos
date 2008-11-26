@@ -1,5 +1,5 @@
 #define _KSDDK_
 #include <windows.h>
-#include <ntsecapi.h>
+typedef LONG NTSTATUS;
 #include <ks.h>
 #include <reactos/helper.h>
