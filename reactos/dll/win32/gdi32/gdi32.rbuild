@@ -21,7 +21,8 @@
 		<file>heap.c</file>
 	<if property="REACTX_EMU" value="1">		
 		<file>gdientryhelgl.c</file>
-	<else>
+	</if>
+	<if property="REACTX_EMU" value="0">	
 		<file>gdientry.c</file>
 	</if>		
 		<file>hacks.c</file>
