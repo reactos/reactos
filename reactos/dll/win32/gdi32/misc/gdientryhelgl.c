@@ -67,7 +67,7 @@ static BOOL InitWineD3D(void)
         FreeLibrary(hModWineD3D);
     }
 
-    if (!InitWineD3DFunction("WineDirect3DCreate", (FARPROC*)pWineDirect3DCreate))
+    if (!InitWineD3DFunction("WineDirect3DCreate", (FARPROC*)&pWineDirect3DCreate))
         Ret = FALSE;
 
     return Ret;
