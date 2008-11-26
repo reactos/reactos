@@ -34,8 +34,8 @@ ___SEH2EnterFrame:
 	mov [fs:0], eax
 	ret
 
-.globl __SEH2LeaveFrame
-__SEH2LeaveFrame:
+.globl ___SEH2LeaveFrame
+___SEH2LeaveFrame:
 	mov eax, [fs:0]
 	mov eax, [eax]
 	mov [fs:0], eax
