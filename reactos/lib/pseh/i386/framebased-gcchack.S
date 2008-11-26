@@ -26,6 +26,28 @@ __SEH2CurrentRegistration:
 	mov eax, [fs:0]
 	ret
 
+.globl ___SEH2EnterFrame
+___SEH2EnterFrame:
+	mov eax, [esp+4]
+	mov ecx, [fs:0]
+	mov [eax], ecx
+	mov [fs:0], eax
+	ret
+
+.globl __SEH2LeaveFrame
+__SEH2LeaveFrame:
+	mov eax, [fs:0]
+	mov eax, [eax]
+	mov [fs:0], eax
+	ret
+
+.globl ___SEH2Handle
+___SEH2Handle:
+	mov eax, [esp+4]
+	mov ebp, [esp+8]
+	mov esp, [esp+12]
+	jmp eax
+
 .globl ___SEH2Except
 ___SEH2Except:
 	mov eax, [esp+4]

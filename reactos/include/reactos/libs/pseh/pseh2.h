@@ -23,10 +23,6 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
-#ifndef __GNUC__
-#error TODO
-#endif
-
 struct _EXCEPTION_RECORD;
 struct _EXCEPTION_POINTERS;
 struct _CONTEXT;
@@ -38,6 +34,47 @@ typedef int (__cdecl * _SEH2FrameHandler_t)
 	struct _CONTEXT *,
 	void *
 );
+
+typedef struct __SEH2Registration
+{
+	struct __SEH2Registration * SER_Prev;
+	_SEH2FrameHandler_t SER_Handler;
+}
+_SEH2Registration_t;
+
+typedef struct __SEH2Frame
+{
+	_SEH2Registration_t SF_Registration;
+	volatile struct __SEH2TryLevel * volatile SF_TopTryLevel;
+	void * volatile SF_FramePointer;
+	void * volatile SF_StackPointer;
+	volatile unsigned long SF_Code;
+}
+_SEH2Frame_t;
+
+typedef struct __SEH2TryLevel
+{
+	volatile struct __SEH2TryLevel * ST_Next;
+	void * ST_FramePointer;
+	void * ST_Filter;
+	void * ST_Body;
+}
+_SEH2TryLevel_t;
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+extern void __cdecl _SEH2EnterFrame(_SEH2Frame_t *);
+extern void __cdecl _SEH2LeaveFrame(void);
+extern void __cdecl _SEH2Return(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#if defined(__GNUC__)
 
 #if defined(__i386__)
 typedef struct __SEHTrampoline
@@ -100,13 +137,6 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 #define __SEH_FALSE __builtin_expect(__SEH_ZERO, 0)
 #define __SEH_TRUE  __builtin_expect(!__SEH_ZERO, 1)
 
-typedef struct __SEH2Registration
-{
-	struct __SEH2Registration * SER_Prev;
-	_SEH2FrameHandler_t SER_Handler;
-}
-_SEH2Registration_t;
-
 #define __SEH_FORCE_NEST \
 	__asm__ __volatile__("#%0" : : "r" (&_SEHFrame))
 
@@ -123,25 +153,6 @@ _SEH2Registration_t;
 
 #define __SEH_RETURN_EXCEPT(R_) return (int)(R_)
 #define __SEH_RETURN_FINALLY() return
-
-typedef struct __SEH2Frame
-{
-	_SEH2Registration_t SF_Registration;
-	volatile struct __SEH2TryLevel * volatile SF_TopTryLevel;
-	void * volatile SF_FramePointer;
-	void * volatile SF_StackPointer;
-	volatile unsigned long SF_Code;
-}
-_SEH2Frame_t;
-
-typedef struct __SEH2TryLevel
-{
-	volatile struct __SEH2TryLevel * ST_Next;
-	void * ST_FramePointer;
-	void * ST_Filter;
-	void * ST_Body;
-}
-_SEH2TryLevel_t;
 
 #define __SEH_BEGIN_TRY \
 	{ \
@@ -347,6 +358,7 @@ _SEH2TryLevel_t;
 
 #define _SEH2_GetExceptionInformation() ((struct _EXCEPTION_POINTERS *)_SEHExceptionPointers)
 #define _SEH2_GetExceptionCode() ((_SEH2FrameP)->SF_Code)
+#define _SEH2_AbnormalTermination() (!!_SEH2_GetExceptionCode())
 
 #define _SEH2_YIELD(STMT_) \
 	for(;;) \
@@ -361,17 +373,22 @@ _SEH2TryLevel_t;
 
 __SEH_END_SCOPE_CHAIN;
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#else
 
-extern void __cdecl _SEH2EnterFrame(_SEH2Frame_t *);
-extern void __cdecl _SEH2LeaveFrame(void);
-extern void __cdecl _SEH2Return(void);
+#include <excpt.h>
 
-#ifdef __cplusplus
-}
+#define _SEH2_TRY __try
+#define _SEH2_FINALLY __finally
+#define _SEH2_EXCEPT(E_) __except((E_))
+#define _SEH2_END
+
+#define _SEH2_GetExceptionInformation() (GetExceptionInformation())
+#define _SEH2_GetExceptionCode() (GetExceptionCode())
+#define _SEH2_AbnormalTermination() (AbnormalTermination())
+
+#define _SEH2_YIELD(STMT_) STMT_
+#define _SEH2_LEAVE __leave
+
 #endif
 
 #endif

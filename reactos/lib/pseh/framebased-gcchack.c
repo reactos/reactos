@@ -34,15 +34,31 @@ extern _SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void);
 extern int __SEH2Except(void *, void *, void *);
 extern void __SEH2Finally(void *, void *);
 
+extern
+#if defined(__GNUC__)
+__attribute__((noreturn))
+#elif defined(_MSC_VER)
+__declspec(noreturn)
+#endif
+int __SEH2Handle(void *, void *, void *);
+
 static
+#if defined(__GNUC__)
 __attribute__((always_inline))
+#elif defined(_MSC_VER)
+__forceinline
+#endif
 int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel, EXCEPTION_POINTERS * ep)
 {
 	return __SEH2Except(trylevel->ST_Filter, trylevel->ST_FramePointer, ep);
 }
 
 static
+#if defined(__GNUC__)
 __attribute__((noinline))
+#elif defined(_MSC_VER)
+__declspec(noinline)
+#endif
 void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
 	__SEH2Finally(trylevel->ST_Body, trylevel->ST_FramePointer);
@@ -65,22 +81,16 @@ void _SEH2LocalUnwind(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * dsttrylev
 extern void _SEH2GlobalUnwind(void *);
 
 static
+#if defined(__GNUC__)
 __attribute__((noreturn))
+#elif defined(_MSC_VER)
+__declspec(noreturn)
+#endif
 void _SEH2Handle(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
 	_SEH2GlobalUnwind(frame);
 	_SEH2LocalUnwind(frame, trylevel);
-
-	__asm__ __volatile__
-	(
-		"mov %[frame], %%ebp\n"
-		"mov %[stack], %%esp\n"
-		"jmp *%[handler]\n" :
-		:
-		[frame] "m" (frame->SF_FramePointer), [stack] "m" (frame->SF_StackPointer), [handler] "r" (trylevel->ST_Body)
-	);
-
-	for(;;);
+	__SEH2Handle(trylevel->ST_Body, frame->SF_FramePointer, frame->SF_StackPointer);
 }
 
 static
@@ -94,7 +104,11 @@ int __cdecl _SEH2FrameHandler
 {
 	_SEH2Frame_t * frame;
 
+#if defined(__GNUC__)
 	__asm__ __volatile__("cld");
+#elif defined(_MSC_VER)
+	__asm cld
+#endif
 
 	frame = EstablisherFrame;
 
@@ -134,28 +148,23 @@ int __cdecl _SEH2FrameHandler
 }
 
 extern
+void __cdecl __SEH2EnterFrame(_SEH2Frame_t *);
+
+extern
 void __cdecl _SEH2EnterFrame(_SEH2Frame_t * frame)
 {
 	frame->SF_Registration.SER_Handler = _SEH2FrameHandler;
 	frame->SF_Code = 0;
-	__asm__ __volatile__("movl %%fs:0, %k0\n" : "=q" (frame->SF_Registration.SER_Prev));
-
-	__SEH_BARRIER;
-	__asm__ __volatile__("movl %k0, %%fs:0\n" : : "q" (&frame->SF_Registration));
+	__SEH2EnterFrame(frame);
 }
 
 extern
-void __cdecl _SEH2LeaveFrame()
+void __cdecl __SEH2LeaveFrame(void);
+
+extern
+void __cdecl _SEH2LeaveFrame(void)
 {
-	__asm__ __volatile__
-	(
-		"movl %%fs:0, %%edx\n"
-		"movl 0(%%edx), %%edx\n"
-		"movl %%edx, %%fs:0\n" :
-		:
-		:
-		"edx"
-	);
+	__SEH2LeaveFrame();
 }
 
 extern
