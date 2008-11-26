@@ -369,17 +369,25 @@ NtGdiExtCreatePen(
       }
    }
 
-   hPen = IntGdiExtCreatePen(dwPenStyle,
-                             ulWidth,
-                             ulBrushStyle,
-                             ulColor,
-                             ulClientHatch,
-                             ulHatch,
-                             dwStyleCount,
-                             pSafeStyle,
-                             cjDIB,
-                             bOldStylePen,
-                             hBrush);
+   if (dwPenStyle != PS_NULL)
+   {
+      hPen = IntGdiExtCreatePen(dwPenStyle,
+                                ulWidth,
+                                ulBrushStyle,
+                                ulColor,
+                                ulClientHatch,
+                                ulHatch,
+                                dwStyleCount,
+                                pSafeStyle,
+                                cjDIB,
+                                bOldStylePen,
+                                hBrush);
+   }
+   else
+   {
+      hPen = NtGdiGetStockObject(NULL_PEN);
+   }
+
    if (!hPen && pSafeStyle)
    {
       ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
