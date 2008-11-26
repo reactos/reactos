@@ -23,6 +23,7 @@
 #define USE_WIN32_OPENGL
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+#define D3DADAPTER_DEFAULT 0
 #define D3D_SDK_VERSION 220
 #include "wine/config.h"
 #include "wine/wined3d_interface.h"
@@ -1712,9 +1713,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                         LPDWORD pdwFourCC,
                         LPVIDMEM pvmList)
     {
-    /* Fixme for opengl hel emulations */
-    return 0;
-#if 0
+
     PVIDEOMEMORY VidMemList = NULL;
     DD_HALINFO HalInfo;
     D3DNTHAL_CALLBACKS D3dCallbacks;
@@ -1724,6 +1723,9 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     DWORD dwNumHeaps=0, FourCCs=0;
     DWORD Flags;
     BOOL retVal = TRUE;
+
+    IWineD3D* pWineD3d;
+    WINED3DDISPLAYMODE d3ddm;
 
     /* Clear the structures */
     RtlZeroMemory(&HalInfo, sizeof(DD_HALINFO));
@@ -1739,24 +1741,21 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         VidMemList = (PVIDEOMEMORY) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(VIDEOMEMORY) * 24 ) * pHalInfo->vmiData.dwNumHeaps);       
     }
 
-
     /* Do the query */
-    if (!NtGdiDdQueryDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
-                                      &HalInfo,
-                                      CallbackFlags,
-                                      &D3dCallbacks,
-                                      &D3dDriverData,
-                                      &D3dBufferCallbacks,
-                                      pD3dTextureFormats,
-                                      &dwNumHeaps,
-                                      VidMemList,
-                                      &FourCCs,
-                                      pdwFourCC))
+    if  (  (pDirectDrawGlobal == NULL) ||
+           (GetDdHandle(pDirectDrawGlobal->hDD) == 0) || 
+          (pHalInfo == NULL) )
     {
         /* We failed, free the memory and return */
         retVal = FALSE;
         goto cleanup;
     }
+
+    /* Get wined3d interface */
+    pWineD3d = (IWineD3D*) GetDdHandle(pDirectDrawGlobal->hDD);
+
+    /* Get adapter res, we can use windows own api here */
+    IWineD3D_GetAdapterDisplayMode( pWineD3d, D3DADAPTER_DEFAULT, &d3ddm);
 
     /* Clear the incoming pointer */
     RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
@@ -1784,12 +1783,14 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     }
 
     /* Continue converting the rest */
-    pHalInfo->vmiData.dwFlags = HalInfo.vmiData.dwFlags;
-    pHalInfo->vmiData.dwDisplayWidth = HalInfo.vmiData.dwDisplayWidth;
-    pHalInfo->vmiData.dwDisplayHeight = HalInfo.vmiData.dwDisplayHeight;
-    pHalInfo->vmiData.lDisplayPitch = HalInfo.vmiData.lDisplayPitch;
+    /* FIXME pHalInfo->vmiData.dwFlags */
+    //pHalInfo->vmiData.dwFlags = HalInfo.vmiData.dwFlags;
+    pHalInfo->vmiData.dwDisplayWidth = d3ddm.Width; // HalInfo.vmiData.dwDisplayWidth;
+    pHalInfo->vmiData.dwDisplayHeight = d3ddm.Height;//HalInfo.vmiData.dwDisplayHeight;
+    // FIXME pHalInfo->vmiData.lDisplayPitch = d3ddm.Format//HalInfo.vmiData.lDisplayPitch;
     pHalInfo->vmiData.fpPrimary = 0;
 
+    /* FIXME
     RtlCopyMemory( &pHalInfo->vmiData.ddpfDisplay,
                    &HalInfo.vmiData.ddpfDisplay,
                    sizeof(DDPIXELFORMAT));
@@ -1809,6 +1810,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
     pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
     pHalInfo->lpdwFourCC = pdwFourCC;
+    */
     
     /* always force rope 0x1000 for hal it mean only source copy is supported */
     pHalInfo->ddCaps.dwRops[6] = 0x1000; 
@@ -1820,7 +1822,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
      * this flag even it is being supported. that is mean. It is small hack to keep
      * bad driver working, that trust this is always being setting by it self at end
      */
-    pHalInfo->dwFlags = (HalInfo.dwFlags & ~DDHALINFO_GETDRIVERINFOSET) | DDHALINFO_GETDRIVERINFOSET;   
+    pHalInfo->dwFlags = (HalInfo.dwFlags & ~DDHALINFO_GETDRIVERINFOSET) | DDHALINFO_GETDRIVERINFOSET;
     pHalInfo->GetDriverInfo = (LPDDHAL_GETDRIVERINFO) DdGetDriverInfo;
 
     /* Now check if we got any DD callbacks */
@@ -1937,25 +1939,23 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Zero the struct */
         RtlZeroMemory(pD3dCallbacks, sizeof(DDHAL_DDEXEBUFCALLBACKS));
 
-        /* Check if we have one */
-        if (D3dCallbacks.dwSize)
-        {
-            /* Write the header */
-            pD3dCallbacks->dwSize = sizeof(DDHAL_DDEXEBUFCALLBACKS);
+        /* Write the header */
+        pD3dCallbacks->dwSize = sizeof(DDHAL_DDEXEBUFCALLBACKS);
 
-            /* Now check for each callback */
-            if (D3dCallbacks.ContextCreate)
-            {
-                pD3dCallbacks->ContextCreate = (LPD3DHAL_CONTEXTCREATECB) D3dContextCreate;
-            }
-            if (D3dCallbacks.ContextDestroy)
-            {
-                pD3dCallbacks->ContextDestroy = (LPD3DHAL_CONTEXTDESTROYCB) NtGdiD3dContextDestroy;
-            }
-            if (D3dCallbacks.ContextDestroyAll)
-            {
-                pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
-            }
+        /* Now check for each callback */
+        if (D3dCallbacks.ContextCreate)
+        {
+            pD3dCallbacks->ContextCreate = (LPD3DHAL_CONTEXTCREATECB) D3dContextCreate;
+        }
+        if (D3dCallbacks.ContextDestroy)
+        {
+            /* FIXME */
+            // pD3dCallbacks->ContextDestroy = (LPD3DHAL_CONTEXTDESTROYCB) NtGdiD3dContextDestroy;
+        }
+        if (D3dCallbacks.ContextDestroyAll)
+        {
+            /* FIXME */
+            // pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
         }
     }
 
@@ -1966,7 +1966,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         RtlMoveMemory(pD3dDriverData, &D3dDriverData, sizeof(D3DHAL_GLOBALDRIVERDATA));
 
         /* Write the pointer to the texture formats */
-        pD3dDriverData->lpTextureFormats = pD3dTextureFormats;
+        //FIXME pD3dDriverData->lpTextureFormats = pD3dTextureFormats;
     }
 
     /* Check for D3D Buffer Callbacks */
@@ -1974,38 +1974,35 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     {
         /* Zero the struct */
         RtlZeroMemory(pD3dBufferCallbacks, sizeof(DDHAL_DDEXEBUFCALLBACKS));
-       
-        if ( D3dBufferCallbacks.dwSize)
+
+
+        pD3dBufferCallbacks->dwSize = D3dBufferCallbacks.dwSize;
+
+        pD3dBufferCallbacks->dwFlags = D3dBufferCallbacks.dwFlags;
+        if ( D3dBufferCallbacks.CanCreateD3DBuffer)
         {
-            pD3dBufferCallbacks->dwSize = D3dBufferCallbacks.dwSize;
+            pD3dBufferCallbacks->CanCreateExecuteBuffer = (LPDDHALEXEBUFCB_CANCREATEEXEBUF)DdCanCreateD3DBuffer;
+        }
 
-            pD3dBufferCallbacks->dwFlags = D3dBufferCallbacks.dwFlags;
-            if ( D3dBufferCallbacks.CanCreateD3DBuffer)
-            {
-                pD3dBufferCallbacks->CanCreateExecuteBuffer = (LPDDHALEXEBUFCB_CANCREATEEXEBUF)DdCanCreateD3DBuffer;
-            }
+        if ( D3dBufferCallbacks.CanCreateD3DBuffer)
+        {
+            pD3dBufferCallbacks->CreateExecuteBuffer = (LPDDHALEXEBUFCB_CREATEEXEBUF) DdCreateD3DBuffer;
+        }
 
-            if ( D3dBufferCallbacks.CanCreateD3DBuffer)
-            {
-                pD3dBufferCallbacks->CreateExecuteBuffer = (LPDDHALEXEBUFCB_CREATEEXEBUF) DdCreateD3DBuffer;
-            }
+        if ( D3dBufferCallbacks.DestroyD3DBuffer )
+        {
+            pD3dBufferCallbacks->DestroyExecuteBuffer = (LPDDHALEXEBUFCB_DESTROYEXEBUF) DdDestroyD3DBuffer;
+        }
 
-            if ( D3dBufferCallbacks.DestroyD3DBuffer )
-            {
-                pD3dBufferCallbacks->DestroyExecuteBuffer = (LPDDHALEXEBUFCB_DESTROYEXEBUF) DdDestroyD3DBuffer;
-            }
+        if ( D3dBufferCallbacks.LockD3DBuffer )
+        {
+            pD3dBufferCallbacks->LockExecuteBuffer = (LPDDHALEXEBUFCB_LOCKEXEBUF) DdLockD3D;
+        }
 
-            if ( D3dBufferCallbacks.LockD3DBuffer )
-            {
-                pD3dBufferCallbacks->LockExecuteBuffer = (LPDDHALEXEBUFCB_LOCKEXEBUF) DdLockD3D;
-            }
-
-            if ( D3dBufferCallbacks.UnlockD3DBuffer )
-            {
-                pD3dBufferCallbacks->UnlockExecuteBuffer = (LPDDHALEXEBUFCB_UNLOCKEXEBUF) DdUnlockD3D;
-            }
-            
-        }        
+        if ( D3dBufferCallbacks.UnlockD3DBuffer )
+        {
+            pD3dBufferCallbacks->UnlockExecuteBuffer = (LPDDHALEXEBUFCB_UNLOCKEXEBUF) DdUnlockD3D;
+        }
     }
 
     /* FIXME VidMemList */
@@ -2017,7 +2014,6 @@ cleanup:
     }
 
   return retVal;
-#endif
 }
 
 /*
