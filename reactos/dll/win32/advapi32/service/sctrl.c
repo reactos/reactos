@@ -541,7 +541,7 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     BOOL bResult;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Call to services.exe using RPC */
         bResult = RI_ScSetServiceBitsA((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
@@ -550,12 +550,12 @@ I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
                                        bUpdateImmediately,
                                        lpString);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
         bResult = FALSE;
     }
-    _SEH_END;
+    _SEH2_END;
 
     return bResult;
 }
@@ -577,7 +577,7 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     BOOL bResult;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Call to services.exe using RPC */
         bResult = RI_ScSetServiceBitsW((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
@@ -586,12 +586,12 @@ I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
                                        bUpdateImmediately,
                                        lpString);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
         bResult = FALSE;
     }
-    _SEH_END;
+    _SEH2_END;
 
     return bResult;
 }
