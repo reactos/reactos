@@ -1,15 +1,5 @@
-
-
-
 #define _KSDDK_
 #include <windows.h>
-#include <reactos/helper.h>
-
-
-
+#include <ntsecapi.h>
 #include <ks.h>
-#include <debug.h>
-
-
-
-
+#include <reactos/helper.h>

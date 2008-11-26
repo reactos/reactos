@@ -38,6 +38,7 @@
 #undef SERIAL_IOC_MCR_OUT1
 #undef SERIAL_IOC_MCR_OUT2
 #undef SERIAL_IOC_MCR_LOOP
+#undef IOCTL_SERIAL_LSRMST_INSERT
 #include <ntddser.h>
 
 #define NDEBUG
