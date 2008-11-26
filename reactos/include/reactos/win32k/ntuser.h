@@ -362,7 +362,7 @@ typedef struct _CLIENTINFO
     DWORD dwHookCurrent;
     INT cInDDEMLCallback;
     PCLIENTTHREADINFO pClientThreadInfo;
-    DWORD dwHookData;
+    ULONG_PTR dwHookData;
     DWORD dwKeyCache;
     DWORD afKeyState[2];
     DWORD dwAsyncKeyCache;
