@@ -107,7 +107,45 @@ static LOGFONTW DefaultGuiFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" }; //Bitstream Vera Sans
 
-static HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
+HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
+
+static
+HPEN
+FASTCALL
+IntCreateStockPen( DWORD dwPenStyle,
+                   DWORD dwWidth,
+                   ULONG ulBrushStyle,
+                   ULONG ulColor)
+{
+  HPEN hPen;
+  PGDIBRUSHOBJ PenObject = PENOBJ_AllocPenWithHandle();
+
+  if ((!dwWidth) && (dwPenStyle & PS_STYLE_MASK) != PS_SOLID) dwWidth = 1;  
+   
+  PenObject->ptPenWidth.x = dwWidth;  
+  PenObject->ptPenWidth.y = 0;  
+  PenObject->ulPenStyle = dwPenStyle;  
+  PenObject->BrushAttr.lbColor = ulColor;  
+  PenObject->ulStyle = ulBrushStyle;
+  PenObject->hbmClient = (HANDLE)NULL;
+  PenObject->dwStyleCount = 0;
+  PenObject->pStyle = 0;
+  PenObject->flAttrs = GDIBRUSH_IS_OLDSTYLEPEN;
+
+  switch (dwPenStyle & PS_STYLE_MASK)
+  {
+     case PS_NULL:
+        PenObject->flAttrs |= GDIBRUSH_IS_NULL;
+        break;
+
+    case PS_SOLID:
+        PenObject->flAttrs |= GDIBRUSH_IS_SOLID;
+        break;
+  }
+  hPen = PenObject->BaseObject.hHmgr;
+  PENOBJ_UnlockPen(PenObject);
+  return hPen;    
+}
 
 /*!
  * Creates a bunch of stock objects: brushes, pens, fonts.
@@ -129,10 +167,10 @@ CreateStockObjects(void)
   StockObjects[BLACK_BRUSH] =  IntGdiCreateSolidBrush(RGB(0,0,0));
   StockObjects[NULL_BRUSH] =   IntGdiCreateNullBrush();
 
-  StockObjects[WHITE_PEN] = IntGdiExtCreatePen(WhitePen.lopnStyle, WhitePen.lopnWidth.x, BS_SOLID, WhitePen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
-  StockObjects[BLACK_PEN] = IntGdiExtCreatePen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
-  StockObjects[DC_PEN]    = IntGdiExtCreatePen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
-  StockObjects[NULL_PEN] = IntGdiExtCreatePen(NullPen.lopnStyle, NullPen.lopnWidth.x, BS_SOLID, NullPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
+  StockObjects[WHITE_PEN] = IntCreateStockPen(WhitePen.lopnStyle, WhitePen.lopnWidth.x, BS_SOLID, WhitePen.lopnColor);
+  StockObjects[BLACK_PEN] = IntCreateStockPen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor);
+  StockObjects[DC_PEN]    = IntCreateStockPen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor);
+  StockObjects[NULL_PEN]  = IntCreateStockPen(NullPen.lopnStyle, NullPen.lopnWidth.x, BS_SOLID, NullPen.lopnColor);
 
   StockObjects[20] = NULL; /* TODO: Unknown internal stock object */
   StockObjects[DEFAULT_BITMAP] = IntGdiCreateBitmap(1, 1, 1, 1, NULL);
@@ -303,7 +341,7 @@ CreateSysColorObjects(VOID)
     if(gpsi->SysColorPens[i] == NULL)
     {
       Pen.lopnColor = SysColors[i];
-      gpsi->SysColorPens[i] = IntGdiExtCreatePen(Pen.lopnStyle, Pen.lopnWidth.x, BS_SOLID, Pen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
+      gpsi->SysColorPens[i] = IntCreateStockPen(Pen.lopnStyle, Pen.lopnWidth.x, BS_SOLID, Pen.lopnColor);
       if(gpsi->SysColorPens[i] != NULL)
       {
         GDIOBJ_ConvertToStockObj((HGDIOBJ*)&gpsi->SysColorPens[i]);

@@ -30,7 +30,7 @@
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
 
-
+extern HGDIOBJ StockObjects[];
 extern SHORT gusLanguageID;
 
 SHORT FASTCALL IntGdiGetLanguageID();

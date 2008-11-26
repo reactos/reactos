@@ -47,7 +47,7 @@ IntGdiExtCreatePen(
    IN ULONG_PTR ulHatch,
    DWORD dwStyleCount,
    PULONG pStyle,
-   IN ULONG cjDIB,     // FIXME! We are shipping this too!
+   IN ULONG cjDIB,
    IN BOOL bOldStylePen,
    IN OPTIONAL HBRUSH hbrush)
 {
@@ -60,6 +60,11 @@ IntGdiExtCreatePen(
    static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38};
 
    dwWidth = abs(dwWidth);
+
+   if ( (dwPenStyle & PS_STYLE_MASK) == PS_NULL)
+   {
+      return StockObjects[NULL_PEN];
+   }
 
    if (bOldStylePen)
    {
@@ -79,7 +84,8 @@ IntGdiExtCreatePen(
    hPen = PenObject->BaseObject.hHmgr;
 
    // If nWidth is zero, the pen is a single pixel wide, regardless of the current transformation.
-   if ((bOldStylePen) && (!dwWidth) && (dwPenStyle & PS_STYLE_MASK) != PS_SOLID) dwWidth = 1;
+   if ((bOldStylePen) && (!dwWidth) && (dwPenStyle & PS_STYLE_MASK) != PS_SOLID)
+   dwWidth = 1;
 
    PenObject->ptPenWidth.x = dwWidth;
    PenObject->ptPenWidth.y = 0;
@@ -313,7 +319,7 @@ NtGdiCreatePen(
                              NULL,
                              0,
                              TRUE,
-                             0);
+                             hbr);
 }
 
 HPEN STDCALL
@@ -369,24 +375,36 @@ NtGdiExtCreatePen(
       }
    }
 
-   if (dwPenStyle != PS_NULL)
+   if (ulBrushStyle == BS_PATTERN)
    {
-      hPen = IntGdiExtCreatePen(dwPenStyle,
+      _SEH_TRY
+      {
+         ProbeForRead((PVOID)ulHatch, cjDIB, 1);
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END
+      if(!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         if (pSafeStyle) ExFreePoolWithTag(pSafeStyle, TAG_PENSTYLES);
+         return 0;
+      }
+   }
+
+   hPen = IntGdiExtCreatePen(dwPenStyle,
                                 ulWidth,
-                                ulBrushStyle,
+                           ulBrushStyle,
                                 ulColor,
-                                ulClientHatch,
+                          ulClientHatch,
                                 ulHatch,
-                                dwStyleCount,
-                                pSafeStyle,
-                                cjDIB,
-                                bOldStylePen,
-                                hBrush);
-   }
-   else
-   {
-      hPen = NtGdiGetStockObject(NULL_PEN);
-   }
+                           dwStyleCount,
+                             pSafeStyle,
+                                  cjDIB,
+                           bOldStylePen,
+                                 hBrush);
 
    if (!hPen && pSafeStyle)
    {
