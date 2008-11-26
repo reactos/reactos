@@ -603,7 +603,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
     else
     {
         /* Get the first thread ourselves */
-        ThisThread = PsGetNextProcessThread(Process, OldThread);
+        ThisThread = PsGetNextProcessThread(Process, NULL);
         IsFirstThread = TRUE;
     }
 

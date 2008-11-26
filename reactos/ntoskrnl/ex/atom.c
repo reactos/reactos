@@ -92,7 +92,7 @@ NtAddAtom(IN PWSTR AtomName,
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
     NTSTATUS Status = STATUS_SUCCESS;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    LPWSTR CapturedName = NULL;
+    LPWSTR CapturedName;
     ULONG CapturedSize;
     RTL_ATOM SafeAtom;
     PAGED_CODE();
@@ -107,6 +107,9 @@ NtAddAtom(IN PWSTR AtomName,
         DPRINT1("Atom name too long\n");
         return STATUS_INVALID_PARAMETER;
     }
+    
+    /* Re-use the given name if kernel mode or no atom name */
+    CapturedName = AtomName;
 
     /* Check if we're called from user-mode*/
     if (PreviousMode != KernelMode)
@@ -147,11 +150,6 @@ NtAddAtom(IN PWSTR AtomName,
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
-    }
-    else
-    {
-        /* Simplify code and re-use one variable */
-        if (AtomName) CapturedName = AtomName;
     }
 
     /* Make sure probe worked */
@@ -261,6 +259,9 @@ NtFindAtom(IN PWSTR AtomName,
         DPRINT1("Atom name too long\n");
         return STATUS_INVALID_PARAMETER;
     }
+    
+    /* Re-use the given name if kernel mode or no atom name */
+    CapturedName = AtomName;
 
     /* Check if we're called from user-mode*/
     if (PreviousMode != KernelMode)
@@ -301,11 +302,6 @@ NtFindAtom(IN PWSTR AtomName,
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
-    }
-    else
-    {
-        /* Simplify code and re-use one variable */
-        if (AtomName) CapturedName = AtomName;
     }
 
     /* Make sure probe worked */

@@ -546,11 +546,13 @@ KiDoBugCheckCallbacks(VOID)
 
 VOID
 NTAPI
+__declspec(noreturn)
 KiBugCheckDebugBreak(IN ULONG StatusCode)
 {
     /* If KDBG isn't connected, freeze the CPU, otherwise, break */
     if (KdDebuggerNotPresent) for (;;) KeArchHaltProcessor();
     DbgBreakPointWithStatus(StatusCode);
+    while (TRUE);
 }
 
 PCHAR
@@ -604,13 +606,9 @@ KiDumpParameterImages(IN PCHAR Message,
                                      &InSystem);
         if (!ImageBase)
         {
-            /* Driver wasn't found, check for unloaded driver */
-            DriverName = NULL; // FIXME: ROS can't
-            if (!DriverName) continue;
-
-            /* Convert the driver name */
-            ImageBase = (PVOID)Parameters[i];
-            ConversionRoutine(DriverName, AnsiName, sizeof(AnsiName));
+            /* FIXME: Add code to check for unloaded drivers */
+            DPRINT1("Potentially unloaded driver!\n");
+            continue;
         }
         else
         {
@@ -751,6 +749,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
 
 VOID
 NTAPI
+__declspec(noreturn)
 KeBugCheckWithTf(IN ULONG BugCheckCode,
                  IN ULONG_PTR BugCheckParameter1,
                  IN ULONG_PTR BugCheckParameter2,

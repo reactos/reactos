@@ -431,6 +431,7 @@ RtlRaiseException(
 NTSYSAPI
 VOID
 NTAPI
+__declspec(noreturn)
 RtlRaiseStatus(
     IN NTSTATUS Status
 );

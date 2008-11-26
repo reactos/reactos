@@ -763,7 +763,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 NTSTATUS
 NTAPI
 ObpIncrementHandleCount(IN PVOID Object,
-                        IN PACCESS_STATE AccessState,
+                        IN PACCESS_STATE AccessState OPTIONAL,
                         IN KPROCESSOR_MODE AccessMode,
                         IN ULONG HandleAttributes,
                         IN PEPROCESS Process,

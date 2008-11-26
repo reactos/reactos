@@ -32,6 +32,21 @@
 #define INT_32_DPL0                 0x8E00
 #define INT_32_DPL3                 0xEE00
 
+//
+// This table contains the prefix flags that are used by V86 emulation
+//
+.equ PREFIX_FLAG_ES,                0x00000100
+.equ PREFIX_FLAG_CS,                0x00000200
+.equ PREFIX_FLAG_SS,                0x00000400
+.equ PREFIX_FLAG_DS,                0x00000800
+.equ PREFIX_FLAG_FS,                0x00001000
+.equ PREFIX_FLAG_GS,                0x00002000
+.equ PREFIX_FLAG_OPER32,            0x00004000
+.equ PREFIX_FLAG_ADDR32,            0x00008000
+.equ PREFIX_FLAG_LOCK,              0x00010000
+.equ PREFIX_FLAG_REPNE,             0x00020000
+.equ PREFIX_FLAG_REP,               0x00040000
+
 .intel_syntax noprefix
 
 //
@@ -193,6 +208,23 @@ _KiUnexpectedInterrupt&Number:
     .rept \count
         .byte 0
     .endr
+.endm
+
+//
+// @name GENERATE_PREFIX_HANDLER
+//
+// This macro creates a prefix opcode handler.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro GENERATE_PREFIX_HANDLER Name
+.func Opcode&Name&PrefixV86
+_Opcode&Name&PrefixV86:
+    or ebx, PREFIX_FLAG_&Name
+    jmp _OpcodeGenericPrefixV86
+.endfunc
 .endm
 
 //

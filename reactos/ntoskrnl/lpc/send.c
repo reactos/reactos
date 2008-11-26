@@ -256,6 +256,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
         /* FIXME: TODO */
         Semaphore = NULL; // we'd use the Thread Semaphore here
         ASSERT(FALSE);
+        return STATUS_NOT_IMPLEMENTED;
     }
     else
     {

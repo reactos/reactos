@@ -7666,12 +7666,14 @@ ExNotifyCallback(
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 ExRaiseAccessViolation(
   VOID);
 
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 ExRaiseDatatypeMisalignment(
   VOID);
 
@@ -7679,6 +7681,7 @@ DECLSPEC_NORETURN
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 ExRaiseStatus(
   IN NTSTATUS  Status);
 
@@ -9603,12 +9606,14 @@ KeAreApcsDisabled(
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 KeBugCheck(
   IN ULONG  BugCheckCode);
 
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 KeBugCheckEx(
   IN ULONG  BugCheckCode,
   IN ULONG_PTR  BugCheckParameter1,

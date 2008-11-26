@@ -497,13 +497,8 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
         else
         {
 ParseFromRoot:
-            /* Check if we have a device map */
-            if (DeviceMap)
-            {
-                /* Dereference it */
-                //ObfDereferenceDeviceMap(DeviceMap);
-                DeviceMap = NULL;
-            }
+            /* FIXME: Check if we have a device map */
+            ASSERT(DeviceMap == NULL);
 
             /* Check if this is a possible DOS name */
             if (!((ULONG_PTR)(ObjectName->Buffer) & 7))
