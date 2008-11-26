@@ -18,7 +18,6 @@
 		<library>uuid</library>
 		<library>wine</library>		
 		<library>opengl32</library>
-		<library>wined3d</library>
 	</if>
 	
 	<directory name="include">

@@ -28,8 +28,50 @@
 #include "wine/config.h"
 #include "wine/wined3d_interface.h"
 
+typedef IWineD3D* WINAPI (*WINED3DCREATE) (UINT, UINT, PVOID);
 
+static WINED3DCREATE     pWineDirect3DCreate   = NULL;
 
+HINSTANCE                hWineD3D              = NULL;
+
+static BOOL InitWineD3DFunction(PCSTR name,
+                                FARPROC *funcptr)
+{
+    PVOID func;
+
+    func = (PVOID)GetProcAddress(hWineD3D, name);
+    if (func != NULL)
+    {
+        (void)InterlockedCompareExchangePointer((PVOID*)funcptr,
+                                                func,
+                                                NULL);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static BOOL InitWineD3D(void)
+{
+    HMODULE hModWineD3D;
+    BOOL Ret = TRUE;
+
+    hModWineD3D = LoadLibraryW(L"WINED3D.DLL");
+    if (hModWineD3D == NULL)
+        return FALSE;
+
+    if (InterlockedCompareExchangePointer((PVOID*)&hWineD3D,
+                                          (PVOID)hModWineD3D,
+                                          NULL) != NULL)
+    {
+        FreeLibrary(hModWineD3D);
+    }
+
+    if (!InitWineD3DFunction("WineDirect3DCreate", (FARPROC*)pWineDirect3DCreate))
+        Ret = FALSE;
+
+    return Ret;
+}
 
 /* DATA **********************************************************************/
 
@@ -1636,6 +1678,7 @@ bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
 #endif
 }
 
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -1651,6 +1694,10 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
     BOOL Return = FALSE;
 
+    if(pWineDirect3DCreate == NULL)
+        if(InitWineD3D() == FALSE)
+            return Return;
+
     /* Check if the global hDC (hdc == 0) is being used */
     if (!hdc)
     {
@@ -1662,7 +1709,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             {
                 /* Create the DDraw Object */
                 //ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
-                ghDirectDraw = (HANDLE) WineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
+                ghDirectDraw = (HANDLE) pWineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
 
                 /* Delete our DC */
                 DeleteDC(hdc);
@@ -1684,7 +1731,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     {
         /* Using the per-process object, so create it */
          //pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc);
-        pDirectDrawGlobal->hDD = (ULONG_PTR) WineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
+        pDirectDrawGlobal->hDD = (ULONG_PTR) pWineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
 
         /* Set the return value */
         Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
@@ -1720,7 +1767,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
     DD_D3DBUFCALLBACKS D3dBufferCallbacks;
     DWORD CallbackFlags[3];
-    DWORD dwNumHeaps=0, FourCCs=0;
+    //DWORD dwNumHeaps=0, FourCCs=0;
     DWORD Flags;
     BOOL retVal = TRUE;
 
