@@ -188,9 +188,10 @@ ConvertBitmapInfo(
     * description).
     */
 
-   if (BitmapInfo->bmiHeader.biSize != sizeof(BITMAPCOREHEADER) &&
+   if ( !BitmapInfo || 
+        (BitmapInfo->bmiHeader.biSize != sizeof(BITMAPCOREHEADER) &&
        (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER) ||
-        BitmapInfo->bmiHeader.biSize > sizeof(BITMAPV5HEADER)))
+        BitmapInfo->bmiHeader.biSize > sizeof(BITMAPV5HEADER))))
    {
       return NULL;
    }
@@ -213,32 +214,7 @@ ConvertBitmapInfo(
 
    if (FollowedByData)
    {
-      if (BitmapInfo->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
-      {
-         DataSize =
-            CoreBitmapInfo->bmciHeader.bcHeight *
-            CoreBitmapInfo->bmciHeader.bcWidth *
-            CoreBitmapInfo->bmciHeader.bcBitCount;
-         DataSize = ((DataSize + 31) & ~31) / 8;
-         DataSize *= CoreBitmapInfo->bmciHeader.bcPlanes;
-      }
-      else
-      {
-         if (BitmapInfo->bmiHeader.biCompression == BI_RGB ||
-             BitmapInfo->bmiHeader.biCompression == BI_BITFIELDS)
-         {
-            DataSize =
-               abs(BitmapInfo->bmiHeader.biHeight) *
-               BitmapInfo->bmiHeader.biWidth *
-               BitmapInfo->bmiHeader.biBitCount;
-            DataSize = ((DataSize + 31) & ~31) / 8;
-            DataSize *= BitmapInfo->bmiHeader.biPlanes;
-         }
-         else
-         {
-            DataSize = BitmapInfo->bmiHeader.biSizeImage;
-         }
-      }
+      DataSize = DIB_BitmapBitsSize((PBITMAPINFO)BitmapInfo );
    }
 
    /*

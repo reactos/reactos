@@ -57,6 +57,7 @@
 			<file>actctx.c</file>
 			<file>atom.c</file>
 			<file>chartype.c</file>
+			<file>collation.c</file>
 			<file>casemap.c</file>
 			<file>comm.c</file>
 			<file>computername.c</file>
@@ -75,6 +76,7 @@
 			<file>perfcnt.c</file>
 			<file>recovery.c</file>
 			<file>res.c</file>
+			<file>sortkey.c</file>
 			<file>stubs.c</file>
 			<file>sysinfo.c</file>
 			<file>time.c</file>

@@ -34,9 +34,6 @@
  *   - Implement the OXID resolver so we don't need magic endpoint names for
  *     clients and servers to meet up
  *
- *   - Make all ole interface marshaling use NDR to be wire compatible with
- *     native DCOM
- *
  */
 
 #include "config.h"
@@ -66,14 +63,12 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-HINSTANCE OLE32_hInstance = 0; /* FIXME: make static ... */
+HINSTANCE OLE32_hInstance = 0;
 
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
 
 /****************************************************************************
  * This section defines variables internal to the COM module.
- *
- * TODO: Most of these things will have to be made thread-safe.
  */
 
 static HRESULT COM_GetRegisteredClassObject(const struct apartment *apt, REFCLSID rclsid,
@@ -116,7 +111,7 @@ static LONG s_COMServerProcessReferences = 0;
  * objects.
  *
  * TODO: Make this data structure aware of inter-process communication. This
- *       means that parts of this will be exported to the Wine Server.
+ *       means that parts of this will be exported to rpcss.
  */
 typedef struct tagRegisteredClass
 {
@@ -209,8 +204,8 @@ static void COMPOBJ_InitProcess( void )
      * following class is created. The *caller* of CoMarshalInterface (i.e., the
      * application) is responsible for pumping the message loop in that thread.
      * The WM_USER messages which point to the RPCs are then dispatched to
-     * COM_AptWndProc by the user's code from the apartment in which the interface
-     * was unmarshalled.
+     * apartment_wndproc by the user's code from the apartment in which the
+     * interface was unmarshalled.
      */
     memset(&wclass, 0, sizeof(wclass));
     wclass.lpfnWndProc = apartment_wndproc;
@@ -560,6 +555,8 @@ struct host_thread_params
     HWND apartment_hwnd;
 };
 
+/* thread for hosting an object to allow an object to appear to be created in
+ * an apartment with an incompatible threading model */
 static DWORD CALLBACK apartment_hostobject_thread(LPVOID p)
 {
     struct host_thread_params *params = p;
@@ -609,7 +606,12 @@ static DWORD CALLBACK apartment_hostobject_thread(LPVOID p)
     return S_OK;
 }
 
-static HRESULT apartment_hostobject_in_hostapt(struct apartment *apt, BOOL multi_threaded, BOOL main_apartment, HKEY hkeydll, REFCLSID rclsid, REFIID riid, void **ppv)
+/* finds or creates a host apartment, creates the object inside it and returns
+ * a proxy to it so that the object can be used in the apartment of the
+ * caller of this function */
+static HRESULT apartment_hostobject_in_hostapt(
+    struct apartment *apt, BOOL multi_threaded, BOOL main_apartment,
+    HKEY hkeydll, REFCLSID rclsid, REFIID riid, void **ppv)
 {
     struct host_object_params params;
     HWND apartment_hwnd = NULL;
@@ -715,6 +717,8 @@ static HRESULT apartment_hostobject_in_hostapt(struct apartment *apt, BOOL multi
     return hr;
 }
 
+/* create a window for the apartment or return the current one if one has
+ * already been created */
 HRESULT apartment_createwindowifneeded(struct apartment *apt)
 {
     if (apt->multi_threaded)
@@ -738,6 +742,7 @@ HRESULT apartment_createwindowifneeded(struct apartment *apt)
     return S_OK;
 }
 
+/* retrieves the window for the main- or apartment-threaded apartment */
 HWND apartment_getwindow(const struct apartment *apt)
 {
     assert(!apt->multi_threaded);
@@ -750,6 +755,8 @@ void apartment_joinmta(void)
     COM_CurrentInfo()->apt = MTA;
 }
 
+/* gets the specified class object by loading the appropriate DLL, if
+ * necessary and calls the DllGetClassObject function for the DLL */
 static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
                                         BOOL apartment_threaded,
                                         REFCLSID rclsid, REFIID riid, void **ppv)
@@ -822,6 +829,8 @@ static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
     return hr;
 }
 
+/* frees unused libraries loaded by apartment_getclassobject by calling the
+ * DLL's DllCanUnloadNow entry point */
 static void apartment_freeunusedlibraries(struct apartment *apt, DWORD delay)
 {
     struct apartment_loaded_dll *entry, *next;
@@ -834,6 +843,10 @@ static void apartment_freeunusedlibraries(struct apartment *apt, DWORD delay)
 
             if (real_delay == INFINITE)
             {
+                /* DLLs that return multi-threaded objects aren't unloaded
+                 * straight away to cope for programs that have races between
+                 * last object destruction and threads in the DLLs that haven't
+                 * finished, despite DllCanUnloadNow returning S_OK */
                 if (entry->multi_threaded)
                     real_delay = 10 * 60 * 1000; /* 10 minutes */
                 else

@@ -8,5 +8,4 @@
 	<library>uuid</library>
 	<file>rasman.c</file>
 	<file>rasman.rc</file>
-	<file>rasman.spec</file>
 </module>

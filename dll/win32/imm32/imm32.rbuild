@@ -9,7 +9,6 @@
 	<define name="_WIN32_WINNT">0x600</define>
 	<file>imm.c</file>
 	<file>version.rc</file>
-	<file>imm32.spec</file>
 	<library>wine</library>
 	<library>user32</library>
 	<library>gdi32</library>

@@ -1,9 +1,7 @@
 
 #ifndef _MMSYSTEM_H
 #define _MMSYSTEM_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
+
 #pragma pack(push,1)
 #ifdef __cplusplus
 extern "C" {

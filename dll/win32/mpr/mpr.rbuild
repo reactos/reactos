@@ -13,7 +13,6 @@
 	<file>pwcache.c</file>
 	<file>wnet.c</file>
 	<file>mpr.rc</file>
-	<file>mpr.spec</file>
 	<library>wine</library>
 	<library>user32</library>
 	<library>advapi32</library>

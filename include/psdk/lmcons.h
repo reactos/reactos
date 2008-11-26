@@ -1,8 +1,5 @@
 #ifndef _LMCONS_H
 #define _LMCONS_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define MESSAGE_FILENAME TEXT("NETMSG")
 #define OS2MSG_FILENAME TEXT("BASE")

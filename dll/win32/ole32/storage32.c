@@ -1906,7 +1906,7 @@ static HRESULT WINAPI StorageImpl_Stat( IStorage* iface,
   StorageImpl* const This = (StorageImpl*)iface;
   HRESULT result = StorageBaseImpl_Stat( iface, pstatstg, grfStatFlag );
 
-  if ( !FAILED(result) && ((grfStatFlag & STATFLAG_NONAME) == 0) && This->pwcsName )
+  if ( SUCCEEDED(result) && ((grfStatFlag & STATFLAG_NONAME) == 0) && This->pwcsName )
   {
       CoTaskMemFree(pstatstg->pwcsName);
       pstatstg->pwcsName = CoTaskMemAlloc((lstrlenW(This->pwcsName)+1)*sizeof(WCHAR));
@@ -5895,7 +5895,7 @@ HRESULT WINAPI StgOpenStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgf
         return STG_E_INVALIDPARAMETER;
     }
 
-    return StgOpenStorage(pwcsName, NULL, grfMode, (SNB)NULL, 0, (IStorage **)ppObjectOpen); 
+    return StgOpenStorage(pwcsName, NULL, grfMode, NULL, 0, (IStorage **)ppObjectOpen);
 }
 
 
@@ -6335,13 +6335,13 @@ HRESULT  WINAPI OleLoadFromStream(IStream *pStm,REFIID iidInterface,void** ppvOb
     TRACE("(%p,%s,%p)\n",pStm,debugstr_guid(iidInterface),ppvObj);
 
     res=ReadClassStm(pStm,&clsid);
-    if (!SUCCEEDED(res))
+    if (FAILED(res))
 	return res;
     res=CoCreateInstance(&clsid,NULL,CLSCTX_INPROC_SERVER,iidInterface,ppvObj);
-    if (!SUCCEEDED(res))
+    if (FAILED(res))
 	return res;
     res=IUnknown_QueryInterface((IUnknown*)*ppvObj,&IID_IPersistStream,(LPVOID*)&xstm);
-    if (!SUCCEEDED(res)) {
+    if (FAILED(res)) {
 	IUnknown_Release((IUnknown*)*ppvObj);
 	return res;
     }
@@ -6583,7 +6583,7 @@ static HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM
 	int max_try = 6;
 
 	pData->pData = NULL;
-	pData->pstrOleObjFileName = (CHAR *) NULL;
+	pData->pstrOleObjFileName = NULL;
 
 	for( nTryCnt=0;nTryCnt < max_try; nTryCnt++)
 	{

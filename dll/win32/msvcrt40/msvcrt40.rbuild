@@ -7,7 +7,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<file>msvcrt40.c</file>
-	<file>msvcrt40.spec</file>
 	<library>wine</library>
 	<library>msvcrt</library>
 	<library>kernel32</library>

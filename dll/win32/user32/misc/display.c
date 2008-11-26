@@ -242,17 +242,14 @@ EnumDisplaySettingsExA(
     COPYS(dmDeviceName, CCHDEVICENAME );
     COPYN(dmSpecVersion);
     COPYN(dmDriverVersion);
-    switch (DevModeW.dmSize)
+    switch (lpDevMode->dmSize)
     {
-        case SIZEOF_DEVMODEW_300:
+        case SIZEOF_DEVMODEA_300:
+        case SIZEOF_DEVMODEA_400:
+        case SIZEOF_DEVMODEA_500:
+             break;
+        default:
             lpDevMode->dmSize = SIZEOF_DEVMODEA_300;
-            break;
-        case SIZEOF_DEVMODEW_400:
-            lpDevMode->dmSize = SIZEOF_DEVMODEA_400;
-            break;
-        case SIZEOF_DEVMODEW_500:
-        default: /* FIXME what to do??? */
-            lpDevMode->dmSize = SIZEOF_DEVMODEA_500;
             break;
     }
     COPYN(dmDriverExtra);
@@ -276,7 +273,7 @@ EnumDisplaySettingsExA(
     COPYN(dmDisplayFlags); // aka dmNup
     COPYN(dmDisplayFrequency);
 
-    if (DevModeW.dmSize <= SIZEOF_DEVMODEW_300)
+    if (lpDevMode->dmSize <= SIZEOF_DEVMODEW_300)
         return TRUE; // we're done with 0x300 fields
 
     COPYN(dmICMMethod);
@@ -286,7 +283,7 @@ EnumDisplaySettingsExA(
     COPYN(dmReserved1);
     COPYN(dmReserved2);
 
-    if (DevModeW.dmSize <= SIZEOF_DEVMODEW_400)
+    if (lpDevMode->dmSize <= SIZEOF_DEVMODEW_400)
         return TRUE; // we're done with 0x400 fields
 
     COPYN(dmPanningWidth);

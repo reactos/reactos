@@ -1299,7 +1299,7 @@ static OleMenuHookItem * OLEMenu_IsHookInstalled( DWORD tid )
  */
 static BOOL OLEMenu_FindMainMenuIndex( HMENU hMainMenu, HMENU hPopupMenu, UINT *pnPos )
 {
-  UINT i, nItems;
+  INT i, nItems;
 
   nItems = GetMenuItemCount( hMainMenu );
 

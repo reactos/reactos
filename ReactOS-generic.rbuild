@@ -119,4 +119,5 @@
 		<xi:include href="tools/tools.rbuild" />
 	</directory>
 
+	<compilerflag>@warnings.rsp</compilerflag>
 </group>

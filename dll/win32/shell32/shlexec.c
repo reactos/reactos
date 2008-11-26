@@ -566,7 +566,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
     else
     {
         /* First thing we need is the file's extension */
-        extension = wcschr(xlpFile, '.'); /* Assume last "." is the one; */
+        extension = wcsrchr(xlpFile, '.'); /* Assume last "." is the one; */
         /* File->Run in progman uses */
         /* .\FILE.EXE :( */
         TRACE("xlpFile=%s,extension=%s\n", debugstr_w(xlpFile), debugstr_w(extension));

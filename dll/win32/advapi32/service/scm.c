@@ -249,7 +249,7 @@ ChangeServiceConfig2A(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -309,7 +309,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -383,7 +383,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -457,7 +457,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -491,7 +491,7 @@ CloseServiceHandle(SC_HANDLE hSCObject)
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -532,7 +532,7 @@ ControlService(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -799,7 +799,7 @@ CreateServiceW(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -833,7 +833,7 @@ DeleteService(SC_HANDLE hService)
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -878,7 +878,7 @@ EnumDependentServicesA(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -939,7 +939,7 @@ EnumDependentServicesW(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1028,7 +1028,7 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1093,7 +1093,7 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1162,7 +1162,7 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1239,7 +1239,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1306,7 +1306,7 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
     _SEH_HANDLE
     {
         /* HACK: because of a problem with rpcrt4, rpcserver is hacked to return 6 for ERROR_SERVICE_DOES_NOT_EXIST */
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
 
 
@@ -1350,7 +1350,7 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1392,7 +1392,7 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1434,7 +1434,7 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1470,7 +1470,7 @@ LockServiceDatabase(SC_HANDLE hSCManager)
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1555,7 +1555,7 @@ OpenSCManagerA(LPCSTR lpMachineName,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1600,7 +1600,7 @@ OpenSCManagerW(LPCWSTR lpMachineName,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1643,7 +1643,7 @@ OpenServiceA(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1686,7 +1686,7 @@ OpenServiceW(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1732,7 +1732,7 @@ QueryServiceConfigA(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1801,7 +1801,7 @@ QueryServiceConfigW(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1889,7 +1889,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -1984,7 +1984,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2062,7 +2062,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2110,7 +2110,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2161,7 +2161,7 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2227,7 +2227,7 @@ SetServiceObjectSecurity(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2266,7 +2266,7 @@ QueryServiceStatus(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2308,7 +2308,7 @@ QueryServiceStatusEx(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2343,7 +2343,7 @@ StartServiceA(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2378,7 +2378,7 @@ StartServiceW(SC_HANDLE hService,
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2412,7 +2412,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -2447,7 +2447,7 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
     }
     _SEH_HANDLE
     {
-        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+        dwError = ScmRpcStatusToWinError(_SEH_GetExceptionCode());
     }
     _SEH_END;
 

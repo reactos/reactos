@@ -7,7 +7,6 @@
         <include base="ReactOS">include/reactos/wine</include>
         <define name="__WINESRC__" />
         <file>sxs.c</file>
-        <file>sxs.spec</file>
         <library>wine</library>
         <library>kernel32</library>
         <library>ntdll</library>

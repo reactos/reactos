@@ -30,6 +30,5 @@
 	<file>wininet_main.c</file>
 	<file>rsrc.rc</file>
 	<file>version.rc</file>
-	<file>wininet.spec</file>
 </module>
 </group>

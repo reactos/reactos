@@ -1,8 +1,5 @@
 #ifndef _CDERR_H
 #define _CDERR_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define CDERR_DIALOGFAILURE	0xFFFF
 #define CDERR_GENERALCODES	0x0000

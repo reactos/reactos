@@ -6,5 +6,4 @@
 	<library>hal</library>
 	<file>usbd.c</file>
 	<file>usbd.rc</file>
-	<file>usbd.spec</file>
 </module>

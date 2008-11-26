@@ -1,8 +1,5 @@
 #ifndef _SHELLAPI_H
 #define _SHELLAPI_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -126,9 +123,6 @@ extern "C" {
 #define SHGFI_SHELLICONSIZE	4
 #define SHGFI_PIDL	8
 #define SHGFI_USEFILEATTRIBUTES	16
-#define SHERB_NOCONFIRMATION 1
-#define SHERB_NOPROGRESSUI 2
-#define SHERB_NOSOUND 4
 
 typedef WORD FILEOP_FLAGS;
 typedef WORD PRINTEROP_FLAGS;

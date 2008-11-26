@@ -12,7 +12,7 @@ AnyPopup@0
 AppendMenuA@16
 AppendMenuW@16
 ArrangeIconicWindows@4
-AttachThreadInput@12
+AttachThreadInput@12=NtUserAttachThreadInput@12
 BeginDeferWindowPos@4
 BeginPaint@8
 BlockInput@4

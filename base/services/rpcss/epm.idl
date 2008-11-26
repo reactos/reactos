@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002 Greg Turner
+ * Copyright 2008 Robert Shearman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,11 +16,4 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_RPCSS_NP_CLIENT_H
-#define __WINE_RPCSS_NP_CLIENT_H
-
-/* rpcss_np_client.c */
-HANDLE RPC_RpcssNPConnect(void);
-BOOL RPCRT4_SendReceiveNPMsg(HANDLE, PRPCSS_NP_MESSAGE, char *,  PRPCSS_NP_REPLY);
-
-#endif /* __RPCSS_NP_CLINET_H */
+#include "wine/epm.idl"

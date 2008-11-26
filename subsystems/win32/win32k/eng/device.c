@@ -62,6 +62,7 @@ EngDeviceIoControl(HANDLE  hDevice,
 				      nInBufferSize,
 				      lpOutBuffer,
 				      nOutBufferSize, FALSE, &Event, &Iosb);
+  if (!Irp) return ERROR_NOT_ENOUGH_MEMORY;
 
   Status = IoCallDriver(DeviceObject, Irp);
 

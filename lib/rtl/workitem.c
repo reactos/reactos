@@ -879,3 +879,16 @@ Cleanup:
 
     return Status;
 }
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlSetIoCompletionCallback(IN HANDLE FileHandle,
+                           IN PIO_APC_ROUTINE Callback,
+                           IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}

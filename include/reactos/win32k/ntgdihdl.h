@@ -330,8 +330,8 @@ typedef struct _BRUSH_ATTR // Used with pen too.
 
 typedef struct _FONT_ATTR
 {
-    DWORD dwUnknown;
-    void *pCharWidthData;
+    BOOL    bSlowWidths;
+    PCFONT  pCharWidthData;
 } FONT_ATTR, *PFONT_ATTR;
 
 

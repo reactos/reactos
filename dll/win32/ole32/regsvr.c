@@ -32,6 +32,7 @@
 
 #include "ole2.h"
 #include "olectl.h"
+#include "comcat.h"
 #include "initguid.h"
 #include "compobj_private.h"
 #include "moniker.h"
@@ -406,6 +407,9 @@ static GUID const CLSID_StdOleLink = {
 static GUID const CLSID_PackagerMoniker = {
     0x00000308, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
 
+static GUID const CLSID_PSFactoryBuffer_actxprxy = {
+    0xB8DA6310, 0xE19B, 0x11D0, {0x93,0x3C,0x00,0xA0,0xC9,0x0D,0xCA,0xA9} };
+
 extern GUID const CLSID_Picture_Metafile;
 extern GUID const CLSID_Picture_Dib;
 
@@ -492,6 +496,12 @@ static struct regsvr_coclass const coclass_list[] = {
 	"ole32.dll",
 	"Apartment"
     },
+    {	&CLSID_StdComponentCategoriesMgr,
+	"Component Categories Manager",
+	NULL,
+	"ole32.dll",
+	"Both"
+    },
     { NULL }			/* list terminator */
 };
 
@@ -502,6 +512,7 @@ static struct regsvr_coclass const coclass_list[] = {
 #define INTERFACE_ENTRY(interface, base, clsid32, clsid16) { &IID_##interface, #interface, base, sizeof(interface##Vtbl)/sizeof(void*), clsid16, clsid32 }
 #define BAS_INTERFACE_ENTRY(interface, base) INTERFACE_ENTRY(interface, &IID_##base, &CLSID_PSFactoryBuffer, NULL)
 #define STD_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, &CLSID_PSFactoryBuffer, NULL)
+#define ACTX_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, &CLSID_PSFactoryBuffer_actxprxy, NULL)
 #define LCL_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, NULL, NULL)
 
 static const struct regsvr_interface interface_list[] = {
@@ -561,6 +572,10 @@ static const struct regsvr_interface interface_list[] = {
     LCL_INTERFACE_ENTRY(IClientSecurity),
     LCL_INTERFACE_ENTRY(IServerSecurity),
     STD_INTERFACE_ENTRY(ISequentialStream),
+    ACTX_INTERFACE_ENTRY(IEnumGUID),
+    ACTX_INTERFACE_ENTRY(IEnumCATEGORYINFO),
+    ACTX_INTERFACE_ENTRY(ICatRegister),
+    ACTX_INTERFACE_ENTRY(ICatInformation),
     { NULL }			/* list terminator */
 };
 

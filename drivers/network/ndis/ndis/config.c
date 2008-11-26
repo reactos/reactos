@@ -139,7 +139,7 @@ NdisCloseConfiguration(
 
     while(!IsListEmpty(&ConfigurationContext->ResourceListHead))
     {
-        Resource = (PMINIPORT_RESOURCE)RemoveTailList(&ConfigurationContext->ResourceListHead);
+        Resource = (PMINIPORT_RESOURCE)ExInterlockedRemoveHeadList(&ConfigurationContext->ResourceListHead, &ConfigurationContext->ResourceLock);
         if(Resource->ResourceType == MINIPORT_RESOURCE_TYPE_MEMORY)
         {
             NDIS_DbgPrint(MAX_TRACE,("freeing 0x%x\n", Resource->Resource));

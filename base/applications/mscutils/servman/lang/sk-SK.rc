@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  18-09-2008
- * LAST CHANGE:  19-09-2008
+ * LAST CHANGE:  05-11-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -15,7 +15,7 @@ BEGIN
   END
   POPUP "Akcia"
   BEGIN
-    MENUITEM "Connect to...", ID_CONNECT, GRAYED
+    MENUITEM "Pripojiù sa na...", ID_CONNECT, GRAYED //Connect to...
     MENUITEM SEPARATOR
     MENUITEM "Spustiù",     ID_START, GRAYED
     MENUITEM "Zastaviù",    ID_STOP, GRAYED
@@ -25,9 +25,9 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Obnoviù",     ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Edit...",     ID_EDIT, GRAYED
-    MENUITEM "Create...",   ID_CREATE, GRAYED
-    MENUITEM "Delete...",   ID_DELETE, GRAYED
+    MENUITEM "Upraviù...",     ID_EDIT, GRAYED
+    MENUITEM "Vytvoriù...",   ID_CREATE, GRAYED
+    MENUITEM "Odstr·niù...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Vlastnosti...", ID_PROP, GRAYED
   END
@@ -59,8 +59,8 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Obnoviù",     ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Edit...",     ID_EDIT, GRAYED
-    MENUITEM "Delete...",   ID_DELETE, GRAYED
+    MENUITEM "Upraviù...",     ID_EDIT, GRAYED
+    MENUITEM "Odstr·niù...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Vlastnosti...", ID_PROP, GRAYED
     MENUITEM SEPARATOR
@@ -93,21 +93,21 @@ BEGIN
   PUSHBUTTON "Zastaviù", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "Pozastaviù", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "PokraËovaù", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
-  LTEXT "Service name:", IDC_STATIC, 4, 11, 53, 11
+  LTEXT "N·zov sluûby:", IDC_STATIC, 4, 11, 53, 11
   LTEXT "Display name:", IDC_STATIC, 4, 29, 53, 11
-  LTEXT "Description:", IDC_STATIC, 4, 51, 53, 11
+  LTEXT "Popis:", IDC_STATIC, 4, 51, 53, 11
   LTEXT "Path to executable:", IDC_STATIC, 6, 73, 82, 9
   LTEXT "Startup type:", IDC_STATIC, 6, 108, 53, 11
-  LTEXT "Service status:", IDC_STATIC, 4, 138, 53, 11
+  LTEXT "Stav sluûby:", IDC_STATIC, 4, 138, 53, 11
   LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
   LTEXT "You can specify the start parameters that apply when you start the service from here.",IDC_STATIC, 6,177,240,15
   LTEXT "Start parameters:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+  PUSHBUTTON "Upraviù", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
-CAPTION "Dependencies"
+CAPTION "Z·vislosti" //Dependencies
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -119,7 +119,7 @@ BEGIN
 END
 
 IDD_DLG_CREATE DIALOGEX 6,6,225,209
-CAPTION "Create a service"
+CAPTION "Vytvoriù sluûbu"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -128,10 +128,10 @@ BEGIN
   EDITTEXT IDC_CREATE_PATH, 10, 62, 210, 13, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
-  LTEXT "*Service Name :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*N·zov sluûby :", IDC_STATIC, 12, 12, 54, 9
   LTEXT "*Display Name :", IDC_STATIC, 12, 33, 54, 9
   LTEXT "*Path to executable :", IDC_STATIC, 10, 51, 68, 9
-  LTEXT "Description :", IDC_STATIC, 12, 86, 44, 9
+  LTEXT "Popis :", IDC_STATIC, 12, 86, 44, 9
   PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
   PUSHBUTTON "Zruöiù", IDCANCEL, 176, 192, 46, 13
   LTEXT "Additional options (click help for details)", IDC_STATIC, 10, 151, 134, 9
@@ -139,13 +139,13 @@ BEGIN
 END
 
 IDD_DLG_DELETE DIALOGEX 6,6,185,148
-CAPTION "Delete a service"
+CAPTION "Odstr·niù sluûbu"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
   LTEXT "Are you sure you want to delete the following service? This cannot be undone once removed!", IDC_STATIC, 50, 6, 125, 25
-  LTEXT "Service Name:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "N·zov sluûby:",IDC_STATIC, 6, 40, 80, 9
   LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
   EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
   PUSHBUTTON "¡no", IDOK, 26, 129, 54, 13
@@ -181,7 +181,7 @@ BEGIN
   IDS_SECONDCOLUMN "Popis"
   IDS_THIRDCOLUMN "Stav"
   IDS_FOURTHCOLUMN "Typ spustenia" //SpÙsob spustenia
-  IDS_FITHCOLUMN "Log On As" //Prihl·sen˝ ako
+  IDS_FITHCOLUMN "Prihl·sen˝ ako" //Log On As
 END
 
 STRINGTABLE DISCARDABLE
@@ -190,12 +190,12 @@ BEGIN
   IDS_SERVICES_STOPPED "Zastaven·"
   IDS_SERVICES_AUTO "Automaticky"
   IDS_SERVICES_MAN "RuËne"
-  IDS_SERVICES_DIS "Disabled"
+  IDS_SERVICES_DIS "Zablokovan·" //Disabled
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_NUM_SERVICES "Num Services: %d"
+  IDS_NUM_SERVICES "PoËet sluûieb: %d"
   IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
@@ -218,8 +218,8 @@ BEGIN
   IDS_PROGRESS_INFO_STOP   "ReactOS is attempting to stop the following service"
   IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
   IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
-  IDS_CREATE_SUCCESS "Service Created Succesfully"
-  IDS_DELETE_SUCCESS "Service Deleted Succesfully"
+  IDS_CREATE_SUCCESS "Sluûba bola ˙speöne vytvoren·"
+  IDS_DELETE_SUCCESS "Sluûba bola ˙speöne odstr·nen·"
   IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
   IDS_DELETE_STOP "You must manually stop the service before deleting!"
 END

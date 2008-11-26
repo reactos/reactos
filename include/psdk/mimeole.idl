@@ -32,6 +32,8 @@ interface IMimeEnumProperties;
 cpp_quote("DEFINE_GUID(CLSID_IMimeBody,      0xfd853cdb, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 cpp_quote("DEFINE_GUID(CLSID_IMimeAllocator, 0xfd853cdd, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 cpp_quote("DEFINE_GUID(CLSID_IMimeMessage,   0xfd853ce3, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_IMimeSecurity,  0xfd853cde, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_IVirtualStream, 0xfd853cdf, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 
 cpp_quote("#define MIME_E_REG_CREATE_KEY         0x800cce01")
 cpp_quote("#define MIME_E_REG_QUERY_INFO         0x800cce02")
@@ -40,8 +42,18 @@ cpp_quote("#define MIME_E_BOUNDARY_MISMATCH      0x800cce04")
 cpp_quote("#define MIME_E_NOT_FOUND              0x800cce05")
 cpp_quote("#define MIME_E_NO_DATA                0x800cce05")
 cpp_quote("#define MIME_E_BUFFER_TOO_SMALL       0x800cce06")
+cpp_quote("#define MIME_E_INVALID_ITEM_FLAGS     0x800cce07")
+cpp_quote("#define MIME_E_ONE_LINE_ITEME         0x800cce08")
+cpp_quote("#define MIME_E_INVALID_HANDLE         0x800cce09")
+cpp_quote("#define MIME_E_CHARSET_TRANSLATE      0x800cce0a")
+cpp_quote("#define MIME_E_NOT_INITIALIZED        0x800cce0b")
+
+cpp_quote("#define MIME_E_INVALID_CHARSET_TYPE   0x800cce31")
 
 cpp_quote("#define MIME_E_INVALID_TEXT_TYPE      0x800cce38")
+
+cpp_quote("#define MIME_E_SECURITY_NOOP          0x800cceb1")
+cpp_quote("#define MIME_S_SECURITY_NOOP          0x000cceb1")
 
 cpp_quote("typedef enum tagMIMEPROPID {")
 cpp_quote("    PID_HDR_NEWSGROUP  = 2,")
@@ -78,7 +90,14 @@ cpp_quote("    PID_HDR_SENDER     = 61,")
 cpp_quote("    PID_HDR_INREPLYTO  = 77,")
 cpp_quote("} MIMEPROPID;")
 
+cpp_quote("#define TYPEDID_MASK                  ((ULONG)0xffff)")
+cpp_quote("#define TYPEDID_TYPE(t)               ((VARTYPE)((t) & TYPEDID_MASK))")
+
+cpp_quote("#define OID_HIDE_TNEF_ATTACHMENTS     (0x000e0000 | VT_BOOL)")
+cpp_quote("#define OID_SECURITY_TYPE             (0x00180000 | VT_UI4)")
+cpp_quote("#define OID_SECURITY_HWND_OWNER       (0x00320000 | VT_UI4)")
 cpp_quote("#define OID_HEADER_RELOAD_TYPE        (0x00370000 | VT_UI4)")
+cpp_quote("#define OID_SHOW_MACBINARY            (0x00390000 | VT_BOOL)")
 
 
 [
@@ -235,6 +254,9 @@ library MIMEOLE
         HRESULT GetCodePageInfo(
             [in]        CODEPAGEID cpiCodePage,
             [in, out]   LPCODEPAGEINFO pCodePageInfo);
+        HRESULT CanConvertCodePages(
+            [in]        CODEPAGEID cpiSource,
+            [in]        CODEPAGEID cpiDest);
         HRESULT DecodeHeader(
             [in]        HCHARSET hCharset,
             [in]        LPCSTR pszData,
@@ -256,22 +278,22 @@ library MIMEOLE
             [in]        CODEPAGEID cpiDest,
             [in]        LPPROPVARIANT pIn,
             [in, out]   LPPROPVARIANT pOut);
-        HRESULT MLANG_ConvertInetReset();
+        HRESULT MLANG_ConvertInetReset(void);
         HRESULT MLANG_ConvertInetString(
             [in]        CODEPAGEID cpiSource,
             [in]        CODEPAGEID cpiDest,
             [in]        LPCSTR pSource,
             [in]        int *pnSizeOfSource,
-            [out]       LPSTR pDestination,
+            [in,out,unique]  LPSTR pDestination,
             [in]        int *pnDstSize);
         HRESULT Rfc1522Decode(
             [in]        LPCSTR pszValue,
-            [in]        LPCSTR pszCharset,
+            [in,ref]    LPSTR pszCharset,
             [in]        ULONG cchmax,
             [out]       LPSTR *ppszDecoded);
         HRESULT Rfc1522Encode(
             [in]        LPCSTR pszValue,
-            [in]         HCHARSET hCharset,
+            [in]        HCHARSET hCharset,
             [out]       LPSTR *ppszEncoded);
     }
 
@@ -292,6 +314,19 @@ library MIMEOLE
 
         typedef BLOB THUMBBLOB;
         typedef void *HCAPICERTSTORE;
+
+        cpp_quote("#define MST_NONE             0x00000000")
+        cpp_quote("#define MST_THIS_SIGN        0x00000001")
+        cpp_quote("#define MST_THIS_ENCRYPT     0x00000002")
+        cpp_quote("#define MST_BLOB_FLAG        0x00000004")
+        cpp_quote("#define MST_THIS_BLOBSIGN    (MST_BLOB_FLAG | MST_THIS_SIGN)")
+        cpp_quote("#define MST_CHILD_SIGN       0x00000100")
+        cpp_quote("#define MST_CHILD_ENCRYPT    0x00000200")
+        cpp_quote("#define MST_SUBMSG_SIGN      0x00001000")
+        cpp_quote("#define MST_SUBMSG_ENCRYPT   0x00002000")
+        cpp_quote("#define MST_RECEIPT_REQUEST  0x00010000")
+        cpp_quote("#define MST_CLASS_SMIME_V1   0x00000000")
+        cpp_quote("#define MST_CLASS_PGP        0x01000000")
 
         typedef enum tagCERTSTATE
         {
@@ -1041,6 +1076,8 @@ cpp_quote("#endif")
     ]
     interface IMimeEnumProperties : IUnknown
     {
+        typedef [unique] IMimeEnumProperties *LPMIMEENUMPROPERTIES;
+
         typedef struct tagENUMPROPERTY
         {
             LPSTR       pszName;
@@ -1048,7 +1085,22 @@ cpp_quote("#endif")
             DWORD       dwPropId;
         } ENUMPROPERTY, *LPENUMPROPERTY;
 
-        /* FIXME: fill this in */
+        HRESULT Next(
+            [in]      ULONG cFetch,
+            [in, out] LPENUMPROPERTY prgProp,
+            [out]     ULONG *pcFetched);
+
+        HRESULT Skip(
+            [in]      ULONG cItems);
+
+        HRESULT Reset(void);
+
+        HRESULT Clone(
+            [out]      IMimeEnumProperties **ppEnum);
+
+        HRESULT Count(
+            [out]      ULONG *pcItems);
+
     }
 
     [
@@ -1163,6 +1215,31 @@ cpp_quote("#endif")
     interface IMimeEditTagCollection : IUnknown
     {
         /* FIXME: fill this in */
+    }
+
+    [
+         uuid(ba715ae0-a740-11d2-8b22-0080c76b34c6),
+         local
+    ]
+    interface IMimeSecurityCallback : IUnknown
+    {
+        /* FIXME: fill this in */
+
+        cpp_quote("#define CMS_RECIPIENT_INFO_TYPE_UNKNOWN                0")
+        cpp_quote("#define CMS_RECIPIENT_INFO_TYPE_KEYTRANS               1")
+        cpp_quote("#define CMS_RECIPIENT_INFO_TYPE_KEYAGREE               2")
+        cpp_quote("#define CMS_RECIPIENT_INFO_TYPE_MAIL_LIST              3")
+
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_CERTIFICATE          0")
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_KEYTRANS             1")
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_PROVIDER             2")
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_EPHEMERAL_KEYAGREE   3")
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_STATIC_KEYAGREE      4")
+
+        cpp_quote("#define CMS_RECIPIENT_INFO_KEYID_CERTIFICATE           0")
+        cpp_quote("#define CMS_RECIPIENT_INFO_KEYID_ISSUERSERIAL          1")
+        cpp_quote("#define CMS_RECIPIENT_INFO_KEYID_KEY_ID                2")
+
     }
 }
 

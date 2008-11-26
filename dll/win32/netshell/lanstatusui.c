@@ -398,7 +398,7 @@ LANStatusUiDetailsDlg(
 
             hDlgCtrl = GetDlgItem(hwndDlg, IDC_DETAILS);
             InsertColumnToListView(hDlgCtrl, IDS_PROPERTY, 0, 80);
-            InsertColumnToListView(hDlgCtrl, IDS_VALUE, 0, 80);
+            InsertColumnToListView(hDlgCtrl, IDS_VALUE, 1, 80);
 
             dwSize = 0;
             pCurAdapter = NULL;

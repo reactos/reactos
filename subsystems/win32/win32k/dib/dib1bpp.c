@@ -351,7 +351,6 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
    BOOLEAN UsesPattern;
    PULONG DestBits;
    ULONG RoundedRight;
-/*   BYTE NoBits;*/
 
    UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
    UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
@@ -417,7 +416,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
 #endif
       }
 
-      for (; DestX < RoundedRight; DestX += 32, DestBits++, SourceX++)
+      for (; DestX < RoundedRight; DestX += 32, DestBits++, SourceX += 32)
       {
          Dest = *DestBits;
 
@@ -450,10 +449,8 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
 
       if (DestX < BltInfo->DestRect.right)
       {
-//         Dest = *DestBits;
          for (; DestX < BltInfo->DestRect.right; DestX++, SourceX++)
          {
-//            Dest = *DestBits;
             Dest = DIB_1BPP_GetPixel(BltInfo->DestSurface, DestX, DestY);
 
             if (UsesSource)
@@ -467,7 +464,6 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
             }
 
             DIB_1BPP_PutPixel(BltInfo->DestSurface, DestX, DestY, DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern) & 0xF);
-//            Dest >>= 1;
          }
       }
 
@@ -627,7 +623,7 @@ BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       break;
 
       default:
-      //DPRINT1("DIB_1BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
+       DPRINT1("DIB_1BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return FALSE;
     }
 

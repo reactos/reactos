@@ -2972,7 +2972,7 @@ CdRomDeviceControlCompletion(
 
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG)realIrpNextStack->Parameters.Others.Argument1-1))) {
 
 
             if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
@@ -3192,7 +3192,9 @@ CdRomDeviceControlCompletion(
         case IOCTL_CDROM_READ_Q_CHANNEL: {
 
             PSUB_Q_CHANNEL_DATA userChannelData = realIrp->AssociatedIrp.SystemBuffer;
+#if DBG
             PCDROM_SUB_Q_DATA_FORMAT inputBuffer = realIrp->AssociatedIrp.SystemBuffer;
+#endif
             PSUB_Q_CHANNEL_DATA subQPtr = srb->DataBuffer;
 
 #if DBG
@@ -3497,7 +3499,7 @@ CdRomSetVolumeIntermediateCompletion(
             retry = TRUE;
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG)realIrpNextStack->Parameters.Others.Argument1-1))) {
 
             if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
 
@@ -3823,7 +3825,7 @@ CdRomSwitchModeCompletion(
             retry = TRUE;
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG)realIrpNextStack->Parameters.Others.Argument1-1))) {
 
             if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
 
@@ -4199,7 +4201,7 @@ Return Value:
             retry = TRUE;
         }
 
-        if (retry && (irpNextStack->Parameters.Others.Argument1 = (ULONG)irpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (irpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG)irpNextStack->Parameters.Others.Argument1-1))) {
 
             if (((ULONG)irpNextStack->Parameters.Others.Argument1)) {
 

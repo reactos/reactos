@@ -955,7 +955,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
 
                     BitmapObj = BITMAPOBJ_LockBitmap(hMem);
-                    BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (LPSTR)&bm);
+                    BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (PVOID)&bm);
                     if(BitmapObj)
                     {
                         BITMAPOBJ_UnlockBitmap(BitmapObj);

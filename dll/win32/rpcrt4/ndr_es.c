@@ -156,7 +156,18 @@ RPC_STATUS RPC_ENTRY MesEncodeFixedBufferHandleCreate(
 
     *pHandle = (handle_t)pEsMsg;
 
-    return RPC_S_OK;}
+    return RPC_S_OK;
+}
+
+/***********************************************************************
+ *            MesEncodeDynBufferHandleCreate [RPCRT4.@]
+ */
+RPC_STATUS RPC_ENTRY MesEncodeDynBufferHandleCreate(char **ppBuffer,
+        ULONG *pEncodedSize, handle_t *pHandle)
+{
+    FIXME("%p %p %p stub\n", ppBuffer, pEncodedSize, pHandle);
+    return RPC_S_OK;
+}
 
 /***********************************************************************
  *            MesDecodeBufferHandleCreate [RPCRT4.@]

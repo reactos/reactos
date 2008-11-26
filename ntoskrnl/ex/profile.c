@@ -154,7 +154,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     if(PreviousMode != KernelMode)
     {
         /* Entry SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make sure that the handle pointer is valid */
             ProbeForWriteHandle(ProfileHandle);
@@ -164,11 +164,11 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
                           BufferSize,
                           sizeof(ULONG));
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if we failed */
         if(!NT_SUCCESS(Status)) return Status;
@@ -256,16 +256,16 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     }
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Copy the created handle back to the caller*/
         *ProfileHandle = hProfile;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return Status */
     return Status;
@@ -284,7 +284,7 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
     if(PreviousMode != KernelMode)
     {
         /* Entry SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make sure the counter and frequency are valid */
             ProbeForWriteLargeInteger(PerformanceCounter);
@@ -293,18 +293,18 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
                 ProbeForWriteLargeInteger(PerformanceFrequency);
             }
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* If the pointers are invalid, bail out */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Enter a new SEH Block */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Query the Kernel */
         *PerformanceCounter = KeQueryPerformanceCounter(&PerfFrequency);
@@ -312,11 +312,11 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
         /* Return Frequency if requested */
         if(PerformanceFrequency) *PerformanceFrequency = PerfFrequency;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status to caller */
     return Status;
@@ -374,17 +374,17 @@ NtStartProfile(IN HANDLE ProfileHandle)
     Profile->Mdl = MmCreateMdl(NULL, Profile->Buffer, Profile->BufferSize);
 
     /* Protect this in SEH as we might raise an exception */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe and Lock for Write Access */
         MmProbeAndLockPages(Profile->Mdl, PreviousMode, IoWriteAccess);
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Fail if we raised an exception */
     if (!NT_SUCCESS(Status))
@@ -485,16 +485,16 @@ NtQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
     if(PreviousMode != KernelMode)
     {
         /* Enter SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Validate interval */
             ProbeForWriteUlong(Interval);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* If pointer was invalid, bail out */
         if(!NT_SUCCESS(Status)) return Status;
@@ -504,16 +504,16 @@ NtQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
     ReturnInterval = KeQueryIntervalProfile(ProfileSource);
 
     /* Enter SEH block for return */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Return the data */
         *Interval = ReturnInterval;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return Success */
     return STATUS_SUCCESS;

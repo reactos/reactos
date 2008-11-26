@@ -429,11 +429,6 @@ LONG
 NTAPI
 ExSystemExceptionFilter(VOID);
 
-static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
-{
-    return ExSystemExceptionFilter();
-}
-
 /* CALLBACKS *****************************************************************/
 
 VOID

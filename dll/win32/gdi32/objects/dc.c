@@ -507,7 +507,7 @@ GetDeviceCaps(HDC hDC,
   {
      // HAX!!!!
      // Due to winlogon process/thread mapping issues we have this hax!
-     //
+     // FIXME!!! This is a victim of the Win32k Initialization BUG!!!!!
      return NtGdiGetDeviceCaps(hDC,i);
 
      if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
@@ -1064,7 +1064,7 @@ SetBkColor(
 
   if ( Dc_Attr->crBackgroundClr != crColor )
   {
-     Dc_Attr->ulDirty_ |= DIRTY_LINE;
+     Dc_Attr->ulDirty_ |= (DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL);
      Dc_Attr->crBackgroundClr = crColor;
   }
   return OldColor;
@@ -1561,23 +1561,19 @@ SelectObject(HDC hDC,
             return NtGdiSelectBitmap(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_BRUSH:
-#if 0 // enable this when support is ready in win32k
             hOldObj = pDc_Attr->hbrush;
             pDc_Attr->ulDirty_ |= DC_BRUSH_DIRTY;
             pDc_Attr->hbrush = hGdiObj;
             return hOldObj;
-#endif
-            return NtGdiSelectBrush(hDC, hGdiObj);
+//            return NtGdiSelectBrush(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_PEN:
         case GDI_OBJECT_TYPE_EXTPEN:
-#if 0 // enable this when support is ready in win32k
             hOldObj = pDc_Attr->hpen;
             pDc_Attr->ulDirty_ |= DC_PEN_DIRTY;
             pDc_Attr->hpen = hGdiObj;
             return hOldObj;
-#endif
-            return NtGdiSelectPen(hDC, hGdiObj);
+//            return NtGdiSelectPen(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_FONT:
             hOldObj = pDc_Attr->hlfntNew;

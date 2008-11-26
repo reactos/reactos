@@ -95,6 +95,12 @@ IntGdiPolygon(PDC    dc,
             DestRect.bottom   = max(DestRect.bottom, Points[CurrentPoint].y);
         }
 
+        if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+           IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+        if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+           IntGdiSelectPen(dc,Dc_Attr->hpen);
+
         /* Special locking order to avoid lock-ups */
         FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
         PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
@@ -241,6 +247,12 @@ NtGdiEllipse(
 
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
 
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
     if (NULL == PenBrushObj)
@@ -506,20 +518,23 @@ IntRectangle(PDC dc,
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    if ( PATH_IsPathOpen(dc->DcLevel) )
-    {
-        return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
-    }
-
     /* Do we rotate or shear? */
     if (!(dc->DcLevel.mxWorldToDevice.flAccel & MX_SCALE))
     {
+
         POINTL DestCoords[4];
+        ULONG  PolyCounts = 4;
         DestCoords[0].x = DestCoords[3].x = LeftRect;
         DestCoords[0].y = DestCoords[1].y = TopRect;
         DestCoords[1].x = DestCoords[2].x = RightRect;
         DestCoords[2].y = DestCoords[3].y = BottomRect;
-        return IntGdiPolygon(dc, DestCoords, 4);
+        // Use IntGdiPolyPolygon so to support PATH.
+        return IntGdiPolyPolygon(dc, DestCoords, &PolyCounts, 1);
+    }
+    // Rectangle Path only.
+    if ( PATH_IsPathOpen(dc->DcLevel) )
+    {
+        return PATH_Rectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     }
 
     DestRect.left = LeftRect;
@@ -540,6 +555,12 @@ IntRectangle(PDC dc,
         DestRect.right--;
         DestRect.bottom--;
     }
+
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
 
     /* Special locking order to avoid lock-ups! */
     FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
@@ -699,6 +720,12 @@ IntRoundRect(
 
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
 
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
     if (!PenBrushObj)
@@ -1021,10 +1048,95 @@ NtGdiExtFloodFill(
     COLORREF  Color,
     UINT  FillType)
 {
-    DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
+  PDC dc;
+  PDC_ATTR Dc_Attr;
+  BITMAPOBJ *BitmapObj = NULL;
+  PGDIBRUSHOBJ FillBrushObj = NULL;
+  GDIBRUSHINST FillBrushInst;
+  BOOL       Ret = FALSE;
+  RECTL      DestRect;
+  POINTL     Pt;
+//  MIX        Mix;
 
-    /* lie and say we succeded */
-    return TRUE;
+  DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
+
+  dc = DC_LockDc(hDC);
+  if (!dc)
+  {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+  }
+  if (dc->DC_Type == DC_TYPE_INFO)
+  {
+      DC_UnlockDc(dc);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+  }
+
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(dc,Dc_Attr->hpen);
+
+  if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+  Pt.x = XStart;
+  Pt.y = YStart;
+  IntLPtoDP(dc, (LPPOINT)&Pt, 1);
+
+  Ret = NtGdiPtInRegion(dc->w.hGCClipRgn, Pt.x, Pt.y);
+  if (Ret)
+     IntGdiGetRgnBox(dc->w.hGCClipRgn,(LPRECT)&DestRect);
+  else
+     goto cleanup;
+
+  FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+  if (!FillBrushObj)
+  {
+      Ret = FALSE;
+      goto cleanup;
+  }
+  BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+  if (!BitmapObj)
+  {
+      Ret = FALSE;
+      goto cleanup;
+  }
+
+  if ( FillBrushObj && (FillType == FLOODFILLBORDER))
+  {
+     if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+     {
+        FillBrushObj->BrushAttr.lbColor = Color;
+        IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
+        Ret = IntEngBitBlt(&BitmapObj->SurfObj,
+                               NULL,
+                               NULL,
+                               dc->CombinedClip,
+                               NULL,
+                               &DestRect,
+                               NULL,
+                               NULL,
+                               &FillBrushInst.BrushObject,
+                               NULL,
+                               ROP3_TO_ROP4(PATCOPY));
+     }
+  }
+  else
+  {
+  }
+
+cleanup:
+  if (FillBrushObj)
+      BRUSHOBJ_UnlockBrush(FillBrushObj);
+
+  if (BitmapObj)
+     BITMAPOBJ_UnlockBitmap(BitmapObj);
+
+  DC_UnlockDc(dc);
+  return Ret;
 }
 
 /* EOF */

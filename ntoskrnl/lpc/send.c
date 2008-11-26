@@ -541,7 +541,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     else
     {
         /* No callback, just copy the message */
-        _SEH_TRY
+        _SEH2_TRY
         {
             LpcpMoveMessage(&Message->Request,
                             LpcRequest,
@@ -549,11 +549,11 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                             MessageType,
                             &Thread->Cid);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if (!NT_SUCCESS(Status))
         {
@@ -690,7 +690,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                      (&Message->Request) + 1);
 
             /* Move the message */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 LpcpMoveMessage(LpcReply,
                                 &Message->Request,
@@ -698,11 +698,11 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                                 0,
                                 NULL);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Check if this is an LPC request with data information */
             if ((LpcpGetMessageType(&Message->Request) == LPC_REQUEST) &&

@@ -17,9 +17,6 @@
 
 #ifndef __WINSCARD_H
 #define __WINSCARD_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #include <WinSmCrd.h>
 

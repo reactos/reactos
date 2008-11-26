@@ -199,6 +199,7 @@ IntGdiArcInternal(
           int YEndArc)
 {
   BOOL Ret;
+  PDC_ATTR pDc_Attr;
 
   DPRINT("StartX: %d, StartY: %d, EndX: %d, EndY: %d\n",
            XStartArc,YStartArc,XEndArc,YEndArc);
@@ -220,6 +221,15 @@ IntGdiArcInternal(
                  YEndArc,
                  arctype);
   }
+
+  pDc_Attr = dc->pDc_Attr;
+  if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+
+  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,pDc_Attr->hbrush);
+
+  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(dc,pDc_Attr->hpen);
 
   if (arctype == GdiTypeArcTo)
   {

@@ -1,3 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            dll/win32/kernel32/misc/actctx.c
+ * PURPOSE:         Comm functions
+ * PROGRAMMERS:     Jacek Caban for CodeWeavers
+ *                  Eric Pouech
+ *                  Jon Griffiths
+ *                  Dmitry Chapyshev (dmitry@reactos.org)
+ */
+
 #include <k32.h>
 
 #define NDEBUG
@@ -123,9 +134,15 @@ ActivateActCtx(
     ULONG_PTR *ulCookie
     )
 {
+    NTSTATUS Status;
+
     DPRINT("ActivateActCtx(%p %p)\n", hActCtx, ulCookie );
-    if (ulCookie)
-        *ulCookie = ACTCTX_FAKE_COOKIE;
+
+    if ((Status = RtlActivateActivationContext(0, hActCtx, ulCookie)))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
     return TRUE;
 }
 
@@ -139,6 +156,7 @@ AddRefActCtx(
     )
 {
     DPRINT("AddRefActCtx(%p)\n", hActCtx);
+    RtlAddRefActivationContext(hActCtx);
 }
 
 /*
@@ -150,15 +168,17 @@ CreateActCtxW(
     PCACTCTXW pActCtx
     )
 {
+    NTSTATUS    Status;
+    HANDLE      hActCtx;
+
     DPRINT("CreateActCtxW(%p %08lx)\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
 
-    if (!pActCtx)
+    if ((Status = RtlCreateActivationContext(&hActCtx, &pActCtx)))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
         return INVALID_HANDLE_VALUE;
-    if (pActCtx->cbSize != sizeof *pActCtx)
-        return INVALID_HANDLE_VALUE;
-    if (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL)
-        return INVALID_HANDLE_VALUE;
-    return ACTCTX_FAKE_HANDLE;
+    }
+    return hActCtx;
 }
 
 /*
@@ -172,8 +192,7 @@ DeactivateActCtx(
     )
 {
     DPRINT("DeactivateActCtx(%08lx %08lx)\n", dwFlags, ulCookie);
-    if (ulCookie != ACTCTX_FAKE_COOKIE)
-        return FALSE;
+    RtlDeactivateActivationContext(dwFlags, ulCookie);
     return TRUE;
 }
 
@@ -207,8 +226,16 @@ FindActCtxSectionStringW(
     PACTCTX_SECTION_KEYED_DATA ReturnedData
     )
 {
-    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__);
-    return FALSE;
+    UNICODE_STRING us;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&us, lpStringToFind);
+    if ((Status = RtlFindActivationContextSectionString(dwFlags, lpExtensionGuid, ulSectionId, &us, ReturnedData)))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /*
@@ -219,8 +246,14 @@ STDCALL
 GetCurrentActCtx(
     HANDLE *phActCtx)
 {
+    NTSTATUS Status;
+
     DPRINT("GetCurrentActCtx(%p)\n", phActCtx);
-    *phActCtx = ACTCTX_FAKE_HANDLE;
+    if ((Status = RtlGetActiveActivationContext(phActCtx)))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
     return TRUE;
 }
 
@@ -255,6 +288,7 @@ ReleaseActCtx(
     )
 {
     DPRINT("ReleaseActCtx(%p)\n", hActCtx);
+    RtlReleaseActivationContext(hActCtx);
 }
 
 /*

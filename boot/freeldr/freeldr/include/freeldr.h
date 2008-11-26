@@ -84,6 +84,7 @@
 #include <ver.h>
 #include <cmdline.h>
 #include <bget.h>
+#include <winerror.h>
 /* Needed by boot manager */
 #include <bootmgr.h>
 #include <oslist.h>

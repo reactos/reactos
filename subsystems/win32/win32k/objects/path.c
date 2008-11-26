@@ -140,7 +140,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
     /* Restore the old mapping mode */
 //    IntGdiSetMapMode( dc, mapMode );
 //    Dc_Attr->szlViewportExt = ptViewportExt;
-//   Dc_Attr->ptlViewportOrg = ptViewportOrg;
+//    Dc_Attr->ptlViewportOrg = ptViewportOrg;
 //    Dc_Attr->szlWindowExt   = ptWindowExt;
 //    Dc_Attr->ptlWindowOrg   = ptWindowOrg;
 
@@ -1329,7 +1329,9 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     if (pPath->state != PATH_Closed)
         return FALSE;
 
-    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+
     /* Save the mapping mode info */
     mapMode = Dc_Attr->iMapMode;
     IntGetViewportExtEx(dc, &szViewportExt);
@@ -1490,9 +1492,9 @@ BOOL
 FASTCALL
 PATH_WidenPath(DC *dc)
 {
-    INT i, j, numStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
+    INT i, j, numStrokes, numOldStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
     BOOL ret = FALSE;
-    PPATH pPath, pNewPath, *pStrokes, pUpPath, pDownPath;
+    PPATH pPath, pNewPath, *pStrokes, *pOldStrokes, pUpPath, pDownPath;
     EXTLOGPEN *elp;
     DWORD obj_type, joint, endcap, penType;
     PDC_ATTR Dc_Attr = dc->pDc_Attr;
@@ -1560,6 +1562,7 @@ PATH_WidenPath(DC *dc)
         penWidthOut++;
 
     numStrokes = 0;
+    numOldStrokes = 1;
 
     pStrokes    = ExAllocatePoolWithTag(PagedPool, sizeof(PPATH), TAG_PATH);
     pStrokes[0] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
@@ -1588,8 +1591,11 @@ PATH_WidenPath(DC *dc)
                 }
                 numStrokes++;
                 j = 0;
-                ExFreePoolWithTag(pStrokes, TAG_PATH);
+                pOldStrokes = pStrokes; // Save old pointer.
                 pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
+                RtlCopyMemory(pStrokes, pOldStrokes, numOldStrokes * sizeof(PPATH));
+                numOldStrokes = numStrokes; // Save orig count.
+                ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
                 pStrokes[numStrokes - 1] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
 
                 PATH_InitGdiPath(pStrokes[numStrokes - 1]);
@@ -1850,6 +1856,239 @@ PATH_WidenPath(DC *dc)
     return ret;
 }
 
+static inline INT int_from_fixed(FIXED f)
+{
+    return (f.fract >= 0x8000) ? (f.value + 1) : f.value;
+}
+
+/**********************************************************************
+ *      PATH_BezierTo
+ *
+ * internally used by PATH_add_outline
+ */
+static
+VOID
+FASTCALL
+PATH_BezierTo(PPATH pPath, POINT *lppt, INT n)
+{
+    if (n < 2) return;
+
+    if (n == 2)
+    {
+        PATH_AddEntry(pPath, &lppt[1], PT_LINETO);
+    }
+    else if (n == 3)
+    {
+        PATH_AddEntry(pPath, &lppt[0], PT_BEZIERTO);
+        PATH_AddEntry(pPath, &lppt[1], PT_BEZIERTO);
+        PATH_AddEntry(pPath, &lppt[2], PT_BEZIERTO);
+    }
+    else
+    {
+        POINT pt[3];
+        INT i = 0;
+
+        pt[2] = lppt[0];
+        n--;
+
+        while (n > 2)
+        {
+            pt[0] = pt[2];
+            pt[1] = lppt[i+1];
+            pt[2].x = (lppt[i+2].x + lppt[i+1].x) / 2;
+            pt[2].y = (lppt[i+2].y + lppt[i+1].y) / 2;
+            PATH_BezierTo(pPath, pt, 3);
+            n--;
+            i++;
+        }
+
+        pt[0] = pt[2];
+        pt[1] = lppt[i+1];
+        pt[2] = lppt[i+2];
+        PATH_BezierTo(pPath, pt, 3);
+    }
+}
+
+static
+BOOL
+FASTCALL
+PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
+{
+  PPATH pPath;
+  TTPOLYGONHEADER *start;
+  POINT pt;
+
+  start = header;
+
+  pPath = PATH_LockPath(dc->DcLevel.hPath);
+  {
+     return FALSE;
+  }
+
+  while ((char *)header < (char *)start + size)
+  {
+     TTPOLYCURVE *curve;
+
+     if (header->dwType != TT_POLYGON_TYPE)
+     {
+        DPRINT1("Unknown header type %d\n", header->dwType);
+        return FALSE;
+     }
+
+     pt.x = x + int_from_fixed(header->pfxStart.x);
+     pt.y = y - int_from_fixed(header->pfxStart.y);
+     IntLPtoDP(dc, &pt, 1);
+     PATH_AddEntry(pPath, &pt, PT_MOVETO);
+
+     curve = (TTPOLYCURVE *)(header + 1);
+
+     while ((char *)curve < (char *)header + header->cb)
+     {
+        /*DPRINT1("curve->wType %d\n", curve->wType);*/
+
+        switch(curve->wType)
+        {
+           case TT_PRIM_LINE:
+           {
+              WORD i;
+
+              for (i = 0; i < curve->cpfx; i++)
+              {
+                 pt.x = x + int_from_fixed(curve->apfx[i].x);
+                 pt.y = y - int_from_fixed(curve->apfx[i].y);
+                 IntLPtoDP(dc, &pt, 1);
+                 PATH_AddEntry(pPath, &pt, PT_LINETO);
+              }
+              break;
+           }
+
+           case TT_PRIM_QSPLINE:
+           case TT_PRIM_CSPLINE:
+           {
+              WORD i;
+              POINTFX ptfx;
+              POINT *pts = ExAllocatePoolWithTag(PagedPool, (curve->cpfx + 1) * sizeof(POINT), TAG_PATH);
+
+              if (!pts) return FALSE;
+
+              ptfx = *(POINTFX *)((char *)curve - sizeof(POINTFX));
+
+              pts[0].x = x + int_from_fixed(ptfx.x);
+              pts[0].y = y - int_from_fixed(ptfx.y);
+              IntLPtoDP(dc, &pts[0], 1);
+
+              for (i = 0; i < curve->cpfx; i++)
+              {
+                  pts[i + 1].x = x + int_from_fixed(curve->apfx[i].x);
+                  pts[i + 1].y = y - int_from_fixed(curve->apfx[i].y);
+                  IntLPtoDP(dc, &pts[i + 1], 1);
+              }
+
+              PATH_BezierTo(pPath, pts, curve->cpfx + 1);
+
+              ExFreePoolWithTag(pts, TAG_PATH);
+              break;
+           }
+
+           default:
+              DPRINT1("Unknown curve type %04x\n", curve->wType);
+              return FALSE;
+        }
+
+        curve = (TTPOLYCURVE *)&curve->apfx[curve->cpfx];
+     }
+     header = (TTPOLYGONHEADER *)((char *)header + header->cb);
+  }
+
+  IntGdiCloseFigure( pPath );
+  PATH_UnlockPath( pPath );     
+  return TRUE;
+}
+
+/**********************************************************************
+ *      PATH_ExtTextOut
+ */
+BOOL
+FASTCALL 
+PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECT *lprc,
+                     LPCWSTR str, UINT count, const INT *dx)
+{
+    unsigned int idx;
+    double cosEsc, sinEsc;
+    PDC_ATTR Dc_Attr;
+    PTEXTOBJ TextObj;
+    LOGFONTW lf;
+    POINTL org;
+    INT offset = 0, xoff = 0, yoff = 0;
+
+    if (!count) return TRUE;
+
+    Dc_Attr = dc->pDc_Attr;
+    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    TextObj = RealizeFontInit( Dc_Attr->hlfntNew);
+    if ( !TextObj ) return FALSE;
+
+    FontGetObject( TextObj, sizeof(lf), &lf);
+
+    if (lf.lfEscapement != 0)
+    {
+        cosEsc = cos(lf.lfEscapement * M_PI / 1800);
+        sinEsc = sin(lf.lfEscapement * M_PI / 1800);
+    } else
+    {
+        cosEsc = 1;
+        sinEsc = 0;
+    }
+
+    IntGdiGetDCOrg(dc, &org);
+
+    for (idx = 0; idx < count; idx++)
+    {
+        GLYPHMETRICS gm;
+        DWORD dwSize;
+        void *outline;
+
+        dwSize = ftGdiGetGlyphOutline( dc,
+                                       str[idx],
+                                       GGO_GLYPH_INDEX | GGO_NATIVE,
+                                       &gm,
+                                       0,
+                                       NULL,
+                                       NULL,
+                                       TRUE);
+        if (!dwSize) return FALSE;
+
+        outline = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_PATH);
+        if (!outline) return FALSE;
+
+        ftGdiGetGlyphOutline( dc,
+                              str[idx],
+                              GGO_GLYPH_INDEX | GGO_NATIVE,
+                              &gm,
+                              dwSize,
+                              outline,
+                              NULL,
+                              TRUE);
+
+        PATH_add_outline(dc, org.x + x + xoff, org.x + y + yoff, outline, dwSize);
+
+        ExFreePoolWithTag(outline, TAG_PATH);
+
+        if (dx)
+        {
+            offset += dx[idx];
+            xoff = offset * cosEsc;
+            yoff = offset * -sinEsc;
+        }
+        else
+        {
+            xoff += gm.gmCellIncX;
+            yoff += gm.gmCellIncY;
+        }
+    }
+    return TRUE;
+}
 
 
 /***********************************************************************
@@ -2028,8 +2267,9 @@ BOOL
 STDCALL
 NtGdiFillPath(HDC  hDC)
 {
-  BOOL ret = TRUE;
+  BOOL ret = FALSE;
   PPATH pPath;
+  PDC_ATTR pDc_Attr;
   PDC dc = DC_LockDc ( hDC );
  
   if ( !dc )
@@ -2043,6 +2283,12 @@ NtGdiFillPath(HDC  hDC)
      DC_UnlockDc ( dc );
      return FALSE;
   }
+
+  pDc_Attr = dc->pDc_Attr;
+  if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+
+  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,pDc_Attr->hbrush);
 
   ret = PATH_FillPath( dc, pPath );
   if ( ret )
@@ -2297,6 +2543,7 @@ STDCALL
 NtGdiStrokeAndFillPath(HDC hDC)
 {
   DC *pDc;
+  PDC_ATTR pDc_Attr;
   PPATH pPath;
   BOOL bRet = FALSE;
 
@@ -2313,6 +2560,15 @@ NtGdiStrokeAndFillPath(HDC hDC)
      DC_UnlockDc ( pDc );
      return FALSE;
   }
+
+  pDc_Attr = pDc->pDc_Attr;
+  if (!pDc_Attr) pDc_Attr = &pDc->Dc_Attr;
+
+  if (pDc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(pDc,pDc_Attr->hbrush);
+  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(pDc,pDc_Attr->hpen);
+
   bRet = PATH_FillPath(pDc, pPath);
   if (bRet) bRet = PATH_StrokePath(pDc, pPath);
   if (bRet) PATH_EmptyPath(pPath);
@@ -2327,6 +2583,7 @@ STDCALL
 NtGdiStrokePath(HDC hDC)
 {
   DC *pDc;
+  PDC_ATTR pDc_Attr;
   PPATH pPath;
   BOOL bRet = FALSE;
 
@@ -2343,6 +2600,12 @@ NtGdiStrokePath(HDC hDC)
      DC_UnlockDc ( pDc );
      return FALSE;
   }
+
+  pDc_Attr = pDc->pDc_Attr;
+  if (!pDc_Attr) pDc_Attr = &pDc->Dc_Attr;
+
+  if (pDc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(pDc,pDc_Attr->hpen);
 
   bRet = PATH_StrokePath(pDc, pPath);
   PATH_EmptyPath(pPath);

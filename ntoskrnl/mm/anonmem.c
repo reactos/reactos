@@ -632,7 +632,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
 
    PreviousMode = KeGetPreviousMode();
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       if (PreviousMode != KernelMode)
       {
@@ -642,13 +642,13 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
       PBaseAddress = *UBaseAddress;
       PRegionSize  = *URegionSize;
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       /* Get the exception code */
-      Status = _SEH_GetExceptionCode();
-      _SEH_YIELD(return Status);
+      Status = _SEH2_GetExceptionCode();
+      _SEH2_YIELD(return Status);
    }
-   _SEH_END;
+   _SEH2_END;
 
    BoundaryAddressMultiple.QuadPart = 0;
 

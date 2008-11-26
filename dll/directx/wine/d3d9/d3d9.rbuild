@@ -35,5 +35,4 @@
 	<file>volume.c</file>
 	<file>volumetexture.c</file>
 	<file>version.rc</file>
-	<file>d3d9.spec</file>
 </module>

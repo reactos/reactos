@@ -132,14 +132,14 @@ HRESULT MSSTYLES_OpenThemeFile(LPCWSTR lpThemeFile, LPCWSTR pszColorName, LPCWST
         hr = HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
         goto invalid_theme;
     }
-    pszColors = (LPWSTR)LoadResource(hTheme, hrsc);
+    pszColors = LoadResource(hTheme, hrsc);
 
     if(!(hrsc = FindResourceW(hTheme, MAKEINTRESOURCEW(1), szSizeNamesResource))) {
         TRACE("Size names resource not found\n");
         hr = HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
         goto invalid_theme;
     }
-    pszSizes = (LPWSTR)LoadResource(hTheme, hrsc);
+    pszSizes = LoadResource(hTheme, hrsc);
 
     /* Validate requested color against what's available from the theme */
     if(pszColorName) {
@@ -298,7 +298,7 @@ static PUXINI_FILE MSSTYLES_GetActiveThemeIni(PTHEME_FILE tf)
         TRACE("FILERESNAMES map not found\n");
         return NULL;
     }
-    tmp = (LPWSTR)LoadResource(tf->hTheme, hrsc);
+    tmp = LoadResource(tf->hTheme, hrsc);
     dwResourceIndex = (dwSizeCount * dwColorNum) + dwSizeNum;
     for(i=0; i < dwResourceIndex; i++) {
         tmp += lstrlenW(tmp)+1;

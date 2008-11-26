@@ -617,7 +617,7 @@ SetTextColor(
 
   if ( Dc_Attr->crForegroundClr != crColor )
   {
-     Dc_Attr->ulDirty_ |= DIRTY_TEXT;
+     Dc_Attr->ulDirty_ |= (DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
      Dc_Attr->crForegroundClr = crColor;
   }
   return OldColor;

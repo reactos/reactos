@@ -1,8 +1,5 @@
 #ifndef _WINDOWSX_H
 #define _WINDOWSX_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define WM_CTLCOLOR 25
 #define Button_Enable(hwndCtl,fEnable) EnableWindow((hwndCtl),(fEnable))

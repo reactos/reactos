@@ -244,7 +244,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
     /* Check if we need to probe parameters */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the target */
             CapturedLinkTarget = ProbeForReadUnicodeString(LinkTarget);
@@ -255,12 +255,12 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
             /* Probe the return handle */
             ProbeForWriteHandle(LinkHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Exception, get the error code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Probing failed, return the error code */
         if(!NT_SUCCESS(Status)) return Status;
@@ -334,17 +334,17 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
                                 &hLink);
         if (NT_SUCCESS(Status))
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the handle to caller */
                 *LinkHandle = hLink;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -386,17 +386,17 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
     /* Check if we need to probe parameters */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the return handle */
             ProbeForWriteHandle(LinkHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Exception, get the error code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Probing failed, return the error code */
         if(!NT_SUCCESS(Status)) return Status;
@@ -412,17 +412,17 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
                                 &hLink);
     if (NT_SUCCESS(Status))
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return the handle to caller */
             *LinkHandle = hLink;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             /* Get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return status to caller */
@@ -464,7 +464,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
 
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the unicode string for read and write */
             ProbeForWriteUnicodeString(LinkTarget);
@@ -478,12 +478,12 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
             /* Probe the return length */
             if(ResultLength) ProbeForWriteUlong(ResultLength);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Probe failure: get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Probe failed, return status */
         if(!NT_SUCCESS(Status)) return Status;
@@ -515,7 +515,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                                     SymlinkObject->LinkTarget.Length;
 
         /* Enter SEH so we can safely copy */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make sure our buffer will fit */
             if (LengthUsed <= SafeLinkTarget.MaximumLength)
@@ -541,12 +541,12 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                 *ResultLength = SymlinkObject->LinkTarget.MaximumLength;
             }
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             /* Get the error code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Unlock and dereference the object */
         ObpReleaseObjectLock(OBJECT_TO_OBJECT_HEADER(SymlinkObject));

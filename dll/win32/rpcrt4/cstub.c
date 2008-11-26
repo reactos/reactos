@@ -1,7 +1,7 @@
 /*
  * COM stub (CStdStubBuffer) implementation
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +17,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#include "config.h"
+#include "wine/port.h"
 
 #include <stdarg.h>
 
@@ -39,9 +42,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 #define STUB_HEADER(This) (((const CInterfaceStubHeader*)((This)->lpVtbl))[-1])
 
-static WINE_EXCEPTION_FILTER(stub_filter)
+static LONG WINAPI stub_filter(EXCEPTION_POINTERS *eptr)
 {
-    if (GetExceptionInformation()->ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
+    if (eptr->ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
         return EXCEPTION_CONTINUE_SEARCH;
     return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -194,7 +197,7 @@ static void fill_table(IUnknownVtbl *vtbl, void **methods, DWORD num)
 #else  /* __i386__ */
 
 typedef struct {int dummy;} vtbl_method_t;
-static void fill_table(IUnknownVtbl *vtbl, DWORD num)
+static void fill_table(IUnknownVtbl *vtbl, void **methods, DWORD num)
 {
     ERR("delegated stubs are not supported on this architecture\n");
 }
@@ -218,9 +221,7 @@ void create_delegating_vtbl(DWORD num_methods)
         if(current_vtbl.table && current_vtbl.table->ref == 0)
         {
             TRACE("freeing old table\n");
-            VirtualFree(current_vtbl.table->methods,
-                        (current_vtbl.table->size - 3) * sizeof(vtbl_method_t),
-                        MEM_RELEASE);
+            VirtualFree(current_vtbl.table->methods, 0, MEM_RELEASE);
             HeapFree(GetProcessHeap(), 0, current_vtbl.table);
         }
         size = (num_methods - 3) * sizeof(vtbl_method_t);
@@ -255,9 +256,7 @@ static void release_delegating_vtbl(IUnknownVtbl *vtbl)
     if(table->ref == 0 && table != current_vtbl.table)
     {
         TRACE("... and we're not current so free'ing\n");
-        VirtualFree(current_vtbl.table->methods,
-                    (current_vtbl.table->size - 3) * sizeof(vtbl_method_t),
-                    MEM_RELEASE);
+        VirtualFree(current_vtbl.table->methods, 0, MEM_RELEASE);
         HeapFree(GetProcessHeap(), 0, table);
     }
     LeaveCriticalSection(&delegating_vtbl_section);

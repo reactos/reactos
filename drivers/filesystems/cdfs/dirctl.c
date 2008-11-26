@@ -166,6 +166,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
   UNICODE_STRING TempString;
   UNICODE_STRING ShortName;
   UNICODE_STRING LongName;
+  UNICODE_STRING FileToFindUpcase;
   PVOID Block;
   NTSTATUS Status;
   ULONG len;
@@ -263,6 +264,13 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
       Record = (PDIR_RECORD)((ULONG_PTR)Record + Record->RecordLength);
     }
 
+  /* Upper case the expression for FsRtlIsNameInExpression */
+	Status = RtlUpcaseUnicodeString(&FileToFindUpcase, FileToFind, TRUE);
+	if (!NT_SUCCESS(Status))
+	{
+		return Status;
+	}
+
   while(TRUE)
     {
       DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
@@ -307,8 +315,8 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
       DPRINT("ShortName '%wZ'\n", &ShortName);
 
-      if (FsRtlIsNameInExpression(FileToFind, &LongName, TRUE, NULL) ||
-	  FsRtlIsNameInExpression(FileToFind, &ShortName, TRUE, NULL))
+      if (FsRtlIsNameInExpression(&FileToFindUpcase, &LongName, TRUE, NULL) ||
+	  FsRtlIsNameInExpression(&FileToFindUpcase, &ShortName, TRUE, NULL))
 	{
 	  if (Parent && Parent->PathName)
 	    {
@@ -347,6 +355,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 	  DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",
 		 Fcb->PathName, Fcb->ObjectName, DirIndex);
 
+    RtlFreeUnicodeString(&FileToFindUpcase);
 	  CcUnpinData(Context);
 
 	  return STATUS_SUCCESS;
@@ -357,6 +366,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
       DirIndex++;
     }
 
+  RtlFreeUnicodeString(&FileToFindUpcase);
   CcUnpinData(Context);
 
   if (pDirIndex)

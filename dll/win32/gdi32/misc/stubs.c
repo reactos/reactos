@@ -24,31 +24,6 @@
 /*
  * @unimplemented
  */
-int
-STDCALL
-StretchDIBits(HDC hdc,
-              int XDest,
-              int YDest,
-              int nDestWidth,
-              int nDestHeight,
-              int XSrc,
-              int YSrc,
-              int nSrcWidth,
-              int nSrcHeight,
-              CONST VOID *lpBits,
-              CONST BITMAPINFO *lpBitsInfo,
-              UINT iUsage,
-              DWORD dwRop)
-
-{
-    /* FIXME share memory */
-    return NtGdiStretchDIBitsInternal(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc,
-                              nSrcWidth, nSrcHeight, (LPBYTE)lpBits, (LPBITMAPINFO)lpBitsInfo, (DWORD)iUsage, dwRop, 0, 0, NULL);
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 PtInRegion(IN HRGN hrgn,
@@ -197,7 +172,7 @@ SetBoundsRect(HDC hdc,
               CONST RECT *prc,
               UINT flags)
 {
-    /* FIXME add check for vaildate the flags */
+    /* FIXME add check for validate the flags */
     return NtGdiSetBoundsRect(hdc, (LPRECT)prc, flags);
 }
 
@@ -1809,28 +1784,6 @@ CombineRgn(HRGN  hDest,
 {
     /* FIXME some part should be done in user mode */
     return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
-}
-
-/*
- * @unimplemented
- */
-HBITMAP STDCALL
-CreateBitmap(INT  Width,
-             INT  Height,
-             UINT  Planes,
-             UINT  BitsPixel,
-             PCVOID pUnsafeBits)
-{
-    /* FIXME some part should be done in user mode */
-    if (Width && Height)
-    {
-        return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
-    }
-    else
-    {
-        /* Return 1x1 bitmap */
-        return GetStockObject(DEFAULT_BITMAP);
-    }
 }
 
 /*

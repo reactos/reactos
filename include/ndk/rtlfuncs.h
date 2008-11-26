@@ -2063,6 +2063,15 @@ RtlQueueWorkItem(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlSetIoCompletionCallback(
+    IN HANDLE FileHandle,
+    IN PIO_APC_ROUTINE Callback,
+    IN ULONG Flags
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlRegisterWait(
     IN PHANDLE phNewWaitObject,
     IN HANDLE hObject,
@@ -2823,6 +2832,15 @@ LdrRelocateImageWithBias(
 #ifdef NTOS_MODE_USER
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlActivateActivationContext(
+    IN ULONG Unknown,
+    IN HANDLE Handle,
+    OUT PULONG_PTR Cookie
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlAddRefActivationContext(
@@ -2843,6 +2861,14 @@ NTSTATUS
 NTAPI
 RtlAllocateActivationContextStack(
     IN PVOID *Context
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateActivationContext(
+    OUT PHANDLE Handle,
+    IN OUT PVOID ReturnedData
 );
 
 NTSYSAPI
@@ -2893,11 +2919,11 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlFindActivationContextSectionString(
-    IN PVOID Unknown0,
-    IN PVOID Unknown1,
+    IN ULONG dwFlags,
+    IN const GUID *ExtensionGuid,
     IN ULONG SectionType,
     IN PUNICODE_STRING SectionName,
-    IN PVOID Unknown2
+    IN OUT PVOID ReturnedData
 );
 
 NTSYSAPI

@@ -1,7 +1,7 @@
 /*
  * RPC messages
  *
- * Copyright 2001-2002 Ove Kåven, TransGaming Technologies
+ * Copyright 2001-2002 Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2004 Filip Navara
  * Copyright 2006 CodeWeavers
  *
@@ -1005,7 +1005,10 @@ RPC_STATUS WINAPI I_RpcNegotiateTransferSyntax(PRPC_MESSAGE pMsg)
   TRACE("(%p)\n", pMsg);
 
   if (!bind || bind->server)
+  {
+    ERR("no binding\n");
     return RPC_S_INVALID_BINDING;
+  }
 
   /* if we already have a connection, we don't need to negotiate again */
   if (!pMsg->ReservedForRuntime)
@@ -1065,7 +1068,10 @@ RPC_STATUS WINAPI I_RpcGetBuffer(PRPC_MESSAGE pMsg)
   TRACE("(%p): BufferLength=%d\n", pMsg, pMsg->BufferLength);
 
   if (!bind)
+  {
+    ERR("no binding\n");
     return RPC_S_INVALID_BINDING;
+  }
 
   pMsg->Buffer = I_RpcAllocate(pMsg->BufferLength);
   TRACE("Buffer=%p\n", pMsg->Buffer);
@@ -1118,7 +1124,11 @@ RPC_STATUS WINAPI I_RpcFreeBuffer(PRPC_MESSAGE pMsg)
 
   TRACE("(%p) Buffer=%p\n", pMsg, pMsg->Buffer);
 
-  if (!bind) return RPC_S_INVALID_BINDING;
+  if (!bind)
+  {
+    ERR("no binding\n");
+    return RPC_S_INVALID_BINDING;
+  }
 
   if (pMsg->ReservedForRuntime)
   {

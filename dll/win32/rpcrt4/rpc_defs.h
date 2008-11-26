@@ -1,7 +1,7 @@
 /*
  * RPC definitions
  *
- * Copyright 2001-2002 Ove Kåven, TransGaming Technologies
+ * Copyright 2001-2002 Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2004 Filip Navara
  *
  * This library is free software; you can redistribute it and/or

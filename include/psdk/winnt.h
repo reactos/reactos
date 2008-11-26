@@ -1,8 +1,5 @@
 #ifndef _WINNT_H
 #define _WINNT_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifdef __GNUC__
 #include <msvctarget.h>
@@ -41,10 +38,6 @@ extern "C" {
 #include <basetsd.h>
 #include <guiddef.h>
 
-#ifndef __cplusplus
-    typedef unsigned short wchar_t;
-#endif
-
 #include <ctype.h>
 #undef __need_wchar_t
 
@@ -68,6 +61,12 @@ extern "C" {
 #else
 #define DECLSPEC_ADDRSAFE
 #endif
+#endif
+
+#if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
+#define __WINE_ALLOC_SIZE(x) __attribute__((__alloc_size__(x)))
+#else
+#define __WINE_ALLOC_SIZE(x)
 #endif
 
 #ifndef FORCEINLINE
@@ -2831,7 +2830,7 @@ typedef CONTEXT *PCONTEXT,*LPCONTEXT;
       PVOID ExceptionAddress;
       DWORD NumberParameters;
       ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-    } EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD;
+    } EXCEPTION_RECORD;
 
     typedef EXCEPTION_RECORD *PEXCEPTION_RECORD;
 
@@ -3858,7 +3857,6 @@ typedef struct _IMAGE_BOUND_FORWARDER_REF {
 	WORD OffsetModuleName;
 	WORD Reserved;
 } IMAGE_BOUND_FORWARDER_REF,*PIMAGE_BOUND_FORWARDER_REF;
-typedef void(NTAPI *PIMAGE_TLS_CALLBACK)(PVOID,DWORD,PVOID);
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
 	DWORD Characteristics;
 	DWORD TimeDateStamp;
@@ -4375,9 +4373,6 @@ typedef enum _POWER_INFORMATION_LEVEL {
 	ProcessorPowerPolicyCurrent
 } POWER_INFORMATION_LEVEL;
 
-#if (_WIN32_WINNT >= 0x0500)
-typedef LONG (WINAPI *PVECTORED_EXCEPTION_HANDLER)(PEXCEPTION_POINTERS);
-#endif
 #if 1 /* (WIN32_WINNT >= 0x0500) */
 typedef struct _SYSTEM_POWER_INFORMATION {
 	ULONG  MaxIdlenessAllowed;
@@ -4817,7 +4812,7 @@ BitScanReverse(OUT ULONG *Index,
 #if defined(_M_IX86)
 	__asm__ __volatile__("bsrl %2,%0\n\t"
 	                     "setnz %1\n\t"
-	                     :"=&r" (*Index), "=r" (BitPosition)
+	                     :"=&r" (*Index), "=q" (BitPosition)
 	                     :"rm" (Mask)
 	                     :"memory");
 	return BitPosition;

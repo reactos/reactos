@@ -1,8 +1,5 @@
 #ifndef _VFW_H
 #define _VFW_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifndef _WINDOWS_H
 #include <windows.h>
@@ -185,21 +182,7 @@ typedef struct IAVIEditStream *PAVIEDITSTREAM;
 #define TWOCCFromFOURCC(fcc) HIWORD(fcc)
 #define ToHex(n) ((BYTE)(((n)>9)?((n)-10+'A'):((n)+'0')))
 #define MAKEAVICKID(tcc, stream) MAKELONG((ToHex((stream)&0x0f)<<8)|(ToHex(((stream)&0xf0)>>4)),tcc)
-#define AVIF_HASINDEX	0x10
-#define AVIF_MUSTUSEINDEX	0x20
-#define AVIF_ISINTERLEAVED	0x100
-#define AVIF_TRUSTCKTYPE	0x800
-#define AVIF_WASCAPTUREFILE	0x10000
-#define AVIF_COPYRIGHTED	0x20000
 #define AVI_HEADERSIZE	2048
-#define AVISF_DISABLED	0x01
-#define AVISF_VIDEO_PALCHANGES	0x10000
-#define AVIIF_LIST	0x01
-#define AVIIF_TWOCC	0x02
-#define AVIIF_KEYFRAME	0x10
-#define AVIIF_NOTIME	0x100
-#define AVIIF_COMPUSE	0xfff0000
-#define AVIIF_KEYFRAME	0x10
 #define	AVIGETFRAMEF_BESTDISPLAYFMT	1
 #define AVISTREAMINFO_DISABLED	0x01
 #define AVISTREAMINFO_FORMATCHANGES	0x10000
@@ -527,6 +510,15 @@ typedef struct {
 	LPVOID lpState;
 	LONG cbState;
 } COMPVARS, *PCOMPVARS;
+
+/* flags for dwFlags member of MainAVIHeader */
+#define AVIF_HASINDEX       0x00000010
+#define AVIF_MUSTUSEINDEX   0x00000020
+#define AVIF_ISINTERLEAVED  0x00000100
+#define AVIF_TRUSTCKTYPE    0x00000800
+#define AVIF_WASCAPTUREFILE 0x00010000
+#define AVIF_COPYRIGHTED    0x00020000
+
 typedef struct _MainAVIHeader
 {
 	DWORD dwMicroSecPerFrame;
@@ -541,6 +533,11 @@ typedef struct _MainAVIHeader
 	DWORD dwHeight;
 	DWORD dwReserved[4];
 } MainAVIHeader;
+
+/* flags for dwFlags member of AVIStreamHeader */
+#define AVISF_DISABLED         0x00000001
+#define AVISF_VIDEO_PALCHANGES 0x00010000
+
 typedef struct {
 	FOURCC fccType;
 	FOURCC fccHandler;
@@ -720,7 +717,7 @@ DECLARE_INTERFACE_(IAVIStream, IUnknown)
 	STDMETHOD(WriteData)(THIS_ DWORD,LPVOID,LONG) PURE;
 	STDMETHOD(SetInfo)(THIS_ AVISTREAMINFOW*,LONG) PURE;
 };
-typedef IAVIStream *PAVISTREAM;
+#undef INTERFACE
 
 /*****************************************************************************
  * IAVIStreaming interface
@@ -760,7 +757,7 @@ DECLARE_INTERFACE_(IAVIEditStream, IUnknown)
 	STDMETHOD(Clone)(THIS_ PAVISTREAM*) PURE;
 	STDMETHOD(SetInfo)(THIS_ LPAVISTREAMINFOW,LONG) PURE;
 };
-typedef IAVIEditStream *PAVIEDITSTREAM;
+#undef INTERFACE
 
 #define INTERFACE IAVIFile
 DECLARE_INTERFACE_(IAVIFile, IUnknown)
@@ -777,7 +774,6 @@ DECLARE_INTERFACE_(IAVIFile, IUnknown)
 	STDMETHOD(DeleteStream)(THIS_ DWORD,LONG) PURE;
 };
 #undef INTERFACE
-typedef IAVIFile *PAVIFILE;
 
 #if !defined(__cplusplus) || defined(CINTERFACE)
 /*** IUnknown methods ***/

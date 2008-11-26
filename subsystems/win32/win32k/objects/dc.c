@@ -130,8 +130,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->DC_Type        = DC_TYPE_MEMORY; // Always!
   NewDC->w.hBitmap      = NtGdiGetStockObject(DEFAULT_BITMAP);
   NewDC->pPDev          = OrigDC->pPDev;
+  NewDC->DcLevel.hpal    = OrigDC->DcLevel.hpal;
 
-  NewDC->DcLevel.hpal = OrigDC->DcLevel.hpal;
   nDc_Attr->lTextAlign      = oDc_Attr->lTextAlign;
   nDc_Attr->ulForegroundClr = oDc_Attr->ulForegroundClr;
   nDc_Attr->ulBackgroundClr = oDc_Attr->ulBackgroundClr;
@@ -1138,6 +1138,13 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
   }
   Dc_Attr = dc->pDc_Attr;
   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+  if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(dc,Dc_Attr->hpen);
+
   switch(ObjectType)
   {
     case GDI_OBJECT_TYPE_EXTPEN:
@@ -2092,6 +2099,10 @@ NtGdiSelectBitmap(
     /* Release the old bitmap, lock the new one and convert it to a SURF */
     pDC->w.hBitmap = hBmp;
 
+    // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
+    pDC->DcLevel.pSurface = pBmp;
+    pBmp->hDC = hDC;
+
     // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
     if(pBmp->dib)
     {
@@ -2142,61 +2153,6 @@ NtGdiSelectBitmap(
  /*
  * @implemented
  */
-HBRUSH
-APIENTRY
-NtGdiSelectBrush(
-    IN HDC hDC,
-    IN HBRUSH hBrush)
-{
-    PDC pDC;
-    PDC_ATTR pDc_Attr;
-    HBRUSH hOrgBrush;
-    PGDIBRUSHOBJ pBrush;
-    XLATEOBJ *XlateObj;
-    BOOLEAN bFailed;
-
-    if (hDC == NULL || hBrush == NULL) return NULL;
-
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
-    {
-        return NULL;
-    }
-
-    pDc_Attr = pDC->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
-
-    pBrush = BRUSHOBJ_LockBrush(hBrush);
-    if (pBrush == NULL)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    XlateObj = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
-    BRUSHOBJ_UnlockBrush(pBrush);
-    if(bFailed)
-    {
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    hOrgBrush = pDc_Attr->hbrush;
-    pDc_Attr->hbrush = hBrush;
-    if (pDC->XlateBrush != NULL)
-    {
-        EngDeleteXlate(pDC->XlateBrush);
-    }
-    pDC->XlateBrush = XlateObj;
-
-    DC_UnlockDc(pDC);
-    return hOrgBrush;
-}
-
- /*
- * @implemented
- */
 HFONT
 APIENTRY
 NtGdiSelectFont(
@@ -2228,60 +2184,6 @@ NtGdiSelectFont(
     DC_UnlockDc(pDC);
 
     return hOrgFont;
-}
-
- /*
- * @implemented
- */
-HPEN
-APIENTRY
-NtGdiSelectPen(
-    IN HDC hDC,
-    IN HPEN hPen)
-{
-    PDC pDC;
-    PDC_ATTR pDc_Attr;
-    HPEN hOrgPen = NULL;
-    PGDIBRUSHOBJ pPen;
-    XLATEOBJ *XlateObj;
-    BOOLEAN bFailed;
-
-    if (hDC == NULL || hPen == NULL) return NULL;
-
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
-    {
-        return NULL;
-    }
-
-    pDc_Attr = pDC->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
-
-    pPen = PENOBJ_LockPen(hPen);
-    if (pPen == NULL)
-    {
-        return NULL;
-    }
-
-    XlateObj = IntGdiCreateBrushXlate(pDC, pPen, &bFailed);
-    PENOBJ_UnlockPen(pPen);
-    if (bFailed)
-    {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        return NULL;
-    }
-
-    hOrgPen = pDc_Attr->hpen;
-    pDc_Attr->hpen = hPen;
-    if (pDC->XlatePen != NULL)
-    {
-        EngDeleteXlate(pDC->XlatePen);
-    }
-    pDC->XlatePen = XlateObj;
-
-    DC_UnlockDc(pDC);
-
-    return hOrgPen;
 }
 
 HPALETTE 
@@ -2648,6 +2550,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
   Dc_Attr->iMapMode = MM_TEXT;
   Dc_Attr->iGraphicsMode = GM_COMPATIBLE;
+  Dc_Attr->jFillMode = ALTERNATE;
 
   Dc_Attr->szlWindowExt.cx = 1; // Float to Int,,, WRONG!
   Dc_Attr->szlWindowExt.cy = 1;

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-<module name="eventvwr" type="win32gui" installbase="system32" installname="eventvwr.exe" allowwarnings="true">
+<module name="eventvwr" type="win32gui" installbase="system32" installname="eventvwr.exe" unicode="yes">
 	<include base="eventvwr">.</include>
 	<library>kernel32</library>
 	<library>user32</library>

@@ -1063,7 +1063,3 @@ NdisScheduleWorkItem(
     ExQueueWorkItem(pntWorkItem, CriticalWorkQueue);
     return NDIS_STATUS_SUCCESS;
 }
-
-
-
-/* EOF */

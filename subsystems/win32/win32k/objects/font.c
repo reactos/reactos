@@ -402,8 +402,69 @@ NtGdiGetKerningPairs(HDC  hDC,
                      ULONG  NumPairs,
                      LPKERNINGPAIR  krnpair)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PDC dc;
+  PDC_ATTR Dc_Attr;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGDI;
+  DWORD Count;
+  KERNINGPAIR *pKP;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  dc = DC_LockDc(hDC);
+  if (!dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  TextObj = RealizeFontInit(Dc_Attr->hlfntNew);
+  DC_UnlockDc(dc);
+
+  if (!TextObj)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  FontGDI = ObjToGDI(TextObj->Font, FONT);
+  TEXTOBJ_UnlockText(TextObj);
+
+  Count = ftGdiGetKerningPairs(FontGDI,0,NULL);
+
+  if ( Count && krnpair )
+  {
+     if (Count > NumPairs)
+     {
+        SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+     }
+     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
+     if (!pKP)
+     {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+     }
+     ftGdiGetKerningPairs(FontGDI,Count,pKP);
+     _SEH_TRY
+     {
+        ProbeForWrite(krnpair, Count * sizeof(KERNINGPAIR), 1);
+        RtlCopyMemory(krnpair, pKP, Count * sizeof(KERNINGPAIR));
+     }
+     _SEH_HANDLE
+     {
+        Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END
+     if (!NT_SUCCESS(Status))
+     {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        Count = 0;
+     }     
+     ExFreePoolWithTag(pKP,TAG_GDITEXT);
+  }
+  return Count;
 }
 
 /*
@@ -424,7 +485,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   HFONT hFont = 0;
   ULONG Size;
   OUTLINETEXTMETRICW *potm;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -460,12 +521,21 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   IntGetOutlineTextMetrics(FontGDI, Size, potm);
   if (otm)
   {
-     Status = MmCopyToCaller(otm, potm, Size);
-     if (! NT_SUCCESS(Status))
+     _SEH_TRY
+     {
+         ProbeForWrite(otm, Size, 1);
+         RtlCopyMemory(otm, potm, Size);
+     }
+     _SEH_HANDLE
+     {
+         Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END
+
+     if (!NT_SUCCESS(Status))
      {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        ExFreePoolWithTag(potm,TAG_GDITEXT);
-        return 0;
+        Size = 0;
      }
   }
   ExFreePoolWithTag(potm,TAG_GDITEXT);

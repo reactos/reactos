@@ -100,7 +100,7 @@ GetPath(HDC hdc,
 {
     INT retValue = -1;
 
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_METADC)
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
     }

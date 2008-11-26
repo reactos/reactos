@@ -106,7 +106,8 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
 
-FORCEINLINE
+static
+__inline
 NTSTATUS
 DefaultSetInfoBufferCheck(ULONG Class,
                           const INFORMATION_CLASS_INFO *ClassList,
@@ -136,17 +137,17 @@ DefaultSetInfoBufferCheck(ULONG Class,
         {
             if (PreviousMode != KernelMode)
             {
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     ProbeForRead(Buffer,
                                  BufferLength,
                                  ClassList[Class].AlignmentSET);
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
             }
         }
     }
@@ -156,7 +157,8 @@ DefaultSetInfoBufferCheck(ULONG Class,
     return Status;
 }
 
-FORCEINLINE
+static
+__inline
 NTSTATUS
 DefaultQueryInfoBufferCheck(ULONG Class,
                             const INFORMATION_CLASS_INFO *ClassList,
@@ -187,7 +189,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
         {
             if (PreviousMode != KernelMode)
             {
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     if (Buffer != NULL)
                     {
@@ -201,11 +203,11 @@ DefaultQueryInfoBufferCheck(ULONG Class,
                         ProbeForWriteUlong(ReturnLength);
                     }
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
             }
         }
     }

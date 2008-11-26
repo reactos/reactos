@@ -57,7 +57,6 @@
 	<file>view.c</file>
 	<file>rsrc.rc</file>
 	<include base="mshtml" root="intermediate">.</include>
-	<file>mshtml.spec</file>
 	<library>wine</library>
 	<library>strmiids</library>
 	<library>uuid</library>

@@ -1,8 +1,5 @@
 #ifndef _SQLUCODE_H
 #define _SQLUCODE_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #include <sqlext.h>
 #ifdef __cplusplus

@@ -1,8 +1,5 @@
 #ifndef _RASERROR_H
 #define _RASERROR_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define RASBASE 600
 #define SUCCESS 0

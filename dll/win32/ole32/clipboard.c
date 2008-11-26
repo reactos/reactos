@@ -956,7 +956,7 @@ static HRESULT OLEClipbrd_RenderFormat(IDataObject *pIDataObject, LPFORMATETC pF
 
       /* Get the metafile picture out of it */
 
-      if (!FAILED(hr = IDataObject_GetData(theOleClipboard->pIDataObjectSrc, &fmt2, &std2)))
+      if (SUCCEEDED(hr = IDataObject_GetData(theOleClipboard->pIDataObjectSrc, &fmt2, &std2)))
       {
         mfp = (METAFILEPICT *)GlobalLock(std2.u.hGlobal);
       }

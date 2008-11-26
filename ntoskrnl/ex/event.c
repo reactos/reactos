@@ -110,16 +110,16 @@ NtCreateEvent(OUT PHANDLE EventHandle,
     if(PreviousMode != KernelMode)
     {
         /* Enter SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Check handle pointer */
             ProbeForWriteHandle(EventHandle);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
@@ -156,16 +156,16 @@ NtCreateEvent(OUT PHANDLE EventHandle,
         if(NT_SUCCESS(Status))
         {
             /* Enter SEH for return */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the handle to the caller */
                 *EventHandle = hEvent;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -193,16 +193,16 @@ NtOpenEvent(OUT PHANDLE EventHandle,
     if(PreviousMode != KernelMode)
     {
         /* Enter SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Check handle pointer */
             ProbeForWriteHandle(EventHandle);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
@@ -221,16 +221,16 @@ NtOpenEvent(OUT PHANDLE EventHandle,
     if(NT_SUCCESS(Status))
     {
         /* Enter SEH for return */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return the handle to the caller */
             *EventHandle = hEvent;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return status */
@@ -256,16 +256,16 @@ NtPulseEvent(IN HANDLE EventHandle,
     if((PreviousState) && (PreviousMode != KernelMode))
     {
         /* Entry SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make sure the state pointer is valid */
             ProbeForWriteLong(PreviousState);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
@@ -290,16 +290,16 @@ NtPulseEvent(IN HANDLE EventHandle,
         if(PreviousState)
         {
             /* Entry SEH Block for return */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return previous state */
                 *PreviousState = Prev;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
    }
 
@@ -354,7 +354,7 @@ NtQueryEvent(IN HANDLE EventHandle,
     if(NT_SUCCESS(Status))
     {
         /* Entry SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return Event Type and State */
             BasicInfo->EventType = Event->Header.Type;
@@ -363,11 +363,11 @@ NtQueryEvent(IN HANDLE EventHandle,
             /* Return length */
             if(ReturnLength) *ReturnLength = sizeof(EVENT_BASIC_INFORMATION);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Dereference the Object */
         ObDereferenceObject(Event);
@@ -396,16 +396,16 @@ NtResetEvent(IN HANDLE EventHandle,
     if((PreviousState) && (PreviousMode != KernelMode))
     {
         /* Entry SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make sure the state pointer is valid */
             ProbeForWriteLong(PreviousState);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
@@ -430,16 +430,16 @@ NtResetEvent(IN HANDLE EventHandle,
         if(PreviousState)
         {
             /* Entry SEH Block for return */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return previous state */
                 *PreviousState = Prev;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
    }
 
@@ -466,16 +466,16 @@ NtSetEvent(IN HANDLE EventHandle,
     if ((PreviousState) && (PreviousMode != KernelMode))
     {
         /* Entry SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make sure the state pointer is valid */
             ProbeForWriteLong(PreviousState);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
@@ -498,16 +498,16 @@ NtSetEvent(IN HANDLE EventHandle,
         if (PreviousState)
         {
             /* Entry SEH Block for return */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return previous state */
                 *PreviousState = Prev;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 

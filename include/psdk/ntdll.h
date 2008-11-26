@@ -1,8 +1,5 @@
 #ifndef _NTDLL_H
 #define _NTDLL_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 typedef enum _SHUTDOWN_ACTION {
      ShutdownNoReboot,

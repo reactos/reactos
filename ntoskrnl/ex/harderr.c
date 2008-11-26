@@ -572,7 +572,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
         }
 
         /* Enter SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Validate the response pointer */
             ProbeForWriteUlong(Response);
@@ -620,13 +620,13 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                 }
             }
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             /* Free captured buffer */
             if (SafeParams) ExFreePool(SafeParams);
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* If we failed to capture/probe, bail out */
         if (!NT_SUCCESS(Status)) return Status;
@@ -663,16 +663,16 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
         if (SafeParams) ExFreePool(SafeParams);
 
         /* Enter SEH Block for return */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return the response */
             *Response = SafeResponse;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else
     {

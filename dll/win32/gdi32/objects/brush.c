@@ -30,6 +30,18 @@ ExtCreatePen(DWORD dwPenStyle,
          return 0;
       }
    }
+   else if ((dwPenStyle & PS_STYLE_MASK) == PS_INSIDEFRAME &&
+            (dwPenStyle & PS_TYPE_MASK) != PS_GEOMETRIC)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+   else if ((dwPenStyle & PS_STYLE_MASK) == PS_ALTERNATE &&
+            (dwPenStyle & PS_TYPE_MASK) != PS_COSMETIC)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
    else
    {
       if (dwStyleCount || lpStyle)

@@ -51,6 +51,7 @@ PKDB_KTRAP_FRAME KdbCurrentTrapFrame = NULL; /* Pointer to the current trapframe
 STATIC KDB_KTRAP_FRAME KdbTrapFrame = { { 0 } };  /* The trapframe which was passed to KdbEnterDebuggerException */
 STATIC KDB_KTRAP_FRAME KdbThreadTrapFrame = { { 0 } }; /* The trapframe of the current thread (KdbCurrentThread) */
 STATIC KAPC_STATE KdbApcState;
+extern BOOLEAN KdbpBugCheckRequested;
 
 /* Array of conditions when to enter KDB */
 STATIC KDB_ENTER_CONDITION KdbEnterConditions[][2] =
@@ -1600,6 +1601,14 @@ KdbEnterDebuggerException(
 
    /* Leave critical section */
    Ke386RestoreFlags(OldEflags);
+
+   /* Check if user requested a bugcheck */
+   if (KdbpBugCheckRequested)
+   {
+       /* Clear the flag and bugcheck the system */
+       KdbpBugCheckRequested = FALSE;
+       KeBugCheck(MANUALLY_INITIATED_CRASH);
+   }
 
 continue_execution:
    /* Clear debug status */

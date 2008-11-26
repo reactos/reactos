@@ -1,8 +1,5 @@
 #ifndef _RAS_H
 #define _RAS_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -930,7 +927,7 @@ VOID APIENTRY RasFreeEapUserIdentityA (LPRASEAPUSERIDENTITYA);
 #if (WINVER >=0x501)
 DWORD APIENTRY RasDeleteSubEntryA(LPCSTR pszPhonebook, LPCSTR pszEntry, DWORD dwSubentryId);
 DWORD APIENTRY  RasDeleteSubEntryW(LPCWSTR pszPhonebook, LPCWSTR pszEntry, DWORD dwSubEntryId);
-#endif (WINVER >=0x501)
+#endif // (WINVER >=0x501)
 
 
 /* UNICODE defines for functions */

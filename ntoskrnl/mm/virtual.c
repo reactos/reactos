@@ -20,25 +20,19 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-_SEH_DEFINE_LOCALS(MiGetExceptionInfo)
+static
+int
+MiGetExceptionInfo(EXCEPTION_POINTERS *ExceptionInfo, BOOLEAN * HaveBadAddress, ULONG_PTR * BadAddress)
 {
-    volatile BOOLEAN HaveBadAddress;
-    volatile ULONG_PTR BadAddress;
-};
-
-_SEH_FILTER(MiGetExceptionInfo)
-{
-    _SEH_ACCESS_LOCALS(MiGetExceptionInfo);
-    EXCEPTION_POINTERS *ExceptionInfo = _SEH_GetExceptionPointers();
     PEXCEPTION_RECORD ExceptionRecord;
     PAGED_CODE();
-    
+
     /* Assume default */
-    _SEH_VAR(HaveBadAddress) = FALSE;
-    
+    *HaveBadAddress = FALSE;
+
     /* Get the exception record */
     ExceptionRecord = ExceptionInfo->ExceptionRecord;
-    
+
     /* Look at the exception code */
     if ((ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) ||
         (ExceptionRecord->ExceptionCode == STATUS_GUARD_PAGE_VIOLATION) ||
@@ -48,11 +42,11 @@ _SEH_FILTER(MiGetExceptionInfo)
         if (ExceptionRecord->NumberParameters > 1)
         {
             /* Return the address */
-            _SEH_VAR(HaveBadAddress) = TRUE;
-            _SEH_VAR(BadAddress) = ExceptionRecord->ExceptionInformation[1];   
+            *HaveBadAddress = TRUE;
+            *BadAddress = ExceptionRecord->ExceptionInformation[1];
         }
     }
-    
+
     /* Continue executing the next handler */
     return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -75,7 +69,8 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
     PVOID MdlAddress;
     KAPC_STATE ApcState;
-    _SEH_DECLARE_LOCALS(MiGetExceptionInfo);
+    BOOLEAN HaveBadAddress;
+    ULONG_PTR BadAddress;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
@@ -101,7 +96,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
         ASSERT(FailedInProbe == FALSE);
 
         /* Protect user-mode copy */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* If this is our first time, probe the buffer */
             if ((CurrentAddress == SourceAddress) && (PreviousMode != KernelMode))
@@ -156,7 +151,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             FailedInMoving = TRUE;
             RtlCopyMemory(CurrentTargetAddress, MdlAddress, CurrentSize);
         }
-        _SEH_EXCEPT(MiGetExceptionInfo)
+        _SEH2_EXCEPT(MiGetExceptionInfo(_SEH2_GetExceptionInformation(), &HaveBadAddress, &BadAddress))
         {
             /* Detach from whoever we may be attached to */
             KeUnstackDetachProcess(&ApcState);
@@ -171,8 +166,8 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             if ((FailedInProbe) || (FailedInMapping))
             {
                 /* Exit */
-                Status = _SEH_GetExceptionCode();
-                _SEH_YIELD(return Status);
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(return Status);
             }
 
             /* Otherwise, we failed  probably during the move */
@@ -180,17 +175,17 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             if (FailedInMoving)
             {
                 /* Check if we know exactly where we stopped copying */
-                if (_SEH_VAR(HaveBadAddress))
+                if (HaveBadAddress)
                 {
                     /* Return the exact number of bytes copied */
-                    *ReturnSize = _SEH_VAR(BadAddress) - (ULONG_PTR)SourceAddress;
+                    *ReturnSize = BadAddress - (ULONG_PTR)SourceAddress;
                 }
             }
 
             /* Return partial copy */
             Status = STATUS_PARTIAL_COPY;
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check for SEH status */
         if (Status != STATUS_SUCCESS) return Status;
@@ -229,7 +224,8 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
     PVOID PoolAddress;
     KAPC_STATE ApcState;
-    _SEH_DECLARE_LOCALS(MiGetExceptionInfo);
+    BOOLEAN HaveBadAddress;
+    ULONG_PTR BadAddress;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
@@ -267,7 +263,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
         ASSERT(FailedInProbe == FALSE);
 
         /* Protect user-mode copy */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* If this is our first time, probe the buffer */
             if ((CurrentAddress == SourceAddress) && (PreviousMode != KernelMode))
@@ -306,7 +302,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             FailedInMoving = TRUE;
             RtlCopyMemory(CurrentTargetAddress, PoolAddress, CurrentSize);
         }
-        _SEH_EXCEPT(MiGetExceptionInfo)
+        _SEH2_EXCEPT(MiGetExceptionInfo(_SEH2_GetExceptionInformation(), &HaveBadAddress, &BadAddress))
         {
             /* Detach from whoever we may be attached to */
             KeUnstackDetachProcess(&ApcState);
@@ -318,8 +314,8 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             if (FailedInProbe)
             {
                 /* Exit */
-                Status = _SEH_GetExceptionCode();
-                _SEH_YIELD(return Status);
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(return Status);
             }
 
             /* Otherwise, we failed  probably during the move */
@@ -327,17 +323,17 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             if (FailedInMoving)
             {
                 /* Check if we know exactly where we stopped copying */
-                if (_SEH_VAR(HaveBadAddress))
+                if (HaveBadAddress)
                 {
                     /* Return the exact number of bytes copied */
-                    *ReturnSize = _SEH_VAR(BadAddress) - (ULONG_PTR)SourceAddress;
+                    *ReturnSize = BadAddress - (ULONG_PTR)SourceAddress;
                 }
             }
 
             /* Return partial copy */
             Status = STATUS_PARTIAL_COPY;
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check for SEH status */
         if (Status != STATUS_SUCCESS) return Status;
@@ -374,17 +370,17 @@ MmCopyVirtualMemory(IN PEPROCESS SourceProcess,
 
     /* Don't accept zero-sized buffers */
     if (!BufferSize) return STATUS_SUCCESS;
-    
+
     /* If we are copying from ourselves, lock the target instead */
     if (SourceProcess == PsGetCurrentProcess()) Process = TargetProcess;
-    
+
     /* Acquire rundown protection */
     if (!ExAcquireRundownProtection(&Process->RundownProtect))
     {
         /* Fail */
         return STATUS_PROCESS_IS_TERMINATING;
     }
-    
+
     /* See if we should use the pool copy */
     if (BufferSize > MI_POOL_COPY_BYTES)
     {
@@ -408,7 +404,7 @@ MmCopyVirtualMemory(IN PEPROCESS SourceProcess,
                               PreviousMode,
                               ReturnSize);
     }
-    
+
     /* Release the lock */
     ExReleaseRundownProtection(&Process->RundownProtect);
     return Status;
@@ -583,14 +579,14 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     PMM_AVL_TABLE AddressSpace;
     ULONG OldAccessProtection_;
     NTSTATUS Status;
-    
+
     *NumberOfBytesToProtect =
     PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) -
     PAGE_ROUND_DOWN(*BaseAddress);
     *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
-    
+
     AddressSpace = &Process->VadRoot;
-    
+
     MmLockAddressSpace(AddressSpace);
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
     if (MemoryArea == NULL)
@@ -598,10 +594,10 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         MmUnlockAddressSpace(AddressSpace);
         return STATUS_UNSUCCESSFUL;
     }
-    
+
     if (OldAccessProtection == NULL)
         OldAccessProtection = &OldAccessProtection_;
-    
+
     if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
     {
         Status = MmProtectAnonMem(AddressSpace, MemoryArea, *BaseAddress,
@@ -620,9 +616,9 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         /* FIXME: Should we return failure or success in this case? */
         Status = STATUS_CONFLICTING_ADDRESSES;
     }
-    
+
     MmUnlockAddressSpace(AddressSpace);
-    
+
     return Status;
 }
 
@@ -676,38 +672,38 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
     PEPROCESS Process;
     NTSTATUS Status = STATUS_SUCCESS;
     SIZE_T BytesRead = 0;
-    PAGED_CODE();    
+    PAGED_CODE();
 
     /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
     {
         /* Validate the read addresses */
         if ((((ULONG_PTR)BaseAddress + NumberOfBytesToRead) < (ULONG_PTR)BaseAddress) ||
-            (((ULONG_PTR)Buffer + NumberOfBytesToRead) < (ULONG_PTR)Buffer) ||        
+            (((ULONG_PTR)Buffer + NumberOfBytesToRead) < (ULONG_PTR)Buffer) ||
             (((ULONG_PTR)BaseAddress + NumberOfBytesToRead) > MmUserProbeAddress) ||
             (((ULONG_PTR)Buffer + NumberOfBytesToRead) > MmUserProbeAddress))
         {
             /* Don't allow to write into kernel space */
             return STATUS_ACCESS_VIOLATION;
         }
-        
+
         /* Enter SEH for probe */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the output value */
             if (NumberOfBytesRead) ProbeForWriteSize_t(NumberOfBytesRead);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
-        
+        _SEH2_END;
+
         /* Return if we failed */
         if (!NT_SUCCESS(Status)) return Status;
     }
-    
+
     /* Reference the process */
     Status = ObReferenceObjectByHandle(ProcessHandle,
                                        PROCESS_VM_READ,
@@ -725,26 +721,26 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                                      NumberOfBytesToRead,
                                      PreviousMode,
                                      &BytesRead);
-        
+
         /* Dereference the process */
         ObDereferenceObject(Process);
     }
-    
+
     /* Check if the caller sent this parameter */
     if (NumberOfBytesRead)
     {
         /* Enter SEH to guard write */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return the number of bytes read */
             *NumberOfBytesRead = BytesRead;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Handle exception */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return status */
@@ -763,38 +759,38 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
     PEPROCESS Process;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG BytesWritten = 0;
-    PAGED_CODE();    
+    PAGED_CODE();
 
     /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
     {
         /* Validate the read addresses */
         if ((((ULONG_PTR)BaseAddress + NumberOfBytesToWrite) < (ULONG_PTR)BaseAddress) ||
-            (((ULONG_PTR)Buffer + NumberOfBytesToWrite) < (ULONG_PTR)Buffer) ||        
+            (((ULONG_PTR)Buffer + NumberOfBytesToWrite) < (ULONG_PTR)Buffer) ||
             (((ULONG_PTR)BaseAddress + NumberOfBytesToWrite) > MmUserProbeAddress) ||
             (((ULONG_PTR)Buffer + NumberOfBytesToWrite) > MmUserProbeAddress))
         {
             /* Don't allow to write into kernel space */
             return STATUS_ACCESS_VIOLATION;
         }
-        
+
         /* Enter SEH for probe */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the output value */
             if (NumberOfBytesWritten) ProbeForWriteSize_t(NumberOfBytesWritten);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
-        
+        _SEH2_END;
+
         /* Return if we failed */
         if (!NT_SUCCESS(Status)) return Status;
     }
-    
+
     /* Reference the process */
     Status = ObReferenceObjectByHandle(ProcessHandle,
                                        PROCESS_VM_WRITE,
@@ -812,28 +808,28 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                                      NumberOfBytesToWrite,
                                      PreviousMode,
                                      &BytesWritten);
-        
+
         /* Dereference the process */
         ObDereferenceObject(Process);
     }
-    
+
     /* Check if the caller sent this parameter */
     if (NumberOfBytesWritten)
     {
         /* Enter SEH to guard write */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return the number of bytes read */
             *NumberOfBytesWritten = BytesWritten;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Handle exception */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -857,24 +853,24 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Validate all outputs */
             ProbeForWritePointer(UnsafeBaseAddress);
             ProbeForWriteSize_t(UnsafeNumberOfBytesToProtect);
             ProbeForWriteUlong(UnsafeOldAccessProtection);
-            
+
             /* Capture them */
             BaseAddress = *UnsafeBaseAddress;
             NumberOfBytesToProtect = *UnsafeNumberOfBytesToProtect;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
-        
+        _SEH2_END;
+
         /* Return on exception */
         if (!NT_SUCCESS(Status)) return Status;
     }
@@ -884,10 +880,10 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
         BaseAddress = *UnsafeBaseAddress;
         NumberOfBytesToProtect = *UnsafeNumberOfBytesToProtect;
     }
-    
+
     /* Catch illegal base address */
     if (BaseAddress > (PVOID)MmUserProbeAddress) return STATUS_INVALID_PARAMETER_2;
-    
+
     /* Catch illegal region size  */
     if ((MmUserProbeAddress - (ULONG_PTR)BaseAddress) < NumberOfBytesToProtect)
     {
@@ -916,21 +912,21 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
 
     /* Release reference */
     ObDereferenceObject(Process);
-    
+
     /* Enter SEH to return data */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Return data to user */
         *UnsafeOldAccessProtection = OldAccessProtection;
         *UnsafeBaseAddress = BaseAddress;
         *UnsafeNumberOfBytesToProtect = NumberOfBytesToProtect;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Catch exception */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status */
     return Status;
@@ -955,73 +951,73 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
         MEMORY_BASIC_INFORMATION BasicInfo;
     }
     VirtualMemoryInfo;
-    
+
     DPRINT("NtQueryVirtualMemory(ProcessHandle %x, Address %x, "
            "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
            "Length %lu ResultLength %x)\n",ProcessHandle,Address,
            VirtualMemoryInformationClass,VirtualMemoryInformation,
            Length,ResultLength);
-    
+
     PreviousMode =  ExGetPreviousMode();
-    
+
     if (PreviousMode != KernelMode && UnsafeResultLength != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteSize_t(UnsafeResultLength);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
-        
+        _SEH2_END;
+
         if (!NT_SUCCESS(Status))
         {
             return Status;
         }
     }
-    
+
     if (Address >= MmSystemRangeStart)
     {
         DPRINT1("Invalid parameter\n");
         return STATUS_INVALID_PARAMETER;
     }
-    
+
     /* FIXME: Move this inside MiQueryVirtualMemory */
     if (VirtualMemoryInformationClass == MemorySectionName)
     {
         RtlInitEmptyUnicodeString(&ModuleFileName, ModuleFileNameBuffer, sizeof(ModuleFileNameBuffer));
         Status = MmGetFileNameForAddress(Address, &ModuleFileName);
-        
+
         if (NT_SUCCESS(Status))
         {
             SectionName = VirtualMemoryInformation;
             if (PreviousMode != KernelMode)
             {
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
                     SectionName->SectionFileName.MaximumLength = Length;
                     RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
-                    
+
                     if (UnsafeResultLength != NULL)
                     {
                         *UnsafeResultLength = ModuleFileName.Length;
                     }
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
             }
             else
             {
                 RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
                 SectionName->SectionFileName.MaximumLength = Length;
                 RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
-                
+
                 if (UnsafeResultLength != NULL)
                 {
                     *UnsafeResultLength = ModuleFileName.Length;
@@ -1039,12 +1035,12 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
                                       Length,
                                       &ResultLength);
     }
-       
+
     if (NT_SUCCESS(Status))
     {
         if (PreviousMode != KernelMode)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 if (ResultLength > 0)
                 {
@@ -1060,11 +1056,11 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
                     *UnsafeResultLength = ResultLength;
                 }
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
         else
         {
@@ -1074,14 +1070,14 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
                               &VirtualMemoryInfo,
                               ResultLength);
             }
-            
+
             if (UnsafeResultLength != NULL)
             {
                 *UnsafeResultLength = ResultLength;
             }
         }
     }
-    
+
     return(Status);
 }
 

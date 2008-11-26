@@ -79,6 +79,12 @@ typedef struct
   RPC_IF_ID *IfId[1];
 } RPC_IF_ID_VECTOR;
 
+typedef struct
+{
+  unsigned int Count;
+  unsigned long Stats[1];
+} RPC_STATS_VECTOR;
+
 typedef I_RPC_HANDLE *RPC_EP_INQ_HANDLE;
 
 #define RPC_C_EP_ALL_ELTS 0

@@ -1,7 +1,7 @@
 /*
  * NDR -Oi,-Oif,-Oicf Interpreter
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2003-5 Robert Shearman (for CodeWeavers)
  *
  * This library is free software; you can redistribute it and/or

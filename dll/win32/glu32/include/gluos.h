@@ -40,7 +40,6 @@
 #define NOIME
 #define NOMINMAX
 
-#define _WIN32_WINNT 0x0400
 #ifndef STRICT
   #define STRICT 1
 #endif

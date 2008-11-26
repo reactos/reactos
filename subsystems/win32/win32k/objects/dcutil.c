@@ -199,7 +199,7 @@ IntGdiSetBkColor(HDC hDC, COLORREF color)
   oldColor = Dc_Attr->crBackgroundClr;
   Dc_Attr->crBackgroundClr = color;
   Dc_Attr->ulBackgroundClr = (ULONG)color;
-  Dc_Attr->ulDirty_ &= ~DIRTY_LINE; // Clear Flag if set.
+  Dc_Attr->ulDirty_ &= ~(DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL); // Clear Flag if set.
   hBrush = Dc_Attr->hbrush;
   DC_UnlockDc(dc);
   NtGdiSelectBrush(hDC, hBrush);
@@ -271,6 +271,7 @@ IntGdiSetTextColor(HDC hDC,
   oldColor = Dc_Attr->crForegroundClr;
   Dc_Attr->crForegroundClr = color;
   hBrush = Dc_Attr->hbrush;
+  Dc_Attr->ulDirty_ &= ~(DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL);
   DC_UnlockDc( dc );
   NtGdiSelectBrush(hDC, hBrush);
   return  oldColor;

@@ -8,5 +8,4 @@
         <library>kernel32</library>
         <library>ntdll</library>
         <file>pdh_main.c</file>
-        <file>pdh.spec</file>
 </module>

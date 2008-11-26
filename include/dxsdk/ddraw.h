@@ -2557,6 +2557,7 @@ DECLARE_INTERFACE_( IDirectDrawSurface3, IUnknown )
          #define IDirectDrawSurface7_GetLOD(p,a)                  (p)->GetLOD(a)
      #endif
 #endif
+#undef INTERFACE
 
 #ifdef __cplusplus
 };

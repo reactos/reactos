@@ -83,11 +83,6 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    if( FCB->AddressFile.Object == NULL) {
-	return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
-	                               NULL );
-    }
-
     Mdl = IoAllocateMdl
 	( Irp->UserBuffer,
 	  IrpSp->Parameters.DeviceIoControl.OutputBufferLength,
@@ -105,11 +100,21 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	if( NT_SUCCESS(Status) ) {
             if( Local ) {
+                if( FCB->AddressFile.Object == NULL ) {
+	            return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
+	                                           NULL );
+                }
+
                 Status = TdiQueryInformation
                     ( FCB->AddressFile.Object,
                       TDI_QUERY_ADDRESS_INFO,
                       Mdl );
             } else {
+                if( FCB->Connection.Object == NULL || (FCB->State != SOCKET_STATE_BOUND && FCB->State != SOCKET_STATE_CONNECTED) ) {
+	            return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
+	                                           NULL );
+                }
+
                 if( NT_SUCCESS
                     ( Status = TdiBuildNullConnectionInfo
                       ( &ConnInfo,

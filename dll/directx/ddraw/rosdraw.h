@@ -9,6 +9,8 @@
 #include <d3dhal.h>
 #include <ddrawgdi.h>
 
+#include <pseh/pseh.h>
+
 #include "Ddraw/ddraw.h"
 #include "Surface/surface.h"
 #include "Clipper/clipper.h"

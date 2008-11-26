@@ -185,12 +185,12 @@ typedef struct _GDIDEVICE
 
   PVOID         pvGammaRamp;    // Gamma ramp pointer.
 
-  DHPDEV        hPDev;          // DHPDEV for device.
-
   HSURF         FillPatterns[HS_DDI_MAX];
 
   ULONG         DxDd_nCount;
 
+  DHPDEV        hPDev;          // DHPDEV for device.
+  PVOID         ppalSurf;       // PEPALOBJ/PPALGDI for this device.
   DEVINFO       DevInfo;
   GDIINFO       GDIInfo;
   HSURF         pSurface;       // SURFACE for this device.
@@ -268,6 +268,9 @@ VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PGDIDEVICE, PDEVCAPS);
+HPEN FASTCALL IntGdiSelectPen(PDC,HPEN);
+HBRUSH FASTCALL IntGdiSelectBrush(PDC,HBRUSH);
+INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
 
 extern PGDIDEVICE pPrimarySurface;
 

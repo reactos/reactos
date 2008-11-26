@@ -19,8 +19,6 @@
 
 /* FUNCTIONS ***************************************************************/
 
-typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
-
 HANDLE TimerThreadHandle = NULL;
 
 NTSTATUS

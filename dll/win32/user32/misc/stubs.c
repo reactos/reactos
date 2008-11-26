@@ -18,21 +18,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-AttachThreadInput(
-  DWORD idAttach,
-  DWORD idAttachTo,
-  BOOL fAttach)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
 int
 STDCALL
 GetMouseMovePointsEx(

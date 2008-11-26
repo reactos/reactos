@@ -25,7 +25,6 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
-WINE_DECLARE_DEBUG_CHANNEL(eventlog);
 
 static RPC_UNICODE_STRING EmptyString = { 0, 0, L"" };
 
@@ -163,7 +162,7 @@ BackupEventLogA(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -203,7 +202,7 @@ BackupEventLogW(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -240,7 +239,7 @@ ClearEventLogA(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -277,7 +276,7 @@ ClearEventLogW(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -307,7 +306,7 @@ CloseEventLog(IN HANDLE hEventLog)
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -343,7 +342,7 @@ DeregisterEventSource(IN HANDLE hEventLog)
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -380,7 +379,7 @@ GetNumberOfEventLogRecords(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -419,7 +418,7 @@ GetOldestEventLogRecord(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -520,7 +519,7 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -600,7 +599,7 @@ OpenEventLogW(IN LPCWSTR lpUNCServerName,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -645,7 +644,7 @@ ReadEventLogA(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -702,7 +701,7 @@ ReadEventLogW(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -792,7 +791,7 @@ RegisterEventSourceW(IN LPCWSTR lpUNCServerName,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -903,9 +902,9 @@ ReportEventW(IN HANDLE hEventLog,
              IN LPCWSTR *lpStrings,
              IN LPVOID lpRawData)
 {
-#if 0
     NTSTATUS Status;
     UNICODE_STRING *Strings;
+    UNICODE_STRING ComputerName;
     WORD i;
 
     TRACE("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
@@ -924,6 +923,9 @@ ReportEventW(IN HANDLE hEventLog,
     for (i = 0; i < wNumStrings; i++)
         RtlInitUnicodeString(&Strings[i], lpStrings[i]);
 
+    /*FIXME: ComputerName */
+    RtlInitEmptyUnicodeString(&ComputerName, NULL, 0);
+
     _SEH_TRY
     {
         Status = ElfrReportEventW(hEventLog,
@@ -933,9 +935,9 @@ ReportEventW(IN HANDLE hEventLog,
                                   dwEventID,
                                   wNumStrings,
                                   dwDataSize,
-                                  L"", /* FIXME: ComputerName */
+                                  (PRPC_UNICODE_STRING) &ComputerName,
                                   lpUserSid,
-                                  (LPWSTR *)lpStrings, /* FIXME: should be Strings */
+                                  (PRPC_UNICODE_STRING*) &Strings,
                                   lpRawData,
                                   0,
                                   NULL,
@@ -943,7 +945,7 @@ ReportEventW(IN HANDLE hEventLog,
     }
     _SEH_HANDLE
     {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(_SEH_GetExceptionCode());
     }
     _SEH_END;
 
@@ -956,43 +958,4 @@ ReportEventW(IN HANDLE hEventLog,
     }
 
     return TRUE;
-#else
-  int i;
-
-    /* partial stub */
-
-  if (wNumStrings == 0)
-    return TRUE;
-
-  if (lpStrings == NULL)
-    return TRUE;
-
-  for (i = 0; i < wNumStrings; i++)
-    {
-      switch (wType)
-        {
-        case EVENTLOG_SUCCESS:
-            TRACE_(eventlog)("Success: %S\n", lpStrings[i]);
-            break;
-
-        case EVENTLOG_ERROR_TYPE:
-            ERR_(eventlog)("Error: %S\n", lpStrings[i]);
-            break;
-
-        case EVENTLOG_WARNING_TYPE:
-            WARN_(eventlog)("Warning: %S\n", lpStrings[i]);
-            break;
-
-        case EVENTLOG_INFORMATION_TYPE:
-            TRACE_(eventlog)("Info: %S\n", lpStrings[i]);
-            break;
-
-        default:
-            TRACE_(eventlog)("Type %hu: %S\n", wType, lpStrings[i]);
-            break;
-        }
-    }
-
-  return TRUE;
-#endif
 }

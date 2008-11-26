@@ -758,7 +758,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
   INFO_(FLOPPY, "ReadWritePassive(): success; Completing with STATUS_SUCCESS\n");
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = Length;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  IoCompleteRequest(Irp, IO_DISK_INCREMENT);
   StopMotor(DriveInfo->ControllerInfo);
 }
 

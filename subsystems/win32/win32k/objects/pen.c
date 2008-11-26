@@ -79,7 +79,7 @@ IntGdiExtCreatePen(
    hPen = PenObject->BaseObject.hHmgr;
 
    // If nWidth is zero, the pen is a single pixel wide, regardless of the current transformation.
-   if ((bOldStylePen) && (!dwWidth)) dwWidth = 1;
+   if ((bOldStylePen) && (!dwWidth) && (dwPenStyle & PS_STYLE_MASK) != PS_SOLID) dwWidth = 1;
 
    PenObject->ptPenWidth.x = dwWidth;
    PenObject->ptPenWidth.y = 0;
@@ -108,8 +108,6 @@ IntGdiExtCreatePen(
          break;
 
       case PS_ALTERNATE:
-         /* PS_ALTERNATE is applicable only for cosmetic pens */
-         if ((dwPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC) goto ExitCleanup;
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
          PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
          break;
@@ -135,9 +133,6 @@ IntGdiExtCreatePen(
          break;
 
       case PS_INSIDEFRAME:
-         /* FIXME: does it need some additional work? */
-         /* PS_INSIDEFRAME is applicable only for geometric pens */
-         if ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) goto ExitCleanup;
          PenObject->flAttrs |= (GDIBRUSH_IS_SOLID|GDIBRUSH_IS_INSIDEFRAME);
          break;
 
@@ -247,6 +242,52 @@ PEN_GetObject(PGDIBRUSHOBJ pPenObject, INT cbCount, PLOGPEN pBuffer)
    return cbRetCount;
 }
 
+
+HPEN
+FASTCALL
+IntGdiSelectPen(
+    PDC pDC,
+    HPEN hPen)
+{
+    PDC_ATTR pDc_Attr;
+    HPEN hOrgPen = NULL;
+    PGDIBRUSHOBJ pPen;
+    XLATEOBJ *XlateObj;
+    BOOLEAN bFailed;
+
+    if (pDC == NULL || hPen == NULL) return NULL;
+
+    pDc_Attr = pDC->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+    pPen = PENOBJ_LockPen(hPen);
+    if (pPen == NULL)
+    {
+        return NULL;
+    }
+
+    XlateObj = IntGdiCreateBrushXlate(pDC, pPen, &bFailed);
+    PENOBJ_UnlockPen(pPen);
+    if (bFailed)
+    {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        return NULL;
+    }
+
+    hOrgPen = pDc_Attr->hpen;
+    pDc_Attr->hpen = hPen;
+
+    if (pDC->XlatePen != NULL)
+    {
+        EngDeleteXlate(pDC->XlatePen);
+    }
+    pDc_Attr->ulDirty_ &= ~DC_PEN_DIRTY;
+
+    pDC->XlatePen = XlateObj;
+
+    return hOrgPen;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 HPEN STDCALL
@@ -346,5 +387,31 @@ NtGdiExtCreatePen(
    return hPen;
 }
 
+ /*
+ * @implemented
+ */
+HPEN
+APIENTRY
+NtGdiSelectPen(
+    IN HDC hDC,
+    IN HPEN hPen)
+{
+    PDC pDC;
+    HPEN hOrgPen;
+
+    if (hDC == NULL || hPen == NULL) return NULL;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        return NULL;
+    }
+
+    hOrgPen = IntGdiSelectPen(pDC,hPen);
+
+    DC_UnlockDc(pDC);
+
+    return hOrgPen;
+}
 
 /* EOF */

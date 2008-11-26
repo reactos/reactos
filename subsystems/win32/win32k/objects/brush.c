@@ -62,12 +62,12 @@ BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
    if (Count == 0) return 0;
 
    /* Set colour */
-    Buffer->lbColor =  BrushObject->BrushAttr.lbColor;
+    Buffer->lbColor = BrushObject->BrushAttr.lbColor;
 
     /* set Hatch */
     if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
     {
-        /* FIXME : is this right value */
+        /* FIXME : this is not the right value */
         Buffer->lbHatch = (LONG)BrushObject->hbmPattern;
     }
     else
@@ -153,7 +153,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
 
          if (Dc->w.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(hPalette, Dc_Attr->crForegroundClr, Dc_Attr->crBackgroundClr);
+            Result = IntEngCreateSrcMonoXlate(hPalette, BrushObj->BrushAttr.lbColor, Dc_Attr->crBackgroundClr);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
       {
@@ -509,6 +509,52 @@ IntGdiCreateNullBrush(VOID)
    return hBrush;
 }
 
+HBRUSH
+FASTCALL
+IntGdiSelectBrush(
+    PDC pDC,
+    HBRUSH hBrush)
+{
+    PDC_ATTR pDc_Attr;
+    HBRUSH hOrgBrush;
+    PGDIBRUSHOBJ pBrush;
+    XLATEOBJ *XlateObj;
+    BOOLEAN bFailed;
+
+    if (pDC == NULL || hBrush == NULL) return NULL;
+
+    pDc_Attr = pDC->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+    pBrush = BRUSHOBJ_LockBrush(hBrush);
+    if (pBrush == NULL)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+
+    XlateObj = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
+    BRUSHOBJ_UnlockBrush(pBrush);
+    if(bFailed)
+    {
+        return NULL;
+    }
+
+    hOrgBrush = pDc_Attr->hbrush;
+    pDc_Attr->hbrush = hBrush;
+
+    if (pDC->XlateBrush != NULL)
+    {
+        EngDeleteXlate(pDC->XlateBrush);
+    }
+    pDC->XlateBrush = XlateObj;
+
+    pDc_Attr->ulDirty_ &= ~DC_BRUSH_DIRTY;
+
+    return hOrgBrush;
+}
+
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 HBRUSH STDCALL
@@ -654,6 +700,33 @@ IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color)
       BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
   }
   BRUSHOBJ_UnlockBrush(BrushObject);
+}
+
+ /*
+ * @implemented
+ */
+HBRUSH
+APIENTRY
+NtGdiSelectBrush(
+    IN HDC hDC,
+    IN HBRUSH hBrush)
+{
+    PDC pDC;
+    HBRUSH hOrgBrush;
+
+    if (hDC == NULL || hBrush == NULL) return NULL;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        return NULL;
+    }
+
+    hOrgBrush = IntGdiSelectBrush(pDC,hBrush);
+
+    DC_UnlockDc(pDC);
+
+    return hOrgBrush;
 }
 
 /* EOF */

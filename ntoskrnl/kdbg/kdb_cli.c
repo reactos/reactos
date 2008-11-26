@@ -99,6 +99,7 @@ STATIC LONG KdbNumberOfRowsTerminal = -1;
 STATIC LONG KdbNumberOfColsTerminal = -1;
 
 PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDBinit file is loaded into during initialization */
+BOOLEAN KdbpBugCheckRequested = FALSE;
 
 STATIC CONST struct
 {
@@ -1689,8 +1690,9 @@ KdbpCmdTss(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[])
 {
-   KeBugCheck(0xDEADDEAD);
-   return TRUE;
+   /* Set the flag and quit looping */
+   KdbpBugCheckRequested = TRUE;
+   return FALSE;
 }
 
 /*!\brief Sets or displays a config variables value.

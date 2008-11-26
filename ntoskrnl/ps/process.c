@@ -810,17 +810,17 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     KeQuerySystemTime(&Process->CreateTime);
 
     /* Protect against bad user-mode pointer */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Save the process handle */
        *ProcessHandle = hProcess;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the exception code */
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
 CleanupWithRef:
     /*
@@ -1253,17 +1253,17 @@ NtCreateProcessEx(OUT PHANDLE ProcessHandle,
     /* Check if we came from user mode */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe process handle */
             ProbeForWriteHandle(ProcessHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -1354,7 +1354,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the thread handle */
             ProbeForWriteHandle(ProcessHandle);
@@ -1378,12 +1378,12 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
             HasObjectName = (ObjectAttributes->ObjectName != NULL);
             Attributes = ObjectAttributes->Attributes;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
     else
@@ -1489,17 +1489,17 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     if (NT_SUCCESS(Status))
     {
         /* Use SEH for write back */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write back the handle */
             *ProcessHandle = hProcess;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return status */

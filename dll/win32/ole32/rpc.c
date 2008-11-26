@@ -1,7 +1,7 @@
 /*
  *	RPC Manager
  *
- * Copyright 2001  Ove Kåven, TransGaming Technologies
+ * Copyright 2001  Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2002  Marcus Meissner
  * Copyright 2005  Mike Hearn, Rob Shearman for CodeWeavers
  *

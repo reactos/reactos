@@ -2208,8 +2208,7 @@ ftGdiGetTextCharsetInfo(
   TT_OS2 *pOS2;
   FT_Face Face;
   CHARSETINFO csi;
-  DWORD cp;
-  DWORD fs0;
+  DWORD cp, fs0;
   USHORT usACP, usOEM;
 
   Dc_Attr = Dc->pDc_Attr;
@@ -2942,6 +2941,7 @@ ftGdiRealizationInfo(PFONTGDI Font, PREALIZATION_INFO Info)
   return TRUE;
 }
 
+
 DWORD
 FASTCALL
 ftGdiGetKerningPairs( PFONTGDI Font,
@@ -2949,22 +2949,20 @@ ftGdiGetKerningPairs( PFONTGDI Font,
                       LPKERNINGPAIR pKerningPair)
 {
   DWORD Count = 0;
-  FT_Face face;
-
-  face = Font->face;
+  INT i = 0;
+  FT_Face face = Font->face;
 
   if (FT_HAS_KERNING(face) && face->charmap->encoding == FT_ENCODING_UNICODE)
   {
      FT_UInt previous_index = 0, glyph_index = 0;
      FT_ULong char_code, char_previous;
      FT_Vector delta;
-     int i;
         
      char_previous = char_code = FT_Get_First_Char(face, &glyph_index);
 
      IntUnLockFreeType;
 
-     for (i = 0; i < face->num_glyphs; i++)
+     while (glyph_index)
      {
          if (previous_index && glyph_index)
          {
@@ -2975,6 +2973,8 @@ ftGdiGetKerningPairs( PFONTGDI Font,
                pKerningPair[i].wFirst      = char_previous;
                pKerningPair[i].wSecond     = char_code;
                pKerningPair[i].iKernAmount = delta.x;
+               i++;
+               if (i == cPairs) break;
             }
             Count++;
          }
@@ -3162,23 +3162,10 @@ NtGdiExtTextOutW(
       Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {
-        goto fail;
+         goto fail;
       }
    }
    String = SafeString;
-
-   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
-   {
-      // At least one of the two flags were specified. Copy lprc. Once.
-      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
-      if (!NT_SUCCESS(Status))
-      {
-         DC_UnlockDc(dc);
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return FALSE;
-      }
-      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
-   }
 
    if (NULL != UnsafeDx && Count > 0)
    {
@@ -3188,10 +3175,38 @@ NtGdiExtTextOutW(
          goto fail;
       }
       Status = MmCopyFromCaller(Dx, UnsafeDx, Count * sizeof(INT));
-      if (! NT_SUCCESS(Status))
+      if (!NT_SUCCESS(Status))
       {
          goto fail;
       }
+   }
+
+   if (lprc)
+   {
+      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         goto fail;
+      }
+   }
+
+   if (PATH_IsPathOpen(dc->DcLevel))
+   {
+      if (!PATH_ExtTextOut( dc,
+                            XStart,
+                            YStart,
+                            fuOptions,
+             (const RECT *)&SpecifiedDestRect,
+                            SafeString,
+                            Count,
+               (const INT *)Dx)) goto fail;
+      goto good;
+   }
+
+   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
+   {
+      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
    }
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
@@ -3636,13 +3651,14 @@ NtGdiExtTextOutW(
    }
    BRUSHOBJ_UnlockBrush(BrushFg);
    NtGdiDeleteObject(hBrushFg);
+good:
    if (NULL != SafeString)
    {
-      ExFreePool((void*)SafeString);
+      ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
    }
    if (NULL != Dx)
    {
-      ExFreePool(Dx);
+      ExFreePoolWithTag(Dx, TAG_GDITEXT);
    }
    DC_UnlockDc( dc );
 
@@ -3669,11 +3685,11 @@ fail:
    }
    if (NULL != SafeString)
    {
-      ExFreePool((void*)SafeString);
+      ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
    }
    if (NULL != Dx)
    {
-      ExFreePool(Dx);
+      ExFreePoolWithTag(Dx, TAG_GDITEXT);
    }
    DC_UnlockDc(dc);
 

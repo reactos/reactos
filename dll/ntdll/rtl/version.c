@@ -104,6 +104,8 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 NTSTATUS NTAPI
 RtlGetVersion(RTL_OSVERSIONINFOW *Info)
 {
+   ULONG i, MaxLength;
+
    if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||
        Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
    {
@@ -113,17 +115,19 @@ RtlGetVersion(RTL_OSVERSIONINFOW *Info)
       Info->dwMinorVersion = Peb->OSMinorVersion;
       Info->dwBuildNumber = Peb->OSBuildNumber;
       Info->dwPlatformId = Peb->OSPlatformId;
+      RtlZeroMemory(Info->szCSDVersion, sizeof(Info->szCSDVersion));
       if(((Peb->OSCSDVersion >> 8) & 0xFF) != 0)
       {
-        int i = _snwprintf(Info->szCSDVersion,
-                           (sizeof(Info->szCSDVersion) / sizeof(Info->szCSDVersion[0])) - 1,
-                           L"Service Pack %d",
-                           ((Peb->OSCSDVersion >> 8) & 0xFF));
-        Info->szCSDVersion[i] = L'\0';
-      }
-      else
-      {
-        RtlZeroMemory(Info->szCSDVersion, sizeof(Info->szCSDVersion));
+        MaxLength = (sizeof(Info->szCSDVersion) / sizeof(Info->szCSDVersion[0])) - 1;
+        i = _snwprintf(Info->szCSDVersion,
+                       MaxLength,
+                       L"Service Pack %d",
+                       ((Peb->OSCSDVersion >> 8) & 0xFF));
+        if (i < 0)
+        {
+           /* null-terminate if it was overflowed */
+           Info->szCSDVersion[MaxLength] = L'\0';
+        }
       }
       if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
       {
