@@ -282,7 +282,6 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
     POBJECT_HEADER ObjectHeader;
     UNICODE_STRING ComponentName, RemainingName;
     BOOLEAN Reparse = FALSE, SymLink = FALSE;
-    PDEVICE_MAP DeviceMap = NULL;
     POBJECT_DIRECTORY Directory = NULL, ParentDirectory = NULL, RootDirectory;
     POBJECT_DIRECTORY ReferencedDirectory = NULL, ReferencedParentDirectory = NULL;
     KIRQL CalloutIrql;
@@ -498,7 +497,6 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
         {
 ParseFromRoot:
             /* FIXME: Check if we have a device map */
-            ASSERT(DeviceMap == NULL);
 
             /* Check if this is a possible DOS name */
             if (!((ULONG_PTR)(ObjectName->Buffer) & 7))
