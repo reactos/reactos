@@ -111,7 +111,7 @@ typedef unsigned char boolean;
 #define midl_user_free MIDL_user_free
 #define midl_user_allocate MIDL_user_allocate
 
-#define NdrFcShort(s) (unsigned char)(s & 0xff), (unsigned char)(s >> 8)
+#define NdrFcShort(s) (unsigned char)(s & 0xff), (unsigned char)((s & 0xff00) >> 8)
 #define NdrFcLong(s)  (unsigned char)(s & 0xff), (unsigned char)((s & 0x0000ff00) >> 8), \
   (unsigned char)((s & 0x00ff0000) >> 16), (unsigned char)(s >> 24)
 

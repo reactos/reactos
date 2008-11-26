@@ -39,7 +39,7 @@ int adns_writev(int FileDescriptor, const struct iovec * iov, int iovCount)
 	for(; i < iovCount; i++)
 		total_len += iov[i].iov_len;
 
-	p = buf = (char *)alloca(total_len);
+	p = buf = (char *)_alloca(total_len);
 
 	for(; i < iovCount; i++)
 	{
@@ -79,28 +79,28 @@ int adns_getpid()
 
 int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
-	static __int64 Adjustment;
+    static __int64 Adjustment;
 	__int64 now = 0;
-	
-	if (!Adjustment)
-	{
+
+    if (!Adjustment)
+    {
 		SYSTEMTIME st = {1970,1,0,1,0,0,0};
 		SystemTimeToFileTime(&st, (LPFILETIME)&Adjustment);
-	}
-	
-	if (tz)
-	{
+    }
+
+    if (tz)
+    {
 		errno = EINVAL;
-		return -1;
-	}
-	
+	return -1;
+    }
+
 	GetSystemTimeAsFileTime((LPFILETIME)&now);
 	now -= Adjustment;
-	
+
 	tv->tv_sec = (long)(now / 10000000);
 	tv->tv_usec = (long)((now % 10000000) / 10); 
 
-	return 0;
+    return 0;
 }
 
 /* Memory allocated in the DLL must be freed in the dll, so
