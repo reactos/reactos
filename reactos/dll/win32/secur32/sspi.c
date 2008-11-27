@@ -93,6 +93,15 @@ ApplyControlTokenW(PCtxtHandle Handle,
 
 SECURITY_STATUS
 WINAPI
+ApplyControlTokenA(PCtxtHandle Handle,
+                  PSecBufferDesc Buffer)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
 CompleteAuthToken(PCtxtHandle Handle,
                   PSecBufferDesc Buffer)
 {
@@ -246,4 +255,186 @@ QuerySecurityPackageInfoW(
 {
 	DPRINT1("%s() not implemented!\n", __FUNCTION__);
 	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+AcceptSecurityContext(
+    PCredHandle phCredential,
+    PCtxtHandle phContext,
+	PSecBufferDesc pInput,
+    ULONG fContextReq,
+	ULONG TargetDataRep,
+	PCtxtHandle phNewContext,
+    PSecBufferDesc pOutput,
+	ULONG *pfContextAttr,
+	PTimeStamp ptsExpiry
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+AddCredentialsA(
+	PCredHandle hCredentials,
+	SEC_CHAR *pszPrincipal,
+	SEC_CHAR *pszPackage,
+	ULONG fCredentialUse,
+	LPVOID pAuthData,
+	SEC_GET_KEY_FN pGetKeyFn,
+	LPVOID pvGetKeyArgument,
+	PTimeStamp ptsExpiry
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+AddCredentialsW(
+	PCredHandle hCredentials,
+	SEC_WCHAR *pszPrincipal,
+	SEC_WCHAR *pszPackage,
+	ULONG fCredentialUse,
+	LPVOID pAuthData,
+	SEC_GET_KEY_FN pGetKeyFn,
+	LPVOID pvGetKeyArgument,
+	PTimeStamp ptsExpiry
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+ExportSecurityContext(
+	PCtxtHandle phContext,
+	ULONG fFlags,
+	PSecBuffer pPackedContext,
+	LPVOID *pToken
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+ImpersonateSecurityContext(
+	PCtxtHandle phContext
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+ImportSecurityContextA(
+	SEC_CHAR *pszPackage,
+	PSecBuffer pPackedContext,
+	LPVOID Token,
+	PCtxtHandle phContext
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+ImportSecurityContextW(
+	SEC_WCHAR *pszPackage,
+	PSecBuffer pPackedContext,
+	LPVOID Token,
+	PCtxtHandle phContext
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+QueryCredentialsAttributesA(
+	PCredHandle phCredential,
+	ULONG ulAttribute,
+	LPVOID pBuffer
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+QueryCredentialsAttributesW(
+	PCredHandle phCredential,
+	ULONG ulAttribute,
+	LPVOID pBuffer
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+QuerySecurityContextToken(
+	PCtxtHandle phContext,
+	PHANDLE phToken
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+SECURITY_STATUS
+WINAPI
+RevertSecurityContext(
+	PCtxtHandle phContext
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+PSecurityFunctionTableA
+WINAPI
+InitSecurityInterfaceA(VOID)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return NULL;
+}
+
+BOOLEAN
+WINAPI
+TranslateNameA(
+	LPCSTR lpAccountName,
+	EXTENDED_NAME_FORMAT AccountNameFormat,
+	EXTENDED_NAME_FORMAT DesiredNameFormat,
+	LPSTR lpTranslatedName,
+	PULONG nSize
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return FALSE;
+}
+
+BOOLEAN
+WINAPI
+TranslateNameW(
+	LPCWSTR lpAccountName,
+	EXTENDED_NAME_FORMAT AccountNameFormat,
+	EXTENDED_NAME_FORMAT DesiredNameFormat,
+	LPWSTR lpTranslatedName,
+	PULONG nSize
+)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return FALSE;
 }
