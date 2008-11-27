@@ -1866,6 +1866,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pDDCallbacks->GetScanLine = DdGetScanLine;
     }
 
+
     /* Check for DD Surface Callbacks */
     if (pDDSurfaceCallbacks) 
     {
@@ -1892,6 +1893,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pDDSurfaceCallbacks->SetOverlayPosition = DdSetOverlayPosition;
         pDDSurfaceCallbacks->AddAttachedSurface = DdAddAttachedSurface;
     }
+
 
     /* Check for DD Palette Callbacks, This interface are dead for user mode, 
      * only what it can support are being report back.  
@@ -1920,6 +1922,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         // FIXME pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
     }
 
+
     /* Check for D3D Driver Data */
     if (pD3dDriverData)
     {
@@ -1929,7 +1932,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Write the pointer to the texture formats */
         //FIXME pD3dDriverData->lpTextureFormats = pD3dTextureFormats;
     }
-    else
+
 
     /* Check for D3D Buffer Callbacks */
     if (pD3dBufferCallbacks)
