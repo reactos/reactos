@@ -1735,6 +1735,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
         /* Set the return value */
         Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
+        
     }
 
     /* Return to caller */
@@ -1761,13 +1762,20 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                         LPVIDMEM pvmList)
     {
 
+    HDC hdc;
+    DEVMODEW DevMode;
     PVIDEOMEMORY VidMemList = NULL;
     //DWORD dwNumHeaps=0, FourCCs=0;
-
     BOOL retVal = TRUE;
 
+    HBITMAP hbmp;
+    const UINT bmiSize = sizeof(BITMAPINFOHEADER) + 0x10;
+    UCHAR *pbmiData;
+    BITMAPINFO *pbmi;
+    DWORD *pMasks;
+
     IWineD3D* pWineD3d;
-    WINED3DDISPLAYMODE d3ddm;
+
 
     /* Note : XP always alloc 24*sizeof(VIDEOMEMORY) of pvmlist so we change it to it */
     if ( (pvmList != NULL) &&
@@ -1790,64 +1798,143 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     pWineD3d = (IWineD3D*) GetDdHandle(pDirectDrawGlobal->hDD);
 
     /* Get adapter res, we can use windows own api here */
-    IWineD3D_GetAdapterDisplayMode( pWineD3d, D3DADAPTER_DEFAULT, &d3ddm);
+    //IWineD3D_GetAdapterDisplayMode( pWineD3d, D3DADAPTER_DEFAULT, &d3ddm);
+    EnumDisplaySettingsW(NULL,ENUM_CURRENT_SETTINGS,&DevMode);
 
-    /* Clear the incoming pointer */
-    RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
-
-    /* Convert all the data */
-    pHalInfo->dwSize = sizeof(DDHALINFO);
-    pHalInfo->lpDDCallbacks = pDDCallbacks;
-    pHalInfo->lpDDSurfaceCallbacks = pDDSurfaceCallbacks;
-    pHalInfo->lpDDPaletteCallbacks = pDDPaletteCallbacks;
-
-    /* Check for NT5+ D3D Data */
-/* FIXME
-    if ( (D3dCallbacks.dwSize != 0) &&
-         (D3dDriverData.dwSize != 0) )
+    /* Dectect RGB bit mask */
+    hdc = GetDC(GetDesktopWindow());
+    if (hdc == NULL)
     {
+        goto cleanup;
+    }
+
+    hbmp = CreateCompatibleBitmap(hdc, 1, 1);
+    if (hbmp==NULL)
+    {
+        DeleteDC(hdc);
+        goto cleanup;
+    }
+
+    pbmiData = (UCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bmiSize);
+    pbmi = (BITMAPINFO*)pbmiData;
+
+    if (pbmiData==NULL)
+    {
+       DeleteDC(hdc);
+       DeleteObject(hbmp);
+       goto cleanup;
+    }
+
+    pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    pbmi->bmiHeader.biBitCount = (WORD)DevMode.dmBitsPerPel;
+    pbmi->bmiHeader.biCompression = BI_BITFIELDS;
+    pbmi->bmiHeader.biWidth = 1;
+    pbmi->bmiHeader.biHeight = 1;
+
+    GetDIBits(hdc, hbmp, 0, 0, NULL, pbmi, 0);
+    DeleteObject(hbmp);
+    pMasks = (DWORD*)(pbmiData + sizeof(BITMAPINFOHEADER));
+    /* End dectect RGB bit mask */
+
+    if (pHalInfo)
+    {
+        /* Clear the incoming pointer */
+        RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
+
+        /* Convert all the data */
+        pHalInfo->dwSize = sizeof(DDHALINFO);
+        
+        pHalInfo->vmiData.fpPrimary = 0;
+        pHalInfo->vmiData.dwFlags = 0; // MSDN Currently unused and should be set to zero.
+
+        pHalInfo->vmiData.dwDisplayWidth = DevMode.dmPelsHeight;
+        pHalInfo->vmiData.dwDisplayHeight = DevMode.dmPelsWidth;
+
+        /* ToDo align it right, we skip align it, it must be algin like the graphice card delta for the screen 
+         * the graphice card delta is same as pHalInfo->vmiData.lDisplayPitch
+         */
+        pHalInfo->vmiData.lDisplayPitch = (DevMode.dmPelsWidth * DevMode.dmBitsPerPel) / 8;
+
+        /* Setup DDPIXELFORMAT for pHalInfo->vmiData.ddpfDisplay */
+        pHalInfo->vmiData.ddpfDisplay.dwSize = sizeof(DDPIXELFORMAT);
+        switch(DevMode.dmBitsPerPel)
+        {
+            case 1:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED1;
+                break;
+
+            case 2:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED2;
+                break;
+
+            case 4:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED4;
+                break;
+
+            case 8:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED8;
+                break;
+
+            case 16:
+            case 24:
+            case 32:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_RGB;
+                break;
+            default:
+                break;
+        }
+
+        pHalInfo->vmiData.ddpfDisplay.dwFourCC = 0;
+        pHalInfo->vmiData.ddpfDisplay.dwRGBBitCount = DevMode.dmBitsPerPel;
+        pHalInfo->vmiData.ddpfDisplay.dwRBitMask = pMasks[0];
+        pHalInfo->vmiData.ddpfDisplay.dwGBitMask = pMasks[1];
+        pHalInfo->vmiData.ddpfDisplay.dwBBitMask = pMasks[2];
+        pHalInfo->vmiData.ddpfDisplay.dwRGBAlphaBitMask = pMasks[3];
+
+        /* ToDo ? align setting for wined3d */
+        pHalInfo->vmiData.dwOffscreenAlign = 0;
+        pHalInfo->vmiData.dwOverlayAlign = 0;
+        pHalInfo->vmiData.dwTextureAlign = 0;
+        pHalInfo->vmiData.dwZBufferAlign = 0;
+        pHalInfo->vmiData.dwAlphaAlign = 0;
+
+        pHalInfo->vmiData.dwNumHeaps = 0;
+        pHalInfo->vmiData.pvmList = NULL;
+
+        // FIXME pHalInfo->ddCaps DDCORECAPS
+
+        /* always force rope 0x1000 for hal it mean only source copy is supported */
+        pHalInfo->ddCaps.dwRops[6] = 0x1000;
+
+        pHalInfo->GetDriverInfo = (LPDDHAL_GETDRIVERINFO) DdGetDriverInfo;
+
+        pHalInfo->dwFlags = DDHALINFO_ISPRIMARYDISPLAY; // we assume the current drv is the primary driver
+        /* DDHALINFO_ISPRIMARYDISPLAY
+         * Driver is the primary display driver.
+         *
+         * DDHALINFO_MODEXILLEGAL
+         * Hardware does not support ModeX modes
+         *
+         * DDHALINFO_GETDRIVERINFOSET
+         * The GetDriverInfo member is set, gdi32 does always set it
+         *
+         * DDHALINFO_GETDRIVERINFO2
+         * Driver supports GetDriverInfo2 variant of GetDriverInfo
+         */
+
+        /* Setup callbacks */
+        pHalInfo->lpDDCallbacks = pDDCallbacks;
+        pHalInfo->lpDDSurfaceCallbacks = pDDSurfaceCallbacks;
+        pHalInfo->lpDDPaletteCallbacks =pDDPaletteCallbacks;
         pHalInfo->lpD3DGlobalDriverData = (ULONG_PTR)pD3dDriverData;
         pHalInfo->lpD3DHALCallbacks = (ULONG_PTR)pD3dCallbacks;
         pHalInfo->lpDDExeBufCallbacks = pD3dBufferCallbacks;
 
+        /*  FIXME
+            pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
+            pHalInfo->lpdwFourCC = pdwFourCC;
+        */
     }
-*/
-    /* Continue converting the rest */
-    /* FIXME pHalInfo->vmiData.dwFlags */
-    //pHalInfo->vmiData.dwFlags = HalInfo.vmiData.dwFlags;
-    pHalInfo->vmiData.dwDisplayWidth = d3ddm.Width; // HalInfo.vmiData.dwDisplayWidth;
-    pHalInfo->vmiData.dwDisplayHeight = d3ddm.Height;//HalInfo.vmiData.dwDisplayHeight;
-    // FIXME pHalInfo->vmiData.lDisplayPitch = d3ddm.Format//HalInfo.vmiData.lDisplayPitch;
-    pHalInfo->vmiData.fpPrimary = 0;
-
-    /* FIXME
-    RtlCopyMemory( &pHalInfo->vmiData.ddpfDisplay,
-                   &HalInfo.vmiData.ddpfDisplay,
-                   sizeof(DDPIXELFORMAT));
-
-    pHalInfo->vmiData.dwOffscreenAlign = HalInfo.vmiData.dwOffscreenAlign;
-    pHalInfo->vmiData.dwOverlayAlign = HalInfo.vmiData.dwOverlayAlign;
-    pHalInfo->vmiData.dwTextureAlign = HalInfo.vmiData.dwTextureAlign;
-     pHalInfo->vmiData.dwZBufferAlign = HalInfo.vmiData.dwZBufferAlign;
-    pHalInfo->vmiData.dwAlphaAlign = HalInfo.vmiData.dwAlphaAlign;
-
-    pHalInfo->vmiData.dwNumHeaps = dwNumHeaps;
-    pHalInfo->vmiData.pvmList = pvmList;
-
-    RtlCopyMemory( &pHalInfo->ddCaps, 
-                   &HalInfo.ddCaps,
-                   sizeof(DDCORECAPS ));
-
-    pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
-    pHalInfo->lpdwFourCC = pdwFourCC;
-    */
-    
-    /* always force rope 0x1000 for hal it mean only source copy is supported */
-    pHalInfo->ddCaps.dwRops[6] = 0x1000;
-
-    
-    pHalInfo->dwFlags = DDHALINFO_GETDRIVERINFOSET;
-    pHalInfo->GetDriverInfo = (LPDDHAL_GETDRIVERINFO) DdGetDriverInfo;
 
     /* Now check if we got any DD callbacks */
     if (pDDCallbacks)
