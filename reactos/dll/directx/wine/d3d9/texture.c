@@ -33,7 +33,7 @@ static HRESULT WINAPI IDirect3DTexture9Impl_QueryInterface(LPDIRECT3DTEXTURE9 if
         || IsEqualGUID(riid, &IID_IDirect3DResource9)
         || IsEqualGUID(riid, &IID_IDirect3DBaseTexture9)
         || IsEqualGUID(riid, &IID_IDirect3DTexture9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DTexture9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -62,7 +62,7 @@ static ULONG WINAPI IDirect3DTexture9Impl_Release(LPDIRECT3DTEXTURE9 iface) {
         EnterCriticalSection(&d3d9_cs);
         IWineD3DTexture_Destroy(This->wineD3DTexture, D3D9CB_DestroySurface);
         LeaveCriticalSection(&d3d9_cs);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -356,7 +356,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9EX iface, U
         FIXME("(%p) call to IWineD3DDevice_CreateTexture failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
    } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppTexture= (LPDIRECT3DTEXTURE9) object;
         TRACE("(%p) Created Texture %p, %p\n", This, object, object->wineD3DTexture);

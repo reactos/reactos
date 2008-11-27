@@ -4,7 +4,7 @@
  *Copyright 2002-2003 Jason Edmeades
  *Copyright 2002-2003 Raphael Junqueira
  *Copyright 2005 Oliver Stieber
- *Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ *Copyright 2007-2008 Stefan DÃ¶singer for CodeWeavers
  *
  *This library is free software; you can redistribute it and/or
  *modify it under the terms of the GNU Lesser General Public
@@ -72,7 +72,7 @@ static void WINAPI IWineD3DSwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
      * this will be the original desktop resolution. In case of d3d7 this will be a NOP because ddraw sets the resolution
      * before starting up Direct3D, thus orig_width and orig_height will be equal to the modes in the presentation params
      */
-    if(This->presentParms.Windowed == FALSE) {
+    if(This->presentParms.Windowed == FALSE && This->presentParms.AutoRestoreDisplayMode) {
         mode.Width = This->orig_width;
         mode.Height = This->orig_height;
         mode.RefreshRate = 0;
@@ -256,6 +256,13 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
          */
         if(This->presentParms.SwapEffect == WINED3DSWAPEFFECT_FLIP) {
             IWineD3DSurface_ModifyLocation(This->backBuffer[0], SFLAG_INDRAWABLE, TRUE);
+        }
+    }
+
+    if (This->wineD3DDevice->stencilBufferTarget) {
+        if (This->presentParms.Flags & WINED3DPRESENTFLAG_DISCARD_DEPTHSTENCIL
+                || ((IWineD3DSurfaceImpl *)This->wineD3DDevice->stencilBufferTarget)->Flags & SFLAG_DISCARD) {
+            surface_modify_ds_location(This->wineD3DDevice->stencilBufferTarget, SFLAG_DS_DISCARDED);
         }
     }
 

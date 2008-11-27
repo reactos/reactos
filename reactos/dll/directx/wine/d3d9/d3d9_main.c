@@ -48,7 +48,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
     object->lpVtbl = &Direct3D9_Vtbl;
     object->ref = 1;
     EnterCriticalSection(&d3d9_cs);
-    object->WineD3D = WineDirect3DCreate(SDKVersion, 9, (IUnknown *)object);
+    object->WineD3D = WineDirect3DCreate(9, (IUnknown *)object);
     LeaveCriticalSection(&d3d9_cs);
 
     TRACE("SDKVersion = %x, Created Direct3D object @ %p, WineObj @ %p\n", SDKVersion, object, object->WineD3D);

@@ -8,7 +8,7 @@
  * Copyright 2002-2003 Raphael Junqueira
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
- * Copyright 2006-2008 Stefan Dösinger
+ * Copyright 2006-2008 Stefan DÃ¶singer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -192,8 +192,8 @@ IWineGDISurfaceImpl_UnlockRect(IWineD3DSurface *iface)
 #endif
 
     /* Tell the swapchain to update the screen */
-    IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **) &swapchain);
-    if(swapchain) {
+    if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **)&swapchain)))
+    {
         x11_copy_to_screen(swapchain, &This->lockedRect);
         IWineD3DSwapChain_Release((IWineD3DSwapChain *) swapchain);
     }
@@ -225,8 +225,8 @@ IWineGDISurfaceImpl_Flip(IWineD3DSurface *iface,
     IWineD3DSwapChainImpl *swapchain = NULL;
     HRESULT hr;
 
-    IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **) &swapchain);
-    if(!swapchain) {
+    if(FAILED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **)&swapchain)))
+    {
         ERR("Flipped surface is not on a swapchain\n");
         return WINEDDERR_NOTFLIPPABLE;
     }
@@ -481,8 +481,8 @@ HRESULT WINAPI IWineGDISurfaceImpl_RealizePalette(IWineD3DSurface *iface) {
     /* Update the image because of the palette change. Some games like e.g Red Alert
        call SetEntries a lot to implement fading. */
     /* Tell the swapchain to update the screen */
-    IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **) &swapchain);
-    if(swapchain) {
+    if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **)&swapchain)))
+    {
         x11_copy_to_screen(swapchain, NULL);
         IWineD3DSwapChain_Release((IWineD3DSwapChain *) swapchain);
     }
@@ -532,20 +532,6 @@ IWineGDISurfaceImpl_PrivateSetup(IWineD3DSurface *iface)
     This->resource.allocatedMemory = This->dib.bitmap_data;
 
     return WINED3D_OK;
-}
-
-void WINAPI IWineGDISurfaceImpl_SetGlTextureDesc(IWineD3DSurface *iface, UINT textureName, int target) {
-    IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
-
-    /* Ignore 0 textureName and target. D3D textures can be created with gdi surfaces as plain
-     * containers, but they're useless until the app creates a d3d device from a d3d point of
-     * view, it's not an implementation limitation. This avoids false warnings when the texture
-     * is destroyed and sets the description back to 0/0
-     */
-    if(textureName != 0 || target != 0) {
-        FIXME("(%p) : Should not be called on a GDI surface. textureName %u, target %i\n", This, textureName, target);
-        DebugBreak();
-    }
 }
 
 void WINAPI IWineGDISurfaceImpl_GetGlDesc(IWineD3DSurface *iface, glDescriptor **glDescription) {
@@ -692,7 +678,6 @@ const IWineD3DSurfaceVtbl IWineGDISurface_Vtbl =
     IWineD3DBaseSurfaceImpl_BindTexture,
     IWineGDISurfaceImpl_SaveSnapshot,
     IWineD3DBaseSurfaceImpl_SetContainer,
-    IWineGDISurfaceImpl_SetGlTextureDesc,
     IWineGDISurfaceImpl_GetGlDesc,
     IWineD3DSurfaceImpl_GetData,
     IWineD3DBaseSurfaceImpl_SetFormat,

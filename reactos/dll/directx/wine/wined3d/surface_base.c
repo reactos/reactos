@@ -7,7 +7,7 @@
  * Copyright 2002-2003 Raphael Junqueira
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
- * Copyright 2006-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2006-2008 Stefan DÃ¶singer for CodeWeavers
  * Copyright 2007 Henri Verbeet
  * Copyright 2006-2007 Roderick Colenbrander
  *
@@ -1539,7 +1539,7 @@ IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface,
     }
 
     if ((This->Flags & SFLAG_LOCKED) ||
-         ((Src != NULL) && (Src->Flags & SFLAG_LOCKED)))
+            (Src->Flags & SFLAG_LOCKED))
     {
         WARN(" Surface is busy, returning DDERR_SURFACEBUSY\n");
         return WINEDDERR_SURFACEBUSY;

@@ -32,7 +32,7 @@ static HRESULT WINAPI IDirect3DVolumeTexture9Impl_QueryInterface(LPDIRECT3DVOLUM
     || IsEqualGUID(riid, &IID_IDirect3DResource9)
     || IsEqualGUID(riid, &IID_IDirect3DBaseTexture9)
     || IsEqualGUID(riid, &IID_IDirect3DVolumeTexture9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DVolumeTexture9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -59,7 +59,7 @@ static ULONG WINAPI IDirect3DVolumeTexture9Impl_Release(LPDIRECT3DVOLUMETEXTURE9
 
     if (ref == 0) {
         IWineD3DVolumeTexture_Destroy(This->wineD3DVolumeTexture, D3D9CB_DestroyVolume);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -269,7 +269,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateVolumeTexture(LPDIRECT3DDEVICE9EX if
         FIXME("(%p) call to IWineD3DDevice_CreateVolumeTexture failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppVolumeTexture = (LPDIRECT3DVOLUMETEXTURE9) object;
         TRACE("(%p) : Created volume texture %p\n", This, object);

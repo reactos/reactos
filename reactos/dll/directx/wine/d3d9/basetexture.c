@@ -31,7 +31,7 @@ static HRESULT WINAPI IDirect3DBaseTexture9Impl_QueryInterface(LPDIRECT3DBASETEX
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DResource9)
         || IsEqualGUID(riid, &IID_IDirect3DBaseTexture9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DBaseTexture9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }

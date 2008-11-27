@@ -30,7 +30,7 @@ static HRESULT WINAPI IDirect3DResource9Impl_QueryInterface(LPDIRECT3DRESOURCE9 
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DResource9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DResource9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }

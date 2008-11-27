@@ -3,12 +3,12 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = wined3d.dll
-IMPORTLIB = libwined3d.$(IMPLIBEXT)
-IMPORTS   = user32 gdi32 advapi32 kernel32
-EXTRALIBS = -luuid
+IMPORTLIB = wined3d
+IMPORTS   = uuid user32 gdi32 advapi32 kernel32
 
 C_SRCS = \
 	arb_program_shader.c \
+	ati_fragment_shader.c \
 	baseshader.c \
 	basetexture.c \
 	clipper.c \
@@ -19,6 +19,7 @@ C_SRCS = \
 	drawprim.c \
 	glsl_shader.c \
 	indexbuffer.c \
+	nvidia_texture_shader.c \
 	palette.c \
 	pixelshader.c \
 	query.c \
@@ -29,6 +30,8 @@ C_SRCS = \
 	surface.c \
 	surface_gdi.c \
 	swapchain.c \
+	swapchain_gdi.c \
+	swapchain_base.c \
 	texture.c \
 	utils.c \
 	vertexbuffer.c \

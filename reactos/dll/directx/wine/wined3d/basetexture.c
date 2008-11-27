@@ -4,7 +4,7 @@
  * Copyright 2002-2004 Jason Edmeades
  * Copyright 2002-2004 Raphael Junqueira
  * Copyright 2005 Oliver Stieber
- * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2007-2008 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
