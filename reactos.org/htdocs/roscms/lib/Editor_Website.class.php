@@ -143,7 +143,7 @@ class Editor_Website extends Editor
 
       // add new tag
       case 'addtag':
-        Tag::add(, $_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
+        Tag::add($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
         $this->showEntryDetails(self::METADATA);
         break;
 
@@ -323,7 +323,7 @@ class Editor_Website extends Editor
 
     if (Security::hasRight($this->data_id, 'write')) {
       echo_strip('
-        <button type="button" id="bsavedraft" onclick="'."edit_form_submit_draft(".$this->data_id.",".$this->rev_id.")".'">Save as Draft</button> &nbsp;
+        <button type="button" id="bsavedraft" onclick="'."saveAsDraft(".$this->data_id.",".$this->rev_id.")".'">Save as Draft</button> &nbsp;
         <input name="editautosavemode" type="hidden" value="true" />');
     }
     else {
@@ -356,7 +356,7 @@ class Editor_Website extends Editor
 
     if ($revisions_count <= 0) {
       echo_strip('
-        <span id="bshowdiff" class="frmeditbutton" onclick="'."diffentries3(".$this->rev_id.",".$this->rev_id.")".'>
+        <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea(".$this->rev_id.",".$this->rev_id.")".'>
         <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> (no related ');echo strtolower($roscms_standard_language_full).' entry, choose yourself)&nbsp;';
     }
     else {
@@ -401,7 +401,7 @@ class Editor_Website extends Editor
       }
 
       echo_strip('
-        <span id="bshowdiff" class="frmeditbutton" onclick="'."diffentries3('".$diff1."','".$diff2."')".'">
+        <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea('".$diff1."','".$diff2."')".'">
         <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> &nbsp;');
     }
 
@@ -433,7 +433,7 @@ class Editor_Website extends Editor
       echo '<strong>Single Entry</strong>';
     }
     else {
-      echo '<span class="detailmenu" onclick="'."changecreateinterface('single')".'">Single Entry</span>';
+      echo '<span class="detailmenu" onclick="'."changeNewEntryTab('single')".'">Single Entry</span>';
     }
     echo '&nbsp;|&nbsp;';
 
@@ -442,7 +442,7 @@ class Editor_Website extends Editor
       echo '<strong>Dynamic Entry</strong>';
     }
     else {
-      echo '<span class="detailmenu" onclick="'."changecreateinterface('dynamic')".'">Dynamic Entry</span>';
+      echo '<span class="detailmenu" onclick="'."changeNewEntryTab('dynamic')".'">Dynamic Entry</span>';
     }
     echo '&nbsp;|&nbsp;';
 
@@ -451,7 +451,7 @@ class Editor_Website extends Editor
       echo '<strong>Page &amp; Content</strong>';
     }
     else {
-      echo '<span class="detailmenu" onclick="'."changecreateinterface('template')".'">Page &amp; Content</span>';
+      echo '<span class="detailmenu" onclick="'."changeNewEntryTab('template')".'">Page &amp; Content</span>';
     }
 
     echo_strip('
@@ -531,7 +531,7 @@ class Editor_Website extends Editor
     echo_strip('
           <br />
           <br />
-          <button type="button" onclick="'."createentry('".$tmode."')".'">Create</button>
+          <button type="button" onclick="'."createNewEntry('".$tmode."')".'">Create</button>
         </div>
       </div>');
   }
@@ -558,7 +558,7 @@ class Editor_Website extends Editor
     echo_strip('
       <div style="padding-bottom: 3px;">
         <span class="frmeditheader">
-          <span onclick="'."bchangestar(".$revision['data_id'].",".$revision['rev_id'].",'star','addtagn', ".$thisuser->id().", 'editstar')".'" style="cursor: pointer;">
+          <span onclick="'."toggleBookmark(".$revision['data_id'].",".$revision['rev_id'].", ".$thisuser->id().", 'editstar')".'" style="cursor: pointer;">
            <img id="editstar" class="'.Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id()).'" src="images/star_'.Tag::getValueByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id()).'_small.gif" alt="" style="width:13px; height:13px; border:0px;" />
           </span>
           &nbsp;');
@@ -616,7 +616,7 @@ class Editor_Website extends Editor
       echo '<strong>Metadata</strong>';
     }
     else {
-      echo '<span class="detailmenu" onclick="'."bshowtag(".$this->data_id.",".$this->rev_id.",'a','b', '".$thisuser->id()."')".'">Metadata</span>';
+      echo '<span class="detailmenu" onclick="'."showEditorTabMetadata(".$this->data_id.",".$this->rev_id.",'a','b', '".$thisuser->id()."')".'">Metadata</span>';
     }
     echo '&nbsp;|&nbsp;';
 
@@ -625,7 +625,7 @@ class Editor_Website extends Editor
       echo '<strong>History</strong>';
     }
     else {
-      echo '<span class="detailmenu" onclick="'."bshowhistory(".$this->data_id.",".$this->rev_id.",'a','b', '".$thisuser->id()."')".'">History</span>';
+      echo '<span class="detailmenu" onclick="'."showEditorTabHistory(".$this->data_id.",".$this->rev_id.",'a','b', '".$thisuser->id()."')".'">History</span>';
     }
     echo '&nbsp;|&nbsp;';
 
@@ -654,7 +654,7 @@ class Editor_Website extends Editor
         echo '<strong>Revision</strong>';
       }
       else {
-        echo '<span class="detailmenu" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Revision</span>';
+        echo '<span class="detailmenu" onclick="'."showEditorTabRevisions(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Revision</span>';
       }
     }
 
@@ -667,7 +667,7 @@ class Editor_Website extends Editor
         echo '<strong>Security</strong>';
       }
       else {
-        echo '<span class="detailmenu" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Security</span>';
+        echo '<span class="detailmenu" onclick="'."showEditorTabSecurity(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Security</span>';
       }
     }
 
@@ -755,7 +755,7 @@ class Editor_Website extends Editor
         // allow someone to delete his metadata he set and the user-id > 0
       if (($thisuser->securityLevel() > 1 && $tag['tag_usrid'] == 0) || (Security::hasRight($this->data_id, 'add') && $tag['tag_usrid'] == -1) || ($tag['tag_usrid'] == $thisuser->id() && $tag['tag_usrid'] > 0)) {
         echo_strip('&nbsp;&nbsp;
-          <span class="frmeditbutton" onclick="'."bdeltag(".$this->data_id.",".$this->rev_id.",'".$tag['tag_id']."', '".$thisuser->id()."')".'">
+          <span class="frmeditbutton" onclick="'."delLabelOrTag(".$this->data_id.",".$this->rev_id.",'".$tag['tag_id']."', '".$thisuser->id()."')".'">
             <img src="images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
             &nbsp;Delete
           </span>');
@@ -771,7 +771,7 @@ class Editor_Website extends Editor
       <div class="frmeditheadline">Add Private Label</div>
       <label for="addtagn"><b>Tag:</b></label>&nbsp;
       <input type="text" id="addtagn" size="15" maxlength="100" value="" />&nbsp;
-      <button type="button" onclick="'."baddtag(".$this->data_id.",".$this->rev_id.",'tag','addtagn', '".$thisuser->id()."')".'">Add</button>
+      <button type="button" onclick="'."addLabelOrTag(".$this->data_id.",".$this->rev_id.",'tag','addtagn', '".$thisuser->id()."')".'">Add</button>
       <br />');
 
     if ($thisuser->securityLevel() > 1) {
@@ -782,11 +782,11 @@ class Editor_Website extends Editor
         <input type="text" id="addtags1" size="15" maxlength="100" value="" />&nbsp;
         <label for="addtags2" style="font-weight:bold">Value:</label>&nbsp;
         <input type="text" id="addtags2" size="15" maxlength="100" value="" /> &nbsp;
-        <button type="button" onclick="'."baddtag(".$this->data_id.",".$this->rev_id.",'addtags1','addtags2','0')".'">Add Label</button>&nbsp;');
+        <button type="button" onclick="'."addLabelOrTag(".$this->data_id.",".$this->rev_id.",'addtags1','addtags2','0')".'">Add Label</button>&nbsp;');
 
       // add new system tags
       if (Security::hasRight($this->data_id, 'add')) { 
-        echo '<button type="button" onclick="'."baddtag(".$this->data_id.",".$this->rev_id.",'addtags1','addtags2',-1)".'">Add Sys</button>';
+        echo '<button type="button" onclick="'."addLabelOrTag(".$this->data_id.",".$this->rev_id.",'addtags1','addtags2',-1)".'">Add Sys</button>';
       }
     }
     
@@ -936,8 +936,8 @@ class Editor_Website extends Editor
       <img src="images/attention.gif" width="22" height="22" /><br />
       <br />
       <br />
-      <button type="button" id="beditsavefields" onclick="'."editsavesecuritychanges('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
-      <button type="button" id="beditclear" onclick="'."bshowsecurity(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
+      <button type="button" id="beditsavefields" onclick="'."saveSecurityData('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
+      <button type="button" id="beditclear" onclick="'."showEditorTabSecurity(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
   }
 
 
@@ -974,7 +974,7 @@ class Editor_Website extends Editor
     echo_strip('
       <div id="editaddstext"></div>
       <span id="editaddstextcount" style="display: none;">'.$stext_num.'</span>
-      <span class="filterbutton" onclick="editaddshorttext()">
+      <span class="filterbutton" onclick="addShortTextField()">
         <img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
       </span>
       <br /><br /><br />
@@ -1000,11 +1000,11 @@ class Editor_Website extends Editor
     echo_strip('
       <div id="editaddtext"></div>
       <span id="editaddtextcount" style="display: none;">'.$text_num.'</span>
-      <span class="filterbutton" onclick="editaddtext()">
+      <span class="filterbutton" onclick="addTextField()">
         <img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
       </span>
       <br /><br /><br />
-      <button type="button" id="beditsavefields" onclick="'."editsavefieldchanges('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
+      <button type="button" id="beditsavefields" onclick="'."saveFieldData('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
       <button type="button" id="beditclear" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
   }
 
@@ -1055,8 +1055,8 @@ class Editor_Website extends Editor
       <img src="images/attention.gif" width="22" height="22" /><br />
       <br />
       <br />
-      <button type="button" id="beditsaveentry" onclick="editsaveentrychanges('.$this->data_id.','.$this->rev_id.')">Save Changes</button> &nbsp;
-      <button type="button" id="beditclear" onclick="'."bshowentry(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
+      <button type="button" id="beditsaveentry" onclick="saveRevisionData('.$this->data_id.','.$this->rev_id.')">Save Changes</button> &nbsp;
+      <button type="button" id="beditclear" onclick="'."showEditorTabRevisions(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
   }
 
 
@@ -1166,17 +1166,17 @@ class Editor_Website extends Editor
       <table width="100%" border="0">
         <tr>
           <td style="text-align:center;">
-            <select name="cbmdiff1" id="cbmdiff1" onchange="'."diffentries2(this.value, document.getElementById('cbmdiff2').value)".'">');
+            <select name="cbmdiff1" id="cbmdiff1" onchange="'."getDiffEntries(this.value, document.getElementById('cbmdiff2').value)".'">');
     // history
     $this->selectRevision($rev_id1, $dynamic_num);
     echo_strip('
             </select>
           </td>
           <td style="width:50px;text-align:center;">
-            <input type="submit" name="switchdiff" id="switchdiff" value="switch" onclick="'."diffentries2(document.getElementById('cbmdiff2').value, document.getElementById('cbmdiff1').value)".'" />
+            <input type="submit" name="switchdiff" id="switchdiff" value="switch" onclick="'."getDiffEntries(document.getElementById('cbmdiff2').value, document.getElementById('cbmdiff1').value)".'" />
           </td>
           <td style="text-align:center;">
-            <select name="cbmdiff2" id="cbmdiff2" onchange="diffentries2(document.getElementById(\'cbmdiff1\').value, this.value)">');
+            <select name="cbmdiff2" id="cbmdiff2" onchange="'."getDiffEntries(document.getElementById('cbmdiff1').value, this.value)".'">');
     // history
     $this->selectRevision($rev_id2,$dynamic_num);
     echo_strip('

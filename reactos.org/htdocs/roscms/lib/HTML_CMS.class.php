@@ -86,7 +86,7 @@ abstract class HTML_CMS extends HTML
         <strong>'.$thisuser->name().'</strong>
         '.(($security_level > 1) ? '| SecLev: '.$security_level.' ('. $group_list .')' : '').'
         |
-        <span onclick="pagerefresh()" style="color:#006090; cursor:pointer;">
+        <span onclick="refreshPage()" style="color:#006090; cursor:pointer;">
           <img src="images/reload.gif" alt="reload page" width="16" height="16" />
           <span style="text-decoration:underline;">reload</span>
         </span>  
@@ -97,7 +97,7 @@ abstract class HTML_CMS extends HTML
         <table id="mt" border="0" cellpadding="0" cellspacing="0" style="width:100%">
           <tbody>
             <tr>
-              <th class="int'.(($this->branch == 'welcome') ? '2' : '1').'" onclick="'."roscms_mainmenu('welcome')".'">
+              <th class="int'.(($this->branch == 'welcome') ? '2' : '1').'" onclick="'."loadBranch('welcome')".'">
                 <div class="tc1">
                   <div class="tc2">
                     <div class="tc3"></div>
@@ -107,7 +107,7 @@ abstract class HTML_CMS extends HTML
               </th>
               <td>&nbsp;&nbsp;</td>
 
-              <th class="int'.(($this->branch == 'website') ? '2' : '1').'" onclick="'."roscms_mainmenu('website')".'">
+              <th class="int'.(($this->branch == 'website') ? '2' : '1').'" onclick="'."loadBranch('website')".'">
                 <div class="tc1">
                   <div class="tc2">
                     <div class="tc3"></div>
@@ -119,7 +119,7 @@ abstract class HTML_CMS extends HTML
 
     if ($thisuser->isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
       echo_strip('
-        <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."roscms_mainmenu('user')".'">
+        <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."loadBranch('user')".'">
           <div class="tc1">
             <div class="tc2">
               <div class="tc3"></div>
@@ -132,7 +132,7 @@ abstract class HTML_CMS extends HTML
 
     if ($thisuser->securityLevel() == 3) {
       echo_strip('
-        <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."roscms_mainmenu('maintain')".'">
+        <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."loadBranch('maintain')".'">
           <div class="tc1">
             <div class="tc2">
               <div class="tc3"></div>
@@ -142,7 +142,7 @@ abstract class HTML_CMS extends HTML
         </th>
         <td>&nbsp;&nbsp;</td>
 
-        <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."roscms_mainmenu('stats')".'">
+        <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."loadBranch('stats')".'">
           <div class="tc1">
             <div class="tc2">
               <div class="tc3"></div>

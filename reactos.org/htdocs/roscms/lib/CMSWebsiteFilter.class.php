@@ -95,8 +95,8 @@ class CMSWebsiteFilter
     $stmt->execute();
     while ($filter = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo_strip('
-        <span style="cursor:pointer; text-decoration:underline;" onclick="'."tbl_user_filter('".$filter['filt_string']."', '".$type."', '".$filter['filt_title']."')".'">'.$filter['filt_title'].'</span>
-        <span style="cursor:pointer;" onclick="'."delete_user_filter('".$filter['filt_id']."', '".$type."', '".$filter['filt_title']."')".'">
+        <span style="cursor:pointer; text-decoration:underline;" onclick="'."selectUserFilter('".$filter['filt_string']."', '".$type."', '".$filter['filt_title']."')".'">'.$filter['filt_title'].'</span>
+        <span style="cursor:pointer;" onclick="'."deleteUserFilter('".$filter['filt_id']."', '".$type."', '".$filter['filt_title']."')".'">
           <img src="images/remove.gif" alt="-" style="width:11px; height:11px; border:0px;" />
         </span>
         <br />');
@@ -114,7 +114,7 @@ class CMSWebsiteFilter
 
     // echo add 'button'
     if ($type == 'label') {
-      echo '<div style="cursor: pointer; text-align:right;" onclick="'."add_user_filter('label', '')".'"  style="text-decoration:underline;">Add</div>';
+      echo '<div style="cursor: pointer; text-align:right;" onclick="'."addUserFilter('label', '')".'"  style="text-decoration:underline;">Add</div>';
     }
   } // end of member function manage
 

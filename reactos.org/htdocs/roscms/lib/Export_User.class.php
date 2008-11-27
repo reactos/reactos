@@ -194,7 +194,7 @@ class Export_User extends Export
               foreach ( $users as $user) {
                 echo_strip('
                   <li>
-                    <a href="'."javascript:getuserdetails('".$user['user_id']."')".'">'.$user['user_name'].'</a>
+                    <a href="'."javascript:getUserDetails('".$user['user_id']."')".'">'.$user['user_name'].'</a>
                     ('.$user['user_language'].', '.$user['user_fullname'].')
                   </li>');
               }
@@ -229,7 +229,7 @@ class Export_User extends Export
                 <p><strong>Registered:</strong> '.$user['user_register'].'</p>
                 <p>Account is '.($user['user_account_enabled']=='yes'?'enabled':'disabled').'
                   &nbsp;(
-                  <span class="frmeditbutton" onclick="'."setaccount(".$user_id.", '".($user['user_account_enabled']=='yes'?'disable':'enable')."')".'">&nbsp;'.($user['user_account_enabled']=='yes'?'disable':'enable').'</span> 
+                  <span class="frmeditbutton" onclick="'."setAccount(".$user_id.", '".($user['user_account_enabled']=='yes'?'disable':'enable')."')".'">&nbsp;'.($user['user_account_enabled']=='yes'?'disable':'enable').'</span> 
                   it)
                 </p>');
             }
@@ -247,7 +247,7 @@ class Export_User extends Export
               if ($thisuser->securityLevel() == 3) {
                 echo_strip('
                   &nbsp;
-                  <span class="frmeditbutton" onclick="'."delmembership(".$user_id.", '".$user['usrgroup_name_id']."')".'">
+                  <span class="frmeditbutton" onclick="'."delMembership(".$user_id.", '".$user['usrgroup_name_id']."')".'">
                     <img src="images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
                     &nbsp;Delete
                   </span>');
@@ -269,7 +269,7 @@ class Export_User extends Export
                 }
               }
               echo_strip('</select>
-                <input type="button" name="addmemb" id="addmemb" value="Add Membership" onclick="'."addmembership(".$user_id.", document.getElementById('cbmmemb').value)".'" />
+                <input type="button" name="addmemb" id="addmemb" value="Add Membership" onclick="'."getUserDetails(".$user_id.", document.getElementById('cbmmemb').value)".'" />
                 <br />
                 <br />
                 <select id="cbmusrlang" name="cbmusrlang">');
@@ -279,10 +279,10 @@ class Export_User extends Export
                 echo '<option value="'.$lang['lang_id'].'">'.$lang['lang_name'].'</option>';
               }
               echo_strip('</select>
-              <input type="button" name="addusrlang" id="addusrlang" value="Update User language" onclick="'."updateusrlang(".$user_id.", document.getElementById('cbmusrlang').value)".'" /><br />');
+              <input type="button" name="addusrlang" id="addusrlang" value="Update User language" onclick="'."updateUserLang(".$user_id.", document.getElementById('cbmusrlang').value)".'" /><br />');
             }
             elseif ($thisuser->isMemberOfGroup('transmaint')) {
-              echo_strip('<input type="button" name="addmemb" id="addmemb" value="Make this User a Translator" onclick="'."addmembership(".$user_id.", 'translator')".'" />
+              echo_strip('<input type="button" name="addmemb" id="addmemb" value="Make this User a Translator" onclick="'."getUserDetails(".$user_id.", 'translator')".'" />
                 <br />
                 <br />');
               $stmt=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
@@ -291,7 +291,7 @@ class Export_User extends Export
               $user_lang = $stmt->fetchColumn();
 
               if ($user_lang != '') {
-                echo '<input type="button" name="addusrlang" id="addusrlang" value="Switch User language to \''.$user_lang.'\'" onclick="'."updateusrlang(".$user_id.", '".$user_lang.")".'" /><br />';
+                echo '<input type="button" name="addusrlang" id="addusrlang" value="Switch User language to \''.$user_lang.'\'" onclick="'."updateUserLang(".$user_id.", '".$user_lang.")".'" /><br />';
               }
 
             }

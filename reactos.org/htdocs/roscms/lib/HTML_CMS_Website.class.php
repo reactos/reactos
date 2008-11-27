@@ -78,7 +78,7 @@ class HTML_CMS_Website extends HTML_CMS
         var roscms_intern_entry_per_page = 25;
 
         // editor preferences
-        var roscms_archive = 0;
+        var roscms_archive = false;
         var autosave_coundown = 100000; // 10000; 100000
         var autosave_val = '';
         var autosave_cache = '';
@@ -88,7 +88,6 @@ class HTML_CMS_Website extends HTML_CMS
         var submenu_button = '';
         var nres=1;
         var smenutabs = 12; // sync this value with the tab-menu entry-count !!!
-        markedrows = new Array(); //global
 
         //
         var filtstring1 = '';
@@ -149,7 +148,7 @@ class HTML_CMS_Website extends HTML_CMS
 
       <div class="roscms_container" style="border: 1px dashed white; z-index: 2;">
         <div class="tabmenu" style="position: absolute; top: 0px; width: 150px; left: 0px; border: 0px; z-index:1;">
-          <div id="smenutab1" class="submb" onclick="smenutab_open(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab1" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc1" class="subm2" style="font-weight: bold;">New Entry</div>
             </div>
@@ -160,60 +159,60 @@ class HTML_CMS_Website extends HTML_CMS
     }
 
     echo_strip('
-          <div id="smenutab2" class="subma" onclick="smenutab_open(this.id)">
+          <div id="smenutab2" class="subma" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc2" class="subm2"><b>New</b></div>
             </div>
           </div>
 
-          <div id="smenutab3" class="submb" onclick="smenutab_open(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab3" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc3" class="subm2">Page</div>
             </div>
           </div>
-          <div id="smenutab4" class="submb" onclick="smenutab_open(this.id)">
+          <div id="smenutab4" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc4" class="subm2">Content</div>
             </div>
           </div>
-          <div id="smenutab5" class="submb" onclick="smenutab_open(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab5" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc5" class="subm2">Template</div>
             </div>
           </div>
-          <div id="smenutab6" class="submb" onclick="smenutab_open(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab6" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc6" class="subm2">Script</div>
             </div>
           </div>
-          <div id="smenutab7" class="submb" onclick="smenutab_open(this.id)">
+          <div id="smenutab7" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc7" class="subm2">Translate</div>
             </div>
           </div>
-          <div id="smenutab8" class="submb" onclick="smenutab_open(this.id)">
+          <div id="smenutab8" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc8" class="subm2">All Entries</div>
             </div>
           </div>
           <div style="background: #FFFFFF none repeat scroll 0%;">&nbsp;</div>
 
-          <div id="smenutab9" class="submb" onclick="smenutab_open(this.id)">
+          <div id="smenutab9" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc9" class="subm2">Bookmark&nbsp;<img src="images/star_on_small.gif" alt="" style="width:13px; height:13px; border:0px;" /></div>
             </div>
           </div>
-          <div id="smenutab10" class="submb" onclick="smenutab_open(this.id)">
+          <div id="smenutab10" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc10" class="subm2">Drafts</div>
             </div>
           </div>
-          <div id="smenutab11" class="submb" onclick="smenutab_open(this.id)">
+          <div id="smenutab11" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc11" class="subm2">My Entries</div>
             </div>
           </div>
-          <div id="smenutab12" class="submb" onclick="smenutab_open(this.id)">
+          <div id="smenutab12" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc12" class="subm2">Archive</div>
             </div>
@@ -281,26 +280,20 @@ class HTML_CMS_Website extends HTML_CMS
                     <div class="bubble" id="bub">
                       <div id="frametable" style="border: 0px dashed white;">
                         <div class="filterbar">
-                          <input id="txtfind" type="text" accesskey="f" tabindex="1" title="Search &amp; Filters" onfocus="'."textbox_hint(this.id, this.value, 'Search &amp; Filters', 1)".'" onblur="'."textbox_hint(this.id, this.value, 'Search &amp; Filters', 0)".'" onkeyup="filtsearchbox()" value="Search &amp; Filters" size="39" maxlength="250" class="tfind" />&nbsp;
+                          <input id="txtfind" type="text" accesskey="f" tabindex="1" title="Search &amp; Filters" onfocus="'."searchFilter(this.id, this.value, 'Search &amp; Filters', true)".'" onblur="'."searchFilter(this.id, this.value, 'Search &amp; Filters', false)".'" onkeyup="getAllActiveFilters()" value="Search &amp; Filters" size="39" maxlength="250" class="tfind" />&nbsp;
                           <span id="filters" class="filterbutton" onclick="TabOpenClose(this.id)"><img id="filtersi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Filters</span>&nbsp;
                           <div id="filtersc" style="display:none;">
                             <div id="filtersct">&nbsp;</div>
                             <div id="filt2" class="filterbar2">
-                              <span class="filterbutton" onclick="filtadd()"><img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add</span>
-                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="filtentryclear2()"><img src="images/clear.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Clear</span>
-                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="'."add_user_filter('filter', filtstring2)".'"><img src="images/save.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Save</span>
-                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="filtsearch()"><img src="images/search.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Search</span>
+                              <span class="filterbutton" onclick="addFilter()"><img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add</span>
+                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="clearAllFilter()"><img src="images/clear.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Clear</span>
+                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="'."addUserFilter('filter', filtstring2)".'"><img src="images/save.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Save</span>
+                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="searchByFilters()"><img src="images/search.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Search</span>
                             </div>
-                          </div>');echo '
-                          <script type="text/javascript">
-                          <!--
-                            // add first filter entry (default)
-                            filtentryclear(); 
-                          -->
-                          </script>';echo_strip('
+                          </div>
                         </div>
                       <div style="border: 0px dashed red; position: absolute; top: 9px; right: 13px; text-align:right; white-space: nowrap;">
-                        <select name="favlangopt" id="favlangopt" style="vertical-align: top; width: 22ex;" onchange="setlang(this.value)">');
+                        <select name="favlangopt" id="favlangopt" style="vertical-align: top; width: 22ex;" onchange="setLang(this.value)">');
 
     $user_lang = ROSUser::getLanguage($thisuser->id(), true);
 

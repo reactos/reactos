@@ -63,9 +63,9 @@ class HTML_CMS_Maintain extends HTML_CMS
       <h2>Maintain</h2>
       <p><b>RosCMS Maintainer Interface</b></p>
       <br />
-      <p><a href="javascript:optimizedb()">Optimize Database Tables</a></p>
+      <p><a href="javascript:optimizeDB()">Optimize Database Tables</a></p>
       <br />
-      <p><a href="javascript:ppreview()">Page Preview</a></p>
+      <p><a href="javascript:previewPage()">Page Preview</a></p>
 
       <div>
         <label for="textfield">Entry-Name:</label>
@@ -88,10 +88,10 @@ class HTML_CMS_Maintain extends HTML_CMS
     echo_strip('
         </select>
         <input name="dynnbr" type="text" id="dynnbr" size="3" maxlength="5" />
-        <input name="entryupdate" type="button" value="generate" onclick="pupdate()" />
+        <input name="entryupdate" type="button" value="generate" onclick="generatePage()" />
       </div>
 
-      <p><a href="javascript:genpages()">Generate All Pages</a></p>
+      <p><a href="javascript:generateAllPages()">Generate All Pages</a></p>
       <div id="maintainarea" style="border: 1px dashed red;display:none;"></div>
       <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" />
       <br />');

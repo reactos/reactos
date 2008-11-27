@@ -76,12 +76,12 @@ class HTML_CMS_User extends HTML_CMS
 
     echo_strip('
       <div>
-        <label for="textfield">Username: </label><input type="text" name="textfield" id="textfield" onkeyup="getuser()" /><br />
-        <input name="searchopt" type="radio" id="searchopt1" value="accountname" checked="checked" onclick="getuser()" /><label>account name</label>
-        <input name="searchopt" type="radio" id="searchopt2" value="fullname" onclick="getuser()" /><label>full name </label>
-        <input name="searchopt" type="radio" id="searchopt3" value="email" onclick="getuser()" /><label>email address</label>
-        <input name="searchopt" type="radio" id="searchopt4" value="website" onclick="getuser()" /><label>website</label>
-        <input name="searchopt" type="radio" id="searchopt5" value="language" onclick="getuser()" /><label>language</label>
+        <label for="textfield">Username: </label><input type="text" name="textfield" id="textfield" onkeyup="getUser()" /><br />
+        <input name="searchopt" type="radio" id="searchopt1" value="accountname" checked="checked" onclick="getUser()" /><label>account name</label>
+        <input name="searchopt" type="radio" id="searchopt2" value="fullname" onclick="getUser()" /><label>full name </label>
+        <input name="searchopt" type="radio" id="searchopt3" value="email" onclick="getUser()" /><label>email address</label>
+        <input name="searchopt" type="radio" id="searchopt4" value="website" onclick="getUser()" /><label>website</label>
+        <input name="searchopt" type="radio" id="searchopt5" value="language" onclick="getUser()" /><label>language</label>
         <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" /><br />
         <br />
       </div>
