@@ -51,8 +51,10 @@ static void test_solidbrush(void)
         solidBrush = CreateSolidBrush(stock[i].color);
         
         if(stock[i].stockobj != -1) {
-            stockBrush = (HBRUSH)GetStockObject(stock[i].stockobj);
-            ok(stockBrush!=solidBrush, "Stock %s brush equals solid %s brush\n", stock[i].name, stock[i].name);
+            stockBrush = GetStockObject(stock[i].stockobj);
+            ok(stockBrush!=solidBrush ||
+               broken(stockBrush==solidBrush), /* win9x does return stock object */
+               "Stock %s brush equals solid %s brush\n", stock[i].name, stock[i].name);
         }
         else
             stockBrush = NULL;
@@ -70,7 +72,10 @@ static void test_solidbrush(void)
         }
 
         DeleteObject(solidBrush);
-        ok(GetObject(solidBrush, sizeof(br), &br)==0, "GetObject succeeded on a deleted %s brush\n", stock[i].name);
+        ret = GetObject(solidBrush, sizeof(br), &br);
+        ok(ret==0 ||
+           broken(ret!=0), /* win9x */
+           "GetObject succeeded on a deleted %s brush\n", stock[i].name);
     }
 }
  

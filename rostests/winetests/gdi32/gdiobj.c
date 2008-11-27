@@ -43,7 +43,7 @@ static void test_gdi_objects(void)
      */
     SetLastError(0);
     hp = SelectObject(NULL, GetStockObject(BLACK_PEN));
-    ok(!hp && GetLastError() == ERROR_INVALID_HANDLE,
+    ok(!hp && (GetLastError() == ERROR_INVALID_HANDLE || broken(!GetLastError())),
        "SelectObject(NULL DC) expected 0, ERROR_INVALID_HANDLE, got %p, %u\n",
        hp, GetLastError());
 
@@ -77,7 +77,7 @@ static void test_gdi_objects(void)
     /* GetObject does not SetLastError() on a null object */
     SetLastError(0);
     i = GetObjectA(NULL, sizeof(buff), buff);
-    ok (!i && !GetLastError(),
+    ok (!i && (GetLastError() == 0 || GetLastError() == ERROR_INVALID_PARAMETER),
         "GetObject(NULL obj), expected 0, NO_ERROR, got %d, %u\n",
 	i, GetLastError());
 
@@ -207,7 +207,7 @@ static void test_GetCurrentObject(void)
     hobj = GetCurrentObject(hdc, OBJ_PEN);
     ok(hobj == hpen, "OBJ_PEN is wrong: %p\n", hobj);
     hobj = GetCurrentObject(hdc, OBJ_EXTPEN);
-    ok(hobj == hpen, "OBJ_EXTPEN is wrong: %p\n", hobj);
+    ok(hobj == hpen || broken(hobj == 0) /* win9x */, "OBJ_EXTPEN is wrong: %p\n", hobj);
 
     hbrush = CreateSolidBrush(RGB(10, 20, 30));
     assert(hbrush != 0);
@@ -243,7 +243,7 @@ static void test_GetCurrentObject(void)
     hobj = GetCurrentObject(hdc, OBJ_PEN);
     ok(hobj == hpen, "OBJ_PEN is wrong: %p\n", hobj);
     hobj = GetCurrentObject(hdc, OBJ_EXTPEN);
-    ok(hobj == hpen, "OBJ_EXTPEN is wrong: %p\n", hobj);
+    ok(hobj == hpen || broken(hobj == 0) /* win9x */, "OBJ_EXTPEN is wrong: %p\n", hobj);
 
     hcs = GetColorSpace(hdc);
     if (hcs)
@@ -254,7 +254,7 @@ static void test_GetCurrentObject(void)
         ok(hcs != 0, "CreateColorSpace failed\n");
         SelectObject(hdc, hcs);
         hobj = GetCurrentObject(hdc, OBJ_COLORSPACE);
-        ok(hobj == hcs, "OBJ_COLORSPACE is wrong: %p\n", hobj);
+        ok(hobj == hcs || broken(hobj == 0) /* win9x */, "OBJ_COLORSPACE is wrong: %p\n", hobj);
     }
 
     hrgn = CreateRectRgn(1, 1, 100, 100);

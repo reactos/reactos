@@ -111,7 +111,9 @@ static void test_GetRandomRgn(void)
     GetRgnBox(hrgn, &ret_rc);
     if(GetVersion() & 0x80000000)
         OffsetRect(&window_rc, -window_rc.left, -window_rc.top);
-    ok(EqualRect(&window_rc, &ret_rc), "GetRandomRgn %d,%d - %d,%d\n",
+    ok(EqualRect(&window_rc, &ret_rc) ||
+       broken(IsRectEmpty(&ret_rc)), /* win95 */
+       "GetRandomRgn %d,%d - %d,%d\n",
        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom);
 
     DeleteObject(hrgn);

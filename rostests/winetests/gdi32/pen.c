@@ -29,6 +29,8 @@
 #include "wine/test.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
+#define expect2(expected, alt, got) ok(got == expected || got == alt, \
+                                       "Expected %.8x or %.8x, got %.8x\n", expected, alt, got)
 
 static void test_logpen(void)
 {
@@ -68,7 +70,7 @@ static void test_logpen(void)
 
     for (i = 0; i < sizeof(pen)/sizeof(pen[0]); i++)
     {
-        trace("testing style %u\n", pen[i].style);
+        trace("%d: testing style %u\n", i, pen[i].style);
 
         /********************** cosmetic pens **********************/
         /* CreatePenIndirect behaviour */
@@ -142,6 +144,7 @@ static void test_logpen(void)
         /* for some reason XP differentiates PS_NULL here */
         if (pen[i].style == PS_NULL)
         {
+            ok(hpen == GetStockObject(NULL_PEN), "hpen should be a stock NULL_PEN\n");
             ok(size == sizeof(EXTLOGPEN), "GetObject returned %d, error %d\n", size, GetLastError());
             ok(elp.elpPenStyle == pen[i].ret_style, "expected %u, got %u\n", pen[i].ret_style, elp.elpPenStyle);
             ok(elp.elpWidth == 0, "expected 0, got %u\n", elp.elpWidth);
@@ -204,7 +207,10 @@ static void test_logpen(void)
         obj_type = GetObjectType(hpen);
         /* for some reason XP differentiates PS_NULL here */
         if (pen[i].style == PS_NULL)
+        {
             ok(obj_type == OBJ_PEN, "wrong object type %u\n", obj_type);
+            ok(hpen == GetStockObject(NULL_PEN), "hpen should be a stock NULL_PEN\n");
+        }
         else
             ok(obj_type == OBJ_EXTPEN, "wrong object type %u\n", obj_type);
 
@@ -504,7 +510,7 @@ static void test_ps_userstyle(void)
 
     pen = ExtCreatePen(PS_GEOMETRIC | PS_USERSTYLE, 50, &lb, 0, style);
     ok(pen == 0, "ExtCreatePen should fail\n");
-    expect(0xdeadbeef, GetLastError());
+    expect2(0xdeadbeef, ERROR_INVALID_PARAMETER, GetLastError());
     DeleteObject(pen);
     SetLastError(0xdeadbeef);
 
