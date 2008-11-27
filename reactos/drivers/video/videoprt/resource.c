@@ -332,7 +332,7 @@ VideoPortMapBankedMemory(
 {
    TRACE_(VIDEOPRT, "VideoPortMapBankedMemory\n");
    UNIMPLEMENTED;
-   return ERROR_CALL_NOT_IMPLEMENTED;
+   return ERROR_INVALID_FUNCTION;
 }
 
 
@@ -437,7 +437,7 @@ VideoPortGetAccessRanges(
 
             if (ReturnedLength != sizeof(PCI_COMMON_CONFIG))
             {
-               return ERROR_NO_SYSTEM_RESOURCES;
+               return ERROR_NOT_ENOUGH_MEMORY;
             }
          }
          else
@@ -504,7 +504,7 @@ VideoPortGetAccessRanges(
          DeviceExtension->AllocatedResources = AllocatedResources;
       }
       if (AllocatedResources == NULL)
-         return ERROR_NO_SYSTEM_RESOURCES;
+         return ERROR_NOT_ENOUGH_MEMORY;
 
       AssignedCount = 0;
       for (FullList = AllocatedResources->List;
@@ -524,14 +524,14 @@ VideoPortGetAccessRanges(
                 AssignedCount >= NumAccessRanges)
             {
                WARN_(VIDEOPRT, "Too many access ranges found\n");
-               return ERROR_NO_SYSTEM_RESOURCES;
+               return ERROR_NOT_ENOUGH_MEMORY;
             }
             if (Descriptor->Type == CmResourceTypeMemory)
             {
                if (NumAccessRanges <= AssignedCount)
                {
                   WARN_(VIDEOPRT, "Too many access ranges found\n");
-                  return ERROR_NO_SYSTEM_RESOURCES;
+                  return ERROR_NOT_ENOUGH_MEMORY;
                }
                INFO_(VIDEOPRT, "Memory range starting at 0x%08x length 0x%08x\n",
                       Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
@@ -667,7 +667,7 @@ VideoPortGetDeviceData(
 {
    TRACE_(VIDEOPRT, "VideoPortGetDeviceData\n");
    UNIMPLEMENTED;
-   return ERROR_CALL_NOT_IMPLEMENTED;
+   return ERROR_INVALID_FUNCTION;
 }
 
 /*

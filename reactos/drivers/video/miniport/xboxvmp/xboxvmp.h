@@ -33,6 +33,7 @@
 #include <ntddk.h>
 #endif
 
+#include "dderror.h"
 #include "miniport.h"
 #include "ntddvdeo.h"
 #include "video.h"

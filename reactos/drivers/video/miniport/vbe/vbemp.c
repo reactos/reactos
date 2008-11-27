@@ -29,6 +29,11 @@
 
 #include "vbemp.h"
 
+#undef LOWORD
+#undef HIWORD
+#define LOWORD(l)	((USHORT)((ULONG_PTR)(l)))
+#define HIWORD(l)	((USHORT)(((ULONG_PTR)(l)>>16)&0xFFFF))
+
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
 VP_STATUS STDCALL
