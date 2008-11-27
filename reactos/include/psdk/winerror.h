@@ -267,7 +267,7 @@
 #define ERROR_INVALID_EA_NAME                              254
 #define ERROR_EA_LIST_INCONSISTENT                         255
 #ifndef WAIT_TIMEOUT /* also in winbase.h */
-#define WAIT_TIMEOUT 258L
+#define WAIT_TIMEOUT 258
 #endif
 #define ERROR_NO_MORE_ITEMS                                259
 #define ERROR_CANNOT_COPY                                  266
