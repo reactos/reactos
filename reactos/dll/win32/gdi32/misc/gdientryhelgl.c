@@ -1775,7 +1775,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     DWORD *pMasks;
 
     IWineD3D* pWineD3d;
-    //WINED3DCAPS WineCaps;
+    WINED3DCAPS WineCaps;
 
 
     /* Note : XP always alloc 24*sizeof(VIDEOMEMORY) of pvmlist so we change it to it */
@@ -1798,14 +1798,16 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     /* Get wined3d interface */
     pWineD3d = (IWineD3D*) GetDdHandle(pDirectDrawGlobal->hDD);
 
-    /* Get adapter res, we can use windows own api here */
-    //IWineD3D_GetAdapterDisplayMode( pWineD3d, D3DADAPTER_DEFAULT, &d3ddm);
+    /* Get adapter res, we can use windows own api here for we need getting the d3d support caps*/
+    IWineD3D_GetDeviceCaps(pWineD3d, 0, WINED3DDEVTYPE_HAL,(WINED3DCAPS *)&WineCaps);
+
     EnumDisplaySettingsW(NULL,ENUM_CURRENT_SETTINGS,&DevMode);
 
     /* Dectect RGB bit mask */
     hdc = GetDC(GetDesktopWindow());
     if (hdc == NULL)
     {
+        retVal = FALSE;
         goto cleanup;
     }
 
@@ -1813,6 +1815,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     if (hbmp==NULL)
     {
         DeleteDC(hdc);
+        retVal = FALSE;
         goto cleanup;
     }
 
@@ -1823,6 +1826,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     {
        DeleteDC(hdc);
        DeleteObject(hbmp);
+       retVal = FALSE;
        goto cleanup;
     }
 
@@ -1909,9 +1913,6 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pHalInfo->ddCaps.dwSize = sizeof(DDCORECAPS);
 
         // FIXME fill in with wined3d caps here */
-        // WINED3DCAPS WineCaps;
-        //pWineD3d->GetDeviceCaps(0,&WineCaps);
-        //IWineD3DDevice_GetDeviceCaps(This->WineD3DDevice, &WineCaps);
 
         /* Note wined3d seam not support in pHalInfo->ddCaps.dwCaps 
            DDCAPS_ALIGNBOUNDARYDEST, DDCAPS_ALIGNSIZEDEST, DDCAPS_ALIGNSTRIDE
@@ -2016,6 +2017,11 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             pHalInfo->lpdwFourCC = pdwFourCC;
         */
     }
+    else
+    {
+       retVal = FALSE;
+       goto cleanup;
+    }
 
     /* Now check if we got any DD callbacks */
     if (pDDCallbacks)
@@ -2032,6 +2038,11 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pDDCallbacks->WaitForVerticalBlank = DdWaitForVerticalBlank;
         pDDCallbacks->CanCreateSurface = DdCanCreateSurface;
         pDDCallbacks->GetScanLine = DdGetScanLine;
+    }
+    else
+    {
+       retVal = FALSE;
+       goto cleanup;
     }
 
 
@@ -2061,6 +2072,11 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pDDSurfaceCallbacks->SetOverlayPosition = DdSetOverlayPosition;
         pDDSurfaceCallbacks->AddAttachedSurface = DdAddAttachedSurface;
     }
+    else
+    {
+       retVal = FALSE;
+       goto cleanup;
+    }
 
 
     /* Check for DD Palette Callbacks, This interface are dead for user mode, 
@@ -2074,6 +2090,11 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Write the header */
         pDDPaletteCallbacks->dwSize = sizeof(DDHAL_DDPALETTECALLBACKS);
         pDDPaletteCallbacks->dwFlags = 0;
+    }
+    else
+    {
+       retVal = FALSE;
+       goto cleanup;
     }
 
     if (pD3dCallbacks)
@@ -2089,16 +2110,94 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         // FIXME pD3dCallbacks->ContextDestroy = (LPD3DHAL_CONTEXTDESTROYCB) NtGdiD3dContextDestroy;
         // FIXME pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
     }
+    else
+    {
+       retVal = FALSE;
+       goto cleanup;
+    }
 
 
     /* Check for D3D Driver Data */
     if (pD3dDriverData)
     {
-        /* Copy the struct */
-        //FIXME RtlMoveMemory(pD3dDriverData, &D3dDriverData, sizeof(D3DHAL_GLOBALDRIVERDATA));
+        /* Zero the struct */
+        RtlZeroMemory(pD3dDriverData, sizeof(D3DHAL_GLOBALDRIVERDATA));
+
+        /* Write the header */
+        pD3dDriverData->dwSize = sizeof(D3DHAL_GLOBALDRIVERDATA);
+        //pD3dDriverData->hwCaps.dwSize = sizeof(D3DHALDEVICEDESC); // FIXME
+
+        pD3dDriverData->hwCaps.dwFlags = D3DDD_TRICAPS | D3DDD_LINECAPS | D3DDD_DEVCAPS | D3DDD_LIGHTINGCAPS;
+        // MSDN D3DDD_BCLIPPING The bClipping member contains valid data. 
+        // MSDN D3DDD_COLORMODEL The dcmColorModel member contains valid data. 
+        // MSDN D3DDD_DEVICERENDERBITDEPTH The dwDeviceRenderBitDepth member contains valid data. 
+        // MSDN D3DDD_DEVICEZBUFFERBITDEPTH The dwDeviceZBufferBitDepth member contains valid data. 
+        // MSDN D3DDD_MAXBUFFERSIZE The dwMaxBufferSize member contains valid data. 
+        //MSDN D3DDD_MAXVERTEXCOUNT The dwMaxVertexCount member contains valid data. 
+
+
+        pD3dDriverData->hwCaps.dlcLightingCaps.dwSize = sizeof(D3DLIGHTINGCAPS);
+        pD3dDriverData->hwCaps.dlcLightingCaps.dwCaps = 0; // FIXME
+        pD3dDriverData->hwCaps.dlcLightingCaps.dwLightingModel = D3DLIGHTINGMODEL_RGB;
+        pD3dDriverData->hwCaps.dlcLightingCaps.dwNumLights = 0; // FIXME
+
+        /* FIXME ?
+        pD3dDriverData->hwCaps.bClipping
+        pD3dDriverData->hwCaps.dcmColorModel
+        pD3dDriverData->hwCaps.dlcLightingCaps
+        pD3dDriverData->hwCaps.dtcTransformCaps
+        pD3dDriverData->hwCaps.dwDeviceRenderBitDepth
+        pD3dDriverData->hwCaps.dwDeviceZBufferBitDepth
+        pD3dDriverData->hwCaps.dwMaxBufferSize
+        pD3dDriverData->hwCaps.dwMaxVertexCount =
+        */
+
+        /* Fill in the caps */
+        // pD3dDriverData->dwNumVertices = WineCaps.MaxVertexIndex; ??
+        //pD3dDriverData->dwNumClipVertices = WineCaps.MaxUserClipPlanes; // ?
+
+        pD3dDriverData->hwCaps.dwDevCaps = WineCaps.DevCaps;
+
+        pD3dDriverData->hwCaps.dpcLineCaps.dwSize = sizeof(D3DPRIMCAPS);
+        // pD3dDriverData->hwCaps.dpcLineCaps.dwMiscCaps = 
+        pD3dDriverData->hwCaps.dpcLineCaps.dwRasterCaps = WineCaps.RasterCaps;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwZCmpCaps = WineCaps.ZCmpCaps;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwSrcBlendCaps = WineCaps.SrcBlendCaps;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwDestBlendCaps = WineCaps.DestBlendCaps;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwAlphaCmpCaps = WineCaps.AlphaCmpCaps;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwShadeCaps = WineCaps.ShadeCaps;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwTextureCaps = WineCaps.TextureCaps;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwTextureFilterCaps = WineCaps.TextureFilterCaps;
+        // pD3dDriverData->hwCaps.dpcLineCaps.dwTextureBlendCaps  // ?
+        pD3dDriverData->hwCaps.dpcLineCaps.dwTextureAddressCaps = WineCaps.TextureAddressCaps;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwStippleWidth = 32;
+        pD3dDriverData->hwCaps.dpcLineCaps.dwStippleHeight = 32;
+
+         pD3dDriverData->hwCaps.dpcTriCaps.dwSize = sizeof(D3DPRIMCAPS);
+        // pD3dDriverData->hwCaps.dpcTriCaps.dwMiscCaps = 
+        pD3dDriverData->hwCaps.dpcTriCaps.dwRasterCaps = WineCaps.RasterCaps;
+        pD3dDriverData->hwCaps.dpcTriCaps.dwZCmpCaps = WineCaps.ZCmpCaps;
+        pD3dDriverData->hwCaps.dpcTriCaps.dwSrcBlendCaps = WineCaps.SrcBlendCaps;
+        pD3dDriverData->hwCaps.dpcTriCaps.dwDestBlendCaps = WineCaps.DestBlendCaps;
+        pD3dDriverData->hwCaps.dpcTriCaps.dwAlphaCmpCaps = WineCaps.AlphaCmpCaps;
+        pD3dDriverData->hwCaps.dpcTriCaps.dwShadeCaps = WineCaps.ShadeCaps;
+        pD3dDriverData->hwCaps.dpcTriCaps.dwTextureCaps = WineCaps.TextureCaps;
+        pD3dDriverData->hwCaps.dpcTriCaps.dwTextureFilterCaps = WineCaps.TextureFilterCaps;
+        // pD3dDriverData->hwCaps.dpcTriCaps.dwTextureBlendCaps  // ?
+        pD3dDriverData->hwCaps.dpcTriCaps.dwTextureAddressCaps = WineCaps.TextureAddressCaps;
+        pD3dDriverData->hwCaps.dpcTriCaps.dwStippleWidth = 32; // correct ?
+        pD3dDriverData->hwCaps.dpcTriCaps.dwStippleHeight = 32; // correct ?
+
+        /* FIXME  Fill in more caps */
 
         /* Write the pointer to the texture formats */
+        // pD3dDriverData->dwNumTextureFormats;
         //FIXME pD3dDriverData->lpTextureFormats = pD3dTextureFormats;
+    }
+    else
+    {
+       retVal = FALSE;
+       goto cleanup;
     }
 
 
@@ -2117,6 +2216,11 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pD3dBufferCallbacks->CreateExecuteBuffer = (LPDDHALEXEBUFCB_CREATEEXEBUF) DdCreateD3DBuffer;
         pD3dBufferCallbacks->LockExecuteBuffer = (LPDDHALEXEBUFCB_LOCKEXEBUF) DdLockD3D;
         pD3dBufferCallbacks->UnlockExecuteBuffer = (LPDDHALEXEBUFCB_UNLOCKEXEBUF) DdUnlockD3D;
+    }
+    else
+    {
+       retVal = FALSE;
+       goto cleanup;
     }
 
     /* FIXME VidMemList */
