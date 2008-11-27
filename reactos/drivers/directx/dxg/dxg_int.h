@@ -17,22 +17,23 @@
 #include <winerror.h>
 #include <wingdi.h>
 #include <winddi.h>
-#include <winuser.h>
 #include <prntfont.h>
 #include <dde.h>
-#include <wincon.h>
 
-/* Public Win32K Headers */
-#include <win32k/ntusrtyp.h>
-#include <win32k/ntuser.h>
-#include <win32k/ntgdityp.h>
-#include <win32k/ntgdihdl.h>
-#include <win32.h>
-#include <gdiobj.h>
-#include <dc.h>
+/* DXG treats this as opaque */
+typedef PVOID PDC;
+typedef PVOID PW32THREAD;
+
+typedef struct _DD_BASEOBJECT
+{
+  HGDIOBJ     hHmgr;
+  ULONG       ulShareCount;
+  USHORT      cExclusiveLock;
+  USHORT      BaseFlags;
+  PW32THREAD  Tid;
+} DD_BASEOBJECT, *PDD_BASEOBJECT;
 
 #include <drivers/directx/directxint.h>
-
 #include <drivers/directx/dxg.h>
 #include <drivers/directx/dxeng.h>
 
