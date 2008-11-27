@@ -89,28 +89,28 @@
 
 typedef struct _VIDEOPARAMETERS {
   GUID  Guid;
-  DWORD  dwOffset;
-  DWORD  dwCommand;
-  DWORD  dwFlags;
-  DWORD  dwMode;
-  DWORD  dwTVStandard;
-  DWORD  dwAvailableModes;
-  DWORD  dwAvailableTVStandard;
-  DWORD  dwFlickerFilter;
-  DWORD  dwOverScanX;
-  DWORD  dwOverScanY;
-  DWORD  dwMaxUnscaledX;
-  DWORD  dwMaxUnscaledY;
-  DWORD  dwPositionX;
-  DWORD  dwPositionY;
-  DWORD  dwBrightness;
-  DWORD  dwContrast;
-  DWORD  dwCPType;
-  DWORD  dwCPCommand;
-  DWORD  dwCPStandard;
-  DWORD  dwCPKey;
-  BYTE  bCP_APSTriggerBits;
-  BYTE  bOEMCopyProtection[256];
+  ULONG  dwOffset;
+  ULONG  dwCommand;
+  ULONG  dwFlags;
+  ULONG  dwMode;
+  ULONG  dwTVStandard;
+  ULONG  dwAvailableModes;
+  ULONG  dwAvailableTVStandard;
+  ULONG  dwFlickerFilter;
+  ULONG  dwOverScanX;
+  ULONG  dwOverScanY;
+  ULONG  dwMaxUnscaledX;
+  ULONG  dwMaxUnscaledY;
+  ULONG  dwPositionX;
+  ULONG  dwPositionY;
+  ULONG  dwBrightness;
+  ULONG  dwContrast;
+  ULONG  dwCPType;
+  ULONG  dwCPCommand;
+  ULONG  dwCPStandard;
+  ULONG  dwCPKey;
+  ULONG  bCP_APSTriggerBits;
+  UCHAR  bOEMCopyProtection[256];
 } VIDEOPARAMETERS, *PVIDEOPARAMETERS, FAR *LPVIDEOPARAMETERS;
 
 
