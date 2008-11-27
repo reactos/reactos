@@ -166,14 +166,14 @@ VOID FreeAdapter(
 NTSTATUS TcpipLanGetDwordOid
 ( PIP_INTERFACE Interface,
   NDIS_OID Oid,
-  PDWORD Result ) {
+  PULONG Result ) {
     /* Get maximum frame size */
     if( Interface->Context ) {
         return NDISCall((PLAN_ADAPTER)Interface->Context,
                         NdisRequestQueryInformation,
                         Oid,
                         Result,
-                        sizeof(DWORD));
+                        sizeof(ULONG));
     } else switch( Oid ) { /* Loopback Case */
     case OID_GEN_HARDWARE_STATUS:
         *Result = NdisHardwareStatusReady;
@@ -782,7 +782,7 @@ static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
 
 NTSTATUS NTAPI AppendUnicodeString(PUNICODE_STRING ResultFirst,
 				   PUNICODE_STRING Second,
-				   BOOL Deallocate) {
+				   BOOLEAN Deallocate) {
     NTSTATUS Status;
     UNICODE_STRING Ustr = *ResultFirst;
     PWSTR new_string = ExAllocatePoolWithTag

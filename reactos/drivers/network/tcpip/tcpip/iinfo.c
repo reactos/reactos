@@ -83,8 +83,8 @@ TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID *ID,
 				      PNDIS_BUFFER Buffer,
 				      PUINT BufferSize) {
     NTSTATUS Status;
-    DWORD NumNeighbors = NBCopyNeighbors( Interface, NULL );
-    DWORD MemSize = NumNeighbors * sizeof(IPARP_ENTRY);
+    ULONG NumNeighbors = NBCopyNeighbors( Interface, NULL );
+    ULONG MemSize = NumNeighbors * sizeof(IPARP_ENTRY);
     PIPARP_ENTRY ArpEntries =
 	ExAllocatePoolWithTag
 	( NonPagedPool, MemSize, FOURCC('A','R','P','t') );
@@ -104,7 +104,7 @@ TDI_STATUS InfoTdiQueryGetArpCapability(TDIEntityID *ID,
 					PNDIS_BUFFER Buffer,
 					PUINT BufferSize) {
     NTSTATUS Status;
-    DWORD Capability = 0x280;
+    ULONG Capability = 0x280;
 
     TI_DbgPrint(MID_TRACE,("Copying out %d bytes (AT_ENTITY capability)\n",
 			   sizeof(Capability)));

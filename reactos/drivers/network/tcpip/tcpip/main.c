@@ -387,7 +387,7 @@ TiDispatchInternal(
  */
 {
   NTSTATUS Status;
-  BOOL Complete = TRUE;
+  BOOLEAN Complete = TRUE;
   PIO_STACK_LOCATION IrpSp;
 
   RIRP(Irp);
@@ -912,11 +912,11 @@ DriverEntry(
 
 VOID NTAPI
 IPAddInterface(
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4)
+	ULONG   Unknown0,
+	ULONG   Unknown1,
+	ULONG   Unknown2,
+	ULONG   Unknown3,
+	ULONG   Unknown4)
 {
     UNIMPLEMENTED
 }
@@ -924,7 +924,7 @@ IPAddInterface(
 
 VOID NTAPI
 IPDelInterface(
-	DWORD	Unknown0)
+	ULONG   Unknown0)
 {
     UNIMPLEMENTED
 }
@@ -932,8 +932,8 @@ IPDelInterface(
 
 VOID NTAPI
 LookupRoute(
-	DWORD	Unknown0,
-	DWORD	Unknown1)
+	ULONG   Unknown0,
+	ULONG   Unknown1)
 {
     UNIMPLEMENTED
 }

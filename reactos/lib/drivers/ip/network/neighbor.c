@@ -64,7 +64,7 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
 
 /* Must be called with table lock acquired */
 VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
-			 BOOL CallComplete,
+			 BOOLEAN CallComplete,
 			 NTSTATUS ErrorCode ) {
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;

@@ -103,10 +103,10 @@ TdiMapUserRequest (
 VOID
 STDCALL
 TdiOpenNetbiosAddress (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	ULONG   Unknown0,
+	ULONG   Unknown1,
+	ULONG   Unknown2,
+	ULONG   Unknown3
 	)
 {
 }
