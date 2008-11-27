@@ -209,8 +209,23 @@ PEN_GetObject(PGDIBRUSHOBJ pPenObject, INT cbCount, PLOGPEN pBuffer)
    PLOGPEN pLogPen;
    PEXTLOGPEN pExtLogPen;
    INT cbRetCount;
+   BOOLEAN isOldPen;
 
-   if (pPenObject->flAttrs & GDIBRUSH_IS_OLDSTYLEPEN)
+   isOldPen = (pPenObject->flAttrs & GDIBRUSH_IS_OLDSTYLEPEN) > 0;
+   if ((pPenObject->ulPenStyle & PS_STYLE_MASK) == PS_NULL)
+   {
+      /* PS_NULL can be retrieved as LOGPEN or as EXTLOGPEN */
+      if (cbCount == sizeof(LOGPEN))
+      {
+         isOldPen = TRUE;
+      }
+      else if (cbCount == sizeof(EXTLOGPEN))
+      {
+         isOldPen = FALSE;
+      }
+   }
+
+   if (isOldPen)
    {
       cbRetCount = sizeof(LOGPEN);
       if (pBuffer)
