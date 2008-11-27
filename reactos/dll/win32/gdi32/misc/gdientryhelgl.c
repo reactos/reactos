@@ -1834,6 +1834,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     GetDIBits(hdc, hbmp, 0, 0, NULL, pbmi, 0);
     DeleteObject(hbmp);
     pMasks = (DWORD*)(pbmiData + sizeof(BITMAPINFOHEADER));
+    DeleteDC(hdc);
     /* End dectect RGB bit mask */
 
     if (pHalInfo)
@@ -1903,8 +1904,32 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
         // FIXME pHalInfo->ddCaps DDCORECAPS
 
+        RtlZeroMemory(&pHalInfo->ddCaps, sizeof(DDCORECAPS));
+        pHalInfo->ddCaps.dwSize = sizeof(DDCORECAPS);
+
+        // FIXME fill in with wined3d caps here */
+        // WINED3DCAPS WineCaps;
+        //pWineD3d->GetDeviceCaps(0,&WineCaps);
+
+        /* example value and member that need be fill in */
+        // pHalInfo->ddCaps.dwCaps                  : 0x94427bc1
+        // pHalInfo->ddCaps.dwCaps2                 : 0x004afe78
+        // pHalInfo->ddCaps.dwCKeyCaps              : 0x0003a311
+        // pHalInfo->ddCaps.dwFXCaps                : 0x27f95420
+        // pHalInfo->ddCaps.dwMaxVisibleOverlays    : 0x00000001
+        // pHalInfo->ddCaps.dwNumFourCCCodes        : 0x0000001c
+        // pHalInfo->ddCaps.ddsCaps.dwCaps          : 0x30c272fc
+        // pHalInfo->ddCaps.dwMinOverlayStretch     : 0x00000020
+        // pHalInfo->ddCaps.dwMaxOverlayStretch     : 0x0007d000
+        // pHalInfo->ddCaps.dwMinLiveVideoStretch   : 0x00000020
+        // pHalInfo->ddCaps.dwMaxLiveVideoStretch   : 0x00003e80
+        // pHalInfo->ddCaps.dwMinHwCodecStretch     : 0x00000020
+        // pHalInfo->ddCaps.dwMaxHwCodecStretch     : 0x00003e80
+        // pHalInfo->ddCaps.dwSVBCaps               : 0x80000040
+
         /* always force rope 0x1000 for hal it mean only source copy is supported */
         pHalInfo->ddCaps.dwRops[6] = 0x1000;
+        
 
         pHalInfo->GetDriverInfo = (LPDDHAL_GETDRIVERINFO) DdGetDriverInfo;
 
