@@ -424,7 +424,7 @@ void FileChildWindow::resize_children(int cx, int cy)
 		hdl.prc   = &rt;
 		hdl.pwpos = &wp;
 
-		Header_Layout(_left->_hwndHeader, &hdl);
+		(void)Header_Layout(_left->_hwndHeader, &hdl);
 
 		hdwp = DeferWindowPos(hdwp, _left->_hwndHeader, wp.hwndInsertAfter,
 							wp.x-1, wp.y, _split_pos-SPLIT_WIDTH/2+1, wp.cy, wp.flags);

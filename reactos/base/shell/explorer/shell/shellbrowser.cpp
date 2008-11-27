@@ -161,7 +161,7 @@ void ShellBrowser::InitializeTree()
 	CONTEXT("ShellBrowserChild::InitializeTree()");
 
 	_himl_old = TreeView_SetImageList(_left_hwnd, _himl, TVSIL_NORMAL);
-	TreeView_SetScrollTime(_left_hwnd, 100);
+	(void)TreeView_SetScrollTime(_left_hwnd, 100);
 
 	TV_INSERTSTRUCT tvInsert;
 	TV_ITEM& tvItem = tvInsert.item;
@@ -176,8 +176,8 @@ void ShellBrowser::InitializeTree()
 	tvItem.cChildren = 1;
 
 	HTREEITEM hItem = TreeView_InsertItem(_left_hwnd, &tvInsert);
-	TreeView_SelectItem(_left_hwnd, hItem);
-	TreeView_Expand(_left_hwnd, hItem, TVE_EXPAND);
+	(void)TreeView_SelectItem(_left_hwnd, hItem);
+	(void)TreeView_Expand(_left_hwnd, hItem, TVE_EXPAND);
 }
 
 bool ShellBrowser::InitDragDrop()
@@ -273,7 +273,7 @@ void ShellBrowser::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 	CONTEXT("ShellBrowser::OnTreeItemExpanding()");
 
 	if (pnmtv->action == TVE_COLLAPSE)
-        TreeView_Expand(_left_hwnd, pnmtv->itemNew.hItem, TVE_COLLAPSE|TVE_COLLAPSERESET);
+        (void)TreeView_Expand(_left_hwnd, pnmtv->itemNew.hItem, TVE_COLLAPSE|TVE_COLLAPSERESET);
     else if (pnmtv->action == TVE_EXPAND) {
 		ShellDirectory* entry = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, pnmtv->itemNew.hItem);
 
@@ -288,7 +288,7 @@ void ShellBrowser::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 				tvItem.hItem = pnmtv->itemNew.hItem;
 				tvItem.cChildren = 0;
 
-				TreeView_SetItem(_left_hwnd, &tvItem);
+				(void)TreeView_SetItem(_left_hwnd, &tvItem);
 			}
 	}
 }
@@ -316,7 +316,7 @@ int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFold
 
 	while((hchild=hnext) != 0) {
 		hnext = TreeView_GetNextSibling(_left_hwnd, hchild);
-		TreeView_DeleteItem(_left_hwnd, hchild);
+		(void)TreeView_DeleteItem(_left_hwnd, hchild);
 	}
 
 	TV_ITEM tvItem;
@@ -531,7 +531,7 @@ HTREEITEM ShellBrowser::select_entry(HTREEITEM hitem, Entry* entry, bool expand)
 		if ((Entry*)TreeView_GetItemData(_left_hwnd,hitem) == entry) {
 			if (TreeView_SelectItem(_left_hwnd, hitem)) {
 				if (expand)
-					TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND);
+					(void)TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND);
 
 				return hitem;
 			}

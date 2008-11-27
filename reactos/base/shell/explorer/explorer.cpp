@@ -1130,9 +1130,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	if (_tcsstr(ext_options,TEXT("-console"))) {
 		AllocConsole();
 
-		_dup2(_open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_RDONLY), 0);
-		_dup2(_open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), 0), 1);
-		_dup2(_open_osfhandle((long)GetStdHandle(STD_ERROR_HANDLE), 0), 2);
+		_dup2(_open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_RDONLY), 0);
+		_dup2(_open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), 0), 1);
+		_dup2(_open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), 0), 2);
 
 		g_Globals._log = _fdopen(1, "w");
 		setvbuf(g_Globals._log, 0, _IONBF, 0);
@@ -1179,7 +1179,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	if (use_gdb_stub) {
 		LOG(TEXT("waiting for debugger connection...\n"));
 
+#ifdef __i386__
 		initialize_gdb_stub();
+#endif
 	}
 
 	g_Globals.init(hInstance);

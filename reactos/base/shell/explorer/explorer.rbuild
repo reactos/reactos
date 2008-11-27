@@ -62,7 +62,9 @@
 		<file>xs-native.cpp</file>
 	</directory>
 	<file>explorer.cpp</file>
-	<file>i386-stub-win32.c</file>
+	<if property="ARCH" value="i386">
+		<file>i386-stub-win32.c</file>
+	</if>
 	<file>explorer.rc</file>
 </module>
 <installfile installbase=".">explorer-cfg-template.xml</installfile>

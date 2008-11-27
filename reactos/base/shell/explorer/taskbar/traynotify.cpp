@@ -966,7 +966,7 @@ void TrayNotifyDlg::Refresh()
 
 	HiddenWindow hide(_tree_ctrl);
 
-	TreeView_DeleteAllItems(_tree_ctrl);
+	(void)TreeView_DeleteAllItems(_tree_ctrl);
 
 	TV_INSERTSTRUCT tvi;
 
@@ -1040,12 +1040,12 @@ void TrayNotifyDlg::Refresh()
 		CheckDlgButton(_hwnd, ID_SHOW_HIDDEN_ICONS, _pNotifyArea->_show_hidden? BST_CHECKED: BST_UNCHECKED);
 	}
 
-	TreeView_Expand(_tree_ctrl, _hitemCurrent_visible, TVE_EXPAND);
-	TreeView_Expand(_tree_ctrl, _hitemCurrent_hidden, TVE_EXPAND);
-	TreeView_Expand(_tree_ctrl, _hitemCurrent, TVE_EXPAND);
-	TreeView_Expand(_tree_ctrl, _hitemConfig, TVE_EXPAND);
+	(void)TreeView_Expand(_tree_ctrl, _hitemCurrent_visible, TVE_EXPAND);
+	(void)TreeView_Expand(_tree_ctrl, _hitemCurrent_hidden, TVE_EXPAND);
+	(void)TreeView_Expand(_tree_ctrl, _hitemCurrent, TVE_EXPAND);
+	(void)TreeView_Expand(_tree_ctrl, _hitemConfig, TVE_EXPAND);
 
-	TreeView_EnsureVisible(_tree_ctrl, _hitemCurrent_visible);
+	(void)TreeView_EnsureVisible(_tree_ctrl, _hitemCurrent_visible);
 }
 
 void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyInfo& entry, HDC hdc)

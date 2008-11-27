@@ -144,7 +144,7 @@ bool Pane::create_header(HWND hparent, int id)
 		hdi.pszText = g_pos_names[idx];
 		hdi.fmt = HDF_STRING | g_pos_align[idx];
 		hdi.cxy = _widths[idx];
-		Header_InsertItem(hwnd, idx, &hdi);
+		(void)Header_InsertItem(hwnd, idx, &hdi);
 	}
 
 	_hwndHeader = hwnd;
@@ -704,18 +704,18 @@ void Pane::set_header()
 
 	for(; x+_widths[i]<scroll_pos && i<COLUMNS; i++) {
 		x += _widths[i];
-		Header_SetItem(_hwndHeader, i, &item);
+		(void)Header_SetItem(_hwndHeader, i, &item);
 	}
 
 	if (i < COLUMNS) {
 		x += _widths[i];
 		item.cxy = x - scroll_pos;
-		Header_SetItem(_hwndHeader, i++, &item);
+		(void)Header_SetItem(_hwndHeader, i++, &item);
 
 		for(; i<COLUMNS; i++) {
 			item.cxy = _widths[i];
 			x += _widths[i];
-			Header_SetItem(_hwndHeader, i, &item);
+			(void)Header_SetItem(_hwndHeader, i, &item);
 		}
 	}
 }
@@ -779,7 +779,7 @@ void Pane::calc_single_width(int col)
 		x += _widths[col];
 	}
 
-	ListBox_SetHorizontalExtent(_hwnd, x);
+	(void)ListBox_SetHorizontalExtent(_hwnd, x);
 }
 
 
@@ -796,7 +796,7 @@ int Pane::Notify(int id, NMHDR* pnmh)
 			ClientRect clnt(_hwnd);
 
 			 // move immediate to simulate HDS_FULLDRAG (for now [04/2000] not realy needed with WINELIB)
-			Header_SetItem(_hwndHeader, idx, phdn->pitem);
+			(void)Header_SetItem(_hwndHeader, idx, phdn->pitem);
 
 			_widths[idx] += dx;
 
@@ -845,7 +845,7 @@ int Pane::Notify(int id, NMHDR* pnmh)
 			item.mask = HDI_WIDTH;
 			item.cxy = _widths[phdn->iItem];
 
-			Header_SetItem(_hwndHeader, phdn->iItem, &item);
+			(void)Header_SetItem(_hwndHeader, phdn->iItem, &item);
 			InvalidateRect(_hwnd, 0, TRUE);
 			break;}
 

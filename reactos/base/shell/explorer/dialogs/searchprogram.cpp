@@ -111,19 +111,19 @@ FindProgramDlg::FindProgramDlg(HWND hwnd)
 
 	LoadString(g_Globals._hInstance, IDS_NAMECOLUMN, szTemp, nChars);
 	column.pszText = szTemp;
-	ListView_InsertColumn(_list_ctrl, 0, &column);
+	(void)ListView_InsertColumn(_list_ctrl, 0, &column);
 
 	column.cx = 300;
 	LoadString(g_Globals._hInstance, IDS_PATHCOLUMN, szTemp, nChars);
 	column.pszText = szTemp;
-	ListView_InsertColumn(_list_ctrl, 1, &column);
+	(void)ListView_InsertColumn(_list_ctrl, 1, &column);
 
 	column.cx = 400;
 	LoadString(g_Globals._hInstance, IDS_MENUCOLUMN, szTemp, nChars);
 	column.pszText = szTemp;
-	ListView_InsertColumn(_list_ctrl, 2, &column);
+	(void)ListView_InsertColumn(_list_ctrl, 2, &column);
 
-	ListView_SetExtendedListViewStyleEx(_list_ctrl, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
+	(void)ListView_SetExtendedListViewStyleEx(_list_ctrl, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 
 	_common_programs = SpecialFolderFSPath(CSIDL_COMMON_PROGRAMS, hwnd);
 	if (!_common_programs.empty())
@@ -161,7 +161,7 @@ void FindProgramDlg::Refresh(bool delete_cache)
 
 	HiddenWindow hide_listctrl(_list_ctrl);
 
-	ListView_DeleteAllItems(_list_ctrl);
+	(void)ListView_DeleteAllItems(_list_ctrl);
 
 	if (delete_cache || !_thread._cache_valid) {
 		_thread.free_dirs();
@@ -254,11 +254,11 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 
 	item.iSubItem = 1;
 	item.pszText = (LPTSTR)(LPCTSTR)cache_entry._path;
-	ListView_SetItem(_list_ctrl, &item);
+	(void)ListView_SetItem(_list_ctrl, &item);
 
 	item.iSubItem = 2;
 	item.pszText = (LPTSTR)(LPCTSTR)cache_entry._menu_path;
-	ListView_SetItem(_list_ctrl, &item);
+	(void)ListView_SetItem(_list_ctrl, &item);
 }
 
 LRESULT FindProgramDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)

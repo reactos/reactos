@@ -1289,11 +1289,11 @@ void ListSort::sort()
 	int idx = ListView_GetSelectionMark(_hwnd);
 	LPARAM param = ListView_GetItemData(_hwnd, idx);
 
-	ListView_SortItems(_hwnd, _compare_fct, (LPARAM)this);
+	(void)ListView_SortItems(_hwnd, _compare_fct, (LPARAM)this);
 
 	if (idx >= 0) {
 		idx = ListView_FindItemPara(_hwnd, param);
-		ListView_EnsureVisible(_hwnd, idx, FALSE);
+		(void)ListView_EnsureVisible(_hwnd, idx, FALSE);
 	}
 }
 

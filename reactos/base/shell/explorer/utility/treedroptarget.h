@@ -50,7 +50,7 @@ public:
 			GlobalUnlock(medium.hGlobal);
 		}
 
-		TreeView_SelectDropTarget(m_hTargetWnd, NULL);
+		(void)TreeView_SelectDropTarget(m_hTargetWnd, NULL);
 
 		return true; //let base free the medium
 	}
@@ -67,14 +67,14 @@ public:
 		HTREEITEM hItem = TreeView_HitTest(m_hTargetWnd,&hit);
 
 		if (hItem != NULL)
-			TreeView_SelectDropTarget(m_hTargetWnd, hItem);
+			(void)TreeView_SelectDropTarget(m_hTargetWnd, hItem);
 
 		return IDropTargetImpl::DragOver(grfKeyState, pt, pdwEffect);
 	}
 
 	virtual HRESULT STDMETHODCALLTYPE DragLeave(void)
 	{
-		TreeView_SelectDropTarget(m_hTargetWnd, NULL);
+		(void)TreeView_SelectDropTarget(m_hTargetWnd, NULL);
 
 		return IDropTargetImpl::DragLeave();
 	}
