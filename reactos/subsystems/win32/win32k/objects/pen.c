@@ -209,32 +209,34 @@ PEN_GetObject(PGDIBRUSHOBJ pPenObject, INT cbCount, PLOGPEN pBuffer)
    PLOGPEN pLogPen;
    PEXTLOGPEN pExtLogPen;
    INT cbRetCount;
-   BOOLEAN isOldPen;
 
-   isOldPen = (pPenObject->flAttrs & GDIBRUSH_IS_OLDSTYLEPEN) > 0;
-   if ((pPenObject->ulPenStyle & PS_STYLE_MASK) == PS_NULL)
-   {
-      /* PS_NULL can be retrieved as LOGPEN or as EXTLOGPEN */
-      if (cbCount == sizeof(LOGPEN))
-      {
-         isOldPen = TRUE;
-      }
-      else if (cbCount == sizeof(EXTLOGPEN))
-      {
-         isOldPen = FALSE;
-      }
-   }
-
-   if (isOldPen)
+   if (pPenObject->flAttrs & GDIBRUSH_IS_OLDSTYLEPEN)
    {
       cbRetCount = sizeof(LOGPEN);
       if (pBuffer)
       {
+
          if (cbCount < cbRetCount) return 0;
-         pLogPen = (PLOGPEN)pBuffer;
-         pLogPen->lopnWidth = pPenObject->ptPenWidth;
-         pLogPen->lopnStyle = pPenObject->ulPenStyle;
-         pLogPen->lopnColor = pPenObject->BrushAttr.lbColor;
+
+         if ( (pPenObject->ulPenStyle & PS_STYLE_MASK) == PS_NULL && 
+               cbCount == sizeof(EXTLOGPEN))
+         {
+            pExtLogPen = (PEXTLOGPEN)pBuffer; 
+            pExtLogPen->elpPenStyle = pPenObject->ulPenStyle;
+            pExtLogPen->elpWidth = 0;
+            pExtLogPen->elpBrushStyle = pPenObject->ulStyle;
+            pExtLogPen->elpColor = pPenObject->BrushAttr.lbColor;
+            pExtLogPen->elpHatch = 0;
+            pExtLogPen->elpNumEntries = 0;
+            cbRetCount = sizeof(EXTLOGPEN);
+         }
+         else
+         {
+            pLogPen = (PLOGPEN)pBuffer;
+            pLogPen->lopnWidth = pPenObject->ptPenWidth;
+            pLogPen->lopnStyle = pPenObject->ulPenStyle;
+            pLogPen->lopnColor = pPenObject->BrushAttr.lbColor;
+         }
       }
    }
    else

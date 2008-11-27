@@ -120,9 +120,9 @@ IntCreateStockPen( DWORD dwPenStyle,
   HPEN hPen;
   PGDIBRUSHOBJ PenObject = PENOBJ_AllocPenWithHandle();
 
-  if ((!dwWidth) && (dwPenStyle & PS_STYLE_MASK) != PS_SOLID) dwWidth = 1;  
+  if ((dwPenStyle & PS_STYLE_MASK) == PS_NULL) dwWidth = 1;
    
-  PenObject->ptPenWidth.x = dwWidth;  
+  PenObject->ptPenWidth.x = abs(dwWidth);  
   PenObject->ptPenWidth.y = 0;  
   PenObject->ulPenStyle = dwPenStyle;  
   PenObject->BrushAttr.lbColor = ulColor;  

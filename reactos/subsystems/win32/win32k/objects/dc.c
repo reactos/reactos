@@ -60,7 +60,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
 {
   PDC  NewDC, OrigDC;
   PDC_ATTR nDc_Attr, oDc_Attr;
-  HDC hNewDC, DisplayDC;
+  HDC hNewDC, DisplayDC = NULL;
   HRGN hVisRgn;
   UNICODE_STRING DriverName;
   DWORD Layout = 0;
@@ -145,6 +145,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->DcLevel.flPath     = OrigDC->DcLevel.flPath;
   nDc_Attr->ulDirty_        = oDc_Attr->ulDirty_;
   nDc_Attr->iCS_CP          = oDc_Attr->iCS_CP;
+
+  NewDC->erclWindow = (RECTL){0,0,1,1};
 
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
@@ -838,35 +840,30 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->flGraphics  = PrimarySurface.DevInfo.flGraphicsCaps;
   NewDC->flGraphics2 = PrimarySurface.DevInfo.flGraphicsCaps2;
 
+  NewDC->DcLevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
+
+  nDc_Attr->jROP2 = R2_COPYPEN;
+
+  NewDC->erclWindow.top = NewDC->erclWindow.left = 0;
+  NewDC->erclWindow.right  = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes;
+  NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes;
+  NewDC->DcLevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
+
+  nDc_Attr->iCS_CP = ftGdiGetTextCharsetInfo(NewDC,NULL,0);
+
+  hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes,
+                                     ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes);
+
   if (!CreateAsIC)
   {
-    NewDC->DcLevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
-
-    nDc_Attr->jROP2 = R2_COPYPEN;
-
-    NewDC->erclWindow.top = NewDC->erclWindow.left = 0;
-    NewDC->erclWindow.right  = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes;
-    NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes;
-    NewDC->DcLevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
-
-    nDc_Attr->iCS_CP = ftGdiGetTextCharsetInfo(NewDC,NULL,0);
-
+    NewDC->pSurfInfo = NULL;
+//    NewDC->DcLevel.pSurface = 
     DC_UnlockDc( NewDC );
-
-    hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes,
-                                 ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes);
-    if (hVisRgn)
-    {
-      GdiSelectVisRgn(hNewDC, hVisRgn);
-      NtGdiDeleteObject(hVisRgn);
-    }
 
     /*  Initialize the DC state  */
     DC_InitDC(hNewDC);
     IntGdiSetTextColor(hNewDC, RGB(0, 0, 0));
-    IntGdiSetTextAlign(hNewDC, TA_TOP);
     IntGdiSetBkColor(hNewDC, RGB(255, 255, 255));
-    IntGdiSetBkMode(hNewDC, OPAQUE);
   }
   else
   {
@@ -877,8 +874,22 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
        cannot accept a handle to an information context.
      */
     NewDC->DC_Type = DC_TYPE_INFO;
+//    NewDC->pSurfInfo = 
+    NewDC->DcLevel.pSurface = NULL;
+    nDc_Attr->crBackgroundClr = nDc_Attr->ulBackgroundClr = RGB(255, 255, 255);
+    nDc_Attr->crForegroundClr = RGB(0, 0, 0);
     DC_UnlockDc( NewDC );
   }
+
+  if (hVisRgn)
+  {
+     GdiSelectVisRgn(hNewDC, hVisRgn);
+     NtGdiDeleteObject(hVisRgn);
+  }
+
+  IntGdiSetTextAlign(hNewDC, TA_TOP);
+  IntGdiSetBkMode(hNewDC, OPAQUE);
+
   return hNewDC;
 }
 
