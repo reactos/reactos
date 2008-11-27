@@ -1775,6 +1775,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     DWORD *pMasks;
 
     IWineD3D* pWineD3d;
+    //WINED3DCAPS WineCaps;
 
 
     /* Note : XP always alloc 24*sizeof(VIDEOMEMORY) of pvmlist so we change it to it */
@@ -1910,22 +1911,77 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         // FIXME fill in with wined3d caps here */
         // WINED3DCAPS WineCaps;
         //pWineD3d->GetDeviceCaps(0,&WineCaps);
+        //IWineD3DDevice_GetDeviceCaps(This->WineD3DDevice, &WineCaps);
 
-        /* example value and member that need be fill in */
-        // pHalInfo->ddCaps.dwCaps                  : 0x94427bc1
-        // pHalInfo->ddCaps.dwCaps2                 : 0x004afe78
-        // pHalInfo->ddCaps.dwCKeyCaps              : 0x0003a311
-        // pHalInfo->ddCaps.dwFXCaps                : 0x27f95420
-        // pHalInfo->ddCaps.dwMaxVisibleOverlays    : 0x00000001
-        // pHalInfo->ddCaps.dwNumFourCCCodes        : 0x0000001c
-        // pHalInfo->ddCaps.ddsCaps.dwCaps          : 0x30c272fc
-        // pHalInfo->ddCaps.dwMinOverlayStretch     : 0x00000020
-        // pHalInfo->ddCaps.dwMaxOverlayStretch     : 0x0007d000
-        // pHalInfo->ddCaps.dwMinLiveVideoStretch   : 0x00000020
-        // pHalInfo->ddCaps.dwMaxLiveVideoStretch   : 0x00003e80
-        // pHalInfo->ddCaps.dwMinHwCodecStretch     : 0x00000020
-        // pHalInfo->ddCaps.dwMaxHwCodecStretch     : 0x00003e80
-        // pHalInfo->ddCaps.dwSVBCaps               : 0x80000040
+        /* Note wined3d seam not support in pHalInfo->ddCaps.dwCaps 
+           DDCAPS_ALIGNBOUNDARYDEST, DDCAPS_ALIGNSIZEDEST, DDCAPS_ALIGNSTRIDE
+           DDCAPS_ALPHA
+           DDCAPS_BLTFOURCC, DDCAPS_BLTQUEUE
+           DDCAPS_OVERLAY, DDCAPS_OVERLAYCANTCLIP, DDCAPS_OVERLAYFOURCC, DDCAPS_OVERLAYSTRETCH
+           DDCAPS_PALETTE, DDCAPS_PALETTEVSYNC
+           DDCAPS_READSCANLINE
+           DDCAPS_STEREOVIEW
+           DDCAPS_VBI
+           DDCAPS_ZBLTS
+           DDCAPS_ZOVERLAYS
+        */
+        pHalInfo->ddCaps.dwCaps =  DDCAPS_BLT                      |
+                                   DDCAPS_BLTCOLORFILL             |
+                                   DDCAPS_BLTDEPTHFILL             |
+                                   DDCAPS_BLTSTRETCH               |
+                                   DDCAPS_CANBLTSYSMEM             |
+                                   DDCAPS_CANCLIP                  |
+                                   DDCAPS_CANCLIPSTRETCHED         |
+                                   DDCAPS_COLORKEY                 |
+                                   DDCAPS_COLORKEYHWASSIST         |
+                                   DDCAPS_ALIGNBOUNDARYSRC         |
+                                   DDCAPS_GDI                      |
+                                   DDCAPS_PALETTE                  |
+                                   DDCAPS_3D;
+
+        /* See msdn what pHalInfo->ddCaps.dwCaps2 does not support  */
+        pHalInfo->ddCaps.dwCaps2 = DDCAPS2_CERTIFIED               |
+                                   DDCAPS2_NOPAGELOCKREQUIRED      |
+                                   DDCAPS2_PRIMARYGAMMA            |
+                                   DDCAPS2_WIDESURFACES            |
+                                   DDCAPS2_CANRENDERWINDOWED;
+
+        /* See msdn what pHalInfo->ddCaps.dwCKeyCaps does not support  */
+        pHalInfo->ddCaps.dwCKeyCaps = DDCKEYCAPS_DESTBLT |
+                                      DDCKEYCAPS_SRCBLT;
+
+        /* See msdn what pHalInfo->ddCaps.dwFXCaps does not support  */
+        pHalInfo->ddCaps.dwFXCaps = DDFXCAPS_BLTALPHA               |
+                                    DDFXCAPS_BLTMIRRORLEFTRIGHT     |
+                                    DDFXCAPS_BLTMIRRORUPDOWN        |
+                                    DDFXCAPS_BLTROTATION90          |
+                                    DDFXCAPS_BLTSHRINKX             |
+                                    DDFXCAPS_BLTSHRINKXN            |
+                                    DDFXCAPS_BLTSHRINKY             |
+                                    DDFXCAPS_BLTSHRINKXN            |
+                                    DDFXCAPS_BLTSTRETCHX            |
+                                    DDFXCAPS_BLTSTRETCHXN           |
+                                    DDFXCAPS_BLTSTRETCHY            |
+                                    DDFXCAPS_BLTSTRETCHYN;
+
+        /* See msdn what pHalInfo->ddCaps.dwSVBCaps does not support  */
+        pHalInfo->ddCaps.dwSVBCaps = pHalInfo->ddCaps.dwCaps;
+
+        /* See msdn what pHalInfo->ddCaps.dwCaps does not support  */
+        pHalInfo->ddCaps.ddsCaps.dwCaps = DDSCAPS_ALPHA                   |
+                                          DDSCAPS_BACKBUFFER              |
+                                          DDSCAPS_FLIP                    |
+                                          DDSCAPS_FRONTBUFFER             |
+                                          DDSCAPS_OFFSCREENPLAIN          |
+                                          DDSCAPS_PALETTE                 |
+                                          DDSCAPS_PRIMARYSURFACE          |
+                                          DDSCAPS_SYSTEMMEMORY            |
+                                          DDSCAPS_VIDEOMEMORY             |
+                                          DDSCAPS_VISIBLE                 |
+                                          DDSCAPS_3DDEVICE                |
+                                          DDSCAPS_MIPMAP                  |
+                                          DDSCAPS_TEXTURE                 |
+                                          DDSCAPS_ZBUFFER;
 
         /* always force rope 0x1000 for hal it mean only source copy is supported */
         pHalInfo->ddCaps.dwRops[6] = 0x1000;
