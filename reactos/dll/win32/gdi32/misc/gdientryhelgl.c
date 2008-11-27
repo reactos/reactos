@@ -1762,30 +1762,18 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     {
 
     PVIDEOMEMORY VidMemList = NULL;
-    DD_HALINFO HalInfo;
-    D3DNTHAL_CALLBACKS D3dCallbacks;
-    D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
-    DD_D3DBUFCALLBACKS D3dBufferCallbacks;
-    DWORD CallbackFlags[3];
     //DWORD dwNumHeaps=0, FourCCs=0;
-    DWORD Flags;
+
     BOOL retVal = TRUE;
 
     IWineD3D* pWineD3d;
     WINED3DDISPLAYMODE d3ddm;
 
-    /* Clear the structures */
-    RtlZeroMemory(&HalInfo, sizeof(DD_HALINFO));
-    RtlZeroMemory(&D3dCallbacks, sizeof(D3DNTHAL_CALLBACKS));
-    RtlZeroMemory(&D3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
-    RtlZeroMemory(&D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
-    RtlZeroMemory(CallbackFlags, sizeof(DWORD)*3);
-
     /* Note : XP always alloc 24*sizeof(VIDEOMEMORY) of pvmlist so we change it to it */
     if ( (pvmList != NULL) &&
          (pHalInfo->vmiData.dwNumHeaps != 0) )
     {
-        VidMemList = (PVIDEOMEMORY) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(VIDEOMEMORY) * 24 ) * pHalInfo->vmiData.dwNumHeaps);       
+        VidMemList = (PVIDEOMEMORY) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(VIDEOMEMORY) * 24 ) * pHalInfo->vmiData.dwNumHeaps);
     }
 
     /* Do the query */
@@ -1814,21 +1802,16 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     pHalInfo->lpDDPaletteCallbacks = pDDPaletteCallbacks;
 
     /* Check for NT5+ D3D Data */
+/* FIXME
     if ( (D3dCallbacks.dwSize != 0) &&
          (D3dDriverData.dwSize != 0) )
     {
-        /* Write these down */
         pHalInfo->lpD3DGlobalDriverData = (ULONG_PTR)pD3dDriverData;
         pHalInfo->lpD3DHALCallbacks = (ULONG_PTR)pD3dCallbacks;
+        pHalInfo->lpDDExeBufCallbacks = pD3dBufferCallbacks;
 
-        /* Check for Buffer Callbacks */
-        if (D3dBufferCallbacks.dwSize)
-        {
-            /* Write this one too */
-            pHalInfo->lpDDExeBufCallbacks = pD3dBufferCallbacks;
-        }
     }
-
+*/
     /* Continue converting the rest */
     /* FIXME pHalInfo->vmiData.dwFlags */
     //pHalInfo->vmiData.dwFlags = HalInfo.vmiData.dwFlags;
@@ -1860,16 +1843,10 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     */
     
     /* always force rope 0x1000 for hal it mean only source copy is supported */
-    pHalInfo->ddCaps.dwRops[6] = 0x1000; 
+    pHalInfo->ddCaps.dwRops[6] = 0x1000;
 
-    /* Set the HAL flags what ReactX got from the driver 
-     * Windows XP force setting DDHALINFO_GETDRIVERINFOSET if the driver does not set it 
-     * and ReactX doing same to keep compatible with drivers, but the driver are 
-     * force support DdGetDriverInfo acoriding MSDN but it seam some driver do not set 
-     * this flag even it is being supported. that is mean. It is small hack to keep
-     * bad driver working, that trust this is always being setting by it self at end
-     */
-    pHalInfo->dwFlags = (HalInfo.dwFlags & ~DDHALINFO_GETDRIVERINFOSET) | DDHALINFO_GETDRIVERINFOSET;
+    
+    pHalInfo->dwFlags = DDHALINFO_GETDRIVERINFOSET;
     pHalInfo->GetDriverInfo = (LPDDHAL_GETDRIVERINFO) DdGetDriverInfo;
 
     /* Now check if we got any DD callbacks */
@@ -1877,34 +1854,16 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     {
         /* Zero the structure */
         RtlZeroMemory(pDDCallbacks, sizeof(DDHAL_DDCALLBACKS));
-        pDDCallbacks->dwSize = sizeof(DDHAL_DDCALLBACKS);
 
-        /* Set the flags for this structure 
-         * Windows XP force setting DDHAL_CB32_CREATESURFACE if the driver does not set it 
-         * and ReactX doing same to keep compatible with drivers, but the driver are 
-         * force support pDDCallbacks acoriding MSDN but it seam some driver do not set 
-         * this flag even it is being supported. that is mean. It is small hack to keep
-         * bad driver working, that trust this is always being setting by it self at end
-        */
-        Flags = (CallbackFlags[0] & ~DDHAL_CB32_CREATESURFACE) | DDHAL_CB32_CREATESURFACE;
-        pDDCallbacks->dwFlags = Flags;
+        /* Fill in the size and the flags for DDHAL_DDCALLBACKS */
+        pDDCallbacks->dwSize = sizeof(DDHAL_DDCALLBACKS);
+        pDDCallbacks->dwFlags = DDHAL_CB32_CANCREATESURFACE | DDHAL_CB32_GETSCANLINE | DDHAL_CB32_CREATESURFACE | DDHAL_CB32_WAITFORVERTICALBLANK;
         
         /* Write the always-on functions */
         pDDCallbacks->CreateSurface = DdCreateSurface;
-
-        /* Now write the pointers, if applicable */
-        if (Flags & DDHAL_CB32_WAITFORVERTICALBLANK)
-        {
-            pDDCallbacks->WaitForVerticalBlank = DdWaitForVerticalBlank;
-        }
-        if (Flags & DDHAL_CB32_CANCREATESURFACE)
-        {
-            pDDCallbacks->CanCreateSurface = DdCanCreateSurface;
-        }
-        if (Flags & DDHAL_CB32_GETSCANLINE)
-        {
-            pDDCallbacks->GetScanLine = DdGetScanLine;
-        }
+        pDDCallbacks->WaitForVerticalBlank = DdWaitForVerticalBlank;
+        pDDCallbacks->CanCreateSurface = DdCanCreateSurface;
+        pDDCallbacks->GetScanLine = DdGetScanLine;
     }
 
     /* Check for DD Surface Callbacks */
@@ -1912,24 +1871,11 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     {
         /* Zero the structures */
         RtlZeroMemory(pDDSurfaceCallbacks, sizeof(DDHAL_DDSURFACECALLBACKS));
+
+        /* Setup the size and flags for DDHAL_DDSURFACECALLBACKS */
         pDDSurfaceCallbacks->dwSize  = sizeof(DDHAL_DDSURFACECALLBACKS);
+        pDDSurfaceCallbacks->dwFlags = DDHAL_SURFCB32_LOCK | DDHAL_SURFCB32_UNLOCK | DDHAL_SURFCB32_SETCOLORKEY | DDHAL_SURFCB32_DESTROYSURFACE;
 
-        /* Set the flags for this structure 
-         * Windows XP force setting DDHAL_SURFCB32_LOCK, DDHAL_SURFCB32_UNLOCK, 
-         * DDHAL_SURFCB32_SETCOLORKEY, DDHAL_SURFCB32_DESTROYSURFACE if the driver 
-         * does not set it and ReactX doing same to keep compatible with drivers, 
-         * but the driver are force support pDDSurfaceCallbacks acoriding MSDN but it seam 
-         * some driver do not set this flag even it is being supported. that is mean. 
-         * It is small hack to keep bad driver working, that trust this is always being 
-         * setting by it self at end
-         */
-
-        Flags = (CallbackFlags[1] & ~(DDHAL_SURFCB32_LOCK | DDHAL_SURFCB32_UNLOCK |
-                                      DDHAL_SURFCB32_SETCOLORKEY | DDHAL_SURFCB32_DESTROYSURFACE)) |
-                                     (DDHAL_SURFCB32_LOCK | DDHAL_SURFCB32_UNLOCK |
-                                      DDHAL_SURFCB32_SETCOLORKEY | DDHAL_SURFCB32_DESTROYSURFACE);
-                                     
-        pDDSurfaceCallbacks->dwFlags = Flags;
         
         /* Write the always-on functions */
         pDDSurfaceCallbacks->Lock = DdLock;
@@ -1937,35 +1883,14 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pDDSurfaceCallbacks->SetColorKey = DdSetColorKey;
         pDDSurfaceCallbacks->DestroySurface = DdDestroySurface;
 
-        /* Write the optional ones */
-        if (Flags & DDHAL_SURFCB32_FLIP)
-        {
-            pDDSurfaceCallbacks->Flip = DdFlip;
-        }
-        if (Flags & DDHAL_SURFCB32_BLT)
-        {
-            pDDSurfaceCallbacks->Blt = DdBlt;
-        }
-        if (Flags & DDHAL_SURFCB32_GETBLTSTATUS)
-        {
-            pDDSurfaceCallbacks->GetBltStatus = DdGetBltStatus;
-        }
-        if (Flags & DDHAL_SURFCB32_GETFLIPSTATUS)
-        {
-            pDDSurfaceCallbacks->GetFlipStatus = DdGetFlipStatus;
-        }
-        if (Flags & DDHAL_SURFCB32_UPDATEOVERLAY)
-        {
-            pDDSurfaceCallbacks->UpdateOverlay = DdUpdateOverlay;
-        }
-        if (Flags & DDHAL_SURFCB32_SETOVERLAYPOSITION)
-        {
-            pDDSurfaceCallbacks->SetOverlayPosition = DdSetOverlayPosition;
-        }
-        if (Flags & DDHAL_SURFCB32_ADDATTACHEDSURFACE)
-        {
-            pDDSurfaceCallbacks->AddAttachedSurface = DdAddAttachedSurface;
-        }
+        /* Write the always-on functions */
+        pDDSurfaceCallbacks->Flip = DdFlip;
+        pDDSurfaceCallbacks->Blt = DdBlt;
+        pDDSurfaceCallbacks->GetBltStatus = DdGetBltStatus;
+        pDDSurfaceCallbacks->GetFlipStatus = DdGetFlipStatus;
+        pDDSurfaceCallbacks->UpdateOverlay = DdUpdateOverlay;
+        pDDSurfaceCallbacks->SetOverlayPosition = DdSetOverlayPosition;
+        pDDSurfaceCallbacks->AddAttachedSurface = DdAddAttachedSurface;
     }
 
     /* Check for DD Palette Callbacks, This interface are dead for user mode, 
@@ -1977,8 +1902,8 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         RtlZeroMemory(pDDPaletteCallbacks, sizeof(DDHAL_DDPALETTECALLBACKS));
 
         /* Write the header */
-        pDDPaletteCallbacks->dwSize  = sizeof(DDHAL_DDPALETTECALLBACKS);
-        pDDPaletteCallbacks->dwFlags = CallbackFlags[2];
+        pDDPaletteCallbacks->dwSize = sizeof(DDHAL_DDPALETTECALLBACKS);
+        pDDPaletteCallbacks->dwFlags = 0;
     }
 
     if (pD3dCallbacks)
@@ -1989,32 +1914,22 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Write the header */
         pD3dCallbacks->dwSize = sizeof(DDHAL_DDEXEBUFCALLBACKS);
 
-        /* Now check for each callback */
-        if (D3dCallbacks.ContextCreate)
-        {
-            pD3dCallbacks->ContextCreate = (LPD3DHAL_CONTEXTCREATECB) D3dContextCreate;
-        }
-        if (D3dCallbacks.ContextDestroy)
-        {
-            /* FIXME */
-            // pD3dCallbacks->ContextDestroy = (LPD3DHAL_CONTEXTDESTROYCB) NtGdiD3dContextDestroy;
-        }
-        if (D3dCallbacks.ContextDestroyAll)
-        {
-            /* FIXME */
-            // pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
-        }
+        /* Write the always-on functions */
+        pD3dCallbacks->ContextCreate = (LPD3DHAL_CONTEXTCREATECB) D3dContextCreate;
+        // FIXME pD3dCallbacks->ContextDestroy = (LPD3DHAL_CONTEXTDESTROYCB) NtGdiD3dContextDestroy;
+        // FIXME pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
     }
 
     /* Check for D3D Driver Data */
     if (pD3dDriverData)
     {
         /* Copy the struct */
-        RtlMoveMemory(pD3dDriverData, &D3dDriverData, sizeof(D3DHAL_GLOBALDRIVERDATA));
+        //FIXME RtlMoveMemory(pD3dDriverData, &D3dDriverData, sizeof(D3DHAL_GLOBALDRIVERDATA));
 
         /* Write the pointer to the texture formats */
         //FIXME pD3dDriverData->lpTextureFormats = pD3dTextureFormats;
     }
+    else
 
     /* Check for D3D Buffer Callbacks */
     if (pD3dBufferCallbacks)
@@ -2022,34 +1937,15 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Zero the struct */
         RtlZeroMemory(pD3dBufferCallbacks, sizeof(DDHAL_DDEXEBUFCALLBACKS));
 
+        /* Write the header */
+        pD3dBufferCallbacks->dwSize = sizeof(DDHAL_DDEXEBUFCALLBACKS);
+        pD3dBufferCallbacks->dwFlags = DDHAL_D3DBUFCB32_CREATED3DBUF | DDHAL_D3DBUFCB32_CANCREATED3DBUF | DDHAL_D3DBUFCB32_LOCKD3DBUF | DDHAL_D3DBUFCB32_UNLOCKD3DBUF;
 
-        pD3dBufferCallbacks->dwSize = D3dBufferCallbacks.dwSize;
-
-        pD3dBufferCallbacks->dwFlags = D3dBufferCallbacks.dwFlags;
-        if ( D3dBufferCallbacks.CanCreateD3DBuffer)
-        {
-            pD3dBufferCallbacks->CanCreateExecuteBuffer = (LPDDHALEXEBUFCB_CANCREATEEXEBUF)DdCanCreateD3DBuffer;
-        }
-
-        if ( D3dBufferCallbacks.CanCreateD3DBuffer)
-        {
-            pD3dBufferCallbacks->CreateExecuteBuffer = (LPDDHALEXEBUFCB_CREATEEXEBUF) DdCreateD3DBuffer;
-        }
-
-        if ( D3dBufferCallbacks.DestroyD3DBuffer )
-        {
-            pD3dBufferCallbacks->DestroyExecuteBuffer = (LPDDHALEXEBUFCB_DESTROYEXEBUF) DdDestroyD3DBuffer;
-        }
-
-        if ( D3dBufferCallbacks.LockD3DBuffer )
-        {
-            pD3dBufferCallbacks->LockExecuteBuffer = (LPDDHALEXEBUFCB_LOCKEXEBUF) DdLockD3D;
-        }
-
-        if ( D3dBufferCallbacks.UnlockD3DBuffer )
-        {
-            pD3dBufferCallbacks->UnlockExecuteBuffer = (LPDDHALEXEBUFCB_UNLOCKEXEBUF) DdUnlockD3D;
-        }
+        /* Write the always-on functions */
+        pD3dBufferCallbacks->CanCreateExecuteBuffer = (LPDDHALEXEBUFCB_CANCREATEEXEBUF)DdCanCreateD3DBuffer;
+        pD3dBufferCallbacks->CreateExecuteBuffer = (LPDDHALEXEBUFCB_CREATEEXEBUF) DdCreateD3DBuffer;
+        pD3dBufferCallbacks->LockExecuteBuffer = (LPDDHALEXEBUFCB_LOCKEXEBUF) DdLockD3D;
+        pD3dBufferCallbacks->UnlockExecuteBuffer = (LPDDHALEXEBUFCB_UNLOCKEXEBUF) DdUnlockD3D;
     }
 
     /* FIXME VidMemList */
