@@ -5,7 +5,7 @@
  * Copyright 2002-2003 Jason Edmeades
  *                     Raphael Junqueira
  * Copyright 2005 Oliver Stieber
- * Copyright 2006 Stefan Dösinger
+ * Copyright 2006 Stefan DÃ¶singer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -122,83 +122,6 @@ typedef struct _WINED3DLINEPATTERN {
     WORD    wRepeatFactor;
     WORD    wLinePattern;
 } WINED3DLINEPATTERN;
-
-#define WINED3D_VSHADER_MAX_CONSTANTS 96
-#define WINED3D_PSHADER_MAX_CONSTANTS 32
-
-typedef struct _WINED3DVECTOR_3 {
-    float x;
-    float y;
-    float z;
-} WINED3DVECTOR_3;
-
-typedef struct _WINED3DVECTOR_4 {
-    float x;
-    float y;
-    float z;
-    float w;
-} WINED3DVECTOR_4;
-
-typedef struct WINED3DSHADERVECTOR {
-  float x;
-  float y;
-  float z;
-  float w;
-} WINED3DSHADERVECTOR;
-
-typedef struct WINED3DSHADERSCALAR {
-  float x;
-} WINED3DSHADERSCALAR;
-
-typedef WINED3DSHADERVECTOR WINEVSHADERCONSTANTS8[WINED3D_VSHADER_MAX_CONSTANTS];
-
-typedef struct VSHADERDATA {
-  /** Run Time Shader Function Constants */
-  /*D3DXBUFFER* constants;*/
-  WINEVSHADERCONSTANTS8 C;
-  /** Shader Code as char ... */
-  CONST DWORD* code;
-  UINT codeLength;
-} VSHADERDATA;
-
-/** temporary here waiting for buffer code */
-typedef struct VSHADERINPUTDATA {
-  WINED3DSHADERVECTOR V[17];
-} WINEVSHADERINPUTDATA;
-
-/** temporary here waiting for buffer code */
-typedef struct VSHADEROUTPUTDATA {
-  WINED3DSHADERVECTOR oPos;
-  WINED3DSHADERVECTOR oD[2];
-  WINED3DSHADERVECTOR oT[8];
-  WINED3DSHADERVECTOR oFog;
-  WINED3DSHADERVECTOR oPts;
-} WINEVSHADEROUTPUTDATA;
-
-typedef WINED3DSHADERVECTOR WINEPSHADERCONSTANTS8[WINED3D_PSHADER_MAX_CONSTANTS];
-
-typedef struct PSHADERDATA {
-  /** Run Time Shader Function Constants */
-  /*D3DXBUFFER* constants;*/
-  WINEPSHADERCONSTANTS8 C;
-  /** Shader Code as char ... */
-  CONST DWORD* code;
-  UINT codeLength;
-} PSHADERDATA;
-
-/** temporary here waiting for buffer code */
-typedef struct PSHADERINPUTDATA {
-  WINED3DSHADERVECTOR V[2];
-  WINED3DSHADERVECTOR T[8];
-  WINED3DSHADERVECTOR S[16];
-  /*D3DSHADERVECTOR R[12];*/
-} WINEPSHADERINPUTDATA;
-
-/** temporary here waiting for buffer code */
-typedef struct PSHADEROUTPUTDATA {
-  WINED3DSHADERVECTOR oC[4];
-  WINED3DSHADERVECTOR oDepth;
-} WINEPSHADEROUTPUTDATA;
 
 /*****************************************************************************
  * WineD3D Structures to be used when d3d8 and d3d9 are incompatible
@@ -886,7 +809,15 @@ typedef struct _WINED3DPRESENT_PARAMETERS {
     DWORD                   Flags;
     UINT                    FullScreen_RefreshRateInHz;
     UINT                    PresentationInterval;
+    BOOL                    AutoRestoreDisplayMode;
 } WINED3DPRESENT_PARAMETERS;
+
+#define WINED3DPRESENTFLAG_LOCKABLE_BACKBUFFER  0x00000001
+#define WINED3DPRESENTFLAG_DISCARD_DEPTHSTENCIL 0x00000002
+#define WINED3DPRESENTFLAG_DEVICECLIP           0x00000004
+#define WINED3DPRESENTFLAG_VIDEO                0x00000010
+#define WINED3DPRESENTFLAG_NOAUTOROTATE         0x00000020
+#define WINED3DPRESENTFLAG_UNPRUNEDMODE         0x00000040
 
 typedef enum _WINED3DRESOURCETYPE {
     WINED3DRTYPE_SURFACE                =  1,

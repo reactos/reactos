@@ -4,7 +4,7 @@
  * Copyright 2002-2003 The wine-d3d team
  * Copyright 2002-2003 Raphael Junqueira
  * Copyright 2005 Oliver Stieber
- * Copyright 2006 Stefan Dösinger for CodeWeavers
+ * Copyright 2006 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -116,9 +116,9 @@ DEFINE_GUID(IID_IWineD3D,
 DEFINE_GUID(IID_IWineD3DBase,
 0x46799311, 0x8e0e, 0x40ce, 0xb2, 0xec, 0xdd, 0xb9, 0x9f, 0x18, 0xfc, 0xb4);
 
-/* {108F9C44-6F30-11d9-C687-00046142C14F} */
+/* {6d10a2ce-09d0-4a53-a427-11388f9f8ca5} */
 DEFINE_GUID(IID_IWineD3DDevice, 
-0x108f9c44, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
+0x6d10a2ce, 0x09d0, 0x4a53, 0xa4, 0x27, 0x11, 0x38, 0x8f, 0x9f, 0x8c, 0xa5);
 
 /* {f756720c-32b9-4439-b5a3-1d6c97037d9e} */
 DEFINE_GUID(IID_IWineD3DPalette,
@@ -243,7 +243,7 @@ typedef HRESULT (WINAPI *D3DCB_CREATEVOLUMEFN) (IUnknown *pDevice,
                                                struct IWineD3DVolume **ppVolume,
                                                HANDLE    *pSharedHandle);
 
-typedef HRESULT (WINAPI *D3DCB_CREATEADDITIONALSWAPCHAIN) (IUnknown *pDevice,
+typedef HRESULT (WINAPI *D3DCB_CREATESWAPCHAIN) (IUnknown *pDevice,
                                                WINED3DPRESENT_PARAMETERS *pPresentationParameters,
                                                struct IWineD3DSwapChain **pSwapChain
                                                );
@@ -343,7 +343,7 @@ DECLARE_INTERFACE_(IWineD3D, IWineD3DBase)
 #endif
 
 /* Define the main WineD3D entrypoint */
-IWineD3D* WINAPI WineDirect3DCreate(UINT SDKVersion, UINT dxVersion, IUnknown *parent);
+IWineD3D* WINAPI WineDirect3DCreate(UINT dxVersion, IUnknown *parent);
 
 /*****************************************************************************
  * IWineD3DDevice interface 
@@ -367,14 +367,14 @@ DECLARE_INTERFACE_(IWineD3DDevice,IWineD3DBase)
     STDMETHOD(CreateVolume)(THIS_ UINT Width, UINT Height, UINT Depth, DWORD Usage, WINED3DFORMAT Format, WINED3DPOOL Pool, struct IWineD3DVolume** ppVolumeTexture, HANDLE* pSharedHandle, IUnknown *parent) PURE;
     STDMETHOD(CreateCubeTexture)(THIS_ UINT EdgeLength, UINT Levels, DWORD Usage, WINED3DFORMAT Format, WINED3DPOOL Pool, struct IWineD3DCubeTexture** ppCubeTexture, HANDLE* pSharedHandle, IUnknown *parent, D3DCB_CREATESURFACEFN pFn) PURE;
     STDMETHOD(CreateQuery)(THIS_ WINED3DQUERYTYPE Type, struct IWineD3DQuery **ppQuery, IUnknown *pParent);
-    STDMETHOD(CreateAdditionalSwapChain)(THIS_ WINED3DPRESENT_PARAMETERS *pPresentationParameters, struct IWineD3DSwapChain **pSwapChain, IUnknown *pParent, D3DCB_CREATERENDERTARGETFN pFn, D3DCB_CREATEDEPTHSTENCILSURFACEFN pFn2, WINED3DSURFTYPE surface_type);
+    STDMETHOD(CreateSwapChain)(THIS_ WINED3DPRESENT_PARAMETERS *pPresentationParameters, struct IWineD3DSwapChain **pSwapChain, IUnknown *pParent, D3DCB_CREATERENDERTARGETFN pFn, D3DCB_CREATEDEPTHSTENCILSURFACEFN pFn2, WINED3DSURFTYPE surface_type);
     STDMETHOD(CreateVertexDeclaration)(THIS_ struct IWineD3DVertexDeclaration** ppDecl, IUnknown* pParent, const WINED3DVERTEXELEMENT *elements, UINT element_count) PURE;
     STDMETHOD(CreateVertexDeclarationFromFVF)(THIS_ struct IWineD3DVertexDeclaration** ppDecl, IUnknown* pParent, DWORD Fvf) PURE;
     STDMETHOD(CreateVertexShader)(THIS_ struct IWineD3DVertexDeclaration *vertex_declaration, CONST DWORD* pFunction, struct IWineD3DVertexShader** ppShader, IUnknown *pParent) PURE;
     STDMETHOD(CreatePixelShader)(THIS_ CONST DWORD* pFunction, struct IWineD3DPixelShader** ppShader, IUnknown *pParent) PURE;
     STDMETHOD_(HRESULT,CreatePalette)(THIS_ DWORD Flags, PALETTEENTRY *PalEnt, struct IWineD3DPalette **Palette, IUnknown *Parent);
-    STDMETHOD(Init3D)(THIS_ WINED3DPRESENT_PARAMETERS* pPresentationParameters, D3DCB_CREATEADDITIONALSWAPCHAIN D3DCB_CreateAdditionalSwapChain);
-    STDMETHOD(InitGDI)(THIS_ WINED3DPRESENT_PARAMETERS* pPresentationParameters, D3DCB_CREATEADDITIONALSWAPCHAIN D3DCB_CreateAdditionalSwapChain);
+    STDMETHOD(Init3D)(THIS_ WINED3DPRESENT_PARAMETERS* pPresentationParameters, D3DCB_CREATESWAPCHAIN D3DCB_CreateSwapChain);
+    STDMETHOD(InitGDI)(THIS_ WINED3DPRESENT_PARAMETERS* pPresentationParameters, D3DCB_CREATESWAPCHAIN D3DCB_CreateSwapChain);
     STDMETHOD(Uninit3D)(THIS, D3DCB_DESTROYSURFACEFN pFn, D3DCB_DESTROYSWAPCHAINFN pFn2);
     STDMETHOD(UninitGDI)(THIS, D3DCB_DESTROYSWAPCHAINFN pFn2);
     STDMETHOD_(void, SetMultithreaded)(THIS);
@@ -507,7 +507,7 @@ DECLARE_INTERFACE_(IWineD3DDevice,IWineD3DBase)
 #define IWineD3DDevice_CreateVolume(p,a,b,c,d,e,f,g,h,i)        (p)->lpVtbl->CreateVolume(p,a,b,c,d,e,f,g,h,i)
 #define IWineD3DDevice_CreateCubeTexture(p,a,b,c,d,e,f,g,h,i)   (p)->lpVtbl->CreateCubeTexture(p,a,b,c,d,e,f,g,h,i)
 #define IWineD3DDevice_CreateQuery(p,a,b,c)                     (p)->lpVtbl->CreateQuery(p,a,b,c)
-#define IWineD3DDevice_CreateAdditionalSwapChain(p,a,b,c,d,e,f) (p)->lpVtbl->CreateAdditionalSwapChain(p,a,b,c,d,e,f)
+#define IWineD3DDevice_CreateSwapChain(p,a,b,c,d,e,f)           (p)->lpVtbl->CreateSwapChain(p,a,b,c,d,e,f)
 #define IWineD3DDevice_CreateVertexDeclaration(p,a,b,c,d)       (p)->lpVtbl->CreateVertexDeclaration(p,a,b,c,d)
 #define IWineD3DDevice_CreateVertexDeclarationFromFVF(p,a,b,c)  (p)->lpVtbl->CreateVertexDeclarationFromFVF(p,a,b,c)
 #define IWineD3DDevice_CreateVertexShader(p,a,b,c,d)            (p)->lpVtbl->CreateVertexShader(p,a,b,c,d)
@@ -1157,7 +1157,6 @@ DECLARE_INTERFACE_(IWineD3DSurface,IWineD3DResource)
     STDMETHOD_(void, BindTexture)(THIS) PURE;
     STDMETHOD(SaveSnapshot)(THIS_ const char *filename) PURE;
     STDMETHOD(SetContainer)(THIS_ IWineD3DBase *container) PURE;
-    STDMETHOD_(void,SetGlTextureDesc)(THIS_ UINT textureName, int target) PURE;
     STDMETHOD_(void,GetGlDesc)(THIS_ glDescriptor **glDescription) PURE;
     STDMETHOD_(CONST void *, GetData)(THIS) PURE;
     STDMETHOD(SetFormat)(THIS_ WINED3DFORMAT format) PURE;
@@ -1218,7 +1217,6 @@ DECLARE_INTERFACE_(IWineD3DSurface,IWineD3DResource)
 #define IWineD3DSurface_BindTexture(p)               (p)->lpVtbl->BindTexture(p)
 #define IWineD3DSurface_SaveSnapshot(p,a)            (p)->lpVtbl->SaveSnapshot(p,a)
 #define IWineD3DSurface_SetContainer(p,a)            (p)->lpVtbl->SetContainer(p,a)
-#define IWineD3DSurface_SetGlTextureDesc(p,a,b)      (p)->lpVtbl->SetGlTextureDesc(p,a,b)
 #define IWineD3DSurface_GetGlDesc(p,a)               (p)->lpVtbl->GetGlDesc(p,a)
 #define IWineD3DSurface_GetData(p)                   (p)->lpVtbl->GetData(p)
 #define IWineD3DSurface_SetFormat(p,a)               (p)->lpVtbl->SetFormat(p,a)
