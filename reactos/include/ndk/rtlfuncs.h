@@ -195,14 +195,14 @@ RtlConvertUlongToLuid(ULONG Ulong)
 #if DBG
 
 #define ASSERT( exp ) \
-    ((!(exp)) ? \
+    ((void)((!(exp)) ? \
         (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
-        TRUE)
+        TRUE))
 
 #define ASSERTMSG( msg, exp ) \
-    ((!(exp)) ? \
+    ((void)((!(exp)) ? \
         (RtlAssert( #exp, __FILE__, __LINE__, msg ),FALSE) : \
-        TRUE)
+        TRUE))
 
 #else
 
@@ -670,7 +670,7 @@ RtlWalkHeap(
     IN HANDLE HeapHandle,
     IN PVOID HeapEntry
 );
-    
+
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
 
 //
