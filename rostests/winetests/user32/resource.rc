@@ -165,13 +165,16 @@ FONT 8, "MS Shell Dlg"
 {
     POPUP "&File"
     {
-        MENUITEM "&New", 100
+        POPUP "&New..."
+        {
+            MENUITEM "&New file", 100
+        }
         MENUITEM "&Open", 101
         MENUITEM "&Save", 102
         MENUITEM SEPARATOR
         MENUITEM "E&xit", 103
     }
-    POPUP "Edit"
+    POPUP "&Edit"
     {
         MENUITEM "&Undo", 200
         MENUITEM SEPARATOR

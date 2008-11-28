@@ -40,7 +40,16 @@ static void test_LoadStringW(void)
 
     /* Check that the string which is returned by LoadStringW matches
        the string at the pointer returned by LoadStringW when called with buflen = 0 */
+    SetLastError(0xdeadbeef);
     length1 = LoadStringW(hInst, 2, (WCHAR *) &resourcepointer, 0); /* get pointer to resource. */
+    if (!length1)
+    {
+        if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+            win_skip( "LoadStringW not implemented\n" );
+        else
+            win_skip( "LoadStringW does not return a pointer to the resource\n" );
+        return;
+    }
     length2 = LoadStringW(hInst, 2, returnedstringw, sizeof(returnedstringw) /sizeof(WCHAR)); /* get resource string */
     ok(length2 > 0, "LoadStringW failed to load resource 2, ret %d, err %d\n", length2, GetLastError());
     ok(length1 == length2, "LoadStringW returned different values dependent on buflen. ret1 %d, ret2 %d\n",
@@ -114,7 +123,8 @@ static void test_LoadStringA (void)
         "LoadString failed: ret %d err %d\n", ret, GetLastError());
 
     ret = LoadStringA(hInst, 0, buf, 0);
-    ok( ret == -1, "LoadStringA did not return -1 when called with buflen = 0, got %d, err %d\n",
+    ok( ret == -1 || broken(ret == 0),
+        "LoadStringA did not return -1 when called with buflen = 0, got %d, err %d\n",
         ret, GetLastError());
 }
 
@@ -170,41 +180,43 @@ static void test_accel1(void)
     ok( hAccel != NULL, "create accelerator table\n");
 
     r = CopyAcceleratorTable( hAccel, NULL, 0 );
-    ok( r == n, "two entries in table\n");
+    ok( r == n || broken(r == 2), /* win9x */
+        "two entries in table %u/%u\n", r, n);
 
-    r = CopyAcceleratorTable( hAccel, &ac[0], r );
-    ok( r == n, "still should be two entries in table\n");
+    r = CopyAcceleratorTable( hAccel, &ac[0], n );
+    ok( r == n || broken(r == 2), /* win9x */
+        "still should be two entries in table %u/%u\n", r, n);
 
     n=0;
     ok( ac[n].cmd == 1000, "cmd 0 not preserved\n");
     ok( ac[n].key == 'A', "key 0 not preserved\n");
     ok( ac[n].fVirt == (FVIRTKEY | FNOINVERT), "fVirt 0 not preserved\n");
 
-    n++;
+    if (++n == r) goto done;
     ok( ac[n].cmd == 0xffff, "cmd 1 not preserved\n");
     ok( ac[n].key == 0xffff, "key 1 not preserved\n");
     ok( ac[n].fVirt == 0x007f, "fVirt 1 not changed\n");
 
-    n++;
+    if (++n == r) goto done;
     ok( ac[n].cmd == 0xfff0, "cmd 2 not preserved\n");
     ok( ac[n].key == 0x00ff, "key 2 not preserved\n");
     ok( ac[n].fVirt == 0x0070, "fVirt 2 not changed\n");
 
-    n++;
+    if (++n == r) goto done;
     ok( ac[n].cmd == 0xfff0, "cmd 3 not preserved\n");
     ok( ac[n].key == 0x00ff, "key 3 not preserved\n");
     ok( ac[n].fVirt == 0x0000, "fVirt 3 not changed\n");
 
-    n++;
+    if (++n == r) goto done;
     ok( ac[n].cmd == 0xfff0, "cmd 4 not preserved\n");
     ok( ac[n].key == 0xffff, "key 4 not preserved\n");
     ok( ac[n].fVirt == 0x0001, "fVirt 4 not changed\n");
-
+done:
     r = DestroyAcceleratorTable( hAccel );
     ok( r, "destroy accelerator table\n");
 
     hAccel = CreateAcceleratorTable( &ac[0], 0 );
-    ok( !hAccel, "zero elements should fail\n");
+    ok( !hAccel || broken(hAccel != NULL), /* nt4 */ "zero elements should fail\n");
 
     /* these will on crash win2k
     hAccel = CreateAcceleratorTable( NULL, 1 );
@@ -220,6 +232,7 @@ static void test_accel2(void)
 {
     ACCEL ac[2], out[2];
     HACCEL hac;
+    int res;
 
     ac[0].cmd   = 0;
     ac[0].fVirt = 0;
@@ -236,8 +249,8 @@ static void test_accel2(void)
 
     /* try a zero count */
     hac = CreateAcceleratorTable( &ac[0], 0 );
-    ok( !hac , "fail\n");
-    ok( !DestroyAcceleratorTable( hac ), "destroy failed\n");
+    ok( !hac || broken(hac != NULL), /* nt4 */ "fail\n");
+    if (!hac) ok( !DestroyAcceleratorTable( hac ), "destroy failed\n");
 
     /* creating one accelerator should work */
     hac = CreateAcceleratorTable( &ac[0], 1 );
@@ -248,9 +261,12 @@ static void test_accel2(void)
     /* how about two of the same type? */
     hac = CreateAcceleratorTable( &ac[0], 2);
     ok( hac != NULL , "fail\n");
-    ok( 2 == CopyAcceleratorTable( hac, NULL, 100 ), "copy null failed\n");
-    ok( 2 == CopyAcceleratorTable( hac, NULL, 0 ), "copy null failed\n");
-    ok( 2 == CopyAcceleratorTable( hac, NULL, 1 ), "copy null failed\n");
+    res = CopyAcceleratorTable( hac, NULL, 100 );
+    ok( res == 2 || broken(res == 0), /* win9x */ "copy null failed %d\n", res);
+    res = CopyAcceleratorTable( hac, NULL, 0 );
+    ok( res == 2, "copy null failed %d\n", res);
+    res = CopyAcceleratorTable( hac, NULL, 1 );
+    ok( res == 2 || broken(res == 0), /* win9x */ "copy null failed %d\n", res);
     ok( 1 == CopyAcceleratorTable( hac, out, 1 ), "copy 1 failed\n");
     ok( 2 == CopyAcceleratorTable( hac, out, 2 ), "copy 2 failed\n");
     ok( DestroyAcceleratorTable( hac ), "destroy failed\n");
@@ -301,14 +317,18 @@ static void test_accel2(void)
     memset( ac, 0xff, sizeof ac );
     hac = CreateAcceleratorTable( &ac[0], 2);
     ok( hac != NULL , "fail\n");
-    ok( 2 == CopyAcceleratorTable( hac, out, 2 ), "copy 2 failed\n");
+    res = CopyAcceleratorTable( hac, out, 2 );
+    ok( res == 2 || broken(res == 1), /* win9x */ "copy 2 failed %d\n", res);
     /* ok( memcmp( ac, out, sizeof ac ), "tables not different\n"); */
     ok( out[0].cmd == ac[0].cmd, "cmd modified\n");
     ok( out[0].fVirt == (ac[0].fVirt&0x7f), "fVirt not modified\n");
     ok( out[0].key == ac[0].key, "key modified\n");
-    ok( out[1].cmd == ac[1].cmd, "cmd modified\n");
-    ok( out[1].fVirt == (ac[1].fVirt&0x7f), "fVirt not modified\n");
-    ok( out[1].key == ac[1].key, "key modified\n");
+    if (res == 2)
+    {
+        ok( out[1].cmd == ac[1].cmd, "cmd modified\n");
+        ok( out[1].fVirt == (ac[1].fVirt&0x7f), "fVirt not modified\n");
+        ok( out[1].key == ac[1].key, "key modified\n");
+    }
     ok( DestroyAcceleratorTable( hac ), "destroy failed\n");
 }
 
@@ -333,9 +353,13 @@ static void test_PrivateExtractIcons(void) {
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, 16, 16, ahIcon, aIconId, 3, 0);
     ok(cIcons == 3, "Three icons requested got cIcons=%d\n", cIcons);
 
-    cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(32,16), MAKELONG(32,16), 
-                                  ahIcon, aIconId, 3, 0);
-    ok(cIcons == 4, "Three icons requested, four expected, got cIcons=%d\n", cIcons);
+    /* count must be a multiple of two when getting two sizes */
+    cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(16,32), MAKELONG(16,32),
+                                   ahIcon, aIconId, 3, 0);
+    ok(cIcons == 0 /* vista */ || cIcons == 4, "Three icons requested got cIcons=%d\n", cIcons);
+    cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(16,32), MAKELONG(16,32),
+                                   ahIcon, aIconId, 4, 0);
+    ok(cIcons == 4, "Four icons requested got cIcons=%d\n", cIcons);
 }
 
 static void test_LoadImage(void)

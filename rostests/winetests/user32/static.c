@@ -33,12 +33,12 @@
 
 static HWND hMainWnd;
 
-#define expect_eq(expr, value, type, fmt) { type val = expr; ok(val == (value), #expr " expected " #fmt " got " #fmt "\n", (value), val); }
+#define expect_eq(expr, value, type, fmt) { type val = expr; ok(val == (value), #expr " expected " fmt " got " fmt "\n", (value), val); }
 #define expect_rect(r, _left, _top, _right, _bottom) ok(r.left == _left && r.top == _top && \
     r.bottom == _bottom && r.right == _right, "Invalid rect (%d,%d) (%d,%d) vs (%d,%d) (%d,%d)\n", \
     r.left, r.top, r.right, r.bottom, _left, _top, _right, _bottom);
 
-int g_nReceivedColorStatic = 0;
+static int g_nReceivedColorStatic = 0;
 
 static HWND build_static(DWORD style)
 {
@@ -63,7 +63,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpara
     return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-void test_updates(int style, int flags)
+static void test_updates(int style, int flags)
 {
     RECT r1 = {20, 20, 30, 30};
     HWND hStatic = build_static(style);
@@ -89,6 +89,10 @@ void test_updates(int style, int flags)
 
     if (flags & TODO_COUNT)
         todo_wine { expect_eq(g_nReceivedColorStatic, exp, int, "%d"); }
+    else if (style == SS_ICON || style == SS_BITMAP)
+        ok( g_nReceivedColorStatic == exp ||
+            broken(g_nReceivedColorStatic == 0), /* win9x */
+            "expected %u got %u\n", exp, g_nReceivedColorStatic );
     else
         expect_eq(g_nReceivedColorStatic, exp, int, "%d");
     DestroyWindow(hStatic);
@@ -108,7 +112,7 @@ START_TEST(static)
     wndclass.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
     wndclass.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
     wndclass.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wndclass.hbrBackground  = (HBRUSH) GetStockObject(WHITE_BRUSH);
+    wndclass.hbrBackground  = GetStockObject(WHITE_BRUSH);
     wndclass.lpszClassName  = szClassName;
     wndclass.lpszMenuName   = NULL;
     RegisterClassEx(&wndclass);

@@ -57,6 +57,33 @@ static void init_function_pointers(void)
 #undef GET_PROC
 }
 
+static BOOL correct_behavior(void)
+{
+    HMENU hmenu;
+    MENUITEMINFO info;
+    BOOL rc;
+
+    hmenu = CreateMenu();
+
+    memset(&info, 0, sizeof(MENUITEMINFO));
+    info.cbSize= sizeof(MENUITEMINFO);
+    SetLastError(0xdeadbeef);
+    rc = GetMenuItemInfo(hmenu, 0, TRUE, &info);
+    /* Win9x  : 0xdeadbeef
+     * NT4    : ERROR_INVALID_PARAMETER
+     * >= W2K : ERROR_MENU_ITEM_NOT_FOUND
+     */
+    if (!rc && GetLastError() != ERROR_MENU_ITEM_NOT_FOUND)
+    {
+        win_skip("NT4 and below can't handle a bigger MENUITEMINFO struct\n");
+        DestroyMenu(hmenu);
+        return FALSE;
+    }
+
+    DestroyMenu(hmenu);
+    return TRUE;
+}
+
 static LRESULT WINAPI menu_check_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
@@ -357,7 +384,8 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
     MOD_GotDrawItemMsg = FALSE;
     mii.fMask = MIIM_FTYPE | MIIM_DATA | MIIM_STATE;
     mii.fType = 0;
-    mii.fState = MF_CHECKED;
+    /* check the menu item unless MNS_CHECKORBMP is set */
+    mii.fState = (mnuopt != 2 ? MFS_CHECKED : MFS_UNCHECKED);
     mii.dwItemData =0;
     MODsizes[0] = bmpsize;
     hastab = 0;
@@ -447,8 +475,14 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
     if( hbmp == HBMMENU_CALLBACK && MOD_GotDrawItemMsg) {
         /* check the position of the bitmap */
         /* horizontal */
-        expect = ispop ? (4 + ( mnuopt  ? 0 : GetSystemMetrics(SM_CXMENUCHECK)))
-            : 3;
+        if (!ispop)
+            expect = 3;
+        else if (mnuopt == 0)
+            expect = 4 + GetSystemMetrics(SM_CXMENUCHECK);
+        else if (mnuopt == 1)
+            expect = 4;
+        else /* mnuopt == 2 */
+            expect = 2;
         ok( expect == MOD_rc[0].left,
                 "bitmap left is %d expected %d\n", MOD_rc[0].left, expect);
         failed = failed || !(expect == MOD_rc[0].left);
@@ -1691,7 +1725,7 @@ static struct menu_mouse_tests_s {
 static void send_key(WORD wVk)
 {
     TEST_INPUT i[2];
-    memset(&i, 0, 2*sizeof(INPUT));
+    memset(i, 0, sizeof(i));
     i[0].type = i[1].type = INPUT_KEYBOARD;
     i[0].u.ki.wVk = i[1].u.ki.wVk = wVk;
     i[1].u.ki.dwFlags = KEYEVENTF_KEYUP;
@@ -1706,10 +1740,10 @@ static void click_menu(HANDLE hWnd, struct menu_item_pair_s *mi)
     RECT r;
     int screen_w = GetSystemMetrics(SM_CXSCREEN);
     int screen_h = GetSystemMetrics(SM_CYSCREEN);
+    BOOL ret = GetMenuItemRect(mi->uMenu > 2 ? NULL : hWnd, hMenu, mi->uItem, &r);
+    if(!ret) return;
 
-    GetMenuItemRect(mi->uMenu > 2 ? NULL : hWnd, hMenu, mi->uItem, &r);
-
-    memset(&i, 0, 3*sizeof(INPUT));
+    memset(i, 0, sizeof(i));
     i[0].type = i[1].type = i[2].type = INPUT_MOUSE;
     i[0].u.mi.dx = i[1].u.mi.dx = i[2].u.mi.dx
             = ((r.left + 5) * 65535) / screen_w;
@@ -1785,6 +1819,7 @@ static void test_menu_input(void) {
     WNDCLASSA  wclass;
     HINSTANCE hInstance = GetModuleHandleA( NULL );
     HANDLE hThread, hWnd;
+    DWORD tid;
 
     wclass.lpszClassName = "MenuTestClass";
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
@@ -1820,7 +1855,7 @@ static void test_menu_input(void) {
     ShowWindow(hWnd, SW_SHOW);
     UpdateWindow(hWnd);
 
-    hThread = CreateThread(NULL, 0, test_menu_input_thread, hWnd, 0, NULL);
+    hThread = CreateThread(NULL, 0, test_menu_input_thread, hWnd, 0, &tid);
     while(1)
     {
         if (WAIT_TIMEOUT != WaitForSingleObject(hThread, 50))
@@ -1997,9 +2032,10 @@ static void test_menu_hilitemenuitem( void )
 static void check_menu_items(HMENU hmenu, UINT checked_cmd, UINT checked_type,
                              UINT checked_state)
 {
-    UINT i, count;
+    INT i, count;
 
     count = GetMenuItemCount(hmenu);
+    ok (count != -1, "GetMenuItemCount returned -1\n");
 
     for (i = 0; i < count; i++)
     {
@@ -2140,7 +2176,7 @@ static void test_menu_resource_layout(void)
         { MF_SEPARATOR, MF_GRAYED|MF_DISABLED, 8, "" }
     };
     HMENU hmenu;
-    UINT count, i;
+    INT count, i;
     BOOL ret;
 
     hmenu = LoadMenuIndirect(&menu_template);
@@ -2342,13 +2378,23 @@ START_TEST(menu)
 {
     init_function_pointers();
 
+    /* Wine defines MENUITEMINFO for W2K and above. NT4 and below can't
+     * handle that.
+     */
+    if (correct_behavior())
+    {
+        test_menu_add_string();
+        test_menu_iteminfo();
+        test_menu_search_bycommand();
+        test_CheckMenuRadioItem();
+        test_menu_resource_layout();
+        test_InsertMenu();
+    }
+
     register_menu_check_class();
 
     test_menu_locked_by_window();
     test_menu_ownerdraw();
-    test_menu_add_string();
-    test_menu_iteminfo();
-    test_menu_search_bycommand();
     test_menu_bmp_and_string();
 
     if( !pSendInput)
@@ -2358,7 +2404,4 @@ START_TEST(menu)
     test_menu_flags();
 
     test_menu_hilitemenuitem();
-    test_CheckMenuRadioItem();
-    test_menu_resource_layout();
-    test_InsertMenu();
 }

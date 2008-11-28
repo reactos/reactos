@@ -22,8 +22,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500 /* For SPI_GETMOUSEHOVERWIDTH and more */
+#define SPI_SETWHEELSCROLLCHARS   109
 
 #include "wine/test.h"
 #include "windef.h"
@@ -129,12 +128,16 @@ static HDC hdc;
 #define SPI_SETPOWEROFFACTIVE_VALNAME           "PowerOffActive"
 #define SPI_SETDRAGFULLWINDOWS_REGKEY           "Control Panel\\Desktop"
 #define SPI_SETDRAGFULLWINDOWS_VALNAME          "DragFullWindows"
+#define SPI_SETSNAPTODEFBUTTON_REGKEY           "Control Panel\\Mouse"
+#define SPI_SETSNAPTODEFBUTTON_VALNAME          "SnapToDefaultButton"
 #define SPI_SETMOUSEHOVERWIDTH_REGKEY           "Control Panel\\Mouse"
 #define SPI_SETMOUSEHOVERWIDTH_VALNAME          "MouseHoverWidth"
 #define SPI_SETMOUSEHOVERHEIGHT_REGKEY          "Control Panel\\Mouse"
 #define SPI_SETMOUSEHOVERHEIGHT_VALNAME         "MouseHoverHeight"
 #define SPI_SETMOUSEHOVERTIME_REGKEY            "Control Panel\\Mouse"
 #define SPI_SETMOUSEHOVERTIME_VALNAME           "MouseHoverTime"
+#define SPI_SETMOUSESCROLLCHARS_REGKEY          "Control Panel\\Desktop"
+#define SPI_SETMOUSESCROLLCHARS_VALNAME         "WheelScrollChars"
 #define SPI_SETMOUSESCROLLLINES_REGKEY          "Control Panel\\Desktop"
 #define SPI_SETMOUSESCROLLLINES_VALNAME         "WheelScrollLines"
 #define SPI_SETMENUSHOWDELAY_REGKEY             "Control Panel\\Desktop"
@@ -219,7 +222,7 @@ static BOOL test_error_msg ( int rc, const char *name )
 
     if (rc==0)
     {
-        if (last_error==0xdeadbeef || last_error==ERROR_INVALID_SPI_VALUE)
+        if (last_error==0xdeadbeef || last_error==ERROR_INVALID_SPI_VALUE || last_error==ERROR_INVALID_PARAMETER)
         {
             trace("%s not supported on this platform. Skipping test\n", name);
         }
@@ -1773,7 +1776,7 @@ static void test_SPI_SETSHOWSOUNDS( void )             /*     57 */
         rc=SystemParametersInfoA( SPI_SETSHOWSOUNDS, vals[i], 0,
                                   SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
         ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
-        test_change_message( SPI_SETSHOWSOUNDS, 0 );
+        test_change_message( SPI_SETSHOWSOUNDS, 1 );
         test_reg_key( SPI_SETSHOWSOUNDS_REGKEY,
                       SPI_SETSHOWSOUNDS_VALNAME,
                       vals[i] ? "1" : "0" );
@@ -1809,7 +1812,7 @@ static void test_SPI_SETKEYBOARDPREF( void )           /*     69 */
         rc=SystemParametersInfoA( SPI_SETKEYBOARDPREF, vals[i], 0,
                                   SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
         ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
-        test_change_message( SPI_SETKEYBOARDPREF, 0 );
+        test_change_message( SPI_SETKEYBOARDPREF, 1 );
         test_reg_key_ex2( SPI_SETKEYBOARDPREF_REGKEY, SPI_SETKEYBOARDPREF_REGKEY_LEGACY,
                           SPI_SETKEYBOARDPREF_VALNAME, SPI_SETKEYBOARDPREF_VALNAME_LEGACY,
                           vals[i] ? "1" : "0" );
@@ -1843,7 +1846,7 @@ static void test_SPI_SETSCREENREADER( void )           /*     71 */
         rc=SystemParametersInfoA( SPI_SETSCREENREADER, vals[i], 0,
                                   SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
         ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
-        test_change_message( SPI_SETSCREENREADER, 0 );
+        test_change_message( SPI_SETSCREENREADER, 1 );
         test_reg_key_ex2( SPI_SETSCREENREADER_REGKEY, SPI_SETSCREENREADER_REGKEY_LEGACY,
                       SPI_SETSCREENREADER_VALNAME, SPI_SETSCREENREADER_VALNAME_LEGACY,
                       vals[i] ? "1" : "0" );
@@ -1912,14 +1915,17 @@ static void test_SPI_SETLOWPOWERACTIVE( void )         /*     85 */
         rc=SystemParametersInfoA( SPI_SETLOWPOWERACTIVE, vals[i], 0,
                                   SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
         ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
-        test_change_message( SPI_SETLOWPOWERACTIVE, 0 );
+        test_change_message( SPI_SETLOWPOWERACTIVE, 1 );
         test_reg_key( SPI_SETLOWPOWERACTIVE_REGKEY,
                       SPI_SETLOWPOWERACTIVE_VALNAME,
                       vals[i] ? "1" : "0" );
 
+        /* SPI_SETLOWPOWERACTIVE is not persistent in win2k3 and above */
         rc=SystemParametersInfoA( SPI_GETLOWPOWERACTIVE, 0, &v, 0 );
         ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
-        eq( v, vals[i], "SPI_GETLOWPOWERACTIVE", "%d" );
+        ok(v == vals[i] ||
+           v == 0, /* win2k3 */
+           "SPI_GETLOWPOWERACTIVE: got %d instead of 0 or %d\n", v, vals[i]);
     }
 
     rc=SystemParametersInfoA( SPI_SETLOWPOWERACTIVE, old_b, 0, SPIF_UPDATEINIFILE );
@@ -1946,17 +1952,54 @@ static void test_SPI_SETPOWEROFFACTIVE( void )         /*     86 */
         rc=SystemParametersInfoA( SPI_SETPOWEROFFACTIVE, vals[i], 0,
                                   SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
         ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
-        test_change_message( SPI_SETPOWEROFFACTIVE, 0 );
+        test_change_message( SPI_SETPOWEROFFACTIVE, 1 );
         test_reg_key( SPI_SETPOWEROFFACTIVE_REGKEY,
                       SPI_SETPOWEROFFACTIVE_VALNAME,
                       vals[i] ? "1" : "0" );
 
+        /* SPI_SETPOWEROFFACTIVE is not persistent in win2k3 and above */
         rc=SystemParametersInfoA( SPI_GETPOWEROFFACTIVE, 0, &v, 0 );
         ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
-        eq( v, vals[i], "SPI_GETPOWEROFFACTIVE", "%d" );
+        ok(v == vals[i] ||
+           v == 0, /* win2k3 */
+           "SPI_GETPOWEROFFACTIVE: got %d instead of 0 or %d\n", v, vals[i]);
     }
 
     rc=SystemParametersInfoA( SPI_SETPOWEROFFACTIVE, old_b, 0, SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
+}
+
+static void test_SPI_SETSNAPTODEFBUTTON( void )         /*     95 */
+{
+    BOOL rc;
+    BOOL old_b;
+    const UINT vals[]={TRUE,FALSE};
+    unsigned int i;
+
+    trace("testing SPI_{GET,SET}SNAPTODEFBUTTON\n");
+    SetLastError(0xdeadbeef);
+    rc=SystemParametersInfoA( SPI_GETSNAPTODEFBUTTON, 0, &old_b, 0 );
+    if (!test_error_msg(rc,"SPI_GETSNAPTODEFBUTTON"))
+        return;
+
+    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    {
+        UINT v;
+
+        rc=SystemParametersInfoA( SPI_SETSNAPTODEFBUTTON, vals[i], 0,
+                                  SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        test_change_message( SPI_SETSNAPTODEFBUTTON, 0 );
+        test_reg_key( SPI_SETSNAPTODEFBUTTON_REGKEY,
+                      SPI_SETSNAPTODEFBUTTON_VALNAME,
+                      vals[i] ? "1" : "0" );
+
+        rc=SystemParametersInfoA( SPI_GETSNAPTODEFBUTTON, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        eq( v, vals[i], "SPI_GETSNAPTODEFBUTTON", "%d" );
+    }
+
+    rc=SystemParametersInfoA( SPI_SETSNAPTODEFBUTTON, old_b, 0, SPIF_UPDATEINIFILE );
     ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
 }
 
@@ -2157,6 +2200,44 @@ static void test_SPI_SETMENUSHOWDELAY( void )      /*     107 */
     ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
 }
 
+static void test_SPI_SETWHEELSCROLLCHARS( void )      /*     108 */
+{
+    BOOL rc;
+    UINT old_chars;
+    const UINT vals[]={32767,0};
+    unsigned int i;
+
+    trace("testing SPI_{GET,SET}WHEELSCROLLCHARS\n");
+    SetLastError(0xdeadbeef);
+    rc=SystemParametersInfoA( SPI_GETWHEELSCROLLCHARS, 0, &old_chars, 0 );
+
+    /* SPI_{GET,SET}WHEELSCROLLCHARS not supported on Windows 95 */
+    if (!test_error_msg(rc,"SPI_{GET,SET}WHEELSCROLLCHARS"))
+        return;
+
+    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    {
+        UINT v;
+        char buf[10];
+
+        rc=SystemParametersInfoA( SPI_SETWHEELSCROLLCHARS, vals[i], 0,
+                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        if (!test_error_msg(rc,"SPI_SETWHEELSCROLLCHARS")) return;
+        test_change_message( SPI_SETWHEELSCROLLCHARS, 0 );
+        sprintf( buf, "%d", vals[i] );
+        test_reg_key( SPI_SETMOUSESCROLLCHARS_REGKEY,
+                      SPI_SETMOUSESCROLLCHARS_VALNAME, buf );
+
+        SystemParametersInfoA( SPI_GETWHEELSCROLLCHARS, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        eq( v, vals[i], "SPI_{GET,SET}WHEELSCROLLCHARS", "%d" );
+    }
+
+    rc=SystemParametersInfoA( SPI_SETWHEELSCROLLCHARS, old_chars, 0,
+                              SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
+}
+
 static void test_SPI_SETWALLPAPER( void )              /*   115 */
 {
     BOOL rc;
@@ -2294,11 +2375,13 @@ static DWORD WINAPI SysParamsThreadFunc( LPVOID lpParam )
     test_SPI_SETFONTSMOOTHING();                /*     75 */
     test_SPI_SETLOWPOWERACTIVE();               /*     85 */
     test_SPI_SETPOWEROFFACTIVE();               /*     86 */
+    test_SPI_SETSNAPTODEFBUTTON();              /*     95 */
     test_SPI_SETMOUSEHOVERWIDTH();              /*     99 */
     test_SPI_SETMOUSEHOVERHEIGHT();             /*    101 */
     test_SPI_SETMOUSEHOVERTIME();               /*    103 */
     test_SPI_SETWHEELSCROLLLINES();             /*    105 */
     test_SPI_SETMENUSHOWDELAY();                /*    107 */
+    test_SPI_SETWHEELSCROLLCHARS();             /*    108 */
     test_SPI_SETWALLPAPER();                    /*    115 */
 
     test_WM_DISPLAYCHANGE();
@@ -2389,6 +2472,8 @@ static void test_GetSystemMetrics( void)
     INT CaptionWidth;
     MINIMIZEDMETRICS minim;
     NONCLIENTMETRICS ncm;
+    SIZE screen;
+
     minim.cbSize = sizeof( minim);
     ncm.cbSize = sizeof( ncm);
     SystemParametersInfo( SPI_GETMINIMIZEDMETRICS, 0, &minim, 0);
@@ -2464,8 +2549,9 @@ static void test_GetSystemMetrics( void)
     /* SM_SECURE */
     ok_gsm( SM_CXEDGE, 2);
     ok_gsm( SM_CYEDGE, 2);
-    ok_gsm( SM_CXMINSPACING, GetSystemMetrics( SM_CXMINIMIZED) + minim.iHorzGap );
-    ok_gsm( SM_CYMINSPACING, GetSystemMetrics( SM_CYMINIMIZED) + minim.iVertGap );
+    /* sign-extension for iHorzGap/iVertGap is broken on Win9x */
+    ok_gsm( SM_CXMINSPACING, GetSystemMetrics( SM_CXMINIMIZED) + (short)minim.iHorzGap );
+    ok_gsm( SM_CYMINSPACING, GetSystemMetrics( SM_CYMINIMIZED) + (short)minim.iVertGap );
     /* SM_CXSMICON */
     /* SM_CYSMICON */
     ok_gsm( SM_CYSMCAPTION, ncm.iSmCaptionHeight + 1);
@@ -2481,10 +2567,15 @@ static void test_GetSystemMetrics( void)
     /* SM_ARRANGE */
     ok_gsm( SM_CXMINIMIZED, minim.iWidth + 6);
     ok_gsm( SM_CYMINIMIZED, GetSystemMetrics( SM_CYCAPTION) + 5);
-    ok_gsm( SM_CXMAXTRACK, GetSystemMetrics( SM_CXVIRTUALSCREEN) +
-            4 + 2 * GetSystemMetrics( SM_CXFRAME));
-    ok_gsm( SM_CYMAXTRACK, GetSystemMetrics( SM_CYVIRTUALSCREEN) +
-            4 + 2 * GetSystemMetrics( SM_CYFRAME));
+    screen.cx = GetSystemMetrics( SM_CXVIRTUALSCREEN );
+    screen.cy = GetSystemMetrics( SM_CYVIRTUALSCREEN );
+    if (!screen.cx || !screen.cy)  /* not supported on NT4 */
+    {
+        screen.cx = GetSystemMetrics( SM_CXSCREEN );
+        screen.cy = GetSystemMetrics( SM_CYSCREEN );
+    }
+    ok_gsm( SM_CXMAXTRACK, screen.cx + 4 + 2 * GetSystemMetrics(SM_CXFRAME));
+    ok_gsm( SM_CYMAXTRACK, screen.cy + 4 + 2 * GetSystemMetrics(SM_CYFRAME));
     /* the next two cannot really be tested as they depend on (application)
      * toolbars */
     /* SM_CXMAXIMIZED */

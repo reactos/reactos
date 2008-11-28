@@ -76,11 +76,10 @@ static LRESULT CALLBACK callback_child(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             SetLastError(0xdeadbeef);
             ret = DestroyCursor((HCURSOR) lParam);
             error = GetLastError();
-            todo_wine {
-            ok(!ret, "DestroyCursor on the active cursor succeeded.\n");
-            ok(error == ERROR_DESTROY_OBJECT_OF_OTHER_THREAD,
+            todo_wine ok(!ret || broken(ret) /* win9x */, "DestroyCursor on the active cursor succeeded.\n");
+            ok(error == ERROR_DESTROY_OBJECT_OF_OTHER_THREAD ||
+               error == 0xdeadbeef,  /* vista */
                 "Last error: %u\n", error);
-            }
             return TRUE;
         case WM_DESTROY:
             PostQuitMessage(0);
@@ -132,7 +131,7 @@ static void do_child(void)
     PostMessage(parent, PROC_INIT, (WPARAM) child, 0);
 
     /* Receive messages. */
-    while ((ret = GetMessage(&msg, child, 0, 0)))
+    while ((ret = GetMessage(&msg, 0, 0, 0)))
     {
         ok(ret != -1, "GetMessage failed.  Error: %u\n", GetLastError());
         TranslateMessage(&msg);
@@ -233,7 +232,7 @@ static void test_CopyImage_Check(HBITMAP bitmap, UINT flags, INT copyWidth, INT 
     BOOL orig_is_dib;
     BOOL copy_is_dib;
 
-    copy = (HBITMAP) CopyImage(bitmap, IMAGE_BITMAP, copyWidth, copyHeight, flags);
+    copy = CopyImage(bitmap, IMAGE_BITMAP, copyWidth, copyHeight, flags);
     ok(copy != NULL, "CopyImage() failed\n");
     if (copy != NULL)
     {
@@ -504,13 +503,14 @@ static void test_CreateIcon(void)
     static const BYTE bmp_bits[1024];
     HICON hIcon;
     HBITMAP hbmMask, hbmColor;
+    BITMAPINFO *bmpinfo;
     ICONINFO info;
     HDC hdc;
+    void *bits;
     UINT display_bpp;
 
     hdc = GetDC(0);
     display_bpp = GetDeviceCaps(hdc, BITSPIXEL);
-    ReleaseDC(0, hdc);
 
     /* these crash under XP
     hIcon = CreateIcon(0, 16, 16, 1, 1, bmp_bits, NULL);
@@ -581,6 +581,78 @@ static void test_CreateIcon(void)
 
     DeleteObject(hbmMask);
     DeleteObject(hbmColor);
+
+    /* test creating an icon from a DIB section */
+
+    bmpinfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(BITMAPINFO,bmiColors[256]));
+    bmpinfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmpinfo->bmiHeader.biWidth = 32;
+    bmpinfo->bmiHeader.biHeight = 32;
+    bmpinfo->bmiHeader.biPlanes = 1;
+    bmpinfo->bmiHeader.biBitCount = 8;
+    bmpinfo->bmiHeader.biCompression = BI_RGB;
+    hbmColor = CreateDIBSection( hdc, bmpinfo, DIB_RGB_COLORS, &bits, NULL, 0 );
+    ok(hbmColor != NULL, "Expected a handle to the DIB\n");
+    if (bits)
+        memset( bits, 0x55, 32 * 32 * bmpinfo->bmiHeader.biBitCount / 8 );
+    bmpinfo->bmiHeader.biBitCount = 1;
+    hbmMask = CreateDIBSection( hdc, bmpinfo, DIB_RGB_COLORS, &bits, NULL, 0 );
+    ok(hbmMask != NULL, "Expected a handle to the DIB\n");
+    if (bits)
+        memset( bits, 0x55, 32 * 32 * bmpinfo->bmiHeader.biBitCount / 8 );
+
+    info.fIcon = TRUE;
+    info.xHotspot = 8;
+    info.yHotspot = 8;
+    info.hbmMask = hbmColor;
+    info.hbmColor = hbmMask;
+    SetLastError(0xdeadbeaf);
+    hIcon = CreateIconIndirect(&info);
+    ok(hIcon != 0, "CreateIconIndirect failed\n");
+    test_icon_info(hIcon, 32, 32, 8);
+    DestroyIcon(hIcon);
+    DeleteObject(hbmColor);
+
+    bmpinfo->bmiHeader.biBitCount = 16;
+    hbmColor = CreateDIBSection( hdc, bmpinfo, DIB_RGB_COLORS, &bits, NULL, 0 );
+    ok(hbmColor != NULL, "Expected a handle to the DIB\n");
+    if (bits)
+        memset( bits, 0x55, 32 * 32 * bmpinfo->bmiHeader.biBitCount / 8 );
+
+    info.fIcon = TRUE;
+    info.xHotspot = 8;
+    info.yHotspot = 8;
+    info.hbmMask = hbmColor;
+    info.hbmColor = hbmMask;
+    SetLastError(0xdeadbeaf);
+    hIcon = CreateIconIndirect(&info);
+    ok(hIcon != 0, "CreateIconIndirect failed\n");
+    test_icon_info(hIcon, 32, 32, 8);
+    DestroyIcon(hIcon);
+    DeleteObject(hbmColor);
+
+    bmpinfo->bmiHeader.biBitCount = 32;
+    hbmColor = CreateDIBSection( hdc, bmpinfo, DIB_RGB_COLORS, &bits, NULL, 0 );
+    ok(hbmColor != NULL, "Expected a handle to the DIB\n");
+    if (bits)
+        memset( bits, 0x55, 32 * 32 * bmpinfo->bmiHeader.biBitCount / 8 );
+
+    info.fIcon = TRUE;
+    info.xHotspot = 8;
+    info.yHotspot = 8;
+    info.hbmMask = hbmColor;
+    info.hbmColor = hbmMask;
+    SetLastError(0xdeadbeaf);
+    hIcon = CreateIconIndirect(&info);
+    ok(hIcon != 0, "CreateIconIndirect failed\n");
+    test_icon_info(hIcon, 32, 32, 8);
+    DestroyIcon(hIcon);
+
+    DeleteObject(hbmMask);
+    DeleteObject(hbmColor);
+    HeapFree( GetProcessHeap(), 0, bmpinfo );
+
+    ReleaseDC(0, hdc);
 }
 
 /* Shamelessly ripped from dlls/oleaut32/tests/olepicture.c */
@@ -664,7 +736,10 @@ static void test_LoadImageFile(const unsigned char * image_data,
     handle = LoadImageA(NULL, filename, IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE);
     ok(handle == NULL, "LoadImage(%s) as IMAGE_CURSOR succeeded incorrectly.\n", ext);
     error = GetLastError();
-    ok(error == 0, "Last error: %u\n", error);
+    ok(error == 0 ||
+        broken(error == 0xdeadbeef) || /* Win9x */
+        broken(error == ERROR_BAD_PATHNAME), /* Win98, WinMe */
+        "Last error: %u\n", error);
     if (handle != NULL) DestroyCursor(handle);
 
     /* Load as icon. For all tested formats, this should fail */
@@ -672,7 +747,10 @@ static void test_LoadImageFile(const unsigned char * image_data,
     handle = LoadImageA(NULL, filename, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
     ok(handle == NULL, "LoadImage(%s) as IMAGE_ICON succeeded incorrectly.\n", ext);
     error = GetLastError();
-    ok(error == 0, "Last error: %u\n", error);
+    ok(error == 0 ||
+        broken(error == 0xdeadbeef) || /* Win9x */
+        broken(error == ERROR_BAD_PATHNAME), /* Win98, WinMe */
+        "Last error: %u\n", error);
     if (handle != NULL) DestroyIcon(handle);
 
     /* Load as bitmap. Should succeed if bmp, fail for everything else */
@@ -682,7 +760,9 @@ static void test_LoadImageFile(const unsigned char * image_data,
 	ok(handle != NULL, "LoadImage(%s) as IMAGE_BITMAP failed.\n", ext);
     else ok(handle == NULL, "LoadImage(%s) as IMAGE_BITMAP succeeded incorrectly.\n", ext);
     error = GetLastError();
-    ok(error == 0, "Last error: %u\n", error);
+    ok(error == 0 ||
+        error == 0xdeadbeef, /* Win9x, WinMe */
+        "Last error: %u\n", error);
     if (handle != NULL) DeleteObject(handle);
 
     DeleteFileA(filename);
@@ -741,15 +821,16 @@ static void test_LoadImage(void)
     /* Test loading an icon as a cursor. */
     SetLastError(0xdeadbeef);
     handle = LoadImageA(NULL, "icon.ico", IMAGE_CURSOR, 0, 0, LR_LOADFROMFILE);
-    todo_wine
     ok(handle != NULL, "LoadImage() failed.\n");
     error = GetLastError();
-    ok(error == 0, "Last error: %u\n", error);
+    ok(error == 0 ||
+        broken(error == 0xdeadbeef) || /* Win9x */
+        broken(error == ERROR_BAD_PATHNAME), /* Win98, WinMe */
+        "Last error: %u\n", error);
 
     /* Test the icon information. */
     SetLastError(0xdeadbeef);
     ret = GetIconInfo(handle, &icon_info);
-    todo_wine
     ok(ret, "GetIconInfo() failed.\n");
     error = GetLastError();
     ok(error == 0xdeadbeef, "Last error: %u\n", error);
@@ -766,7 +847,6 @@ static void test_LoadImage(void)
     /* Clean up. */
     SetLastError(0xdeadbeef);
     ret = DestroyCursor(handle);
-    todo_wine
     ok(ret, "DestroyCursor() failed.\n");
     error = GetLastError();
     ok(error == 0xdeadbeef, "Last error: %u\n", error);
@@ -779,6 +859,99 @@ static void test_LoadImage(void)
     test_LoadImageFile(gif4pixel, sizeof(gif4pixel), "gif", 0);
     test_LoadImageFile(jpgimage, sizeof(jpgimage), "jpg", 0);
     test_LoadImageFile(pngimage, sizeof(pngimage), "png", 0);
+}
+
+static void test_CreateIconFromResource(void)
+{
+    HANDLE handle;
+    BOOL ret;
+    DWORD error;
+    BITMAPINFOHEADER *icon_header;
+    INT16 *hotspot;
+    ICONINFO icon_info;
+
+#define ICON_RES_WIDTH 32
+#define ICON_RES_HEIGHT 32
+#define ICON_RES_AND_SIZE (ICON_WIDTH*ICON_HEIGHT/8)
+#define ICON_RES_BPP 32
+#define ICON_RES_SIZE \
+    (sizeof(BITMAPINFOHEADER) + ICON_AND_SIZE + ICON_AND_SIZE*ICON_BPP)
+#define CRSR_RES_SIZE (2*sizeof(INT16) + ICON_RES_SIZE)
+
+    /* Set icon data. */
+    hotspot = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, CRSR_RES_SIZE);
+
+    /* Cursor resources have an extra hotspot, icon resources not. */
+    hotspot[0] = 3;
+    hotspot[1] = 3;
+
+    icon_header = (BITMAPINFOHEADER *) (hotspot + 2);
+    icon_header->biSize = sizeof(BITMAPINFOHEADER);
+    icon_header->biWidth = ICON_WIDTH;
+    icon_header->biHeight = ICON_HEIGHT*2;
+    icon_header->biPlanes = 1;
+    icon_header->biBitCount = ICON_BPP;
+    icon_header->biSizeImage = 0; /* Uncompressed bitmap. */
+
+    /* Test creating a cursor. */
+    SetLastError(0xdeadbeef);
+    handle = CreateIconFromResource((PBYTE) hotspot, CRSR_RES_SIZE, FALSE, 0x00030000);
+    ok(handle != NULL, "Create cursor failed.\n");
+
+    /* Test the icon information. */
+    SetLastError(0xdeadbeef);
+    ret = GetIconInfo(handle, &icon_info);
+    ok(ret, "GetIconInfo() failed.\n");
+    error = GetLastError();
+    ok(error == 0xdeadbeef, "Last error: %u\n", error);
+
+    if (ret)
+    {
+        ok(icon_info.fIcon == FALSE, "fIcon != FALSE.\n");
+        ok(icon_info.xHotspot == 3, "xHotspot is %u.\n", icon_info.xHotspot);
+        ok(icon_info.yHotspot == 3, "yHotspot is %u.\n", icon_info.yHotspot);
+        ok(icon_info.hbmColor != NULL, "No hbmColor!\n");
+        ok(icon_info.hbmMask != NULL, "No hbmMask!\n");
+    }
+
+    /* Clean up. */
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(handle);
+    ok(ret, "DestroyCursor() failed.\n");
+    error = GetLastError();
+    ok(error == 0xdeadbeef, "Last error: %u\n", error);
+
+    /* Test creating an icon. */
+    SetLastError(0xdeadbeef);
+    handle = CreateIconFromResource((PBYTE) icon_header, ICON_RES_SIZE, TRUE,
+				    0x00030000);
+    ok(handle != NULL, "Create icon failed.\n");
+
+    /* Test the icon information. */
+    SetLastError(0xdeadbeef);
+    ret = GetIconInfo(handle, &icon_info);
+    ok(ret, "GetIconInfo() failed.\n");
+    error = GetLastError();
+    ok(error == 0xdeadbeef, "Last error: %u\n", error);
+
+    if (ret)
+    {
+        ok(icon_info.fIcon == TRUE, "fIcon != TRUE.\n");
+	/* Icons always have hotspot in the middle */
+        ok(icon_info.xHotspot == ICON_WIDTH/2, "xHotspot is %u.\n", icon_info.xHotspot);
+        ok(icon_info.yHotspot == ICON_HEIGHT/2, "yHotspot is %u.\n", icon_info.yHotspot);
+        ok(icon_info.hbmColor != NULL, "No hbmColor!\n");
+        ok(icon_info.hbmMask != NULL, "No hbmMask!\n");
+    }
+
+    /* Clean up. */
+    SetLastError(0xdeadbeef);
+    ret = DestroyCursor(handle);
+    ok(ret, "DestroyCursor() failed.\n");
+    error = GetLastError();
+    ok(error == 0xdeadbeef, "Last error: %u\n", error);
+
+    HeapFree(GetProcessHeap(), 0, hotspot);
 }
 
 static void test_DestroyCursor(void)
@@ -810,24 +983,26 @@ static void test_DestroyCursor(void)
 
     SetLastError(0xdeadbeef);
     ret = DestroyCursor(cursor);
-    ok(!ret, "DestroyCursor on the active cursor succeeded\n");
+    ok(!ret || broken(ret)  /* succeeds on win9x */, "DestroyCursor on the active cursor succeeded\n");
     error = GetLastError();
     ok(error == 0xdeadbeef, "Last error: %u\n", error);
+    if (!ret)
+    {
+        cursor2 = GetCursor();
+        ok(cursor2 == cursor, "Active was set to %p when trying to destroy it\n", cursor2);
+        SetCursor(NULL);
 
-    cursor2 = GetCursor();
-    ok(cursor2 == cursor, "Active was set to %p when trying to destroy it\n", cursor2);
-
-    SetCursor(NULL);
-
-    /* Trying to destroy the cursor properly fails now with
-     * ERROR_INVALID_CURSOR_HANDLE.  This happens because we called
-     * DestroyCursor() 2+ times after calling SetCursor().  The calls to
-     * GetCursor() and SetCursor(NULL) in between make no difference. */
-    ret = DestroyCursor(cursor);
-    todo_wine {
-        ok(!ret, "DestroyCursor succeeded.\n");
-        error = GetLastError();
-        ok(error == ERROR_INVALID_CURSOR_HANDLE, "Last error: 0x%08x\n", error);
+        /* Trying to destroy the cursor properly fails now with
+         * ERROR_INVALID_CURSOR_HANDLE.  This happens because we called
+         * DestroyCursor() 2+ times after calling SetCursor().  The calls to
+         * GetCursor() and SetCursor(NULL) in between make no difference. */
+        ret = DestroyCursor(cursor);
+        todo_wine {
+            ok(!ret, "DestroyCursor succeeded.\n");
+            error = GetLastError();
+            ok(error == ERROR_INVALID_CURSOR_HANDLE || error == 0xdeadbeef, /* vista */
+               "Last error: 0x%08x\n", error);
+        }
     }
 
     DeleteObject(cursorInfo.hbmMask);
@@ -838,7 +1013,7 @@ static void test_DestroyCursor(void)
 
     SetLastError(0xdeadbeef);
     ret = DestroyCursor(cursor);
-    ok(ret, "DestroyCursor on the active cursor failed.\n");
+    ok(ret || broken(!ret) /* fails on win9x */, "DestroyCursor on the active cursor failed.\n");
     error = GetLastError();
     ok(error == 0xdeadbeef, "Last error: 0x%08x\n", error);
 
@@ -885,6 +1060,7 @@ START_TEST(cursoricon)
     test_initial_cursor();
     test_CreateIcon();
     test_LoadImage();
+    test_CreateIconFromResource();
     test_DestroyCursor();
     do_parent();
     test_child_process();

@@ -874,7 +874,7 @@ static void InitialFocusTest (void)
 
         hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG", (LPSTR)RT_DIALOG);
         hTemplate = LoadResource(g_hinst, hResource);
-        pTemplate = (LPDLGTEMPLATEA)LockResource(hTemplate);
+        pTemplate = LockResource(hTemplate);
 
         g_hwndInitialFocusT1 = 0;
         hDlg = CreateDialogIndirectParamA(g_hinst, pTemplate, NULL, focusDlgWinProc, 0);
@@ -896,7 +896,8 @@ static void test_GetDlgItemText(void)
     ret = GetDlgItemTextA(NULL, 0, string, sizeof(string)/sizeof(string[0]));
     ok(!ret, "GetDlgItemText(NULL) shouldn't have succeeded\n");
 
-    ok(string[0] == '\0', "string retrieved using GetDlgItemText should have been NULL terminated\n");
+    ok(string[0] == '\0' || broken(!strcmp(string, "Overwrite Me")),
+       "string retrieved using GetDlgItemText should have been NULL terminated\n");
 }
 
 static void test_DialogBoxParamA(void)
@@ -906,12 +907,16 @@ static void test_DialogBoxParamA(void)
 
     SetLastError(0xdeadbeef);
     ret = DialogBoxParamA(GetModuleHandle(NULL), "IDD_DIALOG" , hwnd_invalid, 0 , 0);
-    ok(0 == ret, "DialogBoxParamA returned %d, expected 0\n", ret);
-    ok(ERROR_INVALID_WINDOW_HANDLE == GetLastError(),"got %d, expected ERROR_INVALID_WINDOW_HANDLE\n",GetLastError());
+    ok(0 == ret || broken(ret == -1), "DialogBoxParamA returned %d, expected 0\n", ret);
+    ok(ERROR_INVALID_WINDOW_HANDLE == GetLastError() ||
+       broken(GetLastError() == 0xdeadbeef),
+       "got %d, expected ERROR_INVALID_WINDOW_HANDLE\n",GetLastError());
     SetLastError(0xdeadbeef);
     ret = DialogBoxParamA(GetModuleHandle(NULL), "RESOURCE_INVALID" , 0, 0, 0);
     ok(-1 == ret, "DialogBoxParamA returned %d, expected -1\n", ret);
-    ok(ERROR_RESOURCE_NAME_NOT_FOUND == GetLastError(),"got %d, expected ERROR_RESOURCE_NAME_NOT_FOUND\n",GetLastError());
+    ok(ERROR_RESOURCE_NAME_NOT_FOUND == GetLastError() ||
+       broken(GetLastError() == 0xdeadbeef),
+       "got %d, expected ERROR_RESOURCE_NAME_NOT_FOUND\n",GetLastError());
 }
 
 static void test_DisabledDialogTest(void)

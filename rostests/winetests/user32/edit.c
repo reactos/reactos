@@ -1336,30 +1336,41 @@ static void test_margins_font_change(void)
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0,0));
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 0, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 0, "got %d\n", HIWORD(margins));
- 
+    ok(LOWORD(margins) == 0 || broken(LOWORD(margins) == LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 0 || broken(HIWORD(margins) == HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
+
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,0));
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 0, "got %d\n", HIWORD(margins));  
+    ok(LOWORD(margins) == 1 || broken(LOWORD(margins) == LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 0 || broken(HIWORD(margins) == HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
 
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,1));
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins));  
+    ok(LOWORD(margins) == 1 || broken(LOWORD(margins) == LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 1 || broken(HIWORD(margins) == HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
 
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO,EC_USEFONTINFO));
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins)); 
+    ok(LOWORD(margins) == 1 || broken(LOWORD(margins) == LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 1 || broken(HIWORD(margins) == HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
+
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont2, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins)); 
- 
+    ok(LOWORD(margins) == 1 || broken(LOWORD(margins) != 1 && LOWORD(margins) != LOWORD(font_margins)), /* win95 */
+       "got %d\n", LOWORD(margins));
+    ok(HIWORD(margins) == 1 || broken(HIWORD(margins) != 1 && HIWORD(margins) != HIWORD(font_margins)), /* win95 */
+       "got %d\n", HIWORD(margins));
+
     /* Above a certain size threshold then the margin is updated */
     SetWindowPos(hwEdit, NULL, 10, 10, 1000, 100, SWP_NOZORDER | SWP_NOACTIVATE);
     SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,0));
@@ -1380,7 +1391,8 @@ static void test_margins_font_change(void)
     ok(HIWORD(margins) == HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
     SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont2, 0);
     margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) != LOWORD(font_margins), "got %d\n", LOWORD(margins));
+    ok(LOWORD(margins) != LOWORD(font_margins) || broken(LOWORD(margins) == LOWORD(font_margins)), /* win98 */
+       "got %d\n", LOWORD(margins));
     ok(HIWORD(margins) != HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
 
     SendMessageA(hwEdit, WM_SETFONT, 0, 0);
@@ -1989,6 +2001,53 @@ static void UnregisterWindowClasses (void)
     UnregisterClassA(szEditTextPositionClass, hinst);
 }
 
+void test_fontsize(void)
+{
+    HWND hwEdit;
+    HFONT hfont;
+    LOGFONT lf;
+    LONG r;
+    char szLocalString[MAXLEN];
+
+    memset(&lf,0,sizeof(LOGFONTA));
+    strcpy(lf.lfFaceName,"Arial");
+    lf.lfHeight = -300; /* taller than the edit box */
+    lf.lfWeight = 500;
+    hfont = CreateFontIndirect(&lf);
+
+    trace("EDIT: Oversized font (Multi line)\n");
+    hwEdit= CreateWindow("EDIT", NULL, ES_MULTILINE|ES_AUTOHSCROLL,
+                           0, 0, 150, 50, NULL, NULL, hinst, NULL);
+
+    SendMessage(hwEdit,WM_SETFONT,(WPARAM)hfont,0);
+
+    if (winetest_interactive)
+        ShowWindow (hwEdit, SW_SHOW);
+
+    r = SendMessage(hwEdit, WM_CHAR, 'A', 1);
+    ok(1 == r, "Expected: %d, got: %d\n", 1, r);
+    r = SendMessage(hwEdit, WM_CHAR, 'B', 1);
+    ok(1 == r, "Expected: %d, got: %d\n", 1, r);
+    r = SendMessage(hwEdit, WM_CHAR, 'C', 1);
+    ok(1 == r, "Expected: %d, got: %d\n", 1, r);
+
+    GetWindowText(hwEdit, szLocalString, MAXLEN);
+    ok(lstrcmp(szLocalString, "ABC")==0,
+       "Wrong contents of edit: %s\n", szLocalString);
+
+    r = SendMessage(hwEdit, EM_POSFROMCHAR,0,0);
+    ok(r != -1,"EM_POSFROMCHAR failed index 0\n");
+    r = SendMessage(hwEdit, EM_POSFROMCHAR,1,0);
+    ok(r != -1,"EM_POSFROMCHAR failed index 1\n");
+    r = SendMessage(hwEdit, EM_POSFROMCHAR,2,0);
+    ok(r != -1,"EM_POSFROMCHAR failed index 2\n");
+    r = SendMessage(hwEdit, EM_POSFROMCHAR,3,0);
+    ok(r == -1,"EM_POSFROMCHAR succeeded index 3\n");
+
+    DestroyWindow (hwEdit);
+    DeleteObject(hfont);
+}
+
 START_TEST(edit)
 {
     hinst = GetModuleHandleA(NULL);
@@ -2012,6 +2071,7 @@ START_TEST(edit)
     test_wantreturn_edit_dialog();
     test_singleline_wantreturn_edit_dialog();
     test_child_edit_wmkeydown();
+    test_fontsize();
 
     UnregisterWindowClasses();
 }

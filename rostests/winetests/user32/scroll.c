@@ -127,6 +127,74 @@ static void scrollbar_test3(void)
 
 }
 
+static void scrollbar_test4(void)
+{
+    BOOL ret;
+    SCROLLBARINFO sbi;
+    RECT rect;
+    BOOL (WINAPI *pGetScrollBarInfo)(HWND, LONG, LPSCROLLBARINFO);
+
+    pGetScrollBarInfo = (void*)GetProcAddress(GetModuleHandleA("user32.dll"), "GetScrollBarInfo");
+    if (!pGetScrollBarInfo)
+    {
+        win_skip("GetScrollBarInfo is not available\n");
+        return;
+    }
+
+    /* Test GetScrollBarInfo to make sure it returns rcScrollBar in screen
+     * coordinates. */
+    sbi.cbSize = sizeof(sbi);
+    ret = pGetScrollBarInfo( hScroll, OBJID_CLIENT, &sbi);
+    ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+    GetWindowRect( hScroll, &rect );
+    ok( ret, "The GetWindowRect() call should not fail.\n" );
+    ok( !(sbi.rgstate[0] & (STATE_SYSTEM_INVISIBLE|STATE_SYSTEM_OFFSCREEN)),
+        "unexpected rgstate(0x%x)\n", sbi.rgstate[0]);
+    ok( EqualRect(&rect, &sbi.rcScrollBar),
+        "WindowRect(%d, %d, %d, %d) != rcScrollBar(%d, %d, %d, %d)\n",
+        rect.top, rect.left, rect.bottom, rect.right,
+        sbi.rcScrollBar.top, sbi.rcScrollBar.left,
+        sbi.rcScrollBar.bottom, sbi.rcScrollBar.right );
+
+    /* Test windows horizontal and vertical scrollbar to make sure rcScrollBar
+     * is still returned in screen coordinates by moving the window, and
+     * making sure that it shifts the rcScrollBar value. */
+    ShowWindow( hMainWnd, SW_SHOW );
+    sbi.cbSize = sizeof(sbi);
+    ret = pGetScrollBarInfo( hMainWnd, OBJID_HSCROLL, &sbi);
+    ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+    GetWindowRect( hMainWnd, &rect );
+    ok( ret, "The GetWindowRect() call should not fail.\n" );
+    MoveWindow( hMainWnd, rect.left+5, rect.top+5,
+                rect.right-rect.left, rect.bottom-rect.top, TRUE );
+    rect = sbi.rcScrollBar;
+    OffsetRect(&rect, 5, 5);
+    ret = pGetScrollBarInfo( hMainWnd, OBJID_HSCROLL, &sbi);
+    ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+    ok( EqualRect(&rect, &sbi.rcScrollBar),
+        "PreviousRect(%d, %d, %d, %d) != CurrentRect(%d, %d, %d, %d)\n",
+        rect.top, rect.left, rect.bottom, rect.right,
+        sbi.rcScrollBar.top, sbi.rcScrollBar.left,
+        sbi.rcScrollBar.bottom, sbi.rcScrollBar.right );
+
+    sbi.cbSize = sizeof(sbi);
+    ret = pGetScrollBarInfo( hMainWnd, OBJID_VSCROLL, &sbi);
+    ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+    GetWindowRect( hMainWnd, &rect );
+    ok( ret, "The GetWindowRect() call should not fail.\n" );
+    MoveWindow( hMainWnd, rect.left+5, rect.top+5,
+                rect.right-rect.left, rect.bottom-rect.top, TRUE );
+    rect = sbi.rcScrollBar;
+    OffsetRect(&rect, 5, 5);
+    ret = pGetScrollBarInfo( hMainWnd, OBJID_VSCROLL, &sbi);
+    ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+    ok( EqualRect(&rect, &sbi.rcScrollBar),
+        "PreviousRect(%d, %d, %d, %d) != CurrentRect(%d, %d, %d, %d)\n",
+        rect.top, rect.left, rect.bottom, rect.right,
+        sbi.rcScrollBar.top, sbi.rcScrollBar.left,
+        sbi.rcScrollBar.bottom, sbi.rcScrollBar.right );
+}
+
 START_TEST ( scroll )
 {
     WNDCLASSA wc;
@@ -143,7 +211,8 @@ START_TEST ( scroll )
     wc.lpfnWndProc = MyWndProc;
     RegisterClassA(&wc);
 
-    hMainWnd = CreateWindowExA( 0, "MyTestWnd", "Scroll", WS_OVERLAPPEDWINDOW,
+    hMainWnd = CreateWindowExA( 0, "MyTestWnd", "Scroll",
+      WS_OVERLAPPEDWINDOW|WS_VSCROLL|WS_HSCROLL,
       CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0 );
 
     if ( !ok( hMainWnd != NULL, "Failed to create parent window. Tests aborted.\n" ) )
@@ -154,6 +223,7 @@ START_TEST ( scroll )
     scrollbar_test1();
     scrollbar_test2();
     scrollbar_test3();
+    scrollbar_test4();
 
     DestroyWindow(hScroll);
     DestroyWindow(hMainWnd);

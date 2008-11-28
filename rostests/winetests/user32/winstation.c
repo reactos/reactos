@@ -122,7 +122,9 @@ static void test_handles(void)
 
     flags = 0;
     ok( GetHandleInformation( w1, &flags ), "GetHandleInformation failed\n" );
-    ok( !(flags & HANDLE_FLAG_PROTECT_FROM_CLOSE), "handle %p PROTECT_FROM_CLOSE set\n", w1 );
+    ok( !(flags & HANDLE_FLAG_PROTECT_FROM_CLOSE) ||
+        broken(flags & HANDLE_FLAG_PROTECT_FROM_CLOSE), /* set on nt4 */
+        "handle %p PROTECT_FROM_CLOSE set\n", w1 );
 
     ok( DuplicateHandle( GetCurrentProcess(), w1, GetCurrentProcess(), (PHANDLE)&w2, 0,
                          TRUE, DUPLICATE_SAME_ACCESS ), "DuplicateHandle failed\n" );
@@ -201,7 +203,11 @@ static void test_handles(void)
     ok( GetLastError() == ERROR_BUSY, "bad last error %d\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
-    ok( !CloseHandle(d1), "closing thread desktop handle failed\n" );
+    if (CloseHandle( d1 ))  /* succeeds on nt4 */
+    {
+        win_skip( "NT4 desktop handle management is completely different\n" );
+        return;
+    }
     ok( GetLastError() == ERROR_INVALID_HANDLE, "bad last error %d\n", GetLastError() );
 
     ok( DuplicateHandle( GetCurrentProcess(), d1, GetCurrentProcess(), (PHANDLE)&d2, 0,
