@@ -52,6 +52,7 @@
 # define DECLARE_INTERFACE(i)    interface i
 # define DECLARE_INTERFACE_(i,b) interface i : public b
 #else
+# define interface struct
 # define STDMETHOD(m) HRESULT (STDMETHODCALLTYPE *m)
 # define STDMETHOD_(t,m) t (STDMETHODCALLTYPE *m)
 # define PURE
