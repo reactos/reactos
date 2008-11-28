@@ -291,7 +291,7 @@ typedef struct _TEB
     ULONG           GdiClientTID;               /* 6f8 */
     PVOID           GdiThreadLocaleInfo;        /* 6fc */
     PVOID           UserReserved[5];            /* 700 */
-    PVOID           glDispachTable[280];        /* 714 */
+    PVOID           glDispatchTable[280];        /* 714 */
     ULONG           glReserved1[26];            /* b74 */
     PVOID           glReserved2;                /* bdc */
     PVOID           glSectionInfo;              /* be0 */

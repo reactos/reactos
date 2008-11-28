@@ -1642,6 +1642,7 @@ extern "C" {
 #define WM_MEASUREITEM 44
 #if (WINVER >= 0x0500)
 #define WM_MENURBUTTONUP 290
+#define WM_UNINITMENUPOPUP 293
 #endif
 #define WM_MENUCHAR 288
 #define WM_MENUCOMMAND 294
