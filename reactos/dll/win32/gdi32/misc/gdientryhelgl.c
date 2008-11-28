@@ -16,6 +16,7 @@
 #include <ddrawgdi.h>
 #include <ntgdi.h>
 #include <d3dhal.h>
+#include <debug.h>
 
 
 /* For opengl support */
@@ -79,6 +80,8 @@ HANDLE ghDirectDraw;
 ULONG gcDirectDraw;
 
 #define GetDdHandle(Handle) ((HANDLE)Handle ? (HANDLE)Handle : ghDirectDraw)
+#define HEL_OGL_STUB DPRINT1("HEL OGL STUB: %s\n", __FUNCTION__);\
+        return 0
 
 
 
@@ -95,7 +98,7 @@ DdAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA Attach)
 {
 
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
     /* Call win32k */
 #if 0
     return NtGdiDdAddAttachedSurface((HANDLE)Attach->lpDDSurface->hDDSurface,
@@ -116,7 +119,7 @@ DdBlt(LPDDHAL_BLTDATA Blt)
 
 
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     HANDLE Surface = 0;
@@ -142,7 +145,7 @@ WINAPI
 DdDestroySurface(LPDDHAL_DESTROYSURFACEDATA pDestroySurface)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     DWORD Return = DDHAL_DRIVER_NOTHANDLED;
@@ -173,7 +176,7 @@ DdFlip(LPDDHAL_FLIPDATA Flip)
 {
 
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* Note :
@@ -215,7 +218,7 @@ WINAPI
 DdLock(LPDDHAL_LOCKDATA Lock)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Call win32k */
     return NtGdiDdLock((HANDLE)Lock->lpDDSurface->hDDSurface,
@@ -248,7 +251,7 @@ WINAPI
 DdGetBltStatus(LPDDHAL_GETBLTSTATUSDATA GetBltStatus)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* Call win32k */
@@ -267,7 +270,7 @@ WINAPI
 DdGetFlipStatus(LPDDHAL_GETFLIPSTATUSDATA GetFlipStatus)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* Call win32k */
@@ -287,7 +290,7 @@ WINAPI
 DdUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA UpdateOverlay)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* We have to handle this manually here */
@@ -329,7 +332,7 @@ WINAPI
 DdSetOverlayPosition(LPDDHAL_SETOVERLAYPOSITIONDATA SetOverlayPosition)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* Call win32k */
@@ -349,7 +352,7 @@ WINAPI
 DdWaitForVerticalBlank(LPDDHAL_WAITFORVERTICALBLANKDATA WaitForVerticalBlank)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* Call win32k */
@@ -370,7 +373,7 @@ WINAPI
 DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* 
@@ -396,7 +399,7 @@ WINAPI
 DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     DWORD Return = DDHAL_DRIVER_NOTHANDLED;
@@ -661,7 +664,7 @@ WINAPI
 DdSetColorKey(LPDDHAL_SETCOLORKEYDATA pSetColorKey)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* Call win32k */
@@ -680,7 +683,7 @@ WINAPI
 DdGetScanLine(LPDDHAL_GETSCANLINEDATA pGetScanLine)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Call win32k */
     return NtGdiDdGetScanLine(GetDdHandle(pGetScanLine->lpDD->hDD),
@@ -699,7 +702,7 @@ WINAPI
 DvpCreateVideoPort(LPDDHAL_CREATEVPORTDATA pDvdCreatePort)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     pDvdCreatePort->lpVideoPort->hDDVideoPort = 
         NtGdiDvpCreateVideoPort(GetDdHandle(pDvdCreatePort->lpDD->lpGbl->hDD), 
@@ -718,7 +721,7 @@ WINAPI
 DvpDestroyVideoPort(LPDDHAL_DESTROYVPORTDATA pDvdDestoryPort)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
   return NtGdiDvpDestroyVideoPort(pDvdDestoryPort->lpVideoPort->hDDVideoPort, (PDD_DESTROYVPORTDATA)pDvdDestoryPort);
 #endif
@@ -734,7 +737,7 @@ WINAPI
 DvpFlipVideoPort(LPDDHAL_FLIPVPORTDATA pDvdPortFlip)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     return NtGdiDvpFlipVideoPort(pDvdPortFlip->lpVideoPort->hDDVideoPort,
@@ -754,7 +757,7 @@ WINAPI
 DvpGetVideoPortBandwidth(LPDDHAL_GETVPORTBANDWIDTHDATA pDvdPortBandWidth)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpGetVideoPortBandwidth(pDvdPortBandWidth->lpVideoPort->hDDVideoPort, (PDD_GETVPORTBANDWIDTHDATA)pDvdPortBandWidth);
 #endif
@@ -770,7 +773,7 @@ WINAPI
 DvpColorControl(LPDDHAL_VPORTCOLORDATA pDvdPortColorControl)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpColorControl(pDvdPortColorControl->lpVideoPort->hDDVideoPort, (PDD_VPORTCOLORDATA) pDvdPortColorControl);
 #endif
@@ -786,7 +789,7 @@ WINAPI
 DvpGetVideoSignalStatus(LPDDHAL_GETVPORTSIGNALDATA pDvdPortVideoSignalStatus)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpGetVideoSignalStatus(pDvdPortVideoSignalStatus->lpVideoPort->hDDVideoPort, (PDD_GETVPORTSIGNALDATA) pDvdPortVideoSignalStatus);
 #endif
@@ -802,7 +805,7 @@ WINAPI
 DvpGetVideoPortFlipStatus(LPDDHAL_GETVPORTFLIPSTATUSDATA pDvdPortVideoPortFlipStatus)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpGetVideoPortFlipStatus(GetDdHandle(pDvdPortVideoPortFlipStatus->lpDD->lpGbl->hDD), (PDD_GETVPORTFLIPSTATUSDATA) pDvdPortVideoPortFlipStatus);
 #endif
@@ -819,7 +822,7 @@ WINAPI
 DvpCanCreateVideoPort(LPDDHAL_CANCREATEVPORTDATA pDvdCanCreateVideoPort)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpCanCreateVideoPort(GetDdHandle(pDvdCanCreateVideoPort->lpDD->lpGbl->hDD), (PDD_CANCREATEVPORTDATA) pDvdCanCreateVideoPort);
 #endif
@@ -834,7 +837,7 @@ WINAPI
 DvpWaitForVideoPortSync(LPDDHAL_WAITFORVPORTSYNCDATA pDvdWaitForVideoPortSync)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpWaitForVideoPortSync(pDvdWaitForVideoPortSync->lpVideoPort->hDDVideoPort,  (PDD_WAITFORVPORTSYNCDATA) pDvdWaitForVideoPortSync);
 #endif
@@ -850,7 +853,7 @@ WINAPI
 DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /*
      * Windows XP limit to max 10 handles of videoport surface and Vbi 
@@ -918,7 +921,7 @@ WINAPI
 DvpGetVideoPortField(LPDDHAL_FLIPVPORTDATA pDvdGetVideoPortField)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpGetVideoPortField(pDvdGetVideoPortField->lpVideoPort->hDDVideoPort, (PDD_GETVPORTFIELDDATA)pDvdGetVideoPortField);
 #endif
@@ -934,7 +937,7 @@ WINAPI
 DvpGetVideoPortInputFormats(LPDDHAL_GETVPORTINPUTFORMATDATA pDvdGetVideoPortInputFormat)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpGetVideoPortInputFormats(pDvdGetVideoPortInputFormat->lpVideoPort->hDDVideoPort, (PDD_GETVPORTINPUTFORMATDATA) pDvdGetVideoPortInputFormat);
 #endif
@@ -950,7 +953,7 @@ WINAPI
 DvpGetVideoPortLine(LPDDHAL_GETVPORTLINEDATA pDvdGetVideoPortLine)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpGetVideoPortLine(pDvdGetVideoPortLine->lpVideoPort->hDDVideoPort, (PDD_GETVPORTLINEDATA)pDvdGetVideoPortLine);
 #endif
@@ -966,7 +969,7 @@ WINAPI
 DvpGetVideoPortOutputFormats(LPDDHAL_GETVPORTLINEDATA pDvdGetVideoPortOutputFormat)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpGetVideoPortLine(pDvdGetVideoPortOutputFormat->lpVideoPort->hDDVideoPort, (PDD_GETVPORTLINEDATA)pDvdGetVideoPortOutputFormat);
 #endif
@@ -982,7 +985,7 @@ WINAPI
 DvpGetVideoPortConnectInfo(LPDDHAL_GETVPORTCONNECTDATA pDvdGetVideoPortInfo)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDvpGetVideoPortConnectInfo( GetDdHandle( pDvdGetVideoPortInfo->lpDD->lpGbl->hDD) , (PDD_GETVPORTCONNECTDATA) pDvdGetVideoPortInfo);
 #endif
@@ -998,7 +1001,7 @@ WINAPI
 DdGetAvailDriverMemory(LPDDHAL_GETAVAILDRIVERMEMORYDATA pDdGetAvailDriverMemory)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
   return NtGdiDdGetAvailDriverMemory(GetDdHandle( pDdGetAvailDriverMemory->lpDD->hDD), (PDD_GETAVAILDRIVERMEMORYDATA) pDdGetAvailDriverMemory);
 #endif
@@ -1014,7 +1017,7 @@ WINAPI
 DdAlphaBlt(LPDDHAL_BLTDATA pDdAlphaBlt)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     HANDLE hDDSrcSurface = 0; 
 
@@ -1037,7 +1040,7 @@ WINAPI
 DdCreateSurfaceEx(LPDDHAL_CREATESURFACEEXDATA pDdCreateSurfaceEx)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     pDdCreateSurfaceEx->ddRVal = NtGdiDdCreateSurfaceEx( GetDdHandle(pDdCreateSurfaceEx->lpDDLcl->lpGbl->hDD),
                                                          (HANDLE)pDdCreateSurfaceEx->lpDDSLcl->hDDSurface, 
@@ -1056,7 +1059,7 @@ WINAPI
 DdColorControl(LPDDHAL_COLORCONTROLDATA pDdColorControl)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     return NtGdiDdColorControl( (HANDLE) pDdColorControl->lpDDSurface->hDDSurface, (PDD_COLORCONTROLDATA) &pDdColorControl);
@@ -1073,7 +1076,7 @@ WINAPI
 DdSetExclusiveMode(LPDDHAL_SETEXCLUSIVEMODEDATA pDdSetExclusiveMode)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDdSetExclusiveMode( GetDdHandle(pDdSetExclusiveMode->lpDD->hDD), (PDD_SETEXCLUSIVEMODEDATA) &pDdSetExclusiveMode);
 #endif
@@ -1089,7 +1092,7 @@ WINAPI
 DdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA pDdFlipToGDISurface)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return NtGdiDdFlipToGDISurface( GetDdHandle(pDdFlipToGDISurface->lpDD->hDD), (PDD_FLIPTOGDISURFACEDATA) &pDdFlipToGDISurface);
 #endif
@@ -1101,7 +1104,7 @@ WINAPI
 DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     DDHAL_GETDRIVERINFODATA pDrvInfoData;
     DWORD retValue = DDHAL_DRIVER_NOTHANDLED;
@@ -1441,7 +1444,7 @@ WINAPI
 D3dContextCreate(LPD3DHAL_CONTEXTCREATEDATA pdcci)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     HANDLE hSurfZ = NULL;
 
@@ -1467,7 +1470,7 @@ WINAPI
 DdCanCreateD3DBuffer(LPDDHAL_CANCREATESURFACEDATA CanCreateD3DBuffer)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* 
      * Note : This functions are basic same, in win32k 
@@ -1493,7 +1496,7 @@ WINAPI
 DdCreateD3DBuffer(LPDDHAL_CREATESURFACEDATA pCreateSurface)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     HANDLE puhSurface = 0;
     DDRAWI_DDRAWSURFACE_GBL *pSurfGBL;
@@ -1566,7 +1569,7 @@ WINAPI
 DdDestroyD3DBuffer(LPDDHAL_DESTROYSURFACEDATA pDestroySurface)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     DWORD retValue = 0;
@@ -1590,7 +1593,7 @@ WINAPI
 DdLockD3D(LPDDHAL_LOCKDATA Lock)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Call win32k */
     return NtGdiDdLockD3D((HANDLE)Lock->lpDDSurface->hDDSurface, (PDD_LOCKDATA)Lock);
@@ -1607,7 +1610,7 @@ WINAPI
 DdUnlockD3D(LPDDHAL_UNLOCKDATA Unlock)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Call win32k */
     return NtGdiDdUnlock((HANDLE)Unlock->lpDDSurface->hDDSurface,
@@ -1624,7 +1627,7 @@ bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
                  BOOL bComplete)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     DD_SURFACE_LOCAL SurfaceLocal;
     DD_SURFACE_GLOBAL SurfaceGlobal;
@@ -1786,9 +1789,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     }
 
     /* Do the query */
-    if  (  (pDirectDrawGlobal == NULL) ||
-           (GetDdHandle(pDirectDrawGlobal->hDD) == 0) || 
-          (pHalInfo == NULL) )
+    if ( GetDdHandle(pDirectDrawGlobal->hDD) == NULL || pHalInfo == NULL)
     {
         /* We failed, free the memory and return */
         retVal = FALSE;
@@ -1804,7 +1805,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     EnumDisplaySettingsW(NULL,ENUM_CURRENT_SETTINGS,&DevMode);
 
     /* Dectect RGB bit mask */
-    hdc = GetDC(GetDesktopWindow());
+    hdc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
     if (hdc == NULL)
     {
         retVal = FALSE;
@@ -1842,8 +1843,6 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     DeleteDC(hdc);
     /* End dectect RGB bit mask */
 
-    if (pHalInfo)
-    {
         /* Clear the incoming pointer */
         RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
 
@@ -2016,12 +2015,6 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
             pHalInfo->lpdwFourCC = pdwFourCC;
         */
-    }
-    else
-    {
-       retVal = FALSE;
-       goto cleanup;
-    }
 
     /* Now check if we got any DD callbacks */
     if (pDDCallbacks)
@@ -2244,7 +2237,7 @@ WINAPI
 DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     BOOL Return = FALSE;
 
@@ -2291,7 +2284,7 @@ DdCreateSurfaceObject( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
                        BOOL bPrimarySurface)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     return bDDCreateSurface(pSurfaceLocal, TRUE);
 #endif
@@ -2308,7 +2301,7 @@ WINAPI
 DdDeleteSurfaceObject(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     BOOL Return = FALSE;
 
@@ -2335,7 +2328,7 @@ DdResetVisrgn(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
               HWND hWnd)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Call win32k directly */
     return NtGdiDdResetVisrgn((HANDLE) pSurfaceLocal->hDDSurface, hWnd);
@@ -2353,7 +2346,7 @@ DdGetDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
         LPPALETTEENTRY pColorTable)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Call win32k directly */
     return NtGdiDdGetDC(pColorTable, (HANDLE) pSurfaceLocal->hDDSurface);
@@ -2370,7 +2363,7 @@ WINAPI
 DdReleaseDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Call win32k directly */
     return NtGdiDdReleaseDC((HANDLE) pSurfaceLocal->hDDSurface);
@@ -2391,7 +2384,7 @@ DdCreateDIBSection(HDC hdc,
                    DWORD dwOffset)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    HEL_OGL_STUB;
 }
 
 /*
@@ -2405,7 +2398,7 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                            BOOL *pbNewMode)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Call win32k directly */
     return NtGdiDdReenableDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
@@ -2425,7 +2418,7 @@ DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
                  LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     /* Create Surface if it does not exits one */
     if (!pSurfaceFrom->hDDSurface)
@@ -2494,7 +2487,7 @@ DdGetDxHandle(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
               BOOL bRelease)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 #if 0
     HANDLE hDD = NULL;
     HANDLE hSurface = (HANDLE)pSurface->hDDSurface;
@@ -2524,7 +2517,7 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
                LPVOID lpGammaRamp)
 {
     /* Fixme for opengl hel emulations */
-    return 0;
+    HEL_OGL_STUB;
 
 #if 0
     /* Call win32k directly */
