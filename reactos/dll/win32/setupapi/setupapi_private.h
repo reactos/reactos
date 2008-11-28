@@ -44,6 +44,11 @@
 
 #include <pseh/pseh.h>
 
+/* This hack definition is necessary as long as setupapi 
+   depends on Wine "compatibility" headers */
+typedef ULONG RESOURCEID;
+typedef RESOURCEID *PRESOURCEID;
+
 #include <pnp_c.h>
 #include "rpc_private.h"
 #include "resource.h"
