@@ -509,5 +509,19 @@ NtGdiPolyDraw(
     return result;
 }
 
+ /*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtGdiMoveTo(
+    IN HDC hdc,
+    IN INT x,
+    IN INT y,
+    OUT OPTIONAL LPPOINT pptOut)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
 /* EOF */

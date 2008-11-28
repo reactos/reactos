@@ -3573,4 +3573,17 @@ NtGdiGetDhpdev(
   return pGdiDevice->hPDev;
 }
 
+ /*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtGdiMakeInfoDC(
+    IN HDC hdc,
+    IN BOOL bSet)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /* EOF */
