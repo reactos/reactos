@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2005 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2008 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     bsmaster.h
@@ -31,7 +31,7 @@ Notes:
 Revision History:
 
     Code was created by
-         Alter, Copyright (c) 2002-2007
+         Alter, Copyright (c) 2002-2008
 
     Some definitions were taken from FreeBSD 4.3-4.6 ATA driver by
          Søren Schmidt, Copyright (c) 1998,1999,2000,2001
@@ -520,6 +520,8 @@ typedef struct _IDE_AHCI_PORT_REGISTERS {
 
 } IDE_AHCI_PORT_REGISTERS, *PIDE_AHCI_PORT_REGISTERS;
 
+#define IDX_AHCI_P_CLB                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, CLB))
+#define IDX_AHCI_P_FB                     (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, FB))
 #define IDX_AHCI_P_IS                     (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, IS))
 #define IDX_AHCI_P_CI                     (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, CI))
 
@@ -544,6 +546,7 @@ typedef struct _IDE_AHCI_PRD_ENTRY {
 } IDE_AHCI_PRD_ENTRY, *PIDE_AHCI_PRD_ENTRY;
 
 #define ATA_AHCI_DMA_ENTRIES		(PAGE_SIZE/2/sizeof(IDE_AHCI_PRD_ENTRY))   /* 128 */
+#define ATA_AHCI_MAX_TAGS		32
 
 typedef struct _IDE_AHCI_CMD {
     UCHAR              cfis[64];
@@ -557,7 +560,21 @@ typedef struct _IDE_AHCI_CMD_LIST {
     USHORT             prd_length;     /* PRD entries */
     ULONG              bytecount;
     ULONGLONG          cmd_table_phys; /* 128byte aligned */
+    ULONG              Reserved[4];
 } IDE_AHCI_CMD_LIST, *PIDE_AHCI_CMD_LIST;
+
+typedef struct _IDE_AHCI_RCV_FIS {
+    UCHAR              dsfis[28];
+    UCHAR              Reserved1[4];
+    UCHAR              psfis[24];
+    UCHAR              Reserved2[8];
+    UCHAR              rfis[24];
+    UCHAR              Reserved3[4];
+    ULONG              SDBFIS;
+    UCHAR              ufis[64];
+    UCHAR              Reserved4[96];
+} IDE_AHCI_RCV_FIS, *PIDE_AHCI_RCV_FIS;
+
 
 #define IsBusMaster(pciData) \
     ( ((pciData)->Command & (PCI_ENABLE_BUS_MASTER/* | PCI_ENABLE_IO_SPACE*/)) == \
@@ -892,7 +909,7 @@ typedef struct _HW_DEVICE_EXTENSION {
     ULONG NumberChannels;
     ULONG NumberLuns;
     ULONG FirstChannelToCheck;
-#if 1
+#if 0
     HW_LU_EXTENSION lun[IDE_MAX_LUN];
     HW_CHANNEL chan[AHCI_MAX_PORT/*IDE_MAX_CHAN*/];
 #else
@@ -1015,6 +1032,14 @@ UniataFindCompatBusMasterController2(
     IN PCHAR ArgumentString,
     IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
     OUT PBOOLEAN Again
+    );
+
+#define UNIATA_ALLOCATE_NEW_LUNS  0x00
+
+extern BOOLEAN
+UniataAllocateLunExt(
+    PHW_DEVICE_EXTENSION  deviceExtension,
+    ULONG NewNumberChannels
     );
 
 extern ULONG DDKAPI
@@ -1159,6 +1184,14 @@ AtapiInterrupt2(
     );
 
 extern PDRIVER_OBJECT SavedDriverObject;
+
+extern BOOLEAN
+UniataChipDetectChannels(
+    IN PVOID HwDeviceExtension,
+    IN PPCI_COMMON_CONFIG pciData, // optional
+    IN ULONG DeviceNumber,
+    IN PPORT_CONFIGURATION_INFORMATION ConfigInfo
+    );
 
 extern BOOLEAN
 UniataChipDetect(
