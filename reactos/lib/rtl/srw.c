@@ -50,7 +50,7 @@
 #define ASSERT_SRW_WAITBLOCK(ptr) \
     ASSERT(((ULONG_PTR)ptr & ((1 << RTL_SRWLOCK_BITS) - 1)) == 0)
 #else
-#define ASSERT_SRW_WAITBLOCK(ptr)
+#define ASSERT_SRW_WAITBLOCK(ptr) ((void)0)
 #endif
 
 typedef struct _RTLP_SRWLOCK_SHARED_WAKE
