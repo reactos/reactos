@@ -242,7 +242,7 @@ KiInsertQueueApc(IN PKAPC Apc,
                         if (Thread->Queue) Thread->Queue->CurrentCount++;
                         
                         /* Put into deferred ready list with this status */
-                        Status = STATUS_KERNEL_APC;
+                        Thread->WaitStatus = STATUS_KERNEL_APC;
                         KiInsertDeferredReadyList(Thread);
                     }
                     
