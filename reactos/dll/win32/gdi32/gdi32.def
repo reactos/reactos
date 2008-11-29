@@ -622,3 +622,4 @@ bInitSystemAndFontsDirectoriesW@8
 bMakePathNameW@16
 cGetTTFFromFOT@28
 gdiPlaySpoolStream@24
+GdiGetBitmapBitsSize@4

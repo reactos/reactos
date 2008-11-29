@@ -21,6 +21,50 @@
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 
+
+
+/*
+ * @implemented
+ */
+int
+WINAPI
+GdiGetBitmapBitsSize(BITMAPINFO *lpbmi)
+{
+    int retSize;
+    
+    if (lpbmi->bmiHeader.biSize == FIELD_OFFSET(BITMAPINFOHEADER, biPlanes))
+    {
+        /* Calc the bits Size and align it*/
+        retSize = HIWORD(lpbmi->bmiHeader.biWidth) * ((LOWORD(lpbmi->bmiHeader.biWidth) * 
+                  LOWORD(lpbmi->bmiHeader.biHeight) * HIWORD(lpbmi->bmiHeader.biHeight) + 31) 
+                  & -32) / 8;
+    }
+    else
+    {
+        if ( (lpbmi->bmiHeader.biCompression == BI_BITFIELDS) ||
+             (lpbmi->bmiHeader.biCompression == BI_RGB))
+        {
+            if (lpbmi->bmiHeader.biHeight >=0 )
+            {
+                /* Calc the bits Size and align it*/
+                retSize = lpbmi->bmiHeader.biHeight * ((lpbmi->bmiHeader.biWidth * 
+                          lpbmi->bmiHeader.biPlanes * lpbmi->bmiHeader.biBitCount + 31) & -32) / 8;
+            }
+            else
+            {
+                /* Make height postiive if it negitve then calc the bits Size and align it*/
+                retSize = (-lpbmi->bmiHeader.biHeight) * ((lpbmi->bmiHeader.biWidth * 
+                          lpbmi->bmiHeader.biPlanes * lpbmi->bmiHeader.biBitCount + 31) & -32) / 8;
+            }
+        }
+        else
+        {
+            retSize = lpbmi->bmiHeader.biSizeImage;
+        }
+    }
+    return retSize;
+}
+
 /*
  * @unimplemented
  */
