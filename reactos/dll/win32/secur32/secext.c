@@ -12,7 +12,7 @@ GetComputerObjectNameA (
 	PULONG pulong
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -24,7 +24,7 @@ GetComputerObjectNameW (
 	PULONG pulong
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -37,7 +37,7 @@ GetUserNameExA (
 	PULONG pulong
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -50,6 +50,6 @@ GetUserNameExW (
 	PULONG pulong
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }

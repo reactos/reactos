@@ -53,7 +53,8 @@ LsaDeregisterLogonProcess(HANDLE LsaHandle)
 NTSTATUS STDCALL
 LsaConnectUntrusted(PHANDLE LsaHandle)
 {
-  return(STATUS_UNSUCCESSFUL);
+  UNIMPLEMENTED;
+  return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -339,7 +340,8 @@ PULONG LogonSessionCount,
 PLUID * LogonSessionList
 )
 {
-  return(FALSE);
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /*
@@ -352,7 +354,8 @@ PLUID LogonId,
 PSECURITY_LOGON_SESSION_DATA * ppLogonSessionData
 )
 {
-  return(FALSE);
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /*
@@ -365,7 +368,8 @@ POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
 HANDLE NotificationEventHandle
 )
 {
-  return(FALSE);
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /*
@@ -378,5 +382,6 @@ POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
 HANDLE NotificationEventHandle
 )
 {
-  return(FALSE);
+  UNIMPLEMENTED;
+  return FALSE;
 }

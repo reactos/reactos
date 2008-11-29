@@ -11,7 +11,7 @@ EnumerateSecurityPackagesW (
 	PSecPkgInfoW* psecpkginfow
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -22,7 +22,7 @@ EnumerateSecurityPackagesA(
 	PSecPkgInfoA* psecpkginfoa
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -32,7 +32,7 @@ FreeContextBuffer (
 	PVOID pvoid
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -40,7 +40,7 @@ SECURITY_STATUS
 WINAPI
 FreeCredentialsHandle(PCredHandle Handle)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -48,7 +48,7 @@ SECURITY_STATUS
 WINAPI
 DeleteSecurityContext(PCtxtHandle Handle)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -56,7 +56,7 @@ PSecurityFunctionTableW
 WINAPI
 InitSecurityInterfaceW(VOID)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return NULL;
 }
 
@@ -67,7 +67,7 @@ EncryptMessage(PCtxtHandle Handle,
                PSecBufferDesc Buffer,
                ULONG Bar)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -78,7 +78,7 @@ DecryptMessage(PCtxtHandle Handle,
                ULONG Foo,
                PULONG Bar)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -87,7 +87,7 @@ WINAPI
 ApplyControlTokenW(PCtxtHandle Handle,
                   PSecBufferDesc Buffer)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -96,7 +96,7 @@ WINAPI
 ApplyControlTokenA(PCtxtHandle Handle,
                   PSecBufferDesc Buffer)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -105,7 +105,7 @@ WINAPI
 CompleteAuthToken(PCtxtHandle Handle,
                   PSecBufferDesc Buffer)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -115,7 +115,7 @@ QueryContextAttributesA(PCtxtHandle Handle,
                         ULONG Foo,
                         PVOID Bar)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -125,7 +125,7 @@ QueryContextAttributesW(PCtxtHandle Handle,
                         ULONG Foo,
                         PVOID Bar)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -143,7 +143,7 @@ AcquireCredentialsHandleA (
     PTimeStamp pExpires
     )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -161,7 +161,7 @@ AcquireCredentialsHandleW (
     PTimeStamp pExpires
     )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -182,7 +182,7 @@ InitializeSecurityContextW (
     PTimeStamp pExpires
     )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -203,7 +203,7 @@ InitializeSecurityContextA (
     PTimeStamp pExpires
     )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -217,7 +217,7 @@ MakeSignature(
     ULONG MessageSeqNo
     )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -231,7 +231,7 @@ VerifySignature(
     PULONG pfQOP
     )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -242,7 +242,7 @@ QuerySecurityPackageInfoA(
     PSecPkgInfoA* ppPackageInfo
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -253,7 +253,7 @@ QuerySecurityPackageInfoW(
     PSecPkgInfoW* ppPackageInfo
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -271,7 +271,7 @@ AcceptSecurityContext(
 	PTimeStamp ptsExpiry
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -288,7 +288,7 @@ AddCredentialsA(
 	PTimeStamp ptsExpiry
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -305,7 +305,7 @@ AddCredentialsW(
 	PTimeStamp ptsExpiry
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -318,7 +318,7 @@ ExportSecurityContext(
 	LPVOID *pToken
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -328,7 +328,7 @@ ImpersonateSecurityContext(
 	PCtxtHandle phContext
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -341,7 +341,7 @@ ImportSecurityContextA(
 	PCtxtHandle phContext
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -354,7 +354,7 @@ ImportSecurityContextW(
 	PCtxtHandle phContext
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -366,7 +366,7 @@ QueryCredentialsAttributesA(
 	LPVOID pBuffer
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -378,7 +378,7 @@ QueryCredentialsAttributesW(
 	LPVOID pBuffer
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -389,7 +389,7 @@ QuerySecurityContextToken(
 	PHANDLE phToken
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -399,7 +399,7 @@ RevertSecurityContext(
 	PCtxtHandle phContext
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -407,7 +407,7 @@ PSecurityFunctionTableA
 WINAPI
 InitSecurityInterfaceA(VOID)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return NULL;
 }
 
@@ -421,7 +421,7 @@ TranslateNameA(
 	PULONG nSize
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
@@ -435,6 +435,6 @@ TranslateNameW(
 	PULONG nSize
 )
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	UNIMPLEMENTED;
 	return FALSE;
 }
