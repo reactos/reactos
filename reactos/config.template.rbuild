@@ -86,9 +86,25 @@
 <property name="_ELF_" value="0" />
 
 <!--
-	Activate OpenGL emulations for ReactX in GDI32
+	Activate gdi32.dll DirectX/ReactX OpenGL emulations for ReactX,
+	this is a exprement and will not fullywork yet, It is not a 
+	replacement for real hardware support for ReactX, It is for
+	graphice card that does not support DirectX/ReactX hal, if
+	the graphice card support hardware acclartions of OpenGL
+	this will take over ReactX/DirectX Hal support or if 
+	the graphice card does not support OpenGL Hardware acclartions
+	or DirectX/ReactX hardware acclartions ReactOS fallback mesa3D
+	ICD interface will do the work.     
+	
+	Waring to activate only REACTX_EMU you are force to activate
+	NSWPAT as well, if we do not have hardware acclartions driver
+	install for OpenGL, When the graphic card are runing on
+	Mesa3D you are force to activate NSWPAT as well to support
+	compress texture (DXT1, DXT2, DXT3, DXT4, DXT5), 
+	other wise REACTX_EMU will not work proper and can not decompress
+	texture/surface.
 -->
-<property name="REACTX_EMU" value="0" />
+<property name="REACTX_EMU" value="1" />
 
 
 </group>
