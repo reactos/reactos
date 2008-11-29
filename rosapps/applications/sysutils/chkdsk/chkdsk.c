@@ -205,7 +205,7 @@ ParseCommandLine(
 //
 //----------------------------------------------------------------------
 BOOLEAN
-STDCALL
+WINAPI
 ChkdskCallback(
 	CALLBACKCOMMAND	Command,
 	DWORD		Modifier,

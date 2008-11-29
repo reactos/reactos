@@ -69,7 +69,7 @@ char tempPICE[1024];
 //
 //*************************************************************************
 
-NTSTATUS STDCALL pice_open(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS NTAPI pice_open(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     DPRINT((0,"pice_open\n"));
 
@@ -89,7 +89,7 @@ NTSTATUS STDCALL pice_open(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 // pice_close()
 //
 //*************************************************************************
-NTSTATUS STDCALL pice_close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS NTAPI pice_close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     DPRINT((0,"pice_close\n"));
 
@@ -108,7 +108,7 @@ NTSTATUS STDCALL pice_close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 //
 //*************************************************************************
 
-NTSTATUS STDCALL pice_ioctl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS NTAPI pice_ioctl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 //	char* pFilename = (char*) ioctl_param;
 
@@ -160,7 +160,7 @@ NTSTATUS STDCALL pice_ioctl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
+NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
 			     PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Module entry point

@@ -68,7 +68,7 @@ INT (* COMMAND_CALL) (INT ArgC,LPCSTR ArgV []);
 
 
 
-VOID STDCALL PrintStatus (NTSTATUS Status);
+VOID WINAPI PrintStatus (NTSTATUS Status);
 
 #define CMD_REF(n) CMD_##n
 #define CMD_DEF(n) INT CMD_REF(n) (INT argc, LPCSTR argv [])
@@ -88,7 +88,7 @@ struct _COMMAND_DESCRIPTOR
 
 #define BIT(n,m) (((n)&(m))?'1':'0')
 LPSTR
-STDCALL
+WINAPI
 ByteToBinaryString (
 	BYTE	Byte,
 	CHAR	Binary [8]
@@ -107,7 +107,7 @@ ByteToBinaryString (
 
 /* --- */
 VOID
-STDCALL
+WINAPI
 DumpData (int Size, PVOID pData )
 {
 	PBYTE		Buffer = (PBYTE) pData;
@@ -200,7 +200,7 @@ KernelObjectName [] =
 
 
 LPTSTR
-STDCALL
+WINAPI
 HandleTypeToObjectName (
 	DWORD	HandleType
 	)
@@ -216,7 +216,7 @@ HandleTypeToObjectName (
 /* --- */
 
 int
-STDCALL
+WINAPI
 FindRequiredBufferSize (int i, int step)
 {
 	NTSTATUS	Status = STATUS_INFO_LENGTH_MISMATCH;
@@ -263,7 +263,7 @@ FindRequiredBufferSize (int i, int step)
 
 
 VOID
-STDCALL
+WINAPI
 PrintStatus (NTSTATUS Status)
 {
 	LPCSTR StatusName = NULL;
@@ -310,7 +310,7 @@ DaysOfWeek [] =
 };
 
 VOID
-STDCALL
+WINAPI
 PrintUtcDateTime (LPCSTR Template, PTIME UtcTime)
 {
 	CHAR		UtcTimeString [64];
