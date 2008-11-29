@@ -114,7 +114,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
     }
 
-    if( NT_SUCCESS(Status) ) {
+    if( NT_SUCCESS(Status) && FCB->State == SOCKET_STATE_CONNECTED ) {
 	Status = MakeSocketIntoConnection( FCB );
 
 	if( !NT_SUCCESS(Status) ) {
