@@ -396,10 +396,10 @@ WINAPI
 DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
 {
     /* Fixme for opengl hel emulations */
-
     ULONG SurfaceCount;
     DDSURFACEDESC2 desc2;
     LPDDSURFACEDESC pSurfaceDesc;
+    WINED3DDISPLAYMODE Mode;
 
     HRESULT hrc = DD_OK;
     UINT Height;
@@ -409,7 +409,7 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     IWineD3D *pWined3d = (IWineD3D*) GetDdHandle(pCreateSurface->lpDD->hDD);
     IWineD3DDevice * pWineD3DDevice = (IWineD3DDevice*) pCreateSurface->lpDD->dwUnused3;
     void *Parent = NULL;
-
+    
     if ( (!pWined3d) ||
          (!pWineD3DDevice))
     {
@@ -435,19 +435,112 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     pCreateSurface->ddRVal = DDERR_GENERIC;
     if (SurfaceCount != 0)
     {
+        LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[0];
+
         /* Fixme for opengl hel emulations */
         DPRINT1("DdCreateSurface entered\n");
 
         pCreateSurface->ddRVal = DD_OK;
 
+        lcl->lpGbl->wWidth = desc2.dwWidth;
+        lcl->lpGbl->wHeight = desc2.dwHeight;
+        lcl->lpGbl->dwLinearSize = desc2.dwLinearSize;
+        RtlCopyMemory(&lcl->lpGbl->ddpfSurface, &desc2.ddpfPixelFormat, sizeof(DDPIXELFORMAT))
+
+        /* Get the video mode from WineD3D - we will need it */
+        hr = IWineD3DDevice_GetDisplayMode(pWineD3DDevice, 0, &Mode);
+        if(FAILED(hr))
+        {
+            
+            ERR("Failed to read display mode from wined3d\n");
+
+            if ((lcl->dwFlags & DDRAWISURF_HASPIXELFORMAT) == 0)
+            {
+                switch(pCreateSurface->lpDD->vmiData.ddpfDisplay.dwRGBBitCount)
+                {
+                    case 8:
+                        Mode.Format = WINED3DFMT_P8;
+                        break;
+
+                    case 15:
+                        Mode.Format = WINED3DFMT_X1R5G5B5;
+                        break;
+
+                    case 16:
+                        Mode.Format = WINED3DFMT_R5G6B5;
+                        break;
+
+                    case 24:
+                        Mode.Format = WINED3DFMT_R8G8B8;
+                        break;
+
+                    case 32:
+                        Mode.Format = WINED3DFMT_X8R8G8B8;
+                        break;
+
+                    default:
+                        pCreateSurface->ddRVal = DDERR_GENERIC;
+                        break;
+                }
+
+                Mode.Width = pCreateSurface->lpDD->vmiData.dwDisplayWidth;
+                Mode.Height = pCreateSurface->lpDD->vmiData.dwDisplayHeight;
+            }
+            else
+            {
+                if (lcl->lpGbl->ddpfSurface.dwFlags & DDPF_FOURCC)
+                {
+                    Mode.Format = lcl->lpGbl->ddpfSurface.dwFourCC;
+                }
+                else
+                {
+                    switch(lcl->lpGbl->ddpfSurface.dwRGBBitCount)
+                    {
+                        case 8:
+                            Mode.Format = WINED3DFMT_P8;
+                            break;
+
+                        case 15:
+                            Mode.Format = WINED3DFMT_X1R5G5B5;
+                            break;
+
+                        case 16:
+                            Mode.Format = WINED3DFMT_R5G6B5;
+                            break;
+
+                        case 24:
+                            Mode.Format = WINED3DFMT_R8G8B8;
+                            break;
+
+                        case 32:
+                            Mode.Format = WINED3DFMT_X8R8G8B8;
+                            break;
+
+                        default:
+                            pCreateSurface->ddRVal = DDERR_GENERIC;
+                            break;
+                    }
+                }
+                Mode.Width = lcl->lpGbl->wWidth;
+                Mode.Height = lcl->lpGbl->wHeight;
+            }
+        }
+    }
+
+    if (pCreateSurface->ddRVal = DD_OK)
+    {
+       
+
         for (i=0;i<SurfaceCount;i++)
         {
             LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
+
             object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IWineD3DSurface));
             if (NULL == object)
             {
                 DPRINT1("Allocation of memory failed\n");
                 pCreateSurface->ddRVal = DDERR_OUTOFVIDEOMEMORY;
+                break;
             }
             lcl->hDDSurface = (ULONG_PTR) object;
         }
@@ -458,13 +551,14 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
             {
                 LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
 
+                pWineD3DDevice->CreateSurface(
                 hrc = IWineD3DDevice_CreateSurface(pWineD3DDevice,
-                                                   Width,
-                                                   Height,
-                                                   WINED3DFMT_R8G8B8,
+                                                   Mode.Width,
+                                                   Mode.Height,
+                                                   Mode.Format,
                                                    TRUE /* Lockable */,
                                                    FALSE /* Discard */,
-                                                   1,
+                                                   i,
                                                    (IWineD3DSurface **)&lcl->hDDSurface,
                                                    WINED3DRTYPE_SURFACE, /**/
                                                    WINED3DUSAGE_DYNAMIC & WINED3DUSAGE_MASK,
