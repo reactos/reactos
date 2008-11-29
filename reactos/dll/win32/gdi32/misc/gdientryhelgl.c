@@ -332,21 +332,58 @@ DWORD
 WINAPI
 DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
 {
-    /* Fixme for opengl hel emulations */
-    HEL_OGL_STUB;
+    DWORD i = 0;
+    if (CanCreateSurface->lpDDSurfaceDesc)
+    {
 
-#if 0
-    /* 
-     * Note : This functions are basic same, in win32k 
-     * NtGdiDdCanCreateD3DBuffer and  NtGdiDdCanCreateSurface are mergs 
-     * toghter in win32k at end and retrurn same data, it is still sepreated 
-     * at user mode but in kmode it is not. 
-     */
+        CanCreateSurface->ddRVal = DDERR_INVALIDPIXELFORMAT;
 
-    /* Call win32k */
-    return NtGdiDdCanCreateSurface(GetDdHandle(CanCreateSurface->lpDD->hDD),
-                                   (PDD_CANCREATESURFACEDATA)CanCreateSurface);
-#endif
+        if ((CanCreateSurface->lpDDSurfaceDesc->dwSize == sizeof(DDSURFACEDESC) ||
+            CanCreateSurface->lpDDSurfaceDesc->dwSize == sizeof(DDSURFACEDESC2)))
+        {
+            if (CanCreateSurface->bIsDifferentPixelFormat == FALSE)
+            {
+                    // Maybe more check before we return DD_OK 
+                    CanCreateSurface->ddRVal = DD_OK;
+            }
+            else
+            {
+                if (CanCreateSurface->lpDDSurfaceDesc->dwFlags & DDPF_FOURCC)
+                {
+                    
+                    for (i=0;i<CanCreateSurface->lpDD->dwNumFourCC;i++)
+                    {
+                        if (CanCreateSurface->lpDD->lpdwFourCC[i] == CanCreateSurface->lpDDSurfaceDesc->ddpfPixelFormat.dwFourCC)
+                        {
+                            // calc yuvBitCount 
+                            switch ( CanCreateSurface->lpDDSurfaceDesc->ddpfPixelFormat.dwFourCC )
+                            {
+                                case MAKEFOURCC('Y','U','Y','2') :
+                                    CanCreateSurface->lpDDSurfaceDesc->ddpfPixelFormat.dwYUVBitCount = 16;
+                                    break;
+
+                                case MAKEFOURCC('U','Y','V','Y') :
+                                    CanCreateSurface->lpDDSurfaceDesc->ddpfPixelFormat.dwYUVBitCount = 16;
+                                    break;
+
+                                case MAKEFOURCC('Y','V','1','2') :
+                                    CanCreateSurface->lpDDSurfaceDesc->ddpfPixelFormat.dwYUVBitCount = 12;
+                                    break;
+
+                                default:
+                                    break;
+                            }
+
+                            // Maybe more check before we return DD_OK 
+                            CanCreateSurface->ddRVal = DD_OK;
+                            break;
+                        }
+                    }
+                }
+            }
+        } 
+    }
+    return DDHAL_DRIVER_HANDLED;
 }
 
 /*
