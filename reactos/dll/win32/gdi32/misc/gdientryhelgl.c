@@ -1842,176 +1842,176 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     DeleteDC(hdc);
     /* End dectect RGB bit mask */
 
-    /* Clear the incoming pointer */
-    RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
-
-    /* Convert all the data */
-    pHalInfo->dwSize = sizeof(DDHALINFO);
-
-    pHalInfo->vmiData.fpPrimary = 0;
-    pHalInfo->vmiData.dwFlags = 0; // MSDN Currently unused and should be set to zero.
-
-    pHalInfo->vmiData.dwDisplayWidth = DevMode.dmPelsHeight;
-    pHalInfo->vmiData.dwDisplayHeight = DevMode.dmPelsWidth;
-
-    /* ToDo align it right, we skip align it, it must be algin like the graphice card delta for the screen 
-    * the graphice card delta is same as pHalInfo->vmiData.lDisplayPitch
-    */
-    pHalInfo->vmiData.lDisplayPitch = (DevMode.dmPelsWidth * DevMode.dmBitsPerPel) / 8;
-
-    /* Setup DDPIXELFORMAT for pHalInfo->vmiData.ddpfDisplay */
-    pHalInfo->vmiData.ddpfDisplay.dwSize = sizeof(DDPIXELFORMAT);
-    switch(DevMode.dmBitsPerPel)
+    if (pHalInfo)
     {
-    case 1:
-        pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED1;
-        break;
+        /* Clear the incoming pointer */
+        RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
 
-    case 2:
-        pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED2;
-        break;
+        /* Convert all the data */
+        pHalInfo->dwSize = sizeof(DDHALINFO);
 
-    case 4:
-        pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED4;
-        break;
+        pHalInfo->vmiData.fpPrimary = 0;
+        pHalInfo->vmiData.dwFlags = 0; // MSDN Currently unused and should be set to zero.
 
-    case 8:
-        pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED8;
-        break;
+        pHalInfo->vmiData.dwDisplayWidth = DevMode.dmPelsHeight;
+        pHalInfo->vmiData.dwDisplayHeight = DevMode.dmPelsWidth;
 
-    case 16:
-    case 24:
-    case 32:
-        pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_RGB;
-        break;
-    default:
-        break;
+        /* ToDo align it right, we skip align it, it must be algin like the graphice card delta for the screen 
+         * the graphice card delta is same as pHalInfo->vmiData.lDisplayPitch
+         */
+        pHalInfo->vmiData.lDisplayPitch = (DevMode.dmPelsWidth * DevMode.dmBitsPerPel) / 8;
+
+        /* Setup DDPIXELFORMAT for pHalInfo->vmiData.ddpfDisplay */
+        pHalInfo->vmiData.ddpfDisplay.dwSize = sizeof(DDPIXELFORMAT);
+        switch(DevMode.dmBitsPerPel)
+        {
+            case 1:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED1;
+                break;
+
+            case 2:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED2;
+                break;
+
+            case 4:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED4;
+                break;
+
+            case 8:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_PALETTEINDEXED8;
+                break;
+
+            case 16:
+            case 24:
+            case 32:
+                pHalInfo->vmiData.ddpfDisplay.dwFlags = DDPF_RGB;
+                break;
+
+            default:
+                break;
+        }
+
+        pHalInfo->vmiData.ddpfDisplay.dwFourCC = 0;
+        pHalInfo->vmiData.ddpfDisplay.dwRGBBitCount = DevMode.dmBitsPerPel;
+        pHalInfo->vmiData.ddpfDisplay.dwRBitMask = pMasks[0];
+        pHalInfo->vmiData.ddpfDisplay.dwGBitMask = pMasks[1];
+        pHalInfo->vmiData.ddpfDisplay.dwBBitMask = pMasks[2];
+        pHalInfo->vmiData.ddpfDisplay.dwRGBAlphaBitMask = pMasks[3];
+
+        /* ToDo ? align setting for wined3d */
+        pHalInfo->vmiData.dwOffscreenAlign = 0;
+        pHalInfo->vmiData.dwOverlayAlign = 0;
+        pHalInfo->vmiData.dwTextureAlign = 0;
+        pHalInfo->vmiData.dwZBufferAlign = 0;
+        pHalInfo->vmiData.dwAlphaAlign = 0;
+
+        pHalInfo->vmiData.dwNumHeaps = 0;
+        pHalInfo->vmiData.pvmList = NULL;
+
+        RtlZeroMemory(&pHalInfo->ddCaps, sizeof(DDCORECAPS));
+        pHalInfo->ddCaps.dwSize = sizeof(DDCORECAPS);
+
+        /* Note wined3d seam not support in pHalInfo->ddCaps.dwCaps 
+           DDCAPS_ALIGNBOUNDARYDEST, DDCAPS_ALIGNSIZEDEST, DDCAPS_ALIGNSTRIDE
+           DDCAPS_ALPHA
+           DDCAPS_BLTFOURCC, DDCAPS_BLTQUEUE
+           DDCAPS_OVERLAY, DDCAPS_OVERLAYCANTCLIP, DDCAPS_OVERLAYFOURCC, DDCAPS_OVERLAYSTRETCH
+           DDCAPS_PALETTE, DDCAPS_PALETTEVSYNC
+           DDCAPS_READSCANLINE
+           DDCAPS_STEREOVIEW
+           DDCAPS_VBI
+           DDCAPS_ZBLTS
+           DDCAPS_ZOVERLAYS
+        */
+        pHalInfo->ddCaps.dwCaps = DDCAPS_BLT              |
+                                  DDCAPS_BLTCOLORFILL     |
+                                  DDCAPS_BLTDEPTHFILL     |
+                                  DDCAPS_BLTSTRETCH       |
+                                  DDCAPS_CANBLTSYSMEM     |
+                                  DDCAPS_CANCLIP          |
+                                  DDCAPS_CANCLIPSTRETCHED |
+                                  DDCAPS_COLORKEY         |
+                                  DDCAPS_COLORKEYHWASSIST |
+                                  DDCAPS_ALIGNBOUNDARYSRC |
+                                  DDCAPS_GDI              |
+                                  DDCAPS_PALETTE          |
+                                  DDCAPS_3D;
+
+        /* See msdn what pHalInfo->ddCaps.dwCaps2 does not support  */
+        pHalInfo->ddCaps.dwCaps2 = DDCAPS2_CERTIFIED          |
+                                   DDCAPS2_NOPAGELOCKREQUIRED |
+                                   DDCAPS2_PRIMARYGAMMA       |
+                                   DDCAPS2_WIDESURFACES       |
+                                   DDCAPS2_CANRENDERWINDOWED;
+
+        /* See msdn what pHalInfo->ddCaps.dwCKeyCaps does not support  */
+        pHalInfo->ddCaps.dwCKeyCaps = DDCKEYCAPS_DESTBLT | DDCKEYCAPS_SRCBLT;
+
+        /* See msdn what pHalInfo->ddCaps.dwFXCaps does not support  */
+        pHalInfo->ddCaps.dwFXCaps = DDFXCAPS_BLTALPHA           |
+                                    DDFXCAPS_BLTMIRRORLEFTRIGHT |
+                                    DDFXCAPS_BLTMIRRORUPDOWN    |
+                                    DDFXCAPS_BLTROTATION90      |
+                                    DDFXCAPS_BLTSHRINKX         |
+                                    DDFXCAPS_BLTSHRINKXN        |
+                                    DDFXCAPS_BLTSHRINKY         |
+                                    DDFXCAPS_BLTSHRINKXN        |
+                                    DDFXCAPS_BLTSTRETCHX        |
+                                    DDFXCAPS_BLTSTRETCHXN       |
+                                    DDFXCAPS_BLTSTRETCHY        |
+                                    DDFXCAPS_BLTSTRETCHYN;
+
+        /* See msdn what pHalInfo->ddCaps.dwSVBCaps does not support  */
+        pHalInfo->ddCaps.dwSVBCaps = pHalInfo->ddCaps.dwCaps;
+
+        /* See msdn what pHalInfo->ddCaps.dwCaps does not support  */
+        pHalInfo->ddCaps.ddsCaps.dwCaps = DDSCAPS_ALPHA          |
+                                          DDSCAPS_BACKBUFFER     |
+                                          DDSCAPS_FLIP           |
+                                          DDSCAPS_FRONTBUFFER    |
+                                          DDSCAPS_OFFSCREENPLAIN |
+                                          DDSCAPS_PALETTE        |
+                                          DDSCAPS_PRIMARYSURFACE |
+                                          DDSCAPS_SYSTEMMEMORY   |
+                                          DDSCAPS_VIDEOMEMORY    |
+                                            DDSCAPS_VISIBLE        |
+                                          DDSCAPS_3DDEVICE       |
+                                          DDSCAPS_MIPMAP         |
+                                          DDSCAPS_TEXTURE        |
+                                          DDSCAPS_ZBUFFER;
+
+        /* always force rope 0x1000 for hal it mean only source copy is supported */
+        pHalInfo->ddCaps.dwRops[6] = 0x1000;
+
+        pHalInfo->GetDriverInfo = (LPDDHAL_GETDRIVERINFO) DdGetDriverInfo;
+
+        pHalInfo->dwFlags = DDHALINFO_ISPRIMARYDISPLAY; // we assume the current drv is the primary driver
+        /* DDHALINFO_ISPRIMARYDISPLAY
+         * Driver is the primary display driver.
+         *
+         * DDHALINFO_MODEXILLEGAL
+         * Hardware does not support ModeX modes
+         *
+         * DDHALINFO_GETDRIVERINFOSET
+         * The GetDriverInfo member is set, gdi32 does always set it
+         *
+         * DDHALINFO_GETDRIVERINFO2
+         * Driver supports GetDriverInfo2 variant of GetDriverInfo
+        */
+
+        /* Setup callbacks */
+        pHalInfo->lpDDCallbacks = pDDCallbacks;
+        pHalInfo->lpDDSurfaceCallbacks = pDDSurfaceCallbacks;
+        pHalInfo->lpDDPaletteCallbacks =pDDPaletteCallbacks;
+        pHalInfo->lpD3DGlobalDriverData = (ULONG_PTR)pD3dDriverData;
+        pHalInfo->lpD3DHALCallbacks = (ULONG_PTR)pD3dCallbacks;
+        pHalInfo->lpDDExeBufCallbacks = pD3dBufferCallbacks;
+
+        /*  FIXME
+        pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
+        pHalInfo->lpdwFourCC = pdwFourCC;
+        */
     }
-
-    pHalInfo->vmiData.ddpfDisplay.dwFourCC = 0;
-    pHalInfo->vmiData.ddpfDisplay.dwRGBBitCount = DevMode.dmBitsPerPel;
-    pHalInfo->vmiData.ddpfDisplay.dwRBitMask = pMasks[0];
-    pHalInfo->vmiData.ddpfDisplay.dwGBitMask = pMasks[1];
-    pHalInfo->vmiData.ddpfDisplay.dwBBitMask = pMasks[2];
-    pHalInfo->vmiData.ddpfDisplay.dwRGBAlphaBitMask = pMasks[3];
-
-    /* ToDo ? align setting for wined3d */
-    pHalInfo->vmiData.dwOffscreenAlign = 0;
-    pHalInfo->vmiData.dwOverlayAlign = 0;
-    pHalInfo->vmiData.dwTextureAlign = 0;
-    pHalInfo->vmiData.dwZBufferAlign = 0;
-    pHalInfo->vmiData.dwAlphaAlign = 0;
-
-    pHalInfo->vmiData.dwNumHeaps = 0;
-    pHalInfo->vmiData.pvmList = NULL;
-
-    // FIXME pHalInfo->ddCaps DDCORECAPS
-
-    RtlZeroMemory(&pHalInfo->ddCaps, sizeof(DDCORECAPS));
-    pHalInfo->ddCaps.dwSize = sizeof(DDCORECAPS);
-
-    // FIXME fill in with wined3d caps here */
-
-    /* Note wined3d seam not support in pHalInfo->ddCaps.dwCaps 
-    DDCAPS_ALIGNBOUNDARYDEST, DDCAPS_ALIGNSIZEDEST, DDCAPS_ALIGNSTRIDE
-    DDCAPS_ALPHA
-    DDCAPS_BLTFOURCC, DDCAPS_BLTQUEUE
-    DDCAPS_OVERLAY, DDCAPS_OVERLAYCANTCLIP, DDCAPS_OVERLAYFOURCC, DDCAPS_OVERLAYSTRETCH
-    DDCAPS_PALETTE, DDCAPS_PALETTEVSYNC
-    DDCAPS_READSCANLINE
-    DDCAPS_STEREOVIEW
-    DDCAPS_VBI
-    DDCAPS_ZBLTS
-    DDCAPS_ZOVERLAYS
-    */
-    pHalInfo->ddCaps.dwCaps = DDCAPS_BLT              |
-                              DDCAPS_BLTCOLORFILL     |
-                              DDCAPS_BLTDEPTHFILL     |
-                              DDCAPS_BLTSTRETCH       |
-                              DDCAPS_CANBLTSYSMEM     |
-                              DDCAPS_CANCLIP          |
-                              DDCAPS_CANCLIPSTRETCHED |
-                              DDCAPS_COLORKEY         |
-                              DDCAPS_COLORKEYHWASSIST |
-                              DDCAPS_ALIGNBOUNDARYSRC |
-                              DDCAPS_GDI              |
-                              DDCAPS_PALETTE          |
-                              DDCAPS_3D;
-
-    /* See msdn what pHalInfo->ddCaps.dwCaps2 does not support  */
-    pHalInfo->ddCaps.dwCaps2 = DDCAPS2_CERTIFIED          |
-                               DDCAPS2_NOPAGELOCKREQUIRED |
-                               DDCAPS2_PRIMARYGAMMA       |
-                               DDCAPS2_WIDESURFACES       |
-                               DDCAPS2_CANRENDERWINDOWED;
-
-    /* See msdn what pHalInfo->ddCaps.dwCKeyCaps does not support  */
-    pHalInfo->ddCaps.dwCKeyCaps = DDCKEYCAPS_DESTBLT | DDCKEYCAPS_SRCBLT;
-
-    /* See msdn what pHalInfo->ddCaps.dwFXCaps does not support  */
-    pHalInfo->ddCaps.dwFXCaps = DDFXCAPS_BLTALPHA           |
-                                DDFXCAPS_BLTMIRRORLEFTRIGHT |
-                                DDFXCAPS_BLTMIRRORUPDOWN    |
-                                DDFXCAPS_BLTROTATION90      |
-                                DDFXCAPS_BLTSHRINKX         |
-                                DDFXCAPS_BLTSHRINKXN        |
-                                DDFXCAPS_BLTSHRINKY         |
-                                DDFXCAPS_BLTSHRINKXN        |
-                                DDFXCAPS_BLTSTRETCHX        |
-                                DDFXCAPS_BLTSTRETCHXN       |
-                                DDFXCAPS_BLTSTRETCHY        |
-                                DDFXCAPS_BLTSTRETCHYN;
-
-    /* See msdn what pHalInfo->ddCaps.dwSVBCaps does not support  */
-    pHalInfo->ddCaps.dwSVBCaps = pHalInfo->ddCaps.dwCaps;
-
-    /* See msdn what pHalInfo->ddCaps.dwCaps does not support  */
-    pHalInfo->ddCaps.ddsCaps.dwCaps = DDSCAPS_ALPHA          |
-                                      DDSCAPS_BACKBUFFER     |
-                                      DDSCAPS_FLIP           |
-                                      DDSCAPS_FRONTBUFFER    |
-                                      DDSCAPS_OFFSCREENPLAIN |
-                                      DDSCAPS_PALETTE        |
-                                      DDSCAPS_PRIMARYSURFACE |
-                                      DDSCAPS_SYSTEMMEMORY   |
-                                      DDSCAPS_VIDEOMEMORY    |
-                                      DDSCAPS_VISIBLE        |
-                                      DDSCAPS_3DDEVICE       |
-                                      DDSCAPS_MIPMAP         |
-                                      DDSCAPS_TEXTURE        |
-                                      DDSCAPS_ZBUFFER;
-
-    /* always force rope 0x1000 for hal it mean only source copy is supported */
-    pHalInfo->ddCaps.dwRops[6] = 0x1000;
-
-    pHalInfo->GetDriverInfo = (LPDDHAL_GETDRIVERINFO) DdGetDriverInfo;
-
-    pHalInfo->dwFlags = DDHALINFO_ISPRIMARYDISPLAY; // we assume the current drv is the primary driver
-    /* DDHALINFO_ISPRIMARYDISPLAY
-    * Driver is the primary display driver.
-    *
-    * DDHALINFO_MODEXILLEGAL
-    * Hardware does not support ModeX modes
-    *
-    * DDHALINFO_GETDRIVERINFOSET
-    * The GetDriverInfo member is set, gdi32 does always set it
-    *
-    * DDHALINFO_GETDRIVERINFO2
-    * Driver supports GetDriverInfo2 variant of GetDriverInfo
-    */
-
-    /* Setup callbacks */
-    pHalInfo->lpDDCallbacks = pDDCallbacks;
-    pHalInfo->lpDDSurfaceCallbacks = pDDSurfaceCallbacks;
-    pHalInfo->lpDDPaletteCallbacks =pDDPaletteCallbacks;
-    pHalInfo->lpD3DGlobalDriverData = (ULONG_PTR)pD3dDriverData;
-    pHalInfo->lpD3DHALCallbacks = (ULONG_PTR)pD3dCallbacks;
-    pHalInfo->lpDDExeBufCallbacks = pD3dBufferCallbacks;
-
-    /*  FIXME
-    pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
-    pHalInfo->lpdwFourCC = pdwFourCC;
-    */
 
     /* Now check if we got any DD callbacks */
     if (pDDCallbacks)
