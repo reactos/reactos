@@ -1,6 +1,8 @@
 /*
- * PROGRAMMERS:     David Welch
+ * PROGRAMMERS:
+ *                  David Welch
  *                  Eric Kohl
+ *                  Gregor Schneider
  *
  * TODO:
  *   - Verify the implementation of '%Z'.
@@ -23,13 +25,14 @@
 #include <tchar.h>
 
 #define ZEROPAD	1		/* pad with zero */
-#define SIGN	2		/* unsigned/signed long */
+#define SIGN	2		/* unsigned/signed */
 #define PLUS	4		/* show plus */
 #define SPACE	8		/* space if plus */
 #define LEFT	16		/* left justified */
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
-#define REMOVEHEX	256		/* use 256 as remve 0x frim BASE 16  */
+#define ZEROTRUNC	128	/* truncate zero's */
+#define REMOVEHEX	256	/* remove 0x from BASE 16 */
 
 static
 __inline
@@ -146,105 +149,229 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 	return buf;
 }
 
+typedef struct {
+	unsigned int mantissal:32;
+	unsigned int mantissah:20;
+	unsigned int exponent:11;
+	unsigned int sign:1;
+} ieee_double_t;
+
 static char *
-numberf(char * buf, char * end, double num, int base, int size, int precision, int type)
+numberf(char * buf, char * end, double num, char exp_sign, int size, int precision, int type)
 {
-	char c,sign,tmp[66];
-	const char *digits;
-	const char *small_digits = "0123456789abcdefghijklmnopqrstuvwxyz";
-	const char *large_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	int i;
-	long long x;
+	double exponent = 0.0;
+	double e;
+	long ie;
 
-    /* FIXME
-       the float version of number is direcly copy of number
-    */
+	int i = 0;
+	int j = 0;
+	int ro = 0;
 
-	digits = (type & LARGE) ? large_digits : small_digits;
-	if (type & LEFT)
-		type &= ~ZEROPAD;
-	if (base < 2 || base > 36)
-		return 0;
-	c = (type & ZEROPAD) ? '0' : ' ';
-	sign = 0;
-	if (num < 0) {
-		sign = '-';
-		num = -num;
-		size--;
-	} else if (type & PLUS) {
-		sign = '+';
-		size--;
-	} else if (type & SPACE) {
-		sign = ' ';
-		size--;
+	double frac, intr;
+	double p;
+
+	char c, sign, digits[66];
+	char *tmp;
+
+	union
+	{
+		double*  __n;
+		ieee_double_t*  n;
+	} n;
+
+	n.__n = &num;
+
+	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' )
+	{
+		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3ff);
+		exponent = ie/3.321928;
 	}
-	if (type & SPECIAL)  {
-		if (base == 16)
-			size -= 2;
-		else if (base == 8)
+
+	if ( exp_sign == 'g' || exp_sign == 'G' )
+	{
+		type |= ZEROTRUNC;
+		if ( exponent < -4 || fabs(exponent) >= precision )
+			exp_sign -= 2; // g -> e and G -> E
+		else
+			exp_sign = 'f';
+	}
+
+	if ( exp_sign == 'e' ||  exp_sign == 'E' )
+	{
+		frac = modf(exponent,&e);
+		/* FIXME: this exponent over-/underflow scheme doesn't comply with the wanted behaviour 
+		 * needed at all or completely different in original? */
+#if 0
+		if ( frac > 0.5 )
+			e++;
+		else if (  frac < -0.5  )
+			e--;
+#endif
+
+		/* size-5 because "e+abc" is going to follow */
+		buf = numberf(buf, end, num/pow(10.0L,(long double)e), 'f', size-5, precision, type);
+		if (buf <= end)
+			*buf = exp_sign;
+		++buf;
+		size--;
+
+		ie = (long)e;
+		type = LEFT | SIGN | PLUS;
+		buf = number(buf, end, ie, 10, 3, 3, type);
+		return buf;
+	}
+
+	if ( exp_sign == 'f' )
+	{
+		if (type & LEFT)
+			type &= ~ZEROPAD;
+
+		c = (type & ZEROPAD) ? '0' : ' ';
+		sign = 0;
+
+		if (num < 0)
+		{
+			sign = '-';
+			num = fabs(num);
 			size--;
-	}
-	i = 0;
-	if (num == 0)
-		tmp[i++] = '0';
-	else while (num != 0)
-    {
-        x = num;
-		tmp[i++] = digits[do_div(&x,base)];
-		num=x;
-    }
-	if (i > precision)
-		precision = i;
-	size -= precision;
-	if (!(type&(ZEROPAD+LEFT))) {
-		while(size-->0) {
+		}
+			else if (type & PLUS)
+		{
+			sign = '+';
+			size--;
+		}
+		else if (type & SPACE)
+		{
+			sign = ' ';
+			size--;
+		}
+
+		frac = modf(num,&intr);
+
+		// # flags forces a . and prevents truncation of trailing zero's
+		if ( precision > 0 )
+		{
+			i = precision-1;
+			while ( i >= 0  )
+			{
+				frac*=10.0L;
+				frac = modf(frac, &p);
+				digits[i] = (int)p + '0';
+				i--;
+			}
+			i = precision;
+			size -= precision;
+
+			if ( precision >= 1 || type & SPECIAL)
+			{
+				digits[i++] = '.';
+				size--;
+			}
+		} 
+
+		ro = 0;
+		if ( frac > 0.5 )
+		{
+			ro = 1;
+		}
+
+		if ( intr == 0.0 )
+		{
+			digits[i++] = '0';
+			size--;
+		}
+		else
+		{
+			while ( intr > 0.0 )
+			{
+				p = intr;
+				intr/=10.0L;
+				modf(intr, &intr);
+
+				p -= 10.0*intr;
+
+				digits[i++] = (int)p + '0';
+				size--;
+			}
+		}
+
+		j = 0;
+		while ( j < i && ro == 1)
+		{
+			if ( digits[j] >= '0' && digits[j] <= '8' )
+			{
+				digits[j]++;
+				ro = 0;
+			}
+			else if ( digits[j] == '9' )
+			{
+				digits[j] = '0';
+			}
+			j++;
+		}
+		if ( ro == 1 )
+			digits[i++] = '1';
+
+		digits[i] = 0;
+
+		if (!(type & (ZEROPAD+LEFT)))
+		{
+			while(size-->0)
+			{
+				if (buf <= end)
+					*buf = ' ';
+				++buf;
+			}
+		}
+		if (sign)
+		{
+			if (buf <= end)
+				*buf = sign;
+			++buf;
+		}
+
+		if (!(type & (ZEROPAD+LEFT)))
+		{
+			while(size-->0)
+			{
+				if (buf <= end)
+					*buf = ' ';
+				++buf;
+			}
+		}
+
+		if (!(type & LEFT))
+		{
+			while (size-- > 0)
+			{
+				if (buf <= end)
+					*buf = c;
+				++buf;
+			}
+		}
+
+		tmp = digits;
+		if ( type & ZEROTRUNC && ((type & SPECIAL) != SPECIAL) )
+		{
+			j = 0;
+			while ( j < i && ( *tmp == '0' || *tmp == '.' ))
+			{
+				tmp++;
+				i--;
+			}
+		}
+		while (i-- > 0)
+		{
+			if (buf <= end)
+				*buf = tmp[i];
+			++buf;
+		}
+		while (size-- > 0)
+		{
 			if (buf <= end)
 				*buf = ' ';
-			++buf;
-		}
-	}
-	if (sign) {
-		if (buf <= end)
-			*buf = sign;
-		++buf;
-	}
-	if (type & SPECIAL) {
-		if (base==8) {
-			if (buf <= end)
-				*buf = '0';
-			++buf;
-		} else if (base==16) {
-			if (buf <= end)
-				*buf = '0';
-			++buf;
-			if (buf <= end)
-				*buf = digits[33];
-			++buf;
-		}
-	}
-	if (!(type & LEFT)) {
-		while (size-- > 0) {
-			if (buf <= end)
-				*buf = c;
-			++buf;
-		}
-	}
-	if (type & ZEROPAD) {
-		while (i < precision--) {
-			if (buf <= end)
-				*buf = '0';
-			++buf;
-		}
-	}
-	while (i-- > 0) {
-		if (buf <= end)
-			*buf = tmp[i];
-		++buf;
-	}
-	while (size-- > 0) {
-		if (buf <= end)
-			*buf = ' ';
-		++buf;
+			buf++;
+		}	
 	}
 	return buf;
 }
@@ -367,8 +494,6 @@ int __cdecl lnx_vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	int precision;		/* min. # of digits for integers; max
 				   number of chars for from string */
 	int qualifier;		/* 'h', 'l', 'L', 'I' or 'w' for integer fields */
-
-    /* clear the string buffer with zero so we do not need NULL terment it at end */
 
 	str = buf;
 	end = buf + cnt - 1;
@@ -596,7 +721,7 @@ int __cdecl lnx_vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
          } else {
             if ( precision == -1 )
                precision = 6;
-               	str = numberf(str, end, _double, base, field_width, precision, flags);
+               	str = numberf(str, end, _double, *fmt, field_width, precision, flags);
          }
 
           continue;
