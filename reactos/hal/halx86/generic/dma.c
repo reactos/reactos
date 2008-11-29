@@ -164,7 +164,7 @@ HalpInitDma(VOID)
  * by the passed DMA adapter.
  */
 
-PHYSICAL_ADDRESS STDCALL
+PHYSICAL_ADDRESS NTAPI
 HalpGetAdapterMaximumPhysicalAddress(
    IN PADAPTER_OBJECT AdapterObject)
 {
@@ -200,7 +200,7 @@ HalpGetAdapterMaximumPhysicalAddress(
  *        already allocated).
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalpGrowMapBuffers(
    IN PADAPTER_OBJECT AdapterObject,
    IN ULONG SizeOfMapBuffers)
@@ -329,7 +329,7 @@ HalpGrowMapBuffers(
  * @see HalpInitDma
  */
 
-PADAPTER_OBJECT STDCALL
+PADAPTER_OBJECT NTAPI
 HalpDmaAllocateMasterAdapter(VOID)
 {
    PADAPTER_OBJECT MasterAdapter;
@@ -388,7 +388,7 @@ HalpDmaAllocateMasterAdapter(VOID)
  * @see HalGetAdapter
  */
 
-PADAPTER_OBJECT STDCALL
+PADAPTER_OBJECT NTAPI
 HalpDmaAllocateChildAdapter(
    ULONG NumberOfMapRegisters,
    PDEVICE_DESCRIPTION DeviceDescription)
@@ -458,7 +458,7 @@ HalpDmaAllocateChildAdapter(
  * Setup DMA modes and extended modes for (E)ISA DMA adapter object.
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalpDmaInitializeEisaAdapter(
    PADAPTER_OBJECT AdapterObject,
    PDEVICE_DESCRIPTION DeviceDescription)
@@ -588,7 +588,7 @@ HalpDmaInitializeEisaAdapter(
  * @implemented
  */
 
-PADAPTER_OBJECT STDCALL
+PADAPTER_OBJECT NTAPI
 HalGetAdapter(
    PDEVICE_DESCRIPTION DeviceDescription,
    PULONG NumberOfMapRegisters)
@@ -787,7 +787,7 @@ HalGetAdapter(
  * @see HalGetAdapter
  */
 
-PDMA_ADAPTER STDCALL
+PDMA_ADAPTER NTAPI
 HalpGetDmaAdapter(
    IN PVOID Context,
    IN PDEVICE_DESCRIPTION DeviceDescription,
@@ -805,7 +805,7 @@ HalpGetDmaAdapter(
  * @see HalGetAdapter
  */
 
-VOID STDCALL
+VOID NTAPI
 HalPutDmaAdapter(
    PADAPTER_OBJECT AdapterObject)
 {
@@ -846,7 +846,7 @@ HalPutDmaAdapter(
  * @implemented
  */
 
-PVOID STDCALL
+PVOID NTAPI
 HalAllocateCommonBuffer(
    PADAPTER_OBJECT AdapterObject,
    ULONG Length,
@@ -895,7 +895,7 @@ HalAllocateCommonBuffer(
  * @implemented
  */
 
-VOID STDCALL
+VOID NTAPI
 HalFreeCommonBuffer(
    PADAPTER_OBJECT AdapterObject,
    ULONG Length,
@@ -915,7 +915,7 @@ HalFreeCommonBuffer(
  * @see HalGetAdapter
  */
 
-ULONG STDCALL
+ULONG NTAPI
 HalpDmaGetDmaAlignment(
    PADAPTER_OBJECT AdapterObject)
 {
@@ -930,7 +930,7 @@ HalpDmaGetDmaAlignment(
  * @implemented
  */
 
-ULONG STDCALL
+ULONG NTAPI
 HalReadDmaCounter(
    PADAPTER_OBJECT AdapterObject)
 {
@@ -1002,7 +1002,7 @@ HalReadDmaCounter(
  * at PASSIVE_LEVEL in work item.
  */
 
-VOID STDCALL
+VOID NTAPI
 HalpGrowMapBufferWorker(PVOID DeferredContext)
 {
    PGROW_WORK_ITEM WorkItem = (PGROW_WORK_ITEM)DeferredContext;
@@ -1064,7 +1064,7 @@ HalpGrowMapBufferWorker(PVOID DeferredContext)
  * @implemented
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 HalAllocateAdapterChannel(
    PADAPTER_OBJECT AdapterObject,
    PWAIT_CONTEXT_BLOCK WaitContextBlock,
@@ -1235,7 +1235,7 @@ HalAllocateAdapterChannel(
  * @implemented
  */
 
-VOID STDCALL
+VOID NTAPI
 IoFreeAdapterChannel(
    PADAPTER_OBJECT AdapterObject)
 {
@@ -1359,7 +1359,7 @@ IoFreeAdapterChannel(
  * @implemented
  */
 
-VOID STDCALL
+VOID NTAPI
 IoFreeMapRegisters(
    IN PADAPTER_OBJECT AdapterObject,
    IN PVOID MapRegisterBase,
@@ -1465,7 +1465,7 @@ IoFreeMapRegisters(
  * @see IoFlushAdapterBuffers, IoMapTransfer
  */
 
-VOID STDCALL
+VOID NTAPI
 HalpCopyBufferMap(
    PMDL Mdl,
    PROS_MAP_REGISTER_ENTRY MapRegisterBase,
@@ -1554,7 +1554,7 @@ HalpCopyBufferMap(
  * @unimplemented.
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 IoFlushAdapterBuffers(
    PADAPTER_OBJECT AdapterObject,
    PMDL Mdl,
@@ -1663,7 +1663,7 @@ IoFlushAdapterBuffers(
  * @implemented
  */
 
-PHYSICAL_ADDRESS STDCALL
+PHYSICAL_ADDRESS NTAPI
 IoMapTransfer(
    IN PADAPTER_OBJECT AdapterObject,
    IN PMDL Mdl,

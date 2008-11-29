@@ -36,7 +36,7 @@
     (UCHAR)(((int / 10) << 4) + (int % 10))
 
 /* adapter.c */
-PADAPTER_OBJECT STDCALL HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
+PADAPTER_OBJECT NTAPI HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
 
 /* bus.c */
 VOID NTAPI HalpInitNonBusHandler (VOID);

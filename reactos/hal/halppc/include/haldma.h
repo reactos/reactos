@@ -367,16 +367,16 @@ typedef struct _GROW_WORK_ITEM {
 
 #define MAP_BASE_SW_SG 1
 
-PADAPTER_OBJECT STDCALL
+PADAPTER_OBJECT NTAPI
 HalpDmaAllocateMasterAdapter(VOID);
 
-PDMA_ADAPTER STDCALL
+PDMA_ADAPTER NTAPI
 HalpGetDmaAdapter(
    IN PVOID Context,
    IN PDEVICE_DESCRIPTION DeviceDescription,
    OUT PULONG NumberOfMapRegisters);
 
-ULONG STDCALL
+ULONG NTAPI
 HalpDmaGetDmaAlignment(
    PADAPTER_OBJECT AdapterObject);
 

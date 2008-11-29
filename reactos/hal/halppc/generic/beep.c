@@ -32,7 +32,7 @@
  */
 
 BOOLEAN
-STDCALL
+NTAPI
 HalMakeBeep (
 	ULONG	Frequency
 	)

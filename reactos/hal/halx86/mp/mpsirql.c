@@ -21,7 +21,7 @@
 /* FUNCTIONS ****************************************************************/
 
 #undef KeGetCurrentIrql
-KIRQL STDCALL KeGetCurrentIrql (VOID)
+KIRQL NTAPI KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level
  * RETURNS: The current irq level
@@ -160,7 +160,7 @@ KfLowerIrql (KIRQL	NewIrql)
  * NOTES
  */
 #undef KeLowerIrql
-VOID STDCALL
+VOID NTAPI
 KeLowerIrql (KIRQL NewIrql)
 {
   KfLowerIrql (NewIrql);
@@ -234,7 +234,7 @@ KfRaiseIrql (KIRQL	NewIrql)
  *	Calls KfRaiseIrql
  */
 #undef KeRaiseIrql
-VOID STDCALL
+VOID NTAPI
 KeRaiseIrql (KIRQL	NewIrql,
 	PKIRQL	OldIrql)
 {
@@ -259,7 +259,7 @@ KeRaiseIrql (KIRQL	NewIrql,
  *	Calls KfRaiseIrql
  */
 
-KIRQL STDCALL
+KIRQL NTAPI
 KeRaiseIrqlToDpcLevel (VOID)
 {
   return KfRaiseIrql (DISPATCH_LEVEL);
@@ -283,14 +283,14 @@ KeRaiseIrqlToDpcLevel (VOID)
  *	Calls KfRaiseIrql
  */
 
-KIRQL STDCALL
+KIRQL NTAPI
 KeRaiseIrqlToSynchLevel (VOID)
 {
   return KfRaiseIrql (CLOCK2_LEVEL);
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalBeginSystemInterrupt (KIRQL Irql,
 			 ULONG Vector,
 			 PKIRQL OldIrql)
@@ -317,7 +317,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 }
 
 
-VOID STDCALL
+VOID NTAPI
 HalEndSystemInterrupt (KIRQL Irql,
 		       ULONG Unknown2)
 /*
@@ -336,7 +336,7 @@ HalEndSystemInterrupt (KIRQL Irql,
   HalpLowerIrql (Irql, TRUE);
 }
   
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalDisableSystemInterrupt (ULONG Vector,
 			   KIRQL Irql)
 {
@@ -358,7 +358,7 @@ HalDisableSystemInterrupt (ULONG Vector,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalEnableSystemInterrupt (ULONG Vector,
 			  KIRQL Irql,
 			  KINTERRUPT_MODE InterruptMode)
