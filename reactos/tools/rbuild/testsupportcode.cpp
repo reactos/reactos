@@ -390,7 +390,7 @@ TestSupportCode::WriteStartupFile ( Module& module )
 	s = s + sprintf ( s, "}\n" );
 	s = s + sprintf ( s, "\n" );
 	s = s + sprintf ( s, "int\n" );
-	s = s + sprintf ( s, "STDCALL\n" );
+	s = s + sprintf ( s, "WINAPI\n" );
 	s = s + sprintf ( s, "WinMain(HINSTANCE hInstance,\n" );
 	s = s + sprintf ( s, "  HINSTANCE hPrevInstance,\n" );
 	s = s + sprintf ( s, "  LPSTR lpszCmdParam,\n" );
