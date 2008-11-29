@@ -5,7 +5,6 @@
 
 #ifdef _MSC_VER
   #define STDCALL
-  #define DDKAPI
 #endif
 
 #ifdef __cplusplus

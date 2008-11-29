@@ -25,7 +25,6 @@
 
 /* FIXME - what a headers mess.... */
 
-#define DDKAPI __stdcall
 #define DDKFASTAPI __fastcall
 #define FASTCALL __fastcall
 #define DDKCDECLAPI __cdecl
