@@ -1778,6 +1778,22 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
     IWineD3D* pWineD3d;
     WINED3DCAPS WineCaps;
+    DWORD wined3dFourCCList[] = 
+    {
+        MAKEFOURCC('Y','U','Y','2'),
+        MAKEFOURCC('U','Y','V','Y'),
+        MAKEFOURCC('Y','V','1','2'),
+        // MAKEFOURCC('N','V','1','2'), // WINED3DFMT_NVHU ?
+        // MAKEFOURCC('N','V','2','1'), // WINED3DFMT_NVHUS ?
+        MAKEFOURCC('D','X','T','1'),
+        MAKEFOURCC('D','X','T','2'),
+        MAKEFOURCC('D','X','T','3'),
+        MAKEFOURCC('D','X','T','4'),
+        MAKEFOURCC('D','X','T','5')
+    };
+
+
+
 
 
     /* Note : XP always alloc 24*sizeof(VIDEOMEMORY) of pvmlist so we change it to it */
@@ -1974,7 +1990,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                                           DDSCAPS_PRIMARYSURFACE |
                                           DDSCAPS_SYSTEMMEMORY   |
                                           DDSCAPS_VIDEOMEMORY    |
-                                            DDSCAPS_VISIBLE        |
+                                          DDSCAPS_VISIBLE        |
                                           DDSCAPS_3DDEVICE       |
                                           DDSCAPS_MIPMAP         |
                                           DDSCAPS_TEXTURE        |
@@ -2007,10 +2023,13 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pHalInfo->lpD3DHALCallbacks = (ULONG_PTR)pD3dCallbacks;
         pHalInfo->lpDDExeBufCallbacks = pD3dBufferCallbacks;
 
-        /*  FIXME
-        pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
+        pHalInfo->ddCaps.dwNumFourCCCodes = sizeof(wined3dFourCCList) / sizeof(DWORD);
         pHalInfo->lpdwFourCC = pdwFourCC;
-        */
+
+        if (pdwFourCC)
+        {
+            RtlCopyMemory( pdwFourCC, &wined3dFourCCList, sizeof(wined3dFourCCList));
+        }
     }
 
     /* Now check if we got any DD callbacks */
