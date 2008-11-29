@@ -184,7 +184,7 @@ class utf_converter
 				// upper 5 bits: data filled with 0
 				if (tmp & 0x80)
 				{
-					if (tmp & 0xc0 != 0xc0)
+					if ((tmp & 0xc0) != 0xc0)
 					{
 						cerr << "UTF-8 Error: invalid data byte" << endl;
 						return ret;
