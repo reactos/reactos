@@ -149,7 +149,7 @@ DtbgInit()
   return TRUE;
 }
 
-static DWORD STDCALL
+static DWORD WINAPI
 DtbgDesktopThread(PVOID Data)
 {
   HWND BackgroundWnd;

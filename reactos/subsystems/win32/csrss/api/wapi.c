@@ -118,7 +118,7 @@ CsrHandleHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     (VOID)CallHardError(ProcessData, Message);
 }
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
                              IN HANDLE hApiListenPort)
 {
@@ -192,7 +192,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
 }
 
 VOID
-STDCALL
+WINAPI
 ClientConnectionThread(HANDLE ServerPort)
 {
     NTSTATUS Status;
@@ -309,7 +309,7 @@ ClientConnectionThread(HANDLE ServerPort)
  * 	"\Windows\ApiPort".
  */
 #if 0
-DWORD STDCALL
+DWORD WINAPI
 ServerApiPortThread (HANDLE hApiListenPort)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -354,7 +354,7 @@ ServerApiPortThread (HANDLE hApiListenPort)
  * 	"\Windows\SbApiPort". We will accept only one
  * 	connection request (from the SM).
  */
-DWORD STDCALL
+DWORD WINAPI
 ServerSbApiPortThread (HANDLE hSbApiPortListen)
 {
     HANDLE          hConnectedPort = (HANDLE) 0;

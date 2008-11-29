@@ -2203,7 +2203,7 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
 
 // NtGdi Exported Functions
 INT
-STDCALL
+APIENTRY
 NtGdiCombineRgn(HRGN  hDest,
                 HRGN  hSrc1,
                 HRGN  hSrc2,
@@ -2268,7 +2268,7 @@ NtGdiCombineRgn(HRGN  hDest,
 }
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiCreateEllipticRgn(
     INT Left,
     INT Top,
@@ -2297,7 +2297,7 @@ IntGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 }
 
 
-HRGN STDCALL
+HRGN APIENTRY
 NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
     PROSRGNDATA pRgn;
@@ -2319,7 +2319,7 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiCreateRoundRectRgn(
     INT left,
     INT top,
@@ -2437,7 +2437,7 @@ NtGdiCreateRoundRectRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiEqualRgn(
     HRGN  hSrcRgn1,
     HRGN  hSrcRgn2
@@ -2488,7 +2488,7 @@ exit:
 }
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiExtCreateRegion(
     OPTIONAL LPXFORM Xform,
     DWORD Count,
@@ -2589,7 +2589,7 @@ NtGdiExtCreateRegion(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiFillRgn(
     HDC hDC,
     HRGN hRgn,
@@ -2623,7 +2623,7 @@ NtGdiFillRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiFrameRgn(
     HDC hDC,
     HRGN hRgn,
@@ -2685,7 +2685,7 @@ REGION_GetRgnBox(
       API region is the intersection of the meta region and the clipping region,
       clearly named after the fact that it is controlled by GDI API calls.
 */
-INT STDCALL
+INT APIENTRY
 NtGdiGetRandomRgn(
     HDC hDC,
     HRGN hDest,
@@ -2751,7 +2751,7 @@ NtGdiGetRandomRgn(
     return ret;
 }
 
-INT STDCALL
+INT APIENTRY
 IntGdiGetRgnBox(
     HRGN hRgn,
     LPRECT pRect
@@ -2772,7 +2772,7 @@ IntGdiGetRgnBox(
 }
 
 
-INT STDCALL
+INT APIENTRY
 NtGdiGetRgnBox(
     HRGN hRgn,
     LPRECT pRect
@@ -2814,7 +2814,7 @@ NtGdiGetRgnBox(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiInvertRgn(
     HDC hDC,
     HRGN hRgn
@@ -2847,7 +2847,7 @@ NtGdiInvertRgn(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiOffsetRgn(
     HRGN hRgn,
     INT XOffset,
@@ -2963,7 +2963,7 @@ IntGdiPaintRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiPtInRegion(
     HRGN hRgn,
     INT X,
@@ -3020,7 +3020,7 @@ REGION_RectInRegion(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiRectInRegion(
     HRGN  hRgn,
     LPRECT unsaferc
@@ -3101,7 +3101,7 @@ REGION_SetRectRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetRectRgn(
     HRGN hRgn,
     INT LeftRect,
@@ -3123,7 +3123,7 @@ NtGdiSetRectRgn(
     return TRUE;
 }
 
-HRGN STDCALL
+HRGN APIENTRY
 NtGdiUnionRectWithRgn(
     HRGN hDest,
     CONST PRECT UnsafeRect
@@ -3172,7 +3172,7 @@ NtGdiUnionRectWithRgn(
  *
  * If the function fails, the return value is zero."
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtGdiGetRegionData(
     HRGN hrgn,
     DWORD count,

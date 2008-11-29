@@ -136,7 +136,7 @@ IntRestoreTebWndCallback (HWND hWnd, PVOID pWnd)
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
+VOID APIENTRY
 co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               HWND hWnd,
                               UINT Msg,
@@ -175,7 +175,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
    return;
 }
 
-LRESULT STDCALL
+LRESULT APIENTRY
 co_IntCallWindowProc(WNDPROC Proc,
                      BOOLEAN IsAnsiProc,
                      HWND Wnd,
@@ -265,7 +265,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    return Result;
 }
 
-HMENU STDCALL
+HMENU APIENTRY
 co_IntLoadSysMenuTemplate()
 {
    LRESULT Result;
@@ -296,7 +296,7 @@ co_IntLoadSysMenuTemplate()
    return (HMENU)Result;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 co_IntLoadDefaultCursors(VOID)
 {
    LRESULT Result;
@@ -328,7 +328,7 @@ co_IntLoadDefaultCursors(VOID)
    return TRUE;
 }
 
-LRESULT STDCALL
+LRESULT APIENTRY
 co_IntCallHookProc(INT HookId,
                    INT Code,
                    WPARAM wParam,
@@ -518,7 +518,7 @@ co_IntCallHookProc(INT HookId,
 }
 
 LRESULT
-STDCALL
+APIENTRY
 co_IntCallEventProc(HWINEVENTHOOK hook,
                            DWORD event,
                              HWND hWnd,

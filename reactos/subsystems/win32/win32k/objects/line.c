@@ -392,7 +392,7 @@ IntGdiPolyPolyline(DC      *dc,
 /******************************************************************************/
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiLineTo(HDC  hDC,
             int  XEnd,
             int  YEnd)

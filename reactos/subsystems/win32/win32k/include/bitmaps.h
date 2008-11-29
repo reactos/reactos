@@ -56,9 +56,9 @@ INT     FASTCALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
 UINT    FASTCALL BITMAPOBJ_GetRealBitsPixel(UINT nBitsPixel);
 HBITMAP FASTCALL BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);
 INT     FASTCALL DIB_GetDIBWidthBytes (INT  width, INT  depth);
-int     NTAPI  DIB_GetDIBImageBytes (INT  width, INT  height, INT  depth);
+int     APIENTRY  DIB_GetDIBImageBytes (INT  width, INT  height, INT  depth);
 INT     FASTCALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
-INT     NTAPI  BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
+INT     APIENTRY  BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer);
 HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice);
 
 #endif

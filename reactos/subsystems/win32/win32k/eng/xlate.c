@@ -532,7 +532,7 @@ EngDeleteXlate(XLATEOBJ *XlateObj)
 /*
  * @implemented
  */
-PULONG STDCALL
+PULONG APIENTRY
 XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 {
    if (XlateObj->iSrcType == PAL_INDEXED)
@@ -546,7 +546,7 @@ XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG APIENTRY
 XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 {
    XLATEGDI *XlateGDI;
@@ -603,7 +603,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG APIENTRY
 XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
    ULONG *OutPal)
 {

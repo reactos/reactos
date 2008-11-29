@@ -213,7 +213,7 @@ IntGdiInitBrushInstance(GDIBRUSHINST *BrushInst, PGDIBRUSHOBJ BrushObj, XLATEOBJ
  *    TRUE if the input values together form a valid image, FALSE otherwise.
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 CalculateColorTableSize(
    CONST BITMAPINFOHEADER *BitmapInfoHeader,
    UINT *ColorSpec,
@@ -318,7 +318,7 @@ CalculateColorTableSize(
    }
 }
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 IntGdiCreateDIBBrush(
    CONST BITMAPINFO *BitmapInfo,
    UINT ColorSpec,
@@ -388,7 +388,7 @@ IntGdiCreateDIBBrush(
    return hBrush;
 }
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 IntGdiCreateHatchBrush(
    INT Style,
    COLORREF Color)
@@ -429,7 +429,7 @@ IntGdiCreateHatchBrush(
    return hBrush;
 }
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 IntGdiCreatePatternBrush(
    HBITMAP hBitmap)
 {
@@ -464,7 +464,7 @@ IntGdiCreatePatternBrush(
    return hBrush;
 }
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 IntGdiCreateSolidBrush(
    COLORREF Color)
 {
@@ -489,7 +489,7 @@ IntGdiCreateSolidBrush(
    return hBrush;
 }
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 IntGdiCreateNullBrush(VOID)
 {
    HBRUSH hBrush;
@@ -557,7 +557,7 @@ IntGdiSelectBrush(
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 NtGdiCreateDIBBrush(
    IN PVOID BitmapInfoAndData,
    IN FLONG ColorSpec,
@@ -607,7 +607,7 @@ NtGdiCreateDIBBrush(
    return hBrush;
 }
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 NtGdiCreateHatchBrushInternal(
    ULONG Style,
    COLORREF Color,
@@ -616,7 +616,7 @@ NtGdiCreateHatchBrushInternal(
    return IntGdiCreateHatchBrush(Style, Color);
 }
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 NtGdiCreatePatternBrushInternal(
    HBITMAP hBitmap,
    BOOL bPen,
@@ -625,7 +625,7 @@ NtGdiCreatePatternBrushInternal(
    return IntGdiCreatePatternBrush(hBitmap);
 }
 
-HBRUSH STDCALL
+HBRUSH APIENTRY
 NtGdiCreateSolidBrush(COLORREF Color,
                       IN OPTIONAL HBRUSH hbr)
 {
@@ -642,7 +642,7 @@ NtGdiCreateSolidBrush(COLORREF Color,
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 {
    PDC dc;

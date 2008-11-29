@@ -143,7 +143,7 @@ static BOOL FASTCALL BezierCheck( int level, POINT *Points)
 /* Helper for GDI_Bezier.
  * Just handles one Bezier, so Points should point to four POINTs
  */
-static void STDCALL GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
+static void APIENTRY GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
 				INT *nPtsOut, INT level )
 {
   if(*nPtsOut == *dwOut) {

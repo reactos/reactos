@@ -201,7 +201,7 @@ CreateStockObjects(void)
  * \param	Object - stock object id.
  * \return	Handle to the object.
 */
-HGDIOBJ STDCALL
+HGDIOBJ APIENTRY
 NtGdiGetStockObject(INT Object)
 {
   DPRINT("NtGdiGetStockObject index %d\n", Object);

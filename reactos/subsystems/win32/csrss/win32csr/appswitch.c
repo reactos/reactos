@@ -258,7 +258,7 @@ SwitchWindowDlgProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 VOID
-STDCALL
+WINAPI
 InitializeAppSwitchHook()
 {
     hhk = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookProc, NULL, 0);

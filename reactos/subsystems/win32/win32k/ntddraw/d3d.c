@@ -56,7 +56,7 @@
 *--*/
 
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
                           PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
 {
@@ -113,7 +113,7 @@ NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
 * the correct struct is LPD3DHAL_CONTEXTCREATEDATA.
 *--*/
 BOOL 
-STDCALL
+APIENTRY
 NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
                       HANDLE hSurfColor,
                       HANDLE hSurfZ,
@@ -151,7 +151,7 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
 *
 *--*/
 DWORD
-STDCALL
+APIENTRY
 NtGdiD3dContextDestroy(LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData)
 {
     PGD_D3DCONTEXTDESTROY pfnD3dContextDestroy = (PGD_D3DCONTEXTDESTROY)gpDxFuncs[DXG_INDEX_DxD3dContextDestroy].pfn;
@@ -189,7 +189,7 @@ NtGdiD3dContextDestroy(LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData)
 * any parameters. Last time MSDN checked: 19/10-2007
 *--*/
 DWORD
-STDCALL
+APIENTRY
 NtGdiD3dContextDestroyAll(LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad)
 {
     PGD_D3DCONTEXTDESTROYALL pfnD3dContextDestroyAll = (PGD_D3DCONTEXTDESTROYALL)gpDxFuncs[DXG_INDEX_DxD3dContextDestroyAll].pfn;
@@ -257,7 +257,7 @@ NtGdiD3dContextDestroyAll(LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad)
 *
 *--*/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
                        HANDLE *hSurface,
                        DDSURFACEDESC *puSurfaceDescription,
@@ -286,7 +286,7 @@ NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
 /* NtGdiDdDestroyD3DBuffer                                              */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdDestroyD3DBuffer(HANDLE hSurface)
 {
     PGD_DXDDDESTROYD3DBUFFER pfnDdDestroyD3DBuffer = (PGD_DXDDDESTROYD3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdDestroyD3DBuffer].pfn;  
@@ -305,7 +305,7 @@ NtGdiDdDestroyD3DBuffer(HANDLE hSurface)
 /* NtGdiD3dDrawPrimitives2                                              */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiD3dDrawPrimitives2(HANDLE hCmdBuf,
                         HANDLE hVBuf,
                         LPD3DNTHAL_DRAWPRIMITIVES2DATA pded,
@@ -331,7 +331,7 @@ NtGdiD3dDrawPrimitives2(HANDLE hCmdBuf,
 /* NtGdiD3dValidateTextureStageState                                    */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdLockD3D(HANDLE hSurface,
                PDD_LOCKDATA puLockData)
 {
@@ -351,7 +351,7 @@ NtGdiDdLockD3D(HANDLE hSurface,
 /* NtGdiD3dValidateTextureStageState                                    */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiD3dValidateTextureStageState(LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData)
 {
     PGD_D3DVALIDATETEXTURESTAGESTATE pfnD3dValidateTextureStageState = (PGD_D3DVALIDATETEXTURESTAGESTATE)gpDxFuncs[DXG_INDEX_DxD3dValidateTextureStageState].pfn;  
@@ -370,7 +370,7 @@ NtGdiD3dValidateTextureStageState(LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
 /* NtGdiDdUnlockD3D                                                     */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdUnlockD3D(HANDLE hSurface,
                  PDD_UNLOCKDATA puUnlockData)
 {

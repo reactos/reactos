@@ -74,7 +74,7 @@ const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate(void)
    return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
 }
 
-UINT STDCALL
+UINT APIENTRY
 IntAnimatePalette(HPALETTE hPal,
                   UINT StartIndex,
                   UINT NumEntries,
@@ -135,7 +135,7 @@ IntAnimatePalette(HPALETTE hPal,
     return ret;
 }
 
-HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
+HPALETTE APIENTRY NtGdiCreateHalftonePalette(HDC  hDC)
 {
     int i, r, g, b;
     struct {
@@ -243,7 +243,7 @@ HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
 /*
  * @implemented
  */
-HPALETTE STDCALL
+HPALETTE APIENTRY
 NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
 {
     PPALGDI PalGDI;
@@ -276,7 +276,7 @@ NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
 }
 
 
-BOOL STDCALL NtGdiGetColorAdjustment(HDC  hDC,
+BOOL APIENTRY NtGdiGetColorAdjustment(HDC  hDC,
                              LPCOLORADJUSTMENT  ca)
 {
    UNIMPLEMENTED;
@@ -291,7 +291,7 @@ unsigned short GetNumberOfBits(unsigned int dwMask)
    return wBits;
 }
 
-COLORREF STDCALL NtGdiGetNearestColor(HDC hDC, COLORREF Color)
+COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
 {
    COLORREF nearest = CLR_INVALID;
    PDC dc;
@@ -336,7 +336,7 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC hDC, COLORREF Color)
    return nearest;
 }
 
-UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
+UINT APIENTRY NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
                                  COLORREF  Color)
 {
   PPALGDI palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
@@ -352,7 +352,7 @@ UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
   return index;
 }
 
-UINT STDCALL
+UINT APIENTRY
 IntGetPaletteEntries(HPALETTE  hpal,
                      UINT  StartIndex,
                      UINT  Entries,
@@ -397,7 +397,7 @@ IntGetPaletteEntries(HPALETTE  hpal,
     return Entries;
 }
 
-UINT STDCALL
+UINT APIENTRY
 IntGetSystemPaletteEntries(HDC  hDC,
                            UINT  StartIndex,
                            UINT  Entries,
@@ -462,7 +462,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
     return Ret;
 }
 
-UINT STDCALL NtGdiGetSystemPaletteUse(HDC  hDC)
+UINT APIENTRY NtGdiGetSystemPaletteUse(HDC  hDC)
 {
   return SystemPaletteUse;
 }
@@ -572,7 +572,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   return realized;
 }
 
-BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
+BOOL APIENTRY NtGdiResizePalette(HPALETTE  hpal,
                         UINT  Entries)
 {
 /*  PALOBJ *palPtr = (PALOBJ*)AccessUserObject(hPal);
@@ -616,14 +616,14 @@ BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
   return FALSE;
 }
 
-BOOL STDCALL NtGdiSetColorAdjustment(HDC  hDC,
+BOOL APIENTRY NtGdiSetColorAdjustment(HDC  hDC,
                                      LPCOLORADJUSTMENT  ca)
 {
    UNIMPLEMENTED;
    return FALSE;
 }
 
-UINT STDCALL
+UINT APIENTRY
 IntSetPaletteEntries(HPALETTE  hpal,
                       UINT  Start,
                       UINT  Entries,
@@ -659,7 +659,7 @@ IntSetPaletteEntries(HPALETTE  hpal,
     return Entries;
 }
 
-UINT STDCALL
+UINT APIENTRY
 NtGdiSetSystemPaletteUse(HDC hDC, UINT Usage)
 {
     UINT old = SystemPaletteUse;
@@ -686,7 +686,7 @@ NtGdiSetSystemPaletteUse(HDC hDC, UINT Usage)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 {
    BOOL Ret = FALSE;
@@ -709,7 +709,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    return Ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiUpdateColors(HDC hDC)
 {
    PWINDOW_OBJECT Wnd;
@@ -745,7 +745,7 @@ NtGdiUpdateColors(HDC hDC)
    return ret;
 }
 
-INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
+INT APIENTRY COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
                              XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved)
 {
   int i, best = 0, diff = 0x7fffffff;
@@ -773,7 +773,7 @@ INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
     return (XlateObj->pulXlate) ? (INT)XlateObj->pulXlate[best] : best;
 }
 
-COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
+COLORREF APIENTRY COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
 {
    INT index;
 
@@ -784,7 +784,7 @@ COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, 
       palPalEntry[index].peBlue);
 }
 
-int STDCALL COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
+int APIENTRY COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
                                    COLORREF col )
 {
   int i;

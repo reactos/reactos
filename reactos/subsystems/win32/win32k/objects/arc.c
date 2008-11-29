@@ -341,7 +341,7 @@ NtGdiAngleArc(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiArcInternal(
         ARCTYPE arctype,
         HDC  hDC,

@@ -550,7 +550,7 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
  * @implemented
  */
 HANDLE
-STDCALL
+APIENTRY
 NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
 {
    PCURICON_OBJECT CurIcon;
@@ -629,7 +629,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetIconInfo(
    HANDLE hCurIcon,
    PICONINFO IconInfo,
@@ -722,7 +722,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-NTAPI
+APIENTRY
 NtUserGetIconSize(
     HANDLE hCurIcon,
     UINT istepIfAniCur,
@@ -772,7 +772,7 @@ cleanup:
  * @unimplemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserGetCursorFrameInfo(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -789,7 +789,7 @@ NtUserGetCursorFrameInfo(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetCursorInfo(
    PCURSORINFO pci)
 {
@@ -863,7 +863,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserClipCursor(
    RECT *UnsafeRect)
 {
@@ -936,7 +936,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserDestroyCursor(
    HANDLE hCurIcon,
    DWORD Unknown)
@@ -978,7 +978,7 @@ CLEANUP:
  * @implemented
  */
 HICON
-STDCALL
+APIENTRY
 NtUserFindExistingCursorIcon(
    HMODULE hModule,
    HRSRC hRsrc,
@@ -1024,7 +1024,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetClipCursor(
    RECT *lpRect)
 {
@@ -1086,7 +1086,7 @@ CLEANUP:
  * @implemented
  */
 HCURSOR
-STDCALL
+APIENTRY
 NtUserSetCursor(
    HCURSOR hCursor)
 {
@@ -1138,7 +1138,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserSetCursorContents(
    HANDLE hCurIcon,
    PICONINFO UnsafeIconInfo)
@@ -1231,7 +1231,7 @@ CLEANUP:
  */
 #if 0
 BOOL
-NTAPI
+APIENTRY
 NtUserSetCursorIconData(
   HANDLE Handle,
   HMODULE hModule,
@@ -1318,7 +1318,7 @@ CLEANUP:
 }
 #else
 BOOL
-STDCALL
+APIENTRY
 NtUserSetCursorIconData(
    HANDLE hCurIcon,
    PBOOL fIcon,
@@ -1405,7 +1405,7 @@ CLEANUP:
  * @unimplemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserSetSystemCursor(
    HCURSOR hcur,
    DWORD id)
@@ -1771,7 +1771,7 @@ cleanup:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserDrawIconEx(
    HDC hdc,
    int xLeft,
@@ -1817,7 +1817,7 @@ NtUserDrawIconEx(
 /* Called from NtUserCallOneParam with Routine ONEPARAM_ROUTINE_SHOWCURSOR
  * User32 macro NtUserShowCursor */
 int
-NTAPI
+APIENTRY
 UserShowCursor(BOOL bShow)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();

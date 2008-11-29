@@ -1359,7 +1359,7 @@ UserSystemParametersInfo(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserSystemParametersInfo(
    UINT uiAction,
    UINT uiParam,
@@ -1380,7 +1380,7 @@ CLEANUP:
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserUpdatePerUserSystemParameters(
    DWORD dwReserved,
    BOOL bEnable)

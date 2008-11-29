@@ -10,7 +10,7 @@
  */
 
 #define DC_GET_VAL( func_type, func_name, dc_field ) \
-func_type STDCALL  func_name( HDC hdc ) \
+func_type APIENTRY  func_name( HDC hdc ) \
 {                                   \
   func_type  ft;                    \
   PDC  dc = DC_LockDc( hdc );       \
@@ -44,7 +44,7 @@ VOID FASTCALL Int##FuncName ( PDC dc, LP##type pt) \
 }
 
 #if 0
-BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
+BOOL APIENTRY NtGdi##FuncName ( HDC hdc, LP##type pt ) \
 { \
   NTSTATUS Status = STATUS_SUCCESS; \
   type Safept; \
@@ -83,7 +83,7 @@ BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
 #endif
 
 #define DC_SET_MODE( func_name, dc_field, min_val, max_val ) \
-INT STDCALL  func_name( HDC hdc, INT mode ) \
+INT APIENTRY  func_name( HDC hdc, INT mode ) \
 {                                           \
   INT  prevMode;                            \
   PDC  dc;                                  \

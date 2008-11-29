@@ -343,7 +343,7 @@ IntCallWndProcRet
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserCallMsgFilter(
    LPMSG lpmsg,
    INT code)
@@ -404,7 +404,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-LRESULT STDCALL
+LRESULT APIENTRY
 NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
 {
    NTSTATUS Status;
@@ -494,7 +494,7 @@ CLEANUP:
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserTranslateMessage(LPMSG lpMsg,
                        HKL dwhkl)
 {
@@ -961,7 +961,7 @@ MsgExit:
    return Present;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
                   HWND hWnd,
                   UINT MsgFilterMin,
@@ -1084,7 +1084,7 @@ co_IntWaitMessage(HWND Wnd,
    return FALSE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
                  HWND hWnd,
                  UINT MsgFilterMin,
@@ -1364,7 +1364,7 @@ UserPostMessage(HWND Wnd,
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserPostMessage(HWND hWnd,
                   UINT Msg,
                   WPARAM wParam,
@@ -1385,7 +1385,7 @@ CLEANUP:
 
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserPostThreadMessage(DWORD idThread,
                         UINT Msg,
                         WPARAM wParam,
@@ -1442,7 +1442,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserQuerySendMessage(DWORD Unknown0)
 {
    UNIMPLEMENTED;
@@ -1792,7 +1792,7 @@ co_IntDoSendMessage(HWND hWnd,
    return (LRESULT)Result;
 }
 
-LRESULT STDCALL
+LRESULT APIENTRY
 NtUserSendMessageTimeout(HWND hWnd,
                          UINT Msg,
                          WPARAM wParam,
@@ -1831,7 +1831,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-LRESULT STDCALL
+LRESULT APIENTRY
 NtUserSendMessage(HWND Wnd,
                   UINT Msg,
                   WPARAM wParam,
@@ -1925,7 +1925,7 @@ UserSendNotifyMessage(HWND hWnd,
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSendNotifyMessage(HWND hWnd,
                         UINT Msg,
                         WPARAM wParam,
@@ -1946,7 +1946,7 @@ CLEANUP:
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserWaitMessage(VOID)
 {
    DECLARE_RETURN(BOOL);
@@ -1962,7 +1962,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 IntGetQueueStatus(BOOL ClearChanges)
 {
    PTHREADINFO pti;
@@ -1988,7 +1988,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntInitMessagePumpHook()
 {
    if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
@@ -1999,7 +1999,7 @@ IntInitMessagePumpHook()
    return FALSE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntUninitMessagePumpHook()
 {
    if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
@@ -2015,7 +2015,7 @@ IntUninitMessagePumpHook()
 }
 
 
-LRESULT STDCALL
+LRESULT APIENTRY
 NtUserMessageCall(
    HWND hWnd,
    UINT Msg,
@@ -2188,7 +2188,7 @@ NtUserMessageCall(
 #define WAIT_FAILED ((DWORD)0xFFFFFFFF)
 
 DWORD
-NTAPI
+APIENTRY
 NtUserWaitForInputIdle(
    IN HANDLE hProcess,
    IN DWORD dwMilliseconds,

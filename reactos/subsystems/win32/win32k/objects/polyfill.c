@@ -374,7 +374,7 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 */
 static
 void
-STDCALL
+APIENTRY
 POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** ActiveHead )
 {
   int i;
@@ -399,7 +399,7 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
 */
 static
 void
-STDCALL
+APIENTRY
 POLYGONFILL_FillScanLineAlternate(
   PDC dc,
   int ScanLine,
@@ -447,7 +447,7 @@ POLYGONFILL_FillScanLineAlternate(
 
 static
 void
-STDCALL
+APIENTRY
 POLYGONFILL_FillScanLineWinding(
   PDC dc,
   int ScanLine,
@@ -547,7 +547,7 @@ POLYGONFILL_FillScanLineWinding(
 //The direction of each edge of the polygon is important.
 
 BOOL
-STDCALL
+APIENTRY
 FillPolygon(
   PDC dc,
   BITMAPOBJ *BitmapObj,
@@ -562,7 +562,7 @@ FillPolygon(
   int ScanLine;
   PDC_ATTR Dc_Attr = dc->pDc_Attr;
   void
-  (STDCALL *FillScanLine)(
+  (APIENTRY *FillScanLine)(
     PDC dc,
     int ScanLine,
     FILL_EDGE* ActiveHead,

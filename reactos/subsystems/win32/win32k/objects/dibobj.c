@@ -24,7 +24,7 @@
 #define NDEBUG
 #include <debug.h>
 
-UINT STDCALL
+UINT APIENTRY
 IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors)
 {
    PDC dc;
@@ -89,7 +89,7 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
    return Entries;
 }
 
-UINT STDCALL
+UINT APIENTRY
 IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
 {
    PDC dc;
@@ -295,7 +295,7 @@ IntSetDIBits(
 }
 
 // Converts a DIB to a device-dependent bitmap
-INT STDCALL
+INT APIENTRY
 NtGdiSetDIBits(
 	HDC  hDC,
 	HBITMAP  hBitmap,
@@ -495,7 +495,7 @@ NtGdiSetDIBitsToDeviceInternal(
 
 
 /* Converts a device-dependent bitmap to a DIB */
-INT STDCALL
+INT APIENTRY
 NtGdiGetDIBitsInternal(HDC hDC,
                        HBITMAP hBitmap,
                        UINT StartScan,
@@ -1088,7 +1088,7 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
 }
 
 
-HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
+HBITMAP APIENTRY NtGdiCreateDIBSection(HDC hDC,
                               IN OPTIONAL HANDLE hSection,
                               IN DWORD dwOffset,
                               IN LPBITMAPINFO bmi,
@@ -1128,7 +1128,7 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
   return hbitmap;
 }
 
-HBITMAP STDCALL
+HBITMAP APIENTRY
 DIB_CreateDIBSection(
   PDC dc, BITMAPINFO *bmi, UINT usage,
   LPVOID *bits, HANDLE section,
@@ -1372,7 +1372,7 @@ INT FASTCALL DIB_GetDIBWidthBytes (INT width, INT depth)
  * 11/16/1999 (RJJ) lifted from wine
  */
 
-INT STDCALL DIB_GetDIBImageBytes (INT  width, INT height, INT depth)
+INT APIENTRY DIB_GetDIBImageBytes (INT  width, INT height, INT depth)
 {
   return DIB_GetDIBWidthBytes( width, depth ) * (height < 0 ? -height : height);
 }

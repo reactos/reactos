@@ -24,7 +24,7 @@
 #include <debug.h>
 
 INT
-STDCALL
+APIENTRY
 NtGdiAbortDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -32,7 +32,7 @@ NtGdiAbortDoc(HDC  hDC)
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEndDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -40,7 +40,7 @@ NtGdiEndDoc(HDC  hDC)
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEndPage(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -63,7 +63,7 @@ IntGdiEscape(PDC    dc,
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEscape(HDC  hDC,
             INT  Escape,
             INT  InSize,
@@ -88,7 +88,7 @@ NtGdiEscape(HDC  hDC,
 }
 
 INT
-STDCALL
+APIENTRY
 IntEngExtEscape(
    SURFOBJ *Surface,
    INT      Escape,
@@ -105,7 +105,7 @@ IntEngExtEscape(
 }
 
 INT
-STDCALL
+APIENTRY
 IntGdiExtEscape(
    PDC    dc,
    INT    Escape,
@@ -145,7 +145,7 @@ IntGdiExtEscape(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiExtEscape(
    HDC    hDC,
    IN OPTIONAL PWCHAR pDriver,
@@ -308,7 +308,7 @@ NtGdiStartDoc(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiStartPage(HDC  hDC)
 {
   UNIMPLEMENTED;

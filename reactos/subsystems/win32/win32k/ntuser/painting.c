@@ -765,7 +765,7 @@ co_IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
  *    @implemented
  */
 
-HDC STDCALL
+HDC APIENTRY
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 {
    PWINDOW_OBJECT Window = NULL;
@@ -876,7 +876,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
 {
    NTSTATUS Status = STATUS_SUCCESS;
@@ -959,7 +959,7 @@ co_UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
  *    @implemented
  */
 
-INT STDCALL
+INT APIENTRY
 NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
 {
    DECLARE_RETURN(INT);
@@ -994,7 +994,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
 {
    PWINDOW_OBJECT Window;
@@ -1078,7 +1078,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
                    UINT flags)
 {
@@ -1237,7 +1237,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
                const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate)
 {
@@ -1321,7 +1321,7 @@ CLEANUP:
  *    @implemented
  */
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
                      const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate, UINT flags)
 {
@@ -1891,7 +1891,7 @@ UserRealizePalette(HDC hdc)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserDrawCaptionTemp(
    HWND hWnd,
    HDC hDC,
@@ -1946,7 +1946,7 @@ NtUserDrawCaptionTemp(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserDrawCaption(HWND hWnd,
    HDC hDC,
    LPCRECT lpRc,
@@ -1956,7 +1956,7 @@ NtUserDrawCaption(HWND hWnd,
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserInvalidateRect(
     HWND hWnd,
     CONST RECT *lpUnsafeRect,
@@ -1966,7 +1966,7 @@ NtUserInvalidateRect(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserInvalidateRgn(
     HWND hWnd,
     HRGN hRgn,

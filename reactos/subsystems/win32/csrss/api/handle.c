@@ -61,7 +61,7 @@ CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions)
   return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object, DWORD Access )
+NTSTATUS WINAPI CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object, DWORD Access )
 {
   ULONG h = (ULONG)Handle >> 2;
   DPRINT("CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
@@ -82,7 +82,7 @@ NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, O
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 CsrReleaseObjectByPointer(Object_t *Object)
 {
   unsigned DefIndex;
@@ -106,7 +106,7 @@ CsrReleaseObjectByPointer(Object_t *Object)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
                  HANDLE Handle)
 {
@@ -126,7 +126,7 @@ CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
   return CsrReleaseObjectByPointer(Object);
 }
 
-NTSTATUS STDCALL CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
+NTSTATUS WINAPI CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
                                  PHANDLE Handle,
                                  Object_t *Object,
                                  DWORD Access,
@@ -170,7 +170,7 @@ NTSTATUS STDCALL CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
+NTSTATUS WINAPI CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
                                          PCSRSS_PROCESS_DATA TargetProcessData)
 {
     ULONG i;
@@ -206,7 +206,7 @@ NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle )
+NTSTATUS WINAPI CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle )
 {
   ULONG h = (ULONG)Handle >> 2;
 

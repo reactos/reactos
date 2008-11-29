@@ -37,7 +37,7 @@ PENOBJ_LockPen(HGDIOBJ hBMObj)
       return GDIOBJ_LockObj( hBMObj, GDI_OBJECT_TYPE_PEN);
 }
 
-HPEN STDCALL
+HPEN APIENTRY
 IntGdiExtCreatePen(
    DWORD dwPenStyle,
    DWORD dwWidth,
@@ -203,7 +203,7 @@ IntGdiSetSolidPenColor(HPEN hPen, COLORREF Color)
   }
 }
 
-INT STDCALL
+INT APIENTRY
 PEN_GetObject(PGDIBRUSHOBJ pPenObject, INT cbCount, PLOGPEN pBuffer)
 {
    PLOGPEN pLogPen;
@@ -313,7 +313,7 @@ IntGdiSelectPen(
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-HPEN STDCALL
+HPEN APIENTRY
 NtGdiCreatePen(
    INT PenStyle,
    INT Width,
@@ -339,7 +339,7 @@ NtGdiCreatePen(
                              hbr);
 }
 
-HPEN STDCALL
+HPEN APIENTRY
 NtGdiExtCreatePen(
    DWORD dwPenStyle,
    DWORD ulWidth,

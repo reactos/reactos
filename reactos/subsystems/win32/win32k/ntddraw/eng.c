@@ -18,7 +18,7 @@
 /* HeapVidMemAllocAligned                                               */
 /************************************************************************/
 FLATPTR
-STDCALL
+APIENTRY
 HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
                        DWORD dwWidth,
                        DWORD dwHeight,
@@ -41,7 +41,7 @@ HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
 /* VidMemFree                                                           */
 /************************************************************************/
 VOID
-STDCALL
+APIENTRY
 VidMemFree(LPVMEMHEAP pvmh,
            FLATPTR ptr)
 {
@@ -62,7 +62,7 @@ VidMemFree(LPVMEMHEAP pvmh,
 /* EngAllocPrivateUserMem                                               */
 /************************************************************************/
 PVOID
-STDCALL
+APIENTRY
 EngAllocPrivateUserMem(PDD_SURFACE_LOCAL  psl,
                        SIZE_T  cj,
                        ULONG  tag)
@@ -83,7 +83,7 @@ EngAllocPrivateUserMem(PDD_SURFACE_LOCAL  psl,
 /* EngFreePrivateUserMem                                                */
 /************************************************************************/
 VOID
-STDCALL
+APIENTRY
 EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
                       PVOID  pv)
 {
@@ -125,7 +125,7 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
 *
 *--*/
 DWORD
-STDCALL
+APIENTRY
 EngDxIoctl(ULONG ulIoctl,
            PVOID pBuffer,
            ULONG ulBufferSize)
@@ -160,7 +160,7 @@ EngDxIoctl(ULONG ulIoctl,
 *
 *--*/
 PDD_SURFACE_LOCAL
-STDCALL
+APIENTRY
 EngLockDirectDrawSurface(HANDLE hSurface)
 {
     PGD_ENGLOCKDIRECTDRAWSURFACE pfnEngLockDirectDrawSurface = (PGD_ENGLOCKDIRECTDRAWSURFACE)gpDxFuncs[DXG_INDEX_DxDdLockDirectDrawSurface].pfn;
@@ -194,7 +194,7 @@ EngLockDirectDrawSurface(HANDLE hSurface)
 *
 *--*/
 BOOL
-STDCALL
+APIENTRY
 EngUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
 {
     PGD_ENGUNLOCKDIRECTDRAWSURFACE pfnEngUnlockDirectDrawSurface = (PGD_ENGUNLOCKDIRECTDRAWSURFACE)gpDxFuncs[DXG_INDEX_DxDdUnlockDirectDrawSurface].pfn;

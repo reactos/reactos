@@ -49,7 +49,7 @@ NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID);
 
 NTSTATUS
-STDCALL
+APIENTRY
 IntDesktopObjectParse(IN PVOID ParseObject,
                       IN PVOID ObjectType,
                       IN OUT PACCESS_STATE AccessState,
@@ -61,7 +61,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                       IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
                       OUT PVOID *Object);
 
-VOID STDCALL
+VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 VOID FASTCALL

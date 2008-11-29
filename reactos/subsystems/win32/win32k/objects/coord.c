@@ -88,7 +88,7 @@ IntGdiCombineTransform(LPXFORM XFormResult,
   return TRUE;
 }
 
-BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
+BOOL APIENTRY NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
                                    LPXFORM  Unsafexform1,
                                    LPXFORM  Unsafexform2)
 {
@@ -173,7 +173,7 @@ IntGdiModifyWorldTransform(PDC pDc,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetTransform(HDC  hDC,
                DWORD iXform,
               LPXFORM  XForm)
@@ -337,7 +337,7 @@ NtGdiTransformPoints( HDC hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiModifyWorldTransform(HDC hDC,
                           LPXFORM  UnsafeXForm,
                           DWORD Mode)
@@ -376,7 +376,7 @@ NtGdiModifyWorldTransform(HDC hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiOffsetViewportOrgEx(HDC hDC,
                         int XOffset,
                         int YOffset,
@@ -429,7 +429,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiOffsetWindowOrgEx(HDC  hDC,
                       int  XOffset,
                       int  YOffset,
@@ -483,7 +483,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiScaleViewportExtEx(HDC  hDC,
                        int  Xnum,
                      int  Xdenom,
@@ -565,7 +565,7 @@ NtGdiScaleViewportExtEx(HDC  hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiScaleWindowExtEx(HDC  hDC,
                      int  Xnum,
                    int  Xdenom,
@@ -649,7 +649,7 @@ NtGdiScaleWindowExtEx(HDC  hDC,
 }
 
 int
-STDCALL
+APIENTRY
 IntGdiSetMapMode(PDC  dc,
                 int  MapMode)
 {
@@ -730,7 +730,7 @@ IntGdiSetMapMode(PDC  dc,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetViewportExtEx(HDC  hDC,
                       int  XExtent,
                       int  YExtent,
@@ -805,7 +805,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetViewportOrgEx(HDC  hDC,
                      int  X,
                      int  Y,
@@ -859,7 +859,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetWindowExtEx(HDC  hDC,
                    int  XExtent,
                    int  YExtent,
@@ -925,7 +925,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetWindowOrgEx(HDC  hDC,
                    int  X,
                    int  Y,

@@ -20,7 +20,7 @@
 PKBL KBLList = NULL; // Keyboard layout list.
 
 typedef PVOID (*KbdLayerDescriptor)(VOID);
-NTSTATUS STDCALL LdrGetProcedureAddress(PVOID module,
+NTSTATUS APIENTRY LdrGetProcedureAddress(PVOID module,
                                         PANSI_STRING import_name,
                                         DWORD flags,
                                         PVOID *func_addr);
@@ -40,7 +40,7 @@ NTSTATUS STDCALL LdrGetProcedureAddress(PVOID module,
  * Returns NTSTATUS
  */
 
-static NTSTATUS NTAPI ReadRegistryValue( PUNICODE_STRING KeyName,
+static NTSTATUS APIENTRY ReadRegistryValue( PUNICODE_STRING KeyName,
       PUNICODE_STRING ValueName,
       PUNICODE_STRING ReturnedValue )
 {
@@ -467,7 +467,7 @@ UserGetKeyboardLayout(
 }
 
 UINT
-STDCALL
+APIENTRY
 NtUserGetKeyboardLayoutList(
    INT nItems,
    HKL* pHklBuff)
@@ -517,7 +517,7 @@ NtUserGetKeyboardLayoutList(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetKeyboardLayoutName(
    LPWSTR lpszName)
 {
@@ -548,7 +548,7 @@ NtUserGetKeyboardLayoutName(
 
 
 HKL
-STDCALL
+APIENTRY
 NtUserLoadKeyboardLayoutEx(
    IN HANDLE Handle,
    IN DWORD offTable,
@@ -609,7 +609,7 @@ the_end:
 }
 
 HKL
-STDCALL
+APIENTRY
 NtUserActivateKeyboardLayout(
    HKL hKl,
    ULONG Flags)
@@ -666,7 +666,7 @@ the_end:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserUnloadKeyboardLayout(
    HKL hKl)
 {

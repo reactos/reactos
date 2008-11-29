@@ -231,7 +231,7 @@ InitTimerImpl(VOID)
 
 
 UINT_PTR
-STDCALL
+APIENTRY
 NtUserSetTimer
 (
    HWND hWnd,
@@ -255,7 +255,7 @@ CLEANUP:
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserKillTimer
 (
    HWND hWnd,
@@ -277,7 +277,7 @@ CLEANUP:
 
 
 UINT_PTR
-STDCALL
+APIENTRY
 NtUserSetSystemTimer(
    HWND hWnd,
    UINT_PTR nIDEvent,

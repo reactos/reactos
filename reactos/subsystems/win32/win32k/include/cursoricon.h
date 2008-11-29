@@ -77,7 +77,7 @@ BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxW
    INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 
-int NTAPI UserShowCursor(BOOL bShow);
+int APIENTRY UserShowCursor(BOOL bShow);
 
 #define IntGetSysCursorInfo(WinStaObj) \
   (PSYSTEM_CURSORINFO)((WinStaObj)->SystemCursor)

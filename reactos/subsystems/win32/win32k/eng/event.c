@@ -14,7 +14,7 @@
 #include <debug.h>
 
 BOOL
-STDCALL
+APIENTRY
 EngCreateEvent ( OUT PEVENT *Event )
 {
   (*Event) = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_DFSM);
@@ -27,7 +27,7 @@ EngCreateEvent ( OUT PEVENT *Event )
 }
 
 BOOL
-STDCALL
+APIENTRY
 EngDeleteEvent ( IN PEVENT Event)
 {
   ExFreePoolWithTag(Event, TAG_DFSM);
@@ -35,7 +35,7 @@ EngDeleteEvent ( IN PEVENT Event)
 }
 
 PEVENT
-STDCALL
+APIENTRY
 EngMapEvent(IN HDEV    Dev,
 	    IN HANDLE  UserObject,
 	    IN PVOID   Reserved1,
@@ -68,14 +68,14 @@ EngMapEvent(IN HDEV    Dev,
 }
 
 LONG
-STDCALL
+APIENTRY
 EngSetEvent ( IN PEVENT Event )
 {
   return KeSetEvent((PKEVENT)Event, IO_NO_INCREMENT, FALSE);
 }
 
 BOOL
-STDCALL
+APIENTRY
 EngUnmapEvent ( IN PEVENT Event )
 {
   ObDereferenceObject((PVOID)Event);
@@ -84,7 +84,7 @@ EngUnmapEvent ( IN PEVENT Event )
 }
 
 BOOL
-STDCALL
+APIENTRY
 EngWaitForSingleObject (IN PEVENT          Event,
 			IN PLARGE_INTEGER  TimeOut)
 {

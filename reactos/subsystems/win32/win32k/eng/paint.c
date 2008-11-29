@@ -32,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL STDCALL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
+BOOL APIENTRY FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
 {
   LONG y;
   ULONG LineWidth;
@@ -56,7 +56,7 @@ BOOL STDCALL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 EngPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
             BRUSHOBJ *BrushObj, POINTL *BrushPoint)
 {
@@ -102,7 +102,7 @@ EngPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngPaint(IN SURFOBJ *Surface,
 	 IN CLIPOBJ *ClipRegion,
 	 IN BRUSHOBJ *Brush,
@@ -117,7 +117,7 @@ EngPaint(IN SURFOBJ *Surface,
   return ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngPaint(IN SURFOBJ *Surface,
             IN CLIPOBJ *ClipRegion,
             IN BRUSHOBJ *Brush,

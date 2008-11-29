@@ -129,7 +129,7 @@ IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetDeviceGammaRamp(HDC  hDC,
                              LPVOID  Ramp)
 {
@@ -186,7 +186,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetColorSpace(IN HDC hdc,
                    IN HCOLORSPACE hColorSpace)
 {
@@ -361,7 +361,7 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetDeviceGammaRamp(HDC  hDC,
                              LPVOID  Ramp)
 {
@@ -415,7 +415,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiSetIcmMode(HDC  hDC,
                 ULONG nCommand,
                 ULONG EnableICM) // ulMode

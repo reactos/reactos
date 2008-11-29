@@ -2096,7 +2096,7 @@ PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECT *lprc,
  */
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiAbortPath(HDC  hDC)
 {
   PPATH pPath;
@@ -2121,7 +2121,7 @@ NtGdiAbortPath(HDC  hDC)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiBeginPath( HDC  hDC )
 {
   PPATH pPath;
@@ -2186,7 +2186,7 @@ NtGdiBeginPath( HDC  hDC )
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiCloseFigure(HDC hDC)
 {
   BOOL Ret = FALSE; // default to failure
@@ -2225,7 +2225,7 @@ NtGdiCloseFigure(HDC hDC)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiEndPath(HDC  hDC)
 {
   BOOL ret = TRUE;
@@ -2264,7 +2264,7 @@ NtGdiEndPath(HDC  hDC)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiFillPath(HDC  hDC)
 {
   BOOL ret = FALSE;
@@ -2304,7 +2304,7 @@ NtGdiFillPath(HDC  hDC)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiFlattenPath(HDC  hDC)
 {
    BOOL Ret = FALSE;
@@ -2381,7 +2381,7 @@ NtGdiGetMiterLimit(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiGetPath(
    HDC hDC,
    LPPOINT Points,
@@ -2447,7 +2447,7 @@ done:
 }
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiPathToRegion(HDC  hDC)
 {
   PPATH pPath;
@@ -2539,7 +2539,7 @@ NtGdiSetMiterLimit(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiStrokeAndFillPath(HDC hDC)
 {
   DC *pDc;
@@ -2579,7 +2579,7 @@ NtGdiStrokeAndFillPath(HDC hDC)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiStrokePath(HDC hDC)
 {
   DC *pDc;
@@ -2616,7 +2616,7 @@ NtGdiStrokePath(HDC hDC)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiWidenPath(HDC  hDC)
 {
   BOOL Ret;
@@ -2632,7 +2632,7 @@ NtGdiWidenPath(HDC  hDC)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSelectClipPath(HDC  hDC,
                    int  Mode)
 {

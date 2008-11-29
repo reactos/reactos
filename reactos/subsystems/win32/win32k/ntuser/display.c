@@ -21,7 +21,7 @@
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 NTSTATUS
-NTAPI
+APIENTRY
 NtUserEnumDisplaySettings(
    PUNICODE_STRING pusDeviceName,
    DWORD iModeNum,
@@ -113,7 +113,7 @@ NtUserEnumDisplaySettings(
 
 
 LONG
-NTAPI
+APIENTRY
 NtUserChangeDisplaySettings(
    PUNICODE_STRING lpszDeviceName,
    LPDEVMODEW lpDevMode,

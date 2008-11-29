@@ -158,7 +158,7 @@ IsHotKey (UINT fsModifiers, UINT vk)
 /* SYSCALLS *****************************************************************/
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserRegisterHotKey(HWND hWnd,
                      int id,
                      UINT fsModifiers,
@@ -214,7 +214,7 @@ CLEANUP:
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserUnregisterHotKey(HWND hWnd, int id)
 {
    PHOT_KEY_ITEM HotKeyItem;

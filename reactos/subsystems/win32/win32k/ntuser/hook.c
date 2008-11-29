@@ -878,7 +878,7 @@ UserCallNextHookEx(
 }
 
 LRESULT
-STDCALL
+APIENTRY
 NtUserCallNextHookEx(
    int Code,
    WPARAM wParam,
@@ -940,7 +940,7 @@ CLEANUP:
 }
 
 HHOOK
-STDCALL
+APIENTRY
 NtUserSetWindowsHookAW(
    int idHook, 
    HOOKPROC lpfn,
@@ -952,7 +952,7 @@ NtUserSetWindowsHookAW(
 }
 
 HHOOK
-STDCALL
+APIENTRY
 NtUserSetWindowsHookEx(
    HINSTANCE Mod,
    PUNICODE_STRING UnsafeModuleName,
@@ -1168,7 +1168,7 @@ CLEANUP:
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserUnhookWindowsHookEx(
    HHOOK Hook)
 {

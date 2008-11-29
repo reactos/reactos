@@ -63,7 +63,7 @@ IntEngCleanupDriverObjs(struct _EPROCESS *Process,
  * @implemented
  */
 HDRVOBJ
-STDCALL
+APIENTRY
 EngCreateDriverObj(
 	IN PVOID        pvObj,
 	IN FREEOBJPROC  pFreeObjProc,
@@ -104,7 +104,7 @@ EngCreateDriverObj(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 EngDeleteDriverObj(
 	IN HDRVOBJ  hdo,
 	IN BOOL  bCallBack,
@@ -148,7 +148,7 @@ EngDeleteDriverObj(
  * @implemented
  */
 PDRIVEROBJ
-STDCALL
+APIENTRY
 EngLockDriverObj( IN HDRVOBJ hdo )
 {
   PDRIVEROBJ DrvObjUser = (PDRIVEROBJ)hdo;
@@ -167,7 +167,7 @@ EngLockDriverObj( IN HDRVOBJ hdo )
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 EngUnlockDriverObj ( IN HDRVOBJ hdo )
 {
   PDRIVERGDI DrvObjInt = ObjToGDI((PDRIVEROBJ)hdo, DRIVER);

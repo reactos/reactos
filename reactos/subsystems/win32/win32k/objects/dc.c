@@ -48,14 +48,14 @@ InitDcImpl(VOID)
 
 //  -----------------------------------------------------  Public Functions
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiCancelDC(HDC  hDC)
 {
   UNIMPLEMENTED;
   return FALSE;
 }
 
-HDC STDCALL
+HDC APIENTRY
 NtGdiCreateCompatibleDC(HDC hDC)
 {
   PDC  NewDC, OrigDC;
@@ -232,7 +232,7 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames, ULONG DisplayNumber)
   return TRUE;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS APIENTRY
 DevModeCallback(IN PWSTR ValueName,
                 IN ULONG ValueType,
                 IN PVOID ValueData,
@@ -893,7 +893,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   return hNewDC;
 }
 
-HDC STDCALL
+HDC APIENTRY
 NtGdiOpenDCW( PUNICODE_STRING Device,
               DEVMODEW *InitData,
               PUNICODE_STRING pustrLogAddr,
@@ -1087,7 +1087,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiDeleteObjectApp(HANDLE  DCHandle)
 {
 
@@ -1132,7 +1132,7 @@ NtGdiEnumObjects(
 }
 
 HANDLE
-STDCALL
+APIENTRY
 NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
 {
   HGDIOBJ SelObject;
@@ -1199,7 +1199,7 @@ IntCalcFillOrigin(PDC pdc)
 }
 
 VOID
-STDCALL
+APIENTRY
 GdiSetDCOrg(HDC hDC, LONG Left, LONG Top, PRECTL prc)
 {
   PDC pdc;
@@ -1225,7 +1225,7 @@ IntGdiGetDCOrg(PDC pDc, PPOINTL ppt)
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 GdiGetDCOrgEx(HDC hDC, PPOINTL ppt, PRECTL prc)
 {
   PDC pdc;
@@ -1264,7 +1264,7 @@ IntGetAspectRatioFilter(PDC pDC,
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
 {
   BOOL Ret = TRUE;
@@ -1515,7 +1515,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
 #endif
 }
 
-HDC STDCALL
+HDC APIENTRY
 IntGdiGetDCState(HDC  hDC)
 {
   PDC  newdc, dc;
@@ -1548,7 +1548,7 @@ IntGdiGetDCState(HDC  hDC)
 
 
 VOID
-STDCALL
+APIENTRY
 IntGdiSetDCState ( HDC hDC, HDC hDCSave )
 {
   PDC  dc, dcs;
@@ -1795,7 +1795,7 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
   return ret;
 }
 
-INT STDCALL
+INT APIENTRY
 NtGdiGetDeviceCaps(HDC  hDC,
                   INT  Index)
 {
@@ -1950,7 +1950,7 @@ NtGdiResetDC(
   return 0;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
 {
   PDC dc, dcs;
@@ -2021,7 +2021,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
 }
 
 
-INT STDCALL
+INT APIENTRY
 NtGdiSaveDC(HDC  hDC)
 {
   HDC  hdcs;
@@ -2241,7 +2241,7 @@ GdiSelectPalette(HDC  hDC,
     return oldPal;
 }
 
-WORD STDCALL
+WORD APIENTRY
 IntGdiSetHookFlags(HDC hDC, WORD Flags)
 {
   WORD wRet;
@@ -2276,7 +2276,7 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
 
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetDCDword(
              HDC hDC,
              UINT u,
@@ -2372,7 +2372,7 @@ NtGdiGetDCDword(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetAndSetDCDword(
                   HDC hDC,
                   UINT u,

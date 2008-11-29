@@ -177,7 +177,7 @@ NtGdiAddFontResourceW(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtGdiGetFontData(
    HDC hDC,
    DWORD Table,
@@ -397,7 +397,7 @@ Exit:
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtGdiGetKerningPairs(HDC  hDC,
                      ULONG  NumPairs,
                      LPKERNINGPAIR  krnpair)
@@ -472,7 +472,7 @@ NtGdiGetKerningPairs(HDC  hDC,
  472, this is NtGdiGetOutlineTextMetricsInternalW.
  */
 ULONG
-STDCALL
+APIENTRY
 NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
                                    ULONG  Data,
                       OUTLINETEXTMETRICW  *otm,
@@ -715,7 +715,7 @@ NtGdiGetRealizationInfo(
 }
 
 HFONT
-STDCALL
+APIENTRY
 NtGdiHfontCreate(
   IN PENUMLOGFONTEXDVW pelfw,
   IN ULONG cjElfw,

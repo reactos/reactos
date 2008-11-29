@@ -49,7 +49,7 @@ extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
 NTSTATUS
-STDCALL
+APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
@@ -171,7 +171,7 @@ CLEANUP:
 
 
 NTSTATUS
-STDCALL
+APIENTRY
 Win32kThreadCallback(struct _ETHREAD *Thread,
                      PSW32THREADCALLOUTTYPE Type)
 {
@@ -374,7 +374,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
 /*
  * This definition doesn't work
  */
-NTSTATUS STDCALL
+NTSTATUS APIENTRY
 DriverEntry (
   IN	PDRIVER_OBJECT	DriverObject,
   IN	PUNICODE_STRING	RegistryPath)

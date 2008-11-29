@@ -277,7 +277,7 @@ NtGdiGetTextExtentExW(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetTextExtent(HDC hdc,
                    LPWSTR lpwsz,
                    INT cwc,
@@ -288,7 +288,7 @@ NtGdiGetTextExtent(HDC hdc,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetTextJustification(HDC  hDC,
                           int  BreakExtra,
                           int  BreakCount)

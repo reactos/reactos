@@ -25,7 +25,7 @@
 
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiAlphaBlend(
 	HDC  hDCDest,
 	LONG  XOriginDest,
@@ -170,7 +170,7 @@ NtGdiAlphaBlend(
 	return Status;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiBitBlt(
 	HDC  hDCDest,
 	INT  XDest,
@@ -338,7 +338,7 @@ cleanup:
 	return Status;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiTransparentBlt(
 	HDC			hdcDst,
 	INT			xDst,
@@ -514,7 +514,7 @@ SwapROP3_SrcDst(BYTE bRop3)
 #define DSTCOPY 		0x00AA0029
 #define DSTERASE		0x00220326 /* dest = dest & (~src) : DSna */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiMaskBlt (
 	HDC hdcDest, INT nXDest, INT nYDest,
 	INT nWidth, INT nHeight, HDC hdcSrc,
@@ -726,7 +726,7 @@ NtGdiPlgBlt(
 	return FALSE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiStretchBlt(
 	HDC  hDCDest,
 	INT  XOriginDest,
@@ -1075,7 +1075,7 @@ IntGdiPolyPatBlt(
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiPatBlt(
    HDC hDC,
    INT XLeft,
@@ -1138,7 +1138,7 @@ NtGdiPatBlt(
    return ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiPolyPatBlt(
    HDC hDC,
    DWORD dwRop,

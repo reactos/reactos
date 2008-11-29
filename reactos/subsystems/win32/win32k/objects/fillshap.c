@@ -198,7 +198,7 @@ IntGdiPolyPolygon(DC      *dc,
  *
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiEllipse(
     HDC hDC,
     int Left,
@@ -346,7 +346,7 @@ extern BOOL FillPolygon(PDC dc,
 
 
 ULONG_PTR
-STDCALL
+APIENTRY
 NtGdiPolyPolyDraw( IN HDC hDC,
                    IN PPOINT UnsafePoints,
                    IN PULONG UnsafeCounts,
@@ -651,7 +651,7 @@ cleanup:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiRectangle(HDC  hDC,
                int  LeftRect,
                int  TopRect,
@@ -786,7 +786,7 @@ IntRoundRect(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiRoundRect(
     HDC  hDC,
     int  LeftRect,
@@ -928,7 +928,7 @@ IntGdiGradientFill(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiGradientFill(
     HDC hdc,
     PTRIVERTEX pVertex,
@@ -1040,7 +1040,7 @@ NtGdiGradientFill(
     return Ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiExtFloodFill(
     HDC  hDC,
     INT  XStart,

@@ -518,7 +518,7 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
  *   TRUE on success, FALSE on failure.
  *
  */
-static BOOLEAN STDCALL
+static BOOLEAN APIENTRY
 IntTranslateCharsetInfo(PDWORD Src, /* [in]
                          if flags == TCI_SRCFONTSIG: pointer to fsCsb of a FONTSIGNATURE
                          if flags == TCI_SRCCHARSET: a character set value
@@ -1172,7 +1172,7 @@ typedef struct FontFamilyInfoCallbackContext
   DWORD Size;
 } FONT_FAMILY_INFO_CALLBACK_CONTEXT, *PFONT_FAMILY_INFO_CALLBACK_CONTEXT;
 
-static NTSTATUS STDCALL
+static NTSTATUS APIENTRY
 FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
                                     IN PVOID ValueData, IN ULONG ValueLength,
                                     IN PVOID Context, IN PVOID EntryContext)
@@ -1287,7 +1287,7 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
 }
 
 
-FT_Glyph STDCALL
+FT_Glyph APIENTRY
 ftGdiGlyphCacheGet(
    FT_Face Face,
    INT GlyphIndex,
@@ -1336,7 +1336,7 @@ ftGdiGlyphCacheGet(
    return FontEntry->Glyph;
 }
 
-FT_Glyph STDCALL
+FT_Glyph APIENTRY
 ftGdiGlyphCacheSet(
    FT_Face Face,
    INT GlyphIndex,
@@ -2993,7 +2993,7 @@ ftGdiGetKerningPairs( PFONTGDI Font,
 // Functions needing sorting.
 //
 ///////////////
-int STDCALL
+int APIENTRY
 NtGdiGetFontFamilyInfo(HDC Dc,
                        LPLOGFONTW UnsafeLogFont,
                        PFONTFAMILYINFO UnsafeInfo,
@@ -3700,7 +3700,7 @@ fail:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetCharABCWidthsW(
     IN HDC hDC,
     IN UINT FirstChar,
@@ -3868,7 +3868,7 @@ NtGdiGetCharABCWidthsW(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetCharWidthW(
     IN HDC hDC,
     IN UINT FirstChar,
@@ -4008,7 +4008,7 @@ NtGdiGetCharWidthW(
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtGdiGetGlyphIndicesW(
     IN HDC hdc,
     IN OPTIONAL LPWSTR UnSafepwc,

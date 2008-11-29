@@ -1662,7 +1662,7 @@ co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTes
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetMinMaxInfo(
    HWND hWnd,
    MINMAXINFO *MinMaxInfo,

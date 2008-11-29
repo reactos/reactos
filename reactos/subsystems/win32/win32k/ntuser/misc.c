@@ -63,7 +63,7 @@ IntGdiGetLanguageID()
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserGetThreadState(
    DWORD Routine)
 {
@@ -107,7 +107,7 @@ CLEANUP:
 
 
 UINT
-STDCALL
+APIENTRY
 NtUserGetDoubleClickTime(VOID)
 {
    UINT Result;
@@ -139,7 +139,7 @@ CLEANUP:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetGUIThreadInfo(
    DWORD idThread, /* if NULL use foreground thread */
    LPGUITHREADINFO lpgui)
@@ -244,7 +244,7 @@ CLEANUP:
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetGuiResources(
    HANDLE hProcess,
    DWORD uiFlags)

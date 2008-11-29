@@ -31,7 +31,7 @@ NtGdiConvertMetafileRect(IN HDC hDC,
  * @unimplemented
  */
 HDC
-STDCALL
+APIENTRY
 NtGdiCreateMetafileDC(IN HDC hdc)
 {
 

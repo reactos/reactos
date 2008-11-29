@@ -35,7 +35,7 @@
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID APIENTRY
 BRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ  *BrushObj,
 		       IN ULONG  ObjSize)
 {
@@ -46,7 +46,7 @@ BRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ  *BrushObj,
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID APIENTRY
 BRUSHOBJ_pvGetRbrush(IN BRUSHOBJ  *BrushObj)
 {
   return(BrushObj->pvRbrush);
@@ -55,7 +55,7 @@ BRUSHOBJ_pvGetRbrush(IN BRUSHOBJ  *BrushObj)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG APIENTRY
 BRUSHOBJ_ulGetBrushColor(IN BRUSHOBJ *BrushObj)
 {
    return BrushObj->iSolidColor;

@@ -75,7 +75,7 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
  * @unimplemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallNoParam(DWORD Routine)
 {
    DWORD Result = 0;
@@ -139,7 +139,7 @@ CLEANUP:
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallOneParam(
    DWORD Param,
    DWORD Routine)
@@ -416,7 +416,7 @@ CLEANUP:
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallTwoParam(
    DWORD Param1,
    DWORD Param2,
@@ -680,7 +680,7 @@ CLEANUP:
  * @unimplemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserCallHwndLock(
    HWND hWnd,
    DWORD Routine)
@@ -757,7 +757,7 @@ CLEANUP:
  * @unimplemented
  */
 HWND
-STDCALL
+APIENTRY
 NtUserCallHwndOpt(
    HWND hWnd,
    DWORD Routine)
@@ -777,7 +777,7 @@ NtUserCallHwndOpt(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwnd(
    HWND hWnd,
    DWORD Routine)
@@ -800,7 +800,7 @@ NtUserCallHwnd(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwndParam(
    HWND hWnd,
    DWORD Param,
@@ -819,7 +819,7 @@ NtUserCallHwndParam(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwndParamLock(
    HWND hWnd,
    DWORD Param,

@@ -77,7 +77,7 @@ static UINT DontDistinguishShifts( UINT ret )
    return ret;
 }
 
-static VOID STDCALL SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
+static VOID APIENTRY SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
 {
    ASSERT(vk <= 0xff);
 
@@ -308,7 +308,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
 }
 
 static
-int STDCALL
+int APIENTRY
 ToUnicodeInner(UINT wVirtKey,
                UINT wScanCode,
                PBYTE lpKeyState,
@@ -362,7 +362,7 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
 
 
 SHORT
-STDCALL
+APIENTRY
 NtUserGetKeyState(
    INT key)
 {
@@ -397,7 +397,7 @@ DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
 
 
 SHORT
-STDCALL
+APIENTRY
 NtUserGetAsyncKeyState(
    INT key)
 {
@@ -503,7 +503,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetKeyboardState(
    LPBYTE lpKeyState)
 {
@@ -528,7 +528,7 @@ CLEANUP:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserSetKeyboardState(LPBYTE lpKeyState)
 {
    BOOL Result = TRUE;
@@ -662,7 +662,7 @@ static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout )
 }
 
 UINT
-STDCALL
+APIENTRY
 NtUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl )
 {
    PTHREADINFO pti;
@@ -688,7 +688,7 @@ CLEANUP:
 
 
 int
-STDCALL
+APIENTRY
 NtUserToUnicodeEx(
    UINT wVirtKey,
    UINT wScanCode,
@@ -758,7 +758,7 @@ static int W32kSimpleToupper( int ch )
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
 {
    PTHREADINFO pti;
@@ -996,7 +996,7 @@ UserGetKeyboardType(
     look for wChar match.
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserVkKeyScanEx(
    WCHAR wChar,
    HKL KeyboardLayout,

@@ -453,7 +453,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
  *   The number of monitors which intersect the specified region or -1 on failure.
  */
 INT
-STDCALL
+APIENTRY
 NtUserEnumDisplayMonitors(
    OPTIONAL IN HDC hDC,
    OPTIONAL IN LPCRECT pRect,
@@ -624,7 +624,7 @@ NtUserEnumDisplayMonitors(
  *
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetMonitorInfo(
    IN HMONITOR hMonitor,
    OUT LPMONITORINFO pMonitorInfo)
@@ -723,7 +723,7 @@ CLEANUP:
  *   return value depends on dwFlags
  */
 HMONITOR
-STDCALL
+APIENTRY
 NtUserMonitorFromPoint(
    IN POINT point,
    IN DWORD dwFlags)
@@ -781,7 +781,7 @@ NtUserMonitorFromPoint(
  *   return value depends on dwFlags
  */
 HMONITOR
-STDCALL
+APIENTRY
 NtUserMonitorFromRect(
    IN LPCRECT pRect,
    IN DWORD dwFlags)
@@ -876,7 +876,7 @@ NtUserMonitorFromRect(
 
 
 HMONITOR
-STDCALL
+APIENTRY
 NtUserMonitorFromWindow(
    IN HWND hWnd,
    IN DWORD dwFlags)

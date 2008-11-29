@@ -413,7 +413,7 @@ UserGetForegroundWindow(VOID)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserGetForegroundWindow(VOID)
 {
    DECLARE_RETURN(HWND);
@@ -441,7 +441,7 @@ HWND FASTCALL UserGetActiveWindow()
 }
 
 
-HWND STDCALL
+HWND APIENTRY
 NtUserSetActiveWindow(HWND hWnd)
 {
    USER_REFERENCE_ENTRY Ref;
@@ -491,7 +491,7 @@ CLEANUP:
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 IntGetCapture(VOID)
 {
    PTHREADINFO pti;
@@ -512,7 +512,7 @@ CLEANUP:
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserSetCapture(HWND hWnd)
 {
    PTHREADINFO pti;
@@ -609,7 +609,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserSetFocus(HWND hWnd)
 {
    PWINDOW_OBJECT Window;

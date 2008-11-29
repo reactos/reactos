@@ -35,7 +35,7 @@
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 EngDeviceIoControl(HANDLE  hDevice,
 		   DWORD   dwIoControlCode,
 		   LPVOID  lpInBuffer,

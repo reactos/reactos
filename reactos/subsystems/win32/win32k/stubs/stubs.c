@@ -2778,7 +2778,7 @@ NtGdiUnmapMemFont(
 }
 
 BOOL
-STDCALL
+APIENTRY
 EngControlSprites(
   IN WNDOBJ  *pwo,
   IN FLONG  fl)

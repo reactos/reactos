@@ -1878,7 +1878,7 @@ UserRegisterSystemClasses(IN ULONG Count,
 /* SYSCALLS *****************************************************************/
 
 
-RTL_ATOM NTAPI
+RTL_ATOM APIENTRY
 NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
                       IN PUNICODE_STRING ClassName,
                       IN PUNICODE_STRING MenuName,
@@ -1988,7 +1988,7 @@ InvalidParameter:
 
 
 RTL_ATOM
-NTAPI
+APIENTRY
 NtUserRegisterClassExWOW(
     WNDCLASSEXW* lpwcx,
     PUNICODE_STRING ClassName,
@@ -2093,7 +2093,7 @@ InvalidParameter:
 }
 
 
-ULONG_PTR NTAPI
+ULONG_PTR APIENTRY
 NtUserGetClassLong(IN HWND hWnd,
                    IN INT Offset,
                    IN BOOL Ansi)
@@ -2130,7 +2130,7 @@ NtUserGetClassLong(IN HWND hWnd,
 
 
 
-ULONG_PTR STDCALL
+ULONG_PTR APIENTRY
 NtUserSetClassLong(HWND hWnd,
                    INT Offset,
                    ULONG_PTR dwNewLong,
@@ -2210,7 +2210,7 @@ Cleanup:
 }
 
 WORD
-STDCALL
+APIENTRY
 NtUserSetClassWord(
   HWND hWnd,
   INT nIndex,
@@ -2219,7 +2219,7 @@ NtUserSetClassWord(
    return(0);
 }
 
-BOOL NTAPI
+BOOL APIENTRY
 NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
                       IN HINSTANCE hInstance,
                       OUT PCLSMENUNAME pClassMenuName)
@@ -2270,7 +2270,7 @@ InvalidParameter:
 }
 
 /* NOTE: for system classes hInstance is not NULL here, but User32Instance */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetClassInfo(
    HINSTANCE hInstance,
    PUNICODE_STRING ClassName,
@@ -2382,7 +2382,7 @@ Cleanup:
 
 
 
-INT NTAPI
+INT APIENTRY
 NtUserGetClassName (IN HWND hWnd,
                     OUT PUNICODE_STRING ClassName,
                     IN BOOL Ansi)
@@ -2424,7 +2424,7 @@ NtUserGetClassName (IN HWND hWnd,
     return Ret;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserGetWOWClass(DWORD Unknown0,
                   DWORD Unknown1)
 {
