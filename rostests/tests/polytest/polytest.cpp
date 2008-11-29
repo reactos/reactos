@@ -500,7 +500,6 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 */
 static
 void
-WINAPI
 POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** ActiveHead )
 {
   int i;
@@ -525,7 +524,6 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
 */
 static
 void
-WINAPI
 POLYGONFILL_FillScanLineAlternate(
   PDC dc,
   int ScanLine,
@@ -573,7 +571,6 @@ POLYGONFILL_FillScanLineAlternate(
 
 static
 void
-WINAPI
 POLYGONFILL_FillScanLineWinding(
   PDC dc,
   int ScanLine,
@@ -673,7 +670,6 @@ POLYGONFILL_FillScanLineWinding(
 //The direction of each edge of the polygon is important.
 
 BOOL
-WINAPI
 FillPolygon(
   PDC dc,
   SURFOBJ *SurfObj,
@@ -688,7 +684,6 @@ FillPolygon(
   int ScanLine;
 
   void
-  WINAPI
   (*FillScanLine)(
     PDC dc,
     int ScanLine,
