@@ -253,7 +253,7 @@ ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
     LUID NewLuid;

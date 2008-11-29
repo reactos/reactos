@@ -289,7 +289,7 @@ SeReleaseLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Privilege,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeAppendPrivileges(PACCESS_STATE AccessState,
                    PPRIVILEGE_SET Privileges)
 {
@@ -301,7 +301,7 @@ SeAppendPrivileges(PACCESS_STATE AccessState,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
 {
     UNIMPLEMENTED;
@@ -310,7 +310,7 @@ SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SePrivilegeCheck (PPRIVILEGE_SET Privileges,
                   PSECURITY_SUBJECT_CONTEXT SubjectContext,
                   KPROCESSOR_MODE PreviousMode)
@@ -342,7 +342,7 @@ SePrivilegeCheck (PPRIVILEGE_SET Privileges,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SeSinglePrivilegeCheck (IN LUID PrivilegeValue,
                         IN KPROCESSOR_MODE PreviousMode)
 {
@@ -379,7 +379,7 @@ SeSinglePrivilegeCheck (IN LUID PrivilegeValue,
 
 /* SYSTEM CALLS ***************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtPrivilegeCheck (IN HANDLE ClientToken,
                   IN PPRIVILEGE_SET RequiredPrivileges,
                   OUT PBOOLEAN Result)

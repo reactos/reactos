@@ -137,7 +137,7 @@ MmBuildMdlFromPages(PMDL Mdl, PPFN_TYPE Pages)
 
 
 BOOLEAN
-STDCALL
+NTAPI
 MmIsFileAPagingFile(PFILE_OBJECT FileObject)
 {
     ULONG i;
@@ -538,7 +538,7 @@ MmAllocRetrievelDescriptorList(ULONG Pairs)
    return RetDescList;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmDumpToPagingFile(ULONG BugCode,
                    ULONG BugCodeParameter1,
                    ULONG BugCodeParameter2,
@@ -681,7 +681,7 @@ MmDumpToPagingFile(ULONG BugCode,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
 {
    PFILE_OBJECT PageFile;
@@ -795,7 +795,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtCreatePagingFile(IN PUNICODE_STRING FileName,
                    IN PLARGE_INTEGER InitialSize,
                    IN PLARGE_INTEGER MaximumSize,

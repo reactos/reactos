@@ -1639,7 +1639,7 @@ KdbDeleteProcessHook(IN PEPROCESS Process)
 }
 
 VOID
-STDCALL
+NTAPI
 KdbpGetCommandLineSettings(PCHAR p1)
 {
     PCHAR p2;

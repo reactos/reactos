@@ -568,7 +568,7 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN OUT PVOID *BaseAddress,
                        IN OUT PSIZE_T NumberOfBytesToProtect,
@@ -932,7 +932,7 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtQueryVirtualMemory(IN HANDLE ProcessHandle,
                      IN PVOID Address,
                      IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,

@@ -117,7 +117,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
 /* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 CcRosTraceCacheMap (
 	PBCB Bcb,
 	BOOLEAN Trace )
@@ -818,7 +818,7 @@ CcRosGetCacheSegment(PBCB Bcb,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CcRosRequestCacheSegment(PBCB Bcb,
 		      ULONG FileOffset,
 		      PVOID* BaseAddress,
@@ -947,7 +947,7 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
 	     IN PLARGE_INTEGER FileOffset OPTIONAL,
 	     IN ULONG Length,
@@ -1164,7 +1164,7 @@ CcRosDereferenceCache(PFILE_OBJECT FileObject)
   KeReleaseGuardedMutex(&ViewLock);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CcRosReleaseFileCache(PFILE_OBJECT FileObject)
 /*
  * FUNCTION: Called by the file system when a handle to a file object
@@ -1301,7 +1301,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 /*
  * @implemented
  */
-PFILE_OBJECT STDCALL
+PFILE_OBJECT NTAPI
 CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointers)
 {
    PBCB Bcb;
@@ -1314,7 +1314,7 @@ CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointers
    return NULL;
 }
 
-VOID STDCALL
+VOID NTAPI
 CmLazyCloseThreadMain(PVOID Ignored)
 {
    LARGE_INTEGER Timeout;

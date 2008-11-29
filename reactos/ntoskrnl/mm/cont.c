@@ -59,7 +59,7 @@ MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
  *
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
                                        IN PHYSICAL_ADDRESS LowestAcceptableAddress OPTIONAL,
                                        IN PHYSICAL_ADDRESS HighestAcceptableAddress,
@@ -152,7 +152,7 @@ MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
  *
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
                             IN PHYSICAL_ADDRESS HighestAcceptableAddress)
 {
@@ -187,7 +187,7 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
  *
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 MmFreeContiguousMemory(IN PVOID BaseAddress)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());
@@ -223,7 +223,7 @@ MmFreeContiguousMemory(IN PVOID BaseAddress)
  *
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 MmFreeContiguousMemorySpecifyCache(IN PVOID BaseAddress,
                                    IN ULONG NumberOfBytes,
                                    IN MEMORY_CACHING_TYPE CacheType)

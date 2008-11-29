@@ -26,7 +26,7 @@ extern ULONG NtOSCSDVersion;
 * @implemented
 */
 ULONG
-STDCALL
+NTAPI
 RtlGetNtGlobalFlags(VOID)
 {
 	return(NtGlobalFlag);
@@ -36,7 +36,7 @@ RtlGetNtGlobalFlags(VOID)
 /*
 * @implemented
 */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
 {
    ULONG i, MaxLength;

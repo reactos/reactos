@@ -185,7 +185,7 @@ static VOID MmVerifyMemoryAreas(PMM_AVL_TABLE AddressSpace)
 #define MmVerifyMemoryAreas(x)
 #endif
 
-VOID STDCALL
+VOID NTAPI
 MmDumpMemoryAreas(PMM_AVL_TABLE AddressSpace)
 {
    PMEMORY_AREA Node;
@@ -209,7 +209,7 @@ MmDumpMemoryAreas(PMM_AVL_TABLE AddressSpace)
    DbgPrint("Finished MmDumpMemoryAreas()\n");
 }
 
-PMEMORY_AREA STDCALL
+PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByAddress(
    PMM_AVL_TABLE AddressSpace,
    PVOID Address)
@@ -239,7 +239,7 @@ MmLocateMemoryAreaByAddress(
    return NULL;
 }
 
-PMEMORY_AREA STDCALL
+PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByRegion(
    PMM_AVL_TABLE AddressSpace,
    PVOID Address,
@@ -628,7 +628,7 @@ MmFindGapTopDown(
 }
 
 
-PVOID STDCALL
+PVOID NTAPI
 MmFindGap(
    PMM_AVL_TABLE AddressSpace,
    ULONG_PTR Length,
@@ -641,7 +641,7 @@ MmFindGap(
    return MmFindGapBottomUp(AddressSpace, Length, Granularity);
 }
 
-ULONG_PTR STDCALL
+ULONG_PTR NTAPI
 MmFindGapAtAddress(
    PMM_AVL_TABLE AddressSpace,
    PVOID Address)
@@ -738,7 +738,7 @@ MmInitMemoryAreas(VOID)
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmFreeMemoryArea(
    PMM_AVL_TABLE AddressSpace,
    PMEMORY_AREA MemoryArea,
@@ -880,7 +880,7 @@ MmFreeMemoryArea(
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmFreeMemoryAreaByPtr(
    PMM_AVL_TABLE AddressSpace,
    PVOID BaseAddress,
@@ -932,7 +932,7 @@ MmFreeMemoryAreaByPtr(
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmCreateMemoryArea(PMM_AVL_TABLE AddressSpace,
                    ULONG Type,
                    PVOID *BaseAddress,
@@ -1055,7 +1055,7 @@ MmMapMemoryArea(PVOID BaseAddress,
 }
 
 
-VOID STDCALL
+VOID NTAPI
 MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
                                  PMM_AVL_TABLE AddressSpace,
                                  PVOID BaseAddress)

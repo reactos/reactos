@@ -135,7 +135,7 @@ FORCEINLINE struct _KPCR * NTHALAPI KeGetCurrentKPCR(
 }
 
 VOID
-STDCALL
+NTAPI
 KePPCInitThreadWithContext(
 	PKTHREAD Thread,
 	PKSYSTEM_ROUTINE SystemRoutine,
@@ -144,12 +144,12 @@ KePPCInitThreadWithContext(
 	PCONTEXT Context);
 
 VOID
-STDCALL
+NTAPI
 KeApplicationProcessorInitDispatcher(
   VOID);
 
 VOID
-STDCALL
+NTAPI
 KeCreateApplicationProcessorIdleThread(
   ULONG Id);
 
@@ -160,7 +160,7 @@ static VOID KePPCFnInit()
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
-STDCALL
+NTAPI
 KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 PKSTART_ROUTINE StartRoutine,
                 PVOID StartContext,

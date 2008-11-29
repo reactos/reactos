@@ -216,7 +216,7 @@ SepFindPrimaryGroupAndDefaultOwner(PTOKEN Token,
 
 
 NTSTATUS
-STDCALL
+NTAPI
 SepDuplicateToken(PTOKEN Token,
                   POBJECT_ATTRIBUTES ObjectAttributes,
                   BOOLEAN EffectiveOnly,
@@ -422,7 +422,7 @@ SeIsTokenChild(IN PTOKEN Token,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 SeCopyClientToken(IN PACCESS_TOKEN Token,
                   IN SECURITY_IMPERSONATION_LEVEL Level,
                   IN KPROCESSOR_MODE PreviousMode,
@@ -449,7 +449,7 @@ SeCopyClientToken(IN PACCESS_TOKEN Token,
     return(Status);
 }
 
-VOID STDCALL
+VOID NTAPI
 SepDeleteToken(PVOID ObjectBody)
 {
     PTOKEN AccessToken = (PTOKEN)ObjectBody;
@@ -513,7 +513,7 @@ SeAssignPrimaryToken(IN PEPROCESS Process,
 }
 
 PTOKEN
-STDCALL
+NTAPI
 SepCreateSystemProcessToken(VOID)
 {
     NTSTATUS Status;
@@ -728,7 +728,7 @@ SepCreateSystemProcessToken(VOID)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeFilterToken(IN PACCESS_TOKEN ExistingToken,
               IN ULONG Flags,
               IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
@@ -744,7 +744,7 @@ SeFilterToken(IN PACCESS_TOKEN ExistingToken,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeQueryInformationToken(IN PACCESS_TOKEN Token,
                         IN TOKEN_INFORMATION_CLASS TokenInformationClass,
                         OUT PVOID *TokenInformation)
@@ -757,7 +757,7 @@ SeQueryInformationToken(IN PACCESS_TOKEN Token,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeQuerySessionIdToken(IN PACCESS_TOKEN Token,
                       IN PULONG pSessionId)
 {
@@ -768,7 +768,7 @@ SeQuerySessionIdToken(IN PACCESS_TOKEN Token,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeQueryAuthenticationIdToken(IN PACCESS_TOKEN Token,
                              OUT PLUID LogonId)
 {
@@ -784,7 +784,7 @@ SeQueryAuthenticationIdToken(IN PACCESS_TOKEN Token,
  * @implemented
  */
 SECURITY_IMPERSONATION_LEVEL
-STDCALL
+NTAPI
 SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
 {
     PAGED_CODE();
@@ -796,7 +796,7 @@ SeTokenImpersonationLevel(IN PACCESS_TOKEN Token)
 /*
  * @implemented
  */
-TOKEN_TYPE STDCALL
+TOKEN_TYPE NTAPI
 SeTokenType(IN PACCESS_TOKEN Token)
 {
     PAGED_CODE();
@@ -809,7 +809,7 @@ SeTokenType(IN PACCESS_TOKEN Token)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeTokenIsAdmin(IN PACCESS_TOKEN Token)
 {
     PAGED_CODE();
@@ -820,7 +820,7 @@ SeTokenIsAdmin(IN PACCESS_TOKEN Token)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeTokenIsRestricted(IN PACCESS_TOKEN Token)
 {
     PAGED_CODE();
@@ -831,7 +831,7 @@ SeTokenIsRestricted(IN PACCESS_TOKEN Token)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeTokenIsWriteRestricted(IN PACCESS_TOKEN Token)
 {
     PAGED_CODE();
@@ -843,7 +843,7 @@ SeTokenIsWriteRestricted(IN PACCESS_TOKEN Token)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtQueryInformationToken(IN HANDLE TokenHandle,
                         IN TOKEN_INFORMATION_CLASS TokenInformationClass,
                         OUT PVOID TokenInformation,
@@ -1405,7 +1405,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
  *  TokenOrigin, TokenDefaultDacl
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtSetInformationToken(IN HANDLE TokenHandle,
                       IN TOKEN_INFORMATION_CLASS TokenInformationClass,
                       OUT PVOID TokenInformation,
@@ -1647,7 +1647,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
  * is correct either. -Gunnar
  * This is true. EffectiveOnly overrides SQOS.EffectiveOnly. - IAI
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtDuplicateToken(IN HANDLE ExistingTokenHandle,
                  IN ACCESS_MASK DesiredAccess,
                  IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
@@ -1747,7 +1747,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtAdjustGroupsToken(IN HANDLE TokenHandle,
                     IN BOOLEAN ResetToDefault,
                     IN PTOKEN_GROUPS NewState,
@@ -1762,7 +1762,7 @@ NtAdjustGroupsToken(IN HANDLE TokenHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
                          IN BOOLEAN DisableAllPrivileges,
                          IN PTOKEN_PRIVILEGES NewState,
@@ -1940,7 +1940,7 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtCreateToken(OUT PHANDLE TokenHandle,
               IN ACCESS_MASK DesiredAccess,
               IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -2181,7 +2181,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                     IN ACCESS_MASK DesiredAccess,
                     IN BOOLEAN OpenAsSelf,
@@ -2349,7 +2349,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtOpenThreadToken(IN HANDLE ThreadHandle,
                   IN ACCESS_MASK DesiredAccess,
                   IN BOOLEAN OpenAsSelf,
@@ -2461,7 +2461,7 @@ NtFilterToken(IN HANDLE ExistingTokenHandle,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtImpersonateAnonymousToken(IN HANDLE Thread)
 {
     UNIMPLEMENTED;

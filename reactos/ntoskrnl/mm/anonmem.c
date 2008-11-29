@@ -519,7 +519,7 @@ MmModifyAttributes(PMM_AVL_TABLE AddressSpace,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
                         IN OUT PVOID* UBaseAddress,
                         IN     ULONG_PTR  ZeroBits,
@@ -915,7 +915,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     IN PVOID*  PBaseAddress,
                     IN PSIZE_T PRegionSize,
@@ -1030,7 +1030,7 @@ MmProtectAnonMem(PMM_AVL_TABLE AddressSpace,
    return(Status);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmQueryAnonMem(PMEMORY_AREA MemoryArea,
                PVOID Address,
                PMEMORY_BASIC_INFORMATION Info,

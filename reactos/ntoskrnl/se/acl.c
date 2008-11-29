@@ -219,7 +219,7 @@ SepInitDACLs(VOID)
     return(TRUE);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SepCreateImpersonationTokenDacl(PTOKEN Token,
                                 PTOKEN PrimaryToken,
                                 PACL *Dacl)

@@ -19,7 +19,7 @@
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 CcMdlRead(
 	IN	PFILE_OBJECT		FileObject,
 	IN	PLARGE_INTEGER		FileOffset,
@@ -49,7 +49,7 @@ CcMdlRead(
  *
  */
 VOID
-STDCALL
+NTAPI
 CcMdlReadComplete2(IN PMDL MemoryDescriptorList,
                      IN PFILE_OBJECT FileObject)
 {
@@ -81,7 +81,7 @@ CcMdlReadComplete2(IN PMDL MemoryDescriptorList,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 CcMdlReadComplete(IN PFILE_OBJECT FileObject,
                   IN PMDL MdlChain)
 {
@@ -109,7 +109,7 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 CcMdlWriteComplete(IN PFILE_OBJECT FileObject,
                    IN PLARGE_INTEGER FileOffset,
                    IN PMDL MdlChain)
@@ -150,7 +150,7 @@ CcMdlWriteComplete2(
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcMdlWriteAbort (
     IN PFILE_OBJECT FileObject,
     IN PMDL MdlChain
@@ -163,7 +163,7 @@ CcMdlWriteAbort (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcPrepareMdlWrite (
 	IN	PFILE_OBJECT		FileObject,
 	IN	PLARGE_INTEGER		FileOffset,

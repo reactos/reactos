@@ -882,7 +882,7 @@ MmProtectMdlSystemAddress(IN PMDL MemoryDescriptorList,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
                            IN PEPROCESS Process,
                            IN KPROCESSOR_MODE AccessMode,
@@ -896,7 +896,7 @@ MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 MmProbeAndLockSelectedPages(IN OUT PMDL MemoryDescriptorList,
                             IN LARGE_INTEGER PageList[],
                             IN KPROCESSOR_MODE AccessMode,

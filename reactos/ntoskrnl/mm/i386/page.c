@@ -180,7 +180,7 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
                             IN PULONG DirectoryTableBase)
@@ -1044,7 +1044,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 /*
  * @implemented
  */
-PHYSICAL_ADDRESS STDCALL
+PHYSICAL_ADDRESS NTAPI
 MmGetPhysicalAddress(PVOID vaddr)
 /*
  * FUNCTION: Returns the physical address corresponding to a virtual address

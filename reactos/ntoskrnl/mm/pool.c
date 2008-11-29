@@ -27,7 +27,7 @@ EiGetPagedPoolTag(IN PVOID Block);
 ULONG NTAPI
 EiGetNonPagedPoolTag(IN PVOID Block);
 
-static PVOID STDCALL
+static PVOID NTAPI
 EiAllocatePool(POOL_TYPE PoolType,
                ULONG NumberOfBytes,
                ULONG Tag,
@@ -70,7 +70,7 @@ EiAllocatePool(POOL_TYPE PoolType,
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 /*
  * FUNCTION: Allocates pool memory of a specified type and returns a pointer
@@ -119,7 +119,7 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
@@ -147,7 +147,7 @@ ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
    return(ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, TAG_NONE));
@@ -157,7 +157,7 @@ ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 ExAllocatePoolWithTagPriority(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes,
@@ -269,7 +269,7 @@ ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
  * @unimplemented
  */
 SIZE_T
-STDCALL
+NTAPI
 ExQueryPoolBlockSize (
     IN PVOID PoolBlock,
     OUT PBOOLEAN QuotaCharged
@@ -283,7 +283,7 @@ ExQueryPoolBlockSize (
  * @unimplemented
  */
 PVOID
-STDCALL
+NTAPI
 MmAllocateMappingAddress (
      IN SIZE_T NumberOfBytes,
      IN ULONG PoolTag
@@ -298,7 +298,7 @@ MmAllocateMappingAddress (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 MmFreeMappingAddress (
      IN PVOID BaseAddress,
      IN ULONG PoolTag
@@ -308,7 +308,7 @@ MmFreeMappingAddress (
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 MiRaisePoolQuota(
     IN POOL_TYPE PoolType,
     IN ULONG CurrentMaxQuota,

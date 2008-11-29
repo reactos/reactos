@@ -2089,7 +2089,7 @@ MmProtectSectionView(PMM_AVL_TABLE AddressSpace,
    return(Status);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmQuerySectionView(PMEMORY_AREA MemoryArea,
                    PVOID Address,
                    PMEMORY_BASIC_INFORMATION Info,
@@ -2168,7 +2168,7 @@ MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
    }
 }
 
-VOID STDCALL
+VOID NTAPI
 MmpDeleteSection(PVOID ObjectBody)
 {
    PROS_SECTION_OBJECT Section = (PROS_SECTION_OBJECT)ObjectBody;
@@ -2239,7 +2239,7 @@ MmpDeleteSection(PVOID ObjectBody)
    }
 }
 
-VOID STDCALL
+VOID NTAPI
 MmpCloseSection(IN PEPROCESS Process OPTIONAL,
                 IN PVOID Object,
                 IN ACCESS_MASK GrantedAccess,
@@ -3477,7 +3477,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtCreateSection (OUT PHANDLE SectionHandle,
                  IN ACCESS_MASK DesiredAccess,
                  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -3552,7 +3552,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
  *
  * REVISIONS
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtOpenSection(PHANDLE   SectionHandle,
               ACCESS_MASK  DesiredAccess,
               POBJECT_ATTRIBUTES ObjectAttributes)
@@ -3699,7 +3699,7 @@ MmMapViewOfSegment(PMM_AVL_TABLE AddressSpace,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtMapViewOfSection(IN HANDLE SectionHandle,
                    IN HANDLE ProcessHandle,
                    IN OUT PVOID* BaseAddress  OPTIONAL,
@@ -4029,7 +4029,7 @@ MmUnmapViewOfSegment(PMM_AVL_TABLE AddressSpace,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmUnmapViewOfSection(PEPROCESS Process,
                      PVOID BaseAddress)
 {
@@ -4166,7 +4166,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
  *
  * REVISIONS
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtUnmapViewOfSection (HANDLE ProcessHandle,
                       PVOID BaseAddress)
 {
@@ -4222,7 +4222,7 @@ NtUnmapViewOfSection (HANDLE ProcessHandle,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtQuerySection(IN HANDLE SectionHandle,
                IN SECTION_INFORMATION_CLASS SectionInformationClass,
                OUT PVOID SectionInformation,
@@ -4352,7 +4352,7 @@ NtQuerySection(IN HANDLE SectionHandle,
  * @todo Move the actual code to internal function MmExtendSection.
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtExtendSection(IN HANDLE SectionHandle,
                 IN PLARGE_INTEGER NewMaximumSize)
 {
@@ -4430,7 +4430,7 @@ NtExtendSection(IN HANDLE SectionHandle,
  *
  * REVISIONS
  */
-PVOID STDCALL
+PVOID NTAPI
 MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
 {
    PVOID Result;
@@ -4519,7 +4519,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMapViewOfSection(IN PVOID SectionObject,
                    IN PEPROCESS Process,
                    IN OUT PVOID *BaseAddress,
@@ -4716,7 +4716,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                       IN PLARGE_INTEGER   NewFileSize)
 {
@@ -4728,7 +4728,7 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmDisableModifiedWriteOfSection (ULONG Unknown0)
 {
    UNIMPLEMENTED;
@@ -4738,7 +4738,7 @@ MmDisableModifiedWriteOfSection (ULONG Unknown0)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                      IN MMFLUSH_TYPE   FlushType)
 {
@@ -4761,7 +4761,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmForceSectionClosed (
     IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     IN BOOLEAN                  DelayClose)
@@ -4774,7 +4774,7 @@ MmForceSectionClosed (
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMapViewInSystemSpace (IN PVOID SectionObject,
                         OUT PVOID * MappedBase,
                         IN OUT PULONG ViewSize)
@@ -4822,7 +4822,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 MmMapViewInSessionSpace (
     IN PVOID Section,
     OUT PVOID *MappedBase,
@@ -4837,7 +4837,7 @@ MmMapViewInSessionSpace (
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmUnmapViewInSystemSpace (IN PVOID MappedBase)
 {
    PMM_AVL_TABLE AddressSpace;
@@ -4856,7 +4856,7 @@ MmUnmapViewInSystemSpace (IN PVOID MappedBase)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 MmUnmapViewInSessionSpace (
     IN PVOID MappedBase
     )
@@ -4868,7 +4868,7 @@ MmUnmapViewInSessionSpace (
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmSetBankedSection (ULONG Unknown0,
                     ULONG Unknown1,
                     ULONG Unknown2,
@@ -4936,7 +4936,7 @@ MmSetBankedSection (ULONG Unknown0,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmCreateSection (OUT PVOID  * Section,
                  IN ACCESS_MASK  DesiredAccess,
                  IN POBJECT_ATTRIBUTES ObjectAttributes     OPTIONAL,

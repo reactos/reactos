@@ -383,7 +383,7 @@ SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecur
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
                             IN KPROCESSOR_MODE CurrentMode,
                             IN POOL_TYPE PoolType,
@@ -720,7 +720,7 @@ Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
                               IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
                               IN OUT PULONG Length,
@@ -858,7 +858,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
                             IN KPROCESSOR_MODE CurrentMode,
                             IN BOOLEAN CaptureIfKernelMode)
@@ -882,7 +882,7 @@ SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
                             IN PSECURITY_INFORMATION _SecurityInformation,
                             IN PSECURITY_DESCRIPTOR _SecurityDescriptor,
@@ -1073,7 +1073,7 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeSetSecurityDescriptorInfoEx(IN PVOID Object OPTIONAL,
                               IN PSECURITY_INFORMATION SecurityInformation,
                               IN PSECURITY_DESCRIPTOR ModificationDescriptor,
@@ -1095,7 +1095,7 @@ SeSetSecurityDescriptorInfoEx(IN PVOID Object OPTIONAL,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SeValidSecurityDescriptor(IN ULONG Length,
                           IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
 {
@@ -1231,7 +1231,7 @@ SeValidSecurityDescriptor(IN ULONG Length,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     PAGED_CODE();
@@ -1249,7 +1249,7 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
                    IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
                    OUT PSECURITY_DESCRIPTOR *NewDescriptor,
@@ -1267,7 +1267,7 @@ SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
                  PSECURITY_DESCRIPTOR _ExplicitDescriptor OPTIONAL,
                  PSECURITY_DESCRIPTOR *NewDescriptor,

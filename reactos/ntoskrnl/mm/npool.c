@@ -1455,7 +1455,7 @@ static HDR_USED* get_block(unsigned int size, unsigned long alignment)
    return (HDR_USED*)current;
 }
 
-ULONG STDCALL
+ULONG NTAPI
 ExRosQueryNonPagedPoolTag ( PVOID Addr )
 {
    HDR_USED* blk=(HDR_USED*)((ULONG_PTR)Addr - HDR_USED_SIZE);
@@ -1530,7 +1530,7 @@ void check_redzone_list(void)
 #endif
 
 
-VOID STDCALL ExFreeNonPagedPool (PVOID block)
+VOID NTAPI ExFreeNonPagedPool (PVOID block)
 /*
  * FUNCTION: Releases previously allocated memory
  * ARGUMENTS:
@@ -1586,7 +1586,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 }
 
-PVOID STDCALL
+PVOID NTAPI
 ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Caller)
 {
 #if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
@@ -1787,7 +1787,7 @@ MiInitializeNonPagedPool(VOID)
 }
 
 PVOID
-STDCALL
+NTAPI
 MiAllocateSpecialPool  (IN POOL_TYPE PoolType,
                         IN SIZE_T NumberOfBytes,
                         IN ULONG Tag,

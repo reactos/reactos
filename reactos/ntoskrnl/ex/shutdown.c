@@ -14,7 +14,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
+VOID NTAPI
 KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
 			  IN PVOID DeferredContext,
 			  IN PVOID SystemArgument1,
@@ -36,7 +36,7 @@ KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
      }
 }
 
-VOID STDCALL
+VOID NTAPI
 ShutdownThreadMain(PVOID Context)
 {
    SHUTDOWN_ACTION Action = (SHUTDOWN_ACTION)Context;
@@ -215,7 +215,7 @@ ShutdownThreadMain(PVOID Context)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 		      IN SYSTEM_POWER_STATE MinSystemState,
 		      IN ULONG Flags)
@@ -227,7 +227,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
    NTSTATUS Status;
