@@ -166,6 +166,7 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 	int i = 0;
 	int j = 0;
 	int ro = 0;
+	int isize;
 
 	double frac, intr;
 	double p;
@@ -194,6 +195,7 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 			exp_sign -= 2; // g -> e and G -> E
 		else
 			exp_sign = 'f';
+		if (type & SPECIAL) precision--;
 	}
 
 	if ( exp_sign == 'e' ||  exp_sign == 'E' )
@@ -210,6 +212,13 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 
 		/* size-5 because "e+abc" is going to follow */
 		buf = numberf(buf, end, num/pow(10.0L,(long double)e), 'f', size-5, precision, type);
+		isize = 4;
+		while(*(buf-1) == ' ')
+		{
+			isize++;
+			--buf;
+		}
+
 		if (buf <= end)
 			*buf = exp_sign;
 		++buf;
@@ -217,7 +226,7 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 
 		ie = (long)e;
 		type = LEFT | SIGN | PLUS;
-		buf = number(buf, end, ie, 10, 3, 3, type);
+		buf = number(buf, end, ie, 10, isize, 3, type);
 		return buf;
 	}
 
@@ -259,15 +268,16 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 				digits[i] = (int)p + '0';
 				i--;
 			}
+
 			i = precision;
 			size -= precision;
-
-			if ( precision >= 1 || type & SPECIAL)
-			{
-				digits[i++] = '.';
-				size--;
-			}
 		} 
+
+		if ( precision >= 1 || type & SPECIAL)
+		{
+			digits[i++] = '.';
+			size--;
+		}
 
 		ro = 0;
 		if ( frac > 0.5 )
