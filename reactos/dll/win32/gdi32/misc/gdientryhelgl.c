@@ -396,259 +396,94 @@ WINAPI
 DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
 {
     /* Fixme for opengl hel emulations */
-    HEL_OGL_STUB;
 
-#if 0
-    DWORD Return = DDHAL_DRIVER_NOTHANDLED;
-    ULONG SurfaceCount = pCreateSurface->dwSCnt;
-    DD_SURFACE_LOCAL DdSurfaceLocal;
-    DD_SURFACE_MORE DdSurfaceMore;
-    DD_SURFACE_GLOBAL DdSurfaceGlobal;
+    ULONG SurfaceCount;
+    DDSURFACEDESC2 desc2;
+    LPDDSURFACEDESC pSurfaceDesc;
 
-    HANDLE hPrevSurface, hSurface;
+    HRESULT hrc = DD_OK;
+    UINT Height;
+    UINT Width;
+    INT i;
+    IWineD3DSurface *object;
+    IWineD3D *pWined3d = (IWineD3D*) GetDdHandle(pCreateSurface->lpDD->hDD);
+    IWineD3DDevice * pWineD3DDevice = (IWineD3DDevice*) pCreateSurface->lpDD->dwUnused3;
+    void *Parent = NULL;
 
-    PDD_SURFACE_LOCAL pDdSurfaceLocal = NULL;
-    PDD_SURFACE_MORE pDdSurfaceMore = NULL;
-    PDD_SURFACE_GLOBAL pDdSurfaceGlobal = NULL;
-
-    PDD_SURFACE_LOCAL ptmpDdSurfaceLocal = NULL;
-    PDD_SURFACE_MORE ptmpDdSurfaceMore = NULL;
-    PDD_SURFACE_GLOBAL ptmpDdSurfaceGlobal = NULL;
-    PHANDLE phSurface = NULL, puhSurface = NULL;
-    ULONG i;
-    LPDDSURFACEDESC pSurfaceDesc = NULL;
-
-    /* TODO : Speed optimze, most games/dx apps/program does not want 1 surface, they want lest 2
-     * so we need incress the stack so it can contain 2 surface instead of one, this will incress 
-     * the speed of the apps when it trying alloc buffer. How to incress the surface stack space
-     * we need create a own struct for DD_SURFACE_LOCAL DdSurfaceLocal, DD_SURFACE_MORE DdSurfaceMore
-     * DD_SURFACE_GLOBAL DdSurfaceGlobal. HANDLE hPrevSurface, hSurface. like
-     * struct { DD_SURFACE_LOCAL DdSurfaceLocal1, DD_SURFACE_LOCAL DdSurfaceLocal2 }
-     * lest so it contain two surface. maybe 4. we need watch what is most common here before 
-     * we create the size activate  this IF when you start doing the optimze and please also
-     * take report from user which value they got here
-     */ 
-#if 1
+    if ( (!pWined3d) ||
+         (!pWineD3DDevice))
     {
-        char buffer[1024]; \
-        sprintf ( buffer, "Function %s : Optimze max to %d Surface ? (%s:%d)\n", __FUNCTION__, (int)SurfaceCount,__FILE__,__LINE__ );
-        OutputDebugStringA(buffer);
+        return DDHAL_DRIVER_NOTHANDLED;
     }
-#endif
 
-    /* Check how many surfaces there are */
-    if (SurfaceCount != 1)
+    SurfaceCount = pCreateSurface->dwSCnt;
+    pSurfaceDesc = pCreateSurface->lpDDSurfaceDesc;
+    Height = pSurfaceDesc->dwHeight;
+    Width = pSurfaceDesc->dwWidth;
+
+    if (pSurfaceDesc->dwSize == sizeof(DDSURFACEDESC2))
     {
-        /* We got more that one surface so we need alloc memory for them */
-        pDdSurfaceLocal = (PDD_SURFACE_LOCAL) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_LOCAL) * SurfaceCount ));
-        pDdSurfaceMore = (PDD_SURFACE_MORE) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_MORE) * SurfaceCount ));
-        pDdSurfaceGlobal = (PDD_SURFACE_GLOBAL)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_GLOBAL) * SurfaceCount ));
-        phSurface = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(HANDLE) * SurfaceCount ));
-        puhSurface = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(HANDLE) * SurfaceCount ));
-
-        /* check if we sueese alloc all memory we need */
-        if ((pDdSurfaceLocal == NULL) || (pDdSurfaceMore == NULL) || (pDdSurfaceGlobal == NULL) || (phSurface == NULL) || (puhSurface == NULL))
-        {
-            pCreateSurface->ddRVal = DDERR_OUTOFMEMORY;
-
-            if ( pDdSurfaceLocal != NULL )
-            {
-                HeapFree(GetProcessHeap(), 0, pDdSurfaceLocal);
-            }
-
-            if ( pDdSurfaceMore != NULL )
-            {
-                HeapFree(GetProcessHeap(), 0, pDdSurfaceMore);
-            }
-
-            if ( phSurface != NULL )
-            {
-                HeapFree(GetProcessHeap(), 0, phSurface);
-            }
-
-            if ( puhSurface != NULL )
-            {
-                HeapFree(GetProcessHeap(), 0, puhSurface);
-            }
-
-            return DDHAL_DRIVER_HANDLED;
-        }
+        RtlCopyMemory(&desc2,pSurfaceDesc,sizeof(DDSURFACEDESC2));
     }
     else
     {
-        /* We'll use what we have on the stack */
-        pDdSurfaceLocal = &DdSurfaceLocal;
-        pDdSurfaceMore = &DdSurfaceMore;
-        pDdSurfaceGlobal = &DdSurfaceGlobal;
-        phSurface = &hPrevSurface;
-        puhSurface = &hSurface;
-
-        /* Clear the structures */
-        RtlZeroMemory(&DdSurfaceLocal, sizeof(DdSurfaceLocal));
-        RtlZeroMemory(&DdSurfaceGlobal, sizeof(DdSurfaceGlobal));
-        RtlZeroMemory(&DdSurfaceMore, sizeof(DdSurfaceMore));
+        RtlZeroMemory(&desc2,sizeof(DDSURFACEDESC2));
+        RtlCopyMemory(&desc2,pSurfaceDesc,sizeof(DDSURFACEDESC));
+        desc2.dwSize = sizeof(DDSURFACEDESC2);
     }
 
-    /* check if we got a surface or not */
-    if (SurfaceCount!=0)
-    {
-        /* Loop for each surface */
-        ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
-        ptmpDdSurfaceLocal = pDdSurfaceLocal;
-        ptmpDdSurfaceMore = pDdSurfaceMore;
-        pSurfaceDesc = pCreateSurface->lpDDSurfaceDesc;
-
-        for (i = 0; i < SurfaceCount; i++)
-        {
-            LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
-            LPDDRAWI_DDRAWSURFACE_GBL gpl = pCreateSurface->lplpSList[i]->lpGbl;
-
-            phSurface[i] = (HANDLE)lcl->hDDSurface;
-            ptmpDdSurfaceLocal->ddsCaps.dwCaps = lcl->ddsCaps.dwCaps;
-
-            ptmpDdSurfaceLocal->dwFlags = (ptmpDdSurfaceLocal->dwFlags &
-                                          (0xB0000000 | DDRAWISURF_INMASTERSPRITELIST |
-                                           DDRAWISURF_HELCB | DDRAWISURF_FRONTBUFFER |
-                                           DDRAWISURF_BACKBUFFER | DDRAWISURF_INVALID |
-                                           DDRAWISURF_DCIBUSY | DDRAWISURF_DCILOCK)) |
-                                          (lcl->dwFlags & DDRAWISURF_DRIVERMANAGED);
-
-            ptmpDdSurfaceGlobal->wWidth = gpl->wWidth;
-            ptmpDdSurfaceGlobal->wHeight = gpl->wHeight;
-            ptmpDdSurfaceGlobal->lPitch = gpl->lPitch;
-            ptmpDdSurfaceGlobal->fpVidMem = gpl->fpVidMem;
-            ptmpDdSurfaceGlobal->dwBlockSizeX = gpl->dwBlockSizeX;
-            ptmpDdSurfaceGlobal->dwBlockSizeY = gpl->dwBlockSizeY;
-
-            if (lcl->dwFlags & DDRAWISURF_HASPIXELFORMAT)
-            {
-                RtlCopyMemory( &ptmpDdSurfaceGlobal->ddpfSurface ,
-                               &gpl->ddpfSurface,
-                               sizeof(DDPIXELFORMAT));
-
-                ptmpDdSurfaceGlobal->ddpfSurface.dwSize = sizeof(DDPIXELFORMAT);
-            }
-            else
-            {
-                RtlCopyMemory( &ptmpDdSurfaceGlobal->ddpfSurface ,
-                               &gpl->lpDD->vmiData.ddpfDisplay,
-                               sizeof(DDPIXELFORMAT));
-            }
-
-            /* Note if lcl->lpSurfMore is NULL zero out 
-             * ptmpDdSurfaceMore->ddsCapsEx.dwCaps2,
-             * dwCaps3, dwCaps4, ptmpDdSurfaceMore->dwSurfaceHandle 
-             */
-            if (lcl->lpSurfMore)
-            {
-                ptmpDdSurfaceMore->ddsCapsEx.dwCaps2 = lcl->lpSurfMore->ddsCapsEx.dwCaps2;
-                ptmpDdSurfaceMore->ddsCapsEx.dwCaps3 = lcl->lpSurfMore->ddsCapsEx.dwCaps3;
-                ptmpDdSurfaceMore->ddsCapsEx.dwCaps4 = lcl->lpSurfMore->ddsCapsEx.dwCaps4;
-                ptmpDdSurfaceMore->dwSurfaceHandle = lcl->lpSurfMore->dwSurfaceHandle;
-            }
-
-
-            /* count to next SurfaceCount */
-            ptmpDdSurfaceGlobal = (PDD_SURFACE_GLOBAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceGlobal)) + sizeof(DD_SURFACE_GLOBAL));
-            ptmpDdSurfaceLocal = (PDD_SURFACE_LOCAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceLocal)) + sizeof(DD_SURFACE_LOCAL));
-            ptmpDdSurfaceMore = (PDD_SURFACE_MORE) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceMore)) + sizeof(DD_SURFACE_MORE));
-        }
-    }
-
-    /* Call win32k now */
     pCreateSurface->ddRVal = DDERR_GENERIC;
-
-    Return = NtGdiDdCreateSurface(GetDdHandle(pCreateSurface->lpDD->hDD),
-                                    (HANDLE *)phSurface,
-                                     pSurfaceDesc,
-                                     pDdSurfaceGlobal,
-                                     pDdSurfaceLocal,
-                                     pDdSurfaceMore,
-                                     (PDD_CREATESURFACEDATA)pCreateSurface,
-                                     puhSurface);
-
-    if (SurfaceCount == 0)
+    if (SurfaceCount != 0)
     {
-        pCreateSurface->ddRVal = DDERR_GENERIC;
-    }
-    else
-    {
-        ptmpDdSurfaceMore = pDdSurfaceMore;
-        ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
-        ptmpDdSurfaceLocal = pDdSurfaceLocal;
+        /* Fixme for opengl hel emulations */
+        DPRINT1("DdCreateSurface entered\n");
+
+        pCreateSurface->ddRVal = DD_OK;
 
         for (i=0;i<SurfaceCount;i++)
         {
             LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
-            LPDDRAWI_DDRAWSURFACE_GBL gpl = pCreateSurface->lplpSList[i]->lpGbl;
-
-            gpl->lPitch = ptmpDdSurfaceGlobal->lPitch;
-            gpl->fpVidMem = ptmpDdSurfaceGlobal->fpVidMem;
-            gpl->dwBlockSizeX = ptmpDdSurfaceGlobal->dwBlockSizeX;
-            gpl->dwBlockSizeY = ptmpDdSurfaceGlobal->dwBlockSizeY;
-
-            if (lcl->dwFlags & DDRAWISURF_HASPIXELFORMAT)
+            object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IWineD3DSurface));
+            if (NULL == object)
             {
-                RtlCopyMemory( &gpl->ddpfSurface, &ptmpDdSurfaceGlobal->ddpfSurface , sizeof(DDPIXELFORMAT));
+                DPRINT1("Allocation of memory failed\n");
+                pCreateSurface->ddRVal = DDERR_OUTOFVIDEOMEMORY;
             }
-
-            if (pCreateSurface->ddRVal != DD_OK)
-            {
-                gpl->fpVidMem = 0;
-                if (lcl->hDDSurface)
-                {
-                    NtGdiDdDeleteSurfaceObject( (HANDLE)lcl->hDDSurface);
-                }
-                lcl->hDDSurface = 0;
-            }
-            else
-            {
-
-                lcl->hDDSurface = (ULONG_PTR) puhSurface[i];
-            }
-
-            lcl->ddsCaps.dwCaps = ptmpDdSurfaceLocal->ddsCaps.dwCaps;
-            if (lcl->lpSurfMore)
-            {
-                lcl->lpSurfMore->ddsCapsEx.dwCaps2 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps2;
-                lcl->lpSurfMore->ddsCapsEx.dwCaps3 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps3;
-                lcl->lpSurfMore->ddsCapsEx.dwCaps4 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps4;
-            }
-
-            /* count to next SurfaceCount */
-            ptmpDdSurfaceGlobal = (PDD_SURFACE_GLOBAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceGlobal)) + sizeof(DD_SURFACE_GLOBAL));
-            ptmpDdSurfaceLocal = (PDD_SURFACE_LOCAL) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceLocal)) + sizeof(DD_SURFACE_LOCAL));
-            ptmpDdSurfaceMore = (PDD_SURFACE_MORE) (((PBYTE) ((ULONG_PTR) ptmpDdSurfaceMore)) + sizeof(DD_SURFACE_MORE));
-        }
-    }
-
-    /* Check if we have to free all our local allocations */
-    if (SurfaceCount > 1)
-    {
-        if ( pDdSurfaceLocal != NULL )
-        {
-            HeapFree(GetProcessHeap(), 0, pDdSurfaceLocal);
+            lcl->hDDSurface = (ULONG_PTR) object;
         }
 
-        if ( pDdSurfaceMore != NULL )
+        if ( pCreateSurface->ddRVal == DD_OK)
         {
-            HeapFree(GetProcessHeap(), 0, pDdSurfaceMore);
-        }
+            for (i=0;i<SurfaceCount;i++)
+            {
+                LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
 
-        if ( phSurface != NULL )
-        {
-            HeapFree(GetProcessHeap(), 0, phSurface);
-        }
-
-        if ( puhSurface != NULL )
-        {
-            HeapFree(GetProcessHeap(), 0, puhSurface);
+                hrc = IWineD3DDevice_CreateSurface(pWineD3DDevice,
+                                                   Width,
+                                                   Height,
+                                                   WINED3DFMT_R8G8B8,
+                                                   TRUE /* Lockable */,
+                                                   FALSE /* Discard */,
+                                                   1,
+                                                   (IWineD3DSurface **)&lcl->hDDSurface,
+                                                   WINED3DRTYPE_SURFACE, /**/
+                                                   WINED3DUSAGE_DYNAMIC & WINED3DUSAGE_MASK,
+                                                   WINED3DPOOL_DEFAULT,
+                                                   WINED3DMULTISAMPLE_NONE,
+                                                   0 /* MultiSampleQuality */,
+                                                   0 /* SharedHandle */,
+                                                   SURFACE_OPENGL,
+                                                  (IUnknown *)Parent);
+            }
+            if (hrc != D3D_OK )
+            {
+                pCreateSurface->ddRVal = DDERR_GENERIC;
+            }
         }
     }
 
     /* Return */
-    return Return;
-#endif
+    return DDHAL_DRIVER_HANDLED;
 }
 
 /*
