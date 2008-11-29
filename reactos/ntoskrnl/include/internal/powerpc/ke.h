@@ -21,10 +21,6 @@
 
 #include <ndk/powerpc/ketypes.h>
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 /* Possible values for KTHREAD's NpxState */
 #define KPCR_BASE 0xff000000
 #define NPX_STATE_INVALID   0x01
