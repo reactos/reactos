@@ -39,10 +39,23 @@ static void test_sprintf( void )
 
     format = "%+#23.15e";
     r = sprintf(buffer,format,pnumber);
-    todo_wine {
-    ok(!strcmp(buffer,"+7.894561230000000e+008"),"exponent format incorrect\n");
-    }
+    ok(!strcmp(buffer,"+7.894561230000000e+008"),"+#23.15e failed: '%s'\n", buffer);
     ok( r==23, "return count wrong\n");
+
+    format = "%-#23.15e";
+    r = sprintf(buffer,format,pnumber);
+    ok(!strcmp(buffer,"7.894561230000000e+008 "),"-#23.15e failed: '%s'\n", buffer);
+    ok( r==23, "return count wrong\n");
+
+    format = "%#23.15e";
+    r = sprintf(buffer,format,pnumber);
+    ok(!strcmp(buffer," 7.894561230000000e+008"),"#23.15e failed: '%s'\n", buffer);
+    ok( r==23, "return count wrong\n");
+
+    format = "%#1.1g";
+    r = sprintf(buffer,format,pnumber);
+    ok(!strcmp(buffer,"8.e+008"),"#1.1g failed: '%s'\n", buffer);
+    ok( r==7, "return count wrong\n");
 
     format = "%I64d";
     r = sprintf(buffer,format,((ULONGLONG)0xffffffff)*0xffffffff);
@@ -206,8 +219,11 @@ static void test_sprintf( void )
 
     format = "%lld";
     r = sprintf(buffer,format,((ULONGLONG)0xffffffff)*0xffffffff);
-    ok(!strcmp(buffer, "1"), "Problem with \"ll\" interpretation\n");
-    ok( r==1, "return count wrong\n");
+    ok( r == 1 || r == 11, "return count wrong %d\n", r);
+    if (r == 11)  /* %ll works on Vista */
+        ok(!strcmp(buffer, "-8589934591"), "Problem with \"ll\" interpretation '%s'\n", buffer);
+    else
+        ok(!strcmp(buffer, "1"), "Problem with \"ll\" interpretation '%s'\n", buffer);
 
     format = "%I";
     r = sprintf(buffer,format,1);
@@ -221,8 +237,15 @@ static void test_sprintf( void )
 
     format = "%I32d";
     r = sprintf(buffer,format,1);
-    ok(!strcmp(buffer,"1"),"I32d failed\n");
-    ok( r==1, "return count wrong\n");
+    if (r == 1)
+    {
+        ok(!strcmp(buffer,"1"),"I32d failed, got '%s'\n",buffer);
+    }
+    else
+    {
+        /* Older versions don't grok I32 format */
+        ok(r == 4 && !strcmp(buffer,"I32d"),"I32d failed, got '%s',%d\n",buffer,r);
+    }
 
     format = "%I64D";
     r = sprintf(buffer,format,(LONGLONG)-1);
@@ -367,9 +390,18 @@ static void test_sprintf( void )
     format = "asdf%n";
     x = 0;
     r = sprintf(buffer, format, &x );
-    ok(x == 4, "should write to x\n");
-    ok(!strcmp(buffer,"asdf"), "failed\n");
-    ok( r==4, "return count wrong\n");
+    if (r == -1)
+    {
+        /* %n format is disabled by default on vista */
+        /* FIXME: should test with _set_printf_count_output */
+        ok(x == 0, "should not write to x: %d\n", x);
+    }
+    else
+    {
+        ok(x == 4, "should write to x: %d\n", x);
+        ok(!strcmp(buffer,"asdf"), "failed\n");
+        ok( r==4, "return count wrong: %d\n", r);
+    }
 
     format = "%-1d";
     r = sprintf(buffer, format,2);
@@ -391,12 +423,10 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,"1"), "failed\n");
     ok( r==1, "return count wrong\n");
 
-    todo_wine {
     format = "%2.4e";
     r = sprintf(buffer, format,8.6);
     ok(!strcmp(buffer,"8.6000e+000"), "failed\n");
     ok( r==11, "return count wrong\n");
-    }
 
     format = "%2.4g";
     r = sprintf(buffer, format,8.6);
@@ -497,26 +527,13 @@ static void test_swprintf( void )
     const wchar_t hs[] = {'%', 'h', 's', 0};
 
     swprintf(buffer,TwentyThreePoint15e,pnumber);
-    todo_wine
-      {
-        ok(wcsstr(buffer,e008) != 0,"Sprintf different\n");
-      }
+    ok(wcsstr(buffer,e008) != 0,"Sprintf different\n");
     swprintf(buffer,I64d,((ULONGLONG)0xffffffff)*0xffffffff);
       ok(wcslen(buffer) == 11,"Problem with long long\n");
     swprintf(buffer,S,string);
       ok(wcslen(buffer) == 6,"Problem with \"%%S\" interpretation\n");
    swprintf(buffer, hs, string);
    ok( wcscmp(string_w,buffer) == 0, "swprintf failed with %%hs\n");
-}
-
-static void test_fwprintf( void )
-{
-    const char *string="not a wide string";
-    todo_wine
-      {
-        ok(fwprintf(fopen("nul","r+"),(const wchar_t *)string) == -1,
-           "Non-wide string should not be printed by fwprintf\n");
-      }
 }
 
 static void test_snprintf (void)
@@ -648,7 +665,6 @@ START_TEST(printf)
 {
     test_sprintf();
     test_swprintf();
-    test_fwprintf();
     test_snprintf();
     test_fcvt();
 }

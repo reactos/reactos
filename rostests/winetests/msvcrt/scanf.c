@@ -28,6 +28,7 @@ static void test_sscanf( void )
     char format[20];
     int result, ret;
     char c;
+    void *ptr;
     float res1= -82.6267f, res2= 27.76f, res11, res12;
     static const char pname[]=" St. Petersburg, Florida\n";
     int hour=21,min=59,sec=20;
@@ -38,6 +39,32 @@ static void test_sscanf( void )
     strcpy(buffer,"");
     ret = sscanf(buffer, "%d", &result);
     ok( ret == EOF,"sscanf returns %x instead of %x\n", ret, EOF );
+
+    /* check %p */
+    ok( sscanf("000000000046F170", "%p", &ptr) == 1, "sscanf failed\n"  );
+    ok( ptr == (void *)0x46F170,"sscanf reads %p instead of %x\n", ptr, 0x46F170 );
+
+    ok( sscanf("0046F171", "%p", &ptr) == 1, "sscanf failed\n"  );
+    ok( ptr == (void *)0x46F171,"sscanf reads %p instead of %x\n", ptr, 0x46F171 );
+
+    ok( sscanf("46F172", "%p", &ptr) == 1, "sscanf failed\n"  );
+    ok( ptr == (void *)0x46F172,"sscanf reads %p instead of %x\n", ptr, 0x46F172 );
+
+    ok( sscanf("0x46F173", "%p", &ptr) == 1, "sscanf failed\n"  );
+    ok( ptr == (void *)0,"sscanf reads %p instead of %x\n", ptr, 0 );
+
+    ok( sscanf("-46F174", "%p", &ptr) == 1, "sscanf failed\n"  );
+    ok( ptr == (void *)0xFFB90E8C,"sscanf reads %p instead of %x\n", ptr, 0xFFB90E8C );
+
+    ok( sscanf("+46F175", "%p", &ptr) == 1, "sscanf failed\n"  );
+    ok( ptr == (void *)0x46F175,"sscanf reads %p instead of %x\n", ptr, 0x46F175 );
+
+    /* check %p with no hex digits */
+    ok( sscanf("1233", "%p", &ptr) == 1, "sscanf failed\n"  );
+    ok( ptr == (void *)0x1233,"sscanf reads %p instead of %x\n", ptr, 0x1233 );
+
+    ok( sscanf("1234", "%P", &ptr) == 1, "sscanf failed\n"  );
+    ok( ptr == (void *)0x1234,"sscanf reads %p instead of %x\n", ptr, 0x1234 );
 
     /* check %x */
     strcpy(buffer,"0x519");

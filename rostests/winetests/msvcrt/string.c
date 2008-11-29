@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <mbctype.h>
 #include <locale.h>
+#include <errno.h>
 
 size_t _mbstrlen(const char*);
 
@@ -48,6 +49,10 @@ static char *buf_to_string(const unsigned char *bin, int len, int nr)
 
 static void* (*pmemcpy)(void *, const void *, size_t n);
 static int* (*pmemcmp)(void *, const void *, size_t n);
+static int (*pstrcpy_s)(char *dst, size_t len, const char *src);
+static int (*pstrcat_s)(char *dst, size_t len, const char *src);
+static int (*p_mbsnbcpy_s)(unsigned char * dst, size_t size, const unsigned char * src, size_t count);
+static int (*p_wcscpy_s)(wchar_t *wcDest, size_t size, const wchar_t *wcSrc);
 
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hMsvcrt,y)
 #define SET(x,y) SETNOFAIL(x,y); ok(x != NULL, "Export '%s' not found\n", y)
@@ -126,8 +131,6 @@ static void test_codepage(int cp)
 
 #define test_codepage_todo(cp, todo) test_codepage(cp)
 
-#else
-
 /* RLE-encoded mbctype tables for given codepages */
 static int result_cp_932_mbctype[] = { 0x0,65, 0x8,1, 0x18,26, 0x8,6, 0x28,26, 0x8,4,
   0x0,1, 0x8,1, 0xc,31, 0x8,1, 0xa,5, 0x9,58, 0xc,29, 0,3 };
@@ -140,7 +143,7 @@ static int result_cp_950_mbctype[] = { 0x0,65, 0x8,1, 0x18,26, 0x8,6, 0x28,26, 0
 
 static int todo_none[] = { -2 };
 static int todo_cp_932[] = { 254, -2 };
-#if 0
+
 void test_cp_table(int cp, int *result, int *todo)
 {
     int i;
@@ -168,8 +171,9 @@ void test_cp_table(int cp, int *result, int *todo)
 
 #define test_codepage(num) test_cp_table(num, result_cp_##num##_mbctype, todo_none);
 #define test_codepage_todo(num, todo) test_cp_table(num, result_cp_##num##_mbctype, todo);
+
 #endif
-#endif
+
 
 static void test_mbcp(void)
 {
@@ -395,6 +399,215 @@ static void test_strdup(void)
    free( str );
 }
 
+static void test_strcpy_s(void)
+{
+    char dest[8];
+    const char *small = "small";
+    const char *big = "atoolongstringforthislittledestination";
+    int ret;
+
+    if(!pstrcpy_s)
+    {
+        skip("strcpy_s not found\n");
+        return;
+    }
+
+    memset(dest, 'X', sizeof(dest));
+    ret = pstrcpy_s(dest, sizeof(dest), small);
+    ok(ret == 0, "Copying a string into a big enough destination returned %d, expected 0\n", ret);
+    ok(dest[0] == 's' && dest[1] == 'm' && dest[2] == 'a' && dest[3] == 'l' &&
+       dest[4] == 'l' && dest[5] == '\0'&& dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    memset(dest, 'X', sizeof(dest));
+    ret = pstrcpy_s(dest, 0, big);
+    ok(ret == EINVAL, "Copying into a destination of size 0 returned %d, expected EINVAL\n", ret);
+    ok(dest[0] == 'X' && dest[1] == 'X' && dest[2] == 'X' && dest[3] == 'X' &&
+       dest[4] == 'X' && dest[5] == 'X' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+    ret = pstrcpy_s(dest, 0, NULL);
+    ok(ret == EINVAL, "Copying into a destination of size 0 returned %d, expected EINVAL\n", ret);
+    ok(dest[0] == 'X' && dest[1] == 'X' && dest[2] == 'X' && dest[3] == 'X' &&
+       dest[4] == 'X' && dest[5] == 'X' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    memset(dest, 'X', sizeof(dest));
+    ret = pstrcpy_s(dest, sizeof(dest), big);
+    ok(ret == ERANGE, "Copying a big string in a small location returned %d, expected ERANGE\n", ret);
+    ok(dest[0] == '\0'&& dest[1] == 't' && dest[2] == 'o' && dest[3] == 'o' &&
+       dest[4] == 'l' && dest[5] == 'o' && dest[6] == 'n' && dest[7] == 'g',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    memset(dest, 'X', sizeof(dest));
+    ret = pstrcpy_s(dest, sizeof(dest), NULL);
+    ok(ret == EINVAL, "Copying from a NULL source string returned %d, expected EINVAL\n", ret);
+    ok(dest[0] == '\0'&& dest[1] == 'X' && dest[2] == 'X' && dest[3] == 'X' &&
+       dest[4] == 'X' && dest[5] == 'X' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    ret = pstrcpy_s(NULL, sizeof(dest), small);
+    ok(ret == EINVAL, "Copying a big string a NULL dest returned %d, expected EINVAL\n", ret);
+}
+
+static void test_strcat_s(void)
+{
+    char dest[8];
+    const char *small = "sma";
+    int ret;
+
+    if(!pstrcat_s)
+    {
+        skip("strcat_s not found\n");
+        return;
+    }
+
+    memset(dest, 'X', sizeof(dest));
+    dest[0] = '\0';
+    ret = pstrcat_s(dest, sizeof(dest), small);
+    ok(ret == 0, "strcat_s: Copying a string into a big enough destination returned %d, expected 0\n", ret);
+    ok(dest[0] == 's' && dest[1] == 'm' && dest[2] == 'a' && dest[3] == '\0'&&
+       dest[4] == 'X' && dest[5] == 'X' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+    ret = pstrcat_s(dest, sizeof(dest), small);
+    ok(ret == 0, "strcat_s: Attaching a string to a big enough destination returned %d, expected 0\n", ret);
+    ok(dest[0] == 's' && dest[1] == 'm' && dest[2] == 'a' && dest[3] == 's' &&
+       dest[4] == 'm' && dest[5] == 'a' && dest[6] == '\0'&& dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    ret = pstrcat_s(dest, sizeof(dest), small);
+    ok(ret == ERANGE, "strcat_s: Attaching a string to a filled up destination returned %d, expected ERANGE\n", ret);
+    ok(dest[0] == '\0'&& dest[1] == 'm' && dest[2] == 'a' && dest[3] == 's' &&
+       dest[4] == 'm' && dest[5] == 'a' && dest[6] == 's' && dest[7] == 'm',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    memset(dest, 'X', sizeof(dest));
+    dest[0] = 'a';
+    dest[1] = '\0';
+
+    ret = pstrcat_s(dest, 0, small);
+    ok(ret == EINVAL, "strcat_s: Source len = 0 returned %d, expected EINVAL\n", ret);
+    ok(dest[0] == 'a' && dest[1] == '\0'&& dest[2] == 'X' && dest[3] == 'X' &&
+       dest[4] == 'X' && dest[5] == 'X' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    ret = pstrcat_s(dest, 0, NULL);
+    ok(ret == EINVAL, "strcat_s: len = 0 and src = NULL returned %d, expected EINVAL\n", ret);
+    ok(dest[0] == 'a' && dest[1] == '\0'&& dest[2] == 'X' && dest[3] == 'X' &&
+       dest[4] == 'X' && dest[5] == 'X' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    ret = pstrcat_s(dest, sizeof(dest), NULL);
+    ok(ret == EINVAL, "strcat_s:  Sourcing from NULL returned %d, expected EINVAL\n", ret);
+    ok(dest[0] == '\0'&& dest[1] == '\0'&& dest[2] == 'X' && dest[3] == 'X' &&
+       dest[4] == 'X' && dest[5] == 'X' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from strcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    ret = pstrcat_s(NULL, sizeof(dest), small);
+    ok(ret == EINVAL, "strcat_s: Writing to a NULL string returned %d, expected EINVAL\n", ret);
+}
+
+static void test__mbsnbcpy_s(void)
+{
+    unsigned char dest[8];
+    const unsigned char big[] = "atoolongstringforthislittledestination";
+    const unsigned char small[] = "small";
+    int ret;
+
+    if(!p_mbsnbcpy_s)
+    {
+        skip("_mbsnbcpy_s not found\n");
+        return;
+    }
+
+    memset(dest, 'X', sizeof(dest));
+    ret = p_mbsnbcpy_s(dest, sizeof(dest), small, sizeof(small));
+    ok(ret == 0, "_mbsnbcpy_s: Copying a string into a big enough destination returned %d, expected 0\n", ret);
+    ok(dest[0] == 's' && dest[1] == 'm' && dest[2] == 'a' && dest[3] == 'l' &&
+       dest[4] == 'l' && dest[5] == '\0'&& dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from _mbsnbcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    /* WTF? */
+    memset(dest, 'X', sizeof(dest));
+    ret = p_mbsnbcpy_s(dest, sizeof(dest) - 2, big, sizeof(small));
+    ok(ret == ERANGE, "_mbsnbcpy_s: Copying a too long string returned %d, expected ERANGE\n", ret);
+    ok(dest[0] == '\0'&& dest[1] == 't' && dest[2] == 'o' && dest[3] == 'o' &&
+       dest[4] == 'l' && dest[5] == 'o' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from _mbsnbcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    memset(dest, 'X', sizeof(dest));
+    ret = p_mbsnbcpy_s(dest, sizeof(dest) - 2, big, 4);
+    ok(ret == 0, "_mbsnbcpy_s: Copying a too long string with a count cap returned %d, expected 0\n", ret);
+    ok(dest[0] == 'a' && dest[1] == 't' && dest[2] == 'o' && dest[3] == 'o' &&
+       dest[4] == '\0'&& dest[5] == 'X' && dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from _mbsnbcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+
+    memset(dest, 'X', sizeof(dest));
+    ret = p_mbsnbcpy_s(dest, sizeof(dest) - 2, small, sizeof(small) + 10);
+    ok(ret == 0, "_mbsnbcpy_s: Copying more data than the source string len returned %d, expected 0\n", ret);
+    ok(dest[0] == 's' && dest[1] == 'm' && dest[2] == 'a' && dest[3] == 'l' &&
+       dest[4] == 'l' && dest[5] == '\0'&& dest[6] == 'X' && dest[7] == 'X',
+       "Unexpected return data from _mbsnbcpy_s: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+       dest[0], dest[1], dest[2], dest[3], dest[4], dest[5], dest[6], dest[7]);
+}
+
+static void test_wcscpy_s(void)
+{
+    static const WCHAR szLongText[] = { 'T','h','i','s','A','L','o','n','g','s','t','r','i','n','g',0 };
+    static WCHAR szDest[18];
+    static WCHAR szDestShort[8];
+    int ret;
+
+    if(!p_wcscpy_s)
+    {
+        skip("wcscpy_s not found\n");
+        return;
+    }
+
+    /* Test NULL Dest */
+    ret = p_wcscpy_s(NULL, 18, szLongText);
+    ok(ret == EINVAL, "p_wcscpy_s expect EINVAL got %d\n", ret);
+
+    /* Test NULL Source */
+    szDest[0] = 'A';
+    ret = p_wcscpy_s(szDest, 18, NULL);
+    ok(ret == EINVAL, "expected EINVAL got %d\n", ret);
+    ok(szDest[0] == 0, "szDest[0] not 0\n");
+
+    /* Test invalid size */
+    szDest[0] = 'A';
+    ret = p_wcscpy_s(szDest, 0, szLongText);
+    /* Later versions changed the return value for this case to EINVAL,
+     * and don't modify the result if the dest size is 0.
+     */
+    ok(ret == ERANGE || ret == EINVAL, "expected ERANGE/EINVAL got %d\n", ret);
+    ok(szDest[0] == 0 || ret == EINVAL, "szDest[0] not 0\n");
+
+    /* Copy same buffer size */
+    ret = p_wcscpy_s(szDest, 18, szLongText);
+    ok(ret == 0, "expected 0 got %d\n", ret);
+    ok(lstrcmpW(szDest, szLongText) == 0, "szDest != szLongText\n");
+
+    /* Copy smaller buffer size */
+    szDest[0] = 'A';
+    ret = p_wcscpy_s(szDestShort, 8, szLongText);
+    ok(ret == ERANGE || ret == EINVAL, "expected ERANGE/EINVAL got %d\n", ret);
+    ok(szDestShort[0] == 0, "szDestShort[0] not 0\n");
+}
+
 START_TEST(string)
 {
     char mem[100];
@@ -407,6 +620,10 @@ START_TEST(string)
     ok(hMsvcrt != 0, "GetModuleHandleA failed\n");
     SET(pmemcpy,"memcpy");
     SET(pmemcmp,"memcmp");
+    pstrcpy_s = (void *)GetProcAddress( hMsvcrt,"strcpy_s" );
+    pstrcat_s = (void *)GetProcAddress( hMsvcrt,"strcat_s" );
+    p_mbsnbcpy_s = (void *)GetProcAddress( hMsvcrt,"_mbsnbcpy_s" );
+    p_wcscpy_s = (void *)GetProcAddress( hMsvcrt,"wcscpy_s" );
 
     /* MSVCRT memcpy behaves like memmove for overlapping moves,
        MFC42 CString::Insert seems to rely on that behaviour */
@@ -426,4 +643,9 @@ START_TEST(string)
     test_mbsspnp();
    /* test _strdup */
     test_strdup();
+    test_strcpy_s();
+    test_strcat_s();
+    test__mbsnbcpy_s();
+
+    test_wcscpy_s();
 }

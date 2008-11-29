@@ -31,19 +31,94 @@
 #include <process.h>
 #include <errno.h>
 
+typedef struct
+{
+    const char* buffer;
+    const char* drive;
+    const char* dir;
+    const char* file;
+    const char* ext;
+    const char* expected;
+} makepath_case;
+
+#define USE_BUFF ((char*)~0ul)
+static const makepath_case makepath_cases[] =
+{
+    { NULL, NULL, NULL, NULL, NULL, "" }, /* 0 */
+    { NULL, "c", NULL, NULL, NULL, "c:" },
+    { NULL, "c:", NULL, NULL, NULL, "c:" },
+    { NULL, "c:\\", NULL, NULL, NULL, "c:" },
+    { NULL, NULL, "dir", NULL, NULL, "dir\\" },
+    { NULL, NULL, "dir\\", NULL, NULL, "dir\\" },
+    { NULL, NULL, "\\dir", NULL, NULL, "\\dir\\" },
+    { NULL, NULL, NULL, "file", NULL, "file" },
+    { NULL, NULL, NULL, "\\file", NULL, "\\file" },
+    { NULL, NULL, NULL, "file", NULL, "file" },
+    { NULL, NULL, NULL, NULL, "ext", ".ext" }, /* 10 */
+    { NULL, NULL, NULL, NULL, ".ext", ".ext" },
+    { "foo", NULL, NULL, NULL, NULL, "" },
+    { "foo", USE_BUFF, NULL, NULL, NULL, "f:" },
+    { "foo", NULL, USE_BUFF, NULL, NULL, "foo\\" },
+    { "foo", NULL, NULL, USE_BUFF, NULL, "foo" },
+    { "foo", NULL, USE_BUFF, "file", NULL, "foo\\file" },
+    { "foo", NULL, USE_BUFF, "file", "ext", "foo\\file.ext" },
+    { "foo", NULL, NULL, USE_BUFF, "ext", "foo.ext" },
+    /* remaining combinations of USE_BUFF crash native */
+    { NULL, "c", "dir", "file", "ext", "c:dir\\file.ext" },
+    { NULL, "c:", "dir", "file", "ext", "c:dir\\file.ext" }, /* 20 */
+    { NULL, "c:\\", "dir", "file", "ext", "c:dir\\file.ext" }
+};
+
 static void test_makepath(void)
 {
+    WCHAR driveW[MAX_PATH];
+    WCHAR dirW[MAX_PATH];
+    WCHAR fileW[MAX_PATH];
+    WCHAR extW[MAX_PATH];
+    WCHAR bufferW[MAX_PATH];
     char buffer[MAX_PATH];
 
-    _makepath(buffer, "C", "\\foo", "dummy", "txt");
-    ok( strcmp(buffer, "C:\\foo\\dummy.txt") == 0, "unexpected result: %s\n", buffer);
-    _makepath(buffer, "C:", "\\foo\\", "dummy", ".txt");
-    ok( strcmp(buffer, "C:\\foo\\dummy.txt") == 0, "unexpected result: %s\n", buffer);
+    unsigned int i, n;
 
-    /* this works with native and e.g. Freelancer depends on it */
-    strcpy(buffer, "foo");
-    _makepath(buffer, NULL, buffer, "dummy.txt", NULL);
-    ok( strcmp(buffer, "foo\\dummy.txt") == 0, "unexpected result: %s\n", buffer);
+    for (i = 0; i < sizeof(makepath_cases)/sizeof(makepath_cases[0]); ++i)
+    {
+        const makepath_case* p = &makepath_cases[i];
+
+        memset(buffer, 'X', MAX_PATH);
+        if (p->buffer)
+            strcpy(buffer, p->buffer);
+
+        /* Ascii */
+        _makepath(buffer,
+                  p->drive == USE_BUFF ? buffer : p->drive,
+                  p->dir == USE_BUFF ? buffer : p->dir,
+                  p->file == USE_BUFF? buffer : p->file,
+                  p->ext == USE_BUFF ? buffer : p->ext);
+
+        buffer[MAX_PATH - 1] = '\0';
+        ok(!strcmp(p->expected, buffer), "got '%s' for case %d\n", buffer, i);
+
+        /* Unicode */
+        if (p->drive != USE_BUFF) MultiByteToWideChar(CP_ACP, 0, p->drive, -1, driveW, MAX_PATH);
+        if (p->dir != USE_BUFF) MultiByteToWideChar(CP_ACP, 0, p->dir, -1, dirW, MAX_PATH);
+        if (p->file != USE_BUFF) MultiByteToWideChar(CP_ACP, 0, p->file, -1, fileW, MAX_PATH);
+        if (p->ext != USE_BUFF) MultiByteToWideChar(CP_ACP, 0, p->ext, -1, extW, MAX_PATH);
+
+        memset(buffer, 0, MAX_PATH);
+        for (n = 0; n < MAX_PATH; ++n)
+            bufferW[n] = 'X';
+        if (p->buffer) MultiByteToWideChar( CP_ACP, 0, p->buffer, -1, bufferW, MAX_PATH);
+
+        _wmakepath(bufferW,
+                   p->drive == USE_BUFF ? bufferW : p->drive ? driveW : NULL,
+                   p->dir == USE_BUFF ? bufferW : p->dir ? dirW : NULL,
+                   p->file == USE_BUFF? bufferW : p->file ? fileW : NULL,
+                   p->ext == USE_BUFF ? bufferW : p->ext ? extW : NULL);
+
+        bufferW[MAX_PATH - 1] = '\0';
+        WideCharToMultiByte(CP_ACP, 0, bufferW, -1, buffer, MAX_PATH, NULL, NULL);
+        ok(!strcmp(p->expected, buffer), "got '%s' for unicode case %d\n", buffer, i);
+    }
 }
 
 static void test_fullpath(void)

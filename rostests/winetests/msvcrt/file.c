@@ -114,13 +114,13 @@ static void test_fileops( void )
     fclose (file);
     fd = open ("fdopen.tst", O_RDONLY | O_TEXT);
     file = fdopen (fd, "rt"); /* open in TEXT mode */
-    ok(fgetws(wbuffer,sizeof(wbuffer),file) !=0,"fgetws failed unexpected\n");
-    ok(fgetws(wbuffer,sizeof(wbuffer),file) ==0,"fgetws didn't signal EOF\n");
+    ok(fgetws(wbuffer,sizeof(wbuffer)/sizeof(wbuffer[0]),file) !=0,"fgetws failed unexpected\n");
+    ok(fgetws(wbuffer,sizeof(wbuffer)/sizeof(wbuffer[0]),file) ==0,"fgetws didn't signal EOF\n");
     ok(feof(file) !=0,"feof doesn't signal EOF\n");
     rewind(file);
     ok(fgetws(wbuffer,strlen(outbuffer),file) !=0,"fgetws failed unexpected\n");
     ok(lstrlenW(wbuffer) == (lstrlenA(outbuffer) -1),"fgetws didn't read right size\n");
-    ok(fgetws(wbuffer,sizeof(outbuffer),file) !=0,"fgets failed unexpected\n");
+    ok(fgetws(wbuffer,sizeof(outbuffer)/sizeof(outbuffer[0]),file) !=0,"fgets failed unexpected\n");
     ok(lstrlenW(wbuffer) == 1,"fgets dropped chars\n");
     fclose (file);
 
@@ -331,6 +331,63 @@ static void test_fgetc( void )
   ret = fgetc(tempfh);
   ok(ich == ret, "Second fgetc expected %x got %x\n", ich, ret);
   fclose(tempfh);
+  unlink(tempf);
+}
+
+static void test_fputc( void )
+{
+  char* tempf;
+  FILE *tempfh;
+  int  ret;
+
+  tempf=_tempnam(".","wne");
+  tempfh = fopen(tempf,"wb");
+  ret = fputc(0,tempfh);
+  ok(0 == ret, "fputc(0,tempfh) expected %x got %x\n", 0, ret);
+  ret = fputc(0xff,tempfh);
+  ok(0xff == ret, "fputc(0xff,tempfh) expected %x got %x\n", 0xff, ret);
+  ret = fputc(0xffffffff,tempfh);
+  ok(0xff == ret, "fputc(0xffffffff,tempfh) expected %x got %x\n", 0xff, ret);
+  fclose(tempfh);
+
+  tempfh = fopen(tempf,"rb");
+  ret = fputc(0,tempfh);
+  ok(EOF == ret, "fputc(0,tempfh) on r/o file expected %x got %x\n", EOF, ret);
+  fclose(tempfh);
+
+  unlink(tempf);
+}
+
+static void test_flsbuf( void )
+{
+  char* tempf;
+  FILE *tempfh;
+  int  ret;
+  int  bufmode;
+  int  bufmodes[] = {_IOFBF,_IONBF};
+
+  tempf=_tempnam(".","wne");
+  for (bufmode=0; bufmode < sizeof(bufmodes)/sizeof(bufmodes[0]); bufmode++)
+  {
+    tempfh = fopen(tempf,"wb");
+    setvbuf(tempfh,NULL,bufmodes[bufmode],2048);
+    ret = _flsbuf(0,tempfh);
+    ok(0 == ret, "_flsbuf(0,tempfh) with bufmode %x expected %x got %x\n",
+                         bufmodes[bufmode], 0, ret);
+    ret = _flsbuf(0xff,tempfh);
+    ok(0xff == ret, "_flsbuf(0xff,tempfh) with bufmode %x expected %x got %x\n",
+                         bufmodes[bufmode], 0, ret);
+    ret = _flsbuf(0xffffffff,tempfh);
+    ok(0xff == ret, "_flsbuf(0xffffffff,tempfh) with bufmode %x expected %x got %x\n",
+                         bufmodes[bufmode], 0, ret);
+    fclose(tempfh);
+  }
+
+  tempfh = fopen(tempf,"rb");
+  ret = _flsbuf(0,tempfh);
+  ok(EOF == ret, "_flsbuf(0,tempfh) on r/o file expected %x got %x\n", EOF, ret);
+  fclose(tempfh);
+
   unlink(tempf);
 }
 
@@ -783,8 +840,8 @@ static void test_fopen_fclose_fcloseall( void )
     ok(stream3 != NULL, "The file '%s' should be opened now\n", fname3 );
     errno = 0xfaceabad;
     stream4 = fopen("", "w+");
-    ok(stream4 == NULL && errno == ENOENT, 
-       "filename is empty, errno = %d (expected 2)\n", errno);
+    ok(stream4 == NULL && (errno == EINVAL || errno == ENOENT),
+       "filename is empty, errno = %d (expected 2 or 22)\n", errno);
     errno = 0xfaceabad;
     stream4 = fopen(NULL, "w+");
     ok(stream4 == NULL && (errno == EINVAL || errno == ENOENT), 
@@ -1028,6 +1085,19 @@ static void test_pipes(const char* selfname)
     ok(fclose(file) == 0, "unable to close the pipe: %d\n", errno);
 }
 
+static void test_unlink(void)
+{
+    FILE* file;
+    ok(mkdir("test_unlink") == 0, "unable to create test dir\n");
+    file = fopen("test_unlink\\empty", "w");
+    ok(file != NULL, "unable to create test file\n");
+    if(file)
+      fclose(file);
+    ok(_unlink("test_unlink") != 0, "unlinking a non-empty directory must fail\n");
+    unlink("test_unlink\\empty");
+    rmdir("test_unlink");
+}
+
 START_TEST(file)
 {
     int arg_c;
@@ -1052,6 +1122,7 @@ START_TEST(file)
     test_file_write_read();
     test_chsize();
     test_stat();
+    test_unlink();
 
     /* testing stream I/O */
     test_fdopen();
@@ -1061,6 +1132,8 @@ START_TEST(file)
     test_readmode(FALSE); /* binary mode */
     test_readmode(TRUE);  /* ascii mode */
     test_fgetc();
+    test_fputc();
+    test_flsbuf();
     test_fgetwc();
     test_ctrlz();
     test_file_put_get();
