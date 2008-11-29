@@ -25,7 +25,7 @@ WCHAR CaptWndClass[] = L"captwnd_class";
 HINSTANCE hInst;
 INT testnum = 0;
 
-//BOOL STDCALL (*DrawCaptionTemp) (
+//BOOL WINAPI (*DrawCaptionTemp) (
 //		 HWND        hwnd,
 //		 HDC         hdc,
 //		 const RECT *rect,

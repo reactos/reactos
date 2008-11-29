@@ -8,32 +8,32 @@
  */
 #include <windows.h>
 
-HMODULE STDCALL
+HMODULE WINAPI
 _GetModuleHandleA(LPCSTR lpModuleName)
 {
   return GetModuleHandleA(lpModuleName);
 }
 
-FARPROC STDCALL
+FARPROC WINAPI
 _GetProcAddress(HMODULE hModule,
   LPCSTR lpProcName)
 {
   return GetProcAddress(hModule, lpProcName);
 }
 
-HINSTANCE STDCALL
+HINSTANCE WINAPI
 _LoadLibraryA(LPCSTR lpLibFileName)
 {
   return LoadLibraryA(lpLibFileName);
 }
 
-VOID STDCALL
+VOID WINAPI
 _ExitProcess(UINT uExitCode)
 {
   ExitProcess(uExitCode);
 }
 
-HANDLE STDCALL
+HANDLE WINAPI
 _CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, DWORD dwStackSize,
               LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter,
               DWORD dwCreationFlags, LPDWORD lpThreadId)
@@ -42,31 +42,31 @@ _CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, DWORD dwStackSize,
                       lpParameter, dwCreationFlags, lpThreadId);
 }
 
-WINBOOL STDCALL
+WINBOOL WINAPI
 _TerminateThread(HANDLE hThread, DWORD dwExitCode)
 {
   return TerminateThread(hThread, dwExitCode);
 }
 
-DWORD STDCALL
+DWORD WINAPI
 _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
 {
   return WaitForSingleObject(hHandle, dwMilliseconds);
 }
 
-DWORD STDCALL
+DWORD WINAPI
 _GetLastError()
 {
   return GetLastError();
 }
 
-VOID STDCALL
+VOID WINAPI
 _CloseHandle(HANDLE handle)
 {
   CloseHandle (handle);
 }
 
-BOOL STDCALL
+BOOL WINAPI
 _GetThreadTimes(HANDLE hThread, LPFILETIME lpCreationTime,
 	            LPFILETIME lpExitTime, LPFILETIME lpKernelTime,
 	            LPFILETIME lpUserTime)
@@ -75,31 +75,31 @@ _GetThreadTimes(HANDLE hThread, LPFILETIME lpCreationTime,
                         lpKernelTime, lpUserTime);
 }
 
-BOOL STDCALL
+BOOL WINAPI
 _SetPriorityClass(HANDLE hProcess, DWORD dwPriorityClass)
 {
   return SetPriorityClass(hProcess, dwPriorityClass);
 }
 
-BOOL STDCALL
+BOOL WINAPI
 _SetThreadPriority(HANDLE hThread, int nPriority)
 {
   return SetThreadPriority(hThread, nPriority);
 }
 
-HANDLE STDCALL
+HANDLE WINAPI
 _GetCurrentProcess()
 {
   return GetCurrentProcess();
 }
 
-HANDLE STDCALL
+HANDLE WINAPI
 _GetCurrentThread()
 {
   return GetCurrentThread();
 }
 
-VOID STDCALL
+VOID WINAPI
 _Sleep(DWORD dwMilliseconds)
 {
   return Sleep(dwMilliseconds);

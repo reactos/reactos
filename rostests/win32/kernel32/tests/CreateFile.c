@@ -67,7 +67,7 @@ static CreateFileTest_Parameters CreateFileTests[] =
 
 static CreateFileTest_Parameters *CurrentTest;
 
-static NTSTATUS STDCALL
+static NTSTATUS WINAPI
 MockNtCreateFile(PHANDLE FileHandle,
   ACCESS_MASK DesiredAccess,
   POBJECT_ATTRIBUTES ObjectAttributes,

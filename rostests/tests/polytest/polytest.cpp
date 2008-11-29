@@ -17,7 +17,6 @@
 #include <assert.h>
 
 #define FASTCALL
-#define STDCALL
 #define INT int
 #define CLIPOBJ int
 #define SURFOBJ int
@@ -501,7 +500,7 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
 */
 static
 void
-STDCALL
+WINAPI
 POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** ActiveHead )
 {
   int i;
@@ -526,7 +525,7 @@ POLYGONFILL_BuildActiveList ( int Scanline, FILL_EDGE_LIST* list, FILL_EDGE** Ac
 */
 static
 void
-STDCALL
+WINAPI
 POLYGONFILL_FillScanLineAlternate(
   PDC dc,
   int ScanLine,
@@ -574,7 +573,7 @@ POLYGONFILL_FillScanLineAlternate(
 
 static
 void
-STDCALL
+WINAPI
 POLYGONFILL_FillScanLineWinding(
   PDC dc,
   int ScanLine,
@@ -674,7 +673,7 @@ POLYGONFILL_FillScanLineWinding(
 //The direction of each edge of the polygon is important.
 
 BOOL
-STDCALL
+WINAPI
 FillPolygon(
   PDC dc,
   SURFOBJ *SurfObj,
@@ -689,7 +688,7 @@ FillPolygon(
   int ScanLine;
 
   void
-  STDCALL
+  WINAPI
   (*FillScanLine)(
     PDC dc,
     int ScanLine,

@@ -13,7 +13,7 @@ MyGdiQueryTable()
 	return pPeb->GdiSharedHandleTable;
 }
 
-static DWORD STDCALL
+static DWORD WINAPI
 IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 {
 	DWORD ret;

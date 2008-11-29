@@ -227,7 +227,7 @@ AddTest(TestRoutine Routine)
   InsertTailList(&AllTests, &Test->ListEntry);
 }
 
-PVOID STDCALL
+PVOID WINAPI
 FrameworkGetHook(ULONG index)
 {
   return FrameworkGetHookInternal(index);

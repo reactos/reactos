@@ -25,7 +25,7 @@
 
 extern
 NTSTATUS
-(STDCALL * QueryObject)(
+(WINAPI * QueryObject)(
 	IN	HANDLE	ObjectHandle,
 	IN	CINT	ObjectInformationClass,
 	OUT	PVOID	ObjectInformation,
@@ -35,7 +35,7 @@ NTSTATUS
 
 extern
 NTSTATUS
-(STDCALL * QueryInformationPort)(
+(WINAPI * QueryInformationPort)(
 	IN	HANDLE	PortHandle,
 	IN	CINT	PortInformationClass,	/* guess */
 	OUT	PVOID	PortInformation,	/* guess */

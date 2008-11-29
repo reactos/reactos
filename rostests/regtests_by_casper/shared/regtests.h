@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef DWORD (STDCALL _LPTHREAD_START_ROUTINE)(LPVOID lpParameter);
+typedef DWORD (WINAPI _LPTHREAD_START_ROUTINE)(LPVOID lpParameter);
 
 typedef struct __FILETIME
 {
@@ -164,7 +164,7 @@ typedef void (*TestOutputRoutine)(char *Buffer);
 *  OutputRoutine - Output routine.
  * TestName - If NULL all tests are run. If non-NULL specifies the test to be run
  */
-typedef void (STDCALL *TestDriverMain)(TestOutputRoutine OutputRoutine, char *TestName);
+typedef void (WINAPI *TestDriverMain)(TestOutputRoutine OutputRoutine, char *TestName);
 
 typedef struct __TEST
 {
@@ -189,56 +189,56 @@ typedef struct __API_DESCRIPTION
 extern _API_DESCRIPTION ExternalDependencies[];
 extern ULONG MaxExternalDependency;
 
-HANDLE STDCALL
+HANDLE WINAPI
 _GetModuleHandleA(LPCSTR lpModuleName);
 
-PVOID STDCALL
+PVOID WINAPI
 _GetProcAddress(HANDLE hModule,
   LPCSTR lpProcName);
 
-HANDLE STDCALL
+HANDLE WINAPI
 _LoadLibraryA(LPCSTR lpLibFileName);
 
-VOID STDCALL
+VOID WINAPI
 _ExitProcess(UINT uExitCode);
 
-HANDLE STDCALL
+HANDLE WINAPI
 _CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, DWORD dwStackSize,
               _LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter,
               DWORD dwCreationFlags, LPDWORD lpThreadId);
 
-BOOL STDCALL
+BOOL WINAPI
 _TerminateThread(HANDLE hThread, DWORD dwExitCode);
 
-DWORD STDCALL
+DWORD WINAPI
 _WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
 
-DWORD STDCALL
+DWORD WINAPI
 _GetLastError();
 
-VOID STDCALL
+VOID WINAPI
 _CloseHandle(HANDLE handle);
 
-BOOL STDCALL
+BOOL WINAPI
 _GetThreadTimes(HANDLE hThread,
                 _LPFILETIME lpCreationTime,
                 _LPFILETIME lpExitTime,
                 _LPFILETIME lpKernelTime,
                 _LPFILETIME lpUserTime);
 
-BOOL STDCALL
+BOOL WINAPI
 _SetPriorityClass(HANDLE hProcess, DWORD dwPriorityClass);
 
-BOOL STDCALL
+BOOL WINAPI
 _SetThreadPriority(HANDLE hThread, int nPriority);
 
-HANDLE STDCALL
+HANDLE WINAPI
 _GetCurrentProcess();
 
-HANDLE STDCALL
+HANDLE WINAPI
 _GetCurrentThread();
 
-VOID STDCALL
+VOID WINAPI
 _Sleep(DWORD dwMilliseconds);
 
 
