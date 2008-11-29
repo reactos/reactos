@@ -220,7 +220,7 @@ typedef struct _MIDL_STUB_MESSAGE
   int fNeedMCCP:1;
   int fUnused:3;
   int fUnused2:16;
-  DWORD dwDestContext;
+  unsigned long dwDestContext;
   void *pvDestContext;
   NDR_SCONTEXT *SavedContextHandles;
   LONG ParamNumber;
@@ -230,7 +230,7 @@ typedef struct _MIDL_STUB_MESSAGE
   ULONG *SizePtrOffsetArray;
   ULONG *SizePtrLengthArray;
   void *pArgQueue;
-  DWORD dwStubPhase;
+  unsigned long dwStubPhase;
   void *LowStackMark;
   PNDR_ASYNC_MESSAGE pAsyncMsg;
   PNDR_CORRELATION_INFO pCorrInfo;
@@ -291,8 +291,8 @@ typedef struct _USER_MARSHAL_ROUTINE_QUADRUPLE
 
 /* 'USRC' */
 #define USER_MARSHAL_CB_SIGNATURE \
-	( ( (DWORD)'U' << 24 ) | ( (DWORD)'S' << 16 ) | \
-	  ( (DWORD)'R' << 8  ) | ( (DWORD)'C'       ) )
+	( ( (unsigned long)'U' << 24 ) | ( (unsigned long)'S' << 16 ) | \
+	  ( (unsigned long)'R' << 8  ) | ( (unsigned long)'C'       ) )
 
 typedef enum
 {
@@ -462,7 +462,8 @@ typedef struct _FULL_PTR_XLAT_TABLES {
 
 struct IRpcStubBuffer;
 
-typedef ULONG error_status_t;
+typedef unsigned long error_status_t;
+
 typedef void  * NDR_CCONTEXT;
 
 typedef struct _SCONTEXT_QUEUE {
@@ -649,13 +650,13 @@ RPCRTAPI void RPC_ENTRY
   NdrAsyncServerCall( PRPC_MESSAGE pRpcMsg );
 
 RPCRTAPI LONG RPC_ENTRY
-  NdrStubCall2( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
+  NdrStubCall2( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, unsigned long * pdwStubPhase );
 RPCRTAPI LONG RPC_ENTRY
-  NdrStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
+  NdrStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, unsigned long * pdwStubPhase );
 RPCRTAPI LONG RPC_ENTRY
-  NdrAsyncStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
+  NdrAsyncStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, unsigned long * pdwStubPhase );
 RPCRTAPI LONG RPC_ENTRY
-  NdrDcomAsyncStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
+  NdrDcomAsyncStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, unsigned long * pdwStubPhase );
 
 RPCRTAPI void* RPC_ENTRY
   NdrAllocate( PMIDL_STUB_MESSAGE pStubMsg, SIZE_T Len ) __WINE_ALLOC_SIZE(2);

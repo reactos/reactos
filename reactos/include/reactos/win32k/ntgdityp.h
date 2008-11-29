@@ -216,7 +216,9 @@ typedef DWORD LFTYPE;
 typedef PVOID KERNEL_PVOID;
 typedef PVOID PUMDHPDEV;
 typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
+#if !defined(__WINDDI_H)
 typedef LONG FIX;
+#endif
 
 typedef struct _CHWIDTHINFO // Based on FD_DEVICEMETRICS
 {

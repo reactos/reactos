@@ -96,17 +96,9 @@ extern "C" {
 #endif
 typedef char CHAR;
 typedef short SHORT;
-#ifndef LONG_DEFINED
-#define LONG_DEFINED
-	typedef long LONG;
-	typedef unsigned long ULONG,*PULONG;
-#endif//LONG_DEFINED
+typedef long LONG;
 typedef char CCHAR, *PCCHAR;
-typedef unsigned char UCHAR,*PUCHAR;
-typedef unsigned short USHORT,*PUSHORT;
-typedef char *PSZ;
-
-typedef void *PVOID,*LPVOID;
+typedef void *PVOID;
 
 /* FIXME for __WIN64 */
 #ifndef  __ptr64
@@ -183,7 +175,7 @@ typedef void *HANDLE;
 typedef PVOID HANDLE;
 #define DECLARE_HANDLE(n) typedef HANDLE n
 #endif
-typedef HANDLE *PHANDLE,*LPHANDLE;
+typedef HANDLE *PHANDLE;
 typedef DWORD LCID;
 typedef PDWORD PLCID;
 typedef WORD LANGID;
