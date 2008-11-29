@@ -451,7 +451,7 @@ acpi_install_gpe_handler (
 
 	/* Parameter validation */
 
-	if (!handler || (gpe_number > NUM_GPE)) {
+	if (!handler || (gpe_number >= NUM_GPE)) {
 		return (AE_BAD_PARAMETER);
 	}
 
@@ -510,7 +510,7 @@ acpi_remove_gpe_handler (
 
 	/* Parameter validation */
 
-	if (!handler || (gpe_number > NUM_GPE)) {
+	if (!handler || (gpe_number >= NUM_GPE)) {
 		return (AE_BAD_PARAMETER);
 	}
 
