@@ -7,8 +7,4 @@
 	<directory name="green">
 		<xi:include href="green/green.rbuild" />
 	</directory>
-
-	<directory name="ramdrv">
-		<xi:include href="ramdrv/ramdrv.rbuild" />
-	</directory>
 </group>
