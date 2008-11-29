@@ -326,7 +326,7 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
 /*
  * FUNCTION: Retrieve the specified file information
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp)
 {
@@ -444,7 +444,7 @@ CdfsSetPositionInformation(PFILE_OBJECT FileObject,
 /*
  * FUNCTION: Set the specified file information
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp)
 {

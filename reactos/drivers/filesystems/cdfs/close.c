@@ -76,7 +76,7 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {

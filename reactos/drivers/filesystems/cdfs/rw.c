@@ -178,7 +178,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsRead(PDEVICE_OBJECT DeviceObject,
 	 PIRP Irp)
 {
@@ -229,7 +229,7 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsWrite(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {

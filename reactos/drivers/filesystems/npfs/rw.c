@@ -44,7 +44,7 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
 #endif
 
 static DRIVER_CANCEL NpfsReadWriteCancelRoutine;
-static VOID STDCALL
+static VOID NTAPI
 NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 						   IN PIRP Irp)
 {
@@ -92,7 +92,7 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 	}
 }
 
-static VOID STDCALL
+static VOID NTAPI
 NpfsWaiterThread(PVOID InitContext)
 {
 	PNPFS_THREAD_CONTEXT ThreadContext = (PNPFS_THREAD_CONTEXT) InitContext;
@@ -288,7 +288,7 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 		 IN PIRP Irp)
 {
@@ -599,7 +599,7 @@ done:
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsWrite(PDEVICE_OBJECT DeviceObject,
 		  PIRP Irp)
 {

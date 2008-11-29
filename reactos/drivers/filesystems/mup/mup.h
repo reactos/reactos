@@ -19,13 +19,13 @@ typedef struct
 
 /* create.c */
 DRIVER_DISPATCH MupCreate;
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MupCreate(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
 
 /* mup.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath);
 

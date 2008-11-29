@@ -57,7 +57,7 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsCleanup(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {

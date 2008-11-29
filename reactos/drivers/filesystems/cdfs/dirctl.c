@@ -760,7 +760,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
 
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp)
 {

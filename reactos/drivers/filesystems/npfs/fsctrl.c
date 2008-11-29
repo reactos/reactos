@@ -17,7 +17,7 @@
 /* FUNCTIONS *****************************************************************/
 
 static DRIVER_CANCEL NpfsListeningCancelRoutine;
-static VOID STDCALL
+static VOID NTAPI
 NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 						   IN PIRP Irp)
 {
@@ -406,7 +406,7 @@ NpfsPeekPipe(PIRP Irp,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 					  PIRP Irp)
 {
@@ -523,7 +523,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject,
 				 PIRP Irp)
 {
