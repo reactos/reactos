@@ -140,6 +140,11 @@ ProRequest(
   MiniQueueWorkItem(Adapter, NdisWorkItemRequest, NdisRequest, FALSE);
   return NDIS_STATUS_PENDING;
 #else
+  if (MiniIsBusy(Adapter, NdisWorkItemRequest)) {
+      MiniQueueWorkItem(Adapter, NdisWorkItemRequest, NdisRequest, FALSE);
+      return NDIS_STATUS_PENDING;
+  }
+
   return MiniDoRequest(Adapter, NdisRequest);
 #endif
 }
@@ -164,7 +169,7 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
    KIRQL RaiseOldIrql;
    NDIS_STATUS NdisStatus;
 
-   if(Adapter->NdisMiniportBlock.FirstPendingPacket) {
+   if(MiniIsBusy(Adapter, NdisWorkItemSend)) {
       MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet, FALSE);
       return NDIS_STATUS_PENDING;
    }

@@ -169,6 +169,11 @@ MiniSendComplete(
     IN  PNDIS_PACKET    Packet,
     IN  NDIS_STATUS     Status);
 
+BOOLEAN
+MiniIsBusy(
+    PLOGICAL_ADAPTER Adapter,
+    NDIS_WORK_ITEM_TYPE Type);
+
 #endif /* __MINIPORT_H */
 
 /* EOF */
