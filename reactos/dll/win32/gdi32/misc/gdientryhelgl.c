@@ -437,7 +437,6 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     {
         LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[0];
 
-        /* Fixme for opengl hel emulations */
         DPRINT1("DdCreateSurface entered\n");
 
         pCreateSurface->ddRVal = DD_OK;
@@ -451,7 +450,6 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
         hrc = IWineD3DDevice_GetDisplayMode(pWineD3DDevice, 0, &Mode);
         if(FAILED(hrc))
         {
-
             if ((lcl->dwFlags & DDRAWISURF_HASPIXELFORMAT) == 0)
             {
                 switch(pCreateSurface->lpDD->vmiData.ddpfDisplay.dwRGBBitCount)
@@ -527,7 +525,6 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
 
     if (pCreateSurface->ddRVal == DD_OK)
     {
-       
 
         for (i=0;i<SurfaceCount;i++)
         {
@@ -536,41 +533,66 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
             object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IWineD3DSurface));
             if (NULL == object)
             {
-                DPRINT1("Allocation of memory failed\n");
                 pCreateSurface->ddRVal = DDERR_OUTOFVIDEOMEMORY;
                 break;
             }
             lcl->hDDSurface = (ULONG_PTR) object;
         }
+    }
 
-        if ( pCreateSurface->ddRVal == DD_OK)
+    if ( pCreateSurface->ddRVal == DD_OK)
+    {
+        for (i=0;i<SurfaceCount;i++)
         {
-            for (i=0;i<SurfaceCount;i++)
-            {
-                LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
+            LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
 
-                hrc = IWineD3DDevice_CreateSurface(pWineD3DDevice,
-                                                   Mode.Width,
-                                                   Mode.Height,
-                                                   Mode.Format,
-                                                   TRUE /* Lockable */,
-                                                   FALSE /* Discard */,
-                                                   i,
-                                                   (IWineD3DSurface **)&lcl->hDDSurface,
-                                                   WINED3DRTYPE_SURFACE, /**/
-                                                   WINED3DUSAGE_DYNAMIC & WINED3DUSAGE_MASK,
-                                                   WINED3DPOOL_DEFAULT,
-                                                   WINED3DMULTISAMPLE_NONE,
-                                                   0 /* MultiSampleQuality */,
-                                                   0 /* SharedHandle */,
-                                                   SURFACE_OPENGL,
-                                                  (IUnknown *)Parent);
-            }
-            if (hrc != D3D_OK )
-            {
-                pCreateSurface->ddRVal = DDERR_GENERIC;
-            }
+            hrc = IWineD3DDevice_CreateSurface(pWineD3DDevice,
+                                               Mode.Width,
+                                               Mode.Height,
+                                               Mode.Format,
+                                               TRUE /* Lockable */,
+                                               FALSE /* Discard */,
+                                               i,
+                                               (IWineD3DSurface **)&lcl->hDDSurface,
+                                               WINED3DRTYPE_SURFACE, /**/
+                                               WINED3DUSAGE_DYNAMIC & WINED3DUSAGE_MASK,
+                                               WINED3DPOOL_DEFAULT,
+                                               WINED3DMULTISAMPLE_NONE,
+                                               0 /* MultiSampleQuality */,
+                                               0 /* SharedHandle */,
+                                               SURFACE_OPENGL,
+                                              (IUnknown *)Parent);
+         }
+         if (hrc != D3D_OK )
+         {
+            pCreateSurface->ddRVal = DDERR_GENERIC;
         }
+    }
+
+    /* FIXME see look at wine ddraw file ddraw how this thing works and in functions IDirectDrawImpl_CreateSurface */
+
+    /* FIXME some way check see if it frist time to create primary surface */
+    if ( (desc2.ddsCaps.dwCaps & (DDSCAPS_PRIMARYSURFACE)) )
+    {
+       /* FIXME see wine ddraw/ddraw.c setup IDirectDrawImpl_AttachD3DDevice */
+    }
+    else
+    {
+        /* FIXME see wine ddraw/ddraw.c setup IDirectDrawImpl_CreateGDISwapChain */
+    }
+
+    if (desc2.ddsCaps.dwCaps2 & DDSCAPS2_CUBEMAP)
+    {
+        /* FIXME see wine ddraw/ddraw.c setup IWineD3DDevice_CreateCubeTexture */
+    }
+    else
+    {
+        /* FIXME see wine ddraw/ddraw.c setup IWineD3DDevice_CreateTexture */
+    }
+
+    if (pCreateSurface->ddRVal != DD_OK)
+    {
+        /* FIXME free memory from lcl->hDDSurface when we fail */
     }
 
     /* Return */
