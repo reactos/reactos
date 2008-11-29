@@ -294,19 +294,114 @@ ScsiDebugPrint(IN ULONG DebugPrintLevel,
     DbgPrint(Buffer);
 }
 
+/* An internal helper function for ScsiPortCompleteRequest */
+VOID
+NTAPI
+SpiCompleteRequest(IN PVOID HwDeviceExtension,
+                   IN PSCSI_REQUEST_BLOCK_INFO SrbInfo,
+                   IN UCHAR SrbStatus)
+{
+    PSCSI_REQUEST_BLOCK Srb;
+
+    /* Get current SRB */
+    Srb = SrbInfo->Srb;
+
+    /* Return if there is no SRB or it is not active */
+    if (!Srb || !(Srb->SrbFlags & SRB_FLAGS_IS_ACTIVE)) return;
+
+    /* Set status */
+    Srb->SrbStatus = SrbStatus;
+
+    /* Set data transfered to 0 */
+    Srb->DataTransferLength = 0;
+
+    /* Notify */
+    ScsiPortNotification(RequestComplete,
+                         HwDeviceExtension,
+                         Srb);
+}
 
 /*
  * @unimplemented
  */
 VOID NTAPI
 ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
-			IN UCHAR PathId,
-			IN UCHAR TargetId,
-			IN UCHAR Lun,
-			IN UCHAR SrbStatus)
+                        IN UCHAR PathId,
+                        IN UCHAR TargetId,
+                        IN UCHAR Lun,
+                        IN UCHAR SrbStatus)
 {
-  DPRINT("ScsiPortCompleteRequest()\n");
-  UNIMPLEMENTED;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PSCSI_PORT_LUN_EXTENSION LunExtension;
+    PSCSI_REQUEST_BLOCK_INFO SrbInfo;
+    PLIST_ENTRY ListEntry;
+    ULONG BusNumber;
+    ULONG Target;
+
+    DPRINT("ScsiPortCompleteRequest() called\n");
+
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
+
+    /* Go through all buses */
+    for (BusNumber = 0; BusNumber < 8; BusNumber++)
+    {
+        /* Go through all targets */
+        for (Target = 0; Target < DeviceExtension->MaxTargedIds; Target++)
+        {
+            /* Get logical unit list head */
+            LunExtension = DeviceExtension->LunExtensionList[Target % 8];
+
+            /* Go through all logical units */
+            while (LunExtension)
+            {
+                /* Now match what caller asked with what we are at now */
+                if ((PathId == SP_UNTAGGED || PathId == LunExtension->PathId) &&
+                    (TargetId == SP_UNTAGGED || TargetId == LunExtension->TargetId) &&
+                    (Lun == SP_UNTAGGED || Lun == LunExtension->Lun))
+                {
+                    /* Yes, that's what caller asked for. Complete abort requests */
+                    if (LunExtension->CompletedAbortRequests)
+                    {
+                        /* TODO: Save SrbStatus in this request */
+                        DPRINT1("Completing abort request without setting SrbStatus!\n");
+
+                        /* Issue a notification request */
+                        ScsiPortNotification(RequestComplete,
+                                             HwDeviceExtension,
+                                             LunExtension->CompletedAbortRequests);
+                    }
+
+                    /* Complete the request using our helper */
+                    SpiCompleteRequest(HwDeviceExtension,
+                                       &LunExtension->SrbInfo,
+                                       SrbStatus);
+
+                    /* Go through the queue and complete everything there too */
+                    ListEntry = LunExtension->SrbInfo.Requests.Flink;
+                    while (ListEntry != &LunExtension->SrbInfo.Requests)
+                    {
+                        /* Get the actual SRB info entry */
+                        SrbInfo = CONTAINING_RECORD(ListEntry,
+                                                    SCSI_REQUEST_BLOCK_INFO,
+                                                    Requests);
+
+                        /* Complete it */
+                        SpiCompleteRequest(HwDeviceExtension,
+                                           SrbInfo,
+                                           SrbStatus);
+
+                        /* Advance to the next request in queue */
+                        ListEntry = SrbInfo->Requests.Flink;
+                    }
+                }
+
+                /* Advance to the next one */
+                LunExtension = LunExtension->Next;
+            }
+        }
+    }
 }
 
 /*
