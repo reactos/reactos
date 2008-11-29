@@ -2398,12 +2398,9 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                            BOOL *pbNewMode)
 {
     /* Fixme for opengl hel emulations */
-    HEL_OGL_STUB;
-#if 0
-    /* Call win32k directly */
-    return NtGdiDdReenableDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
-                                           pbNewMode);
-#endif
+    *pbNewMode = FALSE;
+
+    return TRUE;
 }
 
 
