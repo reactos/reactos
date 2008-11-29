@@ -1659,6 +1659,39 @@ static BOOL InitWineD3D(void)
 
 BOOL
 WINAPI
+CreateWineD3DDevice(LPDDRAWI_DIRECTDRAW_GBL hDirectDraw)
+{
+    IWineD3D *This = (IWineD3D*)hDirectDraw;
+    IWineD3DDevice *WineD3DDevice;
+    HRESULT hr;
+
+    if( !This )
+        return FALSE;
+
+    WineD3DDevice = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IWineD3DDevice));
+
+    if (!WineD3DDevice)
+    {
+        hDirectDraw->dwUnused3 = 0;
+        return FALSE;
+    }
+
+    hr = IWineD3D_CreateDevice(This, 0, WINED3DDEVTYPE_HAL, NULL, 0, &WineD3DDevice, NULL);
+
+    if ( hr != DD_OK )
+    {
+        HeapFree(GetProcessHeap(), 0, WineD3DDevice);
+        hDirectDraw->dwUnused3 = 0;
+        return FALSE;
+    }
+
+    hDirectDraw->dwUnused3 = (DWORD) WineD3DDevice;
+
+    return TRUE;
+}
+
+BOOL
+WINAPI
 bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
                  BOOL bComplete)
 {
@@ -1749,7 +1782,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                 /* Create the DDraw Object */
                 //ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
                 ghDirectDraw = (HANDLE) pWineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
-
+                CreateWineD3DDevice((LPDDRAWI_DIRECTDRAW_GBL) ghDirectDraw);
                 /* Delete our DC */
                 DeleteDC(hdc);
             }
@@ -1771,7 +1804,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Using the per-process object, so create it */
          //pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc);
         pDirectDrawGlobal->hDD = (ULONG_PTR) pWineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
-
+        CreateWineD3DDevice((LPDDRAWI_DIRECTDRAW_GBL) pDirectDrawGlobal->hDD);
         /* Set the return value */
         Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
         
@@ -1841,7 +1874,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     }
 
     /* Do the query */
-    if ( GetDdHandle(pDirectDrawGlobal->hDD) == NULL || pHalInfo == NULL)
+    if ( GetDdHandle(pDirectDrawGlobal->hDD) == NULL)
     {
         /* We failed, free the memory and return */
         retVal = FALSE;
