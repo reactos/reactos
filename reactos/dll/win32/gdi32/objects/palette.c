@@ -98,7 +98,8 @@ GetSystemPaletteEntries(HDC hDC,
         if (ppe)
         {
            RtlZeroMemory( &ippe, sizeof(ippe) );
-           RtlCopyMemory( &ippe, &sys_pal_template, sizeof(sys_pal_template) );
+           RtlCopyMemory( &ippe, &sys_pal_template, 10 * sizeof(PALETTEENTRY) );
+           RtlCopyMemory( &ippe + 246 , &sys_pal_template + 10 , 10 * sizeof(PALETTEENTRY) );
 
            if (iStartIndex < 256)
            {
