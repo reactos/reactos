@@ -445,14 +445,12 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
         lcl->lpGbl->wWidth = desc2.dwWidth;
         lcl->lpGbl->wHeight = desc2.dwHeight;
         lcl->lpGbl->dwLinearSize = desc2.dwLinearSize;
-        RtlCopyMemory(&lcl->lpGbl->ddpfSurface, &desc2.ddpfPixelFormat, sizeof(DDPIXELFORMAT))
+        RtlCopyMemory(&lcl->lpGbl->ddpfSurface, &desc2.ddpfPixelFormat, sizeof(DDPIXELFORMAT));
 
         /* Get the video mode from WineD3D - we will need it */
-        hr = IWineD3DDevice_GetDisplayMode(pWineD3DDevice, 0, &Mode);
-        if(FAILED(hr))
+        hrc = IWineD3DDevice_GetDisplayMode(pWineD3DDevice, 0, &Mode);
+        if(FAILED(hrc))
         {
-            
-            ERR("Failed to read display mode from wined3d\n");
 
             if ((lcl->dwFlags & DDRAWISURF_HASPIXELFORMAT) == 0)
             {
@@ -527,7 +525,7 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
         }
     }
 
-    if (pCreateSurface->ddRVal = DD_OK)
+    if (pCreateSurface->ddRVal == DD_OK)
     {
        
 
@@ -551,7 +549,6 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
             {
                 LPDDRAWI_DDRAWSURFACE_LCL lcl = pCreateSurface->lplpSList[i];
 
-                pWineD3DDevice->CreateSurface(
                 hrc = IWineD3DDevice_CreateSurface(pWineD3DDevice,
                                                    Mode.Width,
                                                    Mode.Height,
