@@ -35,7 +35,7 @@
 	<dependency>bugcodes</dependency>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
-		<pch>ntoskrnl.h</pch>
+		<pch>precomp.h</pch>
 	</directory>
 	-->
 	<directory name="ke">

@@ -13,9 +13,6 @@
 #include "rosdraw.h"
 HMODULE hDllModule = 0;
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
 CRITICAL_SECTION ddcs;
 
 // This function is exported by the dll
@@ -26,8 +23,8 @@ typedef struct
     LPVOID lpContext;
 } DirectDrawEnumerateProcData;
 
-BOOL 
-CALLBACK 
+BOOL
+CALLBACK
 TranslateCallbackA(GUID *lpGUID,
                    LPSTR lpDriverDescription,
                    LPSTR lpDriverName,
@@ -180,8 +177,8 @@ DirectDrawCreateEx(LPGUID lpGUID,
     return retVal;
 }
 
-HRESULT 
-WINAPI 
+HRESULT
+WINAPI
 DirectDrawEnumerateA( LPDDENUMCALLBACKA lpCallback,
                      LPVOID lpContext)
 {
@@ -297,7 +294,7 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
 
    for more info about this command see msdn documentation
 
-    The buffer start with D3DHAL_DP2COMMAND struct afer that follows either one struct or 
+    The buffer start with D3DHAL_DP2COMMAND struct afer that follows either one struct or
     no struct at at all
     example for command D3DDP2OP_VIEWPORTINFO
 

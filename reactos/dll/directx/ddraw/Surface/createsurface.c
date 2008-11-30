@@ -9,10 +9,6 @@
  */
 #include "rosdraw.h"
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
-
 /*
 * All parameters must have been checked if they are valid before they are passed to Internal_CreateSurface.
 * If not please fix the code in the functions which call Internal_CreateSurface.
@@ -77,8 +73,8 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
     }
 
     /*
-     * program does not need set the DDSD_LPSURFACE, 
-     * if they forget set it, the ddraw will autoamtic 
+     * program does not need set the DDSD_LPSURFACE,
+     * if they forget set it, the ddraw will autoamtic
      * set it for system memory.
      */
     if ( ((pDDSD->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY) == DDSCAPS_SYSTEMMEMORY) &&
@@ -285,28 +281,28 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         DxHeapMemFree(slist_gbl);
 
     *ppSurf = (LPDDRAWI_DDRAWSURFACE_INT) &slist_int[0]->lpVtbl;
-        
+
     return DD_OK;
 
 cleanup:
     for(count = 0; count < num_of_surf; count++)
     {
-        if (slist_more[count] != NULL) 
+        if (slist_more[count] != NULL)
             DxHeapMemFree(slist_more[count]);
-        if (slist_gbl[count] != NULL) 
+        if (slist_gbl[count] != NULL)
             DxHeapMemFree(slist_gbl[count]);
-        if (slist_lcl[count] != NULL) 
+        if (slist_lcl[count] != NULL)
             DxHeapMemFree(slist_lcl[count]);
-        if (slist_int[count] != NULL) 
+        if (slist_int[count] != NULL)
             DxHeapMemFree(slist_int[count]);
     }
-    if (slist_more != NULL) 
+    if (slist_more != NULL)
         DxHeapMemFree(slist_more);
-    if (slist_gbl != NULL) 
+    if (slist_gbl != NULL)
         DxHeapMemFree(slist_gbl);
-    if (slist_lcl != NULL) 
+    if (slist_lcl != NULL)
         DxHeapMemFree(slist_lcl);
-    if (slist_int != NULL) 
+    if (slist_int != NULL)
         DxHeapMemFree(slist_int);
 
     return ret;

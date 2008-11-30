@@ -63,6 +63,7 @@
 	<file>explorer.cpp</file>
 	<file>i386-stub-win32.c</file>
 	<file>explorer.rc</file>
+	<linkerflag>--enable-stdcall-fixup</linkerflag>
 </module>
 <installfile installbase=".">explorer-cfg-template.xml</installfile>
 <directory name="notifyhook">

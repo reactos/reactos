@@ -11,7 +11,7 @@
 	<include base="ReactOS">include/reactos/drivers</include>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
-	<pch>w32k.h</pch>
+	<pch>pch.h</pch>
 
 	<directory name="dib" root="intermediate">
 		<file>dib8gen.c</file>

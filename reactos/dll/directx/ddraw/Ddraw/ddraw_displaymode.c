@@ -11,9 +11,6 @@
 
 #include "rosdraw.h"
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
 HRESULT WINAPI
 Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                                   LPDDSURFACEDESC pDDSD, LPVOID pContext, LPDDENUMMODESCALLBACK pCallback)

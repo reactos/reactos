@@ -10,9 +10,6 @@
 
 #include "rosdraw.h"
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
 HRESULT WINAPI
 Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DWORD cooplevel)
 {

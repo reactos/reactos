@@ -20,11 +20,6 @@
 
 #include <string.h>
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
-
-
 LPDDRAWI_DIRECTDRAW_INT
 internal_directdraw_int_alloc(LPDDRAWI_DIRECTDRAW_INT This)
 {

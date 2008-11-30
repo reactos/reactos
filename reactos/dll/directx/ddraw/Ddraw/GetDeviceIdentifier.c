@@ -21,8 +21,6 @@
 
 #include <string.h>
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
 /* For DirectDraw 4 - 6 */
 HRESULT WINAPI
 Main_DirectDraw_GetDeviceIdentifier(LPDDRAWI_DIRECTDRAW_INT This,

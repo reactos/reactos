@@ -20,10 +20,6 @@
 
 #include <string.h>
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
-
 HRESULT WINAPI
 Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                          LPDDCAPS pHELCaps)

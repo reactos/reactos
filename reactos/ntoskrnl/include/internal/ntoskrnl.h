@@ -106,117 +106,6 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
 
-static
-__inline
-NTSTATUS
-DefaultSetInfoBufferCheck(ULONG Class,
-                          const INFORMATION_CLASS_INFO *ClassList,
-                          ULONG ClassListEntries,
-                          PVOID Buffer,
-                          ULONG BufferLength,
-                          KPROCESSOR_MODE PreviousMode)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (Class < ClassListEntries)
-    {
-        if (!(ClassList[Class].Flags & ICIF_SET))
-        {
-            Status = STATUS_INVALID_INFO_CLASS;
-        }
-        else if (ClassList[Class].RequiredSizeSET > 0 &&
-                 BufferLength != ClassList[Class].RequiredSizeSET)
-        {
-            if (!(ClassList[Class].Flags & ICIF_SET_SIZE_VARIABLE))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-            }
-        }
-
-        if (NT_SUCCESS(Status))
-        {
-            if (PreviousMode != KernelMode)
-            {
-                _SEH2_TRY
-                {
-                    ProbeForRead(Buffer,
-                                 BufferLength,
-                                 ClassList[Class].AlignmentSET);
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
-            }
-        }
-    }
-    else
-        Status = STATUS_INVALID_INFO_CLASS;
-
-    return Status;
-}
-
-static
-__inline
-NTSTATUS
-DefaultQueryInfoBufferCheck(ULONG Class,
-                            const INFORMATION_CLASS_INFO *ClassList,
-                            ULONG ClassListEntries,
-                            PVOID Buffer,
-                            ULONG BufferLength,
-                            PULONG ReturnLength,
-                            KPROCESSOR_MODE PreviousMode)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (Class < ClassListEntries)
-    {
-        if (!(ClassList[Class].Flags & ICIF_QUERY))
-        {
-            Status = STATUS_INVALID_INFO_CLASS;
-        }
-        else if (ClassList[Class].RequiredSizeQUERY > 0 &&
-                 BufferLength != ClassList[Class].RequiredSizeQUERY)
-        {
-            if (!(ClassList[Class].Flags & ICIF_QUERY_SIZE_VARIABLE))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-            }
-        }
-
-        if (NT_SUCCESS(Status))
-        {
-            if (PreviousMode != KernelMode)
-            {
-                _SEH2_TRY
-                {
-                    if (Buffer != NULL)
-                    {
-                        ProbeForWrite(Buffer,
-                                      BufferLength,
-                                      ClassList[Class].AlignmentQUERY);
-                    }
-
-                    if (ReturnLength != NULL)
-                    {
-                        ProbeForWriteUlong(ReturnLength);
-                    }
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
-            }
-        }
-    }
-    else
-        Status = STATUS_INVALID_INFO_CLASS;
-
-    return Status;
-}
-
 /*
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
  * or as a pointer
@@ -250,6 +139,7 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
 C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
+
 C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
 #ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
