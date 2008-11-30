@@ -6,7 +6,7 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 TextOutA(
 	HDC  hdc,
 	int  nXStart,
@@ -35,7 +35,7 @@ TextOutA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 TextOutW(
 	HDC  hdc,
 	int  nXStart,
@@ -51,7 +51,7 @@ TextOutW(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GdiGetCodePage(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -65,7 +65,7 @@ GdiGetCodePage(HDC hdc)
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 GetTextCharacterExtra(
 	HDC	hDc
 	)
@@ -82,7 +82,7 @@ GetTextCharacterExtra(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetTextCharset(HDC hdc)
 {
     /* MSDN docs say this is equivalent */
@@ -96,7 +96,7 @@ GetTextCharset(HDC hdc)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetTextMetricsA(
 	HDC		hdc,
 	LPTEXTMETRICA	lptm
@@ -117,7 +117,7 @@ GetTextMetricsA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetTextMetricsW(
 	HDC		hdc,
 	LPTEXTMETRICW	lptm
@@ -278,7 +278,7 @@ GetTextExtentPoint32W(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetTextExtentExPointI(HDC hdc,
                       LPWORD pgiIn,
                       int cgi,
@@ -294,7 +294,7 @@ GetTextExtentExPointI(HDC hdc,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetTextExtentPointI(HDC hdc,
                     LPWORD pgiIn,
                     int cgi,
@@ -307,7 +307,7 @@ GetTextExtentPointI(HDC hdc,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ExtTextOutA(
 	HDC		hdc,
 	int		X,
@@ -338,7 +338,7 @@ ExtTextOutA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ExtTextOutW(
 	HDC		hdc,
 	int		X,
@@ -380,7 +380,7 @@ GetTextFaceW(HDC hDC,
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetTextFaceA( HDC hdc, INT count, LPSTR name )
 {
     INT res = GetTextFaceW(hdc, 0, NULL);
@@ -404,7 +404,7 @@ GetTextFaceA( HDC hdc, INT count, LPSTR name )
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 GetTextFaceAliasW(HDC hdc,
                   int cChar,
                   LPWSTR pszOut)
@@ -419,7 +419,7 @@ GetTextFaceAliasW(HDC hdc,
 
 
 BOOL
-STDCALL
+WINAPI
 GetFontResourceInfoW(
     LPCWSTR lpFileName,
     DWORD *pdwBufSize,
@@ -469,7 +469,7 @@ GetFontResourceInfoW(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 SetTextCharacterExtra(
 	HDC	hDC,
 	int	CharExtra
@@ -510,7 +510,7 @@ SetTextCharacterExtra(
  *
  */
 UINT
-STDCALL
+WINAPI
 GetTextAlign(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -524,7 +524,7 @@ GetTextAlign(HDC hdc)
  *
  */
 COLORREF
-STDCALL
+WINAPI
 GetTextColor(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -538,7 +538,7 @@ GetTextColor(HDC hdc)
  * @unimplemented
  */
 UINT
-STDCALL
+WINAPI
 SetTextAlign(HDC hdc,
              UINT fMode)
 {
@@ -582,7 +582,7 @@ SetTextAlign(HDC hdc,
  * @implemented
  */
 COLORREF
-STDCALL
+WINAPI
 SetTextColor(
 	HDC hdc,
 	COLORREF crColor
@@ -627,7 +627,7 @@ SetTextColor(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetTextJustification(
 	HDC	hdc,
 	int	extra,

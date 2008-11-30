@@ -22,7 +22,7 @@ extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsBadReadPtr(IN LPCVOID lp,
              IN UINT_PTR ucb)
 {

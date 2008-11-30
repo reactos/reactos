@@ -120,8 +120,8 @@ static const signed char LTRBInnerFlat[] = {
 /* FUNCTIONS *****************************************************************/
 
 
-HPEN STDCALL GetSysColorPen(int nIndex);
-HBRUSH STDCALL GetSysColorBrush(int nIndex);
+HPEN WINAPI GetSysColorPen(int nIndex);
+HBRUSH WINAPI GetSysColorBrush(int nIndex);
 
 /* Ported from WINE20020904 */
 /* Same as DrawEdge invoked with BF_DIAGONAL */
@@ -1314,7 +1314,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 
 
 BOOL
-STDCALL
+WINAPI
 IntGrayString(
     HDC hDC,
     HBRUSH hBrush,
@@ -1708,7 +1708,7 @@ cleanup:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
     if (GetMapMode(hDC) != MM_TEXT)
@@ -1736,7 +1736,7 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DrawEdge(HDC hDC, LPRECT rc, UINT edge, UINT flags)
 {
     if (flags & BF_DIAGONAL)
@@ -1748,7 +1748,7 @@ DrawEdge(HDC hDC, LPRECT rc, UINT edge, UINT flags)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GrayStringA(HDC hDC, HBRUSH hBrush, GRAYSTRINGPROC lpOutputFunc, LPARAM lpData,
             int nCount, int X, int Y, int nWidth, int nHeight)
 {
@@ -1758,7 +1758,7 @@ GrayStringA(HDC hDC, HBRUSH hBrush, GRAYSTRINGPROC lpOutputFunc, LPARAM lpData,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GrayStringW(HDC hDC, HBRUSH hBrush, GRAYSTRINGPROC lpOutputFunc, LPARAM lpData,
             int nCount, int X, int Y, int nWidth, int nHeight)
 {
@@ -1768,7 +1768,7 @@ GrayStringW(HDC hDC, HBRUSH hBrush, GRAYSTRINGPROC lpOutputFunc, LPARAM lpData,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 InvertRect(HDC hDC, CONST RECT *lprc)
 {
     return PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
@@ -1778,7 +1778,7 @@ InvertRect(HDC hDC, CONST RECT *lprc)
 /*
  * @implemented
  */
-INT STDCALL
+INT WINAPI
 FrameRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
     HBRUSH oldbrush;
@@ -1799,7 +1799,7 @@ FrameRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 FlashWindow(HWND hWnd, BOOL bInvert)
 {
     UNIMPLEMENTED;
@@ -1809,7 +1809,7 @@ FlashWindow(HWND hWnd, BOOL bInvert)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 FlashWindowEx(PFLASHWINFO pfwi)
 {
     UNIMPLEMENTED;
@@ -1819,7 +1819,7 @@ FlashWindowEx(PFLASHWINFO pfwi)
 /*
  * @implemented
  */
-INT STDCALL
+INT WINAPI
 FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
     HBRUSH prevhbr;
@@ -1841,7 +1841,7 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DrawAnimatedRects(HWND hWnd, int idAni, CONST RECT *lprcFrom,
                   CONST RECT *lprcTo)
 {
@@ -1852,7 +1852,7 @@ DrawAnimatedRects(HWND hWnd, int idAni, CONST RECT *lprcFrom,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DrawFocusRect(HDC hdc, CONST RECT *rect)
 {
     static HBRUSH hFocusRectBrush = NULL;
@@ -1889,7 +1889,7 @@ DrawFocusRect(HDC hdc, CONST RECT *rect)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DrawStateA(HDC hDC, HBRUSH hBrush, DRAWSTATEPROC lpOutputFunc, LPARAM lData,
            WPARAM wData, int x, int y, int cx, int cy, UINT fuFlags)
 {
@@ -1899,7 +1899,7 @@ DrawStateA(HDC hDC, HBRUSH hBrush, DRAWSTATEPROC lpOutputFunc, LPARAM lData,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DrawStateW(HDC hDC, HBRUSH hBrush, DRAWSTATEPROC lpOutputFunc, LPARAM lData,
            WPARAM wData, int x, int y, int cx, int cy, UINT fuFlags)
 {

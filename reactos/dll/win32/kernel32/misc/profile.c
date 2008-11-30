@@ -1871,7 +1871,7 @@ CloseProfileUserMapping(VOID)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 QueryWin31IniFilesMappedToRegistry(DWORD Unknown0,
                                    DWORD Unknown1,
                                    DWORD Unknown2,

@@ -110,7 +110,7 @@ ExtCreatePen(DWORD dwPenStyle,
 /*
  * @implemented
  */
-HBRUSH STDCALL
+HBRUSH WINAPI
 CreateDIBPatternBrush(
    HGLOBAL hglbDIBPacked,
    UINT fuColorSpec)
@@ -142,7 +142,7 @@ CreateDIBPatternBrush(
 /*
  * @implemented
  */
-HBRUSH STDCALL
+HBRUSH WINAPI
 CreateDIBPatternBrushPt(
    CONST VOID *lpPackedDIB,
    UINT fuColorSpec)
@@ -171,7 +171,7 @@ CreateDIBPatternBrushPt(
  * @implemented
  */
 HBRUSH
-STDCALL
+WINAPI
 CreateHatchBrush(INT fnStyle,
                  COLORREF clrref)
 {
@@ -182,7 +182,7 @@ CreateHatchBrush(INT fnStyle,
  * @implemented
  */
 HBRUSH
-STDCALL
+WINAPI
 CreatePatternBrush(HBITMAP hbmp)
 {
     return NtGdiCreatePatternBrushInternal(hbmp, FALSE, FALSE);
@@ -192,7 +192,7 @@ CreatePatternBrush(HBITMAP hbmp)
  * @implemented
  */
 HBRUSH
-STDCALL
+WINAPI
 CreateSolidBrush(IN COLORREF crColor)
 {
     /* Call Server-Side API */
@@ -202,7 +202,7 @@ CreateSolidBrush(IN COLORREF crColor)
 /*
  * @implemented
  */
-HBRUSH STDCALL
+HBRUSH WINAPI
 CreateBrushIndirect(
    CONST LOGBRUSH *LogBrush)
 {
@@ -257,7 +257,7 @@ CreateBrushIndirect(
 }
 
 BOOL
-STDCALL
+WINAPI
 PatBlt(HDC hdc,
        int nXLeft,
        int nYLeft,
@@ -270,7 +270,7 @@ PatBlt(HDC hdc,
 }
 
 BOOL
-STDCALL
+WINAPI
 PolyPatBlt(IN HDC hdc,
            IN DWORD rop4,
            IN PPOLYPATBLT pPoly,
@@ -286,7 +286,7 @@ PolyPatBlt(IN HDC hdc,
  *
  */
 int
-STDCALL
+WINAPI
 GetROP2(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -298,7 +298,7 @@ GetROP2(HDC hdc)
  * @implemented
  */
 int
-STDCALL
+WINAPI
 SetROP2(HDC hdc,
         int fnDrawMode)
 {
@@ -349,7 +349,7 @@ SetROP2(HDC hdc,
  *
  */
 BOOL
-STDCALL
+WINAPI
 GetBrushOrgEx(HDC hdc,LPPOINT pt)
 {
   PDC_ATTR Dc_Attr;
@@ -367,7 +367,7 @@ GetBrushOrgEx(HDC hdc,LPPOINT pt)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetBrushOrgEx(HDC hdc,
               int nXOrg,
               int nYOrg,

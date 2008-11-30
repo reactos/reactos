@@ -44,11 +44,11 @@ static RTL_CRITICAL_SECTION CodePageListLock;
 
 /* FORWARD DECLARATIONS *******************************************************/
 
-BOOL STDCALL
+BOOL WINAPI
 GetNlsSectionName(UINT CodePage, UINT Base, ULONG Unknown,
                   LPSTR BaseName, LPSTR Result, ULONG ResultSize);
 
-BOOL STDCALL
+BOOL WINAPI
 GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize);
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -334,7 +334,7 @@ IntGetCodePageEntry(UINT CodePage)
 
 static
 INT
-STDCALL
+WINAPI
 IntMultiByteToWideCharUTF8(DWORD Flags,
                            LPCSTR MultiByteString,
                            INT MultiByteCount,
@@ -403,7 +403,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
 
 static
 INT
-STDCALL
+WINAPI
 IntMultiByteToWideCharCP(UINT CodePage,
                          DWORD Flags,
                          LPCSTR MultiByteString,
@@ -535,7 +535,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
 
 static
 INT
-STDCALL 
+WINAPI 
 IntMultiByteToWideCharSYMBOL(DWORD Flags, 
                              LPCSTR MultiByteString,
                              INT MultiByteCount, 
@@ -590,7 +590,7 @@ IntMultiByteToWideCharSYMBOL(DWORD Flags,
  */
 
 static INT
-STDCALL
+WINAPI
 IntWideCharToMultiByteSYMBOL(DWORD Flags,
                              LPCWSTR WideCharString,
                              INT WideCharCount,
@@ -651,7 +651,7 @@ IntWideCharToMultiByteSYMBOL(DWORD Flags,
  */
 
 static INT
-STDCALL
+WINAPI
 IntWideCharToMultiByteUTF8(UINT CodePage,
                            DWORD Flags,
                            LPCWSTR WideCharString,
@@ -791,7 +791,7 @@ IntIsValidDBCSMapping(PCPTABLEINFO CodePageTable, DWORD Flags, WCHAR wch, USHORT
  */
 static
 INT
-STDCALL
+WINAPI
 IntWideCharToMultiByteCP(UINT CodePage,
                          DWORD Flags,
                          LPCWSTR WideCharString,
@@ -1063,7 +1063,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
  */
 
 static BOOL
-STDCALL
+WINAPI
 IntIsLeadByte(PCPTABLEINFO TableInfo, BYTE Byte)
 {
     UINT LeadByteNo;
@@ -1110,7 +1110,7 @@ IntIsLeadByte(PCPTABLEINFO TableInfo, BYTE Byte)
  */
 
 BOOL
-STDCALL
+WINAPI
 GetNlsSectionName(UINT CodePage,
                   UINT Base,
                   ULONG Unknown,
@@ -1155,7 +1155,7 @@ GetNlsSectionName(UINT CodePage,
  */
 
 BOOL
-STDCALL
+WINAPI
 GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
 {
     WCHAR ValueNameBuffer[11];
@@ -1231,7 +1231,7 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
  */
 
 BOOL
-STDCALL
+WINAPI
 IsValidCodePage(UINT CodePage)
 {
     if (CodePage == CP_UTF8 || CodePage == CP_UTF7)
@@ -1273,7 +1273,7 @@ IsValidCodePage(UINT CodePage)
  */
 
 INT
-STDCALL
+WINAPI
 MultiByteToWideChar(UINT CodePage,
                     DWORD Flags,
                     LPCSTR MultiByteString,
@@ -1365,7 +1365,7 @@ MultiByteToWideChar(UINT CodePage,
  */
 
 INT
-STDCALL
+WINAPI
 WideCharToMultiByte(UINT CodePage,
                     DWORD Flags,
                     LPCWSTR WideCharString,
@@ -1440,7 +1440,7 @@ WideCharToMultiByte(UINT CodePage,
  */
 
 UINT
-STDCALL
+WINAPI
 GetACP(VOID)
 {
     return AnsiCodePage.CodePageTable.CodePage;
@@ -1455,7 +1455,7 @@ GetACP(VOID)
  */
 
 UINT
-STDCALL
+WINAPI
 GetOEMCP(VOID)
 {
     return OemCodePage.CodePageTable.CodePage;
@@ -1470,7 +1470,7 @@ GetOEMCP(VOID)
  */
 
 BOOL
-STDCALL
+WINAPI
 IsDBCSLeadByteEx(UINT CodePage, BYTE TestByte)
 {
     PCODEPAGE_ENTRY CodePageEntry;
@@ -1492,7 +1492,7 @@ IsDBCSLeadByteEx(UINT CodePage, BYTE TestByte)
  */
 
 BOOL
-STDCALL
+WINAPI
 IsDBCSLeadByte(BYTE TestByte)
 {
     return IntIsLeadByte(&AnsiCodePage.CodePageTable, TestByte);

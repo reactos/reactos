@@ -83,7 +83,7 @@ DereferencePolicyHandle(IN OUT PLSAR_POLICY_HANDLE Policy,
 }
 
 
-DWORD STDCALL
+DWORD WINAPI
 LsapRpcThreadRoutine(LPVOID lpParameter)
 {
     RPC_STATUS Status;

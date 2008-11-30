@@ -150,11 +150,11 @@ typedef struct _USER32_THREAD_DATA
 PUSER32_THREAD_DATA User32GetThreadData();
 
 DEVMODEW *
-STDCALL
+WINAPI
 GdiConvertToDevmodeW(DEVMODEA *dm);
 
 /* FIXME: Belongs to some header. */
-BOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);
+BOOL WINAPI GdiDllInitialize(HANDLE, DWORD, LPVOID);
 void InitStockObjects(void);
 VOID DeleteFrameBrushes(VOID);
 

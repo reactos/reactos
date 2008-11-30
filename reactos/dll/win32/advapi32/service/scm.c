@@ -329,7 +329,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ChangeServiceConfigA(SC_HANDLE hService,
                      DWORD dwServiceType,
                      DWORD dwStartType,
@@ -403,7 +403,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ChangeServiceConfigW(SC_HANDLE hService,
                      DWORD dwServiceType,
                      DWORD dwStartType,
@@ -477,7 +477,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CloseServiceHandle(SC_HANDLE hSCObject)
 {
     DWORD dwError;
@@ -513,7 +513,7 @@ CloseServiceHandle(SC_HANDLE hSCObject)
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ControlService(SC_HANDLE hService,
                DWORD dwControl,
                LPSERVICE_STATUS lpServiceStatus)
@@ -554,7 +554,7 @@ ControlService(SC_HANDLE hService,
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ControlServiceEx(IN SC_HANDLE hService,
                  IN DWORD dwControl,
                  IN DWORD dwInfoLevel,
@@ -572,7 +572,7 @@ ControlServiceEx(IN SC_HANDLE hService,
  *
  * @implemented
  */
-SC_HANDLE STDCALL
+SC_HANDLE WINAPI
 CreateServiceA(SC_HANDLE hSCManager,
                LPCSTR lpServiceName,
                LPCSTR lpDisplayName,
@@ -737,7 +737,7 @@ cleanup:
  *
  * @implemented
  */
-SC_HANDLE STDCALL
+SC_HANDLE WINAPI
 CreateServiceW(SC_HANDLE hSCManager,
                LPCWSTR lpServiceName,
                LPCWSTR lpDisplayName,
@@ -819,7 +819,7 @@ CreateServiceW(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DeleteService(SC_HANDLE hService)
 {
     DWORD dwError;
@@ -853,7 +853,7 @@ DeleteService(SC_HANDLE hService)
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumDependentServicesA(SC_HANDLE hService,
                        DWORD dwServiceState,
                        LPENUM_SERVICE_STATUSA lpServices,
@@ -914,7 +914,7 @@ EnumDependentServicesA(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumDependentServicesW(SC_HANDLE hService,
                        DWORD dwServiceState,
                        LPENUM_SERVICE_STATUSW lpServices,
@@ -976,7 +976,7 @@ EnumDependentServicesW(SC_HANDLE hService,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumServiceGroupW(
     SC_HANDLE               hSCManager,
     DWORD                   dwServiceType,
@@ -999,7 +999,7 @@ EnumServiceGroupW(
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumServicesStatusA(SC_HANDLE hSCManager,
                     DWORD dwServiceType,
                     DWORD dwServiceState,
@@ -1064,7 +1064,7 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumServicesStatusW(SC_HANDLE hSCManager,
                     DWORD dwServiceType,
                     DWORD dwServiceState,
@@ -1129,7 +1129,7 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumServicesStatusExA(SC_HANDLE hSCManager,
                       SC_ENUM_TYPE InfoLevel,
                       DWORD dwServiceType,
@@ -1206,7 +1206,7 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumServicesStatusExW(SC_HANDLE hSCManager,
                       SC_ENUM_TYPE InfoLevel,
                       DWORD dwServiceType,
@@ -1283,7 +1283,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetServiceDisplayNameA(SC_HANDLE hSCManager,
                        LPCSTR lpServiceName,
                        LPSTR lpDisplayName,
@@ -1328,7 +1328,7 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetServiceDisplayNameW(SC_HANDLE hSCManager,
                        LPCWSTR lpServiceName,
                        LPWSTR lpDisplayName,
@@ -1370,7 +1370,7 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetServiceKeyNameA(SC_HANDLE hSCManager,
                    LPCSTR lpDisplayName,
                    LPSTR lpServiceName,
@@ -1412,7 +1412,7 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetServiceKeyNameW(SC_HANDLE hSCManager,
                    LPCWSTR lpDisplayName,
                    LPWSTR lpServiceName,
@@ -1454,7 +1454,7 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-SC_LOCK STDCALL
+SC_LOCK WINAPI
 LockServiceDatabase(SC_HANDLE hSCManager)
 {
     SC_LOCK hLock;
@@ -1532,7 +1532,7 @@ WaitForSCManager(VOID)
  *
  * @implemented
  */
-SC_HANDLE STDCALL
+SC_HANDLE WINAPI
 OpenSCManagerA(LPCSTR lpMachineName,
                LPCSTR lpDatabaseName,
                DWORD dwDesiredAccess)
@@ -1577,7 +1577,7 @@ OpenSCManagerA(LPCSTR lpMachineName,
  *
  * @implemented
  */
-SC_HANDLE STDCALL
+SC_HANDLE WINAPI
 OpenSCManagerW(LPCWSTR lpMachineName,
                LPCWSTR lpDatabaseName,
                DWORD dwDesiredAccess)
@@ -1622,7 +1622,7 @@ OpenSCManagerW(LPCWSTR lpMachineName,
  *
  * @implemented
  */
-SC_HANDLE STDCALL
+SC_HANDLE WINAPI
 OpenServiceA(SC_HANDLE hSCManager,
              LPCSTR lpServiceName,
              DWORD dwDesiredAccess)
@@ -1665,7 +1665,7 @@ OpenServiceA(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-SC_HANDLE STDCALL
+SC_HANDLE WINAPI
 OpenServiceW(SC_HANDLE hSCManager,
              LPCWSTR lpServiceName,
              DWORD dwDesiredAccess)
@@ -1711,7 +1711,7 @@ OpenServiceW(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceConfigA(SC_HANDLE hService,
                     LPQUERY_SERVICE_CONFIGA lpServiceConfig,
                     DWORD cbBufSize,
@@ -1780,7 +1780,7 @@ QueryServiceConfigA(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceConfigW(SC_HANDLE hService,
                     LPQUERY_SERVICE_CONFIGW lpServiceConfig,
                     DWORD cbBufSize,
@@ -1852,7 +1852,7 @@ QueryServiceConfigW(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceConfig2A(SC_HANDLE hService,
                      DWORD dwInfoLevel,
                      LPBYTE lpBuffer,
@@ -1947,7 +1947,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceConfig2W(SC_HANDLE hService,
                      DWORD dwInfoLevel,
                      LPBYTE lpBuffer,
@@ -2042,7 +2042,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceLockStatusA(SC_HANDLE hSCManager,
                         LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
                         DWORD cbBufSize,
@@ -2090,7 +2090,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceLockStatusW(SC_HANDLE hSCManager,
                         LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
                         DWORD cbBufSize,
@@ -2138,7 +2138,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceObjectSecurity(SC_HANDLE hService,
                            SECURITY_INFORMATION dwSecurityInformation,
                            PSECURITY_DESCRIPTOR lpSecurityDescriptor,
@@ -2180,7 +2180,7 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetServiceObjectSecurity(SC_HANDLE hService,
                          SECURITY_INFORMATION dwSecurityInformation,
                          PSECURITY_DESCRIPTOR lpSecurityDescriptor)
@@ -2249,7 +2249,7 @@ SetServiceObjectSecurity(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceStatus(SC_HANDLE hService,
                    LPSERVICE_STATUS lpServiceStatus)
 {
@@ -2286,7 +2286,7 @@ QueryServiceStatus(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryServiceStatusEx(SC_HANDLE hService,
                      SC_STATUS_TYPE InfoLevel,
                      LPBYTE lpBuffer,
@@ -2328,7 +2328,7 @@ QueryServiceStatusEx(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 StartServiceA(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCSTR *lpServiceArgVectors)
@@ -2363,7 +2363,7 @@ StartServiceA(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 StartServiceW(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCWSTR *lpServiceArgVectors)
@@ -2398,7 +2398,7 @@ StartServiceW(SC_HANDLE hService,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 UnlockServiceDatabase(SC_LOCK ScLock)
 {
     DWORD dwError;
@@ -2432,7 +2432,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 NotifyBootConfigStatus(BOOL BootAcceptable)
 {
     DWORD dwError;

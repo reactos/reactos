@@ -31,7 +31,7 @@ extern BOOLEAN InWindows;
  * @remarks Returned pointer must be freed by caller.
  */
 
-LPWSTR STDCALL
+LPWSTR WINAPI
 GetDllLoadPath(LPCWSTR lpModule)
 {
 	ULONG Pos = 0, Length = 0;
@@ -98,7 +98,7 @@ GetDllLoadPath(LPCWSTR lpModule)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DisableThreadLibraryCalls (
 	HMODULE	hLibModule
 	)
@@ -119,7 +119,7 @@ DisableThreadLibraryCalls (
  * @implemented
  */
 HINSTANCE
-STDCALL
+WINAPI
 LoadLibraryA (
 	LPCSTR	lpLibFileName
 	)
@@ -132,7 +132,7 @@ LoadLibraryA (
  * @implemented
  */
 HINSTANCE
-STDCALL
+WINAPI
 LoadLibraryExA (
 	LPCSTR	lpLibFileName,
 	HANDLE	hFile,
@@ -152,7 +152,7 @@ LoadLibraryExA (
  * @implemented
  */
 HINSTANCE
-STDCALL
+WINAPI
 LoadLibraryW (
 	LPCWSTR	lpLibFileName
 	)
@@ -165,7 +165,7 @@ LoadLibraryW (
  * @implemented
  */
 HINSTANCE
-STDCALL
+WINAPI
 LoadLibraryExW (
 	LPCWSTR	lpLibFileName,
 	HANDLE	hFile,
@@ -241,7 +241,7 @@ LoadLibraryExW (
  * @implemented
  */
 FARPROC
-STDCALL
+WINAPI
 GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 {
 	ANSI_STRING ProcedureName;
@@ -279,7 +279,7 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FreeLibrary( HMODULE hLibModule )
 {
 	LdrUnloadDll(hLibModule);
@@ -291,7 +291,7 @@ FreeLibrary( HMODULE hLibModule )
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 FreeLibraryAndExitThread (
 	HMODULE	hLibModule,
 	DWORD	dwExitCode
@@ -308,7 +308,7 @@ FreeLibraryAndExitThread (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetModuleFileNameA (
 	HINSTANCE	hModule,
 	LPSTR		lpFilename,
@@ -374,7 +374,7 @@ GetModuleFileNameA (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetModuleFileNameW (
 	HINSTANCE	hModule,
 	LPWSTR		lpFilename,
@@ -433,7 +433,7 @@ GetModuleFileNameW (
  * @implemented
  */
 HMODULE
-STDCALL
+WINAPI
 GetModuleHandleA ( LPCSTR lpModuleName )
 {
 	ANSI_STRING ModuleName;
@@ -465,7 +465,7 @@ GetModuleHandleA ( LPCSTR lpModuleName )
  * @implemented
  */
 HMODULE
-STDCALL
+WINAPI
 GetModuleHandleW (LPCWSTR lpModuleName)
 {
 	UNICODE_STRING ModuleName;
@@ -496,7 +496,7 @@ GetModuleHandleW (LPCWSTR lpModuleName)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetModuleHandleExW(IN DWORD dwFlags,
                    IN LPCWSTR lpModuleName  OPTIONAL,
                    OUT HMODULE* phModule)
@@ -563,7 +563,7 @@ GetModuleHandleExW(IN DWORD dwFlags,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetModuleHandleExA(IN DWORD dwFlags,
                    IN LPCSTR lpModuleName  OPTIONAL,
                    OUT HMODULE* phModule)
@@ -608,7 +608,7 @@ GetModuleHandleExA(IN DWORD dwFlags,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 LoadModule (
     LPCSTR  lpModuleName,
     LPVOID  lpParameterBlock

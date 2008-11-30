@@ -186,7 +186,7 @@ InternalCopyFindDataA(LPWIN32_FIND_DATAA            lpFindFileData,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 InternalFindNextFile (
     HANDLE	hFindFile,
     PUNICODE_STRING SearchPattern,
@@ -334,7 +334,7 @@ NeedMoreData:
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 InternalFindFirstFile (
     LPCWSTR	lpFileName,
     BOOLEAN DirectoryOnly,
@@ -554,7 +554,7 @@ InternalFindFirstFile (
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstFileA (
 	LPCSTR			lpFileName,
 	LPWIN32_FIND_DATAA	lpFindFileData
@@ -573,7 +573,7 @@ FindFirstFileA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FindNextFileA (
 	HANDLE hFindFile,
 	LPWIN32_FIND_DATAA lpFindFileData)
@@ -589,7 +589,7 @@ FindNextFileA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FindClose (
 	HANDLE	hFindFile
 	)
@@ -646,7 +646,7 @@ FindClose (
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstFileW (
 	LPCWSTR			lpFileName,
 	LPWIN32_FIND_DATAW	lpFindFileData
@@ -664,7 +664,7 @@ FindFirstFileW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FindNextFileW (
 	HANDLE			hFindFile,
 	LPWIN32_FIND_DATAW	lpFindFileData
@@ -681,7 +681,7 @@ FindNextFileW (
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstFileExW (LPCWSTR               lpFileName,
                   FINDEX_INFO_LEVELS    fInfoLevelId,
                   LPVOID                lpFindFileData,
@@ -717,7 +717,7 @@ FindFirstFileExW (LPCWSTR               lpFileName,
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstFileExA (
 	LPCSTR			lpFileName,
 	FINDEX_INFO_LEVELS	fInfoLevelId,

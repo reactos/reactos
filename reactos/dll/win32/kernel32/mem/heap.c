@@ -254,7 +254,7 @@ HeapUsage(HANDLE hHeap,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 HeapWalk(HANDLE	hHeap,
          LPPROCESS_HEAP_ENTRY lpEntry)
 {

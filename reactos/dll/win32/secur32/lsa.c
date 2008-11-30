@@ -24,7 +24,7 @@ extern HANDLE Secur32Heap;
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaDeregisterLogonProcess(HANDLE LsaHandle)
 {
    LSASS_REQUEST Request;
@@ -53,7 +53,7 @@ LsaDeregisterLogonProcess(HANDLE LsaHandle)
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaConnectUntrusted(PHANDLE LsaHandle)
 {
   UNIMPLEMENTED;
@@ -63,7 +63,7 @@ LsaConnectUntrusted(PHANDLE LsaHandle)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaCallAuthenticationPackage(HANDLE LsaHandle,
 			     ULONG AuthenticationPackage,
 			     PVOID ProtocolSubmitBuffer,
@@ -124,7 +124,7 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaFreeReturnBuffer(PVOID Buffer)
 {
    return(RtlFreeHeap(Secur32Heap, 0, Buffer));
@@ -134,7 +134,7 @@ LsaFreeReturnBuffer(PVOID Buffer)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaLookupAuthenticationPackage(HANDLE LsaHandle,
 			       PLSA_STRING PackageName,
 			       PULONG AuthenticationPackage)
@@ -172,7 +172,7 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaLogonUser(HANDLE LsaHandle,
 	     PLSA_STRING OriginName,
 	     SECURITY_LOGON_TYPE LogonType,
@@ -276,7 +276,7 @@ LsaLogonUser(HANDLE LsaHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
 			PHANDLE Handle,
 			PLSA_OPERATIONAL_MODE OperationalMode)
@@ -337,7 +337,7 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaEnumerateLogonSessions(
 PULONG LogonSessionCount,
 PLUID * LogonSessionList
@@ -351,7 +351,7 @@ PLUID * LogonSessionList
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaGetLogonSessionData(
 PLUID LogonId,
 PSECURITY_LOGON_SESSION_DATA * ppLogonSessionData
@@ -365,7 +365,7 @@ PSECURITY_LOGON_SESSION_DATA * ppLogonSessionData
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaRegisterPolicyChangeNotification(
 POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
 HANDLE NotificationEventHandle
@@ -379,7 +379,7 @@ HANDLE NotificationEventHandle
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaUnregisterPolicyChangeNotification(
 POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
 HANDLE NotificationEventHandle

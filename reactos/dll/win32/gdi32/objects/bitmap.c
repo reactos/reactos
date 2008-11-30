@@ -65,7 +65,7 @@ DIB_BitmapBitsSize( PBITMAPINFO Info )
  * did not calc the info right for some headers.
  */
 INT
-STDCALL
+WINAPI
 DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
                   PLONG width,
                   PLONG height,
@@ -128,7 +128,7 @@ DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP WINAPI
 CreateDIBSection(
    HDC hDC,
    CONST BITMAPINFO *BitmapInfo,
@@ -186,7 +186,7 @@ CreateDIBSection(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 BitBlt(HDC hdcDest,      /* handle to destination DC */
        int nXOriginDest, /* x-coord of destination upper-left corner */
        int nYOriginDest, /* y-coord of destination upper-left corner */
@@ -219,7 +219,7 @@ BitBlt(HDC hdcDest,      /* handle to destination DC */
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 StretchBlt(
    HDC hdcDest,      /* handle to destination DC */
    int nXOriginDest, /* x-coord of destination upper-left corner */
@@ -248,7 +248,7 @@ StretchBlt(
 /*
  * @unimplemented
  */
-HBITMAP STDCALL
+HBITMAP WINAPI
 CreateBitmap(INT  Width,
              INT  Height,
              UINT  Planes,
@@ -342,7 +342,7 @@ CreateCompatibleBitmap(
 
 
 INT
-STDCALL
+WINAPI
 GetDIBits(
     HDC hDC,
     HBITMAP hbmp,
@@ -402,7 +402,7 @@ GetDIBits(
  * @implemented
  */
 HBITMAP
-STDCALL
+WINAPI
 CreateDIBitmap( HDC hDC,
                 const BITMAPINFOHEADER *Header,
                 DWORD Init,
@@ -484,7 +484,7 @@ Exit:
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 SetDIBits(HDC hDC,
           HBITMAP hBitmap,
           UINT uStartScan,
@@ -574,7 +574,7 @@ SetDIBits(HDC hDC,
 #endif
 
 INT
-STDCALL
+WINAPI
 SetDIBits(HDC hdc,
           HBITMAP hbmp,
           UINT uStartScan,
@@ -631,7 +631,7 @@ SetDIBits(HDC hdc,
  *
  */
 INT
-STDCALL
+WINAPI
 SetDIBitsToDevice(
     HDC hdc,
     int XDest,
@@ -758,7 +758,7 @@ SetDIBitsToDevice(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 StretchDIBits(HDC hdc,
               int XDest,
               int YDest,

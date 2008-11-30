@@ -55,7 +55,7 @@ CreateNamedPipeA(LPCSTR lpName,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateNamedPipeW(LPCWSTR lpName,
                  DWORD dwOpenMode,
                  DWORD dwPipeMode,

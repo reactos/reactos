@@ -15,7 +15,7 @@
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DllMain(HINSTANCE InstDLL,
         DWORD Reason,
         LPVOID Reserved)
@@ -28,7 +28,7 @@ DllMain(HINSTANCE InstDLL,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AbortPrinter(HANDLE Printer)
 {
   OutputDebugStringW(L"winspool AbortPrinter stub called\n");
@@ -42,7 +42,7 @@ AbortPrinter(HANDLE Printer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddFormA(HANDLE Printer, DWORD Level, PBYTE Form)
 {
   OutputDebugStringW(L"winspool AddFormA stub called\n");
@@ -56,7 +56,7 @@ AddFormA(HANDLE Printer, DWORD Level, PBYTE Form)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddFormW(HANDLE Printer, DWORD Level, PBYTE Form)
 {
   OutputDebugStringW(L"winspool AddFormW stub called\n");
@@ -70,7 +70,7 @@ AddFormW(HANDLE Printer, DWORD Level, PBYTE Form)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddJobA(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool AddJobA stub called\n");
@@ -84,7 +84,7 @@ AddJobA(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddJobW(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool AddJobW stub called\n");
@@ -100,7 +100,7 @@ AddJobW(HANDLE Printer, DWORD Level, PBYTE Data, DWORD BufSize, PDWORD Needed)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddPortA(LPSTR Name, HWND Wnd, LPSTR MonitorName)
 {
   OutputDebugStringW(L"winspool  stub called\n");
@@ -114,7 +114,7 @@ AddPortA(LPSTR Name, HWND Wnd, LPSTR MonitorName)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddPortW(LPWSTR Name, HWND Wnd, LPWSTR MonitorName)
 {
   OutputDebugStringW(L"winspool AddPortW stub called\n");
@@ -128,7 +128,7 @@ AddPortW(LPWSTR Name, HWND Wnd, LPWSTR MonitorName)
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 AddPrinterA(LPSTR Name, DWORD Level, PBYTE Buffer)
 {
   OutputDebugStringW(L"winspool AddPrinterA stub called\n");
@@ -142,7 +142,7 @@ AddPrinterA(LPSTR Name, DWORD Level, PBYTE Buffer)
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 AddPrinterW(LPWSTR Name, DWORD Level, PBYTE Buffer)
 {
   OutputDebugStringW(L"winspool AddPrinterW stub called\n");
@@ -156,7 +156,7 @@ AddPrinterW(LPWSTR Name, DWORD Level, PBYTE Buffer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddPrinterConnectionA(LPSTR Name)
 {
   OutputDebugStringW(L"winspool AddPrinterConnectionA stub called\n");
@@ -170,7 +170,7 @@ AddPrinterConnectionA(LPSTR Name)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddPrinterConnectionW(LPWSTR Name)
 {
   OutputDebugStringW(L"winspool AddPrinterConnectionW stub called\n");
@@ -184,7 +184,7 @@ AddPrinterConnectionW(LPWSTR Name)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddPrinterDriverA(LPSTR Name, DWORD Level, PBYTE Buffer)
 {
   OutputDebugStringW(L"winspool AddPrinterDriverA stub called\n");
@@ -198,7 +198,7 @@ AddPrinterDriverA(LPSTR Name, DWORD Level, PBYTE Buffer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddPrinterDriverW(LPWSTR Name, DWORD Level, PBYTE Buffer)
 {
   OutputDebugStringW(L"winspool AddPrinterDriverW stub called\n");
@@ -212,7 +212,7 @@ AddPrinterDriverW(LPWSTR Name, DWORD Level, PBYTE Buffer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddPrintProcessorA(LPSTR Name, LPSTR Environment, LPSTR PathName, LPSTR PrintProcessorName)
 {
   OutputDebugStringW(L"winspool AddPrintProcessorA stub called\n");
@@ -226,7 +226,7 @@ AddPrintProcessorA(LPSTR Name, LPSTR Environment, LPSTR PathName, LPSTR PrintPro
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddPrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PathName, LPWSTR PrintProcessorName)
 {
   OutputDebugStringW(L"winspool AddPrintProcessorW stub called\n");
@@ -239,7 +239,7 @@ AddPrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PathName, LPWSTR Prin
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 AdvancedDocumentPropertiesA(HWND Wnd, HANDLE Printer, LPSTR DeviceName, PDEVMODEA DevModeOut, PDEVMODEA DevModeIn)
 {
   OutputDebugStringW(L"winspool AdvancedDocumentPropertiesA stub called\n");
@@ -253,7 +253,7 @@ AdvancedDocumentPropertiesA(HWND Wnd, HANDLE Printer, LPSTR DeviceName, PDEVMODE
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 AdvancedDocumentPropertiesW(HWND Wnd, HANDLE Printer, LPWSTR DeviceName, PDEVMODEW DevModeOut, PDEVMODEW DevModeIn)
 {
   OutputDebugStringW(L"winspool AdvancedDocumentPropertiesW stub called\n");
@@ -267,7 +267,7 @@ AdvancedDocumentPropertiesW(HWND Wnd, HANDLE Printer, LPWSTR DeviceName, PDEVMOD
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ClosePrinter(HANDLE Printer)
 {
   OutputDebugStringW(L"winspool ClosePrinter stub called\n");
@@ -281,7 +281,7 @@ ClosePrinter(HANDLE Printer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ConfigurePortA(LPSTR Name, HWND Wnd, LPSTR PortName)
 {
   OutputDebugStringW(L"winspool ConfigurePortA stub called\n");
@@ -295,7 +295,7 @@ ConfigurePortA(LPSTR Name, HWND Wnd, LPSTR PortName)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ConfigurePortW(LPWSTR Name, HWND Wnd, LPWSTR PortName)
 {
   OutputDebugStringW(L"winspool ConfigurePortW stub called\n");
@@ -309,7 +309,7 @@ ConfigurePortW(LPWSTR Name, HWND Wnd, LPWSTR PortName)
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 ConnectToPrinterDlg(HWND Wnd, DWORD Flags)
 {
   OutputDebugStringW(L"winspool ConnectToPrinterDlg stub called\n");
@@ -323,7 +323,7 @@ ConnectToPrinterDlg(HWND Wnd, DWORD Flags)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeleteFormA(HANDLE Printer, LPSTR Name)
 {
   OutputDebugStringW(L"winspool DeleteFormA stub called\n");
@@ -337,7 +337,7 @@ DeleteFormA(HANDLE Printer, LPSTR Name)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeleteFormW(HANDLE Printer, LPWSTR Name)
 {
   OutputDebugStringW(L"winspool DeleteFormW stub called\n");
@@ -351,7 +351,7 @@ DeleteFormW(HANDLE Printer, LPWSTR Name)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeleteMonitorA(LPSTR Name, LPSTR Environment, LPSTR MonitorName)
 {
   OutputDebugStringW(L"winspool DeleteMonitorA stub called\n");
@@ -365,7 +365,7 @@ DeleteMonitorA(LPSTR Name, LPSTR Environment, LPSTR MonitorName)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeleteMonitorW(LPWSTR Name, LPWSTR Environment, LPWSTR MonitorName)
 {
   OutputDebugStringW(L"winspool DeleteMonitorW stub called\n");
@@ -379,7 +379,7 @@ DeleteMonitorW(LPWSTR Name, LPWSTR Environment, LPWSTR MonitorName)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePortA(LPSTR Name, HWND Wnd, LPSTR PortName)
 {
   OutputDebugStringW(L"winspool DeletePortA stub called\n");
@@ -393,7 +393,7 @@ DeletePortA(LPSTR Name, HWND Wnd, LPSTR PortName)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePortW(LPWSTR Name, HWND Wnd, LPWSTR PortName)
 {
   OutputDebugStringW(L"winspool DeletePortW stub called\n");
@@ -407,7 +407,7 @@ DeletePortW(LPWSTR Name, HWND Wnd, LPWSTR PortName)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrinter(HANDLE Printer)
 {
   OutputDebugStringW(L"winspool DeletePrinter stub called\n");
@@ -421,7 +421,7 @@ DeletePrinter(HANDLE Printer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrinterConnectionA(LPSTR Name)
 {
   OutputDebugStringW(L"winspool DeletePrinterConnectionA stub called\n");
@@ -435,7 +435,7 @@ DeletePrinterConnectionA(LPSTR Name)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrinterConnectionW(LPWSTR Name)
 {
   OutputDebugStringW(L"winspool DeletePrinterConnectionW stub called\n");
@@ -449,7 +449,7 @@ DeletePrinterConnectionW(LPWSTR Name)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 DeletePrinterDataA(HANDLE Printer, LPSTR Name)
 {
   OutputDebugStringW(L"winspool DeletePrinterDataA stub called\n");
@@ -463,7 +463,7 @@ DeletePrinterDataA(HANDLE Printer, LPSTR Name)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 DeletePrinterDataW(HANDLE Printer, LPWSTR Name)
 {
   OutputDebugStringW(L"winspool DeletePrinterDataW stub called\n");
@@ -477,7 +477,7 @@ DeletePrinterDataW(HANDLE Printer, LPWSTR Name)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrinterDriverA(LPSTR Name, LPSTR Environment, LPSTR Driver)
 {
   OutputDebugStringW(L"winspool DeletePrinterDriverA stub called\n");
@@ -491,7 +491,7 @@ DeletePrinterDriverA(LPSTR Name, LPSTR Environment, LPSTR Driver)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrinterDriverW(LPWSTR Name, LPWSTR Environment, LPWSTR Driver)
 {
   OutputDebugStringW(L"winspool DeletePrinterDriverW stub called\n");
@@ -505,7 +505,7 @@ DeletePrinterDriverW(LPWSTR Name, LPWSTR Environment, LPWSTR Driver)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrintProcessorA(LPSTR Name, LPSTR Environment, LPSTR PrintProcessor)
 {
   OutputDebugStringW(L"winspool DeletePrintProcessorA stub called\n");
@@ -519,7 +519,7 @@ DeletePrintProcessorA(LPSTR Name, LPSTR Environment, LPSTR PrintProcessor)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProcessor)
 {
   OutputDebugStringW(L"winspool DeletePrintProcessorW stub called\n");
@@ -532,7 +532,7 @@ DeletePrintProcessorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProcessor)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 DeviceCapabilitiesA(LPCSTR Device, LPCSTR Port, WORD Capability, LPSTR Buffer, CONST DEVMODEA *DevMode)
 {
   OutputDebugStringW(L"winspool DeviceCapabilitiesA stub called\n");
@@ -546,7 +546,7 @@ DeviceCapabilitiesA(LPCSTR Device, LPCSTR Port, WORD Capability, LPSTR Buffer, C
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 DeviceCapabilitiesW(LPCWSTR Device, LPCWSTR Port, WORD Capability, LPWSTR Buffer, CONST DEVMODEW *DevMode)
 {
   OutputDebugStringW(L"winspool DeviceCapabilitiesW stub called\n");
@@ -560,7 +560,7 @@ DeviceCapabilitiesW(LPCWSTR Device, LPCWSTR Port, WORD Capability, LPWSTR Buffer
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 DocumentPropertiesA(HWND Wnd, HANDLE Printer, LPSTR Device, PDEVMODEA DevModeOut, PDEVMODEA DevModeIn, DWORD Mode)
 {
   OutputDebugStringW(L"winspool DocumentPropertiesA stub called\n");
@@ -574,7 +574,7 @@ DocumentPropertiesA(HWND Wnd, HANDLE Printer, LPSTR Device, PDEVMODEA DevModeOut
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 DocumentPropertiesW(HWND Wnd, HANDLE Printer, LPWSTR Device, PDEVMODEW DevModeOut, PDEVMODEW DevModeIn, DWORD Mode)
 {
   OutputDebugStringW(L"winspool DocumentPropertiesW stub called\n");
@@ -588,7 +588,7 @@ DocumentPropertiesW(HWND Wnd, HANDLE Printer, LPWSTR Device, PDEVMODEW DevModeOu
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EndDocPrinter(HANDLE Printer)
 {
   OutputDebugStringW(L"winspool EndDocPrinter stub called\n");
@@ -602,7 +602,7 @@ EndDocPrinter(HANDLE Printer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EndPagePrinter(HANDLE Printer)
 {
   OutputDebugStringW(L"winspool EndPagePrinter stub called\n");
@@ -616,7 +616,7 @@ EndPagePrinter(HANDLE Printer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumFormsA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumFormsA stub called\n");
@@ -632,7 +632,7 @@ EnumFormsA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Need
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumFormsW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumFormsW stub called\n");
@@ -647,7 +647,7 @@ EnumFormsW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Need
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumJobsA(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumJobsA stub called\n");
@@ -664,7 +664,7 @@ EnumJobsA(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, 
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumJobsW(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumJobsW stub called\n");
@@ -681,7 +681,7 @@ EnumJobsW(HANDLE Printer, DWORD First, DWORD NoJobs, DWORD Level, PBYTE Buffer, 
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumMonitorsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumMonitorsA stub called\n");
@@ -698,7 +698,7 @@ EnumMonitorsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Neede
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumMonitorsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumMonitorsW stub called\n");
@@ -715,7 +715,7 @@ EnumMonitorsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Need
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPortsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPortsA stub called\n");
@@ -732,7 +732,7 @@ EnumPortsA(LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, 
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPortsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPortsW stub called\n");
@@ -749,7 +749,7 @@ EnumPortsW(LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed,
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 EnumPrinterDataA(HANDLE Printer, DWORD Index, LPSTR Name, DWORD NameSize, PDWORD NameReturned, PDWORD Type, PBYTE Buffer, DWORD BufSize, PDWORD BufReturned)
 {
   OutputDebugStringW(L"winspool EnumPrinterDataA stub called\n");
@@ -762,7 +762,7 @@ EnumPrinterDataA(HANDLE Printer, DWORD Index, LPSTR Name, DWORD NameSize, PDWORD
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 EnumPrinterDataW(HANDLE Printer, DWORD Index, LPWSTR Name, DWORD NameSize, PDWORD NameReturned, PDWORD Type, PBYTE Buffer, DWORD BufSize, PDWORD BufReturned)
 {
   OutputDebugStringW(L"winspool EnumPrinterDataW stub called\n");
@@ -775,7 +775,7 @@ EnumPrinterDataW(HANDLE Printer, DWORD Index, LPWSTR Name, DWORD NameSize, PDWOR
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPrinterDriversA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPrinterDriversA stub called\n");
@@ -791,7 +791,7 @@ EnumPrinterDriversA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DW
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPrinterDriversW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPrinterDriversW stub called\n");
@@ -807,7 +807,7 @@ EnumPrinterDriversW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, 
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPrintersA(DWORD Flags, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPrintersA stub called\n");
@@ -823,7 +823,7 @@ EnumPrintersA(DWORD Flags, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPrintersW(DWORD Flags, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPrintersW stub called\n");
@@ -839,7 +839,7 @@ EnumPrintersW(DWORD Flags, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPrintProcessorDatatypesA(LPSTR Name, LPSTR PrintProcessor, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPrintProcessorDatatypesA stub called\n");
@@ -855,7 +855,7 @@ EnumPrintProcessorDatatypesA(LPSTR Name, LPSTR PrintProcessor, DWORD Level, PBYT
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPrintProcessorDatatypesW(LPWSTR Name, LPWSTR PrintProcessor, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPrintProcessorDatatypesW stub called\n");
@@ -871,7 +871,7 @@ EnumPrintProcessorDatatypesW(LPWSTR Name, LPWSTR PrintProcessor, DWORD Level, PB
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPrintProcessorsA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPrintProcessorsA stub called\n");
@@ -887,7 +887,7 @@ EnumPrintProcessorsA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, D
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPrintProcessorsW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed, PDWORD Returned)
 {
   OutputDebugStringW(L"winspool EnumPrintProcessorsW stub called\n");
@@ -903,7 +903,7 @@ EnumPrintProcessorsW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 FindClosePrinterChangeNotification(HANDLE Printer)
 {
   OutputDebugStringW(L"winspool FindClosePrinterChangeNotification stub called\n");
@@ -917,7 +917,7 @@ FindClosePrinterChangeNotification(HANDLE Printer)
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstPrinterChangeNotification(HANDLE Printer, DWORD Flags, DWORD Options, PVOID NotifyOptions)
 {
   OutputDebugStringW(L"winspool FindFirstPrinterChangeNotification stub called\n");
@@ -931,7 +931,7 @@ FindFirstPrinterChangeNotification(HANDLE Printer, DWORD Flags, DWORD Options, P
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 FindNextPrinterChangeNotification(HANDLE Printer, PDWORD Change, PVOID NotifyOptions, PVOID* NotifyInfo)
 {
   OutputDebugStringW(L"winspool FindNextPrinterChangeNotification stub called\n");
@@ -945,7 +945,7 @@ FindNextPrinterChangeNotification(HANDLE Printer, PDWORD Change, PVOID NotifyOpt
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 FreePrinterNotifyInfo(PPRINTER_NOTIFY_INFO NotifyInfo)
 {
   OutputDebugStringW(L"winspool FreePrinterNotifyInfo stub called\n");
@@ -959,7 +959,7 @@ FreePrinterNotifyInfo(PPRINTER_NOTIFY_INFO NotifyInfo)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetFormA(HANDLE Printer, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetFormA stub called\n");
@@ -973,7 +973,7 @@ GetFormA(HANDLE Printer, LPSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, P
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetFormW(HANDLE Printer, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetFormW stub called\n");
@@ -987,7 +987,7 @@ GetFormW(HANDLE Printer, LPWSTR Name, DWORD Level, PBYTE Buffer, DWORD BufSize, 
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetJobA(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetJobA stub called\n");
@@ -1001,7 +1001,7 @@ GetJobA(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD BufSize, PDW
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetJobW(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetJobW stub called\n");
@@ -1015,7 +1015,7 @@ GetJobW(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD BufSize, PDW
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterA stub called\n");
@@ -1029,7 +1029,7 @@ GetPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Nee
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterW stub called\n");
@@ -1043,7 +1043,7 @@ GetPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Nee
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetPrinterDataA(HANDLE Printer, LPSTR Name, PDWORD Type, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDataA stub called\n");
@@ -1056,7 +1056,7 @@ GetPrinterDataA(HANDLE Printer, LPSTR Name, PDWORD Type, PBYTE Buffer, DWORD Buf
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetPrinterDataW(HANDLE Printer, LPWSTR Name, PDWORD Type, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDataW stub called\n");
@@ -1069,7 +1069,7 @@ GetPrinterDataW(HANDLE Printer, LPWSTR Name, PDWORD Type, PBYTE Buffer, DWORD Bu
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetPrinterDriverA(HANDLE Printer, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDriverA stub called\n");
@@ -1083,7 +1083,7 @@ GetPrinterDriverA(HANDLE Printer, LPSTR Environment, DWORD Level, PBYTE Buffer, 
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetPrinterDriverW(HANDLE Printer, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDriverW stub called\n");
@@ -1097,7 +1097,7 @@ GetPrinterDriverW(HANDLE Printer, LPWSTR Environment, DWORD Level, PBYTE Buffer,
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetPrinterDriverDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDriverDirectoryA stub called\n");
@@ -1111,7 +1111,7 @@ GetPrinterDriverDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buf
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetPrinterDriverDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrinterDriverDirectoryW stub called\n");
@@ -1125,7 +1125,7 @@ GetPrinterDriverDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE B
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetPrintProcessorDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrintProcessorDirectoryA stub called\n");
@@ -1139,7 +1139,7 @@ GetPrintProcessorDirectoryA(LPSTR Name, LPSTR Environment, DWORD Level, PBYTE Bu
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetPrintProcessorDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE Buffer, DWORD BufSize, PDWORD Needed)
 {
   OutputDebugStringW(L"winspool GetPrintProcessorDirectoryW stub called\n");
@@ -1153,7 +1153,7 @@ GetPrintProcessorDirectoryW(LPWSTR Name, LPWSTR Environment, DWORD Level, PBYTE 
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 OpenPrinterA(LPSTR Name, PHANDLE Printer, LPPRINTER_DEFAULTSA Defaults)
 {
   OutputDebugStringW(L"winspool OpenPrinterA stub called\n");
@@ -1167,7 +1167,7 @@ OpenPrinterA(LPSTR Name, PHANDLE Printer, LPPRINTER_DEFAULTSA Defaults)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 OpenPrinterW(LPWSTR Name, PHANDLE Printer, LPPRINTER_DEFAULTSW Defaults)
 {
   OutputDebugStringW(L"winspool OpenPrinterW stub called\n");
@@ -1181,7 +1181,7 @@ OpenPrinterW(LPWSTR Name, PHANDLE Printer, LPPRINTER_DEFAULTSW Defaults)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 PrinterMessageBoxA(HANDLE Printer, DWORD Error, HWND Wnd, LPSTR Text, LPSTR Caption, DWORD Type)
 {
   OutputDebugStringW(L"winspool PrinterMessageBoxA stub called\n");
@@ -1194,7 +1194,7 @@ PrinterMessageBoxA(HANDLE Printer, DWORD Error, HWND Wnd, LPSTR Text, LPSTR Capt
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 PrinterMessageBoxW(HANDLE Printer, DWORD Error, HWND Wnd, LPWSTR Text, LPWSTR Caption, DWORD Type)
 {
   OutputDebugStringW(L"winspool PrinterMessageBoxW stub called\n");
@@ -1207,7 +1207,7 @@ PrinterMessageBoxW(HANDLE Printer, DWORD Error, HWND Wnd, LPWSTR Text, LPWSTR Ca
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 PrinterProperties(HWND Wnd, HANDLE Printer)
 {
   OutputDebugStringW(L"winspool PrinterProperties stub called\n");
@@ -1221,7 +1221,7 @@ PrinterProperties(HWND Wnd, HANDLE Printer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ReadPrinter(HANDLE Printer, PVOID Buffer, DWORD BufSize, PDWORD Received)
 {
   OutputDebugStringW(L"winspool ReadPrinter stub called\n");
@@ -1235,7 +1235,7 @@ ReadPrinter(HANDLE Printer, PVOID Buffer, DWORD BufSize, PDWORD Received)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ResetPrinterA(HANDLE Printer, LPPRINTER_DEFAULTSA Defaults)
 {
   OutputDebugStringW(L"winspool ResetPrinterA stub called\n");
@@ -1249,7 +1249,7 @@ ResetPrinterA(HANDLE Printer, LPPRINTER_DEFAULTSA Defaults)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ResetPrinterW(HANDLE Printer, LPPRINTER_DEFAULTSW Defaults)
 {
   OutputDebugStringW(L"winspool ResetPrinterW stub called\n");
@@ -1263,7 +1263,7 @@ ResetPrinterW(HANDLE Printer, LPPRINTER_DEFAULTSW Defaults)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ScheduleJob(HANDLE Printer, DWORD Job)
 {
   OutputDebugStringW(L"winspool ScheduleJob stub called\n");
@@ -1277,7 +1277,7 @@ ScheduleJob(HANDLE Printer, DWORD Job)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFormA(HANDLE Printer, LPSTR Form, DWORD Level, PBYTE Buffer)
 {
   OutputDebugStringW(L"winspool SetFormA stub called\n");
@@ -1291,7 +1291,7 @@ SetFormA(HANDLE Printer, LPSTR Form, DWORD Level, PBYTE Buffer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFormW(HANDLE Printer, LPWSTR Form, DWORD Level, PBYTE Buffer)
 {
   OutputDebugStringW(L"winspool SetFormW stub called\n");
@@ -1305,7 +1305,7 @@ SetFormW(HANDLE Printer, LPWSTR Form, DWORD Level, PBYTE Buffer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetJobA(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD Command)
 {
   OutputDebugStringW(L"winspool SetJobA stub called\n");
@@ -1319,7 +1319,7 @@ SetJobA(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD Command)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetJobW(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD Command)
 {
   OutputDebugStringW(L"winspool SetJobW stub called\n");
@@ -1333,7 +1333,7 @@ SetJobW(HANDLE Printer, DWORD Job, DWORD Level, PBYTE Buffer, DWORD Command)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD Command)
 {
   OutputDebugStringW(L"winspool SetPrinterA stub called\n");
@@ -1347,7 +1347,7 @@ SetPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD Command)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD Command)
 {
   OutputDebugStringW(L"winspool SetPrinterW stub called\n");
@@ -1361,7 +1361,7 @@ SetPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer, DWORD Command)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetPrinterDataA(HANDLE Printer, LPSTR Name, DWORD Type, PBYTE Buffer, DWORD BufSize)
 {
   OutputDebugStringW(L"winspool SetPrinterDataA stub called\n");
@@ -1375,7 +1375,7 @@ SetPrinterDataA(HANDLE Printer, LPSTR Name, DWORD Type, PBYTE Buffer, DWORD BufS
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetPrinterDataW(HANDLE Printer, LPWSTR Name, DWORD Type, PBYTE Buffer, DWORD BufSize)
 {
   OutputDebugStringW(L"winspool SetPrinterDataW stub called\n");
@@ -1389,7 +1389,7 @@ SetPrinterDataW(HANDLE Printer, LPWSTR Name, DWORD Type, PBYTE Buffer, DWORD Buf
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 StartDocPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer)
 {
   OutputDebugStringW(L"winspool StartDocPrinterA stub called\n");
@@ -1403,7 +1403,7 @@ StartDocPrinterA(HANDLE Printer, DWORD Level, PBYTE Buffer)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 StartDocPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer)
 {
   OutputDebugStringW(L"winspool StartDocPrinterW stub called\n");
@@ -1417,7 +1417,7 @@ StartDocPrinterW(HANDLE Printer, DWORD Level, PBYTE Buffer)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 StartPagePrinter(HANDLE Printer)
 {
   OutputDebugStringW(L"winspool StartPagePrinter stub called\n");
@@ -1431,7 +1431,7 @@ StartPagePrinter(HANDLE Printer)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 WaitForPrinterChange(HANDLE Printer, DWORD Flags)
 {
   OutputDebugStringW(L"winspool WaitForPrinterChange stub called\n");
@@ -1445,7 +1445,7 @@ WaitForPrinterChange(HANDLE Printer, DWORD Flags)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 WritePrinter(HANDLE Printer, PVOID Buffer, DWORD BufSize, PDWORD Written)
 {
   OutputDebugStringW(L"winspool WritePrinter stub called\n");

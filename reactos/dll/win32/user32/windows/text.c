@@ -339,7 +339,7 @@ IsCharAlphaA(CHAR Ch)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsCharAlphaNumericA(CHAR Ch)
 {
     WCHAR WCh;
@@ -352,7 +352,7 @@ IsCharAlphaNumericA(CHAR Ch)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsCharAlphaNumericW(WCHAR Ch)
 {
     return (GetC1Type(Ch) & (C1_ALPHA|C1_DIGIT)) != 0;

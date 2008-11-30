@@ -24,34 +24,34 @@
 
 C_ASSERT(FIELD_OFFSET(TEB, glTable) == 0xbe8);
 
-int STDCALL glEmptyFunc0() { return 0; }
-int STDCALL glEmptyFunc4( long l1 ) { return 0; }
-int STDCALL glEmptyFunc8( long l1, long l2 ) { return 0; }
-int STDCALL glEmptyFunc12( long l1, long l2, long l3 ) { return 0; }
-int STDCALL glEmptyFunc16( long l1, long l2, long l3, long l4 ) { return 0; }
-int STDCALL glEmptyFunc20( long l1, long l2, long l3, long l4, long l5 )
+int WINAPI glEmptyFunc0() { return 0; }
+int WINAPI glEmptyFunc4( long l1 ) { return 0; }
+int WINAPI glEmptyFunc8( long l1, long l2 ) { return 0; }
+int WINAPI glEmptyFunc12( long l1, long l2, long l3 ) { return 0; }
+int WINAPI glEmptyFunc16( long l1, long l2, long l3, long l4 ) { return 0; }
+int WINAPI glEmptyFunc20( long l1, long l2, long l3, long l4, long l5 )
                            { return 0; }
-int STDCALL glEmptyFunc24( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc24( long l1, long l2, long l3, long l4, long l5,
                            long l6 ) { return 0; }
-int STDCALL glEmptyFunc28( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc28( long l1, long l2, long l3, long l4, long l5,
                            long l6, long l7 ) { return 0; }
-int STDCALL glEmptyFunc32( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc32( long l1, long l2, long l3, long l4, long l5,
                            long l6, long l7, long l8 ) { return 0; }
-int STDCALL glEmptyFunc36( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc36( long l1, long l2, long l3, long l4, long l5,
                            long l6, long l7, long l8, long l9 ) { return 0; }
-int STDCALL glEmptyFunc40( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc40( long l1, long l2, long l3, long l4, long l5,
                            long l6, long l7, long l8, long l9, long l10 )
                            { return 0; }
-int STDCALL glEmptyFunc44( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc44( long l1, long l2, long l3, long l4, long l5,
                            long l6, long l7, long l8, long l9, long l10,
                            long l11 ) { return 0; }
-int STDCALL glEmptyFunc48( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc48( long l1, long l2, long l3, long l4, long l5,
                            long l6, long l7, long l8, long l9, long l10,
                            long l11, long l12 ) { return 0; }
-int STDCALL glEmptyFunc52( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc52( long l1, long l2, long l3, long l4, long l5,
                            long l6, long l7, long l8, long l9, long l10,
                            long l11, long l12, long l13 ) { return 0; }
-int STDCALL glEmptyFunc56( long l1, long l2, long l3, long l4, long l5,
+int WINAPI glEmptyFunc56( long l1, long l2, long l3, long l4, long l5,
                            long l6, long l7, long l8, long l9, long l10,
                            long l11, long l12, long l13, long l14 )
                            { return 0; }
@@ -69,7 +69,7 @@ __asm__(".align 4"                                    "\n\t"          \
         "       jmp *"FOO((icdidx*4))"(%eax)"         "\n\t");
 #else
 # define X(func, ret, typeargs, args, icdidx, tebidx, stack)          \
-ret STDCALL func typeargs                                             \
+ret WINAPI func typeargs                                             \
 {                                                                     \
 	PROC *table;                                                  \
 	PROC fn;                                                      \
@@ -92,7 +92,7 @@ GLFUNCS_MACRO
 # undef X
 #else /* defined(_M_IX86) */
 # define X(func, ret, typeargs, args, icdidx, tebidx, stack)          \
-ret STDCALL func typeargs                                             \
+ret WINAPI func typeargs                                             \
 {                                                                     \
 	PROC *table;                                                  \
 	PROC fn;                                                      \

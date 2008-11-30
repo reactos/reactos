@@ -82,7 +82,7 @@ InternalOpenDirW(LPCWSTR DirName,
  * @implemented
  */
 /* Synced to Wine-? */
-DWORD STDCALL
+DWORD WINAPI
 GetLogicalDriveStringsA(DWORD nBufferLength,
 			LPSTR lpBuffer)
 {
@@ -120,7 +120,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
  * @implemented
  */
 /* Synced to Wine-? */
-DWORD STDCALL
+DWORD WINAPI
 GetLogicalDriveStringsW(DWORD nBufferLength,
 			LPWSTR lpBuffer)
 {
@@ -156,7 +156,7 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
  * @implemented
  */
 /* Synced to Wine-? */
-DWORD STDCALL
+DWORD WINAPI
 GetLogicalDrives(VOID)
 {
 	NTSTATUS Status;
@@ -183,7 +183,7 @@ GetLogicalDrives(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetDiskFreeSpaceA (
 	LPCSTR	lpRootPathName,
 	LPDWORD	lpSectorsPerCluster,
@@ -211,7 +211,7 @@ GetDiskFreeSpaceA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetDiskFreeSpaceW(
     LPCWSTR lpRootPathName,
     LPDWORD lpSectorsPerCluster,
@@ -272,7 +272,7 @@ GetDiskFreeSpaceW(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetDiskFreeSpaceExA (
 	LPCSTR lpDirectoryName   OPTIONAL,
 	PULARGE_INTEGER	lpFreeBytesAvailableToCaller,
@@ -298,7 +298,7 @@ GetDiskFreeSpaceExA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetDiskFreeSpaceExW(
     LPCWSTR lpDirectoryName OPTIONAL,
     PULARGE_INTEGER lpFreeBytesAvailableToCaller,
@@ -412,7 +412,7 @@ GetDiskFreeSpaceExW(
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 GetDriveTypeA(LPCSTR lpRootPathName)
 {
    PWCHAR RootPathNameW;
@@ -427,7 +427,7 @@ GetDriveTypeA(LPCSTR lpRootPathName)
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 GetDriveTypeW(LPCWSTR lpRootPathName)
 {
 	FILE_FS_DEVICE_INFORMATION FileFsDevice;
@@ -482,7 +482,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetVolumeInformationA(
 	LPCSTR	lpRootPathName,
 	LPSTR	lpVolumeNameBuffer,
@@ -621,7 +621,7 @@ FailNoMem:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetVolumeInformationW(
     LPCWSTR lpRootPathName,
     LPWSTR lpVolumeNameBuffer,
@@ -738,7 +738,7 @@ GetVolumeInformationW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetVolumeLabelA (
 	LPCSTR	lpRootPathName,
 	LPCSTR	lpVolumeName /* NULL if deleting label */
@@ -774,7 +774,7 @@ SetVolumeLabelA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetVolumeLabelW(
    LPCWSTR lpRootPathName,
    LPCWSTR lpVolumeName /* NULL if deleting label */
@@ -1064,7 +1064,7 @@ GetVolumeNameForVolumeMountPointW(
  * @implemented (Wine 13 sep 2008)
  */
 BOOL
-STDCALL
+WINAPI
 GetVolumeNameForVolumeMountPointA(
     LPCSTR lpszVolumeMountPoint,
     LPSTR lpszVolumeName,
@@ -1091,7 +1091,7 @@ GetVolumeNameForVolumeMountPointA(
  * @implemented (Wine 13 sep 2008)
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstVolumeW(
 	LPWSTR volume,
 	DWORD len
@@ -1140,7 +1140,7 @@ FindFirstVolumeW(
  * @implemented (Wine 13 sep 2008)
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstVolumeA(
 	LPSTR volume,
 	DWORD len
@@ -1165,7 +1165,7 @@ FindFirstVolumeA(
  * @implemented (Wine 13 sep 2008)
  */
 BOOL
-STDCALL
+WINAPI
 FindVolumeClose(
     HANDLE hFindVolume
     )

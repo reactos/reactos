@@ -21,7 +21,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheckAndAuditAlarmA(LPCSTR SubsystemName,
                           LPVOID HandleId,
                           LPSTR ObjectTypeName,
@@ -87,7 +87,7 @@ AccessCheckAndAuditAlarmA(LPCSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheckAndAuditAlarmW(LPCWSTR SubsystemName,
                           LPVOID HandleId,
                           LPWSTR ObjectTypeName,
@@ -150,7 +150,7 @@ AccessCheckAndAuditAlarmW(LPCWSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ObjectCloseAuditAlarmA(LPCSTR SubsystemName,
                        LPVOID HandleId,
                        BOOL GenerateOnClose)
@@ -183,7 +183,7 @@ ObjectCloseAuditAlarmA(LPCSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ObjectCloseAuditAlarmW(LPCWSTR SubsystemName,
                        LPVOID HandleId,
                        BOOL GenerateOnClose)
@@ -210,7 +210,7 @@ ObjectCloseAuditAlarmW(LPCWSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ObjectDeleteAuditAlarmA(LPCSTR SubsystemName,
                         LPVOID HandleId,
                         BOOL GenerateOnClose)
@@ -243,7 +243,7 @@ ObjectDeleteAuditAlarmA(LPCSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ObjectDeleteAuditAlarmW(LPCWSTR SubsystemName,
                         LPVOID HandleId,
                         BOOL GenerateOnClose)
@@ -270,7 +270,7 @@ ObjectDeleteAuditAlarmW(LPCWSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ObjectOpenAuditAlarmA(LPCSTR SubsystemName,
                       LPVOID HandleId,
                       LPSTR ObjectTypeName,
@@ -324,7 +324,7 @@ ObjectOpenAuditAlarmA(LPCSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ObjectOpenAuditAlarmW(LPCWSTR SubsystemName,
                       LPVOID HandleId,
                       LPWSTR ObjectTypeName,
@@ -375,7 +375,7 @@ ObjectOpenAuditAlarmW(LPCWSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ObjectPrivilegeAuditAlarmA(LPCSTR SubsystemName,
                            LPVOID HandleId,
                            HANDLE ClientToken,
@@ -409,7 +409,7 @@ ObjectPrivilegeAuditAlarmA(LPCSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ObjectPrivilegeAuditAlarmW(LPCWSTR SubsystemName,
                            LPVOID HandleId,
                            HANDLE ClientToken,
@@ -442,7 +442,7 @@ ObjectPrivilegeAuditAlarmW(LPCWSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 PrivilegedServiceAuditAlarmA(LPCSTR SubsystemName,
                              LPCSTR ServiceName,
                              HANDLE ClientToken,
@@ -478,7 +478,7 @@ PrivilegedServiceAuditAlarmA(LPCSTR SubsystemName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 PrivilegedServiceAuditAlarmW(LPCWSTR SubsystemName,
                              LPCWSTR ServiceName,
                              HANDLE ClientToken,
@@ -512,7 +512,7 @@ PrivilegedServiceAuditAlarmW(LPCWSTR SubsystemName,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheckByTypeResultListAndAuditAlarmByHandleW(IN LPCWSTR SubsystemName,
                                                   IN LPVOID HandleId,
                                                   IN HANDLE ClientToken,
@@ -540,7 +540,7 @@ AccessCheckByTypeResultListAndAuditAlarmByHandleW(IN LPCWSTR SubsystemName,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheckByTypeResultListAndAuditAlarmByHandleA(IN LPCSTR SubsystemName,
                                                   IN LPVOID HandleId,
                                                   IN HANDLE ClientToken,
@@ -568,7 +568,7 @@ AccessCheckByTypeResultListAndAuditAlarmByHandleA(IN LPCSTR SubsystemName,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheckByTypeResultListAndAuditAlarmW(IN LPCWSTR SubsystemName,
                                           IN LPVOID HandleId,
                                           IN LPCWSTR ObjectTypeName,
@@ -595,7 +595,7 @@ AccessCheckByTypeResultListAndAuditAlarmW(IN LPCWSTR SubsystemName,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheckByTypeResultListAndAuditAlarmA(IN LPCSTR SubsystemName,
                                           IN LPVOID HandleId,
                                           IN LPCSTR ObjectTypeName,
@@ -622,7 +622,7 @@ AccessCheckByTypeResultListAndAuditAlarmA(IN LPCSTR SubsystemName,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheckByTypeAndAuditAlarmW(IN LPCWSTR SubsystemName,
                                 IN LPVOID HandleId,
                                 IN LPCWSTR ObjectTypeName,
@@ -649,7 +649,7 @@ AccessCheckByTypeAndAuditAlarmW(IN LPCWSTR SubsystemName,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheckByTypeAndAuditAlarmA(IN LPCSTR SubsystemName,
                                 IN LPVOID HandleId,
                                 IN LPCSTR ObjectTypeName,

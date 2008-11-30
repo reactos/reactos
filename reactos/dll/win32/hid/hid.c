@@ -33,7 +33,7 @@ HINSTANCE hDllInstance;
 /* device interface GUID for HIDClass devices */
 const GUID HidClassGuid = {0x4D1E55B2, 0xF16F, 0x11CF, {0x88,0xCB,0x00,0x11,0x11,0x00,0x00,0x30}};
 
-BOOL STDCALL
+BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,
         DWORD dwReason,
         LPVOID lpvReserved)

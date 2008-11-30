@@ -45,7 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumDisplayDevicesA(
   LPCSTR lpDevice,
   DWORD iDevNum,
@@ -101,7 +101,7 @@ EnumDisplayDevicesA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDisplayDevicesW(
   LPCWSTR lpDevice,
   DWORD iDevNum,
@@ -127,7 +127,7 @@ EnumDisplayDevicesW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDisplayMonitors(
   HDC hdc,
   LPCRECT lprcClip,
@@ -201,7 +201,7 @@ EnumDisplayMonitors(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDisplaySettingsExA(
     LPCSTR lpszDeviceName,
     DWORD iModeNum,
@@ -297,7 +297,7 @@ EnumDisplaySettingsExA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDisplaySettingsA(
   LPCSTR lpszDeviceName,
   DWORD iModeNum,
@@ -311,7 +311,7 @@ EnumDisplaySettingsA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDisplaySettingsExW(
     LPCWSTR lpszDeviceName,
     DWORD iModeNum,
@@ -337,7 +337,7 @@ EnumDisplaySettingsExW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDisplaySettingsW(
   LPCWSTR lpszDeviceName,
   DWORD iModeNum,
@@ -351,7 +351,7 @@ EnumDisplaySettingsW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetMonitorInfoA(
   HMONITOR hMonitor,
   LPMONITORINFO lpmi)
@@ -394,7 +394,7 @@ GetMonitorInfoA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetMonitorInfoW(
   HMONITOR hMonitor,
   LPMONITORINFO lpmi)
@@ -407,7 +407,7 @@ GetMonitorInfoW(
  * @implemented
  */
 HMONITOR
-STDCALL
+WINAPI
 MonitorFromPoint(
 	IN POINT ptPoint,
 	IN DWORD dwFlags )
@@ -420,7 +420,7 @@ MonitorFromPoint(
  * @implemented
  */
 HMONITOR
-STDCALL
+WINAPI
 MonitorFromRect(
 	IN LPCRECT lpcRect,
 	IN DWORD dwFlags )
@@ -433,7 +433,7 @@ MonitorFromRect(
  * @implemented
  */
 HMONITOR
-STDCALL
+WINAPI
 MonitorFromWindow(
 	IN HWND hWnd,
 	IN DWORD dwFlags )
@@ -446,7 +446,7 @@ MonitorFromWindow(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 ChangeDisplaySettingsExA(
   LPCSTR lpszDeviceName,
   LPDEVMODEA lpDevMode,
@@ -488,7 +488,7 @@ ChangeDisplaySettingsExA(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 ChangeDisplaySettingsA(
   LPDEVMODEA lpDevMode,
   DWORD dwflags)
@@ -501,7 +501,7 @@ ChangeDisplaySettingsA(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 ChangeDisplaySettingsExW(
   LPCWSTR lpszDeviceName,
   LPDEVMODEW lpDevMode,
@@ -528,7 +528,7 @@ ChangeDisplaySettingsExW(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 ChangeDisplaySettingsW(
   LPDEVMODEW lpDevMode,
   DWORD dwflags)

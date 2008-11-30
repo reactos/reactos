@@ -20,7 +20,7 @@
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AbortSystemShutdownW(LPCWSTR lpMachineName)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -33,7 +33,7 @@ AbortSystemShutdownW(LPCWSTR lpMachineName)
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AbortSystemShutdownA(LPCSTR lpMachineName)
 {
     ANSI_STRING MachineNameA;
@@ -61,7 +61,7 @@ AbortSystemShutdownA(LPCSTR lpMachineName)
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 InitiateSystemShutdownW(LPWSTR lpMachineName,
                         LPWSTR lpMessage,
                         DWORD dwTimeout,
@@ -94,7 +94,7 @@ InitiateSystemShutdownW(LPWSTR lpMachineName,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 InitiateSystemShutdownA(LPSTR lpMachineName,
                         LPSTR lpMessage,
                         DWORD dwTimeout,

@@ -27,7 +27,7 @@ typedef struct _NS_ROUTINE {
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AcceptEx(SOCKET ListenSocket,
          SOCKET AcceptSocket,
          PVOID OutputBuffer,
@@ -47,7 +47,7 @@ AcceptEx(SOCKET ListenSocket,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 EnumProtocolsA(LPINT ProtocolCount,
                LPVOID ProtocolBuffer,
                LPDWORD BufferLength)
@@ -62,7 +62,7 @@ EnumProtocolsA(LPINT ProtocolCount,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 EnumProtocolsW(LPINT ProtocolCount,
                LPVOID ProtocolBuffer,
                LPDWORD BufferLength)
@@ -77,7 +77,7 @@ EnumProtocolsW(LPINT ProtocolCount,
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 GetAcceptExSockaddrs(PVOID OutputBuffer,
                      DWORD ReceiveDataLength,
                      DWORD LocalAddressLength,
@@ -95,7 +95,7 @@ GetAcceptExSockaddrs(PVOID OutputBuffer,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 GetAddressByNameA(DWORD NameSpace,
                   LPGUID ServiceType,
                   LPSTR ServiceName,
@@ -117,7 +117,7 @@ GetAddressByNameA(DWORD NameSpace,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 GetAddressByNameW(DWORD NameSpace,
                   LPGUID ServiceType,
                   LPWSTR ServiceName,
@@ -139,7 +139,7 @@ GetAddressByNameW(DWORD NameSpace,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 GetServiceA(DWORD NameSpace,
             LPGUID Guid,
             LPSTR ServiceName,
@@ -158,7 +158,7 @@ GetServiceA(DWORD NameSpace,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 GetServiceW(DWORD NameSpace,
             LPGUID Guid,
             LPWSTR ServiceName,
@@ -177,7 +177,7 @@ GetServiceW(DWORD NameSpace,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 GetTypeByNameA(LPSTR ServiceName,
                LPGUID ServiceType)
 {
@@ -191,7 +191,7 @@ GetTypeByNameA(LPSTR ServiceName,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 GetTypeByNameW(LPWSTR ServiceName,
                LPGUID ServiceType)
 {
@@ -205,7 +205,7 @@ GetTypeByNameW(LPWSTR ServiceName,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 MigrateWinsockConfiguration(DWORD Unknown1,
                             DWORD Unknown2,
                             DWORD Unknown3)
@@ -220,7 +220,7 @@ MigrateWinsockConfiguration(DWORD Unknown1,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 SetServiceA(DWORD NameSpace,
             DWORD Operation,
             DWORD Flags,
@@ -238,7 +238,7 @@ SetServiceA(DWORD NameSpace,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 SetServiceW(DWORD NameSpace,
             DWORD Operation,
             DWORD Flags,
@@ -256,7 +256,7 @@ SetServiceW(DWORD NameSpace,
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 WSARecvEx(SOCKET Sock,
           char *Buf,
           int Len,
@@ -272,7 +272,7 @@ WSARecvEx(SOCKET Sock,
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 dn_expand(unsigned char *MessagePtr,
           unsigned char *EndofMesOrig,
           unsigned char *CompDomNam,
@@ -289,7 +289,7 @@ dn_expand(unsigned char *MessagePtr,
  * @unimplemented
  */
 struct netent *
-STDCALL
+WINAPI
 getnetbyname(const char *name)
 {
   OutputDebugStringW(L"w32sock getnetbyname stub called\n");
@@ -302,7 +302,7 @@ getnetbyname(const char *name)
  * @unimplemented
  */
 UINT
-STDCALL
+WINAPI
 inet_network(const char *cp)
 {
   OutputDebugStringW(L"w32sock inet_network stub called\n");
@@ -315,7 +315,7 @@ inet_network(const char *cp)
  * @unimplemented
  */
 SOCKET
-STDCALL
+WINAPI
 rcmd(char **AHost,
      USHORT InPort,
      char *LocUser,
@@ -333,7 +333,7 @@ rcmd(char **AHost,
  * @unimplemented
  */
 SOCKET
-STDCALL
+WINAPI
 rexec(char **AHost,
       int InPort,
       char *User,
@@ -351,7 +351,7 @@ rexec(char **AHost,
  * @unimplemented
  */
 SOCKET
-STDCALL
+WINAPI
 rresvport(int *port)
 {
   OutputDebugStringW(L"w32sock rresvport stub called\n");
@@ -364,7 +364,7 @@ rresvport(int *port)
  * @unimplemented
  */
 void
-STDCALL
+WINAPI
 s_perror(const char *str)
 {
   OutputDebugStringW(L"w32sock s_perror stub called\n");
@@ -375,7 +375,7 @@ s_perror(const char *str)
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 sethostname(char *Name, int NameLen)
 {
   OutputDebugStringW(L"w32sock sethostname stub called\n");
@@ -388,7 +388,7 @@ sethostname(char *Name, int NameLen)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DllMain(HINSTANCE InstDLL,
         DWORD Reason,
         LPVOID Reserved)
@@ -401,7 +401,7 @@ DllMain(HINSTANCE InstDLL,
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 GetNameByTypeA(LPGUID lpServiceType,LPSTR lpServiceName,DWORD dwNameLength)
 {
   OutputDebugStringW(L"w32sock GetNameByTypeA stub called\n");
@@ -413,7 +413,7 @@ GetNameByTypeA(LPGUID lpServiceType,LPSTR lpServiceName,DWORD dwNameLength)
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 GetNameByTypeW(LPGUID lpServiceType,LPWSTR lpServiceName,DWORD dwNameLength)
 {
   OutputDebugStringW(L"w32sock GetNameByTypeW stub called\n");
@@ -425,7 +425,7 @@ GetNameByTypeW(LPGUID lpServiceType,LPWSTR lpServiceName,DWORD dwNameLength)
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 NSPStartup(
     LPGUID lpProviderId,
     LPNSP_ROUTINE lpnspRoutines
@@ -439,7 +439,7 @@ NSPStartup(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 WSPStartup(
     IN WORD wVersionRequested,
     OUT LPWSPDATA lpWSPData,
@@ -456,7 +456,7 @@ WSPStartup(
  * @unimplemented
  */
 INT
-STDCALL
+WINAPI
 NPLoadNameSpaces(
     IN OUT LPDWORD lpdwVersion,
     IN OUT LPNS_ROUTINE nsrBuffer,
@@ -475,7 +475,7 @@ NPLoadNameSpaces(
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 StartWsdpService()
 {
   OutputDebugStringW(L"mswsock StartWsdpService stub called\n");
@@ -486,7 +486,7 @@ StartWsdpService()
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 StopWsdpService()
 {
   OutputDebugStringW(L"mswsock StopWsdpService stub called\n");
@@ -497,7 +497,7 @@ StopWsdpService()
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 SvchostPushServiceGlobals(DWORD Value)
 {
   OutputDebugStringW(L"mswsock SvchostPushServiceGlobals stub called\n");
@@ -510,7 +510,7 @@ SvchostPushServiceGlobals(DWORD Value)
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 ServiceMain(DWORD Unknown1, DWORD Unknown2)
 {
   OutputDebugStringW(L"mswsock ServiceMain stub called\n");

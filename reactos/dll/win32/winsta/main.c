@@ -28,7 +28,7 @@
 HINSTANCE hDllInstance;
 
 
-BOOL STDCALL
+BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,
 	DWORD     dwReason,
 	LPVOID    lpvReserved)

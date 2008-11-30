@@ -23,7 +23,7 @@ KSPIN_LOCK LoopWorkLock;
 LIST_ENTRY LoopWorkList;
 WORK_QUEUE_ITEM LoopWorkItem;
 
-VOID STDCALL LoopReceiveWorker( PVOID Context ) {
+VOID NTAPI LoopReceiveWorker( PVOID Context ) {
     PLIST_ENTRY ListEntry;
     PLAN_WQ_ITEM WorkItem;
     PNDIS_PACKET Packet;

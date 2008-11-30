@@ -108,7 +108,7 @@ ConvertDefaultLocale(LCID lcid)
  * LOCALE_NOUSEROVERRIDE here as well?
  */
 BOOL
-STDCALL
+WINAPI
 EnumDateFormatsExA(
     DATEFMT_ENUMPROCEXA lpDateFmtEnumProcEx,
     LCID                Locale,
@@ -174,7 +174,7 @@ EnumDateFormatsExA(
  *              EnumDateFormatsExW    (KERNEL32.@)
  */
 BOOL
-STDCALL
+WINAPI
 EnumDateFormatsExW(
     DATEFMT_ENUMPROCEXW lpDateFmtEnumProcEx,
     LCID                Locale,
@@ -476,7 +476,7 @@ static BOOL NLS_EnumLanguageGroupLocales(ENUMLANGUAGEGROUPLOCALE_CALLBACKS *lpPr
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumLanguageGroupLocalesA(
     LANGGROUPLOCALE_ENUMPROCA lpLangGroupLocaleEnumProc,
     LGRPID                    LanguageGroup,
@@ -501,7 +501,7 @@ EnumLanguageGroupLocalesA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumLanguageGroupLocalesW(
     LANGGROUPLOCALE_ENUMPROCW lpLangGroupLocaleEnumProc,
     LGRPID                    LanguageGroup,
@@ -600,7 +600,7 @@ static BOOL NLS_EnumSystemCodePages(ENUMSYSTEMCODEPAGES_CALLBACKS *lpProcs)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumSystemCodePagesW (
     CODEPAGE_ENUMPROCW  lpCodePageEnumProc,
     DWORD               dwFlags
@@ -622,7 +622,7 @@ EnumSystemCodePagesW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumSystemCodePagesA (
     CODEPAGE_ENUMPROCA lpCodePageEnumProc,
     DWORD              dwFlags
@@ -644,7 +644,7 @@ EnumSystemCodePagesA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumSystemGeoID(
     GEOCLASS        GeoClass,
     GEOID           ParentGeoId, // reserved
@@ -803,7 +803,7 @@ static BOOL NLS_EnumSystemLanguageGroups(ENUMLANGUAGEGROUP_CALLBACKS *lpProcs)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumSystemLanguageGroupsA(
     LANGUAGEGROUP_ENUMPROCA pLangGroupEnumProc,
     DWORD                   dwFlags,
@@ -826,7 +826,7 @@ EnumSystemLanguageGroupsA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumSystemLanguageGroupsW(
     LANGUAGEGROUP_ENUMPROCW pLangGroupEnumProc,
     DWORD                   dwFlags,
@@ -927,7 +927,7 @@ static BOOL NLS_EnumSystemLocales(ENUMSYSTEMLOCALES_CALLBACKS *lpProcs)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumSystemLocalesA (
     LOCALE_ENUMPROCA lpLocaleEnumProc,
     DWORD            dwFlags
@@ -949,7 +949,7 @@ EnumSystemLocalesA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumSystemLocalesW (
     LOCALE_ENUMPROCW lpLocaleEnumProc,
     DWORD            dwFlags
@@ -982,7 +982,7 @@ static BOOL CALLBACK enum_uilang_proc_a( HMODULE hModule, LPCSTR type,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumUILanguagesA(
     UILANGUAGE_ENUMPROCA lpUILanguageEnumProc,
     DWORD                dwFlags,
@@ -1026,7 +1026,7 @@ static BOOL CALLBACK enum_uilang_proc_w( HMODULE hModule, LPCWSTR type,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumUILanguagesW(
     UILANGUAGE_ENUMPROCW lpUILanguageEnumProc,
     DWORD                dwFlags,
@@ -1060,7 +1060,7 @@ EnumUILanguagesW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetCalendarInfoA(
 	LCID lcid,
 	CALID Calendar,
@@ -1096,7 +1096,7 @@ GetCalendarInfoA(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 GetCalendarInfoW(
     LCID     Locale,
     CALID    Calendar,
@@ -1235,7 +1235,7 @@ GetCalendarInfoW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCPInfo(UINT CodePage,
           LPCPINFO CodePageInfo)
 {
@@ -1289,7 +1289,7 @@ GetCPInfo(UINT CodePage,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCPInfoExW(UINT CodePage,
              DWORD dwFlags,
              LPCPINFOEXW lpCPInfoEx)
@@ -1347,7 +1347,7 @@ GetCPInfoExW(UINT CodePage,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCPInfoExA(UINT CodePage,
              DWORD dwFlags,
              LPCPINFOEXA lpCPInfoEx)
@@ -1450,7 +1450,7 @@ NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 GetGeoInfoW(
     GEOID       Location,
     GEOTYPE     GeoType,
@@ -1491,7 +1491,7 @@ GetGeoInfoW(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 GetGeoInfoA(
     GEOID       Location,
     GEOTYPE     GeoType,
@@ -1682,7 +1682,7 @@ GetLocaleInfoEx (
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetLocaleInfoW (
 	LCID Locale,
     LCTYPE  LCType,
@@ -1903,7 +1903,7 @@ INT WINAPI FoldStringW(DWORD dwFlags, LPCWSTR src, INT srclen,
  * @implemented (Synced to Wine-22112008)
  */
 int
-STDCALL
+WINAPI
 CompareStringA (
     LCID    Locale,
     DWORD   dwCmpFlags,
@@ -1970,7 +1970,7 @@ CompareStringA (
  * @implemented (Synced to Wine-22/11/2008)
  */
 int
-STDCALL
+WINAPI
 CompareStringW (
     LCID    Locale,
     DWORD   dwCmpFlags,
@@ -2035,7 +2035,7 @@ CompareStringW (
  *  - The string returned is NUL terminated, except for LOCALE_FONTSIGNATURE,
  *    which is a bit string.
  */
-INT STDCALL GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
+INT WINAPI GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
 {
     WCHAR *bufferW;
     INT lenW, ret;
@@ -2086,7 +2086,7 @@ INT STDCALL GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
 /*
  * @implemented
  */
-LANGID STDCALL
+LANGID WINAPI
 GetSystemDefaultLangID(VOID)
 {
     return LANGIDFROMLCID(GetSystemDefaultLCID());
@@ -2096,7 +2096,7 @@ GetSystemDefaultLangID(VOID)
 /*
  * @implemented
  */
-LCID STDCALL
+LCID WINAPI
 GetSystemDefaultLCID(VOID)
 {
     LCID lcid;
@@ -2110,7 +2110,7 @@ GetSystemDefaultLCID(VOID)
 /*
  * @implemented
  */
-LANGID STDCALL
+LANGID WINAPI
 GetSystemDefaultUILanguage(VOID)
 {
     LANGID LanguageId;
@@ -2130,7 +2130,7 @@ GetSystemDefaultUILanguage(VOID)
 /*
  * @implemented
  */
-LCID STDCALL
+LCID WINAPI
 GetThreadLocale(VOID)
 {
     return NtCurrentTeb()->CurrentLocale;
@@ -2140,7 +2140,7 @@ GetThreadLocale(VOID)
 /*
  * @implemented
  */
-LANGID STDCALL
+LANGID WINAPI
 GetUserDefaultLangID(VOID)
 {
     return LANGIDFROMLCID(GetUserDefaultLCID());
@@ -2150,7 +2150,7 @@ GetUserDefaultLangID(VOID)
 /*
  * @implemented
  */
-LCID STDCALL
+LCID WINAPI
 GetUserDefaultLCID(VOID)
 {
     LCID lcid;
@@ -2170,7 +2170,7 @@ GetUserDefaultLCID(VOID)
 /*
  * @implemented
  */
-LANGID STDCALL
+LANGID WINAPI
 GetUserDefaultUILanguage(VOID)
 {
     LANGID LangId;
@@ -2220,7 +2220,7 @@ static inline HANDLE create_registry_key(void)
  * @unimplemented
  */
 GEOID
-STDCALL
+WINAPI
 GetUserGeoID(
     GEOCLASS    GeoClass)
 {
@@ -2273,7 +2273,7 @@ GetUserGeoID(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsValidLanguageGroup(
     LGRPID  LanguageGroup,
     DWORD   dwFlags)
@@ -2331,7 +2331,7 @@ IsValidLanguageGroup(
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsValidLocale(LCID Locale,
 	      DWORD dwFlags)
 {
@@ -2438,7 +2438,7 @@ IsValidLocale(LCID Locale,
  * @implemented
  */
 int
-STDCALL
+WINAPI
 LCMapStringA (
     LCID    Locale,
     DWORD   dwMapFlags,
@@ -2520,7 +2520,7 @@ map_string_exit:
  * @implemented
  */
 int
-STDCALL
+WINAPI
 LCMapStringW (
     LCID    Locale,
     DWORD   dwMapFlags,
@@ -2649,7 +2649,7 @@ LCMapStringW (
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCalendarInfoA(
     LCID     Locale,
     CALID    Calendar,
@@ -2681,7 +2681,7 @@ SetCalendarInfoA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCalendarInfoW(
     LCID     Locale,
     CALID    Calendar,
@@ -2729,7 +2729,7 @@ SetCalendarInfoW(
  *  Failure: FALSE. Use GetLastError() to determine the cause.
  */
 BOOL
-STDCALL
+WINAPI
 SetLocaleInfoA (
     LCID    Locale,
     LCTYPE  LCType,
@@ -2771,7 +2771,7 @@ SetLocaleInfoA (
  *
  */
 BOOL
-STDCALL
+WINAPI
 SetLocaleInfoW (
     LCID    Locale,
     LCTYPE  LCType,
@@ -2892,7 +2892,7 @@ BOOL WINAPI SetThreadLocale( LCID lcid )
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetUserDefaultLCID(LCID lcid)
 {
   NTSTATUS Status;
@@ -2910,7 +2910,7 @@ SetUserDefaultLCID(LCID lcid)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetUserDefaultUILanguage(LANGID LangId)
 {
   NTSTATUS Status;
@@ -2929,7 +2929,7 @@ SetUserDefaultUILanguage(LANGID LangId)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetUserGeoID(
     GEOID       GeoId)
 {
@@ -2971,7 +2971,7 @@ SetUserGeoID(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 VerLanguageNameA (
     DWORD   wLang,
     LPSTR   szLang,
@@ -2986,7 +2986,7 @@ VerLanguageNameA (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 VerLanguageNameW (
     DWORD   wLang,
     LPWSTR  szLang,

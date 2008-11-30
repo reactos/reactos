@@ -16,7 +16,7 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 TransmitFile(SOCKET Socket,
              HANDLE File,
              DWORD NumberOfBytesToWrite,

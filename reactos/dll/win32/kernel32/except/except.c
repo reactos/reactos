@@ -207,7 +207,7 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
 /*
  * @unimplemented
  */
-LONG STDCALL
+LONG WINAPI
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
    LONG RetValue;

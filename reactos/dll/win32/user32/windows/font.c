@@ -56,7 +56,7 @@ void _font_assert(const char *msg, const char *file, int line)
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 TabbedTextOutA(
   HDC hDC,
   int X,
@@ -186,7 +186,7 @@ static LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 TabbedTextOutW(
   HDC hDC,
   int X,
@@ -205,7 +205,7 @@ TabbedTextOutW(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetTabbedTextExtentA(
   HDC hDC,
   LPCSTR lpString,
@@ -233,7 +233,7 @@ GetTabbedTextExtentA(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetTabbedTextExtentW(
   HDC hDC,
   LPCWSTR lpString,
@@ -1048,7 +1048,7 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
              LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
 {
@@ -1236,7 +1236,7 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
  * @implemented
  */
 /* WINE synced 22-May-2006 */
-int STDCALL
+int WINAPI
 DrawTextExA( HDC hdc, LPSTR str, INT count,
              LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
 {
@@ -1295,7 +1295,7 @@ DrawTextExA( HDC hdc, LPSTR str, INT count,
  *
  * @implemented
  */
-int STDCALL
+int WINAPI
 DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
 {
     DRAWTEXTPARAMS dtp;
@@ -1314,7 +1314,7 @@ DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
  *
  * @implemented
  */
-int STDCALL
+int WINAPI
 DrawTextA( HDC hdc, LPCSTR str, INT count, LPRECT rect, UINT flags )
 {
     DRAWTEXTPARAMS dtp;

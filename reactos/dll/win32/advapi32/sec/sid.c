@@ -20,7 +20,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 #define MAX_GUID_STRING_LEN 39
 
-BOOL STDCALL
+BOOL WINAPI
 AddAuditAccessAceEx(PACL pAcl,
 		    DWORD dwAceRevision,
 		    DWORD AceFlags,
@@ -610,7 +610,7 @@ ParseAceString(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AllocateLocallyUniqueId(PLUID Luid)
 {
     NTSTATUS Status;
@@ -629,7 +629,7 @@ AllocateLocallyUniqueId(PLUID Luid)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
                          BYTE nSubAuthorityCount,
                          DWORD dwSubAuthority0,
@@ -668,7 +668,7 @@ AllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CopySid(DWORD nDestinationSidLength,
         PSID pDestinationSid,
         PSID pSourceSid)
@@ -1280,7 +1280,7 @@ BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorA(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EqualPrefixSid(PSID pSid1,
                PSID pSid2)
 {
@@ -1291,7 +1291,7 @@ EqualPrefixSid(PSID pSid1,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EqualSid(PSID pSid1,
          PSID pSid2)
 {
@@ -1306,7 +1306,7 @@ EqualSid(PSID pSid1,
  *  Docs says this function does NOT return a value
  *  even thou it's defined to return a PVOID...
  */
-PVOID STDCALL
+PVOID WINAPI
 FreeSid(PSID pSid)
 {
     return RtlFreeSid(pSid);
@@ -1316,7 +1316,7 @@ FreeSid(PSID pSid)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetLengthSid(PSID pSid)
 {
     return (DWORD)RtlLengthSid(pSid);
@@ -1326,7 +1326,7 @@ GetLengthSid(PSID pSid)
 /*
  * @implemented
  */
-PSID_IDENTIFIER_AUTHORITY STDCALL
+PSID_IDENTIFIER_AUTHORITY WINAPI
 GetSidIdentifierAuthority(PSID pSid)
 {
     return RtlIdentifierAuthoritySid(pSid);
@@ -1336,7 +1336,7 @@ GetSidIdentifierAuthority(PSID pSid)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetSidLengthRequired(UCHAR nSubAuthorityCount)
 {
     return (DWORD)RtlLengthRequiredSid(nSubAuthorityCount);
@@ -1346,7 +1346,7 @@ GetSidLengthRequired(UCHAR nSubAuthorityCount)
 /*
  * @implemented
  */
-PDWORD STDCALL
+PDWORD WINAPI
 GetSidSubAuthority(PSID pSid,
                    DWORD nSubAuthority)
 {
@@ -1357,7 +1357,7 @@ GetSidSubAuthority(PSID pSid,
 /*
  * @implemented
  */
-PUCHAR STDCALL
+PUCHAR WINAPI
 GetSidSubAuthorityCount(PSID pSid)
 {
     return RtlSubAuthorityCountSid(pSid);
@@ -1367,7 +1367,7 @@ GetSidSubAuthorityCount(PSID pSid)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 InitializeSid(PSID Sid,
               PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
               BYTE nSubAuthorityCount)
@@ -1390,7 +1390,7 @@ InitializeSid(PSID Sid,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsValidSid(PSID pSid)
 {
     return (BOOL)RtlValidSid(pSid);
@@ -1400,7 +1400,7 @@ IsValidSid(PSID pSid)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ConvertSidToStringSidW(PSID Sid,
                        LPWSTR *StringSid)
 {
@@ -1454,7 +1454,7 @@ ConvertSidToStringSidW(PSID Sid,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ConvertSidToStringSidA(PSID Sid,
                        LPSTR *StringSid)
 {
@@ -1498,7 +1498,7 @@ ConvertSidToStringSidA(PSID Sid,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EqualDomainSid(IN PSID pSid1,
                IN PSID pSid2,
                OUT BOOL* pfEqual)
@@ -1511,7 +1511,7 @@ EqualDomainSid(IN PSID pSid1,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetWindowsAccountDomainSid(IN PSID pSid,
                            OUT PSID ppDomainSid,
                            IN OUT DWORD* cbSid)
@@ -1524,7 +1524,7 @@ GetWindowsAccountDomainSid(IN PSID pSid,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
                    IN PSID DomainSid  OPTIONAL,
                    OUT PSID pSid,
@@ -1572,7 +1572,7 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsWellKnownSid(IN PSID pSid,
                IN WELL_KNOWN_SID_TYPE WellKnownSidType)
 {
@@ -1595,7 +1595,7 @@ IsWellKnownSid(IN PSID pSid,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ConvertStringSidToSidA(IN LPCSTR StringSid,
                        OUT PSID* sid)
 {

@@ -66,17 +66,17 @@ typedef struct _EVENTPROC_CALLBACK_ARGUMENTS
   WCHAR ModuleName[1];
 } EVENTPROC_CALLBACK_ARGUMENTS, *PEVENTPROC_CALLBACK_ARGUMENTS;
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength);
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength);
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength);
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 
 #endif /* __INCLUDE_USER32_CALLBACK_H */

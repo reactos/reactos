@@ -83,7 +83,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 CreateCompatibleDC ( HDC hdc)
 {
  HDC rhDC;
@@ -106,7 +106,7 @@ CreateCompatibleDC ( HDC hdc)
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 CreateDCA (
 	LPCSTR		lpszDriver,
 	LPCSTR		lpszDevice,
@@ -170,7 +170,7 @@ CreateDCA (
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 CreateDCW (
 	LPCWSTR		lpwszDriver,
 	LPCWSTR		lpwszDevice,
@@ -191,7 +191,7 @@ CreateDCW (
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 CreateICW(
 	LPCWSTR		lpszDriver,
 	LPCWSTR		lpszDevice,
@@ -211,7 +211,7 @@ CreateICW(
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 CreateICA(
 	LPCSTR		lpszDriver,
 	LPCSTR		lpszDevice,
@@ -262,7 +262,7 @@ CreateICA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DeleteDC(HDC hDC)
 {
   BOOL Ret = TRUE;
@@ -292,7 +292,7 @@ DeleteDC(HDC hDC)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DeleteObject(HGDIOBJ hObject)
 {
   UINT Type = 0;
@@ -372,7 +372,7 @@ DeleteObject(HGDIOBJ hObject)
 }
 
 INT
-STDCALL
+WINAPI
 GetArcDirection( HDC hdc )
 {
   return GetDCDWord( hdc, GdiGetArcDirection, 0);
@@ -380,7 +380,7 @@ GetArcDirection( HDC hdc )
 
 
 INT
-STDCALL
+WINAPI
 SetArcDirection( HDC hdc, INT nDirection )
 {
   return GetAndSetDCDWord( hdc, GdiGetSetArcDirection, nDirection, 0, 0, 0 );
@@ -388,7 +388,7 @@ SetArcDirection( HDC hdc, INT nDirection )
 
 
 HGDIOBJ
-STDCALL
+WINAPI
 GetDCObject( HDC hDC, INT iType)
 {
  if((iType == GDI_OBJECT_TYPE_BRUSH) ||
@@ -429,7 +429,7 @@ GetDCObject( HDC hDC, INT iType)
  *
  */
 HGDIOBJ
-STDCALL
+WINAPI
 GetCurrentObject(HDC hdc,
                  UINT uObjectType)
 {
@@ -470,7 +470,7 @@ GetCurrentObject(HDC hdc,
  *
  */
 int
-STDCALL
+WINAPI
 GetDeviceCaps(HDC hDC,
               int i)
 {
@@ -643,7 +643,7 @@ GetDeviceCaps(HDC hDC,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetRelAbs(
          HDC  hdc,
          DWORD dwIgnore
@@ -657,7 +657,7 @@ GetRelAbs(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetRelAbs(
 	HDC hdc,
 	INT Mode
@@ -671,7 +671,7 @@ SetRelAbs(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetAndSetDCDWord( HDC hDC, INT u, DWORD dwIn, DWORD Unk1, DWORD Unk2, DWORD Unk3 )
 {
   BOOL Ret = TRUE;
@@ -710,7 +710,7 @@ GetAndSetDCDWord( HDC hDC, INT u, DWORD dwIn, DWORD Unk1, DWORD Unk2, DWORD Unk3
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetDCDWord( HDC hDC, INT u, DWORD Result )
 {
   BOOL Ret = NtGdiGetDCDword( hDC, u, (DWORD*) &u );
@@ -723,7 +723,7 @@ GetDCDWord( HDC hDC, INT u, DWORD Result )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetAspectRatioFilterEx(
                 HDC hdc,
                 LPSIZE lpAspectRatio
@@ -737,7 +737,7 @@ GetAspectRatioFilterEx(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetDCOrgEx(
     HDC hdc,
     LPPOINT lpPoint
@@ -751,7 +751,7 @@ GetDCOrgEx(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 GetDCOrg(
     HDC hdc
     )
@@ -813,7 +813,7 @@ GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
   ENUMLOGFONTEXDVW LogFont;
@@ -879,7 +879,7 @@ GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
   DWORD dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
@@ -930,7 +930,7 @@ GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
  * @implemented
  */
 COLORREF
-STDCALL
+WINAPI
 GetDCBrushColor(
 	HDC hdc
 )
@@ -945,7 +945,7 @@ GetDCBrushColor(
  * @implemented
  */
 COLORREF
-STDCALL
+WINAPI
 GetDCPenColor(
 	HDC hdc
 )
@@ -960,7 +960,7 @@ GetDCPenColor(
  * @implemented
  */
 COLORREF
-STDCALL
+WINAPI
 SetDCBrushColor(
 	HDC hdc,
 	COLORREF crColor
@@ -988,7 +988,7 @@ SetDCBrushColor(
  * @implemented
  */
 COLORREF
-STDCALL
+WINAPI
 SetDCPenColor(
 	HDC hdc,
 	COLORREF crColor
@@ -1017,7 +1017,7 @@ SetDCPenColor(
  *
  */
 COLORREF
-STDCALL
+WINAPI
 GetBkColor(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -1029,7 +1029,7 @@ GetBkColor(HDC hdc)
  * @implemented
  */
 COLORREF
-STDCALL
+WINAPI
 SetBkColor(
 	HDC hdc,
 	COLORREF crColor
@@ -1075,7 +1075,7 @@ SetBkColor(
  *
  */
 int
-STDCALL
+WINAPI
 GetBkMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -1088,7 +1088,7 @@ GetBkMode(HDC hdc)
  *
  */
 int
-STDCALL
+WINAPI
 SetBkMode(HDC hdc,
               int iBkMode)
 {
@@ -1127,7 +1127,7 @@ SetBkMode(HDC hdc,
  *
  */
 int
-STDCALL
+WINAPI
 GetPolyFillMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -1139,7 +1139,7 @@ GetPolyFillMode(HDC hdc)
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 SetPolyFillMode(HDC hdc,
                 int iPolyFillMode)
 {
@@ -1187,7 +1187,7 @@ SetPolyFillMode(HDC hdc,
  *
  */
 int
-STDCALL
+WINAPI
 GetGraphicsMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -1199,7 +1199,7 @@ GetGraphicsMode(HDC hdc)
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 SetGraphicsMode(HDC hdc,
                 int iMode)
 {
@@ -1237,7 +1237,7 @@ SetGraphicsMode(HDC hdc,
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 ResetDCW(
 	HDC		hdc,
 	CONST DEVMODEW	*lpInitData
@@ -1252,7 +1252,7 @@ ResetDCW(
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 ResetDCA(
 	HDC		hdc,
 	CONST DEVMODEA	*lpInitData
@@ -1272,7 +1272,7 @@ ResetDCA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 StartDocW(
 	HDC		hdc,
 	CONST DOCINFOW	*a1
@@ -1286,7 +1286,7 @@ StartDocW(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetObjectType(
 	HGDIOBJ h
 	)
@@ -1378,12 +1378,12 @@ GetStockObject(
 }
 
 /* FIXME: include correct header */
-HPALETTE STDCALL NtUserSelectPalette(HDC  hDC,
+HPALETTE WINAPI NtUserSelectPalette(HDC  hDC,
                             HPALETTE  hpal,
                             BOOL  ForceBackground);
 
 HPALETTE
-STDCALL
+WINAPI
 SelectPalette(
     HDC hDC,
     HPALETTE hPal,
@@ -1417,7 +1417,7 @@ SelectPalette(
  *
  */
 int
-STDCALL
+WINAPI
 GetMapMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -1429,7 +1429,7 @@ GetMapMode(HDC hdc)
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 SetMapMode(
 	HDC hdc,
 	INT Mode
@@ -1462,7 +1462,7 @@ SetMapMode(
  *
  */
 int
-STDCALL
+WINAPI
 GetStretchBltMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -1474,7 +1474,7 @@ GetStretchBltMode(HDC hdc)
  * @implemented
  */
 int
-STDCALL
+WINAPI
 SetStretchBltMode(HDC hdc, int iStretchMode)
 {
   INT oSMode;
@@ -1516,7 +1516,7 @@ SetStretchBltMode(HDC hdc, int iStretchMode)
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 GetHFONT(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
@@ -1530,7 +1530,7 @@ GetHFONT(HDC hdc)
  *
  */
 HGDIOBJ
-STDCALL
+WINAPI
 SelectObject(HDC hDC,
              HGDIOBJ hGdiObj)
 {

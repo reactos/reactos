@@ -109,7 +109,7 @@ PIP_PACKET IPInitializePacket(
 }
 
 
-void STDCALL IPTimeout( PVOID Context ) {
+void NTAPI IPTimeout( PVOID Context ) {
     IpWorkItemQueued = FALSE;
 
     /* Check if datagram fragments have taken too long to assemble */

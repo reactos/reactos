@@ -58,7 +58,7 @@ InitStockObjects(void)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetSysColor(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
@@ -73,7 +73,7 @@ GetSysColor(int nIndex)
 /*
  * @implemented
  */
-HPEN STDCALL
+HPEN WINAPI
 GetSysColorPen(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
@@ -88,7 +88,7 @@ GetSysColorPen(int nIndex)
 /*
  * @implemented
  */
-HBRUSH STDCALL
+HBRUSH WINAPI
 GetSysColorBrush(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
@@ -104,7 +104,7 @@ GetSysColorBrush(int nIndex)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetSysColors(
   int cElements,
   CONST INT *lpaElements,
@@ -1013,7 +1013,7 @@ DefWndScreenshot(HWND hWnd)
 
 
 
-LRESULT STDCALL
+LRESULT WINAPI
 User32DefWindowProc(HWND hWnd,
 		    UINT Msg,
 		    WPARAM wParam,
@@ -1832,7 +1832,7 @@ DefWndImmIsUIMessageW(HWND hwndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-LRESULT STDCALL
+LRESULT WINAPI
 DefWindowProcA(HWND hWnd,
 	       UINT Msg,
 	       WPARAM wParam,
@@ -2002,7 +2002,7 @@ DefWindowProcA(HWND hWnd,
 }
 
 
-LRESULT STDCALL
+LRESULT WINAPI
 DefWindowProcW(HWND hWnd,
 	       UINT Msg,
 	       WPARAM wParam,

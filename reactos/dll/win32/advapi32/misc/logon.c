@@ -17,7 +17,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CreateProcessAsUserA(HANDLE hToken,
                      LPCSTR lpApplicationName,
                      LPSTR lpCommandLine,
@@ -75,7 +75,7 @@ CreateProcessAsUserA(HANDLE hToken,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CreateProcessAsUserW(HANDLE hToken,
                      LPCWSTR lpApplicationName,
                      LPWSTR lpCommandLine,
@@ -133,7 +133,7 @@ CreateProcessAsUserW(HANDLE hToken,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 LogonUserA(LPSTR lpszUsername,
            LPSTR lpszDomain,
            LPSTR lpszPassword,
@@ -198,7 +198,7 @@ UsernameDone:
 }
 
 
-static BOOL STDCALL
+static BOOL WINAPI
 SamGetUserSid(LPCWSTR UserName,
               PSID *Sid)
 {
@@ -294,7 +294,7 @@ SamGetUserSid(LPCWSTR UserName,
 }
 
 
-static BOOL STDCALL
+static BOOL WINAPI
 SamGetDomainSid(PSID *Sid)
 {
     PSID lpSid;
@@ -595,7 +595,7 @@ FreeGroupSids(PTOKEN_GROUPS TokenGroups)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 LogonUserW(LPWSTR lpszUsername,
            LPWSTR lpszDomain,
            LPWSTR lpszPassword,

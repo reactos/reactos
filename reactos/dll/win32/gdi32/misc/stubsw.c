@@ -20,7 +20,7 @@
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 PolyTextOutW(
 	HDC			hdc,
 	CONST POLYTEXTW		*a1,
@@ -36,7 +36,7 @@ PolyTextOutW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetLogColorSpaceW(
 	HCOLORSPACE		a0,
 	LPLOGCOLORSPACEW	a1,
@@ -53,7 +53,7 @@ GetLogColorSpaceW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetICMProfileW(
 	HDC		a0,
 	LPDWORD		a1,
@@ -70,7 +70,7 @@ GetICMProfileW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetICMProfileW(
 	HDC	a0,
 	LPWSTR	a1
@@ -86,7 +86,7 @@ SetICMProfileW(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 EnumICMProfilesW(
 	HDC		hDC,
 	ICMENUMPROCW	lpEnumICMProfilesFunc,
@@ -112,7 +112,7 @@ EnumICMProfilesW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 wglUseFontBitmapsW(
 	HDC		a0,
 	DWORD		a1,
@@ -130,7 +130,7 @@ wglUseFontBitmapsW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 wglUseFontOutlinesW(
 	HDC			a0,
 	DWORD			a1,
@@ -152,7 +152,7 @@ wglUseFontOutlinesW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 UpdateICMRegKeyW(
 	DWORD	a0,
 	LPWSTR	a1,
@@ -176,7 +176,7 @@ UpdateICMRegKeyW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)
 {
 	UNIMPLEMENTED;
@@ -188,7 +188,7 @@ EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFon
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
 {
 	UNIMPLEMENTED;
@@ -200,7 +200,7 @@ EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 GdiAddFontResourceW(
     LPCWSTR lpszFilename,
     FLONG fl,
@@ -213,7 +213,7 @@ GdiAddFontResourceW(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetEUDCTimeStampExW(LPWSTR lpBaseFaceName)
 {
     DWORD retValue = 0;
@@ -236,7 +236,7 @@ GetEUDCTimeStampExW(LPWSTR lpBaseFaceName)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
 {
 	UNIMPLEMENTED;
@@ -248,7 +248,7 @@ bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unknown)
 {
 	UNIMPLEMENTED;
@@ -260,7 +260,7 @@ bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unkno
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetStringBitmapW(HDC hdc,
                  LPWSTR pwsz,
                  BOOL doCall,

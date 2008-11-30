@@ -159,7 +159,7 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ResizePalette(
 	HPALETTE	hPalette,
 	UINT		nEntries
@@ -192,7 +192,7 @@ SetDIBColorTable(HDC hDC,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UpdateColors(
 	HDC	hdc
 	)

@@ -22,7 +22,7 @@
  *    TRUE if the input values together form a valid image, FALSE otherwise.
  */
 
-BOOL STDCALL
+BOOL WINAPI
 CalculateColorTableSize(
    CONST BITMAPINFOHEADER *BitmapInfoHeader,
    UINT *ColorSpec,
@@ -168,7 +168,7 @@ CalculateColorTableSize(
  *    }
  */
 
-LPBITMAPINFO STDCALL
+LPBITMAPINFO WINAPI
 ConvertBitmapInfo(
    CONST BITMAPINFO *BitmapInfo,
    UINT ColorSpec,
@@ -309,7 +309,7 @@ ConvertBitmapInfo(
 }
 
 VOID
-STDCALL
+WINAPI
 LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA)
 {
 #define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, pA->f, len, pW->f, len )
@@ -335,7 +335,7 @@ LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA)
 }
 
 VOID
-STDCALL
+WINAPI
 LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 {
 #define COPYS(f,len) WideCharToMultiByte ( CP_THREAD_ACP, 0, pW->f, len, pA->f, len, NULL, NULL )
@@ -361,7 +361,7 @@ LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 }
 
 VOID
-STDCALL
+WINAPI
 EnumLogFontExW2A( LPENUMLOGFONTEXA fontA, CONST ENUMLOGFONTEXW *fontW )
 {
     LogFontW2A( (LPLOGFONTA)fontA, (CONST LOGFONTW *)fontW );

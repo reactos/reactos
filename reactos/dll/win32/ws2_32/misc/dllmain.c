@@ -24,7 +24,7 @@ DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
 /* To make the linker happy */
-VOID STDCALL KeBugCheck (ULONG BugCheckCode) {}
+VOID WINAPI KeBugCheck (ULONG BugCheckCode) {}
 
 HINSTANCE g_hInstDll;
 HANDLE GlobalHeap;

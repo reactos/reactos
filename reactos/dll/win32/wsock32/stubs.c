@@ -15,7 +15,7 @@
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 getsockopt(SOCKET Sock,
            int Level,
            int OptName,
@@ -31,7 +31,7 @@ getsockopt(SOCKET Sock,
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 setsockopt(SOCKET Sock,
            int Level,
            int OptName,
@@ -47,7 +47,7 @@ setsockopt(SOCKET Sock,
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 recv(SOCKET Sock,
      char *Buf,
      int Len,
@@ -63,7 +63,7 @@ recv(SOCKET Sock,
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 recvfrom(SOCKET Sock,
          char *Buf,
          int Len,
@@ -80,7 +80,7 @@ recvfrom(SOCKET Sock,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DllMain(HINSTANCE InstDLL,
         DWORD Reason,
         LPVOID Reserved)

@@ -29,7 +29,7 @@
  * 	Success status as handed by the SM reply; otherwise a failure
  * 	status code.
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 SmExecuteProgram (IN HANDLE          hSmApiPort,
 		  IN PUNICODE_STRING Pgm)
 {

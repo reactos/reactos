@@ -323,7 +323,7 @@ RegDisablePredefinedCache(VOID)
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDisablePredefinedCacheEx(VOID)
 {
     RtlEnterCriticalSection(&HandleTableCS);
@@ -339,7 +339,7 @@ RegDisablePredefinedCacheEx(VOID)
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegOverridePredefKey(IN HKEY hKey,
                      IN HKEY hNewHKey  OPTIONAL)
 {
@@ -397,7 +397,7 @@ RegOverridePredefKey(IN HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegCloseKey(HKEY hKey)
 {
     NTSTATUS Status;
@@ -705,7 +705,7 @@ RegpCopyTree(IN HKEY hKeySrc,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegCopyTreeW(IN HKEY hKeySrc,
              IN LPCWSTR lpSubKey  OPTIONAL,
              IN HKEY hKeyDest)
@@ -781,7 +781,7 @@ Cleanup2:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegCopyTreeA(IN HKEY hKeySrc,
              IN LPCSTR lpSubKey  OPTIONAL,
              IN HKEY hKeyDest)
@@ -811,7 +811,7 @@ RegCopyTreeA(IN HKEY hKeySrc,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegConnectRegistryA(IN LPCSTR lpMachineName,
                     IN HKEY hKey,
                     OUT PHKEY phkResult)
@@ -841,7 +841,7 @@ RegConnectRegistryA(IN LPCSTR lpMachineName,
  *
  * @unimplemented
  */
-LONG STDCALL
+LONG WINAPI
 RegConnectRegistryW(LPCWSTR lpMachineName,
                     HKEY hKey,
                     PHKEY phkResult)
@@ -1001,7 +1001,7 @@ CreateNestedKey(PHKEY KeyHandle,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegCreateKeyExA(HKEY hKey,
                 LPCSTR lpSubKey,
                 DWORD Reserved,
@@ -1075,7 +1075,7 @@ RegCreateKeyExA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegCreateKeyExW(HKEY hKey,
                 LPCWSTR lpSubKey,
                 DWORD Reserved,
@@ -1140,7 +1140,7 @@ RegCreateKeyExW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegCreateKeyA(HKEY hKey,
               LPCSTR lpSubKey,
               PHKEY phkResult)
@@ -1162,7 +1162,7 @@ RegCreateKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegCreateKeyW(HKEY hKey,
               LPCWSTR lpSubKey,
               PHKEY phkResult)
@@ -1184,7 +1184,7 @@ RegCreateKeyW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDeleteKeyA(HKEY hKey,
               LPCSTR lpSubKey)
 {
@@ -1245,7 +1245,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDeleteKeyW(HKEY hKey,
               LPCWSTR lpSubKey)
 {
@@ -1338,7 +1338,7 @@ RegDeleteKeyExW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDeleteKeyValueW(IN HKEY hKey,
                    IN LPCWSTR lpSubKey  OPTIONAL,
                    IN LPCWSTR lpValueName  OPTIONAL)
@@ -1409,7 +1409,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDeleteKeyValueA(IN HKEY hKey,
                    IN LPCSTR lpSubKey  OPTIONAL,
                    IN LPCSTR lpValueName  OPTIONAL)
@@ -1653,7 +1653,7 @@ SubKeyFailureNoFree:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDeleteTreeW(IN HKEY hKey,
                IN LPCWSTR lpSubKey  OPTIONAL)
 {
@@ -1824,7 +1824,7 @@ cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDeleteTreeA(IN HKEY hKey,
                IN LPCSTR lpSubKey  OPTIONAL)
 {
@@ -2157,7 +2157,7 @@ RegGetValueA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSetKeyValueW(IN HKEY hKey,
                 IN LPCWSTR lpSubKey  OPTIONAL,
                 IN LPCWSTR lpValueName  OPTIONAL,
@@ -2228,7 +2228,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSetKeyValueA(IN HKEY hKey,
                 IN LPCSTR lpSubKey  OPTIONAL,
                 IN LPCSTR lpValueName  OPTIONAL,
@@ -2306,7 +2306,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDeleteValueA(HKEY hKey,
                 LPCSTR lpValueName)
 {
@@ -2343,7 +2343,7 @@ RegDeleteValueA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegDeleteValueW(HKEY hKey,
                 LPCWSTR lpValueName)
 {
@@ -2380,7 +2380,7 @@ RegDeleteValueW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegEnumKeyA(HKEY hKey,
             DWORD dwIndex,
             LPSTR lpName,
@@ -2405,7 +2405,7 @@ RegEnumKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegEnumKeyW(HKEY hKey,
             DWORD dwIndex,
             LPWSTR lpName,
@@ -2430,7 +2430,7 @@ RegEnumKeyW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegEnumKeyExA(HKEY hKey,
               DWORD dwIndex,
               LPSTR lpName,
@@ -2600,7 +2600,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegEnumKeyExW(HKEY hKey,
               DWORD dwIndex,
               LPWSTR lpName,
@@ -2748,7 +2748,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegEnumValueA(HKEY hKey,
               DWORD index,
               LPSTR value,
@@ -2884,7 +2884,7 @@ RegEnumValueA(HKEY hKey,
  *  Success: ERROR_SUCCESS
  *  Failure: nonzero error code from Winerror.h
  */
-LONG STDCALL
+LONG WINAPI
 RegEnumValueW(HKEY hKey,
               DWORD index,
               LPWSTR value,
@@ -2986,7 +2986,7 @@ RegEnumValueW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegFlushKey(HKEY hKey)
 {
     HANDLE KeyHandle;
@@ -3022,7 +3022,7 @@ RegFlushKey(HKEY hKey)
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegGetKeySecurity(HKEY hKey,
                   SECURITY_INFORMATION SecurityInformation,
                   PSECURITY_DESCRIPTOR pSecurityDescriptor,
@@ -3069,7 +3069,7 @@ RegGetKeySecurity(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegLoadKeyA(HKEY hKey,
             LPCSTR lpSubKey,
             LPCSTR lpFile)
@@ -3099,7 +3099,7 @@ RegLoadKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegLoadKeyW(HKEY hKey,
             LPCWSTR lpSubKey,
             LPCWSTR lpFile)
@@ -3173,7 +3173,7 @@ Cleanup:
  *
  * @unimplemented
  */
-LONG STDCALL
+LONG WINAPI
 RegNotifyChangeKeyValue(HKEY hKey,
                         BOOL bWatchSubtree,
                         DWORD dwNotifyFilter,
@@ -3230,7 +3230,7 @@ RegNotifyChangeKeyValue(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegOpenCurrentUser(IN REGSAM samDesired,
                    OUT PHKEY phkResult)
 {
@@ -3255,7 +3255,7 @@ RegOpenCurrentUser(IN REGSAM samDesired,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegOpenKeyA(HKEY hKey,
             LPCSTR lpSubKey,
             PHKEY phkResult)
@@ -3291,7 +3291,7 @@ RegOpenKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegOpenKeyW(HKEY hKey,
             LPCWSTR lpSubKey,
             PHKEY phkResult)
@@ -3323,7 +3323,7 @@ RegOpenKeyW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegOpenKeyExA(HKEY hKey,
               LPCSTR lpSubKey,
               DWORD ulOptions,
@@ -3374,7 +3374,7 @@ RegOpenKeyExA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegOpenKeyExW(HKEY hKey,
               LPCWSTR lpSubKey,
               DWORD ulOptions,
@@ -3426,7 +3426,7 @@ RegOpenKeyExW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegOpenUserClassesRoot(IN HANDLE hToken,
                        IN DWORD dwOptions,
                        IN REGSAM samDesired,
@@ -3568,7 +3568,7 @@ ReadTokenSid:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegQueryInfoKeyA(HKEY hKey,
                  LPSTR lpClass,
                  LPDWORD lpcbClass,
@@ -3629,7 +3629,7 @@ RegQueryInfoKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegQueryInfoKeyW(HKEY hKey,
                  LPWSTR lpClass,
                  LPDWORD lpcbClass,
@@ -3813,7 +3813,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegQueryMultipleValuesA(HKEY hKey,
                         PVALENTA val_list,
                         DWORD num_vals,
@@ -3877,7 +3877,7 @@ RegQueryMultipleValuesA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegQueryMultipleValuesW(HKEY hKey,
                         PVALENTW val_list,
                         DWORD num_vals,
@@ -3956,7 +3956,7 @@ RegQueryReflectionKey(IN HKEY hBase,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegQueryValueExA(HKEY hKey,
                  LPCSTR lpValueName,
                  LPDWORD lpReserved,
@@ -4154,7 +4154,7 @@ RegQueryValueExW(HKEY hkeyorg,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegQueryValueA(HKEY hKey,
                LPCSTR lpSubKey,
                LPSTR lpValue,
@@ -4249,7 +4249,7 @@ RegQueryValueA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegQueryValueW(HKEY hKey,
                LPCWSTR lpSubKey,
                LPWSTR lpValue,
@@ -4323,7 +4323,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegReplaceKeyA(HKEY hKey,
                LPCSTR lpSubKey,
                LPCSTR lpNewFile,
@@ -4359,7 +4359,7 @@ RegReplaceKeyA(HKEY hKey,
  *
  * @unimplemented
  */
-LONG STDCALL
+LONG WINAPI
 RegReplaceKeyW(HKEY hKey,
                LPCWSTR lpSubKey,
                LPCWSTR lpNewFile,
@@ -4494,7 +4494,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegRestoreKeyA(HKEY hKey,
                LPCSTR lpFile,
                DWORD dwFlags)
@@ -4520,7 +4520,7 @@ RegRestoreKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegRestoreKeyW(HKEY hKey,
                LPCWSTR lpFile,
                DWORD dwFlags)
@@ -4595,7 +4595,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSaveKeyA(HKEY hKey,
             LPCSTR lpFile,
             LPSECURITY_ATTRIBUTES lpSecurityAttributes)
@@ -4619,7 +4619,7 @@ RegSaveKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSaveKeyW(HKEY hKey,
             LPCWSTR lpFile,
             LPSECURITY_ATTRIBUTES lpSecurityAttributes)
@@ -4698,7 +4698,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSetKeySecurity(HKEY hKey,
                   SECURITY_INFORMATION SecurityInformation,
                   PSECURITY_DESCRIPTOR pSecurityDescriptor)
@@ -4738,7 +4738,7 @@ RegSetKeySecurity(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSetValueExA(HKEY hKey,
                LPCSTR lpValueName,
                DWORD Reserved,
@@ -4826,7 +4826,7 @@ RegSetValueExA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSetValueExW(HKEY hKey,
                LPCWSTR lpValueName,
                DWORD Reserved,
@@ -4889,7 +4889,7 @@ RegSetValueExW(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSetValueA(HKEY hKeyOriginal,
              LPCSTR lpSubKey,
              DWORD dwType,
@@ -4935,7 +4935,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegSetValueW(HKEY hKeyOriginal,
              LPCWSTR lpSubKey,
              DWORD dwType,
@@ -4984,7 +4984,7 @@ Cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegUnLoadKeyA(HKEY hKey,
               LPCSTR lpSubKey)
 {
@@ -5008,7 +5008,7 @@ RegUnLoadKeyA(HKEY hKey,
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegUnLoadKeyW(HKEY hKey,
               LPCWSTR lpSubKey)
 {
@@ -5099,7 +5099,7 @@ static int load_string(HINSTANCE hModule, UINT resId, LPWSTR pwszBuffer, INT cMa
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegLoadMUIStringW(IN HKEY hKey,
                   IN LPCWSTR pszValue  OPTIONAL,
                   OUT LPWSTR pszOutBuf,
@@ -5199,7 +5199,7 @@ cleanup:
  *
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 RegLoadMUIStringA(IN HKEY hKey,
                   IN LPCSTR pszValue  OPTIONAL,
                   OUT LPSTR pszOutBuf,

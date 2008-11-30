@@ -31,7 +31,7 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FindActCtxSectionStringA(
     DWORD dwFlags,
     const GUID *lpExtensionGuid,
@@ -69,7 +69,7 @@ FindActCtxSectionStringA(
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateActCtxA(
     PCACTCTXA pActCtx
     )
@@ -128,7 +128,7 @@ CreateActCtxA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ActivateActCtx(
     HANDLE hActCtx,
     ULONG_PTR *ulCookie
@@ -150,7 +150,7 @@ ActivateActCtx(
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 AddRefActCtx(
     HANDLE hActCtx
     )
@@ -163,7 +163,7 @@ AddRefActCtx(
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateActCtxW(
     PCACTCTXW pActCtx
     )
@@ -185,7 +185,7 @@ CreateActCtxW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeactivateActCtx(
     DWORD dwFlags,
     ULONG_PTR ulCookie
@@ -200,7 +200,7 @@ DeactivateActCtx(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 FindActCtxSectionGuid(
     DWORD dwFlags,
     const GUID *lpExtensionGuid,
@@ -217,7 +217,7 @@ FindActCtxSectionGuid(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 FindActCtxSectionStringW(
     DWORD dwFlags,
     const GUID *lpExtensionGuid,
@@ -242,7 +242,7 @@ FindActCtxSectionStringW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCurrentActCtx(
     HANDLE *phActCtx)
 {
@@ -261,7 +261,7 @@ GetCurrentActCtx(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 QueryActCtxW(
     DWORD dwFlags,
     HANDLE hActCtx,
@@ -282,7 +282,7 @@ QueryActCtxW(
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 ReleaseActCtx(
     HANDLE hActCtx
     )
@@ -295,7 +295,7 @@ ReleaseActCtx(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ZombifyActCtx(
     HANDLE hActCtx
     )

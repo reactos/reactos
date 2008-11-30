@@ -113,7 +113,7 @@ static BOOL GetComputerNameFromRegistry( LPWSTR RegistryKey,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetComputerNameExW (
     COMPUTER_NAME_FORMAT NameType,
     LPWSTR lpBuffer,
@@ -234,7 +234,7 @@ GetComputerNameExW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetComputerNameExA (
     COMPUTER_NAME_FORMAT NameType,
     LPSTR lpBuffer,
@@ -274,7 +274,7 @@ GetComputerNameExA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetComputerNameA (LPSTR lpBuffer,
 		  LPDWORD lpnSize)
 {
@@ -285,7 +285,7 @@ GetComputerNameA (LPSTR lpBuffer,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetComputerNameW (LPWSTR lpBuffer,
 		  LPDWORD lpnSize)
 {
@@ -380,7 +380,7 @@ static BOOL SetComputerNameToRegistry(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetComputerNameA (LPCSTR lpComputerName)
 {
     return SetComputerNameExA( ComputerNamePhysicalNetBIOS, lpComputerName );
@@ -390,7 +390,7 @@ SetComputerNameA (LPCSTR lpComputerName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetComputerNameW (LPCWSTR lpComputerName)
 {
     return SetComputerNameExW( ComputerNamePhysicalNetBIOS, lpComputerName );
@@ -400,7 +400,7 @@ SetComputerNameW (LPCWSTR lpComputerName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetComputerNameExA (
     COMPUTER_NAME_FORMAT NameType,
     LPCSTR lpBuffer)
@@ -422,7 +422,7 @@ SetComputerNameExA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetComputerNameExW (
     COMPUTER_NAME_FORMAT NameType,
     LPCWSTR lpBuffer)
@@ -466,7 +466,7 @@ SetComputerNameExW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DnsHostnameToComputerNameA(LPCSTR Hostname,
                            LPSTR ComputerName,
                            LPDWORD nSize)
@@ -501,7 +501,7 @@ DnsHostnameToComputerNameA(LPCSTR Hostname,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DnsHostnameToComputerNameW (
 	LPCWSTR hostname,
     LPWSTR computername,

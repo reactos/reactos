@@ -91,7 +91,7 @@ CoordCnvP(MATRIX_S * mx, LPPOINT Point)
 
 
 BOOL
-STDCALL
+WINAPI
 DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
 {
 #if 0
@@ -118,7 +118,7 @@ DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
 
 
 BOOL
-STDCALL
+WINAPI
 LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
 {
 #if 0
@@ -147,7 +147,7 @@ LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
  *
  */
 BOOL
-STDCALL
+WINAPI
 GetCurrentPositionEx(HDC hdc,
                      LPPOINT lpPoint)
 {
@@ -184,7 +184,7 @@ GetCurrentPositionEx(HDC hdc,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetWorldTransform( HDC hDC, LPXFORM lpXform )
 {
   return NtGdiGetTransform( hDC, GdiWorldSpaceToPageSpace, lpXform);
@@ -192,7 +192,7 @@ GetWorldTransform( HDC hDC, LPXFORM lpXform )
 
 
 BOOL
-STDCALL
+WINAPI
 SetWorldTransform( HDC hDC, CONST XFORM *Xform )
 {
       /* FIXME  shall we add undoc #define MWT_SETXFORM 4 ?? */
@@ -201,7 +201,7 @@ SetWorldTransform( HDC hDC, CONST XFORM *Xform )
 
 
 BOOL
-STDCALL
+WINAPI
 ModifyWorldTransform(
                   HDC hDC,
                 CONST XFORM *Xform,
@@ -243,7 +243,7 @@ ModifyWorldTransform(
 }
 
 BOOL
-STDCALL
+WINAPI
 GetViewportExtEx(
              HDC hdc,
              LPSIZE lpSize
@@ -266,7 +266,7 @@ GetViewportExtEx(
 
 
 BOOL
-STDCALL
+WINAPI
 GetViewportOrgEx(
              HDC hdc,
              LPPOINT lpPoint
@@ -284,7 +284,7 @@ GetViewportOrgEx(
 
 
 BOOL
-STDCALL
+WINAPI
 GetWindowExtEx(
            HDC hdc,
            LPSIZE lpSize
@@ -302,7 +302,7 @@ GetWindowExtEx(
 
 
 BOOL
-STDCALL
+WINAPI
 GetWindowOrgEx(
            HDC hdc,
            LPPOINT lpPoint
@@ -321,7 +321,7 @@ GetWindowOrgEx(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetViewportExtEx(HDC hdc,
                  int nXExtent,
                  int nYExtent,
@@ -384,7 +384,7 @@ SetViewportExtEx(HDC hdc,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetWindowOrgEx(HDC hdc,
                int X,
                int Y,
@@ -446,7 +446,7 @@ SetWindowOrgEx(HDC hdc,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetWindowExtEx(HDC hdc,
                int nXExtent,
                int nYExtent,
@@ -517,7 +517,7 @@ SetWindowExtEx(HDC hdc,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetViewportOrgEx(HDC hdc,
                  int X,
                  int Y,
@@ -566,7 +566,7 @@ SetViewportOrgEx(HDC hdc,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ScaleViewportExtEx(
 	HDC	a0,
 	int	a1,
@@ -606,7 +606,7 @@ ScaleViewportExtEx(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ScaleWindowExtEx(
 	HDC	a0,
 	int	a1,
@@ -646,7 +646,7 @@ ScaleWindowExtEx(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetLayout(HDC hdc
 )
 {
@@ -660,7 +660,7 @@ GetLayout(HDC hdc
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetLayout(HDC hdc,
           DWORD dwLayout)
 {
@@ -693,7 +693,7 @@ SetLayout(HDC hdc,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
 {
   if (!GdiIsHandleValid((HGDIOBJ) hdc) || 
@@ -706,7 +706,7 @@ SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
  *
  */
 BOOL
-STDCALL
+WINAPI
 OffsetViewportOrgEx(HDC hdc,
                     int nXOffset,
                     int nYOffset,
@@ -767,7 +767,7 @@ OffsetViewportOrgEx(HDC hdc,
  *
  */
 BOOL
-STDCALL
+WINAPI
 OffsetWindowOrgEx(HDC hdc,
                   int nXOffset,
                   int nYOffset,

@@ -42,7 +42,7 @@ _SEH_FILTER(BaseThreadExceptionFilter)
 
 __declspec(noreturn)
 VOID
-STDCALL
+WINAPI
 BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
                   LPVOID lpParameter)
 {
@@ -68,7 +68,7 @@ BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
              DWORD dwStackSize,
              LPTHREAD_START_ROUTINE lpStartAddress,
@@ -90,7 +90,7 @@ CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateRemoteThread(HANDLE hProcess,
                    LPSECURITY_ATTRIBUTES lpThreadAttributes,
                    DWORD dwStackSize,
@@ -222,7 +222,7 @@ CreateRemoteThread(HANDLE hProcess,
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 ExitThread(DWORD uExitCode)
 {
     NTSTATUS Status;
@@ -653,7 +653,7 @@ SetThreadPriorityBoost(IN HANDLE hThread,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetThreadSelectorEntry(IN HANDLE hThread,
 		       IN DWORD dwSelector,
 		       OUT LPLDT_ENTRY lpSelectorEntry)
@@ -703,7 +703,7 @@ SetThreadIdealProcessor(HANDLE hThread,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetProcessIdOfThread(HANDLE Thread)
 {
   THREAD_BASIC_INFORMATION ThreadBasic;
@@ -726,7 +726,7 @@ GetProcessIdOfThread(HANDLE Thread)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetThreadId(HANDLE Thread)
 {
   THREAD_BASIC_INFORMATION ThreadBasic;
@@ -749,7 +749,7 @@ GetThreadId(HANDLE Thread)
 /*
  * @unimplemented
  */
-LANGID STDCALL
+LANGID WINAPI
 SetThreadUILanguage(WORD wReserved)
 {
   DPRINT1("SetThreadUILanguage(0x%4x) unimplemented!\n", wReserved);
@@ -766,7 +766,7 @@ IntCallUserApc(PVOID Function, PVOID dwData, PVOID Argument3)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
 {
   NTSTATUS Status;
@@ -782,7 +782,7 @@ QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetThreadIOPendingFlag(HANDLE hThread,
                        PBOOL lpIOIsPending)
 {
@@ -814,7 +814,7 @@ GetThreadIOPendingFlag(HANDLE hThread,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 Sleep(DWORD dwMilliseconds)
 {
   SleepEx(dwMilliseconds, FALSE);
@@ -825,7 +825,7 @@ Sleep(DWORD dwMilliseconds)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 SleepEx(DWORD dwMilliseconds,
 	BOOL bAlertable)
 {
@@ -885,7 +885,7 @@ InternalWorkItemTrampoline(PVOID Context)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 QueueUserWorkItem(
     LPTHREAD_START_ROUTINE Function,
     PVOID Context,
@@ -932,7 +932,7 @@ QueueUserWorkItem(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RegisterWaitForSingleObject(
     PHANDLE phNewWaitObject,
     HANDLE hObject,
@@ -962,7 +962,7 @@ RegisterWaitForSingleObject(
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 RegisterWaitForSingleObjectEx(
     HANDLE hObject,
     WAITORTIMERCALLBACK Callback,
@@ -994,7 +994,7 @@ RegisterWaitForSingleObjectEx(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnregisterWait(
     HANDLE WaitHandle
     )
@@ -1013,7 +1013,7 @@ UnregisterWait(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnregisterWaitEx(
     HANDLE WaitHandle,
     HANDLE CompletionEvent

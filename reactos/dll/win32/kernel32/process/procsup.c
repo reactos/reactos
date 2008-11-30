@@ -49,7 +49,7 @@ _SEH_FILTER(BaseExceptionFilter)
 }
 
 VOID
-STDCALL
+WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
 {
     UINT uExitCode = 0;
@@ -82,7 +82,7 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
  * Tells CSR that a new process was created
  */
 NTSTATUS
-STDCALL
+WINAPI
 BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
                          IN HANDLE ProcessId,
                          IN BOOL InheritHandles)
@@ -118,7 +118,7 @@ BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
  * Creates the first Thread in a Proces
  */
 HANDLE
-STDCALL
+WINAPI
 BasepCreateFirstThread(HANDLE ProcessHandle,
                        LPSECURITY_ATTRIBUTES lpThreadAttributes,
                        PSECTION_IMAGE_INFORMATION SectionImageInfo,
@@ -173,7 +173,7 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
  * Converts ANSI to Unicode Environment
  */
 PVOID
-STDCALL
+WINAPI
 BasepConvertUnicodeEnvironment(OUT SIZE_T* EnvSize,
                                IN PVOID lpEnvironment)
 {
@@ -232,7 +232,7 @@ BasepConvertUnicodeEnvironment(OUT SIZE_T* EnvSize,
  * Converts a Win32 Priority Class to NT
  */
 ULONG
-STDCALL
+WINAPI
 BasepConvertPriorityClass(IN ULONG dwCreationFlags)
 {
     ULONG ReturnClass;
@@ -281,7 +281,7 @@ BasepConvertPriorityClass(IN ULONG dwCreationFlags)
  * Duplicates a standard handle and writes it where requested.
  */
 VOID
-STDCALL
+WINAPI
 BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
                              IN HANDLE StandardHandle,
                              IN PHANDLE Address)
@@ -316,7 +316,7 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
 }
 
 LPWSTR
-STDCALL
+WINAPI
 BasepGetDllPath(LPWSTR FullPath,
                 PVOID Environment)
 {
@@ -325,7 +325,7 @@ BasepGetDllPath(LPWSTR FullPath,
 }
 
 VOID
-STDCALL
+WINAPI
 BasepCopyHandles(IN PRTL_USER_PROCESS_PARAMETERS Params,
                  IN PRTL_USER_PROCESS_PARAMETERS PebParams,
                  IN BOOL InheritHandles)
@@ -348,7 +348,7 @@ BasepCopyHandles(IN PRTL_USER_PROCESS_PARAMETERS Params,
 }
 
 NTSTATUS
-STDCALL
+WINAPI
 BasepInitializeEnvironment(HANDLE ProcessHandle,
                            PPEB Peb,
                            LPWSTR ApplicationPathName,
@@ -620,7 +620,7 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateProcessInternalW(HANDLE hToken,
                        LPCWSTR lpApplicationName,
                        LPWSTR lpCommandLine,
@@ -1425,7 +1425,7 @@ Cleanup:
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateProcessW(LPCWSTR lpApplicationName,
                LPWSTR lpCommandLine,
                LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -1456,7 +1456,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateProcessInternalA(HANDLE hToken,
                        LPCSTR lpApplicationName,
                        LPSTR lpCommandLine,
@@ -1593,7 +1593,7 @@ CreateProcessInternalA(HANDLE hToken,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateProcessA(LPCSTR lpApplicationName,
                LPSTR lpCommandLine,
                LPSECURITY_ATTRIBUTES lpProcessAttributes,

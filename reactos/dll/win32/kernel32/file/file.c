@@ -177,7 +177,7 @@ FilenameW2A_N(
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 SetFileApisToOEM(VOID)
 {
     /* Set the correct Base Api */
@@ -192,7 +192,7 @@ SetFileApisToOEM(VOID)
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 SetFileApisToANSI(VOID)
 {
     /* Set the correct Base Api */
@@ -206,7 +206,7 @@ SetFileApisToANSI(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AreFileApisANSI(VOID)
 {
    return bIsFileApiAnsi;
@@ -216,7 +216,7 @@ AreFileApisANSI(VOID)
 /*
  * @implemented
  */
-HFILE STDCALL
+HFILE WINAPI
 OpenFile(LPCSTR lpFileName,
 	 LPOFSTRUCT lpReOpenBuff,
 	 UINT uStyle)
@@ -347,7 +347,7 @@ OpenFile(LPCSTR lpFileName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 FlushFileBuffers(HANDLE hFile)
 {
    NTSTATUS errCode;
@@ -374,7 +374,7 @@ FlushFileBuffers(HANDLE hFile)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 SetFilePointer(HANDLE hFile,
            LONG lDistanceToMove,
            PLONG lpDistanceToMoveHigh,
@@ -497,7 +497,7 @@ SetFilePointer(HANDLE hFile,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFilePointerEx(HANDLE hFile,
 		 LARGE_INTEGER liDistanceToMove,
 		 PLARGE_INTEGER lpNewFilePointer,
@@ -569,7 +569,7 @@ SetFilePointerEx(HANDLE hFile,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetFileType(HANDLE hFile)
 {
   FILE_FS_DEVICE_INFORMATION DeviceInfo;
@@ -631,7 +631,7 @@ GetFileType(HANDLE hFile)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetFileSize(HANDLE hFile,
 	    LPDWORD lpFileSizeHigh)
 {
@@ -667,7 +667,7 @@ GetFileSize(HANDLE hFile,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetFileSizeEx(
     HANDLE hFile,
     PLARGE_INTEGER lpFileSize
@@ -697,7 +697,7 @@ GetFileSizeEx(
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetCompressedFileSizeA(LPCSTR lpFileName,
 		       LPDWORD lpFileSizeHigh)
 {
@@ -713,7 +713,7 @@ GetCompressedFileSizeA(LPCSTR lpFileName,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetCompressedFileSizeW(LPCWSTR lpFileName,
 		       LPDWORD lpFileSizeHigh)
 {
@@ -758,7 +758,7 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileInformationByHandle(HANDLE hFile,
 			   LPBY_HANDLE_FILE_INFORMATION lpFileInformation)
 {
@@ -852,7 +852,7 @@ GetFileInformationByHandle(HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileAttributesExW(LPCWSTR lpFileName,
 		     GET_FILEEX_INFO_LEVELS fInfoLevelId,
 		     LPVOID lpFileInformation)
@@ -919,7 +919,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileAttributesExA(LPCSTR lpFileName,
 		     GET_FILEEX_INFO_LEVELS fInfoLevelId,
 		     LPVOID lpFileInformation)
@@ -936,7 +936,7 @@ GetFileAttributesExA(LPCSTR lpFileName,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetFileAttributesA(LPCSTR lpFileName)
 {
    WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
@@ -955,7 +955,7 @@ GetFileAttributesA(LPCSTR lpFileName)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetFileAttributesW(LPCWSTR lpFileName)
 {
   WIN32_FILE_ATTRIBUTE_DATA FileAttributeData;
@@ -972,7 +972,7 @@ GetFileAttributesW(LPCWSTR lpFileName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileAttributesByHandle(IN HANDLE hFile,
                           OUT LPDWORD dwFileAttributes,
                           IN DWORD dwFlags)
@@ -1008,7 +1008,7 @@ GetFileAttributesByHandle(IN HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetFileAttributesByHandle(IN HANDLE hFile,
                           IN DWORD dwFileAttributes,
                           IN DWORD dwFlags)
@@ -1054,7 +1054,7 @@ SetFileAttributesByHandle(IN HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetFileAttributesA(
    LPCSTR lpFileName,
 	DWORD dwFileAttributes)
@@ -1071,7 +1071,7 @@ SetFileAttributesA(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetFileAttributesW(LPCWSTR lpFileName,
 		   DWORD dwFileAttributes)
 {
@@ -1240,7 +1240,7 @@ UINT WINAPI GetTempFileNameW( LPCWSTR path, LPCWSTR prefix, UINT unique, LPWSTR 
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetFileTime(HANDLE hFile,
 	    LPFILETIME lpCreationTime,
 	    LPFILETIME lpLastAccessTime,
@@ -1281,7 +1281,7 @@ GetFileTime(HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetFileTime(HANDLE hFile,
 	    CONST FILETIME *lpCreationTime,
 	    CONST FILETIME *lpLastAccessTime,
@@ -1337,7 +1337,7 @@ SetFileTime(HANDLE hFile,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetEndOfFile(HANDLE hFile)
 {
 	IO_STATUS_BLOCK  IoStatusBlock;
@@ -1414,7 +1414,7 @@ SetEndOfFile(HANDLE hFile)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileValidData(
     HANDLE hFile,
     LONGLONG ValidDataLength
@@ -1448,7 +1448,7 @@ SetFileValidData(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileShortNameW(
   HANDLE hFile,
   LPCWSTR lpShortName)
@@ -1504,7 +1504,7 @@ SetFileShortNameW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileShortNameA(
     HANDLE hFile,
     LPCSTR lpShortName
@@ -1535,7 +1535,7 @@ SetFileShortNameA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CheckNameLegalDOS8Dot3W(
     LPCWSTR lpName,
     LPSTR lpOemName OPTIONAL,
@@ -1576,7 +1576,7 @@ CheckNameLegalDOS8Dot3W(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CheckNameLegalDOS8Dot3A(
     LPCSTR lpName,
     LPSTR lpOemName OPTIONAL,

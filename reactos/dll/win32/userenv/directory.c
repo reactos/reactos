@@ -33,7 +33,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOL STDCALL
+BOOL WINAPI
 CopyProfileDirectoryA(LPCSTR lpSourcePath,
 		      LPCSTR lpDestinationPath,
 		      DWORD dwFlags)
@@ -71,7 +71,7 @@ CopyProfileDirectoryA(LPCSTR lpSourcePath,
 }
 
 
-BOOL STDCALL
+BOOL WINAPI
 CopyProfileDirectoryW(LPCWSTR lpSourcePath,
 		      LPCWSTR lpDestinationPath,
 		      DWORD dwFlags)

@@ -605,7 +605,7 @@ COMMDCB_PARAM_HANDLER(xon)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 BuildCommDCBAndTimeoutsW(LPCWSTR lpDef,
                          LPDCB lpDCB,
                          LPCOMMTIMEOUTS lpCommTimeouts)
@@ -725,7 +725,7 @@ InvalidParam:
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 BuildCommDCBAndTimeoutsA(LPCSTR lpDef,
                          LPDCB lpDCB,
                          LPCOMMTIMEOUTS lpCommTimeouts)
@@ -756,7 +756,7 @@ BuildCommDCBAndTimeoutsA(LPCSTR lpDef,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 BuildCommDCBA(LPCSTR lpDef, LPDCB lpDCB)
 {
     return BuildCommDCBAndTimeoutsA(lpDef, lpDCB, NULL);
@@ -767,7 +767,7 @@ BuildCommDCBA(LPCSTR lpDef, LPDCB lpDCB)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 BuildCommDCBW(LPCWSTR lpDef, LPDCB lpDCB)
 {
     return BuildCommDCBAndTimeoutsW(lpDef, lpDCB, NULL);
@@ -778,7 +778,7 @@ BuildCommDCBW(LPCWSTR lpDef, LPDCB lpDCB)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ClearCommBreak(HANDLE hFile)
 {
     DWORD dwBytesReturned;
@@ -791,7 +791,7 @@ ClearCommBreak(HANDLE hFile)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpComStat)
 {
 	BOOL status = FALSE;
@@ -853,7 +853,7 @@ ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpComStat)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CommConfigDialogA(LPCSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 {
 	PWCHAR NameW;
@@ -878,10 +878,10 @@ CommConfigDialogA(LPCSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CommConfigDialogW(LPCWSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 {
-	DWORD (STDCALL *drvCommDlgW)(LPCWSTR, HWND, LPCOMMCONFIG);
+	DWORD (WINAPI *drvCommDlgW)(LPCWSTR, HWND, LPCOMMCONFIG);
 	HMODULE hSerialuiDll;
 	DWORD result;
 
@@ -892,7 +892,7 @@ CommConfigDialogW(LPCWSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 		return FALSE;
 	}
 
-	drvCommDlgW = (DWORD (STDCALL *)(LPCWSTR, HWND, LPCOMMCONFIG))
+	drvCommDlgW = (DWORD (WINAPI *)(LPCWSTR, HWND, LPCOMMCONFIG))
 					GetProcAddress(hSerialuiDll, "drvCommConfigDialogW");
 
 	if(!drvCommDlgW)
@@ -914,7 +914,7 @@ CommConfigDialogW(LPCWSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
 {
 	BOOL result = FALSE;
@@ -958,7 +958,7 @@ EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 {
 	BOOL ReturnValue = FALSE;
@@ -1020,7 +1020,7 @@ GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
 {
 	DWORD dwBytesReturned;
@@ -1033,7 +1033,7 @@ GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
 {
 	DWORD dwBytesReturned;
@@ -1047,7 +1047,7 @@ GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
 {
 	DWORD dwBytesReturned;
@@ -1060,7 +1060,7 @@ GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCommState(HANDLE hFile, LPDCB lpDCB)
 {
 	BOOL result = FALSE;
@@ -1169,7 +1169,7 @@ GetCommState(HANDLE hFile, LPDCB lpDCB)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 {
 	DWORD dwBytesReturned;
@@ -1189,7 +1189,7 @@ GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 {
     FARPROC pGetDefaultCommConfig;
@@ -1216,7 +1216,7 @@ GetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 {
 	BOOL ret = FALSE;
@@ -1237,7 +1237,7 @@ GetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PurgeComm(HANDLE hFile, DWORD dwFlags)
 {
 	DWORD dwBytesReturned;
@@ -1251,7 +1251,7 @@ PurgeComm(HANDLE hFile, DWORD dwFlags)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCommBreak(HANDLE hFile)
 {
 	DWORD dwBytesReturned;
@@ -1264,7 +1264,7 @@ SetCommBreak(HANDLE hFile)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, DWORD dwSize)
 {
 	BOOL ReturnValue = FALSE;
@@ -1290,7 +1290,7 @@ SetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, DWORD dwSize)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCommMask(HANDLE hFile, DWORD dwEvtMask)
 {
 	DWORD dwBytesReturned;
@@ -1304,7 +1304,7 @@ SetCommMask(HANDLE hFile, DWORD dwEvtMask)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCommState(HANDLE	hFile, LPDCB lpDCB)
 {
 	BOOL result = FALSE;
@@ -1431,7 +1431,7 @@ SetCommState(HANDLE	hFile, LPDCB lpDCB)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 {
 	DWORD dwBytesReturned;
@@ -1455,7 +1455,7 @@ SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
 {
     BOOL r;
@@ -1480,7 +1480,7 @@ SetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
 {
     FARPROC pGetDefaultCommConfig;
@@ -1507,7 +1507,7 @@ SetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
 {
 	DWORD dwBytesReturned;
@@ -1524,7 +1524,7 @@ SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 TransmitCommChar(HANDLE hFile, char cChar)
 {
 	DWORD dwBytesReturned;
@@ -1537,7 +1537,7 @@ TransmitCommChar(HANDLE hFile, char cChar)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)
 {
 	DWORD dwBytesReturned;

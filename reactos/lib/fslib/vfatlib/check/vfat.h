@@ -419,7 +419,7 @@ typedef struct _VFAT_DIRENTRY_CONTEXT
 
 /*  ------------------------------------------------------  shutdown.c  */
 
-NTSTATUS STDCALL VfatShutdown (PDEVICE_OBJECT DeviceObject,
+NTSTATUS NTAPI VfatShutdown (PDEVICE_OBJECT DeviceObject,
                                PIRP Irp);
 
 /*  --------------------------------------------------------  volume.c  */
@@ -538,7 +538,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 
 /*  ---------------------------------------------------------  iface.c  */
 
-NTSTATUS STDCALL DriverEntry (PDRIVER_OBJECT DriverObject,
+NTSTATUS NTAPI DriverEntry (PDRIVER_OBJECT DriverObject,
                               PUNICODE_STRING RegistryPath);
 
 /*  ---------------------------------------------------------  dirwr.c  */
@@ -722,7 +722,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
 
 VOID VfatFreeIrpContext(PVFAT_IRP_CONTEXT IrpContext);
 
-NTSTATUS STDCALL VfatBuildRequest (PDEVICE_OBJECT DeviceObject,
+NTSTATUS NTAPI VfatBuildRequest (PDEVICE_OBJECT DeviceObject,
                                    PIRP Irp);
 
 PVOID VfatGetUserBuffer(IN PIRP);

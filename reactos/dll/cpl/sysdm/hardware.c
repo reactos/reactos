@@ -10,7 +10,7 @@
 
 #include "precomp.h"
 
-typedef BOOL (STDCALL *PDEVMGREXEC)(HWND hWndParent, HINSTANCE hInst, PVOID Unknown, int nCmdShow);
+typedef BOOL (WINAPI *PDEVMGREXEC)(HWND hWndParent, HINSTANCE hInst, PVOID Unknown, int nCmdShow);
 
 static BOOL
 LaunchDeviceManager(HWND hWndParent)

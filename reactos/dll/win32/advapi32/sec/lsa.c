@@ -75,7 +75,7 @@ PLSAPR_SERVER_NAME_unbind(PLSAPR_SERVER_NAME pszSystemName,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaClose(LSA_HANDLE ObjectHandle)
 {
     TRACE("LsaClose(0x%p) called\n", ObjectHandle);
@@ -91,7 +91,7 @@ LsaClose(LSA_HANDLE ObjectHandle)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaDelete(LSA_HANDLE ObjectHandle)
 {
     TRACE("LsaDelete(0x%p) called\n", ObjectHandle);
@@ -104,7 +104,7 @@ LsaDelete(LSA_HANDLE ObjectHandle)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaAddAccountRights(
     LSA_HANDLE PolicyHandle,
     PSID AccountSid,
@@ -119,7 +119,7 @@ LsaAddAccountRights(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaCreateTrustedDomainEx(
     LSA_HANDLE PolicyHandle,
     PTRUSTED_DOMAIN_INFORMATION_EX TrustedDomainInformation,
@@ -136,7 +136,7 @@ LsaCreateTrustedDomainEx(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaDeleteTrustedDomain(
     LSA_HANDLE PolicyHandle,
     PSID TrustedDomainSid)
@@ -149,7 +149,7 @@ LsaDeleteTrustedDomain(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaEnumerateAccountRights(
     LSA_HANDLE PolicyHandle,
     PSID AccountSid,
@@ -164,7 +164,7 @@ LsaEnumerateAccountRights(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaEnumerateAccountsWithUserRight(
     LSA_HANDLE PolicyHandle,
     OPTIONAL PLSA_UNICODE_STRING UserRights,
@@ -179,7 +179,7 @@ LsaEnumerateAccountsWithUserRight(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaEnumerateTrustedDomains(
     LSA_HANDLE PolicyHandle,
     PLSA_ENUMERATION_HANDLE EnumerationContext,
@@ -196,7 +196,7 @@ LsaEnumerateTrustedDomains(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaEnumerateTrustedDomainsEx(
     LSA_HANDLE PolicyHandle,
     PLSA_ENUMERATION_HANDLE EnumerationContext,
@@ -212,7 +212,7 @@ LsaEnumerateTrustedDomainsEx(
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaFreeMemory(PVOID Buffer)
 {
     TRACE("(%p)\n", Buffer);
@@ -273,7 +273,7 @@ LsaLookupNames(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaLookupNames2(
     LSA_HANDLE PolicyHandle,
     ULONG Flags,
@@ -339,7 +339,7 @@ LsaLookupSids(
  *
  * @implemented
  */
-ULONG STDCALL
+ULONG WINAPI
 LsaNtStatusToWinError(NTSTATUS Status)
 {
     TRACE("(%lx)\n", Status);
@@ -358,7 +358,7 @@ LsaNtStatusToWinError(NTSTATUS Status)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaOpenPolicy(
     IN PLSA_UNICODE_STRING SystemName,
     IN PLSA_OBJECT_ATTRIBUTES ObjectAttributes,
@@ -377,7 +377,7 @@ LsaOpenPolicy(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaOpenTrustedDomainByName(
     LSA_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
@@ -392,7 +392,7 @@ LsaOpenTrustedDomainByName(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaQueryDomainInformationPolicy(
     LSA_HANDLE PolicyHandle,
     POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
@@ -406,7 +406,7 @@ LsaQueryDomainInformationPolicy(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaQueryForestTrustInformation(
     LSA_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
@@ -419,7 +419,7 @@ LsaQueryForestTrustInformation(
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
               POLICY_INFORMATION_CLASS InformationClass,
               PVOID *Buffer)
@@ -512,7 +512,7 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaQueryTrustedDomainInfoByName(
     LSA_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
@@ -527,7 +527,7 @@ LsaQueryTrustedDomainInfoByName(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaQueryTrustedDomainInfo(
     LSA_HANDLE PolicyHandle,
     PSID TrustedDomainSid,
@@ -542,7 +542,7 @@ LsaQueryTrustedDomainInfo(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaRemoveAccountRights(
     LSA_HANDLE PolicyHandle,
     PSID AccountSid,
@@ -558,7 +558,7 @@ LsaRemoveAccountRights(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaRetrievePrivateData(
     LSA_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING KeyName,
@@ -572,7 +572,7 @@ LsaRetrievePrivateData(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaSetDomainInformationPolicy(
     LSA_HANDLE PolicyHandle,
     POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
@@ -586,7 +586,7 @@ LsaSetDomainInformationPolicy(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaSetInformationPolicy(
     LSA_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
@@ -600,7 +600,7 @@ LsaSetInformationPolicy(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaSetForestTrustInformation(
     LSA_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
@@ -616,7 +616,7 @@ LsaSetForestTrustInformation(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaSetTrustedDomainInfoByName(
     LSA_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
@@ -631,7 +631,7 @@ LsaSetTrustedDomainInfoByName(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaSetTrustedDomainInformation(
     LSA_HANDLE PolicyHandle,
     PSID TrustedDomainSid,
@@ -646,7 +646,7 @@ LsaSetTrustedDomainInformation(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaStorePrivateData(
     LSA_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING KeyName,
@@ -660,7 +660,7 @@ LsaStorePrivateData(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaGetUserName(
     PUNICODE_STRING *UserName,
     PUNICODE_STRING *DomainName)
@@ -673,7 +673,7 @@ LsaGetUserName(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaQueryInfoTrustedDomain (DWORD Unknonw0,
 			   DWORD Unknonw1,
 			   DWORD Unknonw2)

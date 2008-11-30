@@ -343,7 +343,7 @@ UnloadNtMarta(VOID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 AreAllAccessesGranted(DWORD GrantedAccess,
                       DWORD DesiredAccess)
 {
@@ -356,7 +356,7 @@ AreAllAccessesGranted(DWORD GrantedAccess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 AreAnyAccessesGranted(DWORD GrantedAccess,
                       DWORD DesiredAccess)
 {
@@ -521,7 +521,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetKernelObjectSecurity(HANDLE Handle,
                         SECURITY_INFORMATION RequestedInformation,
                         PSECURITY_DESCRIPTOR pSecurityDescriptor,
@@ -552,7 +552,7 @@ GetKernelObjectSecurity(HANDLE Handle,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileSecurityA(LPCSTR lpFileName,
                  SECURITY_INFORMATION SecurityInformation,
                  PSECURITY_DESCRIPTOR pSecurityDescriptor)
@@ -586,7 +586,7 @@ SetFileSecurityA(LPCSTR lpFileName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileSecurityW(LPCWSTR lpFileName,
                  SECURITY_INFORMATION SecurityInformation,
                  PSECURITY_DESCRIPTOR pSecurityDescriptor)
@@ -656,7 +656,7 @@ SetFileSecurityW(LPCWSTR lpFileName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetKernelObjectSecurity(HANDLE Handle,
                         SECURITY_INFORMATION SecurityInformation,
                         PSECURITY_DESCRIPTOR SecurityDescriptor)
@@ -700,7 +700,7 @@ ImpersonateAnonymousToken(IN HANDLE ThreadHandle)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ImpersonateLoggedOnUser(HANDLE hToken)
 {
     SECURITY_QUALITY_OF_SERVICE Qos;
@@ -784,7 +784,7 @@ ImpersonateLoggedOnUser(HANDLE hToken)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
     NTSTATUS Status;
@@ -804,7 +804,7 @@ ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RevertToSelf(VOID)
 {
     NTSTATUS Status;
@@ -990,7 +990,7 @@ GetUserNameW(LPWSTR lpszName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupAccountSidA(LPCSTR lpSystemName,
                   PSID lpSid,
                   LPSTR lpName,
@@ -1226,7 +1226,7 @@ LookupAccountSidW(LPCWSTR pSystemName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupAccountNameA(LPCSTR SystemName,
                    LPCSTR AccountName,
                    PSID Sid,
@@ -1363,7 +1363,7 @@ LookupAccountNameW(LPCWSTR lpSystemName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeValueA(LPCSTR lpSystemName,
                       LPCSTR lpName,
                       PLUID lpLuid)
@@ -1413,7 +1413,7 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeValueW(LPCWSTR SystemName,
                       LPCWSTR PrivName,
                       PLUID Luid)
@@ -1482,7 +1482,7 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeDisplayNameA(LPCSTR lpSystemName,
                             LPCSTR lpName,
                             LPSTR lpDisplayName,
@@ -1501,7 +1501,7 @@ LookupPrivilegeDisplayNameA(LPCSTR lpSystemName,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeDisplayNameW(LPCWSTR lpSystemName,
                             LPCWSTR lpName,
                             LPWSTR lpDisplayName,
@@ -1520,7 +1520,7 @@ LookupPrivilegeDisplayNameW(LPCWSTR lpSystemName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeNameA(LPCSTR lpSystemName,
                      PLUID lpLuid,
                      LPSTR lpName,
@@ -1578,7 +1578,7 @@ LookupPrivilegeNameA(LPCSTR lpSystemName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeNameW(LPCWSTR lpSystemName,
                      PLUID lpLuid,
                      LPWSTR lpName,
@@ -1798,7 +1798,7 @@ ProtectSacl:
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetNamedSecurityInfoW(LPWSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1849,7 +1849,7 @@ GetNamedSecurityInfoW(LPWSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetNamedSecurityInfoA(LPSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1891,7 +1891,7 @@ GetNamedSecurityInfoA(LPSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetNamedSecurityInfoW(LPWSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1939,7 +1939,7 @@ SetNamedSecurityInfoW(LPWSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetNamedSecurityInfoA(LPSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1979,7 +1979,7 @@ SetNamedSecurityInfoA(LPSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetSecurityInfo(HANDLE handle,
                 SE_OBJECT_TYPE ObjectType,
                 SECURITY_INFORMATION SecurityInfo,
@@ -2118,7 +2118,7 @@ GetSecurityInfoExW(HANDLE hObject,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ImpersonateNamedPipeClient(HANDLE hNamedPipe)
 {
     IO_STATUS_BLOCK StatusBlock;
@@ -2150,7 +2150,7 @@ ImpersonateNamedPipeClient(HANDLE hNamedPipe)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
                             PSECURITY_DESCRIPTOR CreatorDescriptor,
                             PSECURITY_DESCRIPTOR *NewDescriptor,
@@ -2180,7 +2180,7 @@ CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
                               PSECURITY_DESCRIPTOR CreatorDescriptor,
                               PSECURITY_DESCRIPTOR* NewDescriptor,
@@ -2199,7 +2199,7 @@ CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDescriptor,
                                                    PSECURITY_DESCRIPTOR CreatorDescriptor,
                                                    PSECURITY_DESCRIPTOR* NewDescriptor,
@@ -2219,7 +2219,7 @@ CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDe
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
 {
     NTSTATUS Status;
@@ -2239,7 +2239,7 @@ DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
                          SECURITY_INFORMATION SecurityInformation,
                          PSECURITY_DESCRIPTOR ResultantDescriptor,
@@ -2267,7 +2267,7 @@ GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
                          PSECURITY_DESCRIPTOR ModificationDescriptor,
                          PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
@@ -2295,7 +2295,7 @@ SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 TreeResetNamedSecurityInfoW(LPWSTR pObjectName,
                             SE_OBJECT_TYPE ObjectType,
                             SECURITY_INFORMATION SecurityInfo,
@@ -2372,7 +2372,7 @@ typedef struct _INERNAL_FNPROGRESSW_DATA
     PVOID Args;
 } INERNAL_FNPROGRESSW_DATA, *PINERNAL_FNPROGRESSW_DATA;
 
-static VOID STDCALL
+static VOID WINAPI
 InternalfnProgressW(LPWSTR pObjectName,
                     DWORD Status,
                     PPROG_INVOKE_SETTING pInvokeSetting,
@@ -2428,7 +2428,7 @@ InternalfnProgressW(LPWSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 TreeResetNamedSecurityInfoA(LPSTR pObjectName,
                             SE_OBJECT_TYPE ObjectType,
                             SECURITY_INFORMATION SecurityInfo,
