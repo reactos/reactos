@@ -3,6 +3,7 @@
 <module name="afd" type="kernelmodedriver" installbase="system32/drivers" installname="afd.sys">
 	<include base="afd">include</include>
 	<include base="ReactOS">include/reactos/drivers</include>
+	<include base="ReactOS">include/ndk</include>
 	<library>pseh</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>

@@ -78,6 +78,10 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PMDL Mdl = NULL, SysMdl = NULL;
     PTDI_CONNECTION_INFORMATION ConnInfo = NULL;
     PTRANSPORT_ADDRESS TransAddr = NULL;
+    HANDLE ProcHandle = NULL;
+    BOOLEAN UnlockSysMdl = FALSE;
+    PVOID UserSpace = NULL;
+    ULONG Length, InOutLength;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -110,28 +114,67 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       TDI_QUERY_ADDRESS_INFO,
                       Mdl );
             } else {
+                // what follows is fucked up shit.
+                // i'm not sure how to avoid it
+                // sorry
+                // -- arty
+
                 if( FCB->Connection.Object == NULL || (FCB->State != SOCKET_STATE_BOUND && FCB->State != SOCKET_STATE_CONNECTED) ) {
 	            return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
 	                                           NULL );
                 }
-
+		
                 if( NT_SUCCESS
                     ( Status = TdiBuildNullConnectionInfo
                       ( &ConnInfo,
-                        FCB->LocalAddress->Address[0].AddressType ) ) ) {
-                    SysMdl = IoAllocateMdl
-                        ( ConnInfo,
-                          sizeof( TDI_CONNECTION_INFORMATION ) +
-                          TaLengthOfTransportAddress
-                          ( ConnInfo->RemoteAddress ),
-                          FALSE,
-                          FALSE,
-                          NULL );
-                }
+                        FCB->RemoteAddress->Address[0].AddressType ) ) ) {
+		    
+		    Length = TaLengthOfTransportAddress
+			(ConnInfo->RemoteAddress);
+		    
+		    if (NT_SUCCESS(Status))
+			Status = ObOpenObjectByPointer
+			    (PsGetCurrentProcess(),
+			     0,
+			     NULL,
+			     PROCESS_ALL_ACCESS,
+			     PsProcessType,
+			     KernelMode,
+			     &ProcHandle);
+		    
+		    if (NT_SUCCESS(Status))
+		    {
+			InOutLength = 
+			    PAGE_ROUND_UP(sizeof(TDI_CONNECTION_INFO));
+			
+			Status = NtAllocateVirtualMemory
+			    (ProcHandle,
+			     (PVOID*)&UserSpace,
+			     PAGE_SHIFT,
+			     &InOutLength, 
+			     MEM_COMMIT,
+			     PAGE_READWRITE);
+		    }
 
+		    if (NT_SUCCESS(Status))
+		    {
+			ExFreePool(ConnInfo);
+			ConnInfo = (PTDI_CONNECTION_INFORMATION)UserSpace;
+			
+			SysMdl = IoAllocateMdl
+			    ( UserSpace, Length, FALSE, FALSE, NULL );
+		    }
+		    else
+		    {
+			ExFreePool(ConnInfo);
+			ConnInfo = NULL;
+		    }
+		}
+	    
                 if( SysMdl ) {
                     _SEH_TRY {
                         MmProbeAndLockPages( SysMdl, Irp->RequestorMode, IoModifyAccess );
+			UnlockSysMdl = TRUE;
                     } _SEH_HANDLE {
 	                AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	                Status = _SEH_GetExceptionCode();
@@ -156,8 +199,17 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                     else Status = STATUS_INSUFFICIENT_RESOURCES;
 		}
 
-                if( ConnInfo ) ExFreePool( ConnInfo );
+		if (UnlockSysMdl)
+		    MmUnlockPages( SysMdl );
+
                 if( SysMdl ) IoFreeMdl( SysMdl );
+                if( ConnInfo ) 
+		    NtFreeVirtualMemory
+			( ProcHandle,
+			  (PVOID)ConnInfo, 
+			  &InOutLength,
+			  MEM_RELEASE );
+		if( ProcHandle ) NtClose(ProcHandle);
                 if( TransAddr ) MmUnmapLockedPages( TransAddr, Mdl );
                 MmUnlockPages( Mdl );
                 IoFreeMdl( Mdl );

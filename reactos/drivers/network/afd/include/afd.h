@@ -13,6 +13,12 @@
 #define _AFD_H
 
 #include <ntddk.h>
+#include <winddk.h>
+#include <ntifs.h>
+#include <ndk/obtypes.h>
+#include <ndk/obfuncs.h>
+#include <ndk/mmtypes.h>
+#include <ndk/mmfuncs.h>
 #include <tdi.h>
 #include <tdikrnl.h>
 #include <tdiinfo.h>
