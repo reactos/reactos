@@ -8,7 +8,9 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="include">
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>afd.h</pch>
+	-->
 	</directory>
 	<directory name="afd">
 		<file>bind.c</file>
@@ -25,4 +27,6 @@
 		<file>write.c</file>
 	</directory>
 	<file>afd.rc</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

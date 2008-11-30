@@ -25,8 +25,6 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
-#include <pseh/pseh.h>
-
 /* this has to go after the NDK when being used with the NDK */
 #include <ntsecapi.h>
 

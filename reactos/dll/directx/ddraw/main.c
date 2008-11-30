@@ -96,7 +96,7 @@ DirectDrawCreate (LPGUID lpGUID,
     */
 
     DX_WINDBG_trace();
-     _SEH_TRY
+     _SEH2_TRY
     {
         /* check if pUnkOuter is null or not */
         if (pUnkOuter)
@@ -108,10 +108,10 @@ DirectDrawCreate (LPGUID lpGUID,
             retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, &IID_IDirectDraw, FALSE);
         }
      }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
     return retVal;
 }
@@ -150,7 +150,7 @@ DirectDrawCreateEx(LPGUID lpGUID,
     */
     DX_WINDBG_trace();
 
-     _SEH_TRY
+     _SEH2_TRY
     {
         /* check see if pUnkOuter is null or not */
         if (pUnkOuter)
@@ -169,10 +169,10 @@ DirectDrawCreateEx(LPGUID lpGUID,
 
         /* Create our DirectDraw interface */
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
     return retVal;
 }

@@ -439,7 +439,7 @@ NtGdiPolyDraw(
     Dc_Attr = dc->pDc_Attr;
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
         ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
@@ -450,7 +450,7 @@ NtGdiPolyDraw(
             if ( lpbTypes[i] != PT_MOVETO &&
                  lpbTypes[i] & PT_BEZIERTO )
             {
-                if ( cCount < i+3 ) _SEH_LEAVE;
+                if ( cCount < i+3 ) _SEH2_LEAVE;
                 else i += 2;
             }
         }
@@ -479,7 +479,7 @@ NtGdiPolyDraw(
                 IntGdiPolyBezier(dc, pts, 4);
                 i += 2;
             }
-            else _SEH_LEAVE;
+            else _SEH2_LEAVE;
 
             if ( lpbTypes[i] & PT_CLOSEFIGURE )
             {
@@ -498,11 +498,11 @@ NtGdiPolyDraw(
 
         result = TRUE;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     DC_UnlockDc(dc);
 

@@ -673,7 +673,7 @@ NtUserGetIconInfo(
    ii.hbmColor = BITMAPOBJ_CopyBitmap(CurIcon->IconInfo.hbmColor);
 
    /* Copy fields */
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForWrite(IconInfo, sizeof(ICONINFO), 1);
        RtlCopyMemory(IconInfo, &ii, sizeof(ICONINFO));
@@ -696,11 +696,11 @@ NtUserGetIconInfo(
        }
 
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if (NT_SUCCESS(Status))
       Ret = TRUE;
@@ -741,18 +741,18 @@ NtUserGetIconSize(
       goto cleanup;
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForWrite(plcx, sizeof(LONG), 1);
        RtlCopyMemory(plcx, &CurIcon->Size.cx, sizeof(LONG));
        ProbeForWrite(plcy, sizeof(LONG), 1);
        RtlCopyMemory(plcy, &CurIcon->Size.cy, sizeof(LONG));
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if(NT_SUCCESS(Status))
       bRet = TRUE;
@@ -1264,7 +1264,7 @@ NtUserSetCursorIconData(
    CurIcon->hRsrc = NULL; //hRsrc;
    CurIcon->hGroupRsrc = NULL; //hGroupRsrc;
 
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForRead(pIconInfo, sizeof(ICONINFO), 1);
        RtlCopyMemory(&CurIcon->IconInfo, pIconInfo, sizeof(ICONINFO));
@@ -1296,11 +1296,11 @@ NtUserSetCursorIconData(
            GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
        }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if(!NT_SUCCESS(Status))
       SetLastNtError(Status);

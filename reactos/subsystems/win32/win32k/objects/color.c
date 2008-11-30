@@ -827,17 +827,17 @@ NtGdiDoPalette(
 			return 0;
 		if (bInbound)
 		{
-			_SEH_TRY
+			_SEH2_TRY
 			{
 				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
 				memcpy(pEntries, pUnsafeEntries, cEntries * sizeof(PALETTEENTRY));
 			}
-			_SEH_HANDLE
+			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
 				ExFreePool(pEntries);
-				_SEH_YIELD(return 0);
+				_SEH2_YIELD(return 0);
 			}
-			_SEH_END
+			_SEH2_END
 		}
 	}
 
@@ -877,16 +877,16 @@ NtGdiDoPalette(
 	{
 		if (!bInbound)
 		{
-			_SEH_TRY
+			_SEH2_TRY
 			{
 				ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
 				memcpy(pUnsafeEntries, pEntries, cEntries * sizeof(PALETTEENTRY));
 			}
-			_SEH_HANDLE
+			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
 				ret = 0;
 			}
-			_SEH_END
+			_SEH2_END
 		}
 		ExFreePool(pEntries);
 	}

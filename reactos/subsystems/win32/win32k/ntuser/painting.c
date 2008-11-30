@@ -893,16 +893,16 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
       RETURN(FALSE);
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead(pUnsafePs, sizeof(*pUnsafePs), 1);
       hdc = pUnsafePs->hdc;
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
    if (!NT_SUCCESS(Status))
    {
       RETURN(FALSE);
@@ -1249,7 +1249,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
    DPRINT("Enter NtUserScrollDC\n");
    UserEnterExclusive();
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       if (prcUnsafeScroll)
       {
@@ -1266,11 +1266,11 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
          ProbeForWrite(prcUnsafeUpdate, sizeof(*prcUnsafeUpdate), 1);
       }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
@@ -1289,15 +1289,15 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
 
    if (prcUnsafeUpdate)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          *prcUnsafeUpdate = rcUpdate;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END
+      _SEH2_END
       if (!NT_SUCCESS(Status))
       {
          /* FIXME: SetLastError? */
@@ -1348,7 +1348,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
 
    IntGetClientRect(Window, &rcClip);
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       if (prcUnsafeScroll)
       {
@@ -1364,11 +1364,11 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
          IntGdiIntersectRect(&rcClip, &rcClip, prcUnsafeClip);
       }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if (!NT_SUCCESS(Status))
    {
@@ -1463,17 +1463,17 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
 
    if (prcUnsafeUpdate)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          /* Probe here, to not fail on invalid pointer before scrolling */
          ProbeForWrite(prcUnsafeUpdate, sizeof(*prcUnsafeUpdate), 1);
          *prcUnsafeUpdate = rcUpdate;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END
+      _SEH2_END
 
       if (!NT_SUCCESS(Status))
       {
@@ -1917,7 +1917,7 @@ NtUserDrawCaptionTemp(
      }
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead(lpRc, sizeof(RECT), sizeof(ULONG));
       RtlCopyMemory(&SafeRect, lpRc, sizeof(RECT));
@@ -1935,11 +1935,11 @@ NtUserDrawCaptionTemp(
 	  else
 	    Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, NULL, uFlags);
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      SetLastNtError(_SEH_GetExceptionCode());
+      SetLastNtError(_SEH2_GetExceptionCode());
    }
-   _SEH_END;
+   _SEH2_END;
 
    UserLeave();
    return Ret;

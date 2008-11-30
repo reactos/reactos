@@ -849,7 +849,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             Class->System = TRUE;
         }
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             PWSTR pszMenuNameBuffer = pszMenuName;
 
@@ -898,7 +898,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                     DPRINT1("Failed to convert unicode menu name to ansi!\n");
 
                     /* life would've been much prettier if ntoskrnl exported RtlRaiseStatus()... */
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             else
@@ -910,11 +910,11 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             if (Class->Style & CS_GLOBALCLASS)
                 Class->Global = TRUE;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if (!NT_SUCCESS(Status))
         {
@@ -1276,7 +1276,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
 
     /* Note: Accessing the buffer in ClassName may raise an exception! */
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (Ansi)
         {
@@ -1313,7 +1313,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
                 if (szTemp == NULL)
                 {
                     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 /* query the class name */
@@ -1340,7 +1340,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
                 if (!NT_SUCCESS(Status))
                 {
                     SetLastNtError(Status);
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -1361,17 +1361,17 @@ UserGetClassName(IN PWINDOWCLASS Class,
             if (!NT_SUCCESS(Status))
             {
                 SetLastNtError(Status);
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             Ret = BufLen / sizeof(WCHAR);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Ansi && szTemp != NULL && szTemp != szStaticTemp)
     {
@@ -1493,7 +1493,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
                                 AnsiString.MaximumLength);
         if (strBufW != NULL)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 NTSTATUS Status;
 
@@ -1511,16 +1511,16 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
                 if (!NT_SUCCESS(Status))
                 {
                     SetLastNtError(Status);
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
 
                 Ret = TRUE;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                SetLastNtError(_SEH_GetExceptionCode());
+                SetLastNtError(_SEH2_GetExceptionCode());
             }
-            _SEH_END;
+            _SEH2_END;
 
             if (Ret)
             {
@@ -1910,7 +1910,7 @@ NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
 
     UserEnterExclusive();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the parameters and basic parameter checks */
         if (ProbeForReadUint(&lpwcx->cbSize) != sizeof(WNDCLASSEXW))
@@ -1963,7 +1963,7 @@ NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
         {
 InvalidParameter:
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Register the class */
@@ -1975,11 +1975,11 @@ InvalidParameter:
                                 Flags);
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -2004,7 +2004,7 @@ NtUserRegisterClassExWOW(
 
     UserEnterExclusive();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the parameters and basic parameter checks */
         if (ProbeForReadUint(&lpwcx->cbSize) != sizeof(WNDCLASSEXW))
@@ -2069,7 +2069,7 @@ NtUserRegisterClassExWOW(
         {
 InvalidParameter:
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Register the class */
@@ -2081,11 +2081,11 @@ InvalidParameter:
 //                                Flags);
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -2155,7 +2155,7 @@ NtUserSetClassLong(HWND hWnd,
             goto Cleanup;
         }
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             UNICODE_STRING Value;
 
@@ -2184,7 +2184,7 @@ NtUserSetClassLong(HWND hWnd,
                     {
 InvalidParameter:
                         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-                        _SEH_LEAVE;
+                        _SEH2_LEAVE;
                     }
                 }
 
@@ -2196,11 +2196,11 @@ InvalidParameter:
                                       dwNewLong,
                                       Ansi);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            SetLastNtError(_SEH_GetExceptionCode());
+            SetLastNtError(_SEH2_GetExceptionCode());
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
 Cleanup:
@@ -2229,7 +2229,7 @@ NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
 
     UserEnterExclusive();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* probe the paramters */
         CapturedClassName = ProbeForReadUnicodeString(ClassNameOrAtom);
@@ -2250,7 +2250,7 @@ NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
             {
 InvalidParameter:
                 SetLastWin32Error(ERROR_INVALID_PARAMETER);
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
         }
 
@@ -2258,11 +2258,11 @@ InvalidParameter:
         Ret = UserUnregisterClass(&CapturedClassName,
                                   hInstance);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -2294,7 +2294,7 @@ NtUserGetClassInfo(
         ERR("GetW32ProcessInfo() returned NULL!\n");
         goto Cleanup;
     }
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* probe the paramters */
         CapturedClassName = ProbeForReadUnicodeString(ClassName);
@@ -2328,7 +2328,7 @@ NtUserGetClassInfo(
         {
 InvalidParameter:
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         ProbeForWrite(lpWndClassEx,
@@ -2369,11 +2369,11 @@ InvalidParameter:
          else
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
          SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
     }
-    _SEH_END;
+    _SEH2_END;
 
 Cleanup:
     UserLeave();
@@ -2396,7 +2396,7 @@ NtUserGetClassName (IN HWND hWnd,
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteUnicodeString(ClassName);
             CapturedClassName = *ClassName;
@@ -2412,11 +2412,11 @@ NtUserGetClassName (IN HWND hWnd,
                 ClassName->Length = CapturedClassName.Length;
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            SetLastNtError(_SEH_GetExceptionCode());
+            SetLastNtError(_SEH2_GetExceptionCode());
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     UserLeave();

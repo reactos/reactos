@@ -11,7 +11,9 @@
 	<include base="ReactOS">include/reactos/drivers</include>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>pch.h</pch>
+	-->
 
 	<directory name="dib" root="intermediate">
 		<file>dib8gen.c</file>
@@ -183,6 +185,9 @@
 	<directory name="stubs">
 		<file>stubs.c</file>
 	</directory>
+
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true" crt="libcntpr">
 	<importlibrary definition="win32k.pspec" />

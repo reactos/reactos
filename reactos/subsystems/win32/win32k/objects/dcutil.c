@@ -61,18 +61,18 @@ BOOL APIENTRY NtGdi##FuncName ( HDC hdc, LP##type pt ) \
   } \
   Int##FuncName( dc, &Safept); \
   DC_UnlockDc(dc); \
-  _SEH_TRY \
+  _SEH2_TRY \
   { \
     ProbeForWrite(pt, \
                   sizeof( type ), \
                   1); \
     *pt = Safept; \
   } \
-  _SEH_HANDLE \
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) \
   { \
-    Status = _SEH_GetExceptionCode(); \
+    Status = _SEH2_GetExceptionCode(); \
   } \
-  _SEH_END; \
+  _SEH2_END; \
   if(!NT_SUCCESS(Status)) \
   { \
     SetLastNtError(Status); \
@@ -117,7 +117,7 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
   dc->Dc_Attr.mxDeviceToWorld = dc->DcLevel.mxDeviceToWorld;
   dc->Dc_Attr.mxWorldToPage = dc->DcLevel.mxWorldToPage;
 
-  _SEH_TRY
+  _SEH2_TRY
   {
       ProbeForWrite( Dc_Attr,
              sizeof(DC_ATTR),
@@ -126,11 +126,11 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr)
                 &dc->Dc_Attr,
              sizeof(DC_ATTR));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-     Status = _SEH_GetExceptionCode();
+     Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 }
 
 

@@ -888,15 +888,15 @@ StretchDIBits(HDC hdc,
      pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
      if (pvSafeBits)
      {
-        _SEH_TRY
+        _SEH2_TRY
         {
            RtlCopyMemory( pvSafeBits, lpBits, cjBmpScanSize );
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             Hit = TRUE;
         }
-        _SEH_END
+        _SEH2_END
 
         if (Hit)
         {

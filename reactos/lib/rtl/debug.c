@@ -71,7 +71,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     if (RtlpSetInDbgPrint(TRUE)) return Status;
 
     /* Guard against incorrect pointers */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Get the length and normalize it */
         PrefixLength = strlen(Prefix);
@@ -86,13 +86,13 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
                             Format,
                             ap);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Fail */
         Length = PrefixLength = 0;
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if we went past the buffer */

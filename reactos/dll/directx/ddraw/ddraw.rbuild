@@ -70,4 +70,6 @@
 		<file>DirectD3D3_Vtable.c</file>
 		<file>DirectD3D7_Vtable.c</file>
 	</directory>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

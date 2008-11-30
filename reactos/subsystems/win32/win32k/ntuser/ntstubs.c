@@ -536,7 +536,7 @@ NtUserSetSysColors(
   DWORD Ret = FALSE;
   NTSTATUS Status = STATUS_SUCCESS;
   UserEnterExclusive();
-  _SEH_TRY
+  _SEH2_TRY
   {
      ProbeForRead(lpaElements,
                    sizeof(INT),
@@ -547,11 +547,11 @@ NtUserSetSysColors(
 // Developers: We are thread locked and calling gdi.
      Ret = IntSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues);
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
   if (!NT_SUCCESS(Status))
   {
       SetLastNtError(Status);

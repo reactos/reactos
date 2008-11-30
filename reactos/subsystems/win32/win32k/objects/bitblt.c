@@ -1158,7 +1158,7 @@ NtGdiPolyPatBlt(
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          return FALSE;
       }
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForRead(pRects,
                       cRects * sizeof(PATRECT),
@@ -1167,11 +1167,11 @@ NtGdiPolyPatBlt(
                        pRects,
                        cRects * sizeof(PATRECT));
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {

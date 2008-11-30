@@ -2502,7 +2502,7 @@ NtGdiExtCreateRegion(
     MATRIX matrix;
 
     DPRINT("NtGdiExtCreateRegion\n");
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(RgnData, Count, 1);
         nCount = RgnData->rdh.nCount;
@@ -2512,14 +2512,14 @@ NtGdiExtCreateRegion(
             RgnData->rdh.dwSize != sizeof(RGNDATAHEADER))
         {
             Status = STATUS_INVALID_PARAMETER;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
@@ -2535,7 +2535,7 @@ NtGdiExtCreateRegion(
     }
     hRgn = Region->BaseObject.hHmgr;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Copy header */
         Region->rdh = RgnData->rdh;
@@ -2570,11 +2570,11 @@ NtGdiExtCreateRegion(
                           nCount * sizeof(RECT));
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2795,16 +2795,16 @@ NtGdiGetRgnBox(
         return ret;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(pRect, sizeof(RECT), 1);
         *pRect = SafeRect;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         return ERROR;
@@ -3036,16 +3036,16 @@ NtGdiRectInRegion(
         return ERROR;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(unsaferc, sizeof(RECT), 1);
         rc = *unsaferc;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -3139,16 +3139,16 @@ NtGdiUnionRectWithRgn(
         return NULL;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(UnsafeRect, sizeof(RECT), 1);
         SafeRect = *UnsafeRect;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (! NT_SUCCESS(Status))
     {
@@ -3196,17 +3196,17 @@ NtGdiGetRegionData(
             return size + sizeof(RGNDATAHEADER);
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(rgndata, count, 1);
         RtlCopyMemory(rgndata, &obj->rdh, sizeof(RGNDATAHEADER));
         RtlCopyMemory(rgndata->Buffer, obj->Buffer, size);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {

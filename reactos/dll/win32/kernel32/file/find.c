@@ -292,7 +292,7 @@ NeedMoreData:
 
         if (FoundFile != NULL)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 if (bUnicode)
                 {
@@ -305,10 +305,10 @@ NeedMoreData:
                                           FoundFile);
                 }
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
             }
-            _SEH_END;
+            _SEH2_END;
         }
 
         if (Locked)

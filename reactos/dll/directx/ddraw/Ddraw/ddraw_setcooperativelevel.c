@@ -18,13 +18,13 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
 
     DX_WINDBG_trace();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
 
         if (hwnd && !IsWindow(hwnd))
         {
             retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
+             _SEH2_LEAVE;
         }
 
         // FIXME test if 0x20 exists as a flag and what thuse it do
@@ -34,43 +34,43 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
         {
 
               retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
+             _SEH2_LEAVE;
         }
 
         if (!( cooplevel & (DDSCL_NORMAL | DDSCL_EXCLUSIVE | DDSCL_SETFOCUSWINDOW)))
         {
               retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
+             _SEH2_LEAVE;
         }
 
         if ((cooplevel & DDSCL_FPUSETUP) && (cooplevel & DDSCL_FPUPRESERVE))
         {
               retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
+             _SEH2_LEAVE;
         }
 
         if ((cooplevel & DDSCL_EXCLUSIVE) && (!(cooplevel & DDSCL_FULLSCREEN)))
         {
               retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
+             _SEH2_LEAVE;
         }
 
         if ((cooplevel & DDSCL_ALLOWMODEX) &&  (!(cooplevel & DDSCL_FULLSCREEN)))
         {
               retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
+             _SEH2_LEAVE;
         }
 
         if ((cooplevel & (DDSCL_CREATEDEVICEWINDOW | DDSCL_SETFOCUSWINDOW)))
         {
               retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
+             _SEH2_LEAVE;
         }
 
         if (!cooplevel)
         {
               retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
+             _SEH2_LEAVE;
         }
 
 
@@ -86,7 +86,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
             This->lpLcl->lpGbl->lpExclusiveOwner=NULL;
 
             retVal = DD_OK;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* FULLSCREEN */
@@ -99,20 +99,20 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
             if (hwnd == NULL)
             {
                 retVal = DDERR_INVALIDPARAMS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             if( (GetWindowLong(hwnd, GWL_STYLE) & WS_CHILD) )
             {
                 retVal = DDERR_INVALIDPARAMS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             if( (This->lpLcl->lpGbl->lpExclusiveOwner != NULL) &&
                 (This->lpLcl->lpGbl->lpExclusiveOwner != This->lpLcl) )
             {
                 retVal = DDERR_INVALIDPARAMS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             This->lpLcl->lpGbl->lpExclusiveOwner = This-> lpLcl;
@@ -133,7 +133,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
             /* FIXME fullscreen are not finuish */
 
             retVal = DD_OK;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
     /*
@@ -152,12 +152,12 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
         //    if(This->lpLcl->dwLocalFlags & DDRAWILCL_SETCOOPCALLED)
         //    {
         //        retVal = DDERR_HWNDALREADYSET;
-        //         _SEH_LEAVE;
+        //         _SEH2_LEAVE;
         //    }
         //    else if( (This->lpLcl->dwLocalFlags & DDRAWILCL_ISFULLSCREEN) && window)
         //    {
         //        retVal = DDERR_HWNDALREADYSET;
-        //        _SEH_LEAVE;
+        //        _SEH2_LEAVE;
         //    }
 
         //    This->lpLcl->hFocusWnd = (ULONG_PTR) hwnd;
@@ -178,7 +178,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
         //    if(cooplevel & (DDSCL_FULLSCREEN | DDSCL_EXCLUSIVE) )
         //    {
         //        retVal = DDERR_INVALIDPARAMS;
-        //         _SEH_LEAVE;
+        //         _SEH2_LEAVE;
         //    }
 
         //    /* Switching from fullscreen? */
@@ -212,7 +212,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
         //        if(!(cooplevel & DDSCL_EXCLUSIVE) )
         //        {
         //            retVal = DDERR_INVALIDPARAMS;
-        //            _SEH_LEAVE;
+        //            _SEH2_LEAVE;
         //        }
 
         //        /* Switch from normal to full screen mode? */
@@ -236,7 +236,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
         //    else if(cooplevel & DDSCL_EXCLUSIVE)
         //    {
         //        retVal = DDERR_INVALIDPARAMS;
-        //        _SEH_LEAVE;
+        //        _SEH2_LEAVE;
         //    }
 
         //    if(cooplevel & DDSCL_CREATEDEVICEWINDOW)
@@ -271,10 +271,10 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
         //     * This->cooperative_level |= cooplevel;
         //     */
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
 
     return retVal;

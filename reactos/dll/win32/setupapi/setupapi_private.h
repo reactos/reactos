@@ -42,7 +42,7 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* This hack definition is necessary as long as setupapi 
    depends on Wine "compatibility" headers */

@@ -229,16 +229,16 @@ co_IntCallWindowProc(WNDPROC Proc,
                                &ResultPointer,
                                &ResultLength);
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       /* Simulate old behaviour: copy into our local buffer */
       RtlMoveMemory(Arguments, ResultPointer, ArgumentLength);
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END;
+   _SEH2_END;
 
    UserEnterCo();
 
@@ -493,7 +493,7 @@ co_IntCallHookProc(INT HookId,
 
    UserEnterCo();
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead((PVOID)*(LRESULT*)ResultPointer,
                                    sizeof(LRESULT),
@@ -501,11 +501,11 @@ co_IntCallHookProc(INT HookId,
       /* Simulate old behaviour: copy into our local buffer */
       Result = *(LRESULT*)ResultPointer;
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       Result = 0;
    }
-   _SEH_END;
+   _SEH2_END;
 
    IntCbFreeMemory(Argument);
 

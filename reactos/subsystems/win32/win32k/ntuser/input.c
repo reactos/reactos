@@ -88,25 +88,25 @@ NtUserGetLastInputInfo(PLASTINPUTINFO plii)
 
     UserEnterShared();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
         {
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             ret = FALSE;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
 
         plii->dwTime = IntLastInputTick(FALSE);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
         ret = FALSE;
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 

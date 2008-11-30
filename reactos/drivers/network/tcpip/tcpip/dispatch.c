@@ -10,7 +10,7 @@
  */
 
 #include "precomp.h"
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 NTSTATUS DispPrepareIrpForCancel(
     PTRANSPORT_CONTEXT Context,
@@ -1346,7 +1346,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
         QueryContext = ExAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
         if (QueryContext) {
-	    _SEH_TRY {
+	    _SEH2_TRY {
                 InputMdl = IoAllocateMdl(InputBuffer,
                     sizeof(TCP_REQUEST_QUERY_INFORMATION_EX),
                     FALSE, TRUE, NULL);
@@ -1370,9 +1370,9 @@ NTSTATUS DispTdiQueryInformationEx(
                         InputBuffer, sizeof(TCP_REQUEST_QUERY_INFORMATION_EX));
                 } else
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-            } _SEH_HANDLE {
-                Status = _SEH_GetExceptionCode();
-            } _SEH_END;
+            } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                Status = _SEH2_GetExceptionCode();
+            } _SEH2_END;
 
             if (NT_SUCCESS(Status)) {
                 Size = MmGetMdlByteCount(OutputMdl);
@@ -1423,7 +1423,7 @@ NTSTATUS DispTdiQueryInformationEx(
         QueryContext = ExAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
         if (!QueryContext) return STATUS_INSUFFICIENT_RESOURCES;
 
-	_SEH_TRY {
+	_SEH2_TRY {
 	    InputMdl = IoAllocateMdl(InputBuffer,
 				     sizeof(TCP_REQUEST_QUERY_INFORMATION_EX),
 				     FALSE, TRUE, NULL);
@@ -1433,10 +1433,10 @@ NTSTATUS DispTdiQueryInformationEx(
 
 	    InputMdlLocked = TRUE;
 	    Status = STATUS_SUCCESS;
-	} _SEH_HANDLE {
+	} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 	    TI_DbgPrint(MAX_TRACE, ("Failed to acquire client buffer\n"));
-	    Status = _SEH_GetExceptionCode();
-	} _SEH_END;
+	    Status = _SEH2_GetExceptionCode();
+	} _SEH2_END;
 
 	if( !NT_SUCCESS(Status) || !InputMdl ) {
 	    if( InputMdl ) IoFreeMdl( InputMdl );

@@ -96,5 +96,9 @@
 	<file>version.c</file>
 	<file>wait.c</file>
 	<file>workitem.c</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>rtl.h</pch>
+	-->
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

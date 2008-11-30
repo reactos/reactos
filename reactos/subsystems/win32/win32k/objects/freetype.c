@@ -3723,17 +3723,17 @@ NtGdiGetCharABCWidthsW(
 
    if(pwch)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForRead(pwch,
             sizeof(PWSTR),
                        1);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
    if (!NT_SUCCESS(Status))
    {
@@ -3891,17 +3891,17 @@ NtGdiGetCharWidthW(
 
    if(pwc)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForRead(pwc,
            sizeof(PWSTR),
                       1);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
    if (!NT_SUCCESS(Status))
    {
@@ -4073,17 +4073,17 @@ NtGdiGetGlyphIndicesW(
      ExFreePool(potm);
   }
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     ProbeForRead(UnSafepwc,
              sizeof(PWSTR),
                          1);
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    Status = _SEH_GetExceptionCode();
+    Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   if (!NT_SUCCESS(Status)) goto ErrorRet;
 
@@ -4106,7 +4106,7 @@ NtGdiGetGlyphIndicesW(
 
   IntUnLockFreeType;
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     ProbeForWrite(UnSafepgi,
                sizeof(WORD),
@@ -4115,11 +4115,11 @@ NtGdiGetGlyphIndicesW(
                      Buffer,
             cwc*sizeof(WORD));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    Status = _SEH_GetExceptionCode();
+    Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
 ErrorRet:
   ExFreePoolWithTag(Buffer, TAG_GDITEXT);

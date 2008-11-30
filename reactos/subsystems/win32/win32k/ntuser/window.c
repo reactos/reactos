@@ -1269,17 +1269,17 @@ NtUserBuildHwndList(
             {
                if(dwCount++ < *pBufSize && pWnd)
                {
-                  _SEH_TRY
+                  _SEH2_TRY
                   {
                      ProbeForWrite(pWnd, sizeof(HWND), 1);
                      *pWnd = Window->hSelf;
                      pWnd++;
                   }
-                  _SEH_HANDLE
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
-                     Status = _SEH_GetExceptionCode();
+                     Status = _SEH2_GetExceptionCode();
                   }
-                  _SEH_END
+                  _SEH2_END
                   if(!NT_SUCCESS(Status))
                   {
                      SetLastNtError(Status);
@@ -1728,19 +1728,19 @@ AllocErr:
       }
 
       Wnd->WindowName.Buffer[WindowName->Length / sizeof(WCHAR)] = L'\0';
-      _SEH_TRY
+      _SEH2_TRY
       {
           RtlCopyMemory(Wnd->WindowName.Buffer,
                         WindowName->Buffer,
                         WindowName->Length);
           Wnd->WindowName.Length = WindowName->Length;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
           WindowName->Length = 0;
           Wnd->WindowName.Buffer[0] = L'\0';
       }
-      _SEH_END;
+      _SEH2_END;
    }
 
    /*
@@ -2621,7 +2621,7 @@ NtUserFindWindowEx(HWND hwndParent,
 
    if (ucClassName != NULL || ucWindowName != NULL)
    {
-       _SEH_TRY
+       _SEH2_TRY
        {
            if (ucClassName != NULL)
            {
@@ -2635,13 +2635,13 @@ NtUserFindWindowEx(HWND hwndParent,
                else if (!IS_ATOM(ClassName.Buffer))
                {
                    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-                   _SEH_LEAVE;
+                   _SEH2_LEAVE;
                }
 
                if (!IntGetAtomFromStringOrAtom(&ClassName,
                                                &ClassAtom))
                {
-                   _SEH_LEAVE;
+                   _SEH2_LEAVE;
                }
            }
 
@@ -2656,12 +2656,12 @@ NtUserFindWindowEx(HWND hwndParent,
                }
            }
        }
-       _SEH_HANDLE
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
-           SetLastNtError(_SEH_GetExceptionCode());
-           _SEH_YIELD(RETURN(NULL));
+           SetLastNtError(_SEH2_GetExceptionCode());
+           _SEH2_YIELD(RETURN(NULL));
        }
-       _SEH_END;
+       _SEH2_END;
 
        if (ucClassName != NULL)
        {
@@ -2701,7 +2701,7 @@ NtUserFindWindowEx(HWND hwndParent,
       RETURN( NULL);
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
        if(Parent->hSelf == Desktop)
        {
@@ -2780,12 +2780,12 @@ NtUserFindWindowEx(HWND hwndParent,
        }
 #endif
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       SetLastNtError(_SEH_GetExceptionCode());
+       SetLastNtError(_SEH2_GetExceptionCode());
        Ret = NULL;
    }
-   _SEH_END;
+   _SEH2_END;
 
    RETURN( Ret);
 
@@ -2929,7 +2929,7 @@ NtUserGetComboBoxInfo(
    {
       RETURN( FALSE );
    }
-   _SEH_TRY
+   _SEH2_TRY
    {
        if(pcbi)
        {
@@ -2938,12 +2938,12 @@ NtUserGetComboBoxInfo(
                         1);
        }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       SetLastNtError(_SEH_GetExceptionCode());
-       _SEH_YIELD(RETURN(FALSE));
+       SetLastNtError(_SEH2_GetExceptionCode());
+       _SEH2_YIELD(RETURN(FALSE));
    }
-   _SEH_END;
+   _SEH2_END;
 
    // Pass the user pointer, it was already probed.
    RETURN( (BOOL) co_IntSendMessage( Wnd->hSelf, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi));
@@ -4545,16 +4545,16 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
    RtlInitUnicodeString(&SafeText, NULL);
    if (WindowText != NULL)
    {
-       _SEH_TRY
+       _SEH2_TRY
        {
            SafeText = ProbeForReadUnicodeString(WindowText);
        }
-       _SEH_HANDLE
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
            Ret = FALSE;
-           SetLastNtError(_SEH_GetExceptionCode());
+           SetLastNtError(_SEH2_GetExceptionCode());
        }
-       _SEH_END;
+       _SEH2_END;
 
        if (!Ret)
            return FALSE;
@@ -4571,7 +4571,7 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
 
    if(SafeText.Length != 0)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
           if (Wnd->WindowName.MaximumLength > 0 &&
               SafeText.Length <= Wnd->WindowName.MaximumLength - sizeof(UNICODE_NULL))
@@ -4614,12 +4614,12 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
               }
           }
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-           SetLastNtError(_SEH_GetExceptionCode());
+           SetLastNtError(_SEH2_GetExceptionCode());
            Ret = FALSE;
       }
-      _SEH_END;
+      _SEH2_END;
    }
    else
    {

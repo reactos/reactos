@@ -518,7 +518,7 @@ GetW32ThreadInfo(VOID)
             /* update the TEB */
             Teb = NtCurrentTeb();
             ci = GetWin32ClientInfo();
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForWrite(Teb,
                               sizeof(TEB),
@@ -527,11 +527,11 @@ GetW32ThreadInfo(VOID)
                 Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
                 ci->pClientThreadInfo = &ti->ClientThreadInfo;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                SetLastNtError(_SEH_GetExceptionCode());
+                SetLastNtError(_SEH2_GetExceptionCode());
             }
-            _SEH_END;
+            _SEH2_END;
         }
         else
         {

@@ -34,10 +34,10 @@ NTSTATUS find_entry( PVOID BaseAddress, LDR_RESOURCE_INFO *info,
 
 /* FUNCTIONS ****************************************************************/
 
-_SEH_FILTER(page_fault)
+int page_fault(ULONG ExceptionCode)
 {
-    if (_SEH_GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ||
-        _SEH_GetExceptionCode() == EXCEPTION_PRIV_INSTRUCTION)
+    if (ExceptionCode == EXCEPTION_ACCESS_VIOLATION ||
+        ExceptionCode == EXCEPTION_PRIV_INSTRUCTION)
         return EXCEPTION_EXECUTE_HANDLER;
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -172,7 +172,7 @@ static NTSTATUS LdrpAccessResource( PVOID BaseAddress, IMAGE_RESOURCE_DATA_ENTRY
 {
     NTSTATUS status = STATUS_SUCCESS;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ULONG dirsize;
 
@@ -192,11 +192,11 @@ static NTSTATUS LdrpAccessResource( PVOID BaseAddress, IMAGE_RESOURCE_DATA_ENTRY
             if (size) *size = entry->Size;
         }
     }
-    _SEH_EXCEPT(page_fault)
+    _SEH2_EXCEPT(page_fault(_SEH2_GetExceptionCode()))
     {
-        status = _SEH_GetExceptionCode();
+        status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     return status;
 }
 
@@ -213,7 +213,7 @@ LdrFindResource_U(PVOID BaseAddress,
     void *res;
     NTSTATUS status = STATUS_SUCCESS;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
 	if (ResourceInfo)
         {
@@ -226,11 +226,11 @@ LdrFindResource_U(PVOID BaseAddress,
         status = find_entry( BaseAddress, ResourceInfo, Level, &res, FALSE );
         if (status == STATUS_SUCCESS) *ResourceDataEntry = res;
     }
-    _SEH_EXCEPT(page_fault)
+    _SEH2_EXCEPT(page_fault(_SEH2_GetExceptionCode()))
     {
-        status = _SEH_GetExceptionCode();
+        status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     return status;
 }
 
@@ -260,7 +260,7 @@ LdrFindResourceDirectory_U(IN PVOID BaseAddress,
     void *res;
     NTSTATUS status = STATUS_SUCCESS;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
 	if (info)
         {
@@ -273,11 +273,11 @@ LdrFindResourceDirectory_U(IN PVOID BaseAddress,
         status = find_entry( BaseAddress, info, level, &res, TRUE );
         if (status == STATUS_SUCCESS) *addr = res;
     }
-    _SEH_EXCEPT(page_fault)
+    _SEH2_EXCEPT(page_fault(_SEH2_GetExceptionCode()))
     {
-        status = _SEH_GetExceptionCode();
+        status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     return status;
 }
 

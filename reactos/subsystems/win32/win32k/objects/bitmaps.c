@@ -115,15 +115,15 @@ NtGdiCreateBitmap(
       BOOL Hit = FALSE;
       UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * abs(Height);
 
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForRead(pUnsafeBits, cjBits, 1);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
          Hit = TRUE;
       }
-      _SEH_END
+      _SEH2_END
 
       if (Hit) return 0;
    }
@@ -236,16 +236,16 @@ NtGdiGetBitmapDimension(
 		return FALSE;
 	}
 
-	_SEH_TRY
+	_SEH2_TRY
 	{
 		ProbeForWrite(Dimension, sizeof(SIZE), 1);
 		*Dimension = bmp->dimension;
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
 		Ret = FALSE;
 	}
-	_SEH_END
+	_SEH2_END
 
 	BITMAPOBJ_UnlockBitmap(bmp);
 
@@ -425,16 +425,16 @@ NtGdiGetBitmapBits(HBITMAP  hBitmap,
 	/* Don't copy more bytes than the buffer has */
 	Bytes = min(Bytes, bmp->SurfObj.cjBits);
 
-	_SEH_TRY
+	_SEH2_TRY
 	{
 		ProbeForWrite(pUnsafeBits, Bytes, 1);
 		ret = IntGetBitmapBits(bmp, Bytes, pUnsafeBits);
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
 		ret = 0;
 	}
-	_SEH_END
+	_SEH2_END
 
 	BITMAPOBJ_UnlockBitmap (bmp);
 
@@ -500,16 +500,16 @@ NtGdiSetBitmapBits(
 		return 0;
 	}
 
-	_SEH_TRY
+	_SEH2_TRY
 	{
 		ProbeForRead(pUnsafeBits, Bytes, 1);
 		ret = IntSetBitmapBits(bmp, Bytes, pUnsafeBits);
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
 		ret = 0;
 	}
-	_SEH_END
+	_SEH2_END
 
 	BITMAPOBJ_UnlockBitmap(bmp);
 
@@ -538,16 +538,16 @@ NtGdiSetBitmapDimension(
 
 	if (Size)
 	{
-		_SEH_TRY
+		_SEH2_TRY
 		{
 			ProbeForWrite(Size, sizeof(SIZE), 1);
 			*Size = bmp->dimension;
 		}
-		_SEH_HANDLE
+		_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 		{
 			Ret = FALSE;
 		}
-		_SEH_END
+		_SEH2_END
 	}
 
 	/* The dimension is changed even if writing the old value failed */

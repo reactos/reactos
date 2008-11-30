@@ -38,7 +38,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <ddrawi.h>
 
 /* SEH Support with PSEH */
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* CSRSS Header */
 #include <csrss/csrss.h>

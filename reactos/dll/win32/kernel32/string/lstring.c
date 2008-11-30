@@ -68,7 +68,7 @@ lstrcpynA(LPSTR lpString1, LPCSTR lpString2, int iMaxLength)
     UINT count = iMaxLength;
     LPSTR Ret = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         while ((count > 1) && *s)
         {
@@ -81,8 +81,8 @@ lstrcpynA(LPSTR lpString1, LPCSTR lpString2, int iMaxLength)
 
         Ret = lpString1;
     }
-    _SEH_HANDLE
-    _SEH_END;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_END;
 
     return Ret;
 }
@@ -97,13 +97,13 @@ lstrcpyA(LPSTR lpString1, LPCSTR lpString2)
 {
     LPSTR Ret = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         memmove(lpString1, lpString2, strlen(lpString2) + 1);
         Ret = lpString1;
      }
-    _SEH_HANDLE
-    _SEH_END;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_END;
 
     return Ret;
 }
@@ -118,12 +118,12 @@ lstrcatA(LPSTR lpString1, LPCSTR lpString2)
 {
     LPSTR Ret = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Ret = strcat(lpString1, lpString2);
     }
-    _SEH_HANDLE
-    _SEH_END;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_END;
 
     return Ret;
 }
@@ -138,12 +138,12 @@ lstrlenA(LPCSTR lpString)
 {
     INT Ret = 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Ret = strlen(lpString);
     }
-    _SEH_HANDLE
-    _SEH_END;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_END;
 
     return Ret;
 }
@@ -209,7 +209,7 @@ lstrcpynW(LPWSTR lpString1, LPCWSTR lpString2, int iMaxLength)
     UINT count = iMaxLength;
     LPWSTR Ret = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         while ((count > 1) && *s)
         {
@@ -222,8 +222,8 @@ lstrcpynW(LPWSTR lpString1, LPCWSTR lpString2, int iMaxLength)
 
         Ret = lpString1;
     }
-    _SEH_HANDLE
-    _SEH_END;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_END;
 
     return Ret;
 }
@@ -238,12 +238,12 @@ lstrcpyW(LPWSTR lpString1, LPCWSTR lpString2)
 {
     LPWSTR Ret = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Ret = wcscpy(lpString1, lpString2);
     }
-    _SEH_HANDLE
-    _SEH_END;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_END;
 
     return Ret;
 }
@@ -258,12 +258,12 @@ lstrcatW(LPWSTR lpString1, LPCWSTR lpString2)
 {
     LPWSTR Ret = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Ret = wcscat(lpString1, lpString2);
     }
-    _SEH_HANDLE
-    _SEH_END;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_END;
 
     return Ret;
 }
@@ -278,12 +278,12 @@ lstrlenW(LPCWSTR lpString)
 {
     INT Ret = 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Ret = wcslen(lpString);
     }
-    _SEH_HANDLE
-    _SEH_END;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_END;
 
     return Ret;
 }

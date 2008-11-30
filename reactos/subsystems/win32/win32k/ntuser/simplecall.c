@@ -644,7 +644,7 @@ NtUserCallTwoParam(
 
           if (Count != 0 && RegSysClassArray != NULL)
           {
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeArrayForRead(RegSysClassArray,
                                     sizeof(RegSysClassArray[0]),
@@ -654,11 +654,11 @@ NtUserCallTwoParam(
                   Ret = (DWORD)UserRegisterSystemClasses(Count,
                                                          RegSysClassArray);
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  SetLastNtError(_SEH_GetExceptionCode());
+                  SetLastNtError(_SEH2_GetExceptionCode());
               }
-              _SEH_END;
+              _SEH2_END;
           }
 
           RETURN( Ret);

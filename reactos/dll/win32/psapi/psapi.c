@@ -1332,12 +1332,12 @@ GetProcessMemoryInfo(HANDLE Process,
      similar so we can return the proper error codes when bad pointers are passed
      to this function! */
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     if(cb < sizeof(PROCESS_MEMORY_COUNTERS))
     {
       SetLastError(ERROR_INSUFFICIENT_BUFFER);
-      _SEH_LEAVE;
+      _SEH2_LEAVE;
     }
 
     /* ppsmemCounters->cb isn't checked at all! */
@@ -1350,7 +1350,7 @@ GetProcessMemoryInfo(HANDLE Process,
     if(!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
-      _SEH_LEAVE;
+      _SEH2_LEAVE;
     }
 
     /* fill the structure with the collected information, in case of bad pointers
@@ -1368,11 +1368,11 @@ GetProcessMemoryInfo(HANDLE Process,
 
     Ret = TRUE;
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    SetLastErrorByStatus(_SEH_GetExceptionCode());
+    SetLastErrorByStatus(_SEH2_GetExceptionCode());
   }
-  _SEH_END;
+  _SEH2_END;
 
   return Ret;
 }

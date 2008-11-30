@@ -488,7 +488,7 @@ NtUserGetKeyboardLayoutList(
    }
    else
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForWrite(pHklBuff, nItems*sizeof(HKL), 4);
 
@@ -504,12 +504,12 @@ NtUserGetKeyboardLayoutList(
          }
 
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         SetLastNtError(_SEH_GetExceptionCode());
+         SetLastNtError(_SEH2_GetExceptionCode());
          Ret = 0;
       }
-      _SEH_END;
+      _SEH2_END;
    }
 
    UserLeave();
@@ -527,7 +527,7 @@ NtUserGetKeyboardLayoutName(
 
    UserEnterShared();
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForWrite(lpszName, KL_NAMELENGTH*sizeof(WCHAR), 1);
       pti = PsGetCurrentThreadWin32Thread();
@@ -535,12 +535,12 @@ NtUserGetKeyboardLayoutName(
       RtlCopyMemory(lpszName,  pKbl->Name, KL_NAMELENGTH*sizeof(WCHAR));
       ret = TRUE;
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      SetLastNtError(_SEH_GetExceptionCode());
+      SetLastNtError(_SEH2_GetExceptionCode());
       ret = FALSE;
    }
-   _SEH_END;
+   _SEH2_END;
 
    UserLeave();
    return ret;

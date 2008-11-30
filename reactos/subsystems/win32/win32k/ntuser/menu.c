@@ -1630,19 +1630,19 @@ NtUserGetTitleBarInfo(
         retValue = FALSE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Copy our usermode buffer bti to local buffer bartitleinfo */
         ProbeForRead(bti, sizeof(TITLEBARINFO), 1);
         RtlCopyMemory(&bartitleinfo, bti, sizeof(TITLEBARINFO));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Fail copy the data */ 
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         retValue = FALSE;
     }
-    _SEH_END
+    _SEH2_END
 
     /* Get the tile bar info */ 
     if (retValue)
@@ -1650,19 +1650,19 @@ NtUserGetTitleBarInfo(
         retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);
         if (retValue)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Copy our buffer to user mode buffer bti */
                 ProbeForWrite(bti, sizeof(TITLEBARINFO), 1);
                 RtlCopyMemory(bti, &bartitleinfo, sizeof(TITLEBARINFO));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Fail copy the data */ 
                 SetLastWin32Error(ERROR_INVALID_PARAMETER);
                 retValue = FALSE;
             }
-            _SEH_END
+            _SEH2_END
         }
     }
 

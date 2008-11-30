@@ -1,7 +1,7 @@
 #ifndef NDK_MMCOPY_H
 #define NDK_MMCOPY_H
 
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 NTSTATUS _MmCopyFromCaller( PVOID Target, PVOID Source, UINT Bytes );
 NTSTATUS _MmCopyToCaller( PVOID Target, PVOID Source, UINT Bytes );

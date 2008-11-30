@@ -8,7 +8,7 @@
  * 20040708 Created
  */
 #include <afd.h>
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 #include "debug.h"
 #include "tdiconn.h"
 
@@ -149,13 +149,13 @@ TdiBuildConnectionInfoInPlace
   PTRANSPORT_ADDRESS Address ) {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    _SEH_TRY {
+    _SEH2_TRY {
     	RtlCopyMemory( ConnectionInfo->RemoteAddress,
 		       Address,
 		       ConnectionInfo->RemoteAddressLength );
-    } _SEH_HANDLE {
-	Status = _SEH_GetExceptionCode();
-    } _SEH_END;
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+	Status = _SEH2_GetExceptionCode();
+    } _SEH2_END;
 
     return Status;
 }

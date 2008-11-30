@@ -202,18 +202,18 @@ NtGdiGetAppClipBox(HDC hDC, LPRECT rc)
 
   Ret = GdiGetClipBox(hDC, &Saferect);
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     ProbeForWrite(rc,
                   sizeof(RECT),
                   1);
     *rc = Saferect;
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    Status = _SEH_GetExceptionCode();
+    Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   if(!NT_SUCCESS(Status))
   {
@@ -388,18 +388,18 @@ BOOL APIENTRY NtGdiRectVisible(HDC  hDC,
       return FALSE;
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead(UnsafeRect,
                    sizeof(RECT),
                    1);
       Rect = *UnsafeRect;
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END;
+   _SEH2_END;
 
    if(!NT_SUCCESS(Status))
    {

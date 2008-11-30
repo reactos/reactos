@@ -200,7 +200,7 @@ GetClassLongA(HWND hWnd, int nIndex)
     if (!Wnd)
         return 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Class = DesktopPtrToUser(Wnd->Class);
         if (Class != NULL)
@@ -285,11 +285,11 @@ GetClassLongA(HWND hWnd, int nIndex)
             WARN("Invalid class for hwnd 0x%p!\n", hWnd);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Wnd = NULL; /* Make sure we call NtUserGetClassLong */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Wnd == NULL)
         Ret = NtUserGetClassLong(hWnd, nIndex, TRUE);
@@ -313,7 +313,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
     if (!Wnd)
         return 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Class = DesktopPtrToUser(Wnd->Class);
         if (Class != NULL)
@@ -398,11 +398,11 @@ GetClassLongW ( HWND hWnd, int nIndex )
             WARN("Invalid class for hwnd 0x%p!\n", hWnd);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Wnd = NULL; /* Make sure we call NtUserGetClassLong */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Wnd == NULL)
         Ret = NtUserGetClassLong(hWnd, nIndex, FALSE);

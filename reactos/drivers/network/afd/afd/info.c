@@ -11,7 +11,7 @@
 #include "tdi_proto.h"
 #include "tdiconn.h"
 #include "debug.h"
-#include "pseh/pseh.h"
+#include "pseh/pseh2.h"
 
 NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
@@ -26,7 +26,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    _SEH_TRY {
+    _SEH2_TRY {
 	switch( InfoReq->InformationClass ) {
 	case AFD_INFO_RECEIVE_WINDOW_SIZE:
 	    InfoReq->Information.Ulong = FCB->Recv.Size;
@@ -59,10 +59,10 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    Status = STATUS_INVALID_PARAMETER;
 	    break;
 	}
-    } _SEH_HANDLE {
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 	AFD_DbgPrint(MID_TRACE,("Exception executing GetInfo\n"));
 	Status = STATUS_INVALID_PARAMETER;
-    } _SEH_END;
+    } _SEH2_END;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
@@ -95,12 +95,12 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	  NULL );
 
     if( Mdl != NULL ) {
-	_SEH_TRY {
+	_SEH2_TRY {
 	    MmProbeAndLockPages( Mdl, Irp->RequestorMode, IoModifyAccess );
-	} _SEH_HANDLE {
+	} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 	    AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-	    Status = _SEH_GetExceptionCode();
-	} _SEH_END;
+	    Status = _SEH2_GetExceptionCode();
+	} _SEH2_END;
 
 	if( NT_SUCCESS(Status) ) {
             if( Local ) {
@@ -123,15 +123,15 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	            return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0,
 	                                           NULL );
                 }
-		
+
                 if( NT_SUCCESS
                     ( Status = TdiBuildNullConnectionInfo
                       ( &ConnInfo,
                         FCB->RemoteAddress->Address[0].AddressType ) ) ) {
-		    
+
 		    Length = TaLengthOfTransportAddress
 			(ConnInfo->RemoteAddress);
-		    
+
 		    if (NT_SUCCESS(Status))
 			Status = ObOpenObjectByPointer
 			    (PsGetCurrentProcess(),
@@ -141,17 +141,17 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			     PsProcessType,
 			     KernelMode,
 			     &ProcHandle);
-		    
+
 		    if (NT_SUCCESS(Status))
 		    {
-			InOutLength = 
+			InOutLength =
 			    PAGE_ROUND_UP(sizeof(TDI_CONNECTION_INFO));
-			
+
 			Status = NtAllocateVirtualMemory
 			    (ProcHandle,
 			     (PVOID*)&UserSpace,
 			     PAGE_SHIFT,
-			     &InOutLength, 
+			     &InOutLength,
 			     MEM_COMMIT,
 			     PAGE_READWRITE);
 		    }
@@ -160,7 +160,7 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		    {
 			ExFreePool(ConnInfo);
 			ConnInfo = (PTDI_CONNECTION_INFORMATION)UserSpace;
-			
+
 			SysMdl = IoAllocateMdl
 			    ( UserSpace, Length, FALSE, FALSE, NULL );
 		    }
@@ -170,15 +170,15 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			ConnInfo = NULL;
 		    }
 		}
-	    
+
                 if( SysMdl ) {
-                    _SEH_TRY {
+                    _SEH2_TRY {
                         MmProbeAndLockPages( SysMdl, Irp->RequestorMode, IoModifyAccess );
 			UnlockSysMdl = TRUE;
-                    } _SEH_HANDLE {
+                    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 	                AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-	                Status = _SEH_GetExceptionCode();
-                    } _SEH_END;
+	                Status = _SEH2_GetExceptionCode();
+                    } _SEH2_END;
                 } else Status = STATUS_NO_MEMORY;
 
                 if( NT_SUCCESS(Status) ) {
@@ -203,10 +203,10 @@ AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		    MmUnlockPages( SysMdl );
 
                 if( SysMdl ) IoFreeMdl( SysMdl );
-                if( ConnInfo ) 
+                if( ConnInfo )
 		    NtFreeVirtualMemory
 			( ProcHandle,
-			  (PVOID)ConnInfo, 
+			  (PVOID)ConnInfo,
 			  &InOutLength,
 			  MEM_RELEASE );
 		if( ProcHandle ) NtClose(ProcHandle);

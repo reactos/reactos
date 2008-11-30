@@ -19,7 +19,6 @@
 #include <obfuncs.h>
 #include <iotypes.h>
 #include <debug.h>
-#include <pseh/pseh.h>
 #include "eventlogrpc_s.h"
 
 typedef struct _IO_ERROR_LPC

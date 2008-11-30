@@ -94,7 +94,7 @@ BOOL APIENTRY NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
 {
   BOOL Ret;
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     ProbeForWrite(UnsafeXFormResult,
                   sizeof(XFORM),
@@ -107,11 +107,11 @@ BOOL APIENTRY NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
                  1);
     Ret = IntGdiCombineTransform(UnsafeXFormResult, Unsafexform1, Unsafexform2);
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
     Ret = FALSE;
   }
-  _SEH_END;
+  _SEH2_END;
 
   return Ret;
 }
@@ -194,7 +194,7 @@ NtGdiGetTransform(HDC  hDC,
     return FALSE;
   }
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     ProbeForWrite(XForm,
                   sizeof(XFORM),
@@ -208,11 +208,11 @@ NtGdiGetTransform(HDC  hDC,
      break;
    }
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    Status = _SEH_GetExceptionCode();
+    Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   DC_UnlockDc(dc);
   return NT_SUCCESS(Status);
@@ -264,7 +264,7 @@ NtGdiTransformPoints( HDC hDC,
      return FALSE;
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForWrite(UnsafePtOut,
                     Size,
@@ -276,11 +276,11 @@ NtGdiTransformPoints( HDC hDC,
                     UnsafePtsIn,
                     Size);
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END;
+   _SEH2_END;
 
    if(!NT_SUCCESS(Status))
    {
@@ -308,18 +308,18 @@ NtGdiTransformPoints( HDC hDC,
       }
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       /* pointer was already probed! */
       RtlCopyMemory(UnsafePtOut,
                     Points,
                     Size);
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END;
+   _SEH2_END;
 
    if(!NT_SUCCESS(Status))
    {
@@ -357,16 +357,16 @@ NtGdiModifyWorldTransform(HDC hDC,
    // However, if it is not NULL, then it must be valid even though it is not used.
    if (UnsafeXForm != NULL || Mode != MWT_IDENTITY)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
          RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
          Ret = FALSE;
       }
-      _SEH_END;
+      _SEH2_END;
    }
 
    // Safe to handle kernel mode data.
@@ -397,7 +397,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
   
   if (UnsafePoint)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWrite(UnsafePoint,
                           sizeof(POINT),
@@ -406,11 +406,11 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
             UnsafePoint->y = Dc_Attr->ptlViewportOrg.y;
             if ( Dc_Attr->dwLayout & LAYOUT_RTL ) UnsafePoint->x = -UnsafePoint->x;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
 	if ( !NT_SUCCESS(Status) )
 	  {
@@ -451,7 +451,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
     {
       NTSTATUS Status = STATUS_SUCCESS;
 
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForWrite(Point,
                        sizeof(POINT),
@@ -459,11 +459,11 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
          Point->x = Dc_Attr->ptlWindowOrg.x;
          Point->y = Dc_Attr->ptlWindowOrg.y;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if(!NT_SUCCESS(Status))
       {
@@ -509,7 +509,7 @@ NtGdiScaleViewportExtEx(HDC  hDC,
   {
      NTSTATUS Status = STATUS_SUCCESS;
 
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForWrite(pSize,
             sizeof(LPSIZE),
@@ -518,11 +518,11 @@ NtGdiScaleViewportExtEx(HDC  hDC,
        pSize->cx = pDc_Attr->szlViewportExt.cx;
        pSize->cy = pDc_Attr->szlViewportExt.cy;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -591,7 +591,7 @@ NtGdiScaleWindowExtEx(HDC  hDC,
   {
      NTSTATUS Status = STATUS_SUCCESS;
 
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForWrite(pSize,
             sizeof(LPSIZE),
@@ -602,11 +602,11 @@ NtGdiScaleWindowExtEx(HDC  hDC,
        pSize->cx = X;
        pSize->cy = pDc_Attr->szlWindowExt.cy;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -769,7 +769,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
     {
       NTSTATUS Status = STATUS_SUCCESS;
 
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForWrite(Size,
                        sizeof(SIZE),
@@ -783,11 +783,11 @@ NtGdiSetViewportExtEx(HDC  hDC,
          if (Dc_Attr->iMapMode == MM_ISOTROPIC)
              IntFixIsotropicMapping(dc);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if(!NT_SUCCESS(Status))
       {
@@ -827,7 +827,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
     {
       NTSTATUS Status = STATUS_SUCCESS;
 
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForWrite(Point,
                        sizeof(POINT),
@@ -835,11 +835,11 @@ NtGdiSetViewportOrgEx(HDC  hDC,
          Point->x = Dc_Attr->ptlViewportOrg.x;
          Point->y = Dc_Attr->ptlViewportOrg.y;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if(!NT_SUCCESS(Status))
       {
@@ -893,7 +893,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
     {
       NTSTATUS Status = STATUS_SUCCESS;
 
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForWrite(Size,
                        sizeof(SIZE),
@@ -901,11 +901,11 @@ NtGdiSetWindowExtEx(HDC  hDC,
          Size->cx = Dc_Attr->szlWindowExt.cx;
          Size->cy = Dc_Attr->szlWindowExt.cy;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if(!NT_SUCCESS(Status))
       {
@@ -947,7 +947,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
     {
       NTSTATUS Status = STATUS_SUCCESS;
 
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForWrite(Point,
                        sizeof(POINT),
@@ -955,11 +955,11 @@ NtGdiSetWindowOrgEx(HDC  hDC,
          Point->x = Dc_Attr->ptlWindowOrg.x;
          Point->y = Dc_Attr->ptlWindowOrg.y;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if(!NT_SUCCESS(Status))
       {

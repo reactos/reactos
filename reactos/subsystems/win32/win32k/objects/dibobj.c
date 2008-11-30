@@ -401,7 +401,7 @@ NtGdiSetDIBitsToDeviceInternal(
     ptSource.y = YSrc;
 
     /* Enter SEH, as the bits are user mode */
-    _SEH_TRY // Look at NtGdiStretchDIBitsInternal
+    _SEH2_TRY // Look at NtGdiStretchDIBitsInternal
     {
         SourceSize.cx = bmi->bmiHeader.biWidth;
         SourceSize.cy = ScanLines; // this one --> abs(bmi->bmiHeader.biHeight) - StartScan
@@ -417,14 +417,14 @@ NtGdiSetDIBitsToDeviceInternal(
         {
             SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
             Status = STATUS_NO_MEMORY;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         pSourceSurf = EngLockSurface((HSURF)hSourceBitmap);
         if (!pSourceSurf)
         {
             Status = STATUS_UNSUCCESSFUL;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
 
@@ -434,7 +434,7 @@ NtGdiSetDIBitsToDeviceInternal(
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             Status = STATUS_UNSUCCESSFUL;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
         DDBPaletteType = pDCPalette->Mode;
         DDBPalette = ((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault;
@@ -445,7 +445,7 @@ NtGdiSetDIBitsToDeviceInternal(
         {
             SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
             Status = STATUS_NO_MEMORY;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Determine XlateObj */
@@ -454,7 +454,7 @@ NtGdiSetDIBitsToDeviceInternal(
         {
             SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
             Status = STATUS_NO_MEMORY;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* Copy the bits */
@@ -471,11 +471,11 @@ NtGdiSetDIBitsToDeviceInternal(
                               ROP3_TO_ROP4(SRCCOPY));
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END
+    _SEH2_END
 
     if (NT_SUCCESS(Status))
     {
@@ -543,7 +543,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
     /* fill out the BITMAPINFO struct */
     if (Bits == NULL)
     {
-        _SEH_TRY // Look at NtGdiStretchDIBitsInternal
+        _SEH2_TRY // Look at NtGdiStretchDIBitsInternal
         {   // Why check for anything, we converted in gdi!
             if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
             {
@@ -609,11 +609,11 @@ NtGdiGetDIBitsInternal(HDC hDC,
                     Info->bmiHeader.biHeight = -Info->bmiHeader.biHeight;
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END
+        _SEH2_END
 
         if (NT_SUCCESS(Status))
         {
@@ -628,7 +628,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
         POINTL SourcePoint;
         ULONG Index;
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForRead(Info, sizeof(BITMAPINFO), 1);
 
@@ -690,7 +690,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
             /* Create the destination bitmap to for the copy operation */
             if (StartScan > BitmapObj->SurfObj.sizlBitmap.cy)
             {
-                _SEH_YIELD(goto cleanup);
+                _SEH2_YIELD(goto cleanup);
             }
             else
             {  // Here again! ScanLine can be zero!
@@ -728,14 +728,14 @@ NtGdiGetDIBitsInternal(HDC hDC,
                 }
 
                 if (hDestBitmap == NULL)
-                    _SEH_YIELD(goto cleanup);
+                    _SEH2_YIELD(goto cleanup);
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END
+        _SEH2_END
 
         if (NT_SUCCESS(Status))
         {
@@ -822,16 +822,16 @@ NtGdiStretchDIBitsInternal(
       return 0;
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead(BitsInfo, cjMaxInfo, 1);
       ProbeForRead(Bits, cjMaxBits, 1);
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       Hit = TRUE;
    }
-   _SEH_END
+   _SEH2_END
 
    if (Hit)
    {

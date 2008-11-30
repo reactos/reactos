@@ -3773,18 +3773,18 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
      exception the console lock would've never been released, which would cause
      further calls (if the exception was handled by the caller) to recursively
      acquire the lock... */
-  _SEH_TRY
+  _SEH2_TRY
   {
     RtlCopyMemory(InputExeName, lpInputExeName, lenName * sizeof(WCHAR));
     InputExeName[lenName] = L'\0';
     Ret = TRUE;
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
     lenName = 0;
-    SetLastErrorByStatus(_SEH_GetExceptionCode());
+    SetLastErrorByStatus(_SEH2_GetExceptionCode());
   }
-  _SEH_END;
+  _SEH2_END;
   RtlLeaveCriticalSection(&ConsoleLock);
 
   return Ret;
@@ -3855,16 +3855,16 @@ GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
      exception the console lock would've never been released, which would cause
      further calls (if the exception was handled by the caller) to recursively
      acquire the lock... */
-  _SEH_TRY
+  _SEH2_TRY
   {
     RtlCopyMemory(lpBuffer, InputExeName, (lenName + 1) * sizeof(WCHAR));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
     lenName = 0;
-    SetLastErrorByStatus(_SEH_GetExceptionCode());
+    SetLastErrorByStatus(_SEH2_GetExceptionCode());
   }
-  _SEH_END;
+  _SEH2_END;
 
   RtlLeaveCriticalSection(&ConsoleLock);
 

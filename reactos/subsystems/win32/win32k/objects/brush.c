@@ -577,7 +577,7 @@ NtGdiCreateDIBBrush(
       return NULL;
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead(BitmapInfoAndData,
                    BitmapInfoSize,
@@ -586,11 +586,11 @@ NtGdiCreateDIBBrush(
                     BitmapInfoAndData,
                     BitmapInfoSize);
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END;
+   _SEH2_END;
 
    if (!NT_SUCCESS(Status))
    {
@@ -663,18 +663,18 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
       POINT SafePoint;
       SafePoint.x = Dc_Attr->ptlBrushOrigin.x;
       SafePoint.y = Dc_Attr->ptlBrushOrigin.y;
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForWrite(Point,
                        sizeof(POINT),
                        1);
          *Point = SafePoint;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if(!NT_SUCCESS(Status))
       {

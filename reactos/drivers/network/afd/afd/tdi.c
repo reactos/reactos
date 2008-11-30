@@ -8,7 +8,7 @@
  *   CSH 01/09-2000 Created
  */
 #include <afd.h>
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 #include "debug.h"
 #include "tdiconn.h"
 #include "tdi_proto.h"
@@ -861,15 +861,15 @@ NTSTATUS TdiSend
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    _SEH_TRY {
+    _SEH2_TRY {
         MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
-    } _SEH_HANDLE {
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         *Irp = NULL;
-        _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
-    } _SEH_END;
+        _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+    } _SEH2_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -942,17 +942,17 @@ NTSTATUS TdiReceive(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    _SEH_TRY {
+    _SEH2_TRY {
         AFD_DbgPrint(MIN_TRACE, ("probe and lock\n"));
         MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
         AFD_DbgPrint(MIN_TRACE, ("probe and lock done\n"));
-    } _SEH_HANDLE {
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
 	*Irp = NULL;
-	_SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
-    } _SEH_END;
+	_SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+    } _SEH2_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -1042,15 +1042,15 @@ NTSTATUS TdiReceiveDatagram(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    _SEH_TRY {
+    _SEH2_TRY {
         MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
-    } _SEH_HANDLE {
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         *Irp = NULL;
-        _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
-    } _SEH_END;
+        _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+    } _SEH2_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 
@@ -1141,15 +1141,15 @@ NTSTATUS TdiSendDatagram(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    _SEH_TRY {
+    _SEH2_TRY {
         MmProbeAndLockPages(Mdl, (*Irp)->RequestorMode, IoModifyAccess);
-    } _SEH_HANDLE {
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	IoFreeMdl(Mdl);
         IoFreeIrp(*Irp);
         *Irp = NULL;
-        _SEH_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
-    } _SEH_END;
+        _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+    } _SEH2_END;
 
     AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
 

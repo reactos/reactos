@@ -9,7 +9,7 @@
 #include <d3dhal.h>
 #include <ddrawgdi.h>
 
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 #include "Ddraw/ddraw.h"
 #include "Surface/surface.h"

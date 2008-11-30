@@ -40,7 +40,7 @@
 #include "user32p.h"
 
 /* SEH Support with PSEH */
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* FIXME: Use ntgdi.h then cleanup... */
 HGDIOBJ WINAPI  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);

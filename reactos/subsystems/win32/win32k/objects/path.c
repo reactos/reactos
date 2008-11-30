@@ -2355,18 +2355,18 @@ NtGdiGetMiterLimit(
 
   if (pdwOut)
   {
-      _SEH_TRY
+      _SEH2_TRY
       {
           ProbeForWrite(pdwOut,
                  sizeof(DWORD),
                              1);
           *pdwOut = worker.l;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-          Status = _SEH_GetExceptionCode();
+          Status = _SEH2_GetExceptionCode();
       }
-       _SEH_END;
+       _SEH2_END;
       if (!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
@@ -2423,7 +2423,7 @@ NtGdiGetPath(
   }
   else
   {
-      _SEH_TRY
+      _SEH2_TRY
       {
          memcpy(Points, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
          memcpy(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
@@ -2433,11 +2433,11 @@ NtGdiGetPath(
 
          ret = pPath->numEntriesUsed;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         SetLastNtError(_SEH_GetExceptionCode());
+         SetLastNtError(_SEH2_GetExceptionCode());
       }
-      _SEH_END
+      _SEH2_END
   }
 
 done:
@@ -2514,18 +2514,18 @@ NtGdiSetMiterLimit(
 
   if (pdwOut)
   {
-      _SEH_TRY
+      _SEH2_TRY
       {
           ProbeForWrite(pdwOut,
                  sizeof(DWORD),
                              1);
           *pdwOut = worker1.l;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-          Status = _SEH_GetExceptionCode();
+          Status = _SEH2_GetExceptionCode();
       }
-       _SEH_END;
+       _SEH2_END;
       if (!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);

@@ -66,18 +66,18 @@ NtGdiCreateColorSpace(
   LOGCOLORSPACEEXW Safelcs;
   NTSTATUS Status = STATUS_SUCCESS;
 
-  _SEH_TRY
+  _SEH2_TRY
   {
      ProbeForRead( pLogColorSpace,
                     sizeof(LOGCOLORSPACEEXW),
                     1);
      RtlCopyMemory(&Safelcs, pLogColorSpace, sizeof(LOGCOLORSPACEEXW));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-     Status = _SEH_GetExceptionCode();
+     Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   if (!NT_SUCCESS(Status))
   {
@@ -159,7 +159,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
 
   if (!Ret) return Ret;
 
-  _SEH_TRY
+  _SEH2_TRY
   {
      ProbeForWrite( Ramp,
                     sizeof(PVOID),
@@ -168,11 +168,11 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
                     SafeRamp,
                     sizeof(GAMMARAMP));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-     Status = _SEH_GetExceptionCode();
+     Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   DC_UnlockDc(dc);
   ExFreePool(SafeRamp);
@@ -385,7 +385,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
       SetLastWin32Error(STATUS_NO_MEMORY);
       return FALSE;
   }
-  _SEH_TRY
+  _SEH2_TRY
   {
      ProbeForRead( Ramp,
                    sizeof(PVOID),
@@ -394,11 +394,11 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
                     Ramp,
                     sizeof(GAMMARAMP));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-     Status = _SEH_GetExceptionCode();
+     Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   if (!NT_SUCCESS(Status))
   {

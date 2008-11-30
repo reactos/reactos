@@ -650,16 +650,16 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                         {
                             ret = (HANDLE)pBuffer;
 
-                            _SEH_TRY
+                            _SEH2_TRY
                             {
                                 ProbeForWrite(pBuffer, synthesizedDataSize, 1);
                                 memcpy(pBuffer, (PCHAR)synthesizedData, synthesizedDataSize);
                             }
-                            _SEH_HANDLE
+                            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                             {
                                 ret = NULL;
                             }
-                            _SEH_END
+                            _SEH2_END
 
                             freeSynthesizedData();
                         }
@@ -668,16 +668,16 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                     {
                         ret = (HANDLE)pBuffer;
 
-                        _SEH_TRY
+                        _SEH2_TRY
                         {
                             ProbeForWrite(pBuffer, data->size, 1);
                             memcpy(pBuffer, (PCHAR)data->hData, data->size);
                         }
-                        _SEH_HANDLE
+                        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                         {
                             ret = NULL;
                         }
-                        _SEH_END
+                        _SEH2_END
                     }
                 }
 
@@ -715,7 +715,7 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
         return 0;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWriteUnicodeString(FormatName);
         sFormatName = *(volatile UNICODE_STRING *)FormatName;
@@ -733,11 +733,11 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
             ret = 0;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -785,7 +785,7 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 
     UserEnterExclusive();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (IntCountClipboardFormats() == 0)
         {
@@ -810,11 +810,11 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -868,16 +868,16 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
         if (hMem)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead(hMem, size, 1);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                SetLastNtError(_SEH_GetExceptionCode());
-                _SEH_YIELD(goto exit_setCB);
+                SetLastNtError(_SEH2_GetExceptionCode());
+                _SEH2_YIELD(goto exit_setCB);
             }
-            _SEH_END;
+            _SEH2_END;
 
             if (intIsClipboardOpenByMe())
             {

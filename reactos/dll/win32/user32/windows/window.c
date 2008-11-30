@@ -528,17 +528,17 @@ GetDesktopWindow(VOID)
     PWINDOW Wnd;
     HWND Ret = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Wnd = GetThreadDesktopWnd();
         if (Wnd != NULL)
             Ret = UserHMGetHandle(Wnd);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     return Ret;
 }
@@ -863,7 +863,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
     if (!Wnd)
         return NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Ancestor = NULL;
         switch (gaFlags)
@@ -882,11 +882,11 @@ GetAncestor(HWND hwnd, UINT gaFlags)
         if (Ancestor != NULL)
             Ret = UserHMGetHandle(Ancestor);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!Wnd) /* Fall back */
         Ret = NtUserGetAncestor(hwnd, gaFlags);
@@ -938,16 +938,16 @@ GetLastActivePopup(HWND hWnd)
     Wnd = ValidateHwnd(hWnd);
     if (Wnd != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             if (Wnd->hWndLastActive)
                Ret = Wnd->hWndLastActive;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Do nothing */
         }
-        _SEH_END;
+        _SEH2_END;
     }
     return Ret;
 }
@@ -965,7 +965,7 @@ GetParent(HWND hWnd)
     Wnd = ValidateHwnd(hWnd);
     if (Wnd != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             WndParent = NULL;
             if (Wnd->Style & WS_CHILD)
@@ -982,11 +982,11 @@ GetParent(HWND hWnd)
             if (WndParent != NULL)
                 Ret = UserHMGetHandle(WndParent);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Do nothing */
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     return Ret;
@@ -1037,7 +1037,7 @@ GetWindow(HWND hWnd,
     if (!Wnd)
         return NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         FoundWnd = NULL;
         switch (uCmd)
@@ -1056,11 +1056,11 @@ GetWindow(HWND hWnd,
         if (FoundWnd != NULL)
             Ret = UserHMGetHandle(FoundWnd);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!Wnd) /* Fall back to win32k... */
         Ret = NtUserGetWindow(hWnd, uCmd);
@@ -1176,7 +1176,7 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
     if (!Wnd)
         return 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (Wnd->pi != g_kpi)
         {
@@ -1214,13 +1214,13 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
             Wnd = NULL; /* Don't send a message */
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         lpString[0] = '\0';
         Length = 0;
         Wnd = NULL; /* Don't send a message */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Wnd != NULL)
         Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
@@ -1266,7 +1266,7 @@ GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
     if (!Wnd)
         return 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (Wnd->pi != g_kpi)
         {
@@ -1296,13 +1296,13 @@ GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
             Wnd = NULL; /* Don't send a message */
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         lpString[0] = '\0';
         Length = 0;
         Wnd = NULL; /* Don't send a message */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Wnd != NULL)
         Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
@@ -1360,7 +1360,7 @@ IsChild(HWND hWndParent,
     if (!Wnd)
         return FALSE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         while (Wnd != NULL)
         {
@@ -1377,11 +1377,11 @@ IsChild(HWND hWndParent,
                 break;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     return Ret;
 }
@@ -1445,7 +1445,7 @@ IsWindowVisible(HWND hWnd)
 
     if (Wnd != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             Ret = TRUE;
 
@@ -1464,11 +1464,11 @@ IsWindowVisible(HWND hWnd)
 
             } while (Wnd != NULL);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             Ret = FALSE;
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     return Ret;

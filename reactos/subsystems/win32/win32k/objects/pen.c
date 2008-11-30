@@ -372,18 +372,18 @@ NtGdiExtCreatePen(
          SetLastNtError(ERROR_NOT_ENOUGH_MEMORY);
          return 0;
       }
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForRead(pUnsafeStyle, dwStyleCount * sizeof(DWORD), 1);
          RtlCopyMemory(pSafeStyle,
                        pUnsafeStyle,
                        dwStyleCount * sizeof(DWORD));
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END
+      _SEH2_END
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
@@ -394,15 +394,15 @@ NtGdiExtCreatePen(
 
    if (ulBrushStyle == BS_PATTERN)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForRead((PVOID)ulHatch, cjDIB, 1);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END
+      _SEH2_END
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);

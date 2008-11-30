@@ -10,7 +10,11 @@
 		<define name="__NO_CTYPE_INLINES" />
 		<define name="NTDDI_VERSION">0x05020100</define>
 		<dependency>errcodes</dependency>
+		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 		<pch>k32.h</pch>
+		-->
+		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+		<compilerflag>-fno-unit-at-a-time</compilerflag>
 		<directory name="debug">
 			<file>debugger.c</file>
 			<file>output.c</file>

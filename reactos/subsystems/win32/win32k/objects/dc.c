@@ -910,7 +910,7 @@ NtGdiOpenDCW( PUNICODE_STRING Device,
 
   if(InitData)
   {
-    _SEH_TRY
+    _SEH2_TRY
     {
       if (pUMdhpdev)
       {
@@ -925,11 +925,11 @@ NtGdiOpenDCW( PUNICODE_STRING Device,
                     InitData,
                     sizeof(DEVMODEW));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if(!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
@@ -1322,18 +1322,18 @@ NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
 
   if (Ret)
   {
-    _SEH_TRY
+    _SEH2_TRY
     {
       ProbeForWrite(Point,
                     sizeof(POINT),
                     1);
       *Point = SafePoint;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
   }
 
   if(!NT_SUCCESS(Status))
@@ -1911,18 +1911,18 @@ NtGdiGetDeviceCapsAll (
 
   IntvGetDeviceCaps(dc->pPDev, pSafeDevCaps);
 
-  _SEH_TRY
+  _SEH2_TRY
   {
       ProbeForWrite(pDevCaps,
                     sizeof(DEVCAPS),
                     1);
       RtlCopyMemory(pDevCaps, pSafeDevCaps, sizeof(DEVCAPS));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    Status = _SEH_GetExceptionCode();
+    Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   ExFreePoolWithTag(pSafeDevCaps, TAG_TEMP);
   DC_UnlockDc(dc);
@@ -2346,18 +2346,18 @@ NtGdiGetDCDword(
 
   if (Ret)
   {
-    _SEH_TRY
+    _SEH2_TRY
     {
       ProbeForWrite(Result,
                     sizeof(DWORD),
                     1);
       *Result = SafeResult;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
   }
 
   if(!NT_SUCCESS(Status))
@@ -2472,18 +2472,18 @@ NtGdiGetAndSetDCDword(
 
   if (Ret)
   {
-    _SEH_TRY
+    _SEH2_TRY
     {
       ProbeForWrite(Result,
                     sizeof(DWORD),
                     1);
       *Result = SafeResult;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
   }
 
   if(!NT_SUCCESS(Status))

@@ -285,7 +285,7 @@ typedef struct _PHYSICAL_PAGE
         Flags;
         ULONG AllFlags;
     };
-    
+
     LIST_ENTRY ListEntry;
     ULONG ReferenceCount;
     SWAPENTRY SavedSwapEntry;
@@ -354,7 +354,7 @@ typedef struct _MMFREE_POOL_ENTRY
 
 /* Paged pool information */
 typedef struct _MM_PAGED_POOL_INFO
-{  
+{
     PRTL_BITMAP PagedPoolAllocationMap;
     PRTL_BITMAP EndOfPagedPoolBitmap;
     PMMPTE FirstPteForPagedPool;
@@ -1016,7 +1016,7 @@ ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
 
-FORCEINLINE
+static __inline
 KIRQL
 NTAPI
 MmAcquirePageListLock()

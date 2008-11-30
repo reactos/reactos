@@ -61,16 +61,16 @@ CharLowerA(LPSTR str)
         return (LPSTR)(UINT_PTR)(BYTE)ch;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         CharLowerBuffA( str, strlen(str) );
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return NULL;
     }
-    _SEH_END;
+    _SEH2_END;
 
     return str;
 }
@@ -261,16 +261,16 @@ LPSTR WINAPI CharUpperA(LPSTR str)
         return (LPSTR)(UINT_PTR)(BYTE)ch;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         CharUpperBuffA( str, strlen(str) );
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return NULL;
     }
-    _SEH_END;
+    _SEH2_END;
 
     return str;
 }

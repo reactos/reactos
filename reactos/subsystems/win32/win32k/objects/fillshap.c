@@ -368,7 +368,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         return FALSE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(UnsafePoints, Count * sizeof(POINT), 1);
         ProbeForRead(UnsafeCounts, Count * sizeof(ULONG), 1);
@@ -384,11 +384,11 @@ NtGdiPolyPolyDraw( IN HDC hDC,
             nMaxPoints = max(nMaxPoints, UnsafeCounts[i]);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -423,17 +423,17 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     SafeCounts = pTemp;
     SafePoints = (PVOID)(SafeCounts + Count);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Pointers already probed! */
         RtlCopyMemory(SafeCounts, UnsafeCounts, Count * sizeof(ULONG));
         RtlCopyMemory(SafePoints, UnsafePoints, nPoints * sizeof(POINT));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -978,7 +978,7 @@ NtGdiGradientFill(
             return FALSE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(pVertex,
                      uVertex * sizeof(TRIVERTEX),
@@ -987,11 +987,11 @@ NtGdiGradientFill(
                      SizeMesh,
                      1);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -1009,7 +1009,7 @@ NtGdiGradientFill(
 
     SafeMesh = (PTRIVERTEX)(SafeVertex + uVertex);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* pointers were already probed! */
         RtlCopyMemory(SafeVertex,
@@ -1019,11 +1019,11 @@ NtGdiGradientFill(
                       pMesh,
                       SizeMesh);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {

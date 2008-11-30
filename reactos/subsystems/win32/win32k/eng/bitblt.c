@@ -271,7 +271,7 @@ NtGdiEngBitBlt(
     POINTL ptlMask;
     POINTL ptlBrush;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(prclTrg, sizeof(RECTL), 1);
         RtlCopyMemory(&rclTrg,prclTrg, sizeof(RECTL));
@@ -286,11 +286,11 @@ NtGdiEngBitBlt(
         RtlCopyMemory(&ptlBrush, pptlBrush, sizeof(POINTL));
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH_YIELD(return FALSE);
+        _SEH2_YIELD(return FALSE);
     }
-    _SEH_END;
+    _SEH2_END;
 
     return  EngBitBlt(psoTrg, psoSrc, psoMask, pco, pxlo, &rclTrg, &ptlSrc, &ptlMask, pbo, &ptlBrush, rop4);
 }
@@ -780,7 +780,7 @@ NtGdiEngStretchBlt(
     RECTL rclSrc;
     POINTL lMaskOrigin;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(pca, sizeof(COLORADJUSTMENT), 1);
         RtlCopyMemory(&ca,pca, sizeof(COLORADJUSTMENT));
@@ -798,11 +798,11 @@ NtGdiEngStretchBlt(
         RtlCopyMemory(&lMaskOrigin, MaskOrigin, sizeof(POINTL));
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH_YIELD(return FALSE);
+        _SEH2_YIELD(return FALSE);
     }
-    _SEH_END;
+    _SEH2_END;
 
     return EngStretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation, &ca, &lBrushOrigin, &rclDest, &rclSrc, &lMaskOrigin, Mode);
 }
@@ -1004,7 +1004,7 @@ NtGdiEngAlphaBlend(IN SURFOBJ *Dest,
     RECTL DestRect;
     RECTL SourceRect;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(upDestRect, sizeof(RECTL), 1);
         RtlCopyMemory(&DestRect,upDestRect, sizeof(RECTL));
@@ -1013,11 +1013,11 @@ NtGdiEngAlphaBlend(IN SURFOBJ *Dest,
         RtlCopyMemory(&SourceRect, upSourceRect, sizeof(RECTL));
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH_YIELD(return FALSE);
+        _SEH2_YIELD(return FALSE);
     }
-    _SEH_END;
+    _SEH2_END;
 
     return EngAlphaBlend(Dest, Source, ClipRegion, ColorTranslation, &DestRect, &SourceRect, BlendObj);
 }

@@ -17,7 +17,7 @@
 #include <tchar.h>
 #include <string.h>
 #include <setupapi.h>
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 #include <shlobj.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -1669,7 +1669,7 @@ RegistrationProc(LPVOID Parameter)
   RegistrationData->Registered = 0;
   RegistrationData->DefaultContext = SetupInitDefaultQueueCallback(RegistrationData->hwndDlg);
 
-  _SEH_TRY
+  _SEH2_TRY
     {
       if (!SetupInstallFromInfSectionW(GetParent(RegistrationData->hwndDlg),
                                        hSysSetupInf,
@@ -1688,12 +1688,12 @@ RegistrationProc(LPVOID Parameter)
           LastError = GetLastError();
         }
     }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
       DPRINT("Catching exception\n");
-      LastError = RtlNtStatusToDosError(_SEH_GetExceptionCode());
+      LastError = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
     }
-  _SEH_END;
+  _SEH2_END;
 
   if (NO_ERROR == LastError)
     {
@@ -1875,7 +1875,7 @@ ProcessPageDlgProc(HWND hwndDlg,
               SendDlgItemMessageW(hwndDlg, IDC_ACTIVITY, WM_SETTEXT,
                                   0, (LPARAM) Activity);
             }
-	    oldActivityID = RegistrationNotify->ActivityID; 
+	    oldActivityID = RegistrationNotify->ActivityID;
 	  }
           SendDlgItemMessageW(hwndDlg, IDC_ITEM, WM_SETTEXT, 0,
                               (LPARAM)(NULL == RegistrationNotify->CurrentItem ?
@@ -2223,7 +2223,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
       /* winetests */
       fprintf(file, "%s\n", "SET WINETEST_PLATFORM=wine");
       hFind = FindFirstFileA("c:\\reactos\\bin\\*.exe", &ffd); /* %windir% isn't working on ros */
-      if (hFind != INVALID_HANDLE_VALUE) 
+      if (hFind != INVALID_HANDLE_VALUE)
       {
         do
         {

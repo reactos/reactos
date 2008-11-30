@@ -248,7 +248,7 @@ VOID NTAPI ProtocolTransferDataComplete(
 		    ReadIrp = CONTAINING_RECORD(ReadListEntry, IRP,
 						Tail.Overlay.ListEntry );
 		    LA_DbgPrint(MID_TRACE,("..Irp %x\n", ReadIrp));
-		    _SEH_TRY {
+		    _SEH2_TRY {
 			Header = ReadIrp->AssociatedIrp.SystemBuffer;
 			LA_DbgPrint
 			    (MID_TRACE,
@@ -283,14 +283,14 @@ VOID NTAPI ProtocolTransferDataComplete(
 					       ReadIrp->IoStatus.Information));
 
 			IoCompleteRequest( ReadIrp, IO_NETWORK_INCREMENT );
-		    } _SEH_HANDLE {
+		    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 			LA_DbgPrint
 			    (MIN_TRACE,
 			     ("Failed write to packet in client\n"));
 			ReadIrp->IoStatus.Status = STATUS_ACCESS_VIOLATION;
 			ReadIrp->IoStatus.Information = 0;
 			IoCompleteRequest( ReadIrp, IO_NETWORK_INCREMENT );
-		    } _SEH_END;
+		    } _SEH2_END;
 		    break;
 		}
 	    }

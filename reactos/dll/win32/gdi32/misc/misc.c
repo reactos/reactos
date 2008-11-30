@@ -136,15 +136,15 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
       if(Entry->UserData)
       {
          volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-         _SEH_TRY
+         _SEH2_TRY
          {
            *Current = *Current;
          }
-         _SEH_HANDLE
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
          {
            Result = FALSE;
          }
-         _SEH_END
+         _SEH2_END
       }
        else
          Result = FALSE; // Can not be zero.
