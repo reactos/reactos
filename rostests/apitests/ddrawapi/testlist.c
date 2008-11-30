@@ -27,6 +27,7 @@ void dump_DDRAWI_DDRAWSURFACE_INT(char *str, LPDDRAWI_DDRAWSURFACE_INT lpDdrawSu
 void dump_DDCORECAPS(char *str, LPDDCORECAPS lpDdcorecaps, DWORD offset);
 void dump_VIDMEMINFO(char *str, LPVIDMEMINFO lpVidmeminfo, DWORD offset);
 void dump_DBLNODE(char *str, LPDBLNODE lpDblnode, DWORD offset);
+void dump_DDPIXELFORMAT(char *str, LPDDPIXELFORMAT lpFormat, DWORD offset);
 
 /* dump all data struct when this is trun onm usefull when u debug ddraw.dll */
 #define DUMP_ON 1
@@ -436,9 +437,25 @@ void dump_DDRAWI_DIRECTDRAW_GBL(char * str, LPDDRAWI_DIRECTDRAW_GBL lpDraw_gbl, 
     MY_DUMP_STR(buffer,"DWORD\0",str,"dwNumFourCC\0");
     printf("%08lx %s: 0x%08lx \n", FIELD_OFFSET(DDRAWI_DIRECTDRAW_GBL, dwNumFourCC) + offset, buffer, lpDraw_gbl->dwNumFourCC);
 
+    if (lpDraw_gbl->dwNumFourCC != 0)
+    {
+        int c;
+        char bbbuffer[2048];
+        long long x;
 
-    MY_DUMP_STR(buffer,"LPDWORD\0",str,"lpdwFourCC\0");
-    printf("%08lx %s: 0x%p \n", FIELD_OFFSET(DDRAWI_DIRECTDRAW_GBL, lpdwFourCC) + offset, buffer, lpDraw_gbl->lpdwFourCC);
+        for (c=0;c<lpDraw_gbl->dwNumFourCC;c++)
+        {
+            x = (long long)lpDraw_gbl->lpdwFourCC[c];
+            sprintf(bbbuffer,"lpdwFourCC[%02x]",c);
+            MY_DUMP_STR(buffer,"LPDWORD\0",str,bbbuffer);
+            printf("%08lx %s: 0x%08lx : %s\n", FIELD_OFFSET(DDRAWI_DIRECTDRAW_GBL, lpdwFourCC) + offset, buffer, lpDraw_gbl->lpdwFourCC[c], (char*)&x);
+        }
+    }
+    else
+    {
+        MY_DUMP_STR(buffer,"LPDWORD\0",str,"lpdwFourCC\0");
+        printf("%08lx %s: 0x%p \n", FIELD_OFFSET(DDRAWI_DIRECTDRAW_GBL, lpdwFourCC) + offset, buffer, lpDraw_gbl->lpdwFourCC);
+    }
 
     MY_DUMP_STR(buffer,"DWORD\0",str,"dwNumModes\0");
     printf("%08lx %s: 0x%08lx \n", FIELD_OFFSET(DDRAWI_DIRECTDRAW_GBL, dwNumModes) + offset, buffer, lpDraw_gbl->dwNumModes);
@@ -738,7 +755,9 @@ void dump_VIDMEMINFO(char *str, LPVIDMEMINFO lpVidmeminfo, DWORD offset)
 
     MY_DUMP_STR(buffer,"LONG\0",str,"lDisplayPitch\0");
     printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(VIDMEMINFO, lDisplayPitch)+offset, buffer, lpVidmeminfo->lDisplayPitch);
-    //printf("%08lx DDPIXELFORMAT                       %sddpfDisplay          : 0x%08lx\n", FIELD_OFFSET(VIDMEMINFO, ddpfDisplay)+offset, str, lpVidmeminfo->ddpfDisplay);
+
+    sprintf(buffer,"%sddpfDisplay.",str);
+    dump_DDPIXELFORMAT(buffer, &lpVidmeminfo->ddpfDisplay, FIELD_OFFSET(VIDMEMINFO, ddpfDisplay) + offset );
 
     MY_DUMP_STR(buffer,"DWORD\0",str,"dwOffscreenAlign\0");
     printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(VIDMEMINFO, dwOffscreenAlign)+offset, buffer, lpVidmeminfo->dwOffscreenAlign);
@@ -867,8 +886,37 @@ void dump_DDRAWI_DDRAWSURFACE_LCL(char *str, LPDDRAWI_DDRAWSURFACE_LCL lpDdrawSu
     printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDRAWI_DDRAWSURFACE_LCL, lOverlayY)+offset, buffer, lpDdrawSurface->lOverlayY);
 }
 
+void dump_DDPIXELFORMAT(char *str, LPDDPIXELFORMAT lpFormat, DWORD offset)
+{
 
+    char buffer[2048];
+    if (lpFormat == NULL)
+        return ;
 
+    MY_DUMP_STR(buffer,"DWORD\0",str,"dwSize\0");
+    printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDPIXELFORMAT, dwSize)+offset, buffer, lpFormat->dwSize);
+
+    MY_DUMP_STR(buffer,"DWORD\0",str,"dwFlags\0");
+    printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDPIXELFORMAT, dwFlags)+offset, buffer, lpFormat->dwFlags);
+
+    MY_DUMP_STR(buffer,"DWORD\0",str,"dwFourCC\0");
+    printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDPIXELFORMAT, dwFourCC)+offset, buffer, lpFormat->dwFourCC);
+
+    MY_DUMP_STR(buffer,"DWORD\0",str,"dwRGBBitCount\0");
+    printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDPIXELFORMAT, dwRGBBitCount)+offset, buffer, lpFormat->dwRGBBitCount);
+
+    MY_DUMP_STR(buffer,"DWORD\0",str,"dwRBitMask\0");
+    printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDPIXELFORMAT, dwRBitMask)+offset, buffer, lpFormat->dwRBitMask);
+
+    MY_DUMP_STR(buffer,"DWORD\0",str,"dwGBitMask\0");
+    printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDPIXELFORMAT, dwGBitMask)+offset, buffer, lpFormat->dwGBitMask);
+
+    MY_DUMP_STR(buffer,"DWORD\0",str,"dwBBitMask\0");
+    printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDPIXELFORMAT, dwBBitMask)+offset, buffer, lpFormat->dwBBitMask);
+
+    MY_DUMP_STR(buffer,"DWORD\0",str,"dwRGBAlphaBitMask\0");
+    printf("%08lx %s: 0x%08lx\n", FIELD_OFFSET(DDPIXELFORMAT, dwRGBAlphaBitMask)+offset, buffer, lpFormat->dwRGBAlphaBitMask);
+}
 
 
 #endif
