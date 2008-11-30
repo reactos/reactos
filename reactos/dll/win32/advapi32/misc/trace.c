@@ -27,7 +27,7 @@ GetTraceLoggerHandle(
 )
 {
     DPRINT1("GetTraceLoggerHandle stub()\n");
-    return HandleToUlong(INVALID_HANDLE_VALUE); /* BUGBUG: should we use HandleToLong instead? */
+    return (TRACEHANDLE)-1;
 }
 
 
