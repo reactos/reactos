@@ -1,7 +1,7 @@
 /* FILE:        applications/games/solitaire/lang/cs-CZ.rc
  * PURPOSE:     Czech Language File
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-02-29
+ * UPDATED:     2008-11-30 by Kario
  */
 
 #include "resource.h"
@@ -50,7 +50,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib verze 1.0."
     IDS_SOL_QUIT    "Ukonèit rozehranou hru?"
     IDS_SOL_WIN     "Gratulujeme, zvítìzili jste!!"
-    IDS_SOL_DEAL    "Deal again?"
+    IDS_SOL_DEAL    "Rozdat znova?"
 END
 
 
