@@ -507,12 +507,12 @@ co_IntCallHookProc(INT HookId,
    }
    _SEH2_END;
 
-   IntCbFreeMemory(Argument);
-
    if (!NT_SUCCESS(Status))
    {
       return 0;
    }
+
+   if (Argument) IntCbFreeMemory(Argument);
 
    return Result;
 }
