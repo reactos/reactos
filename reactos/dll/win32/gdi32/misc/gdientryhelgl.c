@@ -1609,11 +1609,11 @@ BOOL
 WINAPI
 CreateWineD3DDevice(LPDDRAWI_DIRECTDRAW_GBL hDirectDraw)
 {
-    IWineD3D *This = (IWineD3D*)hDirectDraw;
+    IWineD3D *pWineD3D = (IWineD3D *) GetDdHandle(hDirectDraw->hDD);
     IWineD3DDevice *WineD3DDevice;
     HRESULT hr;
 
-    if( !This )
+    if( !pWineD3D )
         return FALSE;
 
     WineD3DDevice = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IWineD3DDevice));
@@ -1624,9 +1624,9 @@ CreateWineD3DDevice(LPDDRAWI_DIRECTDRAW_GBL hDirectDraw)
         return FALSE;
     }
 
-    hr = IWineD3D_CreateDevice(This, 0, WINED3DDEVTYPE_HAL, NULL, 0, &WineD3DDevice, NULL);
+    hr = IWineD3D_CreateDevice(pWineD3D, 0, WINED3DDEVTYPE_HAL, NULL, 0, &WineD3DDevice, NULL);
 
-    if ( hr != DD_OK )
+    if ( hr != D3D_OK )
     {
         HeapFree(GetProcessHeap(), 0, WineD3DDevice);
         hDirectDraw->dwUnused3 = 0;
@@ -1730,7 +1730,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                 /* Create the DDraw Object */
                 //ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
                 ghDirectDraw = (HANDLE) pWineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
-                CreateWineD3DDevice((LPDDRAWI_DIRECTDRAW_GBL) ghDirectDraw);
+                CreateWineD3DDevice(ghDirectDraw);
                 /* Delete our DC */
                 DeleteDC(hdc);
             }
@@ -1752,7 +1752,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Using the per-process object, so create it */
          //pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc);
         pDirectDrawGlobal->hDD = (ULONG_PTR) pWineDirect3DCreate(D3D_SDK_VERSION, 9, NULL);
-        CreateWineD3DDevice((LPDDRAWI_DIRECTDRAW_GBL) pDirectDrawGlobal->hDD);
+        CreateWineD3DDevice(pDirectDrawGlobal);
         /* Set the return value */
         Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
         
