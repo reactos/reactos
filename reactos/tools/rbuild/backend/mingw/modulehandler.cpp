@@ -1655,7 +1655,7 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		          backend->GetFullPath ( *pchFilename ).c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
-		          "\t%s -o %s %s %s -g %s\n\n",
+		          "\t%s -o %s %s %s -gstabs+ %s\n\n",
 		          module.cplusplus ? cppc.c_str() : cc.c_str(),
 		          backend->GetFullName ( *pchFilename ).c_str(),
 		          module.cplusplus ? cxxflagsMacro.c_str() : cflagsMacro.c_str(),
@@ -1894,7 +1894,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	}
 	else
 		globalCflags += " -Wall -Wpointer-arith";
-	globalCflags += " -g";
+	globalCflags += " -gstabs+";
 	if ( backend->usePipe )
 		globalCflags += " -pipe";
 	if ( !module.allowWarnings )
@@ -1948,7 +1948,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 		fprintf (
 			fMakefile,
-			"%s_LFLAGS := $(PROJECT_LFLAGS) -g $(%s_LFLAGS)\n",
+			"%s_LFLAGS := $(PROJECT_LFLAGS) $(%s_LFLAGS)\n",
 			module.name.c_str (),
 			module.name.c_str () );
 	}
@@ -3028,7 +3028,7 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 		backend->GetFullName ( junk_cpy ).c_str (),
 		backend->GetFullName ( junk_tmp ).c_str () );
 
-	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -g -o %s\n",
+	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -o %s\n",
 		module.buildtype.c_str (),
 		linkDepsMacro.c_str (),
 		backend->GetFullName ( junk_tmp ).c_str (),
@@ -3568,7 +3568,7 @@ MingwElfExecutableModuleHandler::Process ()
 
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
-	fprintf ( fMakefile, "\t${gcc} $(%s_LINKFORMAT) %s %s -g -o %s\n",
+	fprintf ( fMakefile, "\t${gcc} $(%s_LINKFORMAT) %s %s -gstabs+ -o %s\n",
 	          module.buildtype.c_str(),
 	          objectsMacro.c_str(),
 	          libsMacro.c_str(),
