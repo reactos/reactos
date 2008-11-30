@@ -4590,7 +4590,7 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
 
 NTSYSAPI
 SIZE_T
-STDCALL
+NTAPI
 RtlCompareMemory (
     const VOID *Source1,
     const VOID *Source2,

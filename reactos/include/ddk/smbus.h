@@ -86,7 +86,7 @@ typedef struct _SMB_REQUEST {
   UCHAR  Data[SMB_MAX_DATA_SIZE];
 } SMB_REQUEST, *PSMB_REQUEST;
 
-typedef VOID STDCALL
+typedef VOID NTAPI
 (*SMB_ALARM_NOTIFY)(
   PVOID  Context,
   UCHAR  Address,

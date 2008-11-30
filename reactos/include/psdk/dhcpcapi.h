@@ -8,9 +8,9 @@
 extern "C" {
 #endif
 
-    VOID STDCALL DhcpLeaseIpAddress( ULONG AdapterIndex );
-    VOID STDCALL DhcpReleaseIpAddressLease( ULONG AdapterIndex );
-    VOID STDCALL DhcpStaticRefreshParams
+    VOID WINAPI DhcpLeaseIpAddress( ULONG AdapterIndex );
+    VOID WINAPI DhcpReleaseIpAddressLease( ULONG AdapterIndex );
+    VOID WINAPI DhcpStaticRefreshParams
     ( ULONG AdapterIndex, ULONG IpAddress, ULONG NetMask );
 
 #ifdef __cplusplus

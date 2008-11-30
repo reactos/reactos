@@ -124,7 +124,6 @@ extern "C" {
 #define CDECL _cdecl
 
 #if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
-#define STDCALL __stdcall // FIXME: Non-standard, should be deprecated
 #define CALLBACK    __stdcall
 #define WINAPI      __stdcall
 #define WINAPIV     __cdecl
@@ -132,7 +131,6 @@ extern "C" {
 #define APIPRIVATE  __stdcall
 #define PASCAL      __stdcall
 #else
-#define STDCALL
 #define CALLBACK
 #define WINAPI
 #define WINAPIV

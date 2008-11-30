@@ -358,12 +358,12 @@ typedef enum _PROG_INVOKE_SETTING
     ProgressRetryOperation
 } PROG_INVOKE_SETTING, *PPROG_INVOKE_SETTING;
 
-typedef VOID (STDCALL *FN_PROGRESSW)(LPWSTR pObjectName,
+typedef VOID (WINAPI *FN_PROGRESSW)(LPWSTR pObjectName,
                                      DWORD Status,
                                      PPROG_INVOKE_SETTING pInvokeSetting,
                                      PVOID Args,
                                      BOOL SecuritySet);
-typedef VOID (STDCALL *FN_PROGRESSA)(LPSTR pObjectName,
+typedef VOID (WINAPI *FN_PROGRESSA)(LPSTR pObjectName,
                                      DWORD Status,
                                      PPROG_INVOKE_SETTING pInvokeSetting,
                                      PVOID Args,

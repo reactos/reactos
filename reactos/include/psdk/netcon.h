@@ -248,6 +248,6 @@ DECLARE_INTERFACE_(INetConnectionPropertyUi2, IUnknown)
 EXTERN_C const IID IID_INetConnectionPropertyUi2;
 
 
-VOID STDCALL NcFreeNetconProperties (NETCON_PROPERTIES* pProps);
+VOID WINAPI NcFreeNetconProperties (NETCON_PROPERTIES* pProps);
 
 #endif
