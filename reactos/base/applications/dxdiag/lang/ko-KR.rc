@@ -2,6 +2,7 @@
  *Korean translation by Seungju Kim(www.seungjukim.com) admin at manateeshome {dot} com
  *I like manatees, how about you?
  */
+
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
