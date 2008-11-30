@@ -34,7 +34,7 @@ static const WCHAR szSystemDirectory[] = L"\\System32";
  * 	NTSTATUS:
  *
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SmCreateUserProcess (LPWSTR ImagePath,
 		     LPWSTR CommandLine,
 		     ULONG Flags,

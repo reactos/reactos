@@ -31,49 +31,49 @@
 #define START_UNIT_TIMEOUT  30
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassReadWrite(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassDeviceControlDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassInternalIoControl (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -85,7 +85,7 @@ DriverEntry(
 
 
 VOID
-STDCALL
+NTAPI
 RetryRequest(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -94,13 +94,13 @@ RetryRequest(
     );
 
 VOID
-STDCALL
+NTAPI
 StartUnit(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ClassIoCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -108,14 +108,14 @@ ClassIoCompletion(
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ClassCompletionRoutine(IN PDEVICE_OBJECT DeviceObject,
                        IN PIRP Irp,
                        IN PVOID Context);
 
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -126,7 +126,7 @@ DriverEntry(
 
 
 ULONG
-STDCALL
+NTAPI
 ScsiClassInitialize(
     IN  PVOID            Argument1,
     IN  PVOID            Argument2,
@@ -262,7 +262,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -310,7 +310,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassReadWrite(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -492,7 +492,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassGetCapabilities(
     IN PDEVICE_OBJECT PortDeviceObject,
     OUT PIO_SCSI_CAPABILITIES *PortCapabilities
@@ -573,7 +573,7 @@ Notes:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassGetInquiryData(
     IN PDEVICE_OBJECT PortDeviceObject,
     OUT PSCSI_ADAPTER_BUS_INFO *ConfigInfo
@@ -675,7 +675,7 @@ Notes:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassReadDriveCapacity(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -897,7 +897,7 @@ Retry:
 
 
 VOID
-STDCALL
+NTAPI
 ScsiClassReleaseQueue(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -1038,7 +1038,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 StartUnit(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -1171,7 +1171,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassAsynchronousCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -1252,7 +1252,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 ScsiClassSplitRequest(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -1444,7 +1444,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassIoComplete(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -1591,7 +1591,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassIoCompleteAssociated(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -1804,7 +1804,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassSendSrbSynchronous(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -2094,7 +2094,7 @@ retry:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 ScsiClassInterpretSenseInfo(
     IN PDEVICE_OBJECT DeviceObject,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -2790,7 +2790,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 RetryRequest(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -2913,7 +2913,7 @@ Return Value:
 } // end RetryRequest()
 
 VOID
-STDCALL
+NTAPI
 ScsiClassBuildRequest(
         PDEVICE_OBJECT DeviceObject,
         PIRP Irp
@@ -3140,7 +3140,7 @@ Return Value:
 } // end ScsiClassBuildRequest()
 
 ULONG
-STDCALL
+NTAPI
 ScsiClassModeSense(
     IN PDEVICE_OBJECT DeviceObject,
     IN PCHAR ModeSenseBuffer,
@@ -3235,7 +3235,7 @@ Retry:
 
 
 PVOID
-STDCALL
+NTAPI
 ScsiClassFindModePage(
     IN PCHAR ModeSenseBuffer,
     IN ULONG Length,
@@ -3309,7 +3309,7 @@ Return Value:
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassSendSrbAsynchronous(
         PDEVICE_OBJECT DeviceObject,
         PSCSI_REQUEST_BLOCK Srb,
@@ -3496,7 +3496,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassDeviceControlDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -3539,7 +3539,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -4092,7 +4092,7 @@ SetStatusAndReturn:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -4143,7 +4143,7 @@ Return Value:
 
 
 ULONG
-STDCALL
+NTAPI
 ScsiClassFindUnclaimedDevices(
     IN PCLASS_INIT_DATA InitializationData,
     IN PSCSI_ADAPTER_BUS_INFO  AdapterInformation
@@ -4191,7 +4191,7 @@ ScsiClassFindUnclaimedDevices(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassCreateDeviceObject(
     IN PDRIVER_OBJECT          DriverObject,
     IN PCCHAR                  ObjectNameBuffer,
@@ -4317,7 +4317,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassClaimDevice(
     IN PDEVICE_OBJECT PortDeviceObject,
     IN PSCSI_INQUIRY_DATA LunInfo,
@@ -4483,7 +4483,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassInternalIoControl (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -4556,7 +4556,7 @@ Return Value:
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 ClassIoCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -4604,7 +4604,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 ScsiClassInitializeSrbLookasideList(
     IN PDEVICE_EXTENSION DeviceExtension,
     IN ULONG NumberElements
@@ -4642,7 +4642,7 @@ Return Value:
 
 
 ULONG
-STDCALL
+NTAPI
 ScsiClassQueryTimeOutRegistryValue(
     IN PUNICODE_STRING RegistryPath
     )
@@ -4735,7 +4735,7 @@ Return Value:
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassCheckVerifyComplete(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -4797,7 +4797,7 @@ Return Value:
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 ClassCompletionRoutine(IN PDEVICE_OBJECT DeviceObject,
                        IN PIRP Irp,
                        IN PVOID Context)

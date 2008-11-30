@@ -38,7 +38,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_SUCCESS;

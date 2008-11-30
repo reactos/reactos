@@ -83,7 +83,7 @@ static ULONG MiniportOIDList[] =
 
 
 NDIS_STATUS
-STDCALL
+NTAPI
 MiniportQueryInformation(
     IN NDIS_HANDLE MiniportAdapterContext,
     IN NDIS_OID Oid,
@@ -377,7 +377,7 @@ MiniportQueryInformation(
 }
 
 NDIS_STATUS
-STDCALL
+NTAPI
 MiniportSetInformation(
     IN NDIS_HANDLE MiniportAdapterContext,
     IN NDIS_OID Oid,

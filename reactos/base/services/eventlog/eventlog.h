@@ -177,13 +177,13 @@ VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime,
                            DWORD * pEventTime);
 
 /* logport.c */
-NTSTATUS STDCALL PortThreadRoutine(PVOID Param);
+NTSTATUS WINAPI PortThreadRoutine(PVOID Param);
 
 NTSTATUS InitLogPort(VOID);
 
 NTSTATUS ProcessPortMessage(VOID);
 
 /* rpc.c */
-DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter);
+DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter);
 
 #endif  /* __EVENTLOG_H__ */

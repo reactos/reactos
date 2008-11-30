@@ -320,7 +320,7 @@ NTSTATUS TiCleanupFileObject(
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 TiDispatchOpenClose(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -549,7 +549,7 @@ TiDispatch(
 }
 
 
-VOID STDCALL TiUnload(
+VOID NTAPI TiUnload(
   PDRIVER_OBJECT DriverObject)
 /*
  * FUNCTION: Unloads the driver
@@ -616,7 +616,7 @@ VOID STDCALL TiUnload(
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-VOID STDCALL IPTimeoutDpcFn(
+VOID NTAPI IPTimeoutDpcFn(
     PKDPC Dpc,
     PVOID DeferredContext,
     PVOID SystemArgument1,

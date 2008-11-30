@@ -46,7 +46,7 @@ PSM_CONNECT_DATA FASTCALL SmpGetConnectData (PSM_PORT_MESSAGE Request)
 	return (PSM_CONNECT_DATA)(PortMessage + 1);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request);
 
 /**********************************************************************
@@ -109,7 +109,7 @@ SmpCallbackServer (PSM_PORT_MESSAGE Request,
  * DESCRIPTION
  * 	Entry point for the listener thread of LPC port "\SmApiPort".
  */
-VOID STDCALL
+VOID NTAPI
 SmpApiConnectedThread(PVOID pConnectedPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
@@ -177,7 +177,7 @@ SmpApiConnectedThread(PVOID pConnectedPort)
  * REMARKS
  * 	Quoted in http://support.microsoft.com/kb/258060/EN-US/
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 {
 	PSM_CONNECT_DATA ConnectData = SmpGetConnectData (Request);
@@ -293,7 +293,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
  * 	necessary in NT LPC, because server side connected ports are
  * 	never used to receive requests.
  */
-VOID STDCALL
+VOID NTAPI
 SmpApiThread (HANDLE ListeningPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;

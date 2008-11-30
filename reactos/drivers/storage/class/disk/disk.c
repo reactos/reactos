@@ -160,20 +160,20 @@ BAD_CONTROLLER_INFORMATION const ScsiDiskBadControllers[] = {
 
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
     );
 
 BOOLEAN
-STDCALL
+NTAPI
 ScsiDiskDeviceVerification(
     IN PINQUIRYDATA InquiryData
     );
 
 BOOLEAN
-STDCALL
+NTAPI
 FindScsiDisks(
     IN PDRIVER_OBJECT DriveObject,
     IN PUNICODE_STRING RegistryPath,
@@ -183,28 +183,28 @@ FindScsiDisks(
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiDiskCreateClose (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiDiskReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiDiskDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 VOID
-STDCALL
+NTAPI
 ScsiDiskProcessError(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -213,21 +213,21 @@ ScsiDiskProcessError(
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiDiskShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 VOID
-STDCALL
+NTAPI
 DisableWriteCache(
     IN PDEVICE_OBJECT DeviceObject,
     IN PSCSI_INQUIRY_DATA LunInfo
     );
 
 BOOLEAN
-STDCALL
+NTAPI
 ScsiDiskModeSelect(
     IN PDEVICE_OBJECT DeviceObject,
     IN PCHAR ModeSelectBuffer,
@@ -236,20 +236,20 @@ ScsiDiskModeSelect(
     );
 
 BOOLEAN
-STDCALL
+NTAPI
 IsFloppyDevice(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 BOOLEAN
-STDCALL
+NTAPI
 CalculateMbrCheckSum(
     IN PDEVICE_EXTENSION DeviceExtension,
     OUT PULONG Checksum
     );
 
 BOOLEAN
-STDCALL
+NTAPI
 EnumerateBusKey(
     IN PDEVICE_EXTENSION DeviceExtension,
     HANDLE BusKey,
@@ -257,20 +257,20 @@ EnumerateBusKey(
     );
 
 VOID
-STDCALL
+NTAPI
 UpdateGeometry(
     IN PDEVICE_EXTENSION DeviceExtension
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 UpdateRemovableGeometry (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 CreateDiskDeviceObject(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath,
@@ -283,21 +283,21 @@ CreateDiskDeviceObject(
     );
 
 NTSTATUS
-STDCALL
+NTAPI
 CreatePartitionDeviceObjects(
     IN PDEVICE_OBJECT PhysicalDeviceObject,
     IN PUNICODE_STRING RegistryPath
     );
 
 VOID
-STDCALL
+NTAPI
 UpdateDeviceObjects(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 VOID
-STDCALL
+NTAPI
 ScanForSpecial(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_INQUIRY_DATA LunInfo,
@@ -305,7 +305,7 @@ ScanForSpecial(
     );
 
 VOID
-STDCALL
+NTAPI
 ResetScsiBus(
     IN PDEVICE_OBJECT DeviceObject
     );
@@ -325,7 +325,7 @@ ResetScsiBus(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -391,7 +391,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 ScsiDiskDeviceVerification(
     IN PINQUIRYDATA InquiryData
     )
@@ -426,7 +426,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 FindScsiDisks(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath,
@@ -605,7 +605,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 CreateDiskDeviceObject(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath,
@@ -1055,7 +1055,7 @@ CreateDiskDeviceObjectsExit:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 CreatePartitionDeviceObjects(
     IN PDEVICE_OBJECT PhysicalDeviceObject,
     IN PUNICODE_STRING RegistryPath
@@ -1472,7 +1472,7 @@ CreatePartitionDeviceObjectsExit:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiDiskReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1546,7 +1546,7 @@ Return Value:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiDiskDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -2748,7 +2748,7 @@ Return Value:
 } // end ScsiDiskDeviceControl()
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiDiskShutdownFlush (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -2926,7 +2926,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 IsFloppyDevice(
     PDEVICE_OBJECT DeviceObject
     )
@@ -3066,7 +3066,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 ScsiDiskModeSelect(
     IN PDEVICE_OBJECT DeviceObject,
     IN PCHAR ModeSelectBuffer,
@@ -3202,7 +3202,7 @@ Retry:
 
 
 VOID
-STDCALL
+NTAPI
 DisableWriteCache(
     IN PDEVICE_OBJECT DeviceObject,
     IN PSCSI_INQUIRY_DATA LunInfo
@@ -3409,7 +3409,7 @@ DisableWriteCache(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 CalculateMbrCheckSum(
     IN PDEVICE_EXTENSION DeviceExtension,
     OUT PULONG Checksum
@@ -3531,7 +3531,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 EnumerateBusKey(
     IN PDEVICE_EXTENSION DeviceExtension,
     HANDLE BusKey,
@@ -3847,7 +3847,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 UpdateGeometry(
     IN PDEVICE_EXTENSION DeviceExtension
     )
@@ -4183,7 +4183,7 @@ diskMatched:
 
 
 NTSTATUS
-STDCALL
+NTAPI
 UpdateRemovableGeometry (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -4316,7 +4316,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 ScsiDiskProcessError(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -4380,7 +4380,7 @@ Return Value:
 }
 
 VOID
-STDCALL
+NTAPI
 ScanForSpecial(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_INQUIRY_DATA LunInfo,
@@ -4482,7 +4482,7 @@ Return Value:
 }
 
 VOID
-STDCALL
+NTAPI
 ResetScsiBus(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -4588,7 +4588,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 UpdateDeviceObjects(
     IN PDEVICE_OBJECT PhysicalDisk,
     IN PIRP Irp

@@ -47,7 +47,7 @@
 #undef KeGetCurrentIrql
 /* PROTOTYPES ***************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers);
 VOID
 DiskDumpScsiInvalid(VOID);
@@ -55,11 +55,11 @@ VOID
 _DiskDumpScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 			     IN PVOID HwDeviceExtension,
 			     ...);
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DiskDumpInit(VOID);
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DiskDumpFinish(VOID);
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DiskDumpWrite(LARGE_INTEGER StartAddress, PMDL Mdl);
 
 typedef VOID (*SCSIPORTNOTIFICATION)(IN SCSI_NOTIFICATION_TYPE NotificationType,
@@ -141,7 +141,7 @@ DiskDumpScsiInvalid(VOID)
   KeBugCheck(0);
 }
 
-VOID STDCALL
+VOID NTAPI
 DiskDumpBuildRequest(LARGE_INTEGER StartingOffset, PMDL Mdl)
 {
   LARGE_INTEGER StartingBlock;
@@ -208,7 +208,7 @@ DiskDumpBuildRequest(LARGE_INTEGER StartingOffset, PMDL Mdl)
   /* Leave caching disabled. */
 }
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 DiskDumpIsr(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
   if (!CoreDumpPortDeviceExtension->HwInterrupt(&CoreDumpPortDeviceExtension->MiniPortDeviceExtension))
@@ -218,7 +218,7 @@ DiskDumpIsr(PKINTERRUPT Interrupt, PVOID ServiceContext)
   return(TRUE);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DiskDumpInit(VOID)
 {
   KIRQL CurrentIrql = KeGetCurrentIrql();
@@ -233,13 +233,13 @@ DiskDumpInit(VOID)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DiskDumpFinish(VOID)
 {
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
 {
   KIRQL OldIrql = 0, OldIrql2 = 0;
@@ -292,7 +292,7 @@ DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
 {
   PIMAGE_NT_HEADERS NtHeader;
@@ -428,7 +428,7 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
  *	Status
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
 	    IN PUNICODE_STRING RegistryPath)
 {

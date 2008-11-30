@@ -230,7 +230,7 @@ VBEGetVideoChildDescriptor(
    OUT PULONG pUnused);
 
 /* vbemp.c */
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VBEFindAdapter(
    IN PVOID HwDeviceExtension,
    IN PVOID HwContext,
@@ -238,27 +238,27 @@ VBEFindAdapter(
    IN OUT PVIDEO_PORT_CONFIG_INFO ConfigInfo,
    OUT PUCHAR Again);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VBEInitialize(PVOID HwDeviceExtension);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VBEStartIO(
    PVOID HwDeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VBEResetHw(
    PVOID DeviceExtension,
    ULONG Columns,
    ULONG Rows);
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VBEGetPowerState(
    PVOID HwDeviceExtension,
    ULONG HwId,
    PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VBESetPowerState(
    PVOID HwDeviceExtension,
    ULONG HwId,

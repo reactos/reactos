@@ -42,7 +42,7 @@ VOID AudioUnload(
 
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT driver,
     IN PUNICODE_STRING registry_path

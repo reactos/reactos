@@ -80,7 +80,7 @@ v1.2.0.2  // Fix PR 40284 correctly, disable interrupts in the initialization ro
 #include "BusLogic958.h"
 
 ULONG
-STDCALL
+NTAPI
 DriverEntry(IN PVOID DriverObject,
             IN PVOID Argument2
            )
@@ -169,7 +169,7 @@ DriverEntry(IN PVOID DriverObject,
 
 
 ULONG
-STDCALL
+NTAPI
 BT958HwFindAdapter(IN PVOID HwDeviceExtension,
                    IN PVOID Context,
                    IN PVOID BusInformation,
@@ -1456,7 +1456,7 @@ VOID BusLogic_InitializeCCB( PBuslogic_CCB_T CCB)
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 BT958HwStartIO(IN PVOID HwDeviceExtension,
                IN PSCSI_REQUEST_BLOCK Srb
               )
@@ -1971,7 +1971,7 @@ BusLogic_QueueCommand(IN PVOID HwDeviceExtension ,
 
 
 BOOLEAN
-STDCALL
+NTAPI
 BT958HwInterrupt(IN PVOID HwDeviceExtension)
 //_________________________________________________________________________
 // Routine Description:
@@ -2446,7 +2446,7 @@ BusLogic_ComputeResultCode(BusLogic_HostAdapter_T *HostAdapter,
 
 
 BOOLEAN
-STDCALL
+NTAPI
 BT958HwResetBus(IN PVOID HwDeviceExtension,
                 IN ULONG PathId)
 //_____________________________________________________________________________________
@@ -2618,7 +2618,7 @@ Done:
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 BT958HwInitialize(IN PVOID HwDeviceExtension)
 //_______________________________________________________________________________
 // Routine Description:
@@ -2649,7 +2649,7 @@ BT958HwInitialize(IN PVOID HwDeviceExtension)
 }// end BT958HwInitialize
 
 SCSI_ADAPTER_CONTROL_STATUS
-STDCALL
+NTAPI
 BT958HwAdapterControl(IN PVOID HwDeviceExtension,
                       IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
                       IN PVOID Parameters)

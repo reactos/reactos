@@ -685,7 +685,7 @@ MiniReset(
    return Status;
 }
 
-VOID STDCALL
+VOID NTAPI
 MiniportHangDpc(
         PKDPC Dpc,
         PVOID DeferredContext,

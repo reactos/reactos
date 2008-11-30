@@ -72,7 +72,7 @@ typedef struct
   PHYSICAL_ADDRESS PhysFrameBufferStart;
 } XBOXVMP_DEVICE_EXTENSION, *PXBOXVMP_DEVICE_EXTENSION;
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 XboxVmpFindAdapter(
    IN PVOID HwDeviceExtension,
    IN PVOID HwContext,
@@ -80,27 +80,27 @@ XboxVmpFindAdapter(
    IN OUT PVIDEO_PORT_CONFIG_INFO ConfigInfo,
    OUT PUCHAR Again);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 XboxVmpInitialize(PVOID HwDeviceExtension);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 XboxVmpStartIO(
    PVOID HwDeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 XboxVmpResetHw(
    PVOID DeviceExtension,
    ULONG Columns,
    ULONG Rows);
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 XboxVmpGetPowerState(
    PVOID HwDeviceExtension,
    ULONG HwId,
    PVIDEO_POWER_MANAGEMENT VideoPowerControl);
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 XboxVmpSetPowerState(
    PVOID HwDeviceExtension,
    ULONG HwId,

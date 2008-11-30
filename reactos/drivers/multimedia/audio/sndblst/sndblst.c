@@ -14,7 +14,7 @@
 #include <ntddk.h>
 #include "sndblst.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath);
 
@@ -156,7 +156,7 @@ static NTSTATUS InitDevice(
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 BlasterCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp)
 /*
@@ -195,7 +195,7 @@ BlasterCreate(PDEVICE_OBJECT DeviceObject,
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 BlasterClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 /*
@@ -224,7 +224,7 @@ BlasterClose(PDEVICE_OBJECT DeviceObject,
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 BlasterCleanup(PDEVICE_OBJECT DeviceObject,
 	    PIRP Irp)
 /*
@@ -257,7 +257,7 @@ BlasterCleanup(PDEVICE_OBJECT DeviceObject,
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 BlasterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION Stack;
@@ -290,7 +290,7 @@ BlasterWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
 		  PIRP Irp)
 /*
@@ -409,14 +409,14 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
 }
 
 
-static VOID STDCALL
+static VOID NTAPI
 BlasterUnload(PDRIVER_OBJECT DriverObject)
 {
   DPRINT("BlasterUnload() called!\n");
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath)
 /*

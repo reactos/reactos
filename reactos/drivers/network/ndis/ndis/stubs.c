@@ -1046,7 +1046,7 @@ NdisIMInitializeDeviceInstanceEx(
 
  
 VOID
-STDCALL
+NTAPI
 ndisProcWorkItemHandler(PVOID pContext)
 {
     PNDIS_WORK_ITEM pNdisItem = (PNDIS_WORK_ITEM)pContext;

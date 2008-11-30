@@ -14,7 +14,7 @@
 
 #define GIGABYTE (1024 * 1024 * 1024) /* One Gigabyte */
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 SmpPagingFilesQueryRoutine(PWSTR ValueName,
                            ULONG ValueType,
                            PVOID ValueData,

@@ -11,7 +11,7 @@
 #include "usbhub.h"
 #include <stdarg.h>
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ForwardIrpAndWaitCompletion(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,
@@ -50,7 +50,7 @@ ForwardIrpAndWait(
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)

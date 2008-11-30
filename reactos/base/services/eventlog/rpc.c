@@ -12,7 +12,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter)
+DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
 {
     RPC_STATUS Status;
 

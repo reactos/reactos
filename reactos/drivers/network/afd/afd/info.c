@@ -13,7 +13,7 @@
 #include "debug.h"
 #include "pseh/pseh.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -69,7 +69,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       PIO_STACK_LOCATION IrpSp, BOOLEAN Local ) {
     NTSTATUS Status = STATUS_SUCCESS;

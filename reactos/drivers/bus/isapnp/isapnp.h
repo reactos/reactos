@@ -3,10 +3,6 @@
 
 #include <ntddk.h>
 
-#ifdef _MSC_VER
-  #define STDCALL
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -334,7 +330,7 @@ typedef struct _ISAPNP_DEVICE_EXTENSION
 } ISAPNP_DEVICE_EXTENSION, *PISAPNP_DEVICE_EXTENSION;
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
   IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath);

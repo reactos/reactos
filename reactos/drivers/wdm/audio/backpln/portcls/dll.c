@@ -13,7 +13,7 @@
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 DllInitialize(ULONG Unknown)
 {
     return 0;
@@ -22,7 +22,7 @@ DllInitialize(ULONG Unknown)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 DllUnload(VOID)
 {
     return 0;

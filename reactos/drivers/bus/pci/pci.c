@@ -16,16 +16,16 @@
 #include <debug.h>
 
 static DRIVER_DISPATCH PciDispatchDeviceControl;
-static NTSTATUS STDCALL PciDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+static NTSTATUS NTAPI PciDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 static DRIVER_ADD_DEVICE PciAddDevice;
-static NTSTATUS STDCALL PciAddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT PhysicalDeviceObject);
+static NTSTATUS NTAPI PciAddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT PhysicalDeviceObject);
 
 static DRIVER_DISPATCH PciPowerControl;
-static NTSTATUS STDCALL PciPowerControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+static NTSTATUS NTAPI PciPowerControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 static DRIVER_DISPATCH PciPnpControl;
-static NTSTATUS STDCALL PciPnpControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+static NTSTATUS NTAPI PciPnpControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 
 #ifdef  ALLOC_PRAGMA
@@ -44,7 +44,7 @@ PPCI_DRIVER_EXTENSION DriverExtension = NULL;
 /*** PRIVATE *****************************************************************/
 
 static NTSTATUS
-STDCALL
+NTAPI
 PciDispatchDeviceControl(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -79,7 +79,7 @@ PciDispatchDeviceControl(
 
 
 static NTSTATUS
-STDCALL
+NTAPI
 PciPnpControl(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -110,7 +110,7 @@ PciPnpControl(
 
 
 static NTSTATUS
-STDCALL
+NTAPI
 PciPowerControl(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -139,7 +139,7 @@ PciPowerControl(
 
 
 static NTSTATUS
-STDCALL
+NTAPI
 PciAddDevice(
   IN PDRIVER_OBJECT DriverObject,
   IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -181,7 +181,7 @@ PciAddDevice(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
   IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath)

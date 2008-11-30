@@ -70,7 +70,7 @@ OpenDevicesKey(
 #endif
 
 
-NTSTATUS STDCALL EnumDeviceKeys(
+NTSTATUS NTAPI EnumDeviceKeys(
     IN PUNICODE_STRING RegistryPath,
     IN PWSTR SubKey,
     IN PREGISTRY_CALLBACK_ROUTINE Callback,
@@ -230,7 +230,7 @@ NTSTATUS STDCALL EnumDeviceKeys(
 
 
 
-NTSTATUS STDCALL LoadSettings(
+NTSTATUS NTAPI LoadSettings(
     IN  PWSTR ValueName,
     IN  ULONG ValueType,
     IN  PVOID ValueData,
