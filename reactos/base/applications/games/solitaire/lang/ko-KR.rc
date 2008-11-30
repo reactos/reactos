@@ -47,6 +47,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "현재 게임을 끝낼가요?"
     IDS_SOL_WIN     "축하합니다!!"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

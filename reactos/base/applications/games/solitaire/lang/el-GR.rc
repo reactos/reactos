@@ -50,6 +50,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "Τερματισμός του πιαχνιδιού αυτού;"
     IDS_SOL_WIN     "Συγχαρητήρια, κερδίσατε!!"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

@@ -52,6 +52,7 @@ BEGIN
     IDS_SOL_ABOUT   "SolitÈr od J Brown\n\nCardLib verzia 1.0"
     IDS_SOL_QUIT    "Naozaj chcete skonËiù aktu·lnu hru?"
     IDS_SOL_WIN     "Blahoûel·m, vyhrali ste!"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

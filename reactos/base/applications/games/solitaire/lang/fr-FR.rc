@@ -50,6 +50,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitaire par J Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "Quitter le jeu actuel ?"
     IDS_SOL_WIN     "Félicitations ! Vous avez gagné !"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

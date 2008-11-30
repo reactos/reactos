@@ -19,6 +19,7 @@ TCHAR szAppName[128];
 TCHAR MsgQuit[128];
 TCHAR MsgAbout[128];
 TCHAR MsgWin[128];
+TCHAR MsgDeal[128];
 DWORD dwOptions = 8;
 
 CardWindow SolWnd;
@@ -135,6 +136,7 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
     LoadString(hInst, IDS_SOL_ABOUT, MsgAbout, sizeof(MsgAbout) / sizeof(MsgAbout[0]));
     LoadString(hInst, IDS_SOL_QUIT, MsgQuit, sizeof(MsgQuit) / sizeof(MsgQuit[0]));
     LoadString(hInst, IDS_SOL_WIN, MsgWin, sizeof(MsgWin) / sizeof(MsgWin[0]));
+    LoadString(hInst, IDS_SOL_DEAL, MsgDeal, sizeof(MsgDeal) / sizeof(MsgDeal[0]));
 
     //Window class for the main application parent window
     wndclass.style            = 0;//CS_HREDRAW | CS_VREDRAW;
@@ -577,5 +579,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
     return DefWindowProc (hwnd, iMsg, wParam, lParam);
 }
+
 
 
