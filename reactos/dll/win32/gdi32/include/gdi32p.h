@@ -233,5 +233,8 @@ GdiSetLastError( DWORD dwErrCode );
 DWORD WINAPI GdiGetCodePage(HDC);
 UINT FASTCALL DIB_BitmapBitsSize( PBITMAPINFO );
 
-/* EOF */
+int
+WINAPI
+GdiGetBitmapBitsSize(BITMAPINFO *lpbmi);
 
+/* EOF */
