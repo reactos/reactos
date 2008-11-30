@@ -1,5 +1,6 @@
 /* TRANSLATOR:  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  21-01-2008
+ * LastChange:  31-10-2008 
  */
 
 
@@ -39,7 +40,7 @@ BEGIN
     IDS_NO_APP               "Vyberte, prosím, program predtım ne kliknete na tlaèidlo stiahnu. Ak potrebujete pomoc, kliknite, prosím, na tlaèidlo otáznika v pravom hornom rohu."
     IDS_UPDATE_TITLE         "Aktualizova"
     IDS_UPDATE               "Prepáète, ale táto funkcia zatia¾ nie je implementovaná."
-    IDS_HELP_TITLE           "Pomoc"
+    IDS_HELP_TITLE           "Pomocník"
     IDS_HELP                 "Vyberte kategóriu na ¾avej strane, potom vyberte program a kliknite na tlaèidlo stiahnu. Pre aktualizáciu informácii o programe kliknite na tlaèidlo ved¾a tlaèidla pomoc."
     IDS_NO_APPS              "Prepáète, ale zatia¾ sa v tejto kategórii nenachádzajú iadne programy. Môete pomôc a prida viac programov."
     IDS_CHOOSE_APP           "Vyberte program, prosím."
