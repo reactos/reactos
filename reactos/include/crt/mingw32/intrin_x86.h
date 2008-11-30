@@ -793,9 +793,9 @@ static __inline__ __attribute__((always_inline)) unsigned char _bittestandcomple
 	unsigned char retval;
 
 	if(__builtin_constant_p(b))
-		__asm__("btc %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*(a + (b / 32))), [b] "Ir" (b % 32));
+		__asm__("btc %[b], %[a]; setb %b[retval]" : [a] "+mr" (*(a + (b / 32))), [retval] "=q" (retval) : [b] "Ir" (b % 32));
 	else
-		__asm__("btc %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*a), [b] "r" (b));
+		__asm__("btc %[b], %[a]; setb %b[retval]" : [a] "+mr" (*a), [retval] "=q" (retval) : [b] "r" (b));
 
 	return retval;
 }
@@ -805,9 +805,9 @@ static __inline__ __attribute__((always_inline)) unsigned char _bittestandreset(
 	unsigned char retval;
 
 	if(__builtin_constant_p(b))
-		__asm__("btr %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*(a + (b / 32))), [b] "Ir" (b % 32));
+		__asm__("btr %[b], %[a]; setb %b[retval]" : [a] "+mr" (*(a + (b / 32))), [retval] "=q" (retval) : [b] "Ir" (b % 32));
 	else
-		__asm__("btr %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*a), [b] "r" (b));
+		__asm__("btr %[b], %[a]; setb %b[retval]" : [a] "+mr" (*a), [retval] "=q" (retval) : [b] "r" (b));
 
 	return retval;
 }
@@ -817,9 +817,9 @@ static __inline__ __attribute__((always_inline)) unsigned char _bittestandset(lo
 	unsigned char retval;
 
 	if(__builtin_constant_p(b))
-		__asm__("bts %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*(a + (b / 32))), [b] "Ir" (b % 32));
+		__asm__("bts %[b], %[a]; setb %b[retval]" : [a] "+mr" (*(a + (b / 32))), [retval] "=q" (retval) : [b] "Ir" (b % 32));
 	else
-		__asm__("bts %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*a), [b] "r" (b));
+		__asm__("bts %[b], %[a]; setb %b[retval]" : [a] "+mr" (*a), [retval] "=q" (retval) : [b] "r" (b));
 
 	return retval;
 }

@@ -123,7 +123,7 @@ void  __cpu_features_init (void)
   if (eax < 0x80000001)
     return;
   __cpuid (0x80000001, eax, ebx, ecx, edx);
-  if (edx & EDX_3DNOW);
+  if (edx & EDX_3DNOW)
     __cpu_features |= _CRT_3DNOW;
   if (edx & EDX_3DNOWP)
     __cpu_features |= _CRT_3DNOWP;
