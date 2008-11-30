@@ -825,7 +825,7 @@ void free_winsock_thread_block(PWINSOCK_THREAD_BLOCK p)
 }
 
 BOOL
-STDCALL
+WINAPI
 DllMain(HANDLE hInstDll,
         ULONG dwReason,
         LPVOID lpReserved)
