@@ -1506,6 +1506,7 @@ DoStaticShellExtensions(
 {
     STRRET strFile;
     WCHAR szPath[MAX_PATH];
+    WCHAR szDir[MAX_PATH];
     SHELLEXECUTEINFOW sei;
     PStaticShellEntry pCurrent = This->shead;
     int verb = LOWORD(lpcmi->lpVerb) - This->iIdSCMFirst;
@@ -1527,6 +1528,8 @@ DoStaticShellExtensions(
     if (StrRetToBufW(&strFile, This->dcm.apidl[0], szPath, MAX_PATH) != S_OK)
         return E_FAIL;
 
+    wcscpy(szDir, szPath);
+    PathRemoveFileSpec(szDir);
 
     ZeroMemory(&sei, sizeof(sei));
     sei.cbSize = sizeof(sei);
@@ -1536,6 +1539,7 @@ DoStaticShellExtensions(
     sei.nShow = SW_SHOWNORMAL;
     sei.lpVerb = pCurrent->szVerb;
     sei.lpFile = szPath;
+    sei.lpDirectory = szDir;
     ShellExecuteExW(&sei);
     return S_OK;
 
