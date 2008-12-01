@@ -2,7 +2,7 @@ Here is the short product spec
 
 1. Fix the service stuff
 2. Use the event log
-3. Do real authentication ( I suspect you could hack PAM-GINA to do remote auth)
+3. Do real authentication (LogonUser[Ex]+CreateProcessAsUser maybe?)
 4. Properly Set the environment
 
 
