@@ -156,8 +156,6 @@ static attr_list_t *check_module_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_coclass_attrs(const char *name, attr_list_t *attrs);
 const char *get_attr_display_name(enum attr_type type);
 static void add_explicit_handle_if_necessary(func_t *func);
-static type_t *find_type_helper(const char *name, int t);
-static void check_def(const type_t *t);
 
 static statement_t *make_statement(enum statement_type type);
 static statement_t *make_statement_type_decl(type_t *type);
@@ -841,15 +839,12 @@ int_std:  tINT					{ $$ = make_builtin($<str>1); }
 
 coclass:  tCOCLASS aIDENTIFIER			{ $$ = make_class($2); }
 	| tCOCLASS aKNOWNTYPE			{ $$ = find_type($2, 0);
-						  if ($$->kind != TKIND_COCLASS)
-						    error_loc("%s was not declared a coclass at %s:%d\n",
-							      $2, $$->loc_info.input_name,
-							      $$->loc_info.line_number);
+						  if ($$->defined) error_loc("multiple definition error\n");
+						  if ($$->kind != TKIND_COCLASS) error_loc("%s was not declared a coclass\n", $2);
 						}
 	;
 
 coclasshdr: attributes coclass			{ $$ = $2;
-						  check_def($$);
 						  $$->attrs = check_coclass_attrs($2->name, $1);
 						  if (!parse_only && do_header)
 						    write_coclass($$);
@@ -881,7 +876,7 @@ dispinterfacehdr: attributes dispinterface	{ attr_t *attrs;
 						  is_in_interface = TRUE;
 						  is_object_interface = TRUE;
 						  $$ = $2;
-						  check_def($$);
+						  if ($$->defined) error_loc("multiple definition error\n");
 						  attrs = make_attr(ATTR_DISPINTERFACE);
 						  $$->attrs = append_attr( check_dispiface_attrs($2->name, $1), attrs );
 						  $$->ref = find_type("IDispatch", 0);
@@ -933,7 +928,7 @@ interfacehdr: attributes interface		{ $$.interface = $2;
 						    pointer_default = get_attrv($1, ATTR_POINTERDEFAULT);
 						  is_object_interface = is_object($1);
 						  is_in_interface = TRUE;
-						  check_def($2);
+						  if ($2->defined) error_loc("multiple definition error\n");
 						  $2->attrs = check_iface_attrs($2->name, $1);
 						  $2->defined = TRUE;
 						  if (!parse_only && do_header) write_forward($2);
@@ -1059,7 +1054,6 @@ pointer_type:
 
 structdef: tSTRUCT t_ident '{' fields '}'	{ $$ = get_typev(RPC_FC_STRUCT, $2, tsSTRUCT);
                                                   /* overwrite RPC_FC_STRUCT with a more exact type */
-						  check_def($$);
 						  $$->type = get_struct_type( $4 );
 						  $$->kind = TKIND_RECORD;
 						  $$->fields_or_args = $4;
@@ -1089,7 +1083,6 @@ typedef: tTYPEDEF m_attributes decl_spec declarator_list
 
 uniondef: tUNION t_ident '{' ne_union_fields '}'
 						{ $$ = get_typev(RPC_FC_NON_ENCAPSULATED_UNION, $2, tsUNION);
-						  check_def($$);
 						  $$->kind = TKIND_UNION;
 						  $$->fields_or_args = $4;
 						  $$->defined = TRUE;
@@ -1098,7 +1091,6 @@ uniondef: tUNION t_ident '{' ne_union_fields '}'
 	  tSWITCH '(' s_field ')'
 	  m_ident '{' cases '}'			{ var_t *u = $7;
 						  $$ = get_typev(RPC_FC_ENCAPSULATED_UNION, $2, tsUNION);
-						  check_def($$);
 						  $$->kind = TKIND_UNION;
 						  if (!u) u = make_var( xstrdup("tagged_union") );
 						  u->type = make_type(RPC_FC_NON_ENCAPSULATED_UNION, NULL);
@@ -1392,7 +1384,6 @@ type_t *make_type(unsigned char type, type_t *ref)
   t->tfswrite = FALSE;
   t->checked = FALSE;
   t->typelib_idx = -1;
-  init_loc_info(&t->loc_info);
   return t;
 }
 
@@ -1704,7 +1695,9 @@ static var_t *make_var(char *name)
   v->attrs = NULL;
   v->eval = NULL;
   v->stgclass = STG_NONE;
-  init_loc_info(&v->loc_info);
+  v->loc_info.input_name = input_name ? input_name : "stdin";
+  v->loc_info.line_number = line_number;
+  v->loc_info.near_text = parser_text;
   return v;
 }
 
@@ -1894,12 +1887,6 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
 
     if (name->name) {
       type_t *cur;
-
-      cur = find_type_helper(name->name, 0);
-      if (cur)
-          error_loc("%s: redefinition error; original definition was at %s:%d\n",
-                    cur->name, cur->loc_info.input_name,
-                    cur->loc_info.line_number);
 
       /* set the attributes to allow set_type to do some checks on them */
       name->attrs = attrs;
@@ -2902,18 +2889,4 @@ static func_list_t *append_func_from_statement(func_list_t *list, statement_t *s
         }
     }
     return list;
-}
-
-void init_loc_info(loc_info_t *i)
-{
-    i->input_name = input_name ? input_name : "stdin";
-    i->line_number = line_number;
-    i->near_text = parser_text;
-}
-
-static void check_def(const type_t *t)
-{
-    if (t->defined)
-        error_loc("%s: redefinition error; original definition was at %s:%d\n",
-                  t->name, t->loc_info.input_name, t->loc_info.line_number);
 }

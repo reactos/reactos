@@ -69,7 +69,6 @@ type_t *alias(type_t *t, const char *name)
   a->kind = TKIND_ALIAS;
   a->attrs = NULL;
   a->declarray = FALSE;
-  init_loc_info(&a->loc_info);
 
   return a;
 }
