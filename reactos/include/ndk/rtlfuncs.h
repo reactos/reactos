@@ -1097,6 +1097,8 @@ RtlMapGenericMask(
     PGENERIC_MAPPING GenericMapping
 );
 
+#ifdef NTOS_MODE_USER
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1106,6 +1108,8 @@ RtlQueryInformationAcl(
     ULONG InformationLength,
     ACL_INFORMATION_CLASS InformationClass
 );
+
+#endif
 
 NTSYSAPI
 VOID
@@ -1176,6 +1180,8 @@ RtlSetGroupSecurityDescriptor(
     IN BOOLEAN GroupDefaulted
 );
 
+#ifdef NTOS_MODE_USER
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1185,6 +1191,8 @@ RtlSetInformationAcl(
     ULONG InformationLength,
     ACL_INFORMATION_CLASS InformationClass
 );
+
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -1726,7 +1734,7 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlIsTextUnicode(
-    LPCVOID Buffer,
+    PVOID Buffer,
     INT Length,
     INT *Flags
 );

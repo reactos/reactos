@@ -460,7 +460,6 @@ typedef VOID
 struct _RTL_AVL_TABLE;
 struct _RTL_GENERIC_TABLE;
 struct _RTL_RANGE;
-typedef struct _COMPRESSED_DATA_INFO COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
 //
 // Routines and callbacks for the RTL AVL/Generic Table package
@@ -515,6 +514,7 @@ typedef VOID
 //
 // RTL Query Registry callback
 //
+#ifdef NTOS_MODE_USER
 typedef NTSTATUS
 (NTAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
     IN PWSTR ValueName,
@@ -524,6 +524,7 @@ typedef NTSTATUS
     IN PVOID Context,
     IN PVOID EntryContext
 );
+#endif
 
 //
 // RTL Secure Memory callbacks
@@ -667,6 +668,19 @@ typedef struct _RTL_AVL_TABLE
     PRTL_AVL_FREE_ROUTINE FreeRoutine;
     PVOID TableContext;
 } RTL_AVL_TABLE, *PRTL_AVL_TABLE;
+
+//
+// RTL Compression Buffer
+//
+typedef struct _COMPRESSED_DATA_INFO {
+    USHORT CompressionFormatAndEngine;
+    UCHAR CompressionUnitShift;
+    UCHAR ChunkShift;
+    UCHAR ClusterShift;
+    UCHAR Reserved;
+    USHORT NumberOfChunks;
+    ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
+} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
 //
 // RtlQueryRegistry Data

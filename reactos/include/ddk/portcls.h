@@ -123,9 +123,20 @@
 #ifndef PORTCLS_H
 #define PORTCLS_H
 
+#ifdef __cplusplus
+extern "C"
+{
+    #include <wdm.h>
+}
+#else
+    #include <wdm.h>
+#endif
+
+#include <windef.h>
+
 #include <ks.h>
+#include <ksmedia.h>
 #include <punknown.h>
-#include <ntddk.h>
 #include <drmk.h>
 
 #ifdef __cplusplus

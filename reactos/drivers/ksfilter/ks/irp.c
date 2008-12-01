@@ -126,7 +126,7 @@ KSDDKAPI NTSTATUS NTAPI
 KsAllocateObjectCreateItem(
     IN  KSDEVICE_HEADER Header,
     IN  PKSOBJECT_CREATE_ITEM CreateItem,
-    IN  BOOL AllocateEntry,
+    IN  BOOLEAN AllocateEntry,
     IN  PFNKSITEMFREECALLBACK ItemFreeCallback OPTIONAL)
 {
     UNIMPLEMENTED;

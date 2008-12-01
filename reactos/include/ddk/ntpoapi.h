@@ -23,10 +23,6 @@
 #ifndef __NTPOAPI_H
 #define __NTPOAPI_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "batclass.h"
 
 #ifdef __cplusplus
@@ -36,6 +32,11 @@ extern "C" {
 #define POWER_PERF_SCALE                  100
 #define PERF_LEVEL_TO_PERCENT(x)          (((x) * 1000) / (POWER_PERF_SCALE * 10))
 #define PERCENT_TO_PERF_LEVEL(x)          (((x) * POWER_PERF_SCALE * 10) / 1000)
+
+typedef struct {
+    ULONG       Granularity;
+    ULONG       Capacity;
+} BATTERY_REPORTING_SCALE, *PBATTERY_REPORTING_SCALE;
 
 typedef struct _PROCESSOR_IDLE_TIMES {
 	ULONGLONG  StartTime;
@@ -210,6 +211,57 @@ NtRequestDeviceWakeup(
   IN HANDLE  Device);
 
 #define WINLOGON_LOCK_ON_SLEEP            0x00000001
+
+typedef struct {
+    BOOLEAN             PowerButtonPresent;
+    BOOLEAN             SleepButtonPresent;
+    BOOLEAN             LidPresent;
+    BOOLEAN             SystemS1;
+    BOOLEAN             SystemS2;
+    BOOLEAN             SystemS3;
+    BOOLEAN             SystemS4;
+    BOOLEAN             SystemS5;
+    BOOLEAN             HiberFilePresent;
+    BOOLEAN             FullWake;
+    BOOLEAN             VideoDimPresent;
+    BOOLEAN             ApmPresent;
+    BOOLEAN             UpsPresent;
+    BOOLEAN             ThermalControl;
+    BOOLEAN             ProcessorThrottle;
+    UCHAR               ProcessorMinThrottle;
+#if (NTDDI_VERSION < NTDDI_WINXP)
+    UCHAR               ProcessorThrottleScale;
+    UCHAR               spare2[4];
+#else
+    UCHAR               ProcessorMaxThrottle;
+    BOOLEAN             FastSystemS4;
+    UCHAR               spare2[3];
+#endif // (NTDDI_VERSION < NTDDI_WINXP)
+    BOOLEAN             DiskSpinDown;
+    UCHAR               spare3[8];
+    BOOLEAN             SystemBatteriesPresent;
+    BOOLEAN             BatteriesAreShortTerm;
+    BATTERY_REPORTING_SCALE BatteryScale[3];
+    SYSTEM_POWER_STATE  AcOnLineWake;
+    SYSTEM_POWER_STATE  SoftLidWake;
+    SYSTEM_POWER_STATE  RtcWake;
+    SYSTEM_POWER_STATE  MinDeviceWakeState;
+    SYSTEM_POWER_STATE  DefaultLowLatencyWake;
+} SYSTEM_POWER_CAPABILITIES, *PSYSTEM_POWER_CAPABILITIES;
+
+typedef struct {
+    BOOLEAN             AcOnLine;
+    BOOLEAN             BatteryPresent;
+    BOOLEAN             Charging;
+    BOOLEAN             Discharging;
+    BOOLEAN             Spare1[4];
+    ULONG               MaxCapacity;
+    ULONG               RemainingCapacity;
+    ULONG               Rate;
+    ULONG               EstimatedTime;
+    ULONG               DefaultAlert1;
+    ULONG               DefaultAlert2;
+} SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
 
 typedef struct _PROCESSOR_POWER_INFORMATION {
   ULONG  Number;

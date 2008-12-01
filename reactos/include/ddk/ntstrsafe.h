@@ -26,6 +26,11 @@
 #endif
 #define NTSTRSAFE_MAX_LENGTH    (NTSTRSAFE_MAX_CCH - 1)
 
+//
+// Typedefs
+//
+typedef unsigned long DWORD;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 FORCEINLINE
