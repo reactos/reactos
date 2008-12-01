@@ -396,7 +396,7 @@ VOID ShowInfo(BOOL bAll)
             if (pAdapterInfo)
                 HeapFree(ProcessHeap, 0, pAdapterInfo);
             return;
-
+        }
         if (GetNetworkParams(pFixedInfo, &netOutBufLen) != NO_ERROR)
         {
             DoFormatMessage(0);
