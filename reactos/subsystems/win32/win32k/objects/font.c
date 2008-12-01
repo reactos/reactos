@@ -772,5 +772,41 @@ NtGdiHfontCreate(
   return hNewFont;
 }
 
+/*
+ * @implemented
+ */
+HFONT
+APIENTRY
+NtGdiSelectFont(
+    IN HDC hDC,
+    IN HFONT hFont)
+{
+    PDC pDC;
+    PDC_ATTR pDc_Attr;
+    HFONT hOrgFont = NULL;
+
+    if (hDC == NULL || hFont == NULL) return NULL;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        return NULL;
+    }
+
+    pDc_Attr = pDC->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+    /* FIXME: what if not successful? */
+    if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
+    {
+        hOrgFont = pDc_Attr->hlfntNew;
+        pDc_Attr->hlfntNew = hFont;
+    }
+
+    DC_UnlockDc(pDC);
+
+    return hOrgFont;
+}
+
 
 /* EOF */
