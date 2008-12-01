@@ -1004,7 +1004,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Description",0x00000000,"RPC sub
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Group",0x00000000," RPC Service"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
-HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
 
 ; Scsiport driver

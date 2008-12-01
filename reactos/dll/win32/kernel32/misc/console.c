@@ -144,7 +144,7 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AddConsoleAliasA (LPCSTR lpSource,
 		  LPCSTR lpTarget,
 		  LPCSTR lpExeName)
@@ -178,7 +178,7 @@ AddConsoleAliasA (LPCSTR lpSource,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AddConsoleAliasW (LPCWSTR lpSource,
 		  LPCWSTR lpTarget,
 		  LPCWSTR lpExeName)
@@ -239,7 +239,7 @@ AddConsoleAliasW (LPCWSTR lpSource,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ConsoleMenuControl (HANDLE	hConsole,
 		    DWORD	Unknown1,
 		    DWORD	Unknown2)
@@ -256,7 +256,7 @@ ConsoleMenuControl (HANDLE	hConsole,
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 DuplicateConsoleHandle (HANDLE	hConsole,
 			DWORD   dwDesiredAccess,
 			BOOL	bInheritHandle,
@@ -295,7 +295,7 @@ DuplicateConsoleHandle (HANDLE	hConsole,
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 ExpungeConsoleCommandHistoryW (DWORD	Unknown0)
      /*
       * Undocumented
@@ -310,7 +310,7 @@ ExpungeConsoleCommandHistoryW (DWORD	Unknown0)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 ExpungeConsoleCommandHistoryA (DWORD	Unknown0)
      /*
       * Undocumented
@@ -326,7 +326,7 @@ ExpungeConsoleCommandHistoryA (DWORD	Unknown0)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasW (LPWSTR	lpSource,
 		  LPWSTR	lpTargetBuffer,
 		  DWORD		TargetBufferLength,
@@ -400,7 +400,7 @@ GetConsoleAliasW (LPWSTR	lpSource,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasA (LPSTR	lpSource,
 		  LPSTR	lpTargetBuffer,
 		  DWORD	TargetBufferLength,
@@ -442,7 +442,7 @@ GetConsoleAliasA (LPSTR	lpSource,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasExesW (LPWSTR lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
 {
@@ -489,7 +489,7 @@ GetConsoleAliasExesW (LPWSTR lpExeNameBuffer,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
 {
@@ -512,7 +512,7 @@ GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasExesLengthW (VOID)
 {
   CSR_API_MESSAGE Request; 
@@ -542,7 +542,7 @@ GetConsoleAliasExesLengthW (VOID)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasExesLengthA (VOID)
 {
   DWORD dwLength;
@@ -561,7 +561,7 @@ GetConsoleAliasExesLengthA (VOID)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasesW (LPWSTR AliasBuffer,
 		    DWORD	AliasBufferLength,
 		    LPWSTR	ExeName)
@@ -600,7 +600,7 @@ GetConsoleAliasesW (LPWSTR AliasBuffer,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasesA (LPSTR AliasBuffer,
 		    DWORD	AliasBufferLength,
 		    LPSTR	ExeName)
@@ -632,7 +632,7 @@ GetConsoleAliasesA (LPSTR AliasBuffer,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasesLengthW (LPWSTR lpExeName) 
 {
   CSR_API_MESSAGE Request; 
@@ -663,7 +663,7 @@ GetConsoleAliasesLengthW (LPWSTR lpExeName)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleAliasesLengthA (LPSTR lpExeName)
 {
 	DWORD dwRetVal = 0;
@@ -687,7 +687,7 @@ GetConsoleAliasesLengthA (LPSTR lpExeName)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleCommandHistoryW (DWORD	Unknown0,
 			   DWORD	Unknown1,
 			   DWORD	Unknown2)
@@ -704,7 +704,7 @@ GetConsoleCommandHistoryW (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleCommandHistoryA (DWORD	Unknown0,
 			   DWORD	Unknown1,
 			   DWORD	Unknown2)
@@ -721,7 +721,7 @@ GetConsoleCommandHistoryA (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleCommandHistoryLengthW (DWORD	Unknown0)
      /*
       * Undocumented
@@ -736,7 +736,7 @@ GetConsoleCommandHistoryLengthW (DWORD	Unknown0)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleCommandHistoryLengthA (DWORD	Unknown0)
      /*
       * Undocumented
@@ -750,7 +750,7 @@ GetConsoleCommandHistoryLengthA (DWORD	Unknown0)
 /*
  * @unimplemented
  */
-INT STDCALL
+INT WINAPI
 GetConsoleDisplayMode (LPDWORD lpdwMode)
      /*
       * FUNCTION: Get the console display mode
@@ -769,7 +769,7 @@ GetConsoleDisplayMode (LPDWORD lpdwMode)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleFontInfo (DWORD	Unknown0,
 		    DWORD	Unknown1,
 		    DWORD	Unknown2,
@@ -787,7 +787,7 @@ GetConsoleFontInfo (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-COORD STDCALL
+COORD WINAPI
 GetConsoleFontSize(HANDLE hConsoleOutput,
 		   DWORD nFont)
 {
@@ -801,7 +801,7 @@ GetConsoleFontSize(HANDLE hConsoleOutput,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleHardwareState (HANDLE	hConsole,
 			 DWORD	Flags,
 			 PDWORD	State)
@@ -834,7 +834,7 @@ GetConsoleHardwareState (HANDLE	hConsole,
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 GetConsoleInputWaitHandle (VOID)
      /*
       * Undocumented
@@ -859,7 +859,7 @@ GetConsoleInputWaitHandle (VOID)
 /*
  * @unimplemented
  */
-INT STDCALL
+INT WINAPI
 GetCurrentConsoleFont(HANDLE hConsoleOutput,
 		      BOOL bMaximumWindow,
 		      PCONSOLE_FONT_INFO lpConsoleCurrentFont)
@@ -873,7 +873,7 @@ GetCurrentConsoleFont(HANDLE hConsoleOutput,
 /*
  * @unimplemented
  */
-ULONG STDCALL
+ULONG WINAPI
 GetNumberOfConsoleFonts (VOID)
      /*
       * Undocumented
@@ -888,7 +888,7 @@ GetNumberOfConsoleFonts (VOID)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 InvalidateConsoleDIBits (DWORD	Unknown0,
 			 DWORD	Unknown1)
      /*
@@ -904,7 +904,7 @@ InvalidateConsoleDIBits (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 OpenConsoleW (LPCWSTR  wsName,
 	      DWORD   dwDesiredAccess,
 	      BOOL    bInheritHandle,
@@ -959,7 +959,7 @@ OpenConsoleW (LPCWSTR  wsName,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleCommandHistoryMode (DWORD	dwMode)
      /*
       * Undocumented
@@ -974,7 +974,7 @@ SetConsoleCommandHistoryMode (DWORD	dwMode)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleCursor (DWORD	Unknown0,
 		  DWORD	Unknown1)
      /*
@@ -990,7 +990,7 @@ SetConsoleCursor (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleDisplayMode (HANDLE hOut,
 		       DWORD dwNewMode,
 		       PCOORD lpdwOldMode)
@@ -1011,7 +1011,7 @@ SetConsoleDisplayMode (HANDLE hOut,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleFont (DWORD	Unknown0,
 		DWORD	Unknown1)
      /*
@@ -1027,7 +1027,7 @@ SetConsoleFont (DWORD	Unknown0,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleHardwareState (HANDLE	hConsole,
 			 DWORD	Flags,
 			 DWORD	State)
@@ -1060,7 +1060,7 @@ SetConsoleHardwareState (HANDLE	hConsole,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleKeyShortcuts (DWORD	Unknown0,
 			DWORD	Unknown1,
 			DWORD	Unknown2,
@@ -1078,7 +1078,7 @@ SetConsoleKeyShortcuts (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleMaximumWindowSize (DWORD	Unknown0,
 			     DWORD	Unknown1)
      /*
@@ -1094,7 +1094,7 @@ SetConsoleMaximumWindowSize (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleMenuClose (DWORD	Unknown0)
      /*
       * Undocumented
@@ -1109,7 +1109,7 @@ SetConsoleMenuClose (DWORD	Unknown0)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleNumberOfCommandsA (DWORD	Unknown0,
 			     DWORD	Unknown1)
      /*
@@ -1125,7 +1125,7 @@ SetConsoleNumberOfCommandsA (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleNumberOfCommandsW (DWORD	Unknown0,
 			     DWORD	Unknown1)
      /*
@@ -1141,7 +1141,7 @@ SetConsoleNumberOfCommandsW (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsolePalette (DWORD	Unknown0,
 		   DWORD	Unknown1,
 		   DWORD	Unknown2)
@@ -1158,7 +1158,7 @@ SetConsolePalette (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetLastConsoleEventActive (VOID)
      /*
       * Undocumented
@@ -1173,7 +1173,7 @@ SetLastConsoleEventActive (VOID)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 ShowConsoleCursor (DWORD	Unknown0,
 		   DWORD	Unknown1)
      /*
@@ -1197,7 +1197,7 @@ ShowConsoleCursor (DWORD	Unknown0,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 VerifyConsoleIoHandle(HANDLE Handle)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
@@ -1223,7 +1223,7 @@ VerifyConsoleIoHandle(HANDLE Handle)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 WriteConsoleInputVDMA (DWORD	Unknown0,
 		       DWORD	Unknown1,
 		       DWORD	Unknown2,
@@ -1238,7 +1238,7 @@ WriteConsoleInputVDMA (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 WriteConsoleInputVDMW (DWORD	Unknown0,
 		       DWORD	Unknown1,
 		       DWORD	Unknown2,
@@ -1253,7 +1253,7 @@ WriteConsoleInputVDMW (DWORD	Unknown0,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CloseConsoleHandle(HANDLE Handle)
      /*
       * Undocumented
@@ -1281,7 +1281,7 @@ CloseConsoleHandle(HANDLE Handle)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 GetStdHandle(DWORD nStdHandle)
      /*
       * FUNCTION: Get a handle for the standard input, standard output
@@ -1426,7 +1426,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 WriteConsoleA(HANDLE hConsoleOutput,
 	      CONST VOID *lpBuffer,
 	      DWORD nNumberOfCharsToWrite,
@@ -1447,7 +1447,7 @@ WriteConsoleA(HANDLE hConsoleOutput,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 WriteConsoleW(
 	HANDLE		 hConsoleOutput,
 	CONST VOID	*lpBuffer,
@@ -1556,7 +1556,7 @@ IntReadConsole(HANDLE hConsoleInput,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ReadConsoleA(HANDLE hConsoleInput,
              LPVOID lpBuffer,
              DWORD nNumberOfCharsToRead,
@@ -1577,7 +1577,7 @@ ReadConsoleA(HANDLE hConsoleInput,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ReadConsoleW(HANDLE hConsoleInput,
              LPVOID lpBuffer,
              DWORD nNumberOfCharsToRead,
@@ -1598,7 +1598,7 @@ ReadConsoleW(HANDLE hConsoleInput,
  *
  * @implemented
  */
-BOOL STDCALL AllocConsole(VOID)
+BOOL WINAPI AllocConsole(VOID)
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
    
@@ -1639,7 +1639,7 @@ BOOL STDCALL AllocConsole(VOID)
  *
  * @implemented
  */
-BOOL STDCALL FreeConsole(VOID)
+BOOL WINAPI FreeConsole(VOID)
 {
     // AG: I'm not sure if this is correct (what happens to std handles?)
     // but I just tried to reverse what AllocConsole() does...
@@ -1667,7 +1667,7 @@ BOOL STDCALL FreeConsole(VOID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetConsoleScreenBufferInfo(
     HANDLE hConsoleOutput,
     PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo
@@ -1696,7 +1696,7 @@ GetConsoleScreenBufferInfo(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetConsoleCursorPosition(
     HANDLE hConsoleOutput,
     COORD dwCursorPosition
@@ -1763,7 +1763,7 @@ IntFillConsoleOutputCharacter(HANDLE hConsoleOutput,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 FillConsoleOutputCharacterA(
 	HANDLE		hConsoleOutput,
 	CHAR		cCharacter,
@@ -1787,7 +1787,7 @@ FillConsoleOutputCharacterA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FillConsoleOutputCharacterW(
 	HANDLE		hConsoleOutput,
 	WCHAR		cCharacter,
@@ -3620,7 +3620,7 @@ SetConsoleOutputCP(
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleProcessList(LPDWORD lpdwProcessList,
                       DWORD dwProcessCount)
 {
@@ -3680,7 +3680,7 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
 {
   DPRINT1("GetConsoleSelectionInfo(0x%x) UNIMPLEMENTED!\n", lpConsoleSelectionInfo);
@@ -3695,7 +3695,7 @@ GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AttachConsole(DWORD dwProcessId)
 {
   DPRINT1("AttachConsole(0x%x) UNIMPLEMENTED!\n", dwProcessId);
@@ -3708,7 +3708,7 @@ AttachConsole(DWORD dwProcessId)
  *
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetConsoleWindow (VOID)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
@@ -3731,7 +3731,7 @@ GetConsoleWindow (VOID)
  *
  * @implemented
  */
-BOOL STDCALL SetConsoleIcon(HICON hicon)
+BOOL WINAPI SetConsoleIcon(HICON hicon)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
   
@@ -3754,7 +3754,7 @@ BOOL STDCALL SetConsoleIcon(HICON hicon)
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
 {
   BOOL Ret = FALSE;
@@ -3773,18 +3773,18 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
      exception the console lock would've never been released, which would cause
      further calls (if the exception was handled by the caller) to recursively
      acquire the lock... */
-  _SEH_TRY
+  _SEH2_TRY
   {
     RtlCopyMemory(InputExeName, lpInputExeName, lenName * sizeof(WCHAR));
     InputExeName[lenName] = L'\0';
     Ret = TRUE;
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
     lenName = 0;
-    SetLastErrorByStatus(_SEH_GetExceptionCode());
+    SetLastErrorByStatus(_SEH2_GetExceptionCode());
   }
-  _SEH_END;
+  _SEH2_END;
   RtlLeaveCriticalSection(&ConsoleLock);
 
   return Ret;
@@ -3796,7 +3796,7 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleInputExeNameA(LPCSTR lpInputExeName)
 {
   ANSI_STRING InputExeNameA;
@@ -3835,7 +3835,7 @@ SetConsoleInputExeNameA(LPCSTR lpInputExeName)
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
   int lenName;
@@ -3855,16 +3855,16 @@ GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
      exception the console lock would've never been released, which would cause
      further calls (if the exception was handled by the caller) to recursively
      acquire the lock... */
-  _SEH_TRY
+  _SEH2_TRY
   {
     RtlCopyMemory(lpBuffer, InputExeName, (lenName + 1) * sizeof(WCHAR));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
     lenName = 0;
-    SetLastErrorByStatus(_SEH_GetExceptionCode());
+    SetLastErrorByStatus(_SEH2_GetExceptionCode());
   }
-  _SEH_END;
+  _SEH2_END;
 
   RtlLeaveCriticalSection(&ConsoleLock);
 
@@ -3877,7 +3877,7 @@ GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
 {
   WCHAR *Buffer;
@@ -3926,7 +3926,7 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
     DPRINT1("GetConsoleHistoryInfo(0x%p) UNIMPLEMENTED!\n", lpConsoleHistoryInfo);
@@ -3940,7 +3940,7 @@ GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
     DPRINT1("SetConsoleHistoryInfo(0x%p) UNIMPLEMENTED!\n", lpConsoleHistoryInfo);
@@ -3954,7 +3954,7 @@ SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleOriginalTitleW(OUT LPWSTR lpConsoleTitle,
                          IN DWORD nSize)
 {
@@ -3969,7 +3969,7 @@ GetConsoleOriginalTitleW(OUT LPWSTR lpConsoleTitle,
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetConsoleOriginalTitleA(OUT LPSTR lpConsoleTitle,
                          IN DWORD nSize)
 {
@@ -3984,7 +3984,7 @@ GetConsoleOriginalTitleA(OUT LPSTR lpConsoleTitle,
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
                              OUT PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
 {
@@ -3999,7 +3999,7 @@ GetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
                              IN PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
 {
@@ -4014,7 +4014,7 @@ SetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
  *
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetCurrentConsoleFontEx(IN HANDLE hConsoleOutput,
                         IN BOOL bMaximumWindow,
                         OUT PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx)

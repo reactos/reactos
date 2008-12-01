@@ -17,5 +17,4 @@
 	<file>asn.c</file>
 	<file>softpub.c</file>
 	<file>version.rc</file>
-	<file>wintrust.spec</file>
 </module>

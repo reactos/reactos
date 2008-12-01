@@ -4,8 +4,6 @@
  * Some USB bandwidth allocation constants.
  */
 
-typedef unsigned long ULONG_PTR, *PULONG_PTR;
-
 #define USB2_HOST_DELAY	5			/* nsec, guess */
 #define BW_HOST_DELAY	1000L		/* nanoseconds */
 #define BW_HUB_LS_SETUP	333L		/* nanoseconds */

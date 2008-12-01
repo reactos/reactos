@@ -33,8 +33,6 @@
 #define LANG_ESPERANTO                   0x8f
 #define LANG_WALON                       0x90
 #define LANG_CORNISH                     0x91
-#define LANG_WELSH                       0x92
-#define LANG_BRETON                      0x93
 
 /* FIXME: these are not in the Windows header */
 #define LANG_GAELIC         0x94

@@ -16,7 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AdjustTokenGroups(HANDLE TokenHandle,
                   BOOL ResetToDefault,
                   PTOKEN_GROUPS NewState,
@@ -45,7 +45,7 @@ AdjustTokenGroups(HANDLE TokenHandle,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AdjustTokenPrivileges(HANDLE TokenHandle,
                       BOOL DisableAllPrivileges,
                       PTOKEN_PRIVILEGES NewState,
@@ -83,7 +83,7 @@ AdjustTokenPrivileges(HANDLE TokenHandle,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetTokenInformation(HANDLE TokenHandle,
                     TOKEN_INFORMATION_CLASS TokenInformationClass,
                     LPVOID TokenInformation,
@@ -110,7 +110,7 @@ GetTokenInformation(HANDLE TokenHandle,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetTokenInformation(HANDLE TokenHandle,
                     TOKEN_INFORMATION_CLASS TokenInformationClass,
                     LPVOID TokenInformation,
@@ -135,7 +135,7 @@ SetTokenInformation(HANDLE TokenHandle,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AccessCheck(PSECURITY_DESCRIPTOR pSecurityDescriptor,
             HANDLE ClientToken,
             DWORD DesiredAccess,
@@ -178,7 +178,7 @@ AccessCheck(PSECURITY_DESCRIPTOR pSecurityDescriptor,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 OpenProcessToken(HANDLE ProcessHandle,
                  DWORD DesiredAccess,
                  PHANDLE TokenHandle)
@@ -201,7 +201,7 @@ OpenProcessToken(HANDLE ProcessHandle,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 OpenThreadToken(HANDLE ThreadHandle,
                 DWORD DesiredAccess,
                 BOOL OpenAsSelf,
@@ -226,7 +226,7 @@ OpenThreadToken(HANDLE ThreadHandle,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetThreadToken(IN PHANDLE ThreadHandle  OPTIONAL,
                IN HANDLE TokenHandle)
 {
@@ -252,7 +252,7 @@ SetThreadToken(IN PHANDLE ThreadHandle  OPTIONAL,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DuplicateTokenEx(IN HANDLE ExistingTokenHandle,
                  IN DWORD dwDesiredAccess,
                  IN LPSECURITY_ATTRIBUTES lpTokenAttributes  OPTIONAL,
@@ -307,7 +307,7 @@ DuplicateTokenEx(IN HANDLE ExistingTokenHandle,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DuplicateToken(IN HANDLE ExistingTokenHandle,
                IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
                OUT PHANDLE DuplicateTokenHandle)
@@ -324,7 +324,7 @@ DuplicateToken(IN HANDLE ExistingTokenHandle,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CheckTokenMembership(IN HANDLE ExistingTokenHandle,
                      IN PSID SidToCheck,
                      OUT PBOOL IsMember)
@@ -510,7 +510,7 @@ Cleanup:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsTokenRestricted(HANDLE TokenHandle)
 {
     ULONG RetLength;
@@ -574,7 +574,7 @@ AllocAndReadRestrictedSids:
 }
 
 
-BOOL STDCALL
+BOOL WINAPI
 CreateRestrictedToken(HANDLE TokenHandle,
                       DWORD Flags,
                       DWORD DisableSidCount,

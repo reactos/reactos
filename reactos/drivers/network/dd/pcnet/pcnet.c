@@ -47,13 +47,13 @@
 #include <debug.h>
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath);
 
 static VOID
-STDCALL
+NTAPI
 MiniportHandleInterrupt(
     IN NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -528,7 +528,7 @@ MiFreeSharedMemory(
 }
 
 static BOOLEAN
-STDCALL
+NTAPI
 MiSyncStop(
     IN PVOID SynchronizeContext)
 /*
@@ -544,7 +544,7 @@ MiSyncStop(
 }
 
 static VOID
-STDCALL
+NTAPI
 MiniportHalt(
     IN NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -590,7 +590,7 @@ MiniportHalt(
 }
 
 static BOOLEAN
-STDCALL
+NTAPI
 MiSyncMediaDetection(
     IN PVOID SynchronizeContext)
 /*
@@ -613,7 +613,7 @@ MiSyncMediaDetection(
 }
 
 static VOID
-STDCALL
+NTAPI
 MiniportMediaDetectionTimer(
     IN PVOID SystemSpecific1,
     IN PVOID FunctionContext,
@@ -785,7 +785,7 @@ MiTestCard(
 #endif
 
 VOID
-STDCALL
+NTAPI
 MiniportShutdown( PVOID Context )
 {
   PADAPTER Adapter = Context;
@@ -797,7 +797,7 @@ MiniportShutdown( PVOID Context )
 }
 
 static NDIS_STATUS
-STDCALL
+NTAPI
 MiniportInitialize(
     OUT PNDIS_STATUS OpenErrorStatus,
     OUT PUINT SelectedMediumIndex,
@@ -975,7 +975,7 @@ MiniportInitialize(
 }
 
 static VOID
-STDCALL
+NTAPI
 MiniportISR(
     OUT PBOOLEAN InterruptRecognized,
     OUT PBOOLEAN QueueMiniportHandleInterrupt,
@@ -1028,7 +1028,7 @@ MiniportISR(
 }
 
 static NDIS_STATUS
-STDCALL
+NTAPI
 MiniportReset(
     OUT PBOOLEAN AddressingReset,
     IN NDIS_HANDLE MiniportAdapterContext)
@@ -1055,7 +1055,7 @@ MiniportReset(
 }
 
 static BOOLEAN
-STDCALL
+NTAPI
 MiSyncStartTransmit(
     IN PVOID SynchronizeContext)
 /*
@@ -1071,7 +1071,7 @@ MiSyncStartTransmit(
 }
 
 static NDIS_STATUS
-STDCALL
+NTAPI
 MiniportSend(
     IN NDIS_HANDLE MiniportAdapterContext,
     IN PNDIS_PACKET Packet,
@@ -1162,7 +1162,7 @@ MiniportSend(
 }
 
 static ULONG
-STDCALL
+NTAPI
 MiEthernetCrc(UCHAR *Address)
 /*
  * FUNCTION: Calculate Ethernet CRC32
@@ -1189,7 +1189,7 @@ MiEthernetCrc(UCHAR *Address)
 }
 
 NDIS_STATUS
-STDCALL
+NTAPI
 MiSetMulticast(
     PADAPTER Adapter,
     UCHAR *Addresses,
@@ -1212,7 +1212,7 @@ MiSetMulticast(
 }
 
 NDIS_MEDIA_STATE
-STDCALL
+NTAPI
 MiGetMediaState(PADAPTER Adapter)
 /*
  * FUNCTION: Determine the link state
@@ -1230,7 +1230,7 @@ MiGetMediaState(PADAPTER Adapter)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath)

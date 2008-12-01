@@ -17,7 +17,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 FindCloseChangeNotification (HANDLE hChangeHandle)
 {
    NTSTATUS Status = NtClose(hChangeHandle);
@@ -35,7 +35,7 @@ FindCloseChangeNotification (HANDLE hChangeHandle)
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstChangeNotificationA (
 	LPCSTR	lpPathName,
 	BOOL	bWatchSubtree,
@@ -57,7 +57,7 @@ FindFirstChangeNotificationA (
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 FindFirstChangeNotificationW (
 	LPCWSTR	lpPathName,
 	BOOL	bWatchSubtree,
@@ -134,7 +134,7 @@ FindFirstChangeNotificationW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FindNextChangeNotification (
 	HANDLE	hChangeHandle
 	)
@@ -164,7 +164,7 @@ FindNextChangeNotification (
 
 
 extern VOID
-(STDCALL ApcRoutine)(PVOID ApcContext,
+(WINAPI ApcRoutine)(PVOID ApcContext,
       struct _IO_STATUS_BLOCK* IoStatusBlock,
       ULONG Reserved);
 
@@ -173,7 +173,7 @@ extern VOID
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ReadDirectoryChangesW(
     HANDLE hDirectory,
     LPVOID lpBuffer OPTIONAL,

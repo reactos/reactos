@@ -30,6 +30,7 @@
 #include <ntddk.h>
 #endif
 
+#include "dderror.h"
 #include "miniport.h"
 #include "ntddvdeo.h"
 #include "video.h"
@@ -41,7 +42,7 @@
 void
 InitVGAMode();
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VGAFindAdapter(
    PVOID DeviceExtension,
    PVOID Context,
@@ -49,25 +50,25 @@ VGAFindAdapter(
    PVIDEO_PORT_CONFIG_INFO ConfigInfo,
    PUCHAR Again);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VGAInitialize(
    PVOID DeviceExtension);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VGAStartIO(
    PVOID DeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket);
 
-/*static BOOLEAN STDCALL
+/*static BOOLEAN NTAPI
 VGAInterrupt(PVOID DeviceExtension);*/
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VGAResetHw(
    PVOID DeviceExtension,
    ULONG Columns,
    ULONG Rows);
 
-/*static VOID STDCALL
+/*static VOID NTAPI
 VGATimer(PVOID DeviceExtension);*/
 
 /* Mandatory IoControl routines */

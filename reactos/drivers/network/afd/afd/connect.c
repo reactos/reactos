@@ -147,7 +147,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
 /* Return the socket object for ths request only if it is a connected or
    stream type. */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		       PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;

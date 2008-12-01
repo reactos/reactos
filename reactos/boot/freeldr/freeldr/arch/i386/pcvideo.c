@@ -22,6 +22,12 @@
 #define NDEBUG
 #include <debug.h>
 
+/* non-standard specifier from windef.h -- please deprecate */
+#undef PACKED
+#ifdef __GNUC__
+#define PACKED __attribute__((packed))
+#endif
+
 #define VIDEOPORT_PALETTE_READ		0x03C7
 #define VIDEOPORT_PALETTE_WRITE		0x03C8
 #define VIDEOPORT_PALETTE_DATA		0x03C9

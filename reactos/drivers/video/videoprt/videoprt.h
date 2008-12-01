@@ -32,6 +32,8 @@
 #include <ntifs.h>
 #include <ndk/ntndk.h>
 #include <reactos/helper.h>
+#include <dderror.h>
+#include <windef.h>
 
 #include <debug.h>
 

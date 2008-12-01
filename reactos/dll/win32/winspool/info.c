@@ -111,7 +111,7 @@ BOOL WINAPI GetDefaultPrinterW(LPWSTR name, LPDWORD namesize)
  *		AddPrintProvidorA   (WINSPOOL.@)
  */
 BOOL
-STDCALL
+WINAPI
 AddPrintProvidorA(LPSTR Name, DWORD Level, PBYTE Buffer)
 {
    if (Name || Level > 2 || Buffer == NULL)
@@ -191,7 +191,7 @@ AddPrintProvidorA(LPSTR Name, DWORD Level, PBYTE Buffer)
  *		AddPrintProvidorW   (WINSPOOL.@)
  */
 BOOL
-STDCALL
+WINAPI
 AddPrintProvidorW(LPWSTR Name, DWORD Level, PBYTE Buffer)
 {
    HKEY hKey;
@@ -290,7 +290,7 @@ AddPrintProvidorW(LPWSTR Name, DWORD Level, PBYTE Buffer)
  *    DeletePrintProvidorA   (WINSPOOL.@)
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrintProvidorA(LPSTR Name, LPSTR Environment, LPSTR PrintProvidor)
 {
    BOOL bRet;
@@ -332,7 +332,7 @@ DeletePrintProvidorA(LPSTR Name, LPSTR Environment, LPSTR PrintProvidor)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeletePrintProvidorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProvidor)
 {
    HKEY hKey;
@@ -417,7 +417,7 @@ DeletePrintProvidorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProvidor)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddMonitorA(LPSTR Name, DWORD Level, PBYTE Monitors)
 {
    LPWSTR szName = NULL;
@@ -503,7 +503,7 @@ cleanup:
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 AddMonitorW(LPWSTR Name, DWORD Level, PBYTE Monitors)
 {
    WCHAR szPath[MAX_PATH];

@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  15-06-08
+ * LastChange:  19-11-2008
  */
 
 #ifndef LANG_SK_SK_H__
@@ -372,32 +372,32 @@ static MUI_ENTRY skSKDevicePageEntries[] =
     {
         8,
         11,
-        "        Poü°taü:",
-        TEXT_STYLE_NORMAL
+        "Poü°taü:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         8,
         12,
-        "        Monitor:",
-        TEXT_STYLE_NORMAL,
+        "Monitor:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         8,
         13,
-        "     Kl†vesnica:",
-        TEXT_STYLE_NORMAL
+        "Kl†vesnica:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         8,
         14,
-        " Rozloßenie kl.:",
-        TEXT_STYLE_NORMAL
+        "Rozloßenie kl.:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         8,
         16,
-        "     Akceptovaú:",
-        TEXT_STYLE_NORMAL
+        "Akceptovaú:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
@@ -842,7 +842,6 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
         0,
         "Poükajte, pros°m ...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
-
     },
     {
         0,
@@ -950,19 +949,19 @@ static MUI_ENTRY skSKFileCopyEntries[] =
         11,
         12,
         "Poükajte, pros°m, kÏm InÁtal†tor skop°ruje s£bory do inÁtalaünÇho",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         30,
         13,
         "prieüinka pre ReactOS.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         20,
         14,
         "Dokonüenie mìße trvaú niekoñko min£t.",
-        TEXT_STYLE_NORMAL
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
         50,

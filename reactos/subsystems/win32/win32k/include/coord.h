@@ -14,7 +14,7 @@ int
 FASTCALL
 IntGetGraphicsMode ( PDC dc );
 
-int STDCALL IntGdiSetMapMode(PDC, int);
+int APIENTRY IntGdiSetMapMode(PDC, int);
 
 BOOL
 FASTCALL

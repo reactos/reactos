@@ -46,7 +46,7 @@ CcInitializeCacheManager(VOID)
  * @unimplemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 CcGetFlushedValidData (
     IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     IN BOOLEAN BcbListHeld
@@ -64,7 +64,7 @@ CcGetFlushedValidData (
  * @unimplemented
  */
 PVOID
-STDCALL
+NTAPI
 CcRemapBcb (
     IN PVOID Bcb
     )
@@ -78,7 +78,7 @@ CcRemapBcb (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcScheduleReadAhead (
 	IN	PFILE_OBJECT		FileObject,
 	IN	PLARGE_INTEGER		FileOffset,
@@ -92,7 +92,7 @@ CcScheduleReadAhead (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcSetAdditionalCacheAttributes (
 	IN	PFILE_OBJECT	FileObject,
 	IN	BOOLEAN		DisableReadAhead,
@@ -106,7 +106,7 @@ CcSetAdditionalCacheAttributes (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcSetBcbOwnerPointer (
 	IN	PVOID	Bcb,
 	IN	PVOID	Owner
@@ -119,7 +119,7 @@ CcSetBcbOwnerPointer (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcSetDirtyPageThreshold (
 	IN	PFILE_OBJECT	FileObject,
 	IN	ULONG		DirtyPageThreshold
@@ -132,7 +132,7 @@ CcSetDirtyPageThreshold (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcSetReadAheadGranularity (
 	IN	PFILE_OBJECT	FileObject,
 	IN	ULONG		Granularity

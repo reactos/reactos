@@ -19,7 +19,6 @@
 	<file>pen.c</file>
 	<file>region.c</file>
 	<file>stringformat.c</file>
-	<file>gdiplus.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>shlwapi</library>

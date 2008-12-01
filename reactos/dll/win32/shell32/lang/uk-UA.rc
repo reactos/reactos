@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 Ilya Korniyko
- *           2007 Artem Reznikov
+ *           2007-2008 Artem Reznikov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -606,17 +606,17 @@ BEGIN
 	IDS_SHV_COLUMN9             "Примітка"
 	IDS_SHV_COLUMN10            "Власник"
 	IDS_SHV_COLUMN11            "Група"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "Ім'я файла"
+	IDS_SHV_COLUMN13            "Категорія"
 	IDS_SHV_COLUMN_DELFROM      "Вихідне розташування"
 	IDS_SHV_COLUMN_DELDATE      "Дата видалення"
-	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
-	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_FONTTYPE     "Тип шрифту"
+	IDS_SHV_COLUMN_WORKGROUP    "Робоча група"
+	IDS_SHV_NETWORKLOCATION     "Мережне розташування"
+	IDS_SHV_COLUMN_DOCUMENTS    "Документи"
+	IDS_SHV_COLUMN_STATUS       "Стан"
+	IDS_SHV_COLUMN_COMMENTS     "Примітки"
+	IDS_SHV_COLUMN_LOCATION     "Розташування"
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
@@ -624,7 +624,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Мій Комп'ютер"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошик"
 	IDS_CONTROLPANEL            "Панель керування"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "Адміністрування"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Великі значки"
@@ -638,10 +638,10 @@ BEGIN
 	IDS_DELETE                  "В&идалити"
 	IDS_PROPERTIES              "В&ластивості"
 	IDS_CUT                     "&Вирізати"
-	IDS_RESTORE                 "Restore"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
-	IDS_INSERT                  "Insert"
+	IDS_RESTORE                 "Відновити"
+	IDS_FORMATDRIVE             "Форматувати..."
+	IDS_RENAME                  "Перейменувати"
+	IDS_INSERT                  "Вставити"
 
 	IDS_CREATEFOLDER_DENIED     "Не вдалося створити нову папку: Відмова у доступі."
 	IDS_CREATEFOLDER_CAPTION    "Помилка при створенні нової папки"
@@ -735,18 +735,18 @@ BEGIN
 	IDS_LNK_FILE                "Ярлик"
 	IDS_SYS_FILE                "Системний файл"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Відкрити"
+	IDS_RUNAS_VERB              "Запустити як "
+	IDS_EDIT_VERB               "Змінити"
+	IDS_FIND_VERB               "Пошук"
+	IDS_PRINT_VERB              "Друк"
+	IDS_PLAY_VERB               "Відтворити"
+	IDS_PREVIEW_VERB            "Перегляд"
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_FILE_FOLDER             "%u файлів, %u папок"
+	IDS_PRINTERS                "Принтери"
+	IDS_FONTS                   "Шрифти"
+	IDS_INSTALLNEWFONT          "Інсталювати новий шрифт..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
+	IDS_DEFAULT_CLUSTER_SIZE    "Розмір кластера за промовчанням"
 END

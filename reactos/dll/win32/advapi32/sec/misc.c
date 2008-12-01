@@ -1,11 +1,17 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
+ * WINE COPYRIGHT: 
+ * Copyright 1999, 2000 Juergen Schmied <juergen.schmied@debitel.net>
+ * Copyright 2003 CodeWeavers Inc. (Ulrich Czekalla)
+ * Copyright 2006 Robert Reif
+ *
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/sec/misc.c
+ * FILE:            dll/win32/advapi32/sec/misc.c
  * PURPOSE:         Miscellaneous security functions (some ported from Wine)
  */
 
 #include <advapi32.h>
+#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
@@ -127,6 +133,101 @@ static const AccountSid ACCOUNT_SIDS[] = {
     { WinBuiltinPerfLoggingUsersSid, Performance_Log_Users, BUILTIN, SidTypeAlias },
 };
 
+static const WCHAR SE_CREATE_TOKEN_NAME_W[] =
+ { 'S','e','C','r','e','a','t','e','T','o','k','e','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_ASSIGNPRIMARYTOKEN_NAME_W[] =
+ { 'S','e','A','s','s','i','g','n','P','r','i','m','a','r','y','T','o','k','e','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_LOCK_MEMORY_NAME_W[] =
+ { 'S','e','L','o','c','k','M','e','m','o','r','y','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_INCREASE_QUOTA_NAME_W[] =
+ { 'S','e','I','n','c','r','e','a','s','e','Q','u','o','t','a','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_MACHINE_ACCOUNT_NAME_W[] =
+ { 'S','e','M','a','c','h','i','n','e','A','c','c','o','u','n','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_TCB_NAME_W[] =
+ { 'S','e','T','c','b','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SECURITY_NAME_W[] =
+ { 'S','e','S','e','c','u','r','i','t','y','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_TAKE_OWNERSHIP_NAME_W[] =
+ { 'S','e','T','a','k','e','O','w','n','e','r','s','h','i','p','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_LOAD_DRIVER_NAME_W[] =
+ { 'S','e','L','o','a','d','D','r','i','v','e','r','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SYSTEM_PROFILE_NAME_W[] =
+ { 'S','e','S','y','s','t','e','m','P','r','o','f','i','l','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SYSTEMTIME_NAME_W[] =
+ { 'S','e','S','y','s','t','e','m','t','i','m','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_PROF_SINGLE_PROCESS_NAME_W[] =
+ { 'S','e','P','r','o','f','i','l','e','S','i','n','g','l','e','P','r','o','c','e','s','s','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_INC_BASE_PRIORITY_NAME_W[] =
+ { 'S','e','I','n','c','r','e','a','s','e','B','a','s','e','P','r','i','o','r','i','t','y','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_CREATE_PAGEFILE_NAME_W[] =
+ { 'S','e','C','r','e','a','t','e','P','a','g','e','f','i','l','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_CREATE_PERMANENT_NAME_W[] =
+ { 'S','e','C','r','e','a','t','e','P','e','r','m','a','n','e','n','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_BACKUP_NAME_W[] =
+ { 'S','e','B','a','c','k','u','p','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_RESTORE_NAME_W[] =
+ { 'S','e','R','e','s','t','o','r','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SHUTDOWN_NAME_W[] =
+ { 'S','e','S','h','u','t','d','o','w','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_DEBUG_NAME_W[] =
+ { 'S','e','D','e','b','u','g','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_AUDIT_NAME_W[] =
+ { 'S','e','A','u','d','i','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SYSTEM_ENVIRONMENT_NAME_W[] =
+ { 'S','e','S','y','s','t','e','m','E','n','v','i','r','o','n','m','e','n','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_CHANGE_NOTIFY_NAME_W[] =
+ { 'S','e','C','h','a','n','g','e','N','o','t','i','f','y','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_REMOTE_SHUTDOWN_NAME_W[] =
+ { 'S','e','R','e','m','o','t','e','S','h','u','t','d','o','w','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_UNDOCK_NAME_W[] =
+ { 'S','e','U','n','d','o','c','k','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_SYNC_AGENT_NAME_W[] =
+ { 'S','e','S','y','n','c','A','g','e','n','t','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_ENABLE_DELEGATION_NAME_W[] =
+ { 'S','e','E','n','a','b','l','e','D','e','l','e','g','a','t','i','o','n','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_MANAGE_VOLUME_NAME_W[] =
+ { 'S','e','M','a','n','a','g','e','V','o','l','u','m','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_IMPERSONATE_NAME_W[] =
+ { 'S','e','I','m','p','e','r','s','o','n','a','t','e','P','r','i','v','i','l','e','g','e',0 };
+static const WCHAR SE_CREATE_GLOBAL_NAME_W[] =
+ { 'S','e','C','r','e','a','t','e','G','l','o','b','a','l','P','r','i','v','i','l','e','g','e',0 };
+
+static const WCHAR * const WellKnownPrivNames[SE_MAX_WELL_KNOWN_PRIVILEGE + 1] =
+{
+    NULL,
+    NULL,
+    SE_CREATE_TOKEN_NAME_W,
+    SE_ASSIGNPRIMARYTOKEN_NAME_W,
+    SE_LOCK_MEMORY_NAME_W,
+    SE_INCREASE_QUOTA_NAME_W,
+    SE_MACHINE_ACCOUNT_NAME_W,
+    SE_TCB_NAME_W,
+    SE_SECURITY_NAME_W,
+    SE_TAKE_OWNERSHIP_NAME_W,
+    SE_LOAD_DRIVER_NAME_W,
+    SE_SYSTEM_PROFILE_NAME_W,
+    SE_SYSTEMTIME_NAME_W,
+    SE_PROF_SINGLE_PROCESS_NAME_W,
+    SE_INC_BASE_PRIORITY_NAME_W,
+    SE_CREATE_PAGEFILE_NAME_W,
+    SE_CREATE_PERMANENT_NAME_W,
+    SE_BACKUP_NAME_W,
+    SE_RESTORE_NAME_W,
+    SE_SHUTDOWN_NAME_W,
+    SE_DEBUG_NAME_W,
+    SE_AUDIT_NAME_W,
+    SE_SYSTEM_ENVIRONMENT_NAME_W,
+    SE_CHANGE_NOTIFY_NAME_W,
+    SE_REMOTE_SHUTDOWN_NAME_W,
+    SE_UNDOCK_NAME_W,
+    SE_SYNC_AGENT_NAME_W,
+    SE_ENABLE_DELEGATION_NAME_W,
+    SE_MANAGE_VOLUME_NAME_W,
+    SE_IMPERSONATE_NAME_W,
+    SE_CREATE_GLOBAL_NAME_W,
+};
+
+
 /* Interface to ntmarta.dll ***************************************************/
 
 NTMARTA NtMartaStatic = { 0 };
@@ -242,7 +343,7 @@ UnloadNtMarta(VOID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 AreAllAccessesGranted(DWORD GrantedAccess,
                       DWORD DesiredAccess)
 {
@@ -255,12 +356,37 @@ AreAllAccessesGranted(DWORD GrantedAccess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 AreAnyAccessesGranted(DWORD GrantedAccess,
                       DWORD DesiredAccess)
 {
     return (BOOL)RtlAreAnyAccessesGranted(GrantedAccess,
                                           DesiredAccess);
+}
+
+
+/************************************************************
+ *                ADVAPI_IsLocalComputer
+ *
+ * Checks whether the server name indicates local machine.
+ */
+BOOL ADVAPI_IsLocalComputer(LPCWSTR ServerName)
+{
+    DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+    BOOL Result;
+    LPWSTR buf;
+
+    if (!ServerName || !ServerName[0])
+        return TRUE;
+
+    buf = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+    Result = GetComputerNameW(buf,  &dwSize);
+    if (Result && (ServerName[0] == '\\') && (ServerName[1] == '\\'))
+        ServerName += 2;
+    Result = Result && !lstrcmpW(ServerName, buf);
+    HeapFree(GetProcessHeap(), 0, buf);
+
+    return Result;
 }
 
 
@@ -395,7 +521,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetKernelObjectSecurity(HANDLE Handle,
                         SECURITY_INFORMATION RequestedInformation,
                         PSECURITY_DESCRIPTOR pSecurityDescriptor,
@@ -426,7 +552,7 @@ GetKernelObjectSecurity(HANDLE Handle,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileSecurityA(LPCSTR lpFileName,
                  SECURITY_INFORMATION SecurityInformation,
                  PSECURITY_DESCRIPTOR pSecurityDescriptor)
@@ -460,7 +586,7 @@ SetFileSecurityA(LPCSTR lpFileName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetFileSecurityW(LPCWSTR lpFileName,
                  SECURITY_INFORMATION SecurityInformation,
                  PSECURITY_DESCRIPTOR pSecurityDescriptor)
@@ -530,7 +656,7 @@ SetFileSecurityW(LPCWSTR lpFileName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetKernelObjectSecurity(HANDLE Handle,
                         SECURITY_INFORMATION SecurityInformation,
                         PSECURITY_DESCRIPTOR SecurityDescriptor)
@@ -574,7 +700,7 @@ ImpersonateAnonymousToken(IN HANDLE ThreadHandle)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ImpersonateLoggedOnUser(HANDLE hToken)
 {
     SECURITY_QUALITY_OF_SERVICE Qos;
@@ -658,7 +784,7 @@ ImpersonateLoggedOnUser(HANDLE hToken)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
     NTSTATUS Status;
@@ -678,7 +804,7 @@ ImpersonateSelf(SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RevertToSelf(VOID)
 {
     NTSTATUS Status;
@@ -864,7 +990,7 @@ GetUserNameW(LPWSTR lpszName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupAccountSidA(LPCSTR lpSystemName,
                   PSID lpSid,
                   LPSTR lpName,
@@ -1100,7 +1226,7 @@ LookupAccountSidW(LPCWSTR pSystemName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupAccountNameA(LPCSTR SystemName,
                    LPCSTR AccountName,
                    PSID Sid,
@@ -1237,7 +1363,7 @@ LookupAccountNameW(LPCWSTR lpSystemName,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeValueA(LPCSTR lpSystemName,
                       LPCSTR lpName,
                       PLUID lpLuid)
@@ -1287,7 +1413,7 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeValueW(LPCWSTR SystemName,
                       LPCWSTR PrivName,
                       PLUID Luid)
@@ -1356,7 +1482,7 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeDisplayNameA(LPCSTR lpSystemName,
                             LPCSTR lpName,
                             LPSTR lpDisplayName,
@@ -1375,7 +1501,7 @@ LookupPrivilegeDisplayNameA(LPCSTR lpSystemName,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeDisplayNameW(LPCWSTR lpSystemName,
                             LPCWSTR lpName,
                             LPWSTR lpDisplayName,
@@ -1391,10 +1517,10 @@ LookupPrivilegeDisplayNameW(LPCWSTR lpSystemName,
 /**********************************************************************
  * LookupPrivilegeNameA				EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeNameA(LPCSTR lpSystemName,
                      PLUID lpLuid,
                      LPSTR lpName,
@@ -1449,18 +1575,44 @@ LookupPrivilegeNameA(LPCSTR lpSystemName,
 /**********************************************************************
  * LookupPrivilegeNameW				EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LookupPrivilegeNameW(LPCWSTR lpSystemName,
                      PLUID lpLuid,
                      LPWSTR lpName,
-                     LPDWORD cbName)
+                     LPDWORD cchName)
 {
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    size_t privNameLen;
+
+    TRACE("%s,%p,%p,%p\n",debugstr_w(lpSystemName), lpLuid, lpName, cchName);
+
+    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    {
+        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        return FALSE;
+    }
+    if (lpLuid->HighPart || (lpLuid->LowPart < SE_MIN_WELL_KNOWN_PRIVILEGE ||
+     lpLuid->LowPart > SE_MAX_WELL_KNOWN_PRIVILEGE))
+    {
+        SetLastError(ERROR_NO_SUCH_PRIVILEGE);
+        return FALSE;
+    }
+    privNameLen = strlenW(WellKnownPrivNames[lpLuid->LowPart]);
+    /* Windows crashes if cchName is NULL, so will I */
+    if (*cchName <= privNameLen)
+    {
+        *cchName = privNameLen + 1;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+    else
+    {
+        strcpyW(lpName, WellKnownPrivNames[lpLuid->LowPart]);
+        *cchName = privNameLen;
+        return TRUE;
+    }
 }
 
 
@@ -1646,7 +1798,7 @@ ProtectSacl:
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetNamedSecurityInfoW(LPWSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1697,7 +1849,7 @@ GetNamedSecurityInfoW(LPWSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetNamedSecurityInfoA(LPSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1739,7 +1891,7 @@ GetNamedSecurityInfoA(LPSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetNamedSecurityInfoW(LPWSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1787,7 +1939,7 @@ SetNamedSecurityInfoW(LPWSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetNamedSecurityInfoA(LPSTR pObjectName,
                       SE_OBJECT_TYPE ObjectType,
                       SECURITY_INFORMATION SecurityInfo,
@@ -1827,7 +1979,7 @@ SetNamedSecurityInfoA(LPSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetSecurityInfo(HANDLE handle,
                 SE_OBJECT_TYPE ObjectType,
                 SECURITY_INFORMATION SecurityInfo,
@@ -1966,7 +2118,7 @@ GetSecurityInfoExW(HANDLE hObject,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ImpersonateNamedPipeClient(HANDLE hNamedPipe)
 {
     IO_STATUS_BLOCK StatusBlock;
@@ -1998,7 +2150,7 @@ ImpersonateNamedPipeClient(HANDLE hNamedPipe)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
                             PSECURITY_DESCRIPTOR CreatorDescriptor,
                             PSECURITY_DESCRIPTOR *NewDescriptor,
@@ -2028,7 +2180,7 @@ CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
                               PSECURITY_DESCRIPTOR CreatorDescriptor,
                               PSECURITY_DESCRIPTOR* NewDescriptor,
@@ -2047,7 +2199,7 @@ CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDescriptor,
                                                    PSECURITY_DESCRIPTOR CreatorDescriptor,
                                                    PSECURITY_DESCRIPTOR* NewDescriptor,
@@ -2067,7 +2219,7 @@ CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDe
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
 {
     NTSTATUS Status;
@@ -2087,7 +2239,7 @@ DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
                          SECURITY_INFORMATION SecurityInformation,
                          PSECURITY_DESCRIPTOR ResultantDescriptor,
@@ -2115,7 +2267,7 @@ GetPrivateObjectSecurity(PSECURITY_DESCRIPTOR ObjectDescriptor,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
                          PSECURITY_DESCRIPTOR ModificationDescriptor,
                          PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
@@ -2143,7 +2295,7 @@ SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 TreeResetNamedSecurityInfoW(LPWSTR pObjectName,
                             SE_OBJECT_TYPE ObjectType,
                             SECURITY_INFORMATION SecurityInfo,
@@ -2220,7 +2372,7 @@ typedef struct _INERNAL_FNPROGRESSW_DATA
     PVOID Args;
 } INERNAL_FNPROGRESSW_DATA, *PINERNAL_FNPROGRESSW_DATA;
 
-static VOID STDCALL
+static VOID WINAPI
 InternalfnProgressW(LPWSTR pObjectName,
                     DWORD Status,
                     PPROG_INVOKE_SETTING pInvokeSetting,
@@ -2276,7 +2428,7 @@ InternalfnProgressW(LPWSTR pObjectName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 TreeResetNamedSecurityInfoA(LPSTR pObjectName,
                             SE_OBJECT_TYPE ObjectType,
                             SECURITY_INFORMATION SecurityInfo,

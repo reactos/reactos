@@ -328,7 +328,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngLineTo(SURFOBJ *DestObj,
           CLIPOBJ *Clip,
           BRUSHOBJ *Brush,
@@ -505,7 +505,7 @@ EngLineTo(SURFOBJ *DestObj,
     return IntEngLeave(&EnterLeave);
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngLineTo(SURFOBJ *DestSurf,
              CLIPOBJ *ClipObj,
              BRUSHOBJ *Brush,
@@ -593,7 +593,7 @@ IntEngLineTo(SURFOBJ *DestSurf,
     return ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngPolyline(SURFOBJ *DestSurf,
                CLIPOBJ *Clip,
                BRUSHOBJ *Brush,

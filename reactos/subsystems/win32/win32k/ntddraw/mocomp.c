@@ -16,7 +16,7 @@
 /* NtGdiDdBeginMoCompFrame                                              */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdBeginMoCompFrame(HANDLE hMoComp,
                         PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData)
 {
@@ -36,7 +36,7 @@ NtGdiDdBeginMoCompFrame(HANDLE hMoComp,
 /* NtGdiDdCreateMoComp                                                  */
 /************************************************************************/
 HANDLE
-STDCALL
+APIENTRY
 NtGdiDdCreateMoComp(HANDLE hDirectDraw, PDD_CREATEMOCOMPDATA puCreateMoCompData)
 {
     PGD_DXDDCREATEMOCOMP pfnDdCreateMoComp = (PGD_DXDDCREATEMOCOMP)gpDxFuncs[DXG_INDEX_DxDdCreateMoComp].pfn;
@@ -55,7 +55,7 @@ NtGdiDdCreateMoComp(HANDLE hDirectDraw, PDD_CREATEMOCOMPDATA puCreateMoCompData)
 /* NtGdiDdDestroyMoComp                                                 */
 /************************************************************************/
 DWORD 
-STDCALL
+APIENTRY
 NtGdiDdDestroyMoComp(HANDLE hMoComp,
                      PDD_DESTROYMOCOMPDATA puBeginFrameData)
 {
@@ -75,7 +75,7 @@ NtGdiDdDestroyMoComp(HANDLE hMoComp,
 /* NtGdiDdEndMoCompFrame                                                */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdEndMoCompFrame(HANDLE hMoComp,
                       PDD_ENDMOCOMPFRAMEDATA puEndFrameData)
 {
@@ -95,7 +95,7 @@ NtGdiDdEndMoCompFrame(HANDLE hMoComp,
 /* NtGdiDdGetInternalMoCompInfo                                         */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetInternalMoCompInfo(HANDLE hDirectDraw,
                              PDD_GETINTERNALMOCOMPDATA puGetInternalData)
 {
@@ -116,7 +116,7 @@ NtGdiDdGetInternalMoCompInfo(HANDLE hDirectDraw,
 /* NtGdiDdGetMoCompBuffInfo                                             */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetMoCompBuffInfo(HANDLE hDirectDraw,
                          PDD_GETMOCOMPCOMPBUFFDATA puGetBuffData)
 {
@@ -136,7 +136,7 @@ NtGdiDdGetMoCompBuffInfo(HANDLE hDirectDraw,
 /* NtGdiDdGetMoCompFormats                                              */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetMoCompFormats(HANDLE hDirectDraw,
                         PDD_GETMOCOMPFORMATSDATA puGetMoCompFormatsData)
 {
@@ -157,7 +157,7 @@ NtGdiDdGetMoCompFormats(HANDLE hDirectDraw,
 /* NtGdiDdGetMoCompGuids                                                */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetMoCompGuids(HANDLE hDirectDraw,
                       PDD_GETMOCOMPGUIDSDATA puGetMoCompGuidsData)
 {
@@ -179,7 +179,7 @@ NtGdiDdGetMoCompGuids(HANDLE hDirectDraw,
 /* NtGdiDdQueryMoCompStatus                                             */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdQueryMoCompStatus(HANDLE hMoComp,
                          PDD_QUERYMOCOMPSTATUSDATA puQueryMoCompStatusData)
 {
@@ -200,7 +200,7 @@ NtGdiDdQueryMoCompStatus(HANDLE hMoComp,
 /* NtGdiDdRenderMoComp                                                  */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdRenderMoComp(HANDLE hMoComp,
                     PDD_RENDERMOCOMPDATA puRenderMoCompData)
 {

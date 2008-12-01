@@ -97,10 +97,7 @@ protected:
 	const FileLocation* GetObjectFilename ( const FileLocation* sourceFile,
 	                                        const Module& module ) const;
 
-	std::string GetObjectFilenames ();
-
 	std::string GetPreconditionDependenciesName () const;
-	std::string GetCFlagsMacro () const;
 	static std::string GetObjectsMacro ( const Module& );
 	std::string GetLinkingDependenciesMacro () const;
 	std::string GetLibsMacro () const;
@@ -174,7 +171,9 @@ private:
 public:
 	const Module& module;
 	string_list clean_files;
+	std::string commonflagsMacro;
 	std::string cflagsMacro;
+	std::string cxxflagsMacro;
 	std::string nasmflagsMacro;
 	std::string windresflagsMacro;
 	std::string widlflagsMacro;

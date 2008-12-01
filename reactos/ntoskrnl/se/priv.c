@@ -207,17 +207,17 @@ SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
     /* probe the buffer */
     if (PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForRead(Src,
                          BufferSize,
                          sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         
         if (!NT_SUCCESS(Status))
         {
@@ -248,17 +248,17 @@ SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
     }
     
     /* copy the array to the buffer */
-    _SEH_TRY
+    _SEH2_TRY
     {
         RtlCopyMemory(*Dest,
                       Src,
                       BufferSize);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     
     if (!NT_SUCCESS(Status) && AllocatedMem == NULL)
     {
@@ -289,7 +289,7 @@ SeReleaseLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Privilege,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeAppendPrivileges(PACCESS_STATE AccessState,
                    PPRIVILEGE_SET Privileges)
 {
@@ -301,7 +301,7 @@ SeAppendPrivileges(PACCESS_STATE AccessState,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
 {
     UNIMPLEMENTED;
@@ -310,7 +310,7 @@ SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SePrivilegeCheck (PPRIVILEGE_SET Privileges,
                   PSECURITY_SUBJECT_CONTEXT SubjectContext,
                   KPROCESSOR_MODE PreviousMode)
@@ -342,7 +342,7 @@ SePrivilegeCheck (PPRIVILEGE_SET Privileges,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SeSinglePrivilegeCheck (IN LUID PrivilegeValue,
                         IN KPROCESSOR_MODE PreviousMode)
 {
@@ -379,7 +379,7 @@ SeSinglePrivilegeCheck (IN LUID PrivilegeValue,
 
 /* SYSTEM CALLS ***************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtPrivilegeCheck (IN HANDLE ClientToken,
                   IN PPRIVILEGE_SET RequiredPrivileges,
                   OUT PBOOLEAN Result)
@@ -400,7 +400,7 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
     /* probe the buffers */
     if (PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWrite(RequiredPrivileges,
                           FIELD_OFFSET(PRIVILEGE_SET,
@@ -416,7 +416,7 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
                 sizeof(RequiredPrivileges->Privilege[0]) != PrivilegeCount)
             {
                 Status = STATUS_INVALID_PARAMETER;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
             
             /* probe all of the array */
@@ -427,11 +427,11 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
             
             ProbeForWriteBoolean(Result);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         
         if (!NT_SUCCESS(Status))
         {
@@ -489,7 +489,7 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
     ObDereferenceObject (Token);
     
     /* return the array */
-    _SEH_TRY
+    _SEH2_TRY
     {
         RtlCopyMemory(RequiredPrivileges->Privilege,
                       Privileges,
@@ -497,11 +497,11 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
         *Result = CheckResult;
         Status = STATUS_SUCCESS;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     
     SeReleaseLuidAndAttributesArray (Privileges,
                                      PreviousMode,

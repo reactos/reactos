@@ -50,7 +50,7 @@ NTSTATUS SmCreatePagingFiles(VOID);
 NTSTATUS SmInitializeRegistry(VOID);
 
 /* initss.c */
-NTSTATUS STDCALL SmRegisterInternalSubsystem(LPWSTR,USHORT,PHANDLE);
+NTSTATUS NTAPI SmRegisterInternalSubsystem(LPWSTR,USHORT,PHANDLE);
 NTSTATUS SmLoadSubsystems(VOID);
 
 /* smapi.c */
@@ -58,13 +58,13 @@ NTSTATUS SmLoadSubsystems(VOID);
 NTSTATUS FASTCALL n (PSM_PORT_MESSAGE Request)
 PSM_CONNECT_DATA FASTCALL SmpGetConnectData (PSM_PORT_MESSAGE);
 NTSTATUS SmCreateApiPort(VOID);
-VOID STDCALL SmpApiThread(PVOID);
+VOID NTAPI SmpApiThread(PVOID);
 
 
 /* smapiexec.c */
 #define SM_CREATE_FLAG_WAIT        0x01
 #define SM_CREATE_FLAG_RESERVE_1MB 0x02
-NTSTATUS STDCALL SmCreateUserProcess(LPWSTR ImagePath,
+NTSTATUS NTAPI SmCreateUserProcess(LPWSTR ImagePath,
 				     LPWSTR CommandLine,
 				     ULONG Flags,
 				     PLARGE_INTEGER Timeout OPTIONAL,
@@ -97,10 +97,10 @@ typedef struct _SM_CLIENT_DATA
 
 } SM_CLIENT_DATA, *PSM_CLIENT_DATA;
 NTSTATUS SmInitializeClientManagement (VOID);
-NTSTATUS STDCALL SmCreateClient (PRTL_USER_PROCESS_INFORMATION,PWSTR);
-NTSTATUS STDCALL SmDestroyClient (ULONG);
-NTSTATUS STDCALL SmBeginClientInitialization (PSM_PORT_MESSAGE,PSM_CLIENT_DATA*);
-NTSTATUS STDCALL SmCompleteClientInitialization (ULONG);
+NTSTATUS NTAPI SmCreateClient (PRTL_USER_PROCESS_INFORMATION,PWSTR);
+NTSTATUS NTAPI SmDestroyClient (ULONG);
+NTSTATUS NTAPI SmBeginClientInitialization (PSM_PORT_MESSAGE,PSM_CLIENT_DATA*);
+NTSTATUS NTAPI SmCompleteClientInitialization (ULONG);
 NTSTATUS FASTCALL SmGetClientBasicInformation (PSM_BASIC_INFORMATION);
 NTSTATUS FASTCALL SmGetSubSystemInformation (PSM_SUBSYSTEM_INFORMATION);
 
@@ -110,8 +110,8 @@ extern HANDLE DbgUiApiPort;
 NTSTATUS SmInitializeDbgSs(VOID);
 
 /* print.c */
-VOID STDCALL DisplayString(LPCWSTR lpwString);
-VOID STDCALL PrintString (char* fmt, ...);
+VOID NTAPI DisplayString(LPCWSTR lpwString);
+VOID NTAPI PrintString (char* fmt, ...);
 
 #endif /* _SMSS_H_INCLUDED_ */
 

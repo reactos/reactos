@@ -16,7 +16,7 @@
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CloseWindowStation(HWINSTA hWinSta)
 {
   return(NtUserCloseWindowStation(hWinSta));
@@ -26,7 +26,7 @@ CloseWindowStation(HWINSTA hWinSta)
 /*
  * @implemented
  */
-HWINSTA STDCALL
+HWINSTA WINAPI
 CreateWindowStationA(LPSTR lpwinsta,
 		     DWORD dwReserved,
 		     ACCESS_MASK dwDesiredAccess,
@@ -60,7 +60,7 @@ CreateWindowStationA(LPSTR lpwinsta,
 /*
  * @implemented
  */
-HWINSTA STDCALL
+HWINSTA WINAPI
 CreateWindowStationW(LPWSTR lpwinsta,
 		     DWORD dwReserved,
 		     ACCESS_MASK dwDesiredAccess,
@@ -253,7 +253,7 @@ EnumNamesA(HWINSTA WindowStation,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumWindowStationsA(WINSTAENUMPROCA EnumFunc,
 		    LPARAM Context)
 {
@@ -264,7 +264,7 @@ EnumWindowStationsA(WINSTAENUMPROCA EnumFunc,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumWindowStationsW(WINSTAENUMPROCW EnumFunc,
 		    LPARAM Context)
 {
@@ -275,7 +275,7 @@ EnumWindowStationsW(WINSTAENUMPROCW EnumFunc,
 /*
  * @implemented
  */
-HWINSTA STDCALL
+HWINSTA WINAPI
 GetProcessWindowStation(VOID)
 {
   return NtUserGetProcessWindowStation();
@@ -285,7 +285,7 @@ GetProcessWindowStation(VOID)
 /*
  * @implemented
  */
-HWINSTA STDCALL
+HWINSTA WINAPI
 OpenWindowStationA(LPSTR lpszWinSta,
 		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
@@ -317,7 +317,7 @@ OpenWindowStationA(LPSTR lpszWinSta,
 /*
  * @implemented
  */
-HWINSTA STDCALL
+HWINSTA WINAPI
 OpenWindowStationW(LPWSTR lpszWinSta,
 		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
@@ -333,7 +333,7 @@ OpenWindowStationW(LPWSTR lpszWinSta,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetProcessWindowStation(HWINSTA hWinSta)
 {
   return NtUserSetProcessWindowStation(hWinSta);
@@ -344,7 +344,7 @@ SetProcessWindowStation(HWINSTA hWinSta)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 SetWindowStationUser(
   DWORD Unknown1,
   DWORD Unknown2,
@@ -360,7 +360,7 @@ SetWindowStationUser(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LockWindowStation(HWINSTA hWinSta)
 {
   return NtUserLockWindowStation(hWinSta);
@@ -371,7 +371,7 @@ LockWindowStation(HWINSTA hWinSta)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnlockWindowStation(HWINSTA hWinSta)
 {
   return NtUserUnlockWindowStation(hWinSta);

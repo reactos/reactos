@@ -7,7 +7,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<file>main.c</file>
-	<file>inetmib1.spec</file>
 	<library>wine</library>
 	<library>snmpapi</library>
 	<library>kernel32</library>

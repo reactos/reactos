@@ -52,8 +52,8 @@ BOOL is_old_app(HWND hwnd)
 #define WS_EX_DRAGDETECT    0x00000002L
 #define WM_BEGINDRAG        0x022C
 
-UINT STDCALL SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
-BOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
+UINT WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
+BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 
 /* End of hack section -------------------------------- */
 
@@ -3480,7 +3480,7 @@ static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARA
 /***********************************************************************
  *           GetListBoxInfo !REACTOS!
  */
-DWORD STDCALL
+DWORD WINAPI
 GetListBoxInfo(HWND hwnd)
 {
   return NtUserGetListBoxInfo(hwnd); // Do it right! Have the message org from kmode!

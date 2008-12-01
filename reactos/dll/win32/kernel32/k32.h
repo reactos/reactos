@@ -40,7 +40,7 @@
 #include "include/kernel32.h"
 
 /* PSEH for SEH Support */
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* Helper Header */
 #include <reactos/helper.h>

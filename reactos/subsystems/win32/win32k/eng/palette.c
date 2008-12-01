@@ -59,7 +59,7 @@ ColorCorrection(PPALGDI PalGDI, PPALETTEENTRY PaletteEntry, ULONG Colors)
 /*
  * @implemented
  */
-HPALETTE STDCALL
+HPALETTE APIENTRY
 EngCreatePalette(ULONG Mode, ULONG NumColors, ULONG *Colors,
                  ULONG Red, ULONG Green, ULONG Blue)
 {
@@ -77,7 +77,7 @@ EngCreatePalette(ULONG Mode, ULONG NumColors, ULONG *Colors,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngDeletePalette(IN HPALETTE Palette)
 {
    GDIOBJ_SetOwnership(Palette, PsGetCurrentProcess());
@@ -88,7 +88,7 @@ EngDeletePalette(IN HPALETTE Palette)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG APIENTRY
 PALOBJ_cGetColors(PALOBJ *PalObj, ULONG Start, ULONG Colors, ULONG *PaletteEntry)
 {
    PALGDI *PalGDI;

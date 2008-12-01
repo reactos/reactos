@@ -17,7 +17,7 @@ HANDLE Secur32Heap;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL STDCALL DllMain(HINSTANCE hInstance, ULONG Reason, PVOID Reserved)
+BOOL WINAPI DllMain(HINSTANCE hInstance, ULONG Reason, PVOID Reserved)
 {
    switch (Reason)
      {

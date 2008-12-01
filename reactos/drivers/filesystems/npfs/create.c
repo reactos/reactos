@@ -103,7 +103,7 @@ NpfsSignalAndRemoveListeningServerInstance(PNPFS_FCB Fcb,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsCreate(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp)
 {
@@ -308,7 +308,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 					PIRP Irp)
 {
@@ -555,7 +555,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsCleanup(PDEVICE_OBJECT DeviceObject,
 			PIRP Irp)
 {
@@ -691,7 +691,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsClose(PDEVICE_OBJECT DeviceObject,
 		  PIRP Irp)
 {

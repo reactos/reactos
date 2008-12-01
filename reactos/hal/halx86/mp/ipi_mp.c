@@ -15,7 +15,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-VOID STDCALL
+VOID NTAPI
 HalRequestIpi(KAFFINITY TargetProcessors)
 {
   /* FIXME: SMP HAL is...very broken */

@@ -63,7 +63,7 @@ IntGdiGetLanguageID()
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserGetThreadState(
    DWORD Routine)
 {
@@ -107,7 +107,7 @@ CLEANUP:
 
 
 UINT
-STDCALL
+APIENTRY
 NtUserGetDoubleClickTime(VOID)
 {
    UINT Result;
@@ -139,7 +139,7 @@ CLEANUP:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetGUIThreadInfo(
    DWORD idThread, /* if NULL use foreground thread */
    LPGUITHREADINFO lpgui)
@@ -244,7 +244,7 @@ CLEANUP:
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetGuiResources(
    HANDLE hProcess,
    DWORD uiFlags)
@@ -518,7 +518,7 @@ GetW32ThreadInfo(VOID)
             /* update the TEB */
             Teb = NtCurrentTeb();
             ci = GetWin32ClientInfo();
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForWrite(Teb,
                               sizeof(TEB),
@@ -527,11 +527,11 @@ GetW32ThreadInfo(VOID)
                 Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
                 ci->pClientThreadInfo = &ti->ClientThreadInfo;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                SetLastNtError(_SEH_GetExceptionCode());
+                SetLastNtError(_SEH2_GetExceptionCode());
             }
-            _SEH_END;
+            _SEH2_END;
         }
         else
         {

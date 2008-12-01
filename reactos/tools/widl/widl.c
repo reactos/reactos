@@ -279,13 +279,13 @@ static char *eat_space(char *s)
   return s;
 }
 
-void write_dlldata(ifref_list_t *ifaces)
+void write_dlldata(const statement_list_t *stmts)
 {
   struct list filenames = LIST_INIT(filenames);
   filename_node_t *node;
   FILE *dlldata;
 
-  if (!do_dlldata || !need_proxy_file(ifaces))
+  if (!do_dlldata || !need_proxy_file(stmts))
     return;
 
   dlldata = fopen(dlldata_name, "r");

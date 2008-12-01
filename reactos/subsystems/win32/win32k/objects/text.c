@@ -52,18 +52,18 @@ NtGdiGetRasterizerCaps(
      if ( cjBytes >= sizeof(RASTERIZER_STATUS) ) cjBytes = sizeof(RASTERIZER_STATUS);
      if ( ftGdiGetRasterizerCaps(&rsSafe))
      {
-        _SEH_TRY
+        _SEH2_TRY
         {
            ProbeForWrite( praststat,
                           sizeof(RASTERIZER_STATUS),
                           1);
            RtlCopyMemory(praststat, &rsSafe, cjBytes );
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-           Status = _SEH_GetExceptionCode();
+           Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if (!NT_SUCCESS(Status))
         {
@@ -104,18 +104,18 @@ NtGdiGetTextCharsetInfo(
      if (Ret == DEFAULT_CHARSET)
         RtlZeroMemory(pfsSafe, sizeof(FONTSIGNATURE));
 
-     _SEH_TRY
+     _SEH2_TRY
      {
          ProbeForWrite( lpSig,
                         sizeof(FONTSIGNATURE),
                         1);
          RtlCopyMemory(lpSig, pfsSafe, sizeof(FONTSIGNATURE));
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {
@@ -277,7 +277,7 @@ NtGdiGetTextExtentExW(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetTextExtent(HDC hdc,
                    LPWSTR lpwsz,
                    INT cwc,
@@ -288,7 +288,7 @@ NtGdiGetTextExtent(HDC hdc,
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetTextJustification(HDC  hDC,
                           int  BreakExtra,
                           int  BreakCount)
@@ -373,16 +373,16 @@ NtGdiGetTextMetricsW(
   {
      if (ftGdiGetTextMetricsW(hDC,&Tmwi))
      {
-        _SEH_TRY
+        _SEH2_TRY
         {
            ProbeForWrite(pUnsafeTmwi, cj, 1);
            RtlCopyMemory(pUnsafeTmwi,&Tmwi,cj);
         }
-       _SEH_HANDLE
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-           Status = _SEH_GetExceptionCode();
+           Status = _SEH2_GetExceptionCode();
         }
-       _SEH_END
+       _SEH2_END
 
         if (!NT_SUCCESS(Status))
         {

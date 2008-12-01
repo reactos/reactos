@@ -40,7 +40,7 @@
 #include "wined3d_private_types.h"
 #include "wine/wined3d_interface.h"
 #include "wine/wined3d_caps.h"
-#include "wine/wined3d_gl.h"
+#include "wined3d_gl.h"
 #include "wine/list.h"
 
 /* Hash table functions */
@@ -219,6 +219,96 @@ typedef struct SHADER_BUFFER {
     BOOL newline;
 } SHADER_BUFFER;
 
+enum WINED3D_SHADER_INSTRUCTION_HANDLER
+{
+    WINED3DSIH_ABS,
+    WINED3DSIH_ADD,
+    WINED3DSIH_BEM,
+    WINED3DSIH_BREAK,
+    WINED3DSIH_BREAKC,
+    WINED3DSIH_BREAKP,
+    WINED3DSIH_CALL,
+    WINED3DSIH_CALLNZ,
+    WINED3DSIH_CMP,
+    WINED3DSIH_CND,
+    WINED3DSIH_CRS,
+    WINED3DSIH_DCL,
+    WINED3DSIH_DEF,
+    WINED3DSIH_DEFB,
+    WINED3DSIH_DEFI,
+    WINED3DSIH_DP2ADD,
+    WINED3DSIH_DP3,
+    WINED3DSIH_DP4,
+    WINED3DSIH_DST,
+    WINED3DSIH_DSX,
+    WINED3DSIH_DSY,
+    WINED3DSIH_ELSE,
+    WINED3DSIH_ENDIF,
+    WINED3DSIH_ENDLOOP,
+    WINED3DSIH_ENDREP,
+    WINED3DSIH_EXP,
+    WINED3DSIH_EXPP,
+    WINED3DSIH_FRC,
+    WINED3DSIH_IF,
+    WINED3DSIH_IFC,
+    WINED3DSIH_LABEL,
+    WINED3DSIH_LIT,
+    WINED3DSIH_LOG,
+    WINED3DSIH_LOGP,
+    WINED3DSIH_LOOP,
+    WINED3DSIH_LRP,
+    WINED3DSIH_M3x2,
+    WINED3DSIH_M3x3,
+    WINED3DSIH_M3x4,
+    WINED3DSIH_M4x3,
+    WINED3DSIH_M4x4,
+    WINED3DSIH_MAD,
+    WINED3DSIH_MAX,
+    WINED3DSIH_MIN,
+    WINED3DSIH_MOV,
+    WINED3DSIH_MOVA,
+    WINED3DSIH_MUL,
+    WINED3DSIH_NOP,
+    WINED3DSIH_NRM,
+    WINED3DSIH_PHASE,
+    WINED3DSIH_POW,
+    WINED3DSIH_RCP,
+    WINED3DSIH_REP,
+    WINED3DSIH_RET,
+    WINED3DSIH_RSQ,
+    WINED3DSIH_SETP,
+    WINED3DSIH_SGE,
+    WINED3DSIH_SGN,
+    WINED3DSIH_SINCOS,
+    WINED3DSIH_SLT,
+    WINED3DSIH_SUB,
+    WINED3DSIH_TEX,
+    WINED3DSIH_TEXBEM,
+    WINED3DSIH_TEXBEML,
+    WINED3DSIH_TEXCOORD,
+    WINED3DSIH_TEXDEPTH,
+    WINED3DSIH_TEXDP3,
+    WINED3DSIH_TEXDP3TEX,
+    WINED3DSIH_TEXKILL,
+    WINED3DSIH_TEXLDD,
+    WINED3DSIH_TEXLDL,
+    WINED3DSIH_TEXM3x2DEPTH,
+    WINED3DSIH_TEXM3x2PAD,
+    WINED3DSIH_TEXM3x2TEX,
+    WINED3DSIH_TEXM3x3,
+    WINED3DSIH_TEXM3x3DIFF,
+    WINED3DSIH_TEXM3x3PAD,
+    WINED3DSIH_TEXM3x3SPEC,
+    WINED3DSIH_TEXM3x3TEX,
+    WINED3DSIH_TEXM3x3VSPEC,
+    WINED3DSIH_TEXREG2AR,
+    WINED3DSIH_TEXREG2GB,
+    WINED3DSIH_TEXREG2RGB,
+    WINED3DSIH_TABLE_SIZE
+};
+
+typedef void (*SHADER_HANDLER) (struct SHADER_OPCODE_ARG*);
+
 struct shader_caps {
     DWORD               VertexShaderVersion;
     DWORD               MaxVertexShaderConst;
@@ -235,9 +325,20 @@ struct shader_caps {
     DWORD               MaxPixelShader30InstructionSlots;
 };
 
+enum tex_types
+{
+    tex_1d       = 0,
+    tex_2d       = 1,
+    tex_3d       = 2,
+    tex_cube     = 3,
+    tex_rect     = 4,
+    tex_type_count = 5,
+};
+
 typedef struct {
+    const SHADER_HANDLER *shader_instruction_handler_table;
     void (*shader_select)(IWineD3DDevice *iface, BOOL usePS, BOOL useVS);
-    void (*shader_select_depth_blt)(IWineD3DDevice *iface);
+    void (*shader_select_depth_blt)(IWineD3DDevice *iface, enum tex_types tex_type);
     void (*shader_deselect_depth_blt)(IWineD3DDevice *iface);
     void (*shader_load_constants)(IWineD3DDevice *iface, char usePS, char useVS);
     void (*shader_cleanup)(IWineD3DDevice *iface);
@@ -252,7 +353,6 @@ typedef struct {
     BOOL (*shader_conv_supported)(WINED3DFORMAT conv);
 } shader_backend_t;
 
-extern const shader_backend_t atifs_shader_backend;
 extern const shader_backend_t glsl_shader_backend;
 extern const shader_backend_t arb_program_shader_backend;
 extern const shader_backend_t none_shader_backend;
@@ -449,11 +549,13 @@ void primitiveDeclarationConvertToStridedData(
 DWORD get_flexible_vertex_size(DWORD d3dvtVertexType);
 
 typedef void (WINE_GLAPI *glAttribFunc)(void *data);
-typedef void (WINE_GLAPI *glTexAttribFunc)(GLuint unit, void *data);
+typedef void (WINE_GLAPI *glMultiTexCoordFunc)(GLenum unit, void *data);
 extern glAttribFunc position_funcs[WINED3DDECLTYPE_UNUSED];
 extern glAttribFunc diffuse_funcs[WINED3DDECLTYPE_UNUSED];
 extern glAttribFunc specular_funcs[WINED3DDECLTYPE_UNUSED];
 extern glAttribFunc normal_funcs[WINED3DDECLTYPE_UNUSED];
+extern glMultiTexCoordFunc multi_texcoord_funcs[WINED3DDECLTYPE_UNUSED];
+extern glAttribFunc texcoord_funcs[WINED3DDECLTYPE_UNUSED];
 
 #define eps 1e-8
 
@@ -631,6 +733,7 @@ typedef enum ContextUsage {
 void ActivateContext(IWineD3DDeviceImpl *device, IWineD3DSurface *target, ContextUsage usage);
 WineD3DContext *CreateContext(IWineD3DDeviceImpl *This, IWineD3DSurfaceImpl *target, HWND win, BOOL create_pbuffer, const WINED3DPRESENT_PARAMETERS *pPresentParms);
 void DestroyContext(IWineD3DDeviceImpl *This, WineD3DContext *context);
+void context_resource_released(IWineD3DDevice *iface, IWineD3DResource *resource, WINED3DRESOURCETYPE type);
 void context_bind_fbo(IWineD3DDevice *iface, GLenum target, GLuint *fbo);
 void context_attach_depth_stencil_fbo(IWineD3DDeviceImpl *This, GLenum fbo_target, IWineD3DSurface *depth_stencil, BOOL use_render_buffer);
 void context_attach_surface_fbo(IWineD3DDeviceImpl *This, GLenum fbo_target, DWORD idx, IWineD3DSurface *surface);
@@ -730,15 +833,6 @@ enum projection_types
     proj_count4  = 2
 };
 
-enum tex_types
-{
-    tex_1d       = 0,
-    tex_2d       = 1,
-    tex_3d       = 2,
-    tex_cube     = 3,
-    tex_rect     = 4
-};
-
 enum dst_arg
 {
     resultreg    = 0,
@@ -761,7 +855,7 @@ struct texture_stage_op
     WINED3DFORMAT           color_correction;
 };
 
-struct ffp_settings {
+struct ffp_frag_settings {
     struct texture_stage_op     op[MAX_TEXTURES];
     enum {
         FOG_OFF,
@@ -773,16 +867,16 @@ struct ffp_settings {
     unsigned int sRGB_write;
 };
 
-struct ffp_desc
+struct ffp_frag_desc
 {
-    struct ffp_settings         settings;
+    struct ffp_frag_settings    settings;
 };
 
-void gen_ffp_op(IWineD3DStateBlockImpl *stateblock, struct ffp_settings *settings, BOOL ignore_textype);
-struct ffp_desc *find_ffp_shader(struct hash_table_t *fragment_shaders, struct ffp_settings *settings);
-void add_ffp_shader(struct hash_table_t *shaders, struct ffp_desc *desc);
-BOOL ffp_program_key_compare(void *keya, void *keyb);
-unsigned int ffp_program_key_hash(void *key);
+void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_settings *settings, BOOL ignore_textype);
+struct ffp_frag_desc *find_ffp_frag_shader(struct hash_table_t *fragment_shaders, struct ffp_frag_settings *settings);
+void add_ffp_frag_shader(struct hash_table_t *shaders, struct ffp_frag_desc *desc);
+BOOL ffp_frag_program_key_compare(void *keya, void *keyb);
+unsigned int ffp_frag_program_key_hash(void *key);
 
 /*****************************************************************************
  * IWineD3D implementation structure
@@ -1005,6 +1099,7 @@ typedef struct IWineD3DResourceClass
     UINT                    size;
     DWORD                   usage;
     WINED3DFORMAT           format;
+    DWORD                   priority;
     BYTE                   *allocatedMemory; /* Pointer to the real data location */
     BYTE                   *heapMemory; /* Pointer to the HeapAlloced block of memory */
     struct list             privateData;
@@ -1450,6 +1545,7 @@ void flip_surface(IWineD3DSurfaceImpl *front, IWineD3DSurfaceImpl *back);
 
 #define SFLAG_DS_LOCATIONS  (SFLAG_DS_ONSCREEN | \
                              SFLAG_DS_OFFSCREEN)
+#define SFLAG_DS_DISCARDED   SFLAG_DS_LOCATIONS
 
 BOOL CalculateTexRect(IWineD3DSurfaceImpl *This, RECT *Rect, float glTexCoord[4]);
 
@@ -1501,6 +1597,7 @@ typedef struct IWineD3DVertexDeclarationImpl {
     IWineD3DDeviceImpl      *wineD3DDevice;
 
     WINED3DVERTEXELEMENT    *pDeclarationWine;
+    BOOL                    *ffp_valid;
     UINT                    declarationWNumElements;
 
     DWORD                   streams[MAX_STREAMS];
@@ -1746,7 +1843,6 @@ typedef struct IWineD3DSwapChainImpl
     /* IWineD3DSwapChain fields */
     IWineD3DSurface         **backBuffer;
     IWineD3DSurface          *frontBuffer;
-    BOOL                      wantsDepthStencilBuffer;
     WINED3DPRESENT_PARAMETERS presentParms;
     DWORD                     orig_width, orig_height;
     WINED3DFORMAT             orig_fmt;
@@ -1817,10 +1913,13 @@ void sampler_texdim(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCont
 void tex_alphaop(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context);
 void apply_pixelshader(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context);
 
-void surface_set_compatible_renderbuffer(IWineD3DSurface *iface, unsigned int width, unsigned int height);
+void surface_force_reload(IWineD3DSurface *iface);
 GLenum surface_get_gl_buffer(IWineD3DSurface *iface, IWineD3DSwapChain *swapchain);
-void surface_modify_ds_location(IWineD3DSurface *iface, DWORD location);
 void surface_load_ds_location(IWineD3DSurface *iface, DWORD location);
+void surface_modify_ds_location(IWineD3DSurface *iface, DWORD location);
+void surface_set_compatible_renderbuffer(IWineD3DSurface *iface, unsigned int width, unsigned int height);
+void surface_set_texture_name(IWineD3DSurface *iface, GLuint name);
+void surface_set_texture_target(IWineD3DSurface *iface, GLenum target);
 
 BOOL getColorBits(WINED3DFORMAT fmt, short *redSize, short *greenSize, short *blueSize, short *alphaSize, short *totalSize);
 BOOL getDepthStencilBits(WINED3DFORMAT fmt, short *depthSize, short *stencilSize);
@@ -1884,7 +1983,6 @@ unsigned int count_bits(unsigned int mask);
     /*** class static members ***/
     void IWineD3DBaseTextureImpl_CleanUp(IWineD3DBaseTexture *iface);
 
-typedef void (*SHADER_HANDLER) (struct SHADER_OPCODE_ARG*);
 
 /* TODO: Make this dynamic, based on shader limits ? */
 #define MAX_REG_ADDR 1
@@ -1955,8 +2053,7 @@ typedef struct SHADER_OPCODE {
     const char*   glname;
     char          dst_token;
     CONST UINT    num_params;
-    SHADER_HANDLER hw_fct;
-    SHADER_HANDLER hw_glsl_fct;
+    enum WINED3D_SHADER_INSTRUCTION_HANDLER handler_idx;
     DWORD         min_version;
     DWORD         max_version;
 } SHADER_OPCODE;
@@ -2023,103 +2120,8 @@ extern BOOL vshader_input_is_color(
 
 extern HRESULT allocate_shader_constants(IWineD3DStateBlockImpl* object);
 
-/* ARB shader program Prototypes */
-extern void shader_hw_def(SHADER_OPCODE_ARG *arg);
-
-/* ARB pixel shader prototypes */
-extern void pshader_hw_bem(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_cnd(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_cmp(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_map2gl(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_tex(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texcoord(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texreg2ar(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texreg2gb(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texbem(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texm3x2pad(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texm3x2tex(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texm3x3pad(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texm3x3tex(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texm3x3spec(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texm3x3vspec(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texdepth(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texkill(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texdp3tex(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texdp3(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texm3x3(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texm3x2depth(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_dp2add(SHADER_OPCODE_ARG* arg);
-extern void pshader_hw_texreg2rgb(SHADER_OPCODE_ARG* arg);
-
-/* ARB vertex / pixel shader common prototypes */
-extern void shader_hw_nrm(SHADER_OPCODE_ARG* arg);
-extern void shader_hw_sincos(SHADER_OPCODE_ARG* arg);
-extern void shader_hw_mnxn(SHADER_OPCODE_ARG* arg);
-
-/* ARB vertex shader prototypes */
-extern void vshader_hw_map2gl(SHADER_OPCODE_ARG* arg);
-extern void vshader_hw_rsq_rcp(SHADER_OPCODE_ARG* arg);
-
 /* GLSL helper functions */
 extern void shader_glsl_add_instruction_modifiers(SHADER_OPCODE_ARG *arg);
-
-/** The following translate DirectX pixel/vertex shader opcodes to GLSL lines */
-extern void shader_glsl_cross(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_map2gl(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_arith(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_mov(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_mad(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_mnxn(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_lrp(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_dot(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_rcp(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_rsq(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_cnd(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_compare(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_def(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_defi(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_defb(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_expp(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_cmp(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_lit(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_dst(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_sincos(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_loop(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_end(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_if(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_ifc(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_else(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_break(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_breakc(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_rep(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_call(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_callnz(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_label(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_pow(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_log(SHADER_OPCODE_ARG* arg);
-extern void shader_glsl_texldl(SHADER_OPCODE_ARG* arg);
-
-/** GLSL Pixel Shader Prototypes */
-extern void pshader_glsl_tex(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texcoord(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texdp3tex(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texdp3(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texdepth(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texm3x2depth(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texm3x2pad(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texm3x2tex(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texm3x3(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texm3x3pad(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texm3x3tex(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texm3x3spec(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texm3x3vspec(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texkill(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texbem(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_bem(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texreg2ar(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texreg2gb(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_texreg2rgb(SHADER_OPCODE_ARG* arg);
-extern void pshader_glsl_dp2add(SHADER_OPCODE_ARG* arg);
 
 /*****************************************************************************
  * IDirect3DBaseShader implementation structure
@@ -2308,17 +2310,10 @@ typedef struct IWineD3DVertexShaderImpl {
     attrib_declaration          swizzled_attribs [MAX_ATTRIBS];
     UINT                        num_swizzled_attribs;
 
-    /* run time data...  */
-    VSHADERDATA                *data;
     UINT                       min_rel_offset, max_rel_offset;
     UINT                       rel_offset;
 
     UINT                       recompile_count;
-#if 0 /* needs reworking */
-    /* run time data */
-    VSHADERINPUTDATA input;
-    VSHADEROUTPUTDATA output;
-#endif
 } IWineD3DVertexShaderImpl;
 extern const SHADER_OPCODE IWineD3DVertexShaderImpl_shader_ins[];
 extern const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl;
@@ -2354,9 +2349,6 @@ typedef struct IWineD3DPixelShaderImpl {
     BOOL                  input_reg_used[MAX_REG_INPUT];
     int                         declared_in_count;
 
-    /* run time data */
-    PSHADERDATA                *data;
-
     /* Some information about the shader behavior */
     struct stb_const_desc       bumpenvmatconst[MAX_TEXTURES];
     char                        numbumpenvmatconsts;
@@ -2369,11 +2361,6 @@ typedef struct IWineD3DPixelShaderImpl {
     BOOL                        render_offscreen;
     UINT                        height;
     enum vertexprocessing_mode  vertexprocessing;
-
-#if 0 /* needs reworking */
-    PSHADERINPUTDATA input;
-    PSHADEROUTPUTDATA output;
-#endif
 } IWineD3DPixelShaderImpl;
 
 extern const SHADER_OPCODE IWineD3DPixelShaderImpl_shader_ins[];
@@ -2443,7 +2430,4 @@ static inline BOOL use_ps(IWineD3DDeviceImpl *device) {
 
 void stretch_rect_fbo(IWineD3DDevice *iface, IWineD3DSurface *src_surface, WINED3DRECT *src_rect,
         IWineD3DSurface *dst_surface, WINED3DRECT *dst_rect, const WINED3DTEXTUREFILTERTYPE filter, BOOL flip);
-void depth_blt(IWineD3DDevice *iface, GLuint texture, GLsizei w, GLsizei h);
-
-void context_destroy_fbo_entry(IWineD3DDeviceImpl *This, struct fbo_entry *entry);
 #endif

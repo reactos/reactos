@@ -28,7 +28,7 @@
  * 	      to possibly expand Data before giving it back; if set
  * 	      to NULL, no expansion will be performed.
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 SmLookupSubsystem (IN     PWSTR   Name,
 		   IN OUT PWSTR   Data,
 		   IN OUT PULONG  DataLength,

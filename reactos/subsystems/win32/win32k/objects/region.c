@@ -2203,7 +2203,7 @@ IntGdiCombineRgn(PROSRGNDATA destRgn,
 
 // NtGdi Exported Functions
 INT
-STDCALL
+APIENTRY
 NtGdiCombineRgn(HRGN  hDest,
                 HRGN  hSrc1,
                 HRGN  hSrc2,
@@ -2268,7 +2268,7 @@ NtGdiCombineRgn(HRGN  hDest,
 }
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiCreateEllipticRgn(
     INT Left,
     INT Top,
@@ -2297,7 +2297,7 @@ IntGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 }
 
 
-HRGN STDCALL
+HRGN APIENTRY
 NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
     PROSRGNDATA pRgn;
@@ -2319,7 +2319,7 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiCreateRoundRectRgn(
     INT left,
     INT top,
@@ -2437,7 +2437,7 @@ NtGdiCreateRoundRectRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiEqualRgn(
     HRGN  hSrcRgn1,
     HRGN  hSrcRgn2
@@ -2488,7 +2488,7 @@ exit:
 }
 
 HRGN
-STDCALL
+APIENTRY
 NtGdiExtCreateRegion(
     OPTIONAL LPXFORM Xform,
     DWORD Count,
@@ -2502,7 +2502,7 @@ NtGdiExtCreateRegion(
     MATRIX matrix;
 
     DPRINT("NtGdiExtCreateRegion\n");
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(RgnData, Count, 1);
         nCount = RgnData->rdh.nCount;
@@ -2512,14 +2512,14 @@ NtGdiExtCreateRegion(
             RgnData->rdh.dwSize != sizeof(RGNDATAHEADER))
         {
             Status = STATUS_INVALID_PARAMETER;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
@@ -2535,7 +2535,7 @@ NtGdiExtCreateRegion(
     }
     hRgn = Region->BaseObject.hHmgr;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Copy header */
         Region->rdh = RgnData->rdh;
@@ -2570,11 +2570,11 @@ NtGdiExtCreateRegion(
                           nCount * sizeof(RECT));
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2589,7 +2589,7 @@ NtGdiExtCreateRegion(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiFillRgn(
     HDC hDC,
     HRGN hRgn,
@@ -2623,7 +2623,7 @@ NtGdiFillRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiFrameRgn(
     HDC hDC,
     HRGN hRgn,
@@ -2685,7 +2685,7 @@ REGION_GetRgnBox(
       API region is the intersection of the meta region and the clipping region,
       clearly named after the fact that it is controlled by GDI API calls.
 */
-INT STDCALL
+INT APIENTRY
 NtGdiGetRandomRgn(
     HDC hDC,
     HRGN hDest,
@@ -2751,7 +2751,7 @@ NtGdiGetRandomRgn(
     return ret;
 }
 
-INT STDCALL
+INT APIENTRY
 IntGdiGetRgnBox(
     HRGN hRgn,
     LPRECT pRect
@@ -2772,7 +2772,7 @@ IntGdiGetRgnBox(
 }
 
 
-INT STDCALL
+INT APIENTRY
 NtGdiGetRgnBox(
     HRGN hRgn,
     LPRECT pRect
@@ -2795,16 +2795,16 @@ NtGdiGetRgnBox(
         return ret;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(pRect, sizeof(RECT), 1);
         *pRect = SafeRect;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status))
     {
         return ERROR;
@@ -2814,7 +2814,7 @@ NtGdiGetRgnBox(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiInvertRgn(
     HDC hDC,
     HRGN hRgn
@@ -2847,7 +2847,7 @@ NtGdiInvertRgn(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiOffsetRgn(
     HRGN hRgn,
     INT XOffset,
@@ -2963,7 +2963,7 @@ IntGdiPaintRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiPtInRegion(
     HRGN hRgn,
     INT X,
@@ -3020,7 +3020,7 @@ REGION_RectInRegion(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiRectInRegion(
     HRGN  hRgn,
     LPRECT unsaferc
@@ -3036,16 +3036,16 @@ NtGdiRectInRegion(
         return ERROR;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(unsaferc, sizeof(RECT), 1);
         rc = *unsaferc;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -3101,7 +3101,7 @@ REGION_SetRectRgn(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSetRectRgn(
     HRGN hRgn,
     INT LeftRect,
@@ -3123,7 +3123,7 @@ NtGdiSetRectRgn(
     return TRUE;
 }
 
-HRGN STDCALL
+HRGN APIENTRY
 NtGdiUnionRectWithRgn(
     HRGN hDest,
     CONST PRECT UnsafeRect
@@ -3139,16 +3139,16 @@ NtGdiUnionRectWithRgn(
         return NULL;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(UnsafeRect, sizeof(RECT), 1);
         SafeRect = *UnsafeRect;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (! NT_SUCCESS(Status))
     {
@@ -3172,7 +3172,7 @@ NtGdiUnionRectWithRgn(
  *
  * If the function fails, the return value is zero."
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtGdiGetRegionData(
     HRGN hrgn,
     DWORD count,
@@ -3196,17 +3196,17 @@ NtGdiGetRegionData(
             return size + sizeof(RGNDATAHEADER);
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(rgndata, count, 1);
         RtlCopyMemory(rgndata, &obj->rdh, sizeof(RGNDATAHEADER));
         RtlCopyMemory(rgndata->Buffer, obj->Buffer, size);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {

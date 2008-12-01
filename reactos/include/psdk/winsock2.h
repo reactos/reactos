@@ -13,9 +13,6 @@
 #if !(defined _WINSOCK2_H || defined _WINSOCK_H)
 #define _WINSOCK2_H
 #define _WINSOCK_H /* to prevent later inclusion of winsock.h */
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define _GNU_H_WINDOWS32_SOCKETS
 

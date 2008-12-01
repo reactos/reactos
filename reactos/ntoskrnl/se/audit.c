@@ -187,7 +187,7 @@ SeLocateProcessImageName(IN PEPROCESS Process,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 SeAuditHardLinkCreation(IN PUNICODE_STRING FileName,
                         IN PUNICODE_STRING LinkName,
                         IN BOOLEAN bSuccess)
@@ -199,7 +199,7 @@ SeAuditHardLinkCreation(IN PUNICODE_STRING FileName,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingFileEvents(IN BOOLEAN AccessGranted,
                      IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
@@ -211,7 +211,7 @@ SeAuditingFileEvents(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
                                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
@@ -224,7 +224,7 @@ SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingHardLinkEvents(IN BOOLEAN AccessGranted,
                          IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
@@ -236,7 +236,7 @@ SeAuditingHardLinkEvents(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingHardLinkEventsWithContext(IN BOOLEAN AccessGranted,
                                     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                     IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
@@ -249,7 +249,7 @@ SeAuditingHardLinkEventsWithContext(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
                              IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                              IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext)
@@ -262,7 +262,7 @@ SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 SeCloseObjectAuditAlarm(
                         IN PVOID Object,
                         IN HANDLE Handle,
@@ -275,7 +275,7 @@ SeCloseObjectAuditAlarm(
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 SeDeleteObjectAuditAlarm(IN PVOID Object,
                          IN HANDLE Handle)
 {
@@ -310,7 +310,7 @@ SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
                                 IN PVOID Object OPTIONAL,
                                 IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
@@ -328,7 +328,7 @@ SeOpenObjectForDeleteAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 SePrivilegeObjectAuditAlarm(IN HANDLE Handle,
                             IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
                             IN ACCESS_MASK DesiredAccess,
@@ -360,7 +360,7 @@ NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                         IN PVOID HandleId,
                         IN BOOLEAN GenerateOnClose)
@@ -370,7 +370,7 @@ NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                          IN PVOID HandleId,
                          IN BOOLEAN GenerateOnClose)
@@ -380,7 +380,7 @@ NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                        IN PVOID HandleId,
                        IN PUNICODE_STRING ObjectTypeName,
@@ -399,7 +399,7 @@ NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtPrivilegedServiceAuditAlarm(IN PUNICODE_STRING SubsystemName,
                               IN PUNICODE_STRING ServiceName,
                               IN HANDLE ClientToken,
@@ -411,7 +411,7 @@ NtPrivilegedServiceAuditAlarm(IN PUNICODE_STRING SubsystemName,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                             IN PVOID HandleId,
                             IN HANDLE ClientToken,

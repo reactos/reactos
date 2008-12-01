@@ -271,7 +271,7 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 /*
  * @implemented
  */
-CLIPOBJ * STDCALL
+CLIPOBJ * APIENTRY
 EngCreateClip(VOID)
 {
     CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), TAG_CLIPOBJ);
@@ -286,7 +286,7 @@ EngCreateClip(VOID)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngDeleteClip(CLIPOBJ *ClipRegion)
 {
     EngFreeMem(ObjToGDI(ClipRegion, CLIP));
@@ -295,7 +295,7 @@ EngDeleteClip(CLIPOBJ *ClipRegion)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG APIENTRY
 CLIPOBJ_cEnumStart(
     IN CLIPOBJ* ClipObj,
     IN BOOL ShouldDoAll,
@@ -356,7 +356,7 @@ CLIPOBJ_cEnumStart(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 CLIPOBJ_bEnum(
     IN CLIPOBJ* ClipObj,
     IN ULONG ObjSize,

@@ -9,7 +9,7 @@
 VOID LsarStartRpcServer(VOID);
 
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 LsapInitLsa(VOID)
 {
     HANDLE hEvent;

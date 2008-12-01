@@ -61,7 +61,6 @@
 	<file>dcom.idl</file>
 	<file>irot.idl</file>
 	<include base="ole32" root="intermediate">.</include>
-	<file>ole32.spec</file>
 </module>
 <module name="ole32_irot_server" type="rpcserver">
 	<file>irot.idl</file>

@@ -239,14 +239,14 @@ extern PCDFS_GLOBAL_DATA CdfsGlobalData;
 
 /* cleanup.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsCleanup(PDEVICE_OBJECT DeviceObject,
 	    PIRP Irp);
 
 
 /* close.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
 
@@ -276,14 +276,14 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
 /* create.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp);
 
 
 /* dirctl.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp);
 
@@ -358,18 +358,18 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 
 /* finfo.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp);
 
 
 /* fsctl.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp);
 
@@ -392,28 +392,28 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
 
 /* rw.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsRead(PDEVICE_OBJECT DeviceObject,
 	PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsWrite(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
 
 
 /* volinfo.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			 PIRP Irp);
 
 /* cdfs.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath);
 

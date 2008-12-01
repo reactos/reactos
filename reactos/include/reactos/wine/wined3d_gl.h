@@ -690,6 +690,7 @@ typedef void            GLvoid;
 #define GL_UNSIGNED_INT_10_10_10_2        0x8036
 #define GL_UNSIGNED_INT_2_10_10_10_REV    0x8368
 #define GL_RESCALE_NORMAL                 0x803A
+#define GL_TEXTURE_BINDING_3D             0x806A
 #define GL_LIGHT_MODEL_COLOR_CONTROL      0x81F8
 #define GL_SINGLE_COLOR                   0x81F9
 #define GL_SEPARATE_SPECULAR_COLOR        0x81FA
@@ -1670,9 +1671,15 @@ typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONPROC) (GLenum mode);
 typedef void (WINE_GLAPI *WINED3D_PFNGLACTIVETEXTUREARBPROC) (GLenum texture);
 typedef void (WINE_GLAPI *WINED3D_PFNGLCLIENTACTIVETEXTUREARBPROC) (GLenum texture);
 typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD1FARBPROC) (GLenum target, GLfloat s);
+typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD1FVARBPROC) (GLenum target, const GLfloat *v);
 typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD2FARBPROC) (GLenum target, GLfloat s, GLfloat t);
+typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD2FVARBPROC) (GLenum target, const GLfloat *v);
 typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD3FARBPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r);
+typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD3FVARBPROC) (GLenum target, const GLfloat *v);
 typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD4FARBPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
+typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD4FVARBPROC) (GLenum target, const GLfloat *v);
+typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD2SVARBPROC) (GLenum target, const GLshort *v);
+typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD4SVARBPROC) (GLenum target, const GLshort *v);
 
 /* GL_ARB_texture_cube_map */
 #ifndef GL_ARB_texture_cube_map
@@ -1847,6 +1854,16 @@ typedef void (WINE_GLAPI * PGLFNGLGENERATEMIPMAPEXTPROC)(GLenum target);
 #define GL_READ_FRAMEBUFFER_BINDING_EXT        0x8CAA
 #endif
 typedef void (WINE_GLAPI * PGLFNGLBLITFRAMEBUFFEREXTPROC) (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+
+/* GL_EXT_framebuffer_multisample */
+#ifndef GL_EXT_framebuffer_multisample
+#define GL_EXT_framebuffer_multisample 1
+#define GL_RENDERBUFFER_SAMPLES_EXT                 0x8cab
+#define GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT   0x8d56
+#define GL_MAX_SAMPLES_EXT                          0x8d57
+#endif
+typedef void (WINE_GLAPI * PGLFNRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+
 /* GL_EXT_secondary_color */
 #ifndef GL_EXT_secondary_color
 #define GL_EXT_secondary_color 1
@@ -1948,8 +1965,8 @@ typedef void (WINE_GLAPI * PGLFNGLTEXSUBIMAGE3DEXTPROC) (GLenum target, GLint le
 /* GL_EXT_texture_env_dot3 */
 #ifndef GL_EXT_texture_env_dot3
 #define GL_EXT_texture_env_dot3 1
-#define GL_DOT3_RGB_EXT			  0x8740
-#define GL_DOT3_RGBA_EXT		  0x8741
+#define GL_DOT3_RGB_EXT                   0x8740
+#define GL_DOT3_RGBA_EXT                  0x8741
 #endif
 /* GL_EXT_texture_lod_bias */
 #ifndef GL_EXT_texture_lod_bias
@@ -2723,7 +2740,7 @@ typedef void (WINE_GLAPI * PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC) (GLenum stage
 #endif
 
 /**
- * Point sprites 
+ * Point sprites
  */
 /* GL_ARB_point_sprite */
 #ifndef GL_ARB_point_sprite
@@ -2732,11 +2749,11 @@ typedef void (WINE_GLAPI * PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC) (GLenum stage
 #define GL_COORD_REPLACE_ARB              0x8862
 #endif
 /**
- * @TODO: GL_NV_point_sprite 
+ * @TODO: GL_NV_point_sprite
  */
 
 /**
- * Occlusion Queries 
+ * Occlusion Queries
  */
 /* GL_ARB_occlusion_query */
 #ifndef GL_ARB_occlusion_query
@@ -2826,23 +2843,6 @@ typedef void (WINE_GLAPI * PGLFNFINISHOBJECTAPPLEPROC) (GLenum, GLuint);
 #define GL_APPLE_client_storage 1
 #define GL_UNPACK_CLIENT_STORAGE_APPLE      0x85B2
 #endif
-/* GL_ATI_envmap_bumpmap */
-#ifndef GL_ATI_envmap_bumpmap
-#define GL_ATI_envmap_bumpmap 1
-#define GL_BUMP_ROT_MATRIX_ATI              0x8775
-#define GL_BUMP_ROT_MATRIX_SIZE_ATI         0x8776
-#define GL_BUMP_NUM_TEX_UNITS_ATI           0x8777
-#define GL_BUMP_TEX_UNITS_ATI               0x8778
-#define GL_DUDV_ATI                         0x8779
-#define GL_DU8DV8_ATI                       0x877A
-#define GL_BUMP_ENVMAP_ATI                  0x877B
-#define GL_BUMP_TARGET_ATI                  0x877C
-#endif
-typedef void (WINE_GLAPI * PGLFNTEXBUMPPARAMETERIVATIPROC) (GLenum, GLint *);
-typedef void (WINE_GLAPI * PGLFNTEXBUMPPARAMETERFVATIPROC) (GLenum, GLfloat *);
-typedef void (WINE_GLAPI * PGLFNGETTEXBUMPPARAMETERIVATIPROC) (GLenum, GLint *);
-typedef void (WINE_GLAPI * PGLFNGETTEXBUMPPARAMETERFVATIPROC) (GLenum, GLfloat *);
-
 /* GLX_SGI_video_sync */
 typedef int (WINE_GLAPI * PGLXFNGETVIDEOSYNCSGIPROC) (unsigned int *);
 typedef int (WINE_GLAPI * PGLXFNWAITVIDEOSYNCSGIPROC) (int, int, unsigned int *);
@@ -3192,8 +3192,8 @@ typedef void (WINE_GLAPI * PGLFNVERTEXATTRIBPOINTERPROC) (GLuint index, GLint si
 
 
 /****************************************************
- * OpenGL Official Version 
- *  defines 
+ * OpenGL Official Version
+ *  defines
  ****************************************************/
 /* GL_VERSION_1_3 */
 #if !defined(GL_DOT3_RGBA)
@@ -3329,6 +3329,7 @@ typedef enum _GL_SupportedExt {
   EXT_FOG_COORD,
   EXT_FRAMEBUFFER_OBJECT,
   EXT_FRAMEBUFFER_BLIT,
+  EXT_FRAMEBUFFER_MULTISAMPLE,
   EXT_PALETTED_TEXTURE,
   EXT_PIXEL_BUFFER_OBJECT,
   EXT_POINT_PARAMETERS,
@@ -3371,7 +3372,6 @@ typedef enum _GL_SupportedExt {
   ATI_TEXTURE_ENV_COMBINE3,
   ATI_TEXTURE_MIRROR_ONCE,
   EXT_VERTEX_SHADER,
-  ATI_ENVMAP_BUMPMAP,
   ATI_FRAGMENT_SHADER,
   ATI_TEXTURE_COMPRESSION_3DC,
   /* APPLE */
@@ -3396,7 +3396,7 @@ typedef enum _GL_SupportedExt {
 
 
 /****************************************************
- * #Defines       
+ * #Defines
  ****************************************************/
 #define GL_EXT_FUNCS_GEN \
     /** ARB Extensions **/ \
@@ -3413,9 +3413,15 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(WINED3D_PFNGLACTIVETEXTUREARBPROC,                  glActiveTextureARB,                         ARB_MULTITEXTURE,       NULL )\
     USE_GL_FUNC(WINED3D_PFNGLCLIENTACTIVETEXTUREARBPROC,            glClientActiveTextureARB,                   ARB_MULTITEXTURE,       NULL )\
     USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD1FARBPROC,                glMultiTexCoord1fARB,                       ARB_MULTITEXTURE,       NULL )\
+    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD1FVARBPROC,               glMultiTexCoord1fvARB,                      ARB_MULTITEXTURE,       NULL )\
     USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD2FARBPROC,                glMultiTexCoord2fARB,                       ARB_MULTITEXTURE,       NULL )\
+    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD2FVARBPROC,               glMultiTexCoord2fvARB,                      ARB_MULTITEXTURE,       NULL )\
     USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD3FARBPROC,                glMultiTexCoord3fARB,                       ARB_MULTITEXTURE,       NULL )\
+    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD3FVARBPROC,               glMultiTexCoord3fvARB,                      ARB_MULTITEXTURE,       NULL )\
     USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD4FARBPROC,                glMultiTexCoord4fARB,                       ARB_MULTITEXTURE,       NULL )\
+    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD4FVARBPROC,               glMultiTexCoord4fvARB,                      ARB_MULTITEXTURE,       NULL )\
+    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD2SVARBPROC,               glMultiTexCoord2svARB,                      ARB_MULTITEXTURE,       NULL )\
+    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD4SVARBPROC,               glMultiTexCoord4svARB,                      ARB_MULTITEXTURE,       NULL )\
     /* GL_ARB_occlusion_query */ \
     USE_GL_FUNC(PGLFNGENQUERIESARBPROC,                             glGenQueriesARB,                            ARB_OCCLUSION_QUERY,    NULL )\
     USE_GL_FUNC(PGLFNDELETEQUERIESARBPROC,                          glDeleteQueriesARB,                         ARB_OCCLUSION_QUERY,    NULL )\
@@ -3486,6 +3492,8 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(PGLFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC,  glGetFramebufferAttachmentParameterivEXT,   EXT_FRAMEBUFFER_OBJECT, NULL )\
     /* GL_EXT_framebuffer_blit */ \
     USE_GL_FUNC(PGLFNGLBLITFRAMEBUFFEREXTPROC,                      glBlitFramebufferEXT,                       EXT_FRAMEBUFFER_BLIT,   NULL )\
+    /* GL_EXT_framebuffer_multisample */ \
+    USE_GL_FUNC(PGLFNRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC,         glRenderbufferStorageMultisampleEXT,        EXT_FRAMEBUFFER_MULTISAMPLE, NULL )\
     /* GL_EXT_paletted_texture */ \
     USE_GL_FUNC(PGLFNGLCOLORTABLEEXTPROC,                           glColorTableEXT,                            EXT_PALETTED_TEXTURE,   NULL )\
     /* GL_EXT_point_parameters */ \
@@ -3665,11 +3673,6 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(PGLFNISFENCEAPPLEPROC,                              glIsFenceAPPLE,                             APPLE_FENCE,            NULL )\
     USE_GL_FUNC(PGLFNTESTOBJECTAPPLEPROC,                           glTestObjectAPPLE,                          APPLE_FENCE,            NULL )\
     USE_GL_FUNC(PGLFNFINISHOBJECTAPPLEPROC,                         glFinishObjectAPPLE,                        APPLE_FENCE,            NULL )\
-    /* GL_ATI_envmap_bumpmap */ \
-    USE_GL_FUNC(PGLFNTEXBUMPPARAMETERIVATIPROC,                     glTexBumpParameterivATI,                    ATI_ENVMAP_BUMPMAP,     NULL )\
-    USE_GL_FUNC(PGLFNTEXBUMPPARAMETERFVATIPROC,                     glTexBumpParameterfvATI,                    ATI_ENVMAP_BUMPMAP,     NULL )\
-    USE_GL_FUNC(PGLFNGETTEXBUMPPARAMETERIVATIPROC,                  glGetTexBumpParameterivATI,                 ATI_ENVMAP_BUMPMAP,     NULL )\
-    USE_GL_FUNC(PGLFNGETTEXBUMPPARAMETERFVATIPROC,                  glGetTexBumpParameterfvATI,                 ATI_ENVMAP_BUMPMAP,     NULL )\
     /* GLX_SGI_video_sync */ \
     USE_GL_FUNC(PGLXFNGETVIDEOSYNCSGIPROC,                          glXGetVideoSyncSGI,                         SGI_VIDEO_SYNC,         NULL )\
     USE_GL_FUNC(PGLXFNWAITVIDEOSYNCSGIPROC,                         glXWaitVideoSyncSGI,                        SGI_VIDEO_SYNC,         NULL )\
@@ -3806,7 +3809,7 @@ typedef BOOL (WINAPI * WINED3D_PFNWGLSETPIXELFORMATWINE) (HDC hdc, int iPixelFor
 
 
 /****************************************************
- * Structures       
+ * Structures
  ****************************************************/
 
 typedef struct {
@@ -3837,7 +3840,7 @@ typedef struct _WineD3D_GL_Info {
   DWORD  driver_version_hipart;
   CHAR   gl_renderer[255];
   /**
-   * CAPS Constants 
+   * CAPS Constants
    */
   UINT   max_buffers;
   UINT   max_lights;

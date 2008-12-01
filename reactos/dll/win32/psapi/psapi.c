@@ -42,7 +42,7 @@ typedef struct _ENUM_DEVICE_DRIVERS_CONTEXT
   DWORD nTotal;
 } ENUM_DEVICE_DRIVERS_CONTEXT, *PENUM_DEVICE_DRIVERS_CONTEXT;
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 EnumDeviceDriversCallback(IN PRTL_PROCESS_MODULE_INFORMATION CurrentModule,
                           IN OUT PVOID CallbackContext)
 {
@@ -70,7 +70,7 @@ typedef struct _ENUM_PROCESSES_CONTEXT
   DWORD nCount;
 } ENUM_PROCESSES_CONTEXT, *PENUM_PROCESSES_CONTEXT;
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 EnumProcessesCallback(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
                       IN OUT PVOID CallbackContext)
 {
@@ -100,7 +100,7 @@ typedef struct _ENUM_PROCESS_MODULES_CONTEXT
   DWORD nTotal;
 } ENUM_PROCESS_MODULES_CONTEXT, *PENUM_PROCESS_MODULES_CONTEXT;
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 EnumProcessModulesCallback(IN HANDLE ProcessHandle,
                            IN PLDR_DATA_TABLE_ENTRY CurrentModule,
                            IN OUT PVOID CallbackContext)
@@ -140,7 +140,7 @@ typedef struct _GET_DEVICE_DRIVER_NAME_CONTEXT
   };
 } GET_DEVICE_DRIVER_NAME_CONTEXT, *PGET_DEVICE_DRIVER_NAME_CONTEXT;
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 GetDeviceDriverNameCallback(IN PRTL_PROCESS_MODULE_INFORMATION CurrentModule,
                             IN OUT PVOID CallbackContext)
 {
@@ -384,7 +384,7 @@ typedef struct _GET_MODULE_INFORMATION_CONTEXT
   };
 } GET_MODULE_INFORMATION_CONTEXT, *PGET_MODULE_INFORMATION_CONTEXT;
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 GetModuleInformationCallback(IN HANDLE ProcessHandle,
                              IN PLDR_DATA_TABLE_ENTRY CurrentModule,
                              IN OUT PVOID CallbackContext)
@@ -628,7 +628,7 @@ InternalAnsiPageFileCallback(LPVOID pContext,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EmptyWorkingSet(HANDLE hProcess)
 {
   QUOTA_LIMITS QuotaLimits;
@@ -670,7 +670,7 @@ EmptyWorkingSet(HANDLE hProcess)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDeviceDrivers(LPVOID *lpImageBase,
                   DWORD cb,
                   LPDWORD lpcbNeeded)
@@ -703,7 +703,7 @@ EnumDeviceDrivers(LPVOID *lpImageBase,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumProcesses(DWORD *lpidProcess,
               DWORD cb,
               LPDWORD lpcbNeeded)
@@ -741,7 +741,7 @@ EnumProcesses(DWORD *lpidProcess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumProcessModules(HANDLE hProcess,
                    HMODULE *lphModule,
                    DWORD cb,
@@ -775,7 +775,7 @@ EnumProcessModules(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetDeviceDriverBaseNameA(LPVOID ImageBase,
                          LPSTR lpBaseName,
                          DWORD nSize)
@@ -788,7 +788,7 @@ GetDeviceDriverBaseNameA(LPVOID ImageBase,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetDeviceDriverFileNameA(LPVOID ImageBase,
                          LPSTR lpFilename,
                          DWORD nSize)
@@ -801,7 +801,7 @@ GetDeviceDriverFileNameA(LPVOID ImageBase,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetDeviceDriverBaseNameW(LPVOID ImageBase,
                          LPWSTR lpBaseName,
                          DWORD nSize)
@@ -814,7 +814,7 @@ GetDeviceDriverBaseNameW(LPVOID ImageBase,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetDeviceDriverFileNameW(LPVOID ImageBase,
                          LPWSTR lpFilename,
                          DWORD nSize)
@@ -827,7 +827,7 @@ GetDeviceDriverFileNameW(LPVOID ImageBase,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetMappedFileNameA(HANDLE hProcess,
                    LPVOID lpv,
                    LPSTR lpFilename,
@@ -841,7 +841,7 @@ GetMappedFileNameA(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetMappedFileNameW(HANDLE hProcess,
                    LPVOID lpv,
                    LPWSTR lpFilename,
@@ -855,7 +855,7 @@ GetMappedFileNameW(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetModuleBaseNameA(HANDLE hProcess,
                    HMODULE hModule,
                    LPSTR lpBaseName,
@@ -870,7 +870,7 @@ GetModuleBaseNameA(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetModuleBaseNameW(HANDLE hProcess,
                    HMODULE hModule,
                    LPWSTR lpBaseName,
@@ -885,7 +885,7 @@ GetModuleBaseNameW(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetModuleFileNameExA(HANDLE hProcess,
                      HMODULE hModule,
                      LPSTR lpFilename,
@@ -900,7 +900,7 @@ GetModuleFileNameExA(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetModuleFileNameExW(HANDLE hProcess,
                      HMODULE hModule,
                      LPWSTR lpFilename,
@@ -915,7 +915,7 @@ GetModuleFileNameExW(HANDLE hProcess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetModuleInformation(HANDLE hProcess,
                      HMODULE hModule,
                      LPMODULEINFO lpmodinfo,
@@ -936,7 +936,7 @@ GetModuleInformation(HANDLE hProcess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 InitializeProcessForWsWatch(HANDLE hProcess)
 {
   NTSTATUS Status;
@@ -959,7 +959,7 @@ InitializeProcessForWsWatch(HANDLE hProcess)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetWsChanges(HANDLE hProcess,
              PPSAPI_WS_WATCH_INFORMATION lpWatchInfo,
              DWORD cb)
@@ -985,7 +985,7 @@ GetWsChanges(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetProcessImageFileNameW(HANDLE hProcess,
                          LPWSTR lpImageFileName,
                          DWORD nSize)
@@ -1034,7 +1034,7 @@ GetProcessImageFileNameW(HANDLE hProcess,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetProcessImageFileNameA(HANDLE hProcess,
                          LPSTR lpImageFileName,
                          DWORD nSize)
@@ -1090,7 +1090,7 @@ GetProcessImageFileNameA(HANDLE hProcess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPageFilesA(PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine,
                LPVOID lpContext)
 {
@@ -1107,7 +1107,7 @@ EnumPageFilesA(PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
                LPVOID lpContext)
 {
@@ -1195,7 +1195,7 @@ EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetPerformanceInfo(PPERFORMANCE_INFORMATION pPerformanceInformation,
                    DWORD cb)
 {
@@ -1319,7 +1319,7 @@ GetPerformanceInfo(PPERFORMANCE_INFORMATION pPerformanceInformation,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetProcessMemoryInfo(HANDLE Process,
                      PPROCESS_MEMORY_COUNTERS ppsmemCounters,
                      DWORD cb)
@@ -1332,12 +1332,12 @@ GetProcessMemoryInfo(HANDLE Process,
      similar so we can return the proper error codes when bad pointers are passed
      to this function! */
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     if(cb < sizeof(PROCESS_MEMORY_COUNTERS))
     {
       SetLastError(ERROR_INSUFFICIENT_BUFFER);
-      _SEH_LEAVE;
+      _SEH2_LEAVE;
     }
 
     /* ppsmemCounters->cb isn't checked at all! */
@@ -1350,7 +1350,7 @@ GetProcessMemoryInfo(HANDLE Process,
     if(!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
-      _SEH_LEAVE;
+      _SEH2_LEAVE;
     }
 
     /* fill the structure with the collected information, in case of bad pointers
@@ -1368,11 +1368,11 @@ GetProcessMemoryInfo(HANDLE Process,
 
     Ret = TRUE;
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    SetLastErrorByStatus(_SEH_GetExceptionCode());
+    SetLastErrorByStatus(_SEH2_GetExceptionCode());
   }
-  _SEH_END;
+  _SEH2_END;
 
   return Ret;
 }
@@ -1382,7 +1382,7 @@ GetProcessMemoryInfo(HANDLE Process,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 QueryWorkingSet(HANDLE hProcess,
                 PVOID pv,
                 DWORD cb)

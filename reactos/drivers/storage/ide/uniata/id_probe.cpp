@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2007 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2008 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_probe.cpp
@@ -76,7 +76,7 @@ UniataEnumBusMasterController__(
 VOID
 AtapiDoNothing(VOID)
 {
-    //ULONG i = 0;
+    ULONG i = 0;
     return;
 } // end AtapiDoNothing()
 
@@ -504,8 +504,8 @@ UniataEnumBusMasterController__(
 /*                        if(known) {
                             RtlCopyMemory(newBMListPtr, (PVOID)&(BusMasterAdapters[i]), sizeof(BUSMASTER_CONTROLLER_INFORMATION));
                         } else {*/
-                        sprintf((PCHAR)vendorStrPtr, "%4.4x", (UINT)VendorID);
-                        sprintf((PCHAR)deviceStrPtr, "%4.4x", (UINT)DeviceID);
+                        sprintf((PCHAR)vendorStrPtr, "%4.4x", VendorID);
+                        sprintf((PCHAR)deviceStrPtr, "%4.4x", DeviceID);
 
                         RtlCopyMemory(&(newBMListPtr->VendorIdStr), (PCHAR)vendorStrPtr, 4);
                         RtlCopyMemory(&(newBMListPtr->DeviceIdStr), (PCHAR)deviceStrPtr, 4);
@@ -768,6 +768,44 @@ UniataFindCompatBusMasterController2(
         );
 } // end UniataFindCompatBusMasterController2()
 
+BOOLEAN
+UniataAllocateLunExt(
+    PHW_DEVICE_EXTENSION  deviceExtension,
+    ULONG NewNumberChannels
+    )
+{
+    PHW_LU_EXTENSION old_luns = NULL;
+    PHW_CHANNEL old_chans = NULL;
+
+    KdPrint2((PRINT_PREFIX "allocate Luns for %d channels\n", deviceExtension->NumberChannels));
+
+    old_luns = deviceExtension->lun;
+    old_chans = deviceExtension->chan;
+
+    if(old_luns || old_chans) {
+        if(NewNumberChannels == UNIATA_ALLOCATE_NEW_LUNS) {
+            KdPrint2((PRINT_PREFIX "already allocated!\n"));
+            return FALSE;
+        }
+    }
+
+    deviceExtension->lun = (PHW_LU_EXTENSION)ExAllocatePool(NonPagedPool, sizeof(HW_LU_EXTENSION) * (deviceExtension->NumberChannels+1) * IDE_MAX_LUN_PER_CHAN);
+    if (!deviceExtension->lun) {
+        KdPrint2((PRINT_PREFIX "!deviceExtension->lun => SP_RETURN_ERROR\n"));
+        return FALSE;
+    }
+    RtlZeroMemory(deviceExtension->lun, sizeof(HW_LU_EXTENSION) * (deviceExtension->NumberChannels+1) * IDE_MAX_LUN_PER_CHAN);
+    
+    deviceExtension->chan = (PHW_CHANNEL)ExAllocatePool(NonPagedPool, sizeof(HW_CHANNEL) * (deviceExtension->NumberChannels+1));
+    if (!deviceExtension->chan) {
+        KdPrint2((PRINT_PREFIX "!deviceExtension->chan => SP_RETURN_ERROR\n"));
+        return FALSE;
+    }
+    RtlZeroMemory(deviceExtension->chan, sizeof(HW_CHANNEL) * (deviceExtension->NumberChannels+1));
+    return TRUE;
+} // end UniataAllocateLunExt()
+
+
 /*++
 
 Routine Description:
@@ -861,6 +899,8 @@ UniataFindBusMasterController(
 
     KdPrint2((PRINT_PREFIX "UniataFindBusMasterController: Context=%x, BMListLen=%d\n", Context, BMListLen));
 
+    KdPrint2((PRINT_PREFIX "ConfigInfo->Length %x\n", ConfigInfo->Length));
+
     if(ForceSimplex) {
         KdPrint2((PRINT_PREFIX "ForceSimplex (1)\n"));
         simplexOnly = TRUE;
@@ -893,7 +933,7 @@ UniataFindBusMasterController(
             i &= ~0x80000000;
             if(i >= BMListLen) {
                 KdPrint2((PRINT_PREFIX " => SP_RETURN_NOT_FOUND\n"));
-                return(SP_RETURN_NOT_FOUND);
+                goto exit_notfound;
             }
         }
         BMList[i].channel = (UCHAR)channel;
@@ -933,13 +973,13 @@ UniataFindBusMasterController(
 #ifndef UNIATA_CORE
     if (busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH) {
         KdPrint2((PRINT_PREFIX "busDataRead < PCI_COMMON_HDR_LENGTH => SP_RETURN_ERROR\n"));
-        return SP_RETURN_ERROR;
+        goto exit_error;
     }
 
     KdPrint2((PRINT_PREFIX "busDataRead\n"));
     if (pciData.VendorID == PCI_INVALID_VENDORID) {
         KdPrint2((PRINT_PREFIX "PCI_INVALID_VENDORID\n"));
-        return SP_RETURN_ERROR;
+        goto exit_error;
     }
 #endif //UNIATA_CORE
 
@@ -964,7 +1004,7 @@ UniataFindBusMasterController(
 
     if(BaseClass != PCI_DEV_CLASS_STORAGE) {
         KdPrint2((PRINT_PREFIX "BaseClass != PCI_DEV_CLASS_STORAGE => SP_RETURN_NOT_FOUND\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     KdPrint2((PRINT_PREFIX "Storage Class\n"));
@@ -973,13 +1013,13 @@ UniataFindBusMasterController(
     if(VendorID != BMList[i].nVendorId ||
        DeviceID != BMList[i].nDeviceId) {
         KdPrint2((PRINT_PREFIX "device not suitable\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     found = UniataCheckPCISubclass(BMList[i].Known, BMList[i].RaidFlags, SubClass);
     if(!found) {
         KdPrint2((PRINT_PREFIX "Subclass not supported\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     ConfigInfo->AlignmentMask = 0x00000003;
@@ -1017,7 +1057,7 @@ UniataFindBusMasterController(
     KdPrint2((PRINT_PREFIX "HwFlags = %x\n (1)", deviceExtension->HwFlags));
     if(!found) {
         KdPrint2((PRINT_PREFIX "!found => SP_RETURN_NOT_FOUND\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     KdPrint2((PRINT_PREFIX "HwFlags = %x\n (2)", deviceExtension->HwFlags));
@@ -1050,11 +1090,11 @@ UniataFindBusMasterController(
         } else {
             if((channel==0) && ConfigInfo->AtdiskPrimaryClaimed) {
                 KdPrint2((PRINT_PREFIX "Error: Primary channel already claimed by another driver\n"));
-                return(SP_RETURN_NOT_FOUND);
+                goto exit_notfound;
             }
             if((channel==1) && ConfigInfo->AtdiskSecondaryClaimed) {
                 KdPrint2((PRINT_PREFIX "Error: Secondary channel already claimed by another driver\n"));
-                return(SP_RETURN_NOT_FOUND);
+                goto exit_notfound;
             }
         }
     }
@@ -1274,12 +1314,14 @@ UniataFindBusMasterController(
 
     if((WinVer_Id() >= WinVer_NT) ||
        (ConfigInfo->Length >= sizeof(_ConfigInfo->comm) + sizeof(_ConfigInfo->nt4))) {
+        KdPrint2((PRINT_PREFIX "update ConfigInfo->nt4\n"));
         _ConfigInfo->nt4.DeviceExtensionSize         = sizeof(HW_DEVICE_EXTENSION);
         _ConfigInfo->nt4.SpecificLuExtensionSize     = sizeof(HW_LU_EXTENSION);
         _ConfigInfo->nt4.SrbExtensionSize            = sizeof(ATA_REQ);
     }
     if((WinVer_Id() > WinVer_2k) ||
        (ConfigInfo->Length >= sizeof(_ConfigInfo->comm) + sizeof(_ConfigInfo->nt4) + sizeof(_ConfigInfo->w2k))) {
+        KdPrint2((PRINT_PREFIX "update ConfigInfo->w2k\n"));
         _ConfigInfo->w2k.Dma64BitAddresses           = 0;
         _ConfigInfo->w2k.ResetTargetSupported        = TRUE;
         _ConfigInfo->w2k.MaximumNumberOfLogicalUnits = 2;
@@ -1317,7 +1359,7 @@ UniataFindBusMasterController(
 
         if(AltInit) {
             // I'm sorry, I have to do this
-            // when Win doesn't
+            // when Win doesn't 
 
             if(ConfigInfo->AdapterInterfaceType == Isa /*&&
 //               InDriverEntry*/) {
@@ -1526,7 +1568,7 @@ UniataFindBusMasterController(
             // Search for devices on this controller.
             if (!skip_find_dev &&
                 FindDevices(HwDeviceExtension,
-                        FALSE,
+                        0,
                         c)) {
                 KdPrint2((PRINT_PREFIX "Found some devices\n"));
                 found = TRUE;
@@ -1592,7 +1634,7 @@ exit_findbm:
                                    BaseIoAddressBM_0);
 
         KdPrint2((PRINT_PREFIX "return SP_RETURN_NOT_FOUND\n"));
-        return SP_RETURN_NOT_FOUND;
+        goto exit_notfound;
     } else {
 
         KdPrint2((PRINT_PREFIX "exit: init spinlock\n"));
@@ -1641,6 +1683,16 @@ exit_findbm:
 
     ConfigInfo->NumberOfBuses++; // add virtual channel for communication port
     return SP_RETURN_FOUND;
+
+exit_error:
+    if (deviceExtension->lun) ExFreePool(deviceExtension->lun);
+    if (deviceExtension->chan) ExFreePool(deviceExtension->chan);
+    return SP_RETURN_ERROR;
+    
+exit_notfound:
+    ExFreePool(deviceExtension->lun);
+    ExFreePool(deviceExtension->chan);
+    return SP_RETURN_NOT_FOUND;
 
 } // end UniataFindBusMasterController()
 
@@ -1713,7 +1765,7 @@ UniataFindFakeBusMasterController(
         }
         if(i >= BMListLen) {
             KdPrint2((PRINT_PREFIX "unexpected device arrival => SP_RETURN_NOT_FOUND\n"));
-            return(SP_RETURN_NOT_FOUND);
+            goto exit_notfound;
         }
     }
 
@@ -1747,13 +1799,13 @@ UniataFindFakeBusMasterController(
 
     if (busDataRead < PCI_COMMON_HDR_LENGTH) {
         KdPrint2((PRINT_PREFIX "busDataRead < PCI_COMMON_HDR_LENGTH => SP_RETURN_ERROR\n"));
-        return SP_RETURN_ERROR;
+        goto exit_error;
     }
 
     KdPrint2((PRINT_PREFIX "busDataRead\n"));
     if (pciData.VendorID == PCI_INVALID_VENDORID) {
         KdPrint2((PRINT_PREFIX "PCI_INVALID_VENDORID\n"));
-        return SP_RETURN_ERROR;
+        goto exit_error;
     }
 
     VendorID  = pciData.VendorID;
@@ -1777,7 +1829,7 @@ UniataFindFakeBusMasterController(
 
     if(BaseClass != PCI_DEV_CLASS_STORAGE) {
         KdPrint2((PRINT_PREFIX "BaseClass != PCI_DEV_CLASS_STORAGE => SP_RETURN_NOT_FOUND\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     KdPrint2((PRINT_PREFIX "Storage Class\n"));
@@ -1786,13 +1838,13 @@ UniataFindFakeBusMasterController(
     if(VendorID != BMList[i].nVendorId ||
        DeviceID != BMList[i].nDeviceId) {
         KdPrint2((PRINT_PREFIX "device not suitable\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     if((BMList[i].RaidFlags & UNIATA_RAID_CONTROLLER) &&
         SkipRaids) {
         KdPrint2((PRINT_PREFIX "RAID support disabled\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     switch(SubClass) {
@@ -1804,7 +1856,7 @@ UniataFindFakeBusMasterController(
         break;
     default:
         KdPrint2((PRINT_PREFIX "Subclass not supported\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     ConfigInfo->AlignmentMask = 0x00000003;
@@ -1842,7 +1894,7 @@ UniataFindFakeBusMasterController(
     KdPrint2((PRINT_PREFIX "HwFlags = %x\n (1)", deviceExtension->HwFlags));
     if(!found) {
         KdPrint2((PRINT_PREFIX "!found => SP_RETURN_NOT_FOUND\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     KdPrint2((PRINT_PREFIX "HwFlags = %x\n (2)", deviceExtension->HwFlags));
@@ -1868,16 +1920,16 @@ UniataFindFakeBusMasterController(
         deviceExtension->NumberChannels = 1;
     } else {
         KdPrint2((PRINT_PREFIX "!MasterDev => SP_RETURN_NOT_FOUND\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     if(deviceExtension->AltRegMap) {
         KdPrint2((PRINT_PREFIX "  Non-standard registers layout => SP_RETURN_NOT_FOUND\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
     if(IsBusMaster(&pciData)) {
         KdPrint2((PRINT_PREFIX "  !BusMaster => SP_RETURN_NOT_FOUND\n"));
-        return(SP_RETURN_NOT_FOUND);
+        goto exit_notfound;
     }
 
     KdPrint2((PRINT_PREFIX "IsBusMaster == TRUE\n"));
@@ -1959,6 +2011,16 @@ exit_findbm:
     //PrintNtConsole("return SP_RETURN_FOUND, de %#x, c0.lun0 %#x\n", deviceExtension, deviceExtension->chan[0].lun[0]);
 
     return SP_RETURN_FOUND;
+    
+exit_error:
+    if (deviceExtension->lun) ExFreePool(deviceExtension->lun);
+    if (deviceExtension->chan) ExFreePool(deviceExtension->chan);
+    return SP_RETURN_ERROR;
+    
+exit_notfound:
+    ExFreePool(deviceExtension->lun);
+    ExFreePool(deviceExtension->chan);
+    return SP_RETURN_NOT_FOUND;
 
 } // end UniataFindFakeBusMasterController()
 
@@ -2143,7 +2205,7 @@ AtapiFindController(
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
-    PHW_CHANNEL          chan = &(deviceExtension->chan[0]);
+    PHW_CHANNEL          chan;
     PULONG               adapterCount    = (PULONG)Context;
     PUCHAR               ioSpace;
     ULONG                i;
@@ -2176,6 +2238,12 @@ AtapiFindController(
     KdPrint2((PRINT_PREFIX "  assume max PIO4\n"));
     deviceExtension->MaxTransferMode = ATA_PIO4;
     deviceExtension->NumberChannels = 1;
+
+    if(!UniataAllocateLunExt(deviceExtension, UNIATA_ALLOCATE_NEW_LUNS)) {
+        goto exit_error;
+    }
+
+    chan = &(deviceExtension->chan[0]);
 
     deviceExtension->AdapterInterfaceType =
     deviceExtension->OrigAdapterInterfaceType
@@ -2531,8 +2599,15 @@ not_found:
 
     KdPrint2((PRINT_PREFIX
                "AtapiFindController: return SP_RETURN_NOT_FOUND\n"));
+    ExFreePool(deviceExtension->lun);
+    ExFreePool(deviceExtension->chan);
     return(SP_RETURN_NOT_FOUND);
 
+exit_error:
+    if (deviceExtension->lun) ExFreePool(deviceExtension->lun);
+    if (deviceExtension->chan) ExFreePool(deviceExtension->chan);
+    return SP_RETURN_ERROR;
+    
 } // end AtapiFindController()
 
 BOOLEAN

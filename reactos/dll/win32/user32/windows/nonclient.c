@@ -54,10 +54,10 @@ VOID
 IntDrawScrollBar(HWND hWnd, HDC hDC, INT nBar);
 DWORD
 IntScrollHitTest(HWND hWnd, INT nBar, POINT pt, BOOL bDragging);
-HPEN STDCALL
+HPEN WINAPI
 GetSysColorPen(int nIndex);
 
-BOOL STDCALL GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
+BOOL WINAPI GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
 
 extern ATOM AtomInternalPos;
 
@@ -1058,7 +1058,7 @@ DefWndTrackScrollBar(HWND hWnd, WPARAM wParam, POINT Point)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AdjustWindowRectEx(LPRECT lpRect,
 		   DWORD dwStyle,
 		   BOOL bMenu,
@@ -1090,7 +1090,7 @@ AdjustWindowRectEx(LPRECT lpRect,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AdjustWindowRect(LPRECT lpRect,
 		 DWORD dwStyle,
 		 BOOL bMenu)
@@ -1114,7 +1114,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DrawCaptionTempW(
 		 HWND        hWnd,
 		 HDC         hDC,
@@ -1134,7 +1134,7 @@ DrawCaptionTempW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DrawCaptionTempA(
 		 HWND        hwnd,
 		 HDC         hdc,

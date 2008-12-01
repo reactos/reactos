@@ -7,7 +7,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<file>usp10.c</file>
-	<file>usp10.spec</file>
 	<library>wine</library>
 	<library>gdi32</library>
 	<library>kernel32</library>

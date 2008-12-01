@@ -20,7 +20,7 @@ extern BOOL onLiveCD;
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS STDCALL PortThreadRoutine(PVOID Param)
+NTSTATUS WINAPI PortThreadRoutine(PVOID Param)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 

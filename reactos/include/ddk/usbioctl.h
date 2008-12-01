@@ -237,7 +237,7 @@ typedef enum _USB_HUB_NODE {
 	UsbMIParent
 } USB_HUB_NODE;
 
-typedef VOID STDCALL
+typedef VOID NTAPI
 (*USB_IDLE_CALLBACK)(
   PVOID  Context);
 

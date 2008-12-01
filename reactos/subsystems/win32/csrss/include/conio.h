@@ -49,17 +49,17 @@ typedef struct tagCSRSS_SCREEN_BUFFER
 
 typedef struct tagCSRSS_CONSOLE_VTBL
 {
-  VOID (STDCALL *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  VOID (STDCALL *WriteStream)(PCSRSS_CONSOLE Console, RECT *Block, LONG CursorStartX, LONG CursorStartY,
+  VOID (WINAPI *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+  VOID (WINAPI *WriteStream)(PCSRSS_CONSOLE Console, RECT *Block, LONG CursorStartX, LONG CursorStartY,
                               UINT ScrolledLines, CHAR *Buffer, UINT Length);
-  VOID (STDCALL *DrawRegion)(PCSRSS_CONSOLE Console, RECT *Region);
-  BOOL (STDCALL *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  BOOL (STDCALL *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
+  VOID (WINAPI *DrawRegion)(PCSRSS_CONSOLE Console, RECT *Region);
+  BOOL (WINAPI *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+  BOOL (WINAPI *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
                                 UINT OldCursorX, UINT OldCursorY);
-  BOOL (STDCALL *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  BOOL (STDCALL *ChangeTitle)(PCSRSS_CONSOLE Console);
-  VOID (STDCALL *CleanupConsole)(PCSRSS_CONSOLE Console);
-  BOOL (STDCALL *ChangeIcon)(PCSRSS_CONSOLE Console, HICON hWindowIcon);
+  BOOL (WINAPI *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+  BOOL (WINAPI *ChangeTitle)(PCSRSS_CONSOLE Console);
+  VOID (WINAPI *CleanupConsole)(PCSRSS_CONSOLE Console);
+  BOOL (WINAPI *ChangeIcon)(PCSRSS_CONSOLE Console, HICON hWindowIcon);
 } CSRSS_CONSOLE_VTBL, *PCSRSS_CONSOLE_VTBL;
 
 typedef struct tagCSRSS_CONSOLE
@@ -87,9 +87,9 @@ typedef struct tagCSRSS_CONSOLE
 } CSRSS_CONSOLE;
 
 NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console);
-VOID STDCALL ConioDeleteConsole(Object_t *Object);
-VOID STDCALL ConioDeleteScreenBuffer(Object_t *Buffer);
-void STDCALL ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
+VOID WINAPI ConioDeleteConsole(Object_t *Object);
+VOID WINAPI ConioDeleteScreenBuffer(Object_t *Buffer);
+void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
 PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
 VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);

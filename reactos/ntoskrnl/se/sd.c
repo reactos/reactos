@@ -233,7 +233,7 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
         {
             SECURITY_QUALITY_OF_SERVICE SafeQos;
             
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead(ObjectAttributes,
                              sizeof(OBJECT_ATTRIBUTES),
@@ -273,11 +273,11 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
                     Status = STATUS_INVALID_PARAMETER;
                 }
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             
             if(NT_SUCCESS(Status))
             {
@@ -383,7 +383,7 @@ SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecur
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
                             IN KPROCESSOR_MODE CurrentMode,
                             IN POOL_TYPE PoolType,
@@ -405,7 +405,7 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
         {
             RtlZeroMemory(&DescriptorCopy, sizeof(DescriptorCopy));
             
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* first only probe and copy until the control field of the descriptor
                  to determine whether it's a self-relative descriptor */
@@ -418,7 +418,7 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
                 if(OriginalSecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
                 {
                     Status = STATUS_UNKNOWN_REVISION;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
                 
                 /* make a copy on the stack */
@@ -450,11 +450,11 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
                     DescriptorCopy.Dacl = OriginalSecurityDescriptor->Dacl;
                 }
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             
             if(!NT_SUCCESS(Status))
             {
@@ -536,7 +536,7 @@ SID *SidType = (SID*)DescriptorCopy.SidType;                             \
 if(CurrentMode != KernelMode)                                            \
 {                                                                        \
 /* securely access the buffers! */                                     \
-_SEH_TRY                                                               \
+_SEH2_TRY                                                               \
 {                                                                      \
 SidType##SAC = ProbeForReadUchar(&SidType->SubAuthorityCount);       \
 SidType##Size = RtlLengthRequiredSid(SidType##SAC);                  \
@@ -545,11 +545,11 @@ ProbeForRead(SidType,                                                \
 SidType##Size,                                          \
 sizeof(ULONG));                                         \
 }                                                                      \
-_SEH_HANDLE                                                            \
+_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)                                                            \
 {                                                                      \
-Status = _SEH_GetExceptionCode();                                    \
+Status = _SEH2_GetExceptionCode();                                    \
 }                                                                      \
-_SEH_END;                                                              \
+_SEH2_END;                                                              \
 \
 if(!NT_SUCCESS(Status))                                                \
 {                                                                      \
@@ -581,7 +581,7 @@ PACL AclType = (PACL)DescriptorCopy.AclType;                             \
 if(CurrentMode != KernelMode)                                            \
 {                                                                        \
 /* securely access the buffers! */                                     \
-_SEH_TRY                                                               \
+_SEH2_TRY                                                               \
 {                                                                      \
 AclType##Size = ProbeForReadUshort(&AclType->AclSize);               \
 DescriptorSize += ROUND_UP(AclType##Size, sizeof(ULONG));            \
@@ -589,11 +589,11 @@ ProbeForRead(AclType,                                                \
 AclType##Size,                                          \
 sizeof(ULONG));                                         \
 }                                                                      \
-_SEH_HANDLE                                                            \
+_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)                                                            \
 {                                                                      \
-Status = _SEH_GetExceptionCode();                                    \
+Status = _SEH2_GetExceptionCode();                                    \
 }                                                                      \
-_SEH_END;                                                              \
+_SEH2_END;                                                              \
 \
 if(!NT_SUCCESS(Status))                                                \
 {                                                                      \
@@ -631,7 +631,7 @@ DescriptorCopy.AclType = NULL;                                           \
             NewDescriptor->Sbz1 = DescriptorCopy.Sbz1;
             NewDescriptor->Control = DescriptorCopy.Control | SE_SELF_RELATIVE;
             
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* setup the offsets and copy the SIDs and ACLs to the new
                  self-relative security descriptor. Probing the pointers is not
@@ -684,11 +684,11 @@ Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
                 
 #undef CopyACL
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             
             if(NT_SUCCESS(Status))
             {
@@ -720,7 +720,7 @@ Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
                               IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
                               IN OUT PULONG Length,
@@ -858,7 +858,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
                             IN KPROCESSOR_MODE CurrentMode,
                             IN BOOLEAN CaptureIfKernelMode)
@@ -882,7 +882,7 @@ SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
                             IN PSECURITY_INFORMATION _SecurityInformation,
                             IN PSECURITY_DESCRIPTOR _SecurityDescriptor,
@@ -1073,7 +1073,7 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeSetSecurityDescriptorInfoEx(IN PVOID Object OPTIONAL,
                               IN PSECURITY_INFORMATION SecurityInformation,
                               IN PSECURITY_DESCRIPTOR ModificationDescriptor,
@@ -1095,7 +1095,7 @@ SeSetSecurityDescriptorInfoEx(IN PVOID Object OPTIONAL,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SeValidSecurityDescriptor(IN ULONG Length,
                           IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
 {
@@ -1231,7 +1231,7 @@ SeValidSecurityDescriptor(IN ULONG Length,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     PAGED_CODE();
@@ -1249,7 +1249,7 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
                    IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
                    OUT PSECURITY_DESCRIPTOR *NewDescriptor,
@@ -1267,7 +1267,7 @@ SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
                  PSECURITY_DESCRIPTOR _ExplicitDescriptor OPTIONAL,
                  PSECURITY_DESCRIPTOR *NewDescriptor,

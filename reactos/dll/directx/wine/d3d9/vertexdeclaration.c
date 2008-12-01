@@ -106,8 +106,16 @@ HRESULT vdecl_convert_fvf(
     if (has_blend && (num_blends > 0)) {
         if (((fvf & D3DFVF_XYZB5) == D3DFVF_XYZB2) && (fvf & D3DFVF_LASTBETA_D3DCOLOR))
             elements[idx].Type = D3DDECLTYPE_D3DCOLOR;
-        else
-            elements[idx].Type = D3DDECLTYPE_FLOAT1 + num_blends - 1;
+        else {
+            switch(num_blends) {
+                case 1: elements[idx].Type = D3DDECLTYPE_FLOAT1; break;
+                case 2: elements[idx].Type = D3DDECLTYPE_FLOAT2; break;
+                case 3: elements[idx].Type = D3DDECLTYPE_FLOAT3; break;
+                case 4: elements[idx].Type = D3DDECLTYPE_FLOAT4; break;
+                default:
+                    ERR("Unexpected amount of blend values: %u\n", num_blends);
+            }
+        }
         elements[idx].Usage = D3DDECLUSAGE_BLENDWEIGHT;
         elements[idx].UsageIndex = 0;
         idx++;
@@ -187,7 +195,7 @@ static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_QueryInterface(LPDIRECT3DV
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DVertexDeclaration9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DVertexDeclaration9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -204,7 +212,7 @@ static ULONG WINAPI IDirect3DVertexDeclaration9Impl_AddRef(LPDIRECT3DVERTEXDECLA
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
     if(ref == 1) {
-        IUnknown_AddRef(This->parentDevice);
+        IDirect3DDevice9Ex_AddRef(This->parentDevice);
     }
 
     return ref;
@@ -236,7 +244,7 @@ static ULONG WINAPI IDirect3DVertexDeclaration9Impl_Release(LPDIRECT3DVERTEXDECL
         if(!This->convFVF) {
             IDirect3DVertexDeclaration9Impl_Release(iface);
         }
-        IUnknown_Release(parentDevice);
+        IDirect3DDevice9Ex_Release(parentDevice);
     }
     return ref;
 }
@@ -374,7 +382,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateVertexDeclaration(LPDIRECT3DDEVICE9E
     } else {
         object->parentDevice = iface;
         *ppDecl = (LPDIRECT3DVERTEXDECLARATION9) object;
-        IUnknown_AddRef(*ppDecl);
+        IDirect3DVertexDeclaration9_AddRef(*ppDecl);
          TRACE("(%p) : Created vertex declaration %p\n", This, object);
     }
     return hr;

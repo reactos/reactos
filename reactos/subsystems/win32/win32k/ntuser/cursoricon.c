@@ -550,7 +550,7 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
  * @implemented
  */
 HANDLE
-STDCALL
+APIENTRY
 NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
 {
    PCURICON_OBJECT CurIcon;
@@ -629,7 +629,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetIconInfo(
    HANDLE hCurIcon,
    PICONINFO IconInfo,
@@ -673,7 +673,7 @@ NtUserGetIconInfo(
    ii.hbmColor = BITMAPOBJ_CopyBitmap(CurIcon->IconInfo.hbmColor);
 
    /* Copy fields */
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForWrite(IconInfo, sizeof(ICONINFO), 1);
        RtlCopyMemory(IconInfo, &ii, sizeof(ICONINFO));
@@ -696,11 +696,11 @@ NtUserGetIconInfo(
        }
 
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if (NT_SUCCESS(Status))
       Ret = TRUE;
@@ -722,7 +722,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-NTAPI
+APIENTRY
 NtUserGetIconSize(
     HANDLE hCurIcon,
     UINT istepIfAniCur,
@@ -741,18 +741,18 @@ NtUserGetIconSize(
       goto cleanup;
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForWrite(plcx, sizeof(LONG), 1);
        RtlCopyMemory(plcx, &CurIcon->Size.cx, sizeof(LONG));
        ProbeForWrite(plcy, sizeof(LONG), 1);
        RtlCopyMemory(plcy, &CurIcon->Size.cy, sizeof(LONG));
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if(NT_SUCCESS(Status))
       bRet = TRUE;
@@ -772,7 +772,7 @@ cleanup:
  * @unimplemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserGetCursorFrameInfo(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -789,7 +789,7 @@ NtUserGetCursorFrameInfo(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetCursorInfo(
    PCURSORINFO pci)
 {
@@ -863,7 +863,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserClipCursor(
    RECT *UnsafeRect)
 {
@@ -936,7 +936,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserDestroyCursor(
    HANDLE hCurIcon,
    DWORD Unknown)
@@ -978,7 +978,7 @@ CLEANUP:
  * @implemented
  */
 HICON
-STDCALL
+APIENTRY
 NtUserFindExistingCursorIcon(
    HMODULE hModule,
    HRSRC hRsrc,
@@ -1024,7 +1024,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserGetClipCursor(
    RECT *lpRect)
 {
@@ -1086,7 +1086,7 @@ CLEANUP:
  * @implemented
  */
 HCURSOR
-STDCALL
+APIENTRY
 NtUserSetCursor(
    HCURSOR hCursor)
 {
@@ -1138,7 +1138,7 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserSetCursorContents(
    HANDLE hCurIcon,
    PICONINFO UnsafeIconInfo)
@@ -1231,7 +1231,7 @@ CLEANUP:
  */
 #if 0
 BOOL
-NTAPI
+APIENTRY
 NtUserSetCursorIconData(
   HANDLE Handle,
   HMODULE hModule,
@@ -1264,7 +1264,7 @@ NtUserSetCursorIconData(
    CurIcon->hRsrc = NULL; //hRsrc;
    CurIcon->hGroupRsrc = NULL; //hGroupRsrc;
 
-   _SEH_TRY
+   _SEH2_TRY
    {
        ProbeForRead(pIconInfo, sizeof(ICONINFO), 1);
        RtlCopyMemory(&CurIcon->IconInfo, pIconInfo, sizeof(ICONINFO));
@@ -1296,11 +1296,11 @@ NtUserSetCursorIconData(
            GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
        }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if(!NT_SUCCESS(Status))
       SetLastNtError(Status);
@@ -1318,7 +1318,7 @@ CLEANUP:
 }
 #else
 BOOL
-STDCALL
+APIENTRY
 NtUserSetCursorIconData(
    HANDLE hCurIcon,
    PBOOL fIcon,
@@ -1405,7 +1405,7 @@ CLEANUP:
  * @unimplemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserSetSystemCursor(
    HCURSOR hcur,
    DWORD id)
@@ -1524,12 +1524,12 @@ UserDrawIconEx(
    if (istepIfAniCur)
       DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
 
-   if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
+   if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), (PVOID)&bmpMask))
    {
       return FALSE;
    }
 
-   if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
+   if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), (PVOID)&bmpColor))
    {
       return FALSE;
    }
@@ -1597,7 +1597,7 @@ UserDrawIconEx(
           DPRINT1("GDIOBJ_LockObj() failed!\n");
           goto cleanup;
       }
-      BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
+      BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (PVOID)&bm);
 
       if (bm.bmBitsPixel != 32)
         bAlpha = FALSE;
@@ -1696,7 +1696,7 @@ UserDrawIconEx(
             DPRINT1("GDIOBJ_LockObj() failed!\n");
             goto cleanup;
         }
-        BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
+        BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (PVOID)&bm);
 
         pBits = ExAllocatePoolWithTag(PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
         if (pBits == NULL)
@@ -1771,7 +1771,7 @@ cleanup:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserDrawIconEx(
    HDC hdc,
    int xLeft,
@@ -1817,7 +1817,7 @@ NtUserDrawIconEx(
 /* Called from NtUserCallOneParam with Routine ONEPARAM_ROUTINE_SHOWCURSOR
  * User32 macro NtUserShowCursor */
 int
-NTAPI
+APIENTRY
 UserShowCursor(BOOL bShow)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();

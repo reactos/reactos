@@ -34,7 +34,7 @@ BOOLEAN CheckDMA(PDEVICE_EXTENSION Device)
 #endif
 
 
-static IO_ALLOCATION_ACTION STDCALL SoundProgramDMA(
+static IO_ALLOCATION_ACTION NTAPI SoundProgramDMA(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID MapRegisterBase,

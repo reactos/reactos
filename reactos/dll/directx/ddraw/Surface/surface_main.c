@@ -66,7 +66,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
 
     DX_WINDBG_trace();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (IsEqualGUID(&IID_IDirectDrawSurface7, riid))
         {
@@ -76,7 +76,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &DirectDrawSurface7_Vtable;
@@ -91,7 +91,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &DirectDrawSurface4_Vtable;
@@ -106,7 +106,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &DirectDrawSurface3_Vtable;
@@ -121,7 +121,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &DirectDrawSurface2_Vtable;
@@ -136,7 +136,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &DirectDrawSurface_Vtable;
@@ -151,7 +151,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &DirectDrawColorControl_Vtable;
@@ -166,7 +166,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &DirectDrawGammaControl_Vtable;
@@ -181,7 +181,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &DirectDrawSurfaceKernel_Vtable;
@@ -196,7 +196,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &IDirect3D_Vtbl;
@@ -211,7 +211,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &IDirect3D2_Vtbl;
@@ -226,7 +226,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &IDirect3D3_Vtbl;
@@ -241,7 +241,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
             This->lpVtbl = &IDirect3D7_Vtbl;
@@ -254,10 +254,10 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
             retVal = E_NOINTERFACE;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
     return retVal;
 }
 

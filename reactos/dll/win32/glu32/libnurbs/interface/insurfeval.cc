@@ -1533,8 +1533,8 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
     }
   //clean up 
   free(leftXYZ);
-  free(leftXYZ);
-  free(rightNormal);
+  free(rightXYZ);
+  free(leftNormal);
   free(rightNormal);
 }
 

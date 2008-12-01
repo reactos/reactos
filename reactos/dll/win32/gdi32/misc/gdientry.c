@@ -1937,7 +1937,7 @@ DdReleaseDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
  * GDIEntry 9
  */
 HBITMAP
-STDCALL
+WINAPI
 DdCreateDIBSection(HDC hdc,
                    CONST BITMAPINFO *pbmi,
                    UINT iUsage,
@@ -1971,7 +1971,7 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
  * GDIEntry 11
  */
 BOOL
-STDCALL
+WINAPI
 DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
                  LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo)
 {
@@ -2004,7 +2004,7 @@ DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
  * GDIEntry 12
  */
 VOID
-STDCALL
+WINAPI
 DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
                   LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached)
 {
@@ -2019,7 +2019,7 @@ DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
  * GDIEntry 13
  */
 ULONG
-STDCALL
+WINAPI
 DdQueryDisplaySettingsUniqueness()
 {
  return GdiSharedHandleTable->flDeviceUniq;

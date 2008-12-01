@@ -186,6 +186,19 @@ RtlTimeFieldsToTime(
           TimeFields,
           sizeof(TIME_FIELDS));
 
+   if (TimeFields->Milliseconds < 0 || TimeFields->Milliseconds > 999 ||
+       TimeFields->Second < 0 || TimeFields->Second > 59 ||
+       TimeFields->Minute < 0 || TimeFields->Minute > 59 ||
+       TimeFields->Hour < 0 || TimeFields->Hour > 23 ||
+       TimeFields->Month < 1 || TimeFields->Month > 12 ||
+       TimeFields->Day < 1 ||
+       TimeFields->Day > MonthLengths[TimeFields->Month == 2 ||
+       IsLeapYear(TimeFields->Year)][TimeFields->Month - 1] ||
+       TimeFields->Year < 1601)
+   {
+       return FALSE;
+   }
+
    /* Normalize the TIME_FIELDS structure here */
    while (IntTimeFields.Second >= SECSPERMIN)
    {

@@ -450,7 +450,7 @@ IntCallDebugHook(
 
    if (lParam)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
           ProbeForRead((PVOID)lParam,
                        sizeof(DEBUGHOOKINFO),
@@ -459,11 +459,11 @@ IntCallDebugHook(
                   (PVOID)lParam,
                   sizeof(DEBUGHOOKINFO));
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
           BadChk = TRUE;
       }
-      _SEH_END;
+      _SEH2_END;
       if (BadChk)
       {
           DPRINT1("HOOK WH_DEBUG read from lParam ERROR!\n");
@@ -529,7 +529,7 @@ IntCallDebugHook(
 
    if (HooklParam)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
           ProbeForRead((PVOID)Debug.lParam,
                                       Size,
@@ -538,11 +538,11 @@ IntCallDebugHook(
                 (PVOID)Debug.lParam,
                                Size);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
           BadChk = TRUE;
       }
-      _SEH_END;
+      _SEH2_END;
       if (BadChk)
       {
           DPRINT1("HOOK WH_DEBUG read from Debug.lParam ERROR!\n");
@@ -579,7 +579,7 @@ UserCallNextHookEx(
      MOUSEHOOKSTRUCTEX Mouse;
      if (lParam)
      {
-        _SEH_TRY
+        _SEH2_TRY
         {
            ProbeForRead((PVOID)lParam,
                         sizeof(MOUSEHOOKSTRUCTEX),
@@ -588,11 +588,11 @@ UserCallNextHookEx(
                    (PVOID)lParam,
                    sizeof(MOUSEHOOKSTRUCTEX));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
            BadChk = TRUE;
         }
-        _SEH_END;
+        _SEH2_END;
         if (BadChk)
         {
             DPRINT1("HOOK WH_MOUSE read from lParam ERROR!\n");
@@ -612,7 +612,7 @@ UserCallNextHookEx(
          MSLLHOOKSTRUCT Mouse;
          if (lParam)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead((PVOID)lParam,
                              sizeof(MSLLHOOKSTRUCT),
@@ -621,11 +621,11 @@ UserCallNextHookEx(
                         (PVOID)lParam,
                         sizeof(MSLLHOOKSTRUCT));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk)
             {
                 DPRINT1("HOOK WH_MOUSE_LL read from lParam ERROR!\n");
@@ -643,7 +643,7 @@ UserCallNextHookEx(
          KBDLLHOOKSTRUCT Keyboard;
          if (lParam)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead((PVOID)lParam,
                              sizeof(KBDLLHOOKSTRUCT),
@@ -652,11 +652,11 @@ UserCallNextHookEx(
                         (PVOID)lParam,
                         sizeof(KBDLLHOOKSTRUCT));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk)
             {
                 DPRINT1("HOOK WH_KEYBORD_LL read from lParam ERROR!\n");
@@ -676,7 +676,7 @@ UserCallNextHookEx(
          MSG Msg;
          if (lParam)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                ProbeForRead((PVOID)lParam,
                                sizeof(MSG),
@@ -685,11 +685,11 @@ UserCallNextHookEx(
                      (PVOID)lParam,
                        sizeof(MSG));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
               BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk)
             {
                DPRINT1("HOOK WH_XMESSAGEX read from lParam ERROR!\n");
@@ -700,7 +700,7 @@ UserCallNextHookEx(
             lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)&Msg);
             if (lParam && (Hook->HookId == WH_GETMESSAGE))
             {
-               _SEH_TRY
+               _SEH2_TRY
                {
                   ProbeForWrite((PVOID)lParam,
                                   sizeof(MSG),
@@ -709,11 +709,11 @@ UserCallNextHookEx(
                                          &Msg,
                                   sizeof(MSG));
                }
-               _SEH_HANDLE
+               _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                {
                  BadChk = TRUE;
                }
-               _SEH_END;
+               _SEH2_END;
                if (BadChk)
                {
                   DPRINT1("HOOK WH_GETMESSAGE write to lParam ERROR!\n");
@@ -738,7 +738,7 @@ UserCallNextHookEx(
                DPRINT1("HOOK HCBT_MOVESIZE\n");
                if (lParam)
                {
-                  _SEH_TRY
+                  _SEH2_TRY
                   {
                       ProbeForRead((PVOID)lParam,
                                     sizeof(RECT),
@@ -747,11 +747,11 @@ UserCallNextHookEx(
                            (PVOID)lParam,
                             sizeof(RECT));
                   }
-                  _SEH_HANDLE
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
                      BadChk = TRUE;
                   }
-                  _SEH_END;
+                  _SEH2_END;
                   if (BadChk)
                   {
                       DPRINT1("HOOK HCBT_MOVESIZE read from lParam ERROR!\n");
@@ -770,7 +770,7 @@ UserCallNextHookEx(
                DPRINT1("HOOK HCBT_ACTIVATE\n");
                if (lParam)
                {
-                  _SEH_TRY
+                  _SEH2_TRY
                   {
                       ProbeForRead((PVOID)lParam,
                                    sizeof(CBTACTIVATESTRUCT),
@@ -779,11 +779,11 @@ UserCallNextHookEx(
                              (PVOID)lParam,
                              sizeof(CBTACTIVATESTRUCT));
                   }
-                  _SEH_HANDLE
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
                      BadChk = TRUE;
                   }
-                  _SEH_END;
+                  _SEH2_END;
                   if (BadChk)
                   {
                       DPRINT1("HOOK HCBT_ACTIVATE read from lParam ERROR!\n");
@@ -811,7 +811,7 @@ UserCallNextHookEx(
          EVENTMSG EventMsg;
          if (lParam)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead((PVOID)lParam,
                              sizeof(EVENTMSG),
@@ -820,11 +820,11 @@ UserCallNextHookEx(
                         (PVOID)lParam,
                         sizeof(EVENTMSG));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk)
             {
                 DPRINT1("HOOK WH_JOURNAL read from lParam ERROR!\n");
@@ -835,7 +835,7 @@ UserCallNextHookEx(
             lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)(lParam ? &EventMsg : NULL));
             if (lParam)
             {
-               _SEH_TRY
+               _SEH2_TRY
                {
                   ProbeForWrite((PVOID)lParam,
                                   sizeof(EVENTMSG),
@@ -844,11 +844,11 @@ UserCallNextHookEx(
                                          &EventMsg,
                                   sizeof(EVENTMSG));
                }
-               _SEH_HANDLE
+               _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                {
                  BadChk = TRUE;
                }
-               _SEH_END;
+               _SEH2_END;
                if (BadChk)
                {
                   DPRINT1("HOOK WH_JOURNAL write to lParam ERROR!\n");
@@ -878,7 +878,7 @@ UserCallNextHookEx(
 }
 
 LRESULT
-STDCALL
+APIENTRY
 NtUserCallNextHookEx(
    int Code,
    WPARAM wParam,
@@ -940,7 +940,7 @@ CLEANUP:
 }
 
 HHOOK
-STDCALL
+APIENTRY
 NtUserSetWindowsHookAW(
    int idHook, 
    HOOKPROC lpfn,
@@ -952,7 +952,7 @@ NtUserSetWindowsHookAW(
 }
 
 HHOOK
-STDCALL
+APIENTRY
 NtUserSetWindowsHookEx(
    HINSTANCE Mod,
    PUNICODE_STRING UnsafeModuleName,
@@ -1168,7 +1168,7 @@ CLEANUP:
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserUnhookWindowsHookEx(
    HHOOK Hook)
 {

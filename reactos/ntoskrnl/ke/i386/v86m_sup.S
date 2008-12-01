@@ -10,6 +10,7 @@
 
 #include <asm.h>
 #include <internal/i386/asmmacro.S>
+#undef LOCK
 .intel_syntax noprefix
 
 /* FIXME: Can we make a nice macro to generate V86 Opcode handlers? */
@@ -139,45 +140,17 @@ _Opcode0FV86:
     UNHANDLED_V86_OPCODE
 .endfunc
 
-.func OpcodeESPrefixV86
-_OpcodeESPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeCSPrefixV86
-_OpcodeCSPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeSSPrefixV86
-_OpcodeSSPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeDSPrefixV86
-_OpcodeDSPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeFSPrefixV86
-_OpcodeFSPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeGSPrefixV86
-_OpcodeGSPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeOPER32PrefixV86
-_OpcodeOPER32PrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeADDR32PrefixV86
-_OpcodeADDR32PrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
+GENERATE_PREFIX_HANDLER ES
+GENERATE_PREFIX_HANDLER CS
+GENERATE_PREFIX_HANDLER DS
+GENERATE_PREFIX_HANDLER FS
+GENERATE_PREFIX_HANDLER GS
+GENERATE_PREFIX_HANDLER SS
+GENERATE_PREFIX_HANDLER OPER32
+GENERATE_PREFIX_HANDLER ADDR32
+GENERATE_PREFIX_HANDLER LOCK
+GENERATE_PREFIX_HANDLER REP
+GENERATE_PREFIX_HANDLER REPNE
 
 .func OpcodeINSBV86
 _OpcodeINSBV86:
@@ -224,7 +197,7 @@ _OpcodePUSHFV86:
     sub dx, 2
 
     /* Check if there is an OPER32 prefix */
-    test ebx, 0x4000
+    test ebx, PREFIX_FLAG_OPER32
     jnz SkipPrefix
 
     /* Push EFLAGS */
@@ -264,7 +237,7 @@ _OpcodePOPFV86:
     add edx, 4
 
     /* Check for OPER32 prefix */
-    test ebx, 0x4000
+    test ebx, PREFIX_FLAG_OPER32
     jnz NoPrefix
 
     /* Skip 2 bytes */
@@ -431,7 +404,7 @@ _OpcodeIRETV86:
     add ecx, edx
 
     /* Check for OPER32 prefix */
-    test ebx, 0x4000
+    test ebx, PREFIX_FLAG_OPER32
     jnz Iret32
 
     /* Get flat IP */
@@ -576,21 +549,6 @@ _OpcodeOUTWV86:
     UNHANDLED_V86_OPCODE
 .endfunc
 
-.func OpcodeLOCKPrefixV86
-_OpcodeLOCKPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeREPNEPrefixV86
-_OpcodeREPNEPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
-.func OpcodeREPPrefixV86
-_OpcodeREPPrefixV86:
-    UNHANDLED_V86_OPCODE
-.endfunc
-
 .func OpcodeCLIV86
 _OpcodeCLIV86:
 
@@ -631,6 +589,23 @@ _OpcodeSTIV86:
     /* Return success */
     mov eax, 1
     ret
+.endfunc
+
+.func OpcodeGenericPrefixV86
+_OpcodeGenericPrefixV86:
+
+    /* Skip instruction */
+    inc esi
+    inc edi
+    
+    /* Get the instruction */
+    movzx ecx, byte ptr [esi]
+    
+    /* Get the opcode index */
+    movzx edx, byte ptr OpcodeIndex[ecx]
+    
+    /* Dispatch it */
+    jmp OpcodeDispatchV86[edx*4]
 .endfunc
 
 .func OpcodeHLTV86

@@ -44,22 +44,20 @@ extern int is_object(const attr_list_t *list);
 extern int is_local(const attr_list_t *list);
 extern int need_stub(const type_t *iface);
 extern int need_proxy(const type_t *iface);
-extern int need_stub_files(const ifref_list_t *ifaces);
-extern int need_proxy_file(const ifref_list_t *ifaces);
+extern int need_stub_files(const statement_list_t *stmts);
+extern int need_proxy_file(const statement_list_t *stmts);
 extern const var_t *is_callas(const attr_list_t *list);
 extern void write_args(FILE *h, const var_list_t *arg, const char *name, int obj, int do_indent);
 extern void write_array(FILE *h, array_dims_t *v, int field);
+extern void write_import(const char *fname);
 extern void write_forward(type_t *iface);
 extern void write_interface(type_t *iface);
-extern void write_dispinterface(type_t *iface);
 extern void write_locals(FILE *fp, const type_t *iface, int body);
 extern void write_coclass(type_t *cocl);
 extern void write_coclass_forward(type_t *cocl);
 extern void write_typedef(type_t *type);
-extern void write_expr(FILE *h, const expr_t *e, int brackets);
-extern void write_constdef(const var_t *v);
-extern void write_externdef(const var_t *v);
-extern void write_library(const char *name, const attr_list_t *attr);
+extern void write_declaration(const var_t *v, int is_in_interface);
+extern void write_library(const typelib_t *typelib);
 extern void write_user_types(void);
 extern void write_context_handle_rundowns(void);
 extern void write_generic_handle_routines(void);
@@ -70,6 +68,7 @@ extern const var_t* get_context_handle_var(const func_t* func);
 extern int has_out_arg_or_return(const func_t *func);
 extern void write_guid(FILE *f, const char *guid_prefix, const char *name,
                        const UUID *uuid);
+extern int is_const_decl(const var_t *var);
 
 static inline int last_ptr(const type_t *type)
 {

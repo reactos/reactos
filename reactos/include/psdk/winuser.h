@@ -1,8 +1,5 @@
 #ifndef _WINUSER_H
 #define _WINUSER_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -1645,6 +1642,7 @@ extern "C" {
 #define WM_MEASUREITEM 44
 #if (WINVER >= 0x0500)
 #define WM_MENURBUTTONUP 290
+#define WM_UNINITMENUPOPUP 293
 #endif
 #define WM_MENUCHAR 288
 #define WM_MENUCOMMAND 294
@@ -1779,14 +1777,6 @@ extern "C" {
 #define WM_CHANGEUISTATE 295
 #define WM_UPDATEUISTATE 296
 #define WM_QUERYUISTATE 297
-#define UIS_SET 1
-#define UIS_CLEAR 2
-#define UIS_INITIALIZE 3
-#define UISF_HIDEFOCUS 1
-#define UISF_HIDEACCEL 2
-#if(_WIN32_WINNT >= 0x0501)
-#define UISF_ACTIVE 4
-#endif /* _WIN32_WINNT >= 0x0501 */
 #endif /* _WIN32_WINNT >= 0x0500 */
 #endif /* _WIN32_WCE */
 #define BM_CLICK 245
@@ -2470,14 +2460,10 @@ extern "C" {
 #define HBMMENU_POPUP_RESTORE ((HBITMAP)9)
 #define HBMMENU_POPUP_MAXIMIZE ((HBITMAP)10)
 #define HBMMENU_POPUP_MINIMIZE ((HBITMAP)11)
-#define MOD_ALT 1
-#define MOD_CONTROL 2
-#define MOD_SHIFT 4
-#define MOD_WIN 8
-#define MOD_IGNORE_ALL_MODIFIER 1024
-#define MOD_ON_KEYUP  2048
-#define MOD_RIGHT 16384
-#define MOD_LEFT 32768
+#define MOD_ALT         0x0001
+#define MOD_CONTROL     0x0002
+#define MOD_SHIFT       0x0004
+#define MOD_WIN         0x0008
 #define LLKHF_EXTENDED 0x00000001
 #define LLKHF_INJECTED 0x00000010
 #define LLKHF_ALTDOWN  0x00000020
@@ -2643,10 +2629,10 @@ extern "C" {
 #define RIM_TYPEMOUSE    0x00000000
 #define RIM_TYPEKEYBOARD 0x00000001
 #define RIM_TYPEHID      0x00000002
-#define MOUSE_MOVE_RELATIVE      0x00000000
-#define MOUSE_MOVE_ABSOLUTE      0x00000001
-#define MOUSE_VIRTUAL_DESKTOP    0x00000002
-#define MOUSE_ATTRIBUTES_CHANGED 0x00000004
+#define MOUSE_MOVE_RELATIVE               0
+#define MOUSE_MOVE_ABSOLUTE               1
+#define MOUSE_VIRTUAL_DESKTOP             0x02
+#define MOUSE_ATTRIBUTES_CHANGED          0x04
 #define RI_MOUSE_LEFT_BUTTON_DOWN   0x0001
 #define RI_MOUSE_LEFT_BUTTON_UP     0x0002
 #define RI_MOUSE_RIGHT_BUTTON_DOWN  0x0004
@@ -2664,7 +2650,7 @@ extern "C" {
 #define RI_MOUSE_BUTTON_5_DOWN      0x0100
 #define RI_MOUSE_BUTTON_5_UP        0x0200
 #define RI_MOUSE_WHEEL              0x0400
-#define KEYBOARD_OVERRUN_MAKE_CODE 0x00ff
+#define KEYBOARD_OVERRUN_MAKE_CODE 0xFF
 #define RI_KEY_MAKE            0x0000
 #define RI_KEY_BREAK           0x0001
 #define RI_KEY_E0              0x0002
@@ -2869,7 +2855,6 @@ typedef struct {
 	short cx;
 	short cy;
 } DLGTEMPLATE,*LPDLGTEMPLATE,*LPDLGTEMPLATEA,*LPDLGTEMPLATEW;
-typedef const DLGTEMPLATE *LPCDLGTEMPLATE;
 typedef const DLGTEMPLATE *LPCDLGTEMPLATEA;
 typedef const DLGTEMPLATE *LPCDLGTEMPLATEW;
 #ifdef UNICODE
@@ -3708,8 +3693,10 @@ HMENU WINAPI CreatePopupMenu(void);
 #define CreateWindowW(a,b,c,d,e,f,g,h,i,j,k) CreateWindowExW(0,a,b,c,d,e,f,g,h,i,j,k)
 HWND WINAPI CreateWindowExA(DWORD,LPCSTR,LPCSTR,DWORD,int,int,int,int,HWND,HMENU,HINSTANCE,LPVOID);
 HWND WINAPI CreateWindowExW(DWORD,LPCWSTR,LPCWSTR,DWORD,int,int,int,int,HWND,HMENU,HINSTANCE,LPVOID);
+#ifndef NOWINDOWSTATION
 HWINSTA WINAPI CreateWindowStationA(LPSTR,DWORD,DWORD,LPSECURITY_ATTRIBUTES);
 HWINSTA WINAPI CreateWindowStationW(LPWSTR,DWORD,DWORD,LPSECURITY_ATTRIBUTES);
+#endif
 LRESULT WINAPI DefDlgProcA(HWND,UINT,WPARAM,LPARAM);
 LRESULT WINAPI DefDlgProcW(HWND,UINT,WPARAM,LPARAM);
 HDWP WINAPI DeferWindowPos(HDWP,HWND,HWND,int,int,int,int,UINT);

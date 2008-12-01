@@ -26,7 +26,7 @@ reactos/tools/wpp                 # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/winebuild           # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/wmc                 # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/wrc                 # Synced to Wine-20081105 (~Wine-1.1.7)
-reactos/tools/widl                # Synced to Wine-0_9_59
+reactos/tools/widl                # Synced to Wine-1_1_0
 
 The following libraries are shared with Wine.
 
@@ -124,6 +124,7 @@ ReactOS shares the following programs with Winehq.
 reactos/base/applications/games/winemine  # Out of sync
 reactos/base/applications/regedit         # Out of sync
 reactos/base/applications/cmdutils/xcopy  # Synced to Wine-0_9_54 
+reactos/base/services/rpcss               # Synced to Wine-20081105
 reactos/base/system/expand                # Out of sync
 reactos/base/system/msiexec               # Wine 1.0-rc1
 reactos/base/applications/winhelp         # Synced to Wine-0_9_53
@@ -153,8 +154,9 @@ msvcrt -
   reactos/lib/sdk/crt/cpp.c                     # Synced at 20071111
   reactos/lib/sdk/crt/cppexcept.c               # Synced at 20071111
   reactos/lib/sdk/crt/strings/scanf.c/h         # Synced at 20080604
+  reactos/lib/sdk/crt/strings/wcs.c             # Synced at 20080611
   reactos/lib/sdk/crt/wine/heap.c               # Synced at 20080529
-  reactos/lib/sdk/crt/wine                      # Synced at XXXXXXXX
+  reactos/lib/sdk/crt/wine/undname.c            # Synced at XXXXXXXX
   reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
 
 User32 -

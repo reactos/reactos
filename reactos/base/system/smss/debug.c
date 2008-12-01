@@ -21,7 +21,7 @@ HANDLE hSmDbgApiPort = (HANDLE) 0;
 
 /* FUNCTIONS *********************************************************/
 
-static VOID STDCALL
+static VOID NTAPI
 DbgSsApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
@@ -41,7 +41,7 @@ DbgSsApiPortThread (PVOID dummy)
 	NtTerminateThread(NtCurrentThread(),Status);
 }
 
-static VOID STDCALL
+static VOID NTAPI
 DbgUiApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
@@ -61,13 +61,13 @@ DbgUiApiPortThread (PVOID dummy)
 	NtTerminateThread(NtCurrentThread(),Status);
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 SmpCreatePT (IN OUT PHANDLE hPort,
 	     IN     LPWSTR  wcPortName,
 	     IN     ULONG   ulMaxDataSize,
 	     IN     ULONG   ulMaxMessageSize,
 	     IN     ULONG   ulPoolCharge OPTIONAL,
-	     IN     VOID    (STDCALL * procServingThread)(PVOID) OPTIONAL,
+	     IN     VOID    (NTAPI * procServingThread)(PVOID) OPTIONAL,
 	     IN OUT PHANDLE phServingThread OPTIONAL)
 {
 	NTSTATUS          Status = STATUS_SUCCESS;

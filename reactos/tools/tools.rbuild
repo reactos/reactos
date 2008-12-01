@@ -31,4 +31,7 @@
 <directory name="wrc">
 	<xi:include href="wrc/wrc.rbuild" />
 </directory>
+<directory name="utf16le">
+	<xi:include href="utf16le/utf16le.rbuild" />
+</directory>
 </group>

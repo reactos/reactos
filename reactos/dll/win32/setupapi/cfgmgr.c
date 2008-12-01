@@ -119,15 +119,15 @@ CONFIGRET WINAPI CMP_Init_Detection(
     if (!PnpGetLocalHandles(&BindingHandle, NULL))
         return CR_FAILURE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_InitDetection(BindingHandle);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -157,17 +157,17 @@ CONFIGRET WINAPI CMP_Report_LogOn(
 
     for (i = 0; i < 30; i++)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ret = PNP_ReportLogOn(BindingHandle,
                                   bAdmin,
                                   dwProcessId);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             ret = RpcStatusToCmStatus(RpcExceptionCode());
         }
-        _SEH_END;
+        _SEH2_END;
 
         if (ret == CR_SUCCESS)
             break;
@@ -244,16 +244,16 @@ CONFIGRET WINAPI CM_Add_Empty_Log_Conf_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_AddEmptyLogConf(BindingHandle, lpDevInst, Priority,
                                   &ulLogConfTag, ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret == CR_SUCCESS)
     {
@@ -368,18 +368,18 @@ CONFIGRET WINAPI CM_Add_ID_ExW(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_AddID(BindingHandle,
                         lpDevInst,
                         pszID,
                         ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -578,7 +578,7 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
     if (lpParentDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_CreateDevInst(BindingHandle,
                                 pDeviceID,
@@ -586,11 +586,11 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
                                 MAX_DEVICE_ID_LEN,
                                 ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret == CR_SUCCESS)
     {
@@ -647,17 +647,17 @@ CONFIGRET WINAPI CM_Delete_Class_Key_Ex(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_DeleteClassKey(BindingHandle,
                                  szGuidString,
                                  ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -742,7 +742,7 @@ CONFIGRET WINAPI CM_Disable_DevNode_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
                                        5,
@@ -750,11 +750,11 @@ CONFIGRET WINAPI CM_Disable_DevNode_Ex(
                                        lpDevInst,
                                        NULL);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -841,7 +841,7 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
                                        4,
@@ -849,11 +849,11 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
                                        lpDevInst,
                                        NULL);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -901,7 +901,7 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_EnumerateSubKeys(BindingHandle,
                                    PNP_CLASS_SUBKEYS,
@@ -911,11 +911,11 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
                                    &ulLength,
                                    ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret == CR_SUCCESS)
     {
@@ -1034,7 +1034,7 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_EnumerateSubKeys(BindingHandle,
                                    PNP_ENUMERATOR_SUBKEYS,
@@ -1044,11 +1044,11 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
                                    pulLength,
                                    ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -1109,16 +1109,16 @@ CONFIGRET WINAPI CM_Free_Log_Conf_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_FreeLogConf(BindingHandle, lpDevInst, pLogConfInfo->ulFlags,
                               pLogConfInfo->ulTag, 0);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -1201,7 +1201,7 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetRelatedDeviceInstance(BindingHandle,
                                            PNP_GET_CHILD_DEVICE_INSTANCE,
@@ -1210,11 +1210,11 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
                                            &dwLength,
                                            0);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret != CR_SUCCESS)
         return ret;
@@ -1436,7 +1436,7 @@ CM_Get_Class_Name_ExW(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetClassName(BindingHandle,
                                szGuidString,
@@ -1444,11 +1444,11 @@ CM_Get_Class_Name_ExW(
                                pulLength,
                                ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -1508,18 +1508,18 @@ CONFIGRET WINAPI CM_Get_Depth_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetDepth(BindingHandle,
                            lpDevInst,
                            pulDepth,
                            ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -1687,7 +1687,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
 
     ulTransferLength = *pulLength;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetDeviceRegProp(BindingHandle,
                                    lpDevInst,
@@ -1698,11 +1698,11 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
                                    pulLength,
                                    ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret == CR_SUCCESS)
     {
@@ -1773,7 +1773,7 @@ CM_Get_DevNode_Status_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetDeviceStatus(BindingHandle,
                                   lpDevInst,
@@ -1781,11 +1781,11 @@ CM_Get_DevNode_Status_Ex(
                                   pulProblemNumber,
                                   ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -2082,18 +2082,18 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExW(
 
     *pulLen = 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetDeviceListSize(BindingHandle,
                                     (LPWSTR)pszFilter,
                                     pulLen,
                                     ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -2210,7 +2210,7 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetFirstLogConf(BindingHandle,
                                   lpDevInst,
@@ -2218,11 +2218,11 @@ CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
                                   &ulTag,
                                   ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret != CR_SUCCESS)
         return ret;
@@ -2282,15 +2282,15 @@ CONFIGRET WINAPI CM_Get_Global_State_Ex(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetGlobalState(BindingHandle, pulState, ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -2388,16 +2388,16 @@ CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExW(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_HwProfFlags(BindingHandle, PNP_GET_HWPROFFLAGS, szDevInstName,
                               ulHardwareProfile, pulValue, NULL, NULL, 0, 0);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -2459,7 +2459,7 @@ CONFIGRET WINAPI CM_Get_Log_Conf_Priority_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetLogConfPriority(BindingHandle,
                                      lpDevInst,
@@ -2468,11 +2468,11 @@ CONFIGRET WINAPI CM_Get_Log_Conf_Priority_Ex(
                                      pPriority,
                                      0);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -2536,7 +2536,7 @@ CONFIGRET WINAPI CM_Get_Next_Log_Conf_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetNextLogConf(BindingHandle,
                                  lpDevInst,
@@ -2545,11 +2545,11 @@ CONFIGRET WINAPI CM_Get_Next_Log_Conf_Ex(
                                  &ulNewTag,
                                  0);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret != CR_SUCCESS)
         return ret;
@@ -2629,7 +2629,7 @@ CONFIGRET WINAPI CM_Get_Parent_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetRelatedDeviceInstance(BindingHandle,
                                            PNP_GET_PARENT_DEVICE_INSTANCE,
@@ -2638,11 +2638,11 @@ CONFIGRET WINAPI CM_Get_Parent_Ex(
                                            &dwLength,
                                            0);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret != CR_SUCCESS)
         return ret;
@@ -2716,7 +2716,7 @@ CONFIGRET WINAPI CM_Get_Sibling_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetRelatedDeviceInstance(BindingHandle,
                                            PNP_GET_SIBLING_DEVICE_INSTANCE,
@@ -2725,11 +2725,11 @@ CONFIGRET WINAPI CM_Get_Sibling_Ex(
                                            &dwLength,
                                            0);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret != CR_SUCCESS)
         return ret;
@@ -2779,15 +2779,15 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_GetVersion(BindingHandle, &Version);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret != CR_SUCCESS)
         return 0;
@@ -2835,16 +2835,16 @@ CONFIGRET WINAPI CM_Is_Dock_Station_Present_Ex(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_IsDockStationPresent(BindingHandle,
                                        pbPresent);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -2939,36 +2939,36 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
     }
     else
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Get the root device ID */
             ret = PNP_GetRootDeviceInstance(BindingHandle,
                                             DeviceIdBuffer,
                                             MAX_DEVICE_ID_LEN);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             ret = RpcStatusToCmStatus(RpcExceptionCode());
         }
-        _SEH_END;
+        _SEH2_END;
 
         if (ret != CR_SUCCESS)
             return CR_FAILURE;
     }
     TRACE("DeviceIdBuffer: %s\n", debugstr_w(DeviceIdBuffer));
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Validate the device ID */
         ret = PNP_ValidateDeviceInstance(BindingHandle,
                                          DeviceIdBuffer,
                                          ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (ret == CR_SUCCESS)
     {
@@ -3041,7 +3041,7 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
     if (lpToDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
                                        2,
@@ -3049,11 +3049,11 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
                                        lpFromDevInst,
                                        lpToDevInst);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -3298,7 +3298,7 @@ CM_Reenumerate_DevNode_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
                                        7,
@@ -3306,11 +3306,11 @@ CM_Reenumerate_DevNode_Ex(
                                        lpDevInst,
                                        NULL);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -3349,15 +3349,15 @@ CONFIGRET WINAPI CM_Request_Eject_PC_Ex(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_RequestEjectPC(BindingHandle);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -3403,16 +3403,16 @@ CONFIGRET WINAPI CM_Run_Detection_Ex(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_RunDetection(BindingHandle,
                                ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -3468,18 +3468,18 @@ CONFIGRET WINAPI CM_Set_DevNode_Problem_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_SetDeviceProblem(BindingHandle,
                                    lpDevInst,
                                    ulProblem,
                                    ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -3754,7 +3754,7 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
             return CR_INVALID_PROPERTY;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_SetDeviceRegProp(BindingHandle,
                                    lpDevInst,
@@ -3764,11 +3764,11 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
                                    ulLength,
                                    ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -3864,16 +3864,16 @@ CONFIGRET WINAPI CM_Set_HW_Prof_Flags_ExW(
             return CR_FAILURE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_HwProfFlags(BindingHandle, PNP_SET_HWPROFFLAGS, szDevInstName,
                               ulConfig, &ulValue, NULL, NULL, 0, 0);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -3932,7 +3932,7 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
                                        3,
@@ -3940,11 +3940,11 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
                                        lpDevInst,
                                        NULL);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
@@ -4000,17 +4000,17 @@ CONFIGRET WINAPI CM_Uninstall_DevNode_Ex(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = PNP_UninstallDevInst(BindingHandle,
                                    lpDevInst,
                                    ulFlags);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }

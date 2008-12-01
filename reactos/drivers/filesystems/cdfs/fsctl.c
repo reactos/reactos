@@ -534,7 +534,7 @@ CdfsSetCompression(
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
 {

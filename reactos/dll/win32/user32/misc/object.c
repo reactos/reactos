@@ -39,7 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetUserObjectInformationA(
   HANDLE hObj,
   int nIndex,
@@ -55,7 +55,7 @@ SetUserObjectInformationA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetUserObjectInformationW(
   HANDLE hObj,
   int nIndex,
@@ -71,7 +71,7 @@ SetUserObjectInformationW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 UserHandleGrantAccess(
   HANDLE hUserHandle,
   HANDLE hJob,
@@ -86,7 +86,7 @@ UserHandleGrantAccess(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetUserObjectInformationA(
   HANDLE hObj,
   int nIndex,
@@ -136,7 +136,7 @@ GetUserObjectInformationA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetUserObjectInformationW(
   HANDLE hObj,
   int nIndex,

@@ -36,7 +36,7 @@ UNICODE_STRING WindowsDirectory;
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetCurrentDirectoryA (
 	DWORD	nBufferLength,
 	LPSTR	lpBuffer
@@ -62,7 +62,7 @@ GetCurrentDirectoryA (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetCurrentDirectoryW (
 	DWORD	nBufferLength,
 	LPWSTR	lpBuffer
@@ -82,7 +82,7 @@ GetCurrentDirectoryW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCurrentDirectoryA (
 	LPCSTR	lpPathName
 	)
@@ -102,7 +102,7 @@ SetCurrentDirectoryA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCurrentDirectoryW (
 	LPCWSTR	lpPathName
 	)
@@ -130,7 +130,7 @@ SetCurrentDirectoryW (
  * NOTE: Windows returns a dos/short (8.3) path
  */
 DWORD
-STDCALL
+WINAPI
 GetTempPathA (
 	DWORD	nBufferLength,
 	LPSTR	lpBuffer
@@ -160,7 +160,7 @@ GetTempPathA (
  * ripped from wine
  */
 DWORD
-STDCALL
+WINAPI
 GetTempPathW (
 	DWORD	count,
    LPWSTR   path
@@ -222,7 +222,7 @@ GetTempPathW (
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetSystemDirectoryA (
 	LPSTR	lpBuffer,
 	UINT	uSize
@@ -236,7 +236,7 @@ GetSystemDirectoryA (
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetSystemDirectoryW (
 	LPWSTR	lpBuffer,
 	UINT	uSize
@@ -265,7 +265,7 @@ GetSystemDirectoryW (
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetWindowsDirectoryA (
 	LPSTR	lpBuffer,
 	UINT	uSize
@@ -279,7 +279,7 @@ GetWindowsDirectoryA (
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetWindowsDirectoryW (
 	LPWSTR	lpBuffer,
 	UINT	uSize
@@ -309,7 +309,7 @@ GetWindowsDirectoryW (
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetSystemWindowsDirectoryA(
 	LPSTR	lpBuffer,
 	UINT	uSize
@@ -322,7 +322,7 @@ GetSystemWindowsDirectoryA(
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetSystemWindowsDirectoryW(
 	LPWSTR	lpBuffer,
 	UINT	uSize
@@ -335,7 +335,7 @@ GetSystemWindowsDirectoryW(
  * @unimplemented
  */
 UINT
-STDCALL
+WINAPI
 GetSystemWow64DirectoryW(
     LPWSTR lpBuffer,
     UINT uSize
@@ -354,7 +354,7 @@ GetSystemWow64DirectoryW(
  * @unimplemented
  */
 UINT
-STDCALL
+WINAPI
 GetSystemWow64DirectoryA(
     LPSTR lpBuffer,
     UINT uSize

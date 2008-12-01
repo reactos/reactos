@@ -32,7 +32,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 SamIInitialize(VOID)
 {
   DPRINT1("SamIInitialize() called\n");
@@ -41,7 +41,7 @@ SamIInitialize(VOID)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 SampInitializeRegistry(VOID)
 {
   DPRINT1("SampInitializeRegistry() called\n");

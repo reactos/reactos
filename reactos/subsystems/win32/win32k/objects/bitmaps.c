@@ -31,7 +31,7 @@
  (y) < (r).bottom \
 )
 
-HBITMAP STDCALL
+HBITMAP APIENTRY
 IntGdiCreateBitmap(
     INT  Width,
     INT  Height,
@@ -102,7 +102,7 @@ IntGdiCreateBitmap(
 }
 
 
-HBITMAP STDCALL
+HBITMAP APIENTRY
 NtGdiCreateBitmap(
     INT  Width,
     INT  Height,
@@ -110,26 +110,25 @@ NtGdiCreateBitmap(
     UINT  BitsPixel,
     IN OPTIONAL LPBYTE pUnsafeBits)
 {
-   HBITMAP hBitmap;
-
-   _SEH_TRY
+   if (pUnsafeBits)
    {
-      if (pUnsafeBits)
+      BOOL Hit = FALSE;
+      UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * abs(Height);
+
+      _SEH2_TRY
       {
-         UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * abs(Height);
          ProbeForRead(pUnsafeBits, cjBits, 1);
       }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+         Hit = TRUE;
+      }
+      _SEH2_END
 
-      hBitmap = IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
-
+      if (Hit) return 0;
    }
-   _SEH_HANDLE
-   {
-      hBitmap = 0;
-   }
-   _SEH_END
 
-   return hBitmap;
+   return IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
 }
 
 BOOL INTERNAL_CALL
@@ -187,7 +186,7 @@ IntCreateCompatibleBitmap(
 	return Bmp;
 }
 
-HBITMAP STDCALL
+HBITMAP APIENTRY
 NtGdiCreateCompatibleBitmap(
 	HDC hDC,
 	INT Width,
@@ -195,6 +194,12 @@ NtGdiCreateCompatibleBitmap(
 {
 	HBITMAP Bmp;
 	PDC Dc;
+
+	if ( Width <= 0 || Height <= 0 || (Width * Height) > 0x3FFFFFFF )
+	{
+           SetLastWin32Error(ERROR_INVALID_PARAMETER);
+           return NULL;
+        }
 
 	Dc = DC_LockDc(hDC);
 
@@ -213,7 +218,7 @@ NtGdiCreateCompatibleBitmap(
 	return Bmp;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiGetBitmapDimension(
 	HBITMAP  hBitmap,
 	LPSIZE  Dimension)
@@ -231,23 +236,23 @@ NtGdiGetBitmapDimension(
 		return FALSE;
 	}
 
-	_SEH_TRY
+	_SEH2_TRY
 	{
 		ProbeForWrite(Dimension, sizeof(SIZE), 1);
 		*Dimension = bmp->dimension;
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
 		Ret = FALSE;
 	}
-	_SEH_END
+	_SEH2_END
 
 	BITMAPOBJ_UnlockBitmap(bmp);
 
 	return Ret;
 }
 
-COLORREF STDCALL
+COLORREF APIENTRY
 NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 {
 	PDC dc = NULL;
@@ -352,7 +357,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 }
 
 
-LONG STDCALL
+LONG APIENTRY
 IntGetBitmapBits(
 	PBITMAPOBJ bmp,
 	DWORD Bytes,
@@ -389,7 +394,7 @@ IntGetBitmapBits(
 	return ret;
 }
 
-LONG STDCALL
+LONG APIENTRY
 NtGdiGetBitmapBits(HBITMAP  hBitmap,
                    ULONG  Bytes,
                    OUT OPTIONAL PBYTE pUnsafeBits)
@@ -420,16 +425,16 @@ NtGdiGetBitmapBits(HBITMAP  hBitmap,
 	/* Don't copy more bytes than the buffer has */
 	Bytes = min(Bytes, bmp->SurfObj.cjBits);
 
-	_SEH_TRY
+	_SEH2_TRY
 	{
 		ProbeForWrite(pUnsafeBits, Bytes, 1);
 		ret = IntGetBitmapBits(bmp, Bytes, pUnsafeBits);
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
 		ret = 0;
 	}
-	_SEH_END
+	_SEH2_END
 
 	BITMAPOBJ_UnlockBitmap (bmp);
 
@@ -437,7 +442,7 @@ NtGdiGetBitmapBits(HBITMAP  hBitmap,
 }
 
 
-LONG STDCALL
+LONG APIENTRY
 IntSetBitmapBits(
 	PBITMAPOBJ bmp,
 	DWORD  Bytes,
@@ -474,7 +479,7 @@ IntSetBitmapBits(
 }
 
 
-LONG STDCALL
+LONG APIENTRY
 NtGdiSetBitmapBits(
 	HBITMAP  hBitmap,
 	DWORD  Bytes,
@@ -495,23 +500,23 @@ NtGdiSetBitmapBits(
 		return 0;
 	}
 
-	_SEH_TRY
+	_SEH2_TRY
 	{
 		ProbeForRead(pUnsafeBits, Bytes, 1);
 		ret = IntSetBitmapBits(bmp, Bytes, pUnsafeBits);
 	}
-	_SEH_HANDLE
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
 		ret = 0;
 	}
-	_SEH_END
+	_SEH2_END
 
 	BITMAPOBJ_UnlockBitmap(bmp);
 
 	return ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiSetBitmapDimension(
 	HBITMAP  hBitmap,
 	INT  Width,
@@ -533,16 +538,16 @@ NtGdiSetBitmapDimension(
 
 	if (Size)
 	{
-		_SEH_TRY
+		_SEH2_TRY
 		{
 			ProbeForWrite(Size, sizeof(SIZE), 1);
 			*Size = bmp->dimension;
 		}
-		_SEH_HANDLE
+		_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 		{
 			Ret = FALSE;
 		}
-		_SEH_END
+		_SEH2_END
 	}
 
 	/* The dimension is changed even if writing the old value failed */
@@ -554,7 +559,7 @@ NtGdiSetBitmapDimension(
 	return Ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 GdiSetPixelV(
 	HDC  hDC,
 	INT  X,
@@ -578,7 +583,7 @@ GdiSetPixelV(
 	return TRUE;
 }
 
-COLORREF STDCALL
+COLORREF APIENTRY
 NtGdiSetPixel(
 	HDC  hDC,
 	INT  X,
@@ -674,7 +679,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 		return 0;
 	}
 
-	BITMAP_GetObject(Bitmap, sizeof(BITMAP), &bm);
+	BITMAP_GetObject(Bitmap, sizeof(BITMAP), (PVOID)&bm);
 	bm.bmBits = NULL;
 	if (Bitmap->SurfObj.lDelta >= 0)
 		bm.bmHeight = -bm.bmHeight;
@@ -720,7 +725,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	return  res;
 }
 
-INT STDCALL
+INT APIENTRY
 BITMAP_GetObject(BITMAPOBJ * bmp, INT Count, LPVOID buffer)
 {
 	if ((UINT)Count < sizeof(BITMAP)) return 0;

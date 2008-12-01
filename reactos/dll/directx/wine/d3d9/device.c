@@ -34,7 +34,7 @@ static HRESULT WINAPI IDirect3DDevice9Impl_QueryInterface(LPDIRECT3DDEVICE9EX if
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DDevice9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         *ppobj = This;
         TRACE("Returning IDirect3DDevice9 interface at %p\n", *ppobj);
         return S_OK;
@@ -266,6 +266,7 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
     WINED3DINDEXBUFFER_DESC index_desc;
     WINED3DVERTEXBUFFER_DESC vertex_desc;
     WINED3DFORMAT dummy_format;
+    WINED3DMULTISAMPLE_TYPE dummy_multisampletype;
     DWORD dummy_dword;
     WINED3DPOOL pool = WINED3DPOOL_SCRATCH; /* a harmless pool */
     IUnknown *parent;
@@ -278,7 +279,7 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
             surface_desc.Usage = &dummy_dword;
             surface_desc.Pool = &pool;
             surface_desc.Size = &dummy_dword;
-            surface_desc.MultiSampleType = &dummy_dword;
+            surface_desc.MultiSampleType = &dummy_multisampletype;
             surface_desc.MultiSampleQuality = &dummy_dword;
             surface_desc.Width = &dummy_dword;
             surface_desc.Height = &dummy_dword;
@@ -376,6 +377,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_Reset(LPDIRECT3DDEVICE9EX iface, D3
     localParameters.Flags                               = pPresentationParameters->Flags;
     localParameters.FullScreen_RefreshRateInHz          = pPresentationParameters->FullScreen_RefreshRateInHz;
     localParameters.PresentationInterval                = pPresentationParameters->PresentationInterval;
+    localParameters.AutoRestoreDisplayMode              = TRUE;
 
     EnterCriticalSection(&d3d9_cs);
     hr = IWineD3DDevice_Reset(This->WineD3DDevice, &localParameters);
@@ -513,7 +515,7 @@ static HRESULT  WINAPI IDirect3DDevice9Impl_CreateSurface(LPDIRECT3DDEVICE9EX if
         FIXME("(%p) call to IWineD3DDevice_CreateSurface failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         TRACE("(%p) : Created surface %p\n", This, object);
         *ppSurface = (LPDIRECT3DSURFACE9) object;
@@ -988,11 +990,13 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_GetTexture(LPDIRECT3DDEVICE9EX ifac
 
     EnterCriticalSection(&d3d9_cs);
     rc = IWineD3DDevice_GetTexture(This->WineD3DDevice, Stage, &retTexture);
-    if (rc == D3D_OK && NULL != retTexture) {
+    if (SUCCEEDED(rc) && NULL != retTexture) {
         IWineD3DBaseTexture_GetParent(retTexture, (IUnknown **)ppTexture);
         IWineD3DBaseTexture_Release(retTexture);
-    }else{
-        FIXME("Call to get texture  (%d) failed (%p)\n", Stage, retTexture);
+    } else {
+        if(FAILED(rc)) {
+            WARN("Call to get texture  (%d) failed (%p)\n", Stage, retTexture);
+        }
         *ppTexture = NULL;
     }
     LeaveCriticalSection(&d3d9_cs);
@@ -1720,7 +1724,7 @@ HRESULT WINAPI D3D9CB_CreateSurface(IUnknown *device, IUnknown *pSuperior, UINT 
     if (SUCCEEDED(res)) {
         *ppSurface = d3dSurface->wineD3DSurface;
         d3dSurface->container = pSuperior;
-        IUnknown_Release(d3dSurface->parentDevice);
+        IDirect3DDevice9Ex_Release(d3dSurface->parentDevice);
         d3dSurface->parentDevice = NULL;
         d3dSurface->forwardReference = pSuperior;
     } else {

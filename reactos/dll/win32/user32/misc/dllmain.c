@@ -249,7 +249,7 @@ Cleanup(VOID)
    TlsFree(User32TlsIndex);
 }
 
-INT STDCALL
+INT WINAPI
 DllMain(
    IN PVOID hInstanceDll,
    IN ULONG dwReason,

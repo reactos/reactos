@@ -122,7 +122,7 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
       WCHAR cNull = '\0';
       nBytesToAlloc = dwUnExpDataLen;
 
-      szData = (LPWSTR) LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc);
+      szData = LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc);
       RegQueryValueExW (hKey, lpszValue, 0, NULL, (LPBYTE)szData, &nBytesToAlloc);
       dwExpDataLen = ExpandEnvironmentStringsW(szData, &cNull, 1);
       dwUnExpDataLen = max(nBytesToAlloc, dwExpDataLen);
@@ -131,7 +131,7 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
     else
     {
       nBytesToAlloc = (lstrlenW(pvData) + 1) * sizeof(WCHAR);
-      szData = (LPWSTR) LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc );
+      szData = LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc );
       lstrcpyW(szData, pvData);
       dwExpDataLen = ExpandEnvironmentStringsW(szData, pvData, MAX_PATH );
       if (dwExpDataLen > MAX_PATH) dwRet = ERROR_MORE_DATA;
@@ -566,6 +566,7 @@ BOOL WINAPI IsAppThemed(void)
 BOOL WINAPI IsThemeActive(void)
 {
     TRACE("\n");
+    SetLastError(ERROR_SUCCESS);
     return bThemeActive;
 }
 

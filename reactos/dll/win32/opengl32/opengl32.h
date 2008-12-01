@@ -96,9 +96,9 @@ ULONG DbgPrint(PCH Format,...);
 #ifdef _MSC_VER
 #  define NAKED __declspec(naked)
 #  define SHARED
-#  ifndef STDCALL
-#    define STDCALL __stdcall
-#  endif /* STDCALL */
+#  ifndef WINAPI
+#    define WINAPI __stdcall
+#  endif /* WINAPI */
 #else /* GCC */
 #  define NAKED __attribute__((naked))
 #  define SHARED __attribute__((section("shared"), shared))
@@ -217,31 +217,31 @@ BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 BOOL APIENTRY rosglMakeCurrent( HDC hdc, HGLRC hglrc );
 
 /* empty gl functions from gl.c */
-int STDCALL glEmptyFunc0();
-int STDCALL glEmptyFunc4( long );
-int STDCALL glEmptyFunc8( long, long );
-int STDCALL glEmptyFunc12( long, long, long );
-int STDCALL glEmptyFunc16( long, long, long, long );
-int STDCALL glEmptyFunc20( long, long, long, long, long );
-int STDCALL glEmptyFunc24( long, long, long, long, long, long );
-int STDCALL glEmptyFunc28( long, long, long, long, long, long, long );
-int STDCALL glEmptyFunc32( long, long, long, long, long, long, long, long );
-int STDCALL glEmptyFunc36( long, long, long, long, long, long, long, long,
+int WINAPI glEmptyFunc0();
+int WINAPI glEmptyFunc4( long );
+int WINAPI glEmptyFunc8( long, long );
+int WINAPI glEmptyFunc12( long, long, long );
+int WINAPI glEmptyFunc16( long, long, long, long );
+int WINAPI glEmptyFunc20( long, long, long, long, long );
+int WINAPI glEmptyFunc24( long, long, long, long, long, long );
+int WINAPI glEmptyFunc28( long, long, long, long, long, long, long );
+int WINAPI glEmptyFunc32( long, long, long, long, long, long, long, long );
+int WINAPI glEmptyFunc36( long, long, long, long, long, long, long, long,
                            long );
-int STDCALL glEmptyFunc40( long, long, long, long, long, long, long, long,
+int WINAPI glEmptyFunc40( long, long, long, long, long, long, long, long,
                            long, long );
-int STDCALL glEmptyFunc44( long, long, long, long, long, long, long, long,
+int WINAPI glEmptyFunc44( long, long, long, long, long, long, long, long,
                            long, long, long );
-int STDCALL glEmptyFunc48( long, long, long, long, long, long, long, long,
+int WINAPI glEmptyFunc48( long, long, long, long, long, long, long, long,
                            long, long, long, long );
-int STDCALL glEmptyFunc52( long, long, long, long, long, long, long, long,
+int WINAPI glEmptyFunc52( long, long, long, long, long, long, long, long,
                            long, long, long, long, long );
-int STDCALL glEmptyFunc56( long, long, long, long, long, long, long, long,
+int WINAPI glEmptyFunc56( long, long, long, long, long, long, long, long,
                            long, long, long, long, long, long );
 
 #ifdef OPENGL32_GL_FUNC_PROTOTYPES
 
-#define X(func,ret,typeargs,args,icdidx,tebidx,stack) EXPORT ret STDCALL func typeargs;
+#define X(func,ret,typeargs,args,icdidx,tebidx,stack) EXPORT ret WINAPI func typeargs;
 GLFUNCS_MACRO
 #undef X
 

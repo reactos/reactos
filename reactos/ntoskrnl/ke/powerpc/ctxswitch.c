@@ -46,7 +46,7 @@
  *--*/
 
 VOID
-STDCALL
+NTAPI
 KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 PKSTART_ROUTINE StartRoutine,
                 PVOID StartContext,
@@ -81,7 +81,7 @@ PKTHREAD KiLastThread = NULL;
 PKTRAP_FRAME KiLastThreadTrapFrame = NULL;
 
 VOID
-STDCALL
+NTAPI
 KiDecrementerTrap(PKTRAP_FRAME TrapFrame)
 {
     KIRQL Irql;

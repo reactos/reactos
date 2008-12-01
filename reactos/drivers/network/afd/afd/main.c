@@ -38,10 +38,10 @@ void OskitDumpBuffer( PCHAR Data, UINT Len ) {
 
 /* FUNCTIONS */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp) {
     PAFD_FCB FCB;
@@ -230,7 +230,7 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     AFD_DbgPrint(MIN_TRACE,("Leaving\n"));
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp)
 {
@@ -260,7 +260,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -311,7 +311,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -499,12 +499,12 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return (Status);
 }
 
-static VOID STDCALL
+static VOID NTAPI
 AfdUnload(PDRIVER_OBJECT DriverObject)
 {
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;

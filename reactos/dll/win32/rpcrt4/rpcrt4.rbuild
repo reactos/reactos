@@ -17,6 +17,7 @@
 	<library>iphlpapi</library>
 	<library>ws2_32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<file>cproxy.c</file>
 	<file>cpsf.c</file>
 	<file>cstub.c</file>
@@ -39,7 +40,6 @@
 	<file>rpcrt4.rc</file>
 	<file>epm.idl</file>
 	<include base="rpcrt4" root="intermediate">.</include>
-	<file>rpcrt4.spec</file>
 </module>
 <module name="rpcrt4_epm_client" type="rpcclient">
 	<file>epm.idl</file>

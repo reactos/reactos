@@ -294,7 +294,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
    return Res;
 }
 
-BOOL static STDCALL
+BOOL static APIENTRY
 co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
                             PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
                             PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue, PLIST_ENTRY *Next)
@@ -505,7 +505,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
    return(TRUE);
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
                           UINT FilterLow, UINT FilterHigh, BOOL Remove,
                           PUSER_MESSAGE* Message)
@@ -1009,7 +1009,7 @@ Notified:
    return(TRUE);
 }
 
-VOID STDCALL
+VOID APIENTRY
 MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
 {
    PUSER_SENT_MESSAGE SentMessage;
@@ -1311,7 +1311,7 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
       KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
 }
 
-BOOLEAN STDCALL
+BOOLEAN APIENTRY
 co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
                   IN BOOLEAN Hardware,
                   IN BOOLEAN Remove,

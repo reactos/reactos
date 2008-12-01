@@ -882,7 +882,8 @@ make_directory_records (PDIR_RECORD d)
                 }
               else
                 {
-                  getcwd(buf, sizeof(buf));
+                  if (!getcwd(buf, sizeof(buf)))
+                    error_exit("Can't get CWD: %s\n", strerror(errno));
                   strcat(buf, DIR_SEPARATOR_STRING);
                   strcat(buf, source);
                   strcat(buf, entry->d_name);
@@ -943,7 +944,8 @@ make_directory_records (PDIR_RECORD d)
                     }
                   else
                     {
-                      getcwd(buf, sizeof(buf));
+                      if (!getcwd(buf, sizeof(buf)))
+                        error_exit("Can't get CWD: %s\n", strerror(errno));
                       strcat(buf, DIR_SEPARATOR_STRING);
                       strcat(buf, source);
                     }
@@ -994,7 +996,8 @@ make_directory_records (PDIR_RECORD d)
             }
           else
             {
-              getcwd(buf, sizeof(buf));
+              if (!getcwd(buf, sizeof(buf)))
+                error_exit("Can't get CWD: %s\n", strerror(errno));
               strcat(buf, DIR_SEPARATOR_STRING);
               strcat(buf, source);
               strcat(buf, entry->d_name);

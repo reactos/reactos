@@ -305,9 +305,10 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateAdditionalSwapChain(LPDIRECT3DD
     localParameters.Flags                                       = pPresentationParameters->Flags;
     localParameters.FullScreen_RefreshRateInHz                  = pPresentationParameters->FullScreen_RefreshRateInHz;
     localParameters.PresentationInterval                        = pPresentationParameters->FullScreen_PresentationInterval;
+    localParameters.AutoRestoreDisplayMode                      = TRUE;
 
     EnterCriticalSection(&d3d8_cs);
-    hrc = IWineD3DDevice_CreateAdditionalSwapChain(This->WineD3DDevice, &localParameters, &object->wineD3DSwapChain, (IUnknown*)object, D3D8CB_CreateRenderTarget, D3D8CB_CreateDepthStencilSurface, SURFACE_OPENGL);
+    hrc = IWineD3DDevice_CreateSwapChain(This->WineD3DDevice, &localParameters, &object->wineD3DSwapChain, (IUnknown*)object, D3D8CB_CreateRenderTarget, D3D8CB_CreateDepthStencilSurface, SURFACE_OPENGL);
     LeaveCriticalSection(&d3d8_cs);
 
     pPresentationParameters->BackBufferWidth                    = localParameters.BackBufferWidth;
@@ -325,7 +326,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateAdditionalSwapChain(LPDIRECT3DD
     pPresentationParameters->FullScreen_PresentationInterval    = localParameters.PresentationInterval;
 
     if (hrc != D3D_OK) {
-        FIXME("(%p) call to IWineD3DDevice_CreateAdditionalSwapChain failed\n", This);
+        FIXME("(%p) call to IWineD3DDevice_CreateSwapChain failed\n", This);
         HeapFree(GetProcessHeap(), 0 , object);
         *pSwapChain = NULL;
     }else{
@@ -358,6 +359,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_Reset(LPDIRECT3DDEVICE8 iface, D3DPRE
     localParameters.Flags                                       = pPresentationParameters->Flags;
     localParameters.FullScreen_RefreshRateInHz                  = pPresentationParameters->FullScreen_RefreshRateInHz;
     localParameters.PresentationInterval                        = pPresentationParameters->FullScreen_PresentationInterval;
+    localParameters.AutoRestoreDisplayMode                      = TRUE;
 
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DDevice_Reset(This->WineD3DDevice, &localParameters);
@@ -1950,7 +1952,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_GetPixelShader(LPDIRECT3DDEVICE8 ifac
         IWineD3DPixelShader_Release(object);
         *ppShader = d3d8_shader->handle;
     } else {
-        *ppShader = (DWORD)NULL;
+        *ppShader = 0;
     }
 
     TRACE("(%p) : returning %#x\n", This, *ppShader);

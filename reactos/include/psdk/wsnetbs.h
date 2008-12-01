@@ -1,8 +1,5 @@
 #ifndef _WSNETBS_H
 #define _WSNETBS_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define NETBIOS_NAME_LENGTH	16
 #define NETBIOS_UNIQUE_NAME	0

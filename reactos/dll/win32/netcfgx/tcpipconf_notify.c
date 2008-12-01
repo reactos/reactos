@@ -2538,7 +2538,7 @@ TcpipBasicDlg(
  */
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnQueryInterface(
     INetCfgComponentPropertyUi * iface,
     REFIID iid,
@@ -2573,7 +2573,7 @@ INetCfgComponentPropertyUi_fnQueryInterface(
 
 
 ULONG
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnAddRef(
     INetCfgComponentPropertyUi * iface)
 {
@@ -2584,7 +2584,7 @@ INetCfgComponentPropertyUi_fnAddRef(
 }
 
 ULONG
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnRelease(
     INetCfgComponentPropertyUi * iface)
 {
@@ -2599,7 +2599,7 @@ INetCfgComponentPropertyUi_fnRelease(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnQueryPropertyUi(
     INetCfgComponentPropertyUi * iface,
     IUnknown *pUnkReserved)
@@ -2621,7 +2621,7 @@ INetCfgComponentPropertyUi_fnQueryPropertyUi(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnSetContext(
     INetCfgComponentPropertyUi * iface,
     IUnknown *pUnkReserved)
@@ -2875,7 +2875,7 @@ Initialize(TcpipConfNotifyImpl * This)
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnMergePropPages( 
     INetCfgComponentPropertyUi * iface,
     DWORD *pdwDefPages,
@@ -2926,7 +2926,7 @@ INetCfgComponentPropertyUi_fnMergePropPages(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnValidateProperties(
     INetCfgComponentPropertyUi * iface,
     HWND hwndDlg)
@@ -2936,7 +2936,7 @@ MessageBoxW(NULL, L"INetCfgComponentPropertyUi_fnValidateProperties", NULL, MB_O
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnApplyProperties(
     INetCfgComponentPropertyUi * iface)
 {
@@ -2946,7 +2946,7 @@ MessageBoxW(NULL, L"INetCfgComponentPropertyUi_fnApplyProperties", NULL, MB_OK);
 
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentPropertyUi_fnCancelProperties(
     INetCfgComponentPropertyUi * iface)
 {
@@ -2972,7 +2972,7 @@ static const INetCfgComponentPropertyUiVtbl vt_NetCfgComponentPropertyUi =
  */
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentControl_fnQueryInterface(
     INetCfgComponentControl * iface,
     REFIID iid,
@@ -2983,7 +2983,7 @@ INetCfgComponentControl_fnQueryInterface(
 }
 
 ULONG
-STDCALL
+WINAPI
 INetCfgComponentControl_fnAddRef(
     INetCfgComponentControl * iface)
 {
@@ -2992,7 +2992,7 @@ INetCfgComponentControl_fnAddRef(
 }
 
 ULONG
-STDCALL
+WINAPI
 INetCfgComponentControl_fnRelease(
     INetCfgComponentControl * iface)
 {
@@ -3001,7 +3001,7 @@ INetCfgComponentControl_fnRelease(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentControl_fnInitialize( 
     INetCfgComponentControl * iface,
     INetCfgComponent *pIComp,
@@ -3097,7 +3097,7 @@ CreateMultiSzString(IP_ADDR * pAddr, COPY_TYPE Type, LPDWORD Size, BOOL bComma)
 
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentControl_fnApplyRegistryChanges(
     INetCfgComponentControl * iface)
 {
@@ -3300,7 +3300,7 @@ INetCfgComponentControl_fnApplyRegistryChanges(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentControl_fnApplyPnpChanges(
     INetCfgComponentControl * iface,
     INetCfgPnpReconfigCallback *pICallback)
@@ -3310,7 +3310,7 @@ INetCfgComponentControl_fnApplyPnpChanges(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponentControl_fnCancelChanges(
     INetCfgComponentControl * iface)
 {
@@ -3330,7 +3330,7 @@ static const INetCfgComponentControlVtbl vt_NetCfgComponentControl =
 };
 
 HRESULT
-STDCALL
+WINAPI
 TcpipConfigNotify_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
 {
     TcpipConfNotifyImpl *This;

@@ -2055,9 +2055,19 @@ ULONG CCabinet::AddFile(char* FileName)
         return CAB_STATUS_CANNOT_READ;
     }
 
-    GetFileTimes(SrcFile, FileNode);
+    if (GetFileTimes(SrcFile, FileNode) != CAB_STATUS_SUCCESS)
+    {
+        DPRINT(MIN_TRACE, ("Cannot read file times.\n"));
+        FreeMemory(NewFileName);
+        return CAB_STATUS_CANNOT_READ;
+    }
 
-    GetAttributesOnFile(FileNode);
+    if (GetAttributesOnFile(FileNode) != CAB_STATUS_SUCCESS)
+    {
+        DPRINT(MIN_TRACE, ("Cannot read file attributes.\n"));
+        FreeMemory(NewFileName);
+        return CAB_STATUS_CANNOT_READ;
+    }
 
     CloseFile(SrcFile);
 
@@ -3646,7 +3656,8 @@ ULONG CCabinet::GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File)
         strcpy(buf, File->FileName);
     else
     {
-        getcwd(buf, sizeof(buf));
+        if (!getcwd(buf, sizeof(buf)))
+            return CAB_STATUS_CANNOT_READ;
         strcat(buf, DIR_SEPARATOR_STRING);
         strcat(buf, File->FileName);
     }
@@ -3689,7 +3700,8 @@ ULONG CCabinet::GetAttributesOnFile(PCFFILE_NODE File)
         strcpy(buf, File->FileName);
     else
     {
-        getcwd(buf, sizeof(buf));
+        if (!getcwd(buf, sizeof(buf)))
+            return CAB_STATUS_CANNOT_READ;
         strcat(buf, DIR_SEPARATOR_STRING);
         strcat(buf, File->FileName);
     }

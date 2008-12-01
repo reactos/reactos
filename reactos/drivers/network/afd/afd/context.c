@@ -12,7 +12,7 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
@@ -36,7 +36,7 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;

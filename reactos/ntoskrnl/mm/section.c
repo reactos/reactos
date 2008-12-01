@@ -291,7 +291,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
          {
             DPRINT1("Image segment %d still referenced (was %d)\n", i,
                     SectionSegments[i].ReferenceCount);
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
          MmFreePageTablesSectionSegment(&SectionSegments[i]);
       }
@@ -309,7 +309,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
       if (Segment->ReferenceCount != 0)
       {
          DPRINT1("Data segment still referenced\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmFreePageTablesSectionSegment(Segment);
       ExFreePool(Segment);
@@ -357,7 +357,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                                      TAG_SECTION_PAGE_TABLE);
          if (Table == NULL)
          {
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
          memset(Table, 0, sizeof(SECTION_PAGE_TABLE));
          DPRINT("Table %x\n", Table);
@@ -410,16 +410,16 @@ MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
    if (Entry == 0)
    {
       DPRINT1("Entry == 0 for MmSharePageEntrySectionSegment\n");
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (SHARE_COUNT_FROM_SSE(Entry) == MAX_SHARE_COUNT)
    {
       DPRINT1("Maximum share count reached\n");
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (IS_SWAP_FROM_SSE(Entry))
    {
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
    Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) + 1);
    MmSetPageEntrySectionSegment(Segment, Offset, Entry);
@@ -440,16 +440,16 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
    if (Entry == 0)
    {
       DPRINT1("Entry == 0 for MmUnsharePageEntrySectionSegment\n");
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (SHARE_COUNT_FROM_SSE(Entry) == 0)
    {
       DPRINT1("Zero share count for unshare\n");
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (IS_SWAP_FROM_SSE(Entry))
    {
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
    Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) - 1);
    /*
@@ -485,7 +485,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
             if (!NT_SUCCESS(Status))
             {
                DPRINT1("CcRosUnmapCacheSegment failed, status = %x\n", Status);
-               ASSERT(FALSE);
+                KeBugCheck(MEMORY_MANAGEMENT);
             }
          }
       }
@@ -534,7 +534,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                   if (!NT_SUCCESS(Status))
                   {
                      DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", Status);
-                     ASSERT(FALSE);
+                      KeBugCheck(MEMORY_MANAGEMENT);
                   }
                }
                MmSetPageEntrySectionSegment(Segment, Offset, MAKE_SWAP_SSE(SavedSwapEntry));
@@ -545,7 +545,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
          else
          {
             DPRINT1("Found a swapentry for a non private page in an image or data file sgment\n");
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
       }
    }
@@ -816,7 +816,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
    if (PageOp == NULL)
    {
       DPRINT1("MmGetPageOp failed\n");
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    /*
@@ -834,12 +834,12 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (Status != STATUS_SUCCESS)
       {
          DPRINT1("Failed to wait for page op, status = %x\n", Status);
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (PageOp->Status == STATUS_PENDING)
       {
          DPRINT1("Woke for page op before completion\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmLockAddressSpace(AddressSpace);
       /*
@@ -897,7 +897,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
          if (!NT_SUCCESS(Status))
          {
             DPRINT1("Unable to create virtual mapping\n");
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
          MmInsertRmap(Page, Process, (PVOID)PAddress);
       }
@@ -926,7 +926,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (Segment->Flags & MM_PAGEFILE_SEGMENT)
       {
          DPRINT1("Found a swaped out private page in a pagefile section.\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       MmUnlockSectionSegment(Segment);
@@ -936,14 +936,14 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
       if (!NT_SUCCESS(Status))
       {
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       Status = MmReadFromSwapPage(SwapEntry, Page);
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("MmReadFromSwapPage failed, status = %x\n", Status);
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmLockAddressSpace(AddressSpace);
       Status = MmCreateVirtualMapping(Process,
@@ -954,7 +954,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (!NT_SUCCESS(Status))
       {
          DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
          return(Status);
       }
 
@@ -999,7 +999,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (!NT_SUCCESS(Status))
       {
          DPRINT("MmCreateVirtualMappingUnsafe failed, not out of memory\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
          return(Status);
       }
       /*
@@ -1035,7 +1035,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       }
       if (!NT_SUCCESS(Status))
       {
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       Status = MmCreateVirtualMapping(Process,
                                       Address,
@@ -1045,7 +1045,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (!NT_SUCCESS(Status))
       {
          DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
          return(Status);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
@@ -1126,7 +1126,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (Entry != Entry1)
       {
          DPRINT1("Someone changed ppte entry while we slept\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       /*
@@ -1145,7 +1145,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to create virtual mapping\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
 
@@ -1174,13 +1174,13 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
       if (!NT_SUCCESS(Status))
       {
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       Status = MmReadFromSwapPage(SwapEntry, Page);
       if (!NT_SUCCESS(Status))
       {
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       /*
@@ -1197,7 +1197,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (Entry != Entry1)
       {
          DPRINT1("Someone changed ppte entry while we slept\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       /*
@@ -1220,7 +1220,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to create virtual mapping\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
       if (Locked)
@@ -1252,7 +1252,7 @@ MmNotPresentFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to create virtual mapping\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
       if (Locked)
@@ -1346,7 +1346,7 @@ MmAccessFaultSectionView(PMM_AVL_TABLE AddressSpace,
    if (PageOp == NULL)
    {
       DPRINT1("MmGetPageOp failed\n");
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    /*
@@ -1362,12 +1362,12 @@ MmAccessFaultSectionView(PMM_AVL_TABLE AddressSpace,
       if (Status == STATUS_TIMEOUT)
       {
          DPRINT1("Failed to wait for page op, status = %x\n", Status);
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (PageOp->Status == STATUS_PENDING)
       {
          DPRINT1("Woke for page op before completion\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       /*
       * Restart the operation
@@ -1389,7 +1389,7 @@ MmAccessFaultSectionView(PMM_AVL_TABLE AddressSpace,
    Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &NewPage);
    if (!NT_SUCCESS(Status))
    {
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    /*
@@ -1414,13 +1414,13 @@ MmAccessFaultSectionView(PMM_AVL_TABLE AddressSpace,
    if (!NT_SUCCESS(Status))
    {
       DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
       return(Status);
    }
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Unable to create virtual mapping\n");
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (Locked)
    {
@@ -1550,7 +1550,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       DPRINT1("Trying to page out from physical memory section address 0x%X "
               "process %d\n", Address,
               Process ? Process->UniqueProcessId : 0);
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    /*
@@ -1561,7 +1561,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
    {
       DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
               Process ? Process->UniqueProcessId : 0, Address);
-      ASSERT(FALSE);
+       KeBugCheck(MEMORY_MANAGEMENT);
    }
    Page = MmGetPfnForProcess(Process, Address);
    SwapEntry = MmGetSavedSwapEntryPage(Page);
@@ -1589,7 +1589,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       if(!MiIsPageFromCache(MemoryArea, Context.Offset))
       {
          DPRINT1("Direct mapped non private page is not associated with the cache.\n");
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
    else
@@ -1608,7 +1608,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       if (!(Context.Segment->Flags & MM_PAGEFILE_SEGMENT) &&
             !(Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
       {
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
 
@@ -1626,7 +1626,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       {
          DPRINT1("Found a %s private page (address %x) in a pagefile segment.\n",
                  Context.WasDirty ? "dirty" : "clean", Address);
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (!Context.WasDirty && SwapEntry != 0)
       {
@@ -1644,7 +1644,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       {
          DPRINT1("Found a %s private page (address %x) in a shared section segment.\n",
                  Context.WasDirty ? "dirty" : "clean", Address);
-         ASSERT(FALSE);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (!Context.WasDirty || SwapEntry != 0)
       {
@@ -1665,13 +1665,13 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       {
          DPRINT1("Found a swapentry for a non private and direct mapped page (address %x)\n",
                  Address);
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       Status = CcRosUnmapCacheSegment(Bcb, FileOffset, FALSE);
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("CCRosUnmapCacheSegment failed, status = %x\n", Status);
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -1683,7 +1683,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       {
          DPRINT1("Found a swap entry for a non dirty, non private and not direct mapped page (address %x)\n",
                  Address);
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmReleasePageMemoryConsumer(MC_USER, Page);
       PageOp->Status = STATUS_SUCCESS;
@@ -1700,7 +1700,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       MmUnlockAddressSpace(AddressSpace);
       if (!NT_SUCCESS(Status))
       {
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmReleasePageMemoryConsumer(MC_USER, Page);
       PageOp->Status = STATUS_SUCCESS;
@@ -1828,7 +1828,7 @@ MmPageOutSectionView(PMM_AVL_TABLE AddressSpace,
       MmUnlockAddressSpace(AddressSpace);
       if (!NT_SUCCESS(Status))
       {
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
    else
@@ -1903,7 +1903,7 @@ MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
       DPRINT1("Trying to write back page from physical memory mapped at %X "
               "process %d\n", Address,
               Process ? Process->UniqueProcessId : 0);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    /*
@@ -1914,7 +1914,7 @@ MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
    {
       DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
               Process ? Process->UniqueProcessId : 0, Address);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    Page = MmGetPfnForProcess(Process, Address);
    SwapEntry = MmGetSavedSwapEntryPage(Page);
@@ -2089,7 +2089,7 @@ MmProtectSectionView(PMM_AVL_TABLE AddressSpace,
    return(Status);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmQuerySectionView(PMEMORY_AREA MemoryArea,
                    PVOID Address,
                    PMEMORY_BASIC_INFORMATION Info,
@@ -2168,7 +2168,7 @@ MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
    }
 }
 
-VOID STDCALL
+VOID NTAPI
 MmpDeleteSection(PVOID ObjectBody)
 {
    PROS_SECTION_OBJECT Section = (PROS_SECTION_OBJECT)ObjectBody;
@@ -2239,7 +2239,7 @@ MmpDeleteSection(PVOID ObjectBody)
    }
 }
 
-VOID STDCALL
+VOID NTAPI
 MmpCloseSection(IN PEPROCESS Process OPTIONAL,
                 IN PVOID Object,
                 IN ACCESS_MASK GrantedAccess,
@@ -2282,7 +2282,7 @@ MmCreatePhysicalMemorySection(VOID)
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Failed to create PhysicalMemory section\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    Status = ObInsertObject(PhysSection,
                            NULL,
@@ -2723,7 +2723,7 @@ ExeFmtpReadFile(IN PVOID File,
 
    if(Length == 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    FileOffset = *Offset;
@@ -2731,7 +2731,7 @@ ExeFmtpReadFile(IN PVOID File,
    /* Negative/special offset: it cannot be used in this context */
    if(FileOffset.u.HighPart < 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    AdjustOffset = PAGE_ROUND_DOWN(FileOffset.u.LowPart);
@@ -3134,7 +3134,7 @@ MmspPageAlignSegments
           */
          else
          {
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
       }
    }
@@ -3477,7 +3477,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtCreateSection (OUT PHANDLE SectionHandle,
                  IN ACCESS_MASK DesiredAccess,
                  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -3495,17 +3495,17 @@ NtCreateSection (OUT PHANDLE SectionHandle,
 
    if(MaximumSize != NULL && PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        /* make a copy on the stack */
        SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
        MaximumSize = &SafeMaximumSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3552,7 +3552,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
  *
  * REVISIONS
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtOpenSection(PHANDLE   SectionHandle,
               ACCESS_MASK  DesiredAccess,
               POBJECT_ATTRIBUTES ObjectAttributes)
@@ -3565,15 +3565,15 @@ NtOpenSection(PHANDLE   SectionHandle,
 
    if(PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForWriteHandle(SectionHandle);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3591,15 +3591,15 @@ NtOpenSection(PHANDLE   SectionHandle,
 
    if(NT_SUCCESS(Status))
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        *SectionHandle = hSection;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
 
    return(Status);
@@ -3699,7 +3699,7 @@ MmMapViewOfSegment(PMM_AVL_TABLE AddressSpace,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtMapViewOfSection(IN HANDLE SectionHandle,
                    IN HANDLE ProcessHandle,
                    IN OUT PVOID* BaseAddress  OPTIONAL,
@@ -3750,7 +3750,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
      SafeSectionOffset.QuadPart = 0;
      SafeViewSize = 0;
 
-     _SEH_TRY
+     _SEH2_TRY
      {
        if(BaseAddress != NULL)
        {
@@ -3765,11 +3765,11 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
        ProbeForWriteSize_t(ViewSize);
        SafeViewSize = *ViewSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -3840,7 +3840,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    if(NT_SUCCESS(Status))
    {
      /* copy parameters back to the caller */
-     _SEH_TRY
+     _SEH2_TRY
      {
        if(BaseAddress != NULL)
        {
@@ -3855,11 +3855,11 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
          *ViewSize = SafeViewSize;
        }
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
 
    return(Status);
@@ -3903,7 +3903,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       if (Status != STATUS_SUCCESS)
       {
          DPRINT1("Failed to wait for page op, status = %x\n", Status);
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       MmLockAddressSpace(AddressSpace);
@@ -3937,7 +3937,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       if (Segment->Flags & MM_PAGEFILE_SEGMENT)
       {
          DPRINT1("Found a swap entry for a page in a pagefile section.\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmFreeSwapPage(SwapEntry);
    }
@@ -3952,7 +3952,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
          if (Segment->Flags & MM_PAGEFILE_SEGMENT)
          {
             DPRINT1("Found a private page in a pagefile section.\n");
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
          /*
           * Just dereference private pages
@@ -4029,7 +4029,7 @@ MmUnmapViewOfSegment(PMM_AVL_TABLE AddressSpace,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmUnmapViewOfSection(PEPROCESS Process,
                      PVOID BaseAddress)
 {
@@ -4078,7 +4078,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
             if (Status != STATUS_SUCCESS)
             {
                DPRINT1("Failed to wait for page op, status = %x\n", Status);
-               ASSERT(FALSE);
+               KeBugCheck(MEMORY_MANAGEMENT);
             }
             MmLockAddressSpace(AddressSpace);
             MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
@@ -4124,7 +4124,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
       }
       if (i >= NrSegments)
       {
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       for (i = 0; i < NrSegments; i++)
@@ -4166,7 +4166,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
  *
  * REVISIONS
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtUnmapViewOfSection (HANDLE ProcessHandle,
                       PVOID BaseAddress)
 {
@@ -4222,7 +4222,7 @@ NtUnmapViewOfSection (HANDLE ProcessHandle,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtQuerySection(IN HANDLE SectionHandle,
                IN SECTION_INFORMATION_CLASS SectionInformationClass,
                OUT PVOID SectionInformation,
@@ -4263,7 +4263,7 @@ NtQuerySection(IN HANDLE SectionHandle,
          {
             PSECTION_BASIC_INFORMATION Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
 
-            _SEH_TRY
+            _SEH2_TRY
             {
                Sbi->Attributes = Section->AllocationAttributes;
                if (Section->AllocationAttributes & SEC_IMAGE)
@@ -4283,11 +4283,11 @@ NtQuerySection(IN HANDLE SectionHandle,
                }
                Status = STATUS_SUCCESS;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-               Status = _SEH_GetExceptionCode();
+               Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             break;
          }
@@ -4296,7 +4296,7 @@ NtQuerySection(IN HANDLE SectionHandle,
          {
             PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
 
-            _SEH_TRY
+            _SEH2_TRY
             {
                memset(Sii, 0, sizeof(SECTION_IMAGE_INFORMATION));
                if (Section->AllocationAttributes & SEC_IMAGE)
@@ -4321,11 +4321,11 @@ NtQuerySection(IN HANDLE SectionHandle,
                }
                Status = STATUS_SUCCESS;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-               Status = _SEH_GetExceptionCode();
+               Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             break;
          }
@@ -4352,7 +4352,7 @@ NtQuerySection(IN HANDLE SectionHandle,
  * @todo Move the actual code to internal function MmExtendSection.
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtExtendSection(IN HANDLE SectionHandle,
                 IN PLARGE_INTEGER NewMaximumSize)
 {
@@ -4365,17 +4365,17 @@ NtExtendSection(IN HANDLE SectionHandle,
 
    if(PreviousMode != KernelMode)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        /* make a copy on the stack */
        SafeNewMaximumSize = ProbeForReadLargeInteger(NewMaximumSize);
        NewMaximumSize = &SafeNewMaximumSize;
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
 
      if(!NT_SUCCESS(Status))
      {
@@ -4430,7 +4430,7 @@ NtExtendSection(IN HANDLE SectionHandle,
  *
  * REVISIONS
  */
-PVOID STDCALL
+PVOID NTAPI
 MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
 {
    PVOID Result;
@@ -4519,7 +4519,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMapViewOfSection(IN PVOID SectionObject,
                    IN PEPROCESS Process,
                    IN OUT PVOID *BaseAddress,
@@ -4716,7 +4716,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                       IN PLARGE_INTEGER   NewFileSize)
 {
@@ -4728,7 +4728,7 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmDisableModifiedWriteOfSection (ULONG Unknown0)
 {
    UNIMPLEMENTED;
@@ -4738,7 +4738,7 @@ MmDisableModifiedWriteOfSection (ULONG Unknown0)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                      IN MMFLUSH_TYPE   FlushType)
 {
@@ -4761,7 +4761,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 MmForceSectionClosed (
     IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     IN BOOLEAN                  DelayClose)
@@ -4774,7 +4774,7 @@ MmForceSectionClosed (
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMapViewInSystemSpace (IN PVOID SectionObject,
                         OUT PVOID * MappedBase,
                         IN OUT PULONG ViewSize)
@@ -4822,7 +4822,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 MmMapViewInSessionSpace (
     IN PVOID Section,
     OUT PVOID *MappedBase,
@@ -4837,7 +4837,7 @@ MmMapViewInSessionSpace (
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmUnmapViewInSystemSpace (IN PVOID MappedBase)
 {
    PMM_AVL_TABLE AddressSpace;
@@ -4856,7 +4856,7 @@ MmUnmapViewInSystemSpace (IN PVOID MappedBase)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 MmUnmapViewInSessionSpace (
     IN PVOID MappedBase
     )
@@ -4868,7 +4868,7 @@ MmUnmapViewInSessionSpace (
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmSetBankedSection (ULONG Unknown0,
                     ULONG Unknown1,
                     ULONG Unknown2,
@@ -4936,7 +4936,7 @@ MmSetBankedSection (ULONG Unknown0,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmCreateSection (OUT PVOID  * Section,
                  IN ACCESS_MASK  DesiredAccess,
                  IN POBJECT_ATTRIBUTES ObjectAttributes     OPTIONAL,

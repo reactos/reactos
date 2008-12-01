@@ -43,7 +43,7 @@ CopyBitmap(HBITMAP bmp);
 
 /* This callback routine is called directly after switching to gui mode */
 NTSTATUS
-STDCALL
+WINAPI
 User32SetupDefaultCursors(PVOID Arguments,
                           ULONG ArgumentLength)
 {
@@ -72,7 +72,7 @@ User32SetupDefaultCursors(PVOID Arguments,
  * @implemented
  */
 HCURSOR
-STDCALL
+WINAPI
 CopyCursor(HCURSOR pcur)
 {
     ICONINFO IconInfo;
@@ -88,7 +88,7 @@ CopyCursor(HCURSOR pcur)
  * @implemented
  */
 HCURSOR
-STDCALL
+WINAPI
 CreateCursor(HINSTANCE hInst,
              int xHotSpot,
              int yHotSpot,
@@ -157,7 +157,7 @@ CreateCursor(HINSTANCE hInst,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DestroyCursor(HCURSOR hCursor)
 {
     return (BOOL)NtUserDestroyCursor((HANDLE)hCursor, 0);
@@ -168,7 +168,7 @@ DestroyCursor(HCURSOR hCursor)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetClipCursor(LPRECT lpRect)
 {
     return NtUserGetClipCursor(lpRect);
@@ -179,7 +179,7 @@ GetClipCursor(LPRECT lpRect)
  * @implemented
  */
 HCURSOR
-STDCALL
+WINAPI
 GetCursor(VOID)
 {
     CURSORINFO ci;
@@ -195,7 +195,7 @@ GetCursor(VOID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCursorInfo(PCURSORINFO pci)
 {
     return (BOOL)NtUserGetCursorInfo(pci);
@@ -206,7 +206,7 @@ GetCursorInfo(PCURSORINFO pci)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCursorPos(LPPOINT lpPoint)
 {
     BOOL res;
@@ -227,7 +227,7 @@ GetCursorPos(LPPOINT lpPoint)
  * @implemented
  */
 HCURSOR
-STDCALL
+WINAPI
 LoadCursorA(HINSTANCE hInstance,
             LPCSTR lpCursorName)
 {
@@ -244,7 +244,7 @@ LoadCursorA(HINSTANCE hInstance,
  * @implemented
  */
 HCURSOR
-STDCALL
+WINAPI
 LoadCursorFromFileA(LPCSTR lpFileName)
 {
     UNICODE_STRING FileName;
@@ -265,7 +265,7 @@ LoadCursorFromFileA(LPCSTR lpFileName)
  * @implemented
  */
 HCURSOR
-STDCALL
+WINAPI
 LoadCursorFromFileW(LPCWSTR lpFileName)
 {
     return(LoadImageW(0,
@@ -281,7 +281,7 @@ LoadCursorFromFileW(LPCWSTR lpFileName)
  * @implemented
  */
 HCURSOR
-STDCALL
+WINAPI
 LoadCursorW(HINSTANCE hInstance,
             LPCWSTR lpCursorName)
 {
@@ -298,7 +298,7 @@ LoadCursorW(HINSTANCE hInstance,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ClipCursor(CONST RECT *lpRect)
 {
     return NtUserClipCursor((RECT *)lpRect);
@@ -309,7 +309,7 @@ ClipCursor(CONST RECT *lpRect)
  * @implemented
  */
 HCURSOR
-STDCALL
+WINAPI
 SetCursor(HCURSOR hCursor)
 {
     return NtUserSetCursor(hCursor);
@@ -320,7 +320,7 @@ SetCursor(HCURSOR hCursor)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCursorPos(int X,
              int Y)
 {
@@ -343,7 +343,7 @@ SetCursorPos(int X,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetSystemCursor(HCURSOR hcur,
                 DWORD id)
 {
@@ -356,7 +356,7 @@ SetSystemCursor(HCURSOR hcur,
  * @implemented
  */
 int
-STDCALL
+WINAPI
 ShowCursor(BOOL bShow)
 {
     return NtUserShowCursor(bShow);

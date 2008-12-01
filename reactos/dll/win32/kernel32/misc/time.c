@@ -241,7 +241,7 @@ static BOOL TIME_GetTimezoneBias( const TIME_ZONE_INFORMATION *pTZinfo,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FileTimeToDosDateTime(
 		      CONST FILETIME *lpFileTime,
 		      LPWORD lpFatDate,
@@ -282,7 +282,7 @@ FileTimeToDosDateTime(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DosDateTimeToFileTime(
 		      WORD wFatDate,
 		      WORD wFatTime,
@@ -315,7 +315,7 @@ DosDateTimeToFileTime(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 CompareFileTime(
 		CONST FILETIME *lpFileTime1,
 		CONST FILETIME *lpFileTime2
@@ -338,7 +338,7 @@ CompareFileTime(
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 GetSystemTimeAsFileTime (PFILETIME lpFileTime)
 {
   do
@@ -354,7 +354,7 @@ GetSystemTimeAsFileTime (PFILETIME lpFileTime)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SystemTimeToFileTime(
     CONST SYSTEMTIME *  lpSystemTime,
     LPFILETIME  lpFileTime
@@ -378,6 +378,8 @@ SystemTimeToFileTime(
      lpFileTime->dwHighDateTime = liTime.u.HighPart;
      return TRUE;
   }
+
+  SetLastError(ERROR_INVALID_PARAMETER);
   return FALSE;
 }
 
@@ -386,7 +388,7 @@ SystemTimeToFileTime(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FileTimeToSystemTime(
 		     CONST FILETIME *lpFileTime,
 		     LPSYSTEMTIME lpSystemTime
@@ -420,7 +422,7 @@ FileTimeToSystemTime(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FileTimeToLocalFileTime(
 			CONST FILETIME *lpFileTime,
 			LPFILETIME lpLocalFileTime
@@ -446,7 +448,7 @@ FileTimeToLocalFileTime(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LocalFileTimeToFileTime(
 			CONST FILETIME *lpLocalFileTime,
 			LPFILETIME lpFileTime
@@ -471,7 +473,7 @@ LocalFileTimeToFileTime(
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 GetLocalTime(LPSYSTEMTIME lpSystemTime)
 {
   FILETIME FileTime;
@@ -486,7 +488,7 @@ GetLocalTime(LPSYSTEMTIME lpSystemTime)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 GetSystemTime(LPSYSTEMTIME lpSystemTime)
 {
   FILETIME FileTime;
@@ -499,7 +501,7 @@ GetSystemTime(LPSYSTEMTIME lpSystemTime)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetLocalTime(CONST SYSTEMTIME *lpSystemTime)
 {
   FILETIME LocalFileTime;
@@ -518,7 +520,7 @@ SetLocalTime(CONST SYSTEMTIME *lpSystemTime)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetSystemTime(CONST SYSTEMTIME *lpSystemTime)
 {
   LARGE_INTEGER NewSystemTime;
@@ -535,7 +537,7 @@ SetSystemTime(CONST SYSTEMTIME *lpSystemTime)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 {
    NTSTATUS Status;
@@ -559,7 +561,7 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 {
    NTSTATUS Status;
@@ -591,7 +593,7 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetTickCount(VOID)
 {
   return (DWORD)((ULONGLONG)SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier / 16777216);
@@ -611,7 +613,7 @@ GetTickCount64(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SystemTimeToTzSpecificLocalTime(
                                 CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
                                 CONST SYSTEMTIME *lpUniversalTime,
@@ -648,7 +650,7 @@ SystemTimeToTzSpecificLocalTime(
  * @implemented (Wine 13 sep 2008)
  */
 BOOL
-STDCALL
+WINAPI
 TzSpecificLocalTimeToSystemTime(
     CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
     CONST SYSTEMTIME *lpLocalTime,
@@ -685,7 +687,7 @@ TzSpecificLocalTimeToSystemTime(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 			PDWORD lpTimeIncrement,
 			PBOOL lpTimeAdjustmentDisabled)
@@ -714,7 +716,7 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
 			BOOL bTimeAdjustmentDisabled)
 {
@@ -741,7 +743,7 @@ SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetSystemTimes(
     LPFILETIME lpIdleTime,
     LPFILETIME lpKernelTime,

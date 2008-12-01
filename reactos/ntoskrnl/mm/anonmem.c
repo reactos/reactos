@@ -519,7 +519,7 @@ MmModifyAttributes(PMM_AVL_TABLE AddressSpace,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
                         IN OUT PVOID* UBaseAddress,
                         IN     ULONG_PTR  ZeroBits,
@@ -632,7 +632,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
 
    PreviousMode = KeGetPreviousMode();
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       if (PreviousMode != KernelMode)
       {
@@ -642,13 +642,13 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
       PBaseAddress = *UBaseAddress;
       PRegionSize  = *URegionSize;
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       /* Get the exception code */
-      Status = _SEH_GetExceptionCode();
-      _SEH_YIELD(return Status);
+      Status = _SEH2_GetExceptionCode();
+      _SEH2_YIELD(return Status);
    }
-   _SEH_END;
+   _SEH2_END;
 
    BoundaryAddressMultiple.QuadPart = 0;
 
@@ -915,7 +915,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     IN PVOID*  PBaseAddress,
                     IN PSIZE_T PRegionSize,
@@ -1030,7 +1030,7 @@ MmProtectAnonMem(PMM_AVL_TABLE AddressSpace,
    return(Status);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmQueryAnonMem(PMEMORY_AREA MemoryArea,
                PVOID Address,
                PMEMORY_BASIC_INFORMATION Info,

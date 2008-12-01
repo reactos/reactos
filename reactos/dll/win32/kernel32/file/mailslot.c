@@ -20,7 +20,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 CreateMailslotA(LPCSTR lpName,
 		DWORD nMaxMessageSize,
 		DWORD lReadTimeout,
@@ -47,7 +47,7 @@ CreateMailslotA(LPCSTR lpName,
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 CreateMailslotW(LPCWSTR lpName,
 		DWORD nMaxMessageSize,
 		DWORD lReadTimeout,
@@ -127,7 +127,7 @@ CreateMailslotW(LPCWSTR lpName,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetMailslotInfo(HANDLE hMailslot,
 		LPDWORD lpMaxMessageSize,
 		LPDWORD lpNextSize,
@@ -178,7 +178,7 @@ GetMailslotInfo(HANDLE hMailslot,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetMailslotInfo(HANDLE hMailslot,
 		DWORD lReadTimeout)
 {

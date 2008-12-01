@@ -4,7 +4,7 @@
  * Copyright 2002-2005 Jason Edmeades
  * Copyright 2002-2005 Raphael Junqueira
  * Copyright 2005 Oliver Stieber
- * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2007-2008 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,15 +26,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
 #define GLINFO_LOCATION This->resource.wineD3DDevice->adapter->gl_info
-
-static const GLenum cube_targets[6] = {
-  GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB,
-  GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB,
-  GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB,
-  GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB,
-  GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB,
-  GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB
-};
 
 /* *******************************************
    IWineD3DCubeTexture IUnknown parts follow
@@ -156,7 +147,7 @@ static void WINAPI IWineD3DCubeTextureImpl_PreLoad(IWineD3DCubeTexture *iface) {
         for (i = 0; i < This->baseTexture.levels; i++) {
             for (j = WINED3DCUBEMAP_FACE_POSITIVE_X; j <= WINED3DCUBEMAP_FACE_NEGATIVE_Z ; j++) {
                 IWineD3DSurface_AddDirtyRect(This->surfaces[j][i], NULL);
-                IWineD3DSurface_SetGlTextureDesc(This->surfaces[j][i], This->baseTexture.textureName, cube_targets[j]);
+                surface_force_reload(This->surfaces[j][i]);
                 IWineD3DSurface_LoadTexture(This->surfaces[j][i], srgb_mode);
             }
         }
@@ -181,7 +172,7 @@ static void WINAPI IWineD3DCubeTextureImpl_UnLoad(IWineD3DCubeTexture *iface) {
     for (i = 0; i < This->baseTexture.levels; i++) {
         for (j = WINED3DCUBEMAP_FACE_POSITIVE_X; j <= WINED3DCUBEMAP_FACE_NEGATIVE_Z ; j++) {
             IWineD3DSurface_UnLoad(This->surfaces[j][i]);
-            IWineD3DSurface_SetGlTextureDesc(This->surfaces[j][i], 0, IWineD3DTexture_GetTextureDimensions(iface));
+            surface_set_texture_name(This->surfaces[j][i], 0);
         }
     }
 
@@ -245,7 +236,7 @@ static HRESULT WINAPI IWineD3DCubeTextureImpl_BindTexture(IWineD3DCubeTexture *i
         UINT i, j;
         for (i = 0; i < This->baseTexture.levels; ++i) {
             for (j = WINED3DCUBEMAP_FACE_POSITIVE_X; j <= WINED3DCUBEMAP_FACE_NEGATIVE_Z; ++j) {
-                IWineD3DSurface_SetGlTextureDesc(This->surfaces[j][i], This->baseTexture.textureName, cube_targets[j]);
+                surface_set_texture_name(This->surfaces[j][i], This->baseTexture.textureName);
             }
         }
     }
@@ -285,8 +276,10 @@ static void WINAPI IWineD3DCubeTextureImpl_Destroy(IWineD3DCubeTexture *iface, D
     for (i = 0; i < This->baseTexture.levels; i++) {
         for (j = 0; j < 6; j++) {
             if (This->surfaces[j][i] != NULL) {
+                IWineD3DSurface *surface = This->surfaces[j][i];
                 /* Clean out the texture name we gave to the surface so that the surface doesn't try and release it */
-                IWineD3DSurface_SetGlTextureDesc(This->surfaces[j][i], 0, 0);
+                surface_set_texture_name(surface, 0);
+                surface_set_texture_target(surface, 0);
                 /* Cleanup the container */
                 IWineD3DSurface_SetContainer(This->surfaces[j][i], 0);
                 D3DCB_DestroySurface(This->surfaces[j][i]);

@@ -222,7 +222,7 @@ VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
 #ifndef NO_MAPPING
 // Set the color-mapping table for selected palette.
 // Return number of entries which mapping has changed.
-INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
+INT APIENTRY PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
 {
   char flag;
   int  prevMapping = (palPtr->mapping) ? 1 : 0;

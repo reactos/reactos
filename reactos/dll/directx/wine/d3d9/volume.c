@@ -30,7 +30,7 @@ static HRESULT WINAPI IDirect3DVolume9Impl_QueryInterface(LPDIRECT3DVOLUME9 ifac
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DVolume9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DVolume9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }

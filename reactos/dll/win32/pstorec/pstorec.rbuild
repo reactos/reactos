@@ -5,5 +5,4 @@
 	<library>kernel32</library>
 	<library>uuid</library>
 	<file>pstorec.c</file>
-	<file>pstorec.spec</file>
 </module>

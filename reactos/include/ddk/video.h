@@ -86,6 +86,10 @@ typedef HW_DMA_RETURN
     PDMA  pDma);
 
 
+#ifdef PAGED_CODE
+#undef PAGED_CODE
+#endif
+
 #ifdef DBG
 
 #define PAGED_CODE() \

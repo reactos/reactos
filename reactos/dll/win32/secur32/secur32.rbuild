@@ -1,5 +1,5 @@
 <module name="secur32" type="win32dll" baseaddress="${BASEADDRESS_SECUR32}" installbase="system32" installname="secur32.dll">
-	<importlibrary definition="secur32.def" />
+	<importlibrary definition="secur32.spec" />
 	<include base="secur32">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="__SECUR32__" />

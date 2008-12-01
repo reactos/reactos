@@ -698,6 +698,8 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
 
     pdev = uhci_create_device(drvr_obj, dev_mgr);
+    if (pdev == NULL)
+        return pdev;
     pdev_ext = pdev->DeviceExtension;
 
     pdev_ext->pci_addr = bus_addr;
@@ -706,9 +708,6 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     slot_num.u.AsULONG = 0;
     slot_num.u.bits.DeviceNumber = ((bus_addr & 0xff) >> 3);
     slot_num.u.bits.FunctionNumber = (bus_addr & 0x07);
-
-    if (pdev == NULL)
-        return pdev;
 
     //now create adapter object
     RtlZeroMemory(&dev_desc, sizeof(dev_desc));
@@ -3122,9 +3121,10 @@ uhci_generic_urb_completion(PURB purb, PVOID context)
     if (old_irql < DISPATCH_LEVEL)
         KeRaiseIrql(DISPATCH_LEVEL, &old_irql);
 
-    pdev = purb->pdev;
     if (purb == NULL)
         return;
+
+    pdev = purb->pdev;
 
     if (pdev == NULL)
         return;

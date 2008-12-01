@@ -18,7 +18,7 @@ DWORD DebugTraceLevel = MAX_TRACE;
 #endif /* DBG */
 
 /* To make the linker happy */
-VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
+VOID WINAPI KeBugCheck (ULONG	BugCheckCode) {}
 
 
 BOOL

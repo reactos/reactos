@@ -16,7 +16,6 @@
 	<library>comctl32</library>
 	<library>ws2_32</library>
 	<file>netcfgx.c</file>
-	<file>netcfgx.spec</file>
 	<file>classfactory.c</file>
 	<file>netcfg_iface.c</file>
 	<file>inetcfgcomp_iface.c</file>

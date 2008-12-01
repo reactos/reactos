@@ -1362,6 +1362,16 @@ Module::SetImportLibrary ( ImportLibrary* importLibrary )
 	                                HasImportLibrary () ? "lib" + name + ".a" : output->name );
 }
 
+std::string
+Module::GetDllName () const
+{
+	if ( importLibrary && !importLibrary->dllname.empty() )
+		return importLibrary->dllname;
+	else if ( output )
+		return output->name;
+	else
+		throw new InvalidOperationException ( __FILE__, __LINE__, "Module %s has no dllname." );
+}
 
 File::File ( DirectoryLocation directory,
              const string& relative_path,

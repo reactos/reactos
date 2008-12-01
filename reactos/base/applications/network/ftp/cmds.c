@@ -48,7 +48,6 @@ static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
 extern	char *globerr;
 extern	char home[];
 extern	char *remglob();
-extern	char *getenv();
 extern	int allbinary;
 extern off_t restart_point;
 extern char reply_string[];
@@ -2195,7 +2194,6 @@ void restart(argc, argv)
 	int argc;
 	char *argv[];
 {
-	extern long atol();
 	if (argc != 2)
 		printf("restart: offset not specified\n");
 	else {

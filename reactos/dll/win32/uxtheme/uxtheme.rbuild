@@ -6,6 +6,7 @@
 	<include base="uxtheme">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<file>buffer.c</file>
 	<file>draw.c</file>
 	<file>main.c</file>
 	<file>metric.c</file>
@@ -15,7 +16,6 @@
 	<file>system.c</file>
 	<file>uxini.c</file>
 	<file>version.rc</file>
-	<file>uxtheme.spec</file>
 	<library>wine</library>
 	<library>user32</library>
 	<library>gdi32</library>

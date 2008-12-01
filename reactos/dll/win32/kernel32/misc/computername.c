@@ -113,7 +113,7 @@ static BOOL GetComputerNameFromRegistry( LPWSTR RegistryKey,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetComputerNameExW (
     COMPUTER_NAME_FORMAT NameType,
     LPWSTR lpBuffer,
@@ -234,7 +234,7 @@ GetComputerNameExW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetComputerNameExA (
     COMPUTER_NAME_FORMAT NameType,
     LPSTR lpBuffer,
@@ -274,7 +274,7 @@ GetComputerNameExA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetComputerNameA (LPSTR lpBuffer,
 		  LPDWORD lpnSize)
 {
@@ -285,7 +285,7 @@ GetComputerNameA (LPSTR lpBuffer,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetComputerNameW (LPWSTR lpBuffer,
 		  LPDWORD lpnSize)
 {
@@ -380,7 +380,7 @@ static BOOL SetComputerNameToRegistry(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetComputerNameA (LPCSTR lpComputerName)
 {
     return SetComputerNameExA( ComputerNamePhysicalNetBIOS, lpComputerName );
@@ -390,7 +390,7 @@ SetComputerNameA (LPCSTR lpComputerName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetComputerNameW (LPCWSTR lpComputerName)
 {
     return SetComputerNameExW( ComputerNamePhysicalNetBIOS, lpComputerName );
@@ -400,7 +400,7 @@ SetComputerNameW (LPCWSTR lpComputerName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetComputerNameExA (
     COMPUTER_NAME_FORMAT NameType,
     LPCSTR lpBuffer)
@@ -422,7 +422,7 @@ SetComputerNameExA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetComputerNameExW (
     COMPUTER_NAME_FORMAT NameType,
     LPCWSTR lpBuffer)
@@ -459,6 +459,75 @@ SetComputerNameExW (
         SetLastError (ERROR_INVALID_PARAMETER);
         return FALSE;
   }
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+DnsHostnameToComputerNameA(LPCSTR Hostname,
+                           LPSTR ComputerName,
+                           LPDWORD nSize)
+{
+    DWORD len;
+
+    DPRINT("(%s, %p, %p)\n", Hostname, ComputerName, nSize);
+
+    if (!Hostname || !nSize)
+        return FALSE;
+
+    len = lstrlenA(Hostname);
+
+    if (len > MAX_COMPUTERNAME_LENGTH)
+        len = MAX_COMPUTERNAME_LENGTH;
+
+    if (*nSize < len)
+    {
+        *nSize = len;
+        return FALSE;
+    }
+
+    if (!ComputerName) return FALSE;
+
+    memcpy( ComputerName, Hostname, len );
+    ComputerName[len + 1] = 0;
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+DnsHostnameToComputerNameW (
+	LPCWSTR hostname,
+    LPWSTR computername,
+	LPDWORD size
+    )
+{
+    DWORD len;
+
+    DPRINT("(%s, %p, %p): stub\n", hostname, computername, size);
+
+    if (!hostname || !size) return FALSE;
+    len = lstrlenW(hostname);
+
+    if (len > MAX_COMPUTERNAME_LENGTH)
+        len = MAX_COMPUTERNAME_LENGTH;
+
+    if (*size < len)
+    {
+        *size = len;
+        return FALSE;
+    }
+    if (!computername) return FALSE;
+
+    memcpy( computername, hostname, len * sizeof(WCHAR) );
+    computername[len + 1] = 0;
+    return TRUE;
 }
 
 /* EOF */

@@ -62,7 +62,7 @@ GetSystemDrive(WCHAR **szSystemDrive)
 
     /* get Path to freeldr.ini or boot.ini */
     *szSystemDrive = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    if (szSystemDrive != NULL)
+    if (*szSystemDrive != NULL)
     {
         dwBufSize = GetEnvironmentVariableW(L"SystemDrive", *szSystemDrive, MAX_PATH);
         if (dwBufSize > MAX_PATH)
@@ -83,15 +83,15 @@ GetSystemDrive(WCHAR **szSystemDrive)
         else if (dwBufSize == 0)
         {
 FailGetSysDrive:
-            HeapFree(GetProcessHeap(), 0, szSystemDrive);
+            HeapFree(GetProcessHeap(), 0, *szSystemDrive);
             *szSystemDrive = NULL;
-            return FALSE;
+            return 0;
         }
 
         return dwBufSize;
     }
 
-    return FALSE;
+    return 0;
 }
 
 static PBOOTRECORD
@@ -454,7 +454,7 @@ LoadOSList(HWND hwndDlg, PSTARTINFO pStartInfo)
     HINF hInf;
 
     dwBufSize = GetSystemDrive(&szSystemDrive);
-    if (!dwBufSize)
+    if (dwBufSize == 0)
         return FALSE;
 
     wcscpy(pStartInfo->szFreeldrIni, szSystemDrive);
@@ -462,6 +462,8 @@ LoadOSList(HWND hwndDlg, PSTARTINFO pStartInfo)
 
     if (PathFileExistsW(pStartInfo->szFreeldrIni))
     {
+        /* free resource previously allocated by GetSystemDrive() */
+        HeapFree(GetProcessHeap(), 0, szSystemDrive);
         /* freeldr.ini exists */
         hInf = SetupOpenInfFileW(pStartInfo->szFreeldrIni,
                                 NULL,
@@ -481,6 +483,9 @@ LoadOSList(HWND hwndDlg, PSTARTINFO pStartInfo)
     /* try load boot.ini settings */
     wcscpy(pStartInfo->szFreeldrIni, szSystemDrive);
     wcscat(pStartInfo->szFreeldrIni, L"\\boot.ini");
+
+    /* free resource previously allocated by GetSystemDrive() */
+    HeapFree(GetProcessHeap(), 0, szSystemDrive);
 
     if (PathFileExistsW(pStartInfo->szFreeldrIni))
     {

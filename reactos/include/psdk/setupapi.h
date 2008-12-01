@@ -1,8 +1,5 @@
 #ifndef _SETUPAPI_H_
 #define _SETUPAPI_H_
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #include <commctrl.h>
 #include <pshpack1.h>

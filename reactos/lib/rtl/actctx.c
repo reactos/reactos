@@ -58,11 +58,11 @@ RtlReleaseActivationContext(IN PVOID *Context)
 
 NTSTATUS
 NTAPI
-RtlFindActivationContextSectionString(IN PVOID Unknown0,
-                                      IN PVOID Unknown1,
+RtlFindActivationContextSectionString(IN ULONG dwFlags,
+                                      IN const GUID *ExtensionGuid,
                                       IN ULONG SectionType,
                                       IN PUNICODE_STRING SectionName,
-                                      IN PVOID Unknown2)
+                                      IN OUT PVOID ReturnedData)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -118,6 +118,22 @@ RtlDeactivateActivationContext(DWORD dwFlags,
 NTSTATUS
 NTAPI
 RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RtlActivateActivationContext(IN ULONG Unknown, IN HANDLE Handle, OUT PULONG_PTR Cookie)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RtlCreateActivationContext(OUT PHANDLE Handle, IN OUT PVOID ReturnedData)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

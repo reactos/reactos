@@ -114,7 +114,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
    PUNICODE_STRING ClassName;
    UINT Size = 0;
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
       {
@@ -167,12 +167,12 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
          Size = MsgMemoryEntry->Size;
       }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      DPRINT1("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH_GetExceptionCode());
+      DPRINT1("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH2_GetExceptionCode());
       Size = 0;
    }
-   _SEH_END;
+   _SEH2_END;
    return Size;
 }
 
@@ -343,7 +343,7 @@ IntCallWndProcRet
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserCallMsgFilter(
    LPMSG lpmsg,
    INT code)
@@ -356,7 +356,7 @@ NtUserCallMsgFilter(
    UserEnterExclusive();
    if (lpmsg)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForRead((PVOID)lpmsg,
                        sizeof(MSG),
@@ -365,11 +365,11 @@ NtUserCallMsgFilter(
                 (PVOID)lpmsg,
                  sizeof(MSG));
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
          BadChk = TRUE;
       }
-      _SEH_END;
+      _SEH2_END;
    }
    else
      RETURN( FALSE);
@@ -381,7 +381,7 @@ NtUserCallMsgFilter(
       Ret = co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)&Msg);
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForWrite((PVOID)lpmsg,
                      sizeof(MSG),
@@ -390,11 +390,11 @@ NtUserCallMsgFilter(
                             &Msg,
                      sizeof(MSG));
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       BadChk = TRUE;
    }
-   _SEH_END;
+   _SEH2_END;
    if (BadChk) RETURN( FALSE);
    RETURN( Ret)
 
@@ -404,7 +404,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-LRESULT STDCALL
+LRESULT APIENTRY
 NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
 {
    NTSTATUS Status;
@@ -494,7 +494,7 @@ CLEANUP:
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserTranslateMessage(LPMSG lpMsg,
                        HKL dwhkl)
 {
@@ -925,7 +925,7 @@ MsgExit:
                 MHook.hwnd         = Msg->Msg.hwnd;
                 MHook.wHitTestCode = HitTest;
                 MHook.dwExtraInfo  = 0;
-                co_HOOK_CallHooks( WH_CBT, HCBT_CLICKSKIPPED, 
+                co_HOOK_CallHooks( WH_CBT, HCBT_CLICKSKIPPED,
                                    Msg->Msg.message, (LPARAM)&MHook);
             }
             return FALSE;
@@ -961,7 +961,7 @@ MsgExit:
    return Present;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
                   HWND hWnd,
                   UINT MsgFilterMin,
@@ -1084,7 +1084,7 @@ co_IntWaitMessage(HWND Wnd,
    return FALSE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
                  HWND hWnd,
                  UINT MsgFilterMin,
@@ -1103,6 +1103,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    BOOL GotMessage;
    NTUSERGETMESSAGEINFO Info;
    NTSTATUS Status;
+   /* FIXME: if initialization is removed, gcc complains that this may be used before initialization. Please review */
    PWINDOW_OBJECT Window = NULL;
    PMSGMEMORY MsgMemoryEntry;
    PVOID UserMem;
@@ -1364,7 +1365,7 @@ UserPostMessage(HWND Wnd,
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserPostMessage(HWND hWnd,
                   UINT Msg,
                   WPARAM wParam,
@@ -1385,7 +1386,7 @@ CLEANUP:
 
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserPostThreadMessage(DWORD idThread,
                         UINT Msg,
                         WPARAM wParam,
@@ -1442,7 +1443,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserQuerySendMessage(DWORD Unknown0)
 {
    UNIMPLEMENTED;
@@ -1573,7 +1574,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
    if (STATUS_TIMEOUT == Status)
    {
-/* 
+/*
    MSDN says:
       Microsoft Windows 2000: If GetLastError returns zero, then the function
       timed out.
@@ -1688,7 +1689,7 @@ co_IntDoSendMessage(HWND hWnd,
    PTHREADINFO pti;
    LRESULT Result = TRUE;
    NTSTATUS Status;
-   PWINDOW_OBJECT Window;
+   PWINDOW_OBJECT Window = NULL;
    NTUSERSENDMESSAGEINFO Info;
    MSG UserModeMsg;
    MSG KernelModeMsg;
@@ -1792,7 +1793,7 @@ co_IntDoSendMessage(HWND hWnd,
    return (LRESULT)Result;
 }
 
-LRESULT STDCALL
+LRESULT APIENTRY
 NtUserSendMessageTimeout(HWND hWnd,
                          UINT Msg,
                          WPARAM wParam,
@@ -1831,7 +1832,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-LRESULT STDCALL
+LRESULT APIENTRY
 NtUserSendMessage(HWND Wnd,
                   UINT Msg,
                   WPARAM wParam,
@@ -1925,7 +1926,7 @@ UserSendNotifyMessage(HWND hWnd,
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSendNotifyMessage(HWND hWnd,
                         UINT Msg,
                         WPARAM wParam,
@@ -1946,7 +1947,7 @@ CLEANUP:
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserWaitMessage(VOID)
 {
    DECLARE_RETURN(BOOL);
@@ -1962,7 +1963,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 IntGetQueueStatus(BOOL ClearChanges)
 {
    PTHREADINFO pti;
@@ -1988,7 +1989,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntInitMessagePumpHook()
 {
    if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
@@ -1999,7 +2000,7 @@ IntInitMessagePumpHook()
    return FALSE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntUninitMessagePumpHook()
 {
    if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
@@ -2015,7 +2016,7 @@ IntUninitMessagePumpHook()
 }
 
 
-LRESULT STDCALL
+LRESULT APIENTRY
 NtUserMessageCall(
    HWND hWnd,
    UINT Msg,
@@ -2035,7 +2036,7 @@ NtUserMessageCall(
    if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
    {
       return 0;
-   }   
+   }
    switch(dwType)
    {
       case FNID_DEFWINDOWPROC:
@@ -2052,18 +2053,18 @@ NtUserMessageCall(
 
          if (ResultInfo)
          {
-            _SEH_TRY
+            _SEH2_TRY
             {
                ProbeForWrite((PVOID)ResultInfo,
                          sizeof(BROADCASTPARM),
-                                             1);               
+                                             1);
                parm = (PBROADCASTPARM)ResultInfo;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                BadChk = TRUE;
             }
-            _SEH_END;
+            _SEH2_END;
             if (BadChk) break;
          }
          else
@@ -2129,7 +2130,7 @@ NtUserMessageCall(
          PHOOK NextObj, Hook = ClientInfo->phkCurrent;
 
          if (!ClientInfo || !Hook) break;
-         
+
          UserReferenceObject(Hook);
 
          if (Hook->Thread && (Hook->Thread != PsGetCurrentThread()))
@@ -2140,7 +2141,7 @@ NtUserMessageCall(
 
          NextObj = IntGetNextHook(Hook);
          ClientInfo->phkCurrent = NextObj;
-         
+
          if ( Hook->HookId == WH_CALLWNDPROC)
          {
             CWPSTRUCT CWP;
@@ -2149,11 +2150,11 @@ NtUserMessageCall(
             CWP.wParam  = wParam;
             CWP.lParam  = lParam;
             DPRINT("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
-     
+
             lResult = co_IntCallHookProc( Hook->HookId,
                                           HC_ACTION,
                                         ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
-                                         (LPARAM)&CWP, 
+                                         (LPARAM)&CWP,
                                           Hook->Proc,
                                           Hook->Ansi,
                                           &Hook->ModuleName);
@@ -2171,7 +2172,7 @@ NtUserMessageCall(
                                           HC_ACTION,
                                         ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
                                          (LPARAM)&CWPR,
-                                          Hook->Proc,   
+                                          Hook->Proc,
                                           Hook->Ansi,
                                           &Hook->ModuleName);
          }
@@ -2188,7 +2189,7 @@ NtUserMessageCall(
 #define WAIT_FAILED ((DWORD)0xFFFFFFFF)
 
 DWORD
-NTAPI
+APIENTRY
 NtUserWaitForInputIdle(
    IN HANDLE hProcess,
    IN DWORD dwMilliseconds,
@@ -2198,7 +2199,7 @@ NtUserWaitForInputIdle(
   PW32PROCESS W32Process;
   NTSTATUS Status;
   HANDLE Handles[2];
-  LARGE_INTEGER Timeout; 
+  LARGE_INTEGER Timeout;
   ULONGLONG StartTime, Run, Elapsed = 0;
 
   UserEnterExclusive();
@@ -2294,7 +2295,7 @@ NtUserWaitForInputIdle(
      if (dwMilliseconds != INFINITE)
      {
         Elapsed = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
-                              SharedUserData->TickCountMultiplier / 16777216) 
+                              SharedUserData->TickCountMultiplier / 16777216)
                               - StartTime;
 
         if (Elapsed > Run)

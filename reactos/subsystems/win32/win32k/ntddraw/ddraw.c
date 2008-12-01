@@ -114,7 +114,7 @@ intEnableReactXDriver(HDC hdc)
 /* DirectX graphic/video driver loading and cleanup start here          */
 /************************************************************************/
 NTSTATUS
-STDCALL
+APIENTRY
 DxDdStartupDxGraphics(  ULONG ulc1,
                         PDRVENABLEDATA DxEngDrvOld,
                         ULONG ulc2,
@@ -210,7 +210,7 @@ DxDdStartupDxGraphics(  ULONG ulc1,
 /* NtGdiDdCreateDirectDrawObject                                        */
 /************************************************************************/
 HANDLE
-STDCALL
+APIENTRY
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
     PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject;
@@ -276,7 +276,7 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 *
 *--*/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDxgGenericThunk(ULONG_PTR ulIndex,
                      ULONG_PTR ulHandle,
                      SIZE_T *pdwSizeOfPtr1,
@@ -300,7 +300,7 @@ NtGdiDxgGenericThunk(ULONG_PTR ulIndex,
 /* NtGdiDdGetDriverState                                                */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetDriverState(PDD_GETDRIVERSTATEDATA pdata)
 {
     PGD_DDGETDRIVERSTATE pfnDdGetDriverState = (PGD_DDGETDRIVERSTATE)gpDxFuncs[DXG_INDEX_DxDdGetDriverState].pfn;
@@ -319,7 +319,7 @@ NtGdiDdGetDriverState(PDD_GETDRIVERSTATEDATA pdata)
 /* NtGdiDdColorControl                                                  */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdColorControl(HANDLE hSurface,
                     PDD_COLORCONTROLDATA puColorControlData)
 {
@@ -339,7 +339,7 @@ NtGdiDdColorControl(HANDLE hSurface,
 /* NtGdiDdCreateSurfaceObject                                           */
 /************************************************************************/
 HANDLE
-STDCALL
+APIENTRY
 NtGdiDdCreateSurfaceObject(HANDLE hDirectDrawLocal,
                            HANDLE hSurface,
                            PDD_SURFACE_LOCAL puSurfaceLocal,
@@ -364,7 +364,7 @@ NtGdiDdCreateSurfaceObject(HANDLE hDirectDrawLocal,
 /* NtGdiDdDeleteDirectDrawObject                                        */
 /************************************************************************/
 BOOL
-STDCALL
+APIENTRY
 NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
 {
     PGD_DXDDDELETEDIRECTDRAWOBJECT pfnDdDeleteDirectDrawObject = (PGD_DXDDDELETEDIRECTDRAWOBJECT)gpDxFuncs[DXG_INDEX_DxDdDeleteDirectDrawObject].pfn;
@@ -391,7 +391,7 @@ NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
 /* NtGdiDdDeleteSurfaceObject                                           */
 /************************************************************************/
 BOOL
-STDCALL
+APIENTRY
 NtGdiDdDeleteSurfaceObject(HANDLE hSurface)
 {
     PGD_DXDDDELETESURFACEOBJECT pfnDdDeleteSurfaceObject = (PGD_DXDDDELETESURFACEOBJECT)gpDxFuncs[DXG_INDEX_DxDdDeleteSurfaceObject].pfn;
@@ -411,7 +411,7 @@ NtGdiDdDeleteSurfaceObject(HANDLE hSurface)
 /* NtGdiDdQueryDirectDrawObject                                         */
 /************************************************************************/
 BOOL
-STDCALL
+APIENTRY
 NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
                              DD_HALINFO  *pHalInfo,
                              DWORD *pCallBackFlags,
@@ -445,7 +445,7 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
 /* NtGdiDdReenableDirectDrawObject                                      */
 /************************************************************************/
 BOOL
-STDCALL
+APIENTRY
 NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
                                 BOOL *pubNewMode)
 {
@@ -477,7 +477,7 @@ NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
 /* NtGdiDdGetDriverInfo                                                 */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetDriverInfo(HANDLE hDirectDrawLocal,
                      PDD_GETDRIVERINFODATA puGetDriverInfoData)
 
@@ -499,7 +499,7 @@ NtGdiDdGetDriverInfo(HANDLE hDirectDrawLocal,
 /* NtGdiDdGetAvailDriverMemory                                          */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetAvailDriverMemory(HANDLE hDirectDrawLocal,
                             PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData)
 {
@@ -521,7 +521,7 @@ NtGdiDdGetAvailDriverMemory(HANDLE hDirectDrawLocal,
 /************************************************************************/
 
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdSetExclusiveMode(HANDLE hDirectDraw,
                         PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData)
 {
@@ -543,7 +543,7 @@ NtGdiDdSetExclusiveMode(HANDLE hDirectDraw,
 /* NtGdiDdFlipToGDISurface                                              */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdFlipToGDISurface(HANDLE hDirectDraw,
                         PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData)
 {
@@ -564,7 +564,7 @@ NtGdiDdFlipToGDISurface(HANDLE hDirectDraw,
 /* NtGdiDdGetDC                                                         */
 /************************************************************************/
 HDC
-STDCALL
+APIENTRY
 NtGdiDdGetDC(HANDLE hSurface,
              PALETTEENTRY *puColorTable)
 {
@@ -584,7 +584,7 @@ NtGdiDdGetDC(HANDLE hSurface,
 /* NtGdiDdGetDxHandle                                                   */
 /************************************************************************/
 HANDLE
-STDCALL
+APIENTRY
 NtGdiDdGetDxHandle(HANDLE hDirectDraw,
                    HANDLE hSurface,
                    BOOL bRelease)
@@ -606,7 +606,7 @@ NtGdiDdGetDxHandle(HANDLE hDirectDraw,
 /* NtGdiDdReleaseDC                                                     */
 /************************************************************************/
 BOOL
-STDCALL
+APIENTRY
 NtGdiDdReleaseDC(HANDLE hSurface)
 {
     PGD_DDRELEASEDC pfnDdReleaseDC = (PGD_DDRELEASEDC)gpDxFuncs[DXG_INDEX_DxDdReleaseDC].pfn;
@@ -625,7 +625,7 @@ NtGdiDdReleaseDC(HANDLE hSurface)
 /* NtGdiDdResetVisrgn                                                   */
 /************************************************************************/
 BOOL
-STDCALL
+APIENTRY
 NtGdiDdResetVisrgn(HANDLE hSurface,
                    HWND hwnd)
 {
@@ -646,7 +646,7 @@ NtGdiDdResetVisrgn(HANDLE hSurface,
 /* NtGdiDdSetGammaRamp                                                  */
 /************************************************************************/
 BOOL
-STDCALL
+APIENTRY
 NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
                     HDC hdc,
                     LPVOID lpGammaRamp)

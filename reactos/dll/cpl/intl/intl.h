@@ -75,7 +75,7 @@ ReplaceSubStr(LPCTSTR szSourceStr, LPCTSTR szStrToReplace, LPCTSTR szTempl);
 
 LONG
 APIENTRY
-SetupApplet(LCID lcid);
+SetupApplet(HWND hwndDlg, LCID lcid);
 
 #endif /* __CPL_INTL_H */
 

@@ -166,14 +166,14 @@ VOID FreeAdapter(
 NTSTATUS TcpipLanGetDwordOid
 ( PIP_INTERFACE Interface,
   NDIS_OID Oid,
-  PDWORD Result ) {
+  PULONG Result ) {
     /* Get maximum frame size */
     if( Interface->Context ) {
         return NDISCall((PLAN_ADAPTER)Interface->Context,
                         NdisRequestQueryInformation,
                         Oid,
                         Result,
-                        sizeof(DWORD));
+                        sizeof(ULONG));
     } else switch( Oid ) { /* Loopback Case */
     case OID_GEN_HARDWARE_STATUS:
         *Result = NdisHardwareStatusReady;
@@ -185,7 +185,7 @@ NTSTATUS TcpipLanGetDwordOid
 }
 
 
-VOID STDCALL ProtocolOpenAdapterComplete(
+VOID NTAPI ProtocolOpenAdapterComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status,
     NDIS_STATUS OpenErrorStatus)
@@ -207,7 +207,7 @@ VOID STDCALL ProtocolOpenAdapterComplete(
 }
 
 
-VOID STDCALL ProtocolCloseAdapterComplete(
+VOID NTAPI ProtocolCloseAdapterComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status)
 /*
@@ -227,7 +227,7 @@ VOID STDCALL ProtocolCloseAdapterComplete(
 }
 
 
-VOID STDCALL ProtocolResetComplete(
+VOID NTAPI ProtocolResetComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status)
 /*
@@ -247,7 +247,7 @@ VOID STDCALL ProtocolResetComplete(
 }
 
 
-VOID STDCALL ProtocolRequestComplete(
+VOID NTAPI ProtocolRequestComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_REQUEST NdisRequest,
     NDIS_STATUS Status)
@@ -270,7 +270,7 @@ VOID STDCALL ProtocolRequestComplete(
 }
 
 
-VOID STDCALL ProtocolSendComplete(
+VOID NTAPI ProtocolSendComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
     NDIS_STATUS Status)
@@ -368,7 +368,7 @@ VOID LanSubmitReceiveWork(
 	ASSERT(0);
 }
 
-VOID STDCALL ProtocolTransferDataComplete(
+VOID NTAPI ProtocolTransferDataComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
@@ -397,7 +397,7 @@ VOID STDCALL ProtocolTransferDataComplete(
     LanSubmitReceiveWork( BindingContext, Packet, Status, BytesTransferred );
 }
 
-NDIS_STATUS STDCALL ProtocolReceive(
+NDIS_STATUS NTAPI ProtocolReceive(
     NDIS_HANDLE BindingContext,
     NDIS_HANDLE MacReceiveContext,
     PVOID HeaderBuffer,
@@ -511,7 +511,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
 }
 
 
-VOID STDCALL ProtocolReceiveComplete(
+VOID NTAPI ProtocolReceiveComplete(
     NDIS_HANDLE BindingContext)
 /*
  * FUNCTION: Called by NDIS when we're done receiving data
@@ -523,7 +523,7 @@ VOID STDCALL ProtocolReceiveComplete(
 }
 
 
-VOID STDCALL ProtocolStatus(
+VOID NTAPI ProtocolStatus(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS GeneralStatus,
     PVOID StatusBuffer,
@@ -566,7 +566,7 @@ VOID STDCALL ProtocolStatus(
 }
 
 
-VOID STDCALL ProtocolStatusComplete(
+VOID NTAPI ProtocolStatusComplete(
     NDIS_HANDLE NdisBindingContext)
 /*
  * FUNCTION: Called by NDIS when a status-change has occurred
@@ -577,7 +577,7 @@ VOID STDCALL ProtocolStatusComplete(
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 }
 
-VOID STDCALL ProtocolBindAdapter(
+VOID NTAPI ProtocolBindAdapter(
     OUT PNDIS_STATUS   Status,
     IN  NDIS_HANDLE    BindContext,
     IN  PNDIS_STRING   DeviceName,
@@ -782,7 +782,7 @@ static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
 
 NTSTATUS NTAPI AppendUnicodeString(PUNICODE_STRING ResultFirst,
 				   PUNICODE_STRING Second,
-				   BOOL Deallocate) {
+				   BOOLEAN Deallocate) {
     NTSTATUS Status;
     UNICODE_STRING Ustr = *ResultFirst;
     PWSTR new_string = ExAllocatePoolWithTag

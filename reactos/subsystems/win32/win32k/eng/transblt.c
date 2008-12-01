@@ -32,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL STDCALL
+BOOL APIENTRY
 EngTransparentBlt(SURFOBJ *Dest,
 		  SURFOBJ *Source,
 		  CLIPOBJ *Clip,

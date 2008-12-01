@@ -464,6 +464,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   WCHAR ShortNameBuffer[13];
   UNICODE_STRING ShortName;
   UNICODE_STRING LongName;
+  UNICODE_STRING FileToFindUpcase;
   BOOLEAN HasSpaces;
   GENERATE_NAME_CONTEXT NameContext;
 
@@ -502,6 +503,14 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   Offset = 0;
   BlockOffset = 0;
   Record = (PDIR_RECORD)Block;
+
+  /* Upper case the expression for FsRtlIsNameInExpression */
+	Status = RtlUpcaseUnicodeString(&FileToFindUpcase, FileToFind, TRUE);
+	if (!NT_SUCCESS(Status))
+	{
+		return Status;
+	}
+
   while(TRUE)
     {
       if (Record->RecordLength == 0)
@@ -543,8 +552,8 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 
       DPRINT("ShortName '%wZ'\n", &ShortName);
 
-      if (FsRtlIsNameInExpression(FileToFind, &LongName, TRUE, NULL) ||
-          FsRtlIsNameInExpression(FileToFind, &ShortName, TRUE, NULL))
+      if (FsRtlIsNameInExpression(&FileToFindUpcase, &LongName, TRUE, NULL) ||
+          FsRtlIsNameInExpression(&FileToFindUpcase, &ShortName, TRUE, NULL))
         {
           DPRINT("Match found, %S\n", Name);
           Status = CdfsMakeFCBFromDirEntry(DeviceExt,
@@ -556,6 +565,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
                                            Offset,
                                            FoundFCB);
 
+          RtlFreeUnicodeString(&FileToFindUpcase);
           CcUnpinData(Context);
 
           return(Status);
@@ -578,6 +588,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
                          &Context, &Block))
             {
               DPRINT("CcMapData() failed\n");
+              RtlFreeUnicodeString(&FileToFindUpcase);
               return(STATUS_UNSUCCESSFUL);
             }
           Record = (PDIR_RECORD)((ULONG_PTR)Block + BlockOffset);
@@ -587,6 +598,7 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
         break;
     }
 
+  RtlFreeUnicodeString(&FileToFindUpcase);
   CcUnpinData(Context);
 
   return(STATUS_OBJECT_NAME_NOT_FOUND);

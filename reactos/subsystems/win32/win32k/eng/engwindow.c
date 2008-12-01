@@ -194,7 +194,7 @@ IntEngWindowChanged(
  * @implemented
  */
 WNDOBJ*
-STDCALL
+APIENTRY
 EngCreateWnd(
   SURFOBJ          *pso,
   HWND              hWnd,
@@ -271,7 +271,7 @@ CLEANUP:
  * @implemented
  */
 VOID
-STDCALL
+APIENTRY
 EngDeleteWnd(
   IN WNDOBJ *pwo)
 {
@@ -313,7 +313,7 @@ EngDeleteWnd(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 WNDOBJ_bEnum(
   IN WNDOBJ  *pwo,
   IN ULONG  cj,
@@ -334,7 +334,7 @@ WNDOBJ_bEnum(
  * @implemented
  */
 ULONG
-STDCALL
+APIENTRY
 WNDOBJ_cEnumStart(
   IN WNDOBJ  *pwo,
   IN ULONG  iType,
@@ -359,7 +359,7 @@ WNDOBJ_cEnumStart(
  * @implemented
  */
 VOID
-STDCALL
+APIENTRY
 WNDOBJ_vSetConsumer(
   IN WNDOBJ  *pwo,
   IN PVOID  pvConsumer)

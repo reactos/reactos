@@ -13,14 +13,14 @@
 #include <windows.h>
 
 #ifdef __GNUC__
-#define SNMP_FUNC_TYPE STDCALL
+#define SNMP_FUNC_TYPE WINAPI
 #endif
 #include <snmp.h>
 #include "debug.h"
 
 
 #ifdef __GNUC__
-#define EXPORT STDCALL
+#define EXPORT WINAPI
 #else
 #define EXPORT CALLBACK
 #endif
@@ -38,7 +38,7 @@ DWORD dwUptimeStartTicks;
 
 
 /* To make the linker happy */
-//VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
+//VOID WINAPI KeBugCheck (ULONG	BugCheckCode) {}
 
 
 BOOL

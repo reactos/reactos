@@ -20,7 +20,7 @@
 #if !defined(_RTLFUNCS_H) && (!defined(_NTDDK_) || !defined(__NTDDK_H))
 
 /* Make sure we have basic types (some people include us *before* SDK... */
-#if !defined(_NTDEF_) && !defined(_WINDEF_) && !defined(_WINDEF_H)
+#if !defined(_NTDEF_) && !defined(_NTDEF_H) && !defined(_WINDEF_) && !defined(_WINDEF_H)
 #error Please include SDK first.
 #endif
 

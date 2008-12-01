@@ -62,7 +62,7 @@ typedef struct _CSRSS_PROCESS_DATA
   BOOL Terminated;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
-typedef VOID (STDCALL *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
+typedef VOID (WINAPI *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
 
 typedef struct tagCSRSS_OBJECT_DEFINITION
 {
@@ -70,7 +70,7 @@ typedef struct tagCSRSS_OBJECT_DEFINITION
   CSR_CLEANUP_OBJECT_PROC CsrCleanupObjectProc;
 } CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
 
-typedef NTSTATUS (STDCALL *CSRSS_API_PROC)(PCSRSS_PROCESS_DATA ProcessData,
+typedef NTSTATUS (WINAPI *CSRSS_API_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                            PCSR_API_MESSAGE Request);
 
 typedef struct _CSRSS_API_DEFINITION
@@ -90,7 +90,7 @@ typedef struct _CSRSS_LISTEN_DATA
   PCSRSS_API_DEFINITION *ApiDefinitions;
 } CSRSS_LISTEN_DATA, *PCSRSS_LISTEN_DATA;
 
-#define CSR_API(n) NTSTATUS STDCALL n (\
+#define CSR_API(n) NTSTATUS WINAPI n (\
 PCSRSS_PROCESS_DATA ProcessData,\
 PCSR_API_MESSAGE Request)
 
@@ -103,16 +103,16 @@ CSR_API(CsrCreateProcess);
 CSR_API(CsrTerminateProcess);
 
 /* print.c */
-VOID STDCALL DisplayString(LPCWSTR lpwString);
-VOID STDCALL PrintString (char* fmt, ...);
+VOID WINAPI DisplayString(LPCWSTR lpwString);
+VOID WINAPI PrintString (char* fmt, ...);
 
 /* api/wapi.c */
 NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
 VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
                                 PCSR_API_MESSAGE Request);
-DWORD STDCALL ServerApiPortThread (PVOID PortHandle);
-DWORD STDCALL ServerSbApiPortThread (PVOID PortHandle);
-DWORD STDCALL Console_Api( PVOID unused );
+DWORD WINAPI ServerApiPortThread (PVOID PortHandle);
+DWORD WINAPI ServerSbApiPortThread (PVOID PortHandle);
+DWORD WINAPI Console_Api( PVOID unused );
 VOID
 NTAPI
 ClientConnectionThread(HANDLE ServerPort);
@@ -120,26 +120,26 @@ ClientConnectionThread(HANDLE ServerPort);
 extern HANDLE CsrssApiHeap;
 
 /* api/conio.c */
-VOID STDCALL CsrInitConsoleSupport(VOID);
+VOID WINAPI CsrInitConsoleSupport(VOID);
 
 /* api/process.c */
-typedef NTSTATUS (STDCALL *CSRSS_ENUM_PROCESS_PROC)(PCSRSS_PROCESS_DATA ProcessData,
+typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                                     PVOID Context);
-VOID STDCALL CsrInitProcessData(VOID);
-PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(HANDLE ProcessId);
-PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId);
-NTSTATUS STDCALL CsrFreeProcessData( HANDLE Pid );
-NTSTATUS STDCALL CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context);
+VOID WINAPI CsrInitProcessData(VOID);
+PCSRSS_PROCESS_DATA WINAPI CsrGetProcessData(HANDLE ProcessId);
+PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId);
+NTSTATUS WINAPI CsrFreeProcessData( HANDLE Pid );
+NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context);
 
 /* api/handle.c */
 NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);
-NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object, DWORD Access, BOOL Inheritable );
-NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData, PCSRSS_PROCESS_DATA TargetProcessData);
-NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object, DWORD Access );
-BOOL STDCALL CsrServerInitialization (int,char**,char**);
-NTSTATUS STDCALL CsrReleaseObjectByPointer(Object_t *Object);
-NTSTATUS STDCALL CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
-NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
+NTSTATUS WINAPI CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object, DWORD Access, BOOL Inheritable );
+NTSTATUS WINAPI CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData, PCSRSS_PROCESS_DATA TargetProcessData);
+NTSTATUS WINAPI CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object, DWORD Access );
+BOOL WINAPI CsrServerInitialization (int,char**,char**);
+NTSTATUS WINAPI CsrReleaseObjectByPointer(Object_t *Object);
+NTSTATUS WINAPI CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
+NTSTATUS WINAPI CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 
 CSR_API(CsrGetInputHandle);
 CSR_API(CsrGetOutputHandle);

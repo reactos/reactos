@@ -32,7 +32,7 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_QueryInterface(LPDIRECT3DSWAPCHAIN
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DSwapChain9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DSwapChain9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -48,7 +48,7 @@ static ULONG WINAPI IDirect3DSwapChain9Impl_AddRef(LPDIRECT3DSWAPCHAIN9 iface) {
 
     TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
-    if(ref == 1 && This->parentDevice) IUnknown_AddRef(This->parentDevice);
+    if(ref == 1 && This->parentDevice) IDirect3DDevice9Ex_AddRef(This->parentDevice);
 
     return ref;
 }
@@ -60,7 +60,7 @@ static ULONG WINAPI IDirect3DSwapChain9Impl_Release(LPDIRECT3DSWAPCHAIN9 iface) 
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
-        if (This->parentDevice) IUnknown_Release(This->parentDevice);
+        if (This->parentDevice) IDirect3DDevice9Ex_Release(This->parentDevice);
         if (!This->isImplicit) {
             EnterCriticalSection(&d3d9_cs);
             IWineD3DSwapChain_Destroy(This->wineD3DSwapChain, D3D9CB_DestroyRenderTarget);
@@ -229,7 +229,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DDEVICE
     localParameters.PresentationInterval                = pPresentationParameters->PresentationInterval;
 
     EnterCriticalSection(&d3d9_cs);
-    hrc = IWineD3DDevice_CreateAdditionalSwapChain(This->WineD3DDevice, &localParameters, &object->wineD3DSwapChain, (IUnknown*)object, D3D9CB_CreateRenderTarget, D3D9CB_CreateDepthStencilSurface, SURFACE_OPENGL);
+    hrc = IWineD3DDevice_CreateSwapChain(This->WineD3DDevice, &localParameters, &object->wineD3DSwapChain, (IUnknown*)object, D3D9CB_CreateRenderTarget, D3D9CB_CreateDepthStencilSurface, SURFACE_OPENGL);
     LeaveCriticalSection(&d3d9_cs);
 
     pPresentationParameters->BackBufferWidth            = localParameters.BackBufferWidth;
@@ -248,10 +248,10 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DDEVICE
     pPresentationParameters->PresentationInterval       = localParameters.PresentationInterval;
 
     if (hrc != D3D_OK) {
-        FIXME("(%p) call to IWineD3DDevice_CreateAdditionalSwapChain failed\n", This);
+        FIXME("(%p) call to IWineD3DDevice_CreateSwapChain failed\n", This);
         HeapFree(GetProcessHeap(), 0 , object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *pSwapChain = (IDirect3DSwapChain9 *)object;
         TRACE("(%p) : Created swapchain %p\n", This, *pSwapChain);

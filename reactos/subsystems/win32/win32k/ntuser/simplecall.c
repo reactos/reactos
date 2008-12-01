@@ -75,7 +75,7 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
  * @unimplemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallNoParam(DWORD Routine)
 {
    DWORD Result = 0;
@@ -139,7 +139,7 @@ CLEANUP:
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallOneParam(
    DWORD Param,
    DWORD Routine)
@@ -416,7 +416,7 @@ CLEANUP:
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallTwoParam(
    DWORD Param1,
    DWORD Param2,
@@ -644,7 +644,7 @@ NtUserCallTwoParam(
 
           if (Count != 0 && RegSysClassArray != NULL)
           {
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeArrayForRead(RegSysClassArray,
                                     sizeof(RegSysClassArray[0]),
@@ -654,11 +654,11 @@ NtUserCallTwoParam(
                   Ret = (DWORD)UserRegisterSystemClasses(Count,
                                                          RegSysClassArray);
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  SetLastNtError(_SEH_GetExceptionCode());
+                  SetLastNtError(_SEH2_GetExceptionCode());
               }
-              _SEH_END;
+              _SEH2_END;
           }
 
           RETURN( Ret);
@@ -680,7 +680,7 @@ CLEANUP:
  * @unimplemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserCallHwndLock(
    HWND hWnd,
    DWORD Routine)
@@ -757,7 +757,7 @@ CLEANUP:
  * @unimplemented
  */
 HWND
-STDCALL
+APIENTRY
 NtUserCallHwndOpt(
    HWND hWnd,
    DWORD Routine)
@@ -777,7 +777,7 @@ NtUserCallHwndOpt(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwnd(
    HWND hWnd,
    DWORD Routine)
@@ -800,7 +800,7 @@ NtUserCallHwnd(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwndParam(
    HWND hWnd,
    DWORD Param,
@@ -819,7 +819,7 @@ NtUserCallHwndParam(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwndParamLock(
    HWND hWnd,
    DWORD Param,

@@ -14,5 +14,4 @@
 	<file>stubs.c</file>
 	<file>tui.c</file>
 	<file>msgina.rc</file>
-	<file>msgina.spec</file>
 </module>

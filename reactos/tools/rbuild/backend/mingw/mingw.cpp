@@ -392,7 +392,7 @@ MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
 	if ( data.includes.size () > 0 )
 		fprintf (
 			fMakefile,
-			"PROJECT_CFLAGS %s %s\n",
+			"PROJECT_CINCLUDES %s %s\n",
 			assignmentOperation,
 			MingwModuleHandler::GenerateGccIncludeParametersFromVector ( data.includes ).c_str ());
 
@@ -529,15 +529,16 @@ MingwBackend::GenerateGlobalVariables () const
 	GenerateGlobalCFlagsAndProperties ( "=", ProjectNode.non_if_data );
 	GenerateProjectGccOptions ( "=", ProjectNode.non_if_data );
 
-	fprintf ( fMakefile, "PROJECT_RCFLAGS := $(PROJECT_CFLAGS) $(PROJECT_CDEFINES)\n" );
-	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CFLAGS) $(PROJECT_CDEFINES)\n" );
+	fprintf ( fMakefile, "PROJECT_RCFLAGS := $(PROJECT_CINCLUDES) $(PROJECT_CDEFINES)\n" );
+	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CINCLUDES) $(PROJECT_CDEFINES)\n" );
 	fprintf ( fMakefile, "PROJECT_LFLAGS := '$(shell ${TARGET_CC} -print-libgcc-file-name)' %s\n", GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "PROJECT_LPPFLAGS := '$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)' '$(shell ${TARGET_CPP} -print-file-name=libgcc.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)' '$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)'\n" );
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );
+	fprintf ( fMakefile, "PROJECT_GCCOPTIONS += -Wall\n" );
 	fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -march=$(OARCH)\n" );
+	fprintf ( fMakefile, "PROJECT_GCCOPTIONS += -march=$(OARCH)\n" );
 	fprintf ( fMakefile, "endif\n" );
-	fprintf ( fMakefile, "PROJECT_CFLAGS += $(PROJECT_GCCOPTIONS)\n" );
+	fprintf ( fMakefile, "PROJECT_CFLAGS = $(PROJECT_GCCOPTIONS) $(PROJECT_GCC_CFLAGS)\n" );
+	fprintf ( fMakefile, "PROJECT_CXXFLAGS = $(PROJECT_GCCOPTIONS) $(PROJECT_GCC_CXXFLAGS)\n" );
 	fprintf ( fMakefile, "\n" );
 }
 
@@ -821,7 +822,7 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 	buffer[i] = '\0';
 	pclose ( fp );
 
-	char separators[] = " ";
+	char separators[] = " ()";
 	char *token;
 	char *prevtoken = NULL;
 

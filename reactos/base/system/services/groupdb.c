@@ -77,7 +77,7 @@ ScmSetServiceGroup(PSERVICE lpService,
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS WINAPI
 CreateGroupOrderListRoutine(PWSTR ValueName,
                             ULONG ValueType,
                             PVOID ValueData,
@@ -126,7 +126,7 @@ CreateGroupOrderListRoutine(PWSTR ValueName,
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS WINAPI
 CreateGroupListRoutine(PWSTR ValueName,
                        ULONG ValueType,
                        PVOID ValueData,

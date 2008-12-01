@@ -2,7 +2,7 @@
  *
  * Copyright 2000 (c) Marcus Meissner
  * Copyright 2000 (c) TransGaming Technologies Inc.
- * Copyright 2006 (c) Stefan Dösinger
+ * Copyright 2006 (c) Stefan DÃ¶singer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

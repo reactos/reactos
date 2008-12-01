@@ -8,5 +8,4 @@
 	<library>wine</library>
 	<file>icmp_main.c</file>
 	<file>icmp.rc</file>
-	<file>icmp.spec</file>
 </module>

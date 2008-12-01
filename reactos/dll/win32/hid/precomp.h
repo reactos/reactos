@@ -2,15 +2,15 @@
 #include <windows.h>
 #include <debug.h>
 
-#define DDKAPI __stdcall
 #define _HIDPI_
 #define _HIDPI_NO_FUNCTION_MACROS_
 typedef VOID
-(DDKAPI *PINTERFACE_REFERENCE)(
+(WINAPI *PINTERFACE_REFERENCE)(
   PVOID  Context);
 typedef VOID
-(DDKAPI *PINTERFACE_DEREFERENCE)(
+(WINAPI *PINTERFACE_DEREFERENCE)(
   PVOID  Context);
+#define DDKAPI __stdcall // FIXME
 #include <ntndk.h>
 #include <hidusage.h>
 #include <hidclass.h>

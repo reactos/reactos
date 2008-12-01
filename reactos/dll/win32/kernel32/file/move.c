@@ -226,7 +226,7 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 MoveFileWithProgressW (
 	LPCWSTR			lpExistingFileName,
 	LPCWSTR			lpNewFileName,
@@ -657,7 +657,7 @@ MoveFileWithProgressW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 MoveFileWithProgressA (
 	LPCSTR			lpExistingFileName,
 	LPCSTR			lpNewFileName,
@@ -692,7 +692,7 @@ MoveFileWithProgressA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 MoveFileW (
 	LPCWSTR	lpExistingFileName,
 	LPCWSTR	lpNewFileName
@@ -708,7 +708,7 @@ MoveFileW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 MoveFileExW (
 	LPCWSTR	lpExistingFileName,
 	LPCWSTR	lpNewFileName,
@@ -727,7 +727,7 @@ MoveFileExW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 MoveFileA (
 	LPCSTR	lpExistingFileName,
 	LPCSTR	lpNewFileName
@@ -743,7 +743,7 @@ MoveFileA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 MoveFileExA (
 	LPCSTR	lpExistingFileName,
 	LPCSTR	lpNewFileName,

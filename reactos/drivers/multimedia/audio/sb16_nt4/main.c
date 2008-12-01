@@ -18,7 +18,7 @@
     IRP DISPATCH ROUTINES
 */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CreateSoundBlaster(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -38,7 +38,7 @@ CreateSoundBlaster(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CloseSoundBlaster(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -55,7 +55,7 @@ CloseSoundBlaster(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CleanupSoundBlaster(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -72,7 +72,7 @@ CleanupSoundBlaster(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ControlSoundBlaster(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -97,7 +97,7 @@ ControlSoundBlaster(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 WriteSoundBlaster(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -114,14 +114,14 @@ WriteSoundBlaster(
     return STATUS_SUCCESS;
 }
 
-VOID STDCALL
+VOID NTAPI
 UnloadSoundBlaster(
     PDRIVER_OBJECT DriverObject)
 {
     DPRINT("Sound Blaster driver unload\n");
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 OpenSubkey(
     PUNICODE_STRING RegistryPath,
     PWSTR Subkey,
@@ -164,7 +164,7 @@ OpenSubkey(
 }
 
 
-PWSTR STDCALL
+PWSTR NTAPI
 AllocateRegistryPathInfo(
     PUNICODE_STRING BasePath,
     PUNICODE_STRING ParametersPath,
@@ -210,7 +210,7 @@ AllocateRegistryPathInfo(
 #define TAG_REG_INFO TAG('I','g','e','R')
 #define TAG_REG_NAME TAG('N','g','e','R')
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 EnumerateSubkey(
     PUNICODE_STRING RegistryPath,
     PWSTR Subkey,
@@ -362,7 +362,7 @@ CreateDeviceName(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 InitializeSoundBlaster(
     PDRIVER_OBJECT DriverObject,
     PWSTR RegistryPath)
@@ -466,7 +466,7 @@ InitializeSoundBlaster(
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath)

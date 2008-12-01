@@ -1,7 +1,11 @@
 #ifndef _POWRPROF_H
 #define _POWRPROF_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
+
+#ifndef __WINE_WINTERNL_H
+/* FIXME: Include this, so NTSTATUS gets defined. 
+   Not very clean, but I can't get the hacH^H^H^override used
+   by official PSDK to work. */
+#include <ntsecapi.h>
 #endif
 
 #ifdef __cplusplus
@@ -16,9 +20,6 @@ extern "C" {
 #define NEWSCHEME (UINT)-1
 
 #ifndef RC_INVOKED
-#ifndef NTSTATUS
-typedef LONG NTSTATUS, *PNTSTATUS;
-#endif
 
 typedef struct _GLOBAL_MACHINE_POWER_POLICY{
    ULONG Revision;

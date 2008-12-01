@@ -1,7 +1,7 @@
 #ifdef GDI_DEBUG
 
-NTSYSAPI VOID NTAPI KeRosDumpStackFrames(PULONG, ULONG);
-NTSYSAPI ULONG NTAPI RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
+NTSYSAPI VOID APIENTRY KeRosDumpStackFrames(PULONG, ULONG);
+NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
 
 static int leak_reported = 0;
 #define GDI_STACK_LEVELS 12

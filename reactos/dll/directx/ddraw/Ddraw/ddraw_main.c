@@ -20,11 +20,6 @@
 
 #include <string.h>
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
-
-
 LPDDRAWI_DIRECTDRAW_INT
 internal_directdraw_int_alloc(LPDDRAWI_DIRECTDRAW_INT This)
 {
@@ -48,7 +43,7 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
 
     DX_WINDBG_trace();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* FIXME
             the D3D object can be optained from here
@@ -62,7 +57,7 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -78,7 +73,7 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -95,7 +90,7 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -111,7 +106,7 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
                 if (!This)
                 {
                     retVal = DDERR_OUTOFVIDEOMEMORY;
-                    _SEH_LEAVE;
+                    _SEH2_LEAVE;
                 }
             }
 
@@ -126,10 +121,10 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
             retVal = E_NOINTERFACE;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
     return retVal;
 }
@@ -157,7 +152,7 @@ Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This)
     /* Lock the thread so nothing can change the COM while we updating it */
     AcquireDDThreadLock();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Count up the internal ref counter */
         This->dwIntRefCnt++;
@@ -171,20 +166,20 @@ Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This)
             This->lpLcl->lpGbl->dwRefCnt++;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         retValue = This->dwIntRefCnt;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         retValue = 0;
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Release the thread lock */
     ReleaseDDThreadLock();
@@ -206,7 +201,7 @@ Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This)
     /* Lock the thread so nothing can change the COM while we updating it */
     AcquireDDThreadLock();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (This!=NULL)
         {
@@ -237,10 +232,10 @@ Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This)
             Counter = This->dwIntRefCnt;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Release the thread lock */
     ReleaseDDThreadLock();
@@ -280,7 +275,7 @@ Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This)
     /* Lock the thread so nothing can change the COM while we updating it */
     AcquireDDThreadLock();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check see if Exclusive mode have been activate */
         if (This->lpLcl->lpGbl->lpExclusiveOwner != This->lpLcl)
@@ -288,10 +283,10 @@ Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This)
             retVal = DDERR_NOEXCLUSIVEMODE;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Release the thread lock */
     ReleaseDDThreadLock();
@@ -307,16 +302,16 @@ Main_DirectDraw_GetAvailableVidMem(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS ddsca
 
     ZeroMemory(&myddscaps, sizeof(DDSCAPS2));
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         myddscaps.dwCaps =  ddscaps->dwCaps;
         retValue = Main_DirectDraw_GetAvailableVidMem4(This, &myddscaps, dwTotal, dwFree);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
          retValue = DDERR_INVALIDPARAMS;
     }
-    _SEH_END;
+    _SEH2_END;
 
     return retValue;
 }
@@ -330,7 +325,7 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
 
     DX_WINDBG_trace();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         // There is no HEL implentation of this api
         if (!(This->lpLcl->lpDDCB->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY) ||
@@ -343,7 +338,7 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
             if ((!dwTotal && !dwFree) || !ddscaps)
             {
                 retVal = DDERR_INVALIDPARAMS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             if ( ddscaps->dwCaps & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP |
@@ -351,7 +346,7 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
                                     DDSCAPS_VISIBLE     | DDSCAPS_WRITEONLY | DDSCAPS_OWNDC))
             {
                 retVal = DDERR_INVALIDPARAMS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
 
@@ -364,7 +359,7 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
             if ( ddscaps->dwCaps2 & 0x01)
             {
                 retVal = DDERR_INVALIDCAPS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             if ( ddscaps->dwCaps3 & ~( DDSCAPS3_MULTISAMPLE_QUALITY_MASK | DDSCAPS3_MULTISAMPLE_MASK |
@@ -373,13 +368,13 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
                                        DDSCAPS3_DMAP))
             {
                 retVal = DDERR_INVALIDCAPS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             if ( ddscaps->dwCaps4)
             {
                 retVal = DDERR_INVALIDCAPS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
             }
 
             ZeroMemory(&memdata, sizeof(DDHAL_GETAVAILDRIVERMEMORYDATA));
@@ -413,10 +408,10 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
             }
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
     return retVal;
 }
@@ -431,7 +426,7 @@ Main_DirectDraw_GetFourCCCodes(LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpNumCodes,
 
      // EnterCriticalSection(&ddcs);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if(IsBadWritePtr(lpNumCodes,sizeof(LPDWORD)))
         {
@@ -461,10 +456,10 @@ Main_DirectDraw_GetFourCCCodes(LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpNumCodes,
             }
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
     }
-    _SEH_END;
+    _SEH2_END;
 
     //LeaveCriticalSection(&ddcs);
     return retVal;
@@ -493,7 +488,7 @@ Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDD
     EnterCriticalSection(&ddcs);
     *ppSurf = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
         {
@@ -508,11 +503,11 @@ Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDD
             ret = DDERR_INVALIDPARAMS;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = DDERR_INVALIDPARAMS;
     }
-    _SEH_END;
+    _SEH2_END;
     LeaveCriticalSection(&ddcs);
     return ret;
 }
@@ -529,15 +524,15 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
     EnterCriticalSection(&ddcs);
     *ppSurf = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ret = Internal_CreateSurface(This, pDDSD, ppSurf, pUnkOuter);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ret = DDERR_INVALIDPARAMS;
     }
-    _SEH_END;
+    _SEH2_END;
 
     LeaveCriticalSection(&ddcs);
     return ret;

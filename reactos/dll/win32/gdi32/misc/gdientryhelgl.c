@@ -85,7 +85,7 @@ DdBlt(LPDDHAL_BLTDATA Blt)
     HANDLE Surface = 0;
 
     /* Use the right surface */
-    if (Blt->lpDDSrcSurface) 
+    if (Blt->lpDDSrcSurface)
     {
         Surface = (HANDLE)Blt->lpDDSrcSurface->hDDSurface;
     }
@@ -114,8 +114,8 @@ DdDestroySurface(LPDDHAL_DESTROYSURFACEDATA pDestroySurface)
     if (pDestroySurface->lpDDSurface->hDDSurface)
     {
         /* Check if we shoudl really destroy it */
-        RealDestroy = !(pDestroySurface->lpDDSurface->dwFlags & DDRAWISURF_DRIVERMANAGED) || 
-                      !(pDestroySurface->lpDDSurface->dwFlags & DDRAWISURF_INVALID);            
+        RealDestroy = !(pDestroySurface->lpDDSurface->dwFlags & DDRAWISURF_DRIVERMANAGED) ||
+                      !(pDestroySurface->lpDDSurface->dwFlags & DDRAWISURF_INVALID);
 
          /* Call win32k */
         Return = NtGdiDdDestroySurface((HANDLE)pDestroySurface->lpDDSurface->hDDSurface, RealDestroy);
@@ -141,12 +141,12 @@ DdFlip(LPDDHAL_FLIPDATA Flip)
 #if 0
     /* Note :
     * See http://msdn2.microsoft.com/en-us/library/ms794213.aspx and
-    * http://msdn2.microsoft.com/en-us/library/ms792675.aspx 
+    * http://msdn2.microsoft.com/en-us/library/ms792675.aspx
     */
 
     HANDLE hSurfaceCurrentLeft = NULL;
     HANDLE hSurfaceTargetLeft = NULL;
-   
+
     /* Auto flip off or on */
     if (Flip->dwFlags & DDFLIP_STEREO )
     {
@@ -343,19 +343,19 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
         {
             if (CanCreateSurface->bIsDifferentPixelFormat == FALSE)
             {
-                    // Maybe more check before we return DD_OK 
+                    // Maybe more check before we return DD_OK
                     CanCreateSurface->ddRVal = DD_OK;
             }
             else
             {
                 if (CanCreateSurface->lpDDSurfaceDesc->dwFlags & DDPF_FOURCC)
                 {
-                    
+
                     for (i=0;i<CanCreateSurface->lpDD->dwNumFourCC;i++)
                     {
                         if (CanCreateSurface->lpDD->lpdwFourCC[i] == CanCreateSurface->lpDDSurfaceDesc->ddpfPixelFormat.dwFourCC)
                         {
-                            // calc yuvBitCount 
+                            // calc yuvBitCount
                             switch ( CanCreateSurface->lpDDSurfaceDesc->ddpfPixelFormat.dwFourCC )
                             {
                                 case MAKEFOURCC('Y','U','Y','2') :
@@ -374,14 +374,14 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
                                     break;
                             }
 
-                            // Maybe more check before we return DD_OK 
+                            // Maybe more check before we return DD_OK
                             CanCreateSurface->ddRVal = DD_OK;
                             break;
                         }
                     }
                 }
             }
-        } 
+        }
     }
     return DDHAL_DRIVER_HANDLED;
 }
@@ -409,7 +409,7 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     IWineD3D *pWined3d = (IWineD3D*) GetDdHandle(pCreateSurface->lpDD->hDD);
     IWineD3DDevice * pWineD3DDevice = (IWineD3DDevice*) pCreateSurface->lpDD->dwUnused3;
     void *Parent = NULL;
-    
+
     if ( (!pWined3d) ||
          (!pWineD3DDevice))
     {
@@ -649,8 +649,8 @@ DvpCreateVideoPort(LPDDHAL_CREATEVPORTDATA pDvdCreatePort)
     /* Fixme for opengl hel emulations */
     HEL_OGL_STUB;
 #if 0
-    pDvdCreatePort->lpVideoPort->hDDVideoPort = 
-        NtGdiDvpCreateVideoPort(GetDdHandle(pDvdCreatePort->lpDD->lpGbl->hDD), 
+    pDvdCreatePort->lpVideoPort->hDDVideoPort =
+        NtGdiDvpCreateVideoPort(GetDdHandle(pDvdCreatePort->lpDD->lpGbl->hDD),
                                (PDD_CREATEVPORTDATA) pDvdCreatePort);
 #endif
     return TRUE;
@@ -801,8 +801,8 @@ DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
     HEL_OGL_STUB;
 #if 0
     /*
-     * Windows XP limit to max 10 handles of videoport surface and Vbi 
-     * ReactOS doing same to keep compatible, if it is more that 10 
+     * Windows XP limit to max 10 handles of videoport surface and Vbi
+     * ReactOS doing same to keep compatible, if it is more that 10
      * videoport surface or vbi the stack will be curpted in windows xp
      * ReactOS safe guard againts that
      *
@@ -810,7 +810,7 @@ DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
 
     HANDLE phSurfaceVideo[10];
     HANDLE phSurfaceVbi[10];
-    
+
     if (pDvdUpdateVideoPort->dwFlags != DDRAWI_VPORTSTOP)
     {
         DWORD dwNumAutoflip;
@@ -820,27 +820,27 @@ DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
         dwNumAutoflip = pDvdUpdateVideoPort->dwNumAutoflip;
         if ((dwNumAutoflip == 0) &&
            (pDvdUpdateVideoPort->lplpDDSurface == 0))
-        {           
+        {
                 dwNumAutoflip++;
         }
-        
+
         if (dwNumAutoflip != 0)
-        {                   
+        {
             if (dwNumAutoflip>10)
             {
                 dwNumAutoflip = 10;
             }
-            memcpy(phSurfaceVideo,pDvdUpdateVideoPort->lplpDDSurface,dwNumAutoflip*sizeof(HANDLE));         
+            memcpy(phSurfaceVideo,pDvdUpdateVideoPort->lplpDDSurface,dwNumAutoflip*sizeof(HANDLE));
         }
-        
+
         /* Take copy of lplpDDVBISurface for the handle value will be modify in dxg */
-        dwNumVBIAutoflip = pDvdUpdateVideoPort->dwNumVBIAutoflip;        
+        dwNumVBIAutoflip = pDvdUpdateVideoPort->dwNumVBIAutoflip;
         if ( (dwNumVBIAutoflip == 0) &&
               (pDvdUpdateVideoPort->lplpDDVBISurface == 0) )
         {
             dwNumVBIAutoflip++;
         }
-       
+
         if (dwNumVBIAutoflip != 0)
         {
             if (dwNumVBIAutoflip>10)
@@ -848,7 +848,7 @@ DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
                 dwNumVBIAutoflip = 10;
             }
             memcpy(phSurfaceVbi,pDvdUpdateVideoPort->lplpDDVBISurface,dwNumVBIAutoflip*sizeof(HANDLE));
-        }    
+        }
     }
 
     /* Call Win32k */
@@ -964,13 +964,13 @@ DdAlphaBlt(LPDDHAL_BLTDATA pDdAlphaBlt)
     /* Fixme for opengl hel emulations */
     HEL_OGL_STUB;
 #if 0
-    HANDLE hDDSrcSurface = 0; 
+    HANDLE hDDSrcSurface = 0;
 
     if (pDdAlphaBlt->lpDDSrcSurface != 0)
     {
         hDDSrcSurface = (HANDLE) pDdAlphaBlt->lpDDSrcSurface->hDDSurface;
     }
-    
+
     return NtGdiDdAlphaBlt((HANDLE)pDdAlphaBlt->lpDDDestSurface->hDDSurface, hDDSrcSurface, (PDD_BLTDATA)&pDdAlphaBlt);
 #endif
 }
@@ -988,7 +988,7 @@ DdCreateSurfaceEx(LPDDHAL_CREATESURFACEEXDATA pDdCreateSurfaceEx)
     HEL_OGL_STUB;
 #if 0
     pDdCreateSurfaceEx->ddRVal = NtGdiDdCreateSurfaceEx( GetDdHandle(pDdCreateSurfaceEx->lpDDLcl->lpGbl->hDD),
-                                                         (HANDLE)pDdCreateSurfaceEx->lpDDSLcl->hDDSurface, 
+                                                         (HANDLE)pDdCreateSurfaceEx->lpDDSLcl->hDDSurface,
                                                          pDdCreateSurfaceEx->lpDDSLcl->lpSurfMore->dwSurfaceHandle);
     return TRUE;
 #endif
@@ -1059,17 +1059,17 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
         RtlZeroMemory(&pDrvInfoData, sizeof (DDHAL_GETDRIVERINFODATA));
         RtlCopyMemory(&pDrvInfoData.guidInfo, &pData->guidInfo, sizeof(GUID));
-    
+
         hDD = GetDdHandle(pData->dwContext);
 
         pDrvInfoData.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
-        pDrvInfoData.ddRVal = DDERR_GENERIC;    
+        pDrvInfoData.ddRVal = DDERR_GENERIC;
         pDrvInfoData.dwContext = (ULONG_PTR)hDD;
-        
-      
+
+
         /* Videoport Callbacks check and setup for DirectX/ ReactX */
         if (IsEqualGUID(&pData->guidInfo, &GUID_VideoPortCallbacks))
-        {        
+        {
             DDHAL_DDVIDEOPORTCALLBACKS  pDvdPort;
             DDHAL_DDVIDEOPORTCALLBACKS* pUserDvdPort = (DDHAL_DDVIDEOPORTCALLBACKS *)pData->lpvData;
 
@@ -1080,20 +1080,20 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             /* set up internal buffer */
             pDrvInfoData.lpvData = (PVOID)&pDvdPort;
             pDrvInfoData.dwExpectedSize = DDVIDEOPORTCALLBACKSSIZE ;
-                
+
             /* Call win32k */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
 
             /* Setup user out buffer and convert kmode callbacks to user mode */
-            pUserDvdPort->dwSize = DDVIDEOPORTCALLBACKSSIZE;      
+            pUserDvdPort->dwSize = DDVIDEOPORTCALLBACKSSIZE;
             pUserDvdPort->dwFlags = pDrvInfoData.dwFlags =  0;
-       
+
             pUserDvdPort->dwFlags = (pDrvInfoData.dwFlags & ~(DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
                                                               DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE | DDHAL_VPORT32_WAITFORSYNC)) |
                                                              (DDHAL_VPORT32_CREATEVIDEOPORT | DDHAL_VPORT32_FLIP |
                                                               DDHAL_VPORT32_DESTROY | DDHAL_VPORT32_UPDATE);
 
-            pData->dwActualSize = DDVIDEOPORTCALLBACKSSIZE; 
+            pData->dwActualSize = DDVIDEOPORTCALLBACKSSIZE;
             pUserDvdPort->CreateVideoPort = (LPDDHALVPORTCB_CREATEVIDEOPORT) DvpCreateVideoPort;
             pUserDvdPort->FlipVideoPort = (LPDDHALVPORTCB_FLIP) DvpFlipVideoPort;
             pUserDvdPort->DestroyVideoPort = (LPDDHALVPORTCB_DESTROYVPORT) DvpDestroyVideoPort;
@@ -1121,7 +1121,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
             if (pDvdPort.GetVideoPortField)
             {
-                pUserDvdPort->GetVideoPortField = (LPDDHALVPORTCB_GETFIELD) DvpGetVideoPortField; 
+                pUserDvdPort->GetVideoPortField = (LPDDHALVPORTCB_GETFIELD) DvpGetVideoPortField;
             }
 
             if (pDvdPort.GetVideoPortLine)
@@ -1138,10 +1138,10 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             {
                 pUserDvdPort->GetVideoPortFlipStatus = (LPDDHALVPORTCB_GETFLIPSTATUS) DvpGetVideoPortFlipStatus;
             }
-        
+
             if (pDvdPort.WaitForVideoPortSync)
             {
-                pUserDvdPort->WaitForVideoPortSync = (LPDDHALVPORTCB_WAITFORSYNC) DvpWaitForVideoPortSync; 
+                pUserDvdPort->WaitForVideoPortSync = (LPDDHALVPORTCB_WAITFORSYNC) DvpWaitForVideoPortSync;
             }
 
             if (pDvdPort.GetVideoSignalStatus)
@@ -1154,7 +1154,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
                 pUserDvdPort->ColorControl = (LPDDHALVPORTCB_COLORCONTROL) DvpColorControl;
             }
 
-            /* Windows XP never repot back the true return value, 
+            /* Windows XP never repot back the true return value,
              *  it only report back if we have a driver or not
              *  ReactOS keep this behoir to be compatible with
              *  Windows XP
@@ -1167,7 +1167,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         {
             DDHAL_DDCOLORCONTROLCALLBACKS  pColorControl;
             DDHAL_DDCOLORCONTROLCALLBACKS* pUserColorControl = (DDHAL_DDCOLORCONTROLCALLBACKS *)pData->lpvData;
-                             
+
             /* Clear internal out buffer and set it up*/
             RtlZeroMemory(&pColorControl, DDCOLORCONTROLCALLBACKSSIZE);
             pColorControl.dwSize = DDCOLORCONTROLCALLBACKSSIZE;
@@ -1190,7 +1190,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
                 pUserColorControl->ColorControl = (LPDDHALCOLORCB_COLORCONTROL) DdColorControl;
             }
 
-            /* Windows XP never repot back the true return value, 
+            /* Windows XP never repot back the true return value,
              *  it only report back if we have a driver or not
              *  ReactOS keep this behoir to be compatible with
              *  Windows XP
@@ -1217,7 +1217,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
             pData->dwActualSize = DDMISCELLANEOUSCALLBACKSSIZE;
 
-            /* Only one callbacks are supported */            
+            /* Only one callbacks are supported */
             pUserMisc->dwFlags = pMisc.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY;
             pUserMisc->GetAvailDriverMemory = (LPDDHAL_GETAVAILDRIVERMEMORY) DdGetAvailDriverMemory;
 
@@ -1226,7 +1226,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
              * pUserMisc->GetHeapAlignment;
              * pUserMisc->GetSysmemBltStatus; */
 
-            /* Windows XP never repot back the true return value, 
+            /* Windows XP never repot back the true return value,
              *  it only report back if we have a driver or not
              *  ReactOS keep this behoir to be compatible with
              *  Windows XP
@@ -1239,7 +1239,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         {
             DDHAL_DDMISCELLANEOUS2CALLBACKS  pMisc;
             DDHAL_DDMISCELLANEOUS2CALLBACKS* pUserMisc = (DDHAL_DDMISCELLANEOUS2CALLBACKS *)pData->lpvData;
-                
+
             /* Clear internal out buffer and set it up*/
             RtlZeroMemory(&pMisc, DDMISCELLANEOUS2CALLBACKSSIZE);
             pMisc.dwSize = DDMISCELLANEOUS2CALLBACKSSIZE;
@@ -1247,7 +1247,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             /* set up internal buffer */
             pDrvInfoData.lpvData = (PVOID)&pMisc;
             pDrvInfoData.dwExpectedSize = DDMISCELLANEOUS2CALLBACKSSIZE ;
-                
+
             /* Call win32k */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
 
@@ -1255,7 +1255,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
             pUserMisc->dwFlags = pMisc.dwFlags;
 
-            /* This functions are not documneted in MSDN for this struct, here is directx/reactx alpha blend */ 
+            /* This functions are not documneted in MSDN for this struct, here is directx/reactx alpha blend */
             if ( pMisc.Reserved )
             {
                 pUserMisc->Reserved = (LPVOID) DdAlphaBlt;
@@ -1273,7 +1273,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
             /* NOTE : pUserMisc->DestroyDDLocal is outdated and are not beign tuch */
 
-            /* Windows XP never repot back the true return value, 
+            /* Windows XP never repot back the true return value,
              *  it only report back if we have a driver or not
              *  ReactOS keep this behoir to be compatible with
              *  Windows XP
@@ -1284,12 +1284,12 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         /* NT Callbacks check and setup for DirectX/ ReactX */
         else if (IsEqualGUID(&pData->guidInfo, &GUID_NTCallbacks))
         {
-            /* MS does not have DHAL_* version of this callbacks 
-             * so we are force using PDD_* callbacks here 
+            /* MS does not have DHAL_* version of this callbacks
+             * so we are force using PDD_* callbacks here
              */
             DD_NTCALLBACKS  pNtKernel;
             PDD_NTCALLBACKS pUserNtKernel = (PDD_NTCALLBACKS)pData->lpvData;
-                
+
             /* Clear internal out buffer and set it up*/
             RtlZeroMemory(&pNtKernel, sizeof(DD_NTCALLBACKS));
             pNtKernel.dwSize = sizeof(DD_NTCALLBACKS);
@@ -1297,7 +1297,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             /* set up internal buffer */
             pDrvInfoData.lpvData = (PVOID)&pNtKernel;
             pDrvInfoData.dwExpectedSize = sizeof(DD_NTCALLBACKS) ;
-                
+
             /* Call win32k */
             retValue = NtGdiDdGetDriverInfo(hDD, (PDD_GETDRIVERINFODATA)&pDrvInfoData);
 
@@ -1309,7 +1309,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
             if (pNtKernel.SetExclusiveMode)
             {
-                pUserNtKernel->SetExclusiveMode = (PDD_SETEXCLUSIVEMODE) DdSetExclusiveMode;  
+                pUserNtKernel->SetExclusiveMode = (PDD_SETEXCLUSIVEMODE) DdSetExclusiveMode;
             }
 
             if (pNtKernel.FlipToGDISurface)
@@ -1317,7 +1317,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
                 pUserNtKernel->FlipToGDISurface = (PDD_FLIPTOGDISURFACE) DdFlipToGDISurface;
             }
 
-            /* Windows XP never repot back the true return value, 
+            /* Windows XP never repot back the true return value,
              *  it only report back if we have a driver or not
              *  ReactOS keep this behoir to be compatible with
              *  Windows XP
@@ -1356,7 +1356,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         //}
         else
         {
-            /* set up internal buffer */ 
+            /* set up internal buffer */
             pDrvInfoData.dwExpectedSize = pData->dwExpectedSize;
             pDrvInfoData.lpvData = pData->lpvData;
 
@@ -1366,7 +1366,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
             /* Setup return data */
             pData->dwActualSize = pDrvInfoData.dwActualSize;
             pData->lpvData = pDrvInfoData.lpvData;
-            /* Windows XP never repot back the true return value, 
+            /* Windows XP never repot back the true return value,
              *  it only report back if we have a driver or not
              *  ReactOS keep this behoir to be compatible with
              *  Windows XP
@@ -1384,8 +1384,8 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
  *
  * D3dContextCreate
  */
-BOOL 
-WINAPI 
+BOOL
+WINAPI
 D3dContextCreate(LPD3DHAL_CONTEXTCREATEDATA pdcci)
 {
     /* Fixme for opengl hel emulations */
@@ -1397,8 +1397,8 @@ D3dContextCreate(LPD3DHAL_CONTEXTCREATEDATA pdcci)
     {
         hSurfZ = (HANDLE)pdcci->lpDDSZLcl->hDDSurface;
     }
-   
-    return  NtGdiD3dContextCreate(GetDdHandle(pdcci->lpDDLcl->hDD), 
+
+    return  NtGdiD3dContextCreate(GetDdHandle(pdcci->lpDDLcl->hDD),
                                   (HANDLE)pdcci->lpDDSLcl->hDDSurface,
                                   hSurfZ,
                                   (D3DNTHAL_CONTEXTCREATEI *)pdcci);
@@ -1417,11 +1417,11 @@ DdCanCreateD3DBuffer(LPDDHAL_CANCREATESURFACEDATA CanCreateD3DBuffer)
     /* Fixme for opengl hel emulations */
     HEL_OGL_STUB;
 #if 0
-    /* 
-     * Note : This functions are basic same, in win32k 
-     * NtGdiDdCanCreateD3DBuffer and  NtGdiDdCanCreateSurface are mergs 
-     * toghter in win32k at end and retrurn same data, it is still sepreated 
-     * at user mode but in kmode it is not. 
+    /*
+     * Note : This functions are basic same, in win32k
+     * NtGdiDdCanCreateD3DBuffer and  NtGdiDdCanCreateSurface are mergs
+     * toghter in win32k at end and retrurn same data, it is still sepreated
+     * at user mode but in kmode it is not.
      */
 
     /* Call win32k */
@@ -1755,7 +1755,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         CreateWineD3DDevice(pDirectDrawGlobal);
         /* Set the return value */
         Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
-        
+
     }
 
     /* Return to caller */
@@ -1796,7 +1796,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
     IWineD3D* pWineD3d;
     WINED3DCAPS WineCaps;
-    DWORD wined3dFourCCList[] = 
+    DWORD wined3dFourCCList[] =
     {
         MAKEFOURCC('Y','U','Y','2'),
         MAKEFOURCC('U','Y','V','Y'),
@@ -1890,7 +1890,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pHalInfo->vmiData.dwDisplayWidth = DevMode.dmPelsHeight;
         pHalInfo->vmiData.dwDisplayHeight = DevMode.dmPelsWidth;
 
-        /* ToDo align it right, we skip align it, it must be algin like the graphice card delta for the screen 
+        /* ToDo align it right, we skip align it, it must be algin like the graphice card delta for the screen
          * the graphice card delta is same as pHalInfo->vmiData.lDisplayPitch
          */
         pHalInfo->vmiData.lDisplayPitch = (DevMode.dmPelsWidth * DevMode.dmBitsPerPel) / 8;
@@ -1945,7 +1945,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         RtlZeroMemory(&pHalInfo->ddCaps, sizeof(DDCORECAPS));
         pHalInfo->ddCaps.dwSize = sizeof(DDCORECAPS);
 
-        /* Note wined3d seam not support in pHalInfo->ddCaps.dwCaps 
+        /* Note wined3d seam not support in pHalInfo->ddCaps.dwCaps
            DDCAPS_ALIGNBOUNDARYDEST, DDCAPS_ALIGNSIZEDEST, DDCAPS_ALIGNSTRIDE
            DDCAPS_ALPHA
            DDCAPS_BLTFOURCC, DDCAPS_BLTQUEUE
@@ -2059,7 +2059,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         /* Fill in the size and the flags for DDHAL_DDCALLBACKS */
         pDDCallbacks->dwSize = sizeof(DDHAL_DDCALLBACKS);
         pDDCallbacks->dwFlags = DDHAL_CB32_CANCREATESURFACE | DDHAL_CB32_GETSCANLINE | DDHAL_CB32_CREATESURFACE | DDHAL_CB32_WAITFORVERTICALBLANK;
-        
+
         /* Write the always-on functions */
         pDDCallbacks->CreateSurface = DdCreateSurface;
         pDDCallbacks->WaitForVerticalBlank = DdWaitForVerticalBlank;
@@ -2074,7 +2074,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 
 
     /* Check for DD Surface Callbacks */
-    if (pDDSurfaceCallbacks) 
+    if (pDDSurfaceCallbacks)
     {
         /* Zero the structures */
         RtlZeroMemory(pDDSurfaceCallbacks, sizeof(DDHAL_DDSURFACECALLBACKS));
@@ -2083,7 +2083,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pDDSurfaceCallbacks->dwSize  = sizeof(DDHAL_DDSURFACECALLBACKS);
         pDDSurfaceCallbacks->dwFlags = DDHAL_SURFCB32_LOCK | DDHAL_SURFCB32_UNLOCK | DDHAL_SURFCB32_SETCOLORKEY | DDHAL_SURFCB32_DESTROYSURFACE;
 
-        
+
         /* Write the always-on functions */
         pDDSurfaceCallbacks->Lock = DdLock;
         pDDSurfaceCallbacks->Unlock = DdUnlock;
@@ -2106,8 +2106,8 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     }
 
 
-    /* Check for DD Palette Callbacks, This interface are dead for user mode, 
-     * only what it can support are being report back.  
+    /* Check for DD Palette Callbacks, This interface are dead for user mode,
+     * only what it can support are being report back.
      */
     if (pDDPaletteCallbacks)
     {
@@ -2155,12 +2155,12 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         //pD3dDriverData->hwCaps.dwSize = sizeof(D3DHALDEVICEDESC); // FIXME
 
         pD3dDriverData->hwCaps.dwFlags = D3DDD_TRICAPS | D3DDD_LINECAPS | D3DDD_DEVCAPS | D3DDD_LIGHTINGCAPS;
-        // MSDN D3DDD_BCLIPPING The bClipping member contains valid data. 
-        // MSDN D3DDD_COLORMODEL The dcmColorModel member contains valid data. 
-        // MSDN D3DDD_DEVICERENDERBITDEPTH The dwDeviceRenderBitDepth member contains valid data. 
-        // MSDN D3DDD_DEVICEZBUFFERBITDEPTH The dwDeviceZBufferBitDepth member contains valid data. 
-        // MSDN D3DDD_MAXBUFFERSIZE The dwMaxBufferSize member contains valid data. 
-        //MSDN D3DDD_MAXVERTEXCOUNT The dwMaxVertexCount member contains valid data. 
+        // MSDN D3DDD_BCLIPPING The bClipping member contains valid data.
+        // MSDN D3DDD_COLORMODEL The dcmColorModel member contains valid data.
+        // MSDN D3DDD_DEVICERENDERBITDEPTH The dwDeviceRenderBitDepth member contains valid data.
+        // MSDN D3DDD_DEVICEZBUFFERBITDEPTH The dwDeviceZBufferBitDepth member contains valid data.
+        // MSDN D3DDD_MAXBUFFERSIZE The dwMaxBufferSize member contains valid data.
+        //MSDN D3DDD_MAXVERTEXCOUNT The dwMaxVertexCount member contains valid data.
 
 
         pD3dDriverData->hwCaps.dlcLightingCaps.dwSize = sizeof(D3DLIGHTINGCAPS);
@@ -2186,7 +2186,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pD3dDriverData->hwCaps.dwDevCaps = WineCaps.DevCaps;
 
         pD3dDriverData->hwCaps.dpcLineCaps.dwSize = sizeof(D3DPRIMCAPS);
-        // pD3dDriverData->hwCaps.dpcLineCaps.dwMiscCaps = 
+        // pD3dDriverData->hwCaps.dpcLineCaps.dwMiscCaps =
         pD3dDriverData->hwCaps.dpcLineCaps.dwRasterCaps = WineCaps.RasterCaps;
         pD3dDriverData->hwCaps.dpcLineCaps.dwZCmpCaps = WineCaps.ZCmpCaps;
         pD3dDriverData->hwCaps.dpcLineCaps.dwSrcBlendCaps = WineCaps.SrcBlendCaps;
@@ -2201,7 +2201,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         pD3dDriverData->hwCaps.dpcLineCaps.dwStippleHeight = 32;
 
          pD3dDriverData->hwCaps.dpcTriCaps.dwSize = sizeof(D3DPRIMCAPS);
-        // pD3dDriverData->hwCaps.dpcTriCaps.dwMiscCaps = 
+        // pD3dDriverData->hwCaps.dpcTriCaps.dwMiscCaps =
         pD3dDriverData->hwCaps.dpcTriCaps.dwRasterCaps = WineCaps.RasterCaps;
         pD3dDriverData->hwCaps.dpcTriCaps.dwZCmpCaps = WineCaps.ZCmpCaps;
         pD3dDriverData->hwCaps.dpcTriCaps.dwSrcBlendCaps = WineCaps.SrcBlendCaps;
@@ -2409,7 +2409,7 @@ DdReleaseDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
  * GDIEntry 9
  */
 HBITMAP
-STDCALL
+WINAPI
 DdCreateDIBSection(HDC hdc,
                    CONST BITMAPINFO *pbmi,
                    UINT iUsage,
@@ -2444,7 +2444,7 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
  * GDIEntry 11
  */
 BOOL
-STDCALL
+WINAPI
 DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
                  LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo)
 {
@@ -2481,7 +2481,7 @@ DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
  * GDIEntry 12
  */
 VOID
-STDCALL
+WINAPI
 DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
                   LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached)
 {
@@ -2500,7 +2500,7 @@ DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
  * GDIEntry 13
  */
 ULONG
-STDCALL
+WINAPI
 DdQueryDisplaySettingsUniqueness()
 {
  return GdiSharedHandleTable->flDeviceUniq;

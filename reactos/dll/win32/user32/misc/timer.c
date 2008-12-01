@@ -38,7 +38,7 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 KillSystemTimer(
   HWND hWnd,
   UINT_PTR IDEvent)
@@ -51,7 +51,7 @@ KillSystemTimer(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 KillTimer(
   HWND hWnd,
   UINT_PTR IDEvent)
@@ -64,7 +64,7 @@ KillTimer(
  * @implemented
  */
 UINT_PTR
-STDCALL
+WINAPI
 SetSystemTimer(
   HWND hWnd,
   UINT_PTR IDEvent,
@@ -79,7 +79,7 @@ SetSystemTimer(
  * @implemented
  */
 UINT_PTR
-STDCALL
+WINAPI
 SetTimer(
   HWND hWnd,
   UINT_PTR IDEvent,

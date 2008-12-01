@@ -25,23 +25,23 @@ typedef struct _HUB_DEVICE_EXTENSION
 } HUB_DEVICE_EXTENSION, *PHUB_DEVICE_EXTENSION;
 
 /* createclose.c */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbhubCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbhubClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbhubCleanup(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 /* fdo.c */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbhubPnpFdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
@@ -57,7 +57,7 @@ ForwardIrpAndWait(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
@@ -74,7 +74,7 @@ UsbhubInitMultiSzString(
 	... /* list of PCSZ */);
 
 /* pdo.c */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbhubPnpPdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);

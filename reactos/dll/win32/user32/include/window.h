@@ -49,7 +49,7 @@ LRESULT FASTCALL IntCallWindowProcW(BOOL IsAnsiProc, WNDPROC WndProc,
                                     HWND hWnd, UINT Msg, WPARAM wParam,
                                     LPARAM lParam);
 
-HWND STDCALL
+HWND WINAPI
 User32CreateWindowEx(DWORD dwExStyle,
 		LPCSTR lpClassName,
 		LPCSTR lpWindowName,

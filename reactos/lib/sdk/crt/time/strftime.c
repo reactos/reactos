@@ -233,6 +233,8 @@ size_t wcsftime(wchar_t* s, size_t maxsize, const wchar_t* format, const struct 
   char *x;
   char *f;
   size_t i,j;
+  if ((gsize = maxsize) < 1)
+    return 0;
   x = malloc(maxsize);
   j = wcslen(format);
   f = malloc(j+1);
@@ -240,8 +242,6 @@ size_t wcsftime(wchar_t* s, size_t maxsize, const wchar_t* format, const struct 
 	f[i] = (char)*format;
   f[i] = 0;
   pt = x;
-  if ((gsize = maxsize) < 1)
-    return 0;
   if (_fmt(f, t)) {
     *pt = '\0';
     free(f);

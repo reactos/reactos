@@ -7,7 +7,6 @@
  */
 #include "d3d9_common.h"
 #include "d3d9_callbacks.h"
-#define STDCALL __stdcall
 #include <d3d9.h>
 #include <dll/directx/d3d8thk.h>
 #include "d3d9_private.h"

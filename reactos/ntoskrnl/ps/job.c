@@ -236,15 +236,15 @@ NtCreateJobObject (
     /* check for valid buffers */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteHandle(JobHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if(!NT_SUCCESS(Status))
         {
@@ -298,18 +298,18 @@ NtCreateJobObject (
         if(NT_SUCCESS(Status))
         {
             /* pass the handle back to the caller */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* NOTE: if the caller passed invalid buffers to receive the handle it's his
                 own fault! the object will still be created and live... It's possible
                 to find the handle using ObFindHandleForObject()! */
                 *JobHandle = hJob;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -406,15 +406,15 @@ NtOpenJobObject (
     /* check for valid buffers */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteHandle(JobHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if(!NT_SUCCESS(Status))
         {
@@ -433,15 +433,15 @@ NtOpenJobObject (
             &hJob);
         if(NT_SUCCESS(Status))
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 *JobHandle = hJob;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 

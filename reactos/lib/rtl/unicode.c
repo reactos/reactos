@@ -1546,7 +1546,7 @@ RtlLargeIntegerToChar(
    if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) > Length)
       return STATUS_BUFFER_OVERFLOW;
 
-   //_SEH_TRY
+   //_SEH2_TRY
    {
       sp = String;
       while (tp > temp)
@@ -1556,12 +1556,12 @@ RtlLargeIntegerToChar(
          *sp = 0;
    }
 #if 0
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
       /* Get the error code */
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END;
+   _SEH2_END;
 #endif
 
    return Status;

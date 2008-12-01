@@ -152,7 +152,7 @@ NpfsQueryLocalPipeInformation(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 					 PIRP Irp)
 {
@@ -222,7 +222,7 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsSetInformation(PDEVICE_OBJECT DeviceObject,
 				   PIRP Irp)
 {

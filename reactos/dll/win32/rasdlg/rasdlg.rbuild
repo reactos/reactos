@@ -8,5 +8,4 @@
 	<library>uuid</library>
 	<file>rasdlg.c</file>
 	<file>rasdlg.rc</file>
-	<file>rasdlg.spec</file>
 </module>

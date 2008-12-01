@@ -1,8 +1,5 @@
 #ifndef _BASETSD_H
 #define _BASETSD_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __GNUC__
 #ifndef __int64
@@ -124,6 +121,8 @@ typedef unsigned __int64 ULONG64, *PULONG64;
 typedef unsigned __int64 DWORD64, *PDWORD64;
 typedef unsigned __int64 UINT64,  *PUINT64;
 
+typedef signed char INT8, *PINT8;
+typedef unsigned char UINT8, *PUINT8;
 typedef signed short INT16, *PINT16;
 typedef unsigned short UINT16, *PUINT16;
 

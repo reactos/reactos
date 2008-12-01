@@ -36,5 +36,6 @@
 	<file>stubs.c</file>
 	<file>rpc.c</file>
 	<file>setupapi.rc</file>
-	<file>setupapi.spec</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

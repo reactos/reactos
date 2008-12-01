@@ -6,6 +6,7 @@
 	<include base="wpp">.</include>
 	<library>wpp</library>
 	<file>client.c</file>
+	<file>expr.c</file>
 	<file>hash.c</file>
 	<file>header.c</file>
 	<file>proxy.c</file>

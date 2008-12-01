@@ -1,8 +1,5 @@
 #ifndef _WINNT_H
 #define _WINNT_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifdef __GNUC__
 #include <msvctarget.h>
@@ -40,10 +37,6 @@ extern "C" {
 
 #include <basetsd.h>
 #include <guiddef.h>
-
-#ifndef __cplusplus
-    typedef unsigned short wchar_t;
-#endif
 
 #include <ctype.h>
 #undef __need_wchar_t
@@ -103,17 +96,9 @@ extern "C" {
 #endif
 typedef char CHAR;
 typedef short SHORT;
-#ifndef LONG_DEFINED
-#define LONG_DEFINED
-	typedef long LONG;
-	typedef unsigned long ULONG,*PULONG;
-#endif//LONG_DEFINED
+typedef long LONG;
 typedef char CCHAR, *PCCHAR;
-typedef unsigned char UCHAR,*PUCHAR;
-typedef unsigned short USHORT,*PUSHORT;
-typedef char *PSZ;
-
-typedef void *PVOID,*LPVOID;
+typedef void *PVOID;
 
 /* FIXME for __WIN64 */
 #ifndef  __ptr64
@@ -190,7 +175,7 @@ typedef void *HANDLE;
 typedef PVOID HANDLE;
 #define DECLARE_HANDLE(n) typedef HANDLE n
 #endif
-typedef HANDLE *PHANDLE,*LPHANDLE;
+typedef HANDLE *PHANDLE;
 typedef DWORD LCID;
 typedef PDWORD PLCID;
 typedef WORD LANGID;
@@ -2837,7 +2822,7 @@ typedef CONTEXT *PCONTEXT,*LPCONTEXT;
       PVOID ExceptionAddress;
       DWORD NumberParameters;
       ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-    } EXCEPTION_RECORD, *PEXCEPTION_RECORD, *LPEXCEPTION_RECORD;
+    } EXCEPTION_RECORD;
 
     typedef EXCEPTION_RECORD *PEXCEPTION_RECORD;
 
@@ -3864,7 +3849,6 @@ typedef struct _IMAGE_BOUND_FORWARDER_REF {
 	WORD OffsetModuleName;
 	WORD Reserved;
 } IMAGE_BOUND_FORWARDER_REF,*PIMAGE_BOUND_FORWARDER_REF;
-typedef void(NTAPI *PIMAGE_TLS_CALLBACK)(PVOID,DWORD,PVOID);
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
 	DWORD Characteristics;
 	DWORD TimeDateStamp;
@@ -4381,9 +4365,6 @@ typedef enum _POWER_INFORMATION_LEVEL {
 	ProcessorPowerPolicyCurrent
 } POWER_INFORMATION_LEVEL;
 
-#if (_WIN32_WINNT >= 0x0500)
-typedef LONG (WINAPI *PVECTORED_EXCEPTION_HANDLER)(PEXCEPTION_POINTERS);
-#endif
 #if 1 /* (WIN32_WINNT >= 0x0500) */
 typedef struct _SYSTEM_POWER_INFORMATION {
 	ULONG  MaxIdlenessAllowed;
@@ -4609,7 +4590,7 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
 
 NTSYSAPI
 SIZE_T
-STDCALL
+NTAPI
 RtlCompareMemory (
     const VOID *Source1,
     const VOID *Source2,
@@ -4823,7 +4804,7 @@ BitScanReverse(OUT ULONG *Index,
 #if defined(_M_IX86)
 	__asm__ __volatile__("bsrl %2,%0\n\t"
 	                     "setnz %1\n\t"
-	                     :"=&r" (*Index), "=r" (BitPosition)
+	                     :"=&r" (*Index), "=q" (BitPosition)
 	                     :"rm" (Mask)
 	                     :"memory");
 	return BitPosition;

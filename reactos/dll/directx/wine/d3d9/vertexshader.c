@@ -30,7 +30,7 @@ static HRESULT WINAPI IDirect3DVertexShader9Impl_QueryInterface(LPDIRECT3DVERTEX
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DVertexShader9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DVertexShader9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -59,7 +59,7 @@ static ULONG WINAPI IDirect3DVertexShader9Impl_Release(LPDIRECT3DVERTEXSHADER9 i
         EnterCriticalSection(&d3d9_cs);
         IWineD3DVertexShader_Release(This->wineD3DVertexShader);
         LeaveCriticalSection(&d3d9_cs);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -69,11 +69,12 @@ static ULONG WINAPI IDirect3DVertexShader9Impl_Release(LPDIRECT3DVERTEXSHADER9 i
 static HRESULT WINAPI IDirect3DVertexShader9Impl_GetDevice(LPDIRECT3DVERTEXSHADER9 iface, IDirect3DDevice9** ppDevice) {
     IDirect3DVertexShader9Impl *This = (IDirect3DVertexShader9Impl *)iface;
     IWineD3DDevice *myDevice = NULL;
-    HRESULT hr = D3D_OK;
+    HRESULT hr;
     TRACE("(%p) : Relay\n", This);
 
     EnterCriticalSection(&d3d9_cs);
-    if (D3D_OK == (hr = IWineD3DVertexShader_GetDevice(This->wineD3DVertexShader, &myDevice) && myDevice != NULL)) {
+    hr = IWineD3DVertexShader_GetDevice(This->wineD3DVertexShader, &myDevice);
+    if (WINED3D_OK == hr && myDevice != NULL) {
         hr = IWineD3DDevice_GetParent(myDevice, (IUnknown **)ppDevice);
         IWineD3DDevice_Release(myDevice);
     } else {
@@ -134,7 +135,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateVertexShader(LPDIRECT3DDEVICE9EX iface
         FIXME("Call to IWineD3DDevice_CreateVertexShader failed\n");
         HeapFree(GetProcessHeap(), 0, object);
     }else{
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppShader = (IDirect3DVertexShader9 *)object;
         TRACE("(%p) : Created vertex shader %p\n", This, object);

@@ -10,7 +10,11 @@
 		<define name="__NO_CTYPE_INLINES" />
 		<define name="NTDDI_VERSION">0x05020100</define>
 		<dependency>errcodes</dependency>
+		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 		<pch>k32.h</pch>
+		-->
+		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+		<compilerflag>-fno-unit-at-a-time</compilerflag>
 		<directory name="debug">
 			<file>debugger.c</file>
 			<file>output.c</file>
@@ -57,6 +61,7 @@
 			<file>actctx.c</file>
 			<file>atom.c</file>
 			<file>chartype.c</file>
+			<file>collation.c</file>
 			<file>casemap.c</file>
 			<file>comm.c</file>
 			<file>computername.c</file>
@@ -75,6 +80,7 @@
 			<file>perfcnt.c</file>
 			<file>recovery.c</file>
 			<file>res.c</file>
+			<file>sortkey.c</file>
 			<file>stubs.c</file>
 			<file>sysinfo.c</file>
 			<file>time.c</file>

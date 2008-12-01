@@ -132,7 +132,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
   return(pDce);
 }
 
-static VOID STDCALL
+static VOID APIENTRY
 DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
                BOOL SetClipOrigin)
 {
@@ -865,7 +865,7 @@ UserGetWindowDC(PWINDOW_OBJECT Wnd)
   return UserGetDCEx(Wnd, 0, DCX_USESTYLE | DCX_WINDOW);
 }
 
-HDC STDCALL
+HDC APIENTRY
 NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 {
   PWINDOW_OBJECT Wnd=NULL;
@@ -898,13 +898,13 @@ CLEANUP:
  * Status
  *    @implemented
  */
-HDC STDCALL
+HDC APIENTRY
 NtUserGetWindowDC(HWND hWnd)
 {
   return NtUserGetDCEx(hWnd, 0, DCX_USESTYLE | DCX_WINDOW);
 }
 
-HDC STDCALL
+HDC APIENTRY
 NtUserGetDC(HWND hWnd)
 {
  DPRINT("NtUGetDC -> %x:%x\n", hWnd, !hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE );
@@ -924,7 +924,7 @@ NtUserGetDC(HWND hWnd)
  * \todo	implement ForceBackground == TRUE
 */
 HPALETTE
-STDCALL
+APIENTRY
 NtUserSelectPalette(HDC  hDC,
               HPALETTE  hpal,
        BOOL  ForceBackground)

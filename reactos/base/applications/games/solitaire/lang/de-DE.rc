@@ -50,6 +50,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitär von J Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "Laufendes Spiel beenden?"
     IDS_SOL_WIN     "Glückwunsch, Sie haben Gewonnen!"
+    IDS_SOL_DEAL    "Neu geben?"
 END
 
 

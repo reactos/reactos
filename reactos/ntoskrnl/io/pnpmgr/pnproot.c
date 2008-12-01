@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/io/pnpmgr/pnproot.c
  * PURPOSE:         PnP manager root device
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ *                  Copyright 2007 Herv? Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -503,8 +503,10 @@ cleanup:
         ZwClose(SubKeyHandle);
     if (KeyHandle != INVALID_HANDLE_VALUE)
         ZwClose(KeyHandle);
-    ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
-    ExFreePoolWithTag(SubKeyInfo, TAG_PNP_ROOT);
+    if (KeyInfo)
+        ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
+    if (SubKeyInfo)
+        ExFreePoolWithTag(SubKeyInfo, TAG_PNP_ROOT);
     KeReleaseGuardedMutex(&DeviceExtension->DeviceListLock);
     return Status;
 }

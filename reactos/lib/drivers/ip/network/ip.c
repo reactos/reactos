@@ -109,7 +109,7 @@ PIP_PACKET IPInitializePacket(
 }
 
 
-void STDCALL IPTimeout( PVOID Context ) {
+void NTAPI IPTimeout( PVOID Context ) {
     IpWorkItemQueued = FALSE;
 
     /* Check if datagram fragments have taken too long to assemble */
@@ -150,12 +150,17 @@ VOID IPDispatchProtocol(
         Protocol = 0;
     }
 
-    /* Call the appropriate protocol handler */
-    (*ProtocolTable[Protocol])(Interface, IPPacket);
-    /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
-     * must be handled here. */
-    if( Protocol == IPPROTO_ICMP )
-        ICMPReceive( Interface, IPPacket );
+    if (Protocol < IP_PROTOCOL_TABLE_SIZE &&
+        Protocol >= 0)
+    {
+       /* Call the appropriate protocol handler */
+       (*ProtocolTable[Protocol])(Interface, IPPacket);
+
+       /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
+        * must be handled here. */
+        if( Protocol == IPPROTO_ICMP )
+            ICMPReceive( Interface, IPPacket );
+    }
 }
 
 

@@ -39,7 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetGuiResources(
   HANDLE hProcess,
   DWORD uiFlags)
@@ -52,14 +52,14 @@ GetGuiResources(
  * Private calls for CSRSS
  */
 VOID
-STDCALL
+WINAPI
 PrivateCsrssManualGuiCheck(LONG Check)
 {
   NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
 VOID
-STDCALL
+WINAPI
 PrivateCsrssInitialized(VOID)
 {
   NtUserCallNoParam(NOPARAM_ROUTINE_CSRSS_INITIALIZED);
@@ -70,7 +70,7 @@ PrivateCsrssInitialized(VOID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
   return NtUserCallTwoParam(dwProcessId,
@@ -82,7 +82,7 @@ RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
 {
   /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
@@ -251,7 +251,7 @@ NTSTATUS Status;
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EndTask(
 	HWND    hWnd,
 	BOOL fShutDown,
@@ -274,7 +274,7 @@ EndTask(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsGUIThread(
     BOOL bConvert)
 {

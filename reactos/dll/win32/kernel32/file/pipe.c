@@ -25,7 +25,7 @@ LONG ProcessPipeId = 0;
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreatePipe(PHANDLE hReadPipe,
            PHANDLE hWritePipe,
            LPSECURITY_ATTRIBUTES lpPipeAttributes,

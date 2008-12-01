@@ -316,7 +316,7 @@ SeSetWorldSecurityDescriptor(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 SeCopyClientToken(
     IN PACCESS_TOKEN Token,
     IN SECURITY_IMPERSONATION_LEVEL Level,

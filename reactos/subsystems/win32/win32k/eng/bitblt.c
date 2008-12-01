@@ -32,7 +32,7 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef BOOLEAN (STDCALL *PBLTRECTFUNC)(SURFOBJ* OutputObj,
+typedef BOOLEAN (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         SURFOBJ* InputObj,
                                         SURFOBJ* Mask,
                                         XLATEOBJ* ColorTranslation,
@@ -42,7 +42,7 @@ typedef BOOLEAN (STDCALL *PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         BRUSHOBJ* Brush,
                                         POINTL* BrushOrigin,
                                         ROP4 Rop4);
-typedef BOOLEAN (STDCALL *PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
+typedef BOOLEAN (APIENTRY *PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
                                             SURFOBJ* InputObj,
                                             SURFOBJ* Mask,
                                             CLIPOBJ* ClipRegion,
@@ -53,7 +53,7 @@ typedef BOOLEAN (STDCALL *PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
                                             POINTL* BrushOrigin,
                                             ULONG Mode);
 
-BOOL STDCALL EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
+BOOL APIENTRY EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 {
     static const RECTL rclEmpty = { 0, 0, 0, 0 };
 
@@ -76,7 +76,7 @@ BOOL STDCALL EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
     return FALSE;
 }
 
-static BOOLEAN STDCALL
+static BOOLEAN APIENTRY
 BltMask(SURFOBJ* Dest,
         SURFOBJ* Source,
         SURFOBJ* Mask,
@@ -164,7 +164,7 @@ BltMask(SURFOBJ* Dest,
     return TRUE;
 }
 
-static BOOLEAN STDCALL
+static BOOLEAN APIENTRY
 BltPatCopy(SURFOBJ* Dest,
            SURFOBJ* Source,
            SURFOBJ* Mask,
@@ -184,7 +184,7 @@ BltPatCopy(SURFOBJ* Dest,
     return TRUE;
 }
 
-static BOOLEAN STDCALL
+static BOOLEAN APIENTRY
 CallDibBitBlt(SURFOBJ* OutputObj,
               SURFOBJ* InputObj,
               SURFOBJ* Mask,
@@ -252,7 +252,7 @@ INT __cdecl abs(INT nm);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiEngBitBlt(
                 IN SURFOBJ  *psoTrg,
                 IN SURFOBJ  *psoSrc,
@@ -271,7 +271,7 @@ NtGdiEngBitBlt(
     POINTL ptlMask;
     POINTL ptlBrush;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(prclTrg, sizeof(RECTL), 1);
         RtlCopyMemory(&rclTrg,prclTrg, sizeof(RECTL));
@@ -286,11 +286,11 @@ NtGdiEngBitBlt(
         RtlCopyMemory(&ptlBrush, pptlBrush, sizeof(POINTL));
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH_YIELD(return FALSE);
+        _SEH2_YIELD(return FALSE);
     }
-    _SEH_END;
+    _SEH2_END;
 
     return  EngBitBlt(psoTrg, psoSrc, psoMask, pco, pxlo, &rclTrg, &ptlSrc, &ptlMask, pbo, &ptlBrush, rop4);
 }
@@ -298,7 +298,7 @@ NtGdiEngBitBlt(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngBitBlt(SURFOBJ *DestObj,
           SURFOBJ *SourceObj,
           SURFOBJ *Mask,
@@ -576,7 +576,7 @@ EngBitBlt(SURFOBJ *DestObj,
     return Ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngBitBltEx(SURFOBJ *DestSurf,
                SURFOBJ *SourceSurf,
                SURFOBJ *MaskSurf,
@@ -732,7 +732,7 @@ IntEngBitBltEx(SURFOBJ *DestSurf,
     return ret;
 }
 
-static BOOLEAN STDCALL
+static BOOLEAN APIENTRY
 CallDibStretchBlt(SURFOBJ* OutputObj,
                   SURFOBJ* InputObj,
                   SURFOBJ* Mask,
@@ -759,7 +759,7 @@ CallDibStretchBlt(SURFOBJ* OutputObj,
 
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiEngStretchBlt(
     IN SURFOBJ  *DestObj,
     IN SURFOBJ  *SourceObj,
@@ -780,7 +780,7 @@ NtGdiEngStretchBlt(
     RECTL rclSrc;
     POINTL lMaskOrigin;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(pca, sizeof(COLORADJUSTMENT), 1);
         RtlCopyMemory(&ca,pca, sizeof(COLORADJUSTMENT));
@@ -798,17 +798,17 @@ NtGdiEngStretchBlt(
         RtlCopyMemory(&lMaskOrigin, MaskOrigin, sizeof(POINTL));
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH_YIELD(return FALSE);
+        _SEH2_YIELD(return FALSE);
     }
-    _SEH_END;
+    _SEH2_END;
 
     return EngStretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation, &ca, &lBrushOrigin, &rclDest, &rclSrc, &lMaskOrigin, Mode);
 }
 
 BOOL
-STDCALL
+APIENTRY
 EngStretchBlt(
     IN SURFOBJ  *DestObj,
     IN SURFOBJ  *SourceObj,
@@ -906,7 +906,7 @@ EngStretchBlt(
     return Ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngStretchBlt(SURFOBJ *DestSurf,
                  SURFOBJ *SourceSurf,
                  SURFOBJ *MaskSurf,
@@ -992,7 +992,7 @@ IntEngStretchBlt(SURFOBJ *DestSurf,
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtGdiEngAlphaBlend(IN SURFOBJ *Dest,
                    IN SURFOBJ *Source,
                    IN CLIPOBJ *ClipRegion,
@@ -1004,7 +1004,7 @@ NtGdiEngAlphaBlend(IN SURFOBJ *Dest,
     RECTL DestRect;
     RECTL SourceRect;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(upDestRect, sizeof(RECTL), 1);
         RtlCopyMemory(&DestRect,upDestRect, sizeof(RECTL));
@@ -1013,11 +1013,11 @@ NtGdiEngAlphaBlend(IN SURFOBJ *Dest,
         RtlCopyMemory(&SourceRect, upSourceRect, sizeof(RECTL));
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH_YIELD(return FALSE);
+        _SEH2_YIELD(return FALSE);
     }
-    _SEH_END;
+    _SEH2_END;
 
     return EngAlphaBlend(Dest, Source, ClipRegion, ColorTranslation, &DestRect, &SourceRect, BlendObj);
 }
@@ -1026,7 +1026,7 @@ NtGdiEngAlphaBlend(IN SURFOBJ *Dest,
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 EngAlphaBlend(IN SURFOBJ *Dest,
               IN SURFOBJ *Source,
               IN CLIPOBJ *ClipRegion,
@@ -1287,7 +1287,7 @@ EngAlphaBlend(IN SURFOBJ *Dest,
     return Ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngAlphaBlend(IN SURFOBJ *Dest,
                  IN SURFOBJ *Source,
                  IN CLIPOBJ *ClipRegion,
@@ -1355,7 +1355,7 @@ IntEngAlphaBlend(IN SURFOBJ *Dest,
 /**** REACTOS FONT RENDERING CODE *********************************************/
 
 /* renders the alpha mask bitmap */
-static BOOLEAN STDCALL
+static BOOLEAN APIENTRY
 AlphaBltMask(SURFOBJ* Dest,
              SURFOBJ* Source,
              SURFOBJ* Mask,
@@ -1422,7 +1422,7 @@ AlphaBltMask(SURFOBJ* Dest,
     }
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 EngMaskBitBlt(SURFOBJ *DestObj,
               SURFOBJ *Mask,
               CLIPOBJ *ClipRegion,
@@ -1642,7 +1642,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
     return Ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngMaskBlt(SURFOBJ *DestSurf,
               SURFOBJ *Mask,
               CLIPOBJ *ClipRegion,

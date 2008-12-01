@@ -22,7 +22,7 @@ extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsBadReadPtr(IN LPCVOID lp,
              IN UINT_PTR ucb)
 {
@@ -45,7 +45,7 @@ IsBadReadPtr(IN LPCVOID lp,
     if ((ULONG_PTR)Last < (ULONG_PTR)lp) return TRUE;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the entire range */
         Current = (volatile CHAR*)lp;
@@ -56,12 +56,12 @@ IsBadReadPtr(IN LPCVOID lp,
             Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
         } while (Current <= Last);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* We hit an exception, so return true */
         Result = TRUE;
     }
-    _SEH_END
+    _SEH2_END
 
     /* Return exception status */
     return Result;
@@ -117,7 +117,7 @@ IsBadWritePtr(LPVOID lp,
     if ((ULONG_PTR)Last < (ULONG_PTR)lp) return TRUE;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the entire range */
         Current = (volatile CHAR*)lp;
@@ -128,12 +128,12 @@ IsBadWritePtr(LPVOID lp,
             Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
         } while (Current <= Last);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* We hit an exception, so return true */
         Result = TRUE;
     }
-    _SEH_END
+    _SEH2_END
 
     /* Return exception status */
     return Result;
@@ -175,7 +175,7 @@ IsBadStringPtrW(IN LPCWSTR lpsz,
     if ((ULONG_PTR)Last < (ULONG_PTR)lpsz) return TRUE;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the entire range */
         Current = (volatile WCHAR*)lpsz;
@@ -186,12 +186,12 @@ IsBadStringPtrW(IN LPCWSTR lpsz,
             Current++;
         } while (Char && (Current <= Last));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* We hit an exception, so return true */
         Result = TRUE;
     }
-    _SEH_END
+    _SEH2_END
 
     /* Return exception status */
     return Result;
@@ -221,7 +221,7 @@ IsBadStringPtrA(IN LPCSTR lpsz,
     if ((ULONG_PTR)Last < (ULONG_PTR)lpsz) return TRUE;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe the entire range */
         Current = (volatile CHAR*)lpsz;
@@ -232,12 +232,12 @@ IsBadStringPtrA(IN LPCSTR lpsz,
             Current++;
         } while (Char && (Current <= Last));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* We hit an exception, so return true */
         Result = TRUE;
     }
-    _SEH_END
+    _SEH2_END
 
     /* Return exception status */
     return Result;

@@ -18,7 +18,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  * @implemented
  */
 long
-STDCALL
+WINAPI
 _hread(
 	HFILE	hFile,
 	LPVOID	lpBuffer,
@@ -44,7 +44,7 @@ _hread(
  * @implemented
  */
 long
-STDCALL
+WINAPI
 _hwrite (
 	HFILE	hFile,
 	LPCSTR	lpBuffer,
@@ -78,7 +78,7 @@ _hwrite (
  * @implemented
  */
 HFILE
-STDCALL
+WINAPI
 _lopen (
 	LPCSTR	lpPathName,
 	int	iReadWrite
@@ -119,7 +119,7 @@ _lopen (
  * @implemented
  */
 HFILE
-STDCALL
+WINAPI
 _lcreat (
 	LPCSTR	lpPathName,
 	int	iAttribute
@@ -141,7 +141,7 @@ _lcreat (
  * @implemented
  */
 int
-STDCALL
+WINAPI
 _lclose (
 	HFILE	hFile
 	)
@@ -158,7 +158,7 @@ _lclose (
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 _llseek(
 	HFILE	hFile,
 	LONG	lOffset,

@@ -21,10 +21,6 @@
 
 #include <ndk/powerpc/ketypes.h>
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 /* Possible values for KTHREAD's NpxState */
 #define KPCR_BASE 0xff000000
 #define NPX_STATE_INVALID   0x01
@@ -139,7 +135,7 @@ FORCEINLINE struct _KPCR * NTHALAPI KeGetCurrentKPCR(
 }
 
 VOID
-STDCALL
+NTAPI
 KePPCInitThreadWithContext(
 	PKTHREAD Thread,
 	PKSYSTEM_ROUTINE SystemRoutine,
@@ -148,12 +144,12 @@ KePPCInitThreadWithContext(
 	PCONTEXT Context);
 
 VOID
-STDCALL
+NTAPI
 KeApplicationProcessorInitDispatcher(
   VOID);
 
 VOID
-STDCALL
+NTAPI
 KeCreateApplicationProcessorIdleThread(
   ULONG Id);
 
@@ -164,7 +160,7 @@ static VOID KePPCFnInit()
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
-STDCALL
+NTAPI
 KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 PKSTART_ROUTINE StartRoutine,
                 PVOID StartContext,

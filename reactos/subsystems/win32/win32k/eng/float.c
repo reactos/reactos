@@ -36,7 +36,7 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOL
-STDCALL
+APIENTRY
 EngRestoreFloatingPointState ( IN VOID *Buffer )
 {
   NTSTATUS Status;
@@ -49,7 +49,7 @@ EngRestoreFloatingPointState ( IN VOID *Buffer )
 }
 
 ULONG
-STDCALL
+APIENTRY
 EngSaveFloatingPointState(OUT VOID  *Buffer,
      IN ULONG  BufferSize)
 {

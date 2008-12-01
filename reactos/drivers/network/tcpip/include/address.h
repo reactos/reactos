@@ -69,7 +69,7 @@ PADDRESS_FILE AddrSearchFirst(
 PADDRESS_FILE AddrSearchNext(
     PAF_SEARCH SearchContext);
 
-unsigned long PASCAL inet_addr(const char*);
+unsigned long NTAPI inet_addr(const char*);
 
 ULONG IPv4NToHl( ULONG Address );
 

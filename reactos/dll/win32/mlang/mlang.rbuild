@@ -10,7 +10,6 @@
 	<define name="_WIN32_WINNT">0x600</define>
 	<file>mlang.c</file>
 	<file>regsvr.c</file>
-	<file>mlang.spec</file>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>user32</library>

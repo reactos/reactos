@@ -214,6 +214,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_BUILDNO =@echo $(QUOTE)[BUILDNO]  $@$(QUOTE)
   ECHO_INVOKE  =@echo $(QUOTE)[INVOKE]   $<$(QUOTE)
   ECHO_PCH     =@echo $(QUOTE)[PCH]      $@$(QUOTE)
+  ECHO_CPP     =@echo $(QUOTE)[CPP]      $@$(QUOTE)
   ECHO_CC      =@echo $(QUOTE)[CC]       $<$(QUOTE)
   ECHO_CL      =@echo $(QUOTE)[CL]       $<$(QUOTE)
   ECHO_GAS     =@echo $(QUOTE)[GAS]      $<$(QUOTE)
@@ -246,6 +247,7 @@ else
   ECHO_BUILDNO =
   ECHO_INVOKE  =
   ECHO_PCH     =
+  ECHO_CPP     =
   ECHO_CC      =
   ECHO_GAS     =
   ECHO_NASM    =

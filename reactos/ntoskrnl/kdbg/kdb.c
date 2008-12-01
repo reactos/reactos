@@ -1605,7 +1605,8 @@ KdbEnterDebuggerException(
    /* Check if user requested a bugcheck */
    if (KdbpBugCheckRequested)
    {
-       /* Bugcheck the system */
+       /* Clear the flag and bugcheck the system */
+       KdbpBugCheckRequested = FALSE;
        KeBugCheck(MANUALLY_INITIATED_CRASH);
    }
 
@@ -1638,7 +1639,7 @@ KdbDeleteProcessHook(IN PEPROCESS Process)
 }
 
 VOID
-STDCALL
+NTAPI
 KdbpGetCommandLineSettings(PCHAR p1)
 {
     PCHAR p2;

@@ -294,16 +294,23 @@ static int ctl2_encode_name(
 
     length = strlen(name);
     memcpy(converted_name + 4, name, length);
-    converted_name[0] = length & 0xff;
 
     converted_name[length + 4] = 0;
 
-    converted_name[1] = 0x00;
 
     value = lhash_val_of_name_sys(typelib->typelib_header.varflags & 0x0f, typelib->typelib_header.lcid, converted_name + 4);
 
+#ifdef WORDS_BIGENDIAN
+    converted_name[3] = length & 0xff;
+    converted_name[2] = 0x00;
+    converted_name[1] = value;
+    converted_name[0] = value >> 8;
+#else
+    converted_name[0] = length & 0xff;
+    converted_name[1] = 0x00;
     converted_name[2] = value;
     converted_name[3] = value >> 8;
+#endif
 
     for (offset = (4 - length) & 3; offset; offset--) converted_name[length + offset + 3] = 0x57;
 
@@ -337,8 +344,14 @@ static int ctl2_encode_string(
 
     length = strlen(string);
     memcpy(converted_string + 2, string, length);
+
+#ifdef WORDS_BIGENDIAN
+    converted_string[1] = length & 0xff;
+    converted_string[0] = (length >> 8) & 0xff;
+#else
     converted_string[0] = length & 0xff;
     converted_string[1] = (length >> 8) & 0xff;
+#endif
 
     if(length < 3) { /* strings of this length are padded with up to 8 bytes incl the 2 byte length */
         for(offset = 0; offset < 4; offset++)
@@ -960,8 +973,8 @@ static int encode_type(
       {
         int typeinfo_offset;
 
-        /* typedef'd types without attributes aren't included in the typelib */
-        while (type->typelib_idx < 0 && type->kind == TKIND_ALIAS && ! type->attrs)
+        /* typedef'd types without public attribute aren't included in the typelib */
+        while (type->typelib_idx < 0 && type->kind == TKIND_ALIAS && !is_attr(type->attrs, ATTR_PUBLIC))
           type = type->orig;
 
         chat("encode_type: VT_USERDEFINED - type %p name = %s type->type %d idx %d\n", type,
@@ -984,10 +997,11 @@ static int encode_type(
             case RPC_FC_ENUM16:
                 add_enum_typeinfo(typelib, type);
                 break;
+            case RPC_FC_COCLASS:
+                add_coclass_typeinfo(typelib, type);
+                break;
             case 0:
-                if (type->kind == TKIND_COCLASS)
-                    add_coclass_typeinfo(typelib, type);
-                else if (type->kind == TKIND_DISPATCH)
+                if (type->kind == TKIND_DISPATCH)
                     add_dispinterface_typeinfo(typelib, type);
                 else
                     error("encode_type: VT_USERDEFINED - can't yet add typedef's on the fly\n");
@@ -1180,7 +1194,7 @@ static unsigned long get_ulong_val(unsigned long val, int vt)
     return val;
 }
 
-static void write_value(msft_typelib_t* typelib, int *out, int vt, void *value)
+static void write_value(msft_typelib_t* typelib, int *out, int vt, const void *value)
 {
     switch(vt) {
     case VT_I2:
@@ -1196,7 +1210,7 @@ static void write_value(msft_typelib_t* typelib, int *out, int vt, void *value)
     case VT_HRESULT:
     case VT_PTR:
       {
-        const unsigned long lv = get_ulong_val(*(unsigned long*)value, vt);
+        const unsigned long lv = get_ulong_val(*(const unsigned long*)value, vt);
         if((lv & 0x3ffffff) == lv) {
             *out = 0x80000000;
             *out |= vt << 26;
@@ -1212,7 +1226,7 @@ static void write_value(msft_typelib_t* typelib, int *out, int vt, void *value)
       }
     case VT_BSTR:
       {
-        char *s = (char *) value;
+        const char *s = (const char *) value;
         int len = strlen(s), seg_len = (len + 6 + 3) & ~0x3;
         int offset = ctl2_alloc_segment(typelib, MSFT_SEG_CUSTDATA, seg_len, 0);
         *((unsigned short *)&typelib->typelib_segment_data[MSFT_SEG_CUSTDATA][offset]) = vt;
@@ -1302,7 +1316,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
       {
         num_params++;
         if (arg->attrs) LIST_FOR_EACH_ENTRY( attr, arg->attrs, const attr_t, entry ) {
-            if(attr->type == ATTR_DEFAULTVALUE_EXPR || attr->type == ATTR_DEFAULTVALUE_STRING)
+            if(attr->type == ATTR_DEFAULTVALUE)
                 num_defaults++;
             else if(attr->type == ATTR_OPTIONAL)
                 num_optional++;
@@ -1317,19 +1331,23 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
         expr_t *expr = attr->u.pval;
         switch(attr->type) {
         case ATTR_BINDABLE:
-            funcflags |= 0x4; /* FUNCFLAG_BINDABLE */
+            funcflags |= 0x4; /* FUNCFLAG_FBINDABLE */
+            break;
+        /* FIXME: FUNCFLAG_FDEFAULTBIND */
+        case ATTR_DEFAULTCOLLELEM:
+            funcflags |= 0x100; /* FUNCFLAG_FDEFAULTCOLLELEM */
             break;
         case ATTR_DISPLAYBIND:
-            funcflags |= 0x10; /* FUNCFLAG_DISPLAYBIND */
+            funcflags |= 0x10; /* FUNCFLAG_FDISPLAYBIND */
             break;
-        case ATTR_ENTRY_ORDINAL:
+        case ATTR_ENTRY:
             extra_attr = max(extra_attr, 3);
-            entry = expr->cval;
-            entry_is_ord = 1;
-            break;
-        case ATTR_ENTRY_STRING:
-            extra_attr = max(extra_attr, 3);
-            entry = ctl2_alloc_string(typeinfo->typelib, attr->u.pval);
+            if (expr->type == EXPR_STRLIT || expr->type == EXPR_WSTRLIT)
+              entry = ctl2_alloc_string(typeinfo->typelib, attr->u.pval);
+            else {
+              entry = expr->cval;
+              entry_is_ord = 1;
+            }
             break;
         case ATTR_HELPCONTEXT:
             extra_attr = max(extra_attr, 1);
@@ -1349,8 +1367,11 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
         case ATTR_ID:
             id = expr->cval;
             break;
+        case ATTR_IMMEDIATEBIND:
+            funcflags |= 0x1000; /* FUNCFLAG_FIMMEDIATEBIND */
+            break;
         case ATTR_NONBROWSABLE:
-            funcflags |= 0x400; /* FUNCFLAG_NONBROWSABLE */
+            funcflags |= 0x400; /* FUNCFLAG_FNONBROWSABLE */
             break;
         case ATTR_OUT:
             break;
@@ -1363,9 +1384,18 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
         case ATTR_PROPPUTREF:
             invokekind = 0x8; /* INVOKE_PROPERTYPUTREF */
             break;
+        /* FIXME: FUNCFLAG_FREPLACEABLE */
+        case ATTR_REQUESTEDIT:
+            funcflags |= 0x8; /* FUNCFLAG_FREQUESTEDIT */
+            break;
         case ATTR_RESTRICTED:
             funcflags |= 0x1; /* FUNCFLAG_FRESTRICTED */
             break;
+        case ATTR_SOURCE:
+            funcflags |= 0x2; /* FUNCFLAG_FSOURCE */
+            break;
+        /* FIXME: FUNCFLAG_FUIDEFAULT */
+        /* FIXME: FUNCFLAG_FUSESGETLASTERROR */
         case ATTR_VARARG:
             if (num_optional || num_defaults)
                 warning("add_func_desc: ignoring vararg in function with optional or defaultvalue params\n");
@@ -1373,7 +1403,6 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
                 num_optional = -1;
             break;
         default:
-            warning("add_func_desc: ignoring attr %d\n", attr->type);
             break;
         }
     }
@@ -1459,7 +1488,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
 	encode_var(typeinfo->typelib, arg->type, arg, paramdata, NULL, NULL, &decoded_size);
         if (arg->attrs) LIST_FOR_EACH_ENTRY( attr, arg->attrs, const attr_t, entry ) {
             switch(attr->type) {
-            case ATTR_DEFAULTVALUE_EXPR:
+            case ATTR_DEFAULTVALUE:
               {
                 int vt;
                 expr_t *expr = (expr_t *)attr->u.pval;
@@ -1468,21 +1497,17 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, const func_t *func, int 
                 else
                     vt = get_type_vt(arg->type);
                 paramflags |= 0x30; /* PARAMFLAG_FHASDEFAULT | PARAMFLAG_FOPT */
-                chat("default value %ld\n", expr->cval);
-                write_value(typeinfo->typelib, defaultdata, vt, &expr->cval);
-                break;
-              }
-            case ATTR_DEFAULTVALUE_STRING:
-              {
-                char *s = (char *)attr->u.pval;
-                int vt;
-                if (arg->type->type == RPC_FC_ENUM16)
-                  vt = VT_INT;
+                if (expr->type == EXPR_STRLIT || expr->type == EXPR_WSTRLIT)
+                {
+                  if (vt != VT_BSTR) error("string default value applied to non-string type\n");
+                  chat("default value '%s'\n", expr->u.sval);
+                  write_value(typeinfo->typelib, defaultdata, vt, expr->u.sval);
+                }
                 else
-                  vt = get_type_vt(arg->type);
-                paramflags |= 0x30; /* PARAMFLAG_FHASDEFAULT | PARAMFLAG_FOPT */
-                chat("default value '%s'\n", s);
-                write_value(typeinfo->typelib, defaultdata, vt, s);
+                {
+                  chat("default value %ld\n", expr->cval);
+                  write_value(typeinfo->typelib, defaultdata, vt, &expr->cval);
+                }
                 break;
               }
             case ATTR_IN:
@@ -1595,14 +1620,35 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
     if (var->attrs) LIST_FOR_EACH_ENTRY( attr, var->attrs, const attr_t, entry ) {
         expr_t *expr = attr->u.pval;
         switch(attr->type) {
+        case ATTR_BINDABLE:
+            varflags |= 0x04; /* VARFLAG_FBINDABLE */
+            break;
+        /* FIXME: VARFLAG_FDEFAULTBIND */
+        case ATTR_DEFAULTCOLLELEM:
+            varflags |= 0x100; /* VARFLAG_FDEFAULTCOLLELEM */
+            break;
+        case ATTR_DISPLAYBIND:
+            varflags |= 0x10; /* VARFLAG_FDISPLAYBIND */
+            break;
         case ATTR_HIDDEN:
             varflags |= 0x40; /* VARFLAG_FHIDDEN */
             break;
         case ATTR_ID:
             id = expr->cval;
             break;
+        case ATTR_IMMEDIATEBIND:
+            varflags |= 0x1000; /* VARFLAG_FIMMEDIATEBIND */
+            break;
+        case ATTR_NONBROWSABLE:
+            varflags |= 0x400; /* VARFLAG_FNONBROWSABLE */
+            break;
         case ATTR_READONLY:
             varflags |= 0x01; /* VARFLAG_FREADONLY */
+            break;
+        /* FIXME: VARFLAG_FREPLACEABLE */
+            break;
+        case ATTR_REQUESTEDIT:
+            varflags |= 0x08; /* VARFLAG_FREQUESTEDIT */
             break;
         case ATTR_RESTRICTED:
             varflags |= 0x80; /* VARFLAG_FRESTRICTED */
@@ -1610,8 +1656,8 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
         case ATTR_SOURCE:
             varflags |= 0x02; /* VARFLAG_FSOURCE */
             break;
+        /* FIXME: VARFLAG_FUIDEFAULT */
         default:
-            warning("AddVarDesc: unhandled attr type %d\n", attr->type);
             break;
         }
     }
@@ -1799,9 +1845,6 @@ static msft_typeinfo_t *create_msft_typeinfo(msft_typelib_t *typelib, enum type_
                 typeinfo->flags |= 0x20; /* TYPEFLAG_FCONTROL */
             break;
 
-        case ATTR_DISPINTERFACE:
-            break;
-
         case ATTR_DLLNAME:
           {
             int offset = ctl2_alloc_string(typelib, attr->u.pval);
@@ -1838,8 +1881,7 @@ static msft_typeinfo_t *create_msft_typeinfo(msft_typelib_t *typelib, enum type_
             typeinfo->flags |= 0x10; /* TYPEFLAG_FHIDDEN */
             break;
 
-        case ATTR_LOCAL:
-            break;
+        /* FIXME: TYPEFLAG_FLICENSED */
 
         case ATTR_NONCREATABLE:
             typeinfo->flags &= ~0x2; /* TYPEFLAG_FCANCREATE */
@@ -1849,18 +1891,15 @@ static msft_typeinfo_t *create_msft_typeinfo(msft_typelib_t *typelib, enum type_
             typeinfo->flags |= 0x80; /* TYPEFLAG_FNONEXTENSIBLE */
             break;
 
-        case ATTR_OBJECT:
-            break;
-
-        case ATTR_ODL:
-            break;
-
         case ATTR_OLEAUTOMATION:
             typeinfo->flags |= 0x100; /* TYPEFLAG_FOLEAUTOMATION */
             break;
 
-        case ATTR_PUBLIC:
-            break;
+        /* FIXME: TYPEFLAG_FPREDCLID */
+
+        /* FIXME: TYPEFLAG_FPROXY */
+
+        /* FIXME: TYPEFLAG_FREPLACEABLE */
 
         case ATTR_RESTRICTED:
             typeinfo->flags |= 0x200; /* TYPEFLAG_FRESTRICTED */
@@ -1883,7 +1922,6 @@ static msft_typeinfo_t *create_msft_typeinfo(msft_typelib_t *typelib, enum type_
             break;
 
         default:
-            warning("create_msft_typeinfo: ignoring attr %d\n", attr->type);
             break;
         }
     }
@@ -2102,6 +2140,9 @@ static void add_coclass_typeinfo(msft_typelib_t *typelib, type_t *cls)
             case ATTR_DEFAULT:
                 ref->flags |= 0x1; /* IMPLTYPEFLAG_FDEFAULT */
                 break;
+            case ATTR_DEFAULTVTABLE:
+                ref->flags |= 0x8; /* IMPLTYPEFLAG_FDEFAULTVTABLE */
+                break;
             case ATTR_RESTRICTED:
                 ref->flags |= 0x4; /* IMPLTYPEFLAG_FRESTRICTED */
                 break;
@@ -2289,8 +2330,8 @@ static void set_help_string_context(msft_typelib_t *typelib)
 
 static void set_lcid(msft_typelib_t *typelib)
 {
-    typelib->typelib_header.lcid2 = 0x0;
-    return;
+    const expr_t *lcid_expr = get_attrp( typelib->typelib->attrs, ATTR_LIBLCID );
+    typelib->typelib_header.lcid2 = lcid_expr ? lcid_expr->cval : 0x0;
 }
 
 static void set_lib_flags(msft_typelib_t *typelib)

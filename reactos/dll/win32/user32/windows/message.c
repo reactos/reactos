@@ -1044,7 +1044,7 @@ MsgConversionCleanup(CONST MSG *Msg, BOOL Ansi, BOOL CheckMsgContents, LRESULT *
  * @implemented
  */
 LPARAM
-STDCALL
+WINAPI
 GetMessageExtraInfo(VOID)
 {
   return (LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
@@ -1055,7 +1055,7 @@ GetMessageExtraInfo(VOID)
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetMessagePos(VOID)
 {
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
@@ -1066,7 +1066,7 @@ GetMessagePos(VOID)
 /*
  * @implemented
  */
-LONG STDCALL
+LONG WINAPI
 GetMessageTime(VOID)
 {
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
@@ -1078,7 +1078,7 @@ GetMessageTime(VOID)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 InSendMessage(VOID)
 {
   PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
@@ -1099,7 +1099,7 @@ InSendMessage(VOID)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 InSendMessageEx(
   LPVOID lpReserved)
 {
@@ -1116,7 +1116,7 @@ InSendMessageEx(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ReplyMessage(
   LRESULT lResult)
 {
@@ -1129,7 +1129,7 @@ ReplyMessage(
  * @implemented
  */
 LPARAM
-STDCALL
+WINAPI
 SetMessageExtraInfo(
   LPARAM lParam)
 {
@@ -1232,7 +1232,7 @@ IsCallProcHandle(IN WNDPROC lpWndProc)
 /*
  * @implemented
  */
-LRESULT STDCALL
+LRESULT WINAPI
 CallWindowProcA(WNDPROC lpPrevWndFunc,
 		HWND hWnd,
 		UINT Msg,
@@ -1269,7 +1269,7 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 /*
  * @implemented
  */
-LRESULT STDCALL
+LRESULT WINAPI
 CallWindowProcW(WNDPROC lpPrevWndFunc,
 		HWND hWnd,
 		UINT Msg,
@@ -1331,7 +1331,7 @@ IntCallMessageProc(IN PWINDOW Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, 
 /*
  * @implemented
  */
-LRESULT STDCALL
+LRESULT WINAPI
 DispatchMessageA(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
@@ -1371,7 +1371,7 @@ DispatchMessageA(CONST MSG *lpmsg)
 /*
  * @implemented
  */
-LRESULT STDCALL
+LRESULT WINAPI
 DispatchMessageW(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
@@ -1412,7 +1412,7 @@ DispatchMessageW(CONST MSG *lpmsg)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetMessageA(LPMSG lpMsg,
 	    HWND hWnd,
 	    UINT wMsgFilterMin,
@@ -1462,7 +1462,7 @@ GetMessageA(LPMSG lpMsg,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetMessageW(LPMSG lpMsg,
 	    HWND hWnd,
 	    UINT wMsgFilterMin,
@@ -1507,7 +1507,7 @@ GetMessageW(LPMSG lpMsg,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 PeekMessageA(LPMSG lpMsg,
 	     HWND hWnd,
 	     UINT wMsgFilterMin,
@@ -1559,7 +1559,7 @@ PeekMessageA(LPMSG lpMsg,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PeekMessageW(
   LPMSG lpMsg,
   HWND hWnd,
@@ -1607,7 +1607,7 @@ PeekMessageW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PostMessageA(
   HWND Wnd,
   UINT Msg,
@@ -1645,7 +1645,7 @@ PostMessageA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PostMessageW(
   HWND Wnd,
   UINT Msg,
@@ -1675,7 +1675,7 @@ PostMessageW(
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 PostQuitMessage(
   int nExitCode)
 {
@@ -1687,7 +1687,7 @@ PostQuitMessage(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PostThreadMessageA(
   DWORD idThread,
   UINT Msg,
@@ -1702,7 +1702,7 @@ PostThreadMessageA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PostThreadMessageW(
   DWORD idThread,
   UINT Msg,
@@ -1716,7 +1716,7 @@ PostThreadMessageW(
 /*
  * @implemented
  */
-LRESULT STDCALL
+LRESULT WINAPI
 SendMessageW(HWND Wnd,
 	     UINT Msg,
 	     WPARAM wParam,
@@ -1775,7 +1775,7 @@ SendMessageW(HWND Wnd,
 /*
  * @implemented
  */
-LRESULT STDCALL
+LRESULT WINAPI
 SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   MSG AnsiMsg, UcMsg;
@@ -1857,7 +1857,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SendMessageCallbackA(
   HWND hWnd,
   UINT Msg,
@@ -1879,7 +1879,7 @@ SendMessageCallbackA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SendMessageCallbackW(
   HWND hWnd,
   UINT Msg,
@@ -1901,7 +1901,7 @@ SendMessageCallbackW(
  * @implemented
  */
 LRESULT
-STDCALL
+WINAPI
 SendMessageTimeoutA(
   HWND hWnd,
   UINT Msg,
@@ -1982,7 +1982,7 @@ SendMessageTimeoutA(
  * @implemented
  */
 LRESULT
-STDCALL
+WINAPI
 SendMessageTimeoutW(
   HWND hWnd,
   UINT Msg,
@@ -2020,7 +2020,7 @@ SendMessageTimeoutW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SendNotifyMessageA(
   HWND hWnd,
   UINT Msg,
@@ -2058,7 +2058,7 @@ SendNotifyMessageA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SendNotifyMessageW(
   HWND hWnd,
   UINT Msg,
@@ -2087,7 +2087,7 @@ SendNotifyMessageW(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 {
     switch (lpMsg->message)
@@ -2107,7 +2107,7 @@ TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 TranslateMessage(CONST MSG *lpMsg)
 {
   return(TranslateMessageEx((LPMSG)lpMsg, 0));
@@ -2118,7 +2118,7 @@ TranslateMessage(CONST MSG *lpMsg)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 WaitMessage(VOID)
 {
   return NtUserWaitMessage();
@@ -2128,7 +2128,7 @@ WaitMessage(VOID)
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 RegisterWindowMessageA(LPCSTR lpString)
 {
   UNICODE_STRING String;
@@ -2149,7 +2149,7 @@ RegisterWindowMessageA(LPCSTR lpString)
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 RegisterWindowMessageW(LPCWSTR lpString)
 {
   UNICODE_STRING String;
@@ -2161,7 +2161,7 @@ RegisterWindowMessageW(LPCWSTR lpString)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 SetCapture(HWND hWnd)
 {
   return(NtUserSetCapture(hWnd));
@@ -2170,7 +2170,7 @@ SetCapture(HWND hWnd)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetCapture(VOID)
 {
   return (HWND)NtUserGetThreadState(THREADSTATE_CAPTUREWINDOW);
@@ -2179,7 +2179,7 @@ GetCapture(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ReleaseCapture(VOID)
 {
   NtUserSetCapture(NULL);
@@ -2191,7 +2191,7 @@ ReleaseCapture(VOID)
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 RealGetQueueStatus(UINT flags)
 {
    DWORD ret;
@@ -2216,7 +2216,7 @@ RealGetQueueStatus(UINT flags)
 /*
  * @unimplemented
  */
-BOOL STDCALL GetInputState(VOID)
+BOOL WINAPI GetInputState(VOID)
 {
    DWORD ret;
    WORD  wake_bits;
@@ -2236,7 +2236,7 @@ BOOL STDCALL GetInputState(VOID)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
@@ -2295,7 +2295,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 /*
  * @implemented
  */
-BOOL STDCALL SetMessageQueue(int cMessagesMax)
+BOOL WINAPI SetMessageQueue(int cMessagesMax)
 {
   /* Function does nothing on 32 bit windows */
   return TRUE;
@@ -2312,7 +2312,7 @@ typedef struct _USER_MESSAGE_PUMP_ADDRESSES {
 } USER_MESSAGE_PUMP_ADDRESSES, * PUSER_MESSAGE_PUMP_ADDRESSES;
 
 DWORD
-STDCALL
+WINAPI
 RealMsgWaitForMultipleObjectsEx(
   DWORD nCount,
   CONST HANDLE *pHandles,
@@ -2429,7 +2429,7 @@ DWORD WINAPI GetQueueStatus(UINT flags)
  * @implemented
  */
 
-DWORD STDCALL
+DWORD WINAPI
 RealMsgWaitForMultipleObjectsEx(
    DWORD nCount,
    const HANDLE *pHandles,
@@ -2499,7 +2499,7 @@ MsgWaitForMultipleObjectsEx(
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 MsgWaitForMultipleObjects(
    DWORD nCount,
    CONST HANDLE *lpHandles,
@@ -2581,7 +2581,7 @@ IsDialogMessageA( HWND hwndDlg, LPMSG pmsg )
 }
 
 LONG
-STDCALL
+WINAPI
 IntBroadcastSystemMessage(
     DWORD dwflags,
     LPDWORD lpdwRecipients,
@@ -2666,7 +2666,7 @@ IntBroadcastSystemMessage(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 BroadcastSystemMessageA(
   DWORD dwFlags,
   LPDWORD lpdwRecipients,
@@ -2681,7 +2681,7 @@ BroadcastSystemMessageA(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 BroadcastSystemMessageW(
   DWORD dwFlags,
   LPDWORD lpdwRecipients,
@@ -2696,7 +2696,7 @@ BroadcastSystemMessageW(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 BroadcastSystemMessageExA(
     DWORD dwflags,
     LPDWORD lpdwRecipients,
@@ -2712,7 +2712,7 @@ BroadcastSystemMessageExA(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 BroadcastSystemMessageExW(
     DWORD dwflags,
     LPDWORD lpdwRecipients,

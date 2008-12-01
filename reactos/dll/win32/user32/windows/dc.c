@@ -38,7 +38,7 @@
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 GetDC(HWND hWnd)
 {
     return NtUserGetDC(hWnd);
@@ -49,7 +49,7 @@ GetDC(HWND hWnd)
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 GetDCEx(HWND hWnd,
         HRGN hrgnClip,
         DWORD flags)
@@ -62,7 +62,7 @@ GetDCEx(HWND hWnd,
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 GetWindowDC(HWND hWnd)
 {
     return (HDC)NtUserGetWindowDC(hWnd);
@@ -70,14 +70,14 @@ GetWindowDC(HWND hWnd)
 
 
 BOOL
-STDCALL
+WINAPI
 GdiReleaseDC(HDC hdc);
 
 /*
  * @implemented
  */
 int
-STDCALL
+WINAPI
 ReleaseDC(HWND hWnd,
           HDC hDC)
 {
@@ -96,7 +96,7 @@ ReleaseDC(HWND hWnd,
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 WindowFromDC(HDC hDC)
 {
     return NtUserWindowFromDC(hDC);

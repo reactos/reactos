@@ -9,7 +9,7 @@
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 TdiBuildNetbiosAddress (
 	IN	PUCHAR			NetbiosName,
 	IN	BOOLEAN			IsGroupName,
@@ -23,7 +23,7 @@ TdiBuildNetbiosAddress (
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 TdiBuildNetbiosAddressEa (
 	IN	PUCHAR	Buffer,
 	IN	BOOLEAN	GroupName,
@@ -38,7 +38,7 @@ TdiBuildNetbiosAddressEa (
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 TdiCopyBufferToMdl (
 	IN	PVOID	SourceBuffer,
 	IN	ULONG	SourceOffset,
@@ -56,7 +56,7 @@ TdiCopyBufferToMdl (
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 TdiCopyMdlToBuffer (
 	IN	PMDL	SourceMdlChain,
 	IN	ULONG	SourceOffset,
@@ -74,7 +74,7 @@ TdiCopyMdlToBuffer (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 TdiInitialize (
 	PVOID	Unknown0
 	)
@@ -86,7 +86,7 @@ TdiInitialize (
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 TdiMapUserRequest (
 	IN	PDEVICE_OBJECT		DeviceObject,
 	IN	PIRP			Irp,
@@ -101,12 +101,12 @@ TdiMapUserRequest (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 TdiOpenNetbiosAddress (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	ULONG   Unknown0,
+	ULONG   Unknown1,
+	ULONG   Unknown2,
+	ULONG   Unknown3
 	)
 {
 }
@@ -116,7 +116,7 @@ TdiOpenNetbiosAddress (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 TdiReturnChainedReceives (
 	IN	PVOID	* TsduDescriptors,
 	IN	ULONG	NumberOfTsdus

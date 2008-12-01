@@ -415,18 +415,18 @@ FillEntries(
 	}
 	else
 	{
-		_SEH_TRY
+		_SEH2_TRY
 		{
 			RtlCopyMemory(
 				Irp->UserBuffer,
 				DataStart,
 				NumberOfEntries * sizeof(MOUSE_INPUT_DATA));
 		}
-		_SEH_HANDLE
+		_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 		{
-			Status = _SEH_GetExceptionCode();
+			Status = _SEH2_GetExceptionCode();
 		}
-		_SEH_END;
+		_SEH2_END;
 	}
 
 	return Status;

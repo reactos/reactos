@@ -19,10 +19,6 @@
 #ifndef _GDIPLUSHEADERS_H
 #define _GDIPLUSHEADERS_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 class Image : public GdiplusBase
 {
 public:

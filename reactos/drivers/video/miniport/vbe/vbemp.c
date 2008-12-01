@@ -29,9 +29,14 @@
 
 #include "vbemp.h"
 
+#undef LOWORD
+#undef HIWORD
+#define LOWORD(l)	((USHORT)((ULONG_PTR)(l)))
+#define HIWORD(l)	((USHORT)(((ULONG_PTR)(l)>>16)&0xFFFF))
+
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 DriverEntry(IN PVOID Context1, IN PVOID Context2)
 {
    VIDEO_HW_INITIALIZATION_DATA InitData;
@@ -58,7 +63,7 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
  * so we always return NO_ERROR and do the real work in VBEInitialize.
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VBEFindAdapter(
    IN PVOID HwDeviceExtension,
    IN PVOID HwContext,
@@ -160,7 +165,7 @@ VBESortModes(PVBE_DEVICE_EXTENSION DeviceExtension)
  *   the VBE.
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VBEInitialize(PVOID HwDeviceExtension)
 {
    INT10_BIOS_ARGUMENTS BiosRegisters;
@@ -411,7 +416,7 @@ VBEInitialize(PVOID HwDeviceExtension)
  * Processes the specified Video Request Packet.
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VBEStartIO(
    PVOID HwDeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket)
@@ -535,7 +540,7 @@ VBEStartIO(
  * This function is called to reset the hardware to a known state.
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VBEResetHw(
    PVOID DeviceExtension,
    ULONG Columns,
@@ -599,7 +604,7 @@ VBEResetHw(
  * Queries whether the device can support the requested power state.
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VBEGetPowerState(
    PVOID HwDeviceExtension,
    ULONG HwId,
@@ -669,7 +674,7 @@ VBEGetPowerState(
  * Sets the power state of the specified device
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VBESetPowerState(
    PVOID HwDeviceExtension,
    ULONG HwId,

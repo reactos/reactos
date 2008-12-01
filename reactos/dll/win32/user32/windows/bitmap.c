@@ -67,7 +67,7 @@ CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, in
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 LoadImageA(HINSTANCE hinst,
 	   LPCSTR lpszName,
 	   UINT uType,
@@ -507,7 +507,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
    return hBitmap;
 }
 
-HANDLE STDCALL
+HANDLE WINAPI
 LoadImageW(
    IN HINSTANCE hinst,
    IN LPCWSTR lpszName,
@@ -553,7 +553,7 @@ LoadImageW(
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP WINAPI
 LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
 {
    return LoadImageA(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0);
@@ -563,7 +563,7 @@ LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP WINAPI
 LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
 {
    return LoadImageW(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0);

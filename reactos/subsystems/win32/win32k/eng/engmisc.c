@@ -23,7 +23,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
             SURFOBJ *DestSurf,
             RECTL *DestRect,
@@ -159,7 +159,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
 {
   POINTL SrcPoint;
@@ -220,21 +220,21 @@ IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
   return Result;
 }
 
-HANDLE STDCALL
+HANDLE APIENTRY
 EngGetCurrentProcessId(VOID)
 {
   /* http://www.osr.com/ddk/graphics/gdifncs_5ovb.htm */
   return PsGetCurrentProcessId();
 }
 
-HANDLE STDCALL
+HANDLE APIENTRY
 EngGetCurrentThreadId(VOID)
 {
   /* http://www.osr.com/ddk/graphics/gdifncs_25rb.htm */
   return PsGetCurrentThreadId();
 }
 
-HANDLE STDCALL
+HANDLE APIENTRY
 EngGetProcessHandle(VOID)
 {
   /* http://www.osr.com/ddk/graphics/gdifncs_3tif.htm

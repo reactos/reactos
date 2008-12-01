@@ -23,7 +23,7 @@ void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT del
 /* FUNCTIONS *****************************************************************/
 
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
     PSENDASYNCPROC_CALLBACK_ARGUMENTS CallbackArgs;
@@ -47,7 +47,7 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AllowSetForegroundWindow(DWORD dwProcessId)
 {
     static BOOL show_message = TRUE;
@@ -63,7 +63,7 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 /*
  * @unimplemented
  */
-HDWP STDCALL
+HDWP WINAPI
 BeginDeferWindowPos(int nNumWindows)
 {
     if (nNumWindows < 0)
@@ -83,7 +83,7 @@ BeginDeferWindowPos(int nNumWindows)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 BringWindowToTop(HWND hWnd)
 {
     return NtUserSetWindowPos(hWnd,
@@ -96,7 +96,7 @@ BringWindowToTop(HWND hWnd)
 }
 
 
-VOID STDCALL
+VOID WINAPI
 SwitchToThisWindow(HWND hwnd, BOOL fUnknown)
 {
     ShowWindow(hwnd, SW_SHOW);
@@ -107,7 +107,7 @@ SwitchToThisWindow(HWND hwnd, BOOL fUnknown)
  * @implemented
  */
 WORD
-STDCALL
+WINAPI
 CascadeChildWindows ( HWND hWndParent, WORD wFlags )
 {
   return CascadeWindows(hWndParent, wFlags, NULL, 0, NULL);
@@ -117,7 +117,7 @@ CascadeChildWindows ( HWND hWndParent, WORD wFlags )
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 ChildWindowFromPoint(HWND hWndParent,
                      POINT Point)
 {
@@ -128,7 +128,7 @@ ChildWindowFromPoint(HWND hWndParent,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 ChildWindowFromPointEx(HWND hwndParent,
                        POINT pt,
                        UINT uFlags)
@@ -140,7 +140,7 @@ ChildWindowFromPointEx(HWND hwndParent,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CloseWindow(HWND hWnd)
 {
     SendMessageA(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
@@ -149,7 +149,7 @@ CloseWindow(HWND hWnd)
 }
 
 
-HWND STDCALL
+HWND WINAPI
 User32CreateWindowEx(DWORD dwExStyle,
                      LPCSTR lpClassName,
                      LPCSTR lpWindowName,
@@ -264,7 +264,7 @@ User32CreateWindowEx(DWORD dwExStyle,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 CreateWindowExA(DWORD dwExStyle,
                 LPCSTR lpClassName,
                 LPCSTR lpWindowName,
@@ -370,7 +370,7 @@ CreateWindowExA(DWORD dwExStyle,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 CreateWindowExW(DWORD dwExStyle,
                 LPCWSTR lpClassName,
                 LPCWSTR lpWindowName,
@@ -475,7 +475,7 @@ CreateWindowExW(DWORD dwExStyle,
 /*
  * @unimplemented
  */
-HDWP STDCALL
+HDWP WINAPI
 DeferWindowPos(HDWP hWinPosInfo,
                HWND hWnd,
                HWND hWndInsertAfter,
@@ -497,7 +497,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 DestroyWindow(HWND hWnd)
 {
     return NtUserDestroyWindow(hWnd);
@@ -507,7 +507,7 @@ DestroyWindow(HWND hWnd)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EndDeferWindowPos(HDWP hWinPosInfo)
 {
 #if 0
@@ -522,23 +522,23 @@ EndDeferWindowPos(HDWP hWinPosInfo)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetDesktopWindow(VOID)
 {
     PWINDOW Wnd;
     HWND Ret = NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Wnd = GetThreadDesktopWnd();
         if (Wnd != NULL)
             Ret = UserHMGetHandle(Wnd);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     return Ret;
 }
@@ -547,7 +547,7 @@ GetDesktopWindow(VOID)
 /*
  * @unimplemented
  */
-HWND STDCALL
+HWND WINAPI
 GetForegroundWindow(VOID)
 {
     return NtUserGetForegroundWindow();
@@ -636,7 +636,7 @@ User32EnumWindows(HDESK hDesktop,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumChildWindows(HWND hWndParent,
                  WNDENUMPROC lpEnumFunc,
                  LPARAM lParam)
@@ -652,7 +652,7 @@ EnumChildWindows(HWND hWndParent,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumThreadWindows(DWORD dwThreadId,
                   WNDENUMPROC lpfn,
                   LPARAM lParam)
@@ -666,7 +666,7 @@ EnumThreadWindows(DWORD dwThreadId,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumWindows(WNDENUMPROC lpEnumFunc,
             LPARAM lParam)
 {
@@ -677,7 +677,7 @@ EnumWindows(WNDENUMPROC lpEnumFunc,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 EnumDesktopWindows(HDESK hDesktop,
                    WNDENUMPROC lpfn,
                    LPARAM lParam)
@@ -689,7 +689,7 @@ EnumDesktopWindows(HDESK hDesktop,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 FindWindowExA(HWND hwndParent,
               HWND hwndChildAfter,
               LPCSTR lpszClass,
@@ -749,7 +749,7 @@ FindWindowExA(HWND hwndParent,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 FindWindowExW(HWND hwndParent,
               HWND hwndChildAfter,
               LPCWSTR lpszClass,
@@ -789,7 +789,7 @@ FindWindowExW(HWND hwndParent,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
 {
     //FIXME: FindWindow does not search children, but FindWindowEx does.
@@ -801,7 +801,7 @@ FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 {
     /*
@@ -823,7 +823,7 @@ FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetAltTabInfoA(HWND hwnd,
                int iItem,
                PALTTABINFO pati,
@@ -838,7 +838,7 @@ GetAltTabInfoA(HWND hwnd,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetAltTabInfoW(HWND hwnd,
                int iItem,
                PALTTABINFO pati,
@@ -853,7 +853,7 @@ GetAltTabInfoW(HWND hwnd,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetAncestor(HWND hwnd, UINT gaFlags)
 {
     HWND Ret = NULL;
@@ -863,7 +863,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
     if (!Wnd)
         return NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Ancestor = NULL;
         switch (gaFlags)
@@ -882,11 +882,11 @@ GetAncestor(HWND hwnd, UINT gaFlags)
         if (Ancestor != NULL)
             Ret = UserHMGetHandle(Ancestor);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!Wnd) /* Fall back */
         Ret = NtUserGetAncestor(hwnd, gaFlags);
@@ -898,7 +898,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetClientRect(HWND hWnd, LPRECT lpRect)
 {
     PWINDOW Wnd = ValidateHwnd(hWnd);
@@ -918,7 +918,7 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetGUIThreadInfo(DWORD idThread,
                  LPGUITHREADINFO lpgui)
 {
@@ -929,7 +929,7 @@ GetGUIThreadInfo(DWORD idThread,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetLastActivePopup(HWND hWnd)
 {
     PWINDOW Wnd;
@@ -938,16 +938,16 @@ GetLastActivePopup(HWND hWnd)
     Wnd = ValidateHwnd(hWnd);
     if (Wnd != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             if (Wnd->hWndLastActive)
                Ret = Wnd->hWndLastActive;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Do nothing */
         }
-        _SEH_END;
+        _SEH2_END;
     }
     return Ret;
 }
@@ -956,7 +956,7 @@ GetLastActivePopup(HWND hWnd)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetParent(HWND hWnd)
 {
     PWINDOW Wnd, WndParent;
@@ -965,7 +965,7 @@ GetParent(HWND hWnd)
     Wnd = ValidateHwnd(hWnd);
     if (Wnd != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             WndParent = NULL;
             if (Wnd->Style & WS_CHILD)
@@ -982,11 +982,11 @@ GetParent(HWND hWnd)
             if (WndParent != NULL)
                 Ret = UserHMGetHandle(WndParent);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Do nothing */
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     return Ret;
@@ -996,7 +996,7 @@ GetParent(HWND hWnd)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 {
     if (!pdwDefaultLayout)
@@ -1015,7 +1015,7 @@ GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetTitleBarInfo(HWND hwnd,
                 PTITLEBARINFO pti)
 {
@@ -1026,7 +1026,7 @@ GetTitleBarInfo(HWND hwnd,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetWindow(HWND hWnd,
           UINT uCmd)
 {
@@ -1037,7 +1037,7 @@ GetWindow(HWND hWnd,
     if (!Wnd)
         return NULL;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         FoundWnd = NULL;
         switch (uCmd)
@@ -1056,11 +1056,11 @@ GetWindow(HWND hWnd,
         if (FoundWnd != NULL)
             Ret = UserHMGetHandle(FoundWnd);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!Wnd) /* Fall back to win32k... */
         Ret = NtUserGetWindow(hWnd, uCmd);
@@ -1072,7 +1072,7 @@ GetWindow(HWND hWnd,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetTopWindow(HWND hWnd)
 {
     if (!hWnd) hWnd = GetDesktopWindow();
@@ -1083,7 +1083,7 @@ GetTopWindow(HWND hWnd)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetWindowInfo(HWND hwnd,
               PWINDOWINFO pwi)
 {
@@ -1094,7 +1094,7 @@ GetWindowInfo(HWND hwnd,
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 GetWindowModuleFileNameA(HWND hwnd,
                          LPSTR lpszFileName,
                          UINT cchFileNameMax)
@@ -1113,7 +1113,7 @@ GetWindowModuleFileNameA(HWND hwnd,
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 GetWindowModuleFileNameW(HWND hwnd,
                          LPWSTR lpszFileName,
                          UINT cchFileNameMax)
@@ -1132,7 +1132,7 @@ GetWindowModuleFileNameW(HWND hwnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetWindowPlacement(HWND hWnd,
                    WINDOWPLACEMENT *lpwndpl)
 {
@@ -1143,7 +1143,7 @@ GetWindowPlacement(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetWindowRect(HWND hWnd,
               LPRECT lpRect)
 {
@@ -1162,7 +1162,7 @@ GetWindowRect(HWND hWnd,
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
     PWINDOW Wnd;
@@ -1176,7 +1176,7 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
     if (!Wnd)
         return 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (Wnd->pi != g_kpi)
         {
@@ -1214,13 +1214,13 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
             Wnd = NULL; /* Don't send a message */
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         lpString[0] = '\0';
         Length = 0;
         Wnd = NULL; /* Don't send a message */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Wnd != NULL)
         Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
@@ -1232,7 +1232,7 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 GetWindowTextLengthA(HWND hWnd)
 {
     return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
@@ -1242,7 +1242,7 @@ GetWindowTextLengthA(HWND hWnd)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 GetWindowTextLengthW(HWND hWnd)
 {
     return(SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0));
@@ -1252,7 +1252,7 @@ GetWindowTextLengthW(HWND hWnd)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
     PWINDOW Wnd;
@@ -1266,7 +1266,7 @@ GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
     if (!Wnd)
         return 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (Wnd->pi != g_kpi)
         {
@@ -1296,13 +1296,13 @@ GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
             Wnd = NULL; /* Don't send a message */
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         lpString[0] = '\0';
         Length = 0;
         Wnd = NULL; /* Don't send a message */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Wnd != NULL)
         Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
@@ -1310,7 +1310,7 @@ GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
     return Length;
 }
 
-DWORD STDCALL
+DWORD WINAPI
 GetWindowThreadProcessId(HWND hWnd,
                          LPDWORD lpdwProcessId)
 {
@@ -1346,7 +1346,7 @@ GetWindowThreadProcessId(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsChild(HWND hWndParent,
     HWND hWnd)
 {
@@ -1360,7 +1360,7 @@ IsChild(HWND hWndParent,
     if (!Wnd)
         return FALSE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         while (Wnd != NULL)
         {
@@ -1377,11 +1377,11 @@ IsChild(HWND hWndParent,
                 break;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     return Ret;
 }
@@ -1390,7 +1390,7 @@ IsChild(HWND hWndParent,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsIconic(HWND hWnd)
 {
     PWINDOW Wnd = ValidateHwnd(hWnd);
@@ -1405,7 +1405,7 @@ IsIconic(HWND hWnd)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsWindow(HWND hWnd)
 {
     PWINDOW Wnd = ValidateHwndNoErr(hWnd);
@@ -1422,7 +1422,7 @@ IsWindow(HWND hWnd)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsWindowUnicode(HWND hWnd)
 {
     PWINDOW Wnd = ValidateHwnd(hWnd);
@@ -1437,7 +1437,7 @@ IsWindowUnicode(HWND hWnd)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsWindowVisible(HWND hWnd)
 {
     BOOL Ret = FALSE;
@@ -1445,7 +1445,7 @@ IsWindowVisible(HWND hWnd)
 
     if (Wnd != NULL)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             Ret = TRUE;
 
@@ -1464,11 +1464,11 @@ IsWindowVisible(HWND hWnd)
 
             } while (Wnd != NULL);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             Ret = FALSE;
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     return Ret;
@@ -1478,7 +1478,7 @@ IsWindowVisible(HWND hWnd)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsWindowEnabled(HWND hWnd)
 {
     // AG: I don't know if child windows are affected if the parent is
@@ -1492,7 +1492,7 @@ IsWindowEnabled(HWND hWnd)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsZoomed(HWND hWnd)
 {
     return (GetWindowLongW(hWnd, GWL_STYLE) & WS_MAXIMIZE) != 0;
@@ -1502,7 +1502,7 @@ IsZoomed(HWND hWnd)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 LockSetForegroundWindow(UINT uLockCode)
 {
     UNIMPLEMENTED;
@@ -1513,7 +1513,7 @@ LockSetForegroundWindow(UINT uLockCode)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 MoveWindow(HWND hWnd,
            int X,
            int Y,
@@ -1528,7 +1528,7 @@ MoveWindow(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AnimateWindow(HWND hwnd,
               DWORD dwTime,
               DWORD dwFlags)
@@ -1558,7 +1558,7 @@ AnimateWindow(HWND hwnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 OpenIcon(HWND hWnd)
 {
     if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
@@ -1572,7 +1572,7 @@ OpenIcon(HWND hWnd)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 RealChildWindowFromPoint(HWND hwndParent,
                          POINT ptParentClientCoords)
 {
@@ -1582,7 +1582,7 @@ RealChildWindowFromPoint(HWND hwndParent,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetForegroundWindow(HWND hWnd)
 {
     return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW);
@@ -1592,7 +1592,7 @@ SetForegroundWindow(HWND hWnd)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 SetParent(HWND hWndChild,
           HWND hWndNewParent)
 {
@@ -1603,7 +1603,7 @@ SetParent(HWND hWndChild,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetProcessDefaultLayout(DWORD dwDefaultLayout)
 {
     if (dwDefaultLayout == 0)
@@ -1617,7 +1617,7 @@ SetProcessDefaultLayout(DWORD dwDefaultLayout)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetWindowPlacement(HWND hWnd,
                    CONST WINDOWPLACEMENT *lpwndpl)
 {
@@ -1628,7 +1628,7 @@ SetWindowPlacement(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetWindowPos(HWND hWnd,
              HWND hWndInsertAfter,
              int X,
@@ -1644,7 +1644,7 @@ SetWindowPos(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetWindowTextA(HWND hWnd,
                LPCSTR lpString)
 {
@@ -1684,7 +1684,7 @@ SetWindowTextA(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetWindowTextW(HWND hWnd,
                LPCWSTR lpString)
 {
@@ -1718,7 +1718,7 @@ SetWindowTextW(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ShowOwnedPopups(HWND hWnd,
                 BOOL fShow)
 {
@@ -1729,7 +1729,7 @@ ShowOwnedPopups(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ShowWindow(HWND hWnd,
            int nCmdShow)
 {
@@ -1740,7 +1740,7 @@ ShowWindow(HWND hWnd,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ShowWindowAsync(HWND hWnd,
                 int nCmdShow)
 {
@@ -1751,7 +1751,7 @@ ShowWindowAsync(HWND hWnd,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL WINAPI
 UpdateLayeredWindowIndirect(HWND hwnd,
                             const UPDATELAYEREDWINDOWINFO *info)
 {
@@ -1763,7 +1763,7 @@ UpdateLayeredWindowIndirect(HWND hwnd,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 WindowFromPoint(POINT Point)
 {
     //TODO: Determine what the actual parameters to
@@ -1775,7 +1775,7 @@ WindowFromPoint(POINT Point)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 {
     PWINDOW FromWnd, ToWnd;
@@ -1806,7 +1806,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {
     PWINDOW Wnd, DesktopWnd;
@@ -1827,7 +1827,7 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 {
     PWINDOW Wnd, DesktopWnd;
@@ -1848,7 +1848,7 @@ ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetWindowContextHelpId(HWND hwnd,
                        DWORD dwContextHelpId)
 {
@@ -1859,7 +1859,7 @@ SetWindowContextHelpId(HWND hwnd,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetWindowContextHelpId(HWND hwnd)
 {
     PWINDOW Wnd = ValidateHwnd(hwnd);
@@ -1874,7 +1874,7 @@ GetWindowContextHelpId(HWND hwnd)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
     INT Ret = NtUserInternalGetWindowText(hWnd, lpString, nMaxCount);
@@ -1886,7 +1886,7 @@ InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsHungAppWindow(HWND hwnd)
 {
     return (NtUserQueryWindow(hwnd, QUERY_WINDOW_ISHUNG) != 0);
@@ -1895,7 +1895,7 @@ IsHungAppWindow(HWND hwnd)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 SetLastErrorEx(DWORD dwErrCode, DWORD dwType)
 {
     SetLastError(dwErrCode);
@@ -1904,7 +1904,7 @@ SetLastErrorEx(DWORD dwErrCode, DWORD dwType)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetFocus(VOID)
 {
     return (HWND)NtUserGetThreadState(THREADSTATE_FOCUSWINDOW);
@@ -1913,7 +1913,7 @@ GetFocus(VOID)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 SetTaskmanWindow(HWND hWnd)
 {
     return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
@@ -1922,7 +1922,7 @@ SetTaskmanWindow(HWND hWnd)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 SetProgmanWindow(HWND hWnd)
 {
     return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETPROGMANWINDOW);
@@ -1931,7 +1931,7 @@ SetProgmanWindow(HWND hWnd)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetProgmanWindow(VOID)
 {
     return (HWND)NtUserGetThreadState(THREADSTATE_PROGMANWINDOW);
@@ -1940,7 +1940,7 @@ GetProgmanWindow(VOID)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetTaskmanWindow(VOID)
 {
     return (HWND)NtUserGetThreadState(THREADSTATE_TASKMANWINDOW);
@@ -1949,7 +1949,7 @@ GetTaskmanWindow(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ScrollWindow(HWND hWnd,
              int dx,
              int dy,
@@ -1970,7 +1970,7 @@ ScrollWindow(HWND hWnd,
 /*
  * @implemented
  */
-INT STDCALL
+INT WINAPI
 ScrollWindowEx(HWND hWnd,
                int dx,
                int dy,
@@ -1994,7 +1994,7 @@ ScrollWindowEx(HWND hWnd,
  * @implemented
  */
 WORD
-STDCALL
+WINAPI
 TileChildWindows(HWND hWndParent, WORD wFlags)
 {
     return TileWindows(hWndParent, wFlags, NULL, 0, NULL);
@@ -2003,7 +2003,7 @@ TileChildWindows(HWND hWndParent, WORD wFlags)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 AnyPopup(VOID)
 {
     return NtUserAnyPopup();
@@ -2012,7 +2012,7 @@ AnyPopup(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsWindowInDestroy(HWND hWnd)
 {
     return NtUserIsWindowInDestroy(hWnd);
@@ -2021,7 +2021,7 @@ IsWindowInDestroy(HWND hWnd)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 DisableProcessWindowsGhosting(VOID)
 {
     NtUserEnableProcessWindowGhosting(FALSE);

@@ -1,7 +1,7 @@
 /*
  * Fixed function pipeline replacement using GL_ATI_fragment_shader
  *
- * Copyright 2008 Stefan Dösinger(for CodeWeavers)
+ * Copyright 2008 Stefan DÃ¶singer(for CodeWeavers)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,7 +43,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 /* GL_ATI_fragment_shader specific fixed function pipeline description. "Inherits" from the common one */
 struct atifs_ffp_desc
 {
-    struct ffp_desc parent;
+    struct ffp_frag_desc parent;
     GLuint shader;
     unsigned int num_textures_used;
 };
@@ -163,7 +163,11 @@ static GLuint register_for_arg(DWORD arg, WineD3D_GL_Info *gl_info, unsigned int
     GLenum ret;
 
     if(mod) *mod = GL_NONE;
-    if(arg == ARG_UNUSED) return -1; /* This is the marker for unused registers */
+    if(arg == ARG_UNUSED)
+    {
+        if (rep) *rep = GL_NONE;
+        return -1; /* This is the marker for unused registers */
+    }
 
     switch(arg & WINED3DTA_SELECTMASK) {
         case WINED3DTA_DIFFUSE:
@@ -799,13 +803,13 @@ static GLuint gen_ati_shader(struct texture_stage_op op[MAX_TEXTURES], WineD3D_G
 static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     IWineD3DDeviceImpl          *This = stateblock->wineD3DDevice;
     struct atifs_ffp_desc       *desc;
-    struct ffp_settings settings;
+    struct ffp_frag_settings     settings;
     struct atifs_private_data   *priv = (struct atifs_private_data *) This->fragment_priv;
     DWORD mapped_stage;
     unsigned int i;
 
-    gen_ffp_op(stateblock, &settings, TRUE);
-    desc = (struct atifs_ffp_desc *) find_ffp_shader(priv->fragment_shaders, &settings);
+    gen_ffp_frag_op(stateblock, &settings, TRUE);
+    desc = (struct atifs_ffp_desc *) find_ffp_frag_shader(priv->fragment_shaders, &settings);
     if(!desc) {
         desc = HeapAlloc(GetProcessHeap(), 0, sizeof(*desc));
         if(!desc) {
@@ -820,7 +824,7 @@ static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, Wi
 
         memcpy(&desc->parent.settings, &settings, sizeof(settings));
         desc->shader = gen_ati_shader(settings.op, &GLINFO_LOCATION);
-        add_ffp_shader(priv->fragment_shaders, &desc->parent);
+        add_ffp_frag_shader(priv->fragment_shaders, &desc->parent);
         TRACE("Allocated fixed function replacement shader descriptor %p\n", desc);
     }
 
@@ -1070,7 +1074,7 @@ static HRESULT atifs_alloc(IWineD3DDevice *iface) {
         return E_OUTOFMEMORY;
     }
     priv = (struct atifs_private_data *) This->fragment_priv;
-    priv->fragment_shaders = hash_table_create(ffp_program_key_hash, ffp_program_key_compare);
+    priv->fragment_shaders = hash_table_create(ffp_frag_program_key_hash, ffp_frag_program_key_compare);
     return WINED3D_OK;
 }
 

@@ -18,7 +18,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateIoCompletionPort(
     HANDLE FileHandle,
     HANDLE ExistingCompletionPort,
@@ -88,7 +88,7 @@ CreateIoCompletionPort(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetQueuedCompletionStatus(
    HANDLE CompletionHandle,
    LPDWORD lpNumberOfBytesTransferred,
@@ -141,7 +141,7 @@ GetQueuedCompletionStatus(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PostQueuedCompletionStatus(
    HANDLE CompletionHandle,
    DWORD dwNumberOfBytesTransferred,
@@ -169,7 +169,7 @@ PostQueuedCompletionStatus(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CancelIo(HANDLE hFile)
 {
   IO_STATUS_BLOCK IoStatusBlock;

@@ -17,9 +17,6 @@
 
 #ifndef _WINLDAP_H
 #define _WINLDAP_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifndef _SCHANNEL_H
 #include <schannel.h>

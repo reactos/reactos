@@ -259,7 +259,7 @@ CdfsCreateFile(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp)
 {

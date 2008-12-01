@@ -138,10 +138,6 @@ ScsiDebugPrint(
 
 #else // _DEBUG
 
-#ifdef KdPrint
-#undef KdPrint
-#endif
-
 #define PRINT_PREFIX "UniATA: "
 
 //#define KdPrint3(_x_) {if(LOG_ON_RAISED_IRQL_W2K || MajorVersion < 0x05 || KeGetCurrentIrql() <= 2){/*DbgPrint("%x: ", PsGetCurrentThread()) ;*/ DbgPrint _x_ ; if(g_LogToDisplay){ PrintNtConsole _x_ ;} }}
@@ -944,6 +940,30 @@ AtapiSoftReset(
     ULONG            DeviceNumber
     );
 
+/*#define IdeHardReset(BaseIoAddress,result) \
+{\
+    UCHAR statusByte;\
+    ULONG i;\
+    SelectDrive(BaseIoAddress,DeviceNumber); \
+    AtapiWritePort1(&BaseIoAddress->AltStatus,IDE_DC_DISABLE_INTERRUPTS | IDE_DC_RESET_CONTROLLER );\
+    ScsiPortStallExecution(50 * 1000);\
+    AtapiWritePort1(&BaseIoAddress->AltStatus,IDE_DC_REENABLE_CONTROLLER);\
+     5 seconds for reset  \
+    for (i = 0; i < 1000 * (1+11); i++) {\
+        statusByte = AtapiReadPort1(&BaseIoAddress->AltStatus);\
+        if (statusByte != IDE_STATUS_IDLE && statusByte != IDE_STATUS_SUCCESS) {\
+            ScsiPortStallExecution((i<1000) ? 5 : 500);\
+        } else {\
+            break;\
+        }\
+    }\
+    KdPrint2((PRINT_PREFIX "IdeHardReset: Status %x\n", statusByte)); \
+    if (i == 1000*1000) {\
+        result = FALSE;\
+    }\
+    result = TRUE;\
+}*/
+
 #endif //USER_MODE
 
 #define IS_RDP(OperationCode)\
@@ -1129,7 +1149,7 @@ AtaCommand(
     IN UCHAR command,
     IN USHORT cylinder,
     IN UCHAR head,
-    IN UCHAR sector,
+    IN UCHAR sector, 
     IN UCHAR count,
     IN UCHAR feature,
     IN ULONG flags
@@ -1152,8 +1172,7 @@ AtapiDpcDispatch(
     IN PVOID SystemArgument2
     );
 
-
-//#define AtaCommand(de, devn, chan, cmd, cyl, hd, sec, cnt, feat, flg)
+//#define AtaCommand(de, devn, chan, cmd, cyl, hd, sec, cnt, feat, flg) 
 
 extern LONG
 AtaPio2Mode(LONG pio);

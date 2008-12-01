@@ -217,7 +217,7 @@ DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
     return Reply.Reply;
 }
 
-INT STDCALL
+INT WINAPI
 DllMain(PVOID hinstDll,
 	ULONG dwReason,
 	PVOID reserved)

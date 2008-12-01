@@ -536,7 +536,7 @@ INT WINAPIV wsprintfW( LPWSTR buffer, LPCWSTR spec, ... )
 /*
  * @implemented
  */
-DWORD STDCALL WCSToMBEx(WORD CodePage,LPWSTR UnicodeString,LONG UnicodeSize,LPSTR *MBString,LONG MBSize,BOOL Allocate)
+DWORD WINAPI WCSToMBEx(WORD CodePage,LPWSTR UnicodeString,LONG UnicodeSize,LPSTR *MBString,LONG MBSize,BOOL Allocate)
 {
 	DWORD Size;
 	if (UnicodeSize == -1)
@@ -571,7 +571,7 @@ DWORD STDCALL WCSToMBEx(WORD CodePage,LPWSTR UnicodeString,LONG UnicodeSize,LPST
 /*
  * @implemented
  */
-DWORD STDCALL MBToWCSEx(WORD CodePage,LPSTR MBString,LONG MBSize,LPWSTR *UnicodeString,LONG UnicodeSize,BOOL Allocate)
+DWORD WINAPI MBToWCSEx(WORD CodePage,LPSTR MBString,LONG MBSize,LPWSTR *UnicodeString,LONG UnicodeSize,BOOL Allocate)
 {
 	DWORD Size;
 	if (MBSize == -1)

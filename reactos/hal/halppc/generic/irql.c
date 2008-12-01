@@ -61,7 +61,7 @@ static ULONG HalpPendingInterruptCount[NR_IRQS];
 
 #else
 
-VOID STDCALL
+VOID NTAPI
 KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
 
 #endif
@@ -69,7 +69,7 @@ KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
 /* FUNCTIONS ****************************************************************/
 
 #undef KeGetCurrentIrql
-KIRQL STDCALL KeGetCurrentIrql (VOID)
+KIRQL NTAPI KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level
  * RETURNS: The current irq level
@@ -277,7 +277,7 @@ KfRaiseIrql (KIRQL	NewIrql)
  *	Calls KfRaiseIrql
  */
 
-KIRQL STDCALL
+KIRQL NTAPI
 KeRaiseIrqlToDpcLevel (VOID)
 {
   return KfRaiseIrql (DISPATCH_LEVEL);
@@ -301,14 +301,14 @@ KeRaiseIrqlToDpcLevel (VOID)
  *	Calls KfRaiseIrql
  */
 
-KIRQL STDCALL
+KIRQL NTAPI
 KeRaiseIrqlToSynchLevel (VOID)
 {
   return KfRaiseIrql (DISPATCH_LEVEL);
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalBeginSystemInterrupt (KIRQL Irql,
 			 ULONG Vector,
 			 PKIRQL OldIrql)
@@ -347,7 +347,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 }
 
 
-VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
+VOID NTAPI HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
 /*
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
@@ -357,7 +357,7 @@ VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 HalDisableSystemInterrupt(
   ULONG Vector,
   KIRQL Irql)
@@ -383,7 +383,7 @@ HalDisableSystemInterrupt(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 HalEnableSystemInterrupt(
   ULONG Vector,
   KIRQL Irql,

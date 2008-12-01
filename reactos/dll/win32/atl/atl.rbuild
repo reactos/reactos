@@ -13,7 +13,6 @@
 	<file>registrar.c</file>
 	<file>rsrc.rc</file>
 	<include base="atl" root="intermediate">.</include>
-	<file>atl.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>

@@ -7,5 +7,4 @@
 	<library>uuid</library>
 	<file>corruntimehost.c</file>
 	<file>mscoree_main.c</file>
-	<file>mscoree.spec</file>
 </module>

@@ -2989,3 +2989,13 @@ HRESULT WINAPI MimeOleGetAllocator(IMimeAllocator **alloc)
 {
     return MimeAllocator_create(NULL, (void**)alloc);
 }
+
+HRESULT VirtualStream_create(IUnknown *outer, void **obj)
+{
+    FIXME("(%p, %p)\n", outer, obj);
+
+    *obj = NULL;
+    if (outer) return CLASS_E_NOAGGREGATION;
+
+    return MimeOleCreateVirtualStream((IStream **)obj);
+}

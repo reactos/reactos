@@ -18,7 +18,7 @@
 /**********************************************************************
  * SmpRunBootAppsQueryRoutine/6
  */
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 SmpRunBootAppsQueryRoutine(PWSTR ValueName,
 			  ULONG ValueType,
 			  PVOID ValueData,

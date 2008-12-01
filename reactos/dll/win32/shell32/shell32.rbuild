@@ -70,7 +70,6 @@
 	<file>shv_def_cmenu.c</file>
 	<file>startmenu.c</file>
 	<file>ros-systray.c</file>
-	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>
 	<file>she_ocmenu.c</file>

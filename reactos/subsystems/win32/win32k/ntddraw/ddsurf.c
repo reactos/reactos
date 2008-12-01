@@ -15,7 +15,7 @@
 /* NtGdiDdDestroySurface                                                */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdDestroySurface(HANDLE hSurface, BOOL bRealDestroy)
 {
     PGD_DXDDDESTROYSURFACE pfnDdDestroySurface = (PGD_DXDDDESTROYSURFACE)gpDxFuncs[DXG_INDEX_DxDdDestroySurface].pfn;
@@ -34,7 +34,7 @@ NtGdiDdDestroySurface(HANDLE hSurface, BOOL bRealDestroy)
 /* NtGdiDdFlip                                                          */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdFlip(HANDLE hSurfaceCurrent,
             HANDLE hSurfaceTarget,
             HANDLE hSurfaceCurrentLeft,
@@ -57,7 +57,7 @@ NtGdiDdFlip(HANDLE hSurfaceCurrent,
 /* NtGdiDdUnlock                                                        */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdLock(HANDLE hSurface,
             PDD_LOCKDATA puLockData,
             HDC hdcClip)
@@ -78,7 +78,7 @@ NtGdiDdLock(HANDLE hSurface,
 /* NtGdiDdunlock                                                        */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdUnlock(HANDLE hSurface, 
               PDD_UNLOCKDATA puUnlockData)
 {
@@ -98,7 +98,7 @@ NtGdiDdUnlock(HANDLE hSurface,
 /* NtGdiDdBlt                                                           */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdBlt(HANDLE hSurfaceDest,
            HANDLE hSurfaceSrc,
            PDD_BLTDATA puBltData)
@@ -119,7 +119,7 @@ NtGdiDdBlt(HANDLE hSurfaceDest,
 /* NtGdiDdSetColorKey                                                   */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdSetColorKey(HANDLE hSurface,
                    PDD_SETCOLORKEYDATA puSetColorKeyData)
 {
@@ -141,7 +141,7 @@ NtGdiDdSetColorKey(HANDLE hSurface,
 /************************************************************************/
 
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdAddAttachedSurface(HANDLE hSurface,
                           HANDLE hSurfaceAttached,
                           PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData)
@@ -162,7 +162,7 @@ NtGdiDdAddAttachedSurface(HANDLE hSurface,
 /* NtGdiDdGetBltStatus                                                  */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetBltStatus(HANDLE hSurface,
                     PDD_GETBLTSTATUSDATA puGetBltStatusData)
 {
@@ -182,7 +182,7 @@ NtGdiDdGetBltStatus(HANDLE hSurface,
 /* NtGdiDdGetFlipStatus                                                 */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdGetFlipStatus(HANDLE hSurface,
                      PDD_GETFLIPSTATUSDATA puGetFlipStatusData)
 {
@@ -202,7 +202,7 @@ NtGdiDdGetFlipStatus(HANDLE hSurface,
 /* NtGdiDdUpdateOverlay                                                 */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdUpdateOverlay(HANDLE hSurfaceDestination,
                      HANDLE hSurfaceSource,
                      PDD_UPDATEOVERLAYDATA puUpdateOverlayData)
@@ -224,7 +224,7 @@ NtGdiDdUpdateOverlay(HANDLE hSurfaceDestination,
 /************************************************************************/
 
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdSetOverlayPosition(HANDLE hSurfaceSource,
                           HANDLE hSurfaceDestination,
                           PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData)
@@ -251,7 +251,7 @@ NtGdiDdSetOverlayPosition(HANDLE hSurfaceSource,
 /* NtGdiDdAlphaBlt                                                      */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdAlphaBlt(HANDLE hSurfaceDest,
                 HANDLE hSurfaceSrc,
                 PDD_BLTDATA puBltData)
@@ -272,7 +272,7 @@ NtGdiDdAlphaBlt(HANDLE hSurfaceDest,
 /* NtGdiDdAttachSurface                                                 */
 /************************************************************************/
 BOOL
-STDCALL
+APIENTRY
 NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
                      HANDLE hSurfaceTo
 )
@@ -297,7 +297,7 @@ NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
           so I guess it is a typo in MSDN for this protypes for the info talk against it self
 */
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdUnattachSurface(HANDLE hSurface,
                        HANDLE hSurfaceAttached)
 {

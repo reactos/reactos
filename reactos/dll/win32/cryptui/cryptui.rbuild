@@ -8,7 +8,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<file>main.c</file>
-	<file>cryptui.spec</file>
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>ntdll</library>

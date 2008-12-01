@@ -593,7 +593,7 @@ const struct map_cntr {
 	{"united states", "united states"},
 	{"united-states", "united states"},
 	{"us", "united states"},
-	{"usa" "united states"}
+	{"usa", "united states"}
 };
 
 

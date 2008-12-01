@@ -553,7 +553,11 @@ process_directory (char *path, char *cvspath)
                 }
               else
                 {
-                  getcwd(buf, sizeof(buf));
+                  if (!getcwd(buf, sizeof(buf)))
+                    {
+                      printf("Can't get CWD: %s\n", strerror(errno));
+                      return;
+                    }
                   strcat(buf, DIR_SEPARATOR_STRING);
                   strcat(buf, path);
                   strcat(buf, entry->d_name);
@@ -611,7 +615,11 @@ process_directory (char *path, char *cvspath)
             }
           else
             {
-              getcwd(buf, sizeof(buf));
+              if (!getcwd(buf, sizeof(buf)))
+                {
+                  printf("Can't get CWD: %s\n", strerror(errno));
+                  return;
+                }
               strcat(buf, DIR_SEPARATOR_STRING);
               strcat(buf, path);
               strcat(buf, entry->d_name);

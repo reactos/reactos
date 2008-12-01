@@ -26,7 +26,7 @@
 /* FUNCTIONS ***************************************************************/
 
 #undef KeAcquireSpinLock
-VOID STDCALL
+VOID NTAPI
 KeAcquireSpinLock (
 	PKSPIN_LOCK	SpinLock,
 	PKIRQL		OldIrql
@@ -55,7 +55,7 @@ KeAcquireSpinLockRaiseToSynch (
 }
 
 #undef KeReleaseSpinLock
-VOID STDCALL
+VOID NTAPI
 KeReleaseSpinLock (
 	PKSPIN_LOCK	SpinLock,
 	KIRQL		NewIrql

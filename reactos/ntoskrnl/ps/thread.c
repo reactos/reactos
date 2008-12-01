@@ -113,10 +113,10 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     }
 }
 
-_SEH_FILTER(PspUnhandledExceptionInSystemThread)
+static
+int
+PspUnhandledExceptionInSystemThread(PEXCEPTION_POINTERS ExceptionPointers)
 {
-    PEXCEPTION_POINTERS ExceptionPointers= _SEH_GetExceptionPointers();
-
     /* Print debugging information */
     DPRINT1("PS: Unhandled Kernel Mode Exception Pointers = 0x%p\n",
             ExceptionPointers);
@@ -151,7 +151,7 @@ PspSystemThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     Thread = PsGetCurrentThread();
 
     /* Make sure the thread isn't gone */
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (!(Thread->Terminated) && !(Thread->DeadThread))
         {
@@ -159,12 +159,12 @@ PspSystemThreadStartup(IN PKSTART_ROUTINE StartRoutine,
             StartRoutine(StartContext);
         }
     }
-    _SEH_EXCEPT(PspUnhandledExceptionInSystemThread)
+    _SEH2_EXCEPT(PspUnhandledExceptionInSystemThread(_SEH2_GetExceptionInformation()))
     {
         /* Bugcheck if we got here */
         KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Exit the thread */
     PspTerminateThreadByPointer(Thread, STATUS_SUCCESS, TRUE);
@@ -468,16 +468,16 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     if (NT_SUCCESS(Status))
     {
         /* Wrap in SEH to protect against bad user-mode pointers */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return Cid and Handle */
             if (ClientId) *ClientId = Thread->Cid;
             *ThreadHandle = hThread;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
 
             /* Thread insertion failed, thread is dead */
             PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
@@ -494,7 +494,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             /* Close its handle, killing it */
             ObCloseHandle(ThreadHandle, PreviousMode);
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
     else
@@ -892,7 +892,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
         if (!ThreadContext) return STATUS_INVALID_PARAMETER;
 
         /* Protect checks */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make sure the handle pointer we got is valid */
             ProbeForWriteHandle(ThreadHandle);
@@ -911,11 +911,11 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
             ProbeForRead(InitialTeb, sizeof(INITIAL_TEB), sizeof(ULONG));
             SafeInitialTeb = *InitialTeb;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
     else
@@ -965,7 +965,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the thread handle */
             ProbeForWriteHandle(ThreadHandle);
@@ -989,12 +989,12 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
             HasObjectName = (ObjectAttributes->ObjectName != NULL);
             Attributes = ObjectAttributes->Attributes;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
     else
@@ -1094,17 +1094,17 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     if (NT_SUCCESS(Status))
     {
         /* Protect against bad user-mode pointers */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write back the handle */
             *ThreadHandle = hThread;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return status */

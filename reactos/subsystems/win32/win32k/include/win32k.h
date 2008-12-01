@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 #ifndef __WIN32K_H
 #define __WIN32K_H
-#define INTERNAL_CALL NTAPI
+#define INTERNAL_CALL APIENTRY
 
 /* Internal Win32k Headers */
 #include <include/accelerator.h>

@@ -21,8 +21,6 @@
 
 #include <string.h>
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
 /* For DirectDraw 4 - 6 */
 HRESULT WINAPI
 Main_DirectDraw_GetDeviceIdentifier(LPDDRAWI_DIRECTDRAW_INT This,
@@ -33,7 +31,7 @@ Main_DirectDraw_GetDeviceIdentifier(LPDDRAWI_DIRECTDRAW_INT This,
 
     ZeroMemory(&pDDDI2,sizeof(DDDEVICEIDENTIFIER2));
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         memcpy(&pDDDI2 , pDDDI, sizeof(DDDEVICEIDENTIFIER));
 
@@ -48,11 +46,11 @@ Main_DirectDraw_GetDeviceIdentifier(LPDDRAWI_DIRECTDRAW_INT This,
             memcpy(pDDDI , &pDDDI2, sizeof(DDDEVICEIDENTIFIER) );
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         retVal = DD_FALSE;
     }
-    _SEH_END;
+    _SEH2_END;
 
     return retVal;
 }
@@ -77,13 +75,13 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
 
     EnterCriticalSection( &ddcs );
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if ( (IsBadWritePtr( pDDDI, sizeof(DDDEVICEIDENTIFIER2) ) ) ||
              (dwFlags & ~DDGDI_GETHOSTIDENTIFIER))
         {
             retVal = DDERR_INVALIDPARAMS;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         /* now we can start getting the driver data */
@@ -180,11 +178,11 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
          }
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         retVal = DD_FALSE;
     }
-    _SEH_END;
+    _SEH2_END;
 
     LeaveCriticalSection( &ddcs );
     return retVal;

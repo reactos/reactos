@@ -71,7 +71,7 @@ const STOPBIT_INFO StopBits[] = {
  ************************************/
 
 BOOL
-STDCALL
+WINAPI
 DllMain(HINSTANCE hInstance,
 	DWORD dwReason,
 	LPVOID reserved)

@@ -18,15 +18,15 @@
 
 VOID OpenBitPlane();
 VOID CloseBitPlane();
-VOID LoadFont(PBYTE Bitplane, PUCHAR FontBitfield);
+VOID LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield);
 
 /* FUNCTIONS ****************************************************************/
 
 VOID
-ScrLoadFontTable(UINT CodePage)
+ScrLoadFontTable(UINT32 CodePage)
 {
     PHYSICAL_ADDRESS BaseAddress;
-    PBYTE Bitplane;
+    PUCHAR Bitplane;
     PUCHAR FontBitfield = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -38,7 +38,7 @@ ScrLoadFontTable(UINT CodePage)
 
         /* get pointer to video memory */
         BaseAddress.QuadPart = BITPLANE_BASE;
-        Bitplane = (PBYTE)MmMapIoSpace (BaseAddress, 0xFFFF, MmNonCached);
+        Bitplane = (PUCHAR)MmMapIoSpace (BaseAddress, 0xFFFF, MmNonCached);
 
         Status = ExtractFont(CodePage, FontBitfield);
         if (NT_SUCCESS(Status))
@@ -54,7 +54,7 @@ ScrLoadFontTable(UINT CodePage)
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-NTSTATUS ExtractFont(UINT CodePage, PUCHAR FontBitField)
+NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
 {
     BOOLEAN            bFoundFile = FALSE;
     HANDLE             Handle;
@@ -231,9 +231,9 @@ CloseBitPlane()
 }
 
 VOID
-LoadFont(PBYTE Bitplane, PUCHAR FontBitfield)
+LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield)
 {
-    UINT i,j;
+    UINT32 i,j;
 
     for (i=0; i<256; i++)
     {

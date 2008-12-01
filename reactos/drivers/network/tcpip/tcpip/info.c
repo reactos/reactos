@@ -143,7 +143,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
     UINT i;
     PVOID context = NULL;
     NTSTATUS Status = TDI_INVALID_PARAMETER;
-    BOOL FoundEntity = FALSE;
+    BOOLEAN FoundEntity = FALSE;
     InfoRequest_f InfoRequest = NULL;
 
     TI_DbgPrint(DEBUG_INFO,

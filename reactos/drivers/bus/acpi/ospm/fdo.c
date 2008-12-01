@@ -848,7 +848,7 @@ FdoSetPower(
 /*** PUBLIC ******************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 FdoPnpControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)
@@ -937,7 +937,7 @@ FdoPnpControl(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 FdoPowerControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)

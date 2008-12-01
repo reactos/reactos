@@ -286,7 +286,7 @@ found:
 
 
 int
-STDCALL
+APIENTRY
 NtUserCopyAcceleratorTable(
    HACCEL hAccel,
    LPACCEL Entries,
@@ -329,7 +329,7 @@ CLEANUP:
 }
 
 HACCEL
-STDCALL
+APIENTRY
 NtUserCreateAcceleratorTable(
    LPACCEL Entries,
    SIZE_T EntriesCount)
@@ -393,7 +393,7 @@ CLEANUP:
 
 
 BOOLEAN
-STDCALL
+APIENTRY
 NtUserDestroyAcceleratorTable(
    HACCEL hAccel)
 {
@@ -431,7 +431,7 @@ CLEANUP:
 
 
 int
-STDCALL
+APIENTRY
 NtUserTranslateAccelerator(
    HWND hWnd,
    HACCEL hAccel,

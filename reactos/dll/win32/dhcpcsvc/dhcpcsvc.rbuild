@@ -8,5 +8,4 @@
 	<library>iphlpapi</library>
 	<file>dhcpcsvc.c</file>
 	<file>dhcpcsvc.rc</file>
-	<file>dhcpcsvc.spec</file>
 </module>

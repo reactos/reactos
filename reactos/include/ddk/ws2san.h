@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#define WSPAPI STDCALL
+#define WSPAPI WINAPI
 
 /* FIXME: Unknown definitions */
 typedef PVOID LPWSPDATA;

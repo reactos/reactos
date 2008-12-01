@@ -40,12 +40,12 @@
 #include "user32p.h"
 
 /* SEH Support with PSEH */
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* FIXME: Use ntgdi.h then cleanup... */
-HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
-BOOL STDCALL NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
-LONG STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
+HGDIOBJ WINAPI  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
+BOOL WINAPI NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
+LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 BOOL FASTCALL IsMetaFile(HDC);
 
 extern PW32PROCESSINFO g_pi;

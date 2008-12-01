@@ -765,7 +765,7 @@ co_IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
  *    @implemented
  */
 
-HDC STDCALL
+HDC APIENTRY
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 {
    PWINDOW_OBJECT Window = NULL;
@@ -876,7 +876,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
 {
    NTSTATUS Status = STATUS_SUCCESS;
@@ -893,16 +893,16 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
       RETURN(FALSE);
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead(pUnsafePs, sizeof(*pUnsafePs), 1);
       hdc = pUnsafePs->hdc;
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
    if (!NT_SUCCESS(Status))
    {
       RETURN(FALSE);
@@ -959,7 +959,7 @@ co_UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
  *    @implemented
  */
 
-INT STDCALL
+INT APIENTRY
 NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
 {
    DECLARE_RETURN(INT);
@@ -994,7 +994,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
 {
    PWINDOW_OBJECT Window;
@@ -1078,7 +1078,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
                    UINT flags)
 {
@@ -1237,7 +1237,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
                const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate)
 {
@@ -1249,7 +1249,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
    DPRINT("Enter NtUserScrollDC\n");
    UserEnterExclusive();
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       if (prcUnsafeScroll)
       {
@@ -1266,11 +1266,11 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
          ProbeForWrite(prcUnsafeUpdate, sizeof(*prcUnsafeUpdate), 1);
       }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
@@ -1289,15 +1289,15 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
 
    if (prcUnsafeUpdate)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          *prcUnsafeUpdate = rcUpdate;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END
+      _SEH2_END
       if (!NT_SUCCESS(Status))
       {
          /* FIXME: SetLastError? */
@@ -1321,7 +1321,7 @@ CLEANUP:
  *    @implemented
  */
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
                      const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate, UINT flags)
 {
@@ -1348,7 +1348,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
 
    IntGetClientRect(Window, &rcClip);
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       if (prcUnsafeScroll)
       {
@@ -1364,11 +1364,11 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
          IntGdiIntersectRect(&rcClip, &rcClip, prcUnsafeClip);
       }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
    }
-   _SEH_END
+   _SEH2_END
 
    if (!NT_SUCCESS(Status))
    {
@@ -1463,17 +1463,17 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
 
    if (prcUnsafeUpdate)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          /* Probe here, to not fail on invalid pointer before scrolling */
          ProbeForWrite(prcUnsafeUpdate, sizeof(*prcUnsafeUpdate), 1);
          *prcUnsafeUpdate = rcUpdate;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END
+      _SEH2_END
 
       if (!NT_SUCCESS(Status))
       {
@@ -1891,7 +1891,7 @@ UserRealizePalette(HDC hdc)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserDrawCaptionTemp(
    HWND hWnd,
    HDC hDC,
@@ -1917,7 +1917,7 @@ NtUserDrawCaptionTemp(
      }
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
       ProbeForRead(lpRc, sizeof(RECT), sizeof(ULONG));
       RtlCopyMemory(&SafeRect, lpRc, sizeof(RECT));
@@ -1935,18 +1935,18 @@ NtUserDrawCaptionTemp(
 	  else
 	    Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, NULL, uFlags);
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      SetLastNtError(_SEH_GetExceptionCode());
+      SetLastNtError(_SEH2_GetExceptionCode());
    }
-   _SEH_END;
+   _SEH2_END;
 
    UserLeave();
    return Ret;
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserDrawCaption(HWND hWnd,
    HDC hDC,
    LPCRECT lpRc,
@@ -1956,7 +1956,7 @@ NtUserDrawCaption(HWND hWnd,
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserInvalidateRect(
     HWND hWnd,
     CONST RECT *lpUnsafeRect,
@@ -1966,7 +1966,7 @@ NtUserInvalidateRect(
 }
 
 BOOL
-NTAPI
+APIENTRY
 NtUserInvalidateRgn(
     HWND hWnd,
     HRGN hRgn,

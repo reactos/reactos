@@ -1821,7 +1821,7 @@ static const unsigned short CharTypeTable[] =
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetStringTypeExW (
     LCID Locale,
     DWORD InfoType,
@@ -1839,7 +1839,7 @@ GetStringTypeExW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetStringTypeExA (
     LCID  Locale,
     DWORD InfoType,
@@ -1856,7 +1856,7 @@ GetStringTypeExA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetStringTypeW (
     DWORD InfoType,
     LPCWSTR Src,
@@ -1961,7 +1961,7 @@ GetStringTypeW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetStringTypeA (
     LCID Locale,
     DWORD InfoType,

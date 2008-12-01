@@ -77,7 +77,7 @@ GENERIC_MAPPING IntDesktopMapping =
 /* OBJECT CALLBACKS **********************************************************/
 
 NTSTATUS
-NTAPI
+APIENTRY
 IntDesktopObjectParse(IN PVOID ParseObject,
                       IN PVOID ObjectType,
                       IN OUT PACCESS_STATE AccessState,
@@ -174,7 +174,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     return STATUS_SUCCESS;
 }
 
-VOID STDCALL
+VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
    PDESKTOP Desktop = (PDESKTOP)Parameters->Object;
@@ -876,7 +876,7 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
  *    @implemented
  */
 
-HDESK STDCALL
+HDESK APIENTRY
 NtUserCreateDesktop(
    PUNICODE_STRING lpszDesktopName,
    DWORD dwFlags,
@@ -1088,7 +1088,7 @@ CLEANUP:
  *    @implemented
  */
 
-HDESK STDCALL
+HDESK APIENTRY
 NtUserOpenDesktop(
    PUNICODE_STRING lpszDesktopName,
    DWORD dwFlags,
@@ -1214,7 +1214,7 @@ CLEANUP:
  *    @implemented
  */
 
-HDESK STDCALL
+HDESK APIENTRY
 NtUserOpenInputDesktop(
    DWORD dwFlags,
    BOOL fInherit,
@@ -1294,7 +1294,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserCloseDesktop(HDESK hDesktop)
 {
    PDESKTOP Object;
@@ -1355,7 +1355,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserPaintDesktop(HDC hDC)
 {
    RECT Rect;
@@ -1569,7 +1569,7 @@ CLEANUP:
  *    @unimplemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSwitchDesktop(HDESK hDesktop)
 {
    PDESKTOP DesktopObject;
@@ -1635,7 +1635,7 @@ CLEANUP:
  *    @unimplemented
  */
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserResolveDesktopForWOW(DWORD Unknown0)
 {
    UNIMPLEMENTED
@@ -1649,7 +1649,7 @@ NtUserResolveDesktopForWOW(DWORD Unknown0)
  *    @implemented
  */
 
-HDESK STDCALL
+HDESK APIENTRY
 NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 {
    NTSTATUS Status;
@@ -1959,7 +1959,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetThreadDesktop(HDESK hDesktop)
 {
    PDESKTOP DesktopObject;

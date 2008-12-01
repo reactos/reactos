@@ -49,7 +49,7 @@ extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
 NTSTATUS
-STDCALL
+APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
@@ -171,7 +171,7 @@ CLEANUP:
 
 
 NTSTATUS
-STDCALL
+APIENTRY
 Win32kThreadCallback(struct _ETHREAD *Thread,
                      PSW32THREADCALLOUTTYPE Type)
 {
@@ -275,11 +275,17 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->ppi = PsGetCurrentProcessWin32Process();
       pTeb = NtCurrentTeb();
       if (pTeb)
+      {
           Win32Thread->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
+          Win32Thread->pClientInfo->pClientThreadInfo = NULL;
+      }
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       if (Win32Thread->ThreadInfo)
+      {
           Win32Thread->ThreadInfo->ClientThreadInfo.dwcPumpHook = 0;
+          Win32Thread->pClientInfo->pClientThreadInfo = &Win32Thread->ThreadInfo->ClientThreadInfo;
+      }
     }
   else
     {
@@ -368,7 +374,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
 /*
  * This definition doesn't work
  */
-NTSTATUS STDCALL
+NTSTATUS APIENTRY
 DriverEntry (
   IN	PDRIVER_OBJECT	DriverObject,
   IN	PUNICODE_STRING	RegistryPath)

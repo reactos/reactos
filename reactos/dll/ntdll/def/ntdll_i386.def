@@ -435,7 +435,7 @@ RtlAcquireResourceExclusive@8
 RtlAcquireResourceShared@8
 RtlAcquireSRWLockExclusive@4
 RtlAcquireSRWLockShared@4
-;RtlActivateActivationContext
+RtlActivateActivationContext@12
 ;RtlActivateActivationContextEx
 RtlActivateActivationContextUnsafeFast@8
 RtlAddAccessAllowedAce@16
@@ -520,7 +520,7 @@ RtlCopySidAndAttributesArray@28
 RtlCopyString@8
 RtlCopyUnicodeString@8
 RtlCreateAcl@12
-;RtlCreateActivationContext
+RtlCreateActivationContext@8
 ;RtlCreateAndSetSD
 RtlCreateAtomTable@8
 ;RtlCreateBootStatusDataFile
@@ -869,7 +869,7 @@ RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor@12
 RtlSetHeapInformation@16
 RtlSetInformationAcl@16
-;RtlSetIoCompletionCallback
+RtlSetIoCompletionCallback@12
 RtlSetLastWin32Error@4
 RtlSetLastWin32ErrorAndNtStatusFromNtStatus@4
 ;RtlSetMemoryStreamSize

@@ -23,7 +23,7 @@
 #include <debug.h>
 #include <windns.h> // DNS_A_DATA
 
-#define EXPORT STDCALL
+#define EXPORT WINAPI
 
 extern HINSTANCE g_hInstDll;
 extern HANDLE GlobalHeap;

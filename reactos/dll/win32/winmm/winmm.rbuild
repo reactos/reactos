@@ -26,6 +26,5 @@
 	<file>winmm.c</file>
 	<file>registry.c</file>
 	<file>winmm_res.rc</file>
-	<file>winmm.spec</file>
 </module>
 </group>

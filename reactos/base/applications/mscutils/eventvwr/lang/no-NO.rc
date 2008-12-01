@@ -12,7 +12,7 @@ IDC_EVENTVWR MENU
 BEGIN
 	POPUP "&Logg"
 	BEGIN
-		MENUITEM "&Applikasjon",              ID_LOG_APPLICATION, CHECKED
+		MENUITEM "&Applikasjon",              ID_LOG_APPLICATION
 		MENUITEM "&Sikkerhet",                 ID_LOG_SECURITY
 		MENUITEM "&System",                   ID_LOG_SYSTEM
 		MENUITEM SEPARATOR

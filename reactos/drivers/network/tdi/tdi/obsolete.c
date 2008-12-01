@@ -8,7 +8,7 @@
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 TdiMapBuffer (
 	ULONG	Unknown0
 	)
@@ -21,7 +21,7 @@ TdiMapBuffer (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 TdiUnmapBuffer (
 	ULONG	Unknown0
 	)

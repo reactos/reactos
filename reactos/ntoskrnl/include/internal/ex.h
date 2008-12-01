@@ -92,9 +92,9 @@ typedef struct
 #define MAX_HIGH_INDEX      (MID_LEVEL_ENTRIES * MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 
 //
-// Detect GCC
+// Detect old GCC
 //
-#ifdef __GNUC__
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300)
 
 #define DEFINE_WAIT_BLOCK(x)                                \
     struct _AlignHack                                       \
@@ -428,11 +428,6 @@ ExSweepHandleTable(
 LONG
 NTAPI
 ExSystemExceptionFilter(VOID);
-
-static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
-{
-    return ExSystemExceptionFilter();
-}
 
 /* CALLBACKS *****************************************************************/
 

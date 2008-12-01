@@ -15,7 +15,6 @@
 	<file>fontdlg.c</file>
 	<file>printdlg.c</file>
 	<file>rsrc.rc</file>
-	<file>comdlg32.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>shell32</library>

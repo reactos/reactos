@@ -35,7 +35,7 @@
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngDebugPrint(PCHAR StandardPrefix,
 	      PCHAR DebugMessage,
 	      va_list ap)

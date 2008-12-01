@@ -43,7 +43,7 @@ MiCacheImageSymbols(IN PVOID BaseAddress)
     PAGED_CODE();
 
     /* Make sure it's safe to access the image */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Get the debug directory */
         DebugDirectory = RtlImageDirectoryEntryToData(BaseAddress,
@@ -51,11 +51,11 @@ MiCacheImageSymbols(IN PVOID BaseAddress)
                                                       IMAGE_DIRECTORY_ENTRY_DEBUG,
                                                       &DebugSize);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return the directory */
     return DebugDirectory;

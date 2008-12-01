@@ -20,7 +20,7 @@
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 GetCharacterPlacementA(
 	HDC		hDc,
 	LPCSTR		a1,
@@ -40,7 +40,7 @@ GetCharacterPlacementA(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 StartDocA(
 	HDC		hdc,
 	CONST DOCINFOA	*lpdi
@@ -56,7 +56,7 @@ StartDocA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 PolyTextOutA(
 	HDC			hdc,
 	CONST POLYTEXTA		*a1,
@@ -72,7 +72,7 @@ PolyTextOutA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetLogColorSpaceA(
 	HCOLORSPACE		a0,
 	LPLOGCOLORSPACEA	a1,
@@ -89,7 +89,7 @@ GetLogColorSpaceA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 GetICMProfileA(
 	HDC		hdc,
 	LPDWORD pBufSize,
@@ -106,7 +106,7 @@ GetICMProfileA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 SetICMProfileA(
 	HDC	a0,
 	LPSTR	a1
@@ -122,7 +122,7 @@ SetICMProfileA(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 EnumICMProfilesA(
 	HDC		a0,
 	ICMENUMPROCA	a1,
@@ -149,7 +149,7 @@ EnumICMProfilesA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 wglUseFontBitmapsA(
 	HDC		a0,
 	DWORD		a1,
@@ -167,7 +167,7 @@ wglUseFontBitmapsA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 wglUseFontOutlinesA(
 	HDC			a0,
 	DWORD			a1,
@@ -189,7 +189,7 @@ wglUseFontOutlinesA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 UpdateICMRegKeyA(
 	DWORD	a0,
 	LPSTR	a1,
@@ -206,7 +206,7 @@ UpdateICMRegKeyA(
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetStringBitmapA(HDC hdc,
                  LPSTR psz,
                  BOOL DoCall,

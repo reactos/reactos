@@ -1,7 +1,7 @@
 /*
  * PROJECT:     Setup API
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/setupapi/Uk.rc
+ * FILE:        dll/win32/setupapi/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for setupapi
  * TRANSLATOR:  Artem Reznikov
  */
@@ -25,5 +25,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_QUERY_REBOOT_TEXT        "Для закінчення установки необхідно перезапустити Ваш комп'ютер. Продовжити?"
 	IDS_QUERY_REBOOT_CAPTION     "Перезапустити"
-	IDS_INF_FILE                 "Setup Information"
+	IDS_INF_FILE                 "Відомості для установки"
 END

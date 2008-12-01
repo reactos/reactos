@@ -2,7 +2,7 @@
  *
  * Copyright 1997-2000 Marcus Meissner
  * Copyright 2000-2001 TransGaming Technologies Inc.
- * Copyright 2006 Stefan Dösinger for CodeWeavers
+ * Copyright 2006 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

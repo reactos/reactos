@@ -53,7 +53,6 @@
 	<file>domimpl.c</file>
 	<file>entityref.c</file>
 	<file>version.rc</file>
-	<file>msxml3.spec</file>
 </module>
 <module name="msxml3_v1" type="embeddedtypelib">
 	<dependency>stdole2</dependency>

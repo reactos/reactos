@@ -1189,7 +1189,7 @@ IntIsWindowInDestroy(PWINDOW_OBJECT Window)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserAlterWindowStyle(DWORD Unknown0,
                        DWORD Unknown1,
                        DWORD Unknown2)
@@ -1211,7 +1211,7 @@ NtUserAlterWindowStyle(DWORD Unknown0,
  * @implemented
  */
 NTSTATUS
-STDCALL
+APIENTRY
 NtUserBuildHwndList(
    HDESK hDesktop,
    HWND hwndParent,
@@ -1269,17 +1269,17 @@ NtUserBuildHwndList(
             {
                if(dwCount++ < *pBufSize && pWnd)
                {
-                  _SEH_TRY
+                  _SEH2_TRY
                   {
                      ProbeForWrite(pWnd, sizeof(HWND), 1);
                      *pWnd = Window->hSelf;
                      pWnd++;
                   }
-                  _SEH_HANDLE
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
-                     Status = _SEH_GetExceptionCode();
+                     Status = _SEH2_GetExceptionCode();
                   }
-                  _SEH_END
+                  _SEH2_END
                   if(!NT_SUCCESS(Status))
                   {
                      SetLastNtError(Status);
@@ -1364,7 +1364,7 @@ NtUserBuildHwndList(
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserChildWindowFromPointEx(HWND hwndParent,
                              LONG x,
                              LONG y,
@@ -1480,7 +1480,7 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Window, RECT *rc, BOOL I
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 co_IntCreateWindowEx(DWORD dwExStyle,
                      PUNICODE_STRING ClassName,
                      PUNICODE_STRING WindowName,
@@ -1728,19 +1728,19 @@ AllocErr:
       }
 
       Wnd->WindowName.Buffer[WindowName->Length / sizeof(WCHAR)] = L'\0';
-      _SEH_TRY
+      _SEH2_TRY
       {
           RtlCopyMemory(Wnd->WindowName.Buffer,
                         WindowName->Buffer,
                         WindowName->Length);
           Wnd->WindowName.Length = WindowName->Length;
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
           WindowName->Length = 0;
           Wnd->WindowName.Buffer[0] = L'\0';
       }
-      _SEH_END;
+      _SEH2_END;
    }
 
    /*
@@ -2206,7 +2206,7 @@ CLEANUP:
    END_CLEANUP;
 }
 
-HWND STDCALL
+HWND APIENTRY
 NtUserCreateWindowEx(DWORD dwExStyle,
                      PUNICODE_STRING UnsafeClassName,
                      PUNICODE_STRING UnsafeWindowName,
@@ -2296,7 +2296,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-HDWP STDCALL
+HDWP APIENTRY
 NtUserDeferWindowPos(HDWP WinPosInfo,
                      HWND Wnd,
                      HWND WndInsertAfter,
@@ -2450,7 +2450,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN APIENTRY
 NtUserDestroyWindow(HWND Wnd)
 {
    PWINDOW_OBJECT Window;
@@ -2484,7 +2484,7 @@ CLEANUP:
  * @unimplemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserDrawMenuBarTemp(
    HWND hWnd,
    HDC hDC,
@@ -2501,7 +2501,7 @@ NtUserDrawMenuBarTemp(
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserEndDeferWindowPosEx(DWORD Unknown0,
                           DWORD Unknown1)
 {
@@ -2517,7 +2517,7 @@ NtUserEndDeferWindowPosEx(DWORD Unknown0,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserFillWindow(HWND hWndPaint,
                  HWND hWndPaint1,
                  HDC  hDC,
@@ -2603,7 +2603,7 @@ IntFindWindow(PWINDOW_OBJECT Parent,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserFindWindowEx(HWND hwndParent,
                    HWND hwndChildAfter,
                    PUNICODE_STRING ucClassName,
@@ -2621,7 +2621,7 @@ NtUserFindWindowEx(HWND hwndParent,
 
    if (ucClassName != NULL || ucWindowName != NULL)
    {
-       _SEH_TRY
+       _SEH2_TRY
        {
            if (ucClassName != NULL)
            {
@@ -2635,13 +2635,13 @@ NtUserFindWindowEx(HWND hwndParent,
                else if (!IS_ATOM(ClassName.Buffer))
                {
                    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-                   _SEH_LEAVE;
+                   _SEH2_LEAVE;
                }
 
                if (!IntGetAtomFromStringOrAtom(&ClassName,
                                                &ClassAtom))
                {
-                   _SEH_LEAVE;
+                   _SEH2_LEAVE;
                }
            }
 
@@ -2656,12 +2656,12 @@ NtUserFindWindowEx(HWND hwndParent,
                }
            }
        }
-       _SEH_HANDLE
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
-           SetLastNtError(_SEH_GetExceptionCode());
-           _SEH_YIELD(RETURN(NULL));
+           SetLastNtError(_SEH2_GetExceptionCode());
+           _SEH2_YIELD(RETURN(NULL));
        }
-       _SEH_END;
+       _SEH2_END;
 
        if (ucClassName != NULL)
        {
@@ -2701,7 +2701,7 @@ NtUserFindWindowEx(HWND hwndParent,
       RETURN( NULL);
    }
 
-   _SEH_TRY
+   _SEH2_TRY
    {
        if(Parent->hSelf == Desktop)
        {
@@ -2780,12 +2780,12 @@ NtUserFindWindowEx(HWND hwndParent,
        }
 #endif
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       SetLastNtError(_SEH_GetExceptionCode());
+       SetLastNtError(_SEH2_GetExceptionCode());
        Ret = NULL;
    }
-   _SEH_END;
+   _SEH2_END;
 
    RETURN( Ret);
 
@@ -2799,7 +2799,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
    UNIMPLEMENTED
@@ -2887,7 +2887,7 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserGetAncestor(HWND hWnd, UINT Type)
 {
    PWINDOW_OBJECT Window, Ancestor;
@@ -2914,7 +2914,7 @@ CLEANUP:
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetComboBoxInfo(
    HWND hWnd,
    PCOMBOBOXINFO pcbi)
@@ -2929,7 +2929,7 @@ NtUserGetComboBoxInfo(
    {
       RETURN( FALSE );
    }
-   _SEH_TRY
+   _SEH2_TRY
    {
        if(pcbi)
        {
@@ -2938,12 +2938,12 @@ NtUserGetComboBoxInfo(
                         1);
        }
    }
-   _SEH_HANDLE
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       SetLastNtError(_SEH_GetExceptionCode());
-       _SEH_YIELD(RETURN(FALSE));
+       SetLastNtError(_SEH2_GetExceptionCode());
+       _SEH2_YIELD(RETURN(FALSE));
    }
-   _SEH_END;
+   _SEH2_END;
 
    // Pass the user pointer, it was already probed.
    RETURN( (BOOL) co_IntSendMessage( Wnd->hSelf, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi));
@@ -2958,7 +2958,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserGetInternalWindowPos( HWND hwnd,
                             LPRECT rectWnd,
                             LPPOINT ptIcon)
@@ -2969,7 +2969,7 @@ NtUserGetInternalWindowPos( HWND hwnd,
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetListBoxInfo(
    HWND hWnd)
 {
@@ -3068,7 +3068,7 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
  *    @implemented
  */
 
-HWND STDCALL
+HWND APIENTRY
 NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
    DECLARE_RETURN(HWND);
@@ -3125,7 +3125,7 @@ HWND FASTCALL UserGetShellWindow()
  * Status
  *    @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 {
    PWINSTATION_OBJECT WinStaObject;
@@ -3236,7 +3236,7 @@ CLEANUP:
  *    @implemented
  */
 
-HMENU STDCALL
+HMENU APIENTRY
 NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
 {
    PWINDOW_OBJECT Window;
@@ -3271,7 +3271,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetSystemMenu(HWND hWnd, HMENU hMenu)
 {
    BOOL Result = FALSE;
@@ -3375,7 +3375,7 @@ UserGetWindow(HWND hWnd, UINT Relationship)
  *    @implemented
  */
 
-HWND STDCALL
+HWND APIENTRY
 NtUserGetWindow(HWND hWnd, UINT Relationship)
 {
    DECLARE_RETURN(HWND);
@@ -3505,7 +3505,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
  *    @implemented
  */
 
-LONG STDCALL
+LONG APIENTRY
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 {
    DECLARE_RETURN(LONG);
@@ -3730,7 +3730,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
  *    @implemented
  */
 
-LONG STDCALL
+LONG APIENTRY
 NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {
    DECLARE_RETURN(LONG);
@@ -3755,7 +3755,7 @@ CLEANUP:
  *    @implemented
  */
 
-WORD STDCALL
+WORD APIENTRY
 NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
 {
    PWINDOW_OBJECT Window;
@@ -3804,7 +3804,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetWindowPlacement(HWND hWnd,
                          WINDOWPLACEMENT *lpwndpl)
 {
@@ -3882,7 +3882,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserLockWindowUpdate(HWND hWnd)
 {
    UNIMPLEMENTED
@@ -3894,7 +3894,7 @@ NtUserLockWindowUpdate(HWND hWnd)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserMoveWindow(
    HWND hWnd,
    int X,
@@ -3925,7 +3925,7 @@ NtUserMoveWindow(
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserQueryWindow(HWND hWnd, DWORD Index)
 {
    PWINDOW_OBJECT Window;
@@ -3979,7 +3979,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserRealChildWindowFromPoint(DWORD Unknown0,
                                DWORD Unknown1,
                                DWORD Unknown2)
@@ -3993,7 +3993,7 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
 /*
  * @implemented
  */
-UINT STDCALL
+UINT APIENTRY
 NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 {
    UNICODE_STRING SafeMessageName;
@@ -4032,7 +4032,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserSetImeOwnerWindow(DWORD Unknown0,
                         DWORD Unknown1)
 {
@@ -4045,7 +4045,7 @@ NtUserSetImeOwnerWindow(DWORD Unknown0,
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserSetInternalWindowPos(
    HWND    hwnd,
    UINT    showCmd,
@@ -4062,7 +4062,7 @@ NtUserSetInternalWindowPos(
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetLayeredWindowAttributes(HWND hwnd,
 			   COLORREF crKey,
 			   BYTE bAlpha,
@@ -4076,7 +4076,7 @@ NtUserSetLayeredWindowAttributes(HWND hwnd,
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetLogonNotifyWindow(HWND hWnd)
 {
    UNIMPLEMENTED
@@ -4088,7 +4088,7 @@ NtUserSetLogonNotifyWindow(HWND hWnd)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetMenu(
    HWND hWnd,
    HMENU Menu,
@@ -4134,7 +4134,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetWindowFNID(HWND hWnd,
                     WORD fnID)
 {
@@ -4172,7 +4172,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetWindowPlacement(HWND hWnd,
                          WINDOWPLACEMENT *lpwndpl)
 {
@@ -4235,7 +4235,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetWindowPos(
    HWND hWnd,
    HWND hWndInsertAfter,
@@ -4356,7 +4356,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECT *Rect)
 /*
  * @implemented
  */
-INT STDCALL
+INT APIENTRY
 NtUserSetWindowRgn(
    HWND hWnd,
    HRGN hRgn,
@@ -4405,7 +4405,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserShowWindow(HWND hWnd, LONG nCmdShow)
 {
    PWINDOW_OBJECT Window;
@@ -4437,7 +4437,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
 {
 #if 0
@@ -4453,7 +4453,7 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
  * @unimplemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserUpdateLayeredWindow(
    HWND hwnd,
    HDC hdcDst,
@@ -4474,7 +4474,7 @@ NtUserUpdateLayeredWindow(
 /*
  *    @implemented
  */
-HWND STDCALL
+HWND APIENTRY
 NtUserWindowFromPoint(LONG X, LONG Y)
 {
    POINT pt;
@@ -4532,7 +4532,7 @@ CLEANUP:
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
 {
    PWINDOW_OBJECT Window;
@@ -4545,16 +4545,16 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
    RtlInitUnicodeString(&SafeText, NULL);
    if (WindowText != NULL)
    {
-       _SEH_TRY
+       _SEH2_TRY
        {
            SafeText = ProbeForReadUnicodeString(WindowText);
        }
-       _SEH_HANDLE
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
            Ret = FALSE;
-           SetLastNtError(_SEH_GetExceptionCode());
+           SetLastNtError(_SEH2_GetExceptionCode());
        }
-       _SEH_END;
+       _SEH2_END;
 
        if (!Ret)
            return FALSE;
@@ -4571,7 +4571,7 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
 
    if(SafeText.Length != 0)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
           if (Wnd->WindowName.MaximumLength > 0 &&
               SafeText.Length <= Wnd->WindowName.MaximumLength - sizeof(UNICODE_NULL))
@@ -4614,12 +4614,12 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
               }
           }
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-           SetLastNtError(_SEH_GetExceptionCode());
+           SetLastNtError(_SEH2_GetExceptionCode());
            Ret = FALSE;
       }
-      _SEH_END;
+      _SEH2_END;
    }
    else
    {
@@ -4648,7 +4648,7 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
  *    @implemented
  */
 
-INT STDCALL
+INT APIENTRY
 NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
 {
    PWINDOW_OBJECT Window;
@@ -4773,7 +4773,7 @@ IntShowOwnedPopups(PWINDOW_OBJECT OwnerWnd, BOOL fShow )
  */
 
 BOOL
-STDCALL
+APIENTRY
 NtUserValidateHandleSecure(
    HANDLE handle,
    BOOL Restricted)
