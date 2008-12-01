@@ -746,10 +746,11 @@ static LONG MDICascade( HWND client, MDICLIENTINFO *ci )
         /* walk the list (backwards) and move windows */
         for (i = total - 1; i >= 0; i--)
         {
+            MDI_CalcDefaultChildPos(client, n++, pos, delta, NULL);
+
             TRACE("move %p to (%ld,%ld) size [%ld,%ld]\n",
                   win_array[i], pos[0].x, pos[0].y, pos[1].x, pos[1].y);
 
-            MDI_CalcDefaultChildPos(client, n++, pos, delta, NULL);
             SetWindowPos( win_array[i], 0, pos[0].x, pos[0].y, pos[1].x, pos[1].y,
                           SWP_DRAWFRAME | SWP_NOACTIVATE | SWP_NOZORDER);
         }
