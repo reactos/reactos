@@ -141,12 +141,10 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pPathExt,
 BOOL
 SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 {
-	static TCHAR pszDefaultPathExt[] = _T(".COM;.EXE;.BAT;.CMD");
+	static TCHAR pszDefaultPathExt[] = _T(".com;.exe;.bat;.cmd");
 	LPTSTR pszPathExt, pszPath;
 	LPTSTR pCh;
 	DWORD  dwBuffer;
-	HANDLE hFile;
-	WIN32_FIND_DATAW FindData;
 	TRACE ("SearchForExecutable: \'%s\'\n", debugstr_aw(pFileName));
 
 	/* load environment varable PATHEXT */
@@ -156,21 +154,20 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	{
 		pszPathExt = (LPTSTR)cmd_realloc (pszPathExt, dwBuffer * sizeof (TCHAR));
 		GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, dwBuffer);
+		_tcslwr(pszPathExt);
 	}
 	else if (0 == dwBuffer)
 	{
 		_tcscpy(pszPathExt, pszDefaultPathExt);
 	}
+	else
+	{
+		_tcslwr(pszPathExt);
+	}
 
 	/* Check if valid directly on specified path */
 	if (SearchForExecutableSingle(pFileName, pFullName, pszPathExt, NULL))
 	{
-		hFile = FindFirstFileW(pFullName, &FindData);
-		if (hFile)
-		{
-			_tcscpy(pFullName, FindData.cFileName);
-		}
-		FindClose(hFile);
 		cmd_free(pszPathExt);
 		return TRUE;
 	}
@@ -199,12 +196,6 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	{
 		if (SearchForExecutableSingle(pFileName, pFullName, pszPathExt, pCh))
 		{
-			hFile = FindFirstFileW(pFullName, &FindData);
-			if (hFile)
-			{
-				_tcscpy(pFullName, FindData.cFileName);
-			}
-			FindClose(hFile);
 			cmd_free(pszPath);
 			cmd_free(pszPathExt);
 			return TRUE;
