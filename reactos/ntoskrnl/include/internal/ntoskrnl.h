@@ -41,8 +41,6 @@
 #define InterlockedAnd               _InterlockedAnd
 
 #include "ke.h"
-#include "i386/mm.h"
-#include "i386/v86m.h"
 #include "ob.h"
 #include "mm.h"
 #include "ex.h"

@@ -5,8 +5,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 
-#ifdef _M_IX86
-
 struct _EPROCESS;
 PULONG MmGetPageDirectory(VOID);
 
@@ -29,7 +27,5 @@ PULONG MmGetPageDirectory(VOID);
 
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
-
-#endif
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */
