@@ -23,10 +23,6 @@
 #ifndef _ARC_FILTER_DEFS_
 #define _ARC_FILTER_DEFS_
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -23,10 +23,6 @@
 #ifndef __WINDDI_H
 #define __WINDDI_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __VIDEO_H
 #error video.h cannot be included with winddi.h
 #else

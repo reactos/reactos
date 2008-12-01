@@ -24,10 +24,6 @@
 #define __TVOUT_H
 
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #if _MSC_VER > 1000
 #pragma once
 #endif

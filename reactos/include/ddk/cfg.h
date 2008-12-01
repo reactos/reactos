@@ -23,10 +23,6 @@
 #ifndef _CFG_INCLUDED_
 #define _CFG_INCLUDED_
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

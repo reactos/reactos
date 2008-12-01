@@ -23,10 +23,6 @@
 #ifndef __NTDDCHGR_H
 #define __NTDDCHGR_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "ntddstor.h"
 
 #ifdef __cplusplus
