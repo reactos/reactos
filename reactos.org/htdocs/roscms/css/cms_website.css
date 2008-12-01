@@ -17,398 +17,101 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
     
-									
-										.frmeditheadline {
-											color: #5984C3;
-											font-weight: bold;
-											font-size: 120%;
-											padding-right: 25px;
-										}
-										
-										.frmeditheader {
-											color: #00681C;
-											font-weight: bold;
-										}												
-	
-		.roscms_container {
-			position:				relative;
-			top:					0px; 
-			left:					0px;
-			min-width: 350px;
-		}
-	
-		.datatable {
-			/*border:1px dashed red;*/
-			overflow: 				hidden;
-			min-width: 350px;
-			width: 100%;
-			cursor: pointer;
-			table-layout: fixed; /* without this, IE's trident engine went nuts and forget about "overflow" and "white-space" !!! */
-		}
-		
-		.datatable tr.head th,
-		.datatable tr.head {
-			background-image:   none;
-			background:         #5984C3;
-			color:				#FFFFFF;
-			font-family: 		Verdana, Arial, Helvetica, sans-serif;
-			/*font-size:			80%;*/
-			font-style:			normal;
-			text-align:         left;
-			cursor: default;
-		}
-		
-		.datatable tr.new td,
-		.datatable tr.draft td,
-		.datatable tr.transg td,
-		.datatable tr.transb td,
-		.datatable tr.transr td,
-		.datatable tr.unknown td,
-		.datatable tr.odd td,
-		.datatable tr.even td {
-			color:				#000000;
-			font-family: 		Verdana, Arial, Helvetica, sans-serif;
-			font-style:			normal;	
-			border-bottom:		1px solid #bbb;
-			border-bottom-width: 	1px;
-			background-image:   	none;
-			overflow: 				hidden;
-			border-bottom-style: 	solid;
-			border-bottom-color: 	#bbbbbb;
-			/*font-size: 			80%;*/
-			empty-cells: 		show;
-			
-			
-			empty-cells: 		show;
-			/*white-space: 		nowrap;*/
-			overflow-x: 		hidden;
-			overflow-y: 		hidden;
-			overflow:			hidden;
-			
-		}		
-	
-		.datatable tr.odd td,
-		.datatable tr.odd {
-			background-color: #E2E2E2;
-		}
-		.datatable tr.even td,
-		.datatable tr.even {
-			background-color: #EEEEEE;
-		}
-		
-		.datatable tr.new td,
-		.datatable tr.new {
-			background-color: #B5EDA3;
-		}
-		
-		.datatable tr.draft td,
-		.datatable tr.daft {
-			background-color: #FFE4C1;
-		}
 
-		.datatable tr.unknown td,
-		.datatable tr.unknown {
-			background-color: #FFCCFF;
-		}
-		
-		.datatable tr.transg td,
-		.datatable tr.transg {
-			background-color: #A3EDB4;
-		}
+.editor LABEL,
+.editor H3 { display: block; color: #5984C3; font-weight: bold; font-size: larger; padding-right: 25px; }
+.editor LABEL.normal { display: inline; color: black; font-size: 1em; padding-right: 0px; }
 
-		.datatable tr.transb td,
-		.datatable tr.transb {
-			background-color: #D6CAE4;
-		}
-		
-		.datatable tr.transr td,
-		.datatable tr.transr {
-			background-color: #FAA5A5;
-		}
-		
-	
-		.cMark {
-			width: 30px;
-			text-align:         right;
-			/*max-width:			50px;*/
-			/* border: 1px dashed red; */
-		}
-		
-		.cStar {
-			/*overflow:			hidden;*/
-			width: 				18px;
-			/* border: 1px dashed red; */
-		}
-	
-		.cCid {
-			width: 				180px;
-			overflow: 			hidden;
-			/* border: 1px dashed red; */
-		}
-	
-		.cExtraCol {
-			width: 				75px;
-			overflow: 			hidden;
-			/* border: 1px dashed red; */
-		}
-		
-		.cRev {
-			/*width: 40%; */
-			overflow: hidden;
-			/* border: 1px dashed red; */
-		}
-		
-		.cDate {
-			width: 				90px;
-			overflow: 			hidden;
-			/* border: 1px dashed red; */
-		}
-	
-		.cSpace {
-			width: 10px;
-			overflow: hidden;
-			/* border: 1px dashed red; */
-		}
-		
-		.tcp { /*table content preview*/
-			color: #777777;
-		}
-		
-		.cell-height {
-			overflow: hidden;
-			white-space: nowrap;
-			/*height: 14px;*/
-			display: block;
-			vertical-align: middle;
-			text-align: left;
-			width: 100%;
-			float: left;
-		}
-		
-		.cStarOn {
-			/*background:			url('images/star_on.gif') no-repeat left;
-			display: 			block;*/
-			border: 0px;
-			background-x-position: 	1px;
-			background-y-position: 	3px;
-			background-repeat: 		no-repeat;
-			background-image: 		url('images/star_on.gif');
-			cursor: pointer;
-		}
-		
-		.cStarOff {
-			border: 0px;
-			background-x-position: 	1px;
-			background-y-position: 	3px;
-			background-repeat: 		no-repeat;
-			background-image: 		url('images/star_off.gif');
-			cursor: pointer;
-		}
-		
-		.tabselect {
-			/*font-size: 80%;	*/
-			padding-top: 4px;
-			padding-right: 0px;
-			padding-bottom: 2px;
-			padding-left: 0px;
-			background-color: #C9DAF8;
-		}
-		
-		.listxofy {
-			float:right;
-			text-align:right;
-			padding-top:2px;
-		}
-		
-		.tableswhitespace {		
-			font-size: 			80%;
-			text-align: 		center;
-			padding-top: 		0px;
-			padding-right: 		20px;
-			padding-bottom:		0px;
-			padding-left: 		20px;
-			/*height:				50px;*/
-			background-color:	#FFFFFF;
-		}
-				
-		.bubble_bg {
-			background:#C9DAF8 none repeat scroll 0%;
-			/*margin-bottom:0.6em;*/
-		}
-		.rounded_ul {
-			background:transparent url(images/ul.gif) no-repeat scroll left top;
-		}
-		.rounded_ur {
-			background:transparent url(images/ur.gif) no-repeat scroll right top;
-		}
-		.rounded_ll {
-			background:transparent url(images/ll.gif) no-repeat scroll left bottom;
-		}
-		.rounded_lr {
-			background:transparent url(images/lr.gif) no-repeat scroll right bottom;
-		}
-		.bubble {
-			padding:8px;
-		}
-		
-		
-		.subma {
-			background:#C9DAF8 none repeat scroll 0%;
-		}
-		.submb {
-			background: #FFFFFF none repeat scroll 0%;
-		}
-	
-		.tabmenu {
-			margin-top: 10px;
-		}
-		
-		.subm1 {
-			background:transparent url(images/ul.gif) no-repeat scroll left top;
-		}
-		.subm2 {
-			background:transparent url(images/ll.gif) no-repeat scroll left bottom;
-			padding-top: 3px;
-			padding-bottom: 3px;
-			padding-left: 10px;
-			color: #006090;
-			text-decoration: underline;
-			cursor: pointer;
-		}
-		.subm3 {
-			color: #006090;
-			cursor: pointer;
-		}
-		
-		
-		.laba {
-			background: #C9DAF8 none repeat scroll 0%;
-			width: 140px;
-		}
-		
-		.lab1 {
-			background:transparent url(images/ul.gif) no-repeat scroll left top;
-		}
-		.lab2 {
-			background:transparent url(images/ll.gif) no-repeat scroll left bottom;
-		}
-		.lab3 {
-			background:transparent url(images/ur.gif) no-repeat scroll right top;
-		}
-		.lab4 {
-			background:transparent url(images/lr.gif) no-repeat scroll right bottom;
-		}
+/* edit entry (information on top) */
+.revDetail { color: #00681C; font-weight: bold;}
 
-		.labtitel {
-			cursor:	pointer;
-			padding-top: 2px;
-			padding-left: 4px;
-			padding-right: 4px;
-		}
-		.labcontent {
-			padding-bottom: 4px;
-			padding-left: 4px;
-			padding-right: 4px;
-		}
-		
-		.lablinks {
-			background: #FFFFFF none repeat scroll 0%;
-			padding-top: 3px;
-			padding-bottom: 3px;
-			padding-left: 10px;
-			padding-right: 3px;
-			text-decoration: underline;
-		}
+#roscms_container { position: relative; top: 0px; left: 0px; min-width: 350px; border: 1px dashed white; z-index: 2; }
 
-		.lablinks2 {
-			background: #FFFFFF none repeat scroll 0%;
-			padding-top: 3px;
-			padding-bottom: 3px;
-			padding-left: 10px;
-			padding-right: 3px;
-		}
+/* entryTable */
+#entryTable { overflow: hidden; min-width: 350px; width: 100%; font-family: Verdana, Arial, Helvetica, sans-serif; font-style: normal; }
+#entryTable THEAD { background: #5984C3; color: white; text-align: left; }
+#entryTable TBODY { cursor: pointer; }
+#entryTable TBODY TD { color: black; border-bottom: 1px solid #bbb; overflow: hidden; empty-cells: show; }
 
-		.filterbar {
-			padding-bottom: 5px;
-			border-bottom: 1px;
-			border-bottom-style: solid;
-			border-bottom-color: #bbbbbb;
-		}
-		
-		.filterbar2 {
-			padding-top: 4px;
-		}
-		
-		.filterbutton {
-			/*border: 1px solid #bbbbbb;*/
-			padding-top: 2px;
-			padding-bottom: 2px;
-			padding-right: 3px;
-			padding-left: 3px;
-			cursor:pointer;
-			color:#006090;
-		}
-		
-		.tfind {
-			color:#999999;
-		}
-		
-		.infobox {
-			background: #FAD163 none repeat scroll 0%;
-			width: 400px;
-		}
-		
-		.infoboxc {
-			padding-top: 4px;
-			padding-bottom: 4px;
-			padding-left: 4px;
-			padding-right: 4px;
-			text-align: center;;
-		}
-		
-		.l {
-			text-decoration:underline;
-			color: #006090;
-			font-family: Verdana, Arial, Helvetica, sans-serif;
-			font-style: normal;
-			cursor: pointer;
-		}
-		
-		
-		/* data_edit */
+/* row colors */
+#entryTable .odd TD { background-color: #E2E2E2; }
+#entryTable .even TD { background-color: #EEEEEE; }
+#entryTable .new TD { background-color: #B5EDA3; }
+#entryTable .draft TD { background-color: #FFE4C1; }
+#entryTable .unknown TD { background-color: #FFCCFF; }
+#entryTable .transg TD { background-color: #A3EDB4; }
+#entryTable .transb TD { background-color: #D6CAE4; }
+#entryTable .transr TD { background-color: #FAA5A5; }
 
-		.edittagbody {
-			border-bottom: 1px solid #bbb; 
-			border-bottom-width: 1px; 
-			border-right: 1px solid #bbb; 
-			border-right-width: 1px; 
-			background: #F2F2F2 none repeat scroll 0%;
-		}
-		.edittagbody2 {
-			margin:10px;
-		}
+/* Columns: Checkboxes | Star | Name | | ... | Date */
+.cMark { width: 30px; }
+.cStar { width: 18px; }
+.cCid { width: 180px; }
+.cSpace { width: 10px; }
+.cExtraCol { width: 75px; }
+.cDate { width: 90px; }
 
-		.detailbody {
-			background: #FAE7B2 none repeat scroll 0%; 
-			width: 100%; 
-			height: 30px; 
-			vertical-align: middle;
-		}
-		
-		.detailmenubody {
-			padding: 5px; 
-			font-size: 105%; 
-			text-decoration:none;
-		}
-		
-		.detailmenu {
-			color: #006090;
-			text-decoration: underline;
-			cursor: pointer;
-		}
-		
-		.frmeditbutton {
-			cursor:pointer;
-			color:#006090;
-		}
-		
+/*table content preview */
+.tcp { color: #777777; }
+
+.cell-height { white-space: nowrap; display: block; vertical-align: middle; text-align: left; width: 100%; float: left;}
+
+.cStarOn { border: 0px; background: transparent url("../images/star_on.gif") no-repeat 3px 1px; }
+.cStarOff { border: 0px; background: transparent url("../images/star_off.gif") no-repeat 3px 1px; }
+
+.tabselect { padding: 4px 0px 2px 0px; background-color: #C9DAF8; }
+
+.tableswhitespace { font-size: smaller; text-align: center; padding: 0px 20px; background-color: white; }
+
+#bubble_bg { background-color: #C9DAF8; }
+
+.corner_TL { background: transparent url("../images/ul.gif") no-repeat scroll left top; }
+.corner_TR { background: transparent url("../images/ur.gif") no-repeat scroll right top; padding: 3px 6px 1px 6px; }
+.corner_BL { background: transparent url("../images/ll.gif") no-repeat scroll left bottom; }
+.corner_BR { background: transparent url("../images/lr.gif") no-repeat scroll right bottom; padding: 3px 6px 1px 6px; }
+
+#bubble { padding:8px; }
+
+.subma { background-color: #C9DAF8; }
+.submb { background-color: white; }
+
+.leftMenu { margin-top: 10px; }
+
+/* selected entry on left menu */
+.subm1 { background: transparent url("../images/ul.gif") no-repeat scroll left top; }
+.subm2 { background: transparent url("../images/ll.gif") no-repeat scroll left bottom; padding: 3px 0px 3px 10px; color: #006090; text-decoration: underline; cursor: pointer; }
+
+.leftBubble {  background-color: lightgrey; width: 140px; margin-top: 1.1em; }
+.leftBubble .title { cursor: pointer; padding: 0px 4px; }
+.leftBubble .content { margin: 0px 4px; background-color: white; padding: 3px; }
+
+/* bubble colors */
+#quickinfo { background-color: #FFD4BC;}
+#quickinfo .content { color: black;}
+#quickinfo .content SPAN { color: #FF6600;}
+#smartfilter { background-color: #B5EDA3;}
+#smartfilter .content { color: #009900;}
+#userlabel { background-color: #DFD3EC;}
+#userlabel .content { color: #8868AC;}
+
+.filterbar { padding-bottom: 5px; border-bottom: 1px solid #bbbbbb; }
+.filterbar2 { padding-top: 4px;}
+.filterbutton { padding: 2px 3px; cursor: pointer; color:#006090; }
+#txtfind { color:#999999; }
+
+#alertbox { visibility: hidden; background: #FAD163; width: 400px; margin: 8px auto 5px auto; text-align: center;}
+#alertboxc { padding: 4px; font-weight: bold; }
+
+.button { text-decoration: underline; color: #006090; font-family: Verdana, Arial, Helvetica, sans-serif; font-style: normal; cursor: pointer; }
+
+/* ### Editor ### */
+
+#frmedittagsc { border-bottom: 1px solid #bbb; border-right: 1px solid #bbb; background: #F2F2F2; display: none; }
+#frmedittagsc2 { margin: 10px; }
+
+/* detail tabs */
+.detailbody { background: #FAE7B2; width: 100%; height: 30px; vertical-align: middle; }
+.detailmenubody { padding: 5px; font-size: 105%; text-decoration: none;}
+.detailmenu { color: #006090; text-decoration: underline; cursor: pointer; }
+
+.frmeditbutton { cursor:pointer; color:#006090; }

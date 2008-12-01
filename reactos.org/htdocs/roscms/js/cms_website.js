@@ -66,7 +66,7 @@ function setRowColor( num, color )
 
 
 /**
- * @FILLME
+ * colors a rows background by status
  */
 function setRowColorStatus( num, status )
 {
@@ -166,7 +166,7 @@ function selectAll( status )
 
 
 /**
- * @FILLME
+ * returns a list with selected rows in the entry table
  */
 function selectedEntries( )
 {
@@ -292,7 +292,7 @@ function selectType( type )
 
 
 /**
- * @FILLME
+ * set or reset search filter (in filter loading process)
  *
  * @param object objid
  * @param string objval
@@ -433,13 +433,13 @@ function addUserFilter( uf_type, uf_str )
     try {
       uf_name = window.prompt("Input a new Label name:", "");
       uf_str = 'a_is_'+ beautifystr(uf_name);
-      uf_objid = 'lablinks3';
+      uf_objid = 'labtitel3c';
     } catch (e) {}
   }
   else {
     try {
       uf_name = window.prompt("Input a new Smart Filter name:", "");
-      uf_objid = 'lablinks2';
+      uf_objid = 'labtitel2c';
     } catch (e) {
     }
   }
@@ -469,11 +469,11 @@ function deleteUserFilter( uf_id, uf_type, uf_name )
 
   if (uf_type == 'label') {
     uf_check = confirm("Do you want to delete Label '"+uf_name+"' ?");
-    uf_objid = 'lablinks3';
+    uf_objid = 'labtitel3c';
   }
   else {
     uf_check = confirm("Do you want to delete Smart Filter '"+uf_name+"' ?");
-    uf_objid = 'lablinks2';
+    uf_objid = 'labtitel2c';
   }
 
   if (uf_check == true) {
@@ -493,20 +493,20 @@ function loadUserFilter( type )
   var uf_objid;
 
   if (type == 'label') {
-    uf_objid = 'lablinks3';
+    uf_objid = 'labtitel3c';
   }
   else {
-    uf_objid = 'lablinks2';
+    uf_objid = 'labtitel2c';
   }
 
-  document.getElementById(uf_objid).innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." width="13" height="13" /></div>';
+  document.getElementById(uf_objid).innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
   makeRequest('?page=data_out&d_f=text&d_u=ufs&d_val=load&d_val2='+encodeURIComponent(type), 'ufs', uf_objid, 'html', 'GET', '');
 }
 
 
 
 /**
- * @FILLME
+ * toggles arrow right/bottom
  *
  * @param string objid affected object
  */
@@ -525,7 +525,7 @@ function TabOpenClose( objid )
 
 
 /**
- * @FILLME
+ * toggles arrow right/bottom and saves the status in a cookie
  *
  * @param string objid affected object
  */
@@ -593,13 +593,13 @@ function readCookie( name )
 
 
 /**
- * @FILLME
+ * loads a user filter setting
  *
  * @param string ufiltstr
  * @param int ufilttype
  * @param string ufilttitel
  */
-function tblUserFilter( ufiltstr, ufilttype, ufilttitel )
+function selectUserFilter( ufiltstr, ufilttype, ufilttitel )
 {
   var tentrs = selectedEntries().split("|");
 
@@ -676,8 +676,8 @@ function loadEntryTable( objevent )
 
     // deactivate alert-timer
     window.clearTimeout(alertactiv); 
-    document.getElementById('alertb').style.visibility = 'hidden';
-    document.getElementById('alertbc').innerHTML = '&nbsp;';
+    document.getElementById('alertbox').style.visibility = 'hidden';
+    document.getElementById('alertboxc').innerHTML = '&nbsp;';
 
     // deselect all table entries
     selectAll(false); 
@@ -743,8 +743,8 @@ function reloadEntryTableWithOffset( offset )
 {
   // deactivate alert-timer
   window.clearTimeout(alertactiv);
-  document.getElementById('alertb').style.visibility = 'hidden';
-  document.getElementById('alertbc').innerHTML = '&nbsp;';
+  document.getElementById('alertbox').style.visibility = 'hidden';
+  document.getElementById('alertboxc').innerHTML = '&nbsp;';
 
   // deselect all table entries
   selectAll(false); 
@@ -772,7 +772,7 @@ function loadEntryTableWithOffset( offset )
 
 
 /**
- * @FILLME
+ * reloads the entry table (maybe selected editor before)
  */
 function reloadEntryTable( )
 {
@@ -783,8 +783,8 @@ function reloadEntryTable( )
 
   // deactivate alert-timer
   window.clearTimeout(alertactiv); 
-  document.getElementById('alertb').style.visibility = 'hidden';
-  document.getElementById('alertbc').innerHTML = '&nbsp;';
+  document.getElementById('alertbox').style.visibility = 'hidden';
+  document.getElementById('alertboxc').innerHTML = '&nbsp;';
 
   // deselect all table entries
   selectAll(false);
@@ -806,8 +806,8 @@ function showEditor( )
 
   // deactivate alert-timer
   window.clearTimeout(alertactiv);
-  document.getElementById('alertb').style.visibility = 'hidden';
-  document.getElementById('alertbc').innerHTML = '&nbsp;';
+  document.getElementById('alertbox').style.visibility = 'hidden';
+  document.getElementById('alertboxc').innerHTML = '&nbsp;';
 
   // deselect all table entries
   selectAll(false); 
@@ -836,7 +836,7 @@ function loadEditor( objevent, entryid )
 
     case 'diffentry':
       showEditor();
-      document.getElementById('frmedithead').innerHTML = '<span class="l" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <b>Compare two Entries</b>';
+      document.getElementById('frmedithead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Compare two Entries</strong>';
       break;
 
     default:
@@ -862,13 +862,13 @@ function loadEditor( objevent, entryid )
         roscms_prev_page = roscms_current_page;
         roscms_current_page = objevent;
 
-        document.getElementById('frmedithead').innerHTML = '<span class="l" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <b>Edit Entry</b>';
+        document.getElementById('frmedithead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <b>Edit Entry</b>';
 
         // enable autosave
         autosave_timer = window.setTimeout("tryAutosave()", autosave_coundown);
 
         // loading screen:
-        document.getElementById('editzone').innerHTML = '<div style="background:#FFFFFF; border-bottom: 1px solid #bbb; border-bottom-width: 1px; border-right: 1px solid #bbb; border-right-width: 1px;"><div style="margin:10px;"><div style="width:95%;"><br /><br /><center><img src="images/ajax_loading.gif" alt="loading ..." width="13" height="13" />&nbsp;&nbsp;loading ...</center><br /><br /></div></div></div>';
+        document.getElementById('editzone').innerHTML = '<div style="background:white; border-bottom: 1px solid #bbb; border-right: 1px solid #bbb;margin:10px;padding: 2em 0px;width:95%;text-align: center;"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px;height:13px;" />&nbsp;&nbsp;loading ...</div>';
 
         makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl='+objevent+'&d_id='+devideids2+'&d_r_id='+devideids3+'&d_r_lang='+userlang, 'mef', 'editzone', 'html', 'GET', '');
       }
@@ -892,19 +892,19 @@ function alertboxClose( action )
 
     // close and delete
     case 0:
-      document.getElementById('alertb').style.visibility = 'hidden';
-      document.getElementById('alertbc').innerHTML = '&nbsp;';
+      document.getElementById('alertbox').style.visibility = 'hidden';
+      document.getElementById('alertboxc').innerHTML = '&nbsp;';
       break;
 
     // close
     case 1:
-      document.getElementById('alertb').style.visibility = 'hidden';
+      document.getElementById('alertbox').style.visibility = 'hidden';
       alertactiv = window.setTimeout("alertboxClose(2)", 500);
       break;
 
     // open
     default:
-      document.getElementById('alertb').style.visibility = 'visible';
+      document.getElementById('alertbox').style.visibility = 'visible';
       alertactiv = window.setTimeout("alertboxClose(0)", 6000);
       break;
   }
@@ -920,8 +920,8 @@ function alertboxClose( action )
 function alertbox( text )
 {
   window.clearTimeout(alertactiv);
-  document.getElementById('alertb').style.visibility = 'visible';
-  document.getElementById('alertbc').innerHTML = '<b>'+text+'</b>';
+  document.getElementById('alertbox').style.visibility = 'visible';
+  document.getElementById('alertboxc').innerHTML = text;
   alertactiv = window.setTimeout("alertboxClose(1)", 500);
 }
 
@@ -941,7 +941,7 @@ function removeFilter( objid )
 
 
 /**
- * @FILLME
+ * is another filter selected -> we need to update the possible filter values
  *
  * @param string objid
  */
@@ -1075,18 +1075,18 @@ function htmlSelectPresets( preset )
 
   // prepare selections
   var selhtml_space = ', ';
-  var selhtml_all = '<span class="l" onclick="selectAll(true)">All</span>';
-  var selhtml_none = '<span class="l" onclick="javascript:selectAll(false)">None</span>';
-  var selhtml_inv = '<span class="l" onclick="selectInverse()">Inverse</span>';
-  var selhtml_star = '<span class="l" onclick="selectStars(true)">Starred</span>';
-  var selhtml_nostar = '<span class="l" onclick="selectStars(false)">Unstarred</span>';
-  var selhtml_stable = '<span class="l" onclick="selectType(\'stable\')">Stable</span>';
-  var selhtml_new = '<span class="l" onclick="selectType(\'new\')">New</span>';
-  var selhtml_draft = '<span class="l" onclick="selectType(\'draft\')">Draft</span>';
-  var selhtml_uptodate = '<span class="l" onclick="selectType(\'transg\')">Current</span>';
-  var selhtml_outdated = '<span class="l" onclick="selectType(\'transr\')">Dated</span>';
-  var selhtml_notrans = '<span class="l" onclick="selectType(\'transb\')">Missing</span>';
-  var selhtml_unknown = '<span class="l" onclick="selectType(\'unknown\')">Unknown</span>';
+  var selhtml_all = '<span class="button" onclick="selectAll(true)">All</span>';
+  var selhtml_none = '<span class="button" onclick="javascript:selectAll(false)">None</span>';
+  var selhtml_inv = '<span class="button" onclick="selectInverse()">Inverse</span>';
+  var selhtml_star = '<span class="button" onclick="selectStars(true)">Starred</span>';
+  var selhtml_nostar = '<span class="button" onclick="selectStars(false)">Unstarred</span>';
+  var selhtml_stable = '<span class="button" onclick="selectType(\'stable\')">Stable</span>';
+  var selhtml_new = '<span class="button" onclick="selectType(\'new\')">New</span>';
+  var selhtml_draft = '<span class="button" onclick="selectType(\'draft\')">Draft</span>';
+  var selhtml_uptodate = '<span class="button" onclick="selectType(\'transg\')">Current</span>';
+  var selhtml_outdated = '<span class="button" onclick="selectType(\'transr\')">Dated</span>';
+  var selhtml_notrans = '<span class="button" onclick="selectType(\'transb\')">Missing</span>';
+  var selhtml_unknown = '<span class="button" onclick="selectType(\'unknown\')">Unknown</span>';
 
   // use for all types
   selbarstr += selhtml_all + selhtml_space
@@ -1243,9 +1243,7 @@ function saveFieldData( did, drid )
         tmp_str = tmp_str.substr(1, tmp_str.length-1); 
       }
 
-      if (document.getElementById('editstextorg'+i).value != 'new' && !document.getElementById('editstextdel'+i).checked) {
-        stext_str += document.getElementById('editstextorg'+i).value +'='+ tmp_str +'='+ document.getElementById('editstextdel'+i).checked +'|';
-      }
+      stext_str += document.getElementById('editstextorg'+i).value +'='+ tmp_str +'='+ document.getElementById('editstextdel'+i).checked +'|';
     } // end for
     stext_str = stext_str.substr(0, stext_str.length-1);
 
@@ -1260,12 +1258,9 @@ function saveFieldData( did, drid )
         tmp_str = tmp_str.substr(1, tmp_str.length-1); 
       }
 
-      if (document.getElementById('edittextorg'+i).value != 'new' && !document.getElementById('edittextdel'+i).checked) {
-        text_str += document.getElementById('edittextorg'+i).value +'='+ tmp_str +'='+ document.getElementById('edittextdel'+i).checked +'|';
-      }
+      text_str += document.getElementById('edittextorg'+i).value +'='+ tmp_str +'='+ document.getElementById('edittextdel'+i).checked +'|';
     } // end for
     text_str = text_str.substr(0, text_str.length-1);
-
     makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=alterfields2&d_id='+did+'&d_r_id='+drid+'&d_val='+stext_str+'&d_val2='+text_str, 'mef', 'editalterfields', 'html', 'GET', '');
   } // end if uf_check
 }
@@ -1277,7 +1272,7 @@ function saveFieldData( did, drid )
  */
 function addShortTextField( )
 {
-  var textcount = document.getElementById('editaddstextcount').innerHTML + 1;
+  var textcount = document.getElementById('editaddstextcount').innerHTML*1 + 1;
 
   document.getElementById('editaddstext').innerHTML += '<input type="text" name="editstext'+textcount+'" id="editstext'+textcount+'" size="25" maxlength="100" value="" />&nbsp;';
   document.getElementById('editaddstext').innerHTML += '<input type="checkbox" name="editstextdel'+textcount+'" id="editstextdel'+textcount+'" value="del" /><label for="editstextdel'+textcount+'">delete?</label>';
@@ -1292,7 +1287,7 @@ function addShortTextField( )
  */
 function addTextField( )
 {
-  var textcount = document.getElementById('editaddtextcount').innerHTML + 1;
+  var textcount = document.getElementById('editaddtextcount').innerHTML*1 + 1;
 
   document.getElementById('editaddtext').innerHTML += '<input type="text" name="edittext'+textcount+'" id="edittext'+textcount+'" size="25" maxlength="100" value="" />&nbsp;';
   document.getElementById('editaddtext').innerHTML += '<input type="checkbox" name="edittextdel'+textcount+'" id="edittextdel'+textcount+'" value="del" /><label for="edittextdel'+textcount+'">delete?</label>'
@@ -1441,7 +1436,7 @@ function getEditorTexts( )
     poststr += "&plmsum="+document.getElementById("elmcount").className;
     
     for (var i=1; i <= document.getElementById("elmcount").className; i++) {
-      poststr += "&pdtext"+i+"=" + encodeURIComponent(document.getElementById("edtext"+i).innerHTML);
+      poststr += "&pdtext"+i+"=" + encodeURIComponent(document.getElementById("textname"+i).innerHTML);
 
       // get the content from TinyMCE
       instatinymce = ajaxsaveContent("elm"+i); 
@@ -1452,7 +1447,6 @@ function getEditorTexts( )
         poststr += "&plm"+i+"=" + encodeURIComponent(document.getElementById("elm"+i).value);
       }
     }
-
     return poststr;
   }
   catch (e) {
@@ -1474,14 +1468,15 @@ function saveAsDraft( did, drid )
 {
   document.getElementById("bsavedraft").disabled = true;
 
-  addOrReplaceDraft(did, drid);
+  if (addOrReplaceDraft(did, drid)) {
 
-  // destroy old rich text editor instances
-  rtestop(); 
+    // destroy old rich text editor instances
+    rtestop(); 
 
-  loadEntryTableWithOffset(roscms_current_tbl_position);
-  window.clearTimeout(autosave_timer);
-  alertbox('Draft saved');
+    loadEntryTableWithOffset(roscms_current_tbl_position);
+    window.clearTimeout(autosave_timer);
+    alertbox('Draft saved');
+  }
 }
 
 
@@ -1496,7 +1491,14 @@ function addOrReplaceDraft( did, drid )
 {
   var poststr = getEditorTexts();
 
-  makeRequest('?page=data_out&d_f=text&d_u=asi&d_fl=new&d_id='+encodeURIComponent(did)+'&d_r_id='+encodeURIComponent(drid)+'&d_r_lang='+encodeURIComponent(document.getElementById("mefrlang").innerHTML)+'&d_r_ver='+encodeURIComponent(document.getElementById("mefrverid").innerHTML)+'&d_val='+encodeURIComponent(document.getElementById("estextcount").className)+'&d_val2='+encodeURIComponent(document.getElementById("elmcount").className)+'&d_val3=draft&d_val4='+encodeURIComponent(document.getElementById("entryeditdynnbr").innerHTML), 'asi', 'mefasi', 'html', 'POST', poststr.substr(1));
+  if (poststr != false) {
+    makeRequest('?page=data_out&d_f=text&d_u=asi&d_fl=new&d_id='+encodeURIComponent(did)+'&d_r_id='+encodeURIComponent(drid)+'&d_r_lang='+encodeURIComponent(document.getElementById("mefrlang").innerHTML)+'&d_r_ver='+encodeURIComponent(document.getElementById("mefrverid").innerHTML)+'&d_val='+encodeURIComponent(document.getElementById("estextcount").className)+'&d_val2='+encodeURIComponent(document.getElementById("elmcount").className)+'&d_val3=draft&d_val4='+encodeURIComponent(document.getElementById("entryeditdynnbr").innerHTML), 'asi', 'mefasi', 'html', 'POST', poststr.substr(1));
+    return true;
+  }
+  else {
+    alertbox('Cannot save draft.');
+    return false;
+  }
 }
 
 
@@ -1810,7 +1812,7 @@ function htmlEntryTableHeader( xtrtblcol )
 
   xtrtblcols2 = xtrtblcol.split('|');
 
-  lstHeader = '<table class="datatable" id="rpmt" name="rpmt" cellpadding="1" cellspacing="0">'
+  lstHeader = '<table id="entryTable" cellpadding="1" cellspacing="0">'
     + '<thead><tr class="head">'
     + '<th scope="col" class="cMark">&nbsp;</th>'
     + '<th scope="col" class="cStar">&nbsp;</th>'
@@ -1874,7 +1876,7 @@ function htmlEntryTableRow( bnr, bclass, bid, bdname, btype, brid, brver, brlang
     + '<td class="tstar_'+bid+'|'+brid+'-'+bstarid+'"><div id="bstar_'+(bnr+1)+'" class="'+bstar+'">&nbsp;</div></td>'
     + '<td class="rv'+bid+'|'+brid+'">'+bdname+'</td>'
     + '<td class="rv'+bid+'|'+brid+'">&nbsp;</td>'
-    + '<td class="rv'+bid+'|'+brid+'"><div class="cell-height">';
+    + '<td class="rv'+bid+'|'+brid+'" class="cell-height">';
 
   // not found -> readonly
   if (security.indexOf("write") < 0 ) { 
@@ -1884,10 +1886,11 @@ function htmlEntryTableRow( bnr, bclass, bid, bdname, btype, brid, brver, brlang
   try {
     tmpdesc = unescape(decodeURI(bdesc));
     tmpdesc = tmpdesc.replace(/\+/g, ' ');
+    if (tmpdesc.length == 0) tmpdesc = '&nbsp;';
   } catch (e) {
     tmpdesc = '<em>check the title or description field, it contains non UTF-8 chars</em>';
   }
-  lstBody += '<span class="tcp">'+tmpdesc+'</span></div></td>';
+  lstBody += '<span class="tcp">'+tmpdesc+'</span></td>';
 
   if (xtrtblcol != '' && xtrtblcols2.length > 1) {
     for (var i=1; i < xtrtblcols2.length-1; i++) {
@@ -2398,12 +2401,12 @@ function buildEntryTable( http_request, objid )
 
     // table navigation next page
     if (xview[0].getAttributeNode("curpos").value >= roscms_intern_entry_per_page*2) {
-      mtblnavstr += '<span class="l" onclick="reloadEntryTableWithOffset(0)"><b>&laquo;</b></span>&nbsp;&nbsp;';
+      mtblnavstr += '<span class="button" onclick="reloadEntryTableWithOffset(0)"><strong>&laquo;</strong></span>&nbsp;&nbsp;';
     }
 
     // table navigation previous page
     if (xview[0].getAttributeNode("curpos").value > 0) {
-      mtblnavstr += '<span class="l" onclick="reloadEntryTableWithOffset(';
+      mtblnavstr += '<span class="button" onclick="reloadEntryTableWithOffset(';
       if (xview[0].getAttributeNode("curpos").value-roscms_intern_entry_per_page*1 >= 0) {
         mtblnavstr += xview[0].getAttributeNode("curpos").value-roscms_intern_entry_per_page*1;
       }
@@ -2427,13 +2430,13 @@ function buildEntryTable( http_request, objid )
 
     // display navigation
     if (xview[0].getAttributeNode("curpos").value < xview[0].getAttributeNode("pagemax").value-roscms_intern_entry_per_page*1) {
-      mtblnavstr += '&nbsp;&nbsp;<span class="l" onclick="reloadEntryTableWithOffset(';
+      mtblnavstr += '&nbsp;&nbsp;<span class="button" onclick="reloadEntryTableWithOffset(';
       mtblnavstr += xview[0].getAttributeNode("curpos").value*1+roscms_intern_entry_per_page*1;
       mtblnavstr += ')"><b>Next &rsaquo;</b></span>';
     }
 
     if (xview[0].getAttributeNode("curpos").value < (xview[0].getAttributeNode("pagemax").value*1-roscms_intern_entry_per_page*2)) {
-      mtblnavstr += '&nbsp;&nbsp;<span class="l" onclick="reloadEntryTableWithOffset(';
+      mtblnavstr += '&nbsp;&nbsp;<span class="button" onclick="reloadEntryTableWithOffset(';
       mtblnavstr += xview[0].getAttributeNode("pagemax").value*1-roscms_intern_entry_per_page*1;
       mtblnavstr += ')"><b>&raquo;</b></span>';
     }

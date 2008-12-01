@@ -30,18 +30,12 @@ abstract class HTML
   protected $css_files=array(); 
   protected $js_files=array(); 
 
-  public function __construct( $page_title = '', $page_css = 'roscms' )
+  public function __construct( $page_title = '' )
   {
     // get page title and register css files
     $this->title = $page_title;
-    if ($page_css == 'roscms'){
-      $this->register_css('style_v3.css');
-    }
-    else {
-      $this->register_css('style.css');
-      $this->register_css('logon.css');
-    }
-    
+    $this->register_css('style.css');
+
     // this page was generated in ...
     $roscms_gentime = explode(' ',microtime()); 
     $this->page_start = $roscms_gentime[1] + $roscms_gentime[0]; 
@@ -113,13 +107,11 @@ abstract class HTML
       <body>
       <div id="top">
         <div id="topMenu"> 
-          <p style="color: white;text-align: center;"> 
-            <a href="'.$roscms_intern_webserver_pages.'?page=index">'.$roscms_langres['Home'].'</a> <span>|</span>
-            <a href="'.$roscms_intern_webserver_pages.'?page=about">'.$roscms_langres['Info'].'</a> <span>|</span>
-            <a href="'.$roscms_intern_webserver_pages.'?page=community">'.$roscms_langres['Community'].'</a> <span>|</span>
-            <a href="'.$roscms_intern_webserver_pages.'?page=dev">'.$roscms_langres['Dev'].'</a> <span>|</span>
-            <a href="'.$roscms_intern_webserver_roscms.'?page=user">'.$roscms_langres['myReactOS'].'</a>
-          </p>
+          <a href="'.$roscms_intern_webserver_pages.'?page=index">'.$roscms_langres['Home'].'</a> <span>|</span>
+          <a href="'.$roscms_intern_webserver_pages.'?page=about">'.$roscms_langres['Info'].'</a> <span>|</span>
+          <a href="'.$roscms_intern_webserver_pages.'?page=community">'.$roscms_langres['Community'].'</a> <span>|</span>
+          <a href="'.$roscms_intern_webserver_pages.'?page=dev">'.$roscms_langres['Dev'].'</a> <span>|</span>
+          <a href="'.$roscms_intern_webserver_roscms.'?page=user">'.$roscms_langres['myReactOS'].'</a>
         </div>
       </div>');
   } // end of member function header

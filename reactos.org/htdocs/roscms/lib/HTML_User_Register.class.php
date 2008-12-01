@@ -59,21 +59,17 @@ class HTML_User_Register extends HTML_User
 
     echo_strip('
       <h1>Register to'. $rdf_name.'</h1>
-      <div class="u-h1">Register to '.$rdf_name.'</div>
-      <span class="u-h2">Become a member of the '.$rdf_name.' Community. </span>  The  <span class="u-h2">'.$rdf_logon_system_name.'</span> account offers single sign-on for all <span class="u-h2">'.$rdf_name.'</span> web services.
+      <p>Become a member of the '.$rdf_name.' Community. The '.$rdf_logon_system_name.' account offers single sign-on for all '.$rdf_name.' web services.</p>
       <ul>
         <li>Already a member? <a href="'.$roscms_intern_page_link.'login">Login now</a>! </li>
         <li><a href="'.$roscms_intern_page_link.'login&amp;subpage=lost">Lost username or password?</a></li>
       </ul>
 
       <form action="'.$roscms_intern_page_link.'register" method="post">
-        <div>
-          <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
-            <div class="corner1">
-              <div class="corner2">
-                <div class="corner3">
-                  <div class="corner4">
-                    <div style="text-align:center; padding: 4px;">');
+        <div class="bubble">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>');
 
     if (isset($_POST['registerpost']) && $_POST['username'] != "" && strlen($_POST['username']) >= $rdf_register_user_name_min) {
 
@@ -165,7 +161,7 @@ class HTML_User_Register extends HTML_User
           // send the mail
           if (Email::send($_POST['useremail'], $subject, $message)) {
             echo_strip('
-              <div class="login-title">Account registered</div>
+              <h2>Account registered</h2>
               <div>Check your email inbox (and spam folder) for the <strong>account activation email</strong> that contains the activation hyperlink.</div>');
           }
           else {
@@ -178,12 +174,11 @@ class HTML_User_Register extends HTML_User
     }
     else {
       echo_strip('
-        <div class="login-title">Register Account</div>
-        <div class="login-form">
+        <h2>Register Account</h2>
+        <div class="field">
           <label for="username"'.((isset($_POST['registerpost']) && (strlen($_POST['username']) < $rdf_register_user_name_min || strlen($_POST['username']) > $rdf_register_user_name_max || $safename === false  || substr_count($_POST['username'], ' ') >= 4 || $name_exists)) ? ' style="color:red;"' : '').'>Username</label>
-          <input name="username" type="text" class="input" tabindex="1" id="username"'.(isset($_POST['username']) ? 'value="'.$_POST['username'].'"' : '').' size="50" maxlength="50" />
-          <br />
-          <span style="color:#817A71;">uppercase letters, lowercase letters, numbers, and symbols (ASCII characters)</span>');
+          <input type="text" name="username"  tabindex="1" id="username"'.(isset($_POST['username']) ? 'value="'.$_POST['username'].'"' : '').' maxlength="50" />
+          <div class="detail">uppercase letters, lowercase letters, numbers, and symbols (ASCII characters)</div>');
 
       if (isset($_POST['registerpost']) && (strlen($_POST['username']) < $rdf_register_user_name_min || $name_exists || $safename === false || strlen($_POST['username']) > $rdf_register_user_name_max || substr_count($_POST['username'], ' ') >= 4)) {
         echo_strip('
@@ -193,9 +188,9 @@ class HTML_User_Register extends HTML_User
 
       echo_strip('
         </div>
-        <div class="login-form">
+        <div class="field">
           <label for="userpwd1"'.(isset($_POST['registerpost']) ? ' style="color:red;"' : '').'>Password</label>
-          <input name="userpwd1" type="password" class="input" tabindex="2" id="userpwd1" size="50" maxlength="50" />');
+          <input type="password" name="userpwd1" tabindex="2" id="userpwd1" maxlength="50" />');
 
       if ($safepwd === false || (isset($_POST['userpwd1']) && strlen($_POST['userpwd1']) > $rdf_register_user_name_max)) {
         echo_strip('
@@ -204,19 +199,18 @@ class HTML_User_Register extends HTML_User
       }
       else {
         echo_strip('
-          <br />
-          <span style="color:#817A71;">uppercase letters, lowercase letters, numbers, and symbols (ASCII characters)</span>');
+          <div class="detail">uppercase letters, lowercase letters, numbers, and symbols (ASCII characters)</div>');
       }
 
       echo_strip('
         </div>
-        <div class="login-form">
+        <div class="field">
           <label for="userpwd2"'.(isset($_POST['registerpost']) ? ' style="color:red;"' : '').'>Re-type Password</label>
-          <input name="userpwd2" type="password" class="input" tabindex="3" id="userpwd2" size="50" maxlength="50" />
+          <input name="userpwd2" type="password" tabindex="3" id="userpwd2" maxlength="50" />
         </div>
-        <div class="login-form">
+        <div class="field">
           <label for="useremail"'.(isset($_POST['registerpost']) && isset($_POST['useremail']) && Email::isValid($_POST['useremail']) ? ' style="color:red;"' : '').'>E-Mail</label>
-          <input name="useremail" type="text" class="input" tabindex="4" id="useremail"'.(isset($_POST['useremail']) ? 'value="' . $_POST['useremail'] .  '"' : '').' size="50" maxlength="50" />');
+          <input name="useremail" type="text" class="input" tabindex="4" id="useremail"'.(isset($_POST['useremail']) ? 'value="' . $_POST['useremail'] . '"' : '').'maxlength="50" />');
 
       if (isset($_POST['registerpost']) && $mail_exists) {
         echo_strip('
@@ -226,9 +220,9 @@ class HTML_User_Register extends HTML_User
 
       echo_strip('
         </div>
-        <div class="login-form">
+        <div class="field">
           <label for="usercaptcha"'.(isset($_POST['registerpost']) ? ' style="color:red;"' : '').'>Type the code shown</label>
-          <input name="usercaptcha" type="text" class="input" tabindex="7" id="usercaptcha" size="50" maxlength="50" />
+          <input name="usercaptcha" type="text" tabindex="7" id="usercaptcha" maxlength="50" />
           <script type="text/javascript">');echo "
           <!--
             
@@ -254,38 +248,33 @@ class HTML_User_Register extends HTML_User
 
       echo_strip('
         </div>
-        <div class="login-button">
-          <input type="submit" name="submit" value="Register" tabindex="8" />
-          <input type="button" onclick="'."window.location='".$roscms_intern_webserver_roscms."'".'" tabindex="9" value="Cancel" name="cancel" style="color:#777777;" />
+        <div class="field">
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
+          <button type="submit" name="submit">Register</button>
+          <button type="button" onclick="'."window.location='".$roscms_intern_webserver_roscms."'".'" style="color:#777777;">Cancel</button>
         </div>');
     } // end registration form
 
     echo '
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="corner_BL">
+          <div class="corner_BR"></div>
         </div>
       </div>';
 
     // print error messages
     if ($err_message != '') {
       echo_strip('
-        <div style="background: #FAD163 none repeat scroll 0%; width: 300px; margin:10px;">
-          <div class="corner1">
-            <div class="corner2">
-              <div class="corner3">
-                <div class="corner4">
-                  <div style="text-align:center; padding: 4px;font-style:bold;">');echo $err_message;echo_strip('</div>
-                </div>
-              </div>
-            </div>
+        <div class="bubble message">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>
+          <strong>');echo $err_message;echo_strip('</strong>
+          <div class="corner_BL">
+            <div class="corner_BR"></div>
           </div>
         </div>');
     }
     echo_strip('
-        </div>
       </form>');
   } // end of member function body
 

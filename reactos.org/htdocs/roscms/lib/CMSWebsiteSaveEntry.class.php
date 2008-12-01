@@ -123,7 +123,7 @@ class CMSWebsiteSaveEntry
         Tag::add($_GET['d_id'], $rev_id, 'number', $tag_value, -1);
       }
     }
-    else if ($rev_id != 0 && $type  == 'draft') {
+    elseif ($rev_id != 0 && $type  == 'draft') {
       // Update
       // first delete, then insert new (outside from this scope)
 
@@ -161,6 +161,7 @@ class CMSWebsiteSaveEntry
       $stmt=DBConnection::getInstance()->prepare("INSERT INTO data_text ( text_id , data_rev_id , text_name , text_content ) VALUES ( NULL, :rev_id, :name, :content )");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       for ($i=1; $i <= $_POST['plmsum']; $i++) { // text
+      Log::writeMedium($_POST['pdtext'.$i]);
         $stmt->bindParam('name',$_POST['pdtext'.$i],PDO::PARAM_STR);
         $stmt->bindParam('content',$_POST['plm'.$i],PDO::PARAM_STR);
         $stmt->execute();

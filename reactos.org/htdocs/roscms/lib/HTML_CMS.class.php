@@ -46,7 +46,7 @@ abstract class HTML_CMS extends HTML
     $this->register_css('cms_navigation.css');
     $this->register_js('cms_navigation.js.php');
 
-    parent::__construct( $page_title, 'roscms');
+    parent::__construct($page_title);
   }
   
   protected function build()
@@ -82,7 +82,7 @@ abstract class HTML_CMS extends HTML
 
     // get selected navigation entry
     echo_strip('
-      <div id="myReactOS" style="padding-right: 10px;">
+      <div id="myReactOS">
         <strong>'.$thisuser->name().'</strong>
         '.(($security_level > 1) ? '| SecLev: '.$security_level.' ('. $group_list .')' : '').'
         |
@@ -93,39 +93,37 @@ abstract class HTML_CMS extends HTML
         |
         <a href="'.$roscms_intern_page_link.'logout">Sign out</a>
       </div>
-      <div class="roscms_page">
-        <table id="mt" border="0" cellpadding="0" cellspacing="0" style="width:100%">
+      <div id="roscms_page">
+        <table id="mt" cellpadding="0" cellspacing="0">
           <tbody>
             <tr>
               <th class="int'.(($this->branch == 'welcome') ? '2' : '1').'" onclick="'."loadBranch('welcome')".'">
-                <div class="tc1">
-                  <div class="tc2">
-                    <div class="tc3"></div>
+                <div class="tcL">
+                  <div class="tcR">
+                    <div class="text">Welcome</div>
                   </div>
                 </div>
-                <div class="tblbl">Welcome</div>
               </th>
               <td>&nbsp;&nbsp;</td>
 
               <th class="int'.(($this->branch == 'website') ? '2' : '1').'" onclick="'."loadBranch('website')".'">
-                <div class="tc1">
-                  <div class="tc2">
-                    <div class="tc3"></div>
+                <div class="tcL">
+                  <div class="tcR">
+                    <div class="text">Website</div>
                   </div>
                 </div>
-                <div class="tblbl">Website</div>
               </th>
               <td>&nbsp;&nbsp;</td>');
 
     if ($thisuser->isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
       echo_strip('
         <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."loadBranch('user')".'">
-          <div class="tc1">
-            <div class="tc2">
-              <div class="tc3"></div>
+          <div class="tcL">
+            <div class="tcR">
+              <div class="text">User</div>
             </div>
           </div>
-          <div class="tblbl">User</div>
+
         </th>
         <td>&nbsp;&nbsp;</td>');
     }
@@ -133,22 +131,20 @@ abstract class HTML_CMS extends HTML
     if ($thisuser->securityLevel() == 3) {
       echo_strip('
         <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."loadBranch('maintain')".'">
-          <div class="tc1">
-            <div class="tc2">
-              <div class="tc3"></div>
+          <div class="tcL">
+            <div class="tcR">
+              <div class="text">Maintain</div>
             </div>
           </div>
-          <div class="tblbl">Maintain</div>
         </th>
         <td>&nbsp;&nbsp;</td>
 
         <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."loadBranch('stats')".'">
-          <div class="tc1">
-            <div class="tc2">
-              <div class="tc3"></div>
+          <div class="tcL">
+            <div class="tcR">
+              <div class="text">Statistics</div>
             </div>
           </div>
-          <div class="tblbl">Statistics</div>
         </th>
         <td>&nbsp;&nbsp;</td>');
     }
@@ -163,8 +159,8 @@ abstract class HTML_CMS extends HTML
         </tbody>
       </table>
 
-      <div class="tc2" style="background-color:#C9DAF8;">
-        <div class="submenu" style="font-family:Verdana, Arial, Helvetica, sans-serif; font-size:10px;">');
+      <div class="tcR" style="background-color:#C9DAF8;">
+        <div id="branchInfo">');
 
     switch ($this->branch) {
       case 'welcome';

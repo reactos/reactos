@@ -19,16 +19,12 @@
 
 
 /* fix IE glitch */
-.bubble_bg {
-  margin-bottom: -35px;
-}
+#bubble_bg { margin-bottom: -35px; }
 
-.filterbutton {
-  padding-top: 4px;
-  padding-bottom: 0px;
-}
+.filterbutton { padding-top: 4px; padding-bottom: 0px; }
 
 /* fix IE glitch */
-.spacer {
-  margin-bottom: -18px;
-  }
+.spacer { margin-bottom: -18px; }
+
+/* without this, IE's trident engine went nuts and forget about "overflow" and "white-space" !!! */
+#entryTable { table-layout: fixed; }

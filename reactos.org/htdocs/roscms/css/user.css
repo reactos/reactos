@@ -1,0 +1,59 @@
+    /*
+    RosCMS - ReactOS Content Management System
+    Copyright (C) 2005  Klemens Friedl <frik85@reactos.org>
+                  2008  Danny Götte <dangerground@web.de>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    */
+
+ADDRESS P { margin: 0;}
+
+#content, .contentSmall { font-size: 12px; text-align: justify; }
+#content LI { list-style-image: url("../images/bullet.png") }
+
+/* left menu */
+#leftNav { padding: 0px 10px 10px 10px; }
+#leftNav UL { margin: 0px 0px 1.5em 0px; padding: 0px; list-style-type: none; background-color: #EEEEEE; border-top: #3F3849 0px solid; border-right: #3F3849 1px solid; border-left: #3F3849 1px solid; }
+#leftNav UL LI { font-size: 13px; font-weight: bold; border-bottom: 1px solid #3f3849; }
+#leftNav UL LI A { display: block; padding: 2px 4px; color: #3F3849; text-decoration: none; }
+#leftNav UL LI A:hover { color: black; background-color: #FFCC33; }
+#leftNav H2 { margin: 0px; padding-left: 12px; border: #3F3849 1px solid; font-weight: bold; font-size: 14px; color: white; background-color: #5984c3; }
+
+/* Login Stuff */
+.bubble { margin: 10px auto; background-color: #e1eafb; width: 300px; text-align:center; }
+.bubble.message { background-color: #FAD163; margin-top: 20px; }
+.bubble H2 { color: black; font-size: 200%; font-weight:bold; padding: 5px; }
+.bubble FIELDSET { border: 1px solid lightgrey; text-align: left; margin: 20px 10px 10px 10px; padding: 10px; color:#817A71; font-size:105%; font-weight:bold;}
+
+.bubble .corner_TL { background: transparent url("../images/ul.gif") no-repeat scroll left top; }
+.bubble .corner_TR { background: transparent url("../images/ur.gif") no-repeat scroll right top; padding: 4px 4px 0px 0px; }
+.bubble .corner_BL { background: transparent url("../images/ll.gif") no-repeat scroll left bottom; }
+.bubble .corner_BR { background: transparent url("../images/lr.gif") no-repeat scroll right bottom; padding: 4px 4px 0px 0px; }
+
+.bubble .field { margin-top: 20px; margin-bottom: 20px; }
+.bubble .field LABEL { color:#817A71; display:block; float:none; font-size:105%; font-weight:bold; margin:0.7em 0pt 0.1em; }
+.bubble .field INPUT { background:#FFFADB url("../images/form-back.gif") repeat-x scroll 0%; border:1px solid #CBB945; color:#776B1B; font-size:125%; font-weight:normal; width:200px; padding:3px 7px; line-height:1; }
+.bubble .field BUTTON { font-size:120%; font-weight: bold; }
+.bubble .field SELECT { background-color:#FFFADB; border:1px solid #CBB945; color:#776B1B; font-size:115%; font-weight:normal; width:216px; padding:3px 7px; line-height: 1; }
+
+
+/* user profile */
+.bubble .field .key { color:#817A71; display:block; float:none; font-size:105%; font-weight:bold; margin:0.7em 0pt 0.1em; }
+.bubble .field .value { font-size: 130%; font-weight: bold; padding: 5px;}
+.bubble .field  UL.value { margin: 0px; }
+.bubble .field .value LI{ list-style-type: none; }
+.bubble .field .value A { font-size:95%; color:#333333 !important; }
+.bubble .field .detail { font-size: 10px;font-weight:lighter; }
+.bubble .field .u-link A { color:#333333 !important; font-size:110%; font-weight:bold; margin: 10px 0px; }

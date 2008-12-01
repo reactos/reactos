@@ -34,7 +34,8 @@ abstract class HTML_User extends HTML
    */
   public function __construct( $page_title = '')
   {
-    parent::__construct( $page_title, 'logon');
+    $this->register_css('user.css');
+    parent::__construct( $page_title );
   }
   
   protected function build()
@@ -65,21 +66,20 @@ abstract class HTML_User extends HTML
     echo_strip('
       <table style="border:0" width="100%" cellpadding="0" cellspacing="0">
         <tr style="vertical-align: top;">
-          <td style="width:147px" id="leftNav"> 
-            <div class="navTitle">Navigation</div>
-            <ol>
+          <td style="width:147px; vertical-align: top;" id="leftNav"> 
+            <h2>Navigation</h2>
+            <ul>
               <li><a href="'.$roscms_intern_webserver_pages.'en/index.html">Home</a></li>
               <li><a href="'.$roscms_intern_webserver_pages.'en/about.html">Info</a></li>
               <li><a href="'.$roscms_intern_webserver_pages.'en/community.html">Community</a></li>
               <li><a href="'.$roscms_intern_webserver_pages.'en/dev.html">Development</a></li>
               <li><a href="'.$roscms_intern_webserver_roscms.'?page=user">myReactOS</a></li>
-            </ol>
-            <br />');
+            </ul>');
 
     if ($thisuser->id() > 0) {
       echo_strip('
-        <div class="navTitle">'.$roscms_langres['Account'].'</div>
-        <ol>
+        <h2>'.$roscms_langres['Account'].'</h2>
+        <ul>
           <li title="'.$thisuser->name().'">&nbsp;Nick:&nbsp;'.substr($thisuser->name(), 0, 9).'</li>
           <li><a href="'.$roscms_intern_page_link.'my">My Profile</a></li>
           <li><a href="'.$roscms_intern_page_link.'search">User Search</a></li>
@@ -89,23 +89,21 @@ abstract class HTML_User extends HTML
       }
       echo_strip('
           <li><a href="?page=logout">'.$roscms_langres['Logout'].'</a></li>
-        </ol>
-        <br />');
+        </ul>');
     }
     else {
       echo_strip('
-        <div class="navTitle">'.$roscms_langres['Account'].'</div>
-        <ol> 
+        <h2>'.$roscms_langres['Account'].'</h2>
+        <ul> 
           <li><a href="'.$roscms_intern_page_link.'login">Login</a></li>
           <li><a href="'.$roscms_intern_page_link.'register">Register</a></li>
-        </ol>
-        <br />');
+        </ul>');
     }
 
     // Quick links
     echo_strip('
-      <div class="navTitle">Quick Links</div>
-      <ol>
+      <h2>Quick Links</h2>
+      <ul>
         <li><a href="'.$roscms_intern_webserver_pages.'forum/">Forum</a></li>
         <li><a href="'.$roscms_intern_webserver_pages.'wiki/">Wiki</a></li>
         <li><a href="'.$roscms_intern_webserver_pages.'en/about_userfaq.html">FAQ</a></li>
@@ -113,14 +111,13 @@ abstract class HTML_User extends HTML
         <li><a href="'.$roscms_intern_webserver_pages.'bugzilla/">Bugzilla</a></li>
         <li><a href="'.$roscms_intern_webserver_pages.'en/community_mailinglists.html">Mailing Lists</a></li>
         <li><a href="'.$roscms_intern_webserver_pages.'getbuilds/">Trunk Builds</a></li>
-      </ol>
-      <br />
+      </ul>
 
-      <div class="navTitle">Language</div>
-      <ol>
+      <h2>Language</h2>
+      <ul>
         <li> 
           <div style="text-align:center;"> 
-            <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$roscms_intern_webserver_roscms.'?'.$_SERVER['QUERY_STRING']."&lang=' + this.options[this.selectedIndex].value".'">
+            <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$roscms_intern_webserver_roscms.'?'.htmlentities($_SERVER['QUERY_STRING'])."&lang=' + this.options[this.selectedIndex].value".'">
               <optgroup label="current language">'); 
  
     $stmt=DBConnection::getInstance()->prepare("SELECT lang_name FROM languages WHERE lang_id = :lang_id");
@@ -135,14 +132,14 @@ abstract class HTML_User extends HTML
       
     $stmt=DBConnection::getInstance()->prepare("SELECT lang_name, lang_id, lang_name_org FROM languages ORDER BY lang_level DESC");
     $stmt->execute();
-    while ($language = $stmt->fetch()) {
+    while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
       // display original name in brackets, if a localized version is available
       if ($language['lang_name'] != $language['lang_name_org']) {
-        echo '<option value="'.$language["lang_id"].'">'.$language["lang_name_org"].' ('.$language["lang_name"].')</option>';
+        echo '<option value="'.$language['lang_id'].'">'.$language['lang_name_org'].' ('.$language['lang_name'].')</option>';
       }
       else {
-        echo '<option value="'.$language["lang_id"].'">'.$language["lang_name"].'</option>';
+        echo '<option value="'.$language['lang_id'].'">'.$language['lang_name'].'</option>';
       }
     }
 
@@ -151,10 +148,9 @@ abstract class HTML_User extends HTML
               </select>
             </div>
           </li>
-        </ol>
-        <br />
+        </ul>
       </td>
-      <td id="content">');
+      <td id="content" style="vertical-align: top;">');
   } // end of member function navigation
 
 } // end of HTML_User

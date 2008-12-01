@@ -42,7 +42,7 @@ class HTML_CMS_Website extends HTML_CMS
 
     $this->register_js('cms_website.js');
     $this->register_js('cms_website.js.php');
-    $this->register_js('diffv3.js');
+    $this->register_js('diff.js');
     $this->register_js('../editor/jscripts/tiny_mce/tiny_mce_src.js');
     $this->register_js('../editor/jscripts/mef.js');
     parent::__construct( $page_title, $page_css);
@@ -131,23 +131,18 @@ class HTML_CMS_Website extends HTML_CMS
         var exitmsg = ".'"Click Cancel to continue with RosCMS, click OK to leave RosCMS.\n\nThanks for using RosCMS!"'."
       -->
       </script>";echo_strip('
-      <div class="spacer">&nbsp;</div>
-      <div style="padding-top: 8px; padding-bottom: 5px;text-align: center">
-        <div id="alertb" class="infobox" style="visibility:hidden;">
-          <div class="lab1">
-            <div class="lab2">
-              <div class="lab3">
-                <div class="lab4">
-                  <div id="alertbc" class="infoboxc">&nbsp;</div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div id="alertbox">
+        <div class="corner_TL">
+          <div class="corner_TR"></div>
+        </div>
+        <div id="alertboxc">&nbsp;</div>
+        <div class="corner_BL">
+          <div class="corner_BR"></div>
         </div>
       </div>
 
-      <div class="roscms_container" style="border: 1px dashed white; z-index: 2;">
-        <div class="tabmenu" style="position: absolute; top: 0px; width: 150px; left: 0px; border: 0px; z-index:1;">
+      <div id="roscms_container">
+        <div class="leftMenu" style="position: absolute; top: 0px; width: 150px; left: 0px; border: 0px; z-index:1;">
           <div id="smenutab1" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc1" class="subm2" style="font-weight: bold;">New Entry</div>
@@ -217,83 +212,76 @@ class HTML_CMS_Website extends HTML_CMS
               <div id="smenutabc12" class="subm2">Archive</div>
             </div>
           </div>
-          <div style="background: #FFFFFF none repeat scroll 0%;">&nbsp;</div>
-          <div class="laba" style="background: #FFD4BC none repeat scroll 0%;">
-            <div class="lab1">
-              <div class="lab2">
-                <div class="lab3">
-                  <div class="lab4">
-                    <div class="labtitel" id="labtitel1" onclick="TabOpenCloseEx(this.id)">
-                      <img id="labtitel1i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Quick Info
-                    </div>
-                    <div class="labcontent" id="labtitel1c" style="display:block;">
-                      <div id="qiload" style="display:none; text-align:right;" class="lablinks"><img src="images/ajax_loading.gif" alt="loading ..." width="13" height="13" /></div>
-                      <div id="lablinks1" class="lablinks2"><span style="color:#FF6600;">Move the mouse over an item to get some details</span></div>
-                    </div>
-                  </div>
-                </div>
+          
+          <div class="leftBubble" id="quickinfo">
+            <div class="corner_TL">
+              <div class="corner_TR"></div>
+            </div>
+            <div class="title" id="labtitel1" onclick="TabOpenCloseEx(this.id)">
+              <img id="labtitel1i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Quick Info
+            </div>
+            <div class="content" id="labtitel1c" style="display:block;">
+              <div id="qiload" style="display:none;">
+                <img src="images/ajax_loading.gif" alt="loading ..." width="13" height="13" />
+              </div>
+              <div id="lablinks1" class="text">
+                <span>Move the mouse over an item to get some details</span>
               </div>
             </div>
-          </div>
-          <div style="background: #FFFFFF none repeat scroll 0%;">&nbsp;</div>
-          <div class="laba" style="background: #B5EDA3 none repeat scroll 0%;">
-            <div class="lab1">
-              <div class="lab2">
-                <div class="lab3">
-                  <div class="lab4">
-                    <div class="labtitel" id="labtitel2" onclick="TabOpenCloseEx(this.id)">
-                      <img id="labtitel2i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Smart Filters
-                    </div>
-                    <div class="labcontent" id="labtitel2c">
-                      <div id="lablinks2" class="lablinks2" style="color:#009900;">&nbsp;</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div class="corner_BL">
+              <div class="corner_BR"></div>
             </div>
           </div>
-          <div style="background: #FFFFFF none repeat scroll 0%;">&nbsp;</div>
-          <div class="laba" style="background: #DFD3EC none repeat scroll 0%;">
-            <div class="lab1">
-              <div class="lab2">
-                <div class="lab3">
-                  <div class="lab4">
-                    <div class="labtitel" id="labtitel3" onclick="TabOpenCloseEx(this.id)">
-                      <img id="labtitel3i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Labels
-                    </div>
-                    <div class="labcontent" id="labtitel3c">
-                      <div id="lablinks3" class="lablinks2" style="color:#8868AC;">&nbsp;</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
+          <div class="leftBubble" id="smartfilter">
+            <div class="corner_TL">
+              <div class="corner_TR"></div>
+            </div>
+            <div class="title" id="labtitel2" onclick="TabOpenCloseEx(this.id)">
+              <img id="labtitel2i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Smart Filters
+            </div>
+            <div class="content" id="labtitel2c">&nbsp;</div>
+            <div class="corner_BL">
+              <div class="corner_BR"></div>
+            </div>
+          </div>
+
+          <div class="leftBubble" id="userlabel">
+            <div class="corner_TL">
+              <div class="corner_TR"></div>
+            </div>
+            <div class="title" id="labtitel3" onclick="TabOpenCloseEx(this.id)">
+              <img id="labtitel3i" src="images/tab_open.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Labels
+            </div>
+            <div class="content" id="labtitel3c">&nbsp;</div>
+            <div class="corner_BL">
+              <div class="corner_BR"></div>
             </div>
           </div>
         </div>
 
         <div class="style1" id="impcont" style="margin-left: 150px; z-index:100;">
-          <div class="bubble_bg">
-            <div class="rounded_ll">
-              <div class="rounded_lr">
-                <div class="rounded_ul">
-                  <div class="rounded_ur">
-                    <div class="bubble" id="bub">
-                      <div id="frametable" style="border: 0px dashed white;">
-                        <div class="filterbar">
-                          <input id="txtfind" type="text" accesskey="f" tabindex="1" title="Search &amp; Filters" onfocus="'."searchFilter(this.id, this.value, 'Search &amp; Filters', true)".'" onblur="'."searchFilter(this.id, this.value, 'Search &amp; Filters', false)".'" onkeyup="getAllActiveFilters()" value="Search &amp; Filters" size="39" maxlength="250" class="tfind" />&nbsp;
-                          <span id="filters" class="filterbutton" onclick="TabOpenClose(this.id)"><img id="filtersi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Filters</span>&nbsp;
-                          <div id="filtersc" style="display:none;">
-                            <div id="filtersct">&nbsp;</div>
-                            <div id="filt2" class="filterbar2">
-                              <span class="filterbutton" onclick="addFilter()"><img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add</span>
-                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="clearAllFilter()"><img src="images/clear.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Clear</span>
-                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="'."addUserFilter('filter', filtstring2)".'"><img src="images/save.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Save</span>
-                              &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="searchByFilters()"><img src="images/search.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Search</span>
-                            </div>
-                          </div>
-                        </div>
-                      <div style="border: 0px dashed red; position: absolute; top: 9px; right: 13px; text-align:right; white-space: nowrap;">
-                        <select name="favlangopt" id="favlangopt" style="vertical-align: top; width: 22ex;" onchange="setLang(this.value)">');
+          <div id="bubble_bg">
+            <div class="corner_TL">
+              <div class="corner_TR"></div>
+            </div>
+            <div id="bubble">
+              <div id="frametable" style="border: 0px dashed white;">
+                <div class="filterbar">
+                  <input id="txtfind" type="text" accesskey="f" tabindex="1" title="Search &amp; Filters" onfocus="'."searchFilter(this.id, this.value, 'Search &amp; Filters', true)".'" onblur="'."searchFilter(this.id, this.value, 'Search &amp; Filters', false)".'" onkeyup="getAllActiveFilters()" value="Search &amp; Filters" size="39" maxlength="250" />&nbsp;
+                  <span id="filters" class="filterbutton" onclick="TabOpenClose(this.id)"><img id="filtersi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Filters</span>&nbsp;
+                  <div id="filtersc" style="display:none;">
+                    <div id="filtersct">&nbsp;</div>
+                    <div id="filterOptionsfilt2" class="filterbar2">
+                      <span class="filterbutton" onclick="addFilter()"><img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add</span>
+                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="clearAllFilter()"><img src="images/clear.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Clear</span>
+                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="'."addUserFilter('filter', filtstring2)".'"><img src="images/save.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Save</span>
+                      &nbsp;&nbsp;&nbsp;<span class="filterbutton" onclick="searchByFilters()"><img src="images/search.gif" alt="" style="width:14px; height:14px; border:0px;" />&nbsp;Search</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="border: 0px dashed red; position: absolute; top: 9px; right: 13px; text-align:right; white-space: nowrap;">
+                  <select name="favlangopt" id="favlangopt" style="vertical-align: top; width: 22ex;" onchange="setLang(this.value)">');
 
     $user_lang = ROSUser::getLanguage($thisuser->id(), true);
 
@@ -310,30 +298,29 @@ class HTML_CMS_Website extends HTML_CMS
     }
 
     echo_strip('
-                        </select>
-                      </div>
-                      <div id="tablecmdbar" style="padding-top: 5px;"></div>
-                        <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
-                          <span id="mtblnav">&nbsp;</span>
-                        </div>
-                        <div class="tabselect">Select: <span id="tabselect1"></span></div>
-                        <div id="tablist">&nbsp;</div>
-                        <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
-                          <span id="mtbl2nav">&nbsp;</span>
-                        </div>
-                        <div class="tabselect">Select: <span id="tabselect2"></span></div>
-                      </div>
-                      <div id="frameedit" style="display: block; border: 0px dashed red; ">
-
-                        <div id="frmedithead" style="padding-bottom: 10px;">&nbsp;</div>
-                        <div style="width:100%;">
-                          <div id="editzone">&nbsp;</div>
-                        </div>
-                      </div>
-                    </div>
+                  </select>
+                </div>
+                <div id="tablecmdbar" style="padding-top: 5px;"></div>
+                  <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
+                    <span id="mtblnav">&nbsp;</span>
                   </div>
+                  <div class="tabselect">Select: <span id="tabselect1"></span></div>
+                  <div id="tablist">&nbsp;</div>
+                  <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
+                    <span id="mtbl2nav">&nbsp;</span>
+                  </div>
+                  <div class="tabselect">Select: <span id="tabselect2"></span></div>
+                </div>
+                <div id="frameedit" style="display: block; border: 0px dashed red; ">
+
+                <div id="frmedithead" style="padding-bottom: 10px;">&nbsp;</div>
+                <div style="width:100%;">
+                  <div id="editzone">&nbsp;</div>
                 </div>
               </div>
+            </div>
+            <div class="corner_BL">
+              <div class="corner_BR"></div>
             </div>
           </div>
           <br />

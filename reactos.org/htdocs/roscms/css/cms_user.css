@@ -1,5 +1,3 @@
 
-	.frmeditbutton {
-		cursor:pointer;
-		color:#006090;
-	}
+/* virtual Button */
+.frmeditbutton { cursor:pointer; color:#006090; }

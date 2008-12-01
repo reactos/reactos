@@ -75,13 +75,26 @@ class HTML_User_Profile extends HTML_User
       if ($users_found != 1 && (empty($_GET['user_name']) || !empty($_GET['search']))) {
         echo_strip('
           <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; Profile Search</h1>
-          <div class="u-h1">Profile Search</div>
+          <p>Profile Search</p>
           <form id="form1" method="get" action="'.$roscms_intern_page_link.'search">
-            <input type="hidden" name="page" id="page" value="search" />
-            <input name="search" type="text" id="search" value="'.@htmlentities($_GET['search']).'" />
-            <button type="submit">Search</button>
-          </form>
-          <br />');
+            <div class="bubble">
+              <div class="corner_TL">
+                <div class="corner_TR"></div>
+              </div>
+              <h2>Profile Search</h2>
+              <div class="field">
+                <label for="search">Username</label>
+                <input name="search" type="text" id="search" value="'.@htmlentities($_GET['search']).'" />
+              </div>
+              <div class="field">
+                <input type="hidden" name="page" id="page" value="search" />
+                <button type="submit">Search</button>
+              </div>
+              <div class="corner_BL">
+                <div class="corner_BR"></div>
+              </div>
+            </div>
+          </form>');
 
         // give back results
         if (isset($_GET['search']) && $_GET['search'] != '') {
@@ -148,57 +161,53 @@ class HTML_User_Profile extends HTML_User
 
     // begin output
     echo_strip('
-      <div class="contentSmall"><h1>myReactOS Profile</h1></div>
-      <div class="u-h1">'.(($profile['user_fullname'] != '') ? $profile['user_fullname'].' ('.$profile['user_name'].')' : $profile['user_name']).'</div>
-      <div class="u-h2">A person who joined '.$rdf_name.' on '.Date::getLocal($profile['user_register']).'.</div>
-      <br />
-      <div style="text-align:center;">
-        <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
-          <div class="corner1">
-            <div class="corner2">
-              <div class="corner3">
-                <div class="corner4">
-                  <div style="text-align:center; padding: 4px;">
-                    <div class="login-title">myReactOS Profile</div>
+      <h1>myReactOS Profile</h1>
+      <p>A person who joined '.$rdf_name.' on '.Date::getLocal($profile['user_register']).'.</p>
 
-                    <div class="login-form">
-                      <div class="u-desc">Username</div>
-                      <div class="u-title">'.htmlspecialchars($profile['user_name']).'</div>
-                    </div>');
+      <div class="bubble">
+        <div class="corner_TL">
+          <div class="corner_TR"></div>
+        </div>
+        <h2>myReactOS Profile</h2>
+
+        <div class="field">
+          <div class="key">Username</div>
+          <div class="value">'.htmlspecialchars($profile['user_name']).'</div>
+        </div>');
 
     // Fullname
     if ($profile['user_fullname'] != '') {
       echo_strip('
-        <div class="login-form">
-          <div class="u-desc">First and Last Name</div>
-          <div class="u-title">'.htmlspecialchars($profile['user_fullname']).'</div>
+        <div class="field">
+          <div class="key">First and Last Name</div>
+          <div class="value">'.htmlspecialchars($profile['user_fullname']).'</div>
         </div>');
     }
 
     // email only for the user itself or admins
     if ($profile['user_id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
       echo_strip('
-        <div class="login-form">
-          <div class="u-desc">E-Mail Address </div>
-          <div class="u-title">'.htmlspecialchars($profile['user_email']).'</div>
+        <div class="field">
+          <div class="key">E-Mail Address </div>
+          <div class="value">'.htmlspecialchars($profile['user_email']).'</div>
         </div>');
     }
 
     // Country and Language
     echo_strip('
-      <div class="login-form">
-        <div class="u-desc">Country</div>
-        <div class="u-title">'.(($country !== false) ? $country : '<span style="color: red;">not set</span>').'</div>
+      <div class="field">
+        <div class="key">Country</div>
+        <div class="value">'.(($country !== false) ? $country : '<span style="color: red;">not set</span>').'</div>
       </div>
 
-      <div class="login-form">
-        <div class="u-desc">Language</div>
-        <div class="u-title">'.(($language !== false) ? $language : '<span style="color: red;">not set</span>').'</div>
+      <div class="field">
+        <div class="key">Language</div>
+        <div class="value">'.(($language !== false) ? $language : '<span style="color: red;">not set</span>').'</div>
       </div>
 
-      <div class="login-form">
-        <div class="u-desc">Timezone</div>
-        <div class="u-title">');
+      <div class="field">
+        <div class="key">Timezone</div>
+        <div class="value">');
 
     // Timezone
     if (ROSUser::checkTimezone($profile['user_timezone'])) {
@@ -209,7 +218,7 @@ class HTML_User_Profile extends HTML_User
 
       echo_strip(
         $timezone['tz_name'].' ('.$timezone['tz_value2'].')
-        <div style="font-size: 10px;font-weight:lighter;">
+        <div class="detail">
           server time: '.date('Y-m-d H:i').'<br />
           local time: '.Date::getLocal(date('Y-m-d H:i')).'
         </div>');
@@ -224,72 +233,60 @@ class HTML_User_Profile extends HTML_User
     // Website
     if ($profile['user_website'] != '') {
       echo_strip('
-        <div class="login-form">
-          <div class="u-desc">Private Website</div>
-          <div class="u-title"><a href="'.$profile['user_website'].'" rel="nofollow">'.htmlspecialchars($profile['user_website']).'</a></div>
+        <div class="field">
+          <div class="key">Private Website</div>
+          <div class="value"><a href="'.$profile['user_website'].'" rel="nofollow">'.htmlspecialchars($profile['user_website']).'</a></div>
         </div>');
     }
 
     // Occupation
     if ($profile['user_occupation'] != '') {
       echo_strip('
-        <div class="login-form">
-          <div class="u-desc">Occupation</div>
-          <div class="u-title">'.htmlspecialchars($profile['user_occupation']).'</div>
+        <div class="field">
+          <div class="key">Occupation</div>
+          <div class="value">'.htmlspecialchars($profile['user_occupation']).'</div>
         </div>');
     }
 
     // Groups (only for user itself) and admins
     if ($profile['user_id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
       echo_strip('
-        <div class="login-form">
-          <div class="u-desc">User Groups</div>
-            <div class="u-title">');
+        <div class="field">
+          <div class="key">User Groups</div>
+            <ul class="value">');
       $stmt=DBConnection::getInstance()->prepare("SELECT u.usrgroup_name FROM usergroups u, usergroup_members m WHERE m.usergroupmember_userid = :user_id AND u.usrgroup_name_id = m.usergroupmember_usergroupid ORDER BY usrgroup_securitylevel DESC, usrgroup_name ASC");
       $stmt->bindparam('user_id',$profile['user_id'],PDO::PARAM_INT);
       $stmt->execute();
       while ($usergroup = $stmt->fetch()) {
-        echo $usergroup['usrgroup_name'].'<br />';
+        echo '<li>'.$usergroup['usrgroup_name'].'</li>';
       }
 
       echo_strip('
-          </div>
+          </ul>
         </div>');
     }
 
     // Location
     echo_Strip('
-        <div class="login-form">
-          <a href="'.$roscms_intern_webserver_pages.'peoplemap/" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">'.($profile['user_id']==$thisuser->id() ? 'My ' : '').'Location on the Map</a>
-        </div>
-      </div>');
+        <div class="field">
+          <a href="'.$roscms_intern_webserver_pages.'peoplemap/">'.($profile['user_id']==$thisuser->id() ? 'My ' : '').'Location on the Map</a>
+        </div>');
 
     // show edit or search link (depending if the current user is searched user)
     if ($profile['user_id'] == $thisuser->id()) {
-      echo_strip('
-        <div>&nbsp;</div>
-        <div class="u-link"><a href="'.$roscms_intern_page_link.'my&amp;subpage=edit">Edit My Profile</a></div>
-        <div>&nbsp;</div>');
+      echo '<div class="u-link"><a href="'.$roscms_intern_page_link.'my&amp;subpage=edit">Edit My Profile</a></div>';
     }
     else {
       echo_strip('
-        <div>&nbsp;</div>
-          <div>
-            <a href="'.$roscms_intern_page_link.'search" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">
-              <strong>&raquo; Profile Search</strong>
-            </a>
-          </div>
-          <div>&nbsp;</div>
-        </div>');
+          <div class="u-link">
+            <a href="'.$roscms_intern_page_link.'search">raquo; Profile Search</a>
+          </div>');
     }
       echo_strip('
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div class="corner_BL">
+            <div class="corner_BR"></div>
           </div>
-        </div>
-        <br />');
+        </div>');
   }
 
 

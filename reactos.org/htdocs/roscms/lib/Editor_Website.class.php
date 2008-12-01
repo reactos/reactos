@@ -48,10 +48,8 @@ class Editor_Website extends Editor
    */
   protected function evalAction( $action )
   {
-    $thisuser = &ThisUser::getInstance();
-
     global $roscms_standard_language;
-    global $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4;
+    $thisuser = &ThisUser::getInstance();
 
     switch ($action) {
 
@@ -60,7 +58,7 @@ class Editor_Website extends Editor
 
         // add a new entry only with higher security level
         if ($thisuser->securityLevel() > 1) {
-          switch ($RosCMS_GET_d_value) {
+          switch ($_GET['d_val']) {
             case 'dynamic':
               $this->showAddEntry(self::DYNAMIC);
               break;
@@ -115,7 +113,7 @@ class Editor_Website extends Editor
 
       // update Field details
       case 'alterfields2':
-        Data::updateText($_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, @$_GET['d_arch']);
+        Data::updateText($_GET['d_r_id'], $_GET['d_val'], $_GET['d_val2'], @$_GET['d_arch']);
         $this->show();
         break;
 
@@ -126,7 +124,7 @@ class Editor_Website extends Editor
 
       // update revision details
       case 'alterentry':
-        Data::updateRevision($_GET['d_id'], $_GET['d_r_id'],$RosCMS_GET_d_value,$RosCMS_GET_d_value2,$RosCMS_GET_d_value3,$RosCMS_GET_d_value4,htmlspecialchars(@$_GET["d_val5"]));
+        Data::updateRevision($_GET['d_id'], $_GET['d_r_id'],$_GET['d_val'],$_GET['d_val2'],$_GET['d_val3'],$_GET['d_val4'],htmlspecialchars(@$_GET["d_val5"]));
         $this->show();
         break;
 
@@ -137,13 +135,13 @@ class Editor_Website extends Editor
 
       // update Security details
       case 'altersecurity':
-        Data::update($_GET['d_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4);
+        Data::update($_GET['d_id'], $_GET['d_val'], $_GET['d_val2'], $_GET['d_val3'], $_GET['d_val4']);
         $this->show();
         break;
 
       // add new tag
       case 'addtag':
-        Tag::add($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
+        Tag::add($_GET['d_id'], $_GET['d_r_id'], $_GET['d_val'], $_GET['d_val2'], $_GET['d_val3']);
         $this->showEntryDetails(self::METADATA);
         break;
 
@@ -151,8 +149,8 @@ class Editor_Website extends Editor
       case 'deltag':
       
         // only delete, if user has a higher level than translator, or it's requested by the user itself
-        if ($thisuser->securityLevel() > 1 || $RosCMS_GET_d_value2 == $thisuser->id()) {
-          Tag::deleteById($RosCMS_GET_d_value, $RosCMS_GET_d_value2);
+        if ($thisuser->securityLevel() > 1 || $_GET['d_val2'] == $thisuser->id()) {
+          Tag::deleteById($_GET['d_val'], $_GET['d_val2']);
         }
 
         // reload Metadata
@@ -161,24 +159,24 @@ class Editor_Website extends Editor
 
       // update tag by id
       case 'changetag':
-        Tag::deleteById($RosCMS_GET_d_value4, $RosCMS_GET_d_value3);
-        Tag::add($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
-        echo Tag::getIdByUser($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value, $thisuser->id());
+        Tag::deleteById($RosCMS_GET_d_value4, $_GET['d_val3']);
+        Tag::add($_GET['d_id'], $_GET['d_r_id'], $_GET['d_val'], $_GET['d_val2'], $_GET['d_val3']);
+        echo Tag::getIdByUser($_GET['d_id'], $_GET['d_r_id'], $_GET['d_val'], $thisuser->id());
         break;
 
       // update tag by name/user
       case 'changetag2':
       case 'changetag3':
-        Tag::deleteByName($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value , $RosCMS_GET_d_value3);
-        Tag::add($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value , $RosCMS_GET_d_value2, $RosCMS_GET_d_value3);
-        echo Tag::getIdByName($_GET['d_id'], $_GET['d_r_id'], $RosCMS_GET_d_value, $RosCMS_GET_d_value3);
+        Tag::deleteByName($_GET['d_id'], $_GET['d_r_id'], $_GET['d_val'] , $_GET['d_val3']);
+        Tag::add($_GET['d_id'], $_GET['d_r_id'], $_GET['d_val'] , $_GET['d_val2'], $_GET['d_val3']);
+        echo Tag::getIdByName($_GET['d_id'], $_GET['d_r_id'], $_GET['d_val'], $_GET['d_val3']);
         break;
 
       // Change Tags around Data entry
       case 'changetags':
         // only call function if some entries are given ($_GET['d_val'] holds number of id's)
         if ($_GET['d_val'] > 0) {
-          Data::evalAction($RosCMS_GET_d_value2 /* entry rev_id's */, $RosCMS_GET_d_value3 /* action */, $_GET['d_r_lang'], $RosCMS_GET_d_value4);
+          Data::evalAction($_GET['d_val2'] /* entry rev_id's */, $_GET['d_val3'] /* action */, @$_GET['d_r_lang'], @$_GET['d_val4']);
         }
         break;
 
@@ -187,7 +185,7 @@ class Editor_Website extends Editor
       case 'diff':
       // compare two entries; updates diff area
       case 'diff2':
-        echo $this->showDifference($RosCMS_GET_d_value /* rev_id entry 1 */, $RosCMS_GET_d_value2 /* rev_id entry 2 */);
+        echo $this->showDifference($_GET['d_val'] /* rev_id entry 1 */, $_GET['d_val2'] /* rev_id entry 2 */);
         break;
 
       default:
@@ -270,7 +268,7 @@ class Editor_Website extends Editor
     global $h_a,$h_a2;
 
     echo_strip('
-      <div style="background:white; border-bottom: 1px solid #bbb; border-right: 1px solid #bbb;">
+      <div class="editor" style="background:white; border-bottom: 1px solid #bbb; border-right: 1px solid #bbb;">
         <div style="margin:10px;">
           <div style="width:95%;">
             <form method="post" action="#">
@@ -286,7 +284,7 @@ class Editor_Website extends Editor
         $stext_num++;
 
         echo_strip('
-          <label for="estext"'.$stext_num.'" class="frmeditheadline" style="font-weight: bold;">'.$stext['stext_name'].':</label>
+          <label for="estext"'.$stext_num.'">'.$stext['stext_name'].':</label>
           <span id="edstext'.$stext_num.'" style="display:none;">'.$stext['stext_name'].'</span><br />
           <input name="estext"'.$stext_num.'" type="text" id="estext'.$stext_num.'" size="50" maxlength="250" value="');echo $stext['stext_content'].'" /><br /><br />';
       }
@@ -307,12 +305,11 @@ class Editor_Website extends Editor
         $text_num++;
 
         echo_strip('
-          <label class="frmeditheadline" for="elm'.$text_num.'">'.$text['text_name'].'</label>
+          <label for="elm'.$text_num.'" style="display: inline; margin-right: 20px;" id="textname'.$text_num.'">'.$text['text_name'].'</label>
           <button type="button" id="butRTE'.$text_num.'" onclick="'."toggleEditor('elm".$text_num."', this.id)".'">Rich Text</button>
-          <span id="swraped'.$text_num.'">
-          <input id="wraped'.$text_num.'" type="checkbox" onclick="'."toggleWordWrap(this.id, 'elm".$text_num."');".'" checked="checked" />
-          <label for="wraped'.$text_num.'</label>">Word wrap</label></span>
-          <span id="edtext'.$text_num.'" style="display:none;">'.$text['text_name'].'</span><br />
+          <span id="swraped'.$text_num.'"></span>
+          <input id="wraped'.$text_num.'" type="checkbox" onclick="'."toggleWordWrap(this.id, 'elm".$text_num."');".'" checked="checked" style="padding-left: 10px;" />
+          <label for="wraped'.$text_num.'" class="normal">Word wrap</label>
           <textarea name="elm'.$text_num.'" cols="80" rows="15" class="mceEditor" id="elm'.$text_num.'" style="width: 100%; background-color:#FFFFFF;" >');echo $text['text_content'];echo_strip('</textarea>
           <br />
           <br />');
@@ -356,8 +353,8 @@ class Editor_Website extends Editor
 
     if ($revisions_count <= 0) {
       echo_strip('
-        <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea(".$this->rev_id.",".$this->rev_id.")".'>
-        <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> (no related ');echo strtolower($roscms_standard_language_full).' entry, choose yourself)&nbsp;';
+        <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea(".$this->rev_id.",".$this->rev_id.")".'">
+        <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> (no related '.$roscms_standard_language_full.' entry, choose yourself)&nbsp;');
     }
     else {
 
@@ -402,7 +399,9 @@ class Editor_Website extends Editor
 
       echo_strip('
         <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea('".$diff1."','".$diff2."')".'">
-        <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> &nbsp;');
+          <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />
+          &nbsp;Compare
+        </span>');
     }
 
     echo_strip('
@@ -423,7 +422,7 @@ class Editor_Website extends Editor
   public function showAddEntry($tmode = self::SINGLE)
   {
     echo_strip('
-      <div id="frmadd" style="border-bottom: 1px solid #bbb; border-right: 1px solid #bbb; background: #FFFFFF none repeat scroll 0%;">
+      <div id="frmadd" class="editor" style="border-bottom: 1px solid #bbb; border-right: 1px solid #bbb; background: #FFFFFF none repeat scroll 0%;">
         <div style="margin:10px;">
           <div class="detailbody">
             <div class="detailmenubody" id="newentrymenu">');
@@ -465,12 +464,12 @@ class Editor_Website extends Editor
       case self::SINGLE:
         echo_strip('
           <br />
-          <div class="frmeditheadline">Name</div>
+          <label for="txtaddentryname">Name</label>
           <input type="text" id="txtaddentryname" name="txtaddentryname" />
           <br />
           <br />
           <br />
-          <div class="frmeditheadline">Type</div>
+          <label for="txtaddentrytype">Type</label>
           <select id="txtaddentrytype" name="txtaddentrytype">
             <option value="page">Page</option>
             <option value="content">Content</option>
@@ -481,7 +480,7 @@ class Editor_Website extends Editor
           <br />
           <br />
           <br />
-          <div class="frmeditheadline">Language</div>
+          <label for="txtaddentrylang">Language</label>
           <select id="txtaddentrylang" name="txtaddentrylang">');
 
         // language drop down
@@ -498,7 +497,7 @@ class Editor_Website extends Editor
       case self::DYNAMIC:
         echo_strip('
           <br />
-          <div class="frmeditheadline">Source</div>
+          <label for="txtadddynsource">Source</label>
           <select id="txtadddynsource" name="txtadddynsource">
             <option value="news_page">News</option>
             <option value="newsletter">Newsletter</option>
@@ -510,11 +509,11 @@ class Editor_Website extends Editor
       case self::TEMPLATE:
         echo_strip('
           <br />
-          <div class="frmeditheadline">Name</div>
+          <label for="txtaddentryname3">Name</label>
           <input type="text" id="txtaddentryname3" name="txtaddentryname3" />
           <br />
           <br />
-          <div class="frmeditheadline">Template</div>
+          <label for="txtaddtemplate">Template</label>
           <select id="txtaddtemplate" name="txtaddtemplate">
             <option value="none" selected="selected">no template</option>');
 
@@ -557,9 +556,9 @@ class Editor_Website extends Editor
 
     echo_strip('
       <div style="padding-bottom: 3px;">
-        <span class="frmeditheader">
+        <span class="revDetail">
           <span onclick="'."toggleBookmark(".$revision['data_id'].",".$revision['rev_id'].", ".$thisuser->id().", 'editstar')".'" style="cursor: pointer;">
-           <img id="editstar" class="'.Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id()).'" src="images/star_'.Tag::getValueByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id()).'_small.gif" alt="" style="width:13px; height:13px; border:0px;" />
+           <img id="editstar" class="'.Tag::getIdByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id()).'" src="images/star_'.Tag::getValueByUser($revision['data_id'], $revision['rev_id'], 'star', $thisuser->id()).'_small.gif" alt="" style="width:13px; height:13px; border:0px;" alt="*" />
           </span>
           &nbsp;');
     echo $revision['data_name'];
@@ -577,15 +576,15 @@ class Editor_Website extends Editor
 
     echo_strip('
       </span> &nbsp;
-      <span style="white-space: nowrap;">type: <span class="frmeditheader">'.$revision['data_type'].'</span></span> &nbsp; 
-      <span style="white-space: nowrap;">version: <span id="mefrverid" class="frmeditheader">'.$revision['rev_version'].'</span></span> &nbsp; 
-      <span style="white-space: nowrap;">language: <span id="mefrlang" class="frmeditheader">'.$revision['rev_language'].'</span></span> &nbsp; 
-      <span style="white-space: nowrap;">user: <span id="mefrusrid" class="frmeditheader">'.$revision['user_name'].'</span></span> &nbsp; ');
+      <span style="white-space: nowrap;">type: <span class="revDetail">'.$revision['data_type'].'</span></span> &nbsp; 
+      <span style="white-space: nowrap;">version: <span id="mefrverid" class="revDetail">'.$revision['rev_version'].'</span></span> &nbsp; 
+      <span style="white-space: nowrap;">language: <span id="mefrlang" class="revDetail">'.$revision['rev_language'].'</span></span> &nbsp; 
+      <span style="white-space: nowrap;">user: <span id="mefrusrid" class="revDetail">'.$revision['user_name'].'</span></span> &nbsp; ');
 
     if (isset($_GET['d_arch']) && $_GET['d_arch']) {
       echo_strip('
         <span style="white-space: nowrap;">mode: 
-          <span id="mefrusrid" class="frmeditheader">archive</span>
+          <span id="mefrusrid" class="revDetail">archive</span>
         </span> &nbsp; ');
     }
 
@@ -595,8 +594,8 @@ class Editor_Website extends Editor
           &nbsp;Details
         </span>
       </div>
-      <div id="frmedittagsc" class="edittagbody" style="display: none;">
-        <div class="edittagbody2" id="frmedittagsc2">');
+      <div id="frmedittagsc" class="edittagbody">
+        <div id="frmedittagsc2">');
   }
 
 
@@ -634,7 +633,7 @@ class Editor_Website extends Editor
       echo '<strong>Depencies</strong>';
     }
     else {
-      echo '<span class="detailmenu" onclick="'."bshowdepencies(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Depencies</span>';
+      echo '<span class="detailmenu" onclick="'."showEditorTabDepencies(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Depencies</span>';
     }
 
     // allowed only for someone with "add" rights
@@ -646,7 +645,7 @@ class Editor_Website extends Editor
         echo '<strong>Fields</strong>';
       }
       else {
-        echo '<span class="detailmenu" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Fields</span>';
+        echo '<span class="detailmenu" onclick="'."showEditorTabFields(".$this->data_id.",".$this->rev_id.", '".$thisuser->id()."')".'">Fields</span>';
       }
       echo '&nbsp;|&nbsp;';
 
@@ -729,8 +728,7 @@ class Editor_Website extends Editor
 
         // echo metadata type (metadata / label / private label)
         echo_strip('
-          <br />
-          <div class="frmeditheadline">');
+          <h3>');
         switch ($tag['tag_usrid']) {
           case -1:
             echo 'System Metadata';
@@ -743,7 +741,7 @@ class Editor_Website extends Editor
               echo 'Private Labels';
             }
         } // end switch
-        echo '</div>';
+        echo '</h3>';
       }
 
       // output name & current value
@@ -767,9 +765,8 @@ class Editor_Website extends Editor
 
     echo_strip('
       <br />
-      <br />
-      <div class="frmeditheadline">Add Private Label</div>
-      <label for="addtagn"><b>Tag:</b></label>&nbsp;
+      <h3>Add Private Label</h3>
+      <label for="addtagn" class="normal">Tag:</label>&nbsp;
       <input type="text" id="addtagn" size="15" maxlength="100" value="" />&nbsp;
       <button type="button" onclick="'."addLabelOrTag(".$this->data_id.",".$this->rev_id.",'tag','addtagn', '".$thisuser->id()."')".'">Add</button>
       <br />');
@@ -777,10 +774,10 @@ class Editor_Website extends Editor
     if ($thisuser->securityLevel() > 1) {
       echo_strip('
         <br />
-        <div class="frmeditheadline">Add Label'.(Security::hasRight($this->data_id, 'add') ? ' or System Metadata' : '').'</div>
-        <label for="addtags1" style="font-weight:bold">Name:</label>&nbsp;
+        <h3>Add Label'.(Security::hasRight($this->data_id, 'add') ? ' or System Metadata' : '').'</h3>
+        <label for="addtags1" class="normal">Name:</label>&nbsp;
         <input type="text" id="addtags1" size="15" maxlength="100" value="" />&nbsp;
-        <label for="addtags2" style="font-weight:bold">Value:</label>&nbsp;
+        <label for="addtags2" class="normal">Value:</label>&nbsp;
         <input type="text" id="addtags2" size="15" maxlength="100" value="" /> &nbsp;
         <button type="button" onclick="'."addLabelOrTag(".$this->data_id.",".$this->rev_id.",'addtags1','addtags2','0')".'">Add Label</button>&nbsp;');
 
@@ -806,10 +803,7 @@ class Editor_Website extends Editor
     $stmt->execute();
     $data = $stmt->fetchOnce();
 
-    echo_strip('
-      <br />
-      <div class="frmeditheadline">Versions History</div>
-      <br />');
+    echo '<h3>Versions History</h3>';
 
     // get a perfect mixed entry set
     $dataset = $this->helperHistory(Tag::getValueByUser($this->data_id, $this->rev_id, 'number', -1));
@@ -861,9 +855,7 @@ class Editor_Website extends Editor
     }
 
     echo_strip('
-      <br />
-      <div class="frmeditheadline">Data Depencies</div>
-      <br />');
+      <h3>Data Depencies</h3>');
 
     // search for depencies
     $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, d.data_type, r.data_id, r.rev_id, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id = d.data_id JOIN data_text t ON r.rev_id = t.data_rev_id WHERE t.text_content LIKE :content_phrase AND r.rev_version > 0 ORDER BY r.rev_language, d.data_name, d.data_type");
@@ -904,18 +896,17 @@ class Editor_Website extends Editor
     $data = $stmt->fetchOnce();
 
     echo_strip('
-      <br />
-      <div class="frmeditheadline">Data-ID</div><br />
+      <h3>Data-ID</h3>
       <div>'.$data['data_id'].'</div><br />
-      <div class="frmeditheadline">Name</div><br />
+      <label for="secdataname">Name</label><br />
       <input type="text" name="secdataname" id="secdataname" size="25" maxlength="100" value="'.$data['data_name'].'" /> (ASCII lowercase, no space) 
       <img src="images/attention.gif" width="22" height="22" /><br />
       <br />
       <input type="checkbox" name="chdname" id="chdname" value="update" checked="checked" />
       <label for="chdname">update all links to this data-name</label><br />
       <br />
-      <div class="frmeditheadline">Type</div><br />
-      <select id="cbmdatatype">
+      <label for="cbmdatatype">Type</label><br />
+      <select id="cbmdatatype" name="cbmdatatype">
         <option value="page"'.(($data['data_type'] == 'page') ? ' selected="selected"' : '').'>Page</option>
         <option value="content"'.(($data['data_type'] == 'content') ? ' selected="selected"' : '').'>Content</option>
         <option value="template"'.(($data['data_type'] == 'template') ? ' selected="selected"' : '').'>Template</option>
@@ -923,7 +914,7 @@ class Editor_Website extends Editor
         <option value="system"'.(($data['data_type'] == 'system') ? ' selected="selected"' : '').'>System</option>
       </select><br />
       <br />
-      <div class="frmeditheadline">ACL</div><br />
+      <label for="cbmdataacl">ACL</label><br />
       <select id="cbmdataacl" name="cbmdataacl">');
 
     $stmt=DBConnection::getInstance()->prepare("SELECT sec_name, sec_fullname FROM data_security WHERE sec_branch = 'website' ORDER BY sec_fullname ASC");
@@ -950,21 +941,18 @@ class Editor_Website extends Editor
   {
     global $h_a;
   
-    echo_strip(
-      '<br />
-      <div class="frmeditheadline">Short Text</div>
-      <br />');
+    echo '<h3>Short Text</h3>';
 
     $stext_num = 0;
     $stmt=DBConnection::getInstance()->prepare("SELECT s.stext_name, s.stext_content FROM data_revision".$h_a." r, data_stext".$h_a." s WHERE r.rev_id = s.data_rev_id AND r.rev_id = :rev_id ORDER BY stext_name ASC");
     $stmt->bindParam('rev_id',$this->rev_id,PDO::PARAM_INT);
     $stmt->execute();
-    while($stext = $stmt->fetch()) {
+    while($stext = $stmt->fetch(PDO::FETCH_ASSOC)) {
       ++$stext_num;
     
       echo_strip('
         <input type="text" name="editstext'.$stext_num.'" id="editstext'.$stext_num.'" size="25" maxlength="100" value="');echo $stext['stext_name']; echo_strip('" /> 
-        <input type="checkbox" name="editstextdel'.$stext_num.'" id="editstextdel'.$stext.'" value="del" />
+        <input type="checkbox" name="editstextdel'.$stext_num.'" id="editstextdel'.$stext_num.'" value="del" />
         <label for="editstextdel'.$stext_num.'">delete?</label>
         <input name="editstextorg'.$stext_num.'" id="editstextorg'.$stext_num.'" type="hidden" value="');echo $stext['stext_name'];echo_strip('" />
         <br />
@@ -977,15 +965,14 @@ class Editor_Website extends Editor
       <span class="filterbutton" onclick="addShortTextField()">
         <img src="images/add.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Add
       </span>
-      <br /><br /><br />
-      <div class="frmeditheadline">Text</div>
-      <br />');
+      <br /><br />
+      <h3>Text</h3>');
 
     $text_num = 0;
     $stmt=DBConnection::getInstance()->prepare("SELECT t.text_name, t.text_content FROM data_revision".$h_a." r, data_text".$h_a." t WHERE r.rev_id = t.data_rev_id AND r.rev_id = :rev_id ORDER BY text_name ASC");
     $stmt->bindParam('rev_id',$this->rev_id,PDO::PARAM_INT);
     $stmt->execute();
-    while($text = $stmt->fetch()) {
+    while($text = $stmt->fetch(PDO::FETCH_ASSOC)) {
       ++$text_num;
 
       echo_strip('
@@ -1005,7 +992,7 @@ class Editor_Website extends Editor
       </span>
       <br /><br /><br />
       <button type="button" id="beditsavefields" onclick="'."saveFieldData('".$this->data_id."','".$this->rev_id."')".'">Save Changes</button> &nbsp; 
-      <button type="button" id="beditclear" onclick="'."balterfields(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
+      <button type="button" id="beditclear" onclick="'."saveFieldData(".$this->data_id.",".$this->rev_id.", '".ThisUser::getInstance()->id()."')".'">Clear</button>');
   }
 
 
@@ -1025,9 +1012,9 @@ class Editor_Website extends Editor
 
     echo_strip('
       <br />
-      <div class="frmeditheadline">Rev-ID</div><br />
+      <h3>Rev-ID</h3>
       <div>'.$revision['rev_id'].'</div><br />
-      <div class="frmeditheadline">Language</div><br />
+      <label for="cbmentrylang">Language</label>
       <select id="cbmentrylang" name="cbmentrylang">');
 
     $stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_name FROM languages ORDER BY lang_name ASC");
@@ -1039,18 +1026,18 @@ class Editor_Website extends Editor
     echo_strip('
       </select><br />
       <br />
-      <div class="frmeditheadline">Version</div><br />
+      <label for="vernbr">Version</div>
       <input type="text" name="vernbr" id="vernbr" size="5" maxlength="11" value="'.$revision['rev_version'].'" /><br />
       <br />
-      <div class="frmeditheadline">User</div><br />
+      <label for="verusr">User</label>
       <input type="text" name="verusr" id="verusr" size="20" maxlength="20" value="'.$revision['user_name'].'" /> (account name)
       <img src="images/attention.gif" width="22" height="22" /><br />
       <br />
-      <div class="frmeditheadline">Date</div><br />
+      <label for="verdate">Date</label>
       <input type="text" name="verdate" id="verdate" size="10" maxlength="10" value="'.$revision['rev_date'].'" /> (year-month-day)
       <img src="images/attention.gif" width="22" height="22" /><br />
       <br />
-      <div class="frmeditheadline">Time</div><br />
+      <label for="vertime">Time</label>
       <input type="text" name="vertime" id="vertime" size="8" maxlength="8" value="'.$revision['rev_time'].'" /> (hour:minute:second)
       <img src="images/attention.gif" width="22" height="22" /><br />
       <br />
@@ -1095,7 +1082,6 @@ class Editor_Website extends Editor
    */
   private function showDifference( $rev_id1, $rev_id2 )
   {
-
     // get archive mode for entry 1
     if (substr($rev_id1, 0, 2) == 'ar') {
       $h1_a = '_a';
@@ -1136,15 +1122,15 @@ class Editor_Website extends Editor
     $stmt->execute();
     $revision2 = $stmt->fetchOnce();
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT t.text_content FROM data_revision".$h1_a." r JOIN data_text".$h1_a." t ON r.rev_id = t.data_rev_id WHERE r.rev_id = :rev_id AND t.text_name = 'content' ORDER BY text_name ASC");
+    $stmt=DBConnection::getInstance()->prepare("SELECT t.text_content FROM data_revision".$h2_a." r JOIN data_text".$h2_a." t ON r.rev_id = t.data_rev_id WHERE r.rev_id = :rev_id AND t.text_name = 'content' ORDER BY text_name ASC");
     $stmt->bindParam('rev_id',$rev_id2,PDO::PARAM_INT);
     $stmt->execute();
     $text2 = $stmt->fetchColumn();
 
     // get data id from any stable revision
-    $this->data_id = $revision2['data_id'];
     $dynamic_num = Tag::getValueByUser($revision2['data_id'], $revision2['rev_id'], 'number', -1);
-    if ($dynamic_num === false) {
+    $this->data_id = $revision2['data_id'];
+    if ($h2_a2 != '') {
       $dynamic_num = Tag::getValueByUser($revision1['data_id'], $revision1['rev_id'], 'number', -1);
       $this->data_id = $revision1['data_id'];
     }
@@ -1152,8 +1138,8 @@ class Editor_Website extends Editor
     echo_strip('
       <div style="display: block; border-bottom: 1px solid #bbb; border-right: 1px solid #bbb; background: white none repeat scroll 0%;">
         <div style="margin:10px;">
-        <br />
-        <div class="frmeditheadline">Compare</div>');
+          <br />
+          <span>Compare</span>');
 
     if ($rev_id1 == $rev_id2) {
       echo '<p>Please select two different entries to display the differences!</p>';
@@ -1190,7 +1176,7 @@ class Editor_Website extends Editor
               <li>Language: '.$revision1['lang_name'].'</li>
               <li>User: '.$revision1['user_name'].'</li>');
     if (ThisUser::getInstance()->securityLevel() > 1) {
-      echo '<li>ID: '.$revision1['rev_id'].'</li>';
+      echo '<li>Rev-ID: '.$revision1['rev_id'].'</li>';
     }
     echo_strip('
             </ul>
@@ -1211,7 +1197,7 @@ class Editor_Website extends Editor
       </table>
       <div><pre id="frmeditdiff1" style="display: none;">');echo $text1;echo_strip('</pre></div>
       <div><pre id="frmeditdiff2" style="display: none;">');echo $text2;echo_strip('</pre></div>
-      <div style="display: block; border-width: 1px; border-bottom: 1px solid #bbb;  border-right: 1px solid #bbb; border-top: 1px solid #e3e3e3; border-left: 1px solid #e3e3e3; background: #F2F2F2 none repeat scroll 0%;">
+      <div style="display: block;border-bottom: 1px solid #bbb;  border-right: 1px solid #bbb; border-top: 1px solid #e3e3e3; border-left: 1px solid #e3e3e3; background: #F2F2F2;">
         <pre style="margin:10px; font-size:9px; font-family:Arial, Helvetica, sans-serif;" id="frmeditdiff">&nbsp;</pre>
       </div>
       </div>');

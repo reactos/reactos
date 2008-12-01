@@ -225,81 +225,71 @@ class HTML_User_Login extends HTML_User
 
     $target_clean = '';
     if (isset($_REQUEST['target']) && preg_match('/^(\/[a-zA-Z0-9!$%&,\'()*+\-.\/:;=?@_~]+)$/', $_REQUEST['target'], $matches)) {
-      $target_clean = $matches[1];
-    }
-
-    echo '<form action="'.$roscms_intern_page_link.'login" method="post">';
-
-    if ($target_clean != '' ) {
-      echo_strip('
-        <div style="display:none;">
-          <input type="hidden" name="target" value="'.$target_clean.'" />
-        </div>');
+      $target_clean = htmlentities($matches[1]);
     }
 
     echo_strip('
-      <h1>Login</h1>
-      <div class="u-h1">Login to '.$rdf_name.'</div>
-      <div class="u-h2">You don\'t have a '.$rdf_name.' account yet? <a href="'.$roscms_intern_page_link.'register">Join now</a>, it\'s free and just takes a minute.</div>
-      <div>
-        <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
-          <div class="corner1">
-            <div class="corner2">
-              <div class="corner3">
-                <div class="corner4">
-                  <div style="text-align:center; padding: 4px;">
-                    <div class="login-title">'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'Secure ' : '').'Login</div>
-                    <div class="login-form">
-                      <label for="'.$rdf_login_cookie_usrname.'">Username</label>
-                      <input name="'.$rdf_login_cookie_usrname.'" type="text" class="input" tabindex="1" id="'.$rdf_login_cookie_usrname.'" ');
+      <form action="'.$roscms_intern_page_link.'login" method="post">
+        <h1>Login</h1>
+        <p>You don\'t have a '.$rdf_name.' account yet? <a href="'.$roscms_intern_page_link.'register">Join now</a>, it\'s free and just takes a minute.</p>
+
+        <div class="bubble">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>
+          <h2>'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'Secure ' : '').'Login</h2>
+          <div class="field">
+            <label for="'.$rdf_login_cookie_usrname.'">Username</label>
+            <input type="text" name="'.$rdf_login_cookie_usrname.'" tabindex="1" id="'.$rdf_login_cookie_usrname.'" value="');
     if (isset($_POST[$rdf_login_cookie_usrname])) {
-      echo 'value="'.$_POST[$rdf_login_cookie_usrname].'"';
+      echo $_POST[$rdf_login_cookie_usrname];
     }
     elseif (isset($_COOKIE[$rdf_login_cookie_loginname])) {
-      echo 'value="' . $_COOKIE[$rdf_login_cookie_loginname].'"';
+      echo $_COOKIE[$rdf_login_cookie_loginname];
     }
-    echo_strip(' size="50" maxlength="50" />
+    echo_strip('" maxlength="50" />
       </div>
 
-      <div class="login-form">
+      <div class="field">
         <label for="'.$rdf_login_cookie_usrpwd.'">Password</label>
-        <input name="'.$rdf_login_cookie_usrpwd.'" type="password" class="input" tabindex="2" id="'.$rdf_login_cookie_usrpwd.'" size="50" maxlength="50" />
+        <input name="'.$rdf_login_cookie_usrpwd.'" type="password" tabindex="2" id="'.$rdf_login_cookie_usrpwd.'" maxlength="50" />
       </div>');
 
     if (empty($_GET['sec']) || $_GET['sec'] == 'standard') {
       echo_strip('
-        <div class="login-options">
-          <input name="loginoption1" type="checkbox" id="loginoption1" value="save"'.(isset($_COOKIE[$rdf_login_cookie_loginname]) ? 'checked' : '').' tabindex="3" />
+        <fieldset>
+          <legend>Login options</legend>
+          <input type="checkbox" name="loginoption1" id="loginoption1" value="save"'.(isset($_COOKIE[$rdf_login_cookie_loginname]) ? ' checked="checked"' : '').' tabindex="3" />
           <label for="loginoption1">Save username</label>
           <br />
           <input name="loginoption2" type="checkbox" id="loginoption2" value="notimeout" tabindex="4" /> 
           <label for="loginoption2">Log me on automatically</label>
-        </div>');
+        </fieldset>');
     }
 
-    echo_strip( '
-                  <div class="login-button">
-                    <input type="submit" name="submit" value="Login" class="button" tabindex="5"'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'onclick="'.$rdf_login_cookie_usrpwd.'.value = calcMD5(\''.$random_string_security.'\' + calcMD5('.$rdf_login_cookie_usrpwd.'.value))"': '').' />
-                    <input name="logintype" type="hidden" id="logintype" value="'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'security' : 'standard').'" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    echo '<div class="field">';
+
+    if ($target_clean != '' ) {
+      echo '<input type="hidden" name="target" value="'.$target_clean.'" />';
+    }
+    echo_strip('
+          <input name="logintype" type="hidden" id="logintype" value="'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'security' : 'standard').'" />
+          <button type="submit" name="submit"'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? ' onclick="'.$rdf_login_cookie_usrpwd.'.value = calcMD5(\''.$random_string_security.'\' + calcMD5('.$rdf_login_cookie_usrpwd.'.value))"': '').'>Login</button>
+        </div>
+        <div class="corner_BL">
+          <div class="corner_BR"></div>
         </div>
       </div>');
 
     if ($err_message != "") {
       echo_strip('
-        <div style="background: #FAD163 none repeat scroll 0%; width: 300px; margin:10px;">
-          <div class="corner1">
-            <div class="corner2">
-              <div class="corner3">
-                <div class="corner4">
-                  <div style="text-align:center; padding: 4px; font-weight: bold;">');echo $err_message;echo_strip('</div>
-                </div>
-              </div>
-            </div>
+        <div class="bubble message">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>
+          <strong>');echo $err_message;echo_strip('</strong>
+          <div class="corner_BL">
+            <div class="corner_BR"></div>
           </div>
         </div>');
     }
@@ -314,9 +304,8 @@ class HTML_User_Login extends HTML_User
     }
     
     echo_strip('
-            <br />
-            <a href="'.$roscms_intern_page_link.'login&amp;subpage=lost">Lost username or password?</a>
-          </div>
+          <br />
+          <a href="'.$roscms_intern_page_link.'login&amp;subpage=lost">Lost username or password?</a>
         </div>
       </form>');
   } // end of member function

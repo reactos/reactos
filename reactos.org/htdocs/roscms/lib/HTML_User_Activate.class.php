@@ -56,17 +56,14 @@ class HTML_User_Activate extends HTML_User
 
     echo_strip('
       <h1>Activate myReactOS Account</h1>
-      <div class="u-h1">Activate myReactOS Account</div>
-      <div class="u-h2">Already a member? <a href="'.$roscms_intern_page_link.'login">Login now</a>!<br />
-        Don\'t have a '.$rdf_logon_system_name.' account yet? <a href="'.$roscms_intern_page_link.'register">Join now</a>, it\'s free and just takes a minute.</div>
+      <p>Activate myReactOS Account</p>
+      <p>Already a member? <a href="'.$roscms_intern_page_link.'login">Login now</a>!</p>
+      <p>Don\'t have a '.$rdf_logon_system_name.' account yet? <a href="'.$roscms_intern_page_link.'register">Join now</a>, it\'s free and just takes a minute.</p>
       <form action="'.$roscms_intern_page_link.'login&amp;subpage=activate" method="post">
-        <div align="center">
-          <div style="background: #e1eafb none repeat scroll 0%; width: 300px;">
-            <div class="corner1">
-              <div class="corner2">
-                <div class="corner3">
-                  <div class="corner4">
-                    <div style="text-align:center; padding: 4px;">');
+        <div class="bubble">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>');
 
     if (isset($_POST['registerpost']) && isset($_POST['useremail']) && $_POST['useremail'] != '') {
 
@@ -88,12 +85,12 @@ class HTML_User_Activate extends HTML_User
         $activation_code_exists = true;
       }
       else {
-        echo '<div class="login-title">Invalid Code</div>';
+        echo '<h2>Invalid Code</h2>';
         $err_message = 'Nothing for you to see here. <br />Please move along.';
       }
     }
     else {
-      echo '<div class="login-title">Invalid Code</div>';
+      echo '<h2>Invalid Code</h2>';
       $err_message = 'Nothing for you to see here. <br />Please move along.';
     }
 
@@ -109,50 +106,45 @@ class HTML_User_Activate extends HTML_User
       $stmt->execute();
 
       echo_strip('
-        <div class="login-title">Account activated</div>
+        <h2>Account activated</h2>
         <div><a href="'.$roscms_intern_page_link.'login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
     }
     elseif ($activation_code_exists) {
       echo_strip('
-          <div class="login-title">Activate your Account</div>
+          <h2>Activate your Account</h2>
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="useremail"'.((isset($_POST['registerpost']) && (EMail::isValid($_POST['useremail']) || !$mail_exists)) ? ' style="color:red;"' : '').'>Your E-Mail Address</label>
-          <input name="useremail" type="text" class="input" tabindex="4" id="useremail"'.(isset($_POST['useremail']) ? 'value="'.$_POST['useremail'].'"' : '').' size="50" maxlength="50" />
+          <input type="text" name="useremail" tabindex="4" id="useremail"'.(isset($_POST['useremail']) ? 'value="'.$_POST['useremail'].'"' : '').' maxlength="50" />
         </div>
 
-        <div class="login-button">
-          <input type="submit" name="submit" value="Activate Account" tabindex="8" /><br />
+        <div class="field">
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
+          <button type="submit" name="submit">Activate Account</button>
         </div>');
     }
 
     echo_strip('
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="corner_BL">
+          <div class="corner_BR"></div>
         </div>
       </div>');
 
     if ($err_message != '') {
       echo_strip('
-        <div style="background: #FAD163 none repeat scroll 0%; width: 300px; margin:10px;">
-          <div class="corner1">
-            <div class="corner2">
-              <div class="corner3">
-                <div class="corner4">
-                  <div style="text-align:center; padding: 4px;">');echo $err_message;echo_strip('</div>
-                </div>
-              </div>
-            </div>
+        <div class="bubble message">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>
+          <strong>');echo $err_message;echo_strip('</strong>
+          <div class="corner_BL">
+            <div class="corner_BR"></div>
           </div>
         </div>');
     }
 
     echo_strip('
-        </div>
       </form>');
   }
 

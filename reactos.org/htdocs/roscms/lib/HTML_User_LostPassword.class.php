@@ -61,31 +61,26 @@ class HTML_User_LostPassword extends HTML_User
     if (strlen($activation_code > 6)) {
       echo_strip('
         <h1><a href="'.$roscms_intern_page_link.'login">Login</a> &gt; Reset your Password</h1>
-        <div class="u-h1">Reset your Password</div>
-        <div class="u-h2">Have you forgotten your password of your '.$rdf_name.' account? Don\'t panic. You have already requested us that we reset your password. Now it\'s your turn to enter a new password for your '.$rdf_name.' account.</div>');
+        <p>Have you forgotten your password of your '.$rdf_name.' account? Don\'t panic. You have already requested us that we reset your password. Now it\'s your turn to enter a new password for your '.$rdf_name.' account.</p>');
     }
     else {
       echo_strip('
         <h1><a href="'.$roscms_intern_page_link.'login">Login</a> &gt; Lost Username or Password?</h1>
-        <div class="u-h1">Lost Username or Password?</div>
-        <div class="u-h2">Have you forgotten your username and/or password of your '.$rdf_name.' account? Don\'t panic. We can send you your username and let you reset your password. All you need is your email address.</div>');
+        <p>Have you forgotten your username and/or password of your '.$rdf_name.' account? Don\'t panic. We can send you your username and let you reset your password. All you need is your email address.</p>');
     }
 
     echo_strip('
       <form action="'.$roscms_intern_page_link.'login&amp;subpage=lost" method="post">
-        <div style="text-align: center;">
-          <div style="margin:0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
-            <div class="corner1">
-              <div class="corner2">
-                <div class="corner3">
-                  <div class="corner4">
-                    <div style="text-align:center; padding: 4px;">');
+        <div class="bubble">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>');
 
 
     if (strlen($activation_code) > 6) {
 
       if (!$password_id_exists) {
-        echo '<div class="login-title">Invalid Code</div>';
+        echo '<h2>Invalid Code</h2>';
         $err_message = "Nothing for you to see here. <br />Please move along.";
       }
     }
@@ -103,7 +98,7 @@ class HTML_User_LostPassword extends HTML_User
       $stmt->execute();
 
       echo_strip('
-        <div class="login-title">Password changed</div>
+        <h2>Password changed</h2>
         <div><a href="'.$roscms_intern_page_link.'login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
 
     }
@@ -132,7 +127,7 @@ class HTML_User_LostPassword extends HTML_User
       // send the Email
       if (EMail::send($_POST['useremail'], $subject, $message)) {
         echo_strip('
-          <div class="login-title">Account login data sent</div>
+          <h2>Account login data sent</h2>
           <div>Check your email inbox (and spam folder) for the email that contains your account login data.</div>');
         unset($_SESSION['rdf_security_code']);
         unset($message);
@@ -144,18 +139,17 @@ class HTML_User_LostPassword extends HTML_User
     elseif ($password_id_exists === null || $password_id_exists === true) {
 
       if (strlen($activation_code) > 6) {
-        echo '<div class="login-title">Reset your Password</div>';
+        echo '<h2>Reset your Password</h2>';
       }
       else {
-        echo '<div class="login-title">Lost Username or Password?</div>';
+        echo '<h2>Lost Username or Password?</h2>';
       }
-      echo '</div>';
 
       if (strlen($activation_code) > 6) {
         echo_strip('
-          <div class="login-form">
+          <div class="field">
             <label for="userpwd1"'.(isset($_POST['registerpost']) ? ' style="color:red;"' : '').'>New Password</label>
-            <input name="userpwd1" type="password" class="input" tabindex="2" id="userpwd1" size="50" maxlength="50" />');
+            <input type="password" name="userpwd1" tabindex="2" id="userpwd1" maxlength="50" />');
 
         if ((isset($_POST['userpwd1']) && strlen($_POST['userpwd1']) > $rdf_register_user_name_max)) {
           echo_strip('
@@ -165,28 +159,28 @@ class HTML_User_LostPassword extends HTML_User
         else {
           echo_strip('
             <br />
-            <span style="color:#817A71;">uppercase letters, lowercase letters, numbers, and symbols (ASCII characters)</span>');
+            <div class="detail">uppercase letters, lowercase letters, numbers, and symbols (ASCII characters)</div>');
         }
         
         echo_strip('
           </div>
-          <div class="login-form">
+          <div class="field">
             <label for="userpwd2"'.(isset($_POST['registerpost']) ? ' style="color:red;"' : '').'>Re-type Password</label>
-            <input name="userpwd2" type="password" class="input" tabindex="3" id="userpwd2" size="50" maxlength="50" />
+            <input type="password" name="userpwd2" tabindex="3" id="userpwd2" maxlength="50" />
           </div>');
       }
       else {
         echo_strip('
-          <div class="login-form">
+          <div class="field">
             <label for="useremail"'.((isset($_POST['registerpost']) && (empty($_POST['useremail']) || !EMail::isValid($_POST['useremail']))) ? ' style="color:red;"' : '').'>E-Mail</label>
-            <input name="useremail" type="text" class="input" tabindex="4" id="useremail"'.(isset($_POST['useremail']) ? 'value="'.$_POST['useremail'].'"' : '').' size="50" maxlength="50" />
+            <input name="useremail" type="text" tabindex="4" id="useremail"'.(isset($_POST['useremail']) ? 'value="'.$_POST['useremail'].'"' : '').' maxlength="50" />
           </div>');
       }
 
       echo_strip('
-        <div class="login-form">
+        <div class="field">
           <label for="usercaptcha"'.(isset($_POST['registerpost'])? ' style="color:red;"' :'').'>Type the code shown</label>
-          <input name="usercaptcha" type="text" class="input" tabindex="7" id="usercaptcha" size="50" maxlength="50" />');
+          <input type="text" name="usercaptcha" tabindex="7" id="usercaptcha" maxlength="50" />');
 
       echo '
           <script type="text/javascript">
@@ -214,39 +208,34 @@ class HTML_User_LostPassword extends HTML_User
 
       echo_strip('
         </div>
-        <div class="login-button">
-          <input type="submit" name="submit" value="Send" tabindex="8" /><br />
-          <input type="button" onclick="'."window.location=".$roscms_intern_webserver_roscms."'".'" tabindex="9" value="Cancel" name="cancel" style="color:#777777;" />
+        <div class="field">
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
+          <button type="submit" name="submit">Send</button>
+          <button type="button" onclick="'."window.location=".$roscms_intern_webserver_roscms."'".'" style="color:#777777;">Cancel</button>
         </div>');
     }
 
     echo_strip('
-              </div>
-            </div>
+          <div class="corner_BL">
+            <div class="corner_BR"></div>
           </div>
         </div>
-      </div>');
+      </form>');
 
     if ($err_message != '') {
       echo_strip('
-        <div style="background: #FAD163 none repeat scroll 0%; width: 300px; margin:10px;">
-          <div class="corner1">
-            <div class="corner2">
-              <div class="corner3">
-                <div class="corner4">
-                  <div style="text-align:center; padding: 4px;font-weight:bold;">');echo $err_message;echo_strip('</div>
-                </div>
-              </div>
-            </div>
+        <div class="bubble message">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>
+          <strong>');echo $err_message;echo_strip('</strong>
+          <div class="corner_BL">
+            <div class="corner_BR"></div>
           </div>
         </div>');
     }
 
-    echo_strip('
-        </div>
-      </form>');
-  }
+  } // end of member function body
 
 
 } // end of HTML_User_LostPassword

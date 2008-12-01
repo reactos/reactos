@@ -62,27 +62,20 @@ class HTML_User_ProfileEdit extends HTML_User
     if ($activation_code != '' && strlen($activation_code) > 6) {
       echo_strip('
         <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; <a href="'.$roscms_intern_page_link.'my&amp;subpage=edit">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
-        <div class="u-h1">Activate E-Mail Address</div>
-        <div class="u-h2">
-          So you have a new email address and would like to keep your '.$rdf_name.' account up-to-date? That is a very good idea. To confirm your email address change, please enter your new email address again.
-        </div>');
+        <p>So you have a new email address and would like to keep your '.$rdf_name.' account up-to-date? That is a very good idea. To confirm your email address change, please enter your new email address again.</p>');
     }
     else {
       echo_strip('
         <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; Edit My Profile</h1>
-        <div class="u-h1">Edit My Profile</div>
-        <div class="u-h2">Update your user account profile data to reflect the current state.</div>');
+        <p>Update your user account profile data to reflect the current state.</p>');
     }
     
     echo_strip('
       <form action="'.$roscms_intern_page_link.'my&amp;subpage=edit" method="post">
-        <div style="text-align:center;">
-          <div style="margin: 0px auto; background: #e1eafb none repeat scroll 0%; width: 300px;">
-            <div class="corner1">
-              <div class="corner2">
-                <div class="corner3">
-                  <div class="corner4">
-                    <div style="text-align:center; padding: 4px; ">');
+        <div class="bubble">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>');
 
     $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_fullname, user_email, user_email_activation, user_website, user_country, user_language, user_timezone, user_occupation, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress, user_setting_timeout FROM users WHERE user_id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
@@ -99,7 +92,7 @@ class HTML_User_ProfileEdit extends HTML_User
       ROSUser::syncSubsystems($profile['user_id']);
 
       echo_strip('
-        <div class="login-title">E-Mail Address Changed</div>
+        <h2>E-Mail Address Changed</h2>
         <div>
           <a href="'.$roscms_intern_page_link.'my" style="color: red !important; text-decoration:underline;">My Profile</a>
         </div>');
@@ -183,7 +176,7 @@ class HTML_User_ProfileEdit extends HTML_User
       $stmt->bindParam('user_id',$profile['user_id'],PDO::PARAM_INT);
       $stmt->execute();
 
-      echo '<div class="login-title">Profile Changes Saved</div>';
+      echo '<h2>Profile Changes Saved</h2>';
 
       if ($profile['user_email'] != $_POST['useremail']) {
 
@@ -212,39 +205,36 @@ class HTML_User_ProfileEdit extends HTML_User
     }
     elseif ($activation_code != '' && strlen($activation_code) > 6) {
       echo_strip('
-        <div class="login-title">Activate E-Mail Address</div>
-        <div class="login-form">
+        <h2>Activate E-Mail Address</h2>
+        <div class="field">
           <label for="useremail"'.(isset($_POST['registerpost']) ? ' style="color:red;"' : '').'>New E-Mail Address</label>
-          <input name="useremail" type="text" class="input" tabindex="4" id="useremail" value="" size="50" maxlength="50" />
+          <input type="text" name="useremail" tabindex="4" id="useremail" maxlength="50" />
         </div>
-        <div class="login-button">
-          <input type="submit" name="submit" value="Save" tabindex="16" />
-          <br />
-          <input type="button" onclick="'."window.location='".$roscms_intern_webserver_pages."'".'" tabindex="17" value="Cancel" name="cancel" style="color:#777777;" />
-          <input name="registerpost" type="hidden" id="registerpost" value="reg" />
+        <div class="field">
+          <input type="hidden" name="registerpost" id="registerpost" value="reg" />
+          <button type="submit" name="submit">Save</button>
+          <button type="button" onclick="'."window.location='".$roscms_intern_webserver_pages."'".'" style="color:#777777;">Cancel</button>
         </div>');
     }
     else {
       echo_strip('
-        <div class="login-title">Edit My Profile</div>
+        <h2>Edit My Profile</h2>
         <div style="font-style:italic">* not required</div>
-        <div class="login-form">
+        <div class="field">
           <label for="username">Username</label>
-          <input name="username" type="text" class="input" id="username" value="'.$profile['user_name'].'" size="50" maxlength="50" disabled="disabled" />
-          <br />
-          <span style="color:#817A71;">You cannot change your username.</span>
+          <input name="username" type="text" id="username" value="'.$profile['user_name'].'" maxlength="50" disabled="disabled" />
+          <div class="detail">You cannot change your username.</div>
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="userpwd3"'.((isset($_POST['registerpost']) && isset($_POST['userpwd3']) && $_POST['userpwd3'] != '') ? ' style="color:red;"' : '').'>Current Password *</label>
-          <input name="userpwd3" type="password" class="input" tabindex="1" id="userpwd3" size="50" maxlength="50" />
-          <br />
-          <span style="color:#817A71;">Only fill out the three password fields if you want to change your account password!</span>
+          <input type="password" name="userpwd3" tabindex="1" id="userpwd3" maxlength="50" />
+          <div class="detail">Only fill out the three password fields if you want to change your account password!</div>
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="userpwd1"'.((isset($_POST['registerpost']) && isset($_POST['userpwd3']) && $_POST['userpwd3'] != '') ? ' style="color:red;"' : '').'>New Password *</label>
-          <input name="userpwd1" type="password" class="input" tabindex="2" id="userpwd1" size="50" maxlength="50" />');
+          <input name="userpwd1" type="password" tabindex="2" id="userpwd1" maxlength="50" />');
           
       if ($safepwd === false || (isset($_POST['userpwd1']) && strlen($_POST['userpwd1']) > $rdf_register_user_name_max)) {
         echo_strip('
@@ -253,23 +243,21 @@ class HTML_User_ProfileEdit extends HTML_User
       }
       else {
         echo_strip('
-          <br />
-          <span style="color:#817A71;">uppercase letters, lowercase letters, numbers, and symbols (ASCII characters)</span>');
+          <div class="detail">uppercase letters, lowercase letters, numbers, and symbols (ASCII characters)</div>');
       }
 
       echo_strip('
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="userpwd2"'.((isset($_POST['registerpost']) && isset($_POST['userpwd3']) && $_POST['userpwd3'] != '') ? ' style="color:red;"' : '').'>Re-type New Password *</label>
-          <input name="userpwd2" type="password" class="input" tabindex="3" id="userpwd2" size="50" maxlength="50" />
+          <input type="password" name="userpwd2" tabindex="3" id="userpwd2" maxlength="50" />
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="useremail"'.((isset($_POST['registerpost']) && ($_POST['useremail'] == '' || !EMail::isValid($_POST['useremail']) && $_POST['useremail'] != $profile['user_email'])) ? ' style="color:red"' : '').'>E-Mail</label>
-          <input name="useremail" type="text" class="input" tabindex="4" id="useremail" value="'.((isset($_POST['useremail']) && $_POST['useremail'] != '') ?$_POST['useremail'] : $profile['user_email']).'" size="50" maxlength="50" />
-          <br />
-          <span style="color:#817A71;">Changing the email address involves an activation process.</span>');
+          <input type="text" name="useremail" tabindex="4" id="useremail" value="'.((isset($_POST['useremail']) && $_POST['useremail'] != '') ?$_POST['useremail'] : $profile['user_email']).'" maxlength="50" />
+          <div class="detail">Changing the email address involves an activation process.</div>');
 
       if (isset($_POST['registerpost']) && $existemail && $_POST['useremail'] != $profile['user_email']) {
         echo_strip('
@@ -280,12 +268,12 @@ class HTML_User_ProfileEdit extends HTML_User
       echo_strip('
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="userfullname">First and Last Name *</label>
-          <input name="userfullname" type="text" class="input" tabindex="5" id="userfullname" value="'.(isset($_POST['userfullname']) ? $_POST['userfullname'] : $profile['user_fullname']).'" size="50" maxlength="50" />
+          <input type="text" name="userfullname" tabindex="5" id="userfullname" value="'.(isset($_POST['userfullname']) ? $_POST['userfullname'] : $profile['user_fullname']).'" maxlength="50" />
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="language"'.(isset($_POST['registerpost']) && $_POST['language'] == '' ? ' style="color:red;"' : '').'>Language</label>
           <select id="language" name="language" tabindex="6">
           <option value="">Select One</option>');
@@ -295,7 +283,7 @@ class HTML_User_ProfileEdit extends HTML_User
       while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
         echo '<option value="'.$language['lang_id'].'"';
 
-        if ((isset($_POST['language']) && $_POST['language'] == $country['lang_id']) || (empty($_POST['language']) && $language['lang_id'] == $profile['user_language'])) {
+        if ((isset($_POST['language']) && $_POST['language'] == $language['lang_id']) || (empty($_POST['language']) && $language['lang_id'] == $profile['user_language'])) {
           echo ' selected="selected"'; 
         }
 
@@ -306,7 +294,7 @@ class HTML_User_ProfileEdit extends HTML_User
           </select>
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="country"'.(isset($_POST['registerpost']) && $_POST['country'] == '' ? ' style="color:red;"' : '').'>Country</label>
           <select id="country" name="country" tabindex="6">
           <option value="">Select One</option>');
@@ -327,7 +315,7 @@ class HTML_User_ProfileEdit extends HTML_User
           </select>
         </div>
         
-        <div class="login-form">
+        <div class="field">
           <label for="tzone"'.(isset($_POST['registerpost']) && isset($_POST['tzone']) && $_POST['tzone'] == '' ? ' style="color:red;"' : '').'>Timezone</label>
           <select name="tzone" id="tzone" tabindex="7">');
 
@@ -347,49 +335,40 @@ class HTML_User_ProfileEdit extends HTML_User
           </select>
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="userwebsite">Private Website *</label>
-          <input name="userwebsite" type="text" class="input" tabindex="8" id="userwebsite" value="'.((isset($_POST['userwebsite']) && $_POST['userwebsite'] != '') ? $_POST['userwebsite'] : $profile['user_website']).'" size="50" maxlength="50" />
+          <input type="text" name="userwebsite" tabindex="8" id="userwebsite" value="'.((isset($_POST['userwebsite']) && $_POST['userwebsite'] != '') ? $_POST['userwebsite'] : $profile['user_website']).'" maxlength="50" />
         </div>
 
-        <div class="login-form">
+        <div class="field">
           <label for="useroccupation">Occupation *</label>
-          <input name="useroccupation" type="text" class="input" tabindex="9" id="useroccupation" value="'.((isset($_POST['useroccupation']) && $_POST['useroccupation'] != '') ? $_POST['useroccupation'] : $profile['user_occupation']).'" size="50" maxlength="50" />
-        </div>
-        <div class="login-form">
-          <label for="useroccupation">Location *</label>
-          <a href="'.$roscms_intern_webserver_pages.'peoplemap/" style="color:#333333 !important; text-decoration:underline; font-weight:bold;">My Location on the Map</a>
+          <input type="text" name="useroccupation" tabindex="9" id="useroccupation" value="'.((isset($_POST['useroccupation']) && $_POST['useroccupation'] != '') ? $_POST['useroccupation'] : $profile['user_occupation']).'" maxlength="50" />
         </div>
 
-        <div class="login-options">
-          <fieldset>
-            <legend style="color:#817A71;margin-bottom: 10px;">&nbsp;Login Settings&nbsp;</legend>
-            <input name="loginoption1" style="width:auto;" type="checkbox" id="loginoption1" value="true"'.(isset($_POST['loginoption1']) || (empty($_POST['registerpost']) && $profile['user_setting_multisession'] == 'true') ? ' checked="checked"' : '').' tabindex="11" />
-            <label style="display:inline;" for="loginoption1">Multisession</label>
-            <br />
-            <input name="loginoption2" style="width:auto;" type="checkbox" id="loginoption2" value="true"'.(isset($_POST['loginoption2']) || (empty($_POST['registerpost']) && $profile['user_setting_browseragent'] == 'true') ? ' checked="checked"' : '').' tabindex="12" /> 
-            <label style="display:inline;" for="loginoption2">Browser Agent Check</label>
-            <br />
-            <input name="loginoption3" style="width:auto;" type="checkbox" id="loginoption3" value="true"'.((isset($_POST['loginoption3']) || (empty($_POST['registerpost']) && $profile['user_setting_ipaddress'] == 'true')) ? ' checked="checked"' : '').' tabindex="13" /> 
-            <label style="display:inline;" for="loginoption3">IP Address Check</label>
-            <br />
-            <input name="loginoption4" style="width:auto;" type="checkbox" id="loginoption4" value="true"'.((isset($_POST['loginoption4']) || (empty($_POST['registerpost']) && $profile['user_setting_timeout'] == 'true')) ? ' checked="checked"' : '').' tabindex="14" /> 
-            <label style="display:inline;" for="loginoption4">Log me on automatically</label>
-          </fieldset>
-        </div>
+        <fieldset>
+          <legend style="color:#817A71;margin-bottom: 10px;">Login Settings</legend>
+          <input name="loginoption1" style="width:auto;" type="checkbox" id="loginoption1" value="true"'.(isset($_POST['loginoption1']) || (empty($_POST['registerpost']) && $profile['user_setting_multisession'] == 'true') ? ' checked="checked"' : '').' tabindex="11" />
+          <label style="display:inline;" for="loginoption1">Multisession</label>
+          <br />
+          <input name="loginoption2" style="width:auto;" type="checkbox" id="loginoption2" value="true"'.(isset($_POST['loginoption2']) || (empty($_POST['registerpost']) && $profile['user_setting_browseragent'] == 'true') ? ' checked="checked"' : '').' tabindex="12" /> 
+          <label style="display:inline;" for="loginoption2">Browser Agent Check</label>
+          <br />
+          <input name="loginoption3" style="width:auto;" type="checkbox" id="loginoption3" value="true"'.((isset($_POST['loginoption3']) || (empty($_POST['registerpost']) && $profile['user_setting_ipaddress'] == 'true')) ? ' checked="checked"' : '').' tabindex="13" /> 
+          <label style="display:inline;" for="loginoption3">IP Address Check</label>
+          <br />
+          <input name="loginoption4" style="width:auto;" type="checkbox" id="loginoption4" value="true"'.((isset($_POST['loginoption4']) || (empty($_POST['registerpost']) && $profile['user_setting_timeout'] == 'true')) ? ' checked="checked"' : '').' tabindex="14" /> 
+          <label style="display:inline;" for="loginoption4">Log me on automatically</label>
+        </fieldset>
 
-        <div class="login-button">
-          <input type="submit" name="submit" value="Save" tabindex="16" />
-          <input type="button" onclick="'.("window.location='".$roscms_intern_webserver_roscms."'").'" tabindex="17" value="Cancel" name="cancel" style="color:#777777;" />
-          <input name="registerpost" type="hidden" id="registerpost" value="reg" />
+        <div class="field">
+          <input type="hidden" name="registerpost" id="registerpost" value="reg" />
+          <button type="submit" name="submit">Save</button>
+          <button type="button" onclick="'.("window.location='".$roscms_intern_webserver_roscms."'").'" style="color:#777777;">Cancel</button>
         </div>');
     }
     echo_strip('
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div class="corner_BL">
+            <div class="corner_BR"></div>
           </div>
         </div>
       </form>');

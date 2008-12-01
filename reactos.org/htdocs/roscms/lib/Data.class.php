@@ -345,13 +345,14 @@ class Data
       $stmt_update->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
 
     // Short Text Fields
-    $entries = explode('|', $stext_args);
+    $entries = explode('|', $stext);
+    var_dump($stext);
     foreach ($entries as $entry) {
       $entry_parts = explode('=', $entry);
 
       $stext_name = $entry_parts[0];
       $new_stext_name = $entry_parts[1];
-      $stext_del = $entry_parts[2];
+      $stext_del = $entry_parts[2]=='true';
 
       // check if any work has to be done
       if ($stext_name == $new_stext_name && $stext_del == false) {
@@ -398,16 +399,17 @@ class Data
       $stmt_delete->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
 
     // Text Fields
-    $entries = explode('|', $text_args);
+    $entries = explode('|', $text);
+    var_dump($text);
     foreach ($entries as $entry) {
       $entry_parts = explode('=', $entry);
 
-      $text_name = $entry_party[0];
+      $text_name = $entry_parts[0];
       $new_text_name = $entry_parts[1];
-      $text_del = $entry_parts[2];
+      $text_del = $entry_parts[2]=='true';
 
       // check if any work has to be done
-      if ($text_name == $new_text_name && $entry_text_del == false) {
+      if ($text_name == $new_text_name && $text_del == false) {
         continue;
       }
 
@@ -429,7 +431,7 @@ class Data
       }
 
       // delete field
-      else if ($entry_text_del == "true") {
+      else if ($text_del == "true") {
         $stmt_delete->bindParam('name',$text_name,PDO::PARAM_STR);
         $stmt_delete->execute();
       }
