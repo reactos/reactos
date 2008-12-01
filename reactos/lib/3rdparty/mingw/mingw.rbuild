@@ -4,7 +4,7 @@
 <module name="mingw_common" type="staticlibrary" isstartuplib="true" underscoresymbols="true" crt="dll">
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="mingw_common">include</include>
-	<!-- library>kernel32</library -->
+	<library>kernel32</library>
 	<file>_newmode.c</file>
 	<file>_wgetopt.c</file>
 	<file>argv.c</file>

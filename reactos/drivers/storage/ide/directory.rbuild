@@ -10,7 +10,7 @@
 	<directory name="pciidex">
 		<xi:include href="pciidex/pciidex.rbuild" />
 	</directory>
-	<directory name="uniata">
+	<!-- directory name="uniata">
 		<xi:include href="uniata/uniata.rbuild" />
-	</directory>
+	</directory -->
 </group>

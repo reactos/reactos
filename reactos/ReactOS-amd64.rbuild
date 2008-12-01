@@ -42,7 +42,6 @@
 	<compilerflag>-mpreferred-stack-boundary=4</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
-	<compilerflag>-fno-ira</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
 	<linkerflag>-disable-stdcall-fixup</linkerflag>
 	<linkerflag>-static</linkerflag>
@@ -141,30 +140,59 @@
 	</directory -->
 
 	<directory name="drivers">
+		<directory name="bus">
+			<directory name="pci">
+				<xi:include href="drivers/bus/pci/pci.rbuild" />
+			</directory>
+		</directory>
+
+		<!-- directory name="directx">
+			<xi:include href="drivers/directx/directory.rbuild" />
+		</directory -->
+
+		<!-- directory name="ksfilter">
+			<xi:include href="drivers/ksfilter/directory.rbuild" />
+		</directory -->
+
+		<!-- directory name="multimedia">
+			<xi:include href="drivers/multimedia/directory.rbuild" />
+		</directory -->
+
+		<directory name="parallel">
+			<xi:include href="drivers/parallel/directory.rbuild" />
+		</directory>
+
+		<directory name="serial">
+			<xi:include href="drivers/serial/directory.rbuild" />
+		</directory>
+
+		<!--directory name="usb">	
+			<xi:include href="drivers/usb/directory.rbuild" />
+		</directory-->
+	
+		<!--directory name="video">
+			<xi:include href="drivers/video/directory.rbuild" />
+		</directory-->
+	
+		<!-- directory name="wdm">
+			<xi:include href="drivers/wdm/wdm.rbuild" />
+		</directory -->
+
+		<directory name="wmi">
+			<xi:include href="drivers/wmi/wmilib.rbuild" />
+		</directory>
+
 		<directory name="base">
 			<xi:include href="drivers/base/directory.rbuild" />
 		</directory>
 		<directory name="filesystems">
-			<directory name="cdfs">
-				<xi:include href="drivers/filesystems/cdfs/cdfs.rbuild" />
-			</directory>
-			<directory name="fastfat">
-				<xi:include href="drivers/filesystems/fastfat/vfatfs.rbuild" />
-			</directory>
-			<directory name="ext2">
-				<!-- xi:include href="drivers/filesystems/ext2/ext2.rbuild" / -->
-			</directory>
+			<xi:include href="drivers/filesystems/directory.rbuild" />
 		</directory>
 		<directory name="input">
 			<xi:include href="drivers/input/directory.rbuild" />
 		</directory>
 		<directory name="network">
-			<directory name="ndis">
-				<xi:include href="drivers/network/ndis/ndis.rbuild" />
-			</directory>
-			<directory name="tcpip">
-				<xi:include href="drivers/network/tcpip/tcpip.rbuild" />
-			</directory>
+			<xi:include href="drivers/network/directory.rbuild" />
 		</directory>
 		<directory name="setup">
 			<xi:include href="drivers/setup/directory.rbuild" />
@@ -205,8 +233,82 @@
 	<directory name="include">
 		<xi:include href="include/directory.rbuild" />
 	</directory>
+
 	<directory name="lib">
-		<xi:include href="lib/lib.rbuild" />
+		<directory name="3rdparty">
+			<directory name="adns">
+				<xi:include href="lib/3rdparty/adns/adns.rbuild" />
+			</directory>
+			<directory name="bzip2">
+				<xi:include href="lib/3rdparty/bzip2/bzip2.rbuild" />
+			</directory>
+			<directory name="expat">
+				<xi:include href="lib/3rdparty/expat/expat.rbuild" />
+			</directory>
+			<directory name="icu4ros">
+				<xi:include href="lib/3rdparty/icu4ros/icu4ros.rbuild" />
+			</directory>
+			<directory name="libwine">
+				<xi:include href="lib/3rdparty/libwine/libwine.rbuild" />
+			</directory>
+			<directory name="libxml2">
+				<xi:include href="lib/3rdparty/libxml2/libxml2.rbuild" />
+			</directory>
+			<!--directory name="mingw">
+				<xi:include href="lib/3rdparty/mingw/mingw.rbuild" />
+			</directory-->
+			<directory name="zlib">
+				<xi:include href="lib/3rdparty/zlib/zlib.rbuild" />
+			</directory>
+		</directory>
+		<directory name="sdk">
+			<xi:include href="lib/sdk/sdk.rbuild" />
+		</directory>
+		<directory name="cmlib">
+			<xi:include href="lib/cmlib/cmlib.rbuild" />
+		</directory>
+		<directory name="debugsup">
+			<xi:include href="lib/debugsup/debugsup.rbuild" />
+		</directory>
+		<directory name="drivers">
+			<xi:include href="lib/drivers/directory.rbuild" />
+		</directory>
+		<directory name="epsapi">
+			<xi:include href="lib/epsapi/epsapi.rbuild" />
+		</directory>
+		<directory name="fslib">
+			<xi:include href="lib/fslib/directory.rbuild" />
+		</directory>
+		<directory name="host">
+			<xi:include href="lib/host/directory.rbuild" />
+		</directory>
+		<directory name="inflib">
+			<xi:include href="lib/inflib/inflib.rbuild" />
+		</directory>
+		<directory name="nls">
+			<xi:include href="lib/nls/nls.rbuild" />
+		</directory>
+		<directory name="ntdllsys">
+			<xi:include href="lib/ntdllsys/ntdllsys.rbuild" />
+		</directory>
+		<directory name="pseh">
+			<xi:include href="lib/pseh/pseh.rbuild" />
+		</directory>
+		<directory name="recyclebin">
+			<xi:include href="lib/recyclebin/recyclebin.rbuild" />
+		</directory>
+		<directory name="rossym">
+			<xi:include href="lib/rossym/rossym.rbuild" />
+		</directory>
+		<directory name="rtl">
+			<xi:include href="lib/rtl/rtl.rbuild" />
+		</directory>
+		<directory name="smlib">
+			<xi:include href="lib/smlib/smlib.rbuild" />
+		</directory>
+		<directory name="win32ksys">
+			<xi:include href="lib/win32ksys/win32ksys.rbuild" />
+		</directory>
 	</directory>
 
 	<directory name="media">

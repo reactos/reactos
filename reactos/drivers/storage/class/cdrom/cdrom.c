@@ -2913,7 +2913,7 @@ CdRomDeviceControlCompletion(
                                             srb,
                                             irpStack->MajorFunction,
                                             irpStack->Parameters.DeviceIoControl.IoControlCode,
-                                            MAXIMUM_RETRIES - ((ULONG)realIrpNextStack->Parameters.Others.Argument1),
+											MAXIMUM_RETRIES - ((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1),
                                             &status);
 
         DebugPrint((2, "CdRomDeviceControlCompletion: IRP will %sbe retried\n",
@@ -2972,10 +2972,10 @@ CdRomDeviceControlCompletion(
 
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+		if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG_PTR*)realIrpNextStack->Parameters.Others.Argument1-1)) {
 
 
-            if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
+            if (((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1)) {
 
                 //
                 // Retry request.
@@ -3477,7 +3477,7 @@ CdRomSetVolumeIntermediateCompletion(
                                             srb,
                                             irpStack->MajorFunction,
                                             irpStack->Parameters.DeviceIoControl.IoControlCode,
-                                            MAXIMUM_RETRIES - ((ULONG)realIrpNextStack->Parameters.Others.Argument1),
+                                            MAXIMUM_RETRIES - ((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1),
                                             &status);
 
         if (status == STATUS_DATA_OVERRUN) {
@@ -3497,9 +3497,9 @@ CdRomSetVolumeIntermediateCompletion(
             retry = TRUE;
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
 
-            if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
+            if (((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1)) {
 
                 //
                 // Retry request.
@@ -3808,7 +3808,7 @@ CdRomSwitchModeCompletion(
                                             srb,
                                             irpStack->MajorFunction,
                                             irpStack->Parameters.DeviceIoControl.IoControlCode,
-                                            MAXIMUM_RETRIES - ((ULONG)realIrpNextStack->Parameters.Others.Argument1),
+                                            MAXIMUM_RETRIES - ((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1),
                                             &status);
 
         //
@@ -3823,9 +3823,9 @@ CdRomSwitchModeCompletion(
             retry = TRUE;
         }
 
-        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (ULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PULONG)realIrpNextStack->Parameters.Others.Argument1-1)) {
 
-            if (((ULONG)realIrpNextStack->Parameters.Others.Argument1)) {
+            if (((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1)) {
 
                 //
                 // Retry request.
@@ -4184,7 +4184,7 @@ Return Value:
             srb,
             irpStack->MajorFunction,
             irpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ? irpStack->Parameters.DeviceIoControl.IoControlCode : 0,
-            MAXIMUM_RETRIES - ((ULONG)irpNextStack->Parameters.Others.Argument1),
+            MAXIMUM_RETRIES - ((ULONG_PTR)irpNextStack->Parameters.Others.Argument1),
             &status);
 
         //
@@ -4199,9 +4199,9 @@ Return Value:
             retry = TRUE;
         }
 
-        if (retry && (irpNextStack->Parameters.Others.Argument1 = (ULONG)irpNextStack->Parameters.Others.Argument1-1)) {
+        if (retry && (irpNextStack->Parameters.Others.Argument1 = (PULONG)irpNextStack->Parameters.Others.Argument1-1)) {
 
-            if (((ULONG)irpNextStack->Parameters.Others.Argument1)) {
+            if (((ULONG_PTR)irpNextStack->Parameters.Others.Argument1)) {
 
                 //
                 // Retry request.
@@ -5125,7 +5125,7 @@ Return Value:
         // The data buffer must be aligned.
         //
 
-        srb->DataBuffer = (PVOID) (((ULONG) (context + 1) + (alignment - 1)) &
+        srb->DataBuffer = (PVOID) (((ULONG_PTR) (context + 1) + (alignment - 1)) &
             ~(alignment - 1));
 
 
@@ -5875,13 +5875,13 @@ Return Value:
         irpStack = IoGetCurrentIrpStackLocation(irp);
 
         if (irpStack->Parameters.Others.Argument3) {
-            ULONG count;
+            ULONG_PTR count;
 
             //
             // Decrement the countdown timer and put the IRP back in the list.
             //
 
-            count = (ULONG) irpStack->Parameters.Others.Argument3;
+            count = (ULONG_PTR)irpStack->Parameters.Others.Argument3;
             count--;
             irpStack->Parameters.Others.Argument3 = (PVOID) count;
 
@@ -6495,7 +6495,7 @@ Return Value:
     PIO_STACK_LOCATION  irpStack;
     NTSTATUS            status;
     BOOLEAN             retry;
-    ULONG               retryCount;
+    ULONG_PTR           retryCount;
     ULONG               lastSector;
     PIRP                originalIrp;
     PCDROM_DATA         cddata;
@@ -6505,7 +6505,7 @@ Return Value:
     //
 
     irpStack = IoGetCurrentIrpStackLocation(Irp);
-    retryCount = (ULONG) irpStack->Parameters.Others.Argument1;
+    retryCount = (ULONG_PTR) irpStack->Parameters.Others.Argument1;
     originalIrp = (PIRP) irpStack->Parameters.Others.Argument2;
 
     if (!DeviceObject) {

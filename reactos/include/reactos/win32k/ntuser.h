@@ -375,7 +375,9 @@ typedef struct _CLIENTINFO
 } CLIENTINFO, *PCLIENTINFO;
 
 /* Make sure it fits exactly into the TEB */
+#ifdef __i386__
 C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET(TEB, Win32ClientInfo));
+#endif
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
