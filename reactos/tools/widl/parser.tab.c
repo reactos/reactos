@@ -3635,7 +3635,7 @@ yyreduce:
 
   case 222:
 #line 822 "parser.y"
-    { (yyval.type) = duptype(find_type("float", 0), 1); ;}
+    { (yyval.type) = find_type("float", 0); ;}
     break;
 
   case 223:
@@ -4065,7 +4065,7 @@ yyreduce:
 
   case 295:
 #line 1072 "parser.y"
-    { (yyval.type) = duptype(find_type_or_error("void", 0), 1); ;}
+    { (yyval.type) = find_type_or_error("void", 0); ;}
     break;
 
   case 296:
@@ -5076,7 +5076,7 @@ static type_t *make_class(char *name)
 
 static type_t *make_safearray(type_t *type)
 {
-  type_t *sa = duptype(find_type_or_error("SAFEARRAY", 0), 1);
+  type_t *sa = find_type_or_error("SAFEARRAY", 0);
   sa->ref = type;
   return make_type(pointer_default, sa);
 }

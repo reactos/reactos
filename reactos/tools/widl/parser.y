@@ -819,7 +819,7 @@ base_type: tBYTE				{ $$ = make_builtin($<str>1); }
 						}
 	| tUNSIGNED				{ $$ = make_int(-1); }
 	| tFLOAT				{ $$ = make_builtin($<str>1); }
-	| tSINGLE				{ $$ = duptype(find_type("float", 0), 1); }
+	| tSINGLE				{ $$ = find_type("float", 0); }
 	| tDOUBLE				{ $$ = make_builtin($<str>1); }
 	| tBOOLEAN				{ $$ = make_builtin($<str>1); }
 	| tERRORSTATUST				{ $$ = make_builtin($<str>1); }
@@ -1069,7 +1069,7 @@ structdef: tSTRUCT t_ident '{' fields '}'	{ $$ = get_typev(RPC_FC_STRUCT, $2, ts
                                                 }
 	;
 
-type:	  tVOID					{ $$ = duptype(find_type_or_error("void", 0), 1); }
+type:	  tVOID					{ $$ = find_type_or_error("void", 0); }
 	| aKNOWNTYPE				{ $$ = find_type_or_error($1, 0); }
 	| base_type				{ $$ = $1; }
 	| enumdef				{ $$ = $1; }
@@ -1761,7 +1761,7 @@ static type_t *make_class(char *name)
 
 static type_t *make_safearray(type_t *type)
 {
-  type_t *sa = duptype(find_type_or_error("SAFEARRAY", 0), 1);
+  type_t *sa = find_type_or_error("SAFEARRAY", 0);
   sa->ref = type;
   return make_type(pointer_default, sa);
 }
