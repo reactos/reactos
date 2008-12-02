@@ -1972,8 +1972,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                                   DDCAPS_3D;
 
         /* See msdn what pHalInfo->ddCaps.dwCaps2 does not support  */
-        pHalInfo->ddCaps.dwCaps2 = DDCAPS2_CERTIFIED          |
-                                   DDCAPS2_NOPAGELOCKREQUIRED |
+        pHalInfo->ddCaps.dwCaps2 = DDCAPS2_NOPAGELOCKREQUIRED |
                                    DDCAPS2_PRIMARYGAMMA       |
                                    DDCAPS2_WIDESURFACES       |
                                    DDCAPS2_CANRENDERWINDOWED;
