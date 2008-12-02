@@ -6,7 +6,6 @@
 	<define name="__REACTOS__" />
 	<define name="__REACTOS__" host="true" />
 
-	<property name="DBG_OR_KDBG" value="false" />
 	<if property="DBG" value="1">
 		<define name="DBG">1</define>
 		<define name="_SEH_ENABLE_TRACE" />
