@@ -605,7 +605,6 @@ modules\rosapps\demos\ddraw\ddraw_demo.exe                                 1   o
 modules\rosapps\demos\maze\maze.exe                                        1   optional
 modules\rosapps\dflat32\edit.exe                                           1   optional
 modules\rosapps\drivers\avtest\avtest.sys                                  1   optional
-modules\rosapps\drivers\ramdrv\ramdrv.sys                                  1   optional
 modules\rosapps\drivers\green\green.sys                                    1   optional
 modules\rosapps\templates\dialog\dialog.exe                                       1   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
