@@ -501,7 +501,8 @@ static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type);
 
 static type_t *reg_type(type_t *type, const char *name, int t);
 static type_t *reg_typedefs(decl_spec_t *decl_spec, var_list_t *names, attr_list_t *attrs);
-static type_t *find_type2(char *name, int t);
+static type_t *find_type_or_error(const char *name, int t);
+static type_t *find_type_or_error2(char *name, int t);
 static type_t *get_type(unsigned char type, char *name, int t);
 static type_t *get_typev(unsigned char type, var_t *name, int t);
 static int get_struct_type(var_list_t *fields);
@@ -529,7 +530,6 @@ static attr_list_t *check_module_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_coclass_attrs(const char *name, attr_list_t *attrs);
 const char *get_attr_display_name(enum attr_type type);
 static void add_explicit_handle_if_necessary(func_t *func);
-static type_t *find_type_helper(const char *name, int t);
 static void check_def(const type_t *t);
 
 static statement_t *make_statement(enum statement_type type);
@@ -3818,7 +3818,7 @@ yyreduce:
 
   case 253:
 #line 923 "parser.y"
-    { (yyval.type) = find_type2((yyvsp[0].str), 0); ;}
+    { (yyval.type) = find_type_or_error2((yyvsp[0].str), 0); ;}
     break;
 
   case 254:
@@ -3864,7 +3864,7 @@ yyreduce:
   case 258:
 #line 959 "parser.y"
     { (yyval.type) = (yyvsp[-7].ifinfo).interface;
-						  (yyval.type)->ref = find_type2((yyvsp[-5].str), 0);
+						  (yyval.type)->ref = find_type_or_error2((yyvsp[-5].str), 0);
 						  if (!(yyval.type)->ref) error_loc("base class '%s' not found in import\n", (yyvsp[-5].str));
 						  (yyval.type)->funcs = (yyvsp[-2].func_list);
 						  compute_method_indexes((yyval.type));
@@ -4065,12 +4065,12 @@ yyreduce:
 
   case 295:
 #line 1072 "parser.y"
-    { (yyval.type) = duptype(find_type("void", 0), 1); ;}
+    { (yyval.type) = duptype(find_type_or_error("void", 0), 1); ;}
     break;
 
   case 296:
 #line 1073 "parser.y"
-    { (yyval.type) = find_type((yyvsp[0].str), 0); ;}
+    { (yyval.type) = find_type_or_error((yyvsp[0].str), 0); ;}
     break;
 
   case 297:
@@ -4085,7 +4085,7 @@ yyreduce:
 
   case 299:
 #line 1076 "parser.y"
-    { (yyval.type) = find_type2((yyvsp[0].str), tsENUM); ;}
+    { (yyval.type) = find_type_or_error2((yyvsp[0].str), tsENUM); ;}
     break;
 
   case 300:
@@ -4105,7 +4105,7 @@ yyreduce:
 
   case 303:
 #line 1080 "parser.y"
-    { (yyval.type) = find_type2((yyvsp[0].str), tsUNION); ;}
+    { (yyval.type) = find_type_or_error2((yyvsp[0].str), tsUNION); ;}
     break;
 
   case 304:
@@ -4443,14 +4443,14 @@ static void decl_builtin(const char *name, unsigned char type)
 static type_t *make_builtin(char *name)
 {
   /* NAME is strdup'd in the lexer */
-  type_t *t = duptype(find_type(name, 0), 0);
+  type_t *t = duptype(find_type_or_error(name, 0), 0);
   t->name = name;
   return t;
 }
 
 static type_t *make_int(int sign)
 {
-  type_t *t = duptype(find_type("int", 0), 1);
+  type_t *t = duptype(find_type_or_error("int", 0), 1);
 
   t->sign = sign;
   if (sign < 0)
@@ -5076,7 +5076,7 @@ static type_t *make_class(char *name)
 
 static type_t *make_safearray(type_t *type)
 {
-  type_t *sa = duptype(find_type("SAFEARRAY", 0), 1);
+  type_t *sa = duptype(find_type_or_error("SAFEARRAY", 0), 1);
   sa->ref = type;
   return make_type(pointer_default, sa);
 }
@@ -5210,7 +5210,7 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
     if (name->name) {
       type_t *cur;
 
-      cur = find_type_helper(name->name, 0);
+      cur = find_type(name->name, 0);
       if (cur)
           error_loc("%s: redefinition error; original definition was at %s:%d\n",
                     cur->name, cur->loc_info.input_name,
@@ -5230,7 +5230,7 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
   return type;
 }
 
-static type_t *find_type_helper(const char *name, int t)
+type_t *find_type(const char *name, int t)
 {
   struct rtype *cur = type_hash[hash_ident(name)];
   while (cur && (cur->t != t || strcmp(cur->name, name)))
@@ -5238,9 +5238,9 @@ static type_t *find_type_helper(const char *name, int t)
   return cur ? cur->type : NULL;
 }
 
-type_t *find_type(const char *name, int t)
+static type_t *find_type_or_error(const char *name, int t)
 {
-  type_t *type = find_type_helper(name, t);
+  type_t *type = find_type(name, t);
   if (!type) {
     error_loc("type '%s' not found\n", name);
     return NULL;
@@ -5248,23 +5248,23 @@ type_t *find_type(const char *name, int t)
   return type;
 }
 
-static type_t *find_type2(char *name, int t)
+static type_t *find_type_or_error2(char *name, int t)
 {
-  type_t *tp = find_type(name, t);
+  type_t *tp = find_type_or_error(name, t);
   free(name);
   return tp;
 }
 
 int is_type(const char *name)
 {
-  return find_type_helper(name, 0) != NULL;
+  return find_type(name, 0) != NULL;
 }
 
 static type_t *get_type(unsigned char type, char *name, int t)
 {
   type_t *tp;
   if (name) {
-    tp = find_type_helper(name, t);
+    tp = find_type(name, t);
     if (tp) {
       free(name);
       return tp;
@@ -6020,7 +6020,7 @@ static void add_explicit_handle_if_necessary(func_t *func)
                  * function */
                 var_t *idl_handle = make_var(xstrdup("IDL_handle"));
                 idl_handle->attrs = append_attr(NULL, make_attr(ATTR_IN));
-                idl_handle->type = find_type("handle_t", 0);
+                idl_handle->type = find_type_or_error("handle_t", 0);
                 if (!func->def->type->fields_or_args)
                 {
                     func->def->type->fields_or_args = xmalloc( sizeof(*func->def->type->fields_or_args) );
@@ -6175,7 +6175,7 @@ static statement_t *process_typedefs(declarator_list_t *decls)
     LIST_FOR_EACH_ENTRY_SAFE( decl, next, decls, declarator_t, entry )
     {
         var_t *var = decl->var;
-        type_t *type = find_type(var->name, 0);
+        type_t *type = find_type_or_error(var->name, 0);
         *type_list = xmalloc(sizeof(type_list_t));
         (*type_list)->type = type;
         (*type_list)->next = NULL;

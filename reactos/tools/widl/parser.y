@@ -128,7 +128,8 @@ static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type);
 
 static type_t *reg_type(type_t *type, const char *name, int t);
 static type_t *reg_typedefs(decl_spec_t *decl_spec, var_list_t *names, attr_list_t *attrs);
-static type_t *find_type2(char *name, int t);
+static type_t *find_type_or_error(const char *name, int t);
+static type_t *find_type_or_error2(char *name, int t);
 static type_t *get_type(unsigned char type, char *name, int t);
 static type_t *get_typev(unsigned char type, var_t *name, int t);
 static int get_struct_type(var_list_t *fields);
@@ -156,7 +157,6 @@ static attr_list_t *check_module_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_coclass_attrs(const char *name, attr_list_t *attrs);
 const char *get_attr_display_name(enum attr_type type);
 static void add_explicit_handle_if_necessary(func_t *func);
-static type_t *find_type_helper(const char *name, int t);
 static void check_def(const type_t *t);
 
 static statement_t *make_statement(enum statement_type type);
@@ -920,7 +920,7 @@ dispinterfacedef: dispinterfacehdr '{'
 	;
 
 inherit:					{ $$ = NULL; }
-	| ':' aKNOWNTYPE			{ $$ = find_type2($2, 0); }
+	| ':' aKNOWNTYPE			{ $$ = find_type_or_error2($2, 0); }
 	;
 
 interface: tINTERFACE aIDENTIFIER		{ $$ = get_type(RPC_FC_IP, $2, 0); $$->kind = TKIND_INTERFACE; }
@@ -957,7 +957,7 @@ interfacedef: interfacehdr inherit
 	| interfacehdr ':' aIDENTIFIER
 	  '{' import int_statements '}'
 	   semicolon_opt			{ $$ = $1.interface;
-						  $$->ref = find_type2($3, 0);
+						  $$->ref = find_type_or_error2($3, 0);
 						  if (!$$->ref) error_loc("base class '%s' not found in import\n", $3);
 						  $$->funcs = $6;
 						  compute_method_indexes($$);
@@ -1069,15 +1069,15 @@ structdef: tSTRUCT t_ident '{' fields '}'	{ $$ = get_typev(RPC_FC_STRUCT, $2, ts
                                                 }
 	;
 
-type:	  tVOID					{ $$ = duptype(find_type("void", 0), 1); }
-	| aKNOWNTYPE				{ $$ = find_type($1, 0); }
+type:	  tVOID					{ $$ = duptype(find_type_or_error("void", 0), 1); }
+	| aKNOWNTYPE				{ $$ = find_type_or_error($1, 0); }
 	| base_type				{ $$ = $1; }
 	| enumdef				{ $$ = $1; }
-	| tENUM aIDENTIFIER			{ $$ = find_type2($2, tsENUM); }
+	| tENUM aIDENTIFIER			{ $$ = find_type_or_error2($2, tsENUM); }
 	| structdef				{ $$ = $1; }
 	| tSTRUCT aIDENTIFIER			{ $$ = get_type(RPC_FC_STRUCT, $2, tsSTRUCT); }
 	| uniondef				{ $$ = $1; }
-	| tUNION aIDENTIFIER			{ $$ = find_type2($2, tsUNION); }
+	| tUNION aIDENTIFIER			{ $$ = find_type_or_error2($2, tsUNION); }
 	| tSAFEARRAY '(' type ')'		{ $$ = make_safearray($3); }
 	;
 
@@ -1128,14 +1128,14 @@ static void decl_builtin(const char *name, unsigned char type)
 static type_t *make_builtin(char *name)
 {
   /* NAME is strdup'd in the lexer */
-  type_t *t = duptype(find_type(name, 0), 0);
+  type_t *t = duptype(find_type_or_error(name, 0), 0);
   t->name = name;
   return t;
 }
 
 static type_t *make_int(int sign)
 {
-  type_t *t = duptype(find_type("int", 0), 1);
+  type_t *t = duptype(find_type_or_error("int", 0), 1);
 
   t->sign = sign;
   if (sign < 0)
@@ -1761,7 +1761,7 @@ static type_t *make_class(char *name)
 
 static type_t *make_safearray(type_t *type)
 {
-  type_t *sa = duptype(find_type("SAFEARRAY", 0), 1);
+  type_t *sa = duptype(find_type_or_error("SAFEARRAY", 0), 1);
   sa->ref = type;
   return make_type(pointer_default, sa);
 }
@@ -1895,7 +1895,7 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
     if (name->name) {
       type_t *cur;
 
-      cur = find_type_helper(name->name, 0);
+      cur = find_type(name->name, 0);
       if (cur)
           error_loc("%s: redefinition error; original definition was at %s:%d\n",
                     cur->name, cur->loc_info.input_name,
@@ -1915,7 +1915,7 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
   return type;
 }
 
-static type_t *find_type_helper(const char *name, int t)
+type_t *find_type(const char *name, int t)
 {
   struct rtype *cur = type_hash[hash_ident(name)];
   while (cur && (cur->t != t || strcmp(cur->name, name)))
@@ -1923,9 +1923,9 @@ static type_t *find_type_helper(const char *name, int t)
   return cur ? cur->type : NULL;
 }
 
-type_t *find_type(const char *name, int t)
+static type_t *find_type_or_error(const char *name, int t)
 {
-  type_t *type = find_type_helper(name, t);
+  type_t *type = find_type(name, t);
   if (!type) {
     error_loc("type '%s' not found\n", name);
     return NULL;
@@ -1933,23 +1933,23 @@ type_t *find_type(const char *name, int t)
   return type;
 }
 
-static type_t *find_type2(char *name, int t)
+static type_t *find_type_or_error2(char *name, int t)
 {
-  type_t *tp = find_type(name, t);
+  type_t *tp = find_type_or_error(name, t);
   free(name);
   return tp;
 }
 
 int is_type(const char *name)
 {
-  return find_type_helper(name, 0) != NULL;
+  return find_type(name, 0) != NULL;
 }
 
 static type_t *get_type(unsigned char type, char *name, int t)
 {
   type_t *tp;
   if (name) {
-    tp = find_type_helper(name, t);
+    tp = find_type(name, t);
     if (tp) {
       free(name);
       return tp;
@@ -2705,7 +2705,7 @@ static void add_explicit_handle_if_necessary(func_t *func)
                  * function */
                 var_t *idl_handle = make_var(xstrdup("IDL_handle"));
                 idl_handle->attrs = append_attr(NULL, make_attr(ATTR_IN));
-                idl_handle->type = find_type("handle_t", 0);
+                idl_handle->type = find_type_or_error("handle_t", 0);
                 if (!func->def->type->fields_or_args)
                 {
                     func->def->type->fields_or_args = xmalloc( sizeof(*func->def->type->fields_or_args) );
@@ -2860,7 +2860,7 @@ static statement_t *process_typedefs(declarator_list_t *decls)
     LIST_FOR_EACH_ENTRY_SAFE( decl, next, decls, declarator_t, entry )
     {
         var_t *var = decl->var;
-        type_t *type = find_type(var->name, 0);
+        type_t *type = find_type_or_error(var->name, 0);
         *type_list = xmalloc(sizeof(type_list_t));
         (*type_list)->type = type;
         (*type_list)->next = NULL;
