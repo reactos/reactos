@@ -529,6 +529,8 @@ static attr_list_t *check_module_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_coclass_attrs(const char *name, attr_list_t *attrs);
 const char *get_attr_display_name(enum attr_type type);
 static void add_explicit_handle_if_necessary(func_t *func);
+static type_t *find_type_helper(const char *name, int t);
+static void check_def(const type_t *t);
 
 static statement_t *make_statement(enum statement_type type);
 static statement_t *make_statement_type_decl(type_t *type);
@@ -567,7 +569,7 @@ static func_list_t *append_func_from_statement(func_list_t *list, statement_t *s
 #endif
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 177 "parser.y"
+#line 179 "parser.y"
 typedef union YYSTYPE {
 	attr_t *attr;
 	attr_list_t *attr_list;
@@ -597,7 +599,7 @@ typedef union YYSTYPE {
 	enum storage_class stgclass;
 } YYSTYPE;
 /* Line 196 of yacc.c.  */
-#line 601 "parser.tab.c"
+#line 603 "parser.tab.c"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
@@ -609,7 +611,7 @@ typedef union YYSTYPE {
 
 
 /* Line 219 of yacc.c.  */
-#line 613 "parser.tab.c"
+#line 615 "parser.tab.c"
 
 #if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
 # define YYSIZE_T __SIZE_TYPE__
@@ -964,37 +966,37 @@ static const short int yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const unsigned short int yyrline[] =
 {
-       0,   349,   349,   358,   359,   360,   361,   365,   370,   373,
-     374,   377,   378,   379,   380,   381,   386,   387,   388,   389,
-     392,   393,   396,   397,   401,   402,   408,   411,   412,   416,
-     417,   418,   421,   423,   431,   438,   442,   444,   451,   459,
-     460,   463,   466,   467,   468,   472,   479,   487,   488,   491,
-     492,   496,   502,   503,   504,   507,   508,   511,   512,   513,
-     514,   515,   516,   517,   518,   519,   520,   521,   522,   523,
-     524,   525,   526,   527,   528,   529,   530,   531,   532,   533,
-     534,   535,   536,   537,   538,   539,   540,   541,   542,   543,
-     544,   545,   546,   547,   548,   549,   550,   551,   552,   553,
-     554,   555,   556,   557,   558,   559,   560,   561,   562,   563,
-     564,   568,   569,   570,   571,   572,   573,   574,   575,   576,
-     577,   578,   579,   580,   581,   582,   583,   584,   588,   589,
-     594,   595,   596,   597,   600,   601,   604,   608,   614,   615,
-     616,   619,   623,   632,   636,   641,   650,   651,   664,   665,
-     668,   669,   670,   671,   672,   673,   674,   675,   676,   677,
-     678,   679,   680,   681,   682,   683,   684,   685,   686,   687,
-     688,   689,   690,   691,   692,   693,   694,   695,   696,   697,
-     698,   699,   700,   701,   702,   703,   704,   705,   706,   707,
-     710,   711,   714,   720,   726,   727,   730,   735,   742,   743,
-     746,   747,   751,   752,   755,   763,   772,   778,   784,   785,
-     788,   789,   790,   793,   795,   798,   799,   800,   801,   802,
-     818,   819,   820,   821,   822,   823,   824,   827,   828,   831,
-     832,   833,   834,   835,   836,   837,   840,   841,   847,   856,
-     863,   864,   868,   871,   872,   875,   889,   890,   893,   894,
-     897,   907,   917,   918,   921,   922,   925,   938,   952,   965,
-     969,   970,   973,   974,   977,   982,   990,   991,   992,   996,
-    1000,  1003,  1004,  1007,  1008,  1012,  1013,  1017,  1018,  1019,
-    1023,  1025,  1026,  1030,  1031,  1032,  1033,  1040,  1041,  1045,
-    1046,  1050,  1051,  1052,  1055,  1066,  1067,  1068,  1069,  1070,
-    1071,  1072,  1073,  1074,  1075,  1078,  1084,  1090,  1107,  1108
+       0,   351,   351,   360,   361,   362,   363,   367,   372,   375,
+     376,   379,   380,   381,   382,   383,   388,   389,   390,   391,
+     394,   395,   398,   399,   403,   404,   410,   413,   414,   418,
+     419,   420,   423,   425,   433,   440,   444,   446,   453,   461,
+     462,   465,   468,   469,   470,   474,   481,   489,   490,   493,
+     494,   498,   504,   505,   506,   509,   510,   513,   514,   515,
+     516,   517,   518,   519,   520,   521,   522,   523,   524,   525,
+     526,   527,   528,   529,   530,   531,   532,   533,   534,   535,
+     536,   537,   538,   539,   540,   541,   542,   543,   544,   545,
+     546,   547,   548,   549,   550,   551,   552,   553,   554,   555,
+     556,   557,   558,   559,   560,   561,   562,   563,   564,   565,
+     566,   570,   571,   572,   573,   574,   575,   576,   577,   578,
+     579,   580,   581,   582,   583,   584,   585,   586,   590,   591,
+     596,   597,   598,   599,   602,   603,   606,   610,   616,   617,
+     618,   621,   625,   634,   638,   643,   652,   653,   666,   667,
+     670,   671,   672,   673,   674,   675,   676,   677,   678,   679,
+     680,   681,   682,   683,   684,   685,   686,   687,   688,   689,
+     690,   691,   692,   693,   694,   695,   696,   697,   698,   699,
+     700,   701,   702,   703,   704,   705,   706,   707,   708,   709,
+     712,   713,   716,   722,   728,   729,   732,   737,   744,   745,
+     748,   749,   753,   754,   757,   765,   774,   780,   786,   787,
+     790,   791,   792,   795,   797,   800,   801,   802,   803,   804,
+     820,   821,   822,   823,   824,   825,   826,   829,   830,   833,
+     834,   835,   836,   837,   838,   839,   842,   843,   851,   861,
+     868,   869,   873,   876,   877,   880,   894,   895,   898,   899,
+     902,   912,   922,   923,   926,   927,   930,   943,   957,   970,
+     974,   975,   978,   979,   982,   987,   995,   996,   997,  1001,
+    1005,  1008,  1009,  1012,  1013,  1017,  1018,  1022,  1023,  1024,
+    1028,  1030,  1031,  1035,  1036,  1037,  1038,  1045,  1046,  1050,
+    1051,  1055,  1056,  1057,  1060,  1072,  1073,  1074,  1075,  1076,
+    1077,  1078,  1079,  1080,  1081,  1084,  1090,  1097,  1115,  1116
 };
 #endif
 
@@ -2466,7 +2468,7 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 349 "parser.y"
+#line 351 "parser.y"
     { fix_incomplete();
 						  check_all_user_types((yyvsp[0].stmt_list));
 						  write_proxies((yyvsp[0].stmt_list));
@@ -2477,22 +2479,22 @@ yyreduce:
     break;
 
   case 3:
-#line 358 "parser.y"
+#line 360 "parser.y"
     { (yyval.stmt_list) = NULL; ;}
     break;
 
   case 4:
-#line 359 "parser.y"
+#line 361 "parser.y"
     { (yyval.stmt_list) = (yyvsp[-1].stmt_list); ;}
     break;
 
   case 5:
-#line 360 "parser.y"
+#line 362 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_type_decl((yyvsp[0].type))); ;}
     break;
 
   case 6:
-#line 361 "parser.y"
+#line 363 "parser.y"
     { (yyval.stmt_list) = (yyvsp[-2].stmt_list);
 						  reg_type((yyvsp[-1].type), (yyvsp[-1].type)->name, 0);
 						  if (!parse_only && do_header) write_coclass_forward((yyvsp[-1].type));
@@ -2500,7 +2502,7 @@ yyreduce:
     break;
 
   case 7:
-#line 365 "parser.y"
+#line 367 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_type_decl((yyvsp[0].type)));
 						  add_typelib_entry((yyvsp[0].type));
 						  reg_type((yyvsp[0].type), (yyvsp[0].type)->name, 0);
@@ -2509,44 +2511,44 @@ yyreduce:
     break;
 
   case 8:
-#line 370 "parser.y"
+#line 372 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_module((yyvsp[0].type)));
 						  add_typelib_entry((yyvsp[0].type));
 						;}
     break;
 
   case 9:
-#line 373 "parser.y"
+#line 375 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_library((yyvsp[0].typelib))); ;}
     break;
 
   case 10:
-#line 374 "parser.y"
+#line 376 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), (yyvsp[0].statement)); ;}
     break;
 
   case 11:
-#line 377 "parser.y"
+#line 379 "parser.y"
     { (yyval.stmt_list) = NULL; ;}
     break;
 
   case 12:
-#line 378 "parser.y"
+#line 380 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_reference((yyvsp[0].type))); if (!parse_only) add_typelib_entry((yyvsp[0].type)); ;}
     break;
 
   case 13:
-#line 379 "parser.y"
+#line 381 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_type_decl((yyvsp[0].type))); if (!parse_only) add_typelib_entry((yyvsp[0].type)); ;}
     break;
 
   case 14:
-#line 380 "parser.y"
+#line 382 "parser.y"
     { (yyval.stmt_list) = (yyvsp[-2].stmt_list); reg_type((yyvsp[-1].type), (yyvsp[-1].type)->name, 0); if (!parse_only && do_header) write_coclass_forward((yyvsp[-1].type)); ;}
     break;
 
   case 15:
-#line 381 "parser.y"
+#line 383 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_type_decl((yyvsp[0].type)));
 						  if (!parse_only) add_typelib_entry((yyvsp[0].type));
 						  reg_type((yyvsp[0].type), (yyvsp[0].type)->name, 0);
@@ -2555,42 +2557,42 @@ yyreduce:
     break;
 
   case 16:
-#line 386 "parser.y"
+#line 388 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_module((yyvsp[0].type))); if (!parse_only) add_typelib_entry((yyvsp[0].type)); ;}
     break;
 
   case 17:
-#line 387 "parser.y"
+#line 389 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), (yyvsp[0].statement)); ;}
     break;
 
   case 18:
-#line 388 "parser.y"
+#line 390 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_importlib((yyvsp[0].str))); ;}
     break;
 
   case 19:
-#line 389 "parser.y"
+#line 391 "parser.y"
     { (yyval.stmt_list) = append_statement((yyvsp[-1].stmt_list), make_statement_library((yyvsp[0].typelib))); ;}
     break;
 
   case 20:
-#line 392 "parser.y"
+#line 394 "parser.y"
     { (yyval.func_list) = NULL; ;}
     break;
 
   case 21:
-#line 393 "parser.y"
+#line 395 "parser.y"
     { (yyval.func_list) = append_func_from_statement( (yyvsp[-1].func_list), (yyvsp[0].statement) ); ;}
     break;
 
   case 24:
-#line 401 "parser.y"
+#line 403 "parser.y"
     { (yyval.statement) = make_statement_cppquote((yyvsp[0].str)); ;}
     break;
 
   case 25:
-#line 402 "parser.y"
+#line 404 "parser.y"
     { (yyval.statement) = make_statement_type_decl((yyvsp[-1].type));
 						  if (!parse_only && do_header) {
 						    write_type_def_or_decl(header, (yyvsp[-1].type), FALSE, NULL);
@@ -2600,29 +2602,29 @@ yyreduce:
     break;
 
   case 26:
-#line 408 "parser.y"
+#line 410 "parser.y"
     { (yyval.statement) = make_statement_declaration((yyvsp[-1].var));
 						  if (!parse_only && do_header) write_declaration((yyvsp[-1].var), is_in_interface);
 						;}
     break;
 
   case 27:
-#line 411 "parser.y"
+#line 413 "parser.y"
     { (yyval.statement) = make_statement_import((yyvsp[0].str)); ;}
     break;
 
   case 28:
-#line 412 "parser.y"
+#line 414 "parser.y"
     { (yyval.statement) = (yyvsp[-1].statement); ;}
     break;
 
   case 32:
-#line 421 "parser.y"
+#line 423 "parser.y"
     { (yyval.str) = (yyvsp[-1].str); if (!parse_only && do_header) fprintf(header, "%s\n", (yyvsp[-1].str)); ;}
     break;
 
   case 33:
-#line 423 "parser.y"
+#line 425 "parser.y"
     { assert(yychar == YYEMPTY);
 						  (yyval.import) = xmalloc(sizeof(struct _import_t));
 						  (yyval.import)->name = (yyvsp[-1].str);
@@ -2632,7 +2634,7 @@ yyreduce:
     break;
 
   case 34:
-#line 431 "parser.y"
+#line 433 "parser.y"
     { (yyval.str) = (yyvsp[-2].import)->name;
 						  if ((yyvsp[-2].import)->import_performed) pop_import();
 						  free((yyvsp[-2].import));
@@ -2641,17 +2643,17 @@ yyreduce:
     break;
 
   case 35:
-#line 439 "parser.y"
+#line 441 "parser.y"
     { (yyval.str) = (yyvsp[-2].str); if(!parse_only) add_importlib((yyvsp[-2].str)); ;}
     break;
 
   case 36:
-#line 442 "parser.y"
+#line 444 "parser.y"
     { (yyval.str) = (yyvsp[0].str); ;}
     break;
 
   case 37:
-#line 444 "parser.y"
+#line 446 "parser.y"
     { (yyval.typelib) = make_library((yyvsp[-1].str), check_library_attrs((yyvsp[-1].str), (yyvsp[-2].attr_list)));
 						  if (!parse_only) start_typelib((yyval.typelib));
 						  if (!parse_only && do_header) write_library((yyval.typelib));
@@ -2661,7 +2663,7 @@ yyreduce:
     break;
 
   case 38:
-#line 452 "parser.y"
+#line 454 "parser.y"
     { (yyval.typelib) = (yyvsp[-3].typelib);
 						  (yyval.typelib)->stmts = (yyvsp[-2].stmt_list);
 						  if (!parse_only) end_typelib();
@@ -2670,27 +2672,27 @@ yyreduce:
     break;
 
   case 39:
-#line 459 "parser.y"
+#line 461 "parser.y"
     { (yyval.var_list) = NULL; ;}
     break;
 
   case 41:
-#line 463 "parser.y"
+#line 465 "parser.y"
     { (yyval.var_list) = NULL; ;}
     break;
 
   case 42:
-#line 466 "parser.y"
+#line 468 "parser.y"
     { check_arg((yyvsp[0].var)); (yyval.var_list) = append_var( NULL, (yyvsp[0].var) ); ;}
     break;
 
   case 43:
-#line 467 "parser.y"
+#line 469 "parser.y"
     { check_arg((yyvsp[0].var)); (yyval.var_list) = append_var( (yyvsp[-2].var_list), (yyvsp[0].var)); ;}
     break;
 
   case 45:
-#line 472 "parser.y"
+#line 474 "parser.y"
     { (yyval.var) = (yyvsp[0].declarator)->var;
 						  (yyval.var)->attrs = (yyvsp[-2].attr_list);
 						  if ((yyvsp[-1].declspec)->stgclass != STG_NONE && (yyvsp[-1].declspec)->stgclass != STG_REGISTER)
@@ -2701,7 +2703,7 @@ yyreduce:
     break;
 
   case 46:
-#line 479 "parser.y"
+#line 481 "parser.y"
     { (yyval.var) = (yyvsp[0].declarator)->var;
 						  if ((yyvsp[-1].declspec)->stgclass != STG_NONE && (yyvsp[-1].declspec)->stgclass != STG_REGISTER)
 						    error_loc("invalid storage class for function parameter\n");
@@ -2711,22 +2713,22 @@ yyreduce:
     break;
 
   case 47:
-#line 487 "parser.y"
+#line 489 "parser.y"
     { (yyval.expr) = (yyvsp[-1].expr); ;}
     break;
 
   case 48:
-#line 488 "parser.y"
+#line 490 "parser.y"
     { (yyval.expr) = make_expr(EXPR_VOID); ;}
     break;
 
   case 49:
-#line 491 "parser.y"
+#line 493 "parser.y"
     { (yyval.attr_list) = NULL; ;}
     break;
 
   case 51:
-#line 496 "parser.y"
+#line 498 "parser.y"
     { (yyval.attr_list) = (yyvsp[-1].attr_list);
 						  if (!(yyval.attr_list))
 						    error_loc("empty attribute lists unsupported\n");
@@ -2734,426 +2736,426 @@ yyreduce:
     break;
 
   case 52:
-#line 502 "parser.y"
+#line 504 "parser.y"
     { (yyval.attr_list) = append_attr( NULL, (yyvsp[0].attr) ); ;}
     break;
 
   case 53:
-#line 503 "parser.y"
+#line 505 "parser.y"
     { (yyval.attr_list) = append_attr( (yyvsp[-2].attr_list), (yyvsp[0].attr) ); ;}
     break;
 
   case 54:
-#line 504 "parser.y"
+#line 506 "parser.y"
     { (yyval.attr_list) = append_attr( (yyvsp[-3].attr_list), (yyvsp[0].attr) ); ;}
     break;
 
   case 55:
-#line 507 "parser.y"
+#line 509 "parser.y"
     { (yyval.str_list) = append_str( NULL, (yyvsp[0].str) ); ;}
     break;
 
   case 56:
-#line 508 "parser.y"
+#line 510 "parser.y"
     { (yyval.str_list) = append_str( (yyvsp[-2].str_list), (yyvsp[0].str) ); ;}
     break;
 
   case 57:
-#line 511 "parser.y"
+#line 513 "parser.y"
     { (yyval.attr) = NULL; ;}
     break;
 
   case 58:
-#line 512 "parser.y"
+#line 514 "parser.y"
     { (yyval.attr) = make_attr(ATTR_AGGREGATABLE); ;}
     break;
 
   case 59:
-#line 513 "parser.y"
+#line 515 "parser.y"
     { (yyval.attr) = make_attr(ATTR_APPOBJECT); ;}
     break;
 
   case 60:
-#line 514 "parser.y"
+#line 516 "parser.y"
     { (yyval.attr) = make_attr(ATTR_ASYNC); ;}
     break;
 
   case 61:
-#line 515 "parser.y"
+#line 517 "parser.y"
     { (yyval.attr) = make_attr(ATTR_AUTO_HANDLE); ;}
     break;
 
   case 62:
-#line 516 "parser.y"
+#line 518 "parser.y"
     { (yyval.attr) = make_attr(ATTR_BINDABLE); ;}
     break;
 
   case 63:
-#line 517 "parser.y"
+#line 519 "parser.y"
     { (yyval.attr) = make_attr(ATTR_BROADCAST); ;}
     break;
 
   case 64:
-#line 518 "parser.y"
+#line 520 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_CALLAS, (yyvsp[-1].var)); ;}
     break;
 
   case 65:
-#line 519 "parser.y"
+#line 521 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_CASE, (yyvsp[-1].expr_list)); ;}
     break;
 
   case 66:
-#line 520 "parser.y"
+#line 522 "parser.y"
     { (yyval.attr) = make_attrv(ATTR_CONTEXTHANDLE, 0); ;}
     break;
 
   case 67:
-#line 521 "parser.y"
+#line 523 "parser.y"
     { (yyval.attr) = make_attrv(ATTR_CONTEXTHANDLE, 0); /* RPC_CONTEXT_HANDLE_DONT_SERIALIZE */ ;}
     break;
 
   case 68:
-#line 522 "parser.y"
+#line 524 "parser.y"
     { (yyval.attr) = make_attrv(ATTR_CONTEXTHANDLE, 0); /* RPC_CONTEXT_HANDLE_SERIALIZE */ ;}
     break;
 
   case 69:
-#line 523 "parser.y"
+#line 525 "parser.y"
     { (yyval.attr) = make_attr(ATTR_CONTROL); ;}
     break;
 
   case 70:
-#line 524 "parser.y"
+#line 526 "parser.y"
     { (yyval.attr) = make_attr(ATTR_DEFAULT); ;}
     break;
 
   case 71:
-#line 525 "parser.y"
+#line 527 "parser.y"
     { (yyval.attr) = make_attr(ATTR_DEFAULTCOLLELEM); ;}
     break;
 
   case 72:
-#line 526 "parser.y"
+#line 528 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_DEFAULTVALUE, (yyvsp[-1].expr)); ;}
     break;
 
   case 73:
-#line 527 "parser.y"
+#line 529 "parser.y"
     { (yyval.attr) = make_attr(ATTR_DEFAULTVTABLE); ;}
     break;
 
   case 74:
-#line 528 "parser.y"
+#line 530 "parser.y"
     { (yyval.attr) = make_attr(ATTR_DISPLAYBIND); ;}
     break;
 
   case 75:
-#line 529 "parser.y"
+#line 531 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_DLLNAME, (yyvsp[-1].str)); ;}
     break;
 
   case 76:
-#line 530 "parser.y"
+#line 532 "parser.y"
     { (yyval.attr) = make_attr(ATTR_DUAL); ;}
     break;
 
   case 77:
-#line 531 "parser.y"
+#line 533 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_ENDPOINT, (yyvsp[-1].str_list)); ;}
     break;
 
   case 78:
-#line 532 "parser.y"
+#line 534 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_ENTRY, (yyvsp[-1].expr)); ;}
     break;
 
   case 79:
-#line 533 "parser.y"
+#line 535 "parser.y"
     { (yyval.attr) = make_attr(ATTR_EXPLICIT_HANDLE); ;}
     break;
 
   case 80:
-#line 534 "parser.y"
+#line 536 "parser.y"
     { (yyval.attr) = make_attr(ATTR_HANDLE); ;}
     break;
 
   case 81:
-#line 535 "parser.y"
+#line 537 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_HELPCONTEXT, (yyvsp[-1].expr)); ;}
     break;
 
   case 82:
-#line 536 "parser.y"
+#line 538 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_HELPFILE, (yyvsp[-1].str)); ;}
     break;
 
   case 83:
-#line 537 "parser.y"
+#line 539 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_HELPSTRING, (yyvsp[-1].str)); ;}
     break;
 
   case 84:
-#line 538 "parser.y"
+#line 540 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_HELPSTRINGCONTEXT, (yyvsp[-1].expr)); ;}
     break;
 
   case 85:
-#line 539 "parser.y"
+#line 541 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_HELPSTRINGDLL, (yyvsp[-1].str)); ;}
     break;
 
   case 86:
-#line 540 "parser.y"
+#line 542 "parser.y"
     { (yyval.attr) = make_attr(ATTR_HIDDEN); ;}
     break;
 
   case 87:
-#line 541 "parser.y"
+#line 543 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_ID, (yyvsp[-1].expr)); ;}
     break;
 
   case 88:
-#line 542 "parser.y"
+#line 544 "parser.y"
     { (yyval.attr) = make_attr(ATTR_IDEMPOTENT); ;}
     break;
 
   case 89:
-#line 543 "parser.y"
+#line 545 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_IIDIS, (yyvsp[-1].expr)); ;}
     break;
 
   case 90:
-#line 544 "parser.y"
+#line 546 "parser.y"
     { (yyval.attr) = make_attr(ATTR_IMMEDIATEBIND); ;}
     break;
 
   case 91:
-#line 545 "parser.y"
+#line 547 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_IMPLICIT_HANDLE, (yyvsp[-1].str)); ;}
     break;
 
   case 92:
-#line 546 "parser.y"
+#line 548 "parser.y"
     { (yyval.attr) = make_attr(ATTR_IN); ;}
     break;
 
   case 93:
-#line 547 "parser.y"
+#line 549 "parser.y"
     { (yyval.attr) = make_attr(ATTR_INPUTSYNC); ;}
     break;
 
   case 94:
-#line 548 "parser.y"
+#line 550 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_LENGTHIS, (yyvsp[-1].expr_list)); ;}
     break;
 
   case 95:
-#line 549 "parser.y"
+#line 551 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_LIBLCID, (yyvsp[-1].expr)); ;}
     break;
 
   case 96:
-#line 550 "parser.y"
+#line 552 "parser.y"
     { (yyval.attr) = make_attr(ATTR_LOCAL); ;}
     break;
 
   case 97:
-#line 551 "parser.y"
+#line 553 "parser.y"
     { (yyval.attr) = make_attr(ATTR_NONBROWSABLE); ;}
     break;
 
   case 98:
-#line 552 "parser.y"
+#line 554 "parser.y"
     { (yyval.attr) = make_attr(ATTR_NONCREATABLE); ;}
     break;
 
   case 99:
-#line 553 "parser.y"
+#line 555 "parser.y"
     { (yyval.attr) = make_attr(ATTR_NONEXTENSIBLE); ;}
     break;
 
   case 100:
-#line 554 "parser.y"
+#line 556 "parser.y"
     { (yyval.attr) = make_attr(ATTR_OBJECT); ;}
     break;
 
   case 101:
-#line 555 "parser.y"
+#line 557 "parser.y"
     { (yyval.attr) = make_attr(ATTR_ODL); ;}
     break;
 
   case 102:
-#line 556 "parser.y"
+#line 558 "parser.y"
     { (yyval.attr) = make_attr(ATTR_OLEAUTOMATION); ;}
     break;
 
   case 103:
-#line 557 "parser.y"
+#line 559 "parser.y"
     { (yyval.attr) = make_attr(ATTR_OPTIONAL); ;}
     break;
 
   case 104:
-#line 558 "parser.y"
+#line 560 "parser.y"
     { (yyval.attr) = make_attr(ATTR_OUT); ;}
     break;
 
   case 105:
-#line 559 "parser.y"
+#line 561 "parser.y"
     { (yyval.attr) = make_attrv(ATTR_POINTERDEFAULT, (yyvsp[-1].num)); ;}
     break;
 
   case 106:
-#line 560 "parser.y"
+#line 562 "parser.y"
     { (yyval.attr) = make_attr(ATTR_PROPGET); ;}
     break;
 
   case 107:
-#line 561 "parser.y"
+#line 563 "parser.y"
     { (yyval.attr) = make_attr(ATTR_PROPPUT); ;}
     break;
 
   case 108:
-#line 562 "parser.y"
+#line 564 "parser.y"
     { (yyval.attr) = make_attr(ATTR_PROPPUTREF); ;}
     break;
 
   case 109:
-#line 563 "parser.y"
+#line 565 "parser.y"
     { (yyval.attr) = make_attr(ATTR_PUBLIC); ;}
     break;
 
   case 110:
-#line 565 "parser.y"
+#line 567 "parser.y"
     { expr_list_t *list = append_expr( NULL, (yyvsp[-3].expr) );
 						  list = append_expr( list, (yyvsp[-1].expr) );
 						  (yyval.attr) = make_attrp(ATTR_RANGE, list); ;}
     break;
 
   case 111:
-#line 568 "parser.y"
+#line 570 "parser.y"
     { (yyval.attr) = make_attr(ATTR_READONLY); ;}
     break;
 
   case 112:
-#line 569 "parser.y"
+#line 571 "parser.y"
     { (yyval.attr) = make_attr(ATTR_REQUESTEDIT); ;}
     break;
 
   case 113:
-#line 570 "parser.y"
+#line 572 "parser.y"
     { (yyval.attr) = make_attr(ATTR_RESTRICTED); ;}
     break;
 
   case 114:
-#line 571 "parser.y"
+#line 573 "parser.y"
     { (yyval.attr) = make_attr(ATTR_RETVAL); ;}
     break;
 
   case 115:
-#line 572 "parser.y"
+#line 574 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_SIZEIS, (yyvsp[-1].expr_list)); ;}
     break;
 
   case 116:
-#line 573 "parser.y"
+#line 575 "parser.y"
     { (yyval.attr) = make_attr(ATTR_SOURCE); ;}
     break;
 
   case 117:
-#line 574 "parser.y"
+#line 576 "parser.y"
     { (yyval.attr) = make_attr(ATTR_STRICTCONTEXTHANDLE); ;}
     break;
 
   case 118:
-#line 575 "parser.y"
+#line 577 "parser.y"
     { (yyval.attr) = make_attr(ATTR_STRING); ;}
     break;
 
   case 119:
-#line 576 "parser.y"
+#line 578 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_SWITCHIS, (yyvsp[-1].expr)); ;}
     break;
 
   case 120:
-#line 577 "parser.y"
+#line 579 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_SWITCHTYPE, (yyvsp[-1].type)); ;}
     break;
 
   case 121:
-#line 578 "parser.y"
+#line 580 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_TRANSMITAS, (yyvsp[-1].type)); ;}
     break;
 
   case 122:
-#line 579 "parser.y"
+#line 581 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_UUID, (yyvsp[-1].uuid)); ;}
     break;
 
   case 123:
-#line 580 "parser.y"
+#line 582 "parser.y"
     { (yyval.attr) = make_attr(ATTR_V1ENUM); ;}
     break;
 
   case 124:
-#line 581 "parser.y"
+#line 583 "parser.y"
     { (yyval.attr) = make_attr(ATTR_VARARG); ;}
     break;
 
   case 125:
-#line 582 "parser.y"
+#line 584 "parser.y"
     { (yyval.attr) = make_attrv(ATTR_VERSION, (yyvsp[-1].num)); ;}
     break;
 
   case 126:
-#line 583 "parser.y"
+#line 585 "parser.y"
     { (yyval.attr) = make_attrp(ATTR_WIREMARSHAL, (yyvsp[-1].type)); ;}
     break;
 
   case 127:
-#line 584 "parser.y"
+#line 586 "parser.y"
     { (yyval.attr) = make_attrv(ATTR_POINTERTYPE, (yyvsp[0].num)); ;}
     break;
 
   case 129:
-#line 589 "parser.y"
+#line 591 "parser.y"
     { if (!is_valid_uuid((yyvsp[0].str)))
 						    error_loc("invalid UUID: %s\n", (yyvsp[0].str));
 						  (yyval.uuid) = parse_uuid((yyvsp[0].str)); ;}
     break;
 
   case 130:
-#line 594 "parser.y"
-    { (yyval.str) = (yyvsp[0].str); ;}
-    break;
-
-  case 131:
-#line 595 "parser.y"
-    { (yyval.str) = (yyvsp[0].str); ;}
-    break;
-
-  case 132:
 #line 596 "parser.y"
     { (yyval.str) = (yyvsp[0].str); ;}
     break;
 
-  case 133:
+  case 131:
 #line 597 "parser.y"
     { (yyval.str) = (yyvsp[0].str); ;}
     break;
 
+  case 132:
+#line 598 "parser.y"
+    { (yyval.str) = (yyvsp[0].str); ;}
+    break;
+
+  case 133:
+#line 599 "parser.y"
+    { (yyval.str) = (yyvsp[0].str); ;}
+    break;
+
   case 134:
-#line 600 "parser.y"
+#line 602 "parser.y"
     { (yyval.var_list) = NULL; ;}
     break;
 
   case 135:
-#line 601 "parser.y"
+#line 603 "parser.y"
     { (yyval.var_list) = append_var( (yyvsp[-1].var_list), (yyvsp[0].var) ); ;}
     break;
 
   case 136:
-#line 604 "parser.y"
+#line 606 "parser.y"
     { attr_t *a = make_attrp(ATTR_CASE, append_expr( NULL, (yyvsp[-2].expr) ));
 						  (yyval.var) = (yyvsp[0].var); if (!(yyval.var)) (yyval.var) = make_var(NULL);
 						  (yyval.var)->attrs = append_attr( (yyval.var)->attrs, a );
@@ -3161,7 +3163,7 @@ yyreduce:
     break;
 
   case 137:
-#line 608 "parser.y"
+#line 610 "parser.y"
     { attr_t *a = make_attr(ATTR_DEFAULT);
 						  (yyval.var) = (yyvsp[0].var); if (!(yyval.var)) (yyval.var) = make_var(NULL);
 						  (yyval.var)->attrs = append_attr( (yyval.var)->attrs, a );
@@ -3169,17 +3171,17 @@ yyreduce:
     break;
 
   case 138:
-#line 614 "parser.y"
+#line 616 "parser.y"
     { (yyval.var_list) = NULL; ;}
     break;
 
   case 139:
-#line 615 "parser.y"
+#line 617 "parser.y"
     { (yyval.var_list) = (yyvsp[-1].var_list); ;}
     break;
 
   case 141:
-#line 619 "parser.y"
+#line 621 "parser.y"
     { if (!(yyvsp[0].var)->eval)
 						    (yyvsp[0].var)->eval = make_exprl(EXPR_NUM, 0 /* default for first enum entry */);
                                                   (yyval.var_list) = append_var( NULL, (yyvsp[0].var) );
@@ -3187,7 +3189,7 @@ yyreduce:
     break;
 
   case 142:
-#line 623 "parser.y"
+#line 625 "parser.y"
     { if (!(yyvsp[0].var)->eval)
                                                   {
                                                     var_t *last = LIST_ENTRY( list_tail((yyval.var_list)), var_t, entry );
@@ -3198,7 +3200,7 @@ yyreduce:
     break;
 
   case 143:
-#line 632 "parser.y"
+#line 634 "parser.y"
     { (yyval.var) = reg_const((yyvsp[-2].var));
 						  (yyval.var)->eval = (yyvsp[0].expr);
                                                   (yyval.var)->type = make_int(0);
@@ -3206,14 +3208,14 @@ yyreduce:
     break;
 
   case 144:
-#line 636 "parser.y"
+#line 638 "parser.y"
     { (yyval.var) = reg_const((yyvsp[0].var));
                                                   (yyval.var)->type = make_int(0);
 						;}
     break;
 
   case 145:
-#line 641 "parser.y"
+#line 643 "parser.y"
     { (yyval.type) = get_typev(RPC_FC_ENUM16, (yyvsp[-3].var), tsENUM);
 						  (yyval.type)->kind = TKIND_ENUM;
 						  (yyval.type)->fields_or_args = (yyvsp[-1].var_list);
@@ -3224,232 +3226,232 @@ yyreduce:
     break;
 
   case 146:
-#line 650 "parser.y"
+#line 652 "parser.y"
     { (yyval.expr_list) = append_expr( NULL, (yyvsp[0].expr) ); ;}
     break;
 
   case 147:
-#line 651 "parser.y"
+#line 653 "parser.y"
     { (yyval.expr_list) = append_expr( (yyvsp[-2].expr_list), (yyvsp[0].expr) ); ;}
     break;
 
   case 148:
-#line 664 "parser.y"
+#line 666 "parser.y"
     { (yyval.expr) = make_expr(EXPR_VOID); ;}
     break;
 
   case 150:
-#line 668 "parser.y"
+#line 670 "parser.y"
     { (yyval.expr) = make_exprl(EXPR_NUM, (yyvsp[0].num)); ;}
     break;
 
   case 151:
-#line 669 "parser.y"
+#line 671 "parser.y"
     { (yyval.expr) = make_exprl(EXPR_HEXNUM, (yyvsp[0].num)); ;}
     break;
 
   case 152:
-#line 670 "parser.y"
+#line 672 "parser.y"
     { (yyval.expr) = make_exprd(EXPR_DOUBLE, (yyvsp[0].dbl)); ;}
     break;
 
   case 153:
-#line 671 "parser.y"
+#line 673 "parser.y"
     { (yyval.expr) = make_exprl(EXPR_TRUEFALSE, 0); ;}
     break;
 
   case 154:
-#line 672 "parser.y"
+#line 674 "parser.y"
     { (yyval.expr) = make_exprl(EXPR_NUM, 0); ;}
     break;
 
   case 155:
-#line 673 "parser.y"
+#line 675 "parser.y"
     { (yyval.expr) = make_exprl(EXPR_TRUEFALSE, 1); ;}
     break;
 
   case 156:
-#line 674 "parser.y"
+#line 676 "parser.y"
     { (yyval.expr) = make_exprs(EXPR_STRLIT, (yyvsp[0].str)); ;}
     break;
 
   case 157:
-#line 675 "parser.y"
+#line 677 "parser.y"
     { (yyval.expr) = make_exprs(EXPR_WSTRLIT, (yyvsp[0].str)); ;}
     break;
 
   case 158:
-#line 676 "parser.y"
+#line 678 "parser.y"
     { (yyval.expr) = make_exprs(EXPR_IDENTIFIER, (yyvsp[0].str)); ;}
     break;
 
   case 159:
-#line 677 "parser.y"
+#line 679 "parser.y"
     { (yyval.expr) = make_expr3(EXPR_COND, (yyvsp[-4].expr), (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 160:
-#line 678 "parser.y"
+#line 680 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_LOGOR, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 161:
-#line 679 "parser.y"
+#line 681 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_LOGAND, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 162:
-#line 680 "parser.y"
+#line 682 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_OR , (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 163:
-#line 681 "parser.y"
+#line 683 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_XOR, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 164:
-#line 682 "parser.y"
+#line 684 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_AND, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 165:
-#line 683 "parser.y"
+#line 685 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_EQUALITY, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 166:
-#line 684 "parser.y"
+#line 686 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_INEQUALITY, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 167:
-#line 685 "parser.y"
+#line 687 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_GTR, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 168:
-#line 686 "parser.y"
+#line 688 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_LESS, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 169:
-#line 687 "parser.y"
+#line 689 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_GTREQL, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 170:
-#line 688 "parser.y"
+#line 690 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_LESSEQL, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 171:
-#line 689 "parser.y"
+#line 691 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_SHL, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 172:
-#line 690 "parser.y"
+#line 692 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_SHR, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 173:
-#line 691 "parser.y"
+#line 693 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_ADD, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 174:
-#line 692 "parser.y"
+#line 694 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_SUB, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 175:
-#line 693 "parser.y"
+#line 695 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_MOD, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 176:
-#line 694 "parser.y"
+#line 696 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_MUL, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 177:
-#line 695 "parser.y"
+#line 697 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_DIV, (yyvsp[-2].expr), (yyvsp[0].expr)); ;}
     break;
 
   case 178:
-#line 696 "parser.y"
+#line 698 "parser.y"
     { (yyval.expr) = make_expr1(EXPR_LOGNOT, (yyvsp[0].expr)); ;}
     break;
 
   case 179:
-#line 697 "parser.y"
+#line 699 "parser.y"
     { (yyval.expr) = make_expr1(EXPR_NOT, (yyvsp[0].expr)); ;}
     break;
 
   case 180:
-#line 698 "parser.y"
+#line 700 "parser.y"
     { (yyval.expr) = make_expr1(EXPR_POS, (yyvsp[0].expr)); ;}
     break;
 
   case 181:
-#line 699 "parser.y"
+#line 701 "parser.y"
     { (yyval.expr) = make_expr1(EXPR_NEG, (yyvsp[0].expr)); ;}
     break;
 
   case 182:
-#line 700 "parser.y"
+#line 702 "parser.y"
     { (yyval.expr) = make_expr1(EXPR_ADDRESSOF, (yyvsp[0].expr)); ;}
     break;
 
   case 183:
-#line 701 "parser.y"
+#line 703 "parser.y"
     { (yyval.expr) = make_expr1(EXPR_PPTR, (yyvsp[0].expr)); ;}
     break;
 
   case 184:
-#line 702 "parser.y"
+#line 704 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_MEMBER, make_expr1(EXPR_PPTR, (yyvsp[-2].expr)), make_exprs(EXPR_IDENTIFIER, (yyvsp[0].str))); ;}
     break;
 
   case 185:
-#line 703 "parser.y"
+#line 705 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_MEMBER, (yyvsp[-2].expr), make_exprs(EXPR_IDENTIFIER, (yyvsp[0].str))); ;}
     break;
 
   case 186:
-#line 704 "parser.y"
+#line 706 "parser.y"
     { (yyval.expr) = make_exprt(EXPR_CAST, (yyvsp[-2].type), (yyvsp[0].expr)); ;}
     break;
 
   case 187:
-#line 705 "parser.y"
+#line 707 "parser.y"
     { (yyval.expr) = make_exprt(EXPR_SIZEOF, (yyvsp[-1].type), NULL); ;}
     break;
 
   case 188:
-#line 706 "parser.y"
+#line 708 "parser.y"
     { (yyval.expr) = make_expr2(EXPR_ARRAY, (yyvsp[-3].expr), (yyvsp[-1].expr)); ;}
     break;
 
   case 189:
-#line 707 "parser.y"
+#line 709 "parser.y"
     { (yyval.expr) = (yyvsp[-1].expr); ;}
     break;
 
   case 190:
-#line 710 "parser.y"
+#line 712 "parser.y"
     { (yyval.expr_list) = append_expr( NULL, (yyvsp[0].expr) ); ;}
     break;
 
   case 191:
-#line 711 "parser.y"
+#line 713 "parser.y"
     { (yyval.expr_list) = append_expr( (yyvsp[-2].expr_list), (yyvsp[0].expr) ); ;}
     break;
 
   case 192:
-#line 714 "parser.y"
+#line 716 "parser.y"
     { (yyval.expr) = (yyvsp[0].expr);
 						  if (!(yyval.expr)->is_const)
 						      error_loc("expression is not an integer constant\n");
@@ -3457,7 +3459,7 @@ yyreduce:
     break;
 
   case 193:
-#line 720 "parser.y"
+#line 722 "parser.y"
     { (yyval.expr) = (yyvsp[0].expr);
 						  if (!(yyval.expr)->is_const && (yyval.expr)->type != EXPR_STRLIT && (yyval.expr)->type != EXPR_WSTRLIT)
 						      error_loc("expression is not constant\n");
@@ -3465,17 +3467,17 @@ yyreduce:
     break;
 
   case 194:
-#line 726 "parser.y"
+#line 728 "parser.y"
     { (yyval.var_list) = NULL; ;}
     break;
 
   case 195:
-#line 727 "parser.y"
+#line 729 "parser.y"
     { (yyval.var_list) = append_var_list((yyvsp[-1].var_list), (yyvsp[0].var_list)); ;}
     break;
 
   case 196:
-#line 731 "parser.y"
+#line 733 "parser.y"
     { const char *first = LIST_ENTRY(list_head((yyvsp[-1].declarator_list)), declarator_t, entry)->var->name;
 						  check_field_attrs(first, (yyvsp[-3].attr_list));
 						  (yyval.var_list) = set_var_types((yyvsp[-3].attr_list), (yyvsp[-2].declspec), (yyvsp[-1].declarator_list));
@@ -3483,7 +3485,7 @@ yyreduce:
     break;
 
   case 197:
-#line 735 "parser.y"
+#line 737 "parser.y"
     { var_t *v = make_var(NULL);
 						  v->type = (yyvsp[-1].type); v->attrs = (yyvsp[-2].attr_list);
 						  (yyval.var_list) = append_var(NULL, v);
@@ -3491,37 +3493,37 @@ yyreduce:
     break;
 
   case 198:
-#line 742 "parser.y"
+#line 744 "parser.y"
     { (yyval.var) = (yyvsp[-1].var); ;}
     break;
 
   case 199:
-#line 743 "parser.y"
+#line 745 "parser.y"
     { (yyval.var) = make_var(NULL); (yyval.var)->attrs = (yyvsp[-1].attr_list); ;}
     break;
 
   case 200:
-#line 746 "parser.y"
+#line 748 "parser.y"
     { (yyval.var_list) = NULL; ;}
     break;
 
   case 201:
-#line 747 "parser.y"
+#line 749 "parser.y"
     { (yyval.var_list) = append_var( (yyvsp[-1].var_list), (yyvsp[0].var) ); ;}
     break;
 
   case 202:
-#line 751 "parser.y"
+#line 753 "parser.y"
     { (yyval.var) = (yyvsp[-1].var); ;}
     break;
 
   case 203:
-#line 752 "parser.y"
+#line 754 "parser.y"
     { (yyval.var) = NULL; ;}
     break;
 
   case 204:
-#line 755 "parser.y"
+#line 757 "parser.y"
     { (yyval.var) = (yyvsp[0].declarator)->var;
 						  (yyval.var)->attrs = check_field_attrs((yyval.var)->name, (yyvsp[-2].attr_list));
 						  set_type((yyval.var), (yyvsp[-1].declspec), (yyvsp[0].declarator), FALSE);
@@ -3530,7 +3532,7 @@ yyreduce:
     break;
 
   case 205:
-#line 763 "parser.y"
+#line 765 "parser.y"
     { var_t *v = (yyvsp[0].declarator)->var;
 						  v->attrs = check_function_attrs(v->name, (yyvsp[-2].attr_list));
 						  set_type(v, (yyvsp[-1].declspec), (yyvsp[0].declarator), FALSE);
@@ -3540,7 +3542,7 @@ yyreduce:
     break;
 
   case 206:
-#line 773 "parser.y"
+#line 775 "parser.y"
     { (yyval.var) = (yyvsp[0].declarator)->var;
 						  (yyval.var)->attrs = (yyvsp[-2].attr_list);
 						  set_type((yyval.var), (yyvsp[-1].declspec), (yyvsp[0].declarator), FALSE);
@@ -3549,7 +3551,7 @@ yyreduce:
     break;
 
   case 207:
-#line 778 "parser.y"
+#line 780 "parser.y"
     { (yyval.var) = (yyvsp[0].declarator)->var;
 						  set_type((yyval.var), (yyvsp[-1].declspec), (yyvsp[0].declarator), FALSE);
 						  free((yyvsp[0].declarator));
@@ -3557,52 +3559,52 @@ yyreduce:
     break;
 
   case 208:
-#line 784 "parser.y"
+#line 786 "parser.y"
     { (yyval.var) = NULL; ;}
     break;
 
   case 210:
-#line 788 "parser.y"
+#line 790 "parser.y"
     { (yyval.var) = NULL; ;}
     break;
 
   case 211:
-#line 789 "parser.y"
+#line 791 "parser.y"
     { (yyval.var) = make_var((yyvsp[0].str)); ;}
     break;
 
   case 212:
-#line 790 "parser.y"
+#line 792 "parser.y"
     { (yyval.var) = make_var((yyvsp[0].str)); ;}
     break;
 
   case 213:
-#line 793 "parser.y"
-    { (yyval.var) = make_var((yyvsp[0].str)); ;}
-    break;
-
-  case 214:
 #line 795 "parser.y"
     { (yyval.var) = make_var((yyvsp[0].str)); ;}
     break;
 
+  case 214:
+#line 797 "parser.y"
+    { (yyval.var) = make_var((yyvsp[0].str)); ;}
+    break;
+
   case 215:
-#line 798 "parser.y"
+#line 800 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
   case 216:
-#line 799 "parser.y"
+#line 801 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
   case 218:
-#line 801 "parser.y"
+#line 803 "parser.y"
     { (yyval.type) = (yyvsp[0].type); (yyval.type)->sign = 1; ;}
     break;
 
   case 219:
-#line 802 "parser.y"
+#line 804 "parser.y"
     { (yyval.type) = (yyvsp[0].type); (yyval.type)->sign = -1;
 						  switch ((yyval.type)->type) {
 						  case RPC_FC_CHAR:  break;
@@ -3622,91 +3624,94 @@ yyreduce:
     break;
 
   case 220:
-#line 818 "parser.y"
+#line 820 "parser.y"
     { (yyval.type) = make_int(-1); ;}
     break;
 
   case 221:
-#line 819 "parser.y"
-    { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
-    break;
-
-  case 222:
-#line 820 "parser.y"
-    { (yyval.type) = duptype(find_type("float", 0), 1); ;}
-    break;
-
-  case 223:
 #line 821 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
-  case 224:
+  case 222:
 #line 822 "parser.y"
-    { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
+    { (yyval.type) = duptype(find_type("float", 0), 1); ;}
     break;
 
-  case 225:
+  case 223:
 #line 823 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
-  case 226:
+  case 224:
 #line 824 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
-  case 229:
-#line 831 "parser.y"
+  case 225:
+#line 825 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
-  case 230:
-#line 832 "parser.y"
-    { (yyval.type) = make_builtin((yyvsp[-1].str)); ;}
+  case 226:
+#line 826 "parser.y"
+    { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
-  case 231:
+  case 229:
 #line 833 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
-  case 232:
+  case 230:
 #line 834 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[-1].str)); ;}
     break;
 
-  case 233:
+  case 231:
 #line 835 "parser.y"
+    { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
+    break;
+
+  case 232:
+#line 836 "parser.y"
+    { (yyval.type) = make_builtin((yyvsp[-1].str)); ;}
+    break;
+
+  case 233:
+#line 837 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[-1].str)); ;}
     break;
 
   case 234:
-#line 836 "parser.y"
+#line 838 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
   case 235:
-#line 837 "parser.y"
+#line 839 "parser.y"
     { (yyval.type) = make_builtin((yyvsp[0].str)); ;}
     break;
 
   case 236:
-#line 840 "parser.y"
+#line 842 "parser.y"
     { (yyval.type) = make_class((yyvsp[0].str)); ;}
     break;
 
   case 237:
-#line 841 "parser.y"
+#line 843 "parser.y"
     { (yyval.type) = find_type((yyvsp[0].str), 0);
-						  if ((yyval.type)->defined) error_loc("multiple definition error\n");
-						  if ((yyval.type)->kind != TKIND_COCLASS) error_loc("%s was not declared a coclass\n", (yyvsp[0].str));
+						  if ((yyval.type)->kind != TKIND_COCLASS)
+						    error_loc("%s was not declared a coclass at %s:%d\n",
+							      (yyvsp[0].str), (yyval.type)->loc_info.input_name,
+							      (yyval.type)->loc_info.line_number);
 						;}
     break;
 
   case 238:
-#line 847 "parser.y"
+#line 851 "parser.y"
     { (yyval.type) = (yyvsp[0].type);
+						  check_def((yyval.type));
 						  (yyval.type)->attrs = check_coclass_attrs((yyvsp[0].type)->name, (yyvsp[-1].attr_list));
 						  if (!parse_only && do_header)
 						    write_coclass((yyval.type));
@@ -3716,7 +3721,7 @@ yyreduce:
     break;
 
   case 239:
-#line 857 "parser.y"
+#line 862 "parser.y"
     { (yyval.type) = (yyvsp[-4].type);
 						  (yyval.type)->ifaces = (yyvsp[-2].ifref_list);
 						  (yyval.type)->defined = TRUE;
@@ -3724,37 +3729,37 @@ yyreduce:
     break;
 
   case 240:
-#line 863 "parser.y"
+#line 868 "parser.y"
     { (yyval.ifref_list) = NULL; ;}
     break;
 
   case 241:
-#line 864 "parser.y"
+#line 869 "parser.y"
     { (yyval.ifref_list) = append_ifref( (yyvsp[-1].ifref_list), (yyvsp[0].ifref) ); ;}
     break;
 
   case 242:
-#line 868 "parser.y"
+#line 873 "parser.y"
     { (yyval.ifref) = make_ifref((yyvsp[0].type)); (yyval.ifref)->attrs = (yyvsp[-1].attr_list); ;}
     break;
 
   case 243:
-#line 871 "parser.y"
+#line 876 "parser.y"
     { (yyval.type) = get_type(RPC_FC_IP, (yyvsp[0].str), 0); (yyval.type)->kind = TKIND_DISPATCH; ;}
     break;
 
   case 244:
-#line 872 "parser.y"
+#line 877 "parser.y"
     { (yyval.type) = get_type(RPC_FC_IP, (yyvsp[0].str), 0); (yyval.type)->kind = TKIND_DISPATCH; ;}
     break;
 
   case 245:
-#line 875 "parser.y"
+#line 880 "parser.y"
     { attr_t *attrs;
 						  is_in_interface = TRUE;
 						  is_object_interface = TRUE;
 						  (yyval.type) = (yyvsp[0].type);
-						  if ((yyval.type)->defined) error_loc("multiple definition error\n");
+						  check_def((yyval.type));
 						  attrs = make_attr(ATTR_DISPINTERFACE);
 						  (yyval.type)->attrs = append_attr( check_dispiface_attrs((yyvsp[0].type)->name, (yyvsp[-1].attr_list)), attrs );
 						  (yyval.type)->ref = find_type("IDispatch", 0);
@@ -3765,27 +3770,27 @@ yyreduce:
     break;
 
   case 246:
-#line 889 "parser.y"
+#line 894 "parser.y"
     { (yyval.var_list) = NULL; ;}
     break;
 
   case 247:
-#line 890 "parser.y"
+#line 895 "parser.y"
     { (yyval.var_list) = append_var( (yyvsp[-2].var_list), (yyvsp[-1].var) ); ;}
     break;
 
   case 248:
-#line 893 "parser.y"
+#line 898 "parser.y"
     { (yyval.func_list) = NULL; ;}
     break;
 
   case 249:
-#line 894 "parser.y"
+#line 899 "parser.y"
     { (yyval.func_list) = append_func( (yyvsp[-2].func_list), (yyvsp[-1].func) ); ;}
     break;
 
   case 250:
-#line 900 "parser.y"
+#line 905 "parser.y"
     { (yyval.type) = (yyvsp[-4].type);
 						  (yyval.type)->fields_or_args = (yyvsp[-2].var_list);
 						  (yyval.type)->funcs = (yyvsp[-1].func_list);
@@ -3796,7 +3801,7 @@ yyreduce:
     break;
 
   case 251:
-#line 908 "parser.y"
+#line 913 "parser.y"
     { (yyval.type) = (yyvsp[-4].type);
 						  (yyval.type)->fields_or_args = (yyvsp[-2].type)->fields_or_args;
 						  (yyval.type)->funcs = (yyvsp[-2].type)->funcs;
@@ -3807,34 +3812,34 @@ yyreduce:
     break;
 
   case 252:
-#line 917 "parser.y"
+#line 922 "parser.y"
     { (yyval.type) = NULL; ;}
     break;
 
   case 253:
-#line 918 "parser.y"
+#line 923 "parser.y"
     { (yyval.type) = find_type2((yyvsp[0].str), 0); ;}
     break;
 
   case 254:
-#line 921 "parser.y"
+#line 926 "parser.y"
     { (yyval.type) = get_type(RPC_FC_IP, (yyvsp[0].str), 0); (yyval.type)->kind = TKIND_INTERFACE; ;}
     break;
 
   case 255:
-#line 922 "parser.y"
+#line 927 "parser.y"
     { (yyval.type) = get_type(RPC_FC_IP, (yyvsp[0].str), 0); (yyval.type)->kind = TKIND_INTERFACE; ;}
     break;
 
   case 256:
-#line 925 "parser.y"
+#line 930 "parser.y"
     { (yyval.ifinfo).interface = (yyvsp[0].type);
 						  (yyval.ifinfo).old_pointer_default = pointer_default;
 						  if (is_attr((yyvsp[-1].attr_list), ATTR_POINTERDEFAULT))
 						    pointer_default = get_attrv((yyvsp[-1].attr_list), ATTR_POINTERDEFAULT);
 						  is_object_interface = is_object((yyvsp[-1].attr_list));
 						  is_in_interface = TRUE;
-						  if ((yyvsp[0].type)->defined) error_loc("multiple definition error\n");
+						  check_def((yyvsp[0].type));
 						  (yyvsp[0].type)->attrs = check_iface_attrs((yyvsp[0].type)->name, (yyvsp[-1].attr_list));
 						  (yyvsp[0].type)->defined = TRUE;
 						  if (!parse_only && do_header) write_forward((yyvsp[0].type));
@@ -3842,7 +3847,7 @@ yyreduce:
     break;
 
   case 257:
-#line 939 "parser.y"
+#line 944 "parser.y"
     { (yyval.type) = (yyvsp[-5].ifinfo).interface;
 						  (yyval.type)->ref = (yyvsp[-4].type);
 						  (yyval.type)->funcs = (yyvsp[-2].func_list);
@@ -3857,7 +3862,7 @@ yyreduce:
     break;
 
   case 258:
-#line 954 "parser.y"
+#line 959 "parser.y"
     { (yyval.type) = (yyvsp[-7].ifinfo).interface;
 						  (yyval.type)->ref = find_type2((yyvsp[-5].str), 0);
 						  if (!(yyval.type)->ref) error_loc("base class '%s' not found in import\n", (yyvsp[-5].str));
@@ -3872,39 +3877,39 @@ yyreduce:
     break;
 
   case 259:
-#line 965 "parser.y"
+#line 970 "parser.y"
     { (yyval.type) = (yyvsp[-1].type); ;}
     break;
 
   case 260:
-#line 969 "parser.y"
+#line 974 "parser.y"
     { (yyval.type) = (yyvsp[-1].type); if (!parse_only && do_header) write_forward((yyval.type)); ;}
     break;
 
   case 261:
-#line 970 "parser.y"
+#line 975 "parser.y"
     { (yyval.type) = (yyvsp[-1].type); if (!parse_only && do_header) write_forward((yyval.type)); ;}
     break;
 
   case 262:
-#line 973 "parser.y"
+#line 978 "parser.y"
     { (yyval.type) = make_type(0, NULL); (yyval.type)->name = (yyvsp[0].str); (yyval.type)->kind = TKIND_MODULE; ;}
     break;
 
   case 263:
-#line 974 "parser.y"
+#line 979 "parser.y"
     { (yyval.type) = make_type(0, NULL); (yyval.type)->name = (yyvsp[0].str); (yyval.type)->kind = TKIND_MODULE; ;}
     break;
 
   case 264:
-#line 977 "parser.y"
+#line 982 "parser.y"
     { (yyval.type) = (yyvsp[0].type);
 						  (yyval.type)->attrs = check_module_attrs((yyvsp[0].type)->name, (yyvsp[-1].attr_list));
 						;}
     break;
 
   case 265:
-#line 983 "parser.y"
+#line 988 "parser.y"
     { (yyval.type) = (yyvsp[-4].type);
 						  (yyval.type)->funcs = (yyvsp[-2].func_list);
 						  /* FIXME: if (!parse_only && do_header) write_module($$); */
@@ -3912,97 +3917,97 @@ yyreduce:
     break;
 
   case 266:
-#line 990 "parser.y"
+#line 995 "parser.y"
     { (yyval.stgclass) = STG_EXTERN; ;}
     break;
 
   case 267:
-#line 991 "parser.y"
+#line 996 "parser.y"
     { (yyval.stgclass) = STG_STATIC; ;}
     break;
 
   case 268:
-#line 992 "parser.y"
+#line 997 "parser.y"
     { (yyval.stgclass) = STG_REGISTER; ;}
     break;
 
   case 269:
-#line 996 "parser.y"
+#line 1001 "parser.y"
     { (yyval.attr) = make_attr(ATTR_INLINE); ;}
     break;
 
   case 270:
-#line 1000 "parser.y"
+#line 1005 "parser.y"
     { (yyval.attr) = make_attr(ATTR_CONST); ;}
     break;
 
   case 271:
-#line 1003 "parser.y"
+#line 1008 "parser.y"
     { (yyval.attr_list) = NULL; ;}
     break;
 
   case 272:
-#line 1004 "parser.y"
+#line 1009 "parser.y"
     { (yyval.attr_list) = append_attr((yyvsp[-1].attr_list), (yyvsp[0].attr)); ;}
     break;
 
   case 273:
-#line 1007 "parser.y"
+#line 1012 "parser.y"
     { (yyval.declspec) = make_decl_spec((yyvsp[-1].type), (yyvsp[0].declspec), NULL, NULL, STG_NONE); ;}
     break;
 
   case 274:
-#line 1009 "parser.y"
+#line 1014 "parser.y"
     { (yyval.declspec) = make_decl_spec((yyvsp[-1].type), (yyvsp[-2].declspec), (yyvsp[0].declspec), NULL, STG_NONE); ;}
     break;
 
   case 275:
-#line 1012 "parser.y"
+#line 1017 "parser.y"
     { (yyval.declspec) = NULL; ;}
     break;
 
   case 277:
-#line 1017 "parser.y"
+#line 1022 "parser.y"
     { (yyval.declspec) = make_decl_spec(NULL, (yyvsp[0].declspec), NULL, (yyvsp[-1].attr), STG_NONE); ;}
     break;
 
   case 278:
-#line 1018 "parser.y"
+#line 1023 "parser.y"
     { (yyval.declspec) = make_decl_spec(NULL, (yyvsp[0].declspec), NULL, (yyvsp[-1].attr), STG_NONE); ;}
     break;
 
   case 279:
-#line 1019 "parser.y"
+#line 1024 "parser.y"
     { (yyval.declspec) = make_decl_spec(NULL, (yyvsp[0].declspec), NULL, NULL, (yyvsp[-1].stgclass)); ;}
     break;
 
   case 280:
-#line 1024 "parser.y"
+#line 1029 "parser.y"
     { (yyval.declarator) = (yyvsp[0].declarator); (yyval.declarator)->type = append_ptrchain_type((yyval.declarator)->type, make_pointer_type(NULL, (yyvsp[-1].attr_list))); ;}
     break;
 
   case 281:
-#line 1025 "parser.y"
+#line 1030 "parser.y"
     { (yyval.declarator) = (yyvsp[0].declarator); (yyval.declarator)->type->attrs = append_attr((yyval.declarator)->type->attrs, make_attrp(ATTR_CALLCONV, (yyvsp[-1].str))); ;}
     break;
 
   case 283:
-#line 1030 "parser.y"
+#line 1035 "parser.y"
     { (yyval.declarator) = make_declarator((yyvsp[0].var)); ;}
     break;
 
   case 284:
-#line 1031 "parser.y"
+#line 1036 "parser.y"
     { (yyval.declarator) = (yyvsp[-1].declarator); ;}
     break;
 
   case 285:
-#line 1032 "parser.y"
+#line 1037 "parser.y"
     { (yyval.declarator) = (yyvsp[-1].declarator); (yyval.declarator)->array = append_array((yyval.declarator)->array, (yyvsp[0].expr)); ;}
     break;
 
   case 286:
-#line 1033 "parser.y"
+#line 1038 "parser.y"
     { (yyval.declarator) = (yyvsp[-3].declarator);
 						  (yyval.declarator)->func_type = append_ptrchain_type((yyval.declarator)->type, make_func_type((yyvsp[-1].var_list)));
 						  (yyval.declarator)->type = NULL;
@@ -4010,44 +4015,45 @@ yyreduce:
     break;
 
   case 287:
-#line 1040 "parser.y"
+#line 1045 "parser.y"
     { (yyval.declarator_list) = append_declarator( NULL, (yyvsp[0].declarator) ); ;}
     break;
 
   case 288:
-#line 1041 "parser.y"
+#line 1046 "parser.y"
     { (yyval.declarator_list) = append_declarator( (yyvsp[-2].declarator_list), (yyvsp[0].declarator) ); ;}
     break;
 
   case 289:
-#line 1045 "parser.y"
+#line 1050 "parser.y"
     { (yyval.declarator) = (yyvsp[0].declarator); ;}
     break;
 
   case 290:
-#line 1046 "parser.y"
+#line 1051 "parser.y"
     { (yyval.declarator) = (yyvsp[-2].declarator); (yyvsp[-2].declarator)->var->eval = (yyvsp[0].expr); ;}
     break;
 
   case 291:
-#line 1050 "parser.y"
+#line 1055 "parser.y"
     { (yyval.num) = RPC_FC_RP; ;}
     break;
 
   case 292:
-#line 1051 "parser.y"
+#line 1056 "parser.y"
     { (yyval.num) = RPC_FC_UP; ;}
     break;
 
   case 293:
-#line 1052 "parser.y"
+#line 1057 "parser.y"
     { (yyval.num) = RPC_FC_FP; ;}
     break;
 
   case 294:
-#line 1055 "parser.y"
+#line 1060 "parser.y"
     { (yyval.type) = get_typev(RPC_FC_STRUCT, (yyvsp[-3].var), tsSTRUCT);
                                                   /* overwrite RPC_FC_STRUCT with a more exact type */
+						  check_def((yyval.type));
 						  (yyval.type)->type = get_struct_type( (yyvsp[-1].var_list) );
 						  (yyval.type)->kind = TKIND_RECORD;
 						  (yyval.type)->fields_or_args = (yyvsp[-1].var_list);
@@ -4058,65 +4064,66 @@ yyreduce:
     break;
 
   case 295:
-#line 1066 "parser.y"
+#line 1072 "parser.y"
     { (yyval.type) = duptype(find_type("void", 0), 1); ;}
     break;
 
   case 296:
-#line 1067 "parser.y"
+#line 1073 "parser.y"
     { (yyval.type) = find_type((yyvsp[0].str), 0); ;}
     break;
 
   case 297:
-#line 1068 "parser.y"
+#line 1074 "parser.y"
     { (yyval.type) = (yyvsp[0].type); ;}
     break;
 
   case 298:
-#line 1069 "parser.y"
+#line 1075 "parser.y"
     { (yyval.type) = (yyvsp[0].type); ;}
     break;
 
   case 299:
-#line 1070 "parser.y"
+#line 1076 "parser.y"
     { (yyval.type) = find_type2((yyvsp[0].str), tsENUM); ;}
     break;
 
   case 300:
-#line 1071 "parser.y"
+#line 1077 "parser.y"
     { (yyval.type) = (yyvsp[0].type); ;}
     break;
 
   case 301:
-#line 1072 "parser.y"
+#line 1078 "parser.y"
     { (yyval.type) = get_type(RPC_FC_STRUCT, (yyvsp[0].str), tsSTRUCT); ;}
     break;
 
   case 302:
-#line 1073 "parser.y"
+#line 1079 "parser.y"
     { (yyval.type) = (yyvsp[0].type); ;}
     break;
 
   case 303:
-#line 1074 "parser.y"
+#line 1080 "parser.y"
     { (yyval.type) = find_type2((yyvsp[0].str), tsUNION); ;}
     break;
 
   case 304:
-#line 1075 "parser.y"
+#line 1081 "parser.y"
     { (yyval.type) = make_safearray((yyvsp[-1].type)); ;}
     break;
 
   case 305:
-#line 1079 "parser.y"
+#line 1085 "parser.y"
     { reg_typedefs((yyvsp[-1].declspec), (yyvsp[0].declarator_list), check_typedef_attrs((yyvsp[-2].attr_list)));
 						  (yyval.statement) = process_typedefs((yyvsp[0].declarator_list));
 						;}
     break;
 
   case 306:
-#line 1085 "parser.y"
+#line 1091 "parser.y"
     { (yyval.type) = get_typev(RPC_FC_NON_ENCAPSULATED_UNION, (yyvsp[-3].var), tsUNION);
+						  check_def((yyval.type));
 						  (yyval.type)->kind = TKIND_UNION;
 						  (yyval.type)->fields_or_args = (yyvsp[-1].var_list);
 						  (yyval.type)->defined = TRUE;
@@ -4124,9 +4131,10 @@ yyreduce:
     break;
 
   case 307:
-#line 1092 "parser.y"
+#line 1099 "parser.y"
     { var_t *u = (yyvsp[-3].var);
 						  (yyval.type) = get_typev(RPC_FC_ENCAPSULATED_UNION, (yyvsp[-8].var), tsUNION);
+						  check_def((yyval.type));
 						  (yyval.type)->kind = TKIND_UNION;
 						  if (!u) u = make_var( xstrdup("tagged_union") );
 						  u->type = make_type(RPC_FC_NON_ENCAPSULATED_UNION, NULL);
@@ -4140,12 +4148,12 @@ yyreduce:
     break;
 
   case 308:
-#line 1107 "parser.y"
+#line 1115 "parser.y"
     { (yyval.num) = MAKEVERSION((yyvsp[0].num), 0); ;}
     break;
 
   case 309:
-#line 1108 "parser.y"
+#line 1116 "parser.y"
     { (yyval.num) = MAKEVERSION((yyvsp[-2].num), (yyvsp[0].num)); ;}
     break;
 
@@ -4154,7 +4162,7 @@ yyreduce:
     }
 
 /* Line 1126 of yacc.c.  */
-#line 4158 "parser.tab.c"
+#line 4166 "parser.tab.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -4422,7 +4430,7 @@ yyreturn:
 }
 
 
-#line 1111 "parser.y"
+#line 1119 "parser.y"
 
 
 static void decl_builtin(const char *name, unsigned char type)
@@ -4699,6 +4707,7 @@ type_t *make_type(unsigned char type, type_t *ref)
   t->tfswrite = FALSE;
   t->checked = FALSE;
   t->typelib_idx = -1;
+  init_loc_info(&t->loc_info);
   return t;
 }
 
@@ -5010,9 +5019,7 @@ static var_t *make_var(char *name)
   v->attrs = NULL;
   v->eval = NULL;
   v->stgclass = STG_NONE;
-  v->loc_info.input_name = input_name ? input_name : "stdin";
-  v->loc_info.line_number = line_number;
-  v->loc_info.near_text = parser_text;
+  init_loc_info(&v->loc_info);
   return v;
 }
 
@@ -5202,6 +5209,12 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
 
     if (name->name) {
       type_t *cur;
+
+      cur = find_type_helper(name->name, 0);
+      if (cur)
+          error_loc("%s: redefinition error; original definition was at %s:%d\n",
+                    cur->name, cur->loc_info.input_name,
+                    cur->loc_info.line_number);
 
       /* set the attributes to allow set_type to do some checks on them */
       name->attrs = attrs;
@@ -6204,5 +6217,19 @@ static func_list_t *append_func_from_statement(func_list_t *list, statement_t *s
         }
     }
     return list;
+}
+
+void init_loc_info(loc_info_t *i)
+{
+    i->input_name = input_name ? input_name : "stdin";
+    i->line_number = line_number;
+    i->near_text = parser_text;
+}
+
+static void check_def(const type_t *t)
+{
+    if (t->defined)
+        error_loc("%s: redefinition error; original definition was at %s:%d\n",
+                  t->name, t->loc_info.input_name, t->loc_info.line_number);
 }
 
