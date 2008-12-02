@@ -302,7 +302,7 @@
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
 			</if>
-			<if property="DBG" value="1">
+			<if property="DBG_OR_KDBG" value="true">
 				<file>kdb_symbols.c</file>
 			</if>
 		</directory>
