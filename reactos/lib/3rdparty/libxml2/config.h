@@ -298,5 +298,6 @@
 /* ss_family is not defined here, use __ss_family instead */
 /* #undef ss_family */
 
-/* Win32 Std C name mangling work-around */
+#if !defined(__MINGW32__) || defined(__NO_ISOCEXT)
 #define vsnprintf _vsnprintf
+#endif
