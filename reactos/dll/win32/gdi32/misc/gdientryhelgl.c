@@ -1744,8 +1744,8 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             Return = TRUE;
         }
 
-        /* Zero the handle */
-        pDirectDrawGlobal->hDD = 0;
+        /* Return a handle to the global DirectDraw object*/
+        pDirectDrawGlobal->hDD = (ULONG_PTR) ghDirectDraw;
     }
     else
     {
