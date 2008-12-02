@@ -43,7 +43,7 @@
 
 
 <!--
-	Whether to compile in the integrated kernel debugger.
+	Whether to compile in the integrated kernel debugger. Requires DBG to be set.
 -->
 <property name="KDBG" value="1" />
 

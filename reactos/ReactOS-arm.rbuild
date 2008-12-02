@@ -17,11 +17,10 @@
 	<if property="DBG" value="1">
 		<define name="DBG">1</define>
 		<define name="_SEH_ENABLE_TRACE" />
-		<property name="DBG_OR_KDBG" value="true" />
-	</if>
-	<if property="KDBG" value="1">
-		<define name="KDBG">1</define>
-		<property name="DBG_OR_KDBG" value="true" />
+		
+		<if property="KDBG" value="1">
+			<define name="KDBG">1</define>
+		</if>
 	</if>
 	
 	<include>.</include>
