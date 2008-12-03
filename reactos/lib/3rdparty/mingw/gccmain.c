@@ -46,7 +46,7 @@ __do_global_ctors (void)
    * is terminated with a null entry. Otherwise the first entry was
    * the number of pointers in the list.
    */
-  if (nptrs == -1)
+  if (nptrs == (unsigned long) -1)
     {
       for (nptrs = 0; __CTOR_LIST__[nptrs + 1] != 0; nptrs++);
     }

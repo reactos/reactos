@@ -36,7 +36,7 @@ SmLookupSubsystem (IN     PWSTR   Name,
 		   IN     PVOID   Environment OPTIONAL)
 {
 	NTSTATUS           Status = STATUS_SUCCESS;
-	UNICODE_STRING     usKeyName = {0};
+	UNICODE_STRING     usKeyName = { 0, 0, NULL };
 	OBJECT_ATTRIBUTES  Oa = {0};
 	HANDLE             hKey = (HANDLE) 0;
 
@@ -62,7 +62,7 @@ SmLookupSubsystem (IN     PWSTR   Name,
 			      & Oa);
 	if(NT_SUCCESS(Status))
 	{
-		UNICODE_STRING usValueName = {0};
+		UNICODE_STRING usValueName = { 0, 0, NULL };
 		PWCHAR         KeyValueInformation = NULL;
 		ULONG          KeyValueInformationLength = 1024;
 		ULONG          ResultLength = 0L;

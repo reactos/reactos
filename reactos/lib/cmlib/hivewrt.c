@@ -79,7 +79,7 @@ HvpWriteLog(
    {
       LastIndex = BlockIndex;
       BlockIndex = RtlFindSetBits(&RegistryHive->DirtyVector, 1, BlockIndex);
-      if (BlockIndex == ~0 || BlockIndex < LastIndex)
+      if (BlockIndex == ~0U || BlockIndex < LastIndex)
       {
          break;
       }
@@ -182,7 +182,7 @@ HvpWriteHive(
       {
          LastIndex = BlockIndex;
          BlockIndex = RtlFindSetBits(&RegistryHive->DirtyVector, 1, BlockIndex);
-         if (BlockIndex == ~0 || BlockIndex < LastIndex)
+         if (BlockIndex == ~0U || BlockIndex < LastIndex)
          {
             break;
          }
@@ -239,7 +239,7 @@ HvSyncHive(
 {
    ASSERT(RegistryHive->ReadOnly == FALSE);
 
-   if (RtlFindSetBits(&RegistryHive->DirtyVector, 1, 0) == ~0)
+   if (RtlFindSetBits(&RegistryHive->DirtyVector, 1, 0) == ~0U)
    {
       return TRUE;
    }

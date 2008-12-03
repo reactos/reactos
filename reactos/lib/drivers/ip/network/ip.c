@@ -150,8 +150,7 @@ VOID IPDispatchProtocol(
         Protocol = 0;
     }
 
-    if (Protocol < IP_PROTOCOL_TABLE_SIZE &&
-        Protocol >= 0)
+    if (Protocol < IP_PROTOCOL_TABLE_SIZE)
     {
        /* Call the appropriate protocol handler */
        (*ProtocolTable[Protocol])(Interface, IPPacket);

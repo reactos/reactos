@@ -61,7 +61,8 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Check if we should print it or not */
-    if ((ComponentId != -1) && !(NtQueryDebugFilterState(ComponentId, Level)))
+    if ((ComponentId != -1U) &&
+        !(NtQueryDebugFilterState(ComponentId, Level)))
     {
         /* This message is masked */
         return Status;
@@ -96,7 +97,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if we went past the buffer */
-    if (Length == -1)
+    if (Length == -1U)
     {
         /* Terminate it if we went over-board */
         Buffer[sizeof(Buffer) - 1] = '\n';
