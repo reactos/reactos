@@ -162,7 +162,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwDataSize,
                                  LPVOID lpRawData);
 
-void __inline LogfFreeRecord(LPVOID Rec);
+__inline void LogfFreeRecord(LPVOID Rec);
 
 /* eventlog.c */
 VOID PRINT_HEADER(PFILE_HEADER header);

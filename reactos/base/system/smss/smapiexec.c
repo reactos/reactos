@@ -41,12 +41,12 @@ SmCreateUserProcess (LPWSTR ImagePath,
 		     PLARGE_INTEGER Timeout OPTIONAL,
 		     PRTL_USER_PROCESS_INFORMATION UserProcessInfo OPTIONAL)
 {
-	UNICODE_STRING			ImagePathString = {0};
-	UNICODE_STRING			CommandLineString = {0};
-        UNICODE_STRING			SystemDirectory = {0};
+	UNICODE_STRING			ImagePathString   = { 0, 0, NULL };
+	UNICODE_STRING			CommandLineString = { 0, 0, NULL };
+	UNICODE_STRING			SystemDirectory   = { 0, 0, NULL };
 	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters = NULL;
-	RTL_USER_PROCESS_INFORMATION		ProcessInfo = {0};
-	PRTL_USER_PROCESS_INFORMATION		pProcessInfo = & ProcessInfo;
+	RTL_USER_PROCESS_INFORMATION	ProcessInfo  = {0};
+	PRTL_USER_PROCESS_INFORMATION	pProcessInfo = & ProcessInfo;
 	NTSTATUS			Status = STATUS_SUCCESS;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);

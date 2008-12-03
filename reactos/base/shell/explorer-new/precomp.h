@@ -41,7 +41,7 @@ typedef HRESULT (APIENTRY *SHWINHELP)(HWND, LPWSTR, UINT, DWORD);
 /* Constants for RunFileDlg */
 #define RFF_CALCDIRECTORY   0x04    /* Calculates the working directory from the file name. */
 
-static ULONG __inline
+static __inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {
     char szMsg[512];

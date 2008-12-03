@@ -71,7 +71,7 @@ SmpCreatePT (IN OUT PHANDLE hPort,
 	     IN OUT PHANDLE phServingThread OPTIONAL)
 {
 	NTSTATUS          Status = STATUS_SUCCESS;
-	UNICODE_STRING    PortName = {0};
+	UNICODE_STRING    PortName = { 0, 0, NULL };
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	HANDLE            Thread = (HANDLE) 0;
 	CLIENT_ID         Cid = {0, 0};

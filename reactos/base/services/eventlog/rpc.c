@@ -343,9 +343,9 @@ NTSTATUS ElfrOpenELA(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    UNICODE_STRING UNCServerNameW = { 0, };
-    UNICODE_STRING ModuleNameW = { 0, };
-    UNICODE_STRING RegModuleNameW = { 0, };
+    UNICODE_STRING UNCServerNameW = { 0, 0, NULL };
+    UNICODE_STRING ModuleNameW    = { 0, 0, NULL };
+    UNICODE_STRING RegModuleNameW = { 0, 0, NULL };
     NTSTATUS Status;
 
     if (UNCServerName &&
