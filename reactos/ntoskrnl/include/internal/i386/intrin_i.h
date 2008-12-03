@@ -16,8 +16,7 @@
 
 #define Ke386GetInterruptDescriptorTable(X) \
     __asm__("sidt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
+    : "=m" (X));
 
 #define Ke386SetGlobalDescriptorTable(X) \
     __asm__("lgdt %0\n\t" \
@@ -26,13 +25,11 @@
 
 #define Ke386GetGlobalDescriptorTable(X) \
     __asm__("sgdt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
+    : "=m" (X));
 
 #define Ke386GetLocalDescriptorTable(X) \
     __asm__("sldt %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
+    : "=m" (X));
 
 #define Ke386SetLocalDescriptorTable(X) \
     __asm__("lldt %w0\n\t" \
@@ -43,8 +40,7 @@
 
 #define Ke386GetTr(X) \
     __asm__("str %0\n\t" \
-    : /* no outputs */ \
-    : "m" (X));
+    : "=m" (X));
 
 #define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
