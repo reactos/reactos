@@ -639,7 +639,7 @@ CreateProcessInternalW(HANDLE hToken,
     BOOLEAN FoundQuotes = FALSE;
     BOOLEAN QuotesNeeded = FALSE;
     BOOLEAN CmdLineIsAppName = FALSE;
-    UNICODE_STRING ApplicationName = {0};
+    UNICODE_STRING ApplicationName = { 0, 0, NULL };
     OBJECT_ATTRIBUTES LocalObjectAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hSection = NULL, hProcess = NULL, hThread = NULL, hDebug = NULL;

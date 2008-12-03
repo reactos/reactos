@@ -165,7 +165,7 @@ GetMailslotInfo(HANDLE hMailslot,
    if (lpReadTimeout != NULL)
      {
 	if (Buffer.ReadTimeout.LowPart == 0 &&
-	    Buffer.ReadTimeout.HighPart == 0x80000000)
+	    Buffer.ReadTimeout.HighPart == (LONG)0x80000000)
 	    *lpReadTimeout = MAILSLOT_WAIT_FOREVER;
 	else
 	    *lpReadTimeout = (DWORD)(Buffer.ReadTimeout.QuadPart / -10000);

@@ -169,7 +169,7 @@ CopyDirectory (LPCWSTR lpDestinationPath,
 
   FindClose (hFind);
 
-  DPRINT ("Copy Directory() done\n");
+  DPRINT ("CopyDirectory() done\n");
 
   return TRUE;
 }

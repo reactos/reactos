@@ -14,7 +14,7 @@ typedef struct
     NetCfgComponentItem * pProtocol;
 } INetCfgImpl, *LPINetCfgImpl;
 
-static LPINetCfgImpl __inline impl_from_INetCfgLock(INetCfgLock *iface)
+static __inline LPINetCfgImpl impl_from_INetCfgLock(INetCfgLock *iface)
 {
     return (INetCfgImpl*)((char *)iface - FIELD_OFFSET(INetCfgImpl, lpVtblLock));
 }

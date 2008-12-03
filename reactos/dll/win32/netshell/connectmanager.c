@@ -26,7 +26,7 @@ typedef struct
 } INetConnectionImpl, *LPINetConnectionImpl;
 
 
-static LPINetConnectionManagerImpl __inline impl_from_EnumNetConnection(IEnumNetConnection *iface)
+static __inline LPINetConnectionManagerImpl impl_from_EnumNetConnection(IEnumNetConnection *iface)
 {
     return (LPINetConnectionManagerImpl)((char *)iface - FIELD_OFFSET(INetConnectionManagerImpl, lpVtblNetConnection));
 }

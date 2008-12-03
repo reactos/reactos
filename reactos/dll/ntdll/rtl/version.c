@@ -104,7 +104,7 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 NTSTATUS NTAPI
 RtlGetVersion(RTL_OSVERSIONINFOW *Info)
 {
-   ULONG i, MaxLength;
+   LONG i, MaxLength;
 
    if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||
        Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))

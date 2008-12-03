@@ -495,7 +495,7 @@ GetVolumeInformationA(
 	)
 {
   UNICODE_STRING FileSystemNameU;
-  UNICODE_STRING VolumeNameU = {0};
+  UNICODE_STRING VolumeNameU = { 0, 0, NULL };
   ANSI_STRING VolumeName;
   ANSI_STRING FileSystemName;
   PWCHAR RootPathNameW;

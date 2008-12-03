@@ -79,28 +79,28 @@ static const IObjectWithSiteVtbl vt_ObjectWithSite;
 static const IQueryInfoVtbl vt_QueryInfo;
 static const IExtractIconWVtbl vt_ExtractIconW;
 
-static LPIContextMenuImpl __inline impl_from_IExtractIcon(IExtractIconW *iface)
+static __inline LPIContextMenuImpl impl_from_IExtractIcon(IExtractIconW *iface)
 {
     return (LPIContextMenuImpl)((char *)iface - FIELD_OFFSET(IContextMenuImpl, lpVtblExtractIconW));
 }
 
 
-static LPIContextMenuImpl __inline impl_from_IObjectWithSite(IObjectWithSite *iface)
+static __inline LPIContextMenuImpl impl_from_IObjectWithSite(IObjectWithSite *iface)
 {
     return (LPIContextMenuImpl)((char *)iface - FIELD_OFFSET(IContextMenuImpl, lpVtblObjectWithSite));
 }
 
-static LPIGenericSFImpl __inline impl_from_IPersistFolder2(IPersistFolder2 *iface)
+static __inline LPIGenericSFImpl impl_from_IPersistFolder2(IPersistFolder2 *iface)
 {
     return (LPIGenericSFImpl)((char *)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblPersistFolder2));
 }
 
-static LPIGenericSFImpl __inline impl_from_IShellExecuteHookW(IShellExecuteHookW *iface)
+static __inline LPIGenericSFImpl impl_from_IShellExecuteHookW(IShellExecuteHookW *iface)
 {
     return (LPIGenericSFImpl)((char *)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblShellExecuteHookW));
 }
 
-static LPIContextMenuImpl __inline impl_from_IQueryInfo(IQueryInfo *iface)
+static __inline LPIContextMenuImpl impl_from_IQueryInfo(IQueryInfo *iface)
 {
     return (LPIContextMenuImpl)((char *)iface - FIELD_OFFSET(IContextMenuImpl, lpVtblQueryInfo));
 }

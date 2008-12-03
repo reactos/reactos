@@ -952,7 +952,7 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
                          LPSTR lpUserName,
                          DWORD nMaxUserNameSize)
 {
-    UNICODE_STRING UserNameW = {0};
+    UNICODE_STRING UserNameW = { 0, 0, NULL };
     ANSI_STRING UserNameA;
     BOOL Ret;
 

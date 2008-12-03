@@ -53,7 +53,7 @@ MulDiv(INT nNumber,
         /* Do the sign changes */
         if ((LONG)Result.LowPart >= 0)
         {
-            return (Negative >= 0) ? Result.LowPart : -(LONG)Result.LowPart;
+            return (Negative >= 0) ? (LONG)Result.LowPart : -(LONG)Result.LowPart;
         }
     }
  

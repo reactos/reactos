@@ -830,10 +830,10 @@ SearchPathA (
         LPSTR   *lpFilePart
         )
 {
-        UNICODE_STRING PathU = {0};
-        UNICODE_STRING FileNameU = {0};
-        UNICODE_STRING ExtensionU = {0};
-        UNICODE_STRING BufferU = {0};
+        UNICODE_STRING PathU      = { 0, 0, NULL };
+        UNICODE_STRING FileNameU  = { 0, 0, NULL };
+        UNICODE_STRING ExtensionU = { 0, 0, NULL };
+        UNICODE_STRING BufferU    = { 0, 0, NULL };
         ANSI_STRING Path;
         ANSI_STRING FileName;
         ANSI_STRING Extension;

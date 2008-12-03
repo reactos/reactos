@@ -107,7 +107,7 @@ typedef struct
     UINT MaxNum;
 }TcpipPortSettings;
 
-static LPTcpipConfNotifyImpl __inline impl_from_INetCfgComponentControl(INetCfgComponentControl *iface)
+static __inline LPTcpipConfNotifyImpl impl_from_INetCfgComponentControl(INetCfgComponentControl *iface)
 {
     return (TcpipConfNotifyImpl*)((char *)iface - FIELD_OFFSET(TcpipConfNotifyImpl, lpVtblCompControl));
 }

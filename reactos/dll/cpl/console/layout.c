@@ -160,7 +160,7 @@ LayoutProc(
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(xres, 0));
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP), UDM_SETRANGE, 0, (LPARAM)MAKELONG(yres, 0));
 
-			if (pConInfo->WindowPosition != -1)
+			if (pConInfo->WindowPosition != -1U)
 			{
 				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, LOWORD(pConInfo->WindowPosition), FALSE);
 				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, HIWORD(pConInfo->WindowPosition), FALSE);

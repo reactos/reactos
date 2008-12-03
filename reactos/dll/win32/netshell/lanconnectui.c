@@ -32,12 +32,12 @@ typedef struct
     LONG ref;
 }INetConnectionPropertyUiImpl, *LPINetConnectionPropertyUiImpl;
 
-static LPINetConnectionPropertyUiImpl __inline impl_from_NetLanConnectionUiInfo(INetLanConnectionUiInfo *iface)
+static __inline LPINetConnectionPropertyUiImpl impl_from_NetLanConnectionUiInfo(INetLanConnectionUiInfo *iface)
 {
     return (LPINetConnectionPropertyUiImpl)((char *)iface - FIELD_OFFSET(INetConnectionPropertyUiImpl, lpLanConUiInfoVtbl));
 }
 
-static LPINetConnectionPropertyUiImpl __inline impl_from_NetConnectionConnectUi(INetConnectionConnectUi *iface)
+static __inline LPINetConnectionPropertyUiImpl impl_from_NetConnectionConnectUi(INetConnectionConnectUi *iface)
 {
     return (LPINetConnectionPropertyUiImpl)((char *)iface - FIELD_OFFSET(INetConnectionPropertyUiImpl, lpNetConnectionConnectUi));
 }

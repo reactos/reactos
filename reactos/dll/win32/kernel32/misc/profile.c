@@ -76,7 +76,7 @@ static RTL_CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &PROFILE_CritSect,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, 0, 0
+      0, 0, 0, 0, 0
 };
 static RTL_CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
 
