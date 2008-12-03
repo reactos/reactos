@@ -258,7 +258,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
         {
             CurrentOffset += DataRunLength * NtfsClusterSize;
             DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-            if (DataRunLength != -1)
+            if (DataRunLength != (ULONGLONG)-1)
             {
                 DataRunStartLCN = LastLCN + DataRunOffset;
                 LastLCN = DataRunStartLCN;

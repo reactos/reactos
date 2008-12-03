@@ -274,7 +274,7 @@ MempSetupPaging(IN ULONG StartPage,
 VOID
 MempDisablePages()
 {
-	int i;
+	ULONG i;
 
 	//
 	// We need to delete kernel mapping from memory areas which are

@@ -544,11 +544,11 @@ XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
         }
       else
         {
-          for (i = 15; i >= 0; i--)
+          for (i = 1 << 15; i; i /= 2)
             {
-              if (0 != (DrvParms.BytesPerSector & (1 << i)))
+              if (0 != (DrvParms.BytesPerSector & i))
                 {
-                  Geometry->BytesPerSector = 1 << i;
+                  Geometry->BytesPerSector = i;
                   break;
                 }
             }
