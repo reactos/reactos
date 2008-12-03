@@ -161,7 +161,6 @@ KiGetFeatureBits(VOID)
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
     INT Reg[4];
-    BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
 
     /* Get the Vendor ID */
@@ -176,96 +175,8 @@ KiGetFeatureBits(VOID)
     /* Set the initial APIC ID */
     Prcb->InitialApicId = (UCHAR)(Reg[1] >> 24);
 
-    /* Check for AMD CPU */
-    if (Vendor == CPU_AMD)
-    {
-        /* Check if this is a K5 or higher. */
-        if ((Reg[0] & 0x0F00) >= 0x0500)
-        {
-            /* Check if this is a K5 specifically. */
-            if ((Reg[0] & 0x0F00) == 0x0500)
-            {
-                /* Get the Model Number */
-                switch (Reg[0] & 0x00F0)
-                {
-                    /* Check if this is the Model 1 */
-                    case 0x0010:
-
-                        /* Check if this is Step 0 or 1. They don't support PGE */
-                        if ((Reg[0] & 0x000F) > 0x03) break;
-
-                    case 0x0000:
-
-                        /* Model 0 doesn't support PGE at all. */
-                        Reg[3] &= ~0x2000;
-                        break;
-
-                    case 0x0080:
-
-                        /* K6-2, Step 8 and over have support for MTRR. */
-                        if ((Reg[0] & 0x000F) >= 0x8) FeatureBits |= KF_AMDK6MTRR;
-                        break;
-
-                    case 0x0090:
-
-                        /* As does the K6-3 */
-                        FeatureBits |= KF_AMDK6MTRR;
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-        }
-        else
-        {
-            /* Families below 5 don't support PGE, PSE or CMOV at all */
-            Reg[3] &= ~(0x08 | 0x2000 | 0x8000);
-
-            /* They also don't support advanced CPUID functions. */
-            ExtendedCPUID = FALSE;
-        }
-
-        /* Set the current features */
-        CpuFeatures = Reg[3];
-    }
-
-    /* Now check if this is Intel */
-    if (Vendor == CPU_INTEL)
-    {
-        /* Check if it's a P6 */
-        if (Prcb->CpuType == 6)
-        {
-            /* Perform the special sequence to get the MicroCode Signature */
-            __writemsr(0x8B, 0);
-            __cpuid(Reg, 1);
-            Prcb->UpdateSignature.QuadPart = __readmsr(0x8B);
-        }
-        else if (Prcb->CpuType == 5)
-        {
-            /* On P5, enable workaround for the LOCK errata. */
-            KiI386PentiumLockErrataPresent = TRUE;
-        }
-
-        /* Check for broken P6 with bad SMP PTE implementation */
-        if (((Reg[0] & 0x0FF0) == 0x0610 && (Reg[0] & 0x000F) <= 0x9) ||
-            ((Reg[0] & 0x0FF0) == 0x0630 && (Reg[0] & 0x000F) <= 0x4))
-        {
-            /* Remove support for correct PTE support. */
-            FeatureBits &= ~KF_WORKING_PTE;
-        }
-
-        /* Check if the CPU is too old to support SYSENTER */
-        if ((Prcb->CpuType < 6) ||
-            ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0303)))
-        {
-            /* Disable it */
-            Reg[3] &= ~0x800;
-        }
-
-        /* Set the current features */
-        CpuFeatures = Reg[3];
-    }
+    /* Set the current features */
+    CpuFeatures = Reg[3];
 
     /* Convert all CPUID Feature bits into our format */
     if (CpuFeatures & 0x00000002) FeatureBits |= KF_V86_VIS | KF_CR4;
@@ -300,29 +211,25 @@ KiGetFeatureBits(VOID)
         Prcb->LogicalProcessorsPerPhysicalProcessor = 1;
     }
 
-    /* Check if CPUID 0x80000000 is supported */
-    if (ExtendedCPUID)
+    /* Check extended cpuid features */
+    __cpuid(Reg, 0x80000000);
+    if ((Reg[0] & 0xffffff00) == 0x80000000)
     {
-        /* Do the call */
-        __cpuid(Reg, 0x80000000);
-        if ((Reg[0] & 0xffffff00) == 0x80000000)
+        /* Check if CPUID 0x80000001 is supported */
+        if (Reg[0] >= 0x80000001)
         {
-            /* Check if CPUID 0x80000001 is supported */
-            if (Reg[0] >= 0x80000001)
+            /* Check which extended features are available. */
+            __cpuid(Reg, 0x80000001);
+
+            /* Check if NX-bit is supported */
+            if (Reg[3] & 0x00100000) FeatureBits |= KF_NX_BIT;
+
+            /* Now handle each features for each CPU Vendor */
+            switch (Vendor)
             {
-                /* Check which extended features are available. */
-                __cpuid(Reg, 0x80000001);
-
-                /* Check if NX-bit is supported */
-                if (Reg[3] & 0x00100000) FeatureBits |= KF_NX_BIT;
-
-                /* Now handle each features for each CPU Vendor */
-                switch (Vendor)
-                {
-                    case CPU_AMD:
-                        if (Reg[3] & 0x80000000) FeatureBits |= KF_3DNOW;
-                        break;
-                }
+                case CPU_AMD:
+                    if (Reg[3] & 0x80000000) FeatureBits |= KF_3DNOW;
+                    break;
             }
         }
     }
