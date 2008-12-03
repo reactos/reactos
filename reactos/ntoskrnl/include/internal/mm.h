@@ -166,10 +166,10 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
 
 #define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
-    InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
+    (ULONG)InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
 
 #define InterlockedExchangePte(PointerPte, Value) \
-    InterlockedExchange((PLONG)(PointerPte), Value)
+    (ULONG)InterlockedExchange((PLONG)(PointerPte), Value)
 
 typedef struct
 {
@@ -1016,7 +1016,8 @@ ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
 
-static __inline
+static
+__inline
 KIRQL
 NTAPI
 MmAcquirePageListLock()
