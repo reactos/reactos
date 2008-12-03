@@ -63,11 +63,11 @@
 .macro .endprolog
 .endm
 
-.macro UNIMPLEMENTED2 line, func
+.macro UNIMPLEMENTED2 file, line, func
     jmp 3f
     .equ expr, 12
 1:  .asciz "\func"
-2:  .asciz __FILE__
+2:  .asciz "\file"
 3:
     sub rsp, 0x20
     lea rcx, _MsgUnimplemented[rip]
@@ -77,5 +77,5 @@
     call _DbgPrint
     add rsp, 0x20
 .endm
-#define UNIMPLEMENTED UNIMPLEMENTED2 __LINE__,
+#define UNIMPLEMENTED UNIMPLEMENTED2 __FILE__, __LINE__,
 
