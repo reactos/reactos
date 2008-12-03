@@ -433,7 +433,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
         UCHAR Char;
         USHORT DBCSOffset;
         LPCSTR MbsEnd = MultiByteString + MultiByteCount;
-        ULONG Count;
+        INT Count;
 
         /* Does caller query for output buffer size? */
         if (WideCharCount == 0)
@@ -770,8 +770,9 @@ IntIsValidDBCSMapping(PCPTABLEINFO CodePageTable, DWORD Flags, WCHAR wch, USHORT
     {
         if(ch & 0xff00)
         {
-            UCHAR uOffset = CodePageTable->DBCSOffsets[ch >> 8];
-            return (CodePageTable->MultiByteTable[(uOffset << 8) + (ch & 0xff)] == wch);
+            USHORT uOffset = CodePageTable->DBCSOffsets[ch >> 8];
+            /* if (!uOffset) return (CodePageTable->MultiByteTable[ch] == wch); */
+            return (CodePageTable->DBCSOffsets[uOffset + (ch & 0xff)] == wch);
         }
 
         return (CodePageTable->MultiByteTable[ch] == wch);
