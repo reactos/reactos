@@ -1964,7 +1964,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
     ULONG i;
     KPROCESSOR_MODE PreviousMode;
     ULONG nTokenPrivileges = 0;
-    LARGE_INTEGER LocalExpirationTime = {{0}};
+    LARGE_INTEGER LocalExpirationTime = {{0, 0}};
     NTSTATUS Status = STATUS_SUCCESS;
     
     PAGED_CODE();

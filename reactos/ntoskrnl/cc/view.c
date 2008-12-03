@@ -556,7 +556,8 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS static
+static
+NTSTATUS
 CcRosCreateCacheSegment(PBCB Bcb,
 			ULONG FileOffset,
 			PCACHE_SEGMENT* CacheSeg)

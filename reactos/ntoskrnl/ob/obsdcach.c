@@ -19,8 +19,8 @@ OB_SD_CACHE_LIST ObsSecurityDescriptorCache[SD_CACHE_ENTRIES];
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID
 FORCEINLINE
+VOID
 ObpSdAcquireLock(IN POB_SD_CACHE_LIST CacheEntry)
 {
     /* Acquire the lock */
@@ -28,8 +28,8 @@ ObpSdAcquireLock(IN POB_SD_CACHE_LIST CacheEntry)
     ExAcquirePushLockExclusive(&CacheEntry->PushLock);
 }
 
-VOID
 FORCEINLINE
+VOID
 ObpSdReleaseLock(IN POB_SD_CACHE_LIST CacheEntry)
 {
     /* Release the lock */
@@ -37,8 +37,8 @@ ObpSdReleaseLock(IN POB_SD_CACHE_LIST CacheEntry)
     KeLeaveCriticalRegion();
 }
 
-VOID
 FORCEINLINE
+VOID
 ObpSdAcquireLockShared(IN POB_SD_CACHE_LIST CacheEntry)
 {
     /* Acquire the lock */
@@ -46,8 +46,8 @@ ObpSdAcquireLockShared(IN POB_SD_CACHE_LIST CacheEntry)
     ExAcquirePushLockShared(&CacheEntry->PushLock);
 }
 
-VOID
 FORCEINLINE
+VOID
 ObpSdReleaseLockShared(IN POB_SD_CACHE_LIST CacheEntry)
 {
     /* Release the lock */

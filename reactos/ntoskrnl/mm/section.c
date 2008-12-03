@@ -1990,7 +1990,7 @@ MmWritePageSectionView(PMM_AVL_TABLE AddressSpace,
    return(STATUS_SUCCESS);
 }
 
-VOID static
+static VOID
 MmAlterViewAttributes(PMM_AVL_TABLE AddressSpace,
                       PVOID BaseAddress,
                       ULONG RegionSize,
@@ -3605,7 +3605,7 @@ NtOpenSection(PHANDLE   SectionHandle,
    return(Status);
 }
 
-NTSTATUS static
+static NTSTATUS
 MmMapViewOfSegment(PMM_AVL_TABLE AddressSpace,
                    PROS_SECTION_OBJECT Section,
                    PMM_SECTION_SEGMENT Segment,
@@ -3865,7 +3865,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    return(Status);
 }
 
-VOID static
+static VOID
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                   PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {

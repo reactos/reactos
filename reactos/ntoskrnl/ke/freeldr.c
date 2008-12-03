@@ -59,12 +59,12 @@ ARC_DISK_SIGNATURE BldrDiskInfo[32];                    // 0x1413C
 CHAR BldrArcHwBuffer[16 * 1024];                        // 0x1843C
 
 /* BIOS Memory Map */
-BIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptors[16] = {{0}};
+BIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptors[16] = { { 0, 0 }, };
 PBIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptorList = BiosMemoryDescriptors;
 
 /* ARC Memory Map */
 ULONG NumberDescriptors = 0;
-MEMORY_DESCRIPTOR MDArray[60] = {{0}};
+MEMORY_DESCRIPTOR MDArray[60] = { { 0, 0, 0 }, };
 
 /* FUNCTIONS *****************************************************************/
 

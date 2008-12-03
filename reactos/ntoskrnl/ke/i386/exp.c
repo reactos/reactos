@@ -1011,7 +1011,7 @@ DispatchToUser:
             _SEH2_EXCEPT((RtlCopyMemory(&SehExceptRecord, _SEH2_GetExceptionInformation()->ExceptionRecord, sizeof(EXCEPTION_RECORD)), EXCEPTION_EXECUTE_HANDLER))
             {
                 /* Check if we got a stack overflow and raise that instead */
-                if (SehExceptRecord.ExceptionCode ==
+                if ((NTSTATUS)SehExceptRecord.ExceptionCode ==
                     STATUS_STACK_OVERFLOW)
                 {
                     /* Copy the exception address and record */

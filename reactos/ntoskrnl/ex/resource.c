@@ -20,8 +20,8 @@
 
 #if (!(defined(CONFIG_SMP)) && !(defined(DBG)))
 
-VOID
 FORCEINLINE
+VOID
 ExAcquireResourceLock(IN PERESOURCE Resource,
                       IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
@@ -32,8 +32,8 @@ ExAcquireResourceLock(IN PERESOURCE Resource,
     _disable();
 }
 
-VOID
 FORCEINLINE
+VOID
 ExReleaseResourceLock(IN PERESOURCE Resource,
                       IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
@@ -46,8 +46,8 @@ ExReleaseResourceLock(IN PERESOURCE Resource,
 
 #else
 
-VOID
 FORCEINLINE
+VOID
 ExAcquireResourceLock(IN PERESOURCE Resource,
                       IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
@@ -55,8 +55,8 @@ ExAcquireResourceLock(IN PERESOURCE Resource,
     KeAcquireInStackQueuedSpinLock(&Resource->SpinLock, LockHandle);
 }
 
-VOID
 FORCEINLINE
+VOID
 ExReleaseResourceLock(IN PERESOURCE Resource,
                       IN PKLOCK_QUEUE_HANDLE LockHandle)
 {

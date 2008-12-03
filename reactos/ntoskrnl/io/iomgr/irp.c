@@ -253,7 +253,7 @@ IopCompleteRequest(IN PKAPC Apc,
             FileObject);
 
     /* Sanity check */
-    ASSERT(Irp->IoStatus.Status != 0xFFFFFFFF);
+    ASSERT(Irp->IoStatus.Status != (NTSTATUS)0xFFFFFFFF);
 
     /* Check if we have a file object */
     if (*SystemArgument2)
@@ -1183,7 +1183,7 @@ IofCompleteRequest(IN PIRP Irp,
     ASSERT(Irp->Type == IO_TYPE_IRP);
     ASSERT(!Irp->CancelRoutine);
     ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
-    ASSERT(Irp->IoStatus.Status != 0xFFFFFFFF);
+    ASSERT(Irp->IoStatus.Status != (NTSTATUS)0xFFFFFFFF);
 
     /* Get the last stack */
     LastStackPtr = (PIO_STACK_LOCATION)(Irp + 1);

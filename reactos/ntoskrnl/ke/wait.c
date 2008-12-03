@@ -628,7 +628,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
                     {
                         /* Check if it has an invalid count */
                         if ((Thread == CurrentObject->OwnerThread) &&
-                            (CurrentObject->Header.SignalState == MINLONG))
+                            (CurrentObject->Header.SignalState == (LONG)MINLONG))
                         {
                             /* Raise an exception */
                             KiReleaseDispatcherLock(Thread->WaitIrql);

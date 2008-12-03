@@ -436,7 +436,7 @@ MmNotPresentFaultVirtualMemory(PMM_AVL_TABLE AddressSpace,
    return(STATUS_SUCCESS);
 }
 
-VOID static
+static VOID
 MmModifyAttributes(PMM_AVL_TABLE AddressSpace,
                    PVOID BaseAddress,
                    ULONG RegionSize,
@@ -817,7 +817,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-VOID static
+static VOID
 MmFreeVirtualMemoryPage(PVOID Context,
                         MEMORY_AREA* MemoryArea,
                         PVOID Address,

@@ -16,7 +16,7 @@
 /* GLOBALS *******************************************************************/
 
 static CONFIGURATION_INFORMATION
-_SystemConfigurationInformation = {0, 0, 0, 0, 0, 0, 0, FALSE, FALSE};
+_SystemConfigurationInformation = { 0, 0, 0, 0, 0, 0, 0, FALSE, FALSE, 0, 0 };
 
 /* API Parameters to Pass in IopQueryBusDescription */
 typedef struct IO_QUERY {

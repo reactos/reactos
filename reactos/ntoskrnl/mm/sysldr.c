@@ -94,7 +94,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     PVOID Base = NULL;
     SIZE_T ViewSize = 0;
     KAPC_STATE ApcState;
-    LARGE_INTEGER SectionOffset = {{0}};
+    LARGE_INTEGER SectionOffset = {{0, 0}};
     BOOLEAN LoadSymbols = FALSE;
     ULONG DriverSize;
     PVOID DriverBase;

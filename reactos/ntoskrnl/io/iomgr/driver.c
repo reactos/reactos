@@ -569,7 +569,7 @@ IopAttachFilterDrivers(
    PDEVICE_NODE DeviceNode,
    BOOLEAN Lower)
 {
-   RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
+   RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { { NULL, 0, NULL, NULL, 0, NULL, 0 }, };
    UNICODE_STRING Class;
    WCHAR ClassBuffer[40];
    UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
@@ -1749,7 +1749,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 NTSTATUS NTAPI
 NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 {
-    UNICODE_STRING CapturedDriverServiceName = {0};
+    UNICODE_STRING CapturedDriverServiceName = { 0, 0, NULL };
     KPROCESSOR_MODE PreviousMode;
     LOAD_UNLOAD_PARAMS LoadParams;
     NTSTATUS Status;

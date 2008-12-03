@@ -247,7 +247,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
     OBJECT_ATTRIBUTES ObjectAttributes;
     BOOLEAN FoundRightPDO = FALSE;
     ULONG i = 0, j, Size;
-    UNICODE_STRING ReturnBuffer = {0,};
+    UNICODE_STRING ReturnBuffer = { 0, 0, NULL };
     NTSTATUS Status;
 
     PAGED_CODE();

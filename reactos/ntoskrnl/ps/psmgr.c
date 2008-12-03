@@ -223,7 +223,7 @@ PspMapSystemDll(IN PEPROCESS Process,
                 IN BOOLEAN UseLargePages)
 {
     NTSTATUS Status;
-    LARGE_INTEGER Offset = {{0}};
+    LARGE_INTEGER Offset = {{0, 0}};
     SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
     
@@ -443,7 +443,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Now multiply limits by 1MB */
     PspDefaultPagedLimit <<= 20;
     PspDefaultNonPagedLimit <<= 20;
-    if (PspDefaultPagefileLimit != -1) PspDefaultPagefileLimit <<= 20;
+    if (PspDefaultPagefileLimit != -1U) PspDefaultPagefileLimit <<= 20;
 
     /* Initialize the Active Process List */
     InitializeListHead(&PsActiveProcessHead);

@@ -310,7 +310,7 @@ NTAPI
 CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName, ValueName = {0};
+    UNICODE_STRING KeyName, ValueName = { 0, 0, NULL };
     HANDLE KeyHandle;
     NTSTATUS Status;
     ASSERT(LoaderBlock != NULL);

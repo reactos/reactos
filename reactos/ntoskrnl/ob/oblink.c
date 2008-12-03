@@ -455,7 +455,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                           OUT PUNICODE_STRING LinkTarget,
                           OUT PULONG ResultLength OPTIONAL)
 {
-    UNICODE_STRING SafeLinkTarget = {0};
+    UNICODE_STRING SafeLinkTarget = { 0, 0, NULL };
     POBJECT_SYMBOLIC_LINK SymlinkObject;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;

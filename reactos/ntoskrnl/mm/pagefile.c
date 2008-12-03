@@ -164,7 +164,7 @@ MmShowOutOfSpaceMessagePagingFile(VOID)
    }
 }
 
-LARGE_INTEGER static
+static LARGE_INTEGER
 MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER Offset)
 {
    /* Simple binary search */

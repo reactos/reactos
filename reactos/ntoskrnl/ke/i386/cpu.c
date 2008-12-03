@@ -105,7 +105,7 @@ WRMSR(IN ULONG Register,
 LONGLONG
 RDMSR(IN ULONG Register)
 {
-    LARGE_INTEGER LargeVal = {{0}};
+    LARGE_INTEGER LargeVal = {{0, 0}};
     Ke386Rdmsr(Register, LargeVal.HighPart, LargeVal.LowPart);
     return LargeVal.QuadPart;
 }
@@ -840,7 +840,7 @@ VOID
 NTAPI
 KiI386PentiumLockErrataFixup(VOID)
 {
-    KDESCRIPTOR IdtDescriptor = {0};
+    KDESCRIPTOR IdtDescriptor = { 0, 0, 0 };
     PKIDTENTRY NewIdt, NewIdt2;
 
     /* Allocate memory for a new IDT */
