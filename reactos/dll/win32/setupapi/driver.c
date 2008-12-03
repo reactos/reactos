@@ -1537,7 +1537,7 @@ SetupDiSetSelectedDriverA(
     if (DriverInfoData != NULL)
     {
         if (DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V2_A) &&
-            DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V1_A));
+            DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V1_A))
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;

@@ -110,7 +110,7 @@ RtlFindMessage(PVOID BaseAddress,
 	DPRINT("UnicodeText: %S\n", (PWSTR)MessageEntry->Text);
      }
 
-   if (MessageResourceEntry != NULL);
+   if (MessageResourceEntry != NULL)
      {
 	*MessageResourceEntry = MessageEntry;
      }
