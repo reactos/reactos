@@ -153,8 +153,8 @@ InsertTailList(
     ListHead->Blink = Entry;
 }
 
-BOOLEAN
 static __inline
+BOOLEAN
 IsListEmpty(
             IN const LIST_ENTRY * ListHead
             )

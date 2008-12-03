@@ -5,7 +5,7 @@
 #error Header intended for use by NTOSKRNL/WIN32K only!
 #endif
 
-static const UNICODE_STRING __emptyUnicodeString = {0};
+static const UNICODE_STRING __emptyUnicodeString = {0, 0, NULL};
 static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
 static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
 static const IO_STATUS_BLOCK __emptyIoStatusBlock = {{0}, 0};

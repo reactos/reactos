@@ -191,7 +191,7 @@ typedef struct _DBGKM_MSG
 {
     PORT_MESSAGE h;
     DBGKM_APINUMBER ApiNumber;
-    ULONG ReturnedStatus;
+    NTSTATUS ReturnedStatus;
     union
     {
         DBGKM_EXCEPTION Exception;
