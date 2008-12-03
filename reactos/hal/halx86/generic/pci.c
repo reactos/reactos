@@ -81,10 +81,10 @@ PCIPBUSDATA HalpFakePciBusData =
         HalpWritePCIConfig,
         NULL,
         NULL,
-        {{{0}}},
+        {{{0, 0, 0}}},
         {0, 0, 0, 0}
     },
-    {{0}},
+    {{0, 0}},
     32,
 };
 
