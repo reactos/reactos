@@ -680,7 +680,7 @@ CSR_API(CsrReadConsole)
   return Status;
 }
 
-BOOLEAN __inline ConioGetIntersection(
+__inline BOOLEAN ConioGetIntersection(
   RECT *Intersection,
   RECT *Rect1,
   RECT *Rect2)
@@ -706,7 +706,7 @@ BOOLEAN __inline ConioGetIntersection(
   return TRUE;
 }
 
-BOOLEAN __inline ConioGetUnion(
+__inline BOOLEAN ConioGetUnion(
   RECT *Union,
   RECT *Rect1,
   RECT *Rect2)

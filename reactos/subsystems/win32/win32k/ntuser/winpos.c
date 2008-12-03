@@ -241,7 +241,7 @@ co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
 }
 
 
-VOID static FASTCALL
+static VOID FASTCALL
 WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
 {
    /* FIXME */

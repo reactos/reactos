@@ -293,7 +293,8 @@ static CSRSS_CONSOLE_VTBL TuiVtbl =
   TuiSetScreenInfo,
   TuiUpdateScreenInfo,
   TuiChangeTitle,
-  TuiCleanupConsole
+  TuiCleanupConsole,
+  NULL  // ChangeIcon
 };
 
 NTSTATUS FASTCALL

@@ -454,7 +454,7 @@ IntEngGradientFillTriangle(
 }
 
 
-BOOL static
+static BOOL
 IntEngIsNULLTriangle(TRIVERTEX  *pVertex, GRADIENT_TRIANGLE *gt)
 {
   if(COMPAREVERTEX(VERTEX(Vertex1), VERTEX(Vertex2)))

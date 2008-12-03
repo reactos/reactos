@@ -13,7 +13,7 @@ typedef struct _WNDPROC_INFO
     BOOL IsUnicode;
 } WNDPROC_INFO, *PWNDPROC_INFO;
 
-static BOOL __inline
+static __inline BOOL
 IsCallProcHandle(IN WNDPROC lpWndProc)
 {
     /* FIXME - check for 64 bit architectures... */

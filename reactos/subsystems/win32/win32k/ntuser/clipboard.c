@@ -129,7 +129,7 @@ IntRemoveWindowFromChain(PWINDOW_OBJECT window)
 /*==============================================================*/
 /* if format exists, returns a non zero value (pointing to format object) */
 PCLIPBOARDELEMENT FASTCALL
-intIsFormatAvailable(format)
+intIsFormatAvailable(UINT format)
 {
     PCLIPBOARDELEMENT ret = NULL;
     PCLIPBOARDELEMENT ce = ClipboardData;

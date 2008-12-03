@@ -294,7 +294,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
    return Res;
 }
 
-BOOL static APIENTRY
+static BOOL APIENTRY
 co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
                             PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
                             PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue, PLIST_ENTRY *Next)
