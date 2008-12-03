@@ -808,9 +808,9 @@ static NTSTATUS CheckForDeviceDesc( PUNICODE_STRING EnumKeyName,
                                     PUNICODE_STRING TargetKeyName,
                                     PUNICODE_STRING Name,
                                     PUNICODE_STRING DeviceDesc ) {
-    UNICODE_STRING RootDevice = { 0 }, LinkageKeyName = { 0 };
-    UNICODE_STRING DescKeyName = { 0 }, Linkage = { 0 };
-    UNICODE_STRING BackSlash = { 0 };
+    UNICODE_STRING RootDevice = { 0, 0, NULL }, LinkageKeyName = { 0, 0, NULL };
+    UNICODE_STRING DescKeyName = { 0, 0, NULL }, Linkage = { 0, 0, NULL };
+    UNICODE_STRING BackSlash = { 0, 0, NULL };
     HANDLE DescKey = NULL, LinkageKey = NULL;
     NTSTATUS Status;
 
@@ -962,7 +962,7 @@ BOOLEAN BindAdapter(
     PIP_INTERFACE IF;
     NDIS_STATUS NdisStatus;
     LLIP_BIND_INFO BindInfo;
-    IP_ADDRESS DefaultMask = { 0 };
+    IP_ADDRESS DefaultMask;
     ULONG Lookahead = LOOKAHEAD_SIZE;
     NTSTATUS Status;
 
@@ -1012,7 +1012,7 @@ BOOLEAN BindAdapter(
     TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
                 &IF->Description));
 
-    DefaultMask.Type = IP_ADDRESS_V4;
+    AddrInitIPv4(&DefaultMask, 0);
 
     IF->Unicast = DefaultMask;
     IF->Netmask = DefaultMask;

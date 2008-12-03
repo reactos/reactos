@@ -99,7 +99,7 @@ IntAgpCommitPhysical(
 {
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    PAGP_BUS_INTERFACE_STANDARD AgpBusInterface;
-   PHYSICAL_ADDRESS MappingAddr = {{0}};
+   PHYSICAL_ADDRESS MappingAddr = {{0, 0}};
    PVIDEO_PORT_AGP_MAPPING AgpMapping;
    NTSTATUS Status;
 
@@ -186,7 +186,7 @@ IntAgpReservePhysical(
    IN  VIDEO_PORT_CACHE_TYPE Caching,
    OUT PVOID *PhysicalContext)
 {
-   PHYSICAL_ADDRESS ZeroAddress = {{0}};
+   PHYSICAL_ADDRESS ZeroAddress = {{0, 0}};
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    PAGP_BUS_INTERFACE_STANDARD AgpBusInterface;
    MEMORY_CACHING_TYPE MemCachingType;

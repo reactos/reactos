@@ -357,7 +357,7 @@ VidInitialize(IN BOOLEAN SetMode)
 {
     ULONG Context = 0;
     PHYSICAL_ADDRESS TranslatedAddress;
-    PHYSICAL_ADDRESS NullAddress = {{0}};
+    PHYSICAL_ADDRESS NullAddress = {{0, 0}};
     ULONG AddressSpace = 1;
     BOOLEAN Result;
     ULONG_PTR Base;

@@ -32,7 +32,7 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
     PDEVICE_OBJECT MountDevice;
     PVOID Bpb = NULL;
     ULONG SectorSize;
-    LARGE_INTEGER Offset = {{0}};
+    LARGE_INTEGER Offset = {{0, 0}};
     BOOLEAN DeviceError = FALSE;
     PAGED_CODE();
 

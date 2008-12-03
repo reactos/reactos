@@ -53,7 +53,7 @@ FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
     PDEVICE_OBJECT MountDevice;
     PPACKED_BOOT_SECTOR Bpb = NULL;
     ULONG SectorSize;
-    LARGE_INTEGER Offset = {{0}}, Offset2, Offset3, SectorCount;
+    LARGE_INTEGER Offset = {{0, 0}}, Offset2, Offset3, SectorCount;
     PAGED_CODE();
 
     /* Get the I/O Stack and check the function type */
