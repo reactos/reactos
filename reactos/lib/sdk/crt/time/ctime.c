@@ -1276,7 +1276,9 @@ time2(struct tm *tmp, void (*const funcp)(const time_t * CPP_CONST, const long, 
   int saved_seconds;
   time_t newt;
   time_t t;
-  struct tm yourtm, mytm;
+
+  /* GCC complaints that it may be used uninitialized */
+  struct tm yourtm, mytm = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
   *okayp = FALSE;
   yourtm = *tmp;

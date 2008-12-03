@@ -236,7 +236,9 @@ KeRosDumpStackFrameArray(IN PULONG Frames,
     ULONG i, Addr;
     BOOLEAN InSystem;
     PVOID p;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    /* GCC complaints that it may be used uninitialized */
+    PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
 
     /* Loop them */
     for (i = 0; i < FrameCount; i++)
