@@ -135,7 +135,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 ProcessBasicInfo->UniqueProcessId = (ULONG_PTR)Process->
                                                     UniqueProcessId;
                 ProcessBasicInfo->InheritedFromUniqueProcessId =
-                    (ULONG)Process->InheritedFromUniqueProcessId;
+                    (ULONG_PTR)Process->InheritedFromUniqueProcessId;
                 ProcessBasicInfo->BasePriority = Process->Pcb.BasePriority;
 
             }
@@ -255,7 +255,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH_TRY
             {
                 /* Write back the Session ID */
-                SessionInfo->SessionId = Process->Session;
+                SessionInfo->SessionId = PtrToUlong(Process->Session);
 
                 /* Set the return length */
                 Length = sizeof(PROCESS_SESSION_INFORMATION);
@@ -682,7 +682,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             if (!NT_SUCCESS(Status)) break;
 
             /* Write the session ID in the EPROCESS */
-            Process->Session = SessionInfo.SessionId;
+            Process->Session = UlongToPtr(SessionInfo.SessionId);
 
             /* Check if the process also has a PEB */
             if (Process->Peb)
