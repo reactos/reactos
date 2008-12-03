@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  19-11-2008
+ * LastChange:  01-12-2008
  */
 
 #ifndef LANG_SK_SK_H__
@@ -370,31 +370,31 @@ static MUI_ENTRY skSKDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
         "Poü°taü:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
         "Monitor:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         13,
         "Kl†vesnica:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
         "Rozloßenie kl.:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
         "Akceptovaú:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT

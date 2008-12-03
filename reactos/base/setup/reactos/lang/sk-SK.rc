@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  xx-xx-2007
- * LAST UPDATE:  13-11-2008
+ * LAST UPDATE:  03-12-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -11,9 +11,7 @@ CAPTION "Inötal·cia systÈmu ReactOS" //ReactOS Setup
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "VÌta V·s sprievodca inötal·ciou systÈmu ReactOS.", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "SystÈm ReactOS sa z tohto CD ned· nainötalovaù ihneÔ! "\
-          "Reötartujte, prosÌm, poËÌtaË a inötalaËnÈ CD nechajte "\
-	  "vloûenÈ, aby sa mohol systÈm ReactOS nainötalovaù.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "SystÈm ReactOS sa z tohto CD ned· nainötalovaù ihneÔ! Reötartujte, prosÌm, poËÌtaË a inötalaËnÈ CD nechajte vloûenÈ, aby sa mohol systÈm ReactOS nainötalovaù.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Inötal·ciu ukonËÌte kliknutÌm na tlaËidlo DokonËiù.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -23,7 +21,7 @@ CAPTION "Inötal·cia systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDB_ROSLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
-    CONTROL "Setup language:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
+    CONTROL "Jazyk inötal·cie:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 109, 106, 11
     CONTROL "", IDC_LANGUAGES, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 107, 176, 142
     CONTROL "Keyboard or input method:", IDC_STATIC, "Static", WS_CHILD | WS_VISIBLE | WS_GROUP | SS_RIGHT, 20, 142, 106, 11
     CONTROL "", IDC_KEYLAYOUT, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 132, 141, 176, 81
@@ -35,9 +33,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·cia systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Type of setup", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
-    CONTROL "Install ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
-    CONTROL "Repair or update an installed ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
+    CONTROL "Typ inötal·cie", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
+    CONTROL "Nainötalovaù systÈm ReactOS", IDC_INSTALL, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 20, 15, 277, 10
+    CONTROL "Opraviù alebo aktualizovaù nainötalovan˝ systÈm ReactOS", IDC_SETUP, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 20, 30, 277, 10
     LTEXT "Click Next to setup the devices.", IDC_STATIC, 10, 180 ,297, 10
 END
 
@@ -48,11 +46,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Nastavenia zariadenÌ", IDC_STATIC, "Button", BS_GROUPBOX, 10,0,297,172
     LTEXT "PoËÌtaË:", IDC_STATIC, 20,15, 80, 10
-    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 150, 80
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 15, 180, 80
     LTEXT "Obrazovka:", IDC_STATIC, 20,35, 80, 10
-    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 150, 80
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 180, 80
     LTEXT "Kl·vesnica:", IDC_STATIC, 20,55, 80, 10
-    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 150, 80
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 180, 80
     LTEXT "Click Next setup of the installation device.", IDC_STATIC, 10, 180 ,277, 20
 END
 
@@ -63,10 +61,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "PartÌcia na nainötalovanie systÈmu ReactOS", IDC_STATIC, "Button", BS_GROUPBOX, 10,1,298,176
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
-    PUSHBUTTON "&Create", IDC_PARTCREATE, 20,155,50,15
-    PUSHBUTTON "&Delete", IDC_PARTDELETE, 76,155,50,15
-    PUSHBUTTON "&Advanced Options...", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT "Click Next to start the installation process.", IDC_STATIC, 10, 180 ,277, 20
+    PUSHBUTTON "&Vytvoriù", IDC_PARTCREATE, 20,155,50,15
+    PUSHBUTTON "O&dstr·niù", IDC_PARTDELETE, 76,155,50,15
+    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
+    PUSHBUTTON "RozöÌrenÈ &moûnosti...", IDC_PARTMOREOPTS, 218,155,80,15
+    LTEXT "Click Next to check the summary.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
@@ -86,8 +85,8 @@ BEGIN
 END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
-STYLE WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_THICKFRAME
-CAPTION "Advanced Partition Settings"
+STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
+CAPTION "RozöÌrenÈ nastavenia partÌcie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "InötalaËn˝ prieËinok", IDC_STATIC, "Button", BS_GROUPBOX, 4,1,298,30
@@ -95,10 +94,19 @@ BEGIN
 
     CONTROL "Inötal·cia zav·dzaËa systÈmu", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,41
 
-    CONTROL "Install boot loader on the hard disk (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "No installation of bootloader", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
+    CONTROL "Nainötalovaù zav·dzaË systÈmu na pevn˝ disk (MBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
+    CONTROL "Nenainötalovaù zav·dzaË systÈmu", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
     PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Zruöiù", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inötal·cia systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Zhrnutie inötal·cie", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "KliknutÌm na tlaËidlo œalej spustÌte inötalaËn˝ proces.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
@@ -122,7 +130,7 @@ BEGIN
     CONTROL "Completing the first stage of ReactOS Setup", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
     LTEXT "You have successfully completed the first stage of ReactOS Setup.", IDC_STATIC, 20, 50, 277, 10
  
-    LTEXT "When you click Finish, your computer will restart.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "KliknutÌm na tlaËidlo DokonËiù reötartujete poËÌtaË.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
     LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 10, 180, 297, 20
 END
@@ -131,8 +139,8 @@ END
 STRINGTABLE
 BEGIN
 	IDS_LANGTITLE		"V˝ber jazyka" //Voæba jazyka
-	IDS_LANGSUBTITLE	"Choose language for setup and final system."
-	IDS_TYPETITLE		"Welcome to ReactOS Setup"
+	IDS_LANGSUBTITLE	"Voæba jazyka pre inötal·tor a v˝sledn˝ systÈm." //Choose lang., Vyberte, Zvoæte
+	IDS_TYPETITLE		"VÌta V·s inötal·tor systÈmu ReactOS" //Welcome to ReactOS Setup
 	IDS_TYPESUBTITLE	"Choose setup type."
 	IDS_DEVICETITLE		"Setup the basic devices"
 	IDS_DEVICESUBTITLE	"Set the settings of display and keyboard."
@@ -142,7 +150,9 @@ BEGIN
 	IDS_PROCESSSUBTITLE	"Create and format partition, copy files, install and setup boot loader"
 	IDS_RESTARTTITLE	"First stage of setup finished"
 	IDS_RESTARTSUBTITLE	"The first stage of setup has been completed, restart to continue with second stage"
-	IDS_ABORTSETUP		"ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Really quit?"
+	IDS_SUMMARYTITLE	"Zhrnutie inötal·cie"
+	IDS_SUMMARYSUBTITLE	"List installation properties to check before apply to the installation device"
+	IDS_ABORTSETUP		"ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install Reactos. Naozaj skonËiù?"
 	IDS_ABORTSETUP2		"Preruöiù inötal·ciu?"
 END
 /* EOF */
