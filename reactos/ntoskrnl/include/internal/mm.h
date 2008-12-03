@@ -166,10 +166,10 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
 
 #define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
-    (ULONG)InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
+    InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
 
 #define InterlockedExchangePte(PointerPte, Value) \
-    (ULONG)InterlockedExchange((PLONG)(PointerPte), Value)
+    InterlockedExchange((PLONG)(PointerPte), Value)
 
 typedef struct
 {
