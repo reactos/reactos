@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/ke/i386/kiinit.c
  * PURPOSE:         Kernel Initialization for x86 CPUs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -11,6 +12,9 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+
+#define REQUIRED_FEATURE_BITS (KF_RDTSC|KF_CR4|KF_CMPXCHG8B|KF_XMMI|KF_XMMI64| \
+                               KF_NX_BIT)
 
 /* GLOBALS *******************************************************************/
 
@@ -393,7 +397,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN CCHAR Number,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    BOOLEAN NpxPresent;
     ULONG FeatureBits;
     ULONG PageDirectory[2];
     PVOID DpcStack;
@@ -401,14 +404,20 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Detect and set the CPU Type */
     KiSetProcessorType();
 
-    /* Set CR0 features based on detected CPU */
-    KiSetCR0Bits();
-
     /* Initialize the Power Management Support for this PRCB */
 //    PoInitializePrcb(Prcb);
 
     /* Get the processor features for the CPU */
     FeatureBits = KiGetFeatureBits();
+
+    /* Check if we support all needed features */
+    if ((FeatureBits & REQUIRED_FEATURE_BITS) != REQUIRED_FEATURE_BITS)
+    {
+        /* If not, bugcheck system */
+        DPRINT1("CPU doesn't have needed features! Has: 0x%x, required: 0x%x\n",
+                FeatureBits, REQUIRED_FEATURE_BITS);
+        KeBugCheck(0);
+    }
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
@@ -443,6 +452,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Save feature bits */
     Prcb->FeatureBits = FeatureBits;
 
+    /* Initialize the CPU features */
+    KiInitializeCpuFeatures();
+
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
 
@@ -461,7 +473,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
 
         /* Set boot-level flags */
-        KeI386NpxPresent = NpxPresent;
+        KeI386NpxPresent = TRUE;
         KeI386CpuType = Prcb->CpuType;
         KeI386CpuStep = Prcb->CpuStep;
         KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
@@ -758,9 +770,12 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
         /* Check for break-in */
 //        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
     }
+DPRINT1("after KdInitSystem\n");
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
+
+FrLdrDbgPrint("before KiSetupStackAndInitializeKernel\n");
 
     /* Switch to new kernel stack and start kernel bootstrapping */
     KiSetupStackAndInitializeKernel(&KiInitialProcess.Pcb,

@@ -120,10 +120,6 @@ Ki386SetProcessorFeatures(VOID);
 
 VOID
 NTAPI
-KiSetCR0Bits(VOID);
-
-VOID
-NTAPI
 KiGetCacheInformation(VOID);
 
 BOOLEAN
@@ -145,6 +141,10 @@ KiSetProcessorType(VOID);
 ULONG
 NTAPI
 KiGetFeatureBits(VOID);
+
+VOID
+NTAPI
+KiInitializeCpuFeatures();
 
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);

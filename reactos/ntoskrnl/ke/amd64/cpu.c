@@ -240,6 +240,21 @@ KiGetFeatureBits(VOID)
 
 VOID
 NTAPI
+KiInitializeCpuFeatures()
+{
+    /* Enable Write-Protection */
+    __writecr0(__readcr0() | CR0_WP);
+
+    /* Disable fpu monitoring */
+    __writecr0(__readcr0() & ~CR0_MP);
+
+    /* Enable fx save restore support */
+    __writecr4(__readcr4() | CR4_FXSR);
+
+}
+
+VOID
+NTAPI
 KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
@@ -344,23 +359,6 @@ KiGetCacheInformation(VOID)
             }
             break;
     }
-}
-
-
-VOID
-NTAPI
-KiSetCR0Bits(VOID)
-{
-    ULONG64 Cr0;
-
-    /* Save current CR0 */
-    Cr0 = __readcr0();
-
-    /* If this is a 486, enable Write-Protection */
-    if (KeGetCurrentPrcb()->CpuType > 3) Cr0 |= CR0_WP;
-
-    /* Set new Cr0 */
-    __writecr0(Cr0);
 }
 
 
