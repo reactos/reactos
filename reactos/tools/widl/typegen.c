@@ -984,7 +984,7 @@ static void write_user_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
 {
     unsigned int start, absoff, flags;
     unsigned int align = 0, ualign = 0;
-    const char *name;
+    const char *name = NULL;
     type_t *utype = get_user_type(type, &name);
     size_t usize = user_type_has_variable_size(utype) ? 0 : type_memsize(utype, &ualign);
     size_t size = type_memsize(type, &align);
@@ -2457,11 +2457,12 @@ void write_typeformatstring(FILE *file, const statement_list_t *stmts, type_pred
 static unsigned int get_required_buffer_size_type(
     const type_t *type, const char *name, unsigned int *alignment)
 {
+    const char *uname;
+    const type_t *utype;
+
     *alignment = 0;
-    if (is_user_type(type))
+    if ((utype = get_user_type(type, &uname)))
     {
-        const char *uname;
-        const type_t *utype = get_user_type(type, &uname);
         return get_required_buffer_size_type(utype, uname, alignment);
     }
     else
