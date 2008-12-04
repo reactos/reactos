@@ -20,7 +20,7 @@ extern int PASCAL WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
                            LPSTR szCmdLine, int nShow);
 
 int
-main (int argc, const char *argv[], const char *environ[])
+main (int argc, const char *argv[])
 {
   char *szCmd;
   STARTUPINFO startinfo;

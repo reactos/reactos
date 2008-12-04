@@ -2009,16 +2009,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 		          linkerflags );
 	}
 
-	if ( IsStaticLibrary ( module ) && module.isStartupLib )
-	{
-		fprintf ( fMakefile,
-		          "%s += -Wno-main\n\n",
-		          cflagsMacro.c_str () );
-		fprintf ( fMakefile,
-		          "%s += -Wno-main\n\n",
-		          cxxflagsMacro.c_str () );
-	}
-
 	fprintf ( fMakefile, "\n\n" );
 
 	// future references to the macros will be to get their values
