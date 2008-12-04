@@ -1095,7 +1095,11 @@ FILE* CDECL _wfdopen(int fd, const wchar_t *mode)
   if (modea &&
       WideCharToMultiByte(CP_ACP,0,mode,mlen,modea,mlen,NULL,NULL))
   {
-      if (get_flags(modea, &open_flags, &stream_flags) == -1) return NULL;
+      if (get_flags(modea, &open_flags, &stream_flags) == -1)
+      {
+        free(modea);
+        return NULL;
+      }
       LOCK_FILES();
       if (!(file = alloc_fp()))
         file = NULL;
