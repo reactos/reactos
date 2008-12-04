@@ -1426,7 +1426,6 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
 {
   expr_list_t *sizes = get_attrp(v->attrs, ATTR_SIZEIS);
   expr_list_t *lengs = get_attrp(v->attrs, ATTR_LENGTHIS);
-  int ptr_attr = get_attrv(v->attrs, ATTR_POINTERTYPE);
   int sizeless, has_varconf;
   expr_t *dim;
   type_t *atype, **ptype;
@@ -1457,13 +1456,15 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
    * pointer_default so we need to fix that up here */
   if (!arr)
   {
+    int ptr_attr = get_attrv(v->attrs, ATTR_POINTERTYPE);
     const type_t *ptr = NULL;
     /* pointer attributes on the left side of the type belong to the function
      * pointer, if one is being declared */
     type_t **pt = func_type ? &func_type : &v->type;
-    for (ptr = *pt; ptr; )
+    for (ptr = *pt; ptr && !ptr_attr; )
     {
-      if (ptr->kind == TKIND_ALIAS)
+      ptr_attr = get_attrv(ptr->attrs, ATTR_POINTERTYPE);
+      if (!ptr_attr && ptr->kind == TKIND_ALIAS)
         ptr = ptr->orig;
       else
         break;
