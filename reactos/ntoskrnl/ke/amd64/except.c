@@ -1,11 +1,10 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/i386/exp.c
- * PURPOSE:         Exception Dispatching and Context<->Trap Frame Conversion
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Gregor Anich
- *                  Skywing (skywing@valhallalegends.com)
+ * FILE:            ntoskrnl/ke/amd64/except.c
+ * PURPOSE:         Exception Dispatching for amd64
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                  Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -99,7 +98,104 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     IN KPROCESSOR_MODE PreviousMode,
                     IN BOOLEAN FirstChance)
 {
-    UNIMPLEMENTED;
+    CONTEXT Context;
+
+    DPRINT1("KiDispatchException(%p, %p, %p, %d, %d)\n",
+        ExceptionRecord, ExceptionFrame, TrapFrame, PreviousMode, FirstChance);
+
+    /* Increase number of Exception Dispatches */
+    KeGetCurrentPrcb()->KeExceptionDispatchCount++;
+
+    /* Set the context flags */
+    Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
+
+    /* Check if User Mode or if the debugger is enabled */
+    if ((PreviousMode == UserMode) || (KdDebuggerEnabled))
+    {
+        /* Add the FPU Flag */
+        Context.ContextFlags |= CONTEXT_FLOATING_POINT;
+    }
+
+    /* Get a Context */
+    KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
+
+    /* Look at our exception code */
+    switch (ExceptionRecord->ExceptionCode)
+    {
+        /* Breakpoint */
+        case STATUS_BREAKPOINT:
+
+            /* Decrement EIP by one */
+            Context.Rip--;
+            break;
+
+        /* Internal exception */
+        case KI_EXCEPTION_ACCESS_VIOLATION:
+
+            /* Set correct code */
+            ExceptionRecord->ExceptionCode = STATUS_ACCESS_VIOLATION;
+            if (PreviousMode == UserMode)
+            {
+                /* FIXME: Handle no execute */
+            }
+            break;
+    }
+
+    /* Handle kernel-mode first, it's simpler */
+    if (PreviousMode == KernelMode)
+    {
+        /* Check if this is a first-chance exception */
+        if (FirstChance == TRUE)
+        {
+            /* Break into the debugger for the first time */
+            if (KiDebugRoutine(TrapFrame,
+                               ExceptionFrame,
+                               ExceptionRecord,
+                               &Context,
+                               PreviousMode,
+                               FALSE))
+            {
+                /* Exception was handled */
+                goto Handled;
+            }
+
+            /* If the Debugger couldn't handle it, dispatch the exception */
+            if (RtlDispatchException(ExceptionRecord, &Context)) goto Handled;
+        }
+
+        /* This is a second-chance exception, only for the debugger */
+        if (KiDebugRoutine(TrapFrame,
+                           ExceptionFrame,
+                           ExceptionRecord,
+                           &Context,
+                           PreviousMode,
+                           TRUE))
+        {
+            /* Exception was handled */
+            goto Handled;
+        }
+
+        /* Third strike; you're out */
+        KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
+                     ExceptionRecord->ExceptionCode,
+                     (ULONG_PTR)ExceptionRecord->ExceptionAddress,
+                     (ULONG_PTR)TrapFrame,
+                     0);
+    }
+    else
+    {
+        /* FIXME: user-mode exception handling unimplemented */
+        ASSERT(FALSE);
+    }
+
+Handled:
+    /* Convert the context back into Trap/Exception Frames */
+    KeContextToTrapFrame(&Context,
+                         ExceptionFrame,
+                         TrapFrame,
+                         Context.ContextFlags,
+                         PreviousMode);
+    return;
 }
 
 NTSTATUS
