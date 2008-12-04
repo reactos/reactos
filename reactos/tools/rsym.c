@@ -697,19 +697,23 @@ CreateOutputFile(FILE *OutFile, void *InData,
   Length = StartOfRawData;
   for (Section = 0; Section < OutFileHeader->NumberOfSections; Section++)
     {
+      DWORD SizeOfRawData;
       if (OutRelocSection == OutSectionHeaders + Section)
         {
           Data = (void *) ProcessedRelocs;
+	  SizeOfRawData = ProcessedRelocsLength;
         }
       else if (RosSymLength > 0 && Section + 1 == OutFileHeader->NumberOfSections)
         {
           Data = (void *) PaddedRosSym;
+	  SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
         }
       else
         {
           Data = (void *) ((char *) InData + OutSectionHeaders[Section].PointerToRawData);
+	  SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
         }
-      for (i = 0; i < OutSectionHeaders[Section].SizeOfRawData / 2; i++)
+      for (i = 0; i < SizeOfRawData / 2; i++)
         {
           CheckSum += ((unsigned short*) Data)[i];
           CheckSum = 0xffff & (CheckSum + (CheckSum >> 16));
@@ -730,21 +734,24 @@ CreateOutputFile(FILE *OutFile, void *InData,
     {
       if (0 != OutSectionHeaders[Section].SizeOfRawData)
         {
+	  DWORD SizeOfRawData;
           fseek(OutFile, OutSectionHeaders[Section].PointerToRawData, SEEK_SET);
           if (OutRelocSection == OutSectionHeaders + Section)
             {
               Data = (void *) ProcessedRelocs;
+	      SizeOfRawData = ProcessedRelocsLength;
             }
           else if (RosSymLength > 0 && Section + 1 == OutFileHeader->NumberOfSections)
             {
               Data = (void *) PaddedRosSym;
+	      SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
             }
           else
             {
               Data = (void *) ((char *) InData + OutSectionHeaders[Section].PointerToRawData);
+	      SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
             }
-          if (fwrite(Data, 1, OutSectionHeaders[Section].SizeOfRawData, OutFile) !=
-              OutSectionHeaders[Section].SizeOfRawData)
+          if (fwrite(Data, 1, SizeOfRawData, OutFile) != SizeOfRawData)
             {
               perror("Error writing section data\n");
               free(PaddedRosSym);
