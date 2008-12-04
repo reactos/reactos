@@ -117,9 +117,7 @@ RtlLookupFunctionEntry(
     ULONG IndexLo, IndexHi, IndexMid;
 
     /* Find the corresponding table */
-    FunctionTable = RtlLookupFunctionTable(ControlPc,
-                                           ImageBase,
-                                           &TableLength);
+    FunctionTable = RtlLookupFunctionTable(ControlPc, ImageBase, &TableLength);
 
     /* Fail, if no table is found */
     if (!FunctionTable)
@@ -544,8 +542,8 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     return i;
 }
 
-// CHEKCME: return PVOID?
 // http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Debug/RtlGetCallersAddress.html
+#undef RtlGetCallersAddress
 VOID
 NTAPI
 RtlGetCallersAddress(
