@@ -2,6 +2,7 @@
     /*
     RosCMS - ReactOS Content Management System
     Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
+                  2008  Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,78 +51,26 @@ class Security
     // only if user has rights to access the interface
     if ($thisuser->securityLevel() > 0) {
 
-      // for usage in the while loop
-      $stmt=DBConnection::getInstance()->prepare("SELECT usergroupmember_usergroupid FROM usergroup_members WHERE usergroupmember_userid = :user_id");
+      // go through acl's
+      $stmt=DBConnection::getInstance()->prepare("SELECT a.id, b.can_read, b.can_add, b.can_write, b.can_delete, b.can_publish, b.can_translate FROM ".ROSCMST_ACCESS." a JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id = b.group_id WHERE m.user_id = :user_id");
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
-      $usergroups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-      // go through acl's
-      $stmt=DBConnection::getInstance()->prepare("SELECT sec_name, sec_deny, sec_allow, sec_lev1_read, sec_lev2_read, sec_lev3_read, sec_lev1_write, sec_lev2_write, sec_lev3_write, sec_lev1_add, sec_lev2_add, sec_lev3_add, sec_lev1_pub, sec_lev2_pub, sec_lev3_pub, sec_lev1_trans, sec_lev2_trans, sec_lev3_trans FROM data_security WHERE sec_branch = 'website'");
-      $stmt->execute();
-      while ($sec_entry = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      
         // add entries, remove them if they're on the deny list
-        if ($sec_entry['sec_lev'.$thisuser->securityLevel().'_'.$kind] == 1) {
+        if ($access['can_'.$kind] == true) {
           if ($sec_access) {
-            $acl .= " OR";
+            $acl .= " , ";
           }
-
-          $acl .= " data_acl = ".DBConnection::getInstance()->quote($sec_entry['sec_name'])." ";
+          $acl .= DBConnection::getInstance()->quote($access['id'],PDO::PARAM_INT);
           $sec_access = true;
-
-          // check for denied groups and remove them if needed
-          reset($usergroups);
-          foreach($usergroups as $usergroup) {
-
-            // is usergroup on denied list ?
-            $pos = strpos($sec_entry['sec_deny'], '|'.$usergroup['usergroupmember_usergroupid'].'|');
-            if ($pos !== false) {
-
-              // is usergroup already added to our acl list ?
-              $pos = strpos($acl, " data_acl = ".DBConnection::getInstance()->quote($sec_entry['sec_name']));
-              if ($pos === false) {
-                die('roscms_security_sql(): problem');  //@CHECKME should this really die here ? instead of simply removing the entry
-              }
-              else {
-
-                // remove denied entries from allowed list, remove leading OR
-                $temp_sql = str_replace(" OR data_acl = ".DBConnection::getInstance()->quote($sec_entry['sec_name'])."' ", "", $acl);
-                $temp_sql = str_replace(" data_acl = ".DBConnection::getInstance()->quote($sec_entry['sec_name'])."' ", "", $acl);
-
-                // prevent starting with ' OR'
-                if ($temp_sql == '') {
-                  $sec_access = false;  
-                }
-              }
-            }
-          } // foreach
-        }
-        else {
-
-          // add entries on the allow list, if they aren't set by acl
-          reset($usergroups);
-          foreach($usergroups as $usergroup) {
-          
-            // is current usergroup on the allowed list ?
-            $pos = strpos($sec_entry['sec_allow'], "|".$usergroup['usergroupmember_usergroupid']."|");
-            if ($pos !== false) {
-
-              // add to acl list
-              if ($sec_access) {
-                $acl .= " OR";
-              }
-              $acl .= " data_acl = ".DBConnection::getInstance()->quote($sec_entry['sec_name'])." ";
-              $sec_access = true;
-            }
-          } // foreach
         }
       } // while
     }
 
     // group our acl list, or fail because no rights to access
     if ($sec_access > 0) {
-      $acl = " AND (". $acl .") ";
+      $acl = " AND d.acl_id IN(". $acl .") ";
     }
     else {
       $acl = " AND FALSE ";
@@ -138,10 +87,8 @@ class Security
    * @return rights list
    * @access private
    */
-  private function getRightsList( $data_id )
+  private function getRightsList( $rev_id, $is_rev = true )
   {
-    global $h_a2;
-
     $thisuser = &ThisUser::getInstance();
 
     // roscms interface access ?
@@ -149,61 +96,48 @@ class Security
       return;
     }
 
-    $rights_list = '|';
-    $acl_allow = false;
-    $acl_deny = false;
+    // contains list with granted rights
+    $rights = array('read'=>false,'write'=>false,'add'=>false,'delete'=>false,'publish'=>false,'translate'=>false,);
 
     // get rights
-    $stmt=DBConnection::getInstance()->prepare("SELECT sec_allow, sec_deny, sec_lev1_read, sec_lev2_read, sec_lev3_read, sec_lev1_write, sec_lev2_write, sec_lev3_write, sec_lev1_add, sec_lev2_add, sec_lev3_add, sec_lev1_pub, sec_lev2_pub, sec_lev3_pub, sec_lev1_trans, sec_lev2_trans, sec_lev3_trans FROM data_".$h_a2." d JOIN data_security y ON y.sec_name = d.data_acl WHERE data_id = :data_id AND y.sec_branch = 'website' LIMIT 1");
-    $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
-    $stmt->execute() or die('Data-Entry "'.$data_id.'" not found [usergroups].');
-    $rights = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+    if ($is_rev) {
+      $stmt=DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE r.id = :rev_id AND m.user_id=:user_id LIMIT 1");
+      $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+    }
+    else {
+      $stmt=DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE d.id = :data_id AND m.user_id=:user_id LIMIT 1");
+      $stmt->bindParam('data_id',$rev_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+    }
+    $stmt->execute() or die('Rev-Entry "'.$rev_id.'" not found [usergroups].');
 
-    // check for membership in allowed groups
-    $stmt=DBConnection::getInstance()->prepare("SELECT usergroupmember_usergroupid FROM usergroup_members WHERE usergroupmember_userid = :user_id");
-    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-    $stmt->execute();
-    while($usergroup = $stmt->fetch(PDO::FETCH_ASSOC)) {
-
-      //
-      $pos = strpos($rights['sec_allow'], '|'.$usergroup['usergroupmember_usergroupid'].'|');
-      if ($pos !== false) {
-        $acl_allow = true;
+    while($list = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      // create a list with rights
+      //@CHECKME is this type of checks a good idea ??
+      if ($list['can_read'] == true) {
+        $rights['read'] = true;
+      }
+      if ($list['can_write'] == true) {
+        $rights['write'] = true;
+      }
+      if ($list['can_add'] == true) {
+        $rights['add'] = true;
+      }
+      if ($list['can_delete'] == true) {
+        $rights['delete'] = true;
+      }
+      if ($list['can_publish'] == true) {
+        $rights['publish'] = true;
+      }
+      if ($list['can_translate'] == true) {
+        $rights['translate'] = true;
       }
     }
 
-    // check for membership in denied list
-    $stmt=DBConnection::getInstance()->prepare("SELECT usergroupmember_usergroupid FROM usergroup_members WHERE usergroupmember_userid = :user_id");
-    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-    $stmt->execute();
-    while($usergroup = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-      //
-      $pos = strpos($rights['sec_deny'], '|'.$usergroup['usergroupmember_usergroupid'].'|');
-      if ($pos !== false) {
-        $acl_deny = true;
-      }
-    }
 
-    // create a list with rights
-    //@CHECKME is this type of checks a good idea ??
-    if (($rights['sec_lev'.$thisuser->securityLevel().'_read'] == 1 || $acl_allow === true) && $acl_deny === false) {
-      $rights_list .= 'read|';
-    }
-    if (($rights['sec_lev'.$thisuser->securityLevel().'_write'] == 1 || $acl_allow === true) && $acl_deny === false) {
-      $rights_list .= 'write|';
-    }
-    if (($rights['sec_lev'.$thisuser->securityLevel().'_add'] == 1 || ($acl_allow === true && $thisuser->securityLevel() == 3)) && $acl_deny === false) {
-      $rights_list .= 'add|';
-    }
-    if (($rights['sec_lev'.$thisuser->securityLevel().'_pub'] == 1 || ($acl_allow === true && $thisuser->securityLevel() == 3)) && $acl_deny === false) {
-      $rights_list .= 'pub|';
-    }
-    if (($rights['sec_lev'.$thisuser->securityLevel().'_trans'] == 1 || ($acl_allow === true && $thisuser->securityLevel() == 3)) && $acl_deny === false) {
-      $rights_list .= 'trans|';
-    }
-
-    return $rights_list;
+    return $rights;
   } // end of member function getRightsList
 
 
@@ -223,8 +157,8 @@ class Security
     }
 
     // return if the requested kind of right is in the rights list for the user
-    $pos = strpos(self::getRightsList($data_id), '|'.$kind.'|');
-    return ($pos !== false);
+    $rights = self::getRightsList($data_id, false);
+    return $rights[$kind];
   } // end of member function hasRight
 
 
@@ -242,15 +176,16 @@ class Security
       return;
     }
 
-    $rights_list = self::getRightsList($data_id);  // so we don't need to call the same function several times
-    $explanation = ''; // contains abbreviations for each right or a - (missing) symbol instead
+    $rights = self::getRightsList($data_id, false);  // so we don't need to call the same function several times
+    $explanation = ''; // contains abbreviations for each right or a - (if missing) symbol instead
 
     // start to construct list
-    $explanation .= (strpos($rights_list, '|read|') === false)    ? '-' : 'r';
-    $explanation .= (strpos($rights_list, '|write|') === false)   ? '-' : 'w';
-    $explanation .= (strpos($rights_list, '|add|') === false)     ? '-' : 'a';
-    $explanation .= (strpos($rights_list, '|pub|') === false)     ? '-' : 'p';
-    $explanation .= (strpos($rights_list, '|trans|') === false)   ? '-' : 'p';
+    $explanation .= $rights['read'] ? '-' : 'r';
+    $explanation .= $rights['write'] ? '-' : 'w';
+    $explanation .= $rights['add'] ? '-' : 'a';
+    $explanation .= $rights['delted'] ? '-' : 'd';
+    $explanation .= $rights['publish'] ? '-' : 'p';
+    $explanation .= $rights['translate'] ? '-' : 't';
 
     // add also security level
     $explanation .= ' '.ThisUser::getInstance()->securityLevel();

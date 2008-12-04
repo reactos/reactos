@@ -87,7 +87,7 @@ class Subsystem_Bugzilla extends Subsystem
   protected function checkUser( )
   {
     $inconsistencies = 0;
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.user_id, u.user_name, u.user_email, p.realname AS subsys_user, p.login_name AS subsys_email FROM users u, subsys_mappings m, ".$this->user_table." p WHERE m.map_roscms_userid = u.user_id AND m.map_subsys_name = 'bugzilla' AND p.userid = m.map_subsys_userid AND (u.user_name != p.realname OR p.realname IS NULL OR u.user_email != p.login_name) ");
+    $stmt=DBConnection::getInstance()->prepare("SELECT u.id AS user_id, u.name AS user_name, u.email, p.realname AS subsys_user, p.login_name AS subsys_email FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_SUBSYS." m ON m.user_id=u.id JOIN ".$this->user_table." p ON p.userid=m.subsys_user_id WHERE m.map_subsys_name = 'bugzilla' AND (u.name != p.realname OR p.realname IS NULL OR u.email != p.login_name) ");
     $stmt->execute() or die('DB error (subsys_bugzilla #1)');
     while ($mapping = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo 'Info mismatch for RosCMS userid '.$mapping['user_id'].': ';
@@ -98,8 +98,8 @@ class Subsystem_Bugzilla extends Subsystem
       }
       
       // email
-      if ($mapping['user_email'] != $mapping['subsys_email']){
-        echo 'user_email '.$mapping['user_email'] . "/" .$mapping['subsys_email'];
+      if ($mapping['email'] != $mapping['subsys_email']){
+        echo 'user_email '.$mapping['email'] . "/" .$mapping['subsys_email'];
       }
       
       echo '<br />';
@@ -179,7 +179,7 @@ class Subsystem_Bugzilla extends Subsystem
     }
 
     // Finally, insert a row in the mapping table
-    $stmt=DBConnection::getInstance()->prepare("INSERT INTO subsys_mappings (map_roscms_userid, map_subsys_name, map_subsys_userid) VALUES(:user_id, 'bugzilla', LAST_INSERT_ID())");
+    $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsy_user_id) VALUES(:user_id, 'bugzilla', LAST_INSERT_ID())");
     $stmt->bindParam('user_id',$id,PDO::PARAM_INT);
     $stmt->execute() or die('DB error (subsys_bugzilla #11)');
 
@@ -226,7 +226,7 @@ class Subsystem_Bugzilla extends Subsystem
       }
 
       // Insert a row in the mapping table
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO subsys_mappings (map_roscms_userid, map_subsys_name, map_subsys_userid) VALUES(:roscms_user, 'bugzilla', :bugzilla_user)");
+      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsys_user_id) VALUES(:roscms_user, 'bugzilla', :bugzilla_user)");
       $stmt->bindParam('roscms_user',$user_id,PDO::PARAM_INT);
       $stmt->bindParam('bugzilla_user',$bz_user_id,PDO::PARAM_INT);
       $stmt->execute() or die('DB error (subsys_bugzilla #9)');

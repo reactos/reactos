@@ -72,9 +72,11 @@ abstract class HTML_CMS extends HTML
 
     // generate list of memberships
     $group_list = '';
-    $groups = $thisuser->getGroups();
-    foreach($groups as $group_name => $security_level) {
-      $group_list .= ($group_list!=''?',':'').$group_name;
+    $stmt=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE m.user_id=:user_id ORDER BY g.security_level DESC, g.name");
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+    $stmt->execute();
+    while($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $group_list .= ($group_list!=''?',':'').$group['name'];
     }
 
     // get security level

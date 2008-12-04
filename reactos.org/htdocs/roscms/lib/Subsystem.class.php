@@ -43,12 +43,12 @@ abstract class Subsystem extends Login
   {
     $inconsistencies = 0;
   
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.user_id FROM users WHERE u.user_id NOT IN (SELECT m.map_roscms_userid FROM subsys_mappings m WHERE m.map_roscms_userid = u.user_id AND m.map_subsys_name = :subsys_name)");
+    $stmt=DBConnection::getInstance()->prepare("SELECT u.id FROM ".ROSCMST_USERS." u WHERE u.id NOT IN (SELECT m.user_id FROM ".ROSCMST_SUBSYS." m WHERE m.user_id = u.id AND m.subsys = :subsys_name)");
     $stmt->bindParam('subsys_name',$this->name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_utils #1)');
   
     while ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      echo 'No mapping of RosCMS userid '.$user['user_id'].'<br />';
+      echo 'No mapping of RosCMS userid '.$user['id'].'<br />';
       $inconsistencies++;
     }
 
@@ -70,20 +70,20 @@ abstract class Subsystem extends Login
   {
     $inconsistencies = 0;
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.user_id, m.map_subsys_userid FROM users u JOIN subsys_mappings m ON m.map_roscms_userid = u.user_id LEFT OUTER JOIN ".$this->user_table." ss ON ss.".$this->userid_column." = m.map_subsys_userid WHERE m.map_subsys_name = :subsys_name AND ss.".$this->userid_column." IS NULL ");
+    $stmt=DBConnection::getInstance()->prepare("SELECT u.id AS user_id, m.subsys_user_id FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_SUBSYS." m ON m.user_id = u.id LEFT OUTER JOIN ".$this->user_table." ss ON ss.".$this->userid_column." = m.subsys_user_id WHERE m.subsys = :subsys_name AND ss.".$this->userid_column." IS NULL");
     $stmt->bindParam('subsys_name',$this->name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_utils #2)');
     while ($mapping = $stmt->fetch(PDO::FETCH_ASSOC))
     {
-      echo 'RosCMS userid '.$mapping['user_id'].' maps to subsys userid '.$mapping['map_subsys_userid'].' but that subsys userid doesn\'t exist<br />';
+      echo 'RosCMS userid '.$mapping['user_id'].' maps to subsys userid '.$mapping['subsys_user_id'].' but that subsys userid doesn\'t exist<br />';
       $inconsistencies++;
     }
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT ss.".$this->userid_column." AS userid FROM ".$this->user_table." ss WHERE ss.".$this->userid_column." NOT IN (SELECT m.map_subsys_userid FROM subsys_mappings m WHERE m.map_subsys_userid = ss.".$this->userid_column." AND m.map_subsys_name = :subsys_name)");
+    $stmt=DBConnection::getInstance()->prepare("SELECT ss.".$this->userid_column." AS user_id FROM ".$this->user_table." ss WHERE ss.".$this->userid_column." NOT IN (SELECT m.subsys_user_id FROM ".ROSCMST_SUBSYS." m WHERE m.subsys_user_id = ss.".$this->userid_column." AND m.subsys = :subsys_name)");
     $stmt->bindParam('subsys_name',$this->name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_utils #3)');
     while ($subsys = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      echo 'No RosCMS userid for subsys userid '.$subsys['userid'].'<br />';
+      echo 'No RosCMS userid for subsys userid '.$subsys['user_id'].'<br />';
       $inconsistencies++;
     }
 
@@ -129,10 +129,10 @@ abstract class Subsystem extends Login
    */
   public function addOrUpdateMapping( $user_id )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT map_subsys_userid FROM subsys_mappings WHERE map_roscms_userid = :user_id AND map_subsys_name = :subsys LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT subsys_user_id FROM ".ROSCMST_SUBSYS." WHERE user_id = :user_id AND subsys = :subsys LIMIT 1");
     $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
     $stmt->bindParam('subsys',$this->name,PDO::PARAM_STR);
-    $stmt->execute() or die("DB error (subsys_wiki #2)");
+    $stmt->execute() or die('DB error (subsys_wiki #2)');
 
     if ($subsys_user = $stmt->fetchColumn()) {
       return $this->updateUser($user_id, $subsys_user);

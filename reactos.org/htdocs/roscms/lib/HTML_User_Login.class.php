@@ -101,7 +101,7 @@ class HTML_User_Login extends HTML_User
       }
 
       // get user data
-      $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_roscms_password, user_login_counter, user_account_enabled, user_setting_multisession, user_setting_timeout FROM users WHERE user_name = :user_name LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("SELECT id, password, logins, disabled, match_session, match_session_expire FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
       $stmt->bindParam('user_name',$user_name,PDO::PARAM_STR);
       $stmt->execute() or die('DB error (user login #1)!');
       $user = $stmt->fetchOnce(); 
@@ -109,32 +109,32 @@ class HTML_User_Login extends HTML_User
       if ($session_found === true) {
         // we simply concatenate the password and random key to create a unique session md5 hash
         // hmac functions are not available on most web servers, but this is near as dammit.
-        $user['user_roscms_password'] = md5($session_id.$user['user_roscms_password']);
+        $user['password'] = md5($session_id.$user['password']);
         $a_password = $password;
       }
       else {
         $a_password = md5($password);
       }
 
-      if ($a_password != $user['user_roscms_password']) {
+      if ($a_password != $user['password']) {
         self::loginPage("You have specified an incorrect or inactive username, or an invalid password.");
         exit;
       }
 
       // if the account is NOT enabled; e.g. a reason could be that a member of the admin group has disabled this account because of spamming, etc.
-      if ($user['user_account_enabled'] != 'yes') { 
+      if ($user['disabled'] == true) { 
         self::loginPage('Account is not activated or disabled!<br /><br />Check your email inbox (and spam folder), maybe you have overseen the activation information.');
         exit;
       }
 
       // if the user account setting is "multisession" (a by user setting), it is set to "false" by default
-      if ($user['user_setting_multisession'] == false) {
-        $stmt=DBConnection::getInstance()->prepare("SELECT COUNT('usersession_user_id') FROM user_sessions WHERE usersession_user_id = :user_id");
-        $stmt->bindParam('user_id',$user['user_id'],PDO::PARAM_INT);
+      if ($user['match_session'] == false) {
+        $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_SESSIONS." WHERE user_id = :user_id");
+        $stmt->bindParam('user_id',$user['id'],PDO::PARAM_INT);
         $stmt->execute() or die('DB error (user login #3)!');
     
         if ($stmt->fetchColumn() > 0) {
-          $stmt=DBConnection::getInstance()->prepare("DELETE FROM user_sessions WHERE usersession_user_id =:user_id");
+          $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_SESSIONS." WHERE user_id =:user_id");
           $stmt->bindParam('user_id',$roscms_currentuser_id,PDO::PARAM_INT);
           $stmt->execute();
         }
@@ -159,20 +159,20 @@ class HTML_User_Login extends HTML_User
       }
 
       // expire = NULL
-      if (isset($_POST['loginoption2']) && $_POST['loginoption2'] == 'notimeout' && $user['user_setting_timeout'] == 'true') {
-        $stmt=DBConnection::getInstance()->prepare("INSERT INTO user_sessions (usersession_id, usersession_user_id, usersession_expires, usersession_browseragent, usersession_ipaddress) VALUES (:session_id, :user_id, NULL, :useragent, :ip)");
+      if (isset($_POST['loginoption2']) && $_POST['loginoption2'] == 'notimeout' && $user['match_session_expire'] == true) {
+        $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SESSIONS." (id, user_id, expires, browseragent, ipaddress) VALUES (:session_id, :user_id, NULL, :useragent, :ip)");
         $cookie_time = 0x7fffffff; // 31.12.1969
       }
 
       // expire = 'DATE_ADD(NOW(), INTERVAL 60 MINUTE)';
       else {
-        $stmt=DBConnection::getInstance()->prepare("INSERT INTO user_sessions (usersession_id, usersession_user_id, usersession_expires, usersession_browseragent, usersession_ipaddress) VALUES (:session_id, :user_id, DATE_ADD(NOW(), INTERVAL 60 MINUTE), :useragent, :ip)");
-        $cookie_time = time() + 60 * 60;
+        $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SESSIONS." (id, user_id, expires, browseragent, ip) VALUES (:session_id, :user_id, DATE_ADD(NOW(), INTERVAL 30 MINUTE), :useragent, :ip)");
+        $cookie_time = time() + 30 * 60;
       }
 
       // Add an entry to the 'user_sessions' table
       $stmt->bindParam('session_id',$session_id,PDO::PARAM_STR);
-      $stmt->bindParam('user_id',$user['user_id'],PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$user['id'],PDO::PARAM_INT);
       $stmt->bindParam('useragent',$_SERVER['HTTP_USER_AGENT'],PDO::PARAM_STR);
       $stmt->bindParam('ip',$_SERVER['REMOTE_ADDR'],PDO::PARAM_STR);
       $stmt->execute() or die('DB error (user login #4)!');
@@ -181,8 +181,8 @@ class HTML_User_Login extends HTML_User
       setcookie($rdf_login_cookie_usrkey, $session_id, $cookie_time, '/', Cookie::getDomain());
 
       // Update the login_counter of the specific user
-      $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_timestamp_touch = NOW(), user_login_counter = user_login_counter + 1 WHERE user_id = :user_id");
-      $stmt->bindParam('user_id',$user['user_id'],PDO::PARAM_INT);
+      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW(), logins = logins + 1 WHERE id = :user_id");
+      $stmt->bindParam('user_id',$user['id'],PDO::PARAM_INT);
       $stmt->execute();
 
       unset($session_id);

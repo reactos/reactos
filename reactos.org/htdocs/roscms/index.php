@@ -25,23 +25,14 @@
 
   require('constants.php');
   require('lib/RosCMS_Autoloader.class.php');
+  require('lib/DBConnection.class.php');
 
 	if (get_magic_quotes_gpc()) {
     ini_set('magic_quotes', 'off');
 	}
 
-		
 	// config data
 	require("roscms_conf.php");
-	
-	// logon system
-	define('ROSCMS_LOGIN', '3');
-
-
-	if ( !defined('ROSCMS_SYSTEM') ) {
-		define ("ROSCMS_SYSTEM", "Version 0.3"); // to prevent hacking activity
-	}
-
 
 	// Global Vars:
 	$rpm_page="";
@@ -54,8 +45,6 @@
 	require("custom.php"); // custom on-screen information
 	
 
-  
-  
 	$RosCMS_GET_d_use = ""; // data usage (where the data will be used)
 	$RosCMS_GET_d_flag = ""; // data flag
 	$RosCMS_GET_d_value = ""; // data transport value
@@ -69,16 +58,6 @@
 	if (array_key_exists("d_val2", $_GET)) $RosCMS_GET_d_value2=htmlspecialchars($_GET["d_val2"]);
 	if (array_key_exists("d_val3", $_GET)) $RosCMS_GET_d_value3=htmlspecialchars($_GET["d_val3"]);
 	if (array_key_exists("d_val4", $_GET)) $RosCMS_GET_d_value4=htmlspecialchars($_GET["d_val4"]);
-  
-  
-if (isset($_GET['d_arch']) && $_GET['d_arch'] == true) {
-  $h_a = '_a';
-  $h_a2 = 'a';
-}
-else {
-  $h_a = '';
-  $h_a2 = '';
-}
 
 // strips whitespace from sourcecode
 function echo_strip( $text ) {

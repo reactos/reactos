@@ -73,7 +73,7 @@ class Subsystem_PHPBB extends Subsystem
   {
     $inconsistencies = 0;
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.user_id, u.user_name, u.user_email, u.user_register, p.username AS subsys_name, p.user_email AS subsys_email, FROM_UNIXTIME(p.user_regdate) AS subsys_register FROM users u, subsys_mappings m, ".$this->user_table." p WHERE m.map_roscms_userid = u.user_id AND m.map_subsys_name = 'phpbb' AND p.user_id = m.map_subsys_userid AND (u.user_name != p.username OR u.user_email != p.user_email OR u.user_register != FROM_UNIXTIME(p.user_regdate)) ");
+    $stmt=DBConnection::getInstance()->prepare("SELECT u.id AS user_id, u.name AS user_name, u.email, u.created, p.username AS subsys_name, p.user_email AS subsys_email, FROM_UNIXTIME(p.user_regdate) AS subsys_created FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_SUBSYS." m ON u.id = m.user_id JOIN ".$this->user_table." p ON p.user_id=m.subsys_user_id WHERE m.map_subsys_name = 'phpbb' AND (u.name != p.username OR u.email != p.user_email OR u.created != subsys_created) ");
     $stmt->execute() or die('DB error (subsys_phpbb #1)');
     while ($mapping = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo 'Info mismatch for RosCMS userid '.$mapping['user_id'].': ';
@@ -82,12 +82,12 @@ class Subsystem_PHPBB extends Subsystem
         echo 'user_name '.$mapping['user_name'].'/'.$mapping['subsys_name'].' ';
       }
 
-      if ($mapping['user_email'] != $mapping['subsys_email']) {
-        echo 'user_email '.$mapping['user_email'].'/'.$mapping['subsys_email'].' ';
+      if ($mapping['email'] != $mapping['subsys_email']) {
+        echo 'user_email '.$mapping['email'].'/'.$mapping['subsys_email'].' ';
       }
 
-      if ($mapping['user_register'] != $mapping['subsys_register']) {
-        echo "user_register " . $mapping['user_register'].'/'.$mapping['subsys_register'];
+      if ($mapping['created'] != $mapping['subsys_created']) {
+        echo 'user_register '.$mapping['created'].'/'.$mapping['subsys_created'];
       }
 
       echo '<br />';
@@ -170,7 +170,7 @@ class Subsystem_PHPBB extends Subsystem
     $stmt->execute() or die('DB error (subsys_phpbb #19)');
 
     // Finally, insert a row in the mapping table
-    $stmt=DBConnection::getInstance()->prepare("INSERT INTO subsys_mappings (map_roscms_userid, map_subsys_name, map_subsys_userid) VALUES(:roscms_user, 'phpbb', :phpbb_user)");
+    $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsys_user_id) VALUES(:roscms_user, 'phpbb', :phpbb_user)");
     $stmt->bindParam('roscms_user',$id,PDO::PARAM_INT);
     $stmt->bindParam('phpbb_user',$phpbb_user_id,PDO::PARAM_INT);
     $stmt->execute() or die('DB error (subsys_phpbb #11)');
@@ -218,7 +218,7 @@ class Subsystem_PHPBB extends Subsystem
       }
 
       // Insert a row in the mapping table
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO subsys_mappings (map_roscms_userid, map_subsys_name, map_subsys_userid) VALUES(:roscms_user, 'phpbb', :phpbb_user)");
+      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsys_user_id) VALUES(:roscms_user, 'phpbb', :phpbb_user)");
       $stmt->bindParam('roscms_user',$user_id,PDO::PARAM_INT);
       $stmt->bindParam('phpbb_user',$phpbb_user_id,PDO::PARAM_INT);
       $stmt->execute() or die('DB error (subsys_phpbb #9)');

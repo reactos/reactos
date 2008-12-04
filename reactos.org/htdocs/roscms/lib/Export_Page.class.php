@@ -52,7 +52,6 @@ class Export_Page extends Export
   public function page( )
   {
     global $RosCMS_GET_d_value, $RosCMS_GET_d_value2,$RosCMS_GET_d_value3;
-    global $roscms_standard_language;
 
     $dynamic_num = $RosCMS_GET_d_value3;
 
@@ -72,26 +71,26 @@ class Export_Page extends Export
         $RosCMS_GET_d_value = str_replace('tr', '', $RosCMS_GET_d_value);
 
         if ( is_numeric($RosCMS_GET_d_value) ) {
-          $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, r.rev_id, d.data_id, r.rev_language FROM data_ d, data_revision r WHERE r.data_id = d.data_id  AND r.rev_id = :rev_id  ORDER BY r.rev_version DESC LIMIT 1");
+          $stmt=DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE r.id = :rev_id  ORDER BY r.version DESC LIMIT 1");
           $stmt->bindParam('rev_id',$RosCMS_GET_d_value,PDO::PARAM_INT);
         }
         else {
-          $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, r.rev_id, d.data_id, r.rev_language FROM data_ d JOIN data_revision r ON r.data_id = d.data_id WHERE d.data_name = :data_name AND (r.rev_language = lang_one OR r.rev_language = :lang_two) ORDER BY r.rev_version DESC LIMIT 1");
+          $stmt=DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :data_name AND r.lang_id IN(:lang_one, :lang_two) ORDER BY r.version DESC LIMIT 1");
           $stmt->bindParam('data_name',$RosCMS_GET_d_value,PDO::PARAM_STR);
-          $stmt->bindParam('lang_one',$RosCMS_GET_d_value2,PDO::PARAM_STR);
-          $stmt->bindParam('lang_two',$roscms_standard_language,PDO::PARAM_STR);
+          $stmt->bindParam('lang_one',$RosCMS_GET_d_value2,PDO::PARAM_INT);
+          $stmt->bindParam('lang_two',Language::getStandardId(),PDO::PARAM_INT);
         }
 
         $stmt->execute();
-        $revision = $stmt->fetchOnce();
+        $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
         if ($dynamic_num == '') {
-          $dynamic_num = Tag::getValueByUser($revision['data_id'], $revision['rev_id'], 'number', -1);
+          $dynamic_num = Tag::getValueByUser($revision['id'], 'number', -1);
         }
 
-        Log::writeGenerateLow('preview page: generate_page('.$revision['data_name'].', '.$revision['rev_language'].', '.$dynamic_num.', '.$_GET['d_u'].')');
+        Log::writeGenerateLow('preview page: generate_page('.$revision['name'].', '.$revision['lang_id'].', '.$dynamic_num.', '.$_GET['d_u'].')');
 
         $export_html = new Export_HTML();
-        echo $export_html->processText($revision['rev_id'], $_GET['d_u']);
+        echo $export_html->processText($revision['id'], $_GET['d_u']);
         break;
     }
   }

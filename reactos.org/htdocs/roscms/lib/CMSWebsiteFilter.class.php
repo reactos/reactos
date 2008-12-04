@@ -64,39 +64,36 @@ class CMSWebsiteFilter
     if ($action == 'add') {
 
       // check if filter already exists
-      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM data_user_filter WHERE filt_usrid = :user_id AND filt_title = :title AND filt_type = :type LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_FILTER." WHERE user_id = :user_id AND name = :title LIMIT 1");
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-      $stmt->bindParam('title',$filter_title,PDO::PARAM_STR); 
-      $stmt->bindParam('type',$this->type_num,PDO::PARAM_INT);
+      $stmt->bindParam('title',$filter_title,PDO::PARAM_STR);
       $stmt->execute();
       if ($stmt->fetchColumn() === false) {
 
         // insert new filter
-        $stmt=DBConnection::getInstance()->prepare("INSERT INTO data_user_filter ( filt_id , filt_usrid , filt_title , filt_type , filt_string , filt_datetime , filt_usage , filt_usagedate ) VALUES ( NULL, :user_id, :title, :type, :string, NOW(), 1, NOW() )");
+        $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_FILTER." ( id, user_id, name, setting ) VALUES ( NULL, :user_id, :title, :string )");
         $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
         $stmt->bindParam('title',$filter_title,PDO::PARAM_STR); 
-        $stmt->bindParam('type',$this->type_num,PDO::PARAM_INT);
         $stmt->bindParam('string',$filter_string,PDO::PARAM_STR);
         $stmt->execute();
       }
     }
     elseif ($action == 'del') {
       // delete a label
-      $stmt=DBConnection::getInstance()->prepare("DELETE FROM data_user_filter WHERE filt_id = :filter_id AND filt_usrid = :user_id LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_FILTER." WHERE id = :filter_id AND user_id = :user_id LIMIT 1");
       $stmt->bindParam('filter_id',$filter_title,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
     }
 
     // echo current list of filters
-    $stmt=DBConnection::getInstance()->prepare("SELECT filt_id, filt_title, filt_string FROM data_user_filter WHERE filt_usrid = :user_id AND filt_type = :type ORDER BY filt_title ASC");
+    $stmt=DBConnection::getInstance()->prepare("SELECT id, name, setting FROM ".ROSCMST_FILTER." WHERE user_id = :user_id ORDER BY name ASC");
     $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-    $stmt->bindParam('type',$this->type_num,PDO::PARAM_INT);
     $stmt->execute();
     while ($filter = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo_strip('
-        <span style="cursor:pointer; text-decoration:underline;" onclick="'."selectUserFilter('".$filter['filt_string']."', '".$type."', '".$filter['filt_title']."')".'">'.$filter['filt_title'].'</span>
-        <span style="cursor:pointer;" onclick="'."deleteUserFilter('".$filter['filt_id']."', '".$type."', '".$filter['filt_title']."')".'">
+        <span style="cursor:pointer; text-decoration:underline;" onclick="'."selectUserFilter('".$filter['setting']."', '".$type."', '".$filter['name']."')".'">'.$filter['name'].'</span>
+        <span style="cursor:pointer;" onclick="'."deleteUserFilter('".$filter['id']."', '".$type."', '".$filter['name']."')".'">
           <img src="images/remove.gif" alt="-" style="width:11px; height:11px; border:0px;" />
         </span>
         <br />');

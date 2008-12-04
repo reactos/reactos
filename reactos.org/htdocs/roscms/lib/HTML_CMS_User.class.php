@@ -51,8 +51,6 @@ class HTML_CMS_User extends HTML_CMS
    */
   protected function body( )
   {
-    global $roscms_standard_language;
-
     $thisuser = &ThisUser::getInstance();
 
     if (!$thisuser->isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
@@ -70,8 +68,13 @@ class HTML_CMS_User extends HTML_CMS
     }
     elseif ($thisuser->isMemberOfGroup('transmaint')) {
       echo '<h3>Language Maintainer</h3>';
-      $stmt=DBConnection::getInstance()->prepare("SELECT d.data_id, u.user_id, u.user_name, u.user_fullname, u.user_language, COUNT(r.data_id) as 'editcounter' FROM data_a d, data_revision r, users u WHERE r.data_id = d.data_id AND r.rev_usrid = u.user_id AND rev_version  > 0  AND r.rev_language = :lang GROUP BY u.user_name ORDER BY editcounter DESC, u.user_name");
-      $stmt->bindParam('lang',$roscms_standard_language,PDO::PARAM_STR);
+      $stmt=DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0  AND r.lang_id = :lang GROUP BY u.name ORDER BY editcounter DESC, u.name");
+      $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
+    }
+
+    // for non language maintainers
+    if (!isset($stmt)) {
+      $stmt=DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0 GROUP BY u.name ORDER BY editcounter DESC, u.name");
     }
 
     echo_strip('
@@ -91,12 +94,9 @@ class HTML_CMS_User extends HTML_CMS
       <h4>Translators</h4>
       <ul>');
 
-    if (empty($stmt)) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT d.data_id, u.user_id, u.user_name, u.user_fullname, u.user_language, COUNT(r.data_id) as 'editcounter' FROM data_a d, data_revision r, users u WHERE r.data_id = d.data_id AND r.rev_usrid = u.user_id AND rev_version  > 0 GROUP BY u.user_name ORDER BY editcounter DESC, u.user_name");
-    }
-     $stmt->execute();
-    while ($translator = $stmt->fetch()) {
-      echo '<li>'.$translator['user_name'].' ('.$translator['user_fullname'].'; '.$translator['user_language'].') '.$translator['editcounter'].' stable edits</li>';
+    $stmt->execute();
+    while ($translator = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      echo '<li>'.$translator['name'].' ('.$translator['fullname'].'; '.$translator['language'].') '.$translator['editcounter'].' stable edits</li>';
     }
 
     echo_strip('

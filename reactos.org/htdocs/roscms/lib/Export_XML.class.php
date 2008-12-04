@@ -46,10 +46,7 @@ class Export_XML extends Export
 
   private $column_list = '|';
 
-  private $a = ''; // holds '_a' if in archive mode
-
-  private $a2 = ''; // holds 'a' if in archive mode
-
+  private $archive_mode = false; // boolean
 
 
 
@@ -99,7 +96,7 @@ class Export_XML extends Export
 
     // search for data name
     if ($data_name != '') {
-      $this->sql_where = " AND d.data_name LIKE ".DBConnection::getInstance()->quote('%'.$data_name.'%',PDO::PARAM_STR)." ";
+      $this->sql_where = " AND d.name LIKE ".DBConnection::getInstance()->quote('%'.$data_name.'%',PDO::PARAM_STR)." ";
     }
 
     // filters
@@ -131,16 +128,17 @@ class Export_XML extends Export
     }
     else {
       $column_array = explode('|', $this->column_list);
-    
     }
 
     // check if there are entries which are found by filter settings
-    $stmt=DBConnection::getInstance()->prepare("SELECT COUNT('d.data_id') FROM data_revision".$this->a." r, data_".$this->a2." d ".$this->sql_from." , data_security y WHERE r.rev_version >= 0 AND r.data_id = d.data_id  AND d.data_acl = y.sec_name AND y.sec_branch = 'website' ". Security::getACL('read') ." ". $this->sql_where);
+    $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id ".$this->sql_from." WHERE r.version >= 0 AND r.archive = :archive ".Security::getACL('read')." ".$this->sql_where);
+    $stmt->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
+
     $stmt->execute();
     $ptm_entries = $stmt->fetchColumn();
 
     echo '<?xml version="1.0" encoding="UTF-8"?><root>';
-    if (!$ptm_entries) {
+    if ($ptm_entries == false) {
       echo '#none#';
     }
     else {
@@ -151,25 +149,27 @@ class Export_XML extends Export
       $tdata .= "    <view curpos=\"".$page_offset."\" pagelimit=\"".$this->page_limit."\" pagemax=\"".$ptm_entries."\" tblcols=\"|".$this->column_list."|\" /> \n";
 
       // prepare for usage in loop
-      $stmt_trans=DBConnection::getInstance()->prepare("SELECT d.data_id, d.data_name, d.data_type, r.rev_id, r.rev_version, r.rev_language, r.rev_datetime, r.rev_date, r.rev_usrid FROM data_".$this->a2." d, data_revision".$this->a." r WHERE d.data_id = :data_id AND r.rev_version > 0 AND d.data_id = r.data_id AND r.rev_language = :lang LIMIT 1");
-      $stmt_trans->bindParam('lang',$this->translation_lang);
-      $stmt_trans_dyn=DBConnection::getInstance()->prepare("SELECT d.data_id, d.data_name, d.data_type, r.rev_id, r.rev_version, r.rev_language, r.rev_datetime, r.rev_date, r.rev_usrid FROM data_".$this->a2." d JOIN data_revision".$this->a." r ON d.data_id = r.data_id JOIN data_tag".$this->a." a ON (r.data_id = a.data_id AND r.rev_id = a.data_rev_id) JOIN data_tag_name".$this->a." n ON a.tag_name_id = n.tn_id JOIN data_tag_value".$this->a." v ON a.tag_value_id  = v.tv_id WHERE d.data_id = :data_id AND r.rev_version > 0 AND  r.rev_language = :lang AND a.tag_usrid = '-1' AND v.tv_value = :dyn_num LIMIT 1");
+      $stmt_trans=DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE d.id = :data_id AND r.version > 0 AND r.lang_id = :lang WHERE r.archive = :archive LIMIT 1");
+      $stmt_trans->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
+      $stmt_trans->bindParam('lang',$this->translation_lang,PDO::PARAM_INT);
+      $stmt_trans_dyn=DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.rev_user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE d.id = :data_id AND r.version > 0 AND  r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :dyn_num LIMIT 1");
       $stmt_trans_dyn->bindParam('lang',$this->translation_lang);
-      $stmt_stext=DBConnection::getInstance()->prepare("SELECT stext_content FROM data_stext".$this->a." WHERE data_rev_id = :rev_id AND stext_name = 'title' LIMIT 1");
-      $stmt_lang=DBConnection::getInstance()->prepare("SELECT lang_name FROM languages WHERE lang_id = :lang LIMIT 1");
-      $stmt_user=DBConnection::getInstance()->prepare("SELECT user_name FROM users WHERE user_id = :user_id LIMIT 1");
+      $stmt_trans_dyn->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
+      $stmt_stext=DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = 'title' LIMIT 1");
+      $stmt_lang=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
+      $stmt_user=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+      $stmt_acl=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_ACCESS." WHERE id = :acl_id LIMIT 1");
 
       // make the order command ready for usage
       if ($this->sql_order == '') {
-        echo 'guakdf';
-        $this->sql_order = " ORDER BY r.rev_id DESC";
+        $this->sql_order = " ORDER BY r.id DESC";
       }
       else {
         $this->sql_order = " ORDER BY ".$this->sql_order;
       }
 
       // proceed entries
-      $stmt=DBConnection::getInstance()->prepare("SELECT d.data_id, d.data_name, d.data_type, d.data_acl, r.rev_id, r.rev_version, r.rev_language, r.rev_datetime, r.rev_date, r.rev_usrid  ".$this->sql_select." , y.sec_lev".$thisuser->securityLevel()."_write FROM data_revision".$this->a." r, data_".$this->a2." d ".$this->sql_from." , data_security y WHERE r.rev_version >= 0 AND r.data_id = d.data_id AND d.data_acl = y.sec_name AND y.sec_branch = 'website' ". Security::getACL('read') ." ". $this->sql_where ." ". $this->sql_order ." LIMIT :limit OFFSET :offset");
+      $stmt=DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.acl_id, r.id, r.version, r.lang_id, r.datetime, r.user_id ".$this->sql_select." FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id JOIN ".ROSCMST_ACCESS." a ON d.acl_id = a.id ".$this->sql_from." WHERE r.version > 0 ". Security::getACL('read') ." ". $this->sql_where ." ". $this->sql_order ." LIMIT :limit OFFSET :offset");
       $stmt->bindValue('limit',0+$this->page_limit,PDO::PARAM_INT);
       $stmt->bindValue('offset',0+$page_offset,PDO::PARAM_INT);
       $stmt->execute();
@@ -181,11 +181,11 @@ class Export_XML extends Export
         $security = '';
 
         // try to get a dynamic number, from newsletters, news, ...
-        $dynamic_num = Tag::getValueByUser($row['data_id'], $row['rev_id'], 'number', -1);
+        $dynamic_num = Tag::getValueByUser($row['id'], 'number', -1);
 
         // for non translation
         if ($this->translation_lang == '') {
-          $entry_status = Tag::getValueByUser($row['data_id'], $row['rev_id'], 'status', -1);
+          $entry_status = Tag::getValueByUser($row['id'], 'status', -1);
 
           // get line status/color
           if ($entry_status == 'stable') {
@@ -210,33 +210,33 @@ class Export_XML extends Export
           } else {
             $stmt_translation=$stmt_trans;
           }
-          $stmt_translation->bindParam('data_id',$row['data_id']);
+          $stmt_translation->bindParam('data_id',$row['data_id'],PDO::PARAM_INT);
           $stmt_translation->execute();
           $translated_entry = $stmt_translation->fetchOnce(PDO::FETCH_ASSOC);
 
           // translation doesn't exist, so enable "translate mode"
-          if ($translated_entry['rev_datetime'] == "") { 
-            $line_status = "transb";
+          if ($translated_entry['datetime'] == "") { 
+            $line_status = 'transb';
 
             // figure out if user can translate things
             if (Security::hasRight($row['data_id'], 'trans')) {
               $row['data_id2'] = 'tr'.$row['data_id'];
-              $row['rev_id'] = 'tr'.$row['rev_id'];
-              $row['rev_datetime'] = 'translate!';
+              $row['id'] = 'tr'.$row['id'];
+              $row['datetime'] = 'translate!';
             }
             else {
               $row['data_id2'] = 'notrans';
-              $row['rev_id'] = 'notrans';
-              $row['rev_datetime'] = '-';
+              $row['id'] = 'notrans';
+              $row['datetime'] = '-';
             }
 
             // set info for non existent translations
-            $row['rev_version'] = 1;
-            $row['rev_usrid'] = '';
+            $row['version'] = 0;
+            $row['user_id'] = '';
           }
           // translation already exists
           else {
-            if ($row['rev_date'] > $translated_entry['rev_date']) {
+            if ($row['datetime'] > $translated_entry['datetime']) {
               $line_status = 'transg';
             }
             else {
@@ -248,18 +248,18 @@ class Export_XML extends Export
         }
 
         // prepare dynamic entries
-        if ($row['data_type'] == 'content' && $dynamic_num > 0) {
-          $row['data_name'] .= '_'.$dynamic_num;
+        if ($row['type'] == 'content' && $dynamic_num > 0) {
+          $row['name'] .= '_'.$dynamic_num;
         }
 
         // care about bookmark visibility
-        if (Tag::getValueByUser($row['data_id'], $row['rev_id'], 'star', $thisuser->id()) == 'on') {
+        if (Tag::getValueByUser($row['id'], 'star', $thisuser->id()) == 'on') {
           $star_state = '1';
         }
-        $star_id = Tag::getIdByUser($row['data_id'], $row['rev_id'], 'star', $thisuser->id());
+        $star_id = Tag::getIdByUser($row['id'], 'star', $thisuser->id());
 
         // get page title
-        $stmt_stext->bindParam('rev_id',$row['rev_id'],PDO::PARAM_INT);
+        $stmt_stext->bindParam('rev_id',$row['id'],PDO::PARAM_INT);
         $stmt_stext->execute();
         $stext_content = $stmt_stext->fetchColumn();
 
@@ -270,18 +270,18 @@ class Export_XML extends Export
           // handle column types
           switch ($column) {
             case 'Language':
-              $stmt_lang->bindParam('lang',$row['rev_language'],PDO::PARAM_STR);
+              $stmt_lang->bindParam('lang',$row['lang_id'],PDO::PARAM_STR);
               $stmt_lang->execute();
               $language = $stmt_lang->fetchColumn();
               if ($language != '') {
                 $column_list_row .= $language;
               }
               else {
-                $column_list_row .= '? ('.$row['rev_language'].')';
+                $column_list_row .= '? (Unknown)';
               }
               break;
             case 'User':
-              $stmt_user->bindParam('user_id',$row['rev_usrid'],PDO::PARAM_INT);
+              $stmt_user->bindParam('user_id',$row['user_id'],PDO::PARAM_INT);
               $stmt_user->execute();
               $user_name = $stmt_user->fetchColumn();
               if ($user_name != '') {
@@ -292,16 +292,24 @@ class Export_XML extends Export
               }
               break;
             case 'Type':
-              $column_list_row .= $row['data_type'];
+              $column_list_row .= $row['type'];
               break;
             case 'Security':
-              $column_list_row .= $row['data_acl'];
+              $stmt_acl->bindParam('acl_id',$row['acl_id'],PDO::PARAM_INT);
+              $stmt_acl->execute();
+              $acl = $stmt_acl->fetchColumn();
+              if ($acl != '') {
+                $column_list_row .= $acl;
+              }
+              else {
+                $column_list_row .= 'Unknown';
+              }
               break;
             case 'Rights':
-              $column_list_row .= Security::rightsOverview($row['data_id']);
+              $column_list_row .= Security::rightsOverview($row['id']);
               break;
             case 'Version':
-              $column_list_row .= $row['rev_version'] ;
+              $column_list_row .= $row['version'] ;
               break;
             default:
               $column_list_row .= 'Unknown';
@@ -317,18 +325,18 @@ class Export_XML extends Export
 
         // table data
         $tdata .= '<row id="'.$row['data_id2'].'"';
-        $tdata .= ' dname="'.$row['data_name'].'"';
-        $tdata .= ' type="'.$row['data_type'].'"';
-        $tdata .= ' rid="'.$row['rev_id'].'"';
-        $tdata .= ' rver="'.$row['rev_version'].'"';
-        $tdata .= ' rlang="'.$row['rev_language'].'"';
-        $tdata .= ' rdate="'.$row['rev_datetime'].'"';
-        $tdata .= ' rusrid="'.$row['rev_usrid'].'"';
+        $tdata .= ' dname="'.$row['name'].'"';
+        $tdata .= ' type="'.$row['type'].'"';
+        $tdata .= ' rid="'.$row['id'].'"';
+        $tdata .= ' rver="'.$row['version'].'"';
+        $tdata .= ' rlang="'.$row['lang_id'].'"';
+        $tdata .= ' rdate="'.$row['datetime'].'"';
+        $tdata .= ' rusrid="'.$row['user_id'].'"';
         $tdata .= ' star="'. $star_state .'"'; /* starred (on=1, off=0) */
         $tdata .= ' starid="'. $star_id .'"'; /* star tag id (from getTagId(...)) */
         $tdata .= ' status="'. $line_status .'"'; /* status (odd/even (=stable), new, draft, etc.) */
-        $tdata .= ' security="'. $security ."\""; /* security (read, write, add, pub, trans) */
-        $tdata .= ' xtrcol="'.$column_list_row."\"";
+        $tdata .= ' security="'. $security .'"'; /* security (read, write, add, pub, trans) */
+        $tdata .= ' xtrcol="'.$column_list_row.'"';
         $tdata .= '><![CDATA['.urlencode(substr($stext_content, 30)).']]></row>';
 
         $row_counter++;
@@ -412,48 +420,48 @@ class Export_XML extends Export
             // set order field
             switch ($type_c) {
               case 'datetime': // date-time
-                $this->sql_order .= " r.rev_datetime ";
+                $this->sql_order .= " r.datetime ";
                 break;
               case 'name': // name
-                $this->sql_order .= "d.data_name ";
+                $this->sql_order .= "d.name ";
                 break;
               case 'lang': // language
-                $this->sql_order .= "r.rev_language ";
+                $this->sql_order .= "r.lang_id ";
                 break;
               case 'usr': // user
-                $this->sql_order .= "r.rev_usrid ";
+                $this->sql_order .= "r.user_id ";
                 break;
               case 'ver': // version
-                $this->sql_order .= "r.rev_version ";
+                $this->sql_order .= "r.version ";
                 break;
               case 'nbr': // number ("dynamic" entry)
                 $tag_counter++;
-                $this->sql_order .= " v".$tag_counter.".tv_value";
-                $this->sql_where .= " AND n".$tag_counter.".tn_name = 'number_sort' ";
+                $this->sql_order .= " t".$tag_counter.".value";
+                $this->sql_where .= " AND t".$tag_counter.".name = 'number_sort' ";
                 break;
               case 'type': // type
-                $this->sql_order .= "d.data_type ";
+                $this->sql_order .= "d.type ";
                 break;
               case 'security': // security (ACL)
-                $this->sql_order .= "d.data_acl ";
+                $this->sql_order .= "d.acl_id ";
                 break;
               case 'revid': // revision-id
-                $this->sql_order .= "r.rev_id ";
+                $this->sql_order .= "r.id ";
                 break;
               case 'ext': // page extension 
                 $tag_counter++;
-                $this->sql_order .= " v".$tag_counter.".tv_value ";
-                $this->sql_where .= " AND n".$tag_counter.".tn_name = 'extension' ";
+                $this->sql_order .= " t".$tag_counter.".value ";
+                $this->sql_where .= " AND t".$tag_counter.".name = 'extension' ";
                 break;
               case 'status': // status 
                 $tag_counter++;
-                $this->sql_order .= " v".$tag_counter.".tv_value ";
-                $this->sql_where .= " AND n".$tag_counter.".tn_name = 'status' ";
+                $this->sql_order .= " t".$tag_counter.".value ";
+                $this->sql_where .= " AND t".$tag_counter.".name = 'status' ";
                 break;
               case 'kind': // kind 
                 $tag_counter++;
-                $this->sql_order .= " v".$tag_counter.".tv_value ";
-                $this->sql_where .= " AND n".$tag_counter.".tn_name = 'kind' ";
+                $this->sql_order .= " t".$tag_counter.".value ";
+                $this->sql_where .= " AND t".$tag_counter.".name = 'kind' ";
               break;
             }
             
@@ -468,8 +476,7 @@ class Export_XML extends Export
 
           // kind
           case 'k': 
-            $this->a = "_a";
-            $this->a2 = "a";
+            $this->archive_mode = true;
             break;
         }
       }
@@ -497,10 +504,10 @@ class Export_XML extends Export
 
           // kind (stable, new, draft, unknown)
           case 'k': 
-            if ($type_c == "draft") {
+            if ($type_c == 'draft') {
               $entries_private++;
             }
-            elseif ($type_c == "system") {
+            elseif ($type_c == 'system') {
               $entries_system++;
             }
             else {
@@ -509,18 +516,18 @@ class Export_XML extends Export
 
               // ask for status-tag value
               $tag_counter++;
-              $this->sql_where .= " (n".$tag_counter.".tn_name = 'status' AND v".$tag_counter.".tv_value".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR).") ";
+              $this->sql_where .= " (t".$tag_counter.".name = 'status' AND t".$tag_counter.".value".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR).") ";
             break;
 
           // tag
           case 'a': 
             $tag_counter++;
-            $this->sql_where .= " (n".$tag_counter.".tn_name = 'tag' AND v".$tag_counter.".tv_value".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR).") ";
+            $this->sql_where .= " (t".$tag_counter.".name = 'tag' AND t".$tag_counter.".value".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR).") ";
             break;
 
           // entry name
           case 'n': 
-            $this->sql_where .= "d.data_name";
+            $this->sql_where .= "d.name";
 
             // matching method
             switch ($type_b) {
@@ -541,18 +548,18 @@ class Export_XML extends Export
 
           // type   (page, content, template, script, system)
           case 'y':
-            $this->sql_where .= "d.data_type".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
+            $this->sql_where .= "d.type".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
             break;
 
           // starred
           case 's': 
             $tag_counter++;
-            $this->sql_where .= " (n".$tag_counter.".tn_name = 'star' AND v".$tag_counter.".tv_value = '".($type_c=='true'?'on':'off')."') ";
+            $this->sql_where .= " (t".$tag_counter.".name = 'star' AND t".$tag_counter.".value = '".($type_c=='true'?'on':'off')."') ";
             break;
 
           // date
           case 'd': 
-            $this->sql_where .= "r.rev_date";
+            $this->sql_where .= "DATE(r.datetime)";
 
             // matching method
             switch ($type_b) {
@@ -574,7 +581,7 @@ class Export_XML extends Export
 
           // time
           case 't': 
-            $this->sql_where .= "r.rev_time";
+            $this->sql_where .= "TIME(r.datetime)";
 
             // matching method
             switch ($type_b) {
@@ -596,34 +603,34 @@ class Export_XML extends Export
 
           // language
           case 'l': 
-            $this->sql_where .= "r.rev_language".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
+            $this->sql_where .= "r.lang_id".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
             break;
 
           // security (ACL)
           case 'i': 
-            $this->sql_where .= "d.data_acl".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
+            $this->sql_where .= "d.acl_id".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
             break;
 
           // metadata
           case 'm': 
             $tag_counter++;
-            $this->sql_where .= " (n".$tag_counter.".tn_name = ".DBConnection::getInstance()->quote(strtolower($type_b),PDO::PARAM_STR)." AND v".$tag_counter.".tv_value = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR).") ";
+            $this->sql_where .= " (t".$tag_counter.".name = ".DBConnection::getInstance()->quote(strtolower($type_b),PDO::PARAM_STR)." AND t".$tag_counter.".value = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR).") ";
             break;
 
           // user
           case 'u': 
             // get user_id
-            $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM users WHERE user_name = :user_name LIMIT 1");
-            $stmt->bindParam('user_name',$type_c);
+            $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
+            $stmt->bindParam('user_name',$type_c,PDO::PARAM_STR);
             $stmt->execute();
             $user_id = $stmt->fetchColumn();
 
-            $this->sql_where .= "r.rev_usrid".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($user_id,PDO::PARAM_INT);
+            $this->sql_where .= "r.user_id".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($user_id,PDO::PARAM_INT);
             break;
 
           // version
           case 'v': 
-            $this->sql_where .= "r.rev_version";
+            $this->sql_where .= "r.version";
 
             // matching method
             switch ($type_b) {
@@ -647,17 +654,17 @@ class Export_XML extends Export
           case 'e': 
             switch ($type_b) {
               case 'revid':
-                $this->sql_where .= "r.rev_id = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_INT);
+                $this->sql_where .= "r.id = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_INT);
                 break;
               case 'usrid':
-                $this->sql_where .= "r.rev_usrid = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_INT);
+                $this->sql_where .= "r.user_id = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_INT);
                 break;
               case 'langid':
-                $this->sql_where .= "r.rev_language = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
+                $this->sql_where .= "r.lang_id = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
                 break;
               case 'dataid':
               default:
-                $this->sql_where .= "d.data_id = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_INT);
+                $this->sql_where .= "r.data_id = ".DBConnection::getInstance()->quote($type_c,PDO::PARAM_INT);
                 break;
             }
             break;
@@ -675,35 +682,36 @@ class Export_XML extends Export
 
       // everything except draft
       if ($thisuser->securityLevel() == 3) { 
-        $this->sql_where .= " AND (n.tn_name = 'status' AND v.tv_value != 'draft') ";
+        $this->sql_where .= " AND (t.name = 'status' AND t.value != 'draft') ";
       }
 
       // new, stable and unknown (if more than translator)
       if ($thisuser->securityLevel() == 2) { 
-        $this->sql_where .= " AND (n.tn_name = 'status' AND (v.tv_value = 'new' OR v.tv_value = 'stable' OR v.tv_value = 'unknown')) ";
+        $this->sql_where .= " AND (t.name = 'status' AND (t.value = 'new' OR t.value = 'stable' OR t.value = 'unknown')) ";
       }
       else {
-        $this->sql_where .= " AND (n.tn_name = 'status' AND (v.tv_value = 'new' OR v.tv_value = 'stable')) ";
+        $this->sql_where .= " AND (t.name = 'status' AND (t.value = 'new' OR t.value = 'stable')) ";
       }
 
       // set additional needed sql
-      $this->sql_select .= ", n.tn_name, v.tv_value ";
-      $this->sql_from .= ", data_tag".$this->a." a, data_tag_name".$this->a." n, data_tag_value".$this->a." v ";
-      $this->sql_where .= " AND r.data_id = a.data_id AND r.rev_id = a.data_rev_id AND a.tag_usrid IN(-1, 0, ".DBConnection::getInstance()->quote($thisuser->id(),PDO::PARAM_INT).") AND a.tag_name_id = n.tn_id AND a.tag_value_id  = v.tv_id ";
+      $this->sql_select .= ", t.name AS tag_name, t.value AS tag_value ";
+      $this->sql_from .= " JOIN ".ROSCMST_TAGS." t ON t.rev_id=r.id ";
+      $this->sql_where .= " AND t.user_id IN(-1, 0, ".DBConnection::getInstance()->quote($thisuser->id(),PDO::PARAM_INT).") ";
     }
 
     // construct additioanl sql for tag-usage from filter
     if ($tag_counter > 0) {
+        $this->sql_select .= ", ".$tag_counter." AS tag_count";
       for ($i = 1; $i <= $tag_counter; $i++) {
-        $this->sql_select .= ", n".$i.".tn_name, v".$i.".tv_value ";
-        $this->sql_from .= ", data_tag".$this->a." a".$i.", data_tag_name".$this->a." n".$i.", data_tag_value".$this->a." v".$i." ";
-        $this->sql_where .= " AND r.data_id = a".$i.".data_id AND r.rev_id = a".$i.".data_rev_id AND (a".$i.".tag_usrid = '-1' OR a".$i.".tag_usrid = '0' OR a".$i.".tag_usrid = ".DBConnection::getInstance()->quote($thisuser->id(),PDO::PARAM_INT).") AND a".$i.".tag_name_id = n".$i.".tn_id AND a".$i.".tag_value_id  = v".$i.".tv_id ";
+        $this->sql_select .= ", t".$i.".name AS tag_name".$i.", t".$i.".value AS tag_value".$i." ";
+        $this->sql_from .= " JOIN ".ROSCMST_TAGS." t".$i." ON t".$i.".rev_id = r.id ";
+        $this->sql_where .= " AND t".$i.".user_id IN(-1, 0, ".DBConnection::getInstance()->quote($thisuser->id(),PDO::PARAM_INT).") ";
       }
     }
 
     // make sure only private drafts are visible
     if ($thisuser->securityLevel() < 3 && $entries_private > 0) {
-      $this->sql_where .= " AND r.rev_usrid = '".$thisuser->id()."' ";
+      $this->sql_where .= " AND r.user_id = '".$thisuser->id()."' ";
     }
 
     // either show draft (private) OR stable & new (public) entries,   private AND public entries together are NOT allowed => block 

@@ -80,10 +80,10 @@ class HTML_CMS_Maintain extends HTML_CMS
         <select id="txtaddentrylang" name="txtaddentrylang">');
 
     // display languages
-    $stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_name FROM languages WHERE lang_level > 0 ORDER BY lang_name ASC");
+    $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
     $stmt->execute();
-    while ($language=$stmt->fetch()) {
-      echo '<option value="'.$language['lang_id'].'">'.$language['lang_name'].'</option>';
+    while ($language=$stmt->fetch(PDO::FETCH_ASSOC)) {
+      echo '<option value="'.$language['id'].'">'.$language['name'].'</option>';
     }
     echo_strip('
         </select>
@@ -127,19 +127,19 @@ class HTML_CMS_Maintain extends HTML_CMS
         <h2>RosCMS Language Group Logs</h2>');
 
       // language specific logs
-      $stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_name FROM languages ORDER BY lang_name ASC");
+      $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
       $stmt->execute();
-      while ($language = $stmt->fetch()) {
+      while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
         echo_strip('
-          <h3>'.$language['lang_name'].'</h3>
+          <h3>'.$language['name'].'</h3>
           <h4>High Security Log - '.date('Y-W').'</h4>
-          <textarea name="logviewerhigh'.$language['lang_id'].'" cols="75" rows="5">');echo Log::read('high', $language['lang_id']);echo_strip('</textarea><br />
+          <textarea name="logviewerhigh'.$language['id'].'" cols="75" rows="5">');echo Log::read('high', $language['id']);echo_strip('</textarea><br />
           <br />
           <h4>Medium Security Log - '.date('Y-W').'</h4>
-          <textarea name="logviewermed'.$language['lang_id'].'" cols="75" rows="4">');echo Log::read('medium', $language['lang_id']);echo_strip('</textarea><br />
+          <textarea name="logviewermed'.$language['id'].'" cols="75" rows="4">');echo Log::read('medium', $language['id']);echo_strip('</textarea><br />
           <br />
           <h4>Low Security Log - '.date('Y-W').'</h4>
-        <textarea name="logviewerlow'.$language['lang_id'].'" cols="75" rows="3">');echo Log::read('low', $language['lang_id']);echo_strip('</textarea><br />
+        <textarea name="logviewerlow'.$language['id'].'" cols="75" rows="3">');echo Log::read('low', $language['id']);echo_strip('</textarea><br />
         <br />
         <br />');
       }

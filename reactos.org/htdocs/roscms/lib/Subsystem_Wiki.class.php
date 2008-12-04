@@ -72,8 +72,8 @@ class Subsystem_Wiki extends Subsystem
   protected function checkUser( )
   {
     $inconsistencies = 0;
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.user_id, u.user_name, u.user_email, user_fullname, p.user_name AS subsys_name, p.user_email AS subsys_email, p.user_real_name AS subsys_fullname FROM users u JOIN subsys_mappings m ON m.map_roscms_userid = u.user_id JOIN ".$this->user_table." p ON  p.user_id = m.map_subsys_userid WHERE m.map_subsys_name = 'wiki' AND (REPLACE(u.user_name, '_', ' ') != p.user_name OR u.user_email != p.user_email OR u.user_fullname != p.user_real_name) ");
-    $stmt->execute() or die("DB error (subsys_wiki #1)");
+    $stmt=DBConnection::getInstance()->prepare("SELECT u.id AS user_id, u.name AS user_name, u.email, fullname, p.user_name AS subsys_name, p.user_email AS subsys_email, p.user_real_name AS subsys_fullname FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_SUBSYS." m ON m.user_id = u.id JOIN ".$this->user_table." p ON  p.user_id = m.subsys_user_id WHERE m.subsys = 'wiki' AND (REPLACE(u.name, '_', ' ') != p.user_name OR u.email != p.user_email OR u.fullname != p.user_real_name) ");
+    $stmt->execute() or die('DB error (subsys_wiki #1)');
 
     while ($mapping = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo 'Info mismatch for RosCMS userid '.$mapping['user_id'].': ';
@@ -82,12 +82,12 @@ class Subsystem_Wiki extends Subsystem
         echo 'user_name '.$mapping['user_name'].'/'.$mapping['subsys_name'].' ';
       }
 
-      if ($mapping['user_email'] != $mapping['subsys_email']) {
+      if ($mapping['email'] != $mapping['subsys_email']) {
         echo 'user_email '.$mapping['user_email'].'/'.$mapping['subsys_email'].' ';
       }
 
-      if ($mapping['user_fullname'] != $mapping['user_real_name']) {
-        echo 'user_fullname '.$mapping['user_fullname'].'/'.$mapping['subsys_fullname'].' ';
+      if ($mapping['fullname'] != $mapping['subsys_fullname']) {
+        echo 'user_fullname '.$mapping['fullname'].'/'.$mapping['subsys_fullname'].' ';
       }
 
       echo '<br />';
@@ -113,7 +113,7 @@ class Subsystem_Wiki extends Subsystem
     $stmt->bindParam('user_name',$wiki_user_name,PDO::PARAM_STR);
     $stmt->bindParam('user_email',$user_email,PDO::PARAM_STR);
     $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
-    $stmt->execute() or die("DB error (subsys_wiki #7)");
+    $stmt->execute() or die('DB error (subsys_wiki #7)');
 
     // stop if one of both already exists
     if ($stmt->fetchColumn() > 0) {
@@ -127,7 +127,7 @@ class Subsystem_Wiki extends Subsystem
     $stmt->bindParam('user_email',$roscms_user_email,PDO::PARAM_STR);
     $stmt->bindParam('user_fullname',$roscms_user_fullname,PDO::PARAM_STR);
     $stmt->bindParam('user_id',$wiki_user_id,PDO::PARAM_INT);
-    $stmt->execute() or die("DB error (subsys_wiki #8)");
+    $stmt->execute() or die('DB error (subsys_wiki #8)');
 
     return true;
   } // end of member function updateUserPrivate
@@ -149,12 +149,12 @@ class Subsystem_Wiki extends Subsystem
     $stmt->bindParam('user_name',$name,PDO::PARAM_STR);
     $stmt->bindParam('user_fullname',$fullname,PDO::PARAM_STR);
     $stmt->bindParam('user_email',$email,PDO::PARAM_STR);
-    $stmt->execute() or die("DB error (subsys_wiki #10)");
+    $stmt->execute() or die('DB error (subsys_wiki #10)');
 
     // Finally, insert a row in the mapping table
-    $stmt=DBConnection::getInstance()->prepare("INSERT INTO subsys_mappings (map_roscms_userid, map_subsys_name, map_subsys_userid) VALUES(:user_id, 'wiki', LAST_INSERT_ID())");
+    $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsys_user_id) VALUES(:user_id, 'wiki', LAST_INSERT_ID())");
     $stmt->bindParam('user_id',$id,PDO::PARAM_INT);
-    $stmt->execute() or die("DB error (subsys_wiki #11)");
+    $stmt->execute() or die('DB error (subsys_wiki #11)');
 
     return true;
   } // end of member function addUser
@@ -175,14 +175,14 @@ class Subsystem_Wiki extends Subsystem
     // First, try to match on email address
     $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM ".$this->user_table." WHERE LOWER(user_email) = LOWER(:user_email) LIMIT 1");
     $stmt->bindParam('user_email',$user['email'],PDO::PARAM_STR);
-    $stmt->execute() or die("DB error (subsys_wiki #5)");
+    $stmt->execute() or die('DB error (subsys_wiki #5)');
     $wiki_user_id = $stmt->fetchColumn();
     if ($wiki_user_id === false) {
 
       // That failed. Let's try to match on user name then
       $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM ".$this->user_table." WHERE LOWER(user_name) = LOWER(REPLACE(:user_name, '_', ' '))");
       $stmt->bindParam('user_name',$user['name'],PDO::PARAM_STR);
-      $stmt->execute() or die("DB error (subsys_wiki #6)");
+      $stmt->execute() or die('DB error (subsys_wiki #6)');
       $wiki_user_id = $stmt->fetchColumn();
     }
 
@@ -199,10 +199,10 @@ class Subsystem_Wiki extends Subsystem
       }
 
       // Insert a row in the mapping table
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO subsys_mappings (map_roscms_userid, map_subsys_name, map_subsys_userid) VALUES(:roscms_user, 'wiki', :wiki_user)");
+      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsys_user_id) VALUES(:roscms_user, 'wiki', :wiki_user)");
       $stmt->bindParam('roscms_user',$user_id,PDO::PARAM_INT);
       $stmt->bindParam('wiki_user',$wiki_user_id,PDO::PARAM_INT);
-      $stmt->execute() or die("DB error (subsys_wiki #9)");
+      $stmt->execute() or die('DB error (subsys_wiki #9)');
 
       return true;
     }

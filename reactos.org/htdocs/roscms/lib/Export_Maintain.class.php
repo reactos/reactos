@@ -61,15 +61,9 @@ class Export_Maintain extends Export
 
     switch ($action) {
       case 'optimize':
-        $stmt=DBConnection::getInstance()->prepare("OPTIMIZE TABLE data_, data_a, data_revision, data_revision_a, data_security, data_stext, data_stext_a, data_tag, data_tag_a, data_tag_name, data_tag_name_a, data_tag_value, data_tag_value_a, data_text, data_text_a, data_user_filter, languages, subsys_mappings, usergroups, usergroup_members, users, user_sessions");
+        $stmt=DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_ACCESS.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS'     , 'roscms_groups.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_ACL.",".ROSCMST_DEPENCIES.",".ROSCMST_TIMEZONES);
         $stmt->execute();
         Log::writeHigh('optimize database tables: done by '.ThisUser::getInstance()->id().' {data_maintain_out}');
-        break;
-
-      case 'analyze':
-        $stmt=DBConnection::getInstance()->exec("ANALYZE TABLE data_, data_a, data_revision, data_revision_a, data_security, data_stext, data_stext_a, data_tag, data_tag_a, data_tag_name, data_tag_name_a, data_tag_value, data_tag_value_a, data_text, data_text_a, data_user_filter, languages, subsys_mappings, usergroups, usergroup_members, users, user_sessions");
-        $stmt->execute();
-        Log::writeHigh('analyze database tables: done by '.ThisUser::getInstance()->id().' {data_maintain_out}');
         break;
 
       case 'genpages':
@@ -93,7 +87,7 @@ class Export_Maintain extends Export
       case 'pubdate':
         echo '<h4>Generate related pages of '.$RosCMS_GET_d_value.' ('.$RosCMS_GET_d_value2.', '.$RosCMS_GET_d_value3.', '.$RosCMS_GET_d_value4.')</h4>';
 
-        $stmt=DBConnection::getInstance()->prepare("SELECT data_id FROM data_ WHERE data_name = :name AND data_type = :type LIMIT 1");
+        $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
         $stmt->bindParam('name', $RosCMS_GET_d_value,PDO::PARAM_STR);
         $stmt->bindParam('type', $RosCMS_GET_d_value2,PDO::PARAM_STR);
         $stmt->execute();

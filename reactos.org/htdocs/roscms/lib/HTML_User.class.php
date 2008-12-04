@@ -120,26 +120,27 @@ abstract class HTML_User extends HTML
             <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$roscms_intern_webserver_roscms.'?'.htmlentities($_SERVER['QUERY_STRING'])."&lang=' + this.options[this.selectedIndex].value".'">
               <optgroup label="current language">'); 
  
-    $stmt=DBConnection::getInstance()->prepare("SELECT lang_name FROM languages WHERE lang_id = :lang_id");
-    $stmt->bindParam('lang_id',$rpm_lang,PDO::PARAM_STR);
+    $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id");
+    $stmt->bindParam('lang_id',$rpm_lang,PDO::PARAM_INT);
     $stmt->execute();
-    $current_lang = $stmt->fetchColumn();
+    $current_lang = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
     echo_strip('
-        <option value="#">'.$current_lang.'</option>
+        <option value="#">'.$current_lang['name'].'</option>
       </optgroup>
       <optgroup label="all languages">');
       
-    $stmt=DBConnection::getInstance()->prepare("SELECT lang_name, lang_id, lang_name_org FROM languages ORDER BY lang_level DESC");
+    $stmt=DBConnection::getInstance()->prepare("SELECT name, id, name_original FROM ".ROSCMST_LANGUAGES." WHERE id != :lang ORDER BY name ASC");
+    $stmt->bindParam('lang',$current_lang['id'],PDO::PARAM_INT);
     $stmt->execute();
     while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
       // display original name in brackets, if a localized version is available
-      if ($language['lang_name'] != $language['lang_name_org']) {
-        echo '<option value="'.$language['lang_id'].'">'.$language['lang_name_org'].' ('.$language['lang_name'].')</option>';
+      if ($language['name_original'] != '') {
+        echo '<option value="'.$language['id'].'">'.$language['name'].' ('.$language['name_original'].')</option>';
       }
       else {
-        echo '<option value="'.$language['lang_id'].'">'.$language['lang_name'].'</option>';
+        echo '<option value="'.$language['id'].'">'.$language['name'].'</option>';
       }
     }
 

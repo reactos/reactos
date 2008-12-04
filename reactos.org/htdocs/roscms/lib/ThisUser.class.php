@@ -36,7 +36,7 @@ class ThisUser
    */
   public function addGroup( $group )
   {
-    $this->groups[$group['name']] = $group['security_level'];
+    $this->groups[$group['name_short']] = $group['security_level'];
     if ($group['security_level'] > $this->security_level) $this->security_level = $group['security_level'];
   } // end of member function setId
 
@@ -115,8 +115,8 @@ class ThisUser
   public function setData( $user )
   {
     if($user !== false){
-      $this->user['id'] = $user['user_id'];
-      $this->user['name'] = $user['user_name'];
+      $this->user['id'] = $user['id'];
+      $this->user['name'] = $user['name'];
     }
   } // end of member function setId
 

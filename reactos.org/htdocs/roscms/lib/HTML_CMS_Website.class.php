@@ -56,7 +56,6 @@ class HTML_CMS_Website extends HTML_CMS
    */
   protected function body( )
   {
-    global $roscms_standard_language;
     global $roscms_standard_language_trans;
     global $roscms_intern_webserver_roscms;
     global $roscms_intern_page_link;
@@ -97,7 +96,7 @@ class HTML_CMS_Website extends HTML_CMS
 
         // map php vars
         var roscms_intern_account_id = ".$thisuser->id().";
-        var roscms_standard_language = '".$roscms_standard_language."';
+        var roscms_standard_language = '".Language::getStandardId()."';
         var roscms_standard_language_trans = '".$roscms_standard_language_trans."';
         var roscms_intern_login_check_username = '".$thisuser->name()."';
         var roscms_intern_webserver_roscms = '".$roscms_intern_webserver_roscms."';
@@ -109,13 +108,13 @@ class HTML_CMS_Website extends HTML_CMS
         // favorite user language
         ";
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT lang_id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute();
     $user_lang = $stmt->fetchColumn();
 
-    if (!empty($user_language)) {
-      echo "var userlang = '".$user_language."';";
+    if (!empty($user_lang)) {
+      echo "var userlang = '".$user_lang."';";
     }
     else {
       echo "var userlang = roscms_standard_language;";
@@ -285,16 +284,16 @@ class HTML_CMS_Website extends HTML_CMS
 
     $user_lang = ROSUser::getLanguage($thisuser->id(), true);
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_name FROM languages WHERE lang_level > '0' ORDER BY lang_name ASC");
+    $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
     $stmt->execute();
     while($language=$stmt->fetch()) {
-      echo '<option value="'.$language['lang_id'].'"';
+      echo '<option value="'.$language['id'].'"';
 
-      if ($language['lang_id'] == $user_lang) {
+      if ($language['id'] == $user_lang) {
         echo ' selected="selected"';
       }
 
-      echo '>'.$language['lang_name'].'</option>';
+      echo '>'.$language['name'].'</option>';
     }
 
     echo_strip('

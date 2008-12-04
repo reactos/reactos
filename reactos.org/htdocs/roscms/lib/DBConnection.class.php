@@ -18,6 +18,30 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
+
+// RosCMS Table Names
+define('ROSCMST_ACCESS'     , 'roscms_access');
+define('ROSCMST_USERS'      , 'roscms_accounts');
+define('ROSCMST_FORBIDDEN'  , 'roscms_accounts_forbidden');
+define('ROSCMST_SESSIONS'   , 'roscms_accounts_sessions');
+define('ROSCMST_COUNTRIES'  , 'roscms_countries');
+define('ROSCMST_ENTRIES'    , 'roscms_entries');
+define('ROSCMST_REVISIONS'  , 'roscms_entries_revisions');
+define('ROSCMST_STEXT'      , 'roscms_entries_stext');
+define('ROSCMST_TAGS'       , 'roscms_entries_tags');
+define('ROSCMST_TEXT'       , 'roscms_entries_text');
+define('ROSCMST_FILTER'     , 'roscms_filter');
+define('ROSCMST_GROUPS'     , 'roscms_groups');
+define('ROSCMST_JOBS'       , 'roscms_jobs');
+define('ROSCMST_LANGUAGES'  , 'roscms_languages');
+define('ROSCMST_SUBSYS'     , 'roscms_rel_accounts_subsys');
+define('ROSCMST_MEMBERSHIPS', 'roscms_rel_groups_accounts');
+define('ROSCMST_ACL'        , 'roscms_rel_groups_access');
+define('ROSCMST_DEPENCIES'  , 'roscms_rel_revisions_depencies');
+define('ROSCMST_TIMEZONES'  , 'roscms_timezones');
+
+
+
 /**
  * class Language
  * 

@@ -68,7 +68,7 @@ class HTML_User_Activate extends HTML_User
     if (isset($_POST['registerpost']) && isset($_POST['useremail']) && $_POST['useremail'] != '') {
 
       // check if another account with the same email address already exists
-      $stmt=DBConnection::getInstance()->prepare("SELECT user_email FROM users WHERE user_email = :email LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
       $stmt->bindParam('email',$_POST['useremail'],PDO::PARAM_STR);
       $stmt->execute();
       $mail_exists = ($stmt->fetchColum() !== false);
@@ -77,7 +77,7 @@ class HTML_User_Activate extends HTML_User
     if (strlen($activation_code) > 6) {
 
       // check if an account with the pwd-id exists
-      $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM users WHERE user_register_activation = :activation_code LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE activation = :activation_code LIMIT 1");
       $stmt->bindParam('activation_code',$activation_code,PDO::PARAM_STR);
       $stmt->execute();
 
@@ -95,13 +95,13 @@ class HTML_User_Activate extends HTML_User
     }
 
     if (strlen($activation_code) > 6 && isset($_POST['registerpost']) && isset($_POST['useremail']) && EMail::isValid($_POST['useremail']) && $activation_code_exists && $mail_exists) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM users WHERE user_register_activation = :activation_code LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE activation = :activation_code LIMIT 1");
       $stmt->bindParam('activation_code',$activation_code,PDO::PARAM_STR);
       $stmt->execute();
       $user_id = $stmt->fetchColumn();
 
       // set new account password
-      $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_register_activation = '', user_account_enabled = 'yes', user_timestamp_touch2 = NOW() WHERE user_id = :user_id LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation = '', modified = NOW() WHERE id = :user_id LIMIT 1");
       $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
       $stmt->execute();
 

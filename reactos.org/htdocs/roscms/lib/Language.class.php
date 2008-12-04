@@ -64,5 +64,23 @@ class Language
         break;
     }
   } // end of member function check_lang
+
+
+  public static function getStandardId( )
+  {
+    static $id;
+
+    if (!isset($id)){
+      global $roscms_standard_language;
+
+      $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_LANGUAGES." WHERE name_short = :lang_code LIMIT 1");
+      $stmt->bindParam('lang_code',$roscms_standard_language,PDO::PARAM_STR);
+      $stmt->execute();
+      $lang = $stmt->fetchColumn();
+    }
+    return $id;
+
+
+  }
 } // end of Language
 ?>

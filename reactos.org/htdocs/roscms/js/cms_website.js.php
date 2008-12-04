@@ -26,14 +26,14 @@ Login::required();
 $user_lang = ROSUser::getLanguage(ThisUser::getInstance()->id(), true);
 
 // prepare build languages
-$stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_level, lang_name FROM languages WHERE lang_level > '0' ORDER BY lang_name ASC");
+$stmt=DBConnection::getInstance()->prepare("SELECT id, level, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
 $stmt->execute();
 $languages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 
 /**
- * @FILLME
+ * gives possible values for a selected filter
  *
  * @param string action see this switch statement for more
  * @param int objidval2
@@ -105,7 +105,7 @@ function htmlFilterValues( action, objidval2, filterid ) {
 
 // build languages
 foreach($languages as $language) {
-  echo '<option value="'.$language['lang_id'].'"'.(($language['lang_id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['lang_name'].'</option>';
+  echo '<option value="'.$language['id'].'"'.(($language['id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
 }
 
 ?></select>';
@@ -118,8 +118,8 @@ foreach($languages as $language) {
 
 // build translation languages
 foreach($languages as $language) {
-  if ($language['lang_level'] != '10') {
-    echo '<option value="'.$language['lang_id'].'"'.(($language['lang_id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['lang_name'].'</option>';
+  if ($language['level'] != '10') {
+    echo '<option value="'.$language['id'].'"'.(($language['id'] == $user_lang) ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
   }
 }
  ?></select>';
@@ -167,10 +167,10 @@ foreach($languages as $language) {
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><?php
 
 // ACL
-$stmt=DBConnection::getInstance()->prepare("SELECT sec_name, sec_fullname FROM data_security ORDER BY sec_fullname ASC");
+$stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
 $stmt->execute();
 while($ACL=$stmt->fetch(PDO::FETCH_ASSOC)) {
-  echo '<option value="'. $ACL['sec_name'] .'">'. $ACL['sec_fullname'] .'</option>';
+  echo '<option value="'. $ACL['id'] .'">'. $ACL['name'] .'</option>';
 }
 
  ?></select>';

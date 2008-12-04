@@ -68,14 +68,14 @@ class Login
       }
 
       // Clean out expired sessions
-      DBConnection::getInstance()->exec("DELETE FROM user_sessions WHERE usersession_expires IS NOT NULL AND usersession_expires < NOW()");
+      DBConnection::getInstance()->exec("DELETE FROM ".ROSCMST_SESSIONS." WHERE expires IS NOT NULL AND expires < NOW()");
 
       // Now, see if we have a valid login session
       if ($subsys == '') {
-        $stmt=DBConnection::getInstance()->prepare("SELECT u.user_id, s.usersession_expires AS session_expires FROM user_sessions s JOIN users u ON u.user_id = s.usersession_user_id WHERE s.usersession_id = :session_id AND (u.user_setting_ipaddress = 'false' OR s.usersession_ipaddress=:ip ) AND (u.user_setting_browseragent = 'false' OR s.usersession_browseragent = :agent) AND u.user_account_enabled = 'yes' LIMIT 1");
+        $stmt=DBConnection::getInstance()->prepare("SELECT s.user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip=:ip ) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND u.disabled IS FALSE LIMIT 1");
       }
       else{
-        $stmt=DBConnection::getInstance()->prepare("SELECT m.map_subsys_userid AS user_id, s.usersession_expires AS session_expires FROM user_sessions s JOIN users u ON u.user_id = s.usersession_user_id JOIN subsys_mappings m ON m.map_roscms_userid = s.usersession_user_id WHERE s.usersession_id = :session_id AND (u.user_setting_ipaddress = 'false' OR s.usersession_ipaddress = :ip) AND (u.user_setting_browseragent = 'false' OR s.usersession_browseragent = :agent) AND m.map_subsys_name = :subsys AND u.user_account_enabled = 'yes' LIMIT 1");
+        $stmt=DBConnection::getInstance()->prepare("SELECT m.subsys_userid AS user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id JOIN ".ROSCMST_SUBSYS." m ON m.user_id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip = :ip) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND m.subsys = :subsys AND u.disabled IS FALSE LIMIT 1");
           $stmt->bindParam('subsys',$subsys,PDO::PARAM_STR);
       }
       $stmt->bindParam('session_id',$session_id_clean,PDO::PARAM_INT);
@@ -88,8 +88,8 @@ class Login
         $user_id = $row['user_id'];
         
         // Session with timeout. Update the expiry time in the table and the expiry time of the cookie
-        if (isset($row['session_expires'])){
-          $stmt=DBConnection::getInstance()->prepare("UPDATE user_sessions SET usersession_expires = DATE_ADD(NOW(), INTERVAL 30 MINUTE) WHERE usersession_id = :session_id");
+        if (isset($row['expires'])){
+          $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_SESSIONS." SET expires = DATE_ADD(NOW(), INTERVAL 30 MINUTE) WHERE id = :session_id");
           $stmt->bindParam('session_id',$session_id_clean,PDO::PARAM_INT);
           $stmt->execute();
           setcookie('roscmsusrkey', $session_id_clean, time() + 30 * 60, '/', Cookie::getDomain());
@@ -132,7 +132,7 @@ class Login
       setcookie($rdf_login_cookie_usrkey, '', time() - 3600, '/', Cookie::getDomain());
 
       // delete session from DB
-      $stmt=DBConnection::getInstance()->prepare("DELETE FROM user_sessions WHERE usersession_id = :session_id");
+      $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_SESSIONS." WHERE id = :session_id");
       $stmt->bindparam('session_id',$del_session_id,PDO::PARAM_STR);
       $stmt->execute() or die('DB error (logout)!');
 
@@ -182,7 +182,7 @@ class Login
     }
 
     // get user data
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_roscms_password, user_timestamp_touch, user_setting_timeout, user_login_counter, user_account_enabled, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT id, name, disabled FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
     $stmt->execute() or die('DB error (login script #1)!');
     $user = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -191,15 +191,16 @@ class Login
     }
 
     // if the account is NOT enabled; e.g. a reason could be that a member of the admin group has disabled this account because of spamming, etc.
-    if ($user['user_account_enabled'] != 'yes') { 
-      die('Account is not enabled!<br /><br />System message: '.$user['user_account_enabled']);
+    if ($user['disabled'] == true) { 
+      die('Account is not enabled!<br /><br />System message: User account disabled');
     }
 
     // collect memberships for current user
-    $stmt=DBConnection::getInstance()->prepare("SELECT m.usergroupmember_usergroupid AS name, usrgroup_seclev AS security_level FROM usergroup_members m JOIN usergroups g ON m.usergroupmember_usergroupid = g.usrgroup_name_id WHERE usergroupmember_userid = :user_id");
-    $stmt->bindparam('user_id',$user['user_id'],PDO::PARAM_INT);
+    $stmt=DBConnection::getInstance()->prepare("SELECT g.name_short, g.security_level FROM ".ROSCMST_MEMBERSHIPS." m JOIN ".ROSCMST_GROUPS." g ON m.group_id = g.id WHERE user_id = :user_id");
+    $stmt->bindparam('user_id',$user['id'],PDO::PARAM_INT);
     $stmt->execute();
-    while($membership = $stmt->fetch()) {
+    $memberships = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach($memberships as $membership) {
       ThisUser::getInstance()->addGroup($membership);
     }
 

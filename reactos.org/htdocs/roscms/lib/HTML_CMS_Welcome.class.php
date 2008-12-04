@@ -47,8 +47,6 @@ class HTML_CMS_Welcome extends HTML_CMS
    */
   protected function body( )
   {
-    global $roscms_standard_language;
-
     echo_strip('
       <p>&nbsp;</p>
       <h2>Welcome</h2>
@@ -60,26 +58,26 @@ class HTML_CMS_Welcome extends HTML_CMS
         <li><a href="#web_news_langgroup">Translator Information</a></li>
       </ul>
       <br />
-      <a name="web_news"></a><h3>');echo Data::getContent('web_news', 'system', 'en', 'title', 'stext');echo_strip('</h3>
-      <p style="font-weight: bold;">');echo Data::getContent('web_news', 'system', 'en', 'heading', 'stext').'</p>'.
-      Data::getContent('web_news', 'system', 'en', 'content', 'text').'<br />';
+      <a name="web_news"></a><h3>');echo Data::getContent('web_news', 'system', Language::getStandardId(), 'title', 'stext');echo_strip('</h3>
+      <p style="font-weight: bold;">');echo Data::getContent('web_news', 'system', Language::getStandardId(), 'heading', 'stext').'</p>'.
+      Data::getContent('web_news', 'system', Language::getStandardId(), 'content', 'text').'<br />';
 
       if (ThisUser::getInstance()->isMemberOfGroup('translator', 'transmaint')) {
     
-        $stmt=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
+        $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
         $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
         $stmt->execute();
         $user_lang = $stmt->fetchColumn();
 
-        if ($user_lang != '') {
+        if ($user_lang !== false) {
           echo_strip('
             <a name="web_news_langgroup"></a>
             <h3>Translator Information</h3>');
 
           // try to get content in local language, otherwise use standard language
-          $content = Data::getContent('web_news_langgroup', 'system', $user_lang, 'content', 'text');
+          $content = Data::getContent('web_news_langgroup', 'system',  $user_lang, 'content', 'text');
           if ($content == '') {
-            $content = Data::getContent('web_news_langgroup', 'system', $roscms_standard_language, 'content', 'text');
+            $content = Data::getContent('web_news_langgroup', 'system',  Language::getStandardId(), 'content', 'text');
           }
           echo $content;
         }

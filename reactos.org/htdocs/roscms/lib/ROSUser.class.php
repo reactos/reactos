@@ -39,14 +39,14 @@ class ROSUser
   /**
    * checks if this timezone is in our Database
    *
-   * @param string tz_code timezone code
+   * @param int timezone id for timezone
    * @return bool
    * @access public
    */
   public static function checkTimezone( $tz_code )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM user_timezone WHERE tz_code = :tz_code LIMIT 1");
-    $stmt->bindparam('tz_code',$tz_code,PDO::PARAM_STR);
+    $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TIMEZONES." WHERE id = :timezone LIMIT 1");
+    $stmt->bindparam('timezone',$timezone,PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetchOnce();
   }// end of member function timezone_string
@@ -59,15 +59,15 @@ class ROSUser
    * @return bool
    * @access public
    */
-  public static function getLanguage( $user_id, $short = false)
+  public static function getLanguage( $user_id, $as_id = false)
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT lang_name FROM user_language l JOIN users u ON u.user_language=l.lang_id WHERE user_id = :user_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT l.name FROM ".ROSCMST_LANGUAGES." l JOIN ".ROSCMST_USERS." u ON u.lang_id=l.id WHERE u.id = :user_id LIMIT 1");
     $stmt->bindparam('user_id',$user_id,PDO::PARAM_STR);
     $stmt->execute();
     $ret = $stmt->fetchColumn();
-    if ($ret===false || $short){
-      $stmt=DBConnection::getInstance()->prepare("SELECT user_language FROM users WHERE user_id = :user_id LIMIT 1");
-      $stmt->bindparam('user_id',$user_id,PDO::PARAM_STR);
+    if ($ret===false || $as_id){
+      $stmt=DBConnection::getInstance()->prepare("SELECT lang_id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+      $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
       $stmt->execute();
       return $stmt->fetchColumn();
     }
@@ -85,7 +85,7 @@ class ROSUser
    */
   public static function getCountry( $user_id )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT c.coun_name FROM user_countries c JOIN users u ON u.user_country = c.coun_id  WHERE user_id = :user_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT c.name FROM ".ROSCMST_COUNTRIES." c JOIN ".ROSCMST_USERS." u ON u.country_id = c.id  WHERE u.id = :user_id LIMIT 1");
     $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetchColumn();
@@ -103,9 +103,9 @@ class ROSUser
   public static function getDetailsById( $id )
   {
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_name AS name, user_email AS email, user_fullname AS fullname, UNIX_TIMESTAMP(user_register) AS register FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT name, email, fullname, UNIX_TIMESTAMP(created) AS register FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',$id,PDO::PARAM_INT);
-    $stmt->execute() or die("DB error (subsys_utils #4)");
+    $stmt->execute() or die('DB error (subsys_utils #4)');
 
     // check if a user was found
     $user = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -160,7 +160,7 @@ class ROSUser
   public static function hasPasswordReset( $code )
   {
     // check if an account with the password activation exists
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM users WHERE user_roscms_getpwd_id = :getpwd_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE activation_password = :getpwd_id LIMIT 1");
     $stmt->bindParam('getpwd_id',$code,PDO::PARAM_STR);
     $stmt->execute();
     $password_id_exists = ($stmt->fetchColumn() !== false);
@@ -177,7 +177,7 @@ class ROSUser
   public static function hasEmail( $email )
   {
     // check if another account with the same email address already exists
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_email FROM users WHERE user_email = :email LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
     $stmt->bindParam('email',$email,PDO::PARAM_STR);
     $stmt->execute();
     

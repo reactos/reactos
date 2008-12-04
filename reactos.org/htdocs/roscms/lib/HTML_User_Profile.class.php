@@ -54,21 +54,21 @@ class HTML_User_Profile extends HTML_User
     if ($this->search) {
 
       if (isset($_GET['search'])) {
-        $stmt=DBConnection::getInstance()->prepare("SELECT count(*) FROM users WHERE user_name LIKE :nickname OR user_fullname LIKE :fullname");
-        $stmt->bindValue('nickname','%'.$_GET['search'].'%');
-        $stmt->bindValue('fullname','%'.$_GET['search'].'%');
+        $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname");
+        $stmt->bindValue('nickname','%'.$_GET['search'].'%',PDO::PARAM_STR);
+        $stmt->bindValue('fullname','%'.$_GET['search'].'%',PDO::PARAM_STR);
         $stmt->execute();
         $users_found = $stmt->fetchColumn();
 
         if ($users_found == 1) {
-          $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM users WHERE user_name LIKE :nickname OR user_fullname LIKE :fullname LIMIT 1");
-          $stmt->bindValue('nickname','%'.$_GET['search'].'%');
-          $stmt->bindValue('fullname','%'.$_GET['search'].'%');
+          $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname LIMIT 1");
+          $stmt->bindValue('nickname','%'.$_GET['search'].'%',PDO::PARAM_STR);
+          $stmt->bindValue('fullname','%'.$_GET['search'].'%',PDO::PARAM_STR);
           $stmt->execute();
           $user_id = $stmt->fetchColumn();
         }
       } else {
-        $users_found = -1;
+        $users_found = false;
       }
 
       // more than one user was found (or none)
@@ -100,15 +100,15 @@ class HTML_User_Profile extends HTML_User
         if (isset($_GET['search']) && $_GET['search'] != '') {
           echo '<ul>';
 
-          $stmt=DBConnection::getInstance()->prepare("SELECT user_name, user_fullname FROM users WHERE user_name LIKE :nickname OR user_fullname LIKE :fullname ORDER BY user_name ASC LIMIT 100");
-          $stmt->bindValue('nickname','%'.$_GET['search'].'%');
-          $stmt->bindValue('fullname','%'.$_GET['search'].'%');
+          $stmt=DBConnection::getInstance()->prepare("SELECT name, fullname FROM".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname ORDER BY name ASC LIMIT 100");
+          $stmt->bindValue('nickname','%'.$_GET['search'].'%',PDO::PARAM_STR);
+          $stmt->bindValue('fullname','%'.$_GET['search'].'%',PDO::PARAM_STR);
           $stmt->execute();
 
           while ($search = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            echo '<li><a style="font-weight:bold;" href="'.$roscms_intern_page_link.'search&amp;phrase'.$search['user_name'].'">'.$search['user_name'].'</a>';
+            echo '<li><a style="font-weight:bold;" href="'.$roscms_intern_page_link.'search&amp;phrase'.$search['name'].'">'.$search['name'].'</a>';
             if ($search['user_fullname']) {
-              echo '<br />'.$search['user_fullname'];
+              echo '<br />'.$search['fullname'];
             }
             echo '<br />&nbsp;</li>';
           } // end while
@@ -117,16 +117,19 @@ class HTML_User_Profile extends HTML_User
         }
       }
       else {
-        if (empty($user_id)|| $user_id === false) {
-          $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM users WHERE user_name = :user_name LIMIT 1");
+        if (empty($user_id) || $user_id === false) {
+          $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
           $stmt->bindParam('user_name',rawurldecode(@$_GET['user_name']));
           $stmt->execute();
           $user_id = $stmt->fetchColumn();
         }
+
+        // foreign profile
         $this->profile($user_id);
       }
     }
     else {
+      // own profile
       $this->profile(ThisUser::getInstance()->id());
     }
   }
@@ -136,7 +139,7 @@ class HTML_User_Profile extends HTML_User
    *
    * @access private
    */
-  private function profile( $user_id = null )
+  private function profile( $user_id )
   {
     global $roscms_intern_page_link;
     global $roscms_intern_webserver_pages;
@@ -144,7 +147,7 @@ class HTML_User_Profile extends HTML_User
 
     $thisuser = &ThisUser::getInstance();
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_register, user_fullname, user_email, user_email_activation, user_website, user_country, user_timezone, user_occupation, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress, user_setting_timeout, user_language FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.created, u.fullname, u.email, u.activation, u.homepage, c.name AS country, CONCAT(t.name,' (', t.difference,')') AS timezone, l.name AS language, u.occupation FROM ".ROSCMST_USERS." u LEFT JOIN ".ROSCMST_COUNTRIES." c ON u.country_id=c.id LEFT JOIN ".ROSCMST_TIMEZONES." t ON t.id=u.timezone_id LEFT JOIN ".ROSCMST_LANGUAGES." l ON l.id=u.lang_id WHERE u.id = :user_id LIMIT 1");
     $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
     $stmt->execute();
     $profile = $stmt->fetchOnce();
@@ -155,14 +158,10 @@ class HTML_User_Profile extends HTML_User
       return;
     }
 
-    // prepare
-    $country = ROSuser::getCountry($profile['user_id']);
-    $language = ROSuser::getLanguage($profile['user_id']);
-
     // begin output
     echo_strip('
       <h1>myReactOS Profile</h1>
-      <p>A person who joined '.$rdf_name.' on '.Date::getLocal($profile['user_register']).'.</p>
+      <p>A person who joined '.$rdf_name.' on '.Date::getLocal($profile['created']).'.</p>
 
       <div class="bubble">
         <div class="corner_TL">
@@ -172,24 +171,24 @@ class HTML_User_Profile extends HTML_User
 
         <div class="field">
           <div class="key">Username</div>
-          <div class="value">'.htmlspecialchars($profile['user_name']).'</div>
+          <div class="value">'.htmlspecialchars($profile['name']).'</div>
         </div>');
 
     // Fullname
-    if ($profile['user_fullname'] != '') {
+    if ($profile['fullname'] != '') {
       echo_strip('
         <div class="field">
           <div class="key">First and Last Name</div>
-          <div class="value">'.htmlspecialchars($profile['user_fullname']).'</div>
+          <div class="value">'.htmlspecialchars($profile['fullname']).'</div>
         </div>');
     }
 
     // email only for the user itself or admins
-    if ($profile['user_id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
+    if ($profile['id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
       echo_strip('
         <div class="field">
           <div class="key">E-Mail Address </div>
-          <div class="value">'.htmlspecialchars($profile['user_email']).'</div>
+          <div class="value">'.htmlspecialchars($profile['email']).'</div>
         </div>');
     }
 
@@ -197,68 +196,48 @@ class HTML_User_Profile extends HTML_User
     echo_strip('
       <div class="field">
         <div class="key">Country</div>
-        <div class="value">'.(($country !== false) ? $country : '<span style="color: red;">not set</span>').'</div>
+        <div class="value">'.(($profile['country'] != null) ? $profile['country'] : '<span style="color: red;">not set</span>').'</div>
       </div>
 
       <div class="field">
         <div class="key">Language</div>
-        <div class="value">'.(($language !== false) ? $language : '<span style="color: red;">not set</span>').'</div>
+        <div class="value">'.(($profile['language'] != null) ? $profile['language'] : '<span style="color: red;">not set</span>').'</div>
       </div>
 
       <div class="field">
         <div class="key">Timezone</div>
-        <div class="value">');
-
-    // Timezone
-    if (ROSUser::checkTimezone($profile['user_timezone'])) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT tz_code, tz_name, tz_value2 FROM user_timezone WHERE tz_code = :tz_code LIMIT 1");
-      $stmt->bindparam('tz_code',$profile['user_timezone'],PDO::PARAM_STR);
-      $stmt->execute();
-      $timezone = $stmt->fetchOnce();
-
-      echo_strip(
-        $timezone['tz_name'].' ('.$timezone['tz_value2'].')
-        <div class="detail">
-          server time: '.date('Y-m-d H:i').'<br />
-          local time: '.Date::getLocal(date('Y-m-d H:i')).'
-        </div>');
-    }
-    else {
-      echo '<span style="color: red;">not set</span>';
-    }
-    echo_strip('
-        </div>
+        <div class="value">'.(($profile['timezone'] != null) ? $profile['timezone'] : '<span style="color: red;">not set</span>').'</div>
       </div>');
 
     // Website
-    if ($profile['user_website'] != '') {
+    if ($profile['homepage'] != '') {
       echo_strip('
         <div class="field">
           <div class="key">Private Website</div>
-          <div class="value"><a href="'.$profile['user_website'].'" rel="nofollow">'.htmlspecialchars($profile['user_website']).'</a></div>
+          <div class="value"><a href="'.$profile['homepage'].'" rel="nofollow">'.htmlspecialchars($profile['homepage']).'</a></div>
         </div>');
     }
 
     // Occupation
-    if ($profile['user_occupation'] != '') {
+    if ($profile['occupation'] != '') {
       echo_strip('
         <div class="field">
           <div class="key">Occupation</div>
-          <div class="value">'.htmlspecialchars($profile['user_occupation']).'</div>
+          <div class="value">'.htmlspecialchars($profile['occupation']).'</div>
         </div>');
     }
 
     // Groups (only for user itself) and admins
-    if ($profile['user_id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
+    if ($profile['id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
       echo_strip('
         <div class="field">
           <div class="key">User Groups</div>
             <ul class="value">');
-      $stmt=DBConnection::getInstance()->prepare("SELECT u.usrgroup_name FROM usergroups u, usergroup_members m WHERE m.usergroupmember_userid = :user_id AND u.usrgroup_name_id = m.usergroupmember_usergroupid ORDER BY usrgroup_securitylevel DESC, usrgroup_name ASC");
-      $stmt->bindparam('user_id',$profile['user_id'],PDO::PARAM_INT);
+      $stmt=DBConnection::getInstance()->prepare("SELECT g.name FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE m.user_id = :user_id ORDER BY g.name ASC");
+      $stmt->bindparam('user_id',$profile['id'],PDO::PARAM_INT);
       $stmt->execute();
-      while ($usergroup = $stmt->fetch()) {
-        echo '<li>'.$usergroup['usrgroup_name'].'</li>';
+      while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        echo '<li>'.$group['name'].'</li>';
       }
 
       echo_strip('
@@ -269,11 +248,11 @@ class HTML_User_Profile extends HTML_User
     // Location
     echo_Strip('
         <div class="field">
-          <a href="'.$roscms_intern_webserver_pages.'peoplemap/">'.($profile['user_id']==$thisuser->id() ? 'My ' : '').'Location on the Map</a>
+          <a href="'.$roscms_intern_webserver_pages.'peoplemap/">'.($profile['id']==$thisuser->id() ? 'My ' : '').'Location on the Map</a>
         </div>');
 
     // show edit or search link (depending if the current user is searched user)
-    if ($profile['user_id'] == $thisuser->id()) {
+    if ($profile['id'] == $thisuser->id()) {
       echo '<div class="u-link"><a href="'.$roscms_intern_page_link.'my&amp;subpage=edit">Edit My Profile</a></div>';
     }
     else {

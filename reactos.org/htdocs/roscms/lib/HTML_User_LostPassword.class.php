@@ -86,13 +86,13 @@ class HTML_User_LostPassword extends HTML_User
     }
 
     if (strlen($activation_code) > 6 && isset($_POST['registerpost']) && !empty($_POST['userpwd1']) && !empty($_POST['userpwd2']) && strlen($_POST['userpwd1']) >= $rdf_register_user_pwd_min && strlen($_POST['userpwd1']) < $rdf_register_user_pwd_max && $_POST['userpwd1'] == $_POST['userpwd2'] && !empty($_POST['usercaptcha']) && !empty($_SESSION['rdf_security_code']) && strtolower($_SESSION['rdf_security_code']) == strtolower($_POST['usercaptcha']) && $password_id_exists) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM users WHERE user_roscms_getpwd_id = :getpwd_id LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE activation_password = :getpwd_id LIMIT 1");
       $stmt->bindParam('getpwd_id',$activation_code,PDO::PARAM_STR);
       $stmt->execute();
       $user_id = $stmt->fetchColumn();
 
       // set new account password
-      $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_roscms_getpwd_id = '', user_roscms_password = MD5( :password ), user_timestamp_touch2 = NOW( ) WHERE user_id = :user_id");
+      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation_password = '', password = MD5( :password ), modified = NOW() WHERE id = :user_id");
       $stmt->bindParam('password',$_POST['userpwd1'],PDO::PARAM_STR);
       $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
       $stmt->execute();
@@ -107,13 +107,13 @@ class HTML_User_LostPassword extends HTML_User
       // password activation code
       $activation_code = ROSUser::makeActivationCode();
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name FROM users WHERE user_email = :email LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
       $stmt->bindParam('email',$_POST['useremail'],PDO::PARAM_STR);
       $stmt->execute();
       $user = $stmt->fetchOnce();
 
       // add activation code to account
-      $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_roscms_getpwd_id = :getpwd_id, user_timestamp_touch2 = NOW( ) WHERE user_id = :user_id LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation_password = :getpwd_id WHERE id = :user_id LIMIT 1");
       $stmt->bindParam('getpwd_id',$activation_code,PDO::PARAM_STR);
       $stmt->bindParam('user_id',$user['user_id'],PDO::PARAM_INT);
       $stmt->execute();
@@ -122,7 +122,7 @@ class HTML_User_LostPassword extends HTML_User
       $subject = $rdf_name_long.' - Lost username or password?';
 
       // Email message
-      $message = $rdf_name_long." - Lost username or password?\n\n\nYou have requested your ".$rdf_name." account login data.\n\nYou haven't requested your account login data? Oops, then someone has tried the 'Lost username or password?' function with your email address, just ignore this email.\n\n\nUsername: ".$user['user_name']."\n\n\nLost your password? Reset your password: ".$roscms_intern_page_link."login&subpage=lost&code=".$activation_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
+      $message = $rdf_name_long." - Lost username or password?\n\n\nYou have requested your ".$rdf_name." account login data.\n\nYou haven't requested your account login data? Oops, then someone has tried the 'Lost username or password?' function with your email address, just ignore this email.\n\n\nUsername: ".$user['name']."\n\n\nLost your password? Reset your password: ".$roscms_intern_page_link."login&subpage=lost&code=".$activation_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
       // send the Email
       if (EMail::send($_POST['useremail'], $subject, $message)) {

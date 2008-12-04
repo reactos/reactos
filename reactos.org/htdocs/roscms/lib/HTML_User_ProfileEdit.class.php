@@ -52,6 +52,7 @@ class HTML_User_ProfileEdit extends HTML_User
     global $rdf_register_user_pwd_max;
     global $rdf_register_user_name_max;
     global $roscms_intern_webserver_pages;
+    global $roscms_intern_webserver_roscms;
 
     $activation_code = @$_GET['code'];
 
@@ -77,19 +78,19 @@ class HTML_User_ProfileEdit extends HTML_User
             <div class="corner_TR"></div>
           </div>');
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_id, user_name, user_fullname, user_email, user_email_activation, user_website, user_country, user_language, user_timezone, user_occupation, user_setting_multisession, user_setting_browseragent, user_setting_ipaddress, user_setting_timeout FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt=DBConnection::getInstance()->prepare("SELECT id, name, fullname, email, activation, homepage, country_id, lang_id, timezone_id, occupation, match_session, match_browseragent, match_ip, match_session_expire FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
     $profile = $stmt->fetchOnce();
 
     // DB update E-Mail adress
-    if ($this->checkEmailUpdate($activation_code, $profile['user_email_activation'])) {
-      $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_timestamp_touch2 = NOW() , user_email_activation = '', user_email = :email WHERE user_id = :user_id LIMIT 1");
-      $stmt->bindParam('user_id',$profile['user_id'],PDO::PARAM_INT);
+    if ($this->checkEmailUpdate($activation_code, $profile['activation'])) {
+      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW() , activation = '', email = :email WHERE id = :user_id LIMIT 1");
+      $stmt->bindParam('user_id',$profile['id'],PDO::PARAM_INT);
       $stmt->bindParam('email',$_POST['useremail'],PDO::PARAM_STR);
       $stmt->execute();
 
-      ROSUser::syncSubsystems($profile['user_id']);
+      ROSUser::syncSubsystems($profile['id']);
 
       echo_strip('
         <h2>E-Mail Address Changed</h2>
@@ -99,33 +100,20 @@ class HTML_User_ProfileEdit extends HTML_User
       return;
     }
 
-    // wanna change password
-    if ($this->checkPasswordUpdate()) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM user_unsafepwds WHERE pwd_name = :pwd_name");
-      $stmt->bindParam('pwd_name',$_POST['userpwd1']);
-      $stmt->execute();
-      if ($stmt->fetchColumn() == 0) {
-        $safepwd = true; 
-      }
-      else {
-        $safepwd = false; 
-      }
-    }
-
     // wanna change email
     if (isset($_POST['registerpost']) && isset($_POST['useremail']) && $_POST['useremail'] != '') {
     
       // check if another account with the same email address already exists
-      $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM users WHERE user_email = :email");
+      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
       $stmt->bindParam('email',$_POST['useremail'],PDO::PARAM_STR);
       $stmt->execute();
 
-      if ($stmt->fetchColumn() && $profile['user_email'] != $_POST['useremail']) {
+      if ($stmt->fetchColumn() && $profile['email'] != $_POST['useremail']) {
        $existemail = true;
       }
     }
 
-    if (($activation_code == '' || strlen($activation_code) <= 6) && isset($_POST['registerpost']) && ($safepwd === true || $safepwd === '') && (isset($_POST['userpwd1']) && ($_POST['userpwd1'] == "" || (strlen($_POST['userpwd1']) >= $rdf_register_user_pwd_min && strlen($_POST['userpwd1']) < $rdf_register_user_pwd_max))) && isset($_POST['useremail']) && EMail::isValid($_POST['useremail']) && !$existemail) {
+    if (($activation_code == '' || strlen($activation_code) <= 6) && isset($_POST['registerpost']) && (isset($_POST['userpwd1']) && ($_POST['userpwd1'] == "" || (strlen($_POST['userpwd1']) >= $rdf_register_user_pwd_min && strlen($_POST['userpwd1']) < $rdf_register_user_pwd_max))) && isset($_POST['useremail']) && EMail::isValid($_POST['useremail']) && !$existemail) {
 
       // email address activation code
       $s = '';
@@ -140,19 +128,19 @@ class HTML_User_ProfileEdit extends HTML_User
 
       // update password
       if ($safepwd === true) {
-        $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_roscms_password = MD5(:password) WHERE user_id = :user_id LIMIT 1");
+        $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET password = MD5(:password) WHERE id = :user_id LIMIT 1");
         $stmt->bindParam('password',$_POST['userpwd1'],PDO::PARAM_STR);
-        $stmt->bindParam('user_id',$profile['user_id'],PDO::PARAM_INT);
+        $stmt->bindParam('user_id',$profile['id'],PDO::PARAM_INT);
         $password_change = $stmt->execute();
 
         $password_change = true;
       }
 
       // set email activation code
-      if ($profile['user_email'] != $_POST['useremail']) {
-        $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_email_activation = :activation_code WHERE user_id = :user_id LIMIT 1");
+      if ($profile['email'] != $_POST['useremail']) {
+        $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation = :activation_code WHERE id = :user_id LIMIT 1");
         $stmt->bindValue('activation_code',htmlspecialchars($_POST['useremail']).$account_act_code,PDO::PARAM_STR);
-        $stmt->bindParam('user_id',$profile['user_id'],PDO::PARAM_INT);
+        $stmt->bindParam('user_id',$profile['id'],PDO::PARAM_INT);
         $stmt->execute();
       }
 
@@ -162,29 +150,29 @@ class HTML_User_ProfileEdit extends HTML_User
       }
 
       // update account data
-      $stmt=DBConnection::getInstance()->prepare("UPDATE users SET user_timestamp_touch2 = NOW( ) , user_fullname = :fullname, user_website = :website, user_language = :language, user_country = :country, user_timezone = :timezone, user_occupation = :occupation, user_setting_multisession = :setting_multisession, user_setting_browseragent = :setting_browser, user_setting_ipaddress = :setting_ip, user_setting_timeout = :setting_timeout WHERE user_id = :user_id LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW( ) , fullname = :fullname, homepage = :website, lang_id = :language, country_id = :country, timezone_id = :timezone, occupation = :occupation, match_session = :setting_multisession, match_browseragent = :setting_browser, match_ip = :setting_ip, match_session_expire = :setting_timeout WHERE id = :user_id LIMIT 1");
       $stmt->bindParam('fullname',htmlspecialchars($_POST['userfullname']),PDO::PARAM_STR);
       $stmt->bindParam('website',$_POST['userwebsite'],PDO::PARAM_STR);
-      $stmt->bindParam('language',Language::checkStatic($_POST['language']),PDO::PARAM_STR);
-      $stmt->bindParam('country',$_POST['country'],PDO::PARAM_STR);
-      $stmt->bindParam('timezone',$_POST['tzone'],PDO::PARAM_STR);
+      $stmt->bindParam('language',$_POST['language'],PDO::PARAM_INT);
+      $stmt->bindParam('country',$_POST['country'],PDO::PARAM_INT);
+      $stmt->bindParam('timezone',$_POST['tzone'],PDO::PARAM_INT);
       $stmt->bindParam('occupation',$_POST['useroccupation'],PDO::PARAM_STR);
-      $stmt->bindValue('setting_multisession',isset($_POST['loginoption1']),PDO::PARAM_STR);
-      $stmt->bindValue('setting_browser',isset($_POST['loginoption2']),PDO::PARAM_STR);
-      $stmt->bindValue('setting_ip',isset($_POST['loginoption3']),PDO::PARAM_STR);
-      $stmt->bindValue('setting_timeout',isset($_POST['loginoption4']),PDO::PARAM_STR);
-      $stmt->bindParam('user_id',$profile['user_id'],PDO::PARAM_INT);
+      $stmt->bindValue('setting_multisession',isset($_POST['loginoption1']),PDO::PARAM_BOOL);
+      $stmt->bindValue('setting_browser',isset($_POST['loginoption2']),PDO::PARAM_BOOL);
+      $stmt->bindValue('setting_ip',isset($_POST['loginoption3']),PDO::PARAM_BOOL);
+      $stmt->bindValue('setting_timeout',isset($_POST['loginoption4']),PDO::PARAM_BOOL);
+      $stmt->bindParam('user_id',$profile['id'],PDO::PARAM_INT);
       $stmt->execute();
 
       echo '<h2>Profile Changes Saved</h2>';
 
-      if ($profile['user_email'] != $_POST['useremail']) {
+      if ($profile['email'] != $_POST['useremail']) {
 
         // subject
         $subject = $rdf_name_long." - Email Address Activation";
 
         // message
-        $message = $rdf_name_long." - Email Address Activation\n\n\nYou have requested an email address change for your account on ".$rdf_name.". The next step in order to enable the new email address for the account is to activate it by using the hyperlink below.\n\n\nCurrent E-Mail Address: ".$profile['user_email']."\nNew E-Mail Address: ".$_POST['useremail']."\n\nActivation-Hyperlink: ".$roscms_intern_page_link."my&amp;subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
+        $message = $rdf_name_long." - Email Address Activation\n\n\nYou have requested an email address change for your account on ".$rdf_name.". The next step in order to enable the new email address for the account is to activate it by using the hyperlink below.\n\n\nCurrent E-Mail Address: ".$profile['email']."\nNew E-Mail Address: ".$_POST['useremail']."\n\nActivation-Hyperlink: ".$roscms_intern_page_link."my&amp;subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
         // send the mail
         if (EMail::send($_POST['useremail'], $subject, $message)) {
@@ -201,7 +189,7 @@ class HTML_User_ProfileEdit extends HTML_User
 
       echo '<div><a href="'.$roscms_intern_page_link.'my" style="color:red !important; text-decoration:underline;">My Profile</a></div>';
 
-      ROSUser::syncSubsystems($profile['user_id']);
+      ROSUser::syncSubsystems($profile['id']);
     }
     elseif ($activation_code != '' && strlen($activation_code) > 6) {
       echo_strip('
@@ -222,7 +210,7 @@ class HTML_User_ProfileEdit extends HTML_User
         <div style="font-style:italic">* not required</div>
         <div class="field">
           <label for="username">Username</label>
-          <input name="username" type="text" id="username" value="'.$profile['user_name'].'" maxlength="50" disabled="disabled" />
+          <input name="username" type="text" id="username" value="'.$profile['name'].'" maxlength="50" disabled="disabled" />
           <div class="detail">You cannot change your username.</div>
         </div>
 
@@ -256,7 +244,7 @@ class HTML_User_ProfileEdit extends HTML_User
 
         <div class="field">
           <label for="useremail"'.((isset($_POST['registerpost']) && ($_POST['useremail'] == '' || !EMail::isValid($_POST['useremail']) && $_POST['useremail'] != $profile['user_email'])) ? ' style="color:red"' : '').'>E-Mail</label>
-          <input type="text" name="useremail" tabindex="4" id="useremail" value="'.((isset($_POST['useremail']) && $_POST['useremail'] != '') ?$_POST['useremail'] : $profile['user_email']).'" maxlength="50" />
+          <input type="text" name="useremail" tabindex="4" id="useremail" value="'.((isset($_POST['useremail']) && $_POST['useremail'] != '') ?$_POST['useremail'] : $profile['email']).'" maxlength="50" />
           <div class="detail">Changing the email address involves an activation process.</div>');
 
       if (isset($_POST['registerpost']) && $existemail && $_POST['useremail'] != $profile['user_email']) {
@@ -270,7 +258,7 @@ class HTML_User_ProfileEdit extends HTML_User
 
         <div class="field">
           <label for="userfullname">First and Last Name *</label>
-          <input type="text" name="userfullname" tabindex="5" id="userfullname" value="'.(isset($_POST['userfullname']) ? $_POST['userfullname'] : $profile['user_fullname']).'" maxlength="50" />
+          <input type="text" name="userfullname" tabindex="5" id="userfullname" value="'.(isset($_POST['userfullname']) ? $_POST['userfullname'] : $profile['fullname']).'" maxlength="50" />
         </div>
 
         <div class="field">
@@ -278,16 +266,16 @@ class HTML_User_ProfileEdit extends HTML_User
           <select id="language" name="language" tabindex="6">
           <option value="">Select One</option>');
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT lang_id, lang_name, lang_name_org FROM languages ORDER BY lang_name ASC");
+      $stmt=DBConnection::getInstance()->prepare("SELECT id, name, name_original FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
       $stmt->execute();
       while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        echo '<option value="'.$language['lang_id'].'"';
+        echo '<option value="'.$language['id'].'"';
 
-        if ((isset($_POST['language']) && $_POST['language'] == $language['lang_id']) || (empty($_POST['language']) && $language['lang_id'] == $profile['user_language'])) {
+        if ((isset($_POST['language']) && $_POST['language'] == $language['id']) || (empty($_POST['language']) && $language['id'] == $profile['lang_id'])) {
           echo ' selected="selected"'; 
         }
 
-        echo '>'.$language['lang_name'].' ('.$language['lang_name_org'].')</option>';
+        echo '>'.$language['name'].($language['name_original'] != '' ?' ('.$language['name_original'].')' : '').'</option>';
       }
 
       echo_strip('
@@ -299,36 +287,36 @@ class HTML_User_ProfileEdit extends HTML_User
           <select id="country" name="country" tabindex="6">
           <option value="">Select One</option>');
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT coun_id, coun_name FROM user_countries ORDER BY coun_name ASC");
+      $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_COUNTRIES." ORDER BY name ASC");
       $stmt->execute();
       while ($country = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        echo '<option value="'.$country['coun_id'].'"';
+        echo '<option value="'.$country['id'].'"';
 
-        if ((isset($_POST['country']) && $_POST['country'] == $country['coun_id']) || (empty($_POST['country']) && $country['coun_id'] == $profile['user_country'])) {
+        if ((isset($_POST['country']) && $_POST['country'] == $country['id']) || (empty($_POST['country']) && $country['id'] == $profile['country_id'])) {
           echo ' selected="selected"'; 
         }
 
-        echo '>'.$country['coun_name'].'</option>';
+        echo '>'.$country['name'].'</option>';
       }
 
       echo_strip('
           </select>
         </div>
-        
+
         <div class="field">
           <label for="tzone"'.(isset($_POST['registerpost']) && isset($_POST['tzone']) && $_POST['tzone'] == '' ? ' style="color:red;"' : '').'>Timezone</label>
           <select name="tzone" id="tzone" tabindex="7">');
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT tz_code, tz_name, tz_value2 FROM user_timezone ORDER BY tz_value ASC");
+      $stmt=DBConnection::getInstance()->prepare("SELECT id, name_short, name, difference FROM ".ROSCMST_TIMEZONES." ORDER BY difference ASC, name ASC");
       $stmt->execute();
       while ($timezone = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        echo '<option value="'.$timezone['tz_code'].'"';
+        echo '<option value="'.$timezone['id'].'"';
 
-        if ((isset($_POST['tzone']) && $_POST['tzone'] == $timezone['tz_code']) || (empty($_POST['tzone']) && $timezone['tz_code'] == $profile['user_timezone'])) {
+        if ((isset($_POST['tzone']) && $_POST['tzone'] == $timezone['id']) || (empty($_POST['tzone']) && $timezone['id'] == $profile['timezone_id'])) {
           echo ' selected="selected"'; 
         }
 
-        echo '>'.$timezone['tz_value2'].' '.$timezone['tz_name'].'</option>';
+        echo '>'.$timezone['difference'].' '.$timezone['name_short'].' ('.$timezone['name'].')</option>';
       }
 
       echo_strip('
@@ -337,26 +325,26 @@ class HTML_User_ProfileEdit extends HTML_User
 
         <div class="field">
           <label for="userwebsite">Private Website *</label>
-          <input type="text" name="userwebsite" tabindex="8" id="userwebsite" value="'.((isset($_POST['userwebsite']) && $_POST['userwebsite'] != '') ? $_POST['userwebsite'] : $profile['user_website']).'" maxlength="50" />
+          <input type="text" name="userwebsite" tabindex="8" id="userwebsite" value="'.((isset($_POST['userwebsite']) && $_POST['userwebsite'] != '') ? $_POST['userwebsite'] : $profile['homepage']).'" maxlength="50" />
         </div>
 
         <div class="field">
           <label for="useroccupation">Occupation *</label>
-          <input type="text" name="useroccupation" tabindex="9" id="useroccupation" value="'.((isset($_POST['useroccupation']) && $_POST['useroccupation'] != '') ? $_POST['useroccupation'] : $profile['user_occupation']).'" maxlength="50" />
+          <input type="text" name="useroccupation" tabindex="9" id="useroccupation" value="'.((isset($_POST['useroccupation']) && $_POST['useroccupation'] != '') ? $_POST['useroccupation'] : $profile['occupation']).'" maxlength="50" />
         </div>
 
         <fieldset>
           <legend style="color:#817A71;margin-bottom: 10px;">Login Settings</legend>
-          <input name="loginoption1" style="width:auto;" type="checkbox" id="loginoption1" value="true"'.(isset($_POST['loginoption1']) || (empty($_POST['registerpost']) && $profile['user_setting_multisession'] == 'true') ? ' checked="checked"' : '').' tabindex="11" />
+          <input name="loginoption1" style="width:auto;" type="checkbox" id="loginoption1" value="true"'.(isset($_POST['loginoption1']) || (empty($_POST['registerpost']) && $profile['match_session'] == true) ? ' checked="checked"' : '').' tabindex="11" />
           <label style="display:inline;" for="loginoption1">Multisession</label>
           <br />
-          <input name="loginoption2" style="width:auto;" type="checkbox" id="loginoption2" value="true"'.(isset($_POST['loginoption2']) || (empty($_POST['registerpost']) && $profile['user_setting_browseragent'] == 'true') ? ' checked="checked"' : '').' tabindex="12" /> 
+          <input name="loginoption2" style="width:auto;" type="checkbox" id="loginoption2" value="true"'.(isset($_POST['loginoption2']) || (empty($_POST['registerpost']) && $profile['match_browseragent'] == true) ? ' checked="checked"' : '').' tabindex="12" /> 
           <label style="display:inline;" for="loginoption2">Browser Agent Check</label>
           <br />
-          <input name="loginoption3" style="width:auto;" type="checkbox" id="loginoption3" value="true"'.((isset($_POST['loginoption3']) || (empty($_POST['registerpost']) && $profile['user_setting_ipaddress'] == 'true')) ? ' checked="checked"' : '').' tabindex="13" /> 
+          <input name="loginoption3" style="width:auto;" type="checkbox" id="loginoption3" value="true"'.((isset($_POST['loginoption3']) || (empty($_POST['registerpost']) && $profile['match_ip'] == true)) ? ' checked="checked"' : '').' tabindex="13" /> 
           <label style="display:inline;" for="loginoption3">IP Address Check</label>
           <br />
-          <input name="loginoption4" style="width:auto;" type="checkbox" id="loginoption4" value="true"'.((isset($_POST['loginoption4']) || (empty($_POST['registerpost']) && $profile['user_setting_timeout'] == 'true')) ? ' checked="checked"' : '').' tabindex="14" /> 
+          <input name="loginoption4" style="width:auto;" type="checkbox" id="loginoption4" value="true"'.((isset($_POST['loginoption4']) || (empty($_POST['registerpost']) && $profile['match_session_expire'] == true)) ? ' checked="checked"' : '').' tabindex="14" /> 
           <label style="display:inline;" for="loginoption4">Log me on automatically</label>
         </fieldset>
 

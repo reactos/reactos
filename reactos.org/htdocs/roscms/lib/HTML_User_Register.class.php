@@ -74,31 +74,18 @@ class HTML_User_Register extends HTML_User
     if (isset($_POST['registerpost']) && $_POST['username'] != "" && strlen($_POST['username']) >= $rdf_register_user_name_min) {
 
       // check if another account with the same username already exists
-      $stmt=DBConnection::getInstance()->prepare("SELECT user_name FROM users WHERE REPLACE(user_name, '_', ' ') = REPLACE(:username, '_', ' ') LIMIT 1");
+      $stmt=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_USERS." WHERE REPLACE(name, '_', ' ') = REPLACE(:username, '_', ' ') LIMIT 1");
       $stmt->bindParam('username',$_POST['username'],PDO::PARAM_STR);
       $stmt->execute();
       $name_exists = ($stmt->fetchColumn() !== false);
 
       // check if the username is equal to a protected name
-      $stmt=DBConnection::getInstance()->prepare("SELECT unsafe_name FROM user_unsafenames WHERE unsafe_name = :user_name LIMIT 1");
-      $stmt->bindParam('user_name',$_POST['username'],PDO::PARAM_STR);
+      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_FORBIDDEN." WHERE name = :forbidden LIMIT 1");
+      $stmt->bindValue('forbidden','%'.$_POST['username'].'%',PDO::PARAM_STR);
       $stmt->execute();
 
+      // name is not forbidden -> go on
       if ($stmt->fetchColumn() === false) {
-
-        // check if the username contains part(s) of a protected name
-        $stmt=DBConnection::getInstance()->prepare("SELECT unsafe_name FROM user_unsafenames WHERE unsafe_part = 1");
-        $stmt->execute();
-        while ($forbidden_parts = $stmt->fetch()) {
-          $pos = strpos(strtolower($_POST['username']), $forbidden_parts['unsafe_name']);
-
-          // name is not save, if a forbidden part is found
-          if ($pos !== false) {
-            $safename = false; 
-            break;
-          }
-        }
-
         if (isset($_POST['registerpost']) && isset($_POST['userpwd1']) && $_POST['userpwd1'] != '' && isset($_POST['userpwd2']) && $_POST['userpwd2'] != '' && $_POST['userpwd1'] == $_POST['userpwd2']) {
           $stmt=DBConnection::getInstance()->prepare("SELECT pwd_name FROM user_unsafepwds WHERE pwd_name = :pwd_name LIMIT 1");
           $stmt->bindParam('pwd_name',$_POST['userpwd1'],PDO::PARAM_STR);
@@ -116,7 +103,7 @@ class HTML_User_Register extends HTML_User
           $mail_exists = ($stmt->fetchColumn() !== false);
         }
 
-        if (self::canRegister($safename, $name_exists, $safepwd, $mail_exists)) {
+        if (self::canRegister(true, $name_exists, $safepwd, $mail_exists)) {
 
           // user language (browser settings)
           $userlang = Language::checkStatic($_SERVER['HTTP_ACCEPT_LANGUAGE']);
