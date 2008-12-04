@@ -586,20 +586,7 @@ typedef LBN *PLBN;
 typedef ULONG VBN;
 typedef VBN *PVBN;
 
-typedef struct _NOTIFY_SYNC
-{
-    ULONG Unknown0;
-    ULONG Unknown1;
-    ULONG Unknown2;
-    USHORT Unknown3;
-    USHORT Unknown4;
-    ULONG Unknown5;
-    ULONG Unknown6;
-    ULONG Unknown7;
-    ULONG Unknown8;
-    ULONG Unknown9;
-    ULONG Unknown10;
-} NOTIFY_SYNC, * PNOTIFY_SYNC;
+typedef PVOID *PNOTIFY_SYNC;
 
 typedef enum _FAST_IO_POSSIBLE {
     FastIoIsNotPossible,
