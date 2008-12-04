@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="Windows-1252" ?>
+<?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <project name="ReactOS" makefile="makefile-amd64.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="config-amd64.rbuild">
@@ -45,7 +45,7 @@
 	<compilerflag>-Wpointer-arith</compilerflag>
 	<linkerflag>-disable-stdcall-fixup</linkerflag>
 	<linkerflag>-static</linkerflag>
-	<!-- linkerflag>--unique=.eh_frame</linkerflag-->
+	<linkerflag>--unique=.eh_frame</linkerflag>
 
 <!-- Here starts <xi:include href="ReactOS-generic.rbuild" /> -->
 
@@ -127,68 +127,102 @@
 	<include host="true">include/reactos</include>
 	<include host="true">include/reactos/wine</include>
 
-	<!--directory name="base">
+	<!-- directory name="base">
 		<xi:include href="base/base.rbuild" />
-	</directory-->
+	</directory -->
 
 	<directory name="boot">
 		<xi:include href="boot/boot.rbuild" />
 	</directory>
 
-	<!--directory name="dll">
+	<!-- directory name="dll">
 		<xi:include href="dll/dll.rbuild" />
-	</directory-->
+	</directory -->
 
 	<directory name="drivers">
-		<directory name="base">
-			<xi:include href="drivers/base/directory.rbuild" />
-		</directory>
 		<directory name="bus">
 			<directory name="pci">
 				<xi:include href="drivers/bus/pci/pci.rbuild" />
 			</directory>
 		</directory>
+
 		<!-- directory name="directx">
 			<xi:include href="drivers/directx/directory.rbuild" />
 		</directory -->
+
+		<!-- directory name="ksfilter">
+			<xi:include href="drivers/ksfilter/directory.rbuild" />
+		</directory -->
+
+		<!-- directory name="multimedia">
+			<xi:include href="drivers/multimedia/directory.rbuild" />
+		</directory -->
+
+		<directory name="parallel">
+			<xi:include href="drivers/parallel/directory.rbuild" />
+		</directory>
+
+		<directory name="serial">
+			<xi:include href="drivers/serial/directory.rbuild" />
+		</directory>
+
+		<!--directory name="usb">	
+			<xi:include href="drivers/usb/directory.rbuild" />
+		</directory-->
+	
+		<!--directory name="video">
+			<xi:include href="drivers/video/directory.rbuild" />
+		</directory-->
+	
+		<!-- directory name="wdm">
+			<xi:include href="drivers/wdm/wdm.rbuild" />
+		</directory -->
+
+		<directory name="wmi">
+			<xi:include href="drivers/wmi/wmilib.rbuild" />
+		</directory>
+
+		<directory name="base">
+			<xi:include href="drivers/base/directory.rbuild" />
+		</directory>
 		<directory name="filesystems">
 			<xi:include href="drivers/filesystems/directory.rbuild" />
 		</directory>
 		<directory name="input">
 			<xi:include href="drivers/input/directory.rbuild" />
 		</directory>
-		<!-- directory name="ksfilter">
-			<xi:include href="drivers/ksfilter/directory.rbuild" />
-		</directory -->
-		<!-- directory name="multimedia">
-			<xi:include href="drivers/multimedia/directory.rbuild" />
-		</directory -->
 		<directory name="network">
 			<xi:include href="drivers/network/directory.rbuild" />
-		</directory>
-		<directory name="parallel">
-			<xi:include href="drivers/parallel/directory.rbuild" />
-		</directory>
-		<directory name="serial">
-			<xi:include href="drivers/serial/directory.rbuild" />
 		</directory>
 		<directory name="setup">
 			<xi:include href="drivers/setup/directory.rbuild" />
 		</directory>
-		<!-- directory name="storage">
-			<xi:include href="drivers/storage/directory.rbuild" />
-		</directory -->
-		<!--directory name="usb">	
-			<xi:include href="drivers/usb/directory.rbuild" />
-		</directory-->
-		<!--directory name="video">
-			<xi:include href="drivers/video/directory.rbuild" />
-		</directory-->
-		<!-- directory name="wdm">
-			<xi:include href="drivers/wdm/wdm.rbuild" />
-		</directory -->
-		<directory name="wmi">
-			<xi:include href="drivers/wmi/wmilib.rbuild" />
+		<directory name="storage">
+			<directory name="class">
+				<directory name="cdrom">
+					<xi:include href="drivers/storage/class/cdrom/cdrom.rbuild" />
+				</directory>
+				<directory name="class2">
+					<xi:include href="drivers/storage/class/class2/class2.rbuild" />
+				</directory>
+				<directory name="disk">
+					<xi:include href="drivers/storage/class/disk/disk.rbuild" />
+				</directory>
+			</directory>
+			<directory name="floppy">
+				<xi:include href="drivers/storage/floppy/floppy.rbuild" />
+			</directory>
+			<directory name="ide">
+				<directory name="atapi">
+					<xi:include href="drivers/storage/ide/atapi/atapi.rbuild" />
+				</directory>
+			</directory>
+			<directory name="port">
+				<xi:include href="drivers/storage/port/directory.rbuild" />
+			</directory>
+			<directory name="scsiport">
+				<xi:include href="drivers/storage/scsiport/scsiport.rbuild" />
+			</directory>
 		</directory>
 	</directory>
 
@@ -285,9 +319,9 @@
 		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
 	</directory>
 
-	<!--directory name="subsystems">
+	<!-- directory name="subsystems">
 		<xi:include href="subsystems/subsystems.rbuild" />
-	</directory-->
+	</directory -->
 
 	<directory name="tools">
 		<xi:include href="tools/tools.rbuild" />
