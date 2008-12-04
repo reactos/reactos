@@ -130,21 +130,20 @@ void write_guid(FILE *f, const char *guid_prefix, const char *name, const UUID *
         uuid->Data4[6], uuid->Data4[7]);
 }
 
-void write_name(FILE *h, const var_t *v)
+const char *get_name(const var_t *v)
 {
-  if (is_attr( v->attrs, ATTR_PROPGET ))
-    fprintf(h, "get_" );
-  else if (is_attr( v->attrs, ATTR_PROPPUT ))
-    fprintf(h, "put_" );
-  else if (is_attr( v->attrs, ATTR_PROPPUTREF ))
-    fprintf(h, "putref_" );
-  fprintf(h, "%s", v->name);
-}
+    static char buffer[256];
 
-void write_prefix_name(FILE *h, const char *prefix, const var_t *v)
-{
-  fprintf(h, "%s", prefix);
-  write_name(h, v);
+    if (is_attr( v->attrs, ATTR_PROPGET ))
+        strcpy( buffer, "get_" );
+    else if (is_attr( v->attrs, ATTR_PROPPUT ))
+        strcpy( buffer, "put_" );
+    else if (is_attr( v->attrs, ATTR_PROPPUTREF ))
+        strcpy( buffer, "putref_" );
+    else
+        buffer[0] = 0;
+    strcat( buffer, v->name );
+    return buffer;
 }
 
 static void write_field(FILE *h, var_t *v)
@@ -192,7 +191,7 @@ static void write_enums(FILE *h, var_list_t *enums)
   {
     if (v->name) {
       indent(h, 0);
-      write_name(h, v);
+      fprintf(h, "%s", get_name(v));
       if (v->eval) {
         fprintf(h, " = ");
         write_expr(h, v->eval, 0, 1, NULL, NULL);
@@ -643,17 +642,13 @@ static void write_method_macro(FILE *header, const type_t *iface, const char *na
     if (!is_callas(def->attrs)) {
       const var_t *arg;
 
-      fprintf(header, "#define %s_", name);
-      write_name(header,def);
-      fprintf(header, "(This");
+      fprintf(header, "#define %s_%s(This", name, get_name(def));
       if (cur->args)
           LIST_FOR_EACH_ENTRY( arg, cur->args, const var_t, entry )
               fprintf(header, ",%s", arg->name);
       fprintf(header, ") ");
 
-      fprintf(header, "(This)->lpVtbl->");
-      write_name(header, def);
-      fprintf(header, "(This");
+      fprintf(header, "(This)->lpVtbl->%s(This", get_name(def));
       if (cur->args)
           LIST_FOR_EACH_ENTRY( arg, cur->args, const var_t, entry )
               fprintf(header, ",%s", arg->name);
@@ -706,9 +701,7 @@ static void write_cpp_method_def(FILE *header, const type_t *iface)
       indent(header, 0);
       fprintf(header, "virtual ");
       write_type_decl_left(header, get_func_return_type(cur));
-      fprintf(header, " %s ", callconv);
-      write_name(header, def);
-      fprintf(header, "(\n");
+      fprintf(header, " %s %s(\n", callconv, get_name(def));
       write_args(header, cur->args, iface->name, 2, TRUE);
       fprintf(header, ") = 0;\n");
       fprintf(header, "\n");
@@ -733,9 +726,7 @@ static void do_write_c_method_def(FILE *header, const type_t *iface, const char 
       if (!callconv) callconv = "";
       indent(header, 0);
       write_type_decl_left(header, get_func_return_type(cur));
-      fprintf(header, " (%s *", callconv);
-      write_name(header, def);
-      fprintf(header, ")(\n");
+      fprintf(header, " (%s *%s)(\n", callconv, get_name(def));
       write_args(header, cur->args, name, 1, TRUE);
       fprintf(header, ");\n");
       fprintf(header, "\n");
@@ -767,15 +758,11 @@ static void write_method_proto(FILE *header, const type_t *iface)
       if (!callconv) callconv = "";
       /* proxy prototype */
       write_type_decl_left(header, get_func_return_type(cur));
-      fprintf(header, " %s %s_", callconv, iface->name);
-      write_name(header, def);
-      fprintf(header, "_Proxy(\n");
+      fprintf(header, " %s %s_%s_Proxy(\n", callconv, iface->name, get_name(def));
       write_args(header, cur->args, iface->name, 1, TRUE);
       fprintf(header, ");\n");
       /* stub prototype */
-      fprintf(header, "void __RPC_STUB %s_", iface->name);
-      write_name(header,def);
-      fprintf(header, "_Stub(\n");
+      fprintf(header, "void __RPC_STUB %s_%s_Stub(\n", iface->name, get_name(def));
       fprintf(header, "    IRpcStubBuffer* This,\n");
       fprintf(header, "    IRpcChannelBuffer* pRpcChannelBuffer,\n");
       fprintf(header, "    PRPC_MESSAGE pRpcMessage,\n");
@@ -807,9 +794,7 @@ void write_locals(FILE *fp, const type_t *iface, int body)
         const var_t *mdef = m->def;
         /* proxy prototype - use local prototype */
         write_type_decl_left(fp, get_func_return_type(m));
-        fprintf(fp, " CALLBACK %s_", iface->name);
-        write_name(fp, mdef);
-        fprintf(fp, "_Proxy(\n");
+        fprintf(fp, " CALLBACK %s_%s_Proxy(\n", iface->name, get_name(mdef));
         write_args(fp, m->args, iface->name, 1, TRUE);
         fprintf(fp, ")");
         if (body) {
@@ -831,9 +816,7 @@ void write_locals(FILE *fp, const type_t *iface, int body)
           fprintf(fp, ";\n");
         /* stub prototype - use remotable prototype */
         write_type_decl_left(fp, get_func_return_type(cur));
-        fprintf(fp, " __RPC_STUB %s_", iface->name);
-        write_name(fp, mdef);
-        fprintf(fp, "_Stub(\n");
+        fprintf(fp, " __RPC_STUB %s_%s_Stub(\n", iface->name, get_name(mdef));
         write_args(fp, cur->args, iface->name, 1, TRUE);
         fprintf(fp, ")");
         if (body)
@@ -857,8 +840,7 @@ static void write_function_proto(FILE *header, const type_t *iface, const func_t
   write_type_decl_left(header, get_func_return_type(fun));
   fprintf(header, " ");
   if (callconv) fprintf(header, "%s ", callconv);
-  write_prefix_name(header, prefix, def);
-  fprintf(header, "(\n");
+  fprintf(header, "%s%s(\n", prefix, get_name(def));
   if (fun->args)
     write_args(header, fun->args, iface->name, 0, TRUE);
   else

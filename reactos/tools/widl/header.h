@@ -31,8 +31,6 @@ extern unsigned long get_attrv(const attr_list_t *list, enum attr_type t);
 extern int is_void(const type_t *t);
 extern int is_conformant_array(const type_t *t);
 extern int is_declptr(const type_t *t);
-extern void write_name(FILE *h, const var_t *v);
-extern void write_prefix_name(FILE *h, const char *prefix, const var_t *v);
 extern const char* get_name(const var_t *v);
 extern void write_type_left(FILE *h, type_t *t, int declonly);
 extern void write_type_right(FILE *h, type_t *t, int is_field);

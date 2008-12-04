@@ -3196,11 +3196,9 @@ void declare_stub_args( FILE *file, int indent, const func_t *func )
             write_type_decl_left(file, var->type);
             fprintf(file, " ");
             if (var->type->declarray) {
-                fprintf(file, "( *");
-                write_name(file, var);
-                fprintf(file, " )");
+                fprintf(file, "(*%s)", get_name(var));
             } else
-                write_name(file, var);
+                fprintf(file, "%s", get_name(var));
             write_type_right(file, var->type, FALSE);
             fprintf(file, ";\n");
 
@@ -3231,8 +3229,7 @@ void assign_stub_out_args( FILE *file, int indent, const func_t *func )
 
         if (!in_attr)
         {
-            print_file(file, indent, "");
-            write_name(file, var);
+            print_file(file, indent, "%s", get_name(var));
 
             if (is_context_handle(var->type))
             {
