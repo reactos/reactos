@@ -16,7 +16,9 @@
 
 #define Ke386GetInterruptDescriptorTable(X) \
     __asm__("sidt %0\n\t" \
-    : "=m" (X));
+    : "=m" (X) \
+    : /* no input */ \
+    : "memory");
 
 #define Ke386SetGlobalDescriptorTable(X) \
     __asm__("lgdt %0\n\t" \
@@ -25,11 +27,15 @@
 
 #define Ke386GetGlobalDescriptorTable(X) \
     __asm__("sgdt %0\n\t" \
-    : "=m" (X));
+    : "=m" (X) \
+    : /* no input */ \
+    : "memory");
 
 #define Ke386GetLocalDescriptorTable(X) \
     __asm__("sldt %0\n\t" \
-    : "=m" (X));
+    : "=m" (X) \
+    : /* no input */ \
+    : "memory");
 
 #define Ke386SetLocalDescriptorTable(X) \
     __asm__("lldt %w0\n\t" \
