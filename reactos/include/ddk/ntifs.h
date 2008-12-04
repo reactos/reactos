@@ -3128,7 +3128,7 @@ FsRtlFastCheckLockForRead (
     IN PLARGE_INTEGER       Length,
     IN ULONG                Key,
     IN PFILE_OBJECT         FileObject,
-    IN PEPROCESS            Process
+    IN PVOID                Process
 );
 
 NTKERNELAPI
@@ -3140,7 +3140,7 @@ FsRtlFastCheckLockForWrite (
     IN PLARGE_INTEGER       Length,
     IN ULONG                Key,
     IN PFILE_OBJECT         FileObject,
-    IN PEPROCESS            Process
+    IN PVOID                Process
 );
 
 #define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) (       \
