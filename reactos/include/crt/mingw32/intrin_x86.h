@@ -1233,7 +1233,7 @@ static __inline__ __attribute__((always_inline)) unsigned long long __readmsr(co
 #ifdef _M_AMD64
 	unsigned long low, high;
 	__asm__ __volatile__("rdmsr" : "=a" (low), "=d" (high) : "c" (reg));
-	return (high << 32) | low;
+	return ((unsigned long long)high << 32) | low;
 #else
 	unsigned long long retval;
 	__asm__ __volatile__("rdmsr" : "=A" (retval) : "c" (reg));
