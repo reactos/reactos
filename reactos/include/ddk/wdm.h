@@ -628,7 +628,20 @@ typedef struct _CONTEXT {
 } CONTEXT;
 
 #elif defined(_M_AMD64)
-//#error FIXME-TODO: 64-bit
+
+#define BitTest _bittest
+#define BitTest64 _bittest64
+#define BitTestAndComplement _bittestandcomplement
+#define BitTestAndComplement64 _bittestandcomplement64
+#define BitTestAndSet _bittestandset
+#define BitTestAndSet64 _bittestandset64
+#define BitTestAndReset _bittestandreset
+#define BitTestAndReset64 _bittestandreset64
+#define InterlockedBitTestAndSet _interlockedbittestandset
+#define InterlockedBitTestAndSet64 _interlockedbittestandset64
+#define InterlockedBitTestAndReset _interlockedbittestandreset
+#define InterlockedBitTestAndReset64 _interlockedbittestandreset64
+
 #elif defined(_M_ARM)
 
 //
