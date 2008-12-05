@@ -628,7 +628,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
                     {
                         /* Check if it has an invalid count */
                         if ((Thread == CurrentObject->OwnerThread) &&
-                            (CurrentObject->Header.SignalState == MINLONG))
+                            (CurrentObject->Header.SignalState == (LONG)MINLONG))
                         {
                             /* Raise an exception */
                             KiReleaseDispatcherLock(Thread->WaitIrql);
@@ -785,18 +785,18 @@ NtDelayExecution(IN BOOLEAN Alertable,
     if(PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe and capture the time out */
             SafeInterval = ProbeForReadLargeInteger(DelayInterval);
             DelayInterval = &SafeInterval;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get SEH exception */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
    }
 

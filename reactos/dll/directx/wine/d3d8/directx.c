@@ -444,6 +444,7 @@ static HRESULT WINAPI IDirect3D8Impl_CreateDevice(LPDIRECT3D8 iface, UINT Adapte
     localParameters.Flags                                       = pPresentationParameters->Flags;
     localParameters.FullScreen_RefreshRateInHz                  = pPresentationParameters->FullScreen_RefreshRateInHz;
     localParameters.PresentationInterval                        = pPresentationParameters->FullScreen_PresentationInterval;
+    localParameters.AutoRestoreDisplayMode                      = TRUE;
 
     if(BehaviourFlags & D3DCREATE_MULTITHREADED) {
         IWineD3DDevice_SetMultithreaded(object->WineD3DDevice);

@@ -23,10 +23,6 @@
 #ifndef __USBCAMDI_H
 #define __USBCAMDI_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #if !defined(__USB_H) && !defined(__USBDI_H)
 #error include usb.h or usbdi.h before usbcamdi.h
 #else

@@ -178,7 +178,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
 
     if (KeGetPreviousMode() == UserMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             if (ReplyMessage != NULL)
             {
@@ -197,13 +197,13 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
             if (PortContext != NULL)
                 ProbeForWritePointer(PortContext);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             DPRINT1("SEH crash [1]\n");
 	    DbgBreakPoint();
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if (!NT_SUCCESS(Status))
@@ -427,7 +427,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     Thread->LpcReceivedMessageId = Message->Request.MessageId;
     Thread->LpcReceivedMsgIdValid = TRUE;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if this was a connection request */
         if (LpcpGetMessageType(&Message->Request) == LPC_CONNECTION_REQUEST)
@@ -492,13 +492,13 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
             ASSERT(FALSE);
         }
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         DPRINT1("SEH crash [2]\n");
         DbgBreakPoint();
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Check if we have a message pointer here */
     if (Message)

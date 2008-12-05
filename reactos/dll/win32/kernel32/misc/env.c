@@ -21,7 +21,7 @@
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetEnvironmentVariableA (
 	LPCSTR	lpName,
 	LPSTR	lpBuffer,
@@ -124,7 +124,7 @@ GetEnvironmentVariableA (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetEnvironmentVariableW (
 	LPCWSTR	lpName,
 	LPWSTR	lpBuffer,
@@ -173,7 +173,7 @@ GetEnvironmentVariableW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetEnvironmentVariableA (
 	LPCSTR	lpName,
 	LPCSTR	lpValue
@@ -229,7 +229,7 @@ SetEnvironmentVariableA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetEnvironmentVariableW (
 	LPCWSTR	lpName,
 	LPCWSTR	lpValue
@@ -274,7 +274,7 @@ SetEnvironmentVariableW (
  * @implemented
  */
 LPSTR
-STDCALL
+WINAPI
 GetEnvironmentStringsA (
 	VOID
 	)
@@ -353,7 +353,7 @@ GetEnvironmentStringsA (
  * @implemented
  */
 LPWSTR
-STDCALL
+WINAPI
 GetEnvironmentStringsW (
 	VOID
 	)
@@ -366,7 +366,7 @@ GetEnvironmentStringsW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FreeEnvironmentStringsA (
 	LPSTR	EnvironmentStrings
 	)
@@ -386,7 +386,7 @@ FreeEnvironmentStringsA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FreeEnvironmentStringsW (
 	LPWSTR	EnvironmentStrings
 	)
@@ -400,7 +400,7 @@ FreeEnvironmentStringsW (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 ExpandEnvironmentStringsA (
 	LPCSTR	lpSrc,
 	LPSTR	lpDst,
@@ -480,7 +480,7 @@ ExpandEnvironmentStringsA (
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 ExpandEnvironmentStringsW (
 	LPCWSTR	lpSrc,
 	LPWSTR	lpDst,

@@ -92,9 +92,9 @@ typedef struct
 #define MAX_HIGH_INDEX      (MID_LEVEL_ENTRIES * MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 
 //
-// Detect GCC
+// Detect old GCC
 //
-#ifdef __GNUC__
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300)
 
 #define DEFINE_WAIT_BLOCK(x)                                \
     struct _AlignHack                                       \
@@ -429,15 +429,10 @@ LONG
 NTAPI
 ExSystemExceptionFilter(VOID);
 
-static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
-{
-    return ExSystemExceptionFilter();
-}
-
 /* CALLBACKS *****************************************************************/
 
-VOID
 FORCEINLINE
+VOID
 ExDoCallBack(IN OUT PEX_CALLBACK Callback,
              IN PVOID Context,
              IN PVOID Argument1,
@@ -468,7 +463,7 @@ ExDoCallBack(IN OUT PEX_CALLBACK Callback,
 #define ExpChangePushlock(lock, new, old) InterlockedCompareExchangePointer((PVOID*)lock, (PVOID)new, (PVOID)old)
 #define ExpSetRundown(x, y) InterlockedExchange64((PLONGLONG)x, y)
 #else
-#define ExpChangeRundown(x, y, z) InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z))
+#define ExpChangeRundown(x, y, z) PtrToUlong(InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z)))
 #define ExpChangePushlock(x, y, z) LongToPtr(InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z)))
 #define ExpSetRundown(x, y) InterlockedExchange((PLONG)x, y)
 #endif
@@ -490,8 +485,8 @@ ExDoCallBack(IN OUT PEX_CALLBACK Callback,
  *          function.
  *
  *--*/
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 _ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value, NewValue;
@@ -531,8 +526,8 @@ _ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  *          function.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 _ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value, NewValue;
@@ -574,8 +569,8 @@ _ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  * @remarks This is the internal macro for system use only.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 _ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     /* Set the count to zero */
@@ -598,8 +593,8 @@ _ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  *          necessary, then the slow path is taken through the exported function.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 _ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value;
@@ -628,8 +623,8 @@ _ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
  * @remarks This is the internal macro for system use only.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 _ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 {
     /* Sanity check */
@@ -678,8 +673,8 @@ ExWaitForUnblockPushLock(
  * @remarks None.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 ExInitializePushLock(IN PULONG_PTR PushLock)
 {
     /* Set the value to 0 */
@@ -705,8 +700,8 @@ ExInitializePushLock(IN PULONG_PTR PushLock)
  *          This macro should usually be paired up with KeAcquireCriticalRegion.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 ExAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
     /* Try acquiring the lock */
@@ -739,8 +734,8 @@ ExAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 *          This macro should usually be paired up with KeAcquireCriticalRegion.
 *
 *--*/
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 ExTryToAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
     /* Try acquiring the lock */
@@ -774,8 +769,8 @@ ExTryToAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
  *          This macro should usually be paired up with KeAcquireCriticalRegion.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK NewValue;
@@ -809,8 +804,8 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
  *          to simply set the lock bit and remove any other bits.
  *
  *--*/
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 ExConvertPushLockSharedToExclusive(IN PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK OldValue;
@@ -848,8 +843,8 @@ ExConvertPushLockSharedToExclusive(IN PEX_PUSH_LOCK PushLock)
  *          Callers of ExWaitOnPushLock must be running at IRQL <= APC_LEVEL.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 ExWaitOnPushLock(PEX_PUSH_LOCK PushLock)
 {
     /* Check if we're locked */
@@ -883,8 +878,8 @@ ExWaitOnPushLock(PEX_PUSH_LOCK PushLock)
  *          This macro should usually be paired up with KeLeaveCriticalRegion.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 ExReleasePushLockShared(PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK OldValue;
@@ -923,8 +918,8 @@ ExReleasePushLockShared(PEX_PUSH_LOCK PushLock)
  *          This macro should usually be paired up with KeLeaveCriticalRegion.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK OldValue;
@@ -968,8 +963,8 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
  *          This macro should usually be paired up with KeLeaveCriticalRegion.
  *
  *--*/
-VOID
 FORCEINLINE
+VOID
 ExReleasePushLock(PEX_PUSH_LOCK PushLock)
 {
     EX_PUSH_LOCK OldValue = *PushLock;

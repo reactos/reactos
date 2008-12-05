@@ -5,7 +5,7 @@
     by Andrew Greenwood
 */
 
-#include <portcls.h>
+#include "private.h"
 
 NTSTATUS
 IPortWaveCyclic::NewMasterDmaChannel(

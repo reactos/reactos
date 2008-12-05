@@ -992,7 +992,7 @@ static VOID
 ITrayWindowImpl_UpdateStartButton(IN OUT ITrayWindowImpl *This,
                                   IN HBITMAP hbmStart  OPTIONAL)
 {
-    SIZE Size = {0};
+    SIZE Size = { 0, 0 };
 
     if (This->himlStartBtn == NULL ||
         !SendMessage(This->hwndStart,
@@ -1047,7 +1047,7 @@ ITrayWindowImpl_AlignControls(IN OUT ITrayWindowImpl *This,
 {
     RECT rcClient;
     SIZE TraySize, StartSize;
-    POINT ptTrayNotify = {0};
+    POINT ptTrayNotify = { 0, 0 };
     BOOL Horizontal;
     HDWP dwp;
 
@@ -1131,7 +1131,7 @@ ITrayWindowImpl_AlignControls(IN OUT ITrayWindowImpl *This,
     /* Resize/Move the rebar control */
     if (This->hwndRebar != NULL)
     {
-        POINT ptRebar = {0};
+        POINT ptRebar = { 0, 0 };
         SIZE szRebar;
 
         SetWindowStyle(This->hwndRebar,

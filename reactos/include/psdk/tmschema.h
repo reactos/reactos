@@ -1,8 +1,5 @@
 #ifndef _TMSCHEMA_H
 #define _TMSCHEMA_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #include <schemadef.h>
 

@@ -1257,7 +1257,7 @@ static BOOLEAN gdb_attached_yet = FALSE;
  * This function does all command procesing for interfacing to gdb.
  */
 KD_CONTINUE_TYPE
-STDCALL
+NTAPI
 KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                              PCONTEXT Context,
                              PKTRAP_FRAME TrapFrame)
@@ -1622,7 +1622,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 
 
 BOOLEAN
-STDCALL
+NTAPI
 GspBreakIn(PKINTERRUPT Interrupt,
   PVOID ServiceContext)
 {
@@ -1664,14 +1664,14 @@ GspBreakIn(PKINTERRUPT Interrupt,
 }
 
 VOID
-STDCALL
+NTAPI
 KdpGdbDebugPrint(PCH Message, ULONG Length)
 {
 }
 
 /* Initialize the GDB stub */
 VOID
-STDCALL
+NTAPI
 KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
                ULONG BootPhase)
 {

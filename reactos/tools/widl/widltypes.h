@@ -43,6 +43,7 @@ typedef GUID UUID;
 #endif
 #define FALSE 0
 
+#define RPC_FC_COCLASS  0xfd
 #define RPC_FC_FUNCTION 0xfe
 
 typedef struct _loc_info_t loc_info_t;
@@ -51,7 +52,7 @@ typedef struct _expr_t expr_t;
 typedef struct _type_t type_t;
 typedef struct _typeref_t typeref_t;
 typedef struct _var_t var_t;
-typedef struct _pident_t pident_t;
+typedef struct _declarator_t declarator_t;
 typedef struct _func_t func_t;
 typedef struct _ifref_t ifref_t;
 typedef struct _typelib_entry_t typelib_entry_t;
@@ -60,17 +61,20 @@ typedef struct _importinfo_t importinfo_t;
 typedef struct _typelib_t typelib_t;
 typedef struct _user_type_t user_type_t;
 typedef struct _user_type_t context_handle_t;
+typedef struct _type_list_t type_list_t;
+typedef struct _statement_t statement_t;
 
 typedef struct list attr_list_t;
 typedef struct list str_list_t;
 typedef struct list func_list_t;
 typedef struct list expr_list_t;
 typedef struct list var_list_t;
-typedef struct list pident_list_t;
+typedef struct list declarator_list_t;
 typedef struct list ifref_list_t;
 typedef struct list array_dims_t;
 typedef struct list user_type_list_t;
 typedef struct list context_handle_list_t;
+typedef struct list statement_list_t;
 
 enum attr_type
 {
@@ -83,20 +87,19 @@ enum attr_type
     ATTR_CALLAS,
     ATTR_CALLCONV, /* calling convention pseudo-attribute */
     ATTR_CASE,
+    ATTR_CONST, /* const pseudo-attribute */
     ATTR_CONTEXTHANDLE,
     ATTR_CONTROL,
     ATTR_DEFAULT,
     ATTR_DEFAULTCOLLELEM,
-    ATTR_DEFAULTVALUE_EXPR,
-    ATTR_DEFAULTVALUE_STRING,
+    ATTR_DEFAULTVALUE,
     ATTR_DEFAULTVTABLE,
     ATTR_DISPINTERFACE,
     ATTR_DISPLAYBIND,
     ATTR_DLLNAME,
     ATTR_DUAL,
     ATTR_ENDPOINT,
-    ATTR_ENTRY_ORDINAL,
-    ATTR_ENTRY_STRING,
+    ATTR_ENTRY,
     ATTR_EXPLICIT_HANDLE,
     ATTR_HANDLE,
     ATTR_HELPCONTEXT,
@@ -111,8 +114,10 @@ enum attr_type
     ATTR_IMMEDIATEBIND,
     ATTR_IMPLICIT_HANDLE,
     ATTR_IN,
+    ATTR_INLINE,
     ATTR_INPUTSYNC,
     ATTR_LENGTHIS,
+    ATTR_LIBLCID,
     ATTR_LOCAL,
     ATTR_NONBROWSABLE,
     ATTR_NONCREATABLE,
@@ -170,6 +175,22 @@ enum expr_type
     EXPR_COND,
     EXPR_TRUEFALSE,
     EXPR_ADDRESSOF,
+    EXPR_MEMBER,
+    EXPR_ARRAY,
+    EXPR_MOD,
+    EXPR_LOGOR,
+    EXPR_LOGAND,
+    EXPR_XOR,
+    EXPR_EQUALITY,
+    EXPR_INEQUALITY,
+    EXPR_GTR,
+    EXPR_LESS,
+    EXPR_GTREQL,
+    EXPR_LESSEQL,
+    EXPR_LOGNOT,
+    EXPR_POS,
+    EXPR_STRLIT,
+    EXPR_WSTRLIT,
 };
 
 enum type_kind
@@ -184,6 +205,27 @@ enum type_kind
     TKIND_ALIAS,
     TKIND_UNION,
     TKIND_MAX
+};
+
+enum storage_class
+{
+    STG_NONE,
+    STG_STATIC,
+    STG_EXTERN,
+    STG_REGISTER,
+};
+
+enum statement_type
+{
+    STMT_LIBRARY,
+    STMT_DECLARATION,
+    STMT_TYPE,
+    STMT_TYPEREF,
+    STMT_MODULE,
+    STMT_TYPEDEF,
+    STMT_IMPORT,
+    STMT_IMPORTLIB,
+    STMT_CPPQUOTE
 };
 
 struct _loc_info_t
@@ -231,7 +273,7 @@ struct _type_t {
   enum type_kind kind;
   unsigned char type;
   struct _type_t *ref;
-  const attr_list_t *attrs;
+  attr_list_t *attrs;
   func_list_t *funcs;             /* interfaces and modules */
   var_list_t *fields_or_args;     /* interfaces, structures, enumerations and functions (for args) */
   ifref_list_t *ifaces;           /* coclasses */
@@ -241,13 +283,14 @@ struct _type_t {
   unsigned int typestring_offset;
   unsigned int ptrdesc;           /* used for complex structs */
   int typelib_idx;
+  loc_info_t loc_info;
   unsigned int declarray : 1;     /* if declared as an array */
   unsigned int ignore : 1;
-  unsigned int is_const : 1;
   unsigned int defined : 1;
   unsigned int written : 1;
   unsigned int user_types_registered : 1;
   unsigned int tfswrite : 1;   /* if the type needs to be written to the TFS */
+  unsigned int checked : 1;
   int sign : 2;
 };
 
@@ -256,6 +299,7 @@ struct _var_t {
   type_t *type;
   attr_list_t *attrs;
   expr_t *eval;
+  enum storage_class stgclass;
 
   struct _loc_info_t loc_info;
 
@@ -263,15 +307,11 @@ struct _var_t {
   struct list entry;
 };
 
-struct _pident_t {
+struct _declarator_t {
   var_t *var;
-  int ptr_level;
-
-  int is_func;
-  /* levels of indirection for function pointers */
-  int func_ptr_level;
-  var_list_t *args;
-  char *callconv;
+  type_t *type;
+  type_t *func_type;
+  array_dims_t *array;
 
   /* parser-internal */
   struct list entry;
@@ -330,11 +370,31 @@ struct _typelib_t {
     const attr_list_t *attrs;
     struct list entries;
     struct list importlibs;
+    statement_list_t *stmts;
 };
 
 struct _user_type_t {
     struct list entry;
     const char *name;
+};
+
+struct _type_list_t {
+    type_t *type;
+    struct _type_list_t *next;
+};
+
+struct _statement_t {
+    struct list entry;
+    enum statement_type type;
+    union
+    {
+        ifref_t iface;
+        type_t *type;
+        const char *str;
+        var_t *var;
+        typelib_t *lib;
+        type_list_t *type_list;
+    } u;
 };
 
 extern unsigned char pointer_default;
@@ -355,6 +415,12 @@ int is_var_ptr(const var_t *v);
 int cant_be_null(const var_t *v);
 int is_struct(unsigned char tc);
 int is_union(unsigned char tc);
+
+var_t *find_const(const char *name, int f);
+type_t *find_type(const char *name, int t);
+type_t *make_type(unsigned char type, type_t *ref);
+
+void init_loc_info(loc_info_t *);
 
 static inline type_t *get_func_return_type(const func_t *func)
 {

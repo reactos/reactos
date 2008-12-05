@@ -19,22 +19,22 @@
 #define HIGH_PRIORITY 31
 
 /* FUNCTIONS *****************************************************************/
-_SEH_FILTER(BaseThreadExceptionFilter)
+static
+LONG BaseThreadExceptionFilter(EXCEPTION_POINTERS * ExceptionInfo)
 {
-   EXCEPTION_POINTERS * ExceptionInfo = _SEH_GetExceptionPointers();
    LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
 
    if (GlobalTopLevelExceptionFilter != NULL)
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
          ExceptionDisposition = GlobalTopLevelExceptionFilter(ExceptionInfo);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
          ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
       }
-      _SEH_END;
+      _SEH2_END;
    }
 
    return ExceptionDisposition;
@@ -42,24 +42,24 @@ _SEH_FILTER(BaseThreadExceptionFilter)
 
 __declspec(noreturn)
 VOID
-STDCALL
+WINAPI
 BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
                   LPVOID lpParameter)
 {
     volatile UINT uExitCode = 0;
 
     /* Attempt to call the Thread Start Address */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Get the exit code from the Thread Start */
         uExitCode = (lpStartAddress)((PVOID)lpParameter);
     }
-    _SEH_EXCEPT(BaseThreadExceptionFilter)
+    _SEH2_EXCEPT(BaseThreadExceptionFilter(_SEH2_GetExceptionInformation()))
     {
         /* Get the Exit code from the SEH Handler */
-        uExitCode = _SEH_GetExceptionCode();
-    } _SEH_END;
-   
+        uExitCode = _SEH2_GetExceptionCode();
+    } _SEH2_END;
+
     /* Exit the Thread */
     ExitThread(uExitCode);
 }
@@ -68,7 +68,7 @@ BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
              DWORD dwStackSize,
              LPTHREAD_START_ROUTINE lpStartAddress,
@@ -90,7 +90,7 @@ CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateRemoteThread(HANDLE hProcess,
                    LPSECURITY_ATTRIBUTES lpThreadAttributes,
                    DWORD dwStackSize,
@@ -107,41 +107,41 @@ CreateRemoteThread(HANDLE hProcess,
     POBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hThread;
     ULONG Dummy;
-    
+
     DPRINT("CreateRemoteThread: hProcess: %ld dwStackSize: %ld lpStartAddress"
-            ": %p lpParameter: %lx, dwCreationFlags: %lx\n", hProcess, 
+            ": %p lpParameter: %lx, dwCreationFlags: %lx\n", hProcess,
             dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
-    
+
     /* Clear the Context */
     RtlZeroMemory(&Context, sizeof(CONTEXT));
-    
+
     /* Write PID */
     ClientId.UniqueProcess = hProcess;
-    
+
     /* Create the Stack */
     Status = BasepCreateStack(hProcess,
                               dwStackSize,
                               dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
                               dwStackSize : 0,
-                              &InitialTeb);    
+                              &InitialTeb);
     if(!NT_SUCCESS(Status))
     {
         SetLastErrorByStatus(Status);
         return NULL;
     }
-    
+
     /* Create Initial Context */
     BasepInitializeContext(&Context,
                            lpParameter,
                            lpStartAddress,
                            InitialTeb.StackBase,
                            1);
-    
+
     /* initialize the attributes for the thread object */
     ObjectAttributes = BasepConvertObjectAttributes(&LocalObjectAttributes,
                                                     lpThreadAttributes,
                                                     NULL);
-    
+
     /* Create the Kernel Thread Object */
     Status = NtCreateThread(&hThread,
                             THREAD_ALL_ACCESS,
@@ -157,7 +157,7 @@ CreateRemoteThread(HANDLE hProcess,
         SetLastErrorByStatus(Status);
         return NULL;
     }
-    
+
     #ifdef SXS_SUPPORT_ENABLED
     /* Are we in the same process? */
     if (Process = NtCurrentProcess())
@@ -167,21 +167,21 @@ CreateRemoteThread(HANDLE hProcess,
         PTHREAD_BASIC_INFORMATION ThreadBasicInfo;
         PACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
         ULONG_PTR Cookie;
-        
+
         /* Get the TEB */
         Status = NtQueryInformationThread(hThread,
                                           ThreadBasicIformation,
                                           &ThreadBasicInfo,
                                           sizeof(ThreadBasicInfo),
                                           NULL);
-                                          
+
         /* Allocate the Activation Context Stack */
         Status = RtlAllocateActivationContextStack(&ActivationContextStack);
         Teb = ThreadBasicInfo.TebBaseAddress;
-        
+
         /* Save it */
         Teb->ActivationContextStackPointer = ActivationContextStack;
-        
+
         /* Query the Context */
         Status = RtlQueryInformationActivationContext(1,
                                                       0,
@@ -190,7 +190,7 @@ CreateRemoteThread(HANDLE hProcess,
                                                       &ActivationCtxInfo,
                                                       sizeof(ActivationCtxInfo),
                                                       NULL);
-                                                      
+
         /* Does it need to be activated? */
         if (!ActivationCtxInfo.hActCtx)
         {
@@ -202,18 +202,18 @@ CreateRemoteThread(HANDLE hProcess,
         }
     }
     #endif
-    
+
     /* FIXME: Notify CSR */
 
     /* Success */
     if(lpThreadId) *lpThreadId = (DWORD)ClientId.UniqueThread;
-    
+
     /* Resume it if asked */
     if (!(dwCreationFlags & CREATE_SUSPENDED))
     {
         NtResumeThread(hThread, &Dummy);
     }
-    
+
     /* Return handle to thread */
     return hThread;
 }
@@ -222,12 +222,12 @@ CreateRemoteThread(HANDLE hProcess,
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 ExitThread(DWORD uExitCode)
 {
     NTSTATUS Status;
     BOOLEAN LastThread;
-    
+
     /*
      * Terminate process if this is the last thread
      * of the current process
@@ -245,11 +245,11 @@ ExitThread(DWORD uExitCode)
 
     /* Notify DLLs and TLS Callbacks of termination */
     LdrShutdownThread();
-    
+
     /* Tell the Kernel to free the Stack */
     NtCurrentTeb()->FreeStackOnTermination = TRUE;
     NtTerminateThread(NULL, uExitCode);
-    
+
     /* We will never reach this place. This silences the compiler */
     ExitThread(uExitCode);
 }
@@ -653,7 +653,7 @@ SetThreadPriorityBoost(IN HANDLE hThread,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetThreadSelectorEntry(IN HANDLE hThread,
 		       IN DWORD dwSelector,
 		       OUT LPLDT_ENTRY lpSelectorEntry)
@@ -708,7 +708,7 @@ SetThreadIdealProcessor(HANDLE hThread,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetProcessIdOfThread(HANDLE Thread)
 {
   THREAD_BASIC_INFORMATION ThreadBasic;
@@ -731,7 +731,7 @@ GetProcessIdOfThread(HANDLE Thread)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetThreadId(HANDLE Thread)
 {
   THREAD_BASIC_INFORMATION ThreadBasic;
@@ -754,7 +754,7 @@ GetThreadId(HANDLE Thread)
 /*
  * @unimplemented
  */
-LANGID STDCALL
+LANGID WINAPI
 SetThreadUILanguage(WORD wReserved)
 {
   DPRINT1("SetThreadUILanguage(0x%4x) unimplemented!\n", wReserved);
@@ -771,7 +771,7 @@ IntCallUserApc(PVOID Function, PVOID dwData, PVOID Argument3)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
 {
   NTSTATUS Status;
@@ -787,7 +787,7 @@ QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetThreadIOPendingFlag(HANDLE hThread,
                        PBOOL lpIOIsPending)
 {
@@ -819,7 +819,7 @@ GetThreadIOPendingFlag(HANDLE hThread,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID WINAPI
 Sleep(DWORD dwMilliseconds)
 {
   SleepEx(dwMilliseconds, FALSE);
@@ -830,7 +830,7 @@ Sleep(DWORD dwMilliseconds)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 SleepEx(DWORD dwMilliseconds,
 	BOOL bAlertable)
 {
@@ -890,7 +890,7 @@ InternalWorkItemTrampoline(PVOID Context)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 QueueUserWorkItem(
     LPTHREAD_START_ROUTINE Function,
     PVOID Context,
@@ -937,7 +937,7 @@ QueueUserWorkItem(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RegisterWaitForSingleObject(
     PHANDLE phNewWaitObject,
     HANDLE hObject,
@@ -967,7 +967,7 @@ RegisterWaitForSingleObject(
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 RegisterWaitForSingleObjectEx(
     HANDLE hObject,
     WAITORTIMERCALLBACK Callback,
@@ -978,7 +978,7 @@ RegisterWaitForSingleObjectEx(
 {
     NTSTATUS Status;
     HANDLE hNewWaitObject;
-    
+
     Status = RtlRegisterWait( &hNewWaitObject,
                                hObject,
                                Callback,
@@ -999,7 +999,7 @@ RegisterWaitForSingleObjectEx(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnregisterWait(
     HANDLE WaitHandle
     )
@@ -1018,7 +1018,7 @@ UnregisterWait(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnregisterWaitEx(
     HANDLE WaitHandle,
     HANDLE CompletionEvent

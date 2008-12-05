@@ -23,10 +23,6 @@
 #ifndef __NTDDCDVD_H
 #define __NTDDCDVD_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "ntddstor.h"
 
 #ifdef __cplusplus

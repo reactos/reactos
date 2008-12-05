@@ -107,7 +107,7 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeMarkLogonSessionForTerminationNotification(IN PLUID LogonId)
 {
 	UNIMPLEMENTED;
@@ -118,7 +118,7 @@ SeMarkLogonSessionForTerminationNotification(IN PLUID LogonId)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeRegisterLogonSessionTerminatedRoutine(IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
 	UNIMPLEMENTED;
@@ -129,7 +129,7 @@ SeRegisterLogonSessionTerminatedRoutine(IN PSE_LOGON_SESSION_TERMINATED_ROUTINE 
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeUnregisterLogonSessionTerminatedRoutine(IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine)
 {
 	UNIMPLEMENTED;

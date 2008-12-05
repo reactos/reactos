@@ -23,10 +23,6 @@
 #ifndef __NTDDPCM_H
 #define __NTDDPCM_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,7 +90,7 @@ DEFINE_GUID(GUID_PCMCIA_INTERFACE_STANDARD, \
 
 typedef ULONG MEMORY_SPACE;
 
-typedef ULONG STDCALL
+typedef ULONG NTAPI
 (*PPCMCIA_READ_WRITE_CONFIG)(
   IN PVOID  Context,
   IN ULONG  WhichSpace,
@@ -121,7 +117,7 @@ typedef struct _PCMCIA_BUS_INTERFACE_STANDARD {
 #define PCMCIA_MEMORY_8BIT_ACCESS         0
 #define PCMCIA_MEMORY_16BIT_ACCESS        1
 
-typedef BOOLEAN STDCALL
+typedef BOOLEAN NTAPI
 (*PPCMCIA_MODIFY_MEMORY_WINDOW)(
   IN PVOID  Context,
   IN ULONGLONG  HostBase,
@@ -136,12 +132,12 @@ typedef BOOLEAN STDCALL
 #define PCMCIA_VPP_12V                    1
 #define PCMCIA_VPP_IS_VCC                 2
 
-typedef BOOLEAN STDCALL
+typedef BOOLEAN NTAPI
 (*PPCMCIA_SET_VPP)(
   IN PVOID  Context,
   IN UCHAR  VppLevel);
 
-typedef BOOLEAN STDCALL
+typedef BOOLEAN NTAPI
 (*PPCMCIA_IS_WRITE_PROTECTED)(
   IN PVOID  Context);
 

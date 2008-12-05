@@ -568,11 +568,11 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
       break;
     }
 
-    if ( (t-d->name_on_cd) < sizeof(d->name_on_cd)-1 )
+    if ( (size_t)(t-d->name_on_cd) < sizeof(d->name_on_cd)-1 )
       *t++ = check_for_punctuation(*s, filename);
     else if (!joliet)
     error_exit ("'%s' is not ISO-9660, aborting...", filename );
-    if ( (n-d->name) < sizeof(d->name)-1 )
+    if ( (size_t)(n-d->name) < sizeof(d->name)-1 )
       *n++ = *s;
     else if (!joliet)
       error_exit ( "'%s' is not ISO-9660, aborting...", filename );
@@ -587,7 +587,7 @@ void parse_filename_into_dirrecord ( const char* filename, PDIR_RECORD d, BOOL d
   t = d->extension_on_cd;
   while ( *s != 0 )
   {
-    if ( (t-d->extension_on_cd) < (sizeof(d->extension_on_cd)-1) )
+    if ( (size_t)(t-d->extension_on_cd) < sizeof(d->extension_on_cd)-1 )
       *t++ = check_for_punctuation(*s, filename);
     else if (!joliet)
       error_exit ( "'%s' is not ISO-9660, aborting...", filename );
@@ -882,7 +882,8 @@ make_directory_records (PDIR_RECORD d)
                 }
               else
                 {
-                  getcwd(buf, sizeof(buf));
+                  if (!getcwd(buf, sizeof(buf)))
+                    error_exit("Can't get CWD: %s\n", strerror(errno));
                   strcat(buf, DIR_SEPARATOR_STRING);
                   strcat(buf, source);
                   strcat(buf, entry->d_name);
@@ -943,7 +944,8 @@ make_directory_records (PDIR_RECORD d)
                     }
                   else
                     {
-                      getcwd(buf, sizeof(buf));
+                      if (!getcwd(buf, sizeof(buf)))
+                        error_exit("Can't get CWD: %s\n", strerror(errno));
                       strcat(buf, DIR_SEPARATOR_STRING);
                       strcat(buf, source);
                     }
@@ -994,7 +996,8 @@ make_directory_records (PDIR_RECORD d)
             }
           else
             {
-              getcwd(buf, sizeof(buf));
+              if (!getcwd(buf, sizeof(buf)))
+                error_exit("Can't get CWD: %s\n", strerror(errno));
               strcat(buf, DIR_SEPARATOR_STRING);
               strcat(buf, source);
               strcat(buf, entry->d_name);

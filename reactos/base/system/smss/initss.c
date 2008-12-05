@@ -29,7 +29,7 @@ HANDLE hSmApiPort = (HANDLE) 0;
  *	Register with itself for ImageSubsystemId
  *	(programmatically).
  */
-NTSTATUS STDCALL SmRegisterInternalSubsystem (LPWSTR PgmName,
+NTSTATUS NTAPI SmRegisterInternalSubsystem (LPWSTR PgmName,
 					      USHORT ImageSubsystemId,
 					      PHANDLE ApiPort)
 {

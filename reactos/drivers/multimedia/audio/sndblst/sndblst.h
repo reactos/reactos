@@ -147,13 +147,13 @@ USHORT InitSoundCard(ULONG BasePort);
     Prototypes for functions in settings.c :
 */
 
-NTSTATUS STDCALL EnumDeviceKeys(
+NTSTATUS NTAPI EnumDeviceKeys(
     IN PUNICODE_STRING RegistryPath,
     IN PWSTR SubKey,
     IN PREGISTRY_CALLBACK_ROUTINE Callback,
     IN PVOID Context);
 
-NTSTATUS STDCALL LoadSettings(
+NTSTATUS NTAPI LoadSettings(
     IN  PWSTR ValueName,
     IN  ULONG ValueType,
     IN  PVOID ValueData,

@@ -162,7 +162,7 @@ CdfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp)
 {
@@ -223,7 +223,7 @@ CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			PIRP Irp)
 {

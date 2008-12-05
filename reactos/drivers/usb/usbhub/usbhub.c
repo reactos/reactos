@@ -68,7 +68,7 @@ GetRootHubPointer(
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbhubAddDevice(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo)
@@ -121,7 +121,7 @@ UsbhubAddDevice(
 	return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 IrpStub(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -154,7 +154,7 @@ IrpStub(
 	return Status;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
@@ -163,7 +163,7 @@ DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		return IrpStub(DeviceObject, Irp);
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
@@ -172,7 +172,7 @@ DispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		return UsbhubInternalDeviceControlPdo(DeviceObject, Irp);
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
@@ -184,7 +184,7 @@ DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * Standard DriverEntry method.
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PUNICODE_STRING RegistryPath)

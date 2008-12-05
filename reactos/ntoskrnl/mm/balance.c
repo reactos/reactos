@@ -287,7 +287,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    return(STATUS_SUCCESS);
 }
 
-VOID STDCALL
+VOID NTAPI
 MiBalancerThread(PVOID Unused)
 {
    PVOID WaitObjects[2];

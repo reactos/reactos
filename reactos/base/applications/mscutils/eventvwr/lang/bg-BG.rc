@@ -4,7 +4,7 @@ IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Дневник"
     BEGIN
-        MENUITEM "&Приложение",                ID_LOG_APPLICATION, CHECKED
+        MENUITEM "&Приложение",                ID_LOG_APPLICATION
         MENUITEM "&Сигурност",                   ID_LOG_SECURITY
         MENUITEM "&Уредба",                     ID_LOG_SYSTEM
         MENUITEM SEPARATOR

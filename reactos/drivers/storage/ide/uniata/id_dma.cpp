@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2007 Alexander A. Telyatnikov (Alter)
+Copyright (c) 2002-2008 Alexander A. Telyatnikov (Alter)
 
 Module Name:
     id_dma.cpp
@@ -31,7 +31,7 @@ Notes:
 Revision History:
 
     This module is a port from FreeBSD 4.3-6.1 ATA driver (ata-dma.c, ata-chipset.c) by
-         Søren Schmidt, Copyright (c) 1998-2007
+         Søren Schmidt, Copyright (c) 1998-2008
 
     Changed defaulting-to-generic-PIO/DMA policy
     Added PIO settings for VIA
@@ -176,24 +176,30 @@ err_1:
         }
     }
 #endif //USE_OWN_DMA
-/*
+
     if(deviceExtension->HwFlags & UNIATA_AHCI) {
-        chan->AHCI_CLP = MmAllocateContiguousMemory(sizeof(((PATA_REQ)NULL)->dma_tab), ph4gb);
-        if(chan->AHCI_CLP) {
-            chan->DB_PRD_PhAddr = AtapiVirtToPhysAddr(HwDeviceExtension, NULL, (PUCHAR)(chan->DB_PRD), &i, &ph_addru);
-            if(!chan->DB_PRD_PhAddr || !i || ((LONG)(chan->DB_PRD_PhAddr) == -1)) {
-                KdPrint2((PRINT_PREFIX "AtapiDmaAlloc: No DB PRD BASE\n" ));
-                chan->DB_PRD = NULL;
-                chan->DB_PRD_PhAddr = 0;
+        if(chan->AHCI_CL) {
+            return;
+        }
+        chan->AHCI_CL = (PIDE_AHCI_CMD_LIST)MmAllocateContiguousMemory(sizeof(IDE_AHCI_CMD_LIST)*ATA_AHCI_MAX_TAGS+sizeof(IDE_AHCI_RCV_FIS), ph4gb);
+        if(chan->AHCI_CL) {
+            chan->AHCI_CL_PhAddr = AtapiVirtToPhysAddr(HwDeviceExtension, NULL, (PUCHAR)(chan->AHCI_CL), &i, &ph_addru);
+            if(!chan->AHCI_CL_PhAddr || !i || ((LONG)(chan->AHCI_CL_PhAddr) == -1)) {
+                KdPrint2((PRINT_PREFIX "AtapiDmaAlloc: No AHCI CLP BASE\n" ));
+                chan->AHCI_CL = NULL;
+                chan->AHCI_CL_PhAddr = 0;
                 return;
             }
             if(ph_addru) {
-                KdPrint2((PRINT_PREFIX "AtapiDmaAlloc: No DB PRD below 4Gb\n" ));
-                goto err_1;
+                KdPrint2((PRINT_PREFIX "AtapiDmaAlloc: No AHCI CLP below 4Gb\n" ));
+                MmFreeContiguousMemory(chan->AHCI_CL);
+                chan->AHCI_CL = NULL;
+                chan->AHCI_CL_PhAddr = 0;
+                return;
             }
         }
     }
-*/
+
     return;
 } // end AtapiDmaAlloc()
 
@@ -708,7 +714,7 @@ AtaSetTransferMode(
     IN ULONG mode
     )
 {
-    KdPrint2((PRINT_PREFIX
+    KdPrint3((PRINT_PREFIX 
                 "AtaSetTransferMode: Set %#x on Device %d/%d\n", mode, lChannel, DeviceNumber));
     LONG statusByte = 0;
     CHAR apiomode;
@@ -887,7 +893,7 @@ AtapiDmaInit(
         AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ModeByte);
         return;
     }
-    if (udmamode > 2 && !LunExt->IdentifyData.HwResCableId) {
+    if(udmamode > 2 && !LunExt->IdentifyData.HwResCableId) {
         KdPrint2((PRINT_PREFIX "AtapiDmaInit: DMA limited to UDMA33, non-ATA66 compliant cable\n"));
         udmamode = 2;
         apiomode = min( apiomode, (CHAR)(LunExt->LimitedTransferMode - ATA_PIO));
@@ -1123,6 +1129,29 @@ set_new_acard:
             }
         }
         /* Use GENERIC PIO */
+        break;
+    case ATA_MARVELL_ID:
+        /***********/
+        /* Marvell */
+        /***********/
+        for(i=udmamode; i>=0; i--) {
+            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
+                return;
+            }
+        }
+        for(i=wdmamode; i>=0; i--) {
+            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
+                return;
+            }
+        }
+        /* try generic DMA, use hpt_timing() */
+        if (wdmamode >= 0 && apiomode >= 4) {
+            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_DMA)) {
+                return;
+            }
+        }
+        AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
+        return;
         break;
     case ATA_NETCELL_ID:
         /***********/

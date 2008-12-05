@@ -36,34 +36,7 @@
 #ifndef _STDARG_H_
 #define	_STDARG_H_
 
-#ifdef _MSC_VER
+/* Use psdk */
 #include <stdarg.h>
-#else
-
-typedef char *va_list;
-
-#ifdef __GNUC__
-#define va_start(AP, LASTARG) 						\
- (AP = ((va_list) __builtin_next_arg (LASTARG)))
-#else
-#define	__va_promote(type) \
-	(((sizeof(type) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
-
-#define	va_start(ap, last) \
-	(ap = ((va_list)&(last) + __va_promote(last)))
-#endif
-
-#ifdef KERNEL
-#define	va_arg(ap, type) \
-	((type *)(ap += sizeof(type)))[-1]
-#else
-#define	va_arg(ap, type) \
-	((type *)(ap += sizeof(type) < sizeof(int) ? \
-		(abort(), 0) : sizeof(type)))[-1]
-#endif
-
-#define	va_end(ap)
-
-#endif
 
 #endif /* !_STDARG_H_ */

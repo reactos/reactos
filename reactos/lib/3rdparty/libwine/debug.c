@@ -188,7 +188,7 @@ static void debug_init(void)
     char *wine_debug;
     DWORD dwLength;
     /* GetEnvironmentVariableA will change LastError! */
-    DWORD LastError = GetLastError(); 
+    DWORD LastError = GetLastError();
 
     if (nb_debug_options != -1) return;  /* already initialized */
     nb_debug_options = 0;
@@ -278,7 +278,7 @@ static void release_temp_buffer( char *buffer, size_t size )
 /* default implementation of wine_dbgstr_an */
 static const char *default_dbgstr_an( const char *str, int n )
 {
-    static const char hex[16] = "0123456789abcdef";
+    static const char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     char *dst, *res;
     size_t size;
 

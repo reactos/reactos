@@ -474,7 +474,7 @@ extern "C" {
 
 #ifndef UNALIGNED
 #if defined(__ia64__) || defined(__x86_64)
-#define UNALIGNED __CRT_UNALIGNED
+//#define UNALIGNED __CRT_UNALIGNED
 #else
 #define UNALIGNED
 #endif

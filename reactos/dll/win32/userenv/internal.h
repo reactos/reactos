@@ -49,9 +49,9 @@ typedef struct _DYN_FUNCS
     PVOID foo;
     struct
     {
-      HRESULT (STDCALL *CoInitialize)(LPVOID pvReserved);
-      HRESULT (STDCALL *CoCreateInstance)(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv);
-      HRESULT (STDCALL *CoUninitialize)(VOID);
+      HRESULT (WINAPI *CoInitialize)(LPVOID pvReserved);
+      HRESULT (WINAPI *CoCreateInstance)(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID * ppv);
+      HRESULT (WINAPI *CoUninitialize)(VOID);
     };
   } fn;
 } DYN_FUNCS, *PDYN_FUNCS;

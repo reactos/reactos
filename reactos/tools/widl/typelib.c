@@ -69,6 +69,7 @@ type_t *alias(type_t *t, const char *name)
   a->kind = TKIND_ALIAS;
   a->attrs = NULL;
   a->declarray = FALSE;
+  init_loc_info(&a->loc_info);
 
   return a;
 }
@@ -100,8 +101,9 @@ int is_array(const type_t *t)
 }
 
 /* List of oleauto types that should be recognized by name.
- * (most of) these seem to be intrinsic types in mktyplib. */
-
+ * (most of) these seem to be intrinsic types in mktyplib.
+ * This table MUST be alphabetically sorted on the kw field.
+ */
 static const struct oatype {
   const char *kw;
   unsigned short vt;
@@ -172,7 +174,7 @@ unsigned short get_type_vt(type_t *t)
     if (vt) return vt;
   }
 
-  if (t->kind == TKIND_ALIAS && t->attrs)
+  if (t->kind == TKIND_ALIAS && is_attr(t->attrs, ATTR_PUBLIC))
     return VT_USERDEFINED;
 
   switch (t->type) {
@@ -231,6 +233,7 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_CPSTRUCT:
   case RPC_FC_CVSTRUCT:
   case RPC_FC_BOGUS_STRUCT:
+  case RPC_FC_COCLASS:
     return VT_USERDEFINED;
   case 0:
     return t->kind == TKIND_PRIMITIVE ? VT_VOID : VT_USERDEFINED;
@@ -240,20 +243,13 @@ unsigned short get_type_vt(type_t *t)
   return 0;
 }
 
-void start_typelib(char *name, const attr_list_t *attrs)
+void start_typelib(typelib_t *typelib_type)
 {
     in_typelib++;
     if (!do_typelib) return;
 
-    typelib = xmalloc(sizeof(*typelib));
-    typelib->name = xstrdup(name);
+    typelib = typelib_type;
     typelib->filename = xstrdup(typelib_name);
-    typelib->attrs = attrs;
-    list_init( &typelib->entries );
-    list_init( &typelib->importlibs );
-
-    if (is_attr(attrs, ATTR_POINTERDEFAULT))
-        pointer_default = get_attrv(attrs, ATTR_POINTERDEFAULT);
 }
 
 void end_typelib(void)
@@ -262,8 +258,6 @@ void end_typelib(void)
     if (!typelib) return;
 
     create_msft_typelib(typelib);
-    pointer_default = RPC_FC_UP;
-    return;
 }
 
 void add_typelib_entry(type_t *t)

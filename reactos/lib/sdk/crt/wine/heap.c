@@ -255,7 +255,7 @@ void * CDECL _aligned_offset_realloc(void *memblock, size_t size,
 
     /* Get previous size of block */
     old_size = _msize(*saved);
-    if (old_size == -1)
+    if (old_size == (size_t)-1)
     {
         /* It seems this function was called with an invalid pointer. Bail out. */
         return NULL;

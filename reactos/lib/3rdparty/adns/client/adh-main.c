@@ -240,7 +240,7 @@ int main(int argc, const char *const *argv) {
     for (;;) {
       qu= ov_asynch ? 0 : outstanding.head ? outstanding.head->qu : 0;
       r= adns_check(ads,&qu,&answer,&qun_v);
-      if (r == EAGAIN) break;
+      if ((r == EAGAIN) || (r == EWOULDBLOCK)) break;
       if (r == ESRCH) { if (!ov_pipe) goto x_quit; else break; }
       assert(!r);
       query_done(qun_v,answer);
@@ -259,7 +259,6 @@ int main(int argc, const char *const *argv) {
     r= select(maxfd, &readfds,&writefds,&exceptfds, tv);
 	ADNS_CAPTURE_ERRNO;
     if (r == -1) {
-		ADNS_CAPTURE_ERRNO;
       if (errno == EINTR) continue;
       sysfail("select",errno);
     }

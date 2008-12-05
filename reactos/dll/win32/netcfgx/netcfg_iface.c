@@ -14,7 +14,7 @@ typedef struct
     NetCfgComponentItem * pProtocol;
 } INetCfgImpl, *LPINetCfgImpl;
 
-static LPINetCfgImpl __inline impl_from_INetCfgLock(INetCfgLock *iface)
+static __inline LPINetCfgImpl impl_from_INetCfgLock(INetCfgLock *iface)
 {
     return (INetCfgImpl*)((char *)iface - FIELD_OFFSET(INetCfgImpl, lpVtblLock));
 }
@@ -22,7 +22,7 @@ static LPINetCfgImpl __inline impl_from_INetCfgLock(INetCfgLock *iface)
 
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgLock_fnQueryInterface(
     INetCfgLock * iface,
     REFIID iid,
@@ -34,7 +34,7 @@ INetCfgLock_fnQueryInterface(
 
 
 ULONG
-STDCALL
+WINAPI
 INetCfgLock_fnAddRef(
     INetCfgLock * iface)
 {
@@ -44,7 +44,7 @@ INetCfgLock_fnAddRef(
 }
 
 ULONG
-STDCALL
+WINAPI
 INetCfgLock_fnRelease(
     INetCfgLock * iface)
 {
@@ -53,7 +53,7 @@ INetCfgLock_fnRelease(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgLock_fnAcquireWriteLock(
     INetCfgLock * iface,
     DWORD cmsTimeout,
@@ -102,7 +102,7 @@ INetCfgLock_fnAcquireWriteLock(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgLock_fnReleaseWriteLock(
     INetCfgLock * iface)
 {
@@ -119,7 +119,7 @@ INetCfgLock_fnReleaseWriteLock(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgLock_fnIsWriteLocked(
     INetCfgLock * iface,
     LPWSTR *ppszwClientDescription)
@@ -500,7 +500,7 @@ INetCfg_fnRelease(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfg_fnInitialize(
     INetCfg * iface,
     PVOID pReserved)
@@ -584,7 +584,7 @@ ApplyOrCancelChanges(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfg_fnUninitialize(
     INetCfg * iface)
 {
@@ -598,7 +598,7 @@ INetCfg_fnUninitialize(
 
 
 HRESULT
-STDCALL
+WINAPI
 INetCfg_fnApply(
     INetCfg * iface)
 {
@@ -616,7 +616,7 @@ INetCfg_fnApply(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfg_fnCancel(
     INetCfg * iface)
 {
@@ -633,7 +633,7 @@ INetCfg_fnCancel(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfg_fnEnumComponents(
     INetCfg * iface,
     const GUID *pguidClass,
@@ -658,7 +658,7 @@ INetCfg_fnEnumComponents(
 
 
 HRESULT
-STDCALL
+WINAPI
 INetCfg_fnFindComponent(
     INetCfg * iface,
     LPCWSTR pszwComponentId,
@@ -686,7 +686,7 @@ INetCfg_fnFindComponent(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfg_fnQueryNetCfgClass(
     INetCfg * iface,
     const GUID *pguidClass,

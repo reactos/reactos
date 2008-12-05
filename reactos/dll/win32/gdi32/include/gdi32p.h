@@ -161,7 +161,7 @@ PLDC
 GdiGetLDC(HDC hDC);
 
 HGDIOBJ
-STDCALL
+WINAPI
 GdiFixUpHandle(HGDIOBJ hGO);
 
 BOOL
@@ -186,15 +186,15 @@ NTAPI
 GdiConvertToDevmodeW(DEVMODEA *dm);
 
 DWORD
-STDCALL
+WINAPI
 GetAndSetDCDWord( HDC, INT, DWORD, DWORD, DWORD, DWORD );
 
 DWORD
-STDCALL
+WINAPI
 GetDCDWord( HDC, INT, DWORD);
 
 HGDIOBJ
-STDCALL
+WINAPI
 GetDCObject( HDC, INT);
 
 VOID
@@ -212,7 +212,7 @@ LogFontW2A(
 );
 
 VOID
-STDCALL
+WINAPI
 EnumLogFontExW2A(
     LPENUMLOGFONTEXA fontA,
     CONST ENUMLOGFONTEXW *fontW );
@@ -223,14 +223,18 @@ WINAPI
 UserRealizePalette(HDC hDC);
 
 int
-STDCALL
+WINAPI
 GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv);
 
 VOID
-STDCALL
+WINAPI
 GdiSetLastError( DWORD dwErrCode );
 
-DWORD STDCALL GdiGetCodePage(HDC);
+DWORD WINAPI GdiGetCodePage(HDC);
+UINT FASTCALL DIB_BitmapBitsSize( PBITMAPINFO );
+
+int
+WINAPI
+GdiGetBitmapBitsSize(BITMAPINFO *lpbmi);
 
 /* EOF */
-

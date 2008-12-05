@@ -31,7 +31,7 @@ static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9EX iface, REFIID 
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3D9)) {
-        IUnknown_AddRef(iface);
+        IDirect3D9Ex_AddRef(iface);
         *ppobj = This;
         TRACE("Returning IDirect3D9 interface at %p\n", *ppobj);
         return S_OK;
@@ -346,7 +346,7 @@ HRESULT WINAPI D3D9CB_CreateRenderTarget(IUnknown *device, IUnknown *pSuperior, 
         d3dSurface->container = pSuperior;
         d3dSurface->isImplicit = TRUE;
         /* Implicit surfaces are created with an refcount of 0 */
-        IUnknown_Release((IUnknown *)d3dSurface);
+        IDirect3DSurface9_Release((IDirect3DSurface9 *)d3dSurface);
     } else {
         *ppSurface = NULL;
     }
@@ -393,7 +393,7 @@ static HRESULT WINAPI D3D9CB_CreateAdditionalSwapChain(IUnknown *device,
         *ppSwapChain = d3dSwapChain->wineD3DSwapChain;
         d3dSwapChain->isImplicit = TRUE;
         /* Implicit swap chains are created with an refcount of 0 */
-        IUnknown_Release((IUnknown *)d3dSwapChain);
+        IDirect3DSwapChain9_Release((IDirect3DSwapChain9 *)d3dSwapChain);
     } else {
         *ppSwapChain = NULL;
     }
@@ -444,7 +444,7 @@ HRESULT WINAPI D3D9CB_CreateDepthStencilSurface(IUnknown *device, IUnknown *pSup
         d3dSurface->container = device;
         d3dSurface->isImplicit = TRUE;
         /* Implicit surfaces are created with an refcount of 0 */
-        IUnknown_Release((IUnknown *)d3dSurface);
+        IDirect3DSurface9_Release((IDirect3DSurface9 *)d3dSurface);
     }
     return res;
 }
@@ -515,6 +515,7 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9EX iface, UINT Adap
     localParameters.Flags                               = pPresentationParameters->Flags;
     localParameters.FullScreen_RefreshRateInHz          = pPresentationParameters->FullScreen_RefreshRateInHz;
     localParameters.PresentationInterval                = pPresentationParameters->PresentationInterval;
+    localParameters.AutoRestoreDisplayMode              = TRUE;
 
     if(BehaviourFlags & D3DCREATE_MULTITHREADED) {
         IWineD3DDevice_SetMultithreaded(object->WineD3DDevice);

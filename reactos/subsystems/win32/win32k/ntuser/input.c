@@ -81,32 +81,32 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetLastInputInfo(PLASTINPUTINFO plii)
 {
     BOOL ret = TRUE;
 
     UserEnterShared();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
         {
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             ret = FALSE;
-            _SEH_LEAVE;
+            _SEH2_LEAVE;
         }
 
         ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
 
         plii->dwTime = IntLastInputTick(FALSE);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
         ret = FALSE;
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -201,7 +201,7 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 
 
 
-VOID STDCALL
+VOID APIENTRY
 MouseThreadMain(PVOID StartContext)
 {
    UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
@@ -290,7 +290,7 @@ MouseThreadMain(PVOID StartContext)
 /* Returns a value that indicates if the key is a modifier key, and
  * which one.
  */
-static UINT STDCALL
+static UINT APIENTRY
 IntKeyboardGetModifiers(KEYBOARD_INPUT_DATA *InputData)
 {
    if (InputData->Flags & KEY_E1)
@@ -337,7 +337,7 @@ IntKeyboardGetModifiers(KEYBOARD_INPUT_DATA *InputData)
 /* Asks the keyboard driver to send a small table that shows which
  * lights should connect with which scancodes
  */
-static NTSTATUS STDCALL
+static NTSTATUS APIENTRY
 IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
                              PKEYBOARD_INDICATOR_TRANSLATION *IndicatorTrans)
 {
@@ -390,7 +390,7 @@ IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
 
 /* Sends the keyboard commands to turn on/off the lights.
  */
-static NTSTATUS STDCALL
+static NTSTATUS APIENTRY
 IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
                       PKEYBOARD_INPUT_DATA KeyInput,
                       PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans)
@@ -431,7 +431,7 @@ IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
    return STATUS_SUCCESS;
 }
 
-static VOID STDCALL
+static VOID APIENTRY
 IntKeyboardSendWinKeyMsg()
 {
    PWINDOW_OBJECT Window;
@@ -452,13 +452,13 @@ IntKeyboardSendWinKeyMsg()
    MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
 }
 
-static VOID STDCALL
+static VOID APIENTRY
 co_IntKeyboardSendAltKeyMsg()
 {
    co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
 }
 
-static VOID STDCALL
+static VOID APIENTRY
 KeyboardThreadMain(PVOID StartContext)
 {
    UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
@@ -882,7 +882,7 @@ CleanupInputImp(VOID)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserDragDetect(
    HWND hWnd,
    POINT pt) // Just like the User call.
@@ -935,7 +935,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserBlockInput(
    BOOL BlockIt)
 {
@@ -1109,6 +1109,17 @@ IntMouseInput(MOUSEINPUT *mi)
    Msg.wParam = CurInfo->ButtonsDown;
    Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
    Msg.pt = MousePos;
+
+   if (gQueueKeyStateTable[VK_SHIFT] & 0xc0)
+   {
+      Msg.wParam |= MK_SHIFT;
+   }
+
+   if (gQueueKeyStateTable[VK_CONTROL] & 0xc0)
+   {
+      Msg.wParam |= MK_CONTROL;
+   }
+
    if(DoMove)
    {
       Msg.message = WM_MOUSEMOVE;
@@ -1219,7 +1230,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
 }
 
 UINT
-STDCALL
+APIENTRY
 NtUserSendInput(
    UINT nInputs,
    LPINPUT pInput,

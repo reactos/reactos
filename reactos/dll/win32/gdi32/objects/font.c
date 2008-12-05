@@ -355,7 +355,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 EnumFontFamiliesExW(HDC hdc, LPLOGFONTW lpLogfont, FONTENUMPROCW lpEnumFontFamExProc,
                     LPARAM lParam, DWORD dwFlags)
 {
@@ -366,7 +366,7 @@ EnumFontFamiliesExW(HDC hdc, LPLOGFONTW lpLogfont, FONTENUMPROCW lpEnumFontFamEx
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 EnumFontFamiliesW(HDC hdc, LPCWSTR lpszFamily, FONTENUMPROCW lpEnumFontFamProc,
                   LPARAM lParam)
 {
@@ -386,7 +386,7 @@ EnumFontFamiliesW(HDC hdc, LPCWSTR lpszFamily, FONTENUMPROCW lpEnumFontFamProc,
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 EnumFontFamiliesExA (HDC hdc, LPLOGFONTA lpLogfont, FONTENUMPROCA lpEnumFontFamExProc,
                      LPARAM lParam, DWORD dwFlags)
 {
@@ -407,7 +407,7 @@ EnumFontFamiliesExA (HDC hdc, LPLOGFONTA lpLogfont, FONTENUMPROCA lpEnumFontFamE
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
                   LPARAM lParam)
 {
@@ -427,7 +427,7 @@ EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetCharacterPlacementW(
 	HDC hdc,
 	LPCWSTR lpString,
@@ -510,7 +510,7 @@ GetCharacterPlacementW(
  *
  */
 BOOL
-STDCALL
+WINAPI
 GetCharABCWidthsFloatW(HDC hdc,
                        UINT FirstChar,
                        UINT LastChar,
@@ -535,7 +535,7 @@ GetCharABCWidthsFloatW(HDC hdc,
  *
  */
 BOOL
-STDCALL
+WINAPI
 GetCharWidthFloatW(HDC hdc,
                    UINT iFirstChar,
                    UINT iLastChar,
@@ -560,7 +560,7 @@ GetCharWidthFloatW(HDC hdc,
  *
  */
 BOOL
-STDCALL
+WINAPI
 GetCharWidthW(HDC hdc,
               UINT iFirstChar,
               UINT iLastChar,
@@ -585,7 +585,7 @@ GetCharWidthW(HDC hdc,
  *
  */
 BOOL
-STDCALL
+WINAPI
 GetCharWidth32W(HDC hdc,
                UINT iFirstChar,
                UINT iLastChar,
@@ -611,7 +611,7 @@ GetCharWidth32W(HDC hdc,
  *
  */
 BOOL
-STDCALL
+WINAPI
 GetCharABCWidthsW(HDC hdc,
                   UINT FirstChar,
                   UINT LastChar,
@@ -635,7 +635,7 @@ GetCharABCWidthsW(HDC hdc,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCharWidthA(
 	HDC	hdc,
 	UINT	iFirstChar,
@@ -683,7 +683,7 @@ GetCharWidthA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCharWidth32A(
 	HDC	hdc,
 	UINT	iFirstChar,
@@ -860,7 +860,7 @@ GetCharABCWidthsFloatA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCharABCWidthsI(HDC hdc,
                   UINT giFirst,
                   UINT cgi,
@@ -880,7 +880,7 @@ GetCharABCWidthsI(HDC hdc,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCharWidthI(HDC hdc,
               UINT giFirst,
               UINT cgi,
@@ -907,7 +907,7 @@ GetCharWidthI(HDC hdc,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetFontLanguageInfo(
 	HDC 	hDc
 	)
@@ -919,7 +919,7 @@ GetFontLanguageInfo(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetGlyphIndicesA(
         HDC hdc,
         LPCSTR lpstr,
@@ -942,7 +942,7 @@ GetGlyphIndicesA(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetGlyphOutlineA(
 	HDC		hdc,
 	UINT		uChar,
@@ -983,7 +983,7 @@ GetGlyphOutlineA(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetGlyphOutlineW(
 	HDC		hdc,
 	UINT		uChar,
@@ -1175,7 +1175,7 @@ GetOutlineTextMetricsW(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetKerningPairsW(HDC hdc,
                  ULONG cPairs,
                  LPKERNINGPAIR pkpDst)
@@ -1195,7 +1195,7 @@ GetKerningPairsW(HDC hdc,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetKerningPairsA( HDC hDC,
              DWORD cPairs,
  LPKERNINGPAIR kern_pairA )
@@ -1273,7 +1273,7 @@ GetKerningPairsA( HDC hDC,
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
 {
   if (elfexd)
@@ -1297,7 +1297,7 @@ CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
 {
   /* Msdn: Note, this function ignores the elfDesignVector member in
@@ -1315,7 +1315,7 @@ CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 CreateFontIndirectA(
 	CONST LOGFONTA		*lplf
 	)
@@ -1335,7 +1335,7 @@ CreateFontIndirectA(
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 CreateFontIndirectW(
 	CONST LOGFONTW		*lplf
 	)
@@ -1368,7 +1368,7 @@ CreateFontIndirectW(
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 CreateFontA(
 	int	nHeight,
 	int	nWidth,
@@ -1418,7 +1418,7 @@ CreateFontA(
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 CreateFontW(
 	int	nHeight,
 	int	nWidth,
@@ -1472,7 +1472,7 @@ CreateFontW(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateScalableFontResourceA(
 	DWORD		fdwHidden,
 	LPCSTR		lpszFontRes,
@@ -1488,7 +1488,7 @@ CreateScalableFontResourceA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
@@ -1505,7 +1505,7 @@ AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
  * @implemented
  */
 int
-STDCALL
+WINAPI
 AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
     NTSTATUS Status;
@@ -1535,7 +1535,7 @@ AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
  * @implemented
  */
 int
-STDCALL
+WINAPI
 AddFontResourceA ( LPCSTR lpszFilename )
 {
     NTSTATUS Status;
@@ -1561,7 +1561,7 @@ AddFontResourceA ( LPCSTR lpszFilename )
  * @implemented
  */
 int
-STDCALL
+WINAPI
 AddFontResourceW ( LPCWSTR lpszFilename )
 {
     return GdiAddFontResourceW ( lpszFilename, 0, 0 );
@@ -1572,7 +1572,7 @@ AddFontResourceW ( LPCWSTR lpszFilename )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RemoveFontResourceW(LPCWSTR lpFileName)
 {
     return RemoveFontResourceExW(lpFileName,0,0);
@@ -1583,7 +1583,7 @@ RemoveFontResourceW(LPCWSTR lpFileName)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RemoveFontResourceA(LPCSTR lpFileName)
 {
     return RemoveFontResourceExA(lpFileName,0,0);
@@ -1593,7 +1593,7 @@ RemoveFontResourceA(LPCSTR lpFileName)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 RemoveFontResourceExA(LPCSTR lpFileName,
                       DWORD fl,
                       PVOID pdv
@@ -1622,7 +1622,7 @@ RemoveFontResourceExA(LPCSTR lpFileName,
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 RemoveFontResourceExW(LPCWSTR lpFileName,
                       DWORD fl,
                       PVOID pdv)
@@ -1668,7 +1668,7 @@ RemoveFontResourceExW(LPCWSTR lpFileName,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
 {
     SIZE sz;
@@ -1707,7 +1707,7 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 TranslateCharsetInfo(
   LPDWORD lpSrc, /* [in]
        if flags == TCI_SRCFONTSIG: pointer to fsCsb of a FONTSIGNATURE
@@ -1741,7 +1741,7 @@ TranslateCharsetInfo(
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetMapperFlags(
 	HDC	hDC,
 	DWORD	flags
@@ -1795,7 +1795,7 @@ SetMapperFlags(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 EnumFontsW(
 	HDC  hDC,
 	LPCWSTR lpFaceName,
@@ -1814,7 +1814,7 @@ EnumFontsW(
  * @unimplemented
  */
 int
-STDCALL
+WINAPI
 EnumFontsA (
 	HDC  hDC,
 	LPCSTR lpFaceName,
@@ -1845,7 +1845,7 @@ EnumFontsA (
 #define EfdFontFamilies 3
 
 INT
-STDCALL
+WINAPI
 NewEnumFontFamiliesExW(
     HDC hDC,
     LPLOGFONTW lpLogfont,

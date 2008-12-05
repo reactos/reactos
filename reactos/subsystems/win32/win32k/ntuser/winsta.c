@@ -107,7 +107,7 @@ IntSetupClipboard(PWINSTATION_OBJECT WinStaObj)
 
 /* OBJECT CALLBACKS  **********************************************************/
 
-VOID STDCALL
+VOID APIENTRY
 IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
@@ -120,7 +120,7 @@ IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 }
 
 NTSTATUS
-STDCALL
+APIENTRY
 IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters)
 {
     PUNICODE_STRING RemainingName = Parameters->RemainingName;
@@ -375,7 +375,7 @@ IntGetScreenDC(VOID)
  *    @implemented
  */
 
-HWINSTA STDCALL
+HWINSTA APIENTRY
 NtUserCreateWindowStation(
    PUNICODE_STRING lpszWindowStationName,
    ACCESS_MASK dwDesiredAccess,
@@ -590,7 +590,7 @@ NtUserCreateWindowStation(
  *    @implemented
  */
 
-HWINSTA STDCALL
+HWINSTA APIENTRY
 NtUserOpenWindowStation(
    PUNICODE_STRING lpszWindowStationName,
    ACCESS_MASK dwDesiredAccess)
@@ -665,7 +665,7 @@ NtUserOpenWindowStation(
  */
 
 BOOL
-STDCALL
+APIENTRY
 NtUserCloseWindowStation(
    HWINSTA hWinSta)
 {
@@ -746,7 +746,7 @@ NtUserCloseWindowStation(
  *    @unimplemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetObjectInformation(
    HANDLE hObject,
    DWORD nIndex,
@@ -898,7 +898,7 @@ NtUserGetObjectInformation(
  */
 
 BOOL
-STDCALL
+APIENTRY
 NtUserSetObjectInformation(
    HANDLE hObject,
    DWORD nIndex,
@@ -962,7 +962,7 @@ UserGetProcessWindowStation(VOID)
  *    @implemented
  */
 
-HWINSTA STDCALL
+HWINSTA APIENTRY
 NtUserGetProcessWindowStation(VOID)
 {
    return UserGetProcessWindowStation();
@@ -1021,7 +1021,7 @@ IntGetWinStaObj(VOID)
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 {
    HANDLE hOld;
@@ -1074,7 +1074,7 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserLockWindowStation(HWINSTA hWindowStation)
 {
    PWINSTATION_OBJECT Object;
@@ -1118,7 +1118,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserUnlockWindowStation(HWINSTA hWindowStation)
 {
    PWINSTATION_OBJECT Object;
@@ -1162,7 +1162,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
  *    @unimplemented
  */
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserSetWindowStationUser(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -1489,7 +1489,7 @@ BuildDesktopNameList(
  *    @implemented
  */
 
-NTSTATUS STDCALL
+NTSTATUS APIENTRY
 NtUserBuildNameList(
    HWINSTA hWindowStation,
    ULONG dwSize,

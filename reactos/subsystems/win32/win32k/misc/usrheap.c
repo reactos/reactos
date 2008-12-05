@@ -23,7 +23,7 @@
 #include <debug.h>
 
 
-static NTSTATUS NTAPI
+static NTSTATUS APIENTRY
 IntUserHeapCommitRoutine(IN PVOID Base,
                          IN OUT PVOID *CommitAddress,
                          IN OUT PSIZE_T CommitSize)

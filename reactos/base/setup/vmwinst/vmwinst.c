@@ -448,7 +448,7 @@ InstTerminateInstaller(BOOL Wait)
   }
 }
 
-static DWORD STDCALL
+static DWORD WINAPI
 InstInstallationThread(LPVOID lpParameter)
 {
   HANDLE hThread;

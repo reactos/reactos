@@ -47,7 +47,7 @@ VOID ChewShutdown() {
     KeReleaseSpinLock( &WorkQueueLock, OldIrql );
 }
 
-VOID STDCALL ChewWorkItem( PDEVICE_OBJECT DeviceObject, PVOID ChewItem ) {
+VOID NTAPI ChewWorkItem( PDEVICE_OBJECT DeviceObject, PVOID ChewItem ) {
     PWORK_ITEM WorkItem = ChewItem;
 
     RemoveEntryList( &WorkItem->Entry );

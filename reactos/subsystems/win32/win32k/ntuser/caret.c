@@ -312,7 +312,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
 /* SYSCALLS *****************************************************************/
 
 BOOL
-STDCALL
+APIENTRY
 NtUserCreateCaret(
    HWND hWnd,
    HBITMAP hBitmap,
@@ -371,7 +371,7 @@ CLEANUP:
 }
 
 UINT
-STDCALL
+APIENTRY
 NtUserGetCaretBlinkTime(VOID)
 {
    DECLARE_RETURN(UINT);
@@ -388,7 +388,7 @@ CLEANUP:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetCaretPos(
    LPPOINT lpPoint)
 {
@@ -419,7 +419,7 @@ CLEANUP:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserShowCaret(HWND hWnd OPTIONAL)
 {
    PWINDOW_OBJECT Window = NULL;
@@ -450,7 +450,7 @@ CLEANUP:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserHideCaret(HWND hWnd OPTIONAL)
 {
    PWINDOW_OBJECT Window = NULL;

@@ -12,7 +12,7 @@
 
 NTSTATUS
 #ifndef _MSC_VER
-STDCALL
+NTAPI
 #endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
@@ -62,7 +62,7 @@ DRIVER_INFORMATION      DriverInfo = {0};
 NDIS_PHYSICAL_ADDRESS   HighestAcceptableMax = NDIS_PHYSICAL_ADDRESS_CONST(-1, -1);
 
 
-static BOOLEAN STDCALL MiniportCheckForHang(
+static BOOLEAN NTAPI MiniportCheckForHang(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Examines if an adapter has hung
@@ -78,7 +78,7 @@ static BOOLEAN STDCALL MiniportCheckForHang(
 }
 
 
-static VOID STDCALL MiniportDisableInterrupt(
+static VOID NTAPI MiniportDisableInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Disables interrupts from an adapter
@@ -93,7 +93,7 @@ static VOID STDCALL MiniportDisableInterrupt(
 }
 
 
-static VOID STDCALL MiniportEnableInterrupt(
+static VOID NTAPI MiniportEnableInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Enables interrupts from an adapter
@@ -108,7 +108,7 @@ static VOID STDCALL MiniportEnableInterrupt(
 }
 
 
-static VOID STDCALL MiniportHalt(
+static VOID NTAPI MiniportHalt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Deallocates resources for and halts an adapter
@@ -153,7 +153,7 @@ static VOID STDCALL MiniportHalt(
 }
 
 
-static VOID STDCALL MiQueryResources(
+static VOID NTAPI MiQueryResources(
     OUT PNDIS_STATUS    Status,
     IN  PNIC_ADAPTER    Adapter,
     IN  NDIS_HANDLE     WrapperConfigurationContext)
@@ -204,7 +204,7 @@ static VOID STDCALL MiQueryResources(
 }
 
 VOID
-STDCALL
+NTAPI
 MiniportShutdown(PVOID Context)
 {
   #ifndef NOCARD
@@ -212,7 +212,7 @@ MiniportShutdown(PVOID Context)
   #endif
 }
 
-static NDIS_STATUS STDCALL MiniportInitialize(
+static NDIS_STATUS NTAPI MiniportInitialize(
     OUT PNDIS_STATUS    OpenErrorStatus,
     OUT PUINT           SelectedMediumIndex,
     IN  PNDIS_MEDIUM    MediumArray,
@@ -437,7 +437,7 @@ static NDIS_STATUS STDCALL MiniportInitialize(
 }
 
 
-static VOID STDCALL MiniportISR(
+static VOID NTAPI MiniportISR(
     OUT PBOOLEAN    InterruptRecognized,
     OUT PBOOLEAN    QueueMiniportHandleInterrupt,
     IN  NDIS_HANDLE MiniportAdapterContext)
@@ -462,7 +462,7 @@ static VOID STDCALL MiniportISR(
 }
 
 
-static NDIS_STATUS STDCALL MiniportQueryInformation(
+static NDIS_STATUS NTAPI MiniportQueryInformation(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -622,7 +622,7 @@ static NDIS_STATUS STDCALL MiniportQueryInformation(
 }
 
 
-static NDIS_STATUS STDCALL MiniportReconfigure(
+static NDIS_STATUS NTAPI MiniportReconfigure(
     OUT PNDIS_STATUS    OpenErrorStatus,
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  NDIS_HANDLE     WrapperConfigurationContext)
@@ -645,7 +645,7 @@ static NDIS_STATUS STDCALL MiniportReconfigure(
 
 
 
-static NDIS_STATUS STDCALL MiniportReset(
+static NDIS_STATUS NTAPI MiniportReset(
     OUT PBOOLEAN    AddressingReset,
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -667,7 +667,7 @@ static NDIS_STATUS STDCALL MiniportReset(
 }
 
 
-static NDIS_STATUS STDCALL MiniportSend(
+static NDIS_STATUS NTAPI MiniportSend(
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  PNDIS_PACKET    Packet,
     IN  UINT            Flags)
@@ -709,7 +709,7 @@ static NDIS_STATUS STDCALL MiniportSend(
 }
 
 
-static NDIS_STATUS STDCALL MiniportSetInformation(
+static NDIS_STATUS NTAPI MiniportSetInformation(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -817,7 +817,7 @@ static NDIS_STATUS STDCALL MiniportSetInformation(
 }
 
 
-static NDIS_STATUS STDCALL MiniportTransferData(
+static NDIS_STATUS NTAPI MiniportTransferData(
     OUT PNDIS_PACKET    Packet,
     OUT PUINT           BytesTransferred,
     IN  NDIS_HANDLE     MiniportAdapterContext,
@@ -908,7 +908,7 @@ static NDIS_STATUS STDCALL MiniportTransferData(
 
 NTSTATUS
 #ifndef _MSC_VER
-STDCALL
+NTAPI
 #endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,

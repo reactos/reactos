@@ -16,7 +16,7 @@ DWORD ActiveConsoleSessionId = 0;
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 DosPathToSessionPathW (DWORD SessionID, LPWSTR InPath, LPWSTR * OutPath)
 {
 	return 0;
@@ -35,7 +35,7 @@ DosPathToSessionPathW (DWORD SessionID, LPWSTR InPath, LPWSTR * OutPath)
  *
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 DosPathToSessionPathA (DWORD SessionId, LPSTR InPath, LPSTR * OutPath)
 {
 	//DosPathToSessionPathW (SessionId,InPathW,OutPathW);
@@ -45,7 +45,7 @@ DosPathToSessionPathA (DWORD SessionId, LPSTR InPath, LPSTR * OutPath)
 /*
  * @implemented
  */
-BOOL STDCALL ProcessIdToSessionId (IN  DWORD dwProcessId,
+BOOL WINAPI ProcessIdToSessionId (IN  DWORD dwProcessId,
 				   OUT DWORD* pSessionId)
 {
   PROCESS_SESSION_INFORMATION SessionInformation;
@@ -92,7 +92,7 @@ BOOL STDCALL ProcessIdToSessionId (IN  DWORD dwProcessId,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 WTSGetActiveConsoleSessionId (VOID)
 {
 	return ActiveConsoleSessionId;

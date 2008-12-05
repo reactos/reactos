@@ -21,7 +21,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 WriteFile(IN HANDLE hFile,
           IN LPCVOID lpBuffer,
           IN DWORD nNumberOfBytesToWrite  OPTIONAL,
@@ -128,7 +128,7 @@ WriteFile(IN HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ReadFile(IN HANDLE hFile,
          IN LPVOID lpBuffer,
          IN DWORD nNumberOfBytesToRead,
@@ -246,7 +246,7 @@ ReadFile(IN HANDLE hFile,
    return TRUE;
 }
 
-VOID STDCALL
+VOID WINAPI
 ApcRoutine(PVOID ApcContext,
 		struct _IO_STATUS_BLOCK* IoStatusBlock,
 		ULONG Reserved)
@@ -265,7 +265,7 @@ ApcRoutine(PVOID ApcContext,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 WriteFileEx(IN HANDLE hFile,
             IN LPCVOID lpBuffer,
             IN DWORD nNumberOfBytesToWrite  OPTIONAL,
@@ -302,7 +302,7 @@ WriteFileEx(IN HANDLE hFile,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ReadFileEx(IN HANDLE hFile,
            IN LPVOID lpBuffer,
            IN DWORD nNumberOfBytesToRead  OPTIONAL,

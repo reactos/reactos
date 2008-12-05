@@ -17,7 +17,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetClassInfoExA(
   HINSTANCE hInstance,
   LPCSTR lpszClass,
@@ -78,7 +78,7 @@ GetClassInfoExA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetClassInfoExW(
   HINSTANCE hInstance,
   LPCWSTR lpszClass,
@@ -127,7 +127,7 @@ GetClassInfoExW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetClassInfoA(
   HINSTANCE hInstance,
   LPCSTR lpClassName,
@@ -158,7 +158,7 @@ GetClassInfoA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetClassInfoW(
   HINSTANCE hInstance,
   LPCWSTR lpClassName,
@@ -187,7 +187,7 @@ GetClassInfoW(
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetClassLongA(HWND hWnd, int nIndex)
 {
     PWINDOW Wnd;
@@ -200,7 +200,7 @@ GetClassLongA(HWND hWnd, int nIndex)
     if (!Wnd)
         return 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Class = DesktopPtrToUser(Wnd->Class);
         if (Class != NULL)
@@ -285,11 +285,11 @@ GetClassLongA(HWND hWnd, int nIndex)
             WARN("Invalid class for hwnd 0x%p!\n", hWnd);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Wnd = NULL; /* Make sure we call NtUserGetClassLong */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Wnd == NULL)
         Ret = NtUserGetClassLong(hWnd, nIndex, TRUE);
@@ -300,7 +300,7 @@ GetClassLongA(HWND hWnd, int nIndex)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD WINAPI
 GetClassLongW ( HWND hWnd, int nIndex )
 {
     PWINDOW Wnd;
@@ -313,7 +313,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
     if (!Wnd)
         return 0;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         Class = DesktopPtrToUser(Wnd->Class);
         if (Class != NULL)
@@ -398,11 +398,11 @@ GetClassLongW ( HWND hWnd, int nIndex )
             WARN("Invalid class for hwnd 0x%p!\n", hWnd);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Wnd = NULL; /* Make sure we call NtUserGetClassLong */
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (Wnd == NULL)
         Ret = NtUserGetClassLong(hWnd, nIndex, FALSE);
@@ -440,7 +440,7 @@ GetClassLongPtrW(HWND hWnd,
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 GetClassNameA(
   HWND hWnd,
   LPSTR lpClassName,
@@ -469,7 +469,7 @@ GetClassNameA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetClassNameW(
   HWND hWnd,
   LPWSTR lpClassName,
@@ -498,7 +498,7 @@ GetClassNameW(
  * @implemented
  */
 WORD
-STDCALL
+WINAPI
 GetClassWord(
   HWND hWnd,
   int nIndex)
@@ -519,7 +519,7 @@ GetClassWord(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 GetWindowLongA ( HWND hWnd, int nIndex )
 {
     PWINDOW Wnd;
@@ -576,7 +576,7 @@ GetWindowLongA ( HWND hWnd, int nIndex )
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 GetWindowLongW(HWND hWnd, int nIndex)
 {
     PWINDOW Wnd;
@@ -658,7 +658,7 @@ GetWindowLongPtrW(HWND hWnd,
  * @implemented
  */
 WORD
-STDCALL
+WINAPI
 GetWindowWord(HWND hWnd, int nIndex)
 {
   return (WORD)GetWindowLongW(hWnd, nIndex);
@@ -668,7 +668,7 @@ GetWindowWord(HWND hWnd, int nIndex)
  * @implemented
  */
 WORD
-STDCALL
+WINAPI
 SetWindowWord ( HWND hWnd,int nIndex,WORD wNewWord )
 {
   return (WORD)NtUserSetWindowLong ( hWnd, nIndex, (LONG)wNewWord, TRUE );
@@ -678,7 +678,7 @@ SetWindowWord ( HWND hWnd,int nIndex,WORD wNewWord )
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 RealGetWindowClassW(
   HWND  hwnd,
   LPWSTR pszType,
@@ -693,7 +693,7 @@ RealGetWindowClassW(
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 RealGetWindowClassA(
   HWND  hwnd,
   LPSTR pszType,
@@ -868,7 +868,7 @@ cleanup:
 }
 
 
-ATOM STDCALL
+ATOM WINAPI
 RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
                     LPDWORD pdwWowData,
                     WORD fnID,
@@ -881,7 +881,7 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM WINAPI
 RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 {
    RTL_ATOM Atom;
@@ -974,7 +974,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM WINAPI
 RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
    ATOM Atom;
@@ -1062,7 +1062,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM WINAPI
 RegisterClassA(CONST WNDCLASSA *lpWndClass)
 {
    WNDCLASSEXA Class;
@@ -1080,7 +1080,7 @@ RegisterClassA(CONST WNDCLASSA *lpWndClass)
 /*
  * @implemented
  */
-ATOM STDCALL
+ATOM WINAPI
 RegisterClassW(CONST WNDCLASSW *lpWndClass)
 {
    WNDCLASSEXW Class;
@@ -1099,7 +1099,7 @@ RegisterClassW(CONST WNDCLASSW *lpWndClass)
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetClassLongA (HWND hWnd,
                int nIndex,
                LONG dwNewLong)
@@ -1168,7 +1168,7 @@ SetClassLongA (HWND hWnd,
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 SetClassLongW(HWND hWnd,
               int nIndex,
               LONG dwNewLong)
@@ -1243,7 +1243,7 @@ SetClassLongPtrW(HWND hWnd,
  * @implemented
  */
 WORD
-STDCALL
+WINAPI
 SetClassWord(
   HWND hWnd,
   int nIndex,
@@ -1263,7 +1263,7 @@ SetClassWord(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 SetWindowLongA(
   HWND hWnd,
   int nIndex,
@@ -1277,7 +1277,7 @@ SetWindowLongA(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 SetWindowLongW(
   HWND hWnd,
   int nIndex,
@@ -1318,7 +1318,7 @@ SetWindowLongPtrW(HWND hWnd,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnregisterClassA(
   LPCSTR lpClassName,
   HINSTANCE hInstance)
@@ -1358,7 +1358,7 @@ UnregisterClassA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnregisterClassW(
   LPCWSTR lpClassName,
   HINSTANCE hInstance)

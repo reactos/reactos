@@ -332,7 +332,7 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 
 	CcInitializeCacheMap(fileObject,
 		(PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
-		FALSE,
+		TRUE,
 		&VfatGlobalData->CacheMgrCallbacks,
 		fcb);
 

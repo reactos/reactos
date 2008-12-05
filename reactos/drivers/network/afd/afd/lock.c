@@ -11,7 +11,7 @@
 #include "tdi_proto.h"
 #include "tdiconn.h"
 #include "debug.h"
-#include "pseh/pseh.h"
+#include "pseh/pseh2.h"
 
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
@@ -24,11 +24,11 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 		       FALSE,
 		       NULL );
     if( Irp->MdlAddress ) {
-	_SEH_TRY {
+	_SEH2_TRY {
 	    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
-	} _SEH_HANDLE {
+	} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 	    LockFailed = TRUE;
-	} _SEH_END;
+	} _SEH2_END;
 
 	if( LockFailed ) {
 	    IoFreeMdl( Irp->MdlAddress );
@@ -43,7 +43,7 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 	    IoFreeMdl( Irp->MdlAddress );
 	    Irp->MdlAddress = NULL;
 	    return NULL;
-	}    
+	}
 
 	return IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     } else return NULL;
@@ -80,7 +80,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     if( NewBuf ) {
 	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
 
-        _SEH_TRY {
+        _SEH2_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
             if( LockAddress ) {
                 NewBuf[Count].buf = AddressBuf;
@@ -90,13 +90,13 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
                 NewBuf[Count].len = sizeof(*AddressLen);
                 Count++;
             }
-        } _SEH_HANDLE {
+        } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
                                     "from userland (%x %x)\n",
                                     Buf, AddressLen));
             ExFreePool( NewBuf );
-            _SEH_YIELD(return NULL);
-        } _SEH_END;
+            _SEH2_YIELD(return NULL);
+        } _SEH2_END;
 
 	for( i = 0; i < Count; i++ ) {
 	    AFD_DbgPrint(MID_TRACE,("Locking buffer %d (%x:%d)\n",
@@ -119,12 +119,12 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 
 	    if( MapBuf[i].Mdl ) {
 		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
-		_SEH_TRY {
+		_SEH2_TRY {
 		    MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
 				         Write ? IoModifyAccess : IoReadAccess );
-		} _SEH_HANDLE {
+		} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 		    LockFailed = TRUE;
-		} _SEH_END;
+		} _SEH2_END;
 		AFD_DbgPrint(MID_TRACE,("MmProbeAndLock finished\n"));
 
 		if( LockFailed ) {
@@ -136,7 +136,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 	    } else {
 		ExFreePool( NewBuf );
 		return NULL;
-	    }     
+	    }
 	}
     }
 

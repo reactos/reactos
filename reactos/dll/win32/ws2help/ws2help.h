@@ -14,7 +14,7 @@
 
 #include <wsahelp.h>
 
-#define EXPORT STDCALL
+#define EXPORT WINAPI
 
 #endif /* __WS2HELP_H */
 

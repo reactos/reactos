@@ -1,8 +1,5 @@
 #ifndef _SECEXT_H
 #define _SECEXT_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifndef RC_INVOKED
 #if (_WIN32_WINNT >= 0x0500)

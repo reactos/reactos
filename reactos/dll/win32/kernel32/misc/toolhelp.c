@@ -485,7 +485,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Heap32First(LPHEAPENTRY32 lphe, DWORD th32ProcessID, DWORD th32HeapID)
 {
   PRTL_DEBUG_INFORMATION DebugInfo;
@@ -574,7 +574,7 @@ Heap32First(LPHEAPENTRY32 lphe, DWORD th32ProcessID, DWORD th32HeapID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Heap32Next(LPHEAPENTRY32 lphe)
 {
   PRTL_DEBUG_INFORMATION DebugInfo;
@@ -665,7 +665,7 @@ Heap32Next(LPHEAPENTRY32 lphe)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Heap32ListFirst(HANDLE hSnapshot, LPHEAPLIST32 lphl)
 {
   PTH32SNAPSHOT Snapshot;
@@ -719,7 +719,7 @@ Heap32ListFirst(HANDLE hSnapshot, LPHEAPLIST32 lphl)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Heap32ListNext(HANDLE hSnapshot, LPHEAPLIST32 lphl)
 {
   PTH32SNAPSHOT Snapshot;
@@ -773,7 +773,7 @@ Heap32ListNext(HANDLE hSnapshot, LPHEAPLIST32 lphl)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Module32First(HANDLE hSnapshot, LPMODULEENTRY32 lpme)
 {
   MODULEENTRY32W me;
@@ -806,7 +806,7 @@ Module32First(HANDLE hSnapshot, LPMODULEENTRY32 lpme)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Module32FirstW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
 {
   PTH32SNAPSHOT Snapshot;
@@ -860,7 +860,7 @@ Module32FirstW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Module32Next(HANDLE hSnapshot, LPMODULEENTRY32 lpme)
 {
   MODULEENTRY32W me;
@@ -893,7 +893,7 @@ Module32Next(HANDLE hSnapshot, LPMODULEENTRY32 lpme)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Module32NextW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
 {
   PTH32SNAPSHOT Snapshot;
@@ -947,7 +947,7 @@ Module32NextW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Process32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
 {
   PROCESSENTRY32W pe;
@@ -980,7 +980,7 @@ Process32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Process32FirstW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 {
   PTH32SNAPSHOT Snapshot;
@@ -1036,7 +1036,7 @@ Process32FirstW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Process32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
 {
   PROCESSENTRY32W pe;
@@ -1069,7 +1069,7 @@ Process32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Process32NextW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 {
   PTH32SNAPSHOT Snapshot;
@@ -1123,7 +1123,7 @@ Process32NextW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Thread32First(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 {
   PTH32SNAPSHOT Snapshot;
@@ -1177,7 +1177,7 @@ Thread32First(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Thread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 {
   PTH32SNAPSHOT Snapshot;
@@ -1231,7 +1231,7 @@ Thread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Toolhelp32ReadProcessMemory(DWORD th32ProcessID,  LPCVOID lpBaseAddress,
                             LPVOID lpBuffer, SIZE_T cbRead, SIZE_T* lpNumberOfBytesRead)
 {
@@ -1251,7 +1251,7 @@ Toolhelp32ReadProcessMemory(DWORD th32ProcessID,  LPCVOID lpBaseAddress,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
 {
   PRTL_DEBUG_INFORMATION HeapDebug, ModuleDebug;

@@ -1,3 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            dll/win32/kernel32/misc/actctx.c
+ * PURPOSE:         Comm functions
+ * PROGRAMMERS:     Jacek Caban for CodeWeavers
+ *                  Eric Pouech
+ *                  Jon Griffiths
+ *                  Dmitry Chapyshev (dmitry@reactos.org)
+ */
+
 #include <k32.h>
 
 #define NDEBUG
@@ -20,7 +31,7 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FindActCtxSectionStringA(
     DWORD dwFlags,
     const GUID *lpExtensionGuid,
@@ -58,7 +69,7 @@ FindActCtxSectionStringA(
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateActCtxA(
     PCACTCTXA pActCtx
     )
@@ -117,15 +128,21 @@ CreateActCtxA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ActivateActCtx(
     HANDLE hActCtx,
     ULONG_PTR *ulCookie
     )
 {
+    NTSTATUS Status;
+
     DPRINT("ActivateActCtx(%p %p)\n", hActCtx, ulCookie );
-    if (ulCookie)
-        *ulCookie = ACTCTX_FAKE_COOKIE;
+
+    if ((Status = RtlActivateActivationContext(0, hActCtx, ulCookie)))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
     return TRUE;
 }
 
@@ -133,47 +150,49 @@ ActivateActCtx(
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 AddRefActCtx(
     HANDLE hActCtx
     )
 {
     DPRINT("AddRefActCtx(%p)\n", hActCtx);
+    RtlAddRefActivationContext(hActCtx);
 }
 
 /*
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateActCtxW(
     PCACTCTXW pActCtx
     )
 {
+    NTSTATUS    Status;
+    HANDLE      hActCtx;
+
     DPRINT("CreateActCtxW(%p %08lx)\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
 
-    if (!pActCtx)
+    if ((Status = RtlCreateActivationContext(&hActCtx, &pActCtx)))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
         return INVALID_HANDLE_VALUE;
-    if (pActCtx->cbSize != sizeof *pActCtx)
-        return INVALID_HANDLE_VALUE;
-    if (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL)
-        return INVALID_HANDLE_VALUE;
-    return ACTCTX_FAKE_HANDLE;
+    }
+    return hActCtx;
 }
 
 /*
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeactivateActCtx(
     DWORD dwFlags,
     ULONG_PTR ulCookie
     )
 {
     DPRINT("DeactivateActCtx(%08lx %08lx)\n", dwFlags, ulCookie);
-    if (ulCookie != ACTCTX_FAKE_COOKIE)
-        return FALSE;
+    RtlDeactivateActivationContext(dwFlags, ulCookie);
     return TRUE;
 }
 
@@ -181,7 +200,7 @@ DeactivateActCtx(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 FindActCtxSectionGuid(
     DWORD dwFlags,
     const GUID *lpExtensionGuid,
@@ -198,7 +217,7 @@ FindActCtxSectionGuid(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 FindActCtxSectionStringW(
     DWORD dwFlags,
     const GUID *lpExtensionGuid,
@@ -207,20 +226,15 @@ FindActCtxSectionStringW(
     PACTCTX_SECTION_KEYED_DATA ReturnedData
     )
 {
-    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__);
-    return FALSE;
-}
+    UNICODE_STRING us;
+    NTSTATUS Status;
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetCurrentActCtx(
-    HANDLE *phActCtx)
-{
-    DPRINT("GetCurrentActCtx(%p)\n", phActCtx);
-    *phActCtx = ACTCTX_FAKE_HANDLE;
+    RtlInitUnicodeString(&us, lpStringToFind);
+    if ((Status = RtlFindActivationContextSectionString(dwFlags, lpExtensionGuid, ulSectionId, &us, ReturnedData)))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
     return TRUE;
 }
 
@@ -228,7 +242,26 @@ GetCurrentActCtx(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
+GetCurrentActCtx(
+    HANDLE *phActCtx)
+{
+    NTSTATUS Status;
+
+    DPRINT("GetCurrentActCtx(%p)\n", phActCtx);
+    if ((Status = RtlGetActiveActivationContext(phActCtx)))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
 QueryActCtxW(
     DWORD dwFlags,
     HANDLE hActCtx,
@@ -249,19 +282,20 @@ QueryActCtxW(
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 ReleaseActCtx(
     HANDLE hActCtx
     )
 {
     DPRINT("ReleaseActCtx(%p)\n", hActCtx);
+    RtlReleaseActivationContext(hActCtx);
 }
 
 /*
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 ZombifyActCtx(
     HANDLE hActCtx
     )

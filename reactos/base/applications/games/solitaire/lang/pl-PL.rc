@@ -2,6 +2,7 @@
  *         translated by TestamenT & xrogers
  *      testament@users.sourceforge.net
  * https://sourceforge.net/projects/reactospl
+ * updated by Caemyr (olaf_siejka@o2.pl), Nov, 2008
  */
 
 #include "resource.h"
@@ -49,6 +50,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitaire by J. Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "Zakoñczyæ aktualn¹ grê?"
     IDS_SOL_WIN     "Gratulacje, wygra³eœ!"
+    IDS_SOL_DEAL    "Nowe rozdanie?"
 END
 
 

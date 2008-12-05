@@ -213,7 +213,7 @@ IntNotifyWinEvent(
 }            
 
 VOID
-STDCALL
+APIENTRY
 NtUserNotifyWinEvent(
    DWORD Event,
    HWND  hWnd,
@@ -240,7 +240,7 @@ NtUserNotifyWinEvent(
 }
 
 HWINEVENTHOOK
-STDCALL
+APIENTRY
 NtUserSetWinEventHook(
    UINT eventMin,
    UINT eventMax,
@@ -380,7 +380,7 @@ SetEventExit:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserUnhookWinEvent(
    HWINEVENTHOOK hWinEventHook)
 {

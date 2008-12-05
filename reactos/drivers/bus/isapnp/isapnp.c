@@ -1574,7 +1574,7 @@ ISAPNPStopDevice(
 
 static DRIVER_DISPATCH ISAPNPDispatchOpenClose;
 static NTSTATUS
-STDCALL
+NTAPI
 ISAPNPDispatchOpenClose(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -1590,7 +1590,7 @@ ISAPNPDispatchOpenClose(
 
 static DRIVER_DISPATCH ISAPNPDispatchReadWrite;
 static NTSTATUS
-STDCALL
+NTAPI
 ISAPNPDispatchReadWrite(
   IN PDEVICE_OBJECT PhysicalDeviceObject,
   IN PIRP Irp)
@@ -1606,7 +1606,7 @@ ISAPNPDispatchReadWrite(
 
 static DRIVER_DISPATCH ISAPNPDispatchDeviceControl;
 static NTSTATUS
-STDCALL
+NTAPI
 ISAPNPDispatchDeviceControl(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -1638,7 +1638,7 @@ ISAPNPDispatchDeviceControl(
 
 static DRIVER_DISPATCH ISAPNPControl;
 static NTSTATUS
-STDCALL
+NTAPI
 ISAPNPControl(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)
@@ -1680,7 +1680,7 @@ ISAPNPControl(
 
 
 static NTSTATUS
-STDCALL
+NTAPI
 ISAPNPAddDevice(
   IN PDRIVER_OBJECT DriverObject,
   IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -1721,7 +1721,7 @@ ISAPNPAddDevice(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
   IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath)

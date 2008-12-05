@@ -34,7 +34,7 @@
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngCopyBits(SURFOBJ *Dest,
 	    SURFOBJ *Source,
 	    CLIPOBJ *Clip,

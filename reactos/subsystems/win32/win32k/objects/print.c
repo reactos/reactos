@@ -24,7 +24,7 @@
 #include <debug.h>
 
 INT
-STDCALL
+APIENTRY
 NtGdiAbortDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -32,7 +32,7 @@ NtGdiAbortDoc(HDC  hDC)
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEndDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -40,7 +40,7 @@ NtGdiEndDoc(HDC  hDC)
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEndPage(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -63,7 +63,7 @@ IntGdiEscape(PDC    dc,
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEscape(HDC  hDC,
             INT  Escape,
             INT  InSize,
@@ -88,7 +88,7 @@ NtGdiEscape(HDC  hDC,
 }
 
 INT
-STDCALL
+APIENTRY
 IntEngExtEscape(
    SURFOBJ *Surface,
    INT      Escape,
@@ -105,7 +105,7 @@ IntEngExtEscape(
 }
 
 INT
-STDCALL
+APIENTRY
 IntGdiExtEscape(
    PDC    dc,
    INT    Escape,
@@ -145,7 +145,7 @@ IntGdiExtEscape(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiExtEscape(
    HDC    hDC,
    IN OPTIONAL PWCHAR pDriver,
@@ -181,17 +181,17 @@ NtGdiExtEscape(
 
    if ( InSize && UnsafeInData )
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
         ProbeForRead(UnsafeInData,
                      InSize,
                      1);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {
@@ -208,18 +208,18 @@ NtGdiExtEscape(
          return -1;
       }
 
-      _SEH_TRY
+      _SEH2_TRY
       {
         /* pointers were already probed! */
         RtlCopyMemory(SafeInData,
                       UnsafeInData,
                       InSize);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if ( !NT_SUCCESS(Status) )
       {
@@ -232,17 +232,17 @@ NtGdiExtEscape(
 
    if ( OutSize && UnsafeOutData )
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
         ProbeForWrite(UnsafeOutData,
                       OutSize,
                       1);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {
@@ -271,18 +271,18 @@ freeout:
 
    if ( SafeOutData )
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
         /* pointers were already probed! */
         RtlCopyMemory(UnsafeOutData,
                       SafeOutData,
                       OutSize);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       ExFreePoolWithTag ( SafeOutData, TAG_PRINT );
       if ( !NT_SUCCESS(Status) )
@@ -308,7 +308,7 @@ NtGdiStartDoc(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiStartPage(HDC  hDC)
 {
   UNIMPLEMENTED;

@@ -23,17 +23,13 @@
 #ifndef __WS2SAN_H
 #define __WS2SAN_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include <winsock2.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define WSPAPI STDCALL
+#define WSPAPI WINAPI
 
 /* FIXME: Unknown definitions */
 typedef PVOID LPWSPDATA;

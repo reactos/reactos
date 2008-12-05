@@ -303,7 +303,7 @@ BOOLEAN AddrIsEqualIPv4(
 }
 
 
-unsigned long PASCAL inet_addr(const char *AddrString)
+unsigned long NTAPI inet_addr(const char *AddrString)
 /*
  * Convert an ansi string dotted-quad address to a ulong
  * NOTES:

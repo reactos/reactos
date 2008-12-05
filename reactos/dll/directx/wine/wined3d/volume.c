@@ -328,6 +328,8 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int 
             glDesc->glFormat,
             glDesc->glType,
             This->resource.allocatedMemory);
+
+    ENTER_GL();
     GL_EXTCALL(glTexImage3DEXT(GL_TEXTURE_3D,
                 gl_level,
                 glDesc->glInternal,
@@ -339,6 +341,7 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int 
                 glDesc->glType,
                 This->resource.allocatedMemory));
     checkGLcall("glTexImage3D");
+    LEAVE_GL();
 
     /* When adding code releasing This->resource.allocatedMemory to save data keep in mind that
      * GL_UNPACK_CLIENT_STORAGE_APPLE is enabled by default if supported(GL_APPLE_client_storage).

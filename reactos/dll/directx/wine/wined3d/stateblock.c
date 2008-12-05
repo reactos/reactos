@@ -4,7 +4,7 @@
  * Copyright 2002 Raphael Junqueira
  * Copyright 2004 Jason Edmeades
  * Copyright 2005 Oliver Stieber
- * Copyright 2007 Stefan Dösinger for CodeWeavers
+ * Copyright 2007 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1206,13 +1206,13 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
         This->textureState[i][WINED3DTSS_ALPHAOP               ] = (i==0)? WINED3DTOP_SELECTARG1 :  WINED3DTOP_DISABLE;
         This->textureState[i][WINED3DTSS_ALPHAARG1             ] = WINED3DTA_TEXTURE;
         This->textureState[i][WINED3DTSS_ALPHAARG2             ] = WINED3DTA_CURRENT;
-        This->textureState[i][WINED3DTSS_BUMPENVMAT00          ] = (DWORD) 0.0;
-        This->textureState[i][WINED3DTSS_BUMPENVMAT01          ] = (DWORD) 0.0;
-        This->textureState[i][WINED3DTSS_BUMPENVMAT10          ] = (DWORD) 0.0;
-        This->textureState[i][WINED3DTSS_BUMPENVMAT11          ] = (DWORD) 0.0;
+        This->textureState[i][WINED3DTSS_BUMPENVMAT00          ] = 0;
+        This->textureState[i][WINED3DTSS_BUMPENVMAT01          ] = 0;
+        This->textureState[i][WINED3DTSS_BUMPENVMAT10          ] = 0;
+        This->textureState[i][WINED3DTSS_BUMPENVMAT11          ] = 0;
         This->textureState[i][WINED3DTSS_TEXCOORDINDEX         ] = i;
-        This->textureState[i][WINED3DTSS_BUMPENVLSCALE         ] = (DWORD) 0.0;
-        This->textureState[i][WINED3DTSS_BUMPENVLOFFSET        ] = (DWORD) 0.0;
+        This->textureState[i][WINED3DTSS_BUMPENVLSCALE         ] = 0;
+        This->textureState[i][WINED3DTSS_BUMPENVLOFFSET        ] = 0;
         This->textureState[i][WINED3DTSS_TEXTURETRANSFORMFLAGS ] = WINED3DTTFF_DISABLE;
         This->textureState[i][WINED3DTSS_ADDRESSW              ] = WINED3DTADDRESS_WRAP;
         This->textureState[i][WINED3DTSS_COLORARG0             ] = WINED3DTA_CURRENT;

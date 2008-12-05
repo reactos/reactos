@@ -18,10 +18,6 @@
 #ifndef __WINE_SSPI_H__
 #define __WINE_SSPI_H__
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include <wtypes.h>
 
 #ifdef __cplusplus
@@ -371,9 +367,10 @@ typedef SECURITY_STATUS (SEC_ENTRY *ACCEPT_SECURITY_CONTEXT_FN)(PCredHandle,
 #define ASC_RET_FRAGMENT_ONLY          0x00800000
 #define ASC_RET_NO_TOKEN               0x01000000
 
-/* values for TargetDataRep */
-#define SECURITY_NATIVE_DREP  0x00000010
-#define SECURITY_NETWORK_DREP 0x00000000
+/*Vvalues for TargetDataRep */
+#define SECURITY_NATIVE_DREP           0x00000010
+#define SECURITY_NETWORK_DREP          0x00000000
+
 
 SECURITY_STATUS SEC_ENTRY CompleteAuthToken(PCtxtHandle phContext,
  PSecBufferDesc pToken);
@@ -425,13 +422,6 @@ typedef SECURITY_STATUS (SEC_ENTRY *QUERY_CONTEXT_ATTRIBUTES_FN_W)(PCtxtHandle,
 #define SECPKG_ATTR_ACCESS_TOKEN       18
 #define SECPKG_ATTR_TARGET             19
 #define SECPKG_ATTR_AUTHENTICATION_ID  20
-#define SECPKG_ATTR_ISSUER_LIST        80
-#define SECPKG_ATTR_REMOTE_CRED        81
-#define SECPKG_ATTR_LOCAL_CRED         82
-#define SECPKG_ATTR_REMOTE_CERT_CONTEXT 83
-#define SECPKG_ATTR_LOCAL_CERT_CONTEXT 84
-#define SECPKG_ATTR_ISSUER_LIST_EX     89
-#define SECPKG_ATTR_CONNECTION_INFO    90
 
 /* types for QueryContextAttributes/SetContextAttributes */
 

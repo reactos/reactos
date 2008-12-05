@@ -13,6 +13,11 @@
 #define _AFD_H
 
 #include <ntddk.h>
+#include <ntifs.h>
+#include <ndk/obtypes.h>
+#include <ndk/obfuncs.h>
+#include <ndk/mmtypes.h>
+#include <ndk/mmfuncs.h>
 #include <tdi.h>
 #include <tdikrnl.h>
 #include <tdiinfo.h>
@@ -204,7 +209,7 @@ typedef struct _AFD_FCB {
 /* bind.c */
 
 NTSTATUS WarmSocketForBind( PAFD_FCB FCB );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp);
 
@@ -212,26 +217,26 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB );
 NTSTATUS WarmSocketForConnection( PAFD_FCB FCB );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		       PIO_STACK_LOCATION IrpSp);
 
 /* context.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 
 /* info.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp );
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       PIO_STACK_LOCATION IrpSp, BOOLEAN Local );
 
@@ -283,22 +288,22 @@ NTSTATUS NTAPI PacketSocketRecvComplete
   PIRP Irp,
   PVOID Context );
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			   PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			PIO_STACK_LOCATION IrpSp );
 
 /* select.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	   PIO_STACK_LOCATION IrpSp );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceObject, PFILE_OBJECT FileObject );
@@ -369,10 +374,10 @@ NTSTATUS TdiSendDatagram(
 
 /* write.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			 PIO_STACK_LOCATION IrpSp);
 

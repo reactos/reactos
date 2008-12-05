@@ -76,14 +76,23 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     {
       LARGE_INTEGER FileOffset;
       IO_STATUS_BLOCK IoStatus;
+      CC_FILE_SIZES FileSizes;
 
       if (ReadOffset + Length > Fcb->Entry.DataLengthL)
          Length = Fcb->Entry.DataLengthL - ReadOffset;
 
       if (FileObject->PrivateCacheMap == NULL)
 	{
+	  FileSizes.AllocationSize = Fcb->RFCB.AllocationSize;
+	  FileSizes.FileSize = Fcb->RFCB.FileSize;
+	  FileSizes.ValidDataLength = Fcb->RFCB.ValidDataLength;
+
+	  DPRINT("Attach FCB to File: Size %08x%08x\n", 
+		 Fcb->RFCB.ValidDataLength.HighPart,
+		 Fcb->RFCB.ValidDataLength.LowPart);
+
           CcInitializeCacheMap(FileObject,
-                               (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                               &FileSizes,
 		               FALSE,
 		               &(CdfsGlobalData->CacheMgrCallbacks),
 		               Fcb);
@@ -103,25 +112,65 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
   if ((ReadOffset % BLOCKSIZE) != 0 || (Length % BLOCKSIZE) != 0)
     {
-      return STATUS_INVALID_PARAMETER;
+      /* Then we need to do a partial or misaligned read ... */
+      PVOID PageBuf = ExAllocatePool(NonPagedPool, BLOCKSIZE);
+      PCHAR ReadInPage = (PCHAR)PageBuf + (ReadOffset & (BLOCKSIZE - 1));
+      PCHAR TargetRead = (PCHAR)Buffer;
+      ULONG ActualReadOffset, EndOfExtent, ReadLen;
+
+      if (!PageBuf)
+        {
+	    return STATUS_NO_MEMORY;
+	}
+
+      ActualReadOffset = ReadOffset & ~(BLOCKSIZE - 1);
+      EndOfExtent = ReadOffset + Length;
+
+      while (ActualReadOffset < EndOfExtent)
+        {
+	  Status = CdfsReadSectors
+	      (DeviceExt->StorageDevice,
+	       Fcb->Entry.ExtentLocationL + (ActualReadOffset / BLOCKSIZE),
+	       1,
+	       PageBuf,
+	       FALSE);
+	  
+	  if (!NT_SUCCESS(Status))
+	    break;
+	  
+	  ReadLen = BLOCKSIZE - (ActualReadOffset & (BLOCKSIZE - 1));
+	  if (ReadLen > EndOfExtent - ActualReadOffset)
+	    {
+		ReadLen = EndOfExtent - ActualReadOffset;
+	    }
+
+	  RtlCopyMemory(TargetRead, ReadInPage, ReadLen);
+
+	  ActualReadOffset += ReadLen;
+	  TargetRead += ReadLen;	  
+	}
+
+      ExFreePool(PageBuf);
     }
-
-  if (ReadOffset + Length > ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE))
-    Length = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE) - ReadOffset;
-
-  Status = CdfsReadSectors(DeviceExt->StorageDevice,
-			   Fcb->Entry.ExtentLocationL + (ReadOffset / BLOCKSIZE),
-			   Length / BLOCKSIZE,
-			   Buffer,
-			   FALSE);
-  if (NT_SUCCESS(Status))
+  else
     {
-      *LengthRead = Length;
-      if (Length + ReadOffset > Fcb->Entry.DataLengthL)
-	{
-	  memset(Buffer + Fcb->Entry.DataLengthL - ReadOffset,
-		 0,
-		 Length + ReadOffset - Fcb->Entry.DataLengthL);
+      if (ReadOffset + Length > ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE))
+	Length = ROUND_UP(Fcb->Entry.DataLengthL, BLOCKSIZE) - ReadOffset;
+
+      Status = CdfsReadSectors(DeviceExt->StorageDevice,
+			       Fcb->Entry.ExtentLocationL + (ReadOffset / BLOCKSIZE),
+			       Length / BLOCKSIZE,
+			       Buffer,
+			       FALSE);
+      if (NT_SUCCESS(Status))
+        {
+	  *LengthRead = Length;
+	  if (Length + ReadOffset > Fcb->Entry.DataLengthL)
+	    {
+	      memset(Buffer + Fcb->Entry.DataLengthL - ReadOffset,
+		     0,
+		     Length + ReadOffset - Fcb->Entry.DataLengthL);
+	    }
 	}
     }
 
@@ -129,7 +178,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsRead(PDEVICE_OBJECT DeviceObject,
 	 PIRP Irp)
 {
@@ -180,7 +229,7 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsWrite(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {

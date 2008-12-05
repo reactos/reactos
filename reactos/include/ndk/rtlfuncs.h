@@ -77,8 +77,8 @@ InsertTailList(
     ListHead->Blink = Entry;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 IsListEmpty(
     IN const LIST_ENTRY * ListHead
 )
@@ -195,14 +195,14 @@ RtlConvertUlongToLuid(ULONG Ulong)
 #if DBG
 
 #define ASSERT( exp ) \
-    ((!(exp)) ? \
+    ((void)((!(exp)) ? \
         (RtlAssert( #exp, __FILE__, __LINE__, NULL ),FALSE) : \
-        TRUE)
+        TRUE))
 
 #define ASSERTMSG( msg, exp ) \
-    ((!(exp)) ? \
+    ((void)((!(exp)) ? \
         (RtlAssert( #exp, __FILE__, __LINE__, msg ),FALSE) : \
-        TRUE)
+        TRUE))
 
 #else
 
@@ -431,6 +431,7 @@ RtlRaiseException(
 NTSYSAPI
 VOID
 NTAPI
+__declspec(noreturn)
 RtlRaiseStatus(
     IN NTSTATUS Status
 );
@@ -669,7 +670,7 @@ RtlWalkHeap(
     IN HANDLE HeapHandle,
     IN PVOID HeapEntry
 );
-    
+
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
 
 //
@@ -1096,6 +1097,8 @@ RtlMapGenericMask(
     PGENERIC_MAPPING GenericMapping
 );
 
+#ifdef NTOS_MODE_USER
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1105,6 +1108,8 @@ RtlQueryInformationAcl(
     ULONG InformationLength,
     ACL_INFORMATION_CLASS InformationClass
 );
+
+#endif
 
 NTSYSAPI
 VOID
@@ -1175,6 +1180,8 @@ RtlSetGroupSecurityDescriptor(
     IN BOOLEAN GroupDefaulted
 );
 
+#ifdef NTOS_MODE_USER
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1184,6 +1191,8 @@ RtlSetInformationAcl(
     ULONG InformationLength,
     ACL_INFORMATION_CLASS InformationClass
 );
+
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -1725,7 +1734,7 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlIsTextUnicode(
-    LPCVOID Buffer,
+    PVOID Buffer,
     INT Length,
     INT *Flags
 );
@@ -2057,6 +2066,15 @@ NTAPI
 RtlQueueWorkItem(
     IN WORKERCALLBACKFUNC Function,
     IN PVOID Context OPTIONAL,
+    IN ULONG Flags
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetIoCompletionCallback(
+    IN HANDLE FileHandle,
+    IN PIO_APC_ROUTINE Callback,
     IN ULONG Flags
 );
 
@@ -2823,6 +2841,15 @@ LdrRelocateImageWithBias(
 #ifdef NTOS_MODE_USER
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlActivateActivationContext(
+    IN ULONG Unknown,
+    IN HANDLE Handle,
+    OUT PULONG_PTR Cookie
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlAddRefActivationContext(
@@ -2843,6 +2870,14 @@ NTSTATUS
 NTAPI
 RtlAllocateActivationContextStack(
     IN PVOID *Context
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateActivationContext(
+    OUT PHANDLE Handle,
+    IN OUT PVOID ReturnedData
 );
 
 NTSYSAPI
@@ -2893,11 +2928,11 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlFindActivationContextSectionString(
-    IN PVOID Unknown0,
-    IN PVOID Unknown1,
+    IN ULONG dwFlags,
+    IN const GUID *ExtensionGuid,
     IN ULONG SectionType,
     IN PUNICODE_STRING SectionName,
-    IN PVOID Unknown2
+    IN OUT PVOID ReturnedData
 );
 
 NTSYSAPI

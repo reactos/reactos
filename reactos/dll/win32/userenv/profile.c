@@ -912,7 +912,7 @@ LoadUserProfileW(
     DWORD UserNameLength = 0, DomainLength = 0;
     PTOKEN_USER UserSid = NULL;
     SID_NAME_USE AccountType;
-    UNICODE_STRING SidString = { 0, };
+    UNICODE_STRING SidString = { 0, 0, NULL };
     LONG Error;
     BOOL ret = FALSE;
     DWORD dwLength = sizeof(szUserHivePath) / sizeof(szUserHivePath[0]);

@@ -129,7 +129,7 @@ IntRemoveWindowFromChain(PWINDOW_OBJECT window)
 /*==============================================================*/
 /* if format exists, returns a non zero value (pointing to format object) */
 PCLIPBOARDELEMENT FASTCALL
-intIsFormatAvailable(format)
+intIsFormatAvailable(UINT format)
 {
     PCLIPBOARDELEMENT ret = NULL;
     PCLIPBOARDELEMENT ce = ClipboardData;
@@ -370,7 +370,7 @@ IntClipboardFreeWindow(PWINDOW_OBJECT window)
     }
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
 {
 
@@ -437,7 +437,7 @@ NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
     return ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserCloseClipboard(VOID)
 {
     BOOL ret = FALSE;
@@ -473,7 +473,7 @@ NtUserCloseClipboard(VOID)
     return ret;
 }
 
-HWND STDCALL
+HWND APIENTRY
 NtUserGetOpenClipboardWindow(VOID)
 {
     HWND ret = NULL;
@@ -490,7 +490,7 @@ NtUserGetOpenClipboardWindow(VOID)
     return ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 {
     BOOL ret = FALSE;
@@ -528,7 +528,7 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
     return ret;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserCountClipboardFormats(VOID)
 {
     DWORD ret = 0;
@@ -541,7 +541,7 @@ NtUserCountClipboardFormats(VOID)
     return ret;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserEmptyClipboard(VOID)
 {
     BOOL ret = FALSE;
@@ -578,7 +578,7 @@ NtUserEmptyClipboard(VOID)
     return ret;
 }
 
-HANDLE STDCALL
+HANDLE APIENTRY
 NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
 {
     HANDLE ret = NULL;
@@ -650,16 +650,16 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                         {
                             ret = (HANDLE)pBuffer;
 
-                            _SEH_TRY
+                            _SEH2_TRY
                             {
                                 ProbeForWrite(pBuffer, synthesizedDataSize, 1);
                                 memcpy(pBuffer, (PCHAR)synthesizedData, synthesizedDataSize);
                             }
-                            _SEH_HANDLE
+                            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                             {
                                 ret = NULL;
                             }
-                            _SEH_END
+                            _SEH2_END
 
                             freeSynthesizedData();
                         }
@@ -668,16 +668,16 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                     {
                         ret = (HANDLE)pBuffer;
 
-                        _SEH_TRY
+                        _SEH2_TRY
                         {
                             ProbeForWrite(pBuffer, data->size, 1);
                             memcpy(pBuffer, (PCHAR)data->hData, data->size);
                         }
-                        _SEH_HANDLE
+                        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                         {
                             ret = NULL;
                         }
-                        _SEH_END
+                        _SEH2_END
                     }
                 }
 
@@ -695,7 +695,7 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
     return ret;
 }
 
-INT STDCALL
+INT APIENTRY
 NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
                              INT cchMaxCount)
 {
@@ -715,7 +715,7 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
         return 0;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWriteUnicodeString(FormatName);
         sFormatName = *(volatile UNICODE_STRING *)FormatName;
@@ -733,16 +733,16 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
             ret = 0;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     return ret;
 }
 
-HWND STDCALL
+HWND APIENTRY
 NtUserGetClipboardOwner(VOID)
 {
     HWND ret = NULL;
@@ -759,7 +759,7 @@ NtUserGetClipboardOwner(VOID)
     return ret;
 }
 
-HWND STDCALL
+HWND APIENTRY
 NtUserGetClipboardViewer(VOID)
 {
     HWND ret = NULL;
@@ -776,7 +776,7 @@ NtUserGetClipboardViewer(VOID)
     return ret;
 }
 
-INT STDCALL
+INT APIENTRY
 NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 {
     INT i;
@@ -785,7 +785,7 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 
     UserEnterExclusive();
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if (IntCountClipboardFormats() == 0)
         {
@@ -810,11 +810,11 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     UserLeave();
 
@@ -822,7 +822,7 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
 
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserIsClipboardFormatAvailable(UINT format)
 {
     BOOL ret = FALSE;
@@ -838,7 +838,7 @@ NtUserIsClipboardFormatAvailable(UINT format)
 
 
 
-HANDLE STDCALL
+HANDLE APIENTRY
 NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 {
     HANDLE hCBData = NULL;
@@ -868,16 +868,16 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
         if (hMem)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 ProbeForRead(hMem, size, 1);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                SetLastNtError(_SEH_GetExceptionCode());
-                _SEH_YIELD(goto exit_setCB);
+                SetLastNtError(_SEH2_GetExceptionCode());
+                _SEH2_YIELD(goto exit_setCB);
             }
-            _SEH_END;
+            _SEH2_END;
 
             if (intIsClipboardOpenByMe())
             {
@@ -955,7 +955,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
 
                     BitmapObj = BITMAPOBJ_LockBitmap(hMem);
-                    BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (LPSTR)&bm);
+                    BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (PVOID)&bm);
                     if(BitmapObj)
                     {
                         BITMAPOBJ_UnlockBitmap(BitmapObj);
@@ -1030,7 +1030,7 @@ exit_setCB:
     return hMem;
 }
 
-HWND STDCALL
+HWND APIENTRY
 NtUserSetClipboardViewer(HWND hWndNewViewer)
 {
     HWND ret = NULL;
@@ -1062,7 +1062,7 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
     return ret;
 }
 
-UINT STDCALL
+UINT APIENTRY
 IntEnumClipboardFormats(UINT uFormat)
 {
     UINT ret = 0;
@@ -1135,7 +1135,7 @@ IntIncrementSequenceNumber(VOID)
     WinStaObj->Clipboard->ClipboardSequenceNumber++;
 }
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserGetClipboardSequenceNumber(VOID)
 {
     //windowstation sequence number
@@ -1171,7 +1171,7 @@ NtUserGetClipboardSequenceNumber(VOID)
 
 /**************** VISTA FUNCTIONS******************/
 
-BOOL STDCALL NtUserAddClipboardFormatListener(
+BOOL APIENTRY NtUserAddClipboardFormatListener(
     HWND hwnd
 )
 {
@@ -1179,7 +1179,7 @@ BOOL STDCALL NtUserAddClipboardFormatListener(
     return FALSE;
 }
 
-BOOL STDCALL NtUserRemoveClipboardFormatListener(
+BOOL APIENTRY NtUserRemoveClipboardFormatListener(
     HWND hwnd
 )
 {
@@ -1187,7 +1187,7 @@ BOOL STDCALL NtUserRemoveClipboardFormatListener(
     return FALSE;
 }
 
-BOOL STDCALL NtUserGetUpdatedClipboardFormats(
+BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
     PUINT lpuiFormats,
     UINT cFormats,
     PUINT pcFormatsOut

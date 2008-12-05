@@ -1095,7 +1095,7 @@ LoadAndInitComctl32(VOID)
 
 
 BOOL
-STDCALL
+WINAPI
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,
 	    IN LPVOID lpvReserved)

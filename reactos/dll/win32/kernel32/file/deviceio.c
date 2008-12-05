@@ -18,7 +18,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DeviceIoControl(IN HANDLE hDevice,
                 IN DWORD dwIoControlCode,
                 IN LPVOID lpInBuffer  OPTIONAL,
@@ -149,7 +149,7 @@ DeviceIoControl(IN HANDLE hDevice,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetOverlappedResult (
   IN HANDLE   hFile,
 	IN LPOVERLAPPED	lpOverlapped,

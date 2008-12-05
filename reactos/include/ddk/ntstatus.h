@@ -20,12 +20,8 @@
  *
  */
 
-#ifndef _NTSTATUS_H
-#define _NTSTATUS_H
-
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
+#ifndef _NTSTATUS_
+#define _NTSTATUS_
 
 #ifdef __cplusplus
 extern "C" {

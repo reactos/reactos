@@ -82,7 +82,7 @@ MF_DeleteMFDC ( HGDIOBJ hMDC )
  * @unimplemented
  */
 HMETAFILE
-STDCALL
+WINAPI
 CloseMetaFile(
 	HDC	a0
 	)
@@ -95,7 +95,7 @@ CloseMetaFile(
  * @implemented
  */
 HMETAFILE
-STDCALL
+WINAPI
 CopyMetaFileW(
 	HMETAFILE	hmfSrc,
 	LPCWSTR		lpszFile
@@ -109,7 +109,7 @@ CopyMetaFileW(
  * @implemented
  */
 HMETAFILE
-STDCALL
+WINAPI
 CopyMetaFileA(
 	HMETAFILE	hmfSrc,
 	LPCSTR		lpszFile
@@ -136,7 +136,7 @@ CopyMetaFileA(
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 CreateMetaFileW(
 	LPCWSTR		lpszFile
 	)
@@ -192,7 +192,7 @@ CreateMetaFileW(
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 CreateMetaFileA(
 	LPCSTR		lpszFile
 	)
@@ -217,7 +217,7 @@ CreateMetaFileA(
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeleteMetaFile(
 	HMETAFILE	a0
 	)
@@ -230,7 +230,7 @@ DeleteMetaFile(
  * @implemented
  */
 HMETAFILE
-STDCALL
+WINAPI
 GetMetaFileW(
 	LPCWSTR	lpszMetaFile
 	)
@@ -243,7 +243,7 @@ GetMetaFileW(
  * @implemented
  */
 HMETAFILE
-STDCALL
+WINAPI
 GetMetaFileA(
 	LPCSTR	lpszMetaFile
 	)

@@ -20,7 +20,7 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EngQueryEMFInfo(HDEV hdev,
                 EMFINFO *pEMFInfo)
 {
@@ -31,7 +31,7 @@ EngQueryEMFInfo(HDEV hdev,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GdiPlayDCScript(DWORD a0,
                 DWORD a1,
                 DWORD a2,
@@ -47,7 +47,7 @@ GdiPlayDCScript(DWORD a0,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GdiPlayJournal(DWORD a0,
                DWORD a1,
                DWORD a2,
@@ -62,7 +62,7 @@ GdiPlayJournal(DWORD a0,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GdiPlayScript(DWORD a0,
               DWORD a1,
               DWORD a2,
@@ -79,7 +79,7 @@ GdiPlayScript(DWORD a0,
  * @implemented
  */
 HBITMAP
-STDCALL
+WINAPI
 GdiConvertBitmap(HBITMAP hbm)
 {
     /* Note Windows 2000/XP/VISTA always returns hbm */
@@ -90,7 +90,7 @@ GdiConvertBitmap(HBITMAP hbm)
  * @implemented
  */
 HBRUSH
-STDCALL
+WINAPI
 GdiConvertBrush(HBRUSH hbr)
 {
     /* Note Windows 2000/XP/VISTA always returns hbr */
@@ -101,7 +101,7 @@ GdiConvertBrush(HBRUSH hbr)
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 GdiConvertDC(HDC hdc)
 {
     /* Note Windows 2000/XP/VISTA always returns hdc */
@@ -112,7 +112,7 @@ GdiConvertDC(HDC hdc)
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 GdiConvertFont(HFONT hfont)
 {
     /* Note Windows 2000/XP/VISTA always returns hfont */
@@ -123,7 +123,7 @@ GdiConvertFont(HFONT hfont)
  * @implemented
  */
 HPALETTE
-STDCALL
+WINAPI
 GdiConvertPalette(HPALETTE hpal)
 {
     /* Note Windows 2000/XP/VISTA always returns hpal */
@@ -134,7 +134,7 @@ GdiConvertPalette(HPALETTE hpal)
  * @implemented
  */
 HRGN
-STDCALL
+WINAPI
 GdiConvertRegion(HRGN hregion)
 {
     /* Note Windows 2000/XP/VISTA always returns hregion */
@@ -145,7 +145,7 @@ GdiConvertRegion(HRGN hregion)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GdiSetAttrs(HDC hdc)
 {
     /* Note Windows 2000/XP/VISTA always returns TRUE */
@@ -156,7 +156,7 @@ GdiSetAttrs(HDC hdc)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GdiDeleteLocalDC(HDC hdc)
 {
     /* Note Windows 2000/XP/VISTA always returns TRUE */
@@ -168,7 +168,7 @@ GdiDeleteLocalDC(HDC hdc)
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 GdiSetServerAttr(HDC hdc,DWORD attr)
 {
     /* it does do nothing */
@@ -179,7 +179,7 @@ GdiSetServerAttr(HDC hdc,DWORD attr)
  * @implemented
  */
 int
-STDCALL
+WINAPI
 DeviceCapabilitiesExA(LPCSTR pDevice,
                       LPCSTR pPort,
                       WORD fwCapability,
@@ -194,7 +194,7 @@ DeviceCapabilitiesExA(LPCSTR pDevice,
  * @implemented
  */
 int
-STDCALL
+WINAPI
 DeviceCapabilitiesExW(LPCWSTR pDevice,
                       LPCWSTR pPort,
                       WORD fwCapability,
@@ -209,7 +209,7 @@ DeviceCapabilitiesExW(LPCWSTR pDevice,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FixBrushOrgEx(HDC hDC,
               INT nXOrg,
               INT nYOrg,
@@ -238,7 +238,7 @@ DdSwapTextureHandles(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GdiReleaseLocalDC(HDC hdc)
 {
     /* Note Windows 2000/XP/VISTA always returns TRUE */
@@ -249,7 +249,7 @@ GdiReleaseLocalDC(HDC hdc)
  * @implemented
  */
 HBRUSH
-STDCALL
+WINAPI
 SelectBrushLocal(HBRUSH Currenthbm,
                  HBRUSH Newhbm)
 {
@@ -260,7 +260,7 @@ SelectBrushLocal(HBRUSH Currenthbm,
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 SelectFontLocal(HFONT Currenthfnt,
                 HFONT newhfnt)
 {
@@ -271,7 +271,7 @@ SelectFontLocal(HFONT Currenthfnt,
  * @implemented
  */
 HBRUSH
-STDCALL
+WINAPI
 GdiGetLocalBrush(HBRUSH hbr)
 {
     return hbr;
@@ -281,7 +281,7 @@ GdiGetLocalBrush(HBRUSH hbr)
  * @implemented
  */
 HDC
-STDCALL
+WINAPI
 GdiGetLocalDC(HDC hdc)
 {
     return hdc;
@@ -291,7 +291,7 @@ GdiGetLocalDC(HDC hdc)
  * @implemented
  */
 HFONT
-STDCALL
+WINAPI
 GdiGetLocalFont(HFONT hfont)
 {
     return hfont;

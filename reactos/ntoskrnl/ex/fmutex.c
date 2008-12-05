@@ -20,8 +20,8 @@ KiAcquireFastMutex(
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
 FORCEINLINE
+VOID
 ExiAcquireFastMutexUnsafe(IN PFAST_MUTEX FastMutex)
 {
     PKTHREAD Thread = KeGetCurrentThread();
@@ -47,8 +47,8 @@ ExiAcquireFastMutexUnsafe(IN PFAST_MUTEX FastMutex)
     FastMutex->Owner = Thread;
 }
 
-VOID
 FORCEINLINE
+VOID
 ExiReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
 {
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||

@@ -93,16 +93,16 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     if(PreviousMode != KernelMode)
     {
         /* Enter SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Check handle pointer */
             ProbeForWriteHandle(MutantHandle);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
@@ -138,16 +138,16 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
         if(NT_SUCCESS(Status))
         {
             /* Enter SEH for return */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the handle to the caller */
                 *MutantHandle = hMutant;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -175,16 +175,16 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
     if(PreviousMode != KernelMode)
     {
         /* Enter SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Check handle pointer */
             ProbeForWriteHandle(MutantHandle);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
@@ -203,16 +203,16 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
     if(NT_SUCCESS(Status))
     {
         /* Enter SEH for return */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return the handle to the caller */
             *MutantHandle = hMutant;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return Status */
@@ -264,7 +264,7 @@ NtQueryMutant(IN HANDLE MutantHandle,
     if(NT_SUCCESS(Status))
     {
         /* Enter SEH Block for return */
-         _SEH_TRY
+         _SEH2_TRY
          {
             /* Fill out the Basic Information Requested */
             DPRINT("Returning Mutant Information\n");
@@ -276,11 +276,11 @@ NtQueryMutant(IN HANDLE MutantHandle,
             /* Return the Result Length if requested */
            if(ResultLength) *ResultLength = sizeof(MUTANT_BASIC_INFORMATION);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Release the Object */
         ObDereferenceObject(Mutant);
@@ -310,16 +310,16 @@ NtReleaseMutant(IN HANDLE MutantHandle,
     if((PreviousCount) && (PreviousMode != KernelMode))
     {
         /* Entry SEH Block */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make sure the state pointer is valid */
             ProbeForWriteLong(PreviousCount);
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Bail out if pointer was invalid */
         if(!NT_SUCCESS(Status)) return Status;
@@ -340,7 +340,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
          * Release the mutant. doing so might raise an exception which we're
          * required to catch!
          */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Release the mutant */
             LONG Prev = KeReleaseMutant(Mutant,
@@ -351,11 +351,11 @@ NtReleaseMutant(IN HANDLE MutantHandle,
             /* Return the previous count if requested */
             if(PreviousCount) *PreviousCount = Prev;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Dereference it */
         ObDereferenceObject(Mutant);

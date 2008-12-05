@@ -153,7 +153,7 @@ static int ParseCommandLine( int argc, TCHAR *argv[] )
 // can interpret. If we wanted to halt the chkdsk we could return FALSE.
 //
 //----------------------------------------------------------------------
-BOOLEAN STDCALL
+BOOLEAN WINAPI
 FormatExCallback (
 		CALLBACKCOMMAND Command,
 		ULONG Modifier,

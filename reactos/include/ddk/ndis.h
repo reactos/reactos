@@ -32,15 +32,15 @@
 #ifndef __NDIS_H
 #define __NDIS_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "ntddk.h"
 #include "ntddndis.h"
 #include "netpnp.h"
 #include "netevent.h"
 #include <qos.h>
+
+#if !defined(_WINDEF_H)
+typedef unsigned int UINT, *PUINT;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -4106,6 +4106,11 @@ typedef struct _NDIS_OPEN_BLOCK		NDIS_OPEN_BLOCK,     *PNDIS_OPEN_BLOCK;
 typedef struct _NDIS_M_DRIVER_BLOCK NDIS_M_DRIVER_BLOCK, *PNDIS_M_DRIVER_BLOCK;
 typedef	struct _NDIS_AF_LIST        NDIS_AF_LIST,        *PNDIS_AF_LIST;
 
+//
+// FIXME: Should be   typedef struct _X_FILTER ETH_FILTER, *PETH_FILTER;
+//
+typedef PVOID ETH_FILTER, *PETH_FILTER;
+
 
 typedef struct _NDIS_MINIPORT_INTERRUPT {
   PKINTERRUPT  InterruptObject;
@@ -4165,11 +4170,8 @@ typedef struct _NDIS_MINIPORT_WORK_ITEM {
 	PVOID  WorkItemContext;
 } NDIS_MINIPORT_WORK_ITEM, *PNDIS_MINIPORT_WORK_ITEM;
 
-/* Forward declare to pick up a consistent type */
-typedef struct _NDIS_WORK_ITEM;
-#pragma warning(push)
-typedef VOID    (*NDIS_PROC)(struct _NDIS_WORK_ITEM *, PVOID);
-#pragma warning(pop)
+struct _NDIS_WORK_ITEM;
+typedef VOID (*NDIS_PROC)(struct _NDIS_WORK_ITEM *, PVOID);
 typedef struct _NDIS_WORK_ITEM
 {
     PVOID Context;
@@ -4182,43 +4184,6 @@ typedef struct _NDIS_BIND_PATHS {
 	NDIS_STRING  Paths[1];
 } NDIS_BIND_PATHS, *PNDIS_BIND_PATHS;
 
-#define DECLARE_UNKNOWN_STRUCT(BaseName) \
-  typedef struct _##BaseName BaseName, *P##BaseName;
-
-#define DECLARE_UNKNOWN_PROTOTYPE(Name) \
-  typedef VOID (*(Name))(VOID);
-
-#define ETH_LENGTH_OF_ADDRESS 6
-
-DECLARE_UNKNOWN_STRUCT(ETH_BINDING_INFO)
-
-DECLARE_UNKNOWN_PROTOTYPE(ETH_ADDRESS_CHANGE)
-DECLARE_UNKNOWN_PROTOTYPE(ETH_FILTER_CHANGE)
-DECLARE_UNKNOWN_PROTOTYPE(ETH_DEFERRED_CLOSE)
-
-typedef struct _ETH_FILTER {
-  PNDIS_SPIN_LOCK  Lock;
-  CHAR  (*MCastAddressBuf)[ETH_LENGTH_OF_ADDRESS];
-  struct _NDIS_MINIPORT_BLOCK  *Miniport;
-  UINT  CombinedPacketFilter;
-  PETH_BINDING_INFO  OpenList;
-  ETH_ADDRESS_CHANGE  AddressChangeAction;
-  ETH_FILTER_CHANGE  FilterChangeAction;
-  ETH_DEFERRED_CLOSE  CloseAction;
-  UINT  MaxMulticastAddresses;
-  UINT  NumAddresses;
-  UCHAR AdapterAddress[ETH_LENGTH_OF_ADDRESS];
-  UINT  OldCombinedPacketFilter;
-  CHAR  (*OldMCastAddressBuf)[ETH_LENGTH_OF_ADDRESS];
-  UINT  OldNumAddresses;
-  PETH_BINDING_INFO  DirectedList;
-  PETH_BINDING_INFO  BMList;
-  PETH_BINDING_INFO  MCastSet;
-#if defined(NDIS_WRAPPER)
-  UINT  NumOpens;
-  PVOID  BindListLock;
-#endif
-} ETH_FILTER, *PETH_FILTER;
 
 typedef VOID DDKAPI
 (*ETH_RCV_COMPLETE_HANDLER)(
@@ -4624,7 +4589,7 @@ typedef VOID (DDKAPI *SEND_PACKETS_HANDLER)(
   PVOID  MacHandle; \
   NDIS_HANDLE  BindingHandle; \
   PNDIS_MINIPORT_BLOCK  MiniportHandle; \
-  PNDIS_PROTOCOL_BLOCK  ProtocolHandle; \ 
+  PNDIS_PROTOCOL_BLOCK  ProtocolHandle; \
   NDIS_HANDLE  ProtocolBindingContext; \
   PNDIS_OPEN_BLOCK  MiniportNextOpen; \
   PNDIS_OPEN_BLOCK  ProtocolNextOpen; \
@@ -4667,23 +4632,6 @@ struct _NDIS_OPEN_BLOCK
 #else
   NDIS_COMMON_OPEN_BLOCK_S
 #endif
-#if defined(NDIS_WRAPPER)
-  struct _NDIS_OPEN_CO
-  {
-    struct _NDIS_CO_AF_BLOCK *  NextAf;
-    W_CO_CREATE_VC_HANDLER      MiniportCoCreateVcHandler;
-    W_CO_REQUEST_HANDLER        MiniportCoRequestHandler;
-    CO_CREATE_VC_HANDLER        CoCreateVcHandler;
-    CO_DELETE_VC_HANDLER        CoDeleteVcHandler;
-    PVOID                       CmActivateVcCompleteHandler;
-    PVOID                       CmDeactivateVcCompleteHandler;
-    PVOID                       CoRequestCompleteHandler;
-    LIST_ENTRY                  ActiveVcHead;
-    LIST_ENTRY                  InactiveVcHead;
-    LONG                        PendingAfNotifications;
-    PKEVENT                     AfNotifyCompleteEvent;
-  };
-#endif /* _NDIS_ */
 };
 
 

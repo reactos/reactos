@@ -177,7 +177,7 @@ NtGdiAddFontResourceW(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtGdiGetFontData(
    HDC hDC,
    DWORD Table,
@@ -195,15 +195,15 @@ NtGdiGetFontData(
 
   if (Buffer && Size)
   {
-     _SEH_TRY
+     _SEH2_TRY
      {
          ProbeForRead(Buffer, Size, 1);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END
+     _SEH2_END
   }
 
   if (!NT_SUCCESS(Status)) return Result;
@@ -290,16 +290,16 @@ NtGdiGetFontUnicodeRanges(
 
      if (Size)
      {     
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWrite(pgsSafe, Size, 1);
             RtlCopyMemory(pgs, pgsSafe, Size);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-           Status = _SEH_GetExceptionCode();
+           Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END
+        _SEH2_END
 
         if (!NT_SUCCESS(Status)) Size = 0;
      }
@@ -357,32 +357,32 @@ NtGdiGetGlyphOutline(
 
   if (pvBuf)
   {
-     _SEH_TRY
+     _SEH2_TRY
      {
          ProbeForWrite(UnsafeBuf, cjBuf, 1);
          RtlCopyMemory(UnsafeBuf, pvBuf, cjBuf);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END
+     _SEH2_END
 
      ExFreePoolWithTag(pvBuf, TAG_GDITEXT);
   }
 
   if (pgm)
   {
-     _SEH_TRY
+     _SEH2_TRY
      {
          ProbeForWrite(pgm, sizeof(GLYPHMETRICS), 1);
          RtlCopyMemory(pgm, &gm, sizeof(GLYPHMETRICS));
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END
+     _SEH2_END
   }
 
   if (! NT_SUCCESS(Status))
@@ -397,7 +397,7 @@ Exit:
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtGdiGetKerningPairs(HDC  hDC,
                      ULONG  NumPairs,
                      LPKERNINGPAIR  krnpair)
@@ -447,16 +447,16 @@ NtGdiGetKerningPairs(HDC  hDC,
         return 0;
      }
      ftGdiGetKerningPairs(FontGDI,Count,pKP);
-     _SEH_TRY
+     _SEH2_TRY
      {
         ProbeForWrite(krnpair, Count * sizeof(KERNINGPAIR), 1);
         RtlCopyMemory(krnpair, pKP, Count * sizeof(KERNINGPAIR));
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END
+     _SEH2_END
      if (!NT_SUCCESS(Status))
      {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -472,7 +472,7 @@ NtGdiGetKerningPairs(HDC  hDC,
  472, this is NtGdiGetOutlineTextMetricsInternalW.
  */
 ULONG
-STDCALL
+APIENTRY
 NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
                                    ULONG  Data,
                       OUTLINETEXTMETRICW  *otm,
@@ -521,16 +521,16 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   IntGetOutlineTextMetrics(FontGDI, Size, potm);
   if (otm)
   {
-     _SEH_TRY
+     _SEH2_TRY
      {
          ProbeForWrite(otm, Size, 1);
          RtlCopyMemory(otm, potm, Size);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END
+     _SEH2_END
 
      if (!NT_SUCCESS(Status))
      {
@@ -589,7 +589,7 @@ NtGdiGetFontResourceInfoInternalW(
     }
 
     /* Check buffers and copy pwszFiles to safe unicode string */
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(pwszFiles, cbStringSize, 1);
         ProbeForWrite(pdwBytes, sizeof(DWORD), 1);
@@ -597,11 +597,11 @@ NtGdiGetFontResourceInfoInternalW(
 
         RtlCopyMemory(SafeFileNames.Buffer, pwszFiles, cbStringSize);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END
+    _SEH2_END
 
     if(!NT_SUCCESS(Status))
     {
@@ -618,17 +618,17 @@ NtGdiGetFontResourceInfoInternalW(
     if (bRet && cjIn >= dwBytes)
     {
         /* Copy the data back to caller */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Buffers are already probed */
             RtlCopyMemory(pvBuf, &Buffer, dwBytes);
             *pdwBytes = dwBytes;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END
+        _SEH2_END
 
         if(!NT_SUCCESS(Status))
         {
@@ -680,16 +680,16 @@ NtGdiGetRealizationInfo(
      if (pri)
      {
         NTSTATUS Status = STATUS_SUCCESS;
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWrite(pri, sizeof(REALIZATION_INFO), 1);
             RtlCopyMemory(pri, &ri, sizeof(REALIZATION_INFO));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END
+        _SEH2_END
 
         if(!NT_SUCCESS(Status))
         {
@@ -715,7 +715,7 @@ NtGdiGetRealizationInfo(
 }
 
 HFONT
-STDCALL
+APIENTRY
 NtGdiHfontCreate(
   IN PENUMLOGFONTEXDVW pelfw,
   IN ULONG cjElfw,
@@ -733,16 +733,16 @@ NtGdiHfontCreate(
       return NULL;
   }
 
-  _SEH_TRY
+  _SEH2_TRY
   {
       ProbeForRead(pelfw, sizeof(ENUMLOGFONTEXDVW), 1);
       RtlCopyMemory(&SafeLogfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END
+  _SEH2_END
 
   if (!NT_SUCCESS(Status))
   {
@@ -770,6 +770,42 @@ NtGdiHfontCreate(
   TEXTOBJ_UnlockText(TextObj);
 
   return hNewFont;
+}
+
+/*
+ * @implemented
+ */
+HFONT
+APIENTRY
+NtGdiSelectFont(
+    IN HDC hDC,
+    IN HFONT hFont)
+{
+    PDC pDC;
+    PDC_ATTR pDc_Attr;
+    HFONT hOrgFont = NULL;
+
+    if (hDC == NULL || hFont == NULL) return NULL;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        return NULL;
+    }
+
+    pDc_Attr = pDC->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+    /* FIXME: what if not successful? */
+    if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
+    {
+        hOrgFont = pDc_Attr->hlfntNew;
+        pDc_Attr->hlfntNew = hFont;
+    }
+
+    DC_UnlockDc(pDC);
+
+    return hOrgFont;
 }
 
 

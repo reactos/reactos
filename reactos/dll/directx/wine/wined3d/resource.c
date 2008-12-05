@@ -217,16 +217,18 @@ HRESULT WINAPI IWineD3DResourceImpl_FreePrivateData(IWineD3DResource *iface, REF
     return WINED3D_OK;
 }
 
-/* Priority support is not implemented yet */
 DWORD    WINAPI        IWineD3DResourceImpl_SetPriority(IWineD3DResource *iface, DWORD PriorityNew) {
     IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;
-    FIXME("(%p) : stub\n", This);
-    return 0;
+    DWORD PriorityOld = This->resource.priority;
+    This->resource.priority = PriorityNew;
+    TRACE("(%p) : new priority %d, returning old priority %d\n", This, PriorityNew, PriorityOld );
+    return PriorityOld;
 }
+
 DWORD    WINAPI        IWineD3DResourceImpl_GetPriority(IWineD3DResource *iface) {
     IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;
-    FIXME("(%p) : stub\n", This);
-    return 0;
+    TRACE("(%p) : returning %d\n", This, This->resource.priority );
+    return This->resource.priority;
 }
 
 /* Preloading of resources is not supported yet */

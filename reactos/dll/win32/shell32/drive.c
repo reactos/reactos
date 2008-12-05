@@ -655,11 +655,12 @@ struct
 {
    LPSTR resname;
    DLGPROC dlgproc;
+   UINT DriveType;
 } PropPages[] =
 {
-    { "DRIVE_GENERAL_DLG", DriveGeneralDlg },
-    { "DRIVE_EXTRA_DLG", DriveExtraDlg },
-    { "DRIVE_HARDWARE_DLG", DriveHardwareDlg },
+    { "DRIVE_GENERAL_DLG", DriveGeneralDlg, -1},
+    { "DRIVE_EXTRA_DLG", DriveExtraDlg, DRIVE_FIXED},
+    { "DRIVE_HARDWARE_DLG", DriveHardwareDlg, -1},
 };
 
 HRESULT
@@ -686,6 +687,7 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
    WCHAR szName[MAX_PATH+6];
    DWORD dwMaxComponent, dwFileSysFlags;
    IDataObject * pDataObj = NULL;
+   UINT DriveType;
 
    ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
    psh.dwSize = sizeof(PROPSHEETHEADERW);
@@ -693,7 +695,6 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
    psh.hwndParent = NULL;
    psh.nStartPage = 0;
    psh.phpage = hpsp;
-
 
    if (GetVolumeInformationW(drive, szName, sizeof(szName)/sizeof(WCHAR), NULL, &dwMaxComponent,
                              &dwFileSysFlags, NULL, 0))
@@ -717,15 +718,20 @@ SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * 
       }
    }
 
+   DriveType = GetDriveTypeW(drive);
    for (i = 0; i < DRIVE_PROPERTY_PAGES; i++)
    {
-       HPROPSHEETPAGE hprop = SH_CreatePropertySheetPage(PropPages[i].resname, PropPages[i].dlgproc, (LPARAM)drive, NULL);
-       if (hprop)
+       if (PropPages[i].DriveType == (UINT)-1 || (PropPages[i].DriveType != (UINT)-1 &&  PropPages[i].DriveType == DriveType))
        {
-          hpsp[psh.nPages] = hprop;
-          psh.nPages++;
+           HPROPSHEETPAGE hprop = SH_CreatePropertySheetPage(PropPages[i].resname, PropPages[i].dlgproc, (LPARAM)drive, NULL);
+           if (hprop)
+           {
+              hpsp[psh.nPages] = hprop;
+              psh.nPages++;
+           }
        }
    }
+
    if (SHCreateDataObject(pidlFolder, 1, apidl, NULL, &IID_IDataObject, (void**)&pDataObj) == S_OK)
    {
        hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Drive", MAX_PROPERTY_SHEET_PAGE-DRIVE_PROPERTY_PAGES, pDataObj);

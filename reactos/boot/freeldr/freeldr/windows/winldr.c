@@ -77,7 +77,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                        PCHAR Options,
                        PCHAR SystemPath,
                        PCHAR BootPath,
-                       WORD VersionToBoot)
+                       USHORT VersionToBoot)
 {
 	/* Examples of correct options and paths */
 	//CHAR	Options[] = "/DEBUGPORT=COM1 /BAUDRATE=115200";
@@ -417,7 +417,7 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 
 
 VOID
-LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion)
+LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion)
 {
 	CHAR  MsgBuffer[256];
 	CHAR  SystemPath[512], SearchPath[512];

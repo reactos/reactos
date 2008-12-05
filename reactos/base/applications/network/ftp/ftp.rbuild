@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="ftp" type="win32cui" installbase="system32" installname="ftp.exe" allowwarnings="true">
+<module name="ftp" type="win32cui" installbase="system32" installname="ftp.exe">
 	<include base="ftp">.</include>
 	<define name="lint" />
 	<library>kernel32</library>

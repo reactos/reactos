@@ -1267,7 +1267,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    LCID LocaleId;
    HANDLE InstanceKey = NULL;
    UNICODE_STRING ValueName;
-   UNICODE_STRING ParentIdPrefix = { 0 };
+   UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
    DEVICE_CAPABILITIES DeviceCapabilities;
 
    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);

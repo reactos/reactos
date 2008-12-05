@@ -92,7 +92,7 @@ extern char reactos_arc_strings[32][256];
 static VOID
 __StallExecutionProcessor(ULONG Loops)
 {
-  volatile register unsigned int i;
+  register volatile unsigned int i;
   for (i = 0; i < Loops; i++);
 }
 

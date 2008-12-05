@@ -59,7 +59,7 @@ static FILE *out;
 static FILE *file_handle = NULL;
 static char *file_buffer = NULL;
 static unsigned int file_size = 0;
-static int file_pointer = 0;
+static unsigned int file_pointer = 0;
 static char tagname[200];
 static PAPI_INFO api_info_list = NULL;
 
@@ -553,7 +553,11 @@ process_directory (char *path, char *cvspath)
                 }
               else
                 {
-                  getcwd(buf, sizeof(buf));
+                  if (!getcwd(buf, sizeof(buf)))
+                    {
+                      printf("Can't get CWD: %s\n", strerror(errno));
+                      return;
+                    }
                   strcat(buf, DIR_SEPARATOR_STRING);
                   strcat(buf, path);
                   strcat(buf, entry->d_name);
@@ -611,7 +615,11 @@ process_directory (char *path, char *cvspath)
             }
           else
             {
-              getcwd(buf, sizeof(buf));
+              if (!getcwd(buf, sizeof(buf)))
+                {
+                  printf("Can't get CWD: %s\n", strerror(errno));
+                  return;
+                }
               strcat(buf, DIR_SEPARATOR_STRING);
               strcat(buf, path);
               strcat(buf, entry->d_name);
@@ -744,7 +752,7 @@ read_input_file(char *input_file)
   PAPI_INFO api_info;
   PAPI_INFO next_api_info;
   char *buffer;
-  int size;
+  unsigned int size;
   int len;
 
   in = fopen(input_file, "rb");

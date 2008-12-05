@@ -7,7 +7,7 @@
  * @implemented
  */
 ULONG
-STDCALL
+APIENTRY
 EngGetLastError ( VOID )
 {
   // www.osr.com/ddk/graphics/gdifncs_3non.htm
@@ -18,7 +18,7 @@ EngGetLastError ( VOID )
  * @implemented
  */
 VOID
-STDCALL
+APIENTRY
 EngSetLastError ( IN ULONG iError )
 {
   // www.osr.com/ddk/graphics/gdifncs_95m0.htm

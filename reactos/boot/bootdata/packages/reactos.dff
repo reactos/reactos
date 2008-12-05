@@ -579,7 +579,6 @@ boot\bootdata\bootcdregtest\testboot.bat            7   optional
 ;modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
 ;modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
 ;modules\rosapps\applications\sysutils\ctm\ctm.exe                                       1   optional
-;modules\rosapps\applications\sysutils\dosfsck\dosfsck.exe                                       1   optional
 ;modules\rosapps\applications\sysutils\kill\kill.exe                                     1   optional
 ;modules\rosapps\applications\sysutils\lsdd\lsdd.exe                                     1   optional
 ;modules\rosapps\applications\sysutils\man\man.exe                                       1   optional
@@ -607,7 +606,6 @@ boot\bootdata\bootcdregtest\testboot.bat            7   optional
 ;modules\rosapps\demos\maze\maze.exe                                        1   optional
 ;modules\rosapps\dflat32\edit.exe                                           1   optional
 ;modules\rosapps\drivers\avtest\avtest.sys                                  1   optional
-;modules\rosapps\drivers\ramdrv\ramdrv.sys                                  1   optional
 ;modules\rosapps\drivers\green\green.sys                                    1   optional
 ;modules\rosapps\templates\dialog\dialog.exe                                       1   optional
 ;modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional

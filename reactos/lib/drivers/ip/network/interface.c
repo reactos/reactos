@@ -39,7 +39,7 @@ NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface,
 }
 
 UINT CountInterfaces() {
-    DWORD Count = 0;
+    ULONG Count = 0;
     KIRQL OldIrql;
     IF_LIST_ITER(CurrentIF);
 
@@ -211,7 +211,7 @@ PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
 }
 
 NTSTATUS GetInterfaceConnectionStatus
-( PIP_INTERFACE Interface, PDWORD Result ) {
+( PIP_INTERFACE Interface, PULONG Result ) {
     NTSTATUS Status = TcpipLanGetDwordOid
         ( Interface, OID_GEN_HARDWARE_STATUS, Result );
     if( NT_SUCCESS(Status) ) switch( *Result ) {

@@ -12,8 +12,8 @@
 #include <internal/kbd.h>
 
 #ifdef _MSC_VER
-#ifndef STDCALL
-#define STDCALL __stdcall
+#ifndef WINAPI
+#define WINAPI __stdcall
 #endif
 #endif//_MSC_VER
 
@@ -470,7 +470,7 @@ ROSDATA KBDTABLES keyboard_layout_table =
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID)
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID)
 {
   return &keyboard_layout_table;
 }

@@ -1300,7 +1300,7 @@ static VOID HandleTransmit(
 }
 
 
-VOID STDCALL MiniportHandleInterrupt(
+VOID NTAPI MiniportHandleInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Handler for deferred processing of interrupts

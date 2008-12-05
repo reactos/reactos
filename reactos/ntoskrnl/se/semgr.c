@@ -309,7 +309,7 @@ SepSidInToken(PACCESS_TOKEN _Token,
 }
 
 
-VOID STDCALL
+VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess)
 {
@@ -326,7 +326,7 @@ SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     }
 }
 
-VOID STDCALL
+VOID NTAPI
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess)
 {
@@ -351,7 +351,7 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
               IN BOOLEAN SubjectContextLocked,
@@ -619,7 +619,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
 /* SYSTEM CALLS ***************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               IN HANDLE TokenHandle,
               IN ACCESS_MASK DesiredAccess,

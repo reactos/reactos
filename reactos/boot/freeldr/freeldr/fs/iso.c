@@ -172,7 +172,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
  */
 static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
-	UINT		i;
+	UINT32		i;
 	ULONG			NumberOfPathParts;
 	CHAR		PathPart[261];
 	PVOID		DirectoryBuffer;

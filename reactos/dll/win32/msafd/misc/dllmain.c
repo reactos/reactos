@@ -2296,7 +2296,7 @@ SockReenableAsyncSelectEvent (
 }
 
 BOOL
-STDCALL
+WINAPI
 DllMain(HANDLE hInstDll,
         ULONG dwReason,
         PVOID Reserved)

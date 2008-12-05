@@ -176,7 +176,7 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
            use SEH here because we don't know if it's actually a
            resource mapping */
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             Data = RtlImageDirectoryEntryToData(mbi.AllocationBase,
                                                 TRUE,
@@ -201,10 +201,10 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
                 }
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     return Ret;
@@ -213,7 +213,7 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
 /*
  * @unimplemented
  */
-LONG STDCALL
+LONG WINAPI
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
    LONG RetValue;
@@ -286,7 +286,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       _dump_context ( ExceptionInfo->ContextRecord );
 #ifdef __i386__
       DbgPrint("Frames:\n");
-      _SEH_TRY
+      _SEH2_TRY
       {
          Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
          while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
@@ -306,11 +306,11 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
             Frame = (PULONG)Frame[0];
          }
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH_GetExceptionCode());
+         DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH2_GetExceptionCode());
       }
-      _SEH_END;
+      _SEH2_END;
 #endif
    }
 

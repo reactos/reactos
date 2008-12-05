@@ -1325,7 +1325,7 @@ IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
    return TRUE;
 }
 
-VOID STDCALL
+VOID APIENTRY
 co_InflateRect(LPRECT rect, int dx, int dy)
 {
     rect->left -= dx;
@@ -1334,7 +1334,7 @@ co_InflateRect(LPRECT rect, int dx, int dy)
     rect->bottom += dy;
 }
 
-BOOLEAN STDCALL
+BOOLEAN APIENTRY
 intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
 {
 
@@ -1472,7 +1472,7 @@ intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserBuildMenuItemList(
    HMENU hMenu,
    VOID* Buffer,
@@ -1512,7 +1512,7 @@ CLEANUP:
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserCheckMenuItem(
    HMENU hMenu,
    UINT uIDCheckItem,
@@ -1582,7 +1582,7 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserDeleteMenu(
    HMENU hMenu,
    UINT uPosition,
@@ -1610,7 +1610,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN APIENTRY
 NtUserGetTitleBarInfo(
     HWND hwnd,
     PTITLEBARINFO bti)
@@ -1630,19 +1630,19 @@ NtUserGetTitleBarInfo(
         retValue = FALSE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Copy our usermode buffer bti to local buffer bartitleinfo */
         ProbeForRead(bti, sizeof(TITLEBARINFO), 1);
         RtlCopyMemory(&bartitleinfo, bti, sizeof(TITLEBARINFO));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Fail copy the data */ 
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         retValue = FALSE;
     }
-    _SEH_END
+    _SEH2_END
 
     /* Get the tile bar info */ 
     if (retValue)
@@ -1650,19 +1650,19 @@ NtUserGetTitleBarInfo(
         retValue = intGetTitleBarInfo(WindowObject, &bartitleinfo);
         if (retValue)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Copy our buffer to user mode buffer bti */
                 ProbeForWrite(bti, sizeof(TITLEBARINFO), 1);
                 RtlCopyMemory(bti, &bartitleinfo, sizeof(TITLEBARINFO));
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Fail copy the data */ 
                 SetLastWin32Error(ERROR_INVALID_PARAMETER);
                 retValue = FALSE;
             }
-            _SEH_END
+            _SEH2_END
         }
     }
 
@@ -1700,7 +1700,7 @@ BOOL FASTCALL UserDestroyMenu(HMENU hMenu)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserDestroyMenu(
    HMENU hMenu)
 {
@@ -1733,7 +1733,7 @@ CLEANUP:
 /*
  * @implemented
  */
-UINT STDCALL
+UINT APIENTRY
 NtUserEnableMenuItem(
    HMENU hMenu,
    UINT uIDEnableItem,
@@ -1762,7 +1762,7 @@ CLEANUP:
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 UserInsertMenuItem(
    HMENU hMenu,
    UINT uItem,
@@ -1821,7 +1821,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserEndMenu(VOID)
 {
    UNIMPLEMENTED
@@ -1833,7 +1833,7 @@ NtUserEndMenu(VOID)
 /*
  * @implemented
  */
-UINT STDCALL
+UINT APIENTRY
 NtUserGetMenuDefaultItem(
    HMENU hMenu,
    UINT fByPos,
@@ -1863,7 +1863,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetMenuBarInfo(
    HWND hwnd,
    LONG idObject,
@@ -2079,7 +2079,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-UINT STDCALL
+UINT APIENTRY
 NtUserGetMenuIndex(
    HMENU hMenu,
    UINT wID)
@@ -2093,7 +2093,7 @@ NtUserGetMenuIndex(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetMenuItemRect(
    HWND hWnd,
    HMENU hMenu,
@@ -2168,7 +2168,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserHiliteMenuItem(
    HWND hWnd,
    HMENU hMenu,
@@ -2267,7 +2267,7 @@ UserMenuInfo(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserMenuInfo(
    HMENU hMenu,
    PROSMENUINFO UnsafeMenuInfo,
@@ -2297,7 +2297,7 @@ CLEANUP:
 /*
  * @implemented
  */
-int STDCALL
+int APIENTRY
 NtUserMenuItemFromPoint(
    HWND hWnd,
    HMENU hMenu,
@@ -2424,7 +2424,7 @@ UserMenuItemInfo(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserMenuItemInfo(
    HMENU hMenu,
    UINT Item,
@@ -2456,7 +2456,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserRemoveMenu(
    HMENU hMenu,
    UINT uPosition,
@@ -2486,7 +2486,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetMenuContextHelpId(
    HMENU hMenu,
    DWORD dwContextHelpId)
@@ -2515,7 +2515,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetMenuDefaultItem(
    HMENU hMenu,
    UINT uItem,
@@ -2544,7 +2544,7 @@ CLEANUP:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetMenuFlagRtoL(
    HMENU hMenu)
 {
@@ -2571,7 +2571,7 @@ CLEANUP:
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserThunkedMenuInfo(
    HMENU hMenu,
    LPCMENUINFO lpcmi)
@@ -2585,7 +2585,7 @@ NtUserThunkedMenuInfo(
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserThunkedMenuItemInfo(
    HMENU hMenu,
    UINT uItem,
@@ -2609,7 +2609,7 @@ NtUserThunkedMenuItemInfo(
  * @implemented
  */
 /* NOTE: unused function */
-BOOL STDCALL
+BOOL APIENTRY
 NtUserTrackPopupMenuEx(
    HMENU hMenu,
    UINT fuFlags,

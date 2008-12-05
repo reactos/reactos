@@ -358,17 +358,17 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the token handle */
             ProbeForWriteHandle(TokenHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail on exception */
         if (!NT_SUCCESS(Status)) return Status;
@@ -392,17 +392,17 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
         if (NT_SUCCESS(Status))
         {
             /* Enter SEH for write */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the handle */
                 *TokenHandle = hToken;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -947,7 +947,7 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe QoS */
             ProbeForRead(SecurityQualityOfService,
@@ -958,12 +958,12 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
             SafeServiceQoS = *SecurityQualityOfService;
             SecurityQualityOfService = &SafeServiceQoS;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception status */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail on exception */
         if (!NT_SUCCESS(Status)) return Status;

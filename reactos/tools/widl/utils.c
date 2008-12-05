@@ -67,7 +67,7 @@ static void generic_msg(const loc_info_t *loc_info, const char *s, const char *t
 
 
 /* yyerror:  yacc assumes this is not newline terminated.  */
-int parser_error(const char *s, ...)
+void parser_error(const char *s, ...)
 {
 	loc_info_t cur_location = CURRENT_LOCATION;
 	va_list ap;
@@ -76,7 +76,6 @@ int parser_error(const char *s, ...)
 	fprintf(stderr, "\n");
 	va_end(ap);
 	exit(1);
-	return 1;
 }
 
 void error_loc(const char *s, ...)

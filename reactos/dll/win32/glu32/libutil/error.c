@@ -43,47 +43,46 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static const char *glErrorStrings[GL_OUT_OF_MEMORY - GL_INVALID_ENUM + 1] = {
-    "invalid enumerant",
-    "invalid value",
-    "invalid operation",
-    "stack overflow",
-    "stack underflow",
-    "out of memory",
-};
-
-static const char *gluErrorStrings[GLU_INVALID_OPERATION - GLU_INVALID_ENUM + 1] = {
-    "invalid enumerant",
-    "invalid value",
-    "out of memory",
-    "",				/* never used but need placeholder */
-    "invalid operation",
-};
-
-#define NERRORS (sizeof(errorStrings)/sizeof(errorStrings[0]))
-
 const GLubyte* GLAPIENTRY
 gluErrorString(GLenum errorCode)
 {
-    if (errorCode == 0) {
-	return (const unsigned char *) "no error";
-    }
-    if ((errorCode >= GL_INVALID_ENUM) && (errorCode <= GL_OUT_OF_MEMORY)) {
-	return (const unsigned char *) glErrorStrings[errorCode - GL_INVALID_ENUM];
-    }
-    if (errorCode == GL_TABLE_TOO_LARGE) {
-        return (const unsigned char *) "table too large";
-    }
-    if ((errorCode >= GLU_INVALID_ENUM) && (errorCode <= GLU_INVALID_OPERATION)) {
-	return (const unsigned char *) gluErrorStrings[errorCode - GLU_INVALID_ENUM];
-    }
-    if ((errorCode >= GLU_NURBS_ERROR1) && (errorCode <= GLU_NURBS_ERROR37)) {
-	return (const unsigned char *) __gluNURBSErrorString(errorCode - (GLU_NURBS_ERROR1 - 1));
-    }
-    if ((errorCode >= GLU_TESS_ERROR1) && (errorCode <= GLU_TESS_ERROR8)) {
-	return (const unsigned char *) __gluTessErrorString(errorCode - (GLU_TESS_ERROR1 - 1));
+    switch (errorCode)
+    {
+    case GL_NO_ERROR:
+        return (const GLubyte *) "no error";
+    case GL_INVALID_ENUM:
+        return (const GLubyte *) "invalid enumerant";
+    case GL_INVALID_VALUE:
+        return (const GLubyte *) "invalid value";
+    case GL_INVALID_OPERATION:
+        return (const GLubyte *) "invalid operation";
+    case GL_STACK_OVERFLOW:
+        return (const GLubyte *) "stack overflow";
+    case GL_STACK_UNDERFLOW:
+        return (const GLubyte *) "stack underflow";
+    case GL_OUT_OF_MEMORY:
+        return (const GLubyte *) "out of memory";
+    case GL_TABLE_TOO_LARGE:
+        return (const GLubyte *) "table too large";
+    case GLU_INVALID_ENUM:
+        return (const GLubyte *) "invalid enumerant";
+    case GLU_INVALID_VALUE:
+        return (const GLubyte *) "invalid value";
+    case GLU_OUT_OF_MEMORY:
+        return (const GLubyte *) "out of memory";
+    case GLU_INCOMPATIBLE_GL_VERSION:
+        return (const GLubyte *) "incompatible gl version";
+    case GLU_INVALID_OPERATION:
+        return (const GLubyte *) "invalid operation";
     }
 
-    return 0;
+    if ((errorCode >= GLU_NURBS_ERROR1) && (errorCode <= GLU_NURBS_ERROR37)) {
+	return (const GLubyte *) __gluNURBSErrorString(errorCode - (GLU_NURBS_ERROR1 - 1));
+    }
+    if ((errorCode >= GLU_TESS_ERROR1) && (errorCode <= GLU_TESS_ERROR6)) {
+	return (const GLubyte *) __gluTessErrorString(errorCode - (GLU_TESS_ERROR1 - 1));
+    }
+
+    return (const GLubyte *) 0;
 }
 

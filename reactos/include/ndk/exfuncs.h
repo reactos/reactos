@@ -336,7 +336,7 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDefaultUILanguage(
-    PLANGID LanguageId
+    LANGID* LanguageId
 );
 
 NTSYSCALLAPI
@@ -365,7 +365,7 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInstallUILanguage(
-    PLANGID LanguageId
+    LANGID* LanguageId
 );
 
 NTSYSCALLAPI
@@ -799,7 +799,7 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDefaultUILanguage(
-    PLANGID LanguageId
+    LANGID* LanguageId
 );
 
 NTSYSAPI
@@ -828,7 +828,7 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInstallUILanguage(
-    PLANGID LanguageId
+    LANGID* LanguageId
 );
 
 NTSYSAPI

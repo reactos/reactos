@@ -75,7 +75,7 @@ MmGetSessionLocaleId(VOID)
 }
 
 PVOID
-STDCALL
+NTAPI
 MiCreatePebOrTeb(PEPROCESS Process,
                  PVOID BaseAddress)
 {
@@ -139,7 +139,7 @@ MiFreeStackPage(PVOID Context,
 }
 
 VOID
-STDCALL
+NTAPI
 MmDeleteKernelStack(PVOID StackBase,
                     BOOLEAN GuiStack)
 {
@@ -159,7 +159,7 @@ MmDeleteKernelStack(PVOID StackBase,
 }
 
 VOID
-STDCALL
+NTAPI
 MmDeleteTeb(PEPROCESS Process,
             PTEB Teb)
 {
@@ -181,7 +181,7 @@ MmDeleteTeb(PEPROCESS Process,
 }
 
 PVOID
-STDCALL
+NTAPI
 MmCreateKernelStack(BOOLEAN GuiStack,
                     UCHAR Node)
 {
@@ -253,7 +253,7 @@ MmCreateKernelStack(BOOLEAN GuiStack,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 MmGrowKernelStack(PVOID StackPointer)
 {
     PETHREAD Thread = PsGetCurrentThread();
@@ -274,7 +274,7 @@ MmGrowKernelStack(PVOID StackPointer)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 MmCreatePeb(PEPROCESS Process)
 {
     PPEB Peb = NULL;
@@ -380,7 +380,7 @@ MmCreatePeb(PEPROCESS Process)
             Peb->ImageProcessAffinityMask = ProcessAffinityMask;
         }
 
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Get the Image Config Data too */
             ImageConfigData = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
@@ -405,11 +405,11 @@ MmCreatePeb(PEPROCESS Process)
                 }
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Misc data */
@@ -424,7 +424,7 @@ MmCreatePeb(PEPROCESS Process)
 }
 
 PTEB
-STDCALL
+NTAPI
 MmCreateTeb(PEPROCESS Process,
             PCLIENT_ID ClientId,
             PINITIAL_TEB InitialTeb)

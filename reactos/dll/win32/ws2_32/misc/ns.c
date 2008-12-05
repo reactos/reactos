@@ -1514,7 +1514,7 @@ getaddrinfo(const char FAR * nodename,
         ai->ai_family = PF_INET;
         ai->ai_addrlen = sizeof(struct sockaddr_in);
         ai->ai_addr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ai->ai_addrlen);
-        sin = (struct sockaddr_in *)ret->ai_addr;
+        sin = (struct sockaddr_in *)ai->ai_addr;
         sin->sin_family = AF_INET;
         sin->sin_port = port;
         if (hints)
@@ -1531,6 +1531,7 @@ getaddrinfo(const char FAR * nodename,
             if (ai->ai_protocol == 0)
                 ai->ai_protocol = hints->ai_protocol;
         }
+        ret = ai;
     }
 
     if (ret == NULL)

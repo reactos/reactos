@@ -25,6 +25,12 @@
 #define NDEBUG
 #include <debug.h>
 
+/* non-standard specifier from windef.h -- please deprecate */
+#undef PACKED
+#ifdef __GNUC__
+#define PACKED __attribute__((packed))
+#endif
+
 typedef struct
 {
 	UCHAR	Signature[4];				// (ret) signature ("VESA")

@@ -191,7 +191,7 @@ DllGetClassObject(
 }
 
 VOID
-STDCALL
+WINAPI
 NcFreeNetconProperties (NETCON_PROPERTIES* pProps)
 {
     CoTaskMemFree(pProps->pszwName);

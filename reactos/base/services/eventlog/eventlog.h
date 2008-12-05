@@ -19,7 +19,6 @@
 #include <obfuncs.h>
 #include <iotypes.h>
 #include <debug.h>
-#include <pseh/pseh.h>
 #include "eventlogrpc_s.h"
 
 typedef struct _IO_ERROR_LPC
@@ -94,6 +93,11 @@ typedef struct
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
+typedef struct
+{
+    PLOGFILE LogFile;
+    WCHAR *Name;
+} EVENTSOURCE, *PEVENTSOURCE;
 
 /* file.c */
 VOID LogfListInitialize(VOID);
@@ -158,7 +162,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwDataSize,
                                  LPVOID lpRawData);
 
-void __inline LogfFreeRecord(LPVOID Rec);
+__inline void LogfFreeRecord(LPVOID Rec);
 
 /* eventlog.c */
 VOID PRINT_HEADER(PFILE_HEADER header);
@@ -172,13 +176,13 @@ VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime,
                            DWORD * pEventTime);
 
 /* logport.c */
-NTSTATUS STDCALL PortThreadRoutine(PVOID Param);
+NTSTATUS WINAPI PortThreadRoutine(PVOID Param);
 
 NTSTATUS InitLogPort(VOID);
 
 NTSTATUS ProcessPortMessage(VOID);
 
 /* rpc.c */
-DWORD STDCALL RpcThreadRoutine(LPVOID lpParameter);
+DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter);
 
 #endif  /* __EVENTLOG_H__ */

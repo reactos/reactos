@@ -10,6 +10,7 @@
 	<include base="ReactOS" root="intermediate">include</include>
 	<library>wpp</library>
 	<file>client.c</file>
+	<file>expr.c</file>
 	<file>hash.c</file>
 	<file>header.c</file>
 	<file>proxy.c</file>

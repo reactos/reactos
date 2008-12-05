@@ -50,7 +50,7 @@ typedef struct
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, ULONG_PTR dwData)
 {
 	static WORD WM_WINHELP = 0;
@@ -136,7 +136,7 @@ WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, ULONG_PTR dwData)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 WinHelpW(HWND hWnd, LPCWSTR lpszHelp, UINT uCommand, ULONG_PTR dwData)
 {
     INT len;

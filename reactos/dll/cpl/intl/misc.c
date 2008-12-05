@@ -190,7 +190,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, PGLOBALDATA p
 /* Create applets */
 LONG
 APIENTRY
-SetupApplet(LCID lcid)
+SetupApplet(HWND hwndDlg, LCID lcid)
 {
     PROPSHEETPAGE PsPage[NUM_SHEETS + 1];
     PROPSHEETHEADER psh;
@@ -207,7 +207,7 @@ SetupApplet(LCID lcid)
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
-    psh.hwndParent = NULL;
+    psh.hwndParent = hwndDlg;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
     psh.pszCaption = Caption;

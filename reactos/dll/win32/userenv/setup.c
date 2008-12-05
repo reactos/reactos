@@ -114,6 +114,8 @@ InitializeProfiles (VOID)
   HKEY hKey;
   LONG Error;
 
+  DPRINT("InitializeProfiles()\n");
+
   /* Load profiles directory path */
   if (!LoadStringW(hInstance,
 		  IDS_PROFILEPATH,

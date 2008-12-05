@@ -89,8 +89,8 @@ Ke386SanitizeDr(IN PVOID DrAddress,
 #endif /* _M_IX86 */
 
 #ifndef _M_ARM
-PRKTHREAD
 FORCEINLINE
+PRKTHREAD
 KeGetCurrentThread(VOID)
 {
 #ifdef _M_IX86
@@ -104,8 +104,8 @@ KeGetCurrentThread(VOID)
 #endif
 }
 
-UCHAR
 FORCEINLINE
+UCHAR
 KeGetPreviousMode(VOID)
 {
     /* Return the current mode */
@@ -113,8 +113,8 @@ KeGetPreviousMode(VOID)
 }
 #endif
 
-VOID
 FORCEINLINE
+VOID
 KeFlushProcessTb(VOID)
 {
     /* Flush the TLB by resetting CR3 */
@@ -245,8 +245,8 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 //
 // This routine protects against multiple CPU acquires, it's meaningless on UP.
 //
-VOID
 FORCEINLINE
+VOID
 KiAcquireDispatcherObject(IN DISPATCHER_HEADER* Object)
 {
     UNREFERENCED_PARAMETER(Object);
@@ -255,39 +255,39 @@ KiAcquireDispatcherObject(IN DISPATCHER_HEADER* Object)
 //
 // This routine protects against multiple CPU acquires, it's meaningless on UP.
 //
-VOID
 FORCEINLINE
+VOID
 KiReleaseDispatcherObject(IN DISPATCHER_HEADER* Object)
 {
     UNREFERENCED_PARAMETER(Object);
 }
 
-KIRQL
 FORCEINLINE
+KIRQL
 KiAcquireDispatcherLock(VOID)
 {
     /* Raise to DPC level */
     return KeRaiseIrqlToDpcLevel();
 }
 
-VOID
 FORCEINLINE
+VOID
 KiReleaseDispatcherLock(IN KIRQL OldIrql)
 {
     /* Just exit the dispatcher */
     KiExitDispatcher(OldIrql);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiAcquireDispatcherLockAtDpcLevel(VOID)
 {
     /* This is a no-op at DPC Level for UP systems */
     return;
 }
 
-VOID
 FORCEINLINE
+VOID
 KiReleaseDispatcherLockFromDpcLevel(VOID)
 {
     /* This is a no-op at DPC Level for UP systems */
@@ -494,8 +494,8 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
     InterlockedAnd((PLONG)SpinLock, 0);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiAcquireDispatcherObject(IN DISPATCHER_HEADER* Object)
 {
     LONG OldValue;
@@ -523,8 +523,8 @@ KiAcquireDispatcherObject(IN DISPATCHER_HEADER* Object)
                                         OldValue) != OldValue);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiReleaseDispatcherObject(IN DISPATCHER_HEADER* Object)
 {
     /* Make sure we're at a safe level to touch the lock */
@@ -534,16 +534,16 @@ KiReleaseDispatcherObject(IN DISPATCHER_HEADER* Object)
     InterlockedAnd(&Object->Lock, ~KOBJECT_LOCK_BIT);
 }
 
-KIRQL
 FORCEINLINE
+KIRQL
 KiAcquireDispatcherLock(VOID)
 {
     /* Raise to synchronization level and acquire the dispatcher lock */
     return KeAcquireQueuedSpinLockRaiseToSynch(LockQueueDispatcherLock);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiReleaseDispatcherLock(IN KIRQL OldIrql)
 {
     /* First release the lock */
@@ -554,16 +554,16 @@ KiReleaseDispatcherLock(IN KIRQL OldIrql)
     KiExitDispatcher(OldIrql);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiAcquireDispatcherLockAtDpcLevel(VOID)
 {
     /* Acquire the dispatcher lock */
     KeAcquireQueuedSpinLockAtDpcLevel(LockQueueDispatcherLock);
 }
 
-VOID
 FORCEINLINE
+VOID
 KiReleaseDispatcherLockFromDpcLevel(VOID)
 {
     /* Release the dispatcher lock */
@@ -1005,8 +1005,8 @@ KiReleaseDeviceQueueLock(IN PKLOCK_QUEUE_HANDLE DeviceLock)
 //
 // Recalculates the due time
 //
-PLARGE_INTEGER
 FORCEINLINE
+PLARGE_INTEGER
 KiRecalculateDueTime(IN PLARGE_INTEGER OriginalDueTime,
                      IN PLARGE_INTEGER DueTime,
                      IN OUT PLARGE_INTEGER NewDueTime)
@@ -1105,8 +1105,8 @@ KiCheckAlertability(IN PKTHREAD Thread,
 // Called from KiCompleteTimer, KiInsertTreeTimer, KeSetSystemTime
 // to remove timer entries
 // See Windows HPI blog for more information.
-VOID
 FORCEINLINE
+VOID
 KiRemoveEntryTimer(IN PKTIMER Timer)
 {
     ULONG Hand;
@@ -1136,8 +1136,8 @@ KiRemoveEntryTimer(IN PKTIMER Timer)
 // Called by Wait and Queue code to insert a timer for dispatching.
 // Also called by KeSetTimerEx to insert a timer from the caller.
 //
-VOID
 FORCEINLINE
+VOID
 KxInsertTimer(IN PKTIMER Timer,
               IN ULONG Hand)
 {
@@ -1164,8 +1164,8 @@ KxInsertTimer(IN PKTIMER Timer,
 // Called by KeSetTimerEx and KiInsertTreeTimer to calculate Due Time
 // See the Windows HPI Blog for more information
 //
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 KiComputeDueTime(IN PKTIMER Timer,
                  IN LARGE_INTEGER DueTime,
                  OUT PULONG Hand)
@@ -1216,8 +1216,8 @@ KiComputeDueTime(IN PKTIMER Timer,
 // Also called by timer code when canceling an inserted timer.
 // Removes a timer from it's tree.
 //
-VOID
 FORCEINLINE
+VOID
 KxRemoveTreeTimer(IN PKTIMER Timer)
 {
     ULONG Hand = Timer->Header.Hand;
@@ -1246,8 +1246,8 @@ KxRemoveTreeTimer(IN PKTIMER Timer)
     KiReleaseTimerLock(LockQueue);
 }
 
-VOID
 FORCEINLINE
+VOID
 KxSetTimerForThreadWait(IN PKTIMER Timer,
                         IN LARGE_INTEGER Interval,
                         OUT PULONG Hand)
@@ -1634,7 +1634,8 @@ PKTHREAD
 KiSelectReadyThread(IN KPRIORITY Priority,
                     IN PKPRCB Prcb)
 {
-    ULONG PrioritySet, HighPriority;
+    ULONG PrioritySet;
+    LONG HighPriority;
     PLIST_ENTRY ListEntry;
     PKTHREAD Thread = NULL;
 
@@ -1678,8 +1679,8 @@ Quickie:
 // This routine computes the new priority for a thread. It is only valid for
 // threads with priorities in the dynamic priority range.
 //
-SCHAR
 FORCEINLINE
+SCHAR
 KiComputeNewPriority(IN PKTHREAD Thread,
                      IN SCHAR Adjustment)
 {

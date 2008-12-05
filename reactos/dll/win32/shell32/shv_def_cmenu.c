@@ -1054,9 +1054,19 @@ DoPaste(
         return E_FAIL;
     }
 
-    IShellFolder_Release(psfDesktop);
+    if (This->dcm.cidl)
+    {
+        IShellFolder_Release(psfDesktop);
+        hr = IShellFolder_BindToObject(This->dcm.psf, This->dcm.apidl[0], NULL, &IID_IShellFolder, (LPVOID*)&psfTarget);
+    }
+    else
+    {
+        /* target folder is desktop because cidl is zero */
+        psfTarget = psfDesktop;
+        hr = S_OK;
+    }
 
-    if (FAILED(IShellFolder_BindToObject(This->dcm.psf, This->dcm.apidl[0], NULL, &IID_IShellFolder, (LPVOID*)&psfTarget)))
+    if (FAILED(hr))
     {
         ERR("no IShellFolder\n");
 
@@ -1309,8 +1319,15 @@ DoCopyOrCut(
 {
     LPSHELLBROWSER lpSB;
     LPSHELLVIEW lpSV;
-    LPDATAOBJECT lpDo;
+    LPDATAOBJECT pDataObj;
     HRESULT hr;
+
+    if (SUCCEEDED(SHCreateDataObject(iface->dcm.pidlFolder, iface->dcm.cidl, iface->dcm.apidl, NULL, &IID_IDataObject, (void**)&pDataObj)))
+    {
+        hr = OleSetClipboard(pDataObj);
+        IDataObject_Release(pDataObj);
+        return hr;
+    }
 
     lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER,0,0);
     if (!lpSB)
@@ -1326,19 +1343,19 @@ DoCopyOrCut(
         return hr;
     }
 
-    hr = IShellView_GetItemObject(lpSV, SVGIO_SELECTION, &IID_IDataObject, (LPVOID*)&lpDo);
+    hr = IShellView_GetItemObject(lpSV, SVGIO_SELECTION, &IID_IDataObject, (LPVOID*)&pDataObj);
     if (FAILED(hr))
     {
         TRACE("failed to get item object\n");
         return hr;
     }
 
-    hr = OleSetClipboard(lpDo);
+    hr = OleSetClipboard(pDataObj);
     if (FAILED(hr))
     {
         WARN("OleSetClipboard failed");
     }
-    IDataObject_Release(lpDo);
+    IDataObject_Release(pDataObj);
     IShellView_Release(lpSV);
     return S_OK;
 }
@@ -1489,6 +1506,7 @@ DoStaticShellExtensions(
 {
     STRRET strFile;
     WCHAR szPath[MAX_PATH];
+    WCHAR szDir[MAX_PATH];
     SHELLEXECUTEINFOW sei;
     PStaticShellEntry pCurrent = This->shead;
     int verb = LOWORD(lpcmi->lpVerb) - This->iIdSCMFirst;
@@ -1510,6 +1528,8 @@ DoStaticShellExtensions(
     if (StrRetToBufW(&strFile, This->dcm.apidl[0], szPath, MAX_PATH) != S_OK)
         return E_FAIL;
 
+    wcscpy(szDir, szPath);
+    PathRemoveFileSpec(szDir);
 
     ZeroMemory(&sei, sizeof(sei));
     sei.cbSize = sizeof(sei);
@@ -1519,6 +1539,7 @@ DoStaticShellExtensions(
     sei.nShow = SW_SHOWNORMAL;
     sei.lpVerb = pCurrent->szVerb;
     sei.lpFile = szPath;
+    sei.lpDirectory = szDir;
     ShellExecuteExW(&sei);
     return S_OK;
 

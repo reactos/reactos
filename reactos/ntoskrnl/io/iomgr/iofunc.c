@@ -90,16 +90,16 @@ IopFinalizeAsynchronousIo(IN NTSTATUS SynchStatus,
     }
 
     /* Wrap potential user-mode write in SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         *IoStatusBlock = *KernelIosb;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the exception code */
-        FinalStatus = _SEH_GetExceptionCode();
+        FinalStatus = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Free the event and return status */
     ExFreePool(Event);
@@ -217,7 +217,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -256,12 +256,12 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 }
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -388,7 +388,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         case METHOD_BUFFERED:
 
             /* Enter SEH for allocations */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Select the right Buffer Length */
                 BufferLength = (InputBufferLength > OutputBufferLength) ?
@@ -425,13 +425,13 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                     Irp->UserBuffer = NULL;
                 }
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Cleanup after exception */
                 IopCleanupAfterException(FileObject, Irp, Event, NULL);
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) return Status;
             break;
 
@@ -440,7 +440,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         case METHOD_OUT_DIRECT:
 
             /* Enter SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Check if we got an input buffer */
                 if ((InputBufferLength) && (InputBuffer))
@@ -482,13 +482,13 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                         IoReadAccess : IoWriteAccess);
                 }
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Cleanup after exception */
                 IopCleanupAfterException(FileObject, Irp, Event, NULL);
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) return Status;
             break;
 
@@ -971,17 +971,17 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
     if (PreviousMode != KernelMode)
     {
         /* Protect probes */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O Status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Return exception code, if any */
         if (!NT_SUCCESS(Status)) return Status;
@@ -1104,7 +1104,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O STatus block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -1112,12 +1112,12 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
             /* Probe the buffer */
             if (BufferSize) ProbeForWrite(Buffer, BufferSize, sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
@@ -1247,7 +1247,7 @@ NtLockFile(IN HANDLE FileHandle,
         }
 
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O STatus block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -1256,12 +1256,12 @@ NtLockFile(IN HANDLE FileHandle,
             CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             CapturedLength = ProbeForReadLargeInteger(Length);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check if probing failed */
         if (!NT_SUCCESS(Status))
@@ -1327,7 +1327,7 @@ NtLockFile(IN HANDLE FileHandle,
     StackPtr->FileObject = FileObject;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Allocate local buffer */
         LocalLength = ExAllocatePoolWithTag(NonPagedPool,
@@ -1339,16 +1339,16 @@ NtLockFile(IN HANDLE FileHandle,
         Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
         StackPtr->Parameters.LockControl.Length = LocalLength;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Allocating failed, clean up */
         IopCleanupAfterException(FileObject, Irp, Event, NULL);
         if (LocalLength) ExFreePool(LocalLength);
 
         /* Get status */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set Parameters */
@@ -1405,7 +1405,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O Status Block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -1444,13 +1444,13 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                 SearchPattern->MaximumLength = CapturedFileName.Length;
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception code and free the buffer */
             if (AuxBuffer) ExFreePool(AuxBuffer);
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Return status on failure */
         if (!NT_SUCCESS(Status)) return Status;
@@ -1527,7 +1527,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (DeviceObject->Flags & DO_BUFFERED_IO)
     {
         /* Enter SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Allocate a buffer */
             Irp->AssociatedIrp.SystemBuffer =
@@ -1535,16 +1535,16 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                                       Length,
                                       TAG_SYSB);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Allocating failed, clean up */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
             if (AuxBuffer) ExFreePool(AuxBuffer);
 
             /* Get status */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
 
         /* Set the buffer and flags */
@@ -1555,20 +1555,20 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     }
     else if (DeviceObject->Flags & DO_DIRECT_IO)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Allocate an MDL */
             Mdl = IoAllocateMdl(FileInformation, Length, FALSE, TRUE, Irp);
             MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Allocating failed, clean up */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
-            Status = _SEH_GetExceptionCode();
-            _SEH_YIELD(return Status);
+            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return Status);
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else
     {
@@ -1669,7 +1669,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         }
 
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O Status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -1677,12 +1677,12 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             /* Probe the information */
             ProbeForWrite(FileInformation, Length, sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
     else
@@ -1735,7 +1735,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         if (FileInformationClass == FilePositionInformation)
         {
             /* Protect write in SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write the offset */
                 ((PFILE_POSITION_INFORMATION)FileInformation)->
@@ -1745,12 +1745,12 @@ NtQueryInformationFile(IN HANDLE FileHandle,
                 IoStatusBlock->Information = sizeof(FILE_POSITION_INFORMATION);
                 Status = IoStatusBlock->Status = STATUS_SUCCESS;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Release the file lock, dereference the file and return */
             IopUnlockFileObject(FileObject);
@@ -1791,7 +1791,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     StackPtr->FileObject = FileObject;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
@@ -1799,13 +1799,13 @@ NtQueryInformationFile(IN HANDLE FileHandle,
                                   Length,
                                   TAG_SYSB);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Allocating failed, clean up */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags */
@@ -1847,17 +1847,17 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             Status = KernelIosb.Status;
 
             /* Enter SEH to write the IOSB back */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write it back to the caller */
                 *IoStatusBlock = KernelIosb;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Free the event */
             ExFreePool(Event);
@@ -1965,7 +1965,7 @@ NtReadFile(IN HANDLE FileHandle,
     /* Validate User-Mode Buffers */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -1983,12 +1983,12 @@ NtReadFile(IN HANDLE FileHandle,
             /* Capture and probe the key */
             if (Key) CapturedKey = ProbeForReadUlong(Key);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check for probe failure */
         if (!NT_SUCCESS(Status)) return Status;
@@ -2096,7 +2096,7 @@ NtReadFile(IN HANDLE FileHandle,
         if (Length)
         {
             /* Enter SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Allocate a buffer */
                 Irp->AssociatedIrp.SystemBuffer =
@@ -2104,13 +2104,13 @@ NtReadFile(IN HANDLE FileHandle,
                                           Length,
                                           TAG_SYSB);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Allocating failed, clean up */
                 IopCleanupAfterException(FileObject, Irp, NULL, Event);
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
             if (!NT_SUCCESS(Status)) return Status;
 
             /* Set the buffer and flags */
@@ -2130,20 +2130,20 @@ NtReadFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Allocate an MDL */
                 Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
                 MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Allocating failed, clean up */
                 IopCleanupAfterException(FileObject, Irp, Event, NULL);
-                Status = _SEH_GetExceptionCode();
-                _SEH_YIELD(return Status);
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(return Status);
             }
-            _SEH_END;
+            _SEH2_END;
 
         }
 
@@ -2254,7 +2254,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
         }
 
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O Status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -2265,12 +2265,12 @@ NtSetInformationFile(IN HANDLE FileHandle,
                          (Length == sizeof(BOOLEAN)) ?
                          sizeof(BOOLEAN) : sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
@@ -2325,7 +2325,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
         if (FileInformationClass == FilePositionInformation)
         {
             /* Protect write in SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write the offset */
                 FileObject->CurrentByteOffset =
@@ -2336,12 +2336,12 @@ NtSetInformationFile(IN HANDLE FileHandle,
                 IoStatusBlock->Information = 0;
                 Status = IoStatusBlock->Status = STATUS_SUCCESS;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Release the file lock, dereference the file and return */
             IopUnlockFileObject(FileObject);
@@ -2382,7 +2382,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
     StackPtr->FileObject = FileObject;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
@@ -2395,13 +2395,13 @@ NtSetInformationFile(IN HANDLE FileHandle,
                       FileInformation,
                       Length);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Allocating failed, clean up */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags */
@@ -2506,17 +2506,17 @@ NtSetInformationFile(IN HANDLE FileHandle,
             Status = KernelIosb.Status;
 
             /* Enter SEH to write the IOSB back */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write it back to the caller */
                 *IoStatusBlock = KernelIosb;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Free the event */
             ExFreePool(Event);
@@ -2635,7 +2635,7 @@ NtUnlockFile(IN HANDLE FileHandle,
         }
 
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O Status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -2644,12 +2644,12 @@ NtUnlockFile(IN HANDLE FileHandle,
             CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             CapturedLength = ProbeForReadLargeInteger(Length);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check if probing failed */
         if (!NT_SUCCESS(Status))
@@ -2713,7 +2713,7 @@ NtUnlockFile(IN HANDLE FileHandle,
     StackPtr->FileObject = FileObject;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Allocate a buffer */
         LocalLength = ExAllocatePoolWithTag(NonPagedPool,
@@ -2725,16 +2725,16 @@ NtUnlockFile(IN HANDLE FileHandle,
         Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
         StackPtr->Parameters.LockControl.Length = LocalLength;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Allocating failed, clean up */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
         if (LocalLength) ExFreePool(LocalLength);
 
         /* Get exception status */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set Parameters */
@@ -2809,7 +2809,7 @@ NtWriteFile(IN HANDLE FileHandle,
     /* Validate User-Mode Buffers */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /*
              * Check if the handle has either FILE_WRITE_DATA or
@@ -2823,7 +2823,7 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* We failed */
                 ObDereferenceObject(FileObject);
-                _SEH_YIELD(return STATUS_ACCESS_DENIED);
+                _SEH2_YIELD(return STATUS_ACCESS_DENIED);
             }
 
             /* Probe the status block */
@@ -2842,12 +2842,12 @@ NtWriteFile(IN HANDLE FileHandle,
             /* Capture and probe the key */
             if (Key) CapturedKey = ProbeForReadUlong(Key);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check for probe failure */
         if (!NT_SUCCESS(Status)) return Status;
@@ -2957,7 +2957,7 @@ NtWriteFile(IN HANDLE FileHandle,
         if (Length)
         {
             /* Enter SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Allocate a buffer */
                 Irp->AssociatedIrp.SystemBuffer =
@@ -2968,14 +2968,14 @@ NtWriteFile(IN HANDLE FileHandle,
                 /* Copy the data into it */
                 RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Allocating failed, clean up */
                 IopCleanupAfterException(FileObject, Irp, Event, NULL);
-                Status = _SEH_GetExceptionCode();
-                _SEH_YIELD(return Status);
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(return Status);
             }
-            _SEH_END;
+            _SEH2_END;
 
             /* Set the flags */
             Irp->Flags = (IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);
@@ -2991,20 +2991,20 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Allocate an MDL */
                 Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
                 MmProbeAndLockPages(Mdl, PreviousMode, IoReadAccess);
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Allocating failed, clean up */
                 IopCleanupAfterException(FileObject, Irp, Event, NULL);
-                Status = _SEH_GetExceptionCode();
-                _SEH_YIELD(return Status);
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(return Status);
             }
-            _SEH_END;
+            _SEH2_END;
         }
 
         /* No allocation flags */
@@ -3092,7 +3092,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
         }
 
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O Status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -3100,12 +3100,12 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
             /* Probe the information */
             ProbeForWrite(FsInformation, Length, sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -3161,7 +3161,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     StackPtr->FileObject = FileObject;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
@@ -3169,13 +3169,13 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
                                   Length,
                                   TAG_SYSB);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Allocating failed, clean up */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags for this buffered + deferred I/O */
@@ -3255,7 +3255,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
         }
 
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the I/O Status block */
             ProbeForWriteIoStatusBlock(IoStatusBlock);
@@ -3263,12 +3263,12 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
             /* Probe the information */
             ProbeForRead(FsInformation, Length, sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -3324,7 +3324,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     StackPtr->FileObject = FileObject;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
@@ -3335,13 +3335,13 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
         /* Copy the data into it */
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, FsInformation, Length);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Allocating failed, clean up */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags for this buffered + deferred I/O */

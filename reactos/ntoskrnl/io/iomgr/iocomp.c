@@ -265,17 +265,17 @@ NtCreateIoCompletion(OUT PHANDLE IoCompletionHandle,
     if (PreviousMode != KernelMode)
     {
         /* Wrap probing in SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the handle */
             ProbeForWriteHandle(IoCompletionHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail on exception */
         if (!NT_SUCCESS(Status)) return Status;
@@ -306,17 +306,17 @@ NtCreateIoCompletion(OUT PHANDLE IoCompletionHandle,
         if (NT_SUCCESS(Status))
         {
             /* Protect writing the handle in SEH */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write the handle back */
                 *IoCompletionHandle = hIoCompletionHandle;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
    }
 
@@ -339,17 +339,17 @@ NtOpenIoCompletion(OUT PHANDLE IoCompletionHandle,
     if (PreviousMode != KernelMode)
     {
         /* Wrap probing in SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the handle */
             ProbeForWriteHandle(IoCompletionHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail on exception */
         if (!NT_SUCCESS(Status)) return Status;
@@ -366,17 +366,17 @@ NtOpenIoCompletion(OUT PHANDLE IoCompletionHandle,
     if (NT_SUCCESS(Status))
     {
         /* Protect writing the handle in SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write the handle back */
             *IoCompletionHandle = hIoCompletionHandle;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return Status */
@@ -418,7 +418,7 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
     if (NT_SUCCESS(Status))
     {
         /* Protect write in SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Return Info */
             ((PIO_COMPLETION_BASIC_INFORMATION)IoCompletionInformation)->
@@ -430,12 +430,12 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
                 *ResultLength = sizeof(IO_COMPLETION_BASIC_INFORMATION);
             }
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             /* Get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Dereference the queue */
         ObDereferenceObject(Queue);
@@ -468,7 +468,7 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
     if (PreviousMode != KernelMode)
     {
         /* Protect probes in SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the pointers */
             ProbeForWritePointer(KeyContext);
@@ -483,12 +483,12 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
                 Timeout = &SafeTimeout;
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail on exception */
         if (!NT_SUCCESS(Status)) return Status;
@@ -549,19 +549,19 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
             }
 
             /* Enter SEH to write back the values */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Write the values to caller */
                 *ApcContext = Apc;
                 *KeyContext = Key;
                 *IoStatusBlock = IoStatus;
             }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
 
         /* Dereference the Object */

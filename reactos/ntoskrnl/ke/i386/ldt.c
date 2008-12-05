@@ -131,7 +131,7 @@ BOOLEAN PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
           (Base > Base+SegLimit) ? FALSE : TRUE*/ TRUE);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtSetLdtEntries (ULONG Selector1,
 		 LDT_ENTRY LdtEntry1,
 		 ULONG Selector2,

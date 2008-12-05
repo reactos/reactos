@@ -42,6 +42,14 @@
 #define KeGetPreviousMode()            _KeGetPreviousMode()
 #define KeGetDcacheFillSize()          PCR->DcacheFillSize
 
+
+//
+// Types to use to contain PFNs and their counts.
+//
+typedef ULONG PFN_COUNT;
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
+
 //
 // Stub
 //

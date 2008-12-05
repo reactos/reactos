@@ -30,7 +30,7 @@ ULONG KdpPort;
 /* DEBUG LOG FUNCTIONS *******************************************************/
 
 VOID
-STDCALL
+NTAPI
 KdpPrintToLogInternal(PVOID Context)
 {
     IO_STATUS_BLOCK Iosb;
@@ -54,7 +54,7 @@ KdpPrintToLogInternal(PVOID Context)
 }
 
 VOID
-STDCALL
+NTAPI
 KdpPrintToLog(PCH String,
               ULONG StringLength)
 {
@@ -84,7 +84,7 @@ KdpPrintToLog(PCH String,
 }
 
 VOID
-STDCALL
+NTAPI
 KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                 ULONG BootPhase)
 {
@@ -146,7 +146,7 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 /* SERIAL FUNCTIONS **********************************************************/
 
 VOID
-STDCALL
+NTAPI
 KdpSerialDebugPrint(LPSTR Message,
                     ULONG Length)
 {
@@ -164,7 +164,7 @@ KdpSerialDebugPrint(LPSTR Message,
 }
 
 VOID
-STDCALL
+NTAPI
 KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
@@ -205,7 +205,7 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
 /* SCREEN FUNCTIONS **********************************************************/
 
 VOID
-STDCALL
+NTAPI
 KdpScreenPrint(LPSTR Message,
                ULONG Length)
 {
@@ -214,7 +214,7 @@ KdpScreenPrint(LPSTR Message,
 }
 
 VOID
-STDCALL
+NTAPI
 KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
@@ -238,7 +238,7 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 /* GENERAL FUNCTIONS *********************************************************/
 
 ULONG
-STDCALL
+NTAPI
 KdpPrintString(LPSTR String,
                ULONG Length)
 {

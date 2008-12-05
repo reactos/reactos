@@ -33,7 +33,7 @@ static HRESULT WINAPI IDirect3DCubeTexture9Impl_QueryInterface(LPDIRECT3DCUBETEX
         || IsEqualGUID(riid, &IID_IDirect3DResource9)
         || IsEqualGUID(riid, &IID_IDirect3DBaseTexture9)
         || IsEqualGUID(riid, &IID_IDirect3DCubeTexture9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DCubeTexture9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -63,7 +63,7 @@ static ULONG WINAPI IDirect3DCubeTexture9Impl_Release(LPDIRECT3DCUBETEXTURE9 ifa
 
         EnterCriticalSection(&d3d9_cs);
         IWineD3DCubeTexture_Destroy(This->wineD3DCubeTexture, D3D9CB_DestroySurface);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         LeaveCriticalSection(&d3d9_cs);
 
         HeapFree(GetProcessHeap(), 0, This);
@@ -365,7 +365,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateCubeTexture(LPDIRECT3DDEVICE9EX ifac
         FIXME("(%p) call to IWineD3DDevice_CreateCubeTexture failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppCubeTexture = (LPDIRECT3DCUBETEXTURE9) object;
         TRACE("(%p) : Created cube texture %p\n", This, object);

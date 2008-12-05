@@ -4,7 +4,7 @@
  * Copyright 2002-2005 Jason Edmeades
  * Copyright 2002-2005 Raphael Junqueira
  * Copyright 2005 Oliver Stieber
- * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2007-2008 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -138,7 +138,7 @@ static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
 
         for (i = 0; i < This->baseTexture.levels; i++) {
             IWineD3DSurface_AddDirtyRect(This->surfaces[i], NULL);
-            IWineD3DSurface_SetGlTextureDesc(This->surfaces[i], This->baseTexture.textureName, IWineD3DTexture_GetTextureDimensions(iface));
+            surface_force_reload(This->surfaces[i]);
             IWineD3DSurface_LoadTexture(This->surfaces[i], srgb_mode);
         }
     } else {
@@ -162,7 +162,7 @@ static void WINAPI IWineD3DTextureImpl_UnLoad(IWineD3DTexture *iface) {
      */
     for (i = 0; i < This->baseTexture.levels; i++) {
         IWineD3DSurface_UnLoad(This->surfaces[i]);
-        IWineD3DSurface_SetGlTextureDesc(This->surfaces[i], 0, IWineD3DTexture_GetTextureDimensions(iface));
+        surface_set_texture_name(This->surfaces[i], 0);
     }
 
     IWineD3DBaseTextureImpl_UnLoad((IWineD3DBaseTexture *) iface);
@@ -223,7 +223,7 @@ static HRESULT WINAPI IWineD3DTextureImpl_BindTexture(IWineD3DTexture *iface) {
     if (set_gl_texture_desc && SUCCEEDED(hr)) {
         UINT i;
         for (i = 0; i < This->baseTexture.levels; ++i) {
-            IWineD3DSurface_SetGlTextureDesc(This->surfaces[i], This->baseTexture.textureName, IWineD3DTexture_GetTextureDimensions(iface));
+            surface_set_texture_name(This->surfaces[i], This->baseTexture.textureName);
         }
         /* Conditinal non power of two textures use a different clamping default. If we're using the GL_WINE_normalized_texrect
          * partial driver emulation, we're dealing with a GL_TEXTURE_2D texture which has the address mode set to repeat - something
@@ -284,7 +284,8 @@ static void WINAPI IWineD3DTextureImpl_Destroy(IWineD3DTexture *iface, D3DCB_DES
     for (i = 0; i < This->baseTexture.levels; i++) {
         if (This->surfaces[i] != NULL) {
             /* Clean out the texture name we gave to the surface so that the surface doesn't try and release it */
-            IWineD3DSurface_SetGlTextureDesc(This->surfaces[i], 0, 0);
+            surface_set_texture_name(This->surfaces[i], 0);
+            surface_set_texture_target(This->surfaces[i], 0);
             IWineD3DSurface_SetContainer(This->surfaces[i], 0);
             D3DCB_DestroySurface(This->surfaces[i]);
         }

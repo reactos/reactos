@@ -86,7 +86,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     }
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if the call came from user mode */
         if(PreviousMode != KernelMode)
@@ -114,12 +114,12 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                       HandleArray,
                       ObjectCount * sizeof(HANDLE));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Fail if we raised an exception */
     if (!NT_SUCCESS(Status)) goto Quickie;
@@ -240,7 +240,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     }
 
     /* Now we can finally wait. Use SEH since it can raise an exception */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* We're done playing with handles */
         LockInUse = FALSE;
@@ -256,12 +256,12 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                                           TimeOut,
                                           WaitBlockArray);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
 Quickie:
     /* First derefence */
@@ -365,18 +365,18 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
     if ((TimeOut) && (PreviousMode != KernelMode))
     {
         /* Enter SEH for proving */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make a copy on the stack */
             SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
             TimeOut = &SafeTimeOut;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -401,7 +401,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
         }
 
         /* SEH this since it can also raise an exception */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Ask the kernel to do the wait */
             Status = KeWaitForSingleObject(WaitableObject,
@@ -410,12 +410,12 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
                                            Alertable,
                                            TimeOut);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Dereference the Object */
         ObDereferenceObject(Object);
@@ -466,18 +466,18 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     if ((TimeOut) && (PreviousMode != KernelMode))
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Make a copy on the stack */
             SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
             TimeOut = &SafeTimeOut;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -534,17 +534,17 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     else if (Type == ExMutantObjectType)
     {
         /* This can raise an exception */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Release the mutant */
             KeReleaseMutant(SignalObj, MUTANT_INCREMENT, FALSE, TRUE);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else if (Type == ExSemaphoreObjectType)
     {
@@ -558,17 +558,17 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
         }
 
         /* This can raise an exception*/
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Release the semaphore */
             KeReleaseSemaphore(SignalObj, SEMAPHORE_INCREMENT, 1, TRUE);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else
     {
@@ -580,7 +580,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     if (NT_SUCCESS(Status))
     {
         /* SEH this since it can also raise an exception */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Perform the wait now */
             Status = KeWaitForSingleObject(WaitableObject,
@@ -589,12 +589,12 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
                                            Alertable,
                                            TimeOut);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* We're done here, dereference both objects */

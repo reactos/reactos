@@ -145,23 +145,38 @@ CdfsGetNameInformation(PFILE_OBJECT FileObject,
 		       PULONG BufferLength)
 {
   ULONG NameLength;
+  ULONG BytesToCopy;
 
   DPRINT("CdfsGetNameInformation() called\n");
 
   ASSERT(NameInfo != NULL);
   ASSERT(Fcb != NULL);
 
-  NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
-  NameInfo->FileNameLength = NameLength;
-  if (*BufferLength < (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName) + NameLength))
+  /* If buffer can't hold at least the file name length, bail out */
+  if (*BufferLength < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
     return STATUS_BUFFER_OVERFLOW;
 
-  RtlCopyMemory(NameInfo->FileName,
-		Fcb->PathName,
-		NameLength + sizeof(WCHAR));
+  /* Calculate file name length in bytes */
+  NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
+  NameInfo->FileNameLength = NameLength;
 
-  *BufferLength -=
-    (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName) + NameLength);
+  /* Calculate amount of bytes to copy not to overflow the buffer */
+  BytesToCopy = min(NameLength,
+                    *BufferLength - FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]));
+
+  /* Fill in the bytes */
+  RtlCopyMemory(NameInfo->FileName, Fcb->PathName, BytesToCopy);
+
+  /* Check if we could write more but are not able to */
+  if (*BufferLength < NameLength + FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
+  {
+    /* Return number of bytes written */
+    *BufferLength -= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + BytesToCopy;
+    return STATUS_BUFFER_OVERFLOW;
+  }
+
+  /* We filled up as many bytes, as needed */
+  *BufferLength -= (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + NameLength);
 
   return STATUS_SUCCESS;
 }
@@ -311,7 +326,7 @@ CdfsGetAllInformation(PFILE_OBJECT FileObject,
 /*
  * FUNCTION: Retrieve the specified file information
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp)
 {
@@ -395,7 +410,7 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
     }
 
   Irp->IoStatus.Status = Status;
-  if (NT_SUCCESS(Status))
+  if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW)
     Irp->IoStatus.Information =
       Stack->Parameters.QueryFile.Length - BufferLength;
   else
@@ -429,7 +444,7 @@ CdfsSetPositionInformation(PFILE_OBJECT FileObject,
 /*
  * FUNCTION: Set the specified file information
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp)
 {

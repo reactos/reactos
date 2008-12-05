@@ -51,7 +51,7 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
  * @unimplemented
  */
 ULONG
-STDCALL
+NTAPI
 MmTrimAllSystemPagableMemory (
 	IN ULONG PurgeTransitionList
 	)

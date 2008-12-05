@@ -23,38 +23,23 @@
 #ifndef __WINDDK_H
 #define __WINDDK_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <excpt.h>
+#include <ntdef.h>
+#include <ntstatus.h>
+
 #ifdef __GNUC__
 #include "intrin.h"
 #endif
-
-/*
-** Definitions specific to this Device Driver Kit
-*/
-#define DDKAPI __stdcall
-#define FASTCALL __fastcall
-#define DDKCDECLAPI __cdecl
 
 #ifdef _NTOSKRNL_
 /* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
 #define NTKERNELAPI
 #else
 #define NTKERNELAPI DECLSPEC_IMPORT
-#endif
-
-#if defined(_NTOSKRNL_)
-#define DECLARE_INTERNAL_OBJECT(x) typedef struct _##x; typedef struct _##x *P##x;
-#define DECLARE_INTERNAL_OBJECT2(x,y) typedef struct _##x; typedef struct _##x *P##y;
-#else
-#define DECLARE_INTERNAL_OBJECT(x) struct _##x; typedef struct _##x *P##x;
-#define DECLARE_INTERNAL_OBJECT2(x,y) struct _##x; typedef struct _##x *P##y;
 #endif
 
 #if !defined(_NTHAL_)
@@ -152,10 +137,6 @@ typedef PVOID PSECURITY_DESCRIPTOR;
 typedef ULONG SECURITY_INFORMATION, *PSECURITY_INFORMATION;
 typedef PVOID PSID;
 
-DECLARE_INTERNAL_OBJECT(ADAPTER_OBJECT)
-DECLARE_INTERNAL_OBJECT(DMA_ADAPTER)
-DECLARE_INTERNAL_OBJECT(IO_STATUS_BLOCK)
-
 #if 1
 /* FIXME: Unknown definitions */
 struct _SET_PARTITION_INFORMATION_EX;
@@ -198,30 +179,27 @@ typedef enum _MODE {
   MaximumMode
 } MODE;
 
-typedef struct _QUAD
-{
-    union
-    {
-        LONGLONG UseThisFieldToCopy;
-        float DoNotUseThisField;
-    };
-} QUAD, *PQUAD;
 
 /* Structures not exposed to drivers */
-typedef struct _IO_TIMER *PIO_TIMER;
-typedef struct _KPROCESS *PKPROCESS;
-typedef struct _EPROCESS *PEPROCESS;
-typedef struct _ETHREAD *PETHREAD;
-typedef struct _KINTERRUPT *PKINTERRUPT;
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
-typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
-typedef struct _COMPRESSED_DATA_INFO *PCOMPRESSED_DATA_INFO;
 typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
-typedef struct _PEB *PPEB;
-typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
+
+typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
+typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
+typedef struct _ETHREAD *PETHREAD;
+typedef struct _EPROCESS *PEPROCESS;
+typedef struct _IO_TIMER *PIO_TIMER;
+typedef struct _KINTERRUPT *PKINTERRUPT;
+typedef struct _KPROCESS *PKPROCESS;
+typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
+
+//
+// Forwarder
+//
+struct _COMPRESSED_DATA_INFO;
 
 /* Constants */
 #define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
@@ -1152,19 +1130,19 @@ typedef struct _OBJECT_NAME_INFORMATION {
   UNICODE_STRING  Name;
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
-typedef VOID
-(DDKAPI *PIO_APC_ROUTINE)(
-  IN PVOID ApcContext,
-  IN PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG Reserved);
-
 typedef struct _IO_STATUS_BLOCK {
   _ANONYMOUS_UNION union {
     NTSTATUS  Status;
     PVOID  Pointer;
   } DUMMYUNIONNAME;
   ULONG_PTR  Information;
-} IO_STATUS_BLOCK;
+} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+typedef VOID
+(DDKAPI *PIO_APC_ROUTINE)(
+  IN PVOID ApcContext,
+  IN PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG Reserved);
 
 typedef VOID
 (DDKAPI *PKNORMAL_ROUTINE)(
@@ -1998,6 +1976,15 @@ typedef struct _CM_SERIAL_DEVICE_DATA {
   ULONG  BaudClock;
 } CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
 
+typedef struct _IO_COUNTERS {
+    ULONGLONG  ReadOperationCount;
+    ULONGLONG  WriteOperationCount;
+    ULONGLONG  OtherOperationCount;
+    ULONGLONG ReadTransferCount;
+    ULONGLONG WriteTransferCount;
+    ULONGLONG OtherTransferCount;
+} IO_COUNTERS, *PIO_COUNTERS;
+
 typedef struct _VM_COUNTERS
 {
     SIZE_T PeakVirtualSize;
@@ -2468,6 +2455,12 @@ typedef struct _DRIVER_OBJECT {
 } DRIVER_OBJECT;
 typedef struct _DRIVER_OBJECT *PDRIVER_OBJECT;
 
+typedef struct _DMA_ADAPTER {
+  USHORT  Version;
+  USHORT  Size;
+  struct _DMA_OPERATIONS*  DmaOperations;
+} DMA_ADAPTER, *PDMA_ADAPTER;
+
 typedef VOID
 (DDKAPI *PPUT_DMA_ADAPTER)(
   IN PDMA_ADAPTER  DmaAdapter);
@@ -2595,13 +2588,6 @@ typedef struct _DMA_OPERATIONS {
   PBUILD_SCATTER_GATHER_LIST  BuildScatterGatherList;
   PBUILD_MDL_FROM_SCATTER_GATHER_LIST  BuildMdlFromScatterGatherList;
 } DMA_OPERATIONS, *PDMA_OPERATIONS;
-
-typedef struct _DMA_ADAPTER {
-  USHORT  Version;
-  USHORT  Size;
-  PDMA_OPERATIONS  DmaOperations;
-} DMA_ADAPTER;
-
 
 typedef enum _ARBITER_REQUEST_SOURCE {
   ArbiterRequestUndefined = -1,
@@ -3266,6 +3252,11 @@ typedef struct _FILE_END_OF_FILE_INFORMATION {
 typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
   LARGE_INTEGER  ValidDataLength;
 } FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
+
+typedef union _FILE_SEGMENT_ELEMENT {
+    PVOID64 Buffer;
+    ULONGLONG Alignment;
+}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
 
 typedef enum _FSINFOCLASS {
   FileFsVolumeInformation = 1,
@@ -4118,10 +4109,6 @@ typedef enum _KEY_SET_INFORMATION_CLASS {
   MaxKeySetInfoClass
 } KEY_SET_INFORMATION_CLASS;
 
-#define REG_CREATED_NEW_KEY         0x00000001L
-#define REG_OPENED_EXISTING_KEY     0x00000002L
-
-
 /* KEY_VALUE_Xxx.Type */
 
 #define REG_NONE                           0
@@ -4398,32 +4385,71 @@ typedef enum _EX_POOL_PRIORITY {
   HighPoolPrioritySpecialPoolUnderrun = 41
 } EX_POOL_PRIORITY;
 
-/* PRIVILEGE_SET.Control */
+typedef struct _OSVERSIONINFOA {
+    ULONG dwOSVersionInfoSize;
+    ULONG dwMajorVersion;
+    ULONG dwMinorVersion;
+    ULONG dwBuildNumber;
+    ULONG dwPlatformId;
+    CHAR   szCSDVersion[128];
+} OSVERSIONINFOA, *POSVERSIONINFOA, *LPOSVERSIONINFOA;
 
-#define PRIVILEGE_SET_ALL_NECESSARY       1
+typedef struct _OSVERSIONINFOW {
+    ULONG dwOSVersionInfoSize;
+    ULONG dwMajorVersion;
+    ULONG dwMinorVersion;
+    ULONG dwBuildNumber;
+    ULONG dwPlatformId;
+    WCHAR  szCSDVersion[128];
+} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW, RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
 
-typedef struct _RTL_OSVERSIONINFOW {
-  ULONG  dwOSVersionInfoSize;
-  ULONG  dwMajorVersion;
-  ULONG  dwMinorVersion;
-  ULONG  dwBuildNumber;
-  ULONG  dwPlatformId;
-  WCHAR  szCSDVersion[128];
-} RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
+#ifdef UNICODE
+typedef OSVERSIONINFOW OSVERSIONINFO;
+typedef POSVERSIONINFOW POSVERSIONINFO;
+typedef LPOSVERSIONINFOW LPOSVERSIONINFO;
+#else
+typedef OSVERSIONINFOA OSVERSIONINFO;
+typedef POSVERSIONINFOA POSVERSIONINFO;
+typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
+#endif // UNICODE
 
-typedef struct _RTL_OSVERSIONINFOEXW {
-  ULONG  dwOSVersionInfoSize;
-  ULONG  dwMajorVersion;
-  ULONG  dwMinorVersion;
-  ULONG  dwBuildNumber;
-  ULONG  dwPlatformId;
-  WCHAR  szCSDVersion[128];
-  USHORT  wServicePackMajor;
-  USHORT  wServicePackMinor;
-  USHORT  wSuiteMask;
-  UCHAR  wProductType;
-  UCHAR  wReserved;
-} RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
+typedef struct _OSVERSIONINFOEXA {
+    ULONG dwOSVersionInfoSize;
+    ULONG dwMajorVersion;
+    ULONG dwMinorVersion;
+    ULONG dwBuildNumber;
+    ULONG dwPlatformId;
+    CHAR   szCSDVersion[128];
+    USHORT wServicePackMajor;
+    USHORT wServicePackMinor;
+    USHORT wSuiteMask;
+    UCHAR wProductType;
+    UCHAR wReserved;
+} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
+
+typedef struct _OSVERSIONINFOEXW {
+    ULONG dwOSVersionInfoSize;
+    ULONG dwMajorVersion;
+    ULONG dwMinorVersion;
+    ULONG dwBuildNumber;
+    ULONG dwPlatformId;
+    WCHAR  szCSDVersion[128];
+    USHORT wServicePackMajor;
+    USHORT wServicePackMinor;
+    USHORT wSuiteMask;
+    UCHAR wProductType;
+    UCHAR wReserved;
+} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
+
+#ifdef UNICODE
+typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
+typedef POSVERSIONINFOEXW POSVERSIONINFOEX;
+typedef LPOSVERSIONINFOEXW LPOSVERSIONINFOEX;
+#else
+typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
+typedef POSVERSIONINFOEXA POSVERSIONINFOEX;
+typedef LPOSVERSIONINFOEXA LPOSVERSIONINFOEX;
+#endif // UNICODE
 
 NTSYSAPI
 ULONGLONG
@@ -4576,8 +4602,6 @@ typedef struct _PAGED_LOOKASIDE_LIST {
   GENERAL_LOOKASIDE  L;
   FAST_MUTEX  Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
-
-typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 
 typedef VOID
 (DDKAPI *PCALLBACK_FUNCTION)(
@@ -4984,6 +5008,19 @@ typedef VOID
   IN HANDLE  ProcessId,
   IN PIMAGE_INFO  ImageInfo);
 
+typedef struct _NT_TIB {
+    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+    PVOID StackBase;
+    PVOID StackLimit;
+    PVOID SubSystemTib;
+	_ANONYMOUS_UNION union {
+		PVOID FiberData;
+		ULONG Version;
+	} DUMMYUNIONNAME;
+    PVOID ArbitraryUserPointer;
+    struct _NT_TIB *Self;
+} NT_TIB, *PNT_TIB;
+
 typedef enum _PROCESSINFOCLASS {
   ProcessBasicInformation,
   ProcessQuotaLimits,
@@ -5062,7 +5099,7 @@ typedef enum _THREADINFOCLASS {
 typedef struct _PROCESS_BASIC_INFORMATION
 {
     NTSTATUS ExitStatus;
-    PPEB PebBaseAddress;
+    struct _PEB *PebBaseAddress;
     ULONG_PTR AffinityMask;
     KPRIORITY BasePriority;
     ULONG_PTR UniqueProcessId;
@@ -5109,13 +5146,6 @@ typedef struct _PROCESS_SESSION_INFORMATION
 {
     ULONG SessionId;
 } PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
-
-#define ES_SYSTEM_REQUIRED                0x00000001
-#define ES_DISPLAY_REQUIRED               0x00000002
-#define ES_USER_PRESENT                   0x00000004
-#define ES_CONTINUOUS                     0x80000000
-
-typedef ULONG EXECUTION_STATE;
 
 typedef VOID
 (DDKAPI *PREQUEST_POWER_COMPLETE)(
@@ -5418,9 +5448,12 @@ typedef VOID
 
 #ifdef _X86_
 
+//
+// Types to use to contain PFNs and their counts.
+//
 typedef ULONG PFN_COUNT;
-typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
 #define LOW_LEVEL                          0
@@ -5440,7 +5473,7 @@ typedef struct _KPCR_TIB {
   PVOID  SubSystemTib;          /* 0C */
   _ANONYMOUS_UNION union {
     PVOID  FiberData;           /* 10 */
-    DWORD  Version;             /* 10 */
+    ULONG  Version;             /* 10 */
   } DUMMYUNIONNAME;
   PVOID  ArbitraryUserPointer;  /* 14 */
   struct _KPCR_TIB *Self;       /* 18 */
@@ -5523,11 +5556,143 @@ KeGetCurrentThread(
 
 #define KI_USER_SHARED_DATA               0xffdf0000
 
+#define PAGE_SIZE                         0x1000
+#define PAGE_SHIFT                        12L
+
+#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
+
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
+
+#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
+#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
+#define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
+#define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0C00000
+
+#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
+#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
+
 #elif defined(__x86_64__)
 
+typedef struct DECLSPEC_ALIGN(16) _M128A {
+    ULONGLONG Low;
+    LONGLONG High;
+} M128A, *PM128A;
+
+typedef struct _XMM_SAVE_AREA32 {
+    USHORT ControlWord;
+    USHORT StatusWord;
+    UCHAR TagWord;
+    UCHAR Reserved1;
+    USHORT ErrorOpcode;
+    ULONG ErrorOffset;
+    USHORT ErrorSelector;
+    USHORT Reserved2;
+    ULONG DataOffset;
+    USHORT DataSelector;
+    USHORT Reserved3;
+    ULONG MxCsr;
+    ULONG MxCsr_Mask;
+    M128A FloatRegisters[8];
+    M128A XmmRegisters[16];
+    UCHAR Reserved4[96];
+} XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
+
+typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5Home;
+    ULONG64 P6Home;
+
+    /* Control flags */
+    ULONG ContextFlags;
+    ULONG MxCsr;
+
+    /* Segment */
+    USHORT SegCs;
+    USHORT SegDs;
+    USHORT SegEs;
+    USHORT SegFs;
+    USHORT SegGs;
+    USHORT SegSs;
+    USHORT EFlags;
+
+    /* Debug */
+    ULONG64 Dr0;
+    ULONG64 Dr1;
+    ULONG64 Dr2;
+    ULONG64 Dr3;
+    ULONG64 Dr6;
+    ULONG64 Dr7;
+
+    /* Integer */
+    ULONG64 Rax;
+    ULONG64 Rcx;
+    ULONG64 Rdx;
+    ULONG64 Rbx;
+    ULONG64 Rsp;
+    ULONG64 Rbp;
+    ULONG64 Rsi;
+    ULONG64 Rdi;
+    ULONG64 R8;
+    ULONG64 R9;
+    ULONG64 R10;
+    ULONG64 R11;
+    ULONG64 R12;
+    ULONG64 R13;
+    ULONG64 R14;
+    ULONG64 R15;
+
+    /* Counter */
+    ULONG64 Rip;
+
+   /* Floating point */
+   union {
+       XMM_SAVE_AREA32 FltSave;
+       struct {
+           M128A Header[2];
+           M128A Legacy[8];
+           M128A Xmm0;
+           M128A Xmm1;
+           M128A Xmm2;
+           M128A Xmm3;
+           M128A Xmm4;
+           M128A Xmm5;
+           M128A Xmm6;
+           M128A Xmm7;
+           M128A Xmm8;
+           M128A Xmm9;
+           M128A Xmm10;
+           M128A Xmm11;
+           M128A Xmm12;
+           M128A Xmm13;
+           M128A Xmm14;
+           M128A Xmm15;
+      } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+
+     /* Vector */
+    M128A VectorRegister[26];
+    ULONG64 VectorControl;
+
+    /* Debug control */
+    ULONG64 DebugControl;
+    ULONG64 LastBranchToRip;
+    ULONG64 LastBranchFromRip;
+    ULONG64 LastExceptionToRip;
+    ULONG64 LastExceptionFromRip;
+} CONTEXT;
+
+//
+// Types to use to contain PFNs and their counts.
+//
 typedef ULONG PFN_COUNT;
-typedef LONG64 SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG64 PFN_NUMBER, *PPFN_NUMBER;
+typedef LONG64 SPFN_NUMBER, *PSPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
 #define LOW_LEVEL                          0
@@ -5642,9 +5807,12 @@ KeGetCurrentProcessorNumber(VOID)
 
 #elif defined(__PowerPC__)
 
+//
+// Types to use to contain PFNs and their counts.
+//
 typedef ULONG PFN_COUNT;
-typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
 #define LOW_LEVEL                          0
@@ -5668,7 +5836,7 @@ typedef struct _KPCR_TIB {
   PVOID  SubSystemTib;          /* 0C */
   _ANONYMOUS_UNION union {
     PVOID  FiberData;           /* 10 */
-    DWORD  Version;             /* 10 */
+    ULONG  Version;             /* 10 */
   } DUMMYUNIONNAME;
   PVOID  ArbitraryUserPointer;  /* 14 */
   struct _KPCR_TIB *Self;       /* 18 */
@@ -5717,9 +5885,12 @@ KeGetCurrentProcessorNumber(VOID)
 
 #error MIPS Headers are totally incorrect
 
+//
+// Types to use to contain PFNs and their counts.
+//
 typedef ULONG PFN_COUNT;
-typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 
 #define PASSIVE_LEVEL                      0
 #define APC_LEVEL                          1
@@ -5758,25 +5929,6 @@ KeGetCurrentProcessorNumber(VOID)
 #else
 #error Unknown architecture
 #endif
-
-#define PAGE_SIZE                         0x1000
-#define PAGE_SHIFT                        12L
-
-#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
-
-extern NTKERNELAPI PVOID MmHighestUserAddress;
-extern NTKERNELAPI PVOID MmSystemRangeStart;
-extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
-
-#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
-#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
-#define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
-#define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0C00000
-
-#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
-#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
-
 
 #define EFLAG_SIGN                        0x8000
 #define EFLAG_ZERO                        0x4000
@@ -5942,15 +6094,15 @@ InterlockedExchangeAdd(
 #define InterlockedCompareExchangePointer _InterlockedCompareExchangePointer
 #define InterlockedExchangePointer _InterlockedExchangePointer
 
-#define ExInterlockedPopEntrySList(Head, Lock) ExpInterlockedPopEntrySList(Head)
-#define ExInterlockedPushEntrySList(Head, Entry, Lock) ExpInterlockedPushEntrySList(Head, Entry)
-#define ExInterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
+//#define ExInterlockedPopEntrySList(Head, Lock) ExpInterlockedPopEntrySList(Head)
+//#define ExInterlockedPushEntrySList(Head, Entry, Lock) ExpInterlockedPushEntrySList(Head, Entry)
+//#define ExInterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
 
 #if !defined(_WINBASE_)
-#define InterlockedPopEntrySList(Head) ExpInterlockedPopEntrySList(Head)
-#define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
-#define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
-#define QueryDepthSList(Head) ExQueryDepthSList(Head)
+//#define InterlockedPopEntrySList(Head) ExpInterlockedPopEntrySList(Head)
+//#define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
+//#define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
+//#define QueryDepthSList(Head) ExQueryDepthSList(Head)
 #endif // !defined(_WINBASE_)
 
 #endif // _M_AMD64
@@ -6070,28 +6222,6 @@ KeAcquireSpinLockRaiseToDpc(
  */
 #define BYTES_TO_PAGES(Size) \
   ((ULONG) ((ULONG_PTR) (Size) >> PAGE_SHIFT) + (((ULONG) (Size) & (PAGE_SIZE - 1)) != 0))
-
-/*
- * PCHAR
- * CONTAINING_RECORD(
- *   IN PCHAR  Address,
- *   IN TYPE  Type,
- *   IN PCHAR  Field);
- */
-#ifndef CONTAINING_RECORD
-#define CONTAINING_RECORD(address, type, field) \
-  ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
-#endif
-
-/* LONG
- * FIELD_OFFSET(
- *   IN TYPE  Type,
- *   IN PCHAR  Field);
- */
-#ifndef FIELD_OFFSET
-#define FIELD_OFFSET(Type, Field) \
-  ((LONG) (&(((Type *) 0)->Field)))
-#endif
 
 /*
  * PVOID
@@ -7677,12 +7807,14 @@ ExNotifyCallback(
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 ExRaiseAccessViolation(
   VOID);
 
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 ExRaiseDatatypeMisalignment(
   VOID);
 
@@ -7690,6 +7822,7 @@ DECLSPEC_NORETURN
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 ExRaiseStatus(
   IN NTSTATUS  Status);
 
@@ -9615,12 +9748,14 @@ KeAreApcsDisabled(
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 KeBugCheck(
   IN ULONG  BugCheckCode);
 
 NTKERNELAPI
 VOID
 NTAPI
+__declspec(noreturn)
 KeBugCheckEx(
   IN ULONG  BugCheckCode,
   IN ULONG_PTR  BugCheckParameter1,
@@ -10528,7 +10663,7 @@ MmLockPagableImageSection(
  * MmLockPagableCodeSection(
  *   IN PVOID  AddressWithinSection)
  */
-#define MmLockPagableCodeSection MmLockPagableDataSection
+#define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
 
 NTKERNELAPI
 VOID
@@ -10628,7 +10763,6 @@ MmUnsecureVirtualMemory(
 }
 
 #define MmGetProcedureAddress(Address) (Address)
-#define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
 
 NTKERNELAPI
 VOID

@@ -165,7 +165,7 @@ typedef struct _HW_LU_EXTENSION {
 } HW_LU_EXTENSION, *PHW_LU_EXTENSION;
 
 PSCSI_REQUEST_BLOCK
-STDCALL
+NTAPI
 BuildMechanismStatusSrb (
     IN PVOID HwDeviceExtension,
     IN ULONG PathId,
@@ -173,7 +173,7 @@ BuildMechanismStatusSrb (
     );
 
 PSCSI_REQUEST_BLOCK
-STDCALL
+NTAPI
 BuildRequestSenseSrb (
     IN PVOID HwDeviceExtension,
     IN ULONG PathId,
@@ -181,7 +181,7 @@ BuildRequestSenseSrb (
     );
 
 VOID
-STDCALL
+NTAPI
 AtapiHwInitializeChanger (
     IN PVOID HwDeviceExtension,
     IN ULONG TargetId,
@@ -189,28 +189,28 @@ AtapiHwInitializeChanger (
     );
 
 ULONG
-STDCALL
+NTAPI
 AtapiSendCommand(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
     );
 
 VOID
-STDCALL
+NTAPI
 AtapiZeroMemory(
-    IN PCHAR Buffer,
+    IN PUCHAR Buffer,
     IN ULONG Count
     );
 
 VOID
-STDCALL
+NTAPI
 AtapiHexToString (
     ULONG Value,
     PCHAR *Buffer
     );
 
 LONG
-STDCALL
+NTAPI
 AtapiStringCmp (
     PCHAR FirstStr,
     PCHAR SecondStr,
@@ -218,26 +218,26 @@ AtapiStringCmp (
     );
 
 BOOLEAN
-STDCALL
+NTAPI
 AtapiInterrupt(
     IN PVOID HwDeviceExtension
     );
 
 BOOLEAN
-STDCALL
+NTAPI
 AtapiHwInitialize(
     IN PVOID HwDeviceExtension
         );
 
 ULONG
-STDCALL
+NTAPI
 IdeBuildSenseBuffer(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
     );
 
 VOID
-STDCALL
+NTAPI
 IdeMediaStatus(
     IN BOOLEAN EnableMSN,
     IN PVOID HwDeviceExtension,
@@ -247,7 +247,7 @@ IdeMediaStatus(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 IssueIdentify(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
@@ -632,7 +632,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 SetDriveParameters(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
@@ -729,7 +729,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 AtapiResetController(
     IN PVOID HwDeviceExtension,
     IN ULONG PathId
@@ -901,7 +901,7 @@ Return Value:
 
 
 ULONG
-STDCALL
+NTAPI
 MapError(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -930,7 +930,7 @@ Return Value:
     //PIDE_REGISTERS_2     baseIoAddress2  = deviceExtension->BaseIoAddress2[Srb->TargetId >> 1];
     ULONG i;
     UCHAR errorByte;
-    UCHAR srbStatus;
+    UCHAR srbStatus = SRB_STATUS_ERROR;
     UCHAR scsiStatus;
 
     //
@@ -1278,7 +1278,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 AtapiHwInitialize(
     IN PVOID HwDeviceExtension
     )
@@ -1400,7 +1400,7 @@ Return Value:
                     vendorId[j+1] = ((PUCHAR)deviceExtension->IdentifyData[i].ModelNumber)[j];
                 }
 
-                if (!AtapiStringCmp (vendorId, "CD-ROM  CDR", 11)) {
+                if (!AtapiStringCmp ((PCHAR)vendorId, "CD-ROM  CDR", 11)) {
 
                     //
                     // Inquiry string for older model had a '-', newer is '_'
@@ -1467,7 +1467,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 AtapiHwInitializeChanger (
     IN PVOID HwDeviceExtension,
     IN ULONG TargetId,
@@ -1487,7 +1487,7 @@ AtapiHwInitializeChanger (
 
 
 BOOLEAN
-STDCALL
+NTAPI
 FindDevices(
     IN PVOID HwDeviceExtension,
     IN BOOLEAN AtapiOnly,
@@ -1850,7 +1850,7 @@ atapiIssueId:
 
 
 ULONG
-STDCALL
+NTAPI
 AtapiParseArgumentString(
     IN PCHAR String,
     IN PCHAR KeyWord
@@ -2104,7 +2104,7 @@ ContinueSearch:
 
 
 ULONG
-STDCALL
+NTAPI
 AtapiFindController(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
@@ -2138,7 +2138,7 @@ Return Value:
 {
     PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
     PULONG               adapterCount    = (PULONG)Context;
-    PUCHAR               ioSpace;
+    PUCHAR               ioSpace = NULL;
     ULONG                i;
     ULONG                irq;
     ULONG                portBase;
@@ -2573,7 +2573,7 @@ retryIdentifier:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 FindBrokenController(
     IN PVOID  DeviceExtension,
     IN PUCHAR VendorID,
@@ -2600,12 +2600,9 @@ Return Value:
 
 --*/
 {
-    //PHW_DEVICE_EXTENSION deviceExtension = DeviceExtension;
-    //ULONG               rangeNumber = 0;
     ULONG               pciBuffer;
     ULONG               slotNumber;
     ULONG               functionNumber;
-    //ULONG               status;
     PCI_SLOT_NUMBER     slotData;
     PPCI_COMMON_CONFIG  pciData;
     UCHAR               vendorString[5];
@@ -2668,8 +2665,8 @@ Return Value:
 
             vendorStrPtr = vendorString;
             deviceStrPtr = deviceString;
-            AtapiHexToString(pciData->VendorID, (PVOID)&vendorStrPtr);
-            AtapiHexToString(pciData->DeviceID, (PVOID)&deviceStrPtr);
+            AtapiHexToString(pciData->VendorID, (PCHAR*)&vendorStrPtr);
+            AtapiHexToString(pciData->DeviceID, (PCHAR*)&deviceStrPtr);
 
             DebugPrint((2,
                        "FindBrokenController: Bus %x Slot %x Function %x Vendor %s Product %s\n",
@@ -2683,11 +2680,11 @@ Return Value:
             // Compare strings.
             //
 
-            if (AtapiStringCmp(vendorString,
-                        VendorID,
+            if (AtapiStringCmp((PCHAR)vendorString,
+                        (PCHAR)VendorID,
                         VendorIDLength) ||
-                AtapiStringCmp(deviceString,
-                        DeviceID,
+                AtapiStringCmp((PCHAR)deviceString,
+                        (PCHAR)DeviceID,
                         DeviceIDLength)) {
 
                 //
@@ -2713,7 +2710,7 @@ Return Value:
 
 
 ULONG
-STDCALL
+NTAPI
 AtapiFindNativeModeController(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
@@ -2803,17 +2800,17 @@ Return Value:
 
         vendorStrPtr = vendorString;
         deviceStrPtr = deviceString;
-        AtapiHexToString(pciData.VendorID, (PVOID)&vendorStrPtr);
-        AtapiHexToString(pciData.DeviceID, (PVOID)&deviceStrPtr);
+        AtapiHexToString(pciData.VendorID, (PCHAR*)&vendorStrPtr);
+        AtapiHexToString(pciData.DeviceID, (PCHAR*)&deviceStrPtr);
 
         //
         // Compare strings.
         //
 
-        if (AtapiStringCmp(vendorString,
+        if (AtapiStringCmp((PCHAR)vendorString,
                     NativeModeAdapters[nativeModeAdapterTableIndex].VendorId,
                     NativeModeAdapters[nativeModeAdapterTableIndex].VendorIdLength) ||
-            AtapiStringCmp(deviceString,
+            AtapiStringCmp((PCHAR)deviceString,
                     NativeModeAdapters[nativeModeAdapterTableIndex].DeviceId,
                     NativeModeAdapters[nativeModeAdapterTableIndex].DeviceIdLength)) {
             continue;
@@ -3015,7 +3012,7 @@ setStatusAndExit:
 
 
 ULONG
-STDCALL
+NTAPI
 AtapiFindPCIController(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
@@ -3115,9 +3112,9 @@ Return Value:
         lastSlot = FALSE;
 
         if (FindBrokenController(deviceExtension,
-                                 BrokenAdapters[i].VendorId,
+                                 (PUCHAR)BrokenAdapters[i].VendorId,
                                  BrokenAdapters[i].VendorIdLength,
-                                 BrokenAdapters[i].DeviceId,
+                                 (PUCHAR)BrokenAdapters[i].DeviceId,
                                  BrokenAdapters[i].DeviceIdLength,
                                  &functionNumber,
                                  &slotNumber,
@@ -3361,7 +3358,7 @@ setStatusAndExit:
 
 
 ULONG
-STDCALL
+NTAPI
 Atapi2Scsi(
     IN PSCSI_REQUEST_BLOCK Srb,
     IN char *DataBuffer,
@@ -3412,7 +3409,7 @@ Atapi2Scsi(
 
 
 VOID
-STDCALL
+NTAPI
 AtapiCallBack(
     IN PVOID HwDeviceExtension
     )
@@ -3485,7 +3482,7 @@ AtapiCallBack(
 
 
 BOOLEAN
-STDCALL
+NTAPI
 AtapiInterrupt(
     IN PVOID HwDeviceExtension
     )
@@ -3515,7 +3512,6 @@ Return Value:
     ULONG status;
     ULONG i;
     UCHAR statusByte,interruptReason;
-    //BOOLEAN commandComplete = FALSE;
     BOOLEAN atapiDev = FALSE;
 
     if (srb) {
@@ -4345,7 +4341,7 @@ CompleteRequest:
 
 
 ULONG
-STDCALL
+NTAPI
 IdeSendSmartCommand(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -4501,7 +4497,7 @@ Return Value:
 
 
 ULONG
-STDCALL
+NTAPI
 IdeReadWrite(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -4745,7 +4741,7 @@ Return Value:
 
 
 ULONG
-STDCALL
+NTAPI
 IdeVerify(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -4915,7 +4911,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 Scsi2Atapi(
     IN PSCSI_REQUEST_BLOCK Srb
     )
@@ -4983,7 +4979,7 @@ Return Value:
 
 
 ULONG
-STDCALL
+NTAPI
 AtapiSendCommand(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -5338,7 +5334,7 @@ Return Value:
 } // end AtapiSendCommand()
 
 ULONG
-STDCALL
+NTAPI
 IdeSendCommand(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -5652,7 +5648,7 @@ Return Value:
 } // end IdeSendCommand()
 
 VOID
-STDCALL
+NTAPI
 IdeMediaStatus(
     BOOLEAN EnableMSN,
     IN PVOID HwDeviceExtension,
@@ -5734,7 +5730,7 @@ HwDeviceExtension - ATAPI driver storage.
 }
 
 ULONG
-STDCALL
+NTAPI
 IdeBuildSenseBuffer(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -5759,7 +5755,6 @@ Return Value:
 
 {
     PHW_DEVICE_EXTENSION deviceExtension = HwDeviceExtension;
-    //ULONG status;
     PSENSE_DATA  senseBuffer = (PSENSE_DATA)Srb->DataBuffer;
 
 
@@ -5809,7 +5804,7 @@ Return Value:
 
 
 BOOLEAN
-STDCALL
+NTAPI
 AtapiStartIo(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -5968,7 +5963,7 @@ Return Value:
 
         deviceExtension->CurrentSrb = Srb;
 
-        if (AtapiStringCmp( ((PSRB_IO_CONTROL)(Srb->DataBuffer))->Signature,"SCSIDISK",strlen("SCSIDISK"))) {
+        if (AtapiStringCmp( (PCHAR)((PSRB_IO_CONTROL)(Srb->DataBuffer))->Signature,"SCSIDISK",strlen("SCSIDISK"))) {
 
             DebugPrint((1,
                         "AtapiStartIo: IoControl signature incorrect. Send %s, expected %s\n",
@@ -6175,7 +6170,7 @@ Return Value:
 
 
 ULONG
-STDCALL
+NTAPI
 DriverEntry(
     IN PVOID DriverObject,
     IN PVOID Argument2
@@ -6331,7 +6326,7 @@ Return Value:
 
 
 LONG
-STDCALL
+NTAPI
 AtapiStringCmp (
     PCHAR FirstStr,
     PCHAR SecondStr,
@@ -6379,9 +6374,9 @@ AtapiStringCmp (
 
 
 VOID
-STDCALL
+NTAPI
 AtapiZeroMemory(
-    IN PCHAR Buffer,
+    IN PUCHAR Buffer,
     IN ULONG Count
     )
 {
@@ -6394,7 +6389,7 @@ AtapiZeroMemory(
 
 
 VOID
-STDCALL
+NTAPI
 AtapiHexToString (
     IN ULONG Value,
     IN OUT PCHAR *Buffer
@@ -6445,7 +6440,7 @@ AtapiHexToString (
 
 
 PSCSI_REQUEST_BLOCK
-STDCALL
+NTAPI
 BuildMechanismStatusSrb (
     IN PVOID HwDeviceExtension,
     IN ULONG PathId,
@@ -6491,7 +6486,7 @@ BuildMechanismStatusSrb (
 
 
 PSCSI_REQUEST_BLOCK
-STDCALL
+NTAPI
 BuildRequestSenseSrb (
     IN PVOID HwDeviceExtension,
     IN ULONG PathId,

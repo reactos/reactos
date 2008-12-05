@@ -58,7 +58,7 @@ VOID FASTCALL EnvironmentStringToUnicodeString (PWCHAR wsIn, PUNICODE_STRING usO
 
 
 VOID
-STDCALL
+WINAPI
 NtProcessStartup(PPEB Peb)
 {
     NTSTATUS Status;

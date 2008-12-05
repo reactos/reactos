@@ -57,6 +57,7 @@ ReferencePolicyHandle(IN LSAPR_HANDLE ObjectHandle,
     return Status;
 }
 
+
 /*static*/ VOID
 DereferencePolicyHandle(IN OUT PLSAR_POLICY_HANDLE Policy,
                         IN BOOLEAN Delete)
@@ -81,17 +82,13 @@ DereferencePolicyHandle(IN OUT PLSAR_POLICY_HANDLE Policy,
     RtlLeaveCriticalSection(&PolicyHandleTableLock);
 }
 
-VOID
-LsarStartRpcServer(VOID)
+
+DWORD WINAPI
+LsapRpcThreadRoutine(LPVOID lpParameter)
 {
     RPC_STATUS Status;
 
-    RtlInitializeCriticalSection(&PolicyHandleTableLock);
-    RtlInitializeHandleTable(0x1000,
-                             sizeof(LSAR_POLICY_HANDLE),
-                             &PolicyHandleTable);
-
-    TRACE("LsarStartRpcServer() called");
+    TRACE("LsapRpcThreadRoutine() called");
 
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
                                     10,
@@ -100,7 +97,7 @@ LsarStartRpcServer(VOID)
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
-        return;
+        return 0;
     }
 
     Status = RpcServerRegisterIf(lsarpc_v0_0_s_ifspec,
@@ -109,17 +106,51 @@ LsarStartRpcServer(VOID)
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerRegisterIf() failed (Status %lx)\n", Status);
-        return;
+        return 0;
     }
 
-    Status = RpcServerListen(1, 20, TRUE);
+    Status = RpcServerListen(1, 20, FALSE);
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerListen() failed (Status %lx)\n", Status);
-        return;
+        return 0;
     }
 
-    TRACE("LsarStartRpcServer() done\n");
+    TRACE("LsapRpcThreadRoutine() done\n");
+
+    return 0;
+}
+
+
+VOID
+LsarStartRpcServer(VOID)
+{
+    HANDLE hThread;
+
+    TRACE("LsarStartRpcServer() called");
+
+    RtlInitializeCriticalSection(&PolicyHandleTableLock);
+    RtlInitializeHandleTable(0x1000,
+                             sizeof(LSAR_POLICY_HANDLE),
+                             &PolicyHandleTable);
+
+    hThread = CreateThread(NULL,
+                           0,
+                           (LPTHREAD_START_ROUTINE)
+                           LsapRpcThreadRoutine,
+                           NULL,
+                           0,
+                           NULL);
+    if (!hThread)
+    {
+        WARN("Starting LsapRpcThreadRoutine-Thread failed!\n");
+    }
+    else
+    {
+        CloseHandle(hThread);
+    }
+
+    TRACE("LsarStartRpcServer() done");
 }
 
 
@@ -220,8 +251,16 @@ NTSTATUS LsarOpenPolicy(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *PolicyHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ERR("LsarOpenPolicy called!\n");
+
+    *PolicyHandle = (LSAPR_HANDLE)0xcafe;
+
+    ERR("LsarOpenPolicy done!\n");
+
+    return STATUS_SUCCESS;
+
+//    UNIMPLEMENTED;
+//    return STATUS_NOT_IMPLEMENTED;
 }
 
 

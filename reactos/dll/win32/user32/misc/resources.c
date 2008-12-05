@@ -9,8 +9,8 @@
 #define CR_INVALID_DATA                   0x0000001F
 #endif
 
-typedef DWORD (STDCALL *CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
-typedef DWORD (STDCALL *CMP_UNREGNOTIFY) (ULONG );
+typedef DWORD (WINAPI *CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
+typedef DWORD (WINAPI *CMP_UNREGNOTIFY) (ULONG );
 
 /* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
           does not seem to work properly for stack address space. */
@@ -20,7 +20,7 @@ typedef DWORD (STDCALL *CMP_UNREGNOTIFY) (ULONG );
 
 static HINSTANCE hSetupApi = NULL;
 
-BOOL STDCALL _InternalLoadString
+BOOL WINAPI _InternalLoadString
 (
  HINSTANCE hInstance,
  UINT uID,
@@ -103,7 +103,7 @@ BOOL STDCALL _InternalLoadString
 /*
  * @implemented
  */
-int STDCALL LoadStringA
+int WINAPI LoadStringA
 (
  HINSTANCE hInstance,
  UINT uID,
@@ -184,7 +184,7 @@ int STDCALL LoadStringA
 /*
  * @implemented
  */
-int STDCALL LoadStringW
+int WINAPI LoadStringW
 (
  HINSTANCE hInstance,
  UINT uID,
@@ -249,7 +249,7 @@ int STDCALL LoadStringW
  * @implemented
  */
 HDEVNOTIFY
-STDCALL
+WINAPI
 RegisterDeviceNotificationW(
     HANDLE hRecipient,
     LPVOID NotificationFilter,
@@ -295,7 +295,7 @@ RegisterDeviceNotificationW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnregisterDeviceNotification(
   HDEVNOTIFY Handle)
 {

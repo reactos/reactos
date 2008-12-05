@@ -81,10 +81,10 @@ PCIPBUSDATA HalpFakePciBusData =
         HalpWritePCIConfig,
         NULL,
         NULL,
-        {{{0}}},
+        {{{0, 0, 0}}},
         {0, 0, 0, 0}
     },
-    {{0}},
+    {{0, 0}},
     32,
 };
 
@@ -520,7 +520,7 @@ HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-static ULONG STDCALL
+static ULONG NTAPI
 PciSize(ULONG Base, ULONG Mask)
 {
     ULONG Size = Mask & Base; /* Find the significant bits */

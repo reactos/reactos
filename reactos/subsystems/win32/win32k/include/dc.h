@@ -185,12 +185,12 @@ typedef struct _GDIDEVICE
 
   PVOID         pvGammaRamp;    // Gamma ramp pointer.
 
-  DHPDEV        hPDev;          // DHPDEV for device.
-
   HSURF         FillPatterns[HS_DDI_MAX];
 
   ULONG         DxDd_nCount;
 
+  DHPDEV        hPDev;          // DHPDEV for device.
+  PVOID         ppalSurf;       // PEPALOBJ/PPALGDI for this device.
   DEVINFO       DevInfo;
   GDIINFO       GDIInfo;
   HSURF         pSurface;       // SURFACE for this device.
@@ -256,18 +256,21 @@ VOID FASTCALL IntGetWindowOrgEx(PDC dc, LPPOINT pt);
 
 COLORREF FASTCALL IntGdiSetBkColor (HDC hDC, COLORREF Color);
 INT FASTCALL IntGdiSetBkMode(HDC  hDC, INT  backgroundMode);
-COLORREF STDCALL  IntGdiGetBkColor(HDC  hDC);
-INT STDCALL  IntGdiGetBkMode(HDC  hDC);
+COLORREF APIENTRY  IntGdiGetBkColor(HDC  hDC);
+INT APIENTRY  IntGdiGetBkMode(HDC  hDC);
 COLORREF FASTCALL  IntGdiSetTextColor(HDC hDC, COLORREF color);
 UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
-UINT STDCALL  IntGdiGetTextAlign(HDC  hDC);
-COLORREF STDCALL  IntGdiGetTextColor(HDC  hDC);
-INT STDCALL  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
+UINT APIENTRY  IntGdiGetTextAlign(HDC  hDC);
+COLORREF APIENTRY  IntGdiGetTextColor(HDC  hDC);
+INT APIENTRY  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
 VOID FASTCALL IntGdiReferencePdev(PGDIDEVICE pPDev);
 VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PGDIDEVICE, PDEVCAPS);
+HPEN FASTCALL IntGdiSelectPen(PDC,HPEN);
+HBRUSH FASTCALL IntGdiSelectBrush(PDC,HBRUSH);
+INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
 
 extern PGDIDEVICE pPrimarySurface;
 

@@ -26,7 +26,8 @@
   DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
   KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
 
-static BOOL INTERNAL_CALL GDI_CleanupDummy(PVOID ObjectBody);
+/* static */ /* FIXME: -fno-unit-at-a-time breaks this */
+BOOL INTERNAL_CALL GDI_CleanupDummy(PVOID ObjectBody);
 
 /** GLOBALS *******************************************************************/
 
@@ -86,7 +87,8 @@ static LARGE_INTEGER ShortDelay;
 /*
  * Dummy GDI Cleanup Callback
  */
-static BOOL INTERNAL_CALL
+/* static */ /* FIXME: -fno-unit-at-a-time breaks this */
+BOOL INTERNAL_CALL
 GDI_CleanupDummy(PVOID ObjectBody)
 {
     return TRUE;
@@ -1448,7 +1450,7 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
     (PGDIBRUSHOBJ)->pBrushAttr = NULL;
 
    Notes:
-    Testing with DC_ATTR works but has drawing difficulties. 
+    Testing with DC_ATTR works but has drawing difficulties.
     Base on observation, (Over looking the obvious) we need to supply heap delta
     to user space gdi. Now, with testing, looks all normal.
 
@@ -1469,7 +1471,7 @@ IntGdiAllocObjAttr(GDIOBJTYPE Type)
         pMemAttr = UserHeapAlloc(sizeof(RGN_ATTR));
         if (pMemAttr) RtlZeroMemory(pMemAttr, sizeof(RGN_ATTR));
         break;
-     case GDIObjType_BRUSH_TYPE: 
+     case GDIObjType_BRUSH_TYPE:
         pMemAttr = UserHeapAlloc(sizeof(BRUSH_ATTR));
         if (pMemAttr) RtlZeroMemory(pMemAttr, sizeof(BRUSH_ATTR));
         break;
@@ -1524,7 +1526,7 @@ IntGdiSetBrushOwner(PGDIBRUSHOBJ pbr, DWORD OwnerMask)
         return FALSE;
 
      // Allow user access to User Data.
-     pEntry->UserData = pbr->pBrushAttr;    
+     pEntry->UserData = pbr->pBrushAttr;
   }
   return TRUE;
 }
@@ -1713,19 +1715,19 @@ NtGdiExtGetObjectW(IN HANDLE hGdiObj,
     if ((cbCopyCount) && (lpBuffer))
     {
         // Enter SEH for buffer transfer
-        _SEH_TRY
+        _SEH2_TRY
         {
             // Probe the buffer and copy it
             ProbeForWrite(lpBuffer, cbCopyCount, sizeof(WORD));
             RtlCopyMemory(lpBuffer, &Object, cbCopyCount);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             // Clear the return value.
             // Do *NOT* set last error here!
             iRetCount = 0;
         }
-        _SEH_END;
+        _SEH2_END;
     }
     // Return the count
     return iRetCount;

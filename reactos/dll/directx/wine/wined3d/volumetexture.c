@@ -107,7 +107,7 @@ static void WINAPI IWineD3DVolumeTextureImpl_PreLoad(IWineD3DVolumeTexture *ifac
         srgb_was_toggled = This->baseTexture.is_srgb != srgb_mode;
         This->baseTexture.is_srgb = srgb_mode;
     }
-    ENTER_GL();
+
     /* If the texture is marked dirty or the srgb sampler setting has changed since the last load then reload the surfaces */
     if (This->baseTexture.dirty) {
         for (i = 0; i < This->baseTexture.levels; i++)
@@ -125,7 +125,6 @@ static void WINAPI IWineD3DVolumeTextureImpl_PreLoad(IWineD3DVolumeTexture *ifac
     } else {
         TRACE("(%p) Texture not dirty, nothing to do\n" , iface);
     }
-    LEAVE_GL();
 
     /* No longer dirty */
     This->baseTexture.dirty = FALSE;

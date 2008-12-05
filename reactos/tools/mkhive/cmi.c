@@ -622,7 +622,7 @@ CmiAllocateValueCell(
 
 	NameLength = CmiGetPackedNameLength(ValueName, &Packable);
 
-	DPRINT("ValueName->Length %lu  NameLength %lu\n", ValueName->Length, NameLength);
+	DPRINT("ValueName->Length %u  NameLength %u\n", ValueName->Length, NameLength);
 
 	*VBOffset = HvAllocateCell(&RegistryHive->Hive, sizeof(CM_KEY_VALUE) + NameLength, Storage, HCELL_NIL);
 	if (*VBOffset == HCELL_NIL)

@@ -219,7 +219,7 @@ SepInitDACLs(VOID)
     return(TRUE);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SepCreateImpersonationTokenDacl(PTOKEN Token,
                                 PTOKEN PrimaryToken,
                                 PACL *Dacl)
@@ -280,7 +280,7 @@ SepCaptureAcl(IN PACL InputAcl,
     
     if(AccessMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForRead(InputAcl,
                          sizeof(ACL),
@@ -290,11 +290,11 @@ SepCaptureAcl(IN PACL InputAcl,
                          AclSize,
                          sizeof(ULONG));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         
         if(NT_SUCCESS(Status))
         {
@@ -302,7 +302,7 @@ SepCaptureAcl(IN PACL InputAcl,
                                     AclSize);
             if(NewAcl != NULL)
             {
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     RtlCopyMemory(NewAcl,
                                   InputAcl,
@@ -310,12 +310,12 @@ SepCaptureAcl(IN PACL InputAcl,
                     
                     *CapturedAcl = NewAcl;
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     ExFreePool(NewAcl);
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
             }
             else
             {

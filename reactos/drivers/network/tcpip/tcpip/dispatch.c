@@ -10,7 +10,7 @@
  */
 
 #include "precomp.h"
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 NTSTATUS DispPrepareIrpForCancel(
     PTRANSPORT_CONTEXT Context,
@@ -27,12 +27,17 @@ NTSTATUS DispPrepareIrpForCancel(
  */
 {
     KIRQL OldIrql;
+    PIO_STACK_LOCATION IrpSp;
+    PTRANSPORT_CONTEXT TransContext;
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
+    IrpSp       = IoGetCurrentIrpStackLocation(Irp);
+    TransContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
+
     IoAcquireCancelSpinLock(&OldIrql);
 
-    if (!Irp->Cancel) {
+    if (!Irp->Cancel && !TransContext->CancelIrps) {
         (void)IoSetCancelRoutine(Irp, CancelRoutine);
         IoReleaseCancelSpinLock(OldIrql);
 
@@ -188,6 +193,8 @@ VOID NTAPI DispCancelRequest(
             TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
             break;
         }
+
+        DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
     case TDI_RECEIVE_DATAGRAM:
@@ -767,7 +774,7 @@ NTSTATUS DispTdiReceive(
   PTDI_REQUEST_KERNEL_RECEIVE ReceiveInfo;
   PTRANSPORT_CONTEXT TranContext;
   NTSTATUS Status;
-  ULONG BytesReceived;
+  ULONG BytesReceived = 0;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -839,7 +846,7 @@ NTSTATUS DispTdiReceiveDatagram(
   PTRANSPORT_CONTEXT TranContext;
   TDI_REQUEST Request;
   NTSTATUS Status;
-  ULONG BytesReceived;
+  ULONG BytesReceived = 0;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -916,7 +923,7 @@ NTSTATUS DispTdiSend(
   PTDI_REQUEST_KERNEL_SEND SendInfo;
   PTRANSPORT_CONTEXT TranContext;
   NTSTATUS Status;
-  ULONG BytesSent;
+  ULONG BytesSent = 0;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -1343,7 +1350,7 @@ NTSTATUS DispTdiQueryInformationEx(
 
         QueryContext = ExAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
         if (QueryContext) {
-	    _SEH_TRY {
+	    _SEH2_TRY {
                 InputMdl = IoAllocateMdl(InputBuffer,
                     sizeof(TCP_REQUEST_QUERY_INFORMATION_EX),
                     FALSE, TRUE, NULL);
@@ -1367,9 +1374,9 @@ NTSTATUS DispTdiQueryInformationEx(
                         InputBuffer, sizeof(TCP_REQUEST_QUERY_INFORMATION_EX));
                 } else
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-            } _SEH_HANDLE {
-                Status = _SEH_GetExceptionCode();
-            } _SEH_END;
+            } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                Status = _SEH2_GetExceptionCode();
+            } _SEH2_END;
 
             if (NT_SUCCESS(Status)) {
                 Size = MmGetMdlByteCount(OutputMdl);
@@ -1420,7 +1427,7 @@ NTSTATUS DispTdiQueryInformationEx(
         QueryContext = ExAllocatePool(NonPagedPool, sizeof(TI_QUERY_CONTEXT));
         if (!QueryContext) return STATUS_INSUFFICIENT_RESOURCES;
 
-	_SEH_TRY {
+	_SEH2_TRY {
 	    InputMdl = IoAllocateMdl(InputBuffer,
 				     sizeof(TCP_REQUEST_QUERY_INFORMATION_EX),
 				     FALSE, TRUE, NULL);
@@ -1430,10 +1437,10 @@ NTSTATUS DispTdiQueryInformationEx(
 
 	    InputMdlLocked = TRUE;
 	    Status = STATUS_SUCCESS;
-	} _SEH_HANDLE {
+	} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
 	    TI_DbgPrint(MAX_TRACE, ("Failed to acquire client buffer\n"));
-	    Status = _SEH_GetExceptionCode();
-	} _SEH_END;
+	    Status = _SEH2_GetExceptionCode();
+	} _SEH2_END;
 
 	if( !NT_SUCCESS(Status) || !InputMdl ) {
 	    if( InputMdl ) IoFreeMdl( InputMdl );

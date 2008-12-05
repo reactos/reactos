@@ -68,14 +68,14 @@ extern LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter;
 
 /* FUNCTION PROTOTYPES *******************************************************/
 
-BOOL STDCALL VerifyConsoleIoHandle(HANDLE Handle);
+BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
 
-BOOL STDCALL CloseConsoleHandle(HANDLE Handle);
+BOOL WINAPI CloseConsoleHandle(HANDLE Handle);
 
-HANDLE STDCALL
+HANDLE WINAPI
 GetConsoleInputWaitHandle (VOID);
 
-HANDLE STDCALL OpenConsoleW (LPCWSTR wsName,
+HANDLE WINAPI OpenConsoleW (LPCWSTR wsName,
 			     DWORD  dwDesiredAccess,
 			     BOOL   bInheritHandle,
 			     DWORD  dwShareMode);
@@ -95,20 +95,20 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 #define HeapFree RtlFreeHeap
 
 POBJECT_ATTRIBUTES
-STDCALL
+WINAPI
 BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
                              IN PSECURITY_ATTRIBUTES SecurityAttributes OPTIONAL,
                              IN PUNICODE_STRING ObjectName);
                              
 NTSTATUS
-STDCALL
+WINAPI
 BasepCreateStack(HANDLE hProcess,
                  ULONG StackReserve,
                  ULONG StackCommit,
                  PINITIAL_TEB InitialTeb);
                  
 VOID
-STDCALL
+WINAPI
 BasepInitializeContext(IN PCONTEXT Context,
                        IN PVOID Parameter,
                        IN PVOID StartAddress,
@@ -116,21 +116,21 @@ BasepInitializeContext(IN PCONTEXT Context,
                        IN ULONG ContextType);
                 
 VOID
-STDCALL
+WINAPI
 BaseThreadStartupThunk(VOID);
 
 VOID
-STDCALL
+WINAPI
 BaseProcessStartThunk(VOID);
         
 __declspec(noreturn)
 VOID
-STDCALL
+WINAPI
 BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
                   LPVOID lpParameter);
                   
 VOID
-STDCALL
+WINAPI
 BasepFreeStack(HANDLE hProcess,
                PINITIAL_TEB InitialTeb);
 
@@ -139,32 +139,32 @@ VOID
 WINAPI
 BaseFiberStartup(VOID);
 
-typedef UINT (STDCALL *PPROCESS_START_ROUTINE)(VOID);
+typedef UINT (WINAPI *PPROCESS_START_ROUTINE)(VOID);
 
 VOID
-STDCALL
+WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress);
                   
 BOOLEAN
-STDCALL
+WINAPI
 BasepCheckRealTimePrivilege(VOID);
 
 VOID
-STDCALL
+WINAPI
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
                                    OUT LPWSTR* UnicodeString);
                                    
 PUNICODE_STRING
-STDCALL
+WINAPI
 Basep8BitStringToCachedUnicodeString(IN LPCSTR String);
 
 NTSTATUS
-STDCALL
+WINAPI
 Basep8BitStringToLiveUnicodeString(OUT PUNICODE_STRING UnicodeString,
                                    IN LPCSTR String);
 
 NTSTATUS
-STDCALL
+WINAPI
 Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
                                    IN LPCSTR String);
 
@@ -175,7 +175,7 @@ typedef NTSTATUS (NTAPI *PRTL_CONVERT_STRING)(IN PUNICODE_STRING UnicodeString,
 extern PRTL_CONVERT_STRING Basep8BitStringToUnicodeString;
 
 NTSTATUS
-STDCALL
+WINAPI
 BasepMapFile(IN LPCWSTR lpApplicationName,
              OUT PHANDLE hSection,
              IN PUNICODE_STRING ApplicationName);

@@ -362,7 +362,7 @@ typedef struct _CLIENTINFO
     DWORD dwHookCurrent;
     INT cInDDEMLCallback;
     PCLIENTTHREADINFO pClientThreadInfo;
-    DWORD dwHookData;
+    ULONG_PTR dwHookData;
     DWORD dwKeyCache;
     DWORD afKeyState[2];
     DWORD dwAsyncKeyCache;
@@ -953,7 +953,7 @@ NtUserChangeDisplaySettings(
   LPVOID lParam);
 
 DWORD
-STDCALL
+NTAPI
 NtUserCheckImeHotKey(
   DWORD dwUnknown1,
   DWORD dwUnknown2);
@@ -1197,7 +1197,7 @@ NtUserDrawCaption(
    UINT uFlags);
 
 BOOL
-STDCALL
+NTAPI
 NtUserDrawCaptionTemp(
   HWND hWnd,
   HDC hDC,
@@ -1324,7 +1324,7 @@ NtUserGetAltTabInfo(
    HWND hwnd,
    INT  iItem,
    PALTTABINFO pati,
-   LPTSTR pszItemText,
+   LPWSTR pszItemText,
    UINT   cchItemText,
    BOOL   Ansi);
 
@@ -1792,7 +1792,7 @@ NtUserKillTimer
 );
 
 HKL
-STDCALL
+NTAPI
 NtUserLoadKeyboardLayoutEx(
    IN HANDLE Handle,
    IN DWORD offTable,
@@ -1808,7 +1808,7 @@ NtUserLockWindowStation(
   HWINSTA hWindowStation);
 
 BOOL
-STDCALL
+NTAPI
 NtUserLockWindowUpdate(
   HWND hWnd);
 
@@ -2190,7 +2190,7 @@ NtUserSetClipboardViewer(
   HWND hWndNewViewer);
 
 HPALETTE
-STDCALL
+NTAPI
 NtUserSelectPalette(
     HDC hDC,
     HPALETTE  hpal,

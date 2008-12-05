@@ -162,6 +162,26 @@ UpdateDriverDetailsDlg(IN HWND hwndDlg,
                                  &DriverInfoData))
     {
         HSPFILEQ queueHandle;
+        DWORD HiVal, LoVal;
+        WCHAR szTime[25];
+
+        HiVal = (DriverInfoData.DriverVersion >> 32);
+        if (HiVal)
+        {
+            swprintf (szTime, L"%d.%d", HIWORD(HiVal), LOWORD(HiVal));
+            LoVal = (DriverInfoData.DriverVersion & 0xFFFFFFFF);
+            if (HIWORD(LoVal))
+            {
+                swprintf(&szTime[wcslen(szTime)], L".%d", HIWORD(LoVal));
+                if (LOWORD(LoVal))
+                {
+                    swprintf(&szTime[wcslen(szTime)], L".%d", LOWORD(LoVal));
+                }
+            }
+            SetDlgItemTextW(hwndDlg, IDC_FILEVERSION, szTime);
+        }
+        SetDlgItemText(hwndDlg, IDC_FILEPROVIDER, DriverInfoData.ProviderName);
+
 
         queueHandle = SetupOpenFileQueue();
         if (queueHandle != (HSPFILEQ)INVALID_HANDLE_VALUE)

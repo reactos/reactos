@@ -5,7 +5,7 @@
 #error Header intended for use by NTOSKRNL/WIN32K only!
 #endif
 
-static const UNICODE_STRING __emptyUnicodeString = {0};
+static const UNICODE_STRING __emptyUnicodeString = {0, 0, NULL};
 static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
 static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
 static const IO_STATUS_BLOCK __emptyIoStatusBlock = {{0}, 0};
@@ -92,7 +92,6 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #if defined(_WIN32K_)
 static __inline
 VOID
-NTAPI
 ProbeArrayForRead(IN const VOID *ArrayPtr,
                   IN ULONG ItemSize,
                   IN ULONG ItemCount,
@@ -115,7 +114,6 @@ ProbeArrayForRead(IN const VOID *ArrayPtr,
 
 static __inline
 VOID
-NTAPI
 ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
                    IN ULONG ItemSize,
                    IN ULONG ItemCount,
@@ -139,7 +137,6 @@ ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
 
 static __inline
 NTSTATUS
-NTAPI
 ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                              IN KPROCESSOR_MODE CurrentMode,
                              IN const UNICODE_STRING *UnsafeSrc)
@@ -151,7 +148,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
     /* Probe the structure and buffer*/
     if(CurrentMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             *Dest = ProbeForReadUnicodeString(UnsafeSrc);
             if(Dest->Buffer != NULL)
@@ -169,7 +166,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                     if (Buffer == NULL)
                     {
                         Status = STATUS_INSUFFICIENT_RESOURCES;
-                        _SEH_LEAVE;
+                        _SEH2_LEAVE;
                     }
 
                     /* Copy it */
@@ -194,7 +191,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                 Dest->MaximumLength = 0;
             }
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free allocated resources and zero the destination string */
             if (Buffer != NULL)
@@ -206,9 +203,9 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
             Dest->Buffer = NULL;
 
             /* Return the error code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
     else
     {
@@ -223,7 +220,6 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
 
 static __inline
 VOID
-NTAPI
 ReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
                              IN KPROCESSOR_MODE CurrentMode)
 {

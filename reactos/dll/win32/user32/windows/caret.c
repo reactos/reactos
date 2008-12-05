@@ -84,7 +84,7 @@ DrawCaret(HWND hWnd,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreateCaret(HWND hWnd,
             HBITMAP hBitmap,
             int nWidth,
@@ -98,7 +98,7 @@ CreateCaret(HWND hWnd,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DestroyCaret(VOID)
 {
     return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
@@ -109,7 +109,7 @@ DestroyCaret(VOID)
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetCaretBlinkTime(VOID)
 {
     return NtUserGetCaretBlinkTime();
@@ -120,7 +120,7 @@ GetCaretBlinkTime(VOID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetCaretPos(LPPOINT lpPoint)
 {
     return (BOOL)NtUserGetCaretPos(lpPoint);
@@ -131,7 +131,7 @@ GetCaretPos(LPPOINT lpPoint)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCaretBlinkTime(UINT uMSeconds)
 {
     return NtUserSetCaretBlinkTime(uMSeconds);
@@ -142,7 +142,7 @@ SetCaretBlinkTime(UINT uMSeconds)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetCaretPos(int X,
             int Y)
 {

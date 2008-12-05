@@ -138,7 +138,7 @@ BITMAPOBJ_CleanupBitsLock(BITMAPOBJ *BitmapObj)
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP APIENTRY
 EngCreateDeviceBitmap(IN DHSURF dhsurf,
                       IN SIZEL Size,
                       IN ULONG Format)
@@ -362,6 +362,7 @@ IntCreateBitmap(IN SIZEL Size,
             {
                 BITMAPOBJ_UnlockBitmap(BitmapObj);
                 BITMAPOBJ_FreeBitmapByHandle(NewBitmap);
+                SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
                 return 0;
             }
         }
@@ -401,7 +402,7 @@ IntCreateBitmap(IN SIZEL Size,
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP APIENTRY
 EngCreateBitmap(IN SIZEL Size,
                 IN LONG Width,
                 IN ULONG Format,
@@ -422,7 +423,7 @@ EngCreateBitmap(IN SIZEL Size,
 /*
  * @unimplemented
  */
-HSURF STDCALL
+HSURF APIENTRY
 EngCreateDeviceSurface(IN DHSURF dhsurf,
                        IN SIZEL Size,
                        IN ULONG Format)
@@ -480,7 +481,7 @@ PFN FASTCALL DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngAssociateSurface(IN HSURF Surface,
                     IN HDEV Dev,
                     IN ULONG Hooks)
@@ -510,7 +511,7 @@ EngAssociateSurface(IN HSURF Surface,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngModifySurface(
     IN HSURF hsurf,
     IN HDEV hdev,
@@ -548,7 +549,7 @@ EngModifySurface(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngDeleteSurface(IN HSURF Surface)
 {
     GDIOBJ_SetOwnership(Surface, PsGetCurrentProcess());
@@ -559,7 +560,7 @@ EngDeleteSurface(IN HSURF Surface)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngEraseSurface(SURFOBJ *Surface,
                 RECTL *Rect,
                 ULONG iColor)
@@ -576,7 +577,7 @@ EngEraseSurface(SURFOBJ *Surface,
 /*
  * @implemented
  */
-SURFOBJ * STDCALL
+SURFOBJ * APIENTRY
 NtGdiEngLockSurface(IN HSURF Surface)
 {
     return EngLockSurface(Surface);
@@ -586,7 +587,7 @@ NtGdiEngLockSurface(IN HSURF Surface)
 /*
  * @implemented
  */
-SURFOBJ * STDCALL
+SURFOBJ * APIENTRY
 EngLockSurface(IN HSURF Surface)
 {
     BITMAPOBJ *bmp = GDIOBJ_ShareLockObj(Surface, GDI_OBJECT_TYPE_BITMAP);
@@ -601,7 +602,7 @@ EngLockSurface(IN HSURF Surface)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 NtGdiEngUnlockSurface(IN SURFOBJ *Surface)
 {
     EngUnlockSurface(Surface);
@@ -610,7 +611,7 @@ NtGdiEngUnlockSurface(IN SURFOBJ *Surface)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngUnlockSurface(IN SURFOBJ *Surface)
 {
     if (Surface != NULL)

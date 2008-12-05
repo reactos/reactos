@@ -51,7 +51,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define DIALOG_CLASS_ATOMA   MAKEINTATOMA(32770)  /* Dialog */
 #define DIALOG_CLASS_ATOMW   MAKEINTATOMW(32770)  /* Dialog */
 
-void STDCALL WinPosActivateOtherWindow(HWND hwnd);
+void WINAPI WinPosActivateOtherWindow(HWND hwnd);
 
 /* INTERNAL STRUCTS **********************************************************/
 
@@ -1427,7 +1427,7 @@ BOOL CALLBACK GetDlgItemEnumProc (HWND hwnd, LPARAM lParam )
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 CreateDialogIndirectParamAorW(
   HINSTANCE hInstance,
   LPCDLGTEMPLATE lpTemplate,
@@ -1449,7 +1449,7 @@ CreateDialogIndirectParamAorW(
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 CreateDialogIndirectParamA(
   HINSTANCE hInstance,
   LPCDLGTEMPLATE lpTemplate,
@@ -1465,7 +1465,7 @@ CreateDialogIndirectParamA(
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 CreateDialogIndirectParamW(
   HINSTANCE hInstance,
   LPCDLGTEMPLATE lpTemplate,
@@ -1481,7 +1481,7 @@ CreateDialogIndirectParamW(
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 CreateDialogParamA(
   HINSTANCE hInstance,
   LPCSTR lpTemplateName,
@@ -1502,7 +1502,7 @@ CreateDialogParamA(
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 CreateDialogParamW(
   HINSTANCE hInstance,
   LPCWSTR lpTemplateName,
@@ -1523,7 +1523,7 @@ CreateDialogParamW(
  * @implemented
  */
 LRESULT
-STDCALL
+WINAPI
 DefDlgProcA(
   HWND hDlg,
   UINT Msg,
@@ -1584,7 +1584,7 @@ DefDlgProcA(
  * @implemented
  */
 LRESULT
-STDCALL
+WINAPI
 DefDlgProcW(
   HWND hDlg,
   UINT Msg,
@@ -1645,7 +1645,7 @@ DefDlgProcW(
  * @implemented
  */
 INT_PTR
-STDCALL
+WINAPI
 DialogBoxIndirectParamAorW(
   HINSTANCE hInstance,
   LPCDLGTEMPLATE hDialogTemplate,
@@ -1669,7 +1669,7 @@ DialogBoxIndirectParamAorW(
  * @implemented
  */
 INT_PTR
-STDCALL
+WINAPI
 DialogBoxIndirectParamA(
   HINSTANCE hInstance,
   LPCDLGTEMPLATE hDialogTemplate,
@@ -1685,7 +1685,7 @@ DialogBoxIndirectParamA(
  * @implemented
  */
 INT_PTR
-STDCALL
+WINAPI
 DialogBoxIndirectParamW(
   HINSTANCE hInstance,
   LPCDLGTEMPLATE hDialogTemplate,
@@ -1701,7 +1701,7 @@ DialogBoxIndirectParamW(
  * @implemented
  */
 INT_PTR
-STDCALL
+WINAPI
 DialogBoxParamA(
   HINSTANCE hInstance,
   LPCSTR lpTemplateName,
@@ -1734,7 +1734,7 @@ DialogBoxParamA(
  * @implemented
  */
 INT_PTR
-STDCALL
+WINAPI
 DialogBoxParamW(
   HINSTANCE hInstance,
   LPCWSTR lpTemplateName,
@@ -1767,7 +1767,7 @@ DialogBoxParamW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 DlgDirListA(
   HWND hDlg,
   LPSTR lpPathSpec,
@@ -1783,7 +1783,7 @@ DlgDirListA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 DlgDirListComboBoxA(
   HWND hDlg,
   LPSTR lpPathSpec,
@@ -1799,7 +1799,7 @@ DlgDirListComboBoxA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 DlgDirListComboBoxW(
   HWND hDlg,
   LPWSTR lpPathSpec,
@@ -1815,7 +1815,7 @@ DlgDirListComboBoxW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 DlgDirListW(
   HWND hDlg,
   LPWSTR lpPathSpec,
@@ -1831,7 +1831,7 @@ DlgDirListW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DlgDirSelectComboBoxExA(
   HWND hDlg,
   LPSTR lpString,
@@ -1846,7 +1846,7 @@ DlgDirSelectComboBoxExA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DlgDirSelectComboBoxExW(
   HWND hDlg,
   LPWSTR lpString,
@@ -1861,7 +1861,7 @@ DlgDirSelectComboBoxExW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DlgDirSelectExA(
   HWND hDlg,
   LPSTR lpString,
@@ -1876,7 +1876,7 @@ DlgDirSelectExA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DlgDirSelectExW(
   HWND hDlg,
   LPWSTR lpString,
@@ -1891,7 +1891,7 @@ DlgDirSelectExW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EndDialog(
   HWND hDlg,
   INT_PTR nResult)
@@ -1932,7 +1932,7 @@ EndDialog(
  * @implemented
  */
 LONG
-STDCALL
+WINAPI
 GetDialogBaseUnits(VOID)
 {
     static DWORD units;
@@ -1957,7 +1957,7 @@ GetDialogBaseUnits(VOID)
  * @implemented
  */
 int
-STDCALL
+WINAPI
 GetDlgCtrlID(
   HWND hwndCtl)
 {
@@ -1969,7 +1969,7 @@ GetDlgCtrlID(
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 GetDlgItem(
   HWND hDlg,
   int nIDDlgItem)
@@ -1988,7 +1988,7 @@ GetDlgItem(
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetDlgItemInt(
   HWND hDlg,
   int nIDDlgItem,
@@ -2028,7 +2028,7 @@ GetDlgItemInt(
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetDlgItemTextA(
   HWND hDlg,
   int nIDDlgItem,
@@ -2044,7 +2044,7 @@ GetDlgItemTextA(
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetDlgItemTextW(
   HWND hDlg,
   int nIDDlgItem,
@@ -2059,7 +2059,7 @@ GetDlgItemTextW(
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 GetNextDlgGroupItem(
   HWND hDlg,
   HWND hCtl,
@@ -2177,7 +2177,7 @@ end:
  * @implemented
  */
 HWND
-STDCALL
+WINAPI
 GetNextDlgTabItem(
   HWND hDlg,
   HWND hCtl,
@@ -2198,7 +2198,7 @@ GetNextDlgTabItem(
 
 #if 0
 BOOL
-STDCALL
+WINAPI
 IsDialogMessage(
   HWND hDlg,
   LPMSG lpMsg)
@@ -2275,7 +2275,7 @@ static void DIALOG_FixChildrenOnChangeFocus (HWND hwndDlg, HWND hwndNext)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsDialogMessageW(
   HWND hDlg,
   LPMSG lpMsg)
@@ -2421,7 +2421,7 @@ IsDialogMessageW(
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 IsDlgButtonChecked(
   HWND hDlg,
   int nIDButton)
@@ -2434,7 +2434,7 @@ IsDlgButtonChecked(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 MapDialogRect(
   HWND hDlg,
   LPRECT lpRect)
@@ -2453,7 +2453,7 @@ MapDialogRect(
  * @implemented
  */
 LRESULT
-STDCALL
+WINAPI
 SendDlgItemMessageA(
   HWND hDlg,
   int nIDDlgItem,
@@ -2471,7 +2471,7 @@ SendDlgItemMessageA(
  * @implemented
  */
 LRESULT
-STDCALL
+WINAPI
 SendDlgItemMessageW(
   HWND hDlg,
   int nIDDlgItem,
@@ -2489,7 +2489,7 @@ SendDlgItemMessageW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetDlgItemInt(
   HWND hDlg,
   int nIDDlgItem,
@@ -2509,7 +2509,7 @@ SetDlgItemInt(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetDlgItemTextA(
   HWND hDlg,
   int nIDDlgItem,
@@ -2523,7 +2523,7 @@ SetDlgItemTextA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetDlgItemTextW(
   HWND hDlg,
   int nIDDlgItem,
@@ -2537,7 +2537,7 @@ SetDlgItemTextW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CheckDlgButton(
   HWND hDlg,
   int nIDButton,
@@ -2572,7 +2572,7 @@ static BOOL CALLBACK CheckRB(HWND hwnd, LPARAM lParam)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CheckRadioButton(
   HWND hDlg,
   int nIDFirstButton,

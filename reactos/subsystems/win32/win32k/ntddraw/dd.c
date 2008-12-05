@@ -15,7 +15,7 @@
 /* NtGdiDdCreateSurface                                                 */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdCreateSurface(HANDLE hDirectDrawLocal,
                      HANDLE *hSurface,
                      DDSURFACEDESC *puSurfaceDescription,
@@ -42,7 +42,7 @@ NtGdiDdCreateSurface(HANDLE hDirectDrawLocal,
 /* NtGdiDdWaitForVerticalBlank                                          */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdWaitForVerticalBlank(HANDLE hDirectDraw,
                             PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData)
 {
@@ -62,7 +62,7 @@ NtGdiDdWaitForVerticalBlank(HANDLE hDirectDraw,
 /* NtGdiDdCanCreateSurface                                              */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
                         PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
 {
@@ -83,7 +83,7 @@ NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
 /* NtGdiDdGetScanLine                                                   */
 /************************************************************************/
 DWORD
-STDCALL 
+APIENTRY 
 NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
                    PDD_GETSCANLINEDATA puGetScanLineData)
 {
@@ -110,7 +110,7 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
 /* NtGdiDdCreateSurfaceEx                                               */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
                        HANDLE hSurface,
                        DWORD dwSurfaceHandle)

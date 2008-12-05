@@ -83,14 +83,14 @@ RtlpSetInDbgPrint(IN BOOLEAN NewValue)
 }
 
 KPROCESSOR_MODE
-STDCALL
+NTAPI
 RtlpGetMode()
 {
    return KernelMode;
 }
 
 PVOID
-STDCALL
+NTAPI
 RtlpAllocateMemory(ULONG Bytes,
                    ULONG Tag)
 {
@@ -104,7 +104,7 @@ RtlpAllocateMemory(ULONG Bytes,
 #define TAG_ASTR        TAG('A', 'S', 'T', 'R')
 #define TAG_OSTR        TAG('O', 'S', 'T', 'R')
 VOID
-STDCALL
+NTAPI
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {
@@ -117,7 +117,7 @@ RtlpFreeMemory(PVOID Mem,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlAcquirePebLock(VOID)
 {
 
@@ -126,14 +126,14 @@ RtlAcquirePebLock(VOID)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlReleasePebLock(VOID)
 {
 
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 LdrShutdownThread(VOID)
 {
     return STATUS_SUCCESS;
@@ -141,14 +141,14 @@ LdrShutdownThread(VOID)
 
 
 PPEB
-STDCALL
+NTAPI
 RtlGetCurrentPeb(VOID)
 {
    return ((PEPROCESS)(KeGetCurrentThread()->ApcState.Process))->Peb;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -157,7 +157,7 @@ RtlDeleteHeapLock(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlEnterHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -166,7 +166,7 @@ RtlEnterHeapLock(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -175,7 +175,7 @@ RtlInitializeHeapLock(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlLeaveHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -337,7 +337,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     }
 
     /* Use a SEH block for maximum protection */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we want the user-mode stack frame */
         if (Flags == 1)
@@ -422,12 +422,12 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             Stack = NewStack;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* No index */
         i = 0;
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return frames parsed */
     return i;

@@ -41,7 +41,7 @@ typedef struct _USBD_INTERFACE_LIST_ENTRY {
     PUSBD_INTERFACE_INFORMATION Interface;
 } USBD_INTERFACE_LIST_ENTRY, *PUSBD_INTERFACE_LIST_ENTRY;
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
@@ -51,7 +51,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD NTAPI
 DllInitialize(DWORD Unknown)
 {
     return 0;
@@ -60,7 +60,7 @@ DllInitialize(DWORD Unknown)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD NTAPI
 DllUnload(VOID)
 {
     return 0;
@@ -69,7 +69,7 @@ DllUnload(VOID)
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 USBD_Debug_GetHeap(DWORD Unknown1, POOL_TYPE PoolType, ULONG NumberOfBytes,
 	ULONG Tag)
 {
@@ -79,7 +79,7 @@ USBD_Debug_GetHeap(DWORD Unknown1, POOL_TYPE PoolType, ULONG NumberOfBytes,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_Debug_RetHeap(PVOID Heap, DWORD Unknown2, DWORD Unknown3)
 {
     ExFreePool(Heap);
@@ -88,7 +88,7 @@ USBD_Debug_RetHeap(PVOID Heap, DWORD Unknown2, DWORD Unknown3)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_Debug_LogEntry(PCHAR Name, ULONG_PTR Info1, ULONG_PTR Info2,
     ULONG_PTR Info3)
 {
@@ -97,7 +97,7 @@ USBD_Debug_LogEntry(PCHAR Name, ULONG_PTR Info1, ULONG_PTR Info2,
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 USBD_AllocateDeviceName(DWORD Unknown)
 {
     return NULL;
@@ -106,7 +106,7 @@ USBD_AllocateDeviceName(DWORD Unknown)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD NTAPI
 USBD_CalculateUsbBandwidth(
     ULONG MaxPacketSize,
     UCHAR EndpointType,
@@ -134,7 +134,7 @@ USBD_CalculateUsbBandwidth(
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD NTAPI
 USBD_Dispatch(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
 {
     return 1;
@@ -143,7 +143,7 @@ USBD_Dispatch(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3, DWORD Unknown4)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_FreeDeviceMutex(PVOID Unknown)
 {
 }
@@ -151,7 +151,7 @@ USBD_FreeDeviceMutex(PVOID Unknown)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_FreeDeviceName(PVOID Unknown)
 {
 }
@@ -159,7 +159,7 @@ USBD_FreeDeviceName(PVOID Unknown)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_WaitDeviceMutex(PVOID Unknown)
 {
 }
@@ -167,7 +167,7 @@ USBD_WaitDeviceMutex(PVOID Unknown)
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD NTAPI
 USBD_GetSuspendPowerState(DWORD Unknown1)
 {
     return 0;
@@ -176,7 +176,7 @@ USBD_GetSuspendPowerState(DWORD Unknown1)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 USBD_InitializeDevice(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3,
     DWORD Unknown4, DWORD Unknown5, DWORD Unknown6)
 {
@@ -186,7 +186,7 @@ USBD_InitializeDevice(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 USBD_RegisterHostController(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3,
     DWORD Unknown4, DWORD Unknown5, DWORD Unknown6, DWORD Unknown7,
     DWORD Unknown8, DWORD Unknown9, DWORD Unknown10)
@@ -197,7 +197,7 @@ USBD_RegisterHostController(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 USBD_GetDeviceInformation(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
 {
     return STATUS_NOT_SUPPORTED;
@@ -206,7 +206,7 @@ USBD_GetDeviceInformation(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 USBD_CreateDevice(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3,
     DWORD Unknown4, DWORD Unknown5)
 {
@@ -216,7 +216,7 @@ USBD_CreateDevice(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 USBD_RemoveDevice(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
 {
     return STATUS_NOT_SUPPORTED;
@@ -225,7 +225,7 @@ USBD_RemoveDevice(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_CompleteRequest(DWORD Unknown1, DWORD Unknown2)
 {
 }
@@ -233,7 +233,7 @@ USBD_CompleteRequest(DWORD Unknown1, DWORD Unknown2)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_RegisterHcFilter(
     PDEVICE_OBJECT DeviceObject,
     PDEVICE_OBJECT FilterDeviceObject
@@ -244,7 +244,7 @@ USBD_RegisterHcFilter(
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_SetSuspendPowerState(DWORD Unknown1, DWORD Unknown2)
 {
 }
@@ -252,7 +252,7 @@ USBD_SetSuspendPowerState(DWORD Unknown1, DWORD Unknown2)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 USBD_MakePdoName(DWORD Unknown1, DWORD Unknown2)
 {
     return STATUS_NOT_SUPPORTED;
@@ -261,7 +261,7 @@ USBD_MakePdoName(DWORD Unknown1, DWORD Unknown2)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 USBD_QueryBusTime(
     PDEVICE_OBJECT RootHubPdo,
     PULONG CurrentFrame
@@ -273,7 +273,7 @@ USBD_QueryBusTime(
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_GetUSBDIVersion(
     PUSBD_VERSION_INFORMATION Version
     )
@@ -288,7 +288,7 @@ USBD_GetUSBDIVersion(
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 USBD_RestoreDevice(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
 {
     return STATUS_NOT_SUPPORTED;
@@ -297,7 +297,7 @@ USBD_RestoreDevice(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 USBD_RegisterHcDeviceCapabilities(DWORD Unknown1, DWORD Unknown2,
     DWORD Unknown3)
 {
@@ -308,7 +308,7 @@ USBD_RegisterHcDeviceCapabilities(DWORD Unknown1, DWORD Unknown2,
  * FIXME: Test
  */
 PURB
-STDCALL
+NTAPI
 USBD_CreateConfigurationRequestEx(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     PUSBD_INTERFACE_LIST_ENTRY InterfaceList
@@ -343,7 +343,7 @@ USBD_CreateConfigurationRequestEx(
 /*
  * @unimplemented
  */
-PURB STDCALL
+PURB NTAPI
 USBD_CreateConfigurationRequest(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     PUSHORT Size
@@ -355,7 +355,7 @@ USBD_CreateConfigurationRequest(
 /*
  * @unimplemented
  */
-ULONG STDCALL
+ULONG NTAPI
 USBD_GetInterfaceLength(
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor,
     PUCHAR BufferEnd
@@ -381,7 +381,7 @@ USBD_GetInterfaceLength(
 /*
  * @implemented
  */
-PUSB_COMMON_DESCRIPTOR STDCALL
+PUSB_COMMON_DESCRIPTOR NTAPI
 USBD_ParseDescriptors(
     PVOID  DescriptorBuffer,
     ULONG  TotalLength,
@@ -406,7 +406,7 @@ USBD_ParseDescriptors(
 /*
  * @implemented
  */
-PUSB_INTERFACE_DESCRIPTOR STDCALL
+PUSB_INTERFACE_DESCRIPTOR NTAPI
 USBD_ParseConfigurationDescriptorEx(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     PVOID StartPosition,
@@ -462,7 +462,7 @@ USBD_ParseConfigurationDescriptorEx(
 /*
  * @implemented
  */
-PUSB_INTERFACE_DESCRIPTOR STDCALL
+PUSB_INTERFACE_DESCRIPTOR NTAPI
 USBD_ParseConfigurationDescriptor(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     UCHAR InterfaceNumber,
@@ -478,7 +478,7 @@ USBD_ParseConfigurationDescriptor(
 /*
  * @implemented
  */
-DWORD STDCALL
+DWORD NTAPI
 USBD_GetPdoRegistryParameter(
     PDEVICE_OBJECT PhysicalDeviceObject,
     PVOID Parameter,

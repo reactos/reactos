@@ -19,10 +19,6 @@
 #ifndef _GDIPLUSBASE_H
 #define _GDIPLUSBASE_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 class GdiplusBase {
 public:
   void operator delete(void *in_pVoid)

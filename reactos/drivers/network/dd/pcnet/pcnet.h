@@ -99,7 +99,7 @@ typedef struct _ADAPTER
 
 /* forward declarations */
 NDIS_STATUS
-STDCALL
+NTAPI
 MiniportQueryInformation(
     IN NDIS_HANDLE MiniportAdapterContext,
     IN NDIS_OID Oid,
@@ -109,7 +109,7 @@ MiniportQueryInformation(
     OUT PULONG BytesNeeded);
 
 NDIS_STATUS
-STDCALL
+NTAPI
 MiniportSetInformation(
     IN NDIS_HANDLE MiniportAdapterContext,
     IN NDIS_OID Oid,
@@ -119,14 +119,14 @@ MiniportSetInformation(
     OUT PULONG BytesNeeded);
 
 NDIS_STATUS
-STDCALL
+NTAPI
 MiSetMulticast(
     PADAPTER Adapter,
     UCHAR *Addresses,
     UINT AddressCount);
 
 NDIS_MEDIA_STATE
-STDCALL
+NTAPI
 MiGetMediaState(PADAPTER Adapter);
 
 /* operational constants */

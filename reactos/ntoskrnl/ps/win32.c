@@ -132,18 +132,18 @@ NtW32Call(IN ULONG RoutineIndex,
     ASSERT(KeGetPreviousMode() != KernelMode);
 
     /* Enter SEH for probing */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Probe arguments */
         ProbeForWritePointer(Result);
         ProbeForWriteUlong(ResultLength);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Make sure we got success */
     if (NT_SUCCESS(Status))
@@ -157,18 +157,18 @@ NtW32Call(IN ULONG RoutineIndex,
         if (NT_SUCCESS(Status))
         {
             /* Enter SEH for write back */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return results to user mode */
                 *Result = RetResult;
                 *ResultLength = RetResultLength;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get the exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 

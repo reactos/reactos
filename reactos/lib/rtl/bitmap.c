@@ -651,7 +651,8 @@ ULONG NTAPI
 RtlFindLongestRunClear(PRTL_BITMAP BitMapHeader,
 		       PULONG StartingIndex)
 {
-  RTL_BITMAP_RUN br;
+  /* GCC complaints that it may be used uninitialized */
+  RTL_BITMAP_RUN br = { 0, 0 };
 
   if (RtlFindClearRuns(BitMapHeader, &br, 1, TRUE) == 1)
   {
@@ -670,7 +671,8 @@ ULONG NTAPI
 RtlFindLongestRunSet(PRTL_BITMAP BitMapHeader,
 		     PULONG StartingIndex)
 {
-  RTL_BITMAP_RUN br;
+  /* GCC complaints that it may be used uninitialized */
+  RTL_BITMAP_RUN br = { 0, 0 };
 
   if (NTDLL_FindRuns(BitMapHeader, &br, 1, TRUE, NTDLL_FindSetRun) == 1)
   {

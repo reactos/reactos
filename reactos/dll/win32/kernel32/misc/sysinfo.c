@@ -34,7 +34,7 @@ GetLargePageMinimum(VOID)
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 GetSystemInfo (
 	LPSYSTEM_INFO	Si
 	)
@@ -173,7 +173,7 @@ GetSystemInfo (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 IsProcessorFeaturePresent(DWORD ProcessorFeature)
 {
   if (ProcessorFeature >= PROCESSOR_FEATURE_MAX)
@@ -187,7 +187,7 @@ IsProcessorFeaturePresent(DWORD ProcessorFeature)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetSystemRegistryQuota(PDWORD pdwQuotaAllowed,
                        PDWORD pdwQuotaUsed)
 {
@@ -221,7 +221,7 @@ GetSystemRegistryQuota(PDWORD pdwQuotaAllowed,
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 GetNativeSystemInfo(
     LPSYSTEM_INFO lpSystemInfo
     )

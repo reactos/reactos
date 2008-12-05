@@ -32,7 +32,7 @@ static HRESULT WINAPI IDirect3DQuery9Impl_QueryInterface(LPDIRECT3DQUERY9 iface,
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DQuery9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DQuery9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -60,7 +60,7 @@ static ULONG WINAPI IDirect3DQuery9Impl_Release(LPDIRECT3DQUERY9 iface) {
         EnterCriticalSection(&d3d9_cs);
         IWineD3DQuery_Release(This->wineD3DQuery);
         LeaveCriticalSection(&d3d9_cs);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -179,7 +179,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateQuery(LPDIRECT3DDEVICE9EX iface, D3DQU
         FIXME("(%p) call to IWineD3DDevice_CreateQuery failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppQuery = (LPDIRECT3DQUERY9) object;
         TRACE("(%p) : Created query %p\n", This , object);

@@ -109,7 +109,7 @@ PIP_PACKET IPInitializePacket(
 }
 
 
-void STDCALL IPTimeout( PVOID Context ) {
+void NTAPI IPTimeout( PVOID Context ) {
     IpWorkItemQueued = FALSE;
 
     /* Check if datagram fragments have taken too long to assemble */
@@ -150,8 +150,7 @@ VOID IPDispatchProtocol(
         Protocol = 0;
     }
 
-    if (Protocol < IP_PROTOCOL_TABLE_SIZE &&
-        Protocol >= 0)
+    if (Protocol < IP_PROTOCOL_TABLE_SIZE)
     {
        /* Call the appropriate protocol handler */
        (*ProtocolTable[Protocol])(Interface, IPPacket);

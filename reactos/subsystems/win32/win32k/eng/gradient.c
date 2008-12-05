@@ -454,7 +454,7 @@ IntEngGradientFillTriangle(
 }
 
 
-BOOL static
+static BOOL
 IntEngIsNULLTriangle(TRIVERTEX  *pVertex, GRADIENT_TRIANGLE *gt)
 {
   if(COMPAREVERTEX(VERTEX(Vertex1), VERTEX(Vertex2)))
@@ -467,7 +467,7 @@ IntEngIsNULLTriangle(TRIVERTEX  *pVertex, GRADIENT_TRIANGLE *gt)
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 EngGradientFill(
     IN SURFOBJ  *psoDest,
     IN CLIPOBJ  *pco,
@@ -539,7 +539,7 @@ EngGradientFill(
   return ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEngGradientFill(
     IN SURFOBJ  *psoDest,
     IN CLIPOBJ  *pco,

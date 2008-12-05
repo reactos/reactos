@@ -322,7 +322,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
  * @implemented
  */
 
-ULONG STDCALL
+ULONG APIENTRY
 EngSetPointerShape(
    IN SURFOBJ *pso,
    IN SURFOBJ *psoMask,
@@ -529,7 +529,7 @@ EngSetPointerShape(
  * @implemented
  */
 
-VOID STDCALL
+VOID APIENTRY
 EngMovePointer(
    IN SURFOBJ *pso,
    IN LONG x,
@@ -567,7 +567,7 @@ EngMovePointer(
 
 }
 
-VOID STDCALL
+VOID APIENTRY
 IntEngMovePointer(
    IN SURFOBJ *SurfObj,
    IN LONG x,

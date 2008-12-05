@@ -41,12 +41,6 @@
 #define InterlockedAnd               _InterlockedAnd
 
 #include "ke.h"
-#ifdef _M_AMD64
-#include "amd64/mm.h"
-#else
-#include "i386/mm.h"
-#include "i386/v86m.h"
-#endif
 #include "ob.h"
 #include "mm.h"
 #include "ex.h"
@@ -147,6 +141,7 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
 
+<<<<<<< .working
 #ifndef _M_AMD64
 FORCEINLINE
 #else
@@ -269,6 +264,8 @@ DefaultQueryInfoBufferCheck(ULONG Class,
     return Status;
 }
 
+=======
+>>>>>>> .merge-rechts.r37853
 /*
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
  * or as a pointer
@@ -303,6 +300,7 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
 C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
+
 C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
 #endif
 

@@ -41,7 +41,7 @@ static BOOL can_activate_window( HWND hwnd )
  *  Activates window other than pWnd.
  */
 void
-STDCALL
+WINAPI
 WinPosActivateOtherWindow(HWND hwnd)
 {
     HWND hwndTo, fg;
@@ -71,7 +71,7 @@ WinPosActivateOtherWindow(HWND hwnd)
 
 
 
-UINT STDCALL
+UINT WINAPI
 WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
 		  POINT* MinTrack, POINT* MaxTrack)
 {
@@ -96,7 +96,7 @@ WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetActiveWindow(VOID)
 {
   return (HWND)NtUserGetThreadState(THREADSTATE_ACTIVEWINDOW);
@@ -105,7 +105,7 @@ GetActiveWindow(VOID)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 SetActiveWindow(HWND hWnd)
 {
   return(NtUserSetActiveWindow(hWnd));
@@ -114,7 +114,7 @@ SetActiveWindow(HWND hWnd)
 /*
  * @unimplemented
  */
-UINT STDCALL
+UINT WINAPI
 ArrangeIconicWindows(HWND hWnd)
 {
   return NtUserCallHwndLock( hWnd, HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS);

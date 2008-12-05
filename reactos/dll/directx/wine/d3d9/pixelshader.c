@@ -30,7 +30,7 @@ static HRESULT WINAPI IDirect3DPixelShader9Impl_QueryInterface(LPDIRECT3DPIXELSH
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DPixelShader9)) {
-        IUnknown_AddRef(iface);
+        IDirect3DPixelShader9_AddRef(iface);
         *ppobj = This;
         return S_OK;
     }
@@ -59,7 +59,7 @@ static ULONG WINAPI IDirect3DPixelShader9Impl_Release(LPDIRECT3DPIXELSHADER9 ifa
         EnterCriticalSection(&d3d9_cs);
         IWineD3DPixelShader_Release(This->wineD3DPixelShader);
         LeaveCriticalSection(&d3d9_cs);
-        IUnknown_Release(This->parentDevice);
+        IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -136,7 +136,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreatePixelShader(LPDIRECT3DDEVICE9EX iface,
         FIXME("(%p) call to IWineD3DDevice_CreatePixelShader failed\n", This);
         HeapFree(GetProcessHeap(), 0 , object);
     } else {
-        IUnknown_AddRef(iface);
+        IDirect3DDevice9Ex_AddRef(iface);
         object->parentDevice = iface;
         *ppShader = (IDirect3DPixelShader9*) object;
         TRACE("(%p) : Created pixel shader %p\n", This, object);

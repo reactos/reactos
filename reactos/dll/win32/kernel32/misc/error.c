@@ -21,7 +21,7 @@
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 SetLastError (DWORD dwErrorCode)
 {
     NtCurrentTeb ()->LastErrorValue = (ULONG) dwErrorCode;
@@ -32,7 +32,7 @@ SetLastError (DWORD dwErrorCode)
  * @implemented
  */
 DWORD
-STDCALL
+WINAPI
 GetLastError (VOID)
 {
     return (DWORD) (NtCurrentTeb ()->LastErrorValue);
@@ -43,7 +43,7 @@ GetLastError (VOID)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Beep (DWORD dwFreq, DWORD dwDuration)
 {
     HANDLE hBeep;

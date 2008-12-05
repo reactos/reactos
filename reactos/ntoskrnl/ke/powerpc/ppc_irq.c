@@ -191,7 +191,7 @@ KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
                 IN KIRQL  Irql)
 {
@@ -301,7 +301,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
                    IN KIRQL Irql,
                    IN ULONG Increment)
@@ -365,7 +365,7 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     }
 }
 
-VOID STDCALL
+VOID NTAPI
 KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
 /*
  * FUNCTION: Calls all the interrupt handlers for a given irq.
@@ -540,7 +540,7 @@ KeDumpIrqList(VOID)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 KeConnectInterrupt(PKINTERRUPT InterruptObject)
 {
    KIRQL oldlvl,synch_oldlvl;
@@ -615,7 +615,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
  *        InterruptObject = isr to release
  */
 BOOLEAN
-STDCALL
+NTAPI
 KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
 {
     KIRQL oldlvl,synch_oldlvl;
@@ -671,7 +671,7 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeInitializeInterrupt(PKINTERRUPT Interrupt,
                       PKSERVICE_ROUTINE ServiceRoutine,
                       PVOID ServiceContext,

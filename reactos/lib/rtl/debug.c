@@ -61,7 +61,8 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Check if we should print it or not */
-    if ((ComponentId != -1) && !(NtQueryDebugFilterState(ComponentId, Level)))
+    if ((ComponentId != -1U) &&
+        !(NtQueryDebugFilterState(ComponentId, Level)))
     {
         /* This message is masked */
         return Status;
@@ -71,7 +72,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     if (RtlpSetInDbgPrint(TRUE)) return Status;
 
     /* Guard against incorrect pointers */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Get the length and normalize it */
         PrefixLength = strlen(Prefix);
@@ -86,17 +87,17 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
                             Format,
                             ap);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Fail */
         Length = PrefixLength = 0;
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if we went past the buffer */
-    if (Length == -1)
+    if (Length == -1U)
     {
         /* Terminate it if we went over-board */
         Buffer[sizeof(Buffer) - 1] = '\n';

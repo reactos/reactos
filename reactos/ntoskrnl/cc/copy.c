@@ -271,7 +271,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcCanIWrite (
 			IN	PFILE_OBJECT	FileObject,
 			IN	ULONG			BytesToWrite,
@@ -286,7 +286,7 @@ CcCanIWrite (
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcCopyRead (IN PFILE_OBJECT FileObject,
 	    IN PLARGE_INTEGER FileOffset,
 	    IN ULONG Length,
@@ -404,7 +404,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcCopyWrite (IN PFILE_OBJECT FileObject,
 	     IN PLARGE_INTEGER FileOffset,
 	     IN ULONG Length,
@@ -515,7 +515,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcDeferWrite (
 	IN	PFILE_OBJECT		FileObject,
 	IN	PCC_POST_DEFERRED_WRITE	PostRoutine,
@@ -532,7 +532,7 @@ CcDeferWrite (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcFastCopyRead (
     IN  PFILE_OBJECT FileObject,
     IN  ULONG FileOffset,
@@ -548,7 +548,7 @@ CcFastCopyRead (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 CcFastCopyWrite(
     IN  PFILE_OBJECT FileObject,
     IN  ULONG FileOffset,
@@ -562,7 +562,7 @@ CcFastCopyWrite(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 CcWaitForCurrentLazyWriterActivity (
     VOID
     )
@@ -574,7 +574,7 @@ CcWaitForCurrentLazyWriterActivity (
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcZeroData (IN PFILE_OBJECT     FileObject,
 	    IN PLARGE_INTEGER   StartOffset,
 	    IN PLARGE_INTEGER   EndOffset,

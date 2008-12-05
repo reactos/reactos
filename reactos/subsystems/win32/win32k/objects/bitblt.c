@@ -25,7 +25,7 @@
 
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiAlphaBlend(
 	HDC  hDCDest,
 	LONG  XOriginDest,
@@ -96,11 +96,24 @@ NtGdiAlphaBlend(
 	DestRect.top    = YOriginDest;
 	DestRect.right  = XOriginDest + WidthDest;
 	DestRect.bottom = YOriginDest + HeightDest;
+	IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
 	SourceRect.left   = XOriginSrc;
 	SourceRect.top    = YOriginSrc;
 	SourceRect.right  = XOriginSrc + WidthSrc;
 	SourceRect.bottom = YOriginSrc + HeightSrc;
+	IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
+
+        if (!DestRect.right ||
+            !DestRect.bottom ||
+            !SourceRect.right ||
+            !SourceRect.bottom)
+            {
+               if (hDCSrc != hDCDest)
+                   DC_UnlockDc(DCSrc);
+               DC_UnlockDc(DCDest);
+               return TRUE;
+            }
 
 	/* Determine surfaces to be used in the bitblt */
 	BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
@@ -157,7 +170,7 @@ NtGdiAlphaBlend(
 	return Status;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiBitBlt(
 	HDC  hDCDest,
 	INT  XDest,
@@ -224,6 +237,9 @@ NtGdiBitBlt(
 
 	Dc_Attr = DCDest->pDc_Attr;
 	if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+
+        if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+           IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
 
 	/* Offset the destination and source by the origin of their DCs. */
         XDest += DCDest->ptlDCOrig.x;
@@ -322,7 +338,7 @@ cleanup:
 	return Status;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiTransparentBlt(
 	HDC			hdcDst,
 	INT			xDst,
@@ -484,6 +500,7 @@ done:
  *
  * Someone thought it would be faster to do it here and then switch back
  * to GDI32. I dunno. Write a test and let me know.
+ * A. It should be in here!
  */
 
 static __inline BYTE
@@ -497,7 +514,7 @@ SwapROP3_SrcDst(BYTE bRop3)
 #define DSTCOPY 		0x00AA0029
 #define DSTERASE		0x00220326 /* dest = dest & (~src) : DSna */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiMaskBlt (
 	HDC hdcDest, INT nXDest, INT nYDest,
 	INT nWidth, INT nHeight, HDC hdcSrc,
@@ -709,7 +726,7 @@ NtGdiPlgBlt(
 	return FALSE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiStretchBlt(
 	HDC  hDCDest,
 	INT  XOriginDest,
@@ -780,6 +797,12 @@ NtGdiStretchBlt(
 			DCSrc = DCDest;
 		}
 	}
+
+	Dc_Attr = DCDest->pDc_Attr;
+	if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+
+	if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+	   IntGdiSelectBrush(DCDest,Dc_Attr->hbrush);
 
 	/* Offset the destination and source by the origin of their DCs. */
 	// FIXME: ptlDCOrig is in device coordinates!
@@ -880,8 +903,6 @@ NtGdiStretchBlt(
 
 	if (UsesPattern)
 	{
-		Dc_Attr = DCDest->pDc_Attr;
-		if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
 		BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
 		if (NULL == BrushObj)
 		{
@@ -1008,6 +1029,7 @@ IntGdiPolyPatBlt(
    int i;
    PPATRECT r;
    PGDIBRUSHOBJ BrushObj;
+   PDC_ATTR Dc_Attr;
    DC *dc;
 
    dc = DC_LockDc(hDC);
@@ -1022,6 +1044,12 @@ IntGdiPolyPatBlt(
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
+
+   Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+   if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+      IntGdiSelectBrush(dc,Dc_Attr->hbrush);
 
    for (r = pRects, i = 0; i < cRects; i++)
    {
@@ -1047,7 +1075,7 @@ IntGdiPolyPatBlt(
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiPatBlt(
    HDC hDC,
    INT XLeft,
@@ -1074,14 +1102,18 @@ NtGdiPatBlt(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   Dc_Attr = dc->pDc_Attr;
-   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
    if (dc->DC_Type == DC_TYPE_INFO)
    {
       DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
       return TRUE;
    }
+
+   Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+   if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+      IntGdiSelectBrush(dc,Dc_Attr->hbrush);
 
    BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
    if (BrushObj == NULL)
@@ -1106,7 +1138,7 @@ NtGdiPatBlt(
    return ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiPolyPatBlt(
    HDC hDC,
    DWORD dwRop,
@@ -1126,7 +1158,7 @@ NtGdiPolyPatBlt(
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          return FALSE;
       }
-      _SEH_TRY
+      _SEH2_TRY
       {
          ProbeForRead(pRects,
                       cRects * sizeof(PATRECT),
@@ -1135,11 +1167,11 @@ NtGdiPolyPatBlt(
                        pRects,
                        cRects * sizeof(PATRECT));
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH_GetExceptionCode();
+         Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {

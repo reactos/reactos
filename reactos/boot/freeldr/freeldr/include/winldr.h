@@ -27,7 +27,7 @@
 // ReactOS Loading Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion);
+VOID LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion);
 
 /* Entry-point to kernel */
 typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);

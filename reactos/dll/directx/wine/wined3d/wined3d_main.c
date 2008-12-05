@@ -4,7 +4,7 @@
  * Copyright 2002-2003 The wine-d3d team
  * Copyright 2002-2003 Raphael Junqueira
  * Copyright 2004      Jason Edmeades
- * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2007-2008 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -48,7 +48,7 @@ wined3d_settings_t wined3d_settings =
     FALSE           /* Disable multisampling for now due to Nvidia driver bugs which happens for some users */
 };
 
-IWineD3D* WINAPI WineDirect3DCreate(UINT SDKVersion, UINT dxVersion, IUnknown *parent) {
+IWineD3D* WINAPI WineDirect3DCreate(UINT dxVersion, IUnknown *parent) {
     IWineD3DImpl* object;
 
     if (!InitAdapters()) {

@@ -115,6 +115,12 @@ IntGdiLineTo(DC  *dc,
     }
     else
     {
+       if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+          IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+       if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+          IntGdiSelectPen(dc,Dc_Attr->hpen);
+
         BitmapObj = BITMAPOBJ_LockBitmap ( dc->w.hBitmap );
         if (NULL == BitmapObj)
         {
@@ -257,8 +263,15 @@ IntGdiPolyline(DC      *dc,
     PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
     if (PATH_IsPathOpen(dc->DcLevel))
         return PATH_Polyline(dc, pt, Count);
+
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
 
     /* Get BRUSHOBJ from current pen. */
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
@@ -379,7 +392,7 @@ IntGdiPolyPolyline(DC      *dc,
 /******************************************************************************/
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiLineTo(HDC  hDC,
             int  XEnd,
             int  YEnd)
@@ -426,7 +439,7 @@ NtGdiPolyDraw(
     Dc_Attr = dc->pDc_Attr;
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
         ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
@@ -437,7 +450,7 @@ NtGdiPolyDraw(
             if ( lpbTypes[i] != PT_MOVETO &&
                  lpbTypes[i] & PT_BEZIERTO )
             {
-                if ( cCount < i+3 ) _SEH_LEAVE;
+                if ( cCount < i+3 ) _SEH2_LEAVE;
                 else i += 2;
             }
         }
@@ -466,7 +479,7 @@ NtGdiPolyDraw(
                 IntGdiPolyBezier(dc, pts, 4);
                 i += 2;
             }
-            else _SEH_LEAVE;
+            else _SEH2_LEAVE;
 
             if ( lpbTypes[i] & PT_CLOSEFIGURE )
             {
@@ -485,16 +498,30 @@ NtGdiPolyDraw(
 
         result = TRUE;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     DC_UnlockDc(dc);
 
     return result;
 }
 
+ /*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtGdiMoveTo(
+    IN HDC hdc,
+    IN INT x,
+    IN INT y,
+    OUT OPTIONAL LPPOINT pptOut)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
 /* EOF */

@@ -74,6 +74,7 @@ static ULONG WINAPI IWineD3DVertexDeclarationImpl_Release(IWineD3DVertexDeclarat
         }
 
         HeapFree(GetProcessHeap(), 0, This->pDeclarationWine);
+        HeapFree(GetProcessHeap(), 0, This->ffp_valid);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -118,6 +119,90 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDeclaration(IWineD3DVerte
     return hr;
 }
 
+static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
+{
+    switch(element->Usage)
+    {
+        case WINED3DDECLUSAGE_POSITION:
+        case WINED3DDECLUSAGE_POSITIONT:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_FLOAT2:
+                case WINED3DDECLTYPE_FLOAT3:
+                case WINED3DDECLTYPE_FLOAT4:
+                case WINED3DDECLTYPE_SHORT2:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_FLOAT16_2:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        case WINED3DDECLUSAGE_BLENDWEIGHT:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_D3DCOLOR:
+                case WINED3DDECLTYPE_UBYTE4:
+                case WINED3DDECLTYPE_SHORT2:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_FLOAT16_2:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        case WINED3DDECLUSAGE_NORMAL:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_FLOAT3:
+                case WINED3DDECLTYPE_FLOAT4:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        case WINED3DDECLUSAGE_TEXCOORD:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_FLOAT1:
+                case WINED3DDECLTYPE_FLOAT2:
+                case WINED3DDECLTYPE_FLOAT3:
+                case WINED3DDECLTYPE_FLOAT4:
+                case WINED3DDECLTYPE_SHORT2:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_FLOAT16_2:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        case WINED3DDECLUSAGE_COLOR:
+            switch(element->Type)
+            {
+                case WINED3DDECLTYPE_FLOAT3:
+                case WINED3DDECLTYPE_FLOAT4:
+                case WINED3DDECLTYPE_D3DCOLOR:
+                case WINED3DDECLTYPE_UBYTE4:
+                case WINED3DDECLTYPE_SHORT4:
+                case WINED3DDECLTYPE_UBYTE4N:
+                case WINED3DDECLTYPE_SHORT4N:
+                case WINED3DDECLTYPE_USHORT4N:
+                case WINED3DDECLTYPE_FLOAT16_4:
+                    return TRUE;
+                default:
+                    return FALSE;
+            }
+
+        default:
+            return FALSE;
+    }
+}
+
 static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVertexDeclaration *iface,
         const WINED3DVERTEXELEMENT *elements, UINT element_count) {
     IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
@@ -136,7 +221,8 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
 
     This->declarationWNumElements = element_count;
     This->pDeclarationWine = HeapAlloc(GetProcessHeap(), 0, sizeof(WINED3DVERTEXELEMENT) * element_count);
-    if (!This->pDeclarationWine) {
+    This->ffp_valid = HeapAlloc(GetProcessHeap(), 0, sizeof(*This->ffp_valid) * element_count);
+    if (!This->pDeclarationWine || !This->ffp_valid) {
         ERR("Memory allocation failed\n");
         return WINED3DERR_OUTOFVIDEOMEMORY;
     } else {
@@ -149,6 +235,7 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
     This->num_streams = 0;
     This->position_transformed = FALSE;
     for (i = 0; i < element_count; ++i) {
+        This->ffp_valid[i] = declaration_element_valid_ffp(&This->pDeclarationWine[i]);
 
         if(This->pDeclarationWine[i].Usage == WINED3DDECLUSAGE_POSITIONT) {
             This->position_transformed = TRUE;
@@ -167,7 +254,6 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
 
         if(This->pDeclarationWine[i].Offset & 0x3) {
             WARN("Declaration element %d is not 4 byte aligned(%d), returning E_FAIL\n", i, This->pDeclarationWine[i].Offset);
-            HeapFree(GetProcessHeap(), 0, This->pDeclarationWine);
             return E_FAIL;
         }
 

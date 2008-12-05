@@ -365,7 +365,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor() {
+PKBDTABLES WINAPI KbdLayerDescriptor() {
   return &keyboard_layout_table;
 }
 

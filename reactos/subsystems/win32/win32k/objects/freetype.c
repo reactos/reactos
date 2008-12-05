@@ -518,7 +518,7 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
  *   TRUE on success, FALSE on failure.
  *
  */
-static BOOLEAN STDCALL
+static BOOLEAN APIENTRY
 IntTranslateCharsetInfo(PDWORD Src, /* [in]
                          if flags == TCI_SRCFONTSIG: pointer to fsCsb of a FONTSIGNATURE
                          if flags == TCI_SRCCHARSET: a character set value
@@ -1172,7 +1172,7 @@ typedef struct FontFamilyInfoCallbackContext
   DWORD Size;
 } FONT_FAMILY_INFO_CALLBACK_CONTEXT, *PFONT_FAMILY_INFO_CALLBACK_CONTEXT;
 
-static NTSTATUS STDCALL
+static NTSTATUS APIENTRY
 FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
                                     IN PVOID ValueData, IN ULONG ValueLength,
                                     IN PVOID Context, IN PVOID EntryContext)
@@ -1287,7 +1287,7 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
 }
 
 
-FT_Glyph STDCALL
+FT_Glyph APIENTRY
 ftGdiGlyphCacheGet(
    FT_Face Face,
    INT GlyphIndex,
@@ -1336,7 +1336,7 @@ ftGdiGlyphCacheGet(
    return FontEntry->Glyph;
 }
 
-FT_Glyph STDCALL
+FT_Glyph APIENTRY
 ftGdiGlyphCacheSet(
    FT_Face Face,
    INT GlyphIndex,
@@ -2993,7 +2993,7 @@ ftGdiGetKerningPairs( PFONTGDI Font,
 // Functions needing sorting.
 //
 ///////////////
-int STDCALL
+int APIENTRY
 NtGdiGetFontFamilyInfo(HDC Dc,
                        LPLOGFONTW UnsafeLogFont,
                        PFONTFAMILYINFO UnsafeInfo,
@@ -3162,23 +3162,10 @@ NtGdiExtTextOutW(
       Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {
-        goto fail;
+         goto fail;
       }
    }
    String = SafeString;
-
-   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
-   {
-      // At least one of the two flags were specified. Copy lprc. Once.
-      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
-      if (!NT_SUCCESS(Status))
-      {
-         DC_UnlockDc(dc);
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return FALSE;
-      }
-      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
-   }
 
    if (NULL != UnsafeDx && Count > 0)
    {
@@ -3188,10 +3175,38 @@ NtGdiExtTextOutW(
          goto fail;
       }
       Status = MmCopyFromCaller(Dx, UnsafeDx, Count * sizeof(INT));
-      if (! NT_SUCCESS(Status))
+      if (!NT_SUCCESS(Status))
       {
          goto fail;
       }
+   }
+
+   if (lprc)
+   {
+      Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         goto fail;
+      }
+   }
+
+   if (PATH_IsPathOpen(dc->DcLevel))
+   {
+      if (!PATH_ExtTextOut( dc,
+                            XStart,
+                            YStart,
+                            fuOptions,
+             (const RECT *)&SpecifiedDestRect,
+                            SafeString,
+                            Count,
+               (const INT *)Dx)) goto fail;
+      goto good;
+   }
+
+   if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
+   {
+      IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
    }
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
@@ -3636,13 +3651,14 @@ NtGdiExtTextOutW(
    }
    BRUSHOBJ_UnlockBrush(BrushFg);
    NtGdiDeleteObject(hBrushFg);
+good:
    if (NULL != SafeString)
    {
-      ExFreePool((void*)SafeString);
+      ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
    }
    if (NULL != Dx)
    {
-      ExFreePool(Dx);
+      ExFreePoolWithTag(Dx, TAG_GDITEXT);
    }
    DC_UnlockDc( dc );
 
@@ -3669,11 +3685,11 @@ fail:
    }
    if (NULL != SafeString)
    {
-      ExFreePool((void*)SafeString);
+      ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
    }
    if (NULL != Dx)
    {
-      ExFreePool(Dx);
+      ExFreePoolWithTag(Dx, TAG_GDITEXT);
    }
    DC_UnlockDc(dc);
 
@@ -3684,7 +3700,7 @@ fail:
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetCharABCWidthsW(
     IN HDC hDC,
     IN UINT FirstChar,
@@ -3707,17 +3723,17 @@ NtGdiGetCharABCWidthsW(
 
    if(pwch)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForRead(pwch,
             sizeof(PWSTR),
                        1);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
    if (!NT_SUCCESS(Status))
    {
@@ -3852,7 +3868,7 @@ NtGdiGetCharABCWidthsW(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtGdiGetCharWidthW(
     IN HDC hDC,
     IN UINT FirstChar,
@@ -3875,17 +3891,17 @@ NtGdiGetCharWidthW(
 
    if(pwc)
    {
-     _SEH_TRY
+     _SEH2_TRY
      {
        ProbeForRead(pwc,
            sizeof(PWSTR),
                       1);
      }
-     _SEH_HANDLE
+     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-      Status = _SEH_GetExceptionCode();
+      Status = _SEH2_GetExceptionCode();
      }
-     _SEH_END;
+     _SEH2_END;
    }
    if (!NT_SUCCESS(Status))
    {
@@ -3992,7 +4008,7 @@ NtGdiGetCharWidthW(
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtGdiGetGlyphIndicesW(
     IN HDC hdc,
     IN OPTIONAL LPWSTR UnSafepwc,
@@ -4057,17 +4073,17 @@ NtGdiGetGlyphIndicesW(
      ExFreePool(potm);
   }
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     ProbeForRead(UnSafepwc,
              sizeof(PWSTR),
                          1);
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    Status = _SEH_GetExceptionCode();
+    Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
   if (!NT_SUCCESS(Status)) goto ErrorRet;
 
@@ -4090,7 +4106,7 @@ NtGdiGetGlyphIndicesW(
 
   IntUnLockFreeType;
 
-  _SEH_TRY
+  _SEH2_TRY
   {
     ProbeForWrite(UnSafepgi,
                sizeof(WORD),
@@ -4099,11 +4115,11 @@ NtGdiGetGlyphIndicesW(
                      Buffer,
             cwc*sizeof(WORD));
   }
-  _SEH_HANDLE
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-    Status = _SEH_GetExceptionCode();
+    Status = _SEH2_GetExceptionCode();
   }
-  _SEH_END;
+  _SEH2_END;
 
 ErrorRet:
   ExFreePoolWithTag(Buffer, TAG_GDITEXT);

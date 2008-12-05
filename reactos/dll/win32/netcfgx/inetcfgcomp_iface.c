@@ -20,7 +20,7 @@ typedef struct
 }IEnumNetCfgComponentImpl;
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnQueryInterface(
     INetCfgComponent * iface,
     REFIID iid,
@@ -41,7 +41,7 @@ INetCfgComponent_fnQueryInterface(
 }
 
 ULONG
-STDCALL
+WINAPI
 INetCfgComponent_fnAddRef(
     INetCfgComponent * iface)
 {
@@ -52,7 +52,7 @@ INetCfgComponent_fnAddRef(
 }
 
 ULONG
-STDCALL
+WINAPI
 INetCfgComponent_fnRelease(
     INetCfgComponent * iface)
 {
@@ -67,7 +67,7 @@ INetCfgComponent_fnRelease(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetDisplayName(
     INetCfgComponent * iface,
     LPWSTR * ppszwDisplayName)
@@ -99,7 +99,7 @@ INetCfgComponent_fnGetDisplayName(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnSetDisplayName(
     INetCfgComponent * iface,
     LPCWSTR ppszwDisplayName)
@@ -131,7 +131,7 @@ INetCfgComponent_fnSetDisplayName(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetHelpText(
     INetCfgComponent * iface,
     LPWSTR * ppszwHelpText)
@@ -163,7 +163,7 @@ INetCfgComponent_fnGetHelpText(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetId(
     INetCfgComponent * iface,
     LPWSTR * ppszwId)
@@ -185,7 +185,7 @@ INetCfgComponent_fnGetId(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetCharacteristics(
     INetCfgComponent * iface,
     DWORD * pdwCharacteristics)
@@ -201,7 +201,7 @@ INetCfgComponent_fnGetCharacteristics(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetInstanceGuid(
     INetCfgComponent * iface,
     GUID * pGuid)
@@ -216,7 +216,7 @@ INetCfgComponent_fnGetInstanceGuid(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetPnpDevNodeId(
     INetCfgComponent * iface,
     LPWSTR * ppszwDevNodeId)
@@ -240,7 +240,7 @@ INetCfgComponent_fnGetPnpDevNodeId(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetClassGuid(
     INetCfgComponent * iface,
     GUID * pGuid)
@@ -255,7 +255,7 @@ INetCfgComponent_fnGetClassGuid(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetBindName(
     INetCfgComponent * iface,
     LPWSTR * ppszwBindName)
@@ -277,7 +277,7 @@ INetCfgComponent_fnGetBindName(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnGetDeviceStatus(
     INetCfgComponent * iface,
     ULONG * pStatus)
@@ -296,7 +296,7 @@ INetCfgComponent_fnGetDeviceStatus(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnOpenParamKey(
     INetCfgComponent * iface,
     HKEY * phkey)
@@ -422,7 +422,7 @@ CreateNotificationObject(
 }
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_fnRaisePropertyUi(
     INetCfgComponent * iface,
     IN HWND  hwndParent,
@@ -493,7 +493,7 @@ static const INetCfgComponentVtbl vt_NetCfgComponent =
 };
 
 HRESULT
-STDCALL
+WINAPI
 INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem, INetCfg * pNCfg)
 {
     INetCfgComponentImpl *This;
@@ -527,7 +527,7 @@ INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, N
  */
 
 HRESULT
-STDCALL
+WINAPI
 IEnumNetCfgComponent_fnQueryInterface(
     IEnumNetCfgComponent * iface,
     REFIID iid,
@@ -549,7 +549,7 @@ IEnumNetCfgComponent_fnQueryInterface(
 
 
 ULONG
-STDCALL
+WINAPI
 IEnumNetCfgComponent_fnAddRef(
     IEnumNetCfgComponent * iface)
 {
@@ -560,7 +560,7 @@ IEnumNetCfgComponent_fnAddRef(
 }
 
 ULONG
-STDCALL
+WINAPI
 IEnumNetCfgComponent_fnRelease(
     IEnumNetCfgComponent * iface)
 {
@@ -571,7 +571,7 @@ IEnumNetCfgComponent_fnRelease(
 }
 
 HRESULT
-STDCALL
+WINAPI
 IEnumNetCfgComponent_fnNext(
     IEnumNetCfgComponent * iface,
     ULONG celt,
@@ -601,7 +601,7 @@ IEnumNetCfgComponent_fnNext(
 }
 
 HRESULT
-STDCALL
+WINAPI
 IEnumNetCfgComponent_fnSkip(
     IEnumNetCfgComponent * iface,
     ULONG celt)
@@ -621,7 +621,7 @@ IEnumNetCfgComponent_fnSkip(
 }
 
 HRESULT
-STDCALL
+WINAPI
 IEnumNetCfgComponent_fnReset(
     IEnumNetCfgComponent * iface)
 {
@@ -632,7 +632,7 @@ IEnumNetCfgComponent_fnReset(
 }
 
 HRESULT
-STDCALL
+WINAPI
 IEnumNetCfgComponent_fnClone(
     IEnumNetCfgComponent * iface,
     IEnumNetCfgComponent **ppenum)
@@ -652,7 +652,7 @@ static const IEnumNetCfgComponentVtbl vt_EnumNetCfgComponent =
 };
 
 HRESULT
-STDCALL
+WINAPI
 IEnumNetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, NetCfgComponentItem * pItem, INetCfg * pNCfg)
 {
     IEnumNetCfgComponentImpl *This;

@@ -43,7 +43,7 @@
  *
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
               IN ULONG NumberOfBytes,
               IN MEMORY_CACHING_TYPE CacheEnable)
@@ -135,7 +135,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
  *
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 MmUnmapIoSpace (IN PVOID BaseAddress,
                 IN SIZE_T NumberOfBytes)
 {
@@ -161,7 +161,7 @@ MmUnmapIoSpace (IN PVOID BaseAddress,
  *
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 MmMapVideoDisplay (IN PHYSICAL_ADDRESS PhysicalAddress,
                    IN SIZE_T   NumberOfBytes,
                    IN MEMORY_CACHING_TYPE CacheType)
@@ -173,7 +173,7 @@ MmMapVideoDisplay (IN PHYSICAL_ADDRESS PhysicalAddress,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 MmUnmapVideoDisplay (IN PVOID BaseAddress,
                      IN SIZE_T NumberOfBytes)
 {

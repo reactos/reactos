@@ -6,7 +6,7 @@
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
  * Copyright 2006-2008 Henri Verbeet
- * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2007-2008 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -372,16 +372,12 @@ BOOL initPixelFormats(WineD3D_GL_Info *gl_info)
      * an application that needs this because it causes performance problems due to
      * shader recompiling in some games.
      */
-    if(!GL_SUPPORT(ATI_ENVMAP_BUMPMAP) && !GL_SUPPORT(NV_TEXTURE_SHADER2)) {
+    if(!GL_SUPPORT(NV_TEXTURE_SHADER2)) {
         /* signed -> unsigned fixup */
         dst = getFmtIdx(WINED3DFMT_V8U8);
         gl_info->gl_formats[dst].conversion_group = WINED3DFMT_V8U8;
         dst = getFmtIdx(WINED3DFMT_V16U16);
         gl_info->gl_formats[dst].conversion_group = WINED3DFMT_V8U8;
-    } else if(GL_SUPPORT(ATI_ENVMAP_BUMPMAP)) {
-        /* signed -> unsigned fixup */
-        dst = getFmtIdx(WINED3DFMT_V16U16);
-        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_V16U16;
     } else {
         /* Blue = 1.0 fixup, disabled for now */
         if(0) {
@@ -1083,6 +1079,7 @@ const char *debug_fbostatus(GLenum status) {
         FBOSTATUS_TO_STR(GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT);
         FBOSTATUS_TO_STR(GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT);
         FBOSTATUS_TO_STR(GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT);
+        FBOSTATUS_TO_STR(GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT);
         FBOSTATUS_TO_STR(GL_FRAMEBUFFER_UNSUPPORTED_EXT);
 #undef FBOSTATUS_TO_STR
         default:
@@ -1796,7 +1793,7 @@ void *hash_table_get(struct hash_table_t *table, void *key)
 }
 
 #define GLINFO_LOCATION stateblock->wineD3DDevice->adapter->gl_info
-void gen_ffp_op(IWineD3DStateBlockImpl *stateblock, struct ffp_settings *settings, BOOL ignore_textype) {
+void gen_ffp_frag_op(IWineD3DStateBlockImpl *stateblock, struct ffp_frag_settings *settings, BOOL ignore_textype) {
 #define ARG1 0x01
 #define ARG2 0x02
 #define ARG0 0x04
@@ -2016,13 +2013,13 @@ void gen_ffp_op(IWineD3DStateBlockImpl *stateblock, struct ffp_settings *setting
 }
 #undef GLINFO_LOCATION
 
-struct ffp_desc *find_ffp_shader(struct hash_table_t *fragment_shaders, struct ffp_settings *settings)
+struct ffp_frag_desc *find_ffp_frag_shader(struct hash_table_t *fragment_shaders, struct ffp_frag_settings *settings)
 {
-    return (struct ffp_desc *)hash_table_get(fragment_shaders, settings);}
+    return (struct ffp_frag_desc *)hash_table_get(fragment_shaders, settings);}
 
-void add_ffp_shader(struct hash_table_t *shaders, struct ffp_desc *desc) {
-    struct ffp_settings *key = HeapAlloc(GetProcessHeap(), 0, sizeof(*key));
-    /* Note that the key is the implementation independent part of the ffp_desc structure,
+void add_ffp_frag_shader(struct hash_table_t *shaders, struct ffp_frag_desc *desc) {
+    struct ffp_frag_settings *key = HeapAlloc(GetProcessHeap(), 0, sizeof(*key));
+    /* Note that the key is the implementation independent part of the ffp_frag_desc structure,
      * whereas desc points to an extended structure with implementation specific parts.
      * Make a copy of the key because hash_table_put takes ownership of it
      */
@@ -2124,8 +2121,8 @@ void sampler_texdim(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCont
 }
 #undef GLINFO_LOCATION
 
-unsigned int ffp_program_key_hash(void *key) {
-    struct ffp_settings *k = (struct ffp_settings *)key;
+unsigned int ffp_frag_program_key_hash(void *key) {
+    struct ffp_frag_settings *k = (struct ffp_frag_settings *)key;
     unsigned int hash = 0, i;
     DWORD *blob;
 
@@ -2150,9 +2147,9 @@ unsigned int ffp_program_key_hash(void *key) {
     return hash;
 }
 
-BOOL ffp_program_key_compare(void *keya, void *keyb) {
-    struct ffp_settings *ka = (struct ffp_settings *)keya;
-    struct ffp_settings *kb = (struct ffp_settings *)keyb;
+BOOL ffp_frag_program_key_compare(void *keya, void *keyb) {
+    struct ffp_frag_settings *ka = (struct ffp_frag_settings *)keya;
+    struct ffp_frag_settings *kb = (struct ffp_frag_settings *)keyb;
 
     return memcmp(ka, kb, sizeof(*ka)) == 0;
 }

@@ -33,11 +33,11 @@ char *xstrdup(const char *str);
 #define __attribute__(X)
 #endif
 
-int parser_error(const char *s, ...) __attribute__((format (printf, 1, 2)));
+void parser_error(const char *s, ...) __attribute__((format (printf, 1, 2))) __attribute__((noreturn));
 int parser_warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
-void error_loc(const char *s, ...) __attribute__((format (printf, 1, 2)));
-void error(const char *s, ...) __attribute__((format (printf, 1, 2)));
-void error_loc_info(const loc_info_t *, const char *s, ...) __attribute__((format (printf, 2, 3)));
+void error_loc(const char *s, ...) __attribute__((format (printf, 1, 2))) __attribute__((noreturn));
+void error(const char *s, ...) __attribute__((format (printf, 1, 2))) __attribute__((noreturn));
+void error_loc_info(const loc_info_t *, const char *s, ...) __attribute__((format (printf, 2, 3))) __attribute__((noreturn));
 void warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
 void warning_loc_info(const loc_info_t *, const char *s, ...) __attribute__((format (printf, 2, 3)));
 void chat(const char *s, ...) __attribute__((format (printf, 1, 2)));

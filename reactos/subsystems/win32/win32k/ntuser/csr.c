@@ -88,7 +88,7 @@ co_CsrNotify(PCSR_API_MESSAGE Request)
 
 
 NTSTATUS
-STDCALL
+APIENTRY
 CsrInsertObject(HANDLE ObjectHandle,
                 ACCESS_MASK DesiredAccess,
                 PHANDLE Handle)

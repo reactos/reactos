@@ -40,7 +40,7 @@
  * 	STATUS_INVALID_PARAMETER_MIX if PortName is defined and
  * 	both hSbApiPort and wSubsystem are 0.
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
 		  IN      HANDLE           hSbApiPort      OPTIONAL,
 		  IN      WORD             wSubSystemId    OPTIONAL,

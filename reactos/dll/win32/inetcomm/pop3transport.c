@@ -19,6 +19,7 @@
  */
 
 #define COBJMACROS
+#define NONAMELESSUNION
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -35,32 +36,342 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
 
+enum parse_state
+{
+    STATE_NONE,
+    STATE_OK,
+    STATE_MULTILINE,
+    STATE_DONE
+};
+
 typedef struct
 {
     InternetTransport InetTransport;
     ULONG refs;
-    INETSERVER server;
     POP3COMMAND command;
+    POP3CMDTYPE type;
+    char *response;
+    char *ptr;
+    enum parse_state state;
+    BOOL valid_info;
+    DWORD msgid;
+    DWORD preview_lines;
 } POP3Transport;
+
+static HRESULT parse_response(POP3Transport *This)
+{
+    switch (This->state)
+    {
+    case STATE_NONE:
+    {
+        if (strlen(This->response) < 3)
+        {
+            WARN("parse error\n");
+            This->state = STATE_DONE;
+            return S_FALSE;
+        }
+        if (!memcmp(This->response, "+OK", 3))
+        {
+            This->ptr = This->response + 3;
+            This->state = STATE_OK;
+            return S_OK;
+        }
+        This->state = STATE_DONE;
+        return S_FALSE;
+    }
+    default: return S_OK;
+    }
+}
+
+static HRESULT parse_uidl_response(POP3Transport *This, POP3UIDL *uidl)
+{
+    char *p;
+
+    uidl->dwPopId = 0;
+    uidl->pszUidl = NULL;
+    switch (This->state)
+    {
+    case STATE_OK:
+    {
+        if (This->type == POP3CMD_GET_POPID)
+        {
+            if ((p = strchr(This->ptr, ' ')))
+            {
+                while (*p == ' ') p++;
+                sscanf(p, "%u", &uidl->dwPopId);
+                if ((p = strchr(p, ' ')))
+                {
+                    while (*p == ' ') p++;
+                    uidl->pszUidl = p;
+                    This->valid_info = TRUE;
+                }
+             }
+             This->state = STATE_DONE;
+             return S_OK;
+        }
+        This->state = STATE_MULTILINE;
+        return S_OK;
+    }
+    case STATE_MULTILINE:
+    {
+        if (This->response[0] == '.' && !This->response[1])
+        {
+            This->valid_info = FALSE;
+            This->state = STATE_DONE;
+            return S_OK;
+        }
+        sscanf(This->response, "%u", &uidl->dwPopId);
+        if ((p = strchr(This->response, ' ')))
+        {
+            while (*p == ' ') p++;
+            uidl->pszUidl = p;
+            This->valid_info = TRUE;
+            return S_OK;
+        }
+    }
+    default:
+    {
+        WARN("parse error\n");
+        This->state = STATE_DONE;
+        return S_FALSE;
+    }
+    }
+}
+
+static HRESULT parse_stat_response(POP3Transport *This, POP3STAT *stat)
+{
+    char *p;
+
+    stat->cMessages = 0;
+    stat->cbMessages = 0;
+    switch (This->state)
+    {
+    case STATE_OK:
+    {
+        if ((p = strchr(This->ptr, ' ')))
+        {
+            while (*p == ' ') p++;
+            sscanf(p, "%u %u", &stat->cMessages, &stat->cbMessages);
+            This->valid_info = TRUE;
+            This->state = STATE_DONE;
+            return S_OK;
+        }
+    }
+    default:
+    {
+        WARN("parse error\n");
+        This->state = STATE_DONE;
+        return S_FALSE;
+    }
+    }
+}
+
+static HRESULT parse_list_response(POP3Transport *This, POP3LIST *list)
+{
+    char *p;
+
+    list->dwPopId = 0;
+    list->cbSize = 0;
+    switch (This->state)
+    {
+    case STATE_OK:
+    {
+        if (This->type == POP3CMD_GET_POPID)
+        {
+            if ((p = strchr(This->ptr, ' ')))
+            {
+                while (*p == ' ') p++;
+                sscanf(p, "%u %u", &list->dwPopId, &list->cbSize);
+                This->valid_info = TRUE;
+            }
+            This->state = STATE_DONE;
+            return S_OK;
+        }
+        This->state = STATE_MULTILINE;
+        return S_OK;
+    }
+    case STATE_MULTILINE:
+    {
+        if (This->response[0] == '.' && !This->response[1])
+        {
+            This->valid_info = FALSE;
+            This->state = STATE_DONE;
+            return S_OK;
+        }
+        sscanf(This->response, "%u", &list->dwPopId);
+        if ((p = strchr(This->response, ' ')))
+        {
+            while (*p == ' ') p++;
+            sscanf(p, "%u", &list->cbSize);
+            This->valid_info = TRUE;
+            return S_OK;
+        }
+    }
+    default:
+    {
+        WARN("parse error\n");
+        This->state = STATE_DONE;
+        return S_FALSE;
+    }
+    }
+}
+
+static HRESULT parse_dele_response(POP3Transport *This, DWORD *dwPopId)
+{
+    switch (This->state)
+    {
+    case STATE_OK:
+    {
+        *dwPopId = 0; /* FIXME */
+        This->state = STATE_DONE;
+        return S_OK;
+    }
+    default:
+    {
+        WARN("parse error\n");
+        This->state = STATE_DONE;
+        return S_FALSE;
+    }
+    }
+}
+
+static HRESULT parse_retr_response(POP3Transport *This, POP3RETR *retr)
+{
+    switch (This->state)
+    {
+    case STATE_OK:
+    {
+        retr->fHeader = FALSE;
+        retr->fBody = FALSE;
+        retr->dwPopId = This->msgid;
+        retr->cbSoFar = 0;
+        retr->pszLines = This->response;
+        retr->cbLines = 0;
+
+        This->state = STATE_MULTILINE;
+        This->valid_info = FALSE;
+        return S_OK;
+    }
+    case STATE_MULTILINE:
+    {
+        int len;
+
+        if (This->response[0] == '.' && !This->response[1])
+        {
+            retr->cbLines = retr->cbSoFar;
+            This->state = STATE_DONE;
+            return S_OK;
+        }
+        retr->fHeader = TRUE;
+        if (!This->response[0]) retr->fBody = TRUE;
+
+        len = strlen(This->response);
+        retr->cbSoFar += len;
+        retr->pszLines = This->response;
+        retr->cbLines = len;
+
+        This->valid_info = TRUE;
+        return S_OK;
+    }
+    default:
+    {
+        WARN("parse error\n");
+        This->state = STATE_DONE;
+        return S_FALSE;
+    }
+    }
+}
+
+static HRESULT parse_top_response(POP3Transport *This, POP3TOP *top)
+{
+    switch (This->state)
+    {
+    case STATE_OK:
+    {
+        top->fHeader = FALSE;
+        top->fBody = FALSE;
+        top->dwPopId = This->msgid;
+        top->cPreviewLines = This->preview_lines;
+        top->cbSoFar = 0;
+        top->pszLines = This->response;
+        top->cbLines = 0;
+
+        This->state = STATE_MULTILINE;
+        This->valid_info = FALSE;
+        return S_OK;
+    }
+    case STATE_MULTILINE:
+    {
+        int len;
+
+        if (This->response[0] == '.' && !This->response[1])
+        {
+            top->cbLines = top->cbSoFar;
+            This->state = STATE_DONE;
+            return S_OK;
+        }
+        top->fHeader = TRUE;
+        if (!This->response[0]) top->fBody = TRUE;
+
+        len = strlen(This->response);
+        top->cbSoFar += len;
+        top->pszLines = This->response;
+        top->cbLines = len;
+
+        This->valid_info = TRUE;
+        return S_OK;
+    }
+    default:
+    {
+        WARN("parse error\n");
+        This->state = STATE_DONE;
+        return S_FALSE;
+    }
+    }
+}
+
+static void init_parser(POP3Transport *This, POP3COMMAND command, POP3CMDTYPE type)
+{
+    This->state = STATE_NONE;
+    This->command = command;
+    This->type = type;
+}
 
 static HRESULT POP3Transport_ParseResponse(POP3Transport *This, char *pszResponse, POP3RESPONSE *pResponse)
 {
+    HRESULT hr;
+
     TRACE("response: %s\n", debugstr_a(pszResponse));
 
+    This->response = pszResponse;
+    This->valid_info = FALSE;
+    TRACE("state %u\n", This->state);
+
+    if (SUCCEEDED((hr = parse_response(This))))
+    {
+        switch (This->command)
+        {
+        case POP3_UIDL: hr = parse_uidl_response(This, &pResponse->u.rUidlInfo); break;
+        case POP3_STAT: hr = parse_stat_response(This, &pResponse->u.rStatInfo); break;
+        case POP3_LIST: hr = parse_list_response(This, &pResponse->u.rListInfo); break;
+        case POP3_DELE: hr = parse_dele_response(This, &pResponse->u.dwPopId); break;
+        case POP3_RETR: hr = parse_retr_response(This, &pResponse->u.rRetrInfo); break;
+        case POP3_TOP: hr = parse_top_response(This, &pResponse->u.rTopInfo); break;
+        default:
+            This->state = STATE_DONE;
+            break;
+        }
+    }
     pResponse->command = This->command;
-    pResponse->fDone = TRUE; /* FIXME */
-
-    if (!memcmp(pszResponse, "+OK", 3))
-        pResponse->rIxpResult.hrResult = S_OK;
-    else
-        pResponse->rIxpResult.hrResult = S_FALSE;
-
+    pResponse->fDone = (This->state == STATE_DONE);
+    pResponse->fValidInfo = This->valid_info;
+    pResponse->rIxpResult.hrResult = hr;
     pResponse->rIxpResult.pszResponse = pszResponse;
     pResponse->rIxpResult.uiServerError = 0;
     pResponse->rIxpResult.hrServerError = pResponse->rIxpResult.hrResult;
-    pResponse->rIxpResult.dwSocketError = 0;
+    pResponse->rIxpResult.dwSocketError = WSAGetLastError();
+    pResponse->rIxpResult.pszProblem = NULL;
     pResponse->pTransport = (IPOP3Transport *)&This->InetTransport.u.vtblPOP3;
-    pResponse->fValidInfo = FALSE; /* FIXME */
 
     if (This->InetTransport.pCallback && This->InetTransport.fCommandLogging)
     {
@@ -69,6 +380,152 @@ static HRESULT POP3Transport_ParseResponse(POP3Transport *This, char *pszRespons
             (IInternetTransport *)&This->InetTransport.u.vtbl);
     }
     return S_OK;
+}
+
+static void POP3Transport_CallbackProcessDELEResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+    POP3RESPONSE response;
+    HRESULT hr;
+
+    TRACE("\n");
+
+    hr = POP3Transport_ParseResponse(This, pBuffer, &response);
+    if (FAILED(hr))
+    {
+        /* FIXME: handle error */
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+}
+
+static void POP3Transport_CallbackRecvDELEResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+
+    TRACE("\n");
+    InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessDELEResp);
+}
+
+static void POP3Transport_CallbackProcessNOOPResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+    POP3RESPONSE response;
+    HRESULT hr;
+
+    TRACE("\n");
+
+    hr = POP3Transport_ParseResponse(This, pBuffer, &response);
+    if (FAILED(hr))
+    {
+        /* FIXME: handle error */
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+}
+
+static void POP3Transport_CallbackRecvNOOPResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+
+    TRACE("\n");
+    InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessNOOPResp);
+}
+
+static void POP3Transport_CallbackProcessRSETResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+    POP3RESPONSE response;
+    HRESULT hr;
+
+    TRACE("\n");
+
+    hr = POP3Transport_ParseResponse(This, pBuffer, &response);
+    if (FAILED(hr))
+    {
+        /* FIXME: handle error */
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+}
+
+static void POP3Transport_CallbackRecvRSETResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+
+    TRACE("\n");
+    InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessRSETResp);
+}
+
+void POP3Transport_CallbackProcessRETRResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+    POP3RESPONSE response;
+    HRESULT hr;
+
+    TRACE("\n");
+
+    hr = POP3Transport_ParseResponse(This, pBuffer, &response);
+    if (FAILED(hr))
+    {
+        /* FIXME: handle error */
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+
+    if (!response.fDone)
+    {
+        InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessRETRResp);
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+}
+
+static void POP3Transport_CallbackRecvRETRResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+
+    TRACE("\n");
+    InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessRETRResp);
+}
+
+static void POP3Transport_CallbackProcessTOPResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+    POP3RESPONSE response;
+    HRESULT hr;
+
+    TRACE("\n");
+
+    hr = POP3Transport_ParseResponse(This, pBuffer, &response);
+    if (FAILED(hr))
+    {
+        /* FIXME: handle error */
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+
+    if (!response.fDone)
+    {
+        InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessTOPResp);
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+}
+
+static void POP3Transport_CallbackRecvTOPResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+{
+    POP3Transport *This = (POP3Transport *)iface;
+
+    TRACE("\n");
+    InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessTOPResp);
 }
 
 static void POP3Transport_CallbackProcessLISTResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
@@ -83,6 +540,14 @@ static void POP3Transport_CallbackProcessLISTResp(IInternetTransport *iface, cha
     if (FAILED(hr))
     {
         /* FIXME: handle error */
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+
+    if (!response.fDone)
+    {
+        InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessLISTResp);
         return;
     }
 
@@ -109,6 +574,14 @@ static void POP3Transport_CallbackProcessUIDLResp(IInternetTransport *iface, cha
     if (FAILED(hr))
     {
         /* FIXME: handle error */
+        return;
+    }
+
+    IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
+
+    if (!response.fDone)
+    {
+        InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessUIDLResp);
         return;
     }
 
@@ -198,12 +671,14 @@ static void POP3Transport_CallbackProcessUSERResp(IInternetTransport *iface, cha
 
     IPOP3Callback_OnResponse((IPOP3Callback *)This->InetTransport.pCallback, &response);
 
-    len = sizeof(pass) + strlen(This->server.szPassword) + 2; /* "\r\n" */
+    len = sizeof(pass) + strlen(This->InetTransport.ServerInfo.szPassword) + 2; /* "\r\n" */
     command = HeapAlloc(GetProcessHeap(), 0, len);
 
     strcpy(command, pass);
-    strcat(command, This->server.szPassword);
+    strcat(command, This->InetTransport.ServerInfo.szPassword);
     strcat(command, "\r\n");
+
+    init_parser(This, POP3_PASS, POP3_NONE);
 
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvPASSResp);
     HeapFree(GetProcessHeap(), 0, command);
@@ -226,11 +701,11 @@ static void POP3Transport_CallbackSendUSERCmd(IInternetTransport *iface, char *p
 
     TRACE("\n");
 
-    len = sizeof(user) + strlen(This->server.szUserName) + 2; /* "\r\n" */
+    len = sizeof(user) + strlen(This->InetTransport.ServerInfo.szUserName) + 2; /* "\r\n" */
     command = HeapAlloc(GetProcessHeap(), 0, len);
 
     strcpy(command, user);
-    strcat(command, This->server.szUserName);
+    strcat(command, This->InetTransport.ServerInfo.szUserName);
     strcat(command, "\r\n");
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvUSERResp);
 
@@ -344,8 +819,7 @@ static HRESULT WINAPI POP3Transport_Connect(IPOP3Transport *iface,
     if (FAILED(hr))
         return hr;
 
-    This->command = POP3_USER;
-    This->server = *pInetServer;
+    init_parser(This, POP3_USER, POP3_NONE);
     return InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackSendUSERCmd);
 }
 
@@ -424,13 +898,13 @@ static HRESULT WINAPI POP3Transport_CommandUSER(IPOP3Transport *iface, LPSTR use
     TRACE("(%s)\n", username);
 
     len = sizeof(user) + strlen(username) + 2; /* "\r\n" */
-    command = HeapAlloc(GetProcessHeap(), 0, len);
+    if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
 
     strcpy(command, user);
     strcat(command, username);
     strcat(command, "\r\n");
 
-    This->command = POP3_USER;
+    init_parser(This, POP3_USER, POP3_NONE);
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvUSERResp);
 
     HeapFree(GetProcessHeap(), 0, command);
@@ -447,13 +921,13 @@ static HRESULT WINAPI POP3Transport_CommandPASS(IPOP3Transport *iface, LPSTR pas
     TRACE("(%p)\n", password);
 
     len = sizeof(pass) + strlen(password) + 2; /* "\r\n" */
-    command = HeapAlloc(GetProcessHeap(), 0, len);
+    if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
 
     strcpy(command, pass);
     strcat(command, password);
     strcat(command, "\r\n");
 
-    This->command = POP3_PASS;
+    init_parser(This, POP3_PASS, POP3_NONE);
     InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvPASSResp);
 
     HeapFree(GetProcessHeap(), 0, command);
@@ -463,21 +937,49 @@ static HRESULT WINAPI POP3Transport_CommandPASS(IPOP3Transport *iface, LPSTR pas
 static HRESULT WINAPI POP3Transport_CommandLIST(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char list[] = "LIST\r\n";
+    static char list[] = "LIST %u\r\n";
+    static char list_all[] = "LIST\r\n";
     POP3Transport *This = (POP3Transport *)iface;
+    char *command;
+    int len;
 
     TRACE("(%u, %u)\n", cmdtype, dwPopId);
 
-    This->command = POP3_LIST;
-    InternetTransport_DoCommand(&This->InetTransport, list, POP3Transport_CallbackRecvLISTResp);
+    if (dwPopId)
+    {
+        len = sizeof(list) + 10 + 2; /* "4294967296" + "\r\n" */
+        if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
+        sprintf(command, list, dwPopId);
+    }
+    else command = list_all;
+
+    init_parser(This, POP3_LIST, cmdtype);
+    InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvLISTResp);
+
+    if (dwPopId) HeapFree(GetProcessHeap(), 0, command);
     return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandTOP(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId, DWORD cPreviewLines)
 {
-    FIXME("(%u, %u, %u)\n", cmdtype, dwPopId, cPreviewLines);
-    return E_NOTIMPL;
+    static char top[] = "TOP %u %u\r\n";
+    POP3Transport *This = (POP3Transport *)iface;
+    char *command;
+    int len;
+
+    TRACE("(%u, %u, %u)\n", cmdtype, dwPopId, cPreviewLines);
+
+    len = sizeof(top) + 20 + 2; /* 2 * "4294967296" + "\r\n" */
+    if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
+    sprintf(command, top, dwPopId, cPreviewLines);
+
+    This->preview_lines = cPreviewLines;
+    init_parser(This, POP3_TOP, cmdtype);
+    InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvTOPResp);
+
+    HeapFree(GetProcessHeap(), 0, command);
+    return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandQUIT(IPOP3Transport *iface)
@@ -487,7 +989,9 @@ static HRESULT WINAPI POP3Transport_CommandQUIT(IPOP3Transport *iface)
 
     TRACE("()\n");
 
-    This->command = POP3_QUIT;
+    InternetTransport_ChangeStatus(&This->InetTransport, IXP_DISCONNECTING);
+
+    init_parser(This, POP3_QUIT, POP3_NONE);
     return InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvQUITResp);
 }
 
@@ -498,48 +1002,101 @@ static HRESULT WINAPI POP3Transport_CommandSTAT(IPOP3Transport *iface)
 
     TRACE("\n");
 
-    This->command = POP3_STAT;
+    init_parser(This, POP3_STAT, POP3_NONE);
     InternetTransport_DoCommand(&This->InetTransport, stat, POP3Transport_CallbackRecvSTATResp);
     return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandNOOP(IPOP3Transport *iface)
 {
-    FIXME("()\n");
-    return E_NOTIMPL;
+    static char noop[] = "NOOP\r\n";
+    POP3Transport *This = (POP3Transport *)iface;
+
+    TRACE("\n");
+
+    init_parser(This, POP3_NOOP, POP3_NONE);
+    InternetTransport_DoCommand(&This->InetTransport, noop, POP3Transport_CallbackRecvNOOPResp);
+    return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandRSET(IPOP3Transport *iface)
 {
-    FIXME("()\n");
-    return E_NOTIMPL;
+    static char rset[] = "RSET\r\n";
+    POP3Transport *This = (POP3Transport *)iface;
+
+    TRACE("\n");
+
+    init_parser(This, POP3_RSET, POP3_NONE);
+    InternetTransport_DoCommand(&This->InetTransport, rset, POP3Transport_CallbackRecvRSETResp);
+    return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandUIDL(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    static char uidl[] = "UIDL\r\n";
+    static char uidl[] = "UIDL %u\r\n";
+    static char uidl_all[] = "UIDL\r\n";
     POP3Transport *This = (POP3Transport *)iface;
+    char *command;
+    int len;
 
     TRACE("(%u, %u)\n", cmdtype, dwPopId);
 
-    This->command = POP3_UIDL;
-    InternetTransport_DoCommand(&This->InetTransport, uidl, POP3Transport_CallbackRecvUIDLResp);
+    if (dwPopId)
+    {
+        len = sizeof(uidl) + 10 + 2; /* "4294967296" + "\r\n" */
+        if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
+        sprintf(command, uidl, dwPopId);
+    }
+    else command = uidl_all;
+
+    init_parser(This, POP3_UIDL, cmdtype);
+    InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvUIDLResp);
+
+    if (dwPopId) HeapFree(GetProcessHeap(), 0, command);
     return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandDELE(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    FIXME("(%u, %u)\n", cmdtype, dwPopId);
-    return E_NOTIMPL;
+    static char dele[] = "DELE %u\r\n";
+    POP3Transport *This = (POP3Transport *)iface;
+    char *command;
+    int len;
+
+    TRACE("(%u, %u)\n", cmdtype, dwPopId);
+
+    len = sizeof(dele) + 10 + 2; /* "4294967296" + "\r\n" */
+    if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
+    sprintf(command, dele, dwPopId);
+
+    init_parser(This, POP3_DELE, cmdtype);
+    InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvDELEResp);
+
+    HeapFree(GetProcessHeap(), 0, command);
+    return S_OK;
 }
 
 static HRESULT WINAPI POP3Transport_CommandRETR(
     IPOP3Transport *iface, POP3CMDTYPE cmdtype, DWORD dwPopId)
 {
-    FIXME("(%u, %u)\n", cmdtype, dwPopId);
-    return E_NOTIMPL;
+    static char retr[] = "RETR %u\r\n";
+    POP3Transport *This = (POP3Transport *)iface;
+    char *command;
+    int len;
+
+    TRACE("(%u, %u)\n", cmdtype, dwPopId);
+
+    len = sizeof(retr) + 10 + 2; /* "4294967296" + "\r\n" */
+    if (!(command = HeapAlloc(GetProcessHeap(), 0, len))) return S_FALSE;
+    sprintf(command, retr, dwPopId);
+
+    init_parser(This, POP3_RETR, cmdtype);
+    InternetTransport_DoCommand(&This->InetTransport, command, POP3Transport_CallbackRecvRETRResp);
+
+    HeapFree(GetProcessHeap(), 0, command);
+    return S_OK;
 }
 
 static const IPOP3TransportVtbl POP3TransportVtbl =

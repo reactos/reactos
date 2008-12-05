@@ -32,12 +32,12 @@ typedef struct
     LONG ref;
 }INetConnectionPropertyUiImpl, *LPINetConnectionPropertyUiImpl;
 
-static LPINetConnectionPropertyUiImpl __inline impl_from_NetLanConnectionUiInfo(INetLanConnectionUiInfo *iface)
+static __inline LPINetConnectionPropertyUiImpl impl_from_NetLanConnectionUiInfo(INetLanConnectionUiInfo *iface)
 {
     return (LPINetConnectionPropertyUiImpl)((char *)iface - FIELD_OFFSET(INetConnectionPropertyUiImpl, lpLanConUiInfoVtbl));
 }
 
-static LPINetConnectionPropertyUiImpl __inline impl_from_NetConnectionConnectUi(INetConnectionConnectUi *iface)
+static __inline LPINetConnectionPropertyUiImpl impl_from_NetConnectionConnectUi(INetConnectionConnectUi *iface)
 {
     return (LPINetConnectionPropertyUiImpl)((char *)iface - FIELD_OFFSET(INetConnectionPropertyUiImpl, lpNetConnectionConnectUi));
 }
@@ -573,7 +573,7 @@ static const INetConnectionPropertyUi2Vtbl vt_NetConnectionPropertyUi =
 
 static
 HRESULT
-STDCALL
+WINAPI
 INetLanConnectionUiInfo_fnQueryInterface(
     INetLanConnectionUiInfo * iface,
     REFIID iid,
@@ -585,7 +585,7 @@ INetLanConnectionUiInfo_fnQueryInterface(
 
 static
 ULONG
-STDCALL
+WINAPI
 INetLanConnectionUiInfo_fnAddRef(
     INetLanConnectionUiInfo * iface)
 {
@@ -595,7 +595,7 @@ INetLanConnectionUiInfo_fnAddRef(
 
 static
 ULONG
-STDCALL
+WINAPI
 INetLanConnectionUiInfo_fnRelease(
     INetLanConnectionUiInfo * iface)
 {
@@ -605,7 +605,7 @@ INetLanConnectionUiInfo_fnRelease(
 
 static
 HRESULT
-STDCALL
+WINAPI
 INetLanConnectionUiInfo_fnGetDeviceGuid(
     INetLanConnectionUiInfo * iface,
     GUID * pGuid)
@@ -625,7 +625,7 @@ static const INetLanConnectionUiInfoVtbl vt_NetLanConnectionUiInfo =
 
 static
 HRESULT
-STDCALL
+WINAPI
 INetConnectionConnectUi_fnQueryInterface(
     INetConnectionConnectUi * iface,
     REFIID iid,
@@ -637,7 +637,7 @@ INetConnectionConnectUi_fnQueryInterface(
 
 static
 ULONG
-STDCALL
+WINAPI
 INetConnectionConnectUi_fnAddRef(
     INetConnectionConnectUi * iface)
 {
@@ -647,7 +647,7 @@ INetConnectionConnectUi_fnAddRef(
 
 static
 ULONG
-STDCALL
+WINAPI
 INetConnectionConnectUi_fnRelease(
     INetConnectionConnectUi * iface)
 {
@@ -657,7 +657,7 @@ INetConnectionConnectUi_fnRelease(
 
 static
 HRESULT
-STDCALL
+WINAPI
 INetConnectionConnectUi_fnSetConnection(
     INetConnectionConnectUi * iface,
     INetConnection* pCon)
@@ -676,7 +676,7 @@ INetConnectionConnectUi_fnSetConnection(
 
 static
 HRESULT
-STDCALL
+WINAPI
 INetConnectionConnectUi_fnConnect(
     INetConnectionConnectUi * iface,
     HWND hwndParent,
@@ -698,7 +698,7 @@ INetConnectionConnectUi_fnConnect(
 
 static
 HRESULT
-STDCALL
+WINAPI
 INetConnectionConnectUi_fnDisconnect(
     INetConnectionConnectUi * iface,
     HWND hwndParent,

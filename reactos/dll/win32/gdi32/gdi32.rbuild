@@ -10,9 +10,11 @@
 	<library>pseh</library>
 	<library>dxguid</library>
 	<library>ntdll</library>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
 		<pch>precomp.h</pch>
 	</directory>
+	-->
 	<directory name="main">
 		<file>dllmain.c</file>
 	</directory>
@@ -48,4 +50,6 @@
 		<file>path.c</file>
 	</directory>
 	<file>gdi32.rc</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

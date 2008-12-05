@@ -124,7 +124,7 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
       0,
       DeviceExtension->InterruptLevel);
 
-   return Status ? NO_ERROR : ERROR_INVALID_ACCESS;
+   return Status ? NO_ERROR : ERROR_INVALID_PARAMETER;
 #else
     /* FIXME: Function still present? If so what to use instead of HalEnableSystemInterrupt? */
     UNIMPLEMENTED;
@@ -151,7 +151,7 @@ VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
       DeviceExtension->InterruptVector,
       0);
 
-   return Status ? NO_ERROR : ERROR_INVALID_ACCESS;
+   return Status ? NO_ERROR : ERROR_INVALID_PARAMETER;
 #else
     /* FIXME: Function still present? If so what to use instead of HalDisableSystemInterrupt? */
     UNIMPLEMENTED;

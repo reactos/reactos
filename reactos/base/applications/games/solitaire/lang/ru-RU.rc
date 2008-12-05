@@ -44,6 +44,7 @@ BEGIN
     IDS_SOL_ABOUT   "Пасьянс от J Brown\n\nCardLib версии 1.0."
     IDS_SOL_QUIT    "Закончить текущую игру?"
     IDS_SOL_WIN     "Congratulations, you win!!"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

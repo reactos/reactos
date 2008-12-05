@@ -399,11 +399,11 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   (PLIGATURE1)Ligature
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID) {
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }
 
-INT STDCALL
+INT WINAPI
 DllMain(
   PVOID hinstDll,
   ULONG dwReason,

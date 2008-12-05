@@ -106,7 +106,7 @@ PsGetContextThread(IN PETHREAD Thread,
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Set default ength */
         Size = sizeof(CONTEXT);
@@ -131,12 +131,12 @@ PsGetContextThread(IN PETHREAD Thread,
             ProbeForWrite(ThreadContext, Size, sizeof(ULONG));
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Check if we got success */
     if (!NT_SUCCESS(Status)) return Status;
@@ -197,16 +197,16 @@ PsGetContextThread(IN PETHREAD Thread,
         }
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Copy the context */
         RtlCopyMemory(ThreadContext, &GetSetContext.Context, Size);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status */
     return Status;
@@ -226,7 +226,7 @@ PsSetContextThread(IN PETHREAD Thread,
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Enter SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Set default length */
         Size = sizeof(CONTEXT);
@@ -254,12 +254,12 @@ PsSetContextThread(IN PETHREAD Thread,
         /* Copy the context */
         RtlCopyMemory(&GetSetContext.Context, ThreadContext, Size);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Check if we got success */
     if (!NT_SUCCESS(Status)) return Status;

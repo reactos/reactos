@@ -13,9 +13,11 @@
 	<library>chew</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
 		<pch>precomp.h</pch>
 	</directory>
+	-->
 	<directory name="datalink">
 		<file>lan.c</file>
 	</directory>
@@ -39,4 +41,6 @@
 		<file>wait.c</file>
 	</directory>
 	<file>tcpip.rc</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

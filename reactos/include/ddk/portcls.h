@@ -123,10 +123,20 @@
 #ifndef PORTCLS_H
 #define PORTCLS_H
 
-//#include <windef.h>
+#ifdef __cplusplus
+extern "C"
+{
+    #include <wdm.h>
+}
+#else
+    #include <wdm.h>
+#endif
+
+#include <windef.h>
+
 #include <ks.h>
+#include <ksmedia.h>
 #include <punknown.h>
-#include <ntddk.h>
 #include <drmk.h>
 
 #ifdef __cplusplus
@@ -152,24 +162,9 @@ extern "C"
 
 #define PORT_CLASS_DEVICE_EXTENSION_SIZE ( 64 * sizeof(ULONG_PTR) )
 
-/* ===============================================================
-    Class IDs - TODO (put these elsewhere!!!)
-*/
-#if 0
-//#define CLSID_PortDMus    /* dmusicks.h */
-DEFINE_GUID(CLSID_PortMidi,0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
-#define CLSID_PortTopology
-#define CLSID_PortWaveCyclic
-#define CLSID_PortWavePci
 
-/* first 2 are dmusicks.h */
-#define CLSID_MiniportDriverDMusUART
-#define CLSID_MiniportDriverDMusUARTCapture
-#define CLSID_MiniportDriverFmSynth
-#define CLSID_MiniportDriverFmSynthWithVol
-DEFINE_GUID(CLSID_MiniportDriverUart,0xb4c90ae1L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
-#endif
-
+DEFINE_GUID(CLSID_MiniportDriverFmSynth, 0xb4c90ae0L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+DEFINE_GUID(CLSID_MiniportDriverFmSynthWithVol, 0xe5a3c139L, 0xf0f2, 0x11d1, 0x81, 0xaf, 0x00, 0x60, 0x08, 0x33, 0x16, 0xc1);
 
 /* ===============================================================
     Event Item Flags - TODO
@@ -389,6 +384,8 @@ typedef struct
 
 #undef INTERFACE
 #define INTERFACE IResourceList
+
+DEFINE_GUID(IID_IResourceList, 0x22C6AC60L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
 
 DECLARE_INTERFACE_(IResourceList, IUnknown)
 {
@@ -779,6 +776,8 @@ typedef IInterruptSync *PINTERRUPTSYNC;
     IRegistryKey Interface
 */
 
+DEFINE_GUID(IID_IRegistryKey, 0xE8DA4302l, 0xF304, 0x11D0, 0x95, 0x8B, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3);
+
 DECLARE_INTERFACE_(IRegistryKey, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -1005,28 +1004,55 @@ typedef IPortMidi *PPORTMIDI;
     STDMETHODIMP_(NTSTATUS) RegisterServiceGroup( \
         IN  PSERVICEGROUP ServiceGroup);
 
-
+#undef INTERFACE
 
 /* ===============================================================
     IPortWaveCyclic Interface
 */
-
-#if 0
-#define STATIC_IPortWaveCyclic \
-    0xb4c90a26L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44
-DEFINE_GUIDSTRUCT("0xB4C90A26-5791-11d0-86f9-00a0c911b544", IID_IPortWaveCyclic);
-#define IID_IPortWaveCyclic DEFINE_GUIDNAMED(IID_IPortWaveCyclic)
-#endif
 
 DEFINE_GUID(IID_IPortWaveCyclic,
     0xb4c90a26L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 DEFINE_GUID(CLSID_PortWaveCyclic,
     0xb4c90a2aL, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 
+#define INTERFACE IPortWaveCyclic
+
 DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
 {
-    DEFINE_ABSTRACT_UNKNOWN()
-    DEFINE_ABSTRACT_PORT()
+    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
+        REFIID InterfaceId,
+        PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+
+
+    STDMETHOD_(NTSTATUS,Init)(THIS_
+        IN      PDEVICE_OBJECT  DeviceObject,
+        IN      PIRP            Irp,
+        IN      PUNKNOWN        UnknownMiniport,
+        IN      PUNKNOWN        UnknownAdapter      OPTIONAL,
+        IN      PRESOURCELIST   ResourceList 
+    )   PURE;
+    STDMETHOD_(NTSTATUS,GetDeviceProperty)(THIS_
+        IN      DEVICE_REGISTRY_PROPERTY    DeviceProperty,
+        IN      ULONG                       BufferLength,
+        OUT     PVOID                       PropertyBuffer,
+        OUT     PULONG                      ResultLength
+    )   PURE;
+    STDMETHOD_(NTSTATUS,NewRegistryKey)(THIS_
+        OUT     PREGISTRYKEY *      OutRegistryKey,
+        IN      PUNKNOWN            OuterUnknown,
+        IN      ULONG               RegistryKeyType,
+        IN      ACCESS_MASK         DesiredAccess,
+        IN      POBJECT_ATTRIBUTES  ObjectAttributes    OPTIONAL,
+        IN      ULONG               CreateOptions       OPTIONAL,
+        OUT     PULONG              Disposition         OPTIONAL 
+    )   PURE;
+
+    STDMETHOD_(VOID, Notify)(THIS_
+        IN  PSERVICEGROUP ServiceGroup) PURE;
+
 
     STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
         OUT PDMACHANNEL* DmaChannel,
@@ -1047,13 +1073,12 @@ DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
         IN  BOOL DemandMode,
         IN  DMA_SPEED DmaSpeed) PURE;
 
-    STDMETHOD_(VOID, Notify)(THIS_
-        IN  PSERVICEGROUP ServiceGroup) PURE;
+
 };
 
-/* TODO ... */
+typedef IPortWaveCyclic *PPORTWAVECYCLIC;
 
-
+#undef INTERFACE
 /* ===============================================================
     IPortWavePci Interface
 */
@@ -1221,6 +1246,7 @@ typedef IPortTopology *PPORTTOPOLOGY;
 
 #define IMP_IPortTopology IMP_IPort
 
+
 /* ===============================================================
     IMiniportTopology Interface
 */
@@ -1229,9 +1255,73 @@ typedef IPortTopology *PPORTTOPOLOGY;
     IMiniportWaveCyclicStream Interface
 */
 
+DECLARE_INTERFACE_(IMiniportWaveCyclicStream,IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()   //  For IUnknown
+
+    STDMETHOD_(NTSTATUS,SetFormat)(THIS_
+        IN PKSDATAFORMAT DataFormat)PURE;
+
+    STDMETHOD_(ULONG,SetNotificationFreq)(THIS_
+        IN ULONG Interval,
+        OUT PULONG FrameSize) PURE;
+
+    STDMETHOD_(NTSTATUS,SetState)(THIS_
+        IN KSSTATE State) PURE;
+
+    STDMETHOD_(NTSTATUS,GetPosition)( THIS_
+        OUT PULONG Position) PURE;
+
+    STDMETHOD_(NTSTATUS,NormalizePhysicalPosition)(THIS_
+        IN OUT PLONGLONG PhysicalPosition) PURE;
+
+    STDMETHOD_(void, Silence)( THIS_
+        IN PVOID Buffer,
+        IN ULONG ByteCount) PURE;
+};
+
+typedef IMiniportWaveCyclicStream *PMINIPORTWAVECYCLICSTREAM;
+
 /* ===============================================================
     IMiniportWaveCyclic Interface
 */
+#undef INTERFACE
+
+DEFINE_GUID(IID_IMiniportWaveCyclic,
+    0xb4c90a27L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+#define INTERFACE IMiniportWaveCyclic
+
+DECLARE_INTERFACE_(IMiniportWaveCyclic, IMiniport)
+{
+    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
+        REFIID InterfaceId,
+        PVOID* Interface
+        ) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+
+
+    DEFINE_ABSTRACT_MINIPORT()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PUNKNOWN  UnknownAdapter,
+        IN PRESOURCELIST  ResourceList,
+        IN PPORTWAVECYCLIC  Port) PURE;
+
+    STDMETHOD_(NTSTATUS, NewStream)(THIS_
+        OUT PMINIPORTWAVECYCLICSTREAM  *Stream,
+        IN PUNKNOWN  OuterUnknown  OPTIONAL,
+        IN POOL_TYPE  PoolType,
+        IN ULONG  Pin,
+        IN BOOL  Capture,
+        IN PKSDATAFORMAT  DataFormat,
+        OUT PDMACHANNEL  *DmaChannel,
+        OUT PSERVICEGROUP  *ServiceGroup) PURE;
+};
+
+typedef IMiniportWaveCyclic *PMINIPORTWAVECYCLIC;
+#undef INTERFACE
 
 /* ===============================================================
     IMiniportWavePciStream Interface

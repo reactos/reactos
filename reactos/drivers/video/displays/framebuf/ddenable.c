@@ -20,7 +20,7 @@
 
 #include "framebuf.h"
 
-VOID DDKAPI
+VOID APIENTRY
 DrvDisableDirectDraw( IN DHPDEV  dhpdev)
 {
    PPDEV ppdev = (PPDEV)dhpdev;
@@ -29,7 +29,7 @@ DrvDisableDirectDraw( IN DHPDEV  dhpdev)
       when we shout down directx interface */
 }
 
-BOOL DDKAPI
+BOOL APIENTRY
 DrvEnableDirectDraw(
   IN DHPDEV  dhpdev,
   OUT DD_CALLBACKS  *pCallBacks,
@@ -127,7 +127,7 @@ DrvEnableDirectDraw(
 	 return ppdev->bDDInitialized;
 }
 
-BOOL DDKAPI
+BOOL APIENTRY
 DrvGetDirectDrawInfo(
   IN DHPDEV  dhpdev,
   OUT DD_HALINFO  *pHalInfo,

@@ -1,8 +1,5 @@
 #ifndef _LMALERT_H
 #define _LMALERT_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define ALERTER_MAILSLOT TEXT("\\\\.\\MAILSLOT\\Alerter")
 #define ALERT_PRINT_EVENT TEXT("PRINTING")

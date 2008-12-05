@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	struct sockaddr_in sin;
 	struct hostent *hp;
 	struct servent *sp;
-	int s;
+	SOCKET s;
 
 	WORD wVersionRequested;
 	WSADATA wsaData;

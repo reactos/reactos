@@ -326,7 +326,7 @@ extern int spawnvp(int mode, const char *cmdname, const char * const argv[]);
 
 /* Interlocked functions */
 
-#if defined(__i386__) && defined(__GNUC__) && !defined(WINE_PORT_NO_INTERLOCKED)
+#if defined(_MSC_VER) || (defined(__i386__) && defined(__GNUC__) && !defined(WINE_PORT_NO_INTERLOCKED))
 
 #define interlocked_cmpxchg InterlockedCompareExchange
 #define interlocked_cmpxchg_ptr InterlockedCompareExchangePtr

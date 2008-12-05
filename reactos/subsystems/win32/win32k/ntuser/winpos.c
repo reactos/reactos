@@ -241,7 +241,7 @@ co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
 }
 
 
-VOID static FASTCALL
+static VOID FASTCALL
 WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
 {
    /* FIXME */
@@ -1662,7 +1662,7 @@ co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTes
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetMinMaxInfo(
    HWND hWnd,
    MINMAXINFO *MinMaxInfo,

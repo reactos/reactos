@@ -35,7 +35,7 @@
 #define WRITE_SDA(state)  (i2c->WriteDataLine(HwDeviceExtension, state))
 #define WRITE_SCL(state)  (i2c->WriteClockLine(HwDeviceExtension, state))
 
-STATIC LARGE_INTEGER HalfPeriodDelay = { { 70LL } };
+STATIC LARGE_INTEGER HalfPeriodDelay = {{0, 70}};
 #define DELAY_HALF()      KeDelayExecutionThread(KernelMode, FALSE, &HalfPeriodDelay)
 
 

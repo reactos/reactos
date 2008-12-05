@@ -114,7 +114,7 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     }
 
     /* Decrement the lock count */
-    if (!InterlockedDecrement(&Lock->Common.IoCount));
+    if (!InterlockedDecrement(&Lock->Common.IoCount))
     {
         /* Signal the event */
         KeSetEvent(&Lock->Common.RemoveEvent, IO_NO_INCREMENT, FALSE);

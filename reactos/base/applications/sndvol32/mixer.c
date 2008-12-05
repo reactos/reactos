@@ -472,7 +472,7 @@ SndMixerEnumProducts(PSND_MIXER Mixer,
 INT
 SndMixerGetDestinationCount(PSND_MIXER Mixer)
 {
-    return (Mixer->hmx ? Mixer->Caps.cDestinations : -1);
+    return (Mixer->hmx ? (INT)Mixer->Caps.cDestinations : -1);
 }
 
 BOOL

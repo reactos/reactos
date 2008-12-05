@@ -15,7 +15,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID static
+static VOID
 InsertAfterEntry(PLIST_ENTRY Previous,
                  PLIST_ENTRY Entry)
 /*
@@ -30,7 +30,7 @@ InsertAfterEntry(PLIST_ENTRY Previous,
    Previous->Flink = Entry;
 }
 
-PMM_REGION static
+static PMM_REGION
 MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
               PVOID StartAddress, ULONG Length, ULONG NewType,
               ULONG NewProtect, PMM_AVL_TABLE AddressSpace,

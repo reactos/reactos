@@ -1,8 +1,5 @@
 #ifndef _WINDEF_H
 #define _WINDEF_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -127,7 +124,6 @@ extern "C" {
 #define CDECL _cdecl
 
 #if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
-#define STDCALL __stdcall
 #define CALLBACK    __stdcall
 #define WINAPI      __stdcall
 #define WINAPIV     __cdecl
@@ -135,7 +131,6 @@ extern "C" {
 #define APIPRIVATE  __stdcall
 #define PASCAL      __stdcall
 #else
-#define STDCALL
 #define CALLBACK
 #define WINAPI
 #define WINAPIV
@@ -290,13 +285,28 @@ typedef WORD *PWORD,*LPWORD;
 typedef long *LPLONG;
 typedef DWORD *PDWORD,*LPDWORD;
 typedef CONST void *PCVOID,*LPCVOID;
-typedef int INT;
+
 typedef unsigned int UINT,*PUINT,*LPUINT;
+
+typedef void *LPVOID;
+
+//
+// Check if ntdef.h already defined these for us
+//
+#ifndef BASETYPES
+#define BASETYPES
+typedef unsigned long ULONG, *PULONG;
+typedef unsigned short USHORT, *PUSHORT;
+typedef unsigned char UCHAR, *PUCHAR;
+typedef char *PSZ;
+typedef int INT;
+#endif  /* BASETYPES */
 
 #ifndef NT_INCLUDED
 #include <winnt.h>
 #endif
 
+typedef HANDLE *LPHANDLE;
 typedef UINT_PTR WPARAM;
 typedef LONG_PTR LPARAM;
 typedef LONG_PTR LRESULT;

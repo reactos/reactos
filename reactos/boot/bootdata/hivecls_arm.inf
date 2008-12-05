@@ -211,9 +211,9 @@ HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.e
 ; MSI files
 HKCR,".msi","",0x00000000,"MSI.Package"
 HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
-HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec /i ""%1"""
-HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec /f ""%1"""
-HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec /x ""%1"""
+HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /i ""%1"""
+HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /f ""%1"""
+HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /x ""%1"""
 
 HKCR,".pif","",0x00000000,"piffile"
 

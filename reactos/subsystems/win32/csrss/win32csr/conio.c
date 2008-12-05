@@ -133,7 +133,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
   return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS WINAPI
 CsrInitConsole(PCSRSS_CONSOLE Console)
 {
   NTSTATUS Status;
@@ -680,7 +680,7 @@ CSR_API(CsrReadConsole)
   return Status;
 }
 
-BOOLEAN __inline ConioGetIntersection(
+__inline BOOLEAN ConioGetIntersection(
   RECT *Intersection,
   RECT *Rect1,
   RECT *Rect2)
@@ -706,7 +706,7 @@ BOOLEAN __inline ConioGetIntersection(
   return TRUE;
 }
 
-BOOLEAN __inline ConioGetUnion(
+__inline BOOLEAN ConioGetUnion(
   RECT *Union,
   RECT *Rect1,
   RECT *Rect2)
@@ -894,7 +894,7 @@ CSR_API(CsrWriteConsole)
   return Status;
 }
 
-VOID STDCALL
+VOID WINAPI
 ConioDeleteScreenBuffer(Object_t *Object)
 {
   PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER) Object;
@@ -914,7 +914,7 @@ ConioDrawConsole(PCSRSS_CONSOLE Console)
 }
 
 
-VOID STDCALL
+VOID WINAPI
 ConioDeleteConsole(Object_t *Object)
 {
   PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Object;
@@ -946,7 +946,7 @@ ConioDeleteConsole(Object_t *Object)
   HeapFree(Win32CsrApiHeap, 0, Console);
 }
 
-VOID STDCALL
+VOID WINAPI
 CsrInitConsoleSupport(VOID)
 {
   DPRINT("CSR: CsrInitConsoleSupport()\n");
@@ -1087,7 +1087,7 @@ ConioGetShiftState(PBYTE KeyState)
   return ssOut;
 }
 
-VOID STDCALL
+VOID WINAPI
 ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
 {
   static BYTE KeyState[256] = { 0 };

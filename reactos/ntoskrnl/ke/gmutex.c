@@ -85,8 +85,8 @@ KiAcquireGuardedMutexContented(IN OUT PKGUARDED_MUTEX GuardedMutex)
     }
 }
 
-VOID
 FORCEINLINE
+VOID
 FASTCALL
 KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 {
@@ -101,8 +101,8 @@ KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     }
 }
 
-VOID
 FORCEINLINE
+VOID
 FASTCALL
 KiReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 {

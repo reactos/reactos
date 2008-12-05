@@ -95,7 +95,7 @@ KdbpGetInstLength(
 
 /* from i386/kdb_help.S */
 
-VOID STDCALL
+VOID NTAPI
 KdbpStackSwitchAndCall(
    IN PVOID NewStack,
    IN VOID (*Function)(VOID));
@@ -234,7 +234,7 @@ KdbpAttachToProcess(
    PVOID ProcessId);
 
 VOID
-STDCALL
+NTAPI
 KdbpGetCommandLineSettings(PCHAR p1);
 
 KD_CONTINUE_TYPE

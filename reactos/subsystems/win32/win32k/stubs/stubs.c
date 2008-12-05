@@ -2679,36 +2679,8 @@ NtGdiMakeFontDir(
  */
 BOOL
 APIENTRY
-NtGdiMakeInfoDC(
-    IN HDC hdc,
-    IN BOOL bSet)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiMonoBitmap(
     IN HBITMAP hbm)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiMoveTo(
-    IN HDC hdc,
-    IN INT x,
-    IN INT y,
-    OUT OPTIONAL LPPOINT pptOut)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -2806,7 +2778,7 @@ NtGdiUnmapMemFont(
 }
 
 BOOL
-STDCALL
+APIENTRY
 EngControlSprites(
   IN WNDOBJ  *pwo,
   IN FLONG  fl)

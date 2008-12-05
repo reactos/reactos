@@ -856,7 +856,7 @@ VideoPortGetRegistryParameters(
       UNIMPLEMENTED;
    }
 
-   return ERROR_SUCCESS;
+   return NO_ERROR;
 }
 
 /*
@@ -884,7 +884,7 @@ VideoPortSetRegistryParameters(
       ValueData,
       ValueLength);
 
-   if (Status != ERROR_SUCCESS)
+   if (Status != NO_ERROR)
      WARN_(VIDEOPRT, "VideoPortSetRegistryParameters error 0x%x\n", Status);
 
    return Status;

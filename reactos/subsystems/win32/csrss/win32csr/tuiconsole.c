@@ -71,7 +71,7 @@ TuiInit(VOID)
   return TRUE;
 }
 
-static VOID STDCALL
+static VOID WINAPI
 TuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
 {
   Buffer->DefaultAttrib = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_BLUE;
@@ -100,7 +100,7 @@ TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, RECT *Region)
     }
 }
 
-static VOID STDCALL
+static VOID WINAPI
 TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
 {
   DWORD BytesReturned;
@@ -141,7 +141,7 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
   HeapFree(Win32CsrApiHeap, 0, ConsoleDraw);
 }
 
-static VOID STDCALL
+static VOID WINAPI
 TuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
@@ -159,7 +159,7 @@ TuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
     }
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 TuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 {
   DWORD BytesReturned;
@@ -180,7 +180,7 @@ TuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
   return TRUE;
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
 {
   CONSOLE_SCREEN_BUFFER_INFO Info;
@@ -206,19 +206,19 @@ TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
   return TRUE;
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 TuiUpdateScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 {
     return TRUE;
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 TuiChangeTitle(PCSRSS_CONSOLE Console)
 {
   return TRUE;
 }
 
-static VOID STDCALL
+static VOID WINAPI
 TuiCleanupConsole(PCSRSS_CONSOLE Console)
 {
   DestroyWindow(Console->hWindow);
@@ -244,7 +244,7 @@ TuiCleanupConsole(PCSRSS_CONSOLE Console)
     }
 }
 
-DWORD STDCALL
+DWORD WINAPI
 TuiConsoleThread (PVOID Data)
 {
   PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Data;
@@ -293,7 +293,8 @@ static CSRSS_CONSOLE_VTBL TuiVtbl =
   TuiSetScreenInfo,
   TuiUpdateScreenInfo,
   TuiChangeTitle,
-  TuiCleanupConsole
+  TuiCleanupConsole,
+  NULL  // ChangeIcon
 };
 
 NTSTATUS FASTCALL

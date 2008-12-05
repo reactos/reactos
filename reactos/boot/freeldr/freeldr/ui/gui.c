@@ -99,4 +99,7 @@ const UIVTBL GuiVtbl =
 	GuiFadeInBackdrop,
 	GuiFadeOut,
 	GuiDisplayMenu,*/
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };

@@ -45,6 +45,40 @@ IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
    }
 }
 
+VOID
+IntWriteSystemParametersSettings(PUNICODE_STRING SubKeyName, PUNICODE_STRING KeyName, ULONG Type, PVOID Data, ULONG DataSize)
+{
+    UNICODE_STRING KeyPath;
+    NTSTATUS Status;
+    HANDLE CurrentUserKey, KeyHandle;
+    OBJECT_ATTRIBUTES KeyAttributes, ObjectAttributes;
+
+    /* Get a handle to the current users settings */
+    Status = RtlFormatCurrentUserKeyPath(&KeyPath);
+    if(!NT_SUCCESS(Status))
+        return;
+
+    InitializeObjectAttributes(&ObjectAttributes, &KeyPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    /* Open the HKCU key */
+    Status = ZwOpenKey(&CurrentUserKey, KEY_WRITE, &ObjectAttributes);
+    RtlFreeUnicodeString(&KeyPath);
+    if(!NT_SUCCESS(Status))
+        return;
+
+
+    /* Open up the settings to read the values */
+    InitializeObjectAttributes(&KeyAttributes, SubKeyName, OBJ_CASE_INSENSITIVE, CurrentUserKey, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_WRITE, &KeyAttributes);
+    ZwClose(CurrentUserKey);
+
+    if (NT_SUCCESS(Status))
+    {
+        ZwSetValueKey(KeyHandle, KeyName, 0, Type, Data, DataSize);
+        ZwClose(KeyHandle);
+    }
+}
+
+
 
 ULONG FASTCALL
 IntSystemParametersInfo(
@@ -260,9 +294,17 @@ IntSystemParametersInfo(
                    CurInfo->MouseHoverHeight = uiParam;
                    break;
                case SPI_SETMOUSEBUTTONSWAP:
-                   CurInfo = IntGetSysCursorInfo(WinStaObject);
-                   CurInfo->SwapButtons = uiParam;
-                   break;
+                   {
+                      UNICODE_STRING SubKeyName = RTL_CONSTANT_STRING(L"Control Panel\\Mouse");
+                      UNICODE_STRING SwapMouseButtons = RTL_CONSTANT_STRING(L"SwapMouseButtons");
+                      WCHAR szBuffer[10];
+
+                      swprintf(szBuffer, L"%u", uiParam);
+                      CurInfo = IntGetSysCursorInfo(WinStaObject);
+                      CurInfo->SwapButtons = uiParam;
+                      IntWriteSystemParametersSettings(&SubKeyName, &SwapMouseButtons, REG_SZ, szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR));
+                      break;
+                   }
                case SPI_SETMOUSE:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    CurInfo->CursorAccelerationInfo = *(PCURSORACCELERATION_INFO)pvParam;
@@ -725,16 +767,16 @@ UserSystemParametersInfo_StructSet(
     DPRINT("UserSystemParametersInfo_StructSet SPI Action 0x%x (uiParam: 0x%x, fWinIni: 0x%x)\n",
         uiAction, uiParam, fWinIni);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(pvParam, cbSize, 1);
         RtlCopyMemory(pBuffer,pvParam,cbSize);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if(!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
@@ -762,17 +804,17 @@ UserSystemParametersInfo_StructGet(
 
     DPRINT("UserSystemParametersInfo_StructGet SPI Action 0x%x (uiParam: 0x%x, fWinIni: 0x%x)\n",uiAction,  uiParam, fWinIni);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(pvParam, cbSize, 1);
         /* Copy only first UINT describing structure size*/
         *((PUINT)pBuffer) = *((PUINT)pvParam);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if(!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
@@ -787,16 +829,16 @@ UserSystemParametersInfo_StructGet(
     {
         return( FALSE);
     }
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForWrite(pvParam,  cbSize, 1);
         RtlCopyMemory(pvParam,pBuffer,cbSize);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
     if(!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
@@ -956,16 +998,16 @@ UserSystemParametersInfo(
                 {
                     return( FALSE);
                 }
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     ProbeForWrite(pvParam, sizeof(UINT ), 1);
                     *(PUINT)pvParam = Ret;
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
                 if(!NT_SUCCESS(Status))
                 {
                     SetLastNtError(Status);
@@ -987,16 +1029,16 @@ UserSystemParametersInfo(
                 {
                     return( FALSE);
                 }
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     ProbeForWrite(pvParam, sizeof(DWORD ), 1);
                     *(PDWORD)pvParam = Ret;
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
                 if(!NT_SUCCESS(Status))
                 {
                     SetLastNtError(Status);
@@ -1089,16 +1131,16 @@ UserSystemParametersInfo(
       case SPI_SETWORKAREA:
           {
               RECT rc;
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeForRead(pvParam, sizeof( RECT ), 1);
                   RtlCopyMemory(&rc,pvParam,sizeof(RECT));
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  Status = _SEH_GetExceptionCode();
+                  Status = _SEH2_GetExceptionCode();
               }
-              _SEH_END;
+              _SEH2_END;
               if(!NT_SUCCESS(Status))
               {
                   SetLastNtError(Status);
@@ -1113,16 +1155,16 @@ UserSystemParametersInfo(
               {
                   return( FALSE);
               }
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeForWrite(pvParam,  sizeof( RECT ), 1);
                   RtlCopyMemory(pvParam,&rc,sizeof(RECT));
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  Status = _SEH_GetExceptionCode();
+                  Status = _SEH2_GetExceptionCode();
               }
-              _SEH_END;
+              _SEH2_END;
               if(!NT_SUCCESS(Status))
               {
                   SetLastNtError(Status);
@@ -1133,16 +1175,16 @@ UserSystemParametersInfo(
       case SPI_SETMOUSE:
           {
               CURSORACCELERATION_INFO CursorAccelerationInfo;
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeForRead(pvParam, sizeof( CURSORACCELERATION_INFO ), 1);
                   RtlCopyMemory(&CursorAccelerationInfo,pvParam,sizeof(CURSORACCELERATION_INFO));
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  Status = _SEH_GetExceptionCode();
+                  Status = _SEH2_GetExceptionCode();
               }
-              _SEH_END;
+              _SEH2_END;
               if(!NT_SUCCESS(Status))
               {
                   SetLastNtError(Status);
@@ -1157,16 +1199,16 @@ UserSystemParametersInfo(
               {
                   return( FALSE);
               }
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeForWrite(pvParam,  sizeof( CURSORACCELERATION_INFO ), 1);
                   RtlCopyMemory(pvParam,&CursorAccelerationInfo,sizeof(CURSORACCELERATION_INFO));
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  Status = _SEH_GetExceptionCode();
+                  Status = _SEH2_GetExceptionCode();
               }
-              _SEH_END;
+              _SEH2_END;
               if(!NT_SUCCESS(Status))
               {
                   SetLastNtError(Status);
@@ -1177,16 +1219,16 @@ UserSystemParametersInfo(
       case SPI_SETICONTITLELOGFONT:
           {
               LOGFONTW LogFont;
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeForRead(pvParam, sizeof( LOGFONTW ), 1);
                   RtlCopyMemory(&LogFont,pvParam,sizeof(LOGFONTW));
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  Status = _SEH_GetExceptionCode();
+                  Status = _SEH2_GetExceptionCode();
               }
-              _SEH_END;
+              _SEH2_END;
               if(!NT_SUCCESS(Status))
               {
                   SetLastNtError(Status);
@@ -1201,16 +1243,16 @@ UserSystemParametersInfo(
               {
                   return( FALSE);
               }
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeForWrite(pvParam,  sizeof( LOGFONTW ), 1);
                   RtlCopyMemory(pvParam,&LogFont,sizeof(LOGFONTW));
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  Status = _SEH_GetExceptionCode();
+                  Status = _SEH2_GetExceptionCode();
               }
-              _SEH_END;
+              _SEH2_END;
               if(!NT_SUCCESS(Status))
               {
                   SetLastNtError(Status);
@@ -1228,16 +1270,16 @@ UserSystemParametersInfo(
               }
               if(NULL != pvParam)
               {
-                  _SEH_TRY
+                  _SEH2_TRY
                   {
                       ProbeForWrite(pvParam, sizeof(UINT ), 1);
                       *(PUINT)pvParam = Ret;
                   }
-                  _SEH_HANDLE
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                   {
-                      Status = _SEH_GetExceptionCode();
+                      Status = _SEH2_GetExceptionCode();
                   }
-                  _SEH_END;
+                  _SEH2_END;
                   if(!NT_SUCCESS(Status))
                   {
                       SetLastNtError(Status);
@@ -1251,16 +1293,16 @@ UserSystemParametersInfo(
           /* !!! As opposed to the user mode version this version accepts a handle to the bitmap! */
           {
               HANDLE Handle;
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeForRead(pvParam, sizeof( HANDLE ), 1);
                   Handle = *(PHANDLE)pvParam;
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  Status = _SEH_GetExceptionCode();
+                  Status = _SEH2_GetExceptionCode();
               }
-              _SEH_END;
+              _SEH2_END;
               if(!NT_SUCCESS(Status))
               {
                   SetLastNtError(Status);
@@ -1276,17 +1318,17 @@ UserSystemParametersInfo(
               {
                   return( FALSE);
               }
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeForWrite(pvParam,  sizeof( HANDLE ), 1);
                   *(PHANDLE)pvParam = Handle;
                   RtlCopyMemory(pvParam,&Handle,sizeof(HANDLE));
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  Status = _SEH_GetExceptionCode();
+                  Status = _SEH2_GetExceptionCode();
               }
-              _SEH_END;
+              _SEH2_END;
               if(!NT_SUCCESS(Status))
               {
                   SetLastNtError(Status);
@@ -1317,7 +1359,7 @@ UserSystemParametersInfo(
  * @implemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserSystemParametersInfo(
    UINT uiAction,
    UINT uiParam,
@@ -1338,7 +1380,7 @@ CLEANUP:
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserUpdatePerUserSystemParameters(
    DWORD dwReserved,
    BOOL bEnable)

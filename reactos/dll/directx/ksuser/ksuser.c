@@ -20,6 +20,8 @@
 
 
 #include "ksuser.h"
+#define NDEBUG
+#include <debug.h>
 
 NTSTATUS NTAPI  KsiCreateObjectType( HANDLE hHandle, PVOID guidstr, PVOID Buffer, ULONG BufferSize, ACCESS_MASK DesiredAccess, PHANDLE phHandle);
 

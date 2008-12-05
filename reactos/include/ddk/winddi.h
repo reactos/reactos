@@ -23,10 +23,6 @@
 #ifndef __WINDDI_H
 #define __WINDDI_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __VIDEO_H
 #error video.h cannot be included with winddi.h
 #else
@@ -314,11 +310,11 @@ typedef struct _DEVINFO {
   FLONG  flGraphicsCaps2;
 } DEVINFO, *PDEVINFO;
 
-typedef struct _DRIVEROBJ *PDRIVEROBJ;
+struct _DRIVEROBJ;
 
 typedef BOOL
 (APIENTRY CALLBACK *FREEOBJPROC)(
-  IN PDRIVEROBJ  pDriverObj);
+  IN struct _DRIVEROBJ  *pDriverObj);
 
 typedef struct _DRIVEROBJ {
   PVOID  pvObj;
@@ -1109,6 +1105,17 @@ typedef struct _XLATEOBJ {
   ULONG  cEntries;
   ULONG  *pulXlate;
 } XLATEOBJ;
+
+/* WNDOBJCHANGEPROC.fl constants */
+#define WOC_RGN_CLIENT_DELTA              0x00000001
+#define WOC_RGN_CLIENT                    0x00000002
+#define WOC_RGN_SURFACE_DELTA             0x00000004
+#define WOC_RGN_SURFACE                   0x00000008
+#define WOC_CHANGED                       0x00000010
+#define WOC_DELETE                        0x00000020
+#define WOC_DRAWN                         0x00000040
+#define WOC_SPRITE_OVERLAP                0x00000080
+#define WOC_SPRITE_NO_OVERLAP             0x00000100
 
 typedef VOID (APIENTRY CALLBACK *WNDOBJCHANGEPROC)(
   IN WNDOBJ  *pwo,
@@ -3525,23 +3532,6 @@ BOOL
 APIENTRY
 DrvUnloadFontFile(
   IN ULONG_PTR  iFile);
-
-/* WNDOBJCHANGEPROC.fl constants */
-#define WOC_RGN_CLIENT_DELTA              0x00000001
-#define WOC_RGN_CLIENT                    0x00000002
-#define WOC_RGN_SURFACE_DELTA             0x00000004
-#define WOC_RGN_SURFACE                   0x00000008
-#define WOC_CHANGED                       0x00000010
-#define WOC_DELETE                        0x00000020
-#define WOC_DRAWN                         0x00000040
-#define WOC_SPRITE_OVERLAP                0x00000080
-#define WOC_SPRITE_NO_OVERLAP             0x00000100
-
-typedef VOID
-(APIENTRY CALLBACK * WNDOBJCHANGEPROC)(
-  WNDOBJ  *pwo,
-  FLONG  fl);
-
 
 typedef BOOL
 (APIENTRY *PFN_DrvAlphaBlend)(

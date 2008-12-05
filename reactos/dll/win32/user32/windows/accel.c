@@ -165,6 +165,7 @@ BOOL WINAPI U32IsValidAccelMessage(UINT uMsg)
   case WM_KEYDOWN:
   case WM_KEYUP:
   case WM_CHAR:
+  case WM_SYSCHAR:
   case WM_SYSKEYDOWN:
   case WM_SYSKEYUP:
    return TRUE;

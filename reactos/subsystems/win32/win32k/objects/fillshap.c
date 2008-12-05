@@ -95,6 +95,12 @@ IntGdiPolygon(PDC    dc,
             DestRect.bottom   = max(DestRect.bottom, Points[CurrentPoint].y);
         }
 
+        if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+           IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+        if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+           IntGdiSelectPen(dc,Dc_Attr->hpen);
+
         /* Special locking order to avoid lock-ups */
         FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
         PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
@@ -192,7 +198,7 @@ IntGdiPolyPolygon(DC      *dc,
  *
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiEllipse(
     HDC hDC,
     int Left,
@@ -241,6 +247,12 @@ NtGdiEllipse(
 
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
 
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
     if (NULL == PenBrushObj)
@@ -334,7 +346,7 @@ extern BOOL FillPolygon(PDC dc,
 
 
 ULONG_PTR
-STDCALL
+APIENTRY
 NtGdiPolyPolyDraw( IN HDC hDC,
                    IN PPOINT UnsafePoints,
                    IN PULONG UnsafeCounts,
@@ -356,7 +368,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         return FALSE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(UnsafePoints, Count * sizeof(POINT), 1);
         ProbeForRead(UnsafeCounts, Count * sizeof(ULONG), 1);
@@ -372,11 +384,11 @@ NtGdiPolyPolyDraw( IN HDC hDC,
             nMaxPoints = max(nMaxPoints, UnsafeCounts[i]);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -411,17 +423,17 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     SafeCounts = pTemp;
     SafePoints = (PVOID)(SafeCounts + Count);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Pointers already probed! */
         RtlCopyMemory(SafeCounts, UnsafeCounts, Count * sizeof(ULONG));
         RtlCopyMemory(SafePoints, UnsafePoints, nPoints * sizeof(POINT));
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -544,6 +556,12 @@ IntRectangle(PDC dc,
         DestRect.bottom--;
     }
 
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
+
     /* Special locking order to avoid lock-ups! */
     FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
@@ -633,7 +651,7 @@ cleanup:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiRectangle(HDC  hDC,
                int  LeftRect,
                int  TopRect,
@@ -703,6 +721,12 @@ IntRoundRect(
     Dc_Attr = dc->pDc_Attr;
     if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
+
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
     if (!PenBrushObj)
     {
@@ -762,7 +786,7 @@ IntRoundRect(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiRoundRect(
     HDC  hDC,
     int  LeftRect,
@@ -904,7 +928,7 @@ IntGdiGradientFill(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiGradientFill(
     HDC hdc,
     PTRIVERTEX pVertex,
@@ -954,7 +978,7 @@ NtGdiGradientFill(
             return FALSE;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeForRead(pVertex,
                      uVertex * sizeof(TRIVERTEX),
@@ -963,11 +987,11 @@ NtGdiGradientFill(
                      SizeMesh,
                      1);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -985,7 +1009,7 @@ NtGdiGradientFill(
 
     SafeMesh = (PTRIVERTEX)(SafeVertex + uVertex);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* pointers were already probed! */
         RtlCopyMemory(SafeVertex,
@@ -995,11 +1019,11 @@ NtGdiGradientFill(
                       pMesh,
                       SizeMesh);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
@@ -1016,7 +1040,7 @@ NtGdiGradientFill(
     return Ret;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiExtFloodFill(
     HDC  hDC,
     INT  XStart,
@@ -1024,10 +1048,95 @@ NtGdiExtFloodFill(
     COLORREF  Color,
     UINT  FillType)
 {
-    DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
+  PDC dc;
+  PDC_ATTR Dc_Attr;
+  BITMAPOBJ *BitmapObj = NULL;
+  PGDIBRUSHOBJ FillBrushObj = NULL;
+  GDIBRUSHINST FillBrushInst;
+  BOOL       Ret = FALSE;
+  RECTL      DestRect;
+  POINTL     Pt;
+//  MIX        Mix;
 
-    /* lie and say we succeded */
-    return TRUE;
+  DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
+
+  dc = DC_LockDc(hDC);
+  if (!dc)
+  {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+  }
+  if (dc->DC_Type == DC_TYPE_INFO)
+  {
+      DC_UnlockDc(dc);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+  }
+
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+     IntGdiSelectPen(dc,Dc_Attr->hpen);
+
+  if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+     IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+  Pt.x = XStart;
+  Pt.y = YStart;
+  IntLPtoDP(dc, (LPPOINT)&Pt, 1);
+
+  Ret = NtGdiPtInRegion(dc->w.hGCClipRgn, Pt.x, Pt.y);
+  if (Ret)
+     IntGdiGetRgnBox(dc->w.hGCClipRgn,(LPRECT)&DestRect);
+  else
+     goto cleanup;
+
+  FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
+  if (!FillBrushObj)
+  {
+      Ret = FALSE;
+      goto cleanup;
+  }
+  BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+  if (!BitmapObj)
+  {
+      Ret = FALSE;
+      goto cleanup;
+  }
+
+  if ( FillBrushObj && (FillType == FLOODFILLBORDER))
+  {
+     if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+     {
+        FillBrushObj->BrushAttr.lbColor = Color;
+        IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
+        Ret = IntEngBitBlt(&BitmapObj->SurfObj,
+                               NULL,
+                               NULL,
+                               dc->CombinedClip,
+                               NULL,
+                               &DestRect,
+                               NULL,
+                               NULL,
+                               &FillBrushInst.BrushObject,
+                               NULL,
+                               ROP3_TO_ROP4(PATCOPY));
+     }
+  }
+  else
+  {
+  }
+
+cleanup:
+  if (FillBrushObj)
+      BRUSHOBJ_UnlockBrush(FillBrushObj);
+
+  if (BitmapObj)
+     BITMAPOBJ_UnlockBitmap(BitmapObj);
+
+  DC_UnlockDc(dc);
+  return Ret;
 }
 
 /* EOF */

@@ -136,7 +136,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     {
         DX_STUB_str("Got iface\n");
 
-        if (StartDirectDraw((LPDIRECTDRAW)This, pGUID, FALSE) == DD_OK);
+        if (StartDirectDraw((LPDIRECTDRAW)This, pGUID, FALSE) == DD_OK)
         {
             /*
             RtlZeroMemory(&wnd_class, sizeof(wnd_class));

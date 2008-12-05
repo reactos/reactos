@@ -737,7 +737,7 @@ typedef struct _IO_TIMER
     PIO_TIMER_ROUTINE TimerRoutine;
     PVOID Context;
     PDEVICE_OBJECT DeviceObject;
-} IO_TIMER, *PIO_TIMER;
+} IO_TIMER;
 
 //
 // Driver Extension
@@ -1172,6 +1172,8 @@ typedef struct _EFI_DRIVER_ENTRY
     ULONG DriverFilePathOffset;
 } EFI_DRIVER_ENTRY, *PEFI_DRIVER_ENTRY;
 
+#ifdef NTOS_MODE_USER
+
 //
 // APC Callback for NtCreateFile
 //
@@ -1180,8 +1182,6 @@ typedef VOID
     IN PVOID ApcContext,
     IN PIO_STATUS_BLOCK IoStatusBlock,
     IN ULONG Reserved);
-
-#ifdef NTOS_MODE_USER
 
 //
 // Mailslot IOCTL Codes

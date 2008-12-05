@@ -4,7 +4,6 @@
 	<importlibrary definition="dxg.spec" />
 	<include base="dxg">.</include>
 	<include base="dxg">include</include>
-	<include base="ReactOS">subsystems/win32/win32k/include</include>
 	<library>dxgthk</library>
 	<library>ntoskrnl</library>
 	<file>main.c</file>

@@ -16,7 +16,7 @@
 /* NtGdiDvpCanCreateVideoPort                                           */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpCanCreateVideoPort(HANDLE hDirectDraw,
                            PDD_CANCREATEVPORTDATA puCanCreateVPortData)
 {
@@ -36,7 +36,7 @@ NtGdiDvpCanCreateVideoPort(HANDLE hDirectDraw,
 /* NtGdiDvpColorControl                                                 */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpColorControl(HANDLE hVideoPort,
                      PDD_VPORTCOLORDATA puVPortColorData)
 {
@@ -56,7 +56,7 @@ NtGdiDvpColorControl(HANDLE hVideoPort,
 /* NtGdiDvpCreateVideoPort                                              */
 /************************************************************************/
 HANDLE
-STDCALL
+APIENTRY
 NtGdiDvpCreateVideoPort(HANDLE hDirectDraw,
                         PDD_CREATEVPORTDATA puCreateVPortData)
 {
@@ -76,7 +76,7 @@ NtGdiDvpCreateVideoPort(HANDLE hDirectDraw,
 /* NtGdiDvpDestroyVideoPort                                             */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpDestroyVideoPort(HANDLE hVideoPort,
                          PDD_DESTROYVPORTDATA puDestroyVPortData)
 {
@@ -96,7 +96,7 @@ NtGdiDvpDestroyVideoPort(HANDLE hVideoPort,
 /* NtGdiDvpFlipVideoPort                                                */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpFlipVideoPort(HANDLE hVideoPort,
                       HANDLE hDDSurfaceCurrent,
                       HANDLE hDDSurfaceTarget,
@@ -119,7 +119,7 @@ NtGdiDvpFlipVideoPort(HANDLE hVideoPort,
 /* NtGdiDvpGetVideoPortBandwidth                                        */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpGetVideoPortBandwidth(HANDLE hVideoPort,
                               PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData)
 {
@@ -140,7 +140,7 @@ NtGdiDvpGetVideoPortBandwidth(HANDLE hVideoPort,
 /* NtGdiDvpGetVideoPortFlipStatus                                       */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpGetVideoPortFlipStatus(HANDLE hDirectDraw,
                                PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData)
 {
@@ -161,7 +161,7 @@ NtGdiDvpGetVideoPortFlipStatus(HANDLE hDirectDraw,
 /* NtGdiDvpGetVideoPortInputFormats                                     */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpGetVideoPortInputFormats(HANDLE hVideoPort,
                                  PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData)
 {
@@ -182,7 +182,7 @@ NtGdiDvpGetVideoPortInputFormats(HANDLE hVideoPort,
 /* NtGdiDvpGetVideoPortLine                                             */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpGetVideoPortLine(HANDLE hVideoPort,
                          PDD_GETVPORTLINEDATA puGetVPortLineData)
 {
@@ -203,7 +203,7 @@ NtGdiDvpGetVideoPortLine(HANDLE hVideoPort,
 /* NtGdiDvpGetVideoPortOutputFormats                                    */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpGetVideoPortOutputFormats(HANDLE hVideoPort,
                                   PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData)
 {
@@ -225,7 +225,7 @@ NtGdiDvpGetVideoPortOutputFormats(HANDLE hVideoPort,
 /* NtGdiDvpGetVideoPortConnectInfo                                      */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpGetVideoPortConnectInfo(HANDLE hDirectDraw,
                                 PDD_GETVPORTCONNECTDATA puGetVPortConnectData)
 {
@@ -246,7 +246,7 @@ NtGdiDvpGetVideoPortConnectInfo(HANDLE hDirectDraw,
 /* NtGdiDvpGetVideoSignalStatus                                         */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpGetVideoSignalStatus(HANDLE hVideoPort,
                              PDD_GETVPORTSIGNALDATA puGetVPortSignalData)
 {
@@ -268,7 +268,7 @@ NtGdiDvpGetVideoSignalStatus(HANDLE hVideoPort,
 /* NtGdiDvpUpdateVideoPort                                              */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpUpdateVideoPort(HANDLE hVideoPort,
                         HANDLE* phSurfaceVideo,
                         HANDLE* phSurfaceVbi,
@@ -292,7 +292,7 @@ NtGdiDvpUpdateVideoPort(HANDLE hVideoPort,
 /* NtGdiDvpWaitForVideoPortSync                                         */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpWaitForVideoPortSync(HANDLE hVideoPort,
                              PDD_WAITFORVPORTSYNCDATA puWaitForVPortSyncData)
 {
@@ -313,7 +313,7 @@ NtGdiDvpWaitForVideoPortSync(HANDLE hVideoPort,
 /* NtGdiDvpAcquireNotification                                          */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpAcquireNotification(HANDLE hVideoPort,
                             HANDLE* hEvent,
                             LPDDVIDEOPORTNOTIFY pNotify)
@@ -335,7 +335,7 @@ NtGdiDvpAcquireNotification(HANDLE hVideoPort,
 /* NtGdiDvpReleaseNotification                                          */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpReleaseNotification(HANDLE hVideoPort,
                             HANDLE hEvent)
 {
@@ -357,7 +357,7 @@ NtGdiDvpReleaseNotification(HANDLE hVideoPort,
 /* NtGdiDvpGetVideoPortField                                            */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDvpGetVideoPortField(HANDLE hVideoPort,
                           PDD_GETVPORTFIELDDATA puGetVPortFieldData)
 {

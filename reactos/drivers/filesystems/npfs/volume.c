@@ -59,7 +59,7 @@ NpfsQueryFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NpfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 						   PIRP Irp)
 {

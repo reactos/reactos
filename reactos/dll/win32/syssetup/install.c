@@ -987,7 +987,7 @@ InstallReactOS(HINSTANCE hInstance)
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD WINAPI
 SetupChangeFontSize(
     IN HANDLE hWnd,
     IN LPCWSTR lpszFontSize)

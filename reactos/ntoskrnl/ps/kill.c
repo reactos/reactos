@@ -16,7 +16,7 @@
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY PspReaperListHead = {0};
+LIST_ENTRY PspReaperListHead = { NULL, NULL };
 WORK_QUEUE_ITEM PspReaperWorkItem;
 LARGE_INTEGER ShortTime = {{-10 * 100 * 1000, -1}};
 
@@ -778,7 +778,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
         ObFastDereferenceObject(&CurrentProcess->Token, PrimaryToken);
 
         /* Check if this is a VDM Process and rundown the VDM DPCs if so */
-        if (CurrentProcess->VdmObjects);// VdmRundownDpcs(CurrentProcess);
+        if (CurrentProcess->VdmObjects) { /* VdmRundownDpcs(CurrentProcess); */ }
 
         /* Kill the process in the Object Manager */
         ObKillProcess(CurrentProcess);

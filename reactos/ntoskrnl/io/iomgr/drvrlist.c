@@ -53,7 +53,7 @@ IopDisplayLoadingMessage(PVOID ServiceName,
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 IopGetGroupOrderList(PWSTR ValueName,
 		     ULONG ValueType,
 		     PVOID ValueData,
@@ -95,7 +95,7 @@ IopGetGroupOrderList(PWSTR ValueName,
   return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 IopCreateGroupListEntry(PWSTR ValueName,
 			ULONG ValueType,
 			PVOID ValueData,
@@ -146,7 +146,7 @@ IopCreateGroupListEntry(PWSTR ValueName,
 }
 
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[7];

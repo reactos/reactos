@@ -20,7 +20,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
+VOID NTAPI
 HalInitializeProcessor(ULONG ProcessorNumber,
                        PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -55,7 +55,7 @@ HalInitializeProcessor(ULONG ProcessorNumber,
    //HalpCalibrateStallExecution();
 }
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalAllProcessorsStarted (VOID)
 {
     ULONG CPUs = 0, i;

@@ -29,7 +29,7 @@
 
 /* PSEH Support */
 #include <reactos/helper.h>
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 #include <intrin.h>
 

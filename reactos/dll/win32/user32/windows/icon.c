@@ -147,7 +147,7 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CopyIcon(HICON hIcon)
 {
     HICON hRetIcon = NULL;
@@ -168,7 +168,7 @@ CopyIcon(HICON hIcon)
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CreateIcon(
   HINSTANCE hInstance,
   int nWidth,
@@ -203,7 +203,7 @@ CreateIcon(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CreateIconFromResource(
   PBYTE presbits,
   DWORD dwResSize,
@@ -218,7 +218,7 @@ CreateIconFromResource(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CreateIconFromResourceEx(
   PBYTE pbIconBits,
   DWORD cbIconBits,
@@ -313,7 +313,7 @@ CreateIconFromResourceEx(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 CreateIconIndirect(PICONINFO IconInfo)
 {
   BITMAP ColorBitmap;
@@ -351,7 +351,7 @@ CreateIconIndirect(PICONINFO IconInfo)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DestroyIcon(
   HICON hIcon)
 {
@@ -363,7 +363,7 @@ DestroyIcon(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DrawIcon(
   HDC hDC,
   int X,
@@ -377,7 +377,7 @@ DrawIcon(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DrawIconEx(
   HDC hdc,
   int xLeft,
@@ -399,7 +399,7 @@ DrawIconEx(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetIconInfo(
   HICON hIcon,
   PICONINFO IconInfo)
@@ -412,7 +412,7 @@ GetIconInfo(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 LoadIconA(
   HINSTANCE hInstance,
   LPCSTR lpIconName)
@@ -425,7 +425,7 @@ LoadIconA(
  * @implemented
  */
 HICON
-STDCALL
+WINAPI
 LoadIconW(
   HINSTANCE hInstance,
   LPCWSTR lpIconName)
@@ -438,7 +438,7 @@ LoadIconW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 LookupIconIdFromDirectory(
   PBYTE presbits,
   BOOL fIcon)
