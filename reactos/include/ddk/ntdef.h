@@ -164,7 +164,7 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 //
 #ifndef FIELD_OFFSET
 #define FIELD_OFFSET(Type, Field) \
-  ((LONG) (&(((Type *) 0)->Field)))
+  ((LONG_PTR) (&(((Type *) 0)->Field)))
 #endif
 
 //
