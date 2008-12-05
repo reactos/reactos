@@ -212,6 +212,10 @@ typedef struct _KTRAP_FRAME
     LONG CodePatchCycle;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
+//
+// Dummy LDT_ENTRY
+//
+typedef ULONG LDT_ENTRY;
 
 //
 // GDT Entry Definition
