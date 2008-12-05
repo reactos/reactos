@@ -10,9 +10,6 @@
 
 #include "precomp.h"
 
-/* Define this to bugcheck on double complete */
-/* #define BREAK_ON_DOUBLE_COMPLETE */
-
 UINT TransferDataCalled = 0;
 UINT TransferDataCompleteCalled = 0;
 UINT LanReceiveWorkerCalled = 0;
@@ -50,54 +47,6 @@ NDIS_HANDLE NdisProtocolHandle = (NDIS_HANDLE)NULL;
 BOOLEAN ProtocolRegistered     = FALSE;
 LIST_ENTRY AdapterListHead;
 KSPIN_LOCK AdapterListLock;
-
-/* Double complete protection */
-KSPIN_LOCK LanSendCompleteLock;
-LIST_ENTRY LanSendCompleteList;
-
-VOID LanChainCompletion( PLAN_ADAPTER Adapter, PNDIS_PACKET NdisPacket ) {
-    PLAN_WQ_ITEM PendingCompletion =
-	ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
-
-    if( !PendingCompletion ) return;
-
-    PendingCompletion->Packet  = NdisPacket;
-    PendingCompletion->Adapter = Adapter;
-
-    ExInterlockedInsertTailList( &LanSendCompleteList,
-				 &PendingCompletion->ListEntry,
-				 &LanSendCompleteLock );
-}
-
-BOOLEAN LanShouldComplete( PLAN_ADAPTER Adapter, PNDIS_PACKET NdisPacket ) {
-    PLIST_ENTRY ListEntry;
-    PLAN_WQ_ITEM CompleteEntry;
-    KIRQL OldIrql;
-
-    KeAcquireSpinLock( &LanSendCompleteLock, &OldIrql );
-    for( ListEntry = LanSendCompleteList.Flink;
-	 ListEntry != &LanSendCompleteList;
-	 ListEntry = ListEntry->Flink ) {
-	CompleteEntry = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
-
-	if( CompleteEntry->Adapter == Adapter &&
-	    CompleteEntry->Packet  == NdisPacket ) {
-	    RemoveEntryList( ListEntry );
-	    KeReleaseSpinLock( &LanSendCompleteLock, OldIrql );
-	    ExFreePool( CompleteEntry );
-	    return TRUE;
-	}
-    }
-    KeReleaseSpinLock( &LanSendCompleteLock, OldIrql );
-
-    DbgPrint("NDIS completed the same send packet twice "
-	     "(Adapter %x Packet %x)!!\n", Adapter, NdisPacket);
-#ifdef BREAK_ON_DOUBLE_COMPLETE
-    KeBugCheck(0);
-#endif
-
-    return FALSE;
-}
 
 NDIS_STATUS NDISCall(
     PLAN_ADAPTER Adapter,
@@ -283,13 +232,11 @@ VOID STDCALL ProtocolSendComplete(
  */
 {
     TI_DbgPrint(DEBUG_DATALINK, ("Calling completion routine\n"));
-    if( LanShouldComplete( (PLAN_ADAPTER)BindingContext, Packet ) ) {
-	ASSERT_KM_POINTER(Packet);
-	ASSERT_KM_POINTER(PC(Packet));
-	ASSERT_KM_POINTER(PC(Packet)->DLComplete);
-	(*PC(Packet)->DLComplete)( PC(Packet)->Context, Packet, Status);
-	TI_DbgPrint(DEBUG_DATALINK, ("Finished\n"));
-    }
+    ASSERT_KM_POINTER(Packet);
+    ASSERT_KM_POINTER(PC(Packet));
+    ASSERT_KM_POINTER(PC(Packet)->DLComplete);
+    (*PC(Packet)->DLComplete)( PC(Packet)->Context, Packet, Status);
+    TI_DbgPrint(DEBUG_DATALINK, ("Finished\n"));
 }
 
 VOID LanReceiveWorker( PVOID Context ) {
@@ -645,8 +592,6 @@ VOID LANTransmit(
     /* XXX arty -- Handled adjustment in a saner way than before ...
      * not needed immediately */
     GetDataPtr( NdisPacket, 0, &Data, &Size );
-
-    LanChainCompletion( Adapter, NdisPacket );
 
         switch (Adapter->Media) {
         case NdisMedium802_3:
@@ -1378,26 +1323,6 @@ VOID LANUnregisterProtocol(
         NdisDeregisterProtocol(&NdisStatus, NdisProtocolHandle);
         ProtocolRegistered = FALSE;
     }
-}
-
-VOID LANStartup() {
-    InitializeListHead( &LanSendCompleteList );
-    KeInitializeSpinLock( &LanSendCompleteLock );
-}
-
-VOID LANShutdown() {
-    KIRQL OldIrql;
-    PLAN_WQ_ITEM WorkItem;
-    PLIST_ENTRY ListEntry;
-
-    KeAcquireSpinLock( &LanSendCompleteLock, &OldIrql );
-    while( !IsListEmpty( &LanSendCompleteList ) ) {
-	ListEntry = RemoveHeadList( &LanSendCompleteList );
-	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
-	FreeNdisPacket( WorkItem->Packet );
-	ExFreePool( WorkItem );
-    }
-    KeReleaseSpinLock( &LanSendCompleteLock, OldIrql );
 }
 
 /* EOF */
