@@ -15,7 +15,7 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
                ULONG BootPhase)
 {

@@ -20,7 +20,7 @@ ULONG KdbDebugState = 0; /* KDBG Settings (NOECHO, KDSERIAL) */
 /* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 KdbpGetCommandLineSettings(PCHAR p1)
 {
     PCHAR p2;
