@@ -28,6 +28,8 @@
 #define INF_SUCCESS(x) (0 == (x))
 
 typedef char TCHAR, *PTCHAR, *PTSTR;
+typedef const TCHAR *PCTSTR;
+
 #define _T(x) x
 #define _tcsicmp strcasecmp
 #define _tcslen strlen
