@@ -1453,3 +1453,292 @@ WritePrinter(HANDLE Printer, PVOID Buffer, DWORD BufSize, PDWORD Written)
 
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+XcvDataW(HANDLE hXcv,
+         LPCWSTR pszDataName,
+         PBYTE pInputData,
+         DWORD cbInputData,
+         PBYTE pOutputData,
+         DWORD cbOutputData,
+         PDWORD pcbOutputNeeded,
+         PDWORD pdwStatus)
+{
+    OutputDebugStringW(L"winspool XcvDataW stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetDefaultPrinterA(LPCSTR pszPrinter)
+{
+    OutputDebugStringW(L"winspool SetDefaultPrinterA stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetDefaultPrinterW(LPCWSTR pszPrinter)
+{
+    OutputDebugStringW(L"winspool SetDefaultPrinterW stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+AddPortExA(LPSTR pName,
+           DWORD dwLevel,
+           LPBYTE pBuffer,
+           LPSTR pMonitorName)
+{
+    OutputDebugStringW(L"winspool AddPortExA stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+AddPortExW(LPWSTR pName,
+           DWORD dwLevel,
+           LPBYTE pBuffer,
+           LPWSTR pMonitorName)
+{
+    OutputDebugStringW(L"winspool AddPortExW stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+AddPrinterDriverExA(LPSTR pName,
+                    DWORD dwLevel,
+                    LPBYTE pDriverInfo,
+                    DWORD dwFileCopyFlags)
+{
+    OutputDebugStringW(L"winspool AddPrinterDriverExA stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+AddPrinterDriverExW(LPWSTR pName,
+                    DWORD dwLevel,
+                    LPBYTE pDriverInfo,
+                    DWORD dwFileCopyFlags)
+{
+    OutputDebugStringW(L"winspool AddPrinterDriverExW stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+DeletePrinterDataExA(HANDLE hPrinter,
+                     LPCSTR pKeyName,
+                     LPCSTR pValueName)
+{
+    OutputDebugStringW(L"winspool DeletePrinterDataExA stub called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+DeletePrinterDataExW(HANDLE hPrinter,
+                     LPCWSTR pKeyName,
+                     LPCWSTR pValueName)
+{
+    OutputDebugStringW(L"winspool DeletePrinterDataExW stub called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+DeletePrinterDriverExA(LPSTR pName,
+                       LPSTR pEnvironment,
+                       LPSTR pDriverName,
+                       DWORD dwDeleteFlag,
+                       DWORD dwVersionFlag)
+{
+    OutputDebugStringW(L"winspool DeletePrinterDriverExA stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+DeletePrinterDriverExW(LPWSTR pName,
+                       LPWSTR pEnvironment,
+                       LPWSTR pDriverName,
+                       DWORD dwDeleteFlag,
+                       DWORD dwVersionFlag)
+{
+    OutputDebugStringW(L"winspool DeletePrinterDriverExW stub called\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+EnumPrinterDataExA(HANDLE hPrinter,
+                   LPCSTR pKeyName,
+                   LPBYTE pEnumValues,
+                   DWORD cbEnumValues,
+                   LPDWORD pcbEnumValues,
+                   LPDWORD pnEnumValues)
+{
+    OutputDebugStringW(L"winspool EnumPrinterDataExA stub called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+EnumPrinterDataExW(HANDLE hPrinter,
+                   LPCWSTR pKeyName,
+                   LPBYTE pEnumValues,
+                   DWORD cbEnumValues,
+                   LPDWORD pcbEnumValues,
+                   LPDWORD pnEnumValues)
+{
+    OutputDebugStringW(L"winspool EnumPrinterDataExW stub called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+LONG
+WINAPI
+ExtDeviceMode(HWND hWnd,
+              HANDLE hInst,
+              LPDEVMODEA pDevModeOutput,
+              LPSTR pDeviceName,
+              LPSTR pPort,
+              LPDEVMODEA pDevModeInput,
+              LPSTR pProfile,
+              DWORD fMode)
+{
+    OutputDebugStringW(L"winspool ExtDeviceMode stub called\n");
+    return -1;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetPrinterDataExA(HANDLE hPrinter,
+                  LPCSTR pKeyName,
+                  LPCSTR pValueName,
+                  LPDWORD pType,
+                  LPBYTE pData,
+                  DWORD nSize,
+                  LPDWORD pcbNeeded)
+{
+    OutputDebugStringW(L"winspool GetPrinterDataExA stub called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GetPrinterDataExW(HANDLE hPrinter,
+                  LPCWSTR pKeyName,
+                  LPCWSTR pValueName,
+                  LPDWORD pType,
+                  LPBYTE pData,
+                  DWORD nSize,
+                  LPDWORD pcbNeeded)
+{
+    OutputDebugStringW(L"winspool GetPrinterDataExW stub called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+SetPrinterDataExA(HANDLE hPrinter,
+                  LPCSTR pKeyName,
+                  LPCSTR pValueName,
+                  DWORD dwType,
+                  LPBYTE pData,
+                  DWORD cbData)
+{
+    OutputDebugStringW(L"winspool SetPrinterDataExA stub called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+SetPrinterDataExW(HANDLE hPrinter,
+                  LPCWSTR pKeyName,
+                  LPCWSTR pValueName,
+                  DWORD dwType,
+                  LPBYTE pData,
+                  DWORD cbData)
+{
+    OutputDebugStringW(L"winspool SetPrinterDataExW stub called\n");
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SpoolerInit(VOID)
+{
+    OutputDebugStringW(L"winspool SpoolerInit stub called\n");
+    return FALSE;
+}
