@@ -557,7 +557,11 @@ FrLdrReadAndMapImage(IN FILE *Image,
                                       (ULONG_PTR)LoadBase,
                                       "FreeLdr",
                                       STATUS_SUCCESS,
+#ifdef _M_AMD64
+                                      STATUS_SUCCESS, // allow stripped files
+#else
                                       STATUS_UNSUCCESSFUL,
+#endif
                                       STATUS_UNSUCCESSFUL);
     if (!NT_SUCCESS(Status))
     {
