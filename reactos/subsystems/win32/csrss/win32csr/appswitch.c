@@ -26,6 +26,9 @@ static DWORD NumOfWindows = 0;
 static HWND hAppWindowDlg = NULL;
 static HHOOK hhk = NULL;
 
+UINT WINAPI PrivateExtractIconExW(LPCWSTR,int,HICON*,HICON*,UINT);
+
+
 BOOL
 CALLBACK 
 EnumWindowEnumProc(
@@ -55,7 +58,7 @@ EnumWindowEnumProc(
            if (GetModuleFileNameExW(hProcess, NULL, szFileName, MAX_PATH))
            {
                szFileName[MAX_PATH-1] = L'\0';
-               ExtractIconExW(szFileName, 0, &hIcon, NULL, 1);
+               PrivateExtractIconExW(szFileName, 0, &hIcon, NULL, 1);
            }
        }
     }
