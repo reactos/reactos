@@ -5025,6 +5025,31 @@ RtlNtStatusToDosError (
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlxUnicodeStringToOemSize(
+    PCUNICODE_STRING UnicodeString
+    );
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlxOemStringToUnicodeSize(
+    PCOEM_STRING OemString
+);
+
+#define RtlOemStringToUnicodeSize(STRING) (                 \
+    NLS_MB_OEM_CODE_PAGE_TAG ?                              \
+    RtlxOemStringToUnicodeSize(STRING) :                    \
+    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)  \
+)
+
+#define RtlOemStringToCountedUnicodeSize(STRING) (                    \
+    (ULONG)(RtlOemStringToUnicodeSize(STRING) - sizeof(UNICODE_NULL)) \
+)
+
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlOemStringToUnicodeString(
@@ -5244,6 +5269,42 @@ BOOLEAN
 NTAPI
 RtlValidSid (
     IN PSID Sid
+);
+
+//
+// RTL time functions
+//
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTimeToSecondsSince1980 (
+    PLARGE_INTEGER Time,
+    PULONG ElapsedSeconds
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSecondsSince1980ToTime (
+    ULONG ElapsedSeconds,
+    PLARGE_INTEGER Time
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTimeToSecondsSince1970 (
+    PLARGE_INTEGER Time,
+    PULONG ElapsedSeconds
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSecondsSince1970ToTime (
+    ULONG ElapsedSeconds,
+    PLARGE_INTEGER Time
 );
 
 NTKERNELAPI
