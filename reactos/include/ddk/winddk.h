@@ -6123,8 +6123,8 @@ InterlockedExchangeAdd(
 //#define ExInterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
 
 #if !defined(_WINBASE_)
-//#define InterlockedPopEntrySList(Head) ExpInterlockedPopEntrySList(Head)
-//#define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
+#define InterlockedPopEntrySList(Head) ExpInterlockedPopEntrySList(Head)
+#define InterlockedPushEntrySList(Head, Entry) ExpInterlockedPushEntrySList(Head, Entry)
 //#define InterlockedFlushSList(Head) ExpInterlockedFlushSList(Head)
 //#define QueryDepthSList(Head) ExQueryDepthSList(Head)
 #endif // !defined(_WINBASE_)
