@@ -35,6 +35,7 @@
 extern "C" {
 #endif
 
+#include <excpt.h>
 #include <basetsd.h>
 #include <guiddef.h>
 
