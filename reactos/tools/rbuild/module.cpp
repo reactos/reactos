@@ -745,13 +745,17 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		name = e.GetAttribute ( "property", true );
 		assert( name );
 		const Property *property = project.LookupProperty( name->value );
-		if ( !property )
+		const string *PropertyValue;
+		const string EmptyString;
+
+		if (property)
 		{
-			// Property not found
-			throw InvalidOperationException ( __FILE__,
-			                                  __LINE__,
-			                                  "Test on unknown property '%s' at %s",
-			                                  name->value.c_str (), e.location.c_str () );
+			PropertyValue = &property->value;
+		}
+		else
+		{
+			// Property does not exist, treat it as being empty
+			PropertyValue = &EmptyString;
 		}
 
 		const XMLAttribute* value;
@@ -759,7 +763,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		assert( value );
 
 		bool negate = ( e.name == "ifnot" );
-		bool equality = ( property->value == value->value );
+		bool equality = ( *PropertyValue == value->value );
 		if ( equality == negate )
 		{
 			// Failed, skip this element
