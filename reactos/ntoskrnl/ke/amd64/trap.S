@@ -129,6 +129,8 @@ _MsgUnexpectedInterrupt:
 // KTRAP_FRAME_LastExceptionFromRip
 // KTRAP_FRAME_TrapFrame
 
+    /* Make sure the direction flag is cleared */
+    cld
 .endm
 
 .macro LEAVE_TRAP_FRAME
