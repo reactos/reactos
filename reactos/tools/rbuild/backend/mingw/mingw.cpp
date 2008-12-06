@@ -826,7 +826,7 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 	buffer[i] = '\0';
 	pclose ( fp );
 
-	char separators[] = " ";
+	char separators[] = " ()";
 	char *token;
 	char *prevtoken = NULL;
 
