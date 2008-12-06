@@ -245,9 +245,9 @@
 			<directory name="expat">
 				<xi:include href="lib/3rdparty/expat/expat.rbuild" />
 			</directory>
-			<directory name="icu4ros">
+			<!-- directory name="icu4ros">
 				<xi:include href="lib/3rdparty/icu4ros/icu4ros.rbuild" />
-			</directory>
+			</directory -->
 			<directory name="libwine">
 				<xi:include href="lib/3rdparty/libwine/libwine.rbuild" />
 			</directory>
@@ -285,9 +285,9 @@
 		<directory name="inflib">
 			<xi:include href="lib/inflib/inflib.rbuild" />
 		</directory>
-		<directory name="nls">
+		<!-- directory name="nls">
 			<xi:include href="lib/nls/nls.rbuild" />
-		</directory>
+		</directory -->
 		<directory name="ntdllsys">
 			<xi:include href="lib/ntdllsys/ntdllsys.rbuild" />
 		</directory>
