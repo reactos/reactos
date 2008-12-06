@@ -32,6 +32,12 @@ using std::vector;
 #define CLEAN_FILE(f) clean_files.push_back ( (f).name.length () > 0 ? backend->GetFullName ( f ) : backend->GetFullPath ( f ) );
 #define IsStaticLibrary( module ) ( ( module.type == StaticLibrary ) || ( module.type == HostStaticLibrary ) )
 
+#if (ARCH == amd64)
+#define DEBUG_FORMAT " -gdwarf-2"
+#else
+#define DEBUG_FORMAT " -gstabs+"
+#endif
+
 MingwBackend*
 MingwModuleHandler::backend = NULL;
 FILE*
@@ -1655,11 +1661,12 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		          backend->GetFullPath ( *pchFilename ).c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
-		          "\t%s -o %s %s %s -g %s\n\n",
+		          "\t%s -o %s %s %s %s %s\n\n",
 		          module.cplusplus ? cppc.c_str() : cc.c_str(),
 		          backend->GetFullName ( *pchFilename ).c_str(),
 		          module.cplusplus ? cxxflagsMacro.c_str() : cflagsMacro.c_str(),
 				  GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, module.cplusplus ? CompilerTypeCPP : CompilerTypeCC ).c_str(),
+				  DEBUG_FORMAT,
 		          backend->GetFullName ( baseHeaderFile ).c_str() );
 		delete pchFilename;
 	}
@@ -1894,7 +1901,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	}
 	else
 		globalCflags += " -Wall -Wpointer-arith";
-	globalCflags += " -g";
+	globalCflags += DEBUG_FORMAT;
 	if ( backend->usePipe )
 		globalCflags += " -pipe";
 	if ( !module.allowWarnings )
@@ -1947,7 +1954,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 		fprintf (
 			fMakefile,
-			"%s_LFLAGS := $(PROJECT_LFLAGS) -g $(%s_LFLAGS)\n",
+			"%s_LFLAGS := $(PROJECT_LFLAGS) $(%s_LFLAGS)\n",
 			module.name.c_str (),
 			module.name.c_str () );
 	}
@@ -3027,7 +3034,7 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 		backend->GetFullName ( junk_cpy ).c_str (),
 		backend->GetFullName ( junk_tmp ).c_str () );
 
-	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -g -o %s\n",
+	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -o %s\n",
 		module.buildtype.c_str (),
 		linkDepsMacro.c_str (),
 		backend->GetFullName ( junk_tmp ).c_str (),
@@ -3567,10 +3574,11 @@ MingwElfExecutableModuleHandler::Process ()
 
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
-	fprintf ( fMakefile, "\t${gcc} $(%s_LINKFORMAT) %s %s -g -o %s\n",
+	fprintf ( fMakefile, "\t${gcc} $(%s_LINKFORMAT) %s %s %s -o %s\n",
 	          module.buildtype.c_str(),
 	          objectsMacro.c_str(),
 	          libsMacro.c_str(),
+	          DEBUG_FORMAT,
 	          targetMacro.c_str () );
 
 	delete target_file;
