@@ -450,9 +450,11 @@ GeneratePData(PFILE_INFO File)
     pshp = File->pdata.psh = &File->SectionHeaders[File->pdata.idx];
     memcpy(pshp->Name, ".pdata", 7);
     pshp->Misc.VirtualSize = (File->cFuncs + 1) * sizeof(RUNTIME_FUNCTION);
-//    pshp->VirtualAddress = 
+    pshp->VirtualAddress = File->SectionHeaders[File->pdata.idx - 1].VirtualAddress +
+                           File->SectionHeaders[File->pdata.idx - 1].SizeOfRawData;
     pshp->SizeOfRawData = ROUND_UP(pshp->Misc.VirtualSize, FileAlignment);
-//    pshp->PointerToRawData = 
+    pshp->PointerToRawData = File->SectionHeaders[File->pdata.idx - 1].PointerToRawData +
+                           File->SectionHeaders[File->pdata.idx - 1].SizeOfRawData;
     pdata = File->pdata.p = malloc(pshp->SizeOfRawData);
     memset(File->pdata.p, pshp->SizeOfRawData, 0);
 
