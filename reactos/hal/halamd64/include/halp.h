@@ -30,7 +30,7 @@
     (UCHAR)(((int / 10) << 4) + (int % 10))
 
 /* adapter.c */
-PADAPTER_OBJECT STDCALL HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
+PADAPTER_OBJECT NTAPI HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
 
 /* bus.c */
 VOID NTAPI HalpInitNonBusHandler (VOID);
@@ -154,7 +154,8 @@ HalpTrap06(
     VOID
 );
 
-PDMA_ADAPTER STDCALL
+PDMA_ADAPTER
+NTAPI
 HalpGetDmaAdapter(
    IN PVOID Context,
    IN PDEVICE_DESCRIPTION DeviceDescription,
