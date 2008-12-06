@@ -991,7 +991,6 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
         if (!KeInsertQueueApc(Apc, Apc, NULL, 2))
         {
             /* The APC was already in the queue, fail */
-            ExFreePool(Apc);
             Status = STATUS_UNSUCCESSFUL;
         }
         else
