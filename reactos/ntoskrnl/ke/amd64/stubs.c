@@ -159,3 +159,12 @@ NtVdmControl(IN ULONG ControlCode,
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
+
+NTKERNELAPI
+PSLIST_ENTRY
+ExpInterlockedFlushSList(
+    PSLIST_HEADER ListHead)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
