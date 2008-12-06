@@ -32,6 +32,7 @@ class GpAdjustableArrowCap : public GpCustomLineCap {};
 class GpImage {};
 class GpMetafile : public GpImage {};
 class GpImageAttributes {};
+class GpCachedBitmap {};
 class GpBitmap : public GpImage {};
 class GpPathGradient : public GpBrush {};
 class GpLineGradient : public GpBrush {};
@@ -57,6 +58,7 @@ typedef struct GpAdjustableArrowCap GpAdjustableArrowCap;
 typedef struct GpImage GpImage;
 typedef struct GpMetafile GpMetafile;
 typedef struct GpImageAttributes GpImageAttributes;
+typedef struct GpCachedBitmap GpCachedBitmap;
 typedef struct GpBitmap GpBitmap;
 typedef struct GpPathGradient GpPathGradient;
 typedef struct GpLineGradient GpLineGradient;
@@ -88,5 +90,6 @@ typedef WrapMode GpWrapMode;
 typedef Color GpColor;
 typedef FlushIntention GpFlushIntention;
 typedef CoordinateSpace GpCoordinateSpace;
+typedef PenType GpPenType;
 
 #endif
