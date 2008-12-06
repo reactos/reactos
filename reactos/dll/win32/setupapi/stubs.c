@@ -131,6 +131,34 @@ BOOL WINAPI SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
 }
 
 /***********************************************************************
+ *      SetupPromptForDiskA (SETUPAPI.@)
+ */
+UINT WINAPI SetupPromptForDiskA(HWND hwndParent, PCSTR DialogTitle, PCSTR DiskName,
+        PCSTR PathToSource, PCSTR FileSought, PCSTR TagFile, DWORD DiskPromptStyle,
+        PSTR PathBuffer, DWORD PathBufferSize, PDWORD PathRequiredSize)
+{
+    FIXME("%p %s %s %s %s %s %d %p %d %p: stub\n", hwndParent, debugstr_a(DialogTitle),
+          debugstr_a(DiskName), debugstr_a(PathToSource), debugstr_a(FileSought),
+          debugstr_a(TagFile), DiskPromptStyle, PathBuffer, PathBufferSize,
+          PathRequiredSize);
+    return 0;
+}
+
+/***********************************************************************
+ *      SetupPromptForDiskW (SETUPAPI.@)
+ */
+UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR DiskName,
+        PCWSTR PathToSource, PCWSTR FileSought, PCWSTR TagFile, DWORD DiskPromptStyle,
+        PWSTR PathBuffer, DWORD PathBufferSize, PDWORD PathRequiredSize)
+{
+    FIXME("%p %s %s %s %s %s %d %p %d %p: stub\n", hwndParent, debugstr_w(DialogTitle),
+          debugstr_w(DiskName), debugstr_w(PathToSource), debugstr_w(FileSought),
+          debugstr_w(TagFile), DiskPromptStyle, PathBuffer, PathBufferSize,
+          PathRequiredSize);
+    return 0;
+}
+
+/***********************************************************************
  *		SetupDiRemoveDevice(SETUPAPI.@)
  */
 BOOL WINAPI
