@@ -1009,6 +1009,14 @@ typedef struct _REPARSE_DATA_BUFFER {
 #define IO_REPARSE_TAG_IIS_CACHE                (0xA0000010L)
 #define IO_REPARSE_TAG_DFSR                     (0x80000012L)
 
+//
+// Reserved reparse tags
+//
+#define IO_REPARSE_TAG_RESERVED_ZERO            (0)
+#define IO_REPARSE_TAG_RESERVED_ONE             (1)
+#define IO_REPARSE_TAG_RESERVED_RANGE           IO_REPARSE_TAG_RESERVED_ONE
+
+
 #define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
 
 typedef struct _FILE_ACCESS_INFORMATION {
