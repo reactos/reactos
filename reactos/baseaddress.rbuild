@@ -32,6 +32,7 @@
   <property name="BASEADDRESS_QEDIT" value="0x611c0000" />
   <property name="BASEADDRESS_MODEMUI" value="0x61650000" />
   <property name="BASEADDRESS_MAPI32" value="0x62250000" />
+  <property name="BASEADDRESS_LOCALUI" value="0x62f70000" />
   <property name="BASEADDRESS_HDWWIZ" value="0x64d40000" />
   <property name="BASEADDRESS_TIMEDATE" value="0x64da0000" />
   <property name="BASEADDRESS_SYSDM" value="0x64dd0000" />

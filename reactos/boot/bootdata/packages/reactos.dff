@@ -269,6 +269,7 @@ dll\win32\inetmib1\inetmib1.dll                     1
 dll\win32\iphlpapi\iphlpapi.dll                     1
 dll\win32\jscript\jscript.dll                       1
 dll\win32\kernel32\kernel32.dll                     1
+dll\win32\localui\localui.dll                       1
 dll\win32\lsasrv\lsasrv.dll                         1
 dll\win32\lz32\lz32.dll                             1
 dll\win32\mapi32\mapi32.dll                         1
