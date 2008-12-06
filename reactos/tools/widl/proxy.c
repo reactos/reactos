@@ -140,6 +140,11 @@ int cant_be_null(const var_t *v)
   const attr_list_t *attrs = v->attrs;
   const type_t *type = v->type;
 
+  /* context handles have their own checking so they can be null for the
+   * purposes of null ref pointer checking */
+  if (is_aliaschain_attr(type, ATTR_CONTEXTHANDLE))
+      return 0;
+
   if (! attrs && type)
   {
     attrs = type->attrs;
@@ -259,9 +264,7 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
 
   indent = 0;
   write_type_decl_left(proxy, get_func_return_type(cur));
-  print_proxy( " %s %s_", callconv, iface->name);
-  write_name(proxy, def);
-  print_proxy( "_Proxy(\n");
+  print_proxy( " %s %s_%s_Proxy(\n", callconv, iface->name, get_name(def));
   write_args(proxy, cur->args, iface->name, 1, TRUE);
   print_proxy( ")\n");
   print_proxy( "{\n");
@@ -371,9 +374,7 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
   int has_full_pointer = is_full_pointer_function(cur);
 
   indent = 0;
-  print_proxy( "void __RPC_STUB %s_", iface->name);
-  write_name(proxy, def);
-  print_proxy( "_Stub(\n");
+  print_proxy( "void __RPC_STUB %s_%s_Stub(\n", iface->name, get_name(def));
   indent++;
   print_proxy( "IRpcStubBuffer* This,\n");
   print_proxy( "IRpcChannelBuffer *_pRpcChannelBuffer,\n");
@@ -415,22 +416,13 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
   print_proxy("");
   if (has_ret) fprintf(proxy, "_RetVal = ");
   if (cas) fprintf(proxy, "%s_%s_Stub", iface->name, cas);
-  else
-  {
-      fprintf(proxy, "_This->lpVtbl->");
-      write_name(proxy, def);
-  }
+  else fprintf(proxy, "_This->lpVtbl->%s", get_name(def));
   fprintf(proxy, "(_This");
 
   if (cur->args)
   {
       LIST_FOR_EACH_ENTRY( arg, cur->args, const var_t, entry )
-      {
-          fprintf(proxy, ", ");
-          if (arg->type->declarray)
-              fprintf(proxy, "*");
-          write_name(proxy, arg);
-      }
+          fprintf(proxy, ", %s%s", arg->type->declarray ? "*" : "", get_name(arg));
   }
   fprintf(proxy, ");\n");
   fprintf(proxy, "\n");
@@ -481,9 +473,8 @@ static int write_proxy_methods(type_t *iface, int skip)
     var_t *def = cur->def;
     if (!is_callas(def->attrs)) {
       if (i) fprintf(proxy, ",\n");
-      print_proxy( "%s%s_", skip ? "0\t/* " : "", iface->name);
-      write_name(proxy, def);
-      fprintf(proxy, "_Proxy%s", skip ? " */" : "");
+      if (skip) print_proxy( "0  /* %s_%s_Proxy */", iface->name, get_name(def));
+      else print_proxy( "%s_%s_Proxy", iface->name, get_name(def));
       i++;
     }
   }
@@ -501,15 +492,10 @@ static int write_stub_methods(type_t *iface, int skip)
   if (iface->funcs) LIST_FOR_EACH_ENTRY( cur, iface->funcs, const func_t, entry ) {
     var_t *def = cur->def;
     if (!is_local(def->attrs)) {
-      if (skip)
-        print_proxy("STUB_FORWARDING_FUNCTION,\n");
-      else {
-        if (i) fprintf(proxy,",\n");
-        print_proxy( "%s_", iface->name);
-        write_name(proxy, def);
-        fprintf(proxy, "_Stub");
-        i++;
-      }
+      if (i) fprintf(proxy,",\n");
+      if (skip) print_proxy("STUB_FORWARDING_FUNCTION");
+      else print_proxy( "%s_%s_Stub", iface->name, get_name(def));
+      i++;
     }
   }
   return i;

@@ -16,9 +16,6 @@
     Factory Stubs
 */
 
-/*
- * @unimplemented
- */
 NTSTATUS NTAPI
 PcNewDmaChannel(
     OUT PDMACHANNEL* OutDmaChannel,
@@ -41,37 +38,6 @@ PcNewInterruptSync(
     IN  PRESOURCELIST ResourceList,
     IN  ULONG ResourceIndex,
     IN  INTERRUPTSYNCMODE Mode)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcNewMiniport(
-    OUT PMINIPORT* OutMiniport,
-    IN  REFCLSID ClassId)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcNewRegistryKey(
-    OUT PREGISTRYKEY* OutRegistryKey,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  ULONG RegistryKeyType,
-    IN  ACCESS_MASK DesiredAccess,
-    IN  PVOID DeviceObject OPTIONAL,
-    IN  PVOID SubDevice OPTIONAL,
-    IN  POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN  ULONG CreateOptions OPTIONAL,
-    OUT PULONG Disposition OPTIONAL)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -122,21 +88,6 @@ PcRequestNewPowerState(
 /* ===============================================================
     Properties
 */
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcGetDeviceProperty(
-    IN  PVOID DeviceObject,
-    IN  DEVICE_REGISTRY_PROPERTY DeviceProperty,
-    IN  ULONG BufferLength,
-    OUT PVOID PropertyBuffer,
-    OUT PULONG ResultLength)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
 
 /*
  * @unimplemented
@@ -239,13 +190,7 @@ PcRegisterPhysicalConnectionToExternal(
 /*
  * @unimplemented
  */
-ULONGLONG NTAPI
-PcGetTimeInterval(
-    IN  ULONGLONG Since)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
+
 
 /*
  * @unimplemented

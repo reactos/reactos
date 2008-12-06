@@ -284,10 +284,10 @@ typedef enum _SECURITY_LOGON_TYPE
 #define FSRTL_FLAG_ADVANCED_HEADER      (0x40)
 #define FSRTL_FLAG_EOF_ADVANCE_ACTIVE   (0x80)
 
-#define FSRTL_FLAG2_DO_MODIFIED_WRITE   (0x01)
-#define FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS  (0x02)
-#define FSRTL_FLAG2_PURGE_WHEN_MAPPED (0x04)
-#define FSRTL_FLAG2_IS_PAGING_FILE (0x08)
+#define FSRTL_FLAG2_DO_MODIFIED_WRITE        (0x01)
+#define FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS (0x02)
+#define FSRTL_FLAG2_PURGE_WHEN_MAPPED        (0x04)
+#define FSRTL_FLAG2_IS_PAGING_FILE           (0x08)
 
 #define FSRTL_FSP_TOP_LEVEL_IRP         (0x01)
 #define FSRTL_CACHE_TOP_LEVEL_IRP       (0x02)
@@ -341,6 +341,8 @@ typedef enum _SECURITY_LOGON_TYPE
 #define MAP_PROCESS                     1L
 #define MAP_SYSTEM                      2L
 #define MEM_DOS_LIM                     0x40000000
+
+#define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
 
 #define OB_TYPE_TYPE                    1
 #define OB_TYPE_DIRECTORY               2
@@ -586,7 +588,7 @@ typedef LBN *PLBN;
 typedef ULONG VBN;
 typedef VBN *PVBN;
 
-typedef PVOID *PNOTIFY_SYNC;
+typedef PVOID PNOTIFY_SYNC;
 
 typedef enum _FAST_IO_POSSIBLE {
     FastIoIsNotPossible,
@@ -1009,6 +1011,14 @@ typedef struct _REPARSE_DATA_BUFFER {
 #define IO_REPARSE_TAG_IIS_CACHE                (0xA0000010L)
 #define IO_REPARSE_TAG_DFSR                     (0x80000012L)
 
+//
+// Reserved reparse tags
+//
+#define IO_REPARSE_TAG_RESERVED_ZERO            (0)
+#define IO_REPARSE_TAG_RESERVED_ONE             (1)
+#define IO_REPARSE_TAG_RESERVED_RANGE           IO_REPARSE_TAG_RESERVED_ONE
+
+
 #define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
 
 typedef struct _FILE_ACCESS_INFORMATION {
@@ -1101,23 +1111,6 @@ typedef struct _FILE_ID_FULL_DIR_INFORMATION {
     LARGE_INTEGER FileId;
     WCHAR FileName[1];
 } FILE_ID_FULL_DIR_INFORMATION, *PFILE_ID_FULL_DIR_INFORMATION;
-
-typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
-    ULONG         NextEntryOffset;
-    ULONG         FileIndex;
-    LARGE_INTEGER CreationTime;
-    LARGE_INTEGER LastAccessTime;
-    LARGE_INTEGER LastWriteTime;
-    LARGE_INTEGER ChangeTime;
-    LARGE_INTEGER EndOfFile;
-    LARGE_INTEGER AllocationSize;
-    ULONG         FileAttributes;
-    ULONG         FileNameLength;
-    ULONG         EaSize;
-    CHAR          ShortNameLength;
-    WCHAR         ShortName[12];
-    WCHAR         FileName[0];
-} FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION;
 
 typedef struct _FILE_ID_BOTH_DIR_INFORMATION {
     ULONG NextEntryOffset;
@@ -2839,6 +2832,36 @@ ExWaitForRundownProtectionRelease (
 }
 
 NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddBaseMcbEntry (
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn,
+    IN LONGLONG   Lbn,
+    IN LONGLONG   SectorCount
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn,
+    IN LONGLONG    Lbn,
+    IN LONGLONG    SectorCount
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddMcbEntry (
+    IN PMCB   Mcb,
+    IN VBN    Vbn,
+    IN LBN    Lbn,
+    IN ULONG  SectorCount
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 FsRtlAddToTunnelCache (
@@ -2902,8 +2925,8 @@ NTAPI
 FsRtlAreNamesEqual (
     IN PCUNICODE_STRING  Name1,
     IN PCUNICODE_STRING  Name2,
-    IN BOOLEAN          IgnoreCase,
-    IN PCWCH           UpcaseTable OPTIONAL
+    IN BOOLEAN           IgnoreCase,
+    IN PCWCH             UpcaseTable OPTIONAL
 );
 
 #define FsRtlAreThereCurrentFileLocks(FL) ( \
@@ -3058,18 +3081,18 @@ NTKERNELAPI
 VOID
 NTAPI
 FsRtlDissectDbcs (
-    IN ANSI_STRING Name,
-    OUT PANSI_STRING FirstPart,
-    OUT PANSI_STRING RemainingPart
+    IN ANSI_STRING    Name,
+    OUT PANSI_STRING  FirstPart,
+    OUT PANSI_STRING  RemainingPart
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 FsRtlDissectName (
-    IN UNICODE_STRING Name,
-    OUT PUNICODE_STRING FirstPart,
-    OUT PUNICODE_STRING RemainingPart
+    IN UNICODE_STRING    Name,
+    OUT PUNICODE_STRING  FirstPart,
+    OUT PUNICODE_STRING  RemainingPart
 );
 
 NTKERNELAPI
@@ -3204,6 +3227,17 @@ FsRtlGetFileSize (
     IN OUT PLARGE_INTEGER   FileSize
 );
 
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextBaseMcbEntry (
+    IN PBASE_MCB   Mcb,
+    IN ULONG       RunIndex,
+    OUT PLONGLONG  Vbn,
+    OUT PLONGLONG  Lbn,
+    OUT PLONGLONG  SectorCount
+);
+
 /*
   FsRtlGetNextFileLock:
 
@@ -3225,12 +3259,62 @@ FsRtlGetNextFileLock (
 );
 
 NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    IN ULONG       RunIndex,
+    OUT PLONGLONG  Vbn,
+    OUT PLONGLONG  Lbn,
+    OUT PLONGLONG  SectorCount
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextMcbEntry (
+    IN PMCB     Mcb,
+    IN ULONG    RunIndex,
+    OUT PVBN    Vbn,
+    OUT PLBN    Lbn,
+    OUT PULONG  SectorCount
+);
+
+#define FsRtlGetPerStreamContextPointer(FO) (   \
+    (PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext \
+)
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeBaseMcb (
+    IN PBASE_MCB  Mcb,
+    IN POOL_TYPE  PoolType
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 FsRtlInitializeFileLock (
     IN PFILE_LOCK                   FileLock,
     IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
     IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeLargeMcb (
+    IN PLARGE_MCB  Mcb,
+    IN POOL_TYPE   PoolType
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeMcb (
+    IN PMCB       Mcb,
+    IN POOL_TYPE  PoolType
 );
 
 NTKERNELAPI
@@ -3245,6 +3329,59 @@ VOID
 NTAPI
 FsRtlInitializeTunnelCache (
     IN PTUNNEL Cache
+);
+
+#define FsRtlInitPerStreamContext(PSC, O, I, FC) ( \
+    (PSC)->OwnerId = (O),                          \
+    (PSC)->InstanceId = (I),                       \
+    (PSC)->FreeCallback = (FC)                     \
+)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertPerStreamContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER  PerStreamContext,
+    IN PFSRTL_PER_STREAM_CONTEXT   Ptr
+);
+
+#define FsRtlIsAnsiCharacterLegalFat(C, WILD) (                                \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |       \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterLegalHpfs(C, WILD) (                               \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |      \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterLegalNtfs(C, WILD) (                               \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |      \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterWild(C) (                                       \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
+)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsFatDbcsLegal (
+    IN ANSI_STRING  DbcsName,
+    IN BOOLEAN      WildCardsPermissible,
+    IN BOOLEAN      PathNamePermissible,
+    IN BOOLEAN      LeadingBackslashPermissible
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsHpfsDbcsLegal (
+    IN ANSI_STRING  DbcsName,
+    IN BOOLEAN      WildCardsPermissible,
+    IN BOOLEAN      PathNamePermissible,
+    IN BOOLEAN      LeadingBackslashPermissible
 );
 
 NTKERNELAPI
@@ -3274,15 +3411,104 @@ extern PUSHORT NlsOemLeadByteInfo;
                (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0)))          \
 )
 
-#define FsRtlIsAnsiCharacterWild(C) (                                       \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
-)
-
 #define FsRtlIsUnicodeCharacterWild(C) (                                    \
     (((C) >= 0x40) ?                                                        \
     FALSE :                                                                 \
     FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
 )
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupBaseMcbEntry (
+    IN PBASE_MCB   Mcb,
+    IN LONGLONG    Vbn,
+    OUT PLONGLONG  Lbn OPTIONAL,
+    OUT PLONGLONG  SectorCountFromLbn OPTIONAL,
+    OUT PLONGLONG  StartingLbn OPTIONAL,
+    OUT PLONGLONG  SectorCountFromStartingLbn OPTIONAL,
+    OUT PULONG     Index OPTIONAL
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn,
+    OUT PLONGLONG  Lbn OPTIONAL,
+    OUT PLONGLONG  SectorCountFromLbn OPTIONAL,
+    OUT PLONGLONG  StartingLbn OPTIONAL,
+    OUT PLONGLONG  SectorCountFromStartingLbn OPTIONAL,
+    OUT PULONG     Index OPTIONAL
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastBaseMcbEntry (
+    IN PBASE_MCB   Mcb,
+    OUT PLONGLONG  Vbn,
+    OUT PLONGLONG  Lbn
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    OUT PLONGLONG  Vbn,
+    OUT PLONGLONG  Lbn
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastMcbEntry (
+    IN PMCB   Mcb,
+    OUT PVBN  Vbn,
+    OUT PLBN  Lbn
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastBaseMcbEntryAndIndex (
+    IN PBASE_MCB      OpaqueMcb,
+    IN OUT PLONGLONG  LargeVbn,
+    IN OUT PLONGLONG  LargeLbn,
+    IN OUT PULONG     Index
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastLargeMcbEntryAndIndex (
+    IN PLARGE_MCB  OpaqueMcb,
+    OUT PLONGLONG  LargeVbn,
+    OUT PLONGLONG  LargeLbn,
+    OUT PULONG     Index
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupMcbEntry (
+    IN PMCB     Mcb,
+    IN VBN      Vbn,
+    OUT PLBN    Lbn,
+    OUT PULONG  SectorCount OPTIONAL,
+    OUT PULONG  Index
+);
+
+NTKERNELAPI
+PFSRTL_PER_STREAM_CONTEXT
+NTAPI
+FsRtlLookupPerStreamContextInternal (
+    IN PFSRTL_ADVANCED_FCB_HEADER  StreamContext,
+    IN PVOID                       OwnerId OPTIONAL,
+    IN PVOID                       InstanceId OPTIONAL
+);
 
 NTKERNELAPI
 BOOLEAN
@@ -3385,6 +3611,37 @@ typedef BOOLEAN (*PCHECK_FOR_TRAVERSE_ACCESS) (
 NTKERNELAPI
 VOID
 NTAPI
+FsRtlNotifyFilterChangeDirectory (
+    IN PNOTIFY_SYNC                 NotifySync,
+    IN PLIST_ENTRY                  NotifyList,
+    IN PVOID                        FsContext,
+    IN PSTRING                      FullDirectoryName,
+    IN BOOLEAN                      WatchTree,
+    IN BOOLEAN                      IgnoreBuffer,
+    IN ULONG                        CompletionFilter,
+    IN PIRP                         NotifyIrp,
+    IN PCHECK_FOR_TRAVERSE_ACCESS   TraverseCallback OPTIONAL,
+    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext OPTIONAL,
+    IN PFILTER_REPORT_CHANGE        FilterCallback OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFilterReportChange (
+    IN PNOTIFY_SYNC   NotifySync,
+    IN PLIST_ENTRY    NotifyList,
+    IN PSTRING        FullTargetName,
+    IN USHORT         TargetNameOffset,
+    IN PSTRING        StreamName OPTIONAL,
+    IN PSTRING        NormalizedParentName OPTIONAL,
+    IN ULONG          FilterMatch,
+    IN ULONG          Action,
+    IN PVOID          TargetContext,
+    IN PVOID          FilterContext);
+
+NTKERNELAPI
+VOID
+NTAPI
 FsRtlNotifyFullChangeDirectory (
     IN PNOTIFY_SYNC                 NotifySync,
     IN PLIST_ENTRY                  NotifyList,
@@ -3451,6 +3708,27 @@ FsRtlNotifyVolumeEvent (
 #endif /* (VER_PRODUCTBUILD >= 2195) */
 
 NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInBaseMcb (
+    IN PBASE_MCB Mcb
+);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInLargeMcb (
+    IN PLARGE_MCB Mcb
+);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInMcb (
+    IN PMCB Mcb
+);
+
+NTKERNELAPI
 NTSTATUS
 NTAPI
 FsRtlOplockFsctrl (
@@ -3464,6 +3742,30 @@ BOOLEAN
 NTAPI
 FsRtlOplockIsFastIoPossible (
     IN POPLOCK Oplock
+);
+
+typedef VOID
+(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
+    IN PVOID    Context,
+    IN PKEVENT  Event
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostPagingFileStackOverflow (
+    IN PVOID                          Context,
+    IN PKEVENT                        Event,
+    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostStackOverflow (
+    IN PVOID                          Context,
+    IN PKEVENT                        Event,
+    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
 );
 
 /*
@@ -3532,35 +3834,110 @@ FsRtlRegisterUncProvider (
     IN BOOLEAN          MailslotsSupported
 );
 
-typedef VOID
-(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
-    IN PVOID    Context,
-    IN PKEVENT  Event
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlRemoveBaseMcbEntry (
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn,
+    IN LONGLONG   SectorCount
 );
 
 NTKERNELAPI
 VOID
 NTAPI
-FsRtlPostStackOverflow (
-    IN PVOID                          Context,
-    IN PKEVENT                        Event,
-    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+FsRtlRemoveLargeMcbEntry (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn,
+    IN LONGLONG    SectorCount
 );
 
 NTKERNELAPI
 VOID
 NTAPI
-FsRtlPostPagingFileStackOverflow (
-    IN PVOID                          Context,
-    IN PKEVENT                        Event,
-    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+FsRtlRemoveMcbEntry (
+    IN PMCB   Mcb,
+    IN VBN    Vbn,
+    IN ULONG  SectorCount
+);
+
+NTKERNELAPI
+PFSRTL_PER_STREAM_CONTEXT
+NTAPI
+FsRtlRemovePerStreamContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER  StreamContext,
+    IN PVOID                       OwnerId OPTIONAL,
+    IN PVOID                       InstanceId OPTIONAL
 );
 
 NTKERNELAPI
 VOID
 NTAPI
-FsRtlTeardownPerStreamContexts (
-    IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader
+FsRtlResetBaseMcb (
+    IN PBASE_MCB Mcb
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlResetLargeMcb (
+    IN PLARGE_MCB  Mcb,
+    IN BOOLEAN     SelfSynchronized
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlSplitBaseMcb (
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn,
+    IN LONGLONG   Amount
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlSplitLargeMcb (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn,
+    IN LONGLONG    Amount
+);
+
+#define FsRtlSupportsPerStreamContexts(FO) (                       \
+    (BOOLEAN)((NULL != FsRtlGetPerStreamContextPointer(FO) &&     \
+              FlagOn(FsRtlGetPerStreamContextPointer(FO)->Flags2, \
+              FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))               \
+)
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTruncateBaseMcb (
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTruncateLargeMcb (
+    IN PLARGE_MCB  Mcb,
+    IN LONGLONG    Vbn
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTruncateMcb (
+    IN PMCB  Mcb,
+    IN VBN   Vbn
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeBaseMcb (
+    IN PBASE_MCB Mcb
 );
 
 NTKERNELAPI
@@ -3568,6 +3945,20 @@ VOID
 NTAPI
 FsRtlUninitializeFileLock (
     IN PFILE_LOCK FileLock
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeLargeMcb (
+    IN PLARGE_MCB Mcb
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeMcb (
+    IN PMCB Mcb
 );
 
 NTKERNELAPI
@@ -4543,9 +4934,9 @@ RtlFreeHeap (
 NTSYSAPI
 VOID
 NTAPI
-RtlFreeOemString(
-    IN OUT POEM_STRING OemString
-    );
+RtlFreeOemString (
+    IN POEM_STRING  OemString
+); 
 
 NTSYSAPI
 VOID
@@ -4632,6 +5023,31 @@ NTAPI
 RtlNtStatusToDosError (
     IN NTSTATUS Status
 );
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlxUnicodeStringToOemSize(
+    PCUNICODE_STRING UnicodeString
+    );
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlxOemStringToUnicodeSize(
+    PCOEM_STRING OemString
+);
+
+#define RtlOemStringToUnicodeSize(STRING) (                 \
+    NLS_MB_OEM_CODE_PAGE_TAG ?                              \
+    RtlxOemStringToUnicodeSize(STRING) :                    \
+    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)  \
+)
+
+#define RtlOemStringToCountedUnicodeSize(STRING) (                    \
+    (ULONG)(RtlOemStringToUnicodeSize(STRING) - sizeof(UNICODE_NULL)) \
+)
+
 
 NTSYSAPI
 NTSTATUS
@@ -4729,6 +5145,15 @@ NTAPI
 RtlSubAuthoritySid (
     IN PSID    Sid,
     IN ULONG   SubAuthority
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeStringToCountedOemString (
+    IN OUT POEM_STRING  DestinationString,
+    IN PCUNICODE_STRING SourceString,
+    IN BOOLEAN          AllocateDestinationString
 );
 
 NTSYSAPI
@@ -4844,6 +5269,42 @@ BOOLEAN
 NTAPI
 RtlValidSid (
     IN PSID Sid
+);
+
+//
+// RTL time functions
+//
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTimeToSecondsSince1980 (
+    PLARGE_INTEGER Time,
+    PULONG ElapsedSeconds
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSecondsSince1980ToTime (
+    ULONG ElapsedSeconds,
+    PLARGE_INTEGER Time
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTimeToSecondsSince1970 (
+    PLARGE_INTEGER Time,
+    PULONG ElapsedSeconds
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSecondsSince1970ToTime (
+    ULONG ElapsedSeconds,
+    PLARGE_INTEGER Time
 );
 
 NTKERNELAPI

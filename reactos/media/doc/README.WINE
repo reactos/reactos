@@ -26,7 +26,7 @@ reactos/tools/wpp                 # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/winebuild           # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/wmc                 # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/wrc                 # Synced to Wine-20081105 (~Wine-1.1.7)
-reactos/tools/widl                # Synced to Wine-1_1_0
+reactos/tools/widl                # Synced to Wine-1_1_4, omitting patches that break MIDL-Compatibility
 
 The following libraries are shared with Wine.
 
@@ -56,6 +56,7 @@ reactos/dll/win32/imagehlp        # Patches for BindImage need review and submis
 reactos/dll/win32/inetcomm        # Autosync
 reactos/dll/win32/inetmib1        # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
+reactos/dll/win32/localui         # Autosync
 reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
 reactos/dll/win32/mlang           # Autosync

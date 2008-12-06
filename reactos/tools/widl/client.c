@@ -103,8 +103,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         if (needs_space_after(get_func_return_type(func)))
           fprintf(client, " ");
         if (callconv) fprintf(client, "%s ", callconv);
-        write_prefix_name(client, prefix_client, def);
-        fprintf(client, "(\n");
+        fprintf(client, "%s%s(\n", prefix_client, get_name(def));
         indent++;
         if (func->args)
             write_args(client, func->args, iface->name, 0, TRUE);
@@ -188,6 +187,14 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
             indent++;
             print_client("_Handle = NDRCContextBinding(%s%s);\n", is_ch_ptr ? "*" : "", context_handle_var->name);
             indent--;
+            if (is_attr(context_handle_var->attrs, ATTR_IN) &&
+                !is_attr(context_handle_var->attrs, ATTR_OUT))
+            {
+                print_client("else\n");
+                indent++;
+                print_client("RpcRaiseException(RPC_X_SS_IN_NULL_CONTEXT);\n");
+                indent--;
+            }
             fprintf(client, "\n");
         }
         else if (implicit_handle)

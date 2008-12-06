@@ -2221,11 +2221,6 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 
     DPRINT("ServiceMain() called\n");
 
-    hNoPendingInstalls = CreateEventW(NULL,
-                                      TRUE,
-                                      FALSE,
-                                      L"Global\\PnP_No_Pending_Install_Events");
-
     hThread = CreateThread(NULL,
                            0,
                            PnpEventThread,
@@ -2277,6 +2272,17 @@ wmain(int argc, WCHAR *argv[])
 
     hDeviceInstallListNotEmpty = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (hDeviceInstallListNotEmpty == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Could not create the Event! (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+    hNoPendingInstalls = CreateEventW(NULL,
+                                      TRUE,
+                                      FALSE,
+                                      L"Global\\PnP_No_Pending_Install_Events");
+    if (hNoPendingInstalls == NULL)
     {
         dwError = GetLastError();
         DPRINT1("Could not create the Event! (Error %lu)\n", dwError);

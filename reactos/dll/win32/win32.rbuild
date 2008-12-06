@@ -136,6 +136,9 @@
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.rbuild" />
 </directory>
+<directory name="localui">
+	<xi:include href="localui/localui.rbuild" />
+</directory>
 <directory name="lpk">
 	<xi:include href="lpk/lpk.rbuild" />
 </directory>

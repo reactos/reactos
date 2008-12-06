@@ -11,6 +11,9 @@
 #include <portcls.h>
 #include <debug.h>
 
+#include <portcls.h>
+#include <dmusicks.h>
+
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_PORTCLASS TAG('P', 'C', 'L', 'S')
 
@@ -43,6 +46,28 @@ PortClsSysControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
+NTSTATUS NewMiniportDMusUART(
+    OUT PMINIPORT* OutMiniport,
+    IN  REFCLSID ClassId);
+
+NTSTATUS NewMiniportFmSynth(
+    OUT PMINIPORT* OutMiniport,
+    IN  REFCLSID ClassId);
+
+NTSTATUS NewPortMidi(
+    OUT PPORT* OutPort);
+
+NTSTATUS NewPortDMus(
+    OUT PPORT* OutPort);
+
+NTSTATUS NewPortTopology(
+    OUT PPORT* OutPort);
+
+NTSTATUS NewPortWaveCyclic(
+    OUT PPORT* OutPort);
+
+NTSTATUS NewPortWavePci(
+    OUT PPORT* OutPort);
 
 typedef struct
 {

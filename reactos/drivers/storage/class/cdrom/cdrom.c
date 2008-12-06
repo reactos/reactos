@@ -2913,7 +2913,7 @@ CdRomDeviceControlCompletion(
                                             srb,
                                             irpStack->MajorFunction,
                                             irpStack->Parameters.DeviceIoControl.IoControlCode,
-											MAXIMUM_RETRIES - ((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1),
+                                            MAXIMUM_RETRIES - ((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1),
                                             &status);
 
         DebugPrint((2, "CdRomDeviceControlCompletion: IRP will %sbe retried\n",
@@ -2973,6 +2973,7 @@ CdRomDeviceControlCompletion(
         }
 
         if (retry && (realIrpNextStack->Parameters.Others.Argument1 = (PVOID)((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1-1))) {
+
 
             if (((ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1)) {
 
@@ -5882,7 +5883,7 @@ Return Value:
             // Decrement the countdown timer and put the IRP back in the list.
             //
 
-            count = (ULONG_PTR)irpStack->Parameters.Others.Argument3;
+            count = (ULONG_PTR) irpStack->Parameters.Others.Argument3;
             count--;
             irpStack->Parameters.Others.Argument3 = (PVOID) count;
 

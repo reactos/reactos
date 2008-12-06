@@ -439,10 +439,10 @@
 @ stdcall SetupInitDefaultQueueCallbackEx(long long long long ptr)
 @ stdcall SetupInitializeFileLogA(str long)
 @ stdcall SetupInitializeFileLogW(wstr long)
-@ stub SetupInstallFileA
+@ stdcall SetupInstallFileA(ptr ptr str str str long ptr ptr)
 @ stub SetupInstallFileExA
 @ stub SetupInstallFileExW
-@ stub SetupInstallFileW
+@ stdcall SetupInstallFileW(ptr ptr wstr wstr wstr long ptr ptr)
 @ stdcall SetupInstallFilesFromInfSectionA(long long long str str long)
 @ stdcall SetupInstallFilesFromInfSectionW(long long long wstr wstr long)
 @ stdcall SetupInstallFromInfSectionA(long long str long long str long ptr ptr long ptr)
@@ -464,8 +464,8 @@
 @ stdcall SetupOpenInfFileW(wstr wstr long ptr)
 @ stdcall SetupOpenLog(long)
 @ stdcall SetupOpenMasterInf()
-@ stub SetupPromptForDiskA
-@ stub SetupPromptForDiskW
+@ stdcall SetupPromptForDiskA(ptr str str str str str long ptr long ptr)
+@ stdcall SetupPromptForDiskW(ptr wstr wstr wstr wstr wstr long ptr long ptr)
 @ stdcall SetupPromptReboot(ptr ptr long)
 @ stub SetupQueryDrivesInDiskSpaceListA
 @ stub SetupQueryDrivesInDiskSpaceListW

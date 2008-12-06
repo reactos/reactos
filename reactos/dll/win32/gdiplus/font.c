@@ -153,6 +153,8 @@ GpStatus WINGDIPAPI GdipCreateFont(GDIPCONST GpFontFamily *fontFamily,
 
     (*font)->unit = unit;
     (*font)->emSize = emSize;
+    (*font)->height = tmw->ntmSizeEM;
+    (*font)->line_spacing = tmw->tmAscent + tmw->tmDescent + tmw->tmExternalLeading;
 
     return Ok;
 }
@@ -193,6 +195,9 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
 
     (*font)->lfw.lfHeight = -textmet.tmHeight;
     (*font)->lfw.lfWeight = textmet.tmWeight;
+
+    (*font)->height = 1; /* FIXME: need NEWTEXTMETRIC.ntmSizeEM here */
+    (*font)->line_spacing = textmet.tmAscent + textmet.tmDescent + textmet.tmExternalLeading;
 
     SelectObject(hdc, oldfont);
     DeleteObject(hfont);
@@ -251,7 +256,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromDC(HDC hdc, GpFont **font)
     if(!font)
         return InvalidParameter;
 
-    hfont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
+    hfont = GetCurrentObject(hdc, OBJ_FONT);
     if(!hfont)
         return GenericError;
 
@@ -444,15 +449,31 @@ GpStatus WINGDIPAPI GdipGetFontHeight(GDIPCONST GpFont *font,
  */
 GpStatus WINGDIPAPI GdipGetFontHeightGivenDPI(GDIPCONST GpFont *font, REAL dpi, REAL *height)
 {
+    REAL font_height;
+
     TRACE("%p (%s), %f, %p\n", font,
             debugstr_w(font->lfw.lfFaceName), dpi, height);
 
     if (!(font && height)) return InvalidParameter;
 
+    font_height = font->line_spacing * (font->emSize / font->height);
+
     switch (font->unit)
     {
         case UnitPixel:
-            *height = font->emSize;
+            *height = font_height;
+            break;
+        case UnitPoint:
+            *height = font_height * dpi * inch_per_point;
+            break;
+        case UnitInch:
+            *height = font_height * dpi;
+            break;
+        case UnitDocument:
+            *height = font_height * (dpi / 300.0);
+            break;
+        case UnitMillimeter:
+            *height = font_height * (dpi / mm_per_inch);
             break;
         default:
             FIXME("Unhandled unit type: %d\n", font->unit);
@@ -667,8 +688,7 @@ GpStatus WINGDIPAPI GdipGetEmHeight(GDIPCONST GpFontFamily *family, INT style, U
 {
     if (!(family && EmHeight)) return InvalidParameter;
 
-    TRACE("%p (%s), %d, %p, stub!\n", family,
-            debugstr_w(family->FamilyName), style, EmHeight);
+    TRACE("%p (%s), %d, %p\n", family, debugstr_w(family->FamilyName), style, EmHeight);
 
     *EmHeight = family->tmw.ntmSizeEM;
 
@@ -693,11 +713,16 @@ GpStatus WINGDIPAPI GdipGetEmHeight(GDIPCONST GpFontFamily *family, INT style, U
 GpStatus WINGDIPAPI GdipGetLineSpacing(GDIPCONST GpFontFamily *family,
         INT style, UINT16* LineSpacing)
 {
-    if (!(family && LineSpacing)) return InvalidParameter;
+    TRACE("%p, %d, %p\n", family, style, LineSpacing);
 
-    FIXME("stub!\n");
+    if (!(family && LineSpacing))
+        return InvalidParameter;
 
-    return NotImplemented;
+    if (style) FIXME("ignoring style\n");
+
+    *LineSpacing = family->tmw.tmAscent + family->tmw.tmDescent + family->tmw.tmExternalLeading;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipIsStyleAvailable(GDIPCONST GpFontFamily* family,
@@ -785,12 +810,17 @@ GpStatus WINGDIPAPI GdipGetGenericFontFamilySansSerif(GpFontFamily **nativeFamil
  */
 GpStatus WINGDIPAPI GdipNewPrivateFontCollection(GpFontCollection** fontCollection)
 {
-    FIXME("stub %p\n", fontCollection);
+    TRACE("%p\n", fontCollection);
 
     if (!fontCollection)
         return InvalidParameter;
 
-    return NotImplemented;
+    *fontCollection = GdipAlloc(sizeof(GpFontCollection));
+    if (!*fontCollection) return OutOfMemory;
+
+    (*fontCollection)->FontFamilies = NULL;
+    (*fontCollection)->count = 0;
+    return Ok;
 }
 
 /*****************************************************************************
@@ -798,12 +828,17 @@ GpStatus WINGDIPAPI GdipNewPrivateFontCollection(GpFontCollection** fontCollecti
  */
 GpStatus WINGDIPAPI GdipDeletePrivateFontCollection(GpFontCollection **fontCollection)
 {
-    FIXME("stub %p\n", fontCollection);
+    INT i;
+
+    TRACE("%p\n", fontCollection);
 
     if (!fontCollection)
         return InvalidParameter;
 
-    return NotImplemented;
+    for (i = 0; i < (*fontCollection)->count; i++) GdipFree((*fontCollection)->FontFamilies[i]);
+    GdipFree(*fontCollection);
+
+    return Ok;
 }
 
 /*****************************************************************************
@@ -821,17 +856,32 @@ GpStatus WINGDIPAPI GdipPrivateAddFontFile(GpFontCollection* fontCollection,
 }
 
 /*****************************************************************************
+ * GdipPrivateAddMemoryFont [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipPrivateAddMemoryFont(GpFontCollection* fontCollection,
+        GDIPCONST void* memory, INT length)
+{
+    FIXME("%p, %p, %d\n", fontCollection, memory, length);
+
+    if (!(fontCollection && memory && length))
+        return InvalidParameter;
+
+    return Ok;
+}
+
+/*****************************************************************************
  * GdipGetFontCollectionFamilyCount [GDIPLUS.@]
  */
 GpStatus WINGDIPAPI GdipGetFontCollectionFamilyCount(
         GpFontCollection* fontCollection, INT* numFound)
 {
-    FIXME("stub: %p, %p\n", fontCollection, numFound);
+    TRACE("%p, %p\n", fontCollection, numFound);
 
     if (!(fontCollection && numFound))
         return InvalidParameter;
 
-    return NotImplemented;
+    *numFound = fontCollection->count;
+    return Ok;
 }
 
 /*****************************************************************************
@@ -841,10 +891,27 @@ GpStatus WINGDIPAPI GdipGetFontCollectionFamilyList(
         GpFontCollection* fontCollection, INT numSought,
         GpFontFamily* gpfamilies[], INT* numFound)
 {
-    FIXME("stub: %p, %d, %p, %p\n", fontCollection, numSought, gpfamilies,
-            numFound);
+    INT i;
+
+    TRACE("%p, %d, %p, %p\n", fontCollection, numSought, gpfamilies, numFound);
 
     if (!(fontCollection && gpfamilies && numFound))
+        return InvalidParameter;
+
+    for (i = 0; i < numSought && i < fontCollection->count; i++)
+    {
+        gpfamilies[i] = fontCollection->FontFamilies[i];
+    }
+    *numFound = i;
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
+        GpFontCollection** fontCollection)
+{
+    FIXME("stub: %p\n",fontCollection);
+
+    if (!fontCollection)
         return InvalidParameter;
 
     return NotImplemented;
