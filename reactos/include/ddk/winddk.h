@@ -8850,17 +8850,25 @@ IoGetRelatedDeviceObject(
   IN PFILE_OBJECT  FileObject);
 
 NTKERNELAPI
-ULONG
-NTAPI
-IoGetRemainingStackSize(
-  VOID);
-
-NTKERNELAPI
 VOID
 NTAPI
 IoGetStackLimits(
   OUT PULONG_PTR  LowLimit,
   OUT PULONG_PTR  HighLimit);
+
+FORCEINLINE
+ULONG_PTR
+IoGetRemainingStackSize(
+  VOID
+)
+{
+    ULONG_PTR End, Begin;
+    ULONG_PTR Result;
+
+    IoGetStackLimits(&Begin, &End);
+    Result = (ULONG_PTR)(&End) - Begin;
+    return Result;
+}
 
 NTKERNELAPI
 VOID
