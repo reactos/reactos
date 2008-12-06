@@ -4,6 +4,7 @@
 <module name="gdiplus_winetest" type="win32cui" installbase="bin" installname="gdiplus_winetest.exe" allowwarnings="true">
 	<include base="gdiplus_winetest">.</include>
 	<file>brush.c</file>
+	<file>customlinecap.c</file>
 	<file>font.c</file>
 	<file>graphics.c</file>
 	<file>graphicspath.c</file>

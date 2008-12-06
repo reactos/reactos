@@ -7,6 +7,7 @@
 #include "wine/test.h"
 
 extern void func_brush(void);
+extern void func_customlinecap(void);
 extern void func_font(void);
 extern void func_graphics(void);
 extern void func_graphicspath(void);
@@ -20,6 +21,7 @@ extern void func_stringformat(void);
 const struct test winetest_testlist[] =
 {
     { "brush", func_brush },
+	{ "customlinecap", func_customlinecap },
     { "font", func_font },
     { "graphics", func_graphics },
     { "graphicspath", func_graphicspath },

@@ -42,20 +42,17 @@ static void test_Scan0(void)
     bm = (GpBitmap*)0xdeadbeef;
     stat = GdipCreateBitmapFromScan0(10, -10, 10, PixelFormat24bppRGB, NULL, &bm);
     expect(InvalidParameter, stat);
-
-    expect(NULL, bm);
+    ok( !bm, "expected null bitmap\n" );
 
     bm = (GpBitmap*)0xdeadbeef;
     stat = GdipCreateBitmapFromScan0(-10, 10, 10, PixelFormat24bppRGB, NULL, &bm);
     expect(InvalidParameter, stat);
-
-    expect(NULL, bm);
+    ok( !bm, "expected null bitmap\n" );
 
     bm = (GpBitmap*)0xdeadbeef;
     stat = GdipCreateBitmapFromScan0(10, 0, 10, PixelFormat24bppRGB, NULL, &bm);
     expect(InvalidParameter, stat);
-
-    expect(NULL, bm);
+    ok( !bm, "expected null bitmap\n" );
 
     bm = NULL;
     stat = GdipCreateBitmapFromScan0(10, 10, 12, PixelFormat24bppRGB, buff, &bm);
@@ -67,12 +64,26 @@ static void test_Scan0(void)
     bm = (GpBitmap*) 0xdeadbeef;
     stat = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat24bppRGB, buff, &bm);
     expect(InvalidParameter, stat);
-    expect(NULL, bm);
+    ok( !bm, "expected null bitmap\n" );
 
     bm = (GpBitmap*)0xdeadbeef;
     stat = GdipCreateBitmapFromScan0(10, 10, 0, PixelFormat24bppRGB, buff, &bm);
     expect(InvalidParameter, stat);
-    expect(0xdeadbeef, bm);
+    ok( bm == (GpBitmap*)0xdeadbeef, "expected deadbeef bitmap\n" );
+
+    bm = NULL;
+    stat = GdipCreateBitmapFromScan0(10, 10, -8, PixelFormat24bppRGB, buff, &bm);
+    todo_wine{
+        expect(Ok, stat);
+        ok(NULL != bm, "Expected bitmap to be initialized\n");
+    }
+    if (stat == Ok)
+        GdipDisposeImage((GpImage*)bm);
+
+    bm = (GpBitmap*)0xdeadbeef;
+    stat = GdipCreateBitmapFromScan0(10, 10, -10, PixelFormat24bppRGB, buff, &bm);
+    expect(InvalidParameter, stat);
+    ok( !bm, "expected null bitmap\n" );
 }
 
 static void test_GetImageDimension(void)
@@ -490,21 +501,33 @@ static void test_GdipCloneImage(void)
     /* Create an image, clone it, delete the original, make sure the copy works */
     stat = GdipCreateBitmapFromScan0(WIDTH, HEIGHT, 0, PixelFormat24bppRGB, NULL, &bm);
     expect(Ok, stat);
-todo_wine
-{
+
     image_src = ((GpImage*)bm);
     stat = GdipCloneImage(image_src, &image_dest);
     expect(Ok, stat);
-}
+
     stat = GdipDisposeImage((GpImage*)bm);
     expect(Ok, stat);
-todo_wine
-{
     stat = GdipGetImageBounds(image_dest, &rectF, &unit);
     expect(Ok, stat);
+
+    /* Treat FP values carefully */
+    ok(fabsf(rectF.Width-WIDTH)<1e-5, "Expected: %d, got %.05f\n", WIDTH, rectF.Width);
+    ok(fabsf(rectF.Height-HEIGHT)<1e-5, "Expected: %d, got %.05f\n", HEIGHT, rectF.Height);
+
     stat = GdipDisposeImage(image_dest);
     expect(Ok, stat);
 }
+
+static void test_testcontrol(void)
+{
+    GpStatus stat;
+    DWORD param;
+
+    param = 0;
+    stat = GdipTestControl(TestControlGetBuildNumber, &param);
+    expect(Ok, stat);
+    ok(param != 0, "Build number expected, got %u\n", param);
 }
 
 START_TEST(image)
@@ -529,6 +552,7 @@ START_TEST(image)
     test_GdipCreateBitmapFromHBITMAP();
     test_GdipGetImageFlags();
     test_GdipCloneImage();
+    test_testcontrol();
 
     GdiplusShutdown(gdiplusToken);
 }
