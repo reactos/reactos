@@ -215,6 +215,10 @@ struct _COMPRESSED_DATA_INFO;
 #define KERNEL_LARGE_STACK_SIZE             61440
 #define KERNEL_LARGE_STACK_COMMIT           12288
 
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
 #define DPFLTR_ERROR_LEVEL                  0
 #define DPFLTR_WARNING_LEVEL                1
 #define DPFLTR_TRACE_LEVEL                  2
@@ -5447,6 +5451,58 @@ typedef VOID
 #define PCR_MAJOR_VERSION 1
 
 #ifdef _X86_
+
+#define SIZE_OF_80387_REGISTERS	80
+#define CONTEXT_i386	0x10000
+#define CONTEXT_i486	0x10000
+#define CONTEXT_CONTROL	(CONTEXT_i386|0x00000001L)
+#define CONTEXT_INTEGER	(CONTEXT_i386|0x00000002L)
+#define CONTEXT_SEGMENTS	(CONTEXT_i386|0x00000004L)
+#define CONTEXT_FLOATING_POINT	(CONTEXT_i386|0x00000008L)
+#define CONTEXT_DEBUG_REGISTERS	(CONTEXT_i386|0x00000010L)
+#define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
+#define CONTEXT_FULL	(CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
+#define MAXIMUM_SUPPORTED_EXTENSION  512
+
+typedef struct _FLOATING_SAVE_AREA {
+    ULONG ControlWord;
+    ULONG StatusWord;
+    ULONG TagWord;
+    ULONG ErrorOffset;
+    ULONG ErrorSelector;
+    ULONG DataOffset;
+    ULONG DataSelector;
+    UCHAR RegisterArea[SIZE_OF_80387_REGISTERS];
+    ULONG Cr0NpxState;
+} FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
+
+typedef struct _CONTEXT {
+    ULONG ContextFlags;
+    ULONG Dr0;
+    ULONG Dr1;
+    ULONG Dr2;
+    ULONG Dr3;
+    ULONG Dr6;
+    ULONG Dr7;
+    FLOATING_SAVE_AREA FloatSave;
+    ULONG SegGs;
+    ULONG SegFs;
+    ULONG SegEs;
+    ULONG SegDs;
+    ULONG Edi;
+    ULONG Esi;
+    ULONG Ebx;
+    ULONG Edx;
+    ULONG Ecx;
+    ULONG Eax;
+    ULONG Ebp;
+    ULONG Eip;
+    ULONG SegCs;
+    ULONG EFlags;
+    ULONG Esp;
+    ULONG SegSs;
+    UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
+} CONTEXT;
 
 //
 // Types to use to contain PFNs and their counts.

@@ -2229,7 +2229,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     DWORD64 LastBranchFromRip;
     DWORD64 LastExceptionToRip;
     DWORD64 LastExceptionFromRip;
-} CONTEXT, *PCONTEXT;
+} CONTEXT;
 
 
 typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
@@ -2299,7 +2299,7 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
 NTSYSAPI
 VOID
 __cdecl
-RtlRestoreContext(PCONTEXT ContextRecord,
+RtlRestoreContext(struct _CONTEXT *ContextRecord,
                   struct _EXCEPTION_RECORD *ExceptionRecord);
 
 NTSYSAPI
@@ -4796,29 +4796,8 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 #endif
 }
 
-static __inline__ BOOLEAN
-BitScanReverse(OUT ULONG *Index,
-               IN ULONG Mask)
-{
-	BOOLEAN BitPosition = 0;
-#if defined(_M_IX86)
-	__asm__ __volatile__("bsrl %2,%0\n\t"
-	                     "setnz %1\n\t"
-	                     :"=&r" (*Index), "=q" (BitPosition)
-	                     :"rm" (Mask)
-	                     :"memory");
-	return BitPosition;
-#else
-	/* Slow implementation for now */
-	for( *Index = 31; *Index; (*Index)-- ) {
-		if( (1<<*Index) & Mask ) {
-			return TRUE;
-		}
-	}
-
-	return FALSE;
-#endif
-}
+#define BitScanForward _BitScanForward
+#define BitScanReverse _BitScanReverse
 
 #endif
 

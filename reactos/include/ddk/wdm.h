@@ -9,7 +9,11 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 
+#ifdef __GNUC__
+#include "intrin.h"
+#endif
 
+typedef struct _CONTEXT *PCONTEXT;
 
 //
 // Resource list definitions
@@ -581,131 +585,6 @@ typedef struct _SE_IMPERSONATION_STATE {
 #define SERVICE_AUTO_START             0x00000002
 #define SERVICE_DEMAND_START           0x00000003
 #define SERVICE_DISABLED               0x00000004
-
-
-
-//
-// Architecture Defined Contexts
-//
-#if defined(_M_IX86)
-#define SIZE_OF_80387_REGISTERS	80
-#define CONTEXT_i386	0x10000
-#define CONTEXT_i486	0x10000
-#define CONTEXT_CONTROL	(CONTEXT_i386|0x00000001L)
-#define CONTEXT_INTEGER	(CONTEXT_i386|0x00000002L)
-#define CONTEXT_SEGMENTS	(CONTEXT_i386|0x00000004L)
-#define CONTEXT_FLOATING_POINT	(CONTEXT_i386|0x00000008L)
-#define CONTEXT_DEBUG_REGISTERS	(CONTEXT_i386|0x00000010L)
-#define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
-#define CONTEXT_FULL	(CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
-#define MAXIMUM_SUPPORTED_EXTENSION  512
-
-#define EXCEPTION_READ_FAULT    0
-#define EXCEPTION_WRITE_FAULT   1
-#define EXCEPTION_EXECUTE_FAULT 8
-
-typedef struct _FLOATING_SAVE_AREA {
-    ULONG ControlWord;
-    ULONG StatusWord;
-    ULONG TagWord;
-    ULONG ErrorOffset;
-    ULONG ErrorSelector;
-    ULONG DataOffset;
-    ULONG DataSelector;
-    UCHAR RegisterArea[SIZE_OF_80387_REGISTERS];
-    ULONG Cr0NpxState;
-} FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
-
-typedef struct _CONTEXT {
-    ULONG ContextFlags;
-    ULONG Dr0;
-    ULONG Dr1;
-    ULONG Dr2;
-    ULONG Dr3;
-    ULONG Dr6;
-    ULONG Dr7;
-    FLOATING_SAVE_AREA FloatSave;
-    ULONG SegGs;
-    ULONG SegFs;
-    ULONG SegEs;
-    ULONG SegDs;
-    ULONG Edi;
-    ULONG Esi;
-    ULONG Ebx;
-    ULONG Edx;
-    ULONG Ecx;
-    ULONG Eax;
-    ULONG Ebp;
-    ULONG Eip;
-    ULONG SegCs;
-    ULONG EFlags;
-    ULONG Esp;
-    ULONG SegSs;
-    UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
-} CONTEXT, *PCONTEXT;
-
-#elif defined(_M_AMD64)
-#error FIXME-TODO: 64-bit
-#elif defined(_M_ARM)
-
-//
-// FIXME: Move to armddk.h?
-//
-
-/* The following flags control the contents of the CONTEXT structure. */
-
-#define CONTEXT_ARM    0x0000040
-#define CONTEXT_CONTROL         (CONTEXT_ARM | 0x00000001L)
-#define CONTEXT_INTEGER         (CONTEXT_ARM | 0x00000002L)
-
-#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER)
-
-typedef struct _CONTEXT {
-	/* The flags values within this flag control the contents of
-	   a CONTEXT record.
-
-	   If the context record is used as an input parameter, then
-	   for each portion of the context record controlled by a flag
-	   whose value is set, it is assumed that that portion of the
-	   context record contains valid context. If the context record
-	   is being used to modify a thread's context, then only that
-	   portion of the threads context will be modified.
-
-	   If the context record is used as an IN OUT parameter to capture
-	   the context of a thread, then only those portions of the thread's
-	   context corresponding to set flags will be returned.
-
-	   The context record is never used as an OUT only parameter. */
-
-	ULONG ContextFlags;
-
-	/* This section is specified/returned if the ContextFlags word contains
-	   the flag CONTEXT_INTEGER. */
-	ULONG R0;
-	ULONG R1;
-	ULONG R2;
-	ULONG R3;
-	ULONG R4;
-	ULONG R5;
-	ULONG R6;
-	ULONG R7;
-	ULONG R8;
-	ULONG R9;
-	ULONG R10;
-	ULONG R11;
-	ULONG R12;
-
-	ULONG Sp;
-	ULONG Lr;
-	ULONG Pc;
-	ULONG Psr;
-} CONTEXT, *PCONTEXT;
-
-#else
-#error "Undefined processor architecture"
-#endif
-
-
 
 //
 // Exception Records
