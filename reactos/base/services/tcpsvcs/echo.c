@@ -69,7 +69,7 @@ DWORD WINAPI
 EchoHandler(VOID* sock_)
 {
     DWORD retVal = 0;
-    SOCKET sock = (SOCKET)(UINT_PTR)sock_;
+    SOCKET sock = (SOCKET)sock_;
 
     if (!EchoIncomingPackets(sock))
     {

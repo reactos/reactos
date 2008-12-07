@@ -30,7 +30,7 @@ DaytimeHandler(VOID* Sock_)
     time_t aclock;
     CHAR *pszTime;
     DWORD retVal = 0;
-    SOCKET Sock = (SOCKET)(UINT_PTR)Sock_;
+    SOCKET Sock = (SOCKET)Sock_;
 
     time(&aclock);
     localTime = localtime(&aclock);

@@ -128,7 +128,7 @@ RetrieveQuote(SOCKET sock)
 DWORD WINAPI
 QotdHandler(VOID* sock_)
 {
-    SOCKET sock = (SOCKET)(UINT_PTR)sock_;
+    SOCKET sock = (SOCKET)sock_;
     DWORD retVal = 0;
 
     if (!RetrieveQuote(sock))

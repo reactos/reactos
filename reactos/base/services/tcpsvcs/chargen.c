@@ -96,7 +96,7 @@ DWORD WINAPI
 ChargenHandler(VOID* sock_)
 {
     INT retVal = 0;
-    SOCKET sock = (SOCKET)(UINT_PTR)sock_;
+    SOCKET sock = (SOCKET)sock_;
 
     if (!GenerateChars(sock))
     {

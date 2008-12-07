@@ -95,7 +95,7 @@ AcceptConnections(SOCKET listeningSocket,
 
                     if (!bShutdown)
                     {
-                        hThread = CreateThread(0, 0, lpService, (PVOID)(UINT_PTR)sock, 0, NULL);
+                        hThread = CreateThread(0, 0, lpService, (void*)sock, 0, NULL);
                         if (hThread != NULL)
                         {
                             CloseHandle(hThread);
