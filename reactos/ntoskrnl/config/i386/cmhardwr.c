@@ -245,7 +245,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     PCHAR PartialString = NULL, BiosVersion;
     CHAR CpuString[48];
     PVOID BaseAddress = NULL;
-    LARGE_INTEGER ViewBase = {{0}};
+    LARGE_INTEGER ViewBase = {{0, 0}};
     ULONG_PTR VideoRomBase;
     PCHAR CurrentVersion;
     extern UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;

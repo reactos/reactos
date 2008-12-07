@@ -553,7 +553,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
                                               szDayLen,
                                               &TextSize))
                     {
-                        RECT rcHighlight = {0};
+                        RECT rcHighlight = { 0, 0, 0, 0 };
 
                         rcText.left = rcCell.left + (infoPtr->CellSize.cx / 2) - (TextSize.cx / 2);
                         rcText.top = rcCell.top + (infoPtr->CellSize.cy / 2) - (TextSize.cy / 2);

@@ -24,7 +24,7 @@ WSPUPCALLTABLE Upcalls;
 LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
 ULONG SocketCount = 0;
 PSOCKET_INFORMATION *Sockets = NULL;
-LIST_ENTRY SockHelpersListHead = {NULL};
+LIST_ENTRY SockHelpersListHead = { NULL, NULL };
 ULONG SockAsyncThreadRefCount;
 HANDLE SockAsyncHelperAfdHandle;
 HANDLE SockAsyncCompletionPort;

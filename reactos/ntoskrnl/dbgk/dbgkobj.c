@@ -844,13 +844,13 @@ DbgkpConvertKernelToUserStateChange(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
         case DbgKmExceptionApi:
 
             /* Look at the exception code */
-            if (DebugEvent->ApiMsg.Exception.ExceptionRecord.ExceptionCode ==
+            if ((NTSTATUS)DebugEvent->ApiMsg.Exception.ExceptionRecord.ExceptionCode ==
                 STATUS_BREAKPOINT)
             {
                 /* Update this as a breakpoint exception */
                 WaitStateChange->NewState = DbgBreakpointStateChange;
             }
-            else if (DebugEvent->ApiMsg.Exception.ExceptionRecord.ExceptionCode ==
+            else if ((NTSTATUS)DebugEvent->ApiMsg.Exception.ExceptionRecord.ExceptionCode ==
                      STATUS_SINGLE_STEP)
             {
                 /* Update this as a single step exception */

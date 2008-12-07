@@ -395,7 +395,7 @@ HDRVR WINAPI OpenDriver(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LPARAM lPar
         lstrcpynW(libName, lpDriverName, sizeof(libName) / sizeof(WCHAR));
 
         /* Try and open the driver by filename */
-        if ( lpDrv = DRIVER_TryOpenDriver32(libName, lParam) )
+        if ( (lpDrv = DRIVER_TryOpenDriver32(libName, lParam)) )
             goto the_end;
 
         /* If we got here, the file wasn't found. So we assume the caller
@@ -407,7 +407,7 @@ HDRVR WINAPI OpenDriver(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LPARAM lPar
     if ( DRIVER_GetLibName(lpDriverName, lsn, libName, sizeof(libName)) )
     {
         /* Now we have the filename, we can try and load it */
-        if ( lpDrv = DRIVER_TryOpenDriver32(libName, lParam) )
+        if ( (lpDrv = DRIVER_TryOpenDriver32(libName, lParam)) )
             goto the_end;
     }
 

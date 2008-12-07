@@ -1637,7 +1637,7 @@ AtapiChipInit(
                     KdPrint2((PRINT_PREFIX "SIISETCLK\n"));
                     GetPciConfig1(0x8a, tmp8);
                     if ((tmp8 & 0x30) != 0x10)
-                        ChangePciConfig1(0x8a, (a & 0xcf | 0x10));
+                        ChangePciConfig1(0x8a, (a & 0xcf) | 0x10);
                     GetPciConfig1(0x8a, tmp8);
                     if ((tmp8 & 0x30) != 0x10) {
                         KdPrint2((PRINT_PREFIX "Sil 0680 could not set ATA133 clock\n"));

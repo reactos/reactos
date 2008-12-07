@@ -357,7 +357,7 @@ VfatGetNameInformation(PFILE_OBJECT FileObject,
   RtlCopyMemory(NameInfo->FileName, FCB->PathNameU.Buffer, BytesToCopy);
 
   /* Check if we could write more but are not able to */
-  if (*BufferLength < FCB->PathNameU.Length + FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
+  if (*BufferLength < FCB->PathNameU.Length + (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
   {
     /* Return number of bytes written */
     *BufferLength -= FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]) + BytesToCopy;

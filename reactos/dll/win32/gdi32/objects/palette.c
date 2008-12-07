@@ -86,11 +86,8 @@ GetSystemPaletteEntries(HDC hDC,
                         UINT cEntries,
                         LPPALETTEENTRY ppe)
 {
-  PALETTEENTRY ippe[256];
+     PALETTEENTRY ippe[256];
 
-  if (cEntries < 0) return 0;
-  else
-  {
      if ( GetDeviceCaps(hDC, RASTERCAPS) & RC_PALETTE )
         return NtGdiDoPalette(hDC, iStartIndex, cEntries, ppe, GdiPalGetSystemEntries, FALSE);
      else
@@ -103,9 +100,9 @@ GetSystemPaletteEntries(HDC hDC,
 
            if (iStartIndex < 256)
            {
-              INT Index = 256 - iStartIndex;
+              UINT Index = 256 - iStartIndex;
 
-              if ( Index >= cEntries ) Index = cEntries;
+              if ( Index > cEntries ) Index = cEntries;
 
               RtlCopyMemory( ppe, 
                             &ippe[iStartIndex],
@@ -113,8 +110,8 @@ GetSystemPaletteEntries(HDC hDC,
            }
         }
      }
-  }
-  return 0;
+
+     return 0;
 }
 
 UINT

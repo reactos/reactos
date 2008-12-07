@@ -43,7 +43,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 {
 
     PDRVFN drv_func;
-    INT i;
+    UINT i;
 
     /* Test see if the data is vaild we got from win32k.sys */
     if ((SizeEngDrv != sizeof(DRVENABLEDATA)) ||

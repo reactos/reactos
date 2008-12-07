@@ -532,7 +532,7 @@ WINAPI
 SetThreadPriority(HANDLE hThread,
                   int nPriority)
 {
-    ULONG Prio = nPriority;
+    LONG Prio = nPriority;
     NTSTATUS Status;
 
     /* Check if values forcing saturation should be used */
@@ -549,7 +549,7 @@ SetThreadPriority(HANDLE hThread,
     Status = NtSetInformationThread(hThread,
                                     ThreadBasePriority,
                                     &Prio,
-                                    sizeof(ULONG));
+                                    sizeof(LONG));
     if (!NT_SUCCESS(Status))
     {
         /* Failure */

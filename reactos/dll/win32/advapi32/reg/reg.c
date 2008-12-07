@@ -786,7 +786,7 @@ RegCopyTreeA(IN HKEY hKeySrc,
              IN LPCSTR lpSubKey  OPTIONAL,
              IN HKEY hKeyDest)
 {
-    UNICODE_STRING SubKeyName = {0};
+    UNICODE_STRING SubKeyName = { 0, 0, NULL };
     LONG Ret;
 
     if (lpSubKey != NULL &&
@@ -816,7 +816,7 @@ RegConnectRegistryA(IN LPCSTR lpMachineName,
                     IN HKEY hKey,
                     OUT PHKEY phkResult)
 {
-    UNICODE_STRING MachineName = {0};
+    UNICODE_STRING MachineName = { 0, 0, NULL };
     LONG Ret;
 
     if (lpMachineName != NULL &&
@@ -1414,7 +1414,7 @@ RegDeleteKeyValueA(IN HKEY hKey,
                    IN LPCSTR lpSubKey  OPTIONAL,
                    IN LPCSTR lpValueName  OPTIONAL)
 {
-    UNICODE_STRING SubKey = {0}, ValueName = {0};
+    UNICODE_STRING SubKey = { 0, 0, NULL }, ValueName = { 0, 0, NULL };
     LONG Ret;
 
     if (lpSubKey != NULL &&
@@ -1828,7 +1828,7 @@ LONG WINAPI
 RegDeleteTreeA(IN HKEY hKey,
                IN LPCSTR lpSubKey  OPTIONAL)
 {
-    UNICODE_STRING SubKeyName = {0};
+    UNICODE_STRING SubKeyName = { 0, 0, NULL };
     LONG Ret;
 
     if (lpSubKey != NULL &&

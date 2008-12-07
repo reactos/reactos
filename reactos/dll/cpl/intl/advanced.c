@@ -37,7 +37,7 @@ GetSupportedCP(VOID)
     Count = SetupGetLineCount(hIntlInf, _T("CodePages"));
     if (Count <= 0) return FALSE;
 
-    for (Number = 0; Number < Count; Number++)
+    for (Number = 0; Number < (UINT)Count; Number++)
     {
         if (SetupGetLineByIndex(hIntlInf, _T("CodePages"), Number, &infCont) &&
             SetupGetIntField(&infCont, 0, (PINT)&uiCPage))

@@ -88,7 +88,7 @@ static RTL_CRITICAL_SECTION_DEBUG NLS_FormatsCS_debug =
     0, 0, &NLS_FormatsCS,
     { &NLS_FormatsCS_debug.ProcessLocksList,
       &NLS_FormatsCS_debug.ProcessLocksList },
-      0, 0, 0, 0
+      0, 0, 0, 0, 0
 };
 static RTL_CRITICAL_SECTION NLS_FormatsCS = { &NLS_FormatsCS_debug, -1, 0, 0, 0, 0 };
 

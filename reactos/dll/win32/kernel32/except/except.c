@@ -216,7 +216,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    ULONG ErrorParameters[4];
    ULONG ErrorResponse;
 
-   if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+   if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
        ExceptionInfo->ExceptionRecord->NumberParameters >= 2)
    {
       switch(ExceptionInfo->ExceptionRecord->ExceptionInformation[0])
@@ -269,7 +269,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       /* Print a stack trace. */
       DbgPrint("Unhandled exception\n");
       DbgPrint("ExceptionCode:    %8x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
-      if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+      if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
           ExceptionInfo->ExceptionRecord->NumberParameters == 2)
       {
          DbgPrint("Faulting Address: %8x\n", ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
@@ -312,7 +312,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    ErrorParameters[0] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionCode;
    ErrorParameters[1] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionAddress;
 
-   if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+   if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
    {
        /* get the type of operation that caused the access violation */
        ErrorParameters[2] = ExceptionInfo->ExceptionRecord->ExceptionInformation[0];

@@ -232,7 +232,7 @@ ProcessIdToHandle(IN DWORD dwProcessId)
     CLIENT_ID ClientId;
 
     /* If we don't have a PID, look it up */
-    if (dwProcessId == -1) dwProcessId = (DWORD)CsrGetProcessId();
+    if (dwProcessId == -1U) dwProcessId = (DWORD)CsrGetProcessId();
 
     /* Open a handle to the process */
     ClientId.UniqueThread = NULL;

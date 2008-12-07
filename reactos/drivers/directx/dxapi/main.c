@@ -110,7 +110,7 @@ DxApi(IN DWORD dwFunctionNum,
     dwFunctionNum -= DD_FIRST_DXAPI;
 
     if ((lpvOutBuffer == NULL) || 
-       (dwFunctionNum < (DD_FIRST_DXAPI - DD_FIRST_DXAPI)) ||
+       /*(dwFunctionNum < (DD_FIRST_DXAPI - DD_FIRST_DXAPI)) ||*/
        (dwFunctionNum > (DD_DXAPI_FLUSHVPCAPTUREBUFFERS - DD_FIRST_DXAPI)) ||
        (gDxApiEntryPoint[dwFunctionNum].pfn == NULL) ||
        (cbInBuffer != tblCheckInBuffer[dwFunctionNum]) ||

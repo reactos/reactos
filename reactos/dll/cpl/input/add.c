@@ -42,7 +42,7 @@ GetLayoutCount(LPTSTR szLang)
     HKEY hKey;
     TCHAR szLayoutID[3 + 1], szPreload[CCH_LAYOUT_ID + 1], szLOLang[MAX_PATH];
     DWORD dwIndex = 0, dwType, dwSize;
-    INT Count = 0, i, j;
+    UINT Count = 0, i, j;
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Preload"),
         0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)

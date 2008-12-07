@@ -90,7 +90,8 @@ MirrorRgnByWidth(HRGN hRgn, INT Width, HRGN *phRgn)
         if ( GetRegionData(hRgn, cRgnDSize, pRgnData) )
         {
            HRGN hRgnex;
-           INT i, SaveL = pRgnData->rdh.rcBound.left;
+           UINT i;
+           INT SaveL = pRgnData->rdh.rcBound.left;
            pRgnData->rdh.rcBound.left = Width - pRgnData->rdh.rcBound.right;
            pRgnData->rdh.rcBound.right = Width - SaveL;
            if (pRgnData->rdh.nCount > 0)

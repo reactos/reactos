@@ -650,7 +650,9 @@ CHSourceDlgProc(
 						}
 					}
 					else
+					{
 						/* FIXME */;
+					}
 					return TRUE;
 
 				default:
