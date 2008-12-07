@@ -14,7 +14,6 @@
 
 static LIST_ENTRY LogFileListHead;
 static CRITICAL_SECTION LogFileListCs;
-extern HANDLE MyHeap;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -897,9 +896,4 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     *lpRecSize = dwRecSize;
     return Buffer;
-}
-
-__inline void LogfFreeRecord(LPVOID Rec)
-{
-    HeapFree(MyHeap, 0, Rec);
 }
