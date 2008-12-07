@@ -118,8 +118,8 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragca
         }
 
         //can only drop if card is different colour
-        if( mystack[0].IsBlack() && !dragcard.IsRed() ||
-           !mystack[0].IsBlack() &&  dragcard.IsRed() )
+        if( (mystack[0].IsBlack() && !dragcard.IsRed()) ||
+           (!mystack[0].IsBlack() &&  dragcard.IsRed()) )
         {
             TRACE("EXIT RowStackDropProc(false)\n");
             return false;

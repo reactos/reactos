@@ -295,7 +295,7 @@ int command(const char *fmt, ...)
 		printf("\n");
 		(void) fflush(stdout);
 	}
-	if (cout == (int) NULL) {
+	if (cout == 0) {
 		perror ("No control connection for command");
 		code = -1;
 		return (0);
@@ -583,7 +583,7 @@ null();//				(void) signal(SIGPIPE, oldintp);
 			return;
 		}
 	dout = dataconn(mode);
-	if (dout == (int)NULL)
+	if (!dout)
 		goto abort;
 	(void) gettimeofday(&start, (struct timezone *)0);
 null();//	oldintp = signal(SIGPIPE, SIG_IGN);
@@ -887,7 +887,7 @@ null();//			(void) signal(SIGINT, oldintr);
 		}
 	}
 	din = dataconn("r");
-	if (din == (int)NULL)
+	if (!din)
 		goto abort;
 	if (strcmp(local, "-") == 0)
 		fout = stdout;
@@ -1271,7 +1271,7 @@ int dataconn(const char *mode)
 	if (s < 0) {
 		perror("ftp: accept");
 		(void) closesocket(data), data = -1;
-		return (int) (NULL);
+		return 0;
 	}
 	if(closesocket(data)) {
 		int iret=WSAGetLastError ();

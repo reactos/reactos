@@ -15,4 +15,4 @@
 
 /* Macro for calling "rundll32.exe"
    According to MSDN, ShellExecute returns a value greater than 32 if the operation was successful. */
-#define RUNDLL(param)   ((int)ShellExecute(NULL, _T("open"), _T("rundll32.exe"), (param), NULL, SW_SHOWDEFAULT) > 32)
+#define RUNDLL(param)   ((INT_PTR)ShellExecute(NULL, _T("open"), _T("rundll32.exe"), (param), NULL, SW_SHOWDEFAULT) > 32)

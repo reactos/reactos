@@ -9,7 +9,7 @@
 
 #include "precomp.h"
 
-BOOL CALLBACK
+INT_PTR CALLBACK
 AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND  hLicenseEditWnd;

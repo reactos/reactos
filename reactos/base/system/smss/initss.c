@@ -41,8 +41,8 @@ NTSTATUS NTAPI SmRegisterInternalSubsystem (LPWSTR PgmName,
 
 	RtlZeroMemory (& ProcessInfo, sizeof ProcessInfo);
 	ProcessInfo.Size = sizeof ProcessInfo;
-	ProcessInfo.ProcessHandle = (HANDLE) SmSsProcessId;
-	ProcessInfo.ClientId.UniqueProcess = (HANDLE) SmSsProcessId;
+	ProcessInfo.ProcessHandle = (HANDLE) UlongToPtr(SmSsProcessId);
+	ProcessInfo.ClientId.UniqueProcess = (HANDLE) UlongToPtr(SmSsProcessId);
 	DPRINT("SM: %s: ProcessInfo.ProcessHandle=%p\n",
 		__FUNCTION__,ProcessInfo.ProcessHandle);
 	Status = SmCreateClient (& ProcessInfo, PgmName);

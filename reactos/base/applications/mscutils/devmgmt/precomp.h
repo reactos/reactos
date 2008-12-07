@@ -34,7 +34,7 @@ typedef struct _MAIN_WND_INFO
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
 
-BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 
 /* devmgmt.c */

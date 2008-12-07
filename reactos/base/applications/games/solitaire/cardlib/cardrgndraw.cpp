@@ -298,7 +298,7 @@ void CardRegion::Render(HDC hdc)
             else
                 fDrawTips = TRUE;
 
-            if(yoffset != 0 && abs(xoffset) == 1 ||    xoffset != 0 && abs(yoffset) == 1)
+            if((yoffset != 0 && abs(xoffset) == 1) || (xoffset != 0 && abs(yoffset) == 1))
                 fDrawTips = TRUE;
 
             //draw horizontal strips

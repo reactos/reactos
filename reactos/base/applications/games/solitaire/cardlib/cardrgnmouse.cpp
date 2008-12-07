@@ -626,7 +626,7 @@ void CardRegion::ZoomCard(HDC hdc, int xpos, int ypos, CardRegion *pDestStack)
 
         MoveDragCardTo(hdc, ix, iy);
 
-        if(attarget || ix == idestx && iy == idesty)
+        if(attarget || (ix == idestx && iy == idesty))
             break;
 
         oldx = (int)x;

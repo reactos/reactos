@@ -49,11 +49,6 @@
 #define	STRU_R		2
 #define	STRU_P		3
 
-#define SIGQUIT 1
-#define SIGPIPE 2
-#define SIGALRM 3
-
-
 #define	FORM_N		1
 #define	FORM_T		2
 #define	FORM_C		3

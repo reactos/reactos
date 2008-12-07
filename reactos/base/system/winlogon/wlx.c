@@ -23,7 +23,7 @@ static UINT_PTR IdTimer;
 
 /* FUNCTIONS ****************************************************************/
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 DefaultWlxWindowProc(
 	IN HWND hwndDlg,
 	IN UINT uMsg,

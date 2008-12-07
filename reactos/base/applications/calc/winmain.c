@@ -804,7 +804,7 @@ static char *ReadConversion(const char *formula)
     return str;
 }
 
-static LRESULT CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     TCHAR buffer[SIZEOF(calc.buffer)];
     DWORD n;
@@ -1179,7 +1179,7 @@ static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
     return 1L;
 }
 
-static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     unsigned int x;
     RECT         rc;

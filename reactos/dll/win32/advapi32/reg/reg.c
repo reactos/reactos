@@ -403,7 +403,7 @@ RegCloseKey(HKEY hKey)
     NTSTATUS Status;
 
     /* don't close null handle or a pseudo handle */
-    if ((!hKey) || (((ULONG)hKey & 0xF0000000) == 0x80000000))
+    if ((!hKey) || (((ULONG_PTR)hKey & 0xF0000000) == 0x80000000))
     {
         return ERROR_INVALID_HANDLE;
     }
@@ -1031,7 +1031,7 @@ RegCreateKeyExA(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
-    TRACE("ParentKey %x\n", (ULONG)ParentKey);
+    TRACE("ParentKey %p\n", ParentKey);
 
     if (lpClass != NULL)
     {
@@ -1105,7 +1105,7 @@ RegCreateKeyExW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
-    TRACE("ParentKey %x\n", (ULONG)ParentKey);
+    TRACE("ParentKey %p\n", ParentKey);
 
     RtlInitUnicodeString(&ClassString,
                          lpClass);

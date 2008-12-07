@@ -88,7 +88,7 @@ static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
 
 void PerfDataRefresh(void)
 {
-    SIZE_T                                    ulSize;
+    ULONG                                      ulSize;
     NTSTATUS                                   status;
     LPBYTE                                     pBuffer;
     ULONG                                      BufferSize;
@@ -393,7 +393,7 @@ int PerfGetIndexByProcessId(DWORD dwProcessId)
 
     for (Index = 0; Index < ProcessCount; Index++)
     {
-        if ((DWORD)pPerfData[Index].ProcessId == dwProcessId)
+        if (PtrToUlong(pPerfData[Index].ProcessId) == dwProcessId)
         {
             FoundIndex = Index;
             break;
@@ -412,7 +412,7 @@ ULONG PerfDataGetProcessId(ULONG Index)
     EnterCriticalSection(&PerfDataCriticalSection);
 
     if (Index < ProcessCount)
-        ProcessId = (ULONG)pPerfData[Index].ProcessId;
+        ProcessId = PtrToUlong(pPerfData[Index].ProcessId);
     else
         ProcessId = 0;
 

@@ -505,7 +505,7 @@ HandleLogoff(
 	return STATUS_SUCCESS;
 }
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 ShutdownComputerWindowProc(
 	IN HWND hwndDlg,
 	IN UINT uMsg,

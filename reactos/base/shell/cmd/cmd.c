@@ -307,10 +307,10 @@ static BOOL RunFile(LPTSTR filename)
 
 	ret = (hShExt)(NULL, _T("open"), filename, NULL, NULL, SW_SHOWNORMAL);
 
-	TRACE ("RunFile: ShellExecuteA/W returned %d\n", (DWORD)ret);
+	TRACE ("RunFile: ShellExecuteA/W returned 0x%p\n", ret);
 
 	FreeLibrary(hShell32);
-	return (((DWORD)ret) > 32);
+	return (((DWORD_PTR)ret) > 32);
 }
 
 

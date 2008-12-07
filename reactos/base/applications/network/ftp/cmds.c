@@ -416,7 +416,7 @@ void mput(argc, argv)
 					if (!*tp) {
 						tp = cp;
 						tp2 = tmpbuf;
-						while ((*tp2 = *tp) != (int) NULL) {
+						while ((*tp2 = *tp)) {
 						     if (isupper(*tp2)) {
 						        *tp2 = 'a' + *tp2 - 'A';
 						     }
@@ -573,7 +573,7 @@ usage:
 		if (!*tp) {
 			tp = argv[2];
 			tp2 = tmpbuf;
-			while ((*tp2 = *tp) != (int) NULL) {
+			while ((*tp2 = *tp)) {
 				if (isupper(*tp2)) {
 					*tp2 = 'a' + *tp2 - 'A';
 				}
@@ -715,7 +715,7 @@ void mget(argc, argv)
 				if (!*tp) {
 					tp = cp;
 					tp2 = tmpbuf;
-					while ((*tp2 = *tp) != (int) NULL) {
+					while ((*tp2 = *tp)) {
 						if (isupper(*tp2)) {
 							*tp2 = 'a' + *tp2 - 'A';
 						}
@@ -1686,7 +1686,7 @@ void disconnect()
 	if (!connected)
 		return;
 	(void) command("QUIT");
-	cout = (int) NULL;
+	cout = 0;
 	connected = 0;
 	data = -1;
 	if (!proxy) {

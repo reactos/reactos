@@ -435,7 +435,7 @@ SmCreateClient (PRTL_USER_PROCESS_INFORMATION ProcessInfo, PWSTR ProgramName)
 			SmpClientDirectory.CandidateClient->ServerProcess =
 				(HANDLE) ProcessInfo->ProcessHandle;
 			SmpClientDirectory.CandidateClient->ServerProcessId =
-				(ULONG) ProcessInfo->ClientId.UniqueProcess;
+				(DWORD_PTR) ProcessInfo->ClientId.UniqueProcess;
 			/*
 			 * Copy the program name
 			 */

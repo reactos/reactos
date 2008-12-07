@@ -504,7 +504,7 @@ done:
   }
 
 cleanup:
-  hThread = (HANDLE)InterlockedExchange((LONG*)&hInstallationThread, 0);
+  hThread = InterlockedExchangePointer((PVOID*)&hInstallationThread, 0);
   if(hThread != NULL)
   {
     CloseHandle(hThread);

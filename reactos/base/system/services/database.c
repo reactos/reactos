@@ -117,13 +117,13 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
 
 
 PSERVICE
-ScmGetServiceEntryByClientHandle(ULONG Handle)
+ScmGetServiceEntryByClientHandle(HANDLE Handle)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
 
     DPRINT("ScmGetServiceEntryByClientHandle() called\n");
-    DPRINT("looking for %lu\n", Handle);
+    DPRINT("looking for %p\n", Handle);
 
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)

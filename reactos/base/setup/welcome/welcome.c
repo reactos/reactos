@@ -179,7 +179,7 @@ _tWinMain(HINSTANCE hInst,
   rcRightPanel.left = rcLeftPanel.right;
   rcRightPanel.right = ulInnerWidth - 1;
 
-  if (!LoadString(hInstance, (UINT)MAKEINTRESOURCE(IDS_APPTITLE), szAppTitle, 80))
+  if (!LoadString(hInstance, (UINT_PTR)MAKEINTRESOURCE(IDS_APPTITLE), szAppTitle, 80))
     _tcscpy(szAppTitle, TEXT("ReactOS Welcome"));
 
   /* Create main window */
@@ -386,7 +386,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 					    rcLeftPanel.right - rcLeftPanel.left,
 					    dwHeight,
 					    hWnd,
-					    (HMENU)i,
+					    (HMENU)IntToPtr(i),
 					    hInstance,
 					    NULL);
 	  hwndDefaultTopic = hwndTopicButton[i];

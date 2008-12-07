@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-<module name="regedit" type="win32gui" installname="regedit.exe">
+<module name="regedit" type="win32gui" installname="regedit.exe" allowwarnings="true">
 	<include base="regedit">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
@@ -10,7 +10,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>comdlg32</library>
 	<library>ole32</library>
 	<library>shell32</library>
 	<library>comctl32</library>

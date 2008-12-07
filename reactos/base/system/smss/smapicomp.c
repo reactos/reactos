@@ -24,7 +24,7 @@ SMAPI(SmCompSes)
 
 	DPRINT("SM: %s: ClientId.UniqueProcess=%p\n",
 		__FUNCTION__, Request->Header.ClientId.UniqueProcess);
-	Status = SmCompleteClientInitialization ((ULONG) Request->Header.ClientId.UniqueProcess);
+	Status = SmCompleteClientInitialization (PtrToUlong(Request->Header.ClientId.UniqueProcess));
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT1("SM: %s: SmCompleteClientInitialization failed (Status=0x%08lx)\n",

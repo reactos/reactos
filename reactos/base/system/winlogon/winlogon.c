@@ -185,7 +185,7 @@ RemoveStatusMessage(
 	return Session->Gina.Functions.WlxRemoveStatusMessage(Session->Gina.Context);
 }
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 GinaLoadFailedWindowProc(
 	IN HWND hwndDlg,
 	IN UINT uMsg,

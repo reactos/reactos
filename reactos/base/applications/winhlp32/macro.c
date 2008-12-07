@@ -848,7 +848,7 @@ void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR args)
             dll->class = dll->handler ? (dll->handler)(DW_WHATMSG, 0, 0) : DC_NOMSG;
             WINE_TRACE("Got class %x for DLL %s\n", dll->class, dll_name);
             if (dll->class & DC_INITTERM) dll->handler(DW_INIT, 0, 0);
-            if (dll->class & DC_CALLBACKS) dll->handler(DW_CALLBACKS, (DWORD)Callbacks, 0);
+            if (dll->class & DC_CALLBACKS) dll->handler(DW_CALLBACKS, (DWORD_PTR)Callbacks, 0);
         }
         else WINE_WARN("OOM\n");
     }

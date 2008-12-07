@@ -699,7 +699,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     INFCONTEXT Context;
     PWCHAR Value;
     UINT ErrorLine;
-    SIZE_T ReturnSize;
+    ULONG ReturnSize;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
