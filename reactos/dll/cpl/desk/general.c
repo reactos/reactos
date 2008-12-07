@@ -70,31 +70,33 @@ static VOID
 InitRadioButtons(HWND hWnd)
 {
     HKEY hKey;
-	
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\Display"),
-	                 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-	{
-		TCHAR szBuf[64];
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+                     _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Controls Folder\\Display"),
+                     0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        TCHAR szBuf[64];
         DWORD dwSize = 64;
 
         if (RegQueryValueEx(hKey, _T("DynaSettingsChange"), 0, NULL,
-                            (LPBYTE)szBuf, &dwSize) == ERROR_SUCCESS);
-
-		switch (_ttoi(szBuf))
-		{
-			case 0:
-				SendDlgItemMessage(hWnd, IDC_RESTART_RB, BM_SETCHECK, 1, 1);
-			break;
-			case 1:
-				SendDlgItemMessage(hWnd, IDC_WITHOUTREBOOT_RB, BM_SETCHECK, 1, 1);
-			break;
-			case 3:
-				SendDlgItemMessage(hWnd, IDC_ASKME_RB, BM_SETCHECK, 1, 1);
-			break;
-		}
+                            (LPBYTE)szBuf, &dwSize) == ERROR_SUCCESS)
+        {
+            switch (_ttoi(szBuf))
+            {
+                case 0:
+                    SendDlgItemMessage(hWnd, IDC_RESTART_RB, BM_SETCHECK, 1, 1);
+                    break;
+                case 1:
+                    SendDlgItemMessage(hWnd, IDC_WITHOUTREBOOT_RB, BM_SETCHECK, 1, 1);
+                    break;
+                case 3:
+                    SendDlgItemMessage(hWnd, IDC_ASKME_RB, BM_SETCHECK, 1, 1);
+                    break;
+            }
+        }
 
         RegCloseKey(hKey);
-	}
+    }
 }
 
 INT_PTR CALLBACK
@@ -115,7 +117,7 @@ AdvGeneralPageProc(HWND hwndDlg,
             DispDevice = (PDISPLAY_DEVICE_ENTRY)(((LPPROPSHEETPAGE)lParam)->lParam);
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)DispDevice);
 
-			InitFontSizeList(hwndDlg);
+            InitFontSizeList(hwndDlg);
             InitRadioButtons(hwndDlg);
 
             Ret = TRUE;
