@@ -74,8 +74,8 @@ _RtlCaptureContext:
     /* Store return address */
     mov [rcx + CONTEXT_Rip], rax
 
-    /* Safe mmx registers */
-/*    movdqa [rcx + CONTEXT_Xmm0], xmm0
+    /* Safe xmm registers */
+    movdqa [rcx + CONTEXT_Xmm0], xmm0
     movdqa [rcx + CONTEXT_Xmm1], xmm1
     movdqa [rcx + CONTEXT_Xmm2], xmm2
     movdqa [rcx + CONTEXT_Xmm3], xmm3
@@ -91,7 +91,7 @@ _RtlCaptureContext:
     movdqa [rcx + CONTEXT_Xmm13], xmm13
     movdqa [rcx + CONTEXT_Xmm14], xmm14
     movdqa [rcx + CONTEXT_Xmm15], xmm15
-*/
+
     /* Cleanup stack and return */
     add rsp, 8
     ret
