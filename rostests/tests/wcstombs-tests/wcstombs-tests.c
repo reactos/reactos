@@ -6,6 +6,8 @@
  * COPYRIGHT:  Copyright 2008 Colin Finck <colin@reactos.org>
  */
 
+#define WINVER 0x0500 /* WC_NO_BEST_FIT_CHARS */
+
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -200,39 +202,39 @@ void Win32_Tests(LPBOOL bUsedDefaultChar)
     puts("Win32-Tests");
     puts("-----------");
 
-    ret = WideCharToMultiByte(1252, 0, &wc1, 1, &mbc, 1, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, &wc1, 1, &mbc, 1, NULL, bUsedDefaultChar);
     OK(ret == 1, "ret is %d", ret);
     OK(mbc == -28, "mbc is %d", mbc);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
-    ret = WideCharToMultiByte(1252, 0, &wc2, 1, &mbc, 1, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, &wc2, 1, &mbc, 1, NULL, bUsedDefaultChar);
     OK(ret == 1, "ret is %d", ret);
     OK(mbc == 63, "mbc is %d", mbc);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
-    ret = WideCharToMultiByte(1251, 0, &wc2, 1, &mbc, 1, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1251, WC_NO_BEST_FIT_CHARS, &wc2, 1, &mbc, 1, NULL, bUsedDefaultChar);
     OK(ret == 1, "ret is %d", ret);
     OK(mbc == -16, "mbc is %d", mbc);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
-    ret = WideCharToMultiByte(1251, 0, &wc1, 1, &mbc, 1, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1251, WC_NO_BEST_FIT_CHARS, &wc1, 1, &mbc, 1, NULL, bUsedDefaultChar);
     OK(ret == 1, "ret is %d", ret);
     OK(mbc == 97, "mbc is %d", mbc);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
     /* This call triggers the last Win32 error */
-    ret = WideCharToMultiByte(1252, 0, wcs, -1, &mbc, 1, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, wcs, -1, &mbc, 1, NULL, bUsedDefaultChar);
     OK(ret == 0, "ret is %d", ret);
     OK(mbc == 84, "mbc is %d", mbc);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetLastError() is %lu", GetLastError());
     SetLastError(0xdeadbeef);
 
-    ret = WideCharToMultiByte(1252, 0, wcs, -1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, wcs, -1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 5, "ret is %d", ret);
     OK(!strcmp(mbs, "Th?i"), "mbs is %s", mbs);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
@@ -241,7 +243,7 @@ void Win32_Tests(LPBOOL bUsedDefaultChar)
 
     /* WideCharToMultiByte mustn't add any null character automatically.
        So in this case, we should get the same string again, even if we only copied the first three bytes. */
-    ret = WideCharToMultiByte(1252, 0, wcs, 3, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, wcs, 3, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 3, "ret is %d", ret);
     OK(!strcmp(mbs, "Th?i"), "mbs is %s", mbs);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
@@ -249,71 +251,71 @@ void Win32_Tests(LPBOOL bUsedDefaultChar)
     ZeroMemory(mbs, 5);
 
     /* Now this shouldn't be the case like above as we zeroed the complete string buffer. */
-    ret = WideCharToMultiByte(1252, 0, wcs, 3, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, wcs, 3, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 3, "ret is %d", ret);
     OK(!strcmp(mbs, "Th?"), "mbs is %s", mbs);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
     /* Double-byte tests */
-    ret = WideCharToMultiByte(950, 0, dbwcs, -1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(950, WC_NO_BEST_FIT_CHARS, dbwcs, -1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 5, "ret is %d", ret);
     OK(!strcmp(mbs, "µH©Ò"), "mbs is %s", mbs);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
-    ret = WideCharToMultiByte(950, 0, dbwcs, 1, &mbc, 1, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(950, WC_NO_BEST_FIT_CHARS, dbwcs, 1, &mbc, 1, NULL, bUsedDefaultChar);
     OK(ret == 0, "ret is %d", ret);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar == FALSE");
     OK(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetLastError() is %lu", GetLastError());
     SetLastError(0xdeadbeef);
     ZeroMemory(mbs, 5);
 
-    ret = WideCharToMultiByte(950, 0, dbwcs, 1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(950, WC_NO_BEST_FIT_CHARS, dbwcs, 1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 2, "ret is %d", ret);
     OK(!strcmp(mbs, "µH"), "mbs is %s", mbs);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
     /* Length-only tests */
-    ret = WideCharToMultiByte(1252, 0, &wc2, 1, NULL, 0, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, &wc2, 1, NULL, 0, NULL, bUsedDefaultChar);
     OK(ret == 1, "ret is %d", ret);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
-    ret = WideCharToMultiByte(1252, 0, wcs, -1, NULL, 0, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, wcs, -1, NULL, 0, NULL, bUsedDefaultChar);
     OK(ret == 5, "ret is %d", ret);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
-    ret = WideCharToMultiByte(950, 0, dbwcs, 1, NULL, 0, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(950, WC_NO_BEST_FIT_CHARS, dbwcs, 1, NULL, 0, NULL, bUsedDefaultChar);
     OK(ret == 2, "ret is %d", ret);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
-    ret = WideCharToMultiByte(950, 0, dbwcs, -1, NULL, 0, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(950, WC_NO_BEST_FIT_CHARS, dbwcs, -1, NULL, 0, NULL, bUsedDefaultChar);
     OK(ret == 5, "ret is %d", ret);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
     /* Abnormal uses of WideCharToMultiByte */
-    ret = WideCharToMultiByte(1252, 0, NULL, 5, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, NULL, 5, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 0, "ret is %d", ret);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() is %lu", GetLastError());
     SetLastError(0xdeadbeef);
 
-    ret = WideCharToMultiByte(0, 0, dbwcs, 5, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(0, WC_NO_BEST_FIT_CHARS, dbwcs, 5, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 5, "ret is %d", ret);
     OK(!strcmp(mbs, "??"), "mbs is %s", mbs);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
 
-    ret = WideCharToMultiByte(1252, 0, wcs, -1, (LPSTR)wcs, 5, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, wcs, -1, (LPSTR)wcs, 5, NULL, bUsedDefaultChar);
     OK(ret == 0, "ret is %d", ret);
     OK(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() is %lu", GetLastError());
     SetLastError(0xdeadbeef);
 
-    ret = WideCharToMultiByte(1252, 0, wcs, -1, mbs, -1, NULL, bUsedDefaultChar);
+    ret = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, wcs, -1, mbs, -1, NULL, bUsedDefaultChar);
     OK(ret == 0, "ret is %d", ret);
     OK(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() is %lu", GetLastError());
     SetLastError(0xdeadbeef);
