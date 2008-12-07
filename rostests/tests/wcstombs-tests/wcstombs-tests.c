@@ -6,8 +6,6 @@
  * COPYRIGHT:  Copyright 2008 Colin Finck <colin@reactos.org>
  */
 
-#define WINVER 0x0500 /* WC_NO_BEST_FIT_CHARS */
-
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
