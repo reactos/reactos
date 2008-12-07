@@ -1018,7 +1018,7 @@ DWORD RSetServiceStatus(
         return ERROR_INVALID_HANDLE;
     }
 
-    lpService = ScmGetServiceEntryByClientHandle(LongToPtr(hServiceStatus));
+    lpService = ScmGetServiceEntryByClientHandle((HANDLE)hServiceStatus);
     if (lpService == NULL)
     {
         DPRINT1("lpService == NULL!\n");
