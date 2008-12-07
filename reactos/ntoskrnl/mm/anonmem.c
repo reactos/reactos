@@ -163,7 +163,7 @@ MmPageOutVirtualMemory(PMM_AVL_TABLE AddressSpace,
 
    if (Page == 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    /*
@@ -301,7 +301,7 @@ MmNotPresentFaultVirtualMemory(PMM_AVL_TABLE AddressSpace,
    if (PageOp == NULL)
    {
       DPRINT1("MmGetPageOp failed");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    /*
@@ -322,12 +322,12 @@ MmNotPresentFaultVirtualMemory(PMM_AVL_TABLE AddressSpace,
       if (Status != STATUS_SUCCESS)
       {
          DPRINT1("Failed to wait for page op\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (PageOp->Status == STATUS_PENDING)
       {
          DPRINT1("Woke for page op before completion\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       /*
       * If this wasn't a pagein then we need to restart the handling
@@ -373,7 +373,7 @@ MmNotPresentFaultVirtualMemory(PMM_AVL_TABLE AddressSpace,
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MmRequestPageMemoryConsumer failed, status = %x\n", Status);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    /*
@@ -387,7 +387,7 @@ MmNotPresentFaultVirtualMemory(PMM_AVL_TABLE AddressSpace,
       Status = MmReadFromSwapPage(SwapEntry, Page);
       if (!NT_SUCCESS(Status))
       {
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmSetSavedSwapEntryPage(Page, SwapEntry);
    }
@@ -414,7 +414,7 @@ MmNotPresentFaultVirtualMemory(PMM_AVL_TABLE AddressSpace,
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
       return(Status);
    }
 
@@ -888,7 +888,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
             if (Status != STATUS_SUCCESS)
             {
                DPRINT1("Failed to wait for page op\n");
-               ASSERT(FALSE);
+               KeBugCheck(MEMORY_MANAGEMENT);
             }
             MmLockAddressSpace(&Process->VadRoot);
             MmReleasePageOp(PageOp);

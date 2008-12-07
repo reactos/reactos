@@ -217,7 +217,7 @@ MmCreateKernelStack(BOOLEAN GuiStack,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create thread stack\n");
-        ASSERT(FALSE);
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
 
     /*
@@ -241,7 +241,7 @@ MmCreateKernelStack(BOOLEAN GuiStack,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not create Virtual Mapping for Kernel Stack\n");
-        ASSERT(FALSE);
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
 
     /* Return the stack base */
@@ -715,7 +715,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
             break;
 
          default:
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
 
