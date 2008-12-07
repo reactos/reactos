@@ -52,7 +52,7 @@ class Security
     if ($thisuser->securityLevel() > 0) {
 
       // go through acl's
-      $stmt=DBConnection::getInstance()->prepare("SELECT a.id, b.can_read, b.can_add, b.can_write, b.can_delete, b.can_publish, b.can_translate FROM ".ROSCMST_ACCESS." a JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id = b.group_id WHERE m.user_id = :user_id");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT a.id, b.can_read, b.can_add, b.can_write, b.can_delete, b.can_publish, b.can_translate FROM ".ROSCMST_ACCESS." a JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id = b.group_id WHERE m.user_id = :user_id");
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
       while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -101,12 +101,12 @@ class Security
 
     // get rights
     if ($is_rev) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE r.id = :rev_id AND m.user_id=:user_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE r.id = :rev_id AND m.user_id=:user_id LIMIT 1");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     }
     else {
-      $stmt=DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE d.id = :data_id AND m.user_id=:user_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE d.id = :data_id AND m.user_id=:user_id LIMIT 1");
       $stmt->bindParam('data_id',$rev_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     }

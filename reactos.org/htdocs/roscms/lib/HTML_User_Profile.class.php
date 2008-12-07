@@ -43,25 +43,25 @@ class HTML_User_Profile extends HTML_User
 
 
   /**
-   *
+   * search process
    *
    * @access private
    */
   protected function body( )
   {
-    global $roscms_intern_page_link;
-
-    if ($this->search) {
+    $config = &RosCMS::getInstance();
+  
+    if ($this->search && empty($_GET['user_id'])) {
 
       if (isset($_GET['search'])) {
-        $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname");
         $stmt->bindValue('nickname','%'.$_GET['search'].'%',PDO::PARAM_STR);
         $stmt->bindValue('fullname','%'.$_GET['search'].'%',PDO::PARAM_STR);
         $stmt->execute();
         $users_found = $stmt->fetchColumn();
 
         if ($users_found == 1) {
-          $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname LIMIT 1");
+          $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname LIMIT 1");
           $stmt->bindValue('nickname','%'.$_GET['search'].'%',PDO::PARAM_STR);
           $stmt->bindValue('fullname','%'.$_GET['search'].'%',PDO::PARAM_STR);
           $stmt->execute();
@@ -74,9 +74,9 @@ class HTML_User_Profile extends HTML_User
       // more than one user was found (or none)
       if ($users_found != 1 && (empty($_GET['user_name']) || !empty($_GET['search']))) {
         echo_strip('
-          <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; Profile Search</h1>
+          <h1><a href="'.$config->pathRosCMS().'?page=my">'.$config->siteName().'</a> &gt; Profile Search</h1>
           <p>Profile Search</p>
-          <form id="form1" method="get" action="'.$roscms_intern_page_link.'search">
+          <form id="form1" method="get" action="'.$config->pathRosCMS().'?page=search">
             <div class="bubble">
               <div class="corner_TL">
                 <div class="corner_TR"></div>
@@ -100,14 +100,14 @@ class HTML_User_Profile extends HTML_User
         if (isset($_GET['search']) && $_GET['search'] != '') {
           echo '<ul>';
 
-          $stmt=DBConnection::getInstance()->prepare("SELECT name, fullname FROM".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname ORDER BY name ASC LIMIT 100");
+          $stmt=&DBConnection::getInstance()->prepare("SELECT name, fullname, id FROM ".ROSCMST_USERS." WHERE name LIKE :nickname OR fullname LIKE :fullname ORDER BY name ASC LIMIT 100");
           $stmt->bindValue('nickname','%'.$_GET['search'].'%',PDO::PARAM_STR);
           $stmt->bindValue('fullname','%'.$_GET['search'].'%',PDO::PARAM_STR);
           $stmt->execute();
 
           while ($search = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            echo '<li><a style="font-weight:bold;" href="'.$roscms_intern_page_link.'search&amp;phrase'.$search['name'].'">'.$search['name'].'</a>';
-            if ($search['user_fullname']) {
+            echo '<li><a style="font-weight:bold;" href="'.$config->pathRosCMS().'?page=search&amp;user_id='.$search['id'].'">'.$search['name'].'</a>';
+            if ($search['fullname']) {
               echo '<br />'.$search['fullname'];
             }
             echo '<br />&nbsp;</li>';
@@ -118,7 +118,7 @@ class HTML_User_Profile extends HTML_User
       }
       else {
         if (empty($user_id) || $user_id === false) {
-          $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
+          $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
           $stmt->bindParam('user_name',rawurldecode(@$_GET['user_name']));
           $stmt->execute();
           $user_id = $stmt->fetchColumn();
@@ -128,8 +128,14 @@ class HTML_User_Profile extends HTML_User
         $this->profile($user_id);
       }
     }
+
+    // foreign profile
+    elseif (isset($_GET['user_id']) && $_GET['user_id'] > 0) {
+      $this->profile($_GET['user_id']);
+    }
+
+    // own profile
     else {
-      // own profile
       $this->profile(ThisUser::getInstance()->id());
     }
   }
@@ -141,13 +147,9 @@ class HTML_User_Profile extends HTML_User
    */
   private function profile( $user_id )
   {
-    global $roscms_intern_page_link;
-    global $roscms_intern_webserver_pages;
-    global $rdf_name;
-
     $thisuser = &ThisUser::getInstance();
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.created, u.fullname, u.email, u.activation, u.homepage, c.name AS country, CONCAT(t.name,' (', t.difference,')') AS timezone, l.name AS language, u.occupation FROM ".ROSCMST_USERS." u LEFT JOIN ".ROSCMST_COUNTRIES." c ON u.country_id=c.id LEFT JOIN ".ROSCMST_TIMEZONES." t ON t.id=u.timezone_id LEFT JOIN ".ROSCMST_LANGUAGES." l ON l.id=u.lang_id WHERE u.id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.created, u.fullname, u.email, u.activation, u.homepage, c.name AS country, CONCAT(t.name,' (', t.difference,')') AS timezone, l.name AS language, u.occupation FROM ".ROSCMST_USERS." u LEFT JOIN ".ROSCMST_COUNTRIES." c ON u.country_id=c.id LEFT JOIN ".ROSCMST_TIMEZONES." t ON t.id=u.timezone_id LEFT JOIN ".ROSCMST_LANGUAGES." l ON l.id=u.lang_id WHERE u.id = :user_id LIMIT 1");
     $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
     $stmt->execute();
     $profile = $stmt->fetchOnce();
@@ -160,14 +162,14 @@ class HTML_User_Profile extends HTML_User
 
     // begin output
     echo_strip('
-      <h1>myReactOS Profile</h1>
-      <p>A person who joined '.$rdf_name.' on '.Date::getLocal($profile['created']).'.</p>
+      <h1>'.$config->siteName().' Profile</h1>
+      <p>A person who joined '.$config->siteName().' on '.Date::getLocal($profile['created']).'.</p>
 
       <div class="bubble">
         <div class="corner_TL">
           <div class="corner_TR"></div>
         </div>
-        <h2>myReactOS Profile</h2>
+        <h2>'.$config->siteName().' Profile</h2>
 
         <div class="field">
           <div class="key">Username</div>
@@ -233,7 +235,7 @@ class HTML_User_Profile extends HTML_User
         <div class="field">
           <div class="key">User Groups</div>
             <ul class="value">');
-      $stmt=DBConnection::getInstance()->prepare("SELECT g.name FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE m.user_id = :user_id ORDER BY g.name ASC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT g.name FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE m.user_id = :user_id ORDER BY g.name ASC");
       $stmt->bindparam('user_id',$profile['id'],PDO::PARAM_INT);
       $stmt->execute();
       while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -248,17 +250,17 @@ class HTML_User_Profile extends HTML_User
     // Location
     echo_Strip('
         <div class="field">
-          <a href="'.$roscms_intern_webserver_pages.'peoplemap/">'.($profile['id']==$thisuser->id() ? 'My ' : '').'Location on the Map</a>
+          <a href="'.$config->pathGenerated().'peoplemap/">'.($profile['id']==$thisuser->id() ? 'My ' : '').'Location on the Map</a>
         </div>');
 
     // show edit or search link (depending if the current user is searched user)
     if ($profile['id'] == $thisuser->id()) {
-      echo '<div class="u-link"><a href="'.$roscms_intern_page_link.'my&amp;subpage=edit">Edit My Profile</a></div>';
+      echo '<div class="u-link"><a href="'.$config->pathRosCMS().'?page=my&amp;subpage=edit">Edit My Profile</a></div>';
     }
     else {
       echo_strip('
           <div class="u-link">
-            <a href="'.$roscms_intern_page_link.'search">raquo; Profile Search</a>
+            <a href="'.$config->pathRosCMS().'?page=search">raquo; Profile Search</a>
           </div>');
     }
       echo_strip('

@@ -69,21 +69,17 @@ abstract class HTML
    */
   protected function header( )
   {
-    global $roscms_intern_webserver_pages;
-    global $roscms_intern_webserver_roscms;
-    global $roscms_langres;
-
     // output header
     echo_strip( '
       <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-      <html lang="'.$roscms_langres['lang_code'].'">
+      <html lang="en">
       <head>
         <title>ReactOS '.(($this->title!=='') ? '- '.$this->title : '').'</title>
-        <meta http-equiv="Content-Type" content="text/html; charset='.$roscms_langres['charset'].'" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta http-equiv="Pragma" content="no-cache" />
         <meta name="Copyright" content="ReactOS Foundation" />
         <meta name="generator" content="RosCMS" />
-        <meta name="Content-language" content="'.$roscms_langres['lang_code'].'" />
+        <meta name="Content-language" content="en" />
         <meta name="Robots" content="noindex,nofollow" />
         <meta http-equiv="Content-Script-Type" content="text/javascript" />
         <meta http-equiv="Content-Style-Type" content="text/css" />
@@ -92,14 +88,14 @@ abstract class HTML
     // link css & js files (use register_* methods)
     foreach($this->css_files as $file) {
       if ($file['condition'] === false) {
-        echo '<link href="'.$roscms_intern_webserver_roscms.'css/'.$file['name'].'" type="text/css" rel="stylesheet" />';
+        echo '<link href="'.RosCMS::getInstance()->pathRosCMS().'css/'.$file['name'].'" type="text/css" rel="stylesheet" />';
       }
       else {
-        echo '<!--[if '.$file['condition'].']<link href="'.$roscms_intern_webserver_roscms.'css/'.$file['name'].'" type="text/css" rel="stylesheet" /><![endif]-->';
+        echo '<!--[if '.$file['condition'].']<link href="'.RosCMS::getInstance()->pathRosCMS().'css/'.$file['name'].'" type="text/css" rel="stylesheet" /><![endif]-->';
       }
     }
     foreach($this->js_files as $file) {
-      echo '<script src="'.$roscms_intern_webserver_roscms.'js/'.$file.'" type="text/javascript"></script>';
+      echo '<script src="'.RosCMS::getInstance()->pathRosCMS().'js/'.$file.'" type="text/javascript"></script>';
     }
 
     echo_strip('
@@ -107,11 +103,11 @@ abstract class HTML
       <body>
       <div id="top">
         <div id="topMenu"> 
-          <a href="'.$roscms_intern_webserver_pages.'?page=index">'.$roscms_langres['Home'].'</a> <span>|</span>
-          <a href="'.$roscms_intern_webserver_pages.'?page=about">'.$roscms_langres['Info'].'</a> <span>|</span>
-          <a href="'.$roscms_intern_webserver_pages.'?page=community">'.$roscms_langres['Community'].'</a> <span>|</span>
-          <a href="'.$roscms_intern_webserver_pages.'?page=dev">'.$roscms_langres['Dev'].'</a> <span>|</span>
-          <a href="'.$roscms_intern_webserver_roscms.'?page=user">'.$roscms_langres['myReactOS'].'</a>
+          <a href="'.RosCMS::getInstance()->pathGenerated().'?page=index">Home</a> <span>|</span>
+          <a href="'.RosCMS::getInstance()->pathGenerated().'?page=about">Info</a> <span>|</span>
+          <a href="'.RosCMS::getInstance()->pathGenerated().'?page=community">Community</a> <span>|</span>
+          <a href="'.RosCMS::getInstance()->pathGenerated().'?page=dev">Developement</a> <span>|</span>
+          <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=user">myRosCMS</a>
         </div>
       </div>');
   } // end of member function header
@@ -124,8 +120,6 @@ abstract class HTML
    */
   protected function footer( )
   {
-    global $roscms_extern_brand, $roscms_extern_version_detail;
-
     // This page was generated in ...
     $gentime = explode(' ',microtime()); 
     $page_end = $gentime[1] + $gentime[0]; 
@@ -135,7 +129,7 @@ abstract class HTML
     echo_strip('
       <hr />
       <div id="footer" style="text-align:center;">
-        '.$roscms_extern_brand.' '.$roscms_extern_version_detail.' - (c) 2005-2007 Klemens Friedl<br />
+        '.RosCMS::getInstance()->systemBrand().' - (c) 2005-2008 Klemens Friedl, Danny G&ouml;tte<br />
         <br />
         Page generated in '.$page_time.' seconds
       </div>

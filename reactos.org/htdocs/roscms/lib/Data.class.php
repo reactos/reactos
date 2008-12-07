@@ -35,7 +35,7 @@ class Data
    */
   public static function getContent( $data_name, $data_type, $lang_id, $content_name, $content_type = 'stext', $mode = '' )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.name = :name AND d.type = :type AND r.lang_id = :lang AND r.archive = :archive AND r.version > 0 ORDER BY r.version DESC LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.name = :name AND d.type = :type AND r.lang_id = :lang AND r.archive = :archive AND r.version > 0 ORDER BY r.version DESC LIMIT 1");
     $stmt->bindParam('name',$data_name,PDO::PARAM_STR);
     $stmt->bindParam('type',$data_type,PDO::PARAM_STR);
     $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
@@ -70,7 +70,7 @@ class Data
    */
   public static function getSText( $rev_id, $name )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = :name LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = :name LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->bindParam('name',$name,PDO::PARAM_STR);
     $stmt->execute();
@@ -86,7 +86,7 @@ class Data
    */
   public static function getText( $rev_id, $name )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id AND name = :name LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id AND name = :name LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->bindParam('name',$name,PDO::PARAM_STR);
     $stmt->execute();
@@ -103,7 +103,7 @@ class Data
   public static function updateRevision( $rev_id, $lang_id, $version, $user_name, $date, $time )
   {
     // get current state, so that we only update changed information
-    $stmt=DBConnection::getInstance()->prepare("SELECT data_id, lang_id, version, user_id, datetime FROM ".ROSCMST_REVISIONS." WHERE rev_id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT data_id, lang_id, version, user_id, datetime FROM ".ROSCMST_REVISIONS." WHERE rev_id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
     $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -112,13 +112,13 @@ class Data
     if ($lang_id > 0 && $lang_id != $revision['lang_id']) {
 
       // check if the choosen language do exist
-      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
       $stmt->execute();
 
       // update with new language
       if ($stmt->fetchColumn() !== false) {
-        $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET lang_id = :lang WHERE id = :rev_id LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET lang_id = :lang WHERE id = :rev_id LIMIT 1");
         $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
         $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
         $stmt->execute();
@@ -130,7 +130,7 @@ class Data
     if ($version != '' && $version != $revision['version']) {
 
       // check for existing revisons with same number
-      $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_REVISIONS." WHERE version = :version AND data_id = :data_id AND lang_id = :lang");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_REVISIONS." WHERE version = :version AND data_id = :data_id AND lang_id = :lang");
       $stmt->bindParam('version',$version,PDO::PARAM_INT);
       $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
@@ -139,7 +139,7 @@ class Data
 
       // update with new version
       if ($stmt->fetchColumn() <= 0) {
-        $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET version = :version WHERE rev_id = :rev_id LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET version = :version WHERE rev_id = :rev_id LIMIT 1");
         $stmt->bindParam('version',$version,PDO::PARAM_INT);
         $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
         $stmt->execute();
@@ -151,13 +151,13 @@ class Data
     if ($user_name != '') {
 
       // check for existing user-name
-      $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
       $stmt->bindParam('user_name',$user_name,PDO::PARAM_STR);
       $stmt->execute();
       $user_id = $stmt->fetchColumn();
 
       if ($user_id > 0 && $user_id != $revision['user_id']) {
-        $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET user_id = :user_id WHERE id = :rev_id LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET user_id = :user_id WHERE id = :rev_id LIMIT 1");
         $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
         $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
         $stmt->execute();
@@ -169,7 +169,7 @@ class Data
     if (preg_match('/^([12][0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/', $date,$date_matches) && checkdate($date_matches[2], $date_matches[3], $date_matches[1]) && preg_match('/^([01][0-9]|2[0-3])(:[0-5][0-9]){2}$/',$time) && ($revision['datetime'] != $date.' '.$time) ) {
 
       //
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET datetime = :datetime WHERE id = :rev_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET datetime = :datetime WHERE id = :rev_id LIMIT 1");
       $stmt->bindValue('datetime',$date." ".$time,PDO::PARAM_STR);
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->execute();
@@ -191,7 +191,7 @@ class Data
       return;
     }
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT d.name, d.type, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE r.id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, d.type, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE r.id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
     $page = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -203,14 +203,14 @@ class Data
 
     //if data_type is page -> delete file in all languages
     if ($page['type'] == 'page'){
-      $stmt=DBConnection::getInstance()->prepare("SELECT lang_id FROM ".ROSCMST_LANGUAGES);
+      $stmt=&DBConnection::getInstance()->prepare("SELECT lang_id FROM ".ROSCMST_LANGUAGES);
     }
 
     //if data_type is content (only for dynamic) -> delete only selected one
     elseif ($page['type'] == ''){
       $dynamic_num = Tag::getValueByUser($page['id'],'number',-1);
       if ($dynamic_num > 0) {
-        $stmt=DBConnection::getInstance()->prepare("SELECT name_short FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT name_short FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id LIMIT 1");
         $stmt->bindParam('lang_id',$page['lang_id'],PDO::PARAM_INT);
       }
       // entry is not dynamic
@@ -251,18 +251,18 @@ class Data
     Log::writeMedium("delete entry: rev-id [rev-id: ".$rev_id."] {deleteRevision}");
 
     // delete revision and texts
-    $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
-    $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id");
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
-    $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id");
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
 
     // as we have a result set, we no longer need the tags
-    $stmt_delete=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id LIMIT 1");
+    $stmt_delete=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id LIMIT 1");
     $stmt_delete->bindParam('rev_id',$rev_id);
     $stmt_delete->execute();
   } // end of member function getCookieDomain
@@ -283,21 +283,20 @@ class Data
 
     // prepare for usage in foreach loop
       // check
-      $stmt_check=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = :name LIMIT 1");
+      $stmt_check=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = :name LIMIT 1");
       $stmt_check->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       // delete
-      $stmt_delete=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = :name"); 
+      $stmt_delete=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = :name"); 
       $stmt_delete->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       // add
-      $stmt_insert=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL , :rev_id, :name, '' )");
+      $stmt_insert=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL , :rev_id, :name, '' )");
       $stmt_insert->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       // update
-      $stmt_update=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_STEXT." SET name = :name_new WHERE rev_id = :rev_id AND name = :name");
+      $stmt_update=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_STEXT." SET name = :name_new WHERE rev_id = :rev_id AND name = :name");
       $stmt_update->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
 
     // Short Text Fields
     $entries = explode('|', $stext);
-    var_dump($stext);
     foreach ($entries as $entry) {
       $entry_parts = explode('=', $entry);
 
@@ -337,21 +336,20 @@ class Data
 
     // prepare for usage in foreach loop
       // check
-      $stmt_check=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id AND name = :name LIMIT 1"); 
+      $stmt_check=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id AND name = :name LIMIT 1"); 
       $stmt_check->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       // add
-      $stmt_insert=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES ( NULL , :rev_id, :name, '' )");
+      $stmt_insert=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES ( NULL , :rev_id, :name, '' )");
       $stmt_insert->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       // update
-      $stmt_update=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TEXT." SET name = :name_new WHERE rev_id = :rev_id AND name = :name");
+      $stmt_update=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TEXT." SET name = :name_new WHERE rev_id = :rev_id AND name = :name");
       $stmt_update->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       // delete
-      $stmt_delete=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id AND name = :name"); 
+      $stmt_delete=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id AND name = :name"); 
       $stmt_delete->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
 
     // Text Fields
     $entries = explode('|', $text);
-    var_dump($text);
     foreach ($entries as $entry) {
       $entry_parts = explode('=', $entry);
 
@@ -403,7 +401,7 @@ class Data
    */
   public static function update( $data_id, $data_name, $data_type, $data_acl, $update_links )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT name, type, acl_id FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, type, acl_id FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
     $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
     $stmt->execute();
     $data = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -415,7 +413,7 @@ class Data
 
     // update data type
     if ($data_type != '' && $data_type != $data['type']) {
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRIES." SET type = :type_new WHERE id = :data_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRIES." SET type = :type_new WHERE id = :data_id LIMIT 1");
       $stmt->bindParam('type_new',$data_type,PDO::PARAM_STR);
       $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
       $stmt->execute();
@@ -425,7 +423,7 @@ class Data
 
     // update data name
     if ($data_name != '' && $data_name != $data['name']) {
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRIES." SET name = :name_new WHERE id = :id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRIES." SET name = :name_new WHERE id = :id LIMIT 1");
       $stmt->bindParam('name_new',$data_name,PDO::PARAM_STR);
       $stmt->bindParam('id',$data_id,PDO::PARAM_INT);
       $stmt->execute();
@@ -480,7 +478,7 @@ class Data
 
         // update text content with new name
         //@ADD check, for only updating dependent entries
-        $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TEXT." SET content = REPLACE(REPLACE(content, :old_type_name, :new_type_name), :old_link, :new_link) WHERE content LIKE :search1 OR content LIKE :search2");
+        $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TEXT." SET content = REPLACE(REPLACE(content, :old_type_name, :new_type_name), :old_link, :new_link) WHERE content LIKE :search1 OR content LIKE :search2");
         $stmt->bindParam('search1','%[#'.$old_type_short.'_'.$data['name'].']%',PDO::PARAM_STR);
         $stmt->bindParam('search2','%[#link_'.$data['name'].']%',PDO::PARAM_STR);
         $stmt->bindParam('old_type_name','[#'.$old_type_short.'_'.$data['name'].']',PDO::PARAM_STR);
@@ -495,7 +493,7 @@ class Data
 
     // change ACL
     if ($data_acl != '' && $data_acl != $data['acl_id']) {
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRIES." SET acl_id = :acl_new WHERE id = :data_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRIES." SET acl_id = :acl_new WHERE id = :data_id LIMIT 1");
       $stmt->bindParam('acl_new',$data_acl);
       $stmt->bindParam('data_id',$data_id);
       $stmt->execute();
@@ -521,26 +519,26 @@ class Data
 
     $data_name = trim(@htmlspecialchars($_GET['d_name']));
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
     $stmt->bindParam('name',$data_name,PDO::PARAM_STR);
     $stmt->bindParam('type',$data_type,PDO::PARAM_STR);
     $stmt->execute();
     $data_id = $stmt->fetchColumn();
 
     if ($data_id === false) {
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id , name , type ) VALUES ( NULL , :name, :type )");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id , name , type ) VALUES ( NULL , :name, :type )");
       $stmt->bindParam('name',$data_name,PDO::PARAM_STR);
       $stmt->bindParam('type',$data_type,PDO::PARAM_STR);
       $stmt->execute();
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
       $stmt->bindParam('name',$data_name,PDO::PARAM_STR);
       $stmt->bindParam('type',$data_type,PDO::PARAM_STR);
       $stmt->execute();
       $data_id = $stmt->fetchColumn();
     }
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_REVISIONS." WHERE id = :data_id AND lang_id = :lang AND archive IS FALSE LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_REVISIONS." WHERE id = :data_id AND lang_id = :lang AND archive IS FALSE LIMIT 1");
     $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
     $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
     $stmt->execute();
@@ -548,20 +546,20 @@ class Data
 
     if ($revision_exists === false || $dynamic_content === true) {
       // revision entry doesn't exist
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, 0, :lang, :user_id, NOW())");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, 0, :lang, :user_id, NOW())");
       $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
       
-      $stmt=DBConnection::getInstance()->prepare("SELECT id ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version = 0 AND lang_id = :lang AND user_id = :user_id ORDER BY datetime DESC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version = 0 AND lang_id = :lang AND user_id = :user_id ORDER BY datetime DESC");
       $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
       $rev_id = $stmt->fetchColumn();
 
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, :description, :content )");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, :description, :content )");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->bindValue('description','description',PDO::PARAM_STR);
       $stmt->bindValue('content','',PDO::PARAM_STR);
@@ -590,7 +588,7 @@ class Data
         $content = '';
       }
 
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, 'content', :content )");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, 'content', :content )");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->bindParam('content',$content,PDO::PARAM_STR);
       $stmt->execute();
@@ -602,7 +600,7 @@ class Data
 
         // get highest saved dynamic number for this data
         $dynamic_number = 0;
-        $stmt=DBConnection::getInstance()->prepare("SELECT t.value FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.lang_id = :lang AND r.version > 0 AND t.user_id = -1 AND t.name = 'number' ORDER BY t.value DESC");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT t.value FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.lang_id = :lang AND r.version > 0 AND t.user_id = -1 AND t.name = 'number' ORDER BY t.value DESC");
         $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
         $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
         $stmt->execute();
@@ -648,7 +646,7 @@ class Data
 
     // preview
     if ($action == 'mp') {
-      $stmt=DBConnection::getInstance()->prepare("SELECT d.name, r.rev_id, r.lang_id FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.data_id WHERE r.id = :rev_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, r.rev_id, r.lang_id FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.data_id WHERE r.id = :rev_id LIMIT 1");
       $stmt->bindParam('rev_id',$rev_id_list[0],PDO::PARAM_INT);
       $stmt->execute();
       $revision = $stmt->fetchOnce();
@@ -665,7 +663,7 @@ class Data
       foreach ($rev_id_list as $rev_id) {
 
         // get revision information
-        $stmt_rev=DBConnection::getInstance()->prepare("SELECT lang_id, version, data_id, id, user_id FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
+        $stmt_rev=&DBConnection::getInstance()->prepare("SELECT lang_id, version, data_id, id, user_id FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
         $stmt_rev->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
         $stmt_rev->execute();
         $revision = $stmt_rev->fetchOnce();
@@ -684,7 +682,7 @@ class Data
 
               // check for user language
               if ($user_lang == '') {
-                die('Set a valid language in your myReactOS account settings!');
+                die('Set a valid language in your account settings!');
               }
               elseif ($user_lang != $revision['lang_id']) {
                 echo 'As Language Maintainer you can only mark entries of "'.$user_lang.'" language as stable!';
@@ -696,26 +694,23 @@ class Data
 
             // renew tag
             $tag_id = Tag::getIdByUser($revision['id'], 'status', -1);
-            if ($tag_id > 0) {
-              Tag::deleteById($tag_id);
-            }
-            Tag::add($revision['rev_id'], 'status', 'stable', -1);
+            Tag::update($tag_id, 'stable');
 
             if ($revision['rev_version'] == 0) {
               $dynamic_num = Tag::getValueByUser($revision['rev_id'], 'number',  -1); 
 
               if ($dynamic_num > 0) {
-                $stmt=DBConnection::getInstance()->prepare("SELECT r.id, r.data_id, r.version, r.lang_id FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.version > 0 AND r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :tag_value ORDER BY r.version DESC, r.id DESC LIMIT 1");
+                $stmt=&DBConnection::getInstance()->prepare("SELECT r.id, r.data_id, r.version, r.lang_id FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.version > 0 AND r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :tag_value ORDER BY r.version DESC, r.id DESC LIMIT 1");
                 $stmt->bindParam('tag_value',$dynamic_num,PDO::PARAM_STR);
               }
               else {
-                $stmt=DBConnection::getInstance()->prepare("SELECT id, data_id, version, lang_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang ORDER BY version DESC, id DESC LIMIT 1");
+                $stmt=&DBConnection::getInstance()->prepare("SELECT id, data_id, version, lang_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang ORDER BY version DESC, id DESC LIMIT 1");
               }
               $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
               $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
               $stmt->execute();
               $stable_revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
-//var_dump($stable_revision);
+
               // setup a new version number
               $version_num = 1;
 
@@ -726,7 +721,7 @@ class Data
                 $version_num = $stable_revision['version'] + 1;
 
                 // delete old tags
-                $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id");
+                $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id");
                 $stmt->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
                 $stmt->execute();
 
@@ -744,7 +739,7 @@ class Data
               }
 
               // update the version number
-              $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET version = :version WHERE id = :rev_id");
+              $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET version = :version WHERE id = :rev_id");
               $stmt->bindParam('version',$version_num,PDO::PARAM_INT);
               $stmt->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
               $stmt->execute();
@@ -757,7 +752,7 @@ class Data
                 $generation_lang = $revision['lang_id'];
               }
 
-              $stmt=DBConnection::getInstance()->prepare("SELECT d.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ENTRIES." d2 ON d.name=d2.name WHERE d2.id = :data_id AND d.data_type = 'page' LIMIT 1");
+              $stmt=&DBConnection::getInstance()->prepare("SELECT d.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ENTRIES." d2 ON d.name=d2.name WHERE d2.id = :data_id AND d.data_type = 'page' LIMIT 1");
               $stmt->bindParam('data_id',$revision['data_id']);
               $stmt->execute();
               $data_id = $stmt->fetchColumn();
@@ -777,7 +772,7 @@ class Data
 
               // check for user language
               if ($user_lang == 0) {
-                die('Set a valid language in your myReactOS account settings!');
+                die('Set a valid language in your Account settings!');
               }
               elseif ($user_lang != $revision['lang_id']) {
                 echo 'As Language Maintainer you can only mark entries of "'.$user_lang.'" language as new!';
@@ -786,10 +781,10 @@ class Data
             }
 
             //update tag
-            Tag::deleteByName($revision['id'], 'status', -1);
-            Tag::add($revision['id'], 'status', 'new', -1);
+            $tag_id = Tag::getIdByUser($revision['id'], 'status', -1);
+            Tag::update($tag_id, 'new');
 
-            $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET version = 0 WHERE id = :rev_id");
+            $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET version = 0 WHERE id = :rev_id");
             $stmt->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
             $stmt->execute();
             break;
@@ -872,7 +867,7 @@ class Data
     }
 
     // data_revision
-    $stmt=DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.acl_id, r.version, r.user_id, r.lang_id, r.datetime FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id WHERE r.id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.acl_id, r.version, r.user_id, r.lang_id, r.datetime FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id WHERE r.id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
     $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -884,7 +879,7 @@ class Data
         'lang_id' => $lang_id,
         'datetime' => date('Y-m-d H:i:s'));
     }
-    $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, :version, :lang, :user_id, :datetime )");
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, :version, :lang, :user_id, :datetime )");
     $stmt->bindParam('data_id',$new_data_id,PDO::PARAM_INT);
     $stmt->bindValue('version',$revision['version'],PDO::PARAM_INT);
     $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
@@ -892,7 +887,7 @@ class Data
     $stmt->bindParam('datetime',$revision['datetime'],PDO::PARAM_STR);
     $stmt->execute();
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id=:user_id ORDER BY id DESC LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id=:user_id ORDER BY id DESC LIMIT 1");
     $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
     $stmt->bindParam('user_id',$revision['user_id'],PDO::PARAM_INT);
     $stmt->execute();
@@ -903,13 +898,13 @@ class Data
     }
 
     // copy stext
-    $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) SELECT NULL, :new_rev_id AS rev_id, name, content FROM ".ROSCMST_STEXT." WHERE rev_id = :old_rev_id");
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) SELECT NULL, :new_rev_id AS rev_id, name, content FROM ".ROSCMST_STEXT." WHERE rev_id = :old_rev_id");
     $stmt->bindParam('new_rev_id',$new_rev_id,PDO::PARAM_INT);
     $stmt->bindParam('old_rev_id',$old_rev_id,PDO::PARAM_INT);
     $stmt->execute();
 
     // copy_text
-    $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) SELECT NULL, :new_rev_id AS rev_id, name, content FROM ".ROSCMST_TEXT." WHERE rev_id = :old_rev_id");
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) SELECT NULL, :new_rev_id AS rev_id, name, content FROM ".ROSCMST_TEXT." WHERE rev_id = :old_rev_id");
     $stmt->bindParam('new_rev_id',$new_rev_id,PDO::PARAM_INT);
     $stmt->bindParam('old_rev_id',$old_rev_id,PDO::PARAM_INT);
     $stmt->execute();
@@ -919,8 +914,8 @@ class Data
     Tag::copyFromData($rev_id, $new_rev_id);
     if ($archive_mode === false) {
       // change status to draft
-      Tag::deleteByName($new_rev_id, 'status', -1);
-      Tag::add($new_rev_id, 'status', 'draft', -1);
+      $tag_id = Tag::getIdByUser($new_rev_id, 'status', -1);
+      Tag::update($tag_id, 'draft');
     }
 
     return true;

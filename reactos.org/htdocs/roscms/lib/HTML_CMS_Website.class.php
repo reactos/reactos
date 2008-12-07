@@ -56,10 +56,6 @@ class HTML_CMS_Website extends HTML_CMS
    */
   protected function body( )
   {
-    global $roscms_standard_language_trans;
-    global $roscms_intern_webserver_roscms;
-    global $roscms_intern_page_link;
-
     $thisuser = &ThisUser::getInstance();
 
     echo_strip('
@@ -84,7 +80,7 @@ class HTML_CMS_Website extends HTML_CMS
         var autosave_timer;
 
         //
-        var submenu_button = '';
+        var submenu_button = false;
         var nres=1;
         var smenutabs = 12; // sync this value with the tab-menu entry-count !!!
 
@@ -97,18 +93,17 @@ class HTML_CMS_Website extends HTML_CMS
         // map php vars
         var roscms_intern_account_id = ".$thisuser->id().";
         var roscms_standard_language = '".Language::getStandardId()."';
-        var roscms_standard_language_trans = '".$roscms_standard_language_trans."';
         var roscms_intern_login_check_username = '".$thisuser->name()."';
-        var roscms_intern_webserver_roscms = '".$roscms_intern_webserver_roscms."';
-        var roscms_intern_page_link = '".$roscms_intern_page_link."';
-        var roscms_get_edit = '".(isset($_GET['edit']) ? $RosCMS_GET_cms_edit : '')."';
+        var roscms_intern_webserver_roscms = '".RosCMS::getInstance()->pathRosCMS()."';
+        var roscms_intern_page_link = '".RosCMS::getInstance()->pathRosCMS()."?page=';
+        var roscms_get_edit = '".(isset($_GET['edit']) ? $_GET['edit'] : '')."';
         var roscms_access_level = ".$thisuser->securityLevel().";
         var roscms_cbm_hide = '".(($thisuser->securityLevel() > 1) ? '' : ' disabled="disabled" style="color:#CCCCCC;"')."'; // disable combobox entries for novice user
 
         // favorite user language
         ";
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT lang_id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT lang_id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute();
     $user_lang = $stmt->fetchColumn();
@@ -142,17 +137,12 @@ class HTML_CMS_Website extends HTML_CMS
 
       <div id="roscms_container">
         <div class="leftMenu" style="position: absolute; top: 0px; width: 150px; left: 0px; border: 0px; z-index:1;">
-          <div id="smenutab1" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab1" class="submb" style="margin-bottom: 1.5em;" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc1" class="subm2" style="font-weight: bold;">New Entry</div>
             </div>
-          </div>');
+          </div>
 
-    if ($thisuser->securityLevel() > 1) {
-      echo '<div style="background: white none repeat scroll 0%;">&nbsp;</div>';
-    }
-
-    echo_strip('
           <div id="smenutab2" class="subma" onclick="loadMenu(this.id)">
             <div class="subm1">
               <div id="smenutabc2" class="subm2"><b>New</b></div>
@@ -189,7 +179,7 @@ class HTML_CMS_Website extends HTML_CMS
               <div id="smenutabc8" class="subm2">All Entries</div>
             </div>
           </div>
-          <div style="background: #FFFFFF none repeat scroll 0%;">&nbsp;</div>
+          <br />
 
           <div id="smenutab9" class="submb" onclick="loadMenu(this.id)">
             <div class="subm1">
@@ -284,7 +274,7 @@ class HTML_CMS_Website extends HTML_CMS
 
     $user_lang = ROSUser::getLanguage($thisuser->id(), true);
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
     $stmt->execute();
     while($language=$stmt->fetch()) {
       echo '<option value="'.$language['id'].'"';
@@ -362,7 +352,7 @@ class HTML_CMS_Website extends HTML_CMS
         </div>
       </div>
       <br />
-      <script type="text/javascript" src="'.$roscms_intern_webserver_roscms.'js/cms_website-init.js"></script>');
+      <script type="text/javascript" src="'.RosCMS::getInstance()->pathRosCMS().'js/cms_website-init.js"></script>');
   }
 
 

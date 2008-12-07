@@ -87,7 +87,7 @@ class Subsystem_Bugzilla extends Subsystem
   protected function checkUser( )
   {
     $inconsistencies = 0;
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.id AS user_id, u.name AS user_name, u.email, p.realname AS subsys_user, p.login_name AS subsys_email FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_SUBSYS." m ON m.user_id=u.id JOIN ".$this->user_table." p ON p.userid=m.subsys_user_id WHERE m.map_subsys_name = 'bugzilla' AND (u.name != p.realname OR p.realname IS NULL OR u.email != p.login_name) ");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT u.id AS user_id, u.name AS user_name, u.email, p.realname AS subsys_user, p.login_name AS subsys_email FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_SUBSYS." m ON m.user_id=u.id JOIN ".$this->user_table." p ON p.userid=m.subsys_user_id WHERE m.map_subsys_name = 'bugzilla' AND (u.name != p.realname OR p.realname IS NULL OR u.email != p.login_name) ");
     $stmt->execute() or die('DB error (subsys_bugzilla #1)');
     while ($mapping = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo 'Info mismatch for RosCMS userid '.$mapping['user_id'].': ';
@@ -119,7 +119,7 @@ class Subsystem_Bugzilla extends Subsystem
   protected function updateUserPrivate( $user_id, $user_name, $user_email, $user_register, $subsys_user )
   {
     // Make sure that the email address and/or user name are not already in use in bugzilla
-    $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".$this->user_table." WHERE (LOWER(login_name) = LOWER(:email) OR LOWER(realname) = LOWER(:name)) AND userid != :user_id ");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".$this->user_table." WHERE (LOWER(login_name) = LOWER(:email) OR LOWER(realname) = LOWER(:name)) AND userid != :user_id ");
     $stmt->bindParam('email',$user_email,PDO::PARAM_STR);
     $stmt->bindParam('name',$user_name,PDO::PARAM_STR);
     $stmt->bindParam('user_id',$subsys_user,PDO::PARAM_INT);
@@ -132,7 +132,7 @@ class Subsystem_Bugzilla extends Subsystem
     }
 
     // Now, make sure that info in bugzilla matches info in roscms
-    $stmt=DBConnection::getInstance()->prepare("UPDATE ".$this->user_table." SET login_name = :email, realname = :name WHERE userid = :user_id");
+    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".$this->user_table." SET login_name = :email, realname = :name WHERE userid = :user_id");
     $stmt->bindParam('email',$user_email,PDO::PARAM_STR);
     $stmt->bindParam('name',$user_name,PDO::PARAM_STR);
     $stmt->bindParam('user_id',$subsys_user,PDO::PARAM_INT);
@@ -154,16 +154,16 @@ class Subsystem_Bugzilla extends Subsystem
   protected function addUser( $id, $name, $email, $register )
   {
 
-    $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".$this->user_table." (login_name, cryptpassword, realname) VALUES (:email, '*', :name)");
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".$this->user_table." (login_name, cryptpassword, realname) VALUES (:email, '*', :name)");
     $stmt->bindParam('email',$email,PDO::PARAM_STR);
     $stmt->bindParam('name',$name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_bugzilla #10)');
 
     // The default email_setting was copied from bugzilla/Bugzilla/User.pm function insert_new_user
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".self::DB_NAME.".email_setting (user_id, relationship, event) VALUES (LAST_INSERT_ID(), :relation, :event)");
     foreach ($this->relationships as $rel) {
       foreach (array_merge($this->pos_events, $this->neg_events) as $event) {
         if ($event != self::EVT_CHANGED_BY_ME && ($event != self::EVT_CC || $rel == self::REL_REPORTER)) {
-          $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".self::DB_NAME.".email_setting (user_id, relationship, event) VALUES (LAST_INSERT_ID(), :relation, :event)");
           $stmt->bindParam('relation',$rel,PDO::PARAM_INT);
           $stmt->bindParam('event',$event,PDO::PARAM_INT);
           $stmt->execute() or die('DB error (subsys_bugzilla #14)');
@@ -172,14 +172,14 @@ class Subsystem_Bugzilla extends Subsystem
     }
     
     foreach ($this->global_events as $event) {
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".self::DB_NAME.".email_setting (user_id, relationship, event) VALUES (LAST_INSERT_ID(), :relation, :event)");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".self::DB_NAME.".email_setting (user_id, relationship, event) VALUES (LAST_INSERT_ID(), :relation, :event)");
       $stmt->bindValue('relation',self::REL_ANY,PDO::PARAM_INT);
       $stmt->bindParam('event',$event,PDO::PARAM_INT);
       $stmt->execute() or die('DB error (subsys_bugzilla #15)');
     }
 
     // Finally, insert a row in the mapping table
-    $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsy_user_id) VALUES(:user_id, 'bugzilla', LAST_INSERT_ID())");
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsy_user_id) VALUES(:user_id, 'bugzilla', LAST_INSERT_ID())");
     $stmt->bindParam('user_id',$id,PDO::PARAM_INT);
     $stmt->execute() or die('DB error (subsys_bugzilla #11)');
 
@@ -201,7 +201,7 @@ class Subsystem_Bugzilla extends Subsystem
     }
 
     // First, try to match on email address
-    $stmt=DBConnection::getInstance()->prepare("SELECT userid FROM ".$this->user_table." WHERE LOWER(login_name) = LOWER(:user_email) LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT userid FROM ".$this->user_table." WHERE LOWER(login_name) = LOWER(:user_email) LIMIT 1");
     $stmt->bindParam('user_email',$user['email'],PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_bugzilla #5)');
 
@@ -209,7 +209,7 @@ class Subsystem_Bugzilla extends Subsystem
     if ($bz_user_id === false) {
 
       // That failed. Let's try to match on user name then
-      $stmt=DBConnection::getInstance()->prepare("SELECT userid FROM ".$this->user_table." WHERE LOWER(realname) = LOWER(:user_name)");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT userid FROM ".$this->user_table." WHERE LOWER(realname) = LOWER(:user_name)");
       $stmt->bindParam('user_name',$roscms_user_name,PDO::PARAM_STR);
       $stmt->execute() or die('DB error (subsys_bugzilla #6)');
       $bz_user_id = $stmt->fetchColumn();
@@ -226,7 +226,7 @@ class Subsystem_Bugzilla extends Subsystem
       }
 
       // Insert a row in the mapping table
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsys_user_id) VALUES(:roscms_user, 'bugzilla', :bugzilla_user)");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SUBSYS." (user_id, subsys, subsys_user_id) VALUES(:roscms_user, 'bugzilla', :bugzilla_user)");
       $stmt->bindParam('roscms_user',$user_id,PDO::PARAM_INT);
       $stmt->bindParam('bugzilla_user',$bz_user_id,PDO::PARAM_INT);
       $stmt->execute() or die('DB error (subsys_bugzilla #9)');

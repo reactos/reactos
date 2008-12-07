@@ -424,24 +424,16 @@ function clearQuickinfo( )
  * @param string uf_type 'label'/'filter'
  * @param string uf_str
  */
-function addUserFilter( uf_type, uf_str )
+function addUserFilter( uf_str )
 {
   var uf_name = '';
   var uf_objid = '';
 
-  if (uf_type == 'label') {
-    try {
-      uf_name = window.prompt("Input a new Label name:", "");
-      uf_str = 'a_is_'+ beautifystr(uf_name);
-      uf_objid = 'labtitel3c';
-    } catch (e) {}
+  try {
+    uf_name = window.prompt("Input a new Smart Filter name:", "");
+    uf_objid = 'labtitel2c';
   }
-  else {
-    try {
-      uf_name = window.prompt("Input a new Smart Filter name:", "");
-      uf_objid = 'labtitel2c';
-    } catch (e) {
-    }
+  catch (e) {
   }
 
   // cancel button
@@ -465,16 +457,8 @@ function addUserFilter( uf_type, uf_str )
  */
 function deleteUserFilter( uf_id, uf_type, uf_name )
 {
-  var uf_check = '';
-
-  if (uf_type == 'label') {
-    uf_check = confirm("Do you want to delete Label '"+uf_name+"' ?");
-    uf_objid = 'labtitel3c';
-  }
-  else {
-    uf_check = confirm("Do you want to delete Smart Filter '"+uf_name+"' ?");
-    uf_objid = 'labtitel2c';
-  }
+  var uf_check = confirm("Do you want to delete Smart Filter '"+uf_name+"' ?");
+  uf_objid = 'labtitel2c';
 
   if (uf_check == true) {
     makeRequest('?page=data_out&d_f=text&d_u=ufs&d_val=del&d_val2='+encodeURIComponent(uf_type)+'&d_val3='+encodeURIComponent(uf_id), 'ufs', uf_objid, 'html', 'GET', '');
@@ -485,22 +469,23 @@ function deleteUserFilter( uf_id, uf_type, uf_name )
 
 /**
  * gets another stored filter setting
- *
- * @param string type 'label'/'filter'
  */
-function loadUserFilter( type )
+function loadUserFilter( )
 {
-  var uf_objid;
+  document.getElementById('labtitel2c').innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
+  makeRequest('?page=data_out&d_f=text&d_u=ufs&d_val=load', 'ufs', 'labtitel2c', 'html', 'GET', '');
+}
 
-  if (type == 'label') {
-    uf_objid = 'labtitel3c';
-  }
-  else {
-    uf_objid = 'labtitel2c';
-  }
 
-  document.getElementById(uf_objid).innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
-  makeRequest('?page=data_out&d_f=text&d_u=ufs&d_val=load&d_val2='+encodeURIComponent(type), 'ufs', uf_objid, 'html', 'GET', '');
+
+
+/**
+ * gets user tags
+ */
+function loadUserTags( )
+{
+  document.getElementById('labtitel3c').innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
+  makeRequest('?page=data_out&d_f=text&d_u=ut', 'ut', 'labtitel3c', 'html', 'GET', '');
 }
 
 
@@ -599,7 +584,7 @@ function readCookie( name )
  * @param int ufilttype
  * @param string ufilttitel
  */
-function selectUserFilter( ufiltstr, ufilttype, ufilttitel )
+function selectUserFilter( ufiltstr, ufilttitel )
 {
   var tentrs = selectedEntries().split("|");
 
@@ -622,6 +607,33 @@ function selectUserFilter( ufiltstr, ufilttype, ufilttitel )
     loadEntryTable('all');
     htmlFilterChoices(ufiltstr);
   }
+}
+
+
+
+/**
+ * loads a tagged entries by tag value
+ *
+ * @param string value
+ */
+function selectUserTag( value )
+{
+  var tag_filter = 'a_is_'+value;
+
+  highlightTab('smenutab8');
+
+  filtstring2 = tag_filter;
+
+  // reset search box:
+  filtstring1 = '';
+  document.getElementById('txtfind').value = '';
+  searchFilter('txtfind', document.getElementById('txtfind').value, 'Search & Filters', false);
+
+  chtabtext = null;
+  selectAll(false); /* deselect all */
+
+  loadEntryTable('all');
+  htmlFilterChoices(tag_filter);
 }
 
 
@@ -683,7 +695,8 @@ function loadEntryTable( objevent )
     selectAll(false); 
   }
 
-  if (submenu_button == 'true') {
+  // function was called via loadMenu
+  if (submenu_button == true) {
     roscms_prev_page = roscms_current_page;
     roscms_current_page = objevent;
     htmlFilterChoices(filtstring2);
@@ -1138,13 +1151,12 @@ function htmlSelectPresets( preset )
 /**
  * requests the revisions tab in the entry details
  *
- * @param int did data id
  * @param int drid revision id
  */
-function showEditorTabRevisions( did, drid )
+function showEditorTabRevisions( drid )
 {
   alertbox('Change fields only if you know what you are doing.');
-  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showentry&d_id='+did+'&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showentry&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
 }
 
 
@@ -1152,10 +1164,9 @@ function showEditorTabRevisions( did, drid )
 /**
  * saves changes made in the editor entry details revisions tab
  *
- * @param int did data id
  * @param int drid revision id
  */
-function saveRevisionData( did, drid )
+function saveRevisionData( drid )
 {
   var uf_check = confirm("Please double check your changes.\n\nDo you want to continue?");
 
@@ -1165,15 +1176,13 @@ function saveRevisionData( did, drid )
     var d_usr_str = beautifystr2(document.getElementById('verusr').value);
     var d_date_str = document.getElementById('verdate').value;
     var d_time_str = document.getElementById('vertime').value;
-    var d_chgdataname_str = document.getElementById('chgdataname').value;
-    var d_chgdatatype_str = document.getElementById('cbmchgdatatype').value;
 
     // remove leading space character
     if (d_usr_str.substr(0, 1) == ' ') {
       d_usr_str = d_usr_str.substr(1, d_usr_str.length-1); 
     }
 
-    makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=alterentry&d_id='+did+'&d_r_id='+drid+'&d_val='+d_lang_str+'&d_val2='+d_revnbr_str+'&d_val3='+d_usr_str+'&d_val4='+d_date_str+'&d_val5='+d_time_str+'&d_val6='+d_chgdataname_str+'&d_val7='+d_chgdatatype_str, 'mef', 'editalterentry', 'html', 'GET', '');
+    makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=alterentry&d_r_id='+drid+'&d_val='+d_lang_str+'&d_val2='+d_revnbr_str+'&d_val3='+d_usr_str+'&d_val4='+d_date_str+'&d_val5='+d_time_str, 'mef', 'editalterentry', 'html', 'GET', '');
   }
 }
 
@@ -1185,10 +1194,10 @@ function saveRevisionData( did, drid )
  * @param int did data id
  * @param int drid revision id
  */
-function showEditorTabSecurity( did, drid )
+function showEditorTabSecurity( drid )
 {
   alertbox('Changes will affect all related entries (see \'History\').');
-  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showsecurity&d_id='+did+'&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showsecurity&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
 }
 
 
@@ -1300,12 +1309,11 @@ function addTextField( )
 /**
  * requests the metadata tab in the entry details
  *
- * @param int did data id
  * @param int drid revision id
  */
-function showEditorTabMetadata( did, drid )
+function showEditorTabMetadata( drid )
 {
-  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showtag&d_id='+did+'&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showtag&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
 }
 
 
@@ -1313,12 +1321,11 @@ function showEditorTabMetadata( did, drid )
 /**
  * requests the history tab in the entry details
  *
- * @param int did data id
  * @param int drid revision id
  */
-function showEditorTabHistory( did, drid )
+function showEditorTabHistory( drid )
 {
-  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showhistory&d_id='+did+'&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showhistory&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
 }
 
 
@@ -1326,12 +1333,11 @@ function showEditorTabHistory( did, drid )
 /**
  * requests the depencies tab in the entry details
  *
- * @param int did data id
  * @param int drid revision id
  */
-function showEditorTabDepencies( did, drid )
+function showEditorTabDepencies(  drid )
 {
-  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showdepencies&d_id='+did+'&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=showdepencies&d_r_id='+drid, 'mef', 'frmedittagsc2', 'html', 'GET', '');
 }
 
 
@@ -1339,14 +1345,13 @@ function showEditorTabDepencies( did, drid )
 /**
  * requests the fields tab in the entry details
  *
- * @param int did data id
  * @param int drid revision id
  * @param int dusr user
  */
-function showEditorTabFields( did, drid, dusr )
+function showEditorTabFields( drid, dusr )
 {
   alertbox('Change fields only if you know what you are doing.');
-  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=alterfields&d_id='+did+'&d_r_id='+drid+'&d_val3='+dusr, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+  makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=alterfields&d_r_id='+drid+'&d_val3='+dusr, 'mef', 'frmedittagsc2', 'html', 'GET', '');
 }
 
 
@@ -1360,7 +1365,7 @@ function showEditorTabFields( did, drid, dusr )
  * @param string dtv tag value
  * @param int dusr user
  */
-function addLabelOrTag( did, drid, dtn, dtv, dusr )
+function addLabelOrTag( drid, dtn, dtv, dusr )
 {
   var dtna = '';
   var dtva = '';
@@ -1371,7 +1376,7 @@ function addLabelOrTag( did, drid, dtn, dtv, dusr )
   dtva = document.getElementById(dtv).value;
 
   if (dtna != '' && dtva != '') {
-    makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=addtag&d_id='+did+'&d_r_id='+drid+'&d_val='+encodeURIComponent(dtna)+'&d_val2='+encodeURIComponent(dtva)+'&d_val3='+dusr, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+    makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=addtag&d_r_id='+drid+'&d_val='+encodeURIComponent(dtna)+'&d_val2='+encodeURIComponent(dtva)+'&d_val3='+dusr, 'mef', 'frmedittagsc2', 'html', 'GET', '');
   }
 }
 
@@ -1380,15 +1385,12 @@ function addLabelOrTag( did, drid, dtn, dtv, dusr )
 /**
  * deletes a user label, system metadata/label
  *
- * @param int did data id
- * @param int drid revision id
- * @param int dtid tag id
- * @param int dusr user
+ * @param int tag_id
  */
-function delLabelOrTag( did, drid, dtid, dusr )
+function delLabelOrTag( tag_id )
 {
-  if (dtid != '') {
-    makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=deltag&d_id='+did+'&d_r_id='+drid+'&d_val='+dtid+'&d_val2='+dusr, 'mef', 'frmedittagsc2', 'html', 'GET', '');
+  if (tag_id > 0) {
+    makeRequest('?page=data_out&d_f=text&d_u=mef&d_fl=deltag&d_val='+tag_id, 'mef', 'frmedittagsc2', 'html', 'GET', '');
   }
 }
 
@@ -1773,6 +1775,11 @@ function alertContents( http_request, action, objid )
             updateUserFilter(http_request, objid);
             break;
 
+            // user tags
+          case 'ut': 
+            updateUserTags(http_request, objid);
+            break;
+
             // user quick info
           case 'uqi': 
             updateQuickinfo(http_request, objid);
@@ -1989,6 +1996,10 @@ function applyToEditor( http_request, objid )
       alertbox('Entry updated');
       break;
 
+    case 'updatetag':
+      selectUserTags();
+      objid = tsplits[1];
+
     default:
       document.getElementById(objid).innerHTML = http_request.responseText;
       autosave_cache = getEditorTexts();
@@ -2042,6 +2053,20 @@ function showAutosaveInfo( http_request, objid )
  * @param string objid
  */
 function updateUserFilter( http_request, objid )
+{
+  document.getElementById(objid).innerHTML = http_request.responseText;
+}
+
+
+
+
+/**
+ * update users tags
+ *
+ * @param object http_request
+ * @param string objid
+ */
+function updateUserTags( http_request, objid )
 {
   document.getElementById(objid).innerHTML = http_request.responseText;
 }
@@ -2145,9 +2170,9 @@ function registerMouseActions( )
 function loadMenu( objid )
 {
   var chtabtext = null;
-  var submenu_button = true;
   var translang = '';
 
+  submenu_button = true;
   roscms_archive = false;
 
   // deselect all
@@ -2166,7 +2191,8 @@ function loadMenu( objid )
   }
 
   if (getLang() == roscms_standard_language) {
-    translang = roscms_standard_language_trans;
+    alertbox('You can\'t translate entries, because you don\'t have the standard language as your user language.');
+    return false;
   }
   else {
     translang = getLang();
@@ -2237,6 +2263,7 @@ function loadMenu( objid )
       break;
   } // end switch
 
+  return true;
 }
 
 
@@ -2254,9 +2281,6 @@ function setLang( favlang )
   // translation view
   if (transcheck != -1) { 
     tmp_regstr = new RegExp('r_is_'+userlang, "g");
-    filtstring2 = filtstring2.replace(tmp_regstr, 'r_is_'+favlang);
-
-    tmp_regstr = new RegExp('r_is_'+roscms_standard_language_trans, "g");
     filtstring2 = filtstring2.replace(tmp_regstr, 'r_is_'+favlang);
   }
   else {

@@ -45,9 +45,6 @@ class HTML_User_Activate extends HTML_User
    */
   protected function body( )
   {
-    global $roscms_intern_page_link;
-    global $rdf_logon_system_name;
-
     $err_message = ''; // error message box text
     $mail_exists = false; // email already exists in the database (true = email exists)
     $activation_code_exists = false; // pwd-id exists in the database (true = pwd-id exists)
@@ -55,11 +52,10 @@ class HTML_User_Activate extends HTML_User
     $activation_code = @$_GET['code'];
 
     echo_strip('
-      <h1>Activate myReactOS Account</h1>
-      <p>Activate myReactOS Account</p>
-      <p>Already a member? <a href="'.$roscms_intern_page_link.'login">Login now</a>!</p>
-      <p>Don\'t have a '.$rdf_logon_system_name.' account yet? <a href="'.$roscms_intern_page_link.'register">Join now</a>, it\'s free and just takes a minute.</p>
-      <form action="'.$roscms_intern_page_link.'login&amp;subpage=activate" method="post">
+      <h1>Activate '.RosCMS::getInstance()->siteName().' Account</h1>
+      <p>Already a member? <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=login">Login now</a>!</p>
+      <p>Don\'t have a '.RosCMS::getInstance()->siteName().' account yet? <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=register">Join now</a>, it\'s free and just takes a minute.</p>
+      <form action="'.RosCMS::getInstance()->pathRosCMS().'?page=login&amp;subpage=activate" method="post">
         <div class="bubble">
           <div class="corner_TL">
             <div class="corner_TR"></div>
@@ -68,7 +64,7 @@ class HTML_User_Activate extends HTML_User
     if (isset($_POST['registerpost']) && isset($_POST['useremail']) && $_POST['useremail'] != '') {
 
       // check if another account with the same email address already exists
-      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
       $stmt->bindParam('email',$_POST['useremail'],PDO::PARAM_STR);
       $stmt->execute();
       $mail_exists = ($stmt->fetchColum() !== false);
@@ -77,7 +73,7 @@ class HTML_User_Activate extends HTML_User
     if (strlen($activation_code) > 6) {
 
       // check if an account with the pwd-id exists
-      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE activation = :activation_code LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE activation = :activation_code LIMIT 1");
       $stmt->bindParam('activation_code',$activation_code,PDO::PARAM_STR);
       $stmt->execute();
 
@@ -95,19 +91,19 @@ class HTML_User_Activate extends HTML_User
     }
 
     if (strlen($activation_code) > 6 && isset($_POST['registerpost']) && isset($_POST['useremail']) && EMail::isValid($_POST['useremail']) && $activation_code_exists && $mail_exists) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE activation = :activation_code LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE activation = :activation_code LIMIT 1");
       $stmt->bindParam('activation_code',$activation_code,PDO::PARAM_STR);
       $stmt->execute();
       $user_id = $stmt->fetchColumn();
 
       // set new account password
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation = '', modified = NOW() WHERE id = :user_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation = '', modified = NOW() WHERE id = :user_id LIMIT 1");
       $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
       $stmt->execute();
 
       echo_strip('
         <h2>Account activated</h2>
-        <div><a href="'.$roscms_intern_page_link.'login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
+        <div><a href="'.RosCMS::getInstance()->pathRosCMS().'?page=login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
     }
     elseif ($activation_code_exists) {
       echo_strip('

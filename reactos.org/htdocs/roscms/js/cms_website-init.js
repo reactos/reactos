@@ -36,8 +36,8 @@ if (roscms_get_edit != "") {
   loadEditor('all', roscms_get_edit);
 }
 
-loadUserFilter('filter');
-loadUserFilter('label');
+loadUserFilter();
+loadUserTags();
 
 if (readCookie('labtitel1') == 0) TabOpenCloseEx('labtitel1');
 if (readCookie('labtitel2') == 0) TabOpenCloseEx('labtitel2');

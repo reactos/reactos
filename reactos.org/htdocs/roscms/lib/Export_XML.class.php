@@ -131,7 +131,7 @@ class Export_XML extends Export
     }
 
     // check if there are entries which are found by filter settings
-    $stmt=DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id ".$this->sql_from." WHERE r.version >= 0 AND r.archive = :archive ".Security::getACL('read')." ".$this->sql_where);
+    $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id ".$this->sql_from." WHERE r.version >= 0 AND r.archive = :archive ".Security::getACL('read')." ".$this->sql_where);
     $stmt->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
 
     $stmt->execute();
@@ -146,19 +146,19 @@ class Export_XML extends Export
       echo $ptm_entries.'<table>';
 
       // start table header
-      $tdata .= "    <view curpos=\"".$page_offset."\" pagelimit=\"".$this->page_limit."\" pagemax=\"".$ptm_entries."\" tblcols=\"|".$this->column_list."|\" /> \n";
+      $tdata .= '<view curpos="'.$page_offset.'" pagelimit="'.$this->page_limit.'" pagemax="'.$ptm_entries.'" tblcols="|'.$this->column_list.'|" />';
 
       // prepare for usage in loop
-      $stmt_trans=DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE d.id = :data_id AND r.version > 0 AND r.lang_id = :lang WHERE r.archive = :archive LIMIT 1");
+      $stmt_trans=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE d.id = :data_id AND r.version > 0 AND r.lang_id = :lang WHERE r.archive = :archive LIMIT 1");
       $stmt_trans->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
       $stmt_trans->bindParam('lang',$this->translation_lang,PDO::PARAM_INT);
-      $stmt_trans_dyn=DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.rev_user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE d.id = :data_id AND r.version > 0 AND  r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :dyn_num LIMIT 1");
+      $stmt_trans_dyn=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.rev_user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE d.id = :data_id AND r.version > 0 AND  r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :dyn_num LIMIT 1");
       $stmt_trans_dyn->bindParam('lang',$this->translation_lang);
       $stmt_trans_dyn->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
-      $stmt_stext=DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = 'title' LIMIT 1");
-      $stmt_lang=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
-      $stmt_user=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
-      $stmt_acl=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_ACCESS." WHERE id = :acl_id LIMIT 1");
+      $stmt_stext=&DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = 'title' LIMIT 1");
+      $stmt_lang=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
+      $stmt_user=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+      $stmt_acl=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_ACCESS." WHERE id = :acl_id LIMIT 1");
 
       // make the order command ready for usage
       if ($this->sql_order == '') {
@@ -169,7 +169,8 @@ class Export_XML extends Export
       }
 
       // proceed entries
-      $stmt=DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.acl_id, r.id, r.version, r.lang_id, r.datetime, r.user_id ".$this->sql_select." FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id JOIN ".ROSCMST_ACCESS." a ON d.acl_id = a.id ".$this->sql_from." WHERE r.version > 0 ". Security::getACL('read') ." ". $this->sql_where ." ". $this->sql_order ." LIMIT :limit OFFSET :offset");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.acl_id, r.id, r.version, r.lang_id, r.datetime, r.user_id ".$this->sql_select." FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id ".$this->sql_from." WHERE r.version >= 0 AND r.archive = :archive ".Security::getACL('read')." ".$this->sql_where." ".$this->sql_order." LIMIT :limit OFFSET :offset");
+      $stmt->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
       $stmt->bindValue('limit',0+$this->page_limit,PDO::PARAM_INT);
       $stmt->bindValue('offset',0+$page_offset,PDO::PARAM_INT);
       $stmt->execute();
@@ -620,7 +621,7 @@ class Export_XML extends Export
           // user
           case 'u': 
             // get user_id
-            $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
+            $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
             $stmt->bindParam('user_name',$type_c,PDO::PARAM_STR);
             $stmt->execute();
             $user_id = $stmt->fetchColumn();

@@ -29,8 +29,8 @@ class Date
   /**
    * calculates date the user has set to
    * $date_org = "2008-03-23 10:03:42"; 
-   * + $rdf_user_timezone = -8;
-   * + $rdf_server_timezone = -1;
+   * + user_timezone = -8;
+   * + server_timezone = -1;
    * = "2008-03-23 01:03:42"
    *
    * @param string date if no datetime is set, current datetime is used
@@ -40,15 +40,11 @@ class Date
    */
   public static function getLocal( $date = null, $format = 'Y-m-d H:i' )
   {
-    global $rdf_user_timezone;
-    global $rdf_user_timezone_name;
-    global $rdf_server_timezone;
-
     // calculate only for registered users
     if (ThisUser::getInstance()->id() > 0) {
       $basedate = strtotime($date);
-      $date_new = strtotime(($rdf_user_timezone+$rdf_server_timezone).' hours', $basedate);
-      return date($format, $date_new).' '.$rdf_user_timezone_name;
+      $date_new = strtotime((RosCMS::getInstance->siteTimeZone()).' hours', $basedate);
+      return date($format, $date_new).' '.'UTC';
     }
     // guest visitors get UTC time
     elseif ($date != null) {

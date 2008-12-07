@@ -45,14 +45,7 @@ class HTML_User_ProfileEdit extends HTML_User
    */
   protected function body( )
   {
-    global $roscms_intern_page_link;
-    global $rdf_name_long;
-    global $rdf_name;
-    global $rdf_register_user_pwd_min;
-    global $rdf_register_user_pwd_max;
-    global $rdf_register_user_name_max;
-    global $roscms_intern_webserver_pages;
-    global $roscms_intern_webserver_roscms;
+    $config = &RosCMS::getInstance();
 
     $activation_code = @$_GET['code'];
 
@@ -62,30 +55,30 @@ class HTML_User_ProfileEdit extends HTML_User
 
     if ($activation_code != '' && strlen($activation_code) > 6) {
       echo_strip('
-        <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; <a href="'.$roscms_intern_page_link.'my&amp;subpage=edit">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
-        <p>So you have a new email address and would like to keep your '.$rdf_name.' account up-to-date? That is a very good idea. To confirm your email address change, please enter your new email address again.</p>');
+        <h1><a href="'.$config->pathRosCMS().'?page=my">'.$config->siteName().'</a> &gt; <a href="'.$config->pathRosCMS().'?page=my&amp;subpage=edit">Edit My Profile</a> &gt; Activate E-Mail Address</h1>
+        <p>So you have a new email address and would like to keep your '.$config->siteName().' account up-to-date? That is a very good idea. To confirm your email address change, please enter your new email address again.</p>');
     }
     else {
       echo_strip('
-        <h1><a href="'.$roscms_intern_page_link.'my">myReactOS</a> &gt; Edit My Profile</h1>
+        <h1><a href="'.$config->pathRosCMS().'?page=my">'.$config->siteName().'</a> &gt; Edit My Profile</h1>
         <p>Update your user account profile data to reflect the current state.</p>');
     }
     
     echo_strip('
-      <form action="'.$roscms_intern_page_link.'my&amp;subpage=edit" method="post">
+      <form action="'.$config->pathRosCMS().'?page=my&amp;subpage=edit" method="post">
         <div class="bubble">
           <div class="corner_TL">
             <div class="corner_TR"></div>
           </div>');
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT id, name, fullname, email, activation, homepage, country_id, lang_id, timezone_id, occupation, match_session, match_browseragent, match_ip, match_session_expire FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, fullname, email, activation, homepage, country_id, lang_id, timezone_id, occupation, match_session, match_browseragent, match_ip, match_session_expire FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
     $profile = $stmt->fetchOnce();
 
     // DB update E-Mail adress
     if ($this->checkEmailUpdate($activation_code, $profile['activation'])) {
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW() , activation = '', email = :email WHERE id = :user_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW() , activation = '', email = :email WHERE id = :user_id LIMIT 1");
       $stmt->bindParam('user_id',$profile['id'],PDO::PARAM_INT);
       $stmt->bindParam('email',$_POST['useremail'],PDO::PARAM_STR);
       $stmt->execute();
@@ -95,7 +88,7 @@ class HTML_User_ProfileEdit extends HTML_User
       echo_strip('
         <h2>E-Mail Address Changed</h2>
         <div>
-          <a href="'.$roscms_intern_page_link.'my" style="color: red !important; text-decoration:underline;">My Profile</a>
+          <a href="'.$config->pathRosCMS().'?page=my" style="color: red !important; text-decoration:underline;">My Profile</a>
         </div>');
       return;
     }
@@ -104,7 +97,7 @@ class HTML_User_ProfileEdit extends HTML_User
     if (isset($_POST['registerpost']) && isset($_POST['useremail']) && $_POST['useremail'] != '') {
     
       // check if another account with the same email address already exists
-      $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
       $stmt->bindParam('email',$_POST['useremail'],PDO::PARAM_STR);
       $stmt->execute();
 
@@ -113,7 +106,7 @@ class HTML_User_ProfileEdit extends HTML_User
       }
     }
 
-    if (($activation_code == '' || strlen($activation_code) <= 6) && isset($_POST['registerpost']) && (isset($_POST['userpwd1']) && ($_POST['userpwd1'] == "" || (strlen($_POST['userpwd1']) >= $rdf_register_user_pwd_min && strlen($_POST['userpwd1']) < $rdf_register_user_pwd_max))) && isset($_POST['useremail']) && EMail::isValid($_POST['useremail']) && !$existemail) {
+    if (($activation_code == '' || strlen($activation_code) <= 6) && isset($_POST['registerpost']) && (isset($_POST['userpwd1']) && ($_POST['userpwd1'] == "" || (strlen($_POST['userpwd1']) >= $config->limitPasswordMin() && strlen($_POST['userpwd1']) < $config->limitPasswordMax()))) && isset($_POST['useremail']) && EMail::isValid($_POST['useremail']) && !$existemail) {
 
       // email address activation code
       $s = '';
@@ -128,7 +121,7 @@ class HTML_User_ProfileEdit extends HTML_User
 
       // update password
       if ($safepwd === true) {
-        $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET password = MD5(:password) WHERE id = :user_id LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET password = MD5(:password) WHERE id = :user_id LIMIT 1");
         $stmt->bindParam('password',$_POST['userpwd1'],PDO::PARAM_STR);
         $stmt->bindParam('user_id',$profile['id'],PDO::PARAM_INT);
         $password_change = $stmt->execute();
@@ -138,7 +131,7 @@ class HTML_User_ProfileEdit extends HTML_User
 
       // set email activation code
       if ($profile['email'] != $_POST['useremail']) {
-        $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation = :activation_code WHERE id = :user_id LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation = :activation_code WHERE id = :user_id LIMIT 1");
         $stmt->bindValue('activation_code',htmlspecialchars($_POST['useremail']).$account_act_code,PDO::PARAM_STR);
         $stmt->bindParam('user_id',$profile['id'],PDO::PARAM_INT);
         $stmt->execute();
@@ -150,7 +143,7 @@ class HTML_User_ProfileEdit extends HTML_User
       }
 
       // update account data
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW( ) , fullname = :fullname, homepage = :website, lang_id = :language, country_id = :country, timezone_id = :timezone, occupation = :occupation, match_session = :setting_multisession, match_browseragent = :setting_browser, match_ip = :setting_ip, match_session_expire = :setting_timeout WHERE id = :user_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW( ) , fullname = :fullname, homepage = :website, lang_id = :language, country_id = :country, timezone_id = :timezone, occupation = :occupation, match_session = :setting_multisession, match_browseragent = :setting_browser, match_ip = :setting_ip, match_session_expire = :setting_timeout WHERE id = :user_id LIMIT 1");
       $stmt->bindParam('fullname',htmlspecialchars($_POST['userfullname']),PDO::PARAM_STR);
       $stmt->bindParam('website',$_POST['userwebsite'],PDO::PARAM_STR);
       $stmt->bindParam('language',$_POST['language'],PDO::PARAM_INT);
@@ -169,10 +162,10 @@ class HTML_User_ProfileEdit extends HTML_User
       if ($profile['email'] != $_POST['useremail']) {
 
         // subject
-        $subject = $rdf_name_long." - Email Address Activation";
+        $subject = $config->siteName()." - Email Address Activation";
 
         // message
-        $message = $rdf_name_long." - Email Address Activation\n\n\nYou have requested an email address change for your account on ".$rdf_name.". The next step in order to enable the new email address for the account is to activate it by using the hyperlink below.\n\n\nCurrent E-Mail Address: ".$profile['email']."\nNew E-Mail Address: ".$_POST['useremail']."\n\nActivation-Hyperlink: ".$roscms_intern_page_link."my&amp;subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
+        $message = $config->siteName()." - Email Address Activation\n\n\nYou have requested an email address change for your account on ".$config->siteName().". The next step in order to enable the new email address for the account is to activate it by using the hyperlink below.\n\n\nCurrent E-Mail Address: ".$profile['email']."\nNew E-Mail Address: ".$_POST['useremail']."\n\nActivation-Hyperlink: ".$config->pathRosCMS()."?page=my&amp;subpage=activate&code=".$account_act_code."/\n\n\nBest regards,\nThe ".$config->siteName()." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
         // send the mail
         if (EMail::send($_POST['useremail'], $subject, $message)) {
@@ -187,7 +180,7 @@ class HTML_User_ProfileEdit extends HTML_User
         echo '<div>Password changed.</div>';
       }
 
-      echo '<div><a href="'.$roscms_intern_page_link.'my" style="color:red !important; text-decoration:underline;">My Profile</a></div>';
+      echo '<div><a href="'.$config->pathRosCMS().'?page=my" style="color:red !important; text-decoration:underline;">My Profile</a></div>';
 
       ROSUser::syncSubsystems($profile['id']);
     }
@@ -201,7 +194,7 @@ class HTML_User_ProfileEdit extends HTML_User
         <div class="field">
           <input type="hidden" name="registerpost" id="registerpost" value="reg" />
           <button type="submit" name="submit">Save</button>
-          <button type="button" onclick="'."window.location='".$roscms_intern_webserver_pages."'".'" style="color:#777777;">Cancel</button>
+          <button type="button" onclick="'."window.location='".$config->pathGenerated()."'".'" style="color:#777777;">Cancel</button>
         </div>');
     }
     else {
@@ -224,10 +217,10 @@ class HTML_User_ProfileEdit extends HTML_User
           <label for="userpwd1"'.((isset($_POST['registerpost']) && isset($_POST['userpwd3']) && $_POST['userpwd3'] != '') ? ' style="color:red;"' : '').'>New Password *</label>
           <input name="userpwd1" type="password" tabindex="2" id="userpwd1" maxlength="50" />');
           
-      if ($safepwd === false || (isset($_POST['userpwd1']) && strlen($_POST['userpwd1']) > $rdf_register_user_name_max)) {
+      if ($safepwd === false || (isset($_POST['userpwd1']) && strlen($_POST['userpwd1']) > $config->limitUserNameMax())) {
         echo_strip('
           <br />
-          <em>Please use a stronger password! At least '.$rdf_register_user_pwd_min.' characters, do not include common words or names, and combine three of these character types: uppercase letters, lowercase letters, numbers, or symbols (ASCII characters).</em>');
+          <em>Please use a stronger password! At least '.$config->limitPasswordMin().' characters, do not include common words or names, and combine three of these character types: uppercase letters, lowercase letters, numbers, or symbols (ASCII characters).</em>');
       }
       else {
         echo_strip('
@@ -250,7 +243,7 @@ class HTML_User_ProfileEdit extends HTML_User
       if (isset($_POST['registerpost']) && $existemail && $_POST['useremail'] != $profile['user_email']) {
         echo_strip('
           <br />
-          <em>That email address is already with an account. Do you have several accounts? Please <a href="'.$roscms_intern_page_link.'login" style="color:red !important; text-decoration:underline;"><strong>login</strong></a>!</em>');
+          <em>That email address is already with an account. Do you have several accounts? Please <a href="'.$config->pathRosCMS().'?page=login" style="color:red !important; text-decoration:underline;"><strong>login</strong></a>!</em>');
       }
 
       echo_strip('
@@ -266,7 +259,7 @@ class HTML_User_ProfileEdit extends HTML_User
           <select id="language" name="language" tabindex="6">
           <option value="">Select One</option>');
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT id, name, name_original FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, name_original FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
       $stmt->execute();
       while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
         echo '<option value="'.$language['id'].'"';
@@ -287,7 +280,7 @@ class HTML_User_ProfileEdit extends HTML_User
           <select id="country" name="country" tabindex="6">
           <option value="">Select One</option>');
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_COUNTRIES." ORDER BY name ASC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_COUNTRIES." ORDER BY name ASC");
       $stmt->execute();
       while ($country = $stmt->fetch(PDO::FETCH_ASSOC)) {
         echo '<option value="'.$country['id'].'"';
@@ -307,7 +300,7 @@ class HTML_User_ProfileEdit extends HTML_User
           <label for="tzone"'.(isset($_POST['registerpost']) && isset($_POST['tzone']) && $_POST['tzone'] == '' ? ' style="color:red;"' : '').'>Timezone</label>
           <select name="tzone" id="tzone" tabindex="7">');
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT id, name_short, name, difference FROM ".ROSCMST_TIMEZONES." ORDER BY difference ASC, name ASC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name_short, name, difference FROM ".ROSCMST_TIMEZONES." ORDER BY difference ASC, name ASC");
       $stmt->execute();
       while ($timezone = $stmt->fetch(PDO::FETCH_ASSOC)) {
         echo '<option value="'.$timezone['id'].'"';
@@ -351,7 +344,7 @@ class HTML_User_ProfileEdit extends HTML_User
         <div class="field">
           <input type="hidden" name="registerpost" id="registerpost" value="reg" />
           <button type="submit" name="submit">Save</button>
-          <button type="button" onclick="'.("window.location='".$roscms_intern_webserver_roscms."'").'" style="color:#777777;">Cancel</button>
+          <button type="button" onclick="'.("window.location='".$config->pathRosCMS()."'").'" style="color:#777777;">Cancel</button>
         </div>');
     }
     echo_strip('
@@ -373,16 +366,13 @@ class HTML_User_ProfileEdit extends HTML_User
 
   
   private function checkPasswordUpdate ( )
-  {
-    global $rdf_register_user_pwd_min;
-    global $rdf_register_user_pwd_max;
-  
+  {  
     return (isset($_POST['registerpost'])
       && isset($_POST['userpwd3']) && $_POST['userpwd3'] != ''
       && isset($_POST['userpwd1']) && $_POST['userpwd1'] != ''
       && isset($_POST['userpwd2']) && $_POST['userpwd2'] != ''
-      && strlen($_POST['userpwd1']) >= $rdf_register_user_pwd_min
-      && strlen($_POST['userpwd1']) < $rdf_register_user_pwd_max
+      && strlen($_POST['userpwd1']) >= RosCMS::getInstance()->limitPasswordMin()
+      && strlen($_POST['userpwd1']) < RosCMS::getInstance()->limitPasswordMax()
       && $_POST['userpwd1'] == $_POST['userpwd2']);
   }
 

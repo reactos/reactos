@@ -68,13 +68,13 @@ class HTML_CMS_User extends HTML_CMS
     }
     elseif ($thisuser->isMemberOfGroup('transmaint')) {
       echo '<h3>Language Maintainer</h3>';
-      $stmt=DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0  AND r.lang_id = :lang GROUP BY u.name ORDER BY editcounter DESC, u.name");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0  AND r.lang_id = :lang GROUP BY u.name ORDER BY editcounter DESC, u.name");
       $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
     }
 
     // for non language maintainers
     if (!isset($stmt)) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0 GROUP BY u.name ORDER BY editcounter DESC, u.name");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0 GROUP BY u.name ORDER BY editcounter DESC, u.name");
     }
 
     echo_strip('

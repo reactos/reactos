@@ -51,10 +51,6 @@ class Export_Page extends Export
    */
   public function page( )
   {
-    global $RosCMS_GET_d_value, $RosCMS_GET_d_value2,$RosCMS_GET_d_value3;
-
-    $dynamic_num = $RosCMS_GET_d_value3;
-
     switch (@$_GET['d_u']) {
       case 'output':
         // @TODO
@@ -64,27 +60,33 @@ class Export_Page extends Export
       default:
         if (empty($_GET['d_r_id']) || strpos($_GET['d_r_id'], 'tr') >= 0) {
           // translation mode (contains "tr")
-          $RosCMS_GET_d_value2 = $_GET['d_r_lang'];
+          $lang = $_GET['d_r_lang'];
+        }
+        else {
+          $lang = $_GET['d_val2']
         }
 
         // remove "tr" so that it also work in translation view
-        $RosCMS_GET_d_value = str_replace('tr', '', $RosCMS_GET_d_value);
+        $data = str_replace('tr', '', $_GET['d_val']);
 
-        if ( is_numeric($RosCMS_GET_d_value) ) {
-          $stmt=DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE r.id = :rev_id  ORDER BY r.version DESC LIMIT 1");
-          $stmt->bindParam('rev_id',$RosCMS_GET_d_value,PDO::PARAM_INT);
+        if ( is_numeric($data) ) {
+          $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE r.id = :rev_id  ORDER BY r.version DESC LIMIT 1");
+          $stmt->bindParam('rev_id',$data,PDO::PARAM_INT);
         }
         else {
-          $stmt=DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :data_name AND r.lang_id IN(:lang_one, :lang_two) ORDER BY r.version DESC LIMIT 1");
-          $stmt->bindParam('data_name',$RosCMS_GET_d_value,PDO::PARAM_STR);
-          $stmt->bindParam('lang_one',$RosCMS_GET_d_value2,PDO::PARAM_INT);
+          $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :data_name AND r.lang_id IN(:lang_one, :lang_two) ORDER BY r.version DESC LIMIT 1");
+          $stmt->bindParam('data_name',$data,PDO::PARAM_STR);
+          $stmt->bindParam('lang_one',$lang,PDO::PARAM_INT);
           $stmt->bindParam('lang_two',Language::getStandardId(),PDO::PARAM_INT);
         }
 
         $stmt->execute();
         $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
-        if ($dynamic_num == '') {
+        if (empty($_GET['d_val3'])) {
           $dynamic_num = Tag::getValueByUser($revision['id'], 'number', -1);
+        }
+        else {
+          $dynamic_num = $_GET['d_val3'];
         }
 
         Log::writeGenerateLow('preview page: generate_page('.$revision['name'].', '.$revision['lang_id'].', '.$dynamic_num.', '.$_GET['d_u'].')');

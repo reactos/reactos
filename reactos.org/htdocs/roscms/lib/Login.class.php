@@ -40,16 +40,17 @@ class Login
    */
   public static function in( $login_type, $target, $subsys = '' )
   {
-    global $roscms_intern_webserver_roscms;
-    require_once(ROSCMS_PATH.'custom.php');
+    // we need this include, as the method can also be called through subsystems
+    require_once(ROSCMS_PATH.'config.php');
     $user_id = 0;
+    $config = &RosCMS::getInstance();
 
     if ( $login_type != self::OPTIONAL && $login_type != self::REQUIRED ){
       die('Invalid login_type '.$login_type.' for roscms_subsys_login');
     }
 
     // do update work, if a session is started
-    if (isset($_COOKIE['roscmsusrkey']) && preg_match('/^([a-z]{32})$/', $_COOKIE['roscmsusrkey'], $matches)) {
+    if (isset($_COOKIE[$config->cookieUserKey()]) && preg_match('/^([a-z]{32})$/', $_COOKIE[$config->cookieUserKey()], $matches)) {
       $session_id_clean = $matches[1];
       // get a valid ip
       if (isset($_SERVER['REMOTE_ADDR']) && preg_match('/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/', $_SERVER['REMOTE_ADDR'], $matches) ) {
@@ -72,10 +73,10 @@ class Login
 
       // Now, see if we have a valid login session
       if ($subsys == '') {
-        $stmt=DBConnection::getInstance()->prepare("SELECT s.user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip=:ip ) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND u.disabled IS FALSE LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT s.user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip=:ip ) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND u.disabled IS FALSE LIMIT 1");
       }
       else{
-        $stmt=DBConnection::getInstance()->prepare("SELECT m.subsys_userid AS user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id JOIN ".ROSCMST_SUBSYS." m ON m.user_id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip = :ip) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND m.subsys = :subsys AND u.disabled IS FALSE LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT m.subsys_userid AS user_id, s.expires FROM ".ROSCMST_SESSIONS." s JOIN ".ROSCMST_USERS." u ON u.id = s.user_id JOIN ".ROSCMST_SUBSYS." m ON m.user_id = s.user_id WHERE s.id = :session_id AND (u.match_ip IS FALSE OR s.ip = :ip) AND (u.match_browseragent IS FALSE OR s.browseragent = :agent) AND m.subsys = :subsys AND u.disabled IS FALSE LIMIT 1");
           $stmt->bindParam('subsys',$subsys,PDO::PARAM_STR);
       }
       $stmt->bindParam('session_id',$session_id_clean,PDO::PARAM_INT);
@@ -89,17 +90,17 @@ class Login
         
         // Session with timeout. Update the expiry time in the table and the expiry time of the cookie
         if (isset($row['expires'])){
-          $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_SESSIONS." SET expires = DATE_ADD(NOW(), INTERVAL 30 MINUTE) WHERE id = :session_id");
+          $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_SESSIONS." SET expires = DATE_ADD(NOW(), INTERVAL 30 MINUTE) WHERE id = :session_id");
           $stmt->bindParam('session_id',$session_id_clean,PDO::PARAM_INT);
           $stmt->execute();
-          setcookie('roscmsusrkey', $session_id_clean, time() + 30 * 60, '/', Cookie::getDomain());
+          setcookie($config->cookieUserKey(), $session_id_clean, time() + 30 * 60, '/', Cookie::getDomain());
         }
       }
     } // session check
 
     // goto login page, if login is required and no valid session was found
     if (0 == $user_id && $login_type == self::REQUIRED) {
-      $url = $roscms_intern_webserver_roscms.'?page=login';
+      $url = $config->pathRosCMS().'?page=login';
       if ($target != '') {
         $url .= '&target='.urlencode($target);
       }
@@ -122,32 +123,30 @@ class Login
    */
   public static function out( $target = '' )
   {
-    global $rdf_login_cookie_usrkey;
-    global $roscms_intern_page_link;
+    $user_id = ThisUser::getInstance()->id();
+    $config = &RosCMS::getInstance();
 
-    if (isset($_COOKIE[$rdf_login_cookie_usrkey])) 
-    {
+    if ($_COOKIE[$config->cookieUserKey()]) {
       // delete cookie
-      $del_session_id = $_COOKIE[$rdf_login_cookie_usrkey];
-      setcookie($rdf_login_cookie_usrkey, '', time() - 3600, '/', Cookie::getDomain());
-
-      // delete session from DB
-      $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_SESSIONS." WHERE id = :session_id");
-      $stmt->bindparam('session_id',$del_session_id,PDO::PARAM_STR);
-      $stmt->execute() or die('DB error (logout)!');
-
-      // Set the Logout cookie for the Wiki, so the user won't see cached pages
-      // 5 = $wgClockSkewFudge in the Wiki
-      setcookie('wikiLoggedOut', gmdate('YmdHis', time() + 5), time() + 86400, '/', Cookie::getDomain());
-
+      $del_session_id = $_COOKIE[$config->cookieUserKey()];
+      setcookie($config->cookieUserKey(), '', time() - 3600, '/', Cookie::getDomain());
     }
+
+    // Set the Logout cookie for the Wiki, so the user won't see cached pages
+    // 5 = $wgClockSkewFudge in the Wiki
+    setcookie('wikiLoggedOut', gmdate('YmdHis', time() + 5), (time() + 86400), '/', Cookie::getDomain());
+
+    // delete sessions from DB
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_SESSIONS." WHERE user_id = :user_id");
+    $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
+    $stmt->execute() or die('DB error (logout)!');
 
     if (isset($_REQUEST['target']) && $_REQUEST['target'] != '') {
       header('Location: http://'.$_SERVER['HTTP_HOST'].$_REQUEST['target']);
       exit;
     }
 
-    header('Location: '.$roscms_intern_page_link.'my');
+    header('Location: '.$config->pathRosCMS().'?page=my');
     exit;
   } // end of member function login
 
@@ -182,7 +181,7 @@ class Login
     }
 
     // get user data
-    $stmt=DBConnection::getInstance()->prepare("SELECT id, name, disabled FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, disabled FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);
     $stmt->execute() or die('DB error (login script #1)!');
     $user = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -196,7 +195,7 @@ class Login
     }
 
     // collect memberships for current user
-    $stmt=DBConnection::getInstance()->prepare("SELECT g.name_short, g.security_level FROM ".ROSCMST_MEMBERSHIPS." m JOIN ".ROSCMST_GROUPS." g ON m.group_id = g.id WHERE user_id = :user_id");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT g.name_short, g.security_level FROM ".ROSCMST_MEMBERSHIPS." m JOIN ".ROSCMST_GROUPS." g ON m.group_id = g.id WHERE user_id = :user_id");
     $stmt->bindparam('user_id',$user['id'],PDO::PARAM_INT);
     $stmt->execute();
     $memberships = $stmt->fetchAll(PDO::FETCH_ASSOC);

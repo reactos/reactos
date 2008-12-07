@@ -1,4 +1,4 @@
-<?php include('../custom.php'); ?>
+<?php include('../config.php'); ?>
 
 
 
@@ -33,7 +33,7 @@ function generateAllPages( )
  */
 function previewPage( )
 {
-  window.open("<?php echo $roscms_intern_page_link; ?>data_out&d_f=page&d_u=show&d_val=index&d_val2=en", "RosCMSPagePreview");
+  window.open("<?php echo RosCMS::getInstance()->pathRosCMS(); ?>?page=data_out&d_f=page&d_u=show&d_val=index&d_val2=en", "RosCMSPagePreview");
 }
 
 

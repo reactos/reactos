@@ -21,8 +21,6 @@ SELECT
 FROM user_countries
 ORDER BY coun_name ASC;
 
-DROP TABLE user_countries;
-
 
 
 -- --------------------------------------------------------
@@ -49,9 +47,6 @@ SELECT
 FROM languages
 ORDER BY lang_name ASC;
 
-DROP TABLE languages;
-DROP TABLE user_language;
-
 
 
 -- --------------------------------------------------------
@@ -77,8 +72,6 @@ SELECT
   filt_string
 FROM data_user_filter WHERE filt_type = 1
 ORDER BY filt_usrid ASC, filt_title ASC;
-
-DROP TABLE data_user_filter;
 
 
 
@@ -108,8 +101,6 @@ SELECT
   usrgroup_visible
 FROM usergroups
 ORDER BY usrgroup_name;
-
-DROP TABLE usergroups;
 
 
 
@@ -204,8 +195,6 @@ SET ga.can_read=TRUE, ga.can_write=TRUE, ga.can_add=TRUE, ga.can_delete=TRUE, ga
 UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_access a ON ga.acl_id=a.id JOIN data_security s ON a.old_id=s.sec_name
 SET ga.can_read=FALSE, ga.can_write=FALSE, ga.can_add=FALSE, ga.can_delete=FALSE, ga.can_publish=FALSE, ga.can_translate=FALSE WHERE s.sec_deny LIKE CONCAT('%',g.name_short,'%');
 
-DROP TABLE data_security;
-
 -- --------------------------------------------------------
 -- create and convert group memberships
 -- --------------------------------------------------------
@@ -222,8 +211,6 @@ SELECT
   g.id,
   m.usergroupmember_userid
 FROM usergroup_members m JOIN roscms_groups g ON m.usergroupmember_usergroupid=g.name_short;
-
-DROP TABLE usergroup_members;
 
 
 
@@ -243,6 +230,7 @@ CREATE TABLE roscms_entries (
   KEY name (name)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- double entries are removed after converting revisions
 INSERT INTO roscms_entries
 SELECT
   NULL,
@@ -250,7 +238,7 @@ SELECT
   d.data_name,
   s.id,
   d.data_id,
-  0
+  1
 FROM data_a d JOIN roscms_access s ON d.data_acl=s.old_id
 UNION
 SELECT
@@ -259,12 +247,8 @@ SELECT
   d.data_name,
   s.id,
   d.data_id,
-  1
+  0
 FROM data_ d JOIN roscms_access s ON d.data_acl=s.old_id;
-
--- double entries are removed after converting revisions
-DROP TABLE data_;
-DROP TABLE data_a;
 
 
 
@@ -311,9 +295,6 @@ SELECT
   r.rev_id
 FROM data_revision r JOIN roscms_languages l ON r.rev_language=l.name_short JOIN roscms_entries d ON (d.old_id=r.data_id AND d.old_archive IS FALSE);
 
-DROP TABLE data_revision;
-DROP TABLE data_revision_a;
-
 
 
 -- --------------------------------------------------------
@@ -334,13 +315,6 @@ FROM roscms_entries a JOIN roscms_entries b ON (a.name=b.name AND a.type=b.type 
 
 UPDATE roscms_entries_revisions r JOIN roscms_converter_temp c ON r.data_id=c.old_data_id SET r.data_id=c.new_data_id;
 DELETE FROM roscms_entries WHERE id IN (SELECT old_data_id FROM roscms_converter_temp);
-
-ALTER TABLE roscms_entries
-  DROP old_id,
-  DROP old_archive,
-  ADD UNIQUE KEY type_name ( type , name );
-
-DROP TABLE roscms_converter_temp;
 
 
 
@@ -373,9 +347,6 @@ SELECT
   t.stext_content
 FROM data_stext t JOIN roscms_entries_revisions r ON (t.data_rev_id=r.old_id AND r.archive IS FALSE);
 
-DROP TABLE data_stext;
-DROP TABLE data_stext_a;
-
 
 
 -- --------------------------------------------------------
@@ -406,9 +377,6 @@ SELECT
   t.text_name,
   t.text_content
 FROM data_text t JOIN roscms_entries_revisions r ON (t.data_rev_id=r.old_id AND r.archive IS FALSE);
-
-DROP TABLE data_text;
-DROP TABLE data_text_a;
 
 
 
@@ -444,16 +412,6 @@ SELECT
   v.tv_value
 FROM data_tag t JOIN data_tag_name n ON t.tag_name_id=n.tn_id JOIN data_tag_value v ON t.tag_value_id=v.tv_id JOIN roscms_entries_revisions r ON (t.data_rev_id=r.old_id AND r.archive IS FALSE);
 
-DROP TABLE data_tag;
-DROP TABLE data_tag_a;
-
-DROP TABLE data_tag_name;
-DROP TABLE data_tag_name_a;
-DROP TABLE data_tag_value;
-DROP TABLE data_tag_value_a;
-
-ALTER TABLE roscms_entries_revisions DROP old_id;
-
 
 
 -- --------------------------------------------------------
@@ -475,8 +433,6 @@ SELECT
   map_subsys_name,
   map_subsys_userid
 FROM subsys_mappings;
-
-DROP TABLE subsys_mappings;
 
 
 
@@ -502,8 +458,6 @@ SELECT
   tz_value
 FROM user_timezone
 ORDER BY tz_value;
-
-DROP TABLE user_timezone;
 
 
 
@@ -571,8 +525,6 @@ LEFT JOIN roscms_languages l ON u.user_language=l.name_short
 LEFT JOIN roscms_timezones t ON u.user_timezone=t.name_short
 LEFT JOIN roscms_countries c ON u.user_country=c.name_short;
 
-DROP TABLE users;
-
 
 
 -- --------------------------------------------------------
@@ -588,9 +540,6 @@ INSERT INTO roscms_accounts_forbidden
 SELECT
   unsafe_name
 FROM user_unsafenames;
-
-DROP TABLE user_unsafenames;
-DROP TABLE user_unsafepwds;
 
 
 
@@ -609,8 +558,6 @@ CREATE TABLE roscms_accounts_sessions (
 
 INSERT INTO roscms_accounts_sessions SELECT * FROM user_sessions;
 
-DROP TABLE user_sessions;
-
 
 
 -- --------------------------------------------------------
@@ -624,5 +571,48 @@ CREATE TABLE roscms_jobs (
   KEY `action` (`action`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+
+
 -- --------------------------------------------------------
+-- remove converter specific fields
+-- --------------------------------------------------------
+ALTER TABLE roscms_entries
+  DROP old_id,
+  DROP old_archive,
+  ADD UNIQUE KEY type_name ( type , name );
+ALTER TABLE roscms_entries_revisions DROP old_id;
 ALTER TABLE roscms_access DROP old_id;
+
+
+
+-- --------------------------------------------------------
+-- drop old tables
+-- --------------------------------------------------------
+DROP TABLE data_text;
+DROP TABLE data_text_a;
+DROP TABLE data_stext;
+DROP TABLE data_stext_a;
+DROP TABLE roscms_converter_temp;
+DROP TABLE data_revision;
+DROP TABLE data_revision_a;
+DROP TABLE data_;
+DROP TABLE data_a;
+DROP TABLE usergroup_members;
+DROP TABLE data_security;
+DROP TABLE usergroups;
+DROP TABLE data_user_filter;
+DROP TABLE user_countries;
+DROP TABLE languages;
+DROP TABLE user_language;
+DROP TABLE data_tag;
+DROP TABLE data_tag_a;
+DROP TABLE data_tag_name;
+DROP TABLE data_tag_name_a;
+DROP TABLE data_tag_value;
+DROP TABLE data_tag_value_a;
+DROP TABLE subsys_mappings;
+DROP TABLE user_timezone;
+DROP TABLE users;
+DROP TABLE user_unsafenames;
+DROP TABLE user_unsafepwds;
+DROP TABLE user_sessions;

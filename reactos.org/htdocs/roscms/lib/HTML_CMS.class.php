@@ -65,14 +65,11 @@ abstract class HTML_CMS extends HTML
    */
   private function navigation( )
   {
-    global $roscms_intern_page_link;
-    global $roscms_intern_webserver_pages, $roscms_intern_page_link;
-
     $thisuser = &ThisUser::getInstance();
 
     // generate list of memberships
     $group_list = '';
-    $stmt=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE m.user_id=:user_id ORDER BY g.security_level DESC, g.name");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE m.user_id=:user_id ORDER BY g.security_level DESC, g.name");
     $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute();
     while($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -93,7 +90,7 @@ abstract class HTML_CMS extends HTML
           <span style="text-decoration:underline;">reload</span>
         </span>  
         |
-        <a href="'.$roscms_intern_page_link.'logout">Sign out</a>
+        <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=logout">Sign out</a>
       </div>
       <div id="roscms_page">
         <table id="mt" cellpadding="0" cellspacing="0">
@@ -170,9 +167,9 @@ abstract class HTML_CMS extends HTML
         break;
 
       case 'website':
-        echo_strip('Quick Links: <a href="'.$roscms_intern_page_link.'data&amp;branch=welcome#web_news_langgroup">Translation Group News</a>
-          | <a href="'.$roscms_intern_webserver_pages.'?page=tutorial_roscms">Text- &amp; Video-Tutorials</a>
-          | <a href="'.$roscms_intern_webserver_pages.'/forum/viewforum.php?f=18">Website Forum</a>');
+        echo_strip('Quick Links: <a href="'.RosCMS::getInstance()->pathRosCMS().'?page=data&amp;branch=welcome#web_news_langgroup">Translation Group News</a>
+          | <a href="'.RosCMS::getInstance()->pathGenerated().'?page=tutorial_roscms">Text- &amp; Video-Tutorials</a>
+          | <a href="'.RosCMS::getInstance()->pathGenerated().'/forum/viewforum.php?f=18">Website Forum</a>');
         break;
         
       case 'user':

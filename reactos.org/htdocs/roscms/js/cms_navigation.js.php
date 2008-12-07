@@ -1,5 +1,5 @@
 <?php
-  include_once('../custom.php'); ?>
+  include_once('../config.php'); ?>
 
 
 
@@ -24,5 +24,5 @@ function loadBranch( branch )
 {
   exitmsg = '';
 
-  window.location.href = '<?php echo $roscms_intern_webserver_roscms; ?>?page=data&branch='+branch;
+  window.location.href = '<?php echo RosCMS::getInstance()->pathRosCMS(); ?>?page=data&branch='+branch;
 }

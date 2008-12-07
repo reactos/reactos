@@ -48,23 +48,18 @@ class HTML_User_Login extends HTML_User
    */
   protected function body( )
   {
-    global $roscms_intern_page_link;
-    global $rdf_login_cookie_usrkey;
-    global $rdf_login_cookie_seckey;
-    global $rdf_login_cookie_usrname;
-    global $rdf_login_cookie_usrpwd;
-    global $rdf_login_cookie_loginname;
-
+    $config = &RosCMS::getInstance();
+  
     // show login dialog
-    if (empty($_POST[$rdf_login_cookie_usrname]) && empty($_POST[$rdf_login_cookie_usrpwd])) {
+    if (empty($_POST[$config->cookieUserName()]) && empty($_POST[$config->cookiePassword()])) {
       self::loginPage();
     }
 
     // pw or user are not set
-    elseif(empty($_POST[$rdf_login_cookie_usrname])) {
+    elseif(empty($_POST[$config->cookieUserName()])) {
       self::loginPage('Please enter your username!');
     }
-    elseif(empty($_POST[$rdf_login_cookie_usrpwd])) {
+    elseif(empty($_POST[$config->cookiePassword()])) {
       self::loginPage('Please enter your password');
     }
 
@@ -73,7 +68,7 @@ class HTML_User_Login extends HTML_User
       $user_id = 0;
       $session_id = '';
 
-      if (isset($_COOKIE[$rdf_login_cookie_seckey]) && preg_match('/^([a-z0-9]{32})$/', $_COOKIE[$rdf_login_cookie_seckey], $matches)) {
+      if (isset($_COOKIE[$config->cookieSecure()]) && preg_match('/^([a-z0-9]{32})$/', $_COOKIE[$config->cookieSecure()], $matches)) {
         $session_id = $matches[1];
         $session_found = true;
       }
@@ -83,7 +78,7 @@ class HTML_User_Login extends HTML_User
       }
 
       // Check username. It should only contain printable ASCII chars
-      if (preg_match('/^([ !-~]+)$/', $_POST[$rdf_login_cookie_usrname], $matches)) {
+      if (preg_match('/^([ !-~]+)$/', $_POST[$config->cookieUserName()], $matches)) {
         $user_name = $matches[1];
       }
       else {
@@ -92,7 +87,7 @@ class HTML_User_Login extends HTML_User
       }
 
       // Check password. It should only contain printable ASCII chars
-      if (preg_match('/^([ !-~]+)$/', $_POST[$rdf_login_cookie_usrpwd], $matches)) {
+      if (preg_match('/^([ !-~]+)$/', $_POST[$config->cookiePassword()], $matches)) {
         $password = $matches[1];
       }
       else {
@@ -101,7 +96,7 @@ class HTML_User_Login extends HTML_User
       }
 
       // get user data
-      $stmt=DBConnection::getInstance()->prepare("SELECT id, password, logins, disabled, match_session, match_session_expire FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, password, logins, disabled, match_session, match_session_expire FROM ".ROSCMST_USERS." WHERE name = :user_name LIMIT 1");
       $stmt->bindParam('user_name',$user_name,PDO::PARAM_STR);
       $stmt->execute() or die('DB error (user login #1)!');
       $user = $stmt->fetchOnce(); 
@@ -129,12 +124,12 @@ class HTML_User_Login extends HTML_User
 
       // if the user account setting is "multisession" (a by user setting), it is set to "false" by default
       if ($user['match_session'] == false) {
-        $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_SESSIONS." WHERE user_id = :user_id");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_SESSIONS." WHERE user_id = :user_id");
         $stmt->bindParam('user_id',$user['id'],PDO::PARAM_INT);
         $stmt->execute() or die('DB error (user login #3)!');
     
         if ($stmt->fetchColumn() > 0) {
-          $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_SESSIONS." WHERE user_id =:user_id");
+          $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_SESSIONS." WHERE user_id =:user_id");
           $stmt->bindParam('user_id',$roscms_currentuser_id,PDO::PARAM_INT);
           $stmt->execute();
         }
@@ -142,31 +137,31 @@ class HTML_User_Login extends HTML_User
 
       // At this point, we've passed all checks and we have a valid login check if there's an existing session, if so, end that session
       if (0 != Login::in( Login::OPTIONAL, '')) {
-        $stmt=DBConnection::getInstance()->prepare("DELETE FROM user_sessions WHERE usersession_user_id =:user_id");
-        $stmt->bindParam('user_id',$_COOKIE[$rdf_login_cookie_usrkey],PDO::PARAM_INT);
+        $stmt=&DBConnection::getInstance()->prepare("DELETE FROM user_sessions WHERE usersession_user_id =:user_id");
+        $stmt->bindParam('user_id',$_COOKIE[$config->cookieUserKey()],PDO::PARAM_INT);
         $stmt->execute();
       }
 
       // save username
       if (isset($_POST['loginoption1']) && $_POST['loginoption1'] == 'save') {
         // save for 5 months
-        setcookie($rdf_login_cookie_loginname, $user_name, time() + 24*3600*30*5, '/', Cookie::getDomain());
+        setcookie($config->cookieLoginName(), $user_name, time() + 24*3600*30*5, '/', Cookie::getDomain());
       }
 
       // delete username (cookie)
       else {
-        setcookie($rdf_login_cookie_loginname, '',time() - 3600, '/', Cookie::getDomain());
+        setcookie($config->cookieLoginName(), '',time() - 3600, '/', Cookie::getDomain());
       }
 
       // expire = NULL
       if (isset($_POST['loginoption2']) && $_POST['loginoption2'] == 'notimeout' && $user['match_session_expire'] == true) {
-        $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SESSIONS." (id, user_id, expires, browseragent, ipaddress) VALUES (:session_id, :user_id, NULL, :useragent, :ip)");
+        $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SESSIONS." (id, user_id, expires, browseragent, ipaddress) VALUES (:session_id, :user_id, NULL, :useragent, :ip)");
         $cookie_time = 0x7fffffff; // 31.12.1969
       }
 
       // expire = 'DATE_ADD(NOW(), INTERVAL 60 MINUTE)';
       else {
-        $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SESSIONS." (id, user_id, expires, browseragent, ip) VALUES (:session_id, :user_id, DATE_ADD(NOW(), INTERVAL 30 MINUTE), :useragent, :ip)");
+        $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_SESSIONS." (id, user_id, expires, browseragent, ip) VALUES (:session_id, :user_id, DATE_ADD(NOW(), INTERVAL 30 MINUTE), :useragent, :ip)");
         $cookie_time = time() + 30 * 60;
       }
 
@@ -178,10 +173,10 @@ class HTML_User_Login extends HTML_User
       $stmt->execute() or die('DB error (user login #4)!');
 
       // save session_id (cookie)
-      setcookie($rdf_login_cookie_usrkey, $session_id, $cookie_time, '/', Cookie::getDomain());
+      setcookie($config->cookieUserKey(), $session_id, $cookie_time, '/', Cookie::getDomain());
 
       // Update the login_counter of the specific user
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW(), logins = logins + 1 WHERE id = :user_id");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET modified = NOW(), logins = logins + 1 WHERE id = :user_id");
       $stmt->bindParam('user_id',$user['id'],PDO::PARAM_INT);
       $stmt->execute();
 
@@ -192,7 +187,7 @@ class HTML_User_Login extends HTML_User
         exit;
       }
 
-      header('Location: '.$roscms_intern_page_link.'my');
+      header('Location: '.$config->pathRosCMS().'?page=my');
       exit;
     }
   } // end of member function body
@@ -205,22 +200,17 @@ class HTML_User_Login extends HTML_User
    */
   private function loginPage( $err_message = '' )
   {
-    global $rdf_login_cookie_seckey;
-    global $rdf_login_cookie_usrname;
-    global $rdf_login_cookie_usrpwd;
-    global $rdf_login_cookie_loginname;
-    global $rdf_name;
-    global $roscms_intern_page_link;
+    $config = &RosCMS::getInstance();
 
     //@ADD comment -> why do we need this
-    $random_string_security = ''; 
+    $random_string_security = '';
 
     if (isset($_GET['sec']) && $_GET['sec'] == 'security') { 
       $random_string_security = self::makeKey();
-      setcookie($rdf_login_cookie_seckey, $random_string_security, 0, '/', Cookie::getDomain());
+      setcookie($config->cookieSecure(), $random_string_security, 0, '/', Cookie::getDomain());
     } 
     else {
-      setcookie($rdf_login_cookie_seckey, '', time() - 3600, '/', Cookie::getDomain());
+      setcookie($config->cookieSecure(), '', time() - 3600, '/', Cookie::getDomain());
     }
 
     $target_clean = '';
@@ -229,9 +219,9 @@ class HTML_User_Login extends HTML_User
     }
 
     echo_strip('
-      <form action="'.$roscms_intern_page_link.'login" method="post">
+      <form action="'.$config->pathRosCMS().'?page=login" method="post">
         <h1>Login</h1>
-        <p>You don\'t have a '.$rdf_name.' account yet? <a href="'.$roscms_intern_page_link.'register">Join now</a>, it\'s free and just takes a minute.</p>
+        <p>You don\'t have a '.$config->siteName().' account yet? <a href="'.$config->pathRosCMS().'?page=register">Join now</a>, it\'s free and just takes a minute.</p>
 
         <div class="bubble">
           <div class="corner_TL">
@@ -239,27 +229,27 @@ class HTML_User_Login extends HTML_User
           </div>
           <h2>'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'Secure ' : '').'Login</h2>
           <div class="field">
-            <label for="'.$rdf_login_cookie_usrname.'">Username</label>
-            <input type="text" name="'.$rdf_login_cookie_usrname.'" tabindex="1" id="'.$rdf_login_cookie_usrname.'" value="');
-    if (isset($_POST[$rdf_login_cookie_usrname])) {
-      echo $_POST[$rdf_login_cookie_usrname];
+            <label for="'.$config->cookieUserName().'">Username</label>
+            <input type="text" name="'.$config->cookieUserName().'" tabindex="1" id="'.$config->cookieUserName().'" value="');
+    if (isset($_POST[$config->cookieUserName()])) {
+      echo $_POST[$config->cookieUserName()];
     }
-    elseif (isset($_COOKIE[$rdf_login_cookie_loginname])) {
-      echo $_COOKIE[$rdf_login_cookie_loginname];
+    elseif (isset($_COOKIE[$config->cookieLoginName()])) {
+      echo $_COOKIE[$config->cookieLoginName()];
     }
     echo_strip('" maxlength="50" />
       </div>
 
       <div class="field">
-        <label for="'.$rdf_login_cookie_usrpwd.'">Password</label>
-        <input name="'.$rdf_login_cookie_usrpwd.'" type="password" tabindex="2" id="'.$rdf_login_cookie_usrpwd.'" maxlength="50" />
+        <label for="'.$config->cookiePassword().'">Password</label>
+        <input name="'.$config->cookiePassword().'" type="password" tabindex="2" id="'.$config->cookiePassword().'" maxlength="50" />
       </div>');
 
     if (empty($_GET['sec']) || $_GET['sec'] == 'standard') {
       echo_strip('
         <fieldset>
           <legend>Login options</legend>
-          <input type="checkbox" name="loginoption1" id="loginoption1" value="save"'.(isset($_COOKIE[$rdf_login_cookie_loginname]) ? ' checked="checked"' : '').' tabindex="3" />
+          <input type="checkbox" name="loginoption1" id="loginoption1" value="save"'.(isset($_COOKIE[$config->cookieLoginName()]) ? ' checked="checked"' : '').' tabindex="3" />
           <label for="loginoption1">Save username</label>
           <br />
           <input name="loginoption2" type="checkbox" id="loginoption2" value="notimeout" tabindex="4" /> 
@@ -274,7 +264,7 @@ class HTML_User_Login extends HTML_User
     }
     echo_strip('
           <input name="logintype" type="hidden" id="logintype" value="'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? 'security' : 'standard').'" />
-          <button type="submit" name="submit"'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? ' onclick="'.$rdf_login_cookie_usrpwd.'.value = calcMD5(\''.$random_string_security.'\' + calcMD5('.$rdf_login_cookie_usrpwd.'.value))"': '').'>Login</button>
+          <button type="submit" name="submit"'.((isset($_GET['sec']) && $_GET['sec'] == 'security') ? ' onclick="'.$config->cookiePassword().'.value = calcMD5(\''.$random_string_security.'\' + calcMD5('.$config->cookiePassword().'.value))"': '').'>Login</button>
         </div>
         <div class="corner_BL">
           <div class="corner_BR"></div>
@@ -297,15 +287,15 @@ class HTML_User_Login extends HTML_User
     echo '<div style="margin:10px;text-align:center;">';
 
     if (empty($_GET['sec']) || $_GET['sec'] == 'standard') {
-      echo '<a href="'.$roscms_intern_page_link.'login&amp;sec=security'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use enhanced security</a>';
+      echo '<a href="'.$config->pathRosCMS().'?page=login&amp;sec=security'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use enhanced security</a>';
     }
     else {
-      echo '<a href="'.$roscms_intern_page_link.'login&amp;sec=standard'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use standard security</a>';
+      echo '<a href="'.$config->pathRosCMS().'?page=login&amp;sec=standard'.(($target_clean != '') ? '&amp;target='.urlencode($target_clean) : '').'">Use standard security</a>';
     }
     
     echo_strip('
           <br />
-          <a href="'.$roscms_intern_page_link.'login&amp;subpage=lost">Lost username or password?</a>
+          <a href="'.$config->pathRosCMS().'?page=login&amp;subpage=lost">Lost username or password?</a>
         </div>
       </form>');
   } // end of member function

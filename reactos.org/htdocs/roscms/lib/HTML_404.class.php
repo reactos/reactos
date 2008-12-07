@@ -28,19 +28,16 @@ class HTML_404 extends HTML
 
   public function body( )
   {
-    global $roscms_langres;
-    global $roscms_intern_webserver_pages, $roscms_page_url;
-
     // output
     echo_strip('
-      <h1>404 - '.$roscms_langres['Page_not_found'].'</h1>
-      <h2>'.$roscms_langres['Page_not_found'].'</h2>
+      <h1>404 - Page not found</h1>
+      <h2>Page not found</h2>
       <p>Our Web server cannot find the page or file you asked for.</p>
       <p>The link you followed may be broken or expired. </p>
       <p>Please use one of the following links to find the information you are looking for:</p>
       <ul>
-        <li><a href="'.$roscms_intern_webserver_pages.'">'.$roscms_page_url.' Website</a> </li>
-        <li><a href="'.$roscms_intern_webserver_pages.'?page=sitemap">'.$roscms_page_url.' Sitemap</a> 
+        <li><a href="'.RosCMS::getInstance()->pathGenerated().'">'.RosCMS::getInstance()->siteName().' Website</a> </li>
+        <li><a href="'.RosCMS::getInstance()->pathGenerated().'?page=sitemap">'.RosCMS::getInstance()->siteName().' Sitemap</a> 
         </li>
       </ul>');
   }

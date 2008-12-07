@@ -1,9 +1,10 @@
-ReactOS Content Management System version 3 is available thanks to the work of
+ReactOS Content Management System version 4 is available thanks to the work of
 
 
 Klemens Friedl <frik85@reactos.org>
 Ge van Geldorp <gvg@reactos.org>
-Michael Wirth <?>
+Michael Wirth  <?>
+Danny Götte    <dangerground@web.de>
    
 
 Design (ReactOS Website):

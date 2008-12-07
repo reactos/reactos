@@ -26,7 +26,7 @@ Login::required();
 $user_lang = ROSUser::getLanguage(ThisUser::getInstance()->id(), true);
 
 // prepare build languages
-$stmt=DBConnection::getInstance()->prepare("SELECT id, level, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
+$stmt=&DBConnection::getInstance()->prepare("SELECT id, level, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
 $stmt->execute();
 $languages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -167,7 +167,7 @@ foreach($languages as $language) {
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><?php
 
 // ACL
-$stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
+$stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
 $stmt->execute();
 while($ACL=$stmt->fetch(PDO::FETCH_ASSOC)) {
   echo '<option value="'. $ACL['id'] .'">'. $ACL['name'] .'</option>';

@@ -43,18 +43,15 @@ class EMail
    * @access public
    */
   public static function send( $receiver, $subject, $message )
-  {
-    global $rdf_system_email_str;
-    global $rdf_system_brand;
-  
+  {  
     // email addresses
     $receiver = htmlentities($receiver, ENT_NOQUOTES, 'UTF-8');
 
     // header
     $headers = "";
-    $headers .= "From:" .$rdf_system_email_str."\n";
-    $headers .= "Reply-To:" . $rdf_system_email_str."\n"; 
-    $headers .= "X-Mailer: ".$rdf_system_brand."\n"; 
+    $headers .= "From:" .RosCMS::getInstance->emailSystem()."\n";
+    $headers .= "Reply-To:" . RosCMS::getInstance->emailSystem()."\n"; 
+    $headers .= "X-Mailer: ".RosCMS::getInstance->systemBrand()."\n"; 
     $headers .= "X-Sender-IP: ".$_SERVER['REMOTE_ADDR']."\n"; 
     $headers .= "Content-type: text/plain\n";
 

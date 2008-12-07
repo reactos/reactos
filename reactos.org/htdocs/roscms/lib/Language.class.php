@@ -24,8 +24,6 @@ class Language
    */
   public static function checkStatic( $lang_code )
   {
-    global $roscms_standard_language;
-
     switch ($lang_code) {
       case 'ar':
       case 'bg':
@@ -60,7 +58,7 @@ class Language
         break;
       case '*':
       default:
-        return $roscms_standard_language;
+        return RosCMS::getInstance()->siteLanguage();
         break;
     }
   } // end of member function check_lang
@@ -71,10 +69,8 @@ class Language
     static $id;
 
     if (!isset($id)){
-      global $roscms_standard_language;
-
-      $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_LANGUAGES." WHERE name_short = :lang_code LIMIT 1");
-      $stmt->bindParam('lang_code',$roscms_standard_language,PDO::PARAM_STR);
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_LANGUAGES." WHERE name_short = :lang_code LIMIT 1");
+      $stmt->bindParam('lang_code',RosCMS::getInstance()->siteLanguage(),PDO::PARAM_STR);
       $stmt->execute();
       $lang = $stmt->fetchColumn();
     }

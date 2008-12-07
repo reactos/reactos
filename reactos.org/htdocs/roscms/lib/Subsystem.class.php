@@ -43,7 +43,7 @@ abstract class Subsystem extends Login
   {
     $inconsistencies = 0;
   
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.id FROM ".ROSCMST_USERS." u WHERE u.id NOT IN (SELECT m.user_id FROM ".ROSCMST_SUBSYS." m WHERE m.user_id = u.id AND m.subsys = :subsys_name)");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT u.id FROM ".ROSCMST_USERS." u WHERE u.id NOT IN (SELECT m.user_id FROM ".ROSCMST_SUBSYS." m WHERE m.user_id = u.id AND m.subsys = :subsys_name)");
     $stmt->bindParam('subsys_name',$this->name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_utils #1)');
   
@@ -70,7 +70,7 @@ abstract class Subsystem extends Login
   {
     $inconsistencies = 0;
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.id AS user_id, m.subsys_user_id FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_SUBSYS." m ON m.user_id = u.id LEFT OUTER JOIN ".$this->user_table." ss ON ss.".$this->userid_column." = m.subsys_user_id WHERE m.subsys = :subsys_name AND ss.".$this->userid_column." IS NULL");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT u.id AS user_id, m.subsys_user_id FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_SUBSYS." m ON m.user_id = u.id LEFT OUTER JOIN ".$this->user_table." ss ON ss.".$this->userid_column." = m.subsys_user_id WHERE m.subsys = :subsys_name AND ss.".$this->userid_column." IS NULL");
     $stmt->bindParam('subsys_name',$this->name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_utils #2)');
     while ($mapping = $stmt->fetch(PDO::FETCH_ASSOC))
@@ -79,7 +79,7 @@ abstract class Subsystem extends Login
       $inconsistencies++;
     }
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT ss.".$this->userid_column." AS user_id FROM ".$this->user_table." ss WHERE ss.".$this->userid_column." NOT IN (SELECT m.subsys_user_id FROM ".ROSCMST_SUBSYS." m WHERE m.subsys_user_id = ss.".$this->userid_column." AND m.subsys = :subsys_name)");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT ss.".$this->userid_column." AS user_id FROM ".$this->user_table." ss WHERE ss.".$this->userid_column." NOT IN (SELECT m.subsys_user_id FROM ".ROSCMST_SUBSYS." m WHERE m.subsys_user_id = ss.".$this->userid_column." AND m.subsys = :subsys_name)");
     $stmt->bindParam('subsys_name',$this->name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_utils #3)');
     while ($subsys = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -129,7 +129,7 @@ abstract class Subsystem extends Login
    */
   public function addOrUpdateMapping( $user_id )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT subsys_user_id FROM ".ROSCMST_SUBSYS." WHERE user_id = :user_id AND subsys = :subsys LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT subsys_user_id FROM ".ROSCMST_SUBSYS." WHERE user_id = :user_id AND subsys = :subsys LIMIT 1");
     $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
     $stmt->bindParam('subsys',$this->name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_wiki #2)');

@@ -51,17 +51,9 @@ class Export_Maintain extends Export
    */
   public function maintain( )
   {
-    global $RosCMS_GET_d_use;
-    global $RosCMS_GET_d_value;
-    global $RosCMS_GET_d_value2;
-    global $RosCMS_GET_d_value3;
-    global $RosCMS_GET_d_value4;
-
-    $action = $RosCMS_GET_d_use;
-
-    switch ($action) {
+    switch ($_GET['d_u']) {
       case 'optimize':
-        $stmt=DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_ACCESS.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS'     , 'roscms_groups.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_ACL.",".ROSCMST_DEPENCIES.",".ROSCMST_TIMEZONES);
+        $stmt=&DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_ACCESS.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS'     , 'roscms_groups.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_ACL.",".ROSCMST_DEPENCIES.",".ROSCMST_TIMEZONES);
         $stmt->execute();
         Log::writeHigh('optimize database tables: done by '.ThisUser::getInstance()->id().' {data_maintain_out}');
         break;
@@ -85,15 +77,15 @@ class Export_Maintain extends Export
         break;
 
       case 'pubdate':
-        echo '<h4>Generate related pages of '.$RosCMS_GET_d_value.' ('.$RosCMS_GET_d_value2.', '.$RosCMS_GET_d_value3.', '.$RosCMS_GET_d_value4.')</h4>';
+        echo '<h4>Generate related pages of '.$_GET['d_val'].' ('.$_GET['d_val2'].', '.$_GET['d_val3'].', '.$_GET['d_val4'].')</h4>';
 
-        $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
-        $stmt->bindParam('name', $RosCMS_GET_d_value,PDO::PARAM_STR);
-        $stmt->bindParam('type', $RosCMS_GET_d_value2,PDO::PARAM_STR);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :name AND type = :type LIMIT 1");
+        $stmt->bindParam('name', $_GET['d_val'],PDO::PARAM_STR);
+        $stmt->bindParam('type', $_GET['d_val2'],PDO::PARAM_STR);
         $stmt->execute();
         $data_id = $stmt->fetchColumn();
 
-        echo $export_html->generate($data_id, $RosCMS_GET_d_value3, $RosCMS_GET_d_value4);
+        echo $export_html->generate($data_id, $_GET['d_val3'], $_GET['d_val4']);
         break;
     } // end switch
   }

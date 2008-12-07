@@ -55,13 +55,8 @@ abstract class HTML_User extends HTML
    */
   private function navigation( )
   {
-    global $roscms_intern_webserver_pages;
-    global $roscms_intern_webserver_roscms;
-    global $roscms_intern_page_link;
-    global $rpm_lang;
-    global $roscms_langres;
-
     $thisuser = &ThisUser::getInstance();
+    $config = &RosCMS::getInstance();
 
     echo_strip('
       <table style="border:0" width="100%" cellpadding="0" cellspacing="0">
@@ -69,34 +64,34 @@ abstract class HTML_User extends HTML
           <td style="width:147px; vertical-align: top;" id="leftNav"> 
             <h2>Navigation</h2>
             <ul>
-              <li><a href="'.$roscms_intern_webserver_pages.'en/index.html">Home</a></li>
-              <li><a href="'.$roscms_intern_webserver_pages.'en/about.html">Info</a></li>
-              <li><a href="'.$roscms_intern_webserver_pages.'en/community.html">Community</a></li>
-              <li><a href="'.$roscms_intern_webserver_pages.'en/dev.html">Development</a></li>
-              <li><a href="'.$roscms_intern_webserver_roscms.'?page=user">myReactOS</a></li>
+              <li><a href="'.$config->pathGenerated().'en/index.html">Home</a></li>
+              <li><a href="'.$config->pathGenerated().'en/about.html">Info</a></li>
+              <li><a href="'.$config->pathGenerated().'en/community.html">Community</a></li>
+              <li><a href="'.$config->pathGenerated().'en/dev.html">Development</a></li>
+              <li><a href="'.$config->pathRosCMS().'?page=user">myReactOS</a></li>
             </ul>');
 
     if ($thisuser->id() > 0) {
       echo_strip('
-        <h2>'.$roscms_langres['Account'].'</h2>
+        <h2>Account</h2>
         <ul>
           <li title="'.$thisuser->name().'">&nbsp;Nick:&nbsp;'.substr($thisuser->name(), 0, 9).'</li>
-          <li><a href="'.$roscms_intern_page_link.'my">My Profile</a></li>
-          <li><a href="'.$roscms_intern_page_link.'search">User Search</a></li>
-          <li><a href="'.$roscms_intern_webserver_pages.'peoplemap/">User Map</a></li>');
+          <li><a href="'.$config->pathRosCMS().'?page=my">My Profile</a></li>
+          <li><a href="'.$config->pathRosCMS().'?page=search">User Search</a></li>
+          <li><a href="'.$config->pathGenerated().'peoplemap/">User Map</a></li>');
       if ($thisuser->securityLevel() > 0) {
-        echo '<li><a href="'.$roscms_intern_webserver_roscms.'?page=data&amp;branch=welcome">RosCMS Interface</a></li>';
+        echo '<li><a href="'.$config->pathRosCMS().'?page=data&amp;branch=welcome">RosCMS Interface</a></li>';
       }
       echo_strip('
-          <li><a href="?page=logout">'.$roscms_langres['Logout'].'</a></li>
+          <li><a href="?page=logout">Logout</a></li>
         </ul>');
     }
     else {
       echo_strip('
-        <h2>'.$roscms_langres['Account'].'</h2>
+        <h2>Account</h2>
         <ul> 
-          <li><a href="'.$roscms_intern_page_link.'login">Login</a></li>
-          <li><a href="'.$roscms_intern_page_link.'register">Register</a></li>
+          <li><a href="'.$config->pathRosCMS().'?page=login">Login</a></li>
+          <li><a href="'.$config->pathRosCMS().'?page=register">Register</a></li>
         </ul>');
     }
 
@@ -104,24 +99,24 @@ abstract class HTML_User extends HTML
     echo_strip('
       <h2>Quick Links</h2>
       <ul>
-        <li><a href="'.$roscms_intern_webserver_pages.'forum/">Forum</a></li>
-        <li><a href="'.$roscms_intern_webserver_pages.'wiki/">Wiki</a></li>
-        <li><a href="'.$roscms_intern_webserver_pages.'en/about_userfaq.html">FAQ</a></li>
-        <li><a href="'.$roscms_intern_webserver_pages.'en/about_press.html">Press</a></li>
-        <li><a href="'.$roscms_intern_webserver_pages.'bugzilla/">Bugzilla</a></li>
-        <li><a href="'.$roscms_intern_webserver_pages.'en/community_mailinglists.html">Mailing Lists</a></li>
-        <li><a href="'.$roscms_intern_webserver_pages.'getbuilds/">Trunk Builds</a></li>
+        <li><a href="'.$config->pathGenerated().'forum/">Forum</a></li>
+        <li><a href="'.$config->pathGenerated().'wiki/">Wiki</a></li>
+        <li><a href="'.$config->pathGenerated().'en/about_userfaq.html">FAQ</a></li>
+        <li><a href="'.$config->pathGenerated().'en/about_press.html">Press</a></li>
+        <li><a href="'.$config->pathGenerated().'bugzilla/">Bugzilla</a></li>
+        <li><a href="'.$config->pathGenerated().'en/community_mailinglists.html">Mailing Lists</a></li>
+        <li><a href="'.$config->pathGenerated().'getbuilds/">Trunk Builds</a></li>
       </ul>
 
       <h2>Language</h2>
       <ul>
         <li> 
           <div style="text-align:center;"> 
-            <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$roscms_intern_webserver_roscms.'?'.htmlentities($_SERVER['QUERY_STRING'])."&lang=' + this.options[this.selectedIndex].value".'">
+            <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$config->pathRosCMS().'?'.htmlentities($_SERVER['QUERY_STRING'])."&lang=' + this.options[this.selectedIndex].value".'">
               <optgroup label="current language">'); 
  
-    $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id");
-    $stmt->bindParam('lang_id',$rpm_lang,PDO::PARAM_INT);
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id");
+    $stmt->bindParam('lang_id',$_GET['lang'],PDO::PARAM_INT);
     $stmt->execute();
     $current_lang = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
@@ -130,7 +125,7 @@ abstract class HTML_User extends HTML
       </optgroup>
       <optgroup label="all languages">');
       
-    $stmt=DBConnection::getInstance()->prepare("SELECT name, id, name_original FROM ".ROSCMST_LANGUAGES." WHERE id != :lang ORDER BY name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, id, name_original FROM ".ROSCMST_LANGUAGES." WHERE id != :lang ORDER BY name ASC");
     $stmt->bindParam('lang',$current_lang['id'],PDO::PARAM_INT);
     $stmt->execute();
     while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {

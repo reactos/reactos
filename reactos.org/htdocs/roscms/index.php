@@ -3,6 +3,7 @@
     RosCMS - ReactOS Content Management System
     Copyright (C) 2005-2008  Klemens Friedl <frik85@reactos.org>
                   2005       Ge van Geldorp <gvg@reactos.org>
+                  2008       Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,45 +20,19 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
-	//error_reporting(0);
-	error_reporting(E_ALL);
-	ini_set('error_reporting', E_ALL);
+//@MOVEME to config
+error_reporting(E_ALL);
+ini_set('error_reporting', E_ALL);
 
-  require('constants.php');
-  require('lib/RosCMS_Autoloader.class.php');
-  require('lib/DBConnection.class.php');
+if (get_magic_quotes_gpc()) {
+  ini_set('magic_quotes', 'off');
+}
 
-	if (get_magic_quotes_gpc()) {
-    ini_set('magic_quotes', 'off');
-	}
+// config data
+require_once('config.php');
 
-	// config data
-	require("roscms_conf.php");
-
-	// Global Vars:
-	$rpm_page="";
-	$rpm_lang="";
-
-	if (array_key_exists("lang", $_GET)) $rpm_lang=htmlspecialchars($_GET["lang"]);
-	
-  
-	require("lang.php"); // lang code outsourced
-	require("custom.php"); // custom on-screen information
-	
-
-	$RosCMS_GET_d_use = ""; // data usage (where the data will be used)
-	$RosCMS_GET_d_flag = ""; // data flag
-	$RosCMS_GET_d_value = ""; // data transport value
-	$RosCMS_GET_d_value2 = ""; // data transport value
-	$RosCMS_GET_d_value3 = ""; // data transport value
-	$RosCMS_GET_d_value4 = ""; // data transport value
-
-	if (array_key_exists("d_u", $_GET)) $RosCMS_GET_d_use=htmlspecialchars($_GET["d_u"]);
-	if (array_key_exists("d_fl", $_GET)) $RosCMS_GET_d_flag=htmlspecialchars($_GET["d_fl"]);
-	if (array_key_exists("d_val", $_GET)) $RosCMS_GET_d_value=htmlspecialchars($_GET["d_val"]);
-	if (array_key_exists("d_val2", $_GET)) $RosCMS_GET_d_value2=htmlspecialchars($_GET["d_val2"]);
-	if (array_key_exists("d_val3", $_GET)) $RosCMS_GET_d_value3=htmlspecialchars($_GET["d_val3"]);
-	if (array_key_exists("d_val4", $_GET)) $RosCMS_GET_d_value4=htmlspecialchars($_GET["d_val4"]);
+require_once('lib/RosCMS_Autoloader.class.php');
+require_once('lib/DBConnection.class.php');
 
 // strips whitespace from sourcecode
 function echo_strip( $text ) {
@@ -162,6 +137,9 @@ switch (@$_GET['page']) {
             break;
           case 'ufs': // User Filter Storage
             new CMSWebsiteFilter();
+            break;
+          case 'ut': // User Tags
+            new CMSWebsiteLabel();
             break;
           case 'uqi': // User Quick Info
             new Export_QuickInfo();

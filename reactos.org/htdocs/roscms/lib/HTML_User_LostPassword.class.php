@@ -45,11 +45,8 @@ class HTML_User_LostPassword extends HTML_User
    */
   protected function body( )
   {
-    global $roscms_intern_page_link, $roscms_intern_webserver_roscms;
-    global $rdf_name, $rdf_name_long;
-    global $rdf_register_user_pwd_min, $rdf_register_user_pwd_max;
-    global $rdf_support_email_str;
-
+    $config = &RosCMS::getInstance();
+  
     $err_message = ''; // error message box text
     $mail_exists = false; // email already exists in the database (true = email exists)
     $password_id_exists = null; // pwd-id exists in the database (true = pwd-id exists)
@@ -60,17 +57,17 @@ class HTML_User_LostPassword extends HTML_User
 
     if (strlen($activation_code > 6)) {
       echo_strip('
-        <h1><a href="'.$roscms_intern_page_link.'login">Login</a> &gt; Reset your Password</h1>
-        <p>Have you forgotten your password of your '.$rdf_name.' account? Don\'t panic. You have already requested us that we reset your password. Now it\'s your turn to enter a new password for your '.$rdf_name.' account.</p>');
+        <h1><a href="'.$config->pathRosCMS().'?page=login">Login</a> &gt; Reset your Password</h1>
+        <p>Have you forgotten your password of your '.$config->siteName().' account? Don\'t panic. You have already requested us that we reset your password. Now it\'s your turn to enter a new password for your '.$config->siteName().' account.</p>');
     }
     else {
       echo_strip('
-        <h1><a href="'.$roscms_intern_page_link.'login">Login</a> &gt; Lost Username or Password?</h1>
-        <p>Have you forgotten your username and/or password of your '.$rdf_name.' account? Don\'t panic. We can send you your username and let you reset your password. All you need is your email address.</p>');
+        <h1><a href="'.$config->pathRosCMS().'?page=login">Login</a> &gt; Lost Username or Password?</h1>
+        <p>Have you forgotten your username and/or password of your '.$config->siteName().' account? Don\'t panic. We can send you your username and let you reset your password. All you need is your email address.</p>');
     }
 
     echo_strip('
-      <form action="'.$roscms_intern_page_link.'login&amp;subpage=lost" method="post">
+      <form action="'.$config->pathRosCMS().'?page=login&amp;subpage=lost" method="post">
         <div class="bubble">
           <div class="corner_TL">
             <div class="corner_TR"></div>
@@ -85,21 +82,21 @@ class HTML_User_LostPassword extends HTML_User
       }
     }
 
-    if (strlen($activation_code) > 6 && isset($_POST['registerpost']) && !empty($_POST['userpwd1']) && !empty($_POST['userpwd2']) && strlen($_POST['userpwd1']) >= $rdf_register_user_pwd_min && strlen($_POST['userpwd1']) < $rdf_register_user_pwd_max && $_POST['userpwd1'] == $_POST['userpwd2'] && !empty($_POST['usercaptcha']) && !empty($_SESSION['rdf_security_code']) && strtolower($_SESSION['rdf_security_code']) == strtolower($_POST['usercaptcha']) && $password_id_exists) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE activation_password = :getpwd_id LIMIT 1");
+    if (strlen($activation_code) > 6 && isset($_POST['registerpost']) && !empty($_POST['userpwd1']) && !empty($_POST['userpwd2']) && strlen($_POST['userpwd1']) >= $config->limitPasswordMin() && strlen($_POST['userpwd1']) < $config->limitPasswordMax() && $_POST['userpwd1'] == $_POST['userpwd2'] && !empty($_POST['usercaptcha']) && !empty($_SESSION['rdf_security_code']) && strtolower($_SESSION['rdf_security_code']) == strtolower($_POST['usercaptcha']) && $password_id_exists) {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE activation_password = :getpwd_id LIMIT 1");
       $stmt->bindParam('getpwd_id',$activation_code,PDO::PARAM_STR);
       $stmt->execute();
       $user_id = $stmt->fetchColumn();
 
       // set new account password
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation_password = '', password = MD5( :password ), modified = NOW() WHERE id = :user_id");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation_password = '', password = MD5( :password ), modified = NOW() WHERE id = :user_id");
       $stmt->bindParam('password',$_POST['userpwd1'],PDO::PARAM_STR);
       $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
       $stmt->execute();
 
       echo_strip('
         <h2>Password changed</h2>
-        <div><a href="'.$roscms_intern_page_link.'login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
+        <div><a href="'.$config->pathRosCMS().'?page=login" style="color:red !important; text-decoration:underline;">Login now</a>!</div>');
 
     }
     elseif (strlen($activation_code) < 6 && isset($_POST['registerpost']) && !empty($_POST['useremail']) && EMail::isValid($_POST['useremail']) && !empty($_POST['usercaptcha']) && !empty($_SESSION['rdf_security_code']) && strtolower($_SESSION['rdf_security_code']) == strtolower($_POST['usercaptcha']) && $mail_exists) {
@@ -107,22 +104,22 @@ class HTML_User_LostPassword extends HTML_User
       // password activation code
       $activation_code = ROSUser::makeActivationCode();
 
-      $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_USERS." WHERE email = :email LIMIT 1");
       $stmt->bindParam('email',$_POST['useremail'],PDO::PARAM_STR);
       $stmt->execute();
       $user = $stmt->fetchOnce();
 
       // add activation code to account
-      $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation_password = :getpwd_id WHERE id = :user_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET activation_password = :getpwd_id WHERE id = :user_id LIMIT 1");
       $stmt->bindParam('getpwd_id',$activation_code,PDO::PARAM_STR);
       $stmt->bindParam('user_id',$user['user_id'],PDO::PARAM_INT);
       $stmt->execute();
 
       // Email subject
-      $subject = $rdf_name_long.' - Lost username or password?';
+      $subject = $config->siteName().' - Lost username or password?';
 
       // Email message
-      $message = $rdf_name_long." - Lost username or password?\n\n\nYou have requested your ".$rdf_name." account login data.\n\nYou haven't requested your account login data? Oops, then someone has tried the 'Lost username or password?' function with your email address, just ignore this email.\n\n\nUsername: ".$user['name']."\n\n\nLost your password? Reset your password: ".$roscms_intern_page_link."login&subpage=lost&code=".$activation_code."/\n\n\nBest regards,\nThe ".$rdf_name." Team\n\n\n(please do not reply as this is an auto generated email!)";
+      $message = $config->siteName()." - Lost username or password?\n\n\nYou have requested your ".$config->siteName()." account login data.\n\nYou haven't requested your account login data? Oops, then someone has tried the 'Lost username or password?' function with your email address, just ignore this email.\n\n\nUsername: ".$user['name']."\n\n\nLost your password? Reset your password: ".$config->pathRosCMS()."?page=login&subpage=lost&code=".$activation_code."/\n\n\nBest regards,\nThe ".$config->siteName()." Team\n\n\n(please do not reply as this is an auto generated email!)";
 
       // send the Email
       if (EMail::send($_POST['useremail'], $subject, $message)) {
@@ -151,10 +148,10 @@ class HTML_User_LostPassword extends HTML_User
             <label for="userpwd1"'.(isset($_POST['registerpost']) ? ' style="color:red;"' : '').'>New Password</label>
             <input type="password" name="userpwd1" tabindex="2" id="userpwd1" maxlength="50" />');
 
-        if ((isset($_POST['userpwd1']) && strlen($_POST['userpwd1']) > $rdf_register_user_name_max)) {
+        if ((isset($_POST['userpwd1']) && strlen($_POST['userpwd1']) > $config->limitUserNameMax())) {
           echo_strip('
             <br />
-            <em>Please use a stronger password! At least '.$rdf_register_user_pwd_min.' characters, do not include common words or names, and combine three of these character types: uppercase letters, lowercase letters, numbers, or symbols (ASCII characters).</em>');
+            <em>Please use a stronger password! At least '.$config->limitPasswordMin().' characters, do not include common words or names, and combine three of these character types: uppercase letters, lowercase letters, numbers, or symbols (ASCII characters).</em>');
         }
         else {
           echo_strip('
@@ -190,14 +187,14 @@ class HTML_User_LostPassword extends HTML_User
             function CaptchaReload()
             {
               ++BypassCacheNumber;
-              document.getElementById('captcha').src = '".$roscms_intern_page_link."captcha' + BypassCacheNumber;
+              document.getElementById('captcha').src = '".$config->pathRosCMS()."?page=captcha&nr=' + BypassCacheNumber;
             }
 
             document.write('".'<br /><span style="color:#817A71;">If you can\'t read this, try <a href="javascript:CaptchaReload()">another one</a>.</span>'."');
           -->".'
           </script>';
       echo_strip('
-          <img id="captcha" src="'.$roscms_intern_page_link.'captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$rdf_support_email_str.' for help." title="Are you human?" />
+          <img id="captcha" src="'.$config->pathRosCMS().'?page=captcha" style="padding-top:10px;" alt="If you can\'t read this, try another one or email '.$config->emailSupport().' for help." title="Are you human?" />
           <br />');
 
       if (isset($_POST['registerpost'])) { 
@@ -211,7 +208,7 @@ class HTML_User_LostPassword extends HTML_User
         <div class="field">
           <input name="registerpost" type="hidden" id="registerpost" value="reg" />
           <button type="submit" name="submit">Send</button>
-          <button type="button" onclick="'."window.location=".$roscms_intern_webserver_roscms."'".'" style="color:#777777;">Cancel</button>
+          <button type="button" onclick="'."window.location=".$config->pathRosCMS()."'".'" style="color:#777777;">Cancel</button>
         </div>');
     }
 

@@ -59,7 +59,7 @@ class CMSWebsiteSaveEntry
     $rev_id = 0; // helper var, contains current rev_id in force
 
     // get language id
-    $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_LANGUAGES." WHERE name_short=:lang LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_LANGUAGES." WHERE name_short=:lang LIMIT 1");
     $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_STR);
     $stmt->execute();
     $lang_id = $stmt->fetchColumn();
@@ -67,11 +67,11 @@ class CMSWebsiteSaveEntry
     // detect if theres already a autosave-draft saved, and get rev_id
     if ($type == 'draft') { // draft
       if ($tag_value != 'no') {
-        $stmt=DBConnection::getInstance()->prepare("SELECT r.rev_id FROM ".ROSCMST_TAG." t JOIN ".ROSCMST_REVISIONS." r ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.user_id = :user_id AND r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :tag_value ORDER BY r.id DESC LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT r.rev_id FROM ".ROSCMST_TAG." t JOIN ".ROSCMST_REVISIONS." r ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.user_id = :user_id AND r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :tag_value ORDER BY r.id DESC LIMIT 1");
         $stmt->bindParam('tag_value',$tag_value,PDO::PARAM_STR);
       }
       else {
-        $stmt=DBConnection::getInstance()->prepare("SELECT rev_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id = :user_id AND lang_id = :lang ORDER BY id DESC LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT rev_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id = :user_id AND lang_id = :lang ORDER BY id DESC LIMIT 1");
       }
       $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
@@ -89,14 +89,14 @@ class CMSWebsiteSaveEntry
     if ($type  =='submit' || ($type  == 'draft' && $rev_id == 0)) {
 
       // insert revision itself
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, 0, :lang, :user_id, NOW())");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, 0, :lang, :user_id, NOW())");
       $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
 
       // get inserted rev_id
-      $stmt=DBConnection::getInstance()->prepare("SELECT rev_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version = 0 AND lang_id = :lang AND user_id = :user_id ORDER BY datetime DESC;");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT rev_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version = 0 AND lang_id = :lang AND user_id = :user_id ORDER BY datetime DESC;");
       $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
@@ -104,7 +104,7 @@ class CMSWebsiteSaveEntry
       $rev_id = $stmt->fetchColumn();
 
       // get stable entry
-      $stmt=DBConnection::getInstance()->prepare("SELECT r.rev_id FROM ".ROSCMST_TAGS." t JOIN ".ROSCMST_REVISIONS." r ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.lang_id = :lang AND t.user_id = -1 AND t.name = 'status' AND t.value = 'stable' ORDER BY r.id DESC LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.rev_id FROM ".ROSCMST_TAGS." t JOIN ".ROSCMST_REVISIONS." r ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.lang_id = :lang AND t.user_id = -1 AND t.name = 'status' AND t.value = 'stable' ORDER BY r.id DESC LIMIT 1");
       $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_STR);
       $stmt->execute();
@@ -133,12 +133,12 @@ class CMSWebsiteSaveEntry
       // first delete, then insert new (outside from this scope)
 
       // del short
-      $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id");
+      $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->execute();
 
       // del long
-      $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id");
+      $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->execute();
 
@@ -154,7 +154,7 @@ class CMSWebsiteSaveEntry
     if ($type == 'draft' || $type == 'submit') {
 
       // insert short text
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, :name, :content)");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, :name, :content)");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       for ($i=1; $i <= $_POST['stextsum']; $i++) {  
         $stmt->bindParam('name',$_POST['pdstext'.$i],PDO::PARAM_STR);
@@ -163,7 +163,7 @@ class CMSWebsiteSaveEntry
       }
 
       // insert long text
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, :name, :content )");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, :name, :content )");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       for ($i=1; $i <= $_POST['plmsum']; $i++) { // text
       Log::writeMedium($_POST['pdtext'.$i]);

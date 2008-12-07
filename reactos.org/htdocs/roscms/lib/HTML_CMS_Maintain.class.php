@@ -51,8 +51,6 @@ class HTML_CMS_Maintain extends HTML_CMS
    */
   protected function body( )
   {
-    global $roscms_intern_page_link;
-
     // check if user has rights for this area
     if (ThisUser::getInstance()->securityLevel() < 3) {
       return;
@@ -80,7 +78,7 @@ class HTML_CMS_Maintain extends HTML_CMS
         <select id="txtaddentrylang" name="txtaddentrylang">');
 
     // display languages
-    $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
     $stmt->execute();
     while ($language=$stmt->fetch(PDO::FETCH_ASSOC)) {
       echo '<option value="'.$language['id'].'">'.$language['name'].'</option>';
@@ -127,7 +125,7 @@ class HTML_CMS_Maintain extends HTML_CMS
         <h2>RosCMS Language Group Logs</h2>');
 
       // language specific logs
-      $stmt=DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
       $stmt->execute();
       while ($language = $stmt->fetch(PDO::FETCH_ASSOC)) {
         echo_strip('

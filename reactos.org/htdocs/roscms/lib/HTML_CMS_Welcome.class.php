@@ -64,7 +64,7 @@ class HTML_CMS_Welcome extends HTML_CMS
 
       if (ThisUser::getInstance()->isMemberOfGroup('translator', 'transmaint')) {
     
-        $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
         $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
         $stmt->execute();
         $user_lang = $stmt->fetchColumn();
@@ -83,7 +83,7 @@ class HTML_CMS_Welcome extends HTML_CMS
         }
         else {
           echo_strip('
-            <h2>Please set your favorite language in the myReactOS settings.</h2>
+            <h2>Please set your favorite language in the '.RosCMS::siteName().' profile settings.</h2>
             <p>This language will also be the default language to that you can translate content.</p>');
         }
       }

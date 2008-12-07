@@ -50,7 +50,7 @@ class Export_HTML extends Export
   public function generate( $data_id, $lang_id, $dynamic_num = 0 )
   {
     // get content (prefered in the given language, otherwise standard language)
-    $stmt=DBConnection::getInstance()->prepare("SELECT d.type, d.name, r.data_id, r.lang_id, r.id, l.name_short AS lang_short FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.id = :data_id AND r.lang_id IN( :lang_one, :lang_two) AND r.version > 0 LIMIT 2");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.type, d.name, r.data_id, r.lang_id, r.id, l.name_short AS lang_short FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.id = :data_id AND r.lang_id IN( :lang_one, :lang_two) AND r.version > 0 LIMIT 2");
     $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
     $stmt->bindParam('lang_one',$lang_id,PDO::PARAM_INT);
     $stmt->bindParam('lang_two',Language::getStandardId(),PDO::PARAM_INT);
@@ -117,18 +117,14 @@ class Export_HTML extends Export
    */
   public function generateFiles( $page_name, $lang_id = 0, $dynamic_num = 0, $mode = 'single' )
   {
-    global $roscms_extern_brand;
-    global $roscms_extern_version;
-    global $roscms_extern_version_detail;
-
     $destination_folder = '../'; // distance between roscms folder to pages folder
 
     // do for all or only one language
     if ($lang_id === 0) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT id, name_short, name FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name_short, name FROM ".ROSCMST_LANGUAGES." ORDER BY name ASC");
     }
     else {
-      $stmt=DBConnection::getInstance()->prepare("SELECT id, name_short, name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id, name_short, name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_STR);
     }
     $stmt->execute();
@@ -139,11 +135,11 @@ class Export_HTML extends Export
 
       // switch sql statement by generation mode
       if ($mode == 'single') {
-        $stmt_page=DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.type = 'page' AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) AND d.name = :data_name ORDER BY r.version DESC LIMIT 1");
+        $stmt_page=&DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.type = 'page' AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) AND d.name = :data_name ORDER BY r.version DESC LIMIT 1");
         $stmt_page->bindParam('data_name',$page_name,PDO::PARAM_STR);
       }
       else {
-        $stmt_page=DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.type = 'page' AND r.version > 0 AND r.lang_id IN(:lang_one, r.rev_language) ORDER BY r.version DESC");
+        $stmt_page=&DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.type = 'page' AND r.version > 0 AND r.lang_id IN(:lang_one, r.rev_language) ORDER BY r.version DESC");
       }
       $stmt_page->bindParam('lang_one',$lang['lang_id'],PDO::PARAM_INT);
       $stmt_page->bindParam('lang_two',Language::getStandardId(),PDO::PARAM_INT);
@@ -153,13 +149,13 @@ class Export_HTML extends Export
         // distinguish between dynamic and non dynamic driven pages
         $kind_of_content = Tag::getValueByUser($page['id'], 'kind', -1);
         if ($kind_of_content == 'dynamic' && $dynamic_num == '') {
-          $stmt_content=DBConnection::getInstance()->prepare("SELECT r.id, r.version, r.user_id, r.datetime, t.value AS dynamic_num FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TAGS." t WHERE d.name = :name AND d.type = 'content' AND r.version > 0 AND t.user_id = -1 AND t.name = 'number' ORDER BY t.value ASC");
+          $stmt_content=&DBConnection::getInstance()->prepare("SELECT r.id, r.version, r.user_id, r.datetime, t.value AS dynamic_num FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TAGS." t WHERE d.name = :name AND d.type = 'content' AND r.version > 0 AND t.user_id = -1 AND t.name = 'number' ORDER BY t.value ASC");
           $stmt_content->bindParam('name',$page['name'],PDO::PARAM_STR);
           $stmt_content->execute();
         }
         else {
           // generate once
-          $stmt_content=DBConnection::getInstance()->prepare("SELECT 1 LIMIT 1");
+          $stmt_content=&DBConnection::getInstance()->prepare("SELECT 1 LIMIT 1");
         }
         $stmt_content->execute();
         while ($content = $stmt_content->fetch(PDO::FETCH_ASSOC)) {
@@ -192,7 +188,7 @@ class Export_HTML extends Export
           if ($fh !== false){
             flock($fh,2);
             fputs($fh,$html_content); 
-            fputs($fh,'<!-- Generated with '.$roscms_extern_brand.' '.$roscms_extern_version.' ('.$roscms_extern_version_detail.') - '.date('Y-m-d H:i:s').' [RosCMS_v3] -->');
+            fputs($fh,'<!-- Generated with '.RosCMS::getInstance->systemBrand().' ('.RosCMS::getInstance->systemVersion().') - '.date('Y-m-d H:i:s').' [RosCMS_v3] -->');
             flock($fh,3);
             fclose($fh);
             
@@ -237,7 +233,7 @@ class Export_HTML extends Export
     }
 
     // search for depencies
-    $stmt=DBConnection::getInstance()->prepare("SELECT d.data_name, d.data_type, r.rev_id, r.rev_language FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_STEXT." t ON r.id = t.rev_id WHERE (d.data_type = 'page' ".$sql_type." ) AND t.content LIKE :content_phrase AND r.lang_id = :lang AND r.version > 0");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.data_name, d.data_type, r.rev_id, r.rev_language FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_STEXT." t ON r.id = t.rev_id WHERE (d.data_type = 'page' ".$sql_type." ) AND t.content LIKE :content_phrase AND r.lang_id = :lang AND r.version > 0");
     $stmt->bindParam('lang',$lang_id);
     $stmt->bindValue('content_phrase','%[#'.$type_short.'_'.$like_phrase.']%',PDO::PARAM_STR);
     $stmt->execute();
@@ -284,11 +280,11 @@ class Export_HTML extends Export
   {
     //
     if ($dynamic_num > 0) {
-      $stmt=DBConnection::getInstance()->prepare("SELECT r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TAGS." t WHERE d.name = :name AND d.type = 'page' AND r.version > 0 AND r.lang_id IN(:lang_one,:lang_two) AND t.name = 'number' AND t.user_id = -1 AND t.value = :dynamic_num ORDER BY r.version DESC LIMIT 2");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TAGS." t WHERE d.name = :name AND d.type = 'page' AND r.version > 0 AND r.lang_id IN(:lang_one,:lang_two) AND t.name = 'number' AND t.user_id = -1 AND t.value = :dynamic_num ORDER BY r.version DESC LIMIT 2");
       $stmt->bindParam('dynamic_num',$dynamic_num,PDO::PARAM_INT);
     }
     else {
-      $stmt=DBConnection::getInstance()->prepare("SELECT r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.name = :name AND d.type = 'page' AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) ORDER BY r.version DESC LIMIT 2");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.name = :name AND d.type = 'page' AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) ORDER BY r.version DESC LIMIT 2");
     }
     $stmt->bindParam('name',$page_name,PDO::PARAM_STR);
     $stmt->bindParam('lang_one',$lang_id,PDO::PARAM_INT);
@@ -315,15 +311,14 @@ class Export_HTML extends Export
    */
   public function processText( $rev_id, $output_type = '' )
   {
-    global $roscms_standard_language_full;
-    global $roscms_intern_webserver_pages;
-    global $roscms_intern_webserver_roscms;
     global $roscms_subsystem_wiki_path;
+    
+    $config = &RosCMS::getInstance();
 
     // try to force unlimited script runtime
     @set_time_limit(0);
 
-    $stmt=DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.version, r.user_id, r.datetime, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE r.id = :rev_id ORDER BY r.version DESC LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.version, r.user_id, r.datetime, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE r.id = :rev_id ORDER BY r.version DESC LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
     $page = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -346,7 +341,7 @@ class Export_HTML extends Export
     $content = preg_replace_callback('/(\[#link_[^][#[:space:]]+\])/', array($this,'insertHyperlink'), $content);
 
     // website url
-    $content = str_replace('[#roscms_path_homepage]', $roscms_intern_webserver_pages, $content);
+    $content = str_replace('[#roscms_path_homepage]', $config->pathGenerated(), $content);
 
     // replace roscms constants dependent from dynamic number
     if ($this->dynamic_num > 0) {
@@ -362,7 +357,7 @@ class Export_HTML extends Export
     }
 
     // replace current language stuff
-    $stmt=DBConnection::getInstance()->prepare("SELECT name, name_short FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, name_short FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
     $stmt->bindParam('lang',$page['lang_id'],PDO::PARAM_INT);
     $stmt->execute();
     $lang=$stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -379,7 +374,7 @@ class Export_HTML extends Export
 
     // replace with user_name
     // @FIXME broken logic, or one link too much, which should be removed from Database
-    $stmt=DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',ThisUser::getInstance()->id());
     $stmt->execute();
     $user_name = $stmt->fetchColumn();
@@ -390,17 +385,22 @@ class Export_HTML extends Export
     $content = str_replace('[#roscms_page_version]', $page['version'], $content); 
 
     // page edit link
-    $content = str_replace('[#roscms_page_edit]', $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit', $content);
+    $content = str_replace('[#roscms_page_edit]', $config->pathRosCMS().'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit', $content);
 
     // Subsystem Links
     $content = preg_replace('/\[#wiki_([^]]+)\]/', $roscms_subsystem_wiki_path.'$1', $content);
 
     // translation info
     if ($page['lang_id'] == Language::getStandardId()) {
-      $content = str_replace('[#roscms_trans]', '<p><a href="'.$roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$page['lang_id'].'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit" style="font-size:10px !important;">Edit page content</a> (RosCMS translator account membership required, visit the <a href="'.$roscms_intern_webserver_pages.'forum/" style="font-size:10px !important;">website forum</a> for help)</p><br />', $content); 
+      $content = str_replace('[#roscms_trans]', '<p><a href="'.$config->pathRosCMS().'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$this->page_name.'&amp;d_val2='.$page['lang_id'].'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit" style="font-size:10px !important;">Edit page content</a> (RosCMS translator account membership required, visit the <a href="'.$config->pathGenerated().'forum/" style="font-size:10px !important;">website forum</a> for help)</p><br />', $content); 
     }
     else {
-      $content = str_replace('[#roscms_trans]', '<p><em>If the translation of the <a href="'.$roscms_intern_webserver_pages.'?page='.$page['name'].'&amp;lang='.Language::getStandardId().'" style="font-size:10px !important;">'.$roscms_standard_language_full.' language</a> of this page appears to be outdated or incorrect, please check-out the <a href="'.$roscms_intern_webserver_pages.'?page='.$page['name'].'&amp;lang='.Language::getStandardId().'" style="font-size:10px !important;">'.$roscms_standard_language_full.'</a> page and <a href="'.$roscms_intern_webserver_pages.'forum/viewforum.php?f=18" style="font-size:10px !important;">report</a> or <a href="'.$roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$page['name'].'&amp;d_val2='.$page['lang_id'].'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit" style="font-size:10px !important;">update the content</a>.</em></p><br />', $content); 
+      $stmt=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id");
+      $stmt->bindParam('lang_id',Language::getStandardId(),PDO::PARAM_INT);
+      $stmt->execute(),
+      $lang=$stmt->fetchColumn();
+    
+      $content = str_replace('[#roscms_trans]', '<p><em>If the translation of the <a href="'.$config->pathGenerated().'?page='.$page['name'].'&amp;lang='.Language::getStandardId().'" style="font-size:10px !important;">'.$lang['name'].' language</a> of this page appears to be outdated or incorrect, please check-out the <a href="'.$config->pathGenerated().'?page='.$page['name'].'&amp;lang='.Language::getStandardId().'" style="font-size:10px !important;">'.$lang['name'].'</a> page and <a href="'.$config->pathGenerated().'forum/viewforum.php?f=18" style="font-size:10px !important;">report</a> or <a href="'.$config->pathRosCMS().'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$page['name'].'&amp;d_val2='.$page['lang_id'].'&amp;d_val3='.$this->dynamic_num.'&amp;d_val4=edit" style="font-size:10px !important;">update the content</a>.</em></p><br />', $content); 
     }
 
     return $content;
@@ -454,13 +454,7 @@ class Export_HTML extends Export
    */
   private function insertHyperlink( $matches )
   {
-    global $roscms_intern_webserver_pages;
-    global $roscms_intern_webserver_roscms;
-
-    global $RosCMS_GET_d_value4;
-
-    //@CHANGE get rid of that global var
-    $mode = $RosCMS_GET_d_value4;
+    $mode = $_GET['d_val4'];
     $page_name = substr($matches[0], 7, (strlen($matches[0])-8)); 
 
     $page_name_with_num = $page_name; // page name without number (if exists)
@@ -477,20 +471,20 @@ class Export_HTML extends Export
 
       //
       if ($page_name == '') {
-        $page_link = $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val=index&amp;d_val2='.$this->lang.'&amp;d_val3=';
+        $page_link = RosCMS::getInstance()->pathRosCMS().'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val=index&amp;d_val2='.$this->lang.'&amp;d_val3=';
       }
       else {
-        $page_link = $roscms_intern_webserver_roscms.'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$page_name_with_num.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$dynamic_num;
+        $page_link = RosCMS::getInstance()->pathRosCMS().'?page=data_out&amp;d_f=page&amp;d_u=show&amp;d_val='.$page_name_with_num.'&amp;d_val2='.$this->lang.'&amp;d_val3='.$dynamic_num;
       }
 
-      if ($mode == 'edit') {
+      if (isset($_GET['d_val4']) && $_GET['d_val4'] == 'edit') {
         $page_link .= '&amp;d_val4=edit';
       }
     }
 
     // static pages
     else { 
-      $stmt=DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.name  = :name AND r.lang_id = :lang AND version > 0 LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.name  = :name AND r.lang_id = :lang AND version > 0 LIMIT 1");
       $stmt->bindParam('name',$page_name,PDO::PARAM_STR);
       $stmt->bindParam('lang',$this->lang,PDO::PARAM_STR);
       $stmt->execute();
@@ -503,10 +497,10 @@ class Export_HTML extends Export
 
       // get page link
       if ($page_name == '') {
-        $page_link = $roscms_intern_webserver_pages.$this->lang.'/404.html';
+        $page_link = RosCMS::getInstance()->pathGenerated().$this->lang.'/404.html';
       }
       else{
-        $page_link = $roscms_intern_webserver_pages.$this->lang.'/'.$page_name.'.'.$link_extension;
+        $page_link = RosCMS::getInstance()->pathGenerated().$this->lang.'/'.$page_name.'.'.$link_extension;
       }
     }
 
@@ -525,17 +519,8 @@ class Export_HTML extends Export
    */
   private function sharedInsertHelper( $match_type, $match_name, $lang )
   {
-    global $roscms_intern_webserver_roscms;
-    global $roscms_intern_page_link;
-
-    global $RosCMS_GET_d_flag;
-
-    // map them until the global vars removed
-    // it may be eventually d_flag / d_value4, was used both in same context
-    $mode =$RosCMS_GET_d_flag;
-
     // get entry
-    $stmt=DBConnection::getInstance()->prepare("SELECT a.name AS access_name, t.content, r.version, r.user_id, r.datetime , r.data_id, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id = r.id JOIN ".ROSCMST_ACCESS." a ON a.id=d.acl_id WHERE d.name = :name AND d.type = :type AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) AND t.name = 'content' ORDER BY r.version DESC LIMIT 2");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT a.name AS access_name, t.content, r.version, r.user_id, r.datetime , r.data_id, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id = r.id JOIN ".ROSCMST_ACCESS." a ON a.id=d.acl_id WHERE d.name = :name AND d.type = :type AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) AND t.name = 'content' ORDER BY r.version DESC LIMIT 2");
     $stmt->bindParam('name',$match_name,PDO::PARAM_STR);
     $stmt->bindParam('type',$match_type,PDO::PARAM_STR);
     $stmt->bindParam('lang_one',$lang,PDO::PARAM_INT);
@@ -565,7 +550,7 @@ class Export_HTML extends Export
     }
 
     // text for username
-    $stmt=DBConnection::getInstance()->prepare("SELECT name, fullname FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, fullname FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
     $stmt->bindParam('user_id',$content['user_id'],PDO::PARAM_INT);
     $stmt->execute();
     $account = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -580,8 +565,8 @@ class Export_HTML extends Export
     $html_content = str_replace('[#roscms_'.$match_type.'_version]', '<em>Last modified: '.$content['datetime'].', rev. '.$content['version'].' by '.$user_text.'</em>', $html_content); 
 
     // preview-edit-mode (add some html through it)
-    if ($mode == 'edit' && $content['access_name'] == 'default' && $match_type != 'script') {
-      $html_content = '<div style="border: 1px dashed red;"><div style="padding: 2px;"><a href="'.$roscms_intern_page_link.'data&amp;branch=website&amp;edit=rv'.$content['data_id'].'|'.$content['id'].'" style="background-color:#E8E8E8;"> <img src="'.$roscms_intern_webserver_roscms.'images/edit.gif" style="width:19px; height:19px; border:none;" /><em>'.$match_name.'</em> </a></div>'.$html_content.'</div>';
+    if (isset($_GET['d_fl']) && $_GET['d_fl'] == 'edit' && $content['access_name'] == 'default' && $match_type != 'script') {
+      $html_content = '<div style="border: 1px dashed red;"><div style="padding: 2px;"><a href="'.RosCMS::getInstance()->pathRosCMS().'?page=data&amp;branch=website&amp;edit=rv'.$content['data_id'].'|'.$content['id'].'" style="background-color:#E8E8E8;"> <img src="'.RosCMS::getInstance()->pathRosCMS().'images/edit.gif" style="width:19px; height:19px; border:none;" /><em>'.$match_name.'</em> </a></div>'.$html_content.'</div>';
     }
 
     return $html_content;

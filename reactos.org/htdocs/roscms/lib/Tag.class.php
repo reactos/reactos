@@ -48,10 +48,28 @@ class Tag
   public static function getIdByUser( $rev_id, $tag_name, $user_id )
   {
     // sql stuff
-    $stmt=DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND name = :tag_name AND user_id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND name = :tag_name AND user_id = :user_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->bindParam('tag_name',$tag_name,PDO::PARAM_STR);
     $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchColumn();
+  } // end of member function getIdByName
+
+
+  /**
+   * 
+   *
+   * @param int tag_id 
+   * @return int
+   * @access public
+   */
+  public static function getRevIdById( $tag_id )
+  {
+    // sql stuff
+    $stmt=&DBConnection::getInstance()->prepare("SELECT rev_id FROM ".ROSCMST_TAGS." WHERE id = :tag_id LIMIT 1");
+    $stmt->bindParam('tag_id',$tag_id,PDO::PARAM_INT);
     $stmt->execute();
 
     return $stmt->fetchColumn();
@@ -78,16 +96,16 @@ class Tag
   public static function deleteById( $tag_id )
   {
     // get tag data
-    $stmt=DBConnection::getInstance()->prepare("SELECT user_id FROM ".ROSCMST_TAGS." WHERE id = :tag_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT user_id FROM ".ROSCMST_TAGS." WHERE id = :tag_id LIMIT 1");
     $stmt->bindParam('tag_id',$tag_id,PDO::PARAM_INT);
     $stmt->execute();
     $tag = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
     // @unimplemented: account group membership check
-    if ($tag['user_id'] == ThisUser::getInstance()->id() || $tag['user_id'] == 0 || $tag['user_id'] == -1) {
+    if ($tag['user_id'] == ThisUser::getInstance()->id() || ThisUser::getInstance()->securityLevel() > 1) {
 
       // finally delete tag
-      $stmt=DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE id = :tag_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE id = :tag_id LIMIT 1");
       $stmt->bindParam('tag_id',$tag_id,PDO::PARAM_INT);
       return $stmt->execute();
     }
@@ -114,7 +132,7 @@ class Tag
     }
 
     // tag already exists ?
-    $stmt=DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND name = :tag_name AND value = :tag_value AND user_id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND name = :tag_name AND value = :tag_value AND user_id = :user_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->bindParam('tag_name',$tag_name_id,PDO::PARAM_STR);
     $stmt->bindParam('tag_value',$tag_value_id,PDO::PARAM_STR);
@@ -124,13 +142,40 @@ class Tag
 
     // add new tag if necessary
     if ($tag_exists === false) {
-      $stmt=DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TAGS." ( id , rev_id , name , value , user_id ) VALUES (NULL, :rev_id, :tag_name, :tag_value, :user_id)");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TAGS." ( id , rev_id , name , value , user_id ) VALUES (NULL, :rev_id, :tag_name, :tag_value, :user_id)");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->bindParam('tag_name',$tag_name,PDO::PARAM_STR);
       $stmt->bindParam('tag_value',$tag_value,PDO::PARAM_STR);
       $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
       $stmt->execute();
     }
+  } // end of member function getIdByName
+
+
+  /**
+   * 
+   *
+   * @param int rev_id 
+   * @param string new_value 
+   * @return tag value
+   * @access public
+   */
+  public static function update( $tag_id, $new_value )
+  {
+    // tag already exists ?
+    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TAGS." WHERE tag_id = :tag_id AND user_id IN(-1, 0, :user_id) LIMIT 1");
+    $stmt->bindParam('tag_id',$tag_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
+    if ($stmt->fetchColumn() || ThisUser::getInstance()->securityLevel() == 3) {
+
+      // update value
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TAGS." SET value = :new_value WHERE id=:tag_id");
+      $stmt->bindParam('tag_id',$tag_id,PDO::PARAM_INT);
+      $stmt->bindParam('new_value',$new_value,PDO::PARAM_STR);
+      return $stmt->execute();
+    }
+
+    return false;
   } // end of member function getIdByName
 
 
@@ -143,7 +188,7 @@ class Tag
    */
   public static function copyFromData( $old_rev_id, $new_rev_id )
   {
-    $stmt=DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TAGS." SET rev_id=:new_rev_id WHERE rev_id=:old_rev_id");
+    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TAGS." SET rev_id=:new_rev_id WHERE rev_id=:old_rev_id");
     $stmt->bindParam('old_rev_id',$old_rev_id,PDO::PARAM_INT);
     $stmt->bindParam('new_rev_id',$new_rev_id,PDO::PARAM_INT);
     $stmt->execute();
@@ -165,7 +210,7 @@ class Tag
   public static function getValueByUser( $rev_id, $tag_name, $user_id )
   {
     // need, tag name id
-    $stmt=DBConnection::getInstance()->prepare("SELECT value FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND name = :tag_name AND user_id = :user_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT value FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND name = :tag_name AND user_id = :user_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->bindParam('tag_name',$tag_name,PDO::PARAM_STR);
     $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
@@ -189,7 +234,7 @@ class Tag
    */
   public static function getValue( $rev_id, $tag_name )
   {
-    $stmt=DBConnection::getInstance()->prepare("SELECT value FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND name = :tag_name LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT value FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND name = :tag_name LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id);
     $stmt->bindParam('tag_name',$tag_name);
     $stmt->execute();

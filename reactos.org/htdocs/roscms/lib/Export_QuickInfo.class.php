@@ -46,7 +46,7 @@ class Export_QuickInfo extends Export
   private function getInfo( )
   {
     // get current revision
-    $stmt=DBConnection::getInstance()->prepare("SELECT u.name AS user_name, l.name AS language, r.data_id, d.name, d.type, a.name AS acl, r.id, r.version, datetime FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id=u.id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id JOIN ".ROSCMST_ACCESS." a ON a.id=d.acl_id WHERE r.id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT u.name AS user_name, l.name AS language, r.data_id, d.name, d.type, a.name AS acl, r.id, r.version, datetime FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id=u.id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id JOIN ".ROSCMST_ACCESS." a ON a.id=d.acl_id WHERE r.id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$_GET['d_r_id'],PDO::PARAM_INT);
     $stmt->execute();
     $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -69,7 +69,7 @@ class Export_QuickInfo extends Export
     echo $t_s.'User'.$t_e . wordwrap($revision['user_name'],13,"<br />\n",1).$t_lb;
     
     // list Tags
-    $stmt=DBConnection::getInstance()->prepare("SELECT name, value  FROM ".ROSCMST_TAGS." WHERE user_id IN(-1, 0, :user_id) AND rev_id=:rev_id ORDER BY user_id ASC, name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, value  FROM ".ROSCMST_TAGS." WHERE user_id IN(-1, 0, :user_id) AND rev_id=:rev_id ORDER BY user_id ASC, name ASC");
     $stmt->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
     $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
