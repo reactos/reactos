@@ -478,7 +478,7 @@ VOID DIALOG_FileSaveAs(VOID)
         OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLETEMPLATE | OFN_ENABLEHOOK;
     saveas.lpstrDefExt       = szDefaultExt;
     saveas.lpTemplateName    = MAKEINTRESOURCE(DIALOG_ENCODING);
-    saveas.lpfnHook          = (LPOFNHOOKPROC)DIALOG_FileSaveAs_Hook;
+    saveas.lpfnHook          = DIALOG_FileSaveAs_Hook;
 
     if (GetSaveFileName(&saveas)) {
         SetFileName(szPath);
