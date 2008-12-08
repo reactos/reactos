@@ -604,9 +604,9 @@ NtUserRemoteRedrawScreen                         0
 NtUserRemoteStopScreenUpdates                    0
 NtUserCtxDisplayIOCtl                            3
 NtGdiEngAssociateSurface                         3
-NtGdiEngCreateBitmap                             5
-NtGdiEngCreateDeviceSurface                      3
-NtGdiEngCreateDeviceBitmap                       3
+NtGdiEngCreateBitmap                             6
+NtGdiEngCreateDeviceSurface                      4
+NtGdiEngCreateDeviceBitmap                       4
 NtGdiEngCreatePalette                            6
 NtGdiEngComputeGlyphSet                          3
 NtGdiEngCopyBits                                 6
