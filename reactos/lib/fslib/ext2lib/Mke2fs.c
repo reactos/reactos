@@ -885,7 +885,7 @@ Ext2Format(
      * kludgy hack of using the UUID to derive a random jitter value.
      */
     {
-        int i, val;
+        ULONG i, val;
 
         for (i = 0, val = 0 ; i < sizeof(Ext2Sb.s_uuid); i++)
             val += Ext2Sb.s_uuid[i];

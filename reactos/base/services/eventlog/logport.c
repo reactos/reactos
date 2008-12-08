@@ -15,7 +15,6 @@
 
 HANDLE ConnectPortHandle = NULL;
 HANDLE MessagePortHandle = NULL;
-extern HANDLE MyHeap;
 extern BOOL onLiveCD;
 
 /* FUNCTIONS ****************************************************************/

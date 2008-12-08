@@ -20,7 +20,7 @@ TCHAR MsgQuit[128];
 TCHAR MsgAbout[128];
 TCHAR MsgWin[128];
 TCHAR MsgDeal[128];
-DWORD dwOptions = 8;
+DWORD dwOptions = OPTION_THREE_CARDS;
 
 CardWindow SolWnd;
 
@@ -477,6 +477,13 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             // Force the window to process WM_GETMINMAXINFO again
             GetWindowRect(hwndStatus, &rcStatus);
             nStatusHeight = rcStatus.bottom - rcStatus.top;
+
+            // Hide status bar if options say so
+            if (!(dwOptions & OPTION_SHOW_STATUS))
+            {
+                ShowWindow(hwndStatus, SW_HIDE);
+            }
+
             SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOZORDER);
 
             NewGame();
@@ -497,8 +504,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             if (dwOptions & OPTION_SHOW_STATUS)
             {
                 MoveWindow(SolWnd, 0, 0, nWidth, nHeight - nStatusHeight, TRUE);
-                MoveWindow(hwndStatus, 0, nHeight - nStatusHeight, nWidth, nHeight, TRUE);
-                SendMessage(hwndStatus, WM_SIZE, wParam, lParam);
+                MoveWindow(hwndStatus, 0, nHeight - nStatusHeight, nWidth, nStatusHeight, TRUE);
             }
             else
             {

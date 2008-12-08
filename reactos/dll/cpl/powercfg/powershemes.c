@@ -169,7 +169,7 @@ LoadConfig(HWND hwndDlg)
 	memcpy(&pp, &gPP[iCurSel], sizeof(POWER_POLICY));
 
 	uiIndex = (UINT)SendDlgItemMessage(hwndDlg, IDC_ENERGYLIST, CB_GETCURSEL, 0, 0);
-    if(uiIndex != CB_ERR)
+	if(uiIndex != (UINT)CB_ERR)
 	{
 		SendDlgItemMessage(hwndDlg, IDC_ENERGYLIST, CB_GETLBTEXT, uiIndex, (LPARAM)szProfile);
 		if(LoadString(hApplet, IDS_CONFIG1, szTemp, MAX_PATH))

@@ -629,7 +629,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               OUT PACCESS_MASK GrantedAccess,
               OUT PNTSTATUS AccessStatus)
 {
-    SECURITY_SUBJECT_CONTEXT SubjectSecurityContext = {0};
+    SECURITY_SUBJECT_CONTEXT SubjectSecurityContext = { NULL, 0, NULL, NULL };
     KPROCESSOR_MODE PreviousMode;
     PTOKEN Token;
     NTSTATUS Status;

@@ -348,11 +348,11 @@ errorout:
 
 bool ext2_block_map(PEXT2_FILESYS Ext2Sys, PEXT2_INODE inode, ULONG block, ULONG *dwRet)
 {
-    ULONG dwSizes[4] = {12, 1, 1, 1};
+    ULONG dwSizes[4] = { 12, 1, 1, 1 };
     ULONG Index = 0;
     ULONG dwBlk = 0;
     PEXT2_SUPER_BLOCK pExt2Sb = Ext2Sys->ext2_sb;
-    int   i;
+    UINT i;
     bool  bRet = false;
 
     Index = block;

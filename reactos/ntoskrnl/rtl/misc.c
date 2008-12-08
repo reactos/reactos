@@ -39,7 +39,8 @@ RtlGetNtGlobalFlags(VOID)
 NTSTATUS NTAPI
 RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
 {
-   ULONG i, MaxLength;
+   LONG i;
+   ULONG MaxLength;
    if (lpVersionInformation->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||
        lpVersionInformation->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
    {

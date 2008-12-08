@@ -1530,7 +1530,7 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
                    OUT PSID pSid,
                    IN OUT DWORD* cbSid)
 {
-    int i;
+    unsigned int i;
     TRACE("(%d, %s, %p, %p)\n", WellKnownSidType, debugstr_sid(DomainSid), pSid, cbSid);
 
     if (DomainSid != NULL)
@@ -1576,7 +1576,7 @@ BOOL WINAPI
 IsWellKnownSid(IN PSID pSid,
                IN WELL_KNOWN_SID_TYPE WellKnownSidType)
 {
-    int i;
+    unsigned int i;
     TRACE("(%s, %d)\n", debugstr_sid(pSid), WellKnownSidType);
 
     for (i = 0; i < sizeof(WellKnownSids) / sizeof(WellKnownSids[0]); i++)
@@ -1638,7 +1638,7 @@ ComputeStringSidSize(LPCWSTR StringSid)
     }
     else /* String constant format  - Only available in winxp and above */
     {
-        int i;
+        unsigned int i;
 
         for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
             if (!strncmpW(WellKnownSids[i].wstr, StringSid, 2))

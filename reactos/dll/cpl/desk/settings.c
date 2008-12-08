@@ -283,7 +283,7 @@ OnInitDialog(IN HWND hwndDlg)
 	BITMAP bitmap;
 	DWORD Result = 0;
 	DWORD iDevNum = 0;
-	INT i;
+	DWORD i;
 	DISPLAY_DEVICE displayDevice;
 	PGLOBAL_DATA pGlobalData;
 
@@ -333,7 +333,7 @@ OnInitDialog(IN HWND hwndDlg)
 	else /* FIXME: incomplete! */
 	{
 		PMONSL_MONINFO pMonitors;
-		INT i;
+		DWORD i;
 
 		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pGlobalData->DisplayDeviceList->DeviceDescription);
 		OnDisplayDeviceChanged(hwndDlg, pGlobalData, pGlobalData->DisplayDeviceList);
@@ -341,7 +341,7 @@ OnInitDialog(IN HWND hwndDlg)
 		pMonitors = (PMONSL_MONINFO)HeapAlloc(GetProcessHeap(), 0, sizeof(MONSL_MONINFO) * Result);
 		if (pMonitors)
 		{
-			INT hack = 1280;
+			DWORD hack = 1280;
 			for (i = 0; i < Result; i++)
 			{
 				pMonitors[i].Position.x = hack * i;
@@ -817,7 +817,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 		case WM_DESTROY:
 		{
-			INT i;
+			DWORD i;
 			PDISPLAY_DEVICE_ENTRY Current = pGlobalData->DisplayDeviceList;
 
 			while (Current != NULL)

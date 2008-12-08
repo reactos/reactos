@@ -93,8 +93,7 @@ bool ext2_allocate_group_table(PEXT2_FILESYS fs, ULONG group,
                       PEXT2_BLOCK_BITMAP bmap)
 {
     bool    retval;
-    ULONG   group_blk, start_blk, last_blk, new_blk, blk;
-    int     j;
+    ULONG   group_blk, start_blk, last_blk, new_blk, blk, j;
 
     group_blk = fs->ext2_sb->s_first_data_block +
         (group * fs->ext2_sb->s_blocks_per_group);

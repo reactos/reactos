@@ -143,7 +143,7 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
 
                         if(NT_SUCCESS(Status))
                         {
-                            if(!bFoundFile && atoi(FileName) == CodePage)
+                            if(!bFoundFile && (UINT32)atoi(FileName) == CodePage)
                             {
                                 // We got the correct file.
                                 // Save the offset and loop through the rest of the file table to find the position, where the actual data starts.

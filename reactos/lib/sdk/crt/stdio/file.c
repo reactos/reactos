@@ -40,6 +40,7 @@
 
 #include <sys/utime.h>
 #include <direct.h>
+
 int *__p__fmode(void);
 int *__p___mb_cur_max(void);
 
@@ -3024,4 +3025,4 @@ ioinfo * __pioinfo[] = { /* array of pointers to ioinfo arrays [64] */
 /*********************************************************************
  *		__badioinfo (MSVCRT.@)
  */
-ioinfo __badioinfo = { INVALID_HANDLE_VALUE, WX_TEXT };
+ioinfo __badioinfo = { INVALID_HANDLE_VALUE, WX_TEXT, { 0, } };

@@ -6,6 +6,7 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+#include "lsasrv.h"
 #include "lsa_s.h"
 
 #include <wine/debug.h>

@@ -58,7 +58,7 @@ static ULONG MiniportOIDList[] = {
     OID_802_3_MAC_OPTIONS
 };
 
-DRIVER_INFORMATION      DriverInfo = {0};
+DRIVER_INFORMATION      DriverInfo = { NULL, NULL, { NULL, NULL } };
 NDIS_PHYSICAL_ADDRESS   HighestAcceptableMax = NDIS_PHYSICAL_ADDRESS_CONST(-1, -1);
 
 
@@ -161,7 +161,7 @@ static VOID NTAPI MiQueryResources(
     PNDIS_RESOURCE_LIST AssignedResources;
     UINT BufferSize = 0;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
-    int i;
+    UINT i;
 
     NdisMQueryAdapterResources(Status,
                                WrapperConfigurationContext,

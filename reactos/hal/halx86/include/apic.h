@@ -97,10 +97,10 @@
 
 #define APIC_LVT_VECTOR   		  (0xFF << 0)   /* Vector */
 #define APIC_LVT_DS       		  (0x1 << 12)   /* Delivery Status */
-#define APIC_LVT_REMOTE_IRR		  (0x1 << 14)		/* Remote IRR */
-#define APIC_LVT_LEVEL_TRIGGER	(0x1 << 15)		/* Lvel Triggered */
-#define APIC_LVT_MASKED   	    (0x1 << 16)   /* Mask */
-#define APIC_LVT_PERIODIC 	  	(0x1 << 17)   /* Timer Mode */
+#define APIC_LVT_REMOTE_IRR		  (0x1 << 14)	/* Remote IRR */
+#define APIC_LVT_LEVEL_TRIGGER		  (0x1 << 15)	/* Lvel Triggered */
+#define APIC_LVT_MASKED			  (0x1 << 16)   /* Mask */
+#define APIC_LVT_PERIODIC		  (0x1 << 17)   /* Timer Mode */
 
 #define APIC_LVT3_DM        (0x7 << 8)
 #define APIC_LVT3_IIPP      (0x1 << 13)
@@ -165,30 +165,92 @@ typedef struct _CPU_INFO
 } CPU_INFO, *PCPU_INFO;
 
 extern ULONG CPUCount;			/* Total number of CPUs */
-extern ULONG BootCPU;					/* Bootstrap processor */
+extern ULONG BootCPU;			/* Bootstrap processor */
 extern ULONG OnlineCPUs;		/* Bitmask of online CPUs */
 extern CPU_INFO CPUMap[MAX_CPU];	/* Map of all CPUs in the system */
+extern PULONG APICBase;			/* Virtual address of local APIC */
+extern ULONG lastregr[MAX_CPU];		/* For debugging */
+extern ULONG lastvalr[MAX_CPU];
+extern ULONG lastregw[MAX_CPU];
+extern ULONG lastvalw[MAX_CPU];
 
 /* Prototypes */
-
-__inline VOID APICWrite(ULONG Offset, ULONG Value);
-__inline ULONG APICRead(ULONG Offset);
 VOID APICSendIPI(ULONG Target, ULONG Mode);
 VOID APICSetup(VOID);
 VOID HaliInitBSP(VOID);
 VOID APICSyncArbIDs(VOID);
-__inline VOID APICSendEOI(VOID);
 VOID APICCalibrateTimer(ULONG CPU);
 VOID HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack);
+
+static __inline ULONG _APICRead(ULONG Offset)
+{
+    PULONG p;
+
+    p = (PULONG)((ULONG)APICBase + Offset);
+    return *p;
+}
+
+#if 0
+static __inline VOID APICWrite(ULONG Offset,
+                               ULONG Value)
+{
+    PULONG p;
+
+    p = (PULONG)((ULONG)APICBase + Offset);
+
+    *p = Value;
+}
+#else
+static __inline VOID APICWrite(ULONG Offset,
+                               ULONG Value)
+{
+    PULONG p;
+    ULONG CPU = (_APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
+
+    lastregw[CPU] = Offset;
+    lastvalw[CPU] = Value;
+
+    p = (PULONG)((ULONG)APICBase + Offset);
+
+    *p = Value;
+}
+#endif
+
+#if 0 
+static __inline ULONG APICRead(ULONG Offset)
+{
+    PULONG p;
+
+    p = (PULONG)((ULONG)APICBase + Offset);
+    return *p;
+}
+#else
+static __inline ULONG APICRead(ULONG Offset)
+{
+    PULONG p;
+    ULONG CPU = (_APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
+
+    lastregr[CPU] = Offset;
+    lastvalr[CPU] = 0;
+
+    p = (PULONG)((ULONG)APICBase + Offset);
+
+    lastvalr[CPU] = *p;
+    return lastvalr[CPU];
+}
+#endif
 
 static __inline ULONG ThisCPU(VOID)
 {
     return (APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
 }
 
+static __inline VOID APICSendEOI(VOID)
+{
+    // Send the EOI
+    APICWrite(APIC_EOI, 0);
+}
 
-#endif
-
+#endif /* __INTERNAL_HAL_APIC_H */
 
 /* EOF */
-

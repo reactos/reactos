@@ -775,7 +775,7 @@ StartRecDlgProc(HWND hwndDlg,
                         LRESULT lResult;
 
                         lResult = SendDlgItemMessage(hwndDlg, IDC_STRRECDEBUGCOMBO, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
-                        if (lResult != CB_ERR && lResult != pStartInfo->dwCrashDumpEnabled)
+                        if (lResult != CB_ERR && lResult != (LRESULT)pStartInfo->dwCrashDumpEnabled)
                         {
                             if (pStartInfo->dwCrashDumpEnabled == 1 || pStartInfo->dwCrashDumpEnabled == 2)
                             {
@@ -786,7 +786,7 @@ StartRecDlgProc(HWND hwndDlg,
                                 SendDlgItemMessageW(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(pStartInfo->szMinidumpDir) / sizeof(WCHAR), (LPARAM)pStartInfo->szMinidumpDir);
                             }
 
-                            pStartInfo->dwCrashDumpEnabled = lResult;
+                            pStartInfo->dwCrashDumpEnabled = (DWORD)lResult;
                             SetCrashDlgItems(hwndDlg, pStartInfo);
                         }
                     }

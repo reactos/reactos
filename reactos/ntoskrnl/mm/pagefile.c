@@ -205,7 +205,7 @@ MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER 
          first = mid + 1;
       }
    }
-   ASSERT(FALSE);
+   KeBugCheck(MEMORY_MANAGEMENT);
 #if defined(__GNUC__)
 
    return (LARGE_INTEGER)0LL;
@@ -237,7 +237,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
    if (SwapEntry == 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -247,13 +247,13 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    if (i >= MAX_PAGING_FILES)
    {
       DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
       DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
@@ -298,7 +298,7 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
    if (SwapEntry == 0)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -308,13 +308,13 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    if (i >= MAX_PAGING_FILES)
    {
       DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
       DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
@@ -450,13 +450,13 @@ MmFreeSwapPage(SWAPENTRY Entry)
    if (i >= MAX_PAGING_FILES)
    {
 	DPRINT1("Bad swap entry 0x%.8X\n", Entry);
-	ASSERT(FALSE);
+	KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    if (PagingFileList[i] == NULL)
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
 
@@ -504,7 +504,7 @@ MmAllocSwapPage(VOID)
          off = MiAllocPageFromPagingFile(PagingFileList[i]);
          if (off == 0xFFFFFFFF)
          {
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
             KeReleaseSpinLock(&PagingFileListLock, oldIrql);
             return(STATUS_UNSUCCESSFUL);
          }
@@ -518,7 +518,7 @@ MmAllocSwapPage(VOID)
    }
 
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
-   ASSERT(FALSE);
+   KeBugCheck(MEMORY_MANAGEMENT);
    return(0);
 }
 

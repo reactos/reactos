@@ -3,12 +3,11 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
-DECLARE_HANDLE(LSAPR_HANDLE);
+#include "lsasrv.h"
 
-#define NDEBUG
-#include <debug.h>
+#include "wine/debug.h"
 
-VOID LsarStartRpcServer(VOID);
+WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 
 NTSTATUS WINAPI
@@ -16,7 +15,7 @@ LsapInitLsa(VOID)
 {
     HANDLE hEvent;
 
-    DPRINT("LsapInitLsa() called\n");
+    TRACE("LsapInitLsa()\n");
 
     LsarStartRpcServer();
 
@@ -30,6 +29,7 @@ LsapInitLsa(VOID)
     }
     return STATUS_SUCCESS;
 }
+
 
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {

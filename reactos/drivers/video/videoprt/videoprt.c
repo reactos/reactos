@@ -1078,7 +1078,7 @@ VideoPortEnumerateChildren(
    UCHAR ChildDescriptor[256];
    ULONG ChildId;
    ULONG Unused;
-   INT i;
+   UINT i;
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    if (DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor == NULL)
@@ -1155,7 +1155,7 @@ VideoPortEnumerateChildren(
 #ifndef NDEBUG
       if (ChildType == Monitor)
       {
-         INT j;
+         UINT j;
          PUCHAR p = ChildDescriptor;
          INFO_(VIDEOPRT, "Monitor device enumerated! (ChildId = 0x%x)\n", ChildId);
          for (j = 0; j < sizeof (ChildDescriptor); j += 8)

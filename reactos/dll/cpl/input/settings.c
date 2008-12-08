@@ -214,7 +214,7 @@ GetLayoutName(LPCTSTR szLCID, LPTSTR szName)
     DWORD dwBufLen;
     TCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
     HANDLE hLib;
-    int i, j, k;
+    unsigned i, j, k;
 
     wsprintf(szBuf, _T("SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s"), szLCID);
 

@@ -57,7 +57,7 @@ MmInitializeMdlImplementation(VOID)
     if (!NT_SUCCESS(Status))
     {
         MmUnlockAddressSpace(MmGetKernelAddressSpace());
-        ASSERT(FALSE);
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
     
@@ -692,7 +692,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
             {
                 return NULL;
             }
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
         }
         Base = (PVOID)((ULONG_PTR)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE);
         if (MiMdlMappingRegionHint == StartingOffset) MiMdlMappingRegionHint += PageCount;

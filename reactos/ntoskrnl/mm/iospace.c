@@ -104,7 +104,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("Unable to create virtual mapping\n");
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
    return (PVOID)((ULONG_PTR)Result + Offset);

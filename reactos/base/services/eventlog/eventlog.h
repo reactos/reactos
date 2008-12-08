@@ -162,9 +162,9 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwDataSize,
                                  LPVOID lpRawData);
 
-__inline void LogfFreeRecord(LPVOID Rec);
-
 /* eventlog.c */
+extern HANDLE MyHeap;
+
 VOID PRINT_HEADER(PFILE_HEADER header);
 
 VOID PRINT_RECORD(PEVENTLOGRECORD pRec);
@@ -184,5 +184,10 @@ NTSTATUS ProcessPortMessage(VOID);
 
 /* rpc.c */
 DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter);
+
+static __inline void LogfFreeRecord(LPVOID Rec)
+{
+    HeapFree(MyHeap, 0, Rec);
+}
 
 #endif  /* __EVENTLOG_H__ */

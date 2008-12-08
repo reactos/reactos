@@ -123,7 +123,7 @@ ScmGetServiceEntryByClientHandle(HANDLE Handle)
     PSERVICE CurrentService;
 
     DPRINT("ScmGetServiceEntryByClientHandle() called\n");
-    DPRINT("looking for %lu\n", Handle);
+    DPRINT("looking for %p\n", Handle);
 
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)

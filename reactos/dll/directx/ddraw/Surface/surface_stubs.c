@@ -260,7 +260,7 @@ Main_DDrawSurface_UpdateOverlayDisplay (LPDDRAWI_DDRAWSURFACE_INT This,
 
 	DX_WINDBG_trace();
 
-	if (!This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY)
+	if (!(This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY))
 	{
 		return DDERR_GENERIC;
 	}

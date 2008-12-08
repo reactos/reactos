@@ -97,7 +97,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
    if (Page == 0)
    {
       DPRINT1("Tried to release page zero.\n");
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    KeAcquireSpinLock(&AllocationListLock, &oldIrql);
@@ -169,7 +169,7 @@ MmRebalanceMemoryConsumers(VOID)
          Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
          if (!NT_SUCCESS(Status))
          {
-            ASSERT(FALSE);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
          Target = Target - NrFreedPages;
       }
@@ -326,7 +326,7 @@ MiBalancerThread(PVOID Unused)
                   Status = MiMemoryConsumers[i].Trim(MiMinimumPagesPerRun, 0, &NrFreedPages);
                   if (!NT_SUCCESS(Status))
                   {
-                     ASSERT(FALSE);
+                     KeBugCheck(MEMORY_MANAGEMENT);
                   }
                }
             }
@@ -357,7 +357,7 @@ MiBalancerThread(PVOID Unused)
                   Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
                   if (!NT_SUCCESS(Status))
                   {
-                     ASSERT(FALSE);
+                     KeBugCheck(MEMORY_MANAGEMENT);
                   }
                }
             }
@@ -366,7 +366,7 @@ MiBalancerThread(PVOID Unused)
       else
       {
          DPRINT1("KeWaitForMultipleObjects failed, status = %x\n", Status);
-         ASSERT(FALSE);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
 }
@@ -406,7 +406,7 @@ MiInitBalancerThread(VOID)
                                  NULL);
    if (!NT_SUCCESS(Status))
    {
-      ASSERT(FALSE);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    Priority = LOW_REALTIME_PRIORITY + 1;
