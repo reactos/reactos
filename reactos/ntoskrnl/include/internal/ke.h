@@ -721,11 +721,6 @@ NTAPI
 KeQueryRuntimeProcess(IN PKPROCESS Process,
                       OUT PULONG UserTime);
 
-ULONG
-NTAPI
-KeQueryRuntimeThread(IN PKTHREAD Thread,
-                     OUT PULONG UserTime);
-
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 BOOLEAN

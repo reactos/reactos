@@ -9874,6 +9874,13 @@ NTAPI
 KeQueryPriorityThread(
   IN PRKTHREAD  Thread);
 
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryRuntimeThread(
+  IN PKTHREAD Thread,
+  OUT PULONG UserTime);
+
 #if !defined(_M_AMD64)
 NTKERNELAPI
 ULONGLONG
