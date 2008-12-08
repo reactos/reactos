@@ -538,6 +538,7 @@ QSI_DEF(SystemProcessorInformation)
 /* Class 2 - Performance Information */
 QSI_DEF(SystemPerformanceInformation)
 {
+	ULONG IdleUser, IdleKernel;
 	PSYSTEM_PERFORMANCE_INFORMATION Spi
 		= (PSYSTEM_PERFORMANCE_INFORMATION) Buffer;
 
@@ -554,8 +555,8 @@ QSI_DEF(SystemPerformanceInformation)
 
 	TheIdleProcess = PsIdleProcess;
 
-	Spi->IdleProcessTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
-
+	IdleKernel = KeQueryRuntimeProcess(&TheIdleProcess->Pcb, &IdleUser);
+	Spi->IdleProcessTime.QuadPart = UInt32x32To64(IdleKernel, KeMaximumIncrement);
 	Spi->IoReadTransferCount = IoReadTransferCount;
 	Spi->IoWriteTransferCount = IoWriteTransferCount;
 	Spi->IoOtherTransferCount = IoOtherTransferCount;
@@ -699,7 +700,8 @@ QSI_DEF(SystemProcessInformation)
 {
 	ULONG ovlSize = 0, nThreads;
 	PEPROCESS pr = NULL, syspr;
-	unsigned char *pCur;
+	PUCHAR pCur;
+	ULONG TotalUser, TotalKernel;
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	_SEH2_TRY
@@ -757,8 +759,6 @@ QSI_DEF(SystemProcessInformation)
 			SpiCur->NextEntryOffset = curSize+inLen; // relative offset to the beginnnig of the next structure
 			SpiCur->NumberOfThreads = nThreads;
 			SpiCur->CreateTime = pr->CreateTime;
-			SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000LL;
-			SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000LL;
 			SpiCur->ImageName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
 			SpiCur->ImageName.MaximumLength = (USHORT)inLen;
 			SpiCur->ImageName.Buffer = (void*)(pCur+curSize);
@@ -798,8 +798,8 @@ QSI_DEF(SystemProcessInformation)
 				current = CONTAINING_RECORD(current_entry, ETHREAD,
 				                            ThreadListEntry);
 
-				ThreadInfo->KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
-				ThreadInfo->UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
+				ThreadInfo->KernelTime.QuadPart = UInt32x32To64(current->Tcb.KernelTime, KeMaximumIncrement);
+				ThreadInfo->UserTime.QuadPart = UInt32x32To64(current->Tcb.UserTime, KeMaximumIncrement);
 				ThreadInfo->CreateTime.QuadPart = current->CreateTime.QuadPart;
 				ThreadInfo->WaitTime = current->Tcb.WaitTime;
 				ThreadInfo->StartAddress = (PVOID) current->StartAddress;
@@ -809,9 +809,15 @@ QSI_DEF(SystemProcessInformation)
 				ThreadInfo->ContextSwitches = current->Tcb.ContextSwitches;
 				ThreadInfo->ThreadState = current->Tcb.State;
 				ThreadInfo->WaitReason = current->Tcb.WaitReason;
+
 				ThreadInfo++;
 				current_entry = current_entry->Flink;
 			}
+
+			/* Query total user/kernel times of a process */
+			TotalKernel = KeQueryRuntimeProcess(&pr->Pcb, &TotalUser);
+			SpiCur->UserTime.QuadPart = UInt32x32To64(TotalUser, KeMaximumIncrement);
+			SpiCur->KernelTime.QuadPart = UInt32x32To64(TotalKernel, KeMaximumIncrement);
 
 			/* Handle idle process entry */
 			if (pr == PsIdleProcess) pr = NULL;
@@ -882,37 +888,39 @@ QSI_DEF(SystemDeviceInformation)
 /* Class 8 - Processor Performance Information */
 QSI_DEF(SystemProcessorPerformanceInformation)
 {
-	PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION Spi
-		= (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) Buffer;
+    PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION Spi
+        = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) Buffer;
 
-        LONG i;
-	LARGE_INTEGER CurrentTime;
-	PKPRCB Prcb;
+    LONG i;
+    ULONG TotalTime;
+    LARGE_INTEGER CurrentTime;
+    PKPRCB Prcb;
 
-	*ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION);
-	/*
-	 * Check user buffer's size
-	 */
-	if (Size < KeNumberProcessors * sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION))
-	{
-		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
+    *ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION);
 
-	CurrentTime.QuadPart = KeQueryInterruptTime();
-	Prcb = KeGetPcr()->Prcb;
-	for (i = 0; i < KeNumberProcessors; i++)
-	{
-	   Spi->IdleTime.QuadPart = (Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime) * 100000LL;
-           Spi->KernelTime.QuadPart =  Prcb->KernelTime * 100000LL;
-           Spi->UserTime.QuadPart = Prcb->UserTime * 100000LL;
-           Spi->DpcTime.QuadPart = Prcb->DpcTime * 100000LL;
-           Spi->InterruptTime.QuadPart = Prcb->InterruptTime * 100000LL;
-           Spi->InterruptCount = Prcb->InterruptCount;
-	   Spi++;
-	   Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
-	}
+    /* Check user buffer's size */
+    if (Size < *ReqSize)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
 
-	return (STATUS_SUCCESS);
+    CurrentTime.QuadPart = KeQueryInterruptTime();
+    Prcb = KeGetPcr()->Prcb;
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        /* Calculate total user and kernel times */
+        TotalTime = Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime;
+        Spi->IdleTime.QuadPart = UInt32x32To64(TotalTime, KeMaximumIncrement);
+        Spi->KernelTime.QuadPart =  UInt32x32To64(Prcb->KernelTime, KeMaximumIncrement);
+        Spi->UserTime.QuadPart = UInt32x32To64(Prcb->UserTime, KeMaximumIncrement);
+        Spi->DpcTime.QuadPart = UInt32x32To64(Prcb->DpcTime, KeMaximumIncrement);
+        Spi->InterruptTime.QuadPart = UInt32x32To64(Prcb->InterruptTime, KeMaximumIncrement);
+        Spi->InterruptCount = Prcb->InterruptCount;
+        Spi++;
+        Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 9 - Flags Information */

@@ -722,6 +722,54 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
 /*
  * @implemented
  */
+ULONG
+NTAPI
+KeQueryRuntimeProcess(IN PKPROCESS Process,
+                      OUT PULONG UserTime)
+{
+    ULONG TotalUser, TotalKernel;
+    KLOCK_QUEUE_HANDLE ProcessLock;
+    PLIST_ENTRY NextEntry, ListHead;
+    PKTHREAD Thread;
+
+    ASSERT_PROCESS(Process);
+
+    /* Initialize user and kernel times */
+    TotalUser = Process->UserTime;
+    TotalKernel = Process->KernelTime;
+
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &ProcessLock);
+
+    /* Loop all child threads and sum up their times */
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
+    {
+        /* Get the thread */
+        Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+        /* Sum up times */
+        TotalKernel += Thread->KernelTime;
+        TotalUser += Thread->UserTime;
+
+        /* Go to the next one */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release lock */
+    KiReleaseProcessLock(&ProcessLock);
+
+    /* Return the user time */
+    *UserTime = TotalUser;
+
+    /* Return the kernel time */
+    return TotalKernel;
+}
+
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 KeAddSystemServiceTable(IN PULONG_PTR Base,
