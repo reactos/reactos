@@ -682,7 +682,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             if (!NT_SUCCESS(Status)) break;
 
             /* Write the session ID in the EPROCESS */
-            Process->Session = UlongToPtr(SessionInfo.SessionId);
+            Process->Session = SessionInfo.SessionId;
 
             /* Check if the process also has a PEB */
             if (Process->Peb)

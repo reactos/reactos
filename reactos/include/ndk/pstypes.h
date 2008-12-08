@@ -1265,7 +1265,7 @@ typedef struct _EPROCESS
         HARDWARE_PTE PageDirectoryPte;
         ULONGLONG Filler;
     };
-    HANDLE Session;
+    ULONG Session;
     CHAR ImageFileName[16];
     LIST_ENTRY JobLinks;
     PVOID LockedPagesList;
