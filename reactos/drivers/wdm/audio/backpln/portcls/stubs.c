@@ -32,21 +32,6 @@ PcNewDmaChannel(
  * @unimplemented
  */
 NTSTATUS NTAPI
-PcNewInterruptSync(
-    OUT PINTERRUPTSYNC* OUtInterruptSync,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  PRESOURCELIST ResourceList,
-    IN  ULONG ResourceIndex,
-    IN  INTERRUPTSYNCMODE Mode)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
 PcNewServiceGroup(
     OUT PSERVICEGROUP* OutServiceGroup,
     IN  PUNKNOWN OuterUnknown OPTIONAL)
