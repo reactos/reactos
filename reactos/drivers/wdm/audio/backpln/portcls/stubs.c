@@ -86,38 +86,6 @@ PcCompletePendingPropertyRequest(
     return STATUS_UNSUCCESSFUL;
 }
 
-
-/* ===============================================================
-    I/O Timeouts
-*/
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcRegisterIoTimeout(
-    IN  PDEVICE_OBJECT pDeviceObject,
-    IN  PIO_TIMER_ROUTINE pTimerRoutine,
-    IN  PVOID pContext)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcUnregisterIoTimeout(
-    IN  PDEVICE_OBJECT pDeviceObject,
-    IN  PIO_TIMER_ROUTINE pTimerRoutine,
-    IN  PVOID pContext)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-
 /* ===============================================================
     Physical Connections
 */
