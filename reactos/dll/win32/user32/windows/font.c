@@ -676,9 +676,10 @@ static void TEXT_SkipChars (int *new_count, const WCHAR **new_str,
         assert (max >= n);
         max -= n;
         while (n--)
+        {
             if (*start_str++ == PREFIX && max--)
                 start_str++;
-            else;
+        }
         start_count -= (start_str - str_on_entry);
     }
     else
@@ -736,7 +737,6 @@ static int TEXT_Reprefix (const WCHAR *str, unsigned int ns,
             str++;
             ns--;
         }
-        else;
         i++;
     }
     return result;
