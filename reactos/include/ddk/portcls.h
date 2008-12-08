@@ -694,7 +694,7 @@ typedef IDmaChannel *PDMACHANNEL;
         IN  BOOLEAN WriteToDevice) PURE; \
 \
     STDMETHOD_(NTSTATUS, Stop)( THIS ) PURE; \
-    STDMETHOD_(NTSTATUS, ReadCounter)( THIS ) PURE; \
+    STDMETHOD_(ULONG, ReadCounter)( THIS ) PURE; \
 \
     STDMETHOD_(NTSTATUS, WaitForTC)( THIS_ \
         ULONG Timeout) PURE;
@@ -705,16 +705,19 @@ typedef IDmaChannel *PDMACHANNEL;
         IN  BOOLEAN WriteToDevice); \
 \
     STDMETHODIMP_(NTSTATUS) Stop(void); \
-    STDMETHODIMP_(NTSTATUS) ReadCounter)(void); \
+    STDMETHODIMP_(ULONG) ReadCounter)(void); \
 \
     STDMETHODIMP_(NTSTATUS, WaitForTC)( \
         ULONG Timeout);
 
+#undef INTERFACE
+#define INTERFACE IDmaChannelSlave
+
 DECLARE_INTERFACE_(IDmaChannelSlave, IDmaChannel)
 {
-    DEFINE_ABSTRACT_UNKNOWN()
-    DEFINE_ABSTRACT_DMACHANNEL()
-    DEFINE_ABSTRACT_DMACHANNELSLAVE()
+    DEFINE_ABSTRACT_UNKNOWN();
+    DEFINE_ABSTRACT_DMACHANNEL();
+    DEFINE_ABSTRACT_DMACHANNELSLAVE();
 };
 
 typedef IDmaChannelSlave *PDMACHANNELSLAVE;
@@ -737,6 +740,9 @@ typedef NTSTATUS (*PINTERRUPTSYNCROUTINE)(
     IN  struct IInterruptSync* InterruptSync,
     IN  PVOID DynamicContext);
 
+#undef INTERFACE
+#define INTERFACE IInterruptSync
+
 DECLARE_INTERFACE_(IInterruptSync, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -754,6 +760,8 @@ DECLARE_INTERFACE_(IInterruptSync, IUnknown)
         IN  PVOID DynamicContext,
         IN  BOOLEAN First) PURE;
 };
+
+DEFINE_GUID(IID_IInterruptSync, 0x22C6AC63L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
 
 #define IMP_IInterruptSync \
     STDMETHODIMP_(NTSTATUS, CallSynchronizedRoutine)( \
