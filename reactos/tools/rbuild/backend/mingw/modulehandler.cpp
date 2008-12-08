@@ -1434,6 +1434,9 @@ MingwModuleHandler::GenerateRunRsymCode () const
              "ifneq ($(ROS_GENERATE_RSYM),no)\n" );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_RSYM)\n" );
+	// FIXME! workaround until rsym can extract line numbers from DWARF
+	fprintf ( fMakefile,
+	          "\t$(Q)${objcopy} -R .debug_abbrev -R .debug_aranges -R .debug_frame -R .debug_info -R .debug_line -R .debug_pubnames -R .debug_macinfo -R .debug_str -R .debug_loc -R .debug_pubtypes -R .debug_ranges -R .debug_static_func -R .debug_static_vars -R .debug_types -R .debug_weaknames $@\n\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(RSYM_TARGET) $@ $@\n\n" );
 	fprintf ( fMakefile,
@@ -2013,16 +2016,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 		          "%s += %s\n\n",
 		          linkerflagsMacro.c_str (),
 		          linkerflags );
-	}
-
-	if ( IsStaticLibrary ( module ) && module.isStartupLib )
-	{
-		fprintf ( fMakefile,
-		          "%s += -Wno-main\n\n",
-		          cflagsMacro.c_str () );
-		fprintf ( fMakefile,
-		          "%s += -Wno-main\n\n",
-		          cxxflagsMacro.c_str () );
 	}
 
 	fprintf ( fMakefile, "\n\n" );
