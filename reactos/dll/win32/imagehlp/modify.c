@@ -1044,7 +1044,7 @@ DWORD IMAGEAPI MapFileAndCheckSumA(
 			      0,
 			      0,
 			      0);
-  if (hMapping == 0)
+  if (BaseAddress == NULL)
   {
     CloseHandle(hMapping);
     CloseHandle(hFile);
@@ -1110,7 +1110,7 @@ DWORD IMAGEAPI MapFileAndCheckSumW(
 			      0,
 			      0,
 			      0);
-  if (hMapping == 0)
+  if (BaseAddress == NULL)
   {
     CloseHandle(hMapping);
     CloseHandle(hFile);
