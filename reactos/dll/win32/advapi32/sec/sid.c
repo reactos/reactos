@@ -1793,6 +1793,8 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
     if (*StringSid == '-')
         StringSid++;
 
+    pisid->SubAuthority[i] = atoiW(StringSid);
+
     while (*StringSid)
     {
         while (*StringSid && *StringSid != '-')
@@ -1800,7 +1802,7 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
         if (*StringSid == '-')
             StringSid++;
 
-        pisid->SubAuthority[i++] = atoiW(StringSid);
+        pisid->SubAuthority[++i] = atoiW(StringSid);
     }
 
     if (i != pisid->SubAuthorityCount)
