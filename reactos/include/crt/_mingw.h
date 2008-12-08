@@ -7,6 +7,8 @@
 #ifndef _INC_CRTDEFS
 #define _INC_CRTDEFS
 
+#define _INTEGRAL_MAX_BITS 64
+
 #ifndef MINGW64
 #define MINGW64
 #define MINGW64_VERSION	1.0
