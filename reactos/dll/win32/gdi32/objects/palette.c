@@ -87,6 +87,8 @@ GetSystemPaletteEntries(HDC hDC,
                         LPPALETTEENTRY ppe)
 {
      PALETTEENTRY ippe[256];
+     // Make this work!
+     if ((INT)cEntries < 0 ) return 0;
 
      if ( GetDeviceCaps(hDC, RASTERCAPS) & RC_PALETTE )
         return NtGdiDoPalette(hDC, iStartIndex, cEntries, ppe, GdiPalGetSystemEntries, FALSE);
