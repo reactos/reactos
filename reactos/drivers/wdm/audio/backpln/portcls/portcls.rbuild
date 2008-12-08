@@ -21,6 +21,7 @@
 	<file>undoc.c</file>
 	<file>resource.c</file>
 	<file>registry.c</file>
+	<file>service_group.c</file>	
 	<file>port.c</file>
 	<file>port_dmus.c</file>
 	<file>port_midi.c</file>

@@ -28,19 +28,6 @@ PcNewDmaChannel(
     return STATUS_UNSUCCESSFUL;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcNewServiceGroup(
-    OUT PSERVICEGROUP* OutServiceGroup,
-    IN  PUNKNOWN OuterUnknown OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-
 /* ===============================================================
     Power Management
 */
