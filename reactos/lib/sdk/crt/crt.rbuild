@@ -285,6 +285,11 @@
 				<file>setjmp.s</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="signal">
 		<file>signal.c</file>
