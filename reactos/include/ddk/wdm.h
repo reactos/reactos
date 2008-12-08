@@ -181,9 +181,14 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 #endif
 }
 
+#endif
+
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
 
+#ifdef _M_AMD64
+#define InterlockedBitTestAndSet64 _interlockedbittestandset64
+#define InterlockedBitTestAndReset64 _interlockedbittestandreset64
 #endif
 
 
