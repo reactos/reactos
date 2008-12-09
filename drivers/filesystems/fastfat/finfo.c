@@ -752,24 +752,64 @@ NTSTATUS
 VfatSetRenameInformation(PVFAT_IRP_CONTEXT IrpContext)
 {
   PIRP Irp;
+  NTSTATUS Status;
   PVFATFCB FCB, NewFCB;
   PIO_STACK_LOCATION Stack;
+  PDEVICE_EXTENSION DeviceExt;
   PFILE_OBJECT FileObject, NewFileObject;
+  BOOLEAN ReplaceIfExists, ChangeCaseOnly = FALSE;
+  UNICODE_STRING UpcasedPathName, UpcasedNewPathName;
 
   DPRINT1("VfatSetRenameInformation is stubplemented!\n");
 
   Irp = IrpContext->Irp;
   Stack = IoGetCurrentIrpStackLocation(Irp);
 
+  DeviceExt = IrpContext->DeviceExt;
+
   FileObject = IrpContext->FileObject;
   FCB = FileObject->FsContext;
 
   NewFileObject = Stack->Parameters.SetFile.FileObject;
+  ReplaceIfExists = Stack->Parameters.SetFile.ReplaceIfExists;
   NewFCB = NewFileObject->FsContext;
 
-  if (FsRtlAreNamesEqual(&(FCB->LongNameU), &(NewFCB->LongNameU), FALSE, NULL))
+  /* Don't allow root directory rename */
+  if (vfatFCBIsRoot(FCB))
   {
-    return STATUS_SUCCESS;
+    return STATUS_INVALID_PARAMETER;
+  }
+
+  /* FIXME: Don't let RTL lib allocate memory, do it from kernel ! */
+  Status = RtlUpcaseUnicodeString(&UpcasedPathName, &(FCB->PathNameU), TRUE);
+  if (!NT_SUCCESS(Status))
+  {
+    return Status;
+  }
+  Status = RtlUpcaseUnicodeString(&UpcasedNewPathName, &(NewFCB->PathNameU), TRUE);
+  if (!NT_SUCCESS(Status))
+  {
+    return Status;
+  }
+
+  if ((FCB->parentFcb) == (NewFCB->parentFcb))
+  {
+    /* Run a quick test to know if new and old filenames are the same */
+    if (FsRtlAreNamesEqual(&(FCB->LongNameU), &(NewFCB->LongNameU), FALSE, NULL))
+    {
+      return STATUS_SUCCESS;
+    }
+
+    /* Check both filenames to see if it's only a change case rename */
+    if (FsRtlAreNamesEqual(&(FCB->LongNameU), &(NewFCB->LongNameU), TRUE, NULL))
+    {
+      ChangeCaseOnly = TRUE;
+    }
+  }
+
+  if (vfatGrabFCBFromTable(DeviceExt, &(NewFCB->PathNameU)) && !ReplaceIfExists)
+  {
+    return STATUS_OBJECT_NAME_COLLISION;
   }
 
   return STATUS_NOT_IMPLEMENTED;
