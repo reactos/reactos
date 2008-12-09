@@ -2378,12 +2378,13 @@ WINAPI
 DdGetDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
         LPPALETTEENTRY pColorTable)
 {
-    /* Fixme for opengl hel emulations */
-    HEL_OGL_STUB;
-#if 0
-    /* Call win32k directly */
-    return NtGdiDdGetDC(pColorTable, (HANDLE) pSurfaceLocal->hDDSurface);
-#endif
+    IWineD3DSurface * pWineD3DSurface = (IWineD3DSurface*) pSurfaceLocal->hDDSurface;
+    HDC hDC;
+
+    IWineD3DSurface_GetDC( pWineD3DSurface, &hDC);
+    pSurfaceLocal->hDC = (ULONG_PTR)hDC;
+
+    return hDC;
 }
 
 /*
@@ -2395,12 +2396,12 @@ BOOL
 WINAPI
 DdReleaseDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
 {
-    /* Fixme for opengl hel emulations */
-    HEL_OGL_STUB;
-#if 0
-    /* Call win32k directly */
-    return NtGdiDdReleaseDC((HANDLE) pSurfaceLocal->hDDSurface);
-#endif
+    IWineD3DSurface * pWineD3DSurface = (IWineD3DSurface*) pSurfaceLocal->hDDSurface;
+
+    if (IWineD3DSurface_ReleaseDC( pWineD3DSurface, (HDC)pSurfaceLocal->hDC) == DD_OK)
+        return TRUE;
+
+    return FALSE;
 }
 
 /*
