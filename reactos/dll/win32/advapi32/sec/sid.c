@@ -1132,7 +1132,7 @@ ConvertStringSecurityDescriptorToSecurityDescriptorW(
 	PSECURITY_DESCRIPTOR sd = NULL;
 	BOOL ret = FALSE;
 
-	if (!StringSecurityDescriptor)
+	if (!StringSecurityDescriptor || !SecurityDescriptor)
 		SetLastError(ERROR_INVALID_PARAMETER);
 	else if (StringSDRevision != SDDL_REVISION_1)
 		SetLastError(ERROR_INVALID_PARAMETER);
