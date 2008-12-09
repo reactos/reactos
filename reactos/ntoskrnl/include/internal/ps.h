@@ -423,7 +423,7 @@ extern POBJECT_TYPE PsJobType;
 extern LARGE_INTEGER ShortPsLockDelay;
 extern UNICODE_STRING PsNtDllPathName;
 extern LIST_ENTRY PsLoadedModuleList;
-extern ULONG PsNtosImageBase;
+extern ULONG_PTR PsNtosImageBase;
 
 //
 // Inlined Functions

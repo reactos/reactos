@@ -28,7 +28,7 @@ sprintf_nt(IN PCHAR Buffer,
 
 LIST_ENTRY PsLoadedModuleList;
 KSPIN_LOCK PsLoadedModuleSpinLock;
-ULONG PsNtosImageBase;
+ULONG_PTR PsNtosImageBase;
 KMUTANT MmSystemLoadLock;
 extern ULONG NtGlobalFlag;
 
