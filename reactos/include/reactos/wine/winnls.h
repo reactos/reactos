@@ -19,6 +19,8 @@
 #ifndef __WINE_WINNLS_H
 #define __WINE_WINNLS_H
 
+#include_next <winnls.h>
+
 #define CP_UNIXCP     CP_ACP
 
 
