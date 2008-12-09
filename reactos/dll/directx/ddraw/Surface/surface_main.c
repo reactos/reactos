@@ -590,7 +590,7 @@ Main_DDrawSurface_GetBltStatus(LPDDRAWI_DDRAWSURFACE_INT This, DWORD dwFlags)
 
 	DX_WINDBG_trace();
 
-	if (!This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_FLIP)
+	if (!(This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_FLIP))
 	{
 		return DDERR_GENERIC;
 	}
