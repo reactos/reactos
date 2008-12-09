@@ -452,10 +452,35 @@ ParseAccessMaskString(
 	OUT DWORD* pAccessMask,
 	OUT SIZE_T* pLength)
 {
-	/* FIXME: Allow hexadecimal string for access rights! */
+    LPCWSTR szAcl = Buffer;
+    BOOL RetVal = FALSE;
+    LPCWSTR ptr;
 
-	return ParseFlagsString(Buffer, AccessMaskTable, SDDL_SEPERATORC, pAccessMask, pLength);
-}
+    if ((*szAcl == '0') && (*(szAcl + 1) == 'x'))
+    {
+        LPCWSTR p = szAcl;
+
+        while (*p && *p != ';')
+            p++;
+
+        if (p - szAcl <= 10 /* 8 hex digits + "0x" */ )
+        {
+            *pAccessMask = strtoulW(szAcl, NULL, 16);
+            ptr = wcschr(Buffer, SDDL_SEPERATORC);
+            if (ptr)
+            {
+                *pLength = ptr - Buffer;
+                RetVal = TRUE;
+            }
+        }
+    } 
+    else
+    {
+        RetVal = ParseFlagsString(Buffer, AccessMaskTable, SDDL_SEPERATORC, pAccessMask, pLength);
+    }
+
+    return RetVal;
+ }
 
 static BOOL
 ParseGuidString(
@@ -1664,12 +1689,9 @@ ConvertStringSidToSidA(IN LPCSTR StringSid,
 /******************************************************************************
  * ComputeStringSidSize
  */
-static DWORD
-ComputeStringSidSize(LPCWSTR StringSid)
+static DWORD ComputeStringSidSize(LPCWSTR StringSid)
 {
-    DWORD size = sizeof(SID);
-
-    if (StringSid[0] == 'S' && StringSid[1] == '-') /* S-R-I-S-S */
+    if (StringSid[0] == 'S' && StringSid[1] == '-') /* S-R-I(-S)+ */
     {
         int ctok = 0;
         while (*StringSid)
@@ -1679,8 +1701,8 @@ ComputeStringSidSize(LPCWSTR StringSid)
             StringSid++;
         }
 
-        if (ctok > 3)
-            size += (ctok - 3) * sizeof(DWORD);
+        if (ctok >= 3)
+            return GetSidLengthRequired(ctok - 2);
     }
     else /* String constant format  - Only available in winxp and above */
     {
@@ -1688,10 +1710,10 @@ ComputeStringSidSize(LPCWSTR StringSid)
 
         for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
             if (!strncmpW(WellKnownSids[i].wstr, StringSid, 2))
-                size += (WellKnownSids[i].Sid.SubAuthorityCount - 1) * sizeof(DWORD);
+                return GetSidLengthRequired(WellKnownSids[i].Sid.SubAuthorityCount);
     }
 
-    return size;
+    return GetSidLengthRequired(0);
 }
 
 static const RECORD SidTable[] =
