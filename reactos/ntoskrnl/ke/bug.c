@@ -1065,7 +1065,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
     /* Check if we need to save the context for KD */
 #ifdef _WINKD_
-    if (!KdPitchDebugger) KdDebuggerDataBlock.SavedContext = (ULONG)&Context;
+    if (!KdPitchDebugger) KdDebuggerDataBlock.SavedContext = (ULONG_PTR)&Context;
 #endif
 
     /* Check if a debugger is connected */
