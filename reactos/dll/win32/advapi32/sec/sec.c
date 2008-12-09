@@ -308,8 +308,6 @@ SetSecurityDescriptorControl(PSECURITY_DESCRIPTOR pSecurityDescriptor,
 {
     NTSTATUS Status;
     
-    DbgPrint("SetSecurityDescriptorControl: Received %p\n", pSecurityDescriptor);
-
     Status = RtlSetControlSecurityDescriptor(pSecurityDescriptor,
                                              ControlBitsOfInterest,
                                              ControlBitsToSet);
