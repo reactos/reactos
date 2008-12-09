@@ -97,12 +97,19 @@ static void test_CredWriteA(void)
 
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(&new_cred, 0);
-    ok(!ret, "CredWrite with username without domain should have failed\n");
-    ok(GetLastError() == ERROR_BAD_USERNAME ||
-       GetLastError() == ERROR_NO_SUCH_LOGON_SESSION || /* Vista */
-       broken(GetLastError() == ERROR_IO_PENDING),
-       "CredWrite with username without domain should return ERROR_BAD_USERNAME"
-       "or ERROR_NO_SUCH_LOGON_SESSION not %d\n", GetLastError());
+    if (ret)
+    {
+        /* Vista */
+        ok(GetLastError() == ERROR_IO_PENDING,
+           "Expected ERROR_IO_PENDING, got %d\n", GetLastError());
+    }
+    else
+    {
+        ok(GetLastError() == ERROR_BAD_USERNAME ||
+           GetLastError() == ERROR_NO_SUCH_LOGON_SESSION, /* Vista */
+           "CredWrite with username without domain should return ERROR_BAD_USERNAME"
+           "or ERROR_NO_SUCH_LOGON_SESSION not %d\n", GetLastError());
+    }
 
     new_cred.UserName = NULL;
     SetLastError(0xdeadbeef);

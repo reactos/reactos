@@ -199,13 +199,14 @@ static void setup_main_key(void)
     assert (!RegCreateKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Test", &hkey_main ));
 }
 
-static void test_hkey_main_Value_A(LPCSTR name, LPCSTR string,
+#define lok ok_(__FILE__, line)
+#define test_hkey_main_Value_A(name, string, full_byte_len) _test_hkey_main_Value_A(__LINE__, name, string, full_byte_len)
+static void _test_hkey_main_Value_A(int line, LPCSTR name, LPCSTR string,
                                    DWORD full_byte_len)
 {
     DWORD ret, type, cbData;
     DWORD str_byte_len;
-    LPSTR value;
-    static const char nA[]={'N', 0};
+    BYTE* value;
 
     type=0xdeadbeef;
     cbData=0xdeadbeef;
@@ -215,43 +216,44 @@ static void test_hkey_main_Value_A(LPCSTR name, LPCSTR string,
     SetLastError(0xdeadbeef);
     ret = RegQueryValueExA(hkey_main, name, NULL, &type, NULL, &cbData);
     GLE = GetLastError();
-    ok(ret == ERROR_SUCCESS, "RegQueryValueExA failed: %d, GLE=%d\n", ret, GLE);
+    lok(ret == ERROR_SUCCESS, "RegQueryValueExA/1 failed: %d, GLE=%d\n", ret, GLE);
     /* It is wrong for the Ansi version to not be implemented */
     ok(GLE == 0xdeadbeef, "RegQueryValueExA set GLE = %u\n", GLE);
     if(GLE == ERROR_CALL_NOT_IMPLEMENTED) return;
 
     str_byte_len = (string ? lstrlenA(string) : 0) + 1;
-    ok(type == REG_SZ, "RegQueryValueExA returned type %d\n", type);
-    ok(cbData == full_byte_len || cbData == str_byte_len /* Win9x */,
+    lok(type == REG_SZ, "RegQueryValueExA/1 returned type %d\n", type);
+    lok(cbData == full_byte_len || cbData == str_byte_len /* Win9x */,
         "cbData=%d instead of %d or %d\n", cbData, full_byte_len, str_byte_len);
 
-    value = HeapAlloc(GetProcessHeap(), 0, (cbData+2)*sizeof(*value));
-    strcpy(value, nA);
+    value = HeapAlloc(GetProcessHeap(), 0, cbData+1);
+    memset(value, 0xbd, cbData+1);
     type=0xdeadbeef;
-    ret = RegQueryValueExA(hkey_main, name, NULL, &type, (BYTE*)value, &cbData);
+    ret = RegQueryValueExA(hkey_main, name, NULL, &type, value, &cbData);
     GLE = GetLastError();
-    ok(ret == ERROR_SUCCESS, "RegQueryValueExA failed: %d, GLE=%d\n", ret, GLE);
+    lok(ret == ERROR_SUCCESS, "RegQueryValueExA/2 failed: %d, GLE=%d\n", ret, GLE);
     if (!string)
     {
         /* When cbData == 0, RegQueryValueExA() should not modify the buffer */
-        ok(strcmp(value, nA) == 0 || (cbData == 1 && *value == '\0') /* Win9x */,
-           "RegQueryValueExA failed: '%s' != '%s'\n", value, string);
+        lok(*value == 0xbd || (cbData == 1 && *value == '\0') /* Win9x */,
+           "RegQueryValueExA overflowed: cbData=%u *value=%02x\n", cbData, *value);
     }
     else
     {
-        ok(memcmp(value, string, cbData) == 0, "RegQueryValueExA failed: %s/%d != %s/%d\n",
-           wine_debugstr_an(value, cbData), cbData,
+        lok(memcmp(value, string, cbData) == 0, "RegQueryValueExA/2 failed: %s/%d != %s/%d\n",
+           wine_debugstr_an((char*)value, cbData), cbData,
            wine_debugstr_an(string, full_byte_len), full_byte_len);
+        lok(*(value+cbData) == 0xbd, "RegQueryValueExA/2 overflowed at offset %u: %02x != bd\n", cbData, *(value+cbData));
     }
     HeapFree(GetProcessHeap(), 0, value);
 }
 
-static void test_hkey_main_Value_W(LPCWSTR name, LPCWSTR string,
+#define test_hkey_main_Value_W(name, string, full_byte_len) _test_hkey_main_Value_W(__LINE__, name, string, full_byte_len)
+static void _test_hkey_main_Value_W(int line, LPCWSTR name, LPCWSTR string,
                                    DWORD full_byte_len)
 {
     DWORD ret, type, cbData;
-    LPWSTR value;
-    static const WCHAR nW[]={'N', 0};
+    BYTE* value;
 
     type=0xdeadbeef;
     cbData=0xdeadbeef;
@@ -261,31 +263,33 @@ static void test_hkey_main_Value_W(LPCWSTR name, LPCWSTR string,
     SetLastError(0xdeadbeef);
     ret = RegQueryValueExW(hkey_main, name, NULL, &type, NULL, &cbData);
     GLE = GetLastError();
-    ok(ret == ERROR_SUCCESS, "RegQueryValueExW failed: %d, GLE=%d\n", ret, GLE);
+    lok(ret == ERROR_SUCCESS, "RegQueryValueExW/1 failed: %d, GLE=%d\n", ret, GLE);
     if(GLE == ERROR_CALL_NOT_IMPLEMENTED)
     {
         win_skip("RegQueryValueExW() is not implemented\n");
         return;
     }
 
-    ok(type == REG_SZ, "RegQueryValueExW returned type %d\n", type);
-    ok(cbData == full_byte_len,
+    lok(type == REG_SZ, "RegQueryValueExW/1 returned type %d\n", type);
+    lok(cbData == full_byte_len,
         "cbData=%d instead of %d\n", cbData, full_byte_len);
 
-    value = HeapAlloc(GetProcessHeap(), 0, (cbData+2)*sizeof(*value));
-    lstrcpyW(value, nW);
+    /* Give enough space to overflow by one WCHAR */
+    value = HeapAlloc(GetProcessHeap(), 0, cbData+2);
+    memset(value, 0xbd, cbData+2);
     type=0xdeadbeef;
-    ret = RegQueryValueExW(hkey_main, name, NULL, &type, (BYTE*)value, &cbData);
+    ret = RegQueryValueExW(hkey_main, name, NULL, &type, value, &cbData);
     GLE = GetLastError();
-    ok(ret == ERROR_SUCCESS, "RegQueryValueExW failed: %d, GLE=%d\n", ret, GLE);
-    if (!string)
+    lok(ret == ERROR_SUCCESS, "RegQueryValueExW/2 failed: %d, GLE=%d\n", ret, GLE);
+    if (string)
     {
-        /* When cbData == 0, RegQueryValueExW() should not modify the buffer */
-        string=nW;
+        lok(memcmp(value, string, cbData) == 0, "RegQueryValueExW failed: %s/%d != %s/%d\n",
+           wine_debugstr_wn((WCHAR*)value, cbData / sizeof(WCHAR)), cbData,
+           wine_debugstr_wn(string, full_byte_len / sizeof(WCHAR)), full_byte_len);
     }
-    ok(memcmp(value, string, cbData) == 0, "RegQueryValueExW failed: %s/%d != %s/%d\n",
-       wine_debugstr_wn(value, cbData / sizeof(WCHAR)), cbData,
-       wine_debugstr_wn(string, full_byte_len / sizeof(WCHAR)), full_byte_len);
+    /* This implies that when cbData == 0, RegQueryValueExW() should not modify the buffer */
+    lok(*(value+cbData) == 0xbd, "RegQueryValueExW/2 overflowed at %u: %02x != bd\n", cbData, *(value+cbData));
+    lok(*(value+cbData+1) == 0xbd, "RegQueryValueExW/2 overflowed at %u+1: %02x != bd\n", cbData, *(value+cbData+1));
     HeapFree(GetProcessHeap(), 0, value);
 }
 
@@ -957,6 +961,14 @@ static void test_reg_open_key(void)
            ret == ERROR_FILE_NOT_FOUND /* Win9x,ME */
            , "expected ERROR_BAD_PATHNAME or ERROR_FILE_NOT_FOUND, got %d\n", ret);
 
+    hkResult = NULL;
+    ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, "\\clsid", 0, KEY_QUERY_VALUE, &hkResult);
+    ok(ret == ERROR_SUCCESS || /* 2k/XP */
+       ret == ERROR_BAD_PATHNAME || /* NT */
+       ret == ERROR_FILE_NOT_FOUND /* Win9x,ME */
+       , "expected ERROR_SUCCESS, ERROR_BAD_PATHNAME or ERROR_FILE_NOT_FOUND, got %d\n", ret);
+    RegCloseKey(hkResult);
+
     /* WOW64 flags */
     hkResult = NULL;
     ret = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software", 0, KEY_READ|KEY_WOW64_32KEY, &hkResult);
@@ -1308,6 +1320,87 @@ cleanup:
     RegCloseKey(subkey);
 }
 
+static void test_string_termination(void)
+{
+    HKEY subkey;
+    LSTATUS ret;
+    static const char string[] = "FullString";
+    char name[11];
+    BYTE buffer[11];
+    DWORD insize, outsize, nsize;
+
+    ret = RegCreateKeyA(hkey_main, "string_termination", &subkey);
+    ok(ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", ret);
+
+    /* Off-by-one RegSetValueExA -> adds a trailing '\0'! */
+    insize=sizeof(string)-1;
+    ret = RegSetValueExA(subkey, "stringtest", 0, REG_SZ, (BYTE*)string, insize);
+    ok(ret == ERROR_SUCCESS, "RegSetValueExA failed: %d\n", ret);
+    outsize=insize;
+    ret = RegQueryValueExA(subkey, "stringtest", NULL, NULL, buffer, &outsize);
+    ok(ret == ERROR_MORE_DATA, "RegQueryValueExA returned: %d\n", ret);
+
+    /* Off-by-two RegSetValueExA -> no trailing '\0', except on Win9x */
+    insize=sizeof(string)-2;
+    ret = RegSetValueExA(subkey, "stringtest", 0, REG_SZ, (BYTE*)string, insize);
+    ok(ret == ERROR_SUCCESS, "RegSetValueExA failed: %d\n", ret);
+    outsize=0;
+    ret = RegQueryValueExA(subkey, "stringtest", NULL, NULL, NULL, &outsize);
+    ok(ret == ERROR_SUCCESS, "RegQueryValueExA failed: %d\n", ret);
+    ok(outsize == insize || broken(outsize == sizeof(string)) /* Win9x */,
+       "wrong size %u != %u\n", outsize, insize);
+
+    if (outsize == insize)
+    {
+        /* RegQueryValueExA may return a string with no trailing '\0' */
+        outsize=insize;
+        memset(buffer, 0xbd, sizeof(buffer));
+        ret = RegQueryValueExA(subkey, "stringtest", NULL, NULL, buffer, &outsize);
+        ok(ret == ERROR_SUCCESS, "RegQueryValueExA failed: %d\n", ret);
+        ok(outsize == insize, "wrong size: %u != %u\n", outsize, insize);
+        ok(memcmp(buffer, string, outsize) == 0, "bad string: %s/%u != %s\n",
+           wine_debugstr_an((char*)buffer, outsize), outsize, string);
+        ok(buffer[insize] == 0xbd, "buffer overflow at %u %02x\n", insize, buffer[insize]);
+
+        /* RegQueryValueExA adds a trailing '\0' if there is room */
+        outsize=insize+1;
+        memset(buffer, 0xbd, sizeof(buffer));
+        ret = RegQueryValueExA(subkey, "stringtest", NULL, NULL, buffer, &outsize);
+        ok(ret == ERROR_SUCCESS, "RegQueryValueExA failed: %d\n", ret);
+        ok(outsize == insize, "wrong size: %u != %u\n", outsize, insize);
+        ok(memcmp(buffer, string, outsize) == 0, "bad string: %s/%u != %s\n",
+           wine_debugstr_an((char*)buffer, outsize), outsize, string);
+        ok(buffer[insize] == 0, "buffer overflow at %u %02x\n", insize, buffer[insize]);
+
+        /* RegEnumValueA may return a string with no trailing '\0' */
+        outsize=insize;
+        memset(buffer, 0xbd, sizeof(buffer));
+        nsize=sizeof(name);
+        ret = RegEnumValueA(subkey, 0, name, &nsize, NULL, NULL, buffer, &outsize);
+        ok(ret == ERROR_SUCCESS, "RegEnumValueA failed: %d\n", ret);
+        ok(strcmp(name, "stringtest") == 0, "wrong name: %s\n", name);
+        ok(outsize == insize, "wrong size: %u != %u\n", outsize, insize);
+        ok(memcmp(buffer, string, outsize) == 0, "bad string: %s/%u != %s\n",
+           wine_debugstr_an((char*)buffer, outsize), outsize, string);
+        ok(buffer[insize] == 0xbd, "buffer overflow at %u %02x\n", insize, buffer[insize]);
+
+        /* RegEnumValueA adds a trailing '\0' if there is room */
+        outsize=insize+1;
+        memset(buffer, 0xbd, sizeof(buffer));
+        nsize=sizeof(name);
+        ret = RegEnumValueA(subkey, 0, name, &nsize, NULL, NULL, buffer, &outsize);
+        ok(ret == ERROR_SUCCESS, "RegEnumValueA failed: %d\n", ret);
+        ok(strcmp(name, "stringtest") == 0, "wrong name: %s\n", name);
+        ok(outsize == insize, "wrong size: %u != %u\n", outsize, insize);
+        ok(memcmp(buffer, string, outsize) == 0, "bad string: %s/%u != %s\n",
+           wine_debugstr_an((char*)buffer, outsize), outsize, string);
+        ok(buffer[insize] == 0, "buffer overflow at %u %02x\n", insize, buffer[insize]);
+    }
+
+    RegDeleteKeyA(subkey, "");
+    RegCloseKey(subkey);
+}
+
 static void test_reg_delete_tree(void)
 {
     CHAR buffer[MAX_PATH];
@@ -1398,6 +1491,7 @@ START_TEST(registry)
     test_reg_close_key();
     test_reg_delete_key();
     test_reg_query_value();
+    test_string_termination();
 
     /* SaveKey/LoadKey require the SE_BACKUP_NAME privilege to be set */
     if (set_privileges(SE_BACKUP_NAME, TRUE) &&

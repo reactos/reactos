@@ -564,7 +564,7 @@ static void test_get_displayname(void)
     displaysize = tempsizeW / 2;
     ret = GetServiceDisplayNameW(scm_handle, spoolerW, displaynameW, &displaysize);
     ok(!ret, "Expected failure\n");
-    ok(displaysize = tempsizeW, "Expected the needed buffersize\n");
+    ok(displaysize == tempsizeW, "Expected the needed buffersize\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
        "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
@@ -573,7 +573,7 @@ static void test_get_displayname(void)
     displaysize = tempsizeW;
     ret = GetServiceDisplayNameW(scm_handle, spoolerW, displaynameW, &displaysize);
     ok(!ret, "Expected failure\n");
-    ok(displaysize = tempsizeW, "Expected the needed buffersize\n");
+    ok(displaysize == tempsizeW, "Expected the needed buffersize\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
        "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
@@ -649,7 +649,7 @@ static void test_get_displayname(void)
 
     /* Delete the service */
     ret = DeleteService(svc_handle);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success (err=%d)\n", GetLastError());
 
     CloseServiceHandle(svc_handle);
     CloseServiceHandle(scm_handle);
@@ -882,7 +882,7 @@ static void test_query_svc(void)
     /* Only info level is correct. It looks like the buffer/size is checked second */
     SetLastError(0xdeadbeef);
     ret = pQueryServiceStatusEx(NULL, 0, NULL, 0, &needed);
-    /* NT4 checks the handle first */
+    /* NT4 and Wine check the handle first */
     if (GetLastError() != ERROR_INVALID_HANDLE)
     {
         ok(!ret, "Expected failure\n");
@@ -893,7 +893,7 @@ static void test_query_svc(void)
     }
 
     /* Pass a correct buffer and buffersize but a NULL handle */
-    statusproc = HeapAlloc(GetProcessHeap(), 0, needed);
+    statusproc = HeapAlloc(GetProcessHeap(), 0, sizeof(SERVICE_STATUS_PROCESS));
     bufsize = needed;
     SetLastError(0xdeadbeef);
     ret = pQueryServiceStatusEx(NULL, 0, (BYTE*)statusproc, bufsize, &needed);
@@ -1985,7 +1985,7 @@ static void test_refcount(void)
 
     /* Check if we can close the handle to the Service Control Manager */
     ret = CloseServiceHandle(scm_handle);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success (err=%d)\n", GetLastError());
 
     /* Get a new handle to the Service Control Manager */
     scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
@@ -1997,7 +1997,7 @@ static void test_refcount(void)
 
     /* Delete the service */
     ret = DeleteService(svc_handle4);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success (err=%d)\n", GetLastError());
 
     /* We cannot create the same service again as it's still marked as 'being deleted'.
      * The reason is that we still have 4 open handles to this service even though we
@@ -2023,13 +2023,13 @@ static void test_refcount(void)
 
     /* Close all the handles to the service and try again */
     ret = CloseServiceHandle(svc_handle4);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success (err=%d)\n", GetLastError());
     ret = CloseServiceHandle(svc_handle3);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success (err=%d)\n", GetLastError());
     ret = CloseServiceHandle(svc_handle2);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success (err=%d)\n", GetLastError());
     ret = CloseServiceHandle(svc_handle1);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success (err=%d)\n", GetLastError());
 
     /* Wait a while. Doing a CreateService too soon will result again
      * in an ERROR_SERVICE_MARKED_FOR_DELETE error.
@@ -2044,7 +2044,7 @@ static void test_refcount(void)
 
     /* Delete the service */
     ret = DeleteService(svc_handle5);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success (err=%d)\n", GetLastError());
 
     /* Wait a while. Just in case one of the following tests does a CreateService again */
     Sleep(1000);
