@@ -812,6 +812,11 @@ VfatSetRenameInformation(PVFAT_IRP_CONTEXT IrpContext)
     return STATUS_OBJECT_NAME_COLLISION;
   }
 
+  /* FIXME
+   * Free memory allocated for upcased strings!
+   * FIXME
+   */
+
   return STATUS_NOT_IMPLEMENTED;
 }
 
