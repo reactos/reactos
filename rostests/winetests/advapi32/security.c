@@ -2410,6 +2410,7 @@ static void test_PrivateObjectSecurity(void)
         "D:(A;NP;GAGXGWGR;;;SU)(A;IOID;CCDC;;;SU)(D;OICI;0xffffffff;;;S-1-5-21-93476-23408-4576)"
         "S:(AU;OICINPIOIDSAFA;CCDCLCSWRPRC;;;SU)(AU;NPSA;0x12019f;;;SU)", SDDL_REVISION_1, &sec, &dwDescSize), "Creating descriptor failed\n");
     buf = HeapAlloc(GetProcessHeap(), 0, dwDescSize);
+    DbgPrint("Received %p\n", sec);
     pSetSecurityDescriptorControl(sec, SE_DACL_PROTECTED, SE_DACL_PROTECTED);
     GetSecurityDescriptorControl(sec, &ctrl, &dwRevision);
     todo_wine expect_eq(ctrl, 0x9014, int, "%x");
