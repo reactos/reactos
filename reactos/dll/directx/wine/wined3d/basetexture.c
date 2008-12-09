@@ -27,46 +27,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
 #define GLINFO_LOCATION This->resource.wineD3DDevice->adapter->gl_info
 
-/* *******************************************
-   IWineD3DBaseTexture IUnknown parts follow
-   ******************************************* */
-HRESULT WINAPI IWineD3DBaseTextureImpl_QueryInterface(IWineD3DBaseTexture *iface, REFIID riid, LPVOID *ppobj)
+void basetexture_cleanup(IWineD3DBaseTexture *iface)
 {
-    IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
-    TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IWineD3DBase)
-        || IsEqualGUID(riid, &IID_IWineD3DResource)
-        || IsEqualGUID(riid, &IID_IWineD3DBaseTexture)) {
-        IUnknown_AddRef(iface);
-        *ppobj = This;
-        return S_OK;
-    }
-    *ppobj = NULL;
-    return E_NOINTERFACE;
-}
-
-ULONG WINAPI IWineD3DBaseTextureImpl_AddRef(IWineD3DBaseTexture *iface) {
-    IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
-    ULONG ref = InterlockedIncrement(&This->resource.ref);
-
-    TRACE("(%p) : AddRef increasing from %d\n", This,ref - 1);
-    return ref;
-}
-
-ULONG WINAPI IWineD3DBaseTextureImpl_Release(IWineD3DBaseTexture *iface) {
-    IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
-    ULONG ref = InterlockedDecrement(&This->resource.ref);
-    TRACE("(%p) : Releasing from %d\n", This, ref + 1);
-    if (ref == 0) {
-        IWineD3DBaseTextureImpl_CleanUp(iface);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
-    return ref;
-}
-
-/* class static */
-void IWineD3DBaseTextureImpl_CleanUp(IWineD3DBaseTexture *iface) {
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
     IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
 
@@ -78,41 +40,12 @@ void IWineD3DBaseTextureImpl_CleanUp(IWineD3DBaseTexture *iface) {
         glDeleteTextures(1, &This->baseTexture.textureName);
         LEAVE_GL();
     }
-    IWineD3DResourceImpl_CleanUp((IWineD3DResource *)iface);
+
+    resource_cleanup((IWineD3DResource *)iface);
 }
 
-/* ****************************************************
-   IWineD3DBaseTexture IWineD3DResource parts follow
-   **************************************************** */
-HRESULT WINAPI IWineD3DBaseTextureImpl_GetDevice(IWineD3DBaseTexture *iface, IWineD3DDevice** ppDevice) {
-    return IWineD3DResourceImpl_GetDevice((IWineD3DResource *)iface, ppDevice);
-}
-
-HRESULT WINAPI IWineD3DBaseTextureImpl_SetPrivateData(IWineD3DBaseTexture *iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
-    return IWineD3DResourceImpl_SetPrivateData((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
-}
-
-HRESULT WINAPI IWineD3DBaseTextureImpl_GetPrivateData(IWineD3DBaseTexture *iface, REFGUID refguid, void* pData, DWORD* pSizeOfData) {
-    return IWineD3DResourceImpl_GetPrivateData((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
-}
-
-HRESULT WINAPI IWineD3DBaseTextureImpl_FreePrivateData(IWineD3DBaseTexture *iface, REFGUID refguid) {
-    return IWineD3DResourceImpl_FreePrivateData((IWineD3DResource *)iface, refguid);
-}
-
-DWORD    WINAPI        IWineD3DBaseTextureImpl_SetPriority(IWineD3DBaseTexture *iface, DWORD PriorityNew) {
-    return IWineD3DResourceImpl_SetPriority((IWineD3DResource *)iface, PriorityNew);
-}
-
-DWORD    WINAPI        IWineD3DBaseTextureImpl_GetPriority(IWineD3DBaseTexture *iface) {
-    return IWineD3DResourceImpl_GetPriority((IWineD3DResource *)iface);
-}
-
-void     WINAPI        IWineD3DBaseTextureImpl_PreLoad(IWineD3DBaseTexture *iface) {
-    IWineD3DResourceImpl_PreLoad((IWineD3DResource *)iface);
-}
-
-void     WINAPI        IWineD3DBaseTextureImpl_UnLoad(IWineD3DBaseTexture *iface) {
+void basetexture_unload(IWineD3DBaseTexture *iface)
+{
     IWineD3DTextureImpl *This = (IWineD3DTextureImpl *)iface;
     IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
 
@@ -126,21 +59,10 @@ void     WINAPI        IWineD3DBaseTextureImpl_UnLoad(IWineD3DBaseTexture *iface
     This->baseTexture.dirty = TRUE;
 }
 
-WINED3DRESOURCETYPE WINAPI IWineD3DBaseTextureImpl_GetType(IWineD3DBaseTexture *iface) {
-    return IWineD3DResourceImpl_GetType((IWineD3DResource *)iface);
-}
-
-HRESULT WINAPI IWineD3DBaseTextureImpl_GetParent(IWineD3DBaseTexture *iface, IUnknown **pParent) {
-    return IWineD3DResourceImpl_GetParent((IWineD3DResource *)iface, pParent);
-}
-
-/* ******************************************************
-   IWineD3DBaseTexture IWineD3DBaseTexture parts follow
-   ****************************************************** */
-
 /* There is no OpenGL equivalent of setLOD, getLOD. All they do anyway is prioritize texture loading
  * so just pretend that they work unless something really needs a failure. */
-DWORD WINAPI IWineD3DBaseTextureImpl_SetLOD(IWineD3DBaseTexture *iface, DWORD LODNew) {
+DWORD basetexture_set_lod(IWineD3DBaseTexture *iface, DWORD LODNew)
+{
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
 
     if (This->resource.pool != WINED3DPOOL_MANAGED) {
@@ -156,7 +78,8 @@ DWORD WINAPI IWineD3DBaseTextureImpl_SetLOD(IWineD3DBaseTexture *iface, DWORD LO
     return This->baseTexture.LOD;
 }
 
-DWORD WINAPI IWineD3DBaseTextureImpl_GetLOD(IWineD3DBaseTexture *iface) {
+DWORD basetexture_get_lod(IWineD3DBaseTexture *iface)
+{
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
 
     if (This->resource.pool != WINED3DPOOL_MANAGED) {
@@ -168,13 +91,15 @@ DWORD WINAPI IWineD3DBaseTextureImpl_GetLOD(IWineD3DBaseTexture *iface) {
     return This->baseTexture.LOD;
 }
 
-DWORD WINAPI IWineD3DBaseTextureImpl_GetLevelCount(IWineD3DBaseTexture *iface) {
+DWORD basetexture_get_level_count(IWineD3DBaseTexture *iface)
+{
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
     TRACE("(%p) : returning %d\n", This, This->baseTexture.levels);
     return This->baseTexture.levels;
 }
 
-HRESULT WINAPI IWineD3DBaseTextureImpl_SetAutoGenFilterType(IWineD3DBaseTexture *iface, WINED3DTEXTUREFILTERTYPE FilterType) {
+HRESULT basetexture_set_autogen_filter_type(IWineD3DBaseTexture *iface, WINED3DTEXTUREFILTERTYPE FilterType)
+{
   IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
   IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
   UINT textureDimensions = IWineD3DBaseTexture_GetTextureDimensions(iface);
@@ -216,7 +141,8 @@ HRESULT WINAPI IWineD3DBaseTextureImpl_SetAutoGenFilterType(IWineD3DBaseTexture 
   return WINED3D_OK;
 }
 
-WINED3DTEXTUREFILTERTYPE WINAPI IWineD3DBaseTextureImpl_GetAutoGenFilterType(IWineD3DBaseTexture *iface) {
+WINED3DTEXTUREFILTERTYPE basetexture_get_autogen_filter_type(IWineD3DBaseTexture *iface)
+{
   IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
   FIXME("(%p) : stub\n", This);
   if (!(This->resource.usage & WINED3DUSAGE_AUTOGENMIPMAP)) {
@@ -225,15 +151,16 @@ WINED3DTEXTUREFILTERTYPE WINAPI IWineD3DBaseTextureImpl_GetAutoGenFilterType(IWi
   return This->baseTexture.filterType;
 }
 
-void WINAPI IWineD3DBaseTextureImpl_GenerateMipSubLevels(IWineD3DBaseTexture *iface) {
+void basetexture_generate_mipmaps(IWineD3DBaseTexture *iface)
+{
   IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
   /* TODO: implement filters using GL_SGI_generate_mipmaps http://oss.sgi.com/projects/ogl-sample/registry/SGIS/generate_mipmap.txt */
   FIXME("(%p) : stub\n", This);
   return ;
 }
 
-/* Internal function, No d3d mapping */
-BOOL WINAPI IWineD3DBaseTextureImpl_SetDirty(IWineD3DBaseTexture *iface, BOOL dirty) {
+BOOL basetexture_set_dirty(IWineD3DBaseTexture *iface, BOOL dirty)
+{
     BOOL old;
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
     old = This->baseTexture.dirty;
@@ -241,12 +168,14 @@ BOOL WINAPI IWineD3DBaseTextureImpl_SetDirty(IWineD3DBaseTexture *iface, BOOL di
     return old;
 }
 
-BOOL WINAPI IWineD3DBaseTextureImpl_GetDirty(IWineD3DBaseTexture *iface) {
+BOOL basetexture_get_dirty(IWineD3DBaseTexture *iface)
+{
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
     return This->baseTexture.dirty;
 }
 
-HRESULT WINAPI IWineD3DBaseTextureImpl_BindTexture(IWineD3DBaseTexture *iface) {
+HRESULT basetexture_bind(IWineD3DBaseTexture *iface)
+{
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
     HRESULT hr = WINED3D_OK;
     UINT textureDimensions;
@@ -330,32 +259,6 @@ HRESULT WINAPI IWineD3DBaseTextureImpl_BindTexture(IWineD3DBaseTexture *iface) {
     return hr;
 }
 
-UINT WINAPI IWineD3DBaseTextureImpl_GetTextureDimensions(IWineD3DBaseTexture *iface){
-    IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
-    FIXME("(%p) : This shouldn't be called\n", This);
-    return WINED3D_OK;
-}
-
-BOOL WINAPI IWineD3DBaseTextureImpl_IsCondNP2(IWineD3DBaseTexture *iface){
-    IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
-    FIXME("(%p) : This shouldn't be called\n", This);
-    return FALSE;
-}
-
-static inline GLenum warpLookupType(WINED3DSAMPLERSTATETYPE Type) {
-    switch(Type) {
-    case WINED3DSAMP_ADDRESSU:
-        return GL_TEXTURE_WRAP_S;
-    case WINED3DSAMP_ADDRESSV:
-        return GL_TEXTURE_WRAP_T;
-    case WINED3DSAMP_ADDRESSW:
-        return GL_TEXTURE_WRAP_R;
-    default:
-        FIXME("Unexpected warp type %d\n", Type);
-        return 0;
-    }
-}
-
 static inline void apply_wrap(const GLint textureDimensions, const DWORD state, const GLint type,
                               BOOL cond_np2) {
     GLint wrapParm;
@@ -381,9 +284,10 @@ static inline void apply_wrap(const GLint textureDimensions, const DWORD state, 
     }
 }
 
-void WINAPI IWineD3DBaseTextureImpl_ApplyStateChanges(IWineD3DBaseTexture *iface,
-                                    const DWORD textureStates[WINED3D_HIGHEST_TEXTURE_STATE + 1],
-                                    const DWORD samplerStates[WINED3D_HIGHEST_SAMPLER_STATE + 1]) {
+void basetexture_apply_state_changes(IWineD3DBaseTexture *iface,
+        const DWORD textureStates[WINED3D_HIGHEST_TEXTURE_STATE + 1],
+        const DWORD samplerStates[WINED3D_HIGHEST_SAMPLER_STATE + 1])
+{
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
     DWORD state;
     GLint textureDimensions = IWineD3DBaseTexture_GetTextureDimensions(iface);
@@ -426,7 +330,7 @@ void WINAPI IWineD3DBaseTextureImpl_ApplyStateChanges(IWineD3DBaseTexture *iface
         if (state > WINED3DTEXF_ANISOTROPIC) {
             FIXME("Unrecognized or unsupported MAGFILTER* value %d\n", state);
         } else {
-            glValue = (*This->baseTexture.magLookup)[state - WINED3DTEXF_NONE];
+            glValue = This->baseTexture.magLookup[state - WINED3DTEXF_NONE];
             TRACE("ValueMAG=%d setting MAGFILTER to %x\n", state, glValue);
             glTexParameteri(textureDimensions, GL_TEXTURE_MAG_FILTER, glValue);
             /* We need to reset the Anisotropic filtering state when we change the mag filter to WINED3DTEXF_ANISOTROPIC (this seems a bit weird, check the documentation to see how it should be switched off. */
@@ -455,9 +359,9 @@ void WINAPI IWineD3DBaseTextureImpl_ApplyStateChanges(IWineD3DBaseTexture *iface
                   This->baseTexture.states[WINED3DTEXSTA_MINFILTER],
                   This->baseTexture.states[WINED3DTEXSTA_MIPFILTER]);
         }
-        glValue = (*This->baseTexture.minMipLookup)
+        glValue = This->baseTexture.minMipLookup
                 [min(max(samplerStates[WINED3DSAMP_MINFILTER],WINED3DTEXF_NONE), WINED3DTEXF_ANISOTROPIC)]
-                [min(max(samplerStates[WINED3DSAMP_MIPFILTER],WINED3DTEXF_NONE), WINED3DTEXF_LINEAR)];
+                .mip[min(max(samplerStates[WINED3DSAMP_MIPFILTER],WINED3DTEXF_NONE), WINED3DTEXF_LINEAR)];
 
         TRACE("ValueMIN=%d, ValueMIP=%d, setting MINFILTER to %x\n",
               samplerStates[WINED3DSAMP_MINFILTER],
@@ -487,38 +391,3 @@ void WINAPI IWineD3DBaseTextureImpl_ApplyStateChanges(IWineD3DBaseTexture *iface
         This->baseTexture.states[WINED3DTEXSTA_MAXANISOTROPY] = samplerStates[WINED3DSAMP_MAXANISOTROPY];
     }
 }
-
-
-static const IWineD3DBaseTextureVtbl IWineD3DBaseTexture_Vtbl =
-{
-    /* IUnknown */
-    IWineD3DBaseTextureImpl_QueryInterface,
-    IWineD3DBaseTextureImpl_AddRef,
-    IWineD3DBaseTextureImpl_Release,
-    /* IWineD3DResource */
-    IWineD3DBaseTextureImpl_GetParent,
-    IWineD3DBaseTextureImpl_GetDevice,
-    IWineD3DBaseTextureImpl_SetPrivateData,
-    IWineD3DBaseTextureImpl_GetPrivateData,
-    IWineD3DBaseTextureImpl_FreePrivateData,
-    IWineD3DBaseTextureImpl_SetPriority,
-    IWineD3DBaseTextureImpl_GetPriority,
-    IWineD3DBaseTextureImpl_PreLoad,
-    IWineD3DBaseTextureImpl_UnLoad,
-    IWineD3DBaseTextureImpl_GetType,
-    /*IWineD3DBaseTexture*/
-    IWineD3DBaseTextureImpl_SetLOD,
-    IWineD3DBaseTextureImpl_GetLOD,
-    IWineD3DBaseTextureImpl_GetLevelCount,
-    IWineD3DBaseTextureImpl_SetAutoGenFilterType,
-    IWineD3DBaseTextureImpl_GetAutoGenFilterType,
-    IWineD3DBaseTextureImpl_GenerateMipSubLevels,
-    IWineD3DBaseTextureImpl_SetDirty,
-    IWineD3DBaseTextureImpl_GetDirty,
-    /* internal */
-    IWineD3DBaseTextureImpl_BindTexture,
-    IWineD3DBaseTextureImpl_GetTextureDimensions,
-    IWineD3DBaseTextureImpl_IsCondNP2,
-    IWineD3DBaseTextureImpl_ApplyStateChanges
-
-};

@@ -4,6 +4,7 @@
 	<importlibrary definition="wined3d.def" />
 	<include base="wined3d">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<include base="wined3d" root="intermediate">.</include>
 	<define name="__WINESRC__" />
 	<define name="USE_WIN32_OPENGL" />
 
@@ -49,4 +50,8 @@
 	<file>volumetexture.c</file>
 	<file>wined3d_main.c</file>
 	<file>version.rc</file>
+	<dependency>wined3d_header</dependency>
+</module>
+<module name="wined3d_header" type="idlheader" allowwarnings="true">
+	<file>wined3d.idl</file>
 </module>

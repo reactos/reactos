@@ -1253,7 +1253,7 @@ static inline WineD3DContext *FindContext(IWineD3DDeviceImpl *This, IWineD3DSurf
      * the alpha blend state changes with different render target formats
      */
     if(oldFmt != newFmt) {
-        const GlPixelFormatDesc *glDesc;
+        const struct GlPixelFormatDesc *glDesc;
         const StaticPixelFormatDesc *old = getFormatDescEntry(oldFmt, NULL, NULL);
         const StaticPixelFormatDesc *new = getFormatDescEntry(newFmt, &GLINFO_LOCATION, &glDesc);
 

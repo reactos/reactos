@@ -244,7 +244,7 @@ static void state_blend(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
     if (stateblock->renderState[WINED3DRS_ALPHABLENDENABLE]      ||
         stateblock->renderState[WINED3DRS_EDGEANTIALIAS]         ||
         stateblock->renderState[WINED3DRS_ANTIALIASEDLINEENABLE]) {
-        const GlPixelFormatDesc *glDesc;
+        const struct GlPixelFormatDesc *glDesc;
         getFormatDescEntry(target->resource.format, &GLINFO_LOCATION, &glDesc);
 
         /* Disable blending in all cases even without pixelshaders. With blending on we could face a big performance penalty.
@@ -702,7 +702,7 @@ state_specularenable(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCon
             checkGLcall("glFinalCombinerInputNV()");
         }
     } else {
-        float black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+        const GLfloat black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
         /* for the case of enabled lighting: */
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, &black[0]);
@@ -1224,7 +1224,7 @@ static void state_fogdensity(DWORD state, IWineD3DStateBlockImpl *stateblock, Wi
 static void state_colormat(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     IWineD3DDeviceImpl *device = stateblock->wineD3DDevice;
     GLenum Parm = 0;
-    WineDirect3DStridedData *diffuse = &device->strided_streams.u.s.diffuse;
+    const WineDirect3DStridedData *diffuse = &device->strided_streams.u.s.diffuse;
     BOOL isDiffuseSupplied;
 
     /* Depends on the decoded vertex declaration to read the existence of diffuse data.
@@ -1323,7 +1323,7 @@ static void state_colormat(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
                 glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (float*)&device->updateStateBlock->material.Specular);
                 checkGLcall("glMaterialfv");
             } else {
-                float black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                const GLfloat black[4] = {0.0f, 0.0f, 0.0f, 0.0f};
                 glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, &black[0]);
                 checkGLcall("glMaterialfv");
             }
@@ -1566,10 +1566,10 @@ static void state_lastpixel(DWORD state, IWineD3DStateBlockImpl *stateblock, Win
     if(stateblock->renderState[WINED3DRS_LASTPIXEL]) {
         TRACE("Last Pixel Drawing Enabled\n");
     } else {
-        static BOOL first = TRUE;
-        if(first) {
+        static BOOL warned;
+        if (!warned) {
             FIXME("Last Pixel Drawing Disabled, not handled yet\n");
-            first = FALSE;
+            warned = TRUE;
         } else {
             TRACE("Last Pixel Drawing Disabled, not handled yet\n");
         }
@@ -3119,8 +3119,9 @@ static void unloadTexCoords(IWineD3DStateBlockImpl *stateblock) {
     }
 }
 
-static void loadTexCoords(IWineD3DStateBlockImpl *stateblock, WineDirect3DVertexStridedData *sd, GLint *curVBO) {
-    UINT *offset = stateblock->streamOffset;
+static void loadTexCoords(IWineD3DStateBlockImpl *stateblock, const WineDirect3DVertexStridedData *sd, GLint *curVBO)
+{
+    const UINT *offset = stateblock->streamOffset;
     unsigned int mapped_stage = 0;
     unsigned int textureNo = 0;
 
@@ -3174,6 +3175,10 @@ static void loadTexCoords(IWineD3DStateBlockImpl *stateblock, WineDirect3DVertex
 static void tex_coordindex(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     DWORD stage = (state - STATE_TEXTURESTAGE(0, 0)) / WINED3D_HIGHEST_TEXTURE_STATE;
     DWORD mapped_stage = stateblock->wineD3DDevice->texUnitMap[stage];
+    const GLfloat s_plane[] = { 1.0, 0.0, 0.0, 0.0 };
+    const GLfloat t_plane[] = { 0.0, 1.0, 0.0, 0.0 };
+    const GLfloat r_plane[] = { 0.0, 0.0, 1.0, 0.0 };
+    const GLfloat q_plane[] = { 0.0, 0.0, 0.0, 1.0 };
 
     if (mapped_stage == -1) {
         TRACE("No texture unit mapped to stage %d. Skipping texture coordinates.\n", stage);
@@ -3223,10 +3228,6 @@ static void tex_coordindex(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
          * equates roughly to EYE_LINEAR
          */
         {
-            float s_plane[] = { 1.0, 0.0, 0.0, 0.0 };
-            float t_plane[] = { 0.0, 1.0, 0.0, 0.0 };
-            float r_plane[] = { 0.0, 0.0, 1.0, 0.0 };
-            float q_plane[] = { 0.0, 0.0, 0.0, 1.0 };
             TRACE("WINED3DTSS_TCI_CAMERASPACEPOSITION - Set eye plane\n");
 
             glMatrixMode(GL_MODELVIEW);
@@ -3257,10 +3258,6 @@ static void tex_coordindex(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
     case WINED3DTSS_TCI_CAMERASPACENORMAL:
         {
             if (GL_SUPPORT(NV_TEXGEN_REFLECTION)) {
-                float s_plane[] = { 1.0, 0.0, 0.0, 0.0 };
-                float t_plane[] = { 0.0, 1.0, 0.0, 0.0 };
-                float r_plane[] = { 0.0, 0.0, 1.0, 0.0 };
-                float q_plane[] = { 0.0, 0.0, 0.0, 1.0 };
                 TRACE("WINED3DTSS_TCI_CAMERASPACENORMAL - Set eye plane\n");
 
                 glMatrixMode(GL_MODELVIEW);
@@ -3291,10 +3288,6 @@ static void tex_coordindex(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
     case WINED3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR:
         {
             if (GL_SUPPORT(NV_TEXGEN_REFLECTION)) {
-            float s_plane[] = { 1.0, 0.0, 0.0, 0.0 };
-            float t_plane[] = { 0.0, 1.0, 0.0, 0.0 };
-            float r_plane[] = { 0.0, 0.0, 1.0, 0.0 };
-            float q_plane[] = { 0.0, 0.0, 0.0, 1.0 };
             TRACE("WINED3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR - Set eye plane\n");
 
             glMatrixMode(GL_MODELVIEW);
@@ -3480,7 +3473,7 @@ static void sampler(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCont
     }
 }
 
-void apply_pshader_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
+static void apply_pshader_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     IWineD3DDeviceImpl *device = stateblock->wineD3DDevice;
 
     if (use_ps(device)) {
@@ -3518,9 +3511,6 @@ void apply_pixelshader(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DC
             * if a different texture was bound. I don't have to do anything.
             */
         }
-
-        /* Compile and bind the shader */
-        IWineD3DPixelShader_CompileShader(stateblock->pixelShader);
     } else {
         /* Disabled the pixel shader - color ops weren't applied
          * while it was enabled, so re-apply them.
@@ -3637,12 +3627,12 @@ static void transform_worldex(DWORD state, IWineD3DStateBlockImpl *stateblock, W
      */
     if(stateblock->wineD3DDevice->view_ident) {
         glLoadMatrixf(&stateblock->transforms[WINED3DTS_WORLDMATRIX(matrix)].u.m[0][0]);
-        checkGLcall("glLoadMatrixf")
+        checkGLcall("glLoadMatrixf");
     } else {
         glLoadMatrixf(&stateblock->transforms[WINED3DTS_VIEW].u.m[0][0]);
-        checkGLcall("glLoadMatrixf")
+        checkGLcall("glLoadMatrixf");
         glMultMatrixf(&stateblock->transforms[WINED3DTS_WORLDMATRIX(matrix)].u.m[0][0]);
-        checkGLcall("glMultMatrixf")
+        checkGLcall("glMultMatrixf");
     }
 }
 
@@ -3716,7 +3706,7 @@ static void transform_view(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
      * NOTE2: Apparently texture transforms do NOT need reapplying
      */
 
-    PLIGHTINFOEL *light = NULL;
+    const PLIGHTINFOEL *light = NULL;
 
     glMatrixMode(GL_MODELVIEW);
     checkGLcall("glMatrixMode(GL_MODELVIEW)");
@@ -3907,10 +3897,27 @@ static inline void unloadVertexData(IWineD3DStateBlockImpl *stateblock) {
     unloadTexCoords(stateblock);
 }
 
+static inline void unload_numbered_array(IWineD3DStateBlockImpl *stateblock, WineD3DContext *context, int i)
+{
+    GL_EXTCALL(glDisableVertexAttribArrayARB(i));
+    checkGLcall("glDisableVertexAttribArrayARB(reg)");
+    /* Some Windows drivers(NV GF 7) use the latest value that was used when drawing with the now
+     * deactivated stream disabled, some other drivers(ATI, NV GF 8) set the undefined values to 0x00.
+     * Let's set them to 0x00 to avoid hitting some undefined aspects of OpenGL. All that is really
+     * important here is the glDisableVertexAttribArrayARB call above. The test shows that the refrast
+     * keeps dereferencing the pointers, which would cause crashes in some games like Half Life 2: Episode Two.
+     */
+    GL_EXTCALL(glVertexAttrib4NubARB(i, 0, 0, 0, 0));
+    checkGLcall("glVertexAttrib4NubARB(i, 0, 0, 0, 0)");
+
+    context->numbered_array_mask &= ~(1 << i);
+}
+
 /* This should match any arrays loaded in loadNumberedArrays
  * TODO: Only load / unload arrays if we have to.
  */
-static inline void unloadNumberedArrays(IWineD3DStateBlockImpl *stateblock) {
+static inline void unloadNumberedArrays(IWineD3DStateBlockImpl *stateblock, WineD3DContext *context)
+{
     /* disable any attribs (this is the same for both GLSL and ARB modes) */
     GLint maxAttribs = 16;
     int i;
@@ -3921,23 +3928,16 @@ static inline void unloadNumberedArrays(IWineD3DStateBlockImpl *stateblock) {
     if (glGetError() != GL_NO_ERROR)
         maxAttribs = 16;
     for (i = 0; i < maxAttribs; ++i) {
-        GL_EXTCALL(glDisableVertexAttribArrayARB(i));
-        checkGLcall("glDisableVertexAttribArrayARB(reg)");
-        /* Some Windows drivers(NV GF 7) use the latest value that was used when drawing with the now
-         * deactivated stream disabled, some other drivers(ATI, NV GF 8) set the undefined values to 0x00.
-         * Let's set them to 0x00 to avoid hitting some undefined aspects of OpenGL. All that is really
-         * important here is the glDisableVertexAttribArrayARB call above. The test shows that the refrast
-         * keeps dereferencing the pointers, which would cause crashes in some games like Half Life 2: Episode Two.
-         */
-        GL_EXTCALL(glVertexAttrib4NubARB(i, 0, 0, 0, 0));
-        checkGLcall("glVertexAttrib4NubARB(i, 0, 0, 0, 0)");
+        unload_numbered_array(stateblock, context, i);
     }
 }
 
-static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock, WineDirect3DVertexStridedData *strided) {
+static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock,
+        const WineDirect3DVertexStridedData *strided, WineD3DContext *context)
+{
     GLint curVBO = GL_SUPPORT(ARB_VERTEX_BUFFER_OBJECT) ? -1 : 0;
     int i;
-    UINT *offset = stateblock->streamOffset;
+    const UINT *offset = stateblock->streamOffset;
     IWineD3DVertexBufferImpl *vb;
     DWORD_PTR shift_index;
 
@@ -3945,13 +3945,15 @@ static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock, WineDi
     stateblock->wineD3DDevice->instancedDraw = FALSE;
 
     for (i = 0; i < MAX_ATTRIBS; i++) {
-
-        if (!strided->u.input[i].lpData && !strided->u.input[i].VBO)
+        if (!strided->u.input[i].VBO && !strided->u.input[i].lpData)
+        {
+            if (context->numbered_array_mask & (1 << i)) unload_numbered_array(stateblock, context, i);
             continue;
+        }
 
         /* Do not load instance data. It will be specified using glTexCoord by drawprim */
         if(stateblock->streamFlags[strided->u.input[i].streamNo] & WINED3DSTREAMSOURCE_INSTANCEDATA) {
-            GL_EXTCALL(glDisableVertexAttribArrayARB(i));
+            if (context->numbered_array_mask & (1 << i)) unload_numbered_array(stateblock, context, i);
             stateblock->wineD3DDevice->instancedDraw = TRUE;
             continue;
         }
@@ -3996,31 +3998,37 @@ static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock, WineDi
                                 strided->u.input[i].lpData +
                                 stateblock->loadBaseVertexIndex * strided->u.input[i].dwStride +
                                 offset[strided->u.input[i].streamNo]) );
-                }
-            GL_EXTCALL(glEnableVertexAttribArrayARB(i));
+            }
+
+            if (!(context->numbered_array_mask & (1 << i)))
+            {
+                GL_EXTCALL(glEnableVertexAttribArrayARB(i));
+                context->numbered_array_mask |= (1 << i);
+            }
         } else {
             /* Stride = 0 means always the same values. glVertexAttribPointerARB doesn't do that. Instead disable the pointer and
              * set up the attribute statically. But we have to figure out the system memory address.
              */
-            BYTE *ptr = strided->u.input[i].lpData + offset[strided->u.input[i].streamNo];
+            const BYTE *ptr = strided->u.input[i].lpData + offset[strided->u.input[i].streamNo];
             if(strided->u.input[i].VBO) {
                 vb = (IWineD3DVertexBufferImpl *) stateblock->streamSource[strided->u.input[i].streamNo];
                 ptr += (long) vb->resource.allocatedMemory;
             }
-            GL_EXTCALL(glDisableVertexAttribArrayARB(i));
+
+            if (context->numbered_array_mask & (1 << i)) unload_numbered_array(stateblock, context, i);
 
             switch(strided->u.input[i].dwType) {
                 case WINED3DDECLTYPE_FLOAT1:
-                    GL_EXTCALL(glVertexAttrib1fvARB(i, (float *) ptr));
+                    GL_EXTCALL(glVertexAttrib1fvARB(i, (const GLfloat *)ptr));
                     break;
                 case WINED3DDECLTYPE_FLOAT2:
-                    GL_EXTCALL(glVertexAttrib2fvARB(i, (float *) ptr));
+                    GL_EXTCALL(glVertexAttrib2fvARB(i, (const GLfloat *)ptr));
                     break;
                 case WINED3DDECLTYPE_FLOAT3:
-                    GL_EXTCALL(glVertexAttrib3fvARB(i, (float *) ptr));
+                    GL_EXTCALL(glVertexAttrib3fvARB(i, (const GLfloat *)ptr));
                     break;
                 case WINED3DDECLTYPE_FLOAT4:
-                    GL_EXTCALL(glVertexAttrib4fvARB(i, (float *) ptr));
+                    GL_EXTCALL(glVertexAttrib4fvARB(i, (const GLfloat *)ptr));
                     break;
 
                 case WINED3DDECLTYPE_UBYTE4:
@@ -4032,38 +4040,38 @@ static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock, WineDi
                     break;
 
                 case WINED3DDECLTYPE_SHORT2:
-                    GL_EXTCALL(glVertexAttrib4svARB(i, (GLshort *) ptr));
+                    GL_EXTCALL(glVertexAttrib4svARB(i, (const GLshort *)ptr));
                     break;
                 case WINED3DDECLTYPE_SHORT4:
-                    GL_EXTCALL(glVertexAttrib4svARB(i, (GLshort *) ptr));
+                    GL_EXTCALL(glVertexAttrib4svARB(i, (const GLshort *)ptr));
                     break;
 
                 case WINED3DDECLTYPE_SHORT2N:
                 {
-                    GLshort s[4] = {((short *) ptr)[0], ((short *) ptr)[1], 0, 1};
+                    const GLshort s[4] = {((const GLshort *)ptr)[0], ((const GLshort *)ptr)[1], 0, 1};
                     GL_EXTCALL(glVertexAttrib4NsvARB(i, s));
                     break;
                 }
                 case WINED3DDECLTYPE_USHORT2N:
                 {
-                    GLushort s[4] = {((unsigned short *) ptr)[0], ((unsigned short *) ptr)[1], 0, 1};
+                    const GLushort s[4] = {((const GLushort *)ptr)[0], ((const GLushort *)ptr)[1], 0, 1};
                     GL_EXTCALL(glVertexAttrib4NusvARB(i, s));
                     break;
                 }
                 case WINED3DDECLTYPE_SHORT4N:
-                    GL_EXTCALL(glVertexAttrib4NsvARB(i, (GLshort *) ptr));
+                    GL_EXTCALL(glVertexAttrib4NsvARB(i, (const GLshort *)ptr));
                     break;
                 case WINED3DDECLTYPE_USHORT4N:
-                    GL_EXTCALL(glVertexAttrib4NusvARB(i, (GLushort *) ptr));
+                    GL_EXTCALL(glVertexAttrib4NusvARB(i, (const GLushort *)ptr));
                     break;
 
                 case WINED3DDECLTYPE_UDEC3:
                     FIXME("Unsure about WINED3DDECLTYPE_UDEC3\n");
-                    /*glVertexAttrib3usvARB(i, (GLushort *) ptr); Does not exist */
+                    /*glVertexAttrib3usvARB(i, (const GLushort *)ptr); Does not exist */
                     break;
                 case WINED3DDECLTYPE_DEC3N:
                     FIXME("Unsure about WINED3DDECLTYPE_DEC3N\n");
-                    /*glVertexAttrib3NusvARB(i, (GLushort *) ptr); Does not exist */
+                    /*glVertexAttrib3NusvARB(i, (const GLushort *)ptr); Does not exist */
                     break;
 
                 case WINED3DDECLTYPE_FLOAT16_2:
@@ -4088,8 +4096,9 @@ static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock, WineDi
 }
 
 /* Used from 2 different functions, and too big to justify making it inlined */
-static void loadVertexData(IWineD3DStateBlockImpl *stateblock, WineDirect3DVertexStridedData *sd) {
-    UINT *offset = stateblock->streamOffset;
+static void loadVertexData(IWineD3DStateBlockImpl *stateblock, const WineDirect3DVertexStridedData *sd)
+{
+    const UINT *offset = stateblock->streamOffset;
     GLint curVBO = GL_SUPPORT(ARB_VERTEX_BUFFER_OBJECT) ? -1 : 0;
 
     TRACE("Using fast vertex array code\n");
@@ -4130,10 +4139,11 @@ static void loadVertexData(IWineD3DStateBlockImpl *stateblock, WineDirect3DVerte
             checkGLcall("glWeightPointerARB");
 
             if((sd->u.s.blendMatrixIndices.lpData) || (sd->u.s.blendMatrixIndices.VBO)){
-                static BOOL showfixme = TRUE;
-                if(showfixme){
+                static BOOL warned;
+                if (!warned)
+                {
                     FIXME("blendMatrixIndices support\n");
-                    showfixme = FALSE;
+                    warned = TRUE;
                 }
             }
         } else {
@@ -4271,9 +4281,9 @@ static void loadVertexData(IWineD3DStateBlockImpl *stateblock, WineDirect3DVerte
                                                    WINED3D_ATR_GLTYPE(sd->u.s.specular.dwType),
                                                    sd->u.s.specular.dwStride,
                                                    sd->u.s.specular.lpData + stateblock->loadBaseVertexIndex * sd->u.s.specular.dwStride + offset[sd->u.s.specular.streamNo]);
-            vcheckGLcall("glSecondaryColorPointerEXT(4, GL_UNSIGNED_BYTE, ...)");
+            checkGLcall("glSecondaryColorPointerEXT(4, GL_UNSIGNED_BYTE, ...)");
             glEnableClientState(GL_SECONDARY_COLOR_ARRAY_EXT);
-            vcheckGLcall("glEnableClientState(GL_SECONDARY_COLOR_ARRAY_EXT)");
+            checkGLcall("glEnableClientState(GL_SECONDARY_COLOR_ARRAY_EXT)");
         } else {
 
         /* Missing specular color is not critical, no warnings */
@@ -4295,9 +4305,8 @@ static void loadVertexData(IWineD3DStateBlockImpl *stateblock, WineDirect3DVerte
     loadTexCoords(stateblock, sd, &curVBO);
 }
 
-static inline void drawPrimitiveTraceDataLocations(
-    WineDirect3DVertexStridedData *dataLocations) {
-
+static inline void drawPrimitiveTraceDataLocations(const WineDirect3DVertexStridedData *dataLocations)
+{
     /* Dump out what parts we have supplied */
     TRACE("Strided Data:\n");
     TRACE_STRIDED((dataLocations), position);
@@ -4332,6 +4341,8 @@ static void streamsrc(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
     BOOL fixup = FALSE;
     WineDirect3DVertexStridedData *dataLocations = &device->strided_streams;
     BOOL useVertexShaderFunction;
+    BOOL load_numbered = FALSE;
+    BOOL load_named = FALSE;
 
     if (device->vs_selected_mode != SHADER_NONE && stateblock->vertexShader &&
         ((IWineD3DVertexShaderImpl *)stateblock->vertexShader)->baseShader.function != NULL) {
@@ -4365,39 +4376,49 @@ static void streamsrc(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
         useVertexShaderFunction = FALSE;
     }
 
-    /* Unload the old arrays before loading the new ones to get old junk out */
-    if(context->numberedArraysLoaded) {
-        unloadNumberedArrays(stateblock);
-        context->numberedArraysLoaded = FALSE;
-    }
-    if(context->namedArraysLoaded) {
-        unloadVertexData(stateblock);
-        context->namedArraysLoaded = FALSE;
-    }
-
     if(useVertexShaderFunction) {
         if(((IWineD3DVertexDeclarationImpl *) stateblock->vertexDecl)->half_float_conv_needed && !fixup) {
             TRACE("Using drawStridedSlow with vertex shaders for FLOAT16 conversion\n");
             device->useDrawStridedSlow = TRUE;
-            context->numberedArraysLoaded = FALSE;
         } else {
-            TRACE("Loading numbered arrays\n");
-            loadNumberedArrays(stateblock, dataLocations);
+            load_numbered = TRUE;
             device->useDrawStridedSlow = FALSE;
-            context->numberedArraysLoaded = TRUE;
         }
     } else if (fixup ||
                (dataLocations->u.s.pSize.lpData == NULL &&
                 dataLocations->u.s.diffuse.lpData == NULL &&
                 dataLocations->u.s.specular.lpData == NULL)) {
         /* Load the vertex data using named arrays */
-        TRACE("Loading vertex data\n");
-        loadVertexData(stateblock, dataLocations);
+        load_named = TRUE;
         device->useDrawStridedSlow = FALSE;
-        context->namedArraysLoaded = TRUE;
     } else {
         TRACE("Not loading vertex data\n");
         device->useDrawStridedSlow = TRUE;
+    }
+
+    if (context->numberedArraysLoaded && !load_numbered)
+    {
+        unloadNumberedArrays(stateblock, context);
+        context->numberedArraysLoaded = FALSE;
+        context->numbered_array_mask = 0;
+    }
+    else if (context->namedArraysLoaded)
+    {
+        unloadVertexData(stateblock);
+        context->namedArraysLoaded = FALSE;
+    }
+
+    if (load_numbered)
+    {
+        TRACE("Loading numbered arrays\n");
+        loadNumberedArrays(stateblock, dataLocations, context);
+        context->numberedArraysLoaded = TRUE;
+    }
+    else if (load_named)
+    {
+        TRACE("Loading vertex data\n");
+        loadVertexData(stateblock, dataLocations);
+        context->namedArraysLoaded = TRUE;
     }
 
 /* Generate some fixme's if unsupported functionality is being used */
@@ -4511,11 +4532,6 @@ static void vertexdeclaration(DWORD state, IWineD3DStateBlockImpl *stateblock, W
             state_normalize(STATE_RENDER(WINED3DRS_NORMALIZENORMALS), stateblock, context);
         }
     } else {
-        /* We compile the shader here because we need the vertex declaration
-         * in order to determine if we need to do any swizzling for D3DCOLOR
-         * registers. If the shader is already compiled this call will do nothing. */
-        IWineD3DVertexShader_CompileShader(stateblock->vertexShader);
-
         if(!context->last_was_vshader) {
             int i;
             static BOOL warned = FALSE;
@@ -4610,7 +4626,7 @@ static void viewport_vertexpart(DWORD state, IWineD3DStateBlockImpl *stateblock,
 
 static void light(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     UINT Index = state - STATE_ACTIVELIGHT(0);
-    PLIGHTINFOEL *lightInfo = stateblock->activeLights[Index];
+    const PLIGHTINFOEL *lightInfo = stateblock->activeLights[Index];
 
     if(!lightInfo) {
         glDisable(GL_LIGHT0 + Index);
@@ -5445,7 +5461,8 @@ static const struct StateEntryTemplate ffp_fragmentstate_template[] = {
 #define GLINFO_LOCATION (*gl_info)
 static void ffp_enable(IWineD3DDevice *iface, BOOL enable) { }
 
-static void ffp_fragment_get_caps(WINED3DDEVTYPE devtype, WineD3D_GL_Info *gl_info, struct fragment_caps *pCaps) {
+static void ffp_fragment_get_caps(WINED3DDEVTYPE devtype, const WineD3D_GL_Info *gl_info, struct fragment_caps *pCaps)
+{
     pCaps->TextureOpCaps =  WINED3DTEXOPCAPS_ADD         |
                             WINED3DTEXOPCAPS_ADDSIGNED   |
                             WINED3DTEXOPCAPS_ADDSIGNED2X |
@@ -5483,8 +5500,22 @@ static void ffp_fragment_get_caps(WINED3DDEVTYPE devtype, WineD3D_GL_Info *gl_in
 
 static HRESULT ffp_fragment_alloc(IWineD3DDevice *iface) { return WINED3D_OK; }
 static void ffp_fragment_free(IWineD3DDevice *iface) {}
-static BOOL ffp_conv_supported(WINED3DFORMAT fmt) {
-    TRACE("Checking shader format support for format %s: [FAILED]\n", debug_d3dformat(fmt));
+static BOOL ffp_color_fixup_supported(struct color_fixup_desc fixup)
+{
+    if (TRACE_ON(d3d))
+    {
+        TRACE("Checking support for fixup:\n");
+        dump_color_fixup_desc(fixup);
+    }
+
+    /* We only support identity conversions. */
+    if (is_identity_fixup(fixup))
+    {
+        TRACE("[OK]\n");
+        return TRUE;
+    }
+
+    TRACE("[FAILED]\n");
     return FALSE;
 }
 
@@ -5493,12 +5524,13 @@ const struct fragment_pipeline ffp_fragment_pipeline = {
     ffp_fragment_get_caps,
     ffp_fragment_alloc,
     ffp_fragment_free,
-    ffp_conv_supported,
+    ffp_color_fixup_supported,
     ffp_fragmentstate_template,
     FALSE /* we cannot disable projected textures. The vertex pipe has to do it */
 };
 
-static int num_handlers(APPLYSTATEFUNC *funcs) {
+static unsigned int num_handlers(const APPLYSTATEFUNC *funcs)
+{
     unsigned int i;
     for(i = 0; funcs[i]; i++);
     return i;
@@ -5515,12 +5547,10 @@ static void multistate_apply_3(DWORD state, IWineD3DStateBlockImpl *stateblock, 
     stateblock->wineD3DDevice->multistate_funcs[state][2](state, stateblock, context);
 }
 
-void compile_state_table(struct StateEntry *StateTable,
-                         APPLYSTATEFUNC **dev_multistate_funcs,
-                         WineD3D_GL_Info *gl_info,
-                         const struct StateEntryTemplate *vertex,
-                         const struct fragment_pipeline *fragment,
-                         const struct StateEntryTemplate *misc) {
+void compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_multistate_funcs,
+        const WineD3D_GL_Info *gl_info, const struct StateEntryTemplate *vertex,
+        const struct fragment_pipeline *fragment, const struct StateEntryTemplate *misc)
+{
     unsigned int i, type, handlers;
     APPLYSTATEFUNC multistate_funcs[STATE_HIGHEST + 1][3];
     const struct StateEntryTemplate *cur;

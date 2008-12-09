@@ -44,7 +44,7 @@ static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
     }
 
     if(This->backBuffer) {
-        int i;
+        UINT i;
         for(i = 0; i < This->presentParms.BackBufferCount; i++) {
             IWineD3DSurface_SetContainer(This->backBuffer[i], 0);
             if(D3DCB_DestroyRenderback(This->backBuffer[i]) > 0) {
@@ -80,7 +80,8 @@ static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
  *  rc: Rectangle to copy
  *
  *****************************************************************************/
-void x11_copy_to_screen(IWineD3DSwapChainImpl *This, LPRECT rc) {
+void x11_copy_to_screen(IWineD3DSwapChainImpl *This, const RECT *rc)
+{
     IWineD3DSurfaceImpl *front = (IWineD3DSurfaceImpl *) This->frontBuffer;
 
     if(front->resource.usage & WINED3DUSAGE_RENDERTARGET) {
@@ -235,18 +236,6 @@ static HRESULT WINAPI IWineGDISwapChainImpl_Present(IWineD3DSwapChain *iface, CO
 
     x11_copy_to_screen(This, NULL);
 
-    return WINED3D_OK;
-}
-
-/* FIXME: This should not be needed, the base version is OK */
-HRESULT WINAPI IWineGDIBaseSwapChainImpl_GetDisplayMode(IWineD3DSwapChain *iface, WINED3DDISPLAYMODE*pMode) {
-    IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *)iface;
-    IWineD3DDeviceImpl *device = This->wineD3DDevice;
-
-    pMode->Width = device->ddraw_width;
-    pMode->Height = device->ddraw_height;
-    pMode->Format = device->ddraw_format;
-    pMode->RefreshRate = 0;
     return WINED3D_OK;
 }
 

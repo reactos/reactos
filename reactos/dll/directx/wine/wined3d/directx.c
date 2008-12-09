@@ -154,20 +154,30 @@ static const shader_backend_t *select_shader_backend(UINT Adapter, WINED3DDEVTYP
 static const struct blit_shader *select_blit_implementation(UINT Adapter, WINED3DDEVTYPE DeviceType);
 
 /* lookup tables */
-int minLookup[MAX_LOOKUPS];
-int maxLookup[MAX_LOOKUPS];
-DWORD *stateLookup[MAX_LOOKUPS];
-
-DWORD minMipLookup[WINED3DTEXF_ANISOTROPIC + 1][WINED3DTEXF_LINEAR + 1];
-DWORD minMipLookup_noFilter[WINED3DTEXF_ANISOTROPIC + 1][WINED3DTEXF_LINEAR + 1] = {
-    {GL_NEAREST, GL_NEAREST, GL_NEAREST},
-    {GL_NEAREST, GL_NEAREST, GL_NEAREST},
-    {GL_NEAREST, GL_NEAREST, GL_NEAREST},
-    {GL_NEAREST, GL_NEAREST, GL_NEAREST},
+const int minLookup[MAX_LOOKUPS] =
+{
+    WINED3DTADDRESS_WRAP, /* WINELOOKUP_WARPPARAM */
 };
 
-DWORD magLookup[WINED3DTEXF_ANISOTROPIC + 1];
-DWORD magLookup_noFilter[WINED3DTEXF_ANISOTROPIC + 1] = {
+const int maxLookup[MAX_LOOKUPS] =
+{
+    WINED3DTADDRESS_MIRRORONCE, /* WINELOOKUP_WARPPARAM */
+};
+
+DWORD *stateLookup[MAX_LOOKUPS];
+
+struct min_lookup minMipLookup[WINED3DTEXF_ANISOTROPIC + 1];
+const struct min_lookup minMipLookup_noFilter[WINED3DTEXF_ANISOTROPIC + 1] =
+{
+    {{GL_NEAREST, GL_NEAREST, GL_NEAREST}},
+    {{GL_NEAREST, GL_NEAREST, GL_NEAREST}},
+    {{GL_NEAREST, GL_NEAREST, GL_NEAREST}},
+    {{GL_NEAREST, GL_NEAREST, GL_NEAREST}},
+};
+
+GLenum magLookup[WINED3DTEXF_ANISOTROPIC + 1];
+const GLenum magLookup_noFilter[WINED3DTEXF_ANISOTROPIC + 1] =
+{
     GL_NEAREST, GL_NEAREST, GL_NEAREST, GL_NEAREST
 };
 
@@ -367,12 +377,8 @@ static ULONG WINAPI IWineD3DImpl_Release(IWineD3D *iface) {
 /* Set the shader type for this device, depending on the given capabilities,
  * the device type, and the user preferences in wined3d_settings */
 
-void select_shader_mode(
-    WineD3D_GL_Info *gl_info,
-    WINED3DDEVTYPE DeviceType,
-    int* ps_selected,
-    int* vs_selected) {
-
+static void select_shader_mode(const WineD3D_GL_Info *gl_info, WINED3DDEVTYPE DeviceType, int *ps_selected, int *vs_selected)
+{
     if (wined3d_settings.vs_mode == VS_NONE) {
         *vs_selected = SHADER_NONE;
     } else if (gl_info->supported[ARB_VERTEX_SHADER] && wined3d_settings.glslRequested) {
@@ -450,7 +456,8 @@ static void select_shader_max_constants(
  **********************************************************/
 
 #define GLINFO_LOCATION (*gl_info)
-static inline BOOL test_arb_vs_offset_limit(WineD3D_GL_Info *gl_info) {
+static inline BOOL test_arb_vs_offset_limit(const WineD3D_GL_Info *gl_info)
+{
     GLuint prog;
     BOOL ret = FALSE;
     const char *testcode =
@@ -494,7 +501,7 @@ static DWORD ver_for_ext(GL_SupportedExt ext)
     return 0;
 }
 
-BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
+static BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
     const char *GL_Extensions    = NULL;
     const char *WGL_Extensions   = NULL;
     const char *gl_string        = NULL;
@@ -1075,8 +1082,13 @@ BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
              * shader capabilities, so we use the shader capabilities to distinguish between FX and 6xxx/7xxx.
              */
             if(WINE_D3D9_CAPABLE(gl_info) && (gl_info->vs_nv_version == VS_VERSION_30)) {
+                /* Geforce GTX - highend */
+                if(strstr(gl_info->gl_renderer, "GTX 280")) {
+                    gl_info->gl_card = CARD_NVIDIA_GEFORCE_GTX280;
+                    vidmem = 1024;
+                }
                 /* Geforce9 - highend */
-                if(strstr(gl_info->gl_renderer, "9800")) {
+                else if(strstr(gl_info->gl_renderer, "9800")) {
                     gl_info->gl_card = CARD_NVIDIA_GEFORCE_9800GT;
                     vidmem = 512;
                 }
@@ -1336,11 +1348,7 @@ BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
     else
         gl_info->vidmem = WINE_DEFAULT_VIDMEM;
 
-    /* Load all the lookup tables
-    TODO: It may be a good idea to make minLookup and maxLookup const and populate them in wined3d_private.h where they are declared */
-    minLookup[WINELOOKUP_WARPPARAM] = WINED3DTADDRESS_WRAP;
-    maxLookup[WINELOOKUP_WARPPARAM] = WINED3DTADDRESS_MIRRORONCE;
-
+    /* Load all the lookup tables */
     for (i = 0; i < MAX_LOOKUPS; i++) {
         stateLookup[i] = HeapAlloc(GetProcessHeap(), 0, sizeof(*stateLookup[i]) * (1 + maxLookup[i] - minLookup[i]) );
     }
@@ -1363,19 +1371,21 @@ BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
              gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC] ? GL_LINEAR : GL_NEAREST;
 
 
-    minMipLookup[WINED3DTEXF_NONE][WINED3DTEXF_NONE]     = GL_LINEAR;
-    minMipLookup[WINED3DTEXF_NONE][WINED3DTEXF_POINT]    = GL_LINEAR;
-    minMipLookup[WINED3DTEXF_NONE][WINED3DTEXF_LINEAR]   = GL_LINEAR;
-    minMipLookup[WINED3DTEXF_POINT][WINED3DTEXF_NONE]    = GL_NEAREST;
-    minMipLookup[WINED3DTEXF_POINT][WINED3DTEXF_POINT]   = GL_NEAREST_MIPMAP_NEAREST;
-    minMipLookup[WINED3DTEXF_POINT][WINED3DTEXF_LINEAR]  = GL_NEAREST_MIPMAP_LINEAR;
-    minMipLookup[WINED3DTEXF_LINEAR][WINED3DTEXF_NONE]   = GL_LINEAR;
-    minMipLookup[WINED3DTEXF_LINEAR][WINED3DTEXF_POINT]  = GL_LINEAR_MIPMAP_NEAREST;
-    minMipLookup[WINED3DTEXF_LINEAR][WINED3DTEXF_LINEAR] = GL_LINEAR_MIPMAP_LINEAR;
-    minMipLookup[WINED3DTEXF_ANISOTROPIC][WINED3DTEXF_NONE]   = gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC] ?
-    GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
-    minMipLookup[WINED3DTEXF_ANISOTROPIC][WINED3DTEXF_POINT]  = gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC] ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR;
-    minMipLookup[WINED3DTEXF_ANISOTROPIC][WINED3DTEXF_LINEAR] = gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC] ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
+    minMipLookup[WINED3DTEXF_NONE].mip[WINED3DTEXF_NONE]     = GL_LINEAR;
+    minMipLookup[WINED3DTEXF_NONE].mip[WINED3DTEXF_POINT]    = GL_LINEAR;
+    minMipLookup[WINED3DTEXF_NONE].mip[WINED3DTEXF_LINEAR]   = GL_LINEAR;
+    minMipLookup[WINED3DTEXF_POINT].mip[WINED3DTEXF_NONE]    = GL_NEAREST;
+    minMipLookup[WINED3DTEXF_POINT].mip[WINED3DTEXF_POINT]   = GL_NEAREST_MIPMAP_NEAREST;
+    minMipLookup[WINED3DTEXF_POINT].mip[WINED3DTEXF_LINEAR]  = GL_NEAREST_MIPMAP_LINEAR;
+    minMipLookup[WINED3DTEXF_LINEAR].mip[WINED3DTEXF_NONE]   = GL_LINEAR;
+    minMipLookup[WINED3DTEXF_LINEAR].mip[WINED3DTEXF_POINT]  = GL_LINEAR_MIPMAP_NEAREST;
+    minMipLookup[WINED3DTEXF_LINEAR].mip[WINED3DTEXF_LINEAR] = GL_LINEAR_MIPMAP_LINEAR;
+    minMipLookup[WINED3DTEXF_ANISOTROPIC].mip[WINED3DTEXF_NONE]
+            = gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC] ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
+    minMipLookup[WINED3DTEXF_ANISOTROPIC].mip[WINED3DTEXF_POINT]
+            = gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC] ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR;
+    minMipLookup[WINED3DTEXF_ANISOTROPIC].mip[WINED3DTEXF_LINEAR]
+            = gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC] ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
 
 /* TODO: config lookups */
 
@@ -1527,7 +1537,7 @@ static HRESULT WINAPI IWineD3DImpl_EnumAdapterModes(IWineD3D *iface, UINT Adapte
     if (Adapter == 0 && !DEBUG_SINGLE_MODE) { /* Display */
         DEVMODEW DevModeW;
         int ModeIdx = 0;
-        int i = 0;
+        UINT i = 0;
         int j = 0;
 
         ZeroMemory(&DevModeW, sizeof(DevModeW));
@@ -1665,6 +1675,18 @@ static HRESULT WINAPI IWineD3DImpl_GetAdapterIdentifier(IWineD3D *iface, UINT Ad
     *(pIdentifier->Revision) = 0;
     *pIdentifier->DeviceIdentifier = IID_D3DDEVICE_D3DUID;
 
+    if(wined3d_settings.pci_device_id != PCI_DEVICE_NONE)
+    {
+        TRACE_(d3d_caps)("Overriding pci device id with: %x\n", wined3d_settings.pci_device_id);
+        *(pIdentifier->DeviceId) = wined3d_settings.pci_device_id;
+    }
+
+    if(wined3d_settings.pci_vendor_id != PCI_VENDOR_NONE)
+    {
+        TRACE_(d3d_caps)("Overriding pci vendor id with: %x\n", wined3d_settings.pci_vendor_id);
+        *(pIdentifier->VendorId) = wined3d_settings.pci_vendor_id;
+    }
+
     if (Flags & WINED3DENUM_NO_WHQL_LEVEL) {
         *(pIdentifier->WHQLLevel) = 0;
     } else {
@@ -1755,7 +1777,7 @@ static HRESULT WINAPI IWineD3DImpl_CheckDepthStencilMatch(IWineD3D *iface, UINT 
                                                    WINED3DFORMAT DepthStencilFormat) {
     IWineD3DImpl *This = (IWineD3DImpl *)iface;
     int nCfgs;
-    WineD3D_PixelFormat *cfgs;
+    const WineD3D_PixelFormat *cfgs;
     int it;
 
     WARN_(d3d_caps)("(%p)-> (STUB) (Adptr:%d, DevType:(%x,%s), AdptFmt:(%x,%s), RendrTgtFmt:(%x,%s), DepthStencilFmt:(%x,%s))\n",
@@ -1790,7 +1812,7 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceMultiSampleType(IWineD3D *iface, U
                                                        BOOL Windowed, WINED3DMULTISAMPLE_TYPE MultiSampleType, DWORD*   pQualityLevels) {
 
     IWineD3DImpl *This = (IWineD3DImpl *)iface;
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
     const StaticPixelFormatDesc *desc;
 
     TRACE_(d3d_caps)("(%p)-> (Adptr:%d, DevType:(%x,%s), SurfFmt:(%x,%s), Win?%d, MultiSamp:%x, pQual:%p)\n",
@@ -1823,7 +1845,7 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceMultiSampleType(IWineD3D *iface, U
 
     if(glDesc->Flags & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL)) {
         int i, nCfgs;
-        WineD3D_PixelFormat *cfgs;
+        const WineD3D_PixelFormat *cfgs;
 
         cfgs = Adapters[Adapter].cfgs;
         nCfgs = Adapters[Adapter].nCfgs;
@@ -1844,7 +1866,7 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceMultiSampleType(IWineD3D *iface, U
     else if(glDesc->Flags & WINED3DFMT_FLAG_RENDERTARGET) {
         short redSize, greenSize, blueSize, alphaSize, colorBits;
         int i, nCfgs;
-        WineD3D_PixelFormat *cfgs;
+        const WineD3D_PixelFormat *cfgs;
 
         if(!getColorBits(SurfaceFormat, &redSize, &greenSize, &blueSize, &alphaSize, &colorBits)) {
             ERR("Unable to color bits for format %#x, can't check multisampling capability!\n", SurfaceFormat);
@@ -1965,7 +1987,7 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceType(IWineD3D *iface, UINT Adapter
 static BOOL CheckBumpMapCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WINED3DFORMAT CheckFormat)
 {
     const struct fragment_pipeline *fp;
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
 
     switch(CheckFormat) {
         case WINED3DFMT_V8U8:
@@ -1973,24 +1995,18 @@ static BOOL CheckBumpMapCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WINE
         case WINED3DFMT_L6V5U5:
         case WINED3DFMT_X8L8V8U8:
         case WINED3DFMT_Q8W8V8U8:
+            /* Ask the fixed function pipeline implementation if it can deal
+             * with the conversion. If we've got a GL extension giving native
+             * support this will be an identity conversion. */
             getFormatDescEntry(CheckFormat, &GLINFO_LOCATION, &glDesc);
-            if(glDesc->conversion_group == WINED3DFMT_UNKNOWN) {
-                /* We have a GL extension giving native support */
-                TRACE_(d3d_caps)("[OK]\n");
-                return TRUE;
-            }
-
-            /* No native support: Ask the fixed function pipeline implementation if it
-             * can deal with the conversion
-             */
             fp = select_fragment_implementation(Adapter, DeviceType);
-            if(fp->conv_supported(CheckFormat)) {
+            if (fp->color_fixup_supported(glDesc->color_fixup))
+            {
                 TRACE_(d3d_caps)("[OK]\n");
                 return TRUE;
-            } else {
-                TRACE_(d3d_caps)("[FAILED]\n");
-                return FALSE;
             }
+            TRACE_(d3d_caps)("[FAILED]\n");
+            return FALSE;
 
         default:
             TRACE_(d3d_caps)("[FAILED]\n");
@@ -2002,7 +2018,7 @@ static BOOL CheckBumpMapCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WINE
 static BOOL CheckDepthStencilCapability(UINT Adapter, WINED3DFORMAT DisplayFormat, WINED3DFORMAT DepthStencilFormat)
 {
     int it=0;
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
     const StaticPixelFormatDesc *desc = getFormatDescEntry(DepthStencilFormat, &GLINFO_LOCATION, &glDesc);
 
     /* Fail if we weren't able to get a description of the format */
@@ -2028,7 +2044,7 @@ static BOOL CheckDepthStencilCapability(UINT Adapter, WINED3DFORMAT DisplayForma
 
 static BOOL CheckFilterCapability(UINT Adapter, WINED3DFORMAT CheckFormat)
 {
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
     const StaticPixelFormatDesc *desc = getFormatDescEntry(CheckFormat, &GLINFO_LOCATION, &glDesc);
 
     /* Fail if we weren't able to get a description of the format */
@@ -2046,7 +2062,7 @@ static BOOL CheckFilterCapability(UINT Adapter, WINED3DFORMAT CheckFormat)
 static BOOL CheckRenderTargetCapability(WINED3DFORMAT AdapterFormat, WINED3DFORMAT CheckFormat)
 {
     UINT Adapter = 0;
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
     const StaticPixelFormatDesc *desc = getFormatDescEntry(CheckFormat, &GLINFO_LOCATION, &glDesc);
 
     /* Fail if we weren't able to get a description of the format */
@@ -2153,7 +2169,7 @@ static BOOL CheckSrgbWriteCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WI
 /* Check if a format support blending in combination with pixel shaders */
 static BOOL CheckPostPixelShaderBlendingCapability(UINT Adapter, WINED3DFORMAT CheckFormat)
 {
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
     const StaticPixelFormatDesc *desc = getFormatDescEntry(CheckFormat, &GLINFO_LOCATION, &glDesc);
 
     /* Fail if we weren't able to get a description of the format */
@@ -2185,7 +2201,7 @@ static BOOL CheckTextureCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WINE
 {
     const shader_backend_t *shader_backend;
     const struct fragment_pipeline *fp;
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
 
     switch (CheckFormat) {
 
@@ -2260,25 +2276,18 @@ static BOOL CheckTextureCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WINE
         case WINED3DFMT_L6V5U5:
         case WINED3DFMT_Q8W8V8U8:
         case WINED3DFMT_V16U16:
-        case WINED3DFMT_W11V11U10:
+            /* Ask the shader backend if it can deal with the conversion. If
+             * we've got a GL extension giving native support this will be an
+             * identity conversion. */
             getFormatDescEntry(CheckFormat, &GLINFO_LOCATION, &glDesc);
-            if(glDesc->conversion_group == WINED3DFMT_UNKNOWN) {
-                /* We have a GL extension giving native support */
-                TRACE_(d3d_caps)("[OK]\n");
-                return TRUE;
-            }
-
-            /* No native support: Ask the fixed function pipeline implementation if it
-             * can deal with the conversion
-             */
             shader_backend = select_shader_backend(Adapter, DeviceType);
-            if(shader_backend->shader_conv_supported(CheckFormat)) {
+            if (shader_backend->shader_color_fixup_supported(glDesc->color_fixup))
+            {
                 TRACE_(d3d_caps)("[OK]\n");
                 return TRUE;
-            } else {
-                TRACE_(d3d_caps)("[FAILED]\n");
-                return FALSE;
             }
+            TRACE_(d3d_caps)("[FAILED]\n");
+            return FALSE;
 
         case WINED3DFMT_DXT1:
         case WINED3DFMT_DXT2:
@@ -2301,6 +2310,7 @@ static BOOL CheckTextureCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WINE
         case WINED3DFMT_INDEX32:
         case WINED3DFMT_Q16W16V16U16:
         case WINED3DFMT_A2W10V10U10:
+        case WINED3DFMT_W11V11U10:
             TRACE_(d3d_caps)("[FAILED]\n"); /* Enable when implemented */
             return FALSE;
 
@@ -2383,10 +2393,12 @@ static BOOL CheckTextureCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WINE
         /* Vendor specific formats */
         case WINED3DFMT_ATI2N:
             if(GL_SUPPORT(ATI_TEXTURE_COMPRESSION_3DC) || GL_SUPPORT(EXT_TEXTURE_COMPRESSION_RGTC)) {
+                getFormatDescEntry(CheckFormat, &GLINFO_LOCATION, &glDesc);
                 shader_backend = select_shader_backend(Adapter, DeviceType);
                 fp = select_fragment_implementation(Adapter, DeviceType);
-                if(shader_backend->shader_conv_supported(CheckFormat) &&
-                   fp->conv_supported(CheckFormat)) {
+                if (shader_backend->shader_color_fixup_supported(glDesc->color_fixup)
+                        && fp->color_fixup_supported(glDesc->color_fixup))
+                {
                     TRACE_(d3d_caps)("[OK]\n");
                     return TRUE;
                 }
@@ -2419,6 +2431,7 @@ static BOOL CheckTextureCapability(UINT Adapter, WINED3DDEVTYPE DeviceType, WINE
 }
 
 static BOOL CheckSurfaceCapability(UINT Adapter, WINED3DFORMAT AdapterFormat, WINED3DDEVTYPE DeviceType, WINED3DFORMAT CheckFormat, WINED3DSURFTYPE SurfaceType) {
+    const struct GlPixelFormatDesc *format_desc;
     const struct blit_shader *blitter;
 
     if(SurfaceType == SURFACE_GDI) {
@@ -2455,8 +2468,10 @@ static BOOL CheckSurfaceCapability(UINT Adapter, WINED3DFORMAT AdapterFormat, WI
     if(CheckDepthStencilCapability(Adapter, AdapterFormat, CheckFormat)) return TRUE;
 
     /* If opengl can't process the format natively, the blitter may be able to convert it */
+    getFormatDescEntry(CheckFormat, &GLINFO_LOCATION, &format_desc);
     blitter = select_blit_implementation(Adapter, DeviceType);
-    if(blitter->conv_supported(CheckFormat)) {
+    if (blitter->color_fixup_supported(format_desc->color_fixup))
+    {
         TRACE_(d3d_caps)("[OK]\n");
         return TRUE;
     }
@@ -3726,7 +3741,8 @@ ULONG WINAPI D3DCB_DefaultDestroyVolume(IWineD3DVolume *pVolume) {
     return IUnknown_Release(volumeParent);
 }
 
-static BOOL implementation_is_apple(WineD3D_GL_Info *gl_info) {
+static BOOL implementation_is_apple(const WineD3D_GL_Info *gl_info)
+{
     /* MacOS has various specialities in the extensions it advertises. Some have to be loaded from
      * the opengl 1.2+ core, while other extensions are advertised, but software emulated. So try to
      * detect the Apple OpenGL implementation to apply some extension fixups afterwards.
@@ -3848,6 +3864,7 @@ static const struct driver_version_information driver_version_table[] = {
     {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_8800GTS,    7,  15, 11, 7341   },
     {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9600GT,     7,  15, 11, 7341    },
     {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_9800GT,     7,  15, 11, 7341    },
+    {VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX280,     7,  15, 11, 7341    },
 
     /* ATI cards. The driver versions are somewhat similar, but not quite the same. Let's hardcode */
     {VENDOR_ATI,        CARD_ATI_RADEON_9500,           6,  14, 10, 6764    },
@@ -3964,12 +3981,14 @@ static void fixup_extensions(WineD3D_GL_Info *gl_info) {
     }
 }
 
-static void WINE_GLAPI invalid_func(void *data) {
+static void WINE_GLAPI invalid_func(const void *data)
+{
     ERR("Invalid vertex attribute function called\n");
     DebugBreak();
 }
 
-static void WINE_GLAPI invalid_texcoord_func(GLenum unit, void * data) {
+static void WINE_GLAPI invalid_texcoord_func(GLenum unit, const void *data)
+{
     ERR("Invalid texcoord function called\n");
     DebugBreak();
 }
@@ -3979,8 +3998,9 @@ static void WINE_GLAPI invalid_texcoord_func(GLenum unit, void * data) {
 /* Helper functions for providing vertex data to opengl. The arrays are initialized based on
  * the extension detection and are used in drawStridedSlow
  */
-static void WINE_GLAPI position_d3dcolor(void *data) {
-    DWORD pos = *((DWORD *) data);
+static void WINE_GLAPI position_d3dcolor(const void *data)
+{
+    DWORD pos = *((const DWORD *)data);
 
     FIXME("Add a test for fixed function position from d3dcolor type\n");
     glVertex4s(D3DCOLOR_B_R(pos),
@@ -3988,8 +4008,10 @@ static void WINE_GLAPI position_d3dcolor(void *data) {
                D3DCOLOR_B_B(pos),
                D3DCOLOR_B_A(pos));
 }
-static void WINE_GLAPI position_float4(void *data) {
-    GLfloat *pos = (float *) data;
+
+static void WINE_GLAPI position_float4(const void *data)
+{
+    const GLfloat *pos = data;
 
     if (pos[3] < eps && pos[3] > -eps)
         glVertex3fv(pos);
@@ -4000,8 +4022,9 @@ static void WINE_GLAPI position_float4(void *data) {
     }
 }
 
-static void WINE_GLAPI diffuse_d3dcolor(void *data) {
-    DWORD diffuseColor = *((DWORD *) data);
+static void WINE_GLAPI diffuse_d3dcolor(const void *data)
+{
+    DWORD diffuseColor = *((const DWORD *)data);
 
     glColor4ub(D3DCOLOR_B_R(diffuseColor),
                D3DCOLOR_B_G(diffuseColor),
@@ -4009,148 +4032,152 @@ static void WINE_GLAPI diffuse_d3dcolor(void *data) {
                D3DCOLOR_B_A(diffuseColor));
 }
 
-static void WINE_GLAPI specular_d3dcolor(void *data) {
-    DWORD specularColor = *((DWORD *) data);
+static void WINE_GLAPI specular_d3dcolor(const void *data)
+{
+    DWORD specularColor = *((const DWORD *)data);
 
     GL_EXTCALL(glSecondaryColor3ubEXT)(D3DCOLOR_B_R(specularColor),
                                        D3DCOLOR_B_G(specularColor),
                                        D3DCOLOR_B_B(specularColor));
 }
-static void WINE_GLAPI warn_no_specular_func(void *data) {
+
+static void WINE_GLAPI warn_no_specular_func(const void *data)
+{
     WARN("GL_EXT_secondary_color not supported\n");
 }
 
-void fillGLAttribFuncs(WineD3D_GL_Info *gl_info) {
-    position_funcs[WINED3DDECLTYPE_FLOAT1]      = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_FLOAT2]      = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_FLOAT3]      = (void *) glVertex3fv;
-    position_funcs[WINED3DDECLTYPE_FLOAT4]      = (void *) position_float4;
-    position_funcs[WINED3DDECLTYPE_D3DCOLOR]    = (void *) position_d3dcolor;
-    position_funcs[WINED3DDECLTYPE_UBYTE4]      = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_SHORT2]      = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_SHORT4]      = (void *) glVertex2sv;
-    position_funcs[WINED3DDECLTYPE_UBYTE4N]     = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_SHORT2N]     = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_SHORT4N]     = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_USHORT2N]    = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_USHORT4N]    = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_UDEC3]       = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_DEC3N]       = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_FLOAT16_2]   = (void *) invalid_func;
-    position_funcs[WINED3DDECLTYPE_FLOAT16_4]   = (void *) invalid_func;
+static void fillGLAttribFuncs(const WineD3D_GL_Info *gl_info)
+{
+    position_funcs[WINED3DDECLTYPE_FLOAT1]      = invalid_func;
+    position_funcs[WINED3DDECLTYPE_FLOAT2]      = invalid_func;
+    position_funcs[WINED3DDECLTYPE_FLOAT3]      = (glAttribFunc)glVertex3fv;
+    position_funcs[WINED3DDECLTYPE_FLOAT4]      = position_float4;
+    position_funcs[WINED3DDECLTYPE_D3DCOLOR]    = position_d3dcolor;
+    position_funcs[WINED3DDECLTYPE_UBYTE4]      = invalid_func;
+    position_funcs[WINED3DDECLTYPE_SHORT2]      = invalid_func;
+    position_funcs[WINED3DDECLTYPE_SHORT4]      = (glAttribFunc)glVertex2sv;
+    position_funcs[WINED3DDECLTYPE_UBYTE4N]     = invalid_func;
+    position_funcs[WINED3DDECLTYPE_SHORT2N]     = invalid_func;
+    position_funcs[WINED3DDECLTYPE_SHORT4N]     = invalid_func;
+    position_funcs[WINED3DDECLTYPE_USHORT2N]    = invalid_func;
+    position_funcs[WINED3DDECLTYPE_USHORT4N]    = invalid_func;
+    position_funcs[WINED3DDECLTYPE_UDEC3]       = invalid_func;
+    position_funcs[WINED3DDECLTYPE_DEC3N]       = invalid_func;
+    position_funcs[WINED3DDECLTYPE_FLOAT16_2]   = invalid_func;
+    position_funcs[WINED3DDECLTYPE_FLOAT16_4]   = invalid_func;
 
-    diffuse_funcs[WINED3DDECLTYPE_FLOAT1]       = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_FLOAT2]       = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_FLOAT3]       = (void *) glColor3fv;
-    diffuse_funcs[WINED3DDECLTYPE_FLOAT4]       = (void *) glColor4fv;
-    diffuse_funcs[WINED3DDECLTYPE_D3DCOLOR]     = (void *) diffuse_d3dcolor;
-    diffuse_funcs[WINED3DDECLTYPE_UBYTE4]       = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_SHORT2]       = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_SHORT4]       = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_UBYTE4N]      = (void *) glColor4ubv;
-    diffuse_funcs[WINED3DDECLTYPE_SHORT2N]      = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_SHORT4N]      = (void *) glColor4sv;
-    diffuse_funcs[WINED3DDECLTYPE_USHORT2N]     = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_USHORT4N]     = (void *) glColor4usv;
-    diffuse_funcs[WINED3DDECLTYPE_UDEC3]        = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_DEC3N]        = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_FLOAT16_2]    = (void *) invalid_func;
-    diffuse_funcs[WINED3DDECLTYPE_FLOAT16_4]    = (void *) invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_FLOAT1]       = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_FLOAT2]       = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_FLOAT3]       = (glAttribFunc)glColor3fv;
+    diffuse_funcs[WINED3DDECLTYPE_FLOAT4]       = (glAttribFunc)glColor4fv;
+    diffuse_funcs[WINED3DDECLTYPE_D3DCOLOR]     = diffuse_d3dcolor;
+    diffuse_funcs[WINED3DDECLTYPE_UBYTE4]       = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_SHORT2]       = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_SHORT4]       = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_UBYTE4N]      = (glAttribFunc)glColor4ubv;
+    diffuse_funcs[WINED3DDECLTYPE_SHORT2N]      = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_SHORT4N]      = (glAttribFunc)glColor4sv;
+    diffuse_funcs[WINED3DDECLTYPE_USHORT2N]     = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_USHORT4N]     = (glAttribFunc)glColor4usv;
+    diffuse_funcs[WINED3DDECLTYPE_UDEC3]        = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_DEC3N]        = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_FLOAT16_2]    = invalid_func;
+    diffuse_funcs[WINED3DDECLTYPE_FLOAT16_4]    = invalid_func;
 
     /* No 4 component entry points here */
-    specular_funcs[WINED3DDECLTYPE_FLOAT1]      = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_FLOAT2]      = (void *) invalid_func;
+    specular_funcs[WINED3DDECLTYPE_FLOAT1]      = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_FLOAT2]      = invalid_func;
     if(GL_SUPPORT(EXT_SECONDARY_COLOR)) {
-        specular_funcs[WINED3DDECLTYPE_FLOAT3]      = (void *) GL_EXTCALL(glSecondaryColor3fvEXT);
+        specular_funcs[WINED3DDECLTYPE_FLOAT3]      = (glAttribFunc)GL_EXTCALL(glSecondaryColor3fvEXT);
     } else {
-        specular_funcs[WINED3DDECLTYPE_FLOAT3]      = (void *) warn_no_specular_func;
+        specular_funcs[WINED3DDECLTYPE_FLOAT3]      = warn_no_specular_func;
     }
-    specular_funcs[WINED3DDECLTYPE_FLOAT4]      = (void *) invalid_func;
+    specular_funcs[WINED3DDECLTYPE_FLOAT4]      = invalid_func;
     if(GL_SUPPORT(EXT_SECONDARY_COLOR)) {
-        specular_funcs[WINED3DDECLTYPE_D3DCOLOR]    = (void *) specular_d3dcolor;
+        specular_funcs[WINED3DDECLTYPE_D3DCOLOR]    = specular_d3dcolor;
     } else {
-        specular_funcs[WINED3DDECLTYPE_D3DCOLOR]      = (void *) warn_no_specular_func;
+        specular_funcs[WINED3DDECLTYPE_D3DCOLOR]      = warn_no_specular_func;
     }
-    specular_funcs[WINED3DDECLTYPE_UBYTE4]      = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_SHORT2]      = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_SHORT4]      = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_UBYTE4N]     = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_SHORT2N]     = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_SHORT4N]     = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_USHORT2N]    = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_USHORT4N]    = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_UDEC3]       = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_DEC3N]       = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_FLOAT16_2]   = (void *) invalid_func;
-    specular_funcs[WINED3DDECLTYPE_FLOAT16_4]   = (void *) invalid_func;
+    specular_funcs[WINED3DDECLTYPE_UBYTE4]      = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_SHORT2]      = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_SHORT4]      = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_UBYTE4N]     = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_SHORT2N]     = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_SHORT4N]     = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_USHORT2N]    = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_USHORT4N]    = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_UDEC3]       = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_DEC3N]       = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_FLOAT16_2]   = invalid_func;
+    specular_funcs[WINED3DDECLTYPE_FLOAT16_4]   = invalid_func;
 
     /* Only 3 component entry points here. Test how others behave. Float4 normals are used
      * by one of our tests, trying to pass it to the pixel shader, which fails on Windows.
      */
-    normal_funcs[WINED3DDECLTYPE_FLOAT1]         = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_FLOAT2]         = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_FLOAT3]         = (void *) glNormal3fv;
-    normal_funcs[WINED3DDECLTYPE_FLOAT4]         = (void *) glNormal3fv; /* Just ignore the 4th value */
-    normal_funcs[WINED3DDECLTYPE_D3DCOLOR]       = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_UBYTE4]         = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_SHORT2]         = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_SHORT4]         = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_UBYTE4N]        = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_SHORT2N]        = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_SHORT4N]        = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_USHORT2N]       = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_USHORT4N]       = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_UDEC3]          = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_DEC3N]          = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_FLOAT16_2]      = (void *) invalid_func;
-    normal_funcs[WINED3DDECLTYPE_FLOAT16_4]      = (void *) invalid_func;
+    normal_funcs[WINED3DDECLTYPE_FLOAT1]         = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_FLOAT2]         = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_FLOAT3]         = (glAttribFunc)glNormal3fv;
+    normal_funcs[WINED3DDECLTYPE_FLOAT4]         = (glAttribFunc)glNormal3fv; /* Just ignore the 4th value */
+    normal_funcs[WINED3DDECLTYPE_D3DCOLOR]       = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_UBYTE4]         = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_SHORT2]         = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_SHORT4]         = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_UBYTE4N]        = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_SHORT2N]        = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_SHORT4N]        = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_USHORT2N]       = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_USHORT4N]       = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_UDEC3]          = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_DEC3N]          = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_FLOAT16_2]      = invalid_func;
+    normal_funcs[WINED3DDECLTYPE_FLOAT16_4]      = invalid_func;
 
-    multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT1]    = (void *) GL_EXTCALL(glMultiTexCoord1fvARB);
-    multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT2]    = (void *) GL_EXTCALL(glMultiTexCoord2fvARB);
-    multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT3]    = (void *) GL_EXTCALL(glMultiTexCoord3fvARB);
-    multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT4]    = (void *) GL_EXTCALL(glMultiTexCoord4fvARB);
-    multi_texcoord_funcs[WINED3DDECLTYPE_D3DCOLOR]  = (void *) invalid_texcoord_func;
-    multi_texcoord_funcs[WINED3DDECLTYPE_UBYTE4]    = (void *) invalid_texcoord_func;
-    multi_texcoord_funcs[WINED3DDECLTYPE_SHORT2]    = (void *) GL_EXTCALL(glMultiTexCoord2svARB);
-    multi_texcoord_funcs[WINED3DDECLTYPE_SHORT4]    = (void *) GL_EXTCALL(glMultiTexCoord4svARB);
-    multi_texcoord_funcs[WINED3DDECLTYPE_UBYTE4N]   = (void *) invalid_texcoord_func;
-    multi_texcoord_funcs[WINED3DDECLTYPE_SHORT2N]   = (void *) invalid_texcoord_func;
-    multi_texcoord_funcs[WINED3DDECLTYPE_SHORT4N]   = (void *) invalid_texcoord_func;
-    multi_texcoord_funcs[WINED3DDECLTYPE_USHORT2N]  = (void *) invalid_texcoord_func;
-    multi_texcoord_funcs[WINED3DDECLTYPE_USHORT4N]  = (void *) invalid_texcoord_func;
-    multi_texcoord_funcs[WINED3DDECLTYPE_UDEC3]     = (void *) invalid_texcoord_func;
-    multi_texcoord_funcs[WINED3DDECLTYPE_DEC3N]     = (void *) invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT1]    = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord1fvARB);
+    multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT2]    = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord2fvARB);
+    multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT3]    = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord3fvARB);
+    multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT4]    = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord4fvARB);
+    multi_texcoord_funcs[WINED3DDECLTYPE_D3DCOLOR]  = invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_UBYTE4]    = invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_SHORT2]    = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord2svARB);
+    multi_texcoord_funcs[WINED3DDECLTYPE_SHORT4]    = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord4svARB);
+    multi_texcoord_funcs[WINED3DDECLTYPE_UBYTE4N]   = invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_SHORT2N]   = invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_SHORT4N]   = invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_USHORT2N]  = invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_USHORT4N]  = invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_UDEC3]     = invalid_texcoord_func;
+    multi_texcoord_funcs[WINED3DDECLTYPE_DEC3N]     = invalid_texcoord_func;
     if (GL_SUPPORT(NV_HALF_FLOAT))
     {
-        multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT16_2] = (void *) GL_EXTCALL(glMultiTexCoord2hvNV);
-        multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT16_4] = (void *) GL_EXTCALL(glMultiTexCoord4hvNV);
+        multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT16_2] = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord2hvNV);
+        multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT16_4] = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord4hvNV);
     } else {
-        multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT16_2] = (void *) invalid_texcoord_func;
-        multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT16_4] = (void *) invalid_texcoord_func;
+        multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT16_2] = invalid_texcoord_func;
+        multi_texcoord_funcs[WINED3DDECLTYPE_FLOAT16_4] = invalid_texcoord_func;
     }
 
-    texcoord_funcs[WINED3DDECLTYPE_FLOAT1]      = (void *) glTexCoord1fv;
-    texcoord_funcs[WINED3DDECLTYPE_FLOAT2]      = (void *) glTexCoord2fv;
-    texcoord_funcs[WINED3DDECLTYPE_FLOAT3]      = (void *) glTexCoord3fv;
-    texcoord_funcs[WINED3DDECLTYPE_FLOAT4]      = (void *) glTexCoord4fv;
-    texcoord_funcs[WINED3DDECLTYPE_D3DCOLOR]    = (void *) invalid_func;
-    texcoord_funcs[WINED3DDECLTYPE_UBYTE4]      = (void *) invalid_func;
-    texcoord_funcs[WINED3DDECLTYPE_SHORT2]      = (void *) glTexCoord2sv;
-    texcoord_funcs[WINED3DDECLTYPE_SHORT4]      = (void *) glTexCoord4sv;
-    texcoord_funcs[WINED3DDECLTYPE_UBYTE4N]     = (void *) invalid_func;
-    texcoord_funcs[WINED3DDECLTYPE_SHORT2N]     = (void *) invalid_func;
-    texcoord_funcs[WINED3DDECLTYPE_SHORT4N]     = (void *) invalid_func;
-    texcoord_funcs[WINED3DDECLTYPE_USHORT2N]    = (void *) invalid_func;
-    texcoord_funcs[WINED3DDECLTYPE_USHORT4N]    = (void *) invalid_func;
-    texcoord_funcs[WINED3DDECLTYPE_UDEC3]       = (void *) invalid_func;
-    texcoord_funcs[WINED3DDECLTYPE_DEC3N]       = (void *) invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_FLOAT1]      = (glAttribFunc)glTexCoord1fv;
+    texcoord_funcs[WINED3DDECLTYPE_FLOAT2]      = (glAttribFunc)glTexCoord2fv;
+    texcoord_funcs[WINED3DDECLTYPE_FLOAT3]      = (glAttribFunc)glTexCoord3fv;
+    texcoord_funcs[WINED3DDECLTYPE_FLOAT4]      = (glAttribFunc)glTexCoord4fv;
+    texcoord_funcs[WINED3DDECLTYPE_D3DCOLOR]    = invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_UBYTE4]      = invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_SHORT2]      = (glAttribFunc)glTexCoord2sv;
+    texcoord_funcs[WINED3DDECLTYPE_SHORT4]      = (glAttribFunc)glTexCoord4sv;
+    texcoord_funcs[WINED3DDECLTYPE_UBYTE4N]     = invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_SHORT2N]     = invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_SHORT4N]     = invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_USHORT2N]    = invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_USHORT4N]    = invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_UDEC3]       = invalid_func;
+    texcoord_funcs[WINED3DDECLTYPE_DEC3N]       = invalid_func;
     if (GL_SUPPORT(NV_HALF_FLOAT))
     {
-        texcoord_funcs[WINED3DDECLTYPE_FLOAT16_2]   = (void *) GL_EXTCALL(glTexCoord2hvNV);
-        texcoord_funcs[WINED3DDECLTYPE_FLOAT16_4]   = (void *) GL_EXTCALL(glTexCoord4hvNV);
+        texcoord_funcs[WINED3DDECLTYPE_FLOAT16_2]   = (glAttribFunc)GL_EXTCALL(glTexCoord2hvNV);
+        texcoord_funcs[WINED3DDECLTYPE_FLOAT16_4]   = (glAttribFunc)GL_EXTCALL(glTexCoord4hvNV);
     } else {
-        texcoord_funcs[WINED3DDECLTYPE_FLOAT16_2]   = (void *) invalid_func;
-        texcoord_funcs[WINED3DDECLTYPE_FLOAT16_4]   = (void *) invalid_func;
+        texcoord_funcs[WINED3DDECLTYPE_FLOAT16_2]   = invalid_func;
+        texcoord_funcs[WINED3DDECLTYPE_FLOAT16_4]   = invalid_func;
     }
 }
 

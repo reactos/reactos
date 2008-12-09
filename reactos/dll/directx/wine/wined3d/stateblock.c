@@ -63,11 +63,8 @@ HRESULT allocate_shader_constants(IWineD3DStateBlockImpl* object) {
 }
 
 /** Copy all members of one stateblock to another */
-void stateblock_savedstates_copy(
-    IWineD3DStateBlock* iface,
-    SAVEDSTATES* dest,
-    SAVEDSTATES* source) {
-    
+static void stateblock_savedstates_copy(IWineD3DStateBlock* iface, SAVEDSTATES *dest, const SAVEDSTATES *source)
+{
     IWineD3DStateBlockImpl *This = (IWineD3DStateBlockImpl *)iface;
     unsigned bsize = sizeof(BOOL);
 
@@ -90,10 +87,10 @@ void stateblock_savedstates_copy(
     memcpy(dest->textureState, source->textureState, bsize * MAX_TEXTURES * (WINED3D_HIGHEST_TEXTURE_STATE + 1));
     memcpy(dest->samplerState, source->samplerState, bsize * MAX_COMBINED_SAMPLERS * (WINED3D_HIGHEST_SAMPLER_STATE + 1));
     memcpy(dest->clipplane, source->clipplane, bsize * MAX_CLIPPLANES);
-    memcpy(dest->pixelShaderConstantsB, source->pixelShaderConstantsB, bsize * MAX_CONST_B);
-    memcpy(dest->pixelShaderConstantsI, source->pixelShaderConstantsI, bsize * MAX_CONST_I);
-    memcpy(dest->vertexShaderConstantsB, source->vertexShaderConstantsB, bsize * MAX_CONST_B);
-    memcpy(dest->vertexShaderConstantsI, source->vertexShaderConstantsI, bsize * MAX_CONST_I);
+    dest->pixelShaderConstantsB = source->pixelShaderConstantsB;
+    dest->pixelShaderConstantsI = source->pixelShaderConstantsI;
+    dest->vertexShaderConstantsB = source->vertexShaderConstantsB;
+    dest->vertexShaderConstantsI = source->vertexShaderConstantsI;
 
     /* Dynamically sized arrays */
     memcpy(dest->pixelShaderConstantsF, source->pixelShaderConstantsF, bsize * GL_LIMITS(pshader_constantsF));
@@ -128,10 +125,10 @@ void stateblock_savedstates_set(
     memset(states->textureState, value, bsize * MAX_TEXTURES * (WINED3D_HIGHEST_TEXTURE_STATE + 1));
     memset(states->samplerState, value, bsize * MAX_COMBINED_SAMPLERS * (WINED3D_HIGHEST_SAMPLER_STATE + 1));
     memset(states->clipplane, value, bsize * MAX_CLIPPLANES);
-    memset(states->pixelShaderConstantsB, value, bsize * MAX_CONST_B);
-    memset(states->pixelShaderConstantsI, value, bsize * MAX_CONST_I);
-    memset(states->vertexShaderConstantsB, value, bsize * MAX_CONST_B);
-    memset(states->vertexShaderConstantsI, value, bsize * MAX_CONST_I);
+    states->pixelShaderConstantsB = value ? 0xffff : 0;
+    states->pixelShaderConstantsI = value ? 0xffff : 0;
+    states->vertexShaderConstantsB = value ? 0xffff : 0;
+    states->vertexShaderConstantsI = value ? 0xffff : 0;
 
     /* Dynamically sized arrays */
     memset(states->pixelShaderConstantsF, value, bsize * GL_LIMITS(pshader_constantsF));
@@ -710,7 +707,7 @@ static inline void apply_lights(IWineD3DDevice *pDevice, IWineD3DStateBlockImpl 
         struct list *e;
 
         LIST_FOR_EACH(e, &This->lightMap[i]) {
-            PLIGHTINFOEL *light = LIST_ENTRY(e, PLIGHTINFOEL, entry);
+            const PLIGHTINFOEL *light = LIST_ENTRY(e, PLIGHTINFOEL, entry);
 
             if(light->changed) {
                 IWineD3DDevice_SetLight(pDevice, light->OriginalIndex, &light->OriginalParms);
