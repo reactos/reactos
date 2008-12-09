@@ -1288,7 +1288,6 @@ ConvertStringSecurityDescriptorToSecurityDescriptorW(
 		if (SecurityDescriptorSize)
 			*SecurityDescriptorSize = relativeSdSize;
 		*SecurityDescriptor = relativeSd;
-        DbgPrint("ConvertStringSecurityDescriptorToSecurityDescriptorW: relativeSd: %p\n", relativeSd);
 
 cleanup:
 		if (GetSecurityDescriptorOwner(sd, &pSid, &dummy))

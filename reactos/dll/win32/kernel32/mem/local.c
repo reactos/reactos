@@ -52,7 +52,6 @@ LocalAlloc(UINT uFlags,
         /* Allocate heap for it */
         Ptr = RtlAllocateHeap(hProcessHeap, Flags, dwBytes);
         BASE_TRACE_ALLOC2(Ptr);
-        if ((ULONG_PTR)Ptr == 0xC) DbgPrint("LocalAlloc: Ptr is 0xC\n");
         return Ptr;
     }
 
@@ -132,12 +131,10 @@ Quickie:
         }
 
         /* Set the pointer */
-        if ((ULONG_PTR)hMemory == 0xC) DbgPrint("LocalAlloc: hMemory is 0xC\n");
         Ptr = hMemory;
     }
 
     /* Return the pointer */
-    if ((ULONG_PTR)Ptr == 0xC) DbgPrint("LocalAlloc: Ptr is 0xC\n");
     return Ptr;
 }
 
