@@ -33,7 +33,7 @@
 #include "wingdi.h"
 #include "wine/debug.h"
 #include "d3d8.h"
-#include "wine/wined3d_interface.h"
+#include "wine/wined3d.h"
 
 /* Device caps */
 #define INITIAL_SHADER_HANDLE_TABLE_SIZE        64

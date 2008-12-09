@@ -39,7 +39,7 @@
 
 #include "objbase.h"
 #include "wined3d_private_types.h"
-#include "wined3d.h"
+#include "wine/wined3d.h"
 #include "wined3d_gl.h"
 #include "wine/list.h"
 
