@@ -2035,7 +2035,7 @@ GetDlgItemTextA(
   LPSTR lpString,
   int nMaxCount)
 {
-  if (lpString && (lpString > 0)) lpString[0] = '\0';
+  if (lpString && (nMaxCount > 0)) lpString[0] = '\0';
   return (UINT)SendDlgItemMessageA( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
 }
 
@@ -2051,7 +2051,7 @@ GetDlgItemTextW(
   LPWSTR lpString,
   int nMaxCount)
 {
-  if (lpString && (lpString > 0)) lpString[0] = '\0';
+  if (lpString && (nMaxCount > 0)) lpString[0] = '\0';
   return (UINT)SendDlgItemMessageW( hDlg, nIDDlgItem, WM_GETTEXT, nMaxCount, (LPARAM)lpString );
 }
 
