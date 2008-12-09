@@ -106,7 +106,7 @@ static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULO
 //
 // CR Macros
 //
-#define Ke386SetCr2(X)              __asm__ __volatile__("movl %0,%%cr2" : :"r" (X));
+#define Ke386SetCr2(X)              __asm__ __volatile__("movq %0,%%cr2" : :"r" ((void*)X));
 
 //
 // DR Macros
