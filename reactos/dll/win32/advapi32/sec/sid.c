@@ -1820,7 +1820,7 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
     }
     i = 0;
     ret = FALSE;
-    csubauth = ((cBytes - sizeof(SID)) / sizeof(DWORD)) + 1;
+    csubauth = ((cBytes - GetSidLengthRequired(0)) / sizeof(DWORD));
 
     StringSid += 2; /* Advance to Revision */
     pisid->Revision = atoiW(StringSid);
