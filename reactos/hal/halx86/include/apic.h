@@ -186,7 +186,7 @@ static __inline ULONG _APICRead(ULONG Offset)
 {
     PULONG p;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
     return *p;
 }
 
@@ -196,7 +196,7 @@ static __inline VOID APICWrite(ULONG Offset,
 {
     PULONG p;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
     *p = Value;
 }
@@ -210,7 +210,7 @@ static __inline VOID APICWrite(ULONG Offset,
     lastregw[CPU] = Offset;
     lastvalw[CPU] = Value;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
     *p = Value;
 }
@@ -221,7 +221,7 @@ static __inline ULONG APICRead(ULONG Offset)
 {
     PULONG p;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
     return *p;
 }
 #else
@@ -233,7 +233,7 @@ static __inline ULONG APICRead(ULONG Offset)
     lastregr[CPU] = Offset;
     lastvalr[CPU] = 0;
 
-    p = (PULONG)((ULONG)APICBase + Offset);
+    p = (PULONG)((ULONG_PTR)APICBase + Offset);
 
     lastvalr[CPU] = *p;
     return lastvalr[CPU];
