@@ -235,6 +235,16 @@ Author:
 #define PRIMARY_VECTOR_BASE                     0x30
 #define MAXIMUM_IDTVECTOR                       0xFF
 
+//
+// Usermode callout frame definitions
+//
+#define CBSTACK_STACK                           0x0
+#define CBSTACK_TRAP_FRAME                      0x8
+#define CBSTACK_CALLBACK_STACK                  0x10
+#define CBSTACK_RBP                             0x18
+#define CBSTACK_RESULT                          0x20
+#define CBSTACK_RESULT_LENGTH                   0x28
+
 
 /* Following ones are ASM only! ***********************************************/
 
