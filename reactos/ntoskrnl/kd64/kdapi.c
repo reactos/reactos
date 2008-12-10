@@ -175,7 +175,7 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->Thread = (ULONG)(LONG_PTR)KeGetCurrentThread();
 #if defined(_M_X86_)
     WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Eip;
-#elif defined(_AMD64)
+#elif defined(_M_AMD64)
     WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Rip;
 #else
 #error Unknown platform
