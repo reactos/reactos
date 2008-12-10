@@ -991,6 +991,7 @@ BOOLEAN BindAdapter(
 
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(DEBUG_DATALINK, ("Could not set packet filter (0x%X).\n", NdisStatus));
+        IPUnregisterInterface(IF);
         IPDestroyInterface(IF);
         return FALSE;
     }
