@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <halfuncs.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <debug.h>
 #include "arc/arc.h"
 #include "windbgkd.h"
@@ -51,6 +52,12 @@ NTAPI
 KdPortPutByteEx(
     IN PKD_PORT_INFORMATION PortInformation,
     IN UCHAR ByteToSend);
+
+/* serial debug connection */
+#define DEFAULT_DEBUG_PORT      2 /* COM2 */
+#define DEFAULT_DEBUG_COM1_IRQ  4 /* COM1 IRQ */
+#define DEFAULT_DEBUG_COM2_IRQ  3 /* COM2 IRQ */
+#define DEFAULT_DEBUG_BAUD_RATE 115200 /* 115200 Baud */
 
 #define DEFAULT_BAUD_RATE    19200
 
@@ -123,6 +130,8 @@ static KD_PORT_INFORMATION DefaultPort = { 0, 0, 0 };
 /* The com port must only be initialized once! */
 static BOOLEAN PortInitialized = FALSE;
 
+ULONG KdpPort;
+ULONG KdpPortIrq;
 
 /* STATIC FUNCTIONS *********************************************************/
 
@@ -477,15 +486,113 @@ KdPortEnableInterrupts(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 KdDebuggerInitialize0(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Value;
+    PCHAR CommandLine, Port, BaudRate, Irq;
+
+    /* Apply default values */
+    KdpPortIrq = 0;
+    DefaultPort.ComPort = DEFAULT_DEBUG_PORT;
+    DefaultPort.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
+
+    /* Check if e have a LoaderBlock */
+    if (LoaderBlock)
+    {
+        /* Get the Command Line */
+        CommandLine = LoaderBlock->LoadOptions;
+
+        /* Upcase it */
+        _strupr(CommandLine);
+
+        /* Get the port and baud rate */
+        Port = strstr(CommandLine, "DEBUGPORT");
+        BaudRate = strstr(CommandLine, "BAUDRATE");
+        Irq = strstr(CommandLine, "IRQ");
+
+        /* Check if we got the /DEBUGPORT parameter */
+        if (Port)
+        {
+            /* Move past the actual string, to reach the port*/
+            Port += strlen("DEBUGPORT");
+
+            /* Now get past any spaces and skip the equal sign */
+            while (*Port == ' ') Port++;
+            Port++;
+
+            /* Do we have a serial port? */
+            if (strncmp(Port, "COM", 3) != 0)
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Gheck for a valid Serial Port */
+            Port += 3;
+            Value = atol(Port);
+            if (Value > 4)
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Set the port to use */
+            DefaultPort.ComPort = Value;
+       }
+
+        /* Check if we got a baud rate */
+        if (BaudRate)
+        {
+            /* Move past the actual string, to reach the rate */
+            BaudRate += strlen("BAUDRATE");
+
+            /* Now get past any spaces */
+            while (*BaudRate == ' ') BaudRate++;
+
+            /* And make sure we have a rate */
+            if (*BaudRate)
+            {
+                /* Read and set it */
+                Value = atol(BaudRate + 1);
+                if (Value) DefaultPort.BaudRate = Value;
+            }
+        }
+
+        /* Check Serial Port Settings [IRQ] */
+        if (Irq)
+        {
+            /* Move past the actual string, to reach the rate */
+            Irq += strlen("IRQ");
+
+            /* Now get past any spaces */
+            while (*Irq == ' ') Irq++;
+
+            /* And make sure we have an IRQ */
+            if (*Irq)
+            {
+                /* Read and set it */
+                Value = atol(Irq + 1);
+                if (Value) KdpPortIrq = Value;
+            }
+        }
+    }
+
+    /* Get base address */
+    DefaultPort.BaseAddress = BaseArray[DefaultPort.ComPort];
+
+    /* Check if the COM port does exist */
+    if (!KdpDoesComPortExist(DefaultPort.BaseAddress))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Initialize the port */
+    KdPortInitializeEx(&DefaultPort, 0, 0);
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -535,7 +642,31 @@ KdSendPacket(
     IN PSTRING MessageData,
     IN OUT PKD_CONTEXT Context)
 {
-    UNIMPLEMENTED;
+    ULONG i;
+
+    switch (PacketType)
+    {
+        case PACKET_TYPE_KD_DEBUG_IO:
+            /* Copy Message to COM port */
+            for (i = 0; i < MessageData->Length; i++)
+            {
+                char c = MessageData->Buffer[i];
+                if ( c == 10 )
+                {
+                    KdPortPutByteEx(&DefaultPort, 13);
+                    KdPortPutByteEx(&DefaultPort, 10);
+                }
+                else
+                {
+                    KdPortPutByteEx(&DefaultPort, c);
+                }
+            }
+            break;
+
+        default:
+            break;
+    }
+
     return;
 }
 
@@ -551,7 +682,7 @@ KdReceivePacket(
     OUT PULONG DataLength,
     IN OUT PKD_CONTEXT Context)
 {
-    UNIMPLEMENTED;
+//    UNIMPLEMENTED;
     return 0;
 }
 
