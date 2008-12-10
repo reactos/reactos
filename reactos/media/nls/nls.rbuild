@@ -49,6 +49,7 @@
 	<installfile installbase="system32">c_10079.nls</installfile>
 	<installfile installbase="system32">c_10081.nls</installfile>
 	<installfile installbase="system32">c_20866.nls</installfile>
+	<installfile installbase="system32">c_21866.nls</installfile>
 	<installfile installbase="system32">c_28591.nls</installfile>
 	<installfile installbase="system32">c_28592.nls</installfile>
 	<installfile installbase="system32">c_28593.nls</installfile>
@@ -58,5 +59,10 @@
 	<installfile installbase="system32">c_28597.nls</installfile>
 	<installfile installbase="system32">c_28598.nls</installfile>
 	<installfile installbase="system32">c_28599.nls</installfile>
+	<installfile installbase="system32">c_28600.nls</installfile>
+	<installfile installbase="system32">c_28603.nls</installfile>
+	<installfile installbase="system32">c_28604.nls</installfile>
+	<installfile installbase="system32">c_28605.nls</installfile>
+	<installfile installbase="system32">c_28606.nls</installfile>
 	<installfile installbase="system32">l_intl.nls</installfile>
 </group>

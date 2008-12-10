@@ -502,6 +502,7 @@ media\nls\c_10029.nls                               1
 media\nls\c_10079.nls                               1
 media\nls\c_10081.nls                               1
 media\nls\c_20866.nls                               1
+media\nls\c_21866.nls                               1
 media\nls\c_28591.nls                               1
 media\nls\c_28592.nls                               1
 media\nls\c_28593.nls                               1
@@ -511,6 +512,11 @@ media\nls\c_28596.nls                               1
 media\nls\c_28597.nls                               1
 media\nls\c_28598.nls                               1
 media\nls\c_28599.nls                               1
+media\nls\c_28600.nls                               1
+media\nls\c_28603.nls                               1
+media\nls\c_28604.nls                               1
+media\nls\c_28605.nls                               1
+media\nls\c_28606.nls                               1
 media\drivers\etc\services                          5
 media\inf\acpi.inf                                  6
 media\inf\cdrom.inf                                 6
