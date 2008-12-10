@@ -75,7 +75,7 @@ NTAPI
 KdPollBreakIn(VOID)
 {
     BOOLEAN DoBreak = FALSE;
-    ULONG Flags = 0;
+    ULONG_PTR Flags = 0;
 
     /* First make sure that KD is enabled */
     if (KdDebuggerEnabled)

@@ -173,7 +173,13 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->Processor = (USHORT)KeGetCurrentPrcb()->Number;
     WaitStateChange->NumberProcessors = (ULONG)KeNumberProcessors;
     WaitStateChange->Thread = (ULONG)(LONG_PTR)KeGetCurrentThread();
+#if defined(_M_X86_)
     WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Eip;
+#elif defined(_AMD64)
+    WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Rip;
+#else
+#error Unknown platform
+#endif
 
     /* Zero out the Control Report */
     RtlZeroMemory(&WaitStateChange->ControlReport,
@@ -189,7 +195,7 @@ KdpSetCommonState(IN ULONG NewState,
     /* Clear all the breakpoints in this region */
     HadBreakpoints =
         KdpDeleteBreakpointRange((PVOID)(LONG_PTR)WaitStateChange->ProgramCounter,
-                                 (PVOID)((ULONG)WaitStateChange->ProgramCounter +
+                                 (PVOID)((ULONG_PTR)WaitStateChange->ProgramCounter +
                                          WaitStateChange->ControlReport.InstructionCount - 1));
     if (HadBreakpoints)
     {
@@ -197,36 +203,6 @@ KdpSetCommonState(IN ULONG NewState,
         RtlCopyMemory(&WaitStateChange->ControlReport.InstructionStream[0],
                       (PVOID)(ULONG_PTR)WaitStateChange->ProgramCounter,
                       WaitStateChange->ControlReport.InstructionCount);
-    }
-}
-
-VOID
-NTAPI
-KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
-                   IN PCONTEXT Context)
-{
-    PKPRCB Prcb = KeGetCurrentPrcb();
-
-    /* Copy i386 specific debug registers */
-    WaitStateChange->ControlReport.Dr6 = Prcb->ProcessorState.SpecialRegisters.
-                                         KernelDr6;
-    WaitStateChange->ControlReport.Dr7 = Prcb->ProcessorState.SpecialRegisters.
-                                         KernelDr7;
-
-    /* Copy i386 specific segments */
-    WaitStateChange->ControlReport.SegCs = (USHORT)Context->SegCs;
-    WaitStateChange->ControlReport.SegDs = (USHORT)Context->SegDs;
-    WaitStateChange->ControlReport.SegEs = (USHORT)Context->SegEs;
-    WaitStateChange->ControlReport.SegFs = (USHORT)Context->SegFs;
-
-    /* Copy EFlags */
-    WaitStateChange->ControlReport.EFlags = Context->EFlags;
-
-    /* Set Report Flags */
-    WaitStateChange->ControlReport.ReportFlags = REPORT_INCLUDES_SEGS;
-    if (WaitStateChange->ControlReport.SegCs == KGDT_R0_CODE)
-    {
-        WaitStateChange->ControlReport.ReportFlags = REPORT_INCLUDES_CS;
     }
 }
 

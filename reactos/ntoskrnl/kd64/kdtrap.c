@@ -81,116 +81,6 @@ KdpReport(IN PKTRAP_FRAME TrapFrame,
 
 BOOLEAN
 NTAPI
-KdpTrap(IN PKTRAP_FRAME TrapFrame,
-        IN PKEXCEPTION_FRAME ExceptionFrame,
-        IN PEXCEPTION_RECORD ExceptionRecord,
-        IN PCONTEXT ContextRecord,
-        IN KPROCESSOR_MODE PreviousMode,
-        IN BOOLEAN SecondChanceException)
-{
-    BOOLEAN Unload = FALSE;
-    ULONG Eip, Eax;
-    BOOLEAN Status = FALSE;
-
-    /*
-     * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
-     * Load/Unload symbols.
-     */
-    if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
-        (ExceptionRecord->ExceptionInformation[0] != BREAKPOINT_BREAK))
-    {
-        /* Save EIP */
-        Eip = ContextRecord->Eip;
-
-        /* Check what kind of operation was requested from us */
-        switch (ExceptionRecord->ExceptionInformation[0])
-        {
-            /* DbgPrint */
-            case BREAKPOINT_PRINT:
-
-                /* Call the worker routine */
-                Eax = KdpPrint(ContextRecord->Ebx,
-                               ContextRecord->Edi,
-                               (LPSTR)ExceptionRecord->ExceptionInformation[1],
-                               (ULONG)ExceptionRecord->ExceptionInformation[2],
-                               PreviousMode,
-                               TrapFrame,
-                               ExceptionFrame,
-                               &Status);
-
-                /* Update the return value for the caller */
-                ContextRecord->Eax = Eax;
-                break;
-
-            /* DbgPrompt */
-            case BREAKPOINT_PROMPT:
-
-                /* Call the worker routine */
-                while (TRUE);
-                Eax = 0;
-                Status = TRUE;
-
-                /* Update the return value for the caller */
-                ContextRecord->Eax = Eax;
-                break;
-
-            /* DbgUnloadSymbols */
-            case BREAKPOINT_UNLOAD_SYMBOLS:
-
-                /* Drop into the load case below, with the unload parameter */
-                Unload = TRUE;
-
-            /* DbgLoadSymbols */
-            case BREAKPOINT_LOAD_SYMBOLS:
-
-                /* Call the worker routine */
-                KdpSymbol((PVOID)ExceptionRecord->ExceptionInformation[1],
-                          (PVOID)ExceptionRecord->ExceptionInformation[2],
-                          Unload,
-                          PreviousMode,
-                          ContextRecord,
-                          TrapFrame,
-                          ExceptionFrame);
-                Status = TRUE;
-                break;
-
-            /* DbgCommandString*/
-            case BREAKPOINT_COMMAND_STRING:
-
-                /* Call the worker routine */
-                while (TRUE);
-                Status = TRUE;
-
-            /* Anything else, do nothing */
-            default:
-
-                /* Get out */
-                break;
-        }
-
-        /*
-         * If EIP was not updated, we'll increment it ourselves so execution
-         * continues past the breakpoint.
-         */
-        if (ContextRecord->Eip == Eip) ContextRecord->Eip++;
-    }
-    else
-    {
-        /* Call the worker routine */
-        Status = KdpReport(TrapFrame,
-                           ExceptionFrame,
-                           ExceptionRecord,
-                           ContextRecord,
-                           PreviousMode,
-                           SecondChanceException);
-    }
-
-    /* Return TRUE or FALSE to caller */
-    return Status;
-}
-
-BOOLEAN
-NTAPI
 KdpStub(IN PKTRAP_FRAME TrapFrame,
         IN PKEXCEPTION_FRAME ExceptionFrame,
         IN PEXCEPTION_RECORD ExceptionRecord,
@@ -209,7 +99,13 @@ KdpStub(IN PKTRAP_FRAME TrapFrame,
          (ExceptionCommand == BREAKPOINT_PRINT)))
     {
         /* This we can handle: simply bump EIP */
+#if defined (_M_X86)
         ContextRecord->Eip++;
+#elif defined (_M_AMD64)
+        ContextRecord->Rip++;
+#else
+#error Unknown platform
+#endif
         return TRUE;
     }
     else if (KdPitchDebugger)

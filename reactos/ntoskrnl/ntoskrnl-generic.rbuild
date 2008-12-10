@@ -364,6 +364,16 @@
 			<file>kdlock.c</file>
 			<file>kdprint.c</file>
 			<file>kdtrap.c</file>
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>kd-i386.c</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>kd-amd64.c</file>
+				</directory>
+			</if>
 		</directory>
 	</if>
 	<directory name="lpc">

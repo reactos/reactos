@@ -328,6 +328,8 @@ DBGKD_GET_VERSION64 KdVersionBlock =
     DBGKD_VERS_FLAG_DATA,
 #if defined(_M_IX86)
     IMAGE_FILE_MACHINE_I386,
+#elif defined (_M_AMD64)
+    IMAGE_FILE_MACHINE_AMD64,
 #elif defined(_M_PPC)
     IMAGE_FILE_MACHINE_POWERPC,
 #elif defined(_M_MIPS)
@@ -348,26 +350,32 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
 {
     {{0}},
     0,
-    {PtrToUlong(RtlpBreakWithStatusInstruction)},
+    {(ULONG_PTR)RtlpBreakWithStatusInstruction},
     0,
     FIELD_OFFSET(KTHREAD, CallbackStack),
     CBSTACK_CALLBACK_STACK,
+#if defined(_M_X86)
     CBSTACK_EBP,
+#elif defined (_M_AMD64)
+    CBSTACK_RBP,
+#else
+#error Invalid architecture
+#endif
     0,
-    {PtrToUlong(KiCallUserMode)},
+    {(ULONG_PTR)KiCallUserMode},
     {0},
-    {PtrToUlong(&PsLoadedModuleList)},
-    {PtrToUlong(&PsActiveProcessHead)},
-    {PtrToUlong(&PspCidTable)},
-    {PtrToUlong(&ExpSystemResourcesList)},
+    {(ULONG_PTR)&PsLoadedModuleList},
+    {(ULONG_PTR)&PsActiveProcessHead},
+    {(ULONG_PTR)&PspCidTable},
+    {(ULONG_PTR)&ExpSystemResourcesList},
     {0},                                                        // ExpPagedPoolDescriptor
     {0},                                                        // ExpNumberOfPagedPools
-    {PtrToUlong(&KeTimeIncrement)},
-    {PtrToUlong(&KeBugcheckCallbackListHead)},
-    {PtrToUlong(KiBugCheckData)},
-    {PtrToUlong(&IopErrorLogListHead)},
-    {PtrToUlong(&ObpRootDirectoryObject)},
-    {PtrToUlong(&ObpTypeObjectType)},
+    {(ULONG_PTR)&KeTimeIncrement},
+    {(ULONG_PTR)&KeBugcheckCallbackListHead},
+    {(ULONG_PTR)KiBugCheckData},
+    {(ULONG_PTR)&IopErrorLogListHead},
+    {(ULONG_PTR)&ObpRootDirectoryObject},
+    {(ULONG_PTR)&ObpTypeObjectType},
     {0},                                                        // MmSystemCacheStart
     {0},                                                        // MmSystemCacheEnd
     {0},                                                        // MmSystemCacheWs
@@ -404,17 +412,17 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {0},                                                        // MmResidentAvailablePages
     {0},                                                        // PoolTrackTable
     {0},                                                        // NonPagedPoolDescriptor
-    {PtrToUlong(&MmHighestUserAddress)},
-    {PtrToUlong(&MmSystemRangeStart)},
-    {PtrToUlong(&MmUserProbeAddress)},
-    {PtrToUlong(KdPrintDefaultCircularBuffer)},
-    {PtrToUlong(KdPrintDefaultCircularBuffer + 1)},
-    {PtrToUlong(&KdPrintWritePointer)},
-    {PtrToUlong(&KdPrintRolloverCount)},
+    {(ULONG_PTR)&MmHighestUserAddress},
+    {(ULONG_PTR)&MmSystemRangeStart},
+    {(ULONG_PTR)&MmUserProbeAddress},
+    {(ULONG_PTR)KdPrintDefaultCircularBuffer},
+    {(ULONG_PTR)(KdPrintDefaultCircularBuffer + 1)},
+    {(ULONG_PTR)&KdPrintWritePointer},
+    {(ULONG_PTR)&KdPrintRolloverCount},
     {0},                                                        // MmLoadedUserImageList
-    {PtrToUlong(&NtBuildLab)},
+    {(ULONG_PTR)&NtBuildLab},
     {0},
-    {PtrToUlong(KiProcessorBlock)},
+    {(ULONG_PTR)KiProcessorBlock},
     {0},                                                        // MmUnloadedDrivers
     {0},                                                        // MmLastUnloadedDrivers
     {0},                                                        // MmTriageActionTaken
@@ -424,7 +432,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {0},                                                        // MmAllocatedNonPagedPool
     {0},                                                        // MmPeakCommitment
     {0},                                                        // MmtotalCommitLimitMaximum
-    {PtrToUlong(&CmNtCSDVersion)},
+    {(ULONG_PTR)&CmNtCSDVersion},
     {0},                                                        // MmPhysicalMemoryBlock
     {0},                                                        // MmSessionBase
     {0},                                                        // MmSessionSize
@@ -451,18 +459,31 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     FIELD_OFFSET(KPRCB, ProcessorState.ContextFrame),
     FIELD_OFFSET(KPRCB, Number),
     sizeof(ETHREAD),
-    {PtrToUlong(KdPrintDefaultCircularBuffer)},
-    {PtrToUlong(&KdPrintBufferSize)},
-    {PtrToUlong(&KeLoaderBlock)},
+    {(ULONG_PTR)KdPrintDefaultCircularBuffer},
+    {(ULONG_PTR)&KdPrintBufferSize},
+    {(ULONG_PTR)&KeLoaderBlock},
     sizeof(KIPCR) + sizeof(KPRCB),
     FIELD_OFFSET(KIPCR, Self),
+#if defined(_M_X86)
     FIELD_OFFSET(KPCR, Prcb),
+#elif defined(_M_AMD64)
+    FIELD_OFFSET(KPCR, CurrentPrcb),
+#else
+ #error Invalid architecture
+#endif
+#if defined(_M_X86)
     FIELD_OFFSET(KIPCR, PrcbData),
+#elif defined(_M_AMD64)
+    FIELD_OFFSET(KIPCR, Prcb),
+#else
+ #error Invalid architecture
+#endif
     0,
     0,
     0,
     0,
     0,
+#if defined(_M_X86)
     FIELD_OFFSET(KIPCR, PrcbData) +
     FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
     KGDT_R0_CODE,
@@ -473,6 +494,20 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     KGDT_R3_TEB,
     KGDT_LDT,
     KGDT_TSS,
+#elif defined(_M_AMD64)
+    FIELD_OFFSET(KIPCR, Prcb) +
+    FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
+    KGDT_64_R0_CODE,
+    KGDT_64_DATA,
+    KGDT_64_DATA,
+    KGDT_64_R3_CODE,
+    KGDT_64_DATA,
+    KGDT_64_DATA,
+    0,
+    KGDT_TSS,
+#else
+ #error Invalid architecture
+#endif
     0,
     0,
     {0},                                                        // IopNumTriagDumpDataBlocks

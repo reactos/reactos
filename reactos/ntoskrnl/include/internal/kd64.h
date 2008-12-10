@@ -244,6 +244,20 @@ KdpAddBreakpoint(
     IN PVOID Address
 );
 
+VOID
+NTAPI
+KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
+                   IN PCONTEXT Context);
+
+BOOLEAN
+NTAPI
+KdpReport(IN PKTRAP_FRAME TrapFrame,
+          IN PKEXCEPTION_FRAME ExceptionFrame,
+          IN PEXCEPTION_RECORD ExceptionRecord,
+          IN PCONTEXT ContextRecord,
+          IN KPROCESSOR_MODE PreviousMode,
+          IN BOOLEAN SecondChanceException);
+
 //
 // Global KD Data
 //

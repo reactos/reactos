@@ -133,7 +133,7 @@ KdInitSystem(IN ULONG BootPhase,
                                      InLoadOrderLinks);
 
         /* Save the Kernel Base */
-        PsNtosImageBase = (ULONG)LdrEntry->DllBase;
+        PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
         KdVersionBlock.KernBase = (ULONGLONG)(LONG_PTR)LdrEntry->DllBase;
 
         /* Check if we have a command line */
