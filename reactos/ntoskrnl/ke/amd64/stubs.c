@@ -168,3 +168,14 @@ ExpInterlockedFlushSList(
     UNIMPLEMENTED;
     return NULL;
 }
+
+NTSTATUS
+NTAPI
+KiCallUserMode(
+    IN PVOID *OutputBuffer,
+    IN PULONG OutputLength)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
