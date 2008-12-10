@@ -43,7 +43,7 @@
 <!--
 	Whether to compile in the integrated kernel debugger.
 -->
-<property name="KDBG" value="1" />
+<property name="KDBG" value="0" />
 
 
 <!--
@@ -75,7 +75,7 @@
 	TinyKRNL. Booting into debug mode with this flag enabled will result in a
 	failure to enter GUI mode. Do not enable unless you know what you're doing.
 -->
-<property name="_WINKD_" value="0" />
+<property name="_WINKD_" value="1" />
 
 <!--
 	Whether to compile support for ELF files. Do not enable unless you know what
