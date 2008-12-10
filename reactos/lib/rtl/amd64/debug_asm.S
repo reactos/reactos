@@ -44,10 +44,11 @@ _RtlpBreakWithStatusInstruction:
 
 .func DebugService2
 _DebugService2:
+    ret
     /* Call the interrupt */
 //    mov eax, [rbp+8]
 //    int 0x2D
-    int 3
+//    int 3
 
 .endfunc
 
@@ -62,27 +63,17 @@ _DebugService2:
 .func DebugService
 _DebugService:
 
-    /* Save the registers */
-    push rbx
-    push rcx
-    push rdx
-    push rsi
-    push rdi
- 
-    /* Load Argument 2 in rax */
-    mov rax, [rsp + 48 + 40]
+    /* Prepare registers for interrupt */
+    mov eax, ecx       // Service
+    mov rcx, rdx       // Buffer
+    mov edx, r8d       // Length
+    mov r8, r9         // Argument1
+    mov r9, [rsp + 40] // Argument2
 
     /* Call the Interrupt */
     int 0x2D
     int 3
 
-    /* Restore registers */
-    pop rdi
-    pop rsi
-    pop rdx
-    pop rcx
-    pop rbx
-
-    /* Return */
+   /* Return */
     ret
 .endfunc
