@@ -73,12 +73,12 @@ _MsgUnexpectedInterrupt:
     mov [rbp + KTRAP_FRAME_R11], r11
 
     /* Save xmm registers */
-    movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
-    movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
-    movdqa [rbp + KTRAP_FRAME_Xmm2], xmm2
-    movdqa [rbp + KTRAP_FRAME_Xmm3], xmm3
-    movdqa [rbp + KTRAP_FRAME_Xmm4], xmm4
-    movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
+//    movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
+//    movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
+//    movdqa [rbp + KTRAP_FRAME_Xmm2], xmm2
+//    movdqa [rbp + KTRAP_FRAME_Xmm3], xmm3
+//    movdqa [rbp + KTRAP_FRAME_Xmm4], xmm4
+//    movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
 .endif
 
     /* Save segment selectors */
@@ -163,12 +163,12 @@ _MsgUnexpectedInterrupt:
     mov r11, [rbp + KTRAP_FRAME_R11]
 
     /* Restore xmm registers */
-    movdqa xmm0, [rbp + KTRAP_FRAME_Xmm0]
-    movdqa xmm1, [rbp + KTRAP_FRAME_Xmm1]
-    movdqa xmm2, [rbp + KTRAP_FRAME_Xmm2]
-    movdqa xmm3, [rbp + KTRAP_FRAME_Xmm3]
-    movdqa xmm4, [rbp + KTRAP_FRAME_Xmm4]
-    movdqa xmm5, [rbp + KTRAP_FRAME_Xmm5]
+//    movdqa xmm0, [rbp + KTRAP_FRAME_Xmm0]
+//    movdqa xmm1, [rbp + KTRAP_FRAME_Xmm1]
+//    movdqa xmm2, [rbp + KTRAP_FRAME_Xmm2]
+//    movdqa xmm3, [rbp + KTRAP_FRAME_Xmm3]
+//    movdqa xmm4, [rbp + KTRAP_FRAME_Xmm4]
+//    movdqa xmm5, [rbp + KTRAP_FRAME_Xmm5]
 .endif
 
     /* Restore rbp */
@@ -257,8 +257,7 @@ _MsgUnexpectedInterrupt:
     lea rax, _FrLdrDbgPrint[rip]
     call [rax]
 
-    mov rcx, gs:[KPCR_PRCB + KPRCB_CurrentThread]
-    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, rcx, 0
+    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
 
     /* Return */
     LEAVE_TRAP_FRAME
@@ -469,37 +468,18 @@ _MsgUnexpectedInterrupt:
     push 0
     .allocstack 0x08
 
-    push rax
-    .pushreg rax
-    push rcx
-    .pushreg rcx
-    push rdx
-    .pushreg rdx
-    push r8
-    .pushreg r8
-    push r9
-    .pushreg r9
+    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
 
-    /* Create stack space for parameters */
-    sub rsp, 0x18
-    .allocstack 0x18
+    /* Increase Rip to skip the int3 */
+    inc qword ptr [rbp + KTRAP_FRAME_Rip]
 
-    /* just forward first 3 parameters */
-    call _KdpServiceDispatcher
+    /* Call KiDispatchException */
+    mov r8, [ebp+KTRAP_FRAME_Rax] // Service
+    mov rcx, [ebp+KTRAP_FRAME_Rcx] // Buffer
+    mov rdx, [ebp+KTRAP_FRAME_Rdx] // Length
+    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, r8, rcx, rdx
 
-    /* Skip the int 3, increment return rip */
-    inc qword ptr [rsp + 0x18 + 48]
-
-    /* Cleanup */
-    add rsp, 0x18
-
-    pop r9
-    pop r8
-    pop rdx
-    pop rcx
-    pop rax
-
-    add rsp, 8
+    LEAVE_TRAP_FRAME;
     iretq
 .endproc
 
