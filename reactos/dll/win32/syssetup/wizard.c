@@ -14,7 +14,6 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
-#include <tchar.h>
 #include <string.h>
 #include <setupapi.h>
 #include <pseh/pseh2.h>
@@ -71,12 +70,12 @@ RunVMWInstall(HWND hWnd)
   PROCESS_INFORMATION ProcInfo;
   MSG msg;
   DWORD ret;
-  STARTUPINFO si = {0};
+  STARTUPINFOW si = {0};
   WCHAR InstallName[] = L"vmwinst.exe";
 
   si.cb = sizeof(STARTUPINFO);
 
-  if(CreateProcess(NULL, InstallName, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
+  if(CreateProcessW(NULL, InstallName, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
                    NULL, NULL, &si, &ProcInfo))
   {
     EnableWindow(hWnd, FALSE);
@@ -132,13 +131,13 @@ CenterWindow(HWND hWnd)
 static HFONT
 CreateTitleFont(VOID)
 {
-  NONCLIENTMETRICS ncm;
+  NONCLIENTMETRICSW ncm;
   LOGFONTW LogFont;
   HDC hdc;
   INT FontSize;
   HFONT hFont;
 
-  ncm.cbSize = sizeof(NONCLIENTMETRICS);
+  ncm.cbSize = sizeof(NONCLIENTMETRICSW);
   SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
 
   LogFont = ncm.lfMessageFont;
@@ -171,7 +170,7 @@ GplDlgProc(HWND hwndDlg,
   switch (uMsg)
     {
       case WM_INITDIALOG:
-        GplTextResource = FindResource(hDllInstance, MAKEINTRESOURCE(IDR_GPL), _T("RT_TEXT"));
+        GplTextResource = FindResourceW(hDllInstance, MAKEINTRESOURCE(IDR_GPL), L"RT_TEXT");
         if (NULL == GplTextResource)
           {
             break;
@@ -323,7 +322,7 @@ AckPageDlgProc(HWND hwndDlg,
                 {
                   return FALSE;
                 }
-              ProjectsCount =  LoadString(hDllInstance, IDS_ACKPROJECTS, Projects, ProjectsSize);
+              ProjectsCount =  LoadStringW(hDllInstance, IDS_ACKPROJECTS, Projects, ProjectsSize);
               if (0 == ProjectsCount)
                 {
                   HeapFree(GetProcessHeap(), 0, Projects);
@@ -401,16 +400,16 @@ AckPageDlgProc(HWND hwndDlg,
 
 static
 BOOL
-WriteOwnerSettings(TCHAR * OwnerName,
-                   TCHAR * OwnerOrganization)
+WriteOwnerSettings(WCHAR * OwnerName,
+                   WCHAR * OwnerOrganization)
 {
   HKEY hKey;
   LONG res;
 
 
 
-  res = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     _T("Software\\Microsoft\\Windows NT\\CurrentVersion"),
+  res = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                     L"Software\\Microsoft\\Windows NT\\CurrentVersion",
                      0,
                      KEY_ALL_ACCESS,
                      &hKey);
@@ -420,12 +419,12 @@ WriteOwnerSettings(TCHAR * OwnerName,
       return FALSE;
     }
 
-  res = RegSetValueEx(hKey,
-                      _T("RegisteredOwner"),
+  res = RegSetValueExW(hKey,
+                      L"RegisteredOwner",
                       0,
                       REG_SZ,
                       (LPBYTE)OwnerName,
-                      (_tcslen(OwnerName) + 1) * sizeof(TCHAR));
+                      (wcslen(OwnerName) + 1) * sizeof(WCHAR));
 
   if (res != ERROR_SUCCESS)
     {
@@ -433,12 +432,12 @@ WriteOwnerSettings(TCHAR * OwnerName,
       return FALSE;
     }
 
-  res = RegSetValueEx(hKey,
-                      _T("RegisteredOrganization"),
+  res = RegSetValueExW(hKey,
+                      L"RegisteredOrganization",
                       0,
                       REG_SZ,
                       (LPBYTE)OwnerOrganization,
-                      (_tcslen(OwnerOrganization) + 1) * sizeof(TCHAR));
+                      (wcslen(OwnerOrganization) + 1) * sizeof(WCHAR));
 
   RegCloseKey(hKey);
   return (res == ERROR_SUCCESS);
@@ -450,8 +449,8 @@ OwnerPageDlgProc(HWND hwndDlg,
                  WPARAM wParam,
                  LPARAM lParam)
 {
-  TCHAR OwnerName[51];
-  TCHAR OwnerOrganization[51];
+  WCHAR OwnerName[51];
+  WCHAR OwnerOrganization[51];
   WCHAR Title[64];
   WCHAR ErrorName[256];
   LPNMHDR lpnm;
@@ -492,7 +491,7 @@ OwnerPageDlgProc(HWND hwndDlg,
 
               case PSN_WIZNEXT:
                 OwnerName[0] = 0;
-                if (GetDlgItemText(hwndDlg, IDC_OWNERNAME, OwnerName, 50) == 0)
+                if (GetDlgItemTextW(hwndDlg, IDC_OWNERNAME, OwnerName, 50) == 0)
                 {
                   if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
                   {
@@ -502,7 +501,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                   {
                     wcscpy(ErrorName, L"Setup cannot continue until you enter your name.");
                   }
-                  MessageBox(hwndDlg, ErrorName, Title, MB_ICONERROR | MB_OK);
+                  MessageBoxW(hwndDlg, ErrorName, Title, MB_ICONERROR | MB_OK);
 
                   SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
@@ -538,11 +537,11 @@ OwnerPageDlgProc(HWND hwndDlg,
 }
 static
 BOOL
-WriteComputerSettings(TCHAR * ComputerName, HWND hwndDlg)
+WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
 {
   WCHAR Title[64];
   WCHAR ErrorComputerName[256];
-  if (!SetComputerName(ComputerName))
+  if (!SetComputerNameW(ComputerName))
     {
       if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
       {
@@ -559,7 +558,7 @@ WriteComputerSettings(TCHAR * ComputerName, HWND hwndDlg)
     }
 
   /* Try to also set DNS hostname */
-  SetComputerNameEx(ComputerNamePhysicalDnsHostname, ComputerName);
+  SetComputerNameExW(ComputerNamePhysicalDnsHostname, ComputerName);
 
   return TRUE;
 }
@@ -570,9 +569,9 @@ ComputerPageDlgProc(HWND hwndDlg,
                     WPARAM wParam,
                     LPARAM lParam)
 {
-  TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-  TCHAR Password1[15];
-  TCHAR Password2[15];
+  WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+  WCHAR Password1[15];
+  WCHAR Password2[15];
   PWCHAR Password;
   WCHAR Title[64];
   WCHAR EmptyComputerName[256], NotMatchPassword[256], WrongPassword[256];
@@ -590,10 +589,10 @@ ComputerPageDlgProc(HWND hwndDlg,
         {
           /* Retrieve current computer name */
           Length = MAX_COMPUTERNAME_LENGTH + 1;
-          GetComputerName(ComputerName, &Length);
+          GetComputerNameW(ComputerName, &Length);
 
           /* Display current computer name */
-          SetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName);
+          SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName);
 
           /* Set text limits */
           SendDlgItemMessage(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, 64, 0);
@@ -630,7 +629,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                 break;
 
               case PSN_WIZNEXT:
-                if (GetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName, 64) == 0)
+                if (GetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName, 64) == 0)
                 {
                   if (0 == LoadStringW(hDllInstance, IDS_WZD_COMPUTERNAME, EmptyComputerName,
                                        sizeof(EmptyComputerName) / sizeof(EmptyComputerName[0])))
@@ -668,11 +667,11 @@ ComputerPageDlgProc(HWND hwndDlg,
                   return TRUE;
                 }
 #else
-                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
-                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
+                GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
+                GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
 #endif
                 /* Check if passwords match */
-                if (_tcscmp(Password1, Password2))
+                if (wcscmp(Password1, Password2))
                 {
                   if (0 == LoadStringW(hDllInstance, IDS_WZD_PASSWORDMATCH, NotMatchPassword,
                                        sizeof(NotMatchPassword) / sizeof(NotMatchPassword[0])))
@@ -894,7 +893,7 @@ LocalePageDlgProc(HWND hwndDlg,
                     WCHAR szPath[MAX_PATH];
                     if (GetRosInstallCD(szPath, MAX_PATH))
                       {
-                        wsprintf(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"%s\\reactos\\unattend.inf\"", szPath);
+                        swprintf(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"%S\\reactos\\unattend.inf\"", szPath);
                       }
                     else
                       {
@@ -949,7 +948,7 @@ GetLargerTimeZoneEntry(PSETUPDATA SetupData, DWORD Index)
 static VOID
 CreateTimeZoneList(PSETUPDATA SetupData)
 {
-  TCHAR szKeyName[256];
+  WCHAR szKeyName[256];
   DWORD dwIndex;
   DWORD dwNameSize;
   DWORD dwValueSize;
@@ -960,8 +959,8 @@ CreateTimeZoneList(PSETUPDATA SetupData)
   PTIMEZONE_ENTRY Entry;
   PTIMEZONE_ENTRY Current;
 
-  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		   _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"),
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		   L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
 		   0,
 		   KEY_ALL_ACCESS,
 		   &hZonesKey))
@@ -970,8 +969,8 @@ CreateTimeZoneList(PSETUPDATA SetupData)
   dwIndex = 0;
   while (TRUE)
     {
-      dwNameSize = 256 * sizeof(TCHAR);
-      lError = RegEnumKeyEx(hZonesKey,
+      dwNameSize = 256 * sizeof(WCHAR);
+      lError = RegEnumKeyExW(hZonesKey,
 			    dwIndex,
 			    szKeyName,
 			    &dwNameSize,
@@ -982,7 +981,7 @@ CreateTimeZoneList(PSETUPDATA SetupData)
       if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
 	break;
 
-      if (RegOpenKeyEx(hZonesKey,
+      if (RegOpenKeyExW(hZonesKey,
 		       szKeyName,
 		       0,
 		       KEY_ALL_ACCESS,
@@ -997,8 +996,8 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	}
 
       dwValueSize = 64 * sizeof(TCHAR);
-      if (RegQueryValueEx(hZoneKey,
-			  _T("Display"),
+      if (RegQueryValueExW(hZoneKey,
+			  L"Display",
 			  NULL,
 			  NULL,
 			  (LPBYTE)&Entry->Description,
@@ -1009,8 +1008,8 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	}
 
       dwValueSize = 32 * sizeof(TCHAR);
-      if (RegQueryValueEx(hZoneKey,
-			  _T("Std"),
+      if (RegQueryValueExW(hZoneKey,
+			  L"Std",
 			  NULL,
 			  NULL,
 			  (LPBYTE)&Entry->StandardName,
@@ -1021,8 +1020,8 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	}
 
       dwValueSize = 32 * sizeof(WCHAR);
-      if (RegQueryValueEx(hZoneKey,
-			  _T("Dlt"),
+      if (RegQueryValueExW(hZoneKey,
+			  L"Dlt",
 			  NULL,
 			  NULL,
 			  (LPBYTE)&Entry->DaylightName,
@@ -1033,8 +1032,8 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	}
 
       dwValueSize = sizeof(DWORD);
-      if (RegQueryValueEx(hZoneKey,
-			  _T("Index"),
+      if (RegQueryValueExW(hZoneKey,
+			  L"Index",
 			  NULL,
 			  NULL,
 			  (LPBYTE)&Entry->Index,
@@ -1045,8 +1044,8 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 	}
 
       dwValueSize = sizeof(TZ_INFO);
-      if (RegQueryValueEx(hZoneKey,
-			  _T("TZI"),
+      if (RegQueryValueExW(hZoneKey,
+			  L"TZI",
 			  NULL,
 			  NULL,
 			  (LPBYTE)&Entry->TimezoneInfo,
@@ -1129,26 +1128,26 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
 static BOOL
 GetTimeZoneListIndex(LPDWORD lpIndex)
 {
-  TCHAR szLanguageIdString[9];
+  WCHAR szLanguageIdString[9];
   HKEY hKey;
   DWORD dwValueSize;
   DWORD Length;
-  LPTSTR Buffer;
-  LPTSTR Ptr;
-  LPTSTR End;
+  LPWSTR Buffer;
+  LPWSTR Ptr;
+  LPWSTR End;
   BOOL bFound = FALSE;
   unsigned long iLanguageID;
 
-  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		   _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"),
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		   L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
 		   0,
 		   KEY_ALL_ACCESS,
 		   &hKey))
     return FALSE;
 
   dwValueSize = 9 * sizeof(TCHAR);
-  if (RegQueryValueEx(hKey,
-		      _T("Default"),
+  if (RegQueryValueExW(hKey,
+		      L"Default",
 		      NULL,
 		      NULL,
 		      (LPBYTE)szLanguageIdString,
@@ -1158,19 +1157,19 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
       return FALSE;
     }
 
-  iLanguageID = _tcstoul(szLanguageIdString, NULL, 16);
+  iLanguageID = wcstoul(szLanguageIdString, NULL, 16);
   RegCloseKey(hKey);
 
-  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		   _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"),
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		   L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
 		   0,
 		   KEY_ALL_ACCESS,
 		   &hKey))
     return FALSE;
 
   dwValueSize = 0;
-  if (RegQueryValueEx(hKey,
-		      _T("IndexMapping"),
+  if (RegQueryValueExW(hKey,
+		      L"IndexMapping",
 		      NULL,
 		      NULL,
 		      NULL,
@@ -1187,8 +1186,8 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
       return FALSE;
     }
 
-  if (RegQueryValueEx(hKey,
-		      _T("IndexMapping"),
+  if (RegQueryValueExW(hKey,
+		      L"IndexMapping",
 		      NULL,
 		      NULL,
 		      (LPBYTE)Buffer,
@@ -1204,8 +1203,8 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
   Ptr = Buffer;
   while (*Ptr != 0)
     {
-      Length = _tcslen(Ptr);
-      if (_tcstoul(Ptr, NULL, 16) == iLanguageID)
+      Length = wcslen(Ptr);
+      if (wcstoul(Ptr, NULL, 16) == iLanguageID)
         bFound = TRUE;
 
       Ptr = Ptr + Length + 1;
@@ -1214,12 +1213,12 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
 
       if (bFound)
         {
-          *lpIndex = _tcstoul(Ptr, &End, 10);
+          *lpIndex = wcstoul(Ptr, &End, 10);
           HeapFree(GetProcessHeap(), 0, Buffer);
           return TRUE;
         }
 
-      Length = _tcslen(Ptr);
+      Length = wcslen(Ptr);
       Ptr = Ptr + Length + 1;
     }
 
@@ -1283,9 +1282,9 @@ SetLocalTimeZone(HWND hwnd, PSETUPDATA SetupData)
       Entry = Entry->Next;
     }
 
-  _tcscpy(TimeZoneInformation.StandardName,
+  wcscpy(TimeZoneInformation.StandardName,
 	  Entry->StandardName);
-  _tcscpy(TimeZoneInformation.DaylightName,
+  wcscpy(TimeZoneInformation.DaylightName,
 	  Entry->DaylightName);
 
   TimeZoneInformation.Bias = Entry->TimezoneInfo.Bias;
@@ -2028,38 +2027,38 @@ BOOL
 ProcessUnattendInf(HINF hUnattendedInf)
 {
   INFCONTEXT InfContext;
-  TCHAR szName[256];
-  TCHAR szValue[MAX_PATH];
+  WCHAR szName[256];
+  WCHAR szValue[MAX_PATH];
   DWORD LineLength;
   HKEY hKey;
 
-  if (!SetupFindFirstLine(hUnattendedInf,
-              _T("Unattend"),
-              _T("UnattendSetupEnabled"),
+  if (!SetupFindFirstLineW(hUnattendedInf,
+              L"Unattend",
+              L"UnattendSetupEnabled",
               &InfContext))
     {
       DPRINT1("Error: Cant find UnattendSetupEnabled Key! %d\n", GetLastError());
       return FALSE;
     }
 
-   if (!SetupGetStringField(&InfContext,
+   if (!SetupGetStringFieldW(&InfContext,
                1,
                szValue,
-               sizeof(szValue) / sizeof(TCHAR),
+               sizeof(szValue) / sizeof(WCHAR),
                &LineLength))
     {
       DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
       return FALSE;
     }
 
-  if (_tcscmp(szValue, _T("yes")) != 0)
+  if (wcscmp(szValue, L"yes") != 0)
     {
       DPRINT("Unattend setup was disabled by UnattendSetupEnabled key.\n");
       return FALSE;
     }
 
-  if (!SetupFindFirstLine(hUnattendedInf,
-              _T("Unattend"),
+  if (!SetupFindFirstLineW(hUnattendedInf,
+              L"Unattend",
               NULL,
               &InfContext))
     {
@@ -2070,79 +2069,79 @@ ProcessUnattendInf(HINF hUnattendedInf)
 
   do
   {
-    if (!SetupGetStringField(&InfContext,
+    if (!SetupGetStringFieldW(&InfContext,
                  0,
                  szName,
-                 sizeof(szName) / sizeof(TCHAR),
+                 sizeof(szName) / sizeof(WCHAR),
                  &LineLength))
       {
         DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
         return FALSE;
       }
 
-    if (!SetupGetStringField(&InfContext,
+    if (!SetupGetStringFieldW(&InfContext,
                  1,
                  szValue,
-                 sizeof(szValue) / sizeof(TCHAR),
+                 sizeof(szValue) / sizeof(WCHAR),
                  &LineLength))
       {
         DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
         return FALSE;
       }
     DPRINT1("Name %S Value %S\n",szName, szValue);
-    if (!_tcscmp(szName, _T("FullName")))
+    if (!wcscmp(szName, L"FullName"))
       {
         if ((sizeof(SetupData.OwnerName) / sizeof(TCHAR)) > LineLength)
           {
-            _tcscpy(SetupData.OwnerName, szValue);
+            wcscpy(SetupData.OwnerName, szValue);
           }
       }
-    else if (!_tcscmp(szName, _T("OrgName")))
+    else if (!wcscmp(szName, L"OrgName"))
       {
-        if ((sizeof(SetupData.OwnerOrganization) / sizeof(TCHAR)) > LineLength)
+        if ((sizeof(SetupData.OwnerOrganization) / sizeof(WCHAR)) > LineLength)
           {
-            _tcscpy(SetupData.OwnerOrganization, szValue);
+            wcscpy(SetupData.OwnerOrganization, szValue);
           }
       }
-    else if (!_tcscmp(szName, _T("ComputerName")))
+    else if (!wcscmp(szName, L"ComputerName"))
       {
-        if ((sizeof(SetupData.ComputerName) / sizeof(TCHAR)) > LineLength)
+        if ((sizeof(SetupData.ComputerName) / sizeof(WCHAR)) > LineLength)
         {
-          _tcscpy(SetupData.ComputerName, szValue);
+          wcscpy(SetupData.ComputerName, szValue);
         }
     }
-    else if (!_tcscmp(szName, _T("AdminPassword")))
+    else if (!wcscmp(szName, L"AdminPassword"))
       {
-        if ((sizeof(SetupData.AdminPassword) / sizeof(TCHAR)) > LineLength)
+        if ((sizeof(SetupData.AdminPassword) / sizeof(WCHAR)) > LineLength)
           {
-            _tcscpy(SetupData.AdminPassword, szValue);
+            wcscpy(SetupData.AdminPassword, szValue);
           }
       }
-    else if (!_tcscmp(szName, _T("TimeZoneIndex")))
+    else if (!wcscmp(szName, L"TimeZoneIndex"))
       {
-        SetupData.TimeZoneIndex = _ttoi(szValue);
+        SetupData.TimeZoneIndex = _wtoi(szValue);
       }
-    else if (!_tcscmp(szName, _T("DisableAutoDaylightTimeSet")))
+    else if (!wcscmp(szName, L"DisableAutoDaylightTimeSet"))
       {
-        SetupData.DisableAutoDaylightTimeSet = _ttoi(szValue);
+        SetupData.DisableAutoDaylightTimeSet = _wtoi(szValue);
       }
-    else if (!_tcscmp(szName, _T("DisableVmwInst")))
+    else if (!wcscmp(szName, L"DisableVmwInst"))
       {
-        if(!_tcscmp(szValue, _T("yes")))
+        if(!wcscmp(szValue, L"yes"))
             SetupData.DisableVmwInst = 1;
         else
             SetupData.DisableVmwInst = 0;
       }
-    else if (!_tcscmp(szName, _T("BootCDRegTestActive")))
+    else if (!wcscmp(szName, L"BootCDRegTestActive"))
       {
-        SetupData.BootCDRegtestActive = _ttoi(szValue);
+        SetupData.BootCDRegtestActive = _wtoi(szValue);
       }
 
   }
   while (SetupFindNextLine(&InfContext, &InfContext));
 
-  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                        _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce"),
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
                         0,
                         KEY_SET_VALUE,
                         &hKey) != ERROR_SUCCESS)
@@ -2152,8 +2151,8 @@ ProcessUnattendInf(HINF hUnattendedInf)
     }
 
 
-  if (SetupFindFirstLine(hUnattendedInf,
-                         _T("GuiRunOnce"),
+  if (SetupFindFirstLineW(hUnattendedInf,
+                         L"GuiRunOnce",
                          NULL,
                          &InfContext))
     {
@@ -2161,25 +2160,25 @@ ProcessUnattendInf(HINF hUnattendedInf)
       int i = 0;
       do
       {
-        if(SetupGetStringField(&InfContext,
+        if(SetupGetStringFieldW(&InfContext,
                                0,
                                szValue,
-                               sizeof(szValue) / sizeof(TCHAR),
+                               sizeof(szValue) / sizeof(WCHAR),
                                NULL))
           {
-            TCHAR szPath[MAX_PATH];
-            _stprintf(szName, _T("%d"), i);
+            WCHAR szPath[MAX_PATH];
+            swprintf(szName, L"%d", i);
             DPRINT("szName %S szValue %S\n", szName, szValue);
 
-           if (ExpandEnvironmentStrings(szValue, szPath, MAX_PATH))
+           if (ExpandEnvironmentStringsW(szValue, szPath, MAX_PATH))
              {
                DPRINT("value %S\n", szPath);
-               if (RegSetValueEx(hKey,
+               if (RegSetValueExW(hKey,
                                  szName,
                                  0,
                                  REG_SZ,
                                  (const BYTE*)szPath,
-                                 (_tcslen(szPath)+1) * sizeof(TCHAR)) == ERROR_SUCCESS)
+                                 (wcslen(szPath)+1) * sizeof(WCHAR)) == ERROR_SUCCESS)
                  {
                    i++;
                  }
@@ -2272,7 +2271,7 @@ GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength)
   for (dwIndex = 0; dwIndex < dwLength; dwIndex++)
   {
     szDrive[0] = pDrive[dwIndex];
-    if (GetDriveType(szDrive) == DRIVE_CDROM)
+    if (GetDriveTypeW(szDrive) == DRIVE_CDROM)
     {
         WCHAR szBuffer[MAX_PATH];
         wcscpy(szBuffer, szDrive);
