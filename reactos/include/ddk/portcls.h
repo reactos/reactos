@@ -1409,8 +1409,34 @@ typedef IPortEvents *PPORTEVENTS;
     These are almost identical, except for the addition of two extra methods.
 */
 
-#define DEFINE_ABSTRACT_DRMPORT()
-/* TODO */
+#undef INTERFACE
+#define INTERFACE IDrmPort
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+DEFINE_GUID(IID_IDrmPort, 0x286D3DF8L, 0xCA22, 0x4E2E, 0xB9, 0xBC, 0x20, 0xB4, 0xF0, 0xE2, 0x01, 0xCE);
+#endif
+
+#define DEFINE_ABSTRACT_DRMPORT()                          \
+    STDMETHOD_(NTSTATUS,CreateContentMixed)(THIS_          \
+        IN  PULONG paContentId,                            \
+        IN  ULONG cContentId,                              \
+        OUT PULONG pMixedContentId)PURE;                   \
+                                                           \
+    STDMETHOD_(NTSTATUS,DestroyContent)(THIS_              \
+        IN ULONG ContentId)PURE;                           \
+                                                           \
+    STDMETHOD_(NTSTATUS,ForwardContentToFileObject)(THIS_  \
+        IN ULONG        ContentId,                         \
+        IN PFILE_OBJECT FileObject)PURE;                   \
+                                                           \
+    STDMETHOD_(NTSTATUS,ForwardContentToInterface)(THIS_   \
+        IN ULONG ContentId,                                \
+        IN PUNKNOWN pUnknown,                              \
+        IN ULONG NumMethods)PURE;                          \
+                                                           \
+    STDMETHOD_(NTSTATUS,GetContentRights)(THIS_            \
+        IN  ULONG ContentId,                               \
+        OUT PDRMRIGHTS  DrmRights)PURE;
 
 DECLARE_INTERFACE_(IDrmPort, IUnknown)
 {
@@ -1420,15 +1446,45 @@ DECLARE_INTERFACE_(IDrmPort, IUnknown)
 
 typedef IDrmPort *PDRMPORT;
 
-/* TODO */
+/* ===============================================================
+    IDrmPort2 Interface
+*/
 
+#undef INTERFACE
+#define INTERFACE IDrmPort2
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+DEFINE_GUID(IID_IDrmPort2, 0x1ACCE59CL, 0x7311, 0x4B6B, 0x9F, 0xBA, 0xCC, 0x3B, 0xA5, 0x9A, 0xCD, 0xCE);
+#endif
+
+DECLARE_INTERFACE_(IDrmPort2, IDrmPort)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_DRMPORT()
+
+    STDMETHOD_(NTSTATUS,AddContentHandlers)(THIS_
+        IN ULONG ContentId,
+        IN PVOID * paHandlers,
+        IN ULONG NumHandlers)PURE;
+
+    STDMETHOD_(NTSTATUS,ForwardContentToDeviceObject)(THIS_
+        IN ULONG ContentId,
+        IN PVOID Reserved,
+        IN PCDRMFORWARD DrmForward)PURE;
+};
+
+typedef IDrmPort2 *PDRMPORT2;
 
 /* ===============================================================
     IPortClsVersion Interface
 */
+#undef INTERFACE
+#define INTERFACE IPortClsVersion
 
 DECLARE_INTERFACE_(IPortClsVersion, IUnknown)
 {
+    DEFINE_ABSTRACT_UNKNOWN()
+
     STDMETHOD_(DWORD, GetVersion)(THIS) PURE;
 };
 
