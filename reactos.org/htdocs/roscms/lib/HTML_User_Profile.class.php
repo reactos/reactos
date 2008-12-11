@@ -148,6 +148,7 @@ class HTML_User_Profile extends HTML_User
   private function profile( $user_id )
   {
     $thisuser = &ThisUser::getInstance();
+    $config = &RosCMS::getInstance();
 
     $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.created, u.fullname, u.email, u.activation, u.homepage, c.name AS country, CONCAT(t.name,' (', t.difference,')') AS timezone, l.name AS language, u.occupation FROM ".ROSCMST_USERS." u LEFT JOIN ".ROSCMST_COUNTRIES." c ON u.country_id=c.id LEFT JOIN ".ROSCMST_TIMEZONES." t ON t.id=u.timezone_id LEFT JOIN ".ROSCMST_LANGUAGES." l ON l.id=u.lang_id WHERE u.id = :user_id LIMIT 1");
     $stmt->bindparam('user_id',$user_id,PDO::PARAM_INT);

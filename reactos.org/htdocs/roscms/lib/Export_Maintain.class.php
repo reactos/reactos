@@ -53,7 +53,7 @@ class Export_Maintain extends Export
   {
     switch ($_GET['d_u']) {
       case 'optimize':
-        $stmt=&DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_ACCESS.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS'     , 'roscms_groups.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_ACL.",".ROSCMST_DEPENCIES.",".ROSCMST_TIMEZONES);
+        $stmt=&DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_ACCESS.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_ACL.",".ROSCMST_DEPENCIES.",".ROSCMST_TIMEZONES);
         $stmt->execute();
         Log::writeHigh('optimize database tables: done by '.ThisUser::getInstance()->id().' {data_maintain_out}');
         break;
@@ -62,10 +62,10 @@ class Export_Maintain extends Export
         $gentimeA = explode(' ',microtime()); 
         $gentimeA = $gentimeA[1] + $gentimeA[0]; 
 
-        Log::writeGenerateHigh("generate all pages - start");
+        Log::writeGenerateHigh('generate all pages - start');
 
-        $export_html = new Export_HTML();
-        echo $export_html->generateFiles("index", "all", "", "all");
+        $generate = new Generate();
+        $generate->allEntries();
 
         $gentimeB = explode(' ',microtime()); 
         $gentimeB = $gentimeB[1] + $gentimeB[0]; 
@@ -74,6 +74,24 @@ class Export_Maintain extends Export
         $showtimef = number_format($totaltimef, 4, '.', ''); 
 
         Log::writeGenerateHigh('generate all pages - end: '.$showtimef.' seconds');
+        break;
+
+      case 'rebuilddepencies':
+        $gentimeA = explode(' ',microtime()); 
+        $gentimeA = $gentimeA[1] + $gentimeA[0];
+
+        Log::writeGenerateHigh('rebuilding depency tree - start');
+
+        $data = new DataDepencies();
+        $data->rebuildDepencies();
+
+        $gentimeB = explode(' ',microtime()); 
+        $gentimeB = $gentimeB[1] + $gentimeB[0]; 
+
+        $totaltimef = ($gentimeB - $gentimeA); 
+        $showtimef = number_format($totaltimef, 4, '.', ''); 
+
+        Log::writeGenerateHigh('rebuilding depency tree - end: '.$showtimef.' seconds');
         break;
 
       case 'pubdate':

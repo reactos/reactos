@@ -108,12 +108,16 @@ ORDER BY usrgroup_name;
 -- create depency table (nothing to convert, as it's new and will be filled later)
 -- --------------------------------------------------------
 CREATE TABLE roscms_rel_revisions_depencies (
+  id bigint(20) NOT NULL auto_increment,
   rev_id bigint(20) unsigned NOT NULL COMMENT '->entries_revisions(id)',
-  dependent_from bigint(20) unsigned NOT NULL COMMENT '->entries_revisions(id)',
-  PRIMARY KEY  (rev_id,dependent_from),
+  depency_id bigint(20) unsigned default NULL COMMENT '->entries(id)',
+  depency_name varchar(80) collate utf8_unicode_ci default NULL,
+  is_include tinyint(1) NOT NULL default '0',
+  PRIMARY KEY  (id),
   KEY rev_id (rev_id),
-  KEY dependent_from (dependent_from)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  KEY depency_id (depency_id),
+  KEY depency_name (depency_name)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='if depency_id is NULL-> set name & type';
 
 
 
@@ -123,18 +127,19 @@ CREATE TABLE roscms_rel_revisions_depencies (
 CREATE TABLE roscms_access (
   id bigint(20) unsigned NOT NULL auto_increment,
   name varchar(100) collate utf8_unicode_ci NOT NULL,
+  name_short varchar(50) collate utf8_unicode_ci NOT NULL,
   description varchar(255) collate utf8_unicode_ci NOT NULL,
-  old_id varchar(50) collate utf8_unicode_ci NOT NULL,
   PRIMARY KEY  (id),
-  UNIQUE KEY `name` (`name`)
+  UNIQUE KEY name (name),
+  UNIQUE KEY name_short (name_short)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 INSERT INTO roscms_access
 SELECT
   NULL,
   sec_fullname,
-  sec_description,
-  sec_name
+  sec_name,
+  sec_description
 FROM data_security
 ORDER BY sec_name;
 
@@ -165,7 +170,7 @@ SELECT
   s.sec_lev1_add,
   s.sec_lev1_pub,
   s.sec_lev1_trans
-FROM roscms_access a JOIN data_security s ON a.old_id=s.sec_name JOIN roscms_groups g WHERE g.security_level = 1
+FROM roscms_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 1
 UNION
 SELECT
   a.id,
@@ -176,7 +181,7 @@ SELECT
   s.sec_lev2_add,
   s.sec_lev2_pub,
   s.sec_lev2_trans
-FROM roscms_access a JOIN data_security s ON a.old_id=s.sec_name JOIN roscms_groups g WHERE g.security_level = 2
+FROM roscms_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 2
 UNION
 SELECT
   a.id,
@@ -187,12 +192,12 @@ SELECT
   s.sec_lev3_add,
   s.sec_lev3_pub,
   s.sec_lev3_trans
-FROM roscms_access a JOIN data_security s ON a.old_id=s.sec_name JOIN roscms_groups g WHERE g.security_level = 3;
+FROM roscms_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 3;
 
-UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_access a ON ga.acl_id=a.id JOIN data_security s ON a.old_id=s.sec_name
+UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
 SET ga.can_read=TRUE, ga.can_write=TRUE, ga.can_add=TRUE, ga.can_delete=TRUE, ga.can_publish=TRUE, ga.can_translate=TRUE WHERE s.sec_allow LIKE CONCAT('%',g.name_short,'%');
 
-UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_access a ON ga.acl_id=a.id JOIN data_security s ON a.old_id=s.sec_name
+UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
 SET ga.can_read=FALSE, ga.can_write=FALSE, ga.can_add=FALSE, ga.can_delete=FALSE, ga.can_publish=FALSE, ga.can_translate=FALSE WHERE s.sec_deny LIKE CONCAT('%',g.name_short,'%');
 
 -- --------------------------------------------------------
@@ -219,7 +224,7 @@ FROM usergroup_members m JOIN roscms_groups g ON m.usergroupmember_usergroupid=g
 -- --------------------------------------------------------
 CREATE TABLE roscms_entries (
   id bigint(20) unsigned NOT NULL auto_increment,
-  type enum('page','content','script','template','system') collate utf8_unicode_ci NOT NULL,
+  type enum('page','content','dynamic','script','template','system') collate utf8_unicode_ci NOT NULL,
   name varchar(64) collate utf8_unicode_ci NOT NULL,
   acl_id bigint(20) unsigned COMMENT '->access(id)',
   old_id int(11) NOT NULL,
@@ -239,7 +244,7 @@ SELECT
   s.id,
   d.data_id,
   1
-FROM data_a d JOIN roscms_access s ON d.data_acl=s.old_id
+FROM data_a d JOIN roscms_access s ON d.data_acl=s.name_short
 UNION
 SELECT
   NULL,
@@ -248,7 +253,7 @@ SELECT
   s.id,
   d.data_id,
   0
-FROM data_ d JOIN roscms_access s ON d.data_acl=s.old_id;
+FROM data_ d JOIN roscms_access s ON d.data_acl=s.name_short;
 
 
 
@@ -262,7 +267,7 @@ CREATE TABLE roscms_entries_revisions (
   user_id bigint(20) unsigned NOT NULL COMMENT '->accounts(id)',
   version int(10) unsigned NOT NULL,
   `datetime` datetime NOT NULL,
-  archive tinyint(1) NOT NULL,
+  archive tinyint(1) NOT NULL default '0',
   old_id int(11) NOT NULL,
   PRIMARY KEY  (id),
   KEY data_id (data_id),
@@ -581,7 +586,6 @@ ALTER TABLE roscms_entries
   DROP old_archive,
   ADD UNIQUE KEY type_name ( type , name );
 ALTER TABLE roscms_entries_revisions DROP old_id;
-ALTER TABLE roscms_access DROP old_id;
 
 
 

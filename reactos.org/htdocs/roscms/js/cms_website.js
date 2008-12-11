@@ -2190,14 +2190,6 @@ function loadMenu( objid )
     highlightTab(objid);
   }
 
-  if (getLang() == roscms_standard_language) {
-    alertbox('You can\'t translate entries, because you don\'t have the standard language as your user language.');
-    return false;
-  }
-  else {
-    translang = getLang();
-  }
-
   switch (objid.substring(8)) {
 
     case '1':
@@ -2231,6 +2223,13 @@ function loadMenu( objid )
       break;
 
     case '7':
+      if (getLang() == roscms_standard_language) {
+        alertbox('You can\'t translate entries, because you have the standard language as your user language.');
+        return false;
+      }
+      else {
+        translang = getLang();
+      }
       filtstring2 = 'y_is_content_0|k_is_stable_0|i_is_default_0|c_is_user_0|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'|o_asc_name';
       loadEntryTable('translate');
       break;

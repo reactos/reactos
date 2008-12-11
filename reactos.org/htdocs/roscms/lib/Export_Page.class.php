@@ -60,10 +60,10 @@ class Export_Page extends Export
       default:
         if (empty($_GET['d_r_id']) || strpos($_GET['d_r_id'], 'tr') >= 0) {
           // translation mode (contains "tr")
-          $lang = $_GET['d_r_lang'];
+          $lang = @$_GET['d_r_lang'];
         }
         else {
-          $lang = $_GET['d_val2']
+          $lang = $_GET['d_val2'];
         }
 
         // remove "tr" so that it also work in translation view

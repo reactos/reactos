@@ -166,25 +166,26 @@ class Log
    */
   private function write( $log_str,  $log_mode = 3,  $log_entry = 'log_website_' )
   {
+    $log_entry = $log_entry.date('Y-W');
+  
     // get current log id
     $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name =:data_name LIMIT 1");
-    $stmt->bindValue('data_name',$log_entry.date('Y-W'),PDO::PARAM_STR);
+    $stmt->bindParam('data_name',$log_entry,PDO::PARAM_STR);
     $stmt->execute();
     $log_id = $stmt->fetchColumn();
 
     // if no log is started yet, create a new log id
-    if ($log_id <= 0) {
+    if ($log_id === false) {
       $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id, name, type, acl_id ) VALUES ( NULL, :data_name, 'system', NULL )");
-      $stmt->bindValue('data_name',$log_entry.date('Y-W'),PDO::PARAM_STR);
+      $stmt->bindParam('data_name',$log_entry,PDO::PARAM_STR);
       $stmt->execute();
 
       // and use the new id as current id
       $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ENTRIES." WHERE name = :data_name LIMIT 1");
-      $stmt->bindValue('data_name',$log_entry.date('Y-W'),PDO::PARAM_STR);
+      $stmt->bindParam('data_name',$log_entry,PDO::PARAM_STR);
       $stmt->execute();
       $log_id = $stmt->fetchColumn();
     }
-
 
     // revision (we should only have one)
     $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id LIMIT 1");
@@ -193,7 +194,7 @@ class Log
     $log_rev_id = $stmt->fetchColumn();
 
     // if no log revision is created, insert a new log revision id
-    if ($log_rev_id <= 0) {
+    if ($log_rev_id === false) {
       $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, 1, :lang, :user_id, NOW())");
       $stmt->bindParam('data_id',$log_id,PDO::PARAM_INT);
       $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
@@ -209,13 +210,13 @@ class Log
       // insert short text
       $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, 'description', :content )");
       $stmt->bindParam('rev_id',$log_rev_id,PDO::PARAM_INT);
-      $stmt->bindValue('content',$log_entry.date('Y-W'),PDO::PARAM_INT);
+      $stmt->bindValue('content',$log_entry,PDO::PARAM_STR);
       $stmt->execute();
 
       // insert long text
       $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES (NULL, :rev_id, :name, :content)");
       $stmt->bindParam('rev_id',$log_rev_id,PDO::PARAM_INT);
-      $stmt->bindValue('content',$log_entry.date('Y-W'),PDO::PARAM_INT);
+      $stmt->bindValue('content',$log_entry,PDO::PARAM_STR);
 
       // insert all threee
       $stmt->bindValue('name','low_security_log',PDO::PARAM_INT);

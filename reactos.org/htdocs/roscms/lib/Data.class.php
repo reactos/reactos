@@ -552,7 +552,7 @@ class Data
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->execute();
       
-      $stmt=&DBConnection::getInstance()->prepare("SELECT id ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version = 0 AND lang_id = :lang AND user_id = :user_id ORDER BY datetime DESC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version = 0 AND lang_id = :lang AND user_id = :user_id ORDER BY datetime DESC");
       $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
       $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
@@ -627,8 +627,149 @@ class Data
         new Editor_Website($data_id, $rev_id, 'show');
       }
     }
-
   } // end of member function getCookieDomain
+
+
+
+  /**
+   *
+   *
+   * @access public
+   */
+  public static function rebuildDepencies()
+  {
+    // remove old depencies
+    DBConnection::getInstance()->exec("DELETE FROM ".ROSCMST_DEPENCIES);
+
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." ORDER BY id ASC");
+    $stmt->execute();
+    while ($revision = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $content = Data::getText($revision['id'], 'content');
+      $content = preg_replace_callback('/(\[#templ_[^][#[:space:]]+\])/', array($this,'handleTemplate'), $content);
+      $content = preg_replace_callback('/(\[#cont_[^][#[:space:]]+\])/', array($this,'handleContent'), $content);
+      $content = preg_replace_callback('/(\[#inc_[^][#[:space:]]+\])/', array($this,'handleScript'), $content);
+      $content = preg_replace_callback('/(\[#link_[^][#[:space:]]+\])/', array($this,'handleLink'), $content);
+    }
+  }
+
+
+
+  /**
+   *
+   *
+   * @access public
+   */
+  public static function buildDepencies( $rev_id )
+  {
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.type, d.name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE r.id=:rev_id");
+    $stmt->bindParam('rev_id',$rev_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+
+    switch ($revision['type']) {
+      case 'template':
+        $type_short = 'templ';
+        break;
+      case 'content':
+        $type_short = 'cont';
+        break;
+      case 'script':
+        $type_short = 'inc';
+        break;
+      case 'page':
+        $type_short = 'link';
+        break;
+      default:
+        // skip system stuff
+        return;
+        break;
+    }
+
+    // search for depencies
+    $stmt=&DBConnection::getInstance()->prepare("SELECT t.rev_id, d.type FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON r.id = t.rev_id WHERE t.content LIKE :content_phrase AND r.version > 0");
+    $stmt->bindValue('content_phrase','%[#'.$type_short.'_'.$revision['name'].']%',PDO::PARAM_STR);
+    $stmt->execute();
+
+    // for usage in loop
+    $stmt_check=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_DEPENCIES." WHERE rev_id = :rev_id AND dependent_from = :depency_id LIMIT 1");
+    $stmt_check->bindParam('depency_id',$rev_id,PDO::PARAM_INT);
+
+    $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, depency_id, depency_name, depeny_type) VALUES (:rev_id, :depency_id, :depency_name, :depency_type)");
+    $stmt_ins->bindParam('depency_id',$rev_id,PDO::PARAM_INT);
+    $stmt_ins->bindParam('depency_name',$revision['name'],PDO::PARAM_STR);
+    $stmt_ins->bindParam('depency_type',$revision['type'],PDO::PARAM_STR);
+    // write depencies
+    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+      // check that entry doesn't exist
+      $stmt_check->bindParam('rev_id',$depency['rev_id'],PDO::PARAM_INT);
+      $stmt_check->execute();
+      if ($stmt_check->fetchColumn() === false) {
+        // write the depency to DB
+        $stmt_ins->bindParam('rev_id',$depency['rev_id'],PDO::PARAM_INT);
+        $stmt_ins->execute();
+      }
+    }
+
+    if ($revision['type'] == 'template') {
+      // templates need special dealing
+      $stmt=&DBConnection::getInstance()->prepare("SELECT w.rev_id, d.name, REPLACE(REPLACE(t.content,'[#%NAME%]',d.name), '[#cont_%NAME%]', CONCAT('[#cont_',d.name,']')) AS content FROM roscms_rel_revisions_depencies w JOIN roscms_entries_revisions r ON w.rev_id=r.id JOIN roscms_entries d ON d.id=r.data_id JOIN roscms_entries_text t ON t.rev_id=w.dependent_from WHERE w.dependent_from = :depency_id AND w.dependent_type = 'template' LIMIT 1");
+      $stmt->bindParam('depency_id',$rev_id,PDO::PARAM_INT);
+      $stmt->execute();
+
+      // for usage in loop
+        $stmt_rev=DBConnection::getInstance()->prepare("SELECT d.type, r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE name = :name AND type = :type LIMIT 1");
+        $stmt_check=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_DEPENCIES." WHERE rev_id = :rev_id AND dependent_from = :depency_id LIMIT 1");
+        $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, depency_id, depency_name, depency_type) VALUES (:rev_id, :depency_id, :depency_name, :depency_type)");
+
+      while ($template = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+        // for usage in inner loop
+        $stmt_check->bindParam('rev_id',$template['rev_id'],PDO::PARAM_INT);
+        $stmt_ins->bindParam('rev_id',$template['rev_id'],PDO::PARAM_INT);
+
+        // get contained entries
+        preg_match_all('/\[#([a-z_]+_'.$template['name'].'[^\]]*)\]/iU',$template['content'],$matches);
+        for ($i=0; $i<count($matches[1]) ;$i++) {
+
+          // get name & type
+          if (strpos($matches[1][$i],'templ_') === 0) {
+            $type = 'template';
+            $name = substr($matches[1][$i], 6);
+          }
+          elseif (strpos($matches[1][$i],'cont_') === 0) {
+            $type = 'content';
+            $name = substr($matches[1][$i], 5);
+          }
+          elseif (strpos($matches[1][$i],'inc_') === 0) {
+            $type = 'script';
+            $name = substr($matches[1][$i], 4);
+          }
+          else {
+            break;
+          }
+
+          $stmt_rev->bindParam('name',$name,PDO::PARAM_STR);
+          $stmt_rev->bindParam('type',$type,PDO::PARAM_STR);
+          $stmt_rev->execute();
+          $revision = $stmt_rev->fetch(PDO::FETCH_ASSOC);
+
+          if ($revision !== false) {
+            $stmt_check->bindParam('depency_id',$revision['id'],PDO::PARAM_INT);
+            $stmt_check->execute();
+            if ($stmt_check->fetchColumn() === false) {
+              // write the depency to DB
+              $stmt_ins->bindParam('depency_id',$revision['id'],PDO::PARAM_INT);
+              $stmt_ins->bindParam('depency_name',$revision['name'],PDO::PARAM_STR);
+              $stmt_ins->bindParam('depency_type',$revision['type'],PDO::PARAM_STR);
+              $stmt_ins->execute();
+            }
+          } else {echo $type;}
+        }
+      }
+    }
+  } // end of member function generate_page_output_update
+
 
 
   /**

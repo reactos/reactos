@@ -55,7 +55,6 @@ class Editor_Website extends Editor
 
     $this->rev_id = $revision['id'];
     $this->data_id = $revision['data_id'];
-
   }
 
 
@@ -385,7 +384,7 @@ class Editor_Website extends Editor
         $stmt->execute();
         $diff2 = $stmt->fetchColumn();
 
-        $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :name AND r.version > 0 AND r.rev_language = :lang AND r.archive IS TRUE ORDER BY r.id DESC LIMIT 1");
+        $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :name AND r.version > 0 AND r.lang_id = :lang AND r.archive IS TRUE ORDER BY r.id DESC LIMIT 1");
         $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
         $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
         $stmt->execute();
@@ -484,8 +483,8 @@ class Editor_Website extends Editor
             <option value="page">Page</option>
             <option value="content">Content</option>
             <option value="template">Template</option>
-            <option value="script">Script</option>
-            <option value="system">System</option>
+            <option value="script">Script</option>'.(ThisUser::getInstance()->isMemberOfGroup('ros_sadmin') ? '
+            <option value="dynamic">Dynamic Page Type</option>' : '').'
           </select>
           <br />
           <br />
@@ -496,8 +495,8 @@ class Editor_Website extends Editor
         // language drop down
         $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
         $stmt->execute();
-        while($language=$stmt->fetch()) {
-          echo '<option value="'.$language['id'].'">'.$language['name'].'</option>';
+        while($language=$stmt->fetch(PDO::FETCH_ASSOC)) {
+          echo '<option value="'.$language['id'].'"'.(Language::getStandardId() == $language['id'] ? ' selected="selected"' : '').'>'.$language['name'].'</option>';
         }
         
         echo '</select>';
@@ -508,11 +507,16 @@ class Editor_Website extends Editor
         echo_strip('
           <br />
           <label for="txtadddynsource">Source</label>
-          <select id="txtadddynsource" name="txtadddynsource">
-            <option value="news_page">News</option>
-            <option value="newsletter">Newsletter</option>
-            <option value="interview">Interview</option>
-          </select>');
+          <select id="txtadddynsource" name="txtadddynsource">');
+
+        // dynamic things
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_ENTRIES." WHERE type='dynamic' ORDER BY name ASC");
+        $stmt->execute();
+        while($data=$stmt->fetch(PDO::FETCH_ASSOC)) {
+          echo '<option value="'.$data['id'].'">'.$data['name'].'</option>';
+        }
+        
+        echo '</select>';
         break;
 
       // is page & content
@@ -541,7 +545,7 @@ class Editor_Website extends Editor
     echo_strip('
           <br />
           <br />
-          <button type="button" onclick="'."createNewEntry('".$tmode."')".'">Create</button>
+          <button type="button" onclick="'."createNewEntry(".$tmode.")".'">Create</button>
         </div>
       </div>');
   }
@@ -821,60 +825,85 @@ class Editor_Website extends Editor
     echo '</ul>';
   }
 
+
+
   /**
    *
    *
    * @access private
    */
-  private function showEntryDepencies( $data_id )
+  private function showEntryDepencies()
   {
-    $stmt=&DBConnection::getInstance()->prepare("SELECT name, type FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
-    $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+    echo '<h3>Dependent Entries</h3>';
+    $this->buildDepencyTree($this->data_id);
+
+    // required articles that don't exist
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT depency_name, is_include FROM ".ROSCMST_DEPENCIES." WHERE rev_id=:rev_id AND depency_id IS NULL ORDER BY is_include DESC, depency_name ASC");
+    $stmt->bindParam('rev_id',$this->rev_id, PDO::PARAM_INT);
     $stmt->execute();
-    $data = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+    $required_fail = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // get Data type
-    switch ($data['type']) {
-      case 'template':
-        $type_short = 'templ';
-        break;
-      case 'content':
-        $type_short = 'cont';
-        break;
-      case 'script':
-        $type_short = 'inc';
-        break;
-      default:
-        echo '----this should not happen.<br />';
-        return;
-        break;
-    }
-
-    echo_strip('
-      <h3>Data Depencies</h3>');
-
-    // search for depencies
-    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, d.type, l.name AS language FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON r.id = t.rev_id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id=l.id WHERE t.content LIKE :content_phrase AND r.version > 0 AND r.archive IS FALSE ORDER BY r.lang_id ASC, d.name ASC, d.type ASC");
-    $stmt->bindValue('content_phrase','%[#'.$type_short.'_'.$data['name'].']%',PDO::PARAM_STR);
+    // articles that exist
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name, d.type, w.is_include FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON d.id=w.depency_id WHERE rev_id=:rev_id AND w.depency_name IS NULL ORDER BY w.is_include DESC, d.name ASC, d.type ASC");
+    $stmt->bindParam('rev_id',$this->rev_id, PDO::PARAM_INT);
     $stmt->execute();
+    $required_exist = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $last_language = null;
+    if (count($required_fail) > 0 || count($required_exist) > 0) {
+      echo '<h3>Required Entries</h3>';
 
-    // handle Depencies
-    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      if ($depency['language'] != $last_language) {
-        if ($last_language !== null) {
-          echo '</ul>';
+      if (count($required_exist) > 0) {
+        echo '<ul>';
+        foreach($required_exist as $required) {
+          echo '<li>'.$required['name'].' ['.$required['type'].'] ('.($required['is_include']==true ? 'include' : 'link').')</li>';
         }
-
-        echo '<h3>'.$depency['language'].'</h3><ul>'; 
-        $last_language = $depency['language'];
+        echo '</ul>';
       }
 
-      echo '<li>'.$depency['name'].' ('.$depency['type'].')</li>';
+      if (count($required_fail) > 0) {
+        echo_strip('
+          <h4>Entries that don\'t exist</h4>
+          <ul>');
+        foreach($required_fail as $required) {
+          echo '<li>'.$required['depency_name'].' ('.($required['is_include']==true ? 'include' : 'link').')</li>';
+        }
+        echo '</ul>';
+      }
+
     }
-    echo '</ul>';
   }
+
+
+
+  /**
+   *
+   *
+   * @access private
+   */
+  private function buildDepencyTree( $data_id )
+  {
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.name AS language, d.type, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON w.rev_id = r.id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id WHERE w.depency_id=:data_id AND w.is_include IS TRUE ORDER BY language");
+    $stmt->bindParam('data_id',$data_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $depencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (count($depencies) > 0) {
+      echo '<ul>';
+
+      $last_language = null;
+      // handle Depencies
+      foreach ($depencies as $depency) {
+        echo '<li>'.$depency['name'].' ('.$depency['type'].') ['.$depency['language'].']';
+        if ($data_id != $depency['data_id']) $this->buildDepencyTree( $depency['data_id']);
+        echo '</li>';
+      }
+      echo '</ul>';
+    }
+    elseif ($this->data_id === $data_id) {
+      echo 'Looks like, no other entries depend on this entry.';
+    }
+  }
+
 
 
   /**

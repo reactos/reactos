@@ -29,6 +29,22 @@ function generateAllPages( )
 
 
 /**
+ * rebuild the depency tree
+ */
+function rebuildDepencies( )
+{
+  var uf_check = confirm("Do you want to continue?");
+
+  if (uf_check == true) {
+    document.getElementById('maintainarea').style.display = 'block';
+    document.getElementById('maintainarea').innerHTML = 'rebuilding depencies, this may take a while ...';
+    makeRequest('?page=data_out&d_f=maintain&d_u=rebuilddepencies');
+  }
+}
+
+
+
+/**
  * opens a second window with a preview of the selected page
  */
 function previewPage( )

@@ -43,7 +43,7 @@ class Date
     // calculate only for registered users
     if (ThisUser::getInstance()->id() > 0) {
       $basedate = strtotime($date);
-      $date_new = strtotime((RosCMS::getInstance->siteTimeZone()).' hours', $basedate);
+      $date_new = strtotime((RosCMS::getInstance()->siteTimeZone()).' hours', $basedate);
       return date($format, $date_new).' '.'UTC';
     }
     // guest visitors get UTC time

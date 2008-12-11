@@ -63,6 +63,8 @@ class HTML_CMS_Maintain extends HTML_CMS
       <br />
       <p><a href="javascript:optimizeDB()">Optimize Database Tables</a></p>
       <br />
+      <p><a href="javascript:rebuildDepencies()">Rebuild Depency Tree</a></p>
+      <br />
       <p><a href="javascript:previewPage()">Page Preview</a></p>
 
       <div>

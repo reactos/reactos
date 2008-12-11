@@ -70,7 +70,7 @@ class Security
 
     // group our acl list, or fail because no rights to access
     if ($sec_access > 0) {
-      $acl = " AND d.acl_id IN(". $acl .") ";
+      $acl = " AND d.acl_id IN(". $acl .", NULL) ";
     }
     else {
       $acl = " AND FALSE ";
@@ -78,6 +78,21 @@ class Security
 
     return $acl;
   } // end of member function getACL
+
+
+
+  /**
+   *
+   *
+   * @access public
+   */
+  public static function getAccessId( $name_short )
+  {
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ACCESS." WHERE name_short=:name_short LIMIT 1");
+    $stmt->bindParam('name_short',$name_short,PDO::PARAM_STR);
+    $stmt->execute();
+    return $stmt->fetchColumn();
+  }
 
 
   /**
