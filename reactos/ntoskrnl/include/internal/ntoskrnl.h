@@ -70,7 +70,7 @@
 #include "hal.h"
 #include "arch/intrin_i.h"
 
-ULONG (*FrLdrDbgPrint)(const char *Format, ...);
+extern ULONG (*FrLdrDbgPrint)(const char *Format, ...);
 
 #include <pshpack1.h>
 /*
