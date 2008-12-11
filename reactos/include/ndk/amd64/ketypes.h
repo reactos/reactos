@@ -163,30 +163,45 @@ typedef struct _KTRAP_FRAME
     UINT64 R9;
     UINT64 R10;
     UINT64 R11;
-    UINT64 GsBase;
-    UINT64 GsSwap;
+    union
+    {
+        UINT64 GsBase;
+        UINT64 GsSwap;
+    };
     M128A Xmm0;
     M128A Xmm1;
     M128A Xmm2;
     M128A Xmm3;
     M128A Xmm4;
     M128A Xmm5;
-    UINT64 FaultAddress;
-    UINT64 ContextRecord;
-    UINT64 TimeStampCKCL;
+    union
+    {
+        UINT64 FaultAddress;
+        UINT64 ContextRecord;
+        UINT64 TimeStampCKCL;
+    };
     UINT64 Dr0;
     UINT64 Dr1;
     UINT64 Dr2;
     UINT64 Dr3;
     UINT64 Dr6;
     UINT64 Dr7;
-    UINT64 DebugControl;
-    UINT64 LastBranchToRip;
-    UINT64 LastBranchFromRip;
-    UINT64 LastExceptionToRip;
-    UINT64 LastExceptionFromRip;
-    UINT64 LastBranchControl;
-    ULONG LastBranchMSR;
+    union
+    {
+        struct
+        {
+            UINT64 DebugControl;
+            UINT64 LastBranchToRip;
+            UINT64 LastBranchFromRip;
+            UINT64 LastExceptionToRip;
+            UINT64 LastExceptionFromRip;
+        };
+        struct
+        {
+            UINT64 LastBranchControl;
+            ULONG LastBranchMSR;
+        };
+    };
     USHORT SegDs;
     USHORT SegEs;
     USHORT SegFs;
@@ -196,9 +211,12 @@ typedef struct _KTRAP_FRAME
     UINT64 Rdi;
     UINT64 Rsi;
     UINT64 Rbp;
-    UINT64 ErrorCode;
-    UINT64 ExceptionFrame;
-    UINT64 TimeStampKlog;
+    union
+    {
+        UINT64 ErrorCode;
+        UINT64 ExceptionFrame;
+        UINT64 TimeStampKlog;
+    };
     UINT64 Rip;
     USHORT SegCs;
     UCHAR Fill0;
