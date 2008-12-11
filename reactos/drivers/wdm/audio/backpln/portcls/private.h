@@ -74,6 +74,8 @@ NTSTATUS NewDmaChannelSlave(
     IN PDMA_ADAPTER Adapter,
     OUT PDMACHANNELSLAVE* DmaChannel);
 
+NTSTATUS NewIDrmPort(
+    OUT PDRMPORT2 *OutPort);
 
 typedef struct
 {

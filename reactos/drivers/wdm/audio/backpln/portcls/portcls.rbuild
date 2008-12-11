@@ -13,6 +13,7 @@
 	<file>dll.c</file>
 	<file>dma_master.c</file>
 	<file>dma_slave.c</file>
+	<file>drm_port.c</file>
 	<file>adapter.c</file>
 	<file>irp.c</file>
 	<file>interrupt.c</file>
