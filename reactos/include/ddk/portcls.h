@@ -1362,8 +1362,23 @@ typedef IMiniportWaveCyclic *PMINIPORTWAVECYCLIC;
     IAdapterPowerManagement Interface
 */
 
+#undef INTERFACE
+#define INTERFACE IAdapterPowerManagement
+
+DEFINE_GUID(IID_IAdapterPowerManagement, 0x793417D0L, 0x35FE, 0x11D1, 0xAD, 0x08, 0x00, 0xA0, 0xC9, 0x0A, 0xB1, 0xB0);
+
 DECLARE_INTERFACE_(IAdapterPowerManagement, IUnknown)
 {
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(void,PowerChangeState)(THIS_
+        IN POWER_STATE NewState) PURE;
+
+    STDMETHOD_(NTSTATUS,QueryPowerChangeState)(THIS_
+        IN POWER_STATE NewStateQuery) PURE;
+
+    STDMETHOD_(NTSTATUS,QueryDeviceCapabilities)(THIS_
+        IN PDEVICE_CAPABILITIES PowerDeviceCaps) PURE;
 };
 
 #define IMP_IAdapterPowerManagement
