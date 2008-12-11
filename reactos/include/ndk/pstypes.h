@@ -1169,7 +1169,7 @@ typedef struct _ETHREAD
     KSEMAPHORE AlpcWaitSemaphore;
     ULONG CacheManagerCount;
 #endif
-} ETHREAD, *PETHREAD;
+} ETHREAD;
 
 //
 // Executive Process (EPROCESS)
@@ -1361,7 +1361,7 @@ typedef struct _EPROCESS
     UCHAR PriorityClass;
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
-} EPROCESS, *PEPROCESS;
+} EPROCESS;
 
 //
 // Job Token Filter Data

@@ -9,7 +9,7 @@ extern "C" {
 #include <wdm.h>
 #endif
 
-#include <ntdef.h>
+#include <windef.h>
 #define COM_NO_WINDOWS_H
 #include <basetyps.h>
 #ifdef PUT_GUIDS_HERE

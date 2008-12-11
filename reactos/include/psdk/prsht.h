@@ -97,20 +97,22 @@ extern "C" {
 #define PSM_SETHEADERSUBTITLEA	1151
 #define PSM_SETHEADERSUBTITLEW	1152
 #endif
-#define PSN_FIRST	(-200)
-#define PSN_LAST	(-299)
-#define PSN_APPLY	(-202)
-#define PSN_HELP	(-205)
-#define PSN_KILLACTIVE	(-201)
-#define PSN_QUERYCANCEL	(-209)
-#define PSN_GETOBJECT   (PSN_FIRST-10)
-#define PSN_TRANSLATEACCELERATOR (PSN_FIRST-12)
-#define PSN_QUERYINITIALFOCUS    (PSN_FIRST-13)
-#define PSN_RESET	(-203)
-#define PSN_SETACTIVE	(-200)
-#define PSN_WIZBACK	(-206)
-#define PSN_WIZFINISH	(-208)
-#define PSN_WIZNEXT	(-207)
+
+#define PSN_FIRST                (0U - 200U)
+#define PSN_SETACTIVE            (PSN_FIRST - 0)
+#define PSN_KILLACTIVE           (PSN_FIRST - 1)
+#define PSN_APPLY                (PSN_FIRST - 2)
+#define PSN_RESET                (PSN_FIRST - 3)
+#define PSN_HELP                 (PSN_FIRST - 5)
+#define PSN_WIZBACK              (PSN_FIRST - 6)
+#define PSN_WIZNEXT              (PSN_FIRST - 7)
+#define PSN_WIZFINISH            (PSN_FIRST - 8)
+#define PSN_QUERYCANCEL          (PSN_FIRST - 9)
+#define PSN_GETOBJECT            (PSN_FIRST - 10)
+#define PSN_TRANSLATEACCELERATOR (PSN_FIRST - 12)
+#define PSN_QUERYINITIALFOCUS    (PSN_FIRST - 13)
+#define PSN_LAST                 (PSN_FIRST - 99)
+
 #define PSNRET_NOERROR	0
 #define PSNRET_INVALID	1
 #define PSNRET_INVALID_NOCHANGEPAGE	2

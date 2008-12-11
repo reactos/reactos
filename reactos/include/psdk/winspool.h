@@ -715,6 +715,50 @@ typedef struct _PROVIDOR_INFO_2W{
 	LPWSTR pOrder;
 } PROVIDOR_INFO_2W, *LPPROVIDOR_INFO_2W;
 
+typedef struct _BINARY_CONTAINER {
+ DWORD  cbBuf;
+ LPBYTE pData;
+} BINARY_CONTAINER, *PBINARY_CONTAINER;
+
+typedef struct _BIDI_DATA {
+ DWORD  dwBidiType;
+ union
+ {
+   BOOL             bData;
+   INT              iData;
+   LPWSTR           sData;
+   FLOAT            fData;
+   BINARY_CONTAINER biData;
+ } u;
+} BIDI_DATA, *LPBIDI_DATA, *PBIDI_DATA;
+
+typedef struct _BIDI_REQUEST_DATA {
+ DWORD      dwReqNumber;
+ LPWSTR     pSchema;
+ BIDI_DATA  data;
+} BIDI_REQUEST_DATA, *LPBIDI_REQUEST_DATA, *PBIDI_REQUEST_DATA;
+
+typedef struct _BIDI_REQUEST_CONTAINER {
+ DWORD              Version;
+ DWORD              Flags;
+ DWORD              Count;
+ BIDI_REQUEST_DATA  aData[1];
+} BIDI_REQUEST_CONTAINER, *LPBIDI_REQUEST_CONTAINER, *PBIDI_REQUEST_CONTAINER;
+
+typedef struct _BIDI_RESPONSE_DATA {
+ DWORD      dwResult;
+ DWORD      dwReqNumber;
+ LPWSTR     pSchema;
+ BIDI_DATA  data;
+} BIDI_RESPONSE_DATA, *LPBIDI_RESPONSE_DATA, *PBIDI_RESPONSE_DATA;
+
+typedef struct _BIDI_RESPONSE_CONTAINER {
+ DWORD              Version;
+ DWORD              Flags;
+ DWORD              Count;
+ BIDI_RESPONSE_DATA aData[1];
+} BIDI_RESPONSE_CONTAINER, *LPBIDI_RESPONSE_CONTAINER, *PBIDI_RESPONSE_CONTAINER;
+
 BOOL WINAPI AbortPrinter(HANDLE);
 BOOL WINAPI AddFormA(HANDLE,DWORD,PBYTE);
 BOOL WINAPI AddFormW(HANDLE,DWORD,PBYTE);
@@ -823,6 +867,7 @@ DWORD WINAPI StartDocPrinterW(HANDLE,DWORD,PBYTE);
 BOOL WINAPI StartPagePrinter(HANDLE);
 DWORD WINAPI WaitForPrinterChange(HANDLE,DWORD);
 BOOL WINAPI WritePrinter(HANDLE,PVOID,DWORD,PDWORD);
+BOOL WINAPI XcvDataW(HANDLE, LPCWSTR, PBYTE, DWORD, PBYTE, DWORD, PDWORD, PDWORD);
 
 #ifdef UNICODE
 typedef JOB_INFO_1W JOB_INFO_1,*PJOB_INFO_1,*LPJOB_INFO_1;

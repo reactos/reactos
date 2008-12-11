@@ -23,10 +23,6 @@
 #ifndef __WINXP_H
 #define __WINXP_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

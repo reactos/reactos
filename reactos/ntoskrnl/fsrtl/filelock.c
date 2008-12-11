@@ -141,7 +141,7 @@ FsRtlFastCheckLockForRead(IN PFILE_LOCK FileLock,
                           IN PLARGE_INTEGER Length,
                           IN ULONG Key,
                           IN PFILE_OBJECT FileObject,
-                          IN PEPROCESS Process)
+                          IN PVOID Process)
 {
     KeBugCheck(FILE_SYSTEM);
     return FALSE;
@@ -157,7 +157,7 @@ FsRtlFastCheckLockForWrite(IN PFILE_LOCK FileLock,
                            IN PLARGE_INTEGER Length,
                            IN ULONG Key,
                            IN PFILE_OBJECT FileObject,
-                           IN PEPROCESS Process)
+                           IN PVOID Process)
 {
     KeBugCheck(FILE_SYSTEM);
     return FALSE;

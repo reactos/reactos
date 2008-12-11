@@ -20,6 +20,7 @@
 #define _GDIPLUSENUMS_H
 
 typedef UINT GraphicsState;
+typedef UINT GraphicsContainer;
 
 enum Unit
 {
@@ -73,6 +74,16 @@ enum PathPointType{
     PathPointTypePathMarker     = 32,
     PathPointTypeCloseSubpath   = 128,  /* end of a closed figure */
     PathPointTypeBezier3        = 3
+};
+
+enum PenType
+{
+   PenTypeSolidColor       = BrushTypeSolidColor,
+   PenTypeHatchFill        = BrushTypeHatchFill,
+   PenTypeTextureFill      = BrushTypeTextureFill,
+   PenTypePathGradient     = BrushTypePathGradient,
+   PenTypeLinearGradient   = BrushTypeLinearGradient,
+   PenTypeUnknown          = -1
 };
 
 enum LineJoin
@@ -329,6 +340,23 @@ enum CoordinateSpace
     CoordinateSpaceDevice
 };
 
+enum GpTestControlEnum
+{
+    TestControlForceBilinear  = 0,
+    TestControlNoICM          = 1,
+    TestControlGetBuildNumber = 2
+};
+
+enum MetafileFrameUnit
+{
+    MetafileFrameUnitPixel      = UnitPixel,
+    MetafileFrameUnitPoint      = UnitPoint,
+    MetafileFrameUnitInch       = UnitInch,
+    MetafileFrameUnitDocument   = UnitDocument,
+    MetafileFrameUnitMillimeter = UnitMillimeter,
+    MetafileFrameUnitGdi
+};
+
 #ifndef __cplusplus
 
 typedef enum Unit Unit;
@@ -364,6 +392,9 @@ typedef enum ImageCodecFlags ImageCodecFlags;
 typedef enum CombineMode CombineMode;
 typedef enum FlushIntention FlushIntention;
 typedef enum CoordinateSpace CoordinateSpace;
+typedef enum GpTestControlEnum GpTestControlEnum;
+typedef enum MetafileFrameUnit MetafileFrameUnit;
+typedef enum PenType PenType;
 
 #endif /* end of c typedefs */
 

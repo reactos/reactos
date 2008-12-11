@@ -36,12 +36,6 @@
 extern "C" {
 #endif
 
-/*
-Not sure if this is correct but it causes problems if not included. Can't
-seem to compile without this...
-*/
-#include "ntddk.h"
-
 #ifdef BUILDING_KS
     #define KSDDKAPI
 #else
@@ -1059,12 +1053,12 @@ typedef enum
 } KSCOMPLETION_INVOCATION;
 
 
-
+#if defined(__NTDDK_H)
 /* MOVE ME */
 typedef NTSTATUS (*PFNKSCONTEXT_DISPATCH)(
     IN PVOID Context,
     IN PIRP Irp);
-
+#endif
 
 /* ===============================================================
     Framing
@@ -1109,7 +1103,7 @@ typedef struct
     Dispatch Table
     http://www.osronline.com/DDKx/stream/ks-struct_494j.htm
 */
-
+#if defined(__NTDDK_H)
 typedef struct
 {
     PDRIVER_DISPATCH DeviceIoControl;
@@ -1123,6 +1117,7 @@ typedef struct
     PFAST_IO_READ FastRead;
     PFAST_IO_WRITE FastWrite;
 } KSDISPATCH_TABLE, *PKSDISPATCH_TABLE;
+#endif
 
 typedef struct
 {
@@ -1548,11 +1543,11 @@ typedef PVOID (*PFNKSINITIALIZEALLOCATOR)(
 typedef PVOID (*PFNKSDELETEALLOCATOR)(
     IN  PVOID Context);
 
-
+#if defined(__NTDDK_H)
 typedef NTSTATUS (*PFNKSALLOCATOR)(
     IN  PIRP Irp,
     IN  ULONG BufferSize,
-    IN  BOOL InputOperation);
+    IN  BOOLEAN InputOperation);
 
 typedef NTSTATUS (*PFNKSHANDLER)(
     IN  PIRP Irp,
@@ -1581,6 +1576,7 @@ typedef NTSTATUS (*PFNKINTERSECTHANDLEREX)(
     IN  ULONG DataBufferSize,
     OUT PVOID Data OPTIONAL,
     OUT PULONG DataSize);
+#endif
 
 typedef UNKNOWN PFNALLOCATORE_ALLOCATEFRAME;
 typedef UNKNOWN PFNALLOCATOR_FREEFRAME;
@@ -2017,7 +2013,6 @@ KsFreeEventList(
     IN  OUT PLIST_ENTRY EventsList,
     IN  KSEVENTS_LOCKTYPE EVentsFlags,
     IN  PVOID EventsLock);
-#endif
 
 /* ===============================================================
     Topology Functions
@@ -2154,7 +2149,7 @@ KSDDKAPI NTSTATUS NTAPI
 KsAllocateObjectCreateItem(
     IN  KSDEVICE_HEADER Header,
     IN  PKSOBJECT_CREATE_ITEM CreateItem,
-    IN  BOOL AllocateEntry,
+    IN  BOOLEAN AllocateEntry,
     IN  PFNKSITEMFREECALLBACK ItemFreeCallback OPTIONAL);
 
 KSDDKAPI NTSTATUS NTAPI
@@ -2426,7 +2421,7 @@ KSDDKAPI NTSTATUS NTAPI
 KsCacheMedium(
     IN  PUNICODE_STRING SymbolicLink,
     IN  PKSPIN_MEDIUM Medium,
-    IN  DWORD PinDirection);
+    IN  ULONG PinDirection);
 
 KSDDKAPI NTSTATUS NTAPI
 KsDefaultDispatchPnp(
@@ -2495,13 +2490,14 @@ KSDDKAPI NTSTATUS NTAPI
 KsSynchronousIoControlDevice(
     IN  PFILE_OBJECT FileObject,
     IN  KPROCESSOR_MODE RequestorMode,
-    IN  DWORD IoControl,
+    IN  ULONG IoControl,
     IN  PVOID InBuffer,
     IN  ULONG InSize,
     OUT PVOID OutBuffer,
     IN  ULONG OUtSize,
     OUT PULONG BytesReturned);
 
+#endif
 
 /* ===============================================================
     AVStream Functions (XP / DirectX 8)

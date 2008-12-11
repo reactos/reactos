@@ -13,7 +13,7 @@ KSDDKAPI NTSTATUS NTAPI
 KsCacheMedium(
     IN  PUNICODE_STRING SymbolicLink,
     IN  PKSPIN_MEDIUM Medium,
-    IN  DWORD PinDirection)
+    IN  ULONG PinDirection)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -207,7 +207,7 @@ KSDDKAPI NTSTATUS NTAPI
 KsSynchronousIoControlDevice(
     IN  PFILE_OBJECT FileObject,
     IN  KPROCESSOR_MODE RequestorMode,
-    IN  DWORD IoControl,
+    IN  ULONG IoControl,
     IN  PVOID InBuffer,
     IN  ULONG InSize,
     OUT PVOID OutBuffer,

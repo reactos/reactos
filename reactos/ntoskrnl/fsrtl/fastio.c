@@ -247,7 +247,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
     PFSRTL_COMMON_FCB_HEADER FcbHeader;
 
     /* WDK doc. Offset=0xffffffffffffffff indicates append to the end of file */
-    BOOLEAN FileOffsetAppend = ((FileOffset->HighPart == 0xffffffff) && (FileOffset->LowPart == 0xffffffff));
+    BOOLEAN FileOffsetAppend = ((FileOffset->HighPart == (LONG)0xffffffff) && (FileOffset->LowPart == 0xffffffff));
     BOOLEAN ResourceAquiredShared = FALSE;
 
     BOOLEAN b_4GB = FALSE;
@@ -1153,7 +1153,7 @@ FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
     LARGE_INTEGER Offset;
 
     /* WDK doc. Offset=0xffffffffffffffff indicates append to the end of file */
-    BOOLEAN FileOffsetAppend = ((FileOffset->HighPart == 0xffffffff) && (FileOffset->LowPart == 0xffffffff));
+    BOOLEAN FileOffsetAppend = ((FileOffset->HighPart == (LONG)0xffffffff) && (FileOffset->LowPart == 0xffffffff));
     BOOLEAN FileSizeModified = FALSE;
     BOOLEAN ResourceAquiredShared = FALSE;
 

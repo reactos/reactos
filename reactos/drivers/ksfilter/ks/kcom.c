@@ -2,9 +2,8 @@
     Kernel-mode COM
 */
 
-#include <windows.h>
 #include <ntddk.h>
-#include <ks.h>
+#include <portcls.h>
 #include <kcom.h>
 #include <debug.h>
 

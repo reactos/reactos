@@ -23,10 +23,6 @@
 #ifndef __SCSISCAN_H
 #define __SCSISCAN_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

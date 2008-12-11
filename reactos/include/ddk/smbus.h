@@ -23,10 +23,6 @@
 #ifndef __SMBUS_H
 #define __SMBUS_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

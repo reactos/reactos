@@ -8,7 +8,15 @@
 #ifndef _UNKNOWN_H_
 #define _UNKNOWN_H_
 
-#include <ntdef.h>
+#ifdef __cplusplus
+extern "C" {
+#include <wdm.h>
+}
+#else
+#include <wdm.h>
+#endif
+
+#include <windef.h>
 #define COM_NO_WINDOWS_H
 #include <basetyps.h>
 

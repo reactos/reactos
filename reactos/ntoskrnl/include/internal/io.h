@@ -292,7 +292,7 @@ typedef struct _IO_WORKITEM
     PDEVICE_OBJECT DeviceObject;
     PIO_WORKITEM_ROUTINE WorkerRoutine;
     PVOID Context;
-} IO_WORKITEM, *PIO_WORKITEM;
+} IO_WORKITEM;
 
 //
 // I/O Wrapper around the Kernel Interrupt

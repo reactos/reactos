@@ -1057,7 +1057,7 @@ RtlUnicodeStringToOemString(
  */
 BOOLEAN
 NTAPI
-RtlIsTextUnicode( LPCVOID buf, INT len, INT *pf )
+RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
 {
     const WCHAR *s = buf;
     int i;

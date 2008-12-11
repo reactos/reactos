@@ -26,6 +26,11 @@
 #endif
 #define NTSTRSAFE_MAX_LENGTH    (NTSTRSAFE_MAX_CCH - 1)
 
+//
+// Typedefs
+//
+typedef unsigned long DWORD;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 FORCEINLINE
@@ -135,13 +140,13 @@ RtlStringVPrintfWorkerA(OUT PCHAR Destination,
                         IN va_list argList)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG Return;
+    LONG Return;
     SIZE_T MaxLength, LocalNewLength = 0;
 
     MaxLength = Length - 1;
 
     Return = _vsnprintf(Destination, MaxLength, Format, argList);
-    if ((Return < 0) || (Return > MaxLength))
+    if ((Return < 0) || ((SIZE_T)Return > MaxLength))
     {
         Destination += MaxLength;
         *Destination = ANSI_NULL;
@@ -150,7 +155,7 @@ RtlStringVPrintfWorkerA(OUT PCHAR Destination,
 
         Status = STATUS_BUFFER_OVERFLOW;
     }
-    else if (Return == MaxLength)
+    else if ((SIZE_T)Return == MaxLength)
     {
         Destination += MaxLength;
         *Destination = ANSI_NULL;

@@ -110,6 +110,7 @@ typedef struct
 	UINT aoffset[1];
 } CIDA, *LPIDA;
 
+#define CFSTR_SHELLIDLISTA      "Shell IDList Array"      /* CF_IDLIST */
 #define CFSTR_SHELLIDLISTOFFSET "Shell Object Offsets"    /* CF_OBJECTPOSITIONS */
 #define CFSTR_NETRESOURCES      "Net Resource"            /* CF_NETRESOURCE */
 

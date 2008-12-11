@@ -23,10 +23,6 @@
 #ifndef _CFGMGR32_H_
 #define _CFGMGR32_H_
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "cfg.h"
 
 #ifdef __cplusplus

@@ -8,10 +8,6 @@
 #ifndef DRMK_H
 #define DRMK_H
 
-#include <ntddk.h>
-#include <debug.h>
-#include <punknown.h>
-
 typedef struct
 {
     DWORD Flags;

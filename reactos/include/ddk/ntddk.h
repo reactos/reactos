@@ -27,47 +27,29 @@
 #ifndef __NTDDK_H
 #define __NTDDK_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
-#include <stdarg.h>
+//
+// Dependencies
+//
+#define NT_INCLUDED
+#include <wdm.h>
 #include <excpt.h>
 #include <ntdef.h>
-#include <basetyps.h>
+#include <ntstatus.h>
 
+#include <stdarg.h> // FIXME
+#include <basetyps.h> // FIXME
+
+
+
+//
+// GUID and UUID
+//
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
 typedef GUID UUID;
 
-/* Base types, structures and definitions */
-typedef short CSHORT;
-typedef ULONG CLONG;
-typedef CCHAR *PCCHAR;
-typedef CSHORT *PCSHORT;
-typedef CLONG *PCLONG;
-typedef CONST int CINT;
-typedef CONST char *PCSZ;
 
-#ifndef STATIC
-#define STATIC static
-#endif
-
-#ifndef CALLBACK
-#define CALLBACK
-#endif
-
-#ifndef DECL_IMPORT
-#define DECL_IMPORT __declspec(dllimport)
-#endif
-
-#ifndef DECL_EXPORT
-#define DECL_EXPORT __declspec(dllexport)
-#endif
-
-/* Windows NT status codes */
-#include "ntstatus.h"
-
-/* Windows NT definitions exported to user mode */
-#include <winnt.h>
 
 /* Windows Device Driver Kit */
 #include "winddk.h"
