@@ -791,6 +791,9 @@ typedef IInterruptSync *PINTERRUPTSYNC;
     IRegistryKey Interface
 */
 
+#undef INTERFACE
+#define INTERFACE IRegistryKey
+
 enum
 {
     GeneralRegistryKey,
