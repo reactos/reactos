@@ -133,7 +133,7 @@ static HFONT
 CreateTitleFont(VOID)
 {
   NONCLIENTMETRICS ncm;
-  LOGFONT LogFont;
+  LOGFONTW LogFont;
   HDC hdc;
   INT FontSize;
   HFONT hFont;
@@ -143,12 +143,12 @@ CreateTitleFont(VOID)
 
   LogFont = ncm.lfMessageFont;
   LogFont.lfWeight = FW_BOLD;
-  _tcscpy(LogFont.lfFaceName, _T("MS Shell Dlg"));
+  wcscpy(LogFont.lfFaceName, L"MS Shell Dlg");
 
   hdc = GetDC(NULL);
   FontSize = 12;
-  LogFont.lfHeight = 0 - GetDeviceCaps (hdc, LOGPIXELSY) * FontSize / 72;
-  hFont = CreateFontIndirect(&LogFont);
+  LogFont.lfHeight = 0 - GetDeviceCaps(hdc, LOGPIXELSY) * FontSize / 72;
+  hFont = CreateFontIndirectW(&LogFont);
   ReleaseDC(NULL, hdc);
 
   return hFont;
@@ -553,7 +553,7 @@ WriteComputerSettings(TCHAR * ComputerName, HWND hwndDlg)
       {
         wcscpy(ErrorComputerName, L"Setup failed to set the computer name.");
       }
-      MessageBox(hwndDlg, ErrorComputerName, Title, MB_ICONERROR | MB_OK);
+      MessageBoxW(hwndDlg, ErrorComputerName, Title, MB_ICONERROR | MB_OK);
 
       return FALSE;
     }
@@ -637,7 +637,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                   {
                     wcscpy(EmptyComputerName, L"Setup cannot continue until you enter the name of your computer.");
                   }
-                  MessageBox(hwndDlg, EmptyComputerName, Title, MB_ICONERROR | MB_OK);
+                  MessageBoxW(hwndDlg, EmptyComputerName, Title, MB_ICONERROR | MB_OK);
                   SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
@@ -663,7 +663,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                   {
                     wcscpy(EmptyPassword, L"You must enter a password !");
                   }
-                  MessageBox(hwndDlg, EmptyPassword, Title, MB_ICONERROR | MB_OK);
+                  MessageBoxW(hwndDlg, EmptyPassword, Title, MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
@@ -679,7 +679,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                   {
                     wcscpy(NotMatchPassword, L"The passwords you entered do not match. Please enter the desired password again.");
                   }
-                  MessageBox(hwndDlg, NotMatchPassword, Title, MB_ICONERROR | MB_OK);
+                  MessageBoxW(hwndDlg, NotMatchPassword, Title, MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
@@ -695,7 +695,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     {
                       wcscpy(WrongPassword, L"The password you entered contains invalid characters. Please enter a cleaned password.");
                     }
-                    MessageBox(hwndDlg, WrongPassword, Title, MB_ICONERROR | MB_OK);
+                    MessageBoxW(hwndDlg, WrongPassword, Title, MB_ICONERROR | MB_OK);
                     SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                     return TRUE;
                     break;
@@ -784,11 +784,11 @@ SetKeyboardLayoutName(HWND hwnd)
 static BOOL
 RunControlPanelApplet(HWND hwnd, WCHAR *lpCommandLine)
 {
-  STARTUPINFO StartupInfo;
+  STARTUPINFOW StartupInfo;
   PROCESS_INFORMATION ProcessInformation;
 
-  ZeroMemory(&StartupInfo, sizeof(STARTUPINFO));
-  StartupInfo.cb = sizeof(STARTUPINFO);
+  ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
+  StartupInfo.cb = sizeof(STARTUPINFOW);
 
   if (!CreateProcessW(NULL,
                        lpCommandLine,
@@ -801,7 +801,7 @@ RunControlPanelApplet(HWND hwnd, WCHAR *lpCommandLine)
                        &StartupInfo,
                        &ProcessInformation))
     {
-      MessageBox(hwnd, _T("Error: failed to launch rundll32"), NULL, MB_ICONERROR);
+      MessageBoxW(hwnd, L"Error: failed to launch rundll32", NULL, MB_ICONERROR);
       return FALSE;
     }
 
@@ -816,17 +816,17 @@ WriteUserLocale(VOID)
 {
   HKEY hKey;
   LCID lcid;
-  TCHAR Locale[12];
+  WCHAR Locale[12];
 
   lcid = GetSystemDefaultLCID();
 
-  if (GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Locale, sizeof(Locale) / sizeof(Locale[0])) != 0)
+  if (GetLocaleInfoW(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, Locale, sizeof(Locale) / sizeof(Locale[0])) != 0)
   {
-    if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Control Panel\\International"),
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Control Panel\\International",
                        0, NULL, REG_OPTION_NON_VOLATILE,
                        KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-       RegSetValueEx(hKey, _T("Locale"), 0, REG_SZ, (LPBYTE)Locale, (_tcslen(Locale)+1) * sizeof(TCHAR));
+       RegSetValueExW(hKey, L"Locale", 0, REG_SZ, (LPBYTE)Locale, (wcslen(Locale)+1) * sizeof(WCHAR));
        RegCloseKey(hKey);
     }
   }
@@ -864,7 +864,7 @@ LocalePageDlgProc(HWND hwndDlg,
           {
         case IDC_CUSTOMLOCALE:
           {
-            wcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5"));
+            wcscpy(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5");
             RunControlPanelApplet(hwndDlg, szBuffer);
             /* FIXME: Update input locale name */
           }
@@ -872,7 +872,7 @@ LocalePageDlgProc(HWND hwndDlg,
 
         case IDC_CUSTOMLAYOUT:
           {
-            wcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL input.dll,@1"));
+            wcscpy(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL input.dll,@1");
             RunControlPanelApplet(hwndDlg, szBuffer);
           }
           break;
@@ -1341,15 +1341,15 @@ SetAutoDaylightInfo(HWND hwnd)
 
   if (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
     {
-      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		       _T("SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation"),
+      if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		       L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
 		       0,
 		       KEY_SET_VALUE,
 		       &hKey))
 	  return;
 
-      RegSetValueEx(hKey,
-		    _T("DisableAutoDaylightTimeSet"),
+      RegSetValueExW(hKey,
+		    L"DisableAutoDaylightTimeSet",
 		    0,
 		    REG_DWORD,
 		    (LPBYTE)&dwValue,
@@ -1438,7 +1438,7 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
       {
         wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
       }
-      MessageBox(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
+      MessageBoxW(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
       return FALSE;
     }
 
@@ -1523,7 +1523,7 @@ DateTimePageDlgProc(HWND hwndDlg,
                     {
                       wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
                     }
-                    MessageBox(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
+                    MessageBoxW(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
                   }
                 }
                 break;
@@ -1920,8 +1920,8 @@ static VOID
 SetupIsActive( DWORD dw )
 {
   HKEY hKey = 0;
-  if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, _T("SYSTEM\\Setup"), 0, KEY_WRITE, &hKey ) == ERROR_SUCCESS) {
-    RegSetValueEx( hKey, _T("SystemSetupInProgress"), 0, REG_DWORD, (CONST BYTE *)&dw, sizeof(dw) );
+  if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", 0, KEY_WRITE, &hKey ) == ERROR_SUCCESS) {
+    RegSetValueExW( hKey, L"SystemSetupInProgress", 0, REG_DWORD, (CONST BYTE *)&dw, sizeof(dw) );
     RegCloseKey( hKey );
   }
 }
