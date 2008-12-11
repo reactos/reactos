@@ -559,6 +559,9 @@ typedef IResourceList *PRESOURCELIST;
 /* ===============================================================
     IServiceSink Interface
 */
+#define INTERFACE IServiceSink
+
+DEFINE_GUID(IID_IServiceSink, 0x22C6AC64L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
 
 DECLARE_INTERFACE_(IServiceSink, IUnknown)
 {
@@ -575,8 +578,12 @@ typedef IServiceSink *PSERVICESINK;
 /* ===============================================================
     IServiceGroup Interface
 */
+#undef INTERFACE
+#define INTERFACE IServiceGroup
 
-DECLARE_INTERFACE_(IServiceGroup, IUnknown)
+DEFINE_GUID(IID_IServiceGroup, 0x22C6AC65L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
+
+DECLARE_INTERFACE_(IServiceGroup, IServiceSink)
 {
     DEFINE_ABSTRACT_UNKNOWN()
 
@@ -783,6 +790,15 @@ typedef IInterruptSync *PINTERRUPTSYNC;
 /* ===============================================================
     IRegistryKey Interface
 */
+
+enum
+{
+    GeneralRegistryKey,
+    DeviceRegistryKey,
+    DriverRegistryKey,
+    HwProfileRegistryKey,
+    DeviceInterfaceRegistryKey
+};
 
 DEFINE_GUID(IID_IRegistryKey, 0xE8DA4302l, 0xF304, 0x11D0, 0x95, 0x8B, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3);
 
