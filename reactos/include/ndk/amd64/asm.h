@@ -84,7 +84,7 @@ Author:
 #define KTRAP_FRAME_R9 0x50
 #define KTRAP_FRAME_R10 0x58
 #define KTRAP_FRAME_R11 0x60
-#define KTRAP_FRAME_Spare0 0x68
+#define KTRAP_FRAME_GsBase 0x68
 #define KTRAP_FRAME_Xmm0 0x70
 #define KTRAP_FRAME_Xmm1 0x80
 #define KTRAP_FRAME_Xmm2 0x90
@@ -115,9 +115,11 @@ Author:
 #define KTRAP_FRAME_ErrorCode 0x160
 #define KTRAP_FRAME_Rip 0x168
 #define KTRAP_FRAME_SegCs 0x170
+#define KTRAP_FRAME_Logging 0x173
 #define KTRAP_FRAME_EFlags 0x178
 #define KTRAP_FRAME_Rsp 0x180
 #define KTRAP_FRAME_SegSs 0x188
+#define KTRAP_FRAME_CodePatchCycle 0x18c
 #define SIZE_KTRAP_FRAME 0x190
 #define KTRAP_FRAME_ALIGN                       0x10
 #define KTRAP_FRAME_LENGTH                      0x190
