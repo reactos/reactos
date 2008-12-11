@@ -1109,13 +1109,8 @@ typedef IPortWaveCyclic *PPORTWAVECYCLIC;
 /* ===============================================================
     IPortWavePci Interface
 */
-
-#if 0
-#define STATIC_IID_IPortWavePci \
-    0xb4c90a50L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44
-DEFINE_GUIDSTRUCT("0xB4C90A50-5791-11d0-86f9-00a0c911b544", IID_IPortWavePci);
-#define IID_IPortWavePci DEFINE_GUIDNAMED(IID_IPortWavePci)
-#endif
+#undef INTERFACE
+#define INTERFACE IPortWavePci
 
 DEFINE_GUID(IID_IPortWavePci,
     0xb4c90a50L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
@@ -1144,21 +1139,7 @@ DECLARE_INTERFACE_(IPortWavePci, IPort)
         IN  PSERVICEGROUP ServiceGroup) PURE;
 };
 
-/* TODO ... */
-
-
-/* ===============================================================
-    IPortWavePciStream Interface
-*/
-
-#define STATIC_IPortWavePciStream \
-    0xb4c90a51L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44
-
-DEFINE_GUID(IID_IPortWavePciStream, 0xb4c90a51L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
-
-/* ... */
-
-
+typedef IPortWavePci *PPORTWAVEPCI;
 
 /* ===============================================================
     IMiniPort Interface
@@ -1350,13 +1331,108 @@ DECLARE_INTERFACE_(IMiniportWaveCyclic, IMiniport)
 typedef IMiniportWaveCyclic *PMINIPORTWAVECYCLIC;
 #undef INTERFACE
 
+
+/* ===============================================================
+    IPortWavePciStream Interface
+*/
+#undef INTERFACE
+#define INTERFACE IPortWavePciStream
+
+DEFINE_GUID(IID_IPortWavePciStream, 0xb4c90a51L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+DECLARE_INTERFACE_(IPortWavePciStream,IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()   //  For IUnknown
+
+    STDMETHOD_(NTSTATUS,GetMapping)(THIS_
+        IN PVOID Tag,
+        OUT PPHYSICAL_ADDRESS PhysicalAddress,
+        OUT PVOID * VirtualAddress,
+        OUT PULONG ByteCount,
+        OUT PULONG Flags)PURE;
+
+    STDMETHOD_(NTSTATUS,ReleaseMapping)(THIS_
+        IN PVOID Tag)PURE;
+
+    STDMETHOD_(NTSTATUS,TerminatePacket)(THIS)PURE;
+};
+
+typedef IPortWavePciStream *PPORTWAVEPCISTREAM;
+
 /* ===============================================================
     IMiniportWavePciStream Interface
 */
+#undef INTERFACE
+#define INTERFACE IMiniportWavePciStream
+
+DEFINE_GUID(IID_IMiniportWavePciStream, 0xb4c90a53L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+DECLARE_INTERFACE_(IMiniportWavePciStream,IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS,SetFormat)(THIS_
+        IN PKSDATAFORMAT DataFormat)PURE;
+
+    STDMETHOD_(NTSTATUS,SetState)(THIS_
+        IN KSSTATE State)PURE;
+
+    STDMETHOD_(NTSTATUS,GetPosition)(THIS_
+        OUT PULONGLONG Position)PURE;
+
+    STDMETHOD_(NTSTATUS,NormalizePhysicalPosition)(THIS_
+        IN OUT PLONGLONG PhysicalPosition)PURE;
+
+    STDMETHOD_(NTSTATUS,GetAllocatorFraming)(THIS_
+        OUT PKSALLOCATOR_FRAMING AllocatorFraming) PURE;
+
+    STDMETHOD_(NTSTATUS,RevokeMappings)(THIS_
+        IN PVOID FirstTag,
+        IN PVOID LastTag,
+        OUT PULONG MappingsRevoked)PURE;
+
+    STDMETHOD_(void,MappingAvailable)(THIS)PURE;
+
+    STDMETHOD_(void,Service)(THIS)PURE;
+};
+
+typedef IMiniportWavePciStream *PMINIPORTWAVEPCISTREAM;
 
 /* ===============================================================
     IMiniportWavePci Interface
 */
+#undef INTERFACE
+#define INTERFACE IMiniportWavePci
+
+DEFINE_GUID(IID_IMiniportWavePci, 0xb4c90a52L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+DECLARE_INTERFACE_(IMiniportWavePci,IMiniport)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_MINIPORT()
+
+    STDMETHOD_(NTSTATUS,Init)(THIS_
+        IN PUNKNOWN UnknownAdapter,
+        IN PRESOURCELIST ResourceList,
+        IN PPORTWAVEPCI Port,
+        OUT PSERVICEGROUP * ServiceGroup)PURE;
+
+    STDMETHOD_(NTSTATUS,NewStream)(THIS_
+        OUT PMINIPORTWAVEPCISTREAM *    Stream,
+        IN PUNKNOWN OuterUnknown    OPTIONAL,
+        IN POOL_TYPE PoolType,
+        IN PPORTWAVEPCISTREAM PortStream,
+        IN ULONG Pin,
+        IN BOOLEAN Capture,
+        IN PKSDATAFORMAT DataFormat,
+        OUT PDMACHANNEL * DmaChannel,
+        OUT PSERVICEGROUP * ServiceGroup)PURE;
+
+    STDMETHOD_(void,Service)(THIS)PURE;
+};
+
+typedef IMiniportWavePci *PMINIPORTWAVEPCI;
 
 /* ===============================================================
     IAdapterPowerManagement Interface
