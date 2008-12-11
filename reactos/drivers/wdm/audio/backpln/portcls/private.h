@@ -69,9 +69,17 @@ NTSTATUS NewPortWaveCyclic(
 NTSTATUS NewPortWavePci(
     OUT PPORT* OutPort);
 
+NTSTATUS NewDmaChannelSlave(
+    IN PDEVICE_DESCRIPTION DeviceDesc,
+    IN PDMA_ADAPTER Adapter,
+    OUT PDMACHANNELSLAVE* DmaChannel);
+
+
 typedef struct
 {
     PCPFNSTARTDEVICE StartDevice;
+    KSDEVICE_HEADER KsDeviceHeader;
+    IAdapterPowerManagement * AdapterPowerManagement;
 
     IResourceList* resources;
 } PCExtension;

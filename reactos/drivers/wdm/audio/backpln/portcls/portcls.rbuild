@@ -23,6 +23,7 @@
 	<file>registry.c</file>
 	<file>service_group.c</file>	
 	<file>port.c</file>
+	<file>power.c</file>
 	<file>port_dmus.c</file>
 	<file>port_midi.c</file>
 	<file>port_topology.c</file>

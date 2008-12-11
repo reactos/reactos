@@ -191,7 +191,7 @@ IServiceGroup_fnSupportDelayedService(
 
     if (!This->Initialized)
     {
-        KeInitializeEvent(&This->DpcEvent, NotificationEvent, FALSE);
+        KeInitializeEvent(&This->DpcEvent, SynchronizationEvent, FALSE);
         KeInitializeTimerEx(&This->Timer, NotificationTimer);
         KeInitializeDpc(&This->Dpc, IServiceGroupDpc, (PVOID)This);
         This->Initialized = TRUE;
@@ -263,8 +263,5 @@ PcNewServiceGroup(
     This->Initialized = FALSE;
     *OutServiceGroup = (PSERVICEGROUP)&This->lpVtbl;
 
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_SUCCESS;
 }
-
-
-

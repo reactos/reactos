@@ -144,7 +144,7 @@ PcAddAdapterDevice(
     status = IoCreateDevice(DriverObject,
                             DeviceExtensionSize,
                             NULL,
-                            PhysicalDeviceObject->DeviceType,   /* FILE_DEVICE_KS ? */
+                            FILE_DEVICE_KS,
                             PhysicalDeviceObject->Characteristics, /* TODO: Check */
                             FALSE,
                             &fdo);
@@ -161,9 +161,56 @@ PcAddAdapterDevice(
     ASSERT(portcls_ext);
 
     /* Initialize */
+    RtlZeroMemory(portcls_ext, sizeof(PCExtension));
     portcls_ext->StartDevice = StartDevice;
+
+    status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, 0, NULL);
+    if (!NT_SUCCESS(status))
+    {
+        IoDeleteDevice(fdo);
+        return status;
+    }
 
     DPRINT("PcAddAdapterDriver succeeded\n");
 
+    return status;
+}
+
+NTSTATUS
+NTAPI
+PciDriverDispatch(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("PortClsSysControl called\n");
+
+    /* TODO */
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
     return STATUS_SUCCESS;
+}
+
+NTSTATUS NTAPI
+PcRegisterSubdevice(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PWCHAR Name,
+    IN  PUNKNOWN Unknown)
+{
+    PCExtension* DeviceExt;
+    NTSTATUS Status;
+
+    if (!DeviceObject || !Name || !Unknown)
+        return STATUS_INVALID_PARAMETER;
+
+    DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
+    if (!DeviceExt)
+        return STATUS_UNSUCCESSFUL;
+
+    Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PciDriverDispatch, (PVOID)Unknown, Name, NULL);
+
+
+    return STATUS_UNSUCCESSFUL;
 }

@@ -36,18 +36,6 @@ PcNewDmaChannel(
  * @unimplemented
  */
 NTSTATUS NTAPI
-PcRegisterAdapterPowerManagement(
-    IN  PUNKNOWN pUnknown,
-    IN  PVOID pvContext1)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
 PcRequestNewPowerState(
     IN  PDEVICE_OBJECT pDeviceObject,
     IN  DEVICE_POWER_STATE RequestedNewState)
@@ -130,17 +118,3 @@ PcRegisterPhysicalConnectionToExternal(
 /*
  * @unimplemented
  */
-
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcRegisterSubdevice(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PWCHAR Name,
-    IN  PUNKNOWN Unknown)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
