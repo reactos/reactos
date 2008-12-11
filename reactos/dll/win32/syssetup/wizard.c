@@ -2221,7 +2221,6 @@ ProcessUnattendInf(HINF hUnattendedInf)
 
 
       /* winetests */
-      fprintf(file, "%s\n", "SET WINETEST_PLATFORM=wine");
       hFind = FindFirstFileA("c:\\reactos\\bin\\*.exe", &ffd); /* %windir% isn't working on ros */
       if (hFind != INVALID_HANDLE_VALUE)
       {
