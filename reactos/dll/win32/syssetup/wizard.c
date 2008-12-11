@@ -2179,7 +2179,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
                                  0,
                                  REG_SZ,
                                  (const BYTE*)szPath,
-                                 _tcslen(szPath) * sizeof(TCHAR)) == ERROR_SUCCESS)
+                                 (_tcslen(szPath)+1) * sizeof(TCHAR)) == ERROR_SUCCESS)
                  {
                    i++;
                  }
@@ -2217,7 +2217,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
                     0,
                     REG_SZ,
                     (const BYTE*)szPath,
-                     strlen(szPath) * sizeof(char));
+                     (strlen(szPath)+1) * sizeof(char));
 
 
       /* winetests */
