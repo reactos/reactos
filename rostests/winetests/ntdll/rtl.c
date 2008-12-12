@@ -49,6 +49,7 @@ typedef struct _RTL_HANDLE_TABLE
 static HMODULE hntdll = 0;
 static SIZE_T    (WINAPI  *pRtlCompareMemory)(LPCVOID,LPCVOID,SIZE_T);
 static SIZE_T    (WINAPI  *pRtlCompareMemoryUlong)(PULONG, SIZE_T, ULONG);
+static NTSTATUS  (WINAPI  *pRtlDeleteTimer)(HANDLE, HANDLE, HANDLE);
 static VOID      (WINAPI  *pRtlMoveMemory)(LPVOID,LPCVOID,SIZE_T);
 static VOID      (WINAPI  *pRtlFillMemory)(LPVOID,SIZE_T,BYTE);
 static VOID      (WINAPI  *pRtlFillMemoryUlong)(LPVOID,SIZE_T,ULONG);
@@ -80,6 +81,7 @@ static void InitFunctionPtrs(void)
     if (hntdll) {
 	pRtlCompareMemory = (void *)GetProcAddress(hntdll, "RtlCompareMemory");
 	pRtlCompareMemoryUlong = (void *)GetProcAddress(hntdll, "RtlCompareMemoryUlong");
+        pRtlDeleteTimer = (void *)GetProcAddress(hntdll, "RtlDeleteTimer");
 	pRtlMoveMemory = (void *)GetProcAddress(hntdll, "RtlMoveMemory");
 	pRtlFillMemory = (void *)GetProcAddress(hntdll, "RtlFillMemory");
 	pRtlFillMemoryUlong = (void *)GetProcAddress(hntdll, "RtlFillMemoryUlong");
@@ -263,6 +265,12 @@ static void test_RtlZeroMemory(void)
 static void test_RtlUlonglongByteSwap(void)
 {
     ULONGLONG result;
+
+    if ( pRtlUlonglongByteSwap( 0 ) != 0 )
+    {
+        win_skip("Broken RtlUlonglongByteSwap in win2k\n");
+        return;
+    }
 
     result = pRtlUlonglongByteSwap( ((ULONGLONG)0x76543210 << 32) | 0x87654321 );
     ok( (((ULONGLONG)0x21436587 << 32) | 0x10325476) == result,
@@ -924,6 +932,15 @@ static void test_RtlAllocateAndInitializeSid(void)
     ok(ret == STATUS_INVALID_SID, "wrong error %08x\n", ret);
 }
 
+static void test_RtlDeleteTimer(void)
+{
+    NTSTATUS ret;
+    ret = pRtlDeleteTimer(NULL, NULL, NULL);
+    ok(ret == STATUS_INVALID_PARAMETER_1 ||
+       ret == STATUS_INVALID_PARAMETER, /* W2K */
+       "expected STATUS_INVALID_PARAMETER_1 or STATUS_INVALID_PARAMETER, got %x\n", ret);
+}
+
 START_TEST(rtl)
 {
     InitFunctionPtrs();
@@ -956,4 +973,6 @@ START_TEST(rtl)
         test_HandleTables();
     if (pRtlAllocateAndInitializeSid)
         test_RtlAllocateAndInitializeSid();
+    if (pRtlDeleteTimer)
+        test_RtlDeleteTimer();
 }

@@ -130,21 +130,24 @@ static void test_namespace_pipe(void)
     ok(status == STATUS_INSTANCE_NOT_AVAILABLE,
         "NtCreateNamedPipeFile should have failed with STATUS_INSTANCE_NOT_AVAILABLE got(%08x)\n", status);
 
-    attr.Attributes = OBJ_CASE_INSENSITIVE;
-    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_OPEN);
-    ok(status == STATUS_SUCCESS, "Failed to open NamedPipe(%08x)\n", status);
+    h = CreateFileA("\\\\.\\pipe\\test\\pipe", GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
+                    OPEN_EXISTING, 0, 0 );
+    ok(h != INVALID_HANDLE_VALUE, "Failed to open NamedPipe (%u)\n", GetLastError());
     pNtClose(h);
 
     pRtlInitUnicodeString(&str, buffer3);
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_OPEN);
-    ok(status == STATUS_OBJECT_PATH_NOT_FOUND || status == STATUS_PIPE_NOT_AVAILABLE,
+    ok(status == STATUS_OBJECT_PATH_NOT_FOUND ||
+       status == STATUS_PIPE_NOT_AVAILABLE ||
+       status == STATUS_OBJECT_NAME_INVALID, /* vista */
         "NtOpenFile should have failed with STATUS_OBJECT_PATH_NOT_FOUND got(%08x)\n", status);
 
     pRtlInitUnicodeString(&str, buffer4);
     InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, 0, NULL);
     status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_OPEN);
-    ok(status == STATUS_OBJECT_NAME_NOT_FOUND,
+    ok(status == STATUS_OBJECT_NAME_NOT_FOUND ||
+       status == STATUS_OBJECT_NAME_INVALID, /* vista */
         "NtOpenFile should have failed with STATUS_OBJECT_NAME_NOT_FOUND got(%08x)\n", status);
 
     pNtClose(pipe);
@@ -175,6 +178,64 @@ static void test_namespace_pipe(void)
     DIR_TEST_CREATE_SUCCESS(&h) pNtClose(h); DIR_TEST_OPEN_SUCCESS(&h) pNtClose(h); \
     pRtlFreeUnicodeString(&str);
 
+static BOOL is_correct_dir( HANDLE dir, const char *name )
+{
+    NTSTATUS status;
+    UNICODE_STRING str;
+    OBJECT_ATTRIBUTES attr;
+    HANDLE h = 0;
+
+    pRtlCreateUnicodeStringFromAsciiz(&str, name);
+    InitializeObjectAttributes(&attr, &str, OBJ_OPENIF, dir, NULL);
+    status = pNtCreateMutant(&h, GENERIC_ALL, &attr, FALSE);
+    pRtlFreeUnicodeString(&str);
+    if (h) pNtClose( h );
+    return (status == STATUS_OBJECT_NAME_EXISTS);
+}
+
+/* return a handle to the BaseNamedObjects dir where kernel32 objects get created */
+static HANDLE get_base_dir(void)
+{
+    static const char objname[] = "om.c_get_base_dir_obj";
+    NTSTATUS status;
+    UNICODE_STRING str;
+    OBJECT_ATTRIBUTES attr;
+    HANDLE dir, h;
+    unsigned int i;
+
+    h = CreateMutexA(NULL, FALSE, objname);
+    ok(h != 0, "CreateMutexA failed got ret=%p (%d)\n", h, GetLastError());
+    InitializeObjectAttributes(&attr, &str, OBJ_OPENIF, 0, NULL);
+
+    pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Local");
+    status = pNtOpenDirectoryObject(&dir, DIRECTORY_QUERY, &attr);
+    pRtlFreeUnicodeString(&str);
+    if (!status && is_correct_dir( dir, objname )) goto done;
+    if (!status) pNtClose( dir );
+
+    pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects");
+    status = pNtOpenDirectoryObject(&dir, DIRECTORY_QUERY, &attr);
+    pRtlFreeUnicodeString(&str);
+    if (!status && is_correct_dir( dir, objname )) goto done;
+    if (!status) pNtClose( dir );
+
+    for (i = 0; i < 20; i++)
+    {
+        char name[40];
+        sprintf( name, "\\BaseNamedObjects\\Session\\%u", i );
+        pRtlCreateUnicodeStringFromAsciiz(&str, name );
+        status = pNtOpenDirectoryObject(&dir, DIRECTORY_QUERY, &attr);
+        pRtlFreeUnicodeString(&str);
+        if (!status && is_correct_dir( dir, objname )) goto done;
+        if (!status) pNtClose( dir );
+    }
+    dir = 0;
+
+done:
+    pNtClose( h );
+    return dir;
+}
+
 static void test_name_collisions(void)
 {
     NTSTATUS status;
@@ -202,12 +263,13 @@ static void test_name_collisions(void)
         "NtCreateMutant should have failed with STATUS_OBJECT_TYPE_MISMATCH got(%08x)\n", status);
     pRtlFreeUnicodeString(&str);
 
-
-    pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects");
-    DIR_TEST_OPEN_SUCCESS(&dir)
+    if (!(dir = get_base_dir()))
+    {
+        win_skip( "couldn't find the BaseNamedObjects dir\n" );
+        return;
+    }
     pRtlCreateUnicodeStringFromAsciiz(&str, "om.c-test");
     InitializeObjectAttributes(&attr, &str, OBJ_OPENIF, dir, NULL);
-    
     h = CreateMutexA(NULL, FALSE, "om.c-test");
     ok(h != 0, "CreateMutexA failed got ret=%p (%d)\n", h, GetLastError());
     status = pNtCreateMutant(&h1, GENERIC_ALL, &attr, FALSE);
@@ -285,13 +347,14 @@ static void test_directory(void)
     UNICODE_STRING str;
     OBJECT_ATTRIBUTES attr;
     HANDLE dir, dir1, h;
+    BOOL is_nt4;
 
     /* No name and/or no attributes */
     status = pNtCreateDirectoryObject(NULL, DIRECTORY_QUERY, &attr);
-    ok(status == STATUS_ACCESS_VIOLATION,
+    ok(status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_PARAMETER,
         "NtCreateDirectoryObject should have failed with STATUS_ACCESS_VIOLATION got(%08x)\n", status);
     status = pNtOpenDirectoryObject(NULL, DIRECTORY_QUERY, &attr);
-    ok(status == STATUS_ACCESS_VIOLATION,
+    ok(status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_PARAMETER,
         "NtOpenDirectoryObject should have failed with STATUS_ACCESS_VIOLATION got(%08x)\n", status);
 
     status = pNtCreateDirectoryObject(&h, DIRECTORY_QUERY, NULL);
@@ -335,14 +398,18 @@ static void test_directory(void)
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Local");
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     status = pNtOpenSymbolicLinkObject(&dir, SYMBOLIC_LINK_QUERY, &attr);
-    ok(status == STATUS_SUCCESS, "Failed to open SymbolicLink(%08x)\n", status);
-    pRtlFreeUnicodeString(&str);
-    InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
-    pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
-    DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_TYPE_MISMATCH)
-    pRtlFreeUnicodeString(&str);
-    pNtClose(h);
-    pNtClose(dir);
+    is_nt4 = (status == STATUS_OBJECT_NAME_NOT_FOUND);  /* nt4 doesn't have Local\\ symlink */
+    if (!is_nt4)
+    {
+        ok(status == STATUS_SUCCESS, "Failed to open SymbolicLink(%08x)\n", status);
+        pRtlFreeUnicodeString(&str);
+        InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
+        pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
+        DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_TYPE_MISMATCH)
+        pRtlFreeUnicodeString(&str);
+        pNtClose(h);
+        pNtClose(dir);
+    }
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects");
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
@@ -393,22 +460,23 @@ static void test_directory(void)
 
     pNtClose(dir);
 
-    InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
-    pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Global\\om.c-test");
-    DIR_TEST_CREATE_SUCCESS(&dir)
-    pRtlFreeUnicodeString(&str);
-    pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Local\\om.c-test\\one more level");
-    DIR_TEST_CREATE_SUCCESS(&h)
-    pRtlFreeUnicodeString(&str);
-    pNtClose(h);
-    InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
-    pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
-    DIR_TEST_CREATE_SUCCESS(&dir)
-    pRtlFreeUnicodeString(&str);
-    pNtClose(h);
-
-    pNtClose(dir);
-
+    if (!is_nt4)
+    {
+        InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
+        pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Global\\om.c-test");
+        DIR_TEST_CREATE_SUCCESS(&dir)
+        pRtlFreeUnicodeString(&str);
+        pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Local\\om.c-test\\one more level");
+        DIR_TEST_CREATE_SUCCESS(&h)
+        pRtlFreeUnicodeString(&str);
+        pNtClose(h);
+        InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
+        pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
+        DIR_TEST_CREATE_SUCCESS(&dir)
+        pRtlFreeUnicodeString(&str);
+        pNtClose(h);
+        pNtClose(dir);
+    }
 
     /* Create other objects using RootDirectory */
 
@@ -445,26 +513,19 @@ static void test_directory(void)
     pNtClose(dir);
 }
 
-#define SYMLNK_TEST_CREATE_FAILURE(h,e) \
-    status = pNtCreateSymbolicLinkObject(h, SYMBOLIC_LINK_QUERY, &attr, &target);\
-    ok(status == e,"NtCreateSymbolicLinkObject should have failed with %s got(%08x)\n", #e, status);
-#define SYMLNK_TEST_OPEN_FAILURE(h,e) \
-    status = pNtOpenSymbolicLinkObject(h, SYMBOLIC_LINK_QUERY, &attr);\
-    ok(status == e,"NtOpenSymbolicLinkObject should have failed with %s got(%08x)\n", #e, status);
-#define SYMLNK_TEST_CREATE_OPEN_FAILURE(h,n,t,e) \
+#define SYMLNK_TEST_CREATE_OPEN_FAILURE2(h,n,t,e,e2) \
     pRtlCreateUnicodeStringFromAsciiz(&str, n);\
     pRtlCreateUnicodeStringFromAsciiz(&target, t);\
-    SYMLNK_TEST_CREATE_FAILURE(h,e)\
-    SYMLNK_TEST_OPEN_FAILURE(h,e)\
+    status = pNtCreateSymbolicLinkObject(h, SYMBOLIC_LINK_QUERY, &attr, &target);\
+    ok(status == e || status == e2, \
+       "NtCreateSymbolicLinkObject should have failed with %s or %s got(%08x)\n", #e, #e2, status);\
+    status = pNtOpenSymbolicLinkObject(h, SYMBOLIC_LINK_QUERY, &attr);\
+    ok(status == e || status == e2, \
+       "NtOpenSymbolicLinkObject should have failed with %s or %s got(%08x)\n", #e, #e2, status);\
     pRtlFreeUnicodeString(&target);\
     pRtlFreeUnicodeString(&str);
 
-#define SYMLNK_TEST_CREATE_SUCCESS(h) \
-    status = pNtCreateSymbolicLinkObject(h, SYMBOLIC_LINK_QUERY, &attr, &target); \
-    ok(status == STATUS_SUCCESS, "Failed to create SymbolicLink(%08x)\n", status);
-#define SYMLNK_TEST_OPEN_SUCCESS(h) \
-    status = pNtOpenSymbolicLinkObject(h, SYMBOLIC_LINK_QUERY, &attr); \
-    ok(status == STATUS_SUCCESS, "Failed to open SymbolicLink(%08x)\n", status);
+#define SYMLNK_TEST_CREATE_OPEN_FAILURE(h,n,t,e) SYMLNK_TEST_CREATE_OPEN_FAILURE2(h,n,t,e,e)
 
 static void test_symboliclink(void)
 {
@@ -475,7 +536,7 @@ static void test_symboliclink(void)
     IO_STATUS_BLOCK iosb;
 
     /* No name and/or no attributes */
-    SYMLNK_TEST_CREATE_OPEN_FAILURE(NULL, "", "", STATUS_ACCESS_VIOLATION)
+    SYMLNK_TEST_CREATE_OPEN_FAILURE2(NULL, "", "", STATUS_ACCESS_VIOLATION, STATUS_INVALID_PARAMETER)
 
     status = pNtCreateSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, NULL, NULL);
     ok(status == STATUS_ACCESS_VIOLATION,
@@ -487,26 +548,38 @@ static void test_symboliclink(void)
     /* No attributes */
     pRtlCreateUnicodeStringFromAsciiz(&target, "\\DosDevices");
     status = pNtCreateSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, NULL, &target);
-    ok(status == STATUS_SUCCESS, "NtCreateSymbolicLinkObject failed(%08x)\n", status);
+    ok(status == STATUS_SUCCESS || status == STATUS_ACCESS_VIOLATION, /* nt4 */
+       "NtCreateSymbolicLinkObject failed(%08x)\n", status);
     pRtlFreeUnicodeString(&target);
-    pNtClose(h);
+    if (!status) pNtClose(h);
 
     InitializeObjectAttributes(&attr, NULL, 0, 0, NULL);
-    SYMLNK_TEST_CREATE_FAILURE(&link, STATUS_INVALID_PARAMETER)
-    SYMLNK_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
+    status = pNtCreateSymbolicLinkObject(&link, SYMBOLIC_LINK_QUERY, &attr, &target);
+    ok(status == STATUS_INVALID_PARAMETER ||
+       broken(status == STATUS_SUCCESS),  /* nt4 */
+       "NtCreateSymbolicLinkObject should have failed with STATUS_INVALID_PARAMETER got(%08x)\n", status);
+    if (!status) pNtClose(h);
+    status = pNtOpenSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, &attr);
+    ok(status == STATUS_OBJECT_PATH_SYNTAX_BAD,
+       "NtOpenSymbolicLinkObject should have failed with STATUS_OBJECT_PATH_SYNTAX_BAD got(%08x)\n", status);
 
     /* Bad name */
     pRtlCreateUnicodeStringFromAsciiz(&target, "anywhere");
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "");
-    SYMLNK_TEST_CREATE_SUCCESS(&link)
-    SYMLNK_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
+    status = pNtCreateSymbolicLinkObject(&link, SYMBOLIC_LINK_QUERY, &attr, &target);
+    ok(status == STATUS_SUCCESS, "Failed to create SymbolicLink(%08x)\n", status);
+    status = pNtOpenSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, &attr);
+    ok(status == STATUS_OBJECT_PATH_SYNTAX_BAD,
+       "NtOpenSymbolicLinkObject should have failed with STATUS_OBJECT_PATH_SYNTAX_BAD got(%08x)\n", status);
     pNtClose(link);
     pRtlFreeUnicodeString(&str);
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\");
-    todo_wine {SYMLNK_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_TYPE_MISMATCH)}
+    status = pNtCreateSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, &attr, &target);
+    todo_wine ok(status == STATUS_OBJECT_TYPE_MISMATCH,
+                 "NtCreateSymbolicLinkObject should have failed with STATUS_OBJECT_TYPE_MISMATCH got(%08x)\n", status);
     pRtlFreeUnicodeString(&str);
     pRtlFreeUnicodeString(&target);
 
@@ -514,24 +587,28 @@ static void test_symboliclink(void)
     SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
     SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\\\BaseNamedObjects", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
     SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\\\om.c-test", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
-    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\om.c-test\\", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
+    SYMLNK_TEST_CREATE_OPEN_FAILURE2(&h, "\\BaseNamedObjects\\om.c-test\\", "->Somewhere",
+                                     STATUS_OBJECT_NAME_INVALID, STATUS_OBJECT_PATH_NOT_FOUND)
 
 
-    /* Compaund test */
-    pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects");
-    DIR_TEST_OPEN_SUCCESS(&dir)
-    pRtlFreeUnicodeString(&str);
+    /* Compound test */
+    if (!(dir = get_base_dir()))
+    {
+        win_skip( "couldn't find the BaseNamedObjects dir\n" );
+        return;
+    }
 
     InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
-    pRtlCreateUnicodeStringFromAsciiz(&str, "Local\\test-link");
+    pRtlCreateUnicodeStringFromAsciiz(&str, "test-link");
     pRtlCreateUnicodeStringFromAsciiz(&target, "\\DosDevices");
-    SYMLNK_TEST_CREATE_SUCCESS(&link)
+    status = pNtCreateSymbolicLinkObject(&link, SYMBOLIC_LINK_QUERY, &attr, &target);
+    ok(status == STATUS_SUCCESS, "Failed to create SymbolicLink(%08x)\n", status);
     pRtlFreeUnicodeString(&str);
     pRtlFreeUnicodeString(&target);
 
-    pRtlCreateUnicodeStringFromAsciiz(&str, "Local\\test-link\\PIPE");
+    pRtlCreateUnicodeStringFromAsciiz(&str, "test-link\\NUL");
     status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_OPEN);
-    todo_wine ok(status == STATUS_SUCCESS, "Failed to open NamedPipe(%08x)\n", status);
+    todo_wine ok(status == STATUS_SUCCESS, "Failed to open NUL device(%08x)\n", status);
     pRtlFreeUnicodeString(&str);
 
     pNtClose(h);

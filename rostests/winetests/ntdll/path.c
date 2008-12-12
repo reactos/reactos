@@ -91,6 +91,7 @@ static void test_RtlIsDosDeviceName(void)
         const char *path;
         WORD pos;
         WORD len;
+        BOOL fails;
     };
 
     static const struct test tests[] =
@@ -101,22 +102,26 @@ static void test_RtlIsDosDeviceName(void)
         { "",              0, 0 },
         { "\\\\foo\\nul",  0, 0 },
         { "c:\\nul:",      6, 6 },
-        { "c:\\nul::",     6, 6 },
-        { "c:\\nul::::::", 6, 6 },
+        { "c:\\nul\\",     0, 0 },
+        { "c:\\nul\\foo",  0, 0 },
+        { "c:\\nul::",     6, 6, TRUE },  /* fails on nt4 */
+        { "c:\\nul::::::", 6, 6, TRUE },  /* fails on nt4 */
         { "c:prn     ",    4, 6 },
         { "c:prn.......",  4, 6 },
         { "c:prn... ...",  4, 6 },
-        { "c:NUL  ....  ", 4, 6 },
+        { "c:NUL  ....  ", 4, 6, TRUE },  /* fails on nt4 */
         { "c: . . .",      0, 0 },
         { "c:",            0, 0 },
         { " . . . :",      0, 0 },
         { ":",             0, 0 },
         { "c:nul. . . :",  4, 6 },
-        { "c:nul . . :",   4, 6 },
+        { "c:nul . . :",   4, 6, TRUE },  /* fails on nt4 */
         { "c:nul0",        0, 0 },
+        { "c:prn:aaa",     4, 6, TRUE },  /* fails on win9x */
         { "c:PRN:.txt",    4, 6 },
         { "c:aux:.txt...", 4, 6 },
         { "c:prn:.txt:",   4, 6 },
+        { "c:nul:aaa",     4, 6, TRUE },  /* fails on win9x */
         { "con:",          0, 6 },
         { "lpt1:",         0, 8 },
         { "c:com5:",       4, 8 },
@@ -141,22 +146,11 @@ static void test_RtlIsDosDeviceName(void)
     {
         pRtlMultiByteToUnicodeN( buffer, sizeof(buffer), NULL, test->path, strlen(test->path)+1 );
         ret = pRtlIsDosDeviceName_U( buffer );
-        ok( ret == MAKELONG( test->len, test->pos ),
+        ok( ret == MAKELONG( test->len, test->pos ) ||
+            (test->fails && broken( ret == 0 )),
             "Wrong result (%d,%d)/(%d,%d) for %s\n",
             HIWORD(ret), LOWORD(ret), test->pos, test->len, test->path );
     }
-
-    pRtlMultiByteToUnicodeN( buffer, sizeof(buffer), NULL, "c:prn:aaa", strlen("c:prn:aaa")+1 );
-    ret = pRtlIsDosDeviceName_U( buffer );
-    ok( ret == MAKELONG( 6, 4 ) || /* NT */
-        ret == MAKELONG( 0, 0), /* win9x */
-        "Wrong result (%d,%d)/(4,6) or (0,0) for c:prn:aaa\n", HIWORD(ret), LOWORD(ret) );
-
-    pRtlMultiByteToUnicodeN( buffer, sizeof(buffer), NULL, "c:nul:aaa", strlen("c:nul:aaa")+1 );
-    ret = pRtlIsDosDeviceName_U( buffer );
-    ok( ret == MAKELONG( 6, 4 ) || /* NT */
-        ret == MAKELONG( 0, 0), /* win9x */
-        "Wrong result (%d,%d)/(4,6) or (0,0) for c:nul:aaa\n", HIWORD(ret), LOWORD(ret) );
 }
 
 static void test_RtlIsNameLegalDOS8Dot3(void)
@@ -237,6 +231,8 @@ static void test_RtlGetFullPathName_U(void)
         const char *path;
         const char *rname;
         const char *rfile;
+        const char *alt_rname;
+        const char *alt_rfile;
     };
 
     static const struct test tests[] =
@@ -251,15 +247,17 @@ static void test_RtlGetFullPathName_U(void)
             { "c:/TEST",                     "c:\\test",         "test"},
             { "c:/test/file",                "c:\\test\\file",   "file"},
             { "c:/test./file",               "c:\\test\\file",   "file"},
-            { "c:/test../file",              "c:\\test.\\file",  "file"},
             { "c:/test.. /file",             "c:\\test.. \\file","file"},
             { "c:/test/././file",            "c:\\test\\file",   "file"},
             { "c:/test\\.\\.\\file",         "c:\\test\\file",   "file"},
             { "c:/test/\\.\\.\\file",        "c:\\test\\file",   "file"},
             { "c:/test\\\\.\\.\\file",       "c:\\test\\file",   "file"},
             { "c:/test\\test1\\..\\.\\file", "c:\\test\\file",   "file"},
-            { "c:///test\\.\\.\\file//",     "c:\\test\\file\\", NULL},
+            { "c:///test\\.\\.\\file//",     "c:\\test\\file\\", NULL,
+                                             "c:\\test\\file",   "file"},  /* nt4 */
             { "c:///test\\..\\file\\..\\//", "c:\\",             NULL},
+            { "c:/test../file",              "c:\\test.\\file",  "file",
+                                             "c:\\test..\\file", "file"},  /* vista */
             { NULL, NULL, NULL}
         };
 
@@ -276,27 +274,36 @@ static void test_RtlGetFullPathName_U(void)
         len= strlen(test->rname) * sizeof(WCHAR);
         pRtlMultiByteToUnicodeN(pathbufW , sizeof(pathbufW), NULL, test->path, strlen(test->path)+1 );
         ret = pRtlGetFullPathName_U( pathbufW,MAX_PATH, rbufferW, &file_part);
-        ok( ret == len, "Wrong result %d/%d for \"%s\"\n", ret, len, test->path );
+        ok( ret == len || (test->alt_rname && ret == strlen(test->alt_rname)*sizeof(WCHAR)),
+            "Wrong result %d/%d for \"%s\"\n", ret, len, test->path );
         ok(pRtlUnicodeToMultiByteN(rbufferA,MAX_PATH,&reslen,rbufferW,(lstrlenW(rbufferW) + 1) * sizeof(WCHAR)) == STATUS_SUCCESS,
            "RtlUnicodeToMultiByteN failed\n");
-        ok(lstrcmpiA(rbufferA,test->rname) == 0, "Got \"%s\" expected \"%s\"\n",rbufferA,test->rname);
+        ok(!lstrcmpiA(rbufferA,test->rname) || (test->alt_rname && !lstrcmpiA(rbufferA,test->alt_rname)),
+           "Got \"%s\" expected \"%s\"\n",rbufferA,test->rname);
         if (file_part)
         {
             ok(pRtlUnicodeToMultiByteN(rfileA,MAX_PATH,&reslen,file_part,(lstrlenW(file_part) + 1) * sizeof(WCHAR)) == STATUS_SUCCESS,
                "RtlUnicodeToMultiByteN failed\n");
-            ok(test->rfile && !lstrcmpiA(rfileA,test->rfile), "Got \"%s\" expected \"%s\"\n",rfileA,test->rfile);
+            ok((test->rfile && !lstrcmpiA(rfileA,test->rfile)) ||
+               (test->alt_rfile && !lstrcmpiA(rfileA,test->alt_rfile)),
+               "Got \"%s\" expected \"%s\"\n",rfileA,test->rfile);
         }
         else
         {
             ok( !test->rfile, "Got NULL expected \"%s\"\n", test->rfile );
         }
     }
-
 }
 
 START_TEST(path)
 {
     HMODULE mod = GetModuleHandleA("ntdll.dll");
+    if (!mod)
+    {
+        win_skip("Not running on NT, skipping tests\n");
+        return;
+    }
+
     pRtlMultiByteToUnicodeN = (void *)GetProcAddress(mod,"RtlMultiByteToUnicodeN");
     pRtlUnicodeToMultiByteN = (void *)GetProcAddress(mod,"RtlUnicodeToMultiByteN");
     pRtlDetermineDosPathNameType_U = (void *)GetProcAddress(mod,"RtlDetermineDosPathNameType_U");

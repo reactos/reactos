@@ -233,15 +233,18 @@ static void test_RtlInitUnicodeStringEx(void)
     ok(result == STATUS_NAME_TOO_LONG,
        "pRtlInitUnicodeStringEx(&uni, 0) returns %x, expected %x\n",
        result, STATUS_NAME_TOO_LONG);
-    ok(uni.Length == 12345,
-       "pRtlInitUnicodeStringEx(&uni, 0) sets Length to %u, expected %u\n",
-       uni.Length, 12345);
-    ok(uni.MaximumLength == 12345,
-       "pRtlInitUnicodeStringEx(&uni, 0) sets MaximumLength to %u, expected %u\n",
-       uni.MaximumLength, 12345);
-    ok(uni.Buffer == (void *) 0xdeadbeef,
-       "pRtlInitUnicodeStringEx(&uni, 0) sets Buffer to %p, expected %x\n",
-       uni.Buffer, 0xdeadbeef);
+    ok(uni.Length == 12345 ||
+       uni.Length == 0, /* win2k3 */
+       "pRtlInitUnicodeStringEx(&uni, 0) sets Length to %u, expected 12345 or 0\n",
+       uni.Length);
+    ok(uni.MaximumLength == 12345 ||
+       uni.MaximumLength == 0, /* win2k3 */
+       "pRtlInitUnicodeStringEx(&uni, 0) sets MaximumLength to %u, expected 12345 or 0\n",
+       uni.MaximumLength);
+    ok(uni.Buffer == (void *) 0xdeadbeef ||
+       uni.Buffer == teststring2, /* win2k3 */
+       "pRtlInitUnicodeStringEx(&uni, 0) sets Buffer to %p, expected %x or %p\n",
+       uni.Buffer, 0xdeadbeef, teststring2);
 
     uni.Length = 12345;
     uni.MaximumLength = 12345;
@@ -1215,7 +1218,7 @@ typedef struct {
     int base;
     const char *str;
     int value;
-    NTSTATUS result;
+    NTSTATUS result, alternative;
 } str2int_t;
 
 static const str2int_t str2int[] = {
@@ -1294,7 +1297,7 @@ static const str2int_t str2int[] = {
     { 0, "0xF",                 0xf, STATUS_SUCCESS}, /* one digit hexadecimal */
     { 0, "0xG",                   0, STATUS_SUCCESS}, /* empty hexadecimal */
     { 0, "0x",                    0, STATUS_SUCCESS}, /* empty hexadecimal */
-    { 0, "",                      0, STATUS_SUCCESS}, /* empty string */
+    { 0, "",                      0, STATUS_SUCCESS, STATUS_INVALID_PARAMETER}, /* empty string */
     { 2, "1011101100",          748, STATUS_SUCCESS},
     { 2, "-1011101100",        -748, STATUS_SUCCESS},
     { 2, "2",                     0, STATUS_SUCCESS},
@@ -1302,7 +1305,7 @@ static const str2int_t str2int[] = {
     { 2, "0o1011101100",          0, STATUS_SUCCESS},
     { 2, "0d1011101100",          0, STATUS_SUCCESS},
     { 2, "0x1011101100",          0, STATUS_SUCCESS},
-    { 2, "",                      0, STATUS_SUCCESS}, /* empty string */
+    { 2, "",                      0, STATUS_SUCCESS, STATUS_INVALID_PARAMETER}, /* empty string */
     { 8, "1011101100",    136610368, STATUS_SUCCESS},
     { 8, "-1011101100",  -136610368, STATUS_SUCCESS},
     { 8, "8",                     0, STATUS_SUCCESS},
@@ -1310,7 +1313,7 @@ static const str2int_t str2int[] = {
     { 8, "0o1011101100",          0, STATUS_SUCCESS},
     { 8, "0d1011101100",          0, STATUS_SUCCESS},
     { 8, "0x1011101100",          0, STATUS_SUCCESS},
-    { 8, "",                      0, STATUS_SUCCESS}, /* empty string */
+    { 8, "",                      0, STATUS_SUCCESS, STATUS_INVALID_PARAMETER}, /* empty string */
     {10, "1011101100",   1011101100, STATUS_SUCCESS},
     {10, "-1011101100", -1011101100, STATUS_SUCCESS},
     {10, "0b1011101100",          0, STATUS_SUCCESS},
@@ -1318,7 +1321,7 @@ static const str2int_t str2int[] = {
     {10, "0d1011101100",          0, STATUS_SUCCESS},
     {10, "0x1011101100",          0, STATUS_SUCCESS},
     {10, "o12345",                0, STATUS_SUCCESS}, /* Octal although base is 10 */
-    {10, "",                      0, STATUS_SUCCESS}, /* empty string */
+    {10, "",                      0, STATUS_SUCCESS, STATUS_INVALID_PARAMETER}, /* empty string */
     {16, "1011101100",    286265600, STATUS_SUCCESS},
     {16, "-1011101100",  -286265600, STATUS_SUCCESS},
     {16, "G",                     0, STATUS_SUCCESS},
@@ -1327,9 +1330,9 @@ static const str2int_t str2int[] = {
     {16, "0o1011101100",          0, STATUS_SUCCESS},
     {16, "0d1011101100",  286265600, STATUS_SUCCESS},
     {16, "0x1011101100",          0, STATUS_SUCCESS},
-    {16, "",                      0, STATUS_SUCCESS}, /* empty string */
-    {20, "0",            0xdeadbeef, STATUS_INVALID_PARAMETER}, /* illegal base */
-    {-8, "0",            0xdeadbeef, STATUS_INVALID_PARAMETER}, /* Negative base */
+    {16, "",                      0, STATUS_SUCCESS, STATUS_INVALID_PARAMETER}, /* empty string */
+    {20, "0",                     0, STATUS_INVALID_PARAMETER}, /* illegal base */
+    {-8, "0",                     0, STATUS_INVALID_PARAMETER}, /* Negative base */
 /*    { 0, NULL,                    0, STATUS_SUCCESS}, */ /* NULL as string */
 };
 #define NB_STR2INT (sizeof(str2int)/sizeof(*str2int))
@@ -1348,12 +1351,19 @@ static void test_RtlUnicodeStringToInteger(void)
 	value = 0xdeadbeef;
 	pRtlInitUnicodeString(&uni, wstr);
 	result = pRtlUnicodeStringToInteger(&uni, str2int[test_num].base, &value);
-	ok(result == str2int[test_num].result,
-           "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) has result %x, expected: %x\n",
-	   test_num, str2int[test_num].str, str2int[test_num].base, result, str2int[test_num].result);
-	ok(value == str2int[test_num].value,
-	   "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) assigns value %d, expected: %d\n",
-	   test_num, str2int[test_num].str, str2int[test_num].base, value, str2int[test_num].value);
+	ok(result == str2int[test_num].result ||
+           (str2int[test_num].alternative && result == str2int[test_num].alternative),
+           "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) has result %x, expected: %x (%x)\n",
+	   test_num, str2int[test_num].str, str2int[test_num].base, result,
+           str2int[test_num].result, str2int[test_num].alternative);
+        if (result == STATUS_SUCCESS)
+            ok(value == str2int[test_num].value,
+               "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) assigns value %d, expected: %d\n",
+               test_num, str2int[test_num].str, str2int[test_num].base, value, str2int[test_num].value);
+        else
+            ok(value == 0xdeadbeef || value == 0 /* vista */,
+               "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) assigns value %d, expected 0 or deadbeef\n",
+               test_num, str2int[test_num].str, str2int[test_num].base, value);
 	free(wstr);
     }
 
@@ -1364,7 +1374,7 @@ static void test_RtlUnicodeStringToInteger(void)
        "call failed: RtlUnicodeStringToInteger(\"%s\", %d, NULL) has result %x\n",
        str2int[1].str, str2int[1].base, result);
     result = pRtlUnicodeStringToInteger(&uni, 20, NULL);
-    ok(result == STATUS_INVALID_PARAMETER,
+    ok(result == STATUS_INVALID_PARAMETER || result == STATUS_ACCESS_VIOLATION,
        "call failed: RtlUnicodeStringToInteger(\"%s\", 20, NULL) has result %x\n",
        str2int[1].str, result);
 
@@ -1379,12 +1389,11 @@ static void test_RtlUnicodeStringToInteger(void)
 
     uni.Length = 5; /* Use odd Length (2.5 WCHARS) */
     result = pRtlUnicodeStringToInteger(&uni, str2int[1].base, &value);
-    ok(result == STATUS_SUCCESS,
+    ok(result == STATUS_SUCCESS || result == STATUS_INVALID_PARAMETER /* vista */,
        "call failed: RtlUnicodeStringToInteger(\"12\", %d, [out]) has result %x\n",
        str2int[1].base, result);
-    ok(value == 12,
-       "didn't return expected value (test b): expected: %d, got: %d\n",
-       12, value);
+    if (result == STATUS_SUCCESS)
+        ok(value == 12, "didn't return expected value (test b): expected: %d, got: %d\n", 12, value);
 
     uni.Length = 2;
     result = pRtlUnicodeStringToInteger(&uni, str2int[1].base, &value);
@@ -1410,12 +1419,19 @@ static void test_RtlCharToInteger(void)
 	if (str2int[test_num].str[0] != '\0') {
 	    value = 0xdeadbeef;
 	    result = pRtlCharToInteger(str2int[test_num].str, str2int[test_num].base, &value);
-	    ok(result == str2int[test_num].result,
-               "(test %d): call failed: RtlCharToInteger(\"%s\", %d, [out]) has result %x, expected: %x\n",
-	       test_num, str2int[test_num].str, str2int[test_num].base, result, str2int[test_num].result);
-	    ok(value == str2int[test_num].value,
-	       "(test %d): call failed: RtlCharToInteger(\"%s\", %d, [out]) assigns value %d, expected: %d\n",
-	       test_num, str2int[test_num].str, str2int[test_num].base, value, str2int[test_num].value);
+	    ok(result == str2int[test_num].result ||
+               (str2int[test_num].alternative && result == str2int[test_num].alternative),
+               "(test %d): call failed: RtlCharToInteger(\"%s\", %d, [out]) has result %x, expected: %x (%x)\n",
+	       test_num, str2int[test_num].str, str2int[test_num].base, result,
+               str2int[test_num].result, str2int[test_num].alternative);
+            if (result == STATUS_SUCCESS)
+                ok(value == str2int[test_num].value,
+                   "(test %d): call failed: RtlCharToInteger(\"%s\", %d, [out]) assigns value %d, expected: %d\n",
+                   test_num, str2int[test_num].str, str2int[test_num].base, value, str2int[test_num].value);
+            else
+                ok(value == 0 || value == 0xdeadbeef,
+                   "(test %d): call failed: RtlCharToInteger(\"%s\", %d, [out]) assigns value %d, expected 0 or deadbeef\n",
+                   test_num, str2int[test_num].str, str2int[test_num].base, value);
 	}
     }
 
@@ -1477,8 +1493,8 @@ static const int2str_t int2str[] = {
     { 2,         1000, 10, 33, "1111101000\0------------------------", STATUS_SUCCESS},
     { 2,        10000, 14, 33, "10011100010000\0--------------------", STATUS_SUCCESS},
     { 2,        32767, 15, 33, "111111111111111\0-------------------", STATUS_SUCCESS},
-    { 2,        32768, 16, 33, "1000000000000000\0------------------", STATUS_SUCCESS},
-    { 2,        65535, 16, 33, "1111111111111111\0------------------", STATUS_SUCCESS},
+/*  { 2,        32768, 16, 33, "1000000000000000\0------------------", STATUS_SUCCESS}, broken on windows */
+/*  { 2,        65535, 16, 33, "1111111111111111\0------------------", STATUS_SUCCESS}, broken on windows */
     { 2,        65536, 17, 33, "10000000000000000\0-----------------", STATUS_SUCCESS},
     { 2,       100000, 17, 33, "11000011010100000\0-----------------", STATUS_SUCCESS},
     { 2,      1000000, 20, 33, "11110100001001000000\0--------------", STATUS_SUCCESS},
@@ -1532,8 +1548,8 @@ static const int2str_t int2str[] = {
     {16,  4294967294U,  8,  9, "FFFFFFFE\0--------------------------", STATUS_SUCCESS},
     {16,  4294967295U,  8,  9, "FFFFFFFF\0--------------------------", STATUS_SUCCESS}, /* max unsigned int */
 
-    { 2,        32768, 16, 17, "1000000000000000\0------------------", STATUS_SUCCESS},
-    { 2,        32768, 16, 16, "1000000000000000-------------------",  STATUS_SUCCESS},
+/*  { 2,        32768, 16, 17, "1000000000000000\0------------------", STATUS_SUCCESS}, broken on windows */
+/*  { 2,        32768, 16, 16, "1000000000000000-------------------",  STATUS_SUCCESS}, broken on windows */
     { 2,        65536, 17, 18, "10000000000000000\0-----------------", STATUS_SUCCESS},
     { 2,        65536, 17, 17, "10000000000000000------------------",  STATUS_SUCCESS},
     { 2,       131072, 18, 19, "100000000000000000\0----------------", STATUS_SUCCESS},
@@ -1675,18 +1691,26 @@ static void test_RtlIsTextUnicode(void)
 {
     char ascii[] = "A simple string";
     WCHAR unicode[] = {'A',' ','U','n','i','c','o','d','e',' ','s','t','r','i','n','g',0};
+    WCHAR unicode_no_controls[] = {'A','U','n','i','c','o','d','e','s','t','r','i','n','g',0};
+    /* String with both byte-reversed and standard Unicode control characters. */
+    WCHAR mixed_controls[] = {'\t',0x9000,0x0d00,'\n',0};
     WCHAR *be_unicode;
+    WCHAR *be_unicode_no_controls;
+    BOOLEAN res;
     int flags;
     int i;
 
     ok(!pRtlIsTextUnicode(ascii, sizeof(ascii), NULL), "ASCII text detected as Unicode\n");
 
-    ok(pRtlIsTextUnicode(unicode, sizeof(unicode), NULL), "Text should be Unicode\n");
+    res = pRtlIsTextUnicode(unicode, sizeof(unicode), NULL);
+    ok(res ||
+       broken(res == FALSE), /* NT4 */
+       "Text should be Unicode\n");
+
     ok(!pRtlIsTextUnicode(unicode, sizeof(unicode) - 1, NULL), "Text should be Unicode\n");
 
     flags =  IS_TEXT_UNICODE_UNICODE_MASK;
     ok(pRtlIsTextUnicode(unicode, sizeof(unicode), &flags), "Text should not pass a Unicode\n");
-    todo_wine
     ok(flags == (IS_TEXT_UNICODE_STATISTICS | IS_TEXT_UNICODE_CONTROLS),
        "Expected flags 0x6, obtained %x\n", flags);
 
@@ -1705,7 +1729,7 @@ static void test_RtlIsTextUnicode(void)
         be_unicode[i + 1] = (unicode[i] >> 8) | ((unicode[i] & 0xff) << 8);
     }
     ok(!pRtlIsTextUnicode(be_unicode, sizeof(unicode) + 2, NULL), "Reverse endian should not be Unicode\n");
-    todo_wine ok(!pRtlIsTextUnicode(&be_unicode[1], sizeof(unicode), NULL), "Reverse endian should not be Unicode\n");
+    ok(!pRtlIsTextUnicode(&be_unicode[1], sizeof(unicode), NULL), "Reverse endian should not be Unicode\n");
 
     flags = IS_TEXT_UNICODE_REVERSE_MASK;
     ok(!pRtlIsTextUnicode(&be_unicode[1], sizeof(unicode), &flags), "Reverse endian should be Unicode\n");
@@ -1715,10 +1739,74 @@ static void test_RtlIsTextUnicode(void)
 
     flags = IS_TEXT_UNICODE_REVERSE_MASK;
     ok(!pRtlIsTextUnicode(be_unicode, sizeof(unicode) + 2, &flags), "Reverse endian should be Unicode\n");
-    todo_wine
     ok(flags == (IS_TEXT_UNICODE_REVERSE_CONTROLS | IS_TEXT_UNICODE_REVERSE_SIGNATURE),
        "Expected flags 0xc0, obtained %x\n", flags);
+
+    /* build byte reversed unicode string with no control chars */
+    be_unicode_no_controls = HeapAlloc(GetProcessHeap(), 0, sizeof(unicode) + sizeof(WCHAR));
+    ok(be_unicode_no_controls != NULL, "Expeced HeapAlloc to succeed.\n");
+    be_unicode_no_controls[0] = 0xfffe;
+    for (i = 0; i < sizeof(unicode_no_controls)/sizeof(unicode_no_controls[0]); i++)
+        be_unicode_no_controls[i + 1] = (unicode_no_controls[i] >> 8) | ((unicode_no_controls[i] & 0xff) << 8);
+
+
+    /* The following tests verify that the tests for */
+    /* IS_TEXT_UNICODE_CONTROLS and IS_TEXT_UNICODE_REVERSE_CONTROLS */
+    /* are not mutually exclusive. Regardless of whether the strings */
+    /* contain an indication of endianness, the tests are still */
+    /* run if the flag is passed to (Rtl)IsTextUnicode. */
+
+    /* Test IS_TEXT_UNICODE_CONTROLS flag */
+    flags = IS_TEXT_UNICODE_CONTROLS;
+    ok(!pRtlIsTextUnicode(unicode_no_controls, sizeof(unicode_no_controls), &flags), "Test should not pass on Unicode string lacking control characters.\n");
+    ok(flags == 0, "Expected flags 0x0, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_CONTROLS;
+    ok(!pRtlIsTextUnicode(be_unicode_no_controls, sizeof(unicode_no_controls), &flags), "Test should not pass on byte-reversed Unicode string lacking control characters.\n");
+    ok(flags == 0, "Expected flags 0x0, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_CONTROLS;
+    ok(pRtlIsTextUnicode(unicode, sizeof(unicode), &flags), "Test should pass on Unicode string lacking control characters.\n");
+    ok(flags == IS_TEXT_UNICODE_CONTROLS, "Expected flags 0x04, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_CONTROLS;
+    ok(!pRtlIsTextUnicode(be_unicode_no_controls, sizeof(unicode_no_controls) + 2, &flags),
+            "Test should not pass with standard Unicode string.\n");
+    ok(flags == 0, "Expected flags 0x0, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_CONTROLS;
+    ok(pRtlIsTextUnicode(mixed_controls, sizeof(mixed_controls), &flags), "Test should pass on a string containing control characters.\n");
+    ok(flags == IS_TEXT_UNICODE_CONTROLS, "Expected flags 0x04, obtained %x\n", flags);
+
+    /* Test IS_TEXT_UNICODE_REVERSE_CONTROLS flag */
+    flags = IS_TEXT_UNICODE_REVERSE_CONTROLS;
+    ok(!pRtlIsTextUnicode(be_unicode_no_controls, sizeof(unicode_no_controls), &flags), "Test should not pass on Unicode string lacking control characters.\n");
+    ok(flags == 0, "Expected flags 0x0, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_REVERSE_CONTROLS;
+    ok(!pRtlIsTextUnicode(unicode_no_controls, sizeof(unicode_no_controls), &flags), "Test should not pass on Unicode string lacking control characters.\n");
+    ok(flags == 0, "Expected flags 0x0, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_REVERSE_CONTROLS;
+    ok(!pRtlIsTextUnicode(unicode, sizeof(unicode), &flags), "Test should not pass on Unicode string lacking control characters.\n");
+    ok(flags == 0, "Expected flags 0x0, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_REVERSE_CONTROLS;
+    ok(!pRtlIsTextUnicode(be_unicode, sizeof(unicode) + 2, &flags),
+        "Test should pass with byte-reversed Unicode string containing control characters.\n");
+    ok(flags == IS_TEXT_UNICODE_REVERSE_CONTROLS, "Expected flags 0x40, obtained %x\n", flags);
+
+    flags = IS_TEXT_UNICODE_REVERSE_CONTROLS;
+    ok(!pRtlIsTextUnicode(mixed_controls, sizeof(mixed_controls), &flags), "Test should pass on a string containing byte-reversed control characters.\n");
+    ok(flags == IS_TEXT_UNICODE_REVERSE_CONTROLS, "Expected flags 0x40, obtained %x\n", flags);
+
+    /* Test with flags for both byte-reverse and standard Unicode characters */
+    flags = IS_TEXT_UNICODE_CONTROLS | IS_TEXT_UNICODE_REVERSE_CONTROLS;
+    ok(!pRtlIsTextUnicode(mixed_controls, sizeof(mixed_controls), &flags), "Test should pass on string containing both byte-reversed and standard control characters.\n");
+    ok(flags == (IS_TEXT_UNICODE_CONTROLS | IS_TEXT_UNICODE_REVERSE_CONTROLS), "Expected flags 0x44, obtained %x\n", flags);
+
     HeapFree(GetProcessHeap(), 0, be_unicode);
+    HeapFree(GetProcessHeap(), 0, be_unicode_no_controls);
 }
 
 static const WCHAR szGuid[] = { '{','0','1','0','2','0','3','0','4','-',

@@ -118,26 +118,28 @@ static BOOL init_function_ptrs(void)
 {
     hntdll = LoadLibraryA("ntdll.dll");
 
-    if (hntdll)
-    {
-        pNtCompleteConnectPort = (void *)GetProcAddress(hntdll, "NtCompleteConnectPort");
-        pNtAcceptConnectPort = (void *)GetProcAddress(hntdll, "NtAcceptConnectPort");
-        pNtReplyPort = (void *)GetProcAddress(hntdll, "NtReplyPort");
-        pNtReplyWaitReceivePort = (void *)GetProcAddress(hntdll, "NtReplyWaitReceivePort");
-        pNtCreatePort = (void *)GetProcAddress(hntdll, "NtCreatePort");
-        pNtRequestWaitReplyPort = (void *)GetProcAddress(hntdll, "NtRequestWaitReplyPort");
-        pNtRequestPort = (void *)GetProcAddress(hntdll, "NtRequestPort");
-        pNtRegisterThreadTerminatePort = (void *)GetProcAddress(hntdll, "NtRegisterThreadTerminatePort");
-        pNtConnectPort = (void *)GetProcAddress(hntdll, "NtConnectPort");
-        pRtlInitUnicodeString = (void *)GetProcAddress(hntdll, "RtlInitUnicodeString");
-        pNtWaitForSingleObject = (void *)GetProcAddress(hntdll, "NtWaitForSingleObject");
-    }
+    if (!hntdll)
+        return FALSE;
+
+    pNtCompleteConnectPort = (void *)GetProcAddress(hntdll, "NtCompleteConnectPort");
+    pNtAcceptConnectPort = (void *)GetProcAddress(hntdll, "NtAcceptConnectPort");
+    pNtReplyPort = (void *)GetProcAddress(hntdll, "NtReplyPort");
+    pNtReplyWaitReceivePort = (void *)GetProcAddress(hntdll, "NtReplyWaitReceivePort");
+    pNtCreatePort = (void *)GetProcAddress(hntdll, "NtCreatePort");
+    pNtRequestWaitReplyPort = (void *)GetProcAddress(hntdll, "NtRequestWaitReplyPort");
+    pNtRequestPort = (void *)GetProcAddress(hntdll, "NtRequestPort");
+    pNtRegisterThreadTerminatePort = (void *)GetProcAddress(hntdll, "NtRegisterThreadTerminatePort");
+    pNtConnectPort = (void *)GetProcAddress(hntdll, "NtConnectPort");
+    pRtlInitUnicodeString = (void *)GetProcAddress(hntdll, "RtlInitUnicodeString");
+    pNtWaitForSingleObject = (void *)GetProcAddress(hntdll, "NtWaitForSingleObject");
 
     if (!pNtCompleteConnectPort || !pNtAcceptConnectPort ||
         !pNtReplyWaitReceivePort || !pNtCreatePort || !pNtRequestWaitReplyPort ||
         !pNtRequestPort || !pNtRegisterThreadTerminatePort ||
         !pNtConnectPort || !pRtlInitUnicodeString)
     {
+        win_skip("Needed port functions are not available\n");
+        FreeLibrary(hntdll);
         return FALSE;
     }
 
@@ -224,6 +226,9 @@ static DWORD WINAPI test_ports_client(LPVOID arg)
     ok(!lstrcmp((LPSTR)out->Data, REPLY), "Expected %s, got %s\n", REPLY, out->Data);
     ok(out->MessageType == LPC_REPLY, "Expected LPC_REPLY, got %d\n", out->MessageType);
 
+    HeapFree(GetProcessHeap(), 0, out);
+    HeapFree(GetProcessHeap(), 0, LpcMessage);
+
     return 0;
 }
 
@@ -244,6 +249,11 @@ static void test_ports_server(void)
     obj.ObjectName = &port;
 
     status = pNtCreatePort(&PortHandle, &obj, 100, 100, 0);
+    if (status == STATUS_ACCESS_DENIED)
+    {
+        skip("Not enough rights\n");
+        return;
+    }
     todo_wine
     {
         ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %d\n", status);
@@ -284,6 +294,7 @@ static void test_ports_server(void)
 
             case LPC_CLIENT_DIED:
                 ok(done, "Expected LPC request to be completed!\n");
+                HeapFree(GetProcessHeap(), 0, LpcMessage);
                 return;
 
             default:
@@ -291,6 +302,8 @@ static void test_ports_server(void)
                 break;
         }
     }
+
+    HeapFree(GetProcessHeap(), 0, LpcMessage);
 }
 
 START_TEST(port)
@@ -309,4 +322,6 @@ START_TEST(port)
 
     test_ports_server();
     CloseHandle(thread);
+
+    FreeLibrary(hntdll);
 }

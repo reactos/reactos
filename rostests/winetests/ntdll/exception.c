@@ -21,6 +21,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x500 /* For NTSTATUS */
+#endif
+
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
 #include "windef.h"
@@ -61,110 +65,115 @@ static const struct exception
 } exceptions[] =
 {
     /* test some privileged instructions */
-    { { 0xfb, 0xc3 },  /* sti; ret */
+    { { 0xfb, 0xc3 },  /* 0: sti; ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x6c, 0xc3 },  /* insb (%dx); ret */
+    { { 0x6c, 0xc3 },  /* 1: insb (%dx); ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x6d, 0xc3 },  /* insl (%dx); ret */
+    { { 0x6d, 0xc3 },  /* 2: insl (%dx); ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x6e, 0xc3 },  /* outsb (%dx); ret */
+    { { 0x6e, 0xc3 },  /* 3: outsb (%dx); ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x6f, 0xc3 },  /* outsl (%dx); ret */
+    { { 0x6f, 0xc3 },  /* 4: outsl (%dx); ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xe4, 0x11, 0xc3 },  /* inb $0x11,%al; ret */
+    { { 0xe4, 0x11, 0xc3 },  /* 5: inb $0x11,%al; ret */
       0, 2, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xe5, 0x11, 0xc3 },  /* inl $0x11,%eax; ret */
+    { { 0xe5, 0x11, 0xc3 },  /* 6: inl $0x11,%eax; ret */
       0, 2, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xe6, 0x11, 0xc3 },  /* outb %al,$0x11; ret */
+    { { 0xe6, 0x11, 0xc3 },  /* 7: outb %al,$0x11; ret */
       0, 2, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xe7, 0x11, 0xc3 },  /* outl %eax,$0x11; ret */
+    { { 0xe7, 0x11, 0xc3 },  /* 8: outl %eax,$0x11; ret */
       0, 2, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xed, 0xc3 },  /* inl (%dx),%eax; ret */
+    { { 0xed, 0xc3 },  /* 9: inl (%dx),%eax; ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xee, 0xc3 },  /* outb %al,(%dx); ret */
+    { { 0xee, 0xc3 },  /* 10: outb %al,(%dx); ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xef, 0xc3 },  /* outl %eax,(%dx); ret */
+    { { 0xef, 0xc3 },  /* 11: outl %eax,(%dx); ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xf4, 0xc3 },  /* hlt; ret */
+    { { 0xf4, 0xc3 },  /* 12: hlt; ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0xfa, 0xc3 },  /* cli; ret */
+    { { 0xfa, 0xc3 },  /* 13: cli; ret */
       0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test long jump to invalid selector */
-    { { 0xea, 0, 0, 0, 0, 0, 0, 0xc3 },  /* ljmp $0,$0; ret */
+    { { 0xea, 0, 0, 0, 0, 0, 0, 0xc3 },  /* 14: ljmp $0,$0; ret */
       0, 7, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test iret to invalid selector */
     { { 0x6a, 0x00, 0x6a, 0x00, 0x6a, 0x00, 0xcf, 0x83, 0xc4, 0x0c, 0xc3 },
-      /* pushl $0; pushl $0; pushl $0; iret; addl $12,%esp; ret */
+      /* 15: pushl $0; pushl $0; pushl $0; iret; addl $12,%esp; ret */
       6, 1, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test loading an invalid selector */
-    { { 0xb8, 0xef, 0xbe, 0x00, 0x00, 0x8e, 0xe8, 0xc3 },  /* mov $beef,%ax; mov %ax,%gs; ret */
+    { { 0xb8, 0xef, 0xbe, 0x00, 0x00, 0x8e, 0xe8, 0xc3 },  /* 16: mov $beef,%ax; mov %ax,%gs; ret */
       5, 2, STATUS_ACCESS_VIOLATION, 2, { 0, 0xbee8 } }, /* 0xbee8 or 0xffffffff */
 
     /* test accessing a zero selector */
     { { 0x06, 0x31, 0xc0, 0x8e, 0xc0, 0x26, 0xa1, 0, 0, 0, 0, 0x07, 0xc3 },
-          /* push %es; xor %eax,%eax; mov %ax,%es; mov %es:(0),%ax; pop %es */
+      /* 17: push %es; xor %eax,%eax; mov %ax,%es; mov %es:(0),%ax; pop %es; ret */
       5, 6, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test moving %cs -> %ss */
-    { { 0x0e, 0x17, 0x58, 0xc3 },  /* pushl %cs; popl %ss; popl %eax; ret */
+    { { 0x0e, 0x17, 0x58, 0xc3 },  /* 18: pushl %cs; popl %ss; popl %eax; ret */
       1, 1, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
-    /* test overlong instruction (limit is 16 bytes) */
+    /* 19: test overlong instruction (limit is 16 bytes) */
     { { 0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0xfa,0xc3 },
       0, 16, STATUS_ILLEGAL_INSTRUCTION, 0 },
     { { 0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0xfa,0xc3 },
       0, 15, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test invalid interrupt */
-    { { 0xcd, 0xff, 0xc3 },   /* int $0xff; ret */
+    { { 0xcd, 0xff, 0xc3 },   /* 21: int $0xff; ret */
       0, 2, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test moves to/from Crx */
-    { { 0x0f, 0x20, 0xc0, 0xc3 },  /* movl %cr0,%eax; ret */
+    { { 0x0f, 0x20, 0xc0, 0xc3 },  /* 22: movl %cr0,%eax; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x20, 0xe0, 0xc3 },  /* movl %cr4,%eax; ret */
+    { { 0x0f, 0x20, 0xe0, 0xc3 },  /* 23: movl %cr4,%eax; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x22, 0xc0, 0xc3 },  /* movl %eax,%cr0; ret */
+    { { 0x0f, 0x22, 0xc0, 0xc3 },  /* 24: movl %eax,%cr0; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x22, 0xe0, 0xc3 },  /* movl %eax,%cr4; ret */
+    { { 0x0f, 0x22, 0xe0, 0xc3 },  /* 25: movl %eax,%cr4; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test moves to/from Drx */
-    { { 0x0f, 0x21, 0xc0, 0xc3 },  /* movl %dr0,%eax; ret */
+    { { 0x0f, 0x21, 0xc0, 0xc3 },  /* 26: movl %dr0,%eax; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x21, 0xc8, 0xc3 },  /* movl %dr1,%eax; ret */
+    { { 0x0f, 0x21, 0xc8, 0xc3 },  /* 27: movl %dr1,%eax; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x21, 0xf8, 0xc3 },  /* movl %dr7,%eax; ret */
+    { { 0x0f, 0x21, 0xf8, 0xc3 },  /* 28: movl %dr7,%eax; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x23, 0xc0, 0xc3 },  /* movl %eax,%dr0; ret */
+    { { 0x0f, 0x23, 0xc0, 0xc3 },  /* 29: movl %eax,%dr0; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x23, 0xc8, 0xc3 },  /* movl %eax,%dr1; ret */
+    { { 0x0f, 0x23, 0xc8, 0xc3 },  /* 30: movl %eax,%dr1; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
-    { { 0x0f, 0x23, 0xf8, 0xc3 },  /* movl %eax,%dr7; ret */
+    { { 0x0f, 0x23, 0xf8, 0xc3 },  /* 31: movl %eax,%dr7; ret */
       0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test memory reads */
-    { { 0xa1, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* movl 0xfffffffc,%eax; ret */
+    { { 0xa1, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* 32: movl 0xfffffffc,%eax; ret */
       0, 5, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffc } },
-    { { 0xa1, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* movl 0xfffffffd,%eax; ret */
+    { { 0xa1, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* 33: movl 0xfffffffd,%eax; ret */
       0, 5, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffd } },
-    { { 0xa1, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* movl 0xfffffffe,%eax; ret */
+    { { 0xa1, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* 34: movl 0xfffffffe,%eax; ret */
       0, 5, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffe } },
-    { { 0xa1, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* movl 0xffffffff,%eax; ret */
+    { { 0xa1, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* 35: movl 0xffffffff,%eax; ret */
       0, 5, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test memory writes */
-    { { 0xa3, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* movl %eax,0xfffffffc; ret */
+    { { 0xa3, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* 36: movl %eax,0xfffffffc; ret */
       0, 5, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffc } },
-    { { 0xa3, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* movl %eax,0xfffffffd; ret */
+    { { 0xa3, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* 37: movl %eax,0xfffffffd; ret */
       0, 5, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffd } },
-    { { 0xa3, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* movl %eax,0xfffffffe; ret */
+    { { 0xa3, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* 38: movl %eax,0xfffffffe; ret */
       0, 5, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffe } },
-    { { 0xa3, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* movl %eax,0xffffffff; ret */
+    { { 0xa3, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* 39: movl %eax,0xffffffff; ret */
       0, 5, STATUS_ACCESS_VIOLATION, 2, { 1, 0xffffffff } },
+
+    /* 40: test exception with cleared %ds and %es */
+    { { 0x1e, 0x06, 0x31, 0xc0, 0x8e, 0xd8, 0x8e, 0xc0, 0xfa, 0x07, 0x1f, 0xc3 },
+          /* push %ds; push %es; xorl %eax,%eax; mov %ax,%ds; mov %ax,%es; cli; pop %es; pop %ds; ret */
+      8, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 };
 
 static int got_exception;
@@ -190,7 +199,7 @@ static void run_exception_test(void *handler, const void* context,
     pNtCurrentTeb()->Tib.ExceptionList = exc_frame.frame.Prev;
 }
 
-LONG CALLBACK rtlraiseexception_vectored_handler(EXCEPTION_POINTERS *ExceptionInfo)
+static LONG CALLBACK rtlraiseexception_vectored_handler(EXCEPTION_POINTERS *ExceptionInfo)
 {
     PCONTEXT context = ExceptionInfo->ContextRecord;
     PEXCEPTION_RECORD rec = ExceptionInfo->ExceptionRecord;
@@ -211,8 +220,10 @@ LONG CALLBACK rtlraiseexception_vectored_handler(EXCEPTION_POINTERS *ExceptionIn
      */
     if(rec->ExceptionCode == EXCEPTION_BREAKPOINT)
     {
-        ok(context->Eip == (DWORD)code_mem + 0xa, "Eip at %x instead of %x\n",
-           context->Eip, (DWORD)code_mem + 0xa);
+        ok(context->Eip == (DWORD)code_mem + 0xa ||
+           broken(context->Eip == (DWORD)code_mem + 0xb), /* win2k3 */
+           "Eip at %x instead of %x or %x\n", context->Eip,
+           (DWORD)code_mem + 0xa, (DWORD)code_mem + 0xb);
     }
     else
     {
@@ -241,8 +252,10 @@ static DWORD rtlraiseexception_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTR
      */
     if(rec->ExceptionCode == EXCEPTION_BREAKPOINT)
     {
-        ok(context->Eip == (DWORD)code_mem + 0xa, "Eip at %x instead of %x\n",
-           context->Eip, (DWORD)code_mem + 0xa);
+        ok(context->Eip == (DWORD)code_mem + 0xa ||
+           broken(context->Eip == (DWORD)code_mem + 0xb), /* win2k3 */
+           "Eip at %x instead of %x or %x\n", context->Eip,
+           (DWORD)code_mem + 0xa, (DWORD)code_mem + 0xb);
     }
     else
     {
@@ -488,13 +501,14 @@ static DWORD direction_flag_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATI
 {
 #ifdef __GNUC__
     unsigned int flags;
-    __asm__("pushfl; popl %0" : "=r" (flags) );
+    __asm__("pushfl; popl %0; cld" : "=r" (flags) );
     /* older windows versions don't clear DF properly so don't test */
     if (flags & 0x400) trace( "eflags has DF bit set\n" );
 #endif
     ok( context->EFlags & 0x400, "context eflags has DF bit cleared\n" );
     got_exception++;
     context->Eip++;  /* skip cli */
+    context->EFlags &= ~0x400;  /* make sure it is cleared on return */
     return ExceptionContinueExecution;
 }
 

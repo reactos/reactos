@@ -57,7 +57,7 @@ static BOOL InitFunctionPtrs(void)
 
 static void test_query_basic(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     SYSTEM_BASIC_INFORMATION sbi;
 
@@ -68,7 +68,8 @@ static void test_query_basic(void)
     /* Use a nonexistent info class */
     trace("Check nonexistent info class\n");
     status = pNtQuerySystemInformation(-1, NULL, 0, NULL);
-    ok( status == STATUS_INVALID_INFO_CLASS, "Expected STATUS_INVALID_INFO_CLASS, got %08x\n", status);
+    ok( status == STATUS_INVALID_INFO_CLASS || status == STATUS_NOT_IMPLEMENTED /* vista */,
+        "Expected STATUS_INVALID_INFO_CLASS or STATUS_NOT_IMPLEMENTED, got %08x\n", status);
 
     /* Use an existing class but with a zero-length buffer */
     trace("Check zero-length buffer\n");
@@ -78,7 +79,8 @@ static void test_query_basic(void)
     /* Use an existing class, correct length but no SystemInformation buffer */
     trace("Check no SystemInformation buffer\n");
     status = pNtQuerySystemInformation(SystemBasicInformation, NULL, sizeof(sbi), NULL);
-    ok( status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got %08x\n", status);
+    ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_PARAMETER /* vista */,
+        "Expected STATUS_ACCESS_VIOLATION or STATUS_INVALID_PARAMETER, got %08x\n", status);
 
     /* Use a existing class, correct length, a pointer to a buffer but no ReturnLength pointer */
     trace("Check no ReturnLength pointer\n");
@@ -118,7 +120,7 @@ static void test_query_cpu(void)
 
 static void test_query_performance(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     SYSTEM_PERFORMANCE_INFORMATION spi;
 
@@ -138,7 +140,7 @@ static void test_query_performance(void)
 
 static void test_query_timeofday(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
 
     /* Copy of our winternl.h structure turned into a private one */
@@ -202,7 +204,8 @@ static void test_query_timeofday(void)
     
         status = pNtQuerySystemInformation(SystemTimeOfDayInformation, &sti, 49, &ReturnLength);
         ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
-        ok( 0 == ReturnLength, "ReturnLength should be 0, it is (%d)\n", ReturnLength);
+        ok( ReturnLength == 0 || ReturnLength == sizeof(sti) /* vista */,
+            "ReturnLength should be 0, it is (%d)\n", ReturnLength);
     
         status = pNtQuerySystemInformation(SystemTimeOfDayInformation, &sti, sizeof(sti), &ReturnLength);
         ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
@@ -215,7 +218,7 @@ static void test_query_timeofday(void)
 
 static void test_query_process(void)
 {
-    DWORD status;
+    NTSTATUS status;
     DWORD last_pid;
     ULONG ReturnLength;
     int i = 0, k = 0;
@@ -243,20 +246,20 @@ static void test_query_process(void)
     } SYSTEM_PROCESS_INFORMATION_PRIVATE, *PSYSTEM_PROCESS_INFORMATION_PRIVATE;
 
     ULONG SystemInformationLength = sizeof(SYSTEM_PROCESS_INFORMATION_PRIVATE);
-    SYSTEM_PROCESS_INFORMATION_PRIVATE* spi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength);
+    SYSTEM_PROCESS_INFORMATION_PRIVATE *spi, *spi_buf = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength);
 
     /* Only W2K3 returns the needed length, the rest returns 0, so we have to loop */
 
     for (;;)
     {
-        status = pNtQuerySystemInformation(SystemProcessInformation, spi, SystemInformationLength, &ReturnLength);
+        status = pNtQuerySystemInformation(SystemProcessInformation, spi_buf, SystemInformationLength, &ReturnLength);
 
         if (status != STATUS_INFO_LENGTH_MISMATCH) break;
         
-        spi = HeapReAlloc(GetProcessHeap(), 0, spi , SystemInformationLength *= 2);
+        spi_buf = HeapReAlloc(GetProcessHeap(), 0, spi_buf , SystemInformationLength *= 2);
     }
-
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    spi = spi_buf;
 
     /* Get the first dwOffset, from this we can deduce the OS version we're running
      *
@@ -320,12 +323,12 @@ static void test_query_process(void)
 
     if (one_before_last_pid == 0) one_before_last_pid = last_pid;
 
-    HeapFree( GetProcessHeap(), 0, spi);
+    HeapFree( GetProcessHeap(), 0, spi_buf);
 }
 
 static void test_query_procperf(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     ULONG NeededLength;
     SYSTEM_BASIC_INFORMATION sbi;
@@ -341,29 +344,57 @@ static void test_query_procperf(void)
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
 
     /* Try it for 1 processor */
+    sppi->KernelTime.QuadPart = 0xdeaddead;
+    sppi->UserTime.QuadPart = 0xdeaddead;
+    sppi->IdleTime.QuadPart = 0xdeaddead;
     status = pNtQuerySystemInformation(SystemProcessorPerformanceInformation, sppi,
                                        sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION), &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     ok( sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) == ReturnLength,
         "Inconsistent length %d\n", ReturnLength);
- 
+    ok (sppi->KernelTime.QuadPart != 0xdeaddead, "KernelTime unchanged\n");
+    ok (sppi->UserTime.QuadPart != 0xdeaddead, "UserTime unchanged\n");
+    ok (sppi->IdleTime.QuadPart != 0xdeaddead, "IdleTime unchanged\n");
+
     /* Try it for all processors */
+    sppi->KernelTime.QuadPart = 0xdeaddead;
+    sppi->UserTime.QuadPart = 0xdeaddead;
+    sppi->IdleTime.QuadPart = 0xdeaddead;
     status = pNtQuerySystemInformation(SystemProcessorPerformanceInformation, sppi, NeededLength, &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     ok( NeededLength == ReturnLength, "Inconsistent length (%d) <-> (%d)\n", NeededLength, ReturnLength);
+    ok (sppi->KernelTime.QuadPart != 0xdeaddead, "KernelTime unchanged\n");
+    ok (sppi->UserTime.QuadPart != 0xdeaddead, "UserTime unchanged\n");
+    ok (sppi->IdleTime.QuadPart != 0xdeaddead, "IdleTime unchanged\n");
 
     /* A too large given buffer size */
     sppi = HeapReAlloc(GetProcessHeap(), 0, sppi , NeededLength + 2);
+    sppi->KernelTime.QuadPart = 0xdeaddead;
+    sppi->UserTime.QuadPart = 0xdeaddead;
+    sppi->IdleTime.QuadPart = 0xdeaddead;
     status = pNtQuerySystemInformation(SystemProcessorPerformanceInformation, sppi, NeededLength + 2, &ReturnLength);
-    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    ok( status == STATUS_SUCCESS || status == STATUS_INFO_LENGTH_MISMATCH /* vista */,
+        "Expected STATUS_SUCCESS or STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
     ok( NeededLength == ReturnLength, "Inconsistent length (%d) <-> (%d)\n", NeededLength, ReturnLength);
+    if (status == STATUS_SUCCESS)
+    {
+        ok (sppi->KernelTime.QuadPart != 0xdeaddead, "KernelTime unchanged\n");
+        ok (sppi->UserTime.QuadPart != 0xdeaddead, "UserTime unchanged\n");
+        ok (sppi->IdleTime.QuadPart != 0xdeaddead, "IdleTime unchanged\n");
+    }
+    else /* vista and 2008 */
+    {
+        ok (sppi->KernelTime.QuadPart == 0xdeaddead, "KernelTime changed\n");
+        ok (sppi->UserTime.QuadPart == 0xdeaddead, "UserTime changed\n");
+        ok (sppi->IdleTime.QuadPart == 0xdeaddead, "IdleTime changed\n");
+    }
 
     HeapFree( GetProcessHeap(), 0, sppi);
 }
 
 static void test_query_module(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     ULONG ModuleCount, i;
 
@@ -398,40 +429,37 @@ static void test_query_module(void)
 
 static void test_query_handle(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     ULONG SystemInformationLength = sizeof(SYSTEM_HANDLE_INFORMATION);
     SYSTEM_HANDLE_INFORMATION* shi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength);
 
     /* Request the needed length : a SystemInformationLength greater than one struct sets ReturnLength */
     status = pNtQuerySystemInformation(SystemHandleInformation, shi, SystemInformationLength, &ReturnLength);
-
-    /* The following check assumes more than one handle on any given system */
-    todo_wine
-    {
-        ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
-    }
-    ok( ReturnLength > 0, "Expected ReturnLength to be > 0, it was %d\n", ReturnLength);
+    todo_wine ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
 
     SystemInformationLength = ReturnLength;
     shi = HeapReAlloc(GetProcessHeap(), 0, shi , SystemInformationLength);
     status = pNtQuerySystemInformation(SystemHandleInformation, shi, SystemInformationLength, &ReturnLength);
-    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-
-    /* Check if we have some return values */
-    trace("Number of Handles : %d\n", shi->Count);
-    todo_wine
+    if (status != STATUS_INFO_LENGTH_MISMATCH) /* vista */
     {
-        /* our implementation is a stub for now */
-        ok( shi->Count > 1, "Expected more than 1 handles, got (%d)\n", shi->Count);
-    }
+        ok( status == STATUS_SUCCESS,
+            "Expected STATUS_SUCCESS, got %08x\n", status);
 
+        /* Check if we have some return values */
+        trace("Number of Handles : %d\n", shi->Count);
+        todo_wine
+        {
+            /* our implementation is a stub for now */
+            ok( shi->Count > 1, "Expected more than 1 handles, got (%d)\n", shi->Count);
+        }
+    }
     HeapFree( GetProcessHeap(), 0, shi);
 }
 
 static void test_query_cache(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     SYSTEM_CACHE_INFORMATION sci;
 
@@ -449,7 +477,7 @@ static void test_query_cache(void)
 
 static void test_query_interrupt(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     ULONG NeededLength;
     SYSTEM_BASIC_INFORMATION sbi;
@@ -477,7 +505,7 @@ static void test_query_interrupt(void)
 
 static void test_query_kerndebug(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     SYSTEM_KERNEL_DEBUGGER_INFORMATION skdi;
 
@@ -495,7 +523,7 @@ static void test_query_kerndebug(void)
 
 static void test_query_regquota(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     SYSTEM_REGISTRY_QUOTA_INFORMATION srqi;
 
@@ -513,7 +541,7 @@ static void test_query_regquota(void)
 
 static void test_query_process_basic(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
 
     typedef struct _PROCESS_BASIC_INFORMATION_PRIVATE {
@@ -534,7 +562,8 @@ static void test_query_process_basic(void)
     /* Use a nonexistent info class */
     trace("Check nonexistent info class\n");
     status = pNtQueryInformationProcess(NULL, -1, NULL, 0, NULL);
-    ok( status == STATUS_INVALID_INFO_CLASS, "Expected STATUS_INVALID_INFO_CLASS, got %08x\n", status);
+    ok( status == STATUS_INVALID_INFO_CLASS || status == STATUS_NOT_IMPLEMENTED /* vista */,
+        "Expected STATUS_INVALID_INFO_CLASS or STATUS_NOT_IMPLEMENTED, got %08x\n", status);
 
     /* Do not give a handle and buffer */
     trace("Check NULL handle and buffer and zero-length buffersize\n");
@@ -581,7 +610,7 @@ static void test_query_process_basic(void)
 
 static void test_query_process_vm(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     VM_COUNTERS pvi;
 
@@ -619,7 +648,7 @@ static void test_query_process_vm(void)
 
 static void test_query_process_io(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     IO_COUNTERS pii;
 
@@ -659,7 +688,7 @@ static void test_query_process_io(void)
 
 static void test_query_process_times(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     HANDLE process;
     SYSTEMTIME UTC, Local;
@@ -708,12 +737,13 @@ static void test_query_process_times(void)
 
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessTimes, &spti, sizeof(spti) * 2, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
-    ok( sizeof(spti) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
+    ok( sizeof(spti) == ReturnLength || ReturnLength == 0 /* vista */,
+        "Inconsistent length %d\n", ReturnLength);
 }
 
 static void test_query_process_handlecount(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     DWORD handlecount;
     HANDLE process;
@@ -757,7 +787,7 @@ static void test_query_process_handlecount(void)
 
 static void test_query_process_image_file_name(void)
 {
-    DWORD status;
+    NTSTATUS status;
     ULONG ReturnLength;
     UNICODE_STRING image_file_name;
     void *buffer;
@@ -795,7 +825,7 @@ static void test_query_process_image_file_name(void)
 static void test_readvirtualmemory(void)
 {
     HANDLE process;
-    DWORD status;
+    NTSTATUS status;
     SIZE_T readcount;
     static const char teststring[] = "test string";
     char buffer[12];
@@ -818,8 +848,9 @@ static void test_readvirtualmemory(void)
     /* illegal remote address */
     todo_wine{
     status = pNtReadVirtualMemory(process, (void *) 0x1234, buffer, 12, &readcount);
-    ok( status == STATUS_PARTIAL_COPY, "Expected STATUS_PARTIAL_COPY, got %08x\n", status);
-    ok( readcount == 0, "Expected to read 0 bytes, got %ld\n",readcount);
+    ok( status == STATUS_PARTIAL_COPY || broken(status == STATUS_ACCESS_VIOLATION), "Expected STATUS_PARTIAL_COPY, got %08x\n", status);
+    if (status == STATUS_PARTIAL_COPY)
+        ok( readcount == 0, "Expected to read 0 bytes, got %ld\n",readcount);
     }
 
     /* 0 handle */
