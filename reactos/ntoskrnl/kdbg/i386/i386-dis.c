@@ -37,7 +37,6 @@ typedef signed int bfd_signed_vma;
 #define ATTRIBUTE_UNUSED
 extern int sprintf(char *str, const char *format, ...);
 #define sprintf_vma(BUF, VMA) sprintf(BUF, "0x%X", VMA)
-#define _setjmp setjmp
 struct disassemble_info;
 
 int
