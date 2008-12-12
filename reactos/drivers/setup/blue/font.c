@@ -68,7 +68,7 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
     CFFILE             CabFile;
     ULONG              CabFileOffset = 0;
     LARGE_INTEGER      ByteOffset;
-    WCHAR              SourceBuffer[MAX_PATH] = {L'\0'};
+    WCHAR              SourceBuffer[_MAX_PATH] = {L'\0'};
 
     if(KeGetCurrentIrql() != PASSIVE_LEVEL)
         return STATUS_INVALID_DEVICE_STATE;
@@ -90,7 +90,7 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
         return(Status);
 
     SourceName.Length = 0;
-    SourceName.MaximumLength = MAX_PATH * sizeof(WCHAR);
+    SourceName.MaximumLength = _MAX_PATH * sizeof(WCHAR);
     SourceName.Buffer = SourceBuffer;
 
     Status = ZwQuerySymbolicLinkObject(Handle,
