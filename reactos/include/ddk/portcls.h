@@ -1239,10 +1239,11 @@ DEFINE_GUIDSTRUCT("0xB4C90A30-5791-11d0-86f9-00a0c911b544", IID_IPortTopology);
 #define IID_IPortTopology DEFINE_GUIDNAMED(IID_IPortTopology)
 #endif
 
-DEFINE_GUID(IID_IPortTopology,
-    0xb4c90a30L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
-DEFINE_GUID(CLSID_PortTopology,
-    0xb4c90a32L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+#undef INTERFACE
+#define INTERFACE IPortTopology
+
+DEFINE_GUID(IID_IPortTopology, 0xb4c90a30L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+DEFINE_GUID(CLSID_PortTopology, 0xb4c90a32L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 
 DECLARE_INTERFACE_(IPortTopology, IPort)
 {
@@ -1259,9 +1260,30 @@ typedef IPortTopology *PPORTTOPOLOGY;
     IMiniportTopology Interface
 */
 
+#undef INTERFACE
+#define INTERFACE IMiniportTopology
+
+DEFINE_GUID(IID_IMiniportTopology, 0xb4c90a31L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
+DECLARE_INTERFACE_(IMiniportTopology,IMiniport)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_MINIPORT()
+
+    STDMETHOD_(NTSTATUS,Init)(THIS_
+        IN PUNKNOWN UnknownAdapter,
+        IN PRESOURCELIST ResourceList,
+        IN PPORTTOPOLOGY Port)PURE;
+};
+
+typedef IMiniportTopology *PMINIPORTTOPOLOGY;
+
 /* ===============================================================
     IMiniportWaveCyclicStream Interface
 */
+
+#undef INTERFACE
+#define INTERFACE IMiniportWaveCyclicStream
 
 DECLARE_INTERFACE_(IMiniportWaveCyclicStream,IUnknown)
 {
