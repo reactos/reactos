@@ -102,7 +102,8 @@ Test_NtGdiDoPalette_GdiPalAnimate(PTESTINFO pti)
 INT
 Test_NtGdiDoPalette_GdiPalSetEntries(PTESTINFO pti)
 {
-	HPALETTE hPal;
+	HDC hDC;
+	HPALETTE hPal, hOldPal;
 	PALETTEENTRY palEntries[5] = {
 		{0,0,0,0},
 		{0xff,0xff,0xff,0},
@@ -155,6 +156,13 @@ Test_NtGdiDoPalette_GdiPalSetEntries(PTESTINFO pti)
 	RTEST(palEntries2[0].peFlags == 0);
 
 	/* Test that the buffer was not changed */
+
+
+	/* Test with palette selected into dc */
+	hDC = CreateCompatibleDC(NULL);
+	hOldPal = SelectPalette(hDC, hPal, 0);
+	RTEST(NtGdiDoPalette(hPal, 0, 4, palEntries, GdiPalSetEntries, TRUE) == 4);
+	SelectPalette(hDC, hOldPal, 0);
 
 	/* Test pEntries = NULL */
 	RTEST(NtGdiDoPalette(hPal, 0, 1, NULL, GdiPalGetEntries, TRUE) == 0);

@@ -338,18 +338,36 @@ Test_SPI_SETDESKWALLPAPER(PTESTINFO pti)
 }
 
 INT
+Test_SPI_GETSTICKYKEYS(PTESTINFO pti)
+{
+	STICKYKEYS sk;
+
+	sk.cbSize = sizeof(STICKYKEYS)+1;
+	TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, 0, &sk, 0) == 0);
+
+
+	sk.cbSize = sizeof(STICKYKEYS);
+	NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, 0, &sk, 0);
+	printf("sk.dwFlags = %lx\n", sk.dwFlags);
+
+	return APISTATUS_NORMAL;
+}
+
+INT
 Test_NtUserSystemParametersInfo(PTESTINFO pti)
 {
 	HWND hWnd;
 
 	hWnd = CreateTestWindow();
-//	ASSERT(hWnd);
+	ASSERT(hWnd);
 	Test_NtUserSystemParametersInfo_Params(pti);
 
 	Test_NtUserSystemParametersInfo_fWinIni(pti);
 
 	Test_SPI_GETSETBEEP(pti);
 	Test_SPI_SETDESKWALLPAPER(pti);
+
+	Test_SPI_GETSTICKYKEYS(pti);
 
 	Test_SPI_87_88(pti);
 
