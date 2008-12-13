@@ -968,12 +968,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; NetLogon
-HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","DisplayName",0x00000000,"Net Logon"
-HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Description",0x00000000,"Sets up a secure channel to a domain controller for domain authentication"
-HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
-HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","DisplayName",0x00000000,"Net Logon"
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Description",0x00000000,"Sets up a secure channel to a domain controller for domain authentication"
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
 
 ; Named Pipe filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
@@ -1127,6 +1127,6 @@ HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
 
 ; Debug channels
-;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+ole,+rpc"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+lsasrv,+advapi"
 
 ; EOF
