@@ -612,11 +612,7 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
     REG_DELETE_VALUE_KEY_INFORMATION DeleteValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-
-    /* Workaround for GCC 4.4.0 bug #38271 */
-    UNICODE_STRING ValueNameCopy = { 0, 0, NULL };
-    ValueNameCopy = *ValueName;
-
+    UNICODE_STRING ValueNameCopy = *ValueName;
     PAGED_CODE();
 
     /* Verify that the handle is valid and is a registry key */
