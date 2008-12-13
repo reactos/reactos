@@ -85,6 +85,14 @@
 		<file>lfind.c</file>
 	</directory>
 
+	<directory name="setjmp">
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
+	</directory>
+
 	<directory name="stdlib">
 		<file>qsort.c</file>
 	</directory>
