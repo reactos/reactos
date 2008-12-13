@@ -100,8 +100,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 {
     CONTEXT Context;
 
-    DPRINT1("KiDispatchException(%p, %p, %p, %d, %d)\n",
-        ExceptionRecord, ExceptionFrame, TrapFrame, PreviousMode, FirstChance);
+//    FrLdrDbgPrint("KiDispatchException(%p, %p, %p, %d, %d)\n",
+//        ExceptionRecord, ExceptionFrame, TrapFrame, PreviousMode, FirstChance);
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
@@ -125,7 +125,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Breakpoint */
         case STATUS_BREAKPOINT:
 
-            /* Decrement EIP by one */
+            /* Decrement RIP by one */
             Context.Rip--;
             break;
 
