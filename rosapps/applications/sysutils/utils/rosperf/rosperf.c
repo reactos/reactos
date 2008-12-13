@@ -170,7 +170,7 @@ DisplayStatus(HWND Label, LPCWSTR Message, LPCWSTR Test, int Try)
 {
   WCHAR Status[128];
 
-  snwprintf(Status, sizeof(Status) / sizeof(Status[0]), L"%d %s %s", Try, Message, Test);
+  _snwprintf(Status, sizeof(Status) / sizeof(Status[0]), L"%d %s %s", Try, Message, Test);
   SetWindowTextW(Label, Status);
   InvalidateRect(Label, NULL, TRUE);
   UpdateWindow(Label);

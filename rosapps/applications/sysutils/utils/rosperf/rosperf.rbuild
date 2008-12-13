@@ -2,6 +2,7 @@
     <include base="rosperf">.</include>
     <define name="UNICODE" />
     <library>version</library>
+	<library>msvcrt</library>
     <library>msimg32</library>
     <library>gdi32</library>
     <library>shell32</library>
