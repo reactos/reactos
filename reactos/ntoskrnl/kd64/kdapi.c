@@ -176,7 +176,7 @@ KdpSetCommonState(IN ULONG NewState,
 #if defined(_M_X86_)
     WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Eip;
 #elif defined(_M_AMD64)
-    WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Rip;
+    WaitStateChange->ProgramCounter = (LONG_PTR)Context->Rip;
 #else
 #error Unknown platform
 #endif
@@ -544,7 +544,7 @@ KdpSendWaitContinue(IN ULONG PacketType,
     DBGKD_MANIPULATE_STATE64 ManipulateState;
     ULONG Length;
     KDSTATUS RecvCode;
-
+FrLdrDbgPrint("Enter KdpSendWaitContinue\n");
     /* Setup the Manipulate State structure */
     Header.MaximumLength = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)&ManipulateState;
@@ -554,7 +554,8 @@ KdpSendWaitContinue(IN ULONG PacketType,
 
 SendPacket:
     /* Send the Packet */
-    KdSendPacket(PacketType, SendHeader, SendData, &KdpContext);
+//    KdSendPacket(PacketType, SendHeader, SendData, &KdpContext);
+    KdSendPacket(PacketType, SendHeader, SendData, (PVOID)FrLdrDbgPrint);
 
     /* If the debugger isn't present anymore, just return success */
     if (KdDebuggerNotPresent) return ContinueSuccess;
@@ -565,6 +566,7 @@ SendPacket:
         /* Receive Loop */
         do
         {
+            FrLdrDbgPrint("KdpSendWaitContinue 1\n");
             /* Wait to get a reply to our packet */
             RecvCode = KdReceivePacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                                        &Header,
@@ -947,7 +949,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
     STRING Header, Data;
     DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
     BOOLEAN Status;
-
+FrLdrDbgPrint("Enter KdpReportExceptionStateChange, Rip = 0x%p\n", (PVOID)Context->Rip);
     /* Start report loop */
     do
     {
@@ -968,14 +970,14 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
 
         /* Setup the trace data */
         DumpTraceData(&Data);
-
+FrLdrDbgPrint("KdpReportExceptionStateChange 5\n");
         /* Send State Change packet and wait for a reply */
         Status = KdpSendWaitContinue(PACKET_TYPE_KD_STATE_CHANGE64,
                                      &Header,
                                      &Data,
                                      Context);
     } while (Status == KdPacketNeedsResend);
-
+FrLdrDbgPrint("Leave KdpReportExceptionStateChange, Status = 0x%x\n", Status);
     /* Return */
     return Status;
 }
@@ -1072,7 +1074,7 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
                 IN PKEXCEPTION_FRAME ExceptionFrame)
 {
     BOOLEAN Entered;
-
+FrLdrDbgPrint("KdEnterDebugger!\n");
     /* Check if we have a trap frame */
     if (TrapFrame)
     {
@@ -1114,7 +1116,7 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
 
     /* Make sure we acquired the port */
     if (!KdpPortLocked) DbgPrint("Port lock was not acquired!\n");
-
+FrLdrDbgPrint("KdEnterDebugger returns %d\n", Entered);
     /* Return enter state */
     return Entered;
 }
