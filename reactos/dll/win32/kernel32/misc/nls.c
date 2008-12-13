@@ -1067,13 +1067,13 @@ static BOOL
 WINAPI
 IntIsLeadByte(PCPTABLEINFO TableInfo, BYTE Byte)
 {
-    UINT LeadByteNo;
+    UINT i;
 
     if (TableInfo->MaximumCharacterSize == 2)
     {
-        for (LeadByteNo = 0; LeadByteNo < MAXIMUM_LEADBYTES; LeadByteNo++)
+        for (i = 0; i < MAXIMUM_LEADBYTES && TableInfo->LeadByte[i]; i += 2)
         {
-            if (TableInfo->LeadByte[LeadByteNo] == Byte)
+            if (Byte >= TableInfo->LeadByte[i] && Byte <= TableInfo->LeadByte[i+1])
                 return TRUE;
         }
     }
