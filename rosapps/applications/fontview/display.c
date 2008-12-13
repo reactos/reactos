@@ -152,7 +152,7 @@ Display_SetTypeFace(HWND hwnd, PEXTLOGFONTW pExtLogFont)
 
 	/* Set the new type face name */
 	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	snwprintf(pData->szTypeFaceName, LF_FULLFACESIZE, pExtLogFont->elfFullName);
+	_snwprintf(pData->szTypeFaceName, LF_FULLFACESIZE, pExtLogFont->elfFullName);
 
 	/* Create the new fonts */
 	hDC = GetDC(hwnd);
@@ -202,7 +202,7 @@ Display_SetString(HWND hwnd, LPARAM lParam)
 	DISPLAYDATA* pData;
 
 	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	snwprintf(pData->szString, MAX_STRING, (WCHAR*)lParam);
+	_snwprintf(pData->szString, MAX_STRING, (WCHAR*)lParam);
 
 	// FIXME: redraw the window
 
