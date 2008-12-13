@@ -876,6 +876,8 @@ EnumSymbolsProc(
 		}
 		else
 		{
+		    printf("Symbol: %s, TypeIndex=%ld, Flags=%lx, Value=0x%llx\n",
+		        pSymInfo->Name, pSymInfo->TypeIndex, pSymInfo->Flags, pSymInfo->Value);
 			//if (pSymInfo->Flags & SYMFLAG_FUNCTION)
 			{
 //                              DumpFunction(pSymInfo, pei);
