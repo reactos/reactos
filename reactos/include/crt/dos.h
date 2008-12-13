@@ -39,8 +39,8 @@ extern "C" {
 #endif
 
 #if (defined(_X86_) && !defined(__x86_64))
-  void __cdecl _disable(void);
-  void __cdecl _enable(void);
+//  void __cdecl _disable(void);
+//  void __cdecl _enable(void);
 #endif
 
 #ifndef	NO_OLDNAMES
