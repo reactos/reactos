@@ -5,7 +5,7 @@
  * @implemented
  */
 double
-difftime(time_t time1, time_t time0)
+difftime(time_t time1, time_t time2)
 {
-  return time1-time0;
+  return (double)(time1 - time2);
 }

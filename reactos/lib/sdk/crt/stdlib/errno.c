@@ -13,9 +13,9 @@
 /*
  * @implemented
  */
-int* __doserrno(void)
+unsigned long* __doserrno(void)
 {
-  return (int*)(&GetThreadData()->tdoserrno);
+  return (unsigned long*)(&GetThreadData()->tdoserrno);
 }
 
 /*

@@ -1452,12 +1452,12 @@ __p__tzname(void)
 /*********************************************************************
  *              _dstbias (MSVCRT.@)
  */
-int _dstbias = 0;
+long _dstbias = 0;
 
 /*********************************************************************
  *              __p_dstbias (MSVCRT.@)
  */
-int * __p__dstbias(void)
+long * __p__dstbias(void)
 {
     return &_dstbias;
 }

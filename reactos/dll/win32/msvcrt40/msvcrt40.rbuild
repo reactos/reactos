@@ -8,7 +8,6 @@
 	<define name="__WINESRC__" />
 	<file>msvcrt40.c</file>
 	<library>wine</library>
-	<library>msvcrt</library>
 	<library>kernel32</library>
 </module>
 </group>

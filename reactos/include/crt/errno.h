@@ -1,101 +1,75 @@
-/*
- * errno.h
+/**
  * This file has no copyright assigned and is placed in the Public Domain.
- * This file is a part of the mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within the package.
- *
- * Error numbers and access to error reporting.
- *
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+#ifndef _INC_ERRNO
+#define _INC_ERRNO
 
-#ifndef _ERRNO_H_
-#define	_ERRNO_H_
-
-/* All the headers include this file. */
 #include <_mingw.h>
 
-/*
- * Error numbers.
- * TODO: Can't be sure of some of these assignments, I guessed from the
- * names given by strerror and the defines in the Cygnus errno.h. A lot
- * of the names from the Cygnus errno.h are not represented, and a few
- * of the descriptions returned by strerror do not obviously match
- * their error naming.
- */
-#define EPERM		1	/* Operation not permitted */
-#define	ENOFILE		2	/* No such file or directory */
-#define	ENOENT		2
-#define	ESRCH		3	/* No such process */
-#define	EINTR		4	/* Interrupted function call */
-#define	EIO		5	/* Input/output error */
-#define	ENXIO		6	/* No such device or address */
-#define	E2BIG		7	/* Arg list too long */
-#define	ENOEXEC		8	/* Exec format error */
-#define	EBADF		9	/* Bad file descriptor */
-#define	ECHILD		10	/* No child processes */
-#define	EAGAIN		11	/* Resource temporarily unavailable */
-#define	ENOMEM		12	/* Not enough space */
-#define	EACCES		13	/* Permission denied */
-#define	EFAULT		14	/* Bad address */
-/* 15 - Unknown Error */
-#define	EBUSY		16	/* strerror reports "Resource device" */
-#define	EEXIST		17	/* File exists */
-#define	EXDEV		18	/* Improper link (cross-device link?) */
-#define	ENODEV		19	/* No such device */
-#define	ENOTDIR		20	/* Not a directory */
-#define	EISDIR		21	/* Is a directory */
-#define	EINVAL		22	/* Invalid argument */
-#define	ENFILE		23	/* Too many open files in system */
-#define	EMFILE		24	/* Too many open files */
-#define	ENOTTY		25	/* Inappropriate I/O control operation */
-/* 26 - Unknown Error */
-#define	EFBIG		27	/* File too large */
-#define	ENOSPC		28	/* No space left on device */
-#define	ESPIPE		29	/* Invalid seek (seek on a pipe?) */
-#define	EROFS		30	/* Read-only file system */
-#define	EMLINK		31	/* Too many links */
-#define	EPIPE		32	/* Broken pipe */
-#define	EDOM		33	/* Domain error (math functions) */
-#define	ERANGE		34	/* Result too large (possibly too small) */
-/* 35 - Unknown Error */
-#define	EDEADLOCK	36	/* Resource deadlock avoided (non-Cyg) */
-#define	EDEADLK		36
-/* 37 - Unknown Error */
-#define	ENAMETOOLONG	38	/* Filename too long (91 in Cyg?) */
-#define	ENOLCK		39	/* No locks available (46 in Cyg?) */
-#define	ENOSYS		40	/* Function not implemented (88 in Cyg?) */
-#define	ENOTEMPTY	41	/* Directory not empty (90 in Cyg?) */
-#define	EILSEQ		42	/* Illegal byte sequence */
-
-/*
- * NOTE: ENAMETOOLONG and ENOTEMPTY conflict with definitions in the
- *       sockets.h header provided with windows32api-0.1.2.
- *       You should go and put an #if 0 ... #endif around the whole block
- *       of errors (look at the comment above them).
- */
-
-#ifndef	RC_INVOKED
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-/*
- * Definitions of errno. For _doserrno, sys_nerr and * sys_errlist, see
- * stdlib.h.
- */
-#ifdef _UWIN
-#undef errno
-extern int errno;
-#else
-_CRTIMP int* __cdecl __MINGW_NOTHROW _errno(void);
-#define	errno		(*_errno())
+#ifndef _CRT_ERRNO_DEFINED
+#define _CRT_ERRNO_DEFINED
+  _CRTIMP extern int *__cdecl _errno(void);
+#define errno (*_errno())
+
+  errno_t __cdecl _set_errno(int _Value);
+  errno_t __cdecl _get_errno(int *_Value);
 #endif
 
-#ifdef	__cplusplus
+#define EPERM 1
+#define ENOENT 2
+#define ESRCH 3
+#define EINTR 4
+#define EIO 5
+#define ENXIO 6
+#define E2BIG 7
+#define ENOEXEC 8
+#define EBADF 9
+#define ECHILD 10
+#define EAGAIN 11
+#define ENOMEM 12
+#define EACCES 13
+#define EFAULT 14
+#define EBUSY 16
+#define EEXIST 17
+#define EXDEV 18
+#define ENODEV 19
+#define ENOTDIR 20
+#define EISDIR 21
+#define ENFILE 23
+#define EMFILE 24
+#define ENOTTY 25
+#define EFBIG 27
+#define ENOSPC 28
+#define ESPIPE 29
+#define EROFS 30
+#define EMLINK 31
+#define EPIPE 32
+#define EDOM 33
+#define EDEADLK 36
+#define ENAMETOOLONG 38
+#define ENOLCK 39
+#define ENOSYS 40
+#define ENOTEMPTY 41
+
+#ifndef RC_INVOKED
+#if !defined(_SECURECRT_ERRCODE_VALUES_DEFINED)
+#define _SECURECRT_ERRCODE_VALUES_DEFINED
+#define EINVAL 22
+#define ERANGE 34
+#define EILSEQ 42
+#define STRUNCATE 80
+#endif
+#endif
+
+#define EDEADLOCK EDEADLK
+
+#ifdef __cplusplus
 }
 #endif
-
-#endif	/* Not RC_INVOKED */
-
-#endif	/* Not _ERRNO_H_ */
+#endif

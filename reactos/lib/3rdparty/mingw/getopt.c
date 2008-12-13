@@ -82,7 +82,7 @@ int _tgetopt(int argc, _TCHAR * const argv[], const _TCHAR * optstring)
  ++ s_nArgChar;
 
  /* unrecognized option */
- if((_toptopt == _T(':')) || ((pcOptChar = _tcschr(optstring, (_TCHAR)_toptopt)) == NULL))
+ if(_toptopt == _T(':') || (pcOptChar = _tcschr(optstring, _toptopt)) == NULL)
  {
   /* print an error message */
   if(_topterr && optstring[0] != _T(':'))

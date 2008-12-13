@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <time.h>
+//#include <time.h>
+#include <sys/time.h>
 #include <winsock.h>
 #include "fake.h"
 #include "prototypes.h"
@@ -307,12 +308,13 @@ int access(const char *filename, int accessmethod)
 #define EPOCHFILETIME (116444736000000000LL)
 #endif
 
-int gettimeofday(struct timeval *tv, struct timezone *tz)
+int gettimeofday(struct timeval *tv, void *tz0)
 {
     FILETIME        ft;
     LARGE_INTEGER   li;
     __int64         t;
     static int      tzflag;
+    struct timezone *tz = tz0;
 
     if (tv)
     {

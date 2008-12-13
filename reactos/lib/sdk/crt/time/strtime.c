@@ -12,18 +12,11 @@
 /*
  * @implemented
  */
-char* _strtime(char* buf)
+char* _strtime(char* time)
 {
-    time_t t;
-    struct tm *d;
-    char* dt = (char*)buf;
+   static const char format[] = "HH':'mm':'ss";
 
-    if ( buf == NULL ) {
-        __set_errno(EINVAL);
-        return NULL;
-    }
-    t = time(NULL);
-    d = localtime(&t);
-    sprintf(dt,"%d:%d:%d",d->tm_hour,d->tm_min,d->tm_sec);
-    return dt;
+   GetTimeFormatA(LOCALE_NEUTRAL, 0, NULL, format, time, 9); 
+
+   return time;
 }

@@ -3,7 +3,6 @@
 	<importlibrary definition="rpcrt4.spec" />
 	<include base="rpcrt4">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_STDDEF_H" />
 	<define name="_RPCRT4_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<define name="MSWMSG" />

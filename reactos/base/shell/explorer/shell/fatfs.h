@@ -118,13 +118,13 @@ struct BootSector32 {
 };
 
 
-struct ftime {
+struct filetime {
 	WORD	sec2	: 5;
 	WORD	min 	: 6;
 	WORD	hour	: 5;
 };
 
-struct fdate {
+struct filedate {
 	WORD	day 	: 5;
 	WORD	month	: 4;
 	WORD	year	: 7;
@@ -150,15 +150,15 @@ struct DEntry_E {
 	char			ext[3];
 	char			attr;
 	char			rsrvd[10];
-	struct ftime	time;
-	struct fdate	date;
+	struct filetime	time;
+	struct filedate	date;
 	WORD			fclus;
 	DWORD 			size;
 };
 
 union DEntry {
 	DEntry_E E;
-	BYTE B[8+3+1+10+sizeof(struct ftime)+sizeof(struct fdate)+sizeof(WORD)+sizeof(DWORD)];
+	BYTE B[8+3+1+10+sizeof(struct filetime)+sizeof(struct filedate)+sizeof(WORD)+sizeof(DWORD)];
 };
 
 #pragma pack(pop)

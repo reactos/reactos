@@ -679,7 +679,7 @@ int __cdecl lnx_vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				flags |= ZEROPAD;
 			}
 			str = number(str, end,
-				(unsigned long) va_arg(args, void *), 16,
+				(uintptr_t) va_arg(args, void *), 16,
 				field_width, precision, flags);
 			continue;
 

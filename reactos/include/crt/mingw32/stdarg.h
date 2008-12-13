@@ -28,6 +28,12 @@ Boston, MA 02110-1301, USA.  */
  * ISO C Standard:  7.15  Variable arguments  <stdarg.h>
  */
 
+#ifndef _INC_STDARG
+#define _INC_STDARG
+#ifndef _WIN32
+#error Only Win32 target is supported!
+#endif
+
 #ifndef _STDARG_H
 #ifndef _ANSI_STDARG_H_
 #ifndef __need___va_list
@@ -58,7 +64,7 @@ typedef __builtin_va_list __gnuc_va_list;
 /* Define va_list, if desired, from __gnuc_va_list. */
 /* We deliberately do not define va_list when called from
    stdio.h, because ANSI C says that stdio.h is not supposed to define
-   va_list.  stdio.h needs to have access to that data type,
+   va_list.  stdio.h needs to have access to that data type, 
    but must not use that name.  It should use the name __gnuc_va_list,
    which is safe because it is reserved for the implementation.  */
 
@@ -131,3 +137,17 @@ typedef __gnuc_va_list va_list;
 
 #endif /* not _ANSI_STDARG_H_ */
 #endif /* not _STDARG_H */
+
+#include <vadefs.h>
+
+#ifndef va_start
+#define va_start _crt_va_start
+#endif
+#ifndef va_arg
+#define va_arg _crt_va_arg
+#endif
+#ifndef va_end
+#define va_end _crt_va_end
+#endif
+
+#endif

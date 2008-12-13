@@ -1913,8 +1913,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 	{
 		if ( module.cplusplus )
 		{
-			// HACK: use host headers when building C++
-			globalCflags += " $(HOST_CPPFLAGS)";
+			globalCflags += " $(TARGET_CPPFLAGS)";
 		}
 		else
 			globalCflags += " -nostdinc";

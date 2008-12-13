@@ -28,6 +28,8 @@
 #define INF_SUCCESS(x) (0 == (x))
 
 typedef char TCHAR, *PTCHAR, *PTSTR;
+typedef const TCHAR *PCTSTR;
+
 #define _T(x) x
 #define _tcsicmp strcasecmp
 #define _tcslen strlen
@@ -46,11 +48,11 @@ typedef char TCHAR, *PTCHAR, *PTSTR;
 
 #define UNICODE
 #define _UNICODE
-#include <tchar.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <tchar.h>
 
 extern PVOID InfpHeap;
 
@@ -69,7 +71,5 @@ extern PVOID InfpHeap;
 #define STRFMT "%S"
 
 #endif /* INFLIB_HOST */
-
-typedef const TCHAR *PCTSTR;
 
 /* EOF */

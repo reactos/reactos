@@ -271,10 +271,10 @@ EXPORTS
   _fileno @265
   _findclose @266
   _findfirst @267
-;  _findfirst64 @268
+  _findfirst64 @268
   _findfirsti64 @269
   _findnext @270
-;  _findnext64 @271
+  _findnext64 @271
   _findnexti64 @272
   _finite @273
   _flsbuf @274
@@ -594,10 +594,10 @@ EXPORTS
   _wexecvpe @588
   _wfdopen @589
   _wfindfirst @590
-;  _wfindfirst64 @591
+  _wfindfirst64 @591
   _wfindfirsti64 @592
   _wfindnext @593
-;  _wfindnext64 @594
+  _wfindnext64 @594
   _wfindnexti64 @595
   _wfopen @596
   _wfreopen @597

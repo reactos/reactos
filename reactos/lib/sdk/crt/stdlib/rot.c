@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 
+unsigned int _rotr( unsigned int value, int shift );
 /*
  * @implemented
  */

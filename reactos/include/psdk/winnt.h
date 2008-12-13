@@ -35,6 +35,7 @@
 extern "C" {
 #endif
 
+#include <excpt.h>
 #include <basetsd.h>
 #include <guiddef.h>
 
@@ -131,41 +132,39 @@ typedef WCHAR *PWCHAR,*LPWCH,*PWCH,*NWPSTR,*LPWSTR,*PWSTR;
 typedef CONST WCHAR *LPCWCH,*PCWCH,*LPCWSTR,*PCWSTR;
 typedef CHAR *PCHAR,*LPCH,*PCH,*NPSTR,*LPSTR,*PSTR;
 typedef CONST CHAR *LPCCH,*PCCH,*PCSTR,*LPCSTR;
+typedef PWSTR *PZPWSTR;
+typedef CONST PWSTR *PCZPWSTR;
+typedef WCHAR UNALIGNED *LPUWSTR,*PUWSTR;
+typedef PCWSTR *PZPCWSTR;
+typedef CONST WCHAR UNALIGNED *LPCUWSTR,*PCUWSTR;
+typedef PSTR *PZPSTR;
+typedef CONST PSTR *PCZPSTR;
+typedef PCSTR *PZPCSTR;
+
+#ifdef UNICODE
 #ifndef _TCHAR_DEFINED
 #define _TCHAR_DEFINED
-#ifdef UNICODE
-/*
- * NOTE: This tests UNICODE, which is different from the _UNICODE define
- *       used to differentiate standard C runtime calls.
- */
-typedef WCHAR TCHAR;
-typedef WCHAR _TCHAR;
+  typedef WCHAR TCHAR,*PTCHAR;
+  typedef WCHAR TBYTE ,*PTBYTE;
+#endif
+  typedef LPWSTR LPTCH,PTCH,PTSTR,LPTSTR,LP;
+  typedef LPCWSTR PCTSTR,LPCTSTR;
+  typedef LPUWSTR PUTSTR,LPUTSTR;
+  typedef LPCUWSTR PCUTSTR,LPCUTSTR;
+#define __TEXT(quote) L##quote
 #else
-typedef CHAR TCHAR;
-typedef CHAR _TCHAR;
+#ifndef _TCHAR_DEFINED
+#define _TCHAR_DEFINED
+  typedef char TCHAR,*PTCHAR;
+  typedef unsigned char TBYTE ,*PTBYTE;
 #endif
+  typedef LPSTR LPTCH,PTCH,PTSTR,LPTSTR,PUTSTR,LPUTSTR;
+  typedef LPCSTR PCTSTR,LPCTSTR,PCUTSTR,LPCUTSTR;
+#define __TEXT(quote) quote
 #endif
-typedef TCHAR TBYTE,*PTCH,*PTBYTE;
-typedef TCHAR *LPTCH,*PTSTR,*LPTSTR,*LP,*PTCHAR;
-typedef const TCHAR *LPCTSTR;
-#ifdef UNICODE
-/*
- * __TEXT is a private macro whose specific use is to force the expansion of a
- * macro passed as an argument to the macro TEXT.  DO NOT use this
- * macro within your programs.  It's name and function could change without
- * notice.
- */
-#define __TEXT(q) L##q
-#else
-#define __TEXT(q) q
-#endif
-/*
- * UNICODE a constant string when UNICODE is defined, else returns the string
- * unmodified.
- * The corresponding macros  _TEXT() and _T() for mapping _UNICODE strings
- * passed to C runtime functions are defined in mingw/tchar.h
- */
-#define TEXT(q) __TEXT(q)
+
+#define TEXT(quote) __TEXT(quote)
+
 typedef SHORT *PSHORT;
 typedef LONG *PLONG;
 #ifdef STRICT

@@ -657,29 +657,24 @@ static __inline__ __attribute__((always_inline)) void __incgsdword(const unsigne
 	__asm__ __volatile__("incl %%gs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
-/* NOTE: the bizarre implementation of __addgsxxx mimics the broken Visual C++ behavior */
 static __inline__ __attribute__((always_inline)) void __addgsbyte(const unsigned long Offset, const unsigned char Data)
 {
-	if(!__builtin_constant_p(Offset))
-		__asm__ __volatile__("addb %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
-	else
-		__asm__ __volatile__("addb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
+	__asm__ __volatile__("addb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __addgsword(const unsigned long Offset, const unsigned short Data)
 {
-	if(!__builtin_constant_p(Offset))
-		__asm__ __volatile__("addw %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
-	else
-		__asm__ __volatile__("addw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
+	__asm__ __volatile__("addw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 static __inline__ __attribute__((always_inline)) void __addgsdword(const unsigned long Offset, const unsigned int Data)
 {
-	if(!__builtin_constant_p(Offset))
-		__asm__ __volatile__("addl %k[Offset], %%gs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
-	else
-		__asm__ __volatile__("addl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
+	__asm__ __volatile__("addl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
+}
+
+static __inline__ __attribute__((always_inline)) void __addgsqword(const unsigned long Offset, const unsigned __int64 Data)
+{
+	__asm__ __volatile__("addq %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 #else
@@ -1066,11 +1061,28 @@ static __inline__ __attribute__((always_inline)) void __cpuid(int CPUInfo[], con
 
 static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void)
 {
+#ifdef _M_AMD64
+	unsigned long long low, high;
+	__asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high));
+	return low | (high << 32);
+#else
 	unsigned long long retval;
 	__asm__ __volatile__("rdtsc" : "=A"(retval));
 	return retval;
+#endif
 }
 
+static __inline__ __attribute__((always_inline)) void __writeeflags(uintptr_t Value)
+{
+	__asm__ __volatile__("push %0\n popf" : : "rim"(Value));
+}
+
+static __inline__ __attribute__((always_inline)) uintptr_t __readeflags(void)
+{
+	uintptr_t retval;
+	__asm__ __volatile__("pushf\n pop %0" : "=rm"(retval));
+	return retval;
+}
 
 /*** Interrupts ***/
 static __inline__ __attribute__((always_inline)) void __debugbreak(void)

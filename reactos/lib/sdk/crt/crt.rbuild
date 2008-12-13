@@ -15,7 +15,7 @@
 	</directory>
 </module>
 
-<module name="crt" type="staticlibrary">
+<module name="crt" type="staticlibrary" allowwarnings="true">
 	<library>chkstk</library>
 	<include base="crt">.</include>
 	<include base="crt">include</include>
@@ -69,6 +69,12 @@
 				<file>seh.s</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>seh.s</file>
+				<file>chkstk_asm.s</file>
+			</directory>
+		</if>
 		<file>xcptfil.c</file>
 	</directory>
 	<directory name="float">
@@ -81,6 +87,14 @@
 		<file>nafter.c</file>
 		<file>scalb.c</file>
 		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>clearfp.c</file>
+				<file>cntrlfp.c</file>
+				<file>logb.c</file>
+				<file>statfp.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
 			<directory name="i386">
 				<file>clearfp.c</file>
 				<file>cntrlfp.c</file>
@@ -141,6 +155,14 @@
 
 				<file>atan2.c</file>
 				<file>ci.c</file>
+				<file>exp.c</file>
+				<file>fmod.c</file>
+				<file>ldexp.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="i386">
+				<file>atan2.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
 				<file>ldexp.c</file>
@@ -272,13 +294,21 @@
 		<file>access.c</file>
 		<file>file.c</file>
 		<file>find.c</file>
+		<file>find64.c</file>
+		<file>findi64.c</file>
 		<file>fmode.c</file>
 		<file>lnx_sprintf.c</file>
 		<file>perror.c</file>
 		<file>popen.c</file>
+		<file>stat.c</file>
+		<file>stat64.c</file>
 		<file>waccess.c</file>
 		<file>wfind.c</file>
+		<file>wfind64.c</file>
+		<file>wfindi64.c</file>
 		<file>wpopen.c</file>
+		<file>wstat.c</file>
+		<file>wstat64.c</file>
 	</directory>
 	<directory name="stdlib">
 		<file>_exit.c</file>

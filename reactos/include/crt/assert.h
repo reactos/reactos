@@ -1,51 +1,58 @@
-/*
- * assert.h
+/**
  * This file has no copyright assigned and is placed in the Public Domain.
- * This file is a part of the mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within the package.
- *
- * Define the assert macro for debug output.
- *
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+#ifndef __ASSERT_H_
+#define __ASSERT_H_
 
-/* We should be able to include this file multiple times to allow the assert
-   macro to be enabled/disabled for different parts of code.  So don't add a
-   header guard.  */
-
-#ifndef RC_INVOKED
-
-/* All the headers include this file. */
 #include <_mingw.h>
-
-#undef assert
-
-#ifdef	__cplusplus
-extern "C" {
+#ifdef __cplusplus
+#include <stdlib.h>
 #endif
 
 #ifdef NDEBUG
-/*
- * If not debugging, assert does nothing.
- */
-#define assert(x)	((void)0)
+#ifndef assert
+#define assert(_Expression) ((void)0)
+#endif
+#else
 
-#else /* debugging enabled */
+#ifndef _CRT_TERMINATE_DEFINED
+#define _CRT_TERMINATE_DEFINED
+__declspec(noreturn) void __cdecl exit(int _Code);
+_CRTIMP __declspec(noreturn) void __cdecl _exit(int _Code);
+#if !defined __NO_ISOCEXT /* extern stub in static libmingwex.a */
+/* C99 function name */
+void __cdecl __declspec(noreturn) _Exit(int); /* Declare to get noreturn attribute.  */
+__CRT_INLINE void __cdecl _Exit(int status)
+{  _exit(status); }
+#endif
 
-/*
- * CRTDLL nicely supplies a function which does the actual output and
- * call to abort.
- */
-_CRTIMP void __cdecl __MINGW_NOTHROW _assert (const char*, const char*, int) __MINGW_ATTRIB_NORETURN;
+#if __MINGW_GNUC_PREREQ(4,4)
+#pragma push_macro("abort")
+#undef abort
+#endif
+  void __cdecl __declspec(noreturn) abort(void);
+#if __MINGW_GNUC_PREREQ(4,4)
+#pragma pop_macro("abort")
+#endif
 
-/*
- * Definition of the assert macro.
- */
-#define assert(e)       ((e) ? (void)0 : _assert(#e, __FILE__, __LINE__))
+#endif
 
-#endif	/* NDEBUG */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#ifdef	__cplusplus
+//extern void __cdecl _wassert(const wchar_t *_Message,const wchar_t *_File,unsigned _Line);
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif /* Not RC_INVOKED */
+#ifndef assert
+#define assert(_Expression) (void)((!!(_Expression)))// || (_wassert(_CRT_WIDE(#_Expression),_CRT_WIDE(__FILE__),__LINE__),0))
+#endif
+
+#endif
+
+#endif
