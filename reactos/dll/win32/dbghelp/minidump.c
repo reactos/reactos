@@ -411,7 +411,7 @@ static  unsigned        dump_exception_info(struct dump_context* dc,
     MINIDUMP_EXCEPTION_STREAM   mdExcpt;
     EXCEPTION_RECORD            rec, *prec;
     CONTEXT                     ctx, *pctx;
-    int                         i;
+    DWORD                       i;
 
     mdExcpt.ThreadId = except->ThreadId;
     mdExcpt.__alignment = 0;
@@ -556,6 +556,44 @@ static  unsigned        dump_modules(struct dump_context* dc, BOOL dump_elf)
     return sz;
 }
 
+/* Calls cpuid with an eax of 'ax' and returns the 16 bytes in *p
+ * We are compiled with -fPIC, so we can't clobber ebx.
+ */
+static inline void do_x86cpuid(unsigned int ax, unsigned int *p)
+{
+#if defined(__GNUC__) && defined(__i386__)
+    __asm__("pushl %%ebx\n\t"
+            "cpuid\n\t"
+            "movl %%ebx, %%esi\n\t"
+            "popl %%ebx"
+            : "=a" (p[0]), "=S" (p[1]), "=c" (p[2]), "=d" (p[3])
+            :  "0" (ax));
+#endif
+}
+
+/* From xf86info havecpuid.c 1.11 */
+static inline int have_x86cpuid(void)
+{
+#if defined(__GNUC__) && defined(__i386__)
+    unsigned int f1, f2;
+    __asm__("pushfl\n\t"
+            "pushfl\n\t"
+            "popl %0\n\t"
+            "movl %0,%1\n\t"
+            "xorl %2,%0\n\t"
+            "pushl %0\n\t"
+            "popfl\n\t"
+            "pushfl\n\t"
+            "popl %0\n\t"
+            "popfl"
+            : "=&r" (f1), "=&r" (f2)
+            : "ir" (0x00200000));
+    return ((f1^f2) & 0x00200000) != 0;
+#else
+    return 0;
+#endif
+}
+
 /******************************************************************
  *		dump_system_info
  *
@@ -587,9 +625,42 @@ static  unsigned        dump_system_info(struct dump_context* dc)
     mdSysInfo.u1.Reserved1 = 0;
     mdSysInfo.u1.s.SuiteMask = VER_SUITE_TERMINAL;
 
-    FIXME("fill in CPU vendorID and feature set\n");
-    memset(&mdSysInfo.Cpu, 0, sizeof(mdSysInfo.Cpu));
+    if (have_x86cpuid())
+    {
+        unsigned        regs0[4], regs1[4];
 
+        do_x86cpuid(0, regs0);
+        mdSysInfo.Cpu.X86CpuInfo.VendorId[0] = regs0[1];
+        mdSysInfo.Cpu.X86CpuInfo.VendorId[1] = regs0[2];
+        mdSysInfo.Cpu.X86CpuInfo.VendorId[2] = regs0[3];
+        do_x86cpuid(1, regs1);
+        mdSysInfo.Cpu.X86CpuInfo.VersionInformation = regs1[0];
+        mdSysInfo.Cpu.X86CpuInfo.FeatureInformation = regs1[3];
+        mdSysInfo.Cpu.X86CpuInfo.AMDExtendedCpuFeatures = 0;
+        if (regs0[1] == 0x68747541 /* "Auth" */ &&
+            regs0[3] == 0x69746e65 /* "enti" */ &&
+            regs0[2] == 0x444d4163 /* "cAMD" */)
+        {
+            do_x86cpuid(0x80000000, regs1);  /* get vendor cpuid level */
+            if (regs1[0] >= 0x80000001)
+            {
+                do_x86cpuid(0x80000001, regs1);  /* get vendor features */
+                mdSysInfo.Cpu.X86CpuInfo.AMDExtendedCpuFeatures = regs1[3];
+            }
+        }
+    }
+    else
+    {
+        unsigned        i;
+        ULONG64         one = 1;
+
+        mdSysInfo.Cpu.OtherCpuInfo.ProcessorFeatures[0] = 0;
+        mdSysInfo.Cpu.OtherCpuInfo.ProcessorFeatures[1] = 0;
+
+        for (i = 0; i < sizeof(mdSysInfo.Cpu.OtherCpuInfo.ProcessorFeatures[0]) * 8; i++)
+            if (IsProcessorFeaturePresent(i))
+                mdSysInfo.Cpu.OtherCpuInfo.ProcessorFeatures[0] |= one << i;
+    }
     append(dc, &mdSysInfo, sizeof(mdSysInfo));
 
     /* write the service pack version string after this stream.  It is referenced within the
@@ -907,7 +978,7 @@ BOOL WINAPI MiniDumpReadDumpStream(PVOID base, ULONG str_idx,
     if (mdHead->Signature == MINIDUMP_SIGNATURE)
     {
         MINIDUMP_DIRECTORY* dir;
-        int                 i;
+        DWORD               i;
 
         dir = (MINIDUMP_DIRECTORY*)((char*)base + mdHead->StreamDirectoryRva);
         for (i = 0; i < mdHead->NumberOfStreams; i++, dir++)

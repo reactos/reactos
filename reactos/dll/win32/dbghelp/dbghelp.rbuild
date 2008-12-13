@@ -19,6 +19,7 @@
 	<file>path.c</file>
 	<file>pe_module.c</file>
 	<file>regex.c</file>
+	<file>rosstubs.c</file>
 	<file>source.c</file>
 	<file>stabs.c</file>
 	<file>stack.c</file>

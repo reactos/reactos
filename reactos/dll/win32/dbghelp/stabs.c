@@ -63,7 +63,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
 
-_CRTIMP UINT64 _strtoui64( const char *nptr, char **endptr, int base );
 #define strtoull _strtoui64
 
 #ifndef N_UNDF
@@ -1134,7 +1133,7 @@ static inline void pending_add(struct pending_block* pending, const char* name,
 static void pending_flush(struct pending_block* pending, struct module* module, 
                           struct symt_function* func, struct symt_block* block)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < pending->num; i++)
     {

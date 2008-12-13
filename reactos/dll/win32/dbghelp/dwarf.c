@@ -1036,7 +1036,7 @@ static struct symt* dwarf2_parse_array_type(dwarf2_parse_context_t* ctx,
     struct symt* idx_type = NULL;
     struct attribute min, max, cnt;
     dwarf2_debug_info_t* child;
-    int    i;
+    unsigned int    i;
 
     if (di->symt) return di->symt;
 
@@ -1194,7 +1194,7 @@ static struct symt* dwarf2_parse_udt_type(dwarf2_parse_context_t* ctx,
     if (di->abbrev->have_child) /** any interest to not have child ? */
     {
         dwarf2_debug_info_t*    child;
-        int    i;
+        unsigned int    i;
 
         for (i=0; i<vector_length(&di->children); i++)
         {
@@ -1269,7 +1269,7 @@ static struct symt* dwarf2_parse_enumeration_type(dwarf2_parse_context_t* ctx,
     if (di->abbrev->have_child) /* any interest to not have child ? */
     {
         dwarf2_debug_info_t*    child;
-        int    i;
+        unsigned int    i;
 
         /* FIXME: should we use the sibling stuff ?? */
         for (i=0; i<vector_length(&di->children); i++)
@@ -1454,7 +1454,7 @@ static void dwarf2_parse_inlined_subroutine(dwarf2_subprogram_t* subpgm,
     if (di->abbrev->have_child) /** any interest to not have child ? */
     {
         dwarf2_debug_info_t*    child;
-        int    i;
+        unsigned int    i;
 
         for (i=0; i<vector_length(&di->children); i++)
         {
@@ -1507,7 +1507,7 @@ static void dwarf2_parse_subprogram_block(dwarf2_subprogram_t* subpgm,
     if (di->abbrev->have_child) /** any interest to not have child ? */
     {
         dwarf2_debug_info_t*    child;
-        int    i;
+        unsigned int    i;
 
         for (i=0; i<vector_length(&di->children); i++)
         {
@@ -1631,7 +1631,7 @@ static struct symt* dwarf2_parse_subprogram(dwarf2_parse_context_t* ctx,
     if (di->abbrev->have_child) /** any interest to not have child ? */
     {
         dwarf2_debug_info_t*    child;
-        int    i;
+        unsigned int    i;
 
         for (i=0; i<vector_length(&di->children); i++)
         {
@@ -1706,7 +1706,7 @@ static struct symt* dwarf2_parse_subroutine_type(dwarf2_parse_context_t* ctx,
     if (di->abbrev->have_child) /** any interest to not have child ? */
     {
         dwarf2_debug_info_t*    child;
-        int    i;
+        unsigned int    i;
 
         for (i=0; i<vector_length(&di->children); i++)
         {
@@ -2065,7 +2065,7 @@ static BOOL dwarf2_parse_compilation_unit(const dwarf2_section_t* sections,
 
         if (di->abbrev->have_child)
         {
-            int    i;
+            unsigned int    i;
             for (i=0; i<vector_length(&di->children); i++)
             {
                 pdi = vector_at(&di->children, i);
@@ -2121,7 +2121,7 @@ static enum location_error loc_compute_frame(struct process* pcs,
     struct location*            pframe;
     dwarf2_traverse_context_t   lctx;
     enum location_error         err;
-    int                         i;
+    unsigned int                i;
 
     for (i=0; i<vector_length(&func->vchildren); i++)
     {

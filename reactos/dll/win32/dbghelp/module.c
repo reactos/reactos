@@ -36,6 +36,7 @@ const WCHAR        S_ElfW[]         = {'<','e','l','f','>','\0'};
 const WCHAR        S_WineLoaderW[]  = {'<','w','i','n','e','-','l','o','a','d','e','r','>','\0'};
 static const WCHAR S_DotSoW[]       = {'.','s','o','\0'};
 static const WCHAR S_DotPdbW[]      = {'.','p','d','b','\0'};
+static const WCHAR S_DotDbgW[]      = {'.','d','b','g','\0'};
 const WCHAR        S_WinePThreadW[] = {'w','i','n','e','-','p','t','h','r','e','a','d','\0'};
 const WCHAR        S_WineKThreadW[] = {'w','i','n','e','-','k','t','h','r','e','a','d','\0'};
 const WCHAR        S_SlashW[]       = {'/','\0'};
@@ -423,6 +424,9 @@ enum module_type module_get_type_by_name(const WCHAR* name)
 
     if (len > 4 && !strncmpiW(name + len - 4, S_DotPdbW, 4))
         return DMT_PDB;
+
+    if (len > 4 && !strncmpiW(name + len - 4, S_DotDbgW, 4))
+        return DMT_DBG;
 
     /* wine-[kp]thread is also an ELF module */
     if (((len > 12 && name[len - 13] == '/') || len == 12) &&

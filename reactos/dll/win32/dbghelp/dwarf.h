@@ -68,6 +68,16 @@ typedef enum dwarf_tag_e
   DW_TAG_variant_part                   = 0x33,
   DW_TAG_variable                       = 0x34,
   DW_TAG_volatile_type                  = 0x35,
+  /** Dwarf3 new values */
+  DW_TAG_dwarf_procedure                = 0x36,
+  DW_TAG_restrict_type                  = 0x37,
+  DW_TAG_interface_type                 = 0x38,
+  DW_TAG_namespace                      = 0x39,
+  DW_TAG_imported_module                = 0x3a,
+  DW_TAG_unspecified_type               = 0x3b,
+  DW_TAG_partial_unit                   = 0x3c,
+  DW_TAG_imported_unit                  = 0x3d,
+  DW_TAG_mutable_type                   = 0x3e,
   /** extensions */
   DW_TAG_MIPS_loop                      = 0x4081,
   DW_TAG_format_label                   = 0x4101,
@@ -139,8 +149,20 @@ typedef enum dwarf_attribute_e
   DW_AT_variable_parameter              = 0x4b,
   DW_AT_virtuality                      = 0x4c,
   DW_AT_vtable_elem_location            = 0x4d,
-
+  /** Dwarf3 new values */
+  DW_AT_allocated                       = 0x4e,
+  DW_AT_associated                      = 0x4f,
+  DW_AT_data_location                   = 0x50,
+  DW_AT_stride                          = 0x51,
+  DW_AT_entry_pc                        = 0x52,
+  DW_AT_use_UTF8                        = 0x53,
+  DW_AT_extension                       = 0x54,
   DW_AT_ranges                          = 0x55,
+  DW_AT_trampoline                      = 0x56,
+  DW_AT_call_column                     = 0x57,
+  DW_AT_call_file                       = 0x58,
+  DW_AT_call_line                       = 0x59,
+  DW_AT_description                     = 0x5a,
   /* extensions */
   DW_AT_MIPS_fde                        = 0x2001,
   DW_AT_MIPS_loop_begin                 = 0x2002,
@@ -197,7 +219,9 @@ typedef enum dwarf_type_e
   DW_ATE_signed                         = 0x5,
   DW_ATE_signed_char                    = 0x6,
   DW_ATE_unsigned                       = 0x7,
-  DW_ATE_unsigned_char                  = 0x8
+  DW_ATE_unsigned_char                  = 0x8,
+  /* Dwarf3 new values */
+  DW_ATE_imaginary_float                = 0x9
 } dwarf_type_t;
 
 typedef enum dwarf_operation_e
@@ -346,7 +370,12 @@ typedef enum dwarf_operation_e
   DW_OP_piece                           = 0x93,
   DW_OP_deref_size                      = 0x94,
   DW_OP_xderef_size                     = 0x95,
-  DW_OP_nop                             = 0x96
+  DW_OP_nop                             = 0x96,
+  /** Dwarf3 new values */
+  DW_OP_push_object_address             = 0x97,
+  DW_OP_call2                           = 0x98,
+  DW_OP_call4                           = 0x99,
+  DW_OP_call_ref                        = 0x9a,
 } dwarf_operation_t;
 
 enum dwarf_calling_convention
@@ -369,6 +398,10 @@ enum dwarf_calling_convention
 #define DW_LNS_set_basic_block          0x07
 #define DW_LNS_const_add_pc             0x08
 #define DW_LNS_fixed_advance_pc         0x09
+/* Dwarf3 new values */
+#define DW_LNS_set_prologue_end         0x0a
+#define DW_LNS_set_epilogue_begin       0x0b
+#define DW_LNS_set_isa                  0x0c
 
 #define DW_LNE_end_sequence             0x01
 #define DW_LNE_set_address              0x02
