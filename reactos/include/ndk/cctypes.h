@@ -129,7 +129,7 @@ typedef struct _SHARED_CACHE_MAP
     KEVENT Event;
     EX_PUSH_LOCK VacbPushLock;
     PRIVATE_CACHE_MAP PrivateCacheMap;
-} SHARED_CACHE_MAP;
+} SHARED_CACHE_MAP, *PSHARED_CACHE_MAP;
 
 #endif /* _NTIFS_INCLUDED_  */
 #endif /* NTOS_MODE_USER    */
