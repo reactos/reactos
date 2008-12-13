@@ -503,6 +503,9 @@ __CRT_INLINE long long __cdecl __MINGW_NOTHROW llabs(long long _j)
 long long  __cdecl __MINGW_NOTHROW strtoll (const char* __restrict__, char** __restrict, int);
 unsigned long long  __cdecl __MINGW_NOTHROW strtoull (const char* __restrict__, char** __restrict__, int);
 
+_CRTIMP __int64 __cdecl _strtoi64(const char *,char **,int);
+_CRTIMP unsigned __int64 __cdecl _strtoui64(const char *,char **,int);
+
 #if defined (__MSVCRT__) /* these are stubs for MS _i64 versions */ 
 long long  __cdecl __MINGW_NOTHROW atoll (const char *);
 
