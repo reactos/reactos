@@ -91,5 +91,6 @@ int TestMain(LPWSTR pszExe, LPWSTR pszModule);
 extern TESTENTRY TestList[];
 INT NumTests(void);
 BOOL IsFunctionPresent(LPWSTR lpszFunction);
+VOID DumpMem(PVOID pData, ULONG cbSize, ULONG nWidth);
 
 #endif /* _APITEST_H */
