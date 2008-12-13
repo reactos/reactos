@@ -770,7 +770,20 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
         /* Check for break-in */
 //        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
     }
-DPRINT1("after KdInitSystem\n");
+FrLdrDbgPrint("after KdInitSystem\n");
+
+    /* Hack! Wait for the debugger! */
+    while (!KdPollBreakIn());
+    DbgBreakPointWithStatus(0);
+
+    /* Display separator + ReactOS version at start of the debug log */
+    DPRINT1("-----------------------------------------------------\n");
+    DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+    DPRINT1("Command Line: %s\n", LoaderBlock->LoadOptions);
+    DPRINT1("ARC Paths: %s %s %s %s\n", LoaderBlock->ArcBootDeviceName,
+                                        LoaderBlock->NtHalPathName,
+                                        LoaderBlock->ArcHalDeviceName,
+                                        LoaderBlock->NtBootPathName);
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
