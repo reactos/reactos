@@ -92,4 +92,20 @@ __SEH2GlobalUnwind:
 
 	ret
 
+.globl ___SEH2FrameHandler
+___SEH2FrameHandler:
+
+.extern __SEH2FrameHandler
+
+	cld
+	jmp __SEH2FrameHandler
+
+.globl ___SEH2NestedHandler
+___SEH2NestedHandler:
+
+.extern __SEH2NestedHandler
+
+	cld
+	jmp __SEH2NestedHandler
+
 // EOF

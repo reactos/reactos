@@ -29,25 +29,28 @@
 
 #include <excpt.h>
 
+#ifndef EXCEPTION_EXIT_UNWIND
+#define EXCEPTION_EXIT_UNWIND 4
+#endif
+
+#ifndef EXCEPTION_UNWINDING
+#define EXCEPTION_UNWINDING 2
+#endif
+
 extern _SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void);
+extern void _SEH2GlobalUnwind(void *);
 
 extern int __SEH2Except(void *, void *, void *);
 extern void __SEH2Finally(void *, void *);
+extern DECLSPEC_NORETURN int __SEH2Handle(void *, void *, void *);
 
-extern
-#if defined(__GNUC__)
-__attribute__((noreturn))
-#elif defined(_MSC_VER)
-__declspec(noreturn)
-#endif
-int __SEH2Handle(void *, void *, void *);
+extern void __cdecl __SEH2EnterFrame(_SEH2Registration_t *);
+extern void __cdecl __SEH2LeaveFrame(void);
 
-static
-#if defined(__GNUC__)
-__attribute__((always_inline))
-#elif defined(_MSC_VER)
-__forceinline
-#endif
+extern int __cdecl __SEH2FrameHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
+extern int __cdecl __SEH2NestedHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
+
+FORCEINLINE
 int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel, EXCEPTION_POINTERS * ep)
 {
 	return __SEH2Except(trylevel->ST_Filter, trylevel->ST_FramePointer, ep);
@@ -56,18 +59,36 @@ int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel, EXCEP
 static
 #if defined(__GNUC__)
 __attribute__((noinline))
-#elif defined(_MSC_VER)
-__declspec(noinline)
 #endif
 void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
 	__SEH2Finally(trylevel->ST_Body, trylevel->ST_FramePointer);
 }
 
+extern
+int __cdecl _SEH2NestedHandler
+(
+	struct _EXCEPTION_RECORD * ExceptionRecord,
+	void * EstablisherFrame,
+	struct _CONTEXT * ContextRecord,
+	void * DispatcherContext
+)
+{
+	if(ExceptionRecord->ExceptionFlags & (EXCEPTION_EXIT_UNWIND | EXCEPTION_UNWINDING))
+		return ExceptionContinueSearch;
+
+	*((void **)DispatcherContext) = EstablisherFrame;
+	return ExceptionCollidedUnwind;
+}
+
 static
 void _SEH2LocalUnwind(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * dsttrylevel)
 {
 	volatile _SEH2TryLevel_t * trylevel;
+	_SEH2Registration_t nestedframe;
+
+	nestedframe.SER_Handler = &__SEH2NestedHandler;
+	__SEH2EnterFrame(&nestedframe);
 
 	for(trylevel = frame->SF_TopTryLevel; trylevel && trylevel != dsttrylevel; trylevel = trylevel->ST_Next)
 	{
@@ -76,16 +97,11 @@ void _SEH2LocalUnwind(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * dsttrylev
 	}
 
 	frame->SF_TopTryLevel = dsttrylevel;
+
+	__SEH2LeaveFrame();
 }
 
-extern void _SEH2GlobalUnwind(void *);
-
-static
-#if defined(__GNUC__)
-__attribute__((noreturn))
-#elif defined(_MSC_VER)
-__declspec(noreturn)
-#endif
+static DECLSPEC_NORETURN
 void _SEH2Handle(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
 	_SEH2GlobalUnwind(frame);
@@ -93,7 +109,7 @@ void _SEH2Handle(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 	__SEH2Handle(trylevel->ST_Body, frame->SF_FramePointer, frame->SF_StackPointer);
 }
 
-static
+extern
 int __cdecl _SEH2FrameHandler
 (
 	struct _EXCEPTION_RECORD * ExceptionRecord,
@@ -104,16 +120,10 @@ int __cdecl _SEH2FrameHandler
 {
 	_SEH2Frame_t * frame;
 
-#if defined(__GNUC__)
-	__asm__ __volatile__("cld");
-#elif defined(_MSC_VER)
-	__asm cld
-#endif
-
 	frame = EstablisherFrame;
 
 	/* Unwinding */
-	if(ExceptionRecord->ExceptionFlags & (4 | 2))
+	if(ExceptionRecord->ExceptionFlags & (EXCEPTION_EXIT_UNWIND | EXCEPTION_UNWINDING))
 	{
 		_SEH2LocalUnwind(frame, NULL);
 	}
@@ -148,18 +158,12 @@ int __cdecl _SEH2FrameHandler
 }
 
 extern
-void __cdecl __SEH2EnterFrame(_SEH2Frame_t *);
-
-extern
 void __cdecl _SEH2EnterFrame(_SEH2Frame_t * frame)
 {
-	frame->SF_Registration.SER_Handler = _SEH2FrameHandler;
+	frame->SF_Registration.SER_Handler = __SEH2FrameHandler;
 	frame->SF_Code = 0;
-	__SEH2EnterFrame(frame);
+	__SEH2EnterFrame(&frame->SF_Registration);
 }
-
-extern
-void __cdecl __SEH2LeaveFrame(void);
 
 extern
 void __cdecl _SEH2LeaveFrame(void)
