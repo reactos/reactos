@@ -1733,7 +1733,7 @@ SpiCleanupAfterInit(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
             LunInfo = DeviceExtension->BusesConfig->BusScanInfo[Bus]->LunInfo;
 
-            while (!LunInfo)
+            while (LunInfo)
             {
                 /* Free current, but save pointer to the next one */
                 Ptr = LunInfo->Next;
@@ -1958,8 +1958,8 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
                                               Lun);
 
             /* This request should not be processed if */
-            if ((LunExtension && LunExtension->ReadyLun) ||
-                (LunExtension && LunExtension->SrbInfo.Srb))
+            if ((LunExtension->ReadyLun) ||
+                (LunExtension->SrbInfo.Srb))
             {
                 /* Nothing to do here */
                 break;
@@ -2900,7 +2900,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
         // Store the MDL virtual address in SrbInfo structure
         SrbInfo->DataOffset = MmGetMdlVirtualAddress(Irp->MdlAddress);
 
-        if (DeviceExtension->MapBuffers && Irp->MdlAddress)
+        if (DeviceExtension->MapBuffers)
         {
             /* Calculate offset within DataBuffer */
             SrbInfo->DataOffset = MmGetSystemAddressForMdl(Irp->MdlAddress);
