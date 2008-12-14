@@ -40,7 +40,7 @@
 extern _SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void);
 extern void _SEH2GlobalUnwind(void *);
 
-extern int __SEH2Except(void *, void *, void *);
+extern int __SEH2Except(void *, void *);
 extern void __SEH2Finally(void *, void *);
 extern DECLSPEC_NORETURN int __SEH2Handle(void *, void *, void *);
 
@@ -51,9 +51,27 @@ extern int __cdecl __SEH2FrameHandler(struct _EXCEPTION_RECORD *, void *, struct
 extern int __cdecl __SEH2NestedHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
 
 FORCEINLINE
-int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel, EXCEPTION_POINTERS * ep)
+int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
-	return __SEH2Except(trylevel->ST_Filter, trylevel->ST_FramePointer, ep);
+	void * filter = trylevel->ST_Filter;
+	void * context = NULL;
+
+	if(filter == (void *)0)
+		return 0;
+
+	if(filter == (void *)1)
+		return 1;
+
+	if(filter == (void *)-1)
+		return -1;
+
+	if(_SEHIsTrampoline((_SEHTrampoline_t *)filter))
+	{
+		context = _SEHClosureFromTrampoline((_SEHTrampoline_t *)filter);
+		filter = _SEHFunctionFromTrampoline((_SEHTrampoline_t *)filter);
+	}
+
+	return __SEH2Except(filter, context);
 }
 
 static
@@ -62,7 +80,16 @@ __attribute__((noinline))
 #endif
 void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
-	__SEH2Finally(trylevel->ST_Body, trylevel->ST_FramePointer);
+	void * body = trylevel->ST_Body;
+	void * context = NULL;
+
+	if(_SEHIsTrampoline((_SEHTrampoline_t *)body))
+	{
+		context = _SEHClosureFromTrampoline((_SEHTrampoline_t *)body);
+		body = _SEHFunctionFromTrampoline((_SEHTrampoline_t *)body);
+	}
+
+	__SEH2Finally(body, context);
 }
 
 extern
@@ -91,10 +118,7 @@ void _SEH2LocalUnwind(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * dsttrylev
 	__SEH2EnterFrame(&nestedframe);
 
 	for(trylevel = frame->SF_TopTryLevel; trylevel && trylevel != dsttrylevel; trylevel = trylevel->ST_Next)
-	{
-		if(!trylevel->ST_Filter)
-			_SEH2Finally(frame, trylevel);
-	}
+		_SEH2Finally(frame, trylevel);
 
 	frame->SF_TopTryLevel = dsttrylevel;
 
@@ -132,25 +156,22 @@ int __cdecl _SEH2FrameHandler
 	{
 		int ret = 0;
 		volatile _SEH2TryLevel_t * trylevel;
+		EXCEPTION_POINTERS ep;
+
+		ep.ExceptionRecord = ExceptionRecord;
+		ep.ContextRecord = ContextRecord;
 
 		frame->SF_Code = ExceptionRecord->ExceptionCode;
+		frame->SF_ExceptionInformation = &ep;
 
 		for(trylevel = frame->SF_TopTryLevel; trylevel != NULL; trylevel = trylevel->ST_Next)
 		{
-			if(trylevel->ST_Filter)
-			{
-				EXCEPTION_POINTERS ep;
+			ret = _SEH2Except(frame, trylevel);
 
-				ep.ExceptionRecord = ExceptionRecord;
-				ep.ContextRecord = ContextRecord;
-
-				ret = _SEH2Except(frame, trylevel, &ep);
-
-				if(ret < 0)
-					return ExceptionContinueExecution;
-				else if(ret > 0)
-					_SEH2Handle(frame, trylevel);
-			}
+			if(ret < 0)
+				return ExceptionContinueExecution;
+			else if(ret > 0)
+				_SEH2Handle(frame, trylevel);
 		}
 	}
 
