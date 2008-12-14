@@ -162,7 +162,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         InitPropSheetPage(&psh, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
     }
 
-    /* NOTE: Don;t call SHAddFromPropSheetExtArray here because this applet only allows
+    /* NOTE: Don't call SHAddFromPropSheetExtArray here because this applet only allows
              replacing the background page but not extending the applet by more pages */
 
     ret = (LONG)(PropertySheet(&psh) != -1);
