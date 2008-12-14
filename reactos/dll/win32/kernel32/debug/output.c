@@ -317,7 +317,7 @@ OutputDebugStringA(LPCSTR _OutputString)
 #if 0
    __try
 #else
-    do
+   do
 #endif
     {
         /* size of the current output block */
@@ -326,17 +326,10 @@ OutputDebugStringA(LPCSTR _OutputString)
         /* size of the remainder of the string */
         SIZE_T nOutputStringLen;
 
-        for
-        (
-            /* output the whole string */
-            nOutputStringLen = strlen(_OutputString);
+        /* output the whole string */
+        nOutputStringLen = strlen(_OutputString);
 
-            /* repeat until the string has been fully output */
-            nOutputStringLen > 0;
-
-            /* move to the next block */
-            _OutputString += nRoundLen, nOutputStringLen -= nRoundLen
-        )
+        do
         {
             /* we're connected to the debug monitor:
                write the current block to the shared buffer */
@@ -375,13 +368,25 @@ OutputDebugStringA(LPCSTR _OutputString)
                 CHAR a_cBuffer[512];
 
                 /* write a maximum of 511 bytes */
-                if(nOutputStringLen > (sizeof(a_cBuffer) - 1))
-                    nRoundLen = sizeof(a_cBuffer) - 1;
+                if(nOutputStringLen > (sizeof(a_cBuffer) - 2))
+                    nRoundLen = sizeof(a_cBuffer) - 2;
                 else
                     nRoundLen = nOutputStringLen;
 
                 /* copy the current block */
                 memcpy(a_cBuffer, _OutputString, nRoundLen);
+
+                /* Have we reached the end of the string? */
+                if (nRoundLen == nOutputStringLen)
+                {
+                    /* Make sure we terminate with a line break */
+                    if (a_cBuffer[nRoundLen - 1] != '\n')
+                    {
+                        a_cBuffer[nRoundLen] = '\n';
+                        nRoundLen++;
+                        nOutputStringLen++;
+                    }
+                }
 
                 /* null-terminate the current block */
                 a_cBuffer[nRoundLen] = 0;
@@ -389,7 +394,14 @@ OutputDebugStringA(LPCSTR _OutputString)
                 /* send the current block to the kernel debugger */
                 DbgPrint("%s", a_cBuffer);
             }
+
+            /* move to the next block */
+            _OutputString += nRoundLen;
+            nOutputStringLen -= nRoundLen;
         }
+        /* repeat until the string has been fully output */
+        while (nOutputStringLen > 0);
+
     }
 #if 0
    /* ignore access violations and let other exceptions fall through */
