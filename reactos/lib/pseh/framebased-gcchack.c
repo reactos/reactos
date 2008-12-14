@@ -53,25 +53,7 @@ extern int __cdecl __SEH2NestedHandler(struct _EXCEPTION_RECORD *, void *, struc
 FORCEINLINE
 int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel, EXCEPTION_POINTERS * ep)
 {
-	void * filter = trylevel->ST_Filter;
-	void * context = NULL;
-
-	if(filter == (void *)0)
-		return 0;
-
-	if(filter == (void *)1)
-		return 1;
-
-	if(filter == (void *)-1)
-		return -1;
-
-	if(_SEHIsTrampoline((_SEHTrampoline_t *)filter))
-	{
-		context = _SEHClosureFromTrampoline((_SEHTrampoline_t *)filter);
-		filter = _SEHFunctionFromTrampoline((_SEHTrampoline_t *)filter);
-	}
-
-	return __SEH2Except(filter, context, ep);
+	return __SEH2Except(trylevel->ST_Filter, trylevel->ST_FramePointer, ep);
 }
 
 static
@@ -80,16 +62,7 @@ __attribute__((noinline))
 #endif
 void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
-	void * body = trylevel->ST_Body;
-	void * context = NULL;
-
-	if(_SEHIsTrampoline((_SEHTrampoline_t *)body))
-	{
-		context = _SEHClosureFromTrampoline((_SEHTrampoline_t *)body);
-		body = _SEHFunctionFromTrampoline((_SEHTrampoline_t *)body);
-	}
-
-	__SEH2Finally(body, context);
+	__SEH2Finally(trylevel->ST_Body, trylevel->ST_FramePointer);
 }
 
 extern
@@ -118,7 +91,10 @@ void _SEH2LocalUnwind(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * dsttrylev
 	__SEH2EnterFrame(&nestedframe);
 
 	for(trylevel = frame->SF_TopTryLevel; trylevel && trylevel != dsttrylevel; trylevel = trylevel->ST_Next)
-		_SEH2Finally(frame, trylevel);
+	{
+		if(!trylevel->ST_Filter)
+			_SEH2Finally(frame, trylevel);
+	}
 
 	frame->SF_TopTryLevel = dsttrylevel;
 
@@ -156,21 +132,25 @@ int __cdecl _SEH2FrameHandler
 	{
 		int ret = 0;
 		volatile _SEH2TryLevel_t * trylevel;
-		EXCEPTION_POINTERS ep;
-
-		ep.ExceptionRecord = ExceptionRecord;
-		ep.ContextRecord = ContextRecord;
 
 		frame->SF_Code = ExceptionRecord->ExceptionCode;
 
 		for(trylevel = frame->SF_TopTryLevel; trylevel != NULL; trylevel = trylevel->ST_Next)
 		{
-			ret = _SEH2Except(frame, trylevel, &ep);
+			if(trylevel->ST_Filter)
+			{
+				EXCEPTION_POINTERS ep;
 
-			if(ret < 0)
-				return ExceptionContinueExecution;
-			else if(ret > 0)
-				_SEH2Handle(frame, trylevel);
+				ep.ExceptionRecord = ExceptionRecord;
+				ep.ContextRecord = ContextRecord;
+
+				ret = _SEH2Except(frame, trylevel, &ep);
+
+				if(ret < 0)
+					return ExceptionContinueExecution;
+				else if(ret > 0)
+					_SEH2Handle(frame, trylevel);
+			}
 		}
 	}
 
