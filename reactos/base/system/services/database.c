@@ -446,6 +446,46 @@ ScmDeleteMarkedServices(VOID)
 }
 
 
+VOID
+WaitForLSA(VOID)
+{
+    HANDLE hEvent;
+    DWORD dwError;
+
+    DPRINT1("WaitForLSA() called\n");
+
+    hEvent = CreateEventW(NULL,
+                          TRUE,
+                          FALSE,
+                          L"LSA_RPC_SERVER_ACTIVE");
+    if (hEvent == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Failed to create the notication event (Error %lu)\n", dwError);
+
+        if (dwError == ERROR_ALREADY_EXISTS)
+        {
+            hEvent = OpenEventW(SYNCHRONIZE,
+                                FALSE,
+                                L"LSA_RPC_SERVER_ACTIVE");
+            if (hEvent != NULL)
+            {
+               DPRINT1("Could not open the notification event!\n");
+               return;
+            }
+        }
+    }
+
+    DPRINT1("Wait for LSA!\n");
+    WaitForSingleObject(hEvent, INFINITE);
+    DPRINT1("LSA is available!\n");
+
+    CloseHandle(hEvent);
+
+    DPRINT1("WaitForLSA() done\n");
+}
+
+
 DWORD
 ScmCreateServiceDatabase(VOID)
 {
@@ -515,6 +555,9 @@ ScmCreateServiceDatabase(VOID)
     }
 
     RegCloseKey(hServicesKey);
+
+    /* Wait for LSA */
+    WaitForLSA();
 
     /* Delete services that are marked for delete */
     ScmDeleteMarkedServices();

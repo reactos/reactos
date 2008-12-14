@@ -26,14 +26,13 @@ PWLSESSION WLSession = NULL;
 static BOOL
 StartServicesManager(VOID)
 {
-	HANDLE ServicesInitEvent = NULL;
 	STARTUPINFOW StartupInfo;
 	PROCESS_INFORMATION ProcessInformation;
-	DWORD Count;
 	LPCWSTR ServiceString = L"services.exe";
 	BOOL res;
 
 	/* Start the service control manager (services.exe) */
+	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
 	StartupInfo.cb = sizeof(StartupInfo);
 	StartupInfo.lpReserved = NULL;
 	StartupInfo.lpDesktop = NULL;
@@ -61,29 +60,11 @@ StartServicesManager(VOID)
 		return FALSE;
 	}
 
-	/* Wait for event creation (by SCM) for max. 20 seconds */
-	for (Count = 0; Count < 20; Count++)
-	{
-		Sleep(1000);
+	TRACE("WL: Created new process - %S\n", ServiceString);
 
-		TRACE("WL: Attempting to open event \"SvcctrlStartEvent_A3752DX\"\n");
-		ServicesInitEvent = OpenEventW(
-			SYNCHRONIZE,
-			FALSE,
-			L"SvcctrlStartEvent_A3752DX");
-		if (ServicesInitEvent)
-			break;
-	}
+	CloseHandle(ProcessInformation.hThread);
+	CloseHandle(ProcessInformation.hProcess);
 
-	if (!ServicesInitEvent)
-	{
-		ERR("WL: Failed to open event \"SvcctrlStartEvent_A3752DX\"\n");
-		return FALSE;
-	}
-
-	/* Wait for event signalization */
-	WaitForSingleObject(ServicesInitEvent, INFINITE);
-	CloseHandle(ServicesInitEvent);
 	TRACE("WL: StartServicesManager() done.\n");
 
 	return TRUE;
@@ -99,6 +80,7 @@ StartLsass(VOID)
 	BOOL res;
 
 	/* Start the service control manager (services.exe) */
+	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
 	StartupInfo.cb = sizeof(StartupInfo);
 	StartupInfo.lpReserved = NULL;
 	StartupInfo.lpDesktop = NULL;
@@ -120,6 +102,11 @@ StartLsass(VOID)
 		NULL,
 		&StartupInfo,
 		&ProcessInformation);
+
+	TRACE("WL: Created new process - %S\n", ServiceString);
+
+	CloseHandle(ProcessInformation.hThread);
+	CloseHandle(ProcessInformation.hProcess);
 
 	return res;
 }
