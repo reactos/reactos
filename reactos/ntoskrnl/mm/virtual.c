@@ -65,9 +65,9 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
     PMDL Mdl = (PMDL)MdlBuffer;
     SIZE_T TotalSize, CurrentSize, RemainingSize;
     volatile BOOLEAN FailedInProbe = FALSE, FailedInMapping = FALSE, FailedInMoving;
-    BOOLEAN PagesLocked;
+    volatile BOOLEAN PagesLocked;
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
-    PVOID MdlAddress;
+    volatile PVOID MdlAddress;
     KAPC_STATE ApcState;
     BOOLEAN HaveBadAddress;
     ULONG_PTR BadAddress;
