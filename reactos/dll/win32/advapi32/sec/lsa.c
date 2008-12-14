@@ -78,13 +78,21 @@ PLSAPR_SERVER_NAME_unbind(PLSAPR_SERVER_NAME pszSystemName,
 NTSTATUS WINAPI
 LsaClose(LSA_HANDLE ObjectHandle)
 {
+    NTSTATUS Status;
+
     TRACE("LsaClose(0x%p) called\n", ObjectHandle);
 
-    /* This is our fake handle, don't go too much long way */
-    if (ObjectHandle == (LSA_HANDLE)0xcafe)
-        return STATUS_SUCCESS;
+    _SEH2_TRY
+    {
+        Status = LsarClose((PLSAPR_HANDLE)&ObjectHandle);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH2_END;
 
-    return LsarClose((PLSAPR_HANDLE)&ObjectHandle);
+    return Status;
 }
 
 
@@ -94,9 +102,21 @@ LsaClose(LSA_HANDLE ObjectHandle)
 NTSTATUS WINAPI
 LsaDelete(LSA_HANDLE ObjectHandle)
 {
+    NTSTATUS Status;
+
     TRACE("LsaDelete(0x%p) called\n", ObjectHandle);
 
-    return LsarDelete((LSAPR_HANDLE)ObjectHandle);
+    _SEH2_TRY
+    {
+        Status = LsarDelete((LSAPR_HANDLE)ObjectHandle);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH2_END;
+
+    return Status;
 }
 
 
@@ -365,13 +385,32 @@ LsaOpenPolicy(
     IN ACCESS_MASK DesiredAccess,
     IN OUT PLSA_HANDLE PolicyHandle)
 {
-    TRACE("(%s,%p,0x%08x,%p) stub\n",
+    NTSTATUS Status;
+
+    TRACE("LsaOpenPolicy (%s,%p,0x%08x,%p)\n",
           SystemName?debugstr_w(SystemName->Buffer):"(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
 
-    if(PolicyHandle) *PolicyHandle = (LSA_HANDLE)0xcafe;
-    return STATUS_SUCCESS;
+    _SEH2_TRY
+    {
+        *PolicyHandle = NULL;
+
+        Status = LsarOpenPolicy(SystemName->Buffer,
+                                (PLSAPR_OBJECT_ATTRIBUTES)ObjectAttributes,
+                                DesiredAccess,
+                                PolicyHandle);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    _SEH2_END;
+
+    TRACE("LsaOpenPolicy() done (Status: 0x%08lx)\n", Status);
+
+    return Status;
 }
+
 
 /*
  * @unimplemented
