@@ -1957,6 +1957,9 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
                                               TargetId,
                                               Lun);
 
+            /* If returned LunExtension is NULL, break out */
+            if (!LunExtension) break;
+
             /* This request should not be processed if */
             if ((LunExtension->ReadyLun) ||
                 (LunExtension->SrbInfo.Srb))
