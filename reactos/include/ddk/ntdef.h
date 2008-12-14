@@ -60,14 +60,6 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #define CONST const
 #endif
 
-
-//
-// FIXME: Non standard, should be deprecated
-//
-#ifndef STATIC
-#define STATIC static
-#endif
-
 //
 // TRUE/FALSE
 //
@@ -164,7 +156,7 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 //
 #ifndef FIELD_OFFSET
 #define FIELD_OFFSET(Type, Field) \
-  ((LONG_PTR) (&(((Type *) 0)->Field)))
+  ((LONG)(LONG_PTR) (&(((Type *) 0)->Field)))
 #endif
 
 //
@@ -193,14 +185,8 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 //
 // Import and Export Specifiers
 //
-#ifndef DECL_IMPORT
-#define DECL_IMPORT DECLSPEC_IMPORT //FIXME: DECL_IMPORT -> DECLSPEC_IMPORT
-#endif
-#ifndef DECL_EXPORT
-#define DECL_EXPORT DECLSPEC_EXPORT //FIXME: DECL_EXPORT -> DECLSPEC_EXPORT
-#endif
 
-// Done the same way as in windef.h (for now *cough*)
+// Done the same way as in windef.h for now
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define DECLSPEC_EXPORT __declspec(dllexport)
 #define DECLSPEC_NORETURN __declspec(noreturn)

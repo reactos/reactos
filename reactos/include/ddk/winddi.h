@@ -34,8 +34,8 @@
 extern "C" {
 #endif
 
-#ifndef DECL_IMPORT
-#define DECL_IMPORT __attribute__((dllimport))
+#ifndef DECLSPEC_IMPORT
+#define DECLSPEC_IMPORT __attribute__((dllimport))
 #endif
 
 #ifndef WIN32KAPI

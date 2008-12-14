@@ -3122,10 +3122,10 @@ typedef struct {
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
 #if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTHAL_)
-extern DECL_IMPORT PHAL_DISPATCH HalDispatchTable;
+extern DECLSPEC_IMPORT PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #else
-extern DECL_EXPORT HAL_DISPATCH HalDispatchTable;
+extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH (&HalDispatchTable)
 #endif
 
