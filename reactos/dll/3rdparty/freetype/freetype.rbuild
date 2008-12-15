@@ -20,11 +20,6 @@
 		<file>setjmplongjmp.s</file>
 	</directory>
 	</if>
-	<if property="ARCH" value="amd64">
-	<directory name="amd64">
-		<file>setjmplongjmp.s</file>
-	</directory>
-	</if>
 	<directory name="src">
 		<directory name="base">
 			<file>ftsystem.c</file>
