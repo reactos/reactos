@@ -760,7 +760,7 @@ typedef struct _RpcConnection_tcp
 {
   RpcConnection common;
   int sock;
-  int cancel_fds[2];
+  SOCKET cancel_fds[2];
 } RpcConnection_tcp;
 
 static RpcConnection *rpcrt4_conn_tcp_alloc(void)
@@ -812,7 +812,7 @@ static RPC_STATUS rpcrt4_ncacn_ip_tcp_open(RpcConnection* Connection)
 
   for (ai_cur = ai; ai_cur; ai_cur = ai_cur->ai_next)
   {
-    int val;
+    char val;
 
     if (TRACE_ON(rpc))
     {
@@ -1089,7 +1089,7 @@ static int rpcrt4_conn_tcp_close(RpcConnection *Connection)
 static void rpcrt4_conn_tcp_cancel_call(RpcConnection *Connection)
 {
     RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
-    char dummy = 1;
+    SOCKET dummy = 1;
 
     TRACE("%p\n", Connection);
 
@@ -1269,7 +1269,7 @@ static RpcServerProtseq *rpcrt4_protseq_sock_alloc(void)
     RpcServerProtseq_sock *ps = HeapAlloc(GetProcessHeap(), 0, sizeof(*ps));
     if (ps)
     {
-        int fds[2];
+        SOCKET fds[2];
         if (!socketpair(PF_UNIX, SOCK_DGRAM, 0, fds))
         {
             fcntl(fds[0], F_SETFL, O_NONBLOCK);
