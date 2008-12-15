@@ -1018,8 +1018,9 @@ NtGdiStretchDIBitsInternal(
        return 0;
    }
 
-   hBitmap = NtGdiCreateCompatibleBitmap(hDC, BitsInfo->bmiHeader.biWidth,
-                                         BitsInfo->bmiHeader.biHeight);
+   hBitmap = NtGdiCreateCompatibleBitmap( hDC,
+                                          BitsInfo->bmiHeader.biWidth,
+                                      abs(BitsInfo->bmiHeader.biHeight));
    if (hBitmap == NULL)
    {
        DPRINT1("NtGdiCreateCompatibleBitmap fail create bitmap\n");
@@ -1302,14 +1303,19 @@ HBITMAP APIENTRY NtGdiCreateDIBSection(HDC hDC,
 
 HBITMAP APIENTRY
 DIB_CreateDIBSection(
-  PDC dc, BITMAPINFO *bmi, UINT usage,
-  LPVOID *bits, HANDLE section,
-  DWORD offset, DWORD ovr_pitch)
+  PDC dc,
+  BITMAPINFO *bmi,
+  UINT usage,
+  LPVOID *bits,
+  HANDLE section,
+  DWORD offset,
+  DWORD ovr_pitch)
 {
   HBITMAP res = 0;
   BITMAPOBJ *bmp = NULL;
   DIBSECTION *dib = NULL;
   void *mapBits = NULL;
+  PDC_ATTR pDc_Attr;
 
   // Fill BITMAP32 structure with DIB data
   BITMAPINFOHEADER *bi = &bmi->bmiHeader;
@@ -1328,6 +1334,9 @@ DIB_CreateDIBSection(
   {
     return (HBITMAP)NULL;
   }
+
+  pDc_Attr = dc->pDc_Attr;
+  if ( !pDc_Attr ) pDc_Attr = &dc->Dc_Attr;
 
   effHeight = bi->biHeight >= 0 ? bi->biHeight : -bi->biHeight;
   bm.bmType = 0;
@@ -1522,6 +1531,8 @@ DIB_CreateDIBSection(
   {
       *bits = bm.bmBits;
   }
+
+  if (res) pDc_Attr->ulDirty_ |= DC_DIBSECTION;
 
   return res;
 }
