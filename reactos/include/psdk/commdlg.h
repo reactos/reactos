@@ -4,7 +4,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef _WIN64
 #pragma pack(push,1)
+#endif
 
 #define SAVE_DIALOG  1
 #define OPEN_DIALOG  2
@@ -575,7 +578,9 @@ typedef PRINTDLGEXA PRINTDLGEX, *LPPRINTDLGEX;
 #define PrintDlgEx PrintDlgExA
 #endif /* WINVER >= 0x0500 */
 #endif /* UNICODE */
+#ifndef _WIN64
 #pragma pack(pop)
+#endif
 #ifdef __cplusplus
 }
 #endif
