@@ -1019,7 +1019,7 @@ NtGdiStretchDIBitsInternal(
    }
 
    hBitmap = NtGdiCreateCompatibleBitmap( hDC,
-                                          BitsInfo->bmiHeader.biWidth,
+                                      abs(BitsInfo->bmiHeader.biWidth),
                                       abs(BitsInfo->bmiHeader.biHeight));
    if (hBitmap == NULL)
    {
@@ -1532,7 +1532,7 @@ DIB_CreateDIBSection(
       *bits = bm.bmBits;
   }
 
-  if (res) pDc_Attr->ulDirty_ |= DC_DIBSECTION;
+//  if (res) pDc_Attr->ulDirty_ |= DC_DIBSECTION;
 
   return res;
 }
