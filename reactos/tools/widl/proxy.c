@@ -704,7 +704,11 @@ void write_proxies(const statement_list_t *stmts)
   write_user_quad_list(proxy);
   write_stubdesc(expr_eval_routines);
 
+#ifdef TARGET_amd64
+  print_proxy( "#if !defined(__RPC_WIN64__)\n");
+#else
   print_proxy( "#if !defined(__RPC_WIN32__)\n");
+#endif
   print_proxy( "#error Currently only Wine and WIN32 are supported.\n");
   print_proxy( "#endif\n");
   print_proxy( "\n");

@@ -2062,14 +2062,27 @@ static int get_struct_type(var_list_t *fields)
       break;
 
     case RPC_FC_RP:
+      return RPC_FC_BOGUS_STRUCT;
+
     case RPC_FC_UP:
     case RPC_FC_FP:
     case RPC_FC_OP:
+      if(sizeof(void*) != 4)
+        return RPC_FC_BOGUST_STRUCT;
+      has_pointer = 1;
+      break;
     case RPC_FC_CARRAY:
     case RPC_FC_CVARRAY:
     case RPC_FC_BOGUS_ARRAY:
+    {
+      unsigned int ptr_type = get_attrv(field->attrs, ATTR_POINTERTYPE);
+      if(!ptr_type || ptr_type == RPC_FC_RP)
+        return RPC_FC_BOGUS_STRUCT;
+      else if (sizeof(void*) != 4)
+        return RPC_FC_BOGUS_STRUCT;
       has_pointer = 1;
       break;
+     }
 
     /*
      * Propagate member attributes

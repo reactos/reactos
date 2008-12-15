@@ -461,7 +461,11 @@ static void write_client_ifaces(const statement_list_t *stmts, int expr_eval_rou
                 write_stubdescdecl(iface);
                 write_function_stubs(iface, proc_offset);
 
+#ifdef TARGET_amd64
+                print_client("#if !defined(__RPC_WIN64__)\n");
+#else
                 print_client("#if !defined(__RPC_WIN32__)\n");
+#endif
                 print_client("#error  Invalid build platform for this stub.\n");
                 print_client("#endif\n");
 
