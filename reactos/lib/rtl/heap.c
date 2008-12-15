@@ -68,29 +68,39 @@
 
 typedef struct tagARENA_INUSE
 {
-    DWORD  size;                    /* Block size; must be the first field */
-    DWORD  magic : 23;              /* Magic number */
-    DWORD  has_user_data : 1;       /* There is user data associated with this block */
-    DWORD  unused_bytes : 8;        /* Number of bytes in the block not used by user data (max value is HEAP_MIN_DATA_SIZE+HEAP_MIN_SHRINK_SIZE) */
+    SIZE_T  size;                    /* Block size; must be the first field */
+    SIZE_T  magic : 23;              /* Magic number */
+    SIZE_T  has_user_data : 1;       /* There is user data associated with this block */
+    SIZE_T  unused_bytes : 8;        /* Number of bytes in the block not used by user data (max value is HEAP_MIN_DATA_SIZE+HEAP_MIN_SHRINK_SIZE) */
 } ARENA_INUSE;
 
 typedef struct tagARENA_FREE
 {
-    DWORD                 size;     /* Block size; must be the first field */
-    DWORD                 magic;    /* Magic number */
+    SIZE_T                 size;     /* Block size; must be the first field */
+    SIZE_T                 magic;    /* Magic number */
     struct list           entry;    /* Entry in free list */
 } ARENA_FREE;
 
 #define ARENA_FLAG_FREE        0x00000001  /* flags OR'ed with arena size */
 #define ARENA_FLAG_PREV_FREE   0x00000002
-#define ARENA_SIZE_MASK        (~3)
 #define ARENA_INUSE_MAGIC      0x455355        /* Value for arena 'magic' field */
 #define ARENA_FREE_MAGIC       0x45455246      /* Value for arena 'magic' field */
+
+#ifndef _WIN64
+#define ARENA_SIZE_MASK        (~3L)
+#else
+#define ARENA_SIZE_MASK        (~7L)
+#endif
 
 #define ARENA_INUSE_FILLER     0x55
 #define ARENA_FREE_FILLER      0xaa
 
+#ifndef _WIN64
 #define ALIGNMENT              8   /* everything is aligned on 8 byte boundaries */
+#else
+#define ALIGNMENT              16
+#endif
+
 #define ROUND_SIZE(size)       (((size) + ALIGNMENT - 1) & ~(ALIGNMENT-1))
 
 #define QUIET                  1           /* Suppress messages  */
@@ -118,12 +128,12 @@ struct tagHEAP;
 
 typedef struct tagSUBHEAP
 {
-    DWORD               size;       /* Size of the whole sub-heap */
-    DWORD               commitSize; /* Committed size of the sub-heap */
-    DWORD               headerSize; /* Size of the heap header */
+    SIZE_T               size;       /* Size of the whole sub-heap */
+    SIZE_T               commitSize; /* Committed size of the sub-heap */
+    SIZE_T               headerSize; /* Size of the heap header */
     struct tagSUBHEAP  *next;       /* Next sub-heap */
     struct tagHEAP     *heap;       /* Main heap structure */
-    DWORD               magic;      /* Magic number */
+    SIZE_T               magic;      /* Magic number */
 } SUBHEAP;
 
 #define SUBHEAP_MAGIC    ((DWORD)('S' | ('U'<<8) | ('B'<<16) | ('H'<<24)))
