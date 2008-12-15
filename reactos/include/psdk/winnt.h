@@ -53,6 +53,7 @@ extern "C" {
 #ifdef _X86_
 #define UNALIGNED
 #else
+#undef UNALIGNED
 #define UNALIGNED
 #endif
 
