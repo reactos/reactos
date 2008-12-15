@@ -122,13 +122,14 @@ HRESULT WINAPI IWineD3DBaseSwapChainImpl_GetBackBuffer(IWineD3DSwapChain *iface,
 
 HRESULT WINAPI IWineD3DBaseSwapChainImpl_GetRasterStatus(IWineD3DSwapChain *iface, WINED3DRASTER_STATUS *pRasterStatus) {
     IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *)iface;
-    static BOOL showFixmes = TRUE;
+    static BOOL warned;
     pRasterStatus->InVBlank = TRUE;
     pRasterStatus->ScanLine = 0;
     /* No openGL equivalent */
-    if(showFixmes) {
+    if (!warned)
+    {
         FIXME("(%p) : stub (once)\n", This);
-        showFixmes = FALSE;
+        warned = TRUE;
     }
     return WINED3D_OK;
 }

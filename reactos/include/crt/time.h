@@ -93,14 +93,16 @@ extern "C" {
 #endif
 #endif
 
+/*
 #ifdef _USE_32BIT_TIME_T
 #define _localtime32 localtime
-#define _difftime32  difftime
-#define _ctime32     ctime
-#define _gmtime32    gmtime
-#define _mktime32    mktime
-#define _time32      time
+#define _difftime32	difftime
+#define _ctime32	ctime
+#define _gmtime32	gmtime
+#define _mktime32	mktime
+#define _time32	time
 #endif
+*/
 
 #ifndef _TM_DEFINED
 #define _TM_DEFINED
@@ -119,10 +121,10 @@ extern "C" {
 
 #define CLOCKS_PER_SEC 1000
 
-  __MINGW_IMPORT  int _daylight;
-  __MINGW_IMPORT  long _dstbias;
-  __MINGW_IMPORT  long _timezone;
-  __MINGW_IMPORT  char * _tzname[2];
+  __MINGW_IMPORT int _daylight;
+  __MINGW_IMPORT long _dstbias;
+  __MINGW_IMPORT long _timezone;
+  __MINGW_IMPORT char * _tzname[2];
 
   _CRTIMP errno_t __cdecl _get_daylight(int *_Daylight);
   _CRTIMP errno_t __cdecl _get_dstbias(long *_Daylight_savings_bias);
@@ -159,32 +161,6 @@ extern "C" {
   unsigned __cdecl _getsystime(struct tm *_Tm);
   unsigned __cdecl _setsystime(struct tm *_Tm,unsigned _MilliSec);
 
-#ifndef _SIZE_T_DEFINED
-#define _SIZE_T_DEFINED
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef unsigned int size_t __attribute__ ((mode (DI)));
-#else
-  typedef unsigned __int64 size_t;
-#endif
-#else
-  typedef unsigned long size_t;
-#endif
-#endif
-
-#ifndef _SSIZE_T_DEFINED
-#define _SSIZE_T_DEFINED
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef int ssize_t __attribute__ ((mode (DI)));
-#else
-  typedef __int64 ssize_t;
-#endif
-#else
-  typedef long ssize_t;
-#endif
-#endif
-
 #ifndef _WTIME_DEFINED
   _CRTIMP wchar_t *__cdecl _wasctime(const struct tm *_Tm);
   _CRTIMP wchar_t *__cdecl _wctime32(const __time32_t *_Time);
@@ -209,8 +185,18 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
 #endif
 
 #ifndef RC_INVOKED
+double __cdecl difftime(time_t _Time1,time_t _Time2);
+char *__cdecl ctime(const time_t *_Time);
+struct tm *__cdecl gmtime(const time_t *_Time);
+struct tm *__cdecl localtime(const time_t *_Time);
+struct tm *__cdecl localtime_r(const time_t *_Time,struct tm *);
+
+_CRTIMP time_t __cdecl mktime(struct tm *_Tm);
+_CRTIMP time_t __cdecl _mkgmtime(struct tm *_Tm);
+_CRTIMP time_t __cdecl time(time_t *_Time);
 
 #ifdef _USE_32BIT_TIME_T
+#if 0
 __CRT_INLINE double __cdecl difftime(time_t _Time1,time_t _Time2) { return _difftime32(_Time1,_Time2); }
 __CRT_INLINE char *__cdecl ctime(const time_t *_Time) { return _ctime32(_Time); }
 __CRT_INLINE struct tm *__cdecl gmtime(const time_t *_Time) { return _gmtime32(_Time); }
@@ -218,6 +204,7 @@ __CRT_INLINE struct tm *__cdecl localtime(const time_t *_Time) { return _localti
 __CRT_INLINE time_t __cdecl mktime(struct tm *_Tm) { return _mktime32(_Tm); }
 __CRT_INLINE time_t __cdecl _mkgmtime(struct tm *_Tm) { return _mkgmtime32(_Tm); }
 __CRT_INLINE time_t __cdecl time(time_t *_Time) { return _time32(_Time); }
+#endif
 #else
 __CRT_INLINE double __cdecl difftime(time_t _Time1,time_t _Time2) { return _difftime64(_Time1,_Time2); }
 __CRT_INLINE char *__cdecl ctime(const time_t *_Time) { return _ctime64(_Time); }

@@ -1424,7 +1424,6 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
       L"SeAssignPrimaryTokenPrivilege",
       L"SeLockMemoryPrivilege",
       L"SeIncreaseQuotaPrivilege",
-      L"SeUnsolicitedInputPrivilege",
       L"SeMachineAccountPrivilege",
       L"SeTcbPrivilege",
       L"SeSecurityPrivilege",
@@ -1464,7 +1463,7 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
     {
       if (0 == wcsicmp(PrivName, DefaultPrivNames[Priv]))
         {
-          Luid->LowPart = Priv + 1;
+          Luid->LowPart = Priv + SE_MIN_WELL_KNOWN_PRIVILEGE;
           Luid->HighPart = 0;
           return TRUE;
         }

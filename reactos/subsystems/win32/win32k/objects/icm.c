@@ -118,7 +118,6 @@ IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
         for(i=0; i<256; i++ )
         {
           int NewValue = i * 256;
-          if (NewValue > 65535) NewValue = 65535;
 
           Ramp->Red[i] = Ramp->Green[i] = Ramp->Blue[i] = ((WORD)NewValue);
         }
@@ -350,7 +349,8 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
         pGDev->pvGammaRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
         pGDev->flFlags |= PDEV_GAMMARAMP_TABLE;
      }
-     RtlCopyMemory( pGDev->pvGammaRamp, Ramp, sizeof(GAMMARAMP));
+     if (pGDev->pvGammaRamp)
+        RtlCopyMemory( pGDev->pvGammaRamp, Ramp, sizeof(GAMMARAMP));
 
      Ret = UpdateDeviceGammaRamp(hPDev);
 

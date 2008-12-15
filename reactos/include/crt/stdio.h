@@ -352,14 +352,14 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
 #include <vadefs.h>
 #endif
 
-#ifdef _CRT_NON_CONFORMING_SWPRINTFS
-#ifndef __cplusplus
-#define swprintf _swprintf
-#define vswprintf _vswprintf
-#define _swprintf_l __swprintf_l
-#define _vswprintf_l __vswprintf_l
-#endif
-#endif
+//#ifdef _CRT_NON_CONFORMING_SWPRINTFS
+//#ifndef __cplusplus
+//#define swprintf _swprintf
+//#define vswprintf _vswprintf
+//#define _swprintf_l __swprintf_l
+//#define _vswprintf_l __vswprintf_l
+//#endif
+//#endif
 
   _CRTIMP wchar_t *__cdecl _wtempnam(const wchar_t *_Directory,const wchar_t *_FilePrefix);
   _CRTIMP int __cdecl _vscwprintf(const wchar_t *_Format,va_list _ArgList);

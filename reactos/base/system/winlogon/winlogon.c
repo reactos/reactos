@@ -26,14 +26,13 @@ PWLSESSION WLSession = NULL;
 static BOOL
 StartServicesManager(VOID)
 {
-	HANDLE ServicesInitEvent = NULL;
 	STARTUPINFOW StartupInfo;
 	PROCESS_INFORMATION ProcessInformation;
-	DWORD Count;
 	LPCWSTR ServiceString = L"services.exe";
 	BOOL res;
 
 	/* Start the service control manager (services.exe) */
+	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
 	StartupInfo.cb = sizeof(StartupInfo);
 	StartupInfo.lpReserved = NULL;
 	StartupInfo.lpDesktop = NULL;
@@ -61,98 +60,55 @@ StartServicesManager(VOID)
 		return FALSE;
 	}
 
-	/* Wait for event creation (by SCM) for max. 20 seconds */
-	for (Count = 0; Count < 20; Count++)
-	{
-		Sleep(1000);
+	TRACE("WL: Created new process - %S\n", ServiceString);
 
-		TRACE("WL: Attempting to open event \"SvcctrlStartEvent_A3752DX\"\n");
-		ServicesInitEvent = OpenEventW(
-			SYNCHRONIZE,
-			FALSE,
-			L"SvcctrlStartEvent_A3752DX");
-		if (ServicesInitEvent)
-			break;
-	}
+	CloseHandle(ProcessInformation.hThread);
+	CloseHandle(ProcessInformation.hProcess);
 
-	if (!ServicesInitEvent)
-	{
-		ERR("WL: Failed to open event \"SvcctrlStartEvent_A3752DX\"\n");
-		return FALSE;
-	}
-
-	/* Wait for event signalization */
-	WaitForSingleObject(ServicesInitEvent, INFINITE);
-	CloseHandle(ServicesInitEvent);
 	TRACE("WL: StartServicesManager() done.\n");
 
 	return TRUE;
 }
 
-static BOOL
-StartCustomService(
-	IN LPCWSTR ServiceName)
-{
-	SC_HANDLE hSCManager = NULL;
-	SC_HANDLE hService = NULL;
-	BOOL ret = FALSE;
-
-	hSCManager = OpenSCManager(NULL, NULL, 0);
-	if (!hSCManager)
-	{
-		ERR("WL: Failed to OpenSCManager\n");
-		goto cleanup;
-	}
-
-	hService = OpenServiceW(hSCManager, ServiceName, SERVICE_START);
-	if (!hService)
-	{
-		ERR("WL: Failed to open the service\n");
-		goto cleanup;
-	}
-	if (!StartServiceW(hService, 0, NULL))
-	{
-		ERR("WL: Failed to start the service\n");
-		goto cleanup;
-	}
-
-	ret = TRUE;
-
-cleanup:
-	if (hService)
-		CloseServiceHandle(hService);
-	if (hSCManager)
-		CloseServiceHandle(hSCManager);
-	return ret;
-}
 
 static BOOL
 StartLsass(VOID)
 {
-	HANDLE LsassInitEvent;
+	STARTUPINFOW StartupInfo;
+	PROCESS_INFORMATION ProcessInformation;
+	LPCWSTR ServiceString = L"lsass.exe";
+	BOOL res;
 
-	LsassInitEvent = CreateEventW(
+	/* Start the service control manager (services.exe) */
+	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
+	StartupInfo.cb = sizeof(StartupInfo);
+	StartupInfo.lpReserved = NULL;
+	StartupInfo.lpDesktop = NULL;
+	StartupInfo.lpTitle = NULL;
+	StartupInfo.dwFlags = 0;
+	StartupInfo.cbReserved2 = 0;
+	StartupInfo.lpReserved2 = 0;
+
+	TRACE("WL: Creating new process - %S\n", ServiceString);
+
+	res = CreateProcessW(
+		ServiceString,
 		NULL,
-		TRUE,
+		NULL,
+		NULL,
 		FALSE,
-		L"Global\\SECURITY_SERVICES_STARTED");
-	if (!LsassInitEvent)
-	{
-		ERR("WL: Failed to create lsass notification event (error %lu)\n", GetLastError());
-		return FALSE;
-	}
+		DETACHED_PROCESS,
+		NULL,
+		NULL,
+		&StartupInfo,
+		&ProcessInformation);
 
-	/* Start the local security authority subsystem (Netlogon service) */
-	if (!StartCustomService(L"Netlogon"))
-	{
-		ERR("WL: Failed to start NetLogon service (error %lu)\n", GetLastError());
-		return FALSE;
-	}
+	TRACE("WL: Created new process - %S\n", ServiceString);
 
-	WaitForSingleObject(LsassInitEvent, INFINITE);
-	CloseHandle(LsassInitEvent);
+	CloseHandle(ProcessInformation.hThread);
+	CloseHandle(ProcessInformation.hProcess);
 
-	return TRUE;
+	return res;
 }
 
 BOOL

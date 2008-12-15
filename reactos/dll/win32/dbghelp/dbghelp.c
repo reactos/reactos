@@ -314,7 +314,6 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
             pcs->search_path = HeapReAlloc(GetProcessHeap(), 0, pcs->search_path, (size + 1 + len + 1) * sizeof(WCHAR));
             pcs->search_path[size] = ';';
             GetEnvironmentVariableW(alt_sym_path, pcs->search_path + size + 1, len);
-            size += 1 + len;
         }
     }
 

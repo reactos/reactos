@@ -119,37 +119,37 @@ ULONG WINAPI IWineD3DBaseSurfaceImpl_AddRef(IWineD3DSurface *iface) {
    IWineD3DSurface IWineD3DResource parts follow
    **************************************************** */
 HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetDevice(IWineD3DSurface *iface, IWineD3DDevice** ppDevice) {
-    return IWineD3DResourceImpl_GetDevice((IWineD3DResource *)iface, ppDevice);
+    return resource_get_device((IWineD3DResource *)iface, ppDevice);
 }
 
 HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetPrivateData(IWineD3DSurface *iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
-    return IWineD3DResourceImpl_SetPrivateData((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
+    return resource_set_private_data((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
 }
 
 HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetPrivateData(IWineD3DSurface *iface, REFGUID refguid, void* pData, DWORD* pSizeOfData) {
-    return IWineD3DResourceImpl_GetPrivateData((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
+    return resource_get_private_data((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
 }
 
 HRESULT WINAPI IWineD3DBaseSurfaceImpl_FreePrivateData(IWineD3DSurface *iface, REFGUID refguid) {
-    return IWineD3DResourceImpl_FreePrivateData((IWineD3DResource *)iface, refguid);
+    return resource_free_private_data((IWineD3DResource *)iface, refguid);
 }
 
 DWORD   WINAPI IWineD3DBaseSurfaceImpl_SetPriority(IWineD3DSurface *iface, DWORD PriorityNew) {
-    return IWineD3DResourceImpl_SetPriority((IWineD3DResource *)iface, PriorityNew);
+    return resource_set_priority((IWineD3DResource *)iface, PriorityNew);
 }
 
 DWORD   WINAPI IWineD3DBaseSurfaceImpl_GetPriority(IWineD3DSurface *iface) {
-    return IWineD3DResourceImpl_GetPriority((IWineD3DResource *)iface);
+    return resource_get_priority((IWineD3DResource *)iface);
 }
 
 WINED3DRESOURCETYPE WINAPI IWineD3DBaseSurfaceImpl_GetType(IWineD3DSurface *iface) {
     TRACE("(%p) : calling resourceimpl_GetType\n", iface);
-    return IWineD3DResourceImpl_GetType((IWineD3DResource *)iface);
+    return resource_get_type((IWineD3DResource *)iface);
 }
 
 HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetParent(IWineD3DSurface *iface, IUnknown **pParent) {
     TRACE("(%p) : calling resourceimpl_GetParent\n", iface);
-    return IWineD3DResourceImpl_GetParent((IWineD3DResource *)iface, pParent);
+    return resource_get_parent((IWineD3DResource *)iface, pParent);
 }
 
 /* ******************************************************
@@ -269,7 +269,8 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetPalette(IWineD3DSurface *iface, IWineD
     else return WINED3D_OK;
 }
 
-HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetColorKey(IWineD3DSurface *iface, DWORD Flags, WINEDDCOLORKEY *CKey) {
+HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetColorKey(IWineD3DSurface *iface, DWORD Flags, const WINEDDCOLORKEY *CKey)
+{
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *) iface;
     TRACE("(%p)->(%08x,%p)\n", This, Flags, CKey);
 
@@ -418,7 +419,9 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_UpdateOverlayZOrder(IWineD3DSurface *ifac
     return WINED3D_OK;
 }
 
-HRESULT WINAPI IWineD3DBaseSurfaceImpl_UpdateOverlay(IWineD3DSurface *iface, RECT *SrcRect, IWineD3DSurface *DstSurface, RECT *DstRect, DWORD Flags, WINEDDOVERLAYFX *FX) {
+HRESULT WINAPI IWineD3DBaseSurfaceImpl_UpdateOverlay(IWineD3DSurface *iface, const RECT *SrcRect,
+        IWineD3DSurface *DstSurface, const RECT *DstRect, DWORD Flags, const WINEDDOVERLAYFX *FX)
+{
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *) iface;
     IWineD3DSurfaceImpl *Dst = (IWineD3DSurfaceImpl *) DstSurface;
     TRACE("(%p)->(%p, %p, %p, %08x, %p)\n", This, SrcRect, Dst, DstRect, Flags, FX);
@@ -682,14 +685,16 @@ HRESULT IWineD3DBaseSurfaceImpl_CreateDIBSection(IWineD3DSurface *iface) {
     return WINED3D_OK;
 }
 
-void convert_r32f_r16f(BYTE *src, BYTE *dst, DWORD pitch_in, DWORD pitch_out, unsigned int w, unsigned int h) {
+static void convert_r32f_r16f(const BYTE *src, BYTE *dst, DWORD pitch_in, DWORD pitch_out,
+                              unsigned int w, unsigned int h)
+{
     unsigned int x, y;
-    float *src_f;
+    const float *src_f;
     unsigned short *dst_s;
 
     TRACE("Converting %dx%d pixels, pitches %d %d\n", w, h, pitch_in, pitch_out);
     for(y = 0; y < h; y++) {
-        src_f = (float *) (src + y * pitch_in);
+        src_f = (const float *)(src + y * pitch_in);
         dst_s = (unsigned short *) (dst + y * pitch_out);
         for(x = 0; x < w; x++) {
             dst_s[x] = float_32_to_16(src_f + x);
@@ -699,14 +704,16 @@ void convert_r32f_r16f(BYTE *src, BYTE *dst, DWORD pitch_in, DWORD pitch_out, un
 
 struct d3dfmt_convertor_desc {
     WINED3DFORMAT from, to;
-    void (*convert)(BYTE *src, BYTE *dst, DWORD pitch_in, DWORD pitch_out, unsigned int w, unsigned int h);
+    void (*convert)(const BYTE *src, BYTE *dst, DWORD pitch_in, DWORD pitch_out, unsigned int w, unsigned int h);
 };
 
-struct d3dfmt_convertor_desc convertors[] = {
+static const struct d3dfmt_convertor_desc convertors[] =
+{
     {WINED3DFMT_R32F,       WINED3DFMT_R16F,        convert_r32f_r16f},
 };
 
-static inline struct d3dfmt_convertor_desc *find_convertor(WINED3DFORMAT from, WINED3DFORMAT to) {
+static inline const struct d3dfmt_convertor_desc *find_convertor(WINED3DFORMAT from, WINED3DFORMAT to)
+{
     unsigned int i;
     for(i = 0; i < (sizeof(convertors) / sizeof(convertors[0])); i++) {
         if(convertors[i].from == from && convertors[i].to == to) {
@@ -727,9 +734,9 @@ static inline struct d3dfmt_convertor_desc *find_convertor(WINED3DFORMAT from, W
  *  fmt: Requested destination format
  *
  *****************************************************************************/
-IWineD3DSurfaceImpl *surface_convert_format(IWineD3DSurfaceImpl *source, WINED3DFORMAT to_fmt) {
+static IWineD3DSurfaceImpl *surface_convert_format(IWineD3DSurfaceImpl *source, WINED3DFORMAT to_fmt) {
     IWineD3DSurface *ret = NULL;
-    struct d3dfmt_convertor_desc *conv;
+    const struct d3dfmt_convertor_desc *conv;
     WINED3DLOCKED_RECT lock_src, lock_dst;
     HRESULT hr;
 
@@ -862,14 +869,8 @@ static HRESULT
  *  SrcSurface: Source surface, can be NULL
  *  SrcRect: Source rectangle
  *****************************************************************************/
-HRESULT WINAPI
-IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface,
-                            RECT *DestRect,
-                            IWineD3DSurface *SrcSurface,
-                            RECT *SrcRect,
-                            DWORD Flags,
-                            WINEDDBLTFX *DDBltFx,
-                            WINED3DTEXTUREFILTERTYPE Filter)
+HRESULT WINAPI IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface, const RECT *DestRect, IWineD3DSurface *SrcSurface,
+        const RECT *SrcRect, DWORD Flags, const WINEDDBLTFX *DDBltFx, WINED3DTEXTUREFILTERTYPE Filter)
 {
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *) iface;
     IWineD3DSurfaceImpl *Src = (IWineD3DSurfaceImpl *) SrcSurface;
@@ -880,7 +881,8 @@ IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface,
     int bpp, srcheight, srcwidth, dstheight, dstwidth, width;
     int x, y;
     const StaticPixelFormatDesc *sEntry, *dEntry;
-    LPBYTE dbuf, sbuf;
+    const BYTE *sbuf;
+    BYTE *dbuf;
     TRACE("(%p)->(%p,%p,%p,%x,%p)\n", This, DestRect, Src, SrcRect, Flags, DDBltFx);
 
     if (TRACE_ON(d3d_surface))
@@ -1171,7 +1173,7 @@ IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface,
     /* Now the 'with source' blits */
     if (Src)
     {
-        LPBYTE sbase;
+        const BYTE *sbase;
         int sx, xinc, sy, yinc;
 
         if (!dstwidth || !dstheight) /* hmm... stupid program ? */
@@ -1250,7 +1252,8 @@ IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface,
                     else
                     {
 #define STRETCH_ROW(type) { \
-                        type *s = (type *) sbuf, *d = (type *) dbuf; \
+                        const type *s = (const type *)sbuf; \
+                        type *d = (type *)dbuf; \
                         for (x = sx = 0; x < dstwidth; x++, sx += xinc) \
                         d[x] = s[sx >> 16]; \
                         break; }
@@ -1262,7 +1265,8 @@ IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface,
                                             case 4: STRETCH_ROW(DWORD)
                             case 3:
                             {
-                                LPBYTE s,d = dbuf;
+                                const BYTE *s;
+                                BYTE *d = dbuf;
                                 for (x = sx = 0; x < dstwidth; x++, sx+= xinc)
                                 {
                                     DWORD pixel;
@@ -1416,9 +1420,10 @@ IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface,
             }
 
 #define COPY_COLORKEY_FX(type) { \
-            type *s, *d = (type *) dbuf, *dx, tmp; \
+            const type *s; \
+            type *d = (type *)dbuf, *dx, tmp; \
             for (y = sy = 0; y < dstheight; y++, sy += yinc) { \
-            s = (type*)(sbase + (sy >> 16) * slock.Pitch); \
+            s = (const type*)(sbase + (sy >> 16) * slock.Pitch); \
             dx = d; \
             for (x = sx = 0; x < dstwidth; x++, sx += xinc) { \
             tmp = s[sx >> 16]; \
@@ -1438,7 +1443,8 @@ IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface,
                                 case 4: COPY_COLORKEY_FX(DWORD)
                 case 3:
                 {
-                    LPBYTE s,d = dbuf, dx;
+                    const BYTE *s;
+                    BYTE *d = dbuf, *dx;
                     for (y = sy = 0; y < dstheight; y++, sy += yinc)
                     {
                         sbuf = sbase + (sy >> 16) * slock.Pitch;
@@ -1504,13 +1510,8 @@ release:
  *  WINED3D_OK on success
  *
  *****************************************************************************/
-HRESULT WINAPI
-IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface,
-                                DWORD dstx,
-                                DWORD dsty,
-                                IWineD3DSurface *Source,
-                                RECT *rsrc,
-                                DWORD trans)
+HRESULT WINAPI IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface, DWORD dstx, DWORD dsty,
+        IWineD3DSurface *Source, const RECT *rsrc, DWORD trans)
 {
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *) iface;
     IWineD3DSurfaceImpl *Src = (IWineD3DSurfaceImpl *) Source;
@@ -1520,7 +1521,8 @@ IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface,
     HRESULT             ret = WINED3D_OK;
     RECT                rsrc2;
     RECT                lock_src, lock_dst, lock_union;
-    BYTE                *sbuf, *dbuf;
+    const BYTE          *sbuf;
+    BYTE                *dbuf;
     const StaticPixelFormatDesc *sEntry, *dEntry;
 
     if (TRACE_ON(d3d_surface))
@@ -1548,11 +1550,11 @@ IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface,
     if (!rsrc)
     {
         WARN("rsrc is NULL!\n");
+        rsrc2.left = 0;
+        rsrc2.top = 0;
+        rsrc2.right = Src->currentDesc.Width;
+        rsrc2.bottom = Src->currentDesc.Height;
         rsrc = &rsrc2;
-        rsrc->left = 0;
-        rsrc->top = 0;
-        rsrc->right = Src->currentDesc.Width;
-        rsrc->bottom = Src->currentDesc.Height;
     }
 
     /* Check source rect for validity. Copied from normal Blt. Fixes Baldur's Gate.*/
@@ -1670,15 +1672,15 @@ IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface,
         }
 
 #define COPYBOX_COLORKEY(type) { \
-        type *d, *s, tmp; \
-        s = (type *) sbuf; \
-        d = (type *) dbuf; \
+        const type *s = (const type *)sbuf; \
+        type *d = (type *)dbuf; \
+        type tmp; \
         for (y = 0; y < h; y++) { \
         for (x = 0; x < w; x++) { \
         tmp = s[x]; \
         if (tmp < keylow || tmp > keyhigh) d[x] = tmp; \
     } \
-        s = (type *)((BYTE *)s + slock.Pitch); \
+        s = (const type *)((const BYTE *)s + slock.Pitch); \
         d = (type *)((BYTE *)d + dlock.Pitch); \
     } \
         break; \
@@ -1690,7 +1692,8 @@ IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface,
                             case 4: COPYBOX_COLORKEY(DWORD)
             case 3:
             {
-                BYTE *d, *s;
+                const BYTE *s;
+                BYTE *d;
                 DWORD tmp;
                 s = sbuf;
                 d = dbuf;
@@ -1825,4 +1828,18 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_LockRect(IWineD3DSurface *iface, WINED3DL
 void WINAPI IWineD3DBaseSurfaceImpl_BindTexture(IWineD3DSurface *iface) {
     ERR("Should not be called on base texture\n");
     return;
+}
+
+/* TODO: think about moving this down to resource? */
+const void *WINAPI IWineD3DBaseSurfaceImpl_GetData(IWineD3DSurface *iface)
+{
+    IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
+
+    /* This should only be called for sysmem textures, it may be a good idea
+     * to extend this to all pools at some point in the future  */
+    if (This->resource.pool != WINED3DPOOL_SYSTEMMEM)
+    {
+        FIXME("(%p) Attempting to get system memory for a non-system memory texture\n", iface);
+    }
+    return This->resource.allocatedMemory;
 }

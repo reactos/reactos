@@ -716,6 +716,11 @@ VOID
 FASTCALL
 KiActivateWaiterQueue(IN PKQUEUE Queue);
 
+ULONG
+NTAPI
+KeQueryRuntimeProcess(IN PKPROCESS Process,
+                      OUT PULONG UserTime);
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 BOOLEAN

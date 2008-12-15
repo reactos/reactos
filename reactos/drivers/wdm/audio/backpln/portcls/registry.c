@@ -198,6 +198,22 @@ IRegistryKey_fnSetValueKey(
     return ZwSetValueKey(This->hKey, ValueName, 0, Type, Data, DataSize);
 }
 
+static IRegistryKeyVtbl vt_IRegistryKey =
+{
+    /* IUnknown methods */
+    IRegistryKey_fnQueryInterface,
+    IRegistryKey_fnAddRef,
+    IRegistryKey_fnRelease,
+    /* IRegistryKey methods */
+    IRegistryKey_fnQueryKey,
+    IRegistryKey_fnEnumerateKey,
+    IRegistryKey_fnQueryValueKey,
+    IRegistryKey_fnEnumerateKeyValue,
+    IRegistryKey_fnSetValueKey,
+    IRegistryKey_fnQueryRegistryValues,
+    IRegistryKey_fnNewSubKey,
+    IRegistryKey_fnDeleteKey
+};
 
 /*
  * @unimplemented
@@ -214,9 +230,47 @@ PcNewRegistryKey(
     IN  ULONG CreateOptions OPTIONAL,
     OUT PULONG Disposition OPTIONAL)
 {
-    UNIMPLEMENTED;
-    //IoGetDeviceProperty
+    HANDLE hHandle;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    IRegistryKeyImpl * This;
 
-    return STATUS_UNSUCCESSFUL;
+    if (!OutRegistryKey)
+        return STATUS_INVALID_PARAMETER;
+
+    if (RegistryKeyType != GeneralRegistryKey &&
+        RegistryKeyType != DeviceRegistryKey &&
+        RegistryKeyType != DriverRegistryKey &&
+        RegistryKeyType != HwProfileRegistryKey &&
+        RegistryKeyType != DeviceInterfaceRegistryKey)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (RegistryKeyType == GeneralRegistryKey)
+    {
+        if (!ObjectAttributes)
+            return STATUS_INVALID_PARAMETER;
+
+        Status = ZwOpenKey(&hHandle, DesiredAccess, ObjectAttributes);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IRegistryKeyImpl), TAG_PORTCLASS);
+    if (!This)
+    {
+        ZwClose(hHandle);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    This->hKey = hHandle;
+    This->lpVtbl = &vt_IRegistryKey;
+    This->ref = 1;
+
+    *OutRegistryKey = (PREGISTRYKEY)&This->lpVtbl;
+    return STATUS_SUCCESS;
 }
 

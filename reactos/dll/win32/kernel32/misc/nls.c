@@ -740,7 +740,7 @@ IntIsValidSBCSMapping(PCPTABLEINFO CodePageTable, DWORD Flags, WCHAR wch, UCHAR 
 {
     /* If the WC_NO_BEST_FIT_CHARS flag has been specified, the characters need to match exactly. */
     if (Flags & WC_NO_BEST_FIT_CHARS)
-        return (CodePageTable->MultiByteTable[ch] != wch);
+        return (CodePageTable->MultiByteTable[ch] == wch);
 
     /* By default, all characters except TransDefaultChar apply as a valid mapping
        for ch (so also "nearest" characters) */
@@ -1067,13 +1067,13 @@ static BOOL
 WINAPI
 IntIsLeadByte(PCPTABLEINFO TableInfo, BYTE Byte)
 {
-    UINT LeadByteNo;
+    UINT i;
 
     if (TableInfo->MaximumCharacterSize == 2)
     {
-        for (LeadByteNo = 0; LeadByteNo < MAXIMUM_LEADBYTES; LeadByteNo++)
+        for (i = 0; i < MAXIMUM_LEADBYTES && TableInfo->LeadByte[i]; i += 2)
         {
-            if (TableInfo->LeadByte[LeadByteNo] == Byte)
+            if (Byte >= TableInfo->LeadByte[i] && Byte <= TableInfo->LeadByte[i+1])
                 return TRUE;
         }
     }

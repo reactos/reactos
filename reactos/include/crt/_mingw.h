@@ -9,6 +9,12 @@
 
 #define _INTEGRAL_MAX_BITS 64
 
+#ifndef _WIN64
+ #ifndef _USE_32BIT_TIME_T
+  #define _USE_32BIT_TIME_T
+ #endif
+#endif
+
 #ifndef MINGW64
 #define MINGW64
 #define MINGW64_VERSION	1.0
@@ -42,7 +48,7 @@
 #endif
 # define __DECLSPEC_SUPPORTED
 # define __attribute__(x) /* nothing */
-# define __restrict__/* nothing */
+# define __restrict__ /* nothing */
 #elif defined(__GNUC__)
 # ifdef __declspec
 #  ifndef __MINGW_IMPORT
@@ -85,8 +91,8 @@ limitations in handling dllimport attribute.  */
 #  define _CRTIMP __declspec(dllimport)
 # endif
 # define __DECLSPEC_SUPPORTED
-# define __attribute__(x)/* nothing */
-#endif
+# define __attribute__(x) /* nothing */
+#endif /* __GNUC__ */
 
 #if defined (__GNUC__) && defined (__GNUC_MINOR__)
 #define __MINGW_GNUC_PREREQ(major, minor) \
@@ -111,7 +117,7 @@ limitations in handling dllimport attribute.  */
 #else
 # if defined(_MSC_VER)
 #  define __CRT_INLINE __inline
-# elif  __GNUC_STDC_INLINE__
+# elif __GNUC_STDC_INLINE__
 #  define __CRT_INLINE extern inline __attribute__((__gnu_inline__))
 # else
 #  define __CRT_INLINE extern __inline__

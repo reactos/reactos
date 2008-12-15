@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include <wine/unicode.h>
+
 /* GLOBALS *******************************************************************/
 
 extern BOOLEAN NlsMbCodePageTag;
@@ -1059,10 +1061,12 @@ BOOLEAN
 NTAPI
 RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
 {
+    static const WCHAR std_control_chars[] = {'\r','\n','\t',' ',0x3000,0};
+    static const WCHAR byterev_control_chars[] = {0x0d00,0x0a00,0x0900,0x2000,0};
     const WCHAR *s = buf;
     int i;
     unsigned int flags = ~0U, out_flags = 0;
-    
+
     if (len < sizeof(WCHAR))
     {
         /* FIXME: MSDN documents IS_TEXT_UNICODE_BUFFER_TOO_SMALL but there is no such thing... */
@@ -1077,21 +1081,21 @@ RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
      * the output flags. But some of the tests are mutually
      * exclusive, so I don't see how you could pass all tests ...
      */
-    
+
     /* Check for an odd length ... pass if even. */
     if (len & 1) out_flags |= IS_TEXT_UNICODE_ODD_LENGTH;
-    
+
     if (((char *)buf)[len - 1] == 0)
         len--;  /* Windows seems to do something like that to avoid e.g. false IS_TEXT_UNICODE_NULL_BYTES  */
-    
+
     len /= sizeof(WCHAR);
     /* Windows only checks the first 256 characters */
     if (len > 256) len = 256;
-    
+
     /* Check for the special byte order unicode marks. */
     if (*s == 0xFEFF) out_flags |= IS_TEXT_UNICODE_SIGNATURE;
     if (*s == 0xFFFE) out_flags |= IS_TEXT_UNICODE_REVERSE_SIGNATURE;
-    
+
     /* apply some statistical analysis */
     if (flags & IS_TEXT_UNICODE_STATISTICS)
     {
@@ -1104,7 +1108,7 @@ RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
         if (stats > len / 2)
             out_flags |= IS_TEXT_UNICODE_STATISTICS;
     }
-    
+
     /* Check for unicode NULL chars */
     if (flags & IS_TEXT_UNICODE_NULL_BYTES)
     {
@@ -1117,7 +1121,31 @@ RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
             }
         }
     }
-    
+
+    if (flags & IS_TEXT_UNICODE_CONTROLS)
+    {
+        for (i = 0; i < len; i++)
+        {
+            if (strchrW(std_control_chars, s[i]))
+            {
+                out_flags |= IS_TEXT_UNICODE_CONTROLS;
+                break;
+            }
+        }
+    }
+
+    if (flags & IS_TEXT_UNICODE_REVERSE_CONTROLS)
+    {
+        for (i = 0; i < len; i++)
+        {
+            if (strchrW(byterev_control_chars, s[i]))
+            {
+                out_flags |= IS_TEXT_UNICODE_REVERSE_CONTROLS;
+                break;
+            }
+        }
+    }
+
     if (pf)
     {
         out_flags &= *pf;

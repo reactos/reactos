@@ -1754,7 +1754,7 @@ typedef void (WINE_GLAPI * PGLFNGLPOINTPARAMETERFVARBPROC) (GLenum pname, const 
 #define GL_MODELVIEW30_ARB                0x873E
 #define GL_MODELVIEW31_ARB                0x873F
 #endif
-typedef void (WINE_GLAPI * PGLFNGLWEIGHTPOINTERARB) (GLint size, GLenum type, GLsizei stride, GLvoid* pointer);
+typedef void (WINE_GLAPI * PGLFNGLWEIGHTPOINTERARB) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 typedef void (WINE_GLAPI * PGLFNGLWEIGHTBV) (GLint size, const GLbyte *weights);
 typedef void (WINE_GLAPI * PGLFNGLWEIGHTSV) (GLint size, const GLshort *weights);
 typedef void (WINE_GLAPI * PGLFNGLWEIGHTIV) (GLint size, const GLint *weights);
@@ -3254,6 +3254,7 @@ typedef enum _GL_Cards {
   CARD_NVIDIA_GEFORCE_8800GTS     = 0x0193,
   CARD_NVIDIA_GEFORCE_9600GT      = 0x0622,
   CARD_NVIDIA_GEFORCE_9800GT      = 0x0614,
+  CARD_NVIDIA_GEFORCE_GTX280      = 0x05e1,
 
   CARD_INTEL_845G                 = 0x2562,
   CARD_INTEL_I830G                = 0x3577,
@@ -3812,13 +3813,6 @@ typedef BOOL (WINAPI * WINED3D_PFNWGLSETPIXELFORMATWINE) (HDC hdc, int iPixelFor
  * Structures
  ****************************************************/
 
-typedef struct {
-    GLint                   glInternal, glGammaInternal, rtInternal, glFormat, glType;
-    WINED3DFORMAT           conversion_group;
-    unsigned int            Flags;
-    float                   heightscale;
-} GlPixelFormatDesc;
-
 typedef struct _WINED3DGLTYPE {
     int         d3dType;
     GLint       size;
@@ -3888,7 +3882,7 @@ typedef struct _WineD3D_GL_Info {
   /** OpenGL WGL functions ptr */
   WGL_EXT_FUNCS_GEN
 
-  GlPixelFormatDesc *gl_formats;
+  struct GlPixelFormatDesc *gl_formats;
 
   /* Vertex data types */
   WINED3DGLTYPE glTypeLookup[WINED3DDECLTYPE_UNUSED];

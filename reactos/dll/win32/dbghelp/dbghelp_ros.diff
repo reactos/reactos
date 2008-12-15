@@ -1,53 +1,3 @@
-Index: dbghelp.spec
-===================================================================
---- dbghelp.spec	(revision 35049)
-+++ dbghelp.spec	(working copy)
-@@ -40,8 +40,8 @@
- @ stub SymEnumSym
- @ stdcall SymEnumSymbols(ptr double str ptr ptr)
- @ stdcall SymEnumSymbolsW(ptr double wstr ptr ptr)
--@ stub SymEnumSymbolsForAddr
--@ stub SymEnumSymbolsForAddrW
-+@ stdcall SymEnumSymbolsForAddr (ptr double ptr ptr)
-+@ stdcall SymEnumSymbolsForAddrW (ptr double ptr ptr)
- @ stdcall SymEnumTypes(ptr double ptr ptr)
- @ stdcall SymEnumTypesW(ptr double ptr ptr)
- @ stdcall SymEnumerateModules(long ptr ptr)
-Index: symbol.c
-===================================================================
---- symbol.c	(revision 35049)
-+++ symbol.c	(working copy)
-@@ -1000,6 +1000,30 @@
- }
- 
- /******************************************************************
-+ *		SymEnumSymbolsForAddrW (DBGHELP.@)
-+ *
-+ */
-+BOOL WINAPI SymEnumSymbolsForAddrW(HANDLE hProcess, DWORD64 Address, 
-+                                   PSYM_ENUMERATESYMBOLS_CALLBACKW EnumSymbolsCallback,
-+                                   PVOID UserContext)
-+{
-+    UNIMPLEMENTED;
-+    return FALSE;
-+}
-+
-+/******************************************************************
-+ *		SymEnumSymbolsForAddr (DBGHELP.@)
-+ *
-+ */
-+BOOL WINAPI SymEnumSymbolsForAddr(HANDLE hProcess, DWORD64 Address,
-+                                  PSYM_ENUMERATESYMBOLS_CALLBACK EnumSymbolsCallback,
-+                                  PVOID UserContext)
-+{
-+    UNIMPLEMENTED;
-+    return FALSE;
-+}
-+
-+/******************************************************************
-  *		SymEnumSymbolsW (DBGHELP.@)
-  *
-  */
 Index: stabs.c
 ===================================================================
 --- stabs.c	(revision 35085)
@@ -56,24 +6,8 @@ Index: stabs.c
  
  WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
  
-+UINT64 _strtoui64( const char *nptr, char **endptr, int base );
++#define strtoull _strtoui64
 +
  #ifndef N_UNDF
  #define N_UNDF		0x00
  #endif
-@@ -468,13 +466,13 @@
-         break;
-     case '-':
-         prv->sign = -1;
--        prv->val = strtoull(++ptd->ptr, &last, 10);
-+        prv->val = _strtoui64(++ptd->ptr, &last, 10);
-         ptd->ptr = last;
-         break;
-     case '+':
-     default:    
-         prv->sign = 1;
--        prv->val = strtoull(ptd->ptr, &last, 10);
-+        prv->val = _strtoui64(ptd->ptr, &last, 10);
-         ptd->ptr = last;
-         break;
-     }

@@ -382,7 +382,7 @@ WSAStringToAddressA(IN     LPSTR AddressString,
 
 
 /*
- * @implement
+ * @implemented
  */
 INT
 EXPORT
@@ -396,14 +396,15 @@ WSAStringToAddressW(IN      LPWSTR AddressString,
     int res=0;
     LONG inetaddr = 0;
     LPWSTR *bp=NULL;
+    SOCKADDR_IN *sockaddr;
 
-    SOCKADDR_IN *sockaddr = (SOCKADDR_IN *) lpAddress;
-
-    if (!lpAddressLength || !lpAddress)
+    if (!lpAddressLength || !lpAddress || !AddressString)
+    {
+        WSASetLastError(WSAEINVAL);
         return SOCKET_ERROR;
+    }
 
-    if (AddressString==NULL)
-        return WSAEINVAL;
+    sockaddr = (SOCKADDR_IN *) lpAddress;
 
     /* Set right adress family */
     if (lpProtocolInfo!=NULL)
@@ -421,45 +422,40 @@ WSAStringToAddressW(IN      LPWSTR AddressString,
         }
         else
         {
-            if (!lpAddress)
-                res = WSAEINVAL;
-            else
-            {
-                // translate now ip string to ip
+            // translate ip string to ip
 
-                /* rest sockaddr.sin_addr.s_addr
+            /* rest sockaddr.sin_addr.s_addr
                    for we need to be sure it is zero when we come to while */
-                memset(lpAddress,0,sizeof(SOCKADDR_IN));
+            memset(lpAddress,0,sizeof(SOCKADDR_IN));
 
-                /* Set right adress family */
-                sockaddr->sin_family = AF_INET;
+            /* Set right adress family */
+            sockaddr->sin_family = AF_INET;
 
-                /* Get port number */
-                pos = wcscspn(AddressString,L":") + 1;
+            /* Get port number */
+            pos = wcscspn(AddressString,L":") + 1;
 
-                if (pos < (int)wcslen(AddressString))
-                    sockaddr->sin_port = wcstol(&AddressString[pos],
-                                                bp,
-                                                10);
+            if (pos < (int)wcslen(AddressString))
+                sockaddr->sin_port = wcstol(&AddressString[pos],
+                                            bp,
+                                            10);
 
-                else
-                    sockaddr->sin_port = 0;
+            else
+                sockaddr->sin_port = 0;
 
-                /* Get ip number */
-                pos=0;
-                inetaddr=0;
+            /* Get ip number */
+            pos=0;
+            inetaddr=0;
 
-                while (pos < (int)wcslen(AddressString))
-                {
-                    inetaddr = (inetaddr<<8) + ((UCHAR)wcstol(&AddressString[pos],
-                                                              bp,
-                                                              10));
-                    pos += wcscspn( &AddressString[pos],L".") +1 ;
-                }
-
-                res = 0;
-                sockaddr->sin_addr.s_addr = inetaddr;
+            while (pos < (int)wcslen(AddressString))
+            {
+                inetaddr = (inetaddr<<8) + ((UCHAR)wcstol(&AddressString[pos],
+                                                          bp,
+                                                          10));
+                pos += wcscspn( &AddressString[pos],L".") +1 ;
             }
+
+            res = 0;
+            sockaddr->sin_addr.s_addr = inetaddr;
 
         }
     }

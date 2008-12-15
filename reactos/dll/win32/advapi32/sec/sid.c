@@ -97,6 +97,39 @@ static const WELLKNOWNSID WellKnownSids[] =
     { {'R','U'}, WinBuiltinPreWindows2000CompatibleAccessSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_PREW2KCOMPACCESS } } },
     { {'R','D'}, WinBuiltinRemoteDesktopUsersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS } } },
     { {'N','O'}, WinBuiltinNetworkConfigurationOperatorsSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS } } },
+    { {0,0}, WinNTLMAuthenticationSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_PACKAGE_BASE_RID, SECURITY_PACKAGE_NTLM_RID } } },
+    { {0,0}, WinDigestAuthenticationSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_PACKAGE_BASE_RID, SECURITY_PACKAGE_DIGEST_RID } } },
+    { {0,0}, WinSChannelAuthenticationSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_PACKAGE_BASE_RID, SECURITY_PACKAGE_SCHANNEL_RID } } },
+    { {0,0}, WinThisOrganizationSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_THIS_ORGANIZATION_RID } } },
+    { {0,0}, WinOtherOrganizationSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_OTHER_ORGANIZATION_RID } } },
+    { {0,0}, WinBuiltinIncomingForestTrustBuildersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_INCOMING_FOREST_TRUST_BUILDERS  } } },
+    { {0,0}, WinBuiltinPerfMonitoringUsersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_MONITORING_USERS } } },
+    { {0,0}, WinBuiltinPerfLoggingUsersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_LOGGING_USERS } } },
+    { {0,0}, WinBuiltinAuthorizationAccessSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS } } },
+    { {0,0}, WinBuiltinTerminalServerLicenseServersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS } } },
+    { {0,0}, WinBuiltinDCOMUsersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_DCOM_USERS } } },
+};
+
+typedef struct WELLKNOWNRID
+{
+    WELL_KNOWN_SID_TYPE Type;
+    DWORD Rid;
+} WELLKNOWNRID;
+
+static const WELLKNOWNRID WellKnownRids[] = {
+    { WinAccountAdministratorSid,    DOMAIN_USER_RID_ADMIN },
+    { WinAccountGuestSid,            DOMAIN_USER_RID_GUEST },
+    { WinAccountKrbtgtSid,           DOMAIN_USER_RID_KRBTGT },
+    { WinAccountDomainAdminsSid,     DOMAIN_GROUP_RID_ADMINS },
+    { WinAccountDomainUsersSid,      DOMAIN_GROUP_RID_USERS },
+    { WinAccountDomainGuestsSid,     DOMAIN_GROUP_RID_GUESTS },
+    { WinAccountComputersSid,        DOMAIN_GROUP_RID_COMPUTERS },
+    { WinAccountControllersSid,      DOMAIN_GROUP_RID_CONTROLLERS },
+    { WinAccountCertAdminsSid,       DOMAIN_GROUP_RID_CERT_ADMINS },
+    { WinAccountSchemaAdminsSid,     DOMAIN_GROUP_RID_SCHEMA_ADMINS },
+    { WinAccountEnterpriseAdminsSid, DOMAIN_GROUP_RID_ENTERPRISE_ADMINS },
+    { WinAccountPolicyAdminsSid,     DOMAIN_GROUP_RID_POLICY_ADMINS },
+    { WinAccountRasAndIasServersSid, DOMAIN_ALIAS_RID_RAS_SERVERS },
 };
 
 static const SID sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
@@ -419,10 +452,35 @@ ParseAccessMaskString(
 	OUT DWORD* pAccessMask,
 	OUT SIZE_T* pLength)
 {
-	/* FIXME: Allow hexadecimal string for access rights! */
+    LPCWSTR szAcl = Buffer;
+    BOOL RetVal = FALSE;
+    LPCWSTR ptr;
 
-	return ParseFlagsString(Buffer, AccessMaskTable, SDDL_SEPERATORC, pAccessMask, pLength);
-}
+    if ((*szAcl == '0') && (*(szAcl + 1) == 'x'))
+    {
+        LPCWSTR p = szAcl;
+
+        while (*p && *p != ';')
+            p++;
+
+        if (p - szAcl <= 10 /* 8 hex digits + "0x" */ )
+        {
+            *pAccessMask = strtoulW(szAcl, NULL, 16);
+            ptr = wcschr(Buffer, SDDL_SEPERATORC);
+            if (ptr)
+            {
+                *pLength = ptr - Buffer;
+                RetVal = TRUE;
+            }
+        }
+    } 
+    else
+    {
+        RetVal = ParseFlagsString(Buffer, AccessMaskTable, SDDL_SEPERATORC, pAccessMask, pLength);
+    }
+
+    return RetVal;
+ }
 
 static BOOL
 ParseGuidString(
@@ -1074,7 +1132,7 @@ ConvertStringSecurityDescriptorToSecurityDescriptorW(
 	PSECURITY_DESCRIPTOR sd = NULL;
 	BOOL ret = FALSE;
 
-	if (!StringSecurityDescriptor)
+	if (!StringSecurityDescriptor || !SecurityDescriptor)
 		SetLastError(ERROR_INVALID_PARAMETER);
 	else if (StringSDRevision != SDDL_REVISION_1)
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -1533,27 +1591,16 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
     unsigned int i;
     TRACE("(%d, %s, %p, %p)\n", WellKnownSidType, debugstr_sid(DomainSid), pSid, cbSid);
 
-    if (DomainSid != NULL)
-    {
-        FIXME("Only local computer supported!\n");
-        SetLastError(ERROR_INVALID_PARAMETER);	/* FIXME */
-        return FALSE;
-    }
-
-    if (cbSid == NULL || pSid == NULL)
-    {
+    if (cbSid == NULL || pSid == NULL || (DomainSid && !IsValidSid(DomainSid))) {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
-    {
-        if (WellKnownSids[i].Type == WellKnownSidType)
-        {
+    for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++) {
+        if (WellKnownSids[i].Type == WellKnownSidType) {
             DWORD length = GetSidLengthRequired(WellKnownSids[i].Sid.SubAuthorityCount);
 
-            if (*cbSid < length)
-            {
+            if (*cbSid < length) {
                 SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return FALSE;
             }
@@ -1563,6 +1610,30 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
             return TRUE;
         }
     }
+
+    if (DomainSid == NULL || *GetSidSubAuthorityCount(DomainSid) == SID_MAX_SUB_AUTHORITIES)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    for (i = 0; i < sizeof(WellKnownRids)/sizeof(WellKnownRids[0]); i++)
+        if (WellKnownRids[i].Type == WellKnownSidType) {
+            UCHAR domain_subauth = *GetSidSubAuthorityCount(DomainSid);
+            DWORD domain_sid_length = GetSidLengthRequired(domain_subauth);
+            DWORD output_sid_length = GetSidLengthRequired(domain_subauth + 1);
+
+            if (*cbSid < output_sid_length) {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return FALSE;
+            }
+
+            CopyMemory(pSid, DomainSid, domain_sid_length);
+            (*GetSidSubAuthorityCount(pSid))++;
+            (*GetSidSubAuthority(pSid, domain_subauth)) = WellKnownRids[i].Rid;
+            *cbSid = output_sid_length;
+            return TRUE;
+        }
 
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
@@ -1618,12 +1689,9 @@ ConvertStringSidToSidA(IN LPCSTR StringSid,
 /******************************************************************************
  * ComputeStringSidSize
  */
-static DWORD
-ComputeStringSidSize(LPCWSTR StringSid)
+static DWORD ComputeStringSidSize(LPCWSTR StringSid)
 {
-    DWORD size = sizeof(SID);
-
-    if (StringSid[0] == 'S' && StringSid[1] == '-') /* S-R-I-S-S */
+    if (StringSid[0] == 'S' && StringSid[1] == '-') /* S-R-I(-S)+ */
     {
         int ctok = 0;
         while (*StringSid)
@@ -1633,8 +1701,8 @@ ComputeStringSidSize(LPCWSTR StringSid)
             StringSid++;
         }
 
-        if (ctok > 3)
-            size += (ctok - 3) * sizeof(DWORD);
+        if (ctok >= 3)
+            return GetSidLengthRequired(ctok - 2);
     }
     else /* String constant format  - Only available in winxp and above */
     {
@@ -1642,10 +1710,10 @@ ComputeStringSidSize(LPCWSTR StringSid)
 
         for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
             if (!strncmpW(WellKnownSids[i].wstr, StringSid, 2))
-                size += (WellKnownSids[i].Sid.SubAuthorityCount - 1) * sizeof(DWORD);
+                return GetSidLengthRequired(WellKnownSids[i].Sid.SubAuthorityCount);
     }
 
-    return size;
+    return GetSidLengthRequired(0);
 }
 
 static const RECORD SidTable[] =
@@ -1752,7 +1820,7 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
     }
     i = 0;
     ret = FALSE;
-    csubauth = ((cBytes - sizeof(SID)) / sizeof(DWORD)) + 1;
+    csubauth = ((cBytes - GetSidLengthRequired(0)) / sizeof(DWORD));
 
     StringSid += 2; /* Advance to Revision */
     pisid->Revision = atoiW(StringSid);
@@ -1793,6 +1861,8 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
     if (*StringSid == '-')
         StringSid++;
 
+    pisid->SubAuthority[i] = atoiW(StringSid);
+
     while (*StringSid)
     {
         while (*StringSid && *StringSid != '-')
@@ -1800,7 +1870,7 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
         if (*StringSid == '-')
             StringSid++;
 
-        pisid->SubAuthority[i++] = atoiW(StringSid);
+        pisid->SubAuthority[++i] = atoiW(StringSid);
     }
 
     if (i != pisid->SubAuthorityCount)

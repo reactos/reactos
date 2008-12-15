@@ -117,21 +117,6 @@ static CRITICAL_SECTION FILE_cs;
 #define LOCK_FILES()    do { EnterCriticalSection(&FILE_cs); } while (0)
 #define UNLOCK_FILES()  do { LeaveCriticalSection(&FILE_cs); } while (0)
 
-//void stat64_to_stati64(const struct __stat64 *buf64, struct _stati64 *buf)
-//{
-//    buf->st_dev   = buf64->st_dev;
-//    buf->st_ino   = buf64->st_ino;
-//    buf->st_mode  = buf64->st_mode;
-//    buf->st_nlink = buf64->st_nlink;
-//    buf->st_uid   = buf64->st_uid;
-//    buf->st_gid   = buf64->st_gid;
-//    buf->st_rdev  = buf64->st_rdev;
-//    buf->st_size  = buf64->st_size;
-//    buf->st_atime = buf64->st_atime;
-//    buf->st_mtime = buf64->st_mtime;
-//    buf->st_ctime = buf64->st_ctime;
-//}
-
 static inline BOOL is_valid_fd(int fd)
 {
   return fd >= 0 && fd < fdend && (fdesc[fd].wxflag & WX_OPEN);

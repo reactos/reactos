@@ -29,7 +29,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 #define GLINFO_LOCATION stateblock->wineD3DDevice->adapter->gl_info
-void nvts_activate_dimensions(DWORD stage, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
+static void nvts_activate_dimensions(DWORD stage, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     BOOL bumpmap = FALSE;
 
     if(stage > 0 && (stateblock->textureState[stage - 1][WINED3DTSS_COLOROP] == WINED3DTOP_BUMPENVMAPLUMINANCE ||
@@ -548,7 +548,7 @@ static void nvrc_colorop(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3
     }
 }
 
-void nvts_texdim(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
+static void nvts_texdim(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     DWORD sampler = state - STATE_SAMPLER(0);
     DWORD mapped_stage = stateblock->wineD3DDevice->texUnitMap[sampler];
 
@@ -610,7 +610,8 @@ static void nvts_enable(IWineD3DDevice *iface, BOOL enable) {
     }
 }
 
-static void nvrc_fragment_get_caps(WINED3DDEVTYPE devtype, WineD3D_GL_Info *gl_info, struct fragment_caps *pCaps) {
+static void nvrc_fragment_get_caps(WINED3DDEVTYPE devtype, const WineD3D_GL_Info *gl_info, struct fragment_caps *pCaps)
+{
     pCaps->TextureOpCaps =  WINED3DTEXOPCAPS_ADD                        |
                             WINED3DTEXOPCAPS_ADDSIGNED                  |
                             WINED3DTEXOPCAPS_ADDSIGNED2X                |
@@ -672,12 +673,26 @@ static void nvrc_fragment_free(IWineD3DDevice *iface) {}
  * register combiners extension(Pre-GF3).
  */
 
-static BOOL nvts_conv_supported(WINED3DFORMAT fmt) {
-    TRACE("Checking shader format support for format %s: [FAILED]\n", debug_d3dformat(fmt));
+static BOOL nvts_color_fixup_supported(struct color_fixup_desc fixup)
+{
+    if (TRACE_ON(d3d))
+    {
+        TRACE("Checking support for fixup:\n");
+        dump_color_fixup_desc(fixup);
+    }
+
+    /* We only support identity conversions. */
+    if (is_identity_fixup(fixup))
+    {
+        TRACE("[OK]\n");
+        return TRUE;
+    }
+
+    TRACE("[FAILED]\n");
     return FALSE;
 }
 
-const struct StateEntryTemplate nvrc_fragmentstate_template[] = {
+static const struct StateEntryTemplate nvrc_fragmentstate_template[] = {
     { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          nvrc_colorop        }, 0                               },
     { STATE_TEXTURESTAGE(0, WINED3DTSS_COLORARG1),        { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          nvrc_colorop        }, 0                               },
     { STATE_TEXTURESTAGE(0, WINED3DTSS_COLORARG2),        { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          nvrc_colorop        }, 0                               },
@@ -809,7 +824,7 @@ const struct fragment_pipeline nvts_fragment_pipeline = {
     nvrc_fragment_get_caps,
     nvrc_fragment_alloc,
     nvrc_fragment_free,
-    nvts_conv_supported,
+    nvts_color_fixup_supported,
     nvrc_fragmentstate_template,
     FALSE /* we cannot disable projected textures. The vertex pipe has to do it */
 };
@@ -819,7 +834,7 @@ const struct fragment_pipeline nvrc_fragment_pipeline = {
     nvrc_fragment_get_caps,
     nvrc_fragment_alloc,
     nvrc_fragment_free,
-    nvts_conv_supported,
+    nvts_color_fixup_supported,
     nvrc_fragmentstate_template,
     FALSE /* we cannot disable projected textures. The vertex pipe has to do it */
 };

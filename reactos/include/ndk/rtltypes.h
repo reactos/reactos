@@ -1242,7 +1242,6 @@ typedef struct _NLS_FILE_HEADER
     USHORT UniDefaultChar;
     USHORT TransDefaultChar;
     USHORT TransUniDefaultChar;
-    USHORT DBCSCodePage;
     UCHAR LeadByte[MAXIMUM_LEADBYTES];
 } NLS_FILE_HEADER, *PNLS_FILE_HEADER;
 

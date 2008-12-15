@@ -285,11 +285,6 @@
 				<file>setjmp.s</file>
 			</directory>
 		</if>
-		<if property="ARCH" value="amd64">
-			<directory name="amd64">
-				<file>setjmp.s</file>
-			</directory>
-		</if>
 	</directory>
 	<directory name="signal">
 		<file>signal.c</file>
@@ -300,6 +295,7 @@
 		<file>file.c</file>
 		<file>find.c</file>
 		<file>find64.c</file>
+		<file>findi64.c</file>
 		<file>fmode.c</file>
 		<file>lnx_sprintf.c</file>
 		<file>perror.c</file>
@@ -308,8 +304,11 @@
 		<file>stat64.c</file>
 		<file>waccess.c</file>
 		<file>wfind.c</file>
+		<file>wfind64.c</file>
+		<file>wfindi64.c</file>
 		<file>wpopen.c</file>
 		<file>wstat.c</file>
+		<file>wstat64.c</file>
 	</directory>
 	<directory name="stdlib">
 		<file>_exit.c</file>

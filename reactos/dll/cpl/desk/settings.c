@@ -151,8 +151,7 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN const DISPLAY_DEVICE *DisplayDe
 	DWORD ResolutionsCount = 1;
 	DWORD i;
 
-	newEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(DISPLAY_DEVICE_ENTRY));
-	memset(newEntry, 0, sizeof(DISPLAY_DEVICE_ENTRY));
+	newEntry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DISPLAY_DEVICE_ENTRY));
 	if (!newEntry) goto ByeBye;
 
 	newEntry->Settings = GetPossibleSettings(DisplayDevice->DeviceName, &newEntry->SettingsCount, &newEntry->CurrentSettings);
@@ -311,6 +310,7 @@ OnInitDialog(IN HWND hwndDlg)
 		EnableWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_RESOLUTION), FALSE);
 		EnableWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_RESOLUTION_TEXT), FALSE);
 		EnableWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_ADVANCED), FALSE);
+		ShowWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM), SW_HIDE);
 	}
 	else if (Result == 1)
 	{

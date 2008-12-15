@@ -319,78 +319,90 @@ OutputDebugStringA(LPCSTR _OutputString)
 #else
    do
 #endif
-   {
+    {
         /* size of the current output block */
         SIZE_T nRoundLen;
 
         /* size of the remainder of the string */
         SIZE_T nOutputStringLen;
 
-        for
-        (
-            /* output the whole string */
-            nOutputStringLen = strlen(_OutputString);
+        /* output the whole string */
+        nOutputStringLen = strlen(_OutputString);
 
-            /* repeat until the string has been fully output */
-            nOutputStringLen > 0;
-
-            /* move to the next block */
-            _OutputString += nRoundLen, nOutputStringLen -= nRoundLen
-        )
-    {
-        /* we're connected to the debug monitor: write the current block to the
-           shared buffer */
-        if(hDBMonDataReady)
+        do
         {
-                /* wait a maximum of 10 seconds for the debug monitor to finish processing
-                   the shared buffer */
-            if(WaitForSingleObject(hDBMonBufferReady, 10000) != WAIT_OBJECT_0)
+            /* we're connected to the debug monitor:
+               write the current block to the shared buffer */
+            if(hDBMonDataReady)
             {
-                /* timeout or failure: give up */
-                break;
+                /* wait a maximum of 10 seconds for the debug monitor
+                   to finish processing the shared buffer */
+                if(WaitForSingleObject(hDBMonBufferReady, 10000) != WAIT_OBJECT_0)
+                {
+                    /* timeout or failure: give up */
+                    break;
+                }
+
+                /* write the process id into the buffer */
+                pDBMonBuffer->ProcessId = GetCurrentProcessId();
+
+                /* write only as many bytes as they fit in the buffer */
+                if(nOutputStringLen > (PAGE_SIZE - sizeof(DWORD) - 1))
+                    nRoundLen = PAGE_SIZE - sizeof(DWORD) - 1;
+                else
+                    nRoundLen = nOutputStringLen;
+
+                /* copy the current block into the buffer */
+                memcpy(pDBMonBuffer->Buffer, _OutputString, nRoundLen);
+
+                /* null-terminate the current block */
+                pDBMonBuffer->Buffer[nRoundLen] = 0;
+
+                /* signal that the data contains meaningful data and can be read */
+                SetEvent(hDBMonDataReady);
+            }
+            /* else, send the current block to the kernel debugger */
+            else
+            {
+                /* output in blocks of 512 characters */
+                CHAR a_cBuffer[512];
+
+                /* write a maximum of 511 bytes */
+                if(nOutputStringLen > (sizeof(a_cBuffer) - 2))
+                    nRoundLen = sizeof(a_cBuffer) - 2;
+                else
+                    nRoundLen = nOutputStringLen;
+
+                /* copy the current block */
+                memcpy(a_cBuffer, _OutputString, nRoundLen);
+
+                /* Have we reached the end of the string? */
+                if (nRoundLen == nOutputStringLen)
+                {
+                    /* Make sure we terminate with a line break */
+                    if (a_cBuffer[nRoundLen - 1] != '\n')
+                    {
+                        a_cBuffer[nRoundLen] = '\n';
+                        nRoundLen++;
+                        nOutputStringLen++;
+                    }
+                }
+
+                /* null-terminate the current block */
+                a_cBuffer[nRoundLen] = 0;
+
+                /* send the current block to the kernel debugger */
+                DbgPrint("%s", a_cBuffer);
             }
 
-            /* write the process id into the buffer */
-            pDBMonBuffer->ProcessId = GetCurrentProcessId();
-
-            /* write only as many bytes as they fit in the buffer */
-            if(nOutputStringLen > (PAGE_SIZE - sizeof(DWORD) - 1))
-                nRoundLen = PAGE_SIZE - sizeof(DWORD) - 1;
-            else
-                nRoundLen = nOutputStringLen;
-
-            /* copy the current block into the buffer */
-            memcpy(pDBMonBuffer->Buffer, _OutputString, nRoundLen);
-
-            /* null-terminate the current block */
-            pDBMonBuffer->Buffer[nRoundLen] = 0;
-
-            /* signal that the data contains meaningful data and can be read */
-            SetEvent(hDBMonDataReady);
+            /* move to the next block */
+            _OutputString += nRoundLen;
+            nOutputStringLen -= nRoundLen;
         }
-        /* else, send the current block to the kernel debugger */
-        else
-        {
-            /* output in blocks of 512 characters */
-            CHAR a_cBuffer[512];
+        /* repeat until the string has been fully output */
+        while (nOutputStringLen > 0);
 
-            /* write a maximum of 511 bytes */
-            if(nOutputStringLen > (sizeof(a_cBuffer) - 1))
-                nRoundLen = sizeof(a_cBuffer) - 1;
-            else
-                nRoundLen = nOutputStringLen;
-
-            /* copy the current block */
-            memcpy(a_cBuffer, _OutputString, nRoundLen);
-
-            /* null-terminate the current block */
-            a_cBuffer[nRoundLen] = 0;
-
-            /* send the current block to the kernel debugger */
-            DbgPrint("%s", a_cBuffer);
-        }
     }
-   }
 #if 0
    /* ignore access violations and let other exceptions fall through */
    __except

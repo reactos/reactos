@@ -667,7 +667,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
     
     /* Check impersonation level */
-    if (Token->ImpersonationLevel < SecurityAnonymous)
+    if (Token->ImpersonationLevel < SecurityIdentification)
     {
         DPRINT1("Invalid impersonation level\n");
         ObDereferenceObject(Token);

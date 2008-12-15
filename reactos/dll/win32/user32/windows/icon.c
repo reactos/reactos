@@ -291,6 +291,8 @@ CreateIconFromResourceEx(
   Data = (PBYTE)SafeIconImage + HeaderSize;
 
   /* get a handle to the screen dc, the icon we create is going to be compatable with this */
+  // FIXME!!! This is a victim of the Win32k Initialization BUG!!!!!
+  //hScreenDc = CreateDCW(NULL, NULL, NULL, NULL);
   hScreenDc = CreateCompatibleDC(NULL);
   if (hScreenDc == NULL)
     {

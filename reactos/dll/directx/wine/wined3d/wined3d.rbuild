@@ -49,4 +49,6 @@
 	<file>volumetexture.c</file>
 	<file>wined3d_main.c</file>
 	<file>version.rc</file>
+
+	<dependency>wineheaders</dependency>
 </module>

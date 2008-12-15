@@ -26,6 +26,7 @@
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
+WINE_DECLARE_DEBUG_CHANNEL(d3d);
 
 /* Some private defines, Constant associations, etc.
  * Env bump matrix and per stage constant should be independent,
@@ -159,7 +160,9 @@ static const char *debug_rep(GLuint rep) {
 }
 
 #define GLINFO_LOCATION (*gl_info)
-static GLuint register_for_arg(DWORD arg, WineD3D_GL_Info *gl_info, unsigned int stage, GLuint *mod, GLuint *rep, GLuint tmparg) {
+static GLuint register_for_arg(DWORD arg, const WineD3D_GL_Info *gl_info,
+        unsigned int stage, GLuint *mod, GLuint *rep, GLuint tmparg)
+{
     GLenum ret;
 
     if(mod) *mod = GL_NONE;
@@ -224,7 +227,8 @@ static GLuint register_for_arg(DWORD arg, WineD3D_GL_Info *gl_info, unsigned int
     return ret;
 }
 
-static GLuint find_tmpreg(struct texture_stage_op op[MAX_TEXTURES]) {
+static GLuint find_tmpreg(const struct texture_stage_op op[MAX_TEXTURES])
+{
     int lowest_read = -1;
     int lowest_write = -1;
     int i;
@@ -284,7 +288,8 @@ static GLuint find_tmpreg(struct texture_stage_op op[MAX_TEXTURES]) {
     }
 }
 
-static GLuint gen_ati_shader(struct texture_stage_op op[MAX_TEXTURES], WineD3D_GL_Info *gl_info) {
+static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES], const WineD3D_GL_Info *gl_info)
+{
     GLuint ret = GL_EXTCALL(glGenFragmentShadersATI(1));
     unsigned int stage;
     GLuint arg0, arg1, arg2, extrarg;
@@ -339,21 +344,30 @@ static GLuint gen_ati_shader(struct texture_stage_op op[MAX_TEXTURES], WineD3D_G
 
     /* Pass 2: Generate perturbation calculations */
     for(stage = 0; stage < GL_LIMITS(textures); stage++) {
+        GLuint argmodextra_x, argmodextra_y;
+        struct color_fixup_desc fixup;
+
         if(op[stage].cop == WINED3DTOP_DISABLE) break;
         if(op[stage].cop != WINED3DTOP_BUMPENVMAP &&
            op[stage].cop != WINED3DTOP_BUMPENVMAPLUMINANCE) continue;
 
-        /* Nice thing, we get the color correction for free :-) */
-        if(op[stage].color_correction == WINED3DFMT_V8U8) {
-            argmodextra = GL_2X_BIT_ATI | GL_BIAS_BIT_ATI;
-        } else {
-            argmodextra = 0;
+        if (fixup.x_source != CHANNEL_SOURCE_X || fixup.y_source != CHANNEL_SOURCE_Y)
+        {
+            FIXME("Swizzles not implemented\n");
+            argmodextra_x = GL_NONE;
+            argmodextra_y = GL_NONE;
+        }
+        else
+        {
+            /* Nice thing, we get the color correction for free :-) */
+            argmodextra_x = fixup.x_sign_fixup ? GL_2X_BIT_ATI | GL_BIAS_BIT_ATI : GL_NONE;
+            argmodextra_y = fixup.y_sign_fixup ? GL_2X_BIT_ATI | GL_BIAS_BIT_ATI : GL_NONE;
         }
 
         TRACE("glColorFragmentOp3ATI(GL_DOT2_ADD_ATI, GL_REG_%d_ATI, GL_RED_BIT_ATI, GL_NONE, GL_REG_%d_ATI, GL_NONE, %s, ATI_FFP_CONST_BUMPMAT(%d), GL_NONE, GL_NONE, GL_REG_%d_ATI, GL_RED, GL_NONE)\n",
-              stage + 1, stage, debug_argmod(argmodextra), stage, stage + 1);
+              stage + 1, stage, debug_argmod(argmodextra_x), stage, stage + 1);
         GL_EXTCALL(glColorFragmentOp3ATI(GL_DOT2_ADD_ATI, GL_REG_0_ATI + stage + 1, GL_RED_BIT_ATI, GL_NONE,
-                                         GL_REG_0_ATI + stage, GL_NONE, argmodextra,
+                                         GL_REG_0_ATI + stage, GL_NONE, argmodextra_x,
                                          ATI_FFP_CONST_BUMPMAT(stage), GL_NONE, GL_2X_BIT_ATI | GL_BIAS_BIT_ATI,
                                          GL_REG_0_ATI + stage + 1, GL_RED, GL_NONE));
 
@@ -372,9 +386,9 @@ static GLuint gen_ati_shader(struct texture_stage_op op[MAX_TEXTURES], WineD3D_G
         GL_EXTCALL(glColorFragmentOp1ATI(GL_MOV_ATI, GL_REG_5_ATI, GL_GREEN_BIT_ATI, GL_NONE,
                                         ATI_FFP_CONST_BUMPMAT(stage), GL_ALPHA, GL_NONE));
         TRACE("glColorFragmentOp3ATI(GL_DOT2_ADD_ATI, GL_REG_%d_ATI, GL_GREEN_BIT_ATI, GL_NONE, GL_REG_%d_ATI, GL_NONE, %s, GL_REG_5_ATI, GL_NONE, GL_NONE, GL_REG_%d_ATI, GL_GREEN, GL_NONE)\n",
-              stage + 1, stage, debug_argmod(argmodextra), stage + 1);
+              stage + 1, stage, debug_argmod(argmodextra_y), stage + 1);
         GL_EXTCALL(glColorFragmentOp3ATI(GL_DOT2_ADD_ATI, GL_REG_0_ATI + stage + 1, GL_GREEN_BIT_ATI, GL_NONE,
-                                         GL_REG_0_ATI + stage, GL_NONE, argmodextra,
+                                         GL_REG_0_ATI + stage, GL_NONE, argmodextra_y,
                                          GL_REG_5_ATI, GL_NONE, GL_2X_BIT_ATI | GL_BIAS_BIT_ATI,
                                          GL_REG_0_ATI + stage + 1, GL_GREEN, GL_NONE));
     }
@@ -802,30 +816,32 @@ static GLuint gen_ati_shader(struct texture_stage_op op[MAX_TEXTURES], WineD3D_G
 #define GLINFO_LOCATION stateblock->wineD3DDevice->adapter->gl_info
 static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     IWineD3DDeviceImpl          *This = stateblock->wineD3DDevice;
-    struct atifs_ffp_desc       *desc;
+    const struct atifs_ffp_desc *desc;
     struct ffp_frag_settings     settings;
     struct atifs_private_data   *priv = (struct atifs_private_data *) This->fragment_priv;
     DWORD mapped_stage;
     unsigned int i;
 
     gen_ffp_frag_op(stateblock, &settings, TRUE);
-    desc = (struct atifs_ffp_desc *) find_ffp_frag_shader(priv->fragment_shaders, &settings);
+    desc = (const struct atifs_ffp_desc *)find_ffp_frag_shader(priv->fragment_shaders, &settings);
     if(!desc) {
-        desc = HeapAlloc(GetProcessHeap(), 0, sizeof(*desc));
-        if(!desc) {
+        struct atifs_ffp_desc *new_desc = HeapAlloc(GetProcessHeap(), 0, sizeof(*new_desc));
+        if (!new_desc)
+        {
             ERR("Out of memory\n");
             return;
         }
-        desc->num_textures_used = 0;
+        new_desc->num_textures_used = 0;
         for(i = 0; i < GL_LIMITS(texture_stages); i++) {
             if(settings.op[i].cop == WINED3DTOP_DISABLE) break;
-            desc->num_textures_used = i;
+            new_desc->num_textures_used = i;
         }
 
-        memcpy(&desc->parent.settings, &settings, sizeof(settings));
-        desc->shader = gen_ati_shader(settings.op, &GLINFO_LOCATION);
-        add_ffp_frag_shader(priv->fragment_shaders, &desc->parent);
-        TRACE("Allocated fixed function replacement shader descriptor %p\n", desc);
+        memcpy(&new_desc->parent.settings, &settings, sizeof(settings));
+        new_desc->shader = gen_ati_shader(settings.op, &GLINFO_LOCATION);
+        add_ffp_frag_shader(priv->fragment_shaders, &new_desc->parent);
+        TRACE("Allocated fixed function replacement shader descriptor %p\n", new_desc);
+        desc = new_desc;
     }
 
     /* GL_ATI_fragment_shader depends on the GL_TEXTURE_xD enable settings. Update the texture stages
@@ -1017,7 +1033,8 @@ static void atifs_enable(IWineD3DDevice *iface, BOOL enable) {
     }
 }
 
-static void atifs_get_caps(WINED3DDEVTYPE devtype, WineD3D_GL_Info *gl_info, struct fragment_caps *caps) {
+static void atifs_get_caps(WINED3DDEVTYPE devtype, const WineD3D_GL_Info *gl_info, struct fragment_caps *caps)
+{
     caps->TextureOpCaps =  WINED3DTEXOPCAPS_DISABLE                     |
                            WINED3DTEXOPCAPS_SELECTARG1                  |
                            WINED3DTEXOPCAPS_SELECTARG2                  |
@@ -1101,17 +1118,25 @@ static void atifs_free(IWineD3DDevice *iface) {
 }
 #undef GLINFO_LOCATION
 
-static BOOL atifs_conv_supported(WINED3DFORMAT fmt) {
-    TRACE("Checking shader format support for format %s:", debug_d3dformat(fmt));
-    switch(fmt) {
-        case WINED3DFMT_V8U8:
-        case WINED3DFMT_V16U16:
-            TRACE("[OK]\n");
-            return TRUE;
-        default:
-            TRACE("[FAILED\n");
-            return FALSE;
+static BOOL atifs_color_fixup_supported(struct color_fixup_desc fixup)
+{
+    if (TRACE_ON(d3d_shader) && TRACE_ON(d3d))
+    {
+        TRACE("Checking support for fixup:\n");
+        dump_color_fixup_desc(fixup);
     }
+
+    /* We only support sign fixup of the first two channels. */
+    if (fixup.x_source == CHANNEL_SOURCE_X && fixup.y_source == CHANNEL_SOURCE_Y
+            && fixup.z_source == CHANNEL_SOURCE_Z && fixup.w_source == CHANNEL_SOURCE_W
+            && !fixup.z_sign_fixup && !fixup.w_sign_fixup)
+    {
+        TRACE("[OK]\n");
+        return TRUE;
+    }
+
+    TRACE("[FAILED]\n");
+    return FALSE;
 }
 
 const struct fragment_pipeline atifs_fragment_pipeline = {
@@ -1119,7 +1144,7 @@ const struct fragment_pipeline atifs_fragment_pipeline = {
     atifs_get_caps,
     atifs_alloc,
     atifs_free,
-    atifs_conv_supported,
+    atifs_color_fixup_supported,
     atifs_fragmentstate_template,
     TRUE /* We can disable projected textures */
 };

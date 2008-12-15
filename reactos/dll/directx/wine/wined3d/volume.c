@@ -94,7 +94,7 @@ static ULONG WINAPI IWineD3DVolumeImpl_Release(IWineD3DVolume *iface) {
     TRACE("(%p) : Releasing from %d\n", This, This->resource.ref);
     ref = InterlockedDecrement(&This->resource.ref);
     if (ref == 0) {
-        IWineD3DResourceImpl_CleanUp((IWineD3DResource *)iface);
+        resource_cleanup((IWineD3DResource *)iface);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -104,35 +104,35 @@ static ULONG WINAPI IWineD3DVolumeImpl_Release(IWineD3DVolume *iface) {
    IWineD3DVolume IWineD3DResource parts follow
    **************************************************** */
 static HRESULT WINAPI IWineD3DVolumeImpl_GetParent(IWineD3DVolume *iface, IUnknown **pParent) {
-    return IWineD3DResourceImpl_GetParent((IWineD3DResource *)iface, pParent);
+    return resource_get_parent((IWineD3DResource *)iface, pParent);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_GetDevice(IWineD3DVolume *iface, IWineD3DDevice** ppDevice) {
-    return IWineD3DResourceImpl_GetDevice((IWineD3DResource *)iface, ppDevice);
+    return resource_get_device((IWineD3DResource *)iface, ppDevice);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_SetPrivateData(IWineD3DVolume *iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
-    return IWineD3DResourceImpl_SetPrivateData((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
+    return resource_set_private_data((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_GetPrivateData(IWineD3DVolume *iface, REFGUID  refguid, void* pData, DWORD* pSizeOfData) {
-    return IWineD3DResourceImpl_GetPrivateData((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
+    return resource_get_private_data((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_FreePrivateData(IWineD3DVolume *iface, REFGUID refguid) {
-    return IWineD3DResourceImpl_FreePrivateData((IWineD3DResource *)iface, refguid);
+    return resource_free_private_data((IWineD3DResource *)iface, refguid);
 }
 
 static DWORD WINAPI IWineD3DVolumeImpl_SetPriority(IWineD3DVolume *iface, DWORD PriorityNew) {
-    return IWineD3DResourceImpl_SetPriority((IWineD3DResource *)iface, PriorityNew);
+    return resource_set_priority((IWineD3DResource *)iface, PriorityNew);
 }
 
 static DWORD WINAPI IWineD3DVolumeImpl_GetPriority(IWineD3DVolume *iface) {
-    return IWineD3DResourceImpl_GetPriority((IWineD3DResource *)iface);
+    return resource_get_priority((IWineD3DResource *)iface);
 }
 
 static void WINAPI IWineD3DVolumeImpl_PreLoad(IWineD3DVolume *iface) {
-    IWineD3DResourceImpl_PreLoad((IWineD3DResource *)iface);
+    FIXME("iface %p stub!\n", iface);
 }
 
 static void WINAPI IWineD3DVolumeImpl_UnLoad(IWineD3DVolume *iface) {
@@ -143,7 +143,7 @@ static void WINAPI IWineD3DVolumeImpl_UnLoad(IWineD3DVolume *iface) {
 }
 
 static WINED3DRESOURCETYPE WINAPI IWineD3DVolumeImpl_GetType(IWineD3DVolume *iface) {
-    return IWineD3DResourceImpl_GetType((IWineD3DResource *)iface);
+    return resource_get_type((IWineD3DResource *)iface);
 }
 
 /* *******************************************
@@ -310,7 +310,7 @@ static HRESULT WINAPI IWineD3DVolumeImpl_SetContainer(IWineD3DVolume *iface, IWi
 static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int gl_level, BOOL srgb_mode) {
     IWineD3DVolumeImpl *This     = (IWineD3DVolumeImpl *)iface;
     WINED3DFORMAT format = This->resource.format;
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
     getFormatDescEntry(format, &GLINFO_LOCATION, &glDesc);
 
     TRACE("(%p) : level %u, format %s (0x%08x)\n", This, gl_level, debug_d3dformat(format), format);

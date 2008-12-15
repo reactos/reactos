@@ -162,8 +162,8 @@ void __RPC_USER LSAPR_HANDLE_rundown(LSAPR_HANDLE hHandle)
 
 
 /* Function 0 */
-NTSTATUS LsarClose(
-    LSAPR_HANDLE *ObjectHandle)
+NTSTATUS
+LsarClose(LSAPR_HANDLE *ObjectHandle)
 {
 #if 0
     PLSAR_POLICY_HANDLE Policy = NULL;
@@ -183,14 +183,24 @@ NTSTATUS LsarClose(
 
     return Status;
 #endif
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+
+    TRACE("LsarClose called!\n");
+
+    /* This is our fake handle, don't go too much long way */
+    if (*ObjectHandle == (LSA_HANDLE)0xcafe)
+        Status = STATUS_SUCCESS;
+
+
+    TRACE("LsarClose done (Status: 0x%08lx)!\n", Status);
+
+    return Status;
 }
 
 
 /* Function 1 */
-NTSTATUS LsarDelete(
-    LSAPR_HANDLE ObjectHandle)
+NTSTATUS
+LsarDelete(LSAPR_HANDLE ObjectHandle)
 {
     /* Deprecated */
     return STATUS_NOT_SUPPORTED;
@@ -252,16 +262,13 @@ NTSTATUS LsarOpenPolicy(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *PolicyHandle)
 {
-    ERR("LsarOpenPolicy called!\n");
+    TRACE("LsarOpenPolicy called!\n");
 
     *PolicyHandle = (LSAPR_HANDLE)0xcafe;
 
-    ERR("LsarOpenPolicy done!\n");
+    TRACE("LsarOpenPolicy done!\n");
 
     return STATUS_SUCCESS;
-
-//    UNIMPLEMENTED;
-//    return STATUS_NOT_IMPLEMENTED;
 }
 
 

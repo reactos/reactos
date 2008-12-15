@@ -13,14 +13,18 @@
 	<file>dll.c</file>
 	<file>dma_master.c</file>
 	<file>dma_slave.c</file>
+	<file>drm_port.c</file>
 	<file>adapter.c</file>
 	<file>irp.c</file>
+	<file>interrupt.c</file>
 	<file>drm.c</file>
 	<file>stubs.c</file>
 	<file>undoc.c</file>
 	<file>resource.c</file>
 	<file>registry.c</file>
+	<file>service_group.c</file>	
 	<file>port.c</file>
+	<file>power.c</file>
 	<file>port_dmus.c</file>
 	<file>port_midi.c</file>
 	<file>port_topology.c</file>

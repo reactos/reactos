@@ -25,6 +25,10 @@
 #include <windef.h>
 #include <excpt.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The following definitions allow using exceptions in Wine and Winelib code
  *
  * They should be used like this:
@@ -87,6 +91,12 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 #define __attribute__(x) /* nothing */
 #endif
 
+#if defined(__MINGW32__) || defined(__CYGWIN__) || defined(__REACTOS__)
+#define sigjmp_buf jmp_buf
+#define sigsetjmp(buf,sigs) setjmp(buf)
+#define siglongjmp(buf,val) longjmp(buf,val)
+#endif
+
 #define __TRY \
     do { __WINE_FRAME __f; \
          int __first = 1; \
@@ -101,7 +111,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
          } else { \
              __f.frame.Handler = __wine_exception_handler; \
              __f.u.filter = (func); \
-             if (setjmp( __f.jmp )) { \
+             if (sigsetjmp( __f.jmp, 0 )) { \
                  const __WINE_FRAME * const __eptr __attribute__((unused)) = &__f; \
                  do {
 
@@ -112,7 +122,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
              break; \
          } else { \
              __f.frame.Handler = __wine_exception_handler_page_fault; \
-             if (setjmp( __f.jmp )) { \
+             if (sigsetjmp( __f.jmp, 0 )) { \
                  const __WINE_FRAME * const __eptr __attribute__((unused)) = &__f; \
                  do {
 
@@ -123,7 +133,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
              break; \
          } else { \
              __f.frame.Handler = __wine_exception_handler_all; \
-             if (setjmp( __f.jmp )) { \
+             if (sigsetjmp( __f.jmp, 0 )) { \
                  const __WINE_FRAME * const __eptr __attribute__((unused)) = &__f; \
                  do {
 
@@ -153,9 +163,6 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 typedef LONG (CALLBACK *__WINE_FILTER)(PEXCEPTION_POINTERS);
 typedef void (CALLBACK *__WINE_FINALLY)(BOOL);
 
-#define WINE_EXCEPTION_FILTER(func) LONG WINAPI func( EXCEPTION_POINTERS *__eptr )
-#define WINE_FINALLY_FUNC(func) void CALLBACK func( BOOL __normal )
-
 #define GetExceptionInformation() (__eptr)
 #define GetExceptionCode()        (__eptr->ExceptionRecord->ExceptionCode)
 
@@ -172,7 +179,7 @@ typedef struct __tagWINE_FRAME
         /* finally data */
         __WINE_FINALLY finally_func;
     } u;
-    jmp_buf jmp;
+    sigjmp_buf jmp;
     /* hack to make GetExceptionCode() work in handler */
     DWORD ExceptionCode;
     const struct __tagWINE_FRAME *ExceptionRecord;
@@ -180,7 +187,7 @@ typedef struct __tagWINE_FRAME
 
 #endif /* USE_COMPILER_EXCEPTIONS */
 
-static __inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
 #if defined(__GNUC__) && defined(__i386__)
     EXCEPTION_REGISTRATION_RECORD *prev;
@@ -191,13 +198,13 @@ static __inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGI
     return prev;
 #else
     NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
-    frame->Prev = (void *)teb->ExceptionList;
-    teb->ExceptionList = (void *)frame;
+    frame->Prev = teb->ExceptionList;
+    teb->ExceptionList = frame;
     return frame->Prev;
 #endif
 }
 
-static __inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
 #if defined(__GNUC__) && defined(__i386__)
     __asm__ __volatile__(".byte 0x64\n\tmovl %0,(0)"
@@ -206,113 +213,10 @@ static __inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGIS
 
 #else
     NT_TIB *teb = (NT_TIB *)NtCurrentTeb();
-    teb->ExceptionList = (void *)frame->Prev;
+    teb->ExceptionList = frame->Prev;
     return frame->Prev;
 #endif
 }
-
-#ifndef USE_COMPILER_EXCEPTIONS
-
-static inline void DECLSPEC_NORETURN __wine_unwind_frame( EXCEPTION_RECORD *record,
-                                                          EXCEPTION_REGISTRATION_RECORD *frame )
-{
-    __WINE_FRAME *wine_frame = (__WINE_FRAME *)frame;
-
-    /* hack to make GetExceptionCode() work in handler */
-    wine_frame->ExceptionCode   = record->ExceptionCode;
-    wine_frame->ExceptionRecord = wine_frame;
-
-#if defined(__GNUC__) && defined(__i386__)
-    {
-        /* RtlUnwind clobbers registers on Windows */
-        int dummy1, dummy2, dummy3;
-        __asm__ __volatile__("pushl %%ebp\n\t"
-                             "pushl %%ebx\n\t"
-                             "pushl $0\n\t"
-                             "pushl %2\n\t"
-                             "pushl $0\n\t"
-                             "pushl %1\n\t"
-                             "call *%0\n\t"
-                             "popl %%ebx\n\t"
-                             "popl %%ebp"
-                             : "=a" (dummy1), "=S" (dummy2), "=D" (dummy3)
-                             : "0" (RtlUnwind), "1" (frame), "2" (record)
-                             : "ecx", "edx", "memory" );
-    }
-#else
-    RtlUnwind( frame, 0, record, 0 );
-#endif
-    __wine_pop_frame( frame );
-    longjmp( wine_frame->jmp, 1 );
-}
- 
-static __inline EXCEPTION_DISPOSITION
-__wine_exception_handler( struct _EXCEPTION_RECORD *record, void *frame,
-                          struct _CONTEXT *context, void *pdispatcher )
-{
-    __WINE_FRAME *wine_frame = (__WINE_FRAME *)frame;
-
-    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND | EH_NESTED_CALL))
-        return ExceptionContinueSearch;
-
-    if (wine_frame->u.filter == (void *)1)  /* special hack for page faults */
-    {
-        if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
-            return ExceptionContinueSearch;
-    }
-    else if (wine_frame->u.filter)
-    {
-        EXCEPTION_POINTERS ptrs;
-        ptrs.ExceptionRecord = record;
-        ptrs.ContextRecord = context;
-        switch(wine_frame->u.filter( &ptrs ))
-        {
-        case EXCEPTION_CONTINUE_SEARCH:
-            return ExceptionContinueSearch;
-        case EXCEPTION_CONTINUE_EXECUTION:
-            return ExceptionContinueExecution;
-        case EXCEPTION_EXECUTE_HANDLER:
-            break;
-        default:
-            break;
-        }
-    }
-    __wine_unwind_frame( record, frame );
-}
-
-static __inline EXCEPTION_DISPOSITION
-__wine_exception_handler_page_fault( struct _EXCEPTION_RECORD *record, void *frame,
-                          struct _CONTEXT *context, void *pdispatcher )
-{
-    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND | EH_NESTED_CALL))
-        return ExceptionContinueSearch;
-    if (record->ExceptionCode != STATUS_ACCESS_VIOLATION)
-        return ExceptionContinueSearch;
-    __wine_unwind_frame( record, frame );
-}
-
-static __inline EXCEPTION_DISPOSITION
-__wine_exception_handler_all( struct _EXCEPTION_RECORD *record, void *frame,
-                          struct _CONTEXT *context, void *pdispatcher )
-{
-    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND | EH_NESTED_CALL))
-        return ExceptionContinueSearch;
-    __wine_unwind_frame( record, frame );
-}
-
-static __inline EXCEPTION_DISPOSITION
-__wine_finally_handler( struct _EXCEPTION_RECORD *record, void *frame,
-                        struct _CONTEXT *context, void *pdispatcher )
-{
-    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND))
-    {
-        __WINE_FRAME *wine_frame = (__WINE_FRAME *)frame;
-        wine_frame->u.finally_func( FALSE );
-    }
-    return ExceptionContinueSearch;
-}
-
-#endif /* USE_COMPILER_EXCEPTIONS */
 
 /* Exception handling flags - from OS/2 2.0 exception handling */
 
@@ -335,11 +239,104 @@ __wine_finally_handler( struct _EXCEPTION_RECORD *record, void *frame,
 
 extern void __wine_enter_vm86( CONTEXT *context );
 
-static __inline WINE_EXCEPTION_FILTER(__wine_pagefault_filter)
+#ifndef USE_COMPILER_EXCEPTIONS
+
+/* wrapper for RtlUnwind since it clobbers registers on Windows */
+static inline void __wine_rtl_unwind( EXCEPTION_REGISTRATION_RECORD* frame, EXCEPTION_RECORD *record )
 {
-    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
-        return EXCEPTION_CONTINUE_SEARCH;
-    return EXCEPTION_EXECUTE_HANDLER;
+#if defined(__GNUC__) && defined(__i386__)
+    int dummy1, dummy2, dummy3;
+    __asm__ __volatile__("pushl %%ebp\n\t"
+                         "pushl %%ebx\n\t"
+                         "pushl $0\n\t"
+                         "pushl %2\n\t"
+                         "pushl $0\n\t"
+                         "pushl %1\n\t"
+                         "call *%0\n\t"
+                         "popl %%ebx\n\t"
+                         "popl %%ebp"
+                         : "=a" (dummy1), "=S" (dummy2), "=D" (dummy3)
+                         : "0" (RtlUnwind), "1" (frame), "2" (record)
+                         : "ecx", "edx", "memory" );
+#else
+    RtlUnwind( frame, 0, record, 0 );
+#endif
 }
+
+static inline void DECLSPEC_NORETURN __wine_unwind_frame( EXCEPTION_RECORD *record,
+                                                          EXCEPTION_REGISTRATION_RECORD *frame )
+{
+    __WINE_FRAME *wine_frame = (__WINE_FRAME *)frame;
+
+    /* hack to make GetExceptionCode() work in handler */
+    wine_frame->ExceptionCode   = record->ExceptionCode;
+    wine_frame->ExceptionRecord = wine_frame;
+
+    __wine_rtl_unwind( frame, record );
+    __wine_pop_frame( frame );
+    siglongjmp( wine_frame->jmp, 1 );
+}
+ 
+static inline EXCEPTION_DISPOSITION
+__wine_exception_handler( struct _EXCEPTION_RECORD *record, void *frame,
+                          struct _CONTEXT *context, void *pdispatcher )
+{
+    __WINE_FRAME *wine_frame = (__WINE_FRAME *)frame;
+    EXCEPTION_POINTERS ptrs;
+
+    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND | EH_NESTED_CALL))
+        return ExceptionContinueSearch;
+
+    ptrs.ExceptionRecord = record;
+    ptrs.ContextRecord = context;
+    switch(wine_frame->u.filter( &ptrs ))
+    {
+    case EXCEPTION_CONTINUE_SEARCH:
+        return ExceptionContinueSearch;
+    case EXCEPTION_CONTINUE_EXECUTION:
+        return ExceptionContinueExecution;
+    case EXCEPTION_EXECUTE_HANDLER:
+        break;
+    }
+    __wine_unwind_frame( record, frame );
+}
+
+static inline EXCEPTION_DISPOSITION
+__wine_exception_handler_page_fault( struct _EXCEPTION_RECORD *record, void *frame,
+                          struct _CONTEXT *context, void *pdispatcher )
+{
+    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND | EH_NESTED_CALL))
+        return ExceptionContinueSearch;
+    if (record->ExceptionCode != STATUS_ACCESS_VIOLATION)
+        return ExceptionContinueSearch;
+    __wine_unwind_frame( record, frame );
+}
+
+static inline EXCEPTION_DISPOSITION
+__wine_exception_handler_all( struct _EXCEPTION_RECORD *record, void *frame,
+                          struct _CONTEXT *context, void *pdispatcher )
+{
+    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND | EH_NESTED_CALL))
+        return ExceptionContinueSearch;
+    __wine_unwind_frame( record, frame );
+}
+
+static inline EXCEPTION_DISPOSITION
+__wine_finally_handler( struct _EXCEPTION_RECORD *record, void *frame,
+                        struct _CONTEXT *context, void *pdispatcher )
+{
+    if (record->ExceptionFlags & (EH_UNWINDING | EH_EXIT_UNWIND))
+    {
+        __WINE_FRAME *wine_frame = (__WINE_FRAME *)frame;
+        wine_frame->u.finally_func( FALSE );
+    }
+    return ExceptionContinueSearch;
+}
+
+#endif /* USE_COMPILER_EXCEPTIONS */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* __WINE_WINE_EXCEPTION_H */

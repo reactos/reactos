@@ -28,49 +28,9 @@ PcNewDmaChannel(
     return STATUS_UNSUCCESSFUL;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcNewInterruptSync(
-    OUT PINTERRUPTSYNC* OUtInterruptSync,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  PRESOURCELIST ResourceList,
-    IN  ULONG ResourceIndex,
-    IN  INTERRUPTSYNCMODE Mode)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcNewServiceGroup(
-    OUT PSERVICEGROUP* OutServiceGroup,
-    IN  PUNKNOWN OuterUnknown OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-
 /* ===============================================================
     Power Management
 */
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcRegisterAdapterPowerManagement(
-    IN  PUNKNOWN pUnknown,
-    IN  PVOID pvContext1)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
 
 /*
  * @unimplemented
@@ -100,38 +60,6 @@ PcCompletePendingPropertyRequest(
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
-
-
-/* ===============================================================
-    I/O Timeouts
-*/
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcRegisterIoTimeout(
-    IN  PDEVICE_OBJECT pDeviceObject,
-    IN  PIO_TIMER_ROUTINE pTimerRoutine,
-    IN  PVOID pContext)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcUnregisterIoTimeout(
-    IN  PDEVICE_OBJECT pDeviceObject,
-    IN  PIO_TIMER_ROUTINE pTimerRoutine,
-    IN  PVOID pContext)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
 
 /* ===============================================================
     Physical Connections
@@ -190,17 +118,3 @@ PcRegisterPhysicalConnectionToExternal(
 /*
  * @unimplemented
  */
-
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcRegisterSubdevice(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PWCHAR Name,
-    IN  PUNKNOWN Unknown)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}

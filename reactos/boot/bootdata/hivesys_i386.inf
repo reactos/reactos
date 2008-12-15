@@ -416,6 +416,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10029",0x00000000,"c_10029
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10079",0x00000000,"c_10079.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10081",0x00000000,"c_10081.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","20866",0x00000000,"c_20866.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","21866",0x00000000,"c_21866.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28591",0x00000000,"c_28591.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28592",0x00000000,"c_28592.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28593",0x00000000,"c_28593.nls"
@@ -425,6 +426,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28596",0x00000000,"c_28596
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28597",0x00000000,"c_28597.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28598",0x00000000,"c_28598.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28599",0x00000000,"c_28599.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28600",0x00000000,"c_28600.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28603",0x00000000,"c_28603.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28604",0x00000000,"c_28604.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28605",0x00000000,"c_28605.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","28606",0x00000000,"c_28606.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","ACP",0x00000000,"1252"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","OEMCP",0x00000000,"437"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","MACCP",0x00000000,"10000"
@@ -884,6 +890,14 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 
+; Green driver
+;HKLM,"SYSTEM\CurrentControlSet\Services\green","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\green","Group",0x00000000,"Extended base"
+;HKLM,"SYSTEM\CurrentControlSet\Services\green","ImagePath",0x00020000,"system32\drivers\green.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\green","Start",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\green","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\green\Parameters","AttachedDevice",0x00000000,"\Device\Serial0"
+
 ; i8042 port driver
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Group",0x00000000,"Keyboard Port"
@@ -954,12 +968,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; NetLogon
-HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","DisplayName",0x00000000,"Net Logon"
-HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Description",0x00000000,"Sets up a secure channel to a domain controller for domain authentication"
-HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
-HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","DisplayName",0x00000000,"Net Logon"
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Description",0x00000000,"Sets up a secure channel to a domain controller for domain authentication"
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
 
 ; Named Pipe filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000

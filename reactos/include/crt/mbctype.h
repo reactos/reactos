@@ -14,29 +14,16 @@ extern "C" {
 #endif
 
   /* CRT stuff */
-#if 1
-#if defined (_DLL) && defined (_M_IX86)
+#if defined(_M_CEE_PURE)
   /* Retained for compatibility with VC++ 5.0 and earlier versions */
   _CRTIMP unsigned char * __cdecl __p__mbctype(void);
   _CRTIMP unsigned char * __cdecl __p__mbcasemap(void);
-#endif  /* defined (_DLL) && defined (_M_IX86) */
-#endif
-#ifndef _mbctype
-#ifdef _MSVCRT_
-  extern unsigned char _mbctype[257];
+  #define _mbctype (__p__mbctype())
+  #define _mbcasemap (__p__mbcasemap())
 #else
-#define _mbctype	(*_imp___mbctype)
-  extern unsigned char **_imp___mbctype;
-#endif
-#endif
-#ifndef _mbcasemap
-#ifdef _MSVCRT_
-  extern unsigned char *_mbcasemap;
-#else
-#define _mbcasemap	(*_imp___mbcasemap)
-  extern unsigned char **_imp___mbcasemap;
-#endif
-#endif
+  _CRTIMP extern unsigned char _mbctype[];
+  _CRTIMP extern unsigned char _mbcasemap[];
+#endif // defined(_M_CEE_PURE)
 
   /* CRT stuff */
 #if 1

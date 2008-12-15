@@ -41,9 +41,9 @@ static VOID CloseDefaultKeys(VOID);
         NtClose(Handle);                                                       \
     }
 #define IsPredefKey(HKey)                                                      \
-    (((ULONG_PTR)(HKey) & 0xF0000000) == 0x80000000)
+    (((ULONG)(HKey) & 0xF0000000) == 0x80000000)
 #define GetPredefKeyIndex(HKey)                                                \
-    ((ULONG_PTR)(HKey) & 0x0FFFFFFF)
+    ((ULONG)(HKey) & 0x0FFFFFFF)
 
 static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
 static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
@@ -1030,6 +1030,7 @@ RegCreateKeyExA(HKEY hKey,
     {
         return RtlNtStatusToDosError(Status);
     }
+
     TRACE("ParentKey %p\n", ParentKey);
 
     if (lpClass != NULL)
@@ -1103,6 +1104,7 @@ RegCreateKeyExW(HKEY hKey,
     {
         return RtlNtStatusToDosError(Status);
     }
+
     TRACE("ParentKey %p\n", ParentKey);
 
     RtlInitUnicodeString(&ClassString,

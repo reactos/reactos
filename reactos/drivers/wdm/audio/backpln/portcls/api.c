@@ -30,3 +30,46 @@ PcGetTimeInterval(
     return (CurrentTime.QuadPart - Since);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS NTAPI
+PcRegisterIoTimeout(
+    IN  PDEVICE_OBJECT pDeviceObject,
+    IN  PIO_TIMER_ROUTINE pTimerRoutine,
+    IN  PVOID pContext)
+{
+    NTSTATUS Status;
+
+
+    /* FIXME 
+     * check if timer is already used 
+     */
+
+    Status = IoInitializeTimer(pDeviceObject, pTimerRoutine, pContext);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IoInitializeTimer failed with %x\n", Status);
+        return Status;
+    }
+
+    IoStartTimer(pDeviceObject);
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS NTAPI
+PcUnregisterIoTimeout(
+    IN  PDEVICE_OBJECT pDeviceObject,
+    IN  PIO_TIMER_ROUTINE pTimerRoutine,
+    IN  PVOID pContext)
+{
+    /* FIXME 
+     * check if timer is already used 
+     */
+
+    IoStopTimer(pDeviceObject);
+    return STATUS_SUCCESS;
+}
