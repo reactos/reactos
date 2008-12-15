@@ -785,7 +785,11 @@ typedef struct _CRITICAL_SECTION_DEBUG {
 	LIST_ENTRY ProcessLocksList;
 	DWORD EntryCount;
 	DWORD ContentionCount;
-	DWORD Spare [2];
+//#ifdef __WINESRC__ //not all wine code is marked so
+	DWORD_PTR Spare[8/sizeof(DWORD_PTR)];/* in Wine they store a string here */
+//#else
+	//WORD SpareWORD;
+//#endif
 } CRITICAL_SECTION_DEBUG,*PCRITICAL_SECTION_DEBUG;
 typedef struct _CRITICAL_SECTION {
 	PCRITICAL_SECTION_DEBUG DebugInfo;
