@@ -8,6 +8,7 @@
 #define _SEH2_GetExceptionCode() (0)
 #define _SEH2_YIELD(x) x
 #define _SEH2_LEAVE
+#define _SEH2_FINALLY
 
 
 
