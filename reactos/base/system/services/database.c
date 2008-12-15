@@ -452,7 +452,7 @@ WaitForLSA(VOID)
     HANDLE hEvent;
     DWORD dwError;
 
-    DPRINT1("WaitForLSA() called\n");
+    DPRINT("WaitForLSA() called\n");
 
     hEvent = CreateEventW(NULL,
                           TRUE,
@@ -476,13 +476,13 @@ WaitForLSA(VOID)
         }
     }
 
-    DPRINT1("Wait for LSA!\n");
+    DPRINT("Wait for LSA!\n");
     WaitForSingleObject(hEvent, INFINITE);
-    DPRINT1("LSA is available!\n");
+    DPRINT("LSA is available!\n");
 
     CloseHandle(hEvent);
 
-    DPRINT1("WaitForLSA() done\n");
+    DPRINT("WaitForLSA() done\n");
 }
 
 
