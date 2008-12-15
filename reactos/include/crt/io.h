@@ -84,10 +84,10 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
 /* #endif */
 
 #ifdef _WIN64
-#define _findfirst64i32 _findfirst
-#define _findnext64i32 _findnext
-#define _findfirsti64 _findfirst64
-#define _findnexti64 _findnext64
+//#define _findfirst64i32 _findfirst
+//#define _findnext64i32 _findnext
+//#define _findfirsti64 _findfirst64
+//#define _findnexti64 _findnext64
 
 #else /* !_WIN64 */
 //#define _findfirst32 _findfirst
