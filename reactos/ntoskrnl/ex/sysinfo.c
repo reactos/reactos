@@ -905,11 +905,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
     }
 
     CurrentTime.QuadPart = KeQueryInterruptTime();
-#ifndef _M_AMD64
-    Prcb = KeGetPcr()->Prcb;
-#else
-    Prcb = KeGetPcr()->CurrentPrcb;
-#endif
+    Prcb = KeGetCurrentPrcb();
 
     for (i = 0; i < KeNumberProcessors; i++)
     {
