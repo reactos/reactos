@@ -7,7 +7,6 @@
 	<library>kernel32</library>
 	<file>_newmode.c</file>
 	<file>_wgetopt.c</file>
-	<file>argv.c</file>
 	<file>atonexit.c</file>
 	<file>binmode.c</file>
 	<file>charmax.c</file>
@@ -30,13 +29,13 @@
 	<file>xthdloc.c</file>
 	<file>xtxtmode.c</file>
 </module>
-<module name="mingw_main" type="staticlibrary" isstartuplib="true" allowwarnings="true" crt="dll">
+<module name="mingw_main" type="staticlibrary" isstartuplib="true" crt="dll">
 	<include base="mingw_common">include</include>
 	<file>crt0_c.c</file>
 	<file>crtexe.c</file>
 	<file>dllargv.c</file>
 </module>
-<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" allowwarnings="true" unicode="yes" crt="dll">
+<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" unicode="yes" crt="dll">
 	<include base="mingw_common">include</include>
 	<define name="WPRFLAG"/>
 	<file>crt0_w.c</file>
