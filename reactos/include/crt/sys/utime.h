@@ -107,7 +107,7 @@ extern "C" {
 #ifndef RC_INVOKED
  #ifdef _USE_32BIT_TIME_T
   __CRT_INLINE int __cdecl _utime32(const char *_Filename,struct __utimbuf32 *_Utimbuf) {
-    return _utime(_Filename,(struct __timbuf *)_Utimbuf);
+    return _utime(_Filename,(struct _utimbuf *)_Utimbuf);
   }
   __CRT_INLINE int __cdecl _futime32(int _Desc,struct __utimbuf32 *_Utimbuf) {
     return _futime(_Desc,(struct _utimbuf *)_Utimbuf);
