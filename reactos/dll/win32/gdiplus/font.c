@@ -195,6 +195,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
 
     (*font)->lfw.lfHeight = -textmet.tmHeight;
     (*font)->lfw.lfWeight = textmet.tmWeight;
+    (*font)->lfw.lfCharSet = textmet.tmCharSet;
 
     (*font)->height = 1; /* FIXME: need NEWTEXTMETRIC.ntmSizeEM here */
     (*font)->line_spacing = textmet.tmAscent + textmet.tmDescent + textmet.tmExternalLeading;

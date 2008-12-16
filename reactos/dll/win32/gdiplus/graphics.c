@@ -2456,6 +2456,19 @@ GpStatus WINGDIPAPI GdipGetInterpolationMode(GpGraphics *graphics,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipGetNearestColor(GpGraphics *graphics, ARGB* argb)
+{
+    if(!graphics || !argb)
+        return InvalidParameter;
+
+    if(graphics->busy)
+        return ObjectBusy;
+
+    FIXME("(%p, %p): stub\n", graphics, argb);
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipGetPageScale(GpGraphics *graphics, REAL *scale)
 {
     TRACE("(%p, %p)\n", graphics, scale);
