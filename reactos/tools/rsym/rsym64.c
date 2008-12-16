@@ -205,6 +205,13 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
             State->FramePtr *= 8; // data alignment
             State->IsUwop = 1;
             break;
+        case DW_CFA_GNU_args_size:
+        {
+            unsigned long argsize;
+            printf("Warning, DW_CFA_GNU_args_size is unimplemented\n");
+            Length += DwDecodeUleb128(&argsize, pc + Length);
+            break;
+        }
         /* PSEH types */
         case 0x1c:
             printf("found 1c at %lx\n", State->Location);
@@ -575,7 +582,7 @@ ParsePEHeaders(PFILE_INFO File)
     if ((File->DosHeader->e_magic != IMAGE_DOS_MAGIC) || File->DosHeader->e_lfanew == 0L)
     {
         perror("Input file is not a PE image.\n");
-        return 0;
+        return -1;
     }
 
     /* Locate PE file header  */
@@ -584,7 +591,7 @@ ParsePEHeaders(PFILE_INFO File)
     if (File->FileHeader->Machine != IMAGE_FILE_MACHINE_AMD64)
     {
         perror("Input file is not an x64 image.\n");
-        return 0;
+        return -1;
     }
 
     /* Locate optional header */
@@ -615,7 +622,7 @@ ParsePEHeaders(PFILE_INFO File)
     if (!File->FileHeader->PointerToSymbolTable)
     {
         fprintf(stderr, "No symbol table.\n");
-        return 0;
+        return -1;
     }
 
     File->Symbols = File->FilePtr + File->FileHeader->PointerToSymbolTable;
@@ -664,6 +671,7 @@ int main(int argc, char* argv[])
     char* pszOutFile;
     FILE_INFO File;
     FILE* outfile;
+    int ret;
 
     if (argc != 3)
     {
@@ -681,10 +689,11 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    if (!ParsePEHeaders(&File))
+    ret = ParsePEHeaders(&File);
+    if (ret != 1)
     {
         free(File.FilePtr);
-        exit(1);
+        exit(ret == -1 ? 1 : 0);
     }
 
     File.AlignBuf = malloc(File.OptionalHeader->FileAlignment);
