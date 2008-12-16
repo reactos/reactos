@@ -20,14 +20,13 @@ KsCreateAllocator(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI NTSTATUS NTAPI
 KsCreateDefaultAllocator(
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    return KsCreateDefaultAllocatorEx(Irp, NULL, NULL, NULL, NULL, NULL);
 }
 
 /*
@@ -54,7 +53,14 @@ KsCreateDefaultAllocatorEx(
     IN  PFNKSINITIALIZEALLOCATOR InitializeAllocator OPTIONAL,
     IN  PFNKSDELETEALLOCATOR DeleteAllocator OPTIONAL)
 {
-    UNIMPLEMENTED;
+    NTSTATUS Status;
+    PKSALLOCATOR_FRAMING AllocatorFraming;
+
+   Status = KsValidateAllocatorCreateRequest(Irp, &AllocatorFraming);
+   if (!NT_SUCCESS(Status))
+       return STATUS_INVALID_PARAMETER;
+
+
     return STATUS_UNSUCCESSFUL;
 }
 

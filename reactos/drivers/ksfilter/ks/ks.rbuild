@@ -6,6 +6,7 @@
 	<include base="ks">../include</include>
 	<importlibrary definition="ks.spec" />
 	<library>ntoskrnl</library>
+	<library>hal</library>
 	<define name="BUILDING_KS" />
 	<define name="_NTDDK_" />
 	<define name="_COMDDK_" />
