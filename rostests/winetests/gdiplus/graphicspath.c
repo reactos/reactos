@@ -726,6 +726,15 @@ static path_test_t addcurve_path2[] = {
     {23.3, 13.3, PathPointTypeBezier, 0, 0}, /*10*/
     {30.0, 10.0, PathPointTypeBezier, 0, 0}  /*11*/
     };
+static path_test_t addcurve_path3[] = {
+    {10.0, 10.0, PathPointTypeStart,  0, 0}, /*0*/
+    {13.3, 16.7, PathPointTypeBezier, 0, 1}, /*1*/
+    {3.3,  20.0, PathPointTypeBezier, 0, 0}, /*2*/
+    {10.0, 20.0, PathPointTypeBezier, 0, 0}, /*3*/
+    {16.7, 20.0, PathPointTypeBezier, 0, 0}, /*4*/
+    {23.3, 13.3, PathPointTypeBezier, 0, 0}, /*5*/
+    {30.0, 10.0, PathPointTypeBezier, 0, 0}  /*6*/
+    };
 static void test_addcurve(void)
 {
     GpStatus status;
@@ -765,6 +774,37 @@ static void test_addcurve(void)
     status = GdipAddPathCurve2(path, points, 4, 1.0);
     expect(Ok, status);
     ok_path(path, addcurve_path2, sizeof(addcurve_path2)/sizeof(path_test_t), FALSE);
+
+    /* NULL args */
+    GdipResetPath(path);
+    status = GdipAddPathCurve3(NULL, NULL, 0, 0, 0, 0.0);
+    expect(InvalidParameter, status);
+    status = GdipAddPathCurve3(path, NULL, 0, 0, 0, 0.0);
+    expect(InvalidParameter, status);
+    /* wrong count, offset.. */
+    status = GdipAddPathCurve3(path, points, 0, 0, 0, 0.0);
+    expect(InvalidParameter, status);
+    status = GdipAddPathCurve3(path, points, 4, 0, 0, 0.0);
+    expect(InvalidParameter, status);
+    status = GdipAddPathCurve3(path, points, 4, 0, 4, 0.0);
+    expect(InvalidParameter, status);
+    status = GdipAddPathCurve3(path, points, 4, 1, 3, 0.0);
+    expect(InvalidParameter, status);
+    status = GdipAddPathCurve3(path, points, 4, 1, 0, 0.0);
+    expect(InvalidParameter, status);
+    status = GdipAddPathCurve3(path, points, 4, 3, 1, 0.0);
+    expect(InvalidParameter, status);
+
+    /* use all points */
+    status = GdipAddPathCurve3(path, points, 4, 0, 3, 1.0);
+    expect(Ok, status);
+    ok_path(path, addcurve_path, sizeof(addcurve_path)/sizeof(path_test_t), FALSE);
+    GdipResetPath(path);
+
+    status = GdipAddPathCurve3(path, points, 4, 1, 2, 1.0);
+    expect(Ok, status);
+    ok_path(path, addcurve_path3, sizeof(addcurve_path3)/sizeof(path_test_t), FALSE);
+
     GdipDeletePath(path);
 }
 

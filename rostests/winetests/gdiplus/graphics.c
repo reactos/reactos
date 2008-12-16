@@ -485,6 +485,7 @@ static void test_Get_Release_DC(void)
     GpRegion *clip;
     INT i;
     BOOL res;
+    ARGB color = 0x00000000;
 
     pt[0].X = 10;
     pt[0].Y = 10;
@@ -658,6 +659,8 @@ static void test_Get_Release_DC(void)
     expect(ObjectBusy, status); status = Ok;
     status = GdipGetInterpolationMode(graphics, &intmode);
     expect(ObjectBusy, status); status = Ok;
+    status = GdipGetNearestColor(graphics, &color);
+    expect(ObjectBusy, status); status = Ok;
     status = GdipGetPageScale(graphics, &r);
     expect(ObjectBusy, status); status = Ok;
     status = GdipGetPageUnit(graphics, &unit);
@@ -743,7 +746,6 @@ static void test_Get_Release_DC(void)
     GdipDeleteBrush((GpBrush*)brush);
     GdipDeleteRegion(region);
     GdipDeleteMatrix(m);
-    GdipDeleteRegion(region);
 
     ReleaseDC(0, hdc);
 }

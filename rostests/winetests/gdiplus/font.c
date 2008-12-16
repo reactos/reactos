@@ -134,7 +134,7 @@ static void test_logfont(void)
     expect(0, lfw2.lfItalic);
     expect(0, lfw2.lfUnderline);
     expect(0, lfw2.lfStrikeOut);
-    expect(0, lfw2.lfCharSet);
+    expect(GetTextCharset(hdc), lfw2.lfCharSet);
     expect(0, lfw2.lfOutPrecision);
     expect(0, lfw2.lfClipPrecision);
     expect(0, lfw2.lfQuality);
@@ -164,7 +164,7 @@ static void test_logfont(void)
     expect(TRUE, lfw2.lfItalic);
     expect(TRUE, lfw2.lfUnderline);
     expect(TRUE, lfw2.lfStrikeOut);
-    expect(0, lfw2.lfCharSet);
+    expect(GetTextCharset(hdc), lfw2.lfCharSet);
     expect(0, lfw2.lfOutPrecision);
     expect(0, lfw2.lfClipPrecision);
     expect(0, lfw2.lfQuality);

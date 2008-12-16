@@ -670,7 +670,6 @@ static void test_combinereplace(void)
     expect_magic((DWORD*)(buf + 2));
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_INFINITE_RECT);
-    GdipDeletePath(path);
     GdipDeleteRegion(region2);
 
     /* more complex case : replace with a combined region */
