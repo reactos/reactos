@@ -89,6 +89,7 @@ KdpServiceDispatcher(ULONG Service,
                 default:
                     break;
             }
+            break;
         }
 
         /* Special  case for stack frame dumps */
