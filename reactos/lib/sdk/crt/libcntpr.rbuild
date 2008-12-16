@@ -20,6 +20,12 @@
 				<file>seh.s</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>chkstk_asm.s</file>
+				<file>seh.s</file>
+			</directory>
+		</if>
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>chkstk_asm.s</file>
@@ -52,6 +58,21 @@
 				<file>sin_asm.s</file>
 				<file>sqrt_asm.s</file>
 				<file>tan_asm.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>alldiv.S</file>
+				<file>atan.S</file>
+				<file>ceil.S</file>
+				<file>cos.S</file>
+				<file>fabs.S</file>
+				<file>floor.S</file>
+				<file>log.S</file>
+				<file>pow.S</file>
+				<file>sin.S</file>
+				<file>sqrt.S</file>
+				<file>tan.S</file>
 			</directory>
 		</if>
 		<file>abs.c</file>
