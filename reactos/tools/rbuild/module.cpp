@@ -1454,6 +1454,14 @@ Library::Library ( const Module& _module,
 	  name(_name),
 	  importedModule(_module.project.LocateModule(_name))
 {
+	if ( !importedModule )
+	{
+		throw XMLInvalidBuildFileException (
+			"<internal>",
+			"module '%s' trying to import non-existant module '%s'",
+			module.name.c_str(),
+			name.c_str() );
+	}
 }
 
 void
