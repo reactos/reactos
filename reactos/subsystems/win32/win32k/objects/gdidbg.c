@@ -1,6 +1,6 @@
 #ifdef GDI_DEBUG
 
-NTSYSAPI VOID APIENTRY KeRosDumpStackFrames(PULONG, ULONG);
+#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl(TAG('R', 'o', 's', 'D'), (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
 
 static int leak_reported = 0;

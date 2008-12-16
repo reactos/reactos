@@ -90,6 +90,13 @@ KdpServiceDispatcher(ULONG Service,
                     break;
             }
         }
+
+        /* Special  case for stack frame dumps */
+        case TAG('R', 'o', 's', 'D'):
+        {
+            KeRosDumpStackFrames((PULONG)Buffer1, Buffer1Length);
+            break;
+        }
 #endif
         default:
             HalDisplayString ("Invalid debug service call!\n");

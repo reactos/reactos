@@ -1030,7 +1030,6 @@
 @ stdcall READ_REGISTER_UCHAR(ptr)
 @ stdcall READ_REGISTER_ULONG(ptr)
 @ stdcall READ_REGISTER_USHORT(ptr)
-@ stdcall KeRosDumpStackFrames(ptr long)
 @ stdcall RtlAbsoluteToSelfRelativeSD(ptr ptr ptr)
 @ stdcall RtlAddAccessAllowedAce(ptr long long ptr)
 @ stdcall RtlAddAccessAllowedAceEx(ptr long long long ptr)
