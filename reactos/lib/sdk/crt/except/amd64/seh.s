@@ -54,31 +54,3 @@ __except_handler2:
 __except_handler3:
     ret
 .endfunc
-
-//
-//
-// REMOVE ME REMOVE ME REMOVE ME REMOVE ME REMOVE ME REMOVE ME REMOVE ME
-//
-//
-.func RtlpGetStackLimits@8
-.globl _RtlpGetStackLimits@8
-_RtlpGetStackLimits@8:
-
-    /* Get the current thread */
-    mov eax, [fs:KPCR_CURRENT_THREAD]
-
-    /* Get the stack limits */
-    mov ecx, [eax+KTHREAD_STACK_LIMIT]
-    mov edx, [eax+KTHREAD_INITIAL_STACK]
-    sub edx, SIZEOF_FX_SAVE_AREA
-
-    /* Return them */
-    mov eax, [esp+4]
-    mov [eax], ecx
-
-    mov eax, [esp+8]
-    mov [eax], edx
-
-    /* return */
-    ret 8
-.endfunc
