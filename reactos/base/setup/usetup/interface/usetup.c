@@ -45,6 +45,7 @@ LONG UnattendFormatPartition = 0;
 LONG AutoPartition = 0;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
 PWCHAR SelectedLanguageId;
+WCHAR LocaleID[9];
 WCHAR DefaultLanguage[20];
 WCHAR DefaultKBLayout[20];
 BOOLEAN RepairUpdateFlag = FALSE;
@@ -555,8 +556,16 @@ CheckUnattendedSetup(VOID)
         }
     }
 
-    SetupCloseInfFile(UnattendInf);
+	/* search for LocaleID in the 'Unattend' section*/
+	if (SetupFindFirstLineW (UnattendInf, L"Unattend", L"LocaleID", &Context)){
+		if (INF_GetData (&Context, NULL, &Value)){
+			LONG Id = wcstol(Value, NULL, 16);
+			swprintf(LocaleID,L"%08lx", Id);			
+       }       
+    }
 
+	SetupCloseInfFile(UnattendInf);
+	
     DPRINT("Running unattended setup\n");
 }
 
@@ -797,8 +806,44 @@ SetupStartPage(PINPUT_RECORD Ir)
         KeyboardList = CreateKeyboardDriverList(SetupInf);
         LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
         LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
+		
+		/* new part */
+		
+		wcscpy(SelectedLanguageId,LocaleID);
+		
+		PGENERIC_LIST_ENTRY ListEntry;
+				
+		/* first we hack LanguageList */
+		ListEntry = GetFirstListEntry(LanguageList);
 
-        return INSTALL_INTRO_PAGE;
+		while (ListEntry != NULL)
+		{
+			if (!wcscmp(LocaleID, GetListEntryUserData(ListEntry)))
+			{
+				DPRINT("found %S in LanguageList\n",GetListEntryUserData(ListEntry));
+				SetCurrentListEntry(LanguageList, ListEntry);
+				break;
+			}
+
+			ListEntry = GetNextListEntry(ListEntry);
+		}
+		/* now LayoutList */
+		ListEntry = GetFirstListEntry(LayoutList);
+
+		while (ListEntry != NULL)
+		{
+			if (!wcscmp(LocaleID, GetListEntryUserData(ListEntry)))
+			{
+				DPRINT("found %S in LayoutList\n",GetListEntryUserData(ListEntry));
+				SetCurrentListEntry(LayoutList, ListEntry);
+				break;
+			}
+
+			ListEntry = GetNextListEntry(ListEntry);
+		}
+        SetConsoleCodePage();
+
+	    return INSTALL_INTRO_PAGE;
     }
 
     return LANGUAGE_PAGE;
@@ -3235,14 +3280,16 @@ RegistryPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    /* Update keyboard layout settings */
-    CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
-    if (!ProcessKeyboardLayoutRegistry(LayoutList))
-    {
-        MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+    if (!IsUnattendedSetup){
+        
+       /* Update keyboard layout settings */
+       CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
+       if (!ProcessKeyboardLayoutRegistry(LayoutList))
+       {
+           MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
+           return QUIT_PAGE;
+       }
     }
-
     /* Add codepage information to registry */
     CONSOLE_SetStatusText(MUIGetString(STRING_CODEPAGEINFOUPDATE));
     if (!AddCodePage())
