@@ -246,3 +246,6 @@
 //#include "nls/cym.nls"   /* 0x0492  LANG_WELSH, SUBLANG_NEUTRAL */
 
 //#include "nls/brf.nls"   /* 0x0493  LANG_BRETON, SUBLANG_NEUTRAL */
+
+#include "lang/en-US.rc"
+#include "lang/ru-RU.rc"
