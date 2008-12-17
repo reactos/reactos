@@ -398,6 +398,8 @@ drivers\filesystems\npfs\npfs.sys                   2
 drivers\input\mouclass\mouclass.sys                 2
 drivers\input\sermouse\sermouse.sys                 2
 
+drivers\ksfilter\ks\ks.sys                          2
+
 drivers\network\afd\afd.sys                         2
 drivers\network\ndis\ndis.sys                       2
 drivers\network\tcpip\tcpip.sys                     2
@@ -423,6 +425,7 @@ drivers\video\miniport\vga\vgamp.sys                2
 drivers\video\miniport\vbe\vbemp.sys                2
 drivers\video\videoprt\videoprt.sys                 2
 
+drivers\wdm\audio\backpln\portcls.sys               2
 drivers\wmi\wmilib.sys                              2
 
 ; Media
