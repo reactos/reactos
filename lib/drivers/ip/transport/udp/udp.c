@@ -47,8 +47,6 @@ NTSTATUS AddUDPHeaderIPv4(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Build UDP header */
-    UDPHeader = (PUDP_HEADER)((ULONG_PTR)IPPacket->Data - sizeof(UDP_HEADER));
     /* Port values are already big-endian values */
     UDPHeader->SourcePort = LocalPort;
     UDPHeader->DestPort   = RemotePort;
@@ -56,8 +54,6 @@ NTSTATUS AddUDPHeaderIPv4(
     UDPHeader->Checksum   = 0;
     /* Length of UDP header and data */
     UDPHeader->Length     = WH2N(DataLength + sizeof(UDP_HEADER));
-
-    IPPacket->Data        = ((PCHAR)UDPHeader) + sizeof(UDP_HEADER);
 
     TI_DbgPrint(MID_TRACE, ("Packet: %d ip %d udp %d payload\n",
 			    (PCHAR)UDPHeader - (PCHAR)IPPacket->Header,
