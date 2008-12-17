@@ -600,7 +600,7 @@ RtlAllocateHeap
 ;RtlAllocateMemoryBlockLookaside
 ;RtlAllocateMemoryZone
 RtlAnsiCharToUnicodeChar
-;RtlAnsiStringToUnicodeSize
+RtlAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize
 RtlAnsiStringToUnicodeString
 RtlAppendAsciizToString
 ;RtlAppendPathElement
@@ -699,8 +699,8 @@ RtlDeNormalizeProcessParams
 RtlDeactivateActivationContext
 RtlDeactivateActivationContextUnsafeFast
 ;RtlDebugPrintTimes
-;RtlDecodePointer
-;RtlDecodeSystemPointer
+RtlDecodePointer=RtlEncodePointer
+RtlDecodeSystemPointer=RtlEncodeSystemPointer
 RtlDecompressBuffer
 RtlDecompressFragment
 ;RtlDefaultNpAcl
@@ -987,7 +987,7 @@ RtlNumberGenericTableElementsAvl
 RtlNumberOfClearBits
 RtlNumberOfSetBits
 ;RtlNumberOfSetBitsUlongPtr
-;RtlOemStringToUnicodeSize
+RtlOemStringToUnicodeSize=RtlxOemStringToUnicodeSize
 RtlOemStringToUnicodeString
 RtlOemToUnicodeN
 RtlOpenCurrentUser
@@ -1028,7 +1028,7 @@ RtlQueueWorkItem
 RtlRaiseException
 RtlRaiseStatus
 RtlRandom
-RtlRandomEx
+RtlRandomEx=RtlRandom
 RtlReAllocateHeap
 ;RtlReadMemoryStream
 ;RtlReadOutOfProcessMemoryStream
@@ -1054,7 +1054,7 @@ RtlRemoveVectoredExceptionHandler
 ;RtlResetMemoryZone
 RtlResetRtlTranslations
 ;RtlRestoreContext
-;RtlRestoreLastWin32Error
+RtlRestoreLastWin32Error=RtlSetLastWin32Error
 ;RtlRetrieveNtUserPfn
 ;RtlRevertMemoryStream
 RtlRunDecodeUnicodeString
@@ -1140,11 +1140,11 @@ RtlTimeToTimeFields
 RtlTryEnterCriticalSection
 RtlUnhandledExceptionFilter
 ;RtlUnhandledExceptionFilter2
-;RtlUnicodeStringToAnsiSize
+RtlUnicodeStringToAnsiSize=RtlxUnicodeStringToAnsiSize
 RtlUnicodeStringToAnsiString
 RtlUnicodeStringToCountedOemString
 RtlUnicodeStringToInteger
-;RtlUnicodeStringToOemSize
+RtlUnicodeStringToOemSize=RtlxUnicodeStringToOemSize
 RtlUnicodeStringToOemString
 RtlUnicodeToCustomCPN
 RtlUnicodeToMultiByteN
