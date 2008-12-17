@@ -1,5 +1,5 @@
 <module name="psapi" type="win32dll" baseaddress="${BASEADDRESS_PSAPI}" installbase="system32" installname="psapi.dll">
-	<importlibrary definition="psapi.def" />
+	<importlibrary definition="psapi.spec" />
 	<include base="psapi">.</include>
 	<include base="psapi">include</include>
 	<define name="_DISABLE_TIDENTS" />

@@ -83,7 +83,7 @@ EnumProcessesCallback(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
   }
 
   /* return current process */
-  *Context->lpidProcess = (DWORD)CurrentProcess->UniqueProcessId;
+  *Context->lpidProcess = (DWORD_PTR)CurrentProcess->UniqueProcessId;
 
   /* go to next array slot */
   Context->lpidProcess++;
