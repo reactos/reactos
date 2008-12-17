@@ -1031,6 +1031,15 @@ localtime(const time_t * CPP_CONST timep)
   return &tm;
 }
 
+struct tm *
+_localtime64(const __time64_t * CPP_CONST timep)
+{
+  static struct tm tm;
+
+  localsub(timep, 0L, &tm);
+  return &tm;
+}
+
 /*
 ** gmtsub is to gmtime as localsub is to localtime.
 */

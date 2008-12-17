@@ -64,11 +64,16 @@
 			<directory name="amd64">
 				<file>alldiv.S</file>
 				<file>atan.S</file>
+				<file>atan2.S</file>
 				<file>ceil.S</file>
 				<file>cos.S</file>
+				<file>exp.S</file>
 				<file>fabs.S</file>
 				<file>floor.S</file>
+				<file>fmod.S</file>
+				<file>ldexp.S</file>
 				<file>log.S</file>
+				<file>log10.S</file>
 				<file>pow.S</file>
 				<file>sin.S</file>
 				<file>sqrt.S</file>

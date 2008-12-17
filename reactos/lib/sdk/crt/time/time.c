@@ -33,6 +33,18 @@ time_t time(time_t* t)
 	return tt;
 }
 
+__time64_t _time64(__time64_t* t)
+{
+	FILETIME  SystemTime;
+	DWORD Remainder;
+	__time64_t tt;
+	GetSystemTimeAsFileTime(&SystemTime);
+	tt = FileTimeToUnixTime(&SystemTime,&Remainder);
+	if (t)
+		*t = tt;
+	return tt;
+}
+
 /***********************************************************************
  *           DOSFS_UnixTimeToFileTime
  *
