@@ -1638,6 +1638,10 @@ typedef IDrmPort2 *PDRMPORT2;
 #undef INTERFACE
 #define INTERFACE IPortClsVersion
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+DEFINE_GUID(IID_IPortClsVersion, 0x7D89A7BBL, 0x869B, 0x4567, 0x8D, 0xBE, 0x1E, 0x16, 0x8C, 0xC8, 0x53, 0xDE);
+#endif
+
 DECLARE_INTERFACE_(IPortClsVersion, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
