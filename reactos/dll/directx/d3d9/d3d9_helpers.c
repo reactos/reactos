@@ -93,7 +93,7 @@ HRESULT SafeAppendString(IN OUT LPSTR Dst, IN DWORD DstSize, IN LPCSTR Src)
 
 HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize)
 {
-    ULONG AddressOffset;
+    ULONG_PTR AddressOffset;
     ULONG AlignedMask = MEM_ALIGNMENT - 1;
     CHAR *AlignedPtr;
     ULONG_PTR *AlignedOffsetPtr;
@@ -114,7 +114,7 @@ HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize)
     if (AlignedPtr == 0)
         return DDERR_OUTOFMEMORY;
 
-    AddressOffset = MEM_ALIGNMENT - ((ULONG)AlignedPtr & AlignedMask);
+    AddressOffset = MEM_ALIGNMENT - ((ULONG_PTR)AlignedPtr & AlignedMask);
 	
     AlignedPtr += AddressOffset;
 
