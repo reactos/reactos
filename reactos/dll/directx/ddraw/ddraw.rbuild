@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll" allowwarnings ="true" unicode="yes">
-	<importlibrary definition="ddraw.def" />
+	<importlibrary definition="ddraw.spec" />
 	<include base="ddraw">.</include>
 	<library>kernel32</library>
 	<library>user32</library>
