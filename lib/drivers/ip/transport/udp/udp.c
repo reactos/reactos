@@ -200,7 +200,11 @@ NTSTATUS UDPSendDatagram(
 	return STATUS_UNSUCCESSFUL;
     }
 
-    IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL );
+    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL )))
+    {
+        FreeNdisPacket(Packet.NdisPacket);
+        return Status;
+    }
 
     return STATUS_SUCCESS;
 }
