@@ -247,5 +247,6 @@
 
 //#include "nls/brf.nls"   /* 0x0493  LANG_BRETON, SUBLANG_NEUTRAL */
 
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/ru-RU.rc"
