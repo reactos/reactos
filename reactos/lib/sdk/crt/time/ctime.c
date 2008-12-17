@@ -1035,8 +1035,9 @@ struct tm *
 _localtime64(const __time64_t * CPP_CONST timep)
 {
   static struct tm tm;
+  time_t lt = *timep;
 
-  localsub(timep, 0L, &tm);
+  localsub(&lt, 0L, &tm);
   return &tm;
 }
 
