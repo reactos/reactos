@@ -7,7 +7,7 @@
 	<file>_newmode.c</file>
 	<file>_wgetopt.c</file>
 	<file>argv.c</file>
-	<!-- file>atonexit.c</file -->
+	<file>atonexit.c</file>
 	<file>binmode.c</file>
 	<file>charmax.c</file>
 	<file>cinitexe.c</file>
@@ -25,9 +25,9 @@
 	<file>pseudo-reloc-list.c</file>
 	<file>tlssup.c</file>
 	<file>wildcard.c</file>
-	<!-- file>xncommod.c</file -->
+	<file>xncommod.c</file>
 	<file>xthdloc.c</file>
-	<!-- file>xtxtmode.c</file -->
+	<file>xtxtmode.c</file>
 </module>
 <module name="mingw_main" type="staticlibrary" isstartuplib="true" allowwarnings="true" crt="dll">
 	<include base="mingw_common">include</include>
