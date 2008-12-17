@@ -225,6 +225,7 @@ LdrpInitializeTlsForThread(VOID)
              }
          }
      }
+
    DPRINT("LdrpInitializeTlsForThread() done\n");
    return STATUS_SUCCESS;
 }
@@ -281,7 +282,7 @@ LdrpInitializeTlsForProccess(VOID)
                DbgPrint("EndAddressOfRawData:   %x\n", TlsDirectory->EndAddressOfRawData);
                DbgPrint("SizeOfRawData:         %d\n", TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData);
                DbgPrint("AddressOfIndex:        %x\n", TlsDirectory->AddressOfIndex);
-               DbgPrint("AddressOfCallBacks:    %x (%x)\n", TlsDirectory->AddressOfCallBacks, *TlsDirectory->AddressOfCallBacks);
+               DbgPrint("AddressOfCallBacks:    %x\n", TlsDirectory->AddressOfCallBacks);
                DbgPrint("SizeOfZeroFill:        %d\n", TlsDirectory->SizeOfZeroFill);
                DbgPrint("Characteristics:       %x\n", TlsDirectory->Characteristics);
 #endif
@@ -294,6 +295,7 @@ LdrpInitializeTlsForProccess(VOID)
            Entry = Entry->Flink;
         }
     }
+
   DPRINT("LdrpInitializeTlsForProccess() done\n");
   return STATUS_SUCCESS;
 }
@@ -613,7 +615,6 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                           DosName,
                           NULL) == 0)
     return STATUS_DLL_NOT_FOUND;
-
 
   if (!RtlDosPathNameToNtPathName_U (DosName,
                                      &FullNtFileName,
@@ -1696,14 +1697,15 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
        TlsSize = TlsDirectory->EndAddressOfRawData
                    - TlsDirectory->StartAddressOfRawData
                    + TlsDirectory->SizeOfZeroFill;
-       if (TlsSize > 0 &&
-           NtCurrentPeb()->Ldr->Initialized)
+
+       if (TlsSize > 0 && NtCurrentPeb()->Ldr->Initialized)
          {
-           TRACE_LDR("Trying to load dynamicly %wZ which contains a tls directory\n",
+           TRACE_LDR("Trying to dynamically load %wZ which contains a TLS directory\n",
                      &Module->BaseDllName);
-           return STATUS_UNSUCCESSFUL;
+           TlsDirectory = NULL;
          }
      }
+
    /*
     * Process each import module.
     */
@@ -1766,7 +1768,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                else
                  {
                    TRACE_LDR("%wZ has correct binding to %wZ\n",
-                           &Module->BaseDllName, &ImportedModule->BaseDllName);
+                             &Module->BaseDllName, &ImportedModule->BaseDllName);
                  }
                if (BoundImportDescriptorCurrent->NumberOfModuleForwarderRefs)
                  {
