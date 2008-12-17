@@ -709,6 +709,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     PWCHAR Value;
     UINT ErrorLine;
     ULONG ReturnSize;
+    PGENERIC_LIST_ENTRY ListEntry;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -811,7 +812,6 @@ SetupStartPage(PINPUT_RECORD Ir)
 		
 		wcscpy(SelectedLanguageId,LocaleID);
 		
-		PGENERIC_LIST_ENTRY ListEntry;
 				
 		/* first we hack LanguageList */
 		ListEntry = GetFirstListEntry(LanguageList);
