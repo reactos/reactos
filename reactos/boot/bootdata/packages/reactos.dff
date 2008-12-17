@@ -425,7 +425,7 @@ drivers\video\miniport\vga\vgamp.sys                2
 drivers\video\miniport\vbe\vbemp.sys                2
 drivers\video\videoprt\videoprt.sys                 2
 
-drivers\wdm\audio\backpln\portcls.sys               2
+drivers\wdm\audio\backpln\portcls\portcls.sys       2
 drivers\wmi\wmilib.sys                              2
 
 ; Media
