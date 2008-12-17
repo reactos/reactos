@@ -3,6 +3,7 @@
  * Swedish Language Support
  *
  * Copyright 2005 David Nordenberg
+ * Copyright 2008 Daniel Nylander <po@danielnylander.se>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -62,8 +63,8 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Skapa systemdisk...", -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Anslut &Nätverksenhet",       ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Koppla ifrån Nätverksenhet", ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "Anslut &nätverksenhet",       ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Koppla ifrån nätverksenhet", ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "Dela ut...",                  254
         MENUITEM "&Ta bort utdelning...",       255
@@ -82,13 +83,13 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "&Visa" {
         MENUITEM "&Träd och mapp",              413
-        MENUITEM "Bara tr&äd",                  411
-        MENUITEM "Bara &mapp",                  412
+        MENUITEM "Endast tr&äd",                  411
+        MENUITEM "Endast &mapp",                  412
         MENUITEM SEPARATOR
         MENUITEM "De&la",                       ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Namn",                       ID_VIEW_NAME
-        MENUITEM "&Alla Fildetaljer",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Alla fildetaljer",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
         MENUITEM "&Vissa detaljer...",          ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
         MENUITEM "&Sortera efter namn",         ID_VIEW_SORT_NAME
@@ -108,7 +109,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Enhetsfält",                 ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "St&atusfält",                 ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "F&ullskärm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "H&elskärm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Minimera vid körning",       504
@@ -185,7 +186,7 @@ STRINGTABLE
     IDS_DESKTOP             "Skrivbord"
     IDS_SHELL               "Skal"
     IDS_TITLEFMT            "%s - %s"
-    IDS_NO_IMPL             "Ej implementerat ännu"
+    IDS_NO_IMPL             "Inte implementerat ännu"
     IDS_WINE_FILE           "Wine File"
 }
 
@@ -201,5 +202,5 @@ STRINGTABLE
     IDS_COL_ATTR            "Attribut"
     IDS_COL_SEC             "Säkerhet"
 
-    IDS_FREE_SPACE_FMT      "%s of %s free"
+    IDS_FREE_SPACE_FMT      "%s av %s ledigt"
 }

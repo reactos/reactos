@@ -43,7 +43,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Tiskaj ...",                   102
         MENUITEM "Poveži s programom ...",                103
         MENUITEM SEPARATOR
-        MENUITEM "Ustvari &mapo...",        111
+        MENUITEM "Ustvari &mapo ...",        111
         MENUITEM "&Išči ...",                  104
         MENUITEM "Iz&beri datoteke ...",            116
         MENUITEM SEPARATOR
@@ -97,7 +97,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "Razvrsti po ve&likosti",               ID_VIEW_SORT_SIZE
         MENUITEM "Razvrsti po datu&mu",               ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Filter &...",              ID_VIEW_FILTER
+        MENUITEM "&Filter ...",              ID_VIEW_FILTER
     }
 
     POPUP "M&ožnosti"  {
