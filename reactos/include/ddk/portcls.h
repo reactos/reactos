@@ -622,6 +622,65 @@ DECLARE_INTERFACE_(IServiceGroup, IServiceSink)
 typedef IServiceGroup *PSERVICEGROUP;
 
 
+#if (NTDDI_VERSION >= NTDDI_WIN2003)
+/* ===============================================================
+    IUnregisterSubdevice Interface
+*/
+
+DEFINE_GUID(IID_IUnregisterSubdevice, 0x16738177L, 0xe199, 0x41f9, 0x9a, 0x87, 0xab, 0xb2, 0xa5, 0x43, 0x2f, 0x21);
+
+#undef INTERFACE
+#define INTERFACE IUnregisterSubdevice
+
+DECLARE_INTERFACE_(IUnregisterSubdevice,IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS,UnregisterSubdevice)(THIS_
+        IN  PDEVICE_OBJECT  DeviceObject,
+        IN  PUNKNOWN        Unknown)PURE;
+};
+
+typedef IUnregisterSubdevice *PUNREGISTERSUBDEVICE;
+
+/* ===============================================================
+    IUnregisterPhysicalConnection Interface
+*/
+
+#undef INTERFACE
+#define INTERFACE IUnregisterPhysicalConnection
+
+DEFINE_GUID(IID_IUnregisterPhysicalConnection, 0x6c38e231L, 0x2a0d, 0x428d, 0x81, 0xf8, 0x07, 0xcc, 0x42, 0x8b, 0xb9, 0xa4);
+
+DECLARE_INTERFACE_(IUnregisterPhysicalConnection,IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS,UnregisterPhysicalConnection)(THIS_
+        IN  PDEVICE_OBJECT  DeviceObject,
+        IN  PUNKNOWN        FromUnknown,
+        IN  ULONG           FromPin,
+        IN  PUNKNOWN        ToUnknown,
+        IN  ULONG           ToPin)PURE;
+
+    STDMETHOD_(NTSTATUS,UnregisterPhysicalConnectionToExternal)(THIS_
+        IN  PDEVICE_OBJECT  DeviceObject,
+        IN  PUNKNOWN        FromUnknown,
+        IN  ULONG           FromPin,
+        IN  PUNICODE_STRING ToString,
+        IN  ULONG           ToPin)PURE;
+
+    STDMETHOD_(NTSTATUS,UnregisterPhysicalConnectionFromExternal)(THIS_
+        IN  PDEVICE_OBJECT  DeviceObject,
+        IN  PUNICODE_STRING FromString,
+        IN  ULONG           FromPin,
+        IN  PUNKNOWN        ToUnknown,
+        IN  ULONG           ToPin)PURE;
+};
+
+typedef IUnregisterPhysicalConnection *PUNREGISTERPHYSICALCONNECTION;
+#endif
+
 /* ===============================================================
     IDmaChannel Interface
 */
