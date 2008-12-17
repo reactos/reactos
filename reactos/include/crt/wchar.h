@@ -51,20 +51,8 @@ extern "C" {
 #endif
 
 #ifndef _STDIO_DEFINED
-#ifdef _WIN64
   _CRTIMP FILE *__cdecl __iob_func(void);
-#else
-#ifdef _MSVCRT_
-extern FILE _iob[];	/* A pointer to an array of FILE */
-#define __iob_func()	(_iob)
-#else
-extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
-#define __iob_func()	(*_imp___iob)
-#define _iob __iob_func()
-#endif
-#endif
-
-#define _iob __iob_func()
+  _CRTIMP extern FILE _iob[];
 #endif
 
 #ifndef _STDSTREAM_DEFINED
