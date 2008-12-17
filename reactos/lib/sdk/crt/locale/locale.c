@@ -802,7 +802,15 @@ void *_Gettnames(void)
  */
 void __lconv_init(void)
 {
-  FIXME(" stub\n");
+  char Char = (char) UCHAR_MAX;
+
+  TRACE("__lconv_init()\n");
+
+  _lconv.int_frac_digits = Char;
+  _lconv.frac_digits = Char;
+  _lconv.p_sep_by_space = _lconv.n_sep_by_space = Char;
+  _lconv.p_cs_precedes = _lconv.n_cs_precedes = Char;
+  _lconv.p_sign_posn = _lconv.n_sign_posn = Char;
 }
 
 
