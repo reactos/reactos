@@ -1,0 +1,224 @@
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
+    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "Diagnostisch hulpprogramma voor ReactX"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    PUSHBUTTON "&Help", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&Volgende Pagina", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Alle gegevens opslaan...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Afsluiten", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Dit hulpprogramma geeft gedetailleerde information over de op dit systeem geïnstalleerde ReactX-onderdelen en stuurprogrammas.", -1, 10, 10, 443, 17
+    LTEXT "Als u weet welk gebied het probleem veroorzaakt, kunt u hierboven op het desbetreffende tabblad klikken. Weet u dit niet, dan klikt u op de knop ""Volgende pagina"" om elke pagina te bekijken.", -1, 10, 30, 443, 25
+    GROUPBOX "Systeeminfo", -1, 10, 55, 443, 130, SS_RIGHT
+    LTEXT "Huidige Datum/Tijd:", -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "Computernaam:", -1, 70, 80, 80, 10, SS_RIGHT
+    LTEXT "Besturingssysteem:", -1, 70, 90, 80, 10, SS_RIGHT
+    LTEXT "Taal:", -1, 70, 100, 80, 10, SS_RIGHT
+    LTEXT "Systeemfabrikant:", -1, 70, 110, 80, 10, SS_RIGHT
+    LTEXT "Systeemmodel:", -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
+    LTEXT "Processor:", -1, 70, 140, 80, 10, SS_RIGHT
+    LTEXT "Geheugen:", -1, 70, 150, 80, 10, SS_RIGHT
+    LTEXT "Wisselbestand:", -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT "ReactX-Versie:", -1, 70, 170, 80, 10, SS_RIGHT
+    LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_OS, 155, 90, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_LANG, 155, 100, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MANU, 155, 110, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MODEL, 155, 120, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_BIOS, 155, 130, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_PROC, 155, 140, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MEM, 155, 150, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_SWAP, 155, 160, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_VERSION, 155, 170, 195, 10, SS_LEFT
+END
+
+IDD_DISPLAY_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Apparaat", -1, 10, 10, 250, 100
+    RTEXT "Naam:", -1, 20, 25, 70, 10
+    RTEXT "Fabrikans:", -1, 20, 35, 70, 10
+    RTEXT "Chip-type:", -1, 20, 45, 70, 10
+    RTEXT "DAC-type:", -1, 20, 55, 70, 10
+    RTEXT "Totaal geheugen:", -1, 20, 65, 70, 10
+    RTEXT "Huidige resolutie:", -1, 20, 75, 70, 10
+    RTEXT "Beeldscherm:", -1, 20, 85, 70, 10
+    LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_CHIP, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DAC, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
+
+    GROUPBOX "Stuurprogramma's", -1, 270, 10, 190, 100
+    RTEXT "Stuurprogramma:", -1, 275, 25, 55, 10
+    RTEXT "Versie:", -1, 275, 35, 55, 10
+    RTEXT "Datum:", -1, 275, 45, 55, 10
+    RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
+    RTEXT "Mini-VDD:", -1, 275, 65, 55, 10
+    RTEXT " vvdddVDD:", -1, 275, 75, 55, 10
+    RTEXT "DDI-versie:", -1, 275, 85, 55, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
+
+    GROUPBOX "ReactX-functies", -1, 10, 115, 450, 60
+    RTEXT "DirectDraw-versnelling:", -1, 15, 130, 110, 12
+    RTEXT "Direct3D-versnelling:", -1, 15, 145, 110, 12
+    RTEXT "AGP-oppervlakteversnelling:", -1, 15, 160, 110, 12
+    LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
+    LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
+    LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
+    PUSHBUTTON "Inschakelen", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
+    PUSHBUTTON "Inschakelen", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
+    PUSHBUTTON "Inschakelen", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
+    PUSHBUTTON "DirectDraw testen", IDC_BUTTON_TESTDD, 250, 124, 80, 14
+    PUSHBUTTON "Direct3D testen", IDC_BUTTON_TEST3D, 250, 140, 80, 14, WS_DISABLED
+
+    GROUPBOX "Opmerkingen", -1, 10, 180, 450, 40
+    EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+
+IDD_SOUND_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Apparaat", -1, 10, 10, 250, 100
+    RTEXT "Naam:", -1, 20, 25, 70, 10
+    RTEXT "Apparaat-ID:", -1, 20, 35, 70, 10
+    RTEXT "Fabrikant-ID:", -1, 20, 45, 70, 10
+    RTEXT "Product-ID:", -1, 20, 55, 70, 10
+    RTEXT "Type:", -1, 20, 65, 70, 10
+    RTEXT "Standaardapparaat:", -1, 20, 75, 70, 10
+    LTEXT "", IDC_STATIC_DSOUND_NAME, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_DEVICEID, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_VENDORID, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_PRODUCTID, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_TYPE, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_STANDARD, 95, 75, 150, 10
+    GROUPBOX "Stuurprogramma's", -1, 270, 10, 190, 100
+    RTEXT "Naam:", -1, 275, 25, 55, 10
+    RTEXT "Versie:", -1, 275, 35, 55, 10
+    RTEXT "Datum:", -1, 275, 45, 55, 10
+    RTEXT "WHQL-Logo:", -1, 275, 55, 55, 10
+    RTEXT "Andere bestanden:", -1, 275, 65, 55, 10
+    RTEXT "Leverancier:", -1, 275, 75, 55, 10
+    LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
+    GROUPBOX "ReactX-functies", -1, 10, 115, 450, 60
+    CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
+    RTEXT "Versnellingsniveau van hardwaregeluid:", -1, 20, 135, 90, 20
+    PUSHBUTTON "DirectSound testen", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
+    GROUPBOX "Opmerkingen", -1, 10, 180, 450, 40
+    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_MUSIC_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+IDD_INPUT_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "DirectInput-apparaten", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+    GROUPBOX "Aan invoer gerelateerde apparaten", -1, 10, 100, 452, 60
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    GROUPBOX "opmerkingen", -1, 10, 170, 352, 50
+    EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_NETWORK_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Registreerde DirectPlay serviceproviders", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+END
+
+IDD_HELP_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_MAIN_DIALOG "Diagnostisch hulpprogramma voor ReactX"
+	IDS_SYSTEM_DIALOG "Systeem"
+	IDS_DISPLAY_DIALOG "Beeldscherm"
+	IDS_SOUND_DIALOG "Geluid"
+	IDS_MUSIC_DIALOG "Muziek"
+	IDS_INPUT_DIALOG "Invoer"
+	IDS_NETWORK_DIALOG "Netwerk"
+	IDS_HELP_DIALOG "Help"
+	IDS_FORMAT_MB "%I64uMB RAM"
+	IDS_FORMAT_SWAP "%I64u MB wordt gebruikt, %I64u MB is vrij"
+	IDS_FORMAT_UNIPROC "%s (%u CPU)"
+	IDS_FORMAT_MPPROC  "%s (%u CPUs)"
+	IDS_VERSION_UNKNOWN "ongekende versie"
+	IDS_DEVICE_STATUS_ATTACHED "aangesloten"
+	IDS_DEVICE_STATUS_MISSING "niet aangesloten"
+	IDS_DEVICE_STATUS_UNKNOWN "onbekend"
+	IDS_DEVICE_NAME "Apparaatnaam"
+	IDS_DEVICE_STATUS "Status"
+	IDS_DEVICE_CONTROLLER "Controller-id"
+	IDS_DEVICE_MANUFACTURER "Fabrikant-id"
+	IDS_DEVICE_PRODUCT "Product ID"
+	IDS_DEVICE_FORCEFEEDBACK "Stuurprogramma voor force-feedback"
+	IDS_NOT_APPLICABLE "n.v.t."
+	IDS_OPTION_YES "Ja"
+	IDS_DIRECTPLAY_COL_NAME1 "Naam"
+	IDS_DIRECTPLAY_COL_NAME2 "Register"
+	IDS_DIRECTPLAY_COL_NAME3 "Bestand"
+	IDS_DIRECTPLAY_COL_NAME4 "Versie"
+	IDS_DIRECTPLAY8_MODEMSP "DirectPlay8-Modem Service Provider"
+	IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 Serial Service Provider"
+	IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX Service Provider"
+	IDS_DIRECTPLAY8_TCPSP "DirectPlay8-TCP/IP Service Provider"
+	IDS_DIRECTPLAY_TCPCONN "Internet TCP/IP verbinding voor DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN "IPX verbinding voor DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN "Modem verbinding voor DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN "Serial verbinding voor DirectPlay"
+	IDS_REG_SUCCESS "OK"
+	IDS_REG_FAIL "Fout"
+	IDS_DDTEST_ERROR "Test mislukt!"
+	IDS_DDTEST_DESCRIPTION "Hierdoor wordt DirectDraw op dit systeem getest. Wilt u doorgaan?"
+	IDS_DDPRIMARY_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak. Er moeten enkele witte en zwarte rechthoeken op het scherm verschijnen. Wilt u doorgaan?"
+	IDS_DDPRIMARY_RESULT "Hebt u afwisselend zwarte en witte rechthoeken op het scherm gezien?"
+	IDS_DDOFFSCREEN_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak. Er moet een stuiterend wit vlak worden weergegeven. Wilt u doorgaan?"
+	IDS_DDOFFSCREEN_RESULT "Hebt u het stuiterende vlak gezien?"
+	IDS_DDFULLSCREEN_DESCRIPTION "De volgende test gebruikt DirectDraw om te tekenen op het primaire oppervlak in de modus voor het volledige scherm. Er moet een stuiterend wit vlak worden weergegeven. Wilt u doorgaan?"
+	IDS_DDFULLSCREEN_RESULT "Hebt u het stuiterende vlak op het volledige scherm gezien?"
+	IDS_FORMAT_ADAPTER_MEM "%u MB"
+	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+	IDS_OPTION_NO "Nee"
+END

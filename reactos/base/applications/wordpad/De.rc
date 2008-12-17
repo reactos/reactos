@@ -112,7 +112,7 @@ CAPTION "Datum und Uhrzeit"
 FONT 10, "MS Sans Serif"
 BEGIN
     LTEXT        "Verfügbare Formate",0,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
     PUSHBUTTON   "A&bbrechen",IDCANCEL,87,26,40,12
 END
@@ -241,6 +241,7 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,  "Sie haben keine ausreichende Zugriffsberechtigung um die Datei zu speichern."
     STRING_OPEN_FAILED,          "Die Datei konnte nicht geöffnet werden."
     STRING_OPEN_ACCESS_DENIED,   "Sie haben keine ausreichende Zugriffsberechtigung um die Datei zu öffnen."
+    STRING_PRINTING_NOT_IMPLEMENTED, "Drucken ist nicht implementiert"
 END
 
 #pragma code_page(default)

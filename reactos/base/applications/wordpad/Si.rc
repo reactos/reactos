@@ -112,7 +112,7 @@ CAPTION "Datum in čas"
 FONT 10, "MS Sans Serif"
 BEGIN
     LTEXT        "Razpoložljive oblike",0,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&V redu",IDOK,87,12,40,12
     PUSHBUTTON   "&Prekliči",IDCANCEL,87,26,40,12
 END
@@ -238,6 +238,11 @@ BEGIN
                                  "dokument v tej obliki?"
     STRING_INVALID_NUMBER,       "Neveljavna oblika števila"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "Dokumenti z OLE predmeti niso podprti"
+    STRING_WRITE_FAILED,              "Napaka pri shranjevanju datoteke."
+    STRING_WRITE_ACCESS_DENIED,       "Nimate pravic za shranjevanje te datoteke."
+    STRING_OPEN_FAILED,               "Napaka pri odpiranju datoteke."
+    STRING_OPEN_ACCESS_DENIED,        "Nimate pravic za odpiranje te datoteke."
+    STRING_PRINTING_NOT_IMPLEMENTED, "Tiskanje (še) ni na voljo"
 END
 
 #pragma code_page(default)
