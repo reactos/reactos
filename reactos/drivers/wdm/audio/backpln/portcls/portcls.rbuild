@@ -33,5 +33,6 @@
 	<file>miniport.c</file>
 	<file>miniport_dmus.c</file>
 	<file>miniport_fmsynth.c</file>
+	<file>version.c</file>
 	<file>portcls.rc</file>
 </module>
