@@ -77,7 +77,7 @@ EXPORTS
   _CItan @72
   _CItanh @73
   _CxxThrowException @74
-  _EH_prolog @75
+;  _EH_prolog @75 ???
   _Getdays @76
   _Getmonths @77
   _Gettnames @78
@@ -89,9 +89,9 @@ EXPORTS
 ;  __CxxCallUnwindVecDtor @84
   __CxxDetectRethrow @85
 ;  __CxxExceptionFilter @86
-  __CxxFrameHandler @87
+;  __CxxFrameHandler @87 ???
 ;  __CxxFrameHandler2 @88
-  __CxxLongjmpUnwind @89
+;  __CxxLongjmpUnwind @89 ???
   __CxxQueryExceptionSize @90
 ;  __CxxRegisterExceptionObject @91
 ;  __CxxUnregisterExceptionObject @92
@@ -120,7 +120,7 @@ EXPORTS
   __fpecode @115
   __getmainargs @116
   __initenv @117
-  __iob_func @118
+;  __iob_func @118
   __isascii @119
   __iscsym @120
   __iscsymf @121
@@ -290,8 +290,8 @@ EXPORTS
   _fstat64 @284
   _fstati64 @285
   _ftime @286
-  _ftime64 @287
-  _ftol @288
+;  _ftime64 @287 ???
+;  _ftol @288 ???
   _fullpath @289
   _futime @290
 ;  _futime64 @291
@@ -316,7 +316,7 @@ EXPORTS
 ;  _getwche @310
   _getws @311
   _global_unwind2 @312
-  _gmtime64 @313
+;  _gmtime64 @313 ???
   _heapadd @314
   _heapchk @315
   _heapmin @316
@@ -372,7 +372,7 @@ EXPORTS
   _lfind @366
   _loaddll @367
   _local_unwind2 @368
-  _localtime64 @369
+;  _localtime64 @369 ???
   _lock @370
   _locking @371
   _logb @372
@@ -485,13 +485,13 @@ EXPORTS
 ;  _scprintf @479
 ;  _scwprintf @480
   _searchenv @481
-  _seh_longjmp_unwind=_seh_longjmp_unwind@4 @482
+;  _seh_longjmp_unwind @482 ???
 ;  _set_SSE2_enable @483
   _set_error_mode @484
   _set_sbh_threshold @485
   _seterrormode @486
   _setjmp @487
-  _setjmp3 @488
+  _setjmpex @488
   _setmaxstdio @489
   _setmbcp @490
   _setmode @491
@@ -740,7 +740,7 @@ EXPORTS
   ldexp @734
   ldiv @735
   localeconv @736
-  localtime @737
+;  localtime @737 ???
   log @738
   log10 @739
   longjmp @740
