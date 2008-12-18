@@ -265,6 +265,8 @@ GetLayoutName(LPTSTR szLayoutNum, LPTSTR szName)
             RegCloseKey(hKey);
             return TRUE;
         }
+
+        RegCloseKey(hKey);
     }
 
     return FALSE;
