@@ -24,8 +24,6 @@ HINSTANCE hInst;
 HANDLE    hProcessHeap;
 HMODULE   hDllLib;
 ULONG     ulCurrentLayoutNum = 1;
-UINT      cxSmIcon, cySmIcon;
-
 
 static HICON
 CreateTrayIcon(LPTSTR szLCID)
@@ -51,18 +49,18 @@ CreateTrayIcon(LPTSTR szLCID)
 
     hdcsrc = GetDC(NULL);
     hdc = CreateCompatibleDC(hdcsrc);
-    hBitmap = CreateCompatibleBitmap(hdcsrc, cxSmIcon, cySmIcon);
+    hBitmap = CreateCompatibleBitmap(hdcsrc, 16, 16);
     ReleaseDC(NULL, hdcsrc);
 
     if (hdc && hBitmap)
     {
-        hBmpNew = CreateBitmap(cxSmIcon, cySmIcon, 1, 1, NULL);
+        hBmpNew = CreateBitmap(16, 16, 1, 1, NULL);
         if (hBmpNew)
         {
             hBmpOld = SelectObject(hdc, hBitmap);
-            rect.right = cxSmIcon;
+            rect.right = 16;
             rect.left = 0;
-            rect.bottom = cySmIcon;
+            rect.bottom = 16;
             rect.top = 0;
 
             bkColor = SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
@@ -70,14 +68,14 @@ CreateTrayIcon(LPTSTR szLCID)
 
             ExtTextOut(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, _T(""), 0, NULL);
 
-            hFont = (HFONT) GetStockObject(DEFAULT_GUI_FONT);
-            if (!hFont)
-                goto End;
+            hFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               DEFAULT_QUALITY, FF_DONTCARE, _T("Tahoma"));
 
             hFontOld = SelectObject(hdc, hFont);
             DrawText(hdc, _tcsupr(szBuf), 2, &rect, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
             SelectObject(hdc, hBmpNew);
-            PatBlt(hdc, 0, 0, cxSmIcon, cySmIcon, BLACKNESS);
+            PatBlt(hdc, 0, 0, 16, 16, BLACKNESS);
             SelectObject(hdc, hBmpOld);
             SelectObject(hdc, hFontOld);
 
@@ -86,15 +84,15 @@ CreateTrayIcon(LPTSTR szLCID)
             IconInfo.fIcon = TRUE;
 
             hIcon = CreateIconIndirect(&IconInfo);
-End:
-            if (hBmpNew) DeleteObject(hBmpNew);
-            if (hBmpOld) DeleteObject(hBmpOld);
-            if (hFont) DeleteObject(hFont);
+
+            DeleteObject(hBmpNew);
+            DeleteObject(hBmpOld);
+            DeleteObject(hFont);
         }
     }
 
-    if (hdc) DeleteDC(hdc);
-    if (hBitmap) DeleteObject(hBitmap);
+    DeleteDC(hdc);
+    DeleteObject(hBitmap);
 
     return hIcon;
 }
@@ -386,23 +384,6 @@ GetNextLayout()
     return -1;
 }
 
-static VOID
-SettingsChanging(HWND hwnd)
-{
-    UINT cxSmIconCur = 0, cySmIconCur = 0;
-
-    cxSmIconCur = GetSystemMetrics(SM_CXSMICON);
-    cySmIconCur = GetSystemMetrics(SM_CYSMICON);
-
-    if ((cxSmIcon != cxSmIconCur) || (cySmIcon != cySmIconCur))
-    {
-        cxSmIcon = cxSmIconCur;
-        cySmIcon = cySmIconCur;
-    }
-
-    ActivateLayout(hwnd, ulCurrentLayoutNum);
-}
-
 LRESULT CALLBACK
 WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -413,9 +394,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
         {
-            cxSmIcon = GetSystemMetrics(SM_CXSMICON);
-            cySmIcon = GetSystemMetrics(SM_CYSMICON);
-
             SetHooks();
             AddTrayIcon(hwnd);
             hRightPopupMenu = GetSubMenu(LoadMenu(hInst, MAKEINTRESOURCE(IDR_POPUP)), 0);
@@ -511,8 +489,6 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_SETTINGCHANGE:
         {
-            SettingsChanging(hwnd);
-
             if (wParam == SPI_SETDEFAULTINPUTLANG)
             {
                 //FIXME: Should detect default language changes by CPL applet or by other tools and update UI
