@@ -486,11 +486,50 @@ HRESULT WINAPI IDirect3DDevice9Base_GetBackBuffer(LPDIRECT3DDEVICE9 iface, UINT 
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetRasterStatus
+* @implemented
+*
+* The function IDirect3DDevice9Base_GetRasterStatus retrieves raster information
+* of the monitor for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param D3DRASTER_STATUS* pRasterStatus
+* Pointer to a D3DRASTER_STATUS to receive the raster information
+*
+*/
 HRESULT WINAPI IDirect3DDevice9Base_GetRasterStatus(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
-    return D3D_OK;
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == pRasterStatus)
+    {
+        DPRINT1("Invalid pRasterStatus parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    hResult = IDirect3DSwapChain9_GetRasterStatus(pSwapChain, pRasterStatus);
+
+    UNLOCK_D3DDEVICE9();
+    return hResult;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_SetDialogBoxMode(LPDIRECT3DDEVICE9 iface, BOOL bEnableDialogs)
