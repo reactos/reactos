@@ -14,8 +14,6 @@
 #include <precomp.h>
 #include <mbctype.h>
 
-size_t _mbclen2(const unsigned int s);
-
 /*
  * @implemented
  */
