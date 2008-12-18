@@ -262,8 +262,11 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
 
-        strcpy(szErrorOut, "ACP NLS Setting exists, but isn't readable");
-        return(FALSE);
+        //strcpy(szErrorOut, "ACP NLS Setting exists, but isn't readable");
+        //return(FALSE);
+
+        /* HACK */
+        wcscpy(szNameBuffer, L"c_1252.nls");
     }
 
     /* load ANSI codepage table */
@@ -288,8 +291,11 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
 
-        strcpy(szErrorOut, "OEMCP NLS setting exists, but isn't readable");
-        return(FALSE);
+        //strcpy(szErrorOut, "OEMCP NLS setting exists, but isn't readable");
+        //return(FALSE);
+
+        /* HACK */
+        wcscpy(szNameBuffer, L"c_437.nls");
     }
 
     /* load OEM codepage table */
