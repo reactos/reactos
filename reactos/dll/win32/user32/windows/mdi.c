@@ -126,7 +126,6 @@ static HWND MDI_MoreWindowsDialog(HWND);
 static LRESULT WINAPI MDIClientWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI MDIClientWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
-static
 HWND* WIN_ListChildren (HWND hWndparent)
 {
 

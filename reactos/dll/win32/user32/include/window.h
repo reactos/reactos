@@ -63,3 +63,5 @@ User32CreateWindowEx(DWORD dwExStyle,
 		HINSTANCE hInstance,
 		LPVOID lpParam,
 		BOOL Unicode);
+
+HWND* WIN_ListChildren (HWND hWndparent);
