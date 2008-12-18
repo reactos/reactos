@@ -28,7 +28,7 @@
 #define MAX_ELEM_LEN 64 /* Max length of country/language/CP string */
 
 unsigned char _mbctype[257] = { 0 };
-static int g_mbcp_is_multibyte = 0;
+int g_mbcp_is_multibyte = 0;
 
 /* It seems that the data about valid trail bytes is not available from kernel32
  * so we have to store is here. The format is the same as for lead bytes in CPINFO */
