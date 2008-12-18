@@ -505,9 +505,50 @@ VOID WINAPI IDirect3DDevice9Base_SetGammaRamp(LPDIRECT3DDEVICE9 iface, UINT iSwa
     UNIMPLEMENTED
 }
 
+/*++
+* @name IDirect3DDevice9::GetGammaRamp
+* @implemented
+*
+* The function IDirect3DDevice9Base_GetGammaRamp retrieves the gamma correction ramp values
+* for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param D3DGAMMARAMP* pRamp
+* Pointer to a D3DGAMMARAMP to receive the gamma correction ramp values.
+*
+*/
 VOID WINAPI IDirect3DDevice9Base_GetGammaRamp(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, D3DGAMMARAMP* pRamp)
 {
-    UNIMPLEMENTED
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    Direct3DSwapChain9_INT* pSwapChain_INT;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
+
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return;
+    }
+
+    if (NULL == pRamp)
+    {
+        DPRINT1("Invalid pRamp parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return;
+    }
+
+    pSwapChain_INT = IDirect3DSwapChain9ToImpl(pSwapChain);
+    Direct3DSwapChain9_GetGammaRamp(pSwapChain_INT, pRamp);
+
+    UNLOCK_D3DDEVICE9();
 }
 
 /*++
