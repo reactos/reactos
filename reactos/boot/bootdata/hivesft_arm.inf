@@ -178,6 +178,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
    "429", "160",\
   "2001", "165",\
   "3801", "165",\
+   "42b", "170",\
    "420", "185",\
    "439", "190",\
    "421", "205",\
