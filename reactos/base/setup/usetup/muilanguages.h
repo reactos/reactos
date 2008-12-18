@@ -99,6 +99,7 @@
 #include "lang/mr-IN.h"
 #include "lang/ms-BN.h"
 #include "lang/ms-MY.h"
+#include "lang/my-MM.h"
 #include "lang/nl-BE.h"
 #include "lang/nl-NL.h"
 #include "lang/nn-NO.h"
@@ -159,7 +160,7 @@ const MUI_LANGUAGE LanguageList[] =
   {L"0000042D", L"1252", L"850", L"10000", L"Basque",                       enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    euESLayouts },
   {L"00000423", L"1251", L"866", L"10007", L"Belarusian",                   enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, beBYLayouts },
   {L"00000402", L"1251", L"866", L"10007", L"Bulgarian",                    bgBGPages, bgBGErrorEntries, bgBGStrings, CyrillicFonts, bgBGLayouts },
-  {L"00000455", L"0",    L"1",   L"2",     L"Burmese",                      enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts,  enUSLayouts },
+  {L"00000455", L"0",    L"1",   L"2",     L"Burmese",                      enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts,  myMMLayouts },
   {L"00000403", L"1252", L"850", L"10000", L"Catalan",                      enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    caESLayouts },
   {L"00000404", L"950",  L"950", L"10008", L"Chinese (Taiwan)",             enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts,  zhTWLayouts },
   {L"00000804", L"936",  L"936", L"10008", L"Chinese (PRC)",                enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts,  zhCNLayouts },

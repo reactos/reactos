@@ -391,12 +391,12 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
     {
         if (uIndex > 19) break;
 
-        swprintf(szValueName, L"%d", uIndex + 1);
+        swprintf(szValueName, L"%u", uIndex + 1);
         RtlInitUnicodeString(&ValueName, szValueName);
 
         swprintf(szLangID, L"0000%s", MuiLayouts[uIndex].LangID);
 
-        if (wcscmp(szLangID, MuiLayouts[uIndex].LayoutID) == 0)
+        if (_wcsicmp(szLangID, MuiLayouts[uIndex].LayoutID) == 0)
         {
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
@@ -414,7 +414,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
         }
         else
         {
-            swprintf(szLangID, L"d%03d%s", uCount, MuiLayouts[uIndex].LangID);
+            swprintf(szLangID, L"d%03u%s", uCount, MuiLayouts[uIndex].LangID);
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
@@ -439,7 +439,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
                                    (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
                 NtClose(SubKeyHandle);
                 NtClose(KeyHandle);
                 return FALSE;
