@@ -316,10 +316,64 @@ BOOL WINAPI IDirect3DDevice9Base_ShowCursor(LPDIRECT3DDEVICE9 iface, BOOL bShow)
     return TRUE;
 }
 
+/*++
+* @name IDirect3DDevice9::CreateAdditionalSwapChain
+* @implemented
+*
+* The function IDirect3DDevice9Base_CreateAdditionalSwapChain creates a swap chain object,
+* useful when rendering multiple views.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice()
+*
+* @param D3DPRESENT_PARAMETERS* pPresentationParameters
+* Pointer to a D3DPRESENT_PARAMETERS structure describing the parameters for the swap chain
+* to be created.
+*
+* @param IDirect3DSwapChain9** ppSwapChain
+* Pointer to a IDirect3DSwapChain9* to receive the swap chain object pointer.
+*
+* @return HRESULT
+* If the method successfully fills the ppSwapChain structure, the return value is D3D_OK.
+* If iSwapChain is out of range or ppSwapChain is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL. Also D3DERR_OUTOFVIDEOMEMORY can be returned if allocation
+* of the new swap chain object failed.
+*
+*/
 HRESULT WINAPI IDirect3DDevice9Base_CreateAdditionalSwapChain(LPDIRECT3DDEVICE9 iface, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DSwapChain9** ppSwapChain)
 {
-    UNIMPLEMENTED
+    UINT iSwapChain;
+    IDirect3DSwapChain9* pSwapChain;
+    Direct3DSwapChain9_INT* pSwapChain_INT;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
+    if (NULL == ppSwapChain)
+    {
+        DPRINT1("Invalid ppSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    *ppSwapChain = NULL;
+    iSwapChain = IDirect3DDevice9_GetNumberOfSwapChains(iface) + 1;
+
+    pSwapChain_INT = CreateDirect3DSwapChain9(RT_EXTERNAL, This, iSwapChain);
+    if (NULL == pSwapChain_INT)
+    {
+        DPRINT1("Out of memory");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_OUTOFVIDEOMEMORY;
+    }
+
+    Direct3DSwapChain9_Init(pSwapChain_INT, pPresentationParameters);
+
+    This->pSwapChains[iSwapChain] = pSwapChain_INT;
+    pSwapChain = (IDirect3DSwapChain9*)&pSwapChain_INT->lpVtbl;
+    IDirect3DSwapChain9_AddRef(pSwapChain);
+    *ppSwapChain = pSwapChain;
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
