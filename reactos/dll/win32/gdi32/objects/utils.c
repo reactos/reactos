@@ -329,6 +329,7 @@ LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA)
   COPYN(lfQuality);
   COPYN(lfPitchAndFamily);
   COPYS(lfFaceName,LF_FACESIZE);
+  pW->lfFaceName[LF_FACESIZE - 1] = '\0';
 
 #undef COPYN
 #undef COPYS
@@ -355,6 +356,7 @@ LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
   COPYN(lfQuality);
   COPYN(lfPitchAndFamily);
   COPYS(lfFaceName,LF_FACESIZE);
+  pA->lfFaceName[LF_FACESIZE - 1] = '\0';
 
 #undef COPYN
 #undef COPYS

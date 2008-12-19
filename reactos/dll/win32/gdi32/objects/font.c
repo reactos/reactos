@@ -108,7 +108,7 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
     lenW = MultiByteToWideChar(cp, 0, str, count, NULL, 0);
     strW = HeapAlloc(GetProcessHeap(), 0, lenW*sizeof(WCHAR));
     MultiByteToWideChar(cp, 0, str, count, strW, lenW);
-    DPRINT1("mapped %s -> %S\n", str, strW);
+    DPRINT("mapped %s -> %S\n", str, strW);
     if(plenW) *plenW = lenW;
     if(pCP) *pCP = cp;
     return strW;
