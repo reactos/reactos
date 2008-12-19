@@ -2292,7 +2292,7 @@ int CDECL fputc(int c, FILE* file)
       return res ? res : c;
     }
     else
-      return c;
+      return c & 0xff;
   } else {
     return _flsbuf(c, file);
   }
@@ -2321,7 +2321,7 @@ int CDECL _flsbuf(int c, FILE* file)
 	unsigned char cc=c;
         int len;
 	len = _write(file->_file, &cc, 1);
-        if (len == 1) return c;
+        if (len == 1) return c & 0xff;
         file->_flag |= _IOERR;
         return EOF;
   }
