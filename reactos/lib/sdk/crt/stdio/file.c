@@ -2167,28 +2167,10 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
  */
 wint_t CDECL fputwc(wint_t wc, FILE* file)
 {
-    if (file->_flag & _IOBINARY)
-    {
-        if (fwrite(&wc, sizeof(wc), 1, file) != 1)
-            return WEOF;
-    }
-    else
-    {
-        /* Convert to multibyte in text mode */
-        char mbc[MB_LEN_MAX];
-        int mb_return;
-
-        mb_return = wctomb(mbc, wc);
-
-        if(mb_return == -1)
-            return WEOF;
-
-        /* Output all characters */
-        if (fwrite(mbc, mb_return, 1, file) != 1)
-            return WEOF;
-    }
-
-    return wc;
+  wchar_t mwc=wc;
+  if (fwrite( &mwc, sizeof(mwc), 1, file) != 1)
+    return WEOF;
+  return wc;
 }
 
 /*********************************************************************
