@@ -658,6 +658,9 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
 {
     GRPCURSORICONDIR *dir = (GRPCURSORICONDIR*)xdir;
     UINT retVal = 0;
+
+    GetConnected();
+
     if(dir && !dir->idReserved && (IMAGE_ICON == dir->idType || IMAGE_CURSOR == dir->idType))
     {
         GRPCURSORICONDIRENTRY *entry = NULL;
@@ -667,11 +670,13 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
         {
             ColorBits = 1;
         }
+        else if (g_psi->SystemMetrics[SM_SAMEDISPLAYFORMAT] || (cFlag & LR_VGACOLOR) )
+        {
+            ColorBits = 4;
+        }
         else
         {
-            HDC hdc = CreateICW(NULL, NULL, NULL, NULL);
-            ColorBits = GetDeviceCaps(hdc, BITSPIXEL);
-            DeleteDC(hdc);
+            ColorBits = 0;
         }
 
         if(bIcon)

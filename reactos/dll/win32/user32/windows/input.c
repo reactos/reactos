@@ -153,6 +153,8 @@ EnableWindow(HWND hWnd,
 SHORT WINAPI
 GetAsyncKeyState(int vKey)
 {
+ if (vKey < 0 || vKey > 256)
+    return 0;
  return (SHORT) NtUserGetAsyncKeyState((DWORD) vKey);
 }
 
