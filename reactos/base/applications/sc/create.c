@@ -36,7 +36,7 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
     _tprintf(_T("error control - %lu\n"), dwErrorControl);
     _tprintf(_T("Binary path - %s\n"), lpBinaryPathName);
     _tprintf(_T("load order group - %s\n"), lpLoadOrderGroup);
-    _tprintf(_T("tag - %lu\n"), *lpdwTagId);
+    _tprintf(_T("tag - %lu\n"), lpdwTagId);
     _tprintf(_T("dependincies - %s\n"), lpDependencies);
     _tprintf(_T("account start name - %s\n"), lpServiceStartName);
     _tprintf(_T("account password - %s\n"), lpPassword);
