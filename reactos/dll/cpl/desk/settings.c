@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            lib/cpl/desk/settings.c
+ * FILE:            dll/cpl/desk/settings.c
  * PURPOSE:         Settings property page
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
@@ -286,13 +286,14 @@ OnInitDialog(IN HWND hwndDlg)
 	DISPLAY_DEVICE displayDevice;
 	PGLOBAL_DATA pGlobalData;
 
-	pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+	pGlobalData = HeapAlloc(GetProcessHeap(), 0, sizeof(GLOBAL_DATA));
 	if (pGlobalData == NULL)
 		return;
 
 	SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
 	/* Get video cards list */
+	pGlobalData->DisplayDeviceList = NULL;
 	displayDevice.cb = (DWORD)sizeof(DISPLAY_DEVICE);
 	while (EnumDisplayDevices(NULL, iDevNum, &displayDevice, 0x1))
 	{
@@ -303,6 +304,7 @@ OnInitDialog(IN HWND hwndDlg)
 		}
 		iDevNum++;
 	}
+
 	if (Result == 0)
 	{
 		/* No adapter found */
@@ -311,6 +313,10 @@ OnInitDialog(IN HWND hwndDlg)
 		EnableWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_RESOLUTION_TEXT), FALSE);
 		EnableWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_ADVANCED), FALSE);
 		ShowWindow(GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM), SW_HIDE);
+
+		/* Do not initialize the color spectrum bitmaps */
+		memset(pGlobalData->hSpectrumBitmaps, 0, sizeof(pGlobalData->hSpectrumBitmaps));
+		return;
 	}
 	else if (Result == 1)
 	{
@@ -325,10 +331,10 @@ OnInitDialog(IN HWND hwndDlg)
 		monitors.Size.cy = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
 		monitors.Flags = 0;
 		SendDlgItemMessage(hwndDlg,
-						   IDC_SETTINGS_MONSEL,
-						   MSLM_SETMONITORSINFO,
-						   1,
-						   (LPARAM)&monitors);
+				   IDC_SETTINGS_MONSEL,
+				   MSLM_SETMONITORSINFO,
+				   1,
+				   (LPARAM)&monitors);
 	}
 	else /* FIXME: incomplete! */
 	{
@@ -352,10 +358,10 @@ OnInitDialog(IN HWND hwndDlg)
 			}
 
 			SendDlgItemMessage(hwndDlg,
-							   IDC_SETTINGS_MONSEL,
-							   MSLM_SETMONITORSINFO,
-							   Result,
-							   (LPARAM)pMonitors);
+					   IDC_SETTINGS_MONSEL,
+					   MSLM_SETMONITORSINFO,
+					   Result,
+					   (LPARAM)pMonitors);
 
 			HeapFree(GetProcessHeap(), 0, pMonitors);
 		}
@@ -401,12 +407,17 @@ ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PGLOBAL_
 		default: iBitmap = 2;
 	}
 
-	SelectObject(hdcMem, pGlobalData->hSpectrumBitmaps[iBitmap]);
-	StretchBlt(hDC,
-	           client->left, client->top, client->right - client->left, client->bottom - client->top,
-	           hdcMem, 0, 0,
-	           pGlobalData->cxSource[iBitmap],
-	           pGlobalData->cySource[iBitmap], SRCCOPY);
+	if (SelectObject(hdcMem, pGlobalData->hSpectrumBitmaps[iBitmap]))
+	{
+		StretchBlt(hDC,
+			   client->left, client->top,
+			   client->right - client->left,
+			   client->bottom - client->top,
+			   hdcMem, 0, 0,
+			   pGlobalData->cxSource[iBitmap],
+			   pGlobalData->cySource[iBitmap], SRCCOPY);
+	}
+
 	DeleteDC(hdcMem);
 }
 
@@ -631,7 +642,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 			if (lpDrawItem->CtlID == IDC_SETTINGS_SPECTRUM)
 				ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pGlobalData);
-
 			break;
 		}
 		case WM_COMMAND:
@@ -834,13 +844,13 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				Current = Next;
 			}
 
-			HeapFree(GetProcessHeap(), 0, pGlobalData);
-
 			for (i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
 			{
 				if (pGlobalData->hSpectrumBitmaps[i])
 					DeleteObject(pGlobalData->hSpectrumBitmaps[i]);
 			}
+
+			HeapFree(GetProcessHeap(), 0, pGlobalData);
 		}
 	}
 	return FALSE;
