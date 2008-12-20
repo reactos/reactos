@@ -20,7 +20,7 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
     DWORD dwErrorControl = SERVICE_ERROR_NORMAL;
     LPCTSTR lpBinaryPathName = NULL;
     LPCTSTR lpLoadOrderGroup = NULL;
-    LPDWORD lpdwTagId = NULL;
+    DWORD dwTagId = 0;
     LPCTSTR lpDependencies = NULL;
     LPCTSTR lpServiceStartName = NULL;
     LPCTSTR lpPassword = NULL;
@@ -36,7 +36,7 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
     _tprintf(_T("error control - %lu\n"), dwErrorControl);
     _tprintf(_T("Binary path - %s\n"), lpBinaryPathName);
     _tprintf(_T("load order group - %s\n"), lpLoadOrderGroup);
-    _tprintf(_T("tag - %lu\n"), lpdwTagId);
+    _tprintf(_T("tag - %lu\n"), dwTagId);
     _tprintf(_T("dependincies - %s\n"), lpDependencies);
     _tprintf(_T("account start name - %s\n"), lpServiceStartName);
     _tprintf(_T("account password - %s\n"), lpPassword);
@@ -66,7 +66,7 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
                         dwErrorControl,
                         lpBinaryPathName,
                         lpLoadOrderGroup,
-                        lpdwTagId,
+                        &dwTagId,
                         lpDependencies,
                         lpServiceStartName,
                         lpPassword);
