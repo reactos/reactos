@@ -38,7 +38,6 @@
 #endif
 
 extern _SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void);
-extern void _SEH2GlobalUnwind(void *);
 
 extern int __SEH2Except(void *, void *);
 extern void __SEH2Finally(void *, void *);
@@ -49,6 +48,24 @@ extern void __cdecl __SEH2LeaveFrame(void);
 
 extern int __cdecl __SEH2FrameHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
 extern int __cdecl __SEH2NestedHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
+
+FORCEINLINE
+void _SEH2GlobalUnwind(void * target)
+{
+	__asm__ __volatile__
+	(
+		"push %%ebp\n"
+		"push $0\n"
+		"push $0\n"
+		"push $Return%=\n"
+		"push %[target]\n"
+		"call %c[RtlUnwind]\n"
+		"Return%=: pop %%ebp\n" :
+		:
+		[target] "g" (target), [RtlUnwind] "g" (&RtlUnwind) :
+		"eax", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
+	);
+}
 
 FORCEINLINE
 int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
