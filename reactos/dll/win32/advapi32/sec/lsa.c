@@ -78,11 +78,10 @@ PLSAPR_SERVER_NAME_unbind(PLSAPR_SERVER_NAME pszSystemName,
 NTSTATUS WINAPI
 LsaClose(LSA_HANDLE ObjectHandle)
 {
-    //NTSTATUS Status;
+    NTSTATUS Status;
 
     TRACE("LsaClose(0x%p) called\n", ObjectHandle);
 
-#if 0
     _SEH2_TRY
     {
         Status = LsarClose((PLSAPR_HANDLE)&ObjectHandle);
@@ -94,15 +93,6 @@ LsaClose(LSA_HANDLE ObjectHandle)
     _SEH2_END;
 
     return Status;
-#else
-
-    /* This is our fake handle, don't go too much long way */
-    if (ObjectHandle == (LSA_HANDLE)0xcafe)
-        return STATUS_SUCCESS;
-
-    return LsarClose((PLSAPR_HANDLE)&ObjectHandle);
-
-#endif
 }
 
 
@@ -395,13 +385,12 @@ LsaOpenPolicy(
     IN ACCESS_MASK DesiredAccess,
     IN OUT PLSA_HANDLE PolicyHandle)
 {
-    //NTSTATUS Status;
+    NTSTATUS Status;
 
     TRACE("LsaOpenPolicy (%s,%p,0x%08x,%p)\n",
           SystemName?debugstr_w(SystemName->Buffer):"(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
 
-#if 0
     _SEH2_TRY
     {
         *PolicyHandle = NULL;
@@ -420,12 +409,6 @@ LsaOpenPolicy(
     TRACE("LsaOpenPolicy() done (Status: 0x%08lx)\n", Status);
 
     return Status;
-#else
-
-    if(PolicyHandle) *PolicyHandle = (LSA_HANDLE)0xcafe;
-    return STATUS_SUCCESS;
-
-#endif
 }
 
 
