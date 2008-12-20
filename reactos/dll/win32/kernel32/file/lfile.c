@@ -19,24 +19,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  */
 long
 WINAPI
-_hread(
-	HFILE	hFile,
-	LPVOID	lpBuffer,
-	long	lBytes
-	)
+_hread(HFILE hFile, LPVOID lpBuffer, long lBytes)
 {
-	DWORD	NumberOfBytesRead;
+    DWORD NumberOfBytesRead;
 
-	if ( !ReadFile(
-		LongToHandle(hFile),
-		lpBuffer,
-		(DWORD) lBytes,
-		& NumberOfBytesRead,
-		NULL) )
-	{
-		return HFILE_ERROR;
-	}
-	return NumberOfBytesRead;
+    if (!ReadFile(LongToHandle(hFile),
+                  lpBuffer,
+                  (DWORD) lBytes,
+                  &NumberOfBytesRead,
+                  NULL))
+    {
+        return HFILE_ERROR;
+    }
+    return NumberOfBytesRead;
 }
 
 
@@ -45,32 +40,27 @@ _hread(
  */
 long
 WINAPI
-_hwrite (
-	HFILE	hFile,
-	LPCSTR	lpBuffer,
-	long	lBytes
-	)
+_hwrite(HFILE hFile, LPCSTR lpBuffer, long lBytes)
 {
-	DWORD	NumberOfBytesWritten;
+    DWORD NumberOfBytesWritten;
 
-	if (lBytes == 0)
-	{
-		if ( !SetEndOfFile((HANDLE) hFile ) )
-		{
-			return HFILE_ERROR;
-		}
-		return 0;
-	}
-	if ( !WriteFile(
-		(HANDLE) hFile,
-		(LPVOID) lpBuffer,
-		(DWORD) lBytes,
-		& NumberOfBytesWritten,
-		NULL) )
-	{
-		return HFILE_ERROR;
-	}
-	return NumberOfBytesWritten;
+    if (lBytes == 0)
+    {
+        if (!SetEndOfFile((HANDLE) hFile))
+        {
+            return HFILE_ERROR;
+        }
+        return 0;
+    }
+    if (!WriteFile(LongToHandle(hFile),
+                   (LPVOID) lpBuffer,
+                   (DWORD) lBytes,
+                   &NumberOfBytesWritten,
+                   NULL))
+    {
+        return HFILE_ERROR;
+    }
+    return NumberOfBytesWritten;
 }
 
 
@@ -79,10 +69,7 @@ _hwrite (
  */
 HFILE
 WINAPI
-_lopen (
-	LPCSTR	lpPathName,
-	int	iReadWrite
-	)
+_lopen(LPCSTR lpPathName, int iReadWrite)
 {
     DWORD dwAccess, dwSharing, dwCreation;
 
@@ -128,10 +115,7 @@ _lopen (
  */
 HFILE
 WINAPI
-_lcreat (
-	LPCSTR	lpPathName,
-	int	iAttribute
-	)
+_lcreat(LPCSTR lpPathName, int iAttribute)
 {
     HANDLE hFile;
 
@@ -153,11 +137,9 @@ _lcreat (
  */
 int
 WINAPI
-_lclose (
-	HFILE	hFile
-	)
+_lclose(HFILE hFile)
 {
-	return CloseHandle(LongToHandle(hFile)) ? 0 : HFILE_ERROR;
+    return CloseHandle(LongToHandle(hFile)) ? 0 : HFILE_ERROR;
 }
 
 
@@ -166,11 +148,7 @@ _lclose (
  */
 LONG
 WINAPI
-_llseek(
-	HFILE	hFile,
-	LONG	lOffset,
-	int	iOrigin
-	)
+_llseek(HFILE hFile, LONG lOffset, int iOrigin)
 {
     return SetFilePointer(LongToHandle(hFile),
                           lOffset,
