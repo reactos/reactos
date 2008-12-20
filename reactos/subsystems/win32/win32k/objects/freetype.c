@@ -3135,6 +3135,8 @@ NtGdiExtTextOutW(
     BOOL DoBreak = FALSE;
     LPCWSTR String, SafeString = NULL;
     HPALETTE hDestPalette;
+    PVOID TmpBuffer = NULL;
+    ULONG TmpBufSize, StringSize, DxSize = 0;
 
     // TODO: Write test-cases to exactly match real Windows in different
     // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -3160,41 +3162,70 @@ NtGdiExtTextOutW(
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         goto fail;
     }
+
+    Status = STATUS_SUCCESS;
     if (Count > 0)
     {
-        SafeString = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
-        if (!SafeString)
+        TmpBufSize = StringSize = Count * sizeof(WCHAR);
+        if (UnsafeDx)
         {
+            /* If ETO_PDY is specified, we have pairs of INTs */
+            DxSize = Count * sizeof(INT) * (fuOptions & ETO_PDY ? 2 : 1);
+            TmpBufSize += DxSize;
+        }
+
+        /* Allocate a temp buffer for the string and the Dx values */
+        TmpBuffer = ExAllocatePoolWithTag(PagedPool, TmpBufSize, TAG_GDITEXT);
+        SafeString = TmpBuffer;
+        if (!TmpBuffer)
+        {
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
             goto fail;
         }
-        Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
-        if (! NT_SUCCESS(Status))
+
+        /* Probe and copy user mode data to the temp buffer */
+        _SEH2_TRY
+        {
+            if (UnsafeString)
+            {
+                ProbeForRead(UnsafeString, StringSize, 1);
+                memcpy((PVOID)SafeString, UnsafeString, StringSize);
+            }
+
+            if (UnsafeDx)
+            {
+                ProbeForRead(UnsafeDx, DxSize, 1);
+                Dx = (INT*)((ULONG_PTR)TmpBuffer + StringSize);
+                memcpy(Dx, UnsafeString, DxSize);
+            }
+
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END
+        if (!NT_SUCCESS(Status))
         {
             goto fail;
         }
     }
     String = SafeString;
 
-    if (NULL != UnsafeDx && Count > 0)
-    {
-        Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
-        if (NULL == Dx)
-        {
-            goto fail;
-        }
-        Status = MmCopyFromCaller(Dx, UnsafeDx, Count * sizeof(INT));
-        if (!NT_SUCCESS(Status))
-        {
-            goto fail;
-        }
-    }
-
     if (lprc)
     {
-        Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
+        _SEH2_TRY
+        {
+            ProbeForRead(lprc, sizeof(RECT), 1);
+            memcpy(&SpecifiedDestRect, lprc, sizeof(RECT));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END
         if (!NT_SUCCESS(Status))
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
             goto fail;
         }
     }
@@ -3692,13 +3723,9 @@ fail:
         BRUSHOBJ_UnlockBrush(BrushFg);
         NtGdiDeleteObject(hBrushFg);
     }
-    if (NULL != SafeString)
+    if (TmpBuffer)
     {
-        ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
-    }
-    if (NULL != Dx)
-    {
-        ExFreePoolWithTag(Dx, TAG_GDITEXT);
+        ExFreePoolWithTag(TmpBuffer, TAG_GDITEXT);
     }
     DC_UnlockDc(dc);
 
