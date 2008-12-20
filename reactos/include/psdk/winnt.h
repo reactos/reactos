@@ -180,7 +180,9 @@ typedef PDWORD PLCID;
 typedef WORD LANGID;
 #ifdef __GNUC__
 #define _HAVE_INT64
-#define _INTEGRAL_MAX_BITS 64
+#ifndef _INTEGRAL_MAX_BITS
+# define _INTEGRAL_MAX_BITS 64
+#endif
 #undef __int64
 #define __int64 long long
 #elif defined(__WATCOMC__) && (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64 )
