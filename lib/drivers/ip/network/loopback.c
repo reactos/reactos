@@ -22,6 +22,7 @@ typedef struct _LAN_WQ_ITEM {
 KSPIN_LOCK LoopWorkLock;
 LIST_ENTRY LoopWorkList;
 WORK_QUEUE_ITEM LoopWorkItem;
+BOOLEAN LoopReceiveWorkerBusy = FALSE;
 
 VOID STDCALL LoopReceiveWorker( PVOID Context ) {
     PLIST_ENTRY ListEntry;
@@ -34,43 +35,46 @@ VOID STDCALL LoopReceiveWorker( PVOID Context ) {
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
-    ListEntry = ExInterlockedRemoveHeadList( &LoopWorkList, &LoopWorkLock );
-    WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
+    while( (ListEntry =
+	    ExInterlockedRemoveHeadList( &LoopWorkList, &LoopWorkLock )) ) {
+	WorkItem = CONTAINING_RECORD(ListEntry, LAN_WQ_ITEM, ListEntry);
 
-    TI_DbgPrint(DEBUG_DATALINK, ("WorkItem: %x\n", WorkItem));
+	TI_DbgPrint(DEBUG_DATALINK, ("WorkItem: %x\n", WorkItem));
 
-    Packet = WorkItem->Packet;
-    Adapter = WorkItem->Adapter;
-    BytesTransferred = WorkItem->BytesTransferred;
+	Packet = WorkItem->Packet;
+	Adapter = WorkItem->Adapter;
+	BytesTransferred = WorkItem->BytesTransferred;
 
-    ExFreePool( WorkItem );
+	ExFreePool( WorkItem );
 
-    IPPacket.NdisPacket = Packet;
+        IPPacket.NdisPacket = Packet;
 
-    TI_DbgPrint(DEBUG_DATALINK, ("Packet %x Adapter %x Trans %x\n",
-                                  Packet, Adapter, BytesTransferred));
+        TI_DbgPrint(DEBUG_DATALINK, ("Packet %x Adapter %x Trans %x\n",
+                                     Packet, Adapter, BytesTransferred));
 
-    NdisGetFirstBufferFromPacket(Packet,
-                                 &NdisBuffer,
-                                 &IPPacket.Header,
-                                 &IPPacket.ContigSize,
-                                 &IPPacket.TotalSize);
+        NdisGetFirstBufferFromPacket(Packet,
+                                     &NdisBuffer,
+                                     &IPPacket.Header,
+                                     &IPPacket.ContigSize,
+                                     &IPPacket.TotalSize);
 
-    IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
-    /* Determine which upper layer protocol that should receive
-    this packet and pass it to the correct receive handler */
+	IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
+        /* Determine which upper layer protocol that should receive
+           this packet and pass it to the correct receive handler */
 
-    TI_DbgPrint(MID_TRACE,
-	       ("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
-	         IPPacket.ContigSize, IPPacket.TotalSize,
-		 BytesTransferred));
+	TI_DbgPrint(MID_TRACE,
+		    ("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
+		     IPPacket.ContigSize, IPPacket.TotalSize,
+		     BytesTransferred));
 
-    IPPacket.Position = 0;
+	IPPacket.Position = 0;
 
-    IPReceive(Loopback, &IPPacket);
+        IPReceive(Loopback, &IPPacket);
 
-    FreeNdisPacket( Packet );
+	FreeNdisPacket( Packet );
+    }
     TI_DbgPrint(DEBUG_DATALINK, ("Leaving\n"));
+    LoopReceiveWorkerBusy = FALSE;
 }
 
 VOID LoopSubmitReceiveWork(
@@ -80,19 +84,34 @@ VOID LoopSubmitReceiveWork(
     UINT BytesTransferred) {
     PLAN_WQ_ITEM WQItem;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
+    KIRQL OldIrql;
+
+    TcpipAcquireSpinLock( &LoopWorkLock, &OldIrql );
 
     WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
-    if( !WQItem ) return;
+    if( !WQItem ) {
+	TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
+	return;
+    }
 
     WQItem->Packet = Packet;
     WQItem->Adapter = Adapter;
     WQItem->BytesTransferred = BytesTransferred;
-    ExInterlockedInsertTailList( &LoopWorkList, &WQItem->ListEntry, &LoopWorkLock );
+    InsertTailList( &LoopWorkList, &WQItem->ListEntry );
 
     TI_DbgPrint(DEBUG_DATALINK, ("Packet %x Adapter %x BytesTrans %x\n",
                                  Packet, Adapter, BytesTransferred));
 
-    ExQueueWorkItem( &LoopWorkItem, CriticalWorkQueue );
+    if( !LoopReceiveWorkerBusy ) {
+	LoopReceiveWorkerBusy = TRUE;
+	ExQueueWorkItem( &LoopWorkItem, CriticalWorkQueue );
+	TI_DbgPrint(DEBUG_DATALINK,
+		    ("Work item inserted %x %x\n", &LoopWorkItem, WQItem));
+    } else {
+        TI_DbgPrint(DEBUG_DATALINK,
+                    ("LOOP WORKER BUSY %x %x\n", &LoopWorkItem, WQItem));
+    }
+    TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
 }
 
 VOID LoopTransmit(
