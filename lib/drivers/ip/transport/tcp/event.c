@@ -64,7 +64,6 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     IP_PACKET Packet = { 0 };
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
-    NTSTATUS Status;
 
     if( *data == 0x45 ) { /* IPv4 */
 	Header = (PIPv4_HEADER)data;
@@ -103,7 +102,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     Packet.SrcAddr = LocalAddress;
     Packet.DstAddr = RemoteAddress;
 
-    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, TCPPacketSendComplete, NULL )))
+    if (!NT_SUCCESS(IPSendDatagram( &Packet, NCE, TCPPacketSendComplete, NULL )))
     {
         FreeNdisPacket(Packet.NdisPacket);
         return OSK_EINVAL;
