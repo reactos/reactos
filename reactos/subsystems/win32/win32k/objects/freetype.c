@@ -3669,7 +3669,14 @@ NtGdiExtTextOutW(
         }
         else
         {
-            TextLeft += Dx[i] << 6;
+            if (fuOptions & ETO_PDY)
+            {
+                TextLeft += Dx[i*2] << 6;
+            }
+            else
+            {
+                TextLeft += Dx[i] << 6;
+            }
 //         DbgPrint("new TextLeft2: %d\n", TextLeft);
         }
         previous = glyph_index;
