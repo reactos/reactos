@@ -44,7 +44,7 @@ char copyright[] =
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/time.h>
+#include <time.h>
 
 //#ifdef __STDC__
 //#error "__STDC__ defined"
