@@ -4,7 +4,7 @@
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifndef _INC_STDDEF
 #define _INC_STDDEF

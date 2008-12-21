@@ -6,7 +6,7 @@
 #ifndef _INC_RTCAPI
 #define _INC_RTCAPI
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 

@@ -10,7 +10,7 @@
 #pragma GCC system_header
 #endif
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 struct exception;
 

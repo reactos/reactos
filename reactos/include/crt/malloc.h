@@ -6,7 +6,7 @@
 #ifndef _MALLOC_H_
 #define _MALLOC_H_
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 

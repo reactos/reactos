@@ -6,7 +6,7 @@
 #ifndef _INC_STDLIB
 #define _INC_STDLIB
 
-#include <_mingw.h>
+#include <crtdefs.h>
 #include <limits.h>
 
 #pragma pack(push,_CRT_PACKING)

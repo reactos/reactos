@@ -6,7 +6,7 @@
 #ifndef _INC_SEARCH
 #define _INC_SEARCH
 
-#include <_mingw.h>
+#include <crtdefs.h>
 #include <stddef.h>
 
 #ifdef __cplusplus

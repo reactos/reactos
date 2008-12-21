@@ -6,7 +6,7 @@
 #ifndef _INC_STRING
 #define _INC_STRING
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifdef __cplusplus
 extern "C" {

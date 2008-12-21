@@ -6,7 +6,7 @@
 #ifndef __ASSERT_H_
 #define __ASSERT_H_
 
-#include <_mingw.h>
+#include <crtdefs.h>
 #ifdef __cplusplus
 #include <stdlib.h>
 #endif

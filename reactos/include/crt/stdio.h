@@ -6,7 +6,7 @@
 #ifndef _INC_STDIO
 #define _INC_STDIO
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 

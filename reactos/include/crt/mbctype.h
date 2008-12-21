@@ -6,7 +6,7 @@
 #ifndef _INC_MBCTYPE
 #define _INC_MBCTYPE
 
-#include <_mingw.h>
+#include <crtdefs.h>
 #include <ctype.h>
 
 #ifdef __cplusplus

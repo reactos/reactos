@@ -10,7 +10,7 @@
 #error Only Win32 target is supported!
 #endif
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifdef _USE_32BIT_TIME_T
 #ifdef _WIN64

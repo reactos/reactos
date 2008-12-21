@@ -6,7 +6,7 @@
 #ifndef _INC_ERRNO
 #define _INC_ERRNO
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifdef __cplusplus
 extern "C" {

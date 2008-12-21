@@ -6,7 +6,7 @@
 #ifndef _IO_H_
 #define _IO_H_
 
-#include <_mingw.h>
+#include <crtdefs.h>
 #include <string.h>
 
 #pragma pack(push,_CRT_PACKING)

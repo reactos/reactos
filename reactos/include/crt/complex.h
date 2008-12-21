@@ -26,8 +26,7 @@
 #ifndef _COMPLEX_H_
 #define _COMPLEX_H_
 
-/* All the headers include this file. */
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
      || !defined __STRICT_ANSI__ 

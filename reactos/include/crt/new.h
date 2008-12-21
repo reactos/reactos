@@ -10,7 +10,7 @@
 
 #include <new>
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma push_macro("new")
 #undef new

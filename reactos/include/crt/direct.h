@@ -6,7 +6,7 @@
 #ifndef _INC_DIRECT
 #define _INC_DIRECT
 
-#include <_mingw.h>
+#include <crtdefs.h>
 #include <io.h>
 
 #pragma pack(push,_CRT_PACKING)

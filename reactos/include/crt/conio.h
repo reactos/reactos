@@ -6,7 +6,7 @@
 #ifndef _INC_CONIO
 #define _INC_CONIO
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifdef __cplusplus
 extern "C" {

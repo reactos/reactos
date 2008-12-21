@@ -10,7 +10,7 @@
 #error Only Win32 target is supported!
 #endif
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #undef _CRT_PACKING
 #define _CRT_PACKING 8
