@@ -472,10 +472,70 @@ HRESULT WINAPI IDirect3DDevice9Base_Reset(LPDIRECT3DDEVICE9 iface, D3DPRESENT_PA
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::Present
+* @implemented
+*
+* The function IDirect3DDevice9Base_Present displays the content of the next
+* back buffer in sequence for the device.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param CONST RECT* pSourceRect
+* A pointer to a RECT structure representing an area of the back buffer to display where
+* NULL means the whole back buffer. This parameter MUST be NULL unless the back buffer
+* was created with the D3DSWAPEFFECT_COPY flag.
+*
+* @param CONST RECT* pDestRect
+* A pointer to a RECT structure representing an area of the back buffer where the content
+* will be displayed where NULL means the whole back buffer starting at (0,0).
+* This parameter MUST be NULL unless the back buffer was created with the D3DSWAPEFFECT_COPY flag.
+*
+* @param HWND hDestWindowOverride
+* A destination window where NULL means the window specified in the hWndDeviceWindow of the
+* D3DPRESENT_PARAMETERS structure.
+*
+* @param CONST RGNDATA* pDirtyRegion
+* A pointer to a RGNDATA structure representing an area of the back buffer to display where
+* NULL means the whole back buffer. This parameter MUST be NULL unless the back buffer
+* was created with the D3DSWAPEFFECT_COPY flag. This is an opimization region only.
+*
+* @return HRESULT
+* If the method successfully displays the back buffer content, the return value is D3D_OK.
+* If no swap chains are available, the return value will be D3DERR_INVALIDCALL.
+*/
 HRESULT WINAPI IDirect3DDevice9Base_Present(LPDIRECT3DDEVICE9 iface, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
 {
-    UNIMPLEMENTED
+    UINT i;
+    UINT iNumSwapChains;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
+    iNumSwapChains = IDirect3DDevice9Base_GetNumberOfSwapChains(iface);
+    if (0 == iNumSwapChains)
+    {
+        DPRINT1("Not enough swap chains, Present() fails");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    for (i = 0; i < iNumSwapChains; i++)
+    {
+        HRESULT hResult;
+        IDirect3DSwapChain9* pSwapChain;
+        
+        IDirect3DDevice9Base_GetSwapChain(iface, i, &pSwapChain);
+        hResult = IDirect3DSwapChain9_Present(pSwapChain, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, 0);
+
+        if (FAILED(hResult))
+        {
+            UNLOCK_D3DDEVICE9();
+            return hResult;
+        }
+    }
+
+    UNLOCK_D3DDEVICE9();
     return D3D_OK;
 }
 
