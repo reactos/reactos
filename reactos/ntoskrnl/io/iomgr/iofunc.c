@@ -428,7 +428,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Cleanup after exception */
-                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
@@ -485,7 +485,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Cleanup after exception */
-                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
@@ -2107,7 +2107,7 @@ NtReadFile(IN HANDLE FileHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Allocating failed, clean up */
-                IopCleanupAfterException(FileObject, Irp, NULL, Event);
+                IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
@@ -2139,7 +2139,7 @@ NtReadFile(IN HANDLE FileHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Allocating failed, clean up */
-                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
                 Status = _SEH2_GetExceptionCode();
                 _SEH2_YIELD(return Status);
             }
@@ -2971,7 +2971,7 @@ NtWriteFile(IN HANDLE FileHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Allocating failed, clean up */
-                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
                 Status = _SEH2_GetExceptionCode();
                 _SEH2_YIELD(return Status);
             }
@@ -3000,7 +3000,7 @@ NtWriteFile(IN HANDLE FileHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Allocating failed, clean up */
-                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
                 Status = _SEH2_GetExceptionCode();
                 _SEH2_YIELD(return Status);
             }
