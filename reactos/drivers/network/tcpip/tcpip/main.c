@@ -585,9 +585,6 @@ VOID NTAPI TiUnload(
   /* Shutdown network level protocol subsystem */
   IPShutdown();
 
-  /* Shutdown the lan worker */
-  LANShutdown();
-
   /* Free NDIS buffer descriptors */
   if (GlobalBufferPool)
     NdisFreeBufferPool(GlobalBufferPool);
@@ -827,9 +824,6 @@ DriverEntry(
 	return Status;
   }
 
-  /* Initialize the lan worker */
-  LANStartup();
-
   /* Register protocol with NDIS */
   /* This used to be IP_DEVICE_NAME but the DDK says it has to match your entry in the SCM */
   Status = LANRegisterProtocol(&strNdisDeviceName);
@@ -843,7 +837,6 @@ DriverEntry(
       NULL,
       0,
       NULL);
-    LANShutdown();
     TCPShutdown();
     UDPShutdown();
     RawIPShutdown();
@@ -863,7 +856,6 @@ DriverEntry(
   Status = LoopRegisterAdapter(NULL, NULL);
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
-    LANShutdown();
     TCPShutdown();
     UDPShutdown();
     RawIPShutdown();
