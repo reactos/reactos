@@ -288,14 +288,12 @@ void AdapterInit() {
                 Adapter->DhclientInfo.next = ifi;
                 ifi = &Adapter->DhclientInfo;
                 InsertTailList( &AdapterList, &Adapter->ListEntry );
-            }
-        }
+            } else { free( Adapter ); Adapter = 0; }
+        } else { free( Adapter ); Adapter = 0; }
 
         if( !Adapter )
             DH_DbgPrint(MID_TRACE,("Adapter %d was rejected\n",
                                    Table->table[i].dwIndex));
-        free( Adapter );
-        Adapter = 0;
     }
 
     DH_DbgPrint(MID_TRACE,("done with AdapterInit\n"));
