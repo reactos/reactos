@@ -305,7 +305,7 @@ Test_SPI_GETSETBEEP(PTESTINFO pti)
 	TEST(bTemp == 0);
 	cbSize = sizeof(szReg);
 	TEST(QueryUserRegValueW(L"Control Panel\\Sound", L"Beep", &szReg, &cbSize, NULL) == ERROR_SUCCESS);
-	TEST(wcscmpi(szReg, L"No") == 0);
+	TEST(_wcsicmp(szReg, L"No") == 0);
 
 	/* Value 1 */
 	NtUserSystemParametersInfo(SPI_SETBEEP, 1, NULL, SPIF_UPDATEINIFILE);
@@ -313,7 +313,7 @@ Test_SPI_GETSETBEEP(PTESTINFO pti)
 	TEST(bTemp == 1);
 	cbSize = sizeof(szReg);
 	TEST(QueryUserRegValueW(L"Control Panel\\Sound", L"Beep", &szReg, &cbSize, NULL) == ERROR_SUCCESS);
-	TEST(wcscmpi(szReg, L"Yes") == 0);
+	TEST(_wcsicmp(szReg, L"Yes") == 0);
 
 	/* Value 2 */
 	NtUserSystemParametersInfo(SPI_SETBEEP, 2, NULL, SPIF_UPDATEINIFILE);
@@ -321,7 +321,7 @@ Test_SPI_GETSETBEEP(PTESTINFO pti)
 	TEST(bTemp == 1);
 	cbSize = sizeof(szReg);
 	TEST(QueryUserRegValueW(L"Control Panel\\Sound", L"Beep", &szReg, &cbSize, NULL) == ERROR_SUCCESS);
-	TEST(wcscmpi(szReg, L"Yes") == 0);
+	TEST(_wcsicmp(szReg, L"Yes") == 0);
 
 	/* Restore original value */
 	NtUserSystemParametersInfo(SPI_SETBEEP, 0, &bOrig, SPIF_UPDATEINIFILE);
