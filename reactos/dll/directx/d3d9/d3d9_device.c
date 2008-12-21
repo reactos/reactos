@@ -880,11 +880,54 @@ HRESULT WINAPI IDirect3DDevice9Base_GetRenderTargetData(LPDIRECT3DDEVICE9 iface,
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetFrontBufferData
+* @implemented
+*
+* The function IDirect3DDevice9Base_GetFrontBufferData copies the content of
+* the display device's front buffer in a system memory surface buffer.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param IDirect3DSurface9* pDestSurface
+* Pointer to a IDirect3DSurface9 to receive front buffer content
+*
+* @return HRESULT
+* If the method successfully fills the pDestSurface buffer, the return value is D3D_OK.
+* If iSwapChain is out of range or pDestSurface is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL.
+*/
 HRESULT WINAPI IDirect3DDevice9Base_GetFrontBufferData(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, IDirect3DSurface9* pDestSurface)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
-    return D3D_OK;
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == pDestSurface)
+    {
+        DPRINT1("Invalid pDestSurface parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    hResult = IDirect3DSwapChain9_GetFrontBufferData(pSwapChain, pDestSurface);
+
+    UNLOCK_D3DDEVICE9();
+    return hResult;
 }
 
 HRESULT WINAPI IDirect3DDevice9Base_StretchRect(LPDIRECT3DDEVICE9 iface, IDirect3DSurface9* pSourceSurface, CONST RECT* pSourceRect, IDirect3DSurface9* pDestSurface, CONST RECT* pDestRect, D3DTEXTUREFILTERTYPE Filter)
