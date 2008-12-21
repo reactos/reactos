@@ -132,16 +132,27 @@ LoadAppInitDlls()
     {
         WCHAR buffer[KEY_LENGTH];
         LPWSTR ptr;
-        LPWSTR seps = L" ,";
+		size_t i;
 
-        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);;
+        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);
 
-        ptr = wcstok(buffer, seps);
-        while (ptr)
-        {
-            LoadLibraryW(ptr);
-            ptr = wcstok(NULL, seps);
-        }
+		for (i = 0; i < KEY_LENGTH; ++ i)
+		{
+			if(buffer[i] == L' ' || buffer[i] == L',')
+				buffer[i] = 0;
+		}
+
+		for (i = 0; i < KEY_LENGTH; )
+		{
+			if(buffer[i] == 0)
+				++ i;
+			else
+			{
+				ptr = buffer + i;
+				i += wcslen(ptr);
+				LoadLibraryW(ptr);
+			}
+		}
     }
 }
 
@@ -153,17 +164,28 @@ UnloadAppInitDlls()
         WCHAR buffer[KEY_LENGTH];
         HMODULE hModule;
         LPWSTR ptr;
-        LPWSTR seps = L" ,";
+		size_t i;
 
         RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);
 
-        ptr = wcstok(buffer, seps);
-        while (ptr)
-        {
-            hModule = GetModuleHandleW(ptr);
-            FreeLibrary(hModule);
-            ptr = wcstok(NULL, seps);
-        }
+		for (i = 0; i < KEY_LENGTH; ++ i)
+		{
+			if(buffer[i] == L' ' || buffer[i] == L',')
+				buffer[i] = 0;
+		}
+
+		for (i = 0; i < KEY_LENGTH; )
+		{
+			if(buffer[i] == 0)
+				++ i;
+			else
+			{
+				ptr = buffer + i;
+				i += wcslen(ptr);
+				hModule = GetModuleHandleW(ptr);
+				FreeLibrary(hModule);
+			}
+		}
     }
 }
 

@@ -1,4 +1,4 @@
-<module name="user32" type="win32dll" baseaddress="${BASEADDRESS_USER32}" installbase="system32" installname="user32.dll" unicode="yes">
+<module name="user32" type="win32dll" baseaddress="${BASEADDRESS_USER32}" installbase="system32" installname="user32.dll" unicode="yes" crt="dll">
 	<importlibrary definition="user32.def" />
 	<include base="user32">.</include>
 	<include base="user32">include</include>
