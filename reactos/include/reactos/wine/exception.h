@@ -9,6 +9,9 @@
 extern "C" {
 #endif
 
+typedef EXCEPTION_DISPOSITION (*PEXCEPTION_HANDLER)
+		(struct _EXCEPTION_RECORD*, void*, struct _CONTEXT*, void*);
+
 struct _EXCEPTION_REGISTRATION_RECORD;
 typedef struct _EXCEPTION_REGISTRATION_RECORD EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 
@@ -36,6 +39,13 @@ struct _EXCEPTION_REGISTRATION_RECORD
 #ifndef AbnormalTermination
 #define AbnormalTermination() _SEH2_AbnormalTermination()
 #endif
+
+/* Win32 seems to use the same flags as ExceptionFlags in an EXCEPTION_RECORD */
+#define EH_NONCONTINUABLE   0x01
+#define EH_UNWINDING        0x02
+#define EH_EXIT_UNWIND      0x04
+#define EH_STACK_INVALID    0x08
+#define EH_NESTED_CALL      0x10
 
 #define EXCEPTION_WINE_STUB       0x80000100
 #define EXCEPTION_WINE_ASSERTION  0x80000101

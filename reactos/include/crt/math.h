@@ -76,6 +76,7 @@ extern "C" {
   double __cdecl cos(double _X);
   double __cdecl cosh(double _X);
   double __cdecl exp(double _X);
+  double expm1(double _X);
   double __cdecl fabs(double _X);
   double __cdecl fmod(double _X,double _Y);
   double __cdecl log(double _X);
@@ -130,6 +131,7 @@ extern "C" {
    float __cdecl sinhf(float _X);
    float __cdecl tanhf(float _X);
    float __cdecl expf(float _X);
+   float expm1f(float _X);
    float __cdecl logf(float _X);
    float __cdecl log10f(float _X);
    float __cdecl modff(float _X,float *_Y);
@@ -421,6 +423,7 @@ extern "C" {
 
   extern long double __cdecl powl (long double, long double);
   extern long double __cdecl expl(long double);
+  extern long double expm1l(long double);
   extern long double __cdecl coshl(long double);
   extern long double __cdecl fabsl (long double);
   extern long double __cdecl acosl(long double);

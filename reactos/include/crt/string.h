@@ -143,11 +143,6 @@ extern "C" {
   _CRTIMP int __cdecl _wcsnicoll_l(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount,_locale_t _Locale);
 
 #ifndef	NO_OLDNAMES
-  /* NOTE: There is no _wcscmpi, but this is for compatibility. */
-  int __cdecl wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2);
-  __CRT_INLINE int __cdecl wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2) { return _wcsicmp (__ws1, __ws2); }
-  #define		_wcscmpi	_wcsicmp
-
   wchar_t *__cdecl wcsdup(const wchar_t *_Str);
 #define wcswcs wcsstr
   int __cdecl wcsicmp(const wchar_t *_Str1,const wchar_t *_Str2);

@@ -10,7 +10,7 @@
 #error Only Win32 target is supported!
 #endif
 
-#define _SH_COMPAT	0x00	/* Compatibility */
+#define _SH_COMPAT 0x00
 #define _SH_DENYRW 0x10
 #define _SH_DENYWR 0x20
 #define _SH_DENYRD 0x30

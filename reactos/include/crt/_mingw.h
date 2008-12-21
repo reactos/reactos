@@ -569,5 +569,27 @@ extern "C" {
 #endif
 
 #pragma pack(pop)
+
+/* There are here for intrin.h */
+#ifndef _SIZE_T_DEFINED
+#define _SIZE_T_DEFINED
+#ifdef _WIN64
+  typedef unsigned __int64 size_t;
+#else
+  typedef unsigned int size_t;
+#endif
+#endif
+
+#ifndef _UINTPTR_T_DEFINED
+#define _UINTPTR_T_DEFINED
+#ifdef _WIN64
+  typedef unsigned __int64 uintptr_t;
+#else
+  typedef unsigned int uintptr_t;
+#endif
+#endif
+
+#include <mingw32/intrin.h>
+
 #endif
 

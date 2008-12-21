@@ -131,7 +131,7 @@ extern "C" {
   typedef void (__cdecl *_purecall_handler)(void);
 
   _CRTIMP _purecall_handler __cdecl _set_purecall_handler(_purecall_handler _Handler);
-  _CRTIMP _purecall_handler __cdecl _get_purecall_handler();
+  _CRTIMP _purecall_handler __cdecl _get_purecall_handler(void);
 
   typedef void (__cdecl *_invalid_parameter_handler)(const wchar_t *,const wchar_t *,const wchar_t *,unsigned int,uintptr_t);
   _invalid_parameter_handler __cdecl _set_invalid_parameter_handler(_invalid_parameter_handler _Handler);
@@ -149,15 +149,10 @@ extern "C" {
   errno_t __cdecl _set_doserrno(unsigned long _Value);
   errno_t __cdecl _get_doserrno(unsigned long *_Value);
 
-#ifdef _MSVCRT_
-  extern int*	_imp___sys_nerr;
-  extern char***	_imp__sys_errlist;
-#else 
-  __MINGW_IMPORT int	_sys_nerr;
-  __MINGW_IMPORT char*	_sys_errlist[];
-#endif
+  _CRTIMP extern char *_sys_errlist[];
+  _CRTIMP extern int _sys_nerr;
 
-//#if (defined(_X86_) && !defined(__x86_64))
+#if (defined(_X86_) && !defined(__x86_64))
   _CRTIMP int *__cdecl __p___argc(void);
   _CRTIMP char ***__cdecl __p___argv(void);
   _CRTIMP wchar_t ***__cdecl __p___wargv(void);
@@ -165,7 +160,7 @@ extern "C" {
   _CRTIMP wchar_t ***__cdecl __p__wenviron(void);
   _CRTIMP char **__cdecl __p__pgmptr(void);
   _CRTIMP wchar_t **__cdecl __p__wpgmptr(void);
-//#endif
+#endif
 #ifndef __argc
 #ifdef _MSVCRT_
   extern int __argc;
@@ -349,15 +344,15 @@ extern "C" {
   void *__cdecl bsearch(const void *_Key,const void *_Base,size_t _NumOfElements,size_t _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
   void __cdecl qsort(void *_Base,size_t _NumOfElements,size_t _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
 #endif
-  /*unsigned short __cdecl _byteswap_ushort(unsigned short _Short); */
+  unsigned short __cdecl _byteswap_ushort(unsigned short _Short);
   /*unsigned long __cdecl _byteswap_ulong (unsigned long _Long); */
 #if _INTEGRAL_MAX_BITS >= 64
-  /*unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64 _Int64);*/
+  unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64 _Int64);
 #endif
   div_t __cdecl div(int _Numerator,int _Denominator);
   char *__cdecl getenv(const char *_VarName);
   _CRTIMP char *__cdecl _itoa(int _Value,char *_Dest,int _Radix);
-/* #if _INTEGRAL_MAX_BITS >= 64 */
+#if _INTEGRAL_MAX_BITS >= 64
   _CRTIMP char *__cdecl _i64toa(__int64 _Val,char *_DstBuf,int _Radix);
   _CRTIMP char *__cdecl _ui64toa(unsigned __int64 _Val,char *_DstBuf,int _Radix);
   _CRTIMP __int64 __cdecl _atoi64(const char *_String);
@@ -366,7 +361,7 @@ extern "C" {
   _CRTIMP __int64 __cdecl _strtoi64_l(const char *_String,char **_EndPtr,int _Radix,_locale_t _Locale);
   _CRTIMP unsigned __int64 __cdecl _strtoui64(const char *_String,char **_EndPtr,int _Radix);
   _CRTIMP unsigned __int64 __cdecl _strtoui64_l(const char *_String,char **_EndPtr,int _Radix,_locale_t _Locale);
-/* #endif */
+#endif
   ldiv_t __cdecl ldiv(long _Numerator,long _Denominator);
   _CRTIMP char *__cdecl _ltoa(long _Value,char *_Dest,int _Radix);
   int __cdecl mblen(const char *_Ch,size_t _MaxCount);
@@ -448,7 +443,7 @@ extern "C" {
   _CRTIMP long __cdecl _wtol(const wchar_t *_Str);
   _CRTIMP long __cdecl _wtol_l(const wchar_t *_Str,_locale_t _Locale);
 
-/* #if _INTEGRAL_MAX_BITS >= 64 */
+#if _INTEGRAL_MAX_BITS >= 64
   _CRTIMP wchar_t *__cdecl _i64tow(__int64 _Val,wchar_t *_DstBuf,int _Radix);
   _CRTIMP wchar_t *__cdecl _ui64tow(unsigned __int64 _Val,wchar_t *_DstBuf,int _Radix);
   _CRTIMP __int64 __cdecl _wtoi64(const wchar_t *_Str);
@@ -457,7 +452,7 @@ extern "C" {
   _CRTIMP __int64 __cdecl _wcstoi64_l(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
   _CRTIMP unsigned __int64 __cdecl _wcstoui64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
   _CRTIMP unsigned __int64 __cdecl _wcstoui64_l(const wchar_t *_Str ,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
-/* #endif */
+#endif
 #endif
 
 #ifndef _POSIX_
@@ -472,8 +467,8 @@ extern "C" {
   _CRTIMP int __cdecl _atodbl_l(_CRT_DOUBLE *_Result,char *_Str,_locale_t _Locale);
   _CRTIMP int __cdecl _atoldbl_l(_LDOUBLE *_Result,char *_Str,_locale_t _Locale);
   _CRTIMP int __cdecl _atoflt_l(_CRT_FLOAT *_Result,char *_Str,_locale_t _Locale);
-  _CRTIMP unsigned long __cdecl __MINGW_NOTHROW _lrotl(unsigned long, int) __MINGW_ATTRIB_CONST;
-  _CRTIMP unsigned long __cdecl __MINGW_NOTHROW _lrotr(unsigned long, int) __MINGW_ATTRIB_CONST;
+  unsigned long __cdecl _lrotl(unsigned long _Val,int _Shift);
+  unsigned long __cdecl _lrotr(unsigned long _Val,int _Shift);
   _CRTIMP void __cdecl _makepath(char *_Path,const char *_Drive,const char *_Dir,const char *_Filename,const char *_Ext);
   _onexit_t __cdecl _onexit(_onexit_t _Func);
 
@@ -482,13 +477,13 @@ extern "C" {
   void __cdecl perror(const char *_ErrMsg);
 #endif
   _CRTIMP int __cdecl _putenv(const char *_EnvString);
-  //_CRTIMP unsigned int __cdecl _rotl(unsigned int, int) __MINGW_ATTRIB_CONST;
+  unsigned int __cdecl _rotl(unsigned int _Val,int _Shift);
 #if _INTEGRAL_MAX_BITS >= 64
-  //_CRTIMP unsigned __int64 __cdecl _rotl64(unsigned __int64, int) __MINGW_ATTRIB_CONST;
+  unsigned __int64 __cdecl _rotl64(unsigned __int64 _Val,int _Shift);
 #endif
-  //_CRTIMP unsigned int __cdecl _rotr(unsigned int, int) __MINGW_ATTRIB_CONST;
+  unsigned int __cdecl _rotr(unsigned int _Val,int _Shift);
 #if _INTEGRAL_MAX_BITS >= 64
-  //_CRTIMP unsigned __int64 __cdecl _rotr64(unsigned __int64, int) __MINGW_ATTRIB_CONST;
+  unsigned __int64 __cdecl _rotr64(unsigned __int64 _Val,int _Shift);
 #endif
   _CRTIMP void __cdecl _searchenv(const char *_Filename,const char *_EnvVar,char *_ResultPath);
   _CRTIMP void __cdecl _splitpath(const char *_FullPath,char *_Drive,char *_Dir,char *_Filename,char *_Ext);
@@ -528,8 +523,8 @@ extern "C" {
 #endif
 #endif
 
-#define	sys_errlist	(*_imp___sys_errlist)
-#define	sys_nerr	(*_imp___sys_nerr)
+#define sys_errlist _sys_errlist
+#define sys_nerr _sys_nerr
 #define environ _environ
   char *__cdecl ecvt(double _Val,int _NumOfDigits,int *_PtDec,int *_PtSign);
   char *__cdecl fcvt(double _Val,int _NumOfDec,int *_PtDec,int *_PtSign);
@@ -563,7 +558,7 @@ extern "C" {
   char *__cdecl ulltoa (unsigned long long , char *, int);
   wchar_t *__cdecl lltow (long long, wchar_t *, int);
   wchar_t *__cdecl ulltow (unsigned long long, wchar_t *, int);
-#if _INTEGRAL_MAX_BITS >= 64
+
   /* __CRT_INLINE using non-ansi functions */
   __CRT_INLINE long long  __cdecl atoll (const char * _c) { return _atoi64 (_c); }
   __CRT_INLINE char *__cdecl lltoa (long long _n, char * _c, int _i) { return _i64toa (_n, _c, _i); }
@@ -572,7 +567,7 @@ extern "C" {
   __CRT_INLINE wchar_t *__cdecl lltow (long long _n, wchar_t * _w, int _i) { return _i64tow (_n, _w, _i); }
   __CRT_INLINE wchar_t *__cdecl ulltow (unsigned long long _n, wchar_t * _w, int _i) { return _ui64tow (_n, _w, _i); }
 #endif /* (__STRICT_ANSI__)  */
-#endif
+
 #endif /* !__NO_ISOCEXT */
 
 #ifdef __cplusplus

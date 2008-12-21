@@ -45,7 +45,7 @@ int _ismbslead( const unsigned char *start, const unsigned char *str)
 /*
  * @implemented
  */
-const unsigned char *__p__mbctype(void)
+unsigned char *__p__mbctype(void)
 {
   return _mbctype;
 }

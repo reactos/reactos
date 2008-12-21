@@ -294,7 +294,7 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
 
   _CRTIMP int __cdecl _vscprintf(const char *_Format,va_list _ArgList);
   _CRTIMP int __cdecl _set_printf_count_output(int _Value);
-  _CRTIMP int __cdecl _get_printf_count_output();
+  _CRTIMP int __cdecl _get_printf_count_output(void);
 
 #ifndef _WSTDIO_DEFINED
 
@@ -332,14 +332,7 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
   _CRTIMP int __cdecl _snwprintf(wchar_t *_Dest,size_t _Count,const wchar_t *_Format,...);
   _CRTIMP int __cdecl _vsnwprintf(wchar_t *_Dest,size_t _Count,const wchar_t *_Format,va_list _Args);
 #ifndef __NO_ISOCEXT  /* externs in libmingwex.a */
-  __CRT_INLINE int __cdecl snwprintf (wchar_t* s, size_t n, const wchar_t*  format, ...) {
-	  int r;
-	  va_list a;
-	  __mingw_va_start(a, format);
-	  r = _vsnwprintf (s, n, format, a);
-	  __mingw_va_end(a);
-	  return r;
-  }
+  _CRTIMP int __cdecl snwprintf (wchar_t* s, size_t n, const wchar_t*  format, ...);
   __CRT_INLINE int __cdecl vsnwprintf (wchar_t* s, size_t n, const wchar_t* format, va_list arg) { return _vsnwprintf(s,n,format,arg); }
   int __cdecl vwscanf (const wchar_t *, va_list);
   int __cdecl vfwscanf (FILE *,const wchar_t *,va_list);
