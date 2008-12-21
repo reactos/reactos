@@ -479,11 +479,58 @@ HRESULT WINAPI IDirect3DDevice9Base_Present(LPDIRECT3DDEVICE9 iface, CONST RECT*
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::GetBackBuffer
+* @implemented
+*
+* The function IDirect3DDevice9Base_GetBackBuffer retrieves the back buffer
+* for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param UINT iBackBuffer
+* Back buffer index to get object for.
+* The maximum value for this is the the total number of back buffers - 1, as indexing starts at 0.
+*
+* @param IDirect3DSurface9** ppBackBuffer
+* Pointer to a IDirect3DSurface9* to receive the back buffer object
+*
+* @return HRESULT
+* If the method successfully sets the ppBackBuffer pointer, the return value is D3D_OK.
+* If iSwapChain or iBackBuffer is out of range, Type is invalid or ppBackBuffer is a bad pointer,
+* the return value will be D3DERR_INVALIDCALL.
+*/
 HRESULT WINAPI IDirect3DDevice9Base_GetBackBuffer(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer)
 {
-    UNIMPLEMENTED
+    HRESULT hResult;
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
 
-    return D3D_OK;
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == ppBackBuffer)
+    {
+        DPRINT1("Invalid ppBackBuffer parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    hResult = IDirect3DSwapChain9_GetBackBuffer(pSwapChain, iBackBuffer, Type, ppBackBuffer);
+
+    UNLOCK_D3DDEVICE9();
+    return hResult;
 }
 
 /*++
@@ -503,6 +550,10 @@ HRESULT WINAPI IDirect3DDevice9Base_GetBackBuffer(LPDIRECT3DDEVICE9 iface, UINT 
 * @param D3DRASTER_STATUS* pRasterStatus
 * Pointer to a D3DRASTER_STATUS to receive the raster information
 *
+* @return HRESULT
+* If the method successfully fills the pRasterStatus structure, the return value is D3D_OK.
+* If iSwapChain is out of range or pRasterStatus is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL.
 */
 HRESULT WINAPI IDirect3DDevice9Base_GetRasterStatus(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, D3DRASTER_STATUS* pRasterStatus)
 {
