@@ -77,13 +77,18 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
   StartupInfo.cb = sizeof(STARTUPINFO);
 
   if (*md == 'r' ) {
+    StartupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
 	StartupInfo.hStdOutput = hWritePipe;
 	StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
   }
   else if ( *md == 'w' ) {
 	StartupInfo.hStdInput = hReadPipe;
+    StartupInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 	StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
   }
+
+  if (StartupInfo.dwFlags & STARTF_USESTDHANDLES)
+    StartupInfo.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
   result = CreateProcess(szComSpec,
 	                  szCmdLine,
