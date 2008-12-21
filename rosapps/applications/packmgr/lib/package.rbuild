@@ -1,4 +1,4 @@
-<module name="package" type="win32dll" installbase="system32" installname="package.dll" allowwarnings="true" stdlib="host">
+<module name="package" type="win32dll" installbase="system32" installname="package.dll" allowwarnings="true" stdlib="host" crt="msvcrt">
 	<importlibrary definition="package.def" />
 	<include base="package">.</include>
 
