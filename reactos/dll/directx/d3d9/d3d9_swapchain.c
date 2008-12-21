@@ -249,3 +249,8 @@ VOID Direct3DSwapChain9_GetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, D3D
 {
     memcpy(pRamp, &pThisSwapChain->GammaRamp, sizeof(D3DGAMMARAMP));
 }
+
+VOID Direct3DSwapChain9_SetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
+{
+    UNIMPLEMENTED
+}

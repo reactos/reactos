@@ -650,9 +650,57 @@ HRESULT WINAPI IDirect3DDevice9Base_SetDialogBoxMode(LPDIRECT3DDEVICE9 iface, BO
     return D3D_OK;
 }
 
+/*++
+* @name IDirect3DDevice9::SetGammaRamp
+* @implemented
+*
+* The function IDirect3DDevice9Base_SetGammaRamp sets the gamma correction ramp values
+* for the specified swap chain.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3DDevice9 object returned from IDirect3D9::CreateDevice().
+*
+* @param UINT iSwapChain
+* Swap chain index to get object for.
+* The maximum value for this is the value returned by IDirect3DDevice9::GetNumberOfSwapChains() - 1.
+*
+* @param UINT Flags
+* Can be on of the following:
+* D3DSGR_CALIBRATE - Detects if a gamma calibrator is installed and if so modifies the values to correspond to
+*                    the monitor and system settings before sending them to the display device.
+* D3DSGR_NO_CALIBRATION - The gamma calibrations values are sent directly to the display device without
+*                         any modification.
+*
+* @param CONST D3DGAMMARAMP* pRamp
+* Pointer to a D3DGAMMARAMP representing the gamma correction ramp values to be set.
+*
+*/
 VOID WINAPI IDirect3DDevice9Base_SetGammaRamp(LPDIRECT3DDEVICE9 iface, UINT iSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp)
 {
-    UNIMPLEMENTED
+    IDirect3DSwapChain9* pSwapChain = NULL;
+    Direct3DSwapChain9_INT* pSwapChain_INT;
+    LPDIRECT3DDEVICE9_INT This = IDirect3DDevice9ToImpl(iface);
+    LOCK_D3DDEVICE9();
+
+    IDirect3DDevice9Base_GetSwapChain(iface, iSwapChain, &pSwapChain);
+    if (NULL == pSwapChain)
+    {
+        DPRINT1("Invalid iSwapChain parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return;
+    }
+
+    if (NULL == pRamp)
+    {
+        DPRINT1("Invalid pRamp parameter specified");
+        UNLOCK_D3DDEVICE9();
+        return;
+    }
+
+    pSwapChain_INT = IDirect3DSwapChain9ToImpl(pSwapChain);
+    Direct3DSwapChain9_SetGammaRamp(pSwapChain_INT, Flags, pRamp);
+
+    UNLOCK_D3DDEVICE9();
 }
 
 /*++
