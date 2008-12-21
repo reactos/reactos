@@ -1024,7 +1024,7 @@ static void test_CoGetObjectContext(void)
 
 START_TEST(compobj)
 {
-    skip("Skipping compobj tests\n");
+    skip("ROS-HACK: Skipping compobj tests\n");
     return;
 
     HMODULE hOle32 = GetModuleHandle("ole32");

@@ -1,0 +1,14 @@
+Index: compobj.c
+===================================================================
+--- compobj.c	(revision 38229)
++++ compobj.c	(working copy)
+@@ -1024,6 +1024,9 @@
+ 
+ START_TEST(compobj)
+ {
++    skip("ROS-HACK: Skipping compobj tests\n");
++    return;
++
+     HMODULE hOle32 = GetModuleHandle("ole32");
+     pCoGetObjectContext = (void*)GetProcAddress(hOle32, "CoGetObjectContext");
+     if (!(pCoInitializeEx = (void*)GetProcAddress(hOle32, "CoInitializeEx")))
