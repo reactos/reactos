@@ -21,3 +21,28 @@ Index: security.c
  
      test_SetSecurityDescriptorControl(sec);
  
+===================================================================
+--- security.c	(revision 38229)
++++ security.c	(working copy)
+@@ -2840,6 +2840,7 @@
+ 
+     /* If we don't ask for the security descriptor, Windows will still give us
+        the other stuff, leaving us no way to free it.  */
++    dacl = NULL;
+     ret = pGetSecurityInfo(obj, SE_FILE_OBJECT,
+                           OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                           &owner, &group, &dacl, NULL, NULL);
+@@ -2847,8 +2848,12 @@
+     ok(owner != NULL, "GetSecurityInfo\n");
+     ok(group != NULL, "GetSecurityInfo\n");
+     ok(dacl != NULL, "GetSecurityInfo\n");
+-    ok(IsValidAcl(dacl), "GetSecurityInfo\n");
+ 
++    if (dacl != NULL)
++    {
++        ok(IsValidAcl(dacl), "GetSecurityInfo\n");
++    }
++
+     CloseHandle(obj);
+ }
+ 
