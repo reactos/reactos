@@ -73,8 +73,8 @@ PspRunCreateProcessNotifyRoutines(IN PEPROCESS CurrentProcess,
             /* Do the callback */
             ExDoCallBack(&PspProcessNotifyRoutine[i],
                          CurrentProcess->InheritedFromUniqueProcessId,
-                         (PVOID)(ULONG_PTR)Create,
-                         NULL);
+                         CurrentProcess->UniqueProcessId,
+                         (PVOID)(ULONG_PTR)Create);
         }
     }
 }
