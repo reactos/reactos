@@ -48,6 +48,10 @@
 #define __MINGW_GNUC_PREREQ(major, minor)  0
 #endif
 
+#if !defined (_MSC_VER)
+#define __MINGW_MSC_PREREQ(major, minor)  0
+#endif
+
 #define USE___UUIDOF	0
 
 #ifdef __cplusplus
