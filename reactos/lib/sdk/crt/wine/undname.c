@@ -19,27 +19,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "wine/config.h"
-#include "wine/port.h"
-
+#define __WINE_DEBUG_CHANNEL__
+#include <precomp.h>
 #include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "wine/exception.h"
-#include "winnt.h"
-#include "excpt.h"
-#include "wine/debug.h"
-#include <malloc.h>
-#include <stdlib.h>
 
 #include <internal/wine/msvcrt.h>
 #include <internal/wine/cppexcept.h>
-#include <internal/mtdll.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 

@@ -23,20 +23,11 @@
  * www.thecodeproject.com.
  */
 
-#include "wine/config.h"
-#include "wine/port.h"
-
+#define __WINE_DEBUG_CHANNEL__
+#include <precomp.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winternl.h"
 #include <internal/wine/msvcrt.h>
-#include "wine/exception.h"
-#include "excpt.h"
-#include "wine/debug.h"
-
 #include <internal/wine/cppexcept.h>
 
 #ifdef __i386__  /* CxxFrameHandler is not supported on non-i386 */
@@ -328,7 +319,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, cxx_exception_frame 
 
             /* setup an exception block for nested exceptions */
 
-            nested_frame.frame.Handler = (PEXCEPTION_HANDLER)catch_function_nested_handler;
+            nested_frame.frame.Handler = (PEXCEPTION_ROUTINE)catch_function_nested_handler;
             nested_frame.prev_rec  = thread_data->exc_record;
             nested_frame.cxx_frame = frame;
             nested_frame.descr     = descr;
