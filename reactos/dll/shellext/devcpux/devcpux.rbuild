@@ -1,5 +1,5 @@
 <module name="devcpux" type="win32dll" installbase="system32" installname="devcpux.dll" unicode="yes">
-	<importlibrary definition="devcpux.def" />
+	<importlibrary definition="devcpux.spec" />
 	<include base="devcpux">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>kernel32</library>

@@ -14,7 +14,7 @@
 #include "resource.h"
 
 HINSTANCE g_hInstance = NULL;
-int APIENTRY ProcessorDlgProc (HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK ProcessorDlgProc (HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam);
 
 BOOL
 APIENTRY
@@ -74,8 +74,8 @@ AddFeature(WCHAR* szFeatures, WCHAR* Feature, BOOL* bFirst)
 	wcscat(szFeatures, Feature);
 }
 
-int
-APIENTRY
+LRESULT
+CALLBACK
 ProcessorDlgProc (HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMessage) {
