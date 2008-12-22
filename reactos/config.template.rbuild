@@ -88,6 +88,6 @@
 <!--
 	Whether to compile the multi processor versions for ntoskrnl and hal.
 -->
-<property name="BUILD_MP" value="0" />
+<property name="BUILD_MP" value="1" />
 
 </group>
