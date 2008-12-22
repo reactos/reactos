@@ -275,9 +275,9 @@ _tmain (VOID)
 				_tcscpy(ServerName,argv[++i]);
 				bLocal = FALSE;
 			}
-			else if(!wcsicmp(argv[i], L"/U") && i + 1 < argc)
+			else if(!_wcsicmp(argv[i], L"/U") && i + 1 < argc)
 				_tcscpy(UserName,argv[++i]);
-			else if(!wcsicmp(argv[i], L"/P") && i + 1 < argc)
+			else if(!_wcsicmp(argv[i], L"/P") && i + 1 < argc)
 				_tcscpy(Password,argv[++i]);
 			else
 			{
