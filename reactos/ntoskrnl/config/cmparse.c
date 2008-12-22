@@ -492,16 +492,7 @@ CmpDoCreate(IN PHHIVE Hive,
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyCell == Cell);
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyHive == Hive);
         ASSERT(KeyBody->KeyControlBlock->ParentKcb == ParentKcb);
-        //ASSERT(KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen == KeyNode->MaxNameLen);
-        if (KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen != KeyNode->MaxNameLen)
-        {
-            /* HACK: this gets unsynced due to (?) mismatching KCB referencing */
-            DPRINT1("BUG: KCB MaxNameLen %d does not match KeyNode's MaxNameLen %d!\n",
-                KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen, KeyNode->MaxNameLen);
-
-            /* Manually sync MaxNameLens, remove once fixed */
-            KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen = KeyNode->MaxNameLen;
-        }
+        ASSERT(KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen == KeyNode->MaxNameLen);
 
         /* Update the timestamp */
         KeQuerySystemTime(&TimeStamp);
