@@ -3132,6 +3132,7 @@ GreExtTextOutW(
     POINT Start;
     BOOL DoBreak = FALSE;
     HPALETTE hDestPalette;
+    USHORT DxShift;
 
     // TODO: Write test-cases to exactly match real Windows in different
     // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -3157,6 +3158,8 @@ GreExtTextOutW(
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         goto fail;
     }
+
+    DxShift = fuOptions & ETO_PDY ? 1 : 0;
 
     if (PATH_IsPathOpen(dc->DcLevel))
     {
@@ -3364,7 +3367,7 @@ GreExtTextOutW(
         if (NULL != Dx)
         {
             Start = Count < 2 ? 0 : Count - 2;
-            TextWidth = Count < 2 ? 0 : (Dx[Count - 2] << 6);
+            TextWidth = Count < 2 ? 0 : (Dx[(Count-2)<<DxShift] << 6);
         }
         else
         {
@@ -3597,7 +3600,7 @@ GreExtTextOutW(
         }
         else
         {
-            TextLeft += Dx[i] << 6;
+            TextLeft += Dx[i<<DxShift] << 6;
 //         DbgPrint("new TextLeft2: %d\n", TextLeft);
         }
         previous = glyph_index;
