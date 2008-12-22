@@ -479,7 +479,7 @@ BOOL DfLoadConfig(void)
 				char path[64];
 				DfBuildFileName(path, ".DfCfg");
 	        	fclose(fp);
-				unlink(path);
+				_unlink(path);
             	strcpy(DfCfg.version, DF_VERSION);
 			}
 			ConfigLoaded = TRUE;

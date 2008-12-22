@@ -536,7 +536,7 @@ BOOL DfDisplayHelp(DFWINDOW wnd, char *Help)
     FindHelp(Help);
     if (ThisHelp != NULL)    {
         if (LastStack == NULL ||
-                stricmp(Help, LastStack->hname))    {
+                _stricmp(Help, LastStack->hname))    {
             /* ---- add the window to the history stack ---- */
             ThisStack = DfCalloc(1,sizeof(struct HelpStack));
             ThisStack->hname = DfMalloc(strlen(Help)+1);

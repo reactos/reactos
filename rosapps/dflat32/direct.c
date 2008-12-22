@@ -78,7 +78,7 @@ void DfCreatePath(char *path,char *fspec,int InclName,int Change)
 
 static int dircmp(const void *c1, const void *c2)
 {
-    return stricmp(*(char **)c1, *(char **)c2);
+    return _stricmp(*(char **)c1, *(char **)c2);
 }
 
 

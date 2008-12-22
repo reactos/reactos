@@ -241,7 +241,7 @@ static void SelectFile(DFWINDOW wnd)
 		while (wnd1 != NULL)
 		{
 			if (wnd1->extension &&
-				stricmp(FileName, wnd1->extension) == 0)
+				_stricmp(FileName, wnd1->extension) == 0)
 			{
 				DfSendMessage(wnd1, DFM_SETFOCUS, TRUE, 0);
 				DfSendMessage(wnd1, DFM_RESTORE, 0, 0);
@@ -462,7 +462,7 @@ static void EditDeleteFile(DFWINDOW wnd)
                 char msg[30];
                 sprintf(msg, "Delete %s?", fn);
                 if (DfYesNoBox(msg))    {
-                    unlink(wnd->extension);
+                    _unlink(wnd->extension);
                     DfSendMessage(wnd, DFM_CLOSE_WINDOW, 0, 0);
                 }
             }
