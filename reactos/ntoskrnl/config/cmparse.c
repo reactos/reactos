@@ -599,37 +599,73 @@ CmpDoOpen(IN PHHIVE Hive,
     /* If we have a KCB, make sure it's locked */
     //ASSERT(CmpIsKcbLockedExclusive(*CachedKcb));
 
-    /* Check if this is a symlink */
-    if ((Node->Flags & KEY_SYM_LINK) && !(Attributes & OBJ_OPENLINK))
+    /* Check if caller doesn't want to create a KCB */
+    if (ControlFlags & CMP_OPEN_KCB_NO_CREATE)
     {
-        /* Create the KCB for the symlink */
+        /* Check if this is a symlink */
+        if ((Node->Flags & KEY_SYM_LINK) && !(Attributes & OBJ_OPENLINK))
+        {
+            /* This case for a cached KCB is not implemented yet */
+            ASSERT(FALSE);
+        }
+
+        /* The caller wants to open a cached KCB */
+        if (!CmpReferenceKeyControlBlock(*CachedKcb))
+        {
+            /* Release the registry lock */
+            CmpUnlockRegistry();
+
+            /* Return failure code */
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Our kcb is that one */
+        Kcb = *CachedKcb;
+    }
+    else
+    {
+        /* Check if this is a symlink */
+        if ((Node->Flags & KEY_SYM_LINK) && !(Attributes & OBJ_OPENLINK))
+        {
+            /* Create the KCB for the symlink */
+            Kcb = CmpCreateKeyControlBlock(Hive,
+                                           Cell,
+                                           Node,
+                                           *CachedKcb,
+                                           0,
+                                           KeyName);
+            if (!Kcb)
+            {
+                /* Release registry lock and return failure */
+                CmpUnlockRegistry();
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            /* Make sure it's also locked, and set the pointer */
+            //ASSERT(CmpIsKcbLockedExclusive(Kcb));
+            *CachedKcb = Kcb;
+
+            /* Release the registry lock */
+            CmpUnlockRegistry();
+
+            /* Return reparse required */
+            return STATUS_REPARSE;
+        }
+
+        /* Create the KCB. FIXME: Use lock flag */
         Kcb = CmpCreateKeyControlBlock(Hive,
                                        Cell,
                                        Node,
                                        *CachedKcb,
                                        0,
                                        KeyName);
-        if (!Kcb) return STATUS_INSUFFICIENT_RESOURCES;
-
-        /* Make sure it's also locked, and set the pointer */
-        //ASSERT(CmpIsKcbLockedExclusive(Kcb));
-        *CachedKcb = Kcb;
-
-        /* Release the registry lock */
-        CmpUnlockRegistry();
-
-        /* Return reparse required */
-        return STATUS_REPARSE;
+        if (!Kcb)
+        {
+            /* Release registry lock and return failure */
+            CmpUnlockRegistry();
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
-
-    /* Create the KCB. FIXME: Use lock flag */
-    Kcb = CmpCreateKeyControlBlock(Hive,
-                                   Cell,
-                                   Node,
-                                   *CachedKcb,
-                                   0,
-                                   KeyName);
-    if (!Kcb) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Make sure it's also locked, and set the pointer */
     //ASSERT(CmpIsKcbLockedExclusive(Kcb));
@@ -1308,10 +1344,7 @@ CmpParseKey(IN PVOID ParseObject,
                                   &CellToRelease);
                 if (!Node) ASSERT(FALSE);
             }
-            
-            /* FIXME: This hack seems required? */
-            RtlInitUnicodeString(&NextName, L"\\REGISTRY");
-            
+
             /* Do the open */
             Status = CmpDoOpen(Hive,
                                Cell,
@@ -1320,7 +1353,7 @@ CmpParseKey(IN PVOID ParseObject,
                                AccessMode,
                                Attributes,
                                ParseContext,
-                               0,
+                               CMP_OPEN_KCB_NO_CREATE /* | CMP_CREATE_KCB_KCB_LOCKED */,
                                &Kcb,
                                &NextName,
                                Object);
