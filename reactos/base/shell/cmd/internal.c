@@ -431,6 +431,12 @@ MakeFullPath(TCHAR * DirPath)
     TCHAR *p = DirPath;
     INT  n;
 
+    if (CreateDirectory(DirPath, NULL))
+        return TRUE;
+    else if (GetLastError() != ERROR_PATH_NOT_FOUND)
+        return FALSE;
+
+    /* got ERROR_PATH_NOT_FOUND, so try building it up one component at a time */
     if (p[0] && p[1] == _T(':'))
         p += 2;
     while (*p == _T('\\'))
@@ -445,8 +451,6 @@ MakeFullPath(TCHAR * DirPath)
            (GetLastError() != ERROR_ALREADY_EXISTS))
            return FALSE;
     } while (p != NULL);
-    if (GetLastError() == ERROR_ALREADY_EXISTS)
-       SetLastError(ERROR_SUCCESS);
 
     return TRUE;
 }
@@ -457,55 +461,42 @@ MakeFullPath(TCHAR * DirPath)
  */
 INT cmd_mkdir (LPTSTR param)
 {
-	LPTSTR dir;		/* pointer to the directory to change to */
-	LPTSTR *p = NULL;
-	INT argc;
-	nErrorLevel = 0;
+	LPTSTR *p;
+	INT argc, i;
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_MKDIR_HELP);
 		return 0;
 	}
 
-
-		p = split (param, &argc, FALSE);
-		if (argc > 1)
-		{
-			/*JPP 20-Jul-1998 use standard error message */
-			error_too_many_parameters (param);
-			freep (p);
-			return 1;
-		}
-		else
-			dir = p[0];
-
-	if (!dir)
+	p = split (param, &argc, FALSE);
+	if (argc == 0)
 	{
-		ConErrResPuts (STRING_ERROR_REQ_PARAM_MISSING);
+		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 		nErrorLevel = 1;
-		if(p != NULL)
-			freep (p);
+		freep(p);
 		return 1;
 	}
 
-    if (!MakeFullPath(dir))
-    {
-        if(GetLastError() == ERROR_PATH_NOT_FOUND)
-        {
-            ConErrResPuts(STRING_MD_ERROR2);
-        }
-        else
-        {
-            ErrorMessage (GetLastError(), _T("MD"));
-        }
-        nErrorLevel = 1;
-        freep (p);
-        return 1;
-    }
+	nErrorLevel = 0;
+	for (i = 0; i < argc; i++)
+	{
+		if (!MakeFullPath(p[i]))
+		{
+			if(GetLastError() == ERROR_PATH_NOT_FOUND)
+			{
+				ConErrResPuts(STRING_MD_ERROR2);
+			}
+			else
+			{
+				ErrorMessage (GetLastError(), _T("MD"));
+			}
+			nErrorLevel = 1;
+		}
+	}
 
 	freep (p);
-
-	return 0;
+	return nErrorLevel;
 }
 #endif
 
