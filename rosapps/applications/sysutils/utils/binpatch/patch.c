@@ -444,7 +444,7 @@ applyPatch_file_open_error:
             printf("(S)kip, (R)etry, (A)bort, (M)anually enter filename");
             do
             {
-               c = getch();
+               c = _getch();
             }
             while (c != 's' && c != 'r' && c != 'a' && c != 'm');
             printf("\n");
@@ -496,7 +496,7 @@ applyPatch_file_open_error:
          printf("Do you want to make a backup of %s? (Y)es, (N)o, (A)bort", fileName);
          do
          {
-            c = getch();
+            c = _getch();
          }
          while (c != 'y' && c != 'n' && c != 'a');
          printf("\n");
@@ -511,7 +511,7 @@ applyPatch_file_open_error:
                printf("File %s already exists, overwrite? (Y)es, (N)o, (A)bort", buffer);
                do
                {
-                  c = getch();
+                  c = _getch();
                }
                while (c != 'y' && c != 'n' && c != 'a');
                printf("\n");
