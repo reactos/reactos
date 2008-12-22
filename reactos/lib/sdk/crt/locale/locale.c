@@ -150,7 +150,7 @@ static void remap_synonym(char *name)
   size_t i;
   for (i = 0; i < sizeof(_country_synonyms)/sizeof(char*); i += 2 )
   {
-    if (!strcasecmp(_country_synonyms[i],name))
+    if (!_stricmp(_country_synonyms[i],name))
     {
       TRACE(":Mapping synonym %s to %s\n",name,_country_synonyms[i+1]);
       name[0] = _country_synonyms[i+1][0];
@@ -172,7 +172,7 @@ static int compare_info(LCID lcid, DWORD flags, char* buff, const char* cmp)
   if (!buff[0] || !cmp[0])
     return 0;
   /* Partial matches are allowed, e.g. "Germ" matches "Germany" */
-  return !strncasecmp(cmp, buff, strlen(cmp));
+  return !_strnicmp(cmp, buff, strlen(cmp));
 }
 
 
@@ -271,12 +271,12 @@ static LCID MSVCRT_locale_to_LCID(locale_search_t* locale)
       else
       {
         /* Special codepage values: OEM & ANSI */
-        if (strcasecmp(locale->search_codepage,"OCP"))
+        if (_stricmp(locale->search_codepage,"OCP"))
         {
           GetLocaleInfoA(lcid, LOCALE_IDEFAULTCODEPAGE,
                          locale->found_codepage, MAX_ELEM_LEN);
         }
-        if (strcasecmp(locale->search_codepage,"ACP"))
+        if (_stricmp(locale->search_codepage,"ACP"))
         {
           GetLocaleInfoA(lcid, LOCALE_IDEFAULTANSICODEPAGE,
                          locale->found_codepage, MAX_ELEM_LEN);
