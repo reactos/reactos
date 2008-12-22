@@ -1298,14 +1298,14 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpstrCommand, LPWSTR lpstrRet,
 	    tmp = devType; devType = dev; dev = tmp;
 
 	    dwFlags |= MCI_OPEN_TYPE;
-	    data[2] = (DWORD)devType;
+	    data[2] = (DWORD_PTR)devType;
 	    devType = str_dup_upper(devType);
 	    dwFlags |= MCI_OPEN_ELEMENT;
-	    data[3] = (DWORD)dev;
+	    data[3] = (DWORD_PTR)dev;
 	} else if (strchrW(dev, '.') == NULL) {
 	    tmp = strchrW(dev,' ');
 	    if (tmp) *tmp = '\0';
-	    data[2] = (DWORD)dev;
+	    data[2] = (DWORD_PTR)dev;
 	    devType = str_dup_upper(dev);
 	    if (tmp) *tmp = ' ';
 	    dwFlags |= MCI_OPEN_TYPE;
@@ -1326,7 +1326,7 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpstrCommand, LPWSTR lpstrRet,
 		devType = str_dup_upper(buf);
 	    }
 	    dwFlags |= MCI_OPEN_ELEMENT;
-	    data[3] = (DWORD)dev;
+	    data[3] = (DWORD_PTR)dev;
 	}
 	if ((devAlias = strstrW(args, wszSAliasS))) {
             WCHAR*      tmp2;
@@ -1336,7 +1336,7 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpstrCommand, LPWSTR lpstrRet,
             tmp2 = HeapAlloc(GetProcessHeap(), 0, (tmp - devAlias + 1) * sizeof(WCHAR) );
             memcpy( tmp2, devAlias, (tmp - devAlias) * sizeof(WCHAR) );
             tmp2[tmp - devAlias] = 0;
-            data[4] = (DWORD)tmp2;
+            data[4] = (DWORD_PTR)tmp2;
 	    /* should be done in regular options parsing */
 	    /* dwFlags |= MCI_OPEN_ALIAS; */
 	}
@@ -1390,14 +1390,14 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpstrCommand, LPWSTR lpstrRet,
     /* set up call back */
     if (hwndCallback != 0) {
 	dwFlags |= MCI_NOTIFY;
-	data[0] = (DWORD)hwndCallback;
+	data[0] = (DWORD_PTR)hwndCallback;
     }
 
     /* set return information */
     switch (retType = MCI_GetReturnType(lpCmd)) {
     case 0:		offset = 1;	break;
     case MCI_INTEGER:	offset = 2;	break;
-    case MCI_STRING:	data[1] = (DWORD)lpstrRet; data[2] = uRetLen; offset = 3; break;
+    case MCI_STRING:	data[1] = (DWORD_PTR)lpstrRet; data[2] = uRetLen; offset = 3; break;
     case MCI_RECT:	offset = 5;	break;
     default:	ERR("oops\n");
     }
@@ -1549,7 +1549,7 @@ BOOL WINAPI mciFreeCommandResource(UINT uTable)
 /**************************************************************************
  * 			MCI_SendCommandFrom32			[internal]
  */
-DWORD MCI_SendCommandFrom32(MCIDEVICEID wDevID, UINT16 wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+DWORD MCI_SendCommandFrom32(MCIDEVICEID wDevID, UINT16 wMsg, DWORD dwParam1, DWORD dwParam2)
 {
     DWORD		dwRet = MCIERR_INVALID_DEVICE_ID;
     LPWINE_MCIDRIVER	wmd = MCI_GetDriver(wDevID);
@@ -1584,7 +1584,7 @@ DWORD MCI_SendCommandFrom32(MCIDEVICEID wDevID, UINT16 wMsg, DWORD_PTR dwParam1,
 /**************************************************************************
  * 			MCI_SendCommandFrom16			[internal]
  */
-DWORD MCI_SendCommandFrom16(MCIDEVICEID wDevID, UINT16 wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+DWORD MCI_SendCommandFrom16(MCIDEVICEID wDevID, UINT16 wMsg, DWORD dwParam1, DWORD dwParam2)
 {
     DWORD		dwRet = MCIERR_INVALID_DEVICE_ID;
     LPWINE_MCIDRIVER	wmd = MCI_GetDriver(wDevID);
@@ -1643,7 +1643,7 @@ static	DWORD MCI_Open(DWORD dwParam, LPMCI_OPEN_PARMSW lpParms)
 
     if (dwParam & MCI_OPEN_TYPE) {
 	if (dwParam & MCI_OPEN_TYPE_ID) {
-	    WORD uDevType = LOWORD((DWORD)lpParms->lpstrDeviceType);
+	    WORD uDevType = LOWORD((DWORD_PTR)lpParms->lpstrDeviceType);
 
 	    if (uDevType < MCI_DEVTYPE_FIRST ||
 		uDevType > MCI_DEVTYPE_LAST ||
@@ -1825,7 +1825,7 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSW lpParm
     if (lpParms == NULL)			return MCIERR_NULL_PARAMETER_BLOCK;
 
     TRACE("(%08x, %08lX, %08lX[num=%ld, wDevTyp=%u])\n",
-	  uDevID, dwFlags, (DWORD)lpParms, lpParms->dwNumber, lpParms->wDeviceType);
+	  uDevID, dwFlags, lpParms, lpParms->dwNumber, lpParms->wDeviceType);
 
     switch (dwFlags & ~MCI_SYSINFO_OPEN) {
     case MCI_SYSINFO_QUANTITY:
@@ -2214,7 +2214,7 @@ BOOL WINAPI mciSetDriverData(MCIDEVICEID uDeviceID, DWORD data)
  * 				mciSendCommandW			[WINMM.@]
  *
  */
-DWORD WINAPI mciSendCommandW(MCIDEVICEID wDevID, UINT wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+DWORD WINAPI mciSendCommandW(MCIDEVICEID wDevID, UINT wMsg, DWORD dwParam1, DWORD_PTR dwParam2)
 {
     DWORD	dwRet;
 
@@ -2230,7 +2230,7 @@ DWORD WINAPI mciSendCommandW(MCIDEVICEID wDevID, UINT wMsg, DWORD_PTR dwParam1, 
 /**************************************************************************
  * 				mciSendCommandA			[WINMM.@]
  */
-DWORD WINAPI mciSendCommandA(MCIDEVICEID wDevID, UINT wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+DWORD WINAPI mciSendCommandA(MCIDEVICEID wDevID, UINT wMsg, DWORD dwParam1, DWORD_PTR dwParam2)
 {
     DWORD ret;
     int mapped;
@@ -2388,12 +2388,12 @@ YIELDPROC WINAPI mciGetYieldProc(MCIDEVICEID uDeviceID, DWORD* lpdwYieldData)
 /**************************************************************************
  * 				mciGetCreatorTask		[WINMM.@]
  */
-HTASK WINAPI mciGetCreatorTask(MCIDEVICEID uDeviceID)
+HANDLE WINAPI mciGetCreatorTask(MCIDEVICEID uDeviceID)
 {
     LPWINE_MCIDRIVER	wmd;
-    HTASK ret = 0;
+    HANDLE ret = 0;
 
-    if ((wmd = MCI_GetDriver(uDeviceID))) ret = (HTASK)wmd->CreatorThread;
+    if ((wmd = MCI_GetDriver(uDeviceID))) ret = wmd->CreatorThread;
 
     TRACE("(%u) => %p\n", uDeviceID, ret);
     return ret;

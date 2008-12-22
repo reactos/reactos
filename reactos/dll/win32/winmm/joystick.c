@@ -81,7 +81,7 @@ static	BOOL JOY_LoadDriver(DWORD dwJoyID)
 /**************************************************************************
  * 				JOY_Timer		[internal]
  */
-static	void	CALLBACK	JOY_Timer(HWND hWnd, UINT wMsg, UINT wTimer, DWORD dwTime)
+static	void	CALLBACK	JOY_Timer(HWND hWnd, UINT wMsg, UINT_PTR wTimer, DWORD dwTime)
 {
     int			i;
     WINE_JOYSTICK*	joy;

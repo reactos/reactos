@@ -94,7 +94,7 @@ static	void	TIME_TriggerCallBack(LPWINE_TIMERENTRY lpTimer)
 	if (lpTimer->wFlags & WINE_TIMER_IS32)
 	    (lpTimer->lpFunc)(lpTimer->wTimerID, 0, lpTimer->dwUser, 0, 0);
 	else if (pFnCallMMDrvFunc16)
-	    pFnCallMMDrvFunc16((DWORD)lpTimer->lpFunc, lpTimer->wTimerID, 0,
+	    pFnCallMMDrvFunc16((DWORD_PTR)lpTimer->lpFunc, lpTimer->wTimerID, 0,
                                lpTimer->dwUser, 0, 0);
 	break;
     case TIME_CALLBACK_EVENT_SET:

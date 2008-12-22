@@ -110,8 +110,8 @@ static LRESULT inline DRIVER_SendMessage(LPWINE_DRIVER lpDrv, UINT msg,
  *				SendDriverMessage		[WINMM.@]
  *				DrvSendMessage			[WINMM.@]
  */
-LRESULT WINAPI SendDriverMessage(HDRVR hDriver, UINT msg, LPARAM lParam1,
-				 LPARAM lParam2)
+LRESULT WINAPI SendDriverMessage(HDRVR hDriver, UINT msg, LONG lParam1,
+				 LONG lParam2)
 {
     LPWINE_DRIVER	lpDrv;
     LRESULT 		retval = 0;
@@ -170,7 +170,7 @@ static	BOOL	DRIVER_AddToList(LPWINE_DRIVER lpNewDrv, LPARAM lParam1, LPARAM lPar
         /* first of this driver in list ? */
 	if (DRIVER_GetNumberOfModuleRefs(lpNewDrv->d.d32.hModule, NULL) == 0) {
 	    if (DRIVER_SendMessage(lpNewDrv, DRV_LOAD, 0L, 0L) != DRV_SUCCESS) {
-		TRACE("DRV_LOAD failed on driver 0x%08lx\n", (DWORD)lpNewDrv);
+		TRACE("DRV_LOAD failed on driver %p\n", lpNewDrv);
 		return FALSE;
 	    }
 	    /* returned value is not checked */
@@ -196,7 +196,7 @@ static	BOOL	DRIVER_AddToList(LPWINE_DRIVER lpNewDrv, LPARAM lParam1, LPARAM lPar
 	lpNewDrv->d.d32.dwDriverID = DRIVER_SendMessage(lpNewDrv, DRV_OPEN, lParam1, lParam2);
 
 	if (lpNewDrv->d.d32.dwDriverID == 0) {
-	    TRACE("DRV_OPEN failed on driver 0x%08lx\n", (DWORD)lpNewDrv);
+	    TRACE("DRV_OPEN failed on driver %p\n", lpNewDrv);
 	    DRIVER_RemoveFromList(lpNewDrv);
 	    return FALSE;
 	}
@@ -375,7 +375,7 @@ done:
  *				OpenDriver 		        [WINMM.@]
  *				DrvOpen				[WINMM.@]
  */
-HDRVR WINAPI OpenDriver(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LPARAM lParam)
+HDRVR WINAPI OpenDriver(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LONG lParam)
 {
     LPWINE_DRIVER	lpDrv = NULL;
     WCHAR 		libName[128];
@@ -427,7 +427,7 @@ HDRVR WINAPI OpenDriver(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LPARAM lPar
     return 0;
 
  the_end:
-    if (lpDrv)	TRACE("=> %08lx\n", (DWORD)lpDrv);
+    if (lpDrv)	TRACE("=> %p\n", lpDrv);
     return (HDRVR)lpDrv;
 }
 
@@ -435,7 +435,7 @@ HDRVR WINAPI OpenDriver(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LPARAM lPar
  *			CloseDriver				[WINMM.@]
  *			DrvClose				[WINMM.@]
  */
-LRESULT WINAPI CloseDriver(HDRVR hDrvr, LPARAM lParam1, LPARAM lParam2)
+LRESULT WINAPI CloseDriver(HDRVR hDrvr, LONG lParam1, LONG lParam2)
 {
     LPWINE_DRIVER	lpDrv;
 
@@ -526,8 +526,8 @@ HMODULE WINAPI GetDriverModuleHandle(HDRVR hDrvr)
  * 				DefDriverProc			  [WINMM.@]
  * 				DrvDefDriverProc		  [WINMM.@]
  */
-LRESULT WINAPI DefDriverProc(DWORD_PTR dwDriverIdentifier, HDRVR hDrv,
-			     UINT Msg, LPARAM lParam1, LPARAM lParam2)
+LONG WINAPI DefDriverProc(DWORD dwDriverIdentifier, HDRVR hDrv,
+			     UINT Msg, LONG lParam1, LONG lParam2)
 {
     switch (Msg) {
     case DRV_LOAD:

@@ -345,7 +345,7 @@ UINT  MIXER_Open(LPHMIXER lphMix, UINT uDeviceID, DWORD_PTR dwCallback,
 /**************************************************************************
  * 				mixerOpen			[WINMM.@]
  */
-UINT WINAPI mixerOpen(LPHMIXER lphMix, UINT uDeviceID, DWORD_PTR dwCallback,
+MMRESULT WINAPI mixerOpen(LPHMIXER lphMix, UINT uDeviceID, DWORD_PTR dwCallback,
                      DWORD_PTR dwInstance, DWORD fdwOpen)
 {
     return MIXER_Open(lphMix, uDeviceID, dwCallback, dwInstance, fdwOpen, TRUE);
@@ -687,7 +687,7 @@ UINT WINAPI auxGetNumDevs(void)
 /**************************************************************************
  * 				auxGetDevCapsW		[WINMM.@]
  */
-UINT WINAPI auxGetDevCapsW(UINT_PTR uDeviceID, LPAUXCAPSW lpCaps, UINT uSize)
+MMRESULT WINAPI auxGetDevCapsW(UINT_PTR uDeviceID, LPAUXCAPSW lpCaps, UINT uSize)
 {
     LPWINE_MLD		wmld;
 
@@ -703,7 +703,7 @@ UINT WINAPI auxGetDevCapsW(UINT_PTR uDeviceID, LPAUXCAPSW lpCaps, UINT uSize)
 /**************************************************************************
  * 				auxGetDevCapsA		[WINMM.@]
  */
-UINT WINAPI auxGetDevCapsA(UINT_PTR uDeviceID, LPAUXCAPSA lpCaps, UINT uSize)
+MMRESULT WINAPI auxGetDevCapsA(UINT_PTR uDeviceID, LPAUXCAPSA lpCaps, UINT uSize)
 {
     AUXCAPSW	acW;
     UINT	ret;
@@ -729,7 +729,7 @@ UINT WINAPI auxGetDevCapsA(UINT_PTR uDeviceID, LPAUXCAPSA lpCaps, UINT uSize)
 /**************************************************************************
  * 				auxGetVolume		[WINMM.@]
  */
-UINT WINAPI auxGetVolume(UINT uDeviceID, DWORD* lpdwVolume)
+MMRESULT WINAPI auxGetVolume(UINT uDeviceID, DWORD* lpdwVolume)
 {
     LPWINE_MLD		wmld;
 
@@ -757,7 +757,7 @@ UINT WINAPI auxSetVolume(UINT uDeviceID, DWORD dwVolume)
 /**************************************************************************
  * 				auxOutMessage		[WINMM.@]
  */
-UINT WINAPI auxOutMessage(UINT uDeviceID, UINT uMessage, DWORD_PTR dw1, DWORD_PTR dw2)
+MMRESULT WINAPI auxOutMessage(UINT uDeviceID, UINT uMessage, DWORD_PTR dw1, DWORD_PTR dw2)
 {
     LPWINE_MLD		wmld;
 
@@ -938,7 +938,7 @@ UINT MIDI_OutOpen(LPHMIDIOUT lphMidiOut, UINT uDeviceID, DWORD_PTR dwCallback,
 /**************************************************************************
  * 				midiOutOpen    		[WINMM.@]
  */
-UINT WINAPI midiOutOpen(LPHMIDIOUT lphMidiOut, UINT uDeviceID,
+MMRESULT WINAPI midiOutOpen(LPHMIDIOUT lphMidiOut, UINT_PTR uDeviceID,
                        DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD dwFlags)
 {
     return MIDI_OutOpen(lphMidiOut, uDeviceID, dwCallback, dwInstance, dwFlags, TRUE);
@@ -1122,7 +1122,7 @@ UINT WINAPI midiOutGetID(HMIDIOUT hMidiOut, UINT* lpuDeviceID)
 /**************************************************************************
  * 				midiOutMessage		[WINMM.@]
  */
-UINT WINAPI midiOutMessage(HMIDIOUT hMidiOut, UINT uMessage,
+DWORD WINAPI midiOutMessage(HMIDIOUT hMidiOut, UINT uMessage,
                            DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
     LPWINE_MLD		wmld;
@@ -1161,7 +1161,7 @@ UINT WINAPI midiInGetNumDevs(void)
 /**************************************************************************
  * 				midiInGetDevCapsW	[WINMM.@]
  */
-UINT WINAPI midiInGetDevCapsW(UINT_PTR uDeviceID, LPMIDIINCAPSW lpCaps, UINT uSize)
+MMRESULT WINAPI midiInGetDevCapsW(UINT_PTR uDeviceID, LPMIDIINCAPSW lpCaps, UINT uSize)
 {
     LPWINE_MLD	wmld;
 
@@ -1178,7 +1178,7 @@ UINT WINAPI midiInGetDevCapsW(UINT_PTR uDeviceID, LPMIDIINCAPSW lpCaps, UINT uSi
 /**************************************************************************
  * 				midiInGetDevCapsA	[WINMM.@]
  */
-UINT WINAPI midiInGetDevCapsA(UINT_PTR uDeviceID, LPMIDIINCAPSA lpCaps, UINT uSize)
+MMRESULT WINAPI midiInGetDevCapsA(UINT_PTR uDeviceID, LPMIDIINCAPSA lpCaps, UINT uSize)
 {
     MIDIINCAPSW		micW;
     UINT		ret;
@@ -1238,7 +1238,7 @@ UINT MIDI_InOpen(HMIDIIN* lphMidiIn, UINT uDeviceID, DWORD_PTR dwCallback,
 /**************************************************************************
  * 				midiInOpen		[WINMM.@]
  */
-UINT WINAPI midiInOpen(HMIDIIN* lphMidiIn, UINT uDeviceID,
+MMRESULT WINAPI midiInOpen(HMIDIIN* lphMidiIn, UINT_PTR uDeviceID,
 		       DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD dwFlags)
 {
     return MIDI_InOpen(lphMidiIn, uDeviceID, dwCallback, dwInstance, dwFlags, TRUE);
@@ -1387,7 +1387,7 @@ UINT WINAPI midiInGetID(HMIDIIN hMidiIn, UINT* lpuDeviceID)
 /**************************************************************************
  * 				midiInMessage		[WINMM.@]
  */
-UINT WINAPI midiInMessage(HMIDIIN hMidiIn, UINT uMessage,
+DWORD WINAPI midiInMessage(HMIDIIN hMidiIn, UINT uMessage,
                           DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
     LPWINE_MLD		wmld;
@@ -2090,7 +2090,7 @@ UINT WINAPI waveOutGetNumDevs(void)
 /**************************************************************************
  * 				waveOutGetDevCapsA		[WINMM.@]
  */
-UINT WINAPI waveOutGetDevCapsA(UINT_PTR uDeviceID, LPWAVEOUTCAPSA lpCaps,
+MMRESULT WINAPI waveOutGetDevCapsA(UINT_PTR uDeviceID, LPWAVEOUTCAPSA lpCaps,
 			       UINT uSize)
 {
     WAVEOUTCAPSW	wocW;
@@ -2473,7 +2473,7 @@ UINT WINAPI waveOutGetID(HWAVEOUT hWaveOut, UINT* lpuDeviceID)
 /**************************************************************************
  * 				waveOutMessage 		[WINMM.@]
  */
-UINT WINAPI waveOutMessage(HWAVEOUT hWaveOut, UINT uMessage,
+DWORD WINAPI waveOutMessage(HWAVEOUT hWaveOut, UINT uMessage,
                            DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
     LPWINE_MLD		wmld;
@@ -2508,7 +2508,7 @@ UINT WINAPI waveInGetNumDevs(void)
 /**************************************************************************
  * 				waveInGetDevCapsW 		[WINMM.@]
  */
-UINT WINAPI waveInGetDevCapsW(UINT_PTR uDeviceID, LPWAVEINCAPSW lpCaps, UINT uSize)
+MMRESULT WINAPI waveInGetDevCapsW(UINT_PTR uDeviceID, LPWAVEINCAPSW lpCaps, UINT uSize)
 {
     LPWINE_MLD		wmld;
 
@@ -2741,7 +2741,7 @@ UINT WINAPI waveInGetID(HWAVEIN hWaveIn, UINT* lpuDeviceID)
 /**************************************************************************
  * 				waveInMessage 		[WINMM.@]
  */
-UINT WINAPI waveInMessage(HWAVEIN hWaveIn, UINT uMessage,
+DWORD WINAPI waveInMessage(HWAVEIN hWaveIn, UINT uMessage,
                           DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
     LPWINE_MLD		wmld;

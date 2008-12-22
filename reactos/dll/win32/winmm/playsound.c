@@ -354,8 +354,8 @@ static DWORD WINAPI proc_PlaySound(LPVOID arg)
 
     s.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
-    if (waveOutOpen(&hWave, WAVE_MAPPER, lpWaveFormat, (DWORD)PlaySound_Callback,
-		    (DWORD)&s, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
+    if (waveOutOpen(&hWave, WAVE_MAPPER, lpWaveFormat, (DWORD_PTR)PlaySound_Callback,
+		    (DWORD_PTR)&s, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
 	goto errCleanUp;
 
     /* make it so that 3 buffers per second are needed */
