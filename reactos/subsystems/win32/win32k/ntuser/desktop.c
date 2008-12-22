@@ -1536,7 +1536,7 @@ NtUserPaintDesktop(HDC hDC)
          align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
          mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
 
-         NtGdiExtTextOutW(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL, 0);
+         GreExtTextOutW(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL, 0);
 
          IntGdiSetBkMode(hDC, mode_old);
          IntGdiSetTextAlign(hDC, align_old);
