@@ -3265,6 +3265,12 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
             LongPtr = (PULONG)((ULONG_PTR)Address + Offset);
             *LongPtr += Delta;
             break;
+#ifdef _WIN64
+          case IMAGE_REL_BASED_DIR64:
+            LongPtr = (PULONG)((ULONG_PTR)Address + Offset);
+            *LongPtr += Delta;
+            break;
+#endif
 
           case IMAGE_REL_BASED_HIGHADJ:
           case IMAGE_REL_BASED_MIPS_JMPADDR:
