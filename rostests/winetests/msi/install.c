@@ -4561,9 +4561,6 @@ START_TEST(install)
 {
     DWORD len;
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
-    
-    skip("ROS-HACK: Skipping install tests -- Cm sucks\n");
-    return;
 
     init_functionpointers();
 

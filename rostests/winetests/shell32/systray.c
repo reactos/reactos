@@ -138,7 +138,7 @@ START_TEST(systray)
     RECT rc;
     HMODULE huser32, hshell32;
 
-    skip("Skipping systray tests\n");
+    skip("ROS-HACK: Skipping systray tests\n");
     return;
 
     hshell32 = GetModuleHandleA("shell32.dll");

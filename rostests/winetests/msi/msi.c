@@ -6903,8 +6903,6 @@ static void test_MsiGetUserInfo(void)
 
 START_TEST(msi)
 {
-    skip("ROS-HACK: Skipping msi tests -- Cm sucks\n");
-    return;
 
     init_functionpointers();
 
