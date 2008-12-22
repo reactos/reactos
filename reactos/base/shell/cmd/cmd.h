@@ -258,6 +258,15 @@ INT CommandHistory (LPTSTR param);
 #endif
 
 
+/* Prototypes for IF.C */
+#define IFFLAG_NEGATE 1     /* NOT */
+#define IFFLAG_IGNORECASE 2 /* /I  */
+enum { IF_CMDEXTVERSION, IF_DEFINED, IF_ERRORLEVEL, IF_EXIST,
+       IF_STRINGEQ,         /* == */
+       IF_EQU, IF_GTR, IF_GEQ, IF_LSS, IF_LEQ, IF_NEQ };
+BOOL ExecuteIf(struct _PARSED_COMMAND *Cmd);
+
+
 /* Prototypes for INTERNAL.C */
 VOID InitLastPath (VOID);
 VOID FreeLastPath (VOID);
@@ -330,15 +339,28 @@ INT CommandMsgbox (LPTSTR);
 
 
 /* Prototypes from PARSER.C */
-enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE };
+enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE, C_IF };
 typedef struct _PARSED_COMMAND
 {
 	struct _PARSED_COMMAND *Subcommands;
 	struct _PARSED_COMMAND *Next;
 	struct _REDIRECTION *Redirections;
-	TCHAR *Tail;
 	BYTE Type;
-	TCHAR CommandLine[];
+	union
+	{
+		struct
+		{
+			TCHAR *Tail;
+			TCHAR CommandLine[];
+		} Command;
+		struct
+		{
+			BYTE Flags;
+			BYTE Operator;
+			TCHAR *LeftArg;
+			TCHAR *RightArg;
+		} If;
+	};
 } PARSED_COMMAND;
 PARSED_COMMAND *ParseCommand(LPTSTR Line);
 VOID EchoCommand(PARSED_COMMAND *Cmd);

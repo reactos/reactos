@@ -21,8 +21,6 @@ typedef struct tagBATCHCONTEXT
 	HANDLE hFind;        /* Preserve find handle when doing a for */
 	REDIRECTION *RedirList;
 	TCHAR forvar;
-	INT   bCmdBlock;
-	BOOL  bExecuteBlock[MAX_PATH];
 } BATCH_CONTEXT, *LPBATCH_CONTEXT;
 
 

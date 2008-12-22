@@ -32,15 +32,30 @@
 
 #include <precomp.h>
 
-
-#define X_EXEC 1
-#define X_EMPTY 0x80
-
-INT cmd_if (LPTSTR param)
+static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
+                      LPCTSTR Left, LPCTSTR Right)
 {
-	INT x_flag = 0; /* when set cause 'then' clause to be executed */
-	LPTSTR pp;
+	TCHAR *end;
+	INT nLeft = _tcstol(Left, &end, 0);
+	if (*end == _T('\0'))
+	{
+		INT nRight = _tcstol(Right, &end, 0);
+		if (*end == _T('\0'))
+		{
+			/* both arguments are numeric */
+			return (nLeft < nRight) ? -1 : (nLeft > nRight);
+		}
+	}
+	return StringCmp(Left, Right);
+}
 
+BOOL ExecuteIf(PARSED_COMMAND *Cmd)
+{
+	INT result = FALSE; /* when set cause 'then' clause to be executed */
+	LPTSTR param;
+
+#if 0
+	/* FIXME: need to handle IF /?; will require special parsing */
 	TRACE ("cmd_if: (\'%s\')\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -48,178 +63,89 @@ INT cmd_if (LPTSTR param)
 		ConOutResPaging(TRUE,STRING_IF_HELP1);
 		return 0;
 	}
+#endif
 
-	/* First check if param string begins with 'not' */
-	if (!_tcsnicmp (param, _T("not"), 3) && _istspace (*(param + 3)))
+	if (Cmd->If.Operator == IF_CMDEXTVERSION)
 	{
-		x_flag = X_EXEC;            /* Remember 'NOT' */
-		param += 3;                 /* Step over 'NOT' */
-		while (_istspace (*param))  /* And subsequent spaces */
-			param++;
+		/* IF CMDEXTVERSION n: check if Command Extensions version
+		 * is greater or equal to n */
+		DWORD n = _tcstoul(Cmd->If.RightArg, &param, 10);
+		if (*param != _T('\0'))
+		{
+			error_syntax(Cmd->If.RightArg);
+			return FALSE;
+		}
+		result = (2 >= n);
 	}
-
-	/* Check for 'exist' form */
-	if (!_tcsnicmp (param, _T("exist"), 5) && _istspace (*(param + 5)))
+	else if (Cmd->If.Operator == IF_DEFINED)
 	{
-		UINT i;
-		BOOL bInside = FALSE;
-
-		param += 5;
-		while (_istspace (*param))
-			param++;
-
-		pp = param;
-
-		/* find the whole path to the file */
-		for(i = 0; i < _tcslen(param); i++)
-		{
-			if(param[i] == _T('\"'))
-				bInside = !bInside;
-			if((param[i] == _T(' ')) && !bInside)
-			{
-				break;
-			}
-			pp++;
-		}
-		*pp++ = _T('\0');
-		i = 0;
-		/* remove quotes */
-		while(i < _tcslen(param))
-		{
-			if(param[i] == _T('\"'))
-				memmove(&param[i],&param[i + 1], _tcslen(&param[i]) * sizeof(TCHAR));
-			else
-				i++;
-		}
-
-		if (*pp)
-		{
-			WIN32_FIND_DATA f;
-			HANDLE hFind;
-
-			hFind = FindFirstFile (param, &f);
-			x_flag ^= (hFind == INVALID_HANDLE_VALUE) ? 0 : X_EXEC;
-			if (hFind != INVALID_HANDLE_VALUE)
-			{
-				FindClose (hFind);
-			}
-		}
-		else
-			return 0;
+		/* IF DEFINED var: check if environment variable exists */
+		result = (GetEnvVarOrSpecial(Cmd->If.RightArg) != NULL);
 	}
-	else if (!_tcsnicmp (param, _T("defined"), 7) && _istspace (*(param + 7)))
+	else if (Cmd->If.Operator == IF_ERRORLEVEL)
 	{
-		/* Check for 'defined' form */
-		TCHAR Value [1];
-		INT   ValueSize = 0;
-
-		param += 7;
-		/* IF [NOT] DEFINED var COMMAND */
-		/*                 ^            */
-		while (_istspace (*param))
-			param++;
-		/* IF [NOT] DEFINED var COMMAND */
-		/*                  ^           */
-		pp = param;
-		while (*pp && !_istspace (*pp))
-			pp++;
-		/* IF [NOT] DEFINED var COMMAND */
-		/*                     ^        */
-		if (*pp)
+		/* IF ERRORLEVEL n: check if last exit code is greater or equal to n */
+		INT n = _tcstol(Cmd->If.RightArg, &param, 10);
+		if (*param != _T('\0'))
 		{
-			*pp++ = _T('\0');
-			ValueSize = GetEnvironmentVariable(param, Value, sizeof(Value) / sizeof(Value[0]));
-			x_flag ^= (0 == ValueSize)
-					? 0
-					: X_EXEC;
-			x_flag |= X_EMPTY;
+			error_syntax(Cmd->If.RightArg);
+			return FALSE;
 		}
-		else
-			return 0;
+		result = (nErrorLevel >= n);
 	}
-	else if (!_tcsnicmp (param, _T("errorlevel"), 10) && _istspace (*(param + 10)))
+	else if (Cmd->If.Operator == IF_EXIST)
 	{
-		/* Check for 'errorlevel' form */
-		INT n = 0;
+		/* IF EXIST filename: check if file exists (wildcards allowed) */
+		WIN32_FIND_DATA f;
+		HANDLE hFind;
 
-		pp = param + 10;
-		while (_istspace (*pp))
-			pp++;
+		StripQuotes(Cmd->If.RightArg);
 
-		while (_istdigit (*pp))
-			n = n * 10 + (*pp++ - _T('0'));
-
-		x_flag ^= (nErrorLevel != n) ? 0 : X_EXEC;
-
-		x_flag |= X_EMPTY;          /* Syntax error if comd empty */
+		hFind = FindFirstFile(Cmd->If.RightArg, &f);
+		if (hFind != INVALID_HANDLE_VALUE)
+		{
+			result = TRUE;
+			FindClose(hFind);
+		}
 	}
 	else
 	{
-		BOOL bInQuote = FALSE;
-		INT p1len;
-		pp = param;
-		while ( *pp && ( bInQuote || *pp != _T('=') ) )
-		{
-			if ( *pp == _T('\"') )
-				bInQuote = !bInQuote;
-			++pp;
-		}
-		p1len = pp-param;
-		/* check for "==" */
-		if ( *pp++ != _T('=') || *pp++ != _T('=') )
-		{
-			error_syntax ( NULL );
-			return 1;
-		}
-		while (_istspace (*pp)) /* Skip subsequent spaces */
-			pp++;
+		/* Do case-insensitive string comparisons if /I specified */
+		INT (*StringCmp)(LPCTSTR, LPCTSTR) =
+			(Cmd->If.Flags & IFFLAG_IGNORECASE) ? _tcsicmp : _tcscmp;
 
-		/* are the two sides equal*/
-		if ( !_tcsncmp(param,pp,p1len))
-			x_flag ^= X_EXEC;
-		pp += p1len;
-
-		if ( x_flag )
+		if (Cmd->If.Operator == IF_STRINGEQ)
 		{
-			x_flag |= X_EMPTY;
+			/* IF str1 == str2 */
+			result = StringCmp(Cmd->If.LeftArg, Cmd->If.RightArg) == 0;
+		}
+		else
+		{
+			result = GenericCmp(StringCmp, Cmd->If.LeftArg, Cmd->If.RightArg);
+			switch (Cmd->If.Operator)
+			{
+			case IF_EQU: result = (result == 0); break;
+			case IF_NEQ: result = (result != 0); break;
+			case IF_LSS: result = (result < 0); break;
+			case IF_LEQ: result = (result <= 0); break;
+			case IF_GTR: result = (result > 0); break;
+			case IF_GEQ: result = (result >= 0); break;
+			}
 		}
 	}
 
-	while (_istspace (*pp)) /* skip spaces */
-		pp++;
-
-	if (*pp == _T('('))
+	if (result ^ ((Cmd->If.Flags & IFFLAG_NEGATE) != 0))
 	{
-		if (bc)
-		{
-			pp++;
-			bc->bCmdBlock++;
-			if ((bc->bCmdBlock >= 0) && (bc->bCmdBlock < MAX_PATH))
-				bc->bExecuteBlock[bc->bCmdBlock] = x_flag & X_EXEC;
-			/* commands are in the next lines */
-			if (*pp == _T('\0'))
-				return 0;
-		}
+		/* full condition was true, do the command */
+		return ExecuteCommand(Cmd->Subcommands);
 	}
-
-	if (x_flag & X_EMPTY)
+	else
 	{
-		while (_istspace (*pp)) /* Then skip spaces */
-			pp++;
-
-		if (*pp == _T('\0'))    /* If nothing left then syntax err */
-		{
-			error_syntax (NULL);
-			return 1;
-		}
+		/* full condition was false, do the "else" command if there is one */
+		if (Cmd->Subcommands->Next)
+			return ExecuteCommand(Cmd->Subcommands->Next);
+		return TRUE;
 	}
-
-	if (x_flag & X_EXEC)
-	{
-		ParseCommandLine (pp);
-	}
-
-	return 0;
 }
 
 /* EOF */
