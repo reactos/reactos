@@ -977,7 +977,13 @@ CmpBuildHashStackAndLookupCache(IN PCM_KEY_BODY ParseObject,
     /* Return hive and cell data */
     *Hive = (*Kcb)->KeyHive;
     *Cell = (*Kcb)->KeyCell;
-    
+
+    /* Make sure it's not a dead KCB */
+    ASSERT((*Kcb)->RefCount > 0);
+
+    /* Reference it */
+    (VOID)CmpReferenceKeyControlBlock(*Kcb);
+
     /* Return success for now */
     return STATUS_SUCCESS;
 }
@@ -1197,7 +1203,7 @@ CmpParseKey(IN PVOID ParseObject,
                     if (!Kcb) ASSERT(FALSE);
                     
                     /* Dereference the parent and set the new one */
-                    //CmpDereferenceKeyControlBlock(ParentKcb);
+                    CmpDereferenceKeyControlBlock(ParentKcb);
                     ParentKcb = Kcb;
                 }
                 else
@@ -1336,7 +1342,7 @@ CmpParseKey(IN PVOID ParseObject,
 
     /* Dereference the parent if it exists */
 Quickie:
-    //if (ParentKcb) CmpDereferenceKeyControlBlock(ParentKcb);
+    if (ParentKcb) CmpDereferenceKeyControlBlock(ParentKcb);
     
     /* Unlock the registry */
     CmpUnlockRegistry();
