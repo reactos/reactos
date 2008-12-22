@@ -25,8 +25,6 @@ extern "C" {
 #endif
 #endif
 
-#define _WConst_return _CONST_RETURN
-
 #ifndef _CRT_MEMORY_DEFINED
 #define _CRT_MEMORY_DEFINED
   _CRTIMP void *__cdecl _memccpy(void *_Dst,const void *_Src,int _Val,size_t _MaxCount);

@@ -18,15 +18,6 @@
 extern "C" {
 #endif
 
-#ifndef _CRTIMP
-#define _CRTIMP __declspec(dllimport)
-#endif
-
-#ifndef _WCHAR_T_DEFINED
-#define _WCHAR_T_DEFINED
-  typedef unsigned short wchar_t;
-#endif
-
 #ifndef _TIME32_T_DEFINED
 #define _TIME32_T_DEFINED
   typedef long __time32_t;
@@ -68,20 +59,6 @@ extern "C" {
 #endif
 #else
   typedef unsigned int size_t;
-#endif
-#endif
-
-#ifndef _SSIZE_T_DEFINED
-#define _SSIZE_T_DEFINED
-#undef ssize_t
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef int ssize_t __attribute__ ((mode (DI)));
-#else
-  typedef __int64 ssize_t;
-#endif
-#else
-  typedef int ssize_t;
 #endif
 #endif
 
@@ -181,7 +158,7 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
 #endif
 
 #define _WTIME_DEFINED
-#endif
+#endif /* !_WTIME_DEFINED */
 
 #ifndef RC_INVOKED
 double __cdecl difftime(time_t _Time1,time_t _Time2);
@@ -224,17 +201,6 @@ __CRT_INLINE time_t __cdecl time(time_t *_Time) { return _time64(_Time); }
   void __cdecl tzset(void);
 #endif
 
-#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
-#define _TIMEVAL_DEFINED
-struct timeval {
-  long tv_sec;
-  long tv_usec;
-};
-#define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
-#define timercmp(tvp,uvp,cmp) ((tvp)->tv_sec cmp (uvp)->tv_sec || (tvp)->tv_sec==(uvp)->tv_sec && (tvp)->tv_usec cmp (uvp)->tv_usec)
-#define timerclear(tvp) (tvp)->tv_sec = (tvp)->tv_usec = 0
-#endif /* _TIMEVAL_DEFINED */
-
 #ifdef __cplusplus
 }
 #endif
@@ -242,9 +208,6 @@ struct timeval {
 #pragma pack(pop)
 
 #include <sec_api/time_s.h>
-
-/* Adding timespec definition.  */
-#include <sys/timeb.h>
 
 #endif /* End _TIME_H_ */
 

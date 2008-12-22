@@ -169,60 +169,6 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
 #define _A_SUBDIR 0x10
 #define _A_ARCH 0x20
 
-#ifndef _SIZE_T_DEFINED
-#define _SIZE_T_DEFINED
-#undef size_t
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef unsigned int size_t __attribute__ ((mode (DI)));
-#else
-  typedef unsigned __int64 size_t;
-#endif
-#else
-  typedef unsigned int size_t;
-#endif
-#endif
-
-#ifndef _SSIZE_T_DEFINED
-#define _SSIZE_T_DEFINED
-#undef ssize_t
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef int ssize_t __attribute__ ((mode (DI)));
-#else
-  typedef __int64 ssize_t;
-#endif
-#else
-  typedef int ssize_t;
-#endif
-#endif
-
-#ifndef _OFF_T_DEFINED
-#define _OFF_T_DEFINED
-#ifndef _OFF_T_
-#define _OFF_T_
-  typedef long _off_t;
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
-  typedef long off_t;
-#endif
-#endif
-#endif
-
-#ifndef _OFF64_T_DEFINED
-#define _OFF64_T_DEFINED
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef int _off64_t __attribute__ ((mode (DI)));
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
-  typedef int off64_t __attribute__ ((mode (DI)));
-#endif
-#else
-  typedef long long _off64_t;
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
-  typedef long long off64_t;
-#endif
-#endif
-#endif
-
   /* Some defines for _access nAccessMode (MS doesn't define them, but
   * it doesn't seem to hurt to add them). */
 #define	F_OK	0	/* Check for file existence */
@@ -248,7 +194,6 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
   _CRTIMP int __cdecl _isatty(int _FileHandle);
   _CRTIMP int __cdecl _locking(int _FileHandle,int _LockMode,long _NumOfBytes);
   _CRTIMP long __cdecl _lseek(int _FileHandle,long _Offset,int _Origin);
-  _off64_t lseek64(int fd,_off64_t offset, int whence);
   _CRTIMP char *__cdecl _mktemp(char *_TemplateName);
   _CRTIMP int __cdecl _pipe(int *_PtHandles,unsigned int _PipeSize,int _TextMode);
   _CRTIMP int __cdecl _read(int _FileHandle,void *_DstBuf,unsigned int _MaxCharCount);

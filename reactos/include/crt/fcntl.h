@@ -5,8 +5,6 @@
  */
 #include <crtdefs.h>
 
-#include <io.h>
-
 #ifndef _INC_FCNTL
 #define _INC_FCNTL
 

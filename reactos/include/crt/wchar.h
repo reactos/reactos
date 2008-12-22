@@ -21,16 +21,6 @@ extern "C" {
 #define WCHAR_MAX ((wchar_t)-1) /* UINT16_MAX */
 #endif
 
-#ifndef __GNUC_VA_LIST
-#define __GNUC_VA_LIST
-  typedef __builtin_va_list __gnuc_va_list;
-#endif
-
-#ifndef _VA_LIST_DEFINED
-#define _VA_LIST_DEFINED
-  typedef __gnuc_va_list va_list;
-#endif
-
 #ifndef WEOF
 #define WEOF (wint_t)(0xFFFF)
 #endif
@@ -147,12 +137,6 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
 #define NULL ((void *)0)
 #endif
 #endif
-
-#ifndef _CONST_RETURN
-#define _CONST_RETURN
-#endif
-
-#define _WConst_return _CONST_RETURN
 
 #ifndef _CRT_CTYPEDATA_DEFINED
 #define _CRT_CTYPEDATA_DEFINED
@@ -300,7 +284,7 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
   extern "C++" _CRTIMP int __cdecl _wopen(const wchar_t *_Filename,int _OpenFlag,int _PermissionMode = 0);
   extern "C++" _CRTIMP int __cdecl _wsopen(const wchar_t *_Filename,int _OpenFlag,int _ShareFlag,int _PermissionMode = 0);
 #endif
-#endif
+#endif /* !_WIO_DEFINED */
 
 #ifndef _WLOCALE_DEFINED
 #define _WLOCALE_DEFINED
@@ -329,8 +313,8 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
 #ifndef _CRT_WSYSTEM_DEFINED
 #define _CRT_WSYSTEM_DEFINED
   _CRTIMP int __cdecl _wsystem(const wchar_t *_Command);
-#endif
-#endif
+#endif /* !_CRT_WSYSTEM_DEFINED */
+#endif /* !_WPROCESS_DEFINED */
 
 #ifndef _WCTYPE_INLINE_DEFINED
 #undef _CRT_WCTYPE_NOINLINE
@@ -385,19 +369,16 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
 
 #ifndef _OFF_T_DEFINED
 #define _OFF_T_DEFINED
-#ifndef _OFF_T_
-#define _OFF_T_
   typedef long _off_t;
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
+#ifndef NO_OLDNAMES
   typedef long off_t;
-#endif
 #endif
 #endif
 
 #ifndef _OFF64_T_DEFINED
 #define _OFF64_T_DEFINED
   typedef long long _off64_t;
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
+#ifndef NO_OLDNAMES
   typedef long long off64_t;
 #endif
 #endif
@@ -520,11 +501,6 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
 
 #ifndef _WCONIO_DEFINED
 #define _WCONIO_DEFINED
-
-#ifndef WEOF
-#define WEOF (wint_t)(0xFFFF)
-#endif
-
   _CRTIMP wchar_t *_cgetws(wchar_t *_Buffer);
   _CRTIMP wint_t __cdecl _getwch(void);
   _CRTIMP wint_t __cdecl _getwche(void);
@@ -550,10 +526,6 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
 
 #ifndef _WSTDIO_DEFINED
 #define _WSTDIO_DEFINED
-
-#ifndef WEOF
-#define WEOF (wint_t)(0xFFFF)
-#endif
 
 #ifdef _POSIX_
   _CRTIMP FILE *__cdecl _wfsopen(const wchar_t *_Filename,const wchar_t *_Mode);
@@ -621,9 +593,6 @@ extern FILE (*_imp___iob)[];	/* A pointer to an array of FILE */
   _CRTIMP int __cdecl _vswprintf(wchar_t *_Dest,const wchar_t *_Format,va_list _Args);
   _CRTIMP int __cdecl __swprintf_l(wchar_t *_Dest,const wchar_t *_Format,_locale_t _Plocinfo,...);
   _CRTIMP int __cdecl __vswprintf_l(wchar_t *_Dest,const wchar_t *_Format,_locale_t _Plocinfo,va_list _Args);
-#ifndef RC_INVOKED
-#include <vadefs.h>
-#endif
 
 #ifdef _CRT_NON_CONFORMING_SWPRINTFS
 #ifndef __cplusplus
@@ -871,5 +840,5 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
 
 #pragma pack(pop)
 
-#include <sec_api/wchar_s.h>
+//#include <sec_api/wchar_s.h>
 #endif

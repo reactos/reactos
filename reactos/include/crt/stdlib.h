@@ -577,6 +577,4 @@ extern "C" {
 #pragma pack(pop)
 
 #include <sec_api/stdlib_s.h>
-#include <malloc.h>
-
 #endif

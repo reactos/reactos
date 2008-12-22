@@ -79,11 +79,13 @@ extern "C" {
 
 #define _WConst_return _CONST_RETURN
 
-#ifdef _UNICODE
-
 #ifdef __cplusplus
 }
 #endif
+
+
+#ifdef _UNICODE
+/** UNICODE ******************************************************************/
 
 #include <wchar.h>
 
@@ -479,10 +481,7 @@ extern "C" {
 #define _tseekdir	_wseekdir
 
 #else
-
-#ifdef __cplusplus
-}
-#endif
+/** ANSI *********************************************************************/
 
 #include <string.h>
 
@@ -753,6 +752,7 @@ extern "C" {
 #define _tsetlocale setlocale
 
 #ifdef _MBCS
+/** MBCS *********************************************************************/
 
 #ifdef __cplusplus
 }
@@ -851,7 +851,9 @@ extern "C" {
 #define _tclen _mbclen
 #define _tccpy _mbccpy
 #define _tccpy_l _mbccpy_l
-#else
+
+
+#else /* !_MB_MAP_DIRECT */
 
   _CRTIMP _CONST_RETURN char *__cdecl _tcschr(const char *_Str,unsigned int _Val);
   _CRTIMP size_t __cdecl _tcscspn(const char *_Str,const char *_Control);
@@ -957,7 +959,9 @@ extern "C" {
 #define _istlead _ismbblead
 #define _istleadbyte isleadbyte
 #define _istleadbyte_l _isleadbyte_l
-#else
+
+#else /* !_MBCS */
+/** SBCS *********************************************************************/
 
 #ifndef __TCHAR_DEFINED
 #define __TCHAR_DEFINED
@@ -1106,8 +1110,10 @@ extern "C" {
 #define _strtok_l(_String,_Delimiters,_Locale) (strtok(_String,_Delimiters))
 #define _strnset_l(_Destination,_Value,_Count,_Locale) (_strnset(_Destination,_Value,_Count))
 #define _strset_l(_Destination,_Value,_Locale) (_strset(_Destination,_Value))
-#endif
-#endif
+
+#endif /* !_MBCS */
+#endif  /* !UNICODE */
+/*****************************************************************************/
 
 #define _T(x) __T(x)
 #define _TEXT(x) __T(x)
