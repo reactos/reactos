@@ -20,9 +20,6 @@
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolX(x,y,__FILE__,__LINE__)
 #define exFreePool(x) ExFreePoolX(x,__FILE__,__LINE__)
 
-extern LIST_ENTRY AllocatedObjectsHead;
-extern KSPIN_LOCK AllocatedObjectsLock;
-
 typedef struct _ALLOCATION_TRACKER {
     LIST_ENTRY Entry;
     DWORD Tag;
