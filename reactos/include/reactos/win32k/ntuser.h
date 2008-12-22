@@ -277,6 +277,19 @@ typedef struct _SERVERINFO
   COLORREF SysColors[COLOR_MENUBAR+1];       // GetSysColor
   HBRUSH   SysColorBrushes[COLOR_MENUBAR+1]; // GetSysColorBrush
   HPEN     SysColorPens[COLOR_MENUBAR+1];    // ReactOS exclusive
+  //
+  RECTL    rcScreen;
+  WORD     BitCount;
+  WORD     dmLogPixels;
+  BYTE     BitsPixel;
+  BYTE     Planes;
+  WORD     reserved;
+  DWORD    PUSIFlags;
+  ULONG    uCaretWidth;
+  LANGID   UILangID;
+  UINT     LastRITWasKeyboard : 1;
+  UINT     bKeyboardPref : 1;
+  DWORD    TimeTick;
   DWORD    SrvEventActivity;
 } SERVERINFO, *PSERVERINFO;
 

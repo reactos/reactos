@@ -315,6 +315,11 @@ co_IntInitializeDesktopGraphics(VOID)
    NtGdiSelectFont( hSystemBM, NtGdiGetStockObject(SYSTEM_FONT));
    IntGdiSetDCOwnerEx( hSystemBM, GDI_OBJ_HMGR_PUBLIC, FALSE);
 
+   // FIXME! Move these to a update routine.
+   gpsi->Planes    = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
+   gpsi->BitsPixel = NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL);
+   gpsi->BitCount  = gpsi->Planes * gpsi->BitsPixel;
+
    return TRUE;
 }
 
