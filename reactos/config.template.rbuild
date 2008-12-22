@@ -85,4 +85,9 @@
 -->
 <property name="_ELF_" value="0" />
 
+<!--
+	Whether to compile the multi processor versions for ntoskrnl and hal.
+-->
+<property name="BUILD_MP" value="0" />
+
 </group>
