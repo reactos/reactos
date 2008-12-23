@@ -23,6 +23,7 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
+#if defined(__GNUC__)
 struct _EXCEPTION_RECORD;
 struct _EXCEPTION_POINTERS;
 struct _CONTEXT;
@@ -72,8 +73,6 @@ extern void __cdecl _SEH2Return(void);
 #ifdef __cplusplus
 }
 #endif
-
-#if defined(__GNUC__)
 
 #if defined(__i386__)
 typedef struct __SEHTrampoline
