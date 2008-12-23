@@ -33,7 +33,6 @@
 		<file>lock.c</file>
 		<file>main.c</file>
 		<file>ninfo.c</file>
-		<file>pool.c</file>
 		<file>proto.c</file>
 		<file>tinfo.c</file>
 		<file>wait.c</file>

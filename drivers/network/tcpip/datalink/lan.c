@@ -703,7 +703,7 @@ static NTSTATUS ReadStringFromRegistry( HANDLE RegHandle,
     UnicodeString.MaximumLength = Information->DataLength;
 
     String->Buffer =
-	(PWCHAR)exAllocatePool( NonPagedPool,
+	(PWCHAR)ExAllocatePool( NonPagedPool,
 				UnicodeString.MaximumLength + sizeof(WCHAR) );
 
     if( !String->Buffer ) return STATUS_NO_MEMORY;

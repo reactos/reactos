@@ -123,7 +123,7 @@ VOID AddrFileFree(
  *     Object = Pointer to address file object to free
  */
 {
-    ExFreePool(Object);
+    exFreePool(Object);
 }
 
 
@@ -135,7 +135,7 @@ VOID ControlChannelFree(
  *     Object = Pointer to address file object to free
  */
 {
-    ExFreePool(Object);
+    exFreePool(Object);
 }
 
 
@@ -190,7 +190,7 @@ VOID DeleteAddress(PADDRESS_FILE AddrFile)
     /* Abort the request and free its resources */
     TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
     (*SendRequest->Complete)(SendRequest->Context, STATUS_ADDRESS_CLOSED, 0);
-    ExFreePool(SendRequest);
+    exFreePool(SendRequest);
     TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
     CurrentEntry = NextEntry;
   }
@@ -247,7 +247,7 @@ NTSTATUS FileOpenAddress(
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
-  AddrFile = ExAllocatePool(NonPagedPool, sizeof(ADDRESS_FILE));
+  AddrFile = exAllocatePool(NonPagedPool, sizeof(ADDRESS_FILE));
   if (!AddrFile) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -272,7 +272,7 @@ NTSTATUS FileOpenAddress(
       Matched = AddrLocateADEv4(IPv4Address, &AddrFile->Address);
 
   if (!Matched) {
-    ExFreePool(AddrFile);
+    exFreePool(AddrFile);
     TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
     return STATUS_INVALID_PARAMETER;
   }
@@ -290,7 +290,7 @@ NTSTATUS FileOpenAddress(
            AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
            AddrFile->Port == 0xffff)
       {
-          ExFreePool(AddrFile);
+          exFreePool(AddrFile);
           return STATUS_INVALID_PARAMETER;
       }
 
@@ -306,7 +306,7 @@ NTSTATUS FileOpenAddress(
            AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
            AddrFile->Port == 0xffff)
       {
-          ExFreePool(AddrFile);
+          exFreePool(AddrFile);
           return STATUS_INVALID_PARAMETER;
       }
 
@@ -389,7 +389,7 @@ NTSTATUS FileCloseAddress(
     TCPFreePort( AddrFile->Port );
     if( AddrFile->Listener ) {
 	    TCPClose( AddrFile->Listener );
-	    ExFreePool( AddrFile->Listener );
+	    exFreePool( AddrFile->Listener );
     }
     break;
 
@@ -518,7 +518,7 @@ NTSTATUS FileOpenControlChannel(
   PCONTROL_CHANNEL ControlChannel;
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-  ControlChannel = ExAllocatePool(NonPagedPool, sizeof(*ControlChannel));
+  ControlChannel = exAllocatePool(NonPagedPool, sizeof(*ControlChannel));
 
   if (!ControlChannel) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -558,7 +558,7 @@ NTSTATUS FileCloseControlChannel(
   PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;
   NTSTATUS Status = STATUS_SUCCESS;
 
-  ExFreePool(ControlChannel);
+  exFreePool(ControlChannel);
   Request->Handle.ControlChannel = NULL;
 
   return Status;
