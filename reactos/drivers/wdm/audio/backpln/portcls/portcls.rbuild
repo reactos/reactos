@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../../tools/rbuild/project.dtd">
-<module name="portcls" type="kernelmodedriver" installbase="system32/drivers" installname="portcls.sys" allowwarnings="true">
+<module name="portcls" type="kernelmodedriver" installbase="system32/drivers" installname="portcls.sys">
 	<importlibrary definition="portcls.spec" />
 	<define name="_NTDDK_" />
 	<define name="PC_NO_IMPORTS" />

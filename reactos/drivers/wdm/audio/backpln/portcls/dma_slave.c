@@ -259,7 +259,7 @@ IDmaChannelSlave_fnWaitForTC(
 
 }
 
-static IDmaChannelSlaveVtbl vt_IDmaChannelSlaveVtbl =
+IDmaChannelSlaveVtbl vt_IDmaChannelSlaveVtbl =
 {
     /* IUnknown methods */
     IDmaChannelSlave_fnQueryInterface,
