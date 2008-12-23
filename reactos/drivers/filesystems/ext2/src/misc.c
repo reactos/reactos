@@ -92,27 +92,27 @@ void)
 		// allocate memory for each of the zones and initialize the	zones ...
 		if (!(Ext2GlobalData.ObjectNameZone = Ext2AllocatePool(NonPagedPool, SizeOfObjectNameZone ))) {
 			RC = STATUS_INSUFFICIENT_RESOURCES;
-			try_return(RC);
+			try_return();
 		}
 
 		if (!(Ext2GlobalData.CCBZone = Ext2AllocatePool(NonPagedPool, SizeOfCCBZone ))) {
 			RC = STATUS_INSUFFICIENT_RESOURCES;
-			try_return(RC);
+			try_return();
 		}
 
 		if (!(Ext2GlobalData.FCBZone = Ext2AllocatePool(NonPagedPool, SizeOfFCBZone ))) {
 			RC = STATUS_INSUFFICIENT_RESOURCES;
-			try_return(RC);
+			try_return();
 		}
 
 		if (!(Ext2GlobalData.ByteLockZone = Ext2AllocatePool(NonPagedPool, SizeOfByteLockZone ))) {
 			RC = STATUS_INSUFFICIENT_RESOURCES;
-			try_return(RC);
+			try_return();
 		}
 
 		if (!(Ext2GlobalData.IrpContextZone = Ext2AllocatePool(NonPagedPool, SizeOfIrpContextZone ))) {
 			RC = STATUS_INSUFFICIENT_RESOURCES;
-			try_return(RC);
+			try_return();
 		}
 
 		// initialize each of the zone headers ...
@@ -120,7 +120,7 @@ void)
 					Ext2QuadAlign(sizeof(Ext2ObjectName)),
 					Ext2GlobalData.ObjectNameZone, SizeOfObjectNameZone))) {
 			// failed the initialization, leave ...
-			try_return(RC);
+			try_return();
 		}
 
 		if (!NT_SUCCESS(RC = ExInitializeZone(&(Ext2GlobalData.CCBZoneHeader),
@@ -128,7 +128,7 @@ void)
 					Ext2GlobalData.CCBZone,
 					SizeOfCCBZone))) {
 			// failed the initialization, leave ...
-			try_return(RC);
+			try_return();
 		}
 
 		if (!NT_SUCCESS(RC = ExInitializeZone(&(Ext2GlobalData.FCBZoneHeader),
@@ -136,7 +136,7 @@ void)
 					Ext2GlobalData.FCBZone,
 					SizeOfFCBZone))) {
 			// failed the initialization, leave ...
-			try_return(RC);
+			try_return();
 		}
 
 		if (!NT_SUCCESS(RC = ExInitializeZone(&(Ext2GlobalData.ByteLockZoneHeader),
@@ -144,7 +144,7 @@ void)
 					Ext2GlobalData.ByteLockZone,
 					SizeOfByteLockZone))) {
 			// failed the initialization, leave ...
-			try_return(RC);
+			try_return();
 		}
 
 		if (!NT_SUCCESS(RC = ExInitializeZone(&(Ext2GlobalData.IrpContextZoneHeader),
@@ -152,7 +152,7 @@ void)
 					Ext2GlobalData.IrpContextZone,
 					SizeOfIrpContextZone))) {
 			// failed the initialization, leave ...
-			try_return(RC);
+			try_return();
 		}
 
 		try_exit:	NOTHING;

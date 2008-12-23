@@ -429,7 +429,7 @@ PtrExt2CCB					PtrCCB)
 		{
 			//	Read Failure
 			DebugTrace(DEBUG_TRACE_MISC,   "Cache read failiure while reading in volume meta data", 0);
-			try_return( STATUS_ACCESS_DENIED );
+			try_return( RC = STATUS_ACCESS_DENIED );
 		}
 		else
 		{
@@ -694,11 +694,11 @@ PtrExt2CCB					PtrCCB)
 			case FileFullDirectoryInformation:
 				//	FullDirInformation->
 				DebugTrace(DEBUG_TRACE_DIRINFO,   " === FileFullDirectoryInformation - Not handled", 0 );
-				try_return( RC );
+				try_return();
 			case FileNamesInformation:
 				//	NamesInformation->
 				DebugTrace(DEBUG_TRACE_DIRINFO,   " === FileNamesInformation - Not handled", 0 );
-				try_return( RC );
+				try_return();
 			default:
 				DebugTrace(DEBUG_TRACE_DIRINFO,   " === Invalid Dir Info class - Not handled", 0 );
 				try_return( RC = STATUS_INVALID_INFO_CLASS );
@@ -719,7 +719,7 @@ PtrExt2CCB					PtrCCB)
 				RC = STATUS_NO_SUCH_FILE;
 			else
 				RC = STATUS_NO_MORE_FILES;
-			try_return( RC );
+			try_return();
 		}
 		else if( BytesReturned )
 		{

@@ -221,8 +221,6 @@ Ext2MountVolume (
 	
 	PEXT2_GROUP_DESCRIPTOR	PtrGroupDescriptor = NULL;
 
-	PEXT2_INODE			PtrInode = NULL;
-
 	// Inititalising variables
 	
 	PtrVPB = IrpSp->Parameters.MountVolume.Vpb;
@@ -257,7 +255,7 @@ Ext2MountVolume (
 		DebugTrace(DEBUG_TRACE_MOUNT, "OEM[%s]", BootSector->Oem);
 		if (BootSector->Oem[0])
 		{
-		    try_return (STATUS_WRONG_VOLUME);
+		    try_return (Status = STATUS_WRONG_VOLUME);
 		}
 
 		//	Allocating memory for reading in Super Block...
@@ -299,7 +297,7 @@ Ext2MountVolume (
                     (PDEVICE_OBJECT *)&PtrVolumeDeviceObject)) //	The Volume Device Object
 					) 
 			{
-	            try_return( Status );
+	            try_return();
 			}
 
 			//	
@@ -444,7 +442,7 @@ Ext2MountVolume (
 			PtrRootFileObject = IoCreateStreamFileObject(NULL, TargetDeviceObject );
 			if( !PtrRootFileObject )
 			{
-				try_return( Status );
+				try_return();
 			}
 			//
 			//	Associate the file stream with the Volume parameter block...
@@ -473,7 +471,7 @@ Ext2MountVolume (
 						PtrVCB,
 						PtrObjectName  )  )  )
 				{
-					try_return( Status );
+					try_return();
 				}
 				
 

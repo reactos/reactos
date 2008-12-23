@@ -85,7 +85,7 @@ PUNICODE_STRING	RegistryPath)		// path to the registry key
 					// in your commercial driver implementation, it would be
 					//	advisable for your driver to print an appropriate error
 					//	message to the system error log before leaving
-			//		try_return(RC);
+			//		try_return();
 			//	}
 
 			// we should have the registry data (if any), allocate zone memory ...
@@ -98,7 +98,7 @@ PUNICODE_STRING	RegistryPath)		// path to the registry key
 			if (!NT_SUCCESS(RC = Ext2InitializeZones())) 
 			{
 				// we failed, print a message and leave ...
-				try_return(RC);
+				try_return();
 			}
 #endif
 
@@ -143,7 +143,7 @@ PUNICODE_STRING	RegistryPath)		// path to the registry key
 					&(Ext2GlobalData.Ext2DeviceObject)))) 
 			{
 				// failed to create a device object, leave ...
-				try_return(RC);
+				try_return();
 			}
 
 

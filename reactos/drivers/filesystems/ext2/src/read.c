@@ -255,7 +255,7 @@ BOOLEAN						FirstAttempt )
 		if (ReadLength == 0) 
 		{
 			// a 0 byte read can be immediately succeeded
-			try_return(RC);
+			try_return();
 		}
 
 		// Is this a read of the volume itself ?
@@ -320,7 +320,7 @@ BOOLEAN						FirstAttempt )
 				{
 					RC = STATUS_END_OF_FILE;
 					NumberBytesRead = 0;
-					try_return( RC );
+					try_return();
 				}
 			}
 			if( PagingIo || NonBufferedIo )
@@ -332,7 +332,7 @@ BOOLEAN						FirstAttempt )
 					PtrIrpContext, PtrIrp, PtrVCB, 
 					ByteOffset, ReadLength, SynchronousIo);
 
-				try_return(RC);
+				try_return();
 			}
 			else
 			{
@@ -357,7 +357,7 @@ BOOLEAN						FirstAttempt )
 
 					RC = STATUS_UNSUCCESSFUL;
 					NumberBytesRead = 0;
-					try_return( RC );
+					try_return();
 				}
 				else
 				{
@@ -367,7 +367,7 @@ BOOLEAN						FirstAttempt )
 					PtrBCB = NULL;
 					RC = STATUS_SUCCESS;
 					NumberBytesRead = ReadLength;
-					try_return(RC);
+					try_return();
 
 				}
 			}
@@ -400,7 +400,7 @@ BOOLEAN						FirstAttempt )
 		if ( ( PtrFCB->FCBFlags & EXT2_FCB_DIRECTORY ) &&  !PagingIo )
 		{
 			RC = STATUS_INVALID_DEVICE_REQUEST;
-			try_return(RC);
+			try_return();
 		}
 
 		PtrReqdFCB = &(PtrFCB->NTRequiredFCB);
@@ -448,7 +448,7 @@ BOOLEAN						FirstAttempt )
 				// If the flush failed, return error to the caller
 				if (!NT_SUCCESS(RC = PtrIrp->IoStatus.Status)) 
 				{
-					try_return(RC);
+					try_return();
 				}
 			}
 		}
@@ -573,7 +573,7 @@ BOOLEAN						FirstAttempt )
 				NumberBytesRead = PtrIrp->IoStatus.Information;
 				RC = PtrIrp->IoStatus.Status;
 
-				try_return(RC);
+				try_return();
 			}
 
 			// This is a regular run-of-the-mill cached I/O request. Let the
@@ -593,13 +593,13 @@ BOOLEAN						FirstAttempt )
 				// Mark Irp Pending ...
 				IoMarkIrpPending( PtrIrp );
 				RC = STATUS_PENDING;
-				try_return(RC);
+				try_return();
 			}
 
 			// We have the data
 			RC = PtrIrp->IoStatus.Status;
 			NumberBytesRead = PtrIrp->IoStatus.Information;
-			try_return(RC);
+			try_return();
 		}
 		else //	NonBuffered or Paged IO
 		{
@@ -693,7 +693,7 @@ BOOLEAN						FirstAttempt )
 					// Mark Irp Pending ...
 					IoMarkIrpPending( PtrIrp );
 					RC = STATUS_PENDING;
-					try_return(RC);
+					try_return();
 					DebugTrace(DEBUG_TRACE_ASYNC,   "Cache read failiure while reading in volume meta data - Retrying", 0);
 				}
 			}
@@ -732,7 +732,7 @@ BOOLEAN						FirstAttempt )
 					// Mark Irp Pending ...
 					IoMarkIrpPending( PtrIrp );
 					RC = STATUS_PENDING;
-					try_return(RC);
+					try_return();
 					DebugTrace(DEBUG_TRACE_ASYNC,   "Cache read failiure while reading in volume meta data - Retrying", 0);
 				}
 
@@ -839,7 +839,7 @@ BOOLEAN						FirstAttempt )
 					// Mark Irp Pending ...
 					IoMarkIrpPending( PtrIrp );
 					RC = STATUS_PENDING;
-					try_return(RC);
+					try_return();
 					DebugTrace(DEBUG_TRACE_ASYNC,   "Cache read failiure while reading in volume meta data - Retrying", 0);
 				}
 
@@ -1146,7 +1146,7 @@ BOOLEAN						FirstAttempt )
 			{
 				CompleteIrp = FALSE;	
 			}
-			try_return( RC );
+			try_return();
 		
 		}
 		try_exit:	NOTHING;
@@ -1374,7 +1374,7 @@ uint32			Length)
 			if (!(PtrMdl = IoAllocateMdl(PtrIrp->UserBuffer, Length, FALSE, FALSE, PtrIrp))) 
 			{
 				RC = STATUS_INSUFFICIENT_RESOURCES;
-				try_return(RC);
+				try_return();
 			}
 
 			// Probe and lock the pages described by the MDL
