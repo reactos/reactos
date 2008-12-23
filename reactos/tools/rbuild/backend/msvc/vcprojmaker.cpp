@@ -159,9 +159,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				module.output->relative_path );
 			string file = path + std::string("\\") + files[i]->file.name;
 
-			if ( !_stricmp ( Right(file,3).c_str(), ".rc" ) )
+			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
-			else if ( !_stricmp ( Right(file,2).c_str(), ".h" ) )
+			else if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
 				header_files.push_back ( file );
 			else
 				source_files.push_back ( file );

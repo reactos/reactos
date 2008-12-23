@@ -21,6 +21,7 @@
  */
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 )
+#pragma warning ( disable : 4996 )
 #endif//_MSC_VER
 
 #include <iostream>
@@ -340,7 +341,7 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 			string::size_type pos = file.find_last_of (DEF_SSEP);
 			if ( pos != string::npos )
 				file.erase ( 0, pos+1 );
-			if ( !_stricmp ( Right(file,3).c_str(), ".rc" ) )
+			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				file = ReplaceExtension ( file, ".res" );
 			else
 				file = ReplaceExtension ( file, ".obj" );

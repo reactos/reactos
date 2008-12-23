@@ -26,7 +26,7 @@
 #endif//_MSC_VER
 
 #ifdef WIN32
-#define MKDIR(s) _mkdir(s)
+#define MKDIR(s) mkdir(s)
 #else
 #define MKDIR(s) mkdir(s, 0755)
 #endif
