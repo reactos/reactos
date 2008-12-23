@@ -16,7 +16,7 @@ Signature = "$ReactOS$"
 1 = system32
 2 = system32\drivers
 3 = Fonts
-4 = 
+4 =
 5 = system32\drivers\etc
 6 = inf
 7 = bin
@@ -617,6 +617,7 @@ modules\rosapps\dflat32\edit.exe                                           1   o
 modules\rosapps\drivers\avtest\avtest.sys                                  2   optional
 modules\rosapps\drivers\green\green.sys                                    2   optional
 modules\rosapps\templates\dialog\dialog.exe                                1   optional
+modules\rostests\tests\pseh2\pseh2_test.exe                                7   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
 modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
 modules\rostests\winetests\browseui\browseui_winetest.exe                  7   optional
