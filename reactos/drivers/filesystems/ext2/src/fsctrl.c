@@ -255,7 +255,7 @@ Ext2MountVolume (
 		DebugTrace(DEBUG_TRACE_MOUNT, "OEM[%s]", BootSector->Oem);
 		if (BootSector->Oem[0])
 		{
-		    try_return (Status = STATUS_WRONG_VOLUME);
+		    try_return();
 		}
 
 		//	Allocating memory for reading in Super Block...

@@ -429,7 +429,7 @@ PtrExt2CCB					PtrCCB)
 		{
 			//	Read Failure
 			DebugTrace(DEBUG_TRACE_MISC,   "Cache read failiure while reading in volume meta data", 0);
-			try_return( RC = STATUS_ACCESS_DENIED );
+			try_return();
 		}
 		else
 		{
