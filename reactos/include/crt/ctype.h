@@ -17,69 +17,36 @@ extern "C" {
 #endif
 
 #ifndef _CRT_CTYPEDATA_DEFINED
-#define _CRT_CTYPEDATA_DEFINED
-#ifndef _CTYPE_DISABLE_MACROS
-
-#ifndef __PCTYPE_FUNC
-#define __PCTYPE_FUNC __pctype_func()
-#ifdef _MSVCRT_
-#define __pctype_func()	(_pctype)
-#else
-#define __pctype_func()	(*_imp___pctype)
-#endif
-#endif
-
-#ifndef _pctype
-#ifdef _MSVCRT_
-  extern const unsigned short *_pctype;
-#else
-  extern const unsigned short **_imp___pctype;
-#define _pctype (*_imp___pctype)
-#endif
-#endif
-
-#endif
-#endif
+# define _CRT_CTYPEDATA_DEFINED
+# ifndef _CTYPE_DISABLE_MACROS
+#  ifndef __PCTYPE_FUNC
+#   ifdef _DLL
+#    define __PCTYPE_FUNC __pctype_func()
+#   else
+#    define __PCTYPE_FUNC _pctype
+#   endif
+#  endif /* !__PCTYPE_FUNC */
+  _CRTIMP const unsigned short * __cdecl __pctype_func(void);
+#  ifndef _M_CEE_PURE
+  _CRTDATA(extern const unsigned short *_pctype);
+#  else
+#   define _pctype (__pctype_func())
+#  endif /* !_M_CEE_PURE */
+# endif /* !_CTYPE_DISABLE_MACROS */
+#endif /* !_CRT_CTYPEDATA_DEFINED */
 
 #ifndef _CRT_WCTYPEDATA_DEFINED
 #define _CRT_WCTYPEDATA_DEFINED
-#ifndef _CTYPE_DISABLE_MACROS
-#ifndef _wctype
-#ifdef _MSVCRT_
-  extern unsigned short *_wctype;
-#else
-  extern unsigned short **_imp___wctype;
-#define _wctype (*_imp___wctype)
-#endif
-#endif
-#ifdef _MSVCRT_
-#define __pwctype_func() (_pwctype)
-#ifndef _pwctype
-  extern const unsigned short *_pwctype;
-#endif
-#else
-#define __pwctype_func() (*_imp___pwctype)
-#ifndef _pwctype
-  extern const unsigned short **_imp___pwctype;
-#define _pwctype (*_imp___pwctype)
-#endif
-#endif
-#endif
-#endif
-
-  /* CRT stuff */
-#if 1
-  extern const unsigned char __newclmap[];
-  extern const unsigned char __newcumap[];
-  extern pthreadlocinfo __ptlocinfo;
-  extern pthreadmbcinfo __ptmbcinfo;
-  extern int __globallocalestatus;
-  extern int __locale_changed;
-  extern struct threadlocaleinfostruct __initiallocinfo;
-  extern _locale_tstruct __initiallocalestructinfo;
-  pthreadlocinfo __cdecl __updatetlocinfo(void);
-  pthreadmbcinfo __cdecl __updatetmbcinfo(void);
-#endif
+# ifndef _CTYPE_DISABLE_MACROS
+  _CRTDATA(extern unsigned short *_wctype);
+  _CRTIMP const wctype_t * __cdecl __pwctype_func(void);
+#  ifndef _M_CEE_PURE
+  _CRTDATA(extern const wctype_t *_pwctype);
+#  else
+#   define _pwctype (__pwctype_func())
+#  endif /* !_M_CEE_PURE */
+# endif /* !_CTYPE_DISABLE_MACROS */
+#endif /* !_CRT_WCTYPEDATA_DEFINED */
 
 #define _UPPER 0x1
 #define _LOWER 0x2
@@ -96,7 +63,6 @@ extern "C" {
 
 #ifndef _CTYPE_DEFINED
 #define _CTYPE_DEFINED
-
   _CRTIMP int __cdecl _isctype(int _C,int _Type);
   _CRTIMP int __cdecl _isctype_l(int _C,int _Type,_locale_t _Locale);
   _CRTIMP int __cdecl isalpha(int _C);
@@ -131,51 +97,49 @@ extern "C" {
   _CRTIMP int __cdecl __toascii(int _C);
   _CRTIMP int __cdecl __iscsymf(int _C);
   _CRTIMP int __cdecl __iscsym(int _C);
-
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
 int __cdecl isblank(int _C);
 #endif
-#endif
+#endif /* !_CTYPE_DEFINED */
 
 #ifndef _WCTYPE_DEFINED
 #define _WCTYPE_DEFINED
-
-  int __cdecl iswalpha(wint_t _C);
+  _CRTIMP int __cdecl iswalpha(wint_t _C);
   _CRTIMP int __cdecl _iswalpha_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswupper(wint_t _C);
+  _CRTIMP int __cdecl iswupper(wint_t _C);
   _CRTIMP int __cdecl _iswupper_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswlower(wint_t _C);
+  _CRTIMP int __cdecl iswlower(wint_t _C);
   _CRTIMP int __cdecl _iswlower_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswdigit(wint_t _C);
+  _CRTIMP int __cdecl iswdigit(wint_t _C);
   _CRTIMP int __cdecl _iswdigit_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswxdigit(wint_t _C);
+  _CRTIMP int __cdecl iswxdigit(wint_t _C);
   _CRTIMP int __cdecl _iswxdigit_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswspace(wint_t _C);
+  _CRTIMP int __cdecl iswspace(wint_t _C);
   _CRTIMP int __cdecl _iswspace_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswpunct(wint_t _C);
+  _CRTIMP int __cdecl iswpunct(wint_t _C);
   _CRTIMP int __cdecl _iswpunct_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswalnum(wint_t _C);
+  _CRTIMP int __cdecl iswalnum(wint_t _C);
   _CRTIMP int __cdecl _iswalnum_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswprint(wint_t _C);
+  _CRTIMP int __cdecl iswprint(wint_t _C);
   _CRTIMP int __cdecl _iswprint_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswgraph(wint_t _C);
+  _CRTIMP int __cdecl iswgraph(wint_t _C);
   _CRTIMP int __cdecl _iswgraph_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswcntrl(wint_t _C);
+  _CRTIMP int __cdecl iswcntrl(wint_t _C);
   _CRTIMP int __cdecl _iswcntrl_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswascii(wint_t _C);
-  int __cdecl isleadbyte(int _C);
+  _CRTIMP int __cdecl iswascii(wint_t _C);
+  _CRTIMP int __cdecl isleadbyte(int _C);
   _CRTIMP int __cdecl _isleadbyte_l(int _C,_locale_t _Locale);
-  wint_t __cdecl towupper(wint_t _C);
+  _CRTIMP wint_t __cdecl towupper(wint_t _C);
   _CRTIMP wint_t __cdecl _towupper_l(wint_t _C,_locale_t _Locale);
-  wint_t __cdecl towlower(wint_t _C);
+  _CRTIMP wint_t __cdecl towlower(wint_t _C);
   _CRTIMP wint_t __cdecl _towlower_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswctype(wint_t _C,wctype_t _Type);
+  _CRTIMP int __cdecl iswctype(wint_t _C,wctype_t _Type);
   _CRTIMP int __cdecl _iswctype_l(wint_t _C,wctype_t _Type,_locale_t _Locale);
   _CRTIMP int __cdecl __iswcsymf(wint_t _C);
   _CRTIMP int __cdecl _iswcsymf_l(wint_t _C,_locale_t _Locale);
   _CRTIMP int __cdecl __iswcsym(wint_t _C);
   _CRTIMP int __cdecl _iswcsym_l(wint_t _C,_locale_t _Locale);
-  int __cdecl is_wctype(wint_t _C,wctype_t _Type);
+  _CRTIMP int __cdecl is_wctype(wint_t _C,wctype_t _Type);
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
 int __cdecl iswblank(wint_t _C);
@@ -261,12 +225,12 @@ int __cdecl iswblank(wint_t _C);
 #define _iswcsym_l(_c,_p) (_iswalnum_l(_c,_p) || ((_c)=='_'))
 #endif
 
-#ifndef	NO_OLDNAMES
+#ifndef NO_OLDNAMES
 #ifndef _CTYPE_DEFINED
-  int __cdecl isascii(int _C);
-  int __cdecl toascii(int _C);
-  int __cdecl iscsymf(int _C);
-  int __cdecl iscsym(int _C);
+  _CRT_NONSTDC_DEPRECATE(__isascii) _CRTIMP int __cdecl isascii(int _C);
+  _CRT_NONSTDC_DEPRECATE(__toascii) _CRTIMP int __cdecl toascii(int _C);
+  _CRT_NONSTDC_DEPRECATE(__iscsymf) _CRTIMP int __cdecl iscsymf(int _C);
+  _CRT_NONSTDC_DEPRECATE(__iscsym) _CRTIMP int __cdecl iscsym(int _C);
 #else
 #define isascii __isascii
 #define toascii __toascii
@@ -278,4 +242,5 @@ int __cdecl iswblank(wint_t _C);
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+#endif /* !_INC_CTYPE */

@@ -97,12 +97,24 @@ extern "C" {
 #define _ASSERT(expr) ((void)0)
 #endif
 
+#ifndef _ASSERT_WRN
+#define _ASSERT_WRN(expr) ((void)0)
+#endif
+
 #ifndef _ASSERTE
 #define _ASSERTE(expr) ((void)0)
 #endif
 
+#ifndef _ASSERTE_WRN
+#define _ASSERTE_WRN(expr) ((void)0)
+#endif
+
 #ifndef _ASSERT_EXPR
 #define _ASSERT_EXPR(expr,expr_str) ((void)0)
+#endif
+
+#ifndef _ASSERT_EXPR_WRN
+#define _ASSERT_EXPR_WRN(expr,expr_str) ((void)0)
 #endif
 
 #ifndef _ASSERT_BASE

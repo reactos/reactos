@@ -3,12 +3,8 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#ifndef _MATH_H_
-#define _MATH_H_
-
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
+#ifndef _INC_MATH
+#define _INC_MATH
 
 #include <crtdefs.h>
 
@@ -48,14 +44,7 @@ extern "C" {
 #define EDOM 33
 #define ERANGE 34
 
-#ifndef _HUGE
-#ifdef _MSVCRT_
-  extern double *_HUGE;
-#else
-  extern double *_imp___HUGE;
-#define _HUGE	(*_imp___HUGE)
-#endif
-#endif
+  _CRTIMP extern double _HUGE;
 
 #define HUGE_VAL _HUGE
 
@@ -94,19 +83,19 @@ extern "C" {
 #endif
 
   _CRTIMP double __cdecl _cabs(struct _complex _ComplexA);
-  double __cdecl ceil(double _X);
-  double __cdecl floor(double _X);
-  double __cdecl frexp(double _X,int *_Y);
-  double __cdecl _hypot(double _X,double _Y);
+  _CRTIMP double __cdecl ceil(double _X);
+  _CRTIMP double __cdecl floor(double _X);
+  _CRTIMP double __cdecl frexp(double _X,int *_Y);
+  _CRTIMP double __cdecl _hypot(double _X,double _Y);
   _CRTIMP double __cdecl _j0(double _X);
   _CRTIMP double __cdecl _j1(double _X);
   _CRTIMP double __cdecl _jn(int _X,double _Y);
-  double __cdecl ldexp(double _X,int _Y);
+  _CRTIMP double __cdecl ldexp(double _X,int _Y);
 #ifndef _CRT_MATHERR_DEFINED
 #define _CRT_MATHERR_DEFINED
   int __cdecl _matherr(struct _exception *_Except);
 #endif
-  double __cdecl modf(double _X,double *_Y);
+  _CRTIMP double __cdecl modf(double _X,double *_Y);
   _CRTIMP double __cdecl _y0(double _X);
   _CRTIMP double __cdecl _y1(double _X);
   _CRTIMP double __cdecl _yn(int _X,double _Y);
@@ -767,5 +756,4 @@ __fp_unordered_compare (long double x, long double y){
 
 #endif
 
-#endif /* End _MATH_H_ */
-
+#endif /* !_INC_MATH */
