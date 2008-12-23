@@ -15,6 +15,7 @@
 #define AllocatePacketWithBuffer(x,y,z) AllocatePacketWithBufferX(x,y,z,__FILE__,__LINE__)
 #define FreeNdisPacket(x) FreeNdisPacketX(x,__FILE__,__LINE__)
 
+#ifdef DBG
 #define MTMARK() TrackDumpFL(__FILE__, __LINE__)
 #define exAllocatePool(x,y) ExAllocatePoolX(x,y,__FILE__,__LINE__)
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolX(x,y,__FILE__,__LINE__)
@@ -62,5 +63,20 @@ static __inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
 }
 
 #define MEMTRACK_MAX_TAGS_TO_TRACK 64
+#else
+#define MTMARK()
+#define Track(x,y)
+#define TrackingInit()
+#define TrackDump()
+#define Untrack(x)
+#define TrackTag(x)
+#define exAllocatePoolWithTag(x,y,z) ExAllocatePoolWithTag(x,y,z)
+#define exAllocatePool(x,y) ExAllocatePool(x,y)
+#define exFreePool(x) ExFreePool(x)
+#define exAllocateFromNPagedLookasideList(x) ExAllocateFromNPagedLookasideList(x)
+#define exFreeToNPagedLookasideList(x,y) ExFreeToNPagedLookasideList(x,y)
+#define TrackWithTag(w,x,y,z)
+#define UntrackFL(w,x,y,z)
+#endif
 
 #endif/*MEMMTRAC_H*/

@@ -8,6 +8,7 @@
 #define FBSD_MALLOC FOURCC('d','s','b','f')
 #define EXALLOC_TAG FOURCC('E','x','A','l')
 
+#ifdef DBG
 #define MTMARK() TrackDumpFL(__FILE__, __LINE__)
 #define NdisAllocateBuffer(x,y,z,a,b) { \
     NdisAllocateBuffer(x,y,z,a,b); \
@@ -59,5 +60,21 @@ static __inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
 }
 
 #define MEMTRACK_MAX_TAGS_TO_TRACK 64
+#else
+#define MTMARK()
+#define Track(x,y)
+#define TrackingInit()
+#define TrackDump()
+#define Untrack(x)
+#define TrackTag(x)
+#define FreeNdisPacket FreeNdisPacketX
+#define exFreePool(x) ExFreePool(x)
+#define exAllocatePool(x,y) ExAllocatePool(x,y)
+#define exAllocatePoolWithTag(x,y,z) ExAllocatePoolWithTag(x,y,z)
+#define exAllocateFromNPagedLookasideList(x) ExAllocateFromNPagedLookasideList(x)
+#define exFreeToNPagedLookasideList(x,y) ExFreeToNPagedLookasideList(x,y)
+#define TrackWithTag(w,x,y,z)
+#define UntrackFL(w,x,y,z)
+#endif
 
 #endif/*MEMMTRAC_H*/
