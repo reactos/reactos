@@ -108,11 +108,11 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			string file = path + std::string("\\") + files[i]->file.name;
 
 			source_files.push_back ( file );
-			if ( !stricmp ( Right(file,2).c_str(), ".c" ) )
+			if ( !_stricmp ( Right(file,2).c_str(), ".c" ) )
 				c_srcs.push_back ( file );
-			if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
+			if ( !_stricmp ( Right(file,2).c_str(), ".h" ) )
 				header_files.push_back ( file );
-			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
+			if ( !_stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
 		}
 		const vector<Include*>& incs = data.includes;

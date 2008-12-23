@@ -32,7 +32,7 @@ Backend::Factory::ref = 0;
 Backend::Factory::Factory ( const std::string& name_, const std::string& description_ )
 {
 	string name(name_);
-	strlwr ( &name[0] );
+	_strlwr ( &name[0] );
 	if ( !ref++ )
 		factories = new map<string,Factory*>;
 	(*factories)[name] = this;
@@ -55,7 +55,7 @@ Backend::Factory::Create ( const string& name,
                            Configuration& configuration )
 {
 	string sname ( name );
-	strlwr ( &sname[0] );
+	_strlwr ( &sname[0] );
 	if ( !factories || !factories->size () )
 		throw InvalidOperationException ( __FILE__,
 		                                  __LINE__,
