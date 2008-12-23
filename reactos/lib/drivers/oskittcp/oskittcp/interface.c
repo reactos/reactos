@@ -35,12 +35,12 @@ int _snprintf(char * buf, size_t cnt, const char *fmt, ...);
 void *fbsd_malloc( unsigned int bytes, char *file, unsigned line, ... ) {
     if( !OtcpEvent.TCPMalloc ) panic("no malloc");
     return OtcpEvent.TCPMalloc
-	( OtcpEvent.ClientData, (OSK_UINT)bytes, file, line );
+	( OtcpEvent.ClientData, (OSK_UINT)bytes, (OSK_PCHAR)file, line );
 }
 
 void fbsd_free( void *data, char *file, unsigned line, ... ) {
     if( !OtcpEvent.TCPFree ) panic("no free");
-    OtcpEvent.TCPFree( OtcpEvent.ClientData, data, file, line );
+    OtcpEvent.TCPFree( OtcpEvent.ClientData, data, (OSK_PCHAR)file, line );
 }
 
 void InitOskitTCP() {
@@ -155,7 +155,7 @@ int OskitTCPRecv( void *connection,
     uio.uio_rw = UIO_READ;
     uio.uio_iovcnt = 1;
     iov.iov_len = Len;
-    iov.iov_base = Data;
+    iov.iov_base = (char *)Data;
 
     OS_DbgPrint(OSK_MID_TRACE,("Reading %d bytes from TCP:\n", Len));
 
@@ -260,7 +260,7 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     struct iovec iov;
 
     iov.iov_len = Len;
-    iov.iov_base = Data;
+    iov.iov_base = (char *)Data;
     uio.uio_iov = &iov;
     uio.uio_iovcnt = 1;
     uio.uio_offset = 0;
@@ -406,7 +406,7 @@ out:
 
 void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 			      OSK_UINT IpHeaderLen ) {
-    struct mbuf *Ip = m_devget( Data, Len, 0, NULL, NULL );
+    struct mbuf *Ip = m_devget( (char *)Data, Len, 0, NULL, NULL );
     struct ip *iph;
 
     if( !Ip ) return; /* drop the segment */

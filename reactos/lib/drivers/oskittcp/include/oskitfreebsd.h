@@ -1,6 +1,8 @@
 #ifndef _OSKITFREEBSD_H
 #define _OSKITFREEBSD_H
 
+#undef PAGE_SIZE
+#undef PAGE_SHIFT
 #include <ntddk.h>
 
 #ifdef linux

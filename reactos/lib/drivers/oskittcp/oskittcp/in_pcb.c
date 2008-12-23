@@ -102,7 +102,7 @@ in_pcbbind(inp, nam)
 
 	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
 
-	if( nam ) OskitDumpBuffer( nam->m_data, nam->m_len );
+	if( nam ) OskitDumpBuffer((OSK_PCHAR)nam->m_data, nam->m_len );
 
 #ifndef __REACTOS__
 	if (in_ifaddr == 0) {
