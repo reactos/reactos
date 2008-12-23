@@ -2,6 +2,7 @@
  * Unit tests for code page to/from unicode translations
  *
  * Copyright (c) 2002 Dmitry Timoshkov
+ * Copyright (c) 2008 Colin Finck
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -203,17 +204,165 @@ static void test_overlapped_buffers(void)
     char buf[256];
     int ret;
 
+    SetLastError(0xdeadbeef);
     memcpy((WCHAR *)(buf + 1), strW, sizeof(strW));
     ret = WideCharToMultiByte(CP_ACP, 0, (WCHAR *)(buf + 1), -1, buf, sizeof(buf), NULL, NULL);
     ok(ret == sizeof(strA), "unexpected ret %d\n", ret);
     ok(!memcmp(buf, strA, sizeof(strA)), "conversion failed: %s\n", buf);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+}
+
+static void test_string_conversion(LPBOOL bUsedDefaultChar)
+{
+    char mbc;
+    char mbs[5];
+    int ret;
+    WCHAR wc1 = 228;                           /* Western Windows-1252 character */
+    WCHAR wc2 = 1088;                          /* Russian Windows-1251 character not displayable for Windows-1252 */
+    WCHAR wcs[5] = {'T', 'h', 1088, 'i', 0};   /* String with ASCII characters and a Russian character */
+    WCHAR dbwcs[3] = {28953, 25152, 0};        /* String with Chinese (codepage 950) characters */
+
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(1252, 0, &wc1, 1, &mbc, 1, NULL, bUsedDefaultChar);
+    ok(ret == 1, "ret is %d\n", ret);
+    ok(mbc == -28, "mbc is %d\n", mbc);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(1252, 0, &wc2, 1, &mbc, 1, NULL, bUsedDefaultChar);
+    ok(ret == 1, "ret is %d\n", ret);
+    ok(mbc == 63, "mbc is %d\n", mbc);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+
+    if (IsValidCodePage(1251))
+    {
+        SetLastError(0xdeadbeef);
+        ret = WideCharToMultiByte(1251, 0, &wc2, 1, &mbc, 1, NULL, bUsedDefaultChar);
+        ok(ret == 1, "ret is %d\n", ret);
+        ok(mbc == -16, "mbc is %d\n", mbc);
+        if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+        ok(GetLastError() == 0xdeadbeef ||
+           broken(GetLastError() == 0), /* win95 */
+           "GetLastError() is %u\n", GetLastError());
+
+        SetLastError(0xdeadbeef);
+        ret = WideCharToMultiByte(1251, 0, &wc1, 1, &mbc, 1, NULL, bUsedDefaultChar);
+        ok(ret == 1, "ret is %d\n", ret);
+        ok(mbc == 97, "mbc is %d\n", mbc);
+        if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+        ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+    }
+    else
+        skip("Codepage 1251 not available\n");
+
+    /* This call triggers the last Win32 error */
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(1252, 0, wcs, -1, &mbc, 1, NULL, bUsedDefaultChar);
+    ok(ret == 0, "ret is %d\n", ret);
+    ok(mbc == 84, "mbc is %d\n", mbc);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetLastError() is %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(1252, 0, wcs, -1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ok(ret == 5, "ret is %d\n", ret);
+    ok(!strcmp(mbs, "Th?i"), "mbs is %s\n", mbs);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+    mbs[0] = 0;
+
+    /* WideCharToMultiByte mustn't add any null character automatically.
+       So in this case, we should get the same string again, even if we only copied the first three bytes. */
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(1252, 0, wcs, 3, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ok(ret == 3, "ret is %d\n", ret);
+    ok(!strcmp(mbs, "Th?i"), "mbs is %s\n", mbs);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+    ZeroMemory(mbs, 5);
+
+    /* Now this shouldn't be the case like above as we zeroed the complete string buffer. */
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(1252, 0, wcs, 3, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ok(ret == 3, "ret is %d\n", ret);
+    ok(!strcmp(mbs, "Th?"), "mbs is %s\n", mbs);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+
+    /* Double-byte tests */
+    ret = WideCharToMultiByte(1252, 0, dbwcs, 3, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ok(ret == 3, "ret is %d\n", ret);
+    ok(!strcmp(mbs, "??"), "mbs is %s\n", mbs);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+
+    /* Length-only tests */
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(1252, 0, &wc2, 1, NULL, 0, NULL, bUsedDefaultChar);
+    ok(ret == 1, "ret is %d\n", ret);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(1252, 0, wcs, -1, NULL, 0, NULL, bUsedDefaultChar);
+    ok(ret == 5, "ret is %d\n", ret);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == TRUE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+
+    if (!IsValidCodePage(950))
+    {
+        skip("Codepage 950 not available\n");
+        return;
+    }
+
+    /* Double-byte tests */
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(950, 0, dbwcs, -1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ok(ret == 5, "ret is %d\n", ret);
+    ok(!strcmp(mbs, "µH©Ò"), "mbs is %s\n", mbs);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(950, 0, dbwcs, 1, &mbc, 1, NULL, bUsedDefaultChar);
+    ok(ret == 0, "ret is %d\n", ret);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetLastError() is %u\n", GetLastError());
+    ZeroMemory(mbs, 5);
+
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(950, 0, dbwcs, 1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
+    ok(ret == 2, "ret is %d\n", ret);
+    ok(!strcmp(mbs, "µH"), "mbs is %s\n", mbs);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+
+    /* Length-only tests */
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(950, 0, dbwcs, 1, NULL, 0, NULL, bUsedDefaultChar);
+    ok(ret == 2, "ret is %d\n", ret);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WideCharToMultiByte(950, 0, dbwcs, -1, NULL, 0, NULL, bUsedDefaultChar);
+    ok(ret == 5, "ret is %d\n", ret);
+    if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
 }
 
 START_TEST(codepage)
 {
+    BOOL bUsedDefaultChar;
+
     test_destination_buffer();
     test_null_source();
     test_negative_source_length();
     test_negative_dest_length();
     test_overlapped_buffers();
+
+    /* WideCharToMultiByte has two code paths, test both here */
+    test_string_conversion(NULL);
+    test_string_conversion(&bUsedDefaultChar);
 }

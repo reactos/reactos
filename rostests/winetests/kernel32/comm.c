@@ -27,7 +27,7 @@
 #define TIMEOUT 1000   /* one second for Timeouts*/
 #define SLOWBAUD 150
 #define FASTBAUD 115200
-#define TIMEDELTA 100  /* 100 ms uncertainty allowed */
+#define TIMEDELTA 150  /* 150 ms uncertainty allowed */
 
 /* Define the appropriate LOOPBACK(s) TRUE if you have a Loopback cable with
  * the mentioned shorts connected to your Serial port

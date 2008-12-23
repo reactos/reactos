@@ -19,6 +19,7 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "wine/test.h"
 #include "windef.h"
@@ -182,13 +183,14 @@ static void test_profile_sections(void)
     ok( GetLastError() == ERROR_FILE_NOT_FOUND, "expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
 
     /* And a real one */
+    SetLastError(0xdeadbeef);
     ret=GetPrivateProfileSectionA("section1", buf, sizeof(buf), testfile4);
     for( p = buf + strlen(buf) + 1; *p;p += strlen(p)+1)
         p[-1] = ',';
     ok( ret == 35 && !strcmp( buf, "name1=val1,name2=,name3,name4=val4"), "wrong section returned(%d): %s\n",
             ret, buf);
     ok( buf[ret-1] == 0 && buf[ret] == 0, "returned buffer not terminated with double-null\n" );
-    ok( GetLastError() == S_OK, "expected S_OK, got %d\n", GetLastError());
+    ok( GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %d\n", GetLastError());
 
     DeleteFileA( testfile4 );
 }
@@ -266,10 +268,456 @@ static void test_profile_sections_names(void)
     ok( bufW[1] != 0, "returned buffer terminated with double-null\n" );
 }
 
+/* If the ini-file has already been opened with CreateFile, WritePrivateProfileString failed in wine with an error ERROR_SHARING_VIOLATION,  some testing here */
+static void test_profile_existing(void)
+{
+    static const char *testfile1 = ".\\winesharing1.ini";
+    static const char *testfile2 = ".\\winesharing2.ini";
+
+    static const struct {
+        DWORD dwDesiredAccess;
+        DWORD dwShareMode;
+        DWORD write_error;
+        BOOL read_error;
+        DWORD broken_error;
+    } pe[] = {
+        {GENERIC_READ,  FILE_SHARE_READ,  ERROR_SHARING_VIOLATION, FALSE },
+        {GENERIC_READ,  FILE_SHARE_WRITE, ERROR_SHARING_VIOLATION, TRUE },
+        {GENERIC_WRITE, FILE_SHARE_READ,  ERROR_SHARING_VIOLATION, FALSE },
+        {GENERIC_WRITE, FILE_SHARE_WRITE, ERROR_SHARING_VIOLATION, TRUE },
+        {GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ,  ERROR_SHARING_VIOLATION, FALSE },
+        {GENERIC_READ|GENERIC_WRITE, FILE_SHARE_WRITE, ERROR_SHARING_VIOLATION, TRUE },
+        {GENERIC_READ,  FILE_SHARE_READ|FILE_SHARE_WRITE, 0, FALSE, ERROR_SHARING_VIOLATION /* nt4 */},
+        {GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, 0, FALSE, ERROR_SHARING_VIOLATION /* nt4 */},
+        /*Thief demo (bug 5024) opens .ini file like this*/
+        {GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, 0, FALSE, ERROR_SHARING_VIOLATION /* nt4 */}
+    };
+
+    int i;
+    BOOL ret;
+    DWORD size;
+    HANDLE h = 0;
+    char buffer[MAX_PATH];
+
+    for (i=0; i < sizeof(pe)/sizeof(pe[0]); i++)
+    {
+        h = CreateFile(testfile1, pe[i].dwDesiredAccess, pe[i].dwShareMode, NULL,
+                       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        ok(INVALID_HANDLE_VALUE != h, "%d: CreateFile failed\n",i);
+        SetLastError(0xdeadbeef);
+
+        ret = WritePrivateProfileString(SECTION, KEY, "12345", testfile1);
+        if (!pe[i].write_error)
+        {
+            if (!ret)
+                ok( broken(GetLastError() == pe[i].broken_error),
+                    "%d: WritePrivateProfileString failed with error %u\n", i, GetLastError() );
+            CloseHandle(h);
+            size = GetPrivateProfileString(SECTION, KEY, 0, buffer, MAX_PATH, testfile1);
+            if (ret)
+                ok( size == 5, "%d: test failed, number of characters copied: %d instead of 5\n", i, size );
+            else
+                ok( !size, "%d: test failed, number of characters copied: %d instead of 0\n", i, size );
+        }
+        else
+        {
+            DWORD err = GetLastError();
+            ok( !ret, "%d: WritePrivateProfileString succeeded\n", i );
+            if (!ret)
+                ok( err == pe[i].write_error, "%d: WritePrivateProfileString failed with error %u/%u\n",
+                    i, err, pe[i].write_error );
+            CloseHandle(h);
+            size = GetPrivateProfileString(SECTION, KEY, 0, buffer, MAX_PATH, testfile1);
+            ok( !size, "%d: test failed, number of characters copied: %d instead of 0\n", i, size );
+        }
+
+        ok( DeleteFile(testfile1), "delete failed\n" );
+    }
+
+    h = CreateFile(testfile2, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    sprintf( buffer, "[%s]\r\n%s=123\r\n", SECTION, KEY );
+    ok( WriteFile( h, buffer, strlen(buffer), &size, NULL ), "failed to write\n" );
+    CloseHandle( h );
+
+    for (i=0; i < sizeof(pe)/sizeof(pe[0]); i++)
+    {
+        h = CreateFile(testfile2, pe[i].dwDesiredAccess, pe[i].dwShareMode, NULL,
+                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        ok(INVALID_HANDLE_VALUE != h, "%d: CreateFile failed\n",i);
+        SetLastError(0xdeadbeef);
+        ret = GetPrivateProfileStringA(SECTION, KEY, NULL, buffer, MAX_PATH, testfile2);
+        if (!pe[i].read_error)
+            ok( ret, "%d: GetPrivateProfileString failed with error %u\n", i, GetLastError() );
+        else
+            ok( !ret, "%d: GetPrivateProfileString succeeded\n", i );
+        CloseHandle(h);
+    }
+    ok( DeleteFile(testfile2), "delete failed\n" );
+}
+
+static void test_profile_delete_on_close()
+{
+    static CHAR testfile[] = ".\\testwine5.ini";
+    HANDLE h;
+    DWORD size, res;
+    static const char contents[] = "[" SECTION "]\n" KEY "=123\n";
+
+    h = CreateFile(testfile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                    CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    ok( WriteFile( h, contents, sizeof contents - 1, &size, NULL ),
+                    "Cannot write test file: %x\n", GetLastError() );
+    ok( size == sizeof contents - 1, "Test file: partial write\n");
+
+    res = GetPrivateProfileInt(SECTION, KEY, 0, testfile);
+    ok( res == 123, "Got %d instead of 123\n", res);
+
+    /* This also deletes the file */
+    CloseHandle(h);
+}
+
+static void test_profile_refresh(void)
+{
+    static CHAR testfile[] = ".\\winetest4.ini";
+    HANDLE h;
+    DWORD size, res;
+    static const char contents1[] = "[" SECTION "]\n" KEY "=123\n";
+    static const char contents2[] = "[" SECTION "]\n" KEY "=124\n";
+
+    h = CreateFile(testfile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                    CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    ok( WriteFile( h, contents1, sizeof contents1 - 1, &size, NULL ),
+                    "Cannot write test file: %x\n", GetLastError() );
+    ok( size == sizeof contents1 - 1, "Test file: partial write\n");
+
+    res = GetPrivateProfileInt(SECTION, KEY, 0, testfile);
+    ok( res == 123, "Got %d instead of 123\n", res);
+
+    CloseHandle(h);
+
+    /* Test proper invalidation of wine's profile file cache */
+
+    h = CreateFile(testfile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                    CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    ok( WriteFile( h, contents2, sizeof contents2 - 1, &size, NULL ),
+                    "Cannot write test file: %x\n", GetLastError() );
+    ok( size == sizeof contents2 - 1, "Test file: partial write\n");
+
+    res = GetPrivateProfileInt(SECTION, KEY, 0, testfile);
+    ok( res == 124, "Got %d instead of 124\n", res);
+
+    /* This also deletes the file */
+    CloseHandle(h);
+}
+
+static void create_test_file(LPCSTR name, LPCSTR data, DWORD size)
+{
+    HANDLE hfile;
+    DWORD count;
+
+    hfile = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(hfile != INVALID_HANDLE_VALUE, "cannot create %s\n", name);
+    WriteFile(hfile, data, size, &count, NULL);
+    CloseHandle(hfile);
+}
+
+static BOOL emptystr_ok(CHAR emptystr[MAX_PATH])
+{
+    int i;
+
+    for(i = 0;i < MAX_PATH;++i)
+        if(emptystr[i] != 0)
+        {
+            trace("emptystr[%d] = %d\n",i,emptystr[i]);
+            return FALSE;
+        }
+
+    return TRUE;
+}
+
+static void test_GetPrivateProfileString(const char *content, const char *descript)
+{
+    DWORD ret;
+    CHAR buf[MAX_PATH];
+    CHAR def_val[MAX_PATH];
+    CHAR path[MAX_PATH];
+    CHAR windir[MAX_PATH];
+    /* NT series crashes on r/o empty strings, so pass an r/w
+       empty string and check for modification */
+    CHAR emptystr[MAX_PATH] = "";
+    LPSTR tempfile;
+
+    static const char filename[] = ".\\winetest.ini";
+
+    trace("test_GetPrivateProfileStringA: %s\n", descript);
+
+    create_test_file(filename, content, lstrlenA(content));
+
+    /* Run this test series with caching. Wine won't cache profile
+       files younger than 2.1 seconds. */
+    Sleep(2500);
+
+    /* lpAppName is NULL */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA(NULL, "name1", "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 18, "Expected 18, got %d\n", ret);
+    ok(!memcmp(buf, "section1\0section2\0", ret + 1),
+       "Expected \"section1\\0section2\\0\", got \"%s\"\n", buf);
+
+    /* lpAppName is empty */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA(emptystr, "name1", "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "AppName modified\n");
+
+    /* lpAppName is missing */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("notasection", "name1", "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+
+    /* lpAppName is empty, lpDefault is NULL */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA(emptystr, "name1", NULL,
+                                   buf, MAX_PATH, filename);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "AppName modified\n");
+
+    /* lpAppName is empty, lpDefault is empty */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA(emptystr, "name1", "",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "AppName modified\n");
+
+    /* lpAppName is empty, lpDefault has trailing blank characters */
+    lstrcpyA(buf, "kumquat");
+    /* lpDefault must be writable (trailing blanks are removed inplace in win9x) */
+    lstrcpyA(def_val, "default  ");
+    ret = GetPrivateProfileStringA(emptystr, "name1", def_val,
+                                   buf, MAX_PATH, filename);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "AppName modified\n");
+
+    /* lpAppName is empty, many blank characters in lpDefault */
+    lstrcpyA(buf, "kumquat");
+    /* lpDefault must be writable (trailing blanks are removed inplace in win9x) */
+    lstrcpyA(def_val, "one two  ");
+    ret = GetPrivateProfileStringA(emptystr, "name1", def_val,
+                                   buf, MAX_PATH, filename);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "one two"), "Expected \"one two\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "AppName modified\n");
+
+    /* lpAppName is empty, blank character but not trailing in lpDefault */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA(emptystr, "name1", "one two",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "one two"), "Expected \"one two\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "AppName modified\n");
+
+    /* lpKeyName is NULL */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", NULL, "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 18, "Expected 18, got %d\n", ret);
+    ok(!memcmp(buf, "name1\0name2\0name4\0", ret + 1),
+       "Expected \"name1\\0name2\\0name4\\0\", got \"%s\"\n", buf);
+
+    /* lpKeyName is empty */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", emptystr, "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "KeyName modified\n");
+
+    /* lpKeyName is missing */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "notakey", "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+
+    /* lpKeyName is empty, lpDefault is NULL */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", emptystr, NULL,
+                                   buf, MAX_PATH, filename);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "KeyName modified\n");
+
+    /* lpKeyName is empty, lpDefault is empty */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", emptystr, "",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "KeyName modified\n");
+
+    /* lpKeyName is empty, lpDefault has trailing blank characters */
+    lstrcpyA(buf, "kumquat");
+    /* lpDefault must be writable (trailing blanks are removed inplace in win9x) */
+    lstrcpyA(def_val, "default  ");
+    ret = GetPrivateProfileStringA("section1", emptystr, def_val,
+                                   buf, MAX_PATH, filename);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+    ok(emptystr_ok(emptystr), "KeyName modified\n");
+
+    if (0) /* crashes */
+    {
+        /* lpReturnedString is NULL */
+        ret = GetPrivateProfileStringA("section1", "name1", "default",
+                                       NULL, MAX_PATH, filename);
+    }
+
+    /* lpFileName is NULL */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name1", "default",
+                                   buf, MAX_PATH, NULL);
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+
+    /* lpFileName is empty */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name1", "default",
+                                   buf, MAX_PATH, "");
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+
+    /* lpFileName is nonexistent */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name1", "default",
+                                   buf, MAX_PATH, "nonexistent");
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+
+    /* nSize is 0 */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name1", "default",
+                                   buf, 0, filename);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ok(!lstrcmpA(buf, "kumquat"), "Expected buf to be unchanged, got \"%s\"\n", buf);
+
+    /* nSize is exact size of output */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name1", "default",
+                                   buf, 4, filename);
+    ok(ret == 3, "Expected 3, got %d\n", ret);
+    ok(!lstrcmpA(buf, "val"), "Expected \"val\", got \"%s\"\n", buf);
+
+    /* nSize has room for NULL terminator */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name1", "default",
+                                   buf, 5, filename);
+    ok(ret == 4, "Expected 4, got %d\n", ret);
+    ok(!lstrcmpA(buf, "val1"), "Expected \"val1\", got \"%s\"\n", buf);
+
+    /* output is 1 character */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name4", "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 1, "Expected 1, got %d\n", ret);
+    ok(!lstrcmpA(buf, "a"), "Expected \"a\", got \"%s\"\n", buf);
+
+    /* output is 1 character, no room for NULL terminator */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name4", "default",
+                                   buf, 1, filename);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ok(!lstrcmpA(buf, ""), "Expected \"\", got \"%s\"\n", buf);
+
+    /* lpAppName is NULL, not enough room for final section name */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA(NULL, "name1", "default",
+                                   buf, 16, filename);
+    ok(ret == 14, "Expected 14, got %d\n", ret);
+    ok(!memcmp(buf, "section1\0secti\0", ret + 1),
+       "Expected \"section1\\0secti\\0\", got \"%s\"\n", buf);
+
+    /* lpKeyName is NULL, not enough room for final key name */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", NULL, "default",
+                                   buf, 16, filename);
+    ok(ret == 14, "Expected 14, got %d\n", ret);
+    ok(!memcmp(buf, "name1\0name2\0na\0", ret + 1),
+       "Expected \"name1\\0name2\\0na\\0\", got \"%s\"\n", buf);
+
+    /* key value has quotation marks which are stripped */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name2", "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 4, "Expected 4, got %d\n", ret);
+    ok(!lstrcmpA(buf, "val2"), "Expected \"val2\", got \"%s\"\n", buf);
+
+    /* case does not match */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "NaMe1", "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 4, "Expected 4, got %d\n", ret);
+    ok(!lstrcmpA(buf, "val1"), "Expected \"val1\", got \"%s\"\n", buf);
+
+    /* only filename is used */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "NaMe1", "default",
+                                   buf, MAX_PATH, "winetest.ini");
+    ok(ret == 7, "Expected 7, got %d\n", ret);
+    ok(!lstrcmpA(buf, "default"), "Expected \"default\", got \"%s\"\n", buf);
+
+    GetWindowsDirectoryA(windir, MAX_PATH);
+    GetTempFileNameA(windir, "pre", 0, path);
+    tempfile = strrchr(path, '\\') + 1;
+    create_test_file(path, content, lstrlenA(content));
+
+    /* only filename is used, file exists in windows directory */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "NaMe1", "default",
+                                   buf, MAX_PATH, tempfile);
+    ok(ret == 4, "Expected 4, got %d\n", ret);
+    ok(!lstrcmpA(buf, "val1"), "Expected \"val1\", got \"%s\"\n", buf);
+
+    /* successful case */
+    lstrcpyA(buf, "kumquat");
+    ret = GetPrivateProfileStringA("section1", "name1", "default",
+                                   buf, MAX_PATH, filename);
+    ok(ret == 4, "Expected 4, got %d\n", ret);
+    ok(!lstrcmpA(buf, "val1"), "Expected \"val1\", got \"%s\"\n", buf);
+
+    DeleteFileA(path);
+    DeleteFileA(filename);
+}
+
 START_TEST(profile)
 {
     test_profile_int();
     test_profile_string();
     test_profile_sections();
     test_profile_sections_names();
+    test_profile_existing();
+    test_profile_delete_on_close();
+    test_profile_refresh();
+    test_GetPrivateProfileString(
+        "[section1]\r\n"
+        "name1=val1\r\n"
+        "name2=\"val2\"\r\n"
+        "name3\r\n"
+        "name4=a\r\n"
+        "[section2]\r\n",
+        "CR+LF");
+    test_GetPrivateProfileString(
+        "[section1]\r"
+        "name1=val1\r"
+        "name2=\"val2\"\r"
+        "name3\r"
+        "name4=a\r"
+        "[section2]\r",
+        "CR only");
 }

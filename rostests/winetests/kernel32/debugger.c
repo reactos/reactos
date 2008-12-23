@@ -20,6 +20,8 @@
 
 #include <stdio.h>
 #include <assert.h>
+
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <winreg.h>
 #include <ntndk.h>
@@ -137,6 +139,7 @@ static void doDebugger(int argc, char** argv)
     logfile=(argc >= 4 ? argv[3] : NULL);
     blackbox.pid=(argc >= 5 ? atol(argv[4]) : 0);
 
+    blackbox.attach_err=0;
     if (strstr(myARGV[2], "attach"))
     {
         blackbox.attach_rc=DebugActiveProcess(blackbox.pid);
@@ -147,6 +150,7 @@ static void doDebugger(int argc, char** argv)
         blackbox.attach_rc=TRUE;
 
     debug_event=(argc >= 6 ? (HANDLE)atol(argv[5]) : NULL);
+    blackbox.debug_err=0;
     if (debug_event && strstr(myARGV[2], "event"))
     {
         blackbox.debug_rc=SetEvent(debug_event);
@@ -156,13 +160,18 @@ static void doDebugger(int argc, char** argv)
     else
         blackbox.debug_rc=TRUE;
 
-    get_events(logfile, &start_event, &done_event);
+    if (logfile)
+    {
+        get_events(logfile, &start_event, &done_event);
+    }
+
     if (strstr(myARGV[2], "order"))
     {
         trace("debugger: waiting for the start signal...\n");
         WaitForSingleObject(start_event, INFINITE);
     }
 
+    blackbox.nokill_err=0;
     if (strstr(myARGV[2], "nokill"))
     {
         blackbox.nokill_rc=pDebugSetProcessKillOnExit(FALSE);
@@ -172,6 +181,7 @@ static void doDebugger(int argc, char** argv)
     else
         blackbox.nokill_rc=TRUE;
 
+    blackbox.detach_err=0;
     if (strstr(myARGV[2], "detach"))
     {
         blackbox.detach_rc=pDebugActiveProcessStop(blackbox.pid);
@@ -181,7 +191,10 @@ static void doDebugger(int argc, char** argv)
     else
         blackbox.detach_rc=TRUE;
 
-    save_blackbox(logfile, &blackbox, sizeof(blackbox));
+    if (logfile)
+    {
+        save_blackbox(logfile, &blackbox, sizeof(blackbox));
+    }
     trace("debugger: done debugging...\n");
     SetEvent(done_event);
 
@@ -241,7 +254,9 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
            "wrong exit code : %08x\n", exit_code);
     }
     else
-        ok(exit_code == STATUS_ACCESS_VIOLATION, "exit code = %08x instead of STATUS_ACCESS_VIOLATION\n", exit_code);
+         ok(exit_code == STATUS_ACCESS_VIOLATION ||
+            exit_code == WAIT_ABANDONED, /* win2k3 */
+            "exit code = %08x instead of STATUS_ACCESS_VIOLATION or WAIT_ABANDONED\n", exit_code);
     CloseHandle(info.hProcess);
 
     /* ...before the debugger */
@@ -333,6 +348,7 @@ static void test_ExitCode(void)
         {
             debugger_val=HeapAlloc(GetProcessHeap(), 0, debugger_size);
             RegQueryValueExA(hkey, "debugger", NULL, &debugger_type, debugger_val, &debugger_size);
+            trace("HKLM\\%s\\debugger is set to '%s'\n", AeDebug, debugger_val);
         }
     }
     else if (ret == ERROR_ACCESS_DENIED)

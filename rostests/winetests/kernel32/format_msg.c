@@ -228,7 +228,9 @@ static void test_message_null_buffer(void)
     ret = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, 0, 0, NULL, 0, NULL);
     error = GetLastError();
     ok(!ret, "FormatMessageA returned %u\n", ret);
-    ok(error == ERROR_NOT_ENOUGH_MEMORY, "last error %u\n", error);
+    ok(error == ERROR_NOT_ENOUGH_MEMORY ||
+       error == ERROR_INVALID_PARAMETER, /* win9x */
+       "last error %u\n", error);
 
     SetLastError(0xdeadbeef);
     ret = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, 0, 0, NULL, 0, NULL);

@@ -130,6 +130,49 @@ static void testCursor(HANDLE hCon, COORD sbSize)
        ERROR_INVALID_PARAMETER, GetLastError());
 }
 
+static void testCursorInfo(HANDLE hCon)
+{
+    BOOL ret;
+    CONSOLE_CURSOR_INFO info;
+
+    SetLastError(0xdeadbeef);
+    ret = GetConsoleCursorInfo(NULL, NULL);
+    ok(!ret, "Expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "GetLastError: expecting %u got %u\n",
+       ERROR_INVALID_HANDLE, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    info.dwSize = -1;
+    ret = GetConsoleCursorInfo(NULL, &info);
+    ok(!ret, "Expected failure\n");
+    ok(info.dwSize == -1, "Expected no change for dwSize\n");
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "GetLastError: expecting %u got %u\n",
+       ERROR_INVALID_HANDLE, GetLastError());
+
+    /* Test the correct call first to distinguish between win9x and the rest */
+    SetLastError(0xdeadbeef);
+    ret = GetConsoleCursorInfo(hCon, &info);
+    ok(ret, "Expected success\n");
+    ok(info.dwSize == 25 ||
+       info.dwSize == 12 /* win9x */,
+       "Expected 12 or 25, got %d\n", info.dwSize);
+    ok(info.bVisible, "Expected the cursor to be visible\n");
+    ok(GetLastError() == 0xdeadbeef, "GetLastError: expecting %u got %u\n",
+       0xdeadbeef, GetLastError());
+
+    if (info.dwSize == 12)
+    {
+        skip("NULL CONSOLE_CURSOR_INFO will crash on win9x\n");
+        return;
+    }
+
+    SetLastError(0xdeadbeef);
+    ret = GetConsoleCursorInfo(hCon, NULL);
+    ok(!ret, "Expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_ACCESS, "GetLastError: expecting %u got %u\n",
+       ERROR_INVALID_ACCESS, GetLastError());
+}
+
 static void testWriteSimple(HANDLE hCon, COORD sbSize)
 {
     COORD		c;
@@ -863,6 +906,8 @@ START_TEST(console)
 
     /* Non interactive tests */
     testCursor(hConOut, sbi.dwSize);
+    /* test parameters (FIXME: test functionality) */
+    testCursorInfo(hConOut);
     /* will test wrapped (on/off) & processed (on/off) strings output */
     testWrite(hConOut, sbi.dwSize);
     /* will test line scrolling at the bottom of the screen */

@@ -92,7 +92,9 @@ static void test_GetVersionEx(void)
     SetLastError(0xdeadbeef);
     infoExA.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXA);
     ret = GetVersionExA((OSVERSIONINFOA *)&infoExA);
-    ok(ret, "Expected GetVersionExA to succeed\n");
+    ok(ret ||
+       broken(ret == 0), /* win95 */
+       "Expected GetVersionExA to succeed\n");
     ok(GetLastError() == 0xdeadbeef,
         "Expected 0xdeadbeef, got %d\n", GetLastError());
 }
@@ -162,8 +164,12 @@ static void test_VerifyVersionInfo(void)
         pVerSetConditionMask(pVerSetConditionMask(0, VER_MINORVERSION, VER_GREATER_EQUAL),
             VER_MAJORVERSION, VER_GREATER_EQUAL));
     if (servicepack == 0)
-        ok(!ret && (GetLastError() == ERROR_OLD_WIN_VERSION),
-            "VerifyVersionInfoA should have failed with ERROR_OLD_WIN_VERSION instead of %d\n", GetLastError());
+    {
+        ok(!ret || broken(ret), /* win2k3 */
+           "VerifyVersionInfoA should have failed\n");
+        ok(GetLastError() == ERROR_OLD_WIN_VERSION,
+            "Expected ERROR_OLD_WIN_VERSION instead of %d\n", GetLastError());
+    }
     else
         ok(ret, "VerifyVersionInfoA failed with error %d\n", GetLastError());
 

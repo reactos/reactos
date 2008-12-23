@@ -173,22 +173,25 @@ static void update_resources_version(void)
     res = BeginUpdateResource( filename, TRUE );
     ok( res != NULL, "BeginUpdateResource failed\n");
 
-    r = UpdateResource( res,
-                        MAKEINTRESOURCE(0x1230),
-                        MAKEINTRESOURCE(0x4567),
-                        0xabcd,
-                        NULL, 0 );
-    ok( r == FALSE, "UpdateResource failed\n");
+    if (0)  /* this causes subsequent tests to fail on Vista */
+    {
+        r = UpdateResource( res,
+                            MAKEINTRESOURCE(0x1230),
+                            MAKEINTRESOURCE(0x4567),
+                            0xabcd,
+                            NULL, 0 );
+        ok( r == FALSE, "UpdateResource failed\n");
+    }
 
     r = UpdateResource( res,
                         MAKEINTRESOURCE(0x1230),
                         MAKEINTRESOURCE(0x4567),
                         0xabcd,
                         foo, sizeof foo );
-    ok( r == TRUE, "UpdateResource failed\n");
+    ok( r == TRUE, "UpdateResource failed: %d\n", GetLastError());
 
     r = EndUpdateResource( res, FALSE );
-    ok( r, "EndUpdateResource failed\n");
+    ok( r, "EndUpdateResource failed: %d\n", GetLastError());
 }
 
 
@@ -249,7 +252,8 @@ static void check_exe( res_check_func fn )
     dir = (void*) ((BYTE*) dos + sec[1].VirtualAddress);
 
     ok( dir->Characteristics == 0, "Characteristics wrong\n");
-    ok( dir->TimeDateStamp == 0, "TimeDateStamp wrong\n");
+    ok( dir->TimeDateStamp == 0 || abs( dir->TimeDateStamp - GetTickCount() ) < 1000 /* nt4 */,
+        "TimeDateStamp wrong %u\n", dir->TimeDateStamp);
     ok( dir->MajorVersion == 4, "MajorVersion wrong\n");
     ok( dir->MinorVersion == 0, "MinorVersion wrong\n");
 

@@ -72,6 +72,13 @@ START_TEST(heap)
     mem = HeapAlloc(GetProcessHeap(), 0, ~0UL);
     ok(mem == NULL, "memory allocated for size ~0UL\n");
 
+    /* large blocks must be 16-byte aligned */
+    mem = HeapAlloc(GetProcessHeap(), 0, 512 * 1024);
+    ok( mem != NULL, "failed for size 512K\n" );
+    ok( (ULONG_PTR)mem % 16 == 0 || broken((ULONG_PTR)mem % 16) /* win9x */,
+        "512K block not 16-byte aligned\n" );
+    HeapFree(GetProcessHeap(), 0, mem);
+
     /* Global*() functions */
     gbl = GlobalAlloc(GMEM_MOVEABLE, 0);
     ok(gbl != NULL, "global memory not allocated for size 0\n");
@@ -185,24 +192,31 @@ START_TEST(heap)
     /* invalid free */
     SetLastError(MAGIC_DEAD);
     mem = GlobalFree(gbl);
-    ok(mem == gbl, "Expected gbl, got %p\n", mem);
-    ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+    ok(mem == gbl || broken(mem == NULL) /* nt4 */, "Expected gbl, got %p\n", mem);
+    if (mem == gbl)
+        ok(GetLastError() == ERROR_INVALID_HANDLE ||
+           GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
+           "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     gbl = GlobalAlloc(GMEM_DDESHARE, 100);
 
     res = GlobalUnlock(gbl);
-    ok(res == 1, "Expected 1, got %d\n", res);
+    ok(res == 1 ||
+       res == 0, /* win9x */
+       "Expected 1 or 0, got %d\n", res);
 
     res = GlobalUnlock(gbl);
-    ok(res == 1, "Expected 1, got %d\n", res);
+    ok(res == 1 ||
+       res == 0, /* win9x */
+       "Expected 1 or 0, got %d\n", res);
 
     /* GlobalSize on an invalid handle */
     SetLastError(MAGIC_DEAD);
     size = GlobalSize((HGLOBAL)0xc042);
     ok(size == 0, "Expected 0, got %ld\n", size);
-    ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_HANDLE ||
+       GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
+       "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     /* ####################################### */
     /* Local*() functions */

@@ -27,6 +27,13 @@
 
 #define ALIGN_SIZE(size, alignment) (((size) + (alignment - 1)) & ~((alignment - 1)))
 
+static PVOID RVAToAddr(DWORD_PTR rva, HMODULE module)
+{
+    if (rva == 0)
+        return NULL;
+    return ((char*) module) + rva;
+}
+
 static const struct
 {
     WORD e_magic;      /* 00: MZ Header signature */
@@ -103,7 +110,7 @@ static IMAGE_SECTION_HEADER section =
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ, /* Characteristics */
 };
 
-START_TEST(loader)
+static void test_Loader(void)
 {
     static const struct test_data
     {
@@ -113,6 +120,7 @@ START_TEST(loader)
         DWORD section_alignment, file_alignment;
         DWORD size_of_image, size_of_headers;
         DWORD error; /* 0 means LoadLibrary should succeed */
+        DWORD alt_error; /* alternate error */
     } td[] =
     {
         { &dos_header, sizeof(dos_header),
@@ -141,7 +149,7 @@ START_TEST(loader)
           1, sizeof(IMAGE_OPTIONAL_HEADER), 0x200, 0x200,
           sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0x200,
           sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER),
-          ERROR_SUCCESS
+          ERROR_SUCCESS, ERROR_INVALID_ADDRESS /* vista is more strict */
         },
         { &dos_header, sizeof(dos_header),
           1, sizeof(IMAGE_OPTIONAL_HEADER), 0x200, 0x1000,
@@ -168,25 +176,25 @@ START_TEST(loader)
           1, FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum), 0x200, 0x200,
           sizeof(dos_header) + sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER) + FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum) + sizeof(IMAGE_SECTION_HEADER) + 0x10,
           sizeof(dos_header) + sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER) + FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum) + sizeof(IMAGE_SECTION_HEADER),
-          ERROR_SUCCESS
+          ERROR_SUCCESS, ERROR_BAD_EXE_FORMAT /* vista is more strict */
         },
         { &dos_header, sizeof(dos_header),
           0, FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum), 0x200, 0x200,
           0xd0, /* beyond of the end of file */
           0xc0, /* beyond of the end of file */
-          ERROR_SUCCESS
+          ERROR_SUCCESS, ERROR_BAD_EXE_FORMAT /* vista is more strict */
         },
         { &dos_header, sizeof(dos_header),
           0, FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum), 0x200, 0x200,
           0x1000,
           0,
-          ERROR_SUCCESS
+          ERROR_SUCCESS, ERROR_BAD_EXE_FORMAT /* vista is more strict */
         },
         { &dos_header, sizeof(dos_header),
           0, FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum), 0x200, 0x200,
           1,
           0,
-          ERROR_SUCCESS
+          ERROR_SUCCESS, ERROR_BAD_EXE_FORMAT /* vista is more strict */
         },
 #if 0 /* not power of 2 alignments need more test cases */
         { &dos_header, sizeof(dos_header),
@@ -200,13 +208,13 @@ START_TEST(loader)
           0, FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum), 4, 4,
           1,
           0,
-          ERROR_SUCCESS
+          ERROR_SUCCESS, ERROR_BAD_EXE_FORMAT /* vista is more strict */
         },
         { &dos_header, sizeof(dos_header),
           0, FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum), 1, 1,
           1,
           0,
-          ERROR_SUCCESS
+          ERROR_SUCCESS, ERROR_BAD_EXE_FORMAT /* vista is more strict */
         },
         { &dos_header, sizeof(dos_header),
           0, FIELD_OFFSET(IMAGE_OPTIONAL_HEADER, CheckSum), 0x200, 0x200,
@@ -227,7 +235,7 @@ START_TEST(loader)
           0x04 /* also serves as e_lfanew in the truncated MZ header */, 0x04,
           1,
           0,
-          ERROR_SUCCESS
+          ERROR_SUCCESS, ERROR_BAD_EXE_FORMAT /* vista is more strict */
         }
     };
     static const char filler[0x1000];
@@ -323,18 +331,11 @@ START_TEST(loader)
 
         SetLastError(0xdeadbeef);
         hlib = LoadLibrary(dll_name);
-        if (td[i].error == ERROR_SUCCESS)
+        if (hlib)
         {
             MEMORY_BASIC_INFORMATION info;
 
-            ok(hlib != 0, "%d: LoadLibrary error %d\n", i, GetLastError());
-
-            /* No point in crashing. Test crashes on Vista with some of the given files */
-            if (hlib == 0)
-            {
-                skip("Failed to load dll number %d\n", i);
-                goto endloop;
-            }
+            ok( td[i].error == ERROR_SUCCESS, "%d: should have failed\n", i );
 
             SetLastError(0xdeadbeef);
             ok(VirtualQuery(hlib, &info, sizeof(info)) == sizeof(info),
@@ -461,8 +462,8 @@ START_TEST(loader)
             ok(FreeLibrary(hlib_as_data_file), "FreeLibrary error %d\n", GetLastError());
         }
         else
-        {   /* LoadLibrary is expected to fail */
-            ok(!hlib, "%d: LoadLibrary should fail\n", i);
+        {
+            ok(td[i].error || td[i].alt_error, "%d: LoadLibrary should succeed\n", i);
 
             if (GetLastError() == ERROR_GEN_FAILURE) /* Win9x, broken behaviour */
             {
@@ -471,12 +472,73 @@ START_TEST(loader)
                 return;
             }
 
-            ok(td[i].error == GetLastError(), "%d: expected error %d, got %d\n",
-               i, td[i].error, GetLastError());
+            ok(td[i].error == GetLastError() || td[i].alt_error == GetLastError(),
+               "%d: expected error %d or %d, got %d\n",
+               i, td[i].error, td[i].alt_error, GetLastError());
         }
 
-endloop:
         SetLastError(0xdeadbeef);
         ok(DeleteFile(dll_name), "DeleteFile error %d\n", GetLastError());
     }
+}
+
+/* Verify linking style of import descriptors */
+static void test_ImportDescriptors(void)
+{
+    HMODULE kernel32_module = NULL;
+    PIMAGE_DOS_HEADER d_header;
+    PIMAGE_NT_HEADERS nt_headers;
+    DWORD import_dir_size;
+    DWORD_PTR dir_offset;
+    PIMAGE_IMPORT_DESCRIPTOR import_chunk;
+
+    /* Load kernel32 module */
+    kernel32_module = GetModuleHandleA("kernel32.dll");
+    assert( kernel32_module != NULL );
+
+    /* Get PE header info from module image */
+    d_header = (PIMAGE_DOS_HEADER) kernel32_module;
+    nt_headers = (PIMAGE_NT_HEADERS) (((char*) d_header) +
+            d_header->e_lfanew);
+
+    /* Get size of import entry directory */
+    import_dir_size = nt_headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
+    if (!import_dir_size)
+    {
+        skip("Unable to continue testing due to missing import directory.\n");
+        return;
+    }
+
+    /* Get address of first import chunk */
+    dir_offset = nt_headers->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+    import_chunk = RVAToAddr(dir_offset, kernel32_module);
+    ok(import_chunk != 0, "Invalid import_chunk: %p\n", import_chunk);
+    if (!import_chunk) return;
+
+    /* Iterate through import descriptors and verify set name,
+     * OriginalFirstThunk, and FirstThunk.  Core Windows DLLs, such as
+     * kernel32.dll, don't use Borland-style linking, where the table of
+     * imported names is stored directly in FirstThunk and overwritten
+     * by the relocation, instead of being stored in OriginalFirstThunk.
+     * */
+    for (; import_chunk->FirstThunk; import_chunk++)
+    {
+        LPCSTR module_name = RVAToAddr(import_chunk->Name, kernel32_module);
+        PIMAGE_THUNK_DATA name_table = RVAToAddr(
+                U(*import_chunk).OriginalFirstThunk, kernel32_module);
+        PIMAGE_THUNK_DATA iat = RVAToAddr(
+                import_chunk->FirstThunk, kernel32_module);
+        ok(module_name != NULL, "Imported module name should not be NULL\n");
+        ok(name_table != NULL,
+                "Name table for imported module %s should not be NULL\n",
+                module_name);
+        ok(iat != NULL, "IAT for imported module %s should not be NULL\n",
+                module_name);
+    }
+}
+
+START_TEST(loader)
+{
+    test_Loader();
+    test_ImportDescriptors();
 }

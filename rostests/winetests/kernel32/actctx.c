@@ -17,7 +17,7 @@
  */
 
 #include "wine/test.h"
-#include <psdk/winbase.h>
+#include <winbase.h>
 #include <windef.h>
 #include <winnt.h>
 #include <winternl.h>
@@ -223,7 +223,7 @@ static BOOL create_wide_manifest(const char *filename, const char *manifest, BOO
     BOOL ret;
     int offset = (fBOM ? 0 : 1);
 
-    MultiByteToWideChar(CP_ACP, 0, manifest, -1, &wmanifest[1], (strlen(manifest)+1) * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, manifest, -1, &wmanifest[1], (strlen(manifest)+1));
     wmanifest[0] = 0xfeff;
     if (fReverse)
     {
@@ -851,6 +851,42 @@ static void test_find_string_fail(void)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError()=%u\n", GetLastError());
 }
 
+
+static void test_basic_info(HANDLE handle)
+{
+    ACTIVATION_CONTEXT_BASIC_INFORMATION basic;
+    SIZE_T size;
+    BOOL b;
+
+    b = pQueryActCtxW(0, handle, NULL,
+                          ActivationContextBasicInformation, &basic,
+                          sizeof(basic), &size);
+
+    ok (b,"ActivationContextBasicInformation failed\n");
+    ok (size == sizeof(ACTIVATION_CONTEXT_BASIC_INFORMATION),"size mismatch\n");
+    ok (basic.dwFlags == 0, "unexpected flags %x\n",basic.dwFlags);
+    ok (basic.hActCtx == handle, "unexpected handle\n");
+
+    b = pQueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, handle, NULL,
+                          ActivationContextBasicInformation, &basic,
+                          sizeof(basic), &size);
+    if (handle)
+    {
+        ok (!b,"ActivationContextBasicInformation succeeded\n");
+        ok (size == 0,"size mismatch\n");
+        ok (GetLastError() == ERROR_INVALID_PARAMETER, "Wrong last error\n");
+        ok (basic.dwFlags == 0, "unexpected flags %x\n",basic.dwFlags);
+        ok (basic.hActCtx == handle, "unexpected handle\n");
+    }
+    else
+    {
+        ok (b,"ActivationContextBasicInformation failed\n");
+        ok (size == sizeof(ACTIVATION_CONTEXT_BASIC_INFORMATION),"size mismatch\n");
+        ok (basic.dwFlags == 0, "unexpected flags %x\n",basic.dwFlags);
+        ok (basic.hActCtx == handle, "unexpected handle\n");
+    }
+}
+
 static void test_actctx(void)
 {
     ULONG_PTR cookie;
@@ -865,6 +901,7 @@ static void test_actctx(void)
     ok(handle == NULL, "handle = %p, expected NULL\n", handle);
     ok(b, "GetCurrentActCtx failed: %u\n", GetLastError());
     if(b) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info0);
         pReleaseActCtx(handle);
     }
@@ -879,6 +916,7 @@ static void test_actctx(void)
     handle = test_create("test1.manifest", manifest1);
     DeleteFileA("test1.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1);
         test_info_in_assembly(handle, 1, &manifest1_info);
 
@@ -904,6 +942,7 @@ static void test_actctx(void)
     DeleteFileA("test2.manifest");
     DeleteFileA("testdep.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info2);
         test_info_in_assembly(handle, 1, &manifest2_info);
         test_info_in_assembly(handle, 2, &depmanifest1_info);
@@ -921,6 +960,7 @@ static void test_actctx(void)
     DeleteFileA("test3.manifest");
     DeleteFileA("testdep.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info2);
         test_info_in_assembly(handle, 1, &manifest2_info);
         test_info_in_assembly(handle, 2, &depmanifest2_info);
@@ -948,6 +988,7 @@ static void test_actctx(void)
     DeleteFileA("test2-3.manifest");
     DeleteFileA("testdep.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info2);
         test_info_in_assembly(handle, 1, &manifest2_info);
         test_info_in_assembly(handle, 2, &depmanifest3_info);
@@ -976,6 +1017,7 @@ static void test_actctx(void)
     handle = test_create("test3.manifest", manifest3);
     DeleteFileA("test3.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1);
         test_info_in_assembly(handle, 1, &manifest3_info);
         test_file_info(handle, 0, 0, testlib_dll);
@@ -1002,6 +1044,7 @@ static void test_actctx(void)
     DeleteFileA("test4.manifest");
     DeleteFileA("testdep.manifest");
     if(handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info2);
         test_info_in_assembly(handle, 1, &manifest4_info);
         test_info_in_assembly(handle, 2, &manifest_comctrl_info);
@@ -1020,6 +1063,7 @@ static void test_actctx(void)
         handle = test_create("..\\test1.manifest", manifest1);
         DeleteFileA("..\\test1.manifest");
         if(handle != INVALID_HANDLE_VALUE) {
+            test_basic_info(handle);
             test_detailed_info(handle, &detailed_info1);
             test_info_in_assembly(handle, 1, &manifest1_info);
             pReleaseActCtx(handle);
@@ -1039,6 +1083,7 @@ static void test_actctx(void)
     handle = test_create("test1.manifest", manifest1);
     DeleteFileA("test1.manifest");
     if (handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1);
         test_info_in_assembly(handle, 1, &manifest1_info);
         pReleaseActCtx(handle);
@@ -1053,6 +1098,7 @@ static void test_actctx(void)
     handle = test_create("test1.manifest", manifest1);
     DeleteFileA("test1.manifest");
     if (handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1);
         test_info_in_assembly(handle, 1, &manifest1_info);
         pReleaseActCtx(handle);
@@ -1071,6 +1117,7 @@ static void test_app_manifest(void)
     ok(handle == NULL, "handle != NULL\n");
     ok(b, "GetCurrentActCtx failed: %u\n", GetLastError());
     if(b) {
+        test_basic_info(handle);
         test_detailed_info(handle, &detailed_info1_child);
         test_info_in_assembly(handle, 1, &manifest1_child_info);
         pReleaseActCtx(handle);

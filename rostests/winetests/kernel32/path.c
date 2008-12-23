@@ -465,6 +465,14 @@ static void test_CurrentDirectoryA(CHAR *origdir, CHAR *newdir)
 /* starting with a '.' */
   sprintf(tmpstr,".\\%s",LONGDIR);
   test_setdir(newdir,tmpstr,tmpstr1,1,"check 9");
+/* change to root without a trailing backslash. The function call succeeds
+   but the directory is not changed.
+*/
+  strcpy(tmpstr,"C:");
+  test_setdir(newdir,tmpstr,newdir,1,"check 10");
+/* works however with a trailing backslash */
+  strcpy(tmpstr,"C:\\");
+  test_setdir(newdir,tmpstr,NULL,1,"check 11");
 }
 
 /* Cleanup the mess we made while executing these tests */

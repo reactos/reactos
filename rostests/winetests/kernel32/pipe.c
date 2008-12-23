@@ -21,7 +21,6 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <time.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -713,14 +712,17 @@ static int test_DisconnectNamedPipe(void)
     DWORD written;
     DWORD readden;
 
+    SetLastError(0xdeadbeef);
     hnp = CreateNamedPipe(PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT,
         /* nMaxInstances */ 1,
         /* nOutBufSize */ 1024,
         /* nInBufSize */ 1024,
         /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
         /* lpSecurityAttrib */ NULL);
-    if (INVALID_HANDLE_VALUE == hnp) {
-        trace ("Seems we have no named pipes.\n");
+    if ((hnp == INVALID_HANDLE_VALUE /* Win98 */ || !hnp /* Win95 */)
+        && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
+
+        win_skip("Named pipes are not implemented\n");
         return 1;
     }
 
@@ -793,7 +795,7 @@ static void test_CreatePipe(void)
     size = 32768;
     buffer = HeapAlloc( GetProcessHeap(), 0, size );
     for (i = 0; i < size; i++) buffer[i] = i;
-    ok(CreatePipe(&piperead, &pipewrite, &pipe_attr, size) != 0, "CreatePipe failed\n");
+    ok(CreatePipe(&piperead, &pipewrite, &pipe_attr, (size + 24)) != 0, "CreatePipe failed\n");
     ok(WriteFile(pipewrite, buffer, size, &written, NULL), "Write to anonymous pipe failed\n");
     ok(written == size, "Write to anonymous pipe wrote %d bytes\n", written);
     /* and close the write end, read should still succeed*/
@@ -952,8 +954,8 @@ static void test_ImpersonateNamedPipeClient(HANDLE hClientToken, DWORD security_
     SetLastError(0xdeadbeef);
     ret = ImpersonateNamedPipeClient(hPipeServer);
     error = GetLastError();
-    todo_wine
-    ok(!ret && (error == ERROR_CANNOT_IMPERSONATE), "ImpersonateNamedPipeClient should have failed with ERROR_CANNOT_IMPERSONATE instead of %d\n", GetLastError());
+    ok(ret /* win2k3 */ || (error == ERROR_CANNOT_IMPERSONATE),
+       "ImpersonateNamedPipeClient should have failed with ERROR_CANNOT_IMPERSONATE instead of %d\n", GetLastError());
 
     ret = ConnectNamedPipe(hPipeServer, NULL);
     ok(ret || (GetLastError() == ERROR_PIPE_CONNECTED), "ConnectNamedPipe failed with error %d\n", GetLastError());
@@ -1324,9 +1326,6 @@ static void test_overlapped(void)
 START_TEST(pipe)
 {
     HMODULE hmod;
-
-    skip("ROS-HACK: Skipping pipe tests -- ros' npfs is in a sorry state\n");
-    return;
 
     hmod = GetModuleHandle("advapi32.dll");
     pDuplicateTokenEx = (void *) GetProcAddress(hmod, "DuplicateTokenEx");

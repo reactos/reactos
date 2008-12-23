@@ -27,6 +27,8 @@ static BOOL (WINAPI * pGetVolumeNameForVolumeMountPointW)(LPCWSTR, LPWSTR, DWORD
 static HANDLE (WINAPI *pFindFirstVolumeA)(LPSTR,DWORD);
 static BOOL (WINAPI *pFindNextVolumeA)(HANDLE,LPSTR,DWORD);
 static BOOL (WINAPI *pFindVolumeClose)(HANDLE);
+static UINT (WINAPI *pGetLogicalDriveStringsA)(UINT,LPSTR);
+static UINT (WINAPI *pGetLogicalDriveStringsW)(UINT,LPWSTR);
 
 /* ############################### */
 
@@ -37,6 +39,11 @@ static void test_query_dos_deviceA(void)
     DWORD ret;
     BOOL found = FALSE;
 
+    if (!pFindFirstVolumeA) {
+        skip("On win9x, HARDDISK and RAMDISK not present\n");
+        return;
+    }
+
     for (;drivestr[0] <= 'z'; drivestr[0]++) {
         ret = QueryDosDeviceA( drivestr, buffer, sizeof(buffer));
         if(ret) {
@@ -44,7 +51,7 @@ static void test_query_dos_deviceA(void)
             if (strstr(buffer, "HARDDISK") || strstr(buffer, "RAMDISK")) found = TRUE;
         }
     }
-    todo_wine ok(found, "expected at least one devicename to contain HARDDISK or RAMDISK\n");
+    ok(found, "expected at least one devicename to contain HARDDISK or RAMDISK\n");
 }
 
 static void test_FindFirstVolume(void)
@@ -134,6 +141,81 @@ static void test_GetVolumeNameForVolumeMountPointW(void)
     ok(ret == TRUE, "GetVolumeNameForVolumeMountPointW failed\n");
 }
 
+static void test_GetLogicalDriveStringsA(void)
+{
+    UINT size, size2;
+    char *buf, *ptr;
+
+    if(!pGetLogicalDriveStringsA) {
+        win_skip("GetLogicalDriveStringsA not available\n");
+        return;
+    }
+
+    size = pGetLogicalDriveStringsA(0, NULL);
+    ok(size%4 == 1, "size = %d\n", size);
+
+    buf = HeapAlloc(GetProcessHeap(), 0, size);
+
+    *buf = 0;
+    size2 = pGetLogicalDriveStringsA(2, buf);
+    ok(size2 == size, "size2 = %d\n", size2);
+    ok(!*buf, "buf changed\n");
+
+    size2 = pGetLogicalDriveStringsA(size, buf);
+    ok(size2 == size-1, "size2 = %d\n", size2);
+
+    for(ptr = buf; ptr < buf+size2; ptr += 4) {
+        ok(('A' <= *ptr && *ptr <= 'Z') ||
+           (broken('a' <= *ptr && *ptr <= 'z')), /* Win9x and WinMe */
+           "device name '%c' is not uppercase\n", *ptr);
+        ok(ptr[1] == ':', "ptr[1] = %c, expected ':'\n", ptr[1]);
+        ok(ptr[2] == '\\', "ptr[2] = %c expected '\\'\n", ptr[2]);
+        ok(!ptr[3], "ptr[3] = %c expected nullbyte\n", ptr[3]);
+    }
+    ok(!*ptr, "buf[size2] is not nullbyte\n");
+
+    HeapFree(GetProcessHeap(), 0, buf);
+}
+
+static void test_GetLogicalDriveStringsW(void)
+{
+    UINT size, size2;
+    WCHAR *buf, *ptr;
+
+    if(!pGetLogicalDriveStringsW) {
+        win_skip("GetLogicalDriveStringsW not available\n");
+        return;
+    }
+
+    SetLastError(0xdeadbeef);
+    size = pGetLogicalDriveStringsW(0, NULL);
+    if (size == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
+        win_skip("GetLogicalDriveStringsW not implemented\n");
+        return;
+    }
+    ok(size%4 == 1, "size = %d\n", size);
+
+    buf = HeapAlloc(GetProcessHeap(), 0, size*sizeof(WCHAR));
+
+    *buf = 0;
+    size2 = pGetLogicalDriveStringsW(2, buf);
+    ok(size2 == size, "size2 = %d\n", size2);
+    ok(!*buf, "buf changed\n");
+
+    size2 = pGetLogicalDriveStringsW(size, buf);
+    ok(size2 == size-1, "size2 = %d\n", size2);
+
+    for(ptr = buf; ptr < buf+size2; ptr += 4) {
+        ok('A' <= *ptr && *ptr <= 'Z', "device name '%c' is not uppercase\n", *ptr);
+        ok(ptr[1] == ':', "ptr[1] = %c, expected ':'\n", ptr[1]);
+        ok(ptr[2] == '\\', "ptr[2] = %c expected '\\'\n", ptr[2]);
+        ok(!ptr[3], "ptr[3] = %c expected nullbyte\n", ptr[3]);
+    }
+    ok(!*ptr, "buf[size2] is not nullbyte\n");
+
+    HeapFree(GetProcessHeap(), 0, buf);
+}
+
 START_TEST(volume)
 {
     hdll = GetModuleHandleA("kernel32.dll");
@@ -142,9 +224,13 @@ START_TEST(volume)
     pFindFirstVolumeA = (void *) GetProcAddress(hdll, "FindFirstVolumeA");
     pFindNextVolumeA = (void *) GetProcAddress(hdll, "FindNextVolumeA");
     pFindVolumeClose = (void *) GetProcAddress(hdll, "FindVolumeClose");
+    pGetLogicalDriveStringsA = (void *) GetProcAddress(hdll, "GetLogicalDriveStringsA");
+    pGetLogicalDriveStringsW = (void *) GetProcAddress(hdll, "GetLogicalDriveStringsW");
 
     test_query_dos_deviceA();
     test_FindFirstVolume();
     test_GetVolumeNameForVolumeMountPointA();
     test_GetVolumeNameForVolumeMountPointW();
+    test_GetLogicalDriveStringsA();
+    test_GetLogicalDriveStringsW();
 }

@@ -24,6 +24,13 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
+#include "winnls.h"
+
+static CHAR string[MAX_PATH];
+#define ok_w(res, format, szString) \
+\
+    WideCharToMultiByte(CP_ACP, 0, szString, -1, string, MAX_PATH, NULL, NULL); \
+    ok(res, format, string);
 
 static BOOL (WINAPI *pGetComputerNameExA)(COMPUTER_NAME_FORMAT,LPSTR,LPDWORD);
 static BOOL (WINAPI *pGetComputerNameExW)(COMPUTER_NAME_FORMAT,LPWSTR,LPDWORD);
@@ -156,7 +163,9 @@ static void test_GetSetEnvironmentVariableW(void)
 
     lstrcpyW(buf, fooW);
     ret_size = GetEnvironmentVariableW(name, buf, lstrlenW(value));
-    ok(lstrcmpW(buf, fooW) == 0, "should not touch the buffer\n");
+    ok_w(lstrcmpW(buf, fooW) == 0 ||
+         lstrlenW(buf) == 0, /* Vista */
+         "Expected untouched or empty buffer, got \"%s\"\n", buf);
 
     ok(ret_size == lstrlenW(value) + 1,
        "should return length with terminating 0 ret_size=%d\n", ret_size);

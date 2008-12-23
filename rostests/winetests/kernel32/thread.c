@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Define _WIN32_WINNT to get SetThreadIdealProcessor on Windows */
-#define _WIN32_WINNT 0x0500
-
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -98,6 +96,61 @@ static HANDLE create_target_process(const char *arg)
 In addition there are no checks that the inheritance works properly in
 CreateThread
 */
+
+/* Functions to ensure that from a group of threads, only one executes
+   certain chunks of code at a time, and we know which one is executing
+   it.  It basically makes multithreaded execution linear, which defeats
+   the purpose of multiple threads, but makes testing easy.  */
+static HANDLE start_event, stop_event;
+static LONG num_synced;
+
+static void init_thread_sync_helpers(void)
+{
+  start_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+  ok(start_event != NULL, "CreateEvent failed\n");
+  stop_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+  ok(stop_event != NULL, "CreateEvent failed\n");
+  num_synced = -1;
+}
+
+static BOOL sync_threads_and_run_one(DWORD sync_id, DWORD my_id)
+{
+  LONG num = InterlockedIncrement(&num_synced);
+  assert(-1 <= num && num <= 1);
+  if (num == 1)
+  {
+      ResetEvent( stop_event );
+      SetEvent( start_event );
+  }
+  else
+  {
+    DWORD ret = WaitForSingleObject(start_event, 10000);
+    ok(ret == WAIT_OBJECT_0, "WaitForSingleObject failed %x\n",ret);
+  }
+  return sync_id == my_id;
+}
+
+static void resync_after_run(void)
+{
+  LONG num = InterlockedDecrement(&num_synced);
+  assert(-1 <= num && num <= 1);
+  if (num == -1)
+  {
+      ResetEvent( start_event );
+      SetEvent( stop_event );
+  }
+  else
+  {
+    DWORD ret = WaitForSingleObject(stop_event, 10000);
+    ok(ret == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+  }
+}
+
+static void cleanup_thread_sync_helpers(void)
+{
+  CloseHandle(start_event);
+  CloseHandle(stop_event);
+}
 
 DWORD tlsIndex;
 
@@ -320,6 +373,7 @@ static VOID test_CreateThread_basic(void)
    int error;
    DWORD i,j;
    DWORD GLE, ret;
+   DWORD tid;
 
    /* lstrlenA contains an exception handler so this makes sure exceptions work in the main thread */
    ok( lstrlenA( (char *)0xdeadbeef ) == 0, "lstrlenA: unexpected success\n" );
@@ -377,7 +431,7 @@ static VOID test_CreateThread_basic(void)
 
   /* Test how passing NULL as a pointer to threadid works */
   SetLastError(0xFACEaBAD);
-  thread[0] = CreateThread(NULL,0,threadFunc2,NULL,0,NULL);
+  thread[0] = CreateThread(NULL,0,threadFunc2,NULL,0,&tid);
   GLE = GetLastError();
   if (thread[0]) { /* NT */
     ok(GLE==0xFACEaBAD, "CreateThread set last error to %d, expected 4207848365\n", GLE);
@@ -398,6 +452,7 @@ static VOID test_CreateThread_suspended(void)
 {
   HANDLE thread;
   DWORD threadId;
+  DWORD suspend_count;
   int error;
 
   thread = CreateThread(NULL,0,threadFunc2,NULL,
@@ -419,6 +474,15 @@ static VOID test_CreateThread_suspended(void)
   if(error!=WAIT_OBJECT_0) {
     TerminateThread(thread,1);
   }
+
+  suspend_count = SuspendThread(thread);
+  ok(suspend_count == -1, "SuspendThread returned %d, expected -1\n", suspend_count);
+
+  suspend_count = ResumeThread(thread);
+  ok(suspend_count == 0 ||
+     broken(suspend_count == -1), /* win9x */
+     "ResumeThread returned %d, expected 0\n", suspend_count);
+
   ok(CloseHandle(thread)!=0,"CloseHandle failed\n");
 }
 
@@ -953,6 +1017,183 @@ static void test_RegisterWaitForSingleObject(void)
     ok(ret, "UnregisterWait failed with error %d\n", GetLastError());
 }
 
+static DWORD TLS_main;
+static DWORD TLS_index0, TLS_index1;
+
+static DWORD WINAPI TLS_InheritanceProc(LPVOID p)
+{
+  /* We should NOT inherit the TLS values from our parent or from the
+     main thread.  */
+  LPVOID val;
+
+  val = TlsGetValue(TLS_main);
+  ok(val == NULL, "TLS inheritance failed\n");
+
+  val = TlsGetValue(TLS_index0);
+  ok(val == NULL, "TLS inheritance failed\n");
+
+  val = TlsGetValue(TLS_index1);
+  ok(val == NULL, "TLS inheritance failed\n");
+
+  return 0;
+}
+
+/* Basic TLS usage test.  Make sure we can create slots and the values we
+   store in them are separate among threads.  Also test TLS value
+   inheritance with TLS_InheritanceProc.  */
+static DWORD WINAPI TLS_ThreadProc(LPVOID p)
+{
+  LONG id = (LONG) p;
+  LPVOID val;
+  BOOL ret;
+
+  if (sync_threads_and_run_one(0, id))
+  {
+    TLS_index0 = TlsAlloc();
+    ok(TLS_index0 != TLS_OUT_OF_INDEXES, "TlsAlloc failed\n");
+  }
+  resync_after_run();
+
+  if (sync_threads_and_run_one(1, id))
+  {
+    TLS_index1 = TlsAlloc();
+    ok(TLS_index1 != TLS_OUT_OF_INDEXES, "TlsAlloc failed\n");
+
+    /* Slot indices should be different even if created in different
+       threads.  */
+    ok(TLS_index0 != TLS_index1, "TlsAlloc failed\n");
+
+    /* Both slots should be initialized to NULL */
+    val = TlsGetValue(TLS_index0);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == NULL, "TLS slot not initialized correctly\n");
+
+    val = TlsGetValue(TLS_index1);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == NULL, "TLS slot not initialized correctly\n");
+  }
+  resync_after_run();
+
+  if (sync_threads_and_run_one(0, id))
+  {
+    val = TlsGetValue(TLS_index0);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == NULL, "TLS slot not initialized correctly\n");
+
+    val = TlsGetValue(TLS_index1);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == NULL, "TLS slot not initialized correctly\n");
+
+    ret = TlsSetValue(TLS_index0, (LPVOID) 1);
+    ok(ret, "TlsSetValue failed\n");
+
+    ret = TlsSetValue(TLS_index1, (LPVOID) 2);
+    ok(ret, "TlsSetValue failed\n");
+
+    val = TlsGetValue(TLS_index0);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == (LPVOID) 1, "TLS slot not initialized correctly\n");
+
+    val = TlsGetValue(TLS_index1);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == (LPVOID) 2, "TLS slot not initialized correctly\n");
+  }
+  resync_after_run();
+
+  if (sync_threads_and_run_one(1, id))
+  {
+    val = TlsGetValue(TLS_index0);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == NULL, "TLS slot not initialized correctly\n");
+
+    val = TlsGetValue(TLS_index1);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == NULL, "TLS slot not initialized correctly\n");
+
+    ret = TlsSetValue(TLS_index0, (LPVOID) 3);
+    ok(ret, "TlsSetValue failed\n");
+
+    ret = TlsSetValue(TLS_index1, (LPVOID) 4);
+    ok(ret, "TlsSetValue failed\n");
+
+    val = TlsGetValue(TLS_index0);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == (LPVOID) 3, "TLS slot not initialized correctly\n");
+
+    val = TlsGetValue(TLS_index1);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == (LPVOID) 4, "TLS slot not initialized correctly\n");
+  }
+  resync_after_run();
+
+  if (sync_threads_and_run_one(0, id))
+  {
+    HANDLE thread;
+    DWORD waitret, tid;
+
+    val = TlsGetValue(TLS_index0);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == (LPVOID) 1, "TLS slot not initialized correctly\n");
+
+    val = TlsGetValue(TLS_index1);
+    ok(GetLastError() == ERROR_SUCCESS, "TlsGetValue failed\n");
+    ok(val == (LPVOID) 2, "TLS slot not initialized correctly\n");
+
+    thread = CreateThread(NULL, 0, TLS_InheritanceProc, 0, 0, &tid);
+    ok(thread != NULL, "CreateThread failed\n");
+    waitret = WaitForSingleObject(thread, 60000);
+    ok(waitret == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    CloseHandle(thread);
+
+    ret = TlsFree(TLS_index0);
+    ok(ret, "TlsFree failed\n");
+  }
+  resync_after_run();
+
+  if (sync_threads_and_run_one(1, id))
+  {
+    ret = TlsFree(TLS_index1);
+    ok(ret, "TlsFree failed\n");
+  }
+  resync_after_run();
+
+  return 0;
+}
+
+static void test_TLS(void)
+{
+  HANDLE threads[2];
+  LONG i;
+  DWORD ret;
+  BOOL suc;
+
+  init_thread_sync_helpers();
+
+  /* Allocate a TLS slot in the main thread to test for inheritance.  */
+  TLS_main = TlsAlloc();
+  ok(TLS_main != TLS_OUT_OF_INDEXES, "TlsAlloc failed\n");
+  suc = TlsSetValue(TLS_main, (LPVOID) 4114);
+  ok(suc, "TlsSetValue failed\n");
+
+  for (i = 0; i < 2; ++i)
+  {
+    DWORD tid;
+
+    threads[i] = CreateThread(NULL, 0, TLS_ThreadProc, (LPVOID) i, 0, &tid);
+    ok(threads[i] != NULL, "CreateThread failed\n");
+  }
+
+  ret = WaitForMultipleObjects(2, threads, TRUE, 60000);
+  ok(ret == WAIT_OBJECT_0 || ret == WAIT_OBJECT_0+1 /* nt4 */, "WaitForMultipleObjects failed %u\n",ret);
+
+  for (i = 0; i < 2; ++i)
+    CloseHandle(threads[i]);
+
+  suc = TlsFree(TLS_main);
+  ok(suc, "TlsFree failed\n");
+  cleanup_thread_sync_helpers();
+}
+
 START_TEST(thread)
 {
    HINSTANCE lib;
@@ -986,7 +1227,8 @@ START_TEST(thread)
        while (1)
        {
            HANDLE hThread;
-           hThread = CreateThread(NULL, 0, threadFunc2, NULL, 0, NULL);
+           DWORD tid;
+           hThread = CreateThread(NULL, 0, threadFunc2, NULL, 0, &tid);
            ok(hThread != NULL, "CreateThread failed, error %u\n",
               GetLastError());
            ok(WaitForSingleObject(hThread, 200) == WAIT_OBJECT_0,
@@ -1012,4 +1254,5 @@ START_TEST(thread)
 #endif
    test_QueueUserWorkItem();
    test_RegisterWaitForSingleObject();
+   test_TLS();
 }
