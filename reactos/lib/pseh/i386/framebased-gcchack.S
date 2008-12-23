@@ -21,32 +21,6 @@
 .text
 .intel_syntax noprefix
 
-.func _SEH2CurrentRegistration
-.globl __SEH2CurrentRegistration
-__SEH2CurrentRegistration:
-	mov eax, [fs:0]
-	ret
-.endfunc
-
-.func __SEH2EnterFrame
-.globl ___SEH2EnterFrame
-___SEH2EnterFrame:
-	mov eax, [esp+4]
-	mov ecx, [fs:0]
-	mov [eax], ecx
-	mov [fs:0], eax
-	ret
-.endfunc
-
-.func __SEH2LeaveFrame
-.globl ___SEH2LeaveFrame
-___SEH2LeaveFrame:
-	mov eax, [fs:0]
-	mov eax, [eax]
-	mov [fs:0], eax
-	ret
-.endfunc
-
 .func __SEH2Handle
 .globl ___SEH2Handle
 ___SEH2Handle:
@@ -54,28 +28,6 @@ ___SEH2Handle:
 	mov ebp, [esp+8]
 	mov esp, [esp+12]
 	jmp eax
-.endfunc
-
-.func __SEH2Except
-.globl ___SEH2Except
-___SEH2Except:
-	mov eax, [esp+4]
-	mov ecx, [esp+8]
-
-	call eax
-
-	ret
-.endfunc
-
-.func __SEH2Finally
-.globl ___SEH2Finally
-___SEH2Finally:
-	mov eax, [esp+4]
-	mov ecx, [esp+8]
-
-	call eax
-
-	ret
 .endfunc
 
 .func __SEH2FrameHandler
