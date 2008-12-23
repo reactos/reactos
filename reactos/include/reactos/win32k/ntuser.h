@@ -277,6 +277,14 @@ typedef struct _SERVERINFO
   COLORREF SysColors[COLOR_MENUBAR+1];       // GetSysColor
   HBRUSH   SysColorBrushes[COLOR_MENUBAR+1]; // GetSysColorBrush
   HPEN     SysColorPens[COLOR_MENUBAR+1];    // ReactOS exclusive
+  HBRUSH   hbrGray;
+  POINTL   ptCursor;
+  //
+  DWORD    cxSysFontChar;
+  DWORD    cySysFontChar;
+  DWORD    cxMsgFontChar;
+  DWORD    cyMsgFontChar;
+  TEXTMETRICW tmSysFont;
   //
   RECTL    rcScreen;
   WORD     BitCount;
@@ -284,7 +292,7 @@ typedef struct _SERVERINFO
   BYTE     BitsPixel;
   BYTE     Planes;
   WORD     reserved;
-  DWORD    PUSIFlags;
+  DWORD    PUSIFlags; // PERUSERSERVERINFO Flags.
   ULONG    uCaretWidth;
   LANGID   UILangID;
   UINT     LastRITWasKeyboard : 1;
