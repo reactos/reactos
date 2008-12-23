@@ -62,8 +62,8 @@ KsUnregisterWorker(
     IN  PKSWORKER Worker)
 {
     KS_WORKER * KsWorker;
-    KIRQL OldIrql;
-    ULONG bWait = FALSE;
+    KIRQL OldIrql = 0; // hack!!! janderwald!!!
+    //ULONG bWait = FALSE;
 
     if (!Worker)
         return;
