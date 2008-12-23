@@ -161,13 +161,13 @@ PSHELLNEW_ITEM LoadItem(LPWSTR szKeyName)
             pNewItem = HeapAlloc(GetProcessHeap(), 0, sizeof(SHELLNEW_ITEM));
             pNewItem->Type = type;
             if (szTarget)
-                pNewItem->szTarget = wcsdup(szTarget);
+                pNewItem->szTarget = _wcsdup(szTarget);
             else
                 pNewItem->szTarget = NULL;
 
-            pNewItem->szDesc = wcsdup(szDesc);
-            pNewItem->szIcon = wcsdup(szIcon);
-            pNewItem->szExt = wcsdup(szKeyName);
+            pNewItem->szDesc = _wcsdup(szDesc);
+            pNewItem->szIcon = _wcsdup(szIcon);
+            pNewItem->szExt = _wcsdup(szKeyName);
             pNewItem->Next = NULL;
             break;
          }
@@ -388,7 +388,7 @@ DoShellNewCmd(INewMenuImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
 
          ZeroMemory(&sInfo, sizeof(sInfo));
          sInfo.cb = sizeof(sizeof(sInfo));
-         szCmd = wcsdup(ptr);
+         szCmd = _wcsdup(ptr);
          if (!szCmd)
              break;
          if (CreateProcessW(NULL, szCmd, NULL, NULL,FALSE,0,NULL,NULL,&sInfo, &pi))

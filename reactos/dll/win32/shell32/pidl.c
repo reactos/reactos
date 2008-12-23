@@ -2261,7 +2261,7 @@ void _ILGetFileType(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
             }
             /* display Ext-file as description */
             strcpy(pOut, sType);
-            strupr(pOut);
+            _strupr(pOut);
             /* load localized file string */
             sTemp[0] = '\0';
             if(LoadStringA(shell32_hInstance, IDS_SHV_COLUMN1, sTemp, 64))

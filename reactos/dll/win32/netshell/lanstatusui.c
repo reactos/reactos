@@ -591,7 +591,7 @@ FindNetworkAdapter(HDEVINFO hInfo, SP_DEVINFO_DATA *pDevInfo, LPWSTR pGuid)
             break;
         }
         RegCloseKey(hSubKey);
-        if (!wcsicmp(pGuid, szNetCfg))
+        if (!_wcsicmp(pGuid, szNetCfg))
         {
             return TRUE;
         }

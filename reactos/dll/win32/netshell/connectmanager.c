@@ -527,7 +527,7 @@ GetAdapterIndexFromNetCfgInstanceId(PIP_ADAPTER_INFO pAdapterInfo, LPWSTR szNetC
         {
             szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         }
-        if (!wcsicmp(szBuffer, szNetCfg))
+        if (!_wcsicmp(szBuffer, szNetCfg))
         {
             *pIndex = pCurrentAdapter->Index;
             return TRUE;

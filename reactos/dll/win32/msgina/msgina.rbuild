@@ -2,6 +2,7 @@
 	<importlibrary definition="msgina.spec" />
 	<include base="msgina">.</include>
 	<include base="msgina">include</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<library>ntdll</library>
 	<library>wine</library>
 	<library>kernel32</library>
