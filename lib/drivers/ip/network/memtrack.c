@@ -1,7 +1,6 @@
 #define MEMTRACK_NO_POOL
 #include "precomp.h"
 
-#ifdef MEMTRACK
 
 #define TRACK_TAG TAG('T','r','C','K')
 
@@ -29,12 +28,24 @@ VOID TrackingInit() {
                                    0 );
 }
 
-VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing,
-		       PCHAR File, UINT Line ) {
-    /* if( ShowTag( Thing->Tag ) ) */
-    if( File ) {
+VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing, BOOLEAN ForceShow ) {
+
+    if (ForceShow)
+    {
+        DbgPrint("[%s] Thing %08x %c%c%c%c (%s:%d)\n",
+		  What,
+		  Thing->Thing,
+		  ((PCHAR)&Thing->Tag)[3],
+		  ((PCHAR)&Thing->Tag)[2],
+		  ((PCHAR)&Thing->Tag)[1],
+		  ((PCHAR)&Thing->Tag)[0],
+		  Thing->FileName,
+		  Thing->LineNo);
+    }
+    else
+    {
 	TI_DbgPrint(MAX_TRACE,
-		    ("[%s] Thing %08x %c%c%c%c (%s:%d) (Called from %s:%d)\n",
+		    ("[%s] Thing %08x %c%c%c%c (%s:%d)\n",
 		     What,
 		     Thing->Thing,
 		     ((PCHAR)&Thing->Tag)[3],
@@ -42,19 +53,7 @@ VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing,
 		     ((PCHAR)&Thing->Tag)[1],
 		     ((PCHAR)&Thing->Tag)[0],
 		     Thing->FileName,
-		     Thing->LineNo,
-		     File, Line));
-    } else {
-	TI_DbgPrint(MAX_TRACE,
-		    ( "[%s] Thing %08x %c%c%c%c (%s:%d)\n",
-		      What,
-		      Thing->Thing,
-		      ((PCHAR)&Thing->Tag)[3],
-		      ((PCHAR)&Thing->Tag)[2],
-		      ((PCHAR)&Thing->Tag)[1],
-		      ((PCHAR)&Thing->Tag)[0],
-		      Thing->FileName,
-		      Thing->LineNo ));
+		     Thing->LineNo));
     }
 }
 
@@ -66,6 +65,15 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
     PLIST_ENTRY Entry;
     PALLOCATION_TRACKER ThingInList;
 
+    if (!TrackedThing) return;
+
+    TrackedThing->Tag      = Tag;
+    TrackedThing->Thing    = Thing;
+    TrackedThing->FileName = FileName;
+    TrackedThing->LineNo   = LineNo;
+
+    ShowTrackedThing( "Alloc", TrackedThing, FALSE );
+
     TcpipAcquireSpinLock( &AllocatedObjectsLock, &OldIrql );
     Entry = AllocatedObjectsList.Flink;
     while( Entry != &AllocatedObjectsList ) {
@@ -74,25 +82,21 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
 	    RemoveEntryList(Entry);
 
 	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
-	    ShowTrackedThing( "Alloc", ThingInList, FileName, LineNo );
-	    PoolFreeBuffer( ThingInList );
+	    ShowTrackedThing( "Alloc", ThingInList, FALSE );
+
 	    TrackDumpFL( FileName, LineNo );
 	    DbgPrint("TRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing);
+            ShowTrackedThing( "Double Alloc (Item in list)", ThingInList, TRUE );
+            ShowTrackedThing( "Double Alloc (Item not in list)", TrackedThing, TRUE );
 	    TcpipBugCheck( 0 );
+
+            ExFreeToNPagedLookasideList( &AllocatedObjectsLookasideList,
+	                                 ThingInList );
 	}
 	Entry = Entry->Flink;
     }
 
-    if( TrackedThing ) {
-	TrackedThing->Tag      = Tag;
-	TrackedThing->Thing    = Thing;
-	TrackedThing->FileName = FileName;
-	TrackedThing->LineNo   = LineNo;
-
-
-	InsertHeadList( &AllocatedObjectsList, &TrackedThing->Entry );
-	ShowTrackedThing( "Alloc", TrackedThing, FileName, LineNo );
-    }
+    InsertHeadList( &AllocatedObjectsList, &TrackedThing->Entry );
 
     TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 
@@ -107,7 +111,7 @@ BOOL ShowTag( DWORD Tag ) {
     return TagsToShow[i] ? TRUE : FALSE;
 }
 
-VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
+VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing, DWORD Tag ) {
     KIRQL OldIrql;
     PLIST_ENTRY Entry;
     PALLOCATION_TRACKER ThingInList;
@@ -119,19 +123,25 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
 	if( ThingInList->Thing == Thing ) {
 	    RemoveEntryList(Entry);
 
-	    ShowTrackedThing( "Free ", ThingInList, File, Line );
+	    ShowTrackedThing( "Free ", ThingInList, FALSE );
+
+            if ( ThingInList->Tag != Tag ) {
+                 DbgPrint("UNTRACK: TAG DOES NOT MATCH (%x)\n", Thing);
+                 ShowTrackedThing("Tag Mismatch (Item in list)", ThingInList, TRUE);
+                 TcpipBugCheck( 0 );
+            }
 
 	    ExFreeToNPagedLookasideList( &AllocatedObjectsLookasideList,
 	                                ThingInList );
 
 	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+
 	    /* TrackDumpFL( File, Line ); */
 	    return;
 	}
 	Entry = Entry->Flink;
     }
     TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
-    TrackDumpFL( File, Line );
     DbgPrint("UNTRACK: SPECIFIED ALREADY FREE ITEM %x\n", Thing);
     TcpipBugCheck( 0 );
 }
@@ -147,10 +157,9 @@ VOID TrackDumpFL( PCHAR File, DWORD Line ) {
     Entry = AllocatedObjectsList.Flink;
     while( Entry != &AllocatedObjectsList ) {
 	Thing = CONTAINING_RECORD(Entry, ALLOCATION_TRACKER, Entry);
-	ShowTrackedThing( "Dump ", Thing, 0, 0 );
+	ShowTrackedThing( "Dump ", Thing, FALSE );
 	Entry = Entry->Flink;
     }
     TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 }
 
-#endif/*MEMTRACK*/

@@ -115,7 +115,7 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
 
 	if( Bucket->AssociatedEndpoint == Connection ) {
 	    RemoveEntryList( &Bucket->Entry );
-	    ExFreePool( Bucket );
+	    exFreePool( Bucket );
 	    break;
 	}
 
@@ -142,7 +142,7 @@ NTSTATUS TCPAccept
 				       (PTDI_REQUEST_KERNEL)Request );
 
    if( Status == STATUS_PENDING ) {
-       Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
+       Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
 
        if( Bucket ) {
            Bucket->AssociatedEndpoint = Connection;

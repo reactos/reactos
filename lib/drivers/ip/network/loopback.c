@@ -45,7 +45,7 @@ VOID STDCALL LoopReceiveWorker( PVOID Context ) {
 	Adapter = WorkItem->Adapter;
 	BytesTransferred = WorkItem->BytesTransferred;
 
-	ExFreePool( WorkItem );
+	exFreePool( WorkItem );
 
         IPPacket.NdisPacket = Packet;
 
@@ -88,7 +88,7 @@ VOID LoopSubmitReceiveWork(
 
     TcpipAcquireSpinLock( &LoopWorkLock, &OldIrql );
 
-    WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
+    WQItem = exAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
     if( !WQItem ) {
 	TcpipReleaseSpinLock( &LoopWorkLock, OldIrql );
 	return;

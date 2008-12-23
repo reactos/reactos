@@ -106,7 +106,7 @@ VOID IPAddressFree(
  *     Nothing
  */
 {
-    PoolFreeBuffer(Object);
+    exFreePool(Object);
 }
 
 

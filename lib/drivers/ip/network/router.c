@@ -51,7 +51,7 @@ VOID FreeFIB(
  *     Object = Pointer to an forward information base structure
  */
 {
-    PoolFreeBuffer(Object);
+    exFreePool(Object);
 }
 
 
@@ -213,7 +213,7 @@ PFIB_ENTRY RouterAddRoute(
 			       A2S(Netmask),
 			       A2S(&Router->Address)));
 
-    FIBE = PoolAllocateBuffer(sizeof(FIB_ENTRY));
+    FIBE = exAllocatePool(NonPagedPool, sizeof(FIB_ENTRY));
     if (!FIBE) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;

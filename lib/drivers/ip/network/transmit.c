@@ -212,14 +212,14 @@ NTSTATUS SendFragments(
 
     if (!PrepareNextFragment(IFC)) {
         FreeNdisPacket(IFC->NdisPacket);
-        ExFreePool(IFC);
+        exFreePool(IFC);
         return NDIS_STATUS_FAILURE;
     }
 
     if (!NT_SUCCESS((NdisStatus = IPSendFragment(IFC->NdisPacket, NCE, IFC))))
     {
         FreeNdisPacket(IFC->NdisPacket);
-        ExFreePool(IFC);
+        exFreePool(IFC);
     }
 
     return NdisStatus;
