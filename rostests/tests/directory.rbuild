@@ -109,7 +109,7 @@
 	<directory name="Imagelistviewer">
 		<xi:include href="Imagelistviewer/imagelistviewer.rbuild" />
 	</directory>
-	
+
 <!-- fixme: iptest -->
 
 	<directory name="isotest">
@@ -173,6 +173,9 @@
 	</directory>
 	<directory name="primitives">
 		<xi:include href="primitives/primitives.rbuild" />
+	</directory>
+	<directory name="pseh2">
+		<xi:include href="pseh2/pseh2.rbuild" />
 	</directory>
 
 <!-- fixme: pteb -->
