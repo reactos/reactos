@@ -160,4 +160,11 @@ extern "C" {
 #endif
 
 #include <sec_api/string_s.h>
+
+// HACK
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#define stricmp _stricmp
+#define wcsicmp _wcsicmp
+
 #endif
