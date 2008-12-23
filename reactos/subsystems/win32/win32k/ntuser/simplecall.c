@@ -396,9 +396,26 @@ NtUserCallOneParam(
          /* FIXME: Should use UserEnterShared */
          RETURN(IntEnumClipboardFormats(Param));
 
-       case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
+      case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
           IntUserManualGuiCheck(Param);
           RETURN(TRUE);
+
+      case ONEPARAM_ROUTINE_GETCURSORPOS:
+      {
+          BOOL Ret = TRUE;
+          PPOINTL pptl;
+          _SEH2_TRY
+          {
+             pptl = (PPOINTL)Param;
+             *pptl = gpsi->ptCursor;
+          }
+          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+          {
+             Ret = FALSE;
+          }
+          _SEH2_END;
+          RETURN(Ret);
+      }      
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
