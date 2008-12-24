@@ -318,9 +318,6 @@ StoreUnwindCodes(PUNWIND_INFO Info, PDW2CFSTATE State, ULONG FunctionStart)
     return cCodes;
 }
 
-#define GetSectionPointer(Info, i) \
-    ((void*)(Info->FilePtr + Info->SectionHeaders[i].PointerToRawData))
-
 #define GetxdataSize(cFuncs, cUWOP, cScopes) \
     ( cFuncs * (sizeof(UNWIND_INFO) + 2 + 4 + 4) \
     + cUWOP * sizeof(UNWIND_CODE) \
@@ -369,14 +366,6 @@ StoreUnwindInfo(PUNWIND_INFO Info, PDW2FDE pFde, ULONG FunctionStart)
             cbSize += c * sizeof(UNWIND_CODE);
             Info->SizeOfProlog = State.Location - FunctionStart;
         }
-//        else if
-        // if is scope
-            // if is first scope
-                // align 4
-                // emit gcc_specific handler
-                // create pointer to C_SCOPE_TABLE
-            // 
-
     }
     cbSize = ROUND_UP(cbSize, 4);
 
@@ -396,7 +385,7 @@ CountUnwindData(PFILE_INFO File)
     File->cUWOP = 0;
     State.FramePtr = 0;
 
-    p = GetSectionPointer(File, File->eh_frame.idx);
+    p = File->eh_frame.p;
     pmax = (char*)p + File->eh_frame.psh->Misc.VirtualSize;
     for (; p->Length && (char*)p < pmax; p = NextCIE(p))
     {
@@ -444,7 +433,7 @@ GeneratePData(PFILE_INFO File)
     FileAlignment = File->OptionalHeader->FileAlignment;
 
     /* Get pointer to eh_frame section */
-    eh_frame = GetSectionPointer(File, File->eh_frame.idx);
+    eh_frame = File->eh_frame.p;
     g_ehframep = (ULONG)eh_frame;
 
     /* Get sizes */
@@ -452,16 +441,24 @@ GeneratePData(PFILE_INFO File)
 //    printf("cFuncs = %ld, cUWOPS = %ld, cScopes = %ld\n", 
 //        File->cFuncs, File->cUWOP, File->cScopes);
 
-    /* Allocate .pdata buffer */
-    File->pdata.idx = File->UsedSections;
-    pshp = File->pdata.psh = &File->SectionHeaders[File->pdata.idx];
+    /* Initialize section header for .pdata */
+    i = File->pdata.idx = File->UsedSections;
+    pshp = File->pdata.psh = &File->NewSectionHeaders[i];
     memcpy(pshp->Name, ".pdata", 7);
     pshp->Misc.VirtualSize = (File->cFuncs + 1) * sizeof(RUNTIME_FUNCTION);
-    pshp->VirtualAddress = File->SectionHeaders[File->pdata.idx - 1].VirtualAddress +
-                           File->SectionHeaders[File->pdata.idx - 1].SizeOfRawData;
+    pshp->VirtualAddress = File->NewSectionHeaders[i - 1].VirtualAddress +
+                           File->NewSectionHeaders[i - 1].SizeOfRawData;
     pshp->SizeOfRawData = ROUND_UP(pshp->Misc.VirtualSize, FileAlignment);
-    pshp->PointerToRawData = File->SectionHeaders[File->pdata.idx - 1].PointerToRawData +
-                           File->SectionHeaders[File->pdata.idx - 1].SizeOfRawData;
+    pshp->PointerToRawData = File->NewSectionHeaders[i - 1].PointerToRawData +
+                           File->NewSectionHeaders[i - 1].SizeOfRawData;
+    pshp->PointerToRelocations = 0;
+    pshp->PointerToLinenumbers = 0;
+    pshp->NumberOfRelocations = 0;
+    pshp->NumberOfLinenumbers = 0;
+    pshp->Characteristics = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_NOT_PAGED |
+                            IMAGE_SCN_CNT_INITIALIZED_DATA;
+
+    /* Allocate .pdata buffer */
     pdata = File->pdata.p = malloc(pshp->SizeOfRawData);
     memset(File->pdata.p, pshp->SizeOfRawData, 0);
 
@@ -470,16 +467,24 @@ GeneratePData(PFILE_INFO File)
     Dir->VirtualAddress = pshp->VirtualAddress;
     Dir->Size = pshp->Misc.VirtualSize;
 
-    /* Allocate .xdata buffer */
+    /* Initialize section header for .xdata */
     File->xdata.idx = File->pdata.idx + 1;
-    pshx = File->xdata.psh = &File->SectionHeaders[File->xdata.idx];
+    pshx = File->xdata.psh = &File->NewSectionHeaders[File->xdata.idx];
     memcpy(pshx->Name, ".xdata", 7);
     pshx->Misc.VirtualSize = GetxdataSize(File->cFuncs, File->cUWOP, File->cScopes);
     pshx->VirtualAddress = pshp->VirtualAddress + pshp->SizeOfRawData;
     pshx->SizeOfRawData = ROUND_UP(pshx->Misc.VirtualSize, FileAlignment);
     pshx->PointerToRawData = pshp->PointerToRawData + pshp->SizeOfRawData;
+    pshx->PointerToRelocations = 0;
+    pshx->PointerToLinenumbers = 0;
+    pshx->NumberOfRelocations = 0;
+    pshx->NumberOfLinenumbers = 0;
+    pshx->Characteristics = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_NOT_PAGED |
+                            IMAGE_SCN_CNT_INITIALIZED_DATA;
+
+    /* Allocate .xdata buffer */
     File->xdata.p = malloc(pshx->SizeOfRawData);
-    memset(File->pdata.p, pshx->SizeOfRawData, 0);
+    memset(File->xdata.p, pshx->SizeOfRawData, 0);
 
     i = 0;
     Offset = File->eh_frame.psh->VirtualAddress;
@@ -522,7 +527,7 @@ CalculateChecksum(DWORD Start, void *pFile, ULONG cbSize)
     DWORD i;
     DWORD checksum = Start;
 
-    for (i = 0; i < (cbSize + 1) / sizeof(WORD); i += 1)
+    for (i = 0; i < (cbSize + 1) / sizeof(WORD); i++)
     {
         checksum += Ptr[i];
         checksum = (checksum + (checksum >> 16)) & 0xffff;
@@ -534,8 +539,11 @@ CalculateChecksum(DWORD Start, void *pFile, ULONG cbSize)
 void
 WriteOutFile(FILE *handle, PFILE_INFO File)
 {
-    int ret, Size, Pos;
-    DWORD Checksum;
+    int ret, Size, Pos = 0;
+    DWORD CheckSum;
+    ULONG i, Alignment;
+
+    Alignment = File->OptionalHeader->FileAlignment;
 
     /* Update section count */
     File->FileHeader->NumberOfSections = File->UsedSections + 2; // FIXME!!!
@@ -545,18 +553,60 @@ WriteOutFile(FILE *handle, PFILE_INFO File)
            + File->xdata.psh->SizeOfRawData;
     File->OptionalHeader->SizeOfImage = Size;
 
-    /* Calculate size of file beginning */
-    Size = File->SectionHeaders[File->UsedSections].PointerToRawData;
-
     /* Recalculate checksum */
-    Checksum = CalculateChecksum(0, File->FilePtr, Size);
-    Checksum = CalculateChecksum(Checksum, File->pdata.p, File->pdata.psh->Misc.VirtualSize);
-    Checksum = CalculateChecksum(Checksum, File->xdata.p, File->xdata.psh->Misc.VirtualSize);
-    File->OptionalHeader->CheckSum = Checksum + Size + File->pdata.psh->Misc.VirtualSize;
+    CheckSum = CalculateChecksum(0, File->FilePtr, File->HeaderSize);
+    for (i = 0; i < File->AllSections; i++)
+    {
+        if (File->UseSection[i])
+        {
+            Size = File->SectionHeaders[i].SizeOfRawData;
+            if (Size)
+            {
+                void *p;
+                p = File->FilePtr + File->SectionHeaders[i].PointerToRawData;
+                CheckSum = CalculateChecksum(CheckSum, p, Size);
+            }
+        }
+    }
+    Size = File->pdata.psh->Misc.VirtualSize;
+    CheckSum = CalculateChecksum(CheckSum, File->pdata.p, Size);
+    Size = File->xdata.psh->Misc.VirtualSize;
+    CheckSum = CalculateChecksum(CheckSum, File->xdata.p, Size);
+    CheckSum += File->HeaderSize;
+    CheckSum += File->pdata.psh->Misc.VirtualSize;
+    CheckSum += File->xdata.psh->Misc.VirtualSize;
+    File->OptionalHeader->CheckSum = CheckSum;
 
-    /* Write file beginning */
+    /* Write file header */
+    Size = File->HeaderSize;
     ret = fwrite(File->DosHeader, 1, Size, handle);
     Pos = Size;
+
+    /* Write Section headers */
+    Size = File->NewSectionHeaderSize;
+    ret = fwrite(File->NewSectionHeaders, 1, Size, handle);
+    Pos += Size;
+
+    /* Fill up to next alignement */
+    Size = ROUND_UP(Pos, Alignment) - Pos;
+    ret = fwrite(File->AlignBuf, 1, Size, handle);
+    Pos += Size;
+
+    /* Write sections */
+    for (i = 0; i < File->AllSections; i++)
+    {
+        if (File->UseSection[i])
+        {
+            void *p;
+            Size = File->SectionHeaders[i].SizeOfRawData;
+            if (Size)
+            {
+                p = File->FilePtr + File->SectionHeaders[i].PointerToRawData;
+                ret = fwrite(p, 1, Size, handle);
+                Pos += Size;
+            }
+        }
+    }
 
     /* Write .pdata section */
     Size = File->pdata.psh->SizeOfRawData;
@@ -575,11 +625,13 @@ int
 ParsePEHeaders(PFILE_INFO File)
 {
     DWORD OldChecksum, Checksum;
+    ULONG Alignment, CurrentPos;
     int i;
 
     /* Check if MZ header exists  */
     File->DosHeader = (PIMAGE_DOS_HEADER)File->FilePtr;
-    if ((File->DosHeader->e_magic != IMAGE_DOS_MAGIC) || File->DosHeader->e_lfanew == 0L)
+    if ((File->DosHeader->e_magic != IMAGE_DOS_MAGIC) || 
+        (File->DosHeader->e_lfanew == 0L))
     {
         perror("Input file is not a PE image.\n");
         return -1;
@@ -587,7 +639,9 @@ ParsePEHeaders(PFILE_INFO File)
 
     /* Locate PE file header  */
     File->FileHeader = (PIMAGE_FILE_HEADER)(File->FilePtr + 
-                                     File->DosHeader->e_lfanew + sizeof(ULONG));
+                               File->DosHeader->e_lfanew + sizeof(ULONG));
+
+    /* Check for x64 image */
     if (File->FileHeader->Machine != IMAGE_FILE_MACHINE_AMD64)
     {
         perror("Input file is not an x64 image.\n");
@@ -596,13 +650,12 @@ ParsePEHeaders(PFILE_INFO File)
 
     /* Locate optional header */
     File->OptionalHeader = (PIMAGE_OPTIONAL_HEADER64)(File->FileHeader + 1);
-    File->ImageBase = File->OptionalHeader->ImageBase;
 
     /* Check if checksum is correct */
     OldChecksum = File->OptionalHeader->CheckSum;
     File->OptionalHeader->CheckSum = 0;
-    Checksum = CalculateChecksum(0, File->FilePtr, File->cbInFileSize)
-               + File->cbInFileSize;
+    Checksum = CalculateChecksum(0, File->FilePtr, File->cbInFileSize);
+    Checksum += File->cbInFileSize;
     if (Checksum != OldChecksum)
     {
         fprintf(stderr, "Input file has incorrect PE checksum: 0x%lx (calculated: 0x%lx)\n",
@@ -625,36 +678,64 @@ ParsePEHeaders(PFILE_INFO File)
         return -1;
     }
 
+    /* Create some shortcuts */
+    File->ImageBase = File->OptionalHeader->ImageBase;
     File->Symbols = File->FilePtr + File->FileHeader->PointerToSymbolTable;
     File->Strings = (char*)File->Symbols + File->FileHeader->NumberOfSymbols * 18;
 
     /* Check section names */
     File->AllSections = File->FileHeader->NumberOfSections;
+    Alignment = File->OptionalHeader->FileAlignment;
+    File->NewSectionHeaders = malloc((File->AllSections+2) * sizeof(IMAGE_SECTION_HEADER));
+    File->UsedSections = 0;
     File->eh_frame.idx = -1;
+    CurrentPos = File->SectionHeaders[0].PointerToRawData;
+//    CurrentPos = ROUND_UP(File->HeaderSize, Alignment);
+
+    /* Allocate array of chars, specifiying wheter to copy the section */
+    File->UseSection = malloc(File->AllSections);
+
     for (i = 0; i < File->AllSections; i++)
     {
         char *pName = (char*)File->SectionHeaders[i].Name;
+        File->UseSection[i] = 1;
 
         /* Check for long name */
         if (pName[0] == '/')
         {
             unsigned long index = strtoul(pName+1, 0, 10);
             pName = File->Strings + index;
-        }
-        else
-        {
-            /* Mark last section with a short name */
-            File->UsedSections = i + 1;
+            
+            // Hack, simply remove all sections with long names
+            File->UseSection[i] = 0;
         }
 
+        /* Chek if we have the eh_frame section */
         if (strcmp(pName, ".eh_frame") == 0)
         {
-            File->eh_frame.idx = i;
             File->eh_frame.psh = &File->SectionHeaders[i];
-            File->eh_frame.p = GetSectionPointer(File, i);
+            File->eh_frame.idx = i;
+            File->eh_frame.p = File->FilePtr + File->eh_frame.psh->PointerToRawData;
         }
 
+        if (File->UseSection[i])
+        {
+            /* Copy section header */
+            File->NewSectionHeaders[File->UsedSections] =
+                    File->SectionHeaders[i];
+            /* Fix Offset into File */
+            File->NewSectionHeaders[File->UsedSections].PointerToRawData =
+                  File->SectionHeaders[i].PointerToRawData ? CurrentPos : 0;
+            CurrentPos += File->NewSectionHeaders[File->UsedSections].SizeOfRawData;
+
+            /* Increase number of used sections */
+            File->UsedSections++;
+        }
     }
+
+    /* This is the actual size of the new section headers */
+    File->NewSectionHeaderSize = 
+        (File->UsedSections+2) * sizeof(IMAGE_SECTION_HEADER);
 
     if (File->eh_frame.idx == -1)
     {
