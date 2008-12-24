@@ -23,9 +23,38 @@
 #include "dxdiag_private.h"
 #include "wine/debug.h"
 
+#define INITGUID
+
+DWORD g_cComponents;
+DWORD g_cServerLocks;
+
 WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
 
-LONG DXDIAGN_refCount = 0;
+IClassFactoryVtbl DXDiagCF_Vtbl = 
+{
+  DXDiagCF_QueryInterface,
+  DXDiagCF_AddRef,
+  DXDiagCF_Release,
+  DXDiagCF_CreateInstance,
+  DXDiagCF_LockServer
+};
+
+IDxDiagProviderVtbl DxDiagProvider_Vtbl =
+{
+    IDxDiagProviderImpl_QueryInterface,
+    IDxDiagProviderImpl_AddRef,
+    IDxDiagProviderImpl_Release,
+    IDxDiagProviderImpl_Initialize,
+    IDxDiagProviderImpl_GetRootContainer
+};
+
+IDxDiagProviderPrivateVtbl DxDiagProvider_PrivateVtbl =
+{
+   IDxDiagProviderImpl_QueryInterface,
+   IDxDiagProviderImpl_AddRef,
+   IDxDiagProviderImpl_Release,
+   IDxDiagProviderImpl_ExecMethod
+};
 
 /* At process attach */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -40,69 +69,132 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 /*******************************************************************************
  * DXDiag ClassFactory
  */
-typedef struct {
-  const IClassFactoryVtbl *lpVtbl;
-  REFCLSID   rclsid;
-  HRESULT   (*pfnCreateInstanceFactory)(LPCLASSFACTORY iface, LPUNKNOWN punkOuter, REFIID riid, LPVOID *ppobj);
-} IClassFactoryImpl;
 
-static HRESULT WINAPI DXDiagCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
-  FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+HRESULT 
+WINAPI 
+DXDiagCF_QueryInterface(LPCLASSFACTORY iface, REFIID riid, LPVOID *ppobj) 
+{
+	LPICLASSFACTORY_INT This = (LPICLASSFACTORY_INT) iface;
+	HRESULT retValue = S_OK;	
 
-  if (ppobj == NULL) return E_POINTER;
-
-  return E_NOINTERFACE;
+	if (ppobj == NULL)
+	{
+		retValue = E_INVALIDARG;
+	}
+	else
+	{				
+		if ( ( IsEqualGUID( riid, &IID_IUnknown) ) ||
+			( IsEqualGUID( riid, &IID_IClassFactory) ) )
+		{			
+			*ppobj = This;	
+			IClassFactory_AddRef( iface );
+		}
+		else
+		{
+			*ppobj = NULL;
+			retValue = E_NOINTERFACE;
+		}
+	}
+	return retValue;
 }
 
-static ULONG WINAPI DXDiagCF_AddRef(LPCLASSFACTORY iface) {
-  DXDIAGN_LockModule();
-
-  return 2; /* non-heap based object */
+ULONG 
+WINAPI 
+DXDiagCF_AddRef(LPCLASSFACTORY iface) 
+{
+	LPICLASSFACTORY_INT This = (LPICLASSFACTORY_INT) iface;
+		
+	return (ULONG) InterlockedIncrement( (LONG *) &This->RefCount );
 }
 
-static ULONG WINAPI DXDiagCF_Release(LPCLASSFACTORY iface) {
-  DXDIAGN_UnlockModule();
+ULONG 
+WINAPI 
+DXDiagCF_Release(LPCLASSFACTORY iface) 
+{
+	LPICLASSFACTORY_INT This = (LPICLASSFACTORY_INT) iface;
+	ULONG RefCount = 0;
 
-  return 1; /* non-heap based object */
+	RefCount = InterlockedDecrement( (LONG *) &This->RefCount );
+
+	if (RefCount <= 0)
+	{
+		if (This->RefCount == 0)
+		{		
+			HeapFree(GetProcessHeap(), 0, This);
+		}
+
+		RefCount = 0;
+	}
+	
+	return RefCount;
 }
 
-static HRESULT WINAPI DXDiagCF_CreateInstance(LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj) {
-  IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-  TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
 
-  return This->pfnCreateInstanceFactory(iface, pOuter, riid, ppobj);
+HRESULT 
+WINAPI 
+DXDiagCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOuter, REFIID riid, LPVOID *ppobj) 
+{
+	HRESULT retValue = S_OK;
+	
+	if ( *ppobj != NULL )
+	{
+		*ppobj = NULL;				
+	}
+
+	if ( pOuter == NULL )
+	{		
+		if ( IsEqualGUID( riid, &CLSID_DxDiagProvider ) )
+		{		
+			
+			LPDXDIAGPROVIDER_INT myDxDiagProvider_int = (LPDXDIAGPROVIDER_INT) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(DXDIAGPROVIDER_INT));
+	
+			if ( myDxDiagProvider_int == NULL)
+			{
+				*ppobj = NULL;
+				retValue = E_OUTOFMEMORY;				
+			}
+			else
+			{							
+				myDxDiagProvider_int->lpVbl = (LPVOID) &DxDiagProvider_Vtbl;
+				myDxDiagProvider_int->lpVbl_private = (LPVOID) &DxDiagProvider_PrivateVtbl;				
+				IDxDiagProviderImpl_AddRef( (LPDXDIAGPROVIDER) myDxDiagProvider_int );
+				InterlockedIncrement( (LONG *)&g_cComponents);
+				retValue = IDxDiagProvider_QueryInterface( (LPDXDIAGPROVIDER) myDxDiagProvider_int, riid, ppobj );							
+				IDxDiagProvider_Release( (LPDXDIAGPROVIDER) myDxDiagProvider_int );				
+				*ppobj = (LPVOID) myDxDiagProvider_int;			
+			}			
+		}
+		else
+		{
+			retValue = CLASS_E_CLASSNOTAVAILABLE;
+		}
+	}
+
+	return retValue;
 }
 
-static HRESULT WINAPI DXDiagCF_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
-  TRACE("(%d)\n", dolock);
+HRESULT 
+WINAPI 
+DXDiagCF_LockServer(LPCLASSFACTORY iface,BOOL dolock) 
+{
 
-  if (dolock)
-    DXDIAGN_LockModule();
-  else
-    DXDIAGN_UnlockModule();
+	if (dolock == TRUE)
+	{ 
+		InterlockedIncrement( (LONG *)&g_cServerLocks);
+	}
 
-  return S_OK;
+	return S_OK;
 }
 
-static const IClassFactoryVtbl DXDiagCF_Vtbl = {
-  DXDiagCF_QueryInterface,
-  DXDiagCF_AddRef,
-  DXDiagCF_Release,
-  DXDiagCF_CreateInstance,
-  DXDiagCF_LockServer
-};
 
-static IClassFactoryImpl DXDiag_CFS[] = {
-  { &DXDiagCF_Vtbl, &CLSID_DxDiagProvider, DXDiag_CreateDXDiagProvider },
-  { NULL, NULL, NULL }
-};
+
 
 /***********************************************************************
  *             DllCanUnloadNow (DXDIAGN.@)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-  return DXDIAGN_refCount != 0 ? S_FALSE : S_OK;
+  return S_OK;
 }
 
 /***********************************************************************
@@ -110,18 +202,42 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    int i = 0;
+	HRESULT retValue = S_OK;
+	LPICLASSFACTORY_INT myIClassFactory_int;
+	LPCLASSFACTORY This;
+	
 
-    TRACE("(%p,%p,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-    while (NULL != DXDiag_CFS[i].rclsid) {
-      if (IsEqualGUID(rclsid, DXDiag_CFS[i].rclsid)) {
-	      DXDiagCF_AddRef((IClassFactory*) &DXDiag_CFS[i]);
-	      *ppv = &DXDiag_CFS[i];
-	      return S_OK;
-      }
-      ++i;
-    }
+	if ( IsEqualGUID( rclsid, &CLSID_DxDiagProvider) )	
+	{
+		myIClassFactory_int = (LPICLASSFACTORY_INT) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(ICLASSFACTORY_INT));
+				
+		if (myIClassFactory_int != NULL)
+		{					
+			myIClassFactory_int->lpVbl = (LPVOID) &DXDiagCF_Vtbl;
 
-    FIXME("(%p,%p,%p): no interface found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-    return CLASS_E_CLASSNOTAVAILABLE;
+			This = (LPCLASSFACTORY) myIClassFactory_int;
+						
+			DXDiagCF_AddRef( This );
+									
+			retValue = IClassFactory_QueryInterface(  This, riid, ppv );	
+
+			IClassFactory_AddRef( This ); 
+
+			*ppv = (LPVOID) This;
+		}
+		else
+		{
+			retValue = E_OUTOFMEMORY;
+			*ppv = NULL;
+		}
+
+	}
+	else
+	{
+		retValue = CLASS_E_CLASSNOTAVAILABLE;
+		*ppv = NULL;
+	}
+
+	return retValue;
+
 }

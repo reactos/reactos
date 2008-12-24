@@ -42,24 +42,29 @@ HRESULT WINAPI IDxDiagProviderImpl_QueryInterface(PDXDIAGPROVIDER iface, REFIID 
 }
 
 ULONG WINAPI IDxDiagProviderImpl_AddRef(PDXDIAGPROVIDER iface) {
-    IDxDiagProviderImpl *This = (IDxDiagProviderImpl *)iface;
-    TRACE("(%p) : AddRef from %ld\n", This, This->ref);
-    return ++(This->ref);
+    LPDXDIAGPROVIDER_INT This = (LPDXDIAGPROVIDER_INT) iface;
+    TRACE("(%p) : AddRef from %ld\n", This, This->RefCount);
+	return ++(This->RefCount);
 }
 
 ULONG WINAPI IDxDiagProviderImpl_Release(PDXDIAGPROVIDER iface) {
-    IDxDiagProviderImpl *This = (IDxDiagProviderImpl *)iface;
-    ULONG ref = --This->ref;
-    TRACE("(%p) : ReleaseRef to %ld\n", This, This->ref);
+    LPDXDIAGPROVIDER_INT This = (LPDXDIAGPROVIDER_INT) iface;
+    ULONG ref = --This->RefCount;
+    TRACE("(%p) : ReleaseRef to %ld\n", This, This->RefCount);
     if (ref == 0) {
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
 }
 
+ULONG WINAPI IDxDiagProviderImpl_ExecMethod(PDXDIAGPROVIDER iface) {
+	return 0;
+}
+
+
 /* IDxDiagProvider Interface follow: */
 HRESULT WINAPI IDxDiagProviderImpl_Initialize(PDXDIAGPROVIDER iface, DXDIAG_INIT_PARAMS* pParams) {
-    IDxDiagProviderImpl *This = (IDxDiagProviderImpl *)iface;
+    LPDXDIAGPROVIDER_INT This = (LPDXDIAGPROVIDER_INT) iface;
     TRACE("(%p,%p)\n", iface, pParams);
 
     if (NULL == pParams) {
@@ -76,7 +81,7 @@ HRESULT WINAPI IDxDiagProviderImpl_Initialize(PDXDIAGPROVIDER iface, DXDIAG_INIT
 
 HRESULT WINAPI IDxDiagProviderImpl_GetRootContainer(PDXDIAGPROVIDER iface, IDxDiagContainer** ppInstance) {
   HRESULT hr = S_OK;
-  IDxDiagProviderImpl *This = (IDxDiagProviderImpl *)iface;
+  LPDXDIAGPROVIDER_INT This = (LPDXDIAGPROVIDER_INT) iface;
   TRACE("(%p,%p)\n", iface, ppInstance);
 
   if (NULL == ppInstance) {
@@ -94,26 +99,5 @@ HRESULT WINAPI IDxDiagProviderImpl_GetRootContainer(PDXDIAGPROVIDER iface, IDxDi
   return IDxDiagContainerImpl_QueryInterface((PDXDIAGCONTAINER)This->pRootContainer, &IID_IDxDiagContainer, (void**) ppInstance);
 }
 
-IDxDiagProviderVtbl DxDiagProvider_Vtbl =
-{
-    IDxDiagProviderImpl_QueryInterface,
-    IDxDiagProviderImpl_AddRef,
-    IDxDiagProviderImpl_Release,
-    IDxDiagProviderImpl_Initialize,
-    IDxDiagProviderImpl_GetRootContainer
-};
 
-HRESULT DXDiag_CreateDXDiagProvider(LPCLASSFACTORY iface, LPUNKNOWN punkOuter, REFIID riid, LPVOID *ppobj) {
-  IDxDiagProviderImpl* provider;
 
-  TRACE("(%p, %s, %p)\n", punkOuter, debugstr_guid(riid), ppobj);
-
-  provider = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDxDiagProviderImpl));
-  if (NULL == provider) {
-    *ppobj = NULL;
-    return E_OUTOFMEMORY;
-  }
-  provider->lpVtbl = &DxDiagProvider_Vtbl;
-  provider->ref = 0; /* will be inited with QueryInterface */
-  return IDxDiagProviderImpl_QueryInterface ((PDXDIAGPROVIDER)provider, riid, ppobj);
-}
