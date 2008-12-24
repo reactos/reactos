@@ -1,3 +1,25 @@
+/*
+	Copyright (c) 2008 KJK::Hyperion
+
+	Permission is hereby granted, free of charge, to any person obtaining a
+	copy of this software and associated documentation files (the "Software"),
+	to deal in the Software without restriction, including without limitation
+	the rights to use, copy, modify, merge, publish, distribute, sublicense,
+	and/or sell copies of the Software, and to permit persons to whom the
+	Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+	FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	DEALINGS IN THE SOFTWARE.
+*/
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,12 +64,7 @@ extern void set_positive(int *);
 
 static int call_test(int (*)(void));
 
-#define DEFINE_TEST(NAME_) \
-	static int test_ ## NAME_(void); \
- \
-	static void NAME_(void) {  ok(call_test(test_ ## NAME_), "test failed\n"); } \
- \
-	static int test_ ## NAME_(void)
+#define DEFINE_TEST(NAME_) static int test_ ## NAME_(void)
 
 /* Empty statements *///{{{
 DEFINE_TEST(empty_1)
@@ -2240,121 +2257,6 @@ DEFINE_TEST(abnorm_8)
 // TODO
 //}}}
 
-#define USE_TEST_NAME_(NAME_) # NAME_
-#define USE_TEST_NAME(NAME_) USE_TEST_NAME_(NAME_)
-#define USE_TEST(NAME_) { USE_TEST_NAME(NAME_), NAME_ }
-
-const struct test winetest_testlist[] =
-{
-	USE_TEST(empty_1),
-	USE_TEST(empty_2),
-	USE_TEST(empty_3),
-	USE_TEST(empty_4),
-	USE_TEST(empty_5),
-	USE_TEST(empty_6),
-	USE_TEST(empty_7),
-	USE_TEST(empty_8),
-
-	USE_TEST(execute_handler_1),
-	USE_TEST(continue_execution_1),
-	USE_TEST(continue_search_1),
-	USE_TEST(execute_handler_2),
-	USE_TEST(continue_execution_2),
-
-	USE_TEST(execute_handler_3),
-	USE_TEST(continue_execution_3),
-	USE_TEST(continue_search_2),
-	USE_TEST(execute_handler_4),
-	USE_TEST(continue_execution_4),
-
-	USE_TEST(execute_handler_5),
-	USE_TEST(continue_execution_5),
-	USE_TEST(continue_search_3),
-	USE_TEST(execute_handler_6),
-	USE_TEST(continue_execution_6),
-
-	USE_TEST(execute_handler_7),
-	USE_TEST(continue_execution_7),
-	USE_TEST(continue_search_4),
-	USE_TEST(execute_handler_8),
-	USE_TEST(continue_execution_8),
-
-	USE_TEST(execute_handler_9),
-	USE_TEST(continue_execution_9),
-	USE_TEST(continue_search_5),
-	USE_TEST(execute_handler_10),
-	USE_TEST(continue_execution_10),
-
-	USE_TEST(execute_handler_11),
-	USE_TEST(continue_execution_11),
-	USE_TEST(continue_search_6),
-	USE_TEST(execute_handler_12),
-	USE_TEST(continue_execution_12),
-
-	USE_TEST(leave_1),
-	USE_TEST(leave_2),
-	USE_TEST(leave_3),
-	USE_TEST(leave_4),
-	USE_TEST(leave_5),
-	USE_TEST(leave_6),
-
-	USE_TEST(yield_1),
-	USE_TEST(yield_2),
-	USE_TEST(yield_3),
-	USE_TEST(yield_4),
-	USE_TEST(yield_5),
-	USE_TEST(yield_6),
-
-	USE_TEST(finally_1),
-	USE_TEST(finally_2),
-	USE_TEST(finally_3),
-	USE_TEST(finally_4),
-	USE_TEST(finally_5),
-	USE_TEST(finally_6),
-	USE_TEST(finally_7),
-	USE_TEST(finally_8),
-	USE_TEST(finally_9),
-	USE_TEST(finally_10),
-	USE_TEST(finally_11),
-	USE_TEST(finally_12),
-#if 0
-	USE_TEST(finally_13),
-	USE_TEST(finally_14),
-#endif
-
-	USE_TEST(xpointers_1),
-	USE_TEST(xpointers_2),
-	USE_TEST(xpointers_3),
-	USE_TEST(xpointers_4),
-	USE_TEST(xpointers_5),
-	USE_TEST(xpointers_6),
-	USE_TEST(xpointers_7),
-	USE_TEST(xpointers_8),
-	USE_TEST(xpointers_9),
-	USE_TEST(xpointers_10),
-	USE_TEST(xpointers_11),
-	USE_TEST(xpointers_12),
-	USE_TEST(xpointers_13),
-	USE_TEST(xpointers_14),
-	USE_TEST(xpointers_15),
-	USE_TEST(xpointers_16),
-
-	USE_TEST(xcode_1),
-	USE_TEST(xcode_2),
-	USE_TEST(xcode_3),
-
-	USE_TEST(abnorm_1),
-	USE_TEST(abnorm_2),
-	USE_TEST(abnorm_3),
-	USE_TEST(abnorm_4),
-	USE_TEST(abnorm_5),
-	USE_TEST(abnorm_6),
-	USE_TEST(abnorm_7),
-	USE_TEST(abnorm_8),
-
-	{ 0, 0 }
-};
-
 static
 LONG WINAPI unhandled_exception(PEXCEPTION_POINTERS ExceptionInfo)
 {
@@ -2372,12 +2274,14 @@ struct volatile_context
 	void * edi;
 };
 #else
-#error TODO
+struct volatile_context
+{
+	int _ignore;
+};
 #endif
 
-#if defined(__GNUC__)
 static
-__attribute__((noinline))
+DECLSPEC_NOINLINE
 int sanity_check(int ret, struct volatile_context * before, struct volatile_context * after)
 {
 	if(ret && memcmp(before, after, sizeof(before)))
@@ -2387,17 +2291,16 @@ int sanity_check(int ret, struct volatile_context * before, struct volatile_cont
 }
 
 static
-__attribute__((noinline))
+DECLSPEC_NOINLINE
 int call_test(int (* func)(void))
 {
 	static int ret;
+	static struct volatile_context before, after;
 	static LPTOP_LEVEL_EXCEPTION_FILTER prev_unhandled_exception;
 
 	prev_unhandled_exception = SetUnhandledExceptionFilter(&unhandled_exception);
 
-#if defined(__i386__)
-	static struct volatile_context before, after;
-
+#if defined(__GNUC__) && defined(__i386__)
 	__asm__ __volatile__
 	(
 		"mov %%esp, 0x00 + %c[before]\n"
@@ -2423,14 +2326,143 @@ int call_test(int (* func)(void))
 		"ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
 	);
 #else
-#error TODO
+	ret = func();
 #endif
 
 	SetUnhandledExceptionFilter(prev_unhandled_exception);
 	return ret;
 }
-#else
-#error TODO
-#endif
+
+#define USE_TEST_NAME_(NAME_) # NAME_
+#define USE_TEST_NAME(NAME_) USE_TEST_NAME_(NAME_)
+#define USE_TEST(NAME_) { USE_TEST_NAME(test_ ## NAME_), test_ ## NAME_ }
+
+struct subtest
+{
+	const char * name;
+	int (* func)(void);
+};
+
+void testsuite_syntax(void)
+{
+	const struct subtest testsuite[] =
+	{
+		USE_TEST(empty_1),
+		USE_TEST(empty_2),
+		USE_TEST(empty_3),
+		USE_TEST(empty_4),
+		USE_TEST(empty_5),
+		USE_TEST(empty_6),
+		USE_TEST(empty_7),
+		USE_TEST(empty_8),
+
+		USE_TEST(execute_handler_1),
+		USE_TEST(continue_execution_1),
+		USE_TEST(continue_search_1),
+		USE_TEST(execute_handler_2),
+		USE_TEST(continue_execution_2),
+
+		USE_TEST(execute_handler_3),
+		USE_TEST(continue_execution_3),
+		USE_TEST(continue_search_2),
+		USE_TEST(execute_handler_4),
+		USE_TEST(continue_execution_4),
+
+		USE_TEST(execute_handler_5),
+		USE_TEST(continue_execution_5),
+		USE_TEST(continue_search_3),
+		USE_TEST(execute_handler_6),
+		USE_TEST(continue_execution_6),
+
+		USE_TEST(execute_handler_7),
+		USE_TEST(continue_execution_7),
+		USE_TEST(continue_search_4),
+		USE_TEST(execute_handler_8),
+		USE_TEST(continue_execution_8),
+
+		USE_TEST(execute_handler_9),
+		USE_TEST(continue_execution_9),
+		USE_TEST(continue_search_5),
+		USE_TEST(execute_handler_10),
+		USE_TEST(continue_execution_10),
+
+		USE_TEST(execute_handler_11),
+		USE_TEST(continue_execution_11),
+		USE_TEST(continue_search_6),
+		USE_TEST(execute_handler_12),
+		USE_TEST(continue_execution_12),
+
+		USE_TEST(leave_1),
+		USE_TEST(leave_2),
+		USE_TEST(leave_3),
+		USE_TEST(leave_4),
+		USE_TEST(leave_5),
+		USE_TEST(leave_6),
+
+		USE_TEST(yield_1),
+		USE_TEST(yield_2),
+		USE_TEST(yield_3),
+		USE_TEST(yield_4),
+		USE_TEST(yield_5),
+		USE_TEST(yield_6),
+
+		USE_TEST(finally_1),
+		USE_TEST(finally_2),
+		USE_TEST(finally_3),
+		USE_TEST(finally_4),
+		USE_TEST(finally_5),
+		USE_TEST(finally_6),
+		USE_TEST(finally_7),
+		USE_TEST(finally_8),
+		USE_TEST(finally_9),
+		USE_TEST(finally_10),
+		USE_TEST(finally_11),
+		USE_TEST(finally_12),
+	#if 0
+		USE_TEST(finally_13),
+		USE_TEST(finally_14),
+	#endif
+
+		USE_TEST(xpointers_1),
+		USE_TEST(xpointers_2),
+		USE_TEST(xpointers_3),
+		USE_TEST(xpointers_4),
+		USE_TEST(xpointers_5),
+		USE_TEST(xpointers_6),
+		USE_TEST(xpointers_7),
+		USE_TEST(xpointers_8),
+		USE_TEST(xpointers_9),
+		USE_TEST(xpointers_10),
+		USE_TEST(xpointers_11),
+		USE_TEST(xpointers_12),
+		USE_TEST(xpointers_13),
+		USE_TEST(xpointers_14),
+		USE_TEST(xpointers_15),
+		USE_TEST(xpointers_16),
+
+		USE_TEST(xcode_1),
+		USE_TEST(xcode_2),
+		USE_TEST(xcode_3),
+
+		USE_TEST(abnorm_1),
+		USE_TEST(abnorm_2),
+		USE_TEST(abnorm_3),
+		USE_TEST(abnorm_4),
+		USE_TEST(abnorm_5),
+		USE_TEST(abnorm_6),
+		USE_TEST(abnorm_7),
+		USE_TEST(abnorm_8),
+	};
+
+	size_t i;
+
+	for(i = 0; i < sizeof(testsuite) / sizeof(testsuite[0]); ++ i)
+		ok(call_test(testsuite[i].func), "%s failed\n", testsuite[i].name);
+}
+
+const struct test winetest_testlist[] = {
+	{ "pseh2_syntax", testsuite_syntax },
+	{ 0, 0 }
+};
 
 /* EOF */
