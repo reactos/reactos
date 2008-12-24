@@ -142,6 +142,8 @@ bool zero_blocks(PEXT2_FILESYS fs, ULONG blk, ULONG num,
         if (!buf)
         {
             DPRINT1("Mke2fs: while allocating zeroizing buffer");
+            if (ret_blk)
+                *ret_blk = blk;
             return false;
         }
         memset(buf, 0, fs->blocksize * STRIDE_LENGTH);
