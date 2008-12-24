@@ -141,6 +141,7 @@ extern "C" {
 
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define DECLSPEC_EXPORT __declspec(dllexport)
+#define DECLSPEC_NOINLINE __declspec(noinline)
 #ifdef __GNUC__
 #define DECLSPEC_NORETURN __declspec(noreturn)
 #define DECLARE_STDCALL_P( type ) __stdcall type
