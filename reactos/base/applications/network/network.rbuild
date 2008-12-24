@@ -28,7 +28,9 @@
 	<directory name="route">
 		<xi:include href="route/route.rbuild" />
 	</directory>
-
+	<directory name="telnet">
+		<xi:include href="telnet/telnet.rbuild" />
+	</directory>
 	<directory name="tracert">
 		<xi:include href="tracert/tracert.rbuild" />
 	</directory>
