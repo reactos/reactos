@@ -1,4 +1,4 @@
-<module name="devmgr" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devmgr.dll" allowwarnings="true" unicode="yes">
+<module name="devmgr" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devmgr.dll" unicode="yes">
 	<include base="devmgr">.</include>
 	<importlibrary definition="devmgr.spec" />
 	<library>kernel32</library>
