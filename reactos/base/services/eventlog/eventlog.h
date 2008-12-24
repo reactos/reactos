@@ -36,43 +36,41 @@ typedef struct _IO_ERROR_LPC
 #define LOGFILE_SIGNATURE 0x654c664c
 
 /*
- *  FIXME
  *  Flags used in logfile header
  */
-#define LOGFILE_FLAG1 1
-#define LOGFILE_FLAG2 2
-#define LOGFILE_FLAG3 4
-#define LOGFILE_FLAG4 8
+#define ELF_LOGFILE_HEADER_DIRTY 1
+#define ELF_LOGFILE_HEADER_WRAP 2
+#define ELF_LOGGFILE_LOGFULL_WRITTEN 4
+#define ELF_LOGFILE_ARCHIVE_SET 8
 
-typedef struct
-{
-    DWORD SizeOfHeader;
-    DWORD Signature;
-    DWORD MajorVersion;
-    DWORD MinorVersion;
-    DWORD FirstRecordOffset;
-    DWORD EofOffset;
-    DWORD NextRecord;
-    DWORD OldestRecord;
-    DWORD unknown1;
-    DWORD Flags;
-    DWORD unknown2;
-    DWORD SizeOfHeader2;
-} FILE_HEADER, *PFILE_HEADER;
+/* FIXME: MSDN reads that the following two structs are in winnt.h. Are they? */
+typedef struct _EVENTLOGHEADER {
+    ULONG HeaderSize;
+    ULONG Signature;
+    ULONG MajorVersion;
+    ULONG MinorVersion;
+    ULONG StartOffset;
+    ULONG EndOffset;
+    ULONG CurrentRecordNumber;
+    ULONG OldestRecordNumber;
+    ULONG MaxSize;
+    ULONG Flags;
+    ULONG Retention;
+    ULONG EndHeaderSize;
+} EVENTLOGHEADER, *PEVENTLOGHEADER;
 
-typedef struct
-{
-    DWORD Size1;
-    DWORD Ones;                 // Must be 0x11111111
-    DWORD Twos;                 // Must be 0x22222222
-    DWORD Threes;               // Must be 0x33333333
-    DWORD Fours;                // Must be 0x44444444
-    DWORD StartOffset;
-    DWORD EndOffset;
-    DWORD NextRecordNumber;
-    DWORD OldestRecordNumber;
-    DWORD Size2;
-} EOF_RECORD, *PEOF_RECORD;
+typedef struct _EVENTLOGEOF {
+    ULONG RecordSizeBeginning;
+    ULONG Ones;
+    ULONG Twos;
+    ULONG Threes;
+    ULONG Fours;
+    ULONG BeginRecord;
+    ULONG EndRecord;
+    ULONG CurrentRecordNumber;
+    ULONG OldestRecordNumber;
+    ULONG RecordSizeEnd;
+} EVENTLOGEOF, *PEVENTLOGEOF;
 
 typedef struct
 {
@@ -83,7 +81,7 @@ typedef struct
 typedef struct
 {
     HANDLE hFile;
-    FILE_HEADER Header;
+    EVENTLOGHEADER Header;
     WCHAR *LogName;
     WCHAR *FileName;
     CRITICAL_SECTION cs;
@@ -165,7 +163,7 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 /* eventlog.c */
 extern HANDLE MyHeap;
 
-VOID PRINT_HEADER(PFILE_HEADER header);
+VOID PRINT_HEADER(PEVENTLOGHEADER header);
 
 VOID PRINT_RECORD(PEVENTLOGRECORD pRec);
 

@@ -20,24 +20,24 @@ static CRITICAL_SECTION LogFileListCs;
 BOOL LogfInitializeNew(PLOGFILE LogFile)
 {
     DWORD dwWritten;
-    EOF_RECORD EofRec;
+    EVENTLOGEOF EofRec;
 
-    ZeroMemory(&LogFile->Header, sizeof(FILE_HEADER));
+    ZeroMemory(&LogFile->Header, sizeof(EVENTLOGHEADER));
     SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN);
     SetEndOfFile(LogFile->hFile);
 
-    LogFile->Header.SizeOfHeader = sizeof(FILE_HEADER);
-    LogFile->Header.SizeOfHeader2 = sizeof(FILE_HEADER);
-    LogFile->Header.FirstRecordOffset = sizeof(FILE_HEADER);
-    LogFile->Header.EofOffset = sizeof(FILE_HEADER);
+    LogFile->Header.HeaderSize = sizeof(EVENTLOGHEADER);
+    LogFile->Header.EndHeaderSize = sizeof(EVENTLOGHEADER);
+    LogFile->Header.StartOffset = sizeof(EVENTLOGHEADER);
+    LogFile->Header.EndOffset = sizeof(EVENTLOGHEADER);
     LogFile->Header.MajorVersion = MAJORVER;
     LogFile->Header.MinorVersion = MINORVER;
-    LogFile->Header.NextRecord = 1;
+    LogFile->Header.CurrentRecordNumber = 1;
 
     LogFile->Header.Signature = LOGFILE_SIGNATURE;
     if (!WriteFile(LogFile->hFile,
                    &LogFile->Header,
-                   sizeof(FILE_HEADER),
+                   sizeof(EVENTLOGHEADER),
                    &dwWritten,
                    NULL))
     {
@@ -49,16 +49,16 @@ BOOL LogfInitializeNew(PLOGFILE LogFile)
     EofRec.Twos = 0x22222222;
     EofRec.Threes = 0x33333333;
     EofRec.Fours = 0x44444444;
-    EofRec.Size1 = sizeof(EOF_RECORD);
-    EofRec.Size2 = sizeof(EOF_RECORD);
-    EofRec.NextRecordNumber = LogFile->Header.NextRecord;
-    EofRec.OldestRecordNumber = LogFile->Header.OldestRecord;
-    EofRec.StartOffset = LogFile->Header.FirstRecordOffset;
-    EofRec.EndOffset = LogFile->Header.EofOffset;
+    EofRec.RecordSizeBeginning = sizeof(EVENTLOGEOF);
+    EofRec.RecordSizeEnd = sizeof(EVENTLOGEOF);
+    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
+    EofRec.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
+    EofRec.BeginRecord = LogFile->Header.StartOffset;
+    EofRec.EndRecord = LogFile->Header.EndOffset;
 
     if (!WriteFile(LogFile->hFile,
                    &EofRec,
-                   sizeof(EOF_RECORD),
+                   sizeof(EVENTLOGEOF),
                    &dwWritten,
                    NULL))
     {
@@ -92,7 +92,7 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
 
     if (!ReadFile(LogFile->hFile,
                   &LogFile->Header,
-                  sizeof(FILE_HEADER),
+                  sizeof(EVENTLOGHEADER),
                   &dwRead,
                   NULL))
     {
@@ -100,14 +100,14 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
         return FALSE;
     }
 
-    if (dwRead != sizeof(FILE_HEADER))
+    if (dwRead != sizeof(EVENTLOGHEADER))
     {
         DPRINT("EventLog: Invalid file %S.\n", LogFile->FileName);
         return LogfInitializeNew(LogFile);
     }
 
-    if (LogFile->Header.SizeOfHeader != sizeof(FILE_HEADER) ||
-        LogFile->Header.SizeOfHeader2 != sizeof(FILE_HEADER))
+    if (LogFile->Header.HeaderSize != sizeof(EVENTLOGHEADER) ||
+        LogFile->Header.EndHeaderSize != sizeof(EVENTLOGHEADER))
     {
         DPRINT("EventLog: Invalid header size in %S.\n", LogFile->FileName);
         return LogfInitializeNew(LogFile);
@@ -120,10 +120,10 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
         return LogfInitializeNew(LogFile);
     }
 
-    if (LogFile->Header.EofOffset > GetFileSize(LogFile->hFile, NULL) + 1)
+    if (LogFile->Header.EndOffset > GetFileSize(LogFile->hFile, NULL) + 1)
     {
         DPRINT("EventLog: Invalid eof offset %x in %S.\n",
-               LogFile->Header.EofOffset, LogFile->FileName);
+               LogFile->Header.EndOffset, LogFile->FileName);
         return LogfInitializeNew(LogFile);
     }
 
@@ -204,7 +204,7 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
 
         if (*pdwRecSize2 != dwRecSize)
         {
-            DPRINT1("Invalid size2 of record %d (%x) in %S\n",
+            DPRINT1("Invalid RecordSizeEnd of record %d (%x) in %S\n",
                     dwRecordsNumber, *pdwRecSize2, LogFile->LogName);
             HeapFree(MyHeap, 0, RecBuf);
             break;
@@ -224,8 +224,8 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
         HeapFree(MyHeap, 0, RecBuf);
     }  // for(;;)
 
-    LogFile->Header.NextRecord = dwRecordsNumber + 1;
-    LogFile->Header.OldestRecord = dwRecordsNumber ? 1 : 0;  // FIXME
+    LogFile->Header.CurrentRecordNumber = dwRecordsNumber + 1;
+    LogFile->Header.OldestRecordNumber = dwRecordsNumber ? 1 : 0;  // FIXME
 
     if (!SetFilePointer(LogFile->hFile, 0, NULL, FILE_CURRENT) ==
         INVALID_SET_FILE_POINTER)
@@ -236,7 +236,7 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile)
 
     if (!WriteFile(LogFile->hFile,
                    &LogFile->Header,
-                   sizeof(FILE_HEADER),
+                   sizeof(EVENTLOGHEADER),
                    &dwRead,
                    NULL))
     {
@@ -648,7 +648,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
 {
     DWORD dwWritten;
     SYSTEMTIME st;
-    EOF_RECORD EofRec;
+    EVENTLOGEOF EofRec;
 
     if (!Buffer)
         return FALSE;
@@ -659,7 +659,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
     EnterCriticalSection(&LogFile->cs);
 
     if (SetFilePointer(LogFile->hFile,
-                       LogFile->Header.EofOffset,
+                       LogFile->Header.EndOffset,
                        NULL,
                        FILE_BEGIN) == INVALID_SET_FILE_POINTER)
     {
@@ -676,33 +676,33 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
     }
 
     if (!LogfAddOffsetInformation(LogFile,
-                                  LogFile->Header.NextRecord,
-                                  LogFile->Header.EofOffset))
+                                  LogFile->Header.CurrentRecordNumber,
+                                  LogFile->Header.EndOffset))
     {
         LeaveCriticalSection(&LogFile->cs);
         return FALSE;
     }
 
-    LogFile->Header.NextRecord++;
-    LogFile->Header.EofOffset += dwWritten;
+    LogFile->Header.CurrentRecordNumber++;
+    LogFile->Header.EndOffset += dwWritten;
 
-    if (LogFile->Header.OldestRecord == 0)
-        LogFile->Header.OldestRecord = 1;
+    if (LogFile->Header.OldestRecordNumber == 0)
+        LogFile->Header.OldestRecordNumber = 1;
 
     EofRec.Ones = 0x11111111;
     EofRec.Twos = 0x22222222;
     EofRec.Threes = 0x33333333;
     EofRec.Fours = 0x44444444;
-    EofRec.Size1 = sizeof(EOF_RECORD);
-    EofRec.Size2 = sizeof(EOF_RECORD);
-    EofRec.NextRecordNumber = LogFile->Header.NextRecord;
-    EofRec.OldestRecordNumber = LogFile->Header.OldestRecord;
-    EofRec.StartOffset = LogFile->Header.FirstRecordOffset;
-    EofRec.EndOffset = LogFile->Header.EofOffset;
+    EofRec.RecordSizeBeginning = sizeof(EVENTLOGEOF);
+    EofRec.RecordSizeEnd = sizeof(EVENTLOGEOF);
+    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
+    EofRec.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
+    EofRec.BeginRecord = LogFile->Header.StartOffset;
+    EofRec.EndRecord = LogFile->Header.EndOffset;
 
     if (!WriteFile(LogFile->hFile,
                    &EofRec,
-                   sizeof(EOF_RECORD),
+                   sizeof(EVENTLOGEOF),
                    &dwWritten,
                    NULL))
     {
@@ -721,7 +721,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
 
     if (!WriteFile(LogFile->hFile,
                    &LogFile->Header,
-                   sizeof(FILE_HEADER),
+                   sizeof(EVENTLOGHEADER),
                    &dwWritten,
                    NULL))
     {
@@ -757,7 +757,7 @@ ULONG LogfOffsetByNumber(PLOGFILE LogFile, DWORD RecordNumber)
 
 DWORD LogfGetOldestRecord(PLOGFILE LogFile)
 {
-    return LogFile->Header.OldestRecord;
+    return LogFile->Header.OldestRecordNumber;
 }
 
 BOOL LogfAddOffsetInformation(PLOGFILE LogFile, ULONG ulNumber, ULONG ulOffset)
