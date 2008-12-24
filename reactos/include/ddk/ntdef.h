@@ -11,7 +11,7 @@
 
 // FIXME: Should we include these here?
 #include <stdarg.h>
-#include <string.h> 
+#include <string.h>
 
 
 typedef unsigned long POINTER_64; // FIXME! HACK!!!
@@ -225,12 +225,14 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #endif
 #endif
 
+#ifndef DECLSPEC_NOINLINE
 #if (_MSC_VER >= 1300)
 #define DECLSPEC_NOINLINE  __declspec(noinline)
 #elif defined(__GNUC__)
 #define DECLSPEC_NOINLINE __attribute__((noinline))
 #else
 #define DECLSPEC_NOINLINE
+#endif
 #endif
 
 #if !defined(_M_CEE_PURE)
@@ -255,7 +257,7 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
 
 //
-// Use to silence unused variable warnings when it is intentional 
+// Use to silence unused variable warnings when it is intentional
 //
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
 #define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
@@ -290,7 +292,7 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 // Void Pointers
 //
 typedef void *PVOID;
-//typedef void * POINTER_64 PVOID64; 
+//typedef void * POINTER_64 PVOID64;
 typedef PVOID PVOID64; // FIXME!
 
 //

@@ -141,7 +141,15 @@ extern "C" {
 
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define DECLSPEC_EXPORT __declspec(dllexport)
-#define DECLSPEC_NOINLINE __declspec(noinline)
+#ifndef DECLSPEC_NOINLINE
+#if (_MSC_VER >= 1300)
+#define DECLSPEC_NOINLINE  __declspec(noinline)
+#elif defined(__GNUC__)
+#define DECLSPEC_NOINLINE __attribute__((noinline))
+#else
+#define DECLSPEC_NOINLINE
+#endif
+#endif
 #ifdef __GNUC__
 #define DECLSPEC_NORETURN __declspec(noreturn)
 #define DECLARE_STDCALL_P( type ) __stdcall type
