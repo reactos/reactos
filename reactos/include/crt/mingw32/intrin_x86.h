@@ -70,6 +70,10 @@
 #define _AddressOfReturnAddress() (&(((void **)(__builtin_frame_address(0)))[1]))
 /* TODO: __getcallerseflags but how??? */
 
+/* Maybe the same for x86? */
+#ifdef _x86_64
+#define _alloca(s) __builtin_alloca(s)
+#endif
 
 /*** Atomic operations ***/
 
