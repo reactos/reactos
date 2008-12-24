@@ -56,6 +56,49 @@ FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
 
 DWORD
 FASTCALL
+IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
+{
+  PDC pdc;
+  PDC_ATTR pDc_Attr;
+  PTEXTOBJ TextObj;
+  SIZE sz;
+  TMW_INTERNAL tmwi;
+  BOOL Good;
+
+  static const WCHAR alphabet[] = {
+        'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q',
+        'r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H',
+        'I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',0};
+
+  if(!ftGdiGetTextMetricsW(hdc, &tmwi)) return 0;
+
+  pdc = DC_LockDc(hdc);
+
+  if (!pdc) return 0;
+
+  pDc_Attr = pdc->pDc_Attr;
+  if(!pDc_Attr) pDc_Attr = &pdc->Dc_Attr;
+
+  TextObj = RealizeFontInit(pDc_Attr->hlfntNew);
+  if ( !TextObj )
+  {
+     DC_UnlockDc(pdc);
+     return 0;
+  }
+  Good = TextIntGetTextExtentPoint(pdc, TextObj, alphabet, 52, 0, NULL, 0, &sz);
+  TEXTOBJ_UnlockText(TextObj);
+  DC_UnlockDc(pdc);
+
+  if (!Good) return 0;
+  if (ptm) *ptm = tmwi.TextMetric;
+  if (height) *height = tmwi.TextMetric.tmHeight;
+
+  return (sz.cx / 26 + 1) / 2;
+}
+
+
+DWORD
+FASTCALL
 IntGetFontLanguageInfo(PDC Dc)
 {
   PDC_ATTR Dc_Attr;

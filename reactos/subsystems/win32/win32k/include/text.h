@@ -106,6 +106,7 @@ BOOL FASTCALL ftGdiRealizationInfo(PFONTGDI,PREALIZATION_INFO);
 DWORD FASTCALL ftGdiGetKerningPairs(PFONTGDI,DWORD,LPKERNINGPAIR);
 BOOL NTAPI GreExtTextOutW(IN HDC,IN INT,IN INT,IN UINT,IN OPTIONAL LPRECT,
     IN LPWSTR, IN INT, IN OPTIONAL LPINT, IN DWORD);
+DWORD FASTCALL IntGetCharDimensions(HDC, PTEXTMETRICW, PDWORD);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)
