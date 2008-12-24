@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="riched32_winetest" type="win32cui" installbase="bin" installname="riched32_winetest.exe" allowwarnings="true">
+	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="riched32_winetest">.</include>
 	<file>editor.c</file>
 	<file>testlist.c</file>

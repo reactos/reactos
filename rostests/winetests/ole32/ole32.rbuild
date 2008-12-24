@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="ole32_winetest" type="win32cui" installbase="bin" installname="ole32_winetest.exe" allowwarnings="true">
+	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="ole32_winetest">.</include>
 	<file>clipboard.c</file>
 	<file>compobj.c</file>

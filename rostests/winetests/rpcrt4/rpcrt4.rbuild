@@ -8,6 +8,7 @@
 		<file>server.idl</file>
 	</module>
 	<module name="rpcrt4_winetest" type="win32cui" installbase="bin" installname="rpcrt4_winetest.exe" allowwarnings="true">
+		<compilerflag compiler="cc">-Wno-format</compilerflag>
 		<include base="rpcrt4_winetest">.</include>
 		<include root="intermediate" base="rpcrt4_winetest">.</include>
 		<define name="__USE_W32API" />
