@@ -52,6 +52,10 @@
 #define ioctlsocket ioctl
 #endif /* __MINGW32__ */
 
+/* ReactOS-specific definitions */
+#undef CP_UNIXCP
+#define CP_UNIXCP   CP_THREAD_ACP
+
 /* used for netconnection.c stuff */
 typedef struct
 {
