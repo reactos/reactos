@@ -44,29 +44,11 @@
 static PAGED_LOOKASIDE_LIST gProcessLookasideList;
 static LIST_ENTRY gCurIconList;
 
-/* Look up the location of the cursor in the GDIDEVICE structure
- * when all we know is the window station object
- * Actually doesn't use the window station, but should... */
 BOOL FASTCALL
 IntGetCursorLocation(PWINSTATION_OBJECT WinSta, POINT *loc)
 {
-   HDC hDC;
-   PDC dc;
-   GDIDEVICE *GDIDevice;
-
-#if 1
-   /* FIXME - get the screen dc from the window station or desktop */
-   if (!(hDC = IntGetScreenDC()))
-      return FALSE;
-#endif
-
-   if (!(dc = DC_LockDc(hDC)))
-      return FALSE;
-   GDIDevice = (GDIDEVICE *)dc->pPDev;
-   DC_UnlockDc(dc);
-
-   loc->x = GDIDevice->Pointer.Pos.x;
-   loc->y = GDIDevice->Pointer.Pos.y;
+   loc->x = gpsi->ptCursor.x;
+   loc->y = gpsi->ptCursor.y;
 
    return TRUE;
 }
@@ -259,8 +241,8 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
             SurfObj, soMask, soColor, XlateObj,
             NewCursor->IconInfo.xHotspot,
             NewCursor->IconInfo.yHotspot,
-            GDIDEV(SurfObj)->Pointer.Pos.x,
-            GDIDEV(SurfObj)->Pointer.Pos.y,
+            gpsi->ptCursor.x,
+            gpsi->ptCursor.y,
             &(GDIDEV(SurfObj)->Pointer.Exclude),
             SPS_CHANGE);
       DPRINT("SetCursor: DrvSetPointerShape() returned %x\n",
@@ -277,8 +259,8 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
                                            SurfObj, soMask, soColor, XlateObj,
                                            NewCursor->IconInfo.xHotspot,
                                            NewCursor->IconInfo.yHotspot,
-                                           GDIDEV(SurfObj)->Pointer.Pos.x,
-                                           GDIDEV(SurfObj)->Pointer.Pos.y,
+                                           gpsi->ptCursor.x,
+                                           gpsi->ptCursor.y,
                                            &(GDIDEV(SurfObj)->Pointer.Exclude),
                                            SPS_CHANGE);
       GDIDEV(SurfObj)->Pointer.MovePointer = NULL;
