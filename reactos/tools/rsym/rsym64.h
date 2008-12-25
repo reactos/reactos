@@ -132,7 +132,7 @@ typedef struct _C_SCOPE_TABLE_ENTRY
 typedef struct _C_SCOPE_TABLE
 {
     ULONG NumEntries;
-    C_SCOPE_TABLE_ENTRY Table[1];
+    C_SCOPE_TABLE_ENTRY Entry[1];
 } C_SCOPE_TABLE, *PC_SCOPE_TABLE;
 
 

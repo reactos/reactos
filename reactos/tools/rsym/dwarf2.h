@@ -812,6 +812,15 @@ typedef struct
     char *Instructions;
 } DW2FDE, *PDW2FDE;
 
+typedef struct _SEHBLOCK
+{
+    unsigned long BeginTry;
+    unsigned long EndTry;
+    unsigned long Target;
+    unsigned long Handler;
+    unsigned long End;
+} SEHBLOCK, *PSEHBLOCK;
+
 typedef struct _CFSTATE
 {
     unsigned long Location;
@@ -823,6 +832,9 @@ typedef struct _CFSTATE
     long Offset;
     unsigned long IsUwop;
     unsigned long Scope;
+    unsigned long cScopes;
+    unsigned long TryLevel;
+    SEHBLOCK SehBlock[20];
 } DW2CFSTATE, *PDW2CFSTATE;
 
 #define NextCIE(p) ((void*)((char*)p + p->Length + 4))

@@ -154,11 +154,15 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
             break;
         case DW_CFA_advance_loc2:
             Length = 3;
+//            printf("Found a DW_CFA_advance_loc2 : 0x%lx ->", *(WORD*)(pc + 1));
             State->Location += *(WORD*)(pc + 1);
+//            printf(" 0x%lx\n", State->Location);
             break;
         case DW_CFA_advance_loc4:
             Length = 5;
+//            printf("Found a DW_CFA_advance_loc4 : 0x%lx ->", *(DWORD*)(pc + 1));
             State->Location += *(DWORD*)(pc + 1);
+//            printf(" 0x%lx\n", State->Location);
             break;
         case DW_CFA_offset_extended:
             Length += DwDecodeUleb128(&State->Reg, pc + Length);
@@ -212,19 +216,78 @@ DwExecIntruction(PDW2CFSTATE State, char *pc)
             Length += DwDecodeUleb128(&argsize, pc + Length);
             break;
         }
-        /* PSEH types */
-        case 0x1c:
-            printf("found 1c at %lx\n", State->Location);
-            State->Scope = 1;
+        /* PSEH */
+        case 0x21:
+        {
+            unsigned long SehType;
+
+//            printf("found 0x21 at %lx\n", State->Location);
+            Length += DwDecodeUleb128(&SehType, pc + Length);
+            switch (SehType)
+            {
+                case 1: /* Begin Try */
+                    State->TryLevel++;
+                    if (State->TryLevel >= 20)
+                    {
+                        printf("WTF? Trylevel of 20 exceeded...\n");
+                        exit(1);
+                    }
+                    State->SehBlock[State->TryLevel-1].BeginTry = State->Location;
+//                    printf("Found begintry at 0x%lx\n", State->Location);
+                    State->Scope = 1;
+                    break;
+
+                case 2: /* End Try */
+                    State->SehBlock[State->TryLevel-1].EndTry = State->Location;
+                    State->Scope = 2;
+                    break;
+
+                case 3: /* Jump target */
+                    State->SehBlock[State->TryLevel-1].Target = State->Location;
+                    State->Scope = 3;
+                    break;
+
+                case 4: /* SEH End */
+                    if (State->TryLevel == 20)
+                    {
+                        printf("Ooops, end of SEH with trylevel at 0!\n");
+                        exit(1);
+                    }
+                    State->SehBlock[State->TryLevel-1].End = State->Location;
+                    State->TryLevel--;
+                    State->cScopes++;
+                    State->Scope = 0;
+                    break;
+
+                case 5: /* Constant filter */
+                {
+                    unsigned long value;
+                    Length += DwDecodeUleb128(&value, pc + Length);
+                    State->SehBlock[State->TryLevel-1].Handler = value;
+//                     printf("Found a constant filter at 0x%lx\n", State->Location);
+                    break;
+                }
+
+               /* These work differently. We are in a new function.
+                 * We have to parse a lea opcode to find the adress of
+                 * the jump target. This is the reference to find the 
+                 * appropriate C_SCOPE_TABLE. */
+                case 6: /* Filter func */
+//                    printf("Found a filter func at 0x%lx\n", State->Location);
+                    break;
+
+                case 7: /* Finally func */
+                {
+//                     printf("Found a finally func at 0x%lx\n", State->Location);
+                    break;
+                }
+
+                default:
+                    printf("Found unknow PSEH code 0x%lx\n", SehType);
+                    exit(1);
+            }
             break;
-        case 0x1d:
-            printf("found 1d at %lx\n", State->Location);
-            State->Scope = 2;
-            break;
-        case 0x1e:
-            printf("found 1e at %lx\n", State->Location);
-            State->Scope = 3;
-            break;
+        }
         default:
             fprintf(stderr, "unknown instruction 0x%x at 0x%p\n", Code, pc);
             exit(1);
@@ -346,6 +409,8 @@ StoreUnwindInfo(PUNWIND_INFO Info, PDW2FDE pFde, ULONG FunctionStart)
     /* Initialize state */
     State.Location = FunctionStart;
     State.FramePtr = 0;
+    State.TryLevel = 0;
+    State.cScopes = 0;
 
     /* Parse the CIE's initial instructions */
     pInst = Cie.Instructions;
@@ -369,6 +434,37 @@ StoreUnwindInfo(PUNWIND_INFO Info, PDW2FDE pFde, ULONG FunctionStart)
     }
     cbSize = ROUND_UP(cbSize, 4);
 
+    /* Do we have scope table to write? */
+    if (State.cScopes > 0)
+    {
+        unsigned long i;
+        ULONG *pExceptionHandler;
+        PC_SCOPE_TABLE pScopeTable;
+
+        /* Set flag for exception handler */ 
+        Info->Flags |= UNW_FLAG_EHANDLER;
+
+        /* Store address of handler and number of scope tables */
+        pExceptionHandler = (ULONG*)((char*)Info + cbSize);
+        // HACK for testing purpose
+        *pExceptionHandler = FunctionStart; // _C_specific_handler
+
+        pScopeTable = (PC_SCOPE_TABLE)(pExceptionHandler + 1);
+        pScopeTable->NumEntries = State.cScopes;
+
+        /* Store the scope table entries */
+        for (i = 0; i < State.cScopes; i++)
+        {
+            pScopeTable->Entry[i].Begin = State.SehBlock[i].BeginTry;
+            pScopeTable->Entry[i].End = State.SehBlock[i].EndTry;
+            pScopeTable->Entry[i].Handler = 1;//State.SehBlock[i].Handler;
+            pScopeTable->Entry[i].Target = State.SehBlock[i].Target;
+        }
+        
+        /* Update size */
+        cbSize += 8 + State.cScopes * sizeof(C_SCOPE_TABLE_ENTRY);
+    }
+
     return cbSize;
 }
 
@@ -384,6 +480,7 @@ CountUnwindData(PFILE_INFO File)
     File->cScopes = 0;
     File->cUWOP = 0;
     State.FramePtr = 0;
+    State.TryLevel = 0;
 
     p = File->eh_frame.p;
     pmax = (char*)p + File->eh_frame.psh->Misc.VirtualSize;
