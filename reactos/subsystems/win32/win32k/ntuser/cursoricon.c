@@ -778,39 +778,16 @@ NtUserGetCursorInfo(
    CURSORINFO SafeCi;
    PSYSTEM_CURSORINFO CurInfo;
    PWINSTATION_OBJECT WinSta;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;;
    PCURICON_OBJECT CurIcon;
-   HDC hDC;
+   BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserGetCursorInfo\n");
    UserEnterExclusive();
 
-#if 1
-
-
-   /* FIXME - get the screen dc from the window station or desktop */
-   if (!(hDC = IntGetScreenDC()))
-   {
-      RETURN( FALSE);
-   }
-#endif
-
-   Status = MmCopyFromCaller(&SafeCi.cbSize, pci, sizeof(DWORD));
-   if(!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( FALSE);
-   }
-
-   if(SafeCi.cbSize != sizeof(CURSORINFO))
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      RETURN( FALSE);
-   }
-
    WinSta = IntGetWinStaObj();
-   if(WinSta == NULL)
+   if (WinSta == NULL)
    {
       RETURN( FALSE);
    }
@@ -823,16 +800,31 @@ NtUserGetCursorInfo(
 
    IntGetCursorLocation(WinSta, &SafeCi.ptScreenPos);
 
-   Status = MmCopyToCaller(pci, &SafeCi, sizeof(CURSORINFO));
-   if(!NT_SUCCESS(Status))
+   _SEH2_TRY
    {
-      ObDereferenceObject(WinSta);
+      if (pci->cbSize == sizeof(CURSORINFO))
+      {
+         ProbeForWrite(pci, sizeof(CURSORINFO), 1);
+         RtlCopyMemory(pci, &SafeCi, sizeof(CURSORINFO));
+         Ret = TRUE;
+      }
+      else
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      }
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
+   if (!NT_SUCCESS(Status))
+   {
       SetLastNtError(Status);
-      RETURN( FALSE);
    }
 
    ObDereferenceObject(WinSta);
-   RETURN( TRUE);
+   RETURN(Ret);
 
 CLEANUP:
    DPRINT("Leave NtUserGetCursorInfo, ret=%i\n",_ret_);

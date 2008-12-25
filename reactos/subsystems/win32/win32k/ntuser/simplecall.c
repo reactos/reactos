@@ -404,6 +404,8 @@ NtUserCallOneParam(
       {
           BOOL Ret = TRUE;
           PPOINTL pptl;
+          PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+          if (pti->hDesktop != InputDesktopHandle) RETURN(FALSE);
           _SEH2_TRY
           {
              pptl = (PPOINTL)Param;
