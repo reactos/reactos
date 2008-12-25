@@ -412,6 +412,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
    ULONG HeaderSize;
    ULONG ColorCount;
    PVOID Data;
+   BOOL Hit = FALSE;
 
    if (!(fuLoad & LR_LOADFROMFILE))
    {
@@ -470,8 +471,26 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
          UnmapViewOfFile(BitmapInfo);
       return NULL;
    }
-   memcpy(PrivateInfo, BitmapInfo, HeaderSize);
 
+   _SEH2_TRY
+   {
+   memcpy(PrivateInfo, BitmapInfo, HeaderSize);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Hit = TRUE;
+   }
+   _SEH2_END;
+
+   if (Hit)
+   {
+      DbgPrint("We have a thread overrun, these are already freed! pi -> %d bi -> %d\n", PrivateInfo, BitmapInfo);
+      RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
+      if (fuLoad & LR_LOADFROMFILE)
+         UnmapViewOfFile(BitmapInfo);
+      return NULL;
+   }
+   
    /* FIXME: Handle color conversion and transparency. */
 
    hScreenDc = CreateCompatibleDC(NULL);
