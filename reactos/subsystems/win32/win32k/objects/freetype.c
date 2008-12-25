@@ -3776,7 +3776,7 @@ cleanup:
         ExFreePoolWithTag(Buffer, TAG_GDITEXT);
     }
 
-    return Result;;
+    return Result;
 }
 
 

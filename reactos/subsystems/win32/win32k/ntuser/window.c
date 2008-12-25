@@ -3133,7 +3133,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status;
-   PW32THREADINFO ti;;
+   PW32THREADINFO ti;
 
    DPRINT("Enter NtUserSetShellWindowEx\n");
    UserEnterExclusive();

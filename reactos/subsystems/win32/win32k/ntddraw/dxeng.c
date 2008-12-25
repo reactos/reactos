@@ -585,7 +585,7 @@ BOOLEAN
 APIENTRY
 DxEngReferenceHdev(HDEV hDev)
 {
-    IntGdiReferencePdev((PGDIDEVICE) hDev);;
+    IntGdiReferencePdev((PGDIDEVICE) hDev);
     /* ALWAYS return true */
     return TRUE;
 }

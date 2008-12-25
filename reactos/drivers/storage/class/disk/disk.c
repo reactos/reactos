@@ -1923,7 +1923,7 @@ Return Value:
             break;
         }
 
-        length += (sizeof(SENDCMDOUTPARAMS) > sizeof(SENDCMDINPARAMS)) ? sizeof(SENDCMDOUTPARAMS) : sizeof(SENDCMDINPARAMS);;
+        length += (sizeof(SENDCMDOUTPARAMS) > sizeof(SENDCMDINPARAMS)) ? sizeof(SENDCMDOUTPARAMS) : sizeof(SENDCMDINPARAMS);
         srbControl = ExAllocatePool(NonPagedPool,
                                     sizeof(SRB_IO_CONTROL) + length);
 

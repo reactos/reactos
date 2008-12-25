@@ -1487,7 +1487,7 @@ HalpCopyBufferMap(
        */
       /* FIXME: The correct bug check code isn't defined. */
       /* KEBUGCHECKEX(HAL_MEMORY_ALLOCATION, PAGE_SIZE, 0, (ULONG_PTR)__FILE__, 0); */
-      ASSERT(FALSE);;
+      ASSERT(FALSE);
    }
 
    CurrentAddress = (ULONG_PTR)VirtualAddress +

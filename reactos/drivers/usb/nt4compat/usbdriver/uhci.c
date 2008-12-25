@@ -2783,7 +2783,7 @@ uhci_insert_urb_schedule(PUHCI_DEV uhci, PURB urb)
             uhci->fsbr_cnt++;
             if (uhci->fsbr_cnt == 1)
             {
-                uhci->skel_term_qh->link = uhci->skel_hs_control_qh->phy_addr;;
+                uhci->skel_term_qh->link = uhci->skel_hs_control_qh->phy_addr;
             }
 
             return TRUE;

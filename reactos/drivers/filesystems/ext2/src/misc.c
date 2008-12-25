@@ -1411,7 +1411,7 @@ PLARGE_INTEGER			AllocationSize )
 	PtrVCB->CommonVCBHeader.IsFastIoPossible = FastIoIsNotPossible;
 	
 	PtrVCB->CommonVCBHeader.Resource = &(PtrVCB->VCBResource);
-	PtrVCB->CommonVCBHeader.PagingIoResource = &(PtrVCB->PagingIoResource);;
+	PtrVCB->CommonVCBHeader.PagingIoResource = &(PtrVCB->PagingIoResource);
 
 	// Create a stream file object for this volume.
 	PtrVCB->PtrStreamFileObject = IoCreateStreamFileObject(NULL,

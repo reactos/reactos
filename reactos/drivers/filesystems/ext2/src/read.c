@@ -1045,7 +1045,7 @@ BOOLEAN						FirstAttempt )
 						Ext2BreakPoint();
 					}
 
-					PtrIoRuns[ Index ].LogicalBlock = PtrTIArray[ IBlockIndex ].PtrSIBlocks[ BlockIndex ];;
+					PtrIoRuns[ Index ].LogicalBlock = PtrTIArray[ IBlockIndex ].PtrSIBlocks[ BlockIndex ];
 					DbgPrint( "LogicalBlock = 0x%lX", PtrIoRuns[ Index ].LogicalBlock );
 				}
 

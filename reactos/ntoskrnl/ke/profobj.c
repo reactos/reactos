@@ -54,7 +54,7 @@ KeStartProfile(PKPROFILE Profile,
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT SourceBuffer;
     PKPROFILE_SOURCE_OBJECT CurrentSource;
-    BOOLEAN FreeBuffer = TRUE, SourceFound = FALSE;;
+    BOOLEAN FreeBuffer = TRUE, SourceFound = FALSE;
     PKPROCESS ProfileProcess;
     PLIST_ENTRY NextEntry;
 

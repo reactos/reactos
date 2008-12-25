@@ -579,7 +579,7 @@ PtrExt2CCB					PtrCCB)
 					//	BothDirInformation->ShortName[ j ] = PtrDirEntry->name[j];
 					BothDirInformation->FileName[ j ] = PtrDirEntry->name[j];
 					//	if( j < 11 )
-					//		BothDirInformation->ShortName[j] = PtrDirEntry->name[j];;
+					//		BothDirInformation->ShortName[j] = PtrDirEntry->name[j];
 				}
 
 				/*
