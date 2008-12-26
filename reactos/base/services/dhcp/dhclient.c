@@ -2056,7 +2056,7 @@ ipv4addrs(char * buf)
     note("Input: %s", buf);
 
     do {
-        tmp = strtok(buf, ".");
+        tmp = strtok(buf, " ");
         note("got %s", tmp);
 		if( tmp && inet_aton(tmp, &jnk) ) i++;
         buf = NULL;
