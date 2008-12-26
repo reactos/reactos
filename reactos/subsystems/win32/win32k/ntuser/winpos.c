@@ -1324,6 +1324,8 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    ASSERT_REFS_CO(Window);
    Wnd = Window->Wnd;
 
+   if (!Wnd) return FALSE;
+   
    WasVisible = (Wnd->Style & WS_VISIBLE) != 0;
 
    switch (Cmd)
