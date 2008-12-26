@@ -161,9 +161,8 @@ NormalizeFilename ( const string& filename )
 {
 	if ( filename == "" )
 		return "";
-	Path path;
-	string normalizedPath = path.Fixup ( filename, true );
-	string relativeNormalizedPath = path.RelativeFromWorkingDirectory ( normalizedPath );
+	string normalizedPath = defaultPath.Fixup ( filename, true );
+	string relativeNormalizedPath = defaultPath.RelativeFromWorkingDirectory ( normalizedPath );
 	return FixSeparator ( relativeNormalizedPath );
 }
 

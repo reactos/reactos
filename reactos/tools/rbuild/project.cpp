@@ -25,6 +25,8 @@
 using std::string;
 using std::vector;
 
+const Path defaultPath;
+
 /* static */ string
 Environment::GetVariable ( const string& name )
 {
@@ -259,8 +261,7 @@ Project::ExecuteInvocations ()
 void
 Project::ReadXml ()
 {
-	Path path;
-	head = XMLLoadFile ( xmlfile, path, xmlbuildfiles );
+	head = XMLLoadFile ( xmlfile, defaultPath, xmlbuildfiles );
 	node = NULL;
 	for ( size_t i = 0; i < head->subElements.size (); i++ )
 	{
