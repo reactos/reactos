@@ -250,8 +250,7 @@ PIP_PACKET ReassembleDatagram(
 __inline VOID Cleanup(
   PKSPIN_LOCK Lock,
   KIRQL OldIrql,
-  PIPDATAGRAM_REASSEMBLY IPDR,
-  PVOID Buffer OPTIONAL)
+  PIPDATAGRAM_REASSEMBLY IPDR)
 /*
  * FUNCTION: Performs cleaning operations on errors
  * ARGUMENTS:
@@ -266,8 +265,6 @@ __inline VOID Cleanup(
   TcpipReleaseSpinLock(Lock, OldIrql);
   RemoveIPDR(IPDR);
   FreeIPDR(IPDR);
-  if (Buffer)
-    exFreePool(Buffer);
 }
 
 
@@ -375,7 +372,8 @@ VOID ProcessFragment(
       NewHole = CreateHoleDescriptor(Hole->First, FragLast - 1);
       if (!NewHole) {
         /* We don't have the resources to process this packet, discard it */
-        Cleanup(&IPDR->Lock, OldIrql, IPDR, Hole);
+        exFreeToNPagedLookasideList(&IPHoleList, Hole);
+        Cleanup(&IPDR->Lock, OldIrql, IPDR);
         return;
       }
 
@@ -385,9 +383,9 @@ VOID ProcessFragment(
 
     if ((FragLast < Hole->Last) && (MoreFragments)) {
       /* We can reuse the descriptor for the new hole */
-		  Hole->First = FragLast + 1;
+      Hole->First = FragLast + 1;
 
-		  /* Put the new hole descriptor in the list */
+      /* Put the new hole descriptor in the list */
       InsertTailList(&IPDR->HoleListHead, &Hole->ListEntry);
     } else
       exFreeToNPagedLookasideList(&IPHoleList, Hole);
@@ -407,7 +405,7 @@ VOID ProcessFragment(
     Fragment = exAllocateFromNPagedLookasideList(&IPFragmentList);
     if (!Fragment) {
       /* We don't have the resources to process this packet, discard it */
-      Cleanup(&IPDR->Lock, OldIrql, IPDR, NULL);
+      Cleanup(&IPDR->Lock, OldIrql, IPDR);
       return;
     }
 
@@ -417,7 +415,8 @@ VOID ProcessFragment(
     Fragment->Data = exAllocatePool(NonPagedPool, Fragment->Size);
     if (!Fragment->Data) {
       /* We don't have the resources to process this packet, discard it */
-      Cleanup(&IPDR->Lock, OldIrql, IPDR, Fragment);
+      exFreeToNPagedLookasideList(&IPFragmentList, Fragment);
+      Cleanup(&IPDR->Lock, OldIrql, IPDR);
       return;
     }
 
