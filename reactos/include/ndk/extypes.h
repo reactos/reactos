@@ -861,8 +861,8 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     // NOTE: *NOT* THE SAME AS VM_COUNTERS!
     //
     SIZE_T PeakVirtualSize;
-    ULONG VirtualSize;
-    SIZE_T PageFaultCount;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
     SIZE_T PeakWorkingSetSize;
     SIZE_T WorkingSetSize;
     SIZE_T QuotaPeakPagedPoolUsage;
