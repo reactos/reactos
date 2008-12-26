@@ -121,7 +121,7 @@ IoBuildPartialMdl(IN PMDL SourceMdl,
     Length = ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress, Length);
 
     /* Set the MDL Flags */
-    TargetMdl->MdlFlags = (MDL_ALLOCATED_FIXED_SIZE | MDL_ALLOCATED_MUST_SUCCEED);
+    TargetMdl->MdlFlags &= (MDL_ALLOCATED_FIXED_SIZE | MDL_ALLOCATED_MUST_SUCCEED);
     TargetMdl->MdlFlags |= SourceMdl->MdlFlags & FlagsMask;
     TargetMdl->MdlFlags |= MDL_PARTIAL;
 
