@@ -51,7 +51,6 @@ extern std::string sSep;
 extern std::string sBadSep;
 extern char cSep;
 extern char cBadSep;
-extern const Path defaultPath;
 
 #ifdef WIN32
 #define DEF_EXEPREFIX ""
