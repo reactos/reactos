@@ -34,7 +34,7 @@ IntInt10AllocateBuffer(
 {
    PVOID MemoryAddress;
    NTSTATUS Status;
-   PKPROCESS CallingProcess;
+   PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
    KAPC_STATE ApcState;
 
    TRACE_(VIDEOPRT, "IntInt10AllocateBuffer\n");
@@ -81,7 +81,7 @@ IntInt10FreeBuffer(
 {
    PVOID MemoryAddress = (PVOID)((Seg << 4) | Off);
    NTSTATUS Status;
-   PKPROCESS CallingProcess;
+   PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
    KAPC_STATE ApcState;
 
    TRACE_(VIDEOPRT, "IntInt10FreeBuffer\n");
@@ -104,7 +104,7 @@ IntInt10ReadMemory(
    OUT PVOID Buffer,
    IN ULONG Length)
 {
-   PKPROCESS CallingProcess;
+   PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
    KAPC_STATE ApcState;
 
    TRACE_(VIDEOPRT, "IntInt10ReadMemory\n");
@@ -128,7 +128,7 @@ IntInt10WriteMemory(
    IN PVOID Buffer,
    IN ULONG Length)
 {
-   PKPROCESS CallingProcess;
+   PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
    KAPC_STATE ApcState;
 
    TRACE_(VIDEOPRT, "IntInt10WriteMemory\n");
@@ -152,7 +152,7 @@ IntInt10CallBios(
 {
     CONTEXT BiosContext;
     NTSTATUS Status;
-    PKPROCESS CallingProcess;
+    PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     KAPC_STATE ApcState;
 
     /* Attach to CSRSS */
@@ -204,7 +204,7 @@ VideoPortInt10(
 {
    KV86M_REGISTERS Regs;
    NTSTATUS Status;
-   PKPROCESS CallingProcess;
+   PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
    KAPC_STATE ApcState;
 
    TRACE_(VIDEOPRT, "VideoPortInt10\n");
