@@ -24,6 +24,8 @@
 using std::string;
 using std::vector;
 
+static const Path defaultPath;
+
 string
 Right ( const string& s, size_t n )
 {
@@ -161,8 +163,9 @@ NormalizeFilename ( const string& filename )
 {
 	if ( filename == "" )
 		return "";
-	string normalizedPath = defaultPath.Fixup ( filename, true );
-	string relativeNormalizedPath = defaultPath.RelativeFromWorkingDirectory ( normalizedPath );
+	Path path;
+	string normalizedPath = path.Fixup ( filename, true );
+	string relativeNormalizedPath = path.RelativeFromWorkingDirectory ( normalizedPath );
 	return FixSeparator ( relativeNormalizedPath );
 }
 
