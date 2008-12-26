@@ -5,6 +5,7 @@
 		<include base="kernel32_base">.</include>
 		<include base="kernel32_base">include</include>
 		<include base="ReactOS">include/reactos/subsys</include>
+		<define name="_KERNEL32_" />
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_WIN32_WINNT">0x0600</define>
 		<define name="__NO_CTYPE_INLINES" />
@@ -64,6 +65,7 @@
 			<file>collation.c</file>
 			<file>casemap.c</file>
 			<file>comm.c</file>
+			<file>commdcb.c</file>
 			<file>computername.c</file>
 			<file>console.c</file>
 			<file>dllmain.c</file>
