@@ -851,7 +851,8 @@ RtlSetBits(PRTL_BITMAP BitMapHeader,
   }
 
   /* Set remaining bits, if any */
-  *lpOut |= NTDLL_maskBits[NumberToSet & 0x7];
+  if (NumberToSet & 0x7)
+    *lpOut |= NTDLL_maskBits[NumberToSet & 0x7];
 }
 
 
