@@ -38,7 +38,7 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
 
   ME_InitContext(&c, editor, GetDC(editor->hWnd));
 
-  hf = (HFONT)GetStockObject(SYSTEM_FONT);
+  hf = GetStockObject(SYSTEM_FONT);
   assert(hf);
   GetObjectW(hf, sizeof(LOGFONTW), &lf);
   ZeroMemory(&cf, sizeof(cf));

@@ -78,8 +78,7 @@ static void ME_BeginRow(ME_WrapContext *wc, ME_DisplayItem *para)
     wc->bWordWrap = TRUE;
   } else {
     wc->nAvailWidth = wc->context->rcView.right - wc->context->rcView.left
-        - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin
-        - wc->context->editor->selofs;
+        - (wc->nRow ? wc->nLeftMargin : wc->nFirstMargin) - wc->nRightMargin;
   }
   wc->pt.x = wc->context->pt.x;
   if (wc->context->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
@@ -458,7 +457,7 @@ static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
 
 static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp);
 
-static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp, DWORD beginofs) {
+static void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p;
   ME_WrapContext wc;
   int border = 0;
@@ -573,28 +572,26 @@ static void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
   }
 }
 
-BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
+BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
+{
   ME_DisplayItem *item;
   ME_Context c;
   BOOL bModified = FALSE;
   int yStart = -1;
-  int yLastPos = 0;
 
   ME_InitContext(&c, editor, GetDC(editor->hWnd));
-  c.pt.x = editor->selofs;
-  editor->nHeight = 0;
+  c.pt.x = 0;
   item = editor->pBuffer->pFirst->next;
   while(item != editor->pBuffer->pLast) {
     BOOL bRedraw = FALSE;
 
     assert(item->type == diParagraph);
-    editor->nHeight = max(editor->nHeight, item->member.para.pt.y);
     if ((item->member.para.nFlags & MEPF_REWRAP)
      || (item->member.para.pt.y != c.pt.y))
       bRedraw = TRUE;
     item->member.para.pt = c.pt;
 
-    ME_WrapTextParagraph(&c, item, editor->selofs);
+    ME_WrapTextParagraph(&c, item);
 
     if (bRedraw)
     {
@@ -604,8 +601,6 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
     }
 
     bModified = bModified | bRedraw;
-
-    yLastPos = max(yLastPos, c.pt.y);
 
     if (item->member.para.nFlags & MEPF_ROWSTART)
     {
@@ -698,7 +693,8 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
       c.pt.x = cell->pt.x + cell->nWidth;
       c.pt.y = cell->pt.y;
       cell->next_cell->member.cell.pt = c.pt;
-      c.pt.y += cell->yTextOffset;
+      if (!(item->member.para.next_para->member.para.nFlags & MEPF_ROWEND))
+        c.pt.y += cell->yTextOffset;
     }
     else
     {
@@ -707,7 +703,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
         c.pt.x = item->member.para.pCell->member.cell.pt.x;
       } else {
         /* Normal paragraph */
-        c.pt.x = editor->selofs;
+        c.pt.x = 0;
       }
       c.pt.y += item->member.para.nHeight;
     }
@@ -718,17 +714,9 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   
   editor->nTotalLength = c.pt.y;
   editor->pBuffer->pLast->member.para.pt.x = 0;
-  editor->pBuffer->pLast->member.para.pt.y = yLastPos;
+  editor->pBuffer->pLast->member.para.pt.y = c.pt.y;
 
   ME_DestroyContext(&c, editor->hWnd);
-
-  /* Each paragraph may contain multiple rows, which should be scrollable, even
-     if the containing paragraph has pt.y == 0 */
-  item = editor->pBuffer->pFirst;
-  while ((item = ME_FindItemFwd(item, diStartRow)) != NULL) {
-    assert(item->type == diStartRow);
-    editor->nHeight = max(editor->nHeight, item->member.row.pt.y);
-  }
 
   if (bModified || editor->nTotalLength < editor->nLastTotalLength)
     ME_InvalidateMarkedParagraphs(editor);
@@ -749,16 +737,18 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
   item = editor->pBuffer->pFirst;
   while(item != editor->pBuffer->pLast) {
     if (item->member.para.nFlags & MEPF_REPAINT) {
-      rc.top = item->member.para.pt.y - ofs;
-      rc.bottom = item->member.para.pt.y + item->member.para.nHeight - ofs;
+      rc.top = c.rcView.top + item->member.para.pt.y - ofs;
+      rc.bottom = max(c.rcView.top + item->member.para.pt.y
+                      + item->member.para.nHeight - ofs,
+                      c.rcView.bottom);
       InvalidateRect(editor->hWnd, &rc, TRUE);
     }
     item = item->member.para.next_para;
   }
   if (editor->nTotalLength < editor->nLastTotalLength)
   {
-    rc.top = editor->nTotalLength - ofs;
-    rc.bottom = editor->nLastTotalLength - ofs;
+    rc.top = c.rcView.top + editor->nTotalLength - ofs;
+    rc.bottom = c.rcView.top + editor->nLastTotalLength - ofs;
     InvalidateRect(editor->hWnd, &rc, TRUE);
   }
   ME_DestroyContext(&c, editor->hWnd);

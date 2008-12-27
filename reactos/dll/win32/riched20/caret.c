@@ -214,8 +214,9 @@ ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
       }
 
       *height = pSizeRun->member.run.nAscent + pSizeRun->member.run.nDescent;
-      *x = run->member.run.pt.x + sz.cx;
-      *y = para->member.para.pt.y + row->member.row.nBaseline + run->member.run.pt.y - pSizeRun->member.run.nAscent - ME_GetYScrollPos(editor);
+      *x = c.rcView.left + run->member.run.pt.x + sz.cx;
+      *y = c.rcView.top + para->member.para.pt.y + row->member.row.nBaseline
+           + run->member.run.pt.y - pSizeRun->member.run.nAscent - ME_GetYScrollPos(editor);
       ME_DestroyContext(&c, editor->hWnd);
       return;
     }
@@ -236,10 +237,7 @@ ME_MoveCaret(ME_TextEditor *editor)
   ME_GetCursorCoordinates(editor, &editor->pCursors[0], &x, &y, &height);
   if(editor->bHaveFocus && !ME_IsSelection(editor))
   {
-    RECT rect;
-
-    GetClientRect(editor->hWnd, &rect);
-    x = min(x, rect.right-2);
+    x = min(x, editor->rcFormat.right-1);
     CreateCaret(editor->hWnd, NULL, 0, height);
     SetCaretPos(x, y);
   }
@@ -922,6 +920,9 @@ static BOOL ME_FindPixelPos(ME_TextEditor *editor, int x, int y,
   int rx = 0;
   BOOL isExact = TRUE;
 
+  x -= editor->rcFormat.left;
+  y -= editor->rcFormat.top;
+
   if (is_eol)
     *is_eol = 0;
 
@@ -1109,13 +1110,13 @@ void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum)
 
   ME_FindPixelPos(editor, x, y, &editor->pCursors[0], &editor->bCaretAtEnd);
 
-  if (x >= editor->selofs || is_shift)
+  if (x >= editor->rcFormat.left || is_shift)
   {
     if (clickNum > 1)
     {
       editor->pCursors[1] = editor->pCursors[0];
       if (is_shift) {
-          if (x >= editor->selofs)
+          if (x >= editor->rcFormat.left)
               ME_SelectByType(editor, stWord);
           else
               ME_SelectByType(editor, stParagraph);
@@ -1177,16 +1178,10 @@ void ME_MouseMove(ME_TextEditor *editor, int x, int y)
       memcmp(&editor->pCursors[1], &editor->pCursors[3], sizeof(ME_Cursor)))
   {
       /* The scroll the cursor towards the other end, since it was the one
-       * extended by ME_ExtendAnchorSelection
-       */
-      ME_Cursor tmpCursor = editor->pCursors[0];
-      editor->pCursors[0] = editor->pCursors[1];
-      editor->pCursors[1] = tmpCursor;
-      SendMessageW(editor->hWnd, EM_SCROLLCARET, 0, 0);
-      editor->pCursors[1] = editor->pCursors[0];
-      editor->pCursors[0] = tmpCursor;
+       * extended by ME_ExtendAnchorSelection */
+      ME_EnsureVisible(editor, editor->pCursors[1].pRun);
   } else {
-      SendMessageW(editor->hWnd, EM_SCROLLCARET, 0, 0);
+      ME_EnsureVisible(editor, editor->pCursors[0].pRun);
   }
 
   ME_InvalidateSelection(editor);
@@ -1571,11 +1566,9 @@ void ME_SendSelChange(ME_TextEditor *editor)
 
   if (!(editor->nEventMask & ENM_SELCHANGE))
     return;
-  
-  sc.nmhdr.hwndFrom = editor->hWnd;
-  sc.nmhdr.idFrom = GetWindowLongW(editor->hWnd, GWLP_ID);
+
   sc.nmhdr.code = EN_SELCHANGE;
-  SendMessageW(editor->hWnd, EM_EXGETSEL, 0, (LPARAM)&sc.chrg);
+  ME_GetSelection(editor, &sc.chrg.cpMin, &sc.chrg.cpMax);
   sc.seltyp = SEL_EMPTY;
   if (sc.chrg.cpMin != sc.chrg.cpMax)
     sc.seltyp |= SEL_TEXT;

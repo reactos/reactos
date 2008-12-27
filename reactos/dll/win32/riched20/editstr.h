@@ -90,7 +90,7 @@ typedef enum {
   diUndoPotentialEndTransaction, /* 20 - allows grouping typed chars for undo */
 } ME_DIType;
 
-#define SELECTIONBAR_WIDTH 9
+#define SELECTIONBAR_WIDTH 8
 
 /******************************** run flags *************************/
 #define MERF_STYLEFLAGS 0x0FFF
@@ -333,7 +333,6 @@ typedef struct tagME_TextEditor
   int nCursors;
   SIZE sizeWindow;
   int nTotalLength, nLastTotalLength;
-  int nHeight;
   int nUDArrowX;
   int nSequence;
   COLORREF rgbBackColor;
@@ -350,7 +349,9 @@ typedef struct tagME_TextEditor
   ME_DisplayItem *pLastSelStartPara, *pLastSelEndPara;
   ME_FontCacheItem pFontCache[HFONT_CACHE_SIZE];
   int nZoomNumerator, nZoomDenominator;
+  RECT prevClientRect;
   RECT rcFormat;
+  BOOL bDefaultFormatRect;
   BOOL bWordWrap;
   int nInvalidOfs;
   int nTextLimit;

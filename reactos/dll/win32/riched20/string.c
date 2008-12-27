@@ -342,7 +342,7 @@ ME_CallWordBreakProc(ME_TextEditor *editor, ME_String *str, INT start, INT code)
     int result;
     int buffer_size = WideCharToMultiByte(CP_ACP, 0, str->szData, str->nLen,
                                           NULL, 0, NULL, NULL);
-    char *buffer = (char*)heap_alloc(buffer_size);
+    char *buffer = heap_alloc(buffer_size);
     WideCharToMultiByte(CP_ACP, 0, str->szData, str->nLen,
                         buffer, buffer_size, NULL, NULL);
     result = editor->pfnWordBreak(str->szData, start, str->nLen, code);

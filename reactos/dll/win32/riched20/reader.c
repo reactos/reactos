@@ -673,7 +673,7 @@ static void _RTFGetToken2(RTF_Info *info)
 		}
 
 		/* escaped char */
-		/*if (index (":{}\\", c) != (char *) NULL)*/ /* escaped char */
+		/*if (index (":{}\\", c) != NULL)*/ /* escaped char */
 		if (c == ':' || c == '{' || c == '}' || c == '\\')
 		{
 			info->rtfClass = rtfText;
@@ -2289,7 +2289,7 @@ static RTFKey	rtfKey[] =
 	{ rtfVersion,	-1,			"rtf",		0 },
 	{ rtfDefFont,	-1,			"deff",		0 },
 
-	{ 0,		-1,			(char *) NULL,	0 }
+	{ 0,		-1,			NULL,		0 }
 };
 #define RTF_KEY_COUNT (sizeof(rtfKey) / sizeof(RTFKey))
 
@@ -2326,7 +2326,7 @@ void LookupInit(void)
 
 void LookupCleanup(void)
 {
-	int i;
+	unsigned int i;
 
 	for (i=0; i<RTF_KEY_COUNT*2; i++)
 	{

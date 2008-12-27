@@ -692,7 +692,7 @@ static SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run 
       {
         pos += lDefaultTab - (pos % lDefaultTab);
       }
-      ppos = ME_twips2pointsX(c, pos) + c->editor->selofs;
+      ppos = ME_twips2pointsX(c, pos);
       if (ppos > startx + run->pt.x) {
         size.cx = ppos - startx - run->pt.x;
         break;
@@ -813,7 +813,7 @@ void ME_SetCharFormat(ME_TextEditor *editor, int nOfs, int nChars, CHARFORMAT2W 
       undo->nStart = tmp.pRun->member.run.nCharOfs+para->member.para.nCharOfs;
       undo->nLen = tmp.pRun->member.run.strText->nLen;
       undo->di.member.ustyle = tmp.pRun->member.run.style;
-      /* we'd have to addref undo..ustyle and release tmp...style
+      /* we'd have to addref undo...ustyle and release tmp...style
          but they'd cancel each other out so we can do nothing instead */
     }
     else
@@ -872,8 +872,6 @@ static void ME_GetRunCharFormat(ME_TextEditor *editor, ME_DisplayItem *run, CHAR
  */     
 void ME_GetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt)
 {
-  int nFrom, nTo;
-  ME_GetSelection(editor, &nFrom, &nTo);
   ME_CopyCharFormat(pFmt, &editor->pBuffer->pDefaultStyle->fmt);
 }
 
