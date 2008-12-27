@@ -462,7 +462,7 @@ static cab_ULONG fci_get_checksum(const void *pv, UINT cb, CHECKSUM seed)
     case 2:
       ul |= (((ULONG)(*pb++)) <<  8);
     case 1:
-      ul |= *pb++;
+      ul |= *pb;
     default:
       break;
   }

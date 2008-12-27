@@ -911,6 +911,7 @@ static int LZXfdi_init(int window, fdi_decomp_state *decomp_state) {
 static int NONEfdi_decomp(int inlen, int outlen, fdi_decomp_state *decomp_state)
 {
   if (inlen != outlen) return DECR_ILLEGALDATA;
+  if (outlen > CAB_BLOCKMAX) return DECR_DATAFORMAT;
   memcpy(CAB(outbuf), CAB(inbuf), (size_t) inlen);
   return DECR_OK;
 }
@@ -924,7 +925,7 @@ static void fdi_Ziphuft_free(HFDI hfdi, struct Ziphuft *t)
 
   /* Go through linked list, freeing from the allocated (t[-1]) address. */
   p = t;
-  while (p != (struct Ziphuft *)NULL)
+  while (p != NULL)
   {
     q = (--p)->v.t;
     PFDI_FREE(hfdi, p);
@@ -969,7 +970,7 @@ struct Ziphuft **t, cab_LONG *m, fdi_decomp_state *decomp_state)
   } while (--i);
   if (ZIP(c)[0] == n)                /* null input--all zero length codes */
   {
-    *t = (struct Ziphuft *)NULL;
+    *t = NULL;
     *m = 0;
     return 0;
   }
@@ -1017,8 +1018,8 @@ struct Ziphuft **t, cab_LONG *m, fdi_decomp_state *decomp_state)
   p = ZIP(v);                        /* grab values in bit order */
   h = -1;                       /* no tables yet--level -1 */
   w = l[-1] = 0;                /* no bits decoded yet */
-  ZIP(u)[0] = (struct Ziphuft *)NULL;   /* just to keep compilers happy */
-  q = (struct Ziphuft *)NULL;      /* ditto */
+  ZIP(u)[0] = NULL;             /* just to keep compilers happy */
+  q = NULL;                     /* ditto */
   z = 0;                        /* ditto */
 
   /* go through the bit lengths (k already is bits in shortest code) */
@@ -1060,7 +1061,7 @@ struct Ziphuft **t, cab_LONG *m, fdi_decomp_state *decomp_state)
           return 3;             /* not enough memory */
         }
         *t = q + 1;             /* link to list for Ziphuft_free() */
-        *(t = &(q->v.t)) = (struct Ziphuft *)NULL;
+        *(t = &(q->v.t)) = NULL;
         ZIP(u)[h] = ++q;             /* table starts after link */
 
         /* connect to last table, if there is one */
@@ -2258,6 +2259,56 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
   return DECR_OK;
 }
 
+static void free_decompression_temps(HFDI hfdi, struct fdi_folder *fol,
+  fdi_decomp_state *decomp_state)
+{
+  switch (fol->comp_type & cffoldCOMPTYPE_MASK) {
+  case cffoldCOMPTYPE_LZX:
+    if (LZX(window)) {
+      PFDI_FREE(hfdi, LZX(window));
+      LZX(window) = NULL;
+    }
+    break;
+  case cffoldCOMPTYPE_QUANTUM:
+    if (QTM(window)) {
+      PFDI_FREE(hfdi, QTM(window));
+      QTM(window) = NULL;
+    }
+    break;
+  }
+}
+
+static void free_decompression_mem(HFDI hfdi, struct fdi_folder *fol,
+  fdi_decomp_state *decomp_state, struct fdi_file *file)
+{
+  while (decomp_state) {
+    fdi_decomp_state *prev_fds;
+
+    PFDI_CLOSE(hfdi, CAB(cabhf));
+
+    /* free the storage remembered by mii */
+    if (CAB(mii).nextname) PFDI_FREE(hfdi, CAB(mii).nextname);
+    if (CAB(mii).nextinfo) PFDI_FREE(hfdi, CAB(mii).nextinfo);
+    if (CAB(mii).prevname) PFDI_FREE(hfdi, CAB(mii).prevname);
+    if (CAB(mii).previnfo) PFDI_FREE(hfdi, CAB(mii).previnfo);
+
+    while (CAB(firstfol)) {
+      fol = CAB(firstfol);
+      CAB(firstfol) = CAB(firstfol)->next;
+      PFDI_FREE(hfdi, fol);
+    }
+    while (CAB(firstfile)) {
+      file = CAB(firstfile);
+      if (file->filename) PFDI_FREE(hfdi, (void *)file->filename);
+      CAB(firstfile) = CAB(firstfile)->next;
+      PFDI_FREE(hfdi, file);
+    }
+    prev_fds = decomp_state;
+    decomp_state = CAB(next);
+    PFDI_FREE(hfdi, prev_fds);
+  }
+}
+
 /***********************************************************************
  *		FDICopy (CABINET.22)
  *
@@ -2442,8 +2493,7 @@ BOOL __cdecl FDICopy(
   cab_UBYTE         buf[64];
   struct fdi_folder *fol = NULL, *linkfol = NULL; 
   struct fdi_file   *file = NULL, *linkfile = NULL;
-  fdi_decomp_state _decomp_state;
-  fdi_decomp_state *decomp_state = &_decomp_state;
+  fdi_decomp_state *decomp_state;
 
   TRACE("(hfdi == ^%p, pszCabinet == ^%p, pszCabPath == ^%p, flags == %0d, "
         "pfnfdin == ^%p, pfnfdid == ^%p, pvUser == ^%p)\n",
@@ -2454,6 +2504,11 @@ BOOL __cdecl FDICopy(
     return FALSE;
   }
 
+  if (!(decomp_state = PFDI_ALLOC(hfdi, sizeof(fdi_decomp_state))))
+  {
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+  }
   ZeroMemory(decomp_state, sizeof(fdi_decomp_state));
 
   pathlen = (pszCabPath) ? strlen(pszCabPath) : 0;
@@ -2777,7 +2832,7 @@ BOOL __cdecl FDICopy(
 
       if (file->offset > CAB(offset)) {
         /* decode bytes and send them to /dev/null */
-        switch ((err = fdi_decomp(file, 0, decomp_state, pszCabPath, pfnfdin, pvUser))) {
+        switch (fdi_decomp(file, 0, decomp_state, pszCabPath, pfnfdin, pvUser)) {
           case DECR_OK:
             break;
           case DECR_USERABORT:
@@ -2839,99 +2894,18 @@ BOOL __cdecl FDICopy(
     }
   }
 
-  /* free decompression temps */
-  switch (fol->comp_type & cffoldCOMPTYPE_MASK) {
-  case cffoldCOMPTYPE_LZX:
-    if (LZX(window)) {
-      PFDI_FREE(hfdi, LZX(window));
-      LZX(window) = NULL;
-    }
-    break;
-  case cffoldCOMPTYPE_QUANTUM:
-    if (QTM(window)) {
-      PFDI_FREE(hfdi, QTM(window));
-      QTM(window) = NULL;
-    }
-    break;
-  }
-
-  while (decomp_state) {
-    fdi_decomp_state *prev_fds;
-
-    PFDI_CLOSE(hfdi, CAB(cabhf));
-
-    /* free the storage remembered by mii */
-    if (CAB(mii).nextname) PFDI_FREE(hfdi, CAB(mii).nextname);
-    if (CAB(mii).nextinfo) PFDI_FREE(hfdi, CAB(mii).nextinfo);
-    if (CAB(mii).prevname) PFDI_FREE(hfdi, CAB(mii).prevname);
-    if (CAB(mii).previnfo) PFDI_FREE(hfdi, CAB(mii).previnfo);
-
-    while (CAB(firstfol)) {
-      fol = CAB(firstfol);
-      CAB(firstfol) = CAB(firstfol)->next;
-      PFDI_FREE(hfdi, fol);
-    }
-    while (CAB(firstfile)) {
-      file = CAB(firstfile);
-      if (file->filename) PFDI_FREE(hfdi, (void *)file->filename);
-      CAB(firstfile) = CAB(firstfile)->next;
-      PFDI_FREE(hfdi, file);
-    }
-    prev_fds = decomp_state;
-    decomp_state = CAB(next);
-    if (prev_fds != &_decomp_state)
-      PFDI_FREE(hfdi, prev_fds);
-  }
+  free_decompression_temps(hfdi, fol, decomp_state);
+  free_decompression_mem(hfdi, fol, decomp_state, file);
  
   return TRUE;
 
   bail_and_fail: /* here we free ram before error returns */
 
-  /* free decompression temps */
-  switch (fol->comp_type & cffoldCOMPTYPE_MASK) {
-  case cffoldCOMPTYPE_LZX:
-    if (LZX(window)) {
-      PFDI_FREE(hfdi, LZX(window));
-      LZX(window) = NULL;
-    }
-    break;
-  case cffoldCOMPTYPE_QUANTUM:
-    if (QTM(window)) {
-      PFDI_FREE(hfdi, QTM(window));
-      QTM(window) = NULL;
-    }
-    break;
-  }
+  free_decompression_temps(hfdi, fol, decomp_state);
 
   if (filehf) PFDI_CLOSE(hfdi, filehf);
 
-  while (decomp_state) {
-    fdi_decomp_state *prev_fds;
-
-    PFDI_CLOSE(hfdi, CAB(cabhf));
-
-    /* free the storage remembered by mii */
-    if (CAB(mii).nextname) PFDI_FREE(hfdi, CAB(mii).nextname);
-    if (CAB(mii).nextinfo) PFDI_FREE(hfdi, CAB(mii).nextinfo);
-    if (CAB(mii).prevname) PFDI_FREE(hfdi, CAB(mii).prevname);
-    if (CAB(mii).previnfo) PFDI_FREE(hfdi, CAB(mii).previnfo);
-
-    while (CAB(firstfol)) {
-      fol = CAB(firstfol);
-      CAB(firstfol) = CAB(firstfol)->next;
-      PFDI_FREE(hfdi, fol);
-    }
-    while (CAB(firstfile)) {
-      file = CAB(firstfile);
-      if (file->filename) PFDI_FREE(hfdi, (void *)file->filename);
-      CAB(firstfile) = CAB(firstfile)->next;
-      PFDI_FREE(hfdi, file);
-    }
-    prev_fds = decomp_state;
-    decomp_state = CAB(next);
-    if (prev_fds != &_decomp_state)
-      PFDI_FREE(hfdi, prev_fds);
-  }
+  free_decompression_mem(hfdi, fol, decomp_state, file);
 
   return FALSE;
 }
