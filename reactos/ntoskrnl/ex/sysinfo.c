@@ -1368,25 +1368,38 @@ SSI_DEF(SystemUnloadGdiDriverInformation)
 /* Class 28 - Time Adjustment Information */
 QSI_DEF(SystemTimeAdjustmentInformation)
 {
-	if (sizeof (SYSTEM_SET_TIME_ADJUST_INFORMATION) > Size)
-	{
-		* ReqSize = sizeof (SYSTEM_SET_TIME_ADJUST_INFORMATION);
-		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
-	/* FIXME: */
-	DPRINT1("NtQuerySystemInformation - SystemTimeAdjustmentInformation not implemented\n");
-	return (STATUS_NOT_IMPLEMENTED);
+    PSYSTEM_QUERY_TIME_ADJUST_INFORMATION TimeInfo =
+        (PSYSTEM_QUERY_TIME_ADJUST_INFORMATION)Buffer;
+
+    /* Check if enough storage was provided */
+    if (sizeof(SYSTEM_QUERY_TIME_ADJUST_INFORMATION) > Size)
+    {
+        * ReqSize = sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION);
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Give time values to our caller */
+    TimeInfo->TimeIncrement = KeMaximumIncrement;
+    TimeInfo->TimeAdjustment = KeTimeAdjustment;
+    TimeInfo->Enable = TRUE;
+
+    return STATUS_SUCCESS;
 }
 
 SSI_DEF(SystemTimeAdjustmentInformation)
 {
-	if (sizeof (SYSTEM_SET_TIME_ADJUST_INFORMATION) > Size)
-	{
-		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
-	/* FIXME: */
-	DPRINT1("NtSetSystemInformation - SystemTimeAdjustmentInformation not implemented\n");
-	return (STATUS_NOT_IMPLEMENTED);
+    /*PSYSTEM_SET_TIME_ADJUST_INFORMATION TimeInfo =
+        (PSYSTEM_SET_TIME_ADJUST_INFORMATION)Buffer;*/
+
+    /* Check size of a buffer, it must match our expectations */
+    if (sizeof(SYSTEM_SET_TIME_ADJUST_INFORMATION) != Size)
+        return STATUS_INFO_LENGTH_MISMATCH;
+
+    /* TODO: Check privileges */
+
+    /* TODO: Set time adjustment information */
+    DPRINT1("Setting of SystemTimeAdjustmentInformation is not implemented yet!\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* Class 29 - Summary Memory Information */
