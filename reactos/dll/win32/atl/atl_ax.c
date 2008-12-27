@@ -117,7 +117,7 @@ BOOL WINAPI AtlAxWinInit(void)
  */
 
 
-static ULONG WINAPI IOCS_AddRef(IOCS *This)
+static ULONG IOCS_AddRef(IOCS *This)
 {
     ULONG ref = InterlockedIncrement(&This->ref);
 
@@ -132,7 +132,7 @@ static ULONG WINAPI IOCS_AddRef(IOCS *This)
 #define THIS2IOLEINPLACEFRAME(This) ((IOleInPlaceFrame*)&This->lpOleInPlaceFrameVtbl)
 #define THIS2IOLECONTROLSITE(This) ((IOleControlSite*)&This->lpOleControlSiteVtbl)
 
-static HRESULT WINAPI IOCS_QueryInterface(IOCS *This, REFIID riid, void **ppv)
+static HRESULT IOCS_QueryInterface(IOCS *This, REFIID riid, void **ppv)
 {
     *ppv = NULL;
 
@@ -166,7 +166,7 @@ static HRESULT WINAPI IOCS_QueryInterface(IOCS *This, REFIID riid, void **ppv)
 }
 
 static HRESULT IOCS_Detach( IOCS *This );
-static ULONG WINAPI IOCS_Release(IOCS *This)
+static ULONG IOCS_Release(IOCS *This)
 {
     ULONG ref = InterlockedDecrement(&This->ref);
 
@@ -752,7 +752,7 @@ static HRESULT IOCS_Detach( IOCS *This ) /* remove subclassing */
     if ( This->hWnd )
     {
         SetWindowLongPtrW( This->hWnd, GWLP_WNDPROC, (ULONG_PTR) This->OrigWndProc );
-        SetWindowLongPtrW( This->hWnd, GWLP_USERDATA, (LONG_PTR) NULL );
+        SetWindowLongPtrW( This->hWnd, GWLP_USERDATA, 0 );
         This->hWnd = NULL;
     }
     if ( This->control )
@@ -1244,7 +1244,7 @@ HWND WINAPI AtlAxCreateDialogW(HINSTANCE hInst, LPCWSTR name, HWND owner, DLGPRO
     hgl = LoadResource (hInst, hrsrc);
     if ( !hgl )
         return NULL;
-    ptr = (LPCDLGTEMPLATEW)LockResource ( hgl );
+    ptr = LockResource ( hgl );
     if (!ptr)
     {
         FreeResource( hgl );

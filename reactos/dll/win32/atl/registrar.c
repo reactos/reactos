@@ -242,7 +242,7 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                 strbuf_write(buf->str, &name, -1);
             }else if(key_type == DO_DELETE) {
                 TRACE("Deleting %s\n", debugstr_w(buf->str));
-                lres = RegDeleteTreeW(parent_key, buf->str);
+                RegDeleteTreeW(parent_key, buf->str);
             }else {
                 if(key_type == FORCE_REMOVE)
                     RegDeleteTreeW(parent_key, buf->str);
@@ -439,7 +439,7 @@ static HRESULT resource_register(Registrar *This, LPCOLESTR resFileName,
     if(hins) {
         src = FindResourceW(hins, szID, szType);
         if(src) {
-            regstra = (LPSTR)LoadResource(hins, src);
+            regstra = LoadResource(hins, src);
             reslen = SizeofResource(hins, src);
             if(regstra) {
                 len = MultiByteToWideChar(CP_ACP, 0, regstra, reslen, NULL, 0)+1;
