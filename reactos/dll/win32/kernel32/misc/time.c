@@ -141,8 +141,6 @@ static DWORD TIME_CompTimeZoneID ( const TIME_ZONE_INFORMATION *pTZinfo,
     SYSTEMTIME SysTime;
     FILETIME ftTemp;
 
-    ZeroMemory (&SysTime, sizeof (SysTime));
-
     if (pTZinfo->DaylightDate.wMonth != 0)
     {
         /* if year is 0 then date is in day-of-week format, otherwise
@@ -162,7 +160,7 @@ static DWORD TIME_CompTimeZoneID ( const TIME_ZONE_INFORMATION *pTZinfo,
         if (!islocal) {
             FILETIME2LL( lpFileTime, llTime );
             llTime -= ( pTZinfo->Bias + pTZinfo->DaylightBias )
-                * (LONGLONG) TICKSPERMIN;
+                * (LONGLONG)TICKSPERMIN;
             LL2FILETIME( llTime, &ftTemp)
             lpFileTime = &ftTemp;
         }
@@ -178,7 +176,7 @@ static DWORD TIME_CompTimeZoneID ( const TIME_ZONE_INFORMATION *pTZinfo,
 
         if (!islocal) {
             llTime -= ( pTZinfo->StandardBias - pTZinfo->DaylightBias )
-                * (LONGLONG) TICKSPERMIN;
+                * (LONGLONG)TICKSPERMIN;
             LL2FILETIME( llTime, &ftTemp)
             FileTimeToSystemTime(lpFileTime, &SysTime);
         }
@@ -620,29 +618,38 @@ SystemTimeToTzSpecificLocalTime(
                                 LPSYSTEMTIME lpLocalTime
                                )
 {
-  TIME_ZONE_INFORMATION TimeZoneInformation;
-  LPTIME_ZONE_INFORMATION lpTzInfo;
-  LARGE_INTEGER FileTime;
+ TIME_ZONE_INFORMATION TzInfo;
+  FILETIME FileTime;
+  LONGLONG llTime;
+  LONG lBias;
 
-  if (!lpTimeZoneInformation)
+  if (lpTimeZoneInformation != NULL)
   {
-    GetTimeZoneInformation(&TimeZoneInformation);
-    lpTzInfo = &TimeZoneInformation;
+    TzInfo = *lpTimeZoneInformation;
   }
   else
-    lpTzInfo = (LPTIME_ZONE_INFORMATION)lpTimeZoneInformation;
+  {
+	if (GetTimeZoneInformation(&TzInfo) == TIME_ZONE_ID_INVALID)
+	   return FALSE;
+  }
 
-  if (!lpUniversalTime)
+  if (!lpUniversalTime || !lpLocalTime)
     return FALSE;
 
-  if (!lpLocalTime)
-    return FALSE;
+  if (!SystemTimeToFileTime(lpUniversalTime, &FileTime))
+     return FALSE;
 
-  SystemTimeToFileTime(lpUniversalTime, (PFILETIME)&FileTime);
-  FileTime.QuadPart -= (lpTzInfo->Bias * TICKSPERMIN);
-  FileTimeToSystemTime((PFILETIME)&FileTime, lpLocalTime);
+  FILETIME2LL(&FileTime, llTime)
 
-  return TRUE;
+    if (!TIME_GetTimezoneBias(&TzInfo, &FileTime, FALSE, &lBias))
+        return FALSE;
+
+    /* convert minutes to 100-nanoseconds-ticks */
+    llTime -= (LONGLONG)lBias * TICKSPERMIN;
+
+    LL2FILETIME( llTime, &FileTime)
+
+	return FileTimeToSystemTime(&FileTime, lpLocalTime);
 }
 
 
