@@ -1159,8 +1159,8 @@ QSI_DEF(SystemFileCacheInformation)
 	        MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE; /* FIXME */
 	/* Taskmgr multiplies this one by page size right away */
 	Sci->CurrentSizeIncludingTransitionInPages =
-		MiMemoryConsumers[MC_CACHE].PagesUsed; /* FIXME: Should include  */
-	/* stanby and free pages, which I don't think we track right now */
+		MiMemoryConsumers[MC_CACHE].PagesUsed; /* FIXME: Should be */
+	/* system working set and standby pages. */
 	Sci->PageFaultCount = 0; /* FIXME */
 	Sci->MinimumWorkingSet = 0; /* FIXME */
 	Sci->MaximumWorkingSet = 0; /* FIXME */
