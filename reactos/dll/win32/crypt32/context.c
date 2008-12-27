@@ -173,6 +173,7 @@ void Context_CopyProperties(const void *to, const void *from,
 
     toProperties = Context_GetProperties((void *)to, contextSize);
     fromProperties = Context_GetProperties((void *)from, contextSize);
+    assert(toProperties && fromProperties);
     ContextPropertyList_Copy(toProperties, fromProperties);
 }
 
@@ -206,7 +207,7 @@ static inline struct list *ContextList_ContextToEntry(struct ContextList *list,
     struct list *ret;
 
     if (context)
-        ret = (struct list *)Context_GetExtra(context, list->contextSize);
+        ret = Context_GetExtra(context, list->contextSize);
     else
         ret = NULL;
     return ret;
@@ -287,7 +288,7 @@ void ContextList_Delete(struct ContextList *list, void *context)
     list->contextInterface->free(context);
 }
 
-void ContextList_Empty(struct ContextList *list)
+static void ContextList_Empty(struct ContextList *list)
 {
     struct list *entry, *next;
 

@@ -315,6 +315,7 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
     /* FIXME, find out if there is a name for this GUID */
     static const GUID unknown = { 0xC689AAB8, 0x8E78, 0x11D0, { 0x8C,0x47,0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
     static const GUID cabGUID = { 0xc689aaba, 0x8e78, 0x11d0, {0x8c,0x47,0x00,0xc0,0x4f,0xc2,0x95,0xee }};
+    static const GUID catGUID = { 0xDE351A43, 0x8E59, 0x11D0, { 0x8C,0x47,0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
     static const WORD dosHdr = IMAGE_DOS_SIGNATURE;
     static const BYTE cabHdr[] = { 'M','S','C','F' };
     BYTE hdr[SIP_MAX_MAGIC_NUMBER];
@@ -355,6 +356,7 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
         goto cleanup;
     }
 
+    TRACE("file magic = 0x%02x%02x%02x%02x\n", hdr[0], hdr[1], hdr[2], hdr[3]);
     /* As everything is in place now we start looking at the file header */
     if (!memcmp(hdr, &dosHdr, sizeof(dosHdr)))
     {
@@ -370,6 +372,61 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
         SetLastError(S_OK);
         bRet = TRUE;
         goto cleanup;
+    }
+    /* If it's asn.1-encoded, it's probably a .cat file. */
+    if (hdr[0] == 0x30)
+    {
+        DWORD fileLen = GetFileSize(hFile, NULL);
+
+        TRACE("fileLen = %d\n", fileLen);
+        /* Sanity-check length */
+        if (hdr[1] < 0x80 && fileLen == 2 + hdr[1])
+        {
+            *pgSubject = catGUID;
+            SetLastError(S_OK);
+            bRet = TRUE;
+            goto cleanup;
+        }
+        else if (hdr[1] == 0x80)
+        {
+            /* Indefinite length, can't verify with just the header, assume it
+             * is.
+             */
+            *pgSubject = catGUID;
+            SetLastError(S_OK);
+            bRet = TRUE;
+            goto cleanup;
+        }
+        else
+        {
+            BYTE lenBytes = hdr[1] & 0x7f;
+
+            if (lenBytes == 1 && fileLen == 2 + lenBytes + hdr[2])
+            {
+                *pgSubject = catGUID;
+                SetLastError(S_OK);
+                bRet = TRUE;
+                goto cleanup;
+            }
+            else if (lenBytes == 2 && fileLen == 2 + lenBytes +
+             (hdr[2] << 8 | hdr[3]))
+            {
+                *pgSubject = catGUID;
+                SetLastError(S_OK);
+                bRet = TRUE;
+                goto cleanup;
+            }
+            else if (fileLen > 0xffff)
+            {
+                /* The file size must be greater than 2 bytes in length, so
+                 * assume it is a .cat file
+                 */
+                *pgSubject = catGUID;
+                SetLastError(S_OK);
+                bRet = TRUE;
+                goto cleanup;
+            }
+        }
     }
 
     /* Check for supported functions using CryptSIPDllIsMyFileType */

@@ -50,7 +50,7 @@ PCCRL_CONTEXT WINAPI CertCreateCRLContext(DWORD dwCertEncodingType,
     {
         BYTE *data = NULL;
 
-        crl = (PCRL_CONTEXT)Context_CreateDataContext(sizeof(CRL_CONTEXT));
+        crl = Context_CreateDataContext(sizeof(CRL_CONTEXT));
         if (!crl)
             goto end;
         data = CryptMemAlloc(cbCrlEncoded);

@@ -3088,6 +3088,15 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define szOID_NETSCAPE_SSL_SERVER_NAME       "2.16.840.1.113730.1.12"
 #define szOID_NETSCAPE_COMMENT               "2.16.840.1.113730.1.13"
 
+/* Bits for szOID_NETSCAPE_CERT_TYPE */
+#define NETSCAPE_SSL_CLIENT_AUTH_CERT_TYPE 0x80
+#define NETSCAPE_SSL_SERVER_AUTH_CERT_TYPE 0x40
+#define NETSCAPE_SMIME_CERT_TYPE           0x20
+#define NETSCAPE_SIGN_CERT_TYPE            0x10
+#define NETSCAPE_SSL_CA_CERT_TYPE          0x04
+#define NETSCAPE_SMIME_CA_CERT_TYPE        0x02
+#define NETSCAPE_SIGN_CA_CERT_TYPE         0x01
+
 #define CRYPT_ENCODE_DECODE_NONE             0
 #define X509_CERT                            ((LPCSTR)1)
 #define X509_CERT_TO_BE_SIGNED               ((LPCSTR)2)

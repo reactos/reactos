@@ -338,7 +338,7 @@ PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
              CERT_QUERY_CONTENT_FLAG_CERT |
              CERT_QUERY_CONTENT_FLAG_SERIALIZED_STORE |
              CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED,
-             CERT_QUERY_FORMAT_FLAG_BINARY, 0, NULL, &contentType, NULL,
+             CERT_QUERY_FORMAT_FLAG_ALL, 0, NULL, &contentType, NULL,
              &memStore, NULL, NULL);
             if (ret)
             {

@@ -37,7 +37,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(crypt);
  * CertGetCertificateContextProperty, and are particular to the store in which
  * the property exists (which is separate from the context.)
  */
-static BOOL WINAPI CertContext_GetProperty(void *context, DWORD dwPropId,
+static BOOL CertContext_GetProperty(void *context, DWORD dwPropId,
  void *pvData, DWORD *pcbData);
 
 /* Internal version of CertSetCertificateContextProperty that sets properties
@@ -45,7 +45,7 @@ static BOOL WINAPI CertContext_GetProperty(void *context, DWORD dwPropId,
  * type.) Doesn't handle special cases, since they're handled by
  * CertSetCertificateContextProperty anyway.
  */
-static BOOL WINAPI CertContext_SetProperty(void *context, DWORD dwPropId,
+static BOOL CertContext_SetProperty(void *context, DWORD dwPropId,
  DWORD dwFlags, const void *pvData);
 
 BOOL WINAPI CertAddEncodedCertificateToStore(HCERTSTORE hCertStore,
@@ -88,7 +88,7 @@ PCCERT_CONTEXT WINAPI CertCreateCertificateContext(DWORD dwCertEncodingType,
     {
         BYTE *data = NULL;
 
-        cert = (PCERT_CONTEXT)Context_CreateDataContext(sizeof(CERT_CONTEXT));
+        cert = Context_CreateDataContext(sizeof(CERT_CONTEXT));
         if (!cert)
             goto end;
         data = CryptMemAlloc(cbCertEncoded);
@@ -188,7 +188,7 @@ static BOOL CertContext_CopyParam(void *pvData, DWORD *pcbData, const void *pb,
     return ret;
 }
 
-static BOOL WINAPI CertContext_GetProperty(void *context, DWORD dwPropId,
+static BOOL CertContext_GetProperty(void *context, DWORD dwPropId,
  void *pvData, DWORD *pcbData)
 {
     PCCERT_CONTEXT pCertContext = (PCCERT_CONTEXT)context;
@@ -440,7 +440,7 @@ static BOOL CertContext_SetKeyProvInfoProperty(PCONTEXT_PROPERTY_LIST properties
     return ret;
 }
 
-static BOOL WINAPI CertContext_SetProperty(void *context, DWORD dwPropId,
+static BOOL CertContext_SetProperty(void *context, DWORD dwPropId,
  DWORD dwFlags, const void *pvData)
 {
     PCONTEXT_PROPERTY_LIST properties =
@@ -468,6 +468,7 @@ static BOOL WINAPI CertContext_SetProperty(void *context, DWORD dwPropId,
         case CERT_SIGNATURE_HASH_PROP_ID:
         case CERT_ISSUER_PUBLIC_KEY_MD5_HASH_PROP_ID:
         case CERT_SUBJECT_NAME_MD5_HASH_PROP_ID:
+        case CERT_EXTENDED_ERROR_INFO_PROP_ID:
         case CERT_SUBJECT_PUBLIC_KEY_MD5_HASH_PROP_ID:
         case CERT_ENROLLMENT_PROP_ID:
         case CERT_CROSS_CERT_DIST_POINTS_PROP_ID:
@@ -475,7 +476,7 @@ static BOOL WINAPI CertContext_SetProperty(void *context, DWORD dwPropId,
         {
             if (pvData)
             {
-                const CRYPT_DATA_BLOB *blob = (const CRYPT_DATA_BLOB *)pvData;
+                const CRYPT_DATA_BLOB *blob = pvData;
 
                 ret = ContextPropertyList_SetProperty(properties, dwPropId,
                  blob->pbData, blob->cbData);
@@ -490,7 +491,7 @@ static BOOL WINAPI CertContext_SetProperty(void *context, DWORD dwPropId,
         case CERT_DATE_STAMP_PROP_ID:
             if (pvData)
                 ret = ContextPropertyList_SetProperty(properties, dwPropId,
-                 (const BYTE *)pvData, sizeof(FILETIME));
+                 pvData, sizeof(FILETIME));
             else
             {
                 ContextPropertyList_RemoveProperty(properties, dwPropId);
@@ -501,7 +502,7 @@ static BOOL WINAPI CertContext_SetProperty(void *context, DWORD dwPropId,
         {
             if (pvData)
             {
-                const CERT_KEY_CONTEXT *keyContext = (const CERT_KEY_CONTEXT *)pvData;
+                const CERT_KEY_CONTEXT *keyContext = pvData;
 
                 if (keyContext->cbSize != sizeof(CERT_KEY_CONTEXT))
                 {
@@ -521,8 +522,7 @@ static BOOL WINAPI CertContext_SetProperty(void *context, DWORD dwPropId,
         }
         case CERT_KEY_PROV_INFO_PROP_ID:
             if (pvData)
-                ret = CertContext_SetKeyProvInfoProperty(properties,
-                 (const CRYPT_KEY_PROV_INFO *)pvData);
+                ret = CertContext_SetKeyProvInfoProperty(properties, pvData);
             else
             {
                 ContextPropertyList_RemoveProperty(properties, dwPropId);
@@ -540,13 +540,17 @@ static BOOL WINAPI CertContext_SetProperty(void *context, DWORD dwPropId,
             {
                 if (!(dwFlags & CERT_STORE_NO_CRYPT_RELEASE_FLAG))
                     CryptReleaseContext(keyContext.hCryptProv, 0);
-                if (pvData)
-                    keyContext.hCryptProv = *(const HCRYPTPROV *)pvData;
-                else
-                    keyContext.hCryptProv = 0;
-                ret = CertContext_SetProperty(context, CERT_KEY_CONTEXT_PROP_ID,
-                 0, &keyContext);
             }
+            keyContext.cbSize = sizeof(keyContext);
+            if (pvData)
+                keyContext.hCryptProv = *(const HCRYPTPROV *)pvData;
+            else
+            {
+                keyContext.hCryptProv = 0;
+                keyContext.dwKeySpec = AT_SIGNATURE;
+            }
+            ret = CertContext_SetProperty(context, CERT_KEY_CONTEXT_PROP_ID,
+             0, &keyContext);
             break;
         }
         default:
@@ -600,12 +604,17 @@ static BOOL CRYPT_AcquirePrivateKeyFromProvInfo(PCCERT_CONTEXT pCert,
          CERT_KEY_PROV_INFO_PROP_ID, 0, &size);
         if (ret)
         {
-            info = (PCRYPT_KEY_PROV_INFO)HeapAlloc(GetProcessHeap(), 0, size);
+            info = HeapAlloc(GetProcessHeap(), 0, size);
             if (info)
             {
                 ret = CertGetCertificateContextProperty(pCert,
                  CERT_KEY_PROV_INFO_PROP_ID, info, &size);
                 allocated = TRUE;
+            }
+            else
+            {
+                SetLastError(ERROR_OUTOFMEMORY);
+                ret = FALSE;
             }
         }
         else
@@ -655,8 +664,7 @@ BOOL WINAPI CryptAcquireCertificatePrivateKey(PCCERT_CONTEXT pCert,
          CERT_KEY_PROV_INFO_PROP_ID, 0, &size);
         if (ret)
         {
-            info = (PCRYPT_KEY_PROV_INFO)HeapAlloc(
-             GetProcessHeap(), 0, size);
+            info = HeapAlloc(GetProcessHeap(), 0, size);
             ret = CertGetCertificateContextProperty(pCert,
              CERT_KEY_PROV_INFO_PROP_ID, info, &size);
             if (ret)

@@ -332,7 +332,7 @@ static void WINAPI CRYPT_RegCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
     CryptMemFree(store);
 }
 
-static BOOL WINAPI CRYPT_RegWriteContext(PWINE_REGSTOREINFO store,
+static BOOL CRYPT_RegWriteContext(PWINE_REGSTOREINFO store,
  const void *context, DWORD dwFlags)
 {
     BOOL ret;

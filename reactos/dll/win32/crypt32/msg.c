@@ -46,7 +46,7 @@ typedef BOOL (*CryptMsgUpdateFunc)(HCRYPTMSG hCryptMsg, const BYTE *pbData,
 typedef BOOL (*CryptMsgControlFunc)(HCRYPTMSG hCryptMsg, DWORD dwFlags,
  DWORD dwCtrlType, const void *pvCtrlPara);
 
-BOOL CRYPT_DefaultMsgControl(HCRYPTMSG hCryptMsg, DWORD dwFlags,
+static BOOL CRYPT_DefaultMsgControl(HCRYPTMSG hCryptMsg, DWORD dwFlags,
  DWORD dwCtrlType, const void *pvCtrlPara)
 {
     TRACE("(%p, %08x, %d, %p)\n", hCryptMsg, dwFlags, dwCtrlType, pvCtrlPara);
@@ -1341,7 +1341,7 @@ static HCRYPTMSG CSignedEncodeMsg_Open(DWORD dwFlags,
         return NULL;
     }
     if (info->cbSize == sizeof(CMSG_SIGNED_ENCODE_INFO_WITH_CMS) &&
-     info->rgAttrCertEncoded)
+     info->cAttrCertEncoded)
     {
         FIXME("CMSG_SIGNED_ENCODE_INFO with CMS fields unsupported\n");
         return NULL;
@@ -1723,15 +1723,13 @@ static BOOL CDecodeMsg_FinalizeHashedContent(CDecodeMsg *msg,
         {
             /* Unlike for non-detached messages, the data were never stored as
              * the content param, but were saved in msg->detached_data instead.
-             * Set the content property with the detached data so the data may
-             * be hashed.
              */
-            ContextPropertyList_SetProperty(msg->properties,
-             CMSG_CONTENT_PARAM, msg->detached_data.pbData,
-             msg->detached_data.cbData);
+            content.pbData = msg->detached_data.pbData;
+            content.cbData = msg->detached_data.cbData;
         }
-        ret = ContextPropertyList_FindProperty(msg->properties,
-         CMSG_CONTENT_PARAM, &content);
+        else
+            ret = ContextPropertyList_FindProperty(msg->properties,
+             CMSG_CONTENT_PARAM, &content);
         if (ret)
             ret = CryptHashData(msg->u.hash, content.pbData, content.cbData, 0);
     }
@@ -1972,8 +1970,7 @@ static inline void CRYPT_CopyAttributes(CRYPT_ATTRIBUTES *out,
     {
         DWORD i;
 
-        if ((*nextData - (LPBYTE)0) % sizeof(DWORD_PTR))
-            *nextData += (*nextData - (LPBYTE)0) % sizeof(DWORD_PTR);
+        *nextData = POINTER_ALIGN_DWORD_PTR(*nextData);
         out->rgAttr = (CRYPT_ATTRIBUTE *)*nextData;
         *nextData += in->cAttr * sizeof(CRYPT_ATTRIBUTE);
         for (i = 0; i < in->cAttr; i++)
@@ -1989,8 +1986,7 @@ static inline void CRYPT_CopyAttributes(CRYPT_ATTRIBUTES *out,
                 DWORD j;
 
                 out->rgAttr[i].cValue = in->rgAttr[i].cValue;
-                if ((*nextData - (LPBYTE)0) % sizeof(DWORD_PTR))
-                    *nextData += (*nextData - (LPBYTE)0) % sizeof(DWORD_PTR);
+                *nextData = POINTER_ALIGN_DWORD_PTR(*nextData);
                 out->rgAttr[i].rgValue = (PCRYPT_DATA_BLOB)*nextData;
                 *nextData += in->rgAttr[i].cValue * sizeof(CRYPT_DATA_BLOB);
                 for (j = 0; j < in->rgAttr[i].cValue; j++)
@@ -2010,15 +2006,13 @@ static DWORD CRYPT_SizeOfAttributes(const CRYPT_ATTRIBUTES *attr)
         if (attr->rgAttr[i].pszObjId)
             size += strlen(attr->rgAttr[i].pszObjId) + 1;
         /* align pointer */
-        if (size % sizeof(DWORD_PTR))
-            size += size % sizeof(DWORD_PTR);
+        size = ALIGN_DWORD_PTR(size);
         size += attr->rgAttr[i].cValue * sizeof(CRYPT_DATA_BLOB);
         for (j = 0; j < attr->rgAttr[i].cValue; j++)
             size += attr->rgAttr[i].rgValue[j].cbData;
     }
     /* align pointer again to be conservative */
-    if (size % sizeof(DWORD_PTR))
-        size += size % sizeof(DWORD_PTR);
+    size = ALIGN_DWORD_PTR(size);
     return size;
 }
 
@@ -2096,8 +2090,7 @@ static BOOL CRYPT_CopySignerInfo(void *pvData, DWORD *pcbData,
     size += in->HashEncryptionAlgorithm.Parameters.cbData;
     size += in->EncryptedHash.cbData;
     /* align pointer */
-    if (size % sizeof(DWORD_PTR))
-        size += size % sizeof(DWORD_PTR);
+    size = ALIGN_DWORD_PTR(size);
     size += CRYPT_SizeOfAttributes(&in->AuthAttrs);
     size += CRYPT_SizeOfAttributes(&in->UnauthAttrs);
     if (!pvData)
@@ -2135,9 +2128,7 @@ static BOOL CRYPT_CopySignerInfo(void *pvData, DWORD *pcbData,
             CRYPT_CopyAlgorithmId(&out->HashEncryptionAlgorithm,
              &in->HashEncryptionAlgorithm, &nextData);
             CRYPT_CopyBlob(&out->EncryptedHash, &in->EncryptedHash, &nextData);
-            /* align pointer */
-            if ((nextData - (LPBYTE)0) % sizeof(DWORD_PTR))
-                nextData += (nextData - (LPBYTE)0) % sizeof(DWORD_PTR);
+            nextData = POINTER_ALIGN_DWORD_PTR(nextData);
             CRYPT_CopyAttributes(&out->AuthAttrs, &in->AuthAttrs, &nextData);
             CRYPT_CopyAttributes(&out->UnauthAttrs, &in->UnauthAttrs, &nextData);
         }
@@ -2169,8 +2160,7 @@ static BOOL CRYPT_CopyCMSSignerInfo(void *pvData, DWORD *pcbData,
     size += in->HashEncryptionAlgorithm.Parameters.cbData;
     size += in->EncryptedHash.cbData;
     /* align pointer */
-    if (size % sizeof(DWORD_PTR))
-        size += size % sizeof(DWORD_PTR);
+    size = ALIGN_DWORD_PTR(size);
     size += CRYPT_SizeOfAttributes(&in->AuthAttrs);
     size += CRYPT_SizeOfAttributes(&in->UnauthAttrs);
     if (!pvData)
@@ -2205,9 +2195,7 @@ static BOOL CRYPT_CopyCMSSignerInfo(void *pvData, DWORD *pcbData,
         CRYPT_CopyAlgorithmId(&out->HashEncryptionAlgorithm,
          &in->HashEncryptionAlgorithm, &nextData);
         CRYPT_CopyBlob(&out->EncryptedHash, &in->EncryptedHash, &nextData);
-        /* align pointer */
-        if ((nextData - (LPBYTE)0) % sizeof(DWORD_PTR))
-            nextData += (nextData - (LPBYTE)0) % sizeof(DWORD_PTR);
+        nextData = POINTER_ALIGN_DWORD_PTR(nextData);
         CRYPT_CopyAttributes(&out->AuthAttrs, &in->AuthAttrs, &nextData);
         CRYPT_CopyAttributes(&out->UnauthAttrs, &in->UnauthAttrs, &nextData);
         ret = TRUE;
@@ -2556,6 +2544,11 @@ static BOOL CDecodeSignedMsg_VerifySignature(CDecodeMsg *msg, PCERT_INFO info)
     BOOL ret = FALSE;
     DWORD i;
 
+    if (!msg->u.signed_data.signerHandles)
+    {
+        SetLastError(NTE_BAD_SIGNATURE);
+        return FALSE;
+    }
     for (i = 0; !ret && i < msg->u.signed_data.info->cSignerInfo; i++)
     {
         PCMSG_CMS_SIGNER_INFO signerInfo =
@@ -2598,6 +2591,8 @@ static BOOL CDecodeSignedMsg_VerifySignatureEx(CDecodeMsg *msg,
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (para->dwSignerIndex >= msg->u.signed_data.info->cSignerInfo)
         SetLastError(CRYPT_E_SIGNER_NOT_FOUND);
+    else if (!msg->u.signed_data.signerHandles)
+        SetLastError(NTE_BAD_SIGNATURE);
     else
     {
         switch (para->dwSignerType)

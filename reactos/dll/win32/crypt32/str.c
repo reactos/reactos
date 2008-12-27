@@ -167,7 +167,7 @@ static DWORD CRYPT_AddPrefixA(LPCSTR prefix, LPSTR psz, DWORD csz)
 
     if (psz)
     {
-        chars = min(lstrlenA(prefix), csz);
+        chars = min(strlen(prefix), csz);
         memcpy(psz, prefix, chars);
         *(psz + chars) = '=';
         chars++;
@@ -304,7 +304,7 @@ static DWORD CRYPT_AddPrefixAToW(LPCSTR prefix, LPWSTR psz, DWORD csz)
     {
         DWORD i;
 
-        chars = min(lstrlenA(prefix), csz);
+        chars = min(strlen(prefix), csz);
         for (i = 0; i < chars; i++)
             *(psz + i) = prefix[i];
         *(psz + chars) = '=';
@@ -328,7 +328,7 @@ static DWORD CRYPT_AddPrefixW(LPCWSTR prefix, LPWSTR psz, DWORD csz)
 
     if (psz)
     {
-        chars = min(lstrlenW(prefix), csz);
+        chars = min(strlenW(prefix), csz);
         memcpy(psz, prefix, chars * sizeof(WCHAR));
         *(psz + chars) = '=';
         chars++;
@@ -338,8 +338,10 @@ static DWORD CRYPT_AddPrefixW(LPCWSTR prefix, LPWSTR psz, DWORD csz)
     return chars;
 }
 
-DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
- DWORD dwStrType, LPWSTR psz, DWORD csz)
+static const WCHAR indent[] = { ' ',' ',' ',' ',' ',0 };
+
+DWORD cert_name_to_str_with_indent(DWORD dwCertEncodingType, DWORD indentLevel,
+ PCERT_NAME_BLOB pName, DWORD dwStrType, LPWSTR psz, DWORD csz)
 {
     static const DWORD unsupportedFlags = CERT_NAME_STR_NO_QUOTING_FLAG |
      CERT_NAME_STR_ENABLE_T61_UNICODE_FLAG;
@@ -352,8 +354,6 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
     BOOL bRet;
     CERT_NAME_INFO *info;
 
-    TRACE("(%d, %p, %08x, %p, %d)\n", dwCertEncodingType, pName, dwStrType,
-     psz, csz);
     if (dwStrType & unsupportedFlags)
         FIXME("unsupported flags: %08x\n", dwStrType & unsupportedFlags);
 
@@ -402,6 +402,22 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                     else
                         prefixA = rdn->rgRDNAttr[j].pszObjId;
                 }
+                if (dwStrType & CERT_NAME_STR_CRLF_FLAG)
+                {
+                    DWORD k;
+
+                    for (k = 0; k < indentLevel; k++)
+                    {
+                        if (psz)
+                        {
+                            chars = min(strlenW(indent), csz - ret - 1);
+                            memcpy(psz + ret, indent, chars * sizeof(WCHAR));
+                        }
+                        else
+                            chars = strlenW(indent);
+                        ret += chars;
+                    }
+                }
                 if (prefixW)
                 {
                     /* - 1 is needed to account for the NULL terminator. */
@@ -448,6 +464,19 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
     }
     else
         ret++;
+    return ret;
+}
+
+DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
+ DWORD dwStrType, LPWSTR psz, DWORD csz)
+{
+    BOOL ret;
+
+    TRACE("(%d, %p, %08x, %p, %d)\n", dwCertEncodingType, pName, dwStrType,
+     psz, csz);
+
+    ret = cert_name_to_str_with_indent(dwCertEncodingType, 0, pName, dwStrType,
+     psz, csz);
     TRACE("Returning %s\n", debugstr_w(psz));
     return ret;
 }
@@ -478,7 +507,7 @@ BOOL WINAPI CertStrToNameA(DWORD dwCertEncodingType, LPCSTR pszX500,
             {
                 if (!ret)
                 {
-                    DWORD i;
+                    LONG i;
 
                     *ppszError = pszX500;
                     for (i = 0; i < errorStr - x500; i++)
@@ -665,7 +694,7 @@ static BOOL CRYPT_EncodeValueWithType(DWORD dwCertEncodingType,
     {
         if (value->end > value->start)
         {
-            DWORD i;
+            LONG i;
             LPWSTR ptr = (LPWSTR)nameValue.Value.pbData;
 
             for (i = 0; i < value->end - value->start; i++)
