@@ -20,20 +20,23 @@
 
 #include "config.h"
 #include "wine/port.h"
-#include <stdio.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+#define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
+
+#include <stdio.h>
+#include <stdarg.h>
 
 #include "windef.h"
-#include "wine/debug.h"
 #include "winbase.h"
 #include "winnt.h"
 #include "winnls.h"
 #include "wininet.h"
 #include "objbase.h"
-#define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
 #include "wincrypt.h"
+
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptnet);
 
@@ -397,57 +400,61 @@ static BOOL CRYPT_GetObjectFromFile(HANDLE hFile, PCRYPT_BLOB_ARRAY pObject)
     return ret;
 }
 
-/* FIXME: should make wininet cache all downloads instead */
 static BOOL CRYPT_GetObjectFromCache(LPCWSTR pszURL, PCRYPT_BLOB_ARRAY pObject,
  PCRYPT_RETRIEVE_AUX_INFO pAuxInfo)
 {
     BOOL ret = FALSE;
-    INTERNET_CACHE_ENTRY_INFOW cacheInfo = { sizeof(cacheInfo), 0 };
-    DWORD size = sizeof(cacheInfo);
+    INTERNET_CACHE_ENTRY_INFOW *pCacheInfo = NULL;
+    DWORD size = 0;
 
     TRACE("(%s, %p, %p)\n", debugstr_w(pszURL), pObject, pAuxInfo);
 
-    if (GetUrlCacheEntryInfoW(pszURL, &cacheInfo, &size) ||
-     GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    ret = GetUrlCacheEntryInfoW(pszURL, NULL, &size);
+    if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        pCacheInfo = CryptMemAlloc(size);
+        if (pCacheInfo)
+            ret = TRUE;
+        else
+            SetLastError(ERROR_OUTOFMEMORY);
+    }
+    if (ret && (ret = GetUrlCacheEntryInfoW(pszURL, pCacheInfo, &size)))
     {
         FILETIME ft;
 
         GetSystemTimeAsFileTime(&ft);
-        if (CompareFileTime(&cacheInfo.ExpireTime, &ft) >= 0)
+        if (CompareFileTime(&pCacheInfo->ExpireTime, &ft) >= 0)
         {
-            LPINTERNET_CACHE_ENTRY_INFOW pCacheInfo = CryptMemAlloc(size);
+            HANDLE hFile = CreateFileW(pCacheInfo->lpszLocalFileName,
+             GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-            if (pCacheInfo)
+            if (hFile != INVALID_HANDLE_VALUE)
             {
-                if (GetUrlCacheEntryInfoW(pszURL, pCacheInfo, &size))
+                if ((ret = CRYPT_GetObjectFromFile(hFile, pObject)))
                 {
-                    HANDLE hFile = CreateFileW(pCacheInfo->lpszLocalFileName,
-                     GENERIC_READ, 0, NULL, OPEN_EXISTING,
-                     FILE_ATTRIBUTE_NORMAL, NULL);
-
-                    if (hFile != INVALID_HANDLE_VALUE)
-                    {
-                        if ((ret = CRYPT_GetObjectFromFile(hFile, pObject)))
-                        {
-                            if (pAuxInfo && pAuxInfo->cbSize >=
-                             offsetof(CRYPT_RETRIEVE_AUX_INFO,
-                             pLastSyncTime) + sizeof(PFILETIME) &&
-                             pAuxInfo->pLastSyncTime)
-                                memcpy(pAuxInfo->pLastSyncTime,
-                                 &pCacheInfo->LastSyncTime,
-                                 sizeof(FILETIME));
-                        }
-                        CloseHandle(hFile);
-                    }
+                    if (pAuxInfo && pAuxInfo->cbSize >=
+                     offsetof(CRYPT_RETRIEVE_AUX_INFO,
+                     pLastSyncTime) + sizeof(PFILETIME) &&
+                     pAuxInfo->pLastSyncTime)
+                        memcpy(pAuxInfo->pLastSyncTime,
+                         &pCacheInfo->LastSyncTime,
+                         sizeof(FILETIME));
                 }
-                CryptMemFree(pCacheInfo);
+                CloseHandle(hFile);
             }
             else
-                SetLastError(ERROR_OUTOFMEMORY);
+            {
+                DeleteUrlCacheEntryW(pszURL);
+                ret = FALSE;
+            }
         }
         else
+        {
             DeleteUrlCacheEntryW(pszURL);
+            ret = FALSE;
+        }
     }
+    CryptMemFree(pCacheInfo);
     TRACE("returning %d\n", ret);
     return ret;
 }
@@ -597,30 +604,73 @@ static BOOL CRYPT_DownloadObject(DWORD dwRetrievalFlags, HINTERNET hHttp,
     return ret;
 }
 
+/* Finds the object specified by pszURL in the cache.  If it's not found,
+ * creates a new cache entry for the object and writes the object to it.
+ * Sets the expiration time of the cache entry to expires.
+ */
 static void CRYPT_CacheURL(LPCWSTR pszURL, PCRYPT_BLOB_ARRAY pObject,
  DWORD dwRetrievalFlags, FILETIME expires)
 {
     WCHAR cacheFileName[MAX_PATH];
+    DWORD size = 0;
+    BOOL ret, create = FALSE;
 
-    /* FIXME: let wininet directly cache instead */
-    if (CreateUrlCacheEntryW(pszURL, pObject->rgBlob[0].cbData, NULL,
-     cacheFileName, 0))
+    GetUrlCacheEntryInfoW(pszURL, NULL, &size);
+    if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
-        HANDLE hCacheFile = CreateFileW(cacheFileName, GENERIC_WRITE, 0, NULL,
-         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        INTERNET_CACHE_ENTRY_INFOW *info = CryptMemAlloc(size);
 
-        if (hCacheFile != INVALID_HANDLE_VALUE)
+        if (info)
         {
-            DWORD bytesWritten, entryType;
-            FILETIME ft = { 0 };
+            FILETIME ft;
 
+            ret = GetUrlCacheEntryInfoW(pszURL, info, &size);
+            if (ret)
+                lstrcpyW(cacheFileName, info->lpszLocalFileName);
+            /* Check if the existing cache entry is up to date.  If it isn't,
+             * overwite it with the new value.
+             */
+            GetSystemTimeAsFileTime(&ft);
+            if (CompareFileTime(&info->ExpireTime, &ft) < 0)
+                create = TRUE;
+            CryptMemFree(info);
+        }
+        else
+            ret = FALSE;
+    }
+    else
+    {
+        ret = CreateUrlCacheEntryW(pszURL, pObject->rgBlob[0].cbData, NULL,
+         cacheFileName, 0);
+        create = TRUE;
+    }
+    if (ret)
+    {
+        DWORD entryType;
+        FILETIME ft = { 0 };
+
+        if (create)
+        {
+            HANDLE hCacheFile = CreateFileW(cacheFileName, GENERIC_WRITE, 0,
+             NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+            if (hCacheFile != INVALID_HANDLE_VALUE)
+            {
+                DWORD bytesWritten;
+
+                WriteFile(hCacheFile, pObject->rgBlob[0].pbData,
+                 pObject->rgBlob[0].cbData, &bytesWritten, NULL);
+                CloseHandle(hCacheFile);
+            }
+            else
+                ret = FALSE;
+        }
+        if (ret)
+        {
             if (!(dwRetrievalFlags & CRYPT_STICKY_CACHE_RETRIEVAL))
                 entryType = NORMAL_CACHE_ENTRY;
             else
                 entryType = STICKY_CACHE_ENTRY;
-            WriteFile(hCacheFile, pObject->rgBlob[0].pbData,
-             pObject->rgBlob[0].cbData, &bytesWritten, NULL);
-            CloseHandle(hCacheFile);
             CommitUrlCacheEntryW(pszURL, cacheFileName, expires, ft, entryType,
              NULL, 0, NULL, NULL);
         }
@@ -1272,6 +1322,63 @@ static BOOL CRYPT_GetCreateFunction(LPCSTR pszObjectOid,
     return ret;
 }
 
+typedef BOOL (*get_object_expiration_func)(void *pvContext,
+ FILETIME *expiration);
+
+static BOOL CRYPT_GetExpirationFromCert(void *pvObject, FILETIME *expiration)
+{
+    PCCERT_CONTEXT cert = (PCCERT_CONTEXT)pvObject;
+
+    *expiration = cert->pCertInfo->NotAfter;
+    return TRUE;
+}
+
+static BOOL CRYPT_GetExpirationFromCRL(void *pvObject, FILETIME *expiration)
+{
+    PCCRL_CONTEXT cert = (PCCRL_CONTEXT)pvObject;
+
+    *expiration = cert->pCrlInfo->NextUpdate;
+    return TRUE;
+}
+
+static BOOL CRYPT_GetExpirationFromCTL(void *pvObject, FILETIME *expiration)
+{
+    PCCTL_CONTEXT cert = (PCCTL_CONTEXT)pvObject;
+
+    *expiration = cert->pCtlInfo->NextUpdate;
+    return TRUE;
+}
+
+static BOOL CRYPT_GetExpirationFunction(LPCSTR pszObjectOid,
+ get_object_expiration_func *getExpiration)
+{
+    BOOL ret;
+
+    if (!HIWORD(pszObjectOid))
+    {
+        switch (LOWORD(pszObjectOid))
+        {
+        case LOWORD(CONTEXT_OID_CERTIFICATE):
+            *getExpiration = CRYPT_GetExpirationFromCert;
+            ret = TRUE;
+            break;
+        case LOWORD(CONTEXT_OID_CRL):
+            *getExpiration = CRYPT_GetExpirationFromCRL;
+            ret = TRUE;
+            break;
+        case LOWORD(CONTEXT_OID_CTL):
+            *getExpiration = CRYPT_GetExpirationFromCTL;
+            ret = TRUE;
+            break;
+        default:
+            ret = FALSE;
+        }
+    }
+    else
+        ret = FALSE;
+    return ret;
+}
+
 /***********************************************************************
  *    CryptRetrieveObjectByUrlW (CRYPTNET.@)
  */
@@ -1308,7 +1415,17 @@ BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
          pAuxInfo);
         if (ret)
         {
+            get_object_expiration_func getExpiration;
+
             ret = create(pszObjectOid, dwRetrievalFlags, &object, ppvObject);
+            if (ret && !(dwRetrievalFlags & CRYPT_DONT_CACHE_RESULT) &&
+             CRYPT_GetExpirationFunction(pszObjectOid, &getExpiration))
+            {
+                FILETIME expires;
+
+                if (getExpiration(*ppvObject, &expires))
+                    CRYPT_CacheURL(pszURL, &object, dwRetrievalFlags, expires);
+            }
             freeObject(pszObjectOid, &object, freeContext);
         }
     }
