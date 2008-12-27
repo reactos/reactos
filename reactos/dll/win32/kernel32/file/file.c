@@ -1819,4 +1819,167 @@ OpenFileById(IN HANDLE hFile,
     return INVALID_HANDLE_VALUE;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+ReplaceFileA(
+    LPCSTR  lpReplacedFileName,
+    LPCSTR  lpReplacementFileName,
+    LPCSTR  lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    WCHAR *replacedW, *replacementW, *backupW = NULL;
+    BOOL ret;
+
+    /* This function only makes sense when the first two parameters are defined */
+    if (!lpReplacedFileName || !(replacedW = FilenameA2W(lpReplacedFileName, TRUE)))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!lpReplacementFileName || !(replacementW = FilenameA2W(lpReplacementFileName, TRUE)))
+    {
+        HeapFree(GetProcessHeap(), 0, replacedW);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* The backup parameter, however, is optional */
+    if (lpBackupFileName)
+    {
+        if (!(backupW = FilenameA2W(lpBackupFileName, TRUE)))
+        {
+            HeapFree(GetProcessHeap(), 0, replacedW);
+            HeapFree(GetProcessHeap(), 0, replacementW);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+    }
+
+    ret = ReplaceFileW(replacedW, replacementW, backupW, dwReplaceFlags, lpExclude, lpReserved);
+    HeapFree(GetProcessHeap(), 0, replacedW);
+    HeapFree(GetProcessHeap(), 0, replacementW);
+    HeapFree(GetProcessHeap(), 0, backupW);
+
+    return ret;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+ReplaceFileW(
+    LPCWSTR lpReplacedFileName,
+    LPCWSTR lpReplacementFileName,
+    LPCWSTR lpBackupFileName,
+    DWORD   dwReplaceFlags,
+    LPVOID  lpExclude,
+    LPVOID  lpReserved
+    )
+{
+    HANDLE hReplaced = NULL, hReplacement = NULL, hBackup = NULL;
+    UNICODE_STRING NtReplacedName, NtReplacementName;
+    DWORD Error = ERROR_SUCCESS;
+    NTSTATUS Status;
+    BOOL Ret = FALSE;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    if (dwReplaceFlags)
+        FIXME("Ignoring flags %x\n", dwReplaceFlags);
+
+    /* First two arguments are mandatory */
+    if (!lpReplacedFileName || !lpReplacementFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Open the "replaced" file for reading and writing */
+    if (!(RtlDosPathNameToNtPathName_U(lpReplacedFileName, &NtReplacedName, NULL, NULL)))
+    {
+        Error = ERROR_PATH_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtReplacedName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&hReplaced,
+                        GENERIC_READ | GENERIC_WRITE | DELETE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+            Error = ERROR_FILE_NOT_FOUND;
+        else
+            Error = ERROR_UNABLE_TO_REMOVE_REPLACED;
+        goto Cleanup;
+    }
+
+    /*
+     * Open the replacement file for reading, writing, and deleting
+     * (writing and deleting are needed when finished)
+     */
+    if (!(RtlDosPathNameToNtPathName_U(lpReplacementFileName, &NtReplacementName, NULL, NULL)))
+    {
+        Error = ERROR_PATH_NOT_FOUND;
+        goto Cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtReplacementName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&hReplacement,
+                        GENERIC_READ | GENERIC_WRITE | DELETE | WRITE_DAC | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        Error = RtlNtStatusToDosError(Status);
+        goto Cleanup;
+    }
+
+    /* Not success :( */
+    FIXME("ReplaceFileW not implemented, but it is returned TRUE!\n");
+    Ret = TRUE;
+
+    /* Perform resource cleanup */
+Cleanup:
+    if (hBackup) NtClose(hBackup);
+    if (hReplaced) NtClose(hReplaced);
+    if (hReplacement) NtClose(hReplacement);
+
+    RtlFreeUnicodeString(&NtReplacementName);
+    RtlFreeUnicodeString(&NtReplacedName);
+
+    /* If there was an error, set the error code */
+    if(!Ret)
+    {
+        TRACE("ReplaceFileW failed (error=%d)\n", Error);
+        SetLastError(Error);
+    }
+    return Ret;
+}
+
 /* EOF */
