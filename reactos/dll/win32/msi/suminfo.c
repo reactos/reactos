@@ -169,8 +169,7 @@ static UINT propvar_changetype(PROPVARIANT *changed, PROPVARIANT *property, VART
 static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz )
 {
     UINT type;
-    DWORD i;
-    int size;
+    DWORD i, size;
     PROPERTY_DATA *propdata;
     PROPVARIANT property, *ptr;
     PROPVARIANT changed;

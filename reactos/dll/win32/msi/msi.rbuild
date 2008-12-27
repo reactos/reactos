@@ -20,6 +20,7 @@
 	<file>delete.c</file>
 	<file>dialog.c</file>
 	<file>distinct.c</file>
+	<file>drop.c</file>
 	<file>events.c</file>
 	<file>files.c</file>
 	<file>font.c</file>
@@ -29,6 +30,7 @@
 	<file>insert.c</file>
 	<file>install.c</file>
 	<file>join.c</file>
+	<file>media.c</file>
 	<file>msi.c</file>
 	<file>msi_main.c</file>
 	<file>msiquery.c</file>

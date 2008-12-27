@@ -47,6 +47,7 @@ static const WCHAR CHARACTER_W[] = { 'C','H','A','R','A','C','T','E','R',0 };
 static const WCHAR CREATE_W[] = { 'C','R','E','A','T','E',0 };
 static const WCHAR DELETE_W[] = { 'D','E','L','E','T','E',0 };
 static const WCHAR DISTINCT_W[] = { 'D','I','S','T','I','N','C','T',0 };
+static const WCHAR DROP_W[] = { 'D','R','O','P',0 };
 static const WCHAR FREE_W[] = { 'F','R','E','E',0 };
 static const WCHAR FROM_W[] = { 'F','R','O','M',0 };
 static const WCHAR HOLD_W[] = { 'H','O','L','D',0 };
@@ -89,6 +90,7 @@ static const Keyword aKeywordTable[] = {
   { CREATE_W, TK_CREATE },
   { DELETE_W, TK_DELETE },
   { DISTINCT_W, TK_DISTINCT },
+  { DROP_W, TK_DROP },
   { FREE_W, TK_FREE },
   { FROM_W, TK_FROM },
   { HOLD_W, TK_HOLD },
