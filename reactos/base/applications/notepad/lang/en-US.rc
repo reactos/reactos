@@ -42,8 +42,8 @@ MAIN_MENU MENU
 BEGIN
 	POPUP "&File"
 	BEGIN
-		MENUITEM "&New...",           CMD_NEW
-		MENUITEM "&Open\tCtrl+O",     CMD_OPEN
+		MENUITEM "&New",           CMD_NEW
+		MENUITEM "&Open...\tCtrl+O",     CMD_OPEN
 		MENUITEM "&Save\tCtrl+S",     CMD_SAVE
 		MENUITEM "Save &as...",       CMD_SAVE_AS
 		MENUITEM SEPARATOR

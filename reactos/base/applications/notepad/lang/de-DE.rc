@@ -42,7 +42,7 @@ MAIN_MENU MENU
 BEGIN
 	POPUP "&Datei"
 	BEGIN
-		MENUITEM "&Neu...",           CMD_NEW
+		MENUITEM "&Neu",           CMD_NEW
 		MENUITEM "Ö&ffnen...",        CMD_OPEN
 		MENUITEM "&Speichern",        CMD_SAVE
 		MENUITEM "Speichern &unter...",       CMD_SAVE_AS
