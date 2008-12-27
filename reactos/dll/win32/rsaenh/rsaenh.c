@@ -657,7 +657,7 @@ static inline void update_hash(CRYPTHASH *pCryptHash, CONST BYTE *pbData, DWORD 
             pbTemp = HeapAlloc(GetProcessHeap(), 0, dwDataLen);
             if (!pbTemp) return;
             memcpy(pbTemp, pbData, dwDataLen);
-            RSAENH_CPEncrypt(pCryptHash->hProv, pCryptHash->hKey, (HCRYPTHASH)NULL, FALSE, 0, 
+            RSAENH_CPEncrypt(pCryptHash->hProv, pCryptHash->hKey, 0, FALSE, 0,
                              pbTemp, &dwDataLen, dwDataLen);
             HeapFree(GetProcessHeap(), 0, pbTemp);
             break;
@@ -701,7 +701,7 @@ static inline void finalize_hash(CRYPTHASH *pCryptHash) {
 
         case CALG_MAC:
             dwDataLen = 0;
-            RSAENH_CPEncrypt(pCryptHash->hProv, pCryptHash->hKey, (HCRYPTHASH)NULL, TRUE, 0, 
+            RSAENH_CPEncrypt(pCryptHash->hProv, pCryptHash->hKey, 0, TRUE, 0,
                              pCryptHash->abHashValue, &dwDataLen, pCryptHash->dwHashSize);
             break;
 
@@ -1259,7 +1259,7 @@ static BOOL build_hash_signature(BYTE *pbSignature, DWORD dwLen, ALG_ID aiAlgid,
                           0x86, 0xf7, 0x0d, 0x02, 0x05, 0x05, 0x00, 0x04, 0x10 } },
         { CALG_SHA, 15, { 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 
                           0x02, 0x1a, 0x05, 0x00, 0x04, 0x14 } },
-        { 0,        0,  {} }
+        { 0,        0,  { 0 } }
     };
     DWORD dwIdxOID, i, j;
 
@@ -1677,7 +1677,7 @@ BOOL WINAPI RSAENH_CPCreateHash(HCRYPTPROV hProv, ALG_ID Algid, HCRYPTKEY hKey, 
     pCryptHash->hKey = hKey;
     pCryptHash->hProv = hProv;
     pCryptHash->dwState = RSAENH_HASHSTATE_HASHING;
-    pCryptHash->pHMACInfo = (PHMAC_INFO)NULL;
+    pCryptHash->pHMACInfo = NULL;
     pCryptHash->dwHashSize = peaAlgidInfo->dwDefaultLen >> 3;
     init_data_blob(&pCryptHash->tpPRFParams.blobLabel);
     init_data_blob(&pCryptHash->tpPRFParams.blobSeed);
@@ -2826,10 +2826,10 @@ BOOL WINAPI RSAENH_CPSetKeyParam(HCRYPTPROV hProv, HCRYPTKEY hKey, DWORD dwParam
         {
             CRYPT_INTEGER_BLOB *blob = (CRYPT_INTEGER_BLOB *)pbData;
 
-            /* salt length can't be greater than 128 bits = 16 bytes */
-            if (blob->cbData > 16)
+            /* salt length can't be greater than 184 bits = 24 bytes */
+            if (blob->cbData > 24)
             {
-                SetLastError(ERROR_INVALID_PARAMETER);
+                SetLastError(NTE_BAD_DATA);
                 return FALSE;
             }
             memcpy(pCryptKey->abKeyValue + pCryptKey->dwKeyLen, blob->pbData,
@@ -3557,7 +3557,7 @@ BOOL WINAPI RSAENH_CPSetHashParam(HCRYPTPROV hProv, HCRYPTHASH hHash, DWORD dwPa
 {
     CRYPTHASH *pCryptHash;
     CRYPTKEY *pCryptKey;
-    int i;
+    DWORD i;
 
     TRACE("(hProv=%08lx, hHash=%08lx, dwParam=%08x, pbData=%p, dwFlags=%08x)\n",
            hProv, hHash, dwParam, pbData, dwFlags);
