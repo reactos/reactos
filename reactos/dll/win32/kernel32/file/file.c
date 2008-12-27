@@ -236,8 +236,34 @@ OpenFile(LPCSTR lpFileName,
 
 	if (lpReOpenBuff == NULL)
 	{
-		return FALSE;
+		return HFILE_ERROR;
 	}
+
+    lpReOpenBuff->cBytes = sizeof(OFSTRUCT);
+    lpReOpenBuff->nErrCode = 0;
+
+	if (uStyle & OF_REOPEN) lpFileName = lpReOpenBuff->szPathName;
+
+	if (!lpFileName)
+	{
+		return HFILE_ERROR;
+	}
+
+	if (!GetFullPathNameA(lpFileName,
+						  sizeof(lpReOpenBuff->szPathName),
+						  lpReOpenBuff->szPathName,
+						  NULL))
+	{
+	    lpReOpenBuff->nErrCode = GetLastError();
+		return HFILE_ERROR;
+	}
+
+    if (uStyle & OF_PARSE)
+    {
+        lpReOpenBuff->fFixedDisk = (GetDriveTypeA(lpReOpenBuff->szPathName) != DRIVE_REMOVABLE);
+        TRACE("(%s): OF_PARSE, res = '%s'\n", lpFileName, lpReOpenBuff->szPathName);
+        return 0;
+    }
 
 	if ((uStyle & OF_CREATE) == OF_CREATE)
 	{
@@ -280,8 +306,20 @@ OpenFile(LPCSTR lpFileName,
 
 	if (Len == 0 || Len > OFS_MAXPATHNAME)
 	{
+		lpReOpenBuff->nErrCode = GetLastError();
 		return (HFILE)INVALID_HANDLE_VALUE;
 	}
+
+    if (uStyle & OF_DELETE)
+    {
+        if (!DeleteFileW(PathNameW))
+		{
+			lpReOpenBuff->nErrCode = GetLastError();
+			return HFILE_ERROR;
+		}
+        TRACE("(%s): OF_DELETE return = OK\n", lpFileName);
+        return TRUE;
+    }
 
 	FileName.Buffer = lpReOpenBuff->szPathName;
 	FileName.Length = 0;
@@ -306,14 +344,6 @@ OpenFile(LPCSTR lpFileName,
 	// FILE_SHARE_READ
 	// FILE_NO_INTERMEDIATE_BUFFERING
 
-	if ((uStyle & OF_PARSE) == OF_PARSE)
-	{
-		RtlFreeHeap(RtlGetProcessHeap(),
-                            0,
-                            FileNameString.Buffer);
-		return (HFILE)NULL;
-	}
-
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
 	ObjectAttributes.RootDirectory = NULL;
 	ObjectAttributes.ObjectName = &FileNameString;
@@ -328,16 +358,20 @@ OpenFile(LPCSTR lpFileName,
 	                      FILE_SHARE_READ,
 	                      FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
 
-	RtlFreeHeap(RtlGetProcessHeap(),
-                    0,
-                    FileNameString.Buffer);
+	RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameString.Buffer);
 
-	lpReOpenBuff->nErrCode = (WORD)RtlNtStatusToDosError(errCode);
+	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
 
 	if (!NT_SUCCESS(errCode))
 	{
 		SetLastErrorByStatus (errCode);
 		return (HFILE)INVALID_HANDLE_VALUE;
+	}
+
+	if (uStyle & OF_EXIST)
+	{
+		NtClose(FileHandle);
+		return TRUE;
 	}
 
 	return (HFILE)FileHandle;
