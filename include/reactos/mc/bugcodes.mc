@@ -1230,6 +1230,14 @@ driver changing IRQL and not restoring it to its previous value when
 it has finished its task.
 .
 
+MessageId=0xCA
+Severity=Success
+Facility=System
+SymbolicName=PNP_DETECTED_FATAL_ERROR
+Language=English
+PNP_DETECTED_FATAL_ERROR
+.
+
 MessageId=0xCB
 Severity=Success
 Facility=System
