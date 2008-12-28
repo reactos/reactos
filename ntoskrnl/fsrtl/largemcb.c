@@ -46,12 +46,12 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    ExAcquireFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlAddBaseMcbEntry(&(Mcb->BaseMcb),
                                   Vbn,
                                   Lbn,
                                   SectorCount);
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
     return Result;
 }
@@ -87,13 +87,13 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    ExAcquireFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlGetNextBaseMcbEntry(&(Mcb->BaseMcb),
                                       RunIndex,
                                       Vbn,
                                       Lbn,
                                       SectorCount);
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
     return Result;
 }
@@ -129,10 +129,9 @@ NTAPI
 FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
                         IN POOL_TYPE PoolType)
 {
-    Mcb->FastMutex = ExAllocateFromNPagedLookasideList(&FsRtlFastMutexLookasideList);
+    Mcb->GuardedMutex = ExAllocateFromNPagedLookasideList(&FsRtlFastMutexLookasideList);
 
-    ExInitializeFastMutex(Mcb->FastMutex);
-    KeInitializeGate((PKGATE)&(Mcb->FastMutex->Gate));
+    KeInitializeGuardedMutex(Mcb->GuardedMutex);
 
     _SEH_TRY
     {
@@ -141,8 +140,8 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
     _SEH_HANDLE
     {
         ExFreeToNPagedLookasideList(&FsRtlFastMutexLookasideList,
-                                    Mcb->FastMutex);
-        Mcb->FastMutex = NULL;
+                                    Mcb->GuardedMutex);
+        Mcb->GuardedMutex = NULL;
     }
     _SEH_END;
 }
@@ -163,12 +162,12 @@ FsRtlInitializeLargeMcbs(VOID)
                                    IFS_POOL_TAG,
                                    0); /* FIXME: Should be 4 */
 
-    /* Initialize the list for the fast mutex */
+    /* Initialize the list for the guarded mutex */
     ExInitializeNPagedLookasideList(&FsRtlFastMutexLookasideList,
                                     NULL,
                                     NULL,
                                     POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                    sizeof(FAST_MUTEX),
+                                    sizeof(KGUARDED_MUTEX),
                                     IFS_POOL_TAG,
                                     0); /* FIXME: Should be 32 */
 }
@@ -207,7 +206,7 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    ExAcquireFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlLookupBaseMcbEntry(&(Mcb->BaseMcb),
                                      Vbn,
                                      Lbn,
@@ -215,7 +214,7 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
                                      StartingLbn,
                                      SectorCountFromStartingLbn,
                                      Index);
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
     return Result;
 }
@@ -249,12 +248,12 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
 {
     BOOLEAN Result;
 
-    ExAcquireFastMutex(OpaqueMcb->FastMutex);
+    KeAcquireGuardedMutex(OpaqueMcb->GuardedMutex);
     Result = FsRtlLookupLastBaseMcbEntryAndIndex(&(OpaqueMcb->BaseMcb),
                                                  LargeVbn,
                                                  LargeLbn,
                                                  Index);
-    ExReleaseFastMutex(OpaqueMcb->FastMutex);
+    KeReleaseGuardedMutex(OpaqueMcb->GuardedMutex);
 
     return Result;
 }
@@ -283,11 +282,11 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    ExAcquireFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlLookupLastBaseMcbEntry(&(Mcb->BaseMcb),
                                          Vbn,
                                          Lbn);
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
     return Result;
 }
@@ -313,9 +312,9 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
     ULONG NumberOfRuns;
 
     /* Read the number of runs while holding the MCB lock */
-    ExAcquireFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
     NumberOfRuns = Mcb->BaseMcb.PairCount;
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
     /* Return the count */
     return NumberOfRuns;
@@ -343,11 +342,11 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
                          IN LONGLONG Vbn,
                          IN LONGLONG SectorCount)
 {
-    ExAcquireFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
     FsRtlRemoveBaseMcbEntry(&(Mcb->BaseMcb),
                             Vbn,
                             SectorCount);
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 }
 
 /*
@@ -370,9 +369,9 @@ FsRtlResetLargeMcb(IN PLARGE_MCB Mcb,
 {
     if (!SelfSynchronized)
     {
-        ExAcquireFastMutex(Mcb->FastMutex);
+        KeAcquireGuardedMutex(Mcb->GuardedMutex);
         Mcb->BaseMcb.PairCount = 0;
-        ExReleaseFastMutex(Mcb->FastMutex);
+        KeReleaseGuardedMutex(Mcb->GuardedMutex);
     }
     else
     {
@@ -404,11 +403,11 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    ExAcquireFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlSplitBaseMcb(&(Mcb->BaseMcb),
                                Vbn,
                                Amount);
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
     return Result;
 }
@@ -432,10 +431,10 @@ NTAPI
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
                       IN LONGLONG Vbn)
 {
-    ExAcquireFastMutex(Mcb->FastMutex);
+    KeAcquireGuardedMutex(Mcb->GuardedMutex);
     FsRtlTruncateBaseMcb(&(Mcb->BaseMcb),
                          Vbn);
-    ExReleaseFastMutex(Mcb->FastMutex);
+    KeReleaseGuardedMutex(Mcb->GuardedMutex);
 }
 
 /*
@@ -463,10 +462,10 @@ VOID
 NTAPI
 FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 {
-    if (Mcb->FastMutex)
+    if (Mcb->GuardedMutex)
     {
         ExFreeToNPagedLookasideList(&FsRtlFastMutexLookasideList,
-                                    Mcb->FastMutex);
+                                    Mcb->GuardedMutex);
         FsRtlUninitializeBaseMcb(&(Mcb->BaseMcb));
     }
 }
