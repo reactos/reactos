@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Notepad (Armenian resources)
  */
 
@@ -28,51 +28,51 @@ MAIN_MENU MENU
 BEGIN
     POPUP "&Ֆայլ"
     BEGIN
-        MENUITEM "&Ստեղծել\tCtrl+N",   CMD_NEW
-        MENUITEM "&Բացել...\tCtrl+O", CMD_OPEN
-        MENUITEM "&Պահպանել\tCtrl+S",  CMD_SAVE
-        MENUITEM "Պահպանել &ինչպես...",  CMD_SAVE_AS
+        MENUITEM "&Ստեղծել\tCtrl+N",            CMD_NEW
+        MENUITEM "&Բացել...\tCtrl+O",           CMD_OPEN
+        MENUITEM "&Պահպանել\tCtrl+S",           CMD_SAVE
+        MENUITEM "Պահպանել &ինչպես...",         CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Էջի& պարամետրերը...",  CMD_PAGE_SETUP
-        MENUITEM "&Տպել\tCtrl+P",     CMD_PRINT
-        MENUITEM "&Տպիչի կարգավորում...", CMD_PRINTER_SETUP
+        MENUITEM "Էջի& պարամետրերը...",         CMD_PAGE_SETUP
+        MENUITEM "&Տպել\tCtrl+P",               CMD_PRINT
+        MENUITEM "&Տպիչի կարգավորում...",       CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
-        MENUITEM "Ե&լք",              CMD_EXIT
+        MENUITEM "Ե&լք",                        CMD_EXIT
     END
     POPUP "&Խմբագրել"
     BEGIN
-        MENUITEM "&Մերժել\tCtrl+Z",      CMD_UNDO
+        MENUITEM "&Մերժել\tCtrl+Z",             CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Կտրել\tCtrl+X",       CMD_CUT
-        MENUITEM "&Պատչճենահանել\tCtrl+C", CMD_COPY
-        MENUITEM "Տեղա&դրել\tCtrl+V",     CMD_PASTE
-        MENUITEM "&Ջնջել\tDel",          CMD_DELETE
+        MENUITEM "&Կտրել\tCtrl+X",              CMD_CUT
+        MENUITEM "&Պատչճենահանել\tCtrl+C",      CMD_COPY
+        MENUITEM "Տեղա&դրել\tCtrl+V",           CMD_PASTE
+        MENUITEM "&Ջնջել\tDel",                 CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Գտնել",              CMD_SEARCH
-        MENUITEM "Գտնել &հաջորդը\tF3",    CMD_SEARCH_NEXT
-        MENUITEM "Փոխարինել\tCtrl+H",    CMD_REPLACE
-        MENUITEM "Տեղափոխվել...\tCtrl+G", CMD_GOTO
+        MENUITEM "&Գտնել",                      CMD_SEARCH
+        MENUITEM "Գտնել &հաջորդը\tF3",          CMD_SEARCH_NEXT
+        MENUITEM "Փոխարինել\tCtrl+H",           CMD_REPLACE
+        MENUITEM "Տեղափոխվել...\tCtrl+G",       CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Նշել բելերը",            CMD_SELECT_ALL
-        MENUITEM "Ժամը& և ամսաթիվը\tF5",  CMD_TIME_DATE
+        MENUITEM "Նշել բելերը",                 CMD_SELECT_ALL
+        MENUITEM "Ժամը& և ամսաթիվը\tF5",        CMD_TIME_DATE
     END
     POPUP "Ֆոր&մատավորում"
     BEGIN
-        MENUITEM "&Տողադարձ բառերով", CMD_WRAP
-        MENUITEM "&Տառատեսակ...",  CMD_FONT
+        MENUITEM "&Տողադարձ բառերով",           CMD_WRAP
+        MENUITEM "&Տառատեսակ...",               CMD_FONT
     END
     POPUP "&Տեսք"
     BEGIN
-        MENUITEM "Վիճակի &տեղեկություն", CMD_STATUSBAR
+        MENUITEM "Վիճակի &տեղեկություն",        CMD_STATUSBAR
     END
     POPUP "Տեղե&կություն"
     BEGIN
-        MENUITEM "&Բովանդակություն",     CMD_HELP_CONTENTS
-        MENUITEM "&Փնտրել...",       CMD_HELP_SEARCH
-        MENUITEM "&Օգնությոն օգտագործում", CMD_HELP_ON_HELP
+        MENUITEM "&Բովանդակություն",            CMD_HELP_CONTENTS
+        MENUITEM "&Փնտրել...",                  CMD_HELP_SEARCH
+        MENUITEM "&Օգնությոն օգտագործում",      CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Ծրագրի մասին"      CMD_ABOUT
-        MENUITEM "&Տեղեկություն...",    CMD_ABOUT_WINE
+        MENUITEM "&Ծրագրի մասին"                CMD_ABOUT
+        MENUITEM "&Տեղեկություն...",            CMD_ABOUT_WINE
     END
 END
 
@@ -98,9 +98,9 @@ EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,   130, 55, 35, 11, WS_CHILD | 
 LTEXT    "&Ներքևի:",    0x14E, 100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,   130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
-DEFPUSHBUTTON "OK",             IDOK,                  180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Չնդունել",       IDCANCEL,              180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Տեղեկություն",  IDHELP,                180, 39, 40, 15, WS_TABSTOP
+DEFPUSHBUTTON "OK",             IDOK,               180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Չնդունել",       IDCANCEL,           180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Տեղեկություն",  IDHELP,             180, 39, 40, 15, WS_TABSTOP
 END
 
 /* Dialog `Encoding' */
