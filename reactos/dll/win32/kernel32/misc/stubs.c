@@ -481,24 +481,6 @@ GetNumaProcessorNode(
 /*
  * @unimplemented
  */
-UINT
-WINAPI
-GetWriteWatch(
-    DWORD  dwFlags,
-    PVOID  lpBaseAddress,
-    SIZE_T dwRegionSize,
-    PVOID *lpAddresses,
-    PULONG_PTR lpdwCount,
-    PULONG lpdwGranularity
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 WINAPI
 HeapQueryInformation (
