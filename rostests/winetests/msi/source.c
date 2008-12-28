@@ -130,6 +130,8 @@ static int get_user_sid(LPSTR *usersid)
     PTOKEN_USER user;
     BOOL rc;
 
+    if (!pConvertSidToStringSidA)
+        return 0;
     rc=OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     if (!rc && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
         return 0;
@@ -2864,13 +2866,10 @@ static void test_MsiSourceListEnumMediaDisks(void)
                                       prompt, &promptsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(id == 1, "Expected 1, got %d\n", id);
-    todo_wine
-    {
-        ok(!lstrcmpA(label, "#42"), "Expected \"#42\", got \"%s\"\n", label);
-        ok(labelsz == 3, "Expected 3, got %d\n", labelsz);
-        ok(!lstrcmpA(prompt, "#42"), "Expected \"#42\", got \"%s\"\n", prompt);
-        ok(promptsz == 3, "Expected 3, got %d\n", promptsz);
-    }
+    ok(!lstrcmpA(label, "#42"), "Expected \"#42\", got \"%s\"\n", label);
+    ok(labelsz == 3, "Expected 3, got %d\n", labelsz);
+    ok(!lstrcmpA(prompt, "#42"), "Expected \"#42\", got \"%s\"\n", prompt);
+    ok(promptsz == 3, "Expected 3, got %d\n", promptsz);
 
     RegDeleteValueA(media, "1");
     RegDeleteValueA(media, "2");
