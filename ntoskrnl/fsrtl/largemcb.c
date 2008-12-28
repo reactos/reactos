@@ -134,7 +134,17 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
     ExInitializeFastMutex(Mcb->FastMutex);
     KeInitializeGate((PKGATE)&(Mcb->FastMutex->Gate));
 
-    FsRtlInitializeBaseMcb(&(Mcb->BaseMcb), PoolType);
+    _SEH_TRY
+    {
+        FsRtlInitializeBaseMcb(&(Mcb->BaseMcb), PoolType);
+    }
+    _SEH_HANDLE
+    {
+        ExFreeToNPagedLookasideList(&FsRtlFastMutexLookasideList,
+                                    Mcb->FastMutex);
+        Mcb = NULL;
+    }
+    _SEH_END;
 }
 
 /*
