@@ -64,8 +64,8 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Suchen...", CMD_SEARCH
 		MENUITEM "&Weitersuchen\tF3", CMD_SEARCH_NEXT
-		MENUITEM "&Ersetzen\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Gehe zu...\tCtrl+G",  CMD_GOTO
+		MENUITEM "&Ersetzen\tStrg+H",   CMD_REPLACE
+		MENUITEM "Gehe zu...\tStrg+G",  CMD_GOTO
 		MENUITEM SEPARATOR
 		MENUITEM "Alles &markieren",  CMD_SELECT_ALL
 		MENUITEM "&Uhrzeit/Datum\tF5",        CMD_TIME_DATE
