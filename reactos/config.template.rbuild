@@ -21,13 +21,23 @@
 
 
 <!--
-	Which CPU ReactOS should be optimized for. Specify one of:
-		i486, i586, pentium, pentium2, pentium3, pentium4, athlon-xp, athlon-mp,
-		k6-2
+	Generate instructions for this CPU type. Specify one of:
+		native, i386, i486, pentium, pentium-mmx, pentiumpro, i686,
+		pentium2, pentium3, pentium-m, pentium4, prescott, nocona,
+		core2, k6, k6-2, athlon, athlon-xp, opteron, opteron-sse3,
+		barcelona, winchip-c6, winchip2, c3, c3-2, geode
 
-	See GCC manual for more CPU names and which CPUs GCC can optimize for.
+	See GCC manual for more CPU names.
 -->
 <property name="OARCH" value="pentium" />
+
+
+<!--
+	Which CPU ReactOS should be optimized for. Specify one of the above
+	CPUs or generic. When this option is not used, GCC will optimize for
+	the processor specified by OARCH.
+-->
+<property name="TUNE" value="i686" />
 
 
 <!--
