@@ -100,14 +100,15 @@ typedef struct tagARENA_FREE
 #else
 #define ALIGNMENT              16
 #endif
+#define ARENA_OFFSET (ALIGNMENT - sizeof(ARENA_INUSE))
 
-#define ROUND_SIZE(size)       (((size) + ALIGNMENT - 1) & ~(ALIGNMENT-1))
+#define ROUND_SIZE(size)       (((size) + ALIGNMENT - 1) & ~(ALIGNMENT-1)) + ARENA_OFFSET
 
 #define QUIET                  1           /* Suppress messages  */
 #define NOISY                  0           /* Report all errors  */
 
 /* minimum data size (without arenas) of an allocated block */
-#define HEAP_MIN_DATA_SIZE    16
+#define HEAP_MIN_DATA_SIZE    ROUND_SIZE(2 * sizeof(struct list))
 /* minimum size that must remain to shrink an allocated block */
 #define HEAP_MIN_SHRINK_SIZE  (HEAP_MIN_DATA_SIZE+sizeof(ARENA_FREE))
 
@@ -119,9 +120,10 @@ static const DWORD HEAP_freeListSizes[HEAP_NB_FREE_LISTS] =
     0x20, 0x80, 0x200, ~0UL
 };
 
-typedef struct
+typedef union
 {
     ARENA_FREE  arena;
+    void *alignment[4];
 } FREE_LIST_ENTRY;
 
 struct tagHEAP;
@@ -151,7 +153,7 @@ typedef struct tagHEAP
     SUBHEAP          subheap;       /* First sub-heap */
     struct list      entry;         /* Entry in process heap list */
     RTL_CRITICAL_SECTION critSection; /* Critical section for serialization */
-    FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS];  /* Free lists */
+    FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS] DECLSPEC_ALIGN(8);  /* Free lists */
     DWORD            flags;         /* Heap flags */
     DWORD            magic;         /* Magic number */
     PRTL_HEAP_COMMIT_ROUTINE commitRoutine;
@@ -776,6 +778,7 @@ static SUBHEAP *HEAP_CreateSubHeap( HEAP *heap, void *base, DWORD flags,
     totalSize  = (totalSize + 0xffff) & 0xffff0000;
     commitSize = (commitSize + 0xffff) & 0xffff0000;
     if (!commitSize) commitSize = 0x10000;
+    totalSize = min(totalSize, 0xffff0000); /* don't allow a heap larger than 4Gb */
     if (totalSize < commitSize) totalSize = commitSize;
 
     if (!address)
@@ -884,7 +887,7 @@ static BOOL HEAP_ValidateFreeArena( SUBHEAP *subheap, ARENA_FREE *pArena )
     char *heapEnd = (char *)subheap + subheap->size;
 
     /* Check for unaligned pointers */
-    if ( (ULONG_PTR)pArena % ALIGNMENT != 0 )
+    if ( (ULONG_PTR)pArena % ALIGNMENT != ARENA_OFFSET )
     {
         ERR("Heap %p: unaligned arena pointer %p\n", subheap->heap, pArena );
         return FALSE;
@@ -974,7 +977,7 @@ static BOOL HEAP_ValidateInUseArena( const SUBHEAP *subheap, const ARENA_INUSE *
     const char *heapEnd = (const char *)subheap + subheap->size;
 
     /* Check for unaligned pointers */
-    if ( (ULONG_PTR)pArena % ALIGNMENT != 0 )
+    if ( (ULONG_PTR)pArena % ALIGNMENT != ARENA_OFFSET)
     {
         if ( quiet == NOISY )
         {
@@ -1179,6 +1182,7 @@ RtlCreateHeap(ULONG flags,
         {
             processHeap = subheap->heap;  /* assume the first heap we create is the process main heap */
             list_init( &processHeap->entry );
+            ASSERT( (ULONG_PTR) processHeap->freeList % ALIGNMENT == ARENA_OFFSET );
         }
    }
 
@@ -1243,7 +1247,7 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
 PVOID NTAPI
 RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
                 ULONG flags,   /* [in] Heap allocation control flags */
-                ULONG size)    /* [in] Number of bytes to allocate */
+                SIZE_T size)    /* [in] Number of bytes to allocate */
 {
    ARENA_FREE *pArena;
    ARENA_INUSE *pInUse;
@@ -1568,14 +1572,14 @@ RtlUnlockHeap(HANDLE Heap)
  *
  * @implemented
  */
-ULONG NTAPI
+SIZE_T NTAPI
 RtlSizeHeap(
    HANDLE heap,
    ULONG flags,
    PVOID ptr
 )
 {
-   SIZE_T ret;
+    SIZE_T ret;
     HEAP *heapPtr = HEAP_GetPtr( heap );
 
     if (!heapPtr)
@@ -1860,7 +1864,7 @@ NTAPI
 RtlExtendHeap(IN HANDLE Heap,
               IN ULONG Flags,
               IN PVOID P,
-              IN ULONG Size)
+              IN SIZE_T Size)
 {
     /* TODO */
     UNIMPLEMENTED;
