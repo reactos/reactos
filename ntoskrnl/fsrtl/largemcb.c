@@ -142,7 +142,7 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
     {
         ExFreeToNPagedLookasideList(&FsRtlFastMutexLookasideList,
                                     Mcb->FastMutex);
-        Mcb = NULL;
+        Mcb->FastMutex = NULL;
     }
     _SEH_END;
 }
