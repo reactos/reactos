@@ -795,6 +795,7 @@ NtUserGetCursorInfo(
    CurInfo = IntGetSysCursorInfo(WinSta);
    CurIcon = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
 
+   SafeCi.cbSize = sizeof(CURSORINFO);
    SafeCi.flags = ((CurInfo->ShowingCursor && CurIcon) ? CURSOR_SHOWING : 0);
    SafeCi.hCursor = (CurIcon ? (HCURSOR)CurIcon->Self : (HCURSOR)0);
 
