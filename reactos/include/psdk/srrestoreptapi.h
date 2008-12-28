@@ -27,6 +27,13 @@ extern "C" {
 
 /* Defines */
 
+/* Event types */
+#define BEGIN_NESTED_SYSTEM_CHANGE 102
+#define END_NESTED_SYSTEM_CHANGE   103
+
+/* Restore point types */
+#define APPLICATION_INSTALL          0
+
 #define MAX_DESC    64
 #define MAX_DESC_W  256
 
