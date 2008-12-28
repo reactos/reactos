@@ -121,7 +121,7 @@ static void test_SetApplicationName_GetApplicationName(void)
     ok(hres == S_OK, "GetApplicationName failed: %08x\n", hres);
     if (hres == S_OK)
     {
-        ok(!lstrcmpW(stored_name, empty),
+        ok(!lstrcmpiW(stored_name, empty),
                 "Got %s, expected empty string\n", dbgstr_w(stored_name));
         CoTaskMemFree(stored_name);
     }
@@ -136,7 +136,7 @@ static void test_SetApplicationName_GetApplicationName(void)
     if (hres == S_OK)
     {
         full_name = path_resolve_name(non_application_name);
-        ok(!lstrcmpW(stored_name, full_name), "Got %s, expected %s\n",
+        ok(!lstrcmpiW(stored_name, full_name), "Got %s, expected %s\n",
                 dbgstr_w(stored_name), dbgstr_w(full_name));
         CoTaskMemFree(stored_name);
     }
@@ -151,7 +151,7 @@ static void test_SetApplicationName_GetApplicationName(void)
     if (hres == S_OK)
     {
         full_name = path_resolve_name(notepad_exe);
-        ok(!lstrcmpW(stored_name, full_name), "Got %s, expected %s\n",
+        ok(!lstrcmpiW(stored_name, full_name), "Got %s, expected %s\n",
                 dbgstr_w(stored_name), dbgstr_w(full_name));
         CoTaskMemFree(stored_name);
     }
@@ -164,9 +164,13 @@ static void test_SetApplicationName_GetApplicationName(void)
     ok(hres == S_OK, "GetApplicationName failed: %08x\n", hres);
     if (hres == S_OK)
     {
-        full_name = path_resolve_name(notepad);
-        ok(!lstrcmpW(stored_name, full_name), "Got %s, expected %s\n",
-                dbgstr_w(stored_name), dbgstr_w(full_name));
+        full_name = path_resolve_name(notepad_exe);  /* XP SP1 appends .exe */
+        if (lstrcmpiW(stored_name, full_name) != 0)
+        {
+            full_name = path_resolve_name(notepad);
+            ok(!lstrcmpiW(stored_name, full_name), "Got %s, expected %s\n",
+               dbgstr_w(stored_name), dbgstr_w(full_name));
+        }
         CoTaskMemFree(stored_name);
     }
 
@@ -181,7 +185,7 @@ static void test_SetApplicationName_GetApplicationName(void)
     if (hres == S_OK)
     {
         full_name = path_resolve_name(non_application_name);
-        ok(!lstrcmpW(stored_name, full_name), "Got %s, expected %s\n",
+        ok(!lstrcmpiW(stored_name, full_name), "Got %s, expected %s\n",
                 dbgstr_w(stored_name), dbgstr_w(full_name));
         CoTaskMemFree(stored_name);
     }
@@ -193,7 +197,7 @@ static void test_SetApplicationName_GetApplicationName(void)
     ok(hres == S_OK, "GetApplicationName failed: %08x\n", hres);
     if (hres == S_OK)
     {
-        ok(!lstrcmpW(stored_name, empty),
+        ok(!lstrcmpiW(stored_name, empty),
                 "Got %s, expected empty string\n", dbgstr_w(stored_name));
         CoTaskMemFree(stored_name);
     }
@@ -466,7 +470,10 @@ static void test_SetAccountInformation_GetAccountInformation(void)
     ok(hres == S_OK,
             "Failed setting dummy account with no password: %08x\n", hres);
     hres = ITask_GetAccountInformation(test_task, &account_name);
-    ok(hres == S_OK, "GetAccountInformation failed: %08x\n", hres);
+    ok(hres == S_OK ||
+       broken(hres == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+              hres == SCHED_E_CANNOT_OPEN_TASK),
+       "GetAccountInformation failed: %08x\n", hres);
     if (hres == S_OK)
     {
         ok(!lstrcmpW(account_name, dummy_account_name),
@@ -482,7 +489,10 @@ static void test_SetAccountInformation_GetAccountInformation(void)
     ok(hres == S_OK,
             "Failed setting dummy account with password: %08x\n", hres);
     hres = ITask_GetAccountInformation(test_task, &account_name);
-    ok(hres == S_OK, "GetAccountInformation failed: %08x\n", hres);
+    ok(hres == S_OK ||
+       broken(hres == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+              hres == SCHED_E_CANNOT_OPEN_TASK),
+       "GetAccountInformation failed: %08x\n", hres);
     if (hres == S_OK)
     {
         ok(!lstrcmpW(account_name, dummy_account_name_b),
@@ -495,7 +505,10 @@ static void test_SetAccountInformation_GetAccountInformation(void)
     hres = ITask_SetAccountInformation(test_task, empty, NULL);
     ok(hres == S_OK, "Failed setting system account: %08x\n", hres);
     hres = ITask_GetAccountInformation(test_task, &account_name);
-    ok(hres == S_OK, "GetAccountInformation failed: %08x\n", hres);
+    ok(hres == S_OK ||
+       broken(hres == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+              hres == SCHED_E_CANNOT_OPEN_TASK),
+       "GetAccountInformation failed: %08x\n", hres);
     if (hres == S_OK)
     {
         ok(!lstrcmpW(account_name, empty),
