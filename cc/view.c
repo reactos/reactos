@@ -271,7 +271,7 @@ CcUninitializeCacheMap (IN PFILE_OBJECT FileObject,
                 }
 
                 DPRINT ("%x\n", Bcb->Section);
-                //ObDereferenceObject (Bcb->Section);
+                ObDereferenceObject (Bcb->Section);
                 FileObject->SectionObjectPointer->SharedCacheMap = NULL;
                 ExFreeToNPagedLookasideList (&BcbLookasideList, Bcb);
             }
