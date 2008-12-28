@@ -594,7 +594,7 @@ static void test_FDIIsCabinet(void)
 }
 
 
-INT_PTR __cdecl CopyProgress (FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
+static INT_PTR __cdecl CopyProgress(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
 {
     return 0;
 }
