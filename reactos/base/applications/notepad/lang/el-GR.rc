@@ -27,7 +27,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -38,54 +40,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Αρχείο"
-	BEGIN
-		MENUITEM "&Νέο...",           CMD_NEW
-		MENUITEM "&’νοιγμα\tCtrl+O",     CMD_OPEN
-		MENUITEM "Αποθήκευ&ση\tCtrl+S",     CMD_SAVE
-		MENUITEM "Αποθήκευση &ως...",       CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "Ε&πιλογές σελίδας...",    CMD_PAGE_SETUP
-		MENUITEM "&Εκτύπωση",            CMD_PRINT
-		MENUITEM "Επιλογές εκ&τυπωτή ...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "Έ&ξοδος",             CMD_EXIT
-	END
-	POPUP "&Edit"
-	BEGIN
-		MENUITEM "Α&ναίρεση\tCtrl+Z",     CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "Αποκο&πή\tCtrl+X",      CMD_CUT
-		MENUITEM "&Αντιγραφή\tCtrl+C",     CMD_COPY
-		MENUITEM "&Επικόλληση\tCtrl+V",    CMD_PASTE
-		MENUITEM "&Διαγραφή\tDel",      CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Εύρεση...\tCtrl+F",  CMD_SEARCH
-		MENUITEM "Εύρεση ε&πόμενου\tF3",    CMD_SEARCH_NEXT
-		MENUITEM "Αντικατάσταση\tCtrl+H",   CMD_REPLACE
-		MENUITEM "&Μετάβαση στο...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Επιλογή &Όλων\tCtrl+A",       CMD_SELECT_ALL
-		MENUITEM "&Ώρα/Ημερομηνία\tF5",    CMD_TIME_DATE
-	END
-	POPUP "Φ&ορμά"
-	BEGIN
-		MENUITEM "&Εμφάνιση μεγάλων γραμμών",  CMD_WRAP
-		MENUITEM "&Γραμματοσειρά...",          CMD_FONT
-	END
-	POPUP "&Εμφάνιση"
-	BEGIN
-		MENUITEM "Γραμμή &κατάστασης",    CMD_STATUSBAR
-	END
-	POPUP "&Βοήθεια"
-	BEGIN
-		MENUITEM "&Περιεχόμενα",         CMD_HELP_CONTENTS
-		MENUITEM "&Αναζήτηση...",        CMD_HELP_SEARCH
-		MENUITEM "&Βοήθεια στη βοήθεια",     CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "Πληρο&φορίες",      CMD_ABOUT_WINE
-	END
+    POPUP "&Αρχείο"
+    BEGIN
+        MENUITEM "&Νέο\tCtrl+N",           CMD_NEW
+        MENUITEM "&’νοιγμα\tCtrl+O",       CMD_OPEN
+        MENUITEM "Αποθήκευ&ση\tCtrl+S",    CMD_SAVE
+        MENUITEM "Αποθήκευση &ως...",      CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Ε&πιλογές σελίδας...",   CMD_PAGE_SETUP
+        MENUITEM "&Εκτύπωση\tCtrl+P",      CMD_PRINT
+        MENUITEM "Επιλογές εκ&τυπωτή ...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Έ&ξοδος",                CMD_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Α&ναίρεση\tCtrl+Z",        CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Αποκο&πή\tCtrl+X",         CMD_CUT
+        MENUITEM "&Αντιγραφή\tCtrl+C",       CMD_COPY
+        MENUITEM "&Επικόλληση\tCtrl+V",      CMD_PASTE
+        MENUITEM "&Διαγραφή\tDel",           CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Εύρεση...\tCtrl+F",       CMD_SEARCH
+        MENUITEM "Εύρεση ε&πόμενου\tF3",     CMD_SEARCH_NEXT
+        MENUITEM "Αντικατάσταση\tCtrl+H",    CMD_REPLACE
+        MENUITEM "&Μετάβαση στο...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Επιλογή &Όλων\tCtrl+A",    CMD_SELECT_ALL
+        MENUITEM "&Ώρα/Ημερομηνία\tF5",      CMD_TIME_DATE
+    END
+    POPUP "Φ&ορμά"
+    BEGIN
+        MENUITEM "&Εμφάνιση μεγάλων γραμμών", CMD_WRAP
+        MENUITEM "&Γραμματοσειρά...",         CMD_FONT
+    END
+    POPUP "&Εμφάνιση"
+    BEGIN
+        MENUITEM "Γραμμή &κατάστασης", CMD_STATUSBAR
+    END
+    POPUP "&Βοήθεια"
+    BEGIN
+        MENUITEM "&Περιεχόμενα",         CMD_HELP_CONTENTS
+        MENUITEM "&Αναζήτηση...",        CMD_HELP_SEARCH
+        MENUITEM "&Βοήθεια στη βοήθεια", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About"                CMD_ABOUT
+        MENUITEM "Πληρο&φορίες",         CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */

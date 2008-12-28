@@ -30,7 +30,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -41,54 +43,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Arquivo"
-	BEGIN
-		MENUITEM "&Novo...",		CMD_NEW
-		MENUITEM "A&brir",		CMD_OPEN
-		MENUITEM "&Salvar",		CMD_SAVE
-		MENUITEM "Salvar &como...",	CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "&Imprimir",		CMD_PRINT
-		MENUITEM "C&onfigurar página...",	CMD_PAGE_SETUP
-		MENUITEM "Configurar i&mpressora...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "Sai&r",		CMD_EXIT
-	END
-	POPUP "&Editar"
-	BEGIN
-		MENUITEM "&Desfazer\tCtrl+Z", CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "&Recortar\tCtrl+X",	CMD_CUT
-		MENUITEM "&Copiar\tCtrl+C",	CMD_COPY
-		MENUITEM "C&olar\tCtrl+V",	CMD_PASTE
-		MENUITEM "E&xcluir\tDel",	CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Localizar...",	CMD_SEARCH
-		MENUITEM "Localizar &próxima\tF3",	CMD_SEARCH_NEXT
-		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Selecionar &tudo",	CMD_SELECT_ALL
-		MENUITEM "&Data/Hora\tF5",	CMD_TIME_DATE
-	END
-	POPUP "F&ormat"
-	BEGIN
-		MENUITEM "&Quebrar automática de linha",	CMD_WRAP
-		MENUITEM "&Fonte...",          CMD_FONT
-	END
-	POPUP "&View"
-	BEGIN
-		MENUITEM "Status&bar",    CMD_STATUSBAR
-	END
-	POPUP "&Ajuda"
-	BEGIN
-		MENUITEM "&Conteúdo",		CMD_HELP_CONTENTS
-		MENUITEM "&Procurar...",	CMD_HELP_SEARCH
-		MENUITEM "&Ajuda na ajuda",	CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "&Informações...",	CMD_ABOUT_WINE
-	END
+    POPUP "&Arquivo"
+    BEGIN
+        MENUITEM "&Novo\tCtrl+N",             CMD_NEW
+        MENUITEM "A&brir\tCtrl+O",            CMD_OPEN
+        MENUITEM "&Salvar\tCtrl+S",           CMD_SAVE
+        MENUITEM "Salvar &como...",           CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Imprimir\tCtrl+P",         CMD_PRINT
+        MENUITEM "C&onfigurar página...",     CMD_PAGE_SETUP
+        MENUITEM "Configurar i&mpressora...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Sai&r",                     CMD_EXIT
+    END
+    POPUP "&Editar"
+    BEGIN
+        MENUITEM "&Desfazer\tCtrl+Z",      CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Recortar\tCtrl+X",      CMD_CUT
+        MENUITEM "&Copiar\tCtrl+C",        CMD_COPY
+        MENUITEM "C&olar\tCtrl+V",         CMD_PASTE
+        MENUITEM "E&xcluir\tDel",          CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Localizar...",          CMD_SEARCH
+        MENUITEM "Localizar &próxima\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Replace\tCtrl+H",        CMD_REPLACE
+        MENUITEM "Go To...\tCtrl+G",       CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Selecionar &tudo",       CMD_SELECT_ALL
+        MENUITEM "&Data/Hora\tF5",         CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Quebrar automática de linha", CMD_WRAP
+        MENUITEM "&Fonte...",                    CMD_FONT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Status&bar", CMD_STATUSBAR
+    END
+    POPUP "&Ajuda"
+    BEGIN
+        MENUITEM "&Conteúdo",       CMD_HELP_CONTENTS
+        MENUITEM "&Procurar...",    CMD_HELP_SEARCH
+        MENUITEM "&Ajuda na ajuda", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About"           CMD_ABOUT
+        MENUITEM "&Informações...", CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
@@ -164,33 +166,33 @@ BEGIN
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_PAGESETUP_HEADERVALUE,	"&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,	"Página &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,		"20 mm"     /* FIXME */
-STRING_PAGESETUP_RIGHTVALUE,	"20 mm"     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,		"25 mm"     /* FIXME */
-STRING_PAGESETUP_BOTTOMVALUE,	"25 mm"     /* FIXME */
+STRING_PAGESETUP_HEADERVALUE,    "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,    "Página &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,        "20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,        "25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,    "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,					"Notepad"
-STRING_ERROR,					"ERRO"
-STRING_WARNING,					"AVISO"
-STRING_INFO,					"Informação"
+STRING_NOTEPAD,                    "Notepad"
+STRING_ERROR,                    "ERRO"
+STRING_WARNING,                    "AVISO"
+STRING_INFO,                    "Informação"
 
-STRING_UNTITLED,				"(sem nome)"
+STRING_UNTITLED,                "(sem nome)"
 
-STRING_ALL_FILES,				"Todos os arquivos (*.*)"
-STRING_TEXT_FILES_TXT,			"Arquivos texto (*.txt)"
+STRING_ALL_FILES,                "Todos os arquivos (*.*)"
+STRING_TEXT_FILES_TXT,            "Arquivos texto (*.txt)"
 
-STRING_TOOLARGE,				"Arquivo '%s' é muito longo para o notepad.\n \
+STRING_TOOLARGE,                "Arquivo '%s' é muito longo para o notepad.\n \
 Por favor use um editor diferente."
-STRING_NOTEXT,					"Você não digitou nenhum texto. \
+STRING_NOTEXT,                    "Você não digitou nenhum texto. \
 \nPor favor digite alguma coisa e tente novamente"
-STRING_DOESNOTEXIST,				"Arquivo '%s'\nnão existe\n\n \
+STRING_DOESNOTEXIST,                "Arquivo '%s'\nnão existe\n\n \
 Você deseja criar um novo arquivo?"
-STRING_NOTSAVED,				"Arquivo '%s'\nfoi modificado\n\n \
+STRING_NOTSAVED,                "Arquivo '%s'\nfoi modificado\n\n \
 Gostaria de salvar as alteraçÕes?"
-STRING_NOTFOUND,					"'%s' não pode ser encontrado."
-STRING_OUT_OF_MEMORY,			"Não há memória suficiente para completar essa \
+STRING_NOTFOUND,                    "'%s' não pode ser encontrado."
+STRING_OUT_OF_MEMORY,            "Não há memória suficiente para completar essa \
 tarefa. \nFeche uma ou mais aplicações para aumentar a quantidade de memória livre."
 STRING_CANNOTFIND                               "Cannot find '%s'"
 STRING_ANSI,                                    "ANSI"

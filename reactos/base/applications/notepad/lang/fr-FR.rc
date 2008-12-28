@@ -29,7 +29,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -40,54 +42,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Fichier"
-	BEGIN
-		MENUITEM "&Nouveau...",       CMD_NEW
-		MENUITEM "&Ouvrir\tCtrl+O",   CMD_OPEN
-		MENUITEM "&Enregistrer\tCtrl+S", CMD_SAVE
-		MENUITEM "Enregistrer &sous...", CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "Im&primer",         CMD_PRINT
-		MENUITEM "&Mise en page...",  CMD_PAGE_SETUP
-		MENUITEM "&Configuration de l'imprimante...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Quitter",          CMD_EXIT
-	END
-	POPUP "&Edition"
-	BEGIN
-		MENUITEM "&Annuler\tCtrl+Z",  CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "Co&uper\tCtrl+X",   CMD_CUT
-		MENUITEM "&Copier\tCtrl+C",   CMD_COPY
-		MENUITEM "C&oller\tCtrl+V",   CMD_PASTE
-		MENUITEM "&Effacer\tDel",     CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Rechercher\tCtrl+F", CMD_SEARCH
-		MENUITEM "&Suivant\tF3",      CMD_SEARCH_NEXT
-		MENUITEM "Remplacer\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Atteindre...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Tout &sélectionner\tCtrl+A", CMD_SELECT_ALL
-		MENUITEM "&Heure/Date\tF5",   CMD_TIME_DATE
-	END
-	POPUP "&Format"
-	BEGIN
-		MENUITEM "&Retour à la ligne", CMD_WRAP
-		MENUITEM "&Police...",        CMD_FONT
-	END
-	POPUP "Affichage"
-	BEGIN
-		MENUITEM "Barre d'état",    CMD_STATUSBAR
-	END
-	POPUP "&Aide"
-	BEGIN
-		MENUITEM "&Sommaire",         CMD_HELP_CONTENTS
-		MENUITEM "&Rechercher...",    CMD_HELP_SEARCH
-		MENUITEM "&Utiliser l'aide",  CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&À propos"             CMD_ABOUT
-		MENUITEM "Inf&o...",        CMD_ABOUT_WINE
-	END
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Nouveau\tCtrl+N",                  CMD_NEW
+        MENUITEM "&Ouvrir\tCtrl+O",                   CMD_OPEN
+        MENUITEM "&Enregistrer\tCtrl+S",              CMD_SAVE
+        MENUITEM "Enregistrer &sous...",              CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Im&primer\tCtrl+P",                 CMD_PRINT
+        MENUITEM "&Mise en page...",                  CMD_PAGE_SETUP
+        MENUITEM "&Configuration de l'imprimante...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Quitter",                          CMD_EXIT
+    END
+    POPUP "&Edition"
+    BEGIN
+        MENUITEM "&Annuler\tCtrl+Z",           CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Co&uper\tCtrl+X",            CMD_CUT
+        MENUITEM "&Copier\tCtrl+C",            CMD_COPY
+        MENUITEM "C&oller\tCtrl+V",            CMD_PASTE
+        MENUITEM "&Effacer\tDel",              CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Rechercher\tCtrl+F",        CMD_SEARCH
+        MENUITEM "&Suivant\tF3",               CMD_SEARCH_NEXT
+        MENUITEM "Remplacer\tCtrl+H",          CMD_REPLACE
+        MENUITEM "Atteindre...\tCtrl+G",       CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Tout &sélectionner\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "&Heure/Date\tF5",            CMD_TIME_DATE
+    END
+    POPUP "&Format"
+    BEGIN
+        MENUITEM "&Retour à la ligne", CMD_WRAP
+        MENUITEM "&Police...",         CMD_FONT
+    END
+    POPUP "Affichage"
+    BEGIN
+        MENUITEM "Barre d'état", CMD_STATUSBAR
+    END
+    POPUP "&Aide"
+    BEGIN
+        MENUITEM "&Sommaire",        CMD_HELP_CONTENTS
+        MENUITEM "&Rechercher...",   CMD_HELP_SEARCH
+        MENUITEM "&Utiliser l'aide", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&À propos"         CMD_ABOUT
+        MENUITEM "Inf&o...",         CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */

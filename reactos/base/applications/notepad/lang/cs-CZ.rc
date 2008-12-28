@@ -31,7 +31,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -42,54 +44,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Soubor"
-	BEGIN
-		MENUITEM "&Nový...",               CMD_NEW
-		MENUITEM "&Otevøít\tCtrl+O",       CMD_OPEN
-		MENUITEM "&Uložit\tCtrl+S",        CMD_SAVE
-		MENUITEM "Uložit j&ako...",        CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "&Tisk",                  CMD_PRINT
-		MENUITEM "Nas&tavení stránky...",  CMD_PAGE_SETUP
-		MENUITEM "Nastavení tiská&rny...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Konec",                 CMD_EXIT
-	END
-	POPUP "U&pravit"
-	BEGIN
-		MENUITEM "&Zpìt\tCtrl+Z",          CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "Vyjmou&t\tCtrl+X",       CMD_CUT
-		MENUITEM "&Kopírovat\tCtrl+C",     CMD_COPY
-		MENUITEM "&Vložit\tCtrl+V",        CMD_PASTE
-		MENUITEM "&Smazat\tDel",           CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Hledej\tCtrl+F",        CMD_SEARCH
-		MENUITEM "&Najdi další\tF3",       CMD_SEARCH_NEXT
-		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Vybrat vš&e\tCtrl+A",    CMD_SELECT_ALL
-		MENUITEM "È&as/Datum\tF5",         CMD_TIME_DATE
-	END
-	POPUP "F&ormat"
-	BEGIN
-		MENUITEM "Zalo&mit dlouhé øádky",  CMD_WRAP
-		MENUITEM "&Písmo...",              CMD_FONT
-	END
-	POPUP "&Zobrazit"
-	BEGIN
-		MENUITEM "&Stavový øádek",    CMD_STATUSBAR
-	END
-	POPUP "&Nápovìda"
-	BEGIN
-		MENUITEM "&Obsah",                 CMD_HELP_CONTENTS
-		MENUITEM "&Najít...",              CMD_HELP_SEARCH
-		MENUITEM "&Pomoc k nápovìdì",      CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&O programu"                  CMD_ABOUT
-		MENUITEM "Inf&o...",               CMD_ABOUT_WINE
-	END
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&Nový\tCtrl+N",          CMD_NEW
+        MENUITEM "&Otevøít\tCtrl+O",       CMD_OPEN
+        MENUITEM "&Uložit\tCtrl+S",        CMD_SAVE
+        MENUITEM "Uložit j&ako...",        CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Tisk\tCtrl+P",          CMD_PRINT
+        MENUITEM "Nas&tavení stránky...",  CMD_PAGE_SETUP
+        MENUITEM "Nastavení tiská&rny...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Konec",                 CMD_EXIT
+    END
+    POPUP "U&pravit"
+    BEGIN
+        MENUITEM "&Zpìt\tCtrl+Z",       CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Vyjmou&t\tCtrl+X",    CMD_CUT
+        MENUITEM "&Kopírovat\tCtrl+C",  CMD_COPY
+        MENUITEM "&Vložit\tCtrl+V",     CMD_PASTE
+        MENUITEM "&Smazat\tDel",        CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Hledej\tCtrl+F",     CMD_SEARCH
+        MENUITEM "&Najdi další\tF3",    CMD_SEARCH_NEXT
+        MENUITEM "Replace\tCtrl+H",     CMD_REPLACE
+        MENUITEM "Go To...\tCtrl+G",    CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Vybrat vš&e\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "È&as/Datum\tF5",      CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "Zalo&mit dlouhé øádky", CMD_WRAP
+        MENUITEM "&Písmo...",             CMD_FONT
+    END
+    POPUP "&Zobrazit"
+    BEGIN
+        MENUITEM "&Stavový øádek", CMD_STATUSBAR
+    END
+    POPUP "&Nápovìda"
+    BEGIN
+        MENUITEM "&Obsah",            CMD_HELP_CONTENTS
+        MENUITEM "&Najít...",         CMD_HELP_SEARCH
+        MENUITEM "&Pomoc k nápovìdì", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&O programu"        CMD_ABOUT
+        MENUITEM "Inf&o...",          CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */

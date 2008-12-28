@@ -28,7 +28,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -39,54 +41,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "文件(&F)"
-	BEGIN
-		MENUITEM "新建(&N)...",           CMD_NEW
-		MENUITEM "打开(&O)",             CMD_OPEN
-		MENUITEM "保存(&S)",             CMD_SAVE
-		MENUITEM "另存为(&A)...",       CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "打印(&P)",            CMD_PRINT
-		MENUITEM "页面设置(&T)...",    CMD_PAGE_SETUP
-		MENUITEM "打印设置(&R)...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "退出(&E)",             CMD_EXIT
-	END
-	POPUP "编辑(&E)"
-	BEGIN
-		MENUITEM "撤消(&U)\tCtrl+Z",     CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "剪切(&T)\tCtrl+X",      CMD_CUT
-		MENUITEM "复制(&C)\tCtrl+C",     CMD_COPY
-		MENUITEM "粘贴(&P)\tCtrl+V",    CMD_PASTE
-		MENUITEM "删除(&D)\tDel",      CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "搜索(&S)",           CMD_SEARCH
-		MENUITEM "搜索下一个(&S)\tF3",  CMD_SEARCH_NEXT
-		MENUITEM "替换\tCtrl+H",   CMD_REPLACE
-		MENUITEM "转到...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "全选(&A)",       CMD_SELECT_ALL
-		MENUITEM "插入日期、时间(&T)\tF5",    CMD_TIME_DATE
-	END
-	POPUP "格式(&O)"
-	BEGIN
-		MENUITEM "自动换行(&W)",  CMD_WRAP
-		MENUITEM "字体(&F)...",          CMD_FONT
-	END
-	POPUP "查看(&V)"
-	BEGIN
-		MENUITEM "状态栏(&B)",    CMD_STATUSBAR
-	END
-	POPUP "帮助(&H)"
-	BEGIN
-		MENUITEM "内容(&C)",         CMD_HELP_CONTENTS
-		MENUITEM "搜索(&S)...",        CMD_HELP_SEARCH
-		MENUITEM "如何使用帮助(&H)",     CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "关于(&A)"             CMD_ABOUT
-		MENUITEM "资料信息(&O)...",      CMD_ABOUT_WINE
-	END
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建(&N)...",     CMD_NEW
+        MENUITEM "打开(&O)",        CMD_OPEN
+        MENUITEM "保存(&S)",        CMD_SAVE
+        MENUITEM "另存为(&A)...",   CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "打印(&P)",        CMD_PRINT
+        MENUITEM "页面设置(&T)...", CMD_PAGE_SETUP
+        MENUITEM "打印设置(&R)...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&E)",        CMD_EXIT
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "撤消(&U)\tCtrl+Z",       CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "剪切(&T)\tCtrl+X",       CMD_CUT
+        MENUITEM "复制(&C)\tCtrl+C",       CMD_COPY
+        MENUITEM "粘贴(&P)\tCtrl+V",       CMD_PASTE
+        MENUITEM "删除(&D)\tDel",          CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "搜索(&S)",               CMD_SEARCH
+        MENUITEM "搜索下一个(&S)\tF3",     CMD_SEARCH_NEXT
+        MENUITEM "替换\tCtrl+H",           CMD_REPLACE
+        MENUITEM "转到...\tCtrl+G",        CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "全选(&A)",               CMD_SELECT_ALL
+        MENUITEM "插入日期、时间(&T)\tF5", CMD_TIME_DATE
+    END
+    POPUP "格式(&O)"
+    BEGIN
+        MENUITEM "自动换行(&W)", CMD_WRAP
+        MENUITEM "字体(&F)...",  CMD_FONT
+    END
+    POPUP "查看(&V)"
+    BEGIN
+        MENUITEM "状态栏(&B)", CMD_STATUSBAR
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "内容(&C)",         CMD_HELP_CONTENTS
+        MENUITEM "搜索(&S)...",      CMD_HELP_SEARCH
+        MENUITEM "如何使用帮助(&H)", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "关于(&A)"          CMD_ABOUT
+        MENUITEM "资料信息(&O)...",  CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */

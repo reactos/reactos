@@ -7,7 +7,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -18,54 +20,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Fitxategia"
-	BEGIN
-		MENUITEM "&Berria...",                   CMD_NEW
-		MENUITEM "&Ireki\tCtrl+O",              CMD_OPEN
-		MENUITEM "&Gorde\tCtrl+S",            CMD_SAVE
-		MENUITEM "Gorde &honela...",            CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "&Inprimatu",                   CMD_PRINT
-		MENUITEM "Prestatu &orrialdea...",       CMD_PAGE_SETUP
-		MENUITEM "Inprimatzeko &aurrebista...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Irten",                      CMD_EXIT
-	END
-	POPUP "&Edizioa"
-	BEGIN
-		MENUITEM "&Desegin\tCtrl+Z",         CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "Ebaki\tCtrl+X",           CMD_CUT
-		MENUITEM "&Kopiatu\tCtrl+C",           CMD_COPY
-		MENUITEM "&Itsasi\tCtrl+V",            CMD_PASTE
-		MENUITEM "&Ezabatu\tDel",            CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Bilatu\tCtrl+F",       CMD_SEARCH
-		MENUITEM "Bilatu &hurrengoa\tF3", CMD_SEARCH_NEXT
-		MENUITEM "Ordeztu\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Joan...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Hautatu dena\tCtrl+A", CMD_SELECT_ALL
-		MENUITEM "&Ordua eta data\tF5",         CMD_TIME_DATE
-	END
-	POPUP "Formatua"
-	BEGIN
-		MENUITEM "&Lerrokatu",          CMD_WRAP
-		MENUITEM "Letra-tipoa...",         CMD_FONT
-	END
-	POPUP "&Ikusi"
-	BEGIN
-		MENUITEM "Egoera-barra",    CMD_STATUSBAR
+    POPUP "&Fitxategia"
+    BEGIN
+        MENUITEM "&Berria\tCtrl+N",             CMD_NEW
+        MENUITEM "&Ireki\tCtrl+O",              CMD_OPEN
+        MENUITEM "&Gorde\tCtrl+S",              CMD_SAVE
+        MENUITEM "Gorde &honela...",            CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Inprimatu\tCtrl+P",          CMD_PRINT
+        MENUITEM "Prestatu &orrialdea...",      CMD_PAGE_SETUP
+        MENUITEM "Inprimatzeko &aurrebista...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Irten",                      CMD_EXIT
+    END
+    POPUP "&Edizioa"
+    BEGIN
+        MENUITEM "&Desegin\tCtrl+Z",      CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Ebaki\tCtrl+X",         CMD_CUT
+        MENUITEM "&Kopiatu\tCtrl+C",      CMD_COPY
+        MENUITEM "&Itsasi\tCtrl+V",       CMD_PASTE
+        MENUITEM "&Ezabatu\tDel",         CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bilatu\tCtrl+F",       CMD_SEARCH
+        MENUITEM "Bilatu &hurrengoa\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Ordeztu\tCtrl+H",       CMD_REPLACE
+        MENUITEM "Joan...\tCtrl+G",       CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Hautatu dena\tCtrl+A",  CMD_SELECT_ALL
+        MENUITEM "&Ordua eta data\tF5",   CMD_TIME_DATE
+    END
+    POPUP "Formatua"
+    BEGIN
+        MENUITEM "&Lerrokatu",     CMD_WRAP
+        MENUITEM "Letra-tipoa...", CMD_FONT
+    END
+    POPUP "&Ikusi"
+    BEGIN
+        MENUITEM "Egoera-barra", CMD_STATUSBAR
         END
-	POPUP "Laguntza"
-	BEGIN
-		MENUITEM "Í&ndizea",               CMD_HELP_CONTENTS
-		MENUITEM "&Bilatu...",            CMD_HELP_SEARCH
-		MENUITEM "Laguntzari buruz laguntza", CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&Ohar-blokari buruz"             CMD_ABOUT
-		MENUITEM "&Informazioa...",      CMD_ABOUT_WINE
-	END
+    POPUP "Laguntza"
+    BEGIN
+        MENUITEM "Í&ndizea",                  CMD_HELP_CONTENTS
+        MENUITEM "&Bilatu...",                CMD_HELP_SEARCH
+        MENUITEM "Laguntzari buruz laguntza", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Ohar-blokari buruz"        CMD_ABOUT
+        MENUITEM "&Informazioa...",           CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
