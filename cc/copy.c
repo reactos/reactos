@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -41,7 +41,7 @@ extern LIST_ENTRY CcInUseCacheViewListHead;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL MmMapViewInSystemCache (PCACHE_VIEW);
+NTSTATUS NTAPI MmMapViewInSystemCache (PCACHE_VIEW);
 
 
 VOID NTAPI
@@ -53,20 +53,20 @@ CcInitCacheZeroPage (VOID)
     if (!NT_SUCCESS (Status))
     {
         DbgPrint ("Can't allocate CcZeroPage.\n");
-        KEBUGCHECKCC;
+        KeBugCheck(CACHE_MANAGER);
     }
     Status = MiZeroPage (CcZeroPage);
     if (!NT_SUCCESS (Status))
     {
         DbgPrint ("Can't zero out CcZeroPage.\n");
-        KEBUGCHECKCC;
+        KeBugCheck(CACHE_MANAGER);
     }
 }
 
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcCanIWrite (IN PFILE_OBJECT FileObject, 
              IN ULONG BytesToWrite, 
              IN BOOLEAN Wait, 
@@ -76,7 +76,7 @@ CcCanIWrite (IN PFILE_OBJECT FileObject,
     return FALSE;
 }
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcCopyRead (IN PFILE_OBJECT FileObject,
             IN PLARGE_INTEGER FileOffset, 
             IN ULONG Length, 
@@ -102,7 +102,6 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
     {
         IoStatus->Information = 0;
         IoStatus->Status = STATUS_UNSUCCESSFUL;
-        CHECKPOINT;
         return FALSE;
     }
 
@@ -113,13 +112,13 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 
     if (FileOffset->QuadPart + Length > Bcb->FileSizes.FileSize.QuadPart)
     {
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
 
     if (Bcb->FileSizes.AllocationSize.QuadPart > sizeof (Bcb->CacheView) / sizeof (Bcb->CacheView[0]) * CACHE_VIEW_SIZE)
     {
         /* not implemented */
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
 
     Offset = *FileOffset;
@@ -130,7 +129,6 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
         Index = Offset.QuadPart / CACHE_VIEW_SIZE;
         if (Bcb->CacheView[Index] && Bcb->CacheView[Index]->Bcb == Bcb)
         {
-            CHECKPOINT;
             if (Bcb->CacheView[Index]->RefCount == 0)
             {
                 RemoveEntryList (&Bcb->CacheView[Index]->ListEntry);
@@ -140,11 +138,10 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
         }
         else
         {
-            CHECKPOINT;
             if (IsListEmpty (&CcFreeCacheViewListHead))
             {
                 /* not implemented */
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
 
             entry = CcFreeCacheViewListHead.Flink;
@@ -159,7 +156,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
             }
             if (entry == &CcFreeCacheViewListHead)
             {
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
 
             if (current->Bcb)
@@ -173,7 +170,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
             {
                 DPRINT1 ("%x\n", Bcb->CacheView[Index]->Bcb);
                 /* not implemented */
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
             Bcb->CacheView[Index]->RefCount = 1;
             Bcb->CacheView[Index]->Bcb = Bcb;
@@ -188,7 +185,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 
             if (!NT_SUCCESS (Status))
             {
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
         }
         ExReleaseFastMutex (&CcCacheViewLock);
@@ -228,15 +225,13 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
     }
     ExReleaseFastMutex (&CcCacheViewLock);
 
-    CHECKPOINT;
-
     return TRUE;
 }
 
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcCopyWrite (IN PFILE_OBJECT FileObject, 
              IN PLARGE_INTEGER FileOffset, 
              IN ULONG Length, 
@@ -257,7 +252,6 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 
     if (!Wait)
     {
-        CHECKPOINT;
         return FALSE;
     }
 
@@ -265,13 +259,13 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 
     if (FileOffset->QuadPart + Length > Bcb->FileSizes.FileSize.QuadPart)
     {
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
 
     if (Bcb->FileSizes.AllocationSize.QuadPart > sizeof (Bcb->CacheView) / sizeof (Bcb->CacheView[0]) * CACHE_VIEW_SIZE)
     {
         /* not implemented */
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
 
     Offset = *FileOffset;
@@ -282,7 +276,6 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
         Index = Offset.QuadPart / CACHE_VIEW_SIZE;
         if (Bcb->CacheView[Index] && Bcb->CacheView[Index]->Bcb == Bcb)
         {
-            CHECKPOINT;
             if (Bcb->CacheView[Index]->RefCount == 0)
             {
                 RemoveEntryList (&Bcb->CacheView[Index]->ListEntry);
@@ -292,11 +285,10 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
         }
         else
         {
-            CHECKPOINT;
             if (IsListEmpty (&CcFreeCacheViewListHead))
             {
                 /* not implemented */
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
 
             entry = CcFreeCacheViewListHead.Flink;
@@ -311,7 +303,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
             }
             if (entry == &CcFreeCacheViewListHead)
             {
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
 
             if (current->Bcb)
@@ -325,7 +317,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
             {
                 DPRINT1 ("%x\n", Bcb->CacheView[Index]->Bcb);
                 /* not implemented */
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
             Bcb->CacheView[Index]->RefCount = 1;
             Bcb->CacheView[Index]->Bcb = Bcb;
@@ -340,7 +332,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 
             if (!NT_SUCCESS (Status))
             {
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
         }
         ExReleaseFastMutex (&CcCacheViewLock);
@@ -380,15 +372,13 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
     }
     ExReleaseFastMutex (&CcCacheViewLock);
 
-    CHECKPOINT;
-
     return TRUE;
 }
 
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcDeferWrite (IN PFILE_OBJECT FileObject,
               IN PCC_POST_DEFERRED_WRITE PostRoutine,
               IN PVOID Context1, 
@@ -402,7 +392,7 @@ CcDeferWrite (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcFastCopyRead (IN PFILE_OBJECT FileObject,
                 IN ULONG FileOffset, 
                 IN ULONG Length, 
@@ -416,7 +406,7 @@ CcFastCopyRead (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcFastCopyWrite (IN PFILE_OBJECT FileObject, 
                  IN ULONG FileOffset, 
                  IN ULONG Length, 
@@ -428,7 +418,7 @@ CcFastCopyWrite (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CcWaitForCurrentLazyWriterActivity (VOID)
 {
     UNIMPLEMENTED;
@@ -438,7 +428,7 @@ CcWaitForCurrentLazyWriterActivity (VOID)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcZeroData (IN PFILE_OBJECT FileObject, 
             IN PLARGE_INTEGER StartOffset, 
             IN PLARGE_INTEGER EndOffset, 
@@ -510,19 +500,18 @@ CcZeroData (IN PFILE_OBJECT FileObject,
 
         if (!Wait)
         {
-            CHECKPOINT;
             return FALSE;
         }
 
         if (EndOffset->QuadPart > Bcb->FileSizes.FileSize.QuadPart)
         {
-            KEBUGCHECK (0);
+            KeBugCheck(CACHE_MANAGER);
         }
 
         if (Bcb->FileSizes.AllocationSize.QuadPart > sizeof (Bcb->CacheView) / sizeof (Bcb->CacheView[0]) * CACHE_VIEW_SIZE)
         {
             /* not implemented */
-            KEBUGCHECK (0);
+            KeBugCheck(CACHE_MANAGER);
         }
 
         Offset = *StartOffset;
@@ -534,7 +523,6 @@ CcZeroData (IN PFILE_OBJECT FileObject,
             Index = Offset.QuadPart / CACHE_VIEW_SIZE;
             if (Bcb->CacheView[Index] && Bcb->CacheView[Index]->Bcb == Bcb)
             {
-                CHECKPOINT;
                 if (Bcb->CacheView[Index]->RefCount == 0)
                 {
                     RemoveEntryList (&Bcb->CacheView[Index]->ListEntry);
@@ -544,11 +532,10 @@ CcZeroData (IN PFILE_OBJECT FileObject,
             }
             else
             {
-                CHECKPOINT;
                 if (IsListEmpty (&CcFreeCacheViewListHead))
                 {
                     /* not implemented */
-                    KEBUGCHECK (0);
+                    KeBugCheck(CACHE_MANAGER);
                 }
 
                 entry = CcFreeCacheViewListHead.Flink;
@@ -563,7 +550,7 @@ CcZeroData (IN PFILE_OBJECT FileObject,
                 }
                 if (entry == &CcFreeCacheViewListHead)
                 {
-                    KEBUGCHECK (0);
+                    KeBugCheck(CACHE_MANAGER);
                 }
 
                 Bcb->CacheView[Index] = current;
@@ -572,7 +559,7 @@ CcZeroData (IN PFILE_OBJECT FileObject,
                 {
                     DPRINT1 ("%x\n", Bcb->CacheView[Index]->Bcb);
                     /* not implemented */
-                    KEBUGCHECK (0);
+                    KeBugCheck(CACHE_MANAGER);
                 }
                 Bcb->CacheView[Index]->RefCount = 1;
                 Bcb->CacheView[Index]->Bcb = Bcb;
@@ -587,7 +574,7 @@ CcZeroData (IN PFILE_OBJECT FileObject,
 
                 if (!NT_SUCCESS (Status))
                 {
-                    KEBUGCHECK (0);
+                    KeBugCheck(CACHE_MANAGER);
                 }
             }
             ExReleaseFastMutex (&CcCacheViewLock);
@@ -624,8 +611,6 @@ CcZeroData (IN PFILE_OBJECT FileObject,
             }
         }
         ExReleaseFastMutex (&CcCacheViewLock);
-
-        CHECKPOINT;
     }
     return (TRUE);
 }

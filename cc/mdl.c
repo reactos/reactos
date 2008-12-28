@@ -11,14 +11,14 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcMdlRead (IN PFILE_OBJECT FileObject,
            IN PLARGE_INTEGER FileOffset, 
            IN ULONG Length, 
@@ -45,7 +45,7 @@ CcMdlRead (IN PFILE_OBJECT FileObject,
  *     Used by CcMdlReadComplete@8 and FsRtl
  *
  */
-VOID STDCALL
+VOID NTAPI
 CcMdlReadCompleteDev (IN PMDL MdlChain, 
                       IN PFILE_OBJECT FileObject)
 {
@@ -76,7 +76,7 @@ CcMdlReadCompleteDev (IN PMDL MdlChain,
  *
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcMdlReadComplete (IN PFILE_OBJECT FileObject, 
                    IN PMDL MdlChain)
 {
@@ -101,7 +101,7 @@ CcMdlReadComplete (IN PFILE_OBJECT FileObject,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcMdlWriteComplete (IN PFILE_OBJECT FileObject, 
                     IN PLARGE_INTEGER FileOffset, 
                     IN PMDL MdlChain)
@@ -148,7 +148,7 @@ CcMdlWriteComplete2 (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcMdlWriteAbort (IN PFILE_OBJECT FileObject, 
                  IN PMDL MdlChain)
 {
@@ -158,7 +158,7 @@ CcMdlWriteAbort (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcPrepareMdlWrite (IN PFILE_OBJECT FileObject,
                    IN PLARGE_INTEGER FileOffset, 
                    IN ULONG Length, 

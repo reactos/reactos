@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -45,7 +45,7 @@ NTSTATUS NTAPI MmCreateDataFileSection (PSECTION_OBJECT * SectionObject,
                                         PFILE_OBJECT FileObject, 
                                         BOOLEAN CacheManager);
 
-NTSTATUS STDCALL MmUnmapViewInSystemCache (PCACHE_VIEW);
+NTSTATUS NTAPI MmUnmapViewInSystemCache (PCACHE_VIEW);
 
 NTSTATUS MmFlushDataFileSection (PSECTION_OBJECT Section, PLARGE_INTEGER StartOffset, ULONG Length);
 
@@ -54,7 +54,7 @@ NTSTATUS MmFlushDataFileSection (PSECTION_OBJECT Section, PLARGE_INTEGER StartOf
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcFlushCache (IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
               IN PLARGE_INTEGER FileOffset OPTIONAL, 
               IN ULONG Length, 
@@ -83,7 +83,7 @@ CcFlushCache (IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
 /*
  * @implemented
  */
-PFILE_OBJECT STDCALL
+PFILE_OBJECT NTAPI
 CcGetFileObjectFromSectionPtrs (IN PSECTION_OBJECT_POINTERS SectionObjectPointers)
 {
     PBCB Bcb;
@@ -139,12 +139,12 @@ CcInitView (VOID)
     DPRINT ("CcCacheViewBase: %x\n", CcCacheViewBase);
     if (!NT_SUCCESS (Status))
     {
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
     CcCacheViewArray = ExAllocatePool (NonPagedPool, sizeof (CACHE_VIEW) * (Size / CACHE_VIEW_SIZE));
     if (CcCacheViewArray == NULL)
     {
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
 
     Base = CcCacheViewBase;
@@ -164,7 +164,7 @@ CcInitView (VOID)
 
 }
 
-VOID STDCALL
+VOID NTAPI
 CcInitializeCacheMap (IN PFILE_OBJECT FileObject,
                       IN PCC_FILE_SIZES FileSizes,
                       IN BOOLEAN PinAccess, 
@@ -188,7 +188,7 @@ CcInitializeCacheMap (IN PFILE_OBJECT FileObject,
         Bcb = ExAllocateFromNPagedLookasideList (&BcbLookasideList);
         if (Bcb == NULL)
         {
-            KEBUGCHECK (0);
+            KeBugCheck(CACHE_MANAGER);
         }
         memset (Bcb, 0, sizeof (BCB));
 
@@ -207,7 +207,7 @@ CcInitializeCacheMap (IN PFILE_OBJECT FileObject,
         if (!NT_SUCCESS (Status))
         {
             DPRINT1 ("%x\n", Status);
-            KEBUGCHECK (0);
+            KeBugCheck(CACHE_MANAGER);
         }
 
         FileObject->SectionObjectPointer->SharedCacheMap = Bcb;
@@ -223,7 +223,7 @@ CcInitializeCacheMap (IN PFILE_OBJECT FileObject,
     DPRINT ("CcInitializeCacheMap() done\n");
 }
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcUninitializeCacheMap (IN PFILE_OBJECT FileObject,
                         IN PLARGE_INTEGER TruncateSize OPTIONAL, 
                         IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL)
@@ -255,15 +255,14 @@ CcUninitializeCacheMap (IN PFILE_OBJECT FileObject,
                 {
                     if (Bcb->CacheView[i] && Bcb->CacheView[i]->Bcb == Bcb)
                     {
-                        CHECKPOINT;
                         if (Bcb->CacheView[i]->RefCount > 0)
                         {
-                            KEBUGCHECK (0);
+                            KeBugCheck(CACHE_MANAGER);
                         }
                         Status = MmUnmapViewInSystemCache (Bcb->CacheView[i]);
                         if (!NT_SUCCESS (Status))
                         {
-                            KEBUGCHECK (0);
+                            KeBugCheck(CACHE_MANAGER);
                         }
                         Bcb->CacheView[i]->RefCount = 0;
                         Bcb->CacheView[i]->Bcb = NULL;

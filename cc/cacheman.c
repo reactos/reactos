@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 PFSN_PREFETCHER_GLOBALS CcPfGlobals;
 
@@ -44,7 +44,7 @@ CcInitializeCacheManager (VOID)
 /*
  * @unimplemented
  */
-LARGE_INTEGER STDCALL
+LARGE_INTEGER NTAPI
 CcGetFlushedValidData (IN PSECTION_OBJECT_POINTERS SectionObjectPointer, 
                        IN BOOLEAN BcbListHeld)
 {
@@ -59,7 +59,7 @@ CcGetFlushedValidData (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 /*
  * @unimplemented
  */
-PVOID STDCALL
+PVOID NTAPI
 CcRemapBcb (IN PVOID Bcb)
 {
     UNIMPLEMENTED;
@@ -70,7 +70,7 @@ CcRemapBcb (IN PVOID Bcb)
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcScheduleReadAhead (IN PFILE_OBJECT FileObject, 
                      IN PLARGE_INTEGER FileOffset, 
                      IN ULONG Length)
@@ -81,7 +81,7 @@ CcScheduleReadAhead (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcSetAdditionalCacheAttributes (IN PFILE_OBJECT FileObject, 
                                 IN BOOLEAN DisableReadAhead, 
                                 IN BOOLEAN DisableWriteBehind)
@@ -92,7 +92,7 @@ CcSetAdditionalCacheAttributes (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcSetBcbOwnerPointer (IN PVOID Bcb, 
                       IN PVOID Owner)
 {
@@ -102,7 +102,7 @@ CcSetBcbOwnerPointer (IN PVOID Bcb,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcSetDirtyPageThreshold (IN PFILE_OBJECT FileObject, 
                          IN ULONG DirtyPageThreshold)
 {
@@ -112,7 +112,7 @@ CcSetDirtyPageThreshold (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcSetReadAheadGranularity (IN PFILE_OBJECT FileObject, 
                            IN ULONG Granularity)
 {

@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 
 #ifndef ROUND_DOWN
@@ -24,16 +24,16 @@ extern PCACHE_VIEW CcCacheViewArray;
 extern ULONG CcCacheViewArrayCount;
 extern FAST_MUTEX CcCacheViewLock;
 
-NTSTATUS STDCALL MmUnmapViewInSystemCache (PCACHE_VIEW);
+NTSTATUS NTAPI MmUnmapViewInSystemCache (PCACHE_VIEW);
 
-NTSTATUS STDCALL MmChangeSectionSize (PSECTION_OBJECT Section, PLARGE_INTEGER NewMaxSize);
+NTSTATUS NTAPI MmChangeSectionSize (PSECTION_OBJECT Section, PLARGE_INTEGER NewMaxSize);
 
 /* FUNCTIONS *****************************************************************/
 
 /*
  * @unimplemented
  */
-LARGE_INTEGER STDCALL
+LARGE_INTEGER NTAPI
 CcGetDirtyPages (IN PVOID LogHandle, 
                  IN PDIRTY_PAGE_ROUTINE DirtyPageRoutine, 
                  IN PVOID Context1, 
@@ -48,7 +48,7 @@ CcGetDirtyPages (IN PVOID LogHandle,
 /*
  * @implemented
  */
-PFILE_OBJECT STDCALL
+PFILE_OBJECT NTAPI
 CcGetFileObjectFromBcb (IN PVOID Bcb)
 {
     PINTERNAL_BCB iBcb = (PINTERNAL_BCB) Bcb;
@@ -58,7 +58,7 @@ CcGetFileObjectFromBcb (IN PVOID Bcb)
 /*
  * @unimplemented
  */
-LARGE_INTEGER STDCALL
+LARGE_INTEGER NTAPI
 CcGetLsnForFileObject (IN PFILE_OBJECT FileObject, 
                        OUT PLARGE_INTEGER OldestLsn OPTIONAL)
 {
@@ -71,7 +71,7 @@ CcGetLsnForFileObject (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcIsThereDirtyData (IN PVPB Vpb)
 {
     UNIMPLEMENTED;
@@ -81,7 +81,7 @@ CcIsThereDirtyData (IN PVPB Vpb)
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcPurgeCacheSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                      IN PLARGE_INTEGER FileOffset OPTIONAL, 
                      IN ULONG Length, 
@@ -95,7 +95,7 @@ CcPurgeCacheSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcSetFileSizes (IN PFILE_OBJECT FileObject, 
                 IN PCC_FILE_SIZES FileSizes)
 {
@@ -128,16 +128,16 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
         {
             if (Bcb->CacheView[i]->Bcb != Bcb)
             {
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
             if (Bcb->CacheView[i]->RefCount > 0)
             {
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
             Status = MmUnmapViewInSystemCache (Bcb->CacheView[i]);
             if (!NT_SUCCESS (Status))
             {
-                KEBUGCHECK (0);
+                KeBugCheck(CACHE_MANAGER);
             }
             Bcb->CacheView[i]->RefCount = 0;
             Bcb->CacheView[i]->Bcb = NULL;
@@ -158,12 +158,12 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
             {
                 if (CcCacheViewArray[i].RefCount > 0)
                 {
-                    KEBUGCHECK (0);
+                    KeBugCheck(CACHE_MANAGER);
                 }
                 Status = MmUnmapViewInSystemCache (&CcCacheViewArray[i]);
                 if (!NT_SUCCESS (Status))
                 {
-                    KEBUGCHECK (0);
+                    KeBugCheck(CACHE_MANAGER);
                 }
                 CcCacheViewArray[i].RefCount = 0;
                 CcCacheViewArray[i].Bcb = NULL;
@@ -180,7 +180,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcSetLogHandleForFile (IN PFILE_OBJECT FileObject, 
                        IN PVOID LogHandle, 
                        IN PFLUSH_TO_LSN FlushToLsnRoutine)

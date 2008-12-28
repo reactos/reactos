@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -23,13 +23,13 @@ extern LIST_ENTRY CcInUseCacheViewListHead;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL MmMapViewInSystemCache (PCACHE_VIEW);
+NTSTATUS NTAPI MmMapViewInSystemCache (PCACHE_VIEW);
 
 
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcMapData (IN PFILE_OBJECT FileObject,
            IN PLARGE_INTEGER FileOffset, 
            IN ULONG Length, 
@@ -74,7 +74,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
     if (FileOffset->QuadPart + Length - ROUND_DOWN (FileOffset->QuadPart, CACHE_VIEW_SIZE) > CACHE_VIEW_SIZE)
     {
         /* not implemented */
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
 
 
@@ -82,7 +82,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
     if (Bcb->FileSizes.AllocationSize.QuadPart > sizeof (Bcb->CacheView) / sizeof (Bcb->CacheView[0]) * CACHE_VIEW_SIZE)
     {
         /* not implemented */
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
 
     ExAcquireFastMutex (&CcCacheViewLock);
@@ -102,7 +102,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
         if (IsListEmpty (&CcFreeCacheViewListHead))
         {
             /* not implemented */
-            KEBUGCHECK (0);
+            KeBugCheck(CACHE_MANAGER);
         }
 
         entry = CcFreeCacheViewListHead.Flink;
@@ -117,7 +117,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
         }
         if (entry == &CcFreeCacheViewListHead)
         {
-            KEBUGCHECK (0);
+            KeBugCheck(CACHE_MANAGER);
         }
 
         Bcb->CacheView[Index] = current;
@@ -126,7 +126,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
         {
             DPRINT1 ("%x\n", Bcb->CacheView[Index]->Bcb);
             /* not implemented */
-            KEBUGCHECK (0);
+            KeBugCheck(CACHE_MANAGER);
         }
         Bcb->CacheView[Index]->RefCount = 1;
         Bcb->CacheView[Index]->Bcb = Bcb;
@@ -141,7 +141,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
 
         if (!NT_SUCCESS (Status))
         {
-            KEBUGCHECK (0);
+            KeBugCheck(CACHE_MANAGER);
         }
     }
     ExReleaseFastMutex (&CcCacheViewLock);
@@ -149,7 +149,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
     iBcb = ExAllocateFromNPagedLookasideList (&iBcbLookasideList);
     if (iBcb == NULL)
     {
-        KEBUGCHECK (0);
+        KeBugCheck(CACHE_MANAGER);
     }
     memset (iBcb, 0, sizeof (INTERNAL_BCB));
 
@@ -168,7 +168,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcPinMappedData (IN PFILE_OBJECT FileObject, 
                  IN PLARGE_INTEGER FileOffset, 
                  IN ULONG Length, 
@@ -182,7 +182,7 @@ CcPinMappedData (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcPinRead (IN PFILE_OBJECT FileObject,
            IN PLARGE_INTEGER FileOffset, 
            IN ULONG Length, 
@@ -203,7 +203,7 @@ CcPinRead (IN PFILE_OBJECT FileObject,
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 CcPreparePinWrite (IN PFILE_OBJECT FileObject,
                    IN PLARGE_INTEGER FileOffset,
                    IN ULONG Length, 
@@ -226,7 +226,7 @@ CcPreparePinWrite (IN PFILE_OBJECT FileObject,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcSetDirtyPinnedData (IN PVOID Bcb, 
                       IN PLARGE_INTEGER Lsn)
 {
@@ -239,7 +239,7 @@ CcSetDirtyPinnedData (IN PVOID Bcb,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcUnpinData (IN PVOID _iBcb)
 {
     PINTERNAL_BCB iBcb = _iBcb;
@@ -262,7 +262,7 @@ CcUnpinData (IN PVOID _iBcb)
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcUnpinDataForThread (IN PVOID Bcb, 
                       IN ERESOURCE_THREAD ResourceThreadId)
 {
@@ -272,7 +272,7 @@ CcUnpinDataForThread (IN PVOID Bcb,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 CcRepinBcb (IN PVOID Bcb)
 {
 //  PINTERNAL_BCB iBcb = Bcb;
@@ -283,10 +283,10 @@ CcRepinBcb (IN PVOID Bcb)
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 CcUnpinRepinnedBcb (IN PVOID Bcb, 
                     IN BOOLEAN WriteThrough, 
                     IN PIO_STATUS_BLOCK IoStatus)
 {
-    KEBUGCHECK (0);
+    KeBugCheck(CACHE_MANAGER);
 }
