@@ -1547,6 +1547,30 @@ DECLARE_INTERFACE_(IAdapterPowerManagement, IUnknown)
 /* ===============================================================
     IPinCount Interface
 */
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+#undef INTERFACE
+#define INTERFACE IPinCount
+
+DEFINE_GUID(IID_IPinCount, 0x5dadb7dcL, 0xa2cb, 0x4540, 0xa4, 0xa8, 0x42, 0x5e, 0xe4, 0xae, 0x90, 0x51);
+
+DECLARE_INTERFACE_(IPinCount, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(void,PinCount)(THIS_
+        IN ULONG PinId,
+        IN OUT PULONG FilterNecessary,
+        IN OUT PULONG FilterCurrent,
+        IN OUT PULONG FilterPossible,
+        IN OUT PULONG GlobalCurrent,
+        IN OUT PULONG GlobalPossible) PURE;
+};
+typedef IPinCount *PPINCOUNT;
+
+#undef INTERFACE
+#endif
+
 
 /* ===============================================================
     IPortEvents Interface
