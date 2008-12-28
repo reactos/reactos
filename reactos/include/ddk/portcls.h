@@ -1544,6 +1544,23 @@ DECLARE_INTERFACE_(IAdapterPowerManagement, IUnknown)
     IPowerNotify Interface
 */
 
+#undef INTERFACE
+#define INTERFACE IPowerNotify
+
+DEFINE_GUID(IID_IPowerNotify, 0x3DD648B8L, 0x969F, 0x11D1, 0x95, 0xA9, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3);
+
+DECLARE_INTERFACE_(IPowerNotify, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(void, PowerChangeNotify)(THIS_
+        IN POWER_STATE PowerState)PURE;
+};
+
+typedef IPowerNotify *PPOWERNOTIFY;
+
+#undef INTERFACE
+
 /* ===============================================================
     IPinCount Interface
 */
