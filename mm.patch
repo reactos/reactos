@@ -53,13 +53,15 @@ Index: mminit.c
  /* PRIVATE FUNCTIONS *********************************************************/
  
  VOID
-@@ -509,6 +512,7 @@
+@@ -506,6 +509,9 @@
+         /* Initialize the balance set manager */
+         MmInitBsmThread();
+ 
++        /* Initialize section implementation, phase 2 */
++        MmInitSectionImplementation2();
++
          /* FIXME: Read parameters from memory */
      }
- 
-+        MmInitSectionImplementation2();
-     return TRUE;
- }
  
 Index: mpw.c
 ===================================================================
@@ -2746,7 +2748,7 @@ Index: section.c
 -   DPRINT("MmpCloseSection(OB %x, HC %d)\n",
 -          Object, ProcessHandleCount);
 +   DPRINT("MmpCloseSection(OB %x, HC %d) RC %d\n",
-+          Object, ProcessHandleCount, ObGetObjectPointerCount(Object));
++          Object, ProcessHandleCount, OBJECT_TO_OBJECT_HEADER(Object)->PointerCount);
  }
  
  NTSTATUS
@@ -2960,7 +2962,7 @@ Index: section.c
 +       * FIXME: Revise this once a locking order for file size changes is
 +       * decided
 +       */
-+      if (UMaximumSize != NULL)
++      if (UMaximumSize && (UMaximumSize->QuadPart != 0))
        {
 -         /* FIXME: handle this situation */
 -         ObDereferenceObject(Section);
@@ -3672,7 +3674,17 @@ Index: section.c
  }
  
  /*
-@@ -4944,9 +6110,12 @@
+@@ -4797,7 +5963,8 @@
+    }
+    else if ((*ViewSize) > Section->MaximumSize.u.LowPart)
+    {
+-      (*ViewSize) = Section->MaximumSize.u.LowPart;
++       DPRINT1("Out of bounds view size passed: 0x%x!\n", *ViewSize);
++       (*ViewSize) = Section->MaximumSize.u.LowPart;
+    }
+ 
+    MmLockSectionSegment(Section->Segment);
+@@ -4944,9 +6111,12 @@
                   IN ULONG   SectionPageProtection,
                   IN ULONG   AllocationAttributes,
                   IN HANDLE   FileHandle   OPTIONAL,
@@ -3686,7 +3698,7 @@ Index: section.c
     PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
  
     /*
-@@ -4965,37 +6134,557 @@
+@@ -4965,37 +6135,558 @@
       return STATUS_INVALID_PAGE_PROTECTION;
     }
  
@@ -3962,6 +3974,7 @@ Index: section.c
 +
 +   MmInitializeMdl(Mdl, NULL, ((PPAGE_IO_CONTEXT)Context)->PageCount * PAGE_SIZE);
 +   MmBuildMdlFromPages(Mdl, Pfn);
++   Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_WRITE_OPERATION);
 +
 +   FileOffset.u.HighPart = 0;
 +   FileOffset.u.LowPart = ((PPAGE_IO_CONTEXT)Context)->Offset;
