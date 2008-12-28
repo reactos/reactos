@@ -130,7 +130,9 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
                         IN POOL_TYPE PoolType)
 {
     Mcb->FastMutex = ExAllocateFromNPagedLookasideList(&FsRtlFastMutexLookasideList);
+
     ExInitializeFastMutex(Mcb->FastMutex);
+    KeInitializeGate((PKGATE)&(Mcb->FastMutex->Gate));
 
     FsRtlInitializeBaseMcb(&(Mcb->BaseMcb), PoolType);
 }
