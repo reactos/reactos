@@ -21,6 +21,7 @@
 #define COBJMACROS
 
 #include <stdio.h>
+#include <initguid.h>
 #include <windows.h>
 
 #include "objbase.h"
