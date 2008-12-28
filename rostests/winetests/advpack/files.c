@@ -97,6 +97,7 @@ static BOOL check_ini_file_attr(LPSTR filename)
 
 static void test_AddDelBackupEntry(void)
 {
+    BOOL ret;
     HRESULT res;
     CHAR path[MAX_PATH];
     CHAR windir[MAX_PATH];
@@ -165,7 +166,10 @@ static void test_AddDelBackupEntry(void)
     res = pAddDelBackupEntry("one\0three\0", NULL, "basename", AADBE_DEL_ENTRY);
     SetFileAttributesA(path, FILE_ATTRIBUTE_NORMAL);
     ok(res == S_OK, "Expected S_OK, got %d\n", res);
-    ok(DeleteFileA(path), "Expected path to exist\n");
+    ret = DeleteFileA(path);
+    ok(ret == TRUE ||
+       broken(ret == FALSE), /* win98 */
+       "Expected path to exist\n");
 }
 
 /* the FCI callbacks */

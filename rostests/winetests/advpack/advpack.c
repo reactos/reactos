@@ -264,7 +264,7 @@ static void translateinfstring_test(void)
 
     if(hr == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND))
     {
-        trace("WinNT 3.51 detected. Skipping tests for TranslateInfString()\n");
+        win_skip("WinNT 3.51 detected. Skipping tests for TranslateInfString()\n");
         return;
     }
 
@@ -324,6 +324,13 @@ static void translateinfstringex_test(void)
     HRESULT hr;
     char buffer[MAX_PATH];
     DWORD size = MAX_PATH;
+
+    hr = pOpenINFEngine(inf_file, NULL, 0, &hinf, NULL);
+    if (hr == E_UNEXPECTED)
+    {
+        skip("Skipping tests on win9x because of brokenness\n");
+        return;
+    }
 
     create_inf_file();
     

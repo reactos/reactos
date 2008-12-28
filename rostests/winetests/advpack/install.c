@@ -55,27 +55,20 @@ static BOOL is_spapi_err(DWORD err)
     return (((err & SPAPI_MASK) ^ SPAPI_PREFIX) == 0);
 }
 
-static void append_str(char **str, const char *data)
-{
-    sprintf(*str, data);
-    *str += strlen(*str);
-}
-
 static void create_inf_file(LPCSTR filename)
 {
-    char data[1024];
-    char *ptr = data;
     DWORD dwNumberOfBytesWritten;
     HANDLE hf = CreateFile(filename, GENERIC_WRITE, 0, NULL,
                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    append_str(&ptr, "[Version]\n");
-    append_str(&ptr, "Signature=\"$Chicago$\"\n");
-    append_str(&ptr, "AdvancedINF=2.5\n");
-    append_str(&ptr, "[DefaultInstall]\n");
-    append_str(&ptr, "CheckAdminRights=1\n");
+    static const char data[] =
+        "[Version]\n"
+        "Signature=\"$Chicago$\"\n"
+        "AdvancedINF=2.5\n"
+        "[DefaultInstall]\n"
+        "CheckAdminRights=1\n";
 
-    WriteFile(hf, data, ptr - data, &dwNumberOfBytesWritten, NULL);
+    WriteFile(hf, data, sizeof(data) - 1, &dwNumberOfBytesWritten, NULL);
     CloseHandle(hf);
 }
 
