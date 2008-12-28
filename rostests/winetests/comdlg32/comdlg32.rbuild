@@ -7,9 +7,11 @@
 	<file>filedlg.c</file>
 	<file>printdlg.c</file>
 	<file>testlist.c</file>
+	<file>rsrc.rc</file>
 	<library>wine</library>
 	<library>comdlg32</library>
 	<library>user32</library>
+	<library>gdi32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
 </module>

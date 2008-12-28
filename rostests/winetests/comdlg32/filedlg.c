@@ -22,6 +22,10 @@
 #include <windows.h>
 #include <wine/test.h>
 
+#include "initguid.h"
+#include "shlguid.h"
+#define COBJMACROS
+#include "shobjidl.h"
 
 /* ##### */
 
@@ -131,9 +135,144 @@ static void test_DialogCancel(void)
     }
 }
 
+static UINT CALLBACK create_view_window2_hook(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == WM_NOTIFY)
+    {
+        if (((LPNMHDR)lParam)->code == CDN_FOLDERCHANGE)
+        {
+            IShellBrowser *shell_browser = (IShellBrowser *)SendMessage(GetParent(dlg), WM_USER + 7 /* WM_GETISHELLBROWSER */, 0, 0);
+            IShellView *shell_view = NULL;
+            IShellView2 *shell_view2 = NULL;
+            SV2CVW2_PARAMS view_params;
+            FOLDERSETTINGS folder_settings;
+            HRESULT hr;
+            RECT rect = {0, 0, 0, 0};
+
+            hr = IShellBrowser_QueryActiveShellView(shell_browser, &shell_view);
+            ok(SUCCEEDED(hr), "QueryActiveShellView returned %#x\n", hr);
+            if (FAILED(hr)) goto cleanup;
+
+            hr = IShellView_QueryInterface(shell_view, &IID_IShellView2, (void **)&shell_view2);
+            if (hr == E_NOINTERFACE)
+            {
+                skip("IShellView2 not supported\n");
+                goto cleanup;
+            }
+            ok(SUCCEEDED(hr), "QueryInterface returned %#x\n", hr);
+            if (FAILED(hr)) goto cleanup;
+
+            hr = IShellView2_DestroyViewWindow(shell_view2);
+            ok(SUCCEEDED(hr), "DestroyViewWindow returned %#x\n", hr);
+
+            folder_settings.ViewMode = FVM_LIST;
+            folder_settings.fFlags = 0;
+
+            view_params.cbSize = sizeof(view_params);
+            view_params.psvPrev = NULL;
+            view_params.pfs = &folder_settings;
+            view_params.psbOwner = shell_browser;
+            view_params.prcView = &rect;
+            view_params.pvid = NULL;
+            view_params.hwndView = NULL;
+
+            hr = IShellView2_CreateViewWindow2(shell_view2, &view_params);
+            ok(SUCCEEDED(hr), "CreateViewWindow2 returned %#x\n", hr);
+            if (FAILED(hr)) goto cleanup;
+
+            hr = IShellView2_GetCurrentInfo(shell_view2, &folder_settings);
+            ok(SUCCEEDED(hr), "GetCurrentInfo returned %#x\n", hr);
+            ok(folder_settings.ViewMode == FVM_LIST, "view mode is %d, expected %d\n", folder_settings.ViewMode, FVM_LIST);
+
+            hr = IShellView2_DestroyViewWindow(shell_view2);
+            ok(SUCCEEDED(hr), "DestroyViewWindow returned %#x\n", hr);
+
+            /* XP and W2K3 need this. On Win9x and W2K the call to DestroyWindow() fails and has
+             * no side effects. NT4 doesn't get here. (FIXME: Vista doesn't get here yet).
+             */
+            DestroyWindow(view_params.hwndView);
+
+            view_params.pvid = &VID_Details;
+            hr = IShellView2_CreateViewWindow2(shell_view2, &view_params);
+            ok(SUCCEEDED(hr), "CreateViewWindow2 returned %#x\n", hr);
+            if (FAILED(hr)) goto cleanup;
+
+            hr = IShellView2_GetCurrentInfo(shell_view2, &folder_settings);
+            ok(SUCCEEDED(hr), "GetCurrentInfo returned %#x\n", hr);
+            ok(folder_settings.ViewMode == FVM_DETAILS ||
+               broken(folder_settings.ViewMode == FVM_LIST), /* Win9x */
+               "view mode is %d, expected %d\n", folder_settings.ViewMode, FVM_DETAILS);
+
+cleanup:
+            if (shell_view2) IShellView2_Release(shell_view2);
+            if (shell_view) IShellView_Release(shell_view);
+            PostMessage(GetParent(dlg), WM_COMMAND, IDCANCEL, 0);
+        }
+    }
+    return 0;
+}
+
+static LONG_PTR WINAPI template_hook(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == WM_INITDIALOG)
+    {
+        HWND p,cb;
+        INT sel;
+        p = GetParent(dlg);
+        ok(p!=NULL, "Failed to get parent of template\n");
+        cb = GetDlgItem(p,0x470);
+        ok(cb!=NULL, "Failed to get filter combobox\n");
+        sel = SendMessage(cb, CB_GETCURSEL, 0, 0);
+        ok (sel != -1, "Failed to get selection from filter listbox\n");
+    }
+    if (msg == WM_NOTIFY)
+    {
+        if (((LPNMHDR)lParam)->code == CDN_FOLDERCHANGE)
+            PostMessage(GetParent(dlg), WM_COMMAND, IDCANCEL, 0);
+    }
+    return 0;
+}
+
+static void test_create_view_window2(void)
+{
+    OPENFILENAMEA ofn = {0};
+    char filename[1024] = {0};
+    DWORD ret;
+
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFile = filename;
+    ofn.nMaxFile = 1042;
+    ofn.lpfnHook = create_view_window2_hook;
+    ofn.Flags = OFN_ENABLEHOOK | OFN_EXPLORER;
+    ret = GetOpenFileNameA(&ofn);
+    ok(!ret, "GetOpenFileNameA returned %#x\n", ret);
+    ret = CommDlgExtendedError();
+    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+}
+
+static void test_create_view_template(void)
+{
+    OPENFILENAMEA ofn = {0};
+    char filename[1024] = {0};
+    DWORD ret;
+
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFile = filename;
+    ofn.nMaxFile = 1042;
+    ofn.lpfnHook = (LPOFNHOOKPROC)template_hook;
+    ofn.Flags = OFN_ENABLEHOOK | OFN_EXPLORER| OFN_ENABLETEMPLATE;
+    ofn.hInstance = GetModuleHandleA(NULL);
+    ofn.lpTemplateName = "template1";
+    ofn.lpstrFilter="text\0*.txt\0All\0*\0\0";
+    ret = GetOpenFileNameA(&ofn);
+    ok(!ret, "GetOpenFileNameA returned %#x\n", ret);
+    ret = CommDlgExtendedError();
+    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+}
 
 START_TEST(filedlg)
 {
     test_DialogCancel();
-
+    test_create_view_window2();
+    test_create_view_template();
 }

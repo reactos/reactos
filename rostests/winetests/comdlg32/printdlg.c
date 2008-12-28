@@ -289,6 +289,77 @@ static void test_PrintDlgExW(void)
 
 }
 
+static BOOL abort_proc_called = FALSE;
+static BOOL CALLBACK abort_proc(HDC hdc, int error) { return abort_proc_called = TRUE; }
+static void test_abort_proc(void)
+{
+    HDC print_dc;
+    RECT rect = {0, 0, 100, 100};
+    DOCINFOA doc_info = {0};
+    PRINTDLGA pd = {0};
+    char filename[MAX_PATH];
+
+    if (!GetTempFileNameA(".", "prn", 0, filename))
+    {
+        skip("Failed to create a temporary file name\n");
+        return;
+    }
+
+    pd.lStructSize = sizeof(pd);
+    pd.Flags = PD_RETURNDEFAULT | PD_ALLPAGES | PD_RETURNDC | PD_PRINTTOFILE;
+    pd.nFromPage = 1;
+    pd.nToPage = 1;
+    pd.nCopies = 1;
+
+    if (!PrintDlgA(&pd))
+    {
+        skip("No default printer available.\n");
+        ok(DeleteFileA(filename), "Failed to delete temporary file\n");
+        return;
+    }
+
+    ok(pd.hDC != NULL, "PrintDlg didn't return a DC.\n");
+    if (!(print_dc = pd.hDC))
+    {
+        ok(DeleteFileA(filename), "Failed to delete temporary file\n");
+        return;
+    }
+
+    ok(SetAbortProc(print_dc, abort_proc) > 0, "SetAbortProc failed\n");
+    ok(!abort_proc_called, "AbortProc got called unexpectedly by SetAbortProc.\n");
+    abort_proc_called = FALSE;
+
+    doc_info.cbSize = sizeof(doc_info);
+    doc_info.lpszDocName = "Some document";
+    doc_info.lpszOutput = filename;
+
+    ok(StartDocA(print_dc, &doc_info) > 0, "StartDocA failed\n");
+    ok(abort_proc_called, "AbortProc didn't get called by StartDoc.\n");
+    abort_proc_called = FALSE;
+
+    ok(StartPage(print_dc) > 0, "StartPage failed\n");
+    ok(!abort_proc_called, "AbortProc got called unexpectedly by StartPage.\n");
+    abort_proc_called = FALSE;
+
+    ok(FillRect(print_dc, &rect, (HBRUSH)(COLOR_BACKGROUND + 1)), "FillRect failed\n");
+    ok(!abort_proc_called, "AbortProc got called unexpectedly by StretchBlt.\n");
+    abort_proc_called = FALSE;
+
+    ok(EndPage(print_dc) > 0, "EndPage failed\n");
+    ok(!abort_proc_called, "AbortProc got called unexpectedly by EndPage.\n");
+    abort_proc_called = FALSE;
+
+    ok(EndDoc(print_dc) > 0, "EndDoc failed\n");
+    ok(!abort_proc_called, "AbortProc got called unexpectedly by EndDoc.\n");
+    abort_proc_called = FALSE;
+
+    ok(DeleteDC(print_dc), "DeleteDC failed\n");
+    ok(!abort_proc_called, "AbortProc got called unexpectedly by DeleteDC.\n");
+    abort_proc_called = FALSE;
+
+    ok(DeleteFileA(filename), "Failed to delete temporary file\n");
+}
+
 /* ########################### */
 
 START_TEST(printdlg)
@@ -299,6 +370,7 @@ START_TEST(printdlg)
 
     test_PageSetupDlgA();
     test_PrintDlgA();
+    test_abort_proc();
 
     /* PrintDlgEx not present before w2k */
     if (ptr) {
