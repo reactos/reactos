@@ -41,7 +41,18 @@ modMessage(
             Result = GetSoundDeviceCount(MIDI_OUT_DEVICE_TYPE);
             break;
         }
+
+        case MODM_GETDEVCAPS :
+        {
+            Result = MmeGetSoundDeviceCapabilities(MIDI_OUT_DEVICE_TYPE,
+                                                   DeviceId,
+                                                   (PVOID) Parameter1,
+                                                   Parameter2);
+            break;
+        }
     }
+
+    SND_TRACE(L"modMessage returning MMRESULT %d\n", Result);
 
     ReleaseEntrypointMutex(MIDI_OUT_DEVICE_TYPE);
 

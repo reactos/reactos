@@ -127,6 +127,7 @@
 
 typedef UCHAR MMDEVICE_TYPE, *PMMDEVICE_TYPE;
 struct _SOUND_DEVICE;
+struct _SOUND_DEVICE_INSTANCE;
 
 
 #define DEFINE_GETCAPS_FUNCTYPE(func_typename, caps_type) \
@@ -144,32 +145,29 @@ DEFINE_GETCAPS_FUNCTYPE(MMGETWAVEINCAPS_FUNC,  LPWAVEINCAPS );
 DEFINE_GETCAPS_FUNCTYPE(MMGETMIDIOUTCAPS_FUNC, LPMIDIOUTCAPS);
 DEFINE_GETCAPS_FUNCTYPE(MMGETMIDIINCAPS_FUNC,  LPMIDIINCAPS );
 
+typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
+    IN  struct _SOUND_DEVICE* Device,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize);
+
+typedef MMRESULT (*MMWAVESETFORMAT_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  PWAVEFORMATEX WaveFormat,
+    IN  DWORD WaveFormatSize);
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
     {
-        MMGETCAPS_FUNC          GetCapabilities;
-        MMGETWAVEOUTCAPS_FUNC   GetWaveOutCapabilities;
-        MMGETWAVEINCAPS_FUNC    GetWaveInCapabilities;
-        MMGETMIDIOUTCAPS_FUNC   GetMidiOutCapabilities;
-        MMGETMIDIINCAPS_FUNC    GetMidiInCapabilities;
+        MMGETCAPS_FUNC              GetCapabilities;
+        MMGETWAVEOUTCAPS_FUNC       GetWaveOutCapabilities;
+        MMGETWAVEINCAPS_FUNC        GetWaveInCapabilities;
+        MMGETMIDIOUTCAPS_FUNC       GetMidiOutCapabilities;
+        MMGETMIDIINCAPS_FUNC        GetMidiInCapabilities;
     };
 
-/*
-    MMCREATEINSTANCE_FUNC   Constructor;
-    MMDESTROYINSTANCE_FUNC  Destructor;
-    MMGETCAPS_FUNC          GetCapabilities;
-
-    MMWAVEQUERYFORMAT_FUNC  QueryWaveFormat;
-    MMWAVESETFORMAT_FUNC    SetWaveFormat;
-    MMWAVEQUEUEBUFFER_FUNC  QueueWaveBuffer;
-
-    MMGETWAVESTATE_FUNC     GetWaveDeviceState;
-    MMSETWAVESTATE_FUNC     PauseWaveDevice;
-    MMSETWAVESTATE_FUNC     RestartWaveDevice;
-    MMSETWAVESTATE_FUNC     ResetWaveDevice;
-    MMSETWAVESTATE_FUNC     BreakWaveDeviceLoop;
-*/
+    MMWAVEQUERYFORMATSUPPORT_FUNC   QueryWaveFormatSupport;
+    MMWAVESETFORMAT_FUNC            SetWaveFormat;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
 
 typedef struct _SOUND_DEVICE
@@ -299,6 +297,24 @@ BOOLEAN
 IsValidSoundDeviceInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
 
+MMRESULT
+CreateSoundDeviceInstance(
+    IN  PSOUND_DEVICE SoundDevice,
+    OUT PSOUND_DEVICE_INSTANCE* SoundDeviceInstance);
+
+MMRESULT
+DestroySoundDeviceInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance);
+
+MMRESULT
+DestroyAllSoundDeviceInstances(
+    IN  PSOUND_DEVICE SoundDevice);
+
+MMRESULT
+GetSoundDeviceFromInstance(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PSOUND_DEVICE* SoundDevice);
+
 
 /*
     nt4.c
@@ -358,6 +374,35 @@ Win32ErrorToMmResult(
 MMRESULT
 TranslateInternalMmResult(
     IN  MMRESULT Result);
+
+
+/*
+    wave/format.c
+*/
+
+MMRESULT
+QueryWaveDeviceFormatSupport(
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  LPWAVEFORMATEX Format,
+    IN  DWORD FormatSize);
+
+MMRESULT
+DefaultQueryWaveDeviceFormatSupport(
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  LPWAVEFORMATEX Format,
+    IN  DWORD FormatSize);
+
+MMRESULT
+SetWaveDeviceFormat(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  LPWAVEFORMATEX Format,
+    IN  DWORD FormatSize);
+
+MMRESULT
+DefaultSetWaveDeviceFormat(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  LPWAVEFORMATEX Format,
+    IN  DWORD FormatSize);
 
 
 /*

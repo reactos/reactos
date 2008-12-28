@@ -41,7 +41,18 @@ mxdMessage(
             Result = GetSoundDeviceCount(MIXER_DEVICE_TYPE);
             break;
         }
+
+        case MXDM_GETDEVCAPS :
+        {
+            Result = MmeGetSoundDeviceCapabilities(MIXER_DEVICE_TYPE,
+                                                   DeviceId,
+                                                   (PVOID) Parameter1,
+                                                   Parameter2);
+            break;
+        }
     }
+
+    SND_TRACE(L"mxdMessage returning MMRESULT %d\n", Result);
 
     ReleaseEntrypointMutex(MIXER_DEVICE_TYPE);
 

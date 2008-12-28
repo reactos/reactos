@@ -41,7 +41,18 @@ auxMessage(
             Result = GetSoundDeviceCount(AUX_DEVICE_TYPE);
             break;
         }
+
+        case AUXDM_GETDEVCAPS :
+        {
+            Result = MmeGetSoundDeviceCapabilities(AUX_DEVICE_TYPE,
+                                                   DeviceId,
+                                                   (PVOID) Parameter1,
+                                                   Parameter2);
+            break;
+        }
     }
+
+    SND_TRACE(L"auxMessage returning MMRESULT %d\n", Result);
 
     ReleaseEntrypointMutex(AUX_DEVICE_TYPE);
 

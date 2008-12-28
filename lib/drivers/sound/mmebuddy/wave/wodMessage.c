@@ -51,7 +51,71 @@ wodMessage(
                                                    Parameter2);
             break;
         }
+
+        case WODM_OPEN :
+        {
+            PSOUND_DEVICE SoundDevice;
+            PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+            LPWAVEOPENDESC OpenParameters = (LPWAVEOPENDESC) Parameter1;
+
+            /* Obtain the sound device */
+            Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, DeviceId, &SoundDevice);
+
+            if ( Result != MMSYSERR_NOERROR );
+                break;
+
+            /* See if the device supports this format */
+            Result = QueryWaveDeviceFormatSupport(SoundDevice,
+                                                  OpenParameters->lpFormat,
+                                                  sizeof(WAVEFORMATEX));
+
+            if ( Parameter2 & WAVE_FORMAT_QUERY )
+            {
+                /* Nothing more to be done - keep the result */
+                break;
+            }
+
+            /* The MME API should provide us with a place to store a handle */
+            SND_ASSERT( PrivateHandle );
+            if ( ! PrivateHandle )
+            {
+                /* Not so much an invalid parameter as something messed up!! */
+                SND_ERR(L"MME API supplied a NULL private handle pointer!\n");
+                Result = MMSYSERR_ERROR;
+                break;
+            }
+
+            /* Spawn an instance of the sound device */
+            Result = CreateSoundDeviceInstance(SoundDevice, &SoundDeviceInstance);
+
+            if ( Result != MMSYSERR_NOERROR )
+            {
+                SND_ERR(L"Failed to create sound device instance\n");
+                break;
+            }
+
+            /* Set the sample rate, bits per sample, etc. */
+            Result = SetWaveDeviceFormat(SoundDeviceInstance,
+                                         OpenParameters->lpFormat,
+                                         sizeof(WAVEFORMATEX));
+
+            if ( Result != MMSYSERR_NOERROR )
+            {
+                SND_ERR(L"Failed to set wave device format\n");
+                DestroySoundDeviceInstance(SoundDeviceInstance);
+                break;
+            }
+
+            break;
+        }
+
+        case WODM_CLOSE :
+        {
+            break;
+        }
     }
+
+    SND_TRACE(L"wodMessage returning MMRESULT %d\n", Result);
 
     ReleaseEntrypointMutex(WAVE_OUT_DEVICE_TYPE);
 

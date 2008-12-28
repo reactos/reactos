@@ -53,6 +53,8 @@ widMessage(
         }
     }
 
+    SND_TRACE(L"widMessage returning MMRESULT %d\n", Result);
+
     ReleaseEntrypointMutex(WAVE_IN_DEVICE_TYPE);
 
     return Result;
