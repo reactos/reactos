@@ -24,7 +24,7 @@ extern void func_str(void);
 
 const struct test winetest_testlist[] =
 {
-    { "asn", func_base64 },
+    { "base64", func_base64 },
     { "cert", func_cert },
     { "chain", func_chain },
     { "crl", func_crl },
