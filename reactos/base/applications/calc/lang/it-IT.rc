@@ -517,6 +517,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Franco Lussemburghese"
     IDS_CURRENCY_MALTESE_LIRA       "Lira maltese"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Escudo portoghese"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Corona slovacca"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Tallero sloveno"
     IDS_CURRENCY_SPANISH_PESETA     "Peseta spagnola"
 END

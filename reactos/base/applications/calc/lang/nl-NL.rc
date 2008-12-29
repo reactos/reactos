@@ -1,4 +1,3 @@
-
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 // Dialog
@@ -523,6 +522,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembourg franc"
     IDS_CURRENCY_MALTESE_LIRA       "Maltese lira"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portoguese escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Slowaakse kroon"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenian tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Spanish peseta"
 END

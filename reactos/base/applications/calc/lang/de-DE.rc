@@ -521,6 +521,7 @@ BEGIN
     IDS_CURRENCY_DUTCH_GUILDER      "Niederländische Guilder"
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Österreichische Schilling"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portugiesische Escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Slowakische Krone"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovenische Tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Spanische Peseta"
     IDS_CURRENCY_CYPRIOT_POUND      "Zypriotische Pfund"
