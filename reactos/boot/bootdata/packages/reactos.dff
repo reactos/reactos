@@ -629,6 +629,7 @@ modules\rostests\winetests\gdi32\gdi32_winetest.exe                        7   o
 modules\rostests\winetests\gdiplus\gdiplus_winetest.exe                    7   optional
 modules\rostests\winetests\hlink\hlink_winetest.exe                        7   optional
 modules\rostests\winetests\icmp\icmp_winetest.exe                          7   optional
+modules\rostests\winetests\jscript\jscript_winetest.exe                    7   optional
 modules\rostests\winetests\kernel32\kernel32_winetest.exe                  7   optional
 modules\rostests\winetests\lz32\lz32_winetest.exe                          7   optional
 modules\rostests\winetests\mapi32\mapi32_winetest.exe                      7   optional
