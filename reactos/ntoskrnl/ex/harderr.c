@@ -23,7 +23,7 @@ PEPROCESS ExpDefaultErrorPortProcess = NULL;
 /* FUNCTIONS ****************************************************************/
 
 /*++
-* @name ExpRaiseHardError
+* @name ExpSystemErrorHandler
 *
 * For now it's a stub
 *
