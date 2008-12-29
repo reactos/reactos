@@ -1314,7 +1314,7 @@ UnicodeString::cloneArrayIfNeeded(int32_t newCapacity,
    */
   if(forceClone ||
      fFlags & kBufferIsReadonly ||
-     fFlags & kRefCounted && refCount() > 1 ||
+     (fFlags & kRefCounted && refCount() > 1) ||
      newCapacity > fCapacity
   ) {
     // save old values
@@ -1330,7 +1330,7 @@ UnicodeString::cloneArrayIfNeeded(int32_t newCapacity,
 
     // allocate a new array
     if(allocate(growCapacity) ||
-       newCapacity < growCapacity && allocate(newCapacity)
+       (newCapacity < growCapacity && allocate(newCapacity))
     ) {
       if(doCopyArray) {
         // copy the contents
