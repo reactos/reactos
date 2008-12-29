@@ -7,7 +7,7 @@ UniataSataConnect(
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
-    ULONG Channel = deviceExtension->Channel + lChannel;
+    //ULONG Channel = deviceExtension->Channel + lChannel;
     PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
     SATA_SSTATUS_REG SStatus;
     ULONG i;
@@ -126,7 +126,7 @@ UniataSataClearErr(
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
     PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
-    ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
+    //ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
     SATA_SSTATUS_REG SStatus;
     SATA_SERROR_REG  SError;
 

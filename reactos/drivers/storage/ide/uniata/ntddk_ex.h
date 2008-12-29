@@ -6,7 +6,8 @@
 #define ASSERT
 #else
 #undef ASSERT
-#define ASSERT //(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+//#define ASSERT //(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+#define ASSERT(x) // FIXME: WTF!
 #endif //__REACTOS__
 
 

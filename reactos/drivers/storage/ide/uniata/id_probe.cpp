@@ -76,7 +76,6 @@ UniataEnumBusMasterController__(
 VOID
 AtapiDoNothing(VOID)
 {
-    ULONG i = 0;
     return;
 } // end AtapiDoNothing()
 
@@ -504,8 +503,8 @@ UniataEnumBusMasterController__(
 /*                        if(known) {
                             RtlCopyMemory(newBMListPtr, (PVOID)&(BusMasterAdapters[i]), sizeof(BUSMASTER_CONTROLLER_INFORMATION));
                         } else {*/
-                        sprintf((PCHAR)vendorStrPtr, "%4.4x", VendorID);
-                        sprintf((PCHAR)deviceStrPtr, "%4.4x", DeviceID);
+                        sprintf((PCHAR)vendorStrPtr, "%4.4x", (UINT32)VendorID);
+                        sprintf((PCHAR)deviceStrPtr, "%4.4x", (UINT32)DeviceID);
 
                         RtlCopyMemory(&(newBMListPtr->VendorIdStr), (PCHAR)vendorStrPtr, 4);
                         RtlCopyMemory(&(newBMListPtr->DeviceIdStr), (PCHAR)deviceStrPtr, 4);
@@ -874,7 +873,11 @@ UniataFindBusMasterController(
     BOOLEAN found = FALSE;
     BOOLEAN MasterDev;
     BOOLEAN simplexOnly = FALSE;
+#ifndef UNIATA_CORE
+#ifdef UNIATA_INIT_ON_PROBE
     BOOLEAN skip_find_dev = FALSE;
+#endif
+#endif
     BOOLEAN AltInit = FALSE;
 
     SCSI_PHYSICAL_ADDRESS IoBasePort1;
@@ -1712,7 +1715,7 @@ UniataFindFakeBusMasterController(
     )
 {
     PHW_DEVICE_EXTENSION  deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
-    PHW_CHANNEL           chan = NULL;
+    //PHW_CHANNEL           chan = NULL;
     // this buffer must be global for UNIATA_CORE build
     PCI_COMMON_CONFIG     pciData;
 
@@ -1743,8 +1746,8 @@ UniataFindFakeBusMasterController(
     BOOLEAN found = FALSE;
     BOOLEAN MasterDev;
     BOOLEAN simplexOnly = FALSE;
-    BOOLEAN skip_find_dev = FALSE;
-    BOOLEAN AltInit = FALSE;
+    //BOOLEAN skip_find_dev = FALSE;
+    //BOOLEAN AltInit = FALSE;
 
     PIDE_BUSMASTER_REGISTERS BaseIoAddressBM_0 = NULL;
 
@@ -1797,7 +1800,7 @@ UniataFindFakeBusMasterController(
                                      &pciData,
                                      PCI_COMMON_HDR_LENGTH);
 
-    if (busDataRead < PCI_COMMON_HDR_LENGTH) {
+    if (busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH) {
         KdPrint2((PRINT_PREFIX "busDataRead < PCI_COMMON_HDR_LENGTH => SP_RETURN_ERROR\n"));
         goto exit_error;
     }
@@ -2207,7 +2210,7 @@ AtapiFindController(
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
     PHW_CHANNEL          chan;
     PULONG               adapterCount    = (PULONG)Context;
-    PUCHAR               ioSpace;
+    PUCHAR               ioSpace = NULL;
     ULONG                i;
     ULONG                irq=0;
     ULONG                portBase;
@@ -2217,7 +2220,7 @@ AtapiFindController(
     BOOLEAN              preConfig = FALSE;
     //
     PIDE_REGISTERS_1 BaseIoAddress1;
-    PIDE_REGISTERS_2 BaseIoAddress2;
+    PIDE_REGISTERS_2 BaseIoAddress2 = NULL;
 
     // The following table specifies the ports to be checked when searching for
     // an IDE controller.  A zero entry terminates the search.

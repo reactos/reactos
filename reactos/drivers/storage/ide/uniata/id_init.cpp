@@ -52,11 +52,11 @@ UniataChipDetectChannels(
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
-    ULONG slotNumber = deviceExtension->slotNumber;
-    ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
+    //ULONG slotNumber = deviceExtension->slotNumber;
+    //ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
     ULONG VendorID =  deviceExtension->DevID        & 0xffff;
-    ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
-    ULONG RevID    =  deviceExtension->RevID;
+    //ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
+    //ULONG RevID    =  deviceExtension->RevID;
     ULONG ChipType = deviceExtension->HwFlags & CHIPTYPE_MASK;
     ULONG ChipFlags= deviceExtension->HwFlags & CHIPFLAG_MASK;
 
@@ -216,7 +216,7 @@ UniataChipDetect(
         PCI_DEV_HW_SPEC_BM( 0730, 1039, 0x00, ATA_UDMA5, "SiS 730"  , SIS100OLD        ),
 
         PCI_DEV_HW_SPEC_BM( 0646, 1039, 0x00, ATA_UDMA6, "SiS 645DX", SIS133NEW        ),
-/*        PCI_DEV_HW_SPEC_BM( 0645, 1039, 0x00, ATA_UDMA6, "SiS 645"  , SIS133NEW        ),
+/*        PCI_DEV_HW_SPEC_BM( 0645, 1039, 0x00, ATA_UDMA6, "SiS 645"  , SIS133NEW        ),*/
 /*        PCI_DEV_HW_SPEC_BM( 0640, 1039, 0x00, ATA_UDMA4, "SiS 640"  , SIS_SOUTH        ),*/
         PCI_DEV_HW_SPEC_BM( 0635, 1039, 0x00, ATA_UDMA5, "SiS 635"  , SIS100NEW        ),
         PCI_DEV_HW_SPEC_BM( 0633, 1039, 0x00, ATA_UDMA5, "SiS 633"  , SIS100NEW        ),
@@ -419,7 +419,7 @@ for_ugly_chips:
             BaseIoAddressBM = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
                                     4, 0, deviceExtension->NumberChannels*sizeof(IDE_BUSMASTER_REGISTERS));
             for(c=0; c<deviceExtension->NumberChannels; c++) {
-                ULONG unit01 = (c & 1);
+                //ULONG unit01 = (c & 1);
                 ULONG unit10 = (c & 2);
                 chan = &deviceExtension->chan[c];
 
@@ -987,7 +987,7 @@ AtapiRosbSouthBridgeFixup(
     IN ULONG  slotNumber
     )
 {
-    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    //PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
     PCI_COMMON_CONFIG     pciData;
     ULONG                 funcNumber;
     ULONG                 busDataRead;
@@ -1039,7 +1039,7 @@ AtapiAliSouthBridgeFixup(
     IN ULONG  c
     )
 {
-    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    //PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
     PCI_COMMON_CONFIG     pciData;
     ULONG                 funcNumber;
     ULONG                 busDataRead;
@@ -1174,7 +1174,7 @@ generic_cable80(
     ULONG slotNumber = deviceExtension->slotNumber;
     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
 
-    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
+    //ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
     PHW_CHANNEL chan;
     ULONG  c; // logical channel (for Compatible Mode controllers)
     UCHAR tmp8;
@@ -1332,7 +1332,9 @@ AtapiChipInit(
     ULONG slotNumber = deviceExtension->slotNumber;
     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
     ULONG VendorID =  deviceExtension->DevID        & 0xffff;
+#ifdef _DEBUG
     ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
+#endif
     ULONG RevID    =  deviceExtension->RevID;
 //    ULONG i;
 //    BUSMASTER_CONTROLLER_INFORMATION* DevTypeInfo;
