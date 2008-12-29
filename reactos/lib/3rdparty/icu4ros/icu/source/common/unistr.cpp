@@ -1377,7 +1377,7 @@ The vector deleting destructor is already a part of UObject,
 but defining it here makes sure that it is included with this object file.
 This makes sure that static library dependencies are kept to a minimum.
 */
-static void uprv_UnicodeStringDummy(void) {
+/* static */ void uprv_UnicodeStringDummy(void) {
     U_NAMESPACE_USE
     delete [] (new UnicodeString[2]);
 }
