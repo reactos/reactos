@@ -350,7 +350,8 @@ static HRESULT WINAPI ProtocolSink_Switch(IInternetProtocolSink *iface, PROTOCOL
             CHECK_CALLED(ReportProgress_CONNECTING);
         } else todo_wine {
             CHECK_NOT_CALLED(ReportProgress_FINDINGRESOURCE);
-            CHECK_NOT_CALLED(ReportProgress_CONNECTING);
+            /* IE7 does call this */
+            CLEAR_CALLED(ReportProgress_CONNECTING);
         }
         CHECK_CALLED(ReportProgress_SENDINGREQUEST);
         SET_EXPECT(OnResponse);
@@ -754,6 +755,12 @@ static HRESULT WINAPI Protocol_QueryInterface(IInternetProtocol *iface, REFIID r
         return S_OK;
     }
 
+    if(IsEqualGUID(&IID_IInternetProtocolEx, riid)) {
+        trace("IID_IInternetProtocolEx not supported\n");
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
     if(IsEqualGUID(&IID_IInternetPriority, riid)) {
         *ppv = &InternetPriority;
         return S_OK;
@@ -871,6 +878,7 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         LPWSTR additional_headers = NULL;
         BYTE sec_id[100];
         DWORD fetched = 0, size = 100;
+        DWORD tid;
 
         SET_EXPECT(GetBindString_USER_AGENT);
         hres = IInternetBindInfo_GetBindString(pOIBindInfo, BINDSTRING_USER_AGENT,
@@ -927,7 +935,7 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
         IServiceProvider_Release(service_provider);
 
-        CreateThread(NULL, 0, thread_proc, NULL, 0, NULL);
+        CreateThread(NULL, 0, thread_proc, NULL, 0, &tid);
 
         return S_OK;
     }
@@ -1192,7 +1200,7 @@ static void test_priority(IInternetProtocol *protocol)
     IInternetPriority_Release(priority);
 }
 
-static void file_protocol_start(IInternetProtocol *protocol, LPCWSTR url, BOOL is_first)
+static BOOL file_protocol_start(IInternetProtocol *protocol, LPCWSTR url, BOOL is_first)
 {
     HRESULT hres;
 
@@ -1214,6 +1222,10 @@ static void file_protocol_start(IInternetProtocol *protocol, LPCWSTR url, BOOL i
     expect_hrResult = S_OK;
 
     hres = IInternetProtocol_Start(protocol, url, &protocol_sink, &bind_info, 0, 0);
+    if(hres == INET_E_RESOURCE_NOT_FOUND) {
+        win_skip("Start failed\n");
+        return FALSE;
+    }
     ok(hres == S_OK, "Start failed: %08x\n", hres);
 
     CHECK_CALLED(GetBindInfo);
@@ -1230,6 +1242,8 @@ static void file_protocol_start(IInternetProtocol *protocol, LPCWSTR url, BOOL i
     CHECK_CALLED(ReportData);
     if(is_first)
         CHECK_CALLED(ReportResult);
+
+    return TRUE;
 }
 
 static void test_file_protocol_url(LPCWSTR url)
@@ -1242,7 +1256,7 @@ static void test_file_protocol_url(LPCWSTR url)
     hres = CoGetClassObject(&CLSID_FileProtocol, CLSCTX_INPROC_SERVER, NULL,
             &IID_IUnknown, (void**)&unk);
     ok(hres == S_OK, "CoGetClassObject failed: %08x\n", hres);
-    if(!SUCCEEDED(hres))
+    if(FAILED(hres))
         return;
 
     hres = IUnknown_QueryInterface(unk, &IID_IInternetProtocolInfo, (void**)&protocol_info);
@@ -1259,46 +1273,27 @@ static void test_file_protocol_url(LPCWSTR url)
         ok(hres == S_OK, "Could not get IInternetProtocol: %08x\n", hres);
 
         if(SUCCEEDED(hres)) {
-            file_protocol_start(protocol, url, TRUE);
-            hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
-            ok(hres == S_OK, "Read failed: %08x\n", hres);
-            ok(cb == 2, "cb=%u expected 2\n", cb);
-            hres = IInternetProtocol_Read(protocol, buf, sizeof(buf), &cb);
-            ok(hres == S_FALSE, "Read failed: %08x\n", hres);
-            hres = IInternetProtocol_Read(protocol, buf, sizeof(buf), &cb);
-            ok(hres == S_FALSE, "Read failed: %08x expected S_FALSE\n", hres);
-            ok(cb == 0, "cb=%u expected 0\n", cb);
-            hres = IInternetProtocol_UnlockRequest(protocol);
-            ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
+            if(file_protocol_start(protocol, url, TRUE)) {
+                hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
+                ok(hres == S_OK, "Read failed: %08x\n", hres);
+                ok(cb == 2, "cb=%u expected 2\n", cb);
+                hres = IInternetProtocol_Read(protocol, buf, sizeof(buf), &cb);
+                ok(hres == S_FALSE, "Read failed: %08x\n", hres);
+                hres = IInternetProtocol_Read(protocol, buf, sizeof(buf), &cb);
+                ok(hres == S_FALSE, "Read failed: %08x expected S_FALSE\n", hres);
+                ok(cb == 0, "cb=%u expected 0\n", cb);
+                hres = IInternetProtocol_UnlockRequest(protocol);
+                ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
+            }
 
-            file_protocol_start(protocol, url, FALSE);
-            hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
-            ok(hres == S_FALSE, "Read failed: %08x\n", hres);
-            hres = IInternetProtocol_LockRequest(protocol, 0);
-            ok(hres == S_OK, "LockRequest failed: %08x\n", hres);
-            hres = IInternetProtocol_UnlockRequest(protocol);
-            ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
-
-            IInternetProtocol_Release(protocol);
-        }
-
-        hres = IClassFactory_CreateInstance(factory, NULL, &IID_IInternetProtocol, (void**)&protocol);
-        ok(hres == S_OK, "Could not get IInternetProtocol: %08x\n", hres);
-
-        if(SUCCEEDED(hres)) {
-            file_protocol_start(protocol, url, TRUE);
-            hres = IInternetProtocol_LockRequest(protocol, 0);
-            ok(hres == S_OK, "LockRequest failed: %08x\n", hres);
-            hres = IInternetProtocol_Terminate(protocol, 0);
-            ok(hres == S_OK, "Terminate failed: %08x\n", hres);
-            hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
-            ok(hres == S_OK, "Read failed: %08x\n\n", hres);
-            hres = IInternetProtocol_UnlockRequest(protocol);
-            ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
-            hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
-            ok(hres == S_OK, "Read failed: %08x\n", hres);
-            hres = IInternetProtocol_Terminate(protocol, 0);
-            ok(hres == S_OK, "Terminate failed: %08x\n", hres);
+            if(file_protocol_start(protocol, url, FALSE)) {
+                hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
+                ok(hres == S_FALSE, "Read failed: %08x\n", hres);
+                hres = IInternetProtocol_LockRequest(protocol, 0);
+                ok(hres == S_OK, "LockRequest failed: %08x\n", hres);
+                hres = IInternetProtocol_UnlockRequest(protocol);
+                ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
+            }
 
             IInternetProtocol_Release(protocol);
         }
@@ -1307,12 +1302,35 @@ static void test_file_protocol_url(LPCWSTR url)
         ok(hres == S_OK, "Could not get IInternetProtocol: %08x\n", hres);
 
         if(SUCCEEDED(hres)) {
-            file_protocol_start(protocol, url, TRUE);
-            hres = IInternetProtocol_Terminate(protocol, 0);
-            ok(hres == S_OK, "Terminate failed: %08x\n", hres);
-            hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
-            ok(hres == S_OK, "Read failed: %08x\n", hres);
-            ok(cb == 2, "cb=%u expected 2\n", cb);
+            if(file_protocol_start(protocol, url, TRUE)) {
+                hres = IInternetProtocol_LockRequest(protocol, 0);
+                ok(hres == S_OK, "LockRequest failed: %08x\n", hres);
+                hres = IInternetProtocol_Terminate(protocol, 0);
+                ok(hres == S_OK, "Terminate failed: %08x\n", hres);
+                hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
+                ok(hres == S_OK, "Read failed: %08x\n\n", hres);
+                hres = IInternetProtocol_UnlockRequest(protocol);
+                ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
+                hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
+                ok(hres == S_OK, "Read failed: %08x\n", hres);
+                hres = IInternetProtocol_Terminate(protocol, 0);
+                ok(hres == S_OK, "Terminate failed: %08x\n", hres);
+            }
+
+            IInternetProtocol_Release(protocol);
+        }
+
+        hres = IClassFactory_CreateInstance(factory, NULL, &IID_IInternetProtocol, (void**)&protocol);
+        ok(hres == S_OK, "Could not get IInternetProtocol: %08x\n", hres);
+
+        if(SUCCEEDED(hres)) {
+            if(file_protocol_start(protocol, url, TRUE)) {
+                hres = IInternetProtocol_Terminate(protocol, 0);
+                ok(hres == S_OK, "Terminate failed: %08x\n", hres);
+                hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
+                ok(hres == S_OK, "Read failed: %08x\n", hres);
+                ok(cb == 2, "cb=%u expected 2\n", cb);
+            }
 
             IInternetProtocol_Release(protocol);
         }
@@ -1411,8 +1429,14 @@ static void test_file_protocol(void) {
     trace("Testing file protocol...\n");
     tested_protocol = FILE_TEST;
 
+    SetLastError(0xdeadbeef);
     file = CreateFileW(wszIndexHtml, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
             FILE_ATTRIBUTE_NORMAL, NULL);
+    if(!file && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("Detected Win9x or WinMe\n");
+        return;
+    }
     ok(file != INVALID_HANDLE_VALUE, "CreateFile failed\n");
     if(file == INVALID_HANDLE_VALUE)
         return;
@@ -1535,7 +1559,7 @@ static void test_http_protocol_url(LPCWSTR url, BOOL is_first)
 
     hres = CoGetClassObject(&CLSID_HttpProtocol, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void**)&unk);
     ok(hres == S_OK, "CoGetClassObject failed: %08x\n", hres);
-    if(!SUCCEEDED(hres))
+    if(FAILED(hres))
         return;
 
     hres = IUnknown_QueryInterface(unk, &IID_IInternetProtocolInfo, (void**)&protocol_info);
@@ -1555,7 +1579,6 @@ static void test_http_protocol_url(LPCWSTR url, BOOL is_first)
     if(SUCCEEDED(hres)) {
         BYTE buf[3600];
         DWORD cb;
-        int *called = (bindf & BINDF_FROMURLMON) ? &called_Switch : &called_ReportData;
 
         test_priority(http_protocol);
 
@@ -1577,8 +1600,8 @@ static void test_http_protocol_url(LPCWSTR url, BOOL is_first)
         expect_hrResult = S_OK;
 
         hres = IInternetProtocol_Read(http_protocol, buf, 1, &cb);
-        ok((!*called && hres == E_PENDING && cb==0) ||
-           (*called && hres == S_OK && cb==1), "Read failed: %08x (%d bytes)\n", hres, cb);
+        ok((hres == E_PENDING && cb==0) ||
+           (hres == S_OK && cb==1), "Read failed: %08x (%d bytes)\n", hres, cb);
 
         WaitForSingleObject(event_complete, INFINITE);
         if(bindf & BINDF_FROMURLMON)
@@ -1594,8 +1617,8 @@ static void test_http_protocol_url(LPCWSTR url, BOOL is_first)
             hres = IInternetProtocol_Read(http_protocol, buf, sizeof(buf), &cb);
             if(hres == E_PENDING) {
                 hres = IInternetProtocol_Read(http_protocol, buf, 1, &cb);
-                ok((!*called && hres == E_PENDING && cb==0) ||
-                   (*called && hres == S_OK && cb==1), "Read failed: %08x (%d bytes)\n", hres, cb);
+                ok((hres == E_PENDING && cb==0) ||
+                   (hres == S_OK && cb==1), "Read failed: %08x (%d bytes)\n", hres, cb);
                 WaitForSingleObject(event_complete, INFINITE);
                 if(bindf & BINDF_FROMURLMON)
                     CHECK_CALLED(Switch);
