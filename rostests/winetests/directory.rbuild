@@ -136,6 +136,9 @@
 	<directory name="wininet">
 		<xi:include href="wininet/wininet.rbuild" />
 	</directory>
+	<directory name="wintrust">
+		<xi:include href="wintrust/wintrust.rbuild" />
+	</directory>
 	<!--
 	<directory name="winetest">
 		<xi:include href="winetest/winetest.rbuild" />
