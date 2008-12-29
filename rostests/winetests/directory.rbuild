@@ -22,6 +22,9 @@
 	<directory name="comdlg32">
 		<xi:include href="comdlg32/comdlg32.rbuild" />
 	</directory>
+	<directory name="crypt32">
+		<xi:include href="crypt32/crypt32.rbuild" />
+	</directory>
 	<directory name="gdi32">
 		<xi:include href="gdi32/gdi32.rbuild" />
 	</directory>
