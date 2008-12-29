@@ -7,6 +7,7 @@
 	<file>editor.c</file>
 	<file>richole.c</file>
 	<file>testlist.c</file>
+	<file>txtsrv.c</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>
