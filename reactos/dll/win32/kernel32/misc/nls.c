@@ -379,7 +379,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
         WideChar = Char & UTF8Mask[Length];
         while (Length && MultiByteString < MbsEnd)
         {
-            WideChar = (WideChar << 6) | *MultiByteString++;
+            WideChar = (WideChar << 6) | (*MultiByteString++ & 0x7f);
             Length--;
         }
         *WideCharString++ = WideChar;
