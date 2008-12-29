@@ -37,6 +37,9 @@
 	<directory name="imm32">
 		<xi:include href="imm32/imm32.rbuild" />
 	</directory>
+	<directory name="jscript">
+		<xi:include href="jscript/jscript.rbuild" />
+	</directory>
 	<directory name="kernel32">
 		<xi:include href="kernel32/kernel32.rbuild" />
 	</directory>
