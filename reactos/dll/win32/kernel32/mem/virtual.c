@@ -28,12 +28,6 @@ VirtualAllocEx(IN HANDLE hProcess,
 {
     NTSTATUS Status;
 
-    if (lpAddress != NULL)
-    {
-        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-        return NULL;
-    }
-
     /* Allocate the memory */
     Status = NtAllocateVirtualMemory(hProcess,
                                      (PVOID *)&lpAddress,
