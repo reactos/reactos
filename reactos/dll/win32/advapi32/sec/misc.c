@@ -1261,9 +1261,9 @@ LookupAccountNameA(LPCSTR SystemName,
         WideCharToMultiByte(CP_ACP,
                             0,
                             lpReferencedDomainNameW,
-                            *hReferencedDomainNameLength,
+                            *hReferencedDomainNameLength + 1,
                             ReferencedDomainName,
-                            *hReferencedDomainNameLength,
+                            *hReferencedDomainNameLength + 1,
                             NULL,
                             NULL);
     }
@@ -1343,13 +1343,16 @@ LookupAccountNameW(LPCWSTR lpSystemName,
     if (ReferencedDomainName != NULL && (*cchReferencedDomainName > wcslen(dm)))
         wcscpy(ReferencedDomainName, dm);
 
-    if (*cchReferencedDomainName <= wcslen(dm))
+    if ((*cchReferencedDomainName <= wcslen(dm)) || (!ret))
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         ret = FALSE;
+        *cchReferencedDomainName = wcslen(dm) + 1;
     }
-
-    *cchReferencedDomainName = wcslen(dm)+1;
+    else
+    {
+        *cchReferencedDomainName = wcslen(dm);
+    }
 
     FreeSid(pSid);
 
