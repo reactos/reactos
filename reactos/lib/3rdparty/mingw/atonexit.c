@@ -20,6 +20,7 @@ _PVFV *__onexitend;
 extern _CRTIMP _onexit_t __dllonexit (_onexit_t, _PVFV**, _PVFV**);
 extern _onexit_t (__cdecl *_imp___onexit) (_onexit_t func);
 
+#if 0
 /* Choose a different name to prevent name conflicts. The CRT one works fine.  */
 _onexit_t __cdecl mingw_onexit(_onexit_t func)
 {
@@ -48,3 +49,4 @@ atexit (_PVFV func)
 {
   return (mingw_onexit((_onexit_t)func) == NULL) ? -1 : 0;
 }
+#endif
