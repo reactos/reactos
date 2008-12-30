@@ -1457,7 +1457,6 @@ DEFINE_TEST(finally_12)
 	return ret == return_positive() + return_one() + return_one();
 }
 
-#if 0
 static int test_finally_13_ret;
 
 static
@@ -1550,11 +1549,12 @@ void test_finally_14_helper(void)
 	}
 	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
-		test_finally_14_ret = return_zero();
+		if(test_finally_14_ret == return_positive() + return_one() + return_one())
+			test_finally_14_ret += return_one();
 	}
 	_SEH2_END;
 
-	test_finally_14_ret = return_zero();
+	test_finally_14_ret = return_arg(test_finally_14_ret);
 }
 
 DEFINE_TEST(finally_14)
@@ -1567,17 +1567,16 @@ DEFINE_TEST(finally_14)
 	{
 		ret = return_arg(ret);
 		test_finally_14_helper();
-		ret = return_zero();
+		ret = return_positive();
 	}
 	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
-		ret = return_positive();
+		ret = return_zero();
 	}
 	_SEH2_END;
 
-	return ret == return_positive() && test_finally_14_ret == return_positive() + return_one() + return_one();
+	return ret == return_positive() && test_finally_14_ret == return_positive() + return_one() + return_one() + return_one();
 }
-#endif
 //}}}
 
 /* _SEH2_GetExceptionInformation() *///{{{
@@ -2418,10 +2417,8 @@ void testsuite_syntax(void)
 		USE_TEST(finally_10),
 		USE_TEST(finally_11),
 		USE_TEST(finally_12),
-	#if 0
 		USE_TEST(finally_13),
 		USE_TEST(finally_14),
-	#endif
 
 		USE_TEST(xpointers_1),
 		USE_TEST(xpointers_2),
