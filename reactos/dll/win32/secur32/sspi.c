@@ -98,8 +98,8 @@ FreeContextBuffer (
 	PVOID pvoid
 	)
 {
-	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    HeapFree(GetProcessHeap(), 0, pvoid);
+    return SEC_E_OK;
 }
 
 SECURITY_STATUS
