@@ -3,6 +3,72 @@
 #define NDEBUG
 #include <debug.h>
 
+SECURITY_STATUS WINAPI ApplyControlTokenW(PCtxtHandle Handle, PSecBufferDesc Buffer);
+SECURITY_STATUS WINAPI ApplyControlTokenA(PCtxtHandle Handle, PSecBufferDesc Buffer);
+
+static SecurityFunctionTableA securityFunctionTableA =
+{
+    SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION,
+    EnumerateSecurityPackagesA,
+    QueryCredentialsAttributesA,
+    AcquireCredentialsHandleA,
+    FreeCredentialsHandle,
+    NULL, /* Reserved2 */
+    InitializeSecurityContextA,
+    AcceptSecurityContext,
+    CompleteAuthToken,
+    DeleteSecurityContext,
+    ApplyControlTokenA,
+    QueryContextAttributesA,
+    ImpersonateSecurityContext,
+    RevertSecurityContext,
+    MakeSignature,
+    VerifySignature,
+    FreeContextBuffer,
+    QuerySecurityPackageInfoA,
+    EncryptMessage, /* Reserved3 */
+    DecryptMessage, /* Reserved4 */
+    ExportSecurityContext,
+    ImportSecurityContextA,
+    AddCredentialsA,
+    NULL, /* Reserved8 */
+    QuerySecurityContextToken,
+    EncryptMessage,
+    DecryptMessage,
+    NULL
+};
+
+static SecurityFunctionTableW securityFunctionTableW =
+{
+    SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION,
+    EnumerateSecurityPackagesW,
+    QueryCredentialsAttributesW,
+    AcquireCredentialsHandleW,
+    FreeCredentialsHandle,
+    NULL, /* Reserved2 */
+    InitializeSecurityContextW,
+    AcceptSecurityContext,
+    CompleteAuthToken,
+    DeleteSecurityContext,
+    ApplyControlTokenW,
+    QueryContextAttributesW,
+    ImpersonateSecurityContext,
+    RevertSecurityContext,
+    MakeSignature,
+    VerifySignature,
+    FreeContextBuffer,
+    QuerySecurityPackageInfoW,
+    EncryptMessage, /* Reserved3 */
+    DecryptMessage, /* Reserved4 */
+    ExportSecurityContext,
+    ImportSecurityContextW,
+    AddCredentialsW,
+    NULL, /* Reserved8 */
+    QuerySecurityContextToken,
+    EncryptMessage,
+    DecryptMessage,
+    NULL
+};
 
 SECURITY_STATUS
 WINAPI
@@ -56,8 +122,8 @@ PSecurityFunctionTableW
 WINAPI
 InitSecurityInterfaceW(VOID)
 {
-	UNIMPLEMENTED;
-	return NULL;
+    DPRINT("InitSecurityInterfaceW() called\n");
+    return &securityFunctionTableW;
 }
 
 SECURITY_STATUS
@@ -407,8 +473,8 @@ PSecurityFunctionTableA
 WINAPI
 InitSecurityInterfaceA(VOID)
 {
-	UNIMPLEMENTED;
-	return NULL;
+    DPRINT("InitSecurityInterfaceA() called\n");
+    return &securityFunctionTableA;
 }
 
 BOOLEAN
