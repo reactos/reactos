@@ -1659,7 +1659,7 @@ BOOL WINAPI GlobalUnlock(HGLOBAL);
 BOOL WINAPI GlobalUnWire(HGLOBAL); /* Obsolete: Has no effect. */
 PVOID WINAPI GlobalWire(HGLOBAL); /* Obsolete: Has no effect. */
 #define HasOverlappedIoCompleted(lpOverlapped)  ((lpOverlapped)->Internal != STATUS_PENDING)
-PVOID WINAPI HeapAlloc(HANDLE,DWORD,DWORD);
+PVOID WINAPI HeapAlloc(HANDLE,DWORD,SIZE_T);
 SIZE_T WINAPI HeapCompact(HANDLE,DWORD);
 HANDLE WINAPI HeapCreate(DWORD,DWORD,DWORD);
 BOOL WINAPI HeapDestroy(HANDLE);
