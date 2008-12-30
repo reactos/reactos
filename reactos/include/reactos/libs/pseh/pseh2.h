@@ -212,14 +212,15 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 			(void)_SEH2FrameP; \
 			(void)_SEH2TryLevelP; \
  \
+			if(_SEHTopTryLevel) \
+				_SEH2EnterFrame(_SEH2FrameP); \
+ \
 			_SEHTryLevel.ST_Next = _SEHPrevTryLevelP; \
 			goto _SEHBeforeTry; \
  \
 			_SEHDoTry:; \
-			__SEH_ENTER_TRYLEVEL(); \
  \
-			if(_SEHTopTryLevel) \
-				_SEH2EnterFrame(_SEH2FrameP); \
+			__SEH_ENTER_TRYLEVEL();
 
 #define __SEH_END_SCOPE \
 		} \

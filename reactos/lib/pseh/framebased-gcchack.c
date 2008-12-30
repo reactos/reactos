@@ -241,6 +241,7 @@ extern
 void __cdecl _SEH2EnterFrame(_SEH2Frame_t * frame)
 {
 	frame->SF_Registration.SER_Handler = __SEH2FrameHandler;
+	frame->SF_TopTryLevel = 0;
 	frame->SF_Code = 0;
 	__SEH2EnterFrame(&frame->SF_Registration);
 }
