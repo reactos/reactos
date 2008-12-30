@@ -40,14 +40,14 @@ ___SEH2FrameHandler:
 	jmp __SEH2FrameHandler
 .endfunc
 
-.func __SEH2NestedHandler
-.globl ___SEH2NestedHandler
-___SEH2NestedHandler:
+.func __SEH2UnwindHandler
+.globl ___SEH2UnwindHandler
+___SEH2UnwindHandler:
 
-.extern __SEH2NestedHandler
+.extern __SEH2UnwindHandler
 
 	cld
-	jmp __SEH2NestedHandler
+	jmp __SEH2UnwindHandler
 .endfunc
 
 // EOF
