@@ -1301,6 +1301,12 @@ LookupAccountNameW(LPCWSTR lpSystemName,
     TRACE("%s %s %p %p %p %p %p - stub\n", lpSystemName, lpAccountName,
           Sid, cbSid, ReferencedDomainName, cchReferencedDomainName, peUse);
 
+    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    {
+        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        return FALSE;
+    }
+
     for (i = 0; i < (sizeof(ACCOUNT_SIDS) / sizeof(ACCOUNT_SIDS[0])); i++)
     {
         if (!wcscmp(lpAccountName, ACCOUNT_SIDS[i].account))
