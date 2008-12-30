@@ -40,6 +40,9 @@
 	<directory name="imm32">
 		<xi:include href="imm32/imm32.rbuild" />
 	</directory>
+	<directory name="iphlpapi">
+		<xi:include href="iphlpapi/iphlpapi.rbuild" />
+	</directory>
 	<directory name="jscript">
 		<xi:include href="jscript/jscript.rbuild" />
 	</directory>
