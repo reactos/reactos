@@ -56,7 +56,7 @@ IntGdiGetLanguageID()
     }
     ZwClose(KeyHandle);
   }
-  DPRINT1("Language ID = %x\n",Ret);
+  DPRINT("Language ID = %x\n",Ret);
   return (SHORT) Ret;
 }
 
