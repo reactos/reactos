@@ -1461,6 +1461,12 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
     };
   unsigned Priv;
 
+  if (!ADVAPI_IsLocalComputer(SystemName))
+    {
+        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        return FALSE;
+    }
+
   if (NULL != SystemName && L'\0' != *SystemName)
     {
       FIXME("LookupPrivilegeValueW: not implemented for remote system\n");
@@ -1601,6 +1607,7 @@ LookupPrivilegeNameW(LPCWSTR lpSystemName,
         SetLastError(RPC_S_SERVER_UNAVAILABLE);
         return FALSE;
     }
+
     if (lpLuid->HighPart || (lpLuid->LowPart < SE_MIN_WELL_KNOWN_PRIVILEGE ||
      lpLuid->LowPart > SE_MAX_WELL_KNOWN_PRIVILEGE))
     {
