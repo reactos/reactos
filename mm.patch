@@ -1,6 +1,6 @@
 Index: elf.inc.h
 ===================================================================
---- elf.inc.h	(revision 38402)
+--- elf.inc.h	(revision 38484)
 +++ elf.inc.h	(working copy)
 @@ -444,6 +444,7 @@
    nReadStatus = ReadFileCb
@@ -12,7 +12,7 @@ Index: elf.inc.h
     &pData,
 Index: freelist.c
 ===================================================================
---- freelist.c	(revision 38402)
+--- freelist.c	(revision 38484)
 +++ freelist.c	(working copy)
 @@ -632,6 +632,12 @@
  }
@@ -29,7 +29,7 @@ Index: freelist.c
  {
 Index: mm.c
 ===================================================================
---- mm.c	(revision 38402)
+--- mm.c	(revision 38484)
 +++ mm.c	(working copy)
 @@ -277,6 +277,7 @@
              break;
@@ -41,7 +41,7 @@ Index: mm.c
                                                    (PVOID)Address,
 Index: mminit.c
 ===================================================================
---- mminit.c	(revision 38402)
+--- mminit.c	(revision 38484)
 +++ mminit.c	(working copy)
 @@ -68,6 +68,9 @@
  FALSE;
@@ -53,7 +53,20 @@ Index: mminit.c
  /* PRIVATE FUNCTIONS *********************************************************/
  
  VOID
-@@ -506,6 +509,9 @@
+@@ -101,8 +104,11 @@
+     /* Check if there are any dirty pages, and flush them.
+        There will be no other chance to do this later, since filesystems
+        are going to be shut down. */
+-    CcRosFlushDirtyPages(128, &PagesWritten);
++    //CcRosFlushDirtyPages(128, &PagesWritten);
+ #endif
++
++    /* Flush all dirty pages */
++    MiFlushPages();
+ }
+ 
+ VOID
+@@ -506,6 +512,9 @@
          /* Initialize the balance set manager */
          MmInitBsmThread();
  
@@ -65,7 +78,7 @@ Index: mminit.c
  
 Index: mpw.c
 ===================================================================
---- mpw.c	(revision 38402)
+--- mpw.c	(revision 38484)
 +++ mpw.c	(working copy)
 @@ -88,7 +88,7 @@
        MmWriteDirtyPages(128, &PagesWritten);
@@ -78,7 +91,7 @@ Index: mpw.c
  
 Index: pagefile.c
 ===================================================================
---- pagefile.c	(revision 38402)
+--- pagefile.c	(revision 38484)
 +++ pagefile.c	(working copy)
 @@ -1,5 +1,4 @@
  /*
@@ -88,7 +101,7 @@ Index: pagefile.c
   *  This program is free software; you can redistribute it and/or modify
 Index: pageop.c
 ===================================================================
---- pageop.c	(revision 38402)
+--- pageop.c	(revision 38484)
 +++ pageop.c	(working copy)
 @@ -81,14 +81,23 @@
     /*
@@ -197,7 +210,7 @@ Index: pageop.c
 -
 Index: pe.c
 ===================================================================
---- pe.c	(revision 38402)
+--- pe.c	(revision 38484)
 +++ pe.c	(working copy)
 @@ -240,7 +240,7 @@
  	lnOffset.QuadPart = pidhDosHeader->e_lfanew;
@@ -219,7 +232,7 @@ Index: pe.c
  	    DIE(("ReadFile failed with status %08X\n", nStatus));
 Index: rmap.c
 ===================================================================
---- rmap.c	(revision 38402)
+--- rmap.c	(revision 38484)
 +++ rmap.c	(working copy)
 @@ -299,6 +299,17 @@
        Status = MmPageOutVirtualMemory(AddressSpace, MemoryArea,
@@ -241,7 +254,7 @@ Index: rmap.c
        KeBugCheck(MEMORY_MANAGEMENT);
 Index: section.c
 ===================================================================
---- section.c	(revision 38402)
+--- section.c	(revision 38484)
 +++ section.c	(working copy)
 @@ -62,6 +62,7 @@
     PROS_SECTION_OBJECT Section;
@@ -2756,7 +2769,7 @@ Index: section.c
     return(STATUS_SUCCESS);
  }
  
-+VOID 
++VOID
 +MmInitSectionImplementation2(VOID)
 +{
 +   LARGE_INTEGER DueTime;
@@ -3698,7 +3711,7 @@ Index: section.c
     PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
  
     /*
-@@ -4965,37 +6135,558 @@
+@@ -4965,38 +6135,598 @@
       return STATUS_INVALID_PAGE_PROTECTION;
     }
  
@@ -3877,6 +3890,15 @@ Index: section.c
 +   return STATUS_SUCCESS;
  }
  
++typedef struct _PAGE_IO_CONTEXT
++{
++   PMM_SECTION_SEGMENT Segment;
++   ULONG Offset;
++   ULONG PageCount;
++   PMM_PAGEOP PageOp[16];
++   WORK_QUEUE_ITEM WorkQueueItem; 
++} PAGE_IO_CONTEXT, *PPAGE_IO_CONTEXT;
++
  NTSTATUS
 +MmspWriteDataSectionPage(PMM_SECTION_SEGMENT Segment,
 +                         ULONG Offset,
@@ -3917,7 +3939,7 @@ Index: section.c
 +      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 +      Status = Iosb.Status;
 +   }
-+   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
++   MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
 +   if (!NT_SUCCESS(Status))
 +   {
 +      MmSetPageEntrySectionSegment(Segment, Offset, Entry | 0x2);
@@ -3926,15 +3948,6 @@ Index: section.c
 +   MmspCompleteAndReleasePageOp(PageOp);
 +   return Status;
 +}
-+
-+typedef struct _PAGE_IO_CONTEXT
-+{
-+   PMM_SECTION_SEGMENT Segment;
-+   ULONG Offset;
-+   ULONG PageCount;
-+   PMM_PAGEOP PageOp[16];
-+   WORK_QUEUE_ITEM WorkQueueItem; 
-+} PAGE_IO_CONTEXT, *PPAGE_IO_CONTEXT;
 +
 +VOID NTAPI
 +MmspWriteDataSectionPages(PVOID Context)
@@ -3949,7 +3962,7 @@ Index: section.c
 +   IO_STATUS_BLOCK Iosb;
 +   NTSTATUS Status;
 +
-+   DPRINT("MmspWriteDataSectionPages\n");
++   DPRINT("MmspWriteDataSectionPages, %p pages\n", ((PPAGE_IO_CONTEXT)Context)->PageCount);
 +   
 +   Mdl = alloca(MmSizeOfMdl(NULL, ((PPAGE_IO_CONTEXT)Context)->PageCount * PAGE_SIZE));
 +   Pfn = alloca(((PPAGE_IO_CONTEXT)Context)->PageCount * sizeof(PFN_TYPE));
@@ -4029,7 +4042,7 @@ Index: section.c
 +                           FALSE,
 +                           NULL);
 +
-+      DPRINT("MmspWorkerThread\n");
++      DPRINT1("MmspWorkerThread\n");
 +
 +      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
 +      
@@ -4177,16 +4190,13 @@ Index: section.c
 +}
 +
 +NTSTATUS
-+MmFlushDataFileSection(PROS_SECTION_OBJECT Section, PLARGE_INTEGER StartOffset, ULONG Length)
++MiFlushDataFileSection(PMM_SECTION_SEGMENT Segment, PLARGE_INTEGER StartOffset, ULONG Length)
 +{
-+   PMM_SECTION_SEGMENT Segment;
 +   LARGE_INTEGER Offset;
 +   PPAGE_IO_CONTEXT Context = NULL;
 +   ULONG Entry, i;
 +   PMM_PAGEOP PageOp;
 +   PFN_TYPE Pfn;
-+
-+   Segment = ((PROS_SECTION_OBJECT)Section)->Segment;
 +
 +   if (StartOffset)
 +   {
@@ -4208,7 +4218,7 @@ Index: section.c
 +       Pfn = PFN_FROM_SSE(Entry);
 +       if (!IS_SWAP_FROM_SSE(Entry) && Pfn && !(Entry & 0x2) && MmGetRmapListHeadPage(Pfn) && MmIsDirtyPageRmap(Pfn))
 +       {
-+          Entry|=0x2;
++          Entry |= 0x2;
 +          MmSetPageEntrySectionSegment(Segment, i * PAGE_SIZE, Entry);
 +       }
 +       if (!IS_SWAP_FROM_SSE(Entry) && Pfn && (Entry & 0x2))
@@ -4275,12 +4285,55 @@ Index: section.c
 +}
 +
 +NTSTATUS
++MmFlushDataFileSection(PROS_SECTION_OBJECT Section, PLARGE_INTEGER StartOffset, ULONG Length)
++{
++   PMM_SECTION_SEGMENT Segment;
++
++   /* Get pointer to the segment */
++   Segment = ((PROS_SECTION_OBJECT)Section)->Segment;
++
++   /* Use internal helper */
++   return MiFlushDataFileSection(Segment, StartOffset, Length);
++}
++
++VOID
  NTAPI
++MiFlushPages(VOID)
++{
++   PLIST_ENTRY entry;
++   PMM_SECTION_SEGMENT current;
++
++   /* Grab the lock */
++   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
++
++   DPRINT1("MiFlushPages started\n");
++
++   /* Go through all data sections and flush them */
++   entry = DataSectionObjectListHead.Flink;
++   while (entry != &DataSectionObjectListHead)
++   {
++       current = CONTAINING_RECORD(entry, MM_SECTION_SEGMENT, ListEntry);
++
++       /* Flush it */
++       MiFlushDataFileSection(current, NULL, 0);
++
++       /* Advance to the next section */
++       entry = entry->Flink;
++   }
++
++   DPRINT1("MiFlushPages finished\n");
++
++   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
++}
++
++NTSTATUS
++NTAPI
  NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
                              IN OUT PULONG_PTR NumberOfPages,
+                             IN OUT PULONG_PTR UserPfnArray)
 Index: virtual.c
 ===================================================================
---- virtual.c	(revision 38402)
+--- virtual.c	(revision 38484)
 +++ virtual.c	(working copy)
 @@ -581,7 +581,7 @@
      NTSTATUS Status;
