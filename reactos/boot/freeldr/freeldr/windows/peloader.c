@@ -405,7 +405,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 		/* Size of data is less than the virtual size - fill up the remainder with zeroes */
 		if (SizeOfRawData < VirtualSize)
 		{
-			DbgPrint((DPRINT_WINDOWS, "WinLdrLoadImage(): SORD %d < VS %d", SizeOfRawData, VirtualSize));
+			DbgPrint((DPRINT_WINDOWS, "WinLdrLoadImage(): SORD %d < VS %d\n", SizeOfRawData, VirtualSize));
 			RtlZeroMemory((PVOID)(SectionHeader->VirtualAddress + (ULONG)PhysicalBase + SizeOfRawData), VirtualSize - SizeOfRawData);
 		}
 

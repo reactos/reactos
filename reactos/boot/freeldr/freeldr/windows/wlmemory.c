@@ -133,13 +133,15 @@ MempAllocatePageTables()
 	TotalSize = (1+1+NumPageTables*2)*MM_PAGE_SIZE;
 
 	// PDE+HAL+KernelPTEs == MemoryData
-	Buffer = MmAllocateMemoryWithType(
-		TotalSize - NumPageTables*MM_PAGE_SIZE, LoaderMemoryData);
+	Buffer = MmAllocateMemoryWithType(TotalSize, LoaderMemoryData);
 
 	// Physical PTEs = FirmwareTemporary
-	PhysicalPageTablesBuffer = MmAllocateMemoryWithType(
-		NumPageTables*MM_PAGE_SIZE, LoaderFirmwareTemporary);
+	PhysicalPageTablesBuffer = (PUCHAR)Buffer + TotalSize - NumPageTables*MM_PAGE_SIZE;
+	MmSetMemoryType(PhysicalPageTablesBuffer,
+	                NumPageTables*MM_PAGE_SIZE,
+	                LoaderFirmwareTemporary);
 
+	// This check is now redundant
 	if (Buffer + (TotalSize - NumPageTables*MM_PAGE_SIZE) !=
 		PhysicalPageTablesBuffer)
 	{

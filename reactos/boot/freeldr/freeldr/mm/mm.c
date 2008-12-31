@@ -182,6 +182,22 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_
 	return MemPointer;
 }
 
+VOID MmSetMemoryType(PVOID MemoryAddress, ULONG MemorySize, TYPE_OF_MEMORY NewType)
+{
+	ULONG		PagesNeeded;
+	ULONG		StartPageNumber;
+
+	// Find out how many blocks it will take to
+	// satisfy this allocation
+	PagesNeeded = ROUND_UP(MemorySize, MM_PAGE_SIZE) / MM_PAGE_SIZE;
+
+	// Get the starting page number
+	StartPageNumber = MmGetPageNumberFromAddress(MemoryAddress);
+
+	// Set new type for these pages
+	MmAllocatePagesInLookupTable(PageLookupTableAddress, StartPageNumber, PagesNeeded, NewType);
+}
+
 PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType)
 {
 	ULONG		PagesNeeded;
