@@ -1,5 +1,7 @@
 /*
- * Copyright 2007 Juan Lang
+ * cryptui dll resources
+ *
+ * Copyright 2008 Juan Lang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,18 +17,27 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#ifndef __WINTRUST_PRIV_H__
-#define __WINTRUST_PRIV_H__
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "commctrl.h"
+#include "dlgs.h"
 
-void * WINAPI WINTRUST_Alloc(DWORD cb) __WINE_ALLOC_SIZE(1);
-void * WINAPI WINTRUST_ReAlloc(void *ptr, DWORD cb) __WINE_ALLOC_SIZE(2);
-void WINAPI WINTRUST_Free(void *p);
-BOOL WINAPI WINTRUST_AddStore(CRYPT_PROVIDER_DATA *data, HCERTSTORE store);
-BOOL WINAPI WINTRUST_AddSgnr(CRYPT_PROVIDER_DATA *data,
- BOOL fCounterSigner, DWORD idxSigner, CRYPT_PROVIDER_SGNR *sgnr);
-BOOL WINAPI WINTRUST_AddCert(CRYPT_PROVIDER_DATA *data, DWORD idxSigner,
- BOOL fCounterSigner, DWORD idxCounterSigner, PCCERT_CONTEXT pCert2Add);
-BOOL WINAPI WINTRUST_AddPrivData(CRYPT_PROVIDER_DATA *data,
- CRYPT_PROVIDER_PRIVDATA *pPrivData2Add);
+#include "cryptuires.h"
 
-#endif /* ndef __WINTRUST_PRIV_H__ */
+/* @makedep: smallicons.bmp */
+IDB_SMALL_ICONS BITMAP LOADONCALL DISCARDABLE smallicons.bmp
+
+/* @makedep: cert.bmp */
+IDB_CERT BITMAP LOADONCALL DISCARDABLE cert.bmp
+
+/* @makedep: certerror.bmp */
+IDB_CERT_ERROR BITMAP LOADONCALL DISCARDABLE certerror.bmp
+
+/* @makedep: certwarning.bmp */
+IDB_CERT_WARNING BITMAP LOADONCALL DISCARDABLE certwarning.bmp
+
+/* @makedep: checks.bmp */
+IDB_CHECKS BITMAP LOADONCALL DISCARDABLE checks.bmp
+
+#include "cryptui_En.rc"

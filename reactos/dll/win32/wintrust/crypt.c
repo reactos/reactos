@@ -32,8 +32,24 @@
 #include "imagehlp.h"
 
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
+
+#define CATADMIN_MAGIC 0x43415441 /* 'CATA' */
+#define CATINFO_MAGIC  0x43415449 /* 'CATI' */
+
+struct catadmin
+{
+    DWORD magic;
+    WCHAR path[MAX_PATH];
+};
+
+struct catinfo
+{
+    DWORD magic;
+    WCHAR file[MAX_PATH];
+};
 
 /***********************************************************************
  *      CryptCATAdminAcquireContext (WINTRUST.@)
@@ -42,7 +58,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
  *
  * PARAMS
  *   catAdmin  [O] Pointer to the context handle.
- *   sysSystem [I] Pointer to a GUID for the needed subsystem.
+ *   sys       [I] Pointer to a GUID for the needed subsystem.
  *   dwFlags   [I] Reserved.
  *
  * RETURNS
@@ -50,31 +66,108 @@ WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
  *   Failure: FALSE.
  *
  */
-BOOL WINAPI CryptCATAdminAcquireContext(HCATADMIN* catAdmin,
-                    const GUID *sysSystem, DWORD dwFlags )
+BOOL WINAPI CryptCATAdminAcquireContext(HCATADMIN *catAdmin,
+                                        const GUID *sys, DWORD dwFlags)
 {
-    FIXME("%p %s %x\n", catAdmin, debugstr_guid(sysSystem), dwFlags);
+    static const WCHAR catroot[] =
+        {'\\','c','a','t','r','o','o','t',0};
+    static const WCHAR fmt[] =
+        {'%','s','\\','{','%','0','8','x','-','%','0','4','x','-','%','0',
+         '4','x','-','%','0','2','x','%','0','2','x','-','%','0','2','x',
+         '%','0','2','x','%','0','2','x','%','0','2','x','%','0','2','x',
+         '%','0','2','x','}',0};
+    static const GUID defsys =
+        {0x127d0a1d,0x4ef2,0x11d1,{0x86,0x08,0x00,0xc0,0x4f,0xc2,0x95,0xee}};
+
+    WCHAR catroot_dir[MAX_PATH];
+    struct catadmin *ca;
+
+    TRACE("%p %s %x\n", catAdmin, debugstr_guid(sys), dwFlags);
 
     if (!catAdmin)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+    if (!(ca = HeapAlloc(GetProcessHeap(), 0, sizeof(*ca))))
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
 
-    *catAdmin = (HCATADMIN)0xdeadbeef;
+    GetSystemDirectoryW(catroot_dir, MAX_PATH);
+    strcatW(catroot_dir, catroot);
 
+    /* create the directory if it doesn't exist */
+    CreateDirectoryW(catroot_dir, NULL);
+
+    if (!sys) sys = &defsys;
+    sprintfW(ca->path, fmt, catroot_dir, sys->Data1, sys->Data2,
+             sys->Data3, sys->Data4[0], sys->Data4[1], sys->Data4[2],
+             sys->Data4[3], sys->Data4[4], sys->Data4[5], sys->Data4[6],
+             sys->Data4[7]);
+
+    /* create the directory if it doesn't exist */
+    CreateDirectoryW(ca->path, NULL);
+
+    ca->magic = CATADMIN_MAGIC;
+    *catAdmin = ca;
     return TRUE;
 }
 
 /***********************************************************************
  *             CryptCATAdminAddCatalog (WINTRUST.@)
  */
-BOOL WINAPI CryptCATAdminAddCatalog(HCATADMIN catAdmin, PWSTR catalogFile,
-                                    PWSTR selectBaseName, DWORD flags)
+HCATINFO WINAPI CryptCATAdminAddCatalog(HCATADMIN catAdmin, PWSTR catalogFile,
+                                        PWSTR selectBaseName, DWORD flags)
 {
-    FIXME("%p %s %s %d\n", catAdmin, debugstr_w(catalogFile),
+    static const WCHAR slashW[] = {'\\',0};
+    struct catadmin *ca = catAdmin;
+    struct catinfo *ci;
+    WCHAR *target;
+    DWORD len;
+
+    TRACE("%p %s %s %d\n", catAdmin, debugstr_w(catalogFile),
           debugstr_w(selectBaseName), flags);
-    return TRUE;
+
+    if (!selectBaseName)
+    {
+        FIXME("NULL basename not handled\n");
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (!ca || ca->magic != CATADMIN_MAGIC || !catalogFile || flags)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    len = strlenW(ca->path) + strlenW(selectBaseName) + 2;
+    if (!(target = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+    strcpyW(target, ca->path);
+    strcatW(target, slashW);
+    strcatW(target, selectBaseName);
+
+    if (!CopyFileW(catalogFile, target, FALSE))
+    {
+        HeapFree(GetProcessHeap(), 0, target);
+        return NULL;
+    }
+    if (!(ci = HeapAlloc(GetProcessHeap(), 0, sizeof(*ci))))
+    {
+        HeapFree(GetProcessHeap(), 0, target);
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+    ci->magic = CATINFO_MAGIC;
+    strcpyW(ci->file, selectBaseName);
+
+    HeapFree(GetProcessHeap(), 0, target);
+    return ci;
 }
 
 /***********************************************************************
@@ -83,10 +176,59 @@ BOOL WINAPI CryptCATAdminAddCatalog(HCATADMIN catAdmin, PWSTR catalogFile,
 BOOL WINAPI CryptCATAdminCalcHashFromFileHandle(HANDLE hFile, DWORD* pcbHash,
                                                 BYTE* pbHash, DWORD dwFlags )
 {
-    FIXME("%p %p %p %x\n", hFile, pcbHash, pbHash, dwFlags);
+    BOOL ret = FALSE;
 
-    if (pbHash && pcbHash) memset(pbHash, 0, *pcbHash);
-    return TRUE;
+    TRACE("%p %p %p %x\n", hFile, pcbHash, pbHash, dwFlags);
+
+    if (!hFile || !pcbHash || dwFlags)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (*pcbHash < 20)
+    {
+        *pcbHash = 20;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return TRUE;
+    }
+
+    *pcbHash = 20;
+    if (pbHash)
+    {
+        HCRYPTPROV prov;
+        HCRYPTHASH hash;
+        DWORD bytes_read;
+        BYTE *buffer;
+
+        if (!(buffer = HeapAlloc(GetProcessHeap(), 0, 4096)))
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+        ret = CryptAcquireContextW(&prov, NULL, MS_DEF_PROV_W, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+        if (!ret)
+        {
+            HeapFree(GetProcessHeap(), 0, buffer);
+            return FALSE;
+        }
+        ret = CryptCreateHash(prov, CALG_SHA1, 0, 0, &hash);
+        if (!ret)
+        {
+            HeapFree(GetProcessHeap(), 0, buffer);
+            CryptReleaseContext(prov, 0);
+            return FALSE;
+        }
+        while ((ret = ReadFile(hFile, buffer, 4096, &bytes_read, NULL)) && bytes_read)
+        {
+            CryptHashData(hash, buffer, bytes_read, 0);
+        }
+        if (ret) ret = CryptGetHashParam(hash, HP_HASHVAL, pbHash, pcbHash, 0);
+
+        HeapFree(GetProcessHeap(), 0, buffer);
+        CryptDestroyHash(hash);
+        CryptReleaseContext(prov, 0);
+    }
+    return ret;
 }
 
 /***********************************************************************
@@ -114,15 +256,25 @@ HCATINFO WINAPI CryptCATAdminEnumCatalogFromHash(HCATADMIN hCatAdmin,
  *
  * RETURNS
  *   Success: TRUE.
- *   Failure: FAIL.
+ *   Failure: FALSE.
  *
  */
 BOOL WINAPI CryptCATAdminReleaseCatalogContext(HCATADMIN hCatAdmin,
                                                HCATINFO hCatInfo,
                                                DWORD dwFlags)
 {
-    FIXME("%p %p %x\n", hCatAdmin, hCatInfo, dwFlags);
-    return TRUE;
+    struct catinfo *ci = hCatInfo;
+    struct catadmin *ca = hCatAdmin;
+
+    TRACE("%p %p %x\n", hCatAdmin, hCatInfo, dwFlags);
+
+    if (!ca || ca->magic != CATADMIN_MAGIC || !ci || ci->magic != CATINFO_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    ci->magic = 0;
+    return HeapFree(GetProcessHeap(), 0, ci);
 }
 
 /***********************************************************************
@@ -136,13 +288,22 @@ BOOL WINAPI CryptCATAdminReleaseCatalogContext(HCATADMIN hCatAdmin,
  *
  * RETURNS
  *   Success: TRUE.
- *   Failure: FAIL.
+ *   Failure: FALSE.
  *
  */
 BOOL WINAPI CryptCATAdminReleaseContext(HCATADMIN hCatAdmin, DWORD dwFlags )
 {
-    FIXME("%p %x\n", hCatAdmin, dwFlags);
-    return TRUE;
+    struct catadmin *ca = hCatAdmin;
+
+    TRACE("%p %x\n", hCatAdmin, dwFlags);
+
+    if (!ca || ca->magic != CATADMIN_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    ca->magic = 0;
+    return HeapFree(GetProcessHeap(), 0, ca);
 }
 
 /***********************************************************************
@@ -162,7 +323,15 @@ BOOL WINAPI CryptCATAdminReleaseContext(HCATADMIN hCatAdmin, DWORD dwFlags )
  */
 BOOL WINAPI CryptCATAdminRemoveCatalog(HCATADMIN hCatAdmin, LPCWSTR pwszCatalogFile, DWORD dwFlags)
 {
-    FIXME("%p %s %x\n", hCatAdmin, debugstr_w(pwszCatalogFile), dwFlags);
+    struct catadmin *ca = hCatAdmin;
+
+    TRACE("%p %s %x\n", hCatAdmin, debugstr_w(pwszCatalogFile), dwFlags);
+
+    if (!ca || ca->magic != CATADMIN_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
     return DeleteFileW(pwszCatalogFile);
 }
 
@@ -349,7 +518,7 @@ static BOOL WINTRUST_GetSignedMsgFromCabFile(SIP_SUBJECTINFO *pSubjectInfo,
     /* get basic offset & size info */
     base_offset = SetFilePointer(pSubjectInfo->hFile, 0L, NULL, SEEK_CUR);
 
-    if (SetFilePointer(pSubjectInfo->hFile, 0, NULL, SEEK_END) == -1)
+    if (SetFilePointer(pSubjectInfo->hFile, 0, NULL, SEEK_END) == INVALID_SET_FILE_POINTER)
     {
         TRACE("seek error\n");
         return FALSE;
@@ -357,7 +526,7 @@ static BOOL WINTRUST_GetSignedMsgFromCabFile(SIP_SUBJECTINFO *pSubjectInfo,
 
     cabsize = SetFilePointer(pSubjectInfo->hFile, 0L, NULL, SEEK_CUR);
     if ((cabsize == -1) || (base_offset == -1) ||
-     (SetFilePointer(pSubjectInfo->hFile, base_offset, NULL, SEEK_SET) == -1))
+     (SetFilePointer(pSubjectInfo->hFile, base_offset, NULL, SEEK_SET) == INVALID_SET_FILE_POINTER))
     {
         TRACE("seek error\n");
         return FALSE;
@@ -453,7 +622,7 @@ static BOOL WINTRUST_GetSignedMsgFromCabFile(SIP_SUBJECTINFO *pSubjectInfo,
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
-    if (SetFilePointer(pSubjectInfo->hFile, cert_offset, NULL, SEEK_SET) == -1)
+    if (SetFilePointer(pSubjectInfo->hFile, cert_offset, NULL, SEEK_SET) == INVALID_SET_FILE_POINTER)
     {
         ERR("couldn't seek to cert location\n");
         return FALSE;
@@ -472,6 +641,41 @@ static BOOL WINTRUST_GetSignedMsgFromCabFile(SIP_SUBJECTINFO *pSubjectInfo,
     return TRUE;
 }
 
+static BOOL WINTRUST_GetSignedMsgFromCatFile(SIP_SUBJECTINFO *pSubjectInfo,
+ DWORD *pdwEncodingType, DWORD dwIndex, DWORD *pcbSignedDataMsg,
+ BYTE *pbSignedDataMsg)
+{
+    BOOL ret;
+
+    TRACE("(%p %p %d %p %p)\n", pSubjectInfo, pdwEncodingType, dwIndex,
+          pcbSignedDataMsg, pbSignedDataMsg);
+
+    if (!pbSignedDataMsg)
+    {
+        *pcbSignedDataMsg = GetFileSize(pSubjectInfo->hFile, NULL);
+         ret = TRUE;
+    }
+    else
+    {
+        DWORD len = GetFileSize(pSubjectInfo->hFile, NULL);
+
+        if (*pcbSignedDataMsg < len)
+        {
+            *pcbSignedDataMsg = len;
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            ret = FALSE;
+        }
+        else
+        {
+            ret = ReadFile(pSubjectInfo->hFile, pbSignedDataMsg, len,
+             pcbSignedDataMsg, NULL);
+            if (ret)
+                *pdwEncodingType = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
+        }
+    }
+    return ret;
+}
+
 /***********************************************************************
  *      CryptSIPGetSignedDataMsg  (WINTRUST.@)
  */
@@ -482,6 +686,8 @@ BOOL WINAPI CryptSIPGetSignedDataMsg(SIP_SUBJECTINFO* pSubjectInfo, DWORD* pdwEn
      0x00,0xC0,0x4F,0xC2,0x95,0xEE } };
     static const GUID cabGUID = { 0xC689AABA, 0x8E78, 0x11D0, { 0x8C,0x47,
      0x00,0xC0,0x4F,0xC2,0x95,0xEE } };
+    static const GUID catGUID = { 0xDE351A43, 0x8E59, 0x11D0, { 0x8C,0x47,
+     0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
     BOOL ret;
 
     TRACE("(%p %p %d %p %p)\n", pSubjectInfo, pdwEncodingType, dwIndex,
@@ -492,6 +698,9 @@ BOOL WINAPI CryptSIPGetSignedDataMsg(SIP_SUBJECTINFO* pSubjectInfo, DWORD* pdwEn
          dwIndex, pcbSignedDataMsg, pbSignedDataMsg);
     else if (!memcmp(pSubjectInfo->pgSubjectType, &cabGUID, sizeof(cabGUID)))
         ret = WINTRUST_GetSignedMsgFromCabFile(pSubjectInfo, pdwEncodingType,
+         dwIndex, pcbSignedDataMsg, pbSignedDataMsg);
+    else if (!memcmp(pSubjectInfo->pgSubjectType, &catGUID, sizeof(catGUID)))
+        ret = WINTRUST_GetSignedMsgFromCatFile(pSubjectInfo, pdwEncodingType,
          dwIndex, pcbSignedDataMsg, pbSignedDataMsg);
     else
     {

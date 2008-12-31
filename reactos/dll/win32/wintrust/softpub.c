@@ -128,7 +128,8 @@ static BOOL SOFTPUB_GetSIP(CRYPT_PROVIDER_DATA *data)
 /* Assumes data->u.pPDSip has been loaded, and data->u.pPDSip->pSip allocated.
  * Calls data->u.pPDSip->pSip->pfGet to construct data->hMsg.
  */
-static BOOL SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data)
+static BOOL SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data, HANDLE file,
+ LPCWSTR filePath)
 {
     BOOL ret;
     LPBYTE buf = NULL;
@@ -144,9 +145,8 @@ static BOOL SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data)
 
     data->u.pPDSip->psSipSubjectInfo->cbSize = sizeof(SIP_SUBJECTINFO);
     data->u.pPDSip->psSipSubjectInfo->pgSubjectType = &data->u.pPDSip->gSubject;
-    data->u.pPDSip->psSipSubjectInfo->hFile = data->pWintrustData->u.pFile->hFile;
-    data->u.pPDSip->psSipSubjectInfo->pwsFileName =
-     data->pWintrustData->u.pFile->pcwszFilePath;
+    data->u.pPDSip->psSipSubjectInfo->hFile = file;
+    data->u.pPDSip->psSipSubjectInfo->pwsFileName = filePath;
     data->u.pPDSip->psSipSubjectInfo->hProv = data->hProv;
     ret = data->u.pPDSip->pSip->pfGet(data->u.pPDSip->psSipSubjectInfo,
      &data->dwEncoding, 0, &size, 0);
@@ -198,10 +198,25 @@ static DWORD SOFTPUB_DecodeInnerContent(CRYPT_PROVIDER_DATA *data)
 {
     BOOL ret;
     DWORD size;
+    LPSTR oid = NULL;
     LPBYTE buf = NULL;
 
     ret = CryptMsgGetParam(data->hMsg, CMSG_INNER_CONTENT_TYPE_PARAM, 0, NULL,
      &size);
+    if (!ret)
+        goto error;
+    oid = data->psPfns->pfnAlloc(size);
+    if (!oid)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        ret = FALSE;
+        goto error;
+    }
+    ret = CryptMsgGetParam(data->hMsg, CMSG_INNER_CONTENT_TYPE_PARAM, 0, oid,
+     &size);
+    if (!ret)
+        goto error;
+    ret = CryptMsgGetParam(data->hMsg, CMSG_CONTENT_PARAM, 0, NULL, &size);
     if (!ret)
         goto error;
     buf = data->psPfns->pfnAlloc(size);
@@ -211,51 +226,143 @@ static DWORD SOFTPUB_DecodeInnerContent(CRYPT_PROVIDER_DATA *data)
         ret = FALSE;
         goto error;
     }
-    ret = CryptMsgGetParam(data->hMsg, CMSG_INNER_CONTENT_TYPE_PARAM, 0, buf,
-     &size);
+    ret = CryptMsgGetParam(data->hMsg, CMSG_CONTENT_PARAM, 0, buf, &size);
     if (!ret)
         goto error;
-    if (!strcmp((LPCSTR)buf, SPC_INDIRECT_DATA_OBJID))
+    ret = CryptDecodeObject(data->dwEncoding, oid, buf, size, 0, NULL, &size);
+    if (!ret)
+        goto error;
+    data->u.pPDSip->psIndirectData = data->psPfns->pfnAlloc(size);
+    if (!data->u.pPDSip->psIndirectData)
     {
-        data->psPfns->pfnFree(buf);
-        buf = NULL;
-        ret = CryptMsgGetParam(data->hMsg, CMSG_CONTENT_PARAM, 0, NULL, &size);
-        if (!ret)
-            goto error;
-        buf = data->psPfns->pfnAlloc(size);
-        if (!buf)
-        {
-            SetLastError(ERROR_OUTOFMEMORY);
-            ret = FALSE;
-            goto error;
-        }
-        ret = CryptMsgGetParam(data->hMsg, CMSG_CONTENT_PARAM, 0, buf, &size);
-        if (!ret)
-            goto error;
-        ret = CryptDecodeObject(data->dwEncoding,
-         SPC_INDIRECT_DATA_CONTENT_STRUCT, buf, size, 0, NULL, &size);
-        if (!ret)
-            goto error;
-        data->u.pPDSip->psIndirectData = data->psPfns->pfnAlloc(size);
-        if (!data->u.pPDSip->psIndirectData)
-        {
-            SetLastError(ERROR_OUTOFMEMORY);
-            ret = FALSE;
-            goto error;
-        }
-        ret = CryptDecodeObject(data->dwEncoding,
-         SPC_INDIRECT_DATA_CONTENT_STRUCT, buf, size, 0,
-         data->u.pPDSip->psIndirectData, &size);
-    }
-    else
-    {
-        FIXME("unimplemented for OID %s\n", (LPCSTR)buf);
-        SetLastError(TRUST_E_SUBJECT_FORM_UNKNOWN);
+        SetLastError(ERROR_OUTOFMEMORY);
         ret = FALSE;
+        goto error;
     }
+    ret = CryptDecodeObject(data->dwEncoding, oid, buf, size, 0,
+     data->u.pPDSip->psIndirectData, &size);
 
 error:
     TRACE("returning %d\n", ret);
+    data->psPfns->pfnFree(oid);
+    data->psPfns->pfnFree(buf);
+    return ret;
+}
+
+static BOOL SOFTPUB_LoadCertMessage(CRYPT_PROVIDER_DATA *data)
+{
+    BOOL ret;
+
+    if (data->pWintrustData->u.pCert &&
+     data->pWintrustData->u.pCert->cbStruct == sizeof(WINTRUST_CERT_INFO))
+    {
+        if (data->psPfns)
+        {
+            CRYPT_PROVIDER_SGNR signer = { sizeof(signer), { 0 } };
+            DWORD i;
+
+            /* Add a signer with nothing but the time to verify, so we can
+             * add a cert to it
+             */
+            if (data->pWintrustData->u.pCert->psftVerifyAsOf)
+                data->sftSystemTime = signer.sftVerifyAsOf;
+            else
+            {
+                SYSTEMTIME sysTime;
+
+                GetSystemTime(&sysTime);
+                SystemTimeToFileTime(&sysTime, &signer.sftVerifyAsOf);
+            }
+            ret = data->psPfns->pfnAddSgnr2Chain(data, FALSE, 0, &signer);
+            if (ret)
+            {
+                ret = data->psPfns->pfnAddCert2Chain(data, 0, FALSE, 0,
+                 data->pWintrustData->u.pCert->psCertContext);
+                for (i = 0; ret && i < data->pWintrustData->u.pCert->chStores;
+                 i++)
+                    ret = data->psPfns->pfnAddStore2Chain(data,
+                     data->pWintrustData->u.pCert->pahStores[i]);
+            }
+        }
+        else
+        {
+            /* Do nothing!?  See the tests */
+            ret = TRUE;
+        }
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        ret = FALSE;
+    }
+    return ret;
+}
+
+static BOOL SOFTPUB_LoadFileMessage(CRYPT_PROVIDER_DATA *data)
+{
+    BOOL ret;
+
+    if (!data->pWintrustData->u.pFile)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        ret = FALSE;
+        goto error;
+    }
+    ret = SOFTPUB_OpenFile(data);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_GetFileSubject(data);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_GetSIP(data);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_GetMessageFromFile(data, data->pWintrustData->u.pFile->hFile,
+     data->pWintrustData->u.pFile->pcwszFilePath);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_CreateStoreFromMessage(data);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_DecodeInnerContent(data);
+error:
+    return ret;
+}
+
+static BOOL SOFTPUB_LoadCatalogMessage(CRYPT_PROVIDER_DATA *data)
+{
+    BOOL ret;
+    HANDLE catalog = INVALID_HANDLE_VALUE;
+
+    if (!data->pWintrustData->u.pCatalog)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    catalog = CreateFileW(data->pWintrustData->u.pCatalog->pcwszCatalogFilePath,
+     GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+     NULL);
+    if (catalog == INVALID_HANDLE_VALUE)
+        return FALSE;
+    ret = CryptSIPRetrieveSubjectGuid(
+     data->pWintrustData->u.pCatalog->pcwszCatalogFilePath, catalog,
+     &data->u.pPDSip->gSubject);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_GetSIP(data);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_GetMessageFromFile(data, catalog,
+     data->pWintrustData->u.pCatalog->pcwszCatalogFilePath);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_CreateStoreFromMessage(data);
+    if (!ret)
+        goto error;
+    ret = SOFTPUB_DecodeInnerContent(data);
+    /* FIXME: this loads the catalog file, but doesn't validate the member. */
+error:
+    CloseHandle(catalog);
     return ret;
 }
 
@@ -271,73 +378,13 @@ HRESULT WINAPI SoftpubLoadMessage(CRYPT_PROVIDER_DATA *data)
     switch (data->pWintrustData->dwUnionChoice)
     {
     case WTD_CHOICE_CERT:
-        if (data->pWintrustData->u.pCert &&
-         data->pWintrustData->u.pCert->cbStruct == sizeof(WINTRUST_CERT_INFO))
-        {
-            if (data->psPfns)
-            {
-                CRYPT_PROVIDER_SGNR signer = { sizeof(signer), { 0 } };
-                DWORD i;
-
-                /* Add a signer with nothing but the time to verify, so we can
-                 * add a cert to it
-                 */
-                if (data->pWintrustData->u.pCert->psftVerifyAsOf)
-                    data->sftSystemTime = signer.sftVerifyAsOf;
-                else
-                {
-                    SYSTEMTIME sysTime;
-
-                    GetSystemTime(&sysTime);
-                    SystemTimeToFileTime(&sysTime, &signer.sftVerifyAsOf);
-                }
-                ret = data->psPfns->pfnAddSgnr2Chain(data, FALSE, 0, &signer);
-                if (!ret)
-                    goto error;
-                ret = data->psPfns->pfnAddCert2Chain(data, 0, FALSE, 0,
-                 data->pWintrustData->u.pCert->psCertContext);
-                if (!ret)
-                    goto error;
-                for (i = 0; ret && i < data->pWintrustData->u.pCert->chStores;
-                 i++)
-                    ret = data->psPfns->pfnAddStore2Chain(data,
-                     data->pWintrustData->u.pCert->pahStores[i]);
-            }
-            else
-            {
-                /* Do nothing!?  See the tests */
-                ret = TRUE;
-            }
-        }
-        else
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-        }
+        ret = SOFTPUB_LoadCertMessage(data);
         break;
     case WTD_CHOICE_FILE:
-        if (!data->pWintrustData->u.pFile)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-            goto error;
-        }
-        ret = SOFTPUB_OpenFile(data);
-        if (!ret)
-            goto error;
-        ret = SOFTPUB_GetFileSubject(data);
-        if (!ret)
-            goto error;
-        ret = SOFTPUB_GetSIP(data);
-        if (!ret)
-            goto error;
-        ret = SOFTPUB_GetMessageFromFile(data);
-        if (!ret)
-            goto error;
-        ret = SOFTPUB_CreateStoreFromMessage(data);
-        if (!ret)
-            goto error;
-        ret = SOFTPUB_DecodeInnerContent(data);
+        ret = SOFTPUB_LoadFileMessage(data);
+        break;
+    case WTD_CHOICE_CATALOG:
+        ret = SOFTPUB_LoadCatalogMessage(data);
         break;
     default:
         FIXME("unimplemented for %d\n", data->pWintrustData->dwUnionChoice);
@@ -345,7 +392,6 @@ HRESULT WINAPI SoftpubLoadMessage(CRYPT_PROVIDER_DATA *data)
         ret = FALSE;
     }
 
-error:
     if (!ret)
         data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_OBJPROV] =
          GetLastError();
@@ -501,6 +547,20 @@ HRESULT WINAPI SoftpubLoadSignature(CRYPT_PROVIDER_DATA *data)
     return ret ? S_OK : S_FALSE;
 }
 
+static DWORD WINTRUST_TrustStatusToConfidence(DWORD errorStatus)
+{
+    DWORD confidence = 0;
+
+    confidence = 0;
+    if (!(errorStatus & CERT_TRUST_IS_NOT_SIGNATURE_VALID))
+        confidence |= CERT_CONFIDENCE_SIG;
+    if (!(errorStatus & CERT_TRUST_IS_NOT_TIME_VALID))
+        confidence |= CERT_CONFIDENCE_TIME;
+    if (!(errorStatus & CERT_TRUST_IS_NOT_TIME_NESTED))
+        confidence |= CERT_CONFIDENCE_TIMENEST;
+    return confidence;
+}
+
 BOOL WINAPI SoftpubCheckCert(CRYPT_PROVIDER_DATA *data, DWORD idxSigner,
  BOOL fCounterSignerChain, DWORD idxCounterSigner)
 {
@@ -524,19 +584,9 @@ BOOL WINAPI SoftpubCheckCert(CRYPT_PROVIDER_DATA *data, DWORD idxSigner,
         for (i = 0; i < simpleChain->cElement; i++)
         {
             /* Set confidence */
-            data->pasSigners[idxSigner].pasCertChain[i].dwConfidence = 0;
-            if (!(simpleChain->rgpElement[i]->TrustStatus.dwErrorStatus &
-             CERT_TRUST_IS_NOT_TIME_VALID))
-                data->pasSigners[idxSigner].pasCertChain[i].dwConfidence
-                 |= CERT_CONFIDENCE_TIME;
-            if (!(simpleChain->rgpElement[i]->TrustStatus.dwErrorStatus &
-             CERT_TRUST_IS_NOT_TIME_NESTED))
-                data->pasSigners[idxSigner].pasCertChain[i].dwConfidence
-                 |= CERT_CONFIDENCE_TIMENEST;
-            if (!(simpleChain->rgpElement[i]->TrustStatus.dwErrorStatus &
-             CERT_TRUST_IS_NOT_SIGNATURE_VALID))
-                data->pasSigners[idxSigner].pasCertChain[i].dwConfidence
-                 |= CERT_CONFIDENCE_SIG;
+            data->pasSigners[idxSigner].pasCertChain[i].dwConfidence =
+             WINTRUST_TrustStatusToConfidence(
+             simpleChain->rgpElement[i]->TrustStatus.dwErrorStatus);
             /* Set additional flags */
             if (!(simpleChain->rgpElement[i]->TrustStatus.dwErrorStatus &
              CERT_TRUST_IS_UNTRUSTED_ROOT))
@@ -552,6 +602,51 @@ BOOL WINAPI SoftpubCheckCert(CRYPT_PROVIDER_DATA *data, DWORD idxSigner,
     return ret;
 }
 
+static DWORD WINTRUST_TrustStatusToError(DWORD errorStatus)
+{
+    DWORD error;
+
+    if (errorStatus & CERT_TRUST_IS_NOT_SIGNATURE_VALID)
+        error = TRUST_E_CERT_SIGNATURE;
+    else if (errorStatus & CERT_TRUST_IS_UNTRUSTED_ROOT)
+        error = CERT_E_UNTRUSTEDROOT;
+    else if (errorStatus & CERT_TRUST_IS_NOT_TIME_VALID)
+        error = CERT_E_EXPIRED;
+    else if (errorStatus & CERT_TRUST_IS_NOT_TIME_NESTED)
+        error = CERT_E_VALIDITYPERIODNESTING;
+    else if (errorStatus & CERT_TRUST_IS_REVOKED)
+        error = CERT_E_REVOKED;
+    else if (errorStatus & CERT_TRUST_IS_OFFLINE_REVOCATION ||
+     errorStatus & CERT_TRUST_REVOCATION_STATUS_UNKNOWN)
+        error = CERT_E_REVOCATION_FAILURE;
+    else if (errorStatus & CERT_TRUST_IS_NOT_VALID_FOR_USAGE)
+        error = CERT_E_WRONG_USAGE;
+    else if (errorStatus & CERT_TRUST_IS_CYCLIC)
+        error = CERT_E_CHAINING;
+    else if (errorStatus & CERT_TRUST_INVALID_EXTENSION)
+        error = CERT_E_CRITICAL;
+    else if (errorStatus & CERT_TRUST_INVALID_POLICY_CONSTRAINTS)
+        error = CERT_E_INVALID_POLICY;
+    else if (errorStatus & CERT_TRUST_INVALID_BASIC_CONSTRAINTS)
+        error = TRUST_E_BASIC_CONSTRAINTS;
+    else if (errorStatus & CERT_TRUST_INVALID_NAME_CONSTRAINTS ||
+     errorStatus & CERT_TRUST_HAS_NOT_SUPPORTED_NAME_CONSTRAINT ||
+     errorStatus & CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT ||
+     errorStatus & CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT ||
+     errorStatus & CERT_TRUST_HAS_EXCLUDED_NAME_CONSTRAINT)
+        error = CERT_E_INVALID_NAME;
+    else if (errorStatus & CERT_TRUST_NO_ISSUANCE_CHAIN_POLICY)
+        error = CERT_E_INVALID_POLICY;
+    else if (errorStatus)
+    {
+        FIXME("unknown error status %08x\n", errorStatus);
+        error = TRUST_E_SYSTEM_ERROR;
+    }
+    else
+        error = S_OK;
+    return error;
+}
+
 static BOOL WINTRUST_CopyChain(CRYPT_PROVIDER_DATA *data, DWORD signerIdx)
 {
     BOOL ret;
@@ -559,6 +654,9 @@ static BOOL WINTRUST_CopyChain(CRYPT_PROVIDER_DATA *data, DWORD signerIdx)
      data->pasSigners[signerIdx].pChainContext->rgpChain[0];
     DWORD i;
 
+    data->pasSigners[signerIdx].pasCertChain[0].dwConfidence =
+     WINTRUST_TrustStatusToConfidence(
+     simpleChain->rgpElement[0]->TrustStatus.dwErrorStatus);
     data->pasSigners[signerIdx].pasCertChain[0].pChainElement =
      simpleChain->rgpElement[0];
     ret = TRUE;
@@ -567,9 +665,18 @@ static BOOL WINTRUST_CopyChain(CRYPT_PROVIDER_DATA *data, DWORD signerIdx)
         ret = data->psPfns->pfnAddCert2Chain(data, signerIdx, FALSE, 0,
          simpleChain->rgpElement[i]->pCertContext);
         if (ret)
+        {
             data->pasSigners[signerIdx].pasCertChain[i].pChainElement =
              simpleChain->rgpElement[i];
+            data->pasSigners[signerIdx].pasCertChain[i].dwConfidence =
+             WINTRUST_TrustStatusToConfidence(
+             simpleChain->rgpElement[i]->TrustStatus.dwErrorStatus);
+        }
     }
+    data->pasSigners[signerIdx].pasCertChain[simpleChain->cElement - 1].dwError
+     = WINTRUST_TrustStatusToError(
+     simpleChain->rgpElement[simpleChain->cElement - 1]->
+     TrustStatus.dwErrorStatus);
     return ret;
 }
 
@@ -580,6 +687,11 @@ static void WINTRUST_CreateChainPolicyCreateInfo(
     chainPara->cbSize = sizeof(CERT_CHAIN_PARA);
     if (data->pRequestUsage)
         chainPara->RequestedUsage = *data->pRequestUsage;
+    else
+    {
+        chainPara->RequestedUsage.dwType = 0;
+        chainPara->RequestedUsage.Usage.cUsageIdentifier = 0;
+    }
     info->u.cbSize = sizeof(WTD_GENERIC_CHAIN_POLICY_CREATE_INFO);
     info->hChainEngine = NULL;
     info->pChainPara = chainPara;
@@ -599,7 +711,20 @@ static BOOL WINTRUST_CreateChainForSigner(CRYPT_PROVIDER_DATA *data,
  PCERT_CHAIN_PARA chainPara)
 {
     BOOL ret = TRUE;
+    HCERTSTORE store = NULL;
 
+    if (data->chStores)
+    {
+        store = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
+         CERT_STORE_CREATE_NEW_FLAG, NULL);
+        if (store)
+        {
+            DWORD i;
+
+            for (i = 0; i < data->chStores; i++)
+                CertAddStoreToCollection(store, data->pahStores[i], 0, 0);
+        }
+    }
     /* Expect the end certificate for each signer to be the only cert in the
      * chain:
      */
@@ -608,8 +733,7 @@ static BOOL WINTRUST_CreateChainForSigner(CRYPT_PROVIDER_DATA *data,
         /* Create a certificate chain for each signer */
         ret = CertGetCertificateChain(createInfo->hChainEngine,
          data->pasSigners[signer].pasCertChain[0].pCert,
-         &data->pasSigners[signer].sftVerifyAsOf,
-         data->chStores ? data->pahStores[0] : NULL,
+         &data->pasSigners[signer].sftVerifyAsOf, store,
          chainPara, createInfo->dwFlags, createInfo->pvReserved,
          &data->pasSigners[signer].pChainContext);
         if (ret)
@@ -622,11 +746,17 @@ static BOOL WINTRUST_CreateChainForSigner(CRYPT_PROVIDER_DATA *data,
             else
             {
                 if ((ret = WINTRUST_CopyChain(data, signer)))
-                    ret = data->psPfns->pfnCertCheckPolicy(data, signer, FALSE,
-                     0);
+                {
+                    if (data->psPfns->pfnCertCheckPolicy)
+                        ret = data->psPfns->pfnCertCheckPolicy(data, signer,
+                         FALSE, 0);
+                    else
+                        TRACE("no cert check policy, skipping policy check\n");
+                }
             }
         }
     }
+    CertCloseStore(store, 0);
     return ret;
 }
 
@@ -735,27 +865,60 @@ HRESULT WINAPI SoftpubAuthenticode(CRYPT_PROVIDER_DATA *data)
         ret = TRUE;
         for (i = 0; ret && i < data->csSigners; i++)
         {
-            CERT_CHAIN_POLICY_PARA policyPara = { sizeof(policyPara), 0 };
+            BYTE hash[20];
+            DWORD size = sizeof(hash);
 
-            if (data->dwRegPolicySettings & WTPF_TRUSTTEST)
-                policyPara.dwFlags |= CERT_CHAIN_POLICY_TRUST_TESTROOT_FLAG;
-            if (data->dwRegPolicySettings & WTPF_TESTCANBEVALID)
-                policyPara.dwFlags |= CERT_CHAIN_POLICY_ALLOW_TESTROOT_FLAG;
-            if (data->dwRegPolicySettings & WTPF_IGNOREEXPIRATION)
-                policyPara.dwFlags |=
-                 CERT_CHAIN_POLICY_IGNORE_NOT_TIME_VALID_FLAG |
-                 CERT_CHAIN_POLICY_IGNORE_CTL_NOT_TIME_VALID_FLAG |
-                 CERT_CHAIN_POLICY_IGNORE_NOT_TIME_NESTED_FLAG;
-            if (data->dwRegPolicySettings & WTPF_IGNOREREVOKATION)
-                policyPara.dwFlags |=
-                 CERT_CHAIN_POLICY_IGNORE_END_REV_UNKNOWN_FLAG |
-                 CERT_CHAIN_POLICY_IGNORE_CTL_SIGNER_REV_UNKNOWN_FLAG |
-                 CERT_CHAIN_POLICY_IGNORE_CA_REV_UNKNOWN_FLAG |
-                 CERT_CHAIN_POLICY_IGNORE_ROOT_REV_UNKNOWN_FLAG;
-            CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_AUTHENTICODE,
-             data->pasSigners[i].pChainContext, &policyPara, &policyStatus);
-            if (policyStatus.dwError != NO_ERROR)
-                ret = FALSE;
+            /* First make sure cert isn't disallowed */
+            if ((ret = CertGetCertificateContextProperty(
+             data->pasSigners[i].pasCertChain[0].pCert,
+             CERT_SIGNATURE_HASH_PROP_ID, hash, &size)))
+            {
+                static const WCHAR disallowedW[] =
+                 { 'D','i','s','a','l','l','o','w','e','d',0 };
+                HCERTSTORE disallowed = CertOpenStore(CERT_STORE_PROV_SYSTEM_W,
+                 X509_ASN_ENCODING, 0, CERT_SYSTEM_STORE_CURRENT_USER,
+                 disallowedW);
+
+                if (disallowed)
+                {
+                    PCCERT_CONTEXT found = CertFindCertificateInStore(
+                     disallowed, X509_ASN_ENCODING, 0, CERT_FIND_SIGNATURE_HASH,
+                     hash, NULL);
+
+                    if (found)
+                    {
+                        /* Disallowed!  Can't verify it. */
+                        policyStatus.dwError = TRUST_E_SUBJECT_NOT_TRUSTED;
+                        ret = FALSE;
+                        CertFreeCertificateContext(found);
+                    }
+                    CertCloseStore(disallowed, 0);
+                }
+            }
+            if (ret)
+            {
+                CERT_CHAIN_POLICY_PARA policyPara = { sizeof(policyPara), 0 };
+
+                if (data->dwRegPolicySettings & WTPF_TRUSTTEST)
+                    policyPara.dwFlags |= CERT_CHAIN_POLICY_TRUST_TESTROOT_FLAG;
+                if (data->dwRegPolicySettings & WTPF_TESTCANBEVALID)
+                    policyPara.dwFlags |= CERT_CHAIN_POLICY_ALLOW_TESTROOT_FLAG;
+                if (data->dwRegPolicySettings & WTPF_IGNOREEXPIRATION)
+                    policyPara.dwFlags |=
+                     CERT_CHAIN_POLICY_IGNORE_NOT_TIME_VALID_FLAG |
+                     CERT_CHAIN_POLICY_IGNORE_CTL_NOT_TIME_VALID_FLAG |
+                     CERT_CHAIN_POLICY_IGNORE_NOT_TIME_NESTED_FLAG;
+                if (data->dwRegPolicySettings & WTPF_IGNOREREVOKATION)
+                    policyPara.dwFlags |=
+                     CERT_CHAIN_POLICY_IGNORE_END_REV_UNKNOWN_FLAG |
+                     CERT_CHAIN_POLICY_IGNORE_CTL_SIGNER_REV_UNKNOWN_FLAG |
+                     CERT_CHAIN_POLICY_IGNORE_CA_REV_UNKNOWN_FLAG |
+                     CERT_CHAIN_POLICY_IGNORE_ROOT_REV_UNKNOWN_FLAG;
+                CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_AUTHENTICODE,
+                 data->pasSigners[i].pChainContext, &policyPara, &policyStatus);
+                if (policyStatus.dwError != NO_ERROR)
+                    ret = FALSE;
+            }
         }
     }
     if (!ret)
@@ -849,14 +1012,14 @@ HRESULT WINAPI GenericChainFinalProv(CRYPT_PROVIDER_DATA *data)
             else
                 err = ERROR_OUTOFMEMORY;
         }
-        if (!err)
+        if (err == NO_ERROR)
             err = policyCallback(data, TRUSTERROR_STEP_FINAL_POLICYPROV,
              data->dwRegPolicySettings, data->csSigners, signers, policyArg);
         data->psPfns->pfnFree(signers);
     }
-    if (err)
+    if (err != NO_ERROR)
         data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_POLICYPROV] = err;
-    TRACE("returning %d (%08x)\n", !err ? S_OK : S_FALSE,
+    TRACE("returning %d (%08x)\n", err == NO_ERROR ? S_OK : S_FALSE,
      data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_POLICYPROV]);
     return err == NO_ERROR ? S_OK : S_FALSE;
 }

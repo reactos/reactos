@@ -260,7 +260,7 @@ struct _CRYPT_PROVIDER_DATA;
 
 #define TRUSTERROR_MAX_STEPS                   38
 
-typedef void * (WINAPI *PFN_CPD_MEM_ALLOC)(DWORD cbSize);
+typedef void * (__WINE_ALLOC_SIZE(1) WINAPI *PFN_CPD_MEM_ALLOC)(DWORD cbSize);
 typedef void (WINAPI *PFN_CPD_MEM_FREE)(void *pvMem2Free);
 typedef BOOL (WINAPI *PFN_CPD_ADD_STORE)(struct _CRYPT_PROVIDER_DATA *pProvData,
  HCERTSTORE hStore2Add);
@@ -384,6 +384,10 @@ typedef struct _CRYPT_PROVUI_FUNCS {
 } CRYPT_PROVUI_FUNCS, *PCRYPT_PROVUI_FUNCS;
 
 #include <poppack.h>
+
+#define WVT_OFFSETOF(t,f)     ((ULONG)((ULONG_PTR)(&((t*)0)->f)))
+#define WVT_ISINSTRUCT(t,s,f) (WVT_OFFSETOF(t,f) + sizeof(((t*)0)->f) <= (s))
+#define WVT_IS_CBSTRUCT_GT_MEMBEROFFSET(t,s,f) WVT_ISINSTRUCT(t,s,f)
 
 #define WTPF_TRUSTTEST            0x00000020
 #define WTPF_TESTCANBEVALID       0x00000080
