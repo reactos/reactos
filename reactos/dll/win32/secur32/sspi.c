@@ -182,7 +182,14 @@ QueryContextAttributesA(PCtxtHandle Handle,
                         PVOID Bar)
 {
 	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+
+	if (Handle)
+	{
+		Bar = NULL;
+		return ERROR_CALL_NOT_IMPLEMENTED;
+	}
+
+	return SEC_E_INVALID_HANDLE;
 }
 
 SECURITY_STATUS
@@ -192,7 +199,14 @@ QueryContextAttributesW(PCtxtHandle Handle,
                         PVOID Bar)
 {
 	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+
+	if (Handle)
+	{
+		Bar = NULL;
+		return ERROR_CALL_NOT_IMPLEMENTED;
+	}
+
+	return SEC_E_INVALID_HANDLE;
 }
 
 SECURITY_STATUS
@@ -210,7 +224,15 @@ AcquireCredentialsHandleA (
     )
 {
 	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+
+	if (pszPackage)
+	{
+		phCred = NULL;
+		pExpires = NULL;
+		return ERROR_CALL_NOT_IMPLEMENTED;
+	}
+
+	return SEC_E_SECPKG_NOT_FOUND;
 }
 
 SECURITY_STATUS
@@ -228,7 +250,15 @@ AcquireCredentialsHandleW (
     )
 {
 	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+
+	if (pszPackage)
+	{
+		phCred = NULL;
+		pExpires = NULL;
+		return ERROR_CALL_NOT_IMPLEMENTED;
+	}
+
+	return SEC_E_SECPKG_NOT_FOUND;
 }
 
 SECURITY_STATUS
@@ -309,7 +339,13 @@ QuerySecurityPackageInfoA(
 )
 {
 	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+
+	if (pszPackageName)
+	{
+		*ppPackageInfo = NULL;
+		return ERROR_CALL_NOT_IMPLEMENTED;
+	}
+	return SEC_E_SECPKG_NOT_FOUND;
 }
 
 SECURITY_STATUS
@@ -320,7 +356,13 @@ QuerySecurityPackageInfoW(
 )
 {
 	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+
+	if (pszPackageName)
+	{
+		*ppPackageInfo = NULL;
+		return ERROR_CALL_NOT_IMPLEMENTED;
+	}
+	return SEC_E_SECPKG_NOT_FOUND;
 }
 
 SECURITY_STATUS
@@ -433,7 +475,14 @@ QueryCredentialsAttributesA(
 )
 {
 	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+
+	if (phCredential)
+	{
+		pBuffer = NULL;
+		return ERROR_CALL_NOT_IMPLEMENTED;
+	}
+
+	return SEC_E_INVALID_HANDLE;
 }
 
 SECURITY_STATUS
@@ -445,7 +494,14 @@ QueryCredentialsAttributesW(
 )
 {
 	UNIMPLEMENTED;
-	return ERROR_CALL_NOT_IMPLEMENTED;
+
+	if (phCredential)
+	{
+		pBuffer = NULL;
+		return ERROR_CALL_NOT_IMPLEMENTED;
+	}
+
+	return SEC_E_INVALID_HANDLE;
 }
 
 SECURITY_STATUS
