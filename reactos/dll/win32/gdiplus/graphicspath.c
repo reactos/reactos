@@ -524,6 +524,28 @@ GpStatus WINGDIPAPI GdipAddPathCurve2I(GpPath *path, GDIPCONST GpPoint *points,
     return stat;
 }
 
+GpStatus WINGDIPAPI GdipAddPathCurve3(GpPath *path, GDIPCONST GpPointF *points,
+    INT count, INT offset, INT nseg, REAL tension)
+{
+    TRACE("(%p, %p, %d, %d, %d, %.2f)\n", path, points, count, offset, nseg, tension);
+
+    if(!path || !points || offset + 1 >= count || count - offset < nseg + 1)
+        return InvalidParameter;
+
+    return GdipAddPathCurve2(path, &points[offset], nseg + 1, tension);
+}
+
+GpStatus WINGDIPAPI GdipAddPathCurve3I(GpPath *path, GDIPCONST GpPoint *points,
+    INT count, INT offset, INT nseg, REAL tension)
+{
+    TRACE("(%p, %p, %d, %d, %d, %.2f)\n", path, points, count, offset, nseg, tension);
+
+    if(!path || !points || offset + 1 >= count || count - offset < nseg + 1)
+        return InvalidParameter;
+
+    return GdipAddPathCurve2I(path, &points[offset], nseg + 1, tension);
+}
+
 GpStatus WINGDIPAPI GdipAddPathEllipse(GpPath *path, REAL x, REAL y, REAL width,
     REAL height)
 {

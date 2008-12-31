@@ -1284,6 +1284,53 @@ GetCPInfo(UINT CodePage,
     return TRUE;
 }
 
+static BOOL
+GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
+{
+    HRSRC hrsrc;
+    LCID lcid;
+    LANGID langId;
+    DWORD dwId;
+
+    if (dwResId == 37)
+        dwId = dwResId * 100;
+    else
+        dwId = dwResId;
+
+    lcid = GetUserDefaultLCID();
+    lcid = ConvertDefaultLocale(lcid);
+
+    langId = LANGIDFROMLCID(lcid);
+
+    if (PRIMARYLANGID(langId) == LANG_NEUTRAL)
+        langId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+
+    hrsrc = FindResourceExW(hCurrentModule,
+                            (LPWSTR)RT_STRING,
+                            MAKEINTRESOURCEW((dwId >> 4) + 1),
+                            langId);
+    if (hrsrc)
+    {
+        HGLOBAL hmem = LoadResource(hCurrentModule, hrsrc);
+
+        if (hmem)
+        {
+            const WCHAR *p;
+            unsigned int i;
+
+            p = LockResource(hmem);
+            for (i = 0; i < (dwId & 0x0f); i++) p += *p + 1;
+
+            memcpy(lpszDest, p + 1, *p * sizeof(WCHAR));
+            lpszDest[*p] = '\0';
+
+            return TRUE;
+        }
+    }
+
+    DPRINT1("Could not get codepage name. dwResId = %ld\n", dwResId);
+    return FALSE;
+}
 
 /*
  * @implemented
@@ -1301,21 +1348,17 @@ GetCPInfoExW(UINT CodePage,
     {
         case CP_UTF7:
         {
-            static const WCHAR utf7[] = L"Unicode (UTF-7)\0";
-
             lpCPInfoEx->CodePage = CP_UTF7;
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
-            wcscpy(lpCPInfoEx->CodePageName, utf7);
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
         }
         break;
 
         case CP_UTF8:
         {
-            static const WCHAR utf8[] = L"Unicode (UTF-8)\0";
-            
             lpCPInfoEx->CodePage = CP_UTF8;
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
-            wcscpy(lpCPInfoEx->CodePageName, utf8);
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
         }
 
         default:
@@ -1332,14 +1375,10 @@ GetCPInfoExW(UINT CodePage,
 
             lpCPInfoEx->CodePage = CodePageEntry->CodePageTable.CodePage;
             lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
-            /* FIXME: We need to get a codepage name */
-            DPRINT1("FIXME: We need to get a codepage name!\n");
-            wcscpy(lpCPInfoEx->CodePageName, L"Unknown\0");
+            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName);
         }
         break;
     }
-
-    return TRUE;
 }
 
 

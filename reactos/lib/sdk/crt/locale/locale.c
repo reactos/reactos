@@ -27,8 +27,8 @@
  */
 #define MAX_ELEM_LEN 64 /* Max length of country/language/CP string */
 
-unsigned char MSVCRT_mbctype[257] = { 0 };
-static int g_mbcp_is_multibyte = 0;
+unsigned char _mbctype[257] = { 0 };
+int g_mbcp_is_multibyte = 0;
 
 /* It seems that the data about valid trail bytes is not available from kernel32
  * so we have to store is here. The format is the same as for lead bytes in CPINFO */
@@ -671,13 +671,13 @@ int CDECL _setmbcp(int cp)
   }
 
   /* setup the _mbctype */
-  memset(MSVCRT_mbctype, 0, sizeof(MSVCRT_mbctype));
+  memset(_mbctype, 0, sizeof(_mbctype));
 
   bytes = cpi.LeadByte;
   while (bytes[0] || bytes[1])
   {
     for (i = bytes[0]; i <= bytes[1]; i++)
-      MSVCRT_mbctype[i + 1] |= _M1;
+      _mbctype[i + 1] |= _M1;
     bytes += 2;
   }
 
@@ -698,7 +698,7 @@ int CDECL _setmbcp(int cp)
         while (bytes[0] || bytes[1])
         {
           for (i = bytes[0]; i <= bytes[1]; i++)
-            MSVCRT_mbctype[i + 1] |= _M2;
+            _mbctype[i + 1] |= _M2;
           bytes += 2;
         }
         break;
@@ -713,7 +713,7 @@ int CDECL _setmbcp(int cp)
    */
   charcount = 0;
   for (i = 0; i < 256; i++)
-    if (!(MSVCRT_mbctype[i + 1] & _M1))
+    if (!(_mbctype[i + 1] & _M1))
       bufA[charcount++] = i;
 
   ret = MultiByteToWideChar(newcp, 0, bufA, charcount, bufW, charcount);
@@ -724,12 +724,12 @@ int CDECL _setmbcp(int cp)
 
   curr_type = chartypes;
   for (i = 0; i < 256; i++)
-    if (!(MSVCRT_mbctype[i + 1] & _M1))
+    if (!(_mbctype[i + 1] & _M1))
     {
 	if ((*curr_type) & C1_UPPER)
-	    MSVCRT_mbctype[i + 1] |= _SBUP;
+	    _mbctype[i + 1] |= _SBUP;
 	if ((*curr_type) & C1_LOWER)
-	    MSVCRT_mbctype[i + 1] |= _SBLOW;
+	    _mbctype[i + 1] |= _SBLOW;
 	curr_type++;
     }
 
@@ -741,9 +741,9 @@ int CDECL _setmbcp(int cp)
      * also faster execution.
      */
     for (i = 161; i <= 165; i++)
-      MSVCRT_mbctype[i + 1] |= _MP;
+      _mbctype[i + 1] |= _MP;
     for (i = 166; i <= 223; i++)
-      MSVCRT_mbctype[i + 1] |= _MS;
+      _mbctype[i + 1] |= _MS;
   }
 
   MSVCRT___lc_collate_cp = MSVCRT___lc_codepage = newcp;
@@ -802,7 +802,15 @@ void *_Gettnames(void)
  */
 void __lconv_init(void)
 {
-  FIXME(" stub\n");
+  char Char = (char) UCHAR_MAX;
+
+  TRACE("__lconv_init()\n");
+
+  _lconv.int_frac_digits = Char;
+  _lconv.frac_digits = Char;
+  _lconv.p_sep_by_space = _lconv.n_sep_by_space = Char;
+  _lconv.p_cs_precedes = _lconv.n_cs_precedes = Char;
+  _lconv.p_sign_posn = _lconv.n_sign_posn = Char;
 }
 
 

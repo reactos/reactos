@@ -1574,8 +1574,15 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_INPUTLANGCHANGE:
         {
-            //FIXME: What to do?
-            return TRUE;
+            int count = 0;
+            HWND *win_array = WIN_ListChildren( hWnd );
+
+            if (!win_array)
+                break;
+            while (win_array[count])
+                SendMessageW( win_array[count++], WM_INPUTLANGCHANGE, wParam, lParam);
+            HeapFree(GetProcessHeap(),0,win_array);
+            break;
         }
 
         case WM_ENDSESSION:

@@ -35,26 +35,26 @@ MAIN_MENU MENU LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
  POPUP "&Urejanje" {
    MENUITEM "&Kopiraj ...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "P&ripombe ...", MNID_EDIT_ANNOTATE
+   MENUITEM "&Opombe ...", MNID_EDIT_ANNOTATE
  }
  POPUP "&Zaznamki" {
    MENUITEM "Do&loči ...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
-   POPUP	"Help always visible"
+ POPUP "&Možnosti" {
+   POPUP	"Pomoč vedno vidna"
    BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "Privzeto",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Vidna",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Skrita",	MNID_OPTS_HELP_NONVISIBLE
    END
-   MENUITEM "History",		MNID_OPTS_HISTORY
-   POPUP    "Fonts"
+   MENUITEM "Zgodovina",		MNID_OPTS_HISTORY
+   POPUP    "Pisava"
    BEGIN
-    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Majhna",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Običajna",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Velika",     	MNID_OPTS_FONTS_LARGE
    END
-   MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+   MENUITEM "Uporabi sistemske barve",	MNID_OPTS_SYSTEM_COLORS
   }
   POPUP "&Pomoč" {
    MENUITEM "&O pomoči", MNID_HELP_HELPON
@@ -75,6 +75,14 @@ CAPTION "Indeks"
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
 }
 
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Iskanje"
+{
+    LTEXT  "Ni (še) na voljo", -1, 10, 10, 180, 150
+}
+
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 {
@@ -83,15 +91,38 @@ STID_WHERROR, 		"NAPAKA"
 STID_WARNING,  		"OPOZORILO"
 STID_INFO,  		"Informacija"
 STID_NOT_IMPLEMENTED, 	"Ni (še) na voljo"
-STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke s pomočjo `%s'"
-STID_INDEX, 		"&Teme pomoči"
-STID_CONTENTS, 		"Summart"
+STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke s pomočjo '%s'"
+STID_INDEX, 		"&Indeks"
+STID_CONTENTS, 		"Vsebina"
 STID_BACK, 		"&Nazaj"
 STID_ALL_FILES, 	"Vse datoteke (*.*)"
 STID_HELP_FILES_HLP, 	"Datoteke s pomočjo (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Ne najdem datoteke '%s'. Ali jo želite poiskati sami?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
-STID_PSH_INDEX,		"Help topics: "
+STID_NO_RICHEDIT	"Ne morem najti knjižnice richedit ... Prekinjam"
+STID_PSH_INDEX,		"Teme pomoči: "
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Opomba ...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopiraj",                MNID_CTXT_COPY
+		MENUITEM "Natisni ...",            MNID_CTXT_PRINT
+		POPUP    "Pisava"
+		BEGIN
+			MENUITEM "Majnha",       MNID_CTXT_FONTS_SMALL
+            MENUITEM "Običajna",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Velika",       MNID_CTXT_FONTS_LARGE
+		END
+        POPUP   "Pomoč vedno vidna"
+		BEGIN
+			MENUITEM "Privzeto",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Vidna",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Nevidna", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "Uporabi sistemske barve",   MNID_CTXT_SYSTEM_COLORS
+	END
+END
 
 #pragma code_page(default)

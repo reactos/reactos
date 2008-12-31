@@ -49,18 +49,8 @@ ___SEH2Handle:
 	jmp eax
 
 .globl ___SEH2Except
-___SEH2Except:
-	mov eax, [esp+4]
-	mov ecx, [esp+8]
-
-	push [esp+12]
-	call eax
-
-	pop ecx
-
-	ret
-
 .globl ___SEH2Finally
+___SEH2Except:
 ___SEH2Finally:
 	mov eax, [esp+4]
 	mov ecx, [esp+8]

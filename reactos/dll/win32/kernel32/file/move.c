@@ -235,8 +235,9 @@ MoveFileWithProgressW (
 	DWORD			dwFlags
 	)
 {
-	HANDLE hFile = NULL;
+	HANDLE hFile = NULL, hNewFile = NULL;
 	IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
 	PFILE_RENAME_INFORMATION FileRename;
 	NTSTATUS errCode;
 	BOOL Result;
@@ -248,6 +249,48 @@ MoveFileWithProgressW (
 	if (dwFlags & MOVEFILE_DELAY_UNTIL_REBOOT)
 		return add_boot_rename_entry( lpExistingFileName, lpNewFileName, dwFlags );
 
+    if (dwFlags & MOVEFILE_WRITE_THROUGH)
+        FIXME("MOVEFILE_WRITE_THROUGH unimplemented\n");
+
+    if (!lpNewFileName)
+        return DeleteFileW(lpExistingFileName);
+
+    /* validate & translate the filename */
+    if (!RtlDosPathNameToNtPathName_U (lpNewFileName,
+				           &DstPathU,
+				           NULL,
+				           NULL))
+    {
+        WARN("Invalid destination path\n");
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DstPathU,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    errCode = NtOpenFile(&hNewFile, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes, &IoStatusBlock, 0,
+                         FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT );
+
+	if (NT_SUCCESS(errCode)) /* Destination exists */
+	{
+        NtClose(hNewFile);
+
+        if (!(dwFlags & MOVEFILE_REPLACE_EXISTING))
+        {
+			SetLastError(ERROR_ALREADY_EXISTS);
+			return FALSE;
+		}
+		else if (GetFileAttributesW(lpNewFileName) & FILE_ATTRIBUTE_DIRECTORY)
+		{
+			SetLastError(ERROR_ACCESS_DENIED);
+			return FALSE;
+		}
+	}
+
 	hFile = CreateFileW (lpExistingFileName,
 	                     GENERIC_ALL,
 	                     FILE_SHARE_WRITE|FILE_SHARE_READ,
@@ -258,21 +301,8 @@ MoveFileWithProgressW (
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-	   return FALSE;
+	    return FALSE;
 	}
-
-	
-        /* validate & translate the filename */
-        if (!RtlDosPathNameToNtPathName_U (lpNewFileName,
-				           &DstPathU,
-				           NULL,
-				           NULL))
-        {
-           WARN("Invalid destination path\n");
-	   CloseHandle(hFile);
-           SetLastError(ERROR_PATH_NOT_FOUND);
-           return FALSE;
-        }
 
 	FileRename = RtlAllocateHeap(
 		RtlGetProcessHeap(),

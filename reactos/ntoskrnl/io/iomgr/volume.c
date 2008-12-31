@@ -70,7 +70,7 @@ IopCheckVpbMounted(IN POPEN_PACKET OpenPacket,
             IopDereferenceDeviceObject(DeviceObject, FALSE);
 
             /* Check if it was a total failure */
-            if (!NT_SUCCESS(Status)) return NULL;
+            if (!NT_SUCCESS(*Status)) return NULL;
 
             /* Otherwise we were alerted */
             *Status = STATUS_WRONG_VOLUME;

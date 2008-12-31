@@ -1,11 +1,13 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/mbbtype.c
+ * FILE:        lib/sdk/crt/mbstring/mbbtype.c
  * PURPOSE:     Determines the type of a multibyte character
- * PROGRAMER:   Ariadne
- * UPDATE HISTORY:
- *              12/04/99: Created
+ * PROGRAMERS:   
+ *              Copyright 1999 Ariadne
+ *              Copyright 1999 Alexandre Julliard
+ *              Copyright 2000 Jon Griffths
+ *
  */
 
 #include <precomp.h>
@@ -48,7 +50,28 @@ int _mbbtype(unsigned char c , int type)
  */
 int _mbsbtype( const unsigned char *str, size_t n )
 {
-	if ( str == NULL )
-		return -1;
-	return _mbbtype(*(str+n),1);
+  int lead = 0;
+  const unsigned char *end = str + n;
+
+  /* Lead bytes can also be trail bytes so we need to analyse the string.
+   * Also we must return _MBC_ILLEGAL for chars past the end of the string
+   */
+  while (str < end) /* Note: we skip the last byte - will check after the loop */
+  {
+    if (!*str)
+      return _MBC_ILLEGAL;
+    lead = !lead && _ismbblead(*str);
+    str++;
+  }
+
+  if (lead)
+    if (_ismbbtrail(*str))
+      return _MBC_TRAIL;
+    else
+      return _MBC_ILLEGAL;
+  else
+    if (_ismbblead(*str))
+      return _MBC_LEAD;
+    else
+      return _MBC_SINGLE;
 }

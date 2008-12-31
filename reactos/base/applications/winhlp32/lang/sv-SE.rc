@@ -4,7 +4,7 @@
  * Copyright 1996 Ulrich Schmid
  * Swedish language by Karl Backstrˆm <karl_b@geocities.com>
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- * Copyright 2007 Daniel Nylander
+ * Copyright 2007, 2008 Daniel Nylander <po@danielnylander.se>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 MAIN_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 {
  POPUP "&Arkiv" {
-  MENUITEM "&√ñppna", MNID_FILE_OPEN
+  MENUITEM "&÷ppna", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Skriv ut", MNID_FILE_PRINT
   MENUITEM "Skrivar&konfiguration...", MNID_FILE_SETUP
@@ -38,32 +38,32 @@ MAIN_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
    MENUITEM SEPARATOR
    MENUITEM "&Kommentera...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Bokm√§rke" {
+ POPUP "&Bokm‰rke" {
    MENUITEM "&Definiera...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
-   POPUP	"Help always visible"
+ POPUP "A&lternativ" {
+   POPUP	"Hj‰lpen alltid synlig"
    BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "Standard",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Synlig",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Inte synlig",	MNID_OPTS_HELP_NONVISIBLE
   END
-  MENUITEM "History",		MNID_OPTS_HISTORY
-  POPUP    "Fonts"
+  MENUITEM "Historik",		MNID_OPTS_HISTORY
+  POPUP    "Typsnitt"
   BEGIN
-    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Liten",		MNID_OPTS_FONTS_SMALL
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Stor",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "Anv‰nd systemf‰rger",	MNID_OPTS_SYSTEM_COLORS
  }
- POPUP "&Hj√§lp" {
-   MENUITEM "Hj√§lp &f√∂r hj√§lp", MNID_HELP_HELPON
-   MENUITEM "Alltid &√∂verst", MNID_HELP_HELPTOP
+ POPUP "&Hj‰lp" {
+   MENUITEM "Hj‰lp &fˆr hj‰lp", MNID_HELP_HELPON
+   MENUITEM "Alltid &ˆverst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "&Om WINE", MNID_HELP_WINE
+   MENUITEM "&Om Wine", MNID_HELP_WINE
 #endif
  }
 }
@@ -71,18 +71,18 @@ MAIN_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 {
-STID_WINE_HELP, 	"WINE Hj√§lp"
+STID_WINE_HELP, 	"WINE Hj‰lp"
 STID_WHERROR, 		"FEL"
 STID_WARNING,  		"VARNING"
 STID_INFO,  		"Information"
 STID_NOT_IMPLEMENTED, 	"Inte implementerat"
-STID_HLPFILE_ERROR_s, 	"Fel vid l√§sning av hj√§lpfilen `%s'"
-STID_INDEX, 		"&Inneh√•ll"
-STID_CONTENTS,		"Summary"
-STID_BACK, 		"&Bak√•t"
+STID_HLPFILE_ERROR_s, 	"Fel vid l‰sning av hj‰lpfilen `%s'"
+STID_INDEX, 		"&InnehÂll"
+STID_CONTENTS,		"Sammandrag"
+STID_BACK, 		"&BakÂt"
 STID_ALL_FILES, 	"Alla filer (*.*)"
-STID_HELP_FILES_HLP, 	"Hj√§lpfiler (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du s√∂ka efter denna fil?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
-STID_PSH_INDEX,		"Help topics: "
+STID_HELP_FILES_HLP, 	"Hj‰lpfiler (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du sˆka efter denna fil?"
+STID_NO_RICHEDIT	"Kan inte hitta en implementation av richedit... Avslutar"
+STID_PSH_INDEX,		"Hj‰lprubriker: "
 }

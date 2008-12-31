@@ -1373,6 +1373,11 @@ static INT_PTR CALLBACK datetime_proc(HWND hWnd, UINT message, WPARAM wParam, LP
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
+                case IDC_DATETIME:
+                    if (HIWORD(wParam) != LBN_DBLCLK)
+                        break;
+                    /* Fall through */
+
                 case IDOK:
                     {
                         LRESULT index;

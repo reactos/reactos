@@ -31,6 +31,10 @@ typedef struct _GUID
 } GUID;
 #endif
 
+#ifndef DECLSPEC_SELECTANY
+#define DECLSPEC_SELECTANY __declspec(selectany)
+#endif
+
 #undef DEFINE_GUID
 
 #ifdef INITGUID

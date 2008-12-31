@@ -292,7 +292,7 @@ NtGdiGetFontUnicodeRanges(
      {     
         _SEH2_TRY
         {
-            ProbeForWrite(pgsSafe, Size, 1);
+            ProbeForWrite(pgs, Size, 1);
             RtlCopyMemory(pgs, pgsSafe, Size);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

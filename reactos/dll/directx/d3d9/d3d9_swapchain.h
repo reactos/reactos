@@ -68,14 +68,15 @@ typedef struct _Direct3DSwapChain9_INT
 /* 0x01f4 */    D3DSWAPEFFECT SwapEffect;
 /* 0x01f8 */    DWORD dwUnknown01f8;
 /* 0x01fc */    DWORD dwUnknown01fc;
-/* 0x0200 */    DDGAMMARAMP GammaRamp;
+/* 0x0200 */    D3DGAMMARAMP GammaRamp;
 } Direct3DSwapChain9_INT, FAR* LPDIRECT3DSWAPCHAIN9_INT;
 
-
+LPDIRECT3DSWAPCHAIN9_INT IDirect3DSwapChain9ToImpl(LPDIRECT3DSWAPCHAIN9 iface);
 Direct3DSwapChain9_INT* CreateDirect3DSwapChain9(enum REF_TYPE RefType, struct _Direct3DDevice9_INT* pBaseDevice, DWORD ChainIndex);
 
 VOID Direct3DSwapChain9_SetDisplayMode(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESENT_PARAMETERS* pPresentationParameters);
 HRESULT Direct3DSwapChain9_Init(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESENT_PARAMETERS* pPresentationParameters);
 HRESULT Direct3DSwapChain9_Reset(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESENT_PARAMETERS* pPresentationParameters);
+VOID Direct3DSwapChain9_GetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, D3DGAMMARAMP* pRamp);
 
 #endif // _D3D9_SWAPCHAIN_H_

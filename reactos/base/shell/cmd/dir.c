@@ -1094,71 +1094,43 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
   if (!(iColumns))
     iColumns = 1;
 
-  /* Print Column sorted */
-  if (lpFlags->bWideListColSort)
+  /* Calculate the lines that will be printed */
+  iLines = (USHORT)((dwCount + iColumns - 1) / iColumns);
+
+  for (i = 0; i < iLines; i++)
   {
-    /* Calculate the lines that will be printed */
-//    iLines = ceil((float)dwCount/(float)iColumns);
-    iLines = (USHORT)(dwCount / iColumns);
-
-    for (i = 0;i < iLines;i++)
+    for (j = 0; j < iColumns; j++)
     {
-      for (j = 0; j < iColumns; j++)
+      if (lpFlags->bWideListColSort)
       {
+        /* Print Column sorted */
         temp = (j * iLines) + i;
-        if (temp >= dwCount)
-           break;
-
-        if (ptrFiles[temp]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-          _stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->cFileName);
-        else
-          _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
-
-        if(lpFlags->bPause)
-		   ConOutPrintfPaging(FALSE,_T("%-*s"), iLongestName + 1 , szTempFname);
-		else
-		   ConOutPrintf(_T("%-*s"), iLongestName + 1 , szTempFname);
+      }
+      else
+      {
+        /* Print Line sorted */
+        temp = (i * iColumns) + j;
       }
 
-      if(lpFlags->bPause)
-		 ConOutPrintfPaging(FALSE,_T("\n"));
-	  else
-		 ConOutPrintf(_T("\n"));
-    }
-  }
-  else
-  {
-    /* Print Line sorted */
-    for (i = 0; i < dwCount; i++)
-    {
-      if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        _stprintf(szTempFname, _T("[%s]"), ptrFiles[i]->cFileName);
+      if (temp >= dwCount)
+         break;
+
+      if (ptrFiles[temp]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        _stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->cFileName);
       else
-        _stprintf(szTempFname, _T("%s"), ptrFiles[i]->cFileName);
+        _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
 
       if(lpFlags->bPause)
-		 ConOutPrintfPaging(FALSE,_T("%-*s"), iLongestName + 1, szTempFname );
-	  else
-		 ConOutPrintf(_T("%-*s"), iLongestName + 1, szTempFname );
-
-      /*
-       * We print a new line at the end of each column
-       * except for the case that it is the last item.
-       */
-	  if (!((i + 1) % iColumns) && (i < (dwCount - 1)))
-	  {
-		  if(lpFlags->bPause)
-			 ConOutPrintfPaging(FALSE,_T("\n"));
-		  else
-		     ConOutPrintf(_T("\n"));
-	  }
+        ConOutPrintfPaging(FALSE,_T("%-*s"), iLongestName + 1 , szTempFname);
+      else
+        ConOutPrintf(_T("%-*s"), iLongestName + 1 , szTempFname);
     }
 
-    /* Add a new line after the last item */
+    /* Add a new line after the last item in the column */
     if(lpFlags->bPause)
-	   ConOutPrintfPaging(FALSE,_T("\n"));
-	else
-	   ConOutPrintf(_T("\n"));
+      ConOutPrintfPaging(FALSE,_T("\n"));
+    else
+      ConOutPrintf(_T("\n"));
   }
 }
 

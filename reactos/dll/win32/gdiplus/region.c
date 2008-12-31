@@ -360,6 +360,7 @@ GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *region1,
 
         delete_element(&region1->node);
         memcpy(region1, reg2copy, sizeof(GpRegion));
+        GdipFree(reg2copy);
         return Ok;
     }
 

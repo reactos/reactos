@@ -253,6 +253,22 @@ PcNewRegistryKey(
 
         Status = ZwOpenKey(&hHandle, DesiredAccess, ObjectAttributes);
     }
+    else if (RegistryKeyType == DeviceRegistryKey ||
+             RegistryKeyType == DriverRegistryKey ||
+             RegistryKeyType == HwProfileRegistryKey)
+    {
+        if (RegistryKeyType == HwProfileRegistryKey)
+        {
+             /* IoOpenDeviceRegistryKey used different constant */
+            RegistryKeyType = PLUGPLAY_REGKEY_CURRENT_HWPROFILE;
+        }
+
+        Status = IoOpenDeviceRegistryKey(DeviceObject, RegistryKeyType, DesiredAccess, &hHandle);
+    }
+    else if (RegistryKeyType == DeviceInterfaceRegistryKey)
+    {
+        /* FIXME */
+    }
 
     if (!NT_SUCCESS(Status))
     {

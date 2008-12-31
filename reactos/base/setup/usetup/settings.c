@@ -895,7 +895,7 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
     PWCHAR LayoutId;
     const MUI_LAYOUTS * LayoutsList;
     MUI_LAYOUTS NewLayoutsList[20];
-    ULONG uIndex = 0;
+    ULONG uIndex;
     ULONG uOldPos = 0;
 
     Entry = GetCurrentListEntry(List);
@@ -910,16 +910,17 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
 
     if (_wcsicmp(LayoutsList[0].LayoutID, LayoutId) != 0)
     {
-        do
+        for (uIndex = 1; LayoutsList[uIndex].LangID != NULL; uIndex++)
         {
             if (_wcsicmp(LayoutsList[uIndex].LayoutID, LayoutId) == 0)
             {
                 uOldPos = uIndex;
+                continue;
             }
 
-            uIndex++;
-
-        } while (LayoutsList[uIndex].LangID != NULL);
+            NewLayoutsList[uIndex].LangID   = LayoutsList[uIndex].LangID;
+            NewLayoutsList[uIndex].LayoutID = LayoutsList[uIndex].LayoutID;
+        }
 
         NewLayoutsList[uIndex].LangID    = NULL;
         NewLayoutsList[uIndex].LayoutID  = NULL;

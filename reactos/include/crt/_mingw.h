@@ -32,20 +32,20 @@
 
 #if defined(_MSC_VER)
 # ifdef _DLL
-# ifndef __MINGW_IMPORT
-#  define __MINGW_IMPORT  __declspec(dllimport)
-# endif
-# ifndef _CRTIMP
-#  define _CRTIMP  __declspec(dllimport)
-# endif
+#  ifndef __MINGW_IMPORT
+#   define __MINGW_IMPORT  __declspec(dllimport)
+#  endif
+#  ifndef _CRTIMP
+#   define _CRTIMP  __declspec(dllimport)
+#  endif
 # else
 #  ifndef __MINGW_IMPORT
 #   define __MINGW_IMPORT
 #  endif
-# ifndef _CRTIMP
-#  define _CRTIMP
+#  ifndef _CRTIMP
+#   define _CRTIMP
+#  endif
 # endif
-#endif
 # define __DECLSPEC_SUPPORTED
 # define __attribute__(x) /* nothing */
 # define __restrict__ /* nothing */
@@ -55,25 +55,25 @@
 #   ifdef _DLL
 /* Note the extern. This is needed to work around GCC's
 limitations in handling dllimport attribute.  */
-#   define __MINGW_IMPORT  extern __attribute__ ((__dllimport__))
+#    define __MINGW_IMPORT  extern __attribute__ ((__dllimport__))
 #   else
 #    define __MINGW_IMPORT extern
 #   endif
 #  endif
 #  ifndef _CRTIMP
-#    undef __USE_CRTIMP
-#    if !defined (_CRTBLD) && !defined (_SYSCRT)
-#      define __USE_CRTIMP 1
-#    endif
-#    ifdef __USE_CRTIMP
-#     ifdef _DLL
-#      define _CRTIMP  __attribute__ ((dllimport))
-#    else
-#      define _CRTIMP
-#    endif
+#   undef __USE_CRTIMP
+#   if !defined (_CRTBLD) && !defined (_SYSCRT)
+#    define __USE_CRTIMP 1
+#   endif
+#   ifdef __USE_CRTIMP
+#    ifdef _DLL
+#     define _CRTIMP  __attribute__ ((dllimport))
 #    else
 #     define _CRTIMP
 #    endif
+#   else
+#    define _CRTIMP
+#   endif
 #  endif
 #  define __DECLSPEC_SUPPORTED
 # else /* __declspec */

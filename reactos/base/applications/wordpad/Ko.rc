@@ -18,7 +18,7 @@
  */
 
 
-LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
 BEGIN
@@ -112,7 +112,7 @@ CAPTION "날짜와 시간"
 FONT 10, "MS Shell Dlg"
 BEGIN
     LTEXT        "가능한 형식",0,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "확인(&O)",IDOK,87,12,40,12
     PUSHBUTTON   "취소(&C)",IDCANCEL,87,26,40,12
 END
@@ -131,7 +131,7 @@ END
 IDD_PARAFORMAT DIALOG DISCARDABLE 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "단락 형식"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "들여쓰기", 0, 10, 10, 120, 68
     LTEXT "왼쪽", 0, 15, 22, 40, 13
@@ -149,7 +149,7 @@ END
 IDD_TABSTOPS DIALOG DISCARDABLE 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "탭"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "탭 정지", 0, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
@@ -163,16 +163,16 @@ END
 IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
 STYLE DS_SYSMODAL
 Caption ""
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "줄 넘기기", 0, 10, 10, 130, 85
-    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "줄넘기지 않음", IDC_PAGEFMT_WN, 18, 25, 117, 15
     RADIOBUTTON "창 가장자리서  글 넘기기(&W)", IDC_PAGEFMT_WW, 18, 45, 117, 15
     RADIOBUTTON "가장자리에서 줄 넘기기(&M)", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX " 도구바", 0, 150, 10, 120, 85
     CHECKBOX "도구바(&T)", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "형식바(&F)", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "&Ruler", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "길이바(&R)", IDC_PAGEFMT_RU, 160, 56, 80, 15
     CHECKBOX "상태바(&S)", IDC_PAGEFMT_SB, 160, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
@@ -233,9 +233,9 @@ BEGIN
     STRING_SEARCH_FINISHED,      "문서에서 찾기 끝."
     STRING_LOAD_RICHED_FAILED,   "리치텍스트 라이브러리 불러오기 실패."
     STRING_SAVE_LOSEFORMATTING,  "당신은 보통 텍스트 형식으로 저장하기를 선택했습니다, " \
-                                 "이것은 특수한 꾸밈을 없엘 것입니다. " \
+                                 "이것은 포맷팅을 없엘 것입니다. " \
                                  "당신은 정말로 저장하기를 원합니까?"
-    STRING_INVALID_NUMBER,       "올바르지 않은 수 형식"
+    STRING_INVALID_NUMBER,       "올바르지 않은 숫자 형식"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE 저장 문서는 지원되지 않습니다"
     STRING_WRITE_FAILED,              "파일을 저장할 수 없습니다."
     STRING_WRITE_ACCESS_DENIED,       "파일을 저장할 권한이 없습니다."

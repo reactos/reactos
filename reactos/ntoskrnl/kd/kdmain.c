@@ -89,6 +89,14 @@ KdpServiceDispatcher(ULONG Service,
                 default:
                     break;
             }
+            break;
+        }
+
+        /* Special  case for stack frame dumps */
+        case TAG('R', 'o', 's', 'D'):
+        {
+            KeRosDumpStackFrames((PULONG)Buffer1, Buffer1Length);
+            break;
         }
 #endif
         default:

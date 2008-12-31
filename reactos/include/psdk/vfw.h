@@ -25,6 +25,8 @@ typedef struct IAVIFile *PAVIFILE;
 typedef struct IGetFrame *PGETFRAME;
 typedef struct IAVIEditStream *PAVIEDITSTREAM;
 
+#define ICVERSION 0x0104
+
 #define	ICERR_OK	0
 #define	ICERR_DONTDRAW	1
 #define	ICERR_NEWPALETTE	2

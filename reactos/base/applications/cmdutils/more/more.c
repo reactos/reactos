@@ -124,7 +124,7 @@ int main (int argc, char **argv)
       return 0;
    }
 
-   hKeyboard = CreateFile (_T("CONIN$"), GENERIC_READ,
+   hKeyboard = CreateFile (_T("CONIN$"), GENERIC_READ|GENERIC_WRITE,
                            0,NULL,OPEN_ALWAYS,0,0);
 
    GetScreenSize(&maxx,&maxy);
