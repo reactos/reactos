@@ -249,6 +249,7 @@ dll\win32\cryptnet\cryptnet.dll                     1
 dll\win32\cryptui\cryptui.dll                       1
 dll\win32\dbghelp\dbghelp.dll                       1
 dll\win32\dciman32\dciman32.dll                     1
+dll\win32\dwmapi\dwmapi.dll                         1
 dll\win32\devmgr\devmgr.dll                         1
 dll\win32\dhcpcsvc\dhcpcsvc.dll                     1
 dll\win32\dnsapi\dnsapi.dll                         1
