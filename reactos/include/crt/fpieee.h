@@ -6,7 +6,7 @@
 #ifndef _INC_FPIEEE
 #define _INC_FPIEEE
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 

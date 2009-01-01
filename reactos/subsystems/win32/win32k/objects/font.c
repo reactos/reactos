@@ -728,6 +728,10 @@ NtGdiHfontCreate(
   PTEXTOBJ TextObj;
   NTSTATUS Status = STATUS_SUCCESS;
 
+  /* Silence GCC warnings */
+  SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement = 0;
+  SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation = 0;
+
   if (!pelfw)
   {
       return NULL;

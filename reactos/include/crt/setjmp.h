@@ -6,7 +6,7 @@
 #ifndef _INC_SETJMP
 #define _INC_SETJMP
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 
@@ -130,28 +130,7 @@ extern "C" {
 #define _JMP_BUF_DEFINED
 #endif
 
-__CRT_INLINE void * __cdecl __attribute__ ((__nothrow__)) mingw_getsp(void)
-{
-#ifdef __GNUC__
-#ifdef __x86_64
-      __int64 *ret;
-      __asm__ __volatile__("leaq  16(%%rsp),%0\n"
-                            :"=r"(ret)
-                            :
-      );
-      return ret;
-#elif __i386__
-    __int32 *ret;
-      __asm__ __volatile__("lea  8(%esp),%0\n"
-                            :"=r"(ret)
-                            :
-      );
-      return ret;
-#endif
-#else
-#error Unsupported Compiler
-#endif
-}
+  void * __cdecl __attribute__ ((__nothrow__)) mingw_getsp(void);
 
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
 #ifndef _INC_SETJMPEX

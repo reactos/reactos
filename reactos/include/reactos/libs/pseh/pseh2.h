@@ -49,7 +49,6 @@ typedef struct __SEH2Frame
 {
 	_SEH2Registration_t SF_Registration;
 	volatile struct __SEH2TryLevel * volatile SF_TopTryLevel;
-	struct _EXCEPTION_POINTERS * volatile SF_ExceptionInformation;
 	volatile unsigned long SF_Code;
 }
 _SEH2Frame_t;
@@ -143,15 +142,23 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 #define __SEH_FORCE_NEST \
 	__asm__ __volatile__("#%0" : : "r" (&_SEHFrame))
 
-#define __SEH_DECLARE_EXCEPT_PFN(NAME_) int (__cdecl * NAME_)(void)
-#define __SEH_DECLARE_EXCEPT(NAME_) int __cdecl NAME_(void)
-#define __SEH_DEFINE_EXCEPT(NAME_) int __cdecl NAME_(void)
+#define __SEH_EXCEPT_RET long
+#define __SEH_EXCEPT_ARGS __attribute__((unused)) _SEH2Frame_t * _SEH2FrameP, __attribute__((unused)) struct _EXCEPTION_POINTERS * _SEHExceptionInformation
+#define __SEH_EXCEPT_ARGS_ , __SEH_EXCEPT_ARGS
+#define __SEH_EXCEPT_PFN __SEH_DECLARE_EXCEPT_PFN
+#define __SEH_DECLARE_EXCEPT_PFN(NAME_) __SEH_EXCEPT_RET (__cdecl * NAME_)(__SEH_EXCEPT_ARGS)
+#define __SEH_DECLARE_EXCEPT(NAME_) __SEH_EXCEPT_RET __cdecl NAME_(__SEH_EXCEPT_ARGS)
+#define __SEH_DEFINE_EXCEPT(NAME_) __SEH_EXCEPT_RET __cdecl NAME_(__SEH_EXCEPT_ARGS)
 
-#define __SEH_DECLARE_FINALLY_PFN(NAME_) void (__cdecl * NAME_)(void)
-#define __SEH_DECLARE_FINALLY(NAME_) void __cdecl NAME_(void)
-#define __SEH_DEFINE_FINALLY(NAME_) void __cdecl NAME_(void)
+#define __SEH_FINALLY_RET void
+#define __SEH_FINALLY_ARGS void
+#define __SEH_FINALLY_ARGS_
+#define __SEH_FINALLY_PFN __SEH_DECLARE_FINALLY_PFN
+#define __SEH_DECLARE_FINALLY_PFN(NAME_) __SEH_FINALLY_RET (__cdecl * NAME_)(__SEH_FINALLY_ARGS)
+#define __SEH_DECLARE_FINALLY(NAME_) __SEH_FINALLY_RET __cdecl NAME_(__SEH_FINALLY_ARGS)
+#define __SEH_DEFINE_FINALLY(NAME_) __SEH_FINALLY_RET __cdecl NAME_(__SEH_FINALLY_ARGS)
 
-#define __SEH_RETURN_EXCEPT(R_) return (int)(R_)
+#define __SEH_RETURN_EXCEPT(R_) return (long)(R_)
 #define __SEH_RETURN_FINALLY() return
 
 #define __SEH_BEGIN_TRY \
@@ -178,9 +185,9 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 #define __SEH_LEAVE_TRYLEVEL() __SEH_SET_TRYLEVEL(_SEHPrevTryLevelP)
 
 #define __SEH_END_SCOPE_CHAIN \
-	static const int _SEH2ScopeKind = 1; \
-	static _SEH2Frame_t * const _SEH2FrameP = 0; \
-	static _SEH2TryLevel_t * const _SEH2TryLevelP = 0;
+	static __attribute__((unused)) const int _SEH2ScopeKind = 1; \
+	static __attribute__((unused)) _SEH2Frame_t * const _SEH2FrameP = 0; \
+	static __attribute__((unused)) _SEH2TryLevel_t * const _SEH2TryLevelP = 0;
 
 #define __SEH_BEGIN_SCOPE \
 	for(;;) \
@@ -290,35 +297,39 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
  \
 		_SEHBeforeTry:; \
  \
-		if(__builtin_constant_p((__VA_ARGS__))) \
 		{ \
-			if((__VA_ARGS__) > 0) \
+			__attribute__((unused)) struct _EXCEPTION_POINTERS * volatile _SEHExceptionInformation; \
+ \
+			if(__builtin_constant_p((__VA_ARGS__))) \
 			{ \
-				_SEHTryLevel.ST_Filter = (void *)1; \
-				_SEHTryLevel.ST_Body = &&_SEHBeginExcept; \
-				__SEH_USE_LABEL(_SEHBeginExcept); \
-			} \
-			else if((__VA_ARGS__) < 0) \
-			{ \
-				_SEHTryLevel.ST_Filter = (void *)-1; \
-				_SEHTryLevel.ST_Body = NULL; \
+				if((__VA_ARGS__) > 0) \
+				{ \
+					_SEHTryLevel.ST_Filter = (void *)1; \
+					_SEHTryLevel.ST_Body = &&_SEHBeginExcept; \
+					__SEH_USE_LABEL(_SEHBeginExcept); \
+				} \
+				else if((__VA_ARGS__) < 0) \
+				{ \
+					_SEHTryLevel.ST_Filter = (void *)-1; \
+					_SEHTryLevel.ST_Body = NULL; \
+				} \
+				else \
+				{ \
+					_SEHTryLevel.ST_Filter = (void *)0; \
+					_SEHTryLevel.ST_Body = NULL; \
+				} \
 			} \
 			else \
 			{ \
-				_SEHTryLevel.ST_Filter = (void *)0; \
-				_SEHTryLevel.ST_Body = NULL; \
-			} \
-		} \
-		else \
-		{ \
-			__SEH_DEFINE_EXCEPT(_SEHExcept) \
-			{ \
-				__SEH_RETURN_EXCEPT((__VA_ARGS__)); \
-			} \
+				__SEH_DEFINE_EXCEPT(_SEHExcept) \
+				{ \
+					__SEH_RETURN_EXCEPT((__VA_ARGS__)); \
+				} \
  \
-			_SEHTryLevel.ST_Filter = &_SEHExcept; \
-			_SEHTryLevel.ST_Body = &&_SEHBeginExcept; \
-			__SEH_USE_LABEL(_SEHBeginExcept); \
+				_SEHTryLevel.ST_Filter = &_SEHExcept; \
+				_SEHTryLevel.ST_Body = &&_SEHBeginExcept; \
+				__SEH_USE_LABEL(_SEHBeginExcept); \
+			} \
 		} \
  \
 		__SEH_BARRIER; \
@@ -350,8 +361,6 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 		_SEHBeginExcept:; \
 		{ \
 			{ \
-				_SEH2Frame_t * const _SEH2FrameP = _SEHTopTryLevel ? &_SEHFrame : _SEHCurFrameP; \
-				(void)_SEH2FrameP; \
 				__SEH_BARRIER;
 
 #define _SEH2_END \
@@ -363,7 +372,7 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 	} \
 	__SEH_END_SCOPE;
 
-#define _SEH2_GetExceptionInformation() ((_SEH2FrameP)->SF_ExceptionInformation)
+#define _SEH2_GetExceptionInformation() (_SEHExceptionInformation)
 #define _SEH2_GetExceptionCode() ((_SEH2FrameP)->SF_Code)
 #define _SEH2_AbnormalTermination() (_SEHAbnormalTermination)
 

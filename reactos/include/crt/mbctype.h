@@ -6,7 +6,7 @@
 #ifndef _INC_MBCTYPE
 #define _INC_MBCTYPE
 
-#include <_mingw.h>
+#include <crtdefs.h>
 #include <ctype.h>
 
 #ifdef __cplusplus
@@ -14,16 +14,29 @@ extern "C" {
 #endif
 
   /* CRT stuff */
-#if defined(_M_CEE_PURE)
+#if 1
+#if defined (_DLL) && defined (_M_IX86)
   /* Retained for compatibility with VC++ 5.0 and earlier versions */
   _CRTIMP unsigned char * __cdecl __p__mbctype(void);
   _CRTIMP unsigned char * __cdecl __p__mbcasemap(void);
-  #define _mbctype (__p__mbctype())
-  #define _mbcasemap (__p__mbcasemap())
+#endif  /* defined (_DLL) && defined (_M_IX86) */
+#endif
+#ifndef _mbctype
+#ifdef _MSVCRT_
+  extern unsigned char _mbctype[257];
 #else
-  _CRTIMP extern unsigned char _mbctype[];
-  _CRTIMP extern unsigned char _mbcasemap[];
-#endif // defined(_M_CEE_PURE)
+#define _mbctype	(*_imp___mbctype)
+  extern unsigned char **_imp___mbctype;
+#endif
+#endif
+#ifndef _mbcasemap
+#ifdef _MSVCRT_
+  extern unsigned char *_mbcasemap;
+#else
+#define _mbcasemap	(*_imp___mbcasemap)
+  extern unsigned char **_imp___mbcasemap;
+#endif
+#endif
 
   /* CRT stuff */
 #if 1

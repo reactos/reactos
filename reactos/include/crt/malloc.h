@@ -6,7 +6,7 @@
 #ifndef _MALLOC_H_
 #define _MALLOC_H_
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 
@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #ifndef _STATIC_ASSERT
-#define _STATIC_ASSERT(expr) typedef char __static_assert_t[(expr)?1:-1]
+#define _STATIC_ASSERT(expr) typedef char __static_assert_t[(expr)]
 #endif
 
 /* Return codes for _heapwalk()  */

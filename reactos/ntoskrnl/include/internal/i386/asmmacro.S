@@ -96,10 +96,8 @@
 .macro UNHANDLED_PATH
     /* Get EIP */
     call $+5
-    pop eax
 
     /* Print debug message */
-    push eax
     push offset _UnhandledMsg
     call _DbgPrint
     add esp, 8

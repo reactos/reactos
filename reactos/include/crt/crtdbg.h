@@ -3,7 +3,7 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifndef _INC_CRTDBG
 #define _INC_CRTDBG
@@ -97,12 +97,24 @@ extern "C" {
 #define _ASSERT(expr) ((void)0)
 #endif
 
+#ifndef _ASSERT_WRN
+#define _ASSERT_WRN(expr) ((void)0)
+#endif
+
 #ifndef _ASSERTE
 #define _ASSERTE(expr) ((void)0)
 #endif
 
+#ifndef _ASSERTE_WRN
+#define _ASSERTE_WRN(expr) ((void)0)
+#endif
+
 #ifndef _ASSERT_EXPR
 #define _ASSERT_EXPR(expr,expr_str) ((void)0)
+#endif
+
+#ifndef _ASSERT_EXPR_WRN
+#define _ASSERT_EXPR_WRN(expr,expr_str) ((void)0)
 #endif
 
 #ifndef _ASSERT_BASE

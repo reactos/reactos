@@ -20,14 +20,15 @@
 	DEALINGS IN THE SOFTWARE.
 */
 
-#define _NTSYSTEM_
+#define _NTSYSTEM_ /* removes dllimport attribute from RtlUnwind */
+
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 #include <pseh/pseh2.h>
-
 #include <excpt.h>
+#include <intrin.h>
 
 #ifndef EXCEPTION_EXIT_UNWIND
 #define EXCEPTION_EXIT_UNWIND 4
@@ -37,17 +38,28 @@
 #define EXCEPTION_UNWINDING 2
 #endif
 
-extern _SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void);
-
-extern int __SEH2Except(void *, void *);
-extern void __SEH2Finally(void *, void *);
 extern DECLSPEC_NORETURN int __SEH2Handle(void *, void *, void *);
-
-extern void __cdecl __SEH2EnterFrame(_SEH2Registration_t *);
-extern void __cdecl __SEH2LeaveFrame(void);
-
 extern int __cdecl __SEH2FrameHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
 extern int __cdecl __SEH2NestedHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
+
+FORCEINLINE
+_SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void)
+{
+	return (_SEH2Registration_t *)__readfsdword(0);
+}
+
+FORCEINLINE
+void __cdecl __SEH2EnterFrame(_SEH2Registration_t * frame)
+{
+	frame->SER_Prev = _SEH2CurrentRegistration();
+	__writefsdword(0, (unsigned long)frame);
+}
+
+FORCEINLINE
+void __cdecl __SEH2LeaveFrame(void)
+{
+	__writefsdword(0, (unsigned long)_SEH2CurrentRegistration()->SER_Prev);
+}
 
 FORCEINLINE
 void _SEH2GlobalUnwind(void * target)
@@ -67,11 +79,12 @@ void _SEH2GlobalUnwind(void * target)
 	);
 }
 
-FORCEINLINE
-int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
+static
+__SEH_EXCEPT_RET _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel, struct _EXCEPTION_POINTERS * ep)
 {
 	void * filter = trylevel->ST_Filter;
 	void * context = NULL;
+	__SEH_EXCEPT_RET ret;
 
 	if(filter == (void *)0)
 		return 0;
@@ -88,10 +101,22 @@ int _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 		filter = _SEHFunctionFromTrampoline((_SEHTrampoline_t *)filter);
 	}
 
-	return __SEH2Except(filter, context);
+	__asm__ __volatile__
+	(
+		"push %[ep]\n"
+		"push %[frame]\n"
+		"call *%[filter]\n"
+		"pop %%edx\n"
+		"pop %%edx\n" :
+		[ret] "=a" (ret) :
+		"c" (context), [filter] "r" (filter), [frame] "g" (frame), [ep] "g" (ep) :
+		"edx", "flags", "memory"
+	);
+
+	return ret;
 }
 
-FORCEINLINE
+static
 void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
 	if(trylevel->ST_Filter == NULL && trylevel->ST_Body != NULL)
@@ -105,7 +130,7 @@ void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 			body = _SEHFunctionFromTrampoline((_SEHTrampoline_t *)body);
 		}
 
-		__SEH2Finally(body, context);
+		__asm__ __volatile__("call *%1\n" : : "c" (context), "r" (body) : "eax", "edx", "flags", "memory");
 	}
 }
 
@@ -179,11 +204,10 @@ int __cdecl _SEH2FrameHandler
 		ep.ContextRecord = ContextRecord;
 
 		frame->SF_Code = ExceptionRecord->ExceptionCode;
-		frame->SF_ExceptionInformation = &ep;
 
 		for(trylevel = frame->SF_TopTryLevel; trylevel != NULL; trylevel = trylevel->ST_Next)
 		{
-			ret = _SEH2Except(frame, trylevel);
+			ret = _SEH2Except(frame, trylevel, &ep);
 
 			if(ret < 0)
 				return ExceptionContinueExecution;

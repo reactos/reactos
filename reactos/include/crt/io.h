@@ -1,3 +1,4 @@
+
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
@@ -6,7 +7,7 @@
 #ifndef _IO_H_
 #define _IO_H_
 
-#include <_mingw.h>
+#include <crtdefs.h>
 #include <string.h>
 
 #pragma pack(push,_CRT_PACKING)
@@ -25,15 +26,6 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
 
 #ifndef _FINDDATA_T_DEFINED
 
-  struct _finddata32_t {
-    unsigned attrib;
-    __time32_t time_create;
-    __time32_t time_access;
-    __time32_t time_write;
-    _fsize_t size;
-    char name[260];
-  };
-
   struct _finddata_t {
     unsigned attrib;
     time_t time_create;
@@ -43,7 +35,25 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     char name[260];
   };
 
-/*#if _INTEGRAL_MAX_BITS >= 64*/
+  struct _finddata32_t {
+    unsigned attrib;
+    __time32_t time_create;
+    __time32_t time_access;
+    __time32_t time_write;
+    _fsize_t size;
+    char name[260];
+  };
+
+#if _INTEGRAL_MAX_BITS >= 64
+
+  struct _finddatai64_t {
+    unsigned attrib;
+    time_t time_create;
+    time_t time_access;
+    time_t time_write;
+    __int64 size;
+    char name[260];
+  };
 
   struct _finddata32i64_t {
     unsigned attrib;
@@ -71,44 +81,12 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     __int64 size;
     char name[260];
   };
-
-  struct _finddatai64_t {
-    unsigned attrib;
-    time_t time_create;
-    time_t time_access;
-    time_t time_write;
-    __int64 size;
-    char name[260];
-  };
-
-/* #endif */
-
-#ifdef _WIN64
-//#define _findfirst64i32 _findfirst
-//#define _findnext64i32 _findnext
-//#define _findfirsti64 _findfirst64
-//#define _findnexti64 _findnext64
-
-#else /* !_WIN64 */
-//#define _findfirst32 _findfirst
-//#define _findnext32 _findnext
-//#define _findfirst32i64 _findfirsti64
-//#define _findnext32i64 _findnexti64
-#endif /* !_WIN64 */
+#endif /* _INTEGRAL_MAX_BITS >= 64 */
 
 #define _FINDDATA_T_DEFINED
 #endif
 
 #ifndef _WFINDDATA_T_DEFINED
-
-  struct _wfinddata32_t {
-    unsigned attrib;
-    __time32_t time_create;
-    __time32_t time_access;
-    __time32_t time_write;
-    _fsize_t size;
-    wchar_t name[260];
-  };
 
   struct _wfinddata_t {
     unsigned attrib;
@@ -119,7 +97,25 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     wchar_t name[260];
   };
 
-/* #if _INTEGRAL_MAX_BITS >= 64 */
+  struct _wfinddata32_t {
+    unsigned attrib;
+    __time32_t time_create;
+    __time32_t time_access;
+    __time32_t time_write;
+    _fsize_t size;
+    wchar_t name[260];
+  };
+
+#if _INTEGRAL_MAX_BITS >= 64
+
+  struct _wfinddatai64_t {
+    unsigned attrib;
+    time_t time_create;
+    time_t time_access;
+    time_t time_write;
+    __int64 size;
+    wchar_t name[260];
+  };
 
   struct _wfinddata32i64_t {
     unsigned attrib;
@@ -147,17 +143,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     __int64 size;
     wchar_t name[260];
   };
-
-  struct _wfinddatai64_t {
-    unsigned attrib;
-    time_t time_create;
-    time_t time_access;
-    time_t time_write;
-    __int64 size;
-    wchar_t name[260];
-  };
-
-/* #endif */
+#endif
 
 #define _WFINDDATA_T_DEFINED
 #endif
@@ -168,60 +154,6 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
 #define _A_SYSTEM 0x04
 #define _A_SUBDIR 0x10
 #define _A_ARCH 0x20
-
-#ifndef _SIZE_T_DEFINED
-#define _SIZE_T_DEFINED
-#undef size_t
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef unsigned int size_t __attribute__ ((mode (DI)));
-#else
-  typedef unsigned __int64 size_t;
-#endif
-#else
-  typedef unsigned int size_t;
-#endif
-#endif
-
-#ifndef _SSIZE_T_DEFINED
-#define _SSIZE_T_DEFINED
-#undef ssize_t
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef int ssize_t __attribute__ ((mode (DI)));
-#else
-  typedef __int64 ssize_t;
-#endif
-#else
-  typedef int ssize_t;
-#endif
-#endif
-
-#ifndef _OFF_T_DEFINED
-#define _OFF_T_DEFINED
-#ifndef _OFF_T_
-#define _OFF_T_
-  typedef long _off_t;
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
-  typedef long off_t;
-#endif
-#endif
-#endif
-
-#ifndef _OFF64_T_DEFINED
-#define _OFF64_T_DEFINED
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef int _off64_t __attribute__ ((mode (DI)));
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
-  typedef int off64_t __attribute__ ((mode (DI)));
-#endif
-#else
-  typedef long long _off64_t;
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
-  typedef long long off64_t;
-#endif
-#endif
-#endif
 
   /* Some defines for _access nAccessMode (MS doesn't define them, but
   * it doesn't seem to hurt to add them). */
@@ -248,7 +180,6 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
   _CRTIMP int __cdecl _isatty(int _FileHandle);
   _CRTIMP int __cdecl _locking(int _FileHandle,int _LockMode,long _NumOfBytes);
   _CRTIMP long __cdecl _lseek(int _FileHandle,long _Offset,int _Origin);
-  _off64_t lseek64(int fd,_off64_t offset, int whence);
   _CRTIMP char *__cdecl _mktemp(char *_TemplateName);
   _CRTIMP int __cdecl _pipe(int *_PtHandles,unsigned int _PipeSize,int _TextMode);
   _CRTIMP int __cdecl _read(int _FileHandle,void *_DstBuf,unsigned int _MaxCharCount);
@@ -271,11 +202,16 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
 #if _INTEGRAL_MAX_BITS >= 64
   _CRTIMP __int64 __cdecl _filelengthi64(int _FileHandle);
   _CRTIMP intptr_t __cdecl _findfirst32i64(const char *_Filename,struct _finddata32i64_t *_FindData);
+  _CRTIMP intptr_t __cdecl _findfirst64i32(const char *_Filename,struct _finddata64i32_t *_FindData);
   _CRTIMP intptr_t __cdecl _findfirst64(const char *_Filename,struct __finddata64_t *_FindData);
+  _CRTIMP int __cdecl _findnext32i64(intptr_t _FindHandle,struct _finddata32i64_t *_FindData);
+  _CRTIMP int __cdecl _findnext64i32(intptr_t _FindHandle,struct _finddata64i32_t *_FindData);
+  _CRTIMP int __cdecl _findnext64(intptr_t _FindHandle,struct __finddata64_t *_FindData);
+  _CRTIMP __int64 __cdecl _lseeki64(int _FileHandle,__int64 _Offset,int _Origin);
+  _CRTIMP __int64 __cdecl _telli64(int _FileHandle);
 #ifdef __cplusplus
 #include <string.h>
 #endif
-  intptr_t __cdecl _findfirst64i32(const char *_Filename,struct _finddata64i32_t *_FindData);
   __CRT_INLINE intptr_t __cdecl _findfirst64i32(const char *_Filename,struct _finddata64i32_t *_FindData)
   {
     struct __finddata64_t fd;
@@ -288,9 +224,6 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     strncpy(_FindData->name,fd.name,260);
     return ret;
   }
-  _CRTIMP int __cdecl _findnext32i64(intptr_t _FindHandle,struct _finddata32i64_t *_FindData);
-  _CRTIMP int __cdecl _findnext64(intptr_t _FindHandle,struct __finddata64_t *_FindData);
-  int __cdecl _findnext64i32(intptr_t _FindHandle,struct _finddata64i32_t *_FindData);
   __CRT_INLINE int __cdecl _findnext64i32(intptr_t _FindHandle,struct _finddata64i32_t *_FindData)
   {
     struct __finddata64_t fd;
@@ -303,11 +236,9 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     strncpy(_FindData->name,fd.name,260);
     return ret;
   }
-  __int64 __cdecl _lseeki64(int _FileHandle,__int64 _Offset,int _Origin);
-  __int64 __cdecl _telli64(int _FileHandle);
 #endif
-#ifndef NO_OLDNAMES
 
+#ifndef NO_OLDNAMES
 #ifndef _UWIN
   int __cdecl chdir (const char *);
   char *__cdecl getcwd (char *, int);
@@ -316,7 +247,6 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
   int __cdecl rmdir (const char*);
   int __cdecl chmod (const char *, int);
 #endif /* _UWIN */
-
 #endif /* Not NO_OLDNAMES */
 
   _CRTIMP errno_t __cdecl _sopen_s(int *_FileHandle,const char *_Filename,int _OpenFlag,int _ShareFlag,int _PermissionMode);
@@ -359,7 +289,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
   extern "C++" _CRTIMP int __cdecl _wsopen(const wchar_t *_Filename,int _OpenFlag,int _ShareFlag,int _PermissionMode = 0);
 #endif
 
-#endif
+#endif /* !_WIO_DEFINED */
 
   int __cdecl __lock_fhandle(int _Filehandle);
   void __cdecl _unlock_fhandle(int _Filehandle);

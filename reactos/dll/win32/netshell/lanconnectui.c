@@ -97,7 +97,7 @@ GetINetCfgComponent(INetCfg * pNCfg, INetConnectionPropertyUiImpl * This, INetCf
        hr = INetCfgComponent_GetDisplayName(pNCg, &pName);
        if (SUCCEEDED(hr))
        {
-           if (!wcsicmp(pName, This->pProperties->pszwDeviceName))
+           if (!_wcsicmp(pName, This->pProperties->pszwDeviceName))
            {
                *pOut = pNCg;
                IEnumNetCfgComponent_Release(pEnumCfg);

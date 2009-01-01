@@ -6,7 +6,7 @@
 #ifndef _INC_MBSTRING
 #define _INC_MBSTRING
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 

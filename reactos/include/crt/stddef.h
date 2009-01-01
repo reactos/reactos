@@ -4,7 +4,7 @@
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifndef _INC_STDDEF
 #define _INC_STDDEF
@@ -140,11 +140,11 @@ _TYPE_wchar_t;
 #define ___int_ptrdiff_t_h
 #define _GCC_PTRDIFF_T
 #ifndef __PTRDIFF_TYPE__
-# ifdef _WIN64
-  #define __PTRDIFF_TYPE__ long long int
-# else
-# #define __PTRDIFF_TYPE__ long int
-# endif  
+#ifdef _WIN64
+#define __PTRDIFF_TYPE__ long long int
+#else
+#define __PTRDIFF_TYPE__ long int
+#endif
 #endif
 #ifndef _PTRDIFF_T_DEFINED
 #define _PTRDIFF_T_DEFINED
@@ -208,11 +208,11 @@ typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #define __size_t
 #endif
 #ifndef __SIZE_TYPE__
-# ifdef _WIN64
-#  define __SIZE_TYPE__ long long unsigned int
-# else
-#  define __SIZE_TYPE__ long unsigned int
-# endif
+#ifdef _WIN64
+#define __SIZE_TYPE__ long long unsigned int
+#else
+#define __SIZE_TYPE__ long unsigned int
+#endif
 #endif
 #if !(defined (__GNUG__) && defined (size_t))
 typedef __SIZE_TYPE__ size_t;

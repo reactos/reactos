@@ -6,7 +6,7 @@
 #ifndef _YVALS
 #define _YVALS
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 

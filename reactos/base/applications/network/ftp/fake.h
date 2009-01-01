@@ -6,8 +6,8 @@
 
 #define getwd getcwd
 
-#define strcasecmp strcmp
-#define strncasecmp strnicmp
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 
 struct timezone {
     int tz_minuteswest; /* minutes W of Greenwich */

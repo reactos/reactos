@@ -6,7 +6,7 @@
 #ifndef _INC_WCHAR
 #define _INC_WCHAR
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #pragma pack(push,_CRT_PACKING)
 
@@ -19,16 +19,6 @@ extern "C" {
 #endif
 #ifndef WCHAR_MAX
 #define WCHAR_MAX ((wchar_t)-1) /* UINT16_MAX */
-#endif
-
-#ifndef __GNUC_VA_LIST
-#define __GNUC_VA_LIST
-  typedef __builtin_va_list __gnuc_va_list;
-#endif
-
-#ifndef _VA_LIST_DEFINED
-#define _VA_LIST_DEFINED
-  typedef __gnuc_va_list va_list;
 #endif
 
 #ifndef WEOF
@@ -52,15 +42,18 @@ extern "C" {
 
 #ifndef _STDIO_DEFINED
   _CRTIMP FILE *__cdecl __iob_func(void);
-  _CRTIMP extern FILE _iob[];
+  _CRTDATA(extern FILE _iob[];)
+#ifdef _M_CEE_PURE
+#define _iob __iob_func()
+#endif
 #endif
 
 #ifndef _STDSTREAM_DEFINED
-#define stdin (&__iob_func()[0])
-#define stdout (&__iob_func()[1])
-#define stderr (&__iob_func()[2])
 #define _STDSTREAM_DEFINED
-#endif
+#define stdin (&_iob[0])
+#define stdout (&_iob[1])
+#define stderr (&_iob[1])
+#endif /* !_STDSTREAM_DEFINED */
 
 #ifndef _FSIZE_T_DEFINED
   typedef unsigned long _fsize_t;
@@ -68,6 +61,15 @@ extern "C" {
 #endif
 
 #ifndef _WFINDDATA_T_DEFINED
+  struct _wfinddata_t {
+    unsigned attrib;
+    time_t time_create;
+    time_t time_access;
+    time_t time_write;
+    _fsize_t size;
+    wchar_t name[260];
+  };
+
   struct _wfinddata32_t {
     unsigned attrib;
     __time32_t time_create;
@@ -77,7 +79,15 @@ extern "C" {
     wchar_t name[260];
   };
 
-/* #if _INTEGRAL_MAX_BITS >= 64 */
+#if _INTEGRAL_MAX_BITS >= 64
+  struct _wfinddatai64_t {
+    unsigned attrib;
+    time_t time_create;
+    time_t time_access;
+    time_t time_write;
+    __int64 size;
+    wchar_t name[260];
+  };
 
   struct _wfinddata32i64_t {
     unsigned attrib;
@@ -105,28 +115,10 @@ extern "C" {
     __int64 size;
     wchar_t name[260];
   };
-/* #endif */
-
-#ifdef _USE_32BIT_TIME_T
-#define _wfinddata_t _wfinddata32_t
-#define _wfinddatai64_t _wfinddata32i64_t
-
-#define _wfindfirst _wfindfirst32
-#define _wfindnext _wfindnext32
-#define _wfindfirsti64 _wfindfirst32i64
-#define _wfindnexti64 _wfindnext32i64
-#else
-#define _wfinddata_t _wfinddata64i32_t
-#define _wfinddatai64_t _wfinddata64_t
-
-#define _wfindfirst _wfindfirst64i32
-#define _wfindnext _wfindnext64i32
-#define _wfindfirsti64 _wfindfirst64
-#define _wfindnexti64 _wfindnext64
 #endif
 
 #define _WFINDDATA_T_DEFINED
-#endif
+#endif /* !_WFINDDATA_T_DEFINED */
 
 #ifndef NULL
 #ifdef __cplusplus
@@ -136,65 +128,37 @@ extern "C" {
 #endif
 #endif
 
-#ifndef _CONST_RETURN
-#define _CONST_RETURN
-#endif
-
-#define _WConst_return _CONST_RETURN
-
 #ifndef _CRT_CTYPEDATA_DEFINED
-#define _CRT_CTYPEDATA_DEFINED
-#ifndef _CTYPE_DISABLE_MACROS
-
-#ifndef __PCTYPE_FUNC
-#define __PCTYPE_FUNC __pctype_func()
-#ifdef _MSVCRT_
-#define __pctype_func() (_pctype)
-#else
-#define __pctype_func() (*_imp___pctype)
-#endif
-#endif
-
-#ifndef _pctype
-#ifdef _MSVCRT_
-  extern unsigned short *_pctype;
-#else
-  extern unsigned short **_imp___pctype;
-#define _pctype (*_imp___pctype)
-#endif
-#endif
-#endif
-#endif
+# define _CRT_CTYPEDATA_DEFINED
+# ifndef _CTYPE_DISABLE_MACROS
+#  ifndef __PCTYPE_FUNC
+#   ifdef _DLL
+#    define __PCTYPE_FUNC __pctype_func()
+#   else
+#    define __PCTYPE_FUNC _pctype
+#   endif
+#  endif /* !__PCTYPE_FUNC */
+  _CRTIMP const unsigned short * __cdecl __pctype_func(void);
+#  ifndef _M_CEE_PURE
+  _CRTDATA(extern unsigned short *_pctype);
+#  else
+#   define _pctype (__pctype_func())
+#  endif /* !_M_CEE_PURE */
+# endif /* !_CTYPE_DISABLE_MACROS */
+#endif /* !_CRT_CTYPEDATA_DEFINED */
 
 #ifndef _CRT_WCTYPEDATA_DEFINED
 #define _CRT_WCTYPEDATA_DEFINED
-#ifndef _CTYPE_DISABLE_MACROS
-#ifndef _wctype
-#ifdef _MSVCRT_
-  extern unsigned short *_wctype;
-#else
-  extern unsigned short **_imp___wctype;
-#define _wctype (*_imp___wctype)
-#endif
-#endif
-
-#ifdef _MSVCRT_
-#define __pwctype_func() (_pwctype)
-#else
-#define __pwctype_func() (*_imp___pwctype)
-#endif
-
-#ifndef _pwctype
-#ifdef _MSVCRT_
-  extern unsigned short *_pwctype;
-#else
-  extern unsigned short **_imp___pwctype;
-#define _pwctype (*_imp___pwctype)
-#endif
-#endif
-
-#endif
-#endif
+# ifndef _CTYPE_DISABLE_MACROS
+  _CRTDATA(extern unsigned short *_wctype);
+  _CRTIMP const wctype_t * __cdecl __pwctype_func(void);
+#  ifndef _M_CEE_PURE
+  _CRTDATA(extern const wctype_t *_pwctype);
+#  else
+#   define _pwctype (__pwctype_func())
+#  endif /* !_M_CEE_PURE */
+# endif /* !_CTYPE_DISABLE_MACROS */
+#endif /* !_CRT_WCTYPEDATA_DEFINED */
 
 #define _UPPER 0x1
 #define _LOWER 0x2
@@ -211,48 +175,46 @@ extern "C" {
 
 #ifndef _WCTYPE_DEFINED
 #define _WCTYPE_DEFINED
-
-  int __cdecl iswalpha(wint_t _C);
+  _CRTIMP int __cdecl iswalpha(wint_t _C);
   _CRTIMP int __cdecl _iswalpha_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswupper(wint_t _C);
+  _CRTIMP int __cdecl iswupper(wint_t _C);
   _CRTIMP int __cdecl _iswupper_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswlower(wint_t _C);
+  _CRTIMP int __cdecl iswlower(wint_t _C);
   _CRTIMP int __cdecl _iswlower_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswdigit(wint_t _C);
+  _CRTIMP int __cdecl iswdigit(wint_t _C);
   _CRTIMP int __cdecl _iswdigit_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswxdigit(wint_t _C);
+  _CRTIMP int __cdecl iswxdigit(wint_t _C);
   _CRTIMP int __cdecl _iswxdigit_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswspace(wint_t _C);
+  _CRTIMP int __cdecl iswspace(wint_t _C);
   _CRTIMP int __cdecl _iswspace_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswpunct(wint_t _C);
+  _CRTIMP int __cdecl iswpunct(wint_t _C);
   _CRTIMP int __cdecl _iswpunct_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswalnum(wint_t _C);
+  _CRTIMP int __cdecl iswalnum(wint_t _C);
   _CRTIMP int __cdecl _iswalnum_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswprint(wint_t _C);
+  _CRTIMP int __cdecl iswprint(wint_t _C);
   _CRTIMP int __cdecl _iswprint_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswgraph(wint_t _C);
+  _CRTIMP int __cdecl iswgraph(wint_t _C);
   _CRTIMP int __cdecl _iswgraph_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswcntrl(wint_t _C);
+  _CRTIMP int __cdecl iswcntrl(wint_t _C);
   _CRTIMP int __cdecl _iswcntrl_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswascii(wint_t _C);
-  int __cdecl isleadbyte(int _C);
+  _CRTIMP int __cdecl iswascii(wint_t _C);
+  _CRTIMP int __cdecl isleadbyte(int _C);
   _CRTIMP int __cdecl _isleadbyte_l(int _C,_locale_t _Locale);
-  wint_t __cdecl towupper(wint_t _C);
+  _CRTIMP wint_t __cdecl towupper(wint_t _C);
   _CRTIMP wint_t __cdecl _towupper_l(wint_t _C,_locale_t _Locale);
-  wint_t __cdecl towlower(wint_t _C);
+  _CRTIMP wint_t __cdecl towlower(wint_t _C);
   _CRTIMP wint_t __cdecl _towlower_l(wint_t _C,_locale_t _Locale);
-  int __cdecl iswctype(wint_t _C,wctype_t _Type);
+  _CRTIMP int __cdecl iswctype(wint_t _C,wctype_t _Type);
   _CRTIMP int __cdecl _iswctype_l(wint_t _C,wctype_t _Type,_locale_t _Locale);
   _CRTIMP int __cdecl __iswcsymf(wint_t _C);
   _CRTIMP int __cdecl _iswcsymf_l(wint_t _C,_locale_t _Locale);
   _CRTIMP int __cdecl __iswcsym(wint_t _C);
   _CRTIMP int __cdecl _iswcsym_l(wint_t _C,_locale_t _Locale);
-  int __cdecl is_wctype(wint_t _C,wctype_t _Type);
+  _CRTIMP int __cdecl is_wctype(wint_t _C,wctype_t _Type);
 #endif
 
 #ifndef _WDIRECT_DEFINED
 #define _WDIRECT_DEFINED
-
   _CRTIMP wchar_t *__cdecl _wgetcwd(wchar_t *_DstBuf,int _SizeInWords);
   _CRTIMP wchar_t *__cdecl _wgetdcwd(int _Drive,wchar_t *_DstBuf,int _SizeInWords);
   wchar_t *__cdecl _wgetdcwd_nolock(int _Drive,wchar_t *_DstBuf,int _SizeInWords);
@@ -263,7 +225,6 @@ extern "C" {
 
 #ifndef _WIO_DEFINED
 #define _WIO_DEFINED
-
   _CRTIMP int __cdecl _waccess(const wchar_t *_Filename,int _AccessMode);
   _CRTIMP int __cdecl _wchmod(const wchar_t *_Filename,int _Mode);
   _CRTIMP int __cdecl _wcreat(const wchar_t *_Filename,int _PermissionMode);
@@ -274,10 +235,10 @@ extern "C" {
   _CRTIMP wchar_t *__cdecl _wmktemp(wchar_t *_TemplateName);
 #if _INTEGRAL_MAX_BITS >= 64
   _CRTIMP intptr_t __cdecl _wfindfirst32i64(const wchar_t *_Filename,struct _wfinddata32i64_t *_FindData);
-  intptr_t __cdecl _wfindfirst64i32(const wchar_t *_Filename,struct _wfinddata64i32_t *_FindData);
+  _CRTIMP intptr_t __cdecl _wfindfirst64i32(const wchar_t *_Filename,struct _wfinddata64i32_t *_FindData);
   _CRTIMP intptr_t __cdecl _wfindfirst64(const wchar_t *_Filename,struct _wfinddata64_t *_FindData);
   _CRTIMP int __cdecl _wfindnext32i64(intptr_t _FindHandle,struct _wfinddata32i64_t *_FindData);
-  int __cdecl _wfindnext64i32(intptr_t _FindHandle,struct _wfinddata64i32_t *_FindData);
+  _CRTIMP int __cdecl _wfindnext64i32(intptr_t _FindHandle,struct _wfinddata64i32_t *_FindData);
   _CRTIMP int __cdecl _wfindnext64(intptr_t _FindHandle,struct _wfinddata64_t *_FindData);
 #endif
   _CRTIMP errno_t __cdecl _wsopen_s(int *_FileHandle,const wchar_t *_Filename,int _OpenFlag,int _ShareFlag,int _PermissionFlag);
@@ -288,7 +249,7 @@ extern "C" {
   extern "C++" _CRTIMP int __cdecl _wopen(const wchar_t *_Filename,int _OpenFlag,int _PermissionMode = 0);
   extern "C++" _CRTIMP int __cdecl _wsopen(const wchar_t *_Filename,int _OpenFlag,int _ShareFlag,int _PermissionMode = 0);
 #endif
-#endif
+#endif /* !_WIO_DEFINED */
 
 #ifndef _WLOCALE_DEFINED
 #define _WLOCALE_DEFINED
@@ -297,7 +258,6 @@ extern "C" {
 
 #ifndef _WPROCESS_DEFINED
 #define _WPROCESS_DEFINED
-
   _CRTIMP intptr_t __cdecl _wexecl(const wchar_t *_Filename,const wchar_t *_ArgList,...);
   _CRTIMP intptr_t __cdecl _wexecle(const wchar_t *_Filename,const wchar_t *_ArgList,...);
   _CRTIMP intptr_t __cdecl _wexeclp(const wchar_t *_Filename,const wchar_t *_ArgList,...);
@@ -317,8 +277,8 @@ extern "C" {
 #ifndef _CRT_WSYSTEM_DEFINED
 #define _CRT_WSYSTEM_DEFINED
   _CRTIMP int __cdecl _wsystem(const wchar_t *_Command);
-#endif
-#endif
+#endif /* !_CRT_WSYSTEM_DEFINED */
+#endif /* !_WPROCESS_DEFINED */
 
 #ifndef _WCTYPE_INLINE_DEFINED
 #undef _CRT_WCTYPE_NOINLINE
@@ -373,47 +333,22 @@ extern "C" {
 
 #ifndef _OFF_T_DEFINED
 #define _OFF_T_DEFINED
-#ifndef _OFF_T_
-#define _OFF_T_
   typedef long _off_t;
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
+#ifndef NO_OLDNAMES
   typedef long off_t;
-#endif
 #endif
 #endif
 
 #ifndef _OFF64_T_DEFINED
 #define _OFF64_T_DEFINED
   typedef long long _off64_t;
-#if !defined(NO_OLDNAMES) || defined(_POSIX)
+#ifndef NO_OLDNAMES
   typedef long long off64_t;
 #endif
 #endif
 
 #ifndef _STAT_DEFINED
 #define _STAT_DEFINED
-
-#ifdef _USE_32BIT_TIME_T
-#ifdef WIN64
-#define _fstat _fstat32
-#define _stat _stat32
-#define _wstat _wstat32
-#else
-#define _fstat32 _fstat
-#define _stat32 _stat
-#define _wstat32 _wstat
-#endif
-#define _fstati64 _fstat32i64
-#define _stati64 _stat32i64
-#define _wstati64 _wstat32i64
-#else
-#define _fstat _fstat64i32
-#define _fstati64 _fstat64
-#define _stat _stat64i32
-#define _stati64 _stat64
-#define _wstat _wstat64i32
-#define _wstati64 _wstat64
-#endif
 
   struct _stat32 {
     _dev_t st_dev;
@@ -427,6 +362,20 @@ extern "C" {
     __time32_t st_atime;
     __time32_t st_mtime;
     __time32_t st_ctime;
+  };
+
+  struct _stat {
+    _dev_t st_dev;
+    _ino_t st_ino;
+    unsigned short st_mode;
+    short st_nlink;
+    short st_uid;
+    short st_gid;
+    _dev_t st_rdev;
+    _off_t st_size;
+    time_t st_atime;
+    time_t st_mtime;
+    time_t st_ctime;
   };
 
 #ifndef	NO_OLDNAMES
@@ -445,7 +394,7 @@ extern "C" {
   };
 #endif
 
-/* #if _INTEGRAL_MAX_BITS >= 64 */
+#if _INTEGRAL_MAX_BITS >= 64
 
   struct _stat32i64 {
     _dev_t st_dev;
@@ -488,7 +437,7 @@ extern "C" {
     __time64_t st_mtime;
     __time64_t st_ctime;
   };
-/* #endif */
+#endif
 
 #define __stat64 _stat64
 
@@ -496,11 +445,11 @@ extern "C" {
 
 #ifndef _WSTAT_DEFINED
 #define _WSTAT_DEFINED
-
+  _CRTIMP int __cdecl _wstat(const wchar_t *_Name,struct _stat *_Stat);
   _CRTIMP int __cdecl _wstat32(const wchar_t *_Name,struct _stat32 *_Stat);
 #if _INTEGRAL_MAX_BITS >= 64
   _CRTIMP int __cdecl _wstat32i64(const wchar_t *_Name,struct _stat32i64 *_Stat);
-  int __cdecl _wstat64i32(const wchar_t *_Name,struct _stat64i32 *_Stat);
+  _CRTIMP int __cdecl _wstat64i32(const wchar_t *_Name,struct _stat64i32 *_Stat);
   _CRTIMP int __cdecl _wstat64(const wchar_t *_Name,struct _stat64 *_Stat);
 #endif
 #endif
@@ -508,11 +457,6 @@ extern "C" {
 
 #ifndef _WCONIO_DEFINED
 #define _WCONIO_DEFINED
-
-#ifndef WEOF
-#define WEOF (wint_t)(0xFFFF)
-#endif
-
   _CRTIMP wchar_t *_cgetws(wchar_t *_Buffer);
   _CRTIMP wint_t __cdecl _getwch(void);
   _CRTIMP wint_t __cdecl _getwche(void);
@@ -539,34 +483,30 @@ extern "C" {
 #ifndef _WSTDIO_DEFINED
 #define _WSTDIO_DEFINED
 
-#ifndef WEOF
-#define WEOF (wint_t)(0xFFFF)
-#endif
-
 #ifdef _POSIX_
   _CRTIMP FILE *__cdecl _wfsopen(const wchar_t *_Filename,const wchar_t *_Mode);
 #else
   _CRTIMP FILE *__cdecl _wfsopen(const wchar_t *_Filename,const wchar_t *_Mode,int _ShFlag);
 #endif
 
-  wint_t __cdecl fgetwc(FILE *_File);
+  _CRTIMP_ALT wint_t __cdecl fgetwc(FILE *_File);
   _CRTIMP wint_t __cdecl _fgetwchar(void);
-  wint_t __cdecl fputwc(wchar_t _Ch,FILE *_File);
+  _CRTIMP wint_t __cdecl fputwc(wchar_t _Ch,FILE *_File);
   _CRTIMP wint_t __cdecl _fputwchar(wchar_t _Ch);
-  wint_t __cdecl getwc(FILE *_File);
-  wint_t __cdecl getwchar(void);
-  wint_t __cdecl putwc(wchar_t _Ch,FILE *_File);
-  wint_t __cdecl putwchar(wchar_t _Ch);
-  wint_t __cdecl ungetwc(wint_t _Ch,FILE *_File);
-  wchar_t *__cdecl fgetws(wchar_t *_Dst,int _SizeInWords,FILE *_File);
-  int __cdecl fputws(const wchar_t *_Str,FILE *_File);
+  _CRTIMP wint_t __cdecl getwc(FILE *_File);
+  _CRTIMP wint_t __cdecl getwchar(void);
+  _CRTIMP wint_t __cdecl putwc(wchar_t _Ch,FILE *_File);
+  _CRTIMP wint_t __cdecl putwchar(wchar_t _Ch);
+  _CRTIMP_ALT wint_t __cdecl ungetwc(wint_t _Ch,FILE *_File);
+  _CRTIMP wchar_t *__cdecl fgetws(wchar_t *_Dst,int _SizeInWords,FILE *_File);
+  _CRTIMP int __cdecl fputws(const wchar_t *_Str,FILE *_File);
   _CRTIMP wchar_t *__cdecl _getws(wchar_t *_String);
   _CRTIMP int __cdecl _putws(const wchar_t *_Str);
-  int __cdecl fwprintf(FILE *_File,const wchar_t *_Format,...);
-  int __cdecl wprintf(const wchar_t *_Format,...);
+  _CRTIMP int __cdecl fwprintf(FILE *_File,const wchar_t *_Format,...);
+  _CRTIMP int __cdecl wprintf(const wchar_t *_Format,...);
   _CRTIMP int __cdecl _scwprintf(const wchar_t *_Format,...);
-  int __cdecl vfwprintf(FILE *_File,const wchar_t *_Format,va_list _ArgList);
-  int __cdecl vwprintf(const wchar_t *_Format,va_list _ArgList);
+  _CRTIMP int __cdecl vfwprintf(FILE *_File,const wchar_t *_Format,va_list _ArgList);
+  _CRTIMP int __cdecl vwprintf(const wchar_t *_Format,va_list _ArgList);
   _CRTIMP int __cdecl swprintf(wchar_t*, const wchar_t*, ...);
   _CRTIMP int __cdecl vswprintf(wchar_t*, const wchar_t*,va_list);
   _CRTIMP int __cdecl _swprintf_c(wchar_t *_DstBuf,size_t _SizeInWords,const wchar_t *_Format,...);
@@ -574,11 +514,11 @@ extern "C" {
   _CRTIMP int __cdecl _snwprintf(wchar_t *_Dest,size_t _Count,const wchar_t *_Format,...);
   _CRTIMP int __cdecl _vsnwprintf(wchar_t *_Dest,size_t _Count,const wchar_t *_Format,va_list _Args);
 #ifndef __NO_ISOCEXT  /* externs in libmingwex.a */
-  int __cdecl snwprintf (wchar_t *s, size_t n, const wchar_t * format, ...);
+  _CRTIMP int __cdecl snwprintf (wchar_t *s, size_t n, const wchar_t * format, ...);
   __CRT_INLINE int __cdecl vsnwprintf (wchar_t *s, size_t n, const wchar_t *format, va_list arg) { return _vsnwprintf(s,n,format,arg); }
-  int __cdecl vwscanf (const wchar_t *, va_list);
-  int __cdecl vfwscanf (FILE *,const wchar_t *,va_list);
-  int __cdecl vswscanf (const wchar_t *,const wchar_t *,va_list);
+  _CRTIMP int __cdecl vwscanf (const wchar_t *, va_list);
+  _CRTIMP int __cdecl vfwscanf (FILE *,const wchar_t *,va_list);
+  _CRTIMP int __cdecl vswscanf (const wchar_t *,const wchar_t *,va_list);
 #endif
   _CRTIMP int __cdecl _fwprintf_p(FILE *_File,const wchar_t *_Format,...);
   _CRTIMP int __cdecl _wprintf_p(const wchar_t *_Format,...);
@@ -609,9 +549,6 @@ extern "C" {
   _CRTIMP int __cdecl _vswprintf(wchar_t *_Dest,const wchar_t *_Format,va_list _Args);
   _CRTIMP int __cdecl __swprintf_l(wchar_t *_Dest,const wchar_t *_Format,_locale_t _Plocinfo,...);
   _CRTIMP int __cdecl __vswprintf_l(wchar_t *_Dest,const wchar_t *_Format,_locale_t _Plocinfo,va_list _Args);
-#ifndef RC_INVOKED
-#include <vadefs.h>
-#endif
 
 #ifdef _CRT_NON_CONFORMING_SWPRINTFS
 #ifndef __cplusplus
@@ -766,11 +703,6 @@ extern "C" {
   _CRTIMP int __cdecl _wcsnicoll_l(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount,_locale_t _Locale);
 
 #ifndef	NO_OLDNAMES
-    /* NOTE: There is no _wcscmpi, but this is for compatibility. */
-  int __cdecl wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2);
-  __CRT_INLINE int __cdecl wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2) { return _wcsicmp (__ws1, __ws2); }
-  #define		_wcscmpi	_wcsicmp
-
   wchar_t *__cdecl wcsdup(const wchar_t *_Str);
 #define wcswcs wcsstr
   int __cdecl wcsicmp(const wchar_t *_Str1,const wchar_t *_Str2);
@@ -864,5 +796,5 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
 
 #pragma pack(pop)
 
-#include <sec_api/wchar_s.h>
+//#include <sec_api/wchar_s.h>
 #endif

@@ -21,6 +21,57 @@
 #ifndef __MSVCRT_CPPEXCEPT_H
 #define __MSVCRT_CPPEXCEPT_H
 
+#include <pseh/pseh2.h>
+
+/* Macros to define assembler functions somewhat portably */
+
+#define __ASM_FUNC(name) ".def " __ASM_NAME(name) "; .scl 2; .type 32; .endef"
+#define __ASM_NAME(name) "_" name
+
+#ifdef __GNUC__
+# define __ASM_GLOBAL_FUNC(name,code) \
+      __asm__( ".align 4\n\t" \
+               ".globl " __ASM_NAME(#name) "\n\t" \
+               __ASM_FUNC(#name) "\n" \
+               __ASM_NAME(#name) ":\n\t" \
+               code );
+#else  /* __GNUC__ */
+# define __ASM_GLOBAL_FUNC(name,code) \
+      void __asm_dummy_##name(void) { \
+          asm( ".align 4\n\t" \
+               ".globl " __ASM_NAME(#name) "\n\t" \
+               __ASM_FUNC(#name) "\n" \
+               __ASM_NAME(#name) ":\n\t" \
+               code ); \
+      }
+#endif  /* __GNUC__ */
+
+#define EH_NONCONTINUABLE   0x01
+#define EH_UNWINDING        0x02
+#define EH_EXIT_UNWIND      0x04
+#define EH_STACK_INVALID    0x08
+#define EH_NESTED_CALL      0x10
+
+static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+{
+    frame->Next = (struct _EXCEPTION_REGISTRATION_RECORD *)__readfsdword(0);
+	__writefsdword(0, (unsigned long)frame);
+    return frame->Next;
+}
+
+static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
+{
+	__writefsdword(0, (unsigned long)frame->Next);
+    return frame->Next;
+}
+
+#define __TRY _SEH2_TRY
+#define __EXCEPT(func) _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation()))
+#define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
+#define __EXCEPT_ALL _SEH2_EXCEPT(_SEH_EXECUTE_HANDLER)
+#define __ENDTRY _SEH2_END
+#define __FINALLY(func) _SEH2_FINALLY { func(!_SEH2_AbnormalTermination()); }
+
 #define CXX_FRAME_MAGIC    0x19930520
 #define CXX_EXCEPTION      0xe06d7363
 

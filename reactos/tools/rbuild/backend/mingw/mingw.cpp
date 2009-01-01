@@ -625,7 +625,7 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 		if ( !f )
 		throw FileNotFoundException ( NormalizeFilename ( xmlbuildfile.topIncludeFilename ) );
 
-		if ( fstat ( fileno ( f ), &statbuf ) != 0 )
+		if ( fstat ( _fileno ( f ), &statbuf ) != 0 )
 		{
 			fclose ( f );
 			throw AccessDeniedException ( NormalizeFilename ( xmlbuildfile.topIncludeFilename ) );
@@ -1068,7 +1068,7 @@ MingwBackend::DetectPipeSupport ()
 	{
 		usePipe = (exitcode == 0);
 		fclose ( f );
-		unlink ( pipe_detectionObjectFilename.c_str () );
+		_unlink ( pipe_detectionObjectFilename.c_str () );
 	}
 	else
 		usePipe = false;
@@ -1101,7 +1101,7 @@ MingwBackend::DetectPCHSupport ()
 		{
 			use_pch = true;
 			fclose ( f );
-			unlink ( path.c_str () );
+			_unlink ( path.c_str () );
 		}
 		else
 			use_pch = false;

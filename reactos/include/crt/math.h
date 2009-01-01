@@ -3,14 +3,10 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#ifndef _MATH_H_
-#define _MATH_H_
+#ifndef _INC_MATH
+#define _INC_MATH
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
-#include <_mingw.h>
+#include <crtdefs.h>
 
 struct exception;
 
@@ -48,14 +44,7 @@ extern "C" {
 #define EDOM 33
 #define ERANGE 34
 
-#ifndef _HUGE
-#ifdef _MSVCRT_
-  extern double *_HUGE;
-#else
-  extern double *_imp___HUGE;
-#define _HUGE	(*_imp___HUGE)
-#endif
-#endif
+  _CRTIMP extern double _HUGE;
 
 #define HUGE_VAL _HUGE
 
@@ -76,6 +65,7 @@ extern "C" {
   double __cdecl cos(double _X);
   double __cdecl cosh(double _X);
   double __cdecl exp(double _X);
+  double expm1(double _X);
   double __cdecl fabs(double _X);
   double __cdecl fmod(double _X,double _Y);
   double __cdecl log(double _X);
@@ -93,19 +83,19 @@ extern "C" {
 #endif
 
   _CRTIMP double __cdecl _cabs(struct _complex _ComplexA);
-  double __cdecl ceil(double _X);
-  double __cdecl floor(double _X);
-  double __cdecl frexp(double _X,int *_Y);
-  double __cdecl _hypot(double _X,double _Y);
+  _CRTIMP double __cdecl ceil(double _X);
+  _CRTIMP double __cdecl floor(double _X);
+  _CRTIMP double __cdecl frexp(double _X,int *_Y);
+  _CRTIMP double __cdecl _hypot(double _X,double _Y);
   _CRTIMP double __cdecl _j0(double _X);
   _CRTIMP double __cdecl _j1(double _X);
   _CRTIMP double __cdecl _jn(int _X,double _Y);
-  double __cdecl ldexp(double _X,int _Y);
+  _CRTIMP double __cdecl ldexp(double _X,int _Y);
 #ifndef _CRT_MATHERR_DEFINED
 #define _CRT_MATHERR_DEFINED
   int __cdecl _matherr(struct _exception *_Except);
 #endif
-  double __cdecl modf(double _X,double *_Y);
+  _CRTIMP double __cdecl modf(double _X,double *_Y);
   _CRTIMP double __cdecl _y0(double _X);
   _CRTIMP double __cdecl _y1(double _X);
   _CRTIMP double __cdecl _yn(int _X,double _Y);
@@ -130,6 +120,7 @@ extern "C" {
    float __cdecl sinhf(float _X);
    float __cdecl tanhf(float _X);
    float __cdecl expf(float _X);
+   float expm1f(float _X);
    float __cdecl logf(float _X);
    float __cdecl log10f(float _X);
    float __cdecl modff(float _X,float *_Y);
@@ -421,6 +412,7 @@ extern "C" {
 
   extern long double __cdecl powl (long double, long double);
   extern long double __cdecl expl(long double);
+  extern long double expm1l(long double);
   extern long double __cdecl coshl(long double);
   extern long double __cdecl fabsl (long double);
   extern long double __cdecl acosl(long double);
@@ -764,5 +756,4 @@ __fp_unordered_compare (long double x, long double y){
 
 #endif
 
-#endif /* End _MATH_H_ */
-
+#endif /* !_INC_MATH */

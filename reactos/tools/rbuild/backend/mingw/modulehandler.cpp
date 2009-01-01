@@ -69,7 +69,7 @@ string
 GetTargetMacro ( const Module& module, bool with_dollar )
 {
 	string s ( module.name );
-	strupr ( &s[0] );
+	_strupr ( &s[0] );
 	s += "_TARGET";
 	if ( with_dollar )
 		return ssprintf ( "$(%s)", s.c_str() );
@@ -2406,13 +2406,13 @@ MingwAddCRTLibrary( Module &module )
 	const char * crtAttr = module.CRT.c_str ();
 	const char * crtLib = NULL;
 
-	if ( stricmp ( crtAttr, "libc" ) == 0 )
+	if ( _stricmp ( crtAttr, "libc" ) == 0 )
 		crtLib = "crt";
-	else if ( stricmp ( crtAttr, "msvcrt" ) == 0 )
+	else if ( _stricmp ( crtAttr, "msvcrt" ) == 0 )
 		crtLib = "msvcrt";
-	else if ( stricmp ( crtAttr, "libcntpr" ) == 0 )
+	else if ( _stricmp ( crtAttr, "libcntpr" ) == 0 )
 		crtLib = "libcntpr";
-	else if ( stricmp ( crtAttr, "ntdll" ) == 0 )
+	else if ( _stricmp ( crtAttr, "ntdll" ) == 0 )
 		crtLib = "ntdll";
 
 	if ( crtLib )

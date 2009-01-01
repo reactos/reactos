@@ -670,13 +670,13 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
         {
             ColorBits = 1;
         }
-        else if (g_psi->SystemMetrics[SM_SAMEDISPLAYFORMAT] || (cFlag & LR_VGACOLOR) )
+        else if (cFlag & LR_VGACOLOR)
         {
             ColorBits = 4;
         }
         else
         {
-            ColorBits = 0;
+            ColorBits = g_psi->BitsPixel;
         }
 
         if(bIcon)

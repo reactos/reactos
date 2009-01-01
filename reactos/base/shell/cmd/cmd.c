@@ -879,7 +879,7 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 		if(bc)
 			bNewBatch = FALSE;
 
-		Success = DoCommand(Cmd->CommandLine);
+		Success = DoCommand(Cmd->Command.CommandLine);
 
 		if(bNewBatch && bc)
 			AddBatchRedirection(&Cmd->Redirections);
@@ -902,6 +902,9 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 		break;
 	case C_PIPE:
 		ExecutePipeline(Cmd);
+		break;
+	case C_IF:
+		Success = ExecuteIf(Cmd);
 		break;
 	}
 

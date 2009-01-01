@@ -10,7 +10,9 @@
 			<xi:include href="halx86/hal_generic_up.rbuild" />
 			<xi:include href="halx86/hal_generic_pc.rbuild" />
 			<xi:include href="halx86/halup.rbuild" />
-			<xi:include href="halx86/halmp.rbuild" />
+			<if property="BUILD_MP" value="1">
+				<xi:include href="halx86/halmp.rbuild" />
+			</if>
 			<xi:include href="halx86/halxbox.rbuild" />
 		</directory>
 	</if>

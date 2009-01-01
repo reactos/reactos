@@ -697,7 +697,7 @@ LoadSoundFiles(HWND hwndDlg)
         if (lResult != CB_ERR)
         {
             wcscpy(&szPath[length-1], FileData.cFileName);
-            SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)wcsdup(szPath));
+            SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)_wcsdup(szPath));
         }
     }while(FindNextFileW(hFile, &FileData) != 0);
 

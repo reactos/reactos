@@ -140,9 +140,9 @@ ReadFreeldrSection(HINF hInf, WCHAR *szSectionName)
             break;
         }
 
-        if (!wcsnicmp(szName, L"BootType", 8))
+        if (!_wcsnicmp(szName, L"BootType", 8))
         {
-            if (!wcsnicmp(szValue, L"ReactOS", 7))
+            if (!_wcsnicmp(szValue, L"ReactOS", 7))
             {
                 //FIXME store as enum
                 pRecord->BootType = 1;
@@ -152,11 +152,11 @@ ReadFreeldrSection(HINF hInf, WCHAR *szSectionName)
                 pRecord->BootType = 0;
             }
         }
-        else if (!wcsnicmp(szName, L"SystemPath", 10))
+        else if (!_wcsnicmp(szName, L"SystemPath", 10))
         {
             wcscpy(pRecord->szBootPath, szValue);
         }
-        else if (!wcsnicmp(szName, L"Options", 7))
+        else if (!_wcsnicmp(szName, L"Options", 7))
         {
             //FIXME store flags as values
             wcscpy(pRecord->szOptions, szValue);
@@ -329,12 +329,12 @@ LoadBootSettings(HINF hInf, HWND hwndDlg)
             return FALSE;
         }
 
-        if (!wcsnicmp(szName, L"timeout", 7))
+        if (!_wcsnicmp(szName, L"timeout", 7))
         {
             TimeOut = _wtoi(szValue);
         }
 
-        if (!wcsnicmp(szName, L"default", 7))
+        if (!_wcsnicmp(szName, L"default", 7))
         {
             wcscpy(szDefaultOS, szValue);
         }

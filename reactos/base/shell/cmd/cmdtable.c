@@ -120,7 +120,7 @@ COMMAND cmds[] =
 	{_T("history"), 0, CommandHistory},
 #endif
 
-	{_T("if"), 0, cmd_if},
+//	{_T("if"), 0, cmd_if},
 
 #ifdef INCLUDE_CMD_LABEL
 	{_T("label"), 0, cmd_label},

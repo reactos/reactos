@@ -151,12 +151,12 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
     if (lpDatabaseName == NULL)
         lpDatabaseName = SERVICES_ACTIVE_DATABASEW;
 
-    if (wcsicmp(lpDatabaseName,SERVICES_FAILED_DATABASEW)==0)
+    if (_wcsicmp(lpDatabaseName,SERVICES_FAILED_DATABASEW)==0)
     {
         DPRINT1("Database %S, does not exist\n",lpDatabaseName);
         return ERROR_DATABASE_DOES_NOT_EXIST;
     }
-    else if (wcsicmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
+    else if (_wcsicmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
     {
         DPRINT1("Invalid Database name %S.\n",lpDatabaseName);
         return ERROR_INVALID_NAME;
@@ -332,7 +332,7 @@ Int_EnumDependentServicesW(HKEY hServicesKey,
             /* Can be more than one Dependencies in the DependOnService string */
             while (wcslen(lpszValueBuf + dwDependServiceStrPtr) > 0)
             {
-                if (wcsicmp(lpszValueBuf + dwDependServiceStrPtr, lpService->lpServiceName) == 0)
+                if (_wcsicmp(lpszValueBuf + dwDependServiceStrPtr, lpService->lpServiceName) == 0)
                 {
                     /* Get the current enumed service pointer */
                     lpCurrentService = ScmGetServiceEntryByName(lpszNameBuf);
@@ -1344,7 +1344,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
     /* First check, if it's already good */
     if (ServiceNameLen > 12 &&
-        !wcsnicmp(L"\\SystemRoot\\", CanonName, 12))
+        !_wcsnicmp(L"\\SystemRoot\\", CanonName, 12))
     {
         *RelativeName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
         if (*RelativeName == NULL)
@@ -1362,7 +1362,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
     /* If it has %SystemRoot% prefix, substitute it to \System*/
     if (ServiceNameLen > 13 &&
-        !wcsnicmp(L"%SystemRoot%\\", CanonName, 13))
+        !_wcsnicmp(L"%SystemRoot%\\", CanonName, 13))
     {
         /* There is no +sizeof(wchar_t) because the name is less by 1 wchar */
         *RelativeName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR));
@@ -1432,7 +1432,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     Expanded[ExpandedLen] = 0;
 
     if (ServiceNameLen > ExpandedLen &&
-        !wcsnicmp(Expanded, CanonName, ExpandedLen))
+        !_wcsnicmp(Expanded, CanonName, ExpandedLen))
     {
         /* Only \SystemRoot\ is missing */
         *RelativeName = LocalAlloc(LMEM_ZEROINIT,
@@ -1504,7 +1504,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
                 ExpandedLen = LinkTarget.Length / sizeof(WCHAR);
                 if ((ServiceNameLen > ExpandedLen) &&
-                    !wcsnicmp(LinkTarget.Buffer, CanonName, ExpandedLen))
+                    !_wcsnicmp(LinkTarget.Buffer, CanonName, ExpandedLen))
                 {
                     *RelativeName = LocalAlloc(LMEM_ZEROINIT,
                        (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
@@ -1584,7 +1584,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
     /* 12 is wcslen(L"\\SystemRoot\\") */
     if (ServiceNameLen > 12 &&
-        !wcsnicmp(L"\\SystemRoot\\", lpServiceName, 12))
+        !_wcsnicmp(L"\\SystemRoot\\", lpServiceName, 12))
     {
         /* SystemRoot prefix is already included */
 
@@ -1609,7 +1609,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
     /* Check if it has %SystemRoot% (len=13) */
     if (ServiceNameLen > 13 &&
-        !wcsnicmp(L"%%SystemRoot%%\\", lpServiceName, 13))
+        !_wcsnicmp(L"%%SystemRoot%%\\", lpServiceName, 13))
     {
         /* Substitute %SystemRoot% with \\SystemRoot\\ */
         *lpCanonName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
@@ -1828,7 +1828,7 @@ DWORD RCreateServiceW(
     /* Fill the display name */
     if (lpDisplayName != NULL &&
         *lpDisplayName != 0 &&
-        wcsicmp(lpService->lpDisplayName, lpDisplayName) != 0)
+        _wcsicmp(lpService->lpDisplayName, lpDisplayName) != 0)
     {
         lpService->lpDisplayName = (WCHAR*) HeapAlloc(GetProcessHeap(), 0,
                                              (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));

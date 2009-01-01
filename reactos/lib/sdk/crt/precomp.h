@@ -39,7 +39,9 @@
 /* kernelmode libcnt should not include Wine-debugging crap */
 #ifndef _LIBCNT_
 #include "wine/debug.h"
+#ifndef __WINE_DEBUG_CHANNEL__
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
+#endif
 #else
 #include <debug.h>
 #define TRACE DPRINT

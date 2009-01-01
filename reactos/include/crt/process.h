@@ -6,7 +6,7 @@
 #ifndef _INC_PROCESS
 #define _INC_PROCESS
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 /* Includes a definition of _pid_t and pid_t */
 #include <sys/types.h>

@@ -6,7 +6,7 @@
 #ifndef _TIME_H_
 #define _TIME_H_
 
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifndef _WIN32
 #error Only Win32 target is supported!
@@ -16,15 +16,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef _CRTIMP
-#define _CRTIMP __declspec(dllimport)
-#endif
-
-#ifndef _WCHAR_T_DEFINED
-#define _WCHAR_T_DEFINED
-  typedef unsigned short wchar_t;
 #endif
 
 #ifndef _TIME32_T_DEFINED
@@ -71,20 +62,6 @@ extern "C" {
 #endif
 #endif
 
-#ifndef _SSIZE_T_DEFINED
-#define _SSIZE_T_DEFINED
-#undef ssize_t
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef int ssize_t __attribute__ ((mode (DI)));
-#else
-  typedef __int64 ssize_t;
-#endif
-#else
-  typedef int ssize_t;
-#endif
-#endif
-
 #ifndef NULL
 #ifdef __cplusplus
 #define NULL 0
@@ -92,17 +69,6 @@ extern "C" {
 #define NULL ((void *)0)
 #endif
 #endif
-
-/*
-#ifdef _USE_32BIT_TIME_T
-#define _localtime32 localtime
-#define _difftime32	difftime
-#define _ctime32	ctime
-#define _gmtime32	gmtime
-#define _mktime32	mktime
-#define _time32	time
-#endif
-*/
 
 #ifndef _TM_DEFINED
 #define _TM_DEFINED
@@ -121,79 +87,97 @@ extern "C" {
 
 #define CLOCKS_PER_SEC 1000
 
-  __MINGW_IMPORT int _daylight;
-  __MINGW_IMPORT long _dstbias;
-  __MINGW_IMPORT long _timezone;
-  __MINGW_IMPORT char * _tzname[2];
+  _CRTDATA(extern int _daylight);
+  _CRTDATA(extern long _dstbias);
+  _CRTDATA(extern long _timezone);
+  _CRTDATA(extern char * _tzname[2]);
 
   _CRTIMP errno_t __cdecl _get_daylight(int *_Daylight);
   _CRTIMP errno_t __cdecl _get_dstbias(long *_Daylight_savings_bias);
   _CRTIMP errno_t __cdecl _get_timezone(long *_Timezone);
   _CRTIMP errno_t __cdecl _get_tzname(size_t *_ReturnValue,char *_Buffer,size_t _SizeInBytes,int _Index);
-  char *__cdecl asctime(const struct tm *_Tm);
-  _CRTIMP char *__cdecl _ctime32(const __time32_t *_Time);
-  clock_t __cdecl clock(void);
+
+  _CRTIMP _CRT_INSECURE_DEPRECATE(asctime_s) char *__cdecl asctime(const struct tm *_Tm);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_ctime32_s) char *__cdecl _ctime32(const __time32_t *_Time);
+  _CRTIMP clock_t __cdecl clock(void);
   _CRTIMP double __cdecl _difftime32(__time32_t _Time1,__time32_t _Time2);
-  _CRTIMP struct tm *__cdecl _gmtime32(const __time32_t *_Time);
-  _CRTIMP struct tm *__cdecl _localtime32(const __time32_t *_Time);
-  size_t __cdecl strftime(char *_Buf,size_t _SizeInBytes,const char *_Format,const struct tm *_Tm);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_gmtime32_s) struct tm *__cdecl _gmtime32(const __time32_t *_Time);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_localtime32_s) struct tm *__cdecl _localtime32(const __time32_t *_Time);
+  _CRTIMP size_t __cdecl strftime(char *_Buf,size_t _SizeInBytes,const char *_Format,const struct tm *_Tm);
   _CRTIMP size_t __cdecl _strftime_l(char *_Buf,size_t _Max_size,const char *_Format,const struct tm *_Tm,_locale_t _Locale);
   _CRTIMP char *__cdecl _strdate(char *_Buffer);
   _CRTIMP char *__cdecl _strtime(char *_Buffer);
   _CRTIMP __time32_t __cdecl _time32(__time32_t *_Time);
   _CRTIMP __time32_t __cdecl _mktime32(struct tm *_Tm);
   _CRTIMP __time32_t __cdecl _mkgmtime32(struct tm *_Tm);
-#if defined (_POSIX_) || defined(__GNUC__)
-  void __cdecl tzset(void);
-#endif
   _CRTIMP void __cdecl _tzset(void);
+  _CRT_OBSOLETE(GetLocalTime) unsigned __cdecl _getsystime(struct tm *_Tm);
+  _CRT_OBSOLETE(GetLocalTime) unsigned __cdecl _setsystime(struct tm *_Tm,unsigned _MilliSec);
+
+  _CRTIMP errno_t __cdecl _ctime32_s(char *_Buf,size_t _SizeInBytes,const __time32_t *_Time);
+  _CRTIMP errno_t __cdecl _gmtime32_s(struct tm *_Tm,const __time32_t *_Time);
+  _CRTIMP errno_t __cdecl _localtime32_s(struct tm *_Tm,const __time32_t *_Time);
+  _CRTIMP errno_t __cdecl _strdate_s(char *_Buf,size_t _SizeInBytes);
+  _CRTIMP errno_t __cdecl _strtime_s(char *_Buf ,size_t _SizeInBytes);
 
 #if _INTEGRAL_MAX_BITS >= 64
-  double __cdecl _difftime64(__time64_t _Time1,__time64_t _Time2);
-  _CRTIMP char *__cdecl _ctime64(const __time64_t *_Time);
-  _CRTIMP struct tm *__cdecl _gmtime64(const __time64_t *_Time);
-  _CRTIMP struct tm *__cdecl _localtime64(const __time64_t *_Time);
+  _CRTIMP double __cdecl _difftime64(__time64_t _Time1,__time64_t _Time2);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_ctime64_s) char *__cdecl _ctime64(const __time64_t *_Time);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_gmtime64_s) struct tm *__cdecl _gmtime64(const __time64_t *_Time);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_localtime64_s) struct tm *__cdecl _localtime64(const __time64_t *_Time);
   _CRTIMP __time64_t __cdecl _mktime64(struct tm *_Tm);
   _CRTIMP __time64_t __cdecl _mkgmtime64(struct tm *_Tm);
   _CRTIMP __time64_t __cdecl _time64(__time64_t *_Time);
+
+  _CRTIMP errno_t __cdecl _ctime64_s(char *_Buf,size_t _SizeInBytes,const __time64_t *_Time);
+  _CRTIMP errno_t __cdecl _gmtime64_s(struct tm *_Tm,const __time64_t *_Time);
+  _CRTIMP errno_t __cdecl _localtime64_s(struct tm *_Tm,const __time64_t *_Time);
 #endif
-  unsigned __cdecl _getsystime(struct tm *_Tm);
-  unsigned __cdecl _setsystime(struct tm *_Tm,unsigned _MilliSec);
 
 #ifndef _WTIME_DEFINED
-  _CRTIMP wchar_t *__cdecl _wasctime(const struct tm *_Tm);
-  _CRTIMP wchar_t *__cdecl _wctime32(const __time32_t *_Time);
-  size_t __cdecl wcsftime(wchar_t *_Buf,size_t _SizeInWords,const wchar_t *_Format,const struct tm *_Tm);
+#define _WTIME_DEFINED
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_wasctime_s) wchar_t *__cdecl _wasctime(const struct tm *_Tm);
+  _CRTIMP wchar_t *__cdecl _wctime(const time_t *_Time);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_wctime32_s) wchar_t *__cdecl _wctime32(const __time32_t *_Time);
+  _CRTIMP size_t __cdecl wcsftime(wchar_t *_Buf,size_t _SizeInWords,const wchar_t *_Format,const struct tm *_Tm);
   _CRTIMP size_t __cdecl _wcsftime_l(wchar_t *_Buf,size_t _SizeInWords,const wchar_t *_Format,const struct tm *_Tm,_locale_t _Locale);
   _CRTIMP wchar_t *__cdecl _wstrdate(wchar_t *_Buffer);
   _CRTIMP wchar_t *__cdecl _wstrtime(wchar_t *_Buffer);
+
+  _CRTIMP errno_t __cdecl _wasctime_s(wchar_t *_Buf,size_t _SizeInWords,const struct tm *_Tm);
+  _CRTIMP errno_t __cdecl _wctime32_s(wchar_t *_Buf,size_t _SizeInWords,const __time32_t *_Time);
+  _CRTIMP errno_t __cdecl _wstrdate_s(wchar_t *_Buf,size_t _SizeInWords);
+  _CRTIMP errno_t __cdecl _wstrtime_s(wchar_t *_Buf,size_t _SizeInWords);
 #if _INTEGRAL_MAX_BITS >= 64
-  _CRTIMP wchar_t *__cdecl _wctime64(const __time64_t *_Time);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_wctime64_s) wchar_t *__cdecl _wctime64(const __time64_t *_Time);
+  _CRTIMP errno_t __cdecl _wctime64_s(wchar_t *_Buf,size_t _SizeInWords,const __time64_t *_Time);
 #endif
 
 #if !defined (RC_INVOKED) && !defined (_INC_WTIME_INL)
 #define _INC_WTIME_INL
 #ifdef _USE_32BIT_TIME_T
-__CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime32(_Time); }
+/* Do it like this to be compatible to msvcrt.dll on 32 bit windows XP and before */
+__CRT_INLINE wchar_t *__cdecl _wctime32(const time_t *_Time) { return _wctime(_Time); }
+__CRT_INLINE errno_t _wctime32_s(wchar_t *_Buffer, size_t _SizeInWords,const __time32_t *_Time) { return _wctime32_s(_Buffer, _SizeInWords, _Time); }
 #else
 __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_Time); }
+__CRT_INLINE errno_t _wctime_s(wchar_t *_Buffer, size_t _SizeInWords,const time_t *_Time) { return _wctime64_s(_Buffer, _SizeInWords, _Time); }
 #endif
 #endif
 
-#define _WTIME_DEFINED
-#endif
+#endif /* !_WTIME_DEFINED */
+
+ _CRTIMP double __cdecl difftime(time_t _Time1,time_t _Time2);
+ _CRTIMP char *__cdecl ctime(const time_t *_Time);
+ _CRTIMP struct tm *__cdecl gmtime(const time_t *_Time);
+ _CRTIMP struct tm *__cdecl localtime(const time_t *_Time);
+ _CRTIMP struct tm *__cdecl localtime_r(const time_t *_Time,struct tm *);
+
+ _CRTIMP time_t __cdecl mktime(struct tm *_Tm);
+ _CRTIMP time_t __cdecl _mkgmtime(struct tm *_Tm);
+ _CRTIMP time_t __cdecl time(time_t *_Time);
 
 #ifndef RC_INVOKED
-double __cdecl difftime(time_t _Time1,time_t _Time2);
-char *__cdecl ctime(const time_t *_Time);
-struct tm *__cdecl gmtime(const time_t *_Time);
-struct tm *__cdecl localtime(const time_t *_Time);
-struct tm *__cdecl localtime_r(const time_t *_Time,struct tm *);
-
-_CRTIMP time_t __cdecl mktime(struct tm *_Tm);
-_CRTIMP time_t __cdecl _mkgmtime(struct tm *_Tm);
-_CRTIMP time_t __cdecl time(time_t *_Time);
-
 #ifdef _USE_32BIT_TIME_T
 #if 0
 __CRT_INLINE double __cdecl difftime(time_t _Time1,time_t _Time2) { return _difftime32(_Time1,_Time2); }
@@ -224,17 +208,6 @@ __CRT_INLINE time_t __cdecl time(time_t *_Time) { return _time64(_Time); }
   void __cdecl tzset(void);
 #endif
 
-#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
-#define _TIMEVAL_DEFINED
-struct timeval {
-  long tv_sec;
-  long tv_usec;
-};
-#define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
-#define timercmp(tvp,uvp,cmp) ((tvp)->tv_sec cmp (uvp)->tv_sec || (tvp)->tv_sec==(uvp)->tv_sec && (tvp)->tv_usec cmp (uvp)->tv_usec)
-#define timerclear(tvp) (tvp)->tv_sec = (tvp)->tv_usec = 0
-#endif /* _TIMEVAL_DEFINED */
-
 #ifdef __cplusplus
 }
 #endif
@@ -242,9 +215,6 @@ struct timeval {
 #pragma pack(pop)
 
 #include <sec_api/time_s.h>
-
-/* Adding timespec definition.  */
-#include <sys/timeb.h>
 
 #endif /* End _TIME_H_ */
 

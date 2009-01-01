@@ -3079,15 +3079,15 @@ NtGdiGetFontFamilyInfo(HDC Dc,
 
 BOOL
 APIENTRY
-NtGdiExtTextOutW(
+GreExtTextOutW(
     IN HDC hDC,
     IN INT XStart,
     IN INT YStart,
     IN UINT fuOptions,
     IN OPTIONAL LPRECT lprc,
-    IN LPWSTR UnsafeString,
+    IN LPWSTR String,
     IN INT Count,
-    IN OPTIONAL LPINT UnsafeDx,
+    IN OPTIONAL LPINT Dx,
     IN DWORD dwCodePage)
 {
     /*
@@ -3108,7 +3108,7 @@ NtGdiExtTextOutW(
     LONGLONG TextLeft, RealXStart;
     ULONG TextTop, previous, BackgroundLeft;
     FT_Bool use_kerning;
-    RECTL DestRect, MaskRect, SpecifiedDestRect;
+    RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
     HBRUSH hBrushFg = NULL;
     PGDIBRUSHOBJ BrushFg = NULL;
@@ -3129,12 +3129,10 @@ NtGdiExtTextOutW(
     ULONG Mode;
     FT_Render_Mode RenderMode;
     BOOLEAN Render;
-    NTSTATUS Status;
-    INT *Dx = NULL;
     POINT Start;
     BOOL DoBreak = FALSE;
-    LPCWSTR String, SafeString = NULL;
     HPALETTE hDestPalette;
+    USHORT DxShift;
 
     // TODO: Write test-cases to exactly match real Windows in different
     // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -3155,49 +3153,13 @@ NtGdiExtTextOutW(
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
     /* Check if String is valid */
-    if ((Count > 0xFFFF) || (Count > 0 && UnsafeString == NULL))
+    if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         goto fail;
     }
-    if (Count > 0)
-    {
-        SafeString = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
-        if (!SafeString)
-        {
-            goto fail;
-        }
-        Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
-        if (! NT_SUCCESS(Status))
-        {
-            goto fail;
-        }
-    }
-    String = SafeString;
 
-    if (NULL != UnsafeDx && Count > 0)
-    {
-        Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
-        if (NULL == Dx)
-        {
-            goto fail;
-        }
-        Status = MmCopyFromCaller(Dx, UnsafeDx, Count * sizeof(INT));
-        if (!NT_SUCCESS(Status))
-        {
-            goto fail;
-        }
-    }
-
-    if (lprc)
-    {
-        Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
-        if (!NT_SUCCESS(Status))
-        {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            goto fail;
-        }
-    }
+    DxShift = fuOptions & ETO_PDY ? 1 : 0;
 
     if (PATH_IsPathOpen(dc->DcLevel))
     {
@@ -3205,8 +3167,8 @@ NtGdiExtTextOutW(
                               XStart,
                               YStart,
                               fuOptions,
-                              (const RECT *)&SpecifiedDestRect,
-                              SafeString,
+                              (const RECT *)lprc,
+                              String,
                               Count,
                               (const INT *)Dx)) goto fail;
         goto good;
@@ -3214,7 +3176,7 @@ NtGdiExtTextOutW(
 
     if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
     {
-        IntLPtoDP(dc, (POINT *) &SpecifiedDestRect, 2);
+        IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
     BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
@@ -3288,10 +3250,10 @@ NtGdiExtTextOutW(
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
-        DestRect.left   = SpecifiedDestRect.left   + dc->ptlDCOrig.x;
-        DestRect.top    = SpecifiedDestRect.top    + dc->ptlDCOrig.y;
-        DestRect.right  = SpecifiedDestRect.right  + dc->ptlDCOrig.x;
-        DestRect.bottom = SpecifiedDestRect.bottom + dc->ptlDCOrig.y;
+        DestRect.left   = lprc->left   + dc->ptlDCOrig.x;
+        DestRect.top    = lprc->top    + dc->ptlDCOrig.y;
+        DestRect.right  = lprc->right  + dc->ptlDCOrig.x;
+        DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
         IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
         IntEngBitBlt(
             &BitmapObj->SurfObj,
@@ -3405,7 +3367,7 @@ NtGdiExtTextOutW(
         if (NULL != Dx)
         {
             Start = Count < 2 ? 0 : Count - 2;
-            TextWidth = Count < 2 ? 0 : (Dx[Count - 2] << 6);
+            TextWidth = Count < 2 ? 0 : (Dx[(Count-2)<<DxShift] << 6);
         }
         else
         {
@@ -3602,12 +3564,12 @@ NtGdiExtTextOutW(
 
         if (lprc &&
                 (fuOptions & ETO_CLIPPED) &&
-                DestRect.right >= SpecifiedDestRect.right + dc->ptlDCOrig.x)
+                DestRect.right >= lprc->right + dc->ptlDCOrig.x)
         {
             // We do the check '>=' instead of '>' to possibly save an iteration
             // through this loop, since it's breaking after the drawing is done,
             // and x is always incremented.
-            DestRect.right = SpecifiedDestRect.right + dc->ptlDCOrig.x;
+            DestRect.right = lprc->right + dc->ptlDCOrig.x;
             DoBreak = TRUE;
         }
 
@@ -3638,7 +3600,7 @@ NtGdiExtTextOutW(
         }
         else
         {
-            TextLeft += Dx[i] << 6;
+            TextLeft += Dx[i<<DxShift] << 6;
 //         DbgPrint("new TextLeft2: %d\n", TextLeft);
         }
         previous = glyph_index;
@@ -3661,14 +3623,6 @@ NtGdiExtTextOutW(
     BRUSHOBJ_UnlockBrush(BrushFg);
     NtGdiDeleteObject(hBrushFg);
 good:
-    if (NULL != SafeString)
-    {
-        ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
-    }
-    if (NULL != Dx)
-    {
-        ExFreePoolWithTag(Dx, TAG_GDITEXT);
-    }
     DC_UnlockDc( dc );
 
     return TRUE;
@@ -3692,18 +3646,131 @@ fail:
         BRUSHOBJ_UnlockBrush(BrushFg);
         NtGdiDeleteObject(hBrushFg);
     }
-    if (NULL != SafeString)
-    {
-        ExFreePoolWithTag((void*)SafeString, TAG_GDITEXT);
-    }
-    if (NULL != Dx)
-    {
-        ExFreePoolWithTag(Dx, TAG_GDITEXT);
-    }
     DC_UnlockDc(dc);
 
     return FALSE;
 }
+
+#define STACK_TEXT_BUFFER_SIZE 50
+BOOL
+APIENTRY
+NtGdiExtTextOutW(
+    IN HDC hDC,
+    IN INT XStart,
+    IN INT YStart,
+    IN UINT fuOptions,
+    IN OPTIONAL LPRECT UnsafeRect,
+    IN LPWSTR UnsafeString,
+    IN INT Count,
+    IN OPTIONAL LPINT UnsafeDx,
+    IN DWORD dwCodePage)
+{
+    BOOL Result = FALSE;
+    NTSTATUS Status = STATUS_SUCCESS;
+    RECT SafeRect;
+    BYTE LocalBuffer[STACK_TEXT_BUFFER_SIZE];
+    PVOID Buffer = LocalBuffer;
+    LPWSTR SafeString = NULL;
+    LPINT SafeDx = NULL;
+    ULONG BufSize, StringSize, DxSize = 0;
+
+    /* Check if String is valid */
+    if ((Count > 0xFFFF) || (Count > 0 && UnsafeString == NULL))
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (Count > 0)
+    {
+        /* Calculate buffer size for string and Dx values */
+        BufSize = StringSize = Count * sizeof(WCHAR);
+        if (UnsafeDx)
+        {
+            /* If ETO_PDY is specified, we have pairs of INTs */
+            DxSize = (Count * sizeof(INT)) * (fuOptions & ETO_PDY ? 2 : 1);
+            BufSize += DxSize;
+        }
+
+        /* Check if our local buffer is large enough */
+        if (BufSize > STACK_TEXT_BUFFER_SIZE)
+        {
+            /* It's not, allocate a temp buffer */
+            Buffer = ExAllocatePoolWithTag(PagedPool, BufSize, TAG_GDITEXT);
+            if (!Buffer)
+            {
+                return FALSE;
+            }
+        }
+
+        /* Probe and copy user mode data to the buffer */
+        _SEH2_TRY
+        {
+            /* Probe and copy the string */
+            ProbeForRead(UnsafeString, StringSize, 1);
+            SafeString = Buffer;
+            memcpy((PVOID)SafeString, UnsafeString, StringSize);
+
+            /* If we have Dx values... */
+            if (UnsafeDx)
+            {
+                /* ... probe and copy them */
+                ProbeForRead(UnsafeDx, DxSize, 1);
+                SafeDx = (LPINT)(((ULONG_PTR)Buffer) + StringSize);
+                memcpy(SafeDx, UnsafeDx, DxSize);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END
+        if (!NT_SUCCESS(Status))
+        {
+            goto cleanup;
+        }
+    }
+
+    /* If we have a rect, copy it */
+    if (UnsafeRect)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(UnsafeRect, sizeof(RECT), 1);
+            SafeRect = *UnsafeRect;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END
+        if (!NT_SUCCESS(Status))
+        {
+            goto cleanup;
+        }
+    }
+
+    /* Finally call the internal routine */
+    Result = GreExtTextOutW(hDC,
+                            XStart,
+                            YStart,
+                            fuOptions,
+                            &SafeRect,
+                            SafeString,
+                            Count,
+                            SafeDx,
+                            dwCodePage);
+
+cleanup:
+    /* If we allocated a buffer, free it */
+    if (Buffer != LocalBuffer)
+    {
+        ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+    }
+
+    return Result;;
+}
+
 
 /*
 * @implemented

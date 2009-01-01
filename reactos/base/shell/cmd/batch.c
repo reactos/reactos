@@ -269,7 +269,6 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, BOOL forcenew)
 	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN);
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
-	bc->bCmdBlock = -1;
 	
 	bc->ffind = NULL;
 	bc->forvar = _T('\0');
@@ -444,39 +443,6 @@ LPTSTR ReadBatchLine ()
 			_tcscat(textline, _T("\n"));
 
 		first = textline;
-
-		/* cmd block over multiple lines (..) */
-		if (bc->bCmdBlock >= 0)
-		{
-			if (*first == _T(')'))
-			{
-				first++;
-				/* Strip leading spaces and trailing space/control chars */
-				while(_istspace (*first))
-					first++;
-				if ((_tcsncicmp (first, _T("else"), 4) == 0) && (_tcschr(first, _T('('))))
-				{
-					bc->bExecuteBlock[bc->bCmdBlock] = !bc->bExecuteBlock[bc->bCmdBlock];
-				}
-				else
-				{
-					bc->bCmdBlock--;
-				}
-				continue;
-			}
-			if (bc->bCmdBlock < MAX_PATH)
-				if (!bc->bExecuteBlock[bc->bCmdBlock])
-				{
-					/* increase the bCmdBlock count when there is another conditon which opens a new bracket */
-					if ((_tcsncicmp (first, _T("if"), 2) == 0)  && _tcschr(first, _T('(')))
-					{
-						bc->bCmdBlock++;
-						if ((bc->bCmdBlock > 0) && (bc->bCmdBlock < MAX_PATH))
-							bc->bExecuteBlock[bc->bCmdBlock] = bc->bExecuteBlock[bc->bCmdBlock - 1];
-					}
-					continue;
-				}
-		}
 
 		break;
 	}

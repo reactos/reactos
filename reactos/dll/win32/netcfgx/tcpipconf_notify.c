@@ -2812,7 +2812,7 @@ Initialize(TcpipConfNotifyImpl * This)
         {
             szBuffer[(sizeof(szBuffer)/sizeof(WCHAR))-1] = L'\0';
         }
-        if (!wcsicmp(szBuffer, pStr))
+        if (!_wcsicmp(szBuffer, pStr))
         {
             bFound = TRUE;
             break;

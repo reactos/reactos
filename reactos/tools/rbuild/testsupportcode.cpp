@@ -293,7 +293,7 @@ TestSupportCode::GetTestDispatcherName ( string filename )
 bool
 TestSupportCode::IsTestFile ( string& filename ) const
 {
-	if ( stricmp ( GetFilename ( filename ).c_str (), "setup.c" ) == 0 )
+	if ( _stricmp ( GetFilename ( filename ).c_str (), "setup.c" ) == 0 )
 		return false;
 	return true;
 }

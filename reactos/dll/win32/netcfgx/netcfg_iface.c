@@ -430,7 +430,7 @@ FindNetworkComponent(
 {
     while(pHead)
     {
-        if (!wcsicmp(pHead->szId, pszwComponentId))
+        if (!_wcsicmp(pHead->szId, pszwComponentId))
         {
             return INetCfgComponent_Constructor(NULL, &IID_INetCfgComponent, (LPVOID*)pComponent, pHead, iface);
         }

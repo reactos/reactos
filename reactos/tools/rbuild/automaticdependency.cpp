@@ -60,7 +60,7 @@ SourceFile::Open ()
 	if ( !f )
 		throw FileNotFoundException ( filename );
 
-	if ( fstat ( fileno ( f ), &statbuf ) != 0 )
+	if ( fstat ( _fileno ( f ), &statbuf ) != 0 )
 	{
 		fclose ( f );
 		throw AccessDeniedException ( filename );

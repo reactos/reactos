@@ -2637,7 +2637,7 @@ SH_ShellLinkDlgProc(
                 return TRUE;
             }
             ptr = wcsrchr(szBuffer, L'.');
-            if (ptr && !wcsnicmp(ptr, L".lnk", 4))
+            if (ptr && !_wcsnicmp(ptr, L".lnk", 4))
             {
                 // FIXME load localized error msg
                 MessageBoxW( hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR );

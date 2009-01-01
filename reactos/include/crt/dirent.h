@@ -3,8 +3,7 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-/* All the headers include this file. */
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifndef	__STRICT_ANSI__
 

@@ -14,7 +14,7 @@
 #include <xmmintrin.h>
 #include <assert.h>
 #include <ivec.h>
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #if defined(_ENABLE_VEC_DEBUG)
 #include <iostream>

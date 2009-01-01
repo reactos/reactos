@@ -110,7 +110,9 @@
 	</directory>
 	<directory name="ntoskrnl">
 		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
-		<xi:include href="ntoskrnl/ntkrnlmp.rbuild" />
+		<if property="BUILD_MP" value="1">
+			<xi:include href="ntoskrnl/ntkrnlmp.rbuild" />
+		</if>
 	</directory>
 	<directory name="subsystems">
 		<xi:include href="subsystems/subsystems.rbuild" />

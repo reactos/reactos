@@ -238,9 +238,9 @@ bool Module::GetBooleanAttribute ( const XMLElement& moduleNode, const char * na
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !_stricmp ( p, "true" ) || !_stricmp ( p, "yes" ) )
 			return true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !_stricmp ( p, "false" ) || !_stricmp ( p, "no" ) )
 			return false;
 		else
 		{
@@ -358,26 +358,26 @@ Module::Module ( const Project& project,
 	{
 		CRT = att->value;
 
-		if ( stricmp ( CRT.c_str (), "auto" ) == 0 )
+		if ( _stricmp ( CRT.c_str (), "auto" ) == 0 )
 			CRT = GetDefaultModuleCRT ();
 	}
 	else
 		CRT = GetDefaultModuleCRT ();
 
 	const char * crtAttr = CRT.c_str ();
-	if ( crtAttr == NULL || stricmp ( crtAttr, "none" ) == 0 )
+	if ( crtAttr == NULL || _stricmp ( crtAttr, "none" ) == 0 )
 		dynamicCRT = false;
-	else if ( stricmp ( crtAttr, "libc" ) == 0 )
+	else if ( _stricmp ( crtAttr, "libc" ) == 0 )
 		dynamicCRT = false;
-	else if ( stricmp ( crtAttr, "msvcrt" ) == 0 )
+	else if ( _stricmp ( crtAttr, "msvcrt" ) == 0 )
 		dynamicCRT = true;
-	else if ( stricmp ( crtAttr, "libcntpr" ) == 0 )
+	else if ( _stricmp ( crtAttr, "libcntpr" ) == 0 )
 		dynamicCRT = false;
-	else if ( stricmp ( crtAttr, "ntdll" ) == 0 )
+	else if ( _stricmp ( crtAttr, "ntdll" ) == 0 )
 		dynamicCRT = true;
-	else if ( stricmp ( crtAttr, "static" ) == 0 )
+	else if ( _stricmp ( crtAttr, "static" ) == 0 )
 		dynamicCRT = false;
-	else if ( stricmp ( crtAttr, "dll" ) == 0 )
+	else if ( _stricmp ( crtAttr, "dll" ) == 0 )
 		dynamicCRT = true;
 	else
 	{
@@ -609,9 +609,9 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		const XMLAttribute* att = e.GetAttribute ( "first", false );
 		if ( att != NULL )
 		{
-			if ( !stricmp ( att->value.c_str(), "true" ) )
+			if ( !_stricmp ( att->value.c_str(), "true" ) )
 				first = true;
-			else if ( stricmp ( att->value.c_str(), "false" ) )
+			else if ( _stricmp ( att->value.c_str(), "false" ) )
 			{
 				throw XMLInvalidBuildFileException (
 					e.location,
@@ -626,11 +626,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		{
 			// check for c++ file
 			string ext = GetExtension ( e.value );
-			if ( !stricmp ( ext.c_str(), ".cpp" ) )
+			if ( !_stricmp ( ext.c_str(), ".cpp" ) )
 				cplusplus = true;
-			else if ( !stricmp ( ext.c_str(), ".cc" ) )
+			else if ( !_stricmp ( ext.c_str(), ".cc" ) )
 				cplusplus = true;
-			else if ( !stricmp ( ext.c_str(), ".cxx" ) )
+			else if ( !_stricmp ( ext.c_str(), ".cxx" ) )
 				cplusplus = true;
 		}
 		File* pFile = new File ( directory,
@@ -1865,9 +1865,9 @@ Property::Property ( const XMLElement& node_,
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !_stricmp ( p, "true" ) || !_stricmp ( p, "yes" ) )
 			isInternal = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !_stricmp ( p, "false" ) || !_stricmp ( p, "no" ) )
 			isInternal = false;
 		else
 		{
