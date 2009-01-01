@@ -703,21 +703,6 @@ MmFindGapAtAddress(
    }
 }
 
-/**
- * @name MmInitMemoryAreas
- *
- * Initialize the memory area list implementation.
- */
-
-NTSTATUS
-INIT_FUNCTION
-NTAPI
-MmInitMemoryAreas(VOID)
-{
-   DPRINT("MmInitMemoryAreas()\n");
-   return(STATUS_SUCCESS);
-}
-
 
 /**
  * @name MmFreeMemoryArea
