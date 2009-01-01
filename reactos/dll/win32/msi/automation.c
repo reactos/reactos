@@ -336,7 +336,7 @@ static HRESULT WINAPI AutomationObject_GetIDsOfNames(
     hr = ITypeInfo_GetIDsOfNames(This->iTypeInfo, rgszNames, cNames, rgDispId);
     if (hr == DISP_E_UNKNOWNNAME)
     {
-        int idx;
+        UINT idx;
         for (idx=0; idx<cNames; idx++)
         {
             if (rgDispId[idx] == DISPID_UNKNOWN)
@@ -441,7 +441,7 @@ static HRESULT WINAPI AutomationObject_Invoke(
     if (pVarResult == &varResultDummy) VariantClear(pVarResult);
 
     /* Free function name if we retrieved it */
-    if (bstrName) SysFreeString(bstrName);
+    SysFreeString(bstrName);
 
     TRACE("Returning 0x%08x, %s\n", hr, SUCCEEDED(hr) ? "ok" : "not ok");
 
@@ -618,7 +618,7 @@ static ULONG WINAPI ListEnumerator_Release(IEnumVARIANT* iface)
 static HRESULT WINAPI ListEnumerator_Next(IEnumVARIANT* iface, ULONG celt, VARIANT *rgVar, ULONG *pCeltFetched)
 {
     ListEnumerator *This = (ListEnumerator *)iface;
-    ListData *data = (ListData *)private_data(This->pObj);
+    ListData *data = private_data(This->pObj);
     ULONG idx, local;
 
     TRACE("(%p,%uld,%p,%p)\n", iface, celt, rgVar, pCeltFetched);
@@ -645,7 +645,7 @@ static HRESULT WINAPI ListEnumerator_Next(IEnumVARIANT* iface, ULONG celt, VARIA
 static HRESULT WINAPI ListEnumerator_Skip(IEnumVARIANT* iface, ULONG celt)
 {
     ListEnumerator *This = (ListEnumerator *)iface;
-    ListData *data = (ListData *)private_data(This->pObj);
+    ListData *data = private_data(This->pObj);
 
     TRACE("(%p,%uld)\n", iface, celt);
 
@@ -708,7 +708,7 @@ static const struct IEnumVARIANTVtbl ListEnumerator_Vtbl =
 /* Helper function that copies a passed parameter instead of using VariantChangeType like the actual DispGetParam.
    This function is only for VARIANT type parameters that have several types that cannot be properly discriminated
    using DispGetParam/VariantChangeType. */
-static HRESULT WINAPI DispGetParam_CopyOnly(
+static HRESULT DispGetParam_CopyOnly(
         DISPPARAMS *pdispparams, /* [in] Parameter list */
         UINT        *position,    /* [in] Position of parameter to copy in pdispparams; on return will contain calculated position */
         VARIANT    *pvarResult)  /* [out] Destination for resulting variant */
@@ -988,7 +988,7 @@ static HRESULT WINAPI ListImpl_Invoke(
         EXCEPINFO* pExcepInfo,
         UINT* puArgErr)
 {
-    ListData *data = (ListData *)private_data(This);
+    ListData *data = private_data(This);
     HRESULT hr;
     VARIANTARG varg0;
     IUnknown *pUnk = NULL;
@@ -1868,7 +1868,7 @@ static HRESULT WINAPI InstallerImpl_Invoke(
                     V_DISPATCH(pVarResult) = pDispatch;
 
                     /* Save product strings */
-                    ldata = (ListData *)private_data((AutomationObject *)pDispatch);
+                    ldata = private_data((AutomationObject *)pDispatch);
                     if (!(ldata->pVars = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VARIANT)*idx)))
                         ERR("Out of memory\n");
                     else
@@ -1914,7 +1914,7 @@ static HRESULT WINAPI InstallerImpl_Invoke(
                     V_DISPATCH(pVarResult) = pDispatch;
 
                     /* Save product strings */
-                    ldata = (ListData *)private_data((AutomationObject *)pDispatch);
+                    ldata = private_data((AutomationObject *)pDispatch);
                     if (!(ldata->pVars = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VARIANT)*idx)))
                         ERR("Out of memory\n");
                     else

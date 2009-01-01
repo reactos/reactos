@@ -220,7 +220,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Dereference the process object if it was specified */
-        if (Process) ObDereferenceObject(Process);
+        if (pProcess) ObDereferenceObject(pProcess);
 
         /* Return Status */
         return Status;

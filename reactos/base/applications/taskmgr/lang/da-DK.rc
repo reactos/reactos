@@ -198,7 +198,6 @@ END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
-CAPTION "KMK"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
@@ -366,7 +365,7 @@ BEGIN
     CONTROL         "&Billede Navn",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
     CONTROL         "&PID (Process Identifikation)",IDC_PID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7, 39, 100, 10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,100,10
     CONTROL         "&CPU Forbrug",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,53,10
     CONTROL         "CPU &Tid",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
@@ -605,7 +604,71 @@ BEGIN
     IDS_LICENSE             "Dette program er fri software; du kan formidle det og/eller ændre det under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
-#endif    // English (U.S.) resources
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TAB_APPS                  "Applications"
+    IDS_TAB_PROCESSES             "Processes"
+    IDS_TAB_PERFORMANCE           "Performance"
+    IDS_TAB_TASK                  "Task"
+    IDS_TAB_STATUS                "Status"
+    IDS_TAB_IMAGENAME             "Image Name"
+    IDS_TAB_PID                   "PID"
+    IDS_TAB_USERNAME              "Username"
+    IDS_TAB_SESSIONID             "Session ID"
+    IDS_TAB_CPU                   "CPU"
+    IDS_TAB_CPUTIME               "CPU Time"
+    IDS_TAB_MEMUSAGE              "Mem Usage"
+    IDS_TAB_PEAKMEMUSAGE          "Peak Mem Usage"
+    IDS_TAB_MEMDELTA              "Mem Delta"
+    IDS_TAB_PAGEFAULT             "Page Faults"
+    IDS_TAB_PFDELTA               "PF Delta"
+    IDS_TAB_VMSIZE                "VM Size"
+    IDS_TAB_PAGEDPOOL             "Paged Pool"
+    IDS_TAB_NPPOOL                "NP Pool"
+    IDS_TAB_BASEPRI               "Base Pri"
+    IDS_TAB_HANDLES               "Handles"
+    IDS_TAB_THREADS               "Threads"
+    IDS_TAB_USERPBJECTS           "USER Objects"
+    IDS_TAB_GDIOBJECTS            "GDI Objects"
+    IDS_TAB_IOREADS               "I/O Reads"
+    IDS_TAB_IOWRITES              "I/O Writes"
+    IDS_TAB_IOOTHER               "I/O Other"
+    IDS_TAB_IOREADBYTES           "I/O Read Bytes"
+    IDS_TAB_IOWRITESBYTES         "I/O Write Bytes"
+    IDS_TAB_IOOTHERBYTES          "I/O Other Bytes"
+    IDS_MENU_SELECTCOLUMNS        "&Select Columns..."
+    IDS_MENU_16BITTASK            "&Show 16-bit tasks"
+    IDS_MENU_WINDOWS              "&Windows"
+    IDS_MENU_LARGEICONS           "Lar&ge Icons"
+    IDS_MENU_SMALLICONS           "S&mall Icons"
+    IDS_MENU_DETAILS              "&Details"
+    IDS_MENU_ONEGRAPHALLCPUS      "&One Graph, All CPUs"
+    IDS_MENU_ONEGRAPHPERCPU       "One Graph &Per CPU"
+    IDS_MENU_CPUHISTORY           "&CPU History"
+    IDS_MENU_SHOWKERNELTIMES      "&Show Kernel Times"
+    IDS_CREATENEWTASK             "Create New Task"
+    IDS_CREATENEWTASK_DESC        "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you."
+    IDS_MSG_ACCESSPROCESSAFF      "Unable to Access or Set Process Affinity"
+    IDS_MSG_PROCESSONEPRO         "The process must have affinity with at least one processor."
+    IDS_MSG_INVALIDOPTION         "Invalid Option"
+    IDS_MSG_UNABLEDEBUGPROCESS    "Unable to Debug Process"
+    IDS_MSG_WARNINGDEBUG          "WARNING: Debugging this process may result in loss of data.\nAre you sure you wish to attach the debugger?"
+    IDS_MSG_TASKMGRWARNING        "Task Manager Warning"
+    IDS_MSG_WARNINGTERMINATING    "WARNING: Terminating a process can cause undesired\nresults including loss of data and system instability. The\nprocess will not be given the chance to save its state or\ndata before it is terminated. Are you sure you want to\nterminate the process?"
+    IDS_MSG_UNABLETERMINATEPRO    "Unable to Terminate Process"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Unable to Change Priority"
+    IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
+    IDS_MSG_TRAYICONCPUUSAGE      "CPU Usage: %d%%"
+    IDS_STATUS_MEMUSAGE           "Mem Usage: %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "CPU Usage: %3d%%"
+    IDS_STATUS_PROCESSES          "Processes: %d"
+    IDS_Not_Responding            "Not Responding"
+    IDS_Running                   "Running"
+END
+
+
+#endif    // Danish resources
 /////////////////////////////////////////////////////////////////////////////
 
 

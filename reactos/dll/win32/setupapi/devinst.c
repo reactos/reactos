@@ -4242,6 +4242,42 @@ SetupDiSetDeviceInstallParamsW(
     return ret;
 }
 
+BOOL WINAPI SetupDiSetDeviceInstallParamsA(
+       HDEVINFO DeviceInfoSet,
+       PSP_DEVINFO_DATA DeviceInfoData,
+       PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
+{
+    SP_DEVINSTALL_PARAMS_W deviceInstallParamsW;
+    int len = 0;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p\n", DeviceInfoSet, DeviceInfoData, DeviceInstallParams);
+
+    if (DeviceInstallParams == NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInstallParams->cbSize < sizeof(SP_DEVINSTALL_PARAMS_A))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        memcpy(&deviceInstallParamsW, DeviceInstallParams, FIELD_OFFSET(SP_DEVINSTALL_PARAMS_A, DriverPath));
+        deviceInstallParamsW.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
+        len = MultiByteToWideChar(CP_ACP, 0, DeviceInstallParams->DriverPath, -1, NULL, 0);
+        if (!len)
+        {
+            ERR("DrivePath is NULL\n");
+            ret = FALSE;
+        }
+        else
+        {
+            MultiByteToWideChar(CP_ACP, 0, DeviceInstallParams->DriverPath, -1, deviceInstallParamsW.DriverPath, len);
+            ret = SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &deviceInstallParamsW);
+        }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
 static HKEY
 OpenHardwareProfileKey(
     IN HKEY HKLM,

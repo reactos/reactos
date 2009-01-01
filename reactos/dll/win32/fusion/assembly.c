@@ -502,7 +502,7 @@ static HRESULT parse_clr_tables(ASSEMBLY *assembly, ULONG offset)
     ULONG currofs;
 
     currofs = offset;
-    assembly->tableshdr = (METADATATABLESHDR *)assembly_data_offset(assembly, currofs);
+    assembly->tableshdr = assembly_data_offset(assembly, currofs);
     if (!assembly->tableshdr)
         return E_FAIL;
 
@@ -514,7 +514,7 @@ static HRESULT parse_clr_tables(ASSEMBLY *assembly, ULONG offset)
                        sizeof(DWORD) : sizeof(WORD);
 
     currofs += sizeof(METADATATABLESHDR);
-    assembly->numrows = (DWORD *)assembly_data_offset(assembly, currofs);
+    assembly->numrows = assembly_data_offset(assembly, currofs);
     if (!assembly->numrows)
         return E_FAIL;
 
@@ -628,9 +628,9 @@ static HRESULT parse_clr_metadata(ASSEMBLY *assembly)
                 return hr;
         }
         else if (!lstrcmpA(stream, "#Strings") || !lstrcmpA(stream, "Strings"))
-            assembly->strings = (BYTE *)assembly_data_offset(assembly, ofs);
+            assembly->strings = assembly_data_offset(assembly, ofs);
         else if (!lstrcmpA(stream, "#Blob") || !lstrcmpA(stream, "Blob"))
-            assembly->blobs = (BYTE *)assembly_data_offset(assembly, ofs);
+            assembly->blobs = assembly_data_offset(assembly, ofs);
 
         ptr += lstrlenA(stream) + 1;
         ptr = (BYTE *)(((UINT_PTR)ptr + 3) & ~3); /* align on DWORD boundary */
@@ -883,7 +883,7 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPSTR *token)
     if (offset == -1)
         return E_FAIL;
 
-    asmtbl = (ASSEMBLYTABLE *)assembly_data_offset(assembly, offset);
+    asmtbl = assembly_data_offset(assembly, offset);
     if (!asmtbl)
         return E_FAIL;
 

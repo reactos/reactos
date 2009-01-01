@@ -83,7 +83,7 @@ NTSTATUS NTAPI Ext2ReadInode (
 			DebugTrace(DEBUG_TRACE_MISC,   "&&&&&& Invalid Inode no. Group no %d - too big", GroupNo );
 			DebugTrace(DEBUG_TRACE_MISC,   "Only %d groups available on disk", PtrVcb->NoOfGroups );
 			RC = STATUS_UNSUCCESSFUL;
-			try_return( RC );
+			try_return();
 		}
 
 		//if( PtrVcb->InodeTableBlock[ GroupNo ] == 0 )
@@ -91,7 +91,7 @@ NTSTATUS NTAPI Ext2ReadInode (
 		{
 			DebugTrace(DEBUG_TRACE_MISC,   "&&&&&& Inode Table Group Invalid - Group no %d ", GroupNo );
 			RC = STATUS_UNSUCCESSFUL;
-			try_return( RC );
+			try_return();
 		}
 
 		//	Inode numbers start at 1 and not from 0
@@ -135,7 +135,7 @@ NTSTATUS NTAPI Ext2ReadInode (
 			(PVOID*)&PtrPinnedReadBuffer )) 
 		{
 			RC = STATUS_UNSUCCESSFUL;
-			try_return( RC );
+			try_return();
 		}
 		else
 		{
@@ -736,14 +736,14 @@ NTSTATUS NTAPI Ext2WriteInode(
 			DebugTrace(DEBUG_TRACE_MISC,   "&&&&&& Invalid Inode no. Group no %d - too big", GroupNo );
 			DebugTrace(DEBUG_TRACE_MISC,   "Only %d groups available on disk", PtrVcb->NoOfGroups );
 			RC = STATUS_UNSUCCESSFUL;
-			try_return( RC );
+			try_return();
 		}
 
 		if( PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock == 0 )
 		{
 			DebugTrace(DEBUG_TRACE_MISC,   "&&&&&& Inode Table Group Invalid - Group no %d ", GroupNo );
 			RC = STATUS_UNSUCCESSFUL;
-			try_return( RC );
+			try_return();
 		}
 
 		Index = ( InodeNo - 1 ) - ( GroupNo * PtrVcb->InodesPerGroup );
@@ -781,7 +781,7 @@ NTSTATUS NTAPI Ext2WriteInode(
 					(PVOID*)&PtrPinnedBuffer ) )
 		{
 			RC = STATUS_UNSUCCESSFUL;
-			try_return( RC );
+			try_return();
 		}
 		else
 		{

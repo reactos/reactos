@@ -1261,9 +1261,9 @@ LookupAccountNameA(LPCSTR SystemName,
         WideCharToMultiByte(CP_ACP,
                             0,
                             lpReferencedDomainNameW,
-                            *hReferencedDomainNameLength,
+                            *hReferencedDomainNameLength + 1,
                             ReferencedDomainName,
-                            *hReferencedDomainNameLength,
+                            *hReferencedDomainNameLength + 1,
                             NULL,
                             NULL);
     }
@@ -1300,6 +1300,12 @@ LookupAccountNameW(LPCWSTR lpSystemName,
 
     TRACE("%s %s %p %p %p %p %p - stub\n", lpSystemName, lpAccountName,
           Sid, cbSid, ReferencedDomainName, cchReferencedDomainName, peUse);
+
+    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    {
+        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        return FALSE;
+    }
 
     for (i = 0; i < (sizeof(ACCOUNT_SIDS) / sizeof(ACCOUNT_SIDS[0])); i++)
     {
@@ -1343,13 +1349,16 @@ LookupAccountNameW(LPCWSTR lpSystemName,
     if (ReferencedDomainName != NULL && (*cchReferencedDomainName > wcslen(dm)))
         wcscpy(ReferencedDomainName, dm);
 
-    if (*cchReferencedDomainName <= wcslen(dm))
+    if ((*cchReferencedDomainName <= wcslen(dm)) || (!ret))
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         ret = FALSE;
+        *cchReferencedDomainName = wcslen(dm) + 1;
     }
-
-    *cchReferencedDomainName = wcslen(dm)+1;
+    else
+    {
+        *cchReferencedDomainName = wcslen(dm);
+    }
 
     FreeSid(pSid);
 
@@ -1451,6 +1460,12 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
       L"SeCreateGlobalPrivilege"
     };
   unsigned Priv;
+
+  if (!ADVAPI_IsLocalComputer(SystemName))
+    {
+        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        return FALSE;
+    }
 
   if (NULL != SystemName && L'\0' != *SystemName)
     {
@@ -1592,6 +1607,7 @@ LookupPrivilegeNameW(LPCWSTR lpSystemName,
         SetLastError(RPC_S_SERVER_UNAVAILABLE);
         return FALSE;
     }
+
     if (lpLuid->HighPart || (lpLuid->LowPart < SE_MIN_WELL_KNOWN_PRIVILEGE ||
      lpLuid->LowPart > SE_MAX_WELL_KNOWN_PRIVILEGE))
     {

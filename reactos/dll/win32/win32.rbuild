@@ -76,6 +76,9 @@
 <directory name="dciman32">
 	<xi:include href="dciman32/dciman32.rbuild" />
 </directory>
+<directory name="dwmapi">
+	<xi:include href="dwmapi/dwmapi.rbuild" />
+</directory>
 <directory name="devmgr">
 	<xi:include href="devmgr/devmgr.rbuild" />
 </directory>

@@ -392,10 +392,6 @@ typedef VOID
 
 NTSTATUS
 NTAPI
-MmInitMemoryAreas(VOID);
-
-NTSTATUS
-NTAPI
 MmCreateMemoryArea(
     PMM_AVL_TABLE AddressSpace,
     ULONG Type,

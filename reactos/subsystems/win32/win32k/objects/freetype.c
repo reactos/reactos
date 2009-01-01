@@ -3603,6 +3603,12 @@ GreExtTextOutW(
             TextLeft += Dx[i<<DxShift] << 6;
 //         DbgPrint("new TextLeft2: %d\n", TextLeft);
         }
+
+        if (DxShift)
+        {
+            TextTop -= Dx[2 * i + 1] << 6;
+        }
+
         previous = glyph_index;
 
         String++;
@@ -3651,7 +3657,7 @@ fail:
     return FALSE;
 }
 
-#define STACK_TEXT_BUFFER_SIZE 50
+#define STACK_TEXT_BUFFER_SIZE 100
 BOOL
 APIENTRY
 NtGdiExtTextOutW(
@@ -3706,17 +3712,19 @@ NtGdiExtTextOutW(
         /* Probe and copy user mode data to the buffer */
         _SEH2_TRY
         {
+            /* Put the Dx before the String to assure alignment of 4 */
+            SafeString = (LPWSTR)(((ULONG_PTR)Buffer) + DxSize);
+
             /* Probe and copy the string */
             ProbeForRead(UnsafeString, StringSize, 1);
-            SafeString = Buffer;
             memcpy((PVOID)SafeString, UnsafeString, StringSize);
 
             /* If we have Dx values... */
             if (UnsafeDx)
             {
                 /* ... probe and copy them */
+                SafeDx = Buffer;
                 ProbeForRead(UnsafeDx, DxSize, 1);
-                SafeDx = (LPINT)(((ULONG_PTR)Buffer) + StringSize);
                 memcpy(SafeDx, UnsafeDx, DxSize);
             }
         }
@@ -3768,7 +3776,7 @@ cleanup:
         ExFreePoolWithTag(Buffer, TAG_GDITEXT);
     }
 
-    return Result;;
+    return Result;
 }
 
 

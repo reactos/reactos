@@ -484,7 +484,7 @@ inline std::string get_utf8(const XS_String& s)
 #endif // XS_STRING_UTF8
 
 extern std::string EncodeXMLString(const XS_String& str, bool cdata=false);
-extern XS_String DecodeXMLString(const XS_String& str);
+extern XS_String DecodeXMLString(const std::string& str);
 
 
 #ifdef __GNUC__
@@ -961,13 +961,15 @@ struct XMLNode : public XS_String
 	friend struct XPathElement;
 
 	XMLNode(const XS_String& name)
-	 :	XS_String(name)
+	 :	XS_String(name),
+		_cdata_content(false)
 	{
 	}
 
 	XMLNode(const XS_String& name, const std::string& leading)
 	 :	XS_String(name),
-		_leading(leading)
+		_leading(leading),
+		_cdata_content(false)
 	{
 	}
 
@@ -977,10 +979,11 @@ struct XMLNode : public XS_String
 		_leading(other._leading),
 		_content(other._content),
 		_end_leading(other._end_leading),
-		_trailing(other._trailing)
+		_trailing(other._trailing),
 #ifdef XMLNODE_LOCATION
-		, _location(other._location)
+		_location(other._location),
 #endif
+		_cdata_content(false)
 	{
 		for(Children::const_iterator it=other._children.begin(); it!=other._children.end(); ++it)
 			_children.push_back(new XMLNode(**it));
@@ -994,10 +997,11 @@ struct XMLNode : public XS_String
 		_leading(other._leading),
 		_content(other._content),
 		_end_leading(other._end_leading),
-		_trailing(other._trailing)
+		_trailing(other._trailing),
 #ifdef XMLNODE_LOCATION
-		, _location(other._location)
+		_location(other._location),
 #endif
+		_cdata_content(false)
 	{
 //		assert(copy_no_children==COPY_NOCHILDREN);
 	}
@@ -1153,21 +1157,39 @@ struct XMLNode : public XS_String
 		return _attributes;
 	}
 
+	 /// read element node content
 	XS_String get_content() const
 	{
-#ifdef XS_STRING_UTF8
-		const XS_String& ret = _content;
-#else
-		XS_String ret;
-		assign_utf8(ret, _content.c_str(), _content.length());
-#endif
-
-		return DecodeXMLString(ret.c_str());
+		return DecodeXMLString(_content);
 	}
 
+	 /// read content of a subnode specified by an XPath expression
+	XS_String get_sub_content(const XPath& xpath) const
+	{
+		const XMLNode* node = find_relative(xpath);
+
+		if (node)
+			return node->get_content();
+		else
+			return XS_EMPTY_STR;
+	}
+
+	 /// set element node content
 	void set_content(const XS_String& s, bool cdata=false)
 	{
 		_content.assign(EncodeXMLString(s.c_str(), cdata));
+	}
+
+	 /// set content of a subnode specified by an XPath expression
+	bool set_sub_content(const XPath& xpath, const XS_String& s, bool cdata=false)
+	{
+		XMLNode* node = find_relative(xpath);
+
+		if (node) {
+			node->set_content(s, cdata);
+			return true;
+		} else
+			return false;
 	}
 
 #ifdef XMLNODE_LOCATION
@@ -1187,10 +1209,10 @@ struct XMLNode : public XS_String
 			break;
 
 		  case FORMAT_ORIGINAL:
-			write_worker(out);
+			original_write_worker(out);
 			break;
 
-		default:	 // FORMAT_SMART
+		  default:	// FORMAT_SMART
 			smart_write_worker(out, format, indent);
 		}
 
@@ -1222,6 +1244,8 @@ protected:
 	XMLLocation	_location;
 #endif
 
+	bool	_cdata_content;
+
 	XMLNode* get_first_child() const
 	{
 		if (!_children.empty())
@@ -1242,7 +1266,7 @@ protected:
 	 /// create a new node tree using the given XPath filter expression
 	XMLNode* filter(XPath::const_iterator from, const XPath::const_iterator& to) const;
 
-	void	write_worker(std::ostream& out) const;
+	void	original_write_worker(std::ostream& out) const;
 	void	plain_write_worker(std::ostream& out) const;
 	void	pretty_write_worker(std::ostream& out, const XMLFormat& format, int indent) const;
 	void	smart_write_worker(std::ostream& out, const XMLFormat& format, int indent) const;

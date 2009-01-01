@@ -31,7 +31,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -42,54 +44,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Byla"
-	BEGIN
-		MENUITEM "&Nauja...",           CMD_NEW
-		MENUITEM "&Atverti\tCtrl+O",     CMD_OPEN
-		MENUITEM "Á&raðyti\tCtrl+S",     CMD_SAVE
-		MENUITEM "Áraðyti &kaip...",       CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "P&uslapio nuostatos...",    CMD_PAGE_SETUP
-		MENUITEM "&Spausdinti",            CMD_PRINT
-		MENUITEM "S&pausdintuvo nuostatos...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Baigti",             CMD_EXIT
-	END
-	POPUP "&Redaguoti"
-	BEGIN
-		MENUITEM "&Atðaukti\tCtrl+Z",     CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "&Iðkirpti\tCtrl+X",      CMD_CUT
-		MENUITEM "&Kopijuoti\tCtrl+C",     CMD_COPY
-		MENUITEM "Á&dëti\tCtrl+V",    CMD_PASTE
-		MENUITEM "&Trinti\tDel",      CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "I&eðkoti...\tCtrl+F",  CMD_SEARCH
-		MENUITEM "Ieðk&oti toliau\tF3",    CMD_SEARCH_NEXT
-		MENUITEM "Pakeisti\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Eiti á...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Paþymëti &viskà\tCtrl+A",       CMD_SELECT_ALL
-		MENUITEM "&Laikas ir data\tF5",    CMD_TIME_DATE
-	END
-	POPUP "&Formatas"
-	BEGIN
-		MENUITEM "&Lauþyti eilutes",  CMD_WRAP
-		MENUITEM "Ð&riftas...",          CMD_FONT
-	END
-	POPUP "R&odymas"
-	BEGIN
-		MENUITEM "&Bûsenos juosta",    CMD_STATUSBAR
-	END
-	POPUP "&Pagalba"
-	BEGIN
-		MENUITEM "&Turinys",         CMD_HELP_CONTENTS
-		MENUITEM "&Ieðkoti...",        CMD_HELP_SEARCH
-		MENUITEM "&Pagalba",     CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&Apie Notepad"             CMD_ABOUT
-		MENUITEM "Apie &Wine",      CMD_ABOUT_WINE
-	END
+    POPUP "&Byla"
+    BEGIN
+        MENUITEM "&Nauja\tCtrl+N",             CMD_NEW
+        MENUITEM "&Atverti\tCtrl+O",           CMD_OPEN
+        MENUITEM "Á&raðyti\tCtrl+S",           CMD_SAVE
+        MENUITEM "Áraðyti &kaip...",           CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "P&uslapio nuostatos...",     CMD_PAGE_SETUP
+        MENUITEM "&Spausdinti\tCtrl+P",        CMD_PRINT
+        MENUITEM "S&pausdintuvo nuostatos...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Baigti",                    CMD_EXIT
+    END
+    POPUP "&Redaguoti"
+    BEGIN
+        MENUITEM "&Atðaukti\tCtrl+Z",       CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Iðkirpti\tCtrl+X",       CMD_CUT
+        MENUITEM "&Kopijuoti\tCtrl+C",      CMD_COPY
+        MENUITEM "Á&dëti\tCtrl+V",          CMD_PASTE
+        MENUITEM "&Trinti\tDel",            CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "I&eðkoti...\tCtrl+F",     CMD_SEARCH
+        MENUITEM "Ieðk&oti toliau\tF3",     CMD_SEARCH_NEXT
+        MENUITEM "Pakeisti\tCtrl+H",        CMD_REPLACE
+        MENUITEM "Eiti á...\tCtrl+G",       CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Paþymëti &viskà\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "&Laikas ir data\tF5",     CMD_TIME_DATE
+    END
+    POPUP "&Formatas"
+    BEGIN
+        MENUITEM "&Lauþyti eilutes", CMD_WRAP
+        MENUITEM "Ð&riftas...",      CMD_FONT
+    END
+    POPUP "R&odymas"
+    BEGIN
+        MENUITEM "&Bûsenos juosta", CMD_STATUSBAR
+    END
+    POPUP "&Pagalba"
+    BEGIN
+        MENUITEM "&Turinys",     CMD_HELP_CONTENTS
+        MENUITEM "&Ieðkoti...",  CMD_HELP_SEARCH
+        MENUITEM "&Pagalba",     CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Apie Notepad" CMD_ABOUT
+        MENUITEM "Apie &Wine",   CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */

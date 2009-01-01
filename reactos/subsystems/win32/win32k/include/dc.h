@@ -157,7 +157,6 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of GDIDEVICE 
 {
   /* private GDI pointer handling information, required for software emulation */
   BOOL     Enabled;
-  POINTL   Pos;
   SIZEL    Size;
   POINTL   HotSpot;
   XLATEOBJ *XlateObject;

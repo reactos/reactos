@@ -250,7 +250,7 @@ VOID APICDump(VOID)
 {
   ULONG v, ver, maxlvt;
   ULONG r1, r2, w1, w2;
-  ULONG CPU = ThisCPU();;
+  ULONG CPU = ThisCPU();
 
 
   r1 = lastregr[CPU];
@@ -774,12 +774,12 @@ VOID APICSetupLVTT(ULONG ClockTicks)
    tmp = GET_APIC_VERSION(APICRead(APIC_VER));
    if (!APIC_INTEGRATED(tmp))
    {
-      tmp = SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV) | APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;;
+      tmp = SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV) | APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;
    }
    else
    {
       /* Periodic timer */
-      tmp = APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;;
+      tmp = APIC_LVT_PERIODIC | LOCAL_TIMER_VECTOR;
    }
    APICWrite(APIC_LVTT, tmp);
 

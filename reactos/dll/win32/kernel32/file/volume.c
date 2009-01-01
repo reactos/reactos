@@ -81,7 +81,7 @@ InternalOpenDirW(LPCWSTR DirName,
 /*
  * @implemented
  */
-/* Synced to Wine-? */
+/* Synced to Wine-2008/12/28 */
 DWORD WINAPI
 GetLogicalDriveStringsA(DWORD nBufferLength,
 			LPSTR lpBuffer)
@@ -98,8 +98,8 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
      }
 
 
-   if (count * 4 <= nBufferLength)
-     {
+   if ((count * 4) + 1 > nBufferLength) return ((count * 4) + 1);
+
 	LPSTR p = lpBuffer;
 
 	for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
@@ -111,7 +111,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
 	     *p++ = '\0';
 	  }
 	*p = '\0';
-     }
+
     return (count * 4);
 }
 
@@ -119,7 +119,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
 /*
  * @implemented
  */
-/* Synced to Wine-? */
+/* Synced to Wine-2008/12/28 */
 DWORD WINAPI
 GetLogicalDriveStringsW(DWORD nBufferLength,
 			LPWSTR lpBuffer)
@@ -135,19 +135,19 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
 	   count++;
      }
 
-    if (count * 4 <=  nBufferLength)
-    {
-        LPWSTR p = lpBuffer;
-        for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
-            if (dwDriveMap & (1<<drive))
-            {
-                *p++ = (WCHAR)('A' + drive);
-                *p++ = (WCHAR)':';
-                *p++ = (WCHAR)'\\';
-                *p++ = (WCHAR)'\0';
-            }
-        *p = (WCHAR)'\0';
-    }
+    if ((count * 4) + 1 > nBufferLength) return ((count * 4) + 1);
+
+    LPWSTR p = lpBuffer;
+    for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
+        if (dwDriveMap & (1<<drive))
+        {
+            *p++ = (WCHAR)('A' + drive);
+            *p++ = (WCHAR)':';
+            *p++ = (WCHAR)'\\';
+            *p++ = (WCHAR)'\0';
+        }
+    *p = (WCHAR)'\0';
+
     return (count * 4);
 }
 
@@ -871,6 +871,12 @@ GetVolumeNameForVolumeMountPointW(
    PUCHAR SymbolicLinkName;
    BOOL Result;
    NTSTATUS Status;
+
+   if (!VolumeMountPoint || !VolumeMountPoint[0])
+   {
+       SetLastError(ERROR_PATH_NOT_FOUND);
+       return FALSE;
+   }
 
    /*
     * First step is to convert the passed volume mount point name to

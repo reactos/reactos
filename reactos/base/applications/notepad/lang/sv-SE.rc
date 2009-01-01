@@ -30,7 +30,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -41,54 +43,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Arkiv"
-	BEGIN
-		MENUITEM "&Ny...",            CMD_NEW
-		MENUITEM "&Öppna",            CMD_OPEN
-		MENUITEM "&Spara",            CMD_SAVE
-		MENUITEM "Spara so&m...",     CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "Skriv &ut...",         CMD_PRINT
-		MENUITEM "Utskrifts&format...",    CMD_PAGE_SETUP
-		MENUITEM "Skrivar&inställningar...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Avsluta",          CMD_EXIT
-	END
-	POPUP "&Redigera"
-	BEGIN
-		MENUITEM "&Ångra\tCtrl+Z",     CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "&Klipp ut\tCtrl+X",    CMD_CUT
-		MENUITEM "K&opiera\tCtrl+C",  CMD_COPY
-		MENUITEM "K&listra in\tCtrl+V",       CMD_PASTE
-		MENUITEM "&Ta bort\tDel",     CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "Sök...",            CMD_SEARCH
-		MENUITEM "&Sök nästa\tF3",    CMD_SEARCH_NEXT
-		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Markera &allt",     CMD_SELECT_ALL
-		MENUITEM "&Tid/datum\tF5",    CMD_TIME_DATE
-	END
-	POPUP "F&ormat"
-	BEGIN
-		MENUITEM "&Automatiskt radbyte",      CMD_WRAP
-		MENUITEM "&Font...",          CMD_FONT
-	END
-	POPUP "&View"
-	BEGIN
-		MENUITEM "Status&bar",    CMD_STATUSBAR
-	END
-	POPUP "&Hjälp"
-	BEGIN
-		MENUITEM "&Innehåll",         CMD_HELP_CONTENTS
-		MENUITEM "&Sök...",           CMD_HELP_SEARCH
-		MENUITEM "Anvisningar för hjälpen",    CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "Inf&ormation...",         CMD_ABOUT_WINE
-	END
+    POPUP "&Arkiv"
+    BEGIN
+        MENUITEM "&Ny\tCtrl+N",              CMD_NEW
+        MENUITEM "&Öppna\tCtrl+O",           CMD_OPEN
+        MENUITEM "&Spara\tCtrl+S",           CMD_SAVE
+        MENUITEM "Spara so&m...",            CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Skriv &ut\tCtrl+P",        CMD_PRINT
+        MENUITEM "Utskrifts&format...",      CMD_PAGE_SETUP
+        MENUITEM "Skrivar&inställningar...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Avsluta",                 CMD_EXIT
+    END
+    POPUP "&Redigera"
+    BEGIN
+        MENUITEM "&Ångra\tCtrl+Z",      CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Klipp ut\tCtrl+X",   CMD_CUT
+        MENUITEM "K&opiera\tCtrl+C",    CMD_COPY
+        MENUITEM "K&listra in\tCtrl+V", CMD_PASTE
+        MENUITEM "&Ta bort\tDel",       CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Sök...",              CMD_SEARCH
+        MENUITEM "&Sök nästa\tF3",      CMD_SEARCH_NEXT
+        MENUITEM "Replace\tCtrl+H",     CMD_REPLACE
+        MENUITEM "Go To...\tCtrl+G",    CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Markera &allt",       CMD_SELECT_ALL
+        MENUITEM "&Tid/datum\tF5",      CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Automatiskt radbyte", CMD_WRAP
+        MENUITEM "&Font...",             CMD_FONT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Status&bar", CMD_STATUSBAR
+    END
+    POPUP "&Hjälp"
+    BEGIN
+        MENUITEM "&Innehåll",               CMD_HELP_CONTENTS
+        MENUITEM "&Sök...",                 CMD_HELP_SEARCH
+        MENUITEM "Anvisningar för hjälpen", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About"                   CMD_ABOUT
+        MENUITEM "Inf&ormation...",         CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
@@ -191,7 +193,7 @@ Vill du skapa en ny fil?"
 STRING_NOTSAVED,                                "Filen '%s'\nhar ändrats.\n\n \
 Vill du spara ändringarna?"
 STRING_NOTFOUND,                                        "'%s' hittades inte."
-STRING_OUT_OF_MEMORY,			"Det finns inte tillräckligt med minne för att kunna slutföra \
+STRING_OUT_OF_MEMORY,            "Det finns inte tillräckligt med minne för att kunna slutföra \
 den här åtgärden. \nAvsluta ett eller flera program för att frigöra mer minne."
 STRING_CANNOTFIND                               "Cannot find '%s'"
 STRING_ANSI,                                    "ANSI"

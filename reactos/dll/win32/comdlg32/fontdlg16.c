@@ -187,7 +187,7 @@ BOOL16 WINAPI ChooseFont16(LPCHOOSEFONT16 lpChFont)
 
     if (lpChFont->Flags & CF_ENABLETEMPLATEHANDLE)
     {
-        if (!(template = LockResource16( lpChFont->hInstance )))
+        if (!LockResource16( lpChFont->hInstance ))
         {
             COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
             return FALSE;
@@ -204,7 +204,7 @@ BOOL16 WINAPI ChooseFont16(LPCHOOSEFONT16 lpChFont)
             return FALSE;
         }
         if (!(hDlgTmpl16 = LoadResource16( lpChFont->hInstance, hResInfo )) ||
-            !(template = LockResource16( hDlgTmpl16 )))
+            !LockResource16( hDlgTmpl16 ))
         {
             COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
             return FALSE;

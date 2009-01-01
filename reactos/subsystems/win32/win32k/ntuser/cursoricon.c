@@ -44,29 +44,11 @@
 static PAGED_LOOKASIDE_LIST gProcessLookasideList;
 static LIST_ENTRY gCurIconList;
 
-/* Look up the location of the cursor in the GDIDEVICE structure
- * when all we know is the window station object
- * Actually doesn't use the window station, but should... */
 BOOL FASTCALL
 IntGetCursorLocation(PWINSTATION_OBJECT WinSta, POINT *loc)
 {
-   HDC hDC;
-   PDC dc;
-   GDIDEVICE *GDIDevice;
-
-#if 1
-   /* FIXME - get the screen dc from the window station or desktop */
-   if (!(hDC = IntGetScreenDC()))
-      return FALSE;
-#endif
-
-   if (!(dc = DC_LockDc(hDC)))
-      return FALSE;
-   GDIDevice = (GDIDEVICE *)dc->pPDev;
-   DC_UnlockDc(dc);
-
-   loc->x = GDIDevice->Pointer.Pos.x;
-   loc->y = GDIDevice->Pointer.Pos.y;
+   loc->x = gpsi->ptCursor.x;
+   loc->y = gpsi->ptCursor.y;
 
    return TRUE;
 }
@@ -259,8 +241,8 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
             SurfObj, soMask, soColor, XlateObj,
             NewCursor->IconInfo.xHotspot,
             NewCursor->IconInfo.yHotspot,
-            GDIDEV(SurfObj)->Pointer.Pos.x,
-            GDIDEV(SurfObj)->Pointer.Pos.y,
+            gpsi->ptCursor.x,
+            gpsi->ptCursor.y,
             &(GDIDEV(SurfObj)->Pointer.Exclude),
             SPS_CHANGE);
       DPRINT("SetCursor: DrvSetPointerShape() returned %x\n",
@@ -277,8 +259,8 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
                                            SurfObj, soMask, soColor, XlateObj,
                                            NewCursor->IconInfo.xHotspot,
                                            NewCursor->IconInfo.yHotspot,
-                                           GDIDEV(SurfObj)->Pointer.Pos.x,
-                                           GDIDEV(SurfObj)->Pointer.Pos.y,
+                                           gpsi->ptCursor.x,
+                                           gpsi->ptCursor.y,
                                            &(GDIDEV(SurfObj)->Pointer.Exclude),
                                            SPS_CHANGE);
       GDIDEV(SurfObj)->Pointer.MovePointer = NULL;
@@ -796,39 +778,16 @@ NtUserGetCursorInfo(
    CURSORINFO SafeCi;
    PSYSTEM_CURSORINFO CurInfo;
    PWINSTATION_OBJECT WinSta;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    PCURICON_OBJECT CurIcon;
-   HDC hDC;
+   BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserGetCursorInfo\n");
    UserEnterExclusive();
 
-#if 1
-
-
-   /* FIXME - get the screen dc from the window station or desktop */
-   if (!(hDC = IntGetScreenDC()))
-   {
-      RETURN( FALSE);
-   }
-#endif
-
-   Status = MmCopyFromCaller(&SafeCi.cbSize, pci, sizeof(DWORD));
-   if(!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( FALSE);
-   }
-
-   if(SafeCi.cbSize != sizeof(CURSORINFO))
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      RETURN( FALSE);
-   }
-
    WinSta = IntGetWinStaObj();
-   if(WinSta == NULL)
+   if (WinSta == NULL)
    {
       RETURN( FALSE);
    }
@@ -836,21 +795,37 @@ NtUserGetCursorInfo(
    CurInfo = IntGetSysCursorInfo(WinSta);
    CurIcon = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
 
+   SafeCi.cbSize = sizeof(CURSORINFO);
    SafeCi.flags = ((CurInfo->ShowingCursor && CurIcon) ? CURSOR_SHOWING : 0);
    SafeCi.hCursor = (CurIcon ? (HCURSOR)CurIcon->Self : (HCURSOR)0);
 
    IntGetCursorLocation(WinSta, &SafeCi.ptScreenPos);
 
-   Status = MmCopyToCaller(pci, &SafeCi, sizeof(CURSORINFO));
-   if(!NT_SUCCESS(Status))
+   _SEH2_TRY
    {
-      ObDereferenceObject(WinSta);
+      if (pci->cbSize == sizeof(CURSORINFO))
+      {
+         ProbeForWrite(pci, sizeof(CURSORINFO), 1);
+         RtlCopyMemory(pci, &SafeCi, sizeof(CURSORINFO));
+         Ret = TRUE;
+      }
+      else
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      }
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
+   if (!NT_SUCCESS(Status))
+   {
       SetLastNtError(Status);
-      RETURN( FALSE);
    }
 
    ObDereferenceObject(WinSta);
-   RETURN( TRUE);
+   RETURN(Ret);
 
 CLEANUP:
    DPRINT("Leave NtUserGetCursorInfo, ret=%i\n",_ret_);

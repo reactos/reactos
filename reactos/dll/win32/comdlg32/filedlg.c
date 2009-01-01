@@ -220,6 +220,8 @@ static HRESULT GetName(LPSHELLFOLDER lpsf, LPITEMIDLIST pidl,DWORD dwFlags,LPWST
 IShellFolder* GetShellFolderFromPidl(LPITEMIDLIST pidlAbs);
 LPITEMIDLIST  GetParentPidl(LPITEMIDLIST pidl);
 static LPITEMIDLIST GetPidlFromName(IShellFolder *psf,LPWSTR lpcstrFileName);
+static BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl);
+static UINT GetNumSelected( IDataObject *doSelected );
 
 /* Shell memory allocation */
 static void *MemAlloc(UINT size);
@@ -240,7 +242,7 @@ static BOOL BrowseSelectedFolder(HWND hwnd);
  * OUT : TRUE on success
  *       FALSE on cancel, error, close or filename-does-not-fit-in-buffer.
  */
-static BOOL WINAPI GetFileName95(FileOpenDlgInfos *fodInfos)
+static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 {
 
     LRESULT lRes;
@@ -312,7 +314,7 @@ static BOOL WINAPI GetFileName95(FileOpenDlgInfos *fodInfos)
  * IN  : The OPENFILENAMEA initialisation structure passed to
  *       GetOpenFileNameA win api function (see filedlg.c)
  */
-BOOL  WINAPI GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
+static BOOL GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
 {
   BOOL ret;
   FileOpenDlgInfos fodInfos;
@@ -449,7 +451,7 @@ BOOL  WINAPI GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
  * Call GetFileName95 with this structure and clean the memory.
  *
  */
-BOOL  WINAPI GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType)
+static BOOL GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType)
 {
   BOOL ret;
   FileOpenDlgInfos fodInfos;
@@ -822,8 +824,7 @@ static HWND CreateTemplateDialog(FileOpenDlgInfos *fodInfos, HWND hwnd)
 LRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode)
 {
     LRESULT hook_result = 0;
-
-    FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwndParentDlg,FileOpenDlgInfosStr);
+    FileOpenDlgInfos *fodInfos = GetPropA(hwndParentDlg,FileOpenDlgInfosStr);
 
     TRACE("%p 0x%04x\n",hwndParentDlg, uCode);
 
@@ -862,7 +863,7 @@ static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID result
 {
     UINT len, total;
     WCHAR *p, *buffer;
-    FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+    FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
     TRACE("CDM_GETFILEPATH:\n");
 
@@ -902,7 +903,7 @@ static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID result
 */
 static INT_PTR FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+    FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
     WCHAR lpstrPath[MAX_PATH];
     INT_PTR retval;
 
@@ -1107,7 +1108,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   TBADDBITMAP tba[2];
   RECT rectTB;
   RECT rectlook;
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   tba[0].hInst = HINST_COMMCTRL;
   tba[0].nID   = IDB_VIEW_SMALL_COLOR;
@@ -1164,7 +1165,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBITMAP, 12, (LPARAM) &tba[0]);
   SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBITMAP, 1, (LPARAM) &tba[1]);
 
-  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBUTTONSW, 9, (LPARAM) &tbb);
+  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBUTTONSW, 9, (LPARAM) tbb);
   SendMessageW(fodInfos->DlgInfos.hwndTB, TB_AUTOSIZE, 0, 0);
 
   /* Set the window text with the text specified in the OPENFILENAME structure */
@@ -1388,6 +1389,10 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
       LoadStringW(COMDLG32_hInstance, IDS_SAVE_IN, buf, sizeof(buf)/sizeof(WCHAR));
       SetDlgItemTextW(hwnd, IDC_LOOKINSTATIC, buf);
   }
+
+  /* Initialize the filter combo box */
+  FILEDLG95_FILETYPE_Init(hwnd);
+
   return 0;
 }
 
@@ -1476,9 +1481,6 @@ static LRESULT FILEDLG95_FillControls(HWND hwnd, WPARAM wParam, LPARAM lParam)
   /* Initialize the Look In combo box */
   FILEDLG95_LOOKIN_Init(fodInfos->DlgInfos.hwndLookInCB);
 
-  /* Initialize the filter combo box */
-  FILEDLG95_FILETYPE_Init(hwnd);
-
   /* Browse to the initial directory */
   IShellBrowser_BrowseObject(fodInfos->Shell.FOIShellBrowser,pidlItemId, SBSP_ABSOLUTE);
 
@@ -1507,7 +1509,7 @@ static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
   WORD wNotifyCode = HIWORD(wParam); /* notification code */
   WORD wID = LOWORD(wParam);         /* item, control, or accelerator identifier */
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   switch(wID)
   {
@@ -1567,8 +1569,7 @@ static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
  */
 static LRESULT FILEDLG95_OnWMGetIShellBrowser(HWND hwnd)
 {
-
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   TRACE("\n");
 
@@ -1627,7 +1628,7 @@ BOOL FILEDLG95_OnOpenMultipleFiles(HWND hwnd, LPWSTR lpstrFileList, UINT nFileCo
 {
   WCHAR   lpstrPathSpec[MAX_PATH] = {0};
   UINT   nCount, nSizePath;
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   TRACE("\n");
 
@@ -1755,7 +1756,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
   WCHAR lpstrTemp[MAX_PATH];
   LPSHELLFOLDER lpsf = NULL;
   int nOpenAction;
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   TRACE("hwnd=%p\n", hwnd);
 
@@ -2221,7 +2222,7 @@ ret:
  */
 static LRESULT FILEDLG95_SHELL_Init(HWND hwnd)
 {
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   TRACE("\n");
 
@@ -2256,9 +2257,9 @@ static LRESULT FILEDLG95_SHELL_Init(HWND hwnd)
  */
 static BOOL FILEDLG95_SHELL_ExecuteCommand(HWND hwnd, LPCSTR lpVerb)
 {
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
-
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
   IContextMenu * pcm;
+
   TRACE("(%p,%p)\n", hwnd, lpVerb);
 
   if(SUCCEEDED(IShellView_GetItemObject(fodInfos->Shell.FOIShellView,
@@ -2287,7 +2288,7 @@ static BOOL FILEDLG95_SHELL_ExecuteCommand(HWND hwnd, LPCSTR lpVerb)
  */
 static BOOL FILEDLG95_SHELL_UpFolder(HWND hwnd)
 {
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   TRACE("\n");
 
@@ -2309,7 +2310,7 @@ static BOOL FILEDLG95_SHELL_UpFolder(HWND hwnd)
  */
 static BOOL FILEDLG95_SHELL_BrowseToDesktop(HWND hwnd)
 {
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
   LPITEMIDLIST pidl;
   HRESULT hres;
 
@@ -2328,7 +2329,7 @@ static BOOL FILEDLG95_SHELL_BrowseToDesktop(HWND hwnd)
  */
 static void FILEDLG95_SHELL_Clean(HWND hwnd)
 {
-    FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+    FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
     TRACE("\n");
 
@@ -2353,7 +2354,7 @@ static void FILEDLG95_SHELL_Clean(HWND hwnd)
  */
 static HRESULT FILEDLG95_FILETYPE_Init(HWND hwnd)
 {
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
   int nFilters = 0;  /* number of filters */
   int nFilterIndexCB;
 
@@ -2468,7 +2469,7 @@ static HRESULT FILEDLG95_FILETYPE_Init(HWND hwnd)
  */
 static BOOL FILEDLG95_FILETYPE_OnCommand(HWND hwnd, WORD wNotifyCode)
 {
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   switch(wNotifyCode)
   {
@@ -2534,7 +2535,7 @@ static int FILEDLG95_FILETYPE_SearchExt(HWND hwnd,LPCWSTR lpstrExt)
  */
 static void FILEDLG95_FILETYPE_Clean(HWND hwnd)
 {
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
   int iPos;
   int iCount = CBGetCount(fodInfos->DlgInfos.hwndFileTypeCB);
 
@@ -2671,9 +2672,7 @@ static LRESULT FILEDLG95_LOOKIN_DrawItem(LPDRAWITEMSTRUCT pDIStruct)
   int iIndentation;
   TEXTMETRICW tm;
   LPSFOLDER tmpFolder;
-
-
-  LookInInfos *liInfos = (LookInInfos *)GetPropA(pDIStruct->hwndItem,LookInInfosStr);
+  LookInInfos *liInfos = GetPropA(pDIStruct->hwndItem,LookInInfosStr);
 
   TRACE("\n");
 
@@ -2777,7 +2776,7 @@ static LRESULT FILEDLG95_LOOKIN_DrawItem(LPDRAWITEMSTRUCT pDIStruct)
  */
 static BOOL FILEDLG95_LOOKIN_OnCommand(HWND hwnd, WORD wNotifyCode)
 {
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   TRACE("%p\n", fodInfos);
 
@@ -2827,7 +2826,7 @@ static int FILEDLG95_LOOKIN_AddItem(HWND hwnd,LPITEMIDLIST pidl, int iInsertId)
   if(!pidl)
     return -1;
 
-  if(!(liInfos = (LookInInfos *)GetPropA(hwnd,LookInInfosStr)))
+  if(!(liInfos = GetPropA(hwnd,LookInInfosStr)))
     return -1;
 
   tmpFolder = MemAlloc(sizeof(SFOLDER));
@@ -2923,7 +2922,7 @@ int FILEDLG95_LOOKIN_SelectItem(HWND hwnd,LPITEMIDLIST pidl)
 
   iItemPos = FILEDLG95_LOOKIN_SearchItem(hwnd,(WPARAM)pidl,SEARCH_PIDL);
 
-  liInfos = (LookInInfos *)GetPropA(hwnd,LookInInfosStr);
+  liInfos = GetPropA(hwnd,LookInInfosStr);
 
   if(iItemPos < 0)
   {
@@ -2960,8 +2959,7 @@ int FILEDLG95_LOOKIN_SelectItem(HWND hwnd,LPITEMIDLIST pidl)
 static int FILEDLG95_LOOKIN_RemoveMostExpandedItem(HWND hwnd)
 {
   int iItemPos;
-
-  LookInInfos *liInfos = (LookInInfos *)GetPropA(hwnd,LookInInfosStr);
+  LookInInfos *liInfos = GetPropA(hwnd,LookInInfosStr);
 
   TRACE("\n");
 
@@ -3018,7 +3016,7 @@ static int FILEDLG95_LOOKIN_SearchItem(HWND hwnd,WPARAM searchArg,int iSearchMet
  */
 static void FILEDLG95_LOOKIN_Clean(HWND hwnd)
 {
-    FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+    FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
     int iPos;
     int iCount = CBGetCount(fodInfos->DlgInfos.hwndLookInCB);
 
@@ -3054,7 +3052,7 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd)
     LPWSTR            lpstrAllFile, lpstrCurrFile;
 
     TRACE("\n");
-    fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+    fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
     /* Count how many files we have */
     nFileSelected = GetNumSelected( fodInfos->Shell.FOIDataObject );
@@ -3169,7 +3167,7 @@ static HRESULT COMDLG32_StrRetToStrNW (LPWSTR dest, DWORD len, LPSTRRET src, LPI
  */
 static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, UINT * sizeUsed)
 {
-	FileOpenDlgInfos *fodInfos  = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+	FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 	UINT nStrCharCount = 0;	/* index in src buffer */
 	UINT nFileIndex = 0;	/* index in dest buffer */
 	UINT nFileCount = 0;	/* number of files */
@@ -3274,7 +3272,7 @@ LPITEMIDLIST GetPidlFromDataObject ( IDataObject *doSelected, UINT nPidlIndex)
         return NULL;
 	
     /* Set the FORMATETC structure*/
-    SETDefFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    SETDefFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLISTA), TYMED_HGLOBAL);
 
     /* Get the pidls from IDataObject */
     if(SUCCEEDED(IDataObject_GetData(doSelected,&formatetc,&medium)))
@@ -3295,7 +3293,7 @@ LPITEMIDLIST GetPidlFromDataObject ( IDataObject *doSelected, UINT nPidlIndex)
  * Return the number of selected items in the DataObject.
  *
 */
-UINT GetNumSelected( IDataObject *doSelected )
+static UINT GetNumSelected( IDataObject *doSelected )
 {
     UINT retVal = 0;
     STGMEDIUM medium;
@@ -3306,7 +3304,7 @@ UINT GetNumSelected( IDataObject *doSelected )
     if (!doSelected) return 0;
 
     /* Set the FORMATETC structure*/
-    SETDefFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    SETDefFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLISTA), TYMED_HGLOBAL);
 
     /* Get the pidls from IDataObject */
     if(SUCCEEDED(IDataObject_GetData(doSelected,&formatetc,&medium)))
@@ -3434,7 +3432,7 @@ static LPITEMIDLIST GetPidlFromName(IShellFolder *lpsf,LPWSTR lpcstrFileName)
 
 /*
 */
-BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl)
+static BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl)
 {
 	ULONG uAttr  = SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
 	HRESULT ret;
@@ -3454,7 +3452,7 @@ BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl)
 static BOOL BrowseSelectedFolder(HWND hwnd)
 {
   BOOL bBrowseSelFolder = FALSE;
-  FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   TRACE("\n");
 

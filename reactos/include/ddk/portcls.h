@@ -1544,9 +1544,50 @@ DECLARE_INTERFACE_(IAdapterPowerManagement, IUnknown)
     IPowerNotify Interface
 */
 
+#undef INTERFACE
+#define INTERFACE IPowerNotify
+
+DEFINE_GUID(IID_IPowerNotify, 0x3DD648B8L, 0x969F, 0x11D1, 0x95, 0xA9, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3);
+
+DECLARE_INTERFACE_(IPowerNotify, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(void, PowerChangeNotify)(THIS_
+        IN POWER_STATE PowerState)PURE;
+};
+
+typedef IPowerNotify *PPOWERNOTIFY;
+
+#undef INTERFACE
+
 /* ===============================================================
     IPinCount Interface
 */
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+#undef INTERFACE
+#define INTERFACE IPinCount
+
+DEFINE_GUID(IID_IPinCount, 0x5dadb7dcL, 0xa2cb, 0x4540, 0xa4, 0xa8, 0x42, 0x5e, 0xe4, 0xae, 0x90, 0x51);
+
+DECLARE_INTERFACE_(IPinCount, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(void,PinCount)(THIS_
+        IN ULONG PinId,
+        IN OUT PULONG FilterNecessary,
+        IN OUT PULONG FilterCurrent,
+        IN OUT PULONG FilterPossible,
+        IN OUT PULONG GlobalCurrent,
+        IN OUT PULONG GlobalPossible) PURE;
+};
+typedef IPinCount *PPINCOUNT;
+
+#undef INTERFACE
+#endif
+
 
 /* ===============================================================
     IPortEvents Interface

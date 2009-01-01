@@ -201,7 +201,7 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
 {
   ME_DisplayItem *item = pFirstRun;
   ME_FontTableItem *table = pStream->fonttbl;
-  int i;
+  unsigned int i;
   ME_DisplayItem *pLastPara = ME_GetParagraph(pLastRun);
   ME_DisplayItem *pCell = NULL;
   
@@ -264,7 +264,7 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
         {
           if (borders[i]->width > 0)
           {
-            int j;
+            unsigned int j;
             COLORREF crColor = borders[i]->colorRef;
             for (j = 1; j < pStream->nColorTblLen; j++)
               if (pStream->colortbl[j] == crColor)
@@ -348,7 +348,7 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
       {
         if (borders[i]->width)
         {
-          int j;
+          unsigned int j;
           COLORREF crColor = borders[i]->colorRef;
           sprintf(props + strlen(props), "\\clbrdr%c", sideChar[i]);
           sprintf(props + strlen(props), "\\brdrs");
@@ -380,7 +380,7 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
     {
       if (borders[i]->width)
       {
-        int j;
+        unsigned int j;
         COLORREF crColor = borders[i]->colorRef;
         sprintf(props + strlen(props), "\\trbrdr%c", sideChar[i]);
         sprintf(props + strlen(props), "\\brdrs");
@@ -555,7 +555,7 @@ static BOOL
 ME_StreamOutRTFCharProps(ME_OutStream *pStream, CHARFORMAT2W *fmt)
 {
   char props[STREAMOUT_BUFFER_SIZE] = "";
-  int i;
+  unsigned int i;
 
   if (fmt->dwMask & CFM_ALLCAPS && fmt->dwEffects & CFE_ALLCAPS)
     strcat(props, "\\caps");

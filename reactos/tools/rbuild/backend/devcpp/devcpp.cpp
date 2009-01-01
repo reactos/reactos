@@ -244,6 +244,6 @@ void DevCppBackend::OutputFileUnits()
 		m_devFile << "Link=1" 				<< endl;
 		m_devFile << "Priority=1000"		<< endl;
 		m_devFile << "OverrideBuildCmd=0"	<< endl;
-		m_devFile << "BuildCmd="			<< endl << endl;;
+		m_devFile << "BuildCmd="			<< endl << endl;
 	}
 }

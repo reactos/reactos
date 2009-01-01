@@ -358,15 +358,16 @@ UINT MSI_RecordGetStringA(MSIRECORD *rec, UINT iField,
     case MSIFIELD_WSTR:
         len = WideCharToMultiByte( CP_ACP, 0, rec->fields[iField].u.szwVal, -1,
                              NULL, 0 , NULL, NULL);
-        WideCharToMultiByte( CP_ACP, 0, rec->fields[iField].u.szwVal, -1,
-                             szValue, *pcchValue, NULL, NULL);
+        if (szValue)
+            WideCharToMultiByte( CP_ACP, 0, rec->fields[iField].u.szwVal, -1,
+                                 szValue, *pcchValue, NULL, NULL);
         if( szValue && *pcchValue && len>*pcchValue )
             szValue[*pcchValue-1] = 0;
         if( len )
             len--;
         break;
     case MSIFIELD_NULL:
-        if( *pcchValue > 0 )
+        if( szValue && *pcchValue > 0 )
             szValue[0] = 0;
         break;
     default:
@@ -902,4 +903,75 @@ UINT MSI_RecordStreamToFile( MSIRECORD *rec, UINT iField, LPCWSTR name )
     msiobj_unlock( &rec->hdr );
 
     return r;
+}
+
+MSIRECORD *MSI_CloneRecord(MSIRECORD *rec)
+{
+    MSIRECORD *clone;
+    UINT r, i, count;
+
+    count = MSI_RecordGetFieldCount(rec);
+    clone = MSI_CreateRecord(count);
+    if (!clone)
+        return NULL;
+
+    for (i = 0; i <= count; i++)
+    {
+        if (rec->fields[i].type == MSIFIELD_STREAM)
+        {
+            if (FAILED(IStream_Clone(rec->fields[i].u.stream,
+                                     &clone->fields[i].u.stream)))
+            {
+                msiobj_release(&clone->hdr);
+                return NULL;
+            }
+        }
+        else
+        {
+            r = MSI_RecordCopyField(rec, i, clone, i);
+            if (r != ERROR_SUCCESS)
+            {
+                msiobj_release(&clone->hdr);
+                return NULL;
+            }
+        }
+    }
+
+    return clone;
+}
+
+BOOL MSI_RecordsAreEqual(MSIRECORD *a, MSIRECORD *b)
+{
+    UINT i;
+
+    if (a->count != b->count)
+        return FALSE;
+
+    for (i = 0; i <= a->count; i++)
+    {
+        if (a->fields[i].type != b->fields[i].type)
+            return FALSE;
+
+        switch (a->fields[i].type)
+        {
+            case MSIFIELD_NULL:
+                break;
+
+            case MSIFIELD_INT:
+                if (a->fields[i].u.iVal != b->fields[i].u.iVal)
+                    return FALSE;
+                break;
+
+            case MSIFIELD_WSTR:
+                if (lstrcmpW(a->fields[i].u.szwVal, b->fields[i].u.szwVal))
+                    return FALSE;
+                break;
+
+            case MSIFIELD_STREAM:
+            default:
+                return FALSE;
+        }
+    }
+
+    return TRUE;
 }

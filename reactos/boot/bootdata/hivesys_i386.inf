@@ -890,22 +890,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 
-; Green driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\green","ErrorControl",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\green","Group",0x00000000,"Extended base"
-;HKLM,"SYSTEM\CurrentControlSet\Services\green","ImagePath",0x00020000,"system32\drivers\green.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\green","Start",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\green","Type",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\green\Parameters","AttachedDevice",0x00000000,"\Device\Serial0"
-
-; i8042 port driver
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Group",0x00000000,"Keyboard Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","ImagePath",0x00020000,"system32\drivers\i8042prt.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
-
 ; Kernel-Mode Tests
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Kmtest","ErrorControl",0x00010001,0x00000000
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Kmtest","Group",0x00000000,"Base"

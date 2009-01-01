@@ -989,7 +989,7 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
   INT iSizeFormat;
   ULARGE_INTEGER u64FileSize;
 
-  for (i = 0;i < dwCount;i++)
+  for (i = 0; i < dwCount && !bCtrlBreak; i++)
   {
     /* Calculate size */
     if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
@@ -1097,7 +1097,7 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
   /* Calculate the lines that will be printed */
   iLines = (USHORT)((dwCount + iColumns - 1) / iColumns);
 
-  for (i = 0; i < iLines; i++)
+  for (i = 0; i < iLines && !bCtrlBreak; i++)
   {
     for (j = 0; j < iColumns; j++)
     {
@@ -1154,7 +1154,7 @@ TCHAR szSize[30];				/* The size of file */
 int iSizeFormat;				/* The format of size field */
 ULARGE_INTEGER u64FileSize;		/* The file size */
 
-	for(i = 0;i < dwCount;i++)
+	for (i = 0; i < dwCount && !bCtrlBreak; i++)
 	{
 		/* Broke 8.3 format */
 		if (*ptrFiles[i]->cAlternateFileName )
@@ -1228,7 +1228,7 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 	TCHAR szFullName[MAX_PATH];
 	DWORD i;
 
-	for (i = 0; i < dwCount; i++)
+	for (i = 0; i < dwCount && !bCtrlBreak; i++)
 	{
 		if ((_tcscmp(ptrFiles[i]->cFileName, _T(".")) == 0) ||
 		    (_tcscmp(ptrFiles[i]->cFileName, _T("..")) == 0))
@@ -1681,6 +1681,15 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 
 	/* Free array */
 	cmd_free(ptrFileArray);
+	/* Free linked list */
+	while (ptrStartNode)
+	{
+		ptrNextNode = ptrStartNode->ptrNext;
+		cmd_free(ptrStartNode);
+		ptrStartNode = ptrNextNode;
+		dwCount --;
+	}
+
 	if (CheckCtrlBreak(BREAK_INPUT))
 		return 1;
 
@@ -1739,15 +1748,6 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 			}
 		}while(FindNextFile(hRecSearch,&wfdFileInfo));
 		FindClose(hRecSearch);
-	}
-
-	/* Free linked list */
-	while (ptrStartNode)
-	{
-		ptrNextNode = ptrStartNode->ptrNext;
-		cmd_free(ptrStartNode);
-		ptrStartNode = ptrNextNode;
-		dwCount --;
 	}
 
 	return 0;

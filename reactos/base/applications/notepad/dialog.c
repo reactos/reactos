@@ -676,16 +676,15 @@ VOID DIALOG_EditTimeDate(VOID)
 {
     SYSTEMTIME   st;
     TCHAR        szDate[MAX_STRING_LEN];
-    static const TCHAR space[] = _T(" ");
+    TCHAR        szText[MAX_STRING_LEN * 2 + 2];
 
     GetLocalTime(&st);
 
     GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, NULL, szDate, MAX_STRING_LEN);
-    SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szDate);
-
-    SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)space);
-
+    _tcscpy(szText, szDate);
+    _tcscat(szText, _T(" "));
     GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, szDate, MAX_STRING_LEN);
+    _tcscat(szText, szDate);
     SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szDate);
 }
 

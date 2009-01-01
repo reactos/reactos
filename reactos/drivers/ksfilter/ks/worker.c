@@ -63,12 +63,13 @@ KsUnregisterWorker(
 {
     KS_WORKER * KsWorker;
     KIRQL OldIrql;
-    ULONG bWait = FALSE;
 
     if (!Worker)
         return;
 
     KsWorker = (KS_WORKER *)Worker;
+
+    KeAcquireSpinLock(&KsWorker->Lock, &OldIrql);
 
     KsWorker->DeleteInProgress = TRUE;
 

@@ -219,7 +219,7 @@ AtapiDmaSetup(
     PHW_CHANNEL chan = &(deviceExtension->chan[lChannel]);
     PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
     BOOLEAN use_DB_IO = FALSE;
-    BOOLEAN use_AHCI = FALSE;
+    //BOOLEAN use_AHCI = FALSE;
     ULONG orig_count = count;
     ULONG max_entries = (deviceExtension->HwFlags & UNIATA_AHCI) ? ATA_AHCI_DMA_ENTRIES : ATA_DMA_ENTRIES;
 
@@ -281,7 +281,7 @@ retry_DB_IO:
     if(!dma_count || ((LONG)(dma_base) == -1)) {
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No 1st block\n" ));
         //AtaReq->dma_base = NULL;
-        AtaReq->ahci_base64 = NULL;
+        AtaReq->ahci_base64 = (ULONGLONG)NULL;
         return FALSE;
     }
 
@@ -303,7 +303,7 @@ retry_DB_IO:
         if (i >= max_entries) {
             KdPrint2((PRINT_PREFIX "too many segments in DMA table\n" ));
             //AtaReq->dma_base = NULL;
-            AtaReq->ahci_base64 = NULL;
+            AtaReq->ahci_base64 = (ULONGLONG)NULL;
             return FALSE;
         }
         KdPrint2((PRINT_PREFIX "  get Phys(data[n]=%x)\n", data ));
@@ -321,7 +321,7 @@ retry_DB_IO:
         } else
         if(!dma_count || !dma_base || ((LONG)(dma_base) == -1)) {
             //AtaReq->dma_base = NULL;
-            AtaReq->ahci_base64 = NULL;
+            AtaReq->ahci_base64 = (ULONGLONG)NULL;
             KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No NEXT block\n" ));
             return FALSE;
         }
@@ -612,7 +612,7 @@ AtapiDmaReinit(
     }
 
     if((deviceExtension->HbaCtrlFlags & HBAFLAGS_DMA_DISABLED_LBA48) &&
-       (AtaReq->lba >= ATA_MAX_LBA28) &&
+       (AtaReq->lba >= (LONGLONG)ATA_MAX_LBA28) &&
        (LunExt->TransferMode > ATA_PIO5) ) {
         KdPrint2((PRINT_PREFIX
                     "AtapiDmaReinit: FORCE_DOWNRATE on Device %d for LBA48\n", ldev & 1));
@@ -623,7 +623,7 @@ AtapiDmaReinit(
     if(AtaReq->Flags & REQ_FLAG_FORCE_DOWNRATE) {
         KdPrint2((PRINT_PREFIX
                     "AtapiDmaReinit: FORCE_DOWNRATE on Device %d\n", ldev & 1));
-        if(AtaReq->lba >= ATA_MAX_LBA28) {
+        if(AtaReq->lba >= (LONGLONG)ATA_MAX_LBA28) {
 limit_lba48:
             LunExt->DeviceFlags |= REQ_FLAG_FORCE_DOWNRATE_LBA48;
 limit_pio:
@@ -1046,7 +1046,7 @@ set_new_acard:
         /* set PIO mode timings */
         AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
         if((apiomode >= 0) && (ChipType != VIA133)) {
-            SetPciConfig1(reg-0x08, via_pio[apiomode]);
+            SetPciConfig1(reg-0x08, via_pio[(UCHAR)apiomode]);
         }
         via82c_timing(deviceExtension, dev, ATA_PIO0 + apiomode);
         AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
@@ -1067,18 +1067,18 @@ set_new_acard:
             apiomode = 4;
         for(i=udmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[udmamode]);
+                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[(UCHAR)udmamode]);
                 return;
             }
         }
         for(i=wdmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[wdmamode]);
+                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[(UCHAR)wdmamode]);
                 return;
             }
         }
         if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
-            AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[apiomode]);
+            AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[(UCHAR)apiomode]);
             return;
         }
         return;
@@ -1113,7 +1113,7 @@ set_new_acard:
         }
         if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
             ChangePciConfig4(0x44 + (dev * 8), a | 0x80000000);
-            SetPciConfig4(0x40 + (dev * 8), nat_piotiming[apiomode]);
+            SetPciConfig4(0x40 + (dev * 8), nat_piotiming[(UCHAR)apiomode]);
             return;
         }
         /* Use GENERIC PIO */
@@ -1413,7 +1413,7 @@ set_new_acard:
                 // 44
                 GetPciConfig4(0x44, reg44);
                 reg44 = (reg44 & ~(0xff << bit_offset)) |
-                             (sw_dma_modes[wdmamode] << bit_offset);
+                             (sw_dma_modes[(UCHAR)wdmamode] << bit_offset);
                 SetPciConfig4(0x44, reg44);
                 // 40
                 GetPciConfig4(0x40, reg40);
@@ -1439,7 +1439,7 @@ set_new_acard:
         // 40
         GetPciConfig4(0x40, reg40);
         reg40 = (reg40 & ~(0xff << bit_offset)) |
-                       (sw_pio_modes[apiomode] << bit_offset);
+                       (sw_pio_modes[(UCHAR)apiomode] << bit_offset);
         SetPciConfig4(0x40, reg40);
         return;
         break; }
@@ -1527,7 +1527,7 @@ l_ATA_SILICON_IMAGE_ID:
             /* set PIO mode timings */
             AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
 
-            SetPciConfig1(treg, cmd_pio_modes[apiomode]);
+            SetPciConfig1(treg, cmd_pio_modes[(UCHAR)apiomode]);
             ChangePciConfig1(Channel ? 0x7b : 0x73, a & ~(!(DeviceNumber & 1) ? 0x35 : 0xca));
             return;
 
@@ -1538,7 +1538,7 @@ l_ATA_SILICON_IMAGE_ID:
         /*******/
         /* SiS */
         /*******/
-        PULONG sis_modes;
+        PULONG sis_modes = NULL;
         static const ULONG sis_modes_new133[] =
                 { 0x28269008, 0x0c266008, 0x04263008, 0x0c0a3008, 0x05093008,
                   0x22196008, 0x0c0a3008, 0x05093008, 0x050939fc, 0x050936ac,
@@ -1553,9 +1553,9 @@ l_ATA_SILICON_IMAGE_ID:
                 { 0x00cb, 0x0067, 0x0044, 0x0033, 0x0031, 0x0044, 0x0033, 0x0031,
                   0x8b31, 0x8731, 0x8531, 0x8431, 0x8231, 0x8131 };
 
-        ULONG reg;
+        ULONG reg = 0;
         UCHAR reg57;
-        ULONG reg_size;
+        ULONG reg_size = 0;
         ULONG offs;
 
         switch(ChipType) {
@@ -1901,7 +1901,7 @@ hpt_timing(
     ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
     //ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
 
-    ULONG timing;
+    ULONG timing = 0;
 
     if(mode == ATA_PIO5)
         mode = ATA_PIO4;

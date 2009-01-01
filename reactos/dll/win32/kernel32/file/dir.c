@@ -116,15 +116,14 @@ CreateDirectoryW (
                                    (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
 
         Status = NtCreateFile (&DirectoryHandle,
-                               FILE_LIST_DIRECTORY | SYNCHRONIZE |
-                                   FILE_OPEN_FOR_BACKUP_INTENT,
+                               FILE_LIST_DIRECTORY | SYNCHRONIZE,
                                &ObjectAttributes,
                                &IoStatusBlock,
                                NULL,
                                FILE_ATTRIBUTE_NORMAL,
                                FILE_SHARE_READ | FILE_SHARE_WRITE,
                                FILE_CREATE,
-                               FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                               FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT,
                                NULL,
                                0);
 

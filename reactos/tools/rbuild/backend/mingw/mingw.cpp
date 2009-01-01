@@ -541,6 +541,9 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
 	fprintf ( fMakefile, "PROJECT_GCCOPTIONS += -march=$(OARCH)\n" );
 	fprintf ( fMakefile, "endif\n" );
+	fprintf ( fMakefile, "ifneq ($(TUNE),)\n" );
+	fprintf ( fMakefile, "PROJECT_GCCOPTIONS += -mtune=$(TUNE)\n" );
+	fprintf ( fMakefile, "endif\n" );
 	fprintf ( fMakefile, "PROJECT_CFLAGS = $(PROJECT_GCCOPTIONS) $(PROJECT_GCC_CFLAGS)\n" );
 	fprintf ( fMakefile, "PROJECT_CXXFLAGS = $(PROJECT_GCCOPTIONS) $(PROJECT_GCC_CXXFLAGS)\n" );
 	fprintf ( fMakefile, "\n" );

@@ -382,8 +382,7 @@ PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
              (BYTE *)&ctlInfo, &size);
             if (ret)
             {
-                ctl = (PCTL_CONTEXT)Context_CreateDataContext(
-                 sizeof(CTL_CONTEXT));
+                ctl = Context_CreateDataContext(sizeof(CTL_CONTEXT));
                 if (ctl)
                 {
                     BYTE *data = CryptMemAlloc(cbCtlEncoded);

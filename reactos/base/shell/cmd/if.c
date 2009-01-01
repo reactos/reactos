@@ -49,13 +49,8 @@ static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
 	return StringCmp(Left, Right);
 }
 
-BOOL ExecuteIf(PARSED_COMMAND *Cmd)
+INT cmd_if (LPTSTR param)
 {
-	INT result = FALSE; /* when set cause 'then' clause to be executed */
-	LPTSTR param;
-
-#if 0
-	/* FIXME: need to handle IF /?; will require special parsing */
 	TRACE ("cmd_if: (\'%s\')\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -63,7 +58,15 @@ BOOL ExecuteIf(PARSED_COMMAND *Cmd)
 		ConOutResPaging(TRUE,STRING_IF_HELP1);
 		return 0;
 	}
-#endif
+
+	error_syntax(param);
+	return 1;
+}
+
+BOOL ExecuteIf(PARSED_COMMAND *Cmd)
+{
+	INT result = FALSE; /* when set cause 'then' clause to be executed */
+	LPTSTR param;
 
 	if (Cmd->If.Operator == IF_CMDEXTVERSION)
 	{

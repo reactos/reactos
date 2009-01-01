@@ -332,7 +332,7 @@ static PARSED_COMMAND *ParseIf(void)
 	memset(Cmd, 0, sizeof(PARSED_COMMAND));
 	Cmd->Type = C_IF;
 
-	int Type = ParseToken(0, STANDARD_SEPS);
+	int Type = CurrentTokenType;
 	if (_tcsicmp(CurrentToken, _T("/I")) == 0)
 	{
 		Cmd->If.Flags |= IFFLAG_IGNORECASE;
@@ -488,13 +488,19 @@ static PARSED_COMMAND *ParseCommandPart(void)
 	/* Check for special forms */
 	if (_tcsicmp(ParsedLine, _T("if")) == 0)
 	{
-		if (RedirList)
+		ParseToken(0, STANDARD_SEPS);
+		/* Do special parsing only if it's not followed by /? */
+		if (_tcscmp(CurrentToken, _T("/?")) != 0)
 		{
-			ParseError();
-			FreeRedirection(RedirList);
-			return NULL;
+			if (RedirList)
+			{
+				ParseError();
+				FreeRedirection(RedirList);
+				return NULL;
+			}
+			return ParseIf();
 		}
-		return ParseIf();
+		Pos = _stpcpy(Pos, _T(" /?"));
 	}
 
 	/* Now get the tail */

@@ -30,6 +30,7 @@ static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
 static const WCHAR OemFileMask[] = {'o','e','m','*','.','i','n','f',0};
 static const WCHAR OemFileSpecification[] = {'o','e','m','%','l','u','.','i','n','f',0};
 static const WCHAR DotLnk[] = {'.','l','n','k',0};
+static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
 
 static const WCHAR DependenciesKey[] = {'D','e','p','e','n','d','e','n','c','i','e','s',0};
 static const WCHAR DescriptionKey[] = {'D','e','s','c','r','i','p','t','i','o','n',0};
@@ -1457,9 +1458,12 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
 void WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show )
 {
     WCHAR *s, *path, section[MAX_PATH];
-    void *callback_context;
+    void *callback_context = NULL;
+    DWORD SectionNameLength;
     UINT mode;
-    HINF hinf;
+    HINF hinf = INVALID_HANDLE_VALUE;
+    BOOL bRebootRequired = FALSE;
+    BOOL ret;
 
     TRACE("hwnd %p, handle %p, cmdline %s\n", hwnd, handle, debugstr_w(cmdline));
 
@@ -1475,23 +1479,101 @@ void WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, I
     while (*s == ' ') s++;
     path = s;
 
-    hinf = SetupOpenInfFileW( path, NULL, INF_STYLE_WIN4, NULL );
-    if (hinf == INVALID_HANDLE_VALUE) return;
-
-    if (SetupDiGetActualSectionToInstallW(
-        hinf, section, section, sizeof(section)/sizeof(section[0]), NULL, NULL ))
+    if (mode & 0x80)
     {
-        callback_context = SetupInitDefaultQueueCallback( hwnd );
-        SetupInstallFromInfSectionW( hwnd, hinf, section, SPINST_ALL, NULL, NULL, SP_COPY_NEWER,
-                                     SetupDefaultQueueCallbackW, callback_context,
-                                     NULL, NULL );
-        SetupTermDefaultQueueCallback( callback_context );
+        FIXME("default path of the installation not changed\n");
+        mode &= ~0x80;
     }
-    SetupCloseInfFile( hinf );
 
-    /* FIXME: should check the mode and maybe reboot */
-    /* there isn't much point in doing that since we */
-    /* don't yet handle deferred file copies anyway. */
+    hinf = SetupOpenInfFileW( path, NULL, INF_STYLE_WIN4, NULL );
+    if (hinf == INVALID_HANDLE_VALUE)
+    {
+        WARN("SetupOpenInfFileW(%s) failed (Error %u)\n", path, GetLastError());
+        goto cleanup;
+    }
+
+    ret = SetupDiGetActualSectionToInstallW(
+       hinf, section, section, sizeof(section)/sizeof(section[0]), &SectionNameLength, NULL );
+    if (!ret)
+    {
+        WARN("SetupDiGetActualSectionToInstallW() failed (Error %u)\n", GetLastError());
+        goto cleanup;
+    }
+    if (SectionNameLength > MAX_PATH - strlenW(DotServices))
+    {
+        WARN("Section name '%s' too long\n", section);
+        goto cleanup;
+    }
+
+    /* Copy files and add registry entries */
+    callback_context = SetupInitDefaultQueueCallback( hwnd );
+    ret = SetupInstallFromInfSectionW( hwnd, hinf, section, SPINST_ALL, NULL, NULL,
+                                       SP_COPY_NEWER | SP_COPY_IN_USE_NEEDS_REBOOT,
+                                       SetupDefaultQueueCallbackW, callback_context,
+                                       NULL, NULL );
+    if (!ret)
+    {
+        WARN("SetupInstallFromInfSectionW() failed (Error %u)\n", GetLastError());
+        goto cleanup;
+    }
+    /* FIXME: need to check if some files were in use and need reboot
+     * bReboot = ...;
+     */
+
+    /* Install services */
+    wcscat(section, DotServices);
+    ret = SetupInstallServicesFromInfSectionW( hinf, section, 0 );
+    if (!ret && GetLastError() == ERROR_SECTION_NOT_FOUND)
+        ret = TRUE;
+    if (!ret)
+    {
+        WARN("SetupInstallServicesFromInfSectionW() failed (Error %u)\n", GetLastError());
+        goto cleanup;
+    }
+    else if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
+    {
+        bRebootRequired = TRUE;
+    }
+
+    /* Check if we need to reboot */
+    switch (mode)
+    {
+        case 0:
+            /* Never reboot */
+            break;
+        case 1:
+            /* Always reboot */
+            ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_APPLICATION |
+                SHTDN_REASON_MINOR_INSTALLATION | SHTDN_REASON_FLAG_PLANNED);
+            break;
+        case 2:
+            /* Query user before rebooting */
+            SetupPromptReboot(NULL, hwnd, FALSE);
+            break;
+        case 3:
+            /* Reboot if necessary */
+            if (bRebootRequired)
+            {
+                ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_APPLICATION |
+                    SHTDN_REASON_MINOR_INSTALLATION | SHTDN_REASON_FLAG_PLANNED);
+            }
+            break;
+        case 4:
+            /* If necessary, query user before rebooting */
+            if (bRebootRequired)
+            {
+                SetupPromptReboot(NULL, hwnd, FALSE);
+            }
+            break;
+        default:
+            break;
+    }
+
+cleanup:
+    if ( callback_context )
+        SetupTermDefaultQueueCallback( callback_context );
+    if ( hinf != INVALID_HANDLE_VALUE )
+        SetupCloseInfFile( hinf );
 }
 
 

@@ -24,6 +24,8 @@
 using std::string;
 using std::vector;
 
+static const Path defaultPath;
+
 string
 Right ( const string& s, size_t n )
 {

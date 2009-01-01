@@ -461,6 +461,9 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
     if (!name)
         return NULL;
 
+    if (name[0] == '.')
+        name++;
+
     /* check for extensions already loaded */
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {

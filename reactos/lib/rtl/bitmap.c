@@ -764,9 +764,12 @@ RtlNumberOfSetBits(PRTL_BITMAP BitMapHeader)
       lpOut++;
     }
 
-    bMasked = *lpOut & NTDLL_maskBits[ulRemainder];
-    ulSet += NTDLL_nibbleBitCount[bMasked >> 4];
-    ulSet += NTDLL_nibbleBitCount[bMasked & 0xf];
+    if (ulRemainder)
+    {
+      bMasked = *lpOut & NTDLL_maskBits[ulRemainder];
+      ulSet += NTDLL_nibbleBitCount[bMasked >> 4];
+      ulSet += NTDLL_nibbleBitCount[bMasked & 0xf];
+    }
   }
   return ulSet;
 }
@@ -848,7 +851,8 @@ RtlSetBits(PRTL_BITMAP BitMapHeader,
   }
 
   /* Set remaining bits, if any */
-  *lpOut |= NTDLL_maskBits[NumberToSet & 0x7];
+  if (NumberToSet & 0x7)
+    *lpOut |= NTDLL_maskBits[NumberToSet & 0x7];
 }
 
 

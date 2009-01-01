@@ -159,7 +159,11 @@ InitBadBlocks(
                                                 L"UniATA\\Parameters\\BadBlocks",
                                                 QueryTable, 0, 0);
 
+#ifdef _DEBUG
         KdPrint(( "InitBadBlocks returned: %#x\n", status));
+#else
+        UNREFERENCED_PARAMETER(status);
+#endif
     } else {
 
         KdPrint(( "InitBadBlocks local\n"));

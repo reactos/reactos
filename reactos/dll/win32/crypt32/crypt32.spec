@@ -35,6 +35,7 @@
 @ stdcall CertEnumCTLsInStore(ptr ptr)
 @ stdcall CertEnumCertificateContextProperties(ptr long)
 @ stdcall CertEnumCertificatesInStore(long ptr)
+@ stdcall CertEnumPhysicalStore(ptr long ptr ptr)
 @ stdcall CertEnumSystemStore(long ptr ptr ptr)
 @ stdcall CertFindAttribute(str long ptr)
 @ stdcall CertFindCRLInStore(long long long long ptr ptr)
@@ -98,7 +99,7 @@
 @ stdcall CryptBinaryToStringA(ptr long long ptr ptr)
 @ stub CryptBinaryToStringW # (ptr long long ptr ptr)
 @ stdcall CryptStringToBinaryA(str long long ptr ptr ptr ptr)
-@ stub CryptStringToBinaryW # (wstr long long ptr ptr ptr ptr)
+@ stdcall CryptStringToBinaryW (wstr long long ptr ptr ptr ptr)
 @ stdcall CryptAcquireContextU(ptr wstr wstr long long) advapi32.CryptAcquireContextW
 @ stdcall CryptAcquireCertificatePrivateKey(ptr long ptr ptr ptr ptr)
 @ stub CryptCloseAsyncHandle
@@ -186,8 +187,8 @@
 @ stdcall CryptVerifyCertificateSignature(long long ptr long ptr)
 @ stdcall CryptVerifyCertificateSignatureEx(long long long ptr long ptr long ptr)
 @ stdcall CryptVerifyDetachedMessageHash(ptr ptr long long ptr ptr ptr ptr)
-@ stub CryptVerifyDetachedMessageSignature
-@ stub CryptVerifyMessageHash
+@ stdcall CryptVerifyDetachedMessageSignature(ptr long ptr long long ptr ptr ptr)
+@ stdcall CryptVerifyMessageHash(ptr ptr long ptr ptr ptr ptr)
 @ stdcall CryptVerifyMessageSignature(ptr long ptr long ptr ptr ptr)
 @ stub CryptVerifyMessageSignatureWithKey
 @ stub CryptVerifySignatureU

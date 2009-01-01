@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="wined3d" type="win32dll" installbase="system32" installname="wined3d.dll" allowwarnings ="true" crt="msvcrt">
 	<importlibrary definition="wined3d.def" />
+	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="wined3d">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />

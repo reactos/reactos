@@ -76,8 +76,8 @@ BEGIN
 
     CONTROL "Слагане на начален зареждач (MBR) на твърдия диск", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
     CONTROL "Без слагане на начален зареждач", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,57,278,11
-    PUSHBUTTON "&OK", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Cancel", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Добре", IDOK, 180,83,50,15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "&Отказ", IDCANCEL, 240,83,50,15, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
@@ -103,7 +103,7 @@ BEGIN
  
     LTEXT "Когато натиснете „Край”, компютърът ви ще се презапусне.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "Ако в устройството има КД, го извадете. След това натиснете „Приключване“, за д апрезапуснете компютъра.“, IDC_STATIC, 10, 180, 297, 20
+    LTEXT "Ако в устройството има КД, го извадете. След това натиснете „Приключване“, за да презапуснете компютъра.“, IDC_STATIC, 10, 180, 297, 20
 END
 
 

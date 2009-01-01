@@ -685,8 +685,8 @@ IntCreatePrimarySurface()
      EngEraseSurface(SurfObj, &SurfaceRect, 0); */
 
    /* Put the pointer in the center of the screen */
-   GDIDEV(SurfObj)->Pointer.Pos.x = (SurfaceRect.right - SurfaceRect.left) / 2;
-   GDIDEV(SurfObj)->Pointer.Pos.y = (SurfaceRect.bottom - SurfaceRect.top) / 2;
+   gpsi->ptCursor.x = (SurfaceRect.right - SurfaceRect.left) / 2;
+   gpsi->ptCursor.y = (SurfaceRect.bottom - SurfaceRect.top) / 2;
 
    EngUnlockSurface(SurfObj);
    co_IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);

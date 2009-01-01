@@ -1094,8 +1094,8 @@ IntMouseInput(MOUSEINPUT *mi)
             }
             /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
             * use the old values to move the pointer image */
-            GDIDEV(SurfObj)->Pointer.Pos.x = MousePos.x;
-            GDIDEV(SurfObj)->Pointer.Pos.y = MousePos.y;
+            gpsi->ptCursor.x = MousePos.x;
+            gpsi->ptCursor.y = MousePos.y;
 
             BITMAPOBJ_UnlockBitmap(BitmapObj);
          }

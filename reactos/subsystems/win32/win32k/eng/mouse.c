@@ -126,9 +126,9 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
       return FALSE;
    }
   if (pgp->MovePointer)
-    pgp->MovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
+    pgp->MovePointer(SurfObj, gpsi->ptCursor.x, gpsi->ptCursor.y, &pgp->Exclude);
   else
-    EngMovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
+    EngMovePointer(SurfObj, gpsi->ptCursor.x, gpsi->ptCursor.y, &pgp->Exclude);
 
   ppdev->SafetyRemoveLevel = 0;
 
@@ -169,8 +169,8 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
   /*
    *  Hide the cours
    */
-   pt.x = pgp->Pos.x - pgp->HotSpot.x;
-   pt.y = pgp->Pos.y - pgp->HotSpot.y;
+   pt.x = gpsi->ptCursor.x - pgp->HotSpot.x;
+   pt.y = gpsi->ptCursor.y - pgp->HotSpot.y;
 
 
    if (pgp->SaveSurface != NULL)
@@ -233,8 +233,8 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
      return ;
    }
 
-   pt.x = pgp->Pos.x - pgp->HotSpot.x;
-   pt.y = pgp->Pos.y - pgp->HotSpot.y;
+   pt.x = gpsi->ptCursor.x - pgp->HotSpot.x;
+   pt.y = gpsi->ptCursor.y - pgp->HotSpot.y;
 
    /*
     * Copy the pixels under the cursor to temporary surface.
@@ -402,8 +402,8 @@ EngSetPointerShape(
     * done right after this. It helps IntShowMousePointer. */
    if (x != -1)
    {
-     pgp->Pos.x = x;
-     pgp->Pos.y = y;
+     gpsi->ptCursor.x = x;
+     gpsi->ptCursor.y = y;
    }
 
    pgp->Size.cx = abs(psoMask->lDelta) << 3;
@@ -552,8 +552,8 @@ EngMovePointer(
    {
      /* Actually this should be set by 'the other side', but it would be
       * done right after this. It helps IntShowMousePointer. */
-     pgp->Pos.x = x;
-     pgp->Pos.y = y;
+     gpsi->ptCursor.x = x;
+     gpsi->ptCursor.y = y;
      IntShowMousePointer(ppdev, pso);
      if (prcl != NULL)
      {

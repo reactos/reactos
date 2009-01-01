@@ -78,7 +78,7 @@ static BOOL CRYPT_ProvAddCert(PWINECRYPT_CERTSTORE store, void *cert,
     /* dirty trick: replace the returned context's hCertStore with
      * store.
      */
-    if (ppStoreContext)
+    if (ret && ppStoreContext)
         (*(PCERT_CONTEXT *)ppStoreContext)->hCertStore = store;
     return ret;
 }
@@ -145,7 +145,7 @@ static BOOL CRYPT_ProvAddCRL(PWINECRYPT_CERTSTORE store, void *crl,
     /* dirty trick: replace the returned context's hCertStore with
      * store.
      */
-    if (ppStoreContext)
+    if (ret && ppStoreContext)
         (*(PCRL_CONTEXT *)ppStoreContext)->hCertStore = store;
     return ret;
 }
@@ -212,7 +212,7 @@ static BOOL CRYPT_ProvAddCTL(PWINECRYPT_CERTSTORE store, void *ctl,
     /* dirty trick: replace the returned context's hCertStore with
      * store.
      */
-    if (ppStoreContext)
+    if (ret && ppStoreContext)
         (*(PCTL_CONTEXT *)ppStoreContext)->hCertStore = store;
     return ret;
 }

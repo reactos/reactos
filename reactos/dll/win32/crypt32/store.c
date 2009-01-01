@@ -156,7 +156,7 @@ static BOOL CRYPT_MemAddCert(PWINECRYPT_CERTSTORE store, void *cert,
 
     TRACE("(%p, %p, %p, %p)\n", store, cert, toReplace, ppStoreContext);
 
-    context = (PCERT_CONTEXT)ContextList_Add(ms->certs, cert, toReplace);
+    context = ContextList_Add(ms->certs, cert, toReplace);
     if (context)
     {
         context->hCertStore = store;
@@ -197,7 +197,7 @@ static BOOL CRYPT_MemAddCrl(PWINECRYPT_CERTSTORE store, void *crl,
 
     TRACE("(%p, %p, %p, %p)\n", store, crl, toReplace, ppStoreContext);
 
-    context = (PCRL_CONTEXT)ContextList_Add(ms->crls, crl, toReplace);
+    context = ContextList_Add(ms->crls, crl, toReplace);
     if (context)
     {
         context->hCertStore = store;
@@ -238,7 +238,7 @@ static BOOL CRYPT_MemAddCtl(PWINECRYPT_CERTSTORE store, void *ctl,
 
     TRACE("(%p, %p, %p, %p)\n", store, ctl, toReplace, ppStoreContext);
 
-    context = (PCTL_CONTEXT)ContextList_Add(ms->ctls, ctl, toReplace);
+    context = ContextList_Add(ms->ctls, ctl, toReplace);
     if (context)
     {
         context->hCertStore = store;
@@ -1321,7 +1321,7 @@ BOOL WINAPI CertEnumSystemStore(DWORD dwFlags, void *pvSystemStoreLocationPara,
             rc = RegEnumKeyExW(key, index++, name, &size, NULL, NULL, NULL,
                 NULL);
             if (!rc)
-                ret = pfnEnum(name, 0, &info, NULL, pvArg);
+                ret = pfnEnum(name, dwFlags, &info, NULL, pvArg);
         } while (ret && !rc);
         if (ret && rc != ERROR_NO_MORE_ITEMS)
             SetLastError(rc);
@@ -1329,4 +1329,17 @@ BOOL WINAPI CertEnumSystemStore(DWORD dwFlags, void *pvSystemStoreLocationPara,
     else
         SetLastError(rc);
     return ret;
+}
+
+BOOL WINAPI CertEnumPhysicalStore(const void *pvSystemStore, DWORD dwFlags,
+ void *pvArg, PFN_CERT_ENUM_PHYSICAL_STORE pfnEnum)
+{
+    if (dwFlags & CERT_SYSTEM_STORE_RELOCATE_FLAG)
+        FIXME("(%p, %08x, %p, %p): stub\n", pvSystemStore, dwFlags, pvArg,
+         pfnEnum);
+    else
+        FIXME("(%s, %08x, %p, %p): stub\n", debugstr_w((LPCWSTR)pvSystemStore),
+         dwFlags, pvArg,
+         pfnEnum);
+    return FALSE;
 }

@@ -39,13 +39,26 @@
 static const int KARATSUBA_MUL_CUTOFF = 88,  /* Min. number of digits before Karatsuba multiplication is used. */
                  KARATSUBA_SQR_CUTOFF = 128; /* Min. number of digits before Karatsuba squaring is used. */
 
+static void bn_reverse(unsigned char *s, int len);
+static int s_mp_add(mp_int *a, mp_int *b, mp_int *c);
+static int s_mp_exptmod (const mp_int * G, const mp_int * X, mp_int * P, mp_int * Y);
+#define s_mp_mul(a, b, c) s_mp_mul_digs(a, b, c, (a)->used + (b)->used + 1)
+static int s_mp_mul_digs(const mp_int *a, const mp_int *b, mp_int *c, int digs);
+static int s_mp_mul_high_digs(const mp_int *a, const mp_int *b, mp_int *c, int digs);
+static int s_mp_sqr(const mp_int *a, mp_int *b);
+static int s_mp_sub(const mp_int *a, const mp_int *b, mp_int *c);
+static int mp_exptmod_fast(const mp_int *G, const mp_int *X, mp_int *P, mp_int *Y, int mode);
+static int mp_invmod_slow (const mp_int * a, mp_int * b, mp_int * c);
+static int mp_karatsuba_mul(const mp_int *a, const mp_int *b, mp_int *c);
+static int mp_karatsuba_sqr(const mp_int *a, mp_int *b);
+
 /* computes the modular inverse via binary extended euclidean algorithm, 
  * that is c = 1/a mod b 
  *
  * Based on slow invmod except this is optimized for the case where b is 
  * odd as per HAC Note 14.64 on pp. 610
  */
-int
+static int
 fast_mp_invmod (const mp_int * a, mp_int * b, mp_int * c)
 {
   mp_int  x, y, u, v, B, D;
@@ -175,7 +188,7 @@ __ERR:mp_clear_multi (&x, &y, &u, &v, &B, &D, NULL);
  *
  * Based on Algorithm 14.32 on pp.601 of HAC.
 */
-int
+static int
 fast_mp_montgomery_reduce (mp_int * x, const mp_int * n, mp_digit rho)
 {
   int     ix, res, olduse;
@@ -335,7 +348,7 @@ fast_mp_montgomery_reduce (mp_int * x, const mp_int * n, mp_digit rho)
  * Based on Algorithm 14.12 on pp.595 of HAC.
  *
  */
-int
+static int
 fast_s_mp_mul_digs (const mp_int * a, const mp_int * b, mp_int * c, int digs)
 {
   int     olduse, res, pa, ix, iz;
@@ -414,7 +427,7 @@ fast_s_mp_mul_digs (const mp_int * a, const mp_int * b, mp_int * c, int digs)
  *
  * Based on Algorithm 14.12 on pp.595 of HAC.
  */
-int
+static int
 fast_s_mp_mul_high_digs (const mp_int * a, const mp_int * b, mp_int * c, int digs)
 {
   int     olduse, res, pa, ix, iz;
@@ -512,7 +525,7 @@ Remove W2 and don't memset W
 
 */
 
-int fast_s_mp_sqr (const mp_int * a, mp_int * b)
+static int fast_s_mp_sqr (const mp_int * a, mp_int * b)
 {
   int       olduse, res, pa, ix, iz;
   mp_digit   W[MP_WARRAY], *tmpx;
@@ -996,7 +1009,7 @@ mp_count_bits (const mp_int * a)
   
   /* take the last digit and count the bits in it */
   q = a->dp[a->used - 1];
-  while (q > ((mp_digit) 0)) {
+  while (q > 0) {
     ++r;
     q >>= ((mp_digit) 1);
   }
@@ -3847,7 +3860,7 @@ mp_zero (mp_int * a)
 }
 
 /* reverse an array, used for radix code */
-void
+static void
 bn_reverse (unsigned char *s, int len)
 {
   int     ix, iy;
@@ -3865,7 +3878,7 @@ bn_reverse (unsigned char *s, int len)
 }
 
 /* low level addition, based on HAC pp.594, Algorithm 14.7 */
-int
+static int
 s_mp_add (mp_int * a, mp_int * b, mp_int * c)
 {
   mp_int *x;
@@ -3952,7 +3965,7 @@ s_mp_add (mp_int * a, mp_int * b, mp_int * c)
   return MP_OKAY;
 }
 
-int s_mp_exptmod (const mp_int * G, const mp_int * X, mp_int * P, mp_int * Y)
+static int s_mp_exptmod (const mp_int * G, const mp_int * X, mp_int * P, mp_int * Y)
 {
   mp_int  M[256], res, mu;
   mp_digit buf;
@@ -4163,7 +4176,7 @@ __M:
  * HAC pp. 595, Algorithm 14.12  Modified so you can control how 
  * many digits of output are created.
  */
-int
+static int
 s_mp_mul_digs (const mp_int * a, const mp_int * b, mp_int * c, int digs)
 {
   mp_int  t;
@@ -4232,7 +4245,7 @@ s_mp_mul_digs (const mp_int * a, const mp_int * b, mp_int * c, int digs)
 /* multiplies |a| * |b| and does not compute the lower digs digits
  * [meant to get the higher part of the product]
  */
-int
+static int
 s_mp_mul_high_digs (const mp_int * a, const mp_int * b, mp_int * c, int digs)
 {
   mp_int  t;
@@ -4288,7 +4301,7 @@ s_mp_mul_high_digs (const mp_int * a, const mp_int * b, mp_int * c, int digs)
 }
 
 /* low level squaring, b = a*a, HAC pp.596-597, Algorithm 14.16 */
-int
+static int
 s_mp_sqr (const mp_int * a, mp_int * b)
 {
   mp_int  t;
@@ -4338,7 +4351,7 @@ s_mp_sqr (const mp_int * a, mp_int * b)
       u       = (mp_digit)(r >> ((mp_word) DIGIT_BIT));
     }
     /* propagate upwards */
-    while (u != ((mp_digit) 0)) {
+    while (u != 0) {
       r       = ((mp_word) *tmpt) + ((mp_word) u);
       *tmpt++ = (mp_digit) (r & ((mp_word) MP_MASK));
       u       = (mp_digit)(r >> ((mp_word) DIGIT_BIT));

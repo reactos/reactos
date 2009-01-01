@@ -47,8 +47,8 @@
 /* Basic types
    Emulate a LLP64 memory model using a LP64 compiler */
 typedef void VOID, *PVOID;
-typedef char CHAR, *PCHAR, *PSTR;
-typedef const char CCHAR, *PCSTR, *LPCSTR;
+typedef char CHAR, CCHAR, *PCHAR, *PSTR;
+typedef const char *PCSTR, *LPCSTR;
 typedef unsigned char UCHAR, *PUCHAR, BYTE, *LPBYTE, BOOLEAN, *PBOOLEAN;
 typedef short SHORT, *PSHORT;
 typedef unsigned short USHORT, *PUSHORT, WORD, *PWORD, *LPWORD, WCHAR, *PWCHAR, *PWSTR, *LPWSTR;

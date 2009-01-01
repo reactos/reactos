@@ -132,7 +132,7 @@ void	printf __P((const char *, ...));
 static __inline int bsd_log ( int blah, const char* fmt, ... )
 {
 	va_list arg;
-	int i;
+	int i = 0;
 	va_start(arg, fmt);
 #ifndef __NTDRIVER__
 	i = vprintf ( fmt, arg );
@@ -238,10 +238,14 @@ struct execve_args {
 	char	**envv;
 };
 int	execve __P((struct proc *, struct execve_args *, int *retval));
+
+#if 0
 struct fork_args {
 	int	dummy;
 };
 int	fork __P((struct proc *, struct fork_args *, int retval[]));
+#endif
+
 struct sync_args {
 	int	dummy;
 };

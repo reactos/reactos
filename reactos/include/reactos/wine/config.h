@@ -442,7 +442,7 @@
 
 /* Define to 1 if the system has the type `pid_t'. */
 #if !defined(_MSC_VER)
-//#define HAVE_PID_T 1
+#define HAVE_PID_T 1
 #endif
 
 /* Define to 1 if you have the <poll.h> header file. */

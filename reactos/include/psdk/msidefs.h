@@ -215,6 +215,13 @@ enum msidbSumInfoSourceType
     msidbSumInfoSourceTypeLUAPackage = 0x00000008,
 };
 
+enum msidbRemoveFileInstallMode
+{
+    msidbRemoveFileInstallModeOnInstall = 0x00000001,
+    msidbRemoveFileInstallModeOnRemove = 0x00000002,
+    msidbRemoveFileInstallModeOnBoth = 0x00000003,
+};
+
 /*
  * Windows SDK braindamage alert
  *

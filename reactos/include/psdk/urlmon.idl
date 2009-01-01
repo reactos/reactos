@@ -22,6 +22,10 @@ import "oleidl.idl";
 import "servprov.idl";
 import "msxml.idl";
 
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef GetUserName")
+cpp_quote("#endif")
+
 interface IInternetProtocolSink;
 
 /*****************************************************************************
@@ -1363,6 +1367,147 @@ typedef enum _tagINTERNETFEATURELIST
     FEATURE_ENTRY_COUNT
 } INTERNETFEATURELIST;
 
+/*****************************************************************************
+ * IUri interface
+ */
+[
+    local,
+    object,
+    uuid(a39ee748-6a27-4817-a6f2-13914bef5890),
+    pointer_default(unique)
+]
+interface IUri : IUnknown
+{
+    typedef enum
+    {
+        Uri_PROPERTY_ABSOLUTE_URI = 0,
+        Uri_PROPERTY_STRING_START = Uri_PROPERTY_ABSOLUTE_URI,
+        Uri_PROPERTY_AUTHORITY = 1,
+        Uri_PROPERTY_DISPLAY_URI = 2,
+        Uri_PROPERTY_DOMAIN = 3,
+        Uri_PROPERTY_EXTENSION = 4,
+        Uri_PROPERTY_FRAGMENT = 5,
+        Uri_PROPERTY_HOST = 6,
+        Uri_PROPERTY_PASSWORD = 7,
+        Uri_PROPERTY_PATH = 8,
+        Uri_PROPERTY_PATH_AND_QUERY = 9,
+        Uri_PROPERTY_QUERY = 10,
+        Uri_PROPERTY_RAW_URI = 11,
+        Uri_PROPERTY_SCHEME_NAME = 12,
+        Uri_PROPERTY_USER_INFO = 13,
+        Uri_PROPERTY_USER_NAME = 14,
+        Uri_PROPERTY_STRING_LAST = Uri_PROPERTY_USER_NAME,
+        Uri_PROPERTY_HOST_TYPE = 15,
+        Uri_PROPERTY_DWORD_START = Uri_PROPERTY_HOST_TYPE,
+        Uri_PROPERTY_PORT = 16,
+        Uri_PROPERTY_SCHEME = 17,
+        Uri_PROPERTY_ZONE = 18,
+        Uri_PROPERTY_DWORD_LAST = Uri_PROPERTY_ZONE
+    } Uri_PROPERTY;
+
+    HRESULT GetPropertyBSTR(
+        [in]  Uri_PROPERTY uriProp,
+        [out] BSTR *pbstrProperty,
+        [in]  DWORD dwFlags);
+
+    HRESULT GetPropertyLength(
+        [in]  Uri_PROPERTY uriProp,
+        [out] DWORD *pcchProperty,
+        [in]  DWORD dwFlags);
+
+    HRESULT GetPropertyDWORD(
+        [in]  Uri_PROPERTY uriProp,
+        [out] DWORD *pdwProperty,
+        [in]  DWORD dwFlags);
+
+    HRESULT HasProperty(
+        [in] Uri_PROPERTY uriProp,
+        [out] BOOL *pfHasProperty);
+
+    HRESULT GetAbsoluteUri(
+        [out] BSTR *pbstrAbsoluteUri);
+
+    HRESULT GetAuthority(
+        [out] BSTR *pbstrAuthority);
+
+    HRESULT GetDisplayUri(
+        [out] BSTR *pbstrDisplayString);
+
+    HRESULT GetDomain(
+        [out] BSTR *pbstrDomain);
+
+    HRESULT GetExtension(
+        [out] BSTR *pbstrExtension);
+
+    HRESULT GetFragment(
+        [out] BSTR *pbstrFragment);
+
+    HRESULT GetHost(
+        [out] BSTR *pbstrHost);
+
+    HRESULT GetPassword(
+        [out] BSTR *pbstrPassword);
+
+    HRESULT GetPath(
+        [out] BSTR *pbstrPath);
+
+    HRESULT GetPathAndQuery(
+        [out] BSTR *pbstrPathAndQuery);
+
+    HRESULT GetQuery(
+        [out] BSTR *pbstrQuery);
+
+    HRESULT GetRawUri(
+        [out] BSTR *pbstrRawUri);
+
+    HRESULT GetSchemeName(
+        [out] BSTR *pbstrSchemeName);
+
+    HRESULT GetUserInfo(
+        [out] BSTR *pbstrUserInfo);
+
+    HRESULT GetUserName(
+        [out] BSTR *pbstrUserName);
+
+    HRESULT GetHostType(
+        [out] DWORD *pdwHostType);
+
+    HRESULT GetPort(
+        [out] DWORD *pdwPort);
+
+    HRESULT GetScheme(
+        [out] DWORD *pdwScheme);
+
+    HRESULT GetZone(
+        [out] DWORD *pdwZone);
+
+    HRESULT GetProperties(
+        [out] LPDWORD pdwFlags);
+
+    HRESULT IsEqual(
+        [in]  IUri *pUri,
+        [out] BOOL *pfEqual);
+}
+
+/*****************************************************************************
+ * IInternetProtocolEx interface
+ */
+[
+    local,
+    object,
+    uuid(c7a98e66-1010-492c-a1c8-c809e1f75905),
+    pointer_default(unique)
+]
+interface IInternetProtocolEx : IInternetProtocol
+{
+    HRESULT StartEx(
+        [in] IUri *pUri,
+        [in] IInternetProtocolSink *pOIProtSink,
+        [in] IInternetBindInfo *pOIBindInfo,
+        [in] DWORD grfPI,
+        [in] HANDLE *dwReserved);
+}
+
 cpp_quote("DEFINE_GUID(CLSID_InternetSecurityManager, 0x7b8a2d94, 0x0ac9, 0x11d1, 0x89, 0x6c, 0x00, 0xc0, 0x4f, 0xB6, 0xbf, 0xc4);")
 cpp_quote("DEFINE_GUID(CLSID_InternetZoneManager, 0x7B8A2D95, 0x0AC9, 0x11D1, 0x89, 0x6C, 0x00, 0xC0, 0x4F, 0xB6, 0xBF, 0xC4);")
 cpp_quote("DEFINE_GUID(IID_IAsyncMoniker, 0x79EAC9D3, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);")
@@ -1381,32 +1526,32 @@ cpp_quote("#define URLMON_OPTION_USERAGENT          0x10000001")
 cpp_quote("#define URLMON_OPTION_USERAGENT_REFRESH  0x10000002")
 cpp_quote("#define URLMON_OPTION_URL_ENCODING       0x10000004")
 
-cpp_quote("#define MK_S_ASYNCHRONOUS                0x000401E8")
+cpp_quote("#define MK_S_ASYNCHRONOUS                _HRESULT_TYPEDEF_(0x000401E8)")
 cpp_quote("#ifndef S_ASYNCHRONOUS")
 cpp_quote("#define S_ASYNCHRONOUS                   MK_S_ASYNCHRONOUS")
 cpp_quote("#endif")
 
-cpp_quote("#define INET_E_ERROR_FIRST               0x800C0002")
-cpp_quote("#define INET_E_INVALID_URL               0x800C0002")
-cpp_quote("#define INET_E_NO_SESSION                0x800C0003")
-cpp_quote("#define INET_E_CANNOT_CONNECT            0x800C0004")
-cpp_quote("#define INET_E_RESOURCE_NOT_FOUND        0x800C0005")
-cpp_quote("#define INET_E_OBJECT_NOT_FOUND          0x800C0006")
-cpp_quote("#define INET_E_DATA_NOT_AVAILABLE        0x800C0007")
-cpp_quote("#define INET_E_DOWNLOAD_FAILURE          0x800C0008")
-cpp_quote("#define INET_E_AUTHENTICATION_REQUIRED   0x800C0009")
-cpp_quote("#define INET_E_NO_VALID_MEDIA            0x800C000A")
-cpp_quote("#define INET_E_CONNECTION_TIMEOUT        0x800C000B")
-cpp_quote("#define INET_E_INVALID_REQUEST           0x800C000C")
-cpp_quote("#define INET_E_UNKNOWN_PROTOCOL          0x800C000D")
-cpp_quote("#define INET_E_SECURITY_PROBLEM          0x800C000E")
-cpp_quote("#define INET_E_CANNOT_LOAD_DATA          0x800C000F")
-cpp_quote("#define INET_E_CANNOT_INSTANTIATE_OBJECT 0x800C0010")
-cpp_quote("#define INET_E_USE_DEFAULT_PROTOCOLHANDLER 0x800C0011")
-cpp_quote("#define INET_E_QUERYOPTION_UNKNOWN       0x800C0013")
-cpp_quote("#define INET_E_REDIRECT_FAILED           0x800C0014")
-cpp_quote("#define INET_E_REDIRECT_TO_DIR           0x800C0015")
-cpp_quote("#define INET_E_CANNOT_LOCK_REQUEST       0x800C0016")
+cpp_quote("#define INET_E_ERROR_FIRST               _HRESULT_TYPEDEF_(0x800C0002)")
+cpp_quote("#define INET_E_INVALID_URL               _HRESULT_TYPEDEF_(0x800C0002)")
+cpp_quote("#define INET_E_NO_SESSION                _HRESULT_TYPEDEF_(0x800C0003)")
+cpp_quote("#define INET_E_CANNOT_CONNECT            _HRESULT_TYPEDEF_(0x800C0004)")
+cpp_quote("#define INET_E_RESOURCE_NOT_FOUND        _HRESULT_TYPEDEF_(0x800C0005)")
+cpp_quote("#define INET_E_OBJECT_NOT_FOUND          _HRESULT_TYPEDEF_(0x800C0006)")
+cpp_quote("#define INET_E_DATA_NOT_AVAILABLE        _HRESULT_TYPEDEF_(0x800C0007)")
+cpp_quote("#define INET_E_DOWNLOAD_FAILURE          _HRESULT_TYPEDEF_(0x800C0008)")
+cpp_quote("#define INET_E_AUTHENTICATION_REQUIRED   _HRESULT_TYPEDEF_(0x800C0009)")
+cpp_quote("#define INET_E_NO_VALID_MEDIA            _HRESULT_TYPEDEF_(0x800C000A)")
+cpp_quote("#define INET_E_CONNECTION_TIMEOUT        _HRESULT_TYPEDEF_(0x800C000B)")
+cpp_quote("#define INET_E_INVALID_REQUEST           _HRESULT_TYPEDEF_(0x800C000C)")
+cpp_quote("#define INET_E_UNKNOWN_PROTOCOL          _HRESULT_TYPEDEF_(0x800C000D)")
+cpp_quote("#define INET_E_SECURITY_PROBLEM          _HRESULT_TYPEDEF_(0x800C000E)")
+cpp_quote("#define INET_E_CANNOT_LOAD_DATA          _HRESULT_TYPEDEF_(0x800C000F)")
+cpp_quote("#define INET_E_CANNOT_INSTANTIATE_OBJECT _HRESULT_TYPEDEF_(0x800C0010)")
+cpp_quote("#define INET_E_USE_DEFAULT_PROTOCOLHANDLER _HRESULT_TYPEDEF_(0x800C0011)")
+cpp_quote("#define INET_E_QUERYOPTION_UNKNOWN       _HRESULT_TYPEDEF_(0x800C0013)")
+cpp_quote("#define INET_E_REDIRECT_FAILED           _HRESULT_TYPEDEF_(0x800C0014)")
+cpp_quote("#define INET_E_REDIRECT_TO_DIR           _HRESULT_TYPEDEF_(0x800C0015)")
+cpp_quote("#define INET_E_CANNOT_LOCK_REQUEST       _HRESULT_TYPEDEF_(0x800C0016)")
 cpp_quote("#define INET_E_ERROR_LAST                INET_E_REDIRECT_TO_DIR")
 cpp_quote("#define INET_E_DEFAULT_ACTION            INET_E_USE_DEFAULT_PROTOCOLHANDLER")
 
@@ -1460,6 +1605,10 @@ cpp_quote("HRESULT WINAPI URLOpenBlockingStreamW(LPUNKNOWN,LPCWSTR,LPSTREAM*,DWO
 cpp_quote("#define OInetCombineUrl CoInternetCombineUrl")
 cpp_quote("#define OInetCompareUrl CoInternetCompareUrl")
 cpp_quote("#define OInetGetSession CoInternetGetSession")
+
+cpp_quote("BOOL WINAPI IsLoggingEnabledA(LPCSTR);")
+cpp_quote("BOOL WINAPI IsLoggingEnabledW(LPCWSTR);")
+cpp_quote("#define IsLoggingEnabled WINELIB_NAME_AW(IsLoggingEnabled)")
 
 cpp_quote("#define MKSYS_URLMONIKER 6")
 cpp_quote("#define URL_MK_LEGACY            0")

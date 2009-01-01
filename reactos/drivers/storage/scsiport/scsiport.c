@@ -2752,7 +2752,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION Stack;
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    NTSTATUS Status = STATUS_SUCCESS;;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("ScsiPortDeviceControl()\n");
 

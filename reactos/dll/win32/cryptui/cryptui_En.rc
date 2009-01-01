@@ -1,0 +1,185 @@
+/*
+ * cryptui dll resources
+ *
+ * Copyright 2008 Juan Lang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_CERTIFICATE "Certificate"
+    IDS_CERTIFICATEINFORMATION "Certificate Information"
+    IDS_CERT_INFO_BAD_SIG "This certificate has an invalid signature.  The certificate may have been altered or corrupted."
+    IDS_CERT_INFO_UNTRUSTED_CA "This root certificate is not trusted.  To trust it, add it to your system's trusted root certificate store."
+    IDS_CERT_INFO_UNTRUSTED_ROOT "This certificate could not be validated to a trusted root certificate."
+    IDS_CERT_INFO_PARTIAL_CHAIN "This certificate's issuer could not be found."
+    IDS_CERT_INFO_BAD_PURPOSES "All the intended purposes of this certificate could not be verified."
+    IDS_CERT_INFO_PURPOSES "This cerificate is intended for the following purposes:"
+    IDS_SUBJECT_HEADING "Issued to: "
+    IDS_ISSUER_HEADING "Issued by: "
+    IDS_VALID_FROM "Valid from "
+    IDS_VALID_TO " to "
+    IDS_CERTIFICATE_BAD_SIGNATURE "This certificate has an invalid signature."
+    IDS_CERTIFICATE_BAD_TIME "This certificate has expired or is not yet valid."
+    IDS_CERTIFICATE_BAD_TIMENEST "This certificate's validity period exceeds that of its issuer."
+    IDS_CERTIFICATE_REVOKED "This certificate was revoked by its issuer."
+    IDS_CERTIFICATE_VALID "This certificate is OK."
+    IDS_FIELD "Field"
+    IDS_VALUE "Value"
+    IDS_FIELDS_ALL "<All>"
+    IDS_FIELDS_V1 "Version 1 Fields Only"
+    IDS_FIELDS_EXTENSIONS "Extensions Only"
+    IDS_FIELDS_CRITICAL_EXTENSIONS "Critical Extensions Only"
+    IDS_FIELDS_PROPERTIES "Properties Only"
+    IDS_FIELD_VERSION "Version"
+    IDS_FIELD_SERIAL_NUMBER "Serial number"
+    IDS_FIELD_ISSUER "Issuer"
+    IDS_FIELD_VALID_FROM "Valid from"
+    IDS_FIELD_VALID_TO "Valid to"
+    IDS_FIELD_SUBJECT "Subject"
+    IDS_FIELD_PUBLIC_KEY "Public key"
+    IDS_FIELD_PUBLIC_KEY_FORMAT "%s (%d bits)"
+    IDS_PROP_HASH "SHA1 hash"
+    IDS_PROP_ENHKEY_USAGE "Enhanced key usage (property)"
+    IDS_PROP_FRIENDLY_NAME "Friendly name"
+    IDS_PROP_DESCRIPTION "Description"
+    IDS_CERTIFICATE_PROPERTIES "Certificate Properties"
+    IDS_CERTIFICATE_PURPOSE_ERROR "Please enter an OID in the form 1.2.3.4"
+    IDS_CERTIFICATE_PURPOSE_EXISTS "The OID you entered already exists."
+    IDS_PURPOSE_SERVER_AUTH "Ensures the identify of a remote computer"
+    IDS_PURPOSE_CLIENT_AUTH "Proves your identity to a remote computer"
+    IDS_PURPOSE_CODE_SIGNING "Ensures software came from software publisher\nProtects software from alteration after publication"
+    IDS_PURPOSE_EMAIL_PROTECTION "Protects e-mail messges"
+    IDS_PURPOSE_IPSEC "Allows secure communication over the Internet"
+    IDS_PURPOSE_TIMESTAMP_SIGNING "Allows data to be signed with the current time"
+    IDS_PURPOSE_CTL_USAGE_SIGNING "Allows you to digitally sign a certificate trust list"
+    IDS_PURPOSE_EFS "Allows data on disk to be encrypted"
+    IDS_PURPOSE_EFS_RECOVERY "File Recovery"
+    IDS_PURPOSE_WHQL "Windows Hardware Driver Verification"
+    IDS_PURPOSE_NT5 "Windows System Component Verification"
+    IDS_PURPOSE_OEM_WHQL "OEM Windows System Component Verification"
+    IDS_PURPOSE_EMBEDDED_NT "Embedded Windows System Component Verification"
+    IDS_PURPOSE_ROOT_LIST_SIGNER "Root List Signer"
+    IDS_PURPOSE_QUALIFIED_SUBORDINATION "Qualified Subordination"
+    IDS_PURPOSE_KEY_RECOVERY "Key Recovery"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Document Signing"
+    IDS_PURPOSE_LIFETIME_SIGNING "Lifetime Signing"
+    IDS_PURPOSE_DRM "Digital Rights"
+    IDS_PURPOSE_LICENSES "Key Pack Licenses"
+    IDS_PURPOSE_LICENSE_SERVER "License Server Verification"
+    IDS_PURPOSE_ENROLLMENT_AGENT "Certificate Request Agent"
+    IDS_PURPOSE_SMARTCARD_LOGON "Smart Card Logon"
+    IDS_PURPOSE_CA_EXCHANGE "Private Key Archival"
+    IDS_PURPOSE_KEY_RECOVERY_AGENT "Key Recovery Agent"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Directory Service Email Replication"
+}
+
+IDD_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "General"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", IDC_STATIC, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
+  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W",
+    ES_READONLY|WS_DISABLED,8,11,26,26
+  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W",
+    ES_READONLY|WS_DISABLED,34,11,212,26
+  CONTROL "", IDC_STATIC, "Static", SS_BLACKFRAME, 16,37,222,1
+  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_DISABLED,8,38,238,78
+  CONTROL "", IDC_STATIC, "Static", SS_BLACKFRAME, 16,116,222,1
+  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_DISABLED,8,117,238,91
+  PUSHBUTTON "&Install Certificate...", IDC_ADDTOSTORE,103,216,70,14
+  PUSHBUTTON "Issuer &Statement", IDC_ISSUERSTATEMENT,177,216,70,14
+END
+
+IDD_DETAIL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "Details"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Show:", stc1, 6,12,40,14
+  COMBOBOX IDC_DETAIL_SELECT, 28,10,100,14,
+    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_DETAIL_LIST, "SysListView32",
+    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    6,28,241,100
+  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
+  PUSHBUTTON "&Edit Properties...", IDC_EDITPROPERTIES,103,216,70,14
+  PUSHBUTTON "&Copy to File...", IDC_EXPORT,177,216,70,14
+END
+
+IDD_HIERARCHY DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "Certification Path"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Certification &path", grp1,6,10,245,165, BS_GROUPBOX
+  CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
+    13,22,231,130
+  PUSHBUTTON "&View Certificate", IDC_VIEWCERTIFICATE,175,156,70,14
+  LTEXT "Certificate &status:", IDC_CERTIFICATESTATUS,6,183,70,14
+  CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
+    WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
+END
+
+IDD_USERNOTICE DIALOG DISCARDABLE 0, 0, 255, 256
+CAPTION "Disclaimer"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", IDC_USERNOTICE,"RichEdit20W",
+    WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
+  PUSHBUTTON "Close", IDOK,103,216,70,14
+  PUSHBUTTON "More &Info", IDC_CPS,177,216,70,14
+END
+
+IDD_CERT_PROPERTIES_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "General"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Friendly name:", stc1, 6,14,60,14
+  EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
+  LTEXT "&Description:", stc2, 6,32,60,14
+  EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Certificate purposes", grp1,6,48,245,165, BS_GROUPBOX
+  AUTORADIOBUTTON "&Enable all purposes for this certificate",
+    IDC_ENABLE_ALL_PURPOSES, 12,58,180,14, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "D&isable all purposes for this certificate",
+    IDC_DISABLE_ALL_PURPOSES, 12,70,180,14, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "Enable &only the following purposes for this certificate:",
+    IDC_ENABLE_SELECTED_PURPOSES, 12,82,180,14, BS_AUTORADIOBUTTON
+  CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    24,100,220,90
+  PUSHBUTTON "Add &Purpose...", IDC_ADD_PURPOSE,184,194,60,14
+END
+
+IDD_ADD_CERT_PURPOSE DIALOG DISCARDABLE 0,0,200,68
+CAPTION "Add Purpose"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Add the object identifier (OID) for the certificate purpose you wish to add:",
+    stc1, 6,6,190,28
+  EDITTEXT IDC_NEW_PURPOSE, 6,28,190,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  PUSHBUTTON "OK", IDOK, 33,48,60,14
+  PUSHBUTTON "Cancel", IDCANCEL, 100,48,60,14
+END

@@ -1501,7 +1501,7 @@ IoStartPacket(IN PDEVICE_OBJECT DeviceObject,
             }
 
             /* Release the cancel lock */
-            IoReleaseCancelSpinLock(OldIrql);
+            IoReleaseCancelSpinLock(CancelIrql);
         }
 
         /* Call the Start I/O function */

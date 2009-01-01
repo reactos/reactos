@@ -1745,7 +1745,7 @@ typedef struct tagPANOSE {
 	BYTE bLetterform;
 	BYTE bMidline;
 	BYTE bXHeight;
-} PANOSE, *LPPANOSE;;
+} PANOSE, *LPPANOSE;
 typedef struct tagLOGFONTA {
 	LONG	lfHeight;
 	LONG	lfWidth;

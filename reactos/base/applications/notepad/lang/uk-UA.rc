@@ -27,7 +27,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -38,54 +40,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
- POPUP "&Файл"
- BEGIN
-  MENUITEM "&Створити",              CMD_NEW
-  MENUITEM "&Відкрити...\tCtrl+O",   CMD_OPEN
-  MENUITEM "&З&берегти\tCtrl+S",     CMD_SAVE
-  MENUITEM "Зберегти &як...",        CMD_SAVE_AS
-  MENUITEM SEPARATOR
-  MENUITEM "Пара&метри сторінки...", CMD_PAGE_SETUP
-  MENUITEM "Д&рук",                  CMD_PRINT
-  MENUITEM "Настройка &принтера...", CMD_PRINTER_SETUP
-  MENUITEM SEPARATOR
-  MENUITEM "В&ихід",                 CMD_EXIT
- END
-POPUP "&Правка"
- BEGIN
-  MENUITEM "&Скасувати\tCtrl+Z",     CMD_UNDO
-  MENUITEM SEPARATOR
-  MENUITEM "&Вирізати\tCtrl+X",      CMD_CUT
-  MENUITEM "&Копіювати\tCtrl+C",     CMD_COPY
-  MENUITEM "Вст&авити\tCtrl+V",      CMD_PASTE
-  MENUITEM "В&идалити\tDel",         CMD_DELETE
-  MENUITEM SEPARATOR
-  MENUITEM "З&найти...\tCtrl+F",     CMD_SEARCH
-  MENUITEM "Зна&йти далі\tF3",       CMD_SEARCH_NEXT
-  MENUITEM "&Замінити\tCtrl+H",      CMD_REPLACE
-  MENUITEM "Перей&ти...\tCtrl+G",    CMD_GOTO
-  MENUITEM SEPARATOR
-  MENUITEM "Виді&лити все\tCtrl+A",  CMD_SELECT_ALL
-  MENUITEM "&Дата й час\tF5",        CMD_TIME_DATE
- END
-POPUP "Фор&мат"
- BEGIN
-  MENUITEM "&Перенос по словах",     CMD_WRAP
-  MENUITEM "&Шрифт...",              CMD_FONT
-END
-POPUP "&Вигляд"
- BEGIN
-  MENUITEM "&Рядок стану",           CMD_STATUSBAR
-END
-POPUP "&Довідка"
- BEGIN
-  MENUITEM "&Зміст",                 CMD_HELP_CONTENTS
-  MENUITEM "&Пошук...",              CMD_HELP_SEARCH
-  MENUITEM "&Help on help",          CMD_HELP_ON_HELP
-  MENUITEM SEPARATOR
-		MENUITEM "&Про"      CMD_ABOUT
-  MENUITEM "&Про програму",          CMD_ABOUT_WINE
- END
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Створити\tCtrl+N",      CMD_NEW
+        MENUITEM "&Відкрити...\tCtrl+O",   CMD_OPEN
+        MENUITEM "&З&берегти\tCtrl+S",     CMD_SAVE
+        MENUITEM "Зберегти &як...",        CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Пара&метри сторінки...", CMD_PAGE_SETUP
+        MENUITEM "Д&рук\tCtrl+P",          CMD_PRINT
+        MENUITEM "Настройка &принтера...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "В&ихід",                 CMD_EXIT
+    END
+    POPUP "&Правка"
+    BEGIN
+        MENUITEM "&Скасувати\tCtrl+Z",    CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Вирізати\tCtrl+X",     CMD_CUT
+        MENUITEM "&Копіювати\tCtrl+C",    CMD_COPY
+        MENUITEM "Вст&авити\tCtrl+V",     CMD_PASTE
+        MENUITEM "В&идалити\tDel",        CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "З&найти...\tCtrl+F",    CMD_SEARCH
+        MENUITEM "Зна&йти далі\tF3",      CMD_SEARCH_NEXT
+        MENUITEM "&Замінити\tCtrl+H",     CMD_REPLACE
+        MENUITEM "Перей&ти...\tCtrl+G",   CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Виді&лити все\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "&Дата й час\tF5",       CMD_TIME_DATE
+    END
+    POPUP "Фор&мат"
+    BEGIN
+        MENUITEM "&Перенос по словах", CMD_WRAP
+        MENUITEM "&Шрифт...",          CMD_FONT
+    END
+    POPUP "&Вигляд"
+    BEGIN
+        MENUITEM "&Рядок стану", CMD_STATUSBAR
+    END
+    POPUP "&Довідка"
+    BEGIN
+        MENUITEM "&Зміст",        CMD_HELP_CONTENTS
+        MENUITEM "&Пошук...",     CMD_HELP_SEARCH
+        MENUITEM "&Help on help", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Про"           CMD_ABOUT
+        MENUITEM "&Про програму", CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */

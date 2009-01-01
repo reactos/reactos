@@ -22,12 +22,18 @@
 
 
 <!--
-	Which CPU ReactOS should be optimized for. Specify one of:
+	Generate instructions for this CPU type. Specify one of:
 		armv5te
 
-	See GCC manual for more CPU names and which CPUs GCC can optimize for.
+	See GCC manual for more CPU names.
 -->
 <property name="OARCH" value="armv5te" />
+
+
+<!--
+	Which CPU ReactOS should be optimized for. See GCC manual for CPU names.
+-->
+<property name="TUNE" value="" />
 
 
 <!--

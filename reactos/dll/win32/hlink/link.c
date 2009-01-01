@@ -441,14 +441,14 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
 static HRESULT WINAPI IHlink_fnSetAdditonalParams(IHlink* iface,
         LPCWSTR pwzAdditionalParams)
 {
-    FIXME("\n");
+    TRACE("Not implemented in native IHlink\n");
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IHlink_fnGetAdditionalParams(IHlink* iface,
         LPWSTR* ppwzAdditionalParams)
 {
-    FIXME("\n");
+    TRACE("Not implemented in native IHlink\n");
     return E_NOTIMPL;
 }
 

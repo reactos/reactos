@@ -529,6 +529,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Luksemburski frank"
     IDS_CURRENCY_MALTESE_LIRA       "Maltañskie liry"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portugalskie escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "S³owacka korona"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "S³oveñski tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Hiszpañska peseta"
 END

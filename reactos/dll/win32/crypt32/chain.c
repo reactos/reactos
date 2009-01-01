@@ -251,7 +251,7 @@ static void CRYPT_CheckSimpleChainForCycles(PCERT_SIMPLE_CHAIN chain)
     if (cyclicCertIndex)
     {
         chain->rgpElement[cyclicCertIndex]->TrustStatus.dwErrorStatus
-         |= CERT_TRUST_IS_CYCLIC;
+         |= CERT_TRUST_IS_CYCLIC | CERT_TRUST_INVALID_BASIC_CONSTRAINTS;
         /* Release remaining certs */
         for (i = cyclicCertIndex + 1; i < chain->cElement; i++)
             CRYPT_FreeChainElement(chain->rgpElement[i]);
@@ -304,7 +304,7 @@ static BOOL CRYPT_AddCertToSimpleChain(PCertificateChainEngine engine,
                 chain->rgpElement[chain->cElement - 2]->TrustStatus.dwInfoStatus
                  = subjectInfoStatus;
             /* FIXME: initialize the rest of element */
-            if (chain->cElement % engine->CycleDetectionModulus)
+            if (!(chain->cElement % engine->CycleDetectionModulus))
                 CRYPT_CheckSimpleChainForCycles(chain);
             CRYPT_CombineTrustStatus(&chain->TrustStatus,
              &element->TrustStatus);
@@ -560,14 +560,13 @@ static void CRYPT_FindMatchingNameEntry(const CERT_ALT_NAME_ENTRY *constraint,
  DWORD errorIfFound, DWORD errorIfNotFound)
 {
     DWORD i;
-    BOOL defined = FALSE, match = FALSE;
+    BOOL match = FALSE;
 
     for (i = 0; i < subjectName->cAltEntry; i++)
     {
         if (subjectName->rgAltEntry[i].dwAltNameChoice ==
          constraint->dwAltNameChoice)
         {
-            defined = TRUE;
             switch (constraint->dwAltNameChoice)
             {
             case CERT_ALT_NAME_RFC822_NAME:
@@ -595,16 +594,6 @@ static void CRYPT_FindMatchingNameEntry(const CERT_ALT_NAME_ENTRY *constraint,
             }
         }
     }
-    /* Microsoft's implementation of name constraint checking appears at odds
-     * with RFC 3280:
-     * According to MSDN, CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT is set
-     * when a name constraint is present, but that name form is not defined in
-     * the end certificate.  According to RFC 3280, "if no name of the type is
-     * in the certificate, the name is acceptable."
-     * I follow Microsoft here.
-     */
-    if (!defined)
-        *trustErrorStatus |= CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT;
     *trustErrorStatus |= match ? errorIfFound : errorIfNotFound;
 }
 
@@ -645,10 +634,6 @@ static void CRYPT_CheckNameConstraints(
         }
         else
         {
-            /* See above comment on CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT.
-             * I match Microsoft's implementation here as well.
-             */
-            *trustErrorStatus |= CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT;
             if (nameConstraints->cPermittedSubtree)
                 *trustErrorStatus |=
                  CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT;
@@ -765,6 +750,16 @@ static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
                 /* This one's valid - decrement max length */
                 constraints.dwPathLenConstraint--;
             }
+        }
+        if (CRYPT_IsSimpleChainCyclic(chain))
+        {
+            /* If the chain is cyclic, then the path length constraints
+             * are violated, because the chain is infinitely long.
+             */
+            pathLengthConstraintViolated = TRUE;
+            chain->TrustStatus.dwErrorStatus |=
+             CERT_TRUST_IS_PARTIAL_CHAIN |
+             CERT_TRUST_INVALID_BASIC_CONSTRAINTS;
         }
         /* FIXME: check valid usages */
         CRYPT_CombineTrustStatus(&chain->TrustStatus,
@@ -922,6 +917,7 @@ static BOOL CRYPT_BuildSimpleChain(PCertificateChainEngine engine,
         else
         {
             TRACE("Couldn't find issuer, halting chain creation\n");
+            chain->TrustStatus.dwErrorStatus |= CERT_TRUST_IS_PARTIAL_CHAIN;
             break;
         }
     }
@@ -1795,7 +1791,7 @@ BOOL WINAPI CertVerifyCertificateChainPolicy(LPCSTR szPolicyOID,
             set = CryptInitOIDFunctionSet(
              CRYPT_OID_VERIFY_CERTIFICATE_CHAIN_POLICY_FUNC, 0);
         CryptGetOIDFunctionAddress(set, X509_ASN_ENCODING, szPolicyOID, 0,
-         (void **)&verifyPolicy, hFunc);
+         (void **)&verifyPolicy, &hFunc);
     }
     if (verifyPolicy)
         ret = verifyPolicy(szPolicyOID, pChainContext, pPolicyPara,

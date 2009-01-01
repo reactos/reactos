@@ -31,7 +31,7 @@ char cBadSep;
 void
 InitializeEnvironment ()
 {
-	char *SepValue, *ExePostfixValue, *ExePrefixValue;;
+	char *SepValue, *ExePostfixValue, *ExePrefixValue;
 
 	SepValue = getenv ( "SEP" );
 	if ( SepValue && ( 0 == strcmp ( SepValue, DEF_SSEP ) || 0 == strcmp ( SepValue, DEF_SBAD_SEP ) ) )

@@ -26,6 +26,7 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
+#if defined(__GNUC__)
 struct _EXCEPTION_RECORD;
 struct _EXCEPTION_POINTERS;
 struct _CONTEXT;
@@ -75,8 +76,6 @@ extern void __cdecl _SEH2Return(void);
 #ifdef __cplusplus
 }
 #endif
-
-#if defined(__GNUC__)
 
 #if defined(__i386__)
 typedef struct __SEHTrampoline
@@ -138,9 +137,6 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 
 #define ___SEH_STRINGIFY(X_) # X_
 #define __SEH_STRINGIFY(X_) ___SEH_STRINGIFY(X_)
-
-#define __SEH_FORCE_NEST \
-	__asm__ __volatile__("#%0" : : "r" (&_SEHFrame))
 
 #define __SEH_EXCEPT_RET long
 #define __SEH_EXCEPT_ARGS __attribute__((unused)) _SEH2Frame_t * _SEH2FrameP, __attribute__((unused)) struct _EXCEPTION_POINTERS * _SEHExceptionInformation
@@ -206,25 +202,28 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 			__label__ _SEHDoTry; \
 			__label__ _SEHAfterTry; \
 			static const int _SEH2ScopeKind = 0; \
-			_SEH2Frame_t _SEHFrame; \
 			volatile _SEH2TryLevel_t _SEHTryLevel; \
-			_SEH2Frame_t * const _SEH2FrameP = _SEHTopTryLevel ? &_SEHFrame : _SEHCurFrameP; \
+			void * _SEHStackPointer; \
 			volatile _SEH2TryLevel_t * const _SEH2TryLevelP = &_SEHTryLevel; \
+			_SEH2Frame_t * const _SEH2FrameP = _SEHTopTryLevel ? \
+				({ __asm__ __volatile__("mov %%esp, %0" : "=g" (_SEHStackPointer)); __builtin_alloca(sizeof(_SEH2Frame_t)); }) : \
+				_SEHCurFrameP; \
  \
 			(void)_SEH2ScopeKind; \
-			(void)_SEHFrame; \
 			(void)_SEHTryLevel; \
+			(void)_SEHStackPointer; \
 			(void)_SEH2FrameP; \
 			(void)_SEH2TryLevelP; \
+ \
+			if(_SEHTopTryLevel) \
+				_SEH2EnterFrame(_SEH2FrameP); \
  \
 			_SEHTryLevel.ST_Next = _SEHPrevTryLevelP; \
 			goto _SEHBeforeTry; \
  \
 			_SEHDoTry:; \
-			__SEH_ENTER_TRYLEVEL(); \
  \
-			if(_SEHTopTryLevel) \
-				_SEH2EnterFrame(&_SEHFrame); \
+			__SEH_ENTER_TRYLEVEL();
 
 #define __SEH_END_SCOPE \
 		} \
@@ -350,7 +349,10 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
  \
 		_SEHAfterTry:; \
 		if(_SEHTopTryLevel) \
+		{ \
 			_SEH2LeaveFrame(); \
+			__asm__ __volatile__("mov %0, %%esp" : : "g" (_SEHStackPointer)); \
+		} \
 		else \
 		{ \
 			__SEH_LEAVE_TRYLEVEL(); \

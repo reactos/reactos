@@ -731,6 +731,7 @@ static MSIPACKAGE *msi_alloc_package( void )
         list_init( &package->sourcelist_info );
         list_init( &package->sourcelist_media );
 
+        package->patch = NULL;
         package->ActionFormat = NULL;
         package->LastAction = NULL;
         package->dialog = NULL;
@@ -754,7 +755,7 @@ static UINT msi_load_admin_properties(MSIPACKAGE *package)
     if (r != ERROR_SUCCESS)
         return r;
 
-    r = msi_parse_command_line(package, (WCHAR *)data);
+    r = msi_parse_command_line(package, (WCHAR *)data, TRUE);
 
     msi_free(data);
     return r;
@@ -1344,6 +1345,9 @@ UINT MSI_SetPropertyW( MSIPACKAGE *package, LPCWSTR szName, LPCWSTR szValue)
     }
 
     msiobj_release(&row->hdr);
+
+    if (rc == ERROR_SUCCESS && (!lstrcmpW(szName, cszSourceDir)))
+        msi_reset_folders(package, TRUE);
 
     return rc;
 }

@@ -40,7 +40,7 @@
 
 extern DECLSPEC_NORETURN int __SEH2Handle(void *, void *, void *);
 extern int __cdecl __SEH2FrameHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
-extern int __cdecl __SEH2NestedHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
+extern int __cdecl __SEH2UnwindHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
 
 FORCEINLINE
 _SEH2Registration_t * __cdecl _SEH2CurrentRegistration(void)
@@ -134,8 +134,18 @@ void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 	}
 }
 
+typedef struct __SEH2UnwindFrame
+{
+	_SEH2Registration_t SUF_Registration;
+	_SEH2Frame_t * SUF_Frame;
+	volatile _SEH2TryLevel_t * SUF_TargetTryLevel;
+}
+_SEH2UnwindFrame_t;
+
+static void _SEH2LocalUnwind(_SEH2Frame_t *, volatile _SEH2TryLevel_t *);
+
 extern
-int __cdecl _SEH2NestedHandler
+int __cdecl _SEH2UnwindHandler
 (
 	struct _EXCEPTION_RECORD * ExceptionRecord,
 	void * EstablisherFrame,
@@ -144,25 +154,33 @@ int __cdecl _SEH2NestedHandler
 )
 {
 	if(ExceptionRecord->ExceptionFlags & (EXCEPTION_EXIT_UNWIND | EXCEPTION_UNWINDING))
-		return ExceptionContinueSearch;
+	{
+		_SEH2UnwindFrame_t * unwindframe = CONTAINING_RECORD(EstablisherFrame, _SEH2UnwindFrame_t, SUF_Registration);
+		_SEH2LocalUnwind(unwindframe->SUF_Frame, unwindframe->SUF_TargetTryLevel);
+		*((void **)DispatcherContext) = EstablisherFrame;
+		return ExceptionCollidedUnwind;
+	}
 
-	*((void **)DispatcherContext) = EstablisherFrame;
-	return ExceptionCollidedUnwind;
+	return ExceptionContinueSearch;
 }
 
 static
 void _SEH2LocalUnwind(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * dsttrylevel)
 {
 	volatile _SEH2TryLevel_t * trylevel;
-	_SEH2Registration_t nestedframe;
+	_SEH2UnwindFrame_t unwindframe;
 
-	nestedframe.SER_Handler = &__SEH2NestedHandler;
-	__SEH2EnterFrame(&nestedframe);
+	unwindframe.SUF_Frame = frame;
+	unwindframe.SUF_TargetTryLevel = dsttrylevel;
+
+	unwindframe.SUF_Registration.SER_Handler = &__SEH2UnwindHandler;
+	__SEH2EnterFrame(&unwindframe.SUF_Registration);
 
 	for(trylevel = frame->SF_TopTryLevel; trylevel && trylevel != dsttrylevel; trylevel = trylevel->ST_Next)
+	{
+		frame->SF_TopTryLevel = trylevel->ST_Next;
 		_SEH2Finally(frame, trylevel);
-
-	frame->SF_TopTryLevel = dsttrylevel;
+	}
 
 	__SEH2LeaveFrame();
 }
@@ -223,6 +241,7 @@ extern
 void __cdecl _SEH2EnterFrame(_SEH2Frame_t * frame)
 {
 	frame->SF_Registration.SER_Handler = __SEH2FrameHandler;
+	frame->SF_TopTryLevel = 0;
 	frame->SF_Code = 0;
 	__SEH2EnterFrame(&frame->SF_Registration);
 }

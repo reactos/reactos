@@ -481,24 +481,6 @@ GetNumaProcessorNode(
 /*
  * @unimplemented
  */
-UINT
-WINAPI
-GetWriteWatch(
-    DWORD  dwFlags,
-    PVOID  lpBaseAddress,
-    SIZE_T dwRegionSize,
-    PVOID *lpAddresses,
-    PULONG_PTR lpdwCount,
-    PULONG lpdwGranularity
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 WINAPI
 HeapQueryInformation (
@@ -888,24 +870,6 @@ GetVolumePathNamesForVolumeNameW(
  */
 BOOL
 WINAPI
-ReplaceFileW(
-    LPCWSTR lpReplacedFileName,
-    LPCWSTR lpReplacementFileName,
-    LPCWSTR lpBackupFileName,
-    DWORD   dwReplaceFlags,
-    LPVOID  lpExclude,
-    LPVOID  lpReserved
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
 SetFirmwareEnvironmentVariableW(
     LPCWSTR lpName,
     LPCWSTR lpGuid,
@@ -1036,24 +1000,6 @@ GetVolumePathNamesForVolumeNameA(
     LPSTR lpszVolumePathNames,
     DWORD cchBufferLength,
     PDWORD lpcchReturnLength
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-ReplaceFileA(
-    LPCSTR  lpReplacedFileName,
-    LPCSTR  lpReplacementFileName,
-    LPCSTR  lpBackupFileName,
-    DWORD   dwReplaceFlags,
-    LPVOID  lpExclude,
-    LPVOID  lpReserved
     )
 {
     STUB;

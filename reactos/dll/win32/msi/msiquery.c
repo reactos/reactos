@@ -633,7 +633,7 @@ MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR szColumnNameBuffer,
     MSIQUERY *query = NULL;
     static const WCHAR szError[] = { 0 };
     MSIDBERROR r = MSIDBERROR_NOERROR;
-    int len;
+    DWORD len;
 
     FIXME("%ld %p %p - returns empty error string\n",
           handle, szColumnNameBuffer, pcchBuf );
@@ -645,7 +645,7 @@ MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR szColumnNameBuffer,
     if( !query )
         return MSIDBERROR_INVALIDARG;
 
-    len = lstrlenW( szError );
+    len = strlenW( szError );
     if( szColumnNameBuffer )
     {
         if( *pcchBuf > len )
@@ -665,7 +665,7 @@ MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR szColumnNameBuffer,
     static const CHAR szError[] = { 0 };
     MSIQUERY *query = NULL;
     MSIDBERROR r = MSIDBERROR_NOERROR;
-    int len;
+    DWORD len;
 
     FIXME("%ld %p %p - returns empty error string\n",
           handle, szColumnNameBuffer, pcchBuf );
@@ -677,7 +677,7 @@ MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR szColumnNameBuffer,
     if( !query )
         return MSIDBERROR_INVALIDARG;
 
-    len = lstrlenA( szError );
+    len = strlen( szError );
     if( szColumnNameBuffer )
     {
         if( *pcchBuf > len )

@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  01-12-2008
+ * LastChange:  14-12-2008
  */
 
 #ifndef LANG_SK_SK_H__
@@ -1215,7 +1215,7 @@ static MUI_ENTRY skSKDeletePartitionEntries[] =
     {
         6,
         8,
-        "Vybrali Ste si odstr nenie oblasti",
+        "Vybrali ste si odstr nenie oblasti",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1323,7 +1323,8 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
+        "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
+        "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1374,7 +1375,8 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
+        "Inçtal toru sa nepodarilo nainçtalovaœ zav dzac¡ k¢d s£borov‚ho\n"
+        "syst‚mu FAT na syst‚mov£ part¡ciu.",
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
@@ -1598,7 +1600,7 @@ MUI_STRING skSKStrings[] =
     {STRING_PARTITIONSIZE,
      "Ve–kosœ novej oblasti:"},
     {STRING_CHOOSENEWPARTITION,
-     "Zvolili Ste vytvorenie novej oblasti na"},
+     "Zvolili ste vytvorenie novej oblasti na"},
     {STRING_HDDSIZE,
     "Zadajte, pros¡m, ve–kosœ novej oblasti v megabajtoch."},
     {STRING_CREATEPARTITION,
@@ -1606,7 +1608,7 @@ MUI_STRING skSKStrings[] =
     {STRING_PARTFORMAT,
     "T to oblasœ sa bude form tovaœ ako Ôalçia."},
     {STRING_NONFORMATTEDPART,
-    "Zvolili Ste inçtal ciu syst‚mu ReactOS na nov£ alebo nenaform tovan£ oblasœ."},
+    "Zvolili ste inçtal ciu syst‚mu ReactOS na nov£ alebo nenaform tovan£ oblasœ."},
     {STRING_INSTALLONPART,
     "Inçtal tor nainçtaluje syst‚m ReactOS na oblasœ"},
     {STRING_CHECKINGPART,

@@ -624,7 +624,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Моят компютър"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Кошче"
 	IDS_CONTROLPANEL            "Крило за управление"
-	IDS_ADMINISTRATIVETOOLS     "Управленски средства"
+	IDS_ADMINISTRATIVETOOLS     "Управнически средства"
 
 	// context menus 
 	IDS_VIEW_LARGE              "&Големи значета"
@@ -668,10 +668,10 @@ BEGIN
 	IDS_SHUTDOWN_PROMPT         "Искате ли да изключите компютъра?"
 
 	// shell folder path default values 
-	IDS_PROGRAMS                "Пусков изборник\\Programs"
+	IDS_PROGRAMS                "Пусков изборник\\Приложения"
 	IDS_PERSONAL                "Книжа"
 	IDS_FAVORITES               "Любимки"
-	IDS_STARTUP                 "Пусков изборник\\Programs\\StartUp"
+	IDS_STARTUP                 "Пусков изборник\\Приложения\\Самозапускащи"
 	IDS_RECENT                  "Скорошни"
 	IDS_SENDTO                  "Изпращане"
 	IDS_STARTMENU               "Пусков изборник"
@@ -690,7 +690,7 @@ BEGIN
 	IDS_MYPICTURES              "Моите изображения"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
 	IDS_COMMON_DOCUMENTS        "Документи"
-	IDS_ADMINTOOLS              "Пусков изборник\\Programs\\Administrative Tools"
+	IDS_ADMINTOOLS              "Пусков изборник\\Приложения\\Управнически средства"
 	IDS_COMMON_MUSIC            "Документи\\Музиката ми"
 	IDS_COMMON_PICTURES         "Документи\\Рисунките ми"
 	IDS_COMMON_VIDEO            "Документи\\Лентите ми"
@@ -718,7 +718,7 @@ BEGIN
 	IDS_PICK_ICON_TITLE         "Изберете значе"
 	IDS_PICK_ICON_FILTER        "Файлове със значета(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Изпълними файлове\0*.exe\0"
-	IDS_DIRECTORY                "Папка"
+	IDS_DIRECTORY               "Папка"
 	IDS_VIRTUAL_DRIVER          "Водач на привидно устройство"
 	IDS_BAT_FILE                "Пакетен файл на РеактОС"
 	IDS_CMD_FILE                "Писание за управление на РеактОС"

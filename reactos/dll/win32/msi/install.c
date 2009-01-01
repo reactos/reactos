@@ -215,8 +215,8 @@ UINT msi_strcpy_to_awstring( LPCWSTR str, awstring *awbuf, DWORD *sz )
 /***********************************************************************
  * MsiGetTargetPath   (internal)
  */
-static UINT WINAPI MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
-                                      awstring *szPathBuf, LPDWORD pcchPathBuf )
+static UINT MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
+                               awstring *szPathBuf, LPDWORD pcchPathBuf )
 {
     MSIPACKAGE *package;
     LPWSTR path;
@@ -774,7 +774,7 @@ UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE* package, LPCWSTR szFeature,
         feature->Attributes & msidbFeatureAttributesDisallowAdvertise)
         return ERROR_FUNCTION_FAILED;
 
-    msi_feature_set_state( feature, iState );
+    msi_feature_set_state(package, feature, iState);
 
     ACTION_UpdateComponentStates(package,szFeature);
 

@@ -486,7 +486,7 @@ findpcb:
 	 * else do it below (after getting remote address).
 	 */
 	if (tp->t_state != TCPS_LISTEN)
-		tcp_dooptions(tp, optp, optlen, ti, &to);
+		tcp_dooptions(tp, (u_char *)optp, optlen, ti, &to);
 
 	/*
 	 * Header prediction: check for the two common cases
@@ -687,7 +687,7 @@ findpcb:
 			taop = &tao_noncached;
 			bzero(taop, sizeof(*taop));
 		}
-		tcp_dooptions(tp, optp, optlen, ti, &to);
+		tcp_dooptions(tp, (u_char *)optp, optlen, ti, &to);
 		if (iss)
 			tp->iss = iss;
 		else
@@ -1974,7 +1974,7 @@ tcp_mss(tp, offer)
 	int offer;
 {
 	register struct rtentry *rt;
-	struct ifnet *ifp;
+	struct ifnet *ifp = NULL;
 	register int rtt, mss;
 	u_long bufsize;
 	struct inpcb *inp;

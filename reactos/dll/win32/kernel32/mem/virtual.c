@@ -76,20 +76,26 @@ VirtualFreeEx(IN HANDLE hProcess,
 {
     NTSTATUS Status;
 
-    /* Free the memory */
-    Status = NtFreeVirtualMemory(hProcess,
-                                 (PVOID *)&lpAddress,
-                                 &dwSize,
-                                 dwFreeType);
-    if (!NT_SUCCESS(Status))
+    if (dwSize == 0 || !(dwFreeType & MEM_RELEASE))
     {
-        /* We failed */
-        SetLastErrorByStatus(Status);
-        return FALSE;
+        /* Free the memory */
+        Status = NtFreeVirtualMemory(hProcess,
+                                     &lpAddress,
+                                     &dwSize,
+                                     dwFreeType);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed */
+            SetLastErrorByStatus(Status);
+            return FALSE;
+        }
+
+        /* Return success */
+        return TRUE;
     }
 
-    /* Return success */
-    return TRUE;
+    SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+    return FALSE;
 }
 
 /*
@@ -217,7 +223,7 @@ VirtualQueryEx(IN HANDLE hProcess,
                                   (LPVOID)lpAddress,
                                   MemoryBasicInformation,
                                   lpBuffer,
-                                  sizeof(MEMORY_BASIC_INFORMATION),
+                                  dwLength,
                                   &ResultLength);
     if (!NT_SUCCESS(Status))
     {
@@ -255,6 +261,39 @@ VirtualUnlock(IN LPVOID lpAddress,
 
     /* Return success */
     return TRUE;
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetWriteWatch(
+    DWORD  dwFlags,
+    PVOID  lpBaseAddress,
+    SIZE_T dwRegionSize,
+    PVOID *lpAddresses,
+    PULONG_PTR lpdwCount,
+    PULONG lpdwGranularity
+    )
+{
+    NTSTATUS Status;
+
+    Status = NtGetWriteWatch(GetCurrentProcess(),
+                             dwFlags,
+                             lpBaseAddress,
+                             dwRegionSize,
+                             lpAddresses,
+                             lpdwCount,
+                             lpdwGranularity);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return -1;
+    }
+
+    return 0;
 }
 
 /* EOF */

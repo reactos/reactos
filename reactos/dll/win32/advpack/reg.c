@@ -230,7 +230,7 @@ HRESULT WINAPI RegInstallW(HMODULE hm, LPCWSTR pszSection, const STRTABLEW* pstT
     if(!create_tmp_ini_file(hm, tmp_ini_path))
         return E_FAIL;
 
-    if (write_predefined_strings(hm, tmp_ini_path))
+    if (write_predefined_strings(hm, tmp_ini_path) != S_OK)
         goto done;
 
     /* Write the additional string table */

@@ -36,7 +36,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -47,54 +49,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Plik"
-	BEGIN
-		MENUITEM "&Nowy...",           CMD_NEW
-		MENUITEM "&Otwórz\tCtrl+O",     CMD_OPEN
-		MENUITEM "&Zapisz\tCtrl+S",     CMD_SAVE
-		MENUITEM "Z&apisz jako...",       CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "&Drukuj",            CMD_PRINT
-		MENUITEM "&Ustawienia strony...",    CMD_PAGE_SETUP
-		MENUITEM "Ustawienia &drukarki...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "Zakoñ&cz",             CMD_EXIT
-	END
-	POPUP "&Edycja"
-	BEGIN
-		MENUITEM "&Cofnij\tCtrl+Z",     CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "&Wytnij\tCtrl+X",      CMD_CUT
-		MENUITEM "&Kopiuj\tCtrl+C",     CMD_COPY
-		MENUITEM "Wkl&ej\tCtrl+V",    CMD_PASTE
-		MENUITEM "&Usuñ\tDel",      CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&ZnajdŸ\tCtrl+F",   CMD_SEARCH
-		MENUITEM "Z&najdŸ nastêpny\tF3",  CMD_SEARCH_NEXT
-		MENUITEM "Zamieñ\tCtrl+H",   CMD_REPLACE
-		MENUITEM "IdŸ do...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Zaznacz w&szystko\tCtrl+A",       CMD_SELECT_ALL
-		MENUITEM "Godzina/&Data\tF5",    CMD_TIME_DATE
-	END
-	POPUP "F&ormat"
-	BEGIN
-		MENUITEM "&Zawijanie wierszy",  CMD_WRAP
-		MENUITEM "Czci&onka...",          CMD_FONT
-	END
-	POPUP "P&odgl¹d"
-	BEGIN
-		MENUITEM "Pasek &stanu",    CMD_STATUSBAR
-	END
-	POPUP "Pomo&c"
-	BEGIN
-		MENUITEM "&Tematy pomocy",         CMD_HELP_CONTENTS
-		MENUITEM "&Szukaj...",        CMD_HELP_SEARCH
-		MENUITEM "Pomo&c",     CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&Notatnik - informacje"             CMD_ABOUT
-		MENUITEM "&ReactOS - informacje",      CMD_ABOUT_WINE
-	END
+    POPUP "&Plik"
+    BEGIN
+        MENUITEM "&Nowy\tCtrl+N",           CMD_NEW
+        MENUITEM "&Otwórz\tCtrl+O",         CMD_OPEN
+        MENUITEM "&Zapisz\tCtrl+S",         CMD_SAVE
+        MENUITEM "Z&apisz jako...",         CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Drukuj\tCtrl+P",         CMD_PRINT
+        MENUITEM "&Ustawienia strony...",   CMD_PAGE_SETUP
+        MENUITEM "Ustawienia &drukarki...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Zakoñ&cz",                CMD_EXIT
+    END
+    POPUP "&Edycja"
+    BEGIN
+        MENUITEM "&Cofnij\tCtrl+Z",           CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Wytnij\tCtrl+X",           CMD_CUT
+        MENUITEM "&Kopiuj\tCtrl+C",           CMD_COPY
+        MENUITEM "Wkl&ej\tCtrl+V",            CMD_PASTE
+        MENUITEM "&Usuñ\tDel",                CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&ZnajdŸ\tCtrl+F",           CMD_SEARCH
+        MENUITEM "Z&najdŸ nastêpny\tF3",      CMD_SEARCH_NEXT
+        MENUITEM "Zamieñ\tCtrl+H",            CMD_REPLACE
+        MENUITEM "IdŸ do...\tCtrl+G",         CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Zaznacz w&szystko\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Godzina/&Data\tF5",         CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Zawijanie wierszy", CMD_WRAP
+        MENUITEM "Czci&onka...",       CMD_FONT
+    END
+    POPUP "P&odgl¹d"
+    BEGIN
+        MENUITEM "Pasek &stanu", CMD_STATUSBAR
+    END
+    POPUP "Pomo&c"
+    BEGIN
+        MENUITEM "&Tematy pomocy",        CMD_HELP_CONTENTS
+        MENUITEM "&Szukaj...",            CMD_HELP_SEARCH
+        MENUITEM "Pomo&c",                CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Notatnik - informacje" CMD_ABOUT
+        MENUITEM "&ReactOS - informacje", CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */

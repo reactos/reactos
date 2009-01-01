@@ -75,6 +75,11 @@
 #include <rpc.h>
 #include <shellapi.h>
 #include <winperf.h>
+#ifndef NOCRYPT
+#include <wincrypt.h>
+#include <winefs.h>
+#include <winscard.h>
+#endif
 #ifndef NOGDI
 #include <commdlg.h>
 #include <winspool.h>

@@ -3,6 +3,7 @@
 <module name="mesa32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MESA32}" installbase="system32" installname="mesa32.dll" allowwarnings="true" crt="msvcrt">
 	<importlibrary definition="src/drivers/windows/icd/mesa.def" />
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
+	<compilerflag>-w</compilerflag>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>user32</library>

@@ -549,7 +549,10 @@ DWORD getNumArpEntries(void)
 					&returnSize );
 
 	    if( status == STATUS_SUCCESS ) totalNumber += returnSize;
-	    if( IpArpTable ) tdiFreeThingSet( IpArpTable );
+		if( IpArpTable ) {
+			tdiFreeThingSet( IpArpTable );
+			IpArpTable = NULL;
+		}
 	}
     }
 

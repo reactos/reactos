@@ -180,7 +180,7 @@ static UINT WHERE_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
     if (r != ERROR_SUCCESS)
         return r;
 
-    return wv->table->ops->get_row(view, row, rec);
+    return wv->table->ops->get_row(wv->table, row, rec);
 }
 
 static UINT WHERE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
@@ -585,6 +585,7 @@ static const MSIVIEWOPS where_ops =
     NULL,
     NULL,
     WHERE_sort,
+    NULL,
 };
 
 static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr *cond,

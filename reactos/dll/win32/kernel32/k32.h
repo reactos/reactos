@@ -13,7 +13,6 @@
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
-#define _KERNEL32_
 #include <windows.h>
 #include <tlhelp32.h>
 

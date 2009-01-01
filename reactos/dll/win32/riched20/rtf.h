@@ -1157,9 +1157,6 @@ struct _RTF_Info {
 
     ME_InStream *stream;
 
-    /* edit window to output to */
-    HWND hwndEdit;
-    
     ME_TextEditor *editor;
     ME_Style *style;
 

@@ -1,0 +1,90 @@
+/*
+ * English resources for oleacc
+ *
+ * Copyright 2008 Nikolay Sivov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    0 "unknown object" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "title bar"
+    ROLE_SYSTEM_MENUBAR     "menu bar"
+    ROLE_SYSTEM_SCROLLBAR   "scroll bar"
+    ROLE_SYSTEM_GRIP        "grip"
+    ROLE_SYSTEM_SOUND       "sound"
+    ROLE_SYSTEM_CURSOR      "cursor"
+    ROLE_SYSTEM_CARET       "caret"
+    ROLE_SYSTEM_ALERT       "alert"
+    ROLE_SYSTEM_WINDOW      "window"
+    ROLE_SYSTEM_CLIENT      "client"
+    ROLE_SYSTEM_MENUPOPUP   "popup menu"
+    ROLE_SYSTEM_MENUITEM    "menu item"
+    ROLE_SYSTEM_TOOLTIP     "tool tip"
+    ROLE_SYSTEM_APPLICATION "application"
+    ROLE_SYSTEM_DOCUMENT    "document"
+    ROLE_SYSTEM_PANE        "pane"
+    ROLE_SYSTEM_CHART       "chart"
+    ROLE_SYSTEM_DIALOG      "dialog"
+    ROLE_SYSTEM_BORDER      "border"
+    ROLE_SYSTEM_GROUPING    "grouping"
+    ROLE_SYSTEM_SEPARATOR   "separator"
+    ROLE_SYSTEM_TOOLBAR     "tool bar"
+    ROLE_SYSTEM_STATUSBAR   "status bar"
+    ROLE_SYSTEM_TABLE        "table"
+    ROLE_SYSTEM_COLUMNHEADER "column header"
+    ROLE_SYSTEM_ROWHEADER    "row header"
+    ROLE_SYSTEM_COLUMN       "column"
+    ROLE_SYSTEM_ROW          "row"
+    ROLE_SYSTEM_CELL         "cell"
+    ROLE_SYSTEM_LINK         "link"
+    ROLE_SYSTEM_HELPBALLOON  "help balloon"
+    ROLE_SYSTEM_CHARACTER    "character"
+    ROLE_SYSTEM_LIST         "list"
+    ROLE_SYSTEM_LISTITEM     "list item"
+    ROLE_SYSTEM_OUTLINE      "outline"
+    ROLE_SYSTEM_OUTLINEITEM  "outline item"
+    ROLE_SYSTEM_PAGETAB      "page tab"
+    ROLE_SYSTEM_PROPERTYPAGE "property page"
+    ROLE_SYSTEM_INDICATOR    "indicator"
+    ROLE_SYSTEM_GRAPHIC      "graphic"
+    ROLE_SYSTEM_STATICTEXT   "static text"
+    ROLE_SYSTEM_TEXT         "text"
+    ROLE_SYSTEM_PUSHBUTTON   "push button"
+    ROLE_SYSTEM_CHECKBUTTON  "check button"
+    ROLE_SYSTEM_RADIOBUTTON  "radio button"
+    ROLE_SYSTEM_COMBOBOX     "combo box"
+    ROLE_SYSTEM_DROPLIST     "drop down"
+    ROLE_SYSTEM_PROGRESSBAR  "progress bar"
+    ROLE_SYSTEM_DIAL         "dial"
+    ROLE_SYSTEM_HOTKEYFIELD  "hot key field"
+    ROLE_SYSTEM_SLIDER       "slider"
+    ROLE_SYSTEM_SPINBUTTON   "spin box"
+    ROLE_SYSTEM_DIAGRAM      "diagram"
+    ROLE_SYSTEM_ANIMATION    "animation"
+    ROLE_SYSTEM_EQUATION     "equation"
+    ROLE_SYSTEM_BUTTONDROPDOWN "drop down button"
+    ROLE_SYSTEM_BUTTONMENU   "menu button"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "grid drop down button"
+    ROLE_SYSTEM_WHITESPACE   "white space"
+    ROLE_SYSTEM_PAGETABLIST  "page tab list"
+    ROLE_SYSTEM_CLOCK        "clock"
+    ROLE_SYSTEM_SPLITBUTTON  "split button"
+    ROLE_SYSTEM_IPADDRESS    "IP address"
+    ROLE_SYSTEM_OUTLINEBUTTON "outline button"
+}

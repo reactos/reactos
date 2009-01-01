@@ -596,7 +596,7 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 		Include& include = *includes[i];
 		if ( parameters.length () > 0 )
 			parameters += " ";
-		parameters += "-I" + backend->GetFullPath ( *include.directory );;
+		parameters += "-I" + backend->GetFullPath ( *include.directory );
 	}
 	return parameters;
 }

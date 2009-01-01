@@ -29,8 +29,10 @@ BEGIN
     "^C", CMD_COPY
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
-    "H",  CMD_REPLACE, VIRTKEY, CONTROL
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -41,54 +43,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&File"
-	BEGIN
-		MENUITEM "Bar&u...",              CMD_NEW
-		MENUITEM "&Buka\tCtrl+O",         CMD_OPEN
-		MENUITEM "&Simpan\tCtrl+S",       CMD_SAVE
-		MENUITEM "Simpan seb&agai...",    CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "Se&tup Halaman...",     CMD_PAGE_SETUP
-		MENUITEM "&Cetak",                CMD_PRINT
-		MENUITEM "P&rinter Setup...",     CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Keluar",               CMD_EXIT
-	END
-	POPUP "&Edit"
-	BEGIN
-		MENUITEM "&Undo\tCtrl+Z",         CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "Cu&t\tCtrl+X",          CMD_CUT
-		MENUITEM "&Copy\tCtrl+C",         CMD_COPY
-		MENUITEM "&Paste\tCtrl+V",        CMD_PASTE
-		MENUITEM "&Hapus\tDel",           CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "Ca&ri...\tCtrl+F",      CMD_SEARCH
-		MENUITEM "Cari berikut&nya\tF3",  CMD_SEARCH_NEXT
-		MENUITEM "Ganti\tCtrl+H",         CMD_REPLACE
-		MENUITEM "Pergi Ke...\tCtrl+G",   CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Pilih semu&a\tCtrl+A",  CMD_SELECT_ALL
-		MENUITEM "&Jam/Tanggal\tF5",      CMD_TIME_DATE
-	END
-	POPUP "F&ormat"
-	BEGIN
-		MENUITEM "&Gulung baris panjang", CMD_WRAP
-		MENUITEM "&Font...",              CMD_FONT
-	END
-	POPUP "&Lihat"
-	BEGIN
-		MENUITEM "Status&bar",            CMD_STATUSBAR
-	END
-	POPUP "&Bantuan"
-	BEGIN
-		MENUITEM "&Daftar Isi",           CMD_HELP_CONTENTS
-		MENUITEM "&Cari...",              CMD_HELP_SEARCH
-		MENUITEM "&Bantuan pada bantuan", CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&Tentang"               CMD_ABOUT
-		MENUITEM "Inf&o",                 CMD_ABOUT_WINE
-	END
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Bar&u\tCtrl+N",      CMD_NEW
+        MENUITEM "&Buka\tCtrl+O",      CMD_OPEN
+        MENUITEM "&Simpan\tCtrl+S",    CMD_SAVE
+        MENUITEM "Simpan seb&agai...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Se&tup Halaman...",  CMD_PAGE_SETUP
+        MENUITEM "&Cetak\tCtrl+P",     CMD_PRINT
+        MENUITEM "P&rinter Setup...",  CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Keluar",            CMD_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",        CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",         CMD_CUT
+        MENUITEM "&Copy\tCtrl+C",        CMD_COPY
+        MENUITEM "&Paste\tCtrl+V",       CMD_PASTE
+        MENUITEM "&Hapus\tDel",          CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Ca&ri...\tCtrl+F",     CMD_SEARCH
+        MENUITEM "Cari berikut&nya\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Ganti\tCtrl+H",        CMD_REPLACE
+        MENUITEM "Pergi Ke...\tCtrl+G",  CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Pilih semu&a\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "&Jam/Tanggal\tF5",     CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Gulung baris panjang", CMD_WRAP
+        MENUITEM "&Font...",              CMD_FONT
+    END
+    POPUP "&Lihat"
+    BEGIN
+        MENUITEM "Status&bar", CMD_STATUSBAR
+    END
+    POPUP "&Bantuan"
+    BEGIN
+        MENUITEM "&Daftar Isi",           CMD_HELP_CONTENTS
+        MENUITEM "&Cari...",              CMD_HELP_SEARCH
+        MENUITEM "&Bantuan pada bantuan", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&Tentang"               CMD_ABOUT
+        MENUITEM "Inf&o",                 CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */

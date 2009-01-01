@@ -294,6 +294,7 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)
 {
+   TEXTMETRICW tmw;
    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
    if (! IntCreatePrimarySurface())
    {
@@ -316,9 +317,13 @@ co_IntInitializeDesktopGraphics(VOID)
    IntGdiSetDCOwnerEx( hSystemBM, GDI_OBJ_HMGR_PUBLIC, FALSE);
 
    // FIXME! Move these to a update routine.
-   gpsi->Planes    = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
-   gpsi->BitsPixel = NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL);
-   gpsi->BitCount  = gpsi->Planes * gpsi->BitsPixel;
+   gpsi->Planes        = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
+   gpsi->BitsPixel     = NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL);
+   gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
+   gpsi->dmLogPixels   = NtGdiGetDeviceCaps(ScreenDeviceContext, LOGPIXELSY);
+   // Font is realized and this dc was previously set to internal DC_ATTR.
+   gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, &gpsi->cySysFontChar);
+   gpsi->tmSysFont     = tmw;
 
    return TRUE;
 }

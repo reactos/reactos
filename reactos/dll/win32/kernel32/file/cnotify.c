@@ -92,12 +92,7 @@ FindFirstChangeNotificationW (
                         &ObjectAttributes,
                         &IoStatus,
                         FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-                        FILE_DIRECTORY_FILE);
-
-   /*
-   FIXME: I think we should use FILE_OPEN_FOR_BACKUP_INTENT. See M$ Q188321
-   -Gunnar
-   */
+                        FILE_DIRECTORY_FILE | FILE_OPEN_FOR_BACKUP_INTENT);
 
    RtlFreeHeap(RtlGetProcessHeap(),
                0,
@@ -122,6 +117,7 @@ FindFirstChangeNotificationW (
                                         (BOOLEAN)bWatchSubtree);
    if (!NT_SUCCESS(Status))
    {
+      NtClose(hDir);
       SetLastErrorByStatus(Status);
       return INVALID_HANDLE_VALUE;
    }
@@ -185,23 +181,61 @@ ReadDirectoryChangesW(
     LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine /* OPTIONAL???????? */
     )
 {
+   PVOID CompletionRoutine;
    NTSTATUS Status;
    IO_STATUS_BLOCK IoStatus;
+   HANDLE EventHandle;
+   PIO_APC_ROUTINE IoApcRoutine;
 
    if (lpOverlapped )
+   {
+      if (lpCompletionRoutine)
+      {
+          CompletionRoutine = (PVOID) lpCompletionRoutine;
+          EventHandle = NULL;
+          IoApcRoutine = ApcRoutine;
+      }
+      else
+      {
+          if (((ULONG_PTR) lpOverlapped->hEvent & 1) == 0)
+              CompletionRoutine = (PVOID) lpOverlapped;
+          else
+              CompletionRoutine = NULL;
+
+          EventHandle = lpOverlapped->hEvent;
+          IoApcRoutine = NULL;
+      }
+
       lpOverlapped->Internal = STATUS_PENDING;
+   }
+   else
+   {
+       EventHandle = NULL;
+       IoApcRoutine = NULL;
+       CompletionRoutine = NULL;
+   }
 
    Status = NtNotifyChangeDirectoryFile(
       hDirectory,
-      lpOverlapped ? lpOverlapped->hEvent : NULL,
-      lpCompletionRoutine ? ApcRoutine : NULL, /* ApcRoutine OPTIONAL???? */
-      lpCompletionRoutine, /* ApcContext */
-      lpOverlapped ? (PIO_STATUS_BLOCK)lpOverlapped : &IoStatus,
+      EventHandle,
+      IoApcRoutine,
+      CompletionRoutine, /* ApcContext */
+      lpOverlapped ? (PIO_STATUS_BLOCK)lpOverlapped->Internal : &IoStatus,
       lpBuffer,
       nBufferLength,
       dwNotifyFilter,
       (BOOLEAN)bWatchSubtree
       );
+
+   if ((Status == STATUS_PENDING) && (!lpOverlapped))
+   {
+       Status = NtWaitForSingleObject(hDirectory, FALSE, NULL);
+
+       if (NT_SUCCESS(Status))
+       {
+           Status = IoStatus.Status;
+       }
+   }
 
    if (!NT_SUCCESS(Status))
    {

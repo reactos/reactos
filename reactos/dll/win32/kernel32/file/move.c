@@ -249,8 +249,8 @@ MoveFileWithProgressW (
 	if (dwFlags & MOVEFILE_DELAY_UNTIL_REBOOT)
 		return add_boot_rename_entry( lpExistingFileName, lpNewFileName, dwFlags );
 
-    if (dwFlags & MOVEFILE_WRITE_THROUGH)
-        FIXME("MOVEFILE_WRITE_THROUGH unimplemented\n");
+//    if (dwFlags & MOVEFILE_WRITE_THROUGH)
+//        FIXME("MOVEFILE_WRITE_THROUGH unimplemented\n");
 
     if (!lpNewFileName)
         return DeleteFileW(lpExistingFileName);
@@ -272,31 +272,37 @@ MoveFileWithProgressW (
                                NULL,
                                NULL);
 
-    errCode = NtOpenFile(&hNewFile, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes, &IoStatusBlock, 0,
-                         FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT );
+    errCode = NtOpenFile( &hNewFile,
+                          GENERIC_READ | GENERIC_WRITE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          0,
+                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
+                          ((dwFlags & MOVEFILE_WRITE_THROUGH) ? FILE_WRITE_THROUGH : 0) );
 
-	if (NT_SUCCESS(errCode)) /* Destination exists */
-	{
+    if (NT_SUCCESS(errCode)) /* Destination exists */
+    {
         NtClose(hNewFile);
 
         if (!(dwFlags & MOVEFILE_REPLACE_EXISTING))
         {
 			SetLastError(ERROR_ALREADY_EXISTS);
 			return FALSE;
-		}
-		else if (GetFileAttributesW(lpNewFileName) & FILE_ATTRIBUTE_DIRECTORY)
-		{
-			SetLastError(ERROR_ACCESS_DENIED);
-			return FALSE;
-		}
 	}
+	else if (GetFileAttributesW(lpNewFileName) & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		SetLastError(ERROR_ACCESS_DENIED);
+		return FALSE;
+	}
+    }
 
 	hFile = CreateFileW (lpExistingFileName,
 	                     GENERIC_ALL,
 	                     FILE_SHARE_WRITE|FILE_SHARE_READ,
 	                     NULL,
 	                     OPEN_EXISTING,
-	                     FILE_FLAG_BACKUP_SEMANTICS,
+	                     FILE_FLAG_BACKUP_SEMANTICS |
+	                     ((dwFlags & MOVEFILE_WRITE_THROUGH) ? FILE_FLAG_WRITE_THROUGH : 0),
 	                     NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)

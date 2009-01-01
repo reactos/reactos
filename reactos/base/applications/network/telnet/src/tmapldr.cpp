@@ -588,7 +588,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 #ifdef KEYDEBUG
 			printit("\r                                                                      \r");
 #endif
-			AllOk = SA.Add(temps);;
+			AllOk = SA.Add(temps);
 			if ( !AllOk ) break;
 		} else {
 			//       cerr << "Unexpected line '" << buf << "'\n";

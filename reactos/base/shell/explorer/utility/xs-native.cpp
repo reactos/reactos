@@ -206,14 +206,12 @@ struct Buffer
 
 #ifdef XS_STRING_UTF8
 			XS_String name_str(attr_name, attr_len);
-			XS_String value_str(value, value_len);
 #else
-			XS_String name_str, value_str;
+			XS_String name_str;
 			assign_utf8(name_str, attr_name, attr_len);
-			assign_utf8(value_str, value, value_len);
 #endif
 
-			attributes[name_str] = DecodeXMLString(value_str);
+			attributes[name_str] = DecodeXMLString(std::string(value, value_len));
 		}
 	}
 

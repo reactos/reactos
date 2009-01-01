@@ -1,5 +1,5 @@
 /*
- *Spanish Language resource file
+ * Spanish Language resource file
  * Traducido por: Javier Remacha 2008
  */
 
@@ -527,6 +527,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Franco Luxemburgués"
     IDS_CURRENCY_MALTESE_LIRA       "Lira Maltesa"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Escudo Portugués"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Corona Eslovaca"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Tolar Esloveno"
     IDS_CURRENCY_SPANISH_PESETA     "Peseta Española"
 END

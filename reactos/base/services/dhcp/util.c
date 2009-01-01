@@ -121,7 +121,7 @@ int read_client_conf(void) {
        if (lpCompName !=NULL) {
            memcpy(lpCompName, ComputerName, ComputerNameSize + 1);
            /* Send our hostname, some dhcpds use this to update DNS */
-           config->send_options[DHO_HOST_NAME].data = (u_int8_t*)strlwr(lpCompName);
+           config->send_options[DHO_HOST_NAME].data = (u_int8_t*)_strlwr(lpCompName);
            config->send_options[DHO_HOST_NAME].len = ComputerNameSize;
            debug("Hostname: %s, length: %d",
                  config->send_options[DHO_HOST_NAME].data,

@@ -168,7 +168,7 @@ NTSTATUS NTAPI Ext2ReadPhysicalBlocks (
 		{
 			DebugTrace(DEBUG_TRACE_MISC,   " !!!! Unable to create an IRP", 0 );
 			Status = STATUS_INSUFFICIENT_RESOURCES;
-			try_return( Status );
+			try_return();
 		}
 
 		//

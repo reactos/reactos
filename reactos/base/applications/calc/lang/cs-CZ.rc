@@ -1,6 +1,6 @@
 /* FILE:        base/applications/calc/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-07-27
+ * UPDATED:     2008-12-29
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -523,6 +523,7 @@ BEGIN
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portugalské escudo"
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Rakouský šilink"
     IDS_CURRENCY_GREEK_DRACHMA      "Øecká drachma"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Slovenská koruna"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovinský tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Španìlská peseta"
 END
