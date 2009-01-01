@@ -21,7 +21,7 @@
 #define KERNEL_VERSION_MINOR        4
 #define KERNEL_VERSION_PATCH_LEVEL  0
 
-#define COPYRIGHT_YEAR              "2008"
+#define COPYRIGHT_YEAR              "2009"
 
 /* KERNEL_VERSION_BUILD_TYPE is L"SVN", L"RC1", L"RC2" or L"" (for the release) */
 #define KERNEL_VERSION_BUILD_TYPE   L"SVN"
