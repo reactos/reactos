@@ -1090,6 +1090,8 @@ BOOL
 APIENTRY
 NtGdiDeleteObjectApp(HANDLE  DCHandle)
 {
+  /* Complete all pending operations */
+  NtGdiFlushUserBatch();
 
   if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
 
