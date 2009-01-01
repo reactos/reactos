@@ -216,7 +216,13 @@ NTSTATUS SendFragments(
         return NDIS_STATUS_FAILURE;
     }
 
-    return IPSendFragment(IFC->NdisPacket, NCE, IFC);
+    if (!NT_SUCCESS((NdisStatus = IPSendFragment(IFC->NdisPacket, NCE, IFC))))
+    {
+        FreeNdisPacket(IFC->NdisPacket);
+        ExFreePool(IFC);
+    }
+
+    return NdisStatus;
 }
 
 NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,

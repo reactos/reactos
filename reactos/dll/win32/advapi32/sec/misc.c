@@ -1461,7 +1461,7 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
 
   for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
     {
-      if (0 == wcsicmp(PrivName, DefaultPrivNames[Priv]))
+      if (0 == _wcsicmp(PrivName, DefaultPrivNames[Priv]))
         {
           Luid->LowPart = Priv + SE_MIN_WELL_KNOWN_PRIVILEGE;
           Luid->HighPart = 0;

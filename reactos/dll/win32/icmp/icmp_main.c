@@ -231,7 +231,7 @@ DWORD WINAPI IcmpSendEcho(
     /* check the request size against SO_MAX_MSG_SIZE using getsockopt */
 
     /* Prepare the request */
-    id=_getpid() & 0xFFFF;
+    id=GetCurrentProcessId() & 0xFFFF;
     seq=InterlockedIncrement(&icmp_sequence) & 0xFFFF;
 
     reqsize=ICMP_MINLEN+RequestSize;
@@ -319,18 +319,18 @@ DWORD WINAPI IcmpSendEcho(
     res=sendto(icp->sid, reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
     HeapFree(GetProcessHeap (), 0, reqbuf);
     if (res<0) {
-        if (errno==EMSGSIZE)
+        if (WSAGetLastError()==WSAEMSGSIZE)
             SetLastError(IP_PACKET_TOO_BIG);
         else {
-            switch (errno) {
-            case ENETUNREACH:
+            switch (WSAGetLastError()) {
+            case WSAENETUNREACH:
                 SetLastError(IP_DEST_NET_UNREACHABLE);
                 break;
-            case EHOSTUNREACH:
+            case WSAEHOSTUNREACH:
                 SetLastError(IP_DEST_HOST_UNREACHABLE);
                 break;
             default:
-                TRACE("unknown error: errno=%d\n",errno);
+                TRACE("unknown error: errno=%d\n",WSAGetLastError());
                 SetLastError(IP_GENERAL_FAILURE);
             }
         }

@@ -230,7 +230,11 @@ NTSTATUS RawIPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
-    IPSendDatagram( &Packet, NCE, RawIpSendPacketComplete, NULL );
+    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, RawIpSendPacketComplete, NULL )))
+    {
+        FreeNdisPacket(Packet.NdisPacket);
+        return Status;
+    }
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
 

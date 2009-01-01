@@ -69,7 +69,7 @@ extern "C"
 {
 #endif
 
-extern void __cdecl _SEH2EnterFrame(_SEH2Frame_t *);
+extern __attribute__((returns_twice)) void __cdecl _SEH2EnterFrame(_SEH2Frame_t *);
 extern void __cdecl _SEH2LeaveFrame(void);
 extern void __cdecl _SEH2Return(void);
 
@@ -134,22 +134,11 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 /* GCC doesn't know that this equals zero */
 #define __SEH_VOLATILE_ZERO ({ int zero = 0; __asm__ __volatile__("#" : "+g" (zero)); zero; })
 
-/* GCC believes this is setjmp */
-#define __SEH_PRETEND_SETJMP() (_SEH2PretendSetjmp(), 0)
-
 #define __SEH_VOLATILE_FALSE __builtin_expect(__SEH_VOLATILE_ZERO, 0)
 #define __SEH_VOLATILE_TRUE  __builtin_expect(!__SEH_VOLATILE_ZERO, 1)
 
 #define ___SEH_STRINGIFY(X_) # X_
 #define __SEH_STRINGIFY(X_) ___SEH_STRINGIFY(X_)
-
-static
-__inline__
-__attribute__((returns_twice))
-__attribute__((always_inline))
-void _SEH2PretendSetjmp(void)
-{
-}
 
 #define __SEH_FORCE_NEST \
 	__asm__ __volatile__("#%0" : : "r" (&_SEHFrame))
@@ -166,7 +155,6 @@ void _SEH2PretendSetjmp(void)
 #define __SEH_RETURN_FINALLY() return
 
 #define __SEH_BEGIN_TRY \
-	if(!__SEH_PRETEND_SETJMP()) \
 	{ \
 		__label__ _SEHEndTry; \
  \

@@ -78,5 +78,6 @@ VOID Direct3DSwapChain9_SetDisplayMode(Direct3DSwapChain9_INT* pThisSwapChain, D
 HRESULT Direct3DSwapChain9_Init(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESENT_PARAMETERS* pPresentationParameters);
 HRESULT Direct3DSwapChain9_Reset(Direct3DSwapChain9_INT* pThisSwapChain, D3DPRESENT_PARAMETERS* pPresentationParameters);
 VOID Direct3DSwapChain9_GetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, D3DGAMMARAMP* pRamp);
+VOID Direct3DSwapChain9_SetGammaRamp(Direct3DSwapChain9_INT* pThisSwapChain, DWORD Flags, CONST D3DGAMMARAMP* pRamp);
 
 #endif // _D3D9_SWAPCHAIN_H_

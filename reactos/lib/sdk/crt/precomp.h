@@ -18,6 +18,7 @@
 #include <malloc.h>
 #include <math.h>
 #include <limits.h>
+#include <io.h>
 
 #include <sys/stat.h>
 #include <sys/locking.h>

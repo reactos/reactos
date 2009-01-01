@@ -241,6 +241,7 @@ extern "C" {
 #define _tcscat wcscat
 #define _tcschr wcschr
 #define _tcscpy wcscpy
+#define _tcscpy_s wcscpy_s
 #define _tcscspn wcscspn
 #define _tcslen wcslen
 #define _tcsnlen wcsnlen
@@ -342,6 +343,7 @@ extern "C" {
 #define _tputenv _wputenv
 #define _tsearchenv _wsearchenv
 #define _tsplitpath _wsplitpath
+#define _tsplitpath_s _wsplitpath_s
 
 #define _tfdopen _wfdopen
 #define _tfsopen _wfsopen
@@ -619,6 +621,7 @@ extern "C" {
 
 #define _tcscat strcat
 #define _tcscpy strcpy
+#define _tcscpy_s strcpy_s
 #define _tcsdup _strdup
 #define _tcslen strlen
 #if 0
@@ -683,6 +686,7 @@ extern "C" {
 #define _tputenv _putenv
 #define _tsearchenv _searchenv
 #define _tsplitpath _splitpath
+#define _tsplitpath_s _splitpath_s
 
 #ifdef _POSIX_
 #define _tfdopen fdopen

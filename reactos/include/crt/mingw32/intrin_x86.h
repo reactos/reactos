@@ -65,6 +65,10 @@
 	would use in the same case
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*** Stack frame juggling ***/
 #define _ReturnAddress() (__builtin_return_address(0))
 #define _AddressOfReturnAddress() (&(((void **)(__builtin_frame_address(0)))[1]))
@@ -823,14 +827,14 @@ static __inline__ __attribute__((always_inline)) unsigned char _bittestandset(lo
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char _rotl8(const unsigned char value, const unsigned char shift)
+static __inline__ __attribute__((always_inline)) unsigned char _rotl8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
 	__asm__("rolb %b[shift], %b[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned short _rotl16(const unsigned short value, const unsigned char shift)
+static __inline__ __attribute__((always_inline)) unsigned short _rotl16(unsigned short value, unsigned char shift)
 {
 	unsigned short retval;
 	__asm__("rolw %b[shift], %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -838,14 +842,14 @@ static __inline__ __attribute__((always_inline)) unsigned short _rotl16(const un
 }
 
 #ifndef __MSVCRT__
-static __inline__ __attribute__((always_inline)) unsigned int _rotl(const unsigned int value, const int shift)
+static __inline__ __attribute__((always_inline)) unsigned int _rotl(unsigned int value, int shift)
 {
 	unsigned long retval;
 	__asm__("roll %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long _rotr(const unsigned int value, const unsigned char shift)
+static __inline__ __attribute__((always_inline)) unsigned int _rotr(unsigned int value, int shift)
 {
 	unsigned long retval;
 	__asm__("rorl %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -853,14 +857,14 @@ static __inline__ __attribute__((always_inline)) unsigned long _rotr(const unsig
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) unsigned char _rotr8(const unsigned char value, const unsigned char shift)
+static __inline__ __attribute__((always_inline)) unsigned char _rotr8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
 	__asm__("rorb %b[shift], %b[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned short _rotr16(const unsigned short value, const unsigned char shift)
+static __inline__ __attribute__((always_inline)) unsigned short _rotr16(unsigned short value, unsigned char shift)
 {
 	unsigned short retval;
 	__asm__("rorw %b[shift], %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -1295,6 +1299,10 @@ static __inline__ __attribute__((always_inline)) void __sidt(void *Destination)
 {
 	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination) : "memory");
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* KJK_INTRIN_X86_H_ */
 

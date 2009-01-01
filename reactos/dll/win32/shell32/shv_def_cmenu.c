@@ -1202,11 +1202,9 @@ DoCreateLink(
     if (StrRetToBufW(&strFile, This->dcm.apidl[0], szPath, MAX_PATH) != S_OK)
         return E_FAIL;
 
-
     pszExt = wcsrchr(szPath, L'.');
-    pszExt[0] = 0;
 
-    if (!wcsicmp(pszExt + 1, szLnk))
+    if (pszExt && !wcsicmp(pszExt + 1, szLnk))
     {
         if (!GetUniqueFileName(szPath, pszExt + 1, szTarget, TRUE))
             return E_FAIL;
@@ -1231,7 +1229,7 @@ DoCreateLink(
         {
             return E_FAIL;
         }
-        pszExt[0] = '.';
+
         if (SUCCEEDED(IShellLinkW_SetPath(nLink, szPath)))
         {
             if (SUCCEEDED(IShellLinkW_QueryInterface(nLink, &IID_IPersistFile, (LPVOID*)&ipf)))

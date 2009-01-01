@@ -111,13 +111,13 @@ int CDECL _fstat64(int fd, struct __stat64* buf)
   if (type == FILE_TYPE_PIPE)
   {
     buf->st_dev = buf->st_rdev = fd;
-    buf->st_mode = S_IFIFO;
+    buf->st_mode = _S_IFIFO;
     buf->st_nlink = 1;
   }
   else if (type == FILE_TYPE_CHAR)
   {
     buf->st_dev = buf->st_rdev = fd;
-    buf->st_mode = S_IFCHR;
+    buf->st_mode = _S_IFCHR;
     buf->st_nlink = 1;
   }
   else /* FILE_TYPE_DISK etc. */
@@ -128,9 +128,9 @@ int CDECL _fstat64(int fd, struct __stat64* buf)
       __set_errno(ERROR_INVALID_PARAMETER);
       return -1;
     }
-    buf->st_mode = S_IFREG | S_IREAD;
+    buf->st_mode = _S_IFREG | _S_IREAD;
     if (!(hfi.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-      buf->st_mode |= S_IWRITE;
+      buf->st_mode |= _S_IWRITE;
     buf->st_size  = ((__int64)hfi.nFileSizeHigh << 32) + hfi.nFileSizeLow;
     RtlTimeToSecondsSince1970((LARGE_INTEGER *)&hfi.ftLastAccessTime, &dw);
     buf->st_atime = dw;

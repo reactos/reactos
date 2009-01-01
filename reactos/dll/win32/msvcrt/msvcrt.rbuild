@@ -20,6 +20,7 @@
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<pch>precomp.h</pch>
 	<file>dllmain.c</file>
 	<file>msvcrt.rc</file>

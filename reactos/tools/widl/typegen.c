@@ -823,7 +823,13 @@ size_t type_memsize(const type_t *t, unsigned int *align)
     }
     else if (is_ptr(t) || is_conformant_array(t))
     {
-        size = sizeof(void *);
+#if defined(TARGET_i386)
+        size = 4;
+#elif defined(TARGET_amd64)
+        size = 8;
+#else
+#error Unsupported CPU
+#endif
         if (size > *align) *align = size;
     }
     else switch (t->type)

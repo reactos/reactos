@@ -1,4 +1,4 @@
-<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll">
+<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="shell32.spec" />
 	<include base="shell32">.</include>

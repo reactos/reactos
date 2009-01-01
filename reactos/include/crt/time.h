@@ -145,9 +145,8 @@ extern "C" {
   _CRTIMP __time32_t __cdecl _mkgmtime32(struct tm *_Tm);
 #if defined (_POSIX_) || defined(__GNUC__)
   void __cdecl tzset(void);
-#else
-  _CRTIMP void __cdecl _tzset(void);
 #endif
+  _CRTIMP void __cdecl _tzset(void);
 
 #if _INTEGRAL_MAX_BITS >= 64
   double __cdecl _difftime64(__time64_t _Time1,__time64_t _Time2);
@@ -235,18 +234,6 @@ struct timeval {
 #define timercmp(tvp,uvp,cmp) ((tvp)->tv_sec cmp (uvp)->tv_sec || (tvp)->tv_sec==(uvp)->tv_sec && (tvp)->tv_usec cmp (uvp)->tv_usec)
 #define timerclear(tvp) (tvp)->tv_sec = (tvp)->tv_usec = 0
 #endif /* _TIMEVAL_DEFINED */
-
-#ifndef __STRICT_ANSI__
-#ifndef _TIMEZONE_DEFINED /* also in sys/time.h */
-#define _TIMEZONE_DEFINED
-struct timezone {
-  int tz_minuteswest;
-  int tz_dsttime;
-};
-
-  extern int __cdecl mingw_gettimeofday (struct timeval *p, struct timezone *z);
-#endif
-#endif /* __STRICT_ANSI__ */
 
 #ifdef __cplusplus
 }

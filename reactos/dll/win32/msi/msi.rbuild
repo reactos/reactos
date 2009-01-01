@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="msi" type="win32dll" baseaddress="${BASEADDRESS_MSI}" installbase="system32" installname="msi.dll" allowwarnings="true">
+<module name="msi" type="win32dll" baseaddress="${BASEADDRESS_MSI}" installbase="system32" installname="msi.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="msi.spec" />
 	<include base="msi">.</include>
@@ -69,6 +69,7 @@
 	<library>kernel32</library>
 	<library>odbccp32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<dependency>msiserver</dependency>
 	<dependency>msiheader</dependency>
 </module>

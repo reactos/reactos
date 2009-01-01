@@ -137,6 +137,9 @@ ExDereferenceCallBackBlock(IN OUT PEX_CALLBACK CallBack,
         {
             /* Release rundown protection */
             ExReleaseRundownProtection(&CallbackRoutineBlock->RundownProtect);
+
+            /* We're all done */
+            break;
         }
     }
 }

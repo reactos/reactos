@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="wininet" type="win32dll" baseaddress="${BASEADDRESS_WININET}" installbase="system32" installname="wininet.dll" allowwarnings="true">
+<module name="wininet" type="win32dll" baseaddress="${BASEADDRESS_WININET}" installbase="system32" installname="wininet.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllInstall" />
 	<importlibrary definition="wininet.spec" />
 	<include base="wininet">.</include>

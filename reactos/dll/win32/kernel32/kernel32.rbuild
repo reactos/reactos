@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-	<module name="kernel32_base" type="objectlibrary" allowwarnings="true">
+	<module name="kernel32_base" type="objectlibrary" crt="dll" allowwarnings="true">
 		<include base="kernel32_base">.</include>
 		<include base="kernel32_base">include</include>
 		<include base="ReactOS">include/reactos/subsys</include>
@@ -141,7 +141,7 @@
 		</directory>
 		<library>normalize</library>
 	</module>
-	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
+	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll" crt="dll">
 		<importlibrary definition="kernel32.spec" />
 		<include base="kernel32">.</include>
 		<include base="kernel32" root="intermediate">.</include>

@@ -11,10 +11,13 @@
 	<library>kernel32</library>
 	<library>imagehlp</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<file>crypt.c</file>
 	<file>register.c</file>
 	<file>wintrust_main.c</file>
 	<file>asn.c</file>
 	<file>softpub.c</file>
 	<file>version.rc</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

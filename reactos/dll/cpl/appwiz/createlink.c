@@ -155,7 +155,9 @@ WelcomeDlgProc(HWND hwndDlg,
                         first[1] = L'\0';
 
                     first = wcsrchr(pContext->szDescription, L'.');
-                    first[0] = L'\0';
+
+                    if(first)
+                        first[0] = L'\0';
                 }
 
             }

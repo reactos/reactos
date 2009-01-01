@@ -12,7 +12,7 @@ TextOutA(
 	int  nXStart,
 	int  nYStart,
 	LPCSTR  lpString,
-	int  cbString)
+	int  cchString)
 {
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
@@ -25,7 +25,7 @@ TextOutA(
 	} else
 		StringU.Buffer = NULL;
 
-	ret = TextOutW(hdc, nXStart, nYStart, StringU.Buffer, cbString);
+	ret = TextOutW(hdc, nXStart, nYStart, StringU.Buffer, cchString);
 	RtlFreeUnicodeString(&StringU);
 	return ret;
 }
@@ -41,9 +41,9 @@ TextOutW(
 	int  nXStart,
 	int  nYStart,
 	LPCWSTR  lpString,
-	int  cbString)
+	int  cchString)
 {
-  return NtGdiExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cbString, NULL, 0);
+  return NtGdiExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cchString, NULL, 0);
 }
 
 
@@ -143,7 +143,7 @@ APIENTRY
 GetTextExtentPointA(
 	HDC		hdc,
 	LPCSTR		lpString,
-	int		cbString,
+	int		cchString,
 	LPSIZE		lpSize
 	)
 {
@@ -154,7 +154,7 @@ GetTextExtentPointA(
 	RtlInitAnsiString(&StringA, (LPSTR)lpString);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = GetTextExtentPointW(hdc, StringU.Buffer, cbString, lpSize);
+        ret = GetTextExtentPointW(hdc, StringU.Buffer, cchString, lpSize);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -170,11 +170,11 @@ APIENTRY
 GetTextExtentPointW(
 	HDC		hdc,
 	LPCWSTR		lpString,
-	int		cbString,
+	int		cchString,
 	LPSIZE		lpSize
 	)
 {
-  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cbString, lpSize, 0);
+  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
 }
 
 
@@ -184,13 +184,13 @@ GetTextExtentPointW(
 BOOL
 APIENTRY
 GetTextExtentExPointW(
-	HDC		hdc,
-	LPCWSTR		lpszStr,
-	int		cchString,
-	int		nMaxExtent,
-	LPINT		lpnFit,
-	LPINT		alpDx,
-	LPSIZE		lpSize
+	HDC     hdc,
+	LPCWSTR lpszStr,
+	int     cchString,
+	int     nMaxExtent,
+	LPINT   lpnFit,
+	LPINT   alpDx,
+	LPSIZE  lpSize
 	)
 {
   return NtGdiGetTextExtentExW (
@@ -240,7 +240,7 @@ APIENTRY
 GetTextExtentPoint32A(
 	HDC		hdc,
 	LPCSTR		lpString,
-	int		cbString,
+	int		cchString,
 	LPSIZE		lpSize
 	)
 {
@@ -251,7 +251,7 @@ GetTextExtentPoint32A(
   RtlInitAnsiString(&StringA, (LPSTR)lpString);
   RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-  ret = GetTextExtentPoint32W(hdc, StringU.Buffer, cbString, lpSize);
+  ret = GetTextExtentPoint32W(hdc, StringU.Buffer, cchString, lpSize);
 
   RtlFreeUnicodeString(&StringU);
 
@@ -267,11 +267,11 @@ APIENTRY
 GetTextExtentPoint32W(
 	HDC		hdc,
 	LPCWSTR		lpString,
-	int		cbString,
+	int		cchString,
 	LPSIZE		lpSize
 	)
 {
-	return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cbString, lpSize, 0);
+	return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
 }
 
 /*
@@ -315,7 +315,7 @@ ExtTextOutA(
 	UINT		fuOptions,
 	CONST RECT	*lprc,
 	LPCSTR		lpString,
-	UINT		cbCount,
+	UINT		cchString,
 	CONST INT	*lpDx
 	)
 {
@@ -326,7 +326,7 @@ ExtTextOutA(
 	RtlInitAnsiString(&StringA, (LPSTR)lpString);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = ExtTextOutW(hdc, X, Y, fuOptions, lprc, StringU.Buffer, cbCount, lpDx);
+        ret = ExtTextOutW(hdc, X, Y, fuOptions, lprc, StringU.Buffer, cchString, lpDx);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -346,11 +346,11 @@ ExtTextOutW(
 	UINT		fuOptions,
 	CONST RECT	*lprc,
 	LPCWSTR		lpString,
-	UINT		cbCount,
+	UINT		cchString,
 	CONST INT	*lpDx
 	)
 {
-  return NtGdiExtTextOutW(hdc, X, Y, fuOptions, (LPRECT)lprc, (LPWSTR)lpString, cbCount, (LPINT)lpDx, 0);
+  return NtGdiExtTextOutW(hdc, X, Y, fuOptions, (LPRECT)lprc, (LPWSTR)lpString, cchString, (LPINT)lpDx, 0);
 }
 
 

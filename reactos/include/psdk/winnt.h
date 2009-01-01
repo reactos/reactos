@@ -181,7 +181,9 @@ typedef PDWORD PLCID;
 typedef WORD LANGID;
 #ifdef __GNUC__
 #define _HAVE_INT64
-#define _INTEGRAL_MAX_BITS 64
+#ifndef _INTEGRAL_MAX_BITS
+# define _INTEGRAL_MAX_BITS 64
+#endif
 #undef __int64
 #define __int64 long long
 #elif defined(__WATCOMC__) && (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64 )
@@ -1236,6 +1238,7 @@ typedef enum
 #define SECTION_QUERY 1
 #define SECTION_MAP_EXECUTE 8
 #define SECTION_ALL_ACCESS 0xf001f
+#define WRITE_WATCH_FLAG_RESET 0x01
 #ifndef __NTDDK_H
 #define MESSAGE_RESOURCE_UNICODE 1
 #endif

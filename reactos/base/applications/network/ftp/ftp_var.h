@@ -2,7 +2,7 @@
 #include "fake.h"
 #include "prototypes.h"
 #include <setjmp.h>
-#include <sys/time.h>
+#include <time.h>
 
 //typedef void (*Sig_t)(int);
 

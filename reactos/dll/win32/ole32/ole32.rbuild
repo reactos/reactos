@@ -61,6 +61,8 @@
 	<file>dcom.idl</file>
 	<file>irot.idl</file>
 	<include base="ole32" root="intermediate">.</include>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="ole32_irot_server" type="rpcserver">
 	<file>irot.idl</file>
