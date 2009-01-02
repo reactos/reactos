@@ -622,7 +622,6 @@ NtGdiGetDIBitsInternal(HDC hDC,
        return 0;
     }
 
-    /* Get handle for the palette in DC. */
     Dc = DC_LockDc(hDC);
     if (Dc == NULL) return 0;
     if (Dc->DC_Type == DC_TYPE_INFO)
@@ -630,14 +629,18 @@ NtGdiGetDIBitsInternal(HDC hDC,
         DC_UnlockDc(Dc);
         return 0;
     }
-    /* Source palette obtained from the windows hdc */
-    hSourcePalette = Dc->DcLevel.hpal;
     DC_UnlockDc(Dc);
 
     /* Get a pointer to the source bitmap object */
     BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
     if (BitmapObj == NULL)
        return 0;
+
+    hSourcePalette = BitmapObj->hDIBPalette;
+    if (!hSourcePalette)
+    {
+        hSourcePalette = pPrimarySurface->DevInfo.hpalDefault;
+    }
 
     ColorPtr = ((PBYTE)Info + Info->bmiHeader.biSize);
     rgbQuads = (RGBQUAD *)ColorPtr;
