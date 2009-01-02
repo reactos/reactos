@@ -467,7 +467,7 @@ SerenumDetectLegacyDevice(
 	/* Open port */
 	Status = ObOpenObjectByPointer(
 		LowerDevice,
-		OBJ_EXCLUSIVE | OBJ_KERNEL_HANDLE,
+		OBJ_KERNEL_HANDLE,
 		NULL,
 		0,
 		NULL,
