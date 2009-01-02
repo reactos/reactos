@@ -710,6 +710,7 @@ function loadEntryTable( objevent )
       htmlSelectPresets('basic');
       break;
     case 'page':
+    case 'dynamic':
     case 'content':
       htmlCommandBar('page');
       htmlSelectPresets('basic');
@@ -1494,7 +1495,7 @@ function addOrReplaceDraft( did, drid )
   var poststr = getEditorTexts();
 
   if (poststr != false) {
-    makeRequest('?page=data_out&d_f=text&d_u=asi&d_fl=new&d_id='+encodeURIComponent(did)+'&d_r_id='+encodeURIComponent(drid)+'&d_r_lang='+encodeURIComponent(document.getElementById("mefrlang").innerHTML)+'&d_r_ver='+encodeURIComponent(document.getElementById("mefrverid").innerHTML)+'&d_val='+encodeURIComponent(document.getElementById("estextcount").className)+'&d_val2='+encodeURIComponent(document.getElementById("elmcount").className)+'&d_val3=draft&d_val4='+encodeURIComponent(document.getElementById("entryeditdynnbr").innerHTML), 'asi', 'mefasi', 'html', 'POST', poststr.substr(1));
+    makeRequest('?page=data_out&d_f=text&d_u=asi&d_fl=new&d_id='+encodeURIComponent(did)+'&d_r_id='+encodeURIComponent(drid)+'&d_r_lang='+encodeURIComponent(document.getElementById("mefrlang").innerHTML)+'&d_r_ver='+encodeURIComponent(document.getElementById("mefrverid").innerHTML)+'&d_val='+encodeURIComponent(document.getElementById("estextcount").className)+'&d_val2='+encodeURIComponent(document.getElementById("elmcount").className)+'&d_val3=draft', 'asi', 'mefasi', 'html', 'POST', poststr.substr(1));
     return true;
   }
   else {
@@ -2207,6 +2208,11 @@ function loadMenu( objid )
       loadEntryTable('page');
       break;
 
+    case '13':
+      filtstring2 = 'y_is_dynamic_0|k_is_stable_0|l_is_'+getLang()+'_0|o_asc_name';
+      loadEntryTable('dynamic');
+      break;
+
     case '4':
       filtstring2 = 'y_is_content_0|k_is_stable_0|l_is_'+getLang()+'_0|o_asc_name';
       loadEntryTable('content');
@@ -2230,7 +2236,7 @@ function loadMenu( objid )
       else {
         translang = getLang();
       }
-      filtstring2 = 'y_is_content_0|k_is_stable_0|i_is_default_0|c_is_user_0|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'|o_asc_name';
+      filtstring2 = 'y_is_content_0|k_is_stable_0|i_is_default_0|c_is_user_0|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'|o_desc_date';
       loadEntryTable('translate');
       break;
 

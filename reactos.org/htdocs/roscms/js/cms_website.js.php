@@ -77,7 +77,7 @@ function htmlFilterValues( action, objidval2, filterid ) {
           filtentryselstrs1 += '<option value="no"+roscms_cbm_hide+>is not</option>';
         }
         filtentryselstrs1 += '</select>';
-        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="page">Page</option><option value="content">Content</option><option value="template">Template</option><option value="script">Script</option><option value="system">System</option></select>';
+        filtentryselstrs2 = '<select id="sfc'+filterid+'"><option value="page">Page</option><option value="dynamic">Dynamic Page</option><option value="content">Content</option><option value="template">Template</option><option value="script">Script</option><option value="system">System</option></select>';
         break;
 
       // starred

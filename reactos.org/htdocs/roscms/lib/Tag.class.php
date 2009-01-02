@@ -188,10 +188,13 @@ class Tag
    */
   public static function copyFromData( $old_rev_id, $new_rev_id )
   {
-    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TAGS." SET rev_id=:new_rev_id WHERE rev_id=:old_rev_id");
-    $stmt->bindParam('old_rev_id',$old_rev_id,PDO::PARAM_INT);
-    $stmt->bindParam('new_rev_id',$new_rev_id,PDO::PARAM_INT);
+
+    // prepare statements for while loop
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TAGS." ( rev_id , name, value, user_id ) SELECT :new_rev_id, name, value, user_id FROM ".ROSCMST_TAGS." WHERE rev_id = :old_rev_id");
+    $stmt->bindParam('old_rev_id',$old_rev_id, PDO::PARAM_INT);
+    $stmt->bindParam('new_rev_id',$new_rev_id, PDO::PARAM_INT);
     $stmt->execute();
+
   } // end of member function getIdByName
 
 

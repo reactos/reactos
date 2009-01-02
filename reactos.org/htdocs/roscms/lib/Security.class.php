@@ -116,38 +116,25 @@ class Security
 
     // get rights
     if ($is_rev) {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE r.id = :rev_id AND m.user_id=:user_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE r.id = :rev_id AND m.user_id=:user_id");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     }
     else {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE d.id = :data_id AND m.user_id=:user_id LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE d.id = :data_id AND m.user_id=:user_id");
       $stmt->bindParam('data_id',$rev_id,PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     }
     $stmt->execute() or die('Rev-Entry "'.$rev_id.'" not found [usergroups].');
 
+    // create a list with rights
     while($list = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      // create a list with rights
-      //@CHECKME is this type of checks a good idea ??
-      if ($list['can_read'] == true) {
-        $rights['read'] = true;
-      }
-      if ($list['can_write'] == true) {
-        $rights['write'] = true;
-      }
-      if ($list['can_add'] == true) {
-        $rights['add'] = true;
-      }
-      if ($list['can_delete'] == true) {
-        $rights['delete'] = true;
-      }
-      if ($list['can_publish'] == true) {
-        $rights['publish'] = true;
-      }
-      if ($list['can_translate'] == true) {
-        $rights['translate'] = true;
-      }
+      $rights['read'] |= ($list['can_read'] == true);
+      $rights['write'] |= ($list['can_write'] == true);
+      $rights['add'] |= ($list['can_add'] == true);
+      $rights['delete'] |= ($list['can_delete'] == true);
+      $rights['publish'] |= ($list['can_publish'] == true);
+      $rights['translate'] |= ($list['can_translate'] == true);
     }
 
 
@@ -198,7 +185,7 @@ class Security
     $explanation .= $rights['read'] ? '-' : 'r';
     $explanation .= $rights['write'] ? '-' : 'w';
     $explanation .= $rights['add'] ? '-' : 'a';
-    $explanation .= $rights['delted'] ? '-' : 'd';
+    $explanation .= $rights['delete'] ? '-' : 'd';
     $explanation .= $rights['publish'] ? '-' : 'p';
     $explanation .= $rights['translate'] ? '-' : 't';
 

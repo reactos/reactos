@@ -103,7 +103,8 @@ class Export_Maintain extends Export
         $stmt->execute();
         $data_id = $stmt->fetchColumn();
 
-        echo $export_html->generate($data_id, $_GET['d_val3'], $_GET['d_val4']);
+        $generate = new Generate();
+        echo $generate->generateAll($data_id, 'data');
         break;
     } // end switch
   }

@@ -233,7 +233,7 @@ class Editor_Website extends Editor
       $revision = $stmt->fetchOnce();
 
       // check if user has translator access
-      if (Security::hasRight($revision['data_id'], 'trans')) {
+      if (Security::hasRight($revision['data_id'], 'translate')) {
 
         // copy existing entry to new language
         if (Data::copy($revision['id'], 1 /* copy mode */, $_GET['d_r_lang'])) {
@@ -353,8 +353,6 @@ class Editor_Website extends Editor
     $stmt->execute();
     $revisions_count = $stmt->fetchColumn();
 
-    $dynamic_num = Tag::getValueByUser($this->rev_id, 'number', -1);
-
     if ($revisions_count <= 1) {
       $stmt=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id");
       $stmt->bindParam('lang_id',Language::getStandardId(),PDO::PARAM_INT);
@@ -363,7 +361,7 @@ class Editor_Website extends Editor
 
       echo_strip('
         <span id="bshowdiff" class="frmeditbutton" onclick="'."openOrCloseDiffArea(".$this->rev_id.",".$this->rev_id.")".'">
-        <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> (no related '.$lang['name'].' entry, choose yourself)&nbsp;');
+        <img id="bshowdiffi" src="images/tab_closed.gif" alt="" style="width:11px; height:11px; border:0px;" />&nbsp;Compare</span> (no related '.$lang.' entry, choose yourself)&nbsp;');
     }
     else {
 
@@ -377,7 +375,7 @@ class Editor_Website extends Editor
         $diff1 = $stmt->fetchOnce();
         $diff1 = 'ar'.$diff1['id'];
       }
-      elseif ($dynamic_num === false) {
+      else {
         $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :name AND r.version > 0 AND r.lang_id = :lang AND r.archive IS FALSE ORDER BY r.id DESC LIMIT 1");
         $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
         $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
@@ -387,21 +385,6 @@ class Editor_Website extends Editor
         $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :name AND r.version > 0 AND r.lang_id = :lang AND r.archive IS TRUE ORDER BY r.id DESC LIMIT 1");
         $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
         $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
-        $stmt->execute();
-        $diff1 = 'ar'.$stmt->fetchColumn();
-      }
-      else {
-        $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id JOIN ".ROSCMST_TAGS." t ON r.id=t.rev_id WHERE d.name = :name AND t.name = 'number' AND t.value = :dynamic_num AND t.user_id = -1 AND r.version > 0 AND r.lang_id = :lang AND r.archive IS FALSE ORDER BY r.id DESC LIMIT 1");
-        $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
-        $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
-        $stmt->bindParam('dynamic_num',$dynamic_num,PDO::PARAM_STR);
-        $stmt->execute();
-        $diff2 = $stmt->fetchColumn();
-
-        $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id JOIN ".ROSCMST_TAGS." t ON r.id=t.rev_id WHERE d.name = :name AND t.name = 'number' AND t.value = :dynamic_num AND t.user_id = -1 AND r.version > 0 AND r.lang_id = :lang AND r.archive IS TRUE ORDER BY r.id DESC LIMIT 1");
-        $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
-        $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
-        $stmt->bindParam('dynamic_num',$dynamic_num,PDO::PARAM_STR);
         $stmt->execute();
         $diff1 = 'ar'.$stmt->fetchColumn();
       }
@@ -561,7 +544,7 @@ class Editor_Website extends Editor
     $thisuser = &ThisUser::getInstance();
 
     // get Database Entry
-    $stmt=&DBConnection::getInstance()->prepare("SELECT r.id, d.name, d.type, r.version, l.name AS language, r.datetime, u.name AS user_name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id=l.id WHERE r.id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.id, d.name, d.type, r.version, r.lang_id,l.name AS language, r.datetime, u.name AS user_name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id=l.id WHERE r.id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$this->rev_id);
     $stmt->execute();
     $revision = $stmt->fetchOnce();
@@ -572,26 +555,12 @@ class Editor_Website extends Editor
           <span onclick="'."toggleBookmark(".$revision['id'].", ".$thisuser->id().", 'editstar')".'" style="cursor: pointer;">
            <img id="editstar" class="'.Tag::getIdByUser($revision['id'], 'star', $thisuser->id()).'" src="images/star_'.Tag::getValueByUser($revision['id'], 'star', $thisuser->id()).'_small.gif" alt="" style="width:13px; height:13px; border:0px;" alt="*" />
           </span>
-          &nbsp;');
-    echo $revision['name'];
-
-    // give dynamic number (if exists)
-    $dynamic_num = Tag::getValueByUser($revision['id'], 'number', -1);
-    if ($revision['type'] == 'content' && $dynamic_num > 0) {
-      echo_strip(
-        '_'.$dynamic_num.'
-        <div id="entryeditdynnbr" style="display:none;">'.$dynamic_num.'</div>');
-    }
-    else {
-      echo '<div id="entryeditdynnbr" style="display:none;">no</div>';
-    }
-
-    echo_strip('
-      </span> &nbsp;
-      <span style="white-space: nowrap;">type: <span class="revDetail">'.$revision['type'].'</span></span> &nbsp; 
-      <span style="white-space: nowrap;">version: <span id="mefrverid" class="revDetail">'.$revision['version'].'</span></span> &nbsp; 
-      <span style="white-space: nowrap;">language: <span id="mefrlang" class="revDetail">'.$revision['language'].'</span></span> &nbsp; 
-      <span style="white-space: nowrap;">user: <span id="mefrusrid" class="revDetail">'.$revision['user_name'].'</span></span> &nbsp; ');
+          &nbsp;'.$revision['name'].'</span>
+          &nbsp;
+          <span style="white-space: nowrap;">type: <span class="revDetail">'.$revision['type'].'</span></span> &nbsp; 
+          <span style="white-space: nowrap;">version: <span id="mefrverid" class="revDetail">'.$revision['version'].'</span></span> &nbsp; 
+          <span style="white-space: nowrap;">language: <span class="revDetail">'.$revision['language'].'</span><span id="mefrlang" style="display:none;">'.$revision['lang_id'].'</span></span> &nbsp; 
+          <span style="white-space: nowrap;">user: <span id="mefrusrid" class="revDetail">'.$revision['user_name'].'</span></span> &nbsp; ');
 
     if (isset($_GET['d_arch']) && $_GET['d_arch']) {
       echo_strip('
@@ -838,13 +807,13 @@ class Editor_Website extends Editor
     $this->buildDepencyTree($this->data_id);
 
     // required articles that don't exist
-    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT depency_name, is_include FROM ".ROSCMST_DEPENCIES." WHERE rev_id=:rev_id AND depency_id IS NULL ORDER BY is_include DESC, depency_name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT child_name, include FROM ".ROSCMST_DEPENCIES." WHERE rev_id=:rev_id AND child_id IS NULL ORDER BY include DESC, child_name ASC");
     $stmt->bindParam('rev_id',$this->rev_id, PDO::PARAM_INT);
     $stmt->execute();
     $required_fail = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // articles that exist
-    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name, d.type, w.is_include FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON d.id=w.depency_id WHERE rev_id=:rev_id AND w.depency_name IS NULL ORDER BY w.is_include DESC, d.name ASC, d.type ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT d.name, d.type, w.include FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON d.id=w.child_id WHERE rev_id=:rev_id AND w.child_name IS NULL ORDER BY w.include DESC, d.name ASC, d.type ASC");
     $stmt->bindParam('rev_id',$this->rev_id, PDO::PARAM_INT);
     $stmt->execute();
     $required_exist = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -855,7 +824,7 @@ class Editor_Website extends Editor
       if (count($required_exist) > 0) {
         echo '<ul>';
         foreach($required_exist as $required) {
-          echo '<li>'.$required['name'].' ['.$required['type'].'] ('.($required['is_include']==true ? 'include' : 'link').')</li>';
+          echo '<li>'.$required['name'].' ['.$required['type'].'] ('.($required['include']==true ? 'include' : 'link').')</li>';
         }
         echo '</ul>';
       }
@@ -865,7 +834,7 @@ class Editor_Website extends Editor
           <h4>Entries that don\'t exist</h4>
           <ul>');
         foreach($required_fail as $required) {
-          echo '<li>'.$required['depency_name'].' ('.($required['is_include']==true ? 'include' : 'link').')</li>';
+          echo '<li>'.$required['child_name'].' ('.($required['include']==true ? 'include' : 'link').')</li>';
         }
         echo '</ul>';
       }
@@ -882,7 +851,7 @@ class Editor_Website extends Editor
    */
   private function buildDepencyTree( $data_id )
   {
-    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.name AS language, d.type, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON w.rev_id = r.id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id WHERE w.depency_id=:data_id AND w.is_include IS TRUE ORDER BY language");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.name AS language, d.type, r.data_id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON w.rev_id = r.id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id WHERE w.child_id=:data_id AND w.include IS TRUE ORDER BY l.name ASC, d.name ASC");
     $stmt->bindParam('data_id',$data_id, PDO::PARAM_INT);
     $stmt->execute();
     $depencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -894,7 +863,9 @@ class Editor_Website extends Editor
       // handle Depencies
       foreach ($depencies as $depency) {
         echo '<li>'.$depency['name'].' ('.$depency['type'].') ['.$depency['language'].']';
-        if ($data_id != $depency['data_id']) $this->buildDepencyTree( $depency['data_id']);
+        if ($data_id != $depency['data_id']) {
+          $this->buildDepencyTree( $depency['data_id']);
+        }
         echo '</li>';
       }
       echo '</ul>';
@@ -931,6 +902,7 @@ class Editor_Website extends Editor
       <label for="cbmdatatype">Type</label><br />
       <select id="cbmdatatype" name="cbmdatatype">
         <option value="page"'.(($data['type'] == 'page') ? ' selected="selected"' : '').'>Page</option>
+        <option value="page"'.(($data['type'] == 'dynamic') ? ' selected="selected"' : '').'>Dynamic Page</option>
         <option value="content"'.(($data['type'] == 'content') ? ' selected="selected"' : '').'>Content</option>
         <option value="template"'.(($data['type'] == 'template') ? ' selected="selected"' : '').'>Template</option>
         <option value="script"'.(($data['type'] == 'script') ? ' selected="selected"' : '').'>Script</option>
@@ -1070,11 +1042,11 @@ class Editor_Website extends Editor
    *
    * @access private
    */
-  private function selectRevision( $selected_rev, $dynamic_num )
+  private function selectRevision( $selected_rev )
   {
 
     // get a perfect mixed entry set
-    $dataset = $this->helperHistory($dynamic_num);
+    $dataset = $this->helperHistory();
 
     $last_lang = null;
     foreach($dataset as $revision) {
@@ -1146,10 +1118,8 @@ class Editor_Website extends Editor
     $text2 = $stmt->fetchColumn();
 
     // get data id from any stable revision
-    $dynamic_num = Tag::getValueByUser($revision2['id'], 'number', -1);
     $this->data_id = $revision2['data_id'];
     if ($h2_a2 != '') {
-      $dynamic_num = Tag::getValueByUser($revision1['id'], 'number', -1);
       $this->data_id = $revision1['data_id'];
     }
 
@@ -1172,7 +1142,7 @@ class Editor_Website extends Editor
           <td style="text-align:center;">
             <select name="cbmdiff1" id="cbmdiff1" onchange="'."getDiffEntries(this.value, document.getElementById('cbmdiff2').value)".'">');
     // history
-    $this->selectRevision($rev_id1, $dynamic_num);
+    $this->selectRevision($rev_id1);
     echo_strip('
             </select>
           </td>
@@ -1182,7 +1152,7 @@ class Editor_Website extends Editor
           <td style="text-align:center;">
             <select name="cbmdiff2" id="cbmdiff2" onchange="'."getDiffEntries(document.getElementById('cbmdiff1').value, this.value)".'">');
     // history
-    $this->selectRevision($rev_id2,$dynamic_num);
+    $this->selectRevision($rev_id2);
     echo_strip('
             </select>
           </td>
@@ -1229,7 +1199,7 @@ class Editor_Website extends Editor
    * @param mixed data_normal should be already in right order 
    * @access private
    */
-  private function helperHistory( $dynamic_num = false )
+  private function helperHistory( )
   {
     // check stable entries
     $stmt=&DBConnection::getInstance()->prepare("SELECT name, type FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
@@ -1237,26 +1207,12 @@ class Editor_Website extends Editor
     $stmt->execute();
     $data = $stmt->fetchOnce();
 
-    // no dynamic number
-    if ($dynamic_num === false) {
-      // select active entries
-      $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, r.id, l.name AS language, r.version, r.datetime, u.name AS user_name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.name = :name AND d.type = :type AND r.version > 0 ORDER BY l.name  ASC, r.datetime DESC");
-      $stmt->bindParam('name',$data['data_name'],PDO::PARAM_STR);
-      $stmt->bindParam('type',$data['data_type'],PDO::PARAM_STR);
-      $stmt->execute();
-      return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    // get only dynamic entries with our dynamic number
-    else {
-      // select active entries
-      $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, CONCAT(d.name,'_',t.value) AS name, r.id, r.version, r.datetime, u.name AS user_name, l.name AS language FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TAGS." t ON t.rev_id = r.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.name = :name AND d.type = :type AND t.name = 'number' AND t.user_id = -1 AND t.value = :tag_value AND r.version > 0 ORDER BY l.name ASC, r.datetime DESC");
-      $stmt->bindParam('name',$data['data_name'],PDO::PARAM_STR);
-      $stmt->bindParam('type',$data['data_type'],PDO::PARAM_STR);
-      $stmt->bindParam('tag_value',$dynamic_num,PDO::PARAM_INT);
-      $stmt->execute();
-      return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    // select active entries
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, r.id, l.name AS language, r.version, r.datetime, u.name AS user_name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.name = :name AND d.type = :type AND r.version > 0 ORDER BY l.name  ASC, r.datetime DESC");
+    $stmt->bindParam('name',$data['data_name'],PDO::PARAM_STR);
+    $stmt->bindParam('type',$data['data_type'],PDO::PARAM_STR);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   } // end of member function helperHistory
   
   

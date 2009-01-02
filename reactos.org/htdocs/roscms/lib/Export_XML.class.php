@@ -152,9 +152,6 @@ class Export_XML extends Export
       $stmt_trans=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE d.id = :data_id AND r.version > 0 AND r.lang_id = :lang WHERE r.archive = :archive LIMIT 1");
       $stmt_trans->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
       $stmt_trans->bindParam('lang',$this->translation_lang,PDO::PARAM_INT);
-      $stmt_trans_dyn=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, r.lang_id, r.datetime, r.rev_user_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE d.id = :data_id AND r.version > 0 AND  r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :dyn_num LIMIT 1");
-      $stmt_trans_dyn->bindParam('lang',$this->translation_lang);
-      $stmt_trans_dyn->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
       $stmt_stext=&DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = 'title' LIMIT 1");
       $stmt_lang=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
       $stmt_user=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
@@ -181,9 +178,6 @@ class Export_XML extends Export
         $column_list_row = '';
         $security = '';
 
-        // try to get a dynamic number, from newsletters, news, ...
-        $dynamic_num = Tag::getValueByUser($row['id'], 'number', -1);
-
         // for non translation
         if ($this->translation_lang == '') {
           $entry_status = Tag::getValueByUser($row['id'], 'status', -1);
@@ -202,25 +196,19 @@ class Export_XML extends Export
           
         }
         // translation
-        else { 
+        else {
 
           // check if translated article exists
-          if ($dynamic_num > 0) {
-            $stmt_translation=$stmt_trans_dyn;
-            $stmt_translation->bindParam('dyn_num',$dynamic_num,PDO::PARAM_STR);
-          } else {
-            $stmt_translation=$stmt_trans;
-          }
-          $stmt_translation->bindParam('data_id',$row['data_id'],PDO::PARAM_INT);
-          $stmt_translation->execute();
-          $translated_entry = $stmt_translation->fetchOnce(PDO::FETCH_ASSOC);
+          $stmt_trans->bindParam('data_id',$row['data_id'],PDO::PARAM_INT);
+          $stmt_trans->execute();
+          $translated_entry = $stmt_trans->fetchOnce(PDO::FETCH_ASSOC);
 
           // translation doesn't exist, so enable "translate mode"
-          if ($translated_entry['datetime'] == "") { 
+          if ($translated_entry['datetime'] == "") {
             $line_status = 'transb';
 
             // figure out if user can translate things
-            if (Security::hasRight($row['data_id'], 'trans')) {
+            if (Security::hasRight($row['data_id'], 'translate')) {
               $row['data_id2'] = 'tr'.$row['data_id'];
               $row['id'] = 'tr'.$row['id'];
               $row['datetime'] = 'translate!';
@@ -246,11 +234,6 @@ class Export_XML extends Export
             $row = $translated_entry;
             $row['data_id2'] = $translated_entry['data_id'];
           }
-        }
-
-        // prepare dynamic entries
-        if ($row['type'] == 'content' && $dynamic_num > 0) {
-          $row['name'] .= '_'.$dynamic_num;
         }
 
         // care about bookmark visibility
@@ -320,7 +303,7 @@ class Export_XML extends Export
         $column_list_row .= '|';
 
         // has person right to write / edit entries ?
-        if (Security::hasRight($row['data_id'], 'write','website')) {
+        if (Security::hasRight($row['data_id'], 'write')) {
           $security = 'write';
         }
 
@@ -479,7 +462,7 @@ class Export_XML extends Export
           case 'k': 
             $this->archive_mode = true;
             break;
-        }
+        } // end switch
       }
       // multiple filters 'AND (foo OR bar)'
       else {

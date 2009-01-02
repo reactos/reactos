@@ -82,7 +82,7 @@ class HTML_CMS_Website extends HTML_CMS
         //
         var submenu_button = false;
         var nres=1;
-        var smenutabs = 12; // sync this value with the tab-menu entry-count !!!
+        var smenutabs = 13; // sync this value with the tab-menu entry-count !!!
 
         //
         var filtstring1 = '';
@@ -152,6 +152,11 @@ class HTML_CMS_Website extends HTML_CMS
           <div id="smenutab3" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc3" class="subm2">Page</div>
+            </div>
+          </div>
+          <div id="smenutab13" class="submb" onclick="loadMenu(this.id)"'.((!$thisuser->isMemberOfGroup('ros_sadmin')) ? ' style="display:none;"' : '').'>
+            <div class="subm1">
+              <div id="smenutabc13" class="subm2">Dynamic&nbsp;Page</div>
             </div>
           </div>
           <div id="smenutab4" class="submb" onclick="loadMenu(this.id)">

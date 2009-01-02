@@ -27,6 +27,7 @@ class DataDepencies
 {
 
   private $rev_id = 0;
+  private $short = array('template'=>'templ','content'=>'cont','script'=>'include','page'=>'link','dynamic'=>'link');
 
 
 
@@ -43,12 +44,81 @@ class DataDepencies
     // remove old depencies
     DBConnection::getInstance()->exec("DELETE FROM ".ROSCMST_DEPENCIES);
 
-    $stmt=&DBConnection::getInstance()->prepare("SELECT content, rev_id FROM ".ROSCMST_TEXT." WHERE name = 'content'");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT t.content, t.rev_id FROM ".ROSCMST_TEXT." t JOIN ".ROSCMST_REVISIONS." r ON r.id=t.rev_id WHERE r.archive IS FALSE");
     $stmt->execute();
     while ($text = $stmt->fetch(PDO::FETCH_ASSOC)) {
       $this->rev_id = $text['rev_id'];
-      preg_replace_callback('/\[#(([a-z]+)_([^][#[:space:]]+))\]/', array($this,'newDepency'), $text['content']);
+      preg_replace_callback('/\[#((inc|templ|cont|link)_([^][#[:space:]]+))\]/', array($this,'newDepency'), $text['content']);
     }
+    echo '<strong>Done</strong>';
+  }
+
+
+
+  /**
+   *
+   *
+   * @access public
+   */
+  public function addRevision( $rev_id )
+  {
+    $this->rev_id = $rev_id;
+
+    // get text and parse it for depencies
+    $stmt=&DBConnection::getInstance()->prepare("SELECT content, rev_id FROM ".ROSCMST_TEXT." WHERE rev_id=:rev_id");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    while ($text = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      preg_replace_callback('/\[#((inc|templ|cont|link)_([^][#[:space:]]+))\]/', array($this,'newDepency'), $text['content']);
+    }
+  }
+
+
+
+  /**
+   *
+   *
+   * @access public
+   */
+  public static function renameEntry( $from_name, $to_name, $from_type, $to_type )
+  {
+    //@TODO
+  }
+
+
+
+  /**
+   *
+   *
+   * @access public
+   */
+  public static function removeEntry( $data_id )
+  {
+    // remove old depencies
+    $stmt=&DBConnection::getInstance()->exec("SELECT name, type FROM ".ROSCMST_ENTRIES." WHERE id=:data_id");
+    $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+    $stmt->execute();
+    $data = $stmt->fetchOnce();
+    
+    $stmt=&DBConnection::getInstance()->exec("UPDATE ".ROSCMST_DEPENCIES." SET child_id = NULL, child_name = :depency_name WHERE child_id=:data_id");
+    $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+    $stmt->bindValue('depency_name',$this->short[$data['type']].'_'.$data['name']);
+    $stmt->execute();
+  }
+
+
+
+  /**
+   *
+   *
+   * @access public
+   */
+  public static function removeRevision( $rev_id )
+  {
+    // remove old depencies
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_DEPENCIES." WHERE reV_id = :rev_id");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
   }
 
 
@@ -62,7 +132,6 @@ class DataDepencies
    */
   private function newDepency( $matches )
   {
-
     // get depency type
     switch ($matches[2]) {
       case 'templ':
@@ -81,12 +150,6 @@ class DataDepencies
         $type = 'page';
         $include = false;
         break;
-      case 'roscms':
-        return;
-        break;
-      default:
-        $include = false;
-        break;
     }
 
     // try to get depency id
@@ -98,11 +161,11 @@ class DataDepencies
 
     // insert depency
     if ($data_id === false) {
-      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, depency_name, is_include) VALUES (:rev_id, :depency_name, :is_include)");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, child_name, include) VALUES (:rev_id, :depency_name, :is_include)");
       $stmt->bindParam('depency_name',$matches[1],PDO::PARAM_STR);
     }
     else {
-      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, depency_id, is_include) VALUES (:rev_id, :depency_id, :is_include)");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, child_id, include) VALUES (:rev_id, :depency_id, :is_include)");
       $stmt->bindParam('depency_id',$data_id,PDO::PARAM_INT);
     }
     $stmt->bindParam('rev_id',$this->rev_id,PDO::PARAM_INT);

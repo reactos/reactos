@@ -31,7 +31,8 @@ class Generate
 {
 
   private $destination_folder = '../'; // distance between roscms folder to pages folder
-  private $cache_dir = './../roscms_cache/'; // cached files
+  private $cache_dir = '../roscms_cache/'; // cached files
+  private $base_dir = '';
 
   private $outout_type; // 'show' => preview; 'generate' => while generating files
 
@@ -39,7 +40,11 @@ class Generate
   private $page_name;
   private $page_version;
   private $dynamic_num = false; // should be a number (false => no dynamic number)
-  
+
+  // language
+  private $lang_id = null;
+  private $lang = null;
+
   private $short = array('template'=>'templ', 'content'=>'cont', 'script'=>'inc');
 
 
@@ -60,7 +65,7 @@ class Generate
     mysql_select_db(DB_NAME);
 
     // try to force unlimited script runtime
-    @set_time_limit(0);
+    @set_time_limit(300);
   }
 
 
@@ -77,22 +82,24 @@ class Generate
     clearstatcache();
 
     // caching
-    //$this->cacheFiles();
+    $this->cacheFiles();
+
+    $this->base_dir = $this->destination_folder;
 
     // build all entries
     if ($id === null) {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.id AS lang_id, l.name AS language, l.name_short AS lang_short FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE d.type = 'page' ORDER BY l.level DESC, l.id ASC, d.name ASC");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, type, l.id AS lang_id, l.name AS language, l.name_short AS lang_short FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE (d.type = 'page' OR d.type = 'dynamic') ORDER BY l.level DESC, l.id ASC, d.name ASC");
     }
 
     // build only the selected language
-    elseif($id_type === 'lang') {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.id AS lang_id, l.name AS language, l.name_short AS lang_short FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE d.type = 'page' AND l.id=:lang_id ORDER BY d.name ASC");
+    elseif ($id_type === 'lang') {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, type, l.id AS lang_id, l.name AS language, l.name_short AS lang_short FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE (d.type = 'page' OR d.type = 'dynamic') AND l.id=:lang_id ORDER BY d.name ASC");
       $stmt->bindParam('lang_id',$id,PDO::PARAM_INT);
     }
 
     // build only the selected page, in all languages
-    elseif($id_type === 'data') {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, l.id AS lang_id, l.name AS language, l.name_short AS lang_short FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE d.type = 'page' AND d.name = :data_name ORDER BY l.level DESC");
+    elseif ($id_type === 'data') {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, type, l.id AS lang_id, l.name AS language, l.name_short AS lang_short FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE (d.type = 'page' OR d.type = 'dynamic') AND d.name = :data_name ORDER BY l.level DESC");
       $stmt->bindParam('data_name',$ld,PDO::PARAM_STR);
     }
     $stmt->execute();
@@ -107,16 +114,17 @@ class Generate
 
         $this->lang_id = $data['lang_id'];
         $this->lang = $data['lang_short'];
-
-        // create new language folder
-        if (isset($data['lang_short']) && !is_dir($this->destination_folder.'/'.$data['lang_short'])) {
-          mkdir($this->destination_folder.'/'.$data['lang_short']);
-        }
       }
 
-      // generate Entry, prefer native language
-      $this->oneEntry($data['name']);
+      // generate entry
+      if ($data['type'] == 'page') {
+        $this->oneEntry($data['name']);
+      }
+      else {
+        $this->makeDynamic($data['name']);
+      }
     }
+
   } // end of member function doAll
 
 
@@ -130,7 +138,7 @@ class Generate
   public function oneEntry( $data_name, $lang_id = null )
   {
     // if called standalone
-    if ($lang_id != null) {
+    if ($lang_id !== null) {
       $stmt=&DBConnection::getInstance()->prepare("SELECT name_short FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id LIMIT 1");
       $stmt->bindParam('lang_id',$lang_id,PDO::PARAM_INT);
       $stmt->execute();
@@ -139,9 +147,10 @@ class Generate
       $this->lang_id = $lang_id;
     }
 
+    echo $this->lang.'--'.$data_name.'<br />';
+
     // get page data
     $revision = $this->getFrom('page', $data_name);
-
     if ($revision === false) {
       echo '<p><strong>!!! '.date('Y-m-d H:i:s').' - no text found: '.$data_name.'('.$this->lang_id.')</strong></p>';
       return false;
@@ -156,13 +165,9 @@ class Generate
 
     // get file name
     $file_name = $data_name.'.'.$file_extension;
-    $file = $this->lang.'/'.$file_name;
 
     // can I copy from standard lang ?
-    if ($this->lang_id == Language::getStandardId() && file_exists($this->destination_folder.RosCMS::getInstance()->siteLanguage().'/'.$file_name)) {
-      copy($this->destination_folder.RosCMS::getInstance()->siteLanguage().'/'.$file_name,$this->destination_folder.$file);
-    }
-    else {
+    if (!$this->cloneFile($revision['lang_id'],RosCMS::getInstance()->siteLanguage(),$this->lang, $file_name)) {
 
       // needed by replacing functions
       $this->page_name = $data_name;
@@ -174,24 +179,96 @@ class Generate
       $content = str_replace('[#%NAME%]', $data_name, $content);
       $content = str_replace('[#cont_%NAME%]', '[#cont_'.$data_name.']', $content);
 
-      $content = preg_replace_callback('/\[#((cont|inc|templ)_[^][#[:space:]]+)\]/', array($this,'getCached'),$content);
+      // replace depencies
+      $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
+      $stmt_more->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
+      $stmt_more->execute();
+      $depencies = $stmt_more->fetchAll(PDO::FETCH_ASSOC);
+      foreach ($depencies as $depency) {
+
+        // replace
+        if ($depency['type'] != 'script') {
+          $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
+        }
+        // eval
+        else {echo '[#inc_'.$depency['name'].']';
+          $content = str_replace('[#inc_'.$depency['name'].']', $this->evalTemplate(array(null,$depency['name'])), $content);
+        }
+      }
 
       // replace roscms vars
       $content = $this->replaceRoscmsPlaceholder($content);
 
       // write content to filename, if possible
-      $fh = fopen($this->destination_folder.$file, 'w');
-      if ($fh !== false){
-        flock($fh,2);
-        fputs($fh,$content.'<!-- Generated with '.RosCMS::getInstance()->systemBrand().' ('.RosCMS::getInstance()->systemVersion().') - '.date('Y-m-d H:i:s').' -->'); 
-        flock($fh,3);
-        fclose($fh);
-        //echo '<p> * '.date('Y-m-d H:i:s').' - "'.$file.'"</p>';
-        return true;
-      }
-      else {
-        //echo '<p>* could not create file: "'.$this->destination_folder.$file.'"</p>';
-        return false;
+      $this->writeFile($this->lang,$file_name, $content.'<!-- Generated with '.RosCMS::getInstance()->systemBrand().' ('.RosCMS::getInstance()->systemVersion().') - '.date('Y-m-d H:i:s').' -->');
+    }
+  } // end of member function oneEntry
+
+
+
+  /**
+   * 
+   *
+   * @return 
+   * @access public
+   */
+  public function makeDynamic( $data_name, $lang_id = null )
+  {
+    // if called standalone
+    if ($lang_id != null) {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT name_short FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id LIMIT 1");
+      $stmt->bindParam('lang_id',$lang_id,PDO::PARAM_INT);
+      $stmt->execute();
+
+      $this->lang = $stmt->fetchColumn();
+      $this->lang_id = $lang_id;
+    }
+
+    // get page data
+    $revision = $this->getFrom('dynamic', $data_name);
+
+    if ($revision === false) {
+      echo '<p><strong>!!! '.date('Y-m-d H:i:s').' - no text found: '.$data_name.'('.$this->lang_id.')</strong></p>';
+      return false;
+    }
+
+    // check file extension
+    $file_extension = Tag::getValueByUser($revision['id'], 'extension', -1);
+    if ($file_extension === false) {
+      echo '<p><strong>!!! '.date('Y-m-d H:i:s').' - file extension missing: '.$data_name.'('.$revision['id'].', '.$this->lang_id.')</strong></p>';
+      return false;
+    }
+
+    //
+    $next_index = intval(Tag::getValue($revision['id'],'next_index',-1));
+
+    for ($i=1; $i < $next_index; $i++) {
+
+      // get file name
+      $file_name = $data_name.'_'.$i.'.'.$file_extension;
+      $file = $this->lang.'/'.$file_name;
+
+      // can I copy from standard lang ?
+      if (!$this->cloneFile($revision['lang_id'], RosCMS::getInstance()->siteLanguage(), $this->lang, $file_name)) {
+
+        // needed by replacing functions
+        $this->page_name = $data_name;
+        $this->page_version = $revision['version'];
+        $this->rev_id = $revision['id'];
+        $this->dynamic_num = $i;
+
+        // file content
+        $content = $revision['content'];
+        $content = str_replace('[#%NAME%]', $data_name, $content); 
+
+        $content = preg_replace_callback('/\[#((cont|templ)_[^][#[:space:]]+)\]/', array($this,'getCached'),$content);
+        $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalTemplate'),$content);
+
+        // replace roscms vars
+        $content = $this->replaceRoscmsPlaceholder($content);
+
+        // write content to filename, if possible
+        $this->writeFile($this->lang,$file_name, $content.'<!-- Generated with '.RosCMS::getInstance()->systemBrand().' ('.RosCMS::getInstance()->systemVersion().') - '.date('Y-m-d H:i:s').' -->');
       }
     }
   } // end of member function oneEntry
@@ -204,10 +281,74 @@ class Generate
    * @return 
    * @access private
    */
-  private function cacheFiles( $data_id = null )
+  public function update( $rev_id )
   {
-    
-    $standard_lang = Language::getStandardId();
+
+    $stmt=&DBConnection::getInstance()->prepare("SELECT data_id, lang_id FROM ".ROSCMST_REVISIONS." WHERE id=:rev_id");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    $revision=$stmt->fetchOnce(PDO::FETCH_ASSOC);
+
+    $this->lang_id = $revision['lang_id'];
+
+    // cache data
+    $this->cacheFiles($revision['data_id']);
+
+    // set generating dir again
+    $this->base_dir = $this->destination_folder;
+
+    // update entries which depends on this one
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.lang_id, d.name, d.type, r.id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND w.rev_id != :rev_id AND r.archive IS FALSE AND w.include IS TRUE");
+    $stmt->bindParam('depency_id',$revision['data_id'],PDO::PARAM_INT);
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+      // in standard language we may have depencies to other languages, so better generate them all
+      if ($revision['lang_id'] == Language::getStandardId()){
+        $stmt_lang=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." ORDER BY level DESC");
+      }
+      else {
+        $stmt_lang=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id");
+        $stmt_lang->bindParam('lang_id',$revision['lang_id'],PDO::PARAM_INT);
+      }
+      $stmt_lang->execute();
+      while ($language = $stmt_lang->fetch(PDO::FETCH_ASSOC)) {
+
+      // language settings for generating process
+      $this->lang_id=$language['id'];
+      $this->lang=$language['name_short'];
+
+        // cache recursivly or generate page
+        switch ($depency['type']) {
+          case 'page':
+            $this->oneEntry($depency['name'], $language['id']);
+            break;
+          case 'dynamic':
+            $this->makeDynamic($depency['name'], $language['id']);
+            break;
+          case 'script':
+            // scripts are only executed by in pages
+            break;
+          default:
+            $this->update($depency['id']);
+            break;
+        }
+      }
+    }
+  }
+
+
+
+  /**
+   * 
+   *
+   * @return 
+   * @access private
+   */
+  private function cacheFiles( $data_id = null, $depencies = true )
+  {
+    $this->base_dir = $this->cache_dir;
 
     if ($data_id === null) {
       $stmt=&DBConnection::getInstance()->prepare("SELECT d.id AS data_id, d.type, d.name, l.id AS lang_id FROM ".ROSCMST_ENTRIES." d CROSS JOIN ".ROSCMST_LANGUAGES." l WHERE d.type = 'content' OR d.type = 'script' OR d.type='template' ORDER BY l.level DESC");
@@ -219,28 +360,32 @@ class Generate
     $stmt->execute();
 
     // prepare for usage in loop
-      $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.depency_id=d.id WHERE w.rev_id=:rev_id AND w.is_include IS TRUE");
+      $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE AND d.type != 'script'");
+
     while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+      // change language only on top level
+      if($data_id === null){
+        $this->lang_id = $data['lang_id'];
+      }
+
       $filename = $this->short[$data['type']].'_'.$data['name'].'.rcf';
       $file = $data['lang_id'].'/'.$filename;
 
       $revision = $this->getFrom($data['type'],$data['name']);
       
       // can I copy from standard language ?
-      if ($revision['lang_id'] == $standard_lang && file_exists($this->cache_dir.$standard_lang.'/'.$filename)) {
-        copy($this->cache_dir.$standard_lang.'/'.$filename, $this->cache_dir.$file);
-      }
+      if (!$this->cloneFile($revision['lang_id'],Language::getStandardId(),$data['lang_id'], $filename)) {
 
-      // generate file
-      else {
+        // generate file
         $this->rev_id = $revision['id'];
-        $this->lang_id = $data['lang_id'];
-
-        $content = $revision['content'];
-        
-        if($data['type'] == 'script' && Tag::getValue($revision['id'], 'kind') == 'php') {
-          $content = $this->evalTemplate($content);
+        if (preg_match('/_([1-9][0-9]*)$/', $data['name'],$matches)) {
+          $this->dynamic_num = $matches[1];
         }
+        else {
+          $this->dynamic_num = false;
+        }
+        $content = $revision['content'];
 
         // replace links
         $content = preg_replace_callback('/\[#link_([^][#[:space:]]+)\]/', array($this, 'replaceWithHyperlink'), $content);
@@ -250,31 +395,20 @@ class Generate
         $stmt_more->execute();
         $depencies = $stmt_more->fetchAll(PDO::FETCH_ASSOC);
         foreach ($depencies as $depency) {
-          $depency_file = $data['lang_id'].'/'.$this->short[$depency['type']].'_'.$depency['name'].'.rcf';
-          if (!file_exists($this->cache_dir.$depency_file) || $this->begin > date('Y-m-d H:i:s',filemtime($this->cache_dir.$depency_file))) {
-            $this->cacheFiles($depency['id']);
+
+          // do we care about depencies ?
+          if ($depencies) {
+            $depency_file = $data['lang_id'].'/'.$this->short[$depency['type']].'_'.$depency['name'].'.rcf';
+            if (!file_exists($this->cache_dir.$depency_file) || $this->begin > date('Y-m-d H:i:s',filemtime($this->cache_dir.$depency_file))) {
+              $this->cacheFiles($depency['id']);
+            }
           }
 
           // replace
           $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
         }
 
-        if (!file_exists($this->cache_dir.$file) ||$this->begin > date('Y-m-d H:i:s',filemtime($this->cache_dir.$file))) {
-
-          // create folder, if necessary
-          if(!is_dir($this->cache_dir.$data['lang_id'].'/')) {
-            mkdir($this->cache_dir.$data['lang_id'].'/');
-          }
-
-          // schreiben
-          $fh = fopen($this->cache_dir.$file, 'w');
-          if ($fh !== false) {
-            flock($fh, 2);
-            fwrite($fh, $content); 
-            flock($fh, 3);
-            fclose($fh);
-          }
-        }
+        $this->writeFile($data['lang_id'],$filename, $content);
       }
 
     } // end while
@@ -320,6 +454,7 @@ class Generate
 
     $content = str_replace('[#roscms_language]', $lang['name'], $content); 
     $content = str_replace('[#roscms_language_short]', $lang['name_short'], $content); 
+    $content = str_replace('[#roscms_language_id]', $this->lang_id, $content); 
 
     // replace date and time
     $content = str_replace('[#roscms_date]', date('Y-m-d'), $content); 
@@ -398,7 +533,7 @@ class Generate
 
     // static pages
     else { 
-      $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.name = :name AND d.type = 'page' AND r.version > 0 LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id WHERE d.name = :name AND (d.type='page' OR d.type='dynamic') AND r.version > 0 LIMIT 1");
       $stmt->bindParam('name',$page_name,PDO::PARAM_STR);
       $stmt->execute();
 
@@ -428,7 +563,7 @@ class Generate
   private function getFrom( $type, $name )
   {
     // get entry
-    $stmt=&DBConnection::getInstance()->prepare("SELECT t.content, r.id, r.lang_id, r.version FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id = r.id WHERE d.name = :name AND d.type = :type AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) AND r.archive IS FALSE AND t.name = 'content' ORDER BY r.version DESC LIMIT 2");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT t.content, r.id, r.lang_id, r.version FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON t.rev_id = r.id JOIN ".ROSCMST_TAGS." ta ON ta.rev_id=r.id WHERE d.name = :name AND d.type = :type AND r.version > 0 AND r.lang_id IN(:lang_one, :lang_two) AND r.archive IS FALSE AND t.name = 'content' AND ta.name='status' AND ta.value='stable' ORDER BY r.version DESC LIMIT 2");
     $stmt->bindParam('name',$name,PDO::PARAM_STR);
     $stmt->bindParam('type',$type,PDO::PARAM_STR);
     $stmt->bindParam('lang_one',$this->lang_id,PDO::PARAM_INT);
@@ -449,6 +584,62 @@ class Generate
     }
     return $revision;
   }
+
+
+
+  /**
+   * 
+   *
+   * @param string[] matches 
+
+   * @return 
+   * @access private
+   */
+  private function writeFile( $dir, $filename, $content )
+  {
+    $dir .= '/';
+    $file = $dir.$filename;
+
+    if (!file_exists($this->base_dir.$file) || $this->begin > date('Y-m-d H:i:s',filemtime($this->base_dir.$file))) {
+
+      // create folder, if necessary
+      if(!is_dir($this->base_dir.$dir)) {
+        mkdir($this->base_dir.$dir);
+      }
+
+      // schreiben
+      $fh = fopen($this->base_dir.$file, 'w');
+      if ($fh !== false) {
+        flock($fh, 2);
+        fwrite($fh, $content); 
+        flock($fh, 3);
+        fclose($fh);
+        return true;
+      }
+    }
+    return false;
+  } // end of member function writeFile
+
+
+
+  /**
+   * 
+   *
+   * @param string[] matches 
+
+   * @return 
+   * @access private
+   */
+  private function cloneFile( $source_lang, $source_folder, $dest_folder, $filename )
+  {
+    $standard_lang = &Language::getStandardId();
+
+    if ($source_lang == $standard_lang && $source_lang != $standard_lang && $this->lang_id != $standard_id && file_exists($this->base_dir.$source_folder.'/'.$filename)) {
+      return copy($this->base_dir.$source_folder.'/'.$filename, $this->base_dir.$dest_folder.'/'.$filename);
+    }
+    return false;
+
+  } // end of member function tryCopy
 
 
 
@@ -484,21 +675,33 @@ class Generate
    * @return 
    * @access private
    */
-  private function evalTemplate( $code )
+  private function evalTemplate( $matches )
   {
-    // catch output
-    ob_start(); 
+    $revision = $this->getFrom('script',$matches[1]);
+  
+    if( Tag::getValue($revision['id'], 'kind',-1) == 'php') {
 
-    // some vars for template usage;
-    //@RENAMEME or better remove me, parmeter names should be enough
-    $roscms_template_var_pageid = $this->dynamic_num;
-    $roscms_template_var_lang = $this->lang_id;
+      // catch output
+      ob_start();
 
-    // execute code and return the output
-    eval(' ?> '.$code.' <?php ');
-    $output = ob_get_contents(); 
-    ob_end_clean(); 
-    return $output; 
+      // some vars for template usage;
+      $roscms_dynamic_number = $this->dynamic_num;
+      $roscms_lang_id = $this->lang_id;
+
+      // execute code and return the output
+      eval($revision['content']);
+      $content = ob_get_contents(); 
+      ob_end_clean(); 
+    }
+    else {
+
+      $content = $revision['content'];
+    }
+
+    // replace roscms links
+    $content = preg_replace_callback('/\[#link_([^][#[:space:]]+)\]/', array($this, 'replaceWithHyperlink'), $content);
+
+    return $content;
   } // end of member function eval_template
 
 

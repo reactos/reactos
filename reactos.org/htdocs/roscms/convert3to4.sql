@@ -109,14 +109,14 @@ ORDER BY usrgroup_name;
 -- --------------------------------------------------------
 CREATE TABLE roscms_rel_revisions_depencies (
   id bigint(20) NOT NULL auto_increment,
-  rev_id bigint(20) unsigned NOT NULL COMMENT '->entries_revisions(id)',
-  depency_id bigint(20) unsigned default NULL COMMENT '->entries(id)',
-  depency_name varchar(80) collate utf8_unicode_ci default NULL,
-  is_include tinyint(1) NOT NULL default '0',
+  rev_id bigint(20) unsigned NOT NULL COMMENT '->revisions(id)',
+  child_id bigint(20) unsigned default NULL COMMENT '->entries(id)',
+  child_name varchar(80) collate utf8_unicode_ci default NULL,
+  include tinyint(1) NOT NULL default '0',
   PRIMARY KEY  (id),
   KEY rev_id (rev_id),
-  KEY depency_id (depency_id),
-  KEY depency_name (depency_name)
+  KEY child_id (child_id),
+  KEY child_name (child_name)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='if depency_id is NULL-> set name & type';
 
 
@@ -199,23 +199,6 @@ SET ga.can_read=TRUE, ga.can_write=TRUE, ga.can_add=TRUE, ga.can_delete=TRUE, ga
 
 UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
 SET ga.can_read=FALSE, ga.can_write=FALSE, ga.can_add=FALSE, ga.can_delete=FALSE, ga.can_publish=FALSE, ga.can_translate=FALSE WHERE s.sec_deny LIKE CONCAT('%',g.name_short,'%');
-
--- --------------------------------------------------------
--- create and convert group memberships
--- --------------------------------------------------------
-CREATE TABLE roscms_rel_groups_accounts (
-  group_id bigint(20) unsigned NOT NULL COMMENT '->groups(id)',
-  user_id bigint(20) unsigned NOT NULL COMMENT '->accounts(id)',
-  PRIMARY KEY  (group_id,user_id),
-  KEY group_id (group_id),
-  KEY user_id (user_id)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
-INSERT INTO roscms_rel_groups_accounts
-SELECT
-  g.id,
-  m.usergroupmember_userid
-FROM usergroup_members m JOIN roscms_groups g ON m.usergroupmember_usergroupid=g.name_short;
 
 
 
@@ -420,28 +403,6 @@ FROM data_tag t JOIN data_tag_name n ON t.tag_name_id=n.tn_id JOIN data_tag_valu
 
 
 -- --------------------------------------------------------
--- create and convert subsys mappings
--- --------------------------------------------------------
-CREATE TABLE roscms_rel_accounts_subsys (
-  user_id bigint(20) unsigned NOT NULL COMMENT '->accounts(id)',
-  subsys varchar(10) collate utf8_unicode_ci NOT NULL,
-  subsys_user_id bigint(20) unsigned NOT NULL COMMENT '->$subsys.$user(id)',
-  PRIMARY KEY  (user_id,subsys),
-  UNIQUE KEY subsys (subsys,subsys_user_id),
-  KEY subsys_user_id (subsys_user_id),
-  KEY user_id (user_id)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
-INSERT INTO roscms_rel_accounts_subsys
-SELECT
-  map_roscms_userid,
-  map_subsys_name,
-  map_subsys_userid
-FROM subsys_mappings;
-
-
-
--- --------------------------------------------------------
 -- create and convert timezones
 -- --------------------------------------------------------
 CREATE TABLE roscms_timezones (
@@ -533,6 +494,47 @@ LEFT JOIN roscms_countries c ON u.user_country=c.name_short;
 
 
 -- --------------------------------------------------------
+-- create and convert group memberships
+-- --------------------------------------------------------
+CREATE TABLE roscms_rel_groups_accounts (
+  group_id bigint(20) unsigned NOT NULL COMMENT '->groups(id)',
+  user_id bigint(20) unsigned NOT NULL COMMENT '->accounts(id)',
+  PRIMARY KEY  (group_id,user_id),
+  KEY group_id (group_id),
+  KEY user_id (user_id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+INSERT INTO roscms_rel_groups_accounts
+SELECT DISTINCT
+  g.id,
+  m.usergroupmember_userid
+FROM usergroup_members m JOIN roscms_groups g ON m.usergroupmember_usergroupid=g.name_short JOIN roscms_accounts u ON u.id=m.usergroupmember_userid;
+
+
+
+-- --------------------------------------------------------
+-- create and convert subsys mappings
+-- --------------------------------------------------------
+CREATE TABLE roscms_rel_accounts_subsys (
+  user_id bigint(20) unsigned NOT NULL COMMENT '->accounts(id)',
+  subsys varchar(10) collate utf8_unicode_ci NOT NULL,
+  subsys_user_id bigint(20) unsigned NOT NULL COMMENT '->$subsys.$user(id)',
+  PRIMARY KEY  (user_id,subsys),
+  UNIQUE KEY subsys (subsys,subsys_user_id),
+  KEY subsys_user_id (subsys_user_id),
+  KEY user_id (user_id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+INSERT INTO roscms_rel_accounts_subsys
+SELECT DISTINCT
+  map_roscms_userid,
+  map_subsys_name,
+  map_subsys_userid
+FROM subsys_mappings s JOIN roscms_accounts u ON s.map_roscms_userid=u.id;
+
+
+
+-- --------------------------------------------------------
 -- create and convert forbidden account names (or parts)
 -- --------------------------------------------------------
 CREATE TABLE roscms_accounts_forbidden (
@@ -570,11 +572,31 @@ INSERT INTO roscms_accounts_sessions SELECT * FROM user_sessions;
 -- --------------------------------------------------------
 CREATE TABLE roscms_jobs (
   id bigint(20) unsigned NOT NULL,
-  `action` varchar(32) collate utf8_unicode_ci NOT NULL,
-  `data` text collate utf8_unicode_ci NOT NULL,
-  PRIMARY KEY  (`id`),
-  KEY `action` (`action`)
+  name varchar(32) collate utf8_unicode_ci NOT NULL,
+  content text collate utf8_unicode_ci NOT NULL,
+  PRIMARY KEY  (id),
+  KEY name (name)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+
+
+-- --------------------------------------------------------
+-- convert to dynamic entries
+-- --------------------------------------------------------
+UPDATE roscms_entries SET type = 'dynamic' WHERE type='page' AND (name='news_page' OR name='newsletter' OR name='interview');
+
+INSERT INTO roscms_entries (type, name, acl_id)
+SELECT DISTINCT
+  'content',
+  CONCAT(d.name,'_',t.value),
+  d.acl_id
+FROM roscms_entries d JOIN roscms_entries_revisions r ON r.data_id=d.id JOIN roscms_entries_tags t ON t.rev_id=r.id
+WHERE t.name='number' AND d.type='content';
+
+UPDATE roscms_entries_revisions r JOIN roscms_entries o ON r.data_id=o.id JOIN roscms_entries_tags t ON t.rev_id=r.id JOIN roscms_entries d ON d.name=CONCAT(o.name,'_',t.value) SET r.data_id=d.id WHERE t.name='number' AND o.type='content';
+
+DELETE FROM roscms_entries WHERE type='content' AND (name='news_page' OR name='newsletter' OR name='interview');
 
 
 

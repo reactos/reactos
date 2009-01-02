@@ -132,7 +132,7 @@ abstract class HTML_User extends HTML
 
       // display original name in brackets, if a localized version is available
       if ($language['name_original'] != '') {
-        echo '<option value="'.$language['id'].'">'.$language['name'].' ('.$language['name_original'].')</option>';
+        echo '<option value="'.$language['id'].'">'.$language['name'].' ('.htmlentities($language['name_original']).')</option>';
       }
       else {
         echo '<option value="'.$language['id'].'">'.$language['name'].'</option>';

@@ -191,52 +191,11 @@ class Data
       return;
     }
 
-    $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, d.type, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE r.id = :rev_id LIMIT 1");
+    //@TODO implement adding to job queue
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_JOBS." (name, content) VALUES('stub','stub')");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
-    $page = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
-    // only for entries of type page
-    if ($page === false) {
-      return;
-    }
-
-    //if data_type is page -> delete file in all languages
-    if ($page['type'] == 'page'){
-      $stmt=&DBConnection::getInstance()->prepare("SELECT lang_id FROM ".ROSCMST_LANGUAGES);
-    }
-
-    //if data_type is content (only for dynamic) -> delete only selected one
-    elseif ($page['type'] == ''){
-      $dynamic_num = Tag::getValueByUser($page['id'],'number',-1);
-      if ($dynamic_num > 0) {
-        $stmt=&DBConnection::getInstance()->prepare("SELECT name_short FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id LIMIT 1");
-        $stmt->bindParam('lang_id',$page['lang_id'],PDO::PARAM_INT);
-      }
-      // entry is not dynamic
-      else {
-        return;
-      }
-    }
-
-    // neither page or content -> nothing to do
-    else {
-      return;
-    }
-    
-    // get file name
-    $file_extension = Tag::getValueByUser($page['rev_id'], 'extension', -1);
-    $file_name = $page['name'].(isset($dynamic_num) ? '_'.$dynamic_num : '').'.'.$file_extension;
-
-    // delete entries for selected language packs
-    $stmt->execute();
-    while ($lang = $stmt->fetch(PDO::FETCH_ASSOC)) {
-
-      // delete file if it exists
-      if ( file_exists('../'.$lang['name_short'].'/'.$file_name)) {
-        unlink('../'.$lang['name_short'].'/'.$file_name);
-      }
-    }
   }
 
 
@@ -250,6 +209,10 @@ class Data
   {
     Log::writeMedium("delete entry: rev-id [rev-id: ".$rev_id."] {deleteRevision}");
 
+    // delete Depencies
+    $depencies = new DataDepencies();
+    $depencies->removeRevision($rev_id);
+
     // delete revision and texts
     $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
@@ -261,7 +224,7 @@ class Data
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
 
-    // as we have a result set, we no longer need the tags
+    // we no longer need the tags
     $stmt_delete=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id LIMIT 1");
     $stmt_delete->bindParam('rev_id',$rev_id);
     $stmt_delete->execute();
@@ -447,10 +410,6 @@ class Data
           case 'script':
             $new_type_short = 'inc';
             break;
-          case 'system':
-            $new_type_short = 'sys';
-            break;
-          case 'page':
           default:
             $new_type_short = 'no';
             break;
@@ -467,10 +426,6 @@ class Data
           case 'script':
             $old_type_short = 'inc';
             break;
-          case 'system':
-            $old_type_short = 'sys';
-            break;
-          case 'page':
           default:
             $old_type_short = 'no';
             break;
@@ -564,7 +519,7 @@ class Data
       $stmt->bindValue('description','description',PDO::PARAM_STR);
       $stmt->bindValue('content','',PDO::PARAM_STR);
       $stmt->execute();
-      if ($data_type == 'page') {
+      if ($data_type == 'page' || $data_type == 'dynamic') {
         // add also a comment
         $stmt->bindValue('description','comment',PDO::PARAM_STR);
         $stmt->bindValue('content','',PDO::PARAM_STR);
@@ -573,14 +528,24 @@ class Data
         $stmt->bindValue('description','title',PDO::PARAM_STR);
         $stmt->bindValue('content',$data_name,PDO::PARAM_STR);
         $stmt->execute();
+
+        // add next dynamic number for dynamic entries
+        if ($data_type == 'dynamic') {
+          Tag::add($rev_id, 'next_number', 1, -1);
+        }
       }
       elseif ($data_type == 'content' && $dynamic_content === true) {
+
+        // get highest saved dynamic number for this data
+        $next_number = intval(Tag::getValueByUser($rev_id,'number_next',-1));
+
         // add a title
         $stmt->bindValue('description','title',PDO::PARAM_STR);
-        $stmt->bindValue('content',$data_name,PDO::PARAM_STR);
+        $stmt->bindValue('content',$data_name.'_'.$next_number,PDO::PARAM_STR);
         $stmt->execute();
       }
 
+      // is a template requested
       if ($layout_template != '' && $layout_template != 'none') {
         $content = '[#templ_'.$layout_template.']';
       }
@@ -588,38 +553,29 @@ class Data
         $content = '';
       }
 
+      // make a new page text
       $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) VALUES ( NULL, :rev_id, 'content', :content )");
       $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
       $stmt->bindParam('content',$content,PDO::PARAM_STR);
       $stmt->execute();
 
+      // draft / new / stable ...
       Tag::add($rev_id, 'status', $entry_status, -1);
 
       // add dynamic content tags
-      if ($dynamic_content === true) {
-
-        // get highest saved dynamic number for this data
-        $dynamic_number = 0;
-        $stmt=&DBConnection::getInstance()->prepare("SELECT t.value FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.lang_id = :lang AND r.version > 0 AND t.user_id = -1 AND t.name = 'number' ORDER BY t.value DESC");
-        $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
-        $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
-        $stmt->execute();
-        while ( $tag_value = intval($stmt->fetchColumn())) {
-          // get dynamic content number
-          if ($tag_value > $dynamic_number) {
-            $dynamic_number = $tag_value;
-          }
-        }
-        $dynamic_number++;
+      if (isset($next_number)) {
 
         // add Tags
-        Tag::add($rev_id, 'number', $dynamic_number, -1);
-        Tag::add($rev_id, 'number_sort', str_pad($dynamic_number, 5, '0', STR_PAD_LEFT), -1); // padding with '0'
+        Tag::add($rev_id, 'number', $next_number, -1);
+        Tag::add($rev_id, 'number_sort', str_pad($next_number, 5, '0', STR_PAD_LEFT), -1); // padding with '0'
         Tag::add($rev_id, 'pub_date', date('Y-m-d'), -1);
         Tag::add($rev_id, 'pub_user', $thisuser->id(), -1);
+
+        // update next number
+        Tag::update(Tag::getIdByUser($rev_id,'number_next',-1),$next_number+1);
       }
 
-      if ($data_type == 'page') {
+      if ($data_type == 'page' || $data_type == 'dynamic') {
         Tag::add($rev_id, 'extension', 'html', -1);
       }
 
@@ -628,147 +584,6 @@ class Data
       }
     }
   } // end of member function getCookieDomain
-
-
-
-  /**
-   *
-   *
-   * @access public
-   */
-  public static function rebuildDepencies()
-  {
-    // remove old depencies
-    DBConnection::getInstance()->exec("DELETE FROM ".ROSCMST_DEPENCIES);
-
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." ORDER BY id ASC");
-    $stmt->execute();
-    while ($revision = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      $content = Data::getText($revision['id'], 'content');
-      $content = preg_replace_callback('/(\[#templ_[^][#[:space:]]+\])/', array($this,'handleTemplate'), $content);
-      $content = preg_replace_callback('/(\[#cont_[^][#[:space:]]+\])/', array($this,'handleContent'), $content);
-      $content = preg_replace_callback('/(\[#inc_[^][#[:space:]]+\])/', array($this,'handleScript'), $content);
-      $content = preg_replace_callback('/(\[#link_[^][#[:space:]]+\])/', array($this,'handleLink'), $content);
-    }
-  }
-
-
-
-  /**
-   *
-   *
-   * @access public
-   */
-  public static function buildDepencies( $rev_id )
-  {
-    $stmt=&DBConnection::getInstance()->prepare("SELECT d.type, d.name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE r.id=:rev_id");
-    $stmt->bindParam('rev_id',$rev_id, PDO::PARAM_INT);
-    $stmt->execute();
-    $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
-
-    switch ($revision['type']) {
-      case 'template':
-        $type_short = 'templ';
-        break;
-      case 'content':
-        $type_short = 'cont';
-        break;
-      case 'script':
-        $type_short = 'inc';
-        break;
-      case 'page':
-        $type_short = 'link';
-        break;
-      default:
-        // skip system stuff
-        return;
-        break;
-    }
-
-    // search for depencies
-    $stmt=&DBConnection::getInstance()->prepare("SELECT t.rev_id, d.type FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_TEXT." t ON r.id = t.rev_id WHERE t.content LIKE :content_phrase AND r.version > 0");
-    $stmt->bindValue('content_phrase','%[#'.$type_short.'_'.$revision['name'].']%',PDO::PARAM_STR);
-    $stmt->execute();
-
-    // for usage in loop
-    $stmt_check=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_DEPENCIES." WHERE rev_id = :rev_id AND dependent_from = :depency_id LIMIT 1");
-    $stmt_check->bindParam('depency_id',$rev_id,PDO::PARAM_INT);
-
-    $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, depency_id, depency_name, depeny_type) VALUES (:rev_id, :depency_id, :depency_name, :depency_type)");
-    $stmt_ins->bindParam('depency_id',$rev_id,PDO::PARAM_INT);
-    $stmt_ins->bindParam('depency_name',$revision['name'],PDO::PARAM_STR);
-    $stmt_ins->bindParam('depency_type',$revision['type'],PDO::PARAM_STR);
-    // write depencies
-    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
-
-      // check that entry doesn't exist
-      $stmt_check->bindParam('rev_id',$depency['rev_id'],PDO::PARAM_INT);
-      $stmt_check->execute();
-      if ($stmt_check->fetchColumn() === false) {
-        // write the depency to DB
-        $stmt_ins->bindParam('rev_id',$depency['rev_id'],PDO::PARAM_INT);
-        $stmt_ins->execute();
-      }
-    }
-
-    if ($revision['type'] == 'template') {
-      // templates need special dealing
-      $stmt=&DBConnection::getInstance()->prepare("SELECT w.rev_id, d.name, REPLACE(REPLACE(t.content,'[#%NAME%]',d.name), '[#cont_%NAME%]', CONCAT('[#cont_',d.name,']')) AS content FROM roscms_rel_revisions_depencies w JOIN roscms_entries_revisions r ON w.rev_id=r.id JOIN roscms_entries d ON d.id=r.data_id JOIN roscms_entries_text t ON t.rev_id=w.dependent_from WHERE w.dependent_from = :depency_id AND w.dependent_type = 'template' LIMIT 1");
-      $stmt->bindParam('depency_id',$rev_id,PDO::PARAM_INT);
-      $stmt->execute();
-
-      // for usage in loop
-        $stmt_rev=DBConnection::getInstance()->prepare("SELECT d.type, r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id=d.id WHERE name = :name AND type = :type LIMIT 1");
-        $stmt_check=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_DEPENCIES." WHERE rev_id = :rev_id AND dependent_from = :depency_id LIMIT 1");
-        $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_DEPENCIES." (rev_id, depency_id, depency_name, depency_type) VALUES (:rev_id, :depency_id, :depency_name, :depency_type)");
-
-      while ($template = $stmt->fetch(PDO::FETCH_ASSOC)) {
-
-        // for usage in inner loop
-        $stmt_check->bindParam('rev_id',$template['rev_id'],PDO::PARAM_INT);
-        $stmt_ins->bindParam('rev_id',$template['rev_id'],PDO::PARAM_INT);
-
-        // get contained entries
-        preg_match_all('/\[#([a-z_]+_'.$template['name'].'[^\]]*)\]/iU',$template['content'],$matches);
-        for ($i=0; $i<count($matches[1]) ;$i++) {
-
-          // get name & type
-          if (strpos($matches[1][$i],'templ_') === 0) {
-            $type = 'template';
-            $name = substr($matches[1][$i], 6);
-          }
-          elseif (strpos($matches[1][$i],'cont_') === 0) {
-            $type = 'content';
-            $name = substr($matches[1][$i], 5);
-          }
-          elseif (strpos($matches[1][$i],'inc_') === 0) {
-            $type = 'script';
-            $name = substr($matches[1][$i], 4);
-          }
-          else {
-            break;
-          }
-
-          $stmt_rev->bindParam('name',$name,PDO::PARAM_STR);
-          $stmt_rev->bindParam('type',$type,PDO::PARAM_STR);
-          $stmt_rev->execute();
-          $revision = $stmt_rev->fetch(PDO::FETCH_ASSOC);
-
-          if ($revision !== false) {
-            $stmt_check->bindParam('depency_id',$revision['id'],PDO::PARAM_INT);
-            $stmt_check->execute();
-            if ($stmt_check->fetchColumn() === false) {
-              // write the depency to DB
-              $stmt_ins->bindParam('depency_id',$revision['id'],PDO::PARAM_INT);
-              $stmt_ins->bindParam('depency_name',$revision['name'],PDO::PARAM_STR);
-              $stmt_ins->bindParam('depency_type',$revision['type'],PDO::PARAM_STR);
-              $stmt_ins->execute();
-            }
-          } else {echo $type;}
-        }
-      }
-    }
-  } // end of member function generate_page_output_update
 
 
 
@@ -783,7 +598,6 @@ class Data
     $id_list = preg_replace('/(^|-)[0-9]+\_([0-9]+)/','$2|',$id_list);
     $rev_id_list = explode('|',substr($id_list,0,-1));
 
-    $xport = new Export_HTML();
 
     // preview
     if ($action == 'mp') {
@@ -792,8 +606,9 @@ class Data
       $stmt->execute();
       $revision = $stmt->fetchOnce();
 
-      $dynamic_num = Tag::getValueByUser($revision['id'], 'number', -1);
-      echo $xport->processTextByName($revision['name'], $revision['lang_id'], $dynamic_num, 'show');
+      //@TODO rework preview with caching and such shit
+      $generate = new Generate();
+      echo $generate->oneEntry($revision['name'], $revision['lang_id']);
     }
 
     else {
@@ -837,16 +652,9 @@ class Data
             $tag_id = Tag::getIdByUser($revision['id'], 'status', -1);
             Tag::update($tag_id, 'stable');
 
-            if ($revision['rev_version'] == 0) {
-              $dynamic_num = Tag::getValueByUser($revision['rev_id'], 'number',  -1); 
+            if ($revision['version'] == 0) {
 
-              if ($dynamic_num > 0) {
-                $stmt=&DBConnection::getInstance()->prepare("SELECT r.id, r.data_id, r.version, r.lang_id FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_TAGS." t ON r.id = t.rev_id WHERE r.data_id = :data_id AND r.version > 0 AND r.lang_id = :lang AND t.user_id = -1 AND t.name = 'number' AND t.value = :tag_value ORDER BY r.version DESC, r.id DESC LIMIT 1");
-                $stmt->bindParam('tag_value',$dynamic_num,PDO::PARAM_STR);
-              }
-              else {
-                $stmt=&DBConnection::getInstance()->prepare("SELECT id, data_id, version, lang_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang ORDER BY version DESC, id DESC LIMIT 1");
-              }
+              $stmt=&DBConnection::getInstance()->prepare("SELECT id, data_id, version, lang_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang AND archive IS FALSE ORDER BY version DESC, id DESC LIMIT 1");
               $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
               $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
               $stmt->execute();
@@ -870,10 +678,7 @@ class Data
                 Tag::copyFromData($stable_revision['id'], $revision['id']);
 
                 // move old revision to archive
-                if (Data::copy($stable_revision['id'], 0, $lang_id)) {
-                  Data::deleteRevision($stable_revision['id']);
-                }
-                else {
+                if (!Data::toArchive($stable_revision['id'])) {
                   Log::writeMedium('Data::copy() failed: data-id '.$stable_revision['data_id'].', rev-id '.$stable_revision['id'].Log::prepareInfo($stable_revision['data_id'], $stable_revision['rev_id']).'{changetags}');
                   echo 'Process not successful :S';
                 }
@@ -884,22 +689,14 @@ class Data
               $stmt->bindParam('version',$version_num,PDO::PARAM_INT);
               $stmt->bindParam('rev_id',$revision['id'],PDO::PARAM_INT);
               $stmt->execute();
+              
+              // get depencies
+              $depency = new DataDepencies();
+              $depency->addRevision($revision['id']);
 
-              // get language to generation
-              if ($revision['lang_id'] == null) {
-                $generation_lang = Language::getStandardId();
-              }
-              else {
-                $generation_lang = $revision['lang_id'];
-              }
-
-              $stmt=&DBConnection::getInstance()->prepare("SELECT d.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ENTRIES." d2 ON d.name=d2.name WHERE d2.id = :data_id AND d.data_type = 'page' LIMIT 1");
-              $stmt->bindParam('data_id',$revision['data_id']);
-              $stmt->execute();
-              $data_id = $stmt->fetchColumn();
-              Log::writeGenerateLow('+++++ [generate_page_output_update('.$revision['data_id'].', '.$generation_lang.', '.$dynamic_num.')]');
-
-              $xport->generate($data_id, $generation_lang, $dynamic_num);
+              // generate content
+              $generate = new Generate();
+              $generate->update($revision['id']);
               echo 'Page generation process finished';
             }
             else {
@@ -954,7 +751,7 @@ class Data
               if ($thisuser->securityLevel() < 3) {
                 Data::copy($revision['id'], 0, $lang_id);
               }
-              Data::deleteFile($revision['id']);
+              //Data::deleteFile($revision['id']);
               Data::deleteRevision($revision['id']);
             }
             else {
@@ -972,6 +769,27 @@ class Data
       } // for
     }
   } // end of member function getCookieDomain
+
+
+
+  /**
+   *
+   *
+   * @param int rev_id
+   * @return bool
+   * @access public
+   */
+  public static function toArchive($rev_id )
+  {
+    // remove depencies
+    DataDepencies::removeRevision($rev_id);
+              
+    // move into archive
+    $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET archive = TRUE WHERE id=:rev_id");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    return $stmt->execute();
+  }
+
 
 
   /**
@@ -1015,13 +833,14 @@ class Data
 
     if ($archive_mode === false) {
       $revision = array(
+        'data_id' => $revision['data_id'],
         'version' => '0',
         'user_id' => ThisUser::getInstance()->id(),
         'lang_id' => $lang_id,
         'datetime' => date('Y-m-d H:i:s'));
     }
     $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, :version, :lang, :user_id, :datetime )");
-    $stmt->bindParam('data_id',$new_data_id,PDO::PARAM_INT);
+    $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
     $stmt->bindValue('version',$revision['version'],PDO::PARAM_INT);
     $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
     $stmt->bindParam('user_id',$revision['user_id'],PDO::PARAM_INT);

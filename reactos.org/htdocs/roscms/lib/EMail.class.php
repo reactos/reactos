@@ -49,9 +49,9 @@ class EMail
 
     // header
     $headers = "";
-    $headers .= "From:" .RosCMS::getInstance->emailSystem()."\n";
-    $headers .= "Reply-To:" . RosCMS::getInstance->emailSystem()."\n"; 
-    $headers .= "X-Mailer: ".RosCMS::getInstance->systemBrand()."\n"; 
+    $headers .= "From:" .RosCMS::getInstance()->emailSystem()."\n";
+    $headers .= "Reply-To:" . RosCMS::getInstance()->emailSystem()."\n"; 
+    $headers .= "X-Mailer: ".RosCMS::getInstance()->systemBrand()."\n"; 
     $headers .= "X-Sender-IP: ".$_SERVER['REMOTE_ADDR']."\n"; 
     $headers .= "Content-type: text/plain\n";
 
