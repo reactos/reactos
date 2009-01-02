@@ -1274,6 +1274,14 @@ typedef struct _FILE_MOVE_CLUSTER_INFORMATION
     WCHAR FileName[1];
 } FILE_MOVE_CLUSTER_INFORMATION, *PFILE_MOVE_CLUSTER_INFORMATION;
 
+typedef struct _FILE_NOTIFY_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG Action;
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+} FILE_NOTIFY_INFORMATION, *PFILE_NOTIFY_INFORMATION;
+
 /* raw internal file lock struct returned from FsRtlGetNextFileLock */
 typedef struct _FILE_SHARED_LOCK_ENTRY {
     PVOID           Unknown1;
@@ -3675,17 +3683,6 @@ VOID
 NTAPI
 FsRtlNotifyInitializeSync (
     IN PNOTIFY_SYNC *NotifySync
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyReportChange (
-    IN PNOTIFY_SYNC NotifySync,
-    IN PLIST_ENTRY  NotifyList,
-    IN PSTRING      FullTargetName,
-    IN PUSHORT      FileNamePartLength,
-    IN ULONG        FilterMatch
 );
 
 NTKERNELAPI
