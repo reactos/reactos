@@ -1,7 +1,7 @@
 #include "private.h"
 
 
-typedef struct CResourceList
+typedef struct
 {
     IPortClsVersionVtbl *lpVtbl;
     LONG ref;

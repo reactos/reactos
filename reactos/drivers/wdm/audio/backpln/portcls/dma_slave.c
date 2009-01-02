@@ -7,8 +7,13 @@ typedef struct
 
     LONG ref;
 
+    ULONG MaxMapRegisters;
+    ULONG AllocatedBufferSize;
     ULONG BufferSize;
+    PDMA_ADAPTER pAdapter;
     PHYSICAL_ADDRESS Address;
+    PVOID Buffer;
+    PMDL Mdl;
 
 }IDmaChannelSlaveImpl;
 
@@ -54,6 +59,7 @@ IDmaChannelSlave_fnRelease(
 
     if (This->ref == 0)
     {
+        This->pAdapter->DmaOperations->PutDmaAdapter(This->pAdapter);
         ExFreePoolWithTag(This, TAG_PORTCLASS);
         return 0;
     }
@@ -78,12 +84,26 @@ IDmaChannelSlave_fnAllocateBuffer(
     DPRINT("IDmaChannelSlave_AllocateBuffer: This %p BufferSize %u\n", This, BufferSize);
 
     /* Did the caller already allocate a buffer ?*/
-    if (This->BufferSize) return STATUS_UNSUCCESSFUL;
+    if (This->Buffer)
+    {
+        DPRINT1("IDmaChannelSlave_AllocateBuffer free common buffer first \n");
+        return STATUS_UNSUCCESSFUL;
+    }
 
-    /* FIXME */
-    //This->BufferSize = BufferSize;
+    This->Buffer = This->pAdapter->DmaOperations->AllocateCommonBuffer(This->pAdapter, BufferSize, &This->Address, TRUE);
+    if (!This->Buffer)
+    {
+        DPRINT1("IDmaChannelSlave_AllocateBuffer fAllocateCommonBuffer failed \n");
+        return STATUS_UNSUCCESSFUL;
+    }
 
-    return STATUS_UNSUCCESSFUL;
+    This->Mdl = IoAllocateMdl(This->Buffer, BufferSize, FALSE, FALSE, NULL);
+    if (This->Mdl)
+        MmBuildMdlForNonPagedPool(This->Mdl);
+
+    This->BufferSize = BufferSize;
+    This->AllocatedBufferSize = BufferSize;
+    return STATUS_SUCCESS;
 }
 
 ULONG
@@ -94,7 +114,7 @@ IDmaChannelSlave_fnAllocatedBufferSize(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_AllocatedBufferSize: This %p BufferSize %u\n", This, This->BufferSize);
-    return This->BufferSize;
+    return This->AllocatedBufferSize;
 }
 
 VOID
@@ -133,6 +153,16 @@ IDmaChannelSlave_fnFreeBuffer(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_FreeBuffer: This %p\n", This);
+
+    if (!This->Buffer)
+    {
+        DPRINT1("IDmaChannelSlave_FreeBuffer allocate common buffer first \n");
+        return;
+    }
+
+    This->pAdapter->DmaOperations->FreeCommonBuffer(This->pAdapter, This->AllocatedBufferSize, This->Address, This->Buffer, TRUE);
+    This->Buffer = NULL;
+    This->AllocatedBufferSize = 0;
 }
 
 PADAPTER_OBJECT
@@ -143,7 +173,7 @@ IDmaChannelSlave_fnGetAdapterObject(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_GetAdapterObject: This %p\n", This);
-    return NULL;
+    return (PADAPTER_OBJECT)This->pAdapter;
 }
 
 ULONG
@@ -177,6 +207,7 @@ IDmaChannelSlave_fnSetBufferSize(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_SetBufferSize: This %p\n", This);
+    This->BufferSize = BufferSize;
 
 }
 
@@ -185,7 +216,9 @@ NTAPI
 IDmaChannelSlave_fnBufferSize(
     IN IDmaChannelSlave * iface)
 {
-    return 0;
+    IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
+
+    return This->BufferSize;
 }
 
 
@@ -197,7 +230,7 @@ IDmaChannelSlave_fnSystemAddress(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_SystemAddress: This %p\n", This);
-    return NULL;
+    return This->Buffer;
 }
 
 ULONG
@@ -219,6 +252,7 @@ IDmaChannelSlave_fnReadCounter(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_ReadCounter: This %p\n", This);
+
     return 0;
 }
 
@@ -284,4 +318,31 @@ IDmaChannelSlaveVtbl vt_IDmaChannelSlaveVtbl =
     IDmaChannelSlave_fnReadCounter,
     IDmaChannelSlave_fnWaitForTC
 };
+
+
+NTSTATUS NewDmaChannelSlave(
+    IN PDEVICE_DESCRIPTION DeviceDesc,
+    IN PDMA_ADAPTER Adapter,
+    IN ULONG MapRegisters,
+    OUT PDMACHANNELSLAVE* DmaChannel)
+{
+    IDmaChannelSlaveImpl * This;
+
+    This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IDmaChannelSlaveImpl), TAG_PORTCLASS);
+    if (!This)
+    {
+        Adapter->DmaOperations->PutDmaAdapter(Adapter);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(This, sizeof(IDmaChannelSlaveImpl));
+    This->ref = 1;
+    This->lpVtbl = &vt_IDmaChannelSlaveVtbl;
+    This->pAdapter = Adapter;
+    This->MaxMapRegisters = MapRegisters;
+    *DmaChannel = (PVOID)(&This->lpVtbl);
+
+    return STATUS_SUCCESS;
+
+}
 

@@ -15,6 +15,28 @@ typedef struct
 
 const GUID IID_IMiniportTopology;
 const GUID IID_IPortTopology;
+#if 0
+static
+KSPROPERTY_SET PinPropertySet =
+{
+    &KSPROPSETID_Pin,
+    0,
+    NULL,
+    0,
+    NULL
+};
+
+static
+KSPROPERTY_SET TopologyPropertySet =
+{
+    &KSPROPSETID_Topology,
+    4,
+    NULL,
+    0,
+    NULL
+};
+#endif
+
 
 //---------------------------------------------------------------
 // IUnknown interface functions
@@ -35,6 +57,10 @@ IPortTopology_fnQueryInterface(
         *Output = &This->lpVtbl;
         _InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(refiid, &IID_IPortClsVersion))
+    {
+        return NewPortClsVersion((PPORTCLSVERSION*)Output);
     }
 
     return STATUS_UNSUCCESSFUL;

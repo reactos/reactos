@@ -15,6 +15,7 @@
 	<file>dma_slave.c</file>
 	<file>drm_port.c</file>
 	<file>adapter.c</file>
+	<file>filter_wavecyclic.c</file>
 	<file>irp.c</file>
 	<file>interrupt.c</file>
 	<file>drm.c</file>

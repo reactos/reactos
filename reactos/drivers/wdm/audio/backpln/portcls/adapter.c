@@ -10,7 +10,11 @@
  */
 
 #include "private.h"
+#include <devguid.h>
 #include <initguid.h>
+
+const GUID IID_ISubdevice;
+
 /*
     This is called from DriverEntry so that PortCls can take care of some
     IRPs and map some others to the main KS driver. In most cases this will
@@ -162,7 +166,9 @@ PcAddAdapterDevice(
 
     /* Initialize */
     RtlZeroMemory(portcls_ext, sizeof(PCExtension));
+    portcls_ext->PhysicalDeviceObject = PhysicalDeviceObject;
     portcls_ext->StartDevice = StartDevice;
+	InitializeListHead(&portcls_ext->SubDeviceList);
 
     status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, 0, NULL);
     if (!NT_SUCCESS(status))
@@ -182,9 +188,44 @@ PciDriverDispatch(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    NTSTATUS Status;
+
+    ISubdevice * SubDevice;
+    PCExtension* DeviceExt;
+    SUBDEVICE_ENTRY * Entry;
+    KSDISPATCH_TABLE DispatchTable;
+
     DPRINT1("PortClsSysControl called\n");
 
-    /* TODO */
+    SubDevice = (ISubdevice*)Irp->Tail.Overlay.DriverContext[3];
+    DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
+
+    if (!SubDevice || !DeviceExt)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(SUBDEVICE_ENTRY), TAG_PORTCLASS);
+    if (!Entry)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* initialize DispatchTable */
+    RtlZeroMemory(&DispatchTable, sizeof(KSDISPATCH_TABLE));
+    /* FIXME
+     * initialize DispatchTable pointer
+     * which call in turn ISubDevice
+     */
+
+
+    Status = KsAllocateObjectHeader(&Entry->ObjectHeader, 1, NULL, Irp, &DispatchTable);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Entry, TAG_PORTCLASS);
+        return Status;
+    }
+
+
+    InsertTailList(&DeviceExt->SubDeviceList, &Entry->Entry);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -201,6 +242,10 @@ PcRegisterSubdevice(
 {
     PCExtension* DeviceExt;
     NTSTATUS Status;
+    ISubdevice *SubDevice;
+    UNICODE_STRING ReferenceString;
+    UNICODE_STRING SymbolicLinkName;
+
 
     if (!DeviceObject || !Name || !Unknown)
         return STATUS_INVALID_PARAMETER;
@@ -209,8 +254,35 @@ PcRegisterSubdevice(
     if (!DeviceExt)
         return STATUS_UNSUCCESSFUL;
 
-    Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PciDriverDispatch, (PVOID)Unknown, Name, NULL);
+    Status = Unknown->lpVtbl->QueryInterface(Unknown, &IID_ISubdevice, (LPVOID)&SubDevice);
+    if (!NT_SUCCESS(Status))
+    {
+        /* the provided port driver doesnt support ISubdevice */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PciDriverDispatch, (PVOID)SubDevice, Name, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed to attach */
+        SubDevice->lpVtbl->Release(SubDevice);
+        return Status;
+    }
+
+    /* FIXME retrieve guid from subdescriptor */
+
+    RtlInitUnicodeString(&ReferenceString, Name);
+    /* register device interface */
+    Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject, 
+                                       &GUID_DEVCLASS_SOUND, //FIXME
+                                       &ReferenceString, 
+                                       &SymbolicLinkName);
+    if (NT_SUCCESS(Status))
+    {
+        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+        RtlFreeUnicodeString(&SymbolicLinkName);
+    }
 
 
-    return STATUS_UNSUCCESSFUL;
+    return Status;
 }

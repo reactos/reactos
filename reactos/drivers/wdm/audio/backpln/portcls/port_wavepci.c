@@ -124,6 +124,10 @@ IPortWavePci_fnQueryInterface(
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_IPortClsVersion))
+    {
+        return NewPortClsVersion((PPORTCLSVERSION*)Output);
+    }
     return STATUS_UNSUCCESSFUL;
 }
 
