@@ -284,6 +284,19 @@ IntGetCodePageEntry(UINT CodePage)
                                      PAGE_READONLY,
                                      SEC_FILE,
                                      FileHandle);
+
+            /* HACK: Check if another process was faster
+             * and already created this section. See bug 3626 for details */
+            if (Status == STATUS_OBJECT_NAME_COLLISION)
+            {
+                /* Close the file then */
+                NtClose(FileHandle);
+
+                /* And open the section */
+                Status = NtOpenSection(&SectionHandle,
+                                       SECTION_MAP_READ,
+                                       &ObjectAttributes);
+            }
         }
     }
     RtlFreeUnicodeString(&UnicodeName);
