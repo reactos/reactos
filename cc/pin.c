@@ -53,14 +53,14 @@ CcMapData (IN PFILE_OBJECT FileObject,
     ASSERT (FileOffset);
     ASSERT (piBcb);
     ASSERT (pBuffer);
-	ASSERT (Flags & MAP_WAIT);
+	//ASSERT (Flags & MAP_WAIT);
 
     if (!(Flags & MAP_WAIT))
     {
-		DPRINT1("Reading without MAP_WAIT flag is not implented yet.\n");
-        *piBcb = NULL;
-        *pBuffer = NULL;
-        return FALSE;
+		DPRINT1("Reading without MAP_WAIT flag!\n");
+        //*piBcb = NULL;
+        //*pBuffer = NULL;
+        //return FALSE;
 	}
 
     Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
@@ -263,7 +263,7 @@ CcUnpinData (IN PVOID _iBcb)
  * @unimplemented
  */
 VOID NTAPI
-CcUnpinDataForThread (IN PVOID Bcb, 
+CcUnpinDataForThread (IN PVOID Bcb,
                       IN ERESOURCE_THREAD ResourceThreadId)
 {
     UNIMPLEMENTED;
@@ -275,18 +275,39 @@ CcUnpinDataForThread (IN PVOID Bcb,
 VOID NTAPI
 CcRepinBcb (IN PVOID Bcb)
 {
-//  PINTERNAL_BCB iBcb = Bcb;
+#if 0
+    PINTERNAL_BCB iBcb = Bcb;
 //  iBcb->RefCount++;
-    UNIMPLEMENTED;
+    ExAcquireFastMutex (&CcCacheViewLock);
+    iBcb->Bcb->CacheView[iBcb->Index]->RefCount++;
+    ExReleaseFastMutex (&CcCacheViewLock);
+#endif
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID NTAPI
-CcUnpinRepinnedBcb (IN PVOID Bcb, 
-                    IN BOOLEAN WriteThrough, 
-                    IN PIO_STATUS_BLOCK IoStatus)
+CcUnpinRepinnedBcb (IN PVOID Bcb,
+                    IN BOOLEAN WriteThrough,
+                    OUT PIO_STATUS_BLOCK IoStatus)
 {
-    KeBugCheck(CACHE_MANAGER);
+#if 0
+    PINTERNAL_BCB iBcb = Bcb;
+
+    DPRINT ("CcUnpinRepinnedBcb(%x)\n", Bcb);
+
+    ExAcquireFastMutex (&CcCacheViewLock);
+    iBcb->Bcb->CacheView[iBcb->Index]->RefCount--;
+    if (iBcb->Bcb->CacheView[iBcb->Index]->RefCount == 0)
+    {
+        RemoveEntryList (&iBcb->Bcb->CacheView[iBcb->Index]->ListEntry);
+        InsertHeadList (&CcFreeCacheViewListHead, &iBcb->Bcb->CacheView[iBcb->Index]->ListEntry);
+    }
+    ExReleaseFastMutex (&CcCacheViewLock);
+    ExFreeToNPagedLookasideList (&iBcbLookasideList, iBcb);
+#endif
+    IoStatus->Status = STATUS_SUCCESS;
+
+    DPRINT ("CcUnpinRepinnedBcb done\n");
 }

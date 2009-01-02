@@ -67,18 +67,18 @@ CcInitCacheZeroPage (VOID)
  * @unimplemented
  */
 BOOLEAN NTAPI
-CcCanIWrite (IN PFILE_OBJECT FileObject, 
-             IN ULONG BytesToWrite, 
-             IN BOOLEAN Wait, 
+CcCanIWrite (IN PFILE_OBJECT FileObject,
+             IN ULONG BytesToWrite,
+             IN BOOLEAN Wait,
              IN BOOLEAN Retrying)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    /* Our cache is always ready for writes */
+    return TRUE;
 }
 
 BOOLEAN NTAPI
 CcCopyRead (IN PFILE_OBJECT FileObject,
-            IN PLARGE_INTEGER FileOffset, 
+            IN PLARGE_INTEGER FileOffset,
             IN ULONG Length, 
             IN BOOLEAN Wait, 
             OUT PVOID Buffer, 

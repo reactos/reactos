@@ -113,8 +113,8 @@ CcSetDirtyPageThreshold (IN PFILE_OBJECT FileObject,
  * @unimplemented
  */
 VOID NTAPI
-CcSetReadAheadGranularity (IN PFILE_OBJECT FileObject, 
+CcSetReadAheadGranularity (IN PFILE_OBJECT FileObject,
                            IN ULONG Granularity)
 {
-    UNIMPLEMENTED;
+    DPRINT("CcSetReadAheadGranularity(0x%p 0x%x)\n", FileObject, Granularity);
 }
