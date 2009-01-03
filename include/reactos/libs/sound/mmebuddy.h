@@ -7,6 +7,7 @@
 
     History:
         4 July 2008 - Created
+        31 Dec 2008 - Split off NT4-specific code into a separate library
 
     Notes:
         MME Buddy was the best name I could come up with...
@@ -60,7 +61,10 @@
             } \
         }
 #else
-    /* TODO */
+    #define SND_ERR(...) while ( 0 ) do {}
+    #define SND_WARN(...) while ( 0 ) do {}
+    #define SND_TRACE(...) while ( 0 ) do {}
+    #define SND_ASSERT(condition) while ( 0 ) do {}
 #endif
 
 /*
@@ -155,6 +159,14 @@ typedef MMRESULT (*MMWAVESETFORMAT_FUNC)(
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
+typedef MMRESULT (*MMOPEN_FUNC)(
+    IN  struct _SOUND_DEVICE* SoundDevice,
+    OUT PVOID* Handle);
+
+typedef MMRESULT (*MMCLOSE_FUNC)(
+    IN  struct _SOUND_DEVICE* SoundDevice,
+    IN  PVOID Handle);  /* not sure about this */
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -166,6 +178,9 @@ typedef struct _MMFUNCTION_TABLE
         MMGETMIDIINCAPS_FUNC        GetMidiInCapabilities;
     };
 
+    MMOPEN_FUNC                     Open;
+    MMCLOSE_FUNC                    Close;
+
     MMWAVEQUERYFORMATSUPPORT_FUNC   QueryWaveFormatSupport;
     MMWAVESETFORMAT_FUNC            SetWaveFormat;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
@@ -174,13 +189,15 @@ typedef struct _SOUND_DEVICE
 {
     struct _SOUND_DEVICE* Next;
     MMDEVICE_TYPE Type;
-    PWSTR Path;
+    PVOID Identifier;       /* Path for NT4 drivers */
+    /*PWSTR Path;*/
     MMFUNCTION_TABLE FunctionTable;
 } SOUND_DEVICE, *PSOUND_DEVICE;
 
 typedef struct _SOUND_DEVICE_INSTANCE
 {
-    HANDLE KernelDeviceHandle;
+    struct _SOUND_DEVICE* Device;
+    PVOID Handle;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 
@@ -220,12 +237,6 @@ GetSoundDeviceCapabilities(
     OUT PVOID Capabilities,
     IN  DWORD CapabilitiesSize);
 
-MMRESULT
-DefaultGetSoundDeviceCapabilities(
-    IN  PSOUND_DEVICE SoundDevice,
-    OUT PVOID Capabilities,
-    IN  DWORD CapabilitiesSize);
-
 
 /*
     devicelist.c
@@ -242,7 +253,7 @@ IsValidSoundDevice(
 MMRESULT
 ListSoundDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  LPWSTR DevicePath OPTIONAL,
+    IN  PVOID Identifier OPTIONAL,
     OUT PSOUND_DEVICE* SoundDevice OPTIONAL);
 
 MMRESULT
@@ -264,9 +275,9 @@ GetSoundDevice(
     OUT PSOUND_DEVICE* Device);
 
 MMRESULT
-GetSoundDevicePath(
+GetSoundDeviceIdentifier(
     IN  PSOUND_DEVICE SoundDevice,
-    OUT LPWSTR* DevicePath);
+    OUT PVOID* Identifier);
 
 MMRESULT
 GetSoundDeviceType(
@@ -281,7 +292,7 @@ GetSoundDeviceType(
 MMRESULT
 SetSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE SoundDevice,
-    IN  PMMFUNCTION_TABLE FunctionTable OPTIONAL);
+    IN  PMMFUNCTION_TABLE FunctionTable);
 
 MMRESULT
 GetSoundDeviceFunctionTable(
@@ -315,37 +326,10 @@ GetSoundDeviceFromInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     OUT PSOUND_DEVICE* SoundDevice);
 
-
-/*
-    nt4.c
-*/
-
-typedef BOOLEAN (*SOUND_DEVICE_DETECTED_PROC)(
-    UCHAR DeviceType,
-    PWSTR DevicePath);
-
 MMRESULT
-OpenSoundDriverParametersRegKey(
-    IN  LPWSTR ServiceName,
-    OUT PHKEY KeyHandle);
-
-MMRESULT
-OpenSoundDeviceRegKey(
-    IN  LPWSTR ServiceName,
-    IN  DWORD DeviceIndex,
-    OUT PHKEY KeyHandle);
-
-MMRESULT
-EnumerateNt4ServiceSoundDevices(
-    IN  LPWSTR ServiceName,
-    IN  MMDEVICE_TYPE DeviceType,
-    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
-
-MMRESULT
-DetectNt4SoundDevices(
-    IN  MMDEVICE_TYPE DeviceType,
-    IN  PWSTR BaseDeviceName,
-    IN  SOUND_DEVICE_DETECTED_PROC SoundDeviceDetectedProc);
+GetSoundDeviceInstanceHandle(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PVOID* Handle);
 
 
 /*
@@ -381,13 +365,15 @@ TranslateInternalMmResult(
 */
 
 MMRESULT
-QueryWaveDeviceFormatSupport(
-    IN  PSOUND_DEVICE SoundDevice,
-    IN  LPWAVEFORMATEX Format,
-    IN  DWORD FormatSize);
+MmeOpenWaveDevice(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWAVEOPENDESC OpenParameters,
+    IN  DWORD Flags,
+    OUT DWORD* PrivateHandle);
 
 MMRESULT
-DefaultQueryWaveDeviceFormatSupport(
+QueryWaveDeviceFormatSupport(
     IN  PSOUND_DEVICE SoundDevice,
     IN  LPWAVEFORMATEX Format,
     IN  DWORD FormatSize);
@@ -398,17 +384,12 @@ SetWaveDeviceFormat(
     IN  LPWAVEFORMATEX Format,
     IN  DWORD FormatSize);
 
-MMRESULT
-DefaultSetWaveDeviceFormat(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  LPWAVEFORMATEX Format,
-    IN  DWORD FormatSize);
-
 
 /*
     kernel.c
 */
 
+#if 0
 #define QueryDevice(h, ctl, o, o_size, xfer, ovl) \
     Win32ErrorToMmResult( \
         DeviceIoControl(h, ctl, NULL, 0, o, o_size, xfer, ovl) != 0 \
@@ -426,6 +407,7 @@ DefaultSetWaveDeviceFormat(
 
 #define ControlSoundDevice(sd, ctl, i, i_size, xfer) \
     SoundDeviceIoControl(sd, ctl, i, i_size, NULL, 0, xfer)
+#endif
 
 MMRESULT
 OpenKernelSoundDeviceByName(
@@ -434,12 +416,18 @@ OpenKernelSoundDeviceByName(
     OUT PHANDLE Handle);
 
 MMRESULT
+OpenKernelSoundDevice(
+    IN  PSOUND_DEVICE SoundDevice,
+    IN  BOOLEAN ReadOnly,
+    OUT PHANDLE Handle);
+
+MMRESULT
 CloseKernelSoundDevice(
     IN  HANDLE Handle);
 
 MMRESULT
-SoundDeviceIoControl(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+SyncOverlappedDeviceIoControl(
+    IN  HANDLE SoundDeviceInstance,
     IN  DWORD IoControlCode,
     IN  LPVOID InBuffer,
     IN  DWORD InBufferSize,

@@ -10,6 +10,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
+#include <mmddk.h>
 #include <ntddk.h>
 #include <ntddsnd.h>
 #include <mmebuddy.h>
@@ -29,6 +30,10 @@ MmeGetSoundDeviceCapabilities(
     MMRESULT Result;
 
     SND_TRACE(L"MME *_GETCAPS for device %d of type %d\n", DeviceId, DeviceType);
+
+    /* FIXME: Validate device type and ID */
+    VALIDATE_MMSYS_PARAMETER( Capabilities );
+    VALIDATE_MMSYS_PARAMETER( CapabilitiesSize > 0 );
 
     /* Our parameter checks are done elsewhere */
     Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
@@ -125,83 +130,4 @@ GetSoundDeviceCapabilities(
     return FunctionTable->GetCapabilities(SoundDevice,
                                           Capabilities,
                                           CapabilitiesSize);
-}
-
-/*
-    Provides a default implementation for the "get capabilities" request,
-    using the standard IOCTLs used by NT4 sound drivers.
-*/
-MMRESULT
-DefaultGetSoundDeviceCapabilities(
-    IN  PSOUND_DEVICE SoundDevice,
-    OUT PVOID Capabilities,
-    IN  DWORD CapabilitiesSize)
-{
-    MMRESULT Result;
-    MMDEVICE_TYPE DeviceType;
-    PWSTR DevicePath;
-    DWORD IoCtl;
-    DWORD BytesTransferred;
-    HANDLE DeviceHandle;
-
-    /* If these are bad there's an internal error with MME-Buddy! */
-    SND_ASSERT( SoundDevice );
-    SND_ASSERT( Capabilities );
-    SND_ASSERT( CapabilitiesSize > 0 );
-
-    SND_TRACE(L"Default get-capabilities routine called\n");
-
-    /* Get the device type */
-    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
-    SND_ASSERT( Result == MMSYSERR_NOERROR );
-
-    if ( Result != MMSYSERR_NOERROR );
-        return TranslateInternalMmResult(Result);
-
-    /* Get the device path */
-    Result = GetSoundDevicePath(SoundDevice, &DevicePath);
-    SND_ASSERT( Result == MMSYSERR_NOERROR );
-
-    if ( Result != MMSYSERR_NOERROR );
-        return TranslateInternalMmResult(Result);
-
-    /* Choose the appropriate IOCTL */
-    if ( IS_WAVE_DEVICE_TYPE(DeviceType) )
-    {
-        IoCtl = IOCTL_WAVE_GET_CAPABILITIES;
-    }
-    else if ( IS_MIDI_DEVICE_TYPE(DeviceType) )
-    {
-        IoCtl = IOCTL_MIDI_GET_CAPABILITIES;
-    }
-    else
-    {
-        /* TODO */
-        SND_ASSERT( FALSE );
-    }
-
-    /* Get the capabilities information from the driver */
-    Result = OpenKernelSoundDeviceByName(DevicePath, TRUE, &DeviceHandle);
-
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        SND_ERR(L"Failed to open %wS\n", DevicePath);
-        return TranslateInternalMmResult(Result);
-    }
-
-    Result = QueryDevice(DeviceHandle,
-                         IoCtl,
-                         Capabilities,
-                         CapabilitiesSize,
-                         &BytesTransferred,
-                         NULL);
-
-    CloseKernelSoundDevice(DeviceHandle);
-
-    if ( Result != MMSYSERR_NOERROR )
-    {
-        SND_ERR(L"Retrieval of capabilities information failed\n");
-    }
-
-    return Result;
 }

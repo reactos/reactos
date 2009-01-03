@@ -9,6 +9,8 @@
 */
 
 #include <windows.h>
+#include <mmsystem.h>
+#include <mmddk.h>
 #include <ntddsnd.h>
 #include <mmebuddy.h>
 
@@ -22,7 +24,6 @@ PSOUND_DEVICE   SoundDeviceListTails[SOUND_DEVICE_TYPES];
 MMRESULT
 AllocateSoundDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  PWSTR DevicePath OPTIONAL,
     OUT PSOUND_DEVICE* SoundDevice)
 {
     PSOUND_DEVICE NewDevice;
@@ -30,7 +31,7 @@ AllocateSoundDevice(
     SND_ASSERT( IsValidSoundDeviceType(DeviceType) );
     SND_ASSERT( SoundDevice );
 
-    SND_TRACE(L"Allocating SOUND_DEVICE for %wS\n", DevicePath);
+    SND_TRACE(L"Allocating a SOUND_DEVICE structure\n");
 
     NewDevice = AllocateStruct(SOUND_DEVICE);
 
@@ -38,21 +39,6 @@ AllocateSoundDevice(
         return MMSYSERR_NOMEM;
 
     NewDevice->Type = DeviceType;
-
-    /* Only copy the device path if one was actually passed in */
-    if ( DevicePath )
-    {
-        NewDevice->Path = AllocateWideString(wcslen(DevicePath));
-
-        if ( ! NewDevice->Path )
-        {
-            FreeMemory(NewDevice);
-            NewDevice = NULL;
-            return MMSYSERR_NOMEM;
-        }
-
-        CopyWideString(NewDevice->Path, DevicePath);
-    }
 
     /* Return the new structure to the caller and report success */
     *SoundDevice = NewDevice;
@@ -69,12 +55,7 @@ FreeSoundDevice(
 {
     SND_ASSERT( SoundDevice );
 
-    SND_TRACE(L"Freeing SOUND_DEVICE for %wS\n", SoundDevice->Path);
-
-    if ( SoundDevice->Path )
-    {
-        FreeMemory(SoundDevice->Path);
-    }
+    SND_TRACE(L"Freeing a SOUND_DEVICE structure");
 
     /* For safety the whole struct gets zeroed */
     ZeroMemory(SoundDevice, sizeof(SOUND_DEVICE));
@@ -153,7 +134,7 @@ IsValidSoundDevice(
 MMRESULT
 ListSoundDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  LPWSTR DevicePath OPTIONAL,
+    IN  PVOID Identifier OPTIONAL,
     OUT PSOUND_DEVICE* SoundDevice OPTIONAL)
 {
     MMRESULT Result;
@@ -162,7 +143,7 @@ ListSoundDevice(
 
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceType(DeviceType) );
 
-    Result = AllocateSoundDevice(DeviceType, DevicePath, &NewDevice);
+    Result = AllocateSoundDevice(DeviceType, &NewDevice);
 
     if ( Result != MMSYSERR_NOERROR )
     {
@@ -188,6 +169,9 @@ ListSoundDevice(
 
     /* Set up the default function table */
     SetSoundDeviceFunctionTable(NewDevice, NULL);
+
+    /* Set up other members of the structure */
+    NewDevice->Identifier = Identifier;
 
     /* Fill in the caller's PSOUND_DEVICE */
     if ( SoundDevice )
@@ -343,15 +327,15 @@ GetSoundDevice(
     driver.
 */
 MMRESULT
-GetSoundDevicePath(
+GetSoundDeviceIdentifier(
     IN  PSOUND_DEVICE SoundDevice,
-    OUT LPWSTR* DevicePath)
+    OUT PVOID* Identifier)
 {
     VALIDATE_MMSYS_PARAMETER( SoundDevice );
-    VALIDATE_MMSYS_PARAMETER( DevicePath );
+    VALIDATE_MMSYS_PARAMETER( Identifier );
 
     /* The caller should not modify this! */
-    *DevicePath = SoundDevice->Path;
+    *Identifier = SoundDevice->Identifier;
 
     return MMSYSERR_NOERROR;
 }

@@ -9,11 +9,11 @@
 	<file>functiontable.c</file>
 	<file>reentrancy.c</file>
 	<file>utility.c</file>
-	<file>nt4.c</file>
 	<file>kernel.c</file>
 	<directory name="wave">
 		<file>widMessage.c</file>
 		<file>wodMessage.c</file>
+		<file>format.c</file>
 	</directory>
 	<directory name="midi">
 		<file>midMessage.c</file>

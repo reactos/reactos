@@ -10,6 +10,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
+#include <mmddk.h>
 
 #include <mmebuddy.h>
 

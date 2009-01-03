@@ -11,6 +11,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
+#include <mmddk.h>
 #include <ntddsnd.h>
 #include <mmebuddy.h>
 
@@ -33,8 +34,9 @@ OpenKernelSoundDeviceByName(
     VALIDATE_MMSYS_PARAMETER( DevicePath );
     VALIDATE_MMSYS_PARAMETER( Handle );
 
-    AccessRights = ReadOnly ? GENERIC_READ : GENERIC_WRITE;
+    AccessRights = ReadOnly ? GENERIC_READ : GENERIC_READ | GENERIC_WRITE;
 
+    SND_TRACE(L"OpenKernelSoundDeviceByName: %wS\n", DevicePath);
     *Handle = CreateFile(DevicePath,
                          AccessRights,
                          FILE_SHARE_WRITE,  /* FIXME? Should be read also? */
@@ -45,11 +47,13 @@ OpenKernelSoundDeviceByName(
 
     if ( *Handle == INVALID_HANDLE_VALUE )
     {
+        SND_ERR(L"CreateFile filed - winerror %d\n", GetLastError());
         return Win32ErrorToMmResult(GetLastError());
     }
 
     return MMSYSERR_NOERROR;
 }
+
 
 /*
     Just a wrapped around CloseHandle.
@@ -67,13 +71,12 @@ CloseKernelSoundDevice(
 
 /*
     This is a wrapper around DeviceIoControl which provides control over
-    instantiated sound devices. It takes a sound device instance rather than
-    a handle, and waits for I/O to complete (since an instantiated sound
-    device is opened in overlapped mode, this is necessary).
+    instantiated sound devices. It waits for I/O to complete (since an
+    instantiated sound device is opened in overlapped mode, this is necessary).
 */
 MMRESULT
-SoundDeviceIoControl(
-    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+SyncOverlappedDeviceIoControl(
+    IN  HANDLE Handle,
     IN  DWORD IoControlCode,
     IN  LPVOID InBuffer,
     IN  DWORD InBufferSize,
@@ -85,8 +88,6 @@ SoundDeviceIoControl(
     BOOLEAN IoResult;
     DWORD Transferred;
 
-    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
-
     /* Overlapped I/O is done here - this is used for waiting for completion */
     ZeroMemory(&Overlapped, sizeof(OVERLAPPED));
     Overlapped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -95,7 +96,7 @@ SoundDeviceIoControl(
         return Win32ErrorToMmResult(GetLastError());
 
     /* Talk to the device */
-    IoResult = DeviceIoControl(SoundDeviceInstance->KernelDeviceHandle,
+    IoResult = DeviceIoControl(Handle,
                                IoControlCode,
                                InBuffer,
                                InBufferSize,
@@ -115,7 +116,7 @@ SoundDeviceIoControl(
     }
 
     /* Wait for the I/O to complete */
-    IoResult = GetOverlappedResult(SoundDeviceInstance->KernelDeviceHandle,
+    IoResult = GetOverlappedResult(Handle,
                                    &Overlapped,
                                    &Transferred,
                                    TRUE);

@@ -18,6 +18,7 @@
 #include <ntddsnd.h>
 #include <mmddk.h>
 #include <mmebuddy.h>
+#include <mment4.h>
 //#include <debug.h>
 
 PWSTR SBWaveOutDeviceName = L"ROS Sound Blaster Out";
@@ -42,9 +43,9 @@ GetSoundBlasterDeviceCapabilities(
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
     /* Use the default method of obtaining device capabilities */
-    Result = DefaultGetSoundDeviceCapabilities(SoundDevice,
-                                               Capabilities,
-                                               CapabilitiesSize);
+    Result = GetNt4SoundDeviceCapabilities(SoundDevice,
+                                           Capabilities,
+                                           CapabilitiesSize);
 
     if ( Result != MMSYSERR_NOERROR )
         return Result;
@@ -69,7 +70,6 @@ GetSoundBlasterDeviceCapabilities(
     return MMSYSERR_NOERROR;
 }
 
-
 BOOLEAN FoundDevice(
     UCHAR DeviceType,
     PWSTR DevicePath)
@@ -77,26 +77,31 @@ BOOLEAN FoundDevice(
     MMRESULT Result;
     PSOUND_DEVICE SoundDevice = NULL;
     MMFUNCTION_TABLE FuncTable;
+    PWSTR PathCopy;
 
-    SND_TRACE(L"Callback received: %wS\n", DevicePath);
+    SND_TRACE(L"(Callback) Found device: %wS\n", DevicePath);
 
-    FuncTable.GetCapabilities = GetSoundBlasterDeviceCapabilities;
+    PathCopy = AllocateWideString(wcslen(DevicePath));
 
-/*
+    if ( ! PathCopy )
+        return FALSE;
 
-    ZeroMemory(&FuncTable, sizeof(MMFUNCTION_TABLE));
+    CopyWideString(PathCopy, DevicePath);
 
-    FuncTable.GetCapabilities = GetSoundBlasterDeviceCapabilities;
-*/
-
-    Result = ListSoundDevice(DeviceType, DevicePath, &SoundDevice);
+    Result = ListSoundDevice(DeviceType, (PVOID) PathCopy, &SoundDevice);
 
     if ( Result != MMSYSERR_NOERROR )
     {
+        return TranslateInternalMmResult(Result);
         return FALSE;
     }
 
-    /* TODO: Set up function table */
+    /* Set up our function table */
+    FuncTable.GetCapabilities = GetSoundBlasterDeviceCapabilities;
+    FuncTable.QueryWaveFormatSupport = QueryNt4WaveDeviceFormatSupport;
+    FuncTable.SetWaveFormat = SetNt4WaveDeviceFormat;
+    FuncTable.Open = OpenNt4SoundDevice;
+
     SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
 
     return TRUE;
@@ -153,6 +158,7 @@ DriverProc(
         {
             SND_TRACE(L"DRV_FREE\n");
 
+            /* TODO: Clean up the path names! */
             UnlistAllSoundDevices();
 
             CleanupEntrypointMutexes();

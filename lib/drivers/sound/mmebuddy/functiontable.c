@@ -11,6 +11,8 @@
 */
 
 #include <windows.h>
+#include <mmsystem.h>
+#include <mmddk.h>
 #include <mmebuddy.h>
 
 /*
@@ -22,40 +24,18 @@
 MMRESULT
 SetSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE SoundDevice,
-    IN  PMMFUNCTION_TABLE FunctionTable OPTIONAL)
+    IN  PMMFUNCTION_TABLE FunctionTable)
 {
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
-    /*VALIDATE_MMSYS_PARAMETER( FunctionTable );*/
+    VALIDATE_MMSYS_PARAMETER( FunctionTable );
 
     /* Zero out the existing function table (if present) */
     ZeroMemory(&SoundDevice->FunctionTable, sizeof(MMFUNCTION_TABLE));
 
-    /* Fill in the client-supplied functions, if provided */
-    if ( FunctionTable )
-    {
-        CopyMemory(&SoundDevice->FunctionTable,
-                   FunctionTable,
-                   sizeof(MMFUNCTION_TABLE));
-    }
-
-    /* Plug any gaps in the function table */
-    if ( ! SoundDevice->FunctionTable.GetCapabilities )
-    {
-        SoundDevice->FunctionTable.GetCapabilities =
-            DefaultGetSoundDeviceCapabilities;
-    }
-
-    if ( ! SoundDevice->FunctionTable.QueryWaveFormatSupport )
-    {
-        SoundDevice->FunctionTable.QueryWaveFormatSupport =
-            DefaultQueryWaveDeviceFormatSupport;
-    }
-
-    if ( ! SoundDevice->FunctionTable.SetWaveFormat )
-    {
-        SoundDevice->FunctionTable.SetWaveFormat =
-            DefaultSetWaveDeviceFormat;
-    }
+    /* Fill in the client-supplied functions */
+    CopyMemory(&SoundDevice->FunctionTable,
+               FunctionTable,
+               sizeof(MMFUNCTION_TABLE));
 
     return MMSYSERR_NOERROR;
 }

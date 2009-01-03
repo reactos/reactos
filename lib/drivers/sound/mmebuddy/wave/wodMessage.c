@@ -54,6 +54,45 @@ wodMessage(
 
         case WODM_OPEN :
         {
+            Result = MmeOpenWaveDevice(WAVE_OUT_DEVICE_TYPE,
+                                       DeviceId,
+                                       (LPWAVEOPENDESC) Parameter1,
+                                       Parameter2,
+                                       (DWORD*) PrivateHandle);
+#if 0
+            PSOUND_DEVICE SoundDevice;
+            PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+            LPWAVEOPENDESC OpenDescriptor = (LPWAVEOPENDESC) Parameter1;
+
+            /* FIXME? Do we need the 2nd parameter to go to this routine? */
+            Result = MmeQueryWaveDeviceFormatSupport(WAVE_OUT_DEVICE_TYPE,
+                                                     DeviceId,
+                                                     OpenDescriptor);
+
+            if ( ( Parameter2 & WAVE_FORMAT_QUERY ) ||
+                 ( Result == MMSYSERR_NOTSUPPORTED) )
+            {
+                /* Nothing more to be done */
+                break;
+            }
+
+            /* The MME API should provide us with a place to store a handle */
+            if ( ! PrivateHandle )
+            {
+                /* Not so much an invalid parameter as something messed up!! */
+                SND_ERR(L"MME API supplied a NULL private handle pointer!\n");
+                Result = MMSYSERR_ERROR;
+                break;
+            }
+
+            /* Spawn an instance of the sound device */
+            /*Result = MmeOpenWaveDevice(WAVE_OUT_DEVICE_TYPE, DeviceId, OpenDescriptor);*/
+            /*GetSoundDevice(WAVE_OUT_DEVICE_TYPE, DeviceId, &SoundDevice);
+            Result = CreateSoundDeviceInstance(SoundDevice, &SoundDeviceInstance);*/
+
+            /* TODO... */
+#endif
+#if 0
             PSOUND_DEVICE SoundDevice;
             PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
             LPWAVEOPENDESC OpenParameters = (LPWAVEOPENDESC) Parameter1;
@@ -61,8 +100,11 @@ wodMessage(
             /* Obtain the sound device */
             Result = GetSoundDevice(WAVE_OUT_DEVICE_TYPE, DeviceId, &SoundDevice);
 
-            if ( Result != MMSYSERR_NOERROR );
+            if ( Result != MMSYSERR_NOERROR )
+            {
+                Result = TranslateInternalMmResult(Result);
                 break;
+            }
 
             /* See if the device supports this format */
             Result = QueryWaveDeviceFormatSupport(SoundDevice,
@@ -72,10 +114,11 @@ wodMessage(
             if ( Parameter2 & WAVE_FORMAT_QUERY )
             {
                 /* Nothing more to be done - keep the result */
+                Result = TranslateInternalMmResult(Result);
                 break;
             }
 
-            /* The MME API should provide us with a place to store a handle */
+
             SND_ASSERT( PrivateHandle );
             if ( ! PrivateHandle )
             {
@@ -106,11 +149,17 @@ wodMessage(
                 break;
             }
 
+#endif
             break;
         }
 
         case WODM_CLOSE :
         {
+            /*
+                What should happen here?
+                - Validate the sound device instance
+                - Destroy it
+            */
             break;
         }
     }

@@ -9,6 +9,8 @@
 */
 
 #include <windows.h>
+#include <mmsystem.h>
+#include <mmddk.h>
 #include <ntddk.h>
 #include <ntddsnd.h>
 #include <mmebuddy.h>

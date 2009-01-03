@@ -10,6 +10,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
+#include <mmddk.h>
 #include <mmebuddy.h>
 
 MMRESULT
@@ -68,7 +69,45 @@ CreateSoundDeviceInstance(
     IN  PSOUND_DEVICE SoundDevice,
     OUT PSOUND_DEVICE_INSTANCE* SoundDeviceInstance)
 {
-    return MMSYSERR_NOTSUPPORTED;
+    MMRESULT Result;
+    PMMFUNCTION_TABLE FunctionTable;
+
+    SND_TRACE(L"Creating a sound device instance\n");
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance != NULL );
+
+    Result = AllocateSoundDeviceInstance(SoundDeviceInstance);
+
+    if ( Result != MMSYSERR_NOERROR )
+        return TranslateInternalMmResult(Result);
+
+    /* Get the "open" routine from the function table, and validate it */
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        FreeSoundDeviceInstance(*SoundDeviceInstance);
+        return TranslateInternalMmResult(Result);
+    }
+
+    if ( FunctionTable->Open == NULL )
+    {
+        FreeSoundDeviceInstance(*SoundDeviceInstance);
+        return MMSYSERR_NOTSUPPORTED;
+    }
+
+    /* Set up the members of the structure */
+    (*SoundDeviceInstance)->Device = SoundDevice;
+
+    /* Try and open the device */
+    Result = FunctionTable->Open(SoundDevice, (&(*SoundDeviceInstance)->Handle));
+    if ( Result != MMSYSERR_NOERROR )
+    {
+        FreeSoundDeviceInstance(*SoundDeviceInstance);
+        return TranslateInternalMmResult(Result);
+    }
+
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
@@ -90,5 +129,23 @@ GetSoundDeviceFromInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     OUT PSOUND_DEVICE* SoundDevice)
 {
-    return MMSYSERR_NOTSUPPORTED;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( SoundDevice );
+
+    *SoundDevice = SoundDeviceInstance->Device;
+
+    return MMSYSERR_NOERROR;
+}
+
+MMRESULT
+GetSoundDeviceInstanceHandle(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    OUT PVOID* Handle)
+{
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    VALIDATE_MMSYS_PARAMETER( Handle );
+
+    *Handle = SoundDeviceInstance->Handle;
+
+    return MMSYSERR_NOERROR;
 }

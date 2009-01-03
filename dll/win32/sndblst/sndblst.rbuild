@@ -5,6 +5,7 @@
     <include base="ReactOS">include/reactos/libs/sound</include>
 	<include base="sndblst">.</include>
 	<define name="DEBUG_NT4" />
+    <library>mment4</library>
     <library>mmebuddy</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
