@@ -91,10 +91,7 @@ BOOLEAN FoundDevice(
     Result = ListSoundDevice(DeviceType, (PVOID) PathCopy, &SoundDevice);
 
     if ( ! MMSUCCESS(Result) )
-    {
-        return TranslateInternalMmResult(Result);
         return FALSE;
-    }
 
     /* Set up our function table */
     FuncTable.GetCapabilities = GetSoundBlasterDeviceCapabilities;
