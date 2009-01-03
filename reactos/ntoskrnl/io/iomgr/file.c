@@ -1700,6 +1700,16 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 }
 
                 RtlCopyMemory(SystemEaBuffer, EaBuffer, EaLength);
+
+                /* Validate the buffer */
+                Status = IoCheckEaBufferValidity(SystemEaBuffer,
+                                                 EaLength,
+                                                 &EaErrorOffset);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("FIXME: IoCheckEaBufferValidity() failed with "
+                        "Status: %lx\n",Status);
+                }
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1708,7 +1718,14 @@ IoCreateFile(OUT PHANDLE FileHandle,
         }
         _SEH2_END;
 
-        if(!NT_SUCCESS(Status)) return Status;
+        if(!NT_SUCCESS(Status))
+        {
+            /* Free SystemEaBuffer if needed */
+            if (SystemEaBuffer) ExFreePoolWithTag(SystemEaBuffer, TAG_EA);
+
+            /* Return failure status */
+            return Status;
+        }
     }
     else
     {
