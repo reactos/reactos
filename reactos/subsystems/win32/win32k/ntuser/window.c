@@ -4562,7 +4562,7 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
 
    UserEnterExclusive();
 
-   if(!(Window = UserGetWindowObject(hWnd)))
+   if(!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
    {
       UserLeave();
       return FALSE;
