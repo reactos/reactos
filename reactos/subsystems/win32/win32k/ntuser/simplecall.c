@@ -713,7 +713,7 @@ NtUserCallHwndLock(
    DPRINT("Enter NtUserCallHwndLock\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
    {
       RETURN( FALSE);
    }
@@ -742,15 +742,45 @@ NtUserCallHwndLock(
             Menu->MenuInfo.WndOwner = hWnd;
             Menu->MenuInfo.Height = 0;
 
-            co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                                  SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
+            co_WinPosSetWindowPos( Window,
+                                   HWND_DESKTOP,
+                                   0,0,0,0,
+                                   SWP_NOSIZE|
+                                   SWP_NOMOVE|
+                                   SWP_NOZORDER|
+                                   SWP_NOACTIVATE|
+                                   SWP_FRAMECHANGED );
 
             Ret = TRUE;
             break;
          }
 
       case HWNDLOCK_ROUTINE_REDRAWFRAME:
-         /* FIXME */
+         co_WinPosSetWindowPos( Window,
+                                HWND_DESKTOP,
+                                0,0,0,0, 
+                                SWP_NOSIZE|
+                                SWP_NOMOVE|
+                                SWP_NOZORDER|
+                                SWP_NOACTIVATE|
+                                SWP_FRAMECHANGED );
+         Ret = TRUE;
+         break;
+
+      case HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK:
+         co_WinPosSetWindowPos( Window,
+                                HWND_DESKTOP,
+                                0,0,0,0, 
+                                SWP_NOSIZE|
+                                SWP_NOMOVE|
+                                SWP_NOZORDER|
+                                SWP_NOACTIVATE|
+                                SWP_FRAMECHANGED );
+         if (!IntGetOwner(Window) && !IntGetParent(Window))
+         {
+            co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) hWnd);
+         }
+         Ret = TRUE;
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
@@ -758,7 +788,7 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
-         /* FIXME */
+         Ret = co_UserRedrawWindow( Window, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
          break;
    }
 

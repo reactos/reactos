@@ -4569,57 +4569,47 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
    }
    Wnd = Window->Wnd;
 
-   if(SafeText.Length != 0)
+   if (SafeText.Length != 0)
    {
-      _SEH2_TRY
+      if (Wnd->WindowName.MaximumLength > 0 &&
+          SafeText.Length <= Wnd->WindowName.MaximumLength - sizeof(UNICODE_NULL))
       {
-          if (Wnd->WindowName.MaximumLength > 0 &&
-              SafeText.Length <= Wnd->WindowName.MaximumLength - sizeof(UNICODE_NULL))
-          {
-              ASSERT(Wnd->WindowName.Buffer != NULL);
+         ASSERT(Wnd->WindowName.Buffer != NULL);
 
-              Wnd->WindowName.Length = SafeText.Length;
-              Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
-              RtlCopyMemory(Wnd->WindowName.Buffer,
-                            SafeText.Buffer,
-                            SafeText.Length);
-          }
-          else
-          {
-              PWCHAR buf;
-              Wnd->WindowName.MaximumLength = Wnd->WindowName.Length = 0;
-              buf = Wnd->WindowName.Buffer;
-              Wnd->WindowName.Buffer = NULL;
-              if (buf != NULL)
-              {
-                  DesktopHeapFree(Wnd->pdesktop,
-                                  buf);
-              }
-
-              Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
-                                                        SafeText.Length + sizeof(UNICODE_NULL));
-              if (Wnd->WindowName.Buffer != NULL)
-              {
-                  Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
-                  RtlCopyMemory(Wnd->WindowName.Buffer,
-                                SafeText.Buffer,
-                                SafeText.Length);
-                  Wnd->WindowName.MaximumLength = SafeText.Length + sizeof(UNICODE_NULL);
-                  Wnd->WindowName.Length = SafeText.Length;
-              }
-              else
-              {
-                  SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                  Ret = FALSE;
-              }
-          }
+         Wnd->WindowName.Length = SafeText.Length;
+         Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
+         RtlCopyMemory(Wnd->WindowName.Buffer,
+                              SafeText.Buffer,
+                              SafeText.Length);
       }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      else
       {
-           SetLastNtError(_SEH2_GetExceptionCode());
-           Ret = FALSE;
+         PWCHAR buf;
+         Wnd->WindowName.MaximumLength = Wnd->WindowName.Length = 0;
+         buf = Wnd->WindowName.Buffer;
+         Wnd->WindowName.Buffer = NULL;
+         if (buf != NULL)
+         {
+            DesktopHeapFree(Wnd->pdesktop, buf);
+         }
+
+         Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
+                                                   SafeText.Length + sizeof(UNICODE_NULL));
+         if (Wnd->WindowName.Buffer != NULL)
+         {
+            Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
+            RtlCopyMemory(Wnd->WindowName.Buffer,
+                                 SafeText.Buffer,
+                                 SafeText.Length);
+            Wnd->WindowName.MaximumLength = SafeText.Length + sizeof(UNICODE_NULL);
+            Wnd->WindowName.Length = SafeText.Length;
+         }
+         else
+         {
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            Ret = FALSE;
+         }
       }
-      _SEH2_END;
    }
    else
    {
@@ -4628,6 +4618,9 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
           Wnd->WindowName.Buffer[0] = L'\0';
    }
 
+   // HAX! FIXME! Windows does not do this in here!
+   // In User32, these are called after: NotifyWinEvent EVENT_OBJECT_NAMECHANGE than
+   // RepaintButton, StaticRepaint, NtUserCallHwndLock HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK, etc.
    /* Send shell notifications */
    if (!IntGetOwner(Window) && !IntGetParent(Window))
    {
