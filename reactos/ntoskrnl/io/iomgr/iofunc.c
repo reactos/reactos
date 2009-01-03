@@ -1121,6 +1121,12 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
 
         /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
+
+        /* Check if we have an correct parameter */
+        if (!CompletionFilter)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
     }
 
     /* Get File Object */
