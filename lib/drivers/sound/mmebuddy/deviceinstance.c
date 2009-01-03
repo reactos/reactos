@@ -37,7 +37,7 @@ VOID
 FreeSoundDeviceInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    SND_ASSERT( SoundDeviceInstance );
+    SND_ASSERT( IsValidSoundDeviceInstance(SoundDeviceInstance) );
     FreeMemory(SoundDeviceInstance);
 }
 
@@ -107,6 +107,8 @@ CreateSoundDeviceInstance(
         return TranslateInternalMmResult(Result);
     }
 
+    /* TODO: List device */
+
     return MMSYSERR_NOERROR;
 }
 
@@ -114,7 +116,45 @@ MMRESULT
 DestroySoundDeviceInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    return MMSYSERR_NOTSUPPORTED;
+    MMRESULT Result;
+    PMMFUNCTION_TABLE FunctionTable;
+    PSOUND_DEVICE SoundDevice;
+    PVOID Handle;
+
+    SND_TRACE(L"Destroying a sound device instance\n");
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( Result != MMSYSERR_NOERROR )
+        return TranslateInternalMmResult(Result);
+
+    /* TODO: Unlist */
+
+    Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+    if ( Result != MMSYSERR_NOERROR )
+        return TranslateInternalMmResult(Result);
+
+    /* Get the "close" routine from the function table, and validate it */
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( Result != MMSYSERR_NOERROR )
+        return TranslateInternalMmResult(Result);
+
+    SND_ASSERT( FunctionTable->Close );
+    if ( FunctionTable->Close == NULL )
+    {
+        /* Bad practice, really! If you can open, why not close?! */
+        return MMSYSERR_NOTSUPPORTED;
+    }
+
+    /* Try and close the device */
+    Result = FunctionTable->Close(SoundDeviceInstance, Handle);
+    if ( Result != MMSYSERR_NOERROR )
+        return TranslateInternalMmResult(Result);
+
+    FreeSoundDeviceInstance(SoundDeviceInstance);
+
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT

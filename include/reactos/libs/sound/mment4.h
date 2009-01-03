@@ -82,7 +82,7 @@ OpenNt4SoundDevice(
 
 MMRESULT
 CloseNt4SoundDevice(
-    IN  PSOUND_DEVICE SoundDevice,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Handle);
 
 #endif

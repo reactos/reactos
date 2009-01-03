@@ -101,6 +101,7 @@ BOOLEAN FoundDevice(
     FuncTable.QueryWaveFormatSupport = QueryNt4WaveDeviceFormatSupport;
     FuncTable.SetWaveFormat = SetNt4WaveDeviceFormat;
     FuncTable.Open = OpenNt4SoundDevice;
+    FuncTable.Close = CloseNt4SoundDevice;
 
     SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
 

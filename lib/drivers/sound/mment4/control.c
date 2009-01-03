@@ -64,12 +64,12 @@ OpenNt4SoundDevice(
 
 MMRESULT
 CloseNt4SoundDevice(
-    IN  PSOUND_DEVICE SoundDevice,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Handle)
 {
     SND_TRACE(L"Closing NT4 style sound device\n");
 
-    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
     return CloseKernelSoundDevice((HANDLE) Handle);
 }
 

@@ -7,6 +7,7 @@
 	<file>devicelist.c</file>
 	<file>deviceinstance.c</file>
 	<file>functiontable.c</file>
+    <file>mmewrap.c</file>
 	<file>reentrancy.c</file>
 	<file>utility.c</file>
 	<file>kernel.c</file>

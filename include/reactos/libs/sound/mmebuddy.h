@@ -164,7 +164,7 @@ typedef MMRESULT (*MMOPEN_FUNC)(
     OUT PVOID* Handle);
 
 typedef MMRESULT (*MMCLOSE_FUNC)(
-    IN  struct _SOUND_DEVICE* SoundDevice,
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  PVOID Handle);  /* not sure about this */
 
 typedef struct _MMFUNCTION_TABLE
@@ -221,7 +221,7 @@ ReleaseEntrypointMutex(
 
 
 /*
-    capabilities.c
+    mme.c
 */
 
 MMRESULT
@@ -230,6 +230,23 @@ MmeGetSoundDeviceCapabilities(
     IN  DWORD DeviceId,
     IN  PVOID Capabilities,
     IN  DWORD CapabilitiesSize);
+
+MMRESULT
+MmeOpenWaveDevice(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWAVEOPENDESC OpenParameters,
+    IN  DWORD Flags,
+    OUT DWORD* PrivateHandle);
+
+MMRESULT
+MmeCloseDevice(
+    IN  DWORD PrivateHandle);
+
+
+/*
+    capabilities.c
+*/
 
 MMRESULT
 GetSoundDeviceCapabilities(
@@ -363,14 +380,6 @@ TranslateInternalMmResult(
 /*
     wave/format.c
 */
-
-MMRESULT
-MmeOpenWaveDevice(
-    IN  MMDEVICE_TYPE DeviceType,
-    IN  DWORD DeviceId,
-    IN  LPWAVEOPENDESC OpenParameters,
-    IN  DWORD Flags,
-    OUT DWORD* PrivateHandle);
 
 MMRESULT
 QueryWaveDeviceFormatSupport(

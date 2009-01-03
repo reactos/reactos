@@ -16,37 +16,6 @@
 #include <mmebuddy.h>
 
 /*
-    This is a helper function to alleviate some of the repetition involved with
-    implementing the various MME message functions.
-*/
-MMRESULT
-MmeGetSoundDeviceCapabilities(
-    IN  MMDEVICE_TYPE DeviceType,
-    IN  DWORD DeviceId,
-    IN  PVOID Capabilities,
-    IN  DWORD CapabilitiesSize)
-{
-    PSOUND_DEVICE SoundDevice;
-    MMRESULT Result;
-
-    SND_TRACE(L"MME *_GETCAPS for device %d of type %d\n", DeviceId, DeviceType);
-
-    /* FIXME: Validate device type and ID */
-    VALIDATE_MMSYS_PARAMETER( Capabilities );
-    VALIDATE_MMSYS_PARAMETER( CapabilitiesSize > 0 );
-
-    /* Our parameter checks are done elsewhere */
-    Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
-
-    if ( Result != MMSYSERR_NOERROR )
-        return Result;
-
-    return GetSoundDeviceCapabilities(SoundDevice,
-                                      Capabilities,
-                                      CapabilitiesSize);
-}
-
-/*
     Obtains the capabilities of a sound device. This routine ensures that the
     supplied CapabilitiesSize parameter at least meets the minimum size of the
     relevant capabilities structure.
