@@ -208,7 +208,7 @@ IntGetCodePageEntry(UINT CodePage)
                             sizeof(CodePage) / sizeof(WCHAR)))
         {
             /* Last error is set by GetLocaleInfoW. */
-            return 0;
+            return NULL;
         }
     }
     else if (CodePage == CP_MACCP)
@@ -219,7 +219,7 @@ IntGetCodePageEntry(UINT CodePage)
                             sizeof(CodePage) / sizeof(WCHAR)))
         {
             /* Last error is set by GetLocaleInfoW. */
-            return 0;
+            return NULL;
         }
     }
 
