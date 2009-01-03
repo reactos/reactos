@@ -198,6 +198,15 @@ typedef struct _SOUND_DEVICE_INSTANCE
 {
     struct _SOUND_DEVICE* Device;
     PVOID Handle;
+
+    /* Stuff generously donated to us from WinMM */
+    struct
+    {
+        HDRVR Handle;
+        DWORD Flags;
+        DWORD ClientCallback;
+        DWORD ClientCallbackInstanceData;
+    } WinMM;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 
@@ -223,6 +232,12 @@ ReleaseEntrypointMutex(
 /*
     mme.c
 */
+
+VOID
+NotifyMmeClient(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD Message,
+    IN  DWORD Parameter);
 
 MMRESULT
 MmeGetSoundDeviceCapabilities(
@@ -347,6 +362,14 @@ MMRESULT
 GetSoundDeviceInstanceHandle(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     OUT PVOID* Handle);
+
+MMRESULT
+SetSoundDeviceInstanceMmeData(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  HDRVR MmeHandle,
+    IN  DWORD ClientCallback,
+    IN  DWORD ClientCallbackData,
+    IN  DWORD Flags);
 
 
 /*
@@ -613,14 +636,6 @@ typedef struct _SOUND_DEVICE_INSTANCE
     HANDLE Handle;
 /*    PSOUND_THREAD Thread;*/
 
-    /* Stuff generously donated to us from WinMM */
-    struct
-    {
-        HDRVR Handle;
-        DWORD Flags;
-        DWORD ClientCallback;
-        DWORD ClientCallbackInstanceData;
-    } WinMM;
 
     /* Device-specific parameters */
     union

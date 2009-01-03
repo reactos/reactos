@@ -64,14 +64,18 @@ wodMessage(
 
         case WODM_CLOSE :
         {
-            /*
-                What should happen here?
-                - Validate the sound device instance
-                - Destroy it
-            */
             Result = MmeCloseDevice(PrivateHandle);
 
             break;
+        }
+
+        case WODM_PREPARE :
+        {
+            /*Result = MmeWavePrepare(*/
+        }
+
+        case WODM_UNPREPARE :
+        {
         }
     }
 

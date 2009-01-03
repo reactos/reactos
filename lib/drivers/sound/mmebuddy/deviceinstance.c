@@ -189,3 +189,24 @@ GetSoundDeviceInstanceHandle(
 
     return MMSYSERR_NOERROR;
 }
+
+MMRESULT
+SetSoundDeviceInstanceMmeData(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  HDRVR MmeHandle,
+    IN  DWORD ClientCallback,
+    IN  DWORD ClientCallbackData,
+    IN  DWORD Flags)
+{
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    SND_TRACE(L"Setting MME data - handle %x, callback %x, instance data %x, flags %x\n",
+              MmeHandle, ClientCallback, ClientCallbackData, Flags);
+
+    SoundDeviceInstance->WinMM.Handle = MmeHandle;
+    SoundDeviceInstance->WinMM.ClientCallback = ClientCallback;
+    SoundDeviceInstance->WinMM.ClientCallbackInstanceData = ClientCallbackData;
+    SoundDeviceInstance->WinMM.Flags = Flags;
+
+    return MMSYSERR_NOERROR;
+}

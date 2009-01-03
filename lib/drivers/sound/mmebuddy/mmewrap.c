@@ -16,6 +16,35 @@
 #include <mmebuddy.h>
 
 /*
+    Call the client application when something interesting happens (MME API
+    defines "interesting things" as device open, close, and buffer
+    completion.)
+*/
+VOID
+NotifyMmeClient(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD Message,
+    IN  DWORD Parameter)
+{
+    ASSERT( SoundDeviceInstance );
+
+    SND_TRACE(L"MME client callback - message %d, parameter %d\n",
+              (int) Message,
+              (int) Parameter);
+
+    if ( SoundDeviceInstance->WinMM.ClientCallback )
+    {
+        DriverCallback(SoundDeviceInstance->WinMM.ClientCallback,
+                       HIWORD(SoundDeviceInstance->WinMM.Flags),
+                       SoundDeviceInstance->WinMM.Handle,
+                       Message,
+                       SoundDeviceInstance->WinMM.ClientCallbackInstanceData,
+                       Parameter,
+                       0);
+    }
+}
+
+/*
     This is a helper function to alleviate some of the repetition involved with
     implementing the various MME message functions.
 */
@@ -101,9 +130,19 @@ MmeOpenWaveDevice(
     /* Store the device instance pointer in the private handle - is DWORD safe here? */
     *PrivateHandle = (DWORD) SoundDeviceInstance;
 
-    /* TODO: Call the client application back to say the device is open */
+    /* Store the additional information we were given - FIXME: Need flags! */
+    SetSoundDeviceInstanceMmeData(SoundDeviceInstance,
+                                  (HDRVR)OpenParameters->hWave,
+                                  OpenParameters->dwCallback,
+                                  OpenParameters->dwInstance,
+                                  Flags);
+
+    /* Let the application know the device is open */
     ReleaseEntrypointMutex(DeviceType);
-    /* ... */
+    NotifyMmeClient(SoundDeviceInstance,
+                    DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_OPEN : WIM_OPEN,
+                    0);
+
     AcquireEntrypointMutex(DeviceType);
 
     SND_TRACE(L"Wave device now open\n");
@@ -118,11 +157,27 @@ MmeCloseDevice(
     /* FIXME - Where do we call the callback?? */
     MMRESULT Result;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_DEVICE SoundDevice;
+    MMDEVICE_TYPE DeviceType;
 
     SND_TRACE(L"Closing wave device (WIDM_CLOSE / WODM_CLOSE)\n");
 
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( Result != MMSYSERR_NOERROR )
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    if ( Result != MMSYSERR_NOERROR )
+        return TranslateInternalMmResult(Result);
+
+    ReleaseEntrypointMutex(DeviceType);
+    NotifyMmeClient(SoundDeviceInstance,
+                    DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_CLOSE : WIM_CLOSE,
+                    0);
+    AcquireEntrypointMutex(DeviceType);
 
     Result = DestroySoundDeviceInstance(SoundDeviceInstance);
 
