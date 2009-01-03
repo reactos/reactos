@@ -341,6 +341,7 @@ dll\win32\shimgvw\shimgvw.dll                       1
 dll\win32\shlwapi\shlwapi.dll                       1
 dll\win32\smdll\smdll.dll                           1
 dll\win32\snmpapi\snmpapi.dll                       1
+dll\win32\spoolss\spoolss.dll                       1
 dll\win32\stdole2.tlb\stdole2.tlb                   1
 dll\win32\stdole32.tlb\stdole32.tlb                 1
 dll\win32\sxs\sxs.dll                               1

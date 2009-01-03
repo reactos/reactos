@@ -355,6 +355,9 @@
 <directory name="snmpapi">
 	<xi:include href="snmpapi/snmpapi.rbuild" />
 </directory>
+<directory name="spoolss">
+	<xi:include href="spoolss/spoolss.rbuild" />
+</directory>
 <directory name="stdole2.tlb">
 	<xi:include href="stdole2.tlb/stdole2.rbuild" />
 </directory>
