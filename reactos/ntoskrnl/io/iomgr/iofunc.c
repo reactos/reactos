@@ -1122,8 +1122,8 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
         /* Check if probing failed */
         if (!NT_SUCCESS(Status)) return Status;
 
-        /* Check if we have an correct parameter */
-        if (!CompletionFilter)
+        /* Check if CompletionFilter is valid */
+        if (!CompletionFilter || (CompletionFilter & ~FILE_NOTIFY_VALID_MASK))
         {
             return STATUS_INVALID_PARAMETER;
         }
