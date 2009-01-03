@@ -3297,7 +3297,8 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     }
 
     /* Get the device object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    Status = IoGetRelatedTargetDevice(FileObject, &DeviceObject);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Clear File Object event */
     KeClearEvent(&FileObject->Event);
