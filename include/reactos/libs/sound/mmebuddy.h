@@ -60,6 +60,7 @@
                 ExitProcess(1); \
             } \
         }
+
 #else
     #define SND_ERR(...) while ( 0 ) do {}
     #define SND_WARN(...) while ( 0 ) do {}
@@ -123,6 +124,9 @@
             return MMSYSERR_INVALPARAM; \
         } \
     }
+
+#define MMSUCCESS(result) \
+    ( result == MMSYSERR_NOERROR )
 
 
 /*
@@ -188,6 +192,8 @@ typedef struct _MMFUNCTION_TABLE
 typedef struct _SOUND_DEVICE
 {
     struct _SOUND_DEVICE* Next;
+    struct _SOUND_DEVICE_INSTANCE* HeadInstance;
+    struct _SOUND_DEVICE_INSTANCE* TailInstance;
     MMDEVICE_TYPE Type;
     PVOID Identifier;       /* Path for NT4 drivers */
     /*PWSTR Path;*/
@@ -196,6 +202,7 @@ typedef struct _SOUND_DEVICE
 
 typedef struct _SOUND_DEVICE_INSTANCE
 {
+    struct _SOUND_DEVICE_INSTANCE* Next;
     struct _SOUND_DEVICE* Device;
     PVOID Handle;
 
@@ -324,7 +331,7 @@ GetSoundDeviceType(
 MMRESULT
 SetSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE SoundDevice,
-    IN  PMMFUNCTION_TABLE FunctionTable);
+    IN  PMMFUNCTION_TABLE FunctionTable OPTIONAL);
 
 MMRESULT
 GetSoundDeviceFunctionTable(

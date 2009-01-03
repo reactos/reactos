@@ -24,18 +24,20 @@
 MMRESULT
 SetSoundDeviceFunctionTable(
     IN  PSOUND_DEVICE SoundDevice,
-    IN  PMMFUNCTION_TABLE FunctionTable)
+    IN  PMMFUNCTION_TABLE FunctionTable OPTIONAL)
 {
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
-    VALIDATE_MMSYS_PARAMETER( FunctionTable );
 
     /* Zero out the existing function table (if present) */
     ZeroMemory(&SoundDevice->FunctionTable, sizeof(MMFUNCTION_TABLE));
 
-    /* Fill in the client-supplied functions */
-    CopyMemory(&SoundDevice->FunctionTable,
-               FunctionTable,
-               sizeof(MMFUNCTION_TABLE));
+    if ( FunctionTable )
+    {
+        /* Fill in the client-supplied functions */
+        CopyMemory(&SoundDevice->FunctionTable,
+                   FunctionTable,
+                   sizeof(MMFUNCTION_TABLE));
+    }
 
     return MMSYSERR_NOERROR;
 }

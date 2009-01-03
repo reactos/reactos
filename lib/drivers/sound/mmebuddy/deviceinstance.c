@@ -37,7 +37,9 @@ VOID
 FreeSoundDeviceInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    SND_ASSERT( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+    /* This won't work as the device is no longer valid by this point! */
+    /*SND_ASSERT( IsValidSoundDeviceInstance(SoundDeviceInstance) );*/
+    ZeroMemory(SoundDeviceInstance, sizeof(SOUND_DEVICE_INSTANCE));
     FreeMemory(SoundDeviceInstance);
 }
 
@@ -45,8 +47,27 @@ BOOLEAN
 IsValidSoundDeviceInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    /* TODO - do this better */
-    return ( SoundDeviceInstance != NULL );
+    PSOUND_DEVICE SoundDevice;
+    PSOUND_DEVICE_INSTANCE CurrentInstance;
+
+    if ( ! SoundDeviceInstance )
+        return FALSE;
+
+    /* GetSoundDeviceFromInstance would send us into a recursive loop... */
+    SoundDevice = SoundDeviceInstance->Device;
+    SND_ASSERT(SoundDevice);
+
+    CurrentInstance = SoundDevice->HeadInstance;
+
+    while ( CurrentInstance )
+    {
+        if ( CurrentInstance == SoundDeviceInstance )
+            return TRUE;
+
+        CurrentInstance = CurrentInstance->Next;
+    }
+
+    return FALSE;
 }
 
 MMRESULT
@@ -54,14 +75,72 @@ ListSoundDeviceInstance(
     IN  PSOUND_DEVICE SoundDevice,
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    return MMSYSERR_NOTSUPPORTED;
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDevice(SoundDevice) );
+    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
+
+    SND_TRACE(L"Listing sound device instance\n");
+
+    if ( ! SoundDevice->HeadInstance )
+    {
+        /* First entry - assign to head and tail */
+        SoundDevice->HeadInstance = SoundDeviceInstance;
+        SoundDevice->TailInstance = SoundDeviceInstance;
+    }
+    else
+    {
+        /* Attach to the end */
+        SoundDevice->TailInstance->Next = SoundDeviceInstance;
+        SoundDevice->TailInstance = SoundDeviceInstance;
+    }
+
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
 UnlistSoundDeviceInstance(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance)
 {
-    return MMSYSERR_NOTSUPPORTED;
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PSOUND_DEVICE_INSTANCE CurrentInstance, PreviousInstance;
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    SND_TRACE(L"Unlisting sound device instance\n");
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    SND_ASSERT( MMSUCCESS(Result) );
+
+    PreviousInstance = NULL;
+    CurrentInstance = SoundDevice->HeadInstance;
+
+    while ( CurrentInstance )
+    {
+        if ( CurrentInstance == SoundDeviceInstance )
+        {
+            if ( ! PreviousInstance )
+            {
+                /* This is the head node */
+                SoundDevice->HeadInstance = SoundDevice->HeadInstance->Next;
+            }
+            else
+            {
+                /* There are nodes before this one - cut ours out */
+                PreviousInstance->Next = CurrentInstance->Next;
+            }
+
+            if ( ! CurrentInstance->Next )
+            {
+                /* This is the tail node */
+                SoundDevice->TailInstance = PreviousInstance;
+            }
+        }
+
+        PreviousInstance = CurrentInstance;
+        CurrentInstance = CurrentInstance->Next;
+    }
+
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
@@ -97,17 +176,31 @@ CreateSoundDeviceInstance(
     }
 
     /* Set up the members of the structure */
+    (*SoundDeviceInstance)->Next = NULL; 
     (*SoundDeviceInstance)->Device = SoundDevice;
+    (*SoundDeviceInstance)->Handle = NULL;
 
-    /* Try and open the device */
-    Result = FunctionTable->Open(SoundDevice, (&(*SoundDeviceInstance)->Handle));
-    if ( Result != MMSYSERR_NOERROR )
+    (*SoundDeviceInstance)->WinMM.Handle = NULL;
+    (*SoundDeviceInstance)->WinMM.ClientCallback = 0;
+    (*SoundDeviceInstance)->WinMM.ClientCallbackInstanceData = 0;
+    (*SoundDeviceInstance)->WinMM.Flags = 0;
+
+    /* Add the instance to the list */
+    Result = ListSoundDeviceInstance(SoundDevice, *SoundDeviceInstance);
+    if ( ! MMSUCCESS(Result) )
     {
         FreeSoundDeviceInstance(*SoundDeviceInstance);
         return TranslateInternalMmResult(Result);
     }
 
-    /* TODO: List device */
+    /* Try and open the device */
+    Result = FunctionTable->Open(SoundDevice, (&(*SoundDeviceInstance)->Handle));
+    if ( ! MMSUCCESS(Result) )
+    {
+        UnlistSoundDeviceInstance(*SoundDeviceInstance);
+        FreeSoundDeviceInstance(*SoundDeviceInstance);
+        return TranslateInternalMmResult(Result);
+    }
 
     return MMSYSERR_NOERROR;
 }
@@ -126,18 +219,16 @@ DestroySoundDeviceInstance(
     VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
-    /* TODO: Unlist */
-
     Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     /* Get the "close" routine from the function table, and validate it */
     Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     SND_ASSERT( FunctionTable->Close );
@@ -149,7 +240,12 @@ DestroySoundDeviceInstance(
 
     /* Try and close the device */
     Result = FunctionTable->Close(SoundDeviceInstance, Handle);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    /* Drop it from the list */
+    Result = UnlistSoundDeviceInstance(SoundDeviceInstance);
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     FreeSoundDeviceInstance(SoundDeviceInstance);

@@ -172,6 +172,8 @@ ListSoundDevice(
 
     /* Set up other members of the structure */
     NewDevice->Identifier = Identifier;
+    NewDevice->HeadInstance = NULL;
+    NewDevice->TailInstance = NULL;
 
     /* Fill in the caller's PSOUND_DEVICE */
     if ( SoundDevice )
