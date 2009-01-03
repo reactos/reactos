@@ -2250,11 +2250,6 @@ DestroyPrivateObjectSecurity(PSECURITY_DESCRIPTOR *ObjectDescriptor)
 }
 
 
-#if 0
-//
-// Use when RtlQuerySecurityObject is implemented
-//
-
 /*
  * @implemented
  */
@@ -2284,65 +2279,6 @@ GetPrivateObjectSecurity(IN PSECURITY_DESCRIPTOR ObjectDescriptor,
     /* Success */
     return TRUE;
 }
-#else
-//
-// Wine's implementation (as of December 30th 2008)
-//
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-GetPrivateObjectSecurity(IN PSECURITY_DESCRIPTOR ObjectDescriptor,
-                         IN SECURITY_INFORMATION SecurityInformation,
-                         OUT PSECURITY_DESCRIPTOR ResultantDescriptor OPTIONAL,
-                         IN DWORD DescriptorLength,
-                         OUT PDWORD ReturnLength)
-{
-    SECURITY_DESCRIPTOR desc;
-    BOOL defaulted, present;
-    PACL pacl;
-    PSID psid;
-
-    TRACE("(%p,0x%08x,%p,0x%08x,%p)\n", ObjectDescriptor, SecurityInformation,
-          ResultantDescriptor, DescriptorLength, ReturnLength);
-
-    if (!InitializeSecurityDescriptor(&desc, SECURITY_DESCRIPTOR_REVISION))
-        return FALSE;
-
-    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
-    {
-        if (!GetSecurityDescriptorOwner(ObjectDescriptor, &psid, &defaulted))
-            return FALSE;
-        SetSecurityDescriptorOwner(&desc, psid, defaulted);
-    }
-
-    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
-    {
-        if (!GetSecurityDescriptorGroup(ObjectDescriptor, &psid, &defaulted))
-            return FALSE;
-        SetSecurityDescriptorGroup(&desc, psid, defaulted);
-    }
-
-    if (SecurityInformation & DACL_SECURITY_INFORMATION)
-    {
-        if (!GetSecurityDescriptorDacl(ObjectDescriptor, &present, &pacl, &defaulted))
-            return FALSE;
-        SetSecurityDescriptorDacl(&desc, present, pacl, defaulted);
-    }
-
-    if (SecurityInformation & SACL_SECURITY_INFORMATION)
-    {
-        if (!GetSecurityDescriptorSacl(ObjectDescriptor, &present, &pacl, &defaulted))
-            return FALSE;
-        SetSecurityDescriptorSacl(&desc, present, pacl, defaulted);
-    }
-
-    *ReturnLength = DescriptorLength;
-    return MakeSelfRelativeSD(&desc, ResultantDescriptor, ReturnLength);
-}
-#endif
 
 
 /*
