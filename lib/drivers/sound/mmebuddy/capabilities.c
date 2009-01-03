@@ -44,14 +44,14 @@ GetSoundDeviceCapabilities(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     /* Obtain the function table */
     Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     /* Check that the capabilities structure is of a valid size */

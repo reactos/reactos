@@ -158,12 +158,12 @@ CreateSoundDeviceInstance(
 
     Result = AllocateSoundDeviceInstance(SoundDeviceInstance);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     /* Get the "open" routine from the function table, and validate it */
     Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         FreeSoundDeviceInstance(*SoundDeviceInstance);
         return TranslateInternalMmResult(Result);
@@ -179,11 +179,20 @@ CreateSoundDeviceInstance(
     (*SoundDeviceInstance)->Next = NULL; 
     (*SoundDeviceInstance)->Device = SoundDevice;
     (*SoundDeviceInstance)->Handle = NULL;
+    (*SoundDeviceInstance)->Thread = NULL;
 
-    (*SoundDeviceInstance)->WinMM.Handle = NULL;
+    (*SoundDeviceInstance)->WinMM.Handle = INVALID_HANDLE_VALUE;
     (*SoundDeviceInstance)->WinMM.ClientCallback = 0;
     (*SoundDeviceInstance)->WinMM.ClientCallbackInstanceData = 0;
     (*SoundDeviceInstance)->WinMM.Flags = 0;
+
+    /* Create the streaming thread (TODO - is this for wave only?) */
+    Result = CreateSoundThread(&(*SoundDeviceInstance)->Thread);
+    if ( ! MMSUCCESS(Result) )
+    {
+        FreeSoundDeviceInstance(*SoundDeviceInstance);
+        return TranslateInternalMmResult(Result);
+    }
 
     /* Add the instance to the list */
     Result = ListSoundDeviceInstance(SoundDevice, *SoundDeviceInstance);

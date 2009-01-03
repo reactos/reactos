@@ -47,7 +47,7 @@ GetSoundBlasterDeviceCapabilities(
                                            Capabilities,
                                            CapabilitiesSize);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return Result;
 
     /* Inject the appropriate device name */
@@ -90,7 +90,7 @@ BOOLEAN FoundDevice(
 
     Result = ListSoundDevice(DeviceType, (PVOID) PathCopy, &SoundDevice);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         return TranslateInternalMmResult(Result);
         return FALSE;
@@ -102,6 +102,9 @@ BOOLEAN FoundDevice(
     FuncTable.SetWaveFormat = SetNt4WaveDeviceFormat;
     FuncTable.Open = OpenNt4SoundDevice;
     FuncTable.Close = CloseNt4SoundDevice;
+    FuncTable.PrepareWaveHeader = NULL;
+    FuncTable.UnprepareWaveHeader = NULL;
+    FuncTable.SubmitWaveHeader = NULL;
 
     SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
 
@@ -126,14 +129,14 @@ DriverProc(
 
             Result = InitEntrypointMutexes();
 
-            if ( Result != MMSYSERR_NOERROR )
+            if ( ! MMSUCCESS(Result) )
                 return 0L;
 
             Result = EnumerateNt4ServiceSoundDevices(L"sndblst",
                                                      0,
                                                      FoundDevice);
 
-            if ( Result != MMSYSERR_NOERROR )
+            if ( ! MMSUCCESS(Result) )
             {
                 CleanupEntrypointMutexes();
 

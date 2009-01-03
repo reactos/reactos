@@ -67,7 +67,7 @@ MmeGetSoundDeviceCapabilities(
     /* Our parameter checks are done elsewhere */
     Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return Result;
 
     return GetSoundDeviceCapabilities(SoundDevice,
@@ -97,12 +97,12 @@ MmeOpenWaveDevice(
     Format = OpenParameters->lpFormat;
 
     Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     /* Does this device support the format? */
     Result = QueryWaveDeviceFormatSupport(SoundDevice, Format, sizeof(WAVEFORMATEX));
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         SND_ERR(L"Format not supported\n");
         return TranslateInternalMmResult(Result);
@@ -117,11 +117,11 @@ MmeOpenWaveDevice(
 
     /* Create a sound device instance and open the sound device */
     Result = CreateSoundDeviceInstance(SoundDevice, &SoundDeviceInstance);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     Result = SetWaveDeviceFormat(SoundDeviceInstance, Format, sizeof(WAVEFORMATEX));
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         /* TODO: Destroy sound instance */
         return TranslateInternalMmResult(Result);
@@ -154,7 +154,6 @@ MMRESULT
 MmeCloseDevice(
     IN  DWORD PrivateHandle)
 {
-    /* FIXME - Where do we call the callback?? */
     MMRESULT Result;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
     PSOUND_DEVICE SoundDevice;
@@ -166,11 +165,11 @@ MmeCloseDevice(
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     ReleaseEntrypointMutex(DeviceType);

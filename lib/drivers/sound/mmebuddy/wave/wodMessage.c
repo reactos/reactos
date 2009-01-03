@@ -17,6 +17,15 @@
 
 #include <mmebuddy.h>
 
+#if 0
+MMRESULT HelloWorld(PSOUND_DEVICE_INSTANCE Instance, PVOID String)
+{
+    PWSTR WString = (PWSTR) String;
+    SND_TRACE(WString);
+    return MMSYSERR_NOTSUPPORTED;
+}
+#endif
+
 /*
     Standard MME driver entry-point for messages relating to wave audio
     output.
@@ -71,11 +80,32 @@ wodMessage(
 
         case WODM_PREPARE :
         {
-            /*Result = MmeWavePrepare(*/
+            /* TODO: Do we need to pass 2nd parameter? */
+            Result = MmePrepareWaveHeader(PrivateHandle, Parameter1);
+            break;
         }
 
         case WODM_UNPREPARE :
         {
+            Result = MmeUnprepareWaveHeader(PrivateHandle, Parameter1);
+            break;
+        }
+
+        case WODM_WRITE :
+        {
+            Result = MmeSubmitWaveHeader(PrivateHandle, Parameter1);
+            break;
+        }
+
+        case WODM_GETPOS :
+        {
+#if 0
+            /* Hacky code to test the threading */
+            PSOUND_DEVICE_INSTANCE Instance = (PSOUND_DEVICE_INSTANCE)PrivateHandle;
+            CallSoundThread(Instance->Thread, HelloWorld, Instance, L"Hello World!");
+            CallSoundThread(Instance->Thread, HelloWorld, Instance, L"Hello Universe!");
+#endif
+            break;
         }
     }
 

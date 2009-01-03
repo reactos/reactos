@@ -32,7 +32,7 @@ OpenNt4KernelSoundDevice(
     VALIDATE_MMSYS_PARAMETER( Handle );
 
     Result = GetSoundDeviceIdentifier(SoundDevice, (PVOID*) &Path);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         SND_ERR(L"Unable to get sound device path");
         return TranslateInternalMmResult(Result);
@@ -99,7 +99,7 @@ GetNt4SoundDeviceCapabilities(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    if ( Result != MMSYSERR_NOERROR );
+    if ( ! MMSUCCESS(Result) );
         return TranslateInternalMmResult(Result);
 
     /* Choose the appropriate IOCTL */
@@ -120,7 +120,7 @@ GetNt4SoundDeviceCapabilities(
     /* Get the capabilities information from the driver */
     Result = OpenNt4KernelSoundDevice(SoundDevice, TRUE, &DeviceHandle);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         SND_ERR(L"Failed to open device");
         return TranslateInternalMmResult(Result);
@@ -136,7 +136,7 @@ GetNt4SoundDeviceCapabilities(
 
     CloseKernelSoundDevice(DeviceHandle);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         SND_ERR(L"Retrieval of capabilities information failed\n");
         Result = TranslateInternalMmResult(Result);
@@ -170,7 +170,7 @@ QueryNt4WaveDeviceFormatSupport(
                                       FALSE,
                                       &Handle);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         SND_ERR(L"Unable to open kernel sound device\n");
         return TranslateInternalMmResult(Result);
@@ -184,7 +184,7 @@ QueryNt4WaveDeviceFormatSupport(
                                            0,
                                            NULL);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         SND_ERR(L"Sync overlapped I/O failed - MMSYS_ERROR %d\n", Result);
         Result = TranslateInternalMmResult(Result);
@@ -210,7 +210,7 @@ SetNt4WaveDeviceFormat(
 
     Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     SND_TRACE(L"Setting wave device format on handle %x\n", Handle);
@@ -223,7 +223,7 @@ SetNt4WaveDeviceFormat(
                                            0,
                                            NULL);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     return MMSYSERR_NOERROR;

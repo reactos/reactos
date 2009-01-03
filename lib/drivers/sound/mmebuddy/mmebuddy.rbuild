@@ -11,10 +11,12 @@
 	<file>reentrancy.c</file>
 	<file>utility.c</file>
 	<file>kernel.c</file>
+    <file>thread.c</file>
 	<directory name="wave">
 		<file>widMessage.c</file>
 		<file>wodMessage.c</file>
 		<file>format.c</file>
+        <file>header.c</file>
 	</directory>
 	<directory name="midi">
 		<file>midMessage.c</file>

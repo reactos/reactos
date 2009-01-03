@@ -145,7 +145,7 @@ ListSoundDevice(
 
     Result = AllocateSoundDevice(DeviceType, &NewDevice);
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
     {
         SND_ERR(L"Failed to allocate SOUND_DEVICE structure\n");
         return Result;

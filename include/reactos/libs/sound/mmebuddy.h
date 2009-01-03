@@ -153,6 +153,9 @@ DEFINE_GETCAPS_FUNCTYPE(MMGETWAVEINCAPS_FUNC,  LPWAVEINCAPS );
 DEFINE_GETCAPS_FUNCTYPE(MMGETMIDIOUTCAPS_FUNC, LPMIDIOUTCAPS);
 DEFINE_GETCAPS_FUNCTYPE(MMGETMIDIINCAPS_FUNC,  LPMIDIINCAPS );
 
+struct _SOUND_DEVICE;
+struct _SOUND_DEVICE_INSTANCE;
+
 typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
     IN  struct _SOUND_DEVICE* Device,
     IN  PWAVEFORMATEX WaveFormat,
@@ -171,6 +174,10 @@ typedef MMRESULT (*MMCLOSE_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  PVOID Handle);  /* not sure about this */
 
+typedef MMRESULT (*MMWAVEHEADER_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  PWAVEHDR WaveHeader);
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -187,7 +194,36 @@ typedef struct _MMFUNCTION_TABLE
 
     MMWAVEQUERYFORMATSUPPORT_FUNC   QueryWaveFormatSupport;
     MMWAVESETFORMAT_FUNC            SetWaveFormat;
+
+    MMWAVEHEADER_FUNC               PrepareWaveHeader;
+    MMWAVEHEADER_FUNC               UnprepareWaveHeader;
+    MMWAVEHEADER_FUNC               SubmitWaveHeader;
 } MMFUNCTION_TABLE, *PMMFUNCTION_TABLE;
+
+typedef MMRESULT (*SOUND_THREAD_REQUEST_HANDLER)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  PVOID Parameter);
+
+typedef struct _SOUND_THREAD
+{
+    HANDLE Handle;
+    BOOL Running;
+
+    struct
+    {
+        HANDLE Ready;
+        HANDLE Request;
+        HANDLE Done;
+    } Events;
+
+    struct
+    {
+        SOUND_THREAD_REQUEST_HANDLER Handler;
+        struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
+        PVOID Parameter;
+        MMRESULT Result;
+    } Request;
+} SOUND_THREAD, *PSOUND_THREAD;
 
 typedef struct _SOUND_DEVICE
 {
@@ -205,6 +241,7 @@ typedef struct _SOUND_DEVICE_INSTANCE
     struct _SOUND_DEVICE_INSTANCE* Next;
     struct _SOUND_DEVICE* Device;
     PVOID Handle;
+    struct _SOUND_THREAD* Thread;
 
     /* Stuff generously donated to us from WinMM */
     struct
@@ -215,7 +252,6 @@ typedef struct _SOUND_DEVICE_INSTANCE
         DWORD ClientCallbackInstanceData;
     } WinMM;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
-
 
 /*
     reentrancy.c
@@ -264,6 +300,15 @@ MmeOpenWaveDevice(
 MMRESULT
 MmeCloseDevice(
     IN  DWORD PrivateHandle);
+
+#define MmePrepareWaveHeader(private_handle, header) \
+    PrepareWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
+
+#define MmeUnprepareWaveHeader(private_handle, header) \
+    UnprepareWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
+
+#define MmeSubmitWaveHeader(private_handle, header) \
+    SubmitWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
 
 
 /*
@@ -380,6 +425,26 @@ SetSoundDeviceInstanceMmeData(
 
 
 /*
+    thread.c
+*/
+
+MMRESULT
+CreateSoundThread(
+    OUT PSOUND_THREAD* Thread);
+
+MMRESULT
+DestroySoundThread(
+    IN  PSOUND_THREAD Thread);
+
+MMRESULT
+CallSoundThread(
+    IN  PSOUND_THREAD Thread,
+    IN  SOUND_THREAD_REQUEST_HANDLER RequestHandler,
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance OPTIONAL,
+    IN  PVOID Parameter OPTIONAL);
+
+
+/*
     utility.c
 */
 
@@ -422,6 +487,26 @@ SetWaveDeviceFormat(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  LPWAVEFORMATEX Format,
     IN  DWORD FormatSize);
+
+
+/*
+    wave/header.c
+*/
+
+MMRESULT
+PrepareWaveHeader(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PWAVEHDR Header);
+
+MMRESULT
+UnprepareWaveHeader(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PWAVEHDR Header);
+
+MMRESULT
+SubmitWaveHeader(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PWAVEHDR Header);
 
 
 /*

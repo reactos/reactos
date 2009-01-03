@@ -41,7 +41,7 @@ QueryWaveDeviceFormatSupport(
     Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     if ( ! FunctionTable->QueryWaveFormatSupport )
@@ -68,7 +68,7 @@ SetWaveDeviceFormat(
     VALIDATE_MMSYS_PARAMETER( FormatSize >= sizeof(WAVEFORMATEX) );
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
@@ -81,7 +81,7 @@ SetWaveDeviceFormat(
     Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    if ( Result != MMSYSERR_NOERROR )
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     if ( ! FunctionTable->SetWaveFormat )
