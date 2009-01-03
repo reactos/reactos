@@ -1148,7 +1148,11 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
                                            PreviousMode,
                                            (PVOID *)&Event,
                                            NULL);
-        if (Status != STATUS_SUCCESS) return Status;
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
         KeClearEvent(Event);
     }
 
