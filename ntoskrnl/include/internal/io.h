@@ -669,6 +669,12 @@ IopDereferenceDeviceObject(
     IN BOOLEAN ForceUnload
 );
 
+NTSTATUS
+NTAPI
+IoGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
+                         OUT PDEVICE_OBJECT *DeviceObject
+);
+
 //
 // IRP Routines
 //

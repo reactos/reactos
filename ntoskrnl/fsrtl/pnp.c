@@ -43,8 +43,7 @@ FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,
     PDEVICE_OBJECT DeviceObject = NULL;
     TARGET_DEVICE_CUSTOM_NOTIFICATION Notification;
 
-    /* FIXME: We should call IoGetRelatedTargetDevice here */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    IoGetRelatedTargetDevice(FileObject, &DeviceObject);
     if (DeviceObject)
     {
         Notification.Version = 1;

@@ -552,6 +552,49 @@ IopStartNextPacketByKeyEx(IN PDEVICE_OBJECT DeviceObject,
     }
 }
 
+NTSTATUS
+NTAPI
+IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
+                          OUT PDEVICE_NODE *DeviceNode)
+{
+    NTSTATUS Status;
+    IO_STACK_LOCATION Stack;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_RELATIONS DeviceRelations;
+    PDEVICE_OBJECT DeviceObject = NULL;
+
+    ASSERT(FileObject);
+
+    /* Get DeviceObject related to given FileObject */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    if (!DeviceObject)
+    {
+        return STATUS_NO_SUCH_DEVICE;
+    }
+
+    /* Call the driver to query all the relations (IRP_MJ_PNP) */
+    Status = IopInitiatePnpIrp(DeviceObject, &IoStatusBlock,
+                               IRP_MN_QUERY_DEVICE_RELATIONS, &Stack);
+    if (NT_SUCCESS(Status))
+    {
+        DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+        ASSERT(DeviceRelations);
+        ASSERT(DeviceRelations->Count == 1);
+
+        /* We finally get the device node */
+        *DeviceNode = (PDEVICE_NODE)((PEXTENDED_DEVOBJ_EXTENSION)DeviceRelations->Objects[0]->DeviceObjectExtension)->DeviceNode;
+        if (!*DeviceNode)
+        {
+            Status = STATUS_NO_SUCH_DEVICE;
+        }
+
+        /* Free the DEVICE_RELATIONS structure, we don't need it anymore */
+        ExFreePool(DeviceRelations);
+    }
+
+    return Status;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1205,6 +1248,26 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
 
     /* Return the DO we found */
     return DeviceObject;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+IoGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
+                         OUT PDEVICE_OBJECT *DeviceObject)
+{
+    NTSTATUS Status;
+    PDEVICE_NODE DeviceNode = NULL;
+
+    /* We call the internal function to do all the work */
+    Status = IopGetRelatedTargetDevice(FileObject, &DeviceNode);
+    if (NT_SUCCESS(Status) && DeviceNode)
+    {
+        *DeviceObject = DeviceNode->PhysicalDeviceObject;
+    }
+    return Status;
 }
 
 /*
