@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mmebuddy/header.c
+ * FILE:        lib/drivers/sound/mmebuddy/header.c
  *
  * PURPOSE:     Wave header preparation routines
  *

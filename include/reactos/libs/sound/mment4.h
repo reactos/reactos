@@ -1,16 +1,17 @@
 /*
-    ReactOS Sound System
-    MME Support Helper (NT4 Specific Parts)
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        31 December 2008 - Created
-
-    Notes:
-        This is intended for use in building NT4 compatible audio device
-        drivers. Include mmebuddy.h first.
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library (NT4 Helpers)
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        include/reactos/libs/sound/mment4.h
+ *
+ * PURPOSE:     Header for the NT4 part of the "MME Buddy" helper library
+ *              (located in lib/drivers/sound/mment4)
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
+ *
+ *              31 Dec 2008 - Created
+ *
+ * NOTES:       This is intended for use in building NT4 compatible audio device
+ *              drivers. Include mmebuddy.h first.
 */
 
 #ifndef ROS_AUDIO_MMENT4_H

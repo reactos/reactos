@@ -1,17 +1,15 @@
 /*
-    ReactOS Sound System
-    Sound Blaster MME Driver
-
-    Purpose:
-        MME driver entry-point
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        6 July 2008 - Created
-
-    TODO: Adhere to maximum device name length!
+ * PROJECT:     ReactOS Sound System
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/sndblst/sndblst.c
+ *
+ * PURPOSE:     Sound Blaster MME User-Mode Driver
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
+ *
+ * NOTES:       Currently very experimental and being used as a guinea-pig for
+ *              changes to the MME-Buddy libraries.
+ *              TODO: Adhere to maximum device name length!
 */
 
 #include <windows.h>

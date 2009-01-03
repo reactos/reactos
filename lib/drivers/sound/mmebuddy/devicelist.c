@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mmebuddy/devicelist.c
+ * FILE:        lib/drivers/sound/mmebuddy/devicelist.c
  *
  * PURPOSE:     Manages lists of sound devices.
  *

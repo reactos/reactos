@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mmebuddy/capabilities.c
+ * FILE:        lib/drivers/sound/mmebuddy/capabilities.c
  *
  * PURPOSE:     Queries sound devices for their capabilities.
  *

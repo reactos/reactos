@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" NT4 Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mment4/control.c
+ * FILE:        lib/drivers/sound/mment4/control.c
  *
  * PURPOSE:     Device control for NT4 audio devices
  *

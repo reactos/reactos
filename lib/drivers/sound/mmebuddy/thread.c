@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mmebuddy/thread.c
+ * FILE:        lib/drivers/sound/mmebuddy/thread.c
  *
  * PURPOSE:     Multimedia thread management
  *

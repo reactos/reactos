@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" NT4 Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mment4/detect.c
+ * FILE:        lib/drivers/sound/mment4/detect.c
  *
  * PURPOSE:     Assists in locating Windows NT4 compatible sound devices,
  *              which mostly use the same device naming convention and/or

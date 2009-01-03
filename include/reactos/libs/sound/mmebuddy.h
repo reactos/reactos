@@ -1,19 +1,19 @@
 /*
-    ReactOS Sound System
-    MME Support Helper
-
-    Author:
-        Andrew Greenwood (silverblade@reactos.org)
-
-    History:
-        4 July 2008 - Created
-        31 Dec 2008 - Split off NT4-specific code into a separate library
-
-    Notes:
-        MME Buddy was the best name I could come up with...
-
-        The structures etc. here should be treated as internal to the
-        library so should not be directly accessed elsewhere.
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        include/reactos/libs/sound/mmebuddy.h
+ *
+ * PURPOSE:     Header for the "MME Buddy" helper library (located in
+ *              lib/drivers/sound/mmebuddy)
+ *
+ * PROGRAMMERS: Andrew Greenwood (silverblade@reactos.org)
+ *
+ * HISTORY:     4 July 2008 - Created
+ *              31 Dec 2008 - Split off NT4-specific code into a separate library
+ *
+ * NOTES:       MME Buddy was the best name I could come up with...
+ *              The structures etc. here should be treated as internal to the
+ *              library so should not be directly accessed elsewhere.
 */
 
 #ifndef ROS_AUDIO_MMEBUDDY_H

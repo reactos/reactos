@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mmebuddy/wave/wodMessage.c
+ * FILE:        lib/drivers/sound/mmebuddy/wave/wodMessage.c
  *
  * PURPOSE:     Provides the wodMessage exported function, as required by
  *              the MME API, for wave output device support.
