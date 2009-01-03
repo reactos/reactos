@@ -586,13 +586,13 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
         ASSERT(DeviceRelations->Count == 1);
 
         /* We finally get the device node */
-        *DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceRelations->Objects[0]->DeviceObjectExtension)->DeviceNode;
+        *DeviceNode = IopGetDeviceNode(DeviceRelations->Objects[0]);
         if (!*DeviceNode)
         {
             Status = STATUS_NO_SUCH_DEVICE;
         }
 
-        /* Free the DEVICE_RELATIONS structure, it's not needed it anymore */
+        /* Free the DEVICE_RELATIONS structure, it's not needed anymore */
         ExFreePool(DeviceRelations);
     }
 
