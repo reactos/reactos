@@ -616,7 +616,6 @@ modules\rosapps\applications\write\write.exe                                    
 modules\rosapps\demos\ddraw\ddraw_demo.exe                                 1   optional
 modules\rosapps\demos\maze\maze.exe                                        1   optional
 modules\rosapps\dflat32\edit.exe                                           1   optional
-modules\rosapps\drivers\avtest\avtest.sys                                  2   optional
 modules\rosapps\drivers\green\green.sys                                    2   optional
 modules\rosapps\templates\dialog\dialog.exe                                1   optional
 modules\rostests\tests\pseh2\pseh2_test.exe                                7   optional
