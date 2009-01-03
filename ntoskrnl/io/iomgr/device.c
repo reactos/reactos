@@ -572,6 +572,10 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
         return STATUS_NO_SUCH_DEVICE;
     }
 
+    /* We define input parameters */
+    Stack.Parameters.QueryDeviceRelations.Type = TargetDeviceRelation;
+    Stack.FileObject = FileObject;
+
     /* Call the driver to query all the relations (IRP_MJ_PNP) */
     Status = IopInitiatePnpIrp(DeviceObject, &IoStatusBlock,
                                IRP_MN_QUERY_DEVICE_RELATIONS, &Stack);
@@ -582,7 +586,7 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
         ASSERT(DeviceRelations->Count == 1);
 
         /* We finally get the device node */
-        *DeviceNode = (PDEVICE_NODE)((PEXTENDED_DEVOBJ_EXTENSION)DeviceRelations->Objects[0]->DeviceObjectExtension)->DeviceNode;
+        *DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceRelations->Objects[0]->DeviceObjectExtension)->DeviceNode;
         if (!*DeviceNode)
         {
             Status = STATUS_NO_SUCH_DEVICE;

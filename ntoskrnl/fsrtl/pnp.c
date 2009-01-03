@@ -38,14 +38,16 @@ NTAPI
 FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,
                        IN ULONG EventCode)
 {
+    NTSTATUS Status;
     LPGUID Guid = NULL;
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PDEVICE_OBJECT DeviceObject = NULL;
     TARGET_DEVICE_CUSTOM_NOTIFICATION Notification;
 
-    IoGetRelatedTargetDevice(FileObject, &DeviceObject);
-    if (DeviceObject)
+    Status = IoGetRelatedTargetDevice(FileObject, &DeviceObject);
+    if (NT_SUCCESS(Status))
     {
+        Status = STATUS_INVALID_PARAMETER;
+
         Notification.Version = 1;
         Notification.Size = sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION);
         /* MSDN says that FileObject must be null
