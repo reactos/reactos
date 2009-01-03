@@ -572,7 +572,7 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
         return STATUS_NO_SUCH_DEVICE;
     }
 
-    /* We define input parameters */
+    /* Define input parameters */
     Stack.Parameters.QueryDeviceRelations.Type = TargetDeviceRelation;
     Stack.FileObject = FileObject;
 
@@ -592,7 +592,7 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
             Status = STATUS_NO_SUCH_DEVICE;
         }
 
-        /* Free the DEVICE_RELATIONS structure, we don't need it anymore */
+        /* Free the DEVICE_RELATIONS structure, it's not needed it anymore */
         ExFreePool(DeviceRelations);
     }
 
