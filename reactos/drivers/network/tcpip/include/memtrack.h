@@ -25,20 +25,20 @@
 
 typedef struct _ALLOCATION_TRACKER {
     LIST_ENTRY Entry;
-    DWORD Tag;
+    ULONG Tag;
     PVOID Thing;
     PCHAR FileName;
-    DWORD LineNo;
+    ULONG LineNo;
 } ALLOCATION_TRACKER, *PALLOCATION_TRACKER;
 
 VOID TrackingInit();
-VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR File, DWORD Line );
+VOID TrackWithTag( ULONG Tag, PVOID Thing, PCHAR File, ULONG Line );
 #define Track(Tag,Thing) TrackWithTag(Tag,Thing,__FILE__,__LINE__)
-VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing, DWORD Tag );
+VOID UntrackFL( PCHAR File, ULONG Line, PVOID Thing, ULONG Tag );
 #define Untrack(Thing) UntrackFL(__FILE__,__LINE__,Thing)
-VOID TrackDumpFL( PCHAR File, DWORD Line );
+VOID TrackDumpFL( PCHAR File, ULONG Line );
 #define TrackDump() TrackDumpFL(__FILE__,__LINE__)
-VOID TrackTag( DWORD Tag );
+VOID TrackTag( ULONG Tag );
 
 static __inline PVOID ExAllocateFromNPagedLookasideListX( PNPAGED_LOOKASIDE_LIST List, PCHAR File, ULONG Line ) {
     PVOID Out = ExAllocateFromNPagedLookasideList( List );
