@@ -44,11 +44,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             if (Class)
             {
                 /* Probe it */
-                ProbeForReadUnicodeString(Class);
+                ParseContext.Class = ProbeForReadUnicodeString(Class);
                 ProbeForRead(ParseContext.Class.Buffer,
                              ParseContext.Class.Length,
                              sizeof(WCHAR));
-                ParseContext.Class = *Class;
             }
 
             /* Probe the key handle */
