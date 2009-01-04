@@ -4577,11 +4577,20 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
       {
          ASSERT(Wnd->WindowName.Buffer != NULL);
 
-         Wnd->WindowName.Length = SafeText.Length;
-         Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
-         RtlCopyMemory(Wnd->WindowName.Buffer,
-                              SafeText.Buffer,
-                              SafeText.Length);
+         _SEH2_TRY
+         {
+            Wnd->WindowName.Length = SafeText.Length;
+            Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
+            RtlCopyMemory(Wnd->WindowName.Buffer,
+                          SafeText.Buffer,
+                          SafeText.Length);
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+            Ret = FALSE;
+            SetLastNtError(_SEH2_GetExceptionCode());
+         }
+         _SEH2_END;
       }
       else
       {
@@ -4598,12 +4607,23 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
                                                    SafeText.Length + sizeof(UNICODE_NULL));
          if (Wnd->WindowName.Buffer != NULL)
          {
-            Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
-            RtlCopyMemory(Wnd->WindowName.Buffer,
-                                 SafeText.Buffer,
-                                 SafeText.Length);
-            Wnd->WindowName.MaximumLength = SafeText.Length + sizeof(UNICODE_NULL);
-            Wnd->WindowName.Length = SafeText.Length;
+            _SEH2_TRY
+            {
+               Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
+               RtlCopyMemory(Wnd->WindowName.Buffer,
+                             SafeText.Buffer,
+                             SafeText.Length);
+               Wnd->WindowName.MaximumLength = SafeText.Length + sizeof(UNICODE_NULL);
+               Wnd->WindowName.Length = SafeText.Length;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Wnd->WindowName.Buffer = NULL;
+                DesktopHeapFree(Wnd->pdesktop, Wnd->WindowName.Buffer);
+                Ret = FALSE;
+                SetLastNtError(_SEH2_GetExceptionCode());
+            }
+            _SEH2_END;
          }
          else
          {
