@@ -482,7 +482,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
     { #idlo, 4, 0x##idlo, #idhi, 4, 0x##idhi, rev, mode, name, flags}
 #else
   #define PCI_DEV_HW_SPEC_BM(idhi, idlo, rev, mode, name, flags) \
-    { #idlo, 4, 0x##idlo, #idhi, 4, 0x##idhi, rev, mode, NULL, flags}
+    { (PCHAR) #idlo, 4, 0x##idlo, (PCHAR) #idhi, 4, 0x##idhi, rev, mode, NULL, flags}
 #endif
 
 #define BMLIST_TERMINATOR   (0xffffffffL)

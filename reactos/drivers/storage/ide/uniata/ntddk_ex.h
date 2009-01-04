@@ -1,15 +1,11 @@
 #ifndef __NTDDK_EX__H__
 #define __NTDDK_EX__H__
 
-#ifndef __REACTOS__
+#ifdef ASSERT
 #undef ASSERT
-#define ASSERT
-#else
-#undef ASSERT
-//#define ASSERT //(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
-#define ASSERT(x) // FIXME: WTF!
-#endif //__REACTOS__
-
+#define ASSERT(x) ((void)0)
+// #define ASSERT(x) if (!(x)) { RtlAssert("#x",__FILE__,__LINE__, ""); }
+#endif
 
 #ifndef FILE_CHARACTERISTIC_PNP_DEVICE  // DDK 2003
 

@@ -987,7 +987,7 @@ typedef struct _HW_DEVICE_EXTENSION {
     BOOLEAN        opt_AtapiDmaRawRead;      // default TRUE
     BOOLEAN        opt_AtapiDmaReadWrite;    // default TRUE
 
-    PCHAR          FullDevName;
+    PCCH           FullDevName;
 
 } HW_DEVICE_EXTENSION, *PHW_DEVICE_EXTENSION;
 
@@ -1172,9 +1172,9 @@ AtapiDmaInit(
     IN ULONG DeviceNumber,
     IN ULONG lChannel,          // logical channel,
                                // is always 0 except simplex-only controllers
-    IN CHAR apiomode,
-    IN CHAR wdmamode,
-    IN CHAR udmamode
+    IN SCHAR apiomode,
+    IN SCHAR wdmamode,
+    IN SCHAR udmamode
     );
 
 extern BOOLEAN NTAPI
