@@ -23,9 +23,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
-#include <time.h>
 
 #define COBJMACROS
+#define NONAMELESSUNION
 
 #include "wine/test.h"
 #include <windef.h>
@@ -120,6 +120,53 @@ static const unsigned char apmdata[] = {
 0x01,0x00,0x05,0x00, 0x00,0x00,0x00,0x00, 0x03,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00
 };
+
+/* MF_TEXTOUT_ON_PATH_BITS from gdi32/tests/metafile.c */
+static const unsigned char metafile[] = {
+    0x01, 0x00, 0x09, 0x00, 0x00, 0x03, 0x19, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x32, 0x0a,
+    0x16, 0x00, 0x0b, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x54, 0x65, 0x73, 0x74, 0x03, 0x00, 0x05, 0x00,
+    0x08, 0x00, 0x0c, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x00, 0x00
+};
+
+/* EMF_TEXTOUT_ON_PATH_BITS from gdi32/tests/metafile.c */
+static const unsigned char enhmetafile[] = {
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xe7, 0xff, 0xff, 0xff, 0xe9, 0xff, 0xff, 0xff,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0xf4, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x05, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00,
+    0x40, 0x01, 0x00, 0x00, 0xf0, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xe2, 0x04, 0x00,
+    0x80, 0xa9, 0x03, 0x00, 0x3b, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x54, 0x00, 0x00, 0x00,
+    0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xc8, 0x41, 0x00, 0x80, 0xbb, 0x41,
+    0x0b, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x4c, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x54, 0x00, 0x00, 0x00,
+    0x54, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00,
+    0x03, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
+    0x3c, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00,
+    0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00
+};
+
 
 struct NoStatStreamImpl
 {
@@ -480,6 +527,124 @@ static void test_apm()
     IStream_Release(stream);
 }
 
+static void test_metafile(void)
+{
+    LPSTREAM stream;
+    IPicture *pict;
+    HGLOBAL hglob;
+    LPBYTE *data;
+
+    hglob = GlobalAlloc (0, sizeof(metafile));
+    data = GlobalLock(hglob);
+    memcpy(data, metafile, sizeof(metafile));
+
+    ole_check(CreateStreamOnHGlobal(hglob, TRUE, &stream));
+    /* Windows does not load simple metafiles */
+    ole_expect(OleLoadPictureEx(stream, sizeof(metafile), TRUE, &IID_IPicture, 100, 100, 0, (LPVOID *)&pict), E_FAIL);
+
+    IStream_Release(stream);
+}
+
+static void test_enhmetafile(void)
+{
+    OLE_HANDLE handle;
+    LPSTREAM stream;
+    IPicture *pict;
+    HGLOBAL hglob;
+    LPBYTE *data;
+    LONG cxy;
+    BOOL keep;
+    short type;
+
+    hglob = GlobalAlloc (0, sizeof(enhmetafile));
+    data = GlobalLock(hglob);
+    memcpy(data, enhmetafile, sizeof(enhmetafile));
+
+    ole_check(CreateStreamOnHGlobal(hglob, TRUE, &stream));
+    ole_check(OleLoadPictureEx(stream, sizeof(enhmetafile), TRUE, &IID_IPicture, 10, 10, 0, (LPVOID *)&pict));
+
+    ole_check(IPicture_get_Handle(pict, &handle));
+    ok(handle != 0, "handle is null\n");
+
+    ole_check(IPicture_get_Type(pict, &type));
+    expect_eq(type, PICTYPE_ENHMETAFILE, short, "%d");
+
+    ole_check(IPicture_get_Height(pict, &cxy));
+    expect_eq(cxy, -23, LONG, "%d");
+
+    ole_check(IPicture_get_Width(pict, &cxy));
+    expect_eq(cxy, -25, LONG, "%d");
+
+    ole_check(IPicture_get_KeepOriginalFormat(pict, &keep));
+    todo_wine expect_eq(keep, FALSE, LONG, "%d");
+
+    IPicture_Release(pict);
+    IStream_Release(stream);
+}
+
+static void test_Render(void)
+{
+    IPicture *pic;
+    HRESULT hres;
+    short type;
+    PICTDESC desc;
+    HDC hdc = GetDC(0);
+
+    /* test IPicture::Render return code on uninitialized picture */
+    OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (VOID**)&pic);
+    hres = IPicture_get_Type(pic, &type);
+    ok(hres == S_OK, "IPicture_get_Type does not return S_OK, but 0x%08x\n", hres);
+    ok(type == PICTYPE_UNINITIALIZED, "Expected type = PICTYPE_UNINITIALIZED, got = %d\n", type);
+    /* zero dimensions */
+    hres = IPicture_Render(pic, hdc, 0, 0, 0, 0, 0, 0, 0, 0, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 10, 0, 0, 10, 0, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 10, 0, 0, 0, 10, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 10, 0, 0, 0, 0, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 0, 10, 0, 0, 10, 10, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 0, 0, 0, 10, 10, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 0, 0, 0, 0, 10, 10, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    /* nonzero dimensions, PICTYPE_UNINITIALIZED */
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 10, 0, 0, 10, 10, NULL);
+    ole_expect(hres, S_OK);
+    IPicture_Release(pic);
+
+    desc.cbSizeofstruct = sizeof(PICTDESC);
+    desc.picType = PICTYPE_ICON;
+    desc.u.icon.hicon = LoadIcon(NULL, IDI_APPLICATION);
+    if(!desc.u.icon.hicon){
+        win_skip("LoadIcon failed. Skipping...\n");
+        ReleaseDC(NULL, hdc);
+        return;
+    }
+
+    OleCreatePictureIndirect(&desc, &IID_IPicture, TRUE, (VOID**)&pic);
+    /* zero dimensions, PICTYPE_ICON */
+    hres = IPicture_Render(pic, hdc, 0, 0, 0, 0, 0, 0, 0, 0, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 10, 0, 0, 10, 0, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 10, 0, 0, 0, 10, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 10, 0, 0, 0, 0, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 0, 10, 0, 0, 10, 10, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 10, 0, 0, 0, 10, 10, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    hres = IPicture_Render(pic, hdc, 0, 0, 0, 0, 0, 0, 10, 10, NULL);
+    ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
+    IPicture_Release(pic);
+
+    ReleaseDC(NULL, hdc);
+}
+
 START_TEST(olepicture)
 {
 	hOleaut32 = GetModuleHandleA("oleaut32.dll");
@@ -501,9 +666,12 @@ START_TEST(olepicture)
 	test_empty_image();
 	test_empty_image_2();
         test_apm();
+        test_metafile();
+        test_enhmetafile();
 
 	test_Invoke();
         test_OleCreatePictureIndirect();
+        test_Render();
 }
 
 

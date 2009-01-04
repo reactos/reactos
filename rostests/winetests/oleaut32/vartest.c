@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
-#include <time.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -298,6 +297,7 @@ static void test_var_call1( int line, HRESULT (WINAPI *func)(LPVARIANT,LPVARIANT
                             "got %s expected %s\n", variantstr(&result), variantstr(expected) );
     ok_(__FILE__,line)( is_expected_variant( arg, &old_arg ), "Modified argument %s / %s\n",
                         variantstr(&old_arg), variantstr(arg));
+    VariantClear( &result );
 }
 
 static void test_var_call2( int line, HRESULT (WINAPI *func)(LPVARIANT,LPVARIANT,LPVARIANT),
@@ -317,6 +317,7 @@ static void test_var_call2( int line, HRESULT (WINAPI *func)(LPVARIANT,LPVARIANT
                         variantstr(&old_left), variantstr(left));
     ok_(__FILE__,line)( is_expected_variant( right, &old_right ), "Modified right argument %s / %s\n",
                         variantstr(&old_right), variantstr(right));
+    VariantClear( &result );
 }
 
 
@@ -621,9 +622,12 @@ static void test_VariantCopy(void)
          "Copy(bad src): expected 0x%X, got 0x%X for src vt %d|0x%X\n",
          hExpected, hres, vt, ExtraFlags[i]);
       if (hres == S_OK)
+      {
         ok(V_VT(&vDst) == (vt|ExtraFlags[i]),
            "Copy(bad src): expected vt = %d, got %d\n",
            vt | ExtraFlags[i], V_VT(&vDst));
+        VariantClear(&vDst);
+      }
     }
   }
   
@@ -642,6 +646,7 @@ static void test_VariantCopy(void)
     {
       ok(*V_BSTR(&vDst) == 0, "Copy(NULL BSTR): result not empty\n");
     }
+    VariantClear(&vDst);
   }
 }
 
@@ -813,6 +818,7 @@ static void test_VariantCopyInd(void)
              vt, ExtraFlags[i] & ~VT_BYREF,
              V_VT(&vDst) & VT_TYPEMASK, V_VT(&vDst) & ~VT_TYPEMASK);
         }
+        VariantClear(&vDst);
       }
     }
   }
@@ -1050,7 +1056,7 @@ static void test_VarParseNumFromStr(void)
   EXPECT(1,NUMPRS_HEX_OCT,0,1,0,0);
   EXPECT2(0,FAILDIG);
 
-  /* Doesn't recognise hex in .asm sytax */
+  /* Doesn't recognise hex in .asm syntax */
   CONVERT("0h", NUMPRS_HEX_OCT);
   EXPECT(1,NUMPRS_HEX_OCT,0,1,0,0);
   EXPECT2(0,FAILDIG);
@@ -1060,7 +1066,7 @@ static void test_VarParseNumFromStr(void)
   EXPECT(1,NUMPRS_HEX_OCT,0,1,0,0);
   EXPECT2(0,FAILDIG);
 
-  /* Doesn't recognise hex format humbers at all! */
+  /* Doesn't recognise hex format numbers at all! */
   CONVERT("0x0", NUMPRS_HEX_OCT);
   EXPECT(1,NUMPRS_HEX_OCT,0,1,0,0);
   EXPECT2(0,FAILDIG);
@@ -2078,7 +2084,12 @@ static void test_VarSub(void)
                     leftvt == VT_RECORD || rightvt == VT_RECORD)
                 {
                     if (leftvt == VT_RECORD && rightvt == VT_I8)
-                        expectedhres = DISP_E_TYPEMISMATCH;
+                    {
+                        if (HAVE_OLEAUT32_I8)
+                            expectedhres = DISP_E_TYPEMISMATCH;
+                        else
+                            expectedhres = DISP_E_BADVARTYPE;
+                    }
                     else if (leftvt < VT_UI1 && rightvt == VT_RECORD)
                         expectedhres = DISP_E_TYPEMISMATCH;
                     else if (leftvt >= VT_UI1 && rightvt == VT_RECORD)
@@ -2726,6 +2737,9 @@ static void test_VarMod(void)
   hres = pVarMod(&v1,&v2,&vDst);
   ok(hres == DISP_E_BADVARTYPE && V_VT(&vDst) == VT_EMPTY,
      "VarMod: expected 0x%x,%d, got 0x%X,%d\n", DISP_E_BADVARTYPE, VT_EMPTY, hres, V_VT(&vDst));
+
+  SysFreeString(strNum0);
+  SysFreeString(strNum1);
 }
 
 static HRESULT (WINAPI *pVarFix)(LPVARIANT,LPVARIANT);
@@ -3104,8 +3118,8 @@ static void test_Round( int line, VARIANT *arg, int deci, VARIANT *expected )
 
 static void test_VarRound(void)
 {
-    static WCHAR szNumMin[] = {'-','1','.','4','5','\0' };
-    static WCHAR szNum[] = {'1','.','4','5','\0' };
+    static WCHAR szNumMin[] = {'-','1','.','4','4','9','\0' };
+    static WCHAR szNum[] = {'1','.','4','5','1','\0' };
     HRESULT hres;
     VARIANT v, exp, vDst;
     CY *pcy = &V_CY(&v);
@@ -3140,7 +3154,7 @@ static void test_VarRound(void)
     /* floating point numbers aren't exactly equal and we can't just
      * compare the first few digits. */
     VARROUND(DATE,1.451,1,DATE,1.5);
-    VARROUND(DATE,-1.45,1,DATE,-1.4);
+    VARROUND(DATE,-1.449,1,DATE,-1.4);
 
     /* replace the decimal separator */
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buff, sizeof(buff)/sizeof(char));
@@ -3148,7 +3162,7 @@ static void test_VarRound(void)
         szNumMin[2] = buff[0];
         szNum[1] = buff[0];
         VARROUND(BSTR,(BSTR)szNumMin,1,R8,-1.40);
-        if (0) { VARROUND(BSTR,(BSTR)szNum,1,R8,1.50); }
+        VARROUND(BSTR,(BSTR)szNum,1,R8,1.50);
     } else {
         skip("Skipping VarRound(BSTR) as decimal separator is '%s'\n", buff);
     }
@@ -3381,9 +3395,11 @@ static void test_VarXor(void)
     VARXOR(EMPTY,0,R8,1,I4,1);
     rbstr = SysAllocString(szFalse);
     VARXOR(EMPTY,0,BSTR,rbstr,I2,0);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(EMPTY,0,BSTR,rbstr,I2,-1);
     VARXORCY(EMPTY,0,10000,I4,1);
+    SysFreeString(rbstr);
 
     /* NULL OR 0 = NULL. NULL OR n = n */
     VARXOR(NULL,0,NULL,0,NULL,0);
@@ -3419,8 +3435,10 @@ static void test_VarXor(void)
     VARXOR(NULL,0,R8,1,NULL,0);
     rbstr = SysAllocString(szFalse);
     VARXOR(NULL,0,BSTR,rbstr,NULL,0);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(NULL,0,BSTR,rbstr,NULL,0);
+    SysFreeString(rbstr);
     VARXORCY(NULL,0,10000,NULL,0);
     VARXORCY(NULL,0,0,NULL,0);
 
@@ -3477,9 +3495,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(BOOL,VARIANT_FALSE,BSTR,rbstr,BOOL,VARIANT_FALSE);
     VARXOR(BOOL,VARIANT_TRUE,BSTR,rbstr,BOOL,VARIANT_TRUE);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(BOOL,VARIANT_FALSE,BSTR,rbstr,BOOL,VARIANT_TRUE);
     VARXOR(BOOL,VARIANT_TRUE,BSTR,rbstr,BOOL,VARIANT_FALSE);
+    SysFreeString(rbstr);
     VARXORCY(BOOL,VARIANT_TRUE,10000,I4,-2);
     VARXORCY(BOOL,VARIANT_TRUE,0,I4,-1);
     VARXORCY(BOOL,VARIANT_FALSE,0,I4,0);
@@ -3528,9 +3548,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(I1,0,BSTR,rbstr,I4,0);
     VARXOR(I1,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(I1,0,BSTR,rbstr,I4,-1);
     VARXOR(I1,-1,BSTR,rbstr,I4,0);
+    SysFreeString(rbstr);
     VARXORCY(I1,-1,10000,I4,-2);
     VARXORCY(I1,-1,0,I4,-1);
     VARXORCY(I1,0,0,I4,0);
@@ -3576,9 +3598,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(UI1,0,BSTR,rbstr,I2,0);
     VARXOR(UI1,255,BSTR,rbstr,I2,255);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(UI1,0,BSTR,rbstr,I2,-1);
     VARXOR(UI1,255,BSTR,rbstr,I2,-256);
+    SysFreeString(rbstr);
     VARXORCY(UI1,255,10000,I4,254);
     VARXORCY(UI1,255,0,I4,255);
     VARXORCY(UI1,0,0,I4,0);
@@ -3621,9 +3645,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(I2,0,BSTR,rbstr,I2,0);
     VARXOR(I2,-1,BSTR,rbstr,I2,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(I2,0,BSTR,rbstr,I2,-1);
     VARXOR(I2,-1,BSTR,rbstr,I2,0);
+    SysFreeString(rbstr);
     VARXORCY(I2,-1,10000,I4,-2);
     VARXORCY(I2,-1,0,I4,-1);
     VARXORCY(I2,0,0,I4,0);
@@ -3663,9 +3689,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(UI2,0,BSTR,rbstr,I4,0);
     VARXOR(UI2,65535,BSTR,rbstr,I4,65535);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(UI2,0,BSTR,rbstr,I4,-1);
     VARXOR(UI2,65535,BSTR,rbstr,I4,-65536);
+    SysFreeString(rbstr);
     VARXORCY(UI2,65535,10000,I4,65534);
     VARXORCY(UI2,65535,0,I4,65535);
     VARXORCY(UI2,0,0,I4,0);
@@ -3702,9 +3730,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(I4,0,BSTR,rbstr,I4,0);
     VARXOR(I4,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(I4,0,BSTR,rbstr,I4,-1);
     VARXOR(I4,-1,BSTR,rbstr,I4,0);
+    SysFreeString(rbstr);
     VARXORCY(I4,-1,10000,I4,-2);
     VARXORCY(I4,-1,0,I4,-1);
     VARXORCY(I4,0,0,I4,0);
@@ -3738,9 +3768,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(UI4,0,BSTR,rbstr,I4,0);
     VARXOR(UI4,0xffffffff,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(UI4,0,BSTR,rbstr,I4,-1);
     VARXOR(UI4,0xffffffff,BSTR,rbstr,I4,0);
+    SysFreeString(rbstr);
     VARXORCY(UI4,0xffffffff,10000,I4,-2);
     VARXORCY(UI4,0xffffffff,0,I4,-1);
     VARXORCY(UI4,0,0,I4,0);
@@ -3771,9 +3803,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(R4,0,BSTR,rbstr,I4,0);
     VARXOR(R4,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(R4,0,BSTR,rbstr,I4,-1);
     VARXOR(R4,-1,BSTR,rbstr,I4,0);
+    SysFreeString(rbstr);
     VARXORCY(R4,-1,10000,I4,-2);
     VARXORCY(R4,-1,0,I4,-1);
     VARXORCY(R4,0,0,I4,0);
@@ -3801,9 +3835,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(R8,0,BSTR,rbstr,I4,0);
     VARXOR(R8,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(R8,0,BSTR,rbstr,I4,-1);
     VARXOR(R8,-1,BSTR,rbstr,I4,0);
+    SysFreeString(rbstr);
     VARXORCY(R8,-1,10000,I4,-2);
     VARXORCY(R8,-1,0,I4,-1);
     VARXORCY(R8,0,0,I4,0);
@@ -3828,9 +3864,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(DATE,0,BSTR,rbstr,I4,0);
     VARXOR(DATE,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(DATE,0,BSTR,rbstr,I4,-1);
     VARXOR(DATE,-1,BSTR,rbstr,I4,0);
+    SysFreeString(rbstr);
     VARXORCY(DATE,-1,10000,I4,-2);
     VARXORCY(DATE,-1,0,I4,-1);
     VARXORCY(DATE,0,0,I4,0);
@@ -3847,9 +3885,11 @@ static void test_VarXor(void)
         rbstr = SysAllocString(szFalse);
         VARXOR(I8,0,BSTR,rbstr,I8,0);
         VARXOR(I8,-1,BSTR,rbstr,I8,-1);
+        SysFreeString(rbstr);
         rbstr = SysAllocString(szTrue);
         VARXOR(I8,0,BSTR,rbstr,I8,-1);
         VARXOR(I8,-1,BSTR,rbstr,I8,0);
+        SysFreeString(rbstr);
         VARXORCY(I8,-1,10000,I8,-2);
         VARXORCY(I8,-1,0,I8,-1);
         VARXORCY(I8,0,0,I8,0);
@@ -3866,9 +3906,11 @@ static void test_VarXor(void)
         rbstr = SysAllocString(szFalse);
         VARXOR(UI8,0,BSTR,rbstr,I4,0);
         VARXOR(UI8,0xffff,BSTR,rbstr,I4,0xffff);
+        SysFreeString(rbstr);
         rbstr = SysAllocString(szTrue);
         VARXOR(UI8,0,BSTR,rbstr,I4,-1);
         VARXOR(UI8,0xffff,BSTR,rbstr,I4,-65536);
+        SysFreeString(rbstr);
         VARXORCY(UI8,0xffff,10000,I4,65534);
         VARXORCY(UI8,0xffff,0,I4,0xffff);
         VARXORCY(UI8,0,0,I4,0);
@@ -3883,9 +3925,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(INT,0,BSTR,rbstr,I4,0);
     VARXOR(INT,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(INT,0,BSTR,rbstr,I4,-1);
     VARXOR(INT,-1,BSTR,rbstr,I4,0);
+    SysFreeString(rbstr);
     VARXORCY(INT,-1,10000,I4,-2);
     VARXORCY(INT,-1,0,I4,-1);
     VARXORCY(INT,0,0,I4,0);
@@ -3896,9 +3940,11 @@ static void test_VarXor(void)
     rbstr = SysAllocString(szFalse);
     VARXOR(UINT,0,BSTR,rbstr,I4,0);
     VARXOR(UINT,0xffff,BSTR,rbstr,I4,0xffff);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(UINT,0,BSTR,rbstr,I4,-1);
     VARXOR(UINT,0xffff,BSTR,rbstr,I4,-65536);
+    SysFreeString(rbstr);
     VARXORCY(UINT,0xffff,10000,I4,65534);
     VARXORCY(UINT,0xffff,0,I4,0xffff);
     VARXORCY(UINT,0,0,I4,0);
@@ -3906,13 +3952,18 @@ static void test_VarXor(void)
     lbstr = SysAllocString(szFalse);
     rbstr = SysAllocString(szFalse);
     VARXOR(BSTR,lbstr,BSTR,rbstr,BOOL,0);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VARXOR(BSTR,lbstr,BSTR,rbstr,BOOL,VARIANT_TRUE);
+    SysFreeString(lbstr);
     lbstr = SysAllocString(szTrue);
     VARXOR(BSTR,lbstr,BSTR,rbstr,BOOL,VARIANT_FALSE);
     VARXORCY(BSTR,lbstr,10000,I4,-2);
+    SysFreeString(lbstr);
     lbstr = SysAllocString(szFalse);
     VARXORCY(BSTR,lbstr,10000,I4,1);
+    SysFreeString(lbstr);
+    SysFreeString(rbstr);
 }
 
 static HRESULT (WINAPI *pVarOr)(LPVARIANT,LPVARIANT,LPVARIANT);
@@ -4080,8 +4131,10 @@ static void test_VarOr(void)
     VAROR(EMPTY,0,R8,1,I4,1);
     rbstr = SysAllocString(szFalse);
     VAROR(EMPTY,0,BSTR,rbstr,I2,0);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(EMPTY,0,BSTR,rbstr,I2,-1);
+    SysFreeString(rbstr);
     VARORCY(EMPTY,0,10000,I4,1);
 
     /* NULL OR 0 = NULL. NULL OR n = n */
@@ -4118,8 +4171,10 @@ static void test_VarOr(void)
     VAROR(NULL,0,R8,1,I4,1);
     rbstr = SysAllocString(szFalse);
     VAROR(NULL,0,BSTR,rbstr,NULL,0);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(NULL,0,BSTR,rbstr,BOOL,VARIANT_TRUE);
+    SysFreeString(rbstr);
     VARORCY(NULL,0,10000,I4,1);
     VARORCY(NULL,0,0,NULL,0);
 
@@ -4176,9 +4231,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(BOOL,VARIANT_FALSE,BSTR,rbstr,BOOL,VARIANT_FALSE);
     VAROR(BOOL,VARIANT_TRUE,BSTR,rbstr,BOOL,VARIANT_TRUE);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(BOOL,VARIANT_FALSE,BSTR,rbstr,BOOL,VARIANT_TRUE);
     VAROR(BOOL,VARIANT_TRUE,BSTR,rbstr,BOOL,VARIANT_TRUE);
+    SysFreeString(rbstr);
     VARORCY(BOOL,VARIANT_TRUE,10000,I4,-1);
     VARORCY(BOOL,VARIANT_TRUE,0,I4,-1);
     VARORCY(BOOL,VARIANT_FALSE,0,I4,0);
@@ -4227,9 +4284,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(I1,0,BSTR,rbstr,I4,0);
     VAROR(I1,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(I1,0,BSTR,rbstr,I4,-1);
     VAROR(I1,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(I1,-1,10000,I4,-1);
     VARORCY(I1,-1,0,I4,-1);
     VARORCY(I1,0,0,I4,0);
@@ -4275,9 +4334,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(UI1,0,BSTR,rbstr,I2,0);
     VAROR(UI1,255,BSTR,rbstr,I2,255);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(UI1,0,BSTR,rbstr,I2,-1);
     VAROR(UI1,255,BSTR,rbstr,I2,-1);
+    SysFreeString(rbstr);
     VARORCY(UI1,255,10000,I4,255);
     VARORCY(UI1,255,0,I4,255);
     VARORCY(UI1,0,0,I4,0);
@@ -4320,9 +4381,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(I2,0,BSTR,rbstr,I2,0);
     VAROR(I2,-1,BSTR,rbstr,I2,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(I2,0,BSTR,rbstr,I2,-1);
     VAROR(I2,-1,BSTR,rbstr,I2,-1);
+    SysFreeString(rbstr);
     VARORCY(I2,-1,10000,I4,-1);
     VARORCY(I2,-1,0,I4,-1);
     VARORCY(I2,0,0,I4,0);
@@ -4362,9 +4425,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(UI2,0,BSTR,rbstr,I4,0);
     VAROR(UI2,65535,BSTR,rbstr,I4,65535);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(UI2,0,BSTR,rbstr,I4,-1);
     VAROR(UI2,65535,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(UI2,65535,10000,I4,65535);
     VARORCY(UI2,65535,0,I4,65535);
     VARORCY(UI2,0,0,I4,0);
@@ -4401,9 +4466,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(I4,0,BSTR,rbstr,I4,0);
     VAROR(I4,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(I4,0,BSTR,rbstr,I4,-1);
     VAROR(I4,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(I4,-1,10000,I4,-1);
     VARORCY(I4,-1,0,I4,-1);
     VARORCY(I4,0,0,I4,0);
@@ -4437,9 +4504,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(UI4,0,BSTR,rbstr,I4,0);
     VAROR(UI4,0xffffffff,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(UI4,0,BSTR,rbstr,I4,-1);
     VAROR(UI4,0xffffffff,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(UI4,0xffffffff,10000,I4,-1);
     VARORCY(UI4,0xffffffff,0,I4,-1);
     VARORCY(UI4,0,0,I4,0);
@@ -4470,9 +4539,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(R4,0,BSTR,rbstr,I4,0);
     VAROR(R4,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(R4,0,BSTR,rbstr,I4,-1);
     VAROR(R4,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(R4,-1,10000,I4,-1);
     VARORCY(R4,-1,0,I4,-1);
     VARORCY(R4,0,0,I4,0);
@@ -4500,9 +4571,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(R8,0,BSTR,rbstr,I4,0);
     VAROR(R8,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(R8,0,BSTR,rbstr,I4,-1);
     VAROR(R8,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(R8,-1,10000,I4,-1);
     VARORCY(R8,-1,0,I4,-1);
     VARORCY(R8,0,0,I4,0);
@@ -4527,9 +4600,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(DATE,0,BSTR,rbstr,I4,0);
     VAROR(DATE,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(DATE,0,BSTR,rbstr,I4,-1);
     VAROR(DATE,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(DATE,-1,10000,I4,-1);
     VARORCY(DATE,-1,0,I4,-1);
     VARORCY(DATE,0,0,I4,0);
@@ -4551,9 +4626,11 @@ static void test_VarOr(void)
         rbstr = SysAllocString(szFalse);
         VAROR(I8,0,BSTR,rbstr,I8,0);
         VAROR(I8,-1,BSTR,rbstr,I8,-1);
+        SysFreeString(rbstr);
         rbstr = SysAllocString(szTrue);
         VAROR(I8,0,BSTR,rbstr,I8,-1);
         VAROR(I8,-1,BSTR,rbstr,I8,-1);
+        SysFreeString(rbstr);
         VARORCY(I8,-1,10000,I8,-1);
         VARORCY(I8,-1,0,I8,-1);
         VARORCY(I8,0,0,I8,0);
@@ -4570,9 +4647,11 @@ static void test_VarOr(void)
         rbstr = SysAllocString(szFalse);
         VAROR(UI8,0,BSTR,rbstr,I4,0);
         VAROR(UI8,0xffff,BSTR,rbstr,I4,0xffff);
+        SysFreeString(rbstr);
         rbstr = SysAllocString(szTrue);
         VAROR(UI8,0,BSTR,rbstr,I4,-1);
         VAROR(UI8,0xffff,BSTR,rbstr,I4,-1);
+        SysFreeString(rbstr);
         VARORCY(UI8,0xffff,10000,I4,0xffff);
         VARORCY(UI8,0xffff,0,I4,0xffff);
         VARORCY(UI8,0,0,I4,0);
@@ -4587,9 +4666,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(INT,0,BSTR,rbstr,I4,0);
     VAROR(INT,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(INT,0,BSTR,rbstr,I4,-1);
     VAROR(INT,-1,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(INT,-1,10000,I4,-1);
     VARORCY(INT,-1,0,I4,-1);
     VARORCY(INT,0,0,I4,0);
@@ -4600,9 +4681,11 @@ static void test_VarOr(void)
     rbstr = SysAllocString(szFalse);
     VAROR(UINT,0,BSTR,rbstr,I4,0);
     VAROR(UINT,0xffff,BSTR,rbstr,I4,0xffff);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(UINT,0,BSTR,rbstr,I4,-1);
     VAROR(UINT,0xffff,BSTR,rbstr,I4,-1);
+    SysFreeString(rbstr);
     VARORCY(UINT,0xffff,10000,I4,0xffff);
     VARORCY(UINT,0xffff,0,I4,0xffff);
     VARORCY(UINT,0,0,I4,0);
@@ -4610,13 +4693,18 @@ static void test_VarOr(void)
     lbstr = SysAllocString(szFalse);
     rbstr = SysAllocString(szFalse);
     VAROR(BSTR,lbstr,BSTR,rbstr,BOOL,0);
+    SysFreeString(rbstr);
     rbstr = SysAllocString(szTrue);
     VAROR(BSTR,lbstr,BSTR,rbstr,BOOL,VARIANT_TRUE);
+    SysFreeString(lbstr);
     lbstr = SysAllocString(szTrue);
     VAROR(BSTR,lbstr,BSTR,rbstr,BOOL,VARIANT_TRUE);
     VARORCY(BSTR,lbstr,10000,I4,-1);
+    SysFreeString(lbstr);
     lbstr = SysAllocString(szFalse);
     VARORCY(BSTR,lbstr,10000,I4,1);
+    SysFreeString(lbstr);
+    SysFreeString(rbstr);
 }
 
 static HRESULT (WINAPI *pVarEqv)(LPVARIANT,LPVARIANT,LPVARIANT);
@@ -5049,6 +5137,8 @@ static void test_VarAdd(void)
                        leftvt, ExtraFlags[i], rightvt, ExtraFlags[i], resvt, hres,
                        V_VT(&result));
                 }
+                /* Note, we don't clear left/right deliberately here */
+                VariantClear(&result);
             }
         }
     }
@@ -5090,6 +5180,7 @@ static void test_VarAdd(void)
     ok(hres == S_OK && V_VT(&result) == VT_BSTR, "VarAdd: expected coerced type VT_BSTR, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromStr(V_BSTR(&result), 0, 0, &r);
     ok(hres == S_OK && EQ_DOUBLE(r, 1212), "VarAdd: BSTR value %f, expected %f\n", r, (double)1212);
+    VariantClear(&result);
 
     /* Manuly test some VT_CY and VT_DECIMAL variants */
     V_VT(&cy) = VT_CY;
@@ -5114,6 +5205,7 @@ static void test_VarAdd(void)
     ok(hres == S_OK && V_VT(&result) == VT_DECIMAL, "VarAdd: expected coerced type VT_DECIMAL, got %s!\n", vtstr(V_VT(&result)));
     hres = VarR8FromDec(&V_DECIMAL(&result), &r);
     ok(hres == S_OK && EQ_DOUBLE(r, -15.2), "VarAdd: DECIMAL value %f, expected %f\n", r, (double)-15.2);
+    VariantClear(&result);
 
     SysFreeString(lbstr);
     SysFreeString(rbstr);
@@ -5230,18 +5322,27 @@ static void test_VarCat(void)
             V_VT(&left) = leftvt;
             V_VT(&right) = rightvt;
 
-            if (leftvt == VT_BSTR)
-                V_BSTR(&left) = SysAllocString(sz_empty);
-            if (rightvt == VT_BSTR)
-                V_BSTR(&right) = SysAllocString(sz_empty);
-            if (leftvt == VT_DATE)
-                V_DATE(&left) = 0.0;
-            if (rightvt == VT_DATE)
-                V_DATE(&right) = 0.0;
-            if (leftvt == VT_DECIMAL)
-                VarDecFromR8(0.0, &V_DECIMAL(&left));
-            if (rightvt == VT_DECIMAL)
-                VarDecFromR8(0.0, &V_DECIMAL(&right));
+            switch (leftvt) {
+            case VT_BSTR:
+                V_BSTR(&left) = SysAllocString(sz_empty); break;
+            case VT_DATE:
+                V_DATE(&left) = 0.0; break;
+            case VT_DECIMAL:
+                VarDecFromR8(0.0, &V_DECIMAL(&left)); break;
+            default:
+                V_I8(&left) = 0;
+            }
+
+            switch (rightvt) {
+            case VT_BSTR:
+                V_BSTR(&right) = SysAllocString(sz_empty); break;
+            case VT_DATE:
+                V_DATE(&right) = 0.0; break;
+            case VT_DECIMAL:
+                VarDecFromR8(0.0, &V_DECIMAL(&right)); break;
+            default:
+                V_I8(&right) = 0;
+            }
 
             hres = VarCat(&left, &right, &result);
 
@@ -5261,7 +5362,7 @@ static void test_VarCat(void)
         }
     }
 
-    /* Runnning single comparison tests to compare outputs */
+    /* Running single comparison tests to compare outputs */
 
     /* Test concat strings */
     V_VT(&left) = VT_BSTR;
@@ -5314,8 +5415,9 @@ static void test_VarCat(void)
     V_BSTR(&expected) = SysAllocString(sz12_true);
     hres = VarCat(&left,&right,&result);
     ok(hres == S_OK, "VarCat failed with error 0x%08x\n", hres);
-    ok(VarCmp(&result,&expected,lcid,0) == VARCMP_EQ,
-        "VarCat: VT_INT concat with VT_BOOL (TRUE) returned incorrect result\n");
+    hres = VarCmp(&result,&expected,lcid,0);
+    ok(hres == VARCMP_EQ ||
+       broken(hres == VARCMP_GT), "Expected VARCMP_EQ, got %08x\n", hres);
 
     VariantClear(&left);
     VariantClear(&right);
@@ -5330,8 +5432,9 @@ static void test_VarCat(void)
     V_BSTR(&expected) = SysAllocString(sz12_false);
     hres = VarCat(&left,&right,&result);
     ok(hres == S_OK, "VarCat failed with error 0x%08x\n", hres);
-    ok(VarCmp(&result,&expected,lcid,0) == VARCMP_EQ,
-        "VarCat: VT_INT concat with VT_BOOL (FALSE) returned inncorrect result\n");
+    hres = VarCmp(&result,&expected,lcid,0);
+    ok(hres == VARCMP_EQ ||
+       broken(hres == VARCMP_GT), "Expected VARCMP_EQ, got %08x\n", hres);
 
     VariantClear(&left);
     VariantClear(&right);
@@ -5380,6 +5483,7 @@ static void test_VarCat(void)
     VariantClear(&left);
     VariantClear(&right);
     VariantClear(&result);
+    VariantClear(&expected);
 
     /* Test concat dates with strings */
     V_VT(&left) = VT_BSTR;
@@ -6273,7 +6377,7 @@ static void test_VarCmp(void)
         }
     }
 
-    /* VARCMP{,EX} run each 4 tests with a permutation of all posible
+    /* VARCMP{,EX} run each 4 tests with a permutation of all possible
        input variants with (1) and without (0) VT_RESERVED set. The order
        of the permutations is (0,0); (1,0); (0,1); (1,1) */
     VARCMP(INT,4711,I2,4711,VARCMP_EQ);
@@ -6859,11 +6963,20 @@ static void test_VarPow(void)
         "VARPOW: CY value %f, expected %f\n", V_R8(&result), 4.0);
 
     hres = pVarPow(&cy, &right, &result);
-    ok(hres == S_OK && V_VT(&result) == VT_R8,
-        "VARPOW: expected coerced hres 0x%X type VT_R8, got hres 0x%X type %s!\n",
-        S_OK, hres, vtstr(V_VT(&result)));
-    ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 4.0),
-        "VARPOW: CY value %f, expected %f\n", V_R8(&result), 4.0);
+    if (hres == S_OK)
+    {
+        ok(hres == S_OK && V_VT(&result) == VT_R8,
+           "VARPOW: expected coerced hres 0x%X type VT_R8, got hres 0x%X type %s!\n",
+           S_OK, hres, vtstr(V_VT(&result)));
+        ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 4.0),
+           "VARPOW: CY value %f, expected %f\n", V_R8(&result), 4.0);
+    }
+    else
+    {
+        ok(hres == DISP_E_BADVARTYPE && V_VT(&result) == VT_EMPTY,
+           "VARPOW: expected coerced hres 0x%X type VT_EMPTY, got hres 0x%X type %s!\n",
+           DISP_E_BADVARTYPE, hres, vtstr(V_VT(&result)));
+    }
 
     hres = pVarPow(&left, &cy, &result);
     ok(hres == S_OK && V_VT(&result) == VT_R8,
@@ -6887,11 +7000,20 @@ static void test_VarPow(void)
         "VARPOW: DECIMAL value %f, expected %f\n", V_R8(&result), 4.0);
 
     hres = pVarPow(&dec, &right, &result);
-    ok(hres == S_OK && V_VT(&result) == VT_R8,
-        "VARPOW: expected coerced hres 0x%X type VT_R8, got hres 0x%X type %s!\n",
-        S_OK, hres, vtstr(V_VT(&result)));
-    ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 4.0),
-        "VARPOW: DECIMAL value %f, expected %f\n", V_R8(&result), 4.0);
+    if (hres == S_OK)
+    {
+        ok(hres == S_OK && V_VT(&result) == VT_R8,
+           "VARPOW: expected coerced hres 0x%X type VT_R8, got hres 0x%X type %s!\n",
+           S_OK, hres, vtstr(V_VT(&result)));
+        ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 4.0),
+           "VARPOW: DECIMAL value %f, expected %f\n", V_R8(&result), 4.0);
+    }
+    else
+    {
+        ok(hres == DISP_E_BADVARTYPE && V_VT(&result) == VT_EMPTY,
+           "VARPOW: expected coerced hres 0x%X type VT_EMPTY, got hres 0x%X type %s!\n",
+           DISP_E_BADVARTYPE, hres, vtstr(V_VT(&result)));
+    }
 
     SysFreeString(num2_str);
     SysFreeString(num3_str);

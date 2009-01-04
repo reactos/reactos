@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
-#include <time.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -42,6 +41,7 @@ static HMODULE hOleaut32;
 
 static HRESULT (WINAPI *pVarFormatNumber)(LPVARIANT,int,int,int,int,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarFormat)(LPVARIANT,LPOLESTR,int,int,ULONG,BSTR*);
+static HRESULT (WINAPI *pVarWeekdayName)(int,int,int,ULONG,BSTR*);
 
 /* Have I8/UI8 data type? */
 #define HAVE_OLEAUT32_I8      HAVE_FUNC(VarI8FromI1)
@@ -63,9 +63,11 @@ static inline int strcmpW( const WCHAR *str1, const WCHAR *str2 )
   VariantInit(&v); V_VT(&v) = vt; val(&v) = 1; \
   hres = pVarFormatNumber(&v,2,0,0,0,0,&str); \
   ok(hres == S_OK, "VarFormatNumber (vt %d): returned %8x\n", vt, hres); \
-  if (hres == S_OK) \
+  if (hres == S_OK) { \
     ok(str && strcmpW(str,szResult1) == 0, \
-       "VarFormatNumber (vt %d): string different\n", vt)
+       "VarFormatNumber (vt %d): string different\n", vt); \
+    SysFreeString(str); \
+  }
 
 static void test_VarFormatNumber(void)
 {
@@ -125,7 +127,7 @@ static void test_VarFormatNumber(void)
 
 static const char *szVarFmtFail = "VT %d|0x%04x Format %s: expected 0x%08x, '%s', got 0x%08x, '%s'\n";
 #define VARFMT(vt,v,val,fmt,ret,str) do { \
-  if (out) SysFreeString(out); out = NULL; \
+  out = NULL; \
   V_VT(&in) = (vt); v(&in) = val; \
   if (fmt) MultiByteToWideChar(CP_ACP, 0, fmt, -1, buffW, sizeof(buffW)/sizeof(WCHAR)); \
   hres = pVarFormat(&in,fmt ? buffW : NULL,fd,fw,flags,&out); \
@@ -134,6 +136,7 @@ static const char *szVarFmtFail = "VT %d|0x%04x Format %s: expected 0x%08x, '%s'
   ok(hres == ret && (FAILED(ret) || !strcmp(buff, str)), \
      szVarFmtFail, \
      (vt)&VT_TYPEMASK,(vt)&~VT_TYPEMASK,fmt?fmt:"<null>",ret,str,hres,buff); \
+  SysFreeString(out); \
   } while(0)
 
 typedef struct tagFMTRES
@@ -320,9 +323,12 @@ static void test_VarFormat(void)
   VARFMT(VT_I4,V_I4,1,"000###",S_OK,"000001");
   VARFMT(VT_I4,V_I4,1,"#00##00#0",S_OK,"00000001");
   VARFMT(VT_I4,V_I4,1,"1#####0000",S_OK,"10001");
-  todo_wine {
   VARFMT(VT_I4,V_I4,100000,"#,###,###,###",S_OK,"100,000");
-  }
+  VARFMT(VT_I4,V_I4,1,"0,000,000,000",S_OK,"0,000,000,001");
+  VARFMT(VT_I4,V_I4,123456789,"#,#.#",S_OK,"123,456,789.");
+  VARFMT(VT_I4,V_I4,123456789,"###, ###, ###",S_OK,"123, 456, 789");
+  VARFMT(VT_I4,V_I4,1,"#;-#",S_OK,"1");
+  VARFMT(VT_I4,V_I4,-1,"#;-#",S_OK,"-1");
   VARFMT(VT_R8,V_R8,1.23456789,"0#.0#0#0#0#0",S_OK,"01.234567890");
   VARFMT(VT_R8,V_R8,1.2,"0#.0#0#0#0#0",S_OK,"01.200000000");
   VARFMT(VT_R8,V_R8,9.87654321,"#0.#0#0#0#0#",S_OK,"9.87654321");
@@ -364,6 +370,10 @@ static void test_VarFormat(void)
   VARFMT(VT_R8,V_R8,1.0001e-27,"##00.0000e-0",S_OK,"1000.1000e-30");
   VARFMT(VT_R8,V_R8,47.11,".0000E+0",S_OK,".4711E+2");
   VARFMT(VT_R8,V_R8,3.0401e-13,"#####.####e-0%",S_OK,"30401.e-15%");
+  VARFMT(VT_R8,V_R8,1.57,"0.00",S_OK,"1.57");
+  VARFMT(VT_R8,V_R8,-1.57,"0.00",S_OK,"-1.57");
+  VARFMT(VT_R8,V_R8,-1.57,"#.##",S_OK,"-1.57");
+  VARFMT(VT_R8,V_R8,-0.1,".#",S_OK,"-.1");
 
 
   /* 'out' is not cleared */
@@ -392,10 +402,120 @@ static void test_VarFormat(void)
   VARFMT(VT_BOOL,V_BOOL,VARIANT_TRUE,"",E_INVALIDARG,"");
 }
 
+static const char *szVarWdnFail =
+    "VarWeekdayName (%d, %d, %d, %d, %x): returned %8x, expected %8x\n";
+#define VARWDN(iWeekday, fAbbrev, iFirstDay, dwFlags, ret, buff, out, freeOut) \
+do { \
+  hres = pVarWeekdayName(iWeekday, fAbbrev, iFirstDay, dwFlags, &out); \
+  if (SUCCEEDED(hres)) { \
+    WideCharToMultiByte(CP_ACP, 0, out, -1, buff, sizeof(buff), 0, 0); \
+    if (freeOut) SysFreeString(out); \
+  } else { \
+    buff[0] = '\0'; \
+  } \
+  ok(hres == ret, \
+     szVarWdnFail, \
+     iWeekday, fAbbrev, iFirstDay, dwFlags, &out, hres, ret \
+     ); \
+} while(0)
+
+#define VARWDN_F(iWeekday, fAbbrev, iFirstDay, dwFlags, ret) \
+  VARWDN(iWeekday, fAbbrev, iFirstDay, dwFlags, ret, buff, out, 1)
+
+#define VARWDN_O(iWeekday, fAbbrev, iFirstDay, dwFlags) \
+  VARWDN(iWeekday, fAbbrev, iFirstDay, dwFlags, S_OK, buff, out, 0)
+
+static void test_VarWeekdayName(void)
+{
+  char buff[256];
+  BSTR out = NULL;
+  HRESULT hres;
+  int iWeekday, fAbbrev, iFirstDay;
+  BSTR dayNames[7][2]; /* Monday-Sunday, full/abbr */
+  DWORD defaultFirstDay;
+  int firstDay;
+  int day;
+  int size;
+  DWORD localeValue;
+
+  CHECKPTR(VarWeekdayName);
+
+  SetLastError(0xdeadbeef);
+  GetLocaleInfoW(LOCALE_USER_DEFAULT, 0, NULL, 0);
+  if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+  {
+    skip("GetLocaleInfoW is not implemented\n");
+    return;
+  }
+
+  /* Initialize days' names */
+  for (day = 0; day <= 6; ++day)
+  {
+    for (fAbbrev = 0; fAbbrev <= 1; ++fAbbrev)
+    {
+      localeValue = fAbbrev ? LOCALE_SABBREVDAYNAME1 : LOCALE_SDAYNAME1;
+      localeValue += day;
+      size = GetLocaleInfoW(LOCALE_USER_DEFAULT, localeValue, NULL, 0);
+      dayNames[day][fAbbrev] = SysAllocStringLen(NULL, size - 1);
+      GetLocaleInfoW(LOCALE_USER_DEFAULT, localeValue,
+                     dayNames[day][fAbbrev], size);
+    }
+  }
+
+  /* Get the user's first day of week. 0=Monday, .. */
+  GetLocaleInfoW(
+      LOCALE_USER_DEFAULT, LOCALE_IFIRSTDAYOFWEEK | LOCALE_RETURN_NUMBER,
+      (LPWSTR)&defaultFirstDay, sizeof(defaultFirstDay) / sizeof(WCHAR));
+
+  /* Check invalid arguments */
+  VARWDN_F(0, 0, 4, 0, E_INVALIDARG);
+  VARWDN_F(8, 0, 4, 0, E_INVALIDARG);
+  VARWDN_F(4, 0, -1, 0, E_INVALIDARG);
+  VARWDN_F(4, 0, 8, 0, E_INVALIDARG);
+
+  hres = pVarWeekdayName(1, 0, 0, 0, NULL);
+  ok(E_INVALIDARG == hres,
+     "Null pointer: expected E_INVALIDARG, got 0x%08x\n", hres);
+
+  /* Check all combinations */
+  for (iWeekday = 1; iWeekday <= 7; ++iWeekday)
+  {
+    for (fAbbrev = 0; fAbbrev <= 1; ++fAbbrev)
+    {
+      /* 0 = Default, 1 = Sunday, 2 = Monday, .. */
+      for (iFirstDay = 0; iFirstDay <= 7; ++iFirstDay)
+      {
+        VARWDN_O(iWeekday, fAbbrev, iFirstDay, 0);
+        if (iFirstDay == 0)
+          firstDay = defaultFirstDay;
+        else
+          /* Translate from 0=Sunday to 0=Monday in the modulo 7 space */
+          firstDay = iFirstDay - 2;
+        day = (7 + iWeekday - 1 + firstDay) % 7;
+        ok(VARCMP_EQ == VarBstrCmp(out, dayNames[day][fAbbrev],
+                                   LOCALE_USER_DEFAULT, 0),
+           "VarWeekdayName(%d,%d,%d): got wrong dayname: '%s'\n",
+           iWeekday, fAbbrev, iFirstDay, buff);
+        SysFreeString(out);
+      }
+    }
+  }
+
+  /* Cleanup */
+  for (day = 0; day <= 6; ++day)
+  {
+    for (fAbbrev = 0; fAbbrev <= 1; ++fAbbrev)
+    {
+      SysFreeString(dayNames[day][fAbbrev]);
+    }
+  }
+}
+
 START_TEST(varformat)
 {
   hOleaut32 = GetModuleHandleA("oleaut32.dll");
 
   test_VarFormatNumber();
   test_VarFormat();
+  test_VarWeekdayName();
 }

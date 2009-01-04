@@ -27,9 +27,11 @@
 
 #include "windef.h"
 #include "winbase.h"
+
 #include "oleauto.h"
 #include "ocidl.h"
 #include "shlwapi.h"
+#include "initguid.h"
 #include "tmarshal.h"
 
 #define expect_eq(expr, value, type, format) { type _ret = (expr); ok((value) == _ret, #expr " expected " format " got " format "\n", value, _ret); }
@@ -37,10 +39,10 @@
 #define expect_hex(expr, value) expect_eq(expr, (int)value, int, "0x%x")
 #define expect_null(expr) expect_eq(expr, NULL, const void *, "%p")
 
-#define expect_wstr_utf8val(expr, value) \
+#define expect_wstr_acpval(expr, value) \
     { \
         CHAR buf[260]; \
-        expect_eq(!WideCharToMultiByte(CP_UTF8, 0, (expr), -1, buf, 260, NULL, NULL), 0, int, "%d"); \
+        expect_eq(!WideCharToMultiByte(CP_ACP, 0, (expr), -1, buf, 260, NULL, NULL), 0, int, "%d"); \
         ok(lstrcmp(value, buf) == 0, #expr " expected \"%s\" got \"%s\"\n", value, buf); \
     }
 
@@ -513,6 +515,70 @@ static void test_TypeInfo(void)
     ITypeLib_Release(pTypeLib);
 }
 
+/* RegDeleteTreeW from dlls/advapi32/registry.c */
+static LSTATUS myRegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey)
+{
+    LONG ret;
+    DWORD dwMaxSubkeyLen, dwMaxValueLen;
+    DWORD dwMaxLen, dwSize;
+    WCHAR szNameBuf[MAX_PATH], *lpszName = szNameBuf;
+    HKEY hSubKey = hKey;
+
+    if(lpszSubKey)
+    {
+        ret = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_READ, &hSubKey);
+        if (ret) return ret;
+    }
+
+    ret = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
+            &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
+    if (ret) goto cleanup;
+
+    dwMaxSubkeyLen++;
+    dwMaxValueLen++;
+    dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
+    if (dwMaxLen > sizeof(szNameBuf)/sizeof(WCHAR))
+    {
+        /* Name too big: alloc a buffer for it */
+        if (!(lpszName = HeapAlloc( GetProcessHeap(), 0, dwMaxLen*sizeof(WCHAR))))
+        {
+            ret = ERROR_NOT_ENOUGH_MEMORY;
+            goto cleanup;
+        }
+    }
+
+    /* Recursively delete all the subkeys */
+    while (TRUE)
+    {
+        dwSize = dwMaxLen;
+        if (RegEnumKeyExW(hSubKey, 0, lpszName, &dwSize, NULL,
+                          NULL, NULL, NULL)) break;
+
+        ret = myRegDeleteTreeW(hSubKey, lpszName);
+        if (ret) goto cleanup;
+    }
+
+    if (lpszSubKey)
+        ret = RegDeleteKeyW(hKey, lpszSubKey);
+    else
+        while (TRUE)
+        {
+            dwSize = dwMaxLen;
+            if (RegEnumValueW(hKey, 0, lpszName, &dwSize,
+                  NULL, NULL, NULL, NULL)) break;
+
+            ret = RegDeleteValueW(hKey, lpszName);
+            if (ret) goto cleanup;
+        }
+
+cleanup:
+    if (lpszName != szNameBuf)
+        HeapFree(GetProcessHeap(), 0, lpszName);
+    if(lpszSubKey)
+        RegCloseKey(hSubKey);
+    return ret;
+}
+
 static BOOL do_typelib_reg_key(GUID *uid, WORD maj, WORD min, LPCWSTR base, BOOL remove)
 {
     static const WCHAR typelibW[] = {'T','y','p','e','l','i','b','\\',0};
@@ -521,20 +587,29 @@ static BOOL do_typelib_reg_key(GUID *uid, WORD maj, WORD min, LPCWSTR base, BOOL
     WCHAR buf[128];
     HKEY hkey;
     BOOL ret = TRUE;
+    DWORD res;
 
     memcpy(buf, typelibW, sizeof(typelibW));
     StringFromGUID2(uid, buf + lstrlenW(buf), 40);
 
     if (remove)
     {
-        ok(SHDeleteKeyW(HKEY_CLASSES_ROOT, buf) == ERROR_SUCCESS, "SHDeleteKey failed\n");
+        ok(myRegDeleteTreeW(HKEY_CLASSES_ROOT, buf) == ERROR_SUCCESS, "SHDeleteKey failed\n");
         return TRUE;
     }
 
     wsprintfW(buf + lstrlenW(buf), formatW, maj, min );
 
-    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, buf, 0, NULL, 0,
-                        KEY_WRITE, NULL, &hkey, NULL) != ERROR_SUCCESS)
+    SetLastError(0xdeadbeef);
+    res = RegCreateKeyExW(HKEY_CLASSES_ROOT, buf, 0, NULL, 0,
+                          KEY_WRITE, NULL, &hkey, NULL);
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("W-calls are not implemented\n");
+        return FALSE;
+    }
+
+    if (res != ERROR_SUCCESS)
     {
         trace("RegCreateKeyExW failed\n");
         return FALSE;
@@ -576,7 +651,7 @@ static void test_QueryPathOfRegTypeLib(void)
     BSTR path;
 
     status = UuidCreate(&uid);
-    ok(!status, "UuidCreate error %08lx\n", status);
+    ok(!status || status == RPC_S_UUID_LOCAL_ONLY, "UuidCreate error %08lx\n", status);
 
     StringFromGUID2(&uid, uid_str, 40);
     /*trace("GUID: %s\n", wine_dbgstr_w(uid_str));*/
@@ -608,11 +683,13 @@ static void test_inheritance(void)
     HREFTYPE href;
     FUNCDESC *pFD;
     WCHAR path[MAX_PATH];
+    CHAR pathA[MAX_PATH];
     static const WCHAR tl_path[] = {'.','\\','m','i','d','l','_','t','m','a','r','s','h','a','l','.','t','l','b',0};
 
     BOOL use_midl_tlb = 0;
 
-    GetModuleFileNameW(NULL, path, MAX_PATH);
+    GetModuleFileNameA(NULL, pathA, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, pathA, -1, path, MAX_PATH);
 
     if(use_midl_tlb)
         memcpy(path, tl_path, sizeof(tl_path));
@@ -1204,7 +1281,7 @@ static void test_dump_typelib(const char *name)
     int ifcount = sizeof(info)/sizeof(info[0]);
     int iface, func;
 
-    MultiByteToWideChar(CP_UTF8, 0, name, -1, wszName, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, name, -1, wszName, MAX_PATH);
     ole_check(LoadTypeLibEx(wszName, REGKIND_NONE, &typelib));
     expect_eq(ITypeLib_GetTypeInfoCount(typelib), ifcount, UINT, "%d");
     for (iface = 0; iface < ifcount; iface++)
@@ -1217,7 +1294,7 @@ static void test_dump_typelib(const char *name)
         trace("Interface %s\n", if_info->name);
         ole_check(ITypeLib_GetTypeInfo(typelib, iface, &typeinfo));
         ole_check(ITypeLib_GetDocumentation(typelib, iface, &bstrIfName, NULL, NULL, NULL));
-        expect_wstr_utf8val(bstrIfName, if_info->name);
+        expect_wstr_acpval(bstrIfName, if_info->name);
         SysFreeString(bstrIfName);
 
         ole_check(ITypeInfo_GetTypeAttr(typeinfo, &typeattr));
@@ -1250,7 +1327,7 @@ static void test_dump_typelib(const char *name)
             ole_check(ITypeInfo_GetNames(typeinfo, desc->memid, namesTab, 256, &cNames));
             for (i = 0; i < cNames; i++)
             {
-                expect_wstr_utf8val(namesTab[i], fn_info->names[i]);
+                expect_wstr_acpval(namesTab[i], fn_info->names[i]);
                 SysFreeString(namesTab[i]);
             }
             expect_null(fn_info->names[cNames]);
@@ -1273,13 +1350,41 @@ static void test_dump_typelib(const char *name)
 
 #endif
 
+static const char *create_test_typelib(void)
+{
+    static char filename[MAX_PATH];
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+    DWORD written;
+
+    GetTempFileNameA( ".", "tlb", 0, filename );
+    file = CreateFile( filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
+    ok( file != INVALID_HANDLE_VALUE, "file creation failed\n" );
+    if (file == INVALID_HANDLE_VALUE) return NULL;
+    res = FindResource( GetModuleHandle(0), MAKEINTRESOURCE(2), "TYPELIB" );
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandle(0), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandle(0), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandle(0), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+    return filename;
+}
+
 START_TEST(typelib)
 {
+    const char *filename;
+
     ref_count_test(wszStdOle2);
     test_TypeComp();
     test_CreateDispTypeInfo();
     test_TypeInfo();
     test_QueryPathOfRegTypeLib();
     test_inheritance();
-    test_dump_typelib("test_tlb.tlb");
+
+    if ((filename = create_test_typelib()))
+    {
+        test_dump_typelib( filename );
+        DeleteFile( filename );
+    }
 }

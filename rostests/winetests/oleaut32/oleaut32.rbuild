@@ -4,10 +4,11 @@
 <module name="oleaut32_winetest" type="win32cui" installbase="bin" installname="oleaut32_winetest.exe" allowwarnings="true">
 	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="oleaut32_winetest">.</include>
+	<include base="ReactOS">include/reactos/wine</include>
+	<include base="oleaut32_winetest" root="intermediate">.</include>
 	<library>wine</library>
 	<library>oleaut32</library>
 	<library>ole32</library>
-	<library>shlwapi</library>
 	<library>rpcrt4</library>
 	<library>user32</library>
 	<library>gdi32</library>
@@ -26,5 +27,18 @@
 	<file>vartype.c</file>
 	<file>tmarshal.rc</file>
 	<file>testlist.c</file>
+	<dependency>tmarshal_header</dependency>
+	<dependency>tmarshal</dependency>
+	<dependency>test_tlb</dependency>
+	<dependency>stdole2.tlb</dependency>
+</module>
+<module name="tmarshal_header" type="idlheader">
+	<file>tmarshal.idl</file>
+</module>
+<module name="test_tlb" type="embeddedtypelib" allowwarnings="true">
+	<file>test_tlb.idl</file>
+</module>
+<module name="tmarshal" type="embeddedtypelib" allowwarnings="true">
+	<file>tmarshal.idl</file>
 </module>
 </group>

@@ -498,6 +498,7 @@ static HRESULT (WINAPI *pVarBoolFromUI8)(ULONG64,VARIANT_BOOL*);
 
 static HRESULT (WINAPI *pVarBstrFromR4)(FLOAT,LCID,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarBstrFromDate)(DATE,LCID,ULONG,BSTR*);
+static HRESULT (WINAPI *pVarBstrFromCy)(CY,LCID,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarBstrFromDec)(DECIMAL*,LCID,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarBstrCmp)(BSTR,BSTR,LCID,ULONG);
 
@@ -1097,7 +1098,7 @@ static void test_VarUI1FromDisp(void)
   dispatch.vt = VT_UI1;
   dispatch.bFailInvoke = FALSE;
 
-  hres = VarUI1FromDisp((IDispatch*)&dispatch, in, &out);
+  hres = pVarUI1FromDisp((IDispatch*)&dispatch, in, &out);
   trace("0x%08x\n", hres);
 
   hres = VariantChangeTypeEx(&vDst, &vSrc, in, 0, VT_UI1);
@@ -1105,7 +1106,7 @@ static void test_VarUI1FromDisp(void)
 
   dispatch.bFailInvoke = TRUE;
 
-  hres = VarUI1FromDisp((IDispatch*)&dispatch, in, &out);
+  hres = pVarUI1FromDisp((IDispatch*)&dispatch, in, &out);
   trace("0x%08x\n", hres);
 
   hres = VariantChangeTypeEx(&vDst, &vSrc, in, 0, VT_UI1);
@@ -3322,7 +3323,7 @@ static void test_VarDateFromStr(void)
   CHECKPTR(VarDateFromStr);
   CHECKPTR(SystemTimeToVariantTime);
 
-  /* Some date formats are relative, so we need to find the cuurent year */
+  /* Some date formats are relative, so we need to find the current year */
   GetSystemTime(&st);
   st.wHour = st.wMinute = st.wSecond = st.wMilliseconds = 0;
   DFS(NULL); EXPECT_MISMATCH;
@@ -4800,9 +4801,71 @@ static void test_VarBstrFromDate(void)
   BSTR_DATE(2958465.0, "12/31/9999");
 }
 
+#define BSTR_CY(l, a, b, e) \
+  S(l).Lo = b; S(l).Hi = a; \
+  hres = pVarBstrFromCy(l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);\
+  ok(hres == S_OK, "got hres 0x%08x\n", hres);\
+  if (hres== S_OK && bstr)\
+  {\
+    ok(lstrcmpW(bstr, e) == 0, "invalid number (got %s)\n", wtoascii(bstr));\
+  }
+
+static void test_VarBstrFromCy(void)
+{
+  LCID lcid;
+  HRESULT hres;
+  BSTR bstr = NULL;
+  CY l;
+
+  static const WCHAR szZero[] = {'0', '\0'};
+  static const WCHAR szOne[] = {'1', '\0'};
+  static const WCHAR szOnePointFive[] = {'1','.','5','\0'};
+  static const WCHAR szMinusOnePointFive[] = {'-','1','.','5','\0'};
+  static const WCHAR szBigNum1[] = {'4','2','9','4','9','6','.','7','2','9','5','\0'};    /* (1 << 32) - 1 / 1000 */
+  static const WCHAR szBigNum2[] = {'4','2','9','4','9','6','.','7','2','9','6','\0'};    /* (1 << 32) / 1000 */
+  static const WCHAR szBigNum3[] = {'9','2','2','3','3','7','2','0','3','6','8','5','4','7','7','.','5','8','0','7','\0'};    /* ((1 << 63) - 1)/10000 */
+
+  static const WCHAR szSmallNumber_English[] = {'0','.','0','0','0','9','\0'};
+  static const WCHAR szSmallNumber_Spanish[] = {'0',',','0','0','0','9','\0'};
+
+  CHECKPTR(VarBstrFromCy);
+  lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
+
+  /* check zero */
+  BSTR_CY(l, 0,0, szZero);
+
+  /* check one */
+  BSTR_CY(l, 0, 10000, szOne);
+
+  /* check one point five */
+  BSTR_CY(l, 0, 15000, szOnePointFive);
+
+  /* check minus one point five */
+  BSTR_CY(l, 0xffffffff, ((15000)^0xffffffff)+1, szMinusOnePointFive);
+
+  /* check bignum (1) */
+  BSTR_CY(l, 0, 0xffffffff, szBigNum1);
+
+  /* check bignum (2) */
+  BSTR_CY(l, 1,0, szBigNum2);
+
+  /* check bignum (3) */
+  BSTR_CY(l, 0x7fffffff,0xffffffff, szBigNum3);
+
+  /* check leading zeros and decimal sep. for English locale */
+  BSTR_CY(l, 0,9, szSmallNumber_English);
+
+  lcid = MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT);
+
+  /* check leading zeros and decimal sep. for Spanish locale */
+  BSTR_CY(l, 0,9, szSmallNumber_Spanish);
+}
+
+#undef BSTR_CY
+
 #define BSTR_DEC(l, a, b, c, d, e) \
   SETDEC(l, a,b,c,d);\
-  hres = VarBstrFromDec(&l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);\
+  hres = pVarBstrFromDec(&l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);\
   ok(hres == S_OK, "got hres 0x%08x\n", hres);\
   if (hres== S_OK && bstr)\
   {\
@@ -4811,7 +4874,7 @@ static void test_VarBstrFromDate(void)
 
 #define BSTR_DEC64(l, a, b, c, x, d, e) \
   SETDEC64(l, a,b,c,x,d);\
-  hres = VarBstrFromDec(&l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);\
+  hres = pVarBstrFromDec(&l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);\
   ok(hres == S_OK, "got hres 0x%08x\n", hres);\
   if (hres== S_OK && bstr)\
   {\
@@ -4928,12 +4991,12 @@ static void test_VarBstrCmp(void)
     bstr = SysAllocString(sz);
     bstrempty = SysAllocString(szempty);
     
-    /* NULL handling. Yepp, MSDN is totaly wrong here */
+    /* NULL handling. Yepp, MSDN is totally wrong here */
     VARBSTRCMP(NULL,NULL,0,VARCMP_EQ);
     VARBSTRCMP(bstr,NULL,0,VARCMP_GT);
     VARBSTRCMP(NULL,bstr,0,VARCMP_LT);
 
-    /* NULL and empty string comparisions */
+    /* NULL and empty string comparisons */
     VARBSTRCMP(bstrempty,NULL,0,VARCMP_EQ);
     VARBSTRCMP(NULL,bstrempty,0,VARCMP_EQ);
 
@@ -5139,7 +5202,8 @@ static void test_SysReAllocString(void)
 
     changed = SysReAllocString(&str, szSmaller);
     ok (changed == 1, "Expected 1, got %d\n", changed);
-    ok (str == oldstr, "Created new string\n");
+    /* Vista creates a new string, but older versions reuse the existing string. */
+    /*ok (str == oldstr, "Created new string\n");*/
     bstr = Get(str);
     ok (bstr->dwLen == 2, "Expected 2, got %d\n", bstr->dwLen);
     ok (!lstrcmpW(bstr->szString, szSmaller), "String different\n");
@@ -5178,7 +5242,8 @@ static void test_SysReAllocStringLen(void)
 
     changed = SysReAllocStringLen(&str, szSmaller, 1);
     ok (changed == 1, "Expected 1, got %d\n", changed);
-    ok (str == oldstr, "Created new string\n");
+    /* Vista creates a new string, but older versions reuse the existing string. */
+    /*ok (str == oldstr, "Created new string\n");*/
     bstr = Get(str);
     ok (bstr->dwLen == 2, "Expected 2, got %d\n", bstr->dwLen);
     ok (!lstrcmpW(bstr->szString, szSmaller), "String different\n");
@@ -5717,7 +5782,7 @@ static void test_ClearCustData(void)
    * its memory, while Wine uses HeapAlloc(). Doing this ensures we allocate
    * using the correct function whether with native or builtin.
    */
-  ci.prgCustData = (LPCUSTDATAITEM)SysAllocStringByteLen((LPCSTR)buff, sizeof(buff));
+  ci.prgCustData = (LPCUSTDATAITEM)Get(SysAllocStringByteLen((LPCSTR)buff, sizeof(buff)));
   for (i = 0; i < NUM_CUST_ITEMS; i++)
     VariantInit(&ci.prgCustData[i].varValue);
   pClearCustData(&ci);
@@ -5729,8 +5794,8 @@ static void test_NullByRef(void)
   VARIANT v1, v2;
   HRESULT hRes;
 
-  VariantClear(&v1);
-  VariantClear(&v2);
+  VariantInit(&v1);
+  VariantInit(&v2);
   V_VT(&v1) = VT_BYREF|VT_VARIANT;
   V_BYREF(&v1) = 0;
 
@@ -5763,8 +5828,8 @@ static void test_ChangeType_keep_dst(void)
      HRESULT hres;
 
      bstr = SysAllocString(testW);
-     VariantClear(&v1);
-     VariantClear(&v2);
+     VariantInit(&v1);
+     VariantInit(&v2);
      V_VT(&v1) = VT_BSTR;
      V_BSTR(&v1) = bstr;
      hres = VariantChangeTypeEx(&v1, &v1, 0, 0, VT_INT);
@@ -6042,6 +6107,7 @@ START_TEST(vartype)
 
   test_VarBstrFromR4();
   test_VarBstrFromDate();
+  test_VarBstrFromCy();
   test_VarBstrFromDec();
   test_VarBstrCmp();
   test_SysStringLen();

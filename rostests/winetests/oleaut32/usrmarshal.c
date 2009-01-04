@@ -208,6 +208,7 @@ static void test_marshal_LPSAFEARRAY(void)
         LPSAFEARRAY_UserFree(&umcb.Flags, &lpsa2);
     }
     HeapFree(GetProcessHeap(), 0, buffer);
+    lpsa->cLocks = 0;
     SafeArrayDestroy(lpsa);
 
     /* test NULL safe array */
@@ -244,6 +245,7 @@ static void test_marshal_LPSAFEARRAY(void)
     check_safearray(buffer, lpsa);
 
     HeapFree(GetProcessHeap(), 0, buffer);
+    lpsa->cLocks = 0;
     SafeArrayDestroy(lpsa);
 
     /* VARTYPE-less arrays can be marshaled if cbElements is 1,2,4 or 8 as type SF_In */
@@ -526,6 +528,13 @@ static void test_marshal_VARIANT(void)
     V_VT(&v) = VT_I1;
     V_I1(&v) = 0x12;
 
+    /* check_variant_header tests wReserved[123], so initialize to unique values.
+     * (Could probably also do this by setting the variant to a known DECIMAL.)
+     */
+    V_U2(&v).wReserved1 = 0x1234;
+    V_U2(&v).wReserved2 = 0x5678;
+    V_U2(&v).wReserved3 = 0x9abc;
+
     /* Variants have an alignment of 8 */
     rpcMsg.BufferLength = stubMsg.BufferLength = VARIANT_UserSize(&umcb.Flags, 1, &v);
     ok(stubMsg.BufferLength == 29, "size %d\n", stubMsg.BufferLength);
@@ -607,11 +616,15 @@ static void test_marshal_VARIANT(void)
     ok(*(short*)wirev == s, "wv[6] %08x\n", *wirev);
     if (VARIANT_UNMARSHAL_WORKS)
     {
+        void *mem;
         VariantInit(&v2);
+        V_VT(&v2) = VT_I2 | VT_BYREF;
+        V_BYREF(&v2) = mem = CoTaskMemAlloc(sizeof(V_I2(&v2)));
         stubMsg.Buffer = buffer;
         next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v2);
         ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
         ok(V_VT(&v) == V_VT(&v2), "got vt %d expect %d\n", V_VT(&v), V_VT(&v2));
+        ok(V_BYREF(&v2) == mem, "didn't reuse existing memory\n");
         ok(*V_I2REF(&v) == *V_I2REF(&v2), "got i2 ref %x expect ui4 ref %x\n", *V_I2REF(&v), *V_I2REF(&v2));
 
         VARIANT_UserFree(&umcb.Flags, &v2);
@@ -843,6 +856,7 @@ static void test_marshal_VARIANT(void)
 
     /*** DECIMAL ***/
     VarDecFromI4(0x12345678, &dec);
+    dec.wReserved = 0xfedc;          /* Also initialize reserved field, as we check it later */
     VariantInit(&v);
     V_DECIMAL(&v) = dec;
     V_VT(&v) = VT_DECIMAL;
@@ -900,6 +914,13 @@ static void test_marshal_VARIANT(void)
     if (VARIANT_UNMARSHAL_WORKS)
     {
         VariantInit(&v2);
+        /* check_variant_header tests wReserved[123], so initialize to unique values.
+         * (Could probably also do this by setting the variant to a known DECIMAL.)
+         */
+        V_U2(&v2).wReserved1 = 0x0123;
+        V_U2(&v2).wReserved2 = 0x4567;
+        V_U2(&v2).wReserved3 = 0x89ab;
+
         stubMsg.Buffer = buffer;
         next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v2);
         ok(next == buffer + stubMsg.BufferLength, "got %p expect %p\n", next, buffer + stubMsg.BufferLength);
@@ -1037,7 +1058,6 @@ static void test_marshal_VARIANT(void)
     lpsa = SafeArrayCreate(VT_R8, 1, &sab);
     *(DWORD *)lpsa->pvData = 0xcafebabe;
     *((DWORD *)lpsa->pvData + 1) = 0xdeadbeef;
-    lpsa->cLocks = 7;
 
     VariantInit(&v);
     V_VT(&v) = VT_UI4 | VT_ARRAY;
@@ -1209,9 +1229,7 @@ static void test_marshal_VARIANT(void)
         stubMsg.Buffer = buffer;
         next = VARIANT_UserUnmarshal(&umcb.Flags, buffer, &v3);
         ok(V_VT(&v) == V_VT(&v3), "got vt %d expect %d\n", V_VT(&v), V_VT(&v3));
-        ok(V_VT(V_VARIANTREF(&v)) == V_VT(V_VARIANTREF(&v3)), "vts differ %x %x\n",
-           V_VT(V_VARIANTREF(&v)), V_VT(V_VARIANTREF(&v3)));
-        ok(V_R8(V_VARIANTREF(&v)) == V_R8(V_VARIANTREF(&v3)), "r8s differ\n");
+        ok(V_UNKNOWN(&v) == V_UNKNOWN(&v3), "got %p expect %p\n", V_UNKNOWN(&v), V_UNKNOWN(&v3));
         VARIANT_UserFree(&umcb.Flags, &v3);
         ok(heap_unknown->refs == 1, "%d refcounts of IUnknown leaked\n", heap_unknown->refs - 1);
         IUnknown_Release((IUnknown *)heap_unknown);

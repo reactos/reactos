@@ -35,6 +35,12 @@ library TestTypelib
         STATE_WIDGETIFIED
     } STATE;
 
+    typedef struct tagMYSTRUCT
+    {
+        INT field1;
+        ULONGLONG field2;
+    } MYSTRUCT;
+
     coclass ApplicationObject2;
 
     [
@@ -44,6 +50,17 @@ library TestTypelib
     interface ISomethingFromDispatch : IDispatch
     {
         HRESULT anotherfn(void);
+    }
+
+    [
+        odl,
+        oleautomation,
+        dual,
+        uuid(3f7e06fe-0bce-46f0-8b7d-3a68393c7967)
+    ]
+    interface ItestDual : IDispatch
+    {
+        HRESULT test();
     }
 
     [
@@ -100,12 +117,26 @@ library TestTypelib
         [vararg, id(DISPID_TM_VARARG)]
         void VarArg([in] int numexpect, [in] SAFEARRAY(VARIANT) values);
 
+        [id(DISPID_TM_STRUCTARGS)]
+        void StructArgs([in] MYSTRUCT byval, [in] MYSTRUCT *byptr, [in] MYSTRUCT arr[5]);
+
         [id(DISPID_TM_ERROR)]
         HRESULT Error();
 
         [propget, id(DISPID_TM_CLONEINTERFACE)]
         HRESULT CloneInterface([out, retval] ISomethingFromDispatch **ppVal);
+    }
 
+    [
+        odl,
+        uuid(a1f8cae3-c947-3c5f-a57c-c88b9b6f3586),
+        oleautomation,
+        dual
+    ]
+    interface IStaticWidget : IDispatch
+    {
+        [id(DISPID_TM_TESTDUAL)]
+        HRESULT TestDual([in] ItestDual *p);
     }
 
     [
