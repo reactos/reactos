@@ -1200,6 +1200,14 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
         /* Basic thread information */
         case ThreadBasicInformation:
 
+            /* Set return length */
+            Length = sizeof(THREAD_BASIC_INFORMATION);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect writes with SEH */
             _SEH2_TRY
             {
@@ -1210,9 +1218,6 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                 ThreadBasicInfo->AffinityMask = Thread->Tcb.Affinity;
                 ThreadBasicInfo->Priority = Thread->Tcb.Priority;
                 ThreadBasicInfo->BasePriority = KeQueryBasePriorityThread(&Thread->Tcb);
-
-                /* Set return length */
-                Length = sizeof(THREAD_BASIC_INFORMATION);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -1225,6 +1230,14 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
         /* Thread time information */
         case ThreadTimes:
 
+            /* Set the return length */
+            Length = sizeof(KERNEL_USER_TIMES);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect writes with SEH */
             _SEH2_TRY
             {
@@ -1235,9 +1248,6 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                                                  100000LL;
                 ThreadTime->CreateTime = Thread->CreateTime;
                 ThreadTime->ExitTime = Thread->ExitTime;
-
-                /* Set the return length */
-                Length = sizeof(KERNEL_USER_TIMES);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -1249,14 +1259,19 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
 
         case ThreadQuerySetWin32StartAddress:
 
+            /* Set the return length*/
+            Length = sizeof(PVOID);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect write with SEH */
             _SEH2_TRY
             {
                 /* Return the Win32 Start Address */
                 *(PVOID*)ThreadInformation = Thread->Win32StartAddress;
-
-                /* Set the return length*/
-                Length = sizeof(PVOID);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -1268,14 +1283,19 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
 
         case ThreadPerformanceCount:
 
+            /* Set the return length*/
+            Length = sizeof(LARGE_INTEGER);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect write with SEH */
             _SEH2_TRY
             {
                 /* FIXME */
                 (*(PLARGE_INTEGER)ThreadInformation).QuadPart = 0;
-
-                /* Set the return length*/
-                Length = sizeof(LARGE_INTEGER);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -1287,6 +1307,14 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
 
         case ThreadAmILastThread:
 
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect write with SEH */
             _SEH2_TRY
             {
@@ -1296,9 +1324,6 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                                                &Thread->ThreadsProcess->
                                                ThreadListHead) ?
                                               TRUE : FALSE);
-
-                /* Set the return length*/
-                Length = sizeof(ULONG);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -1310,6 +1335,14 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
 
         case ThreadIsIoPending:
 
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Raise the IRQL to protect the IRP list */
             KeRaiseIrql(APC_LEVEL, &OldIrql);
 
@@ -1318,9 +1351,6 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
             {
                 /* Check if the IRP list is empty or not */
                 *(PULONG)ThreadInformation = !IsListEmpty(&Thread->IrpList);
-
-                /* Set the return length*/
-                Length = sizeof(ULONG);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
