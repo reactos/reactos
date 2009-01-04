@@ -40,18 +40,13 @@ HRESULT (WINAPI * pCoGetObjectContext)(REFIID riid, LPVOID *ppv);
 #define ok_no_locks() ok(cLocks == 0, "Number of locks should be 0, but actually is %d\n", cLocks)
 
 static const CLSID CLSID_non_existent =   { 0x12345678, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
-static const CLSID CLSID_CDeviceMoniker = { 0x4315d437, 0x5b8c, 0x11d0, { 0xbd, 0x3b, 0x00, 0xa0, 0xc9, 0x11, 0xce, 0x86 } };
-static WCHAR devicedotone[] = {'d','e','v','i','c','e','.','1',0};
+static const CLSID CLSID_StdFont = { 0x0be35203, 0x8f91, 0x11ce, { 0x9d, 0xe3, 0x00, 0xaa, 0x00, 0x4b, 0xb8, 0x51 } };
+static WCHAR stdfont[] = {'S','t','d','F','o','n','t',0};
 static const WCHAR wszNonExistent[] = {'N','o','n','E','x','i','s','t','e','n','t',0};
-static WCHAR wszCLSID_CDeviceMoniker[] =
+static WCHAR wszCLSID_StdFont[] =
 {
-    '{',
-    '4','3','1','5','d','4','3','7','-',
-    '5','b','8','c','-',
-    '1','1','d','0','-',
-    'b','d','3','b','-',
-    '0','0','a','0','c','9','1','1','c','e','8','6',
-    '}',0
+    '{','0','b','e','3','5','2','0','3','-','8','f','9','1','-','1','1','c','e','-',
+    '9','d','e','3','-','0','0','a','a','0','0','4','b','b','8','5','1','}',0
 };
 
 static const IID IID_IWineTest =
@@ -143,11 +138,11 @@ static IClassFactory Test_ClassFactory = { &TestClassFactory_Vtbl };
 static void test_ProgIDFromCLSID(void)
 {
     LPWSTR progid;
-    HRESULT hr = ProgIDFromCLSID(&CLSID_CDeviceMoniker, &progid);
+    HRESULT hr = ProgIDFromCLSID(&CLSID_StdFont, &progid);
     ok(hr == S_OK, "ProgIDFromCLSID failed with error 0x%08x\n", hr);
     if (hr == S_OK)
     {
-        ok(!lstrcmpiW(progid, devicedotone), "Didn't get expected prog ID\n");
+        ok(!lstrcmpiW(progid, stdfont), "Didn't get expected prog ID\n");
         CoTaskMemFree(progid);
     }
 
@@ -156,20 +151,20 @@ static void test_ProgIDFromCLSID(void)
     ok(hr == REGDB_E_CLASSNOTREG, "ProgIDFromCLSID returned %08x\n", hr);
     ok(progid == NULL, "ProgIDFromCLSID returns with progid %p\n", progid);
 
-    hr = ProgIDFromCLSID(&CLSID_CDeviceMoniker, NULL);
+    hr = ProgIDFromCLSID(&CLSID_StdFont, NULL);
     ok(hr == E_INVALIDARG, "ProgIDFromCLSID should return E_INVALIDARG instead of 0x%08x\n", hr);
 }
 
 static void test_CLSIDFromProgID(void)
 {
     CLSID clsid;
-    HRESULT hr = CLSIDFromProgID(devicedotone, &clsid);
+    HRESULT hr = CLSIDFromProgID(stdfont, &clsid);
     ok(hr == S_OK, "CLSIDFromProgID failed with error 0x%08x\n", hr);
-    ok(IsEqualCLSID(&clsid, &CLSID_CDeviceMoniker), "clsid wasn't equal to CLSID_CDeviceMoniker\n");
+    ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
 
-    hr = CLSIDFromString(devicedotone, &clsid);
+    hr = CLSIDFromString(stdfont, &clsid);
     ok_ole_success(hr, "CLSIDFromString");
-    ok(IsEqualCLSID(&clsid, &CLSID_CDeviceMoniker), "clsid wasn't equal to CLSID_CDeviceMoniker\n");
+    ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
 
     /* test some failure cases */
 
@@ -188,9 +183,9 @@ static void test_CLSIDFromProgID(void)
 static void test_CLSIDFromString(void)
 {
     CLSID clsid;
-    HRESULT hr = CLSIDFromString(wszCLSID_CDeviceMoniker, &clsid);
+    HRESULT hr = CLSIDFromString(wszCLSID_StdFont, &clsid);
     ok_ole_success(hr, "CLSIDFromString");
-    ok(IsEqualCLSID(&clsid, &CLSID_CDeviceMoniker), "clsid wasn't equal to CLSID_CDeviceMoniker\n");
+    ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
 
     hr = CLSIDFromString(NULL, &clsid);
     ok_ole_success(hr, "CLSIDFromString");
@@ -202,19 +197,19 @@ static void test_StringFromGUID2(void)
   WCHAR str[50];
   int len;
   /* Test corner cases for buffer size */
-  len = StringFromGUID2(&CLSID_CDeviceMoniker,str,50);
+  len = StringFromGUID2(&CLSID_StdFont,str,50);
   ok(len == 39, "len: %d (expected 39)\n", len);
-  ok(!lstrcmpiW(str, wszCLSID_CDeviceMoniker),"string wan't equal for CLSID_CDeviceMoniker\n");
+  ok(!lstrcmpiW(str, wszCLSID_StdFont),"string wasn't equal for CLSID_StdFont\n");
 
   memset(str,0,sizeof str);
-  len = StringFromGUID2(&CLSID_CDeviceMoniker,str,39);
+  len = StringFromGUID2(&CLSID_StdFont,str,39);
   ok(len == 39, "len: %d (expected 39)\n", len);
-  ok(!lstrcmpiW(str, wszCLSID_CDeviceMoniker),"string wan't equal for CLSID_CDeviceMoniker\n");
+  ok(!lstrcmpiW(str, wszCLSID_StdFont),"string wasn't equal for CLSID_StdFont\n");
 
-  len = StringFromGUID2(&CLSID_CDeviceMoniker,str,38);
+  len = StringFromGUID2(&CLSID_StdFont,str,38);
   ok(len == 0, "len: %d (expected 0)\n", len);
 
-  len = StringFromGUID2(&CLSID_CDeviceMoniker,str,30);
+  len = StringFromGUID2(&CLSID_StdFont,str,30);
   ok(len == 0, "len: %d (expected 0)\n", len);
 }
 

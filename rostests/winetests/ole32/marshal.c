@@ -2052,7 +2052,7 @@ static void test_freethreadedmarshaldata(IStream *pStream, MSHCTX mshctx, void *
 
     size = GlobalSize(hglobal);
 
-    marshal_data = (char *)GlobalLock(hglobal);
+    marshal_data = GlobalLock(hglobal);
 
     if (mshctx == MSHCTX_INPROC)
     {

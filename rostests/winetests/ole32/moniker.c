@@ -364,7 +364,7 @@ Moniker_GetDisplayName(IMoniker* iface, IBindCtx* pbc,
 {
     static const WCHAR wszDisplayName[] = {'*','*','G','e','m','m','a',0};
     CHECK_EXPECTED_METHOD("Moniker_GetDisplayName");
-    *ppszDisplayName = (LPOLESTR)CoTaskMemAlloc(sizeof(wszDisplayName));
+    *ppszDisplayName = CoTaskMemAlloc(sizeof(wszDisplayName));
     memcpy(*ppszDisplayName, wszDisplayName, sizeof(wszDisplayName));
     return S_OK;
 }

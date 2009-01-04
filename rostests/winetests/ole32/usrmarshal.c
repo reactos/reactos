@@ -158,9 +158,9 @@ static void test_marshal_HGLOBAL(void)
 
 static HENHMETAFILE create_emf(void)
 {
-    RECT rect = {0, 0, 100, 100};
+    const RECT rect = {0, 0, 100, 100};
     HDC hdc = CreateEnhMetaFile(NULL, NULL, &rect, "HENHMETAFILE Marshaling Test\0Test\0\0");
-    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, NULL, "Test String", strlen("Test String"), NULL);
+    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
     return CloseEnhMetaFile(hdc);
 }
 

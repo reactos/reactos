@@ -108,16 +108,42 @@ static const IDropTargetVtbl DropTarget_VTbl =
 
 static IDropTarget DropTarget = { &DropTarget_VTbl };
 
+static ATOM register_dummy_class(void)
+{
+    WNDCLASS wc =
+    {
+        0,
+        DefWindowProc,
+        0,
+        0,
+        GetModuleHandle(NULL),
+        NULL,
+        LoadCursor(NULL, IDC_ARROW),
+        (HBRUSH)(COLOR_BTNFACE+1),
+        NULL,
+        TEXT("WineOleTestClass"),
+    };
+
+    return RegisterClass(&wc);
+}
+
 START_TEST(dragdrop)
 {
     HRESULT hr;
+    HWND hwnd;
 
-    hr = RegisterDragDrop(GetDesktopWindow(), &DropTarget);
-    ok(hr == E_OUTOFMEMORY, "RegisterDragDrop without OLE initialized should have returned E_OUTOFMEMORY instead of 0x%08x\n", hr);
+    hwnd = CreateWindow(MAKEINTATOM(register_dummy_class()), "Test", 0,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
+        NULL, NULL, NULL);
+
+    hr = RegisterDragDrop(hwnd, &DropTarget);
+    ok(hr == E_OUTOFMEMORY ||
+        broken(hr == CO_E_NOTINITIALIZED), /* NT4 */
+        "RegisterDragDrop without OLE initialized should have returned E_OUTOFMEMORY instead of 0x%08x\n", hr);
 
     OleInitialize(NULL);
 
-    hr = RegisterDragDrop(GetDesktopWindow(), NULL);
+    hr = RegisterDragDrop(hwnd, NULL);
     ok(hr == E_INVALIDARG, "RegisterDragDrop with NULL IDropTarget * should return E_INVALIDARG instead of 0x%08x\n", hr);
 
     hr = RegisterDragDrop(NULL, &DropTarget);
@@ -127,21 +153,25 @@ START_TEST(dragdrop)
     ok(hr == DRAGDROP_E_INVALIDHWND, "RegisterDragDrop with garbage hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08x\n", hr);
 
     ok(droptarget_addref_called == 0, "DropTarget_AddRef shouldn't have been called\n");
-    hr = RegisterDragDrop(GetDesktopWindow(), &DropTarget);
+    hr = RegisterDragDrop(hwnd, &DropTarget);
     ok_ole_success(hr, "RegisterDragDrop");
     ok(droptarget_addref_called == 1, "DropTarget_AddRef should have been called once, not %d times\n", droptarget_addref_called);
 
-    hr = RegisterDragDrop(GetDesktopWindow(), &DropTarget);
+    hr = RegisterDragDrop(hwnd, &DropTarget);
     ok(hr == DRAGDROP_E_ALREADYREGISTERED, "RegisterDragDrop with already registered hwnd should return DRAGDROP_E_ALREADYREGISTERED instead of 0x%08x\n", hr);
 
     ok(droptarget_release_called == 0, "DropTarget_Release shouldn't have been called\n");
     OleUninitialize();
     ok(droptarget_release_called == 0, "DropTarget_Release shouldn't have been called\n");
 
-    hr = RevokeDragDrop(GetDesktopWindow());
+    hr = RevokeDragDrop(hwnd);
     ok_ole_success(hr, "RevokeDragDrop");
-    ok(droptarget_release_called == 1, "DropTarget_Release should have been called once, not %d times\n", droptarget_release_called);
+    ok(droptarget_release_called == 1 ||
+        broken(droptarget_release_called == 0), /* NT4 */
+        "DropTarget_Release should have been called once, not %d times\n", droptarget_release_called);
 
     hr = RevokeDragDrop(NULL);
     ok(hr == DRAGDROP_E_INVALIDHWND, "RevokeDragDrop with NULL hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08x\n", hr);
+
+    DestroyWindow(hwnd);
 }

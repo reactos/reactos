@@ -1481,7 +1481,7 @@ static void test_default_handler(void)
     IOleObject_Release(pObject);
 }
 
-void test_runnable(void)
+static void test_runnable(void)
 {
     static const char *methods_query_runnable[] =
     {

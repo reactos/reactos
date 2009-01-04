@@ -8,6 +8,7 @@
 
 extern void func_clipboard(void);
 extern void func_compobj(void);
+extern void func_defaulthandler(void);
 extern void func_dragdrop(void);
 extern void func_errorinfo(void);
 extern void func_hglobalstream(void);
@@ -23,6 +24,7 @@ const struct test winetest_testlist[] =
 {
     { "clipboard", func_clipboard },
     { "compobj", func_compobj },
+    { "defaulthandler", func_defaulthandler },
     { "dragdrop", func_dragdrop },
     { "errorinfo", func_errorinfo },
     { "hglobalstream", func_hglobalstream },

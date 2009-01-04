@@ -6,6 +6,7 @@
 	<include base="ole32_winetest">.</include>
 	<file>clipboard.c</file>
 	<file>compobj.c</file>
+	<file>defaulthandler.c</file>
 	<file>dragdrop.c</file>
 	<file>errorinfo.c</file>
 	<file>hglobalstream.c</file>

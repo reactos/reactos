@@ -92,7 +92,8 @@ static void test_streamonhglobal(IStream *pStream)
     ull.u.HighPart = -1;
     ull.u.LowPart = -1;
     hr = IStream_SetSize(pStream, ull);
-    ok(hr == E_OUTOFMEMORY, "IStream_SetSize with large size should have returned E_OUTOFMEMORY instead of 0x%08x\n", hr);
+    ok(hr == E_OUTOFMEMORY || broken(hr == S_OK), /* win9x */
+       "IStream_SetSize with large size should have returned E_OUTOFMEMORY instead of 0x%08x\n", hr);
 }
 
 static HRESULT WINAPI TestStream_QueryInterface(IStream *iface, REFIID riid, void **ppv)
@@ -261,18 +262,19 @@ static void test_copyto(void)
 
 static void test_freed_hglobal(void)
 {
+    static const char teststring[] = "this is a test string";
     HRESULT hr;
     IStream *pStream;
     HGLOBAL hglobal;
     char *p;
-    char buffer[10];
+    char buffer[sizeof(teststring) + 8];
     ULARGE_INTEGER ull;
     ULONG read, written;
 
-    hglobal = GlobalAlloc(GMEM_DDESHARE|GMEM_NODISCARD|GMEM_MOVEABLE, strlen("Rob") + 1);
+    hglobal = GlobalAlloc(GMEM_DDESHARE|GMEM_NODISCARD|GMEM_MOVEABLE, strlen(teststring) + 1);
     ok(hglobal != NULL, "GlobalAlloc failed with error %d\n", GetLastError());
     p = GlobalLock(hglobal);
-    strcpy(p, "Rob");
+    strcpy(p, teststring);
     GlobalUnlock(hglobal);
 
     hr = CreateStreamOnHGlobal(hglobal, FALSE, &pStream);
@@ -280,8 +282,10 @@ static void test_freed_hglobal(void)
 
     hr = IStream_Read(pStream, buffer, sizeof(buffer), &read);
     ok_ole_success(hr, "IStream_Read");
-    ok(!strcmp(buffer, "Rob"), "buffer data %s differs\n", buffer);
-    ok(read == strlen("Rob") + 1, "read should be 4 instead of %d\n", read);
+    ok(!strcmp(buffer, teststring), "buffer data %s differs\n", buffer);
+    ok(read == sizeof(teststring) ||
+       broken(read == ((sizeof(teststring) + 3) & ~3)), /* win9x rounds the size */
+       "read should be sizeof(teststring) instead of %d\n", read);
 
     GlobalFree(hglobal);
 

@@ -262,7 +262,8 @@ static void test_storage_stream(void)
     r = IStorage_CreateStream(stg, NULL, STGM_SHARE_EXCLUSIVE | STGM_READWRITE, 0, 0, &stm );
     ok(r==STG_E_INVALIDNAME, "IStorage->CreateStream wrong error\n");
     r = IStorage_CreateStream(stg, longname, STGM_SHARE_EXCLUSIVE | STGM_READWRITE, 0, 0, &stm );
-    ok(r==STG_E_INVALIDNAME, "IStorage->CreateStream wrong error, got %d GetLastError()=%d\n", r, GetLastError());
+    ok(r==STG_E_INVALIDNAME || broken(r==S_OK) /* nt4 */,
+       "IStorage->CreateStream wrong error, got %d GetLastError()=%d\n", r, GetLastError());
     r = IStorage_CreateStream(stg, stmname, STGM_READWRITE, 0, 0, &stm );
     ok(r==STG_E_INVALIDFLAG, "IStorage->CreateStream wrong error\n");
     r = IStorage_CreateStream(stg, stmname, STGM_READ, 0, 0, &stm );
@@ -1003,65 +1004,66 @@ struct access_res
 {
     BOOL gothandle;
     DWORD lasterr;
+    BOOL ignore;
 };
 
 static const struct access_res create[16] =
 {
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { TRUE, ERROR_SUCCESS },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { TRUE, ERROR_SUCCESS },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { TRUE, ERROR_SUCCESS }
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, TRUE }
 };
 
 static const struct access_res create_commit[16] =
 {
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { TRUE, ERROR_SUCCESS },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { TRUE, ERROR_SUCCESS },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { FALSE, ERROR_SHARING_VIOLATION },
-    { TRUE, ERROR_SUCCESS }
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, TRUE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { FALSE, ERROR_SHARING_VIOLATION, FALSE },
+    { TRUE, ERROR_SUCCESS, TRUE }
 };
 
 static const struct access_res create_close[16] =
 {
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
-    { TRUE, ERROR_SUCCESS },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
+    { TRUE, ERROR_SUCCESS, FALSE },
     { TRUE, ERROR_SUCCESS }
 };
 
@@ -1081,6 +1083,9 @@ static void _test_file_access(LPCSTR file, const struct access_res *ares, DWORD 
 
         for (j = 0; j < 4; j++)
         {
+            if (ares[idx].ignore)
+                continue;
+
             if (j == 0) share = 0;
             if (j == 1) share = FILE_SHARE_READ;
             if (j == 2) share = FILE_SHARE_WRITE;
@@ -1096,7 +1101,8 @@ static void _test_file_access(LPCSTR file, const struct access_res *ares, DWORD 
                line, idx, ares[idx].gothandle,
                (hfile != INVALID_HANDLE_VALUE));
 
-            ok(lasterr == ares[idx].lasterr,
+            ok(lasterr == ares[idx].lasterr ||
+               broken(lasterr == 0xdeadbeef) /* win9x */,
                "(%d, lasterr, %d): Expected %d, got %d\n",
                line, idx, ares[idx].lasterr, lasterr);
 

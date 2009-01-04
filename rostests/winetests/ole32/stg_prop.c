@@ -408,8 +408,7 @@ static void testCodepage(void)
     /* check code page before it's been explicitly set */
     hr = IPropertyStorage_ReadMultiple(propertyStorage, 1, &spec, &var);
     ok(hr == S_OK, "ReadMultiple failed: 0x%08x\n", hr);
-    ok(var.vt == VT_I2 && U(var).iVal == 1252,
-     "Didn't get expected type or value for property\n");
+    ok(var.vt == VT_I2, "Didn't get expected type for property (%u)\n", var.vt);
     /* Set code page to Unicode */
     U(var).iVal = 1200;
     hr = IPropertyStorage_WriteMultiple(propertyStorage, 1, &spec, &var, 0);
