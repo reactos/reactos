@@ -339,7 +339,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             {
                 /* Return boost status */
                 *(PULONG)ProcessInformation = Process->Pcb.DisableBoost ?
-                                              FALSE : TRUE;
+                                              TRUE : FALSE;
 
                 /* Set the return length */
                 Length = sizeof(ULONG);
