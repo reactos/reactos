@@ -48,6 +48,7 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #define ProbeForWriteLargeInteger(Ptr) ProbeForWriteGenericType(&((PLARGE_INTEGER)Ptr)->QuadPart, LONGLONG)
 #define ProbeForWriteUlargeInteger(Ptr) ProbeForWriteGenericType(&((PULARGE_INTEGER)Ptr)->QuadPart, ULONGLONG)
 #define ProbeForWriteUnicodeString(Ptr) ProbeForWriteGenericType((PUNICODE_STRING)Ptr, UNICODE_STRING)
+#define ProbeForWriteLargeString(Ptr) ProbeForWriteGenericType((PLARGE_STRING)Ptr, LARGE_STRING)
 #define ProbeForWriteIoStatusBlock(Ptr) ProbeForWriteGenericType((PIO_STATUS_BLOCK)Ptr, IO_STATUS_BLOCK)
 
 #define ProbeForReadGenericType(Ptr, Type, Default)                            \
@@ -74,6 +75,7 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #define ProbeForReadLargeInteger(Ptr) ProbeForReadGenericType((const LARGE_INTEGER *)(Ptr), LARGE_INTEGER, __emptyLargeInteger)
 #define ProbeForReadUlargeInteger(Ptr) ProbeForReadGenericType((const ULARGE_INTEGER *)(Ptr), ULARGE_INTEGER, __emptyULargeInteger)
 #define ProbeForReadUnicodeString(Ptr) ProbeForReadGenericType((const UNICODE_STRING *)(Ptr), UNICODE_STRING, __emptyUnicodeString)
+#define ProbeForReadLargeString(Ptr) ProbeForReadGenericType((const LARGE_STRING *)(Ptr), LARGE_STRING, __emptyLargeString)
 #define ProbeForReadIoStatusBlock(Ptr) ProbeForReadGenericType((const IO_STATUS_BLOCK *)(Ptr), IO_STATUS_BLOCK, __emptyIoStatusBlock)
 
 #define ProbeAndZeroHandle(Ptr) \

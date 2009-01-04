@@ -40,6 +40,7 @@
 		<file>misc.c</file>
 		<file>object.c</file>
 		<file>resources.c</file>
+		<file>rtlstr.c</file>
 		<file>stubs.c</file>
 		<file>timer.c</file>
 		<file>winhelp.c</file>

@@ -5,6 +5,36 @@ struct _W32PROCESSINFO;
 struct _W32THREADINFO;
 struct _WINDOW;
 
+typedef struct _LARGE_UNICODE_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PWSTR Buffer;
+} LARGE_UNICODE_STRING, *PLARGE_UNICODE_STRING;
+
+typedef struct _LARGE_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PVOID Buffer;
+} LARGE_STRING, *PLARGE_STRING;
+//
+// Based on ANSI_STRING
+//
+typedef struct _LARGE_ANSI_STRING
+{
+  ULONG Length;
+  ULONG MaximumLength:31;
+  ULONG bAnsi:1;
+  PCHAR Buffer;
+} LARGE_ANSI_STRING, *PLARGE_ANSI_STRING;
+
+VOID NTAPI RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING,IN PCSZ,IN INT);
+VOID NTAPI RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING,IN PCWSTR,IN INT);
+
+
 /* FIXME: UserHMGetHandle needs to be updated once the new handle manager is implemented */
 #define UserHMGetHandle(obj) ((obj)->hdr.Handle)
 
@@ -1086,9 +1116,9 @@ HWND
 NTAPI
 NtUserCreateWindowEx(
   DWORD dwExStyle,
-  PLARGE_UNICODE_STRING plustrClassName,
-  PLARGE_UNICODE_STRING plustrClsVesrion,
-  PLARGE_UNICODE_STRING plustrWindowName,
+  PLARGE_STRING plstrClassName,
+  PLARGE_STRING plstrClsVesrion,
+  PLARGE_STRING plstrWindowName,
   DWORD dwStyle,
   int x,
   int y,
