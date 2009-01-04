@@ -663,25 +663,36 @@ QSI_DEF(SystemPerformanceInformation)
 /* Class 3 - Time Of Day Information */
 QSI_DEF(SystemTimeOfDayInformation)
 {
-  PSYSTEM_TIMEOFDAY_INFORMATION Sti;
+  SYSTEM_TIMEOFDAY_INFORMATION Sti;
   LARGE_INTEGER CurrentTime;
 
-  Sti = (PSYSTEM_TIMEOFDAY_INFORMATION)Buffer;
-  *ReqSize = sizeof (SYSTEM_TIMEOFDAY_INFORMATION);
+  /* Set amount of written information to 0 */
+  *ReqSize = 0;
 
   /* Check user buffer's size */
-  if (Size != sizeof (SYSTEM_TIMEOFDAY_INFORMATION))
-    {
-      return STATUS_INFO_LENGTH_MISMATCH;
-    }
+  if (Size > sizeof(SYSTEM_TIMEOFDAY_INFORMATION))
+  {
+    return STATUS_INFO_LENGTH_MISMATCH;
+  }
 
+  /* Get current time */
   KeQuerySystemTime(&CurrentTime);
 
-  Sti->BootTime= KeBootTime;
-  Sti->CurrentTime = CurrentTime;
-  Sti->TimeZoneBias.QuadPart = ExpTimeZoneBias.QuadPart;
-  Sti->TimeZoneId = ExpTimeZoneId;
-  Sti->Reserved = 0;
+  /* Zero local buffer */
+  RtlZeroMemory(&Sti, sizeof(SYSTEM_TIMEOFDAY_INFORMATION));
+
+  /* Fill local time structure */
+  Sti.BootTime= KeBootTime;
+  Sti.CurrentTime = CurrentTime;
+  Sti.TimeZoneBias.QuadPart = ExpTimeZoneBias.QuadPart;
+  Sti.TimeZoneId = ExpTimeZoneId;
+  Sti.Reserved = 0;
+
+  /* Copy as much as requested by caller */
+  RtlCopyMemory(Buffer, &Sti, Size);
+
+  /* Set amount of information we copied */
+  *ReqSize = Size;
 
   return STATUS_SUCCESS;
 }
