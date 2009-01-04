@@ -4548,6 +4548,7 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
        _SEH2_TRY
        {
            SafeText = ProbeForReadUnicodeString(WindowText);
+           ProbeForRead(SafeText.Buffer, SafeText.Length, sizeof(WCHAR));
        }
        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
        {
