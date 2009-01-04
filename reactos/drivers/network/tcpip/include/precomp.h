@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <ntddk.h>
+#include <windef.h>
 #include <ntifs.h>
 #include <tdi.h>
 #include <tdistat.h>

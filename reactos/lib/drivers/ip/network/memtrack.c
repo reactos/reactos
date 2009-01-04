@@ -8,9 +8,9 @@
 static LIST_ENTRY AllocatedObjectsList;
 static KSPIN_LOCK AllocatedObjectsLock;
 static NPAGED_LOOKASIDE_LIST AllocatedObjectsLookasideList;
-ULONG TagsToShow[MEMTRACK_MAX_TAGS_TO_TRACK] = { 0 };
+DWORD TagsToShow[MEMTRACK_MAX_TAGS_TO_TRACK] = { 0 };
 
-VOID TrackTag( ULONG Tag ) {
+VOID TrackTag( DWORD Tag ) {
     UINT i;
 
     for( i = 0; TagsToShow[i]; i++ );
@@ -58,7 +58,7 @@ VOID ShowTrackedThing( PCHAR What, PALLOCATION_TRACKER Thing, BOOLEAN ForceShow 
     }
 }
 
-VOID TrackWithTag( ULONG Tag, PVOID Thing, PCHAR FileName, ULONG LineNo ) {
+VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
     PALLOCATION_TRACKER TrackedThing =
         ExAllocateFromNPagedLookasideList( &AllocatedObjectsLookasideList );
 
@@ -104,7 +104,7 @@ VOID TrackWithTag( ULONG Tag, PVOID Thing, PCHAR FileName, ULONG LineNo ) {
     /*TrackDumpFL( FileName, LineNo );*/
 }
 
-BOOLEAN ShowTag( ULONG Tag ) {
+BOOLEAN ShowTag( DWORD Tag ) {
     UINT i;
 
     for( i = 0; TagsToShow[i] && TagsToShow[i] != Tag; i++ );
@@ -112,7 +112,7 @@ BOOLEAN ShowTag( ULONG Tag ) {
     return TagsToShow[i] ? TRUE : FALSE;
 }
 
-VOID UntrackFL( PCHAR File, ULONG Line, PVOID Thing, ULONG Tag ) {
+VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing, DWORD Tag ) {
     KIRQL OldIrql;
     PLIST_ENTRY Entry;
     PALLOCATION_TRACKER ThingInList;
@@ -147,7 +147,7 @@ VOID UntrackFL( PCHAR File, ULONG Line, PVOID Thing, ULONG Tag ) {
     TcpipBugCheck( 0 );
 }
 
-VOID TrackDumpFL( PCHAR File, ULONG Line ) {
+VOID TrackDumpFL( PCHAR File, DWORD Line ) {
     KIRQL OldIrql;
     PLIST_ENTRY Entry;
     PALLOCATION_TRACKER Thing;
