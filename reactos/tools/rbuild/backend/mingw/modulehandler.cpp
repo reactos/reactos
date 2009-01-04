@@ -778,6 +778,22 @@ MingwModuleHandler::GenerateMacros (
 
 	if ( data.libraries.size () > 0 )
 	{
+		// Check if host and target modules are not mixed up
+		HostType current = ModuleHandlerInformations[module.type].DefaultHost;
+		std::vector<Library*>::const_iterator it;
+		for ( it = data.libraries.begin(); it != data.libraries.end(); ++it )
+		{
+			HostType imported = ModuleHandlerInformations[(*it)->importedModule->type].DefaultHost;
+			if (current != imported)
+			{
+				throw InvalidOperationException ( __FILE__,
+				                                  __LINE__,
+				                                  "Module '%s' imports module '%s', which is not of the right type",
+				                                  module.name.c_str (),
+				                                  (*it)->importedModule->name.c_str () );
+			}
+		}
+
 		string deps = GenerateImportLibraryDependenciesFromVector ( data.libraries );
 		if ( deps.size () > 0 )
 		{
