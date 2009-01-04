@@ -61,6 +61,7 @@ static __inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolWithTag(x,y,z)
 #define exAllocatePool(x,y) PoolAllocateBuffer(y)
 #define exFreePool(x) PoolFreeBuffer(x)
+#define exFreeToNPagedLookasideList(x,y) ExFreeToNPagedLookasideList(x,y)
 #define TrackWithTag(w,x,y,z)
 #define UntrackFL(x,y,z)
 #endif
