@@ -322,7 +322,8 @@ static void testGetIpNetTable(void)
       PMIB_IPNETTABLE buf = HeapAlloc(GetProcessHeap(), 0, dwSize);
 
       apiReturn = gGetIpNetTable(buf, &dwSize, FALSE);
-      ok(apiReturn == NO_ERROR,
+      ok(apiReturn == NO_ERROR ||
+         apiReturn == ERROR_NO_DATA, /* empty ARP table's okay */
        "GetIpNetTable(buf, &dwSize, FALSE) returned %d, expected NO_ERROR\n",
        apiReturn);
       HeapFree(GetProcessHeap(), 0, buf);
