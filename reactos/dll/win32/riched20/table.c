@@ -54,8 +54,7 @@
 #include "editor.h"
 #include "rtf.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(richedit);
-WINE_DECLARE_DEBUG_CHANNEL(richedit_lists);
+WINE_DEFAULT_DEBUG_CHANNEL(richedit_lists);
 
 static ME_DisplayItem* ME_InsertEndParaFromCursor(ME_TextEditor *editor,
                                                   int nCursor,
@@ -176,7 +175,7 @@ void ME_CheckTablesForCorruption(ME_TextEditor *editor)
 {
   if(TRACE_ON(richedit_lists))
   {
-    TRACE_(richedit_lists)("---\n");
+    TRACE("---\n");
     ME_DumpDocument(editor->pBuffer);
   }
 #ifndef NDEBUG

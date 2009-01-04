@@ -1616,7 +1616,7 @@ ME_StreamInRTFString(ME_TextEditor *editor, BOOL selection, char *string)
   data.string = string;
   data.length = strlen(string);
   data.pos = 0;
-  es.dwCookie = (DWORD)&data;
+  es.dwCookie = (DWORD_PTR)&data;
   es.pfnCallback = ME_ReadFromRTFString;
   ME_StreamIn(editor, SF_RTF | (selection ? SFF_SELECTION : 0), &es, FALSE);
 }
@@ -2065,7 +2065,7 @@ static BOOL ME_Paste(ME_TextEditor *editor)
     return FALSE;
   gds.hData = GetClipboardData(cf);
   gds.nLength = 0;
-  es.dwCookie = (DWORD)&gds;
+  es.dwCookie = (DWORD_PTR)&gds;
   es.pfnCallback = dwFormat == SF_RTF ? ME_ReadFromHGLOBALRTF : ME_ReadFromHGLOBALUnicode;
   ME_StreamIn(editor, dwFormat|SFF_SELECTION, &es, FALSE);
 
@@ -2685,6 +2685,7 @@ void ME_DestroyEditor(ME_TextEditor *editor)
     DeleteObject(editor->hbrBackground);
   if(editor->lpOleCallback)
     IUnknown_Release(editor->lpOleCallback);
+  SetWindowLongPtrW(editor->hWnd, 0, 0);
   OleUninitialize();
 
   FREE_OBJ(editor->pBuffer);
@@ -3821,7 +3822,6 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
   }
   case WM_DESTROY:
     ME_DestroyEditor(editor);
-    SetWindowLongPtrW(editor->hWnd, 0, 0);
     return 0;
   case WM_SETCURSOR:
   {
