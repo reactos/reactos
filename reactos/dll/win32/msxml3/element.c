@@ -478,7 +478,7 @@ static HRESULT WINAPI domelem_get_tagName(
     len = MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->name, -1, NULL, 0 );
     if (element->ns)
         len += MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->ns->prefix, -1, NULL, 0 );
-    str = (LPWSTR) HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
+    str = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
     if ( !str )
         return E_OUTOFMEMORY;
     if (element->ns)
@@ -587,9 +587,14 @@ static HRESULT WINAPI domelem_getAttributeNode(
     xmlNodePtr element;
     xmlAttrPtr attr;
     IUnknown *unk;
-    HRESULT hr = E_FAIL;
+    HRESULT hr = S_FALSE;
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(p), attributeNode);
+
+    if(!attributeNode)
+        return E_FAIL;
+
+    *attributeNode = NULL;
 
     element = get_element( This );
     if ( !element )
@@ -597,13 +602,17 @@ static HRESULT WINAPI domelem_getAttributeNode(
 
     xml_name = xmlChar_from_wchar(p);
 
+    if(!xmlValidateNameValue(xml_name))
+    {
+        HeapFree(GetProcessHeap(), 0, xml_name);
+        return E_FAIL;
+    }
+
     attr = xmlHasProp(element, xml_name);
     if(attr) {
         unk = create_attribute((xmlNodePtr)attr);
         hr = IUnknown_QueryInterface(unk, &IID_IXMLDOMAttribute, (void**)attributeNode);
         IUnknown_Release(unk);
-    }else {
-        *attributeNode = NULL;
     }
 
     HeapFree(GetProcessHeap(), 0, xml_name);

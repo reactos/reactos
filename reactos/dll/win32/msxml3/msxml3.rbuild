@@ -33,6 +33,7 @@
 	<file>element.c</file>
 	<file>factory.c</file>
 	<file>main.c</file>
+	<file>httprequest.c</file>
 	<file>node.c</file>
 	<file>nodelist.c</file>
 	<file>nodemap.c</file>

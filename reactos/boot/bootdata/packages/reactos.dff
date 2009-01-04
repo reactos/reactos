@@ -641,6 +641,7 @@ modules\rostests\winetests\mshtml\mshtml_winetest.exe                      7   o
 modules\rostests\winetests\msi\msi_winetest.exe                            7   optional
 modules\rostests\winetests\mstask\mstask_winetest.exe                      7   optional
 modules\rostests\winetests\msvcrt\msvcrt_winetest.exe                      7   optional
+modules\rostests\winetests\msxml3\msxml3_winetest.exe                      7   optional
 modules\rostests\winetests\netapi32\netapi32_winetest.exe                  7   optional
 modules\rostests\winetests\ntdll\ntdll_winetest.exe                        7   optional
 modules\rostests\winetests\odbccp32\odbccp32_winetest.exe                  7   optional
