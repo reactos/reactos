@@ -102,7 +102,7 @@ NTSTATUS
 NTAPI
 DbgkpSendApiMessage(
     IN OUT PDBGKM_MSG ApiMsg,
-    IN ULONG Flags
+    IN BOOLEAN SuspendProcess
 );
 
 HANDLE

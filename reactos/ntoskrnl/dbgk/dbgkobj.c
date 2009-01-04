@@ -209,10 +209,11 @@ DbgkpSendApiMessageLpc(IN OUT PDBGKM_MSG Message,
 {
     NTSTATUS Status;
     UCHAR Buffer[PORT_MAXIMUM_MESSAGE_LENGTH];
+    BOOLEAN Suspended = FALSE;
     PAGED_CODE();
 
     /* Suspend process if required */
-    if (SuspendProcess) DbgkpSuspendProcess();
+    if (SuspendProcess) Suspended = DbgkpSuspendProcess();
 
     /* Set return status */
     Message->ReturnedStatus = STATUS_PENDING;
@@ -232,21 +233,22 @@ DbgkpSendApiMessageLpc(IN OUT PDBGKM_MSG Message,
     if (NT_SUCCESS(Status)) RtlCopyMemory(Message, Buffer, sizeof(DBGKM_MSG));
 
     /* Resume the process if it was suspended */
-    if (SuspendProcess) DbgkpResumeProcess();
+    if (Suspended) DbgkpResumeProcess();
     return Status;
 }
 
 NTSTATUS
 NTAPI
 DbgkpSendApiMessage(IN OUT PDBGKM_MSG ApiMsg,
-                    IN ULONG Flags)
+                    IN BOOLEAN SuspendProcess)
 {
     NTSTATUS Status;
+    BOOLEAN Suspended = FALSE;
     PAGED_CODE();
-    DBGKTRACE(DBGK_MESSAGE_DEBUG, "ApiMsg: %p Flags: %lx\n", ApiMsg, Flags);
+    DBGKTRACE(DBGK_MESSAGE_DEBUG, "ApiMsg: %p SuspendProcess: %lx\n", ApiMsg, SuspendProcess);
 
     /* Suspend process if required */
-    if (Flags) DbgkpSuspendProcess();
+    if (SuspendProcess) Suspended = DbgkpSuspendProcess();
 
     /* Set return status */
     ApiMsg->ReturnedStatus = STATUS_PENDING;
@@ -265,7 +267,7 @@ DbgkpSendApiMessage(IN OUT PDBGKM_MSG ApiMsg,
     ZwFlushInstructionCache(NtCurrentProcess(), NULL, 0);
 
     /* Resume the process if it was suspended */
-    if (Flags) DbgkpResumeProcess();
+    if (Suspended) DbgkpResumeProcess();
     return Status;
 }
 
@@ -426,7 +428,7 @@ DbgkpWakeTarget(IN PDEBUG_EVENT DebugEvent)
     DBGKTRACE(DBGK_OBJECT_DEBUG, "DebugEvent: %p\n", DebugEvent);
 
     /* Check if we have to wake the thread */
-    if (DebugEvent->Flags & 20) PsResumeThread(Thread, NULL);
+    if (DebugEvent->Flags & 0x20) PsResumeThread(Thread, NULL);
 
     /* Check if we had locked the thread */
     if (DebugEvent->Flags & 8)
