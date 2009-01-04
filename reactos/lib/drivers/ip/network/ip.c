@@ -33,7 +33,7 @@ VOID FreePacket(
  *     Object = Pointer to an IP packet structure
  */
 {
-    TcpipFreeToNPagedLookasideList(&IPPacketList, Object);
+    exFreeToNPagedLookasideList(&IPPacketList, Object);
 }
 
 
@@ -70,7 +70,7 @@ PIP_PACKET IPCreatePacket(ULONG Type)
 {
   PIP_PACKET IPPacket;
 
-  IPPacket = TcpipAllocateFromNPagedLookasideList(&IPPacketList);
+  IPPacket = exAllocateFromNPagedLookasideList(&IPPacketList);
   if (!IPPacket)
     return NULL;
 

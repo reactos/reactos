@@ -53,7 +53,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
             Complete( Bucket->Request.RequestContext, Status, 0 );
 
             /* Frees the bucket allocated in TCPConnect */
-            PoolFreeBuffer( Bucket );
+            exFreePool( Bucket );
         }
     }
 
@@ -90,7 +90,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 		break;
 	    } else {
 		Complete( Bucket->Request.RequestContext, Status, 0 );
-		PoolFreeBuffer( Bucket );
+		exFreePool( Bucket );
 	    }
 	}
     }
@@ -142,7 +142,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Received );
-		PoolFreeBuffer( Bucket );
+		exFreePool( Bucket );
 	    } else if( Status == STATUS_PENDING ) {
 		InsertHeadList
 		    ( &Connection->ReceiveRequest, &Bucket->Entry );
@@ -152,7 +152,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 			    ("Completing Receive request: %x %x\n",
 			     Bucket->Request, Status));
 		Complete( Bucket->Request.RequestContext, Status, 0 );
-		PoolFreeBuffer( Bucket );
+		exFreePool( Bucket );
 	    }
 	}
     }
@@ -201,7 +201,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
 		Complete( Bucket->Request.RequestContext,
 			  STATUS_SUCCESS, Sent );
-		PoolFreeBuffer( Bucket );
+		exFreePool( Bucket );
 	    } else if( Status == STATUS_PENDING ) {
 		InsertHeadList
 		    ( &Connection->SendRequest, &Bucket->Entry );
@@ -211,7 +211,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 			    ("Completing Send request: %x %x\n",
 			     Bucket->Request, Status));
 		Complete( Bucket->Request.RequestContext, Status, 0 );
-		PoolFreeBuffer( Bucket );
+		exFreePool( Bucket );
 	    }
 	}
     }
@@ -238,7 +238,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                 Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
                 Complete = Bucket->Request.RequestNotifyObject;
                 Complete( Bucket->Request.RequestContext, IrpStatus[i], 0 );
-		PoolFreeBuffer( Bucket );
+		exFreePool( Bucket );
             }
         }
     }
@@ -260,7 +260,7 @@ VOID DrainSignals() {
 
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     PCONNECTION_ENDPOINT Connection =
-	ExAllocatePool(NonPagedPool, sizeof(CONNECTION_ENDPOINT));
+	exAllocatePool(NonPagedPool, sizeof(CONNECTION_ENDPOINT));
     if (!Connection)
 	return Connection;
 
@@ -283,7 +283,7 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
 
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection ) {
     TCPClose( Connection );
-    ExFreePool( Connection );
+    exFreePool( Connection );
 }
 
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
@@ -545,7 +545,7 @@ NTSTATUS TCPConnect
 
     TI_DbgPrint(DEBUG_TCP,("TCPConnect: Called\n"));
 
-    Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
+    Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
     if( !Bucket ) return STATUS_NO_MEMORY;
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
@@ -695,7 +695,7 @@ NTSTATUS TCPReceiveData
     /* Keep this request around ... there was no data yet */
     if( Status == STATUS_PENDING ) {
 	/* Freed in TCPSocketState */
-	Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
+	Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
 	if( !Bucket ) {
 	    TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
 	    TcpipRecursiveMutexLeave( &TCPLock );
@@ -754,7 +754,7 @@ NTSTATUS TCPSendData
     /* Keep this request around ... there was no data yet */
     if( Status == STATUS_PENDING ) {
 	/* Freed in TCPSocketState */
-	Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
+	Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
 	if( !Bucket ) {
 	    TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
 	    TcpipRecursiveMutexLeave( &TCPLock );
@@ -845,7 +845,7 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
 
 	    if( Bucket->Request.RequestContext == Irp ) {
 		RemoveEntryList( &Bucket->Entry );
-		PoolFreeBuffer( Bucket );
+		exFreePool( Bucket );
 		break;
 	    }
 	}

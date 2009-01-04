@@ -26,7 +26,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
 		 Interface, IF, ID->tei_entity, ID->tei_instance));
 
     OutData =
-	(PIFENTRY)ExAllocatePool( NonPagedPool,
+	(PIFENTRY)exAllocatePool( NonPagedPool,
 				  sizeof(IFENTRY) + MAX_IFDESCR_LEN );
 
     if( !OutData ) return TDI_NO_RESOURCES; /* Out of memory */
@@ -71,7 +71,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
 			    ID->tei_entity, ID->tei_instance, Size));
 
     Status = InfoCopyOut( (PCHAR)OutData, Size, Buffer, BufferSize );
-    ExFreePool( OutData );
+    exFreePool( OutData );
 
     TI_DbgPrint(DEBUG_INFO,("Returning %x\n", Status));
 
@@ -86,7 +86,7 @@ TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID *ID,
     ULONG NumNeighbors = NBCopyNeighbors( Interface, NULL );
     ULONG MemSize = NumNeighbors * sizeof(IPARP_ENTRY);
     PIPARP_ENTRY ArpEntries =
-	ExAllocatePoolWithTag
+	exAllocatePoolWithTag
 	( NonPagedPool, MemSize, FOURCC('A','R','P','t') );
 
     if( !ArpEntries ) return STATUS_NO_MEMORY;
@@ -94,7 +94,7 @@ TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID *ID,
 
     Status = InfoCopyOut( (PVOID)ArpEntries, MemSize, Buffer, BufferSize );
 
-    ExFreePool( ArpEntries );
+    exFreePool( ArpEntries );
 
     return Status;
 }

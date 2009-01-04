@@ -21,7 +21,7 @@ VOID NBCompleteSend( PVOID Context,
     ASSERT_KM_POINTER(Packet->Complete);
     Packet->Complete( Packet->Context, Packet->Packet, Status );
     TI_DbgPrint(MID_TRACE, ("Completed\n"));
-    PoolFreeBuffer( Packet );
+    exFreePool( Packet );
     TI_DbgPrint(MID_TRACE, ("Freed\n"));
 }
 
@@ -89,7 +89,7 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
 			      ErrorCode );
         }
 
-	PoolFreeBuffer( Packet );
+	exFreePool( Packet );
     }
 }
 
@@ -283,7 +283,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
 	"LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
 	Interface, Address, LinkAddress, LinkAddressLength, State));
 
-  NCE = ExAllocatePool
+  NCE = exAllocatePool
       (NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
   if (NCE == NULL)
     {
@@ -466,7 +466,7 @@ BOOLEAN NBQueuePacket(
       (DEBUG_NCACHE,
        ("Called. NCE (0x%X)  NdisPacket (0x%X).\n", NCE, NdisPacket));
 
-  Packet = PoolAllocateBuffer( sizeof(NEIGHBOR_PACKET) );
+  Packet = exAllocatePool( NonPagedPool, sizeof(NEIGHBOR_PACKET) );
   if( !Packet ) return FALSE;
 
   /* FIXME: Should we limit the number of queued packets? */
@@ -529,7 +529,7 @@ VOID NBRemoveNeighbor(
           *PrevNCE = CurNCE->Next;
 
 	  NBFlushPacketQueue( CurNCE, TRUE, NDIS_STATUS_REQUEST_ABORTED );
-          ExFreePool(CurNCE);
+          exFreePool(CurNCE);
 
 	  break;
         }
