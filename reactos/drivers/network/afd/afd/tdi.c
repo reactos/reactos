@@ -420,21 +420,13 @@ NTSTATUS TdiListen
         return STATUS_INVALID_PARAMETER;
   }
 
-  Status = TdiBuildNullConnectionInfo(RequestConnectionInfo,
-				      TDI_ADDRESS_TYPE_IP);
-  if (!NT_SUCCESS(Status))
-    return Status;
-
   *Irp = TdiBuildInternalDeviceControlIrp(TDI_LISTEN,              /* Sub function */
 					  DeviceObject,            /* Device object */
 					  ConnectionObject,        /* File object */
 					  NULL,                    /* Event */
 					  Iosb);                   /* Status */
   if (*Irp == NULL)
-    {
-	ExFreePool(*RequestConnectionInfo);
 	return STATUS_INSUFFICIENT_RESOURCES;
-    }
 
   TdiBuildListen(*Irp,                   /* IRP */
                  DeviceObject,           /* Device object */
