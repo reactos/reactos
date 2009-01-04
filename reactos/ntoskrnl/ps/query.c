@@ -120,7 +120,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set return length */
             Length = sizeof(PROCESS_BASIC_INFORMATION);
 
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -152,7 +152,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessIoCounters:
 
             Length = sizeof(IO_COUNTERS);
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -167,7 +167,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length */
             Length = sizeof(KERNEL_USER_TIMES);
 
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -195,15 +195,20 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Process Debug Port */
         case ProcessDebugPort:
 
+            /* Set return length */
+            Length = sizeof(HANDLE);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect write with SEH */
             _SEH2_TRY
             {
                 /* Return whether or not we have a debug port */
                 *(PHANDLE)ProcessInformation = (Process->DebugPort ?
                                                 (HANDLE)-1 : NULL);
-
-                /* Set the return length*/
-                Length = sizeof(HANDLE);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -225,7 +230,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length*/
             Length = sizeof(ULONG);
 
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -251,14 +256,19 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Session ID for the process */
         case ProcessSessionInformation:
 
+            /* Set the return length*/
+            Length = sizeof(PROCESS_SESSION_INFORMATION);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Enter SEH for write safety */
             _SEH2_TRY
             {
                 /* Write back the Session ID */
                 SessionInfo->SessionId = Process->Session;
-
-                /* Set the return length */
-                Length = sizeof(PROCESS_SESSION_INFORMATION);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -279,7 +289,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length */
             Length = sizeof(VM_COUNTERS);
 
-            if ( ProcessInformationLength != Length )
+            if (ProcessInformationLength != Length)
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -313,15 +323,20 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Hard Error Processing Mode */
         case ProcessDefaultHardErrorMode:
 
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Enter SEH for writing back data */
             _SEH2_TRY
             {
                 /* Write the current processing mode */
                 *(PULONG)ProcessInformation = Process->
                                               DefaultHardErrorProcessing;
-
-                /* Set the return length */
-                Length = sizeof(ULONG);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -334,15 +349,20 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Priority Boosting status */
         case ProcessPriorityBoost:
 
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Enter SEH for writing back data */
             _SEH2_TRY
             {
                 /* Return boost status */
                 *(PULONG)ProcessInformation = Process->Pcb.DisableBoost ?
                                               TRUE : FALSE;
-
-                /* Set the return length */
-                Length = sizeof(ULONG);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -355,6 +375,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
+            /* Set the return length*/
+            Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Query the device map information */
             ObQueryDeviceMapInformation(Process, &DeviceMap);
 
@@ -362,9 +390,6 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 *(PPROCESS_DEVICEMAP_INFORMATION)ProcessInformation = DeviceMap;
-
-                /* Set the return length */
-                Length = sizeof(PROCESS_DEVICEMAP_INFORMATION);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -377,14 +402,19 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Priority class */
         case ProcessPriorityClass:
 
+            /* Set the return length*/
+            Length = sizeof(USHORT);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Enter SEH for writing back data */
             _SEH2_TRY
             {
                 /* Return current priority class */
                 *(PUSHORT)ProcessInformation = Process->PriorityClass;
-
-                /* Set the return length */
-                Length = sizeof(USHORT);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
