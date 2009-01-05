@@ -88,9 +88,9 @@
 	<directory name="ole32">
 		<xi:include href="ole32/ole32.rbuild" />
 	</directory>
-	<!--<directory name="oleaut32">
+	<directory name="oleaut32">
 		<xi:include href="oleaut32/oleaut32.rbuild" />
-	</directory-->
+	</directory>
 	<directory name="psapi">
 		<xi:include href="psapi/psapi.rbuild" />
 	</directory>
