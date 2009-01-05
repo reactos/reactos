@@ -570,6 +570,8 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
             {
                 return GetCallProcHandle(Wnd->CallProc);
             }
+            /* BUGBOY Comments: Maybe theres something Im not undestanding here, but why would a CallProc be created
+               on a function that I thought is only suppose to return the current Windows Proc? */
             else
             {
                 PCALLPROC NewCallProc, CallProc;
@@ -1693,6 +1695,14 @@ AllocErr:
    Wnd->UserData = 0;
 
    Wnd->IsSystem = Wnd->Class->System;
+
+   /* BugBoy Comments: Comment below say that System classes are always created as UNICODE.
+      In windows, creating a window with the ANSI version of CreateWindow sets the window
+      to ansi as verified by testing with IsUnicodeWindow API.
+
+      No where can I see in code or through testing does the window change back to ANSI
+      after being created as UNICODE in ROS. I didnt do more testing to see what problems this would cause.*/
+    // See NtUserDefSetText! We convert to Unicode all the time and never use Mix. (jt)
    if (Wnd->Class->System)
    {
        /* NOTE: Always create a unicode window for system classes! */
@@ -2178,6 +2188,28 @@ AllocErr:
         co_IntSendMessage(ParentWindow->hSelf, WM_MDIREFRESHMENU, 0, 0);
         /* ShowWindow won't activate child windows */
         co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
+      }
+   }
+
+   /* BugBoy Comments: if the window being created is a edit control, ATOM 0xC007,
+      then my testing shows that windows (2k and XP) creates a CallProc for it immediately 
+      Dont understand why it does this. */
+   if (ClassAtom == 0XC007)
+   {
+      PCALLPROC CallProc;
+      //CallProc = CreateCallProc(NULL, Wnd->WndProc, bUnicodeWindow, Wnd->ti->kpi);
+      CallProc = CreateCallProc(NULL, Wnd->WndProc, Wnd->Unicode , Wnd->ti->kpi);
+
+      if (!CallProc)
+      {
+         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         DPRINT1("Warning: Unable to create CallProc for edit control. Control may not operate correctly! hwnd %x\n",hWnd);
+      }
+      else
+      {
+         UserAddCallProcToClass(Wnd->Class, CallProc);
+         Wnd->CallProc = CallProc;
+         Wnd->IsSystem = FALSE;
       }
    }
 
@@ -3414,7 +3446,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 
    DPRINT("NtUserGetWindowLong(%x,%d,%d)\n", hWnd, (INT)Index, Ansi);
 
-   if (!(Window = UserGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
    {
       return 0;
    }
@@ -3574,10 +3606,22 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                 UserAddCallProcToClass(Wnd->Class,
                                        CallProc);
             }
+            /* BugBoy Comments: Added this if else, see below comments */
+            if (!Wnd->CallProc)
+            {
+               Ret = Wnd->WndProc;
+            }
+            else
+            {
+                Ret = GetCallProcHandle(Wnd->CallProc);
+            }
 
             Wnd->CallProc = CallProc;
 
-            Ret = GetCallProcHandle(Wnd->CallProc);
+            /* BugBoy Comments: Above sets the current CallProc for the
+               window and below we set the Ret value to it.
+               SetWindowLong for WNDPROC should return the previous proc
+            Ret = GetCallProcHandle(Wnd->CallProc); */
         }
     }
 
@@ -4632,6 +4676,7 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
          {
             SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
             Ret = FALSE;
+            goto Exit;
          }
       }
    }
