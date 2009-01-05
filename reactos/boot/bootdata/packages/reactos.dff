@@ -618,6 +618,8 @@ modules\rosapps\demos\maze\maze.exe                                        1   o
 modules\rosapps\dflat32\edit.exe                                           1   optional
 modules\rosapps\drivers\green\green.sys                                    2   optional
 modules\rosapps\templates\dialog\dialog.exe                                1   optional
+
+modules\rostests\rosautotest\rosautotest.exe                               1   optional
 modules\rostests\tests\pseh2\pseh2_test.exe                                7   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
 modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
@@ -668,6 +670,7 @@ modules\rostests\winetests\winhttp\winhttp_winetest.exe                    7   o
 modules\rostests\winetests\wininet\wininet_winetest.exe                    7   optional
 modules\rostests\winetests\wintrust\wintrust_winetest.exe                  7   optional
 modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
+
 modules\wallpaper\lake.bmp                                                 4   optional
 
 ; Native libraries
