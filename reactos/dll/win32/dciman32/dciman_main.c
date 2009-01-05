@@ -9,12 +9,13 @@
 #include <ddrawgdi.h>
 #include <pseh/pseh.h>
 
-CRITICAL_SECTION ddcs;
+
 
 
 /* Winwatch internal struct */
 typedef struct _WINWATCH_INT
 {
+	LPVOID prev; 
     HWND hWnd;
     BOOL WinWatchStatus;
     LPRGNDATA lpRgnData;
@@ -41,6 +42,11 @@ typedef struct _DCISURFACE_INT
 } DCISURFACE_INT, *LPDCISURFACE_INT;
 
 
+/* Global value */
+LPWINWATCH_INT gpWinWatchList;
+CRITICAL_SECTION gcsWinWatchLock;
+
+/* Function */
 BOOL
 WINAPI
 DllMain( HINSTANCE hModule, DWORD ul_reason_for_call, LPVOID reserved )
@@ -48,11 +54,11 @@ DllMain( HINSTANCE hModule, DWORD ul_reason_for_call, LPVOID reserved )
     switch(ul_reason_for_call)
     {
         case DLL_PROCESS_DETACH:
-            DeleteCriticalSection( &ddcs );
+            DeleteCriticalSection( &gcsWinWatchLock );
             break;
 
         case DLL_PROCESS_ATTACH:
-            InitializeCriticalSection( &ddcs );
+            InitializeCriticalSection( &gcsWinWatchLock );
             break;
     }
     return TRUE;
@@ -404,41 +410,115 @@ GetWindowRegionData(HWND hwnd, DWORD size, LPRGNDATA prd)
     return retvalue;
 }
 
+/*++
+* @name DWORD WINAPI WinWatchOpen(HWND hwnd)
+* @implemented
+*
+
+* @return
+*
+* @remarks.
+* None
+*/
 HWINWATCH WINAPI
 WinWatchOpen(HWND hwnd)
 {
     LPWINWATCH_INT pWinwatch_int;
 
-    EnterCriticalSection(&ddcs);
+    EnterCriticalSection(&gcsWinWatchLock);
 
     if ( (pWinwatch_int = (LPWINWATCH_INT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WINWATCH_INT) )) != NULL )
     {
         pWinwatch_int->hWnd = hwnd;
+		pWinwatch_int->prev = (LPVOID) gpWinWatchList;
+
+		gpWinWatchList = pWinwatch_int;
     }
-    LeaveCriticalSection(&ddcs);
+    LeaveCriticalSection(&gcsWinWatchLock);
     return (HWINWATCH) pWinwatch_int;
 }
 
+/*++
+* @name DWORD WINAPI WinWatchClose(HWND hwnd)
+* @implemented
+*
+
+* @return
+*
+* @remarks.
+* None
+*/
 void WINAPI
 WinWatchClose(HWINWATCH hWW)
 {
-    LPWINWATCH_INT pWinwatch_int = (LPWINWATCH_INT)hWW;
+	LPWINWATCH_INT pWinwatch_int = (LPWINWATCH_INT)hWW;
+	LPWINWATCH_INT tmp_gpWinWatchList ;
+	LPWINWATCH_INT delete_gpWinWatchList;
 
-    EnterCriticalSection(&ddcs);
+	EnterCriticalSection(&gcsWinWatchLock);
 
-    if (pWinwatch_int != NULL)
-    {
-        if (pWinwatch_int->lpRgnData != NULL)
-        {
-            HeapFree(GetProcessHeap(), 0, pWinwatch_int->lpRgnData);
-        }
+	/* Start search see if our hWW exists in the gpWinWatchList */
+	tmp_gpWinWatchList = gpWinWatchList;
+	delete_gpWinWatchList = gpWinWatchList;
 
-        HeapFree(GetProcessHeap(), 0, hWW);
-    }
+	while (delete_gpWinWatchList != pWinwatch_int )
+	{
+		if ( delete_gpWinWatchList == NULL )
+		{
+			/* Noting to delete */
+			break;
+		}
 
-    LeaveCriticalSection(&ddcs);
+		/* Have we found our entry ? */
+		if ( tmp_gpWinWatchList->prev == pWinwatch_int )
+		{
+			/* Yes we found our entry */
+
+			/* Now we save it to delete_gpWinWatchList */ 
+			delete_gpWinWatchList = tmp_gpWinWatchList->prev;
+
+			/* Remove it from the gpWinWatchList list */
+			if  ( tmp_gpWinWatchList->prev != NULL )
+			{
+				tmp_gpWinWatchList->prev = ((LPWINWATCH_INT)tmp_gpWinWatchList->prev)->prev ;
+			}		
+
+		}	
+		else
+		{
+			/* No so we keep looking */
+			tmp_gpWinWatchList = tmp_gpWinWatchList->prev ;
+		}
+	}
+
+	/* now we can delete our entry */
+
+	if  ( (delete_gpWinWatchList != NULL) && 
+		  (pWinwatch_int == delete_gpWinWatchList) )
+	{
+		/* Check see if we got any region data and free it */	
+		if (pWinwatch_int->lpRgnData != NULL)
+		{
+			HeapFree(GetProcessHeap(), 0, delete_gpWinWatchList->lpRgnData);
+		}
+
+		/* Free the delete_gpWinWatchList */
+		HeapFree(GetProcessHeap(), 0, delete_gpWinWatchList);    					
+	}
+
+	LeaveCriticalSection(&gcsWinWatchLock);	
 }
 
+/*++
+* @name WinWatchDidStatusChange(HWINWATCH hWW)
+* @implemented
+*
+
+* @return
+*
+* @remarks.
+* None
+*/
 BOOL WINAPI
 WinWatchDidStatusChange(HWINWATCH hWW)
 {
@@ -446,6 +526,16 @@ WinWatchDidStatusChange(HWINWATCH hWW)
     return pWinwatch_int->WinWatchStatus;
 }
 
+/*++
+* @name WinWatchGetClipList(HWINWATCH hWW)
+* @implemented
+*
+
+* @return
+*
+* @remarks.
+* None
+*/
 UINT WINAPI
 WinWatchGetClipList(HWINWATCH hWW,
                     LPRECT prc,
