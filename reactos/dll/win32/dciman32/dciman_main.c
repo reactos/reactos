@@ -481,8 +481,8 @@ WinWatchClose(HWINWATCH hWW)
 			if  ( tmp_gpWinWatchList->prev != NULL )
 			{
 				tmp_gpWinWatchList->prev = ((LPWINWATCH_INT)tmp_gpWinWatchList->prev)->prev ;
-			}		
-
+			}
+			break;
 		}	
 		else
 		{
