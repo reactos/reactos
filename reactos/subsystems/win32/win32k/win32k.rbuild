@@ -84,6 +84,7 @@
 		<file>driver.c</file>
 		<file>err.c</file>
 		<file>math.c</file>
+		<file>rtlstr.c</file>
 		<file>copy.c</file>
 		<file>usrheap.c</file>
 		<if property="ARCH" value="i386">

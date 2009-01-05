@@ -119,3 +119,4 @@ PWINDOW FASTCALL GetThreadDesktopWnd(VOID);
 PVOID FASTCALL ValidateHandleNoErr(HANDLE handle, UINT uType);
 PWINDOW FASTCALL ValidateHwndNoErr(HWND hwnd);
 VOID FASTCALL GetConnected(VOID);
+BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);

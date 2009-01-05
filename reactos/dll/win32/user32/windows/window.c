@@ -1657,18 +1657,8 @@ SetWindowTextA(HWND hWnd,
     if(ProcessId != GetCurrentProcessId())
     {
         /* do not send WM_GETTEXT messages to other processes */
-        ANSI_STRING AnsiString;
-        UNICODE_STRING UnicodeString;
 
-        if(lpString)
-        {
-            RtlInitAnsiString(&AnsiString, (LPSTR)lpString);
-            RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-            NtUserDefSetText(hWnd, &UnicodeString);
-            RtlFreeUnicodeString(&UnicodeString);
-        }
-        else
-            NtUserDefSetText(hWnd, NULL);
+        DefSetText(hWnd, (PCWSTR)lpString, TRUE);
 
         if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
         {
@@ -1697,12 +1687,8 @@ SetWindowTextW(HWND hWnd,
     if(ProcessId != GetCurrentProcessId())
     {
         /* do not send WM_GETTEXT messages to other processes */
-        UNICODE_STRING UnicodeString;
 
-        if(lpString)
-            RtlInitUnicodeString(&UnicodeString, (LPWSTR)lpString);
-
-        NtUserDefSetText(hWnd, (lpString ? &UnicodeString : NULL));
+        DefSetText(hWnd, lpString, FALSE);
 
         if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
         {

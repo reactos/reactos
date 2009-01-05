@@ -33,7 +33,7 @@ typedef struct _LARGE_ANSI_STRING
 
 VOID NTAPI RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING,IN PCSZ,IN INT);
 VOID NTAPI RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING,IN PCWSTR,IN INT);
-
+BOOL NTAPI RtlLargeStringToUnicodeString( PUNICODE_STRING, PLARGE_STRING);
 
 /* FIXME: UserHMGetHandle needs to be updated once the new handle manager is implemented */
 #define UserHMGetHandle(obj) ((obj)->hdr.Handle)
@@ -1176,7 +1176,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
          int cy,
 		     UINT Flags);
 BOOL NTAPI
-NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText);
+NtUserDefSetText(HWND WindowHandle, PLARGE_STRING WindowText);
 
 BOOLEAN
 NTAPI

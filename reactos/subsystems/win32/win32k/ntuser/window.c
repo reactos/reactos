@@ -4531,35 +4531,35 @@ CLEANUP:
  * Status
  *    @implemented
  */
-
 BOOL APIENTRY
-NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
+NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
 {
    PWINDOW_OBJECT Window;
    PWINDOW Wnd;
-   UNICODE_STRING SafeText;
+   LARGE_STRING SafeText;
+   UNICODE_STRING UnicodeString;
    BOOL Ret = TRUE;
 
    DPRINT("Enter NtUserDefSetText\n");
 
-   RtlInitUnicodeString(&SafeText, NULL);
    if (WindowText != NULL)
    {
-       _SEH2_TRY
-       {
-           SafeText = ProbeForReadUnicodeString(WindowText);
-           ProbeForRead(SafeText.Buffer, SafeText.Length, sizeof(WCHAR));
-       }
-       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-       {
-           Ret = FALSE;
-           SetLastNtError(_SEH2_GetExceptionCode());
-       }
-       _SEH2_END;
+      _SEH2_TRY
+      {
+         SafeText = ProbeForReadLargeString(WindowText);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+         Ret = FALSE;
+         SetLastNtError(_SEH2_GetExceptionCode());
+      }
+      _SEH2_END;
 
-       if (!Ret)
-           return FALSE;
+      if (!Ret)
+         return FALSE;
    }
+   else
+      return TRUE;
 
    UserEnterExclusive();
 
@@ -4570,27 +4570,41 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
    }
    Wnd = Window->Wnd;
 
-   if (SafeText.Length != 0)
+   // ReactOS uses Unicode and not mixed. Up/Down converting will take time.
+   // Brought to you by: The Wine Project! Dysfunctional Thought Processes!
+   // Now we know what the bAnsi is for.
+   RtlInitUnicodeString(&UnicodeString, NULL);
+   if (SafeText.Buffer)
+   {
+      _SEH2_TRY
+      {
+         if (SafeText.bAnsi)
+            ProbeForRead(SafeText.Buffer, SafeText.Length, sizeof(CHAR));
+         else
+            ProbeForRead(SafeText.Buffer, SafeText.Length, sizeof(WCHAR));
+         Ret = RtlLargeStringToUnicodeString(&UnicodeString, &SafeText);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+         Ret = FALSE;
+         SetLastNtError(_SEH2_GetExceptionCode());
+      }
+      _SEH2_END;
+      if (!Ret) goto Exit;
+   }
+
+   if (UnicodeString.Length != 0)
    {
       if (Wnd->WindowName.MaximumLength > 0 &&
-          SafeText.Length <= Wnd->WindowName.MaximumLength - sizeof(UNICODE_NULL))
+          UnicodeString.Length <= Wnd->WindowName.MaximumLength - sizeof(UNICODE_NULL))
       {
          ASSERT(Wnd->WindowName.Buffer != NULL);
 
-         _SEH2_TRY
-         {
-            Wnd->WindowName.Length = SafeText.Length;
-            Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
-            RtlCopyMemory(Wnd->WindowName.Buffer,
-                          SafeText.Buffer,
-                          SafeText.Length);
-         }
-         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-         {
-            Ret = FALSE;
-            SetLastNtError(_SEH2_GetExceptionCode());
-         }
-         _SEH2_END;
+         Wnd->WindowName.Length = UnicodeString.Length;
+         Wnd->WindowName.Buffer[UnicodeString.Length / sizeof(WCHAR)] = L'\0';
+         RtlCopyMemory(Wnd->WindowName.Buffer,
+                              UnicodeString.Buffer,
+                              UnicodeString.Length);
       }
       else
       {
@@ -4604,26 +4618,15 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
          }
 
          Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
-                                                   SafeText.Length + sizeof(UNICODE_NULL));
+                                                   UnicodeString.Length + sizeof(UNICODE_NULL));
          if (Wnd->WindowName.Buffer != NULL)
          {
-            _SEH2_TRY
-            {
-               Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
-               RtlCopyMemory(Wnd->WindowName.Buffer,
-                             SafeText.Buffer,
-                             SafeText.Length);
-               Wnd->WindowName.MaximumLength = SafeText.Length + sizeof(UNICODE_NULL);
-               Wnd->WindowName.Length = SafeText.Length;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Wnd->WindowName.Buffer = NULL;
-                DesktopHeapFree(Wnd->pdesktop, Wnd->WindowName.Buffer);
-                Ret = FALSE;
-                SetLastNtError(_SEH2_GetExceptionCode());
-            }
-            _SEH2_END;
+            Wnd->WindowName.Buffer[UnicodeString.Length / sizeof(WCHAR)] = L'\0';
+            RtlCopyMemory(Wnd->WindowName.Buffer,
+                                 UnicodeString.Buffer,
+                                 UnicodeString.Length);
+            Wnd->WindowName.MaximumLength = UnicodeString.Length + sizeof(UNICODE_NULL);
+            Wnd->WindowName.Length = UnicodeString.Length;
          }
          else
          {
@@ -4649,7 +4652,8 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
    }
 
    Ret = TRUE;
-
+Exit:
+   if (UnicodeString.Buffer) RtlFreeUnicodeString(&UnicodeString);
    DPRINT("Leave NtUserDefSetText, ret=%i\n", Ret);
    UserLeave();
    return Ret;
