@@ -4,6 +4,7 @@
 * FILE:       drivers/fs/np/rw.c
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: David Welch <welch@cwcom.net>
+*             Michael Martin
 */
 
 /* INCLUDES ******************************************************************/
@@ -300,7 +301,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	KEVENT Event;
 	ULONG Length;
 	ULONG Information = 0;
-	ULONG CopyLength;
+	ULONG CopyLength = 0;
 	ULONG TempLength;
 	BOOLEAN IsOriginalRequest = TRUE;
 	PVOID Buffer;
@@ -316,12 +317,16 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	}
 
 	FileObject = IoGetCurrentIrpStackLocation(Irp)->FileObject;
+	DPRINT("FileObject %p\n", FileObject);
+	DPRINT("Pipe name %wZ\n", &FileObject->FileName);
 	Ccb = FileObject->FsContext2;
 	Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
 
-	if (Ccb->OtherSide == NULL)
+	if ((Ccb->OtherSide == NULL) && (Ccb->ReadDataAvailable == 0))
 	{
-		DPRINT("Pipe is NOT connected!\n");
+		/* Its ok if the other side has been Disconnect, but if we have data still in the buffer
+                   , need to still be able to read it. Currently this is a HAXXXX */
+		DPRINT1("Pipe is NO longer connected and no data exist in buffer!\n");
 		if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
 			Status = STATUS_PIPE_LISTENING;
 		else if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
@@ -420,7 +425,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 				{
 					break;
 				}
-				if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE)
+				if ((Ccb->PipeState != FILE_PIPE_CONNECTED_STATE) && (Ccb->ReadDataAvailable == 0))
 				{
 					DPRINT("PipeState: %x\n", Ccb->PipeState);
 					Status = STATUS_PIPE_BROKEN;
@@ -450,7 +455,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 					if (NT_SUCCESS(Status))
 					{
 						Status = STATUS_PENDING;
-                        goto done;
+						goto done;
 					}
 					ExAcquireFastMutex(&Ccb->DataListLock);
 					break;
@@ -489,7 +494,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 					Ccb->WriteQuotaAvailable += CopyLength;
 				}
 
-				if (Length == 0)
+				if ((Length == 0) || (Ccb->ReadDataAvailable == 0))
 				{
 					if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
 					{
@@ -503,37 +508,82 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 			{
 				DPRINT("Message mode\n");
 
-				/* Message mode */
+				/* For Message mode, the Message length will be stored in the buffer preceeding the Message. */
+
 				if (Ccb->ReadDataAvailable)
 				{
-					/* Truncate the message if the receive buffer is too small */
-					CopyLength = min(Ccb->ReadDataAvailable, Length);
-					memcpy(Buffer, Ccb->Data, CopyLength);
+					ULONG NextMessageLength=0;
+					//HexDump(Ccb->Data, (ULONG)Ccb->WritePtr - (ULONG)Ccb->Data);
 
-#ifndef NDEBUG
-					DPRINT("Length %d Buffer %x\n",CopyLength,Buffer);
-					HexDump((PUCHAR)Buffer, CopyLength);
-#endif
+					/*First get the size of the message */
+					memcpy(&NextMessageLength, Ccb->Data, sizeof(NextMessageLength));
 
-					Information = CopyLength;
-
-					if (Ccb->ReadDataAvailable > Length)
+					if (NextMessageLength == 0) 
 					{
-						memmove(Ccb->Data, (PVOID)((ULONG_PTR)Ccb->Data + Length),
-							Ccb->ReadDataAvailable - Length);
-						Ccb->ReadDataAvailable -= Length;
-						Status = STATUS_MORE_ENTRIES;
+						DPRINT1("This should never happen! Possible memory corruption.\n");
+#ifndef NDEBUG
+						HexDump(Ccb->Data, (ULONG)Ccb->WritePtr - (ULONG)Ccb->Data);
+#endif
+						break;
+					}
+
+					/* Use the smaller value */
+					CopyLength = min(NextMessageLength, Length);
+					/* retrieve the message from the buffer */
+					memcpy(Buffer, (PVOID)((ULONG)Ccb->Data + sizeof(NextMessageLength)), CopyLength);
+
+
+					if (Ccb->ReadDataAvailable > CopyLength)
+					{
+						if (CopyLength < NextMessageLength)
+						{
+							/* Client only requested part of the message */
+
+							/* Calculate the remaining message new size */
+							ULONG NewMessageSize = NextMessageLength-CopyLength;
+							/* Write a new Message size to buffer for the part of the message still there */
+							memcpy(Ccb->Data, &NewMessageSize, sizeof(NewMessageSize));
+
+							/* Move the memory starting from end of partial Message just retrieved */
+							memmove((PVOID)((ULONG_PTR)Ccb->Data + sizeof(NewMessageSize)), 
+								(PVOID)((ULONG_PTR) Ccb->Data + CopyLength + sizeof(NewMessageSize)), 
+								(ULONG)Ccb->WritePtr - ((ULONG)Ccb->Data + sizeof(NewMessageSize)) - CopyLength);
+
+							/* Update the write pointer */
+							Ccb->WritePtr = (PVOID)((ULONG)Ccb->WritePtr - CopyLength);
+						}
+						else
+						{
+							/* Client wanted the entire message */
+							/* Move the memory starting from the next Message just retrieved */
+							memmove(Ccb->Data, 
+								(PVOID)((ULONG_PTR) Ccb->Data + NextMessageLength + sizeof(NextMessageLength)),
+								 (ULONG)Ccb->WritePtr - (ULONG)Ccb->Data - NextMessageLength - sizeof(NextMessageLength));
+
+							/* Update the write pointer */
+							Ccb->WritePtr = (PVOID)((ULONG)Ccb->WritePtr - NextMessageLength);
+						}
 					}
 					else
 					{
+						/* This was the last Message, so just zero this messages for safety sake */
+						memset(Ccb->Data,0,NextMessageLength + sizeof(NextMessageLength));
+						/* reset the write pointer */
+						Ccb->WritePtr = Ccb->Data;
 						KeResetEvent(&Ccb->ReadEvent);
 						if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
 						{
 							KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
 						}
-						Ccb->ReadDataAvailable = 0;
-						Ccb->WriteQuotaAvailable = Ccb->MaxDataLength;
 					}
+#ifndef NDEBUG
+					DPRINT("Length %d Buffer %x\n",CopyLength,Buffer);
+					HexDump((PUCHAR)Buffer, CopyLength);
+#endif
+
+					Information += CopyLength;
+					Ccb->WriteQuotaAvailable +=CopyLength;
+					Ccb->ReadDataAvailable -= CopyLength;
 				}
 
 				if (Information > 0)
@@ -708,9 +758,11 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 		if (Fcb->WriteMode == FILE_PIPE_BYTE_STREAM_MODE)
 		{
 			DPRINT("Byte stream mode\n");
+
 			while (Length > 0 && ReaderCcb->WriteQuotaAvailable > 0)
 			{
 				CopyLength = min(Length, ReaderCcb->WriteQuotaAvailable);
+
 				if ((ULONG_PTR)ReaderCcb->WritePtr + CopyLength <= (ULONG_PTR)ReaderCcb->Data + ReaderCcb->MaxDataLength)
 				{
 					memcpy(ReaderCcb->WritePtr, Buffer, CopyLength);
@@ -745,15 +797,23 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 		}
 		else
 		{
+			/* For Message Type Pipe, the Pipes memory will be used to store the size of each message */
+                        /* FIXME: Check and verify ReadMode ByteStream */
 			DPRINT("Message mode\n");
 			if (Length > 0)
 			{
 				CopyLength = min(Length, ReaderCcb->WriteQuotaAvailable);
-				memcpy(ReaderCcb->Data, Buffer, CopyLength);
+				/* First Copy the Length of the message into the pipes buffer */
+				memcpy(ReaderCcb->WritePtr, &CopyLength, sizeof(CopyLength));
+				/* Now the user buffer itself */
+				memcpy((PVOID)((ULONG)ReaderCcb->WritePtr+ sizeof(CopyLength)), Buffer, CopyLength);
+				/* Update the write pointer */
+				ReaderCcb->WritePtr = (PVOID)((ULONG)ReaderCcb->WritePtr + sizeof(CopyLength) + CopyLength);
 
-				Information = CopyLength;
-				ReaderCcb->ReadDataAvailable = CopyLength;
-				ReaderCcb->WriteQuotaAvailable = 0;
+				Information += CopyLength;
+
+				ReaderCcb->ReadDataAvailable += CopyLength;
+				ReaderCcb->WriteQuotaAvailable -= CopyLength;
 			}
 
 			if (Information > 0)

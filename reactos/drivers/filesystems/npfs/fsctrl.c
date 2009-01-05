@@ -5,6 +5,7 @@
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: David Welch <welch@cwcom.net>
 *             Eric Kohl
+*             Michael Martin
 */
 
 /* INCLUDES ******************************************************************/
@@ -368,11 +369,15 @@ NpfsPeekPipe(PIRP Irp,
 	PNPFS_FCB Fcb;
 	PNPFS_CCB Ccb;
 	NTSTATUS Status;
+	ULONG MessageCount = 0;
+	ULONG MessageLength;
+	ULONG ReadDataAvailable;
+	PVOID BufferPtr;
 
-	DPRINT1("NpfsPeekPipe\n");
+	DPRINT("NpfsPeekPipe\n");
 
 	OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-	DPRINT1("OutputBufferLength: %lu\n", OutputBufferLength);
+	DPRINT("OutputBufferLength: %lu\n", OutputBufferLength);
 
 	/* Validate parameters */
 	if (OutputBufferLength < sizeof(FILE_PIPE_PEEK_BUFFER))
@@ -391,16 +396,61 @@ NpfsPeekPipe(PIRP Irp,
 	Reply->ReadDataAvailable = Ccb->ReadDataAvailable;
 	DPRINT("ReadDataAvailable: %lu\n", Ccb->ReadDataAvailable);
 
-	Reply->NumberOfMessages = 0; /* FIXME */
-	Reply->MessageLength = 0; /* FIXME */
-	Reply->Data[0] = 0; /* FIXME */
+	if (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
+	{
+		DPRINT("Byte Stream Mode\n");
+		Reply->MessageLength = Ccb->ReadDataAvailable;
+		DPRINT("Reply->MessageLength  %d\n",Reply->MessageLength );
+	}
+	else
+	{
+		DPRINT("Message Mode\n");
+		ReadDataAvailable=Ccb->ReadDataAvailable;
 
-	//  Irp->IoStatus.Information = sizeof(FILE_PIPE_PEEK_BUFFER);
+		if (ReadDataAvailable > 0)
+		{
+			memcpy(&Reply->MessageLength,Ccb->Data,sizeof(ULONG));
+			BufferPtr = Ccb->Data;
+			/* NOTE: Modifying the structure in header file to keep track of NumberOfMessage would be better */
+			while ((ReadDataAvailable > 0) && (BufferPtr < Ccb->WritePtr))
+			{
+				memcpy(&MessageLength, BufferPtr, sizeof(MessageLength));
 
-	//  Status = STATUS_SUCCESS;
-	Status = STATUS_NOT_IMPLEMENTED;
+				ASSERT(MessageLength > 0);
 
-	DPRINT1("NpfsPeekPipe done\n");
+				DPRINT("MessageLength = %d\n",MessageLength);
+				MessageCount++;
+				ReadDataAvailable -= MessageLength;
+
+				/* If its the first message, copy the Message if the size of buffer is large enough */
+				if ((MessageCount==1) && (Reply->Data[0]) 
+					&& (OutputBufferLength >= (sizeof(FILE_PIPE_PEEK_BUFFER) + MessageLength)))
+				{
+					memcpy(&Reply->Data[0], (PVOID)((ULONG)BufferPtr + sizeof(MessageLength)), MessageLength);
+				}
+				BufferPtr =(PVOID)((ULONG)BufferPtr + MessageLength + sizeof(MessageLength));
+				DPRINT("Message %d\n",MessageCount);
+				DPRINT("ReadDataAvailable: %lu\n", ReadDataAvailable);
+			}
+
+			if (ReadDataAvailable != 0)
+			{
+				DPRINT1("This should never happen! Possible memory corruption.\n");
+				return STATUS_UNSUCCESSFUL;
+			}
+		}
+	}
+
+	Reply->NumberOfMessages = MessageCount;
+	if (MessageCount > 0)
+		Reply->Data[0] = 0;
+
+	Irp->IoStatus.Information = OutputBufferLength;
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+
+	Status = STATUS_SUCCESS;
+
+	DPRINT("NpfsPeekPipe done\n");
 
 	return Status;
 }
