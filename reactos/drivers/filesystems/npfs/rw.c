@@ -326,7 +326,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	{
 		/* Its ok if the other side has been Disconnect, but if we have data still in the buffer
                    , need to still be able to read it. Currently this is a HAXXXX */
-		DPRINT1("Pipe is NO longer connected and no data exist in buffer!\n");
+		DPRINT("Pipe no longer connected and no data exist in buffer. Ok to close pipe\n");
 		if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
 			Status = STATUS_PIPE_LISTENING;
 		else if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
