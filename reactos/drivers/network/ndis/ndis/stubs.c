@@ -532,17 +532,19 @@ NdisGetReceivedPacket(
  */
 VOID
 EXPORT
-NdisGetSystemUpTime(
-    OUT PULONG  pSystemUpTime)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
+NdisGetSystemUpTime(OUT PULONG pSystemUpTime)
 {           
-    /* Get the uptime of the system in msec */
-     *pSystemUpTime = ( (SharedUserData->TickCountLowDeprecated *  SharedUserData->TickCountMultiplier) / 0x1000000); 
+    ULONG Increment;
+    LARGE_INTEGER TickCount;
+
+    /* Get the increment and current tick count */
+    Increment = KeQueryTimeIncrement();
+    KeQueryTickCount(&TickCount);
+
+    /* Convert to milliseconds and return */
+    TickCount.QuadPart *= Increment;
+    TickCount.QuadPart /= (10 * 1000);
+    *pSystemUpTime = TickCount.LowPart;
 }
 
 
