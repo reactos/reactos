@@ -38,6 +38,7 @@
 
 /* kernelmode libcnt should not include Wine-debugging crap */
 #ifndef _LIBCNT_
+#define WINE_NO_TRACE_MSGS
 #include "wine/debug.h"
 #ifndef __WINE_DEBUG_CHANNEL__
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
