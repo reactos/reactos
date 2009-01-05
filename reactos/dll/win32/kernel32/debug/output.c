@@ -376,18 +376,6 @@ OutputDebugStringA(LPCSTR _OutputString)
                 /* copy the current block */
                 memcpy(a_cBuffer, _OutputString, nRoundLen);
 
-                /* Have we reached the end of the string? */
-                if (nRoundLen == nOutputStringLen)
-                {
-                    /* Make sure we terminate with a line break */
-                    if (a_cBuffer[nRoundLen - 1] != '\n')
-                    {
-                        a_cBuffer[nRoundLen] = '\n';
-                        nRoundLen++;
-                        nOutputStringLen++;
-                    }
-                }
-
                 /* null-terminate the current block */
                 a_cBuffer[nRoundLen] = 0;
 
