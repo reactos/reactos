@@ -222,12 +222,15 @@ SermouseDetectLegacyDevice(
 				case '3':
 					INFO_(SERMOUSE, "Microsoft Mouse with 3-buttons detected\n");
 					MouseType = mtLogitech;
+					break;
 				case 'Z':
 					INFO_(SERMOUSE, "Microsoft Wheel Mouse detected\n");
 					MouseType = mtWheelZ;
+					break;
 				default:
 					INFO_(SERMOUSE, "Microsoft Mouse with 2-buttons detected\n");
 					MouseType = mtMicrosoft;
+					break;
 			}
 			goto ByeBye;
 		}

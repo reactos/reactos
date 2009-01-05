@@ -572,6 +572,7 @@ SerenumDetectLegacyDevice(
 					RtlInitUnicodeString(&DeviceDescription, L"Microsoft Mouse with 3-buttons");
 					SerenumInitMultiSzString(&HardwareIds, "*PNP0F08", NULL);
 					SerenumInitMultiSzString(&CompatibleIds, "SERIAL_MOUSE", NULL);
+					break;
 				default:
 					/* Hardware id: *PNP0F01
 					 * Compatible id: SERIAL_MOUSE
@@ -579,6 +580,7 @@ SerenumDetectLegacyDevice(
 					RtlInitUnicodeString(&DeviceDescription, L"Microsoft Mouse with 2-buttons or Microsoft Wheel Mouse");
 					SerenumInitMultiSzString(&HardwareIds, "*PNP0F01", NULL);
 					SerenumInitMultiSzString(&CompatibleIds, "SERIAL_MOUSE", NULL);
+					break;
 			}
 			Status = ReportDetectedDevice(DeviceObject,
 				&DeviceDescription, &DeviceId, &InstanceId, &HardwareIds, &CompatibleIds);
