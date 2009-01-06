@@ -720,6 +720,20 @@ interface IXMLDOMParseError : IDispatch
     HRESULT filepos([retval, out] long * filePos);
 }
 
+[
+    hidden,
+    uuid(3efaa427-272f-11d2-836f-0000f87a7782)
+]
+dispinterface XMLDOMDocumentEvents
+{
+    properties:
+    methods:
+    [id(DISPID_XMLDOMEVENT_ONDATAAVAILABLE)]
+    HRESULT ondataavailable();
+
+    [id(DISPID_XMLDOMEVENT_ONREADYSTATECHANGE)]
+    HRESULT onreadystatechange();
+}
 
 [
 uuid(2933bf90-7b36-11d2-b20e-00c04f983e60)

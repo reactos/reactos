@@ -516,7 +516,7 @@ DECL_WINELIB_TYPE_AW(TEXTRANGE)
 
 typedef struct _editstream
 {
-    DWORD		dwCookie;
+    DWORD_PTR		dwCookie;
     DWORD		dwError;
     EDITSTREAMCALLBACK	pfnCallback;
 } EDITSTREAM;
