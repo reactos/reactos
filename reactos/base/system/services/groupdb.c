@@ -25,7 +25,7 @@ LIST_ENTRY UnknownGroupListHead;
 
 DWORD
 ScmSetServiceGroup(PSERVICE lpService,
-                   LPWSTR lpGroupName)
+                   LPCWSTR lpGroupName)
 {
     PLIST_ENTRY GroupEntry;
     PSERVICE_GROUP lpGroup;

@@ -36,7 +36,7 @@ SVCCTL_HANDLEA_bind(SVCCTL_HANDLEA szMachineName)
                                       (UCHAR *)"\\pipe\\ntsvcs",
                                       NULL,
                                       (UCHAR **)&pszStringBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcStringBindingCompose returned 0x%x\n", status);
         return NULL;
@@ -45,13 +45,13 @@ SVCCTL_HANDLEA_bind(SVCCTL_HANDLEA szMachineName)
     /* Set the binding handle that will be used to bind to the server. */
     status = RpcBindingFromStringBindingA(pszStringBinding,
                                           &hBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
     status = RpcStringFreeA(&pszStringBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcStringFree returned 0x%x\n", status);
     }
@@ -69,7 +69,7 @@ SVCCTL_HANDLEA_unbind(SVCCTL_HANDLEA szMachineName,
     TRACE("SVCCTL_HANDLEA_unbind() called\n");
 
     status = RpcBindingFree(&hBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcBindingFree returned 0x%x\n", status);
     }
@@ -91,7 +91,7 @@ SVCCTL_HANDLEW_bind(SVCCTL_HANDLEW szMachineName)
                                       L"\\pipe\\ntsvcs",
                                       NULL,
                                       &pszStringBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcStringBindingCompose returned 0x%x\n", status);
         return NULL;
@@ -100,13 +100,13 @@ SVCCTL_HANDLEW_bind(SVCCTL_HANDLEW szMachineName)
     /* Set the binding handle that will be used to bind to the server. */
     status = RpcBindingFromStringBindingW(pszStringBinding,
                                           &hBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
     status = RpcStringFreeW(&pszStringBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcStringFree returned 0x%x\n", status);
     }
@@ -124,7 +124,7 @@ SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
     TRACE("SVCCTL_HANDLEW_unbind() called\n");
 
     status = RpcBindingFree(&hBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcBindingFree returned 0x%x\n", status);
     }
@@ -146,7 +146,7 @@ RPC_SERVICE_STATUS_HANDLE_bind(RPC_SERVICE_STATUS_HANDLE hServiceStatus)
                                       L"\\pipe\\ntsvcs",
                                       NULL,
                                       &pszStringBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcStringBindingCompose returned 0x%x\n", status);
         return NULL;
@@ -155,13 +155,13 @@ RPC_SERVICE_STATUS_HANDLE_bind(RPC_SERVICE_STATUS_HANDLE hServiceStatus)
     /* Set the binding handle that will be used to bind to the server. */
     status = RpcBindingFromStringBindingW(pszStringBinding,
                                           &hBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
     status = RpcStringFreeW(&pszStringBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcStringFree returned 0x%x\n", status);
     }
@@ -179,7 +179,7 @@ RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
     TRACE("RPC_SERVICE_STATUS_HANDLE_unbind() called\n");
 
     status = RpcBindingFree(&hBinding);
-    if (status)
+    if (status != RPC_S_OK)
     {
         ERR("RpcBindingFree returned 0x%x\n", status);
     }
@@ -195,6 +195,8 @@ ScmRpcStatusToWinError(RPC_STATUS Status)
             return ERROR_INVALID_HANDLE;
 
         case RPC_X_NULL_REF_POINTER:
+        case RPC_X_ENUM_VALUE_OUT_OF_RANGE:
+        case RPC_X_BYTE_COUNT_TOO_SMALL:
             return ERROR_INVALID_PARAMETER;
 
         case STATUS_ACCESS_VIOLATION:
@@ -759,6 +761,8 @@ CreateServiceW(SC_HANDLE hSCManager,
     LPWSTR lpStr;
 
     TRACE("CreateServiceW() called\n");
+    TRACE("%p %S %S\n", hSCManager, 
+          lpServiceName, lpDisplayName);
 
     /* Calculate the Dependencies length*/
     if (lpDependencies != NULL)
@@ -781,18 +785,18 @@ CreateServiceW(SC_HANDLE hSCManager,
     {
         /* Call to services.exe using RPC */
         dwError = RCreateServiceW((SC_RPC_HANDLE)hSCManager,
-                                  (LPWSTR)lpServiceName,
-                                  (LPWSTR)lpDisplayName,
+                                  lpServiceName,
+                                  lpDisplayName,
                                   dwDesiredAccess,
                                   dwServiceType,
                                   dwStartType,
                                   dwErrorControl,
-                                  (LPWSTR)lpBinaryPathName,
-                                  (LPWSTR)lpLoadOrderGroup,
+                                  lpBinaryPathName,
+                                  lpLoadOrderGroup,
                                   lpdwTagId,
                                   (LPBYTE)lpDependencies,
                                   dwDependenciesLength,
-                                  (LPWSTR)lpServiceStartName,
+                                  lpServiceStartName,
                                   NULL,              /* FIXME: lpPassword */
                                   0,                 /* FIXME: dwPasswordLength */
                                   (SC_RPC_HANDLE *)&hService);
@@ -1292,6 +1296,8 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
     DWORD dwError;
 
     TRACE("GetServiceDisplayNameA() called\n");
+    TRACE("%p %s %p %p\n", hSCManager,
+          debugstr_a(lpServiceName), lpDisplayName, lpcchBuffer);
 
     if (!lpDisplayName)
         *lpcchBuffer = 0;
@@ -1299,7 +1305,7 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
     _SEH2_TRY
     {
         dwError = RGetServiceDisplayNameA((SC_RPC_HANDLE)hSCManager,
-                                          (LPSTR)lpServiceName,
+                                          lpServiceName,
                                           lpDisplayName,
                                           lpcchBuffer);
     }
@@ -1344,7 +1350,7 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
     _SEH2_TRY
     {
         dwError = RGetServiceDisplayNameW((SC_RPC_HANDLE)hSCManager,
-                                          (LPWSTR)lpServiceName,
+                                          lpServiceName,
                                           lpDisplayName,
                                           lpcchBuffer);
     }
@@ -1386,7 +1392,7 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
     _SEH2_TRY
     {
         dwError = RGetServiceKeyNameA((SC_RPC_HANDLE)hSCManager,
-                                      (LPSTR)lpDisplayName,
+                                      lpDisplayName,
                                       lpServiceName,
                                       lpcchBuffer);
     }
@@ -1428,7 +1434,7 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
     _SEH2_TRY
     {
         dwError = RGetServiceKeyNameW((SC_RPC_HANDLE)hSCManager,
-                                      (LPWSTR)lpDisplayName,
+                                      lpDisplayName,
                                       lpServiceName,
                                       lpcchBuffer);
     }

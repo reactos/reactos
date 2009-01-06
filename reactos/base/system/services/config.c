@@ -48,7 +48,7 @@ ScmOpenServiceKey(LPWSTR lpServiceName,
 
 
 DWORD
-ScmCreateServiceKey(LPWSTR lpServiceName,
+ScmCreateServiceKey(LPCWSTR lpServiceName,
                     REGSAM samDesired,
                     PHKEY phKey)
 {

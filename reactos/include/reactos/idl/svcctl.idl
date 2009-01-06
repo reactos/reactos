@@ -380,18 +380,18 @@ interface svcctl
     /* Function 12 */
     DWORD RCreateServiceW(
         [in] SC_RPC_HANDLE hSCManager,
-        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpServiceName,
-        [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpDisplayName,
+        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPCWSTR lpServiceName,
+        [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPCWSTR lpDisplayName,
         [in] DWORD dwDesiredAccess,
         [in] DWORD dwServiceType,
         [in] DWORD dwStartType,
         [in] DWORD dwErrorControl,
-        [in, string, range(0, SC_MAX_PATH_LENGTH)] LPWSTR lpBinaryPathName,
-        [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpLoadOrderGroup,
+        [in, string, range(0, SC_MAX_PATH_LENGTH)] LPCWSTR lpBinaryPathName,
+        [in, string, unique, range(0, SC_MAX_NAME_LENGTH)] LPCWSTR lpLoadOrderGroup,
         [in, out, unique] LPDWORD lpdwTagId,
         [in, unique, size_is(dwDependSize)] LPBYTE lpDependencies,
         [in, range(0, SC_MAX_DEPEND_SIZE)] DWORD dwDependSize,
-        [in, string, unique, range(0, SC_MAX_ACCOUNT_NAME_LENGTH)] LPWSTR lpServiceStartName,
+        [in, string, unique, range(0, SC_MAX_ACCOUNT_NAME_LENGTH)] LPCWSTR lpServiceStartName,
         [in, unique, size_is(dwPwSize)] LPBYTE lpPassword,
         [in, range(0, SC_MAX_PWD_SIZE)] DWORD dwPwSize,
         [out] LPSC_RPC_HANDLE lpServiceHandle);
@@ -454,14 +454,14 @@ interface svcctl
     /* Function 20 */
     DWORD RGetServiceDisplayNameW(
         [in] SC_RPC_HANDLE hSCManager,
-        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpServiceName,
+        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPCWSTR lpServiceName,
         [out, string, range(1, 4*1024+1), size_is(*lpcchBuffer + 1)] LPWSTR lpDisplayName,
         [in, out] DWORD* lpcchBuffer);
 
     /* Function 21 */
     DWORD RGetServiceKeyNameW(
         [in] SC_RPC_HANDLE hSCManager,
-        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPWSTR lpDisplayName,
+        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPCWSTR lpDisplayName,
         [out, string, range(1, 4*1024+1), size_is(*lpcchBuffer + 1)] LPWSTR lpServiceName,
         [in, out] DWORD* lpcchBuffer);
 
@@ -566,14 +566,14 @@ interface svcctl
     /* Function 32 */
     DWORD RGetServiceDisplayNameA(
         [in] SC_RPC_HANDLE hSCManager,
-        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpServiceName,
+        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPCSTR lpServiceName,
         [out, string, size_is(*lpcchBuffer)] LPSTR lpDisplayName,
         [in, out] LPBOUNDED_DWORD_4K lpcchBuffer);
 
     /* Function 33 */
     DWORD RGetServiceKeyNameA(
         [in] SC_RPC_HANDLE hSCManager,
-        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPSTR lpDisplayName,
+        [in, string, range(0, SC_MAX_NAME_LENGTH)] LPCSTR lpDisplayName,
         [out, string, size_is(*lpcchBuffer)] LPSTR lpKeyName,
         [in, out] LPBOUNDED_DWORD_4K lpcchBuffer);
 

@@ -1571,13 +1571,13 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
 DWORD
 ScmCanonDriverImagePath(DWORD dwStartType,
-                        wchar_t *lpServiceName,
+                        const wchar_t *lpServiceName,
                         wchar_t **lpCanonName)
 {
     DWORD ServiceNameLen, Result;
     UNICODE_STRING NtServiceName;
     WCHAR *RelativeName;
-    WCHAR *SourceName = lpServiceName;
+    const WCHAR *SourceName = lpServiceName;
 
     /* Calculate the length of the service's name */
     ServiceNameLen = wcslen(lpServiceName);
@@ -1703,18 +1703,18 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 /* Function 12 */
 DWORD RCreateServiceW(
     SC_RPC_HANDLE hSCManager,
-    LPWSTR lpServiceName,
-    LPWSTR lpDisplayName,
+    LPCWSTR lpServiceName,
+    LPCWSTR lpDisplayName,
     DWORD dwDesiredAccess,
     DWORD dwServiceType,
     DWORD dwStartType,
     DWORD dwErrorControl,
-    LPWSTR lpBinaryPathName,
-    LPWSTR lpLoadOrderGroup,
+    LPCWSTR lpBinaryPathName,
+    LPCWSTR lpLoadOrderGroup,
     LPDWORD lpdwTagId,
     LPBYTE lpDependencies,
     DWORD dwDependSize,
-    LPWSTR lpServiceStartName,
+    LPCWSTR lpServiceStartName,
     LPBYTE lpPassword,
     DWORD dwPwSize,
     LPSC_RPC_HANDLE lpServiceHandle)
@@ -2740,7 +2740,7 @@ DWORD RStartServiceW(
 /* Function 20 */
 DWORD RGetServiceDisplayNameW(
     SC_RPC_HANDLE hSCManager,
-    LPWSTR lpServiceName,
+    LPCWSTR lpServiceName,
     LPWSTR lpDisplayName,
     DWORD *lpcchBuffer)
 {
@@ -2773,7 +2773,10 @@ DWORD RGetServiceDisplayNameW(
         if (*lpcchBuffer == 0)
         {
             *lpcchBuffer = 1;
-            *lpDisplayName = '\0';
+            if (lpDisplayName != NULL)
+            {
+                *lpDisplayName = '\0';
+            }
         }
 
         return ERROR_SERVICE_DOES_NOT_EXIST;
@@ -2783,7 +2786,7 @@ DWORD RGetServiceDisplayNameW(
     {
         dwLength = wcslen(lpService->lpServiceName);
 
-        if (lpServiceName != NULL &&
+        if (lpDisplayName != NULL &&
             *lpcchBuffer > dwLength)
         {
             wcscpy(lpDisplayName, lpService->lpServiceName);
@@ -2811,7 +2814,7 @@ DWORD RGetServiceDisplayNameW(
 /* Function 21 */
 DWORD RGetServiceKeyNameW(
     SC_RPC_HANDLE hSCManager,
-    LPWSTR lpDisplayName,
+    LPCWSTR lpDisplayName,
     LPWSTR lpServiceName,
     DWORD *lpcchBuffer)
 {
@@ -2844,7 +2847,10 @@ DWORD RGetServiceKeyNameW(
         if (*lpcchBuffer == 0)
         {
             *lpcchBuffer = 2;
-            *lpServiceName = '\0';
+            if (lpServiceName != NULL)
+            {
+                *lpServiceName = '\0';
+            }
         }
 
         return ERROR_SERVICE_DOES_NOT_EXIST;
@@ -3774,12 +3780,12 @@ DWORD RStartServiceA(
 /* Function 32 */
 DWORD RGetServiceDisplayNameA(
     SC_RPC_HANDLE hSCManager,
-    LPSTR lpServiceName,
+    LPCSTR lpServiceName,
     LPSTR lpDisplayName,
     LPBOUNDED_DWORD_4K lpcchBuffer)
 {
 //    PMANAGER_HANDLE hManager;
-    PSERVICE lpService;
+    PSERVICE lpService = NULL;
     DWORD dwLength;
     DWORD dwError;
     LPWSTR lpServiceNameW;
@@ -3797,23 +3803,26 @@ DWORD RGetServiceDisplayNameA(
 //        return ERROR_INVALID_HANDLE;
 //    }
 
-    dwLength = strlen(lpServiceName) + 1;
-    lpServiceNameW = HeapAlloc(GetProcessHeap(),
-                               HEAP_ZERO_MEMORY,
-                               dwLength * sizeof(WCHAR));
-    if (!lpServiceNameW)
-        return ERROR_NOT_ENOUGH_MEMORY;
+    if (lpServiceName != NULL)
+    {
+        dwLength = strlen(lpServiceName) + 1;
+        lpServiceNameW = HeapAlloc(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   dwLength * sizeof(WCHAR));
+        if (!lpServiceNameW)
+            return ERROR_NOT_ENOUGH_MEMORY;
 
-    MultiByteToWideChar(CP_ACP,
-                        0,
-                        lpServiceName,
-                        strlen(lpServiceName),
-                        lpServiceNameW,
-                        dwLength);
+        MultiByteToWideChar(CP_ACP,
+                            0,
+                            lpServiceName,
+                            -1,
+                            lpServiceNameW,
+                            dwLength);
 
-    lpService = ScmGetServiceEntryByName(lpServiceNameW);
+        lpService = ScmGetServiceEntryByName(lpServiceNameW);
 
-    HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+        HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+    }
 
     if (lpService == NULL)
     {
@@ -3824,7 +3833,10 @@ DWORD RGetServiceDisplayNameA(
         if (*lpcchBuffer == 0)
         {
             *lpcchBuffer = 1;
-            *lpDisplayName = '\0';
+            if (lpDisplayName != NULL)
+            {
+                *lpDisplayName = '\0';
+            }
         }
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
@@ -3832,7 +3844,7 @@ DWORD RGetServiceDisplayNameA(
     if (!lpService->lpDisplayName)
     {
         dwLength = wcslen(lpService->lpServiceName);
-        if (lpServiceName != NULL &&
+        if (lpDisplayName != NULL &&
             *lpcchBuffer > dwLength)
         {
             WideCharToMultiByte(CP_ACP,
@@ -3840,7 +3852,7 @@ DWORD RGetServiceDisplayNameA(
                                 lpService->lpServiceName,
                                 wcslen(lpService->lpServiceName),
                                 lpDisplayName,
-                                *lpcchBuffer,
+                                dwLength + 1,
                                 NULL,
                                 NULL);
             return ERROR_SUCCESS;
@@ -3857,7 +3869,7 @@ DWORD RGetServiceDisplayNameA(
                                 lpService->lpDisplayName,
                                 wcslen(lpService->lpDisplayName),
                                 lpDisplayName,
-                                *lpcchBuffer,
+                                dwLength + 1,
                                 NULL,
                                 NULL);
             return ERROR_SUCCESS;
@@ -3875,7 +3887,7 @@ DWORD RGetServiceDisplayNameA(
 /* Function 33 */
 DWORD RGetServiceKeyNameA(
     SC_RPC_HANDLE hSCManager,
-    LPSTR lpDisplayName,
+    LPCSTR lpDisplayName,
     LPSTR lpServiceName,
     LPBOUNDED_DWORD_4K lpcchBuffer)
 {
@@ -3900,7 +3912,7 @@ DWORD RGetServiceKeyNameA(
     MultiByteToWideChar(CP_ACP,
                         0,
                         lpDisplayName,
-                        strlen(lpDisplayName),
+                        -1,
                         lpDisplayNameW,
                         dwLength);
 
@@ -3917,21 +3929,24 @@ DWORD RGetServiceKeyNameA(
         if (*lpcchBuffer == 0)
         {
             *lpcchBuffer = 1;
-            *lpServiceName = '\0';
+            if (lpServiceName != NULL)
+            {
+                *lpServiceName = '\0';
+            }
         }
 
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
     dwLength = wcslen(lpService->lpServiceName);
-    if (lpService != NULL &&
+    if (lpServiceName != NULL &&
         *lpcchBuffer > dwLength)
     {
         WideCharToMultiByte(CP_ACP,
                             0,
                             lpService->lpServiceName,
                             wcslen(lpService->lpServiceName),
-                            lpServiceName,
+                            lpServiceName + 1,
                             dwLength,
                             NULL,
                             NULL);
