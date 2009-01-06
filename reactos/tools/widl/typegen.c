@@ -1866,8 +1866,9 @@ static size_t write_struct_tfs(FILE *file, type_t *type,
            nothing is written to file yet.  On the actual writing pass,
            this will have been updated.  */
         unsigned int absoff = type->ptrdesc ? type->ptrdesc : *tfsoff;
-        short reloff = absoff - *tfsoff;
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset= %hd (%u) */\n",
+        int reloff = absoff - *tfsoff;
+        assert( reloff >= 0 );
+        print_file(file, 2, "NdrFcShort(0x%x),\t/* Offset= %d (%u) */\n",
                    reloff, reloff, absoff);
         *tfsoff += 2;
     }
@@ -2255,6 +2256,8 @@ static size_t write_typeformatstring_var(FILE *file, int indent, const func_t *f
         /* basic types don't need a type format string */
         if (is_base_type(type->type))
             return 0;
+
+        if (processed(type)) return type->typestring_offset;
 
         switch (type->type)
         {
@@ -3351,7 +3354,7 @@ void write_endpoints( FILE *f, const char *prefix, const str_list_t *list )
     const char *p;
 
     /* this should be an array of RPC_PROTSEQ_ENDPOINT but we want const strings */
-    print_file( f, 0, "static const unsigned char * %s__RpcProtseqEndpoint[][2] =\n{\n", prefix );
+    print_file( f, 0, "static const unsigned char * const %s__RpcProtseqEndpoint[][2] =\n{\n", prefix );
     LIST_FOR_EACH_ENTRY( endpoint, list, const struct str_list_entry_t, entry )
     {
         print_file( f, 1, "{ (const unsigned char *)\"" );
