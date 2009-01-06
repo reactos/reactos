@@ -109,6 +109,9 @@ switch (@$_GET['page']) {
       case 'maintain':
         new HTML_CMS_Maintain();
         break;
+      case 'admin':
+        new HTML_CMS_Admin();
+        break;
       case 'stats':
         new HTML_CMS_Stats();
         break;
@@ -157,6 +160,24 @@ switch (@$_GET['page']) {
         break;
       case 'maintain':
         new Export_Maintain();
+        break;
+      case 'admin':
+        // Admin interface interaction
+        switch (@$_GET['d_u']) {
+          case 'acl': // Access Control Lists
+            new Admin_ACL();
+            break;
+          case 'group':
+            new Admin_Groups();
+            break;
+          case 'lang':
+            new Admin_Languages();
+            break;
+          default:
+            die('');
+            break;
+        } // end $_GET['d_u']
+        break;
         break;
     } // end switch
     break;

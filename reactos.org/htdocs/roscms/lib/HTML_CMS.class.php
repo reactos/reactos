@@ -127,7 +127,7 @@ abstract class HTML_CMS extends HTML
         <td>&nbsp;&nbsp;</td>');
     }
 
-    if ($thisuser->securityLevel() == 3) {
+    if ($thisuser->isMemberOfGroup('transmaint') || $thisuser->securityLevel() == 3) {
       echo_strip('
         <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."loadBranch('maintain')".'">
           <div class="tcL">
@@ -136,16 +136,28 @@ abstract class HTML_CMS extends HTML
             </div>
           </div>
         </th>
-        <td>&nbsp;&nbsp;</td>
-
-        <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."loadBranch('stats')".'">
-          <div class="tcL">
-            <div class="tcR">
-              <div class="text">Statistics</div>
-            </div>
-          </div>
-        </th>
         <td>&nbsp;&nbsp;</td>');
+
+      if ($thisuser->securityLevel() == 3) {
+        echo_strip('
+          <th class="int'.(($this->branch == 'admin') ? '2' : '1').'" onclick="'."loadBranch('admin')".'">
+            <div class="tcL">
+              <div class="tcR">
+                <div class="text">Administration</div>
+              </div>
+            </div>
+          </th>
+          <td>&nbsp;&nbsp;</td>
+
+          <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."loadBranch('stats')".'">
+            <div class="tcL">
+              <div class="tcR">
+                <div class="text">Statistics</div>
+              </div>
+            </div>
+          </th>
+          <td>&nbsp;&nbsp;</td>');
+      }
     }
 
     echo_strip('
