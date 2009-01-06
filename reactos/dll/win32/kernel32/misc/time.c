@@ -578,7 +578,8 @@ DWORD
 WINAPI
 GetTickCount(VOID)
 {
-    return (DWORD)((ULONGLONG)SharedUserData->TickCountLowDeprecated * SharedUserData->TickCountMultiplier / 16777216);
+    /* Call the 64-bit version */
+    return (DWORD)GetTickCount64();
 }
 
 
@@ -589,7 +590,25 @@ ULONGLONG
 WINAPI
 GetTickCount64(VOID)
 {
-    return (ULONGLONG)SharedUserData->TickCountLowDeprecated * (ULONGLONG)SharedUserData->TickCountMultiplier / 16777216;
+    ULONG Multiplier;
+    LARGE_INTEGER TickCount;
+
+    /* Loop until we get a perfect match */
+    for (;;)
+    {
+        /* Read the tick count value */
+        TickCount.HighPart = SharedUserData->TickCount.High1Time;
+        TickCount.LowPart = SharedUserData->TickCount.LowPart;
+        if (TickCount.HighPart == SharedUserData->TickCount.High2Time) break;
+        YieldProcessor();
+    }
+
+    /* Get the multiplier */
+    Multiplier = SharedUserData->TickCountMultiplier;
+
+    /* Convert to milliseconds and return */
+    return (Int64ShrlMod32(UInt32x32To64(Multiplier, TickCount.LowPart), 24) +
+            (Multiplier * (TickCount.HighPart << 8)));
 }
 
 

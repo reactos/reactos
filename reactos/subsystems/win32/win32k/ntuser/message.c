@@ -2239,8 +2239,7 @@ NtUserWaitForInputIdle(
       return STATUS_SUCCESS;  /* no event to wait on */
   }
 
-  StartTime = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
-                          SharedUserData->TickCountMultiplier / 16777216);
+  StartTime = EngGetTickCount();
 
   Run = dwMilliseconds;
 
@@ -2294,9 +2293,7 @@ NtUserWaitForInputIdle(
 
      if (dwMilliseconds != INFINITE)
      {
-        Elapsed = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
-                              SharedUserData->TickCountMultiplier / 16777216)
-                              - StartTime;
+        Elapsed = EngGetTickCount() - StartTime;
 
         if (Elapsed > Run)
            Status = STATUS_TIMEOUT;

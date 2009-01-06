@@ -349,9 +349,6 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
         SharedUserData->TickCount.LowPart = Time.LowPart;
         SharedUserData->TickCount.High1Time = Time.HighPart;
 
-        /* Update tick count in shared user data as well */
-        SharedUserData->TickCountLowDeprecated++;
-
         /* Queue a DPC that will expire timers */
         KeInsertQueueDpc(&KiExpireTimerDpc, 0, 0);
     }
