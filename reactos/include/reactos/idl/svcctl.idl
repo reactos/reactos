@@ -188,7 +188,7 @@ typedef struct _SC_RPC_CONFIG_INFOA {
         [case(5)] LPSERVICE_SID_INFO pssid;
         [case(6)] LPSERVICE_RPC_REQUIRED_PRIVILEGES_INFO psrp;
         [case(7)] LPSERVICE_PRESHUTDOWN_INFO psps;
-    };
+    } DUMMYUNIONNAME;
 } SC_RPC_CONFIG_INFOA, *LPSC_RPC_CONFIG_INFOA;
 
 typedef struct _SC_RPC_CONFIG_INFOW {
@@ -201,7 +201,7 @@ typedef struct _SC_RPC_CONFIG_INFOW {
         [case(5)] LPSERVICE_SID_INFO pssid;
         [case(6)] LPSERVICE_RPC_REQUIRED_PRIVILEGES_INFO psrp;
         [case(7)] LPSERVICE_PRESHUTDOWN_INFO psps;
-    };
+    } DUMMYUNIONNAME;
 } SC_RPC_CONFIG_INFOW, *LPSC_RPC_CONFIG_INFOW;
 
 typedef struct _SERVICE_NOTIFY_STATUS_CHANGE_PARAMS_1 {

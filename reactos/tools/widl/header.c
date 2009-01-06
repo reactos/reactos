@@ -150,28 +150,8 @@ static void write_field(FILE *h, var_t *v)
 {
   if (!v) return;
   if (v->type) {
-    const char *name = v->name;
-    if (name == NULL) {
-      switch (v->type->type) {
-      case RPC_FC_STRUCT:
-      case RPC_FC_CVSTRUCT:
-      case RPC_FC_CPSTRUCT:
-      case RPC_FC_CSTRUCT:
-      case RPC_FC_PSTRUCT:
-      case RPC_FC_BOGUS_STRUCT:
-      case RPC_FC_ENCAPSULATED_UNION:
-        name = "DUMMYSTRUCTNAME";
-        break;
-      case RPC_FC_NON_ENCAPSULATED_UNION:
-        name = "DUMMYUNIONNAME";
-        break;
-      default:
-        /* ? */
-        break;
-      }
-    }
     indent(h, 0);
-    write_type_def_or_decl(h, v->type, TRUE, "%s", name);
+    write_type_def_or_decl(h, v->type, TRUE, "%s", v->name);
     fprintf(h, ";\n");
   }
 }
