@@ -741,6 +741,9 @@ typedef IUnregisterPhysicalConnection *PUNREGISTERPHYSICALCONNECTION;
         IN  PVOID Source, \
         IN  ULONG ByteCount);
 
+#undef INTERFACE
+#define INTERFACE IDmaChannel
+
 DECLARE_INTERFACE_(IDmaChannel, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -782,6 +785,9 @@ typedef IDmaChannel *PDMACHANNEL;
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 DEFINE_GUID(IID_IDmaChannelSlave, 0x22C6AC62L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
 #endif
+
+#undef INTERFACE
+#define INTERFACE IDmaChannelSlave
 
 DECLARE_INTERFACE_(IDmaChannelSlave, IDmaChannel)
 {
