@@ -744,6 +744,8 @@ typedef IUnregisterPhysicalConnection *PUNREGISTERPHYSICALCONNECTION;
 #undef INTERFACE
 #define INTERFACE IDmaChannel
 
+DEFINE_GUID(IID_IDmaChannel, 0x22C6AC61L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
+
 DECLARE_INTERFACE_(IDmaChannel, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
