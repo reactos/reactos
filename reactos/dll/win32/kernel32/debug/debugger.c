@@ -447,7 +447,7 @@ DebugSetProcessKillOnExit(IN BOOL KillOnExit)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        SetLastError(Status);
+        SetLastErrorByStatus(Status);
         return FALSE;
     }
 
