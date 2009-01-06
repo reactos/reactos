@@ -44,6 +44,27 @@
 #include <libxml/pattern.h>
 #endif
 
+#define MAX_ERR_MSG_SIZE 64000
+
+/*
+ * The following VA_COPY was coded following an example in
+ * the Samba project.  It may not be sufficient for some
+ * esoteric implementations of va_list (i.e. it may need
+ * something involving a memcpy) but (hopefully) will be
+ * sufficient for libxml2.
+ */
+#ifndef VA_COPY
+  #ifdef HAVE_VA_COPY
+    #define VA_COPY(dest, src) va_copy(dest, src)
+  #else
+    #ifdef HAVE___VA_COPY
+      #define VA_COPY(dest,src) __va_copy(dest, src)
+    #else
+      #define VA_COPY(dest,src) (dest) = (src)
+    #endif
+  #endif
+#endif
+
 /* #define DEBUG_CALLBACKS */
 /* #define DEBUG_READER */
 
@@ -4500,30 +4521,32 @@ xmlTextReaderStandalone(xmlTextReaderPtr reader) {
 /* helper to build a xmlMalloc'ed string from a format and va_list */
 static char *
 xmlTextReaderBuildMessage(const char *msg, va_list ap) {
-    int size;
+    int size = 0;
     int chars;
     char *larger;
-    char *str;
-
-    str = (char *) xmlMallocAtomic(150);
-    if (str == NULL) {
-	xmlGenericError(xmlGenericErrorContext, "xmlMalloc failed !\n");
-        return NULL;
-    }
-
-    size = 150;
+    char *str = NULL;
+    va_list aq;
 
     while (1) {
-        chars = vsnprintf(str, size, msg, ap);
-        if ((chars > -1) && (chars < size))
+        VA_COPY(aq, ap);
+        chars = vsnprintf(str, size, msg, aq);
+        va_end(aq);
+        if (chars < 0) {
+	    xmlGenericError(xmlGenericErrorContext, "vsnprintf failed !\n");
+	    if (str) 
+	    	xmlFree(str);
+	    return NULL;  
+	}
+	if ((chars < size) || (size == MAX_ERR_MSG_SIZE))
             break;
-        if (chars > -1)
-            size += chars + 1;
-        else
-            size += 100;
+        if (chars < MAX_ERR_MSG_SIZE)
+        	size = chars + 1;
+	else
+		size = MAX_ERR_MSG_SIZE;
         if ((larger = (char *) xmlRealloc(str, size)) == NULL) {
 	    xmlGenericError(xmlGenericErrorContext, "xmlRealloc failed !\n");
-            xmlFree(str);
+	    if (str)
+            	xmlFree(str);
             return NULL;
         }
         str = larger;

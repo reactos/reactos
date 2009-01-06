@@ -757,8 +757,14 @@ xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
 	return;
     }
 #ifdef LIBXML_HTML_ENABLED
-    if ((cur->type != XML_NAMESPACE_DECL) && (cur->doc != NULL) &&
-        (cur->doc->type == XML_HTML_DOCUMENT_NODE)) {
+    if (ctxt->options & XML_SAVE_XHTML) {
+        xhtmlNodeDumpOutput(ctxt, cur);
+        return;
+    }
+    if (((cur->type != XML_NAMESPACE_DECL) && (cur->doc != NULL) &&
+         (cur->doc->type == XML_HTML_DOCUMENT_NODE) &&
+         ((ctxt->options & XML_SAVE_AS_XML) == 0)) ||
+        (ctxt->options & XML_SAVE_AS_HTML)) {
 	htmlNodeDumpOutputInternal(ctxt, cur);
 	return;
     }
@@ -953,7 +959,10 @@ xmlDocContentDumpOutput(xmlSaveCtxtPtr ctxt, xmlDocPtr cur) {
 		     xmlGetCharEncodingName((xmlCharEncoding) cur->charset);
     }
 
-    if (cur->type == XML_HTML_DOCUMENT_NODE) {
+    if (((cur->type == XML_HTML_DOCUMENT_NODE) &&
+         ((ctxt->options & XML_SAVE_AS_XML) == 0) &&
+         ((ctxt->options & XML_SAVE_XHTML) == 0)) ||
+        (ctxt->options & XML_SAVE_AS_HTML)) {
 #ifdef LIBXML_HTML_ENABLED
         if (encoding != NULL)
 	    htmlSetMetaEncoding(cur, (const xmlChar *) encoding);
@@ -981,7 +990,9 @@ xmlDocContentDumpOutput(xmlSaveCtxtPtr ctxt, xmlDocPtr cur) {
 #else
         return(-1);
 #endif
-    } else if (cur->type == XML_DOCUMENT_NODE) {
+    } else if ((cur->type == XML_DOCUMENT_NODE) ||
+               (ctxt->options & XML_SAVE_AS_XML) ||
+               (ctxt->options & XML_SAVE_XHTML)) {
 	enc = xmlParseCharEncoding((const char*) encoding);
 	if ((encoding != NULL) && (oldctxtenc == NULL) &&
 	    (buf->encoder == NULL) && (buf->conv == NULL) &&
@@ -1032,6 +1043,8 @@ xmlDocContentDumpOutput(xmlSaveCtxtPtr ctxt, xmlDocPtr cur) {
 	}
 
 #ifdef LIBXML_HTML_ENABLED
+        if (ctxt->options & XML_SAVE_XHTML)
+            is_xhtml = 1;
 	if ((ctxt->options & XML_SAVE_NO_XHTML) == 0) {
 	    dtd = xmlGetIntSubset(cur);
 	    if (dtd != NULL) {
@@ -2123,6 +2136,7 @@ xmlNodeDumpOutput(xmlOutputBufferPtr buf, xmlDocPtr doc, xmlNodePtr cur,
     ctxt.format = format;
     ctxt.encoding = (const xmlChar *) encoding;
     xmlSaveCtxtInit(&ctxt);
+    ctxt.options |= XML_SAVE_AS_XML;
 
 #ifdef LIBXML_HTML_ENABLED
     dtd = xmlGetIntSubset(doc);
@@ -2208,6 +2222,7 @@ xmlDocDumpFormatMemoryEnc(xmlDocPtr out_doc, xmlChar **doc_txt_ptr,
     ctxt.format = format;
     ctxt.encoding = (const xmlChar *) txt_encoding;
     xmlSaveCtxtInit(&ctxt);
+    ctxt.options |= XML_SAVE_AS_XML;
     xmlDocContentDumpOutput(&ctxt, out_doc);
     xmlOutputBufferFlush(out_buff);
     if (out_buff->conv != NULL) {
@@ -2326,6 +2341,7 @@ xmlDocFormatDump(FILE *f, xmlDocPtr cur, int format) {
     ctxt.format = format;
     ctxt.encoding = (const xmlChar *) encoding;
     xmlSaveCtxtInit(&ctxt);
+    ctxt.options |= XML_SAVE_AS_XML;
     xmlDocContentDumpOutput(&ctxt, cur);
 
     ret = xmlOutputBufferClose(buf);
@@ -2375,6 +2391,7 @@ xmlSaveFileTo(xmlOutputBufferPtr buf, xmlDocPtr cur, const char *encoding) {
     ctxt.format = 0;
     ctxt.encoding = (const xmlChar *) encoding;
     xmlSaveCtxtInit(&ctxt);
+    ctxt.options |= XML_SAVE_AS_XML;
     xmlDocContentDumpOutput(&ctxt, cur);
     ret = xmlOutputBufferClose(buf);
     return(ret);
@@ -2414,6 +2431,7 @@ xmlSaveFormatFileTo(xmlOutputBufferPtr buf, xmlDocPtr cur,
     ctxt.format = format;
     ctxt.encoding = (const xmlChar *) encoding;
     xmlSaveCtxtInit(&ctxt);
+    ctxt.options |= XML_SAVE_AS_XML;
     xmlDocContentDumpOutput(&ctxt, cur);
     ret = xmlOutputBufferClose(buf);
     return (ret);
@@ -2468,6 +2486,7 @@ xmlSaveFormatFileEnc( const char * filename, xmlDocPtr cur,
     ctxt.format = format;
     ctxt.encoding = (const xmlChar *) encoding;
     xmlSaveCtxtInit(&ctxt);
+    ctxt.options |= XML_SAVE_AS_XML;
 
     xmlDocContentDumpOutput(&ctxt, cur);
 

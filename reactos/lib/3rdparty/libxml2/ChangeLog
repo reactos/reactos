@@ -1,3 +1,39 @@
+Fri Oct  3 09:43:45 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* configure.in doc/* NEWS: preparing the release of 2.7.2
+	* dict.c: fix the Solaris portability issue
+	* parser.c: additional cleanup on #554660 fix
+	* test/ent13 result/ent13* result/noent/ent13*: added the
+	  example in the regression test suite.
+	* HTMLparser.c: handle leading BOM in htmlParseElement()
+
+Thu Oct  2 22:53:39 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* parser.c: fix a nasty bug introduced when cleaning up
+	  entities processing in 2.7.x , fixes #554660
+
+Thu Sep 25 18:04:20 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* HTMLparser.c: fix an HTML parsing error on large data sections
+	  reported by Mike Day
+	* test/HTML/utf8bug.html result/HTML/utf8bug.html.err
+	  result/HTML/utf8bug.html.sax result/HTML/utf8bug.html: add the
+	  reproducer to the test suite
+
+Thu Sep 25 17:35:57 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* runxmlconf.c: fix compilation if XPath is not included
+
+Thu Sep 25 16:54:04 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* xmlreader.c: patch from Riccardo Scussat fixing custom error
+	  handlers problems.
+
+Thu Sep 25 16:30:11 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* include/libxml/xmlsave.h xmlsave.c: new options to serialize
+	  as XML/HTML/XHTML and restore old entry point behaviours
+
 Mon Sep  1 16:49:05 CEST 2008 Daniel Veillard <daniel@veillard.com>
 
 	* doc/xml.html doc/news.html configure.in python/setup.py NEWS:
