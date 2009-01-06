@@ -1189,6 +1189,7 @@ DECLARE_INTERFACE_(IPortWavePci, IPort)
         IN  BOOL ScatterGather,
         IN  BOOL Dma32BitAddresses,
         IN  BOOL Dma64BitAddresses,
+        IN  BOOLEAN IgnoreCount,
         IN  DMA_WIDTH DmaWidth,
         IN  DMA_SPEED DmaSpeed,
         IN  ULONG MaximumLength,
