@@ -486,24 +486,20 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
 {
   /*
    * This function doesn't do any real work now and there's plenty
-   * of bugs in it (calling SetPalette for high/true-color modes,
-   * using DEFAULT_PALETTE instead of the device palette, ...).
+   * of bugs in it.
    */
 
-  PALOBJ *palPtr, *sysPtr;
   PPALGDI palGDI, sysGDI;
   int realized = 0;
   PDC dc;
   HPALETTE systemPalette;
-  //BOOLEAN success;
   USHORT sysMode, palMode;
 
   dc = DC_LockDc(hDC);
   if (!dc) return 0;
 
-  systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
+  systemPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->DcLevel.hpal);
-  palPtr = (PALOBJ*) palGDI;
 
   if (palGDI == NULL)
   {
@@ -513,7 +509,6 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   }
 
   sysGDI = PALETTE_LockPalette(systemPalette);
-  sysPtr = (PALOBJ*) sysGDI;
 
   if (sysGDI == NULL)
   {
@@ -523,35 +518,16 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
     return 0;
   }
 
-
-  // Step 1: Create mapping of system palette\DC palette
-#ifndef NO_MAPPING
-  realized = PALETTE_SetMapping(palPtr, 0, palGDI->NumColors,
-               (dc->DcLevel.hpal != hPrimaryPalette) ||
-               (dc->DcLevel.hpal == NtGdiGetStockObject(DEFAULT_PALETTE)));
-#else
-  realized = 0;
-#endif
-
-
-
-  // Step 2:
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
   // device context is a memory DC, the color table for the bitmap selected into the DC is modified. If the device
   // context is a display DC, the physical palette for that device is modified.
   if(dc->DC_Type == DC_TYPE_MEMORY)
   {
     // Memory managed DC
-    DPRINT1("win32k: realizepalette unimplemented step 2 for DC_MEMORY\n");
-  } else {
-    DPRINT1("win32k: realizepalette commented out step 2\n");
-   /* See bug 733, keep the code for now.
-    if( ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette)
-    {
-      ASSERT(palGDI->NumColors <= 256);
-      success = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette(
-        dc->PDev, palPtr, 0, 0, palGDI->NumColors);
-    }*/
+    DPRINT1("RealizePalette unimplemented for memory managed DCs\n");
+  } else 
+  {
+    DPRINT1("RealizePalette unimplemented for device DCs\n");
   }
 
   // need to pass this to IntEngCreateXlate with palettes unlocked
@@ -560,7 +536,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   PALETTE_UnlockPalette(sysGDI);
   PALETTE_UnlockPalette(palGDI);
 
-  // Step 3: Create the XLATEOBJ for device managed DCs
+  // Create the XLATEOBJ for device managed DCs
   if(dc->DC_Type != DC_TYPE_MEMORY)
   {
     // Device managed DC
