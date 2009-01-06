@@ -744,11 +744,11 @@ void write_proxies(const statement_list_t *stmts)
 
   fprintf(proxy, "const ExtendedProxyFileInfo %s_ProxyFileInfo =\n", file_id);
   fprintf(proxy, "{\n");
-  fprintf(proxy, "    (const PCInterfaceProxyVtblList*)&_%s_ProxyVtblList,\n", file_id);
-  fprintf(proxy, "    (const PCInterfaceStubVtblList*)&_%s_StubVtblList,\n", file_id);
+  fprintf(proxy, "    (const PCInterfaceProxyVtblList*)_%s_ProxyVtblList,\n", file_id);
+  fprintf(proxy, "    (const PCInterfaceStubVtblList*)_%s_StubVtblList,\n", file_id);
   fprintf(proxy, "    _%s_InterfaceNamesList,\n", file_id);
   fprintf(proxy, "    0,\n");
-  fprintf(proxy, "    &_%s_IID_Lookup,\n", file_id);
+  fprintf(proxy, "    _%s_IID_Lookup,\n", file_id);
   fprintf(proxy, "    %d,\n", c);
   fprintf(proxy, "    1,\n");
   fprintf(proxy, "    0,\n");
