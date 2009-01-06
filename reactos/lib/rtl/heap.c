@@ -69,15 +69,15 @@
 typedef struct tagARENA_INUSE
 {
     SIZE_T  size;                    /* Block size; must be the first field */
-    SIZE_T  magic : 23;              /* Magic number */
-    SIZE_T  has_user_data : 1;       /* There is user data associated with this block */
-    SIZE_T  unused_bytes : 8;        /* Number of bytes in the block not used by user data (max value is HEAP_MIN_DATA_SIZE+HEAP_MIN_SHRINK_SIZE) */
+    DWORD   magic : 23;              /* Magic number */
+    DWORD   has_user_data : 1;       /* There is user data associated with this block */
+    DWORD   unused_bytes : 8;        /* Number of bytes in the block not used by user data (max value is HEAP_MIN_DATA_SIZE+HEAP_MIN_SHRINK_SIZE) */
 } ARENA_INUSE;
 
 typedef struct tagARENA_FREE
 {
-    SIZE_T                 size;     /* Block size; must be the first field */
-    SIZE_T                 magic;    /* Magic number */
+    SIZE_T                size;     /* Block size; must be the first field */
+    DWORD                 magic;    /* Magic number */
     struct list           entry;    /* Entry in free list */
 } ARENA_FREE;
 
@@ -130,12 +130,12 @@ struct tagHEAP;
 
 typedef struct tagSUBHEAP
 {
-    SIZE_T               size;       /* Size of the whole sub-heap */
-    SIZE_T               commitSize; /* Committed size of the sub-heap */
-    SIZE_T               headerSize; /* Size of the heap header */
+    SIZE_T              size;       /* Size of the whole sub-heap */
+    SIZE_T              commitSize; /* Committed size of the sub-heap */
+    SIZE_T              headerSize; /* Size of the heap header */
     struct tagSUBHEAP  *next;       /* Next sub-heap */
     struct tagHEAP     *heap;       /* Main heap structure */
-    SIZE_T               magic;      /* Magic number */
+    DWORD               magic;      /* Magic number */
 } SUBHEAP;
 
 #define SUBHEAP_MAGIC    ((DWORD)('S' | ('U'<<8) | ('B'<<16) | ('H'<<24)))
