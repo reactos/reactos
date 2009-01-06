@@ -779,6 +779,10 @@ typedef IDmaChannel *PDMACHANNEL;
 #undef INTERFACE
 #define INTERFACE IDmaChannelSlave
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+DEFINE_GUID(IID_IDmaChannelSlave, 0x22C6AC62L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
+#endif
+
 DECLARE_INTERFACE_(IDmaChannelSlave, IDmaChannel)
 {
     DEFINE_ABSTRACT_UNKNOWN();
@@ -1186,9 +1190,9 @@ DECLARE_INTERFACE_(IPortWavePci, IPort)
         IN  PUNKNOWN OuterUnknown,
         IN  POOL_TYPE PoolType,
         IN  PRESOURCELIST ResourceList OPTIONAL,
-        IN  BOOL ScatterGather,
-        IN  BOOL Dma32BitAddresses,
-        IN  BOOL Dma64BitAddresses,
+        IN  BOOLEAN ScatterGather,
+        IN  BOOLEAN Dma32BitAddresses,
+        IN  BOOLEAN Dma64BitAddresses,
         IN  BOOLEAN IgnoreCount,
         IN  DMA_WIDTH DmaWidth,
         IN  DMA_SPEED DmaSpeed,
