@@ -6,6 +6,7 @@
 	<library>setupapi</library>
 	<library>kernel32</library>
 	<library>comctl32</library>
+	<library>user32</library>
 	<file>hdwwiz.c</file>
 	<file>hdwwiz.rc</file>
 </module>

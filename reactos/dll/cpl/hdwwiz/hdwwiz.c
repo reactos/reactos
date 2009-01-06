@@ -1,6 +1,6 @@
 /*
  * ReactOS New devices installation
- * Copyright (C) 2005 ReactOS Team
+ * Copyright (C) 2005, 2008 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,8 +31,12 @@
 #include <tchar.h>
 #include <stdio.h>
 
+#define NDEBUG
+#include <debug.h>
+
 #include "resource.h"
 #include "hdwwiz.h"
+
 
 HINSTANCE hApplet = NULL;
 
@@ -60,12 +64,67 @@ SearchPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static INT_PTR CALLBACK
 IsConnctedPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {
+            if(HIWORD(wParam) == BN_CLICKED)
+            {
+                if ((SendDlgItemMessage(hwndDlg, IDC_CONNECTED, BM_GETCHECK, 0, 0) == BST_CHECKED) ||
+                    (SendDlgItemMessage(hwndDlg, IDC_NOTCONNECTED, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                }
+                else
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                }
+            }
+        }
+        break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    /* Disable "Next" button */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                }
+                break;
+            }
+        }
+        break;
+    }
+
     return FALSE;
 }
 
 static INT_PTR CALLBACK
 FinishPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    switch (uMsg)
+    {
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    /* Only "Finish" button */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
+                }
+                break;
+            }
+        }
+        break;
+    }
+
     return FALSE;
 }
 
@@ -133,8 +192,14 @@ HardwareWizardInit(HWND hwnd)
 }
 
 VOID CALLBACK
-AddHardwareWizard(HWND hwnd, LPTSTR lpName)
+AddHardwareWizard(HWND hwnd, LPWSTR lpName)
 {
+    if (lpName != NULL)
+    {
+        DPRINT1("No support of remote installation yet!\n");
+        return;
+    }
+
     HardwareWizardInit(hwnd);
 }
 
