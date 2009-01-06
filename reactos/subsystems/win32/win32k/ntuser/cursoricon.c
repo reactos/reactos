@@ -1569,7 +1569,7 @@ UserDrawIconEx(
       BitmapObj = BITMAPOBJ_LockBitmap(hbmOff);
       if (BitmapObj == NULL)
       {
-          DPRINT1("GDIOBJ_LockObj() failed!\n");
+          DPRINT1("BITMAPOBJ_LockBitmap() failed!\n");
           goto cleanup;
       }
       BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (PVOID)&bm);
@@ -1591,7 +1591,7 @@ UserDrawIconEx(
           hOldOffBrush = NtGdiSelectBrush(hdcOff, hbrFlickerFreeDraw);
           if (!hOldOffBrush)
           {
-             DPRINT1("NtGdiSelectBitmap() failed!\n");
+             DPRINT1("NtGdiSelectBrush() failed!\n");
              goto cleanup;
           }
 
@@ -1622,21 +1622,18 @@ UserDrawIconEx(
          goto cleanup;
       }
 
-      DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                   (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                   0, 0, IconSize.cx, IconSize.cy,
-                   ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY), FALSE);
-
-      if (!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth)
-         && (diFlags & DI_IMAGE))
-      {
-         DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                      (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                      0, IconSize.cy, IconSize.cx, IconSize.cy, SRCINVERT,
-                      FALSE);
-
-         diFlags &= ~DI_IMAGE;
-      }
+      DoStretchBlt(hdcOff,
+                   (DoFlickerFree || bAlpha ? 0 : xLeft),
+                   (DoFlickerFree || bAlpha ? 0 : yTop), 
+                   cxWidth,
+                   cyHeight,
+                   hdcMem,
+                   0,
+                   0,
+                   IconSize.cx,
+                   IconSize.cy,
+                   ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY),
+                   FALSE);
 
       NtGdiSelectBitmap(hdcMem, hOldMem);
    }
@@ -1645,9 +1642,16 @@ UserDrawIconEx(
    {
       hOldMem = NtGdiSelectBitmap(hdcMem, (hbmColor ? hbmColor : hbmMask));
 
-      DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                   (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                   0, (hbmColor ? 0 : IconSize.cy), IconSize.cx, IconSize.cy,
+      DoStretchBlt(hdcOff, 
+                   (DoFlickerFree || bAlpha ? 0 : xLeft),
+                   (DoFlickerFree || bAlpha ? 0 : yTop),
+                   cxWidth,
+                   cyHeight,
+                   hdcMem,
+                   0,
+                   (hbmColor ? 0 : IconSize.cy),
+                   IconSize.cx,
+                   IconSize.cy,
                    ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY),
                    NULL != hbmColor);
 
@@ -1659,7 +1663,7 @@ UserDrawIconEx(
         BITMAP bm;
         BITMAPOBJ *BitmapObj = NULL;
         PBYTE pBits = NULL;
-        BLENDFUNCTION  BlendFunc;
+        BLENDFUNCTION BlendFunc;
         DWORD Pixel;
         BYTE Red, Green, Blue, Alpha;
         DWORD Count = 0;
@@ -1668,7 +1672,7 @@ UserDrawIconEx(
         BitmapObj = BITMAPOBJ_LockBitmap(hbmOff);
         if (BitmapObj == NULL)
         {
-            DPRINT1("GDIOBJ_LockObj() failed!\n");
+            DPRINT1("BITMAPOBJ_LockBitmap() failed!\n");
             goto cleanup;
         }
         BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (PVOID)&bm);
