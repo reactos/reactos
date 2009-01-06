@@ -37,8 +37,10 @@
 #include "resource.h"
 #include "hdwwiz.h"
 
+/* GLOBALS ******************************************************************/
 
 HINSTANCE hApplet = NULL;
+HFONT hTitleFont;
 
 typedef BOOL (WINAPI *PINSTALL_NEW_DEVICE)(HWND, LPGUID, PDWORD);
 
@@ -49,9 +51,44 @@ InstallNewDevice(HWND hwndParent, LPGUID ClassGuid, PDWORD pReboot)
     return FALSE;
 }
 
+static HFONT
+CreateTitleFont(VOID)
+{
+    NONCLIENTMETRICS ncm;
+    LOGFONT LogFont;
+    HDC hdc;
+    INT FontSize;
+    HFONT hFont;
+
+    ncm.cbSize = sizeof(NONCLIENTMETRICS);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+
+    LogFont = ncm.lfMessageFont;
+    LogFont.lfWeight = FW_BOLD;
+    _tcscpy(LogFont.lfFaceName, _T("MS Shell Dlg"));
+
+    hdc = GetDC(NULL);
+    FontSize = 12;
+    LogFont.lfHeight = 0 - GetDeviceCaps (hdc, LOGPIXELSY) * FontSize / 72;
+    hFont = CreateFontIndirect(&LogFont);
+    ReleaseDC(NULL, hdc);
+
+    return hFont;
+}
+
 static INT_PTR CALLBACK
 StartPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            /* Set title font */
+            SendDlgItemMessage(hwndDlg, IDC_FINISHTITLE, WM_SETFONT, (WPARAM)hTitleFont, (LPARAM)TRUE);
+        }
+        break;
+    }
+
     return FALSE;
 }
 
@@ -108,6 +145,13 @@ FinishPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+        case WM_INITDIALOG:
+        {
+            /* Set title font */
+            SendDlgItemMessage(hwndDlg, IDC_FINISHTITLE, WM_SETFONT, (WPARAM)hTitleFont, (LPARAM)TRUE);
+        }
+        break;
+
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -187,8 +231,13 @@ HardwareWizardInit(HWND hwnd)
     psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
     psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
 
+    /* Create title font */
+    hTitleFont = CreateTitleFont();
+
     /* Display the wizard */
     PropertySheet(&psh);
+
+    DeleteObject(hTitleFont);
 }
 
 VOID CALLBACK
