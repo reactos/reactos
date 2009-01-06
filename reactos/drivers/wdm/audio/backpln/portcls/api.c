@@ -73,3 +73,58 @@ PcUnregisterIoTimeout(
     IoStopTimer(pDeviceObject);
     return STATUS_SUCCESS;
 }
+
+
+NTSTATUS
+NTAPI
+PcDmaMasterDescription(
+    IN PRESOURCELIST ResourceList OPTIONAL,
+    IN BOOLEAN ScatterGather,
+    IN BOOLEAN Dma32BitAddresses,
+    IN BOOLEAN IgnoreCount,
+    IN BOOLEAN Dma64BitAddresses,
+    IN DMA_WIDTH DmaWidth,
+    IN DMA_SPEED DmaSpeed,
+    IN ULONG MaximumLength,
+    IN ULONG DmaPort,
+    OUT PDEVICE_DESCRIPTION DeviceDescription)
+{
+
+    RtlZeroMemory(DeviceDescription, sizeof(DEVICE_DESCRIPTION));
+
+    DeviceDescription->Master = TRUE;
+    DeviceDescription->ScatterGather= ScatterGather;
+    DeviceDescription->Dma32BitAddresses = Dma32BitAddresses;
+    DeviceDescription->IgnoreCount = IgnoreCount;
+    DeviceDescription->Dma64BitAddresses = Dma64BitAddresses;
+    DeviceDescription->DmaWidth = DmaWidth;
+    DeviceDescription->DmaSpeed = DmaSpeed;
+    DeviceDescription->MaximumLength = MaximumLength;
+    DeviceDescription->DmaPort = DmaPort;
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PcDmaSlaveDescription(
+    IN PRESOURCELIST  ResourceList OPTIONAL,
+    IN ULONG DmaIndex,
+    IN BOOL DemandMode,
+    IN ULONG AutoInitialize,
+    IN DMA_SPEED DmaSpeed
+    IN ULONG MaximumLength,
+    IN ULONG DmaPort,
+    OUT PDEVICE_DESCRIPTION DeviceDescription)
+{
+
+    RtlZeroMemory(DeviceDescription, sizeof(DEVICE_DESCRIPTION));
+
+    DeviceDescription->DemandMode = DemandMode;
+    DeviceDescription->AutoInitialize = AutoInitialize;
+    DeviceDescription->DmaSpeed = DmaSpeed;
+    DeviceDescription->MaximumLength = MaximumLength;
+    DeviceDescription->DmaPort = DmaPort;
+
+    return STATUS_SUCCESS;
+}

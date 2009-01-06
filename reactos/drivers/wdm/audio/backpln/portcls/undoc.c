@@ -89,10 +89,6 @@ PcCreateSubdeviceDescriptor(
 
 /* PcDeleteSubdeviceDescriptor */
 
-/* PcDmaMasterDescription */
-
-/* PcDmaSlaveDescription */
-
 /* PcFreeEventTable */
 
 /* PcFreePropertyTable */
