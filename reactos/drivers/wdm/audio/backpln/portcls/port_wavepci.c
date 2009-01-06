@@ -7,7 +7,6 @@ typedef struct
 
 #if 0
     IUnregisterSubdevice *lpVtblUnregisterSubDevice;
-    IPortClsVersionVtbl  *lpVtblPortClsVersion;
 #endif
     LONG ref;
 

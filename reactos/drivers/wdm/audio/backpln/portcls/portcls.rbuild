@@ -9,9 +9,9 @@
 	<library>ks</library>
 	<library>drmk</library>
 	<library>rtl</library>
+	<library>hal</library>
 	<file>api.c</file>
 	<file>dll.c</file>
-	<file>dma_master.c</file>
 	<file>dma_slave.c</file>
 	<file>drm_port.c</file>
 	<file>adapter.c</file>

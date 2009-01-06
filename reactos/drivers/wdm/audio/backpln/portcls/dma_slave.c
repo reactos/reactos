@@ -7,15 +7,30 @@ typedef struct
 
     LONG ref;
 
+
+    PDEVICE_OBJECT pDeviceObject;
+    PDMA_ADAPTER pAdapter;
+
+    BOOL DmaStarted;
+
+    ULONG MapSize;
+    PVOID MapRegisterBase;
+
+    ULONG LastTransferCount;
+
+    ULONG MaximumBufferSize;
     ULONG MaxMapRegisters;
     ULONG AllocatedBufferSize;
     ULONG BufferSize;
-    PDMA_ADAPTER pAdapter;
+
     PHYSICAL_ADDRESS Address;
     PVOID Buffer;
     PMDL Mdl;
+    BOOLEAN WriteToDevice;
 
 }IDmaChannelSlaveImpl;
+
+const GUID IID_IDmaChannel;
 
 
 //---------------------------------------------------------------
@@ -30,7 +45,17 @@ IDmaChannelSlave_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    /* TODO */
+    IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
+
+    if (IsEqualGUIDAligned(refiid, &IID_IUnknown) ||
+        IsEqualGUIDAligned(refiid, &IID_IDmaChannel) ||
+        IsEqualGUIDAligned(refiid, &IID_IDmaChannelSlave))
+    {
+        *Output = &This->lpVtbl;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -81,8 +106,6 @@ IDmaChannelSlave_fnAllocateBuffer(
 {
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
-    DPRINT("IDmaChannelSlave_AllocateBuffer: This %p BufferSize %u\n", This, BufferSize);
-
     /* Did the caller already allocate a buffer ?*/
     if (This->Buffer)
     {
@@ -90,16 +113,15 @@ IDmaChannelSlave_fnAllocateBuffer(
         return STATUS_UNSUCCESSFUL;
     }
 
+    //FIXME
+    // retry with different size on failure
+
     This->Buffer = This->pAdapter->DmaOperations->AllocateCommonBuffer(This->pAdapter, BufferSize, &This->Address, TRUE);
     if (!This->Buffer)
     {
         DPRINT1("IDmaChannelSlave_AllocateBuffer fAllocateCommonBuffer failed \n");
         return STATUS_UNSUCCESSFUL;
     }
-
-    This->Mdl = IoAllocateMdl(This->Buffer, BufferSize, FALSE, FALSE, NULL);
-    if (This->Mdl)
-        MmBuildMdlForNonPagedPool(This->Mdl);
 
     This->BufferSize = BufferSize;
     This->AllocatedBufferSize = BufferSize;
@@ -129,6 +151,8 @@ IDmaChannelSlave_fnCopyFrom(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_CopyFrom: This %p Destination %p Source %p ByteCount %u\n", This, Destination, Source, ByteCount);
+
+    iface->lpVtbl->CopyTo(iface, Destination, Source, ByteCount);
 }
 
 VOID
@@ -143,8 +167,9 @@ IDmaChannelSlave_fnCopyTo(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_CopyTo: This %p Destination %p Source %p ByteCount %u\n", This, Destination, Source, ByteCount);
+    RtlCopyMemory(Destination, Source, ByteCount);
 }
-
+  
 VOID
 NTAPI
 IDmaChannelSlave_fnFreeBuffer(
@@ -163,6 +188,13 @@ IDmaChannelSlave_fnFreeBuffer(
     This->pAdapter->DmaOperations->FreeCommonBuffer(This->pAdapter, This->AllocatedBufferSize, This->Address, This->Buffer, TRUE);
     This->Buffer = NULL;
     This->AllocatedBufferSize = 0;
+    This->Address.QuadPart = 0LL;
+
+    if (This->Mdl)
+    {
+        IoFreeMdl(This->Mdl);
+        This->Mdl = NULL;
+    }
 }
 
 PADAPTER_OBJECT
@@ -184,7 +216,7 @@ IDmaChannelSlave_fnMaximumBufferSize(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_MaximumBufferSize: This %p\n", This);
-    return 0;
+    return This->MaximumBufferSize;
 }
 
 PHYSICAL_ADDRESS
@@ -241,7 +273,7 @@ IDmaChannelSlave_fnTransferCount(
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_TransferCount: This %p\n", This);
-    return 0;
+    return This->LastTransferCount;
 }
 
 ULONG
@@ -249,11 +281,44 @@ NTAPI
 IDmaChannelSlave_fnReadCounter(
     IN IDmaChannelSlave * iface)
 {
+    ULONG Counter;
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
-    DPRINT("IDmaChannelSlave_ReadCounter: This %p\n", This);
+    Counter = This->pAdapter->DmaOperations->ReadDmaCounter(This->pAdapter);
 
-    return 0;
+    if (!This->DmaStarted || Counter >= This->LastTransferCount) //FIXME
+        Counter = 0;
+
+    return Counter;
+}
+
+IO_ALLOCATION_ACTION
+NTAPI
+AdapterControl(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  MapRegisterBase,
+    IN PVOID  Context)
+{
+    ULONG Length;
+    IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)Context;
+
+    Length = This->MapSize;
+    This->MapRegisterBase = MapRegisterBase;
+
+    This->pAdapter->DmaOperations->MapTransfer(This->pAdapter,
+                                               This->Mdl,
+                                               MapRegisterBase,
+                                               (PVOID)((ULONG_PTR)This->Mdl->StartVa + This->Mdl->ByteOffset),
+                                               &Length,
+                                               This->WriteToDevice);
+
+    if (Length == This->BufferSize)
+    {
+        This->DmaStarted = TRUE;
+    }
+
+   return KeepObject;
 }
 
 NTSTATUS
@@ -263,10 +328,43 @@ IDmaChannelSlave_fnStart(
     ULONG  MapSize,
     BOOLEAN WriteToDevice)
 {
+    NTSTATUS Status;
+    ULONG MapRegisters;
+    KIRQL OldIrql;
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_Start: This %p\n", This);
-    return 0;
+
+    if (This->DmaStarted)
+        return STATUS_UNSUCCESSFUL;
+
+    if (!This->Mdl)
+    {
+        This->Mdl = IoAllocateMdl(&This->Buffer, This->MaximumBufferSize, FALSE, FALSE, NULL);
+        if (!This->Mdl)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        MmBuildMdlForNonPagedPool(This->Mdl);
+    }
+
+    This->MapSize = MapSize;
+    This->WriteToDevice = WriteToDevice;
+    This->LastTransferCount = MapSize;
+
+    //FIXME
+    // synchronize access
+    //
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    MapRegisters = ADDRESS_AND_SIZE_TO_SPAN_PAGES(This->Buffer, MapSize);
+    Status = This->pAdapter->DmaOperations->AllocateAdapterChannel(This->pAdapter, This->pDeviceObject, MapRegisters, AdapterControl, (PVOID)This);
+    KeLowerIrql(OldIrql);
+
+    if(!NT_SUCCESS(Status))
+        This->LastTransferCount = 0;
+
+    return Status;
 }
 
 NTSTATUS
@@ -274,9 +372,29 @@ NTAPI
 IDmaChannelSlave_fnStop(
     IN IDmaChannelSlave * iface)
 {
+    KIRQL OldIrql;
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
     DPRINT("IDmaChannelSlave_fnStop: This %p\n", This);
+
+    if (!This->DmaStarted)
+        return STATUS_SUCCESS;
+
+    This->pAdapter->DmaOperations->FlushAdapterBuffers(This->pAdapter, 
+                                                       This->Mdl,
+                                                       This->MapRegisterBase,
+                                                       (PVOID)((ULONG_PTR)This->Mdl->StartVa + This->Mdl->ByteOffset),
+                                                       This->MapSize,
+                                                       This->WriteToDevice);
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    This->pAdapter->DmaOperations->FreeAdapterChannel(This->pAdapter);
+
+    KeLowerIrql(OldIrql);
+
+    This->DmaStarted = FALSE;
+
     return 0;
 }
 
@@ -286,10 +404,40 @@ IDmaChannelSlave_fnWaitForTC(
     IN IDmaChannelSlave * iface,
     ULONG  Timeout)
 {
+    ULONG RetryCount;
+    ULONG BytesRemaining;
+    ULONG PrevBytesRemaining;
+
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
-    DPRINT("IDmaChannelSlave_WaitForTC: This %p\n", This);
-    return 0;
+    BytesRemaining = This->pAdapter->DmaOperations->ReadDmaCounter(This->pAdapter);
+    if (!BytesRemaining)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    RetryCount = Timeout / 10;
+    PrevBytesRemaining = 0xFFFFFFFF;
+    do
+    {
+        BytesRemaining = This->pAdapter->DmaOperations->ReadDmaCounter(This->pAdapter);
+
+        if (!BytesRemaining)
+            break;
+
+        if (PrevBytesRemaining == BytesRemaining)
+            break;
+
+        KeStallExecutionProcessor(10);
+        PrevBytesRemaining = BytesRemaining;
+
+    }while(RetryCount-- >= 1);
+
+    //FIXME
+    // return error code on timeout
+    //
+
+    return STATUS_SUCCESS;
 
 }
 
@@ -320,29 +468,56 @@ IDmaChannelSlaveVtbl vt_IDmaChannelSlaveVtbl =
 };
 
 
-NTSTATUS NewDmaChannelSlave(
-    IN PDEVICE_DESCRIPTION DeviceDesc,
-    IN PDMA_ADAPTER Adapter,
-    IN ULONG MapRegisters,
-    OUT PDMACHANNELSLAVE* DmaChannel)
+/*
+ * @unimplemented
+ */
+NTSTATUS NTAPI
+PcNewDmaChannel(
+    OUT PDMACHANNEL* OutDmaChannel,
+    IN  PUNKNOWN OuterUnknown OPTIONAL,
+    IN  POOL_TYPE PoolType,
+    IN  PDEVICE_DESCRIPTION DeviceDescription,
+    IN  PDEVICE_OBJECT DeviceObject)
 {
+    NTSTATUS Status;
+    PDMA_ADAPTER Adapter;
+    ULONG MapRegisters;
+    INTERFACE_TYPE BusType;
+    ULONG ResultLength;
+
     IDmaChannelSlaveImpl * This;
 
-    This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IDmaChannelSlaveImpl), TAG_PORTCLASS);
+    This = ExAllocatePoolWithTag(PoolType, sizeof(IDmaChannelSlaveImpl), TAG_PORTCLASS);
     if (!This)
     {
-        Adapter->DmaOperations->PutDmaAdapter(Adapter);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+
+    Status = IoGetDeviceProperty(DeviceObject, DevicePropertyLegacyBusType, sizeof(BusType), (PVOID)&BusType, &ResultLength);
+    if (NT_SUCCESS(Status))
+    {
+        DeviceDescription->InterfaceType = BusType;
+    }
+
+    Adapter = IoGetDmaAdapter(DeviceObject, DeviceDescription, &MapRegisters);
+    if (!Adapter)
+    {
+        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        return STATUS_DEVICE_CONFIGURATION_ERROR;
+    }
+
     RtlZeroMemory(This, sizeof(IDmaChannelSlaveImpl));
+
     This->ref = 1;
     This->lpVtbl = &vt_IDmaChannelSlaveVtbl;
     This->pAdapter = Adapter;
+    This->pDeviceObject = DeviceObject;
+    This->MaximumBufferSize = DeviceDescription->MaximumLength;
     This->MaxMapRegisters = MapRegisters;
-    *DmaChannel = (PVOID)(&This->lpVtbl);
+
+    *OutDmaChannel = (PVOID)(&This->lpVtbl);
 
     return STATUS_SUCCESS;
 
 }
-

@@ -71,12 +71,6 @@ NTSTATUS NewPortWaveCyclic(
 NTSTATUS NewPortWavePci(
     OUT PPORT* OutPort);
 
-NTSTATUS NewDmaChannelSlave(
-    IN PDEVICE_DESCRIPTION DeviceDesc,
-    IN PDMA_ADAPTER Adapter,
-    IN ULONG MapRegisters,
-    OUT PDMACHANNELSLAVE* DmaChannel);
-
 NTSTATUS NewIDrmPort(
     OUT PDRMPORT2 *OutPort);
 

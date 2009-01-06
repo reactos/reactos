@@ -16,17 +16,7 @@
     Factory Stubs
 */
 
-NTSTATUS NTAPI
-PcNewDmaChannel(
-    OUT PDMACHANNEL* OutDmaChannel,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  POOL_TYPE PoolType,
-    IN  PDEVICE_DESCRIPTION DeviceDescription,
-    IN  PDEVICE_OBJECT DeviceObject)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
+
 
 /* ===============================================================
     Power Management
