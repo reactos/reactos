@@ -2510,19 +2510,7 @@ static unsigned int get_required_buffer_size_type(
             return 0;
 
         case RPC_FC_STRUCT:
-        case RPC_FC_PSTRUCT:
-        {
-            size_t size = 0;
-            const var_t *field;
-            if (!type->fields_or_args) return 0;
-            LIST_FOR_EACH_ENTRY( field, type->fields_or_args, const var_t, entry )
-            {
-                unsigned int alignment;
-                size += get_required_buffer_size_type(field->type, field->name,
-                                                      &alignment);
-            }
-            return size;
-        }
+            return fields_memsize(type->fields_or_args, alignment);
 
         case RPC_FC_RP:
             return
@@ -2544,75 +2532,26 @@ static unsigned int get_required_buffer_size(const var_t *var, unsigned int *ali
 {
     int in_attr = is_attr(var->attrs, ATTR_IN);
     int out_attr = is_attr(var->attrs, ATTR_OUT);
-    const type_t *t;
 
     if (!in_attr && !out_attr)
         in_attr = 1;
 
     *alignment = 0;
 
-    for (t = var->type; is_ptr(t); t = t->ref)
-        if (is_attr(t->attrs, ATTR_CONTEXTHANDLE))
+    if ((pass == PASS_IN && in_attr) || (pass == PASS_OUT && out_attr) ||
+        pass == PASS_RETURN)
+    {
+        if (is_ptrchain_attr(var, ATTR_CONTEXTHANDLE))
         {
             *alignment = 4;
             return 20;
         }
 
-    if (pass == PASS_OUT)
-    {
-        if (out_attr && is_ptr(var->type))
-        {
-            type_t *type = var->type;
-
-            if (type->type == RPC_FC_STRUCT)
-            {
-                const var_t *field;
-                unsigned int size = 36;
-
-                if (!type->fields_or_args) return size;
-                LIST_FOR_EACH_ENTRY( field, type->fields_or_args, const var_t, entry )
-                {
-                    unsigned int align;
-                    size += get_required_buffer_size_type(
-                        field->type, field->name, &align);
-                }
-                return size;
-            }
-        }
-        return 0;
+        if (!is_string_type(var->attrs, var->type))
+            return get_required_buffer_size_type(var->type, var->name,
+                                                 alignment);
     }
-    else
-    {
-        if ((!out_attr || in_attr) && !var->type->size_is
-            && !is_attr(var->attrs, ATTR_STRING) && !var->type->declarray)
-        {
-            if (is_ptr(var->type))
-            {
-                type_t *type = var->type;
-
-                if (is_base_type(type->type))
-                {
-                    return 25;
-                }
-                else if (type->type == RPC_FC_STRUCT)
-                {
-                    unsigned int size = 36;
-                    const var_t *field;
-
-                    if (!type->fields_or_args) return size;
-                    LIST_FOR_EACH_ENTRY( field, type->fields_or_args, const var_t, entry )
-                    {
-                        unsigned int align;
-                        size += get_required_buffer_size_type(
-                            field->type, field->name, &align);
-                    }
-                    return size;
-                }
-            }
-        }
-
-        return get_required_buffer_size_type(var->type, var->name, alignment);
-    }
+    return 0;
 }
 
 static unsigned int get_function_buffer_size( const func_t *func, enum pass pass )
