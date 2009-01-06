@@ -115,6 +115,7 @@ dll\cpl\access\access.cpl                           1
 dll\cpl\appwiz\appwiz.cpl                           1
 dll\cpl\console\console.dll                         1
 dll\cpl\desk\desk.cpl                               1
+dll\cpl\hdwwiz\hdwwiz.cpl                           1
 dll\cpl\intl\intl.cpl                               1
 dll\cpl\main\main.cpl                               1
 dll\cpl\mmsys\mmsys.cpl                             1
