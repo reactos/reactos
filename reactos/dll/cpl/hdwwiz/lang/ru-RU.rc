@@ -1,9 +1,56 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
+IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Мастер установки оборудования"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Мастер установки оборудования", 300, 114, 8, 203, 24
+	LTEXT "Этот мастер помогает:", -1, 114, 40, 182, 8
+	LTEXT "1) Устанавливать драйверы для нового оборудования на вашем компьютере", -1, 121, 56, 184, 16
+	LTEXT "2) Проводить диагностику неполадок имеющегося оборудования", -1, 121, 78, 185, 16
+	ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
+	LTEXT "Если к устройству прилагается установочный диск, рекомендуется нажать кнопку ""Отмена"" для закрытия этого мастера и воспользоваться диском изготовителя для установки этого устройства.", 503, 150, 106, 155, 50
+	LTEXT "Для продолжения нажмите кнопку ""Далее"".", -1, 114, 166, 193, 8
+END
+
+IDD_SEARCHPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Мастер установки оборудования"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
+	ICON IDI_SEARCHICON, IDC_SEARCHICON, 148, 50, 20, 20
+END
+
+IDD_ISCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Мастер установки оборудования"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Было ли это устройство уже подключено к компьютеру?", -1, 20, 11, 275, 8
+	AUTORADIOBUTTON "Д&а, устройство уже подключено", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+	AUTORADIOBUTTON "Н&ет, это устройство еще не подключено", IDC_NOTCONNECTED, 29, 35, 266, 8
+END
+
+IDD_FINISHPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Мастер установки оборудования"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Мастер установки оборудования", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT "Работа мастера установки оборудования успешно завершена.", -1, 114, 32, 193, 19
+	LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
+	LTEXT "Для закрытия мастера нажмите кнопку ""Готово"".", -1, 114, 166, 132, 8
+END
+
 STRINGTABLE
 BEGIN
-	IDS_CPLNAME "Добавить оборудование"
-	IDS_CPLDESCRIPTION "Добавить оборудование в компьютер"
+	IDS_CPLNAME "Установка оборудования"
+	IDS_CPLDESCRIPTION "Установка оборудования в компьютер"
+	IDS_SEARCHTITLE "Подождите, выполняется поиск..."
+	IDS_SEARCHTEXT "Этот мастер выполняет поиск оборудования, которое недавно было подключено к компьютеру, но еще не было установлено."
+	IDS_ISCONNECTED "Подключено ли  устройство?"
 END
 
 

@@ -1,7 +1,54 @@
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
+IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Welcome to the Add Hardware Wizard", 300, 114, 8, 203, 24
+	LTEXT "This wizard helps you:", -1, 114, 40, 182, 8
+	LTEXT "1) Install software to support the hardware you add to your computer.", -1, 121, 56, 184, 16
+	LTEXT "2) Troubleshoot problems you may be having with your hardware.", -1, 121, 78, 185, 16
+	ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
+	LTEXT "If your hardware came with an installation CD, it is recommended that you click Cancel to close this wizard and use the manufacturer's CD to install this hardware.", 503, 150, 106, 155, 50
+	LTEXT "To continue, click Next.", -1, 114, 166, 193, 8
+END
+
+IDD_SEARCHPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
+	ICON IDI_SEARCHICON, IDC_SEARCHICON, 148, 50, 20, 20
+END
+
+IDD_ISCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Have you already connected this hardware to your computer?", -1, 20, 11, 275, 8
+	AUTORADIOBUTTON "&Yes, I have already connected the hardware", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+	AUTORADIOBUTTON "&No, I have not added the hardware yet", IDC_NOTCONNECTED, 29, 35, 266, 8
+END
+
+IDD_FINISHPAGE DIALOG DISCARDABLE 0, 0, 317, 186
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Hardware Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Completing the Add Hardware Wizard", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT "You have successfully completed the Add Hardware wizard.", -1, 114, 32, 193, 19
+	LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
+	LTEXT "To close this wizard, click Finish.", -1, 114, 166, 132, 8
+END
+
 STRINGTABLE
 BEGIN
 	IDS_CPLNAME "Pøidat hardware"
 	IDS_CPLDESCRIPTION "Pøidat hardware do tohoto poèítaèe."
+	IDS_SEARCHTITLE "Please wait while the wizard searches..."
+	IDS_SEARCHTEXT "This wizard is searching for hardware that has been connected to your computer recently but has not yet been installed."
+	IDS_ISCONNECTED "Is the hardware connected?"
 END

@@ -21,6 +21,7 @@
  * FILE:            dll/cpl/hdwwiz/hdwwiz.c
  * PURPOSE:         ReactOS Add hardware control panel
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
+ *                  Dmitry Chapyshev (dmitry@reactos.org)
  */
 
 #include <windows.h>
@@ -33,83 +34,109 @@
 #include "resource.h"
 #include "hdwwiz.h"
 
-static LONG APIENTRY Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
-HINSTANCE hApplet = 0;
-
-/* Applets */
-APPLET Applets[] =
-{
-    {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
-};
+HINSTANCE hApplet = NULL;
 
 typedef BOOL (WINAPI *PINSTALL_NEW_DEVICE)(HWND, LPGUID, PDWORD);
 
 
 BOOL CALLBACK
-InstallNewDevice(HWND hwndParent,
-                 LPGUID ClassGuid,
-                 PDWORD pReboot)
+InstallNewDevice(HWND hwndParent, LPGUID ClassGuid, PDWORD pReboot)
 {
-    return TRUE;
+    return FALSE;
 }
 
-static LONG APIENTRY
-Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK
+StartPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HMODULE hNewDev = NULL;
-    PINSTALL_NEW_DEVICE InstallNewDevice;
-    DWORD Reboot;
-    BOOL ret;
-    LONG rc;
-
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(uMsg);
-
-    hNewDev = LoadLibrary(_T("newdev.dll"));
-    if (!hNewDev)
-    {
-        rc = 1;
-        goto cleanup;
-    }
-
-    InstallNewDevice = (PINSTALL_NEW_DEVICE)GetProcAddress(hNewDev, (LPCSTR)"InstallNewDevice");
-    if (!InstallNewDevice)
-    {
-        rc = 2;
-        goto cleanup;
-    }
-
-    ret = InstallNewDevice(hwnd, NULL, &Reboot);
-    if (!ret)
-    {
-        rc = 3;
-        goto cleanup;
-    }
-
-    if (Reboot != DI_NEEDRESTART && Reboot != DI_NEEDREBOOT)
-    {
-        /* We're done with installation */
-        rc = 0;
-        goto cleanup;
-    }
-
-    /* We need to reboot */
-    if (SetupPromptReboot(NULL, hwnd, FALSE) == -1)
-    {
-        /* User doesn't want to reboot, or an error occurred */
-        rc = 5;
-        goto cleanup;
-    }
-
-    rc = 0;
-
-cleanup:
-    if (hNewDev != NULL)
-        FreeLibrary(hNewDev);
-    return rc;
+    return FALSE;
 }
 
+static INT_PTR CALLBACK
+SearchPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return FALSE;
+}
+
+static INT_PTR CALLBACK
+IsConnctedPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return FALSE;
+}
+
+static INT_PTR CALLBACK
+FinishPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return FALSE;
+}
+
+static VOID
+HardwareWizardInit(HWND hwnd)
+{
+    HPROPSHEETPAGE ahpsp[3];
+    PROPSHEETPAGE psp = {0};
+    PROPSHEETHEADER psh;
+    UINT nPages = 0;
+
+    /* Create the Start page, until setup is working */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = StartPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_STARTPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create search page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SEARCHTITLE);
+    psp.pszHeaderSubTitle = NULL;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = SearchPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_SEARCHPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create is connected page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_ISCONNECTED);
+    psp.pszHeaderSubTitle = NULL;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = IsConnctedPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_ISCONNECTEDPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create finish page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = FinishPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create the property sheet */
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
+    psh.hInstance = hApplet;
+    psh.hwndParent = NULL;
+    psh.nPages = nPages;
+    psh.nStartPage = 0;
+    psh.phpage = ahpsp;
+    psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
+    psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
+
+    /* Display the wizard */
+    PropertySheet(&psh);
+}
+
+VOID CALLBACK
+AddHardwareWizard(HWND hwnd, LPTSTR lpName)
+{
+    HardwareWizardInit(hwnd);
+}
 
 /* Control Panel Callback */
 LONG CALLBACK
@@ -118,28 +145,26 @@ CPlApplet(HWND hwndCpl,
           LPARAM lParam1,
           LPARAM lParam2)
 {
-    INT i = (INT)lParam1;
-
     switch (uMsg)
     {
         case CPL_INIT:
             return TRUE;
 
         case CPL_GETCOUNT:
-            return sizeof(Applets)/sizeof(Applets[0]);
+            return 1;
 
         case CPL_INQUIRE:
             {
                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
                 CPlInfo->lData = 0;
-                CPlInfo->idIcon = Applets[i].idIcon;
-                CPlInfo->idName = Applets[i].idName;
-                CPlInfo->idInfo = Applets[i].idDescription;
+                CPlInfo->idIcon = IDI_CPLICON;
+                CPlInfo->idName = IDS_CPLNAME;
+                CPlInfo->idInfo = IDS_CPLDESCRIPTION;
             }
             break;
 
         case CPL_DBLCLK:
-            Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
+            AddHardwareWizard(hwndCpl, NULL);
             break;
     }
 
