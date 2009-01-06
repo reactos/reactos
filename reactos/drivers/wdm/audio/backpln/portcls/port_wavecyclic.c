@@ -26,6 +26,7 @@ const GUID IID_IUnknown;
 const GUID IID_IIrpTarget;
 const GUID IID_IPinCount;
 const GUID IID_IPowerNotify;
+const GUID IID_IDmaChannelSlave;
 
 const GUID GUID_DEVCLASS_SOUND; //FIXME
 //---------------------------------------------------------------
@@ -250,14 +251,30 @@ IPortWaveCyclic_fnNewMasterDmaChannel(
     IN  DMA_WIDTH DmaWidth,
     IN  DMA_SPEED DmaSpeed)
 {
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
+    DEVICE_DESCRIPTION DeviceDescription;
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
+
+    if (!This->bInitialized)
+    {
+        DPRINT("IPortWaveCyclic_fnNewSlaveDmaChannel called w/o initialized\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Status = PcDmaMasterDescription(ResourceList, (Dma32BitAddresses | Dma64BitAddresses), Dma32BitAddresses, 0, Dma64BitAddresses, DmaWidth, DmaSpeed, MaximumLength, 0, &DeviceDescription);
+    if (NT_SUCCESS(Status))
+    {
+        return PcNewDmaChannel(DmaChannel, OuterUnknown, NonPagedPool, &DeviceDescription, This->pDeviceObject);
+    }
+
+    return Status;
 }
 
 NTSTATUS
 NTAPI
 IPortWaveCyclic_fnNewSlaveDmaChannel(
     IN IPortWaveCyclic * iface,
-    OUT PDMACHANNELSLAVE* DmaChannel,
+    OUT PDMACHANNELSLAVE* OutDmaChannel,
     IN  PUNKNOWN OuterUnknown,
     IN  PRESOURCELIST ResourceList OPTIONAL,
     IN  ULONG DmaIndex,
@@ -265,12 +282,9 @@ IPortWaveCyclic_fnNewSlaveDmaChannel(
     IN  BOOL DemandMode,
     IN  DMA_SPEED DmaSpeed)
 {
-    DEVICE_DESCRIPTION DeviceDesc;
-    INTERFACE_TYPE BusType;
-    ULONG ResultLength;
+    DEVICE_DESCRIPTION DeviceDescription;
+    PDMACHANNEL DmaChannel;
     NTSTATUS Status;
-    ULONG MapRegisters;
-    PDMA_ADAPTER Adapter;
 
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
 
@@ -280,34 +294,22 @@ IPortWaveCyclic_fnNewSlaveDmaChannel(
         return STATUS_UNSUCCESSFUL;
     }
 
-    Status = IoGetDeviceProperty(This->pDeviceObject, DevicePropertyLegacyBusType, sizeof(BusType), (PVOID)&BusType, &ResultLength);
-    if (!NT_SUCCESS(Status))
+    // FIXME
+    // Check for F-Type DMA Support
+    //
+
+    Status = PcDmaSlaveDescription(ResourceList, DmaIndex, DemandMode, TRUE, DmaSpeed, MaximumLength, 0, &DeviceDescription);
+    if (NT_SUCCESS(Status))
     {
-        DPRINT("IoGetDeviceProperty failed with %x\n", Status);
-        return Status;
+        Status = PcNewDmaChannel(&DmaChannel, OuterUnknown, NonPagedPool, &DeviceDescription, This->pDeviceObject);
+        if (NT_SUCCESS(Status))
+        {
+            Status = DmaChannel->lpVtbl->QueryInterface(DmaChannel, &IID_IDmaChannelSlave, (PVOID*)OutDmaChannel);
+            DmaChannel->lpVtbl->Release(DmaChannel);
+        }
     }
 
-    RtlZeroMemory(&DeviceDesc, sizeof(DeviceDesc));
-    DeviceDesc.Version = DEVICE_DESCRIPTION_VERSION;
-    DeviceDesc.Master = FALSE;
-    DeviceDesc.InterfaceType = BusType;
-    DeviceDesc.MaximumLength = MaximumLength;
-    DeviceDesc.DemandMode = DemandMode;
-    DeviceDesc.DmaSpeed = DmaSpeed;
-    DeviceDesc.DmaChannel = DmaIndex;
-
-    Adapter = IoGetDmaAdapter(This->pDeviceObject, &DeviceDesc, &MapRegisters);
-    if (!Adapter)
-    {
-        DPRINT("IoGetDmaAdapter failed\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    return NewDmaChannelSlave(&DeviceDesc, Adapter, MapRegisters, DmaChannel);
-
-
-
-    return STATUS_UNSUCCESSFUL;
+    return Status;
 }
 
 VOID

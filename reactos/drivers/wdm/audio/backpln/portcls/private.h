@@ -106,7 +106,31 @@ typedef struct
 } PCExtension;
 
 
+NTSTATUS
+NTAPI
+PcDmaMasterDescription(
+    IN PRESOURCELIST ResourceList OPTIONAL,
+    IN BOOLEAN ScatterGather,
+    IN BOOLEAN Dma32BitAddresses,
+    IN BOOLEAN IgnoreCount,
+    IN BOOLEAN Dma64BitAddresses,
+    IN DMA_WIDTH DmaWidth,
+    IN DMA_SPEED DmaSpeed,
+    IN ULONG MaximumLength,
+    IN ULONG DmaPort,
+    OUT PDEVICE_DESCRIPTION DeviceDescription);
 
+NTSTATUS
+NTAPI
+PcDmaSlaveDescription(
+    IN PRESOURCELIST  ResourceList OPTIONAL,
+    IN ULONG DmaIndex,
+    IN BOOL DemandMode,
+    IN ULONG AutoInitialize,
+    IN DMA_SPEED DmaSpeed,
+    IN ULONG MaximumLength,
+    IN ULONG DmaPort,
+    OUT PDEVICE_DESCRIPTION DeviceDescription);
 
 
 

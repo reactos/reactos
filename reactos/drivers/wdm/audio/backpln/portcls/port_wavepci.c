@@ -275,19 +275,30 @@ NTSTATUS
 NTAPI
 IPortWavePci_fnNewMasterDmaChannel(
     IN IPortWavePci * iface,
-    OUT PDMACHANNEL* DmaChannel,
-    IN  PUNKNOWN OuterUnknown,
-    IN  POOL_TYPE PoolType,
-    IN  PRESOURCELIST ResourceList OPTIONAL,
-    IN  BOOL ScatterGather,
-    IN  BOOL Dma32BitAddresses,
-    IN  BOOL Dma64BitAddresses,
-    IN  DMA_WIDTH DmaWidth,
-    IN  DMA_SPEED DmaSpeed,
-    IN  ULONG MaximumLength,
-    IN  ULONG DmaPort)
+    OUT PDMACHANNEL *DmaChannel,
+    IN PUNKNOWN OuterUnknown OPTIONAL,
+    IN POOL_TYPE PoolType,
+    IN PRESOURCELIST ResourceList OPTIONAL,
+    IN BOOLEAN ScatterGather,
+    IN BOOLEAN Dma32BitAddresses,
+    IN BOOLEAN Dma64BitAddresses,
+    IN BOOLEAN IgnoreCount,
+    IN DMA_WIDTH DmaWidth,
+    IN DMA_SPEED DmaSpeed,
+    IN ULONG  MaximumLength,
+    IN ULONG  DmaPort)
 {
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
+    DEVICE_DESCRIPTION DeviceDescription;
+    IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
+
+    Status = PcDmaMasterDescription(ResourceList, ScatterGather, Dma32BitAddresses, IgnoreCount, Dma64BitAddresses, DmaWidth, DmaSpeed, MaximumLength, DmaPort, &DeviceDescription);
+    if (NT_SUCCESS(Status))
+    {
+        return PcNewDmaChannel(DmaChannel, OuterUnknown, PoolType, &DeviceDescription, This->pDeviceObject);
+    }
+
+    return Status;
 }
 
 VOID

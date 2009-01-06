@@ -74,7 +74,9 @@ PcUnregisterIoTimeout(
     return STATUS_SUCCESS;
 }
 
-
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 PcDmaMasterDescription(
@@ -104,7 +106,9 @@ PcDmaMasterDescription(
 
     return STATUS_SUCCESS;
 }
-
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 PcDmaSlaveDescription(
@@ -112,7 +116,7 @@ PcDmaSlaveDescription(
     IN ULONG DmaIndex,
     IN BOOL DemandMode,
     IN ULONG AutoInitialize,
-    IN DMA_SPEED DmaSpeed
+    IN DMA_SPEED DmaSpeed,
     IN ULONG MaximumLength,
     IN ULONG DmaPort,
     OUT PDEVICE_DESCRIPTION DeviceDescription)
