@@ -579,12 +579,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
    if (XlateObj->flXlate & XO_TABLE)
    {
       if (Color >= XlateObj->cEntries)
-      {
-         DPRINT1("+++ Color = 0x%x, XlateObj->flXlate = 0x%x, XlateObj->cEntries = %ld\n", 
-               Color, XlateObj->flXlate, XlateObj->cEntries);
-         XlateGDI = ObjToGDI(XlateObj, XLATE);
-         Color %= XlateObj->cEntries;
-      }
+          Color %= XlateObj->cEntries;
 
       return XlateObj->pulXlate[Color];
    }
