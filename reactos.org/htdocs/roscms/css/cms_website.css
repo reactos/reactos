@@ -115,3 +115,8 @@
 .detailmenu { color: #006090; text-decoration: underline; cursor: pointer; }
 
 .frmeditbutton { cursor:pointer; color:#006090; }
+
+#legend { display: block; width: 500px; border: solid 1px black; }
+
+#legend .lbox { border: solid 1px black; width: 17px;}
+

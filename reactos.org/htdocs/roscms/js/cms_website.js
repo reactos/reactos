@@ -1961,15 +1961,10 @@ function applyToEditor( http_request, objid )
       break;
 
     case 'diff':
+    case 'diff2': 
       document.getElementById('editzone').innerHTML = '<div id="frmdiff">'+ http_request.responseText + '</div>';
       loadEditor('diffentry');
-      document.getElementById('frmeditdiff').innerHTML = CDiffString(document.getElementById('frmeditdiff1').innerHTML, document.getElementById('frmeditdiff2').innerHTML);
-      break;
-
-    // update diff-area with new entries start diff-process; called from within diff-area
-    case 'diff2': 
-      document.getElementById('frmdiff').innerHTML = http_request.responseText;
-      document.getElementById('frmeditdiff').innerHTML = CDiffString(document.getElementById('frmeditdiff1').innerHTML, document.getElementById('frmeditdiff2').innerHTML);
+      document.getElementById('frmeditdiff').innerHTML = WDiffShortenOutput(WDiffString(document.getElementById('frmeditdiff1').innerHTML, document.getElementById('frmeditdiff2').innerHTML));
       break;
 
     case 'changetags':
