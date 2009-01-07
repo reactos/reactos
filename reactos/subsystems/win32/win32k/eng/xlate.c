@@ -403,8 +403,9 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    XlateGDI->GreenShift = CalculateShift(RGB(0x00, 0xFF, 0x00)) - CalculateShift(XlateGDI->GreenMask);
    XlateGDI->BlueShift =  CalculateShift(RGB(0x00, 0x00, 0xFF)) - CalculateShift(XlateGDI->BlueMask);
 
-   XlateObj->pulXlate[0] = ShiftAndMask(XlateGDI, BackgroundColor);
-   XlateObj->pulXlate[1] = ShiftAndMask(XlateGDI, ForegroundColor);
+   /* Yes, that's how Windows works, ... */
+   XlateObj->pulXlate[1] = ShiftAndMask(XlateGDI, BackgroundColor);
+   XlateObj->pulXlate[0] = ShiftAndMask(XlateGDI, ForegroundColor);
 
    if (XlateObj->iDstType == PAL_INDEXED)
    {
@@ -484,9 +485,24 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* p
 	{
 		if (pSrcSurf->SurfObj.iBitmapFormat == BMF_1BPP)
 		{
-			pDc_Attr = pDCDest->pDc_Attr;
-			if (!pDc_Attr) pDc_Attr = &pDCDest->Dc_Attr;
-			XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pDc_Attr->crBackgroundClr, pDc_Attr->crForegroundClr);
+			/* DIB sections need special handling */
+			if (pSrcSurf->dib)
+			{
+				PPALGDI ppal = PALETTE_LockPalette(pSrcSurf->hDIBPalette);
+				if (ppal)
+				{
+					XlateObj = IntEngCreateSrcMonoXlate(DestPalette, ((ULONG*)ppal->IndexedColors)[0], ((ULONG*)ppal->IndexedColors)[1]);
+					PALETTE_UnlockPalette(ppal);
+				}
+				else
+					XlateObj = NULL;
+			}
+			else
+			{
+				pDc_Attr = pDCDest->pDc_Attr;
+				if (!pDc_Attr) pDc_Attr = &pDCDest->Dc_Attr;
+				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pDc_Attr->crForegroundClr, pDc_Attr->crBackgroundClr);
+			}
 		}
 		else
 		{
@@ -563,7 +579,12 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
    if (XlateObj->flXlate & XO_TABLE)
    {
       if (Color >= XlateObj->cEntries)
-          Color %= XlateObj->cEntries;
+      {
+         DPRINT1("+++ Color = 0x%x, XlateObj->flXlate = 0x%x, XlateObj->cEntries = %ld\n", 
+               Color, XlateObj->flXlate, XlateObj->cEntries);
+         XlateGDI = ObjToGDI(XlateObj, XLATE);
+         Color %= XlateObj->cEntries;
+      }
 
       return XlateObj->pulXlate[Color];
    }
