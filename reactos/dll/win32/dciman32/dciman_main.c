@@ -613,7 +613,7 @@ WinWatchGetClipList(HWINWATCH hWW,
 
 /* Note DCIBeginAccess never return DCI_OK MSDN say it does, but it dose not return it */
 
-int 
+DCIRVAL 
 WINAPI
 DCIBeginAccess(LPDCISURFACEINFO pdci, int x, int y, int dx, int dy)
 {
@@ -628,8 +628,6 @@ DCIBeginAccess(LPDCISURFACEINFO pdci, int x, int y, int dx, int dy)
 	DDHAL_CREATESURFACEDATA DdCreateSurfaceData;
 	DDHAL_DESTROYSURFACEDATA DdDestorySurfaceData;							
 				
-	
-
 	pDciSurface_int = (LPDCISURFACE_INT) (((DWORD) pdci) - sizeof(DCISURFACE_LCL)) ;
 
 	/* Check see if we have lost surface or not */
@@ -656,9 +654,7 @@ DCIBeginAccess(LPDCISURFACEINFO pdci, int x, int y, int dx, int dy)
 		ReStart:
 
 		DdLockData.ddRVal = DDERR_GENERIC;
-		
-
-		
+				
 		EnterCriticalSection(&gcsWinWatchLock);
 		
 		/* Try lock our surface here 
@@ -788,6 +784,7 @@ DCIBeginAccess(LPDCISURFACEINFO pdci, int x, int y, int dx, int dy)
 						}															
 					}
 				}
+
 				/* Get HalInfo from DirectX hardware accalation  fail or something else  so we lost the surface */
 				pDciSurface_int->DciSurface_lcl.LostSurface = TRUE;
 				
@@ -822,6 +819,31 @@ DCIBeginAccess(LPDCISURFACEINFO pdci, int x, int y, int dx, int dy)
 	}
 	
 	return retValue;
+}
+
+void
+WINAPI
+DCIEndAccess(LPDCISURFACEINFO pdci)
+{
+	DDHAL_UNLOCKDATA DdUnlockData;
+	LPDCISURFACE_INT pDciSurface_int;
+	
+	pDciSurface_int = (LPDCISURFACE_INT) (((DWORD) pdci) - sizeof(DCISURFACE_LCL)) ;
+	
+	if ( pDciSurface_int->DciSurface_lcl.LostSurface == 0 )
+	{				
+		DdUnlockData.lpDD = &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal;
+		DdUnlockData.lpDDSurface = &pDciSurface_int->DciSurface_lcl.SurfaceLocal;
+		
+		EnterCriticalSection(&gcsWinWatchLock);
+	
+		pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.Unlock(&DdUnlockData);		
+	
+		LeaveCriticalSection(&gcsWinWatchLock);
+	}
+	
+	pDciSurface_int->DciSurfaceInfo.wSelSurface = 0;
+	pDciSurface_int->DciSurfaceInfo.dwOffSurface = 0;
 }
 
 

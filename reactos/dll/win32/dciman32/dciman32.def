@@ -7,7 +7,7 @@ EXPORTS
   DCICreatePrimary@8
   DCIDestroy@4
   DCIDraw@4
-;  DCIEndAccess
+  DCIEndAccess@4
   DCIEnum@20
   DCIOpenProvider@0
   DCISetClipList@8
