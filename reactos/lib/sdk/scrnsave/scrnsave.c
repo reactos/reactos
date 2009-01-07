@@ -190,7 +190,8 @@ static int LaunchScreenSaver(HWND hParent)
 
     // Display window and start pumping messages
     ShowWindow(hMainWindow, SW_SHOW);
-    SetCursor(NULL);
+    if (!hParent)
+        SetCursor(NULL);
 
     while (GetMessage(&msg, NULL, 0, 0))
         DispatchMessage(&msg);
