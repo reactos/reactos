@@ -162,7 +162,7 @@ AddConsoleAliasA (LPCSTR lpSource,
 		BasepAnsiStringToHeapUnicodeString(lpExeName, (LPWSTR*) &lpExeNameW);
 
 	bRetVal = AddConsoleAliasW(lpSourceW, lpTargetW, lpExeNameW);
-	
+
 	/* Clean up */
 	if (lpSourceW)
 		RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpSourceW);
@@ -183,7 +183,7 @@ AddConsoleAliasW (LPCWSTR lpSource,
 		  LPCWSTR lpTarget,
 		  LPCWSTR lpExeName)
 {
-  PCSR_API_MESSAGE Request; 
+  PCSR_API_MESSAGE Request;
   ULONG CsrRequest;
   NTSTATUS Status;
   ULONG SourceLength;
@@ -192,7 +192,7 @@ AddConsoleAliasW (LPCWSTR lpSource,
   ULONG Size;
   ULONG RequestLength;
   WCHAR * Ptr;
-  
+
   DPRINT("AddConsoleAliasW enterd with lpSource %S lpTarget %S lpExeName %S\n", lpSource, lpTarget, lpExeName);
 
   ExeLength = wcslen(lpExeName) + 1;
@@ -202,10 +202,10 @@ AddConsoleAliasW (LPCWSTR lpSource,
 
   Size = (ExeLength + SourceLength + TargetLength) * sizeof(WCHAR);
   RequestLength = sizeof(CSR_API_MESSAGE) + Size;
-  
+
   Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, RequestLength);
   Ptr = (WCHAR*)(((ULONG_PTR)Request) + sizeof(CSR_API_MESSAGE));
-  
+
   wcscpy(Ptr, lpSource);
   Request->Data.AddConsoleAlias.SourceLength = SourceLength;
   Ptr = (WCHAR*)(((ULONG_PTR)Request) + sizeof(CSR_API_MESSAGE) + SourceLength * sizeof(WCHAR));
@@ -332,7 +332,7 @@ GetConsoleAliasW (LPWSTR	lpSource,
 		  DWORD		TargetBufferLength,
 		  LPWSTR	lpExeName)
 {
-  PCSR_API_MESSAGE Request; 
+  PCSR_API_MESSAGE Request;
   PCSR_CAPTURE_BUFFER CaptureBuffer;
   ULONG CsrRequest;
   NTSTATUS Status;
@@ -353,11 +353,11 @@ GetConsoleAliasW (LPWSTR	lpSource,
 
   RequestLength = Size + sizeof(CSR_API_MESSAGE);
   Request = RtlAllocateHeap(GetProcessHeap(), 0, RequestLength);
-  
+
   CaptureBuffer = CsrAllocateCaptureBuffer(1, TargetBufferLength);
   if (!CaptureBuffer)
   {
-    RtlFreeHeap(GetProcessHeap(), 0, Request);    
+    RtlFreeHeap(GetProcessHeap(), 0, Request);
     return 0;
   }
 
@@ -419,7 +419,7 @@ GetConsoleAliasA (LPSTR	lpSource,
   lpwSource = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSourceSize);
   MultiByteToWideChar(CP_ACP, 0, lpSource, -1, lpwSource, dwSourceSize);
 
-  dwExeNameSize = (strlen(lpExeName)+1) * sizeof(WCHAR); 
+  dwExeNameSize = (strlen(lpExeName)+1) * sizeof(WCHAR);
   lpwExeName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwExeNameSize);
   MultiByteToWideChar(CP_ACP, 0, lpExeName, -1, lpwExeName, dwExeNameSize);
 
@@ -446,7 +446,7 @@ DWORD WINAPI
 GetConsoleAliasExesW (LPWSTR lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
 {
-  CSR_API_MESSAGE Request; 
+  CSR_API_MESSAGE Request;
   PCSR_CAPTURE_BUFFER CaptureBuffer;
   ULONG CsrRequest;
   NTSTATUS Status;
@@ -515,7 +515,7 @@ GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
 DWORD WINAPI
 GetConsoleAliasExesLengthW (VOID)
 {
-  CSR_API_MESSAGE Request; 
+  CSR_API_MESSAGE Request;
   ULONG CsrRequest;
   NTSTATUS          Status;
 
@@ -566,7 +566,7 @@ GetConsoleAliasesW (LPWSTR AliasBuffer,
 		    DWORD	AliasBufferLength,
 		    LPWSTR	ExeName)
 {
-  CSR_API_MESSAGE Request; 
+  CSR_API_MESSAGE Request;
   ULONG CsrRequest;
   NTSTATUS Status;
   DWORD dwLength;
@@ -623,7 +623,7 @@ GetConsoleAliasesA (LPSTR AliasBuffer,
 
     if (dwRetVal)
         dwRetVal = WideCharToMultiByte(CP_ACP, 0, lpwAliasBuffer, dwRetVal, AliasBuffer, AliasBufferLength, NULL, NULL);
-    
+
     HeapFree(GetProcessHeap(), 0, lpwAliasBuffer);
     return dwRetVal;
 }
@@ -633,9 +633,9 @@ GetConsoleAliasesA (LPSTR AliasBuffer,
  * @implemented
  */
 DWORD WINAPI
-GetConsoleAliasesLengthW (LPWSTR lpExeName) 
+GetConsoleAliasesLengthW (LPWSTR lpExeName)
 {
-  CSR_API_MESSAGE Request; 
+  CSR_API_MESSAGE Request;
   ULONG CsrRequest;
   NTSTATUS          Status;
 
@@ -675,7 +675,7 @@ GetConsoleAliasesLengthA (LPSTR lpExeName)
 	dwRetVal = GetConsoleAliasesLengthW(lpExeNameW);
     if (dwRetVal)
         dwRetVal /= sizeof(WCHAR);
-	
+
 	/* Clean up */
 	if (lpExeNameW)
 		RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpExeNameW);
@@ -810,7 +810,7 @@ GetConsoleHardwareState (HANDLE	hConsole,
       */
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status;
 
   CsrRequest = MAKE_CSR_API(SETGET_CONSOLE_HW_STATE, CSR_CONSOLE);
@@ -841,7 +841,7 @@ GetConsoleInputWaitHandle (VOID)
       */
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(GET_INPUT_WAIT_HANDLE, CSR_CONSOLE);
@@ -914,7 +914,7 @@ OpenConsoleW (LPCWSTR  wsName,
       */
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status = STATUS_SUCCESS;
 
   if(0 == _wcsicmp(wsName, L"CONIN$"))
@@ -1036,7 +1036,7 @@ SetConsoleHardwareState (HANDLE	hConsole,
       */
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status;
 
   CsrRequest = MAKE_CSR_API(SETGET_CONSOLE_HW_STATE, CSR_CONSOLE);
@@ -1201,7 +1201,7 @@ BOOL WINAPI
 VerifyConsoleIoHandle(HANDLE Handle)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(VERIFY_HANDLE, CSR_NATIVE);
@@ -1260,7 +1260,7 @@ CloseConsoleHandle(HANDLE Handle)
       */
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(CLOSE_HANDLE, CSR_NATIVE);
@@ -1362,7 +1362,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
                 LPVOID lpReserved,
                 BOOL bUnicode)
 {
-  PCSR_API_MESSAGE Request; 
+  PCSR_API_MESSAGE Request;
   ULONG CsrRequest;
   NTSTATUS Status;
   USHORT nChars;
@@ -1370,9 +1370,9 @@ IntWriteConsole(HANDLE hConsoleOutput,
   DWORD Written = 0;
 
   CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-  Request = RtlAllocateHeap(RtlGetProcessHeap(), 0, 
-                            max(sizeof(CSR_API_MESSAGE), 
-                                CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE) 
+  Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                            max(sizeof(CSR_API_MESSAGE),
+                                CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE)
                                   + min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize) * CharSize));
   if (Request == NULL)
   {
@@ -1473,7 +1473,7 @@ IntReadConsole(HANDLE hConsoleInput,
                PCONSOLE_READCONSOLE_CONTROL lpReserved,
                BOOL bUnicode)
 {
-  PCSR_API_MESSAGE Request; 
+  PCSR_API_MESSAGE Request;
   ULONG CsrRequest;
   NTSTATUS Status;
   ULONG CharSize, CharsRead = 0;
@@ -1481,7 +1481,7 @@ IntReadConsole(HANDLE hConsoleInput,
   CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
   Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                             max(sizeof(CSR_API_MESSAGE),
-                                CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE) 
+                                CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE)
                                   + min(nNumberOfCharsToRead, CSRSS_MAX_READ_CONSOLE / CharSize) * CharSize));
   if (Request == NULL)
   {
@@ -1511,8 +1511,8 @@ IntReadConsole(HANDLE hConsoleInput,
     Status = CsrClientCallServer(Request,
                                  NULL,
                                  CsrRequest,
-                                 max(sizeof(CSR_API_MESSAGE), 
-                                     CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE) 
+                                 max(sizeof(CSR_API_MESSAGE),
+                                     CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE)
                                        + Request->Data.ReadConsoleRequest.NrCharactersToRead * CharSize));
 
     if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
@@ -1601,7 +1601,7 @@ ReadConsoleW(HANDLE hConsoleInput,
 BOOL WINAPI AllocConsole(VOID)
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
    HANDLE hStdError;
 
@@ -1645,7 +1645,7 @@ BOOL WINAPI FreeConsole(VOID)
     // but I just tried to reverse what AllocConsole() does...
 
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(FREE_CONSOLE, CSR_CONSOLE);
@@ -1674,7 +1674,7 @@ GetConsoleScreenBufferInfo(
     )
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(SCREEN_BUFFER_INFO, CSR_CONSOLE);
@@ -1703,7 +1703,7 @@ SetConsoleCursorPosition(
     )
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(SET_CURSOR, CSR_CONSOLE);
@@ -1728,7 +1728,7 @@ IntFillConsoleOutputCharacter(HANDLE hConsoleOutput,
                               BOOL bUnicode)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(FILL_OUTPUT, CSR_CONSOLE);
@@ -1842,7 +1842,7 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
   Request.Data.PeekConsoleInputRequest.Length = nLength;
 
   /* Call the server */
-  Status = CsrClientCallServer(&Request, 
+  Status = CsrClientCallServer(&Request,
                                CaptureBuffer,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
@@ -1858,7 +1858,7 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
     /* Copy into the buffer */
     DPRINT("Copying to buffer\n");
     RtlCopyMemory(lpBuffer,
-                  Request.Data.PeekConsoleInputRequest.InputRecord, 
+                  Request.Data.PeekConsoleInputRequest.InputRecord,
                   sizeof(INPUT_RECORD) * *lpNumberOfEventsRead);
   }
   else
@@ -1921,7 +1921,7 @@ IntReadConsoleInput(HANDLE hConsoleInput,
                     BOOL bUnicode)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   ULONG Read;
   NTSTATUS Status;
 
@@ -2059,7 +2059,7 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
   Request.Data.WriteConsoleInputRequest.Length = nLength;
 
   /* Call the server */
-  Status = CsrClientCallServer(&Request, 
+  Status = CsrClientCallServer(&Request,
                                CaptureBuffer,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
@@ -2171,7 +2171,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   Request.Data.ReadConsoleOutputRequest.ReadRegion = *lpReadRegion;
 
   /* Call the server */
-  Status = CsrClientCallServer(&Request, 
+  Status = CsrClientCallServer(&Request,
                                CaptureBuffer,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
@@ -2182,12 +2182,12 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   {
     /* Copy into the buffer */
     DPRINT("Copying to buffer\n");
-    SizeX = Request.Data.ReadConsoleOutputRequest.ReadRegion.Right - 
+    SizeX = Request.Data.ReadConsoleOutputRequest.ReadRegion.Right -
             Request.Data.ReadConsoleOutputRequest.ReadRegion.Left + 1;
-    SizeY = Request.Data.ReadConsoleOutputRequest.ReadRegion.Bottom - 
+    SizeY = Request.Data.ReadConsoleOutputRequest.ReadRegion.Bottom -
             Request.Data.ReadConsoleOutputRequest.ReadRegion.Top + 1;
-    RtlCopyMemory(lpBuffer, 
-                  Request.Data.ReadConsoleOutputRequest.CharInfo, 
+    RtlCopyMemory(lpBuffer,
+                  Request.Data.ReadConsoleOutputRequest.CharInfo,
                   sizeof(CHAR_INFO) * SizeX * SizeY);
   }
   else
@@ -2284,7 +2284,7 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
   Request.Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
 
   /* Call the server */
-  Status = CsrClientCallServer(&Request, 
+  Status = CsrClientCallServer(&Request,
                                CaptureBuffer,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
@@ -2365,7 +2365,7 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
 
   Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                             max(sizeof(CSR_API_MESSAGE),
-                                CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR) 
+                                CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR)
                                   + min (nChars, CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR / CharSize) * CharSize));
   if (Request == NULL)
   {
@@ -2388,7 +2388,7 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
     Status = CsrClientCallServer(Request,
                                  NULL,
                                  CsrRequest,
-                                 max (sizeof(CSR_API_MESSAGE), 
+                                 max (sizeof(CSR_API_MESSAGE),
                                       CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR) + SizeBytes));
     if(!NT_SUCCESS(Status) || !NT_SUCCESS(Request->Status))
     {
@@ -2555,7 +2555,7 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
 
   Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                             max (sizeof(CSR_API_MESSAGE),
-                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR) 
+                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR)
                                    + min (nChars, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR / CharSize) * CharSize));
   if (Request == NULL)
   {
@@ -2577,7 +2577,7 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
 
     memcpy(Request->Data.WriteConsoleOutputCharRequest.String, lpCharacter, BytesWrite);
 
-    Status = CsrClientCallServer(Request, 
+    Status = CsrClientCallServer(Request,
                                  NULL,
                                  CsrRequest,
                                  max (sizeof(CSR_API_MESSAGE),
@@ -2691,12 +2691,12 @@ WriteConsoleOutputAttribute(
 	 Request->Data.WriteConsoleOutputAttribRequest.Length = Size;
          memcpy(Request->Data.WriteConsoleOutputAttribRequest.Attribute, lpAttribute, Size * sizeof(WORD));
 
-	 Status = CsrClientCallServer( Request, 
-                                       NULL, 
-                                       CsrRequest, 
+	 Status = CsrClientCallServer( Request,
+                                       NULL,
+                                       CsrRequest,
                                        max (sizeof(CSR_API_MESSAGE),
                                             CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB) + Size * sizeof(WORD)));
-                                            
+
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Request->Status ) )
 	    {
                RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
@@ -2730,7 +2730,7 @@ FillConsoleOutputAttribute(
 	)
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(FILL_OUTPUT_ATTRIB, CSR_CONSOLE);
@@ -2763,7 +2763,7 @@ GetConsoleMode(
 	)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(GET_CONSOLE_MODE, CSR_CONSOLE);
@@ -2792,7 +2792,7 @@ GetNumberOfConsoleInputEvents(
 	)
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    if(lpNumberOfEvents == NULL)
@@ -2847,7 +2847,7 @@ GetConsoleCursorInfo(
 	)
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(GET_CURSOR_INFO, CSR_CONSOLE);
@@ -2894,7 +2894,7 @@ SetConsoleMode(
 	)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(SET_CONSOLE_MODE, CSR_CONSOLE);
@@ -2922,7 +2922,7 @@ SetConsoleActiveScreenBuffer(
 	)
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(SET_SCREEN_BUFFER, CSR_CONSOLE);
@@ -2949,7 +2949,7 @@ FlushConsoleInputBuffer(
 	)
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(FLUSH_INPUT_BUFFER, CSR_CONSOLE);
@@ -2994,7 +2994,7 @@ SetConsoleCursorInfo(
 	)
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(SET_CURSOR_INFO, CSR_CONSOLE);
@@ -3020,7 +3020,7 @@ IntScrollConsoleScreenBuffer(HANDLE hConsoleOutput,
                              BOOL bUnicode)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(SCROLL_CONSOLE_SCREEN_BUFFER, CSR_CONSOLE);
@@ -3134,7 +3134,7 @@ SetConsoleTextAttribute(
         )
 {
    CSR_API_MESSAGE Request; ULONG CsrRequest;
-   
+
    NTSTATUS Status;
 
    CsrRequest = MAKE_CSR_API(SET_ATTRIB, CSR_CONSOLE);
@@ -3264,16 +3264,16 @@ GenerateConsoleCtrlEvent(
     CsrRequest = MAKE_CSR_API(GENERATE_CTRL_EVENT, CSR_CONSOLE);
     Request.Data.GenerateCtrlEvent.Event = dwCtrlEvent;
     Request.Data.GenerateCtrlEvent.ProcessGroup = dwProcessGroupId;
-    Status = CsrClientCallServer(&Request, 
-                                 NULL, 
-                                 CsrRequest, 
+    Status = CsrClientCallServer(&Request,
+                                 NULL,
+                                 CsrRequest,
                                  sizeof(CSR_API_MESSAGE));
     if(!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Request.Status)))
     {
         SetLastErrorByStatus(Status);
         return FALSE;
     }
-  
+
     return TRUE;
 }
 
@@ -3303,9 +3303,9 @@ GetConsoleTitleW(
 
    CsrRequest = MAKE_CSR_API(GET_TITLE, CSR_CONSOLE);
 
-   Status = CsrClientCallServer(Request, 
-                                NULL, 
-                                CsrRequest, 
+   Status = CsrClientCallServer(Request,
+                                NULL,
+                                CsrRequest,
                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_TITLE) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
    if(!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Request->Status)))
    {
@@ -3324,7 +3324,7 @@ GetConsoleTitleW(
    }
    memcpy(lpConsoleTitle, Request->Data.GetTitleRequest.Title, nSize * sizeof(WCHAR));
    lpConsoleTitle[nSize] = L'\0';
-   
+
    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
 
    return nSize;
@@ -3389,7 +3389,7 @@ SetConsoleTitleW(
 
   Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                             max (sizeof(CSR_API_MESSAGE),
-                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) + 
+                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) +
                                  min (wcslen(lpConsoleTitle), CSRSS_MAX_TITLE_LENGTH) * sizeof(WCHAR)));
   if (Request == NULL)
   {
@@ -3438,7 +3438,7 @@ SetConsoleTitleA(
 
   Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                             max (sizeof(CSR_API_MESSAGE),
-                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) + 
+                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) +
                                    min (strlen(lpConsoleTitle), CSRSS_MAX_TITLE_LENGTH) * sizeof(WCHAR)));
   if (Request == NULL)
   {
@@ -3521,7 +3521,7 @@ WINAPI
 GetConsoleCP( VOID )
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status;
 
   CsrRequest = MAKE_CSR_API(GET_CONSOLE_CP, CSR_CONSOLE);
@@ -3548,7 +3548,7 @@ SetConsoleCP(
 	)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status;
 
   CsrRequest = MAKE_CSR_API(SET_CONSOLE_CP, CSR_CONSOLE);
@@ -3573,7 +3573,7 @@ WINAPI
 GetConsoleOutputCP( VOID )
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status;
 
   CsrRequest = MAKE_CSR_API(GET_CONSOLE_OUTPUT_CP, CSR_CONSOLE);
@@ -3600,7 +3600,7 @@ SetConsoleOutputCP(
 	)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status;
 
   CsrRequest = MAKE_CSR_API(SET_CONSOLE_OUTPUT_CP, CSR_CONSOLE);
@@ -3643,15 +3643,15 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
      return FALSE;
   }
-                                   
+
   CsrRequest = MAKE_CSR_API(GET_PROCESS_LIST, CSR_CONSOLE);
   Request->Data.GetProcessListRequest.nMaxIds = min (dwProcessCount, CSRSS_MAX_GET_PROCESS_LIST / sizeof(DWORD));
 
-  Status = CsrClientCallServer(Request, 
+  Status = CsrClientCallServer(Request,
                                NULL,
                                CsrRequest,
                                max (sizeof(CSR_API_MESSAGE),
-                                    CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_PROCESS_LIST) 
+                                    CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_PROCESS_LIST)
                                       + Request->Data.GetProcessListRequest.nMaxIds * sizeof(DWORD)));
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
   {
@@ -3712,7 +3712,7 @@ HWND WINAPI
 GetConsoleWindow (VOID)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status;
 
   CsrRequest = MAKE_CSR_API(GET_CONSOLE_WINDOW, CSR_CONSOLE);
@@ -3734,7 +3734,7 @@ GetConsoleWindow (VOID)
 BOOL WINAPI SetConsoleIcon(HICON hicon)
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
-  
+
   NTSTATUS          Status;
 
   CsrRequest = MAKE_CSR_API(SET_CONSOLE_ICON, CSR_CONSOLE);
@@ -3757,7 +3757,6 @@ BOOL WINAPI SetConsoleIcon(HICON hicon)
 BOOL WINAPI
 SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
 {
-  BOOL Ret = FALSE;
   int lenName = lstrlenW(lpInputExeName);
 
   if(lenName < 1 ||
@@ -3769,25 +3768,18 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
   }
 
   RtlEnterCriticalSection(&ConsoleLock);
-  /* wrap copying into SEH as we may copy from invalid buffer and in case of an
-     exception the console lock would've never been released, which would cause
-     further calls (if the exception was handled by the caller) to recursively
-     acquire the lock... */
   _SEH2_TRY
   {
     RtlCopyMemory(InputExeName, lpInputExeName, lenName * sizeof(WCHAR));
     InputExeName[lenName] = L'\0';
-    Ret = TRUE;
   }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  _SEH2_FINALLY
   {
-    lenName = 0;
-    SetLastErrorByStatus(_SEH2_GetExceptionCode());
+    RtlLeaveCriticalSection(&ConsoleLock);
   }
   _SEH2_END;
-  RtlLeaveCriticalSection(&ConsoleLock);
 
-  return Ret;
+  return TRUE;
 }
 
 
@@ -3838,35 +3830,26 @@ SetConsoleInputExeNameA(LPCSTR lpInputExeName)
 DWORD WINAPI
 GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
-  int lenName;
+  int lenName = 0;
 
   RtlEnterCriticalSection(&ConsoleLock);
 
-  lenName = lstrlenW(InputExeName);
-  if(lenName >= (int)nBufferLength)
-  {
-    /* buffer is not large enough, return the required size */
-    RtlLeaveCriticalSection(&ConsoleLock);
-    SetLastError(ERROR_BUFFER_OVERFLOW);
-    return lenName + 1;
-  }
-
-  /* wrap copying into SEH as we may copy to invalid buffer and in case of an
-     exception the console lock would've never been released, which would cause
-     further calls (if the exception was handled by the caller) to recursively
-     acquire the lock... */
   _SEH2_TRY
   {
+    lenName = lstrlenW(InputExeName);
+    if(lenName >= (int)nBufferLength)
+    {
+      /* buffer is not large enough, return the required size */
+      SetLastError(ERROR_BUFFER_OVERFLOW);
+      lenName += 1;
+    }
     RtlCopyMemory(lpBuffer, InputExeName, (lenName + 1) * sizeof(WCHAR));
   }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  _SEH2_FINALLY
   {
-    lenName = 0;
-    SetLastErrorByStatus(_SEH2_GetExceptionCode());
+    RtlLeaveCriticalSection(&ConsoleLock);
   }
   _SEH2_END;
-
-  RtlLeaveCriticalSection(&ConsoleLock);
 
   return lenName;
 }
