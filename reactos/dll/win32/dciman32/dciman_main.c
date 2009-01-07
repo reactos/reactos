@@ -9,8 +9,7 @@
 #include <ddrawgdi.h>
 #include <pseh/pseh.h>
 
-
-
+/* ToDO protect some function with pseh */
 
 /* Winwatch internal struct */
 typedef struct _WINWATCH_INT
@@ -610,6 +609,220 @@ WinWatchGetClipList(HWINWATCH hWW,
     return pWinwatch_int->RgnDataSize;
 }
 
+
+
+/* Note DCIBeginAccess never return DCI_OK MSDN say it does, but it dose not return it */
+
+int 
+WINAPI
+DCIBeginAccess(LPDCISURFACEINFO pdci, int x, int y, int dx, int dy)
+{
+	int retValue = DCI_FAIL_GENERIC;
+	int myRetValue = 0;
+	DDHALINFO ddHalInfo;
+	BOOL bNewMode = FALSE;
+	DDHAL_LOCKDATA DdLockData;
+	DDSURFACEDESC DdSurfaceDesc;	
+	LPDCISURFACE_INT pDciSurface_int;
+	LPDDRAWI_DDRAWSURFACE_LCL tmp_DdSurfLcl;
+	DDHAL_CREATESURFACEDATA DdCreateSurfaceData;
+	DDHAL_DESTROYSURFACEDATA DdDestorySurfaceData;							
+				
+	
+
+	pDciSurface_int = (LPDCISURFACE_INT) (((DWORD) pdci) - sizeof(DCISURFACE_LCL)) ;
+
+	/* Check see if we have lost surface or not */
+	if ( pDciSurface_int->DciSurface_lcl.LostSurface != FALSE)
+	{
+		/* Surface was lost, so we set return error code and return */
+		retValue = DCI_FAIL_INVALIDSURFACE;
+	}
+	else
+	{	
+		/* Surface was not lost  */
+		
+		/* Setup DdLock when we need get our surface pointer */
+		DdLockData.lpDD = &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal;		
+		DdLockData.lpDDSurface = &pDciSurface_int->DciSurface_lcl.SurfaceLocal;
+		DdLockData.bHasRect = 1;
+		DdLockData.dwFlags = 0;
+		DdLockData.rArea.top = y;
+		DdLockData.rArea.left = x;
+		DdLockData.rArea.right = dx + x;
+		DdLockData.rArea.bottom = y + dy;
+				
+		/* if we lost the surface or if the display have been change we need restart from here */
+		ReStart:
+
+		DdLockData.ddRVal = DDERR_GENERIC;
+		
+
+		
+		EnterCriticalSection(&gcsWinWatchLock);
+		
+		/* Try lock our surface here 
+		 *
+		 * Note MS DCIMAN32.DLL does not check see if the driver support Lock or not or if it NULL or the flag
+		 * it will not crash it will return a error code instead, for SEH will capture it.  
+		 */
+
+		pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.Lock( &DdLockData );
+		
+
+		/* We need wait until DdLock is ready and finish to draw */
+		while ( DdLockData.ddRVal == DDERR_WASSTILLDRAWING )
+		{
+			pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.Lock( &DdLockData );
+		}
+
+		/* DdLock is now ready to continue */
+		
+		LeaveCriticalSection(&gcsWinWatchLock);
+		
+		/* Check DdLock return value */
+		if ( DdLockData.ddRVal == DD_OK)
+		{
+			/* Check DdLock sussess so we fill in few members into the struct pdci */
+														
+			pdci->dwOffSurface = (ULONG_PTR)  ( ( ((DWORD)DdLockData.lpSurfData) - ( ( pdci->dwBitCount / 8 ) * x ) ) - ( pdci->lStride * y ) );
+									
+			retValue = DCI_STATUS_POINTERCHANGED;
+		}
+		else if ( DdLockData.ddRVal == DDERR_SURFACELOST)
+		{				
+			/* Check DdLock did not sussess so we need recreate it, maybe becose the display have been change ? */
+
+			/* Restart the DirectX hardware acclartions */
+			if ( DdReenableDirectDrawObject( &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal, &bNewMode ) == 0)
+			{
+				/* We fail restart it, so we return error code */
+				retValue = DCI_ERR_SURFACEISOBSCURED;			
+			}
+			else
+			{							
+				/* Get HalInfo from DirectX hardware accalation */
+				myRetValue = DdQueryDirectDrawObject ( &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal, 
+					                                   &ddHalInfo, 
+												       NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+																		
+				if ( myRetValue == FALSE ) 
+				{
+					if ( ( pDciSurface_int->DciSurfaceInfo.dwWidth != ddHalInfo.vmiData.dwDisplayWidth) ||
+					     ( pDciSurface_int->DciSurfaceInfo.dwHeight != ddHalInfo.vmiData.dwDisplayHeight ) ||
+					     ( pDciSurface_int->DciSurfaceInfo.lStride != ddHalInfo.vmiData.lDisplayPitch ) ||
+					     ( pDciSurface_int->DciSurfaceInfo.dwBitCount != ddHalInfo.vmiData.ddpfDisplay.dwRGBBitCount ) )
+					{
+				
+						/* Here we try recreate the lost surface in follow step 
+						 * 1. Destory the old surface 
+						 * 2. Create the new surface
+						 * 3. ResetVisrgn
+						 */
+
+						/* 
+						* Setup Destorysurface the lost surface so we do not lost any 
+						* hDC or hDD handles and memory leaks and destory it
+						*/
+
+						DdDestorySurfaceData.lpDD =  &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal;					
+						DdDestorySurfaceData.lpDDSurface = &pDciSurface_int->DciSurface_lcl.SurfaceLocal;					
+						DdDestorySurfaceData.ddRVal = DDERR_GENERIC;
+						DdDestorySurfaceData.DestroySurface = pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface;
+																				
+						if ( (pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE) != DDHAL_SURFCB32_DESTROYSURFACE )
+						{					
+							if ( pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface != 0 )
+							{																						
+								pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface( &DdDestorySurfaceData ) ;
+							}
+						}					
+
+						/* 
+						 * Setup our new surface to create it 
+						 */
+															
+						tmp_DdSurfLcl = &pDciSurface_int->DciSurface_lcl.SurfaceLocal;
+										
+						memset(&DdSurfaceDesc,0, sizeof(DDSURFACEDESC));															
+						DdSurfaceDesc.dwSize =  sizeof(DDSURFACEDESC);					
+						DdSurfaceDesc.dwFlags = DDSD_CAPS;
+						DdSurfaceDesc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VISIBLE;
+					
+						DdCreateSurfaceData.lpDD = &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal;
+						DdCreateSurfaceData.lpDDSurfaceDesc = &DdSurfaceDesc;
+						DdCreateSurfaceData.lplpSList = &tmp_DdSurfLcl;				
+						DdCreateSurfaceData.dwSCnt = 1;
+						DdCreateSurfaceData.ddRVal = DDERR_GENERIC;
+						DdCreateSurfaceData.CreateSurface = pDciSurface_int->DciSurface_lcl.DDCallbacks.CreateSurface;
+																																
+						if ( ( pDciSurface_int->DciSurface_lcl.DDCallbacks.CreateSurface != NULL) &&
+							((pDciSurface_int->DciSurface_lcl.DDCallbacks.dwFlags & DDHAL_CB32_CREATESURFACE) == DDHAL_CB32_CREATESURFACE))
+						{																									
+							if ( ( pDciSurface_int->DciSurface_lcl.DDCallbacks.CreateSurface( &DdCreateSurfaceData ) == 1 ) &&
+								( DdCreateSurfaceData.ddRVal == DD_OK ) ) 
+							{													
+								/* 
+								 * RestVisrgn 
+								 */
+								if ( DdResetVisrgn( &pDciSurface_int->DciSurface_lcl.SurfaceLocal, (HWND)-1 ) != 0)
+								{
+									/* The surface was lost, so we need restart DCIBeginAccess,
+									 * we can retstart it in two ways
+									 * 1. call on DCIBeginAccess each time 
+									 * 2. use a goto. 
+									 *
+									 * Why I decide not to call it again,
+									 * is it will use more stack space and we do not known 
+									 * how many times it will restart it self, and 
+									 * it will cost cpu time and stack memory. 
+									 * 
+									 * The goto did seam best slovtions to this issue, and
+									 * it will not cost us extra stack space or cpu time,
+									 * and we do not need setup DdLockData again, and do other 
+									 * check as well.
+									 */
+									goto ReStart;
+								}						
+							}
+						}															
+					}
+				}
+				/* Get HalInfo from DirectX hardware accalation  fail or something else  so we lost the surface */
+				pDciSurface_int->DciSurface_lcl.LostSurface = TRUE;
+				
+				retValue = DCI_FAIL_INVALIDSURFACE;
+					
+				/* 
+				 * Setup Destorysurface the lost surface so we do not lost any hDC or hDD  handles and memory leaks 
+			     * and destory it and free all DirectX rescures 
+				 */
+				DdDestorySurfaceData.lpDD = &pDciSurface_int->DciSurface_lcl.DirectDrawGlobal;					
+				DdDestorySurfaceData.lpDDSurface = &pDciSurface_int->DciSurface_lcl.SurfaceLocal;					
+				DdDestorySurfaceData.ddRVal = DDERR_GENERIC;
+				DdDestorySurfaceData.DestroySurface = pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface;
+																				
+				if ( (pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE) != DDHAL_SURFCB32_DESTROYSURFACE )
+				{					
+					if ( pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface != 0 )
+					{																						
+						if ( pDciSurface_int->DciSurface_lcl.DDSurfaceCallbacks.DestroySurface( &DdDestorySurfaceData ) == DDHAL_DRIVER_HANDLED )
+						{						
+							if ( DdDestorySurfaceData.ddRVal == DD_OK )
+							{
+								DdDeleteDirectDrawObject(&pDciSurface_int->DciSurface_lcl.DirectDrawGlobal);
+							}
+						}
+					}					
+				}
+
+			}
+
+		}									
+	}
+	
+	return retValue;
+}
 
 
 /***********************************************************************************************************/

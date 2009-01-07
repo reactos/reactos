@@ -1,6 +1,6 @@
 
 EXPORTS
-;  DCIBeginAccess
+  DCIBeginAccess@20
   DCICloseProvider@4
   DCICreateOffscreen@40
   DCICreateOverlay@12
