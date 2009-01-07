@@ -45,11 +45,7 @@ HFONT hTitleFont;
 typedef BOOL (WINAPI *PINSTALL_NEW_DEVICE)(HWND, LPGUID, PDWORD);
 
 
-BOOL CALLBACK
-InstallNewDevice(HWND hwndParent, LPGUID ClassGuid, PDWORD pReboot)
-{
-    return FALSE;
-}
+/* STATIC FUNCTIONS *********************************************************/
 
 static HFONT
 CreateTitleFont(VOID)
@@ -224,7 +220,7 @@ HardwareWizardInit(HWND hwnd)
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
     psh.hInstance = hApplet;
-    psh.hwndParent = NULL;
+    psh.hwndParent = hwnd;
     psh.nPages = nPages;
     psh.nStartPage = 0;
     psh.phpage = ahpsp;
@@ -240,7 +236,15 @@ HardwareWizardInit(HWND hwnd)
     DeleteObject(hTitleFont);
 }
 
-VOID CALLBACK
+/* FUNCTIONS ****************************************************************/
+
+BOOL WINAPI
+InstallNewDevice(HWND hwndParent, LPGUID ClassGuid, PDWORD pReboot)
+{
+    return FALSE;
+}
+
+VOID WINAPI
 AddHardwareWizard(HWND hwnd, LPWSTR lpName)
 {
     if (lpName != NULL)
@@ -254,10 +258,7 @@ AddHardwareWizard(HWND hwnd, LPWSTR lpName)
 
 /* Control Panel Callback */
 LONG CALLBACK
-CPlApplet(HWND hwndCpl,
-          UINT uMsg,
-          LPARAM lParam1,
-          LPARAM lParam2)
+CPlApplet(HWND hwndCpl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     switch (uMsg)
     {
@@ -285,7 +286,6 @@ CPlApplet(HWND hwndCpl,
     return FALSE;
 }
 
-
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
@@ -295,6 +295,7 @@ DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
     {
         case DLL_PROCESS_ATTACH:
             hApplet = hinstDLL;
+            DisableThreadLibraryCalls(hinstDLL);
             break;
     }
 
