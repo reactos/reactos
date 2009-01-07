@@ -225,7 +225,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
     UNICODE_STRING WName;
     ARC_STATUS Result;
     PCH Value;
-    volatile ANSI_STRING AValue;
+    ANSI_STRING AValue;
     UNICODE_STRING WValue;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -703,12 +703,11 @@ QSI_DEF(SystemProcessInformation)
 {
     PSYSTEM_PROCESS_INFORMATION SpiCurrent;
     PSYSTEM_THREAD_INFORMATION ThreadInfo;
-    volatile PEPROCESS Process = NULL;
-	PEPROCESS SystemProcess;
+    PEPROCESS Process = NULL, SystemProcess;
     PETHREAD CurrentThread;
     ANSI_STRING ImageName;
     int CurrentSize, ImageNameLength = 32; // image name len in bytes
-    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY CurrentEntry;   
     ULONG TotalSize = 0, ThreadsCount;
     ULONG TotalUser, TotalKernel;
     PUCHAR Current;
