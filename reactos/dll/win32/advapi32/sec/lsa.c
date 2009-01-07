@@ -82,15 +82,15 @@ LsaClose(LSA_HANDLE ObjectHandle)
 
     TRACE("LsaClose(0x%p) called\n", ObjectHandle);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = LsarClose((PLSAPR_HANDLE)&ObjectHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     return Status;
 }
@@ -106,15 +106,15 @@ LsaDelete(LSA_HANDLE ObjectHandle)
 
     TRACE("LsaDelete(0x%p) called\n", ObjectHandle);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         Status = LsarDelete((LSAPR_HANDLE)ObjectHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     return Status;
 }
@@ -391,7 +391,7 @@ LsaOpenPolicy(
           SystemName?debugstr_w(SystemName->Buffer):"(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
 
-    _SEH2_TRY
+    RpcTryExcept
     {
         *PolicyHandle = NULL;
 
@@ -400,11 +400,11 @@ LsaOpenPolicy(
                                 DesiredAccess,
                                 PolicyHandle);
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
-    _SEH2_END;
+    RpcEndExcept;
 
     TRACE("LsaOpenPolicy() done (Status: 0x%08lx)\n", Status);
 
