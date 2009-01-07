@@ -152,7 +152,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                              IN const UNICODE_STRING *UnsafeSrc)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    WCHAR *Buffer = NULL;
+    WCHAR * volatile Buffer = NULL;
     ASSERT(Dest != NULL);
 
     /* Probe the structure and buffer*/

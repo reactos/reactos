@@ -360,7 +360,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG StringLength;
-    PWCHAR StringBuffer = NULL;
+    volatile PWCHAR StringBuffer = NULL;
     UNICODE_STRING LocalName;
     PAGED_CODE();
 
@@ -440,7 +440,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
     NTSTATUS Status = STATUS_SUCCESS;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PSECURITY_QUALITY_OF_SERVICE SecurityQos;
-    PUNICODE_STRING LocalObjectName = NULL;
+    volatile PUNICODE_STRING LocalObjectName = NULL;
     PAGED_CODE();
 
     /* Zero out the Capture Data */
@@ -1258,14 +1258,14 @@ ObpDeleteObjectType(IN PVOID Object)
 {
     ULONG i;
     POBJECT_TYPE ObjectType = (PVOID)Object;
-    
+
     /* Loop our locks */
     for (i = 0; i < 4; i++)
     {
         /* Delete each one */
         ExDeleteResourceLite(&ObjectType->ObjectLocks[i]);
     }
-    
+
     /* Delete our main mutex */
     ExDeleteResourceLite(&ObjectType->Mutex);
 }
@@ -1413,7 +1413,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
     POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
     POBJECT_BASIC_INFORMATION BasicInfo;
     ULONG InfoLength;
-    PVOID Object = NULL;
+    volatile PVOID Object = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
