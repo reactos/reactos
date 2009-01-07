@@ -952,8 +952,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 DispatchToUser:
             _SEH2_TRY
             {
-				ULONG Size;
-				ULONG_PTR Stack, NewStack;
+                ULONG Size;
+                ULONG_PTR Stack, NewStack;
 
                 /* Make sure we have a valid SS and that this isn't V86 mode */
                 if ((TrapFrame->HardwareSegSs != (KGDT_R3_DATA | RPL_MASK)) ||
