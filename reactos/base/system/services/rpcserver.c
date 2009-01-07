@@ -738,7 +738,6 @@ DWORD RQueryServiceObjectSecurity(
     DWORD cbBufSize,
     LPBOUNDED_DWORD_256K pcbBytesNeeded)
 {
-#if 0
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
     ULONG DesiredAccess = 0;
@@ -782,7 +781,7 @@ DWORD RQueryServiceObjectSecurity(
     Status = RtlQuerySecurityObject(lpService->lpSecurityDescriptor,
                                     dwSecurityInformation,
                                     (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
-                                    dwSecuityDescriptorSize,
+                                    cbBufSize,
                                     &dwBytesNeeded);
 
     /* FIXME: Unlock the service list */
@@ -807,9 +806,6 @@ DWORD RQueryServiceObjectSecurity(
     }
 
     return dwError;
-#endif
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
