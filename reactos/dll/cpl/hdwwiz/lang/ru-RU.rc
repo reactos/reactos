@@ -41,7 +41,7 @@ BEGIN
 	LTEXT "Выберите устройство из списка и нажмите кнопку ""Далее"", чтобы проверить его свойства или выполнить диагностику неполадок.", -1, 21, 8, 275, 22
 	LTEXT "Чтобы добавить новое устройство, отсутствующее в этом списке, щелкните элемент ""Добавление нового устройства"".", -1, 21, 32, 275, 24
 	LTEXT "&Установленное оборудование:", -1, 21, 62, 140, 8
-	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 21, 72, 275, 66
+	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
 IDD_SELECTWAYPAGE DIALOG DISCARDABLE 0, 0, 317, 143
@@ -141,4 +141,5 @@ BEGIN
 	IDS_SEARCHTEXT "Этот мастер выполняет поиск оборудования, которое недавно было подключено к компьютеру, но еще не было установлено."
 	IDS_ISCONNECTED "Подключено ли  устройство?"
 	IDS_PROBELISTTITLE "На этом компьютере уже установлено следующее оборудование"
+	IDS_ADDNEWDEVICE "Добавление нового устройства"
 END

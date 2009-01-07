@@ -47,7 +47,7 @@ BEGIN
 	LTEXT "From the list below, select an installed hardware device, then click Next to check properties or troubleshoot a problem you might be having.", -1, 21, 8, 275, 22
 	LTEXT "To add hardware not shown in the list, click ""Add a new hardware device.""", -1, 21, 32, 275, 24
 	LTEXT "I&nstalled hardware:", -1, 21, 62, 140, 8
-	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 21, 72, 275, 66
+	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
 IDD_SELECTWAYPAGE DIALOG DISCARDABLE 0, 0, 317, 143
@@ -147,4 +147,5 @@ BEGIN
 	IDS_SEARCHTEXT "This wizard is searching for hardware that has been connected to your computer recently but has not yet been installed."
 	IDS_ISCONNECTED "Is the hardware connected?"
 	IDS_PROBELISTTITLE "The following hardware is already installed on your computer"
+	IDS_ADDNEWDEVICE "Add a new hardware device"
 END

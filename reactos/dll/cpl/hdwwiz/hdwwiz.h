@@ -1,13 +1,18 @@
 #ifndef __CPL_HDWWIZ_H
 #define __CPL_HDWWIZ_H
 
-typedef struct
-{
-	int idIcon;
-	int idName;
-	int idDescription;
-	APPLET_PROC AppletProc;
-} APPLET, *PAPPLET;
+#include <windows.h>
+#include <commctrl.h>
+#include <setupapi.h>
+#include <cfgmgr32.h>
+#include <cpl.h>
+#include <tchar.h>
+#include <stdio.h>
+
+#define NDEBUG
+#include <debug.h>
+
+#define MAX_STR_SIZE 256
 
 extern HINSTANCE hApplet;
 

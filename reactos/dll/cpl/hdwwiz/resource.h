@@ -16,6 +16,7 @@
 #define IDS_PROBELISTTITLE        1005
 #define IDS_SEARCHTEXT            1020
 #define IDS_SEARCHTITLE           1025
+#define IDS_ADDNEWDEVICE          1081
 #define IDS_ISCONNECTED           1113
 
 /* Dialogs */
