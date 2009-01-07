@@ -13,6 +13,7 @@
 /* Strings */
 #define IDS_CPLNAME               1000
 #define IDS_CPLDESCRIPTION        1001
+#define IDS_PROBELISTTITLE        1005
 #define IDS_SEARCHTEXT            1020
 #define IDS_SEARCHTITLE           1025
 #define IDS_ISCONNECTED           1113
@@ -22,6 +23,7 @@
 #define IDD_SEARCHPAGE            204
 #define IDD_ISFOUNDPAGE           205
 #define IDD_ISCONNECTEDPAGE       206
+#define IDD_NOTCONNECTEDPAGE      207
 #define IDD_PROBELISTPAGE         208
 #define IDD_HWSTATUSPAGE          209
 #define IDD_SELECTWAYPAGE         210
@@ -50,6 +52,7 @@
 #define IDC_WARNINGICON           502
 #define IDC_CONNECTED             504
 #define IDC_NOTCONNECTED          505
+#define IDC_TURNOFFCHECKBOX       506
 
 #endif /* __CPL_RESOURCE_H */
 

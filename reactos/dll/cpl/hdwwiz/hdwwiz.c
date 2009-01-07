@@ -124,10 +124,27 @@ IsConnctedPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case PSN_SETACTIVE:
                 {
-                    /* Disable "Next" button */
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                    if ((SendDlgItemMessage(hwndDlg, IDC_CONNECTED, BM_GETCHECK, 0, 0) == BST_CHECKED) ||
+                        (SendDlgItemMessage(hwndDlg, IDC_NOTCONNECTED, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                    {
+                        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                    }
+                    else
+                    {
+                        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                    }
                 }
                 break;
+
+                case PSN_WIZNEXT:
+                {
+                    if (SendDlgItemMessage(hwndDlg, IDC_NOTCONNECTED, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_NOTCONNECTEDPAGE);
+                    else
+                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_PROBELISTPAGE);
+
+                    return TRUE;
+                }
             }
         }
         break;
@@ -168,10 +185,83 @@ FinishPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
+static INT_PTR CALLBACK
+NotConnectedPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            /* Set title font */
+            SendDlgItemMessage(hwndDlg, IDC_FINISHTITLE, WM_SETFONT, (WPARAM)hTitleFont, (LPARAM)TRUE);
+        }
+        break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH | PSWIZB_BACK);
+                }
+                break;
+
+                case PSN_WIZBACK:
+                {
+                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_ISCONNECTEDPAGE);
+                    return TRUE;
+                }
+            }
+        }
+        break;
+    }
+
+    return FALSE;
+}
+
+static INT_PTR CALLBACK
+ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {
+
+        }
+        break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                }
+                break;
+
+                case PSN_WIZNEXT:
+                {
+                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_FINISHPAGE);
+                    return TRUE;
+                }
+            }
+        }
+        break;
+    }
+
+    return FALSE;
+}
+
 static VOID
 HardwareWizardInit(HWND hwnd)
 {
-    HPROPSHEETPAGE ahpsp[3];
+    HPROPSHEETPAGE ahpsp[5];
     PROPSHEETPAGE psp = {0};
     PROPSHEETHEADER psh;
     UINT nPages = 0;
@@ -207,6 +297,17 @@ HardwareWizardInit(HWND hwnd)
     psp.pszTemplate = MAKEINTRESOURCE(IDD_ISCONNECTEDPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
+    /* Create probe list page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROBELISTTITLE);
+    psp.pszHeaderSubTitle = NULL;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = ProbeListPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_PROBELISTPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
     /* Create finish page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
@@ -214,6 +315,15 @@ HardwareWizardInit(HWND hwnd)
     psp.lParam = 0;
     psp.pfnDlgProc = FinishPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create not connected page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = NotConnectedPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_NOTCONNECTEDPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create the property sheet */
