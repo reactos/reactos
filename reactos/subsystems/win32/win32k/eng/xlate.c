@@ -446,7 +446,7 @@ IntEngGetXlatePalette(XLATEOBJ *XlateObj,
 
 XLATEOBJ*
 FASTCALL
-IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* pSrcSurf)
+IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurfSrc)
 {
 	XLATEOBJ *XlateObj;
 	HPALETTE DestPalette, SourcePalette;
@@ -454,23 +454,23 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* p
 
 	DPRINT("Enter IntCreateXlateFromDCs\n");
 
-	if (pDestSurf == pSrcSurf)
+	if (psurfDest == psurfSrc)
 	{
 		return NULL;
 	}
 
-	DestPalette = pDestSurf->hDIBPalette;
+	DestPalette = psurfDest->hDIBPalette;
 	if (!DestPalette) DestPalette = pPrimarySurface->DevInfo.hpalDefault;
 
-	SourcePalette = pSrcSurf->hDIBPalette;
+	SourcePalette = psurfSrc->hDIBPalette;
 	if (!SourcePalette) SourcePalette = pPrimarySurface->DevInfo.hpalDefault;
 
 	DPRINT("DestPalette = %p, SourcePalette = %p, DefaultPatelle = %p\n", DestPalette, SourcePalette, NtGdiGetStockObject((INT)DEFAULT_PALETTE));
 
 	/* KB41464 details how to convert between mono and color */
-	if (pDestSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+	if (psurfDest->SurfObj.iBitmapFormat == BMF_1BPP)
 	{
-		if (pSrcSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+		if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP)
 		{
 			XlateObj = NULL;
 		}
@@ -483,12 +483,12 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, BITMAPOBJ* pDestSurf, BITMAPOBJ* p
 	}
 	else
 	{
-		if (pSrcSurf->SurfObj.iBitmapFormat == BMF_1BPP)
+		if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP)
 		{
 			/* DIB sections need special handling */
-			if (pSrcSurf->dib)
+			if (psurfSrc->dib)
 			{
-				PPALGDI ppal = PALETTE_LockPalette(pSrcSurf->hDIBPalette);
+				PPALGDI ppal = PALETTE_LockPalette(psurfSrc->hDIBPalette);
 				if (ppal)
 				{
 					XlateObj = IntEngCreateSrcMonoXlate(DestPalette, ((ULONG*)ppal->IndexedColors)[0], ((ULONG*)ppal->IndexedColors)[1]);

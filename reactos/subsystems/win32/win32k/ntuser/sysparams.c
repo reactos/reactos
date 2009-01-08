@@ -357,17 +357,17 @@ IntSystemParametersInfo(
                      hNewBitmap = *(HBITMAP*)pvParam;
                      if(hNewBitmap != NULL)
                      {
-                        BITMAPOBJ *bmp;
+                        SURFACE *psurfBmp;
                         /* try to get the size of the wallpaper */
-                        if(!(bmp = BITMAPOBJ_LockBitmap(hNewBitmap)))
+                        if(!(psurfBmp = SURFACE_LockSurface(hNewBitmap)))
                         {
                            ObDereferenceObject(WinStaObject);
                            return FALSE;
                         }
-                        WinStaObject->cxWallpaper = bmp->SurfObj.sizlBitmap.cx;
-                        WinStaObject->cyWallpaper = bmp->SurfObj.sizlBitmap.cy;
+                        WinStaObject->cxWallpaper = psurfBmp->SurfObj.sizlBitmap.cx;
+                        WinStaObject->cyWallpaper = psurfBmp->SurfObj.sizlBitmap.cy;
 
-                        BITMAPOBJ_UnlockBitmap(bmp);
+                        SURFACE_UnlockSurface(psurfBmp);
 
                         /* change the bitmap's ownership */
                         GDIOBJ_SetOwnership(hNewBitmap, NULL);

@@ -1191,7 +1191,7 @@ IntFillRect( DC *dc,
 {
   DWORD ROP = PATCOPY;
   RECTL DestRect;
-  BITMAPOBJ *BitmapObj;
+  SURFACE *psurf;
   GDIBRUSHINST BrushInst;
   POINTL BrushOrigin;
   BOOL Ret = TRUE;
@@ -1199,8 +1199,8 @@ IntFillRect( DC *dc,
 
   ASSERT(BrushObj);
 
-  BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-  if (BitmapObj == NULL)
+  psurf = SURFACE_LockSurface(dc->w.hBitmap);
+  if (psurf == NULL)
   {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
@@ -1243,7 +1243,7 @@ IntFillRect( DC *dc,
         IntGdiInitBrushInstance(&BrushInst, BrushObj, dc->XlateBrush);
 
      Ret = IntEngBitBlt(
-         &BitmapObj->SurfObj,
+         &psurf->SurfObj,
          NULL,
          NULL,
          dc->CombinedClip,
@@ -1256,7 +1256,7 @@ IntFillRect( DC *dc,
          ROP3_TO_ROP4(ROP));
   }
 
-  BITMAPOBJ_UnlockBitmap(BitmapObj);
+  SURFACE_UnlockSurface(psurf);
   return (int)Ret;
 }
 

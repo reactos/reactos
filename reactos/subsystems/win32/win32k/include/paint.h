@@ -2,6 +2,6 @@
 #define _WIN32K_PAINT_H
 
 BOOL APIENTRY FillSolid (SURFOBJ* Surface, RECTL* Dimensions, ULONG iColor);
-BOOL APIENTRY FillPolygon ( DC* dc, BITMAPOBJ* SurfObj, BRUSHOBJ* BrushObj, MIX RopMode, CONST PPOINT Points, INT Count, RECTL BoundRect );
+BOOL APIENTRY FillPolygon ( DC* dc, SURFACE* pSurface, BRUSHOBJ* BrushObj, MIX RopMode, CONST PPOINT Points, INT Count, RECTL BoundRect );
 
 #endif /* _WIN32K_PAINT_H */

@@ -449,15 +449,15 @@ IntGetDesktopWorkArea(PDESKTOP Desktop, PRECT Rect)
    if((Ret->right == -1) && ScreenDeviceContext)
    {
       PDC dc;
-      BITMAPOBJ *BitmapObj;
+      SURFACE *psurf;
       dc = DC_LockDc(ScreenDeviceContext);
       /* FIXME - Handle dc == NULL!!!! */
-      BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-      if(BitmapObj)
+      psurf = SURFACE_LockSurface(dc->w.hBitmap);
+      if(psurf)
       {
-         Ret->right = BitmapObj->SurfObj.sizlBitmap.cx;
-         Ret->bottom = BitmapObj->SurfObj.sizlBitmap.cy;
-         BITMAPOBJ_UnlockBitmap(BitmapObj);
+         Ret->right = psurf->SurfObj.sizlBitmap.cx;
+         Ret->bottom = psurf->SurfObj.sizlBitmap.cy;
+         SURFACE_UnlockSurface(psurf);
       }
       DC_UnlockDc(dc);
    }

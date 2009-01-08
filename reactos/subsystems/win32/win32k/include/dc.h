@@ -88,7 +88,7 @@ typedef struct _DCLEVEL
   FLOATOBJ          efM22_TWIPS;
   FLOATOBJ          efPr11;
   FLOATOBJ          efPr22;
-  PBITMAPOBJ        pSurface; // SURFACE*
+  PSURFACE          pSurface;
   SIZE              sizl;
 } DCLEVEL, *PDCLEVEL;
 

@@ -82,7 +82,6 @@
 #define TAG_FONTOBJ     TAG('G', 'f', 'n', 't') /* font object */
 #define TAG_WNDOBJ      TAG('W', 'N', 'D', 'O') /* window object */
 #define TAG_XLATEOBJ    TAG('X', 'L', 'A', 'O') /* xlate object */
-#define TAG_BITMAPOBJ   TAG('B', 'M', 'P', 'O') /* bitmap object */
 #define TAG_GSEM        TAG('G', 's', 'e', 'm') /* Gdi Semaphore */
 
 /* misc */

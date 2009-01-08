@@ -76,7 +76,7 @@ IntEngGradientFillRect(
     IN POINTL  *pptlDitherOrg,
     IN BOOL Horizontal)
 {
-  SURFOBJ *OutputObj;
+  SURFOBJ *psoOutput;
   TRIVERTEX *v1, *v2;
   RECTL rcGradient, rcSG;
   RECT_ENUM RectEnum;
@@ -105,7 +105,7 @@ IntEngGradientFillRect(
     dy = abs(rcGradient.bottom - rcGradient.top);
   }
 
-  if(!IntEngEnter(&EnterLeave, psoDest, &rcSG, FALSE, &Translate, &OutputObj))
+  if(!IntEngEnter(&EnterLeave, psoDest, &rcSG, FALSE, &Translate, &psoOutput))
   {
     return FALSE;
   }
@@ -134,8 +134,8 @@ IntEngGradientFillRect(
               if(y >= FillRect.left)
               {
                 Color = XLATEOBJ_iXlate(pxlo, RGB(c[0], c[1], c[2]));
-                DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_VLine(
-                  OutputObj, y, FillRect.top, FillRect.bottom, Color);
+                DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_VLine(
+                  psoOutput, y, FillRect.top, FillRect.bottom, Color);
               }
               HVSTEPCOL(0);
               HVSTEPCOL(1);
@@ -162,8 +162,8 @@ IntEngGradientFillRect(
             if(y >= FillRect.top)
             {
               Color = XLATEOBJ_iXlate(pxlo, RGB(c[0], c[1], c[2]));
-              DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_HLine(
-                OutputObj, FillRect.left, FillRect.right, y, Color);
+              DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_HLine(
+                psoOutput, FillRect.left, FillRect.right, y, Color);
             }
             HVSTEPCOL(0);
             HVSTEPCOL(1);
@@ -191,8 +191,8 @@ IntEngGradientFillRect(
       {
         for(; FillRect.top < FillRect.bottom; FillRect.top++)
         {
-          DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_HLine(
-            OutputObj, FillRect.left, FillRect.right, FillRect.top, Color);
+          DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_HLine(
+            psoOutput, FillRect.left, FillRect.right, FillRect.top, Color);
         }
       }
     }
@@ -204,9 +204,9 @@ IntEngGradientFillRect(
 /* Fill triangle with solid color */
 #define S_FILLLINE(linefrom,lineto) \
   if(sx[lineto] < sx[linefrom]) \
-    DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_HLine(OutputObj, max(sx[lineto], FillRect.left), min(sx[linefrom], FillRect.right), sy, Color); \
+    DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_HLine(psoOutput, max(sx[lineto], FillRect.left), min(sx[linefrom], FillRect.right), sy, Color); \
   else \
-    DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_HLine(OutputObj, max(sx[linefrom], FillRect.left), min(sx[lineto], FillRect.right), sy, Color);
+    DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_HLine(psoOutput, max(sx[linefrom], FillRect.left), min(sx[lineto], FillRect.right), sy, Color);
 #define S_DOLINE(a,b,line) \
   ex[line] += dx[line]; \
   while(ex[line] > 0 && x[line] != destx[line]) \
@@ -265,7 +265,7 @@ IntEngGradientFillRect(
     if(InY && g >= FillRect.left && g < FillRect.right) \
     { \
       Color = XLATEOBJ_iXlate(pxlo, RGB(gc[0], gc[1], gc[2])); \
-      DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_PutPixel(OutputObj, g, sy, Color); \
+      DibFunctionsForBitmapFormat[psoOutput->iBitmapFormat].DIB_PutPixel(psoOutput, g, sy, Color); \
     } \
     FDOCOL(linefrom, lineto, 0); \
     FDOCOL(linefrom, lineto, 1); \
@@ -316,7 +316,7 @@ IntEngGradientFillTriangle(
     IN RECTL  *prclExtents,
     IN POINTL  *pptlDitherOrg)
 {
-  SURFOBJ *OutputObj;
+  SURFOBJ *psoOutput;
   PTRIVERTEX v1, v2, v3;
   //RECT_ENUM RectEnum;
   //BOOL EnumMore;
@@ -356,7 +356,7 @@ IntEngGradientFillTriangle(
   /* FIXME: commented out because of an endless loop - fix triangles first */
   DbgPrint("FIXME: IntEngGradientFillTriangle is broken");
 
-  if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
+  if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &psoOutput))
   {
     return FALSE;
   }
@@ -553,20 +553,20 @@ IntEngGradientFill(
     IN ULONG  ulMode)
 {
   BOOL Ret;
-  BITMAPOBJ *pboDest;
+  SURFACE *psurf;
   ASSERT(psoDest);
 
-  pboDest = CONTAINING_RECORD(psoDest, BITMAPOBJ, SurfObj);
-  ASSERT(pboDest);
+  psurf = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+  ASSERT(psurf);
 
-  BITMAPOBJ_LockBitmapBits(pboDest);
+  SURFACE_LockBitmapBits(psurf);
   MouseSafetyOnDrawStart(
 	  psoDest,
 	  pco->rclBounds.left,
 	  pco->rclBounds.top,
       pco->rclBounds.right,
 	  pco->rclBounds.bottom);
-  if(pboDest->flHooks & HOOK_GRADIENTFILL)
+  if(psurf->flHooks & HOOK_GRADIENTFILL)
   {
     Ret = GDIDEVFUNCS(psoDest).GradientFill(
       psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh,
@@ -578,7 +578,7 @@ IntEngGradientFill(
                           pptlDitherOrg, ulMode);
   }
   MouseSafetyOnDrawEnd(psoDest);
-  BITMAPOBJ_UnlockBitmapBits(pboDest);
+  SURFACE_UnlockBitmapBits(psurf);
 
   return Ret;
 }

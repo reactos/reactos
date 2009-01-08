@@ -26,7 +26,7 @@
  * a couple macros to fill a single pixel or a line
  */
 #define PUTPIXEL(x,y,BrushInst)        \
-  ret = ret && IntEngLineTo(&BitmapObj->SurfObj, \
+  ret = ret && IntEngLineTo(&psurf->SurfObj, \
        dc->CombinedClip,                         \
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
@@ -34,7 +34,7 @@
        ROP2_TO_MIX(Dc_Attr->jROP2));
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
-  ret = ret && IntEngLineTo(&BitmapObj->SurfObj, \
+  ret = ret && IntEngLineTo(&psurf->SurfObj, \
        dc->CombinedClip,                         \
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
@@ -54,7 +54,7 @@ IntGdiPolygon(PDC    dc,
               PPOINT Points,
               int    Count)
 {
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     PGDIBRUSHOBJ PenBrushObj, FillBrushObj;
     GDIBRUSHINST PenBrushInst, FillBrushInst;
     BOOL ret = FALSE; // default to failure
@@ -104,15 +104,15 @@ IntGdiPolygon(PDC    dc,
         /* Special locking order to avoid lock-ups */
         FillBrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
         PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
-        BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-        /* FIXME - BitmapObj can be NULL!!!! don't assert but handle this case gracefully! */
-        ASSERT(BitmapObj);
+        psurf = SURFACE_LockSurface(dc->w.hBitmap);
+        /* FIXME - psurf can be NULL!!!! don't assert but handle this case gracefully! */
+        ASSERT(psurf);
 
         /* Now fill the polygon with the current brush. */
         if (FillBrushObj && !(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
             IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-            ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(Dc_Attr->jROP2), Points, Count, DestRect );
+            ret = FillPolygon ( dc, psurf, &FillBrushInst.BrushObject, ROP2_TO_MIX(Dc_Attr->jROP2), Points, Count, DestRect );
         }
         if (FillBrushObj)
             BRUSHOBJ_UnlockBrush(FillBrushObj);
@@ -131,7 +131,7 @@ IntGdiPolygon(PDC    dc,
 //                                 Points[0].x, Points[0].y,
 //                                 Points[1].x, Points[1].y );
 
-                ret = IntEngLineTo(&BitmapObj->SurfObj,
+                ret = IntEngLineTo(&psurf->SurfObj,
                                    dc->CombinedClip,
                                    &PenBrushInst.BrushObject,
                                    Points[i].x,          /* From */
@@ -145,7 +145,7 @@ IntGdiPolygon(PDC    dc,
             /* Close the polygon */
             if (ret)
             {
-                ret = IntEngLineTo(&BitmapObj->SurfObj,
+                ret = IntEngLineTo(&psurf->SurfObj,
                                    dc->CombinedClip,
                                    &PenBrushInst.BrushObject,
                                    Points[Count-1].x, /* From */
@@ -159,7 +159,7 @@ IntGdiPolygon(PDC    dc,
         if (PenBrushObj)
             PENOBJ_UnlockPen(PenBrushObj);
     }
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
 
     return ret;
 }
@@ -505,7 +505,7 @@ IntRectangle(PDC dc,
              int RightRect,
              int BottomRect)
 {
-    BITMAPOBJ *BitmapObj = NULL;
+    SURFACE *psurf = NULL;
     PGDIBRUSHOBJ PenBrushObj = NULL, FillBrushObj = NULL;
     GDIBRUSHINST PenBrushInst, FillBrushInst;
     BOOL       ret = FALSE; // default to failure
@@ -570,8 +570,8 @@ IntRectangle(PDC dc,
         ret = FALSE;
         goto cleanup;
     }
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    if (!BitmapObj)
+    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    if (!psurf)
     {
         ret = FALSE;
         goto cleanup;
@@ -582,7 +582,7 @@ IntRectangle(PDC dc,
         if (!(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
             IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-            ret = IntEngBitBlt(&BitmapObj->SurfObj,
+            ret = IntEngBitBlt(&psurf->SurfObj,
                                NULL,
                                NULL,
                                dc->CombinedClip,
@@ -605,28 +605,28 @@ IntRectangle(PDC dc,
     if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
     {
         Mix = ROP2_TO_MIX(Dc_Attr->jROP2);
-        ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
+        ret = ret && IntEngLineTo(&psurf->SurfObj,
                                   dc->CombinedClip,
                                   &PenBrushInst.BrushObject,
                                   DestRect.left, DestRect.top, DestRect.right, DestRect.top,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
-        ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
+        ret = ret && IntEngLineTo(&psurf->SurfObj,
                                   dc->CombinedClip,
                                   &PenBrushInst.BrushObject,
                                   DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
-        ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
+        ret = ret && IntEngLineTo(&psurf->SurfObj,
                                   dc->CombinedClip,
                                   &PenBrushInst.BrushObject,
                                   DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
                                   &DestRect, // Bounding rectangle
                                   Mix);
 
-        ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
+        ret = ret && IntEngLineTo(&psurf->SurfObj,
                                   dc->CombinedClip,
                                   &PenBrushInst.BrushObject,
                                   DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
@@ -641,8 +641,8 @@ cleanup:
     if (PenBrushObj)
         PENOBJ_UnlockPen(PenBrushObj);
 
-    if (BitmapObj)
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
+    if (psurf)
+        SURFACE_UnlockSurface(psurf);
 
     /* Move current position in DC?
        MSDN: The current position is neither used nor updated by Rectangle. */
@@ -829,7 +829,7 @@ IntGdiGradientFill(
     ULONG uMesh,
     ULONG ulMode)
 {
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     PPALGDI PalDestGDI;
     XLATEOBJ *XlateObj;
     RECTL Extent;
@@ -891,11 +891,11 @@ IntGdiGradientFill(
     Extent.top += DitherOrg.y;
     Extent.bottom += DitherOrg.y;
 
-    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-    /* FIXME - BitmapObj can be NULL!!! Don't assert but handle this case gracefully! */
-    ASSERT(BitmapObj);
+    psurf = SURFACE_LockSurface(dc->w.hBitmap);
+    /* FIXME - psurf can be NULL!!! Don't assert but handle this case gracefully! */
+    ASSERT(psurf);
 
-    hDestPalette = BitmapObj->hDIBPalette;
+    hDestPalette = psurf->hDIBPalette;
     if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
 
     PalDestGDI = PALETTE_LockPalette(hDestPalette);
@@ -910,7 +910,7 @@ IntGdiGradientFill(
     XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, hDestPalette, NULL);
     ASSERT(XlateObj);
 
-    Ret = IntEngGradientFill(&BitmapObj->SurfObj,
+    Ret = IntEngGradientFill(&psurf->SurfObj,
                              dc->CombinedClip,
                              XlateObj,
                              pVertex,
@@ -921,7 +921,7 @@ IntGdiGradientFill(
                              &DitherOrg,
                              ulMode);
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
     EngDeleteXlate(XlateObj);
 
     return Ret;
@@ -1050,7 +1050,7 @@ NtGdiExtFloodFill(
 {
   PDC dc;
   PDC_ATTR Dc_Attr;
-  BITMAPOBJ *BitmapObj = NULL;
+  SURFACE *psurf = NULL;
   PGDIBRUSHOBJ FillBrushObj = NULL;
   GDIBRUSHINST FillBrushInst;
   BOOL       Ret = FALSE;
@@ -1098,8 +1098,8 @@ NtGdiExtFloodFill(
       Ret = FALSE;
       goto cleanup;
   }
-  BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-  if (!BitmapObj)
+  psurf = SURFACE_LockSurface(dc->w.hBitmap);
+  if (!psurf)
   {
       Ret = FALSE;
       goto cleanup;
@@ -1111,7 +1111,7 @@ NtGdiExtFloodFill(
      {
         FillBrushObj->BrushAttr.lbColor = Color;
         IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-        Ret = IntEngBitBlt(&BitmapObj->SurfObj,
+        Ret = IntEngBitBlt(&psurf->SurfObj,
                                NULL,
                                NULL,
                                dc->CombinedClip,
@@ -1132,8 +1132,8 @@ cleanup:
   if (FillBrushObj)
       BRUSHOBJ_UnlockBrush(FillBrushObj);
 
-  if (BitmapObj)
-     BITMAPOBJ_UnlockBitmap(BitmapObj);
+  if (psurf)
+     SURFACE_UnlockSurface(psurf);
 
   DC_UnlockDc(dc);
   return Ret;

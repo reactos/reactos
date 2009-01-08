@@ -73,7 +73,7 @@ UINT APIENTRY
 IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors)
 {
    PDC dc;
-   PBITMAPOBJ BitmapObj;
+   PSURFACE psurf;
    PPALGDI PalGDI;
    UINT Index;
 
@@ -84,32 +84,32 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
       return 0;
    }
 
-   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-   if (BitmapObj == NULL)
+   psurf = SURFACE_LockSurface(dc->w.hBitmap);
+   if (psurf == NULL)
    {
       DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
-   if (BitmapObj->dib == NULL)
+   if (psurf->dib == NULL)
    {
-      BITMAPOBJ_UnlockBitmap(BitmapObj);
+      SURFACE_UnlockSurface(psurf);
       DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
-   if (BitmapObj->dib->dsBmih.biBitCount <= 8 &&
-       StartIndex < (1 << BitmapObj->dib->dsBmih.biBitCount))
+   if (psurf->dib->dsBmih.biBitCount <= 8 &&
+       StartIndex < (1 << psurf->dib->dsBmih.biBitCount))
    {
-      if (StartIndex + Entries > (1 << BitmapObj->dib->dsBmih.biBitCount))
-         Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
+      if (StartIndex + Entries > (1 << psurf->dib->dsBmih.biBitCount))
+         Entries = (1 << psurf->dib->dsBmih.biBitCount) - StartIndex;
 
-      PalGDI = PALETTE_LockPalette(BitmapObj->hDIBPalette);
+      PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
       if (PalGDI == NULL)
       {
-          BITMAPOBJ_UnlockBitmap(BitmapObj);
+          SURFACE_UnlockSurface(psurf);
           DC_UnlockDc(dc);
           SetLastWin32Error(ERROR_INVALID_HANDLE);
           return 0;
@@ -128,7 +128,7 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
    else
       Entries = 0;
 
-   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   SURFACE_UnlockSurface(psurf);
    DC_UnlockDc(dc);
 
    return Entries;
@@ -138,7 +138,7 @@ UINT APIENTRY
 IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
 {
    PDC dc;
-   PBITMAPOBJ BitmapObj;
+   PSURFACE psurf;
    PPALGDI PalGDI;
    UINT Index;
 
@@ -149,32 +149,32 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
       return 0;
    }
 
-   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-   if (BitmapObj == NULL)
+   psurf = SURFACE_LockSurface(dc->w.hBitmap);
+   if (psurf == NULL)
    {
       DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
-   if (BitmapObj->dib == NULL)
+   if (psurf->dib == NULL)
    {
-      BITMAPOBJ_UnlockBitmap(BitmapObj);
+      SURFACE_UnlockSurface(psurf);
       DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
-   if (BitmapObj->dib->dsBmih.biBitCount <= 8 &&
-       StartIndex < (1 << BitmapObj->dib->dsBmih.biBitCount))
+   if (psurf->dib->dsBmih.biBitCount <= 8 &&
+       StartIndex < (1 << psurf->dib->dsBmih.biBitCount))
    {
-      if (StartIndex + Entries > (1 << BitmapObj->dib->dsBmih.biBitCount))
-         Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
+      if (StartIndex + Entries > (1 << psurf->dib->dsBmih.biBitCount))
+         Entries = (1 << psurf->dib->dsBmih.biBitCount) - StartIndex;
 
-      PalGDI = PALETTE_LockPalette(BitmapObj->hDIBPalette);
+      PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
       if (PalGDI == NULL)
       {
-          BITMAPOBJ_UnlockBitmap(BitmapObj);
+          SURFACE_UnlockSurface(psurf);
           DC_UnlockDc(dc);
           SetLastWin32Error(ERROR_INVALID_HANDLE);
           return 0;
@@ -194,7 +194,7 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    else
       Entries = 0;
 
-   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   SURFACE_UnlockSurface(psurf);
    DC_UnlockDc(dc);
 
    return Entries;
@@ -211,7 +211,7 @@ IntSetDIBits(
 	CONST BITMAPINFO  *bmi,
 	UINT  ColorUse)
 {
-  BITMAPOBJ  *bitmap;
+  SURFACE  *bitmap;
   HBITMAP     SourceBitmap;
   INT         result = 0;
   BOOL        copyBitsResult;
@@ -227,7 +227,7 @@ IntSetDIBits(
   INT         DIBWidth;
 
   // Check parameters
-  if (!(bitmap = BITMAPOBJ_LockBitmap(hBitmap)))
+  if (!(bitmap = SURFACE_LockSurface(hBitmap)))
   {
     return 0;
   }
@@ -254,7 +254,7 @@ IntSetDIBits(
                                  (PVOID) Bits);
   if (0 == SourceBitmap)
   {
-      BITMAPOBJ_UnlockBitmap(bitmap);
+      SURFACE_UnlockSurface(bitmap);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
   }
@@ -263,7 +263,7 @@ IntSetDIBits(
   if (NULL == SourceSurf)
   {
       EngDeleteSurface((HSURF)SourceBitmap);
-      BITMAPOBJ_UnlockBitmap(bitmap);
+      SURFACE_UnlockSurface(bitmap);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
   }
@@ -274,7 +274,7 @@ IntSetDIBits(
     {
       EngUnlockSurface(SourceSurf);
       EngDeleteSurface((HSURF)SourceBitmap);
-      BITMAPOBJ_UnlockBitmap(bitmap);
+      SURFACE_UnlockSurface(bitmap);
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
@@ -288,7 +288,7 @@ IntSetDIBits(
     {
       EngUnlockSurface(SourceSurf);
       EngDeleteSurface((HSURF)SourceBitmap);
-      BITMAPOBJ_UnlockBitmap(bitmap);
+      SURFACE_UnlockSurface(bitmap);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
     }
@@ -300,7 +300,7 @@ IntSetDIBits(
       PALETTE_FreePaletteByHandle(DIB_Palette);
       EngUnlockSurface(SourceSurf);
       EngDeleteSurface((HSURF)SourceBitmap);
-      BITMAPOBJ_UnlockBitmap(bitmap);
+      SURFACE_UnlockSurface(bitmap);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
     }
@@ -334,7 +334,7 @@ IntSetDIBits(
 //  if (ColorUse == DIB_PAL_COLORS)
 //    WinFree((LPSTR)lpRGB);
 
-  BITMAPOBJ_UnlockBitmap(bitmap);
+  SURFACE_UnlockSurface(bitmap);
 
   return result;
 }
@@ -583,7 +583,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
                        UINT MaxInfo)
 {
     PDC Dc;
-    BITMAPOBJ *BitmapObj = NULL;
+    SURFACE *psurf = NULL;
     HBITMAP hDestBitmap = NULL;
     HPALETTE hSourcePalette = NULL;
     HPALETTE hDestPalette = NULL;
@@ -632,11 +632,11 @@ NtGdiGetDIBitsInternal(HDC hDC,
     DC_UnlockDc(Dc);
 
     /* Get a pointer to the source bitmap object */
-    BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
-    if (BitmapObj == NULL)
+    psurf = SURFACE_LockSurface(hBitmap);
+    if (psurf == NULL)
        return 0;
 
-    hSourcePalette = BitmapObj->hDIBPalette;
+    hSourcePalette = psurf->hDIBPalette;
     if (!hSourcePalette)
     {
         hSourcePalette = pPrimarySurface->DevInfo.hpalDefault;
@@ -653,25 +653,25 @@ NtGdiGetDIBitsInternal(HDC hDC,
           BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
 
           coreheader = (BITMAPCOREHEADER*) Info;
-          coreheader->bcWidth = BitmapObj->SurfObj.sizlBitmap.cx;
+          coreheader->bcWidth = psurf->SurfObj.sizlBitmap.cx;
           coreheader->bcPlanes = 1;
-          coreheader->bcBitCount = BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
+          coreheader->bcBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
           /* Resulting height may be smaller than original height */
-          coreheader->bcHeight = BitmapObj->SurfObj.sizlBitmap.cy;
+          coreheader->bcHeight = psurf->SurfObj.sizlBitmap.cy;
           coreheader->bcSize = DIB_GetDIBWidthBytes(coreheader->bcWidth,
                               coreheader->bcBitCount) * coreheader->bcHeight;
-          if (BitmapObj->SurfObj.lDelta > 0)
+          if (psurf->SurfObj.lDelta > 0)
              coreheader->bcHeight = -coreheader->bcHeight;
        }
 
        if (Info->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
        {
-          Info->bmiHeader.biWidth = BitmapObj->SurfObj.sizlBitmap.cx;
+          Info->bmiHeader.biWidth = psurf->SurfObj.sizlBitmap.cx;
           /* Resulting height may be smaller than original height */
-          Info->bmiHeader.biHeight = BitmapObj->SurfObj.sizlBitmap.cy;
+          Info->bmiHeader.biHeight = psurf->SurfObj.sizlBitmap.cy;
           Info->bmiHeader.biPlanes = 1;
-          Info->bmiHeader.biBitCount = BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);
-          switch (BitmapObj->SurfObj.iBitmapFormat)
+          Info->bmiHeader.biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+          switch (psurf->SurfObj.iBitmapFormat)
           {
               case BMF_1BPP:
               case BMF_4BPP:
@@ -702,10 +702,10 @@ NtGdiGetDIBitsInternal(HDC hDC,
           Info->bmiHeader.biClrUsed = 0;
           Info->bmiHeader.biClrImportant = 1 << Info->bmiHeader.biBitCount; /* FIXME */
           /* Report negtive height for top-down bitmaps. */
-          if (BitmapObj->SurfObj.lDelta > 0)
+          if (psurf->SurfObj.lDelta > 0)
              Info->bmiHeader.biHeight = -Info->bmiHeader.biHeight;
        }
-       Result = BitmapObj->SurfObj.sizlBitmap.cy;
+       Result = psurf->SurfObj.sizlBitmap.cy;
     }
     else
     {
@@ -715,7 +715,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
        POINTL SourcePoint;
        ULONG Index;
 
-       if (Info->bmiHeader.biBitCount == BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat))
+       if (Info->bmiHeader.biBitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat))
        {
           hDestPalette = hSourcePalette;
           bPaletteMatch = TRUE;
@@ -750,7 +750,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
           case 4:
           case 8:
              Info->bmiHeader.biClrUsed = 0;
-             if ( BitmapObj->dib && BitmapObj->dib->dsBm.bmBitsPixel == Info->bmiHeader.biBitCount)
+             if ( psurf->dib && psurf->dib->dsBm.bmBitsPixel == Info->bmiHeader.biBitCount)
              {
                 if (Usage == DIB_RGB_COLORS)
                 {
@@ -873,14 +873,14 @@ NtGdiGetDIBitsInternal(HDC hDC,
 // If we have a good dib pointer, why not just copy bits from there w/o XLATE'ing them.
 //
        /* Create the destination bitmap too for the copy operation */
-       if (StartScan > BitmapObj->SurfObj.sizlBitmap.cy)
+       if (StartScan > psurf->SurfObj.sizlBitmap.cy)
        {
           goto cleanup;
        }
        else
        {
-          ScanLines = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
-          DestSize.cx = BitmapObj->SurfObj.sizlBitmap.cx;
+          ScanLines = min(ScanLines, psurf->SurfObj.sizlBitmap.cy - StartScan);
+          DestSize.cx = psurf->SurfObj.sizlBitmap.cx;
           DestSize.cy = ScanLines;
 
           hDestBitmap = NULL;
@@ -926,7 +926,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
                                        hSourcePalette);
 
           SourcePoint.x = 0;
-          SourcePoint.y = BitmapObj->SurfObj.sizlBitmap.cy - (StartScan + ScanLines);
+          SourcePoint.y = psurf->SurfObj.sizlBitmap.cy - (StartScan + ScanLines);
 
           /* Determine destination rectangle */
           DestRect.top = 0;
@@ -937,7 +937,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
           DestSurfObj = EngLockSurface((HSURF)hDestBitmap);
 
           if (EngCopyBits( DestSurfObj,
-                          &BitmapObj->SurfObj,
+                          &psurf->SurfObj,
                            NULL,
                            XlateObj,
                           &DestRect,
@@ -958,7 +958,7 @@ cleanup:
     if (hDestPalette != NULL && bPaletteMatch == FALSE)
         PALETTE_FreePaletteByHandle(hDestPalette);
 
-    BITMAPOBJ_UnlockBitmap(BitmapObj);
+    SURFACE_UnlockSurface(psurf);
 
     DPRINT("leaving NtGdiGetDIBitsInternal\n");
 
@@ -1241,8 +1241,8 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
         {
            DIBSECTION dibs;
            INT Count;           
-           BITMAPOBJ *BitmapObject = BITMAPOBJ_LockBitmap(Dc->w.hBitmap);
-           Count = BITMAP_GetObject(BitmapObject, sizeof(dibs), &dibs);
+           SURFACE *psurf = SURFACE_LockSurface(Dc->w.hBitmap);
+           Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
            if (!Count)
               bpp = 1;
            else
@@ -1254,7 +1254,7 @@ NtGdiCreateDIBitmapInternal(IN HDC hDc,
               /* A DIB section is selected in the DC */
                  bpp = dibs.dsBmih.biBitCount;
            }
-           BITMAPOBJ_UnlockBitmap(BitmapObject);           
+           SURFACE_UnlockSurface(psurf);           
         }
      }
      Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
@@ -1315,7 +1315,7 @@ DIB_CreateDIBSection(
   DWORD ovr_pitch)
 {
   HBITMAP res = 0;
-  BITMAPOBJ *bmp = NULL;
+  SURFACE *bmp = NULL;
   DIBSECTION *dib = NULL;
   void *mapBits = NULL;
   PDC_ATTR pDc_Attr;
@@ -1462,7 +1462,7 @@ DIB_CreateDIBSection(
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
 	return NULL;
     }
-    bmp = BITMAPOBJ_LockBitmap(res);
+    bmp = SURFACE_LockSurface(res);
     if (NULL == bmp)
     {
         if (lpRGB != bmi->bmiColors)
@@ -1516,7 +1516,7 @@ DIB_CreateDIBSection(
 
     if (dib) { ExFreePoolWithTag(dib, TAG_DIB); dib = NULL; }
     if (bmp) { bmp = NULL; }
-    if (res) { BITMAPOBJ_FreeBitmapByHandle(res); res = 0; }
+    if (res) { SURFACE_FreeSurfaceByHandle(res); res = 0; }
   }
 
   if (lpRGB != bmi->bmiColors)
@@ -1526,7 +1526,7 @@ DIB_CreateDIBSection(
 
   if (bmp)
   {
-      BITMAPOBJ_UnlockBitmap(bmp);
+      SURFACE_UnlockSurface(bmp);
   }
 
   // Return BITMAP handle and storage location

@@ -44,7 +44,7 @@ IntGdiCreateBitmap(
    LONG WidthBytes;
 
    /* NOTE: Windows also doesn't store nr. of planes separately! */
-   BitsPixel = BITMAPOBJ_GetRealBitsPixel(BitsPixel * Planes);
+   BitsPixel = SURFACE_GetRealBitsPixel(BitsPixel * Planes);
 
    /* Check parameters */
    if (BitsPixel == 0 || Width <= 0 || Width >= 0x8000000 || Height == 0)
@@ -54,7 +54,7 @@ IntGdiCreateBitmap(
       return 0;
    }
 
-   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, BitsPixel);
+   WidthBytes = SURFACE_GetWidthBytes(Width, BitsPixel);
 
    Size.cx = Width;
    Size.cy = abs(Height);
@@ -78,22 +78,22 @@ IntGdiCreateBitmap(
       return 0;
    }
 
-   PBITMAPOBJ bmp = BITMAPOBJ_LockBitmap( hBitmap );
-   if (bmp == NULL)
+   PSURFACE psurfBmp = SURFACE_LockSurface(hBitmap);
+   if (psurfBmp == NULL)
    {
       NtGdiDeleteObject(hBitmap);
       return NULL;
    }
 
-   bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
-   bmp->hDC = NULL; // Fixme
+   psurfBmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+   psurfBmp->hDC = NULL; // Fixme
 
    if (NULL != pBits)
    {
-       IntSetBitmapBits(bmp, bmp->SurfObj.cjBits, pBits);
+       IntSetBitmapBits(psurfBmp, psurfBmp->SurfObj.cjBits, pBits);
    }
 
-   BITMAPOBJ_UnlockBitmap( bmp );
+   SURFACE_UnlockSurface(psurfBmp);
 
    DPRINT("IntGdiCreateBitmap : %dx%d, %d BPP colors, topdown %d, returning %08x\n",
           Size.cx, Size.cy, BitsPixel, (Height < 0 ? 1 : 0), hBitmap);
@@ -113,7 +113,7 @@ NtGdiCreateBitmap(
    if (pUnsafeBits)
    {
       BOOL Hit = FALSE;
-      UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * abs(Height);
+      UINT cjBits = SURFACE_GetWidthBytes(Width, BitsPixel) * abs(Height);
 
       _SEH2_TRY
       {
@@ -130,40 +130,6 @@ NtGdiCreateBitmap(
 
    return IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
 }
-
-BOOL INTERNAL_CALL
-BITMAP_Cleanup(PVOID ObjectBody)
-{
-	PBITMAPOBJ pBmp = (PBITMAPOBJ)ObjectBody;
-	if (pBmp->SurfObj.pvBits != NULL &&
-		(pBmp->flFlags & BITMAPOBJ_IS_APIBITMAP))
-	{
-		if (pBmp->dib == NULL)
-		{
-			ExFreePool(pBmp->SurfObj.pvBits);
-		}
-		else
-		{
-			EngFreeUserMem(pBmp->SurfObj.pvBits);
-		}
-		if (pBmp->hDIBPalette != NULL)
-		{
-			NtGdiDeleteObject(pBmp->hDIBPalette);
-		}
-	}
-
-	if (NULL != pBmp->BitsLock)
-	{
-		ExFreePoolWithTag(pBmp->BitsLock, TAG_BITMAPOBJ);
-		pBmp->BitsLock = NULL;
-	}
-
-	if (pBmp->dib)
-		ExFreePoolWithTag(pBmp->dib, TAG_DIB);
-
-	return TRUE;
-}
-
 
 HBITMAP FASTCALL
 IntCreateCompatibleBitmap(
@@ -192,8 +158,8 @@ IntCreateCompatibleBitmap(
      {
         DIBSECTION dibs;
         INT Count;
-        PBITMAPOBJ BitmapObj = BITMAPOBJ_LockBitmap( Dc->w.hBitmap );
-        Count = BITMAP_GetObject(BitmapObj, sizeof(dibs), &dibs);
+        PSURFACE psurf = SURFACE_LockSurface( Dc->w.hBitmap );
+        Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
 
         if (Count)
         {
@@ -255,12 +221,12 @@ IntCreateCompatibleBitmap(
                  {
                     /* Copy the color table */
                     UINT Index;
-                    PPALGDI PalGDI = PALETTE_LockPalette(BitmapObj->hDIBPalette);
+                    PPALGDI PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
 
                     if (!PalGDI)
                     {
                        ExFreePoolWithTag(bi, TAG_TEMP);
-                       BITMAPOBJ_UnlockBitmap( BitmapObj );
+                       SURFACE_UnlockSurface( psurf );
                        SetLastWin32Error(ERROR_INVALID_HANDLE);
                        return 0;
                     }
@@ -276,7 +242,7 @@ IntCreateCompatibleBitmap(
                     }
                     PALETTE_UnlockPalette(PalGDI); 
                  }
-                 BITMAPOBJ_UnlockBitmap( BitmapObj );
+                 SURFACE_UnlockSurface(psurf);
 
                  Bmp = DIB_CreateDIBSection ( Dc, 
                                               bi,
@@ -291,7 +257,7 @@ IntCreateCompatibleBitmap(
               }
            }
         }
-        BITMAPOBJ_UnlockBitmap( BitmapObj );
+        SURFACE_UnlockSurface(psurf);
      }
   }
   return Bmp;
@@ -337,14 +303,14 @@ NtGdiGetBitmapDimension(
 	HBITMAP  hBitmap,
 	LPSIZE  Dimension)
 {
-	PBITMAPOBJ  bmp;
+	PSURFACE psurfBmp;
 	BOOL Ret = TRUE;
 
 	if (hBitmap == NULL)
 		return FALSE;
 
-	bmp = BITMAPOBJ_LockBitmap(hBitmap);
-	if (bmp == NULL)
+	psurfBmp = SURFACE_LockSurface(hBitmap);
+	if (psurfBmp == NULL)
 	{
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
@@ -353,7 +319,7 @@ NtGdiGetBitmapDimension(
 	_SEH2_TRY
 	{
 		ProbeForWrite(Dimension, sizeof(SIZE), 1);
-		*Dimension = bmp->dimension;
+		*Dimension = psurfBmp->dimension;
 	}
 	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
@@ -361,7 +327,7 @@ NtGdiGetBitmapDimension(
 	}
 	_SEH2_END
 
-	BITMAPOBJ_UnlockBitmap(bmp);
+	SURFACE_UnlockSurface(psurfBmp);
 
 	return Ret;
 }
@@ -372,8 +338,8 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	PDC dc = NULL;
 	COLORREF Result = (COLORREF)CLR_INVALID; // default to failure
 	BOOL bInRect = FALSE;
-	BITMAPOBJ *BitmapObject;
-	SURFOBJ *SurfaceObject;
+	SURFACE *psurf;
+	SURFOBJ *pso;
 	HPALETTE Pal = 0;
 	XLATEOBJ *XlateObj;
 	HBITMAP hBmpTmp;
@@ -395,11 +361,11 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	if ( IN_RECT(dc->CombinedClip->rclBounds,XPos,YPos) )
 	{
 		bInRect = TRUE;
-		BitmapObject = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-		SurfaceObject = &BitmapObject->SurfObj;
-		if ( BitmapObject )
+		psurf = SURFACE_LockSurface(dc->w.hBitmap);
+		pso = &psurf->SurfObj;
+		if ( psurf )
 		{
-			Pal = BitmapObject->hDIBPalette;
+			Pal = psurf->hDIBPalette;
 			if (!Pal) Pal = pPrimarySurface->DevInfo.hpalDefault;
 
 			/* FIXME: Verify if it shouldn't be PAL_BGR! */
@@ -407,15 +373,15 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 			if ( XlateObj )
 			{
 				// check if this DC has a DIB behind it...
-				if ( SurfaceObject->pvScan0 ) // STYPE_BITMAP == SurfaceObject->iType
+				if ( pso->pvScan0 ) // STYPE_BITMAP == pso->iType
 				{
-					ASSERT ( SurfaceObject->lDelta );
+					ASSERT ( pso->lDelta );
 					Result = XLATEOBJ_iXlate(XlateObj,
-						DibFunctionsForBitmapFormat[SurfaceObject->iBitmapFormat].DIB_GetPixel ( SurfaceObject, XPos, YPos ) );
+						DibFunctionsForBitmapFormat[pso->iBitmapFormat].DIB_GetPixel ( pso, XPos, YPos ) );
 				}
 				EngDeleteXlate(XlateObj);
 			}
-			BITMAPOBJ_UnlockBitmap(BitmapObject);
+			SURFACE_UnlockSurface(psurf);
 		}
 	}
 	DC_UnlockDc(dc);
@@ -448,18 +414,18 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 				HBITMAP hBmpOld = (HBITMAP)NtGdiSelectBitmap ( hDCTmp, hBmpTmp );
 				if ( hBmpOld )
 				{
-					PBITMAPOBJ bmpobj;
+					PSURFACE psurf;
 
 					NtGdiBitBlt ( hDCTmp, 0, 0, 1, 1, hDC, XPos, YPos, SRCCOPY, 0, 0 );
 					NtGdiSelectBitmap ( hDCTmp, hBmpOld );
 
 					// our bitmap is no longer selected, so we can access it's stuff...
-					bmpobj = BITMAPOBJ_LockBitmap ( hBmpTmp );
-					if ( bmpobj )
+					psurf = SURFACE_LockSurface(hBmpTmp);
+					if ( psurf )
 					{
 					        // Dont you need to convert something here?
-						Result = *(COLORREF*)bmpobj->SurfObj.pvScan0;
-						BITMAPOBJ_UnlockBitmap ( bmpobj );
+						Result = *(COLORREF*)psurf->SurfObj.pvScan0;
+						SURFACE_UnlockSurface(psurf);
 					}
 				}
 				NtGdiDeleteObject ( hBmpTmp );
@@ -474,7 +440,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 
 LONG APIENTRY
 IntGetBitmapBits(
-	PBITMAPOBJ bmp,
+	PSURFACE psurf,
 	DWORD Bytes,
 	OUT PBYTE Bits)
 {
@@ -483,16 +449,16 @@ IntGetBitmapBits(
 	ASSERT(Bits);
 
 	/* Don't copy more bytes than the buffer has */
-	Bytes = min(Bytes, bmp->SurfObj.cjBits);
+	Bytes = min(Bytes, psurf->SurfObj.cjBits);
 
 #if 0
 	/* FIXME: Call DDI CopyBits here if available  */
-	if(bmp->DDBitmap)
+	if(psurf->DDBitmap)
 	{
 		DPRINT("Calling device specific BitmapBits\n");
-		if(bmp->DDBitmap->funcs->pBitmapBits)
+		if(psurf->DDBitmap->funcs->pBitmapBits)
 		{
-			ret = bmp->DDBitmap->funcs->pBitmapBits(hbitmap, bits, count, DDB_GET);
+			ret = psurf->DDBitmap->funcs->pBitmapBits(hbitmap, bits, count, DDB_GET);
 		}
 		else
 		{
@@ -503,7 +469,7 @@ IntGetBitmapBits(
 	else
 #endif
 	{
-		RtlCopyMemory(Bits, bmp->SurfObj.pvBits, Bytes);
+		RtlCopyMemory(Bits, psurf->SurfObj.pvBits, Bytes);
 		ret = Bytes;
 	}
 	return ret;
@@ -514,7 +480,7 @@ NtGdiGetBitmapBits(HBITMAP  hBitmap,
                    ULONG  Bytes,
                    OUT OPTIONAL PBYTE pUnsafeBits)
 {
-	PBITMAPOBJ  bmp;
+	PSURFACE psurf;
 	LONG  ret;
 
 	if (pUnsafeBits != NULL && Bytes == 0)
@@ -522,8 +488,8 @@ NtGdiGetBitmapBits(HBITMAP  hBitmap,
 		return 0;
 	}
 
-	bmp = BITMAPOBJ_LockBitmap (hBitmap);
-	if (!bmp)
+	psurf = SURFACE_LockSurface(hBitmap);
+	if (!psurf)
 	{
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return 0;
@@ -532,18 +498,18 @@ NtGdiGetBitmapBits(HBITMAP  hBitmap,
 	/* If the bits vector is null, the function should return the read size */
 	if (pUnsafeBits == NULL)
 	{
-		ret = bmp->SurfObj.cjBits;
-		BITMAPOBJ_UnlockBitmap (bmp);
+		ret = psurf->SurfObj.cjBits;
+		SURFACE_UnlockSurface(psurf);
 		return ret;
 	}
 
 	/* Don't copy more bytes than the buffer has */
-	Bytes = min(Bytes, bmp->SurfObj.cjBits);
+	Bytes = min(Bytes, psurf->SurfObj.cjBits);
 
 	_SEH2_TRY
 	{
 		ProbeForWrite(pUnsafeBits, Bytes, 1);
-		ret = IntGetBitmapBits(bmp, Bytes, pUnsafeBits);
+		ret = IntGetBitmapBits(psurf, Bytes, pUnsafeBits);
 	}
 	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
@@ -551,7 +517,7 @@ NtGdiGetBitmapBits(HBITMAP  hBitmap,
 	}
 	_SEH2_END
 
-	BITMAPOBJ_UnlockBitmap (bmp);
+	SURFACE_UnlockSurface(psurf);
 
 	return  ret;
 }
@@ -559,23 +525,23 @@ NtGdiGetBitmapBits(HBITMAP  hBitmap,
 
 LONG APIENTRY
 IntSetBitmapBits(
-	PBITMAPOBJ bmp,
+	PSURFACE psurf,
 	DWORD  Bytes,
 	IN PBYTE Bits)
 {
 	LONG ret;
 
 	/* Don't copy more bytes than the buffer has */
-	Bytes = min(Bytes, bmp->SurfObj.cjBits);
+	Bytes = min(Bytes, psurf->SurfObj.cjBits);
 
 #if 0
 	/* FIXME: call DDI specific function here if available  */
-	if(bmp->DDBitmap)
+	if(psurf->DDBitmap)
 	{
 		DPRINT ("Calling device specific BitmapBits\n");
-		if (bmp->DDBitmap->funcs->pBitmapBits)
+		if (psurf->DDBitmap->funcs->pBitmapBits)
 		{
-			ret = bmp->DDBitmap->funcs->pBitmapBits(hBitmap, (void *) Bits, Bytes, DDB_SET);
+			ret = psurf->DDBitmap->funcs->pBitmapBits(hBitmap, (void *) Bits, Bytes, DDB_SET);
 		}
 		else
 		{
@@ -586,7 +552,7 @@ IntSetBitmapBits(
 	else
 #endif
 	{
-		RtlCopyMemory(bmp->SurfObj.pvBits, Bits, Bytes);
+		RtlCopyMemory(psurf->SurfObj.pvBits, Bits, Bytes);
 		ret = Bytes;
 	}
 
@@ -601,15 +567,15 @@ NtGdiSetBitmapBits(
 	IN PBYTE pUnsafeBits)
 {
 	LONG ret;
-	PBITMAPOBJ bmp;
+	PSURFACE psurf;
 
 	if (pUnsafeBits == NULL || Bytes == 0)
 	{
 		return 0;
 	}
 
-	bmp = BITMAPOBJ_LockBitmap(hBitmap);
-	if (bmp == NULL)
+	psurf = SURFACE_LockSurface(hBitmap);
+	if (psurf == NULL)
 	{
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return 0;
@@ -618,7 +584,7 @@ NtGdiSetBitmapBits(
 	_SEH2_TRY
 	{
 		ProbeForRead(pUnsafeBits, Bytes, 1);
-		ret = IntSetBitmapBits(bmp, Bytes, pUnsafeBits);
+		ret = IntSetBitmapBits(psurf, Bytes, pUnsafeBits);
 	}
 	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
@@ -626,7 +592,7 @@ NtGdiSetBitmapBits(
 	}
 	_SEH2_END
 
-	BITMAPOBJ_UnlockBitmap(bmp);
+	SURFACE_UnlockSurface(psurf);
 
 	return ret;
 }
@@ -638,14 +604,14 @@ NtGdiSetBitmapDimension(
 	INT  Height,
 	LPSIZE  Size)
 {
-	PBITMAPOBJ  bmp;
+	PSURFACE psurf;
 	BOOL Ret = TRUE;
 
 	if (hBitmap == NULL)
 		return FALSE;
 
-	bmp = BITMAPOBJ_LockBitmap(hBitmap);
-	if (bmp == NULL)
+	psurf = SURFACE_LockSurface(hBitmap);
+	if (psurf == NULL)
 	{
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
@@ -656,7 +622,7 @@ NtGdiSetBitmapDimension(
 		_SEH2_TRY
 		{
 			ProbeForWrite(Size, sizeof(SIZE), 1);
-			*Size = bmp->dimension;
+			*Size = psurf->dimension;
 		}
 		_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 		{
@@ -666,10 +632,10 @@ NtGdiSetBitmapDimension(
 	}
 
 	/* The dimension is changed even if writing the old value failed */
-	bmp->dimension.cx = Width;
-	bmp->dimension.cy = Height;
+	psurf->dimension.cx = Width;
+	psurf->dimension.cy = Height;
 
-	BITMAPOBJ_UnlockBitmap (bmp);
+	SURFACE_UnlockSurface(psurf);
 
 	return Ret;
 }
@@ -723,7 +689,7 @@ NtGdiSetPixel(
 /*  Internal Functions  */
 
 UINT FASTCALL
-BITMAPOBJ_GetRealBitsPixel(UINT nBitsPixel)
+SURFACE_GetRealBitsPixel(UINT nBitsPixel)
 {
 	if (nBitsPixel <= 1)
 		return 1;
@@ -742,7 +708,7 @@ BITMAPOBJ_GetRealBitsPixel(UINT nBitsPixel)
 }
 
 INT FASTCALL
-BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
+SURFACE_GetWidthBytes (INT bmWidth, INT bpp)
 {
 #if 0
 	switch(bpp)
@@ -776,11 +742,11 @@ BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
 }
 
 HBITMAP FASTCALL
-BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
+SURFACE_CopyBitmap(HBITMAP  hBitmap)
 {
 	HBITMAP  res;
 	BITMAP  bm;
-	BITMAPOBJ *Bitmap, *resBitmap;
+	SURFACE *Bitmap, *resBitmap;
 	SIZEL Size;
 
 	if (hBitmap == NULL)
@@ -841,7 +807,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 }
 
 INT APIENTRY
-BITMAP_GetObject(BITMAPOBJ * bmp, INT Count, LPVOID buffer)
+BITMAP_GetObject(SURFACE * bmp, INT Count, LPVOID buffer)
 {
 	if ((UINT)Count < sizeof(BITMAP)) return 0;
 
@@ -891,11 +857,11 @@ NtGdiGetDCforBitmap(
     IN HBITMAP hsurf)
 {
   HDC hDC = NULL;
-  PBITMAPOBJ bmp = BITMAPOBJ_LockBitmap( hsurf );
-  if (bmp)
+  PSURFACE psurf = SURFACE_LockSurface(hsurf);
+  if (psurf)
   {
-    hDC = bmp->hDC;
-    BITMAPOBJ_UnlockBitmap( bmp );
+    hDC = psurf->hDC;
+    SURFACE_UnlockSurface(psurf);
   }
   return hDC;
 }
@@ -912,7 +878,7 @@ NtGdiSelectBitmap(
     PDC pDC;
     PDC_ATTR pDc_Attr;
     HBITMAP hOrgBmp;
-    PBITMAPOBJ pBmp;
+    PSURFACE psurfBmp;
     HRGN hVisRgn;
     BOOLEAN bFailed;
     PGDIBRUSHOBJ pBrush;
@@ -935,8 +901,8 @@ NtGdiSelectBitmap(
         return NULL;
     }
 
-    pBmp = BITMAPOBJ_LockBitmap(hBmp);
-    if (!pBmp)
+    psurfBmp = SURFACE_LockSurface(hBmp);
+    if (!psurfBmp)
     {
         DC_UnlockDc(pDC);
         return NULL;
@@ -947,21 +913,21 @@ NtGdiSelectBitmap(
     pDC->w.hBitmap = hBmp;
 
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    pDC->DcLevel.pSurface = pBmp;
-    pBmp->hDC = hDC;
+    pDC->DcLevel.pSurface = psurfBmp;
+    psurfBmp->hDC = hDC;
 
     // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
-    if(pBmp->dib)
+    if(psurfBmp->dib)
     {
-        pDC->w.bitsPerPixel = pBmp->dib->dsBmih.biBitCount;
+        pDC->w.bitsPerPixel = psurfBmp->dib->dsBmih.biBitCount;
     }
     else
     {
-        pDC->w.bitsPerPixel = BitsPerFormat(pBmp->SurfObj.iBitmapFormat);
+        pDC->w.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
     }
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, pBmp->SurfObj.sizlBitmap.cx, pBmp->SurfObj.sizlBitmap.cy);
-    BITMAPOBJ_UnlockBitmap(pBmp);
+    hVisRgn = NtGdiCreateRectRgn(0, 0, psurfBmp->SurfObj.sizlBitmap.cx, psurfBmp->SurfObj.sizlBitmap.cy);
+    SURFACE_UnlockSurface(psurfBmp);
 
     /* Regenerate the XLATEOBJs. */
     pBrush = BRUSHOBJ_LockBrush(pDc_Attr->hbrush);

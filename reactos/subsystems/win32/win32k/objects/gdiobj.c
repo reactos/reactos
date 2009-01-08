@@ -47,7 +47,7 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
   {1, 0,                     0,                NULL},             /* 02 UNUSED1 */
   {1, 0,                     0,                NULL},             /* 03 UNUSED2 */
   {1, sizeof(ROSRGNDATA),    TAG_REGION,       REGION_Cleanup},   /* 04 RGN */
-  {1, sizeof(BITMAPOBJ),     TAG_SURFACE,      BITMAP_Cleanup},   /* 05 SURFACE */
+  {1, sizeof(SURFACE),       TAG_SURFACE,      SURFACE_Cleanup},  /* 05 SURFACE */
   {1, sizeof(CLIENTOBJ),     TAG_CLIENTOBJ,    GDI_CleanupDummy}, /* 06 CLIENTOBJ: METADC,... */
   {1, sizeof(PATH),          TAG_PATH,         GDI_CleanupDummy}, /* 07 PATH */
   {1, sizeof(PALGDI),        TAG_PALETTE,      PALETTE_Cleanup},  /* 08 PAL */
@@ -1655,7 +1655,7 @@ IntGdiGetObject(IN HANDLE Handle,
         break;
 
       case GDI_OBJECT_TYPE_BITMAP:
-        Result = BITMAP_GetObject((BITMAPOBJ *) pGdiObject, cbCount, lpBuffer);
+        Result = BITMAP_GetObject((SURFACE *) pGdiObject, cbCount, lpBuffer);
         break;
       case GDI_OBJECT_TYPE_FONT:
         Result = FontGetObject((PTEXTOBJ) pGdiObject, cbCount, lpBuffer);

@@ -984,8 +984,8 @@ IntMouseInput(MOUSEINPUT *mi)
    BOOL DoMove, SwapButtons;
    MSG Msg;
    HBITMAP hBitmap;
-   BITMAPOBJ *BitmapObj;
-   SURFOBJ *SurfObj;
+   SURFACE *psurf;
+   SURFOBJ *pso;
    PDC dc;
    PWINDOW_OBJECT DesktopWindow;
 
@@ -1083,21 +1083,21 @@ IntMouseInput(MOUSEINPUT *mi)
          hBitmap = dc->w.hBitmap;
          DC_UnlockDc(dc);
 
-         BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
-         if (BitmapObj)
+         psurf = SURFACE_LockSurface(hBitmap);
+         if (psurf)
          {
-            SurfObj = &BitmapObj->SurfObj;
+            pso = &psurf->SurfObj;
 
             if (CurInfo->ShowingCursor)
             {
-               IntEngMovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
+               IntEngMovePointer(pso, MousePos.x, MousePos.y, &(GDIDEV(pso)->Pointer.Exclude));
             }
             /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
             * use the old values to move the pointer image */
             gpsi->ptCursor.x = MousePos.x;
             gpsi->ptCursor.y = MousePos.y;
 
-            BITMAPOBJ_UnlockBitmap(BitmapObj);
+            SURFACE_UnlockSurface(psurf);
          }
       }
    }
