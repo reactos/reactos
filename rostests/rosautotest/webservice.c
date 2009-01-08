@@ -170,6 +170,7 @@ GetTestID(TESTTYPES TestType)
     {
         StringOut("Expected Test ID, but received:\n");
         StringOut(Data);
+        StringOut("\n");
         HeapFree(hProcessHeap, 0, Data);
         return NULL;
     }
@@ -248,6 +249,7 @@ GetSuiteID(TESTTYPES TestType, const PVOID TestData)
     {
         StringOut("Expected Suite ID, but received:\n");
         StringOut(Data);
+        StringOut("\n");
         HeapFree(hProcessHeap, 0, Data);
         return NULL;
     }

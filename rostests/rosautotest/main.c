@@ -53,22 +53,22 @@ IntGetINIValueA(PCWCH AppName, PCWCH KeyName, PCWCH FileName, char** ReturnedVal
 }
 
 /**
- * Gets the username and password hash from the "rosautotest.ini" file if the user enabled submitting the results to the web service.
+ * Gets the username and password from the "rosautotest.ini" file if the user enabled submitting the results to the web service.
  * The "rosautotest.ini" file should look like this:
  *
  * [Login]
  * UserName=TestMan
- * PasswordHash=1234567890abcdef1234567890abcdef
+ * Password=TestPassword
  */
 static BOOL
 IntGetConfigurationValues()
 {
-    const CHAR PasswordHashProp[] = "&passwordhash=";
+    const CHAR PasswordProp[] = "&password=";
     const CHAR UserNameProp[] = "&username=";
 
     DWORD DataLength;
     DWORD Length;
-    PCHAR PasswordHash;
+    PCHAR Password;
     PCHAR UserName;
     WCHAR ConfigFile[MAX_PATH];
 
@@ -76,13 +76,17 @@ IntGetConfigurationValues()
     if(!AppOptions.Submit)
         return TRUE;
 
-    /* Build the path to the configuration file */
-    Length = GetWindowsDirectoryW(ConfigFile, MAX_PATH);
+    /* Build the path to the configuration file from the application's path */
+    GetModuleFileNameW(NULL, ConfigFile, MAX_PATH);
+    Length = wcsrchr(ConfigFile, '\\') - ConfigFile;
     wcscpy(&ConfigFile[Length], L"\\rosautotest.ini");
 
     /* Check if it exists */
     if(GetFileAttributesW(ConfigFile) == INVALID_FILE_ATTRIBUTES)
+    {
+        StringOut("Missing \"rosautotest.ini\" configuration file!\n");
         return FALSE;
+    }
 
     /* Get the required length of the authentication request string */
     DataLength = sizeof(UserNameProp) - 1;
@@ -97,12 +101,12 @@ IntGetConfigurationValues()
     /* Some characters might need to be escaped and an escaped character takes 3 bytes */
     DataLength += 3 * Length;
 
-    DataLength += sizeof(PasswordHashProp) - 1;
-    Length = IntGetINIValueA(L"Login", L"PasswordHash", ConfigFile, &PasswordHash);
+    DataLength += sizeof(PasswordProp) - 1;
+    Length = IntGetINIValueA(L"Login", L"Password", ConfigFile, &Password);
 
     if(!Length)
     {
-        StringOut("PasswordHash is missing in the configuration file\n");
+        StringOut("Password is missing in the configuration file\n");
         return FALSE;
     }
 
@@ -114,8 +118,8 @@ IntGetConfigurationValues()
     strcpy(AuthenticationRequestString, UserNameProp);
     EscapeString(&AuthenticationRequestString[strlen(AuthenticationRequestString)], UserName);
 
-    strcat(AuthenticationRequestString, PasswordHashProp);
-    EscapeString(&AuthenticationRequestString[strlen(AuthenticationRequestString)], PasswordHash);
+    strcat(AuthenticationRequestString, PasswordProp);
+    EscapeString(&AuthenticationRequestString[strlen(AuthenticationRequestString)], Password);
 
     return TRUE;
 }
