@@ -146,4 +146,5 @@ BEGIN
 	IDS_ISCONNECTED "Is the hardware connected?"
 	IDS_PROBELISTTITLE "The following hardware is already installed on your computer"
 	IDS_ADDNEWDEVICE "Add a new hardware device"
+	IDS_SELECTWAYTITLE "The wizard can help you install other hardware"
 END

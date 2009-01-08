@@ -32,6 +32,8 @@
 HINSTANCE hApplet = NULL;
 HFONT hTitleFont;
 SP_CLASSIMAGELIST_DATA ImageListData;
+PWSTR pDeviceStatusText;
+HANDLE hProcessHeap;
 
 typedef BOOL (WINAPI *PINSTALL_NEW_DEVICE)(HWND, LPGUID, PDWORD);
 
@@ -74,6 +76,21 @@ StartPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SendDlgItemMessage(hwndDlg, IDC_FINISHTITLE, WM_SETFONT, (WPARAM)hTitleFont, (LPARAM)TRUE);
         }
         break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+                }
+                break;
+            }
+        }
+        break;
     }
 
     return FALSE;
@@ -82,6 +99,30 @@ StartPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static INT_PTR CALLBACK
 SearchPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            /* TODO: PnP devices search */
+        }
+        break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                }
+                break;
+            }
+        }
+        break;
+    }
+
     return FALSE;
 }
 
@@ -239,8 +280,10 @@ InitProbeListPage(HWND hwndDlg)
 {
     LV_COLUMN Column;
     LV_ITEM Item;
-    WCHAR szBuffer[MAX_STR_SIZE], szGuid[MAX_STR_SIZE], szTrimGuid[MAX_STR_SIZE];
+    WCHAR szBuffer[MAX_STR_SIZE], szGuid[MAX_STR_SIZE],
+          szTrimGuid[MAX_STR_SIZE], szStatusText[MAX_STR_SIZE];
     HWND hList = GetDlgItem(hwndDlg, IDC_PROBELIST);
+    PWSTR pstrStatusText;
     HDEVINFO hDevInfo;
     SP_DEVINFO_DATA DevInfoData;
     ULONG ulStatus, ulProblemNumber;
@@ -325,9 +368,19 @@ InitProbeListPage(HWND hwndDlg)
                                   &ClassGuid,
                                   &Item.iImage);
 
+        DeviceProblemTextW(NULL,
+                           DevInfoData.DevInst,
+                           ulProblemNumber,
+                           szStatusText,
+                           sizeof(szStatusText) / sizeof(WCHAR));
+
+        pstrStatusText = (PWSTR)HeapAlloc(hProcessHeap, 0, sizeof(szStatusText));
+        lstrcpy(pstrStatusText, szStatusText);
+
         /* Set device name */
-        Item.pszText = (LPTSTR) szBuffer;
+        Item.pszText = (LPWSTR) szBuffer;
         Item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
+        Item.lParam = (LPARAM) pstrStatusText;
         Item.iItem = (INT) ListView_GetItemCount(hList);
         (VOID) ListView_InsertItem(hList, &Item);
 
@@ -341,10 +394,13 @@ InitProbeListPage(HWND hwndDlg)
 static INT_PTR CALLBACK
 ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    INT Index;
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
+            pDeviceStatusText = (PWSTR)HeapAlloc(hProcessHeap, 0, MAX_STR_SIZE);
             InitProbeListPage(hwndDlg);
         }
         break;
@@ -367,9 +423,102 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
                 break;
 
+                case NM_CLICK:
+                {
+                    Index = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_PROBELIST), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+                    if (Index != -1)
+                    {
+                        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+                    }
+                }
+                break;
+
                 case PSN_WIZNEXT:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_FINISHPAGE);
+                    Index = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_PROBELIST), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+                    if (Index != -1)
+                    {
+                        if (Index == 0)
+                        {
+                            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
+                        }
+                        else
+                        {
+                            LVITEM Item;
+                            PWSTR pts;
+
+                            ZeroMemory(&Item, sizeof(LV_ITEM));
+                            Item.mask = LVIF_PARAM;
+                            Item.iItem = Index;
+                            (VOID) ListView_GetItem(GetDlgItem(hwndDlg, IDC_PROBELIST), &Item);
+                            pts = (PWSTR) Item.lParam;
+                            wcscpy(pDeviceStatusText, pts);
+
+                            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_HWSTATUSPAGE);
+                        }
+                    }
+                    return TRUE;
+                }
+            }
+        }
+        break;
+
+        case WM_DESTROY:
+        {
+            INT Index;
+            LVITEM Item;
+
+            for (Index = ListView_GetItemCount(GetDlgItem(hwndDlg, IDC_PROBELIST)); --Index > 0;)
+            {
+                ZeroMemory(&Item, sizeof(LV_ITEM));
+                Item.mask = LVIF_PARAM;
+                Item.iItem = Index;
+                (VOID) ListView_GetItem(GetDlgItem(hwndDlg, IDC_PROBELIST), &Item);
+                HeapFree(hProcessHeap, 0, (LPVOID) Item.lParam);
+            }
+            HeapFree(hProcessHeap, 0, (LPVOID) pDeviceStatusText);
+        }
+        break;
+    }
+
+    return FALSE;
+}
+
+static INT_PTR CALLBACK
+SelectWayPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return FALSE;
+}
+
+static INT_PTR CALLBACK
+DevStatusPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            /* Set title font */
+            SendDlgItemMessage(hwndDlg, IDC_FINISHTITLE, WM_SETFONT, (WPARAM)hTitleFont, (LPARAM)TRUE);
+            /* Set status text */
+            SetWindowText(GetDlgItem(hwndDlg, IDC_HWSTATUSEDIT), pDeviceStatusText);
+        }
+        break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH | PSWIZB_BACK);
+                }
+                break;
+
+                case PSN_WIZBACK:
+                {
+                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_PROBELISTPAGE);
                     return TRUE;
                 }
             }
@@ -383,7 +532,7 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static VOID
 HardwareWizardInit(HWND hwnd)
 {
-    HPROPSHEETPAGE ahpsp[6];
+    HPROPSHEETPAGE ahpsp[8];
     PROPSHEETPAGE psp = {0};
     PROPSHEETHEADER psh;
     UINT nPages = 0;
@@ -428,6 +577,26 @@ HardwareWizardInit(HWND hwnd)
     psp.lParam = 0;
     psp.pfnDlgProc = ProbeListPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROBELISTPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create select search way page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SELECTWAYTITLE);
+    psp.pszHeaderSubTitle = NULL;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = SelectWayPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_SELECTWAYPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create device status page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = DevStatusPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_HWSTATUSPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create finish page */
@@ -527,6 +696,7 @@ DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
     {
         case DLL_PROCESS_ATTACH:
             hApplet = hinstDLL;
+            hProcessHeap = GetProcessHeap();
             DisableThreadLibraryCalls(hinstDLL);
             break;
     }
