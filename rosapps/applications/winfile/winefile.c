@@ -33,6 +33,7 @@
 
 #include "winefile.h"
 #include "resource.h"
+#include "wine/unicode.h"
 
 #ifdef _NO_EXTENSIONS
 #undef _LEFT_FILES
@@ -196,8 +197,17 @@ static const TCHAR sQMarks[] = {'?','?','?','\0'};
 static const TCHAR sWINEFILEFRAME[] = {'W','F','S','_','F','r','a','m','e','\0'};
 static const TCHAR sWINEFILETREE[] = {'W','F','S','_','T','r','e','e','\0'};
 
-static const TCHAR sLongHexFmt[] = {'%','I','6','4','X','\0'};
-static const TCHAR sLongNumFmt[] = {'%','I','6','4','u','\0'};
+static void format_longlong(LPWSTR ret, ULONGLONG val)
+{
+    WCHAR buffer[65], *p = &buffer[64];
+
+    *p = 0;
+    do {
+        *(--p) = '0' + val % 10;
+	val /= 10;
+    } while (val);
+    lstrcpyW( ret, p );
+}
 
 
 /* load resource string */
@@ -298,52 +308,6 @@ static inline void choose_font(HWND hwnd)
 
         ReleaseDC(hwnd, hdc);
 }
-
-#ifdef __WINE__
-
-#ifdef UNICODE
-
-/* call vswprintf() in msvcrt.dll */
-/*TODO: fix swprintf() in non-msvcrt mode, so that this dynamic linking function can be removed */
-static int msvcrt_swprintf(WCHAR* buffer, const WCHAR* fmt, ...)
-{
-	static int (__cdecl *pvswprintf)(WCHAR*, const WCHAR*, va_list) = NULL;
-	va_list ap;
-	int ret;
-
-	if (!pvswprintf) {
-		HMODULE hModMsvcrt = LoadLibraryA("msvcrt");
-		pvswprintf = (int(__cdecl*)(WCHAR*,const WCHAR*,va_list)) GetProcAddress(hModMsvcrt, "vswprintf");
-	}
-
-	va_start(ap, fmt);
-	ret = (*pvswprintf)(buffer, fmt, ap);
-	va_end(ap);
-
-	return ret;
-}
-
-static LPCWSTR my_wcsrchr(LPCWSTR str, WCHAR c)
-{
-	LPCWSTR p = str;
-
-	while(*p)
-		++p;
-
-	do {
-		if (--p < str)
-			return NULL;
-	} while(*p != c);
-
-	return p;
-}
-
-#define _tcsrchr my_wcsrchr
-#else	/* UNICODE */
-#define _tcsrchr strrchr
-#endif	/* UNICODE */
-
-#endif	/* __WINE__ */
 
 
 /* allocate and initialise a directory entry */
@@ -1219,8 +1183,8 @@ static int compareExt(const void* arg1, const void* arg2)
 	name1 = fd1->cFileName;
 	name2 = fd2->cFileName;
 
-	ext1 = _tcsrchr(name1, '.');
-	ext2 = _tcsrchr(name2, '.');
+	ext1 = strrchrW(name1, '.');
+	ext2 = strrchrW(name2, '.');
 
 	if (ext1)
 		ext1++;
@@ -2032,7 +1996,6 @@ static INT_PTR CALLBACK PropertiesDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wpa
 			static const TCHAR sByteFmt[] = {'%','s',' ','B','y','t','e','s','\0'};
 			TCHAR b1[BUFFER_LEN], b2[BUFFER_LEN];
 			LPWIN32_FIND_DATA pWFD;
-			ULONGLONG size;
 
 			dlg = (struct PropertiesDialog*) lparam;
 			pWFD = (LPWIN32_FIND_DATA) &dlg->entry.data;
@@ -2044,8 +2007,7 @@ static INT_PTR CALLBACK PropertiesDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wpa
 			format_date(&pWFD->ftLastWriteTime, b1, COL_DATE|COL_TIME);
 			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_LASTCHANGE), b1);
 
-			size = ((ULONGLONG)pWFD->nFileSizeHigh << 32) | pWFD->nFileSizeLow;
-			_stprintf(b1, sLongNumFmt, size);
+                        format_longlong( b1, ((ULONGLONG)pWFD->nFileSizeHigh << 32) | pWFD->nFileSizeLow );
 			wsprintf(b2, sByteFmt, b1);
 			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_SIZE), b2);
 
@@ -2907,17 +2869,18 @@ static void format_bytes(LPTSTR buffer, LONGLONG bytes)
 	static const TCHAR sFmtGB[] = {'%', '.', '1', 'f', ' ', 'G', 'B', '\0'};
 	static const TCHAR sFmtMB[] = {'%', '.', '1', 'f', ' ', 'M', 'B', '\0'};
 	static const TCHAR sFmtkB[] = {'%', '.', '1', 'f', ' ', 'k', 'B', '\0'};
+	static const TCHAR sFmtB[]  = {'%', 'u', 0};
 
 	float fBytes = (float)bytes;
 
 	if (bytes >= 1073741824)	/* 1 GB */
-		_stprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
+		sprintfW(buffer, sFmtGB, fBytes/1073741824.f+.5f);
 	else if (bytes >= 1048576)	/* 1 MB */
-		_stprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
+		sprintfW(buffer, sFmtMB, fBytes/1048576.f+.5f);
 	else if (bytes >= 1024)		/* 1 kB */
-		_stprintf(buffer, sFmtkB, fBytes/1024.f+.5f);
+		sprintfW(buffer, sFmtkB, fBytes/1024.f+.5f);
 	else
-		_stprintf(buffer, sLongNumFmt, bytes);
+		sprintfW(buffer, sFmtB, (DWORD)bytes);
 }
 
 static void set_space_status(void)
@@ -3141,7 +3104,7 @@ static BOOL is_registered_type(LPCTSTR ext)
 
 static enum FILE_TYPE get_file_type(LPCTSTR filename)
 {
-	LPCTSTR ext = _tcsrchr(filename, '.');
+	LPCTSTR ext = strrchrW(filename, '.');
 	if (!ext)
 		ext = sEmpty;
 
@@ -3354,11 +3317,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 		if (!(attrs&FILE_ATTRIBUTE_DIRECTORY))
 #endif
 		{
-			ULONGLONG size;
-
-                        size = ((ULONGLONG)entry->data.nFileSizeHigh << 32) | entry->data.nFileSizeLow;
-
-			_stprintf(buffer, sLongNumFmt, size);
+			format_longlong( buffer, ((ULONGLONG)entry->data.nFileSizeHigh << 32) | entry->data.nFileSizeLow );
 
 			if (calcWidthCol == -1)
 				output_number(pane, dis, col, buffer);
@@ -3397,10 +3356,15 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 
 #ifndef _NO_EXTENSIONS
 	if (entry->bhfi_valid) {
-            ULONGLONG index = ((ULONGLONG)entry->bhfi.nFileIndexHigh << 32) | entry->bhfi.nFileIndexLow;
-
 		if (visible_cols & COL_INDEX) {
-			_stprintf(buffer, sLongHexFmt, index);
+                        static const TCHAR fmtlow[] = {'%','X',0};
+                        static const TCHAR fmthigh[] = {'%','X','%','0','8','X',0};
+
+                        if (entry->bhfi.nFileIndexHigh)
+                            wsprintf(buffer, fmthigh,
+                                     entry->bhfi.nFileIndexHigh, entry->bhfi.nFileIndexLow );
+                        else
+                            wsprintf(buffer, fmtlow, entry->bhfi.nFileIndexLow );
 
 			if (calcWidthCol == -1)
 				output_text(pane, dis, col, buffer, DT_RIGHT);
