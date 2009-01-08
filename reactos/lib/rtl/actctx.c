@@ -15,6 +15,19 @@
 
 #define QUERY_ACTCTX_FLAG_ACTIVE (0x00000001)
 
+#define ACTCTX_FLAGS_ALL (\
+ ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID |\
+ ACTCTX_FLAG_LANGID_VALID |\
+ ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID |\
+ ACTCTX_FLAG_RESOURCE_NAME_VALID |\
+ ACTCTX_FLAG_SET_PROCESS_DEFAULT |\
+ ACTCTX_FLAG_APPLICATION_NAME_VALID |\
+ ACTCTX_FLAG_SOURCE_IS_ASSEMBLYREF |\
+ ACTCTX_FLAG_HMODULE_VALID )
+
+#define ACTCTX_FAKE_HANDLE ((HANDLE) 0xf00baa)
+#define ACTCTX_FAKE_COOKIE ((ULONG_PTR) 0xf00bad)
+
 /* FUNCTIONS ***************************************************************/
 
 VOID
@@ -46,7 +59,10 @@ NTAPI
 RtlGetActiveActivationContext(IN PVOID *Context)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+
+    *Context = ACTCTX_FAKE_HANDLE;
+
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -112,6 +128,10 @@ RtlDeactivateActivationContext(DWORD dwFlags,
                                ULONG_PTR ulCookie)
 {
     UNIMPLEMENTED;
+
+    if (ulCookie == ACTCTX_FAKE_COOKIE)
+        return STATUS_SUCCESS;
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -128,13 +148,28 @@ NTAPI
 RtlActivateActivationContext(IN ULONG Unknown, IN HANDLE Handle, OUT PULONG_PTR Cookie)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+
+    if (Cookie)
+        *Cookie = ACTCTX_FAKE_COOKIE;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 RtlCreateActivationContext(OUT PHANDLE Handle, IN OUT PVOID ReturnedData)
 {
+    PCACTCTXW pActCtx = (PCACTCTXW) ReturnedData;
+
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+
+    if (!pActCtx)
+        *Handle = INVALID_HANDLE_VALUE;
+    if (pActCtx->cbSize != sizeof *pActCtx)
+        *Handle = INVALID_HANDLE_VALUE;
+    if (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL)
+        *Handle = INVALID_HANDLE_VALUE;
+    *Handle = ACTCTX_FAKE_HANDLE;
+
+    return STATUS_SUCCESS;
 }

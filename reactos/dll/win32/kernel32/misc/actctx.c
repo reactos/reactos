@@ -191,8 +191,13 @@ DeactivateActCtx(
     ULONG_PTR ulCookie
     )
 {
+    NTSTATUS Status;
+
     DPRINT("DeactivateActCtx(%08lx %08lx)\n", dwFlags, ulCookie);
-    RtlDeactivateActivationContext(dwFlags, ulCookie);
+    Status = RtlDeactivateActivationContext(dwFlags, ulCookie);
+
+    if (!NT_SUCCESS(Status)) return FALSE;
+
     return TRUE;
 }
 
