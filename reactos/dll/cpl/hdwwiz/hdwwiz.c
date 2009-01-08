@@ -383,7 +383,7 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static VOID
 HardwareWizardInit(HWND hwnd)
 {
-    HPROPSHEETPAGE ahpsp[5];
+    HPROPSHEETPAGE ahpsp[6];
     PROPSHEETPAGE psp = {0};
     PROPSHEETHEADER psh;
     UINT nPages = 0;
