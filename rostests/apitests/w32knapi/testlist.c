@@ -12,11 +12,13 @@
 #include "ntgdi/NtGdiCreateBitmap.c"
 #include "ntgdi/NtGdiCreateCompatibleBitmap.c"
 #include "ntgdi/NtGdiCreateCompatibleDC.c"
+#include "ntgdi/NtGdiCreateDIBSection.c"
 #include "ntgdi/NtGdiDoPalette.c"
 #include "ntgdi/NtGdiEngCreatePalette.c"
 //#include "ntgdi/NtGdiEnumFontChunk.c"
 #include "ntgdi/NtGdiEnumFontOpen.c"
 //#include "ntgdi/NtGdiExtCreatePen.c"
+#include "ntgdi/NtGdiExtTextOutW.c"
 #include "ntgdi/NtGdiFlushUserBatch.c"
 #include "ntgdi/NtGdiGetBitmapBits.c"
 #include "ntgdi/NtGdiGetFontResourceInfoInternalW.c"
@@ -69,11 +71,13 @@ TESTENTRY TestList[] =
 	{ L"NtGdiCreateBitmap", Test_NtGdiCreateBitmap },
 	{ L"NtGdiCreateCompatibleBitmap", Test_NtGdiCreateCompatibleBitmap },
 	{ L"NtGdiCreateCompatibleDC", Test_NtGdiCreateCompatibleDC },
+	{ L"NtGdiCreateDIBSection", Test_NtGdiCreateDIBSection },
 	{ L"NtGdiDoPalette", Test_NtGdiDoPalette },
 	{ L"NtGdiEngCreatePalette", Test_NtGdiEngCreatePalette },
 //	{ L"NtGdiEnumFontChunk", Test_NtGdiEnumFontChunk },
 	{ L"NtGdiEnumFontOpen", Test_NtGdiEnumFontOpen },
 //	{ L"NtGdiExtCreatePen", Test_NtGdiExtCreatePen },
+	{ L"NtGdiExtTextOutW", Test_NtGdiExtTextOutW },
 	{ L"NtGdiFlushUserBatch", Test_NtGdiFlushUserBatch },
 	{ L"NtGdiGetBitmapBits", Test_NtGdiGetBitmapBits },
 	{ L"NtGdiGetFontResourceInfoInternalW", Test_NtGdiGetFontResourceInfoInternalW },
