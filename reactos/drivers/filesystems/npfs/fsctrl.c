@@ -167,8 +167,11 @@ NpfsConnectPipe(PIRP Irp,
 
 	if (Flags & FO_SYNCHRONOUS_IO)
 	{
-		IoMarkIrpPending(Irp);
-		Status = STATUS_PENDING;
+		KeWaitForSingleObject(&Ccb->ConnectEvent,
+			UserRequest,
+			KernelMode,
+			FALSE,
+			NULL);
 	}
 
 	DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
