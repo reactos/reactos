@@ -1086,7 +1086,7 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Save exception code */
-        Status = _SEH2_GetExceptionCode();
+        Status = ExceptionCode;
     }
     _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
