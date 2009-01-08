@@ -1670,7 +1670,7 @@ static LRESULT CALLBACK MACRO_TestDialogProc(HWND hDlg, UINT msg, WPARAM wParam,
 void macro_test(void)
 {
     WNDPROC lpfnDlg = MakeProcInstance(MACRO_TestDialogProc, Globals.hInstance);
-    DialogBox(Globals.hInstance, STRING_DIALOG_TEST, Globals.active_win->hMainWnd, lpfnDlg);
+    DialogBox(Globals.hInstance, STRING_DIALOG_TEST, Globals.active_win->hMainWnd, (DLGPROC)lpfnDlg);
     FreeProcInstance(lpfnDlg);
     macro = szTestMacro;
 }
