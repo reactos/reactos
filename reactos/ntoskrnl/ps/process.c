@@ -822,6 +822,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     }
     _SEH2_END;
 
+    /* Run the Notification Routines */
+    PspRunCreateProcessNotifyRoutines(Process, TRUE);
+
 CleanupWithRef:
     /*
      * Dereference the process. For failures, kills the process and does
