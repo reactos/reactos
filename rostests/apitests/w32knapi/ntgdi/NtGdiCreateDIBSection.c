@@ -34,6 +34,7 @@ Test_NtGdiCreateDIBSection(PTESTINFO pti)
     ULONG cjHeader;
     PVOID pvBits = NULL;
     ULONG cEntries;
+    DIBSECTION dibsection;
 
     struct
     {
@@ -71,6 +72,12 @@ Test_NtGdiCreateDIBSection(PTESTINFO pti)
     TEST(pvBits != NULL);
     TEST(hbmp != 0);
 //    TEST(GetLastError() == 0);
+    TEST(GetObject(hbmp, sizeof(DIBSECTION), &dibsection) == sizeof(DIBSECTION));
+    TEST(dibsection.dsBitfields[0] == 0);
+    TEST(dibsection.dsBitfields[1] == 0);
+    TEST(dibsection.dsBitfields[2] == 0);
+    TEST(dibsection.dshSection == 0);
+    TEST(dibsection.dsOffset == 0);
     if (hbmp) DeleteObject(hbmp);
 
 
@@ -155,6 +162,90 @@ Test_NtGdiCreateDIBSection(PTESTINFO pti)
     TEST(hbmp == 0);
     TEST(GetLastError() == 0);
     if (hbmp) DeleteObject(hbmp);
+
+    /* Test different bitcount */
+    pbih->biBitCount = 4;
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
+    TEST(hbmp != 0);
+
+    pbih->biBitCount = 8;
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
+    TEST(hbmp != 0);
+
+    cjHeader = pbih->biSize;
+    pbih->biBitCount = 16;
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
+    TEST(hbmp != 0);
+
+    pbih->biBitCount = 24;
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
+    TEST(hbmp != 0);
+
+    pbih->biBitCount = 32;
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
+    TEST(hbmp != 0);
+
+    /* Test BI_BITFIELDS */
+    cEntries = 3;
+    cjHeader = pbih->biSize + cEntries * sizeof(DWORD);
+    pbih->biBitCount = 16;
+    pbih->biCompression = BI_BITFIELDS;
+    ((DWORD*)pbmi->bmiColors)[0] = 0x0007;
+    ((DWORD*)pbmi->bmiColors)[1] = 0x0038;
+    ((DWORD*)pbmi->bmiColors)[2] = 0x01C0;
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
+    TEST(hbmp != 0);
+    TEST(GetObject(hbmp, sizeof(DIBSECTION), &dibsection) == sizeof(DIBSECTION));
+    TEST(dibsection.dsBm.bmType == 0);
+    TEST(dibsection.dsBm.bmWidth == 2);
+    TEST(dibsection.dsBm.bmHeight == 2);
+    TEST(dibsection.dsBm.bmWidthBytes == 4);
+    TEST(dibsection.dsBm.bmPlanes == 1);
+    TEST(dibsection.dsBm.bmBitsPixel == 16);
+    TEST(dibsection.dsBm.bmBits == pvBits);
+    TEST(dibsection.dsBmih.biSize == sizeof(BITMAPINFOHEADER));
+    TEST(dibsection.dsBmih.biWidth == 2);
+    TEST(dibsection.dsBmih.biHeight == 2);
+    TEST(dibsection.dsBmih.biPlanes == 1);
+    TEST(dibsection.dsBmih.biBitCount == 16);
+    TEST(dibsection.dsBmih.biCompression == BI_BITFIELDS);
+    TEST(dibsection.dsBmih.biSizeImage == 8);
+    TEST(dibsection.dsBmih.biXPelsPerMeter == 0);
+    TEST(dibsection.dsBmih.biYPelsPerMeter == 0);
+    TEST(dibsection.dsBmih.biClrUsed == 0);
+    TEST(dibsection.dsBmih.biClrImportant == 0);
+    TEST(dibsection.dsBitfields[0] == 0x0007);
+    TEST(dibsection.dsBitfields[1] == 0x0038);
+    TEST(dibsection.dsBitfields[2] == 0x01C0);
+    TEST(dibsection.dshSection == 0);
+    TEST(dibsection.dsOffset == 0);
+
+printf("dib with bitfileds: %p\n", hbmp);
+//system("PAUSE");
+
+    if (hbmp) DeleteObject(hbmp);
+
+
+    /* Test BI_BITFIELDS */
+    SetLastError(0);
+    pvBits = 0;
+
+    pbih->biSize = sizeof(BITMAPINFOHEADER);
+    pbih->biWidth = 2;
+    pbih->biHeight = 2;
+    pbih->biPlanes = 1;
+    pbih->biBitCount = 4;
+    pbih->biCompression = BI_RGB;
+    pbih->biSizeImage = 0;
+    pbih->biXPelsPerMeter = 100;
+    pbih->biYPelsPerMeter = 100;
+    pbih->biClrUsed = 0;
+    pbih->biClrImportant = 0;
+    ((DWORD*)pbmi->bmiColors)[0] = 0xF800;
+    ((DWORD*)pbmi->bmiColors)[1] = 0x00ff00;
+    ((DWORD*)pbmi->bmiColors)[2] = 0x0000ff;
+    cEntries = 0;
+    cjHeader = bmi.bmiHeader.biSize + cEntries * 4 + 20;
 
 
 /** iUsage = 1 (DIB_PAL_COLORS) ***********************************************/
@@ -349,22 +440,12 @@ Test_NtGdiCreateDIBSection(PTESTINFO pti)
     TEST(GetLastError() == 8);
     if (hbmp) DeleteObject(hbmp);
 
-    printf("GetLastError() == %ld\n", GetLastError());
-
     /* Test section */
     HANDLE hSection;
     NTSTATUS Status;
     LARGE_INTEGER MaximumSize;
     
     MaximumSize.QuadPart = 4096;
-    Status = ZwCreateSection(&hSection,
-                             SECTION_ALL_ACCESS,
-                             NULL,
-                             &MaximumSize,
-                             PAGE_READWRITE,
-                             SEC_COMMIT,
-                             NULL);
-    ASSERT(NT_SUCCESS(Status));
     Status = ZwCreateSection(&hSection,
                              SECTION_ALL_ACCESS,
                              NULL,
@@ -381,7 +462,7 @@ Test_NtGdiCreateDIBSection(PTESTINFO pti)
     TEST(hbmp != 0);
 //    TEST(GetLastError() == 0);
     printf("hbmp = %p, pvBits = %p, hSection = %p\n", hbmp, pvBits, hSection);
-    system("PAUSE");
+//system("PAUSE");
     if (hbmp) DeleteObject(hbmp);
 
 
