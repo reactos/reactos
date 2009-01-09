@@ -52,12 +52,39 @@
 //
 // Internal structure for NOTIFY_SYNC
 //
-typedef struct _INT_NOTIFY_SYNC
+typedef struct _REAL_NOTIFY_SYNC
 {
     FAST_MUTEX FastMutex;
     ULONG_PTR OwningThread;
     ULONG OwnerCount;
-} INT_NOTIFY_SYNC, * PINT_NOTIFY_SYNC;
+} REAL_NOTIFY_SYNC, * PREAL_NOTIFY_SYNC;
+
+//
+// Internal structure for notifications
+//
+typedef struct _NOTIFY_CHANGE
+{
+    PREAL_NOTIFY_SYNC NotifySync;
+    PVOID FsContext;
+    PVOID StreamID;
+    PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback;
+    PSECURITY_SUBJECT_CONTEXT SubjectContext;
+    PSTRING FullDirectoryName;
+    PLIST_ENTRY NotifyList;
+    PLIST_ENTRY NotifyIrps;
+    PFILTER_REPORT_CHANGE FilterCallback;
+    USHORT Flags;
+    UCHAR CharacterSize;
+    ULONG CompletionFilter;
+    PVOID AllocatedBuffer;
+    PVOID Buffer;
+    ULONG BufferLength;
+    ULONG ThisBufferLength;
+    ULONG DataLength;
+    ULONG LastEntry;
+    ULONG ReferenceCount;
+    PEPROCESS OwningProcess;
+} NOTIFY_CHANGE, *PNOTIFY_CHANGE;
 
 //
 // Internal structure for MCB Mapping pointer
