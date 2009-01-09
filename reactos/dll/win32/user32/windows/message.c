@@ -2117,17 +2117,6 @@ TranslateMessage(CONST MSG *lpMsg)
 /*
  * @implemented
  */
-BOOL
-WINAPI
-WaitMessage(VOID)
-{
-  return NtUserWaitMessage();
-}
-
-
-/*
- * @implemented
- */
 UINT WINAPI
 RegisterWindowMessageA(LPCSTR lpString)
 {
@@ -2156,15 +2145,6 @@ RegisterWindowMessageW(LPCWSTR lpString)
 
   RtlInitUnicodeString(&String, lpString);
   return(NtUserRegisterWindowMessage(&String));
-}
-
-/*
- * @implemented
- */
-HWND WINAPI
-SetCapture(HWND hWnd)
-{
-  return(NtUserSetCapture(hWnd));
 }
 
 /*

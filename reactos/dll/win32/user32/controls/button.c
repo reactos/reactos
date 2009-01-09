@@ -210,7 +210,7 @@ __inline static void paint_button( HWND hwnd, LONG style, UINT action )
 {
     if (btnPaintFunc[style] && IsWindowVisible(hwnd))
     {
-        HDC hdc = GetDC( hwnd );
+        HDC hdc = NtUserGetDC( hwnd );
         btnPaintFunc[style]( hwnd, hdc, action );
         ReleaseDC( hwnd, hdc );
     }
@@ -317,11 +317,11 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if (btnPaintFunc[btn_type])
         {
             PAINTSTRUCT ps;
-            HDC hdc = wParam ? (HDC)wParam : BeginPaint( hWnd, &ps );
+            HDC hdc = wParam ? (HDC)wParam : NtUserBeginPaint( hWnd, &ps );
             int nOldMode = SetBkMode( hdc, OPAQUE );
             (btnPaintFunc[btn_type])( hWnd, hdc, ODA_DRAWENTIRE );
             SetBkMode(hdc, nOldMode); /*  reset painting mode */
-            if( !wParam ) EndPaint( hWnd, &ps );
+            if( !wParam ) NtUserEndPaint( hWnd, &ps );
         }
         break;
 
@@ -344,8 +344,8 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         }
         /* fall through */
     case WM_LBUTTONDOWN:
-        SetCapture( hWnd );
-        SetFocus( hWnd );
+        NtUserSetCapture( hWnd );
+        NtUserSetFocus( hWnd );
         set_button_state( hWnd, get_button_state( hWnd ) | BUTTON_BTNPRESSED );
         SendMessageW( hWnd, BM_SETSTATE, TRUE, 0 );
         break;
@@ -409,7 +409,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_SETTEXT:
     {
         /* Clear an old text here as Windows does */
-        HDC hdc = GetDC(hWnd);
+        HDC hdc = NtUserGetDC(hWnd);
         HBRUSH hbrush;
         RECT client, rc;
         HWND parent = GetParent(hWnd);

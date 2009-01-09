@@ -13,15 +13,6 @@
 
 #include <wine/debug.h>
 
-/*
- * @implemented
- */
-BOOL WINAPI
-CloseWindowStation(HWINSTA hWinSta)
-{
-  return(NtUserCloseWindowStation(hWinSta));
-}
-
 
 /*
  * @implemented
@@ -276,16 +267,6 @@ EnumWindowStationsW(WINSTAENUMPROCW EnumFunc,
  * @implemented
  */
 HWINSTA WINAPI
-GetProcessWindowStation(VOID)
-{
-  return NtUserGetProcessWindowStation();
-}
-
-
-/*
- * @implemented
- */
-HWINSTA WINAPI
 OpenWindowStationA(LPSTR lpszWinSta,
 		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
@@ -331,16 +312,6 @@ OpenWindowStationW(LPWSTR lpszWinSta,
 
 
 /*
- * @implemented
- */
-BOOL WINAPI
-SetProcessWindowStation(HWINSTA hWinSta)
-{
-  return NtUserSetProcessWindowStation(hWinSta);
-}
-
-
-/*
  * @unimplemented
  */
 DWORD
@@ -353,28 +324,6 @@ SetWindowStationUser(
   )
 {
   return NtUserSetWindowStationUser(Unknown1, Unknown2, Unknown3, Unknown4);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-LockWindowStation(HWINSTA hWinSta)
-{
-  return NtUserLockWindowStation(hWinSta);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-UnlockWindowStation(HWINSTA hWinSta)
-{
-  return NtUserUnlockWindowStation(hWinSta);
 }
 
 /* EOF */

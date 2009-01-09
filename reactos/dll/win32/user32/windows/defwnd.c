@@ -191,7 +191,7 @@ DefWndSetRedraw(HWND hWnd, WPARAM wParam)
     {
        if (Style & WS_VISIBLE) /* Visible */
        {
-            RedrawWindow( hWnd, NULL, 0, RDW_ALLCHILDREN | RDW_VALIDATE );
+            NtUserRedrawWindow( hWnd, NULL, 0, RDW_ALLCHILDREN | RDW_VALIDATE );
             Style &= ~WS_VISIBLE;
             SetWindowLong(hWnd, GWL_STYLE, Style); /* clear bits */
        }
@@ -227,7 +227,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
 	HICON hCursor = (HICON)GetClassLongW(hWnd, GCL_HCURSOR);
 	if (hCursor)
 	  {
-	    SetCursor(hCursor);
+	    NtUserSetCursor(hCursor);
 	    return(TRUE);
 	  }
 	return(FALSE);
@@ -240,7 +240,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
         {
           break;
         }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZEWE)));
+	return((LRESULT)NtUserSetCursor(LoadCursorW(0, IDC_SIZEWE)));
       }
 
     case HTTOP:
@@ -250,7 +250,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
         {
           break;
         }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENS)));
+	return((LRESULT)NtUserSetCursor(LoadCursorW(0, IDC_SIZENS)));
       }
 
     case HTTOPLEFT:
@@ -260,7 +260,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
         {
           break;
         }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENWSE)));
+	return((LRESULT)NtUserSetCursor(LoadCursorW(0, IDC_SIZENWSE)));
       }
 
     case HTBOTTOMLEFT:
@@ -270,10 +270,10 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
         {
           break;
         }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENESW)));
+	return((LRESULT)NtUserSetCursor(LoadCursorW(0, IDC_SIZENESW)));
       }
     }
-  return((LRESULT)SetCursor(LoadCursorW(0, IDC_ARROW)));
+  return((LRESULT)NtUserSetCursor(LoadCursorW(0, IDC_ARROW)));
 }
 
 static LONG
@@ -469,7 +469,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	}
       else
 	{
-	  SetCapture(hwnd);
+	  NtUserSetCapture(hwnd);
 	  hittest = DefWndStartSizeMove(hwnd, Wnd, wParam, &capturePoint);
 	  if (!hittest)
 	    {
@@ -506,7 +506,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       }
       unmodRect = sizingRect;
     }
-  ClipCursor(&clipRect);
+  NtUserClipCursor(&clipRect);
 
   origRect = sizingRect;
   if (ON_LEFT_BORDER(hittest))
@@ -536,17 +536,17 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 
   SendMessageA( hwnd, WM_ENTERSIZEMOVE, 0, 0 );
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, hwnd);
-  if (GetCapture() != hwnd) SetCapture( hwnd );
+  if (GetCapture() != hwnd) NtUserSetCapture( hwnd );
 
   if (Style & WS_CHILD)
     {
       /* Retrieve a default cache DC (without using the window style) */
-      hdc = GetDCEx(hWndParent, 0, DCX_CACHE);
+      hdc = NtUserGetDCEx(hWndParent, 0, DCX_CACHE);
       DesktopRgn = NULL;
     }
   else
     {
-      hdc = GetDC( 0 );
+      hdc = NtUserGetDC( 0 );
       DesktopRgn = CreateRectRgnIndirect(&clipRect);
     }
 
@@ -615,7 +615,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 
 		if( iconic ) /* ok, no system popup tracking */
 		  {
-		    hOldCursor = SetCursor(hDragCursor);
+		    hOldCursor = NtUserSetCursor(hDragCursor);
 		    ShowCursor( TRUE );
 		  }
 	    }
@@ -647,7 +647,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 		  else {
 		    /* To avoid any deadlocks, all the locks on the windows
 		       structures must be suspended before the SetWindowPos */
-		    SetWindowPos( hwnd, 0, newRect.left, newRect.top,
+		    NtUserSetWindowPos( hwnd, 0, newRect.left, newRect.top,
 				  newRect.right - newRect.left,
 				  newRect.bottom - newRect.top,
 				  ( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
@@ -659,13 +659,13 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     }
 
   ReleaseCapture();
-  ClipCursor(NULL);
+  NtUserClipCursor(NULL);
   if( iconic )
     {
       if( moved ) /* restore cursors, show icon title later on */
 	{
 	  ShowCursor( FALSE );
-	  SetCursor( hOldCursor );
+	  NtUserSetCursor( hOldCursor );
 	}
       DestroyCursor( hDragCursor );
     }
@@ -703,14 +703,14 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
         {
 	  /* NOTE: SWP_NOACTIVATE prevents document window activation in Word 6 */
 	  if(!DragFullWindows)
-	    SetWindowPos( hwnd, 0, sizingRect.left, sizingRect.top,
+	    NtUserSetWindowPos( hwnd, 0, sizingRect.left, sizingRect.top,
 			  sizingRect.right - sizingRect.left,
 			  sizingRect.bottom - sizingRect.top,
 			  ( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
         }
       else { /* restore previous size/position */
 	if(DragFullWindows)
-	  SetWindowPos( hwnd, 0, origRect.left, origRect.top,
+	  NtUserSetWindowPos( hwnd, 0, origRect.left, origRect.top,
 			origRect.right - origRect.left,
 			origRect.bottom - origRect.top,
 			( hittest == HTCAPTION ) ? SWP_NOSIZE : 0 );
@@ -783,26 +783,26 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	break;
       case SC_MINIMIZE:
         wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
+        if(NtUserGetWindowPlacement(hWnd, &wp))
         {
           wp.showCmd = SW_MINIMIZE;
-          SetWindowPlacement(hWnd, &wp);
+          NtUserSetWindowPlacement(hWnd, &wp);
         }
         break;
       case SC_MAXIMIZE:
         wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
+        if(NtUserGetWindowPlacement(hWnd, &wp))
         {
           wp.showCmd = SW_MAXIMIZE;
-          SetWindowPlacement(hWnd, &wp);
+          NtUserSetWindowPlacement(hWnd, &wp);
         }
         break;
       case SC_RESTORE:
         wp.length = sizeof(WINDOWPLACEMENT);
-        if(GetWindowPlacement(hWnd, &wp))
+        if(NtUserGetWindowPlacement(hWnd, &wp))
         {
           wp.showCmd = SW_RESTORE;
-          SetWindowPlacement(hWnd, &wp);
+          NtUserSetWindowPlacement(hWnd, &wp);
         }
         break;
       case SC_CLOSE:
@@ -1003,9 +1003,9 @@ DefWndScreenshot(HWND hWnd)
     HDC hdc2;
 
     OpenClipboard(hWnd);
-    EmptyClipboard();
+    NtUserEmptyClipboard();
 
-    hdc = GetWindowDC(hWnd);
+    hdc = NtUserGetWindowDC(hWnd);
     GetWindowRect(hWnd, &rect);
     w = rect.right - rect.left;
     h = rect.bottom - rect.top;
@@ -1023,7 +1023,7 @@ DefWndScreenshot(HWND hWnd)
     ReleaseDC(hWnd, hdc);
     ReleaseDC(hWnd, hdc2);
 
-    CloseClipboard();
+    NtUserCloseClipboard();
 
 }
 
@@ -1107,7 +1107,7 @@ User32DefWindowProc(HWND hWnd,
             /* in Windows, capture is taken when right-clicking on the caption bar */
             if (wParam == HTCAPTION)
             {
-                SetCapture(hWnd);
+                NtUserSetCapture(hWnd);
             }
             break;
         }
@@ -1206,7 +1206,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_PAINT:
         {
             PAINTSTRUCT Ps;
-            HDC hDC = BeginPaint(hWnd, &Ps);
+            HDC hDC = NtUserBeginPaint(hWnd, &Ps);
             if (hDC)
             {
                 HICON hIcon;
@@ -1223,7 +1223,7 @@ User32DefWindowProc(HWND hWnd,
                          GetSystemMetrics(SM_CYICON)) / 2;
                     DrawIcon(hDC, x, y, hIcon);
                 }
-                EndPaint(hWnd, &Ps);
+                NtUserEndPaint(hWnd, &Ps);
             }
             return (0);
         }
@@ -1234,7 +1234,7 @@ User32DefWindowProc(HWND hWnd,
             hRgn = CreateRectRgn(0, 0, 0, 0);
             if (GetUpdateRgn(hWnd, hRgn, FALSE) != NULLREGION)
             {
-                RedrawWindow(hWnd, NULL, hRgn,
+                NtUserRedrawWindow(hWnd, NULL, hRgn,
 			        RDW_ERASENOW | RDW_ERASE | RDW_FRAME |
                     RDW_ALLCHILDREN);
             }
@@ -1250,7 +1250,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_CLOSE:
         {
-            DestroyWindow(hWnd);
+            NtUserDestroyWindow(hWnd);
             return (0);
         }
 
@@ -1283,7 +1283,7 @@ User32DefWindowProc(HWND hWnd,
             if (LOWORD(wParam) != WA_INACTIVE &&
                 !(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
             {
-                SetFocus(hWnd);
+                NtUserSetFocus(hWnd);
             }
             break;
         }
@@ -1520,7 +1520,7 @@ User32DefWindowProc(HWND hWnd,
            INT Index = (wParam != 0) ? GCL_HICON : GCL_HICONSM;
            HICON hOldIcon = (HICON)GetClassLongW(hWnd, Index);
            SetClassLongW(hWnd, Index, lParam);
-           SetWindowPos(hWnd, 0, 0, 0, 0, 0,
+           NtUserSetWindowPos(hWnd, 0, 0, 0, 0, 0,
 		       SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE |
 		       SWP_NOACTIVATE | SWP_NOZORDER);
            return ((LRESULT)hOldIcon);

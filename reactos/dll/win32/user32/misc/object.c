@@ -36,53 +36,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
- */
-BOOL
-WINAPI
-SetUserObjectInformationA(
-  HANDLE hObj,
-  int nIndex,
-  PVOID pvInfo,
-  DWORD nLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-SetUserObjectInformationW(
-  HANDLE hObj,
-  int nIndex,
-  PVOID pvInfo,
-  DWORD nLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-UserHandleGrantAccess(
-  HANDLE hUserHandle,
-  HANDLE hJob,
-  BOOL bGrant)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
  * @implemented
  */
 BOOL
@@ -101,7 +54,7 @@ GetUserObjectInformationA(
          pvInfo, nLength, lpnLengthNeeded);
 
   if (nIndex != UOI_NAME && nIndex != UOI_TYPE)
-    return GetUserObjectInformationW(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
+    return NtUserGetObjectInformation(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
 
   /* allocate unicode buffer */
   buffer = HeapAlloc(GetProcessHeap(), 0, nLength*2);
@@ -112,7 +65,7 @@ GetUserObjectInformationA(
   }
 
   /* get unicode string */
-  if (!GetUserObjectInformationW(hObj, nIndex, buffer, nLength*2, lpnLengthNeeded))
+  if (!NtUserGetObjectInformation(hObj, nIndex, buffer, nLength*2, lpnLengthNeeded))
     ret = FALSE;
   *lpnLengthNeeded /= 2;
 
@@ -130,22 +83,3 @@ GetUserObjectInformationA(
   HeapFree(GetProcessHeap(), 0, buffer);
   return ret;
 }
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-GetUserObjectInformationW(
-  HANDLE hObj,
-  int nIndex,
-  PVOID pvInfo,
-  DWORD nLength,
-  LPDWORD lpnLengthNeeded)
-{
-  TRACE("GetUserObjectInformationW(%x %d %x %d %x)\n", hObj, nIndex,
-         pvInfo, nLength, lpnLengthNeeded);
-  return NtUserGetObjectInformation(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
-}
-

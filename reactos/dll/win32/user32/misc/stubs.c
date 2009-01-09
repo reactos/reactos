@@ -47,30 +47,6 @@ GetMouseMovePointsEx(
 
 
 /*
- * @implemented
- */
-BOOL
-WINAPI
-LockWindowUpdate(
-  HWND hWndLock)
-{
-    return NtUserLockWindowUpdate(hWndLock);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-LockWorkStation(VOID)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
  * @unimplemented
  */
 DWORD
@@ -137,7 +113,7 @@ GetInternalWindowPos(
 {
     WINDOWPLACEMENT wndpl;
 
-    if (GetWindowPlacement(hwnd, &wndpl))
+    if (NtUserGetWindowPlacement(hwnd, &wndpl))
     {
 		if (rectWnd) *rectWnd = wndpl.rcNormalPosition;
 		if (ptIcon)  *ptIcon = wndpl.ptMinPosition;
@@ -190,35 +166,6 @@ RegisterSystemThread ( DWORD flags, DWORD reserved )
 {
   UNIMPLEMENTED;
 }
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-RegisterTasklist ( DWORD x )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-DragObject(
-	   HWND    hwnd1,
-	   HWND    hwnd2,
-	   UINT    u1,
-	   DWORD   dw1,
-	   HCURSOR hc1
-	   )
-{
-  return NtUserDragObject(hwnd1, hwnd2, u1, dw1, hc1);
-}
-
-
 
 
 /*

@@ -267,29 +267,6 @@ int WINAPI TranslateAcceleratorW(HWND hWnd, HACCEL hAccTable, LPMSG lpMsg)
  return NtUserTranslateAccelerator(hWnd, hAccTable, lpMsg);
 }
 
-/*
- * @implemented
- */
-int WINAPI CopyAcceleratorTableW
-(
- HACCEL hAccelSrc,
- LPACCEL lpAccelDst,
- int cAccelEntries
-)
-{
- return NtUserCopyAcceleratorTable(hAccelSrc, lpAccelDst, cAccelEntries);
-}
-
-/*
- * @implemented
- */
-HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccl, int cEntries)
-{
- if (!cEntries || !lpaccl) return (HACCEL)0;
-
- return NtUserCreateAcceleratorTable(lpaccl, cEntries);
-}
-
 
 /*
  * @implemented
@@ -303,7 +280,7 @@ int WINAPI CopyAcceleratorTableA
 {
    int i;
 
-   cAccelEntries = CopyAcceleratorTableW(hAccelSrc, lpAccelDst, cAccelEntries);
+   cAccelEntries = NtUserCopyAcceleratorTable(hAccelSrc, lpAccelDst, cAccelEntries);
 
    if (lpAccelDst == NULL) return cAccelEntries;
 
@@ -349,7 +326,7 @@ HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccl, int cEntries)
    if(!NT_SUCCESS(nErrCode)) lpaccl[i].key = -1;
   }
 
- return CreateAcceleratorTableW(lpaccl, cEntries);
+ return NtUserCreateAcceleratorTable(lpaccl, cEntries);
 }
 
 

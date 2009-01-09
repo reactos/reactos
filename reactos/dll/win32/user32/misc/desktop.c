@@ -327,7 +327,7 @@ SystemParametersInfoA(UINT uiAction,
           }
         }
 
-        RedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
+        NtUserRedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
         return Ret;
       }
@@ -434,24 +434,12 @@ SystemParametersInfoW(UINT uiAction,
         }
       }
 
-      RedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
+      NtUserRedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
       return Ret;
     }
   }
   return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-CloseDesktop(
-  HDESK hDesktop)
-{
-  return NtUserCloseDesktop(hDesktop);
 }
 
 
@@ -627,73 +615,10 @@ OpenDesktopW(
 /*
  * @implemented
  */
-HDESK
-WINAPI
-OpenInputDesktop(
-  DWORD dwFlags,
-  BOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
-{
-  return NtUserOpenInputDesktop(
-    dwFlags,
-    fInherit,
-    dwDesiredAccess);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-PaintDesktop(
-  HDC hdc)
-{
-  return NtUserPaintDesktop(hdc);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SetThreadDesktop(
-  HDESK hDesktop)
-{
-  return NtUserSetThreadDesktop(hDesktop);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SwitchDesktop(
-  HDESK hDesktop)
-{
-  return NtUserSwitchDesktop(hDesktop);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-SetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
-{
-	return NtUserSetShellWindowEx(hwndShell, hwndShellListView);
-}
-
-
-/*
- * @implemented
- */
 BOOL WINAPI
 SetShellWindow(HWND hwndShell)
 {
-	return SetShellWindowEx(hwndShell, hwndShell);
+	return NtUserSetShellWindowEx(hwndShell, hwndShell);
 }
 
 

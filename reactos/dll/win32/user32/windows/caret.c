@@ -39,7 +39,7 @@ DrawCaret(HWND hWnd,
 {
     HDC hDC, hComp;
 
-    hDC = GetDC(hWnd);
+    hDC = NtUserGetDC(hWnd);
     if(hDC)
     {
         if(CaretInfo->Bitmap && GetBitmapDimensionEx(CaretInfo->Bitmap, &CaretInfo->Size))
@@ -80,19 +80,6 @@ DrawCaret(HWND hWnd,
     }
 }
 
-/*
- * @implemented
- */
-BOOL
-WINAPI
-CreateCaret(HWND hWnd,
-            HBITMAP hBitmap,
-            int nWidth,
-            int nHeight)
-{
-    return (BOOL)NtUserCreateCaret(hWnd, hBitmap, nWidth, nHeight);
-}
-
 
 /*
  * @implemented
@@ -102,28 +89,6 @@ WINAPI
 DestroyCaret(VOID)
 {
     return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
-}
-
-
-/*
- * @implemented
- */
-UINT
-WINAPI
-GetCaretBlinkTime(VOID)
-{
-    return NtUserGetCaretBlinkTime();
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-GetCaretPos(LPPOINT lpPoint)
-{
-    return (BOOL)NtUserGetCaretPos(lpPoint);
 }
 
 

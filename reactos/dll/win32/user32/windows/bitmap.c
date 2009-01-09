@@ -699,7 +699,7 @@ CopyBmp(HANDLE hnd,
         }
         else
         {
-            HDC screenDC = GetDC(NULL);
+            HDC screenDC = NtUserGetDC(NULL);
             res = CreateCompatibleBitmap(screenDC, desiredx, desiredy);
             ReleaseDC(NULL, screenDC);
         }
@@ -717,7 +717,7 @@ CopyBmp(HANDLE hnd,
         }
         else
         {
-            HDC screenDC = GetDC(NULL);
+            HDC screenDC = NtUserGetDC(NULL);
             int screen_depth = GetDeviceCaps(screenDC, BITSPIXEL);
             ReleaseDC(NULL, screenDC);
 

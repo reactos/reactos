@@ -104,12 +104,12 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
         {
           case MB_ABORTRETRYIGNORE:
           case MB_YESNO:
-            RemoveMenu(GetSystemMenu(hwnd, FALSE), SC_CLOSE, MF_BYCOMMAND);
+            NtUserRemoveMenu(GetSystemMenu(hwnd, FALSE), SC_CLOSE, MF_BYCOMMAND);
             break;
         }
-        SetFocus(GetDlgItem(hwnd, mbi->DefBtn));
+        NtUserSetFocus(GetDlgItem(hwnd, mbi->DefBtn));
         if(mbi->Timeout && (mbi->Timeout != (UINT)-1))
-          SetTimer(hwnd, 0, mbi->Timeout, NULL);
+          NtUserSetTimer(hwnd, 0, mbi->Timeout, NULL);
       }
       return 0;
 

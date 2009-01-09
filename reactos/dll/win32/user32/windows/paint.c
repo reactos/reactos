@@ -81,45 +81,6 @@ DeleteFrameBrushes(VOID)
     }
 }
 
-/*
- * @implemented
- */
-HDC
-WINAPI
-BeginPaint(
-  HWND hwnd,
-  LPPAINTSTRUCT lpPaint)
-{
-  return NtUserBeginPaint(hwnd, lpPaint);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-EndPaint(
-  HWND hWnd,
-  CONST PAINTSTRUCT *lpPaint)
-{
-  return NtUserEndPaint(hWnd, lpPaint);
-}
-
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-ExcludeUpdateRgn(
-  HDC hDC,
-  HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
 
 /*
  * @implemented
@@ -146,37 +107,6 @@ GetUpdateRgn(
   BOOL bErase)
 {
   return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
-}
-
-
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-InvalidateRgn(
-  HWND hWnd,
-  HRGN hRgn,
-  BOOL bErase)
-{
-  return NtUserInvalidateRgn(hWnd, hRgn, bErase);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-RedrawWindow(
-  HWND hWnd,
-  CONST RECT *lprcUpdate,
-  HRGN hrgnUpdate,
-  UINT flags)
-{
- return NtUserRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
 }
 
 
@@ -224,7 +154,7 @@ WINAPI
 UpdateWindow(
   HWND hWnd)
 {
-  return RedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
+  return NtUserRedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
 }
 
 
@@ -239,7 +169,7 @@ ValidateRect(
 {
   /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
      but Wine dont so i removed it... */
-  return RedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
+  return NtUserRedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
 }
 
 
@@ -254,7 +184,7 @@ ValidateRgn(
 {
   /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
      but Wine dont so i removed it... */
-  return RedrawWindow( hWnd, NULL, hRgn, RDW_VALIDATE );
+  return NtUserRedrawWindow( hWnd, NULL, hRgn, RDW_VALIDATE );
 }
 
 

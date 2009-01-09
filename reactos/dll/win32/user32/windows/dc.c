@@ -34,40 +34,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
-HDC
-WINAPI
-GetDC(HWND hWnd)
-{
-    return NtUserGetDC(hWnd);
-}
-
-
-/*
- * @implemented
- */
-HDC
-WINAPI
-GetDCEx(HWND hWnd,
-        HRGN hrgnClip,
-        DWORD flags)
-{
-    return NtUserGetDCEx(hWnd, hrgnClip, flags);
-}
-
-
-/*
- * @implemented
- */
-HDC
-WINAPI
-GetWindowDC(HWND hWnd)
-{
-    return (HDC)NtUserGetWindowDC(hWnd);
-}
-
 
 BOOL
 WINAPI

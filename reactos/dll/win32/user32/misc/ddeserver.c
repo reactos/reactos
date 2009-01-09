@@ -370,7 +370,7 @@ static WDML_CONV* WDML_CreateServerConv(WDML_INSTANCE* pInstance, HWND hwndClien
     }
     else
     {
-	DestroyWindow(hwndServerConv);
+	NtUserDestroyWindow(hwndServerConv);
     }
     return pConv;
 }

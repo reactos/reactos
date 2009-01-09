@@ -1173,7 +1173,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 	if (istart == iend && delta == 0)
 		return;
 
-	dc = GetDC(es->hwndSelf);
+	dc = NtUserGetDC(es->hwndSelf);
 	if (es->font)
 		old_font = SelectObject(dc, es->font);
 
@@ -1443,7 +1443,7 @@ static void EDIT_CalcLineWidth_SL(EDITSTATE *es)
 
 	text = EDIT_GetPasswordPointer_SL(es);
 
-	dc = GetDC(es->hwndSelf);
+	dc = NtUserGetDC(es->hwndSelf);
 	if (es->font)
 		old_font = SelectObject(dc, es->font);
 
@@ -1577,7 +1577,7 @@ static INT EDIT_CharFromPos(EDITSTATE *es, INT x, INT y, LPBOOL after_wrap)
 				*after_wrap = FALSE;
 			return line_index;
 		}
-		dc = GetDC(es->hwndSelf);
+		dc = NtUserGetDC(es->hwndSelf);
 		if (es->font)
 			old_font = SelectObject(dc, es->font);
                     low = line_index;
@@ -1621,7 +1621,7 @@ static INT EDIT_CharFromPos(EDITSTATE *es, INT x, INT y, LPBOOL after_wrap)
 		}
 
 		text = EDIT_GetPasswordPointer_SL(es);
-		dc = GetDC(es->hwndSelf);
+		dc = NtUserGetDC(es->hwndSelf);
 		if (es->font)
 			old_font = SelectObject(dc, es->font);
 		if (x < 0)
@@ -3187,7 +3187,7 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 	LINEDEF *line_def;
 
 	index = min(index, len);
-	dc = GetDC(es->hwndSelf);
+	dc = NtUserGetDC(es->hwndSelf);
 	if (es->font)
 		old_font = SelectObject(dc, es->font);
 	if (es->style & ES_MULTILINE) {
@@ -3803,7 +3803,7 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
 
         /* Set the default margins depending on the font */
         if (es->font && (left == EC_USEFONTINFO || right == EC_USEFONTINFO)) {
-            HDC dc = GetDC(es->hwndSelf);
+            HDC dc = NtUserGetDC(es->hwndSelf);
             HFONT old_font = SelectObject(dc, es->font);
             GetTextMetricsW(dc, &tm);
             /* The default margins are only non zero for TrueType or Vector fonts */
@@ -4257,7 +4257,7 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
 	/* copy */
 	EnableMenuItem(popup, 3, MF_BYPOSITION | ((end - start) && !(es->style & ES_PASSWORD) ? MF_ENABLED : MF_GRAYED));
 	/* paste */
-	EnableMenuItem(popup, 4, MF_BYPOSITION | (IsClipboardFormatAvailable(CF_UNICODETEXT) && !(es->style & ES_READONLY) ? MF_ENABLED : MF_GRAYED));
+	EnableMenuItem(popup, 4, MF_BYPOSITION | (NtUserIsClipboardFormatAvailable(CF_UNICODETEXT) && !(es->style & ES_READONLY) ? MF_ENABLED : MF_GRAYED));
 	/* delete */
 	EnableMenuItem(popup, 5, MF_BYPOSITION | ((end - start) && !(es->style & ES_READONLY) ? MF_ENABLED : MF_GRAYED));
 	/* select all */
@@ -4274,7 +4274,7 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
         }
 
 	TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, 0, es->hwndSelf, NULL);
-	DestroyMenu(menu);
+	NtUserDestroyMenu(menu);
 }
 
 
@@ -4301,9 +4301,9 @@ static void EDIT_WM_Copy(EDITSTATE *es)
 	TRACE("%s\n", debugstr_w(dst));
 	GlobalUnlock(hdst);
 	OpenClipboard(es->hwndSelf);
-	EmptyClipboard();
+	NtUserEmptyClipboard();
 	SetClipboardData(CF_UNICODETEXT, hdst);
-	CloseClipboard();
+	NtUserCloseClipboard();
 }
 
 
@@ -4801,7 +4801,7 @@ static LRESULT EDIT_WM_LButtonDblClk(EDITSTATE *es)
 	INT ll;
 
 	es->bCaptureState = TRUE;
-	SetCapture(es->hwndSelf);
+	NtUserSetCapture(es->hwndSelf);
 
 	l = EDIT_EM_LineFromChar(es, e);
 	li = EDIT_EM_LineIndex(es, l);
@@ -4811,7 +4811,7 @@ static LRESULT EDIT_WM_LButtonDblClk(EDITSTATE *es)
 	EDIT_EM_SetSel(es, s, e, FALSE);
 	EDIT_EM_ScrollCaret(es);
 	es->region_posx = es->region_posy = 0;
-	SetTimer(es->hwndSelf, 0, 100, NULL);
+	NtUserSetTimer(es->hwndSelf, 0, 100, NULL);
 	return 0;
 }
 
@@ -4827,17 +4827,17 @@ static LRESULT EDIT_WM_LButtonDown(EDITSTATE *es, DWORD keys, INT x, INT y)
 	BOOL after_wrap;
 
 	es->bCaptureState = TRUE;
-	SetCapture(es->hwndSelf);
+	NtUserSetCapture(es->hwndSelf);
 	EDIT_ConfinePoint(es, &x, &y);
 	e = EDIT_CharFromPos(es, x, y, &after_wrap);
 	EDIT_EM_SetSel(es, (keys & MK_SHIFT) ? es->selection_start : e, e, after_wrap);
 	EDIT_EM_ScrollCaret(es);
 	es->region_posx = es->region_posy = 0;
 	if (!(es->style & ES_MULTILINE))
-	    SetTimer(es->hwndSelf, 0, 100, NULL);
+	    NtUserSetTimer(es->hwndSelf, 0, 100, NULL);
 
 	if (!(es->flags & EF_FOCUSED))
-            SetFocus(es->hwndSelf);
+            NtUserSetFocus(es->hwndSelf);
 
 	return 0;
 }
@@ -4851,7 +4851,7 @@ static LRESULT EDIT_WM_LButtonDown(EDITSTATE *es, DWORD keys, INT x, INT y)
 static LRESULT EDIT_WM_LButtonUp(EDITSTATE *es)
 {
 	if (es->bCaptureState) {
-		KillTimer(es->hwndSelf, 0);
+		NtUserKillTimer(es->hwndSelf, 0);
 		if (GetCapture() == es->hwndSelf) ReleaseCapture();
 	}
 	es->bCaptureState = FALSE;
@@ -5026,7 +5026,7 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 	BOOL rev = es->bEnableState &&
 				((es->flags & EF_FOCUSED) ||
 					(es->style & ES_NOHIDESEL));
-        dc = hdc ? hdc : BeginPaint(es->hwndSelf, &ps);
+        dc = hdc ? hdc : NtUserBeginPaint(es->hwndSelf, &ps);
 
 	GetClientRect(es->hwndSelf, &rcClient);
 
@@ -5091,7 +5091,7 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 		SelectObject(dc, old_font);
 
         if (!hdc)
-            EndPaint(es->hwndSelf, &ps);
+            NtUserEndPaint(es->hwndSelf, &ps);
 }
 
 
@@ -5120,7 +5120,7 @@ static void EDIT_WM_Paste(EDITSTATE *es)
              const WCHAR empty_strW[] = { 0 };
              EDIT_EM_ReplaceSel(es, TRUE, empty_strW, TRUE, TRUE);
         }
-	CloseClipboard();
+	NtUserCloseClipboard();
 }
 
 
@@ -5139,12 +5139,12 @@ static void EDIT_WM_SetFocus(EDITSTATE *es)
         /* single line edit updates itself */
         if (!(es->style & ES_MULTILINE))
         {
-            HDC hdc = GetDC(es->hwndSelf);
+            HDC hdc = NtUserGetDC(es->hwndSelf);
             EDIT_WM_Paint(es, hdc);
             ReleaseDC(es->hwndSelf, hdc);
         }
 
-	CreateCaret(es->hwndSelf, 0, 2, es->line_height);
+	NtUserCreateCaret(es->hwndSelf, 0, 2, es->line_height);
 	EDIT_SetCaretPos(es, es->selection_end,
 			 es->flags & EF_AFTER_WRAP);
 	ShowCaret(es->hwndSelf);
@@ -5169,7 +5169,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	RECT clientRect;
 
 	es->font = font;
-	dc = GetDC(es->hwndSelf);
+	dc = NtUserGetDC(es->hwndSelf);
 	if (font)
 		old_font = SelectObject(dc, font);
 	GetTextMetricsW(dc, &tm);
@@ -5194,7 +5194,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 		EDIT_UpdateText(es, NULL, TRUE);
 	if (es->flags & EF_FOCUSED) {
 		DestroyCaret();
-		CreateCaret(es->hwndSelf, 0, 2, es->line_height);
+		NtUserCreateCaret(es->hwndSelf, 0, 2, es->line_height);
 		EDIT_SetCaretPos(es, es->selection_end,
 				 es->flags & EF_AFTER_WRAP);
 		ShowCaret(es->hwndSelf);
@@ -5506,7 +5506,7 @@ static void EDIT_UpdateTextRegion(EDITSTATE *es, HRGN hrgn, BOOL bErase)
         es->flags &= ~EF_UPDATE;
         EDIT_NOTIFY_PARENT(es, EN_UPDATE);
     }
-    InvalidateRgn(es->hwndSelf, hrgn, bErase);
+    NtUserInvalidateRgn(es->hwndSelf, hrgn, bErase);
 }
 
 

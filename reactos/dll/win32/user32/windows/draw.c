@@ -1807,16 +1807,6 @@ FlashWindow(HWND hWnd, BOOL bInvert)
 }
 
 /*
- * @unimplemented
- */
-BOOL WINAPI
-FlashWindowEx(PFLASHWINFO pfwi)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
  * @implemented
  */
 INT WINAPI
@@ -1836,17 +1826,6 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
                 lprc->bottom - lprc->top, PATCOPY);
     SelectObject(hDC, prevhbr);
     return TRUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-DrawAnimatedRects(HWND hWnd, int idAni, CONST RECT *lprcFrom,
-                  CONST RECT *lprcTo)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 /*

@@ -536,7 +536,7 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                 if (bFirstEmpty)
                 {
                     /* ShowWindow the first time the queue goes empty */
-                    ShowWindow( hwnd, SW_SHOWNORMAL );
+                    NtUserShowWindow( hwnd, SW_SHOWNORMAL );
                     bFirstEmpty = FALSE;
                 }
                 if (!(GetWindowLongW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
@@ -558,7 +558,7 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
     }
     if (dlgInfo->flags & DF_OWNERENABLED) DIALOG_EnableOwner( owner );
     retval = dlgInfo->idResult;
-    DestroyWindow( hwnd );
+    NtUserDestroyWindow( hwnd );
     return retval;
 }
 
@@ -703,7 +703,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
            * for both +ve and -ve template.pointSize */
         HDC dc;
         int pixels;
-        dc = GetDC(0);
+        dc = NtUserGetDC(0);
         pixels = MulDiv(template.pointSize, GetDeviceCaps(dc , LOGPIXELSY), 72);
         hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
                                           template.italic, FALSE, FALSE, DEFAULT_CHARSET, 0, 0,
@@ -824,7 +824,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if (!hwnd)
     {
         if (hUserFont) DeleteObject( hUserFont );
-        if (hMenu) DestroyMenu( hMenu );
+        if (hMenu) NtUserDestroyMenu( hMenu );
         if (modal && (flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
         return 0;
     }
@@ -837,7 +837,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if (dlgInfo == NULL)
     {
         if (hUserFont) DeleteObject( hUserFont );
-        if (hMenu) DestroyMenu( hMenu );
+        if (hMenu) NtUserDestroyMenu( hMenu );
         if (modal && (flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
         return 0;
     }
@@ -872,7 +872,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                 /* By returning TRUE, app has requested a default focus assignment */
                 dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE);
                 if( dlgInfo->hwndFocus )
-                    SetFocus( dlgInfo->hwndFocus );
+                    NtUserSetFocus( dlgInfo->hwndFocus );
             }
         }
         if (!(GetWindowLongW( hwnd, GWL_STYLE ) & WS_CHILD))
@@ -880,12 +880,12 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
         if (template.style & WS_VISIBLE && !(GetWindowLongW( hwnd, GWL_STYLE ) & WS_VISIBLE))
         {
-           ShowWindow( hwnd, SW_SHOWNORMAL );   /* SW_SHOW doesn't always work */
+           NtUserShowWindow( hwnd, SW_SHOWNORMAL );   /* SW_SHOW doesn't always work */
         }
         return hwnd;
     }
     if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
-    if( IsWindow(hwnd) ) DestroyWindow( hwnd );
+    if( IsWindow(hwnd) ) NtUserDestroyWindow( hwnd );
     return 0;
 }
 
@@ -906,7 +906,7 @@ static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
     }
     if (SendMessageW( hwndCtrl, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
         SendMessageW( hwndCtrl, EM_SETSEL, 0, -1 );
-    SetFocus( hwndCtrl );
+    NtUserSetFocus( hwndCtrl );
 }
 
 /***********************************************************************
@@ -940,7 +940,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
         infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
        if (!IsWindow( infoPtr->hwndFocus )) return;
     }
-    SetFocus( infoPtr->hwndFocus );
+    NtUserSetFocus( infoPtr->hwndFocus );
 
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
@@ -1078,7 +1078,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                     GlobalFree16(dlgInfo->hDialogHeap);
                 }*/
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
-                if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
+                if (dlgInfo->hMenu) NtUserDestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
             }
              /* Window clean-up */
@@ -1912,13 +1912,13 @@ EndDialog(
     /* Windows sets the focus to the dialog itself in EndDialog */
 
     if (IsChild(hDlg, GetFocus()))
-       SetFocus( hDlg );
+       NtUserSetFocus( hDlg );
 
     /* Don't have to send a ShowWindow(SW_HIDE), just do
        SetWindowPos with SWP_HIDEWINDOW as done in Windows */
 
-    SetWindowPos(hDlg, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
-                 | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW);
+    NtUserSetWindowPos(hDlg, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
+                       | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW);
 
     if (hDlg == GetActiveWindow()) WinPosActivateOtherWindow( hDlg );
 
@@ -1942,7 +1942,7 @@ GetDialogBaseUnits(VOID)
         HDC hdc;
         SIZE size;
 
-        if ((hdc = GetDC(0)))
+        if ((hdc = NtUserGetDC(0)))
         {
             size.cx = GdiGetCharDimensions( hdc, NULL, &size.cy );
             if (size.cx) units = MAKELONG( size.cx, size.cy );
@@ -2338,7 +2338,7 @@ IsDialogMessageW(
                                 SendMessageW (hwndNext, EM_SETSEL, 0, length);
                             }
                         }
-                        SetFocus (hwndNext);
+                        NtUserSetFocus (hwndNext);
                         DIALOG_FixChildrenOnChangeFocus (hDlg, hwndNext);
                     }
                     else

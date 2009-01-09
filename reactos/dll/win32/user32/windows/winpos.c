@@ -60,13 +60,13 @@ WinPosActivateOtherWindow(HWND hwnd)
     }
 
  done:
-    fg = GetForegroundWindow();
+    fg = NtUserGetForegroundWindow();
     TRACE("win = %p fg = %p\n", hwndTo, fg);
     if (!fg || (hwnd == fg))
     {
         if (SetForegroundWindow( hwndTo )) return;
     }
-    if (!SetActiveWindow( hwndTo )) SetActiveWindow(0);
+    if (!NtUserSetActiveWindow( hwndTo )) NtUserSetActiveWindow(0);
 }
 
 
@@ -102,14 +102,6 @@ GetActiveWindow(VOID)
   return (HWND)NtUserGetThreadState(THREADSTATE_ACTIVEWINDOW);
 }
 
-/*
- * @implemented
- */
-HWND WINAPI
-SetActiveWindow(HWND hWnd)
-{
-  return(NtUserSetActiveWindow(hWnd));
-}
 
 /*
  * @unimplemented

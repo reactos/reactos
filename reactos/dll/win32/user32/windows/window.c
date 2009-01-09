@@ -99,7 +99,7 @@ BringWindowToTop(HWND hWnd)
 VOID WINAPI
 SwitchToThisWindow(HWND hwnd, BOOL fUnknown)
 {
-    ShowWindow(hwnd, SW_SHOW);
+    NtUserShowWindow(hwnd, SW_SHOW);
 }
 
 
@@ -327,7 +327,7 @@ CreateWindowExA(DWORD dwExStyle,
             {
                 TRACE("Restoring current maximized child %p\n", top_child);
                 SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
-                ShowWindow(top_child, SW_RESTORE);
+                NtUserShowWindow(top_child, SW_RESTORE);
                 SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
             }
         }
@@ -433,7 +433,7 @@ CreateWindowExW(DWORD dwExStyle,
             {
                 TRACE("Restoring current maximized child %p\n", top_child);
                 SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
-                ShowWindow(top_child, SW_RESTORE);
+                NtUserShowWindow(top_child, SW_RESTORE);
                 SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
             }
         }
@@ -488,19 +488,9 @@ DeferWindowPos(HDWP hWinPosInfo,
 #if 0
     return NtUserDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
 #else
-    SetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+    NtUserSetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
     return hWinPosInfo;
 #endif
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-DestroyWindow(HWND hWnd)
-{
-    return NtUserDestroyWindow(hWnd);
 }
 
 
@@ -543,15 +533,6 @@ GetDesktopWindow(VOID)
     return Ret;
 }
 
-
-/*
- * @unimplemented
- */
-HWND WINAPI
-GetForegroundWindow(VOID)
-{
-    return NtUserGetForegroundWindow();
-}
 
 static BOOL
 User32EnumWindows(HDESK hDesktop,
@@ -918,17 +899,6 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 /*
  * @implemented
  */
-BOOL WINAPI
-GetGUIThreadInfo(DWORD idThread,
-                 LPGUITHREADINFO lpgui)
-{
-    return (BOOL)NtUserGetGUIThreadInfo(idThread, lpgui);
-}
-
-
-/*
- * @implemented
- */
 HWND WINAPI
 GetLastActivePopup(HWND hWnd)
 {
@@ -1009,17 +979,6 @@ GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 
     *pdwDefaultLayout = 0;
     return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-GetTitleBarInfo(HWND hwnd,
-                PTITLEBARINFO pti)
-{
-    return NtUserGetTitleBarInfo(hwnd, pti);
 }
 
 
@@ -1126,17 +1085,6 @@ GetWindowModuleFileNameW(HWND hwnd,
     }
 
     return GetModuleFileNameW(hWndInst, lpszFileName, cchFileNameMax);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-GetWindowPlacement(HWND hWnd,
-                   WINDOWPLACEMENT *lpwndpl)
-{
-    return (BOOL)NtUserGetWindowPlacement(hWnd, lpwndpl);
 }
 
 
@@ -1514,21 +1462,6 @@ LockSetForegroundWindow(UINT uLockCode)
  * @implemented
  */
 BOOL WINAPI
-MoveWindow(HWND hWnd,
-           int X,
-           int Y,
-           int nWidth,
-           int nHeight,
-           BOOL bRepaint)
-{
-    return NtUserMoveWindow(hWnd, X, Y, nWidth, nHeight, bRepaint);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
 AnimateWindow(HWND hwnd,
               DWORD dwTime,
               DWORD dwFlags)
@@ -1549,7 +1482,7 @@ AnimateWindow(HWND hwnd,
         return FALSE;
     }
 
-    ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
+    NtUserShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
 
     return TRUE;
 }
@@ -1564,7 +1497,7 @@ OpenIcon(HWND hWnd)
     if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
         return FALSE;
 
-    ShowWindow(hWnd,SW_RESTORE);
+    NtUserShowWindow(hWnd,SW_RESTORE);
     return TRUE;
 }
 
@@ -1590,17 +1523,6 @@ SetForegroundWindow(HWND hWnd)
 
 
 /*
- * @implemented
- */
-HWND WINAPI
-SetParent(HWND hWndChild,
-          HWND hWndNewParent)
-{
-    return NtUserSetParent(hWndChild, hWndNewParent);
-}
-
-
-/*
  * @unimplemented
  */
 BOOL WINAPI
@@ -1611,33 +1533,6 @@ SetProcessDefaultLayout(DWORD dwDefaultLayout)
 
     UNIMPLEMENTED;
     return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-SetWindowPlacement(HWND hWnd,
-                   CONST WINDOWPLACEMENT *lpwndpl)
-{
-    return (BOOL)NtUserSetWindowPlacement(hWnd, (WINDOWPLACEMENT *)lpwndpl);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-SetWindowPos(HWND hWnd,
-             HWND hWndInsertAfter,
-             int X,
-             int Y,
-             int cx,
-             int cy,
-             UINT uFlags)
-{
-    return NtUserSetWindowPos(hWnd,hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 
 
@@ -1709,28 +1604,6 @@ ShowOwnedPopups(HWND hWnd,
                 BOOL fShow)
 {
     return (BOOL)NtUserCallTwoParam((DWORD)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-ShowWindow(HWND hWnd,
-           int nCmdShow)
-{
-    return NtUserShowWindow(hWnd, nCmdShow);
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-ShowWindowAsync(HWND hWnd,
-                int nCmdShow)
-{
-    return NtUserShowWindowAsync(hWnd, nCmdShow);
 }
 
 

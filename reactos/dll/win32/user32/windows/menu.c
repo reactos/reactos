@@ -957,9 +957,9 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
       {
         PAINTSTRUCT ps;
-        BeginPaint(Wnd, &ps);
+        NtUserBeginPaint(Wnd, &ps);
         MenuDrawPopupMenu(Wnd, ps.hdc, (HMENU)GetWindowLongPtrW(Wnd, 0));
-        EndPaint(Wnd, &ps);
+        NtUserEndPaint(Wnd, &ps);
         return 0;
       }
 
@@ -1044,7 +1044,7 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
 	      return NULL;
 	  if (!(res = MENUEX_ParseResource(res, mii.hSubMenu)))
 	  {
-	      DestroyMenu(mii.hSubMenu);
+	      NtUserDestroyMenu(mii.hSubMenu);
 	      return NULL;
 	  }
 	  mii.fMask |= MIIM_SUBMENU;
@@ -1388,7 +1388,7 @@ MenuPopupMenuCalcSize(PROSMENUINFO MenuInfo, HWND WndOwner)
       return;
     }
 
-  Dc = GetDC(NULL);
+  Dc = NtUserGetDC(NULL);
   SelectObject(Dc, hMenuFont);
 
   Start = 0;
@@ -1766,8 +1766,8 @@ MenuInitTracking(HWND Wnd, HMENU Menu, BOOL Popup, UINT Flags)
         {
           /* app changed/recreated menu bar entries in WM_INITMENU
              Recalculate menu sizes else clicks will not work */
-          SetWindowPos(Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
+          NtUserSetWindowPos(Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+                             SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
 
         }
     /* This makes the menus of applications built with Delphi work.
@@ -1878,8 +1878,8 @@ MenuShowPopup(HWND WndOwner, HMENU Menu, UINT Id,
     }
 
   /* Display the window */
-  SetWindowPos(MenuInfo.Wnd, HWND_TOPMOST, 0, 0, 0, 0,
-               SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+  NtUserSetWindowPos(MenuInfo.Wnd, HWND_TOPMOST, 0, 0, 0, 0,
+                     SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
   UpdateWindow(MenuInfo.Wnd);
 
   return TRUE;
@@ -1963,11 +1963,11 @@ MenuSelectItem(HWND WndOwner, PROSMENUINFO MenuInfo, UINT Index,
 
   if (0 != (MenuInfo->Flags & MF_POPUP))
     {
-      Dc = GetDC(MenuInfo->Wnd);
+      Dc = NtUserGetDC(MenuInfo->Wnd);
     }
   else
     {
-      Dc = GetDCEx(MenuInfo->Wnd, 0, DCX_CACHE | DCX_WINDOW);
+      Dc = NtUserGetDCEx(MenuInfo->Wnd, 0, DCX_CACHE | DCX_WINDOW);
     }
 
   if (NULL == TopPopup)
@@ -2160,7 +2160,7 @@ MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest )
     DefItem = SC_CLOSE;
   }
   #endif
-  SetMenuDefaultItem(Menu, DefItem, MF_BYCOMMAND);
+  NtUserSetMenuDefaultItem(Menu, DefItem, MF_BYCOMMAND);
 }
 
 /***********************************************************************
@@ -2220,11 +2220,11 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
     {
       if (0 != (MenuInfo->Flags & MF_POPUP))
         {
-          Dc = GetDC(MenuInfo->Wnd);
+          Dc = NtUserGetDC(MenuInfo->Wnd);
         }
       else
         {
-          Dc = GetDCEx(MenuInfo->Wnd, 0, DCX_CACHE | DCX_WINDOW);
+          Dc = NtUserGetDCEx(MenuInfo->Wnd, 0, DCX_CACHE | DCX_WINDOW);
         }
 
       SelectObject(Dc, hMenuFont);
@@ -2320,7 +2320,7 @@ MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SendMenuSelect)
         {
           MenuHideSubPopups(WndOwner, &SubMenuInfo, FALSE);
           MenuSelectItem(WndOwner, &SubMenuInfo, NO_SELECTED_ITEM, SendMenuSelect, NULL);
-          DestroyWindow(SubMenuInfo.Wnd);
+          NtUserDestroyWindow(SubMenuInfo.Wnd);
           SubMenuInfo.Wnd = NULL;
           MenuSetRosMenuInfo(&SubMenuInfo);
         }
@@ -2880,7 +2880,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
       if (NewWnd != Mt->OwnerWnd)
         {
           Mt->OwnerWnd = NewWnd;
-          SetCapture(Mt->OwnerWnd);
+          NtUserSetCapture(Mt->OwnerWnd);
           (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt->OwnerWnd);
         }
 
@@ -3243,7 +3243,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
       fEndMenu = ! fRemove;
     }
 
-  SetCapture(Mt.OwnerWnd);
+  NtUserSetCapture(Mt.OwnerWnd);
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, Mt.OwnerWnd);
 
   while (! fEndMenu)
@@ -3271,7 +3271,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                   EnterIdleSent = TRUE;
                   SendMessageW(Mt.OwnerWnd, WM_ENTERIDLE, MSGF_MENU, (LPARAM) Win);
                 }
-              WaitMessage();
+              NtUserWaitMessage();
             }
         }
 
@@ -3529,7 +3529,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
     }
 
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
-  SetCapture(NULL);  /* release the capture */
+  NtUserSetCapture(NULL);  /* release the capture */
 
   /* If dropdown is still painted and the close box is clicked on
      then the menu will be destroyed as part of the DispatchMessage above.
@@ -3545,7 +3545,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
 
               if (0 != (MenuInfo.Flags & MF_POPUP))
                 {
-                  DestroyWindow(MenuInfo.Wnd);
+                  NtUserDestroyWindow(MenuInfo.Wnd);
                   MenuInfo.Wnd = NULL;
                 }
               MenuSelectItem(Mt.OwnerWnd, &MenuInfo, NO_SELECTED_ITEM, FALSE, NULL);
@@ -4031,28 +4031,6 @@ CreatePopupMenu(VOID)
  * @implemented
  */
 BOOL WINAPI
-DeleteMenu(HMENU hMenu,
-	   UINT uPosition,
-	   UINT uFlags)
-{
-  return NtUserDeleteMenu(hMenu, uPosition, uFlags);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-DestroyMenu(HMENU hMenu)
-{
-    return NtUserDestroyMenu(hMenu);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
 DrawMenuBar(HWND hWnd)
 {
   return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
@@ -4078,7 +4056,7 @@ EndMenu(VOID)
 {
   GUITHREADINFO guii;
   guii.cbSize = sizeof(GUITHREADINFO);
-  if(GetGUIThreadInfo(GetCurrentThreadId(), &guii) && guii.hwndMenuOwner)
+  if(NtUserGetGUIThreadInfo(GetCurrentThreadId(), &guii) && guii.hwndMenuOwner)
   {
     PostMessageW(guii.hwndMenuOwner, WM_CANCELMODE, 0, 0);
   }
@@ -4093,19 +4071,6 @@ HMENU WINAPI
 GetMenu(HWND hWnd)
 {
   return NtUserGetMenu(hWnd);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-GetMenuBarInfo(HWND hwnd,
-	       LONG idObject,
-	       LONG idItem,
-	       PMENUBARINFO pmbi)
-{
-  return (BOOL)NtUserGetMenuBarInfo(hwnd, idObject, idItem, pmbi);
 }
 
 
@@ -4352,19 +4317,6 @@ GetMenuItemInfoW(
 /*
  * @implemented
  */
-BOOL WINAPI
-GetMenuItemRect(HWND hWnd,
-		HMENU hMenu,
-		UINT uItem,
-		LPRECT lprcItem)
-{
-  return NtUserGetMenuItemRect( hWnd, hMenu, uItem, lprcItem);
-}
-
-
-/*
- * @implemented
- */
 UINT
 WINAPI
 GetMenuState(
@@ -4496,22 +4448,6 @@ GetSystemMenu(
 
   return NULL == TopMenu ? NULL : GetSubMenu(TopMenu, 0);
 }
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-HiliteMenuItem(
-  HWND hwnd,
-  HMENU hmenu,
-  UINT uItemHilite,
-  UINT uHilite)
-{
-  return NtUserHiliteMenuItem(hwnd, hmenu, uItemHilite, uHilite);
-}
-
 
 
 /*
@@ -4724,7 +4660,7 @@ LoadMenuIndirectW(CONST MENUTEMPLATE *lpMenuTemplate)
       if (!(hMenu = CreateMenu())) return 0;
       if (!MENU_ParseResource(p, hMenu, TRUE))
       {
-        DestroyMenu(hMenu);
+        NtUserDestroyMenu(hMenu);
         return 0;
       }
       return hMenu;
@@ -4734,7 +4670,7 @@ LoadMenuIndirectW(CONST MENUTEMPLATE *lpMenuTemplate)
       if (!(hMenu = CreateMenu())) return 0;
       if (!MENUEX_ParseResource(p, hMenu))
       {
-        DestroyMenu( hMenu );
+        NtUserDestroyMenu( hMenu );
         return 0;
       }
       return hMenu;
@@ -4874,39 +4810,11 @@ ModifyMenuW(
 /*
  * @implemented
  */
-BOOL
-WINAPI
-RemoveMenu(
-  HMENU hMenu,
-  UINT uPosition,
-  UINT uFlags)
-{
-  return NtUserRemoveMenu(hMenu, uPosition, uFlags);
-}
-
-
-/*
- * @implemented
- */
 BOOL WINAPI
 SetMenu(HWND hWnd,
 	HMENU hMenu)
 {
   return NtUserSetMenu(hWnd, hMenu, TRUE);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SetMenuDefaultItem(
-  HMENU hMenu,
-  UINT uItem,
-  UINT fByPos)
-{
-  return NtUserSetMenuDefaultItem(hMenu, uItem, fByPos);
 }
 
 
@@ -5163,18 +5071,6 @@ NEWTrackPopupMenu(
 /*
  * @implemented
  */
-BOOL
-WINAPI
-SetMenuContextHelpId(HMENU hmenu,
-          DWORD dwContextHelpId)
-{
-  return NtUserSetMenuContextHelpId(hmenu, dwContextHelpId);
-}
-
-
-/*
- * @implemented
- */
 DWORD
 WINAPI
 GetMenuContextHelpId(HMENU hmenu)
@@ -5246,14 +5142,14 @@ ChangeMenuW(
             return AppendMenuW(hMenu, flags &~ MF_APPEND, cmdInsert, lpszNewItem);
 
         case MF_DELETE :
-            return DeleteMenu(hMenu, cmd, flags &~ MF_DELETE);
+            return NtUserDeleteMenu(hMenu, cmd, flags &~ MF_DELETE);
 
         case MF_CHANGE :
             return ModifyMenuW(hMenu, cmd, flags &~ MF_CHANGE, cmdInsert, lpszNewItem);
 
         case MF_REMOVE :
-            return RemoveMenu(hMenu, flags & MF_BYPOSITION ? cmd : cmdInsert,
-                                flags &~ MF_REMOVE);
+            return NtUserRemoveMenu(hMenu, flags & MF_BYPOSITION ? cmd : cmdInsert,
+                                    flags &~ MF_REMOVE);
 
         default :   /* MF_INSERT */
             return InsertMenuW(hMenu, cmd, flags, cmdInsert, lpszNewItem);
@@ -5284,14 +5180,14 @@ ChangeMenuA(
             return AppendMenuA(hMenu, flags &~ MF_APPEND, cmdInsert, lpszNewItem);
 
         case MF_DELETE :
-            return DeleteMenu(hMenu, cmd, flags &~ MF_DELETE);
+            return NtUserDeleteMenu(hMenu, cmd, flags &~ MF_DELETE);
 
         case MF_CHANGE :
             return ModifyMenuA(hMenu, cmd, flags &~ MF_CHANGE, cmdInsert, lpszNewItem);
 
         case MF_REMOVE :
-            return RemoveMenu(hMenu, flags & MF_BYPOSITION ? cmd : cmdInsert,
-                                flags &~ MF_REMOVE);
+            return NtUserRemoveMenu(hMenu, flags & MF_BYPOSITION ? cmd : cmdInsert,
+                                    flags &~ MF_REMOVE);
 
         default :   /* MF_INSERT */
             return InsertMenuA(hMenu, cmd, flags, cmdInsert, lpszNewItem);

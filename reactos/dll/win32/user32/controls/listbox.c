@@ -52,7 +52,6 @@ BOOL is_old_app(HWND hwnd)
 #define WS_EX_DRAGDETECT    0x00000002L
 #define WM_BEGINDRAG        0x022C
 
-UINT WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 
 /* End of hack section -------------------------------- */
@@ -460,9 +459,9 @@ static void LISTBOX_UpdateSize( LB_DESCR *descr )
 #endif
             TRACE("[%p]: changing height %d -> %d\n",
                   descr->self, descr->height, descr->height - remaining );
-            SetWindowPos( descr->self, 0, 0, 0, rect.right - rect.left,
-                          rect.bottom - rect.top - remaining,
-                          SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE );
+            NtUserSetWindowPos( descr->self, 0, 0, 0, rect.right - rect.left,
+                                rect.bottom - rect.top - remaining,
+                                SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE );
             return;
         }
     }
@@ -736,7 +735,7 @@ static void LISTBOX_RepaintItem( LB_DESCR *descr, INT index, UINT action )
         return;
     }
     if (LISTBOX_GetItemRect( descr, index, &rect ) != 1) return;
-    if (!(hdc = GetDCEx( descr->self, 0, DCX_CACHE ))) return;
+    if (!(hdc = NtUserGetDCEx( descr->self, 0, DCX_CACHE ))) return;
     if (descr->font) oldFont = SelectObject( hdc, descr->font );
     hbrush = (HBRUSH)SendMessageW( descr->owner, WM_CTLCOLORLISTBOX,
 				   (WPARAM)hdc, (LPARAM)descr->self );
@@ -767,7 +766,7 @@ static void LISTBOX_DrawFocusRect( LB_DESCR *descr, BOOL on )
     if (!descr->caret_on || !descr->in_focus) return;
 
     if (LISTBOX_GetItemRect( descr, descr->focus_item, &rect ) != 1) return;
-    if (!(hdc = GetDCEx( descr->self, 0, DCX_CACHE ))) return;
+    if (!(hdc = NtUserGetDCEx( descr->self, 0, DCX_CACHE ))) return;
     if (descr->font) oldFont = SelectObject( hdc, descr->font );
     if (!IsWindowEnabled(descr->self))
         SetTextColor( hdc, GetSysColor( COLOR_GRAYTEXT ) );
@@ -1388,7 +1387,7 @@ static INT LISTBOX_SetFont( LB_DESCR *descr, HFONT font )
 
     descr->font = font;
 
-    if (!(hdc = GetDCEx( descr->self, 0, DCX_CACHE )))
+    if (!(hdc = NtUserGetDCEx( descr->self, 0, DCX_CACHE )))
     {
         ERR("unable to get DC.\n" );
         return 16;
@@ -2131,8 +2130,8 @@ static LRESULT LISTBOX_HandleLButtonDown( LB_DESCR *descr, DWORD keys, INT x, IN
 
     if (!descr->in_focus)
     {
-        if( !descr->lphc ) SetFocus( descr->self );
-        else SetFocus( (descr->lphc->hWndEdit) ? descr->lphc->hWndEdit : descr->lphc->self );
+        if( !descr->lphc ) NtUserSetFocus( descr->self );
+        else NtUserSetFocus( (descr->lphc->hWndEdit) ? descr->lphc->hWndEdit : descr->lphc->self );
     }
 
     if (index == -1) return 0;
@@ -2145,7 +2144,7 @@ static LRESULT LISTBOX_HandleLButtonDown( LB_DESCR *descr, DWORD keys, INT x, IN
     }
 
     descr->captured = TRUE;
-    SetCapture( descr->self );
+    NtUserSetCapture( descr->self );
 
     if (descr->style & (LBS_EXTENDEDSEL | LBS_MULTIPLESEL))
     {
@@ -2294,7 +2293,7 @@ static LRESULT LISTBOX_HandleLButtonDownCombo( LB_DESCR *descr, UINT msg, DWORD 
             /* Resume the Capture after scrolling is complete
              */
             if(hWndOldCapture != 0)
-                SetCapture(hWndOldCapture);
+                NtUserSetCapture(hWndOldCapture);
         }
     }
     return 0;
@@ -2413,7 +2412,7 @@ static void LISTBOX_HandleMouseMove( LB_DESCR *descr,
     /* Start/stop the system timer */
 
     if (dir != LB_TIMER_NONE)
-        SetSystemTimer( descr->self, LB_TIMER_ID, LB_SCROLL_TIMEOUT, NULL);
+        NtUserSetSystemTimer( descr->self, LB_TIMER_ID, LB_SCROLL_TIMEOUT, NULL);
     else if (LISTBOX_Timer != LB_TIMER_NONE)
         KillSystemTimer( descr->self, LB_TIMER_ID );
     LISTBOX_Timer = dir;
@@ -3270,9 +3269,9 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            HDC hdc = ( wParam ) ? ((HDC)wParam) :  BeginPaint( descr->self, &ps );
+            HDC hdc = ( wParam ) ? ((HDC)wParam) :  NtUserBeginPaint( descr->self, &ps );
             ret = LISTBOX_Paint( descr, hdc );
-            if( !wParam ) EndPaint( hwnd, &ps );
+            if( !wParam ) NtUserEndPaint( hwnd, &ps );
         }
         return ret;
     case WM_SIZE:
@@ -3475,14 +3474,5 @@ static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARA
 static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ListBoxWndProc_common( hwnd, msg, wParam, lParam, TRUE );
-}
-
-/***********************************************************************
- *           GetListBoxInfo !REACTOS!
- */
-DWORD WINAPI
-GetListBoxInfo(HWND hwnd)
-{
-  return NtUserGetListBoxInfo(hwnd); // Do it right! Have the message org from kmode!
 }
 

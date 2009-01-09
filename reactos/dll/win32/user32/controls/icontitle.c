@@ -108,7 +108,7 @@ static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
         length = strlenW( str );
     }
 
-    if (!(hDC = GetDC( hwnd ))) return FALSE;
+    if (!(hDC = NtUserGetDC( hwnd ))) return FALSE;
 
     hPrevFont = SelectObject( hDC, hIconTitleFont );
 
@@ -131,7 +131,7 @@ static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
     /* point is relative to owner, make it relative to parent */
     MapWindowPoints( owner, GetParent(hwnd), &pt, 1 );
 
-    SetWindowPos( hwnd, owner, pt.x, pt.y, cx, cy, SWP_NOACTIVATE );
+    NtUserSetWindowPos( hwnd, owner, pt.x, pt.y, cx, cy, SWP_NOACTIVATE );
     return TRUE;
 }
 
@@ -224,7 +224,7 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
 	case WM_NCLBUTTONDBLCLK:
 	     return SendMessageW( owner, msg, wParam, lParam );
 	case WM_ACTIVATE:
-	     if( wParam ) SetActiveWindow( owner );
+	     if( wParam ) NtUserSetActiveWindow( owner );
              return 0;
 	case WM_CLOSE:
 	     return 0;

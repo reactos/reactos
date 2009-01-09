@@ -36,19 +36,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @implemented
- */
-DWORD
-WINAPI
-GetGuiResources(
-  HANDLE hProcess,
-  DWORD uiFlags)
-{
-  return NtUserGetGuiResources(hProcess, uiFlags);
-}
-
-
-/*
  * Private calls for CSRSS
  */
 VOID
@@ -262,7 +249,7 @@ EndTask(
     if (IsWindow(hWnd))
     {
         if (fForce)
-            return DestroyWindow(hWnd);
+            return NtUserDestroyWindow(hWnd);
         else
             return FALSE;
     }

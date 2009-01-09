@@ -63,7 +63,7 @@ DragDetect(
   rect.top = pt.y - dy;
   rect.bottom = pt.y + dy;
 
-  SetCapture(hWnd);
+  NtUserSetCapture(hWnd);
 
   for (;;)
   {
@@ -96,20 +96,10 @@ DragDetect(
          }
       }
     }
-    WaitMessage();
+    NtUserWaitMessage();
   }
   return 0;
 #endif
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-BlockInput(BOOL fBlockIt)
-{
-  return NtUserBlockInput(fBlockIt);
 }
 
 
@@ -135,7 +125,7 @@ EnableWindow(HWND hWnd,
             /* Remove keyboard focus from that window if it had focus */
             if (hWnd == GetFocus())
             {
-               SetFocus(NULL);
+               NtUserSetFocus(NULL);
             }
         }
         NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
@@ -156,17 +146,6 @@ GetAsyncKeyState(int vKey)
  if (vKey < 0 || vKey > 256)
     return 0;
  return (SHORT) NtUserGetAsyncKeyState((DWORD) vKey);
-}
-
-
-/*
- * @implemented
- */
-UINT
-WINAPI
-GetDoubleClickTime(VOID)
-{
-  return NtUserGetDoubleClickTime();
 }
 
 
@@ -261,17 +240,6 @@ BOOL WINAPI
 GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 {
   return NtUserGetKeyboardLayoutName( pwszKLID );
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-GetKeyboardState(PBYTE lpKeyState)
-{
-
-  return (BOOL) NtUserGetKeyboardState((LPBYTE) lpKeyState);
 }
 
 
@@ -395,48 +363,12 @@ OemKeyScan(WORD wOemChar)
  * @implemented
  */
 BOOL WINAPI
-RegisterHotKey(HWND hWnd,
-	       int id,
-	       UINT fsModifiers,
-	       UINT vk)
-{
-  return (BOOL)NtUserRegisterHotKey(hWnd,
-                                       id,
-                                       fsModifiers,
-                                       vk);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
 SetDoubleClickTime(UINT uInterval)
 {
   return (BOOL)NtUserSystemParametersInfo(SPI_SETDOUBLECLICKTIME,
                                              uInterval,
                                              NULL,
                                              0);
-}
-
-
-/*
- * @implemented
- */
-HWND WINAPI
-SetFocus(HWND hWnd)
-{
-  return NtUserSetFocus(hWnd);
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-SetKeyboardState(LPBYTE lpKeyState)
-{
- return (BOOL) NtUserSetKeyboardState((LPBYTE)lpKeyState);
 }
 
 
@@ -571,20 +503,6 @@ SHORT WINAPI
 VkKeyScanW(WCHAR ch)
 {
   return VkKeyScanExW(ch, GetKeyboardLayout(0));
-}
-
-
-/*
- * @implemented
- */
-UINT
-WINAPI
-SendInput(
-  UINT nInputs,
-  LPINPUT pInputs,
-  int cbSize)
-{
-  return NtUserSendInput(nInputs, pInputs, cbSize);
 }
 
 
@@ -762,7 +680,7 @@ static void CALLBACK TrackMouseEventProc(HWND hwndUnused, UINT uMsg, UINT_PTR id
     /* stop the timer if the tracking list is empty */
     if (!(ptracking_info->tme.dwFlags & (TME_HOVER | TME_LEAVE)))
     {
-        KillTimer(0, ptracking_info->timer);
+        NtUserKillTimer(0, ptracking_info->timer);
         RtlZeroMemory(ptracking_info,sizeof(USER32_TRACKINGLIST));
     }
 }
@@ -852,7 +770,7 @@ TrackMouseEvent(
             /* if we aren't tracking on hover or leave remove this entry */
             if (!(ptracking_info->tme.dwFlags & (TME_HOVER | TME_LEAVE)))
             {
-                KillTimer(0, ptracking_info->timer);
+                NtUserKillTimer(0, ptracking_info->timer);
                 RtlZeroMemory(ptracking_info,sizeof(USER32_TRACKINGLIST));
             }
         }
@@ -868,7 +786,7 @@ TrackMouseEvent(
 
             if (!ptracking_info->timer)
             {
-                ptracking_info->timer = SetTimer(0, 0, hover_time, TrackMouseEventProc);
+                ptracking_info->timer = NtUserSetTimer(0, 0, hover_time, TrackMouseEventProc);
             }
         }
     }
