@@ -98,15 +98,16 @@ Test_Bitmap(PTESTINFO pti)
 static INT
 Test_Dibsection(PTESTINFO pti)
 {
-	BITMAPINFO bmi = {{sizeof(BITMAPINFOHEADER), 10, 10, 1, 8, BI_RGB, 0, 10, 10, 0,0}};
+	BITMAPINFO bmi = {{sizeof(BITMAPINFOHEADER), 10, 9, 1, 8, BI_RGB, 0, 10, 10, 0,0}};
 	HBITMAP hBitmap;
+	BITMAP bitmap;
 	DIBSECTION dibsection;
 	PVOID pData;
 
 	FillMemory(&dibsection, sizeof(DIBSECTION), 0x77);
 	HDC hDC = GetDC(0);
 	hBitmap = CreateDIBSection(hDC, &bmi, DIB_RGB_COLORS, &pData, NULL, 0);
-	if(!hBitmap) return FALSE;
+	ASSERT(hBitmap);
 
 	SetLastError(ERROR_SUCCESS);
 	RTEST(GetObject(hBitmap, sizeof(DIBSECTION), NULL) == sizeof(BITMAP));
@@ -115,8 +116,15 @@ Test_Dibsection(PTESTINFO pti)
 	RTEST(GetObject(hBitmap, -5, NULL) == sizeof(BITMAP));
 	RTEST(GetObject(hBitmap, 0, &dibsection) == 0);
 	RTEST(GetObject(hBitmap, 5, &dibsection) == 0);
-	RTEST(GetObject(hBitmap, sizeof(BITMAP), &dibsection) == sizeof(BITMAP));
-	RTEST(GetObject(hBitmap, sizeof(BITMAP)+2, &dibsection) == sizeof(BITMAP));
+	RTEST(GetObject(hBitmap, sizeof(BITMAP), &bitmap) == sizeof(BITMAP));
+	RTEST(GetObject(hBitmap, sizeof(BITMAP)+2, &bitmap) == sizeof(BITMAP));
+	TEST(bitmap.bmType == 0);
+	TEST(bitmap.bmWidth == 10);
+	TEST(bitmap.bmHeight == 9);
+	TEST(bitmap.bmWidthBytes == 12);
+	TEST(bitmap.bmPlanes == 1);
+	TEST(bitmap.bmBitsPixel == 8);
+	TEST(bitmap.bmBits == pData);
 	RTEST(GetObject(hBitmap, sizeof(DIBSECTION), &dibsection) == sizeof(DIBSECTION));
 	RTEST(GetObject(hBitmap, sizeof(DIBSECTION)+2, &dibsection) == sizeof(DIBSECTION));
 	RTEST(GetObject(hBitmap, -5, &dibsection) == sizeof(DIBSECTION));
