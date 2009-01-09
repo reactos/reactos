@@ -93,35 +93,56 @@ ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
 BOOL INTERNAL_CALL
 SURFACE_Cleanup(PVOID ObjectBody)
 {
-	PSURFACE psurf = (PSURFACE)ObjectBody;
+    PSURFACE psurf = (PSURFACE)ObjectBody;
+    PVOID pvBits = psurf->SurfObj.pvBits;
 
-	if (psurf->SurfObj.pvBits != NULL &&
-		(psurf->flFlags & BITMAPOBJ_IS_APIBITMAP))
-	{
-		if (psurf->dib == NULL)
-		{
-			ExFreePool(psurf->SurfObj.pvBits);
-		}
-		else
-		{
-			EngFreeUserMem(psurf->SurfObj.pvBits);
-		}
-		if (psurf->hDIBPalette != NULL)
-		{
-			NtGdiDeleteObject(psurf->hDIBPalette);
-		}
-	}
+    /* If this is an API bitmap, free the bits */
+    if (pvBits != NULL &&
+        (psurf->flFlags & BITMAPOBJ_IS_APIBITMAP))
+    {
+        /* Check if we have a DIB section */
+        if (psurf->hSecure)
+        {
+            // FIXME: IMPLEMENT ME!
+            // MmUnsecureVirtualMemory(psurf->hSecure);
+            if (psurf->hDIBSection)
+            {
+                /* DIB was created from a section */
+                NTSTATUS Status;
 
-	if (NULL != psurf->BitsLock)
-	{
-		ExFreePoolWithTag(psurf->BitsLock, TAG_SURFACE);
-		psurf->BitsLock = NULL;
-	}
+                pvBits = (PVOID)((ULONG_PTR)pvBits - psurf->dwOffset);
+                Status = ZwUnmapViewOfSection(NtCurrentProcess(), pvBits);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Could not unmap section view!\n");
+                    // Should we BugCheck here?
+                }
+            }
+            else
+            {
+                /* DIB was allocated */
+                EngFreeUserMem(pvBits);
+            }
+        }
+        else
+        {
+            // FIXME: use TAG
+            ExFreePool(psurf->SurfObj.pvBits);
+        }
 
-	if (psurf->dib)
-		ExFreePoolWithTag(psurf->dib, TAG_DIB);
+        if (psurf->hDIBPalette != NULL)
+        {
+            NtGdiDeleteObject(psurf->hDIBPalette);
+        }
+    }
 
-	return TRUE;
+    if (NULL != psurf->BitsLock)
+    {
+        ExFreePoolWithTag(psurf->BitsLock, TAG_SURFACE);
+        psurf->BitsLock = NULL;
+    }
+
+    return TRUE;
 }
 
 BOOL INTERNAL_CALL
@@ -408,7 +429,9 @@ IntCreateBitmap(IN SIZEL Size,
     psurf->flFlags = 0;
     psurf->dimension.cx = 0;
     psurf->dimension.cy = 0;
-    psurf->dib = NULL;
+    
+    psurf->hSecure = NULL;
+    psurf->hDIBSection = NULL;
 
     SURFACE_UnlockSurface(psurf);
 

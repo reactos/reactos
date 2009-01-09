@@ -76,6 +76,7 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
    PSURFACE psurf;
    PPALGDI PalGDI;
    UINT Index;
+   ULONG biBitCount;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
    if (dc->DC_Type == DC_TYPE_INFO)
@@ -92,7 +93,7 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
       return 0;
    }
 
-   if (psurf->dib == NULL)
+   if (psurf->hSecure == NULL)
    {
       SURFACE_UnlockSurface(psurf);
       DC_UnlockDc(dc);
@@ -100,11 +101,11 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
       return 0;
    }
 
-   if (psurf->dib->dsBmih.biBitCount <= 8 &&
-       StartIndex < (1 << psurf->dib->dsBmih.biBitCount))
+   biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+   if (biBitCount <= 8 && StartIndex < (1 << biBitCount))
    {
-      if (StartIndex + Entries > (1 << psurf->dib->dsBmih.biBitCount))
-         Entries = (1 << psurf->dib->dsBmih.biBitCount) - StartIndex;
+      if (StartIndex + Entries > (1 << biBitCount))
+         Entries = (1 << biBitCount) - StartIndex;
 
       PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
       if (PalGDI == NULL)
@@ -141,6 +142,7 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    PSURFACE psurf;
    PPALGDI PalGDI;
    UINT Index;
+   ULONG biBitCount;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
    if (dc->DC_Type == DC_TYPE_INFO)
@@ -157,7 +159,7 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
       return 0;
    }
 
-   if (psurf->dib == NULL)
+   if (psurf->hSecure == NULL)
    {
       SURFACE_UnlockSurface(psurf);
       DC_UnlockDc(dc);
@@ -165,11 +167,12 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
       return 0;
    }
 
-   if (psurf->dib->dsBmih.biBitCount <= 8 &&
-       StartIndex < (1 << psurf->dib->dsBmih.biBitCount))
+   biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+   if (biBitCount <= 8 &&
+       StartIndex < (1 << biBitCount))
    {
-      if (StartIndex + Entries > (1 << psurf->dib->dsBmih.biBitCount))
-         Entries = (1 << psurf->dib->dsBmih.biBitCount) - StartIndex;
+      if (StartIndex + Entries > (1 << biBitCount))
+         Entries = (1 << biBitCount) - StartIndex;
 
       PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
       if (PalGDI == NULL)
@@ -750,7 +753,8 @@ NtGdiGetDIBitsInternal(HDC hDC,
           case 4:
           case 8:
              Info->bmiHeader.biClrUsed = 0;
-             if ( psurf->dib && psurf->dib->dsBm.bmBitsPixel == Info->bmiHeader.biBitCount)
+             if ( psurf->hSecure && 
+                  BitsPerFormat(psurf->SurfObj.iBitmapFormat) == Info->bmiHeader.biBitCount)
              {
                 if (Usage == DIB_RGB_COLORS)
                 {
@@ -1316,7 +1320,6 @@ DIB_CreateDIBSection(
 {
   HBITMAP res = 0;
   SURFACE *bmp = NULL;
-  DIBSECTION *dib = NULL;
   void *mapBits = NULL;
   PDC_ATTR pDc_Attr;
 
@@ -1327,6 +1330,8 @@ DIB_CreateDIBSection(
   BITMAP bm;
   SIZEL Size;
   RGBQUAD *lpRGB;
+  HANDLE hSecure;
+  DWORD dsBitfields[3] = {0};
 
   DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
 	bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
@@ -1374,7 +1379,7 @@ DIB_CreateDIBSection(
      }
 
      mapOffset = offset - (offset % Sbi.AllocationGranularity);
-     mapSize = dib->dsBmih.biSizeImage + (offset - mapOffset);
+     mapSize = bi->biSizeImage + (offset - mapOffset);
 
      SectionOffset.LowPart  = mapOffset;
      SectionOffset.HighPart = 0;
@@ -1405,44 +1410,44 @@ DIB_CreateDIBSection(
      bm.bmBits = EngAllocUserMem( totalSize, 0 );
   }
 
+//  hSecure = MmSecureVirtualMemory(bm.bmBits, totalSize, PAGE_READWRITE);
+  hSecure = (HANDLE)0x1; // HACK OF UNIMPLEMENTED KERNEL STUFF !!!!
+
   if(usage == DIB_PAL_COLORS)
     lpRGB = DIB_MapPaletteColors(dc, bmi);
   else
     lpRGB = bmi->bmiColors;
 
-  // Allocate Memory for DIB and fill structure
-  if (bm.bmBits)
-  {
-    dib = ExAllocatePoolWithTag(PagedPool, sizeof(DIBSECTION), TAG_DIB);
-    if (dib != NULL) RtlZeroMemory(dib, sizeof(DIBSECTION));
-  }
-
-  if (dib)
-  {
-    dib->dsBm = bm;
     /* Set dsBitfields values */
     if ( usage == DIB_PAL_COLORS || bi->biBitCount <= 8)
     {
-      dib->dsBitfields[0] = dib->dsBitfields[1] = dib->dsBitfields[2] = 0;
+      dsBitfields[0] = dsBitfields[1] = dsBitfields[2] = 0;
     }
-    else switch(bi->biBitCount)
+    else if (bi->biCompression == BI_RGB)
     {
-      case 15:
-      case 16:
-        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB       : 0x7c00;
-        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x03e0;
-        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x001f;
-        break;
+        switch(bi->biBitCount)
+        {
+          case 15:
+          case 16:
+            dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB       : 0x7c00;
+            dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x03e0;
+            dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x001f;
+            break;
 
-      case 24:
-      case 32:
-        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB       : 0xff0000;
-        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x00ff00;
-        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x0000ff;
-        break;
+          case 24:
+          case 32:
+            dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB       : 0xff0000;
+            dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x00ff00;
+            dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x0000ff;
+            break;
+        }
     }
-    dib->dshSection = section;
-    dib->dsOffset = offset;
+    else
+    {
+        dsBitfields[0] = ((DWORD*)bmi->bmiColors)[0];
+        dsBitfields[1] = ((DWORD*)bmi->bmiColors)[1];
+        dsBitfields[2] = ((DWORD*)bmi->bmiColors)[2];
+    }
 
     // Create Device Dependent Bitmap and add DIB pointer
     Size.cx = bm.bmWidth;
@@ -1469,12 +1474,19 @@ DIB_CreateDIBSection(
         {
             ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
         }
-	SetLastWin32Error(ERROR_INVALID_HANDLE);
-	NtGdiDeleteObject(bmp);
-	return NULL;
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        NtGdiDeleteObject(bmp);
+        return NULL;
     }
-    bmp->dib = (DIBSECTION *) dib;
+    bmp->hDIBSection = section;
+    bmp->hSecure = hSecure;
+    bmp->dwOffset = offset;
     bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+    bmp->dsBitfields[0] = dsBitfields[0];
+    bmp->dsBitfields[1] = dsBitfields[1];
+    bmp->dsBitfields[2] = dsBitfields[2];
+    bmp->biClrUsed = bi->biClrUsed;
+    bmp->biClrImportant = bi->biClrImportant;
 
     /* WINE NOTE: WINE makes use of a colormap, which is a color translation
                   table between the DIB and the X physical device. Obviously,
@@ -1490,20 +1502,17 @@ DIB_CreateDIBSection(
       bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(bi->biClrUsed, lpRGB);
     else
       bmp->hDIBPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
-                                              dib->dsBitfields[0],
-                                              dib->dsBitfields[1],
-                                              dib->dsBitfields[2]);
-
-    dib->dsBmih = *bi;
-    dib->dsBmih.biSizeImage = totalSize;
-  }
+                                              dsBitfields[0],
+                                              dsBitfields[1],
+                                              dsBitfields[2]);
 
   // Clean up in case of errors
-  if (!res || !bmp || !dib || !bm.bmBits)
+  if (!res || !bmp || !bm.bmBits)
   {
-    DPRINT("got an error res=%08x, bmp=%p, dib=%p, bm.bmBits=%p\n", res, bmp, dib, bm.bmBits);
+    DPRINT("got an error res=%08x, bmp=%p, bm.bmBits=%p\n", res, bmp, bm.bmBits);
       if (bm.bmBits)
       {
+         // MmUnsecureVirtualMemory(hSecure); // FIXME: Implement this!
          if (section)
          {
             ZwUnmapViewOfSection(NtCurrentProcess(), mapBits);
@@ -1514,7 +1523,6 @@ DIB_CreateDIBSection(
                EngFreeUserMem(bm.bmBits), bm.bmBits = NULL;
     }
 
-    if (dib) { ExFreePoolWithTag(dib, TAG_DIB); dib = NULL; }
     if (bmp) { bmp = NULL; }
     if (res) { SURFACE_FreeSurfaceByHandle(res); res = 0; }
   }

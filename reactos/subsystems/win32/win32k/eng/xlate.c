@@ -486,7 +486,7 @@ IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurf
 		if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP)
 		{
 			/* DIB sections need special handling */
-			if (psurfSrc->dib)
+			if (psurfSrc->hSecure)
 			{
 				PPALGDI ppal = PALETTE_LockPalette(psurfSrc->hDIBPalette);
 				if (ppal)

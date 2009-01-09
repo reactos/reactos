@@ -437,7 +437,7 @@ IntGdiCreatePatternBrush(
    PGDIBRUSHOBJ BrushObject;
    HBITMAP hPattern;
 
-   hPattern = SURFACE_CopyBitmap(hBitmap);
+   hPattern = BITMAP_CopyBitmap(hBitmap);
    if (hPattern == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

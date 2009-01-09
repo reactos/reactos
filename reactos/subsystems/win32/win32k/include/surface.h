@@ -20,9 +20,15 @@ typedef struct _SURFACE
                                the actual bits in the bitmap */
 
   /* For device-independent bitmaps: */
-  DIBSECTION *dib;
+  HANDLE      hDIBSection;
+  HANDLE      hSecure;
+  DWORD       dwOffset;
+
   HPALETTE hDIBPalette;
   HDC hDC; // Doc in "Undocumented Windows", page 546, seems to be supported with XP.
+  DWORD dsBitfields[3]; // hack, should probably use palette instead
+  DWORD biClrUsed;
+  DWORD biClrImportant;
 } SURFACE, *PSURFACE;
 
 #define BITMAPOBJ_IS_APIBITMAP		0x1
@@ -50,9 +56,6 @@ typedef struct _SURFACE
 BOOL INTERNAL_CALL SURFACE_Cleanup(PVOID ObjectBody);
 BOOL INTERNAL_CALL SURFACE_InitBitsLock(SURFACE *pBMObj);
 void INTERNAL_CALL SURFACE_CleanupBitsLock(SURFACE *pBMObj);
-INT     FASTCALL SURFACE_GetWidthBytes (INT bmWidth, INT bpp);
-UINT    FASTCALL SURFACE_GetRealBitsPixel(UINT nBitsPixel);
-HBITMAP FASTCALL SURFACE_CopyBitmap (HBITMAP  hBitmap);
 
 #define GDIDEV(SurfObj) ((GDIDEVICE *)((SurfObj)->hdev))
 #define GDIDEVFUNCS(SurfObj) ((GDIDEVICE *)((SurfObj)->hdev))->DriverFunctions

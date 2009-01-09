@@ -44,7 +44,7 @@ IntGdiCreateBitmap(
    LONG WidthBytes;
 
    /* NOTE: Windows also doesn't store nr. of planes separately! */
-   BitsPixel = SURFACE_GetRealBitsPixel(BitsPixel * Planes);
+   BitsPixel = BITMAP_GetRealBitsPixel(BitsPixel * Planes);
 
    /* Check parameters */
    if (BitsPixel == 0 || Width <= 0 || Width >= 0x8000000 || Height == 0)
@@ -54,7 +54,7 @@ IntGdiCreateBitmap(
       return 0;
    }
 
-   WidthBytes = SURFACE_GetWidthBytes(Width, BitsPixel);
+   WidthBytes = BITMAP_GetWidthBytes(Width, BitsPixel);
 
    Size.cx = Width;
    Size.cy = abs(Height);
@@ -113,7 +113,7 @@ NtGdiCreateBitmap(
    if (pUnsafeBits)
    {
       BOOL Hit = FALSE;
-      UINT cjBits = SURFACE_GetWidthBytes(Width, BitsPixel) * abs(Height);
+      UINT cjBits = BITMAP_GetWidthBytes(Width, BitsPixel) * abs(Height);
 
       _SEH2_TRY
       {
@@ -689,7 +689,7 @@ NtGdiSetPixel(
 /*  Internal Functions  */
 
 UINT FASTCALL
-SURFACE_GetRealBitsPixel(UINT nBitsPixel)
+BITMAP_GetRealBitsPixel(UINT nBitsPixel)
 {
 	if (nBitsPixel <= 1)
 		return 1;
@@ -708,7 +708,7 @@ SURFACE_GetRealBitsPixel(UINT nBitsPixel)
 }
 
 INT FASTCALL
-SURFACE_GetWidthBytes (INT bmWidth, INT bpp)
+BITMAP_GetWidthBytes (INT bmWidth, INT bpp)
 {
 #if 0
 	switch(bpp)
@@ -742,7 +742,7 @@ SURFACE_GetWidthBytes (INT bmWidth, INT bpp)
 }
 
 HBITMAP FASTCALL
-SURFACE_CopyBitmap(HBITMAP  hBitmap)
+BITMAP_CopyBitmap(HBITMAP  hBitmap)
 {
 	HBITMAP  res;
 	BITMAP  bm;
@@ -807,45 +807,59 @@ SURFACE_CopyBitmap(HBITMAP  hBitmap)
 }
 
 INT APIENTRY
-BITMAP_GetObject(SURFACE * bmp, INT Count, LPVOID buffer)
+BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
 {
+    PBITMAP pBitmap;
+
+    if (!buffer) return sizeof(BITMAP);
 	if ((UINT)Count < sizeof(BITMAP)) return 0;
 
-	if(bmp->dib)
+    /* always fill a basic BITMAP structure */
+    pBitmap = buffer;
+    pBitmap->bmType = 0;
+    pBitmap->bmWidth = psurf->SurfObj.sizlBitmap.cx;
+    pBitmap->bmHeight = psurf->SurfObj.sizlBitmap.cy;
+    pBitmap->bmWidthBytes = abs(psurf->SurfObj.lDelta);
+    pBitmap->bmPlanes = 1;
+    pBitmap->bmBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+
+    /* Check for DIB section */
+	if(psurf->hSecure)
 	{
-		if((UINT)Count < sizeof(DIBSECTION))
-		{
-			Count = sizeof(BITMAP);
-		}
-		else
-		{
-			Count = sizeof(DIBSECTION);
-		}
-		if (buffer)
-		{
-			memcpy(buffer, bmp->dib, Count);
-		}
-		return Count;
+	    /* Set bmBits in this case */
+        pBitmap->bmBits = psurf->SurfObj.pvBits;
+
+	    if (Count >= sizeof(DIBSECTION))
+	    {
+            /* Fill rest of DIBSECTION */
+            PDIBSECTION pds = buffer;
+
+            pds->dsBmih.biSize = 
+            pds->dsBmih.biWidth = pds->dsBm.bmWidth;
+            pds->dsBmih.biHeight = pds->dsBm.bmHeight;
+            pds->dsBmih.biPlanes = pds->dsBm.bmPlanes;
+            pds->dsBmih.biBitCount = pds->dsBm.bmBitsPixel;
+            pds->dsBmih.biCompression = 0; // FIXME!
+            pds->dsBmih.biSizeImage = psurf->SurfObj.cjBits;
+            pds->dsBmih.biXPelsPerMeter = 0;
+            pds->dsBmih.biYPelsPerMeter = 0;
+            pds->dsBmih.biClrUsed = psurf->biClrUsed;
+            pds->dsBmih.biClrImportant = psurf->biClrImportant;
+            pds->dsBitfields[0] = psurf->dsBitfields[0];
+            pds->dsBitfields[1] = psurf->dsBitfields[1];
+            pds->dsBitfields[2] = psurf->dsBitfields[2];
+            pds->dshSection = psurf->hDIBSection;
+            pds->dsOffset = psurf->dwOffset;
+
+		    return sizeof(DIBSECTION);
+	    }
 	}
 	else
 	{
-		Count = sizeof(BITMAP);
-		if (buffer)
-		{
-			BITMAP Bitmap;
-
-			Count = sizeof(BITMAP);
-			Bitmap.bmType = 0;
-			Bitmap.bmWidth = bmp->SurfObj.sizlBitmap.cx;
-			Bitmap.bmHeight = bmp->SurfObj.sizlBitmap.cy;
-			Bitmap.bmWidthBytes = abs(bmp->SurfObj.lDelta);
-			Bitmap.bmPlanes = 1;
-			Bitmap.bmBitsPixel = BitsPerFormat(bmp->SurfObj.iBitmapFormat);
-			Bitmap.bmBits = NULL; /* not set according to wine test, confirmed in win2k */
-			memcpy(buffer, &Bitmap, Count);
-		}
-		return Count;
+        pBitmap->bmBits = NULL; /* not set according to wine test, confirmed in win2k */
 	}
+
+	return sizeof(BITMAP);
 }
 
 /*
@@ -917,9 +931,10 @@ NtGdiSelectBitmap(
     psurfBmp->hDC = hDC;
 
     // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
-    if(psurfBmp->dib)
+    if(psurfBmp->hSecure)
     {
-        pDC->w.bitsPerPixel = psurfBmp->dib->dsBmih.biBitCount;
+//        pDC->w.bitsPerPixel = psurfBmp->dib->dsBmih.biBitCount; ???
+        pDC->w.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
     }
     else
     {

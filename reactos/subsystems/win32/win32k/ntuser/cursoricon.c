@@ -567,8 +567,8 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
       {
          if(Indirect)
          {
-            CurIcon->IconInfo.hbmMask = SURFACE_CopyBitmap(CurIcon->IconInfo.hbmMask);
-            CurIcon->IconInfo.hbmColor = SURFACE_CopyBitmap(CurIcon->IconInfo.hbmColor);
+            CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
+            CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
          }
          if(CurIcon->IconInfo.hbmColor &&
                (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor)))
@@ -651,8 +651,8 @@ NtUserGetIconInfo(
    RtlCopyMemory(&ii, &CurIcon->IconInfo, sizeof(ICONINFO));
 
    /* Copy bitmaps */
-   ii.hbmMask = SURFACE_CopyBitmap(CurIcon->IconInfo.hbmMask);
-   ii.hbmColor = SURFACE_CopyBitmap(CurIcon->IconInfo.hbmColor);
+   ii.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
+   ii.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
 
    /* Copy fields */
    _SEH2_TRY
@@ -1244,8 +1244,8 @@ NtUserSetCursorIconData(
        ProbeForRead(pIconInfo, sizeof(ICONINFO), 1);
        RtlCopyMemory(&CurIcon->IconInfo, pIconInfo, sizeof(ICONINFO));
 
-       CurIcon->IconInfo.hbmMask = SURFACE_CopyBitmap(pIconInfo->hbmMask);
-       CurIcon->IconInfo.hbmColor = SURFACE_CopyBitmap(pIconInfo->hbmColor);
+       CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(pIconInfo->hbmMask);
+       CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(pIconInfo->hbmColor);
 
        if (CurIcon->IconInfo.hbmColor)
        {
