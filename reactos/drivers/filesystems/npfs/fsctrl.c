@@ -169,7 +169,7 @@ NpfsConnectPipe(PIRP Irp,
 	{
 		KeWaitForSingleObject(&Ccb->ConnectEvent,
 			UserRequest,
-			KernelMode,
+			Irp->RequestorMode,
 			FALSE,
 			NULL);
 	}

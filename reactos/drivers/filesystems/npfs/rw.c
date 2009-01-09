@@ -357,9 +357,15 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 			ExReleaseFastMutex(&Ccb->DataListLock);
 			Status = KeWaitForSingleObject(&Event,
 				Executive,
-				KernelMode,
+				Irp->RequestorMode,
 				FALSE,
 				NULL);
+
+			if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
+			{
+				Status = STATUS_CANCELLED;
+				goto done;
+			}
 			if (!NT_SUCCESS(Status))
 			{
 				ASSERT(FALSE);
@@ -439,17 +445,28 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 					DPRINT("Waiting for readable data (%wZ)\n", &Ccb->Fcb->PipeName);
 					Status = KeWaitForSingleObject(&Ccb->ReadEvent,
 						UserRequest,
-						KernelMode,
+						Irp->RequestorMode,
 						FALSE,
 						NULL);
 					DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Fcb->PipeName, Status);
 					ExAcquireFastMutex(&Ccb->DataListLock);
+
+					if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
+					{
+						Status = STATUS_CANCELLED;
+						break;
+					}
+					if (!NT_SUCCESS(Status))
+					{
+						ASSERT(FALSE);
+					}
 				}
 				else
 				{
 					Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
 
 					Context->WaitEvent = &Ccb->ReadEvent;
+
 					Status = NpfsAddWaitingReadWriteRequest(DeviceObject, Irp);
 
 					if (NT_SUCCESS(Status))
@@ -735,11 +752,20 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 			DPRINT("Waiting for buffer space (%S)\n", Fcb->PipeName.Buffer);
 			Status = KeWaitForSingleObject(&Ccb->WriteEvent,
 				UserRequest,
-				KernelMode,
+				Irp->RequestorMode,
 				FALSE,
 				NULL);
 			DPRINT("Finished waiting (%S)! Status: %x\n", Fcb->PipeName.Buffer, Status);
 
+			if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
+			{
+				Status = STATUS_CANCELLED;
+				break;
+			}
+			if (!NT_SUCCESS(Status))
+			{
+				ASSERT(FALSE);
+			}
 			/*
 			* It's possible that the event was signaled because the
 			* other side of pipe was closed.
