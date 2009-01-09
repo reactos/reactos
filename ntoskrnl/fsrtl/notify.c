@@ -368,16 +368,17 @@ VOID
 NTAPI
 FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
 {
-    PINT_NOTIFY_SYNC IntNotifySync;
+    PREAL_NOTIFY_SYNC RealNotifySync;
 
     *NotifySync = NULL;
     
-    IntNotifySync = FsRtlAllocatePoolWithTag(NonPagedPool, sizeof(INT_NOTIFY_SYNC), TAG('F', 'S', 'N', 'S'));
-    ExInitializeFastMutex(&(IntNotifySync->FastMutex));
-    IntNotifySync->OwningThread = 0;
-    IntNotifySync->OwnerCount = 0;
+    RealNotifySync = ExAllocatePoolWithTag(NonPagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                           sizeof(REAL_NOTIFY_SYNC), TAG('F', 'S', 'N', 'S'));
+    ExInitializeFastMutex(&(RealNotifySync->FastMutex));
+    RealNotifySync->OwningThread = 0;
+    RealNotifySync->OwnerCount = 0;
 
-    *NotifySync = IntNotifySync;
+    *NotifySync = RealNotifySync;
 }
 
 /*++

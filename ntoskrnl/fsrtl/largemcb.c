@@ -114,7 +114,9 @@ FsRtlInitializeBaseMcb(IN PBASE_MCB Mcb,
     }
     else
     {
-        Mcb->Mapping = FsRtlAllocatePoolWithTag(PoolType, sizeof(INT_MAPPING) * MAXIMUM_PAIR_COUNT, TAG('F', 'S', 'B', 'C'));
+        Mcb->Mapping = ExAllocatePoolWithTag(PoolType | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                             sizeof(INT_MAPPING) * MAXIMUM_PAIR_COUNT,
+                                             TAG('F', 'S', 'B', 'C'));
     }
 
     Mcb->PoolType = PoolType;
