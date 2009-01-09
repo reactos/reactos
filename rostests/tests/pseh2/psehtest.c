@@ -64,52 +64,52 @@ extern void set_positive(int *);
 
 static int call_test(int (*)(void));
 
-#define DEFINE_TEST(NAME_) static int test_ ## NAME_(void)
+#define DEFINE_TEST(NAME_) static int NAME_(void)
 
 /* Empty statements *///{{{
-DEFINE_TEST(empty_1)
+DEFINE_TEST(test_empty_1)
 {
 	_SEH2_TRY { } _SEH2_EXCEPT(0) { } _SEH2_END;
 	return 1;
 }
 
-DEFINE_TEST(empty_2)
+DEFINE_TEST(test_empty_2)
 {
 	_SEH2_TRY { } _SEH2_EXCEPT(-1) { } _SEH2_END;
 	return 1;
 }
 
-DEFINE_TEST(empty_3)
+DEFINE_TEST(test_empty_3)
 {
 	_SEH2_TRY { } _SEH2_EXCEPT(1) { } _SEH2_END;
 	return 1;
 }
 
-DEFINE_TEST(empty_4)
+DEFINE_TEST(test_empty_4)
 {
 	_SEH2_TRY { } _SEH2_FINALLY { } _SEH2_END;
 	return 1;
 }
 
-DEFINE_TEST(empty_5)
+DEFINE_TEST(test_empty_5)
 {
 	_SEH2_TRY { _SEH2_TRY { } _SEH2_EXCEPT(0) { } _SEH2_END; } _SEH2_FINALLY { } _SEH2_END;
 	return 1;
 }
 
-DEFINE_TEST(empty_6)
+DEFINE_TEST(test_empty_6)
 {
 	_SEH2_TRY { _SEH2_TRY { } _SEH2_EXCEPT(-1) { } _SEH2_END; } _SEH2_FINALLY { } _SEH2_END;
 	return 1;
 }
 
-DEFINE_TEST(empty_7)
+DEFINE_TEST(test_empty_7)
 {
 	_SEH2_TRY { _SEH2_TRY { } _SEH2_EXCEPT(1) { } _SEH2_END; } _SEH2_FINALLY { } _SEH2_END;
 	return 1;
 }
 
-DEFINE_TEST(empty_8)
+DEFINE_TEST(test_empty_8)
 {
 	_SEH2_TRY { _SEH2_TRY { } _SEH2_FINALLY { } _SEH2_END; } _SEH2_FINALLY { } _SEH2_END;
 	return 1;
@@ -117,7 +117,7 @@ DEFINE_TEST(empty_8)
 //}}}
 
 /* Static exception filters *///{{{
-DEFINE_TEST(execute_handler_1)
+DEFINE_TEST(test_execute_handler_1)
 {
 	static int ret;
 
@@ -137,7 +137,7 @@ DEFINE_TEST(execute_handler_1)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_1)
+DEFINE_TEST(test_continue_execution_1)
 {
 	static int ret;
 
@@ -157,7 +157,7 @@ DEFINE_TEST(continue_execution_1)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_search_1)
+DEFINE_TEST(test_continue_search_1)
 {
 	static int ret;
 
@@ -185,7 +185,7 @@ DEFINE_TEST(continue_search_1)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(execute_handler_2)
+DEFINE_TEST(test_execute_handler_2)
 {
 	static int ret;
 
@@ -205,7 +205,7 @@ DEFINE_TEST(execute_handler_2)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_2)
+DEFINE_TEST(test_continue_execution_2)
 {
 	static int ret;
 
@@ -227,7 +227,7 @@ DEFINE_TEST(continue_execution_2)
 //}}}
 
 /* Dynamic exception filters *///{{{
-DEFINE_TEST(execute_handler_3)
+DEFINE_TEST(test_execute_handler_3)
 {
 	static int ret;
 
@@ -247,7 +247,7 @@ DEFINE_TEST(execute_handler_3)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_3)
+DEFINE_TEST(test_continue_execution_3)
 {
 	static int ret;
 
@@ -267,7 +267,7 @@ DEFINE_TEST(continue_execution_3)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_search_2)
+DEFINE_TEST(test_continue_search_2)
 {
 	static int ret;
 
@@ -295,7 +295,7 @@ DEFINE_TEST(continue_search_2)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(execute_handler_4)
+DEFINE_TEST(test_execute_handler_4)
 {
 	static int ret;
 
@@ -315,7 +315,7 @@ DEFINE_TEST(execute_handler_4)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_4)
+DEFINE_TEST(test_continue_execution_4)
 {
 	static int ret;
 
@@ -337,7 +337,7 @@ DEFINE_TEST(continue_execution_4)
 //}}}
 
 /* Dynamic exception filters, using _SEH2_GetExceptionInformation() *///{{{
-DEFINE_TEST(execute_handler_5)
+DEFINE_TEST(test_execute_handler_5)
 {
 	static int ret;
 
@@ -357,7 +357,7 @@ DEFINE_TEST(execute_handler_5)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_5)
+DEFINE_TEST(test_continue_execution_5)
 {
 	static int ret;
 
@@ -377,7 +377,7 @@ DEFINE_TEST(continue_execution_5)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_search_3)
+DEFINE_TEST(test_continue_search_3)
 {
 	static int ret;
 
@@ -405,7 +405,7 @@ DEFINE_TEST(continue_search_3)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(execute_handler_6)
+DEFINE_TEST(test_execute_handler_6)
 {
 	static int ret;
 
@@ -425,7 +425,7 @@ DEFINE_TEST(execute_handler_6)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_6)
+DEFINE_TEST(test_continue_execution_6)
 {
 	static int ret;
 
@@ -447,7 +447,7 @@ DEFINE_TEST(continue_execution_6)
 //}}}
 
 /* Dynamic exception filters, using _SEH2_GetExceptionCode() *///{{{
-DEFINE_TEST(execute_handler_7)
+DEFINE_TEST(test_execute_handler_7)
 {
 	static int ret;
 
@@ -467,7 +467,7 @@ DEFINE_TEST(execute_handler_7)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_7)
+DEFINE_TEST(test_continue_execution_7)
 {
 	static int ret;
 
@@ -487,7 +487,7 @@ DEFINE_TEST(continue_execution_7)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_search_4)
+DEFINE_TEST(test_continue_search_4)
 {
 	static int ret;
 
@@ -515,7 +515,7 @@ DEFINE_TEST(continue_search_4)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(execute_handler_8)
+DEFINE_TEST(test_execute_handler_8)
 {
 	static int ret;
 
@@ -535,7 +535,7 @@ DEFINE_TEST(execute_handler_8)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_8)
+DEFINE_TEST(test_continue_execution_8)
 {
 	static int ret;
 
@@ -557,7 +557,7 @@ DEFINE_TEST(continue_execution_8)
 //}}}
 
 /* Dynamic exception filters, using _SEH2_GetExceptionInformation() and _SEH2_GetExceptionCode() *///{{{
-DEFINE_TEST(execute_handler_9)
+DEFINE_TEST(test_execute_handler_9)
 {
 	static int ret;
 
@@ -577,7 +577,7 @@ DEFINE_TEST(execute_handler_9)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_9)
+DEFINE_TEST(test_continue_execution_9)
 {
 	static int ret;
 
@@ -597,7 +597,7 @@ DEFINE_TEST(continue_execution_9)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_search_5)
+DEFINE_TEST(test_continue_search_5)
 {
 	static int ret;
 
@@ -625,7 +625,7 @@ DEFINE_TEST(continue_search_5)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(execute_handler_10)
+DEFINE_TEST(test_execute_handler_10)
 {
 	static int ret;
 
@@ -645,7 +645,7 @@ DEFINE_TEST(execute_handler_10)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_10)
+DEFINE_TEST(test_continue_execution_10)
 {
 	static int ret;
 
@@ -667,7 +667,7 @@ DEFINE_TEST(continue_execution_10)
 //}}}
 
 /* Constant exception filters with side effects *///{{{
-DEFINE_TEST(execute_handler_11)
+DEFINE_TEST(test_execute_handler_11)
 {
 	static int ret;
 
@@ -687,7 +687,7 @@ DEFINE_TEST(execute_handler_11)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_11)
+DEFINE_TEST(test_continue_execution_11)
 {
 	static int ret;
 
@@ -707,7 +707,7 @@ DEFINE_TEST(continue_execution_11)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_search_6)
+DEFINE_TEST(test_continue_search_6)
 {
 	static int ret;
 	static int ret2;
@@ -740,7 +740,7 @@ DEFINE_TEST(continue_search_6)
 	return ret == return_positive() && ret2 == return_positive();
 }
 
-DEFINE_TEST(execute_handler_12)
+DEFINE_TEST(test_execute_handler_12)
 {
 	static int ret;
 
@@ -760,7 +760,7 @@ DEFINE_TEST(execute_handler_12)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(continue_execution_12)
+DEFINE_TEST(test_continue_execution_12)
 {
 	static int ret;
 
@@ -782,7 +782,7 @@ DEFINE_TEST(continue_execution_12)
 //}}}
 
 /* _SEH2_LEAVE *///{{{
-DEFINE_TEST(leave_1)
+DEFINE_TEST(test_leave_1)
 {
 	static int ret;
 
@@ -803,7 +803,7 @@ DEFINE_TEST(leave_1)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(leave_2)
+DEFINE_TEST(test_leave_2)
 {
 	static int ret;
 
@@ -826,7 +826,7 @@ DEFINE_TEST(leave_2)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(leave_3)
+DEFINE_TEST(test_leave_3)
 {
 	static int ret;
 
@@ -850,7 +850,7 @@ DEFINE_TEST(leave_3)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(leave_4)
+DEFINE_TEST(test_leave_4)
 {
 	static int ret;
 
@@ -881,7 +881,7 @@ DEFINE_TEST(leave_4)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(leave_5)
+DEFINE_TEST(test_leave_5)
 {
 	static int ret;
 
@@ -907,7 +907,7 @@ DEFINE_TEST(leave_5)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(leave_6)
+DEFINE_TEST(test_leave_6)
 {
 	static int ret;
 
@@ -954,7 +954,7 @@ int test_yield_1_helper(void)
 	return return_zero();
 }
 
-DEFINE_TEST(yield_1)
+DEFINE_TEST(test_yield_1)
 {
 	return test_yield_1_helper() == return_positive();
 }
@@ -976,7 +976,7 @@ int test_yield_2_helper(void)
 	return return_zero();
 }
 
-DEFINE_TEST(yield_2)
+DEFINE_TEST(test_yield_2)
 {
 	return test_yield_2_helper() == return_positive();
 }
@@ -1007,7 +1007,7 @@ int test_yield_3_helper(void)
 	return return_zero();
 }
 
-DEFINE_TEST(yield_3)
+DEFINE_TEST(test_yield_3)
 {
 	return test_yield_3_helper() == return_positive();
 }
@@ -1039,7 +1039,7 @@ int test_yield_4_helper(void)
 	return return_zero();
 }
 
-DEFINE_TEST(yield_4)
+DEFINE_TEST(test_yield_4)
 {
 	return test_yield_4_helper() == return_positive();
 }
@@ -1064,7 +1064,7 @@ int test_yield_5_helper(void)
 	return return_zero();
 }
 
-DEFINE_TEST(yield_5)
+DEFINE_TEST(test_yield_5)
 {
 	return test_yield_5_helper() == return_positive() && test_yield_5_ret == return_positive();
 }
@@ -1097,14 +1097,14 @@ int test_yield_6_helper(void)
 	return return_zero();
 }
 
-DEFINE_TEST(yield_6)
+DEFINE_TEST(test_yield_6)
 {
 	return test_yield_6_helper() == return_positive() && test_yield_6_ret == return_positive() + return_one();
 }
 //}}}
 
 /* Termination blocks *///{{{
-DEFINE_TEST(finally_1)
+DEFINE_TEST(test_finally_1)
 {
 	static int ret;
 
@@ -1123,7 +1123,7 @@ DEFINE_TEST(finally_1)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(finally_2)
+DEFINE_TEST(test_finally_2)
 {
 	static int ret;
 
@@ -1143,7 +1143,7 @@ DEFINE_TEST(finally_2)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(finally_3)
+DEFINE_TEST(test_finally_3)
 {
 	static int ret;
 
@@ -1184,12 +1184,12 @@ static int test_finally_4_helper(void)
 	return return_zero();
 }
 
-DEFINE_TEST(finally_4)
+DEFINE_TEST(test_finally_4)
 {
 	return test_finally_4_helper() == return_positive() && test_finally_4_ret;
 }
 
-DEFINE_TEST(finally_5)
+DEFINE_TEST(test_finally_5)
 {
 	static int ret;
 
@@ -1217,7 +1217,7 @@ DEFINE_TEST(finally_5)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(finally_6)
+DEFINE_TEST(test_finally_6)
 {
 	static int ret;
 
@@ -1246,7 +1246,7 @@ DEFINE_TEST(finally_6)
 	return ret == return_positive() + return_one();
 }
 
-DEFINE_TEST(finally_7)
+DEFINE_TEST(test_finally_7)
 {
 	static int ret;
 
@@ -1276,7 +1276,7 @@ DEFINE_TEST(finally_7)
 	return ret == return_positive() + return_one();
 }
 
-DEFINE_TEST(finally_8)
+DEFINE_TEST(test_finally_8)
 {
 	static int ret;
 
@@ -1337,12 +1337,12 @@ static int test_finally_9_helper(void)
 	return return_zero();
 }
 
-DEFINE_TEST(finally_9)
+DEFINE_TEST(test_finally_9)
 {
 	return test_finally_9_helper() == return_positive() && test_finally_9_ret == return_positive() + return_one();
 }
 
-DEFINE_TEST(finally_10)
+DEFINE_TEST(test_finally_10)
 {
 	static int ret;
 
@@ -1380,7 +1380,7 @@ DEFINE_TEST(finally_10)
 	return ret == return_positive() + return_one();
 }
 
-DEFINE_TEST(finally_11)
+DEFINE_TEST(test_finally_11)
 {
 	static int ret;
 
@@ -1418,7 +1418,7 @@ DEFINE_TEST(finally_11)
 	return ret == return_positive() + return_one();
 }
 
-DEFINE_TEST(finally_12)
+DEFINE_TEST(test_finally_12)
 {
 	static int ret;
 
@@ -1492,7 +1492,7 @@ void test_finally_13_helper(void)
 	test_finally_13_ret = return_zero();
 }
 
-DEFINE_TEST(finally_13)
+DEFINE_TEST(test_finally_13)
 {
 	static int ret;
 
@@ -1557,7 +1557,7 @@ void test_finally_14_helper(void)
 	test_finally_14_ret = return_arg(test_finally_14_ret);
 }
 
-DEFINE_TEST(finally_14)
+DEFINE_TEST(test_finally_14)
 {
 	static int ret;
 
@@ -1599,7 +1599,7 @@ int verify_xpointers(struct _EXCEPTION_POINTERS * ep, DWORD code, DWORD flags, D
 	return filter;
 }
 
-DEFINE_TEST(xpointers_1)
+DEFINE_TEST(test_xpointers_1)
 {
 	static int ret;
 
@@ -1618,7 +1618,7 @@ DEFINE_TEST(xpointers_1)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_2)
+DEFINE_TEST(test_xpointers_2)
 {
 	static int ret;
 
@@ -1637,7 +1637,7 @@ DEFINE_TEST(xpointers_2)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_3)
+DEFINE_TEST(test_xpointers_3)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1657,7 +1657,7 @@ DEFINE_TEST(xpointers_3)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_4)
+DEFINE_TEST(test_xpointers_4)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1677,7 +1677,7 @@ DEFINE_TEST(xpointers_4)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_5)
+DEFINE_TEST(test_xpointers_5)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1697,7 +1697,7 @@ DEFINE_TEST(xpointers_5)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_6)
+DEFINE_TEST(test_xpointers_6)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1717,7 +1717,7 @@ DEFINE_TEST(xpointers_6)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_7)
+DEFINE_TEST(test_xpointers_7)
 {
 	static int ret;
 
@@ -1737,7 +1737,7 @@ DEFINE_TEST(xpointers_7)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_8)
+DEFINE_TEST(test_xpointers_8)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1758,7 +1758,7 @@ DEFINE_TEST(xpointers_8)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_9)
+DEFINE_TEST(test_xpointers_9)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1779,7 +1779,7 @@ DEFINE_TEST(xpointers_9)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_10)
+DEFINE_TEST(test_xpointers_10)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1800,7 +1800,7 @@ DEFINE_TEST(xpointers_10)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_11)
+DEFINE_TEST(test_xpointers_11)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1821,7 +1821,7 @@ DEFINE_TEST(xpointers_11)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_12)
+DEFINE_TEST(test_xpointers_12)
 {
 	static int ret;
 
@@ -1848,7 +1848,7 @@ DEFINE_TEST(xpointers_12)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_13)
+DEFINE_TEST(test_xpointers_13)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1876,7 +1876,7 @@ DEFINE_TEST(xpointers_13)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_14)
+DEFINE_TEST(test_xpointers_14)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1904,7 +1904,7 @@ DEFINE_TEST(xpointers_14)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_15)
+DEFINE_TEST(test_xpointers_15)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1932,7 +1932,7 @@ DEFINE_TEST(xpointers_15)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xpointers_16)
+DEFINE_TEST(test_xpointers_16)
 {
 	static int ret;
 	static const ULONG_PTR args[] = { 1, 2, 12345 };
@@ -1973,7 +1973,7 @@ int verify_xcode(int code, int xcode, int * ret, int filter)
 	return filter;
 }
 
-DEFINE_TEST(xcode_1)
+DEFINE_TEST(test_xcode_1)
 {
 	static int ret;
 
@@ -1993,7 +1993,7 @@ DEFINE_TEST(xcode_1)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xcode_2)
+DEFINE_TEST(test_xcode_2)
 {
 	static int ret;
 
@@ -2013,7 +2013,7 @@ DEFINE_TEST(xcode_2)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(xcode_3)
+DEFINE_TEST(test_xcode_3)
 {
 	static int ret;
 
@@ -2043,7 +2043,7 @@ DEFINE_TEST(xcode_3)
 //}}}
 
 /* _SEH2_AbnormalTermination() *///{{{
-DEFINE_TEST(abnorm_1)
+DEFINE_TEST(test_abnorm_1)
 {
 	static int ret;
 
@@ -2062,7 +2062,7 @@ DEFINE_TEST(abnorm_1)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(abnorm_2)
+DEFINE_TEST(test_abnorm_2)
 {
 	static int ret;
 
@@ -2081,7 +2081,7 @@ DEFINE_TEST(abnorm_2)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(abnorm_3)
+DEFINE_TEST(test_abnorm_3)
 {
 	static int ret;
 
@@ -2101,7 +2101,7 @@ leave:
 	return ret == return_positive();
 }
 
-DEFINE_TEST(abnorm_4)
+DEFINE_TEST(test_abnorm_4)
 {
 	static int ret;
 
@@ -2129,7 +2129,7 @@ DEFINE_TEST(abnorm_4)
 	return ret == return_positive();
 }
 
-DEFINE_TEST(abnorm_5)
+DEFINE_TEST(test_abnorm_5)
 {
 	static int ret;
 
@@ -2156,7 +2156,7 @@ DEFINE_TEST(abnorm_5)
 	return ret == return_positive() + return_one();
 }
 
-DEFINE_TEST(abnorm_6)
+DEFINE_TEST(test_abnorm_6)
 {
 	static int ret;
 
@@ -2183,7 +2183,7 @@ DEFINE_TEST(abnorm_6)
 	return ret == return_positive() + return_one();
 }
 
-DEFINE_TEST(abnorm_7)
+DEFINE_TEST(test_abnorm_7)
 {
 	static int ret;
 
@@ -2211,7 +2211,7 @@ leave:
 	return ret == return_positive() + return_one();
 }
 
-DEFINE_TEST(abnorm_8)
+DEFINE_TEST(test_abnorm_8)
 {
 	static int ret;
 
@@ -2254,6 +2254,56 @@ DEFINE_TEST(abnorm_8)
 
 /* CPU faults *///{{{
 // TODO
+//}}}
+
+/* Past bugs, to detect regressions *///{{{
+/* #4004: volatile registers clobbered when catching across frames (originally misreported) *///{{{
+static
+void test_bug_4004_helper_1(void)
+{
+	int i1, i2, i3;
+
+	i1 = return_positive();
+	i2 = return_positive();
+	i3 = return_positive();
+	(void)return_arg(i1 + i2 + i3);
+
+	_SEH2_TRY
+	{
+		RaiseException(0xE00DEAD0, 0, 0, NULL);
+	}
+	_SEH2_FINALLY
+	{
+	}
+	_SEH2_END;
+}
+
+static
+void test_bug_4004_helper_2(void)
+{
+	_SEH2_TRY
+	{
+		test_bug_4004_helper_1();
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+	}
+	_SEH2_END;
+}
+
+DEFINE_TEST(test_bug_4004)
+{
+	int i1, i2, i3;
+
+	i1 = return_positive();
+	i2 = return_positive();
+	i3 = return_positive();
+
+	test_bug_4004_helper_2();
+
+	return return_arg(i1) + return_arg(i2) + return_arg(i3) == return_positive() * 3;
+}
+//}}}
 //}}}
 
 static
@@ -2334,7 +2384,7 @@ int call_test(int (* func)(void))
 
 #define USE_TEST_NAME_(NAME_) # NAME_
 #define USE_TEST_NAME(NAME_) USE_TEST_NAME_(NAME_)
-#define USE_TEST(NAME_) { USE_TEST_NAME(test_ ## NAME_), test_ ## NAME_ }
+#define USE_TEST(NAME_) { USE_TEST_NAME(NAME_), NAME_ }
 
 struct subtest
 {
@@ -2346,109 +2396,111 @@ void testsuite_syntax(void)
 {
 	const struct subtest testsuite[] =
 	{
-		USE_TEST(empty_1),
-		USE_TEST(empty_2),
-		USE_TEST(empty_3),
-		USE_TEST(empty_4),
-		USE_TEST(empty_5),
-		USE_TEST(empty_6),
-		USE_TEST(empty_7),
-		USE_TEST(empty_8),
+		USE_TEST(test_empty_1),
+		USE_TEST(test_empty_2),
+		USE_TEST(test_empty_3),
+		USE_TEST(test_empty_4),
+		USE_TEST(test_empty_5),
+		USE_TEST(test_empty_6),
+		USE_TEST(test_empty_7),
+		USE_TEST(test_empty_8),
 
-		USE_TEST(execute_handler_1),
-		USE_TEST(continue_execution_1),
-		USE_TEST(continue_search_1),
-		USE_TEST(execute_handler_2),
-		USE_TEST(continue_execution_2),
+		USE_TEST(test_execute_handler_1),
+		USE_TEST(test_continue_execution_1),
+		USE_TEST(test_continue_search_1),
+		USE_TEST(test_execute_handler_2),
+		USE_TEST(test_continue_execution_2),
 
-		USE_TEST(execute_handler_3),
-		USE_TEST(continue_execution_3),
-		USE_TEST(continue_search_2),
-		USE_TEST(execute_handler_4),
-		USE_TEST(continue_execution_4),
+		USE_TEST(test_execute_handler_3),
+		USE_TEST(test_continue_execution_3),
+		USE_TEST(test_continue_search_2),
+		USE_TEST(test_execute_handler_4),
+		USE_TEST(test_continue_execution_4),
 
-		USE_TEST(execute_handler_5),
-		USE_TEST(continue_execution_5),
-		USE_TEST(continue_search_3),
-		USE_TEST(execute_handler_6),
-		USE_TEST(continue_execution_6),
+		USE_TEST(test_execute_handler_5),
+		USE_TEST(test_continue_execution_5),
+		USE_TEST(test_continue_search_3),
+		USE_TEST(test_execute_handler_6),
+		USE_TEST(test_continue_execution_6),
 
-		USE_TEST(execute_handler_7),
-		USE_TEST(continue_execution_7),
-		USE_TEST(continue_search_4),
-		USE_TEST(execute_handler_8),
-		USE_TEST(continue_execution_8),
+		USE_TEST(test_execute_handler_7),
+		USE_TEST(test_continue_execution_7),
+		USE_TEST(test_continue_search_4),
+		USE_TEST(test_execute_handler_8),
+		USE_TEST(test_continue_execution_8),
 
-		USE_TEST(execute_handler_9),
-		USE_TEST(continue_execution_9),
-		USE_TEST(continue_search_5),
-		USE_TEST(execute_handler_10),
-		USE_TEST(continue_execution_10),
+		USE_TEST(test_execute_handler_9),
+		USE_TEST(test_continue_execution_9),
+		USE_TEST(test_continue_search_5),
+		USE_TEST(test_execute_handler_10),
+		USE_TEST(test_continue_execution_10),
 
-		USE_TEST(execute_handler_11),
-		USE_TEST(continue_execution_11),
-		USE_TEST(continue_search_6),
-		USE_TEST(execute_handler_12),
-		USE_TEST(continue_execution_12),
+		USE_TEST(test_execute_handler_11),
+		USE_TEST(test_continue_execution_11),
+		USE_TEST(test_continue_search_6),
+		USE_TEST(test_execute_handler_12),
+		USE_TEST(test_continue_execution_12),
 
-		USE_TEST(leave_1),
-		USE_TEST(leave_2),
-		USE_TEST(leave_3),
-		USE_TEST(leave_4),
-		USE_TEST(leave_5),
-		USE_TEST(leave_6),
+		USE_TEST(test_leave_1),
+		USE_TEST(test_leave_2),
+		USE_TEST(test_leave_3),
+		USE_TEST(test_leave_4),
+		USE_TEST(test_leave_5),
+		USE_TEST(test_leave_6),
 
-		USE_TEST(yield_1),
-		USE_TEST(yield_2),
-		USE_TEST(yield_3),
-		USE_TEST(yield_4),
-		USE_TEST(yield_5),
-		USE_TEST(yield_6),
+		USE_TEST(test_yield_1),
+		USE_TEST(test_yield_2),
+		USE_TEST(test_yield_3),
+		USE_TEST(test_yield_4),
+		USE_TEST(test_yield_5),
+		USE_TEST(test_yield_6),
 
-		USE_TEST(finally_1),
-		USE_TEST(finally_2),
-		USE_TEST(finally_3),
-		USE_TEST(finally_4),
-		USE_TEST(finally_5),
-		USE_TEST(finally_6),
-		USE_TEST(finally_7),
-		USE_TEST(finally_8),
-		USE_TEST(finally_9),
-		USE_TEST(finally_10),
-		USE_TEST(finally_11),
-		USE_TEST(finally_12),
-		USE_TEST(finally_13),
-		USE_TEST(finally_14),
+		USE_TEST(test_finally_1),
+		USE_TEST(test_finally_2),
+		USE_TEST(test_finally_3),
+		USE_TEST(test_finally_4),
+		USE_TEST(test_finally_5),
+		USE_TEST(test_finally_6),
+		USE_TEST(test_finally_7),
+		USE_TEST(test_finally_8),
+		USE_TEST(test_finally_9),
+		USE_TEST(test_finally_10),
+		USE_TEST(test_finally_11),
+		USE_TEST(test_finally_12),
+		USE_TEST(test_finally_13),
+		USE_TEST(test_finally_14),
 
-		USE_TEST(xpointers_1),
-		USE_TEST(xpointers_2),
-		USE_TEST(xpointers_3),
-		USE_TEST(xpointers_4),
-		USE_TEST(xpointers_5),
-		USE_TEST(xpointers_6),
-		USE_TEST(xpointers_7),
-		USE_TEST(xpointers_8),
-		USE_TEST(xpointers_9),
-		USE_TEST(xpointers_10),
-		USE_TEST(xpointers_11),
-		USE_TEST(xpointers_12),
-		USE_TEST(xpointers_13),
-		USE_TEST(xpointers_14),
-		USE_TEST(xpointers_15),
-		USE_TEST(xpointers_16),
+		USE_TEST(test_xpointers_1),
+		USE_TEST(test_xpointers_2),
+		USE_TEST(test_xpointers_3),
+		USE_TEST(test_xpointers_4),
+		USE_TEST(test_xpointers_5),
+		USE_TEST(test_xpointers_6),
+		USE_TEST(test_xpointers_7),
+		USE_TEST(test_xpointers_8),
+		USE_TEST(test_xpointers_9),
+		USE_TEST(test_xpointers_10),
+		USE_TEST(test_xpointers_11),
+		USE_TEST(test_xpointers_12),
+		USE_TEST(test_xpointers_13),
+		USE_TEST(test_xpointers_14),
+		USE_TEST(test_xpointers_15),
+		USE_TEST(test_xpointers_16),
 
-		USE_TEST(xcode_1),
-		USE_TEST(xcode_2),
-		USE_TEST(xcode_3),
+		USE_TEST(test_xcode_1),
+		USE_TEST(test_xcode_2),
+		USE_TEST(test_xcode_3),
 
-		USE_TEST(abnorm_1),
-		USE_TEST(abnorm_2),
-		USE_TEST(abnorm_3),
-		USE_TEST(abnorm_4),
-		USE_TEST(abnorm_5),
-		USE_TEST(abnorm_6),
-		USE_TEST(abnorm_7),
-		USE_TEST(abnorm_8),
+		USE_TEST(test_abnorm_1),
+		USE_TEST(test_abnorm_2),
+		USE_TEST(test_abnorm_3),
+		USE_TEST(test_abnorm_4),
+		USE_TEST(test_abnorm_5),
+		USE_TEST(test_abnorm_6),
+		USE_TEST(test_abnorm_7),
+		USE_TEST(test_abnorm_8),
+
+		USE_TEST(test_bug_4004),
 	};
 
 	size_t i;
