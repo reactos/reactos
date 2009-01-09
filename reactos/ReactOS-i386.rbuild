@@ -14,6 +14,8 @@
 	<define name="__i386__" />
 	<define name="TARGET_i386" host="true" />
 
+	<define name="USE_COMPILER_EXCEPTIONS" />
+
 	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
 
 	<if property="OPTIMIZE" value="1">

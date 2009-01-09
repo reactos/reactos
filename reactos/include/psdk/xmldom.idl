@@ -21,6 +21,10 @@
 
 import "ocidl.idl";
 
+cpp_quote("#ifndef __xmldom_h__")
+cpp_quote("#define __xmldom_h__")
+cpp_quote("#endif")
+
 interface IXMLDOMImplementation;
 interface IXMLDOMNode;
 interface IXMLDOMDocumentFragment;
