@@ -21,12 +21,48 @@
 .text
 .intel_syntax noprefix
 
+.func _SEH2EnterHandleTrylevel
+.globl __SEH2EnterHandleTrylevel
+__SEH2EnterHandleTrylevel:
+	mov eax, [esp+8]
+	mov ecx, [esp+12]
+	mov [eax+8], ecx
+	mov [eax+16], ebp
+	mov [eax+20], ebx
+	mov [eax+24], esi
+	mov [eax+28], edi
+
+	mov edx, [esp+4]
+	mov [edx+8], eax
+
+	xor eax, eax
+	ret
+.endfunc
+
+.func _SEH2EnterFrameAndHandleTrylevel
+.globl __SEH2EnterFrameAndHandleTrylevel
+__SEH2EnterFrameAndHandleTrylevel:
+	mov eax, [esp+8]
+	mov ecx, [esp+12]
+	mov [eax+8], ecx
+	mov [eax+16], ebp
+	mov [eax+20], ebx
+	mov [eax+24], esi
+	mov [eax+28], edi
+
+.extern __SEH2EnterFrameAndTrylevel
+	jmp __SEH2EnterFrameAndTrylevel
+.endfunc
+
 .func __SEH2Handle
 .globl ___SEH2Handle
 ___SEH2Handle:
 	mov eax, [esp+4]
-	mov ebp, [esp+8]
-	mov esp, [esp+12]
+	mov ebp, [esp+12]
+	mov ebx, [esp+16]
+	mov esi, [esp+20]
+	mov edi, [esp+24]
+	mov esp, [esp+8]
 	jmp eax
 .endfunc
 

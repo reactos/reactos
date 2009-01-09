@@ -38,7 +38,7 @@
 #define EXCEPTION_UNWINDING 2
 #endif
 
-extern DECLSPEC_NORETURN int __SEH2Handle(void *, void *, void *);
+extern DECLSPEC_NORETURN int __SEH2Handle(void *, void *, void *, void *, void *, void *);
 extern int __cdecl __SEH2FrameHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
 extern int __cdecl __SEH2UnwindHandler(struct _EXCEPTION_RECORD *, void *, struct _CONTEXT *, void *);
 
@@ -188,9 +188,20 @@ void _SEH2LocalUnwind(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * dsttrylev
 static DECLSPEC_NORETURN
 void _SEH2Handle(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 {
+	volatile _SEH2HandleTryLevel_t * fulltrylevel = CONTAINING_RECORD(trylevel, _SEH2HandleTryLevel_t, SHT_Common);
+
 	_SEH2GlobalUnwind(frame);
-	_SEH2LocalUnwind(frame, trylevel);
-	__SEH2Handle(trylevel->ST_Body, trylevel->ST_Ebp, trylevel->ST_Esp);
+	_SEH2LocalUnwind(frame, &fulltrylevel->SHT_Common);
+
+	__SEH2Handle
+	(
+		fulltrylevel->SHT_Common.ST_Body,
+		fulltrylevel->SHT_Esp,
+		fulltrylevel->SHT_Ebp,
+		fulltrylevel->SHT_Ebx,
+		fulltrylevel->SHT_Esi,
+		fulltrylevel->SHT_Edi
+	);
 }
 
 extern
@@ -241,9 +252,16 @@ extern
 void __cdecl _SEH2EnterFrame(_SEH2Frame_t * frame)
 {
 	frame->SF_Registration.SER_Handler = __SEH2FrameHandler;
-	frame->SF_TopTryLevel = 0;
 	frame->SF_Code = 0;
 	__SEH2EnterFrame(&frame->SF_Registration);
+}
+
+extern
+int __cdecl _SEH2EnterFrameAndTrylevel(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
+{
+	frame->SF_TopTryLevel = trylevel;
+	_SEH2EnterFrame(frame);
+	return 0;
 }
 
 extern
