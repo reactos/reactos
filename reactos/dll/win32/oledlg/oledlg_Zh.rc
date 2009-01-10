@@ -1,0 +1,180 @@
+/*
+ * oledlg (Simplified and Traditional Chinese Resources)
+ *
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "插入对象"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "对象类型:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "确定",IDOK,221,7,66,14
+    PUSHBUTTON      "取消",IDCANCEL,221,24,66,14
+    GROUPBOX        "结果",IDC_RESULT,7,103,208,41
+    CONTROL         "新建",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,7,20,62,10
+    CONTROL         "建立控件",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
+    CONTROL         "建立于文件",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,67,10
+    LTEXT           "",IDC_RESULTDESC,49,112,159,23
+    PUSHBUTTON      "添加控件(&A)...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    CONTROL         "显示为图标",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
+    PUSHBUTTON      "浏览...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
+    LTEXT           "文件:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_RESULTOBJDESC	    "在你的文件中插入一个新的 %s 对象"
+  IDS_RESULTFILEOBJDESC	"将文件的内容以对象的方式插入到你的文件以便你可以用创建本文件的程序来激活它."
+  IDS_BROWSE            "浏览"
+  IDS_NOTOLEMOD         "本文件不像是一个有效的 OLE 模型. 不能注册 OLE 控件."
+  IDS_NOTOLEMODCAPTION  "添加控件"
+}
+
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "特殊粘贴"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT         "源:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "粘贴(&P)", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "粘贴链接(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "为(&A):", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "确定", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
+    CONTROL       "取消", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
+    CONTROL       "帮助(&H)", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
+    CONTROL       "显示为图标(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
+    CONTROL       "改变图标(&I)...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< result text goes here >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "结果", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PS_PASTE_DATA                 "将剪贴板的内容以 %s 插入到你的文件."
+    IDS_PS_PASTE_OBJECT               "将剪贴板的内容插入到你的文件以便你可以使用 %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON       "将剪贴板的内容插入到你的文件以便你可以用 %s 激活它, 一般显示为图标."
+    IDS_PS_PASTE_LINK_DATA            "将剪贴板的内容以 %s 插入到你的文件. 数据是链接到源文件的, 对源文件的任何改动都会反应到你的文件."
+    IDS_PS_PASTE_LINK_OBJECT          "将剪贴板的图像插入到你的文件. 图像是链接到源文件的, 对源文件的任何改动都会反应到你的文件."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON  "将剪贴板的捷径插入到你的文件. 捷径是链接到源文件的, 对源文件的任何改动都会反应到你的文件."
+    IDS_PS_NON_OLE                    "将剪贴板的内容插入到你的文件."
+    IDS_PS_UNKNOWN_TYPE               "不明类型"
+    IDS_PS_UNKNOWN_SRC                "不明来源"
+    IDS_PS_UNKNOWN_APP                "不明应用程序"
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "插入對象"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "對象類型:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "確定",IDOK,221,7,66,14
+    PUSHBUTTON      "取消",IDCANCEL,221,24,66,14
+    GROUPBOX        "結果",IDC_RESULT,7,103,208,41
+    CONTROL         "新建",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,7,20,62,10
+    CONTROL         "建立控件",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
+    CONTROL         "建立於檔案",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,67,10
+    LTEXT           "",IDC_RESULTDESC,49,112,159,23
+    PUSHBUTTON      "添加控件(&A)...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    CONTROL         "顯示為圖標",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
+    PUSHBUTTON      "瀏覽...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
+    LTEXT           "檔案:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_RESULTOBJDESC	    "在你的檔案中插入一個新的 %s 對象"
+  IDS_RESULTFILEOBJDESC	"將檔案的內容以對象的方式插入到你的檔案以便你可以用創建本檔案的程式來激活它."
+  IDS_BROWSE            "瀏覽"
+  IDS_NOTOLEMOD         "本檔案不像是一個有效的 OLE 模型. 不能註冊 OLE 控件."
+  IDS_NOTOLEMODCAPTION  "添加控件"
+}
+
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "特殊貼上"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT         "源:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "貼上(&P)", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "貼上鏈接(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "為(&A):", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "確定", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
+    CONTROL       "取消", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
+    CONTROL       "幫助(&H)", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
+    CONTROL       "顯示為圖標(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
+    CONTROL       "改變圖標(&I)...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< result text goes here >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "結果", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PS_PASTE_DATA                 "將剪貼板的內容以 %s 插入到你的檔案."
+    IDS_PS_PASTE_OBJECT               "將剪貼板的內容插入到你的檔案以便你可以使用 %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON       "將剪貼板的內容插入到你的檔案以便你可以用 %s 激活它, 一般顯示為圖標."
+    IDS_PS_PASTE_LINK_DATA            "將剪貼板的內容以 %s 插入到你的檔案. 數據是鏈接到源檔案的, 對源檔案的任何改動都會反應到你的檔案."
+    IDS_PS_PASTE_LINK_OBJECT          "將剪貼板的圖像插入到你的檔案. 圖像是鏈接到源檔案的, 對源檔案的任何改動都會反應到你的檔案."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON  "將剪貼板的捷徑插入到你的檔案. 捷徑是鏈接到源檔案的, 對源檔案的任何改動都會反應到你的檔案."
+    IDS_PS_NON_OLE                    "將剪貼板的內容插入到你的檔案."
+    IDS_PS_UNKNOWN_TYPE               "不明類型"
+    IDS_PS_UNKNOWN_SRC                "不明來源"
+    IDS_PS_UNKNOWN_APP                "不明應用程式"
+}
+
+#pragma code_page(default)

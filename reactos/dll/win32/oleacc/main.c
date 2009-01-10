@@ -23,6 +23,7 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "oleacc.h"
 
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -39,9 +40,15 @@ HRESULT WINAPI CreateStdAccessibleObject( HWND hwnd, LONG idObject,
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI LresultFromObject( REFIID riid, WPARAM wParam, LPUNKNOWN pAcc )
+LRESULT WINAPI LresultFromObject( REFIID riid, WPARAM wParam, LPUNKNOWN pAcc )
 {
     FIXME("%s %ld %p\n", debugstr_guid(riid), wParam, pAcc );
+    return E_NOTIMPL;
+}
+
+HRESULT WINAPI AccessibleObjectFromPoint( POINT ptScreen, IAccessible** ppacc, VARIANT* pvarChild )
+{
+    FIXME("{%d,%d} %p %p: stub\n", ptScreen.x, ptScreen.y, ppacc, pvarChild );
     return E_NOTIMPL;
 }
 

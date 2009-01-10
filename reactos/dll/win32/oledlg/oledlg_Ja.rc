@@ -16,40 +16,45 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒIƒuƒWƒFƒNƒg‚Ì‘}“ü"
-FONT 9, "MS UI Gothic"
+CAPTION "ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æŒ¿å…¥"
+FONT 9, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
                     LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
                     WS_TABSTOP
-    LTEXT           "ƒIƒuƒWƒFƒNƒg‚ÌŽí—Þ:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
+    LTEXT           "ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ç¨®é¡ž:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
     DEFPUSHBUTTON   "OK",IDOK,221,7,66,14
-    PUSHBUTTON      "ƒLƒƒƒ“ƒZƒ‹",IDCANCEL,221,24,66,14
-    GROUPBOX        "Œ‹‰Ê",IDC_RESULT,7,103,208,41
-    CONTROL         "V‹Kì¬",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
+    PUSHBUTTON      "ã‚­ãƒ£ãƒ³ã‚»ãƒ«",IDCANCEL,221,24,66,14
+    GROUPBOX        "çµæžœ",IDC_RESULT,7,103,208,41
+    CONTROL         "æ–°è¦ä½œæˆ",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
                     WS_GROUP,7,20,62,10
-    CONTROL         "ƒRƒ“ƒgƒ[ƒ‹‚ðì¬",IDC_CREATECONTROL,"Button",
+    CONTROL         "ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚’ä½œæˆ",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
-    CONTROL         "ƒtƒ@ƒCƒ‹‚©‚çì¬",IDC_CREATEFROMFILE,"Button",
+    CONTROL         "ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ä½œæˆ",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,67,10
     LTEXT           "",IDC_RESULTDESC,49,112,159,23
-    PUSHBUTTON      "ƒRƒ“ƒgƒ[ƒ‹‚ð’Ç‰Á(&A)...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
-    CONTROL         "ƒAƒCƒRƒ“‚Æ‚µ‚Ä•\Ž¦",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
+    PUSHBUTTON      "ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚’è¿½åŠ (&A)...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    CONTROL         "ã‚¢ã‚¤ã‚³ãƒ³ã¨ã—ã¦è¡¨ç¤º",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
-    PUSHBUTTON      "ŽQÆ...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
-    LTEXT           "ƒtƒ@ƒCƒ‹:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
+    PUSHBUTTON      "å‚ç…§...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
+    LTEXT           "ãƒ•ã‚¡ã‚¤ãƒ«:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
     EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_RESULTOBJDESC	"ƒhƒLƒ…ƒƒ“ƒg‚ÉV‚µ‚¢ %s ƒIƒuƒWƒFƒNƒg‚ð‘}“ü‚µ‚Ü‚·"
-  IDS_RESULTFILEOBJDESC	"ƒtƒ@ƒCƒ‹‚Ì“à—e‚ðƒIƒuƒWƒFƒNƒg‚Æ‚µ‚ÄƒhƒLƒ…ƒƒ“ƒg‚É‘}“ü‚µ‚Ü‚·BƒIƒuƒWƒFƒNƒg‚Íì¬‚µ‚½ƒvƒƒOƒ‰ƒ€‚©‚ç—LŒø‚É‚Å‚«‚Ü‚·B"
-  IDS_BROWSE            "ŽQÆ"
-  IDS_NOTOLEMOD         "ƒtƒ@ƒCƒ‹‚Í—LŒø‚ÈOLEƒ‚ƒWƒ…[ƒ‹‚Å‚Í‚È‚¢‚æ‚¤‚Å‚·BOLEƒRƒ“ƒgƒ[ƒ‹‚ð“o˜^‚Å‚«‚Ü‚¹‚ñB"
-  IDS_NOTOLEMODCAPTION  "ƒRƒ“ƒgƒ[ƒ‹‚ð’Ç‰Á"
+  IDS_RESULTOBJDESC	"ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ãƒˆã«æ–°ã—ã„ %s ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’æŒ¿å…¥ã—ã¾ã™"
+  IDS_RESULTFILEOBJDESC	"ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã‚’ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ã—ã¦ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ãƒˆã«æŒ¿å…¥ã—ã¾ã™ã€‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¯ä½œæˆã—ãŸãƒ—ãƒ­ã‚°ãƒ©ãƒ ã‹ã‚‰æœ‰åŠ¹ã«ã§ãã¾ã™ã€‚"
+  IDS_BROWSE            "å‚ç…§"
+  IDS_NOTOLEMOD         "ãƒ•ã‚¡ã‚¤ãƒ«ã¯æœ‰åŠ¹ãªOLEãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã§ã¯ãªã„ã‚ˆã†ã§ã™ã€‚OLEã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚’ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚"
+  IDS_NOTOLEMODCAPTION  "ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚’è¿½åŠ "
 }
+
+#pragma code_page(default)

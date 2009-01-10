@@ -1,6 +1,6 @@
 @ stub AccessibleChildren
 @ stub AccessibleObjectFromEvent
-@ stub AccessibleObjectFromPoint
+@ stdcall AccessibleObjectFromPoint(double ptr ptr)
 @ stdcall AccessibleObjectFromWindow(ptr long ptr ptr)
 @ stdcall CreateStdAccessibleObject(ptr long ptr ptr)
 @ stub CreateStdAccessibleProxyA
