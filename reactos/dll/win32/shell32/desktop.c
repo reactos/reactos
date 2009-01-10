@@ -281,8 +281,8 @@ SHDESK_CreateDeskWnd(SHDESK *This)
     if (SUCCEEDED (IShellDesktop_GetTrayWindow(This->ShellDesk,
                                                &hwndTray)))
     {
-        SetShellWindowEx (hwndTray,
-                          This->hWnd);
+        SetShellWindowEx (This->hWnd,
+                          hwndTray); // FIXME: Shouldn't this be the desktop listview?
     }
     return TRUE;
 }
