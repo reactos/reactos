@@ -382,7 +382,7 @@ static BOOL fci_flush_data_block (HFCI hfci, int* err,
   /* inefficient, but it's harder to forget about freeing the buffer :-). */
   /* Reserved areas are used seldom besides that... */
   if (cbReserveCFData!=0) {
-    if(!(reserved = (char*)PFCI_ALLOC(hfci, cbReserveCFData))) {
+    if(!(reserved = PFCI_ALLOC(hfci, cbReserveCFData))) {
       fci_set_error( FCIERR_ALLOC_FAIL, ERROR_NOT_ENOUGH_MEMORY, TRUE );
       return FALSE;
     }
@@ -852,7 +852,7 @@ static BOOL fci_flushfolder_copy_cffolder(HFCI hfci, int* err, UINT cbReserveCFF
 
   /* add optional reserved area */
   if (cbReserveCFFolder!=0) {
-    if(!(reserved = (char*)PFCI_ALLOC(hfci, cbReserveCFFolder))) {
+    if(!(reserved = PFCI_ALLOC(hfci, cbReserveCFFolder))) {
       fci_set_error( FCIERR_ALLOC_FAIL, ERROR_NOT_ENOUGH_MEMORY, TRUE );
       return FALSE;
     }
@@ -1419,7 +1419,7 @@ static BOOL fci_flush_folder(
   /* save size of file CFDATA2 - required for the folder's offset to data */
   sizeFileCFDATA2old = p_fci_internal->sizeFileCFDATA2;
 
-  if(!(reserved = (char*)PFCI_ALLOC(hfci, cbReserveCFData+sizeof(CFDATA)))) {
+  if(!(reserved = PFCI_ALLOC(hfci, cbReserveCFData+sizeof(CFDATA)))) {
     fci_set_error( FCIERR_ALLOC_FAIL, ERROR_NOT_ENOUGH_MEMORY, TRUE );
     PFCI_CLOSE(hfci,handleCFDATA1new,&err,p_fci_internal->pv);
     /* TODO error handling of err */
@@ -1753,7 +1753,7 @@ static BOOL fci_flush_cabinet(
 
   /* add optional reserved area */
   if (cbReserveCFHeader!=0) {
-    if(!(reserved = (char*)PFCI_ALLOC(hfci, cbReserveCFHeader))) {
+    if(!(reserved = PFCI_ALLOC(hfci, cbReserveCFHeader))) {
       fci_set_error( FCIERR_ALLOC_FAIL, ERROR_NOT_ENOUGH_MEMORY, TRUE );
       return FALSE;
     }
@@ -2397,7 +2397,7 @@ BOOL __cdecl FCIAddFile(
       fci_set_error( FCIERR_NONE, ERROR_GEN_FAILURE, TRUE );
       return FALSE;
     }
-    if(!(p_fci_internal->data_in = (char*)PFCI_ALLOC(hfci,CB_MAX_CHUNK))) {
+    if(!(p_fci_internal->data_in = PFCI_ALLOC(hfci,CB_MAX_CHUNK))) {
       fci_set_error( FCIERR_ALLOC_FAIL, ERROR_NOT_ENOUGH_MEMORY, TRUE );
       return FALSE;
     }

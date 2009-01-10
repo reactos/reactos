@@ -237,7 +237,18 @@ static INT_PTR fdi_notify_extract(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pf
 
                 /* create the destination directory if it doesn't exist */
                 if (GetFileAttributesA(szDirectory) == INVALID_FILE_ATTRIBUTES)
+                {
+                    char *ptr;
+
+                    for(ptr = szDirectory + strlen(pDestination->Destination)+1; *ptr; ptr++) {
+                        if(*ptr == '\\') {
+                            *ptr = 0;
+                            CreateDirectoryA(szDirectory, NULL);
+                            *ptr = '\\';
+                        }
+                    }
                     CreateDirectoryA(szDirectory, NULL);
+                }
 
                 hFile = CreateFileA(szFullPath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
                                     CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
