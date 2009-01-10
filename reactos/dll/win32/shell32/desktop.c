@@ -255,13 +255,21 @@ Fail:
     return This;
 }
 
+static HWND
+SHDESK_FindDesktopListView (SHDESK *This)
+{
+    return FindWindowEx (This->hWndShellView,
+                         NULL,
+                         WC_LISTVIEW,
+                         NULL);
+}
+
 static BOOL
 SHDESK_CreateDeskWnd(SHDESK *This)
 {
     IShellBrowser *ShellBrowser;
     FOLDERSETTINGS fs;
     RECT rcClient;
-    HWND hwndTray;
     HRESULT hRet;
 
     if (!GetClientRect(This->hWnd,
@@ -278,12 +286,9 @@ SHDESK_CreateDeskWnd(SHDESK *This)
     if (!SUCCEEDED(hRet))
         return FALSE;
 
-    if (SUCCEEDED (IShellDesktop_GetTrayWindow(This->ShellDesk,
-                                               &hwndTray)))
-    {
-        SetShellWindowEx (This->hWnd,
-                          hwndTray); // FIXME: Shouldn't this be the desktop listview?
-    }
+    SetShellWindowEx (This->hWnd,
+                      SHDESK_FindDesktopListView (This));
+
     return TRUE;
 }
 
