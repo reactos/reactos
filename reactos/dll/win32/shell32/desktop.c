@@ -22,6 +22,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
+BOOL WINAPI SetShellWindowEx(HWND, HWND);
+
 #define SHDESK_TAG 0x4b534544
 
 static const WCHAR szProgmanClassName[] = {'P','r','o','g','m','a','n'};
@@ -259,6 +261,7 @@ SHDESK_CreateDeskWnd(SHDESK *This)
     IShellBrowser *ShellBrowser;
     FOLDERSETTINGS fs;
     RECT rcClient;
+    HWND hwndTray;
     HRESULT hRet;
 
     if (!GetClientRect(This->hWnd,
@@ -275,6 +278,12 @@ SHDESK_CreateDeskWnd(SHDESK *This)
     if (!SUCCEEDED(hRet))
         return FALSE;
 
+    if (SUCCEEDED (IShellDesktop_GetTrayWindow(This->ShellDesk,
+                                               &hwndTray)))
+    {
+        SetShellWindowEx (hwndTray,
+                          This->hWnd);
+    }
     return TRUE;
 }
 
