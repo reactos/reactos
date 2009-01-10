@@ -265,6 +265,27 @@ OpenFile(LPCSTR lpFileName,
         return 0;
     }
 
+    if ((uStyle & OF_EXIST) && !(uStyle & OF_CREATE))
+    {
+        DWORD dwAttributes = GetFileAttributesA(lpReOpenBuff->szPathName);
+
+        switch (dwAttributes)
+        {
+            case 0xFFFFFFFF: /* File does not exist */
+                SetLastError(ERROR_FILE_NOT_FOUND);
+                lpReOpenBuff->nErrCode = (WORD) ERROR_FILE_NOT_FOUND;
+                return -1;
+
+            case FILE_ATTRIBUTE_DIRECTORY:
+                SetLastError(ERROR_ACCESS_DENIED);
+                lpReOpenBuff->nErrCode = (WORD) ERROR_ACCESS_DENIED;
+                return -1;
+
+            default:
+                return 1;
+        }
+    }
+
 	if ((uStyle & OF_CREATE) == OF_CREATE)
 	{
 		DWORD Sharing;
@@ -371,7 +392,7 @@ OpenFile(LPCSTR lpFileName,
 	if (uStyle & OF_EXIST)
 	{
 		NtClose(FileHandle);
-		return TRUE;
+		return (HFILE)1;
 	}
 
 	return (HFILE)FileHandle;
