@@ -139,7 +139,7 @@ GetEnvironmentVariableW (
 	                      lpName);
 
 	VarValue.Length = 0;
-	VarValue.MaximumLength = (USHORT)(nSize != 0 ? (nSize - 1) * sizeof(WCHAR) : 0);
+	VarValue.MaximumLength = (USHORT) (nSize ? nSize - 1 : 0) * sizeof(WCHAR);
 	VarValue.Buffer = lpBuffer;
 
 	Status = RtlQueryEnvironmentVariable_U (NULL,
@@ -147,13 +147,13 @@ GetEnvironmentVariableW (
 	                                        &VarValue);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastErrorByStatus (Status);
 		if (Status == STATUS_BUFFER_TOO_SMALL)
 		{
 			return (VarValue.Length / sizeof(WCHAR)) + 1;
 		}
 		else
 		{
+			SetLastErrorByStatus (Status);
 			return 0;
 		}
 	}
@@ -162,7 +162,7 @@ GetEnvironmentVariableW (
         {
             /* make sure the string is NULL-terminated! RtlQueryEnvironmentVariable_U
                only terminates it if MaximumLength < Length */
-	    VarValue.Buffer[VarValue.Length / sizeof(WCHAR)] = L'\0';
+	    lpBuffer[VarValue.Length / sizeof(WCHAR)] = L'\0';
 	}
 
 	return (VarValue.Length / sizeof(WCHAR));
