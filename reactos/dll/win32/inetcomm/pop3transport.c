@@ -460,7 +460,7 @@ static void POP3Transport_CallbackRecvRSETResp(IInternetTransport *iface, char *
     InternetTransport_ReadLine(&This->InetTransport, POP3Transport_CallbackProcessRSETResp);
 }
 
-void POP3Transport_CallbackProcessRETRResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
+static void POP3Transport_CallbackProcessRETRResp(IInternetTransport *iface, char *pBuffer, int cbBuffer)
 {
     POP3Transport *This = (POP3Transport *)iface;
     POP3RESPONSE response;
