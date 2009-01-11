@@ -1,8 +1,7 @@
 /*
- * Korean language resource file for Credentials UI
+ * Portuguese language resource file for Credentials UI
  *
- * Copyright 2007 Robert Shearman (for CodeWeavers)
- * Copyright 2007 YunSong Hwang-È²À±¼º(hys545@dreamwiz.com)
+ * Copyright 2008 Ricardo Filipe
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,34 +18,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "IDS_TITLEFORMAT"
-FONT 9, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         IDB_BANNER,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
                     0,213,37
     LTEXT           "IDS_MESSAGEFORMAT",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "»ç¿ëÀÚ ÀÌ¸§(&U):",IDC_STATIC,8,62,72,12,SS_CENTERIMAGE
+    LTEXT           "&User name:",IDC_STATIC,8,62,72,12,SS_CENTERIMAGE
     CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
                     CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
-    LTEXT           "¾ÏÈ£(&P):",IDC_STATIC,8,80,72,12,SS_CENTERIMAGE
+    LTEXT           "&Password:",IDC_STATIC,8,80,72,12,SS_CENTERIMAGE
     EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "³» ¾ÏÈ£ ±â¾ï(&R)",IDC_SAVE,"Button",
+    CONTROL         "&Lembrar a password",IDC_SAVE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
-    DEFPUSHBUTTON   "È®ÀÎ",IDOK,97,128,50,14
-    PUSHBUTTON      "Ãë¼Ò",IDCANCEL,156,128,50,14
+    DEFPUSHBUTTON   "OK",IDOK,97,128,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,156,128,50,14
 END
-
 
 STRINGTABLE DISCARDABLE
 {
- IDS_TITLEFORMAT     " %s ¿¬°á"
- IDS_MESSAGEFORMAT   " %s ¿¬°áÁß"
- IDS_INCORRECTPASSWORDTITLE  "·Î±×¿Â  ½ÇÆÐ"
- IDS_INCORRECTPASSWORD       "´ç½ÅÀÇ »ç¿ëÀÚ ÀÌ¸§°ú ¾ÏÈ£°¡\n¿Ã¹Ù¸¥Áö È®ÀÎÇÏ½Ê½Ã¿À"
- IDS_CAPSLOCKONTITLE "Caps Lock  Ä¿Áü"
- IDS_CAPSLOCKON      "Caps Lock ÀÌ Ä¿Á® ÀÖÀ¸¸é ¾ÏÈ£°¡ Àß¸øÀÔ·ÂµÉ ¼ö ÀÖ½À´Ï´Ù.\n\n ¾ÏÈ£¸¦ ÀÔ·ÂÇÏ±â Àü¿¡\nÅ°º¸µåÀÇ Caps Lock Å°¸¦ ²ô½Ã±â ¹Ù¶ø´Ï´Ù."
+    IDS_TITLEFORMAT     "Ligar a %s"
+    IDS_MESSAGEFORMAT   "A ligar a %s"
+    IDS_INCORRECTPASSWORDTITLE  "Logon mal sucedido"
+    IDS_INCORRECTPASSWORD       "Verifique que o seu nome de utilizador\ne password estão correctos."
+    IDS_CAPSLOCKONTITLE "Caps Lock ligado"
+    IDS_CAPSLOCKON      "Tendo o Caps Lock ligado pode provocar que introduza a sua password incorrectamente.\n\nPressione a tecla Caps Lock no seu teclado para desligar o Caps Lock antes\nde introduzir a password."
 }
