@@ -1,5 +1,5 @@
 /*
- * ReactOS USASCII Keyboard layout
+ * ReactOS Japanese (JIS 106) keyboard layout
  * Copyright (C) 2003 ReactOS
  * License: LGPL, see: LGPL.txt
  *
@@ -343,7 +343,6 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   vk_to_wchar_master_table,
 
   /* diacritical marks -- currently implemented by wine code */
-  /* English doesn't have any, anyway */
   NULL,
 
   /* Key names */
@@ -359,7 +358,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   MAKELONG(0,1), /* Version 1.0 */
 
-  /* Ligatures -- English doesn't have any */
+  /* Ligatures -- Japanese doesn't have any */
   0,
   0,
   NULL
@@ -368,5 +367,4 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 PKBDTABLES WINAPI KbdLayerDescriptor() {
   return &keyboard_layout_table;
 }
-
 

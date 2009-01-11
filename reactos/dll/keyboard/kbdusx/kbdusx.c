@@ -461,7 +461,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   MAKELONG(1,1), /* Version 1.0 */
 
-  /* Ligatures -- Russian doesn't have any */
+  /* Ligatures */
   0,
   0,
   NULL
