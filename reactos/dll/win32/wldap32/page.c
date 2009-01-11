@@ -168,7 +168,7 @@ ULONG CDECL ldap_get_next_page( WLDAP32_LDAP *ld, PLDAPSearch search, ULONG page
 {
     FIXME( "(%p, %p, 0x%08x, %p)\n", ld, search, pagesize, message );
 
-    if (!ld) return ~0UL;
+    if (!ld) return ~0u;
     return WLDAP32_LDAP_NOT_SUPPORTED;
 }
 
@@ -179,7 +179,7 @@ ULONG CDECL ldap_get_next_page_s( WLDAP32_LDAP *ld, PLDAPSearch search,
     FIXME( "(%p, %p, %p, 0x%08x, %p, %p)\n", ld, search, timeout,
            pagesize, count, results );
 
-    if (!ld) return ~0UL;
+    if (!ld) return ~0u;
     return WLDAP32_LDAP_NOT_SUPPORTED;
 }
 
@@ -269,7 +269,7 @@ ULONG CDECL ldap_search_abandon_page( WLDAP32_LDAP *ld, PLDAPSearch search )
 {
     FIXME( "(%p, %p)\n", ld, search );
 
-    if (!ld) return ~0UL;
+    if (!ld) return ~0u;
     return WLDAP32_LDAP_SUCCESS;
 }
 
