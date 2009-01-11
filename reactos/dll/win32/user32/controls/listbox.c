@@ -396,7 +396,7 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
         else
             scroll = FALSE;
     }
-    if (!scroll) NtUserInvalidateRect( descr->self, NULL, TRUE );
+    if (!scroll) InvalidateRect( descr->self, NULL, TRUE );
     descr->top_item = index;
     LISTBOX_UpdateScroll( descr );
     return LB_OKAY;
@@ -418,7 +418,7 @@ static void LISTBOX_UpdatePage( LB_DESCR *descr )
     if (page_size == descr->page_size) return;
     descr->page_size = page_size;
     if (descr->style & LBS_MULTICOLUMN)
-        NtUserInvalidateRect( descr->self, NULL, TRUE );
+        InvalidateRect( descr->self, NULL, TRUE );
     LISTBOX_SetTopItem( descr, descr->top_item, FALSE );
 }
 
@@ -473,7 +473,7 @@ static void LISTBOX_UpdateSize( LB_DESCR *descr )
     /* Invalidate the focused item so it will be repainted correctly */
     if (LISTBOX_GetItemRect( descr, descr->focus_item, &rect ) == 1)
     {
-        NtUserInvalidateRect( descr->self, &rect, FALSE );
+        InvalidateRect( descr->self, &rect, FALSE );
     }
 }
 
@@ -702,7 +702,7 @@ static void LISTBOX_SetRedraw( LB_DESCR *descr, BOOL on )
         descr->style &= ~LBS_NOREDRAW;
         if (descr->style & LBS_DISPLAYCHANGED)
         {     /* page was changed while setredraw false, refresh automatically */
-            NtUserInvalidateRect(descr->self, NULL, TRUE);
+            InvalidateRect(descr->self, NULL, TRUE);
             if ((descr->top_item + descr->page_size) > descr->nb_items)
             {      /* reset top of page if less than number of items/page */
                 descr->top_item = descr->nb_items - descr->page_size;
@@ -1240,14 +1240,14 @@ static void LISTBOX_InvalidateItems( LB_DESCR *descr, INT index )
             return;
         }
         rect.bottom = descr->height;
-        NtUserInvalidateRect( descr->self, &rect, TRUE );
+        InvalidateRect( descr->self, &rect, TRUE );
         if (descr->style & LBS_MULTICOLUMN)
         {
             /* Repaint the other columns */
             rect.left  = rect.right;
             rect.right = descr->width;
             rect.top   = 0;
-            NtUserInvalidateRect( descr->self, &rect, TRUE );
+            InvalidateRect( descr->self, &rect, TRUE );
         }
     }
 }
@@ -1257,7 +1257,7 @@ static void LISTBOX_InvalidateItemRect( LB_DESCR *descr, INT index )
     RECT rect;
 
     if (LISTBOX_GetItemRect( descr, index, &rect ) == 1)
-        NtUserInvalidateRect( descr->self, &rect, TRUE );
+        InvalidateRect( descr->self, &rect, TRUE );
 }
 
 /***********************************************************************
@@ -1308,7 +1308,7 @@ static LRESULT LISTBOX_SetItemHeight( LB_DESCR *descr, INT index, INT height, BO
         LISTBOX_UpdatePage( descr );
         LISTBOX_UpdateScroll( descr );
 	if (repaint)
-	    NtUserInvalidateRect( descr->self, 0, TRUE );
+	    InvalidateRect( descr->self, 0, TRUE );
     }
     return LB_OKAY;
 }
@@ -1333,12 +1333,12 @@ static void LISTBOX_SetHorizontalPos( LB_DESCR *descr, INT pos )
         RECT rect;
         /* Invalidate the focused item so it will be repainted correctly */
         if (LISTBOX_GetItemRect( descr, descr->focus_item, &rect ) == 1)
-            NtUserInvalidateRect( descr->self, &rect, TRUE );
+            InvalidateRect( descr->self, &rect, TRUE );
         ScrollWindowEx( descr->self, diff, 0, NULL, NULL, 0, NULL,
                           SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
     }
     else
-        NtUserInvalidateRect( descr->self, NULL, TRUE );
+        InvalidateRect( descr->self, NULL, TRUE );
 }
 
 
@@ -2719,7 +2719,7 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     case LB_RESETCONTENT:
         LISTBOX_ResetContent( descr );
         LISTBOX_UpdateScroll( descr );
-        NtUserInvalidateRect( descr->self, NULL, TRUE );
+        InvalidateRect( descr->self, NULL, TRUE );
         return 0;
 
 #ifndef __REACTOS__
@@ -3256,7 +3256,7 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return LISTBOX_Destroy( descr );
 
     case WM_ENABLE:
-        NtUserInvalidateRect( hwnd, NULL, TRUE );
+        InvalidateRect( hwnd, NULL, TRUE );
         return 0;
 
     case WM_SETREDRAW:
@@ -3282,7 +3282,7 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return (LRESULT)descr->font;
     case WM_SETFONT:
         LISTBOX_SetFont( descr, (HFONT)wParam );
-        if (lParam) NtUserInvalidateRect( hwnd, 0, TRUE );
+        if (lParam) InvalidateRect( hwnd, 0, TRUE );
         return 0;
     case WM_SETFOCUS:
         descr->in_focus = TRUE;

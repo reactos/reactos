@@ -259,8 +259,8 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     LONG state;
     HANDLE oldHbitmap;
 
-    pt.x = LOWORD(lParam);
-    pt.y = HIWORD(lParam);
+    pt.x = (short)LOWORD(lParam);
+    pt.y = (short)HIWORD(lParam);
 
     switch (uMsg)
     {
@@ -433,7 +433,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if (unicode) DefWindowProcW( hWnd, WM_SETTEXT, wParam, lParam );
         else DefWindowProcA( hWnd, WM_SETTEXT, wParam, lParam );
         if (btn_type == BS_GROUPBOX) /* Yes, only for BS_GROUPBOX */
-            NtUserInvalidateRect( hWnd, NULL, TRUE );
+            InvalidateRect( hWnd, NULL, TRUE );
         else
             paint_button( hWnd, btn_type, ODA_DRAWENTIRE );
         return 1; /* success. FIXME: check text length */
@@ -469,7 +469,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case WM_SYSCOLORCHANGE:
-        NtUserInvalidateRect( hWnd, NULL, FALSE );
+        InvalidateRect( hWnd, NULL, FALSE );
         break;
 
 #ifndef __REACTOS__
@@ -506,8 +506,8 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             return 0;
         }
         oldHbitmap = (HBITMAP)SetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET, lParam );
-        NtUserInvalidateRect( hWnd, NULL, FALSE );
-        return (LRESULT)oldHbitmap;
+	InvalidateRect( hWnd, NULL, FALSE );
+	return (LRESULT)oldHbitmap;
 
     case BM_GETIMAGE:
         return GetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET );
@@ -582,7 +582,6 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     }
     return 0;
 }
-
 
 /***********************************************************************
  *           ButtonWndProcW
@@ -826,22 +825,8 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
          return;
    }
 
-   /* ROS Hack to make font look less ugly */
-   if ( ((style & (BS_ICON|BS_BITMAP)) == BS_TEXT) &&
-        (flags & DSS_DISABLED) )
-   {
-      ++rc->left; ++rc->top; ++rc->right; ++rc->bottom;
-      SetTextColor(hdc, GetSysColor(COLOR_3DHILIGHT));
-      DrawTextW(hdc, (LPCWSTR)lp, -1, rc, (UINT)wp);
-      --rc->left; --rc->top; --rc->right; --rc->bottom;
-      SetTextColor(hdc, GetSysColor(COLOR_GRAYTEXT));
-      DrawTextW(hdc, (LPCWSTR)lp, -1, rc, (UINT)wp);
-   }
-   else
-   {
-      DrawStateW(hdc, hbr, lpOutputProc, lp, wp, rc->left, rc->top,
-                 rc->right - rc->left, rc->bottom - rc->top, flags);
-   }
+   DrawStateW(hdc, hbr, lpOutputProc, lp, wp, rc->left, rc->top,
+              rc->right - rc->left, rc->bottom - rc->top, flags);
    HeapFree( GetProcessHeap(), 0, text );
 }
 
@@ -869,11 +854,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
     SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
-#ifdef __REACTOS__
-    hOldPen = (HPEN)SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
-#else
     hOldPen = (HPEN)SelectObject(hDC, SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
-#endif
     hOldBrush =(HBRUSH)SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
     oldBkMode = SetBkMode(hDC, TRANSPARENT);
 

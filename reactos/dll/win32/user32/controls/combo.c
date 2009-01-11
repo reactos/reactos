@@ -1233,7 +1233,7 @@ BOOL COMBO_FlipListbox( LPHEADCOMBO lphc, BOOL ok, BOOL bRedrawButton )
  */
 static void CBRepaintButton( LPHEADCOMBO lphc )
    {
-  NtUserInvalidateRect(lphc->self, &lphc->buttonRect, TRUE);
+  InvalidateRect(lphc->self, &lphc->buttonRect, TRUE);
   UpdateWindow(lphc->self);
 }
 
@@ -1252,9 +1252,7 @@ static void COMBO_SetFocus( LPHEADCOMBO lphc )
        /* lphc->wState |= CBF_FOCUSED;  */
 
        if( !(lphc->wState & CBF_EDIT) )
-       {
-            NtUserInvalidateRect(lphc->self, &lphc->textRect, TRUE);
-       }
+	 InvalidateRect(lphc->self, &lphc->textRect, TRUE);
 
        CB_NOTIFY( lphc, CBN_SETFOCUS );
        lphc->wState |= CBF_FOCUSED;
@@ -1276,11 +1274,11 @@ static void COMBO_KillFocus( LPHEADCOMBO lphc )
            if( CB_GETTYPE(lphc) == CBS_DROPDOWNLIST )
                SendMessageW(lphc->hWndLBox, LB_CARETOFF, 0, 0);
 
-           lphc->wState &= ~CBF_FOCUSED;
+ 	   lphc->wState &= ~CBF_FOCUSED;
 
            /* redraw text */
-           if( !(lphc->wState & CBF_EDIT) )
-                NtUserInvalidateRect(lphc->self, &lphc->textRect, TRUE);
+	   if( !(lphc->wState & CBF_EDIT) )
+	     InvalidateRect(lphc->self, &lphc->textRect, TRUE);
 
            CB_NOTIFY( lphc, CBN_KILLFOCUS );
        }
@@ -1298,12 +1296,12 @@ static LRESULT COMBO_Command( LPHEADCOMBO lphc, WPARAM wParam, HWND hWnd )
 
        switch( HIWORD(wParam) >> 8 )
        {
-        case (EN_SETFOCUS >> 8):
+	   case (EN_SETFOCUS >> 8):
 
                TRACE("[%p]: edit [%p] got focus\n", lphc->self, lphc->hWndEdit );
 
-               COMBO_SetFocus( lphc );
-               break;
+		COMBO_SetFocus( lphc );
+	        break;
 
 	   case (EN_KILLFOCUS >> 8):
 
@@ -1379,7 +1377,7 @@ static LRESULT COMBO_Command( LPHEADCOMBO lphc, WPARAM wParam, HWND hWnd )
 		       SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, (LPARAM)(-1));
 		   }
 		   else
-		       NtUserInvalidateRect(lphc->self, &lphc->textRect, TRUE);
+		       InvalidateRect(lphc->self, &lphc->textRect, TRUE);
 		}
 
 		/* do not roll up if selection is being tracked
@@ -1699,7 +1697,7 @@ static LRESULT COMBO_SelectString( LPHEADCOMBO lphc, INT start, LPARAM pText, BO
        CBUpdateEdit( lphc, index );
      else
      {
-       NtUserInvalidateRect(lphc->self, &lphc->textRect, TRUE);
+       InvalidateRect(lphc->self, &lphc->textRect, TRUE);
      }
    }
    return (LRESULT)index;
@@ -2009,7 +2007,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		EnableWindow( lphc->hWndLBox, (BOOL)wParam );
 
 		/* Force the control to repaint when the enabled state changes. */
-		NtUserInvalidateRect(lphc->self, NULL, TRUE);
+		InvalidateRect(lphc->self, NULL, TRUE);
 		return  TRUE;
 	case WM_SETREDRAW:
 		if( wParam )
@@ -2194,7 +2192,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                     SendMessageW(lphc->hWndEdit, WM_SETTEXT, 0, (LPARAM)empty_stringW);
 		}
                 else
-                    NtUserInvalidateRect(lphc->self, NULL, TRUE);
+                    InvalidateRect(lphc->self, NULL, TRUE);
 		return  TRUE;
 	case CB_INITSTORAGE:
 		return SendMessageW(lphc->hWndLBox, LB_INITSTORAGE, wParam, lParam);
@@ -2283,7 +2281,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		if( lphc->wState & CBF_EDIT )
 		    CBUpdateEdit( lphc, (INT)wParam );
 		else
-		    NtUserInvalidateRect(lphc->self, &lphc->textRect, TRUE);
+		    InvalidateRect(lphc->self, &lphc->textRect, TRUE);
 		lphc->wState &= ~CBF_SELCHANGE;
 	        return  lParam;
 #ifndef __REACTOS__

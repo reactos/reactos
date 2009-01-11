@@ -498,3 +498,8 @@ SetCapture(HWND hWnd)
     return(NtUserSetCapture(hWnd));
 }
 
+EXTINLINE BOOL WINAPI
+InvalidateRect(HWND hWnd, CONST RECT* lpRect, BOOL bErase)
+{
+    return NtUserInvalidateRect(hWnd, lpRect, bErase);
+}

@@ -228,5 +228,7 @@ extern PUSER_HANDLE_ENTRY gHandleEntries;
 PUSER_HANDLE_ENTRY FASTCALL GetUser32Handle(HANDLE);
 PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 
+#define SYSCOLOR_GetPen(index) GetSysColorPen(index)
+
 #endif
 /* EOF */
