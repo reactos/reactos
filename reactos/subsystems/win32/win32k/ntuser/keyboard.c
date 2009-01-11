@@ -213,9 +213,10 @@ static DWORD ModBits( PKBDTABLES pkKT, PBYTE KeyState )
       ModBits |= GetShiftBit( pkKT, VK_MENU );
 
    /* Handle Alt+Gr */
-   if (KeysSet( pkKT, KeyState, VK_RMENU, 0 ) &
-         KS_DOWN_BIT )
-      ModBits |= GetShiftBit( pkKT, VK_CONTROL );
+   if (pkKT->fLocalFlags & 0x1) 
+      if (KeysSet( pkKT, KeyState, VK_RMENU, 0 ) &
+            KS_DOWN_BIT)
+         ModBits |= GetShiftBit( pkKT, VK_CONTROL );
 
    /* Deal with VK_CAPITAL */
    if (KeysSet( pkKT, KeyState, VK_CAPITAL, 0 ) & KS_LOCK_BIT)
