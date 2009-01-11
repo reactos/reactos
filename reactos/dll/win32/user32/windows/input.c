@@ -63,7 +63,7 @@ DragDetect(
   rect.top = pt.y - dy;
   rect.bottom = pt.y + dy;
 
-  NtUserSetCapture(hWnd);
+  SetCapture(hWnd);
 
   for (;;)
   {
@@ -96,7 +96,7 @@ DragDetect(
          }
       }
     }
-    NtUserWaitMessage();
+    WaitMessage();
   }
   return 0;
 #endif
@@ -125,7 +125,7 @@ EnableWindow(HWND hWnd,
             /* Remove keyboard focus from that window if it had focus */
             if (hWnd == GetFocus())
             {
-               NtUserSetFocus(NULL);
+               SetFocus(NULL);
             }
         }
         NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
@@ -680,7 +680,7 @@ static void CALLBACK TrackMouseEventProc(HWND hwndUnused, UINT uMsg, UINT_PTR id
     /* stop the timer if the tracking list is empty */
     if (!(ptracking_info->tme.dwFlags & (TME_HOVER | TME_LEAVE)))
     {
-        NtUserKillTimer(0, ptracking_info->timer);
+        KillTimer(0, ptracking_info->timer);
         RtlZeroMemory(ptracking_info,sizeof(USER32_TRACKINGLIST));
     }
 }
@@ -770,7 +770,7 @@ TrackMouseEvent(
             /* if we aren't tracking on hover or leave remove this entry */
             if (!(ptracking_info->tme.dwFlags & (TME_HOVER | TME_LEAVE)))
             {
-                NtUserKillTimer(0, ptracking_info->timer);
+                KillTimer(0, ptracking_info->timer);
                 RtlZeroMemory(ptracking_info,sizeof(USER32_TRACKINGLIST));
             }
         }
@@ -786,7 +786,7 @@ TrackMouseEvent(
 
             if (!ptracking_info->timer)
             {
-                ptracking_info->timer = NtUserSetTimer(0, 0, hover_time, TrackMouseEventProc);
+                ptracking_info->timer = SetTimer(0, 0, hover_time, TrackMouseEventProc);
             }
         }
     }

@@ -651,7 +651,7 @@ BOOL WINAPI DdeUninitialize(DWORD idInst)
      */
     WDML_FreeAllHSZ(pInstance);
 
-    NtUserDestroyWindow(pInstance->hwndEvent);
+    DestroyWindow(pInstance->hwndEvent);
 
     /* OK now delete the instance handle itself */
 
@@ -1652,7 +1652,7 @@ void WDML_RemoveServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic)
 		pPrev->next = pServer->next;
 	    }
 
-	    NtUserDestroyWindow(pServer->hwndServer);
+	    DestroyWindow(pServer->hwndServer);
 	    WDML_DecHSZ(pInstance, pServer->hszServiceSpec);
 	    WDML_DecHSZ(pInstance, pServer->hszService);
 
@@ -1793,7 +1793,7 @@ void WDML_RemoveConv(WDML_CONV* pRef, WDML_SIDE side)
     hWnd = (side == WDML_CLIENT_SIDE) ? pRef->hwndClient : pRef->hwndServer;
     SetWindowLongPtrW(hWnd, GWL_WDML_CONVERSATION, 0);
 
-    NtUserDestroyWindow((side == WDML_CLIENT_SIDE) ? pRef->hwndClient : pRef->hwndServer);
+    DestroyWindow((side == WDML_CLIENT_SIDE) ? pRef->hwndClient : pRef->hwndServer);
 
     WDML_DecHSZ(pRef->instance, pRef->hszService);
     WDML_DecHSZ(pRef->instance, pRef->hszTopic);

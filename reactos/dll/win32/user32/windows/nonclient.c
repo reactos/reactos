@@ -285,7 +285,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
 
    Style = GetWindowLongW(hWnd, GWL_STYLE);
 
-   hDC = NtUserGetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE | DCX_KEEPCLIPRGN);
+   hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE | DCX_KEEPCLIPRGN);
    if (hDC == 0)
    {
       return 0;
@@ -297,13 +297,13 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
    {
       if (ExStyle & WS_EX_MDICHILD)
       {
-         Active = IsChild(NtUserGetForegroundWindow(), hWnd);
+         Active = IsChild(GetForegroundWindow(), hWnd);
          if (Active)
             Active = (hWnd == (HWND)SendMessageW(Parent, WM_MDIGETACTIVE, 0, 0));
       }
       else
       {
-         Active = (NtUserGetForegroundWindow() == hWnd);
+         Active = (GetForegroundWindow() == hWnd);
       }
    }
    GetWindowRect(hWnd, &WindowRect);
@@ -546,7 +546,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
 
       if (menu && !(Style & WS_CHILD))
       {
-         HDC hDC = NtUserGetWindowDC(hWnd);
+         HDC hDC = GetWindowDC(hWnd);
          if(hDC)
          {
            RECT CliRect = *Rect;
@@ -911,10 +911,10 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
     */
    UpdateWindow(hWnd);
 
-   WindowDC = NtUserGetWindowDC(hWnd);
+   WindowDC = GetWindowDC(hWnd);
    UserDrawCaptionButtonWnd(hWnd, WindowDC, TRUE, ButtonType);
 
-   NtUserSetCapture(hWnd);
+   SetCapture(hWnd);
 
    for (;;)
    {
@@ -950,7 +950,7 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case HTCAPTION:
         {
 	        HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
-	        if (NtUserSetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
+	        if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
 	        {
 	            SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
 	        }

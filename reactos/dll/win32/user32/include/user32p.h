@@ -25,6 +25,7 @@
 #include "window.h"
 #include "winpos.h"
 #include "winsta.h"
+#include "ntwrapper.h"
 
 /* One/Two Param Functions */
 #define NtUserMsqSetWakeMask(dwWaitMask) \

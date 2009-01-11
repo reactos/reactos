@@ -327,7 +327,7 @@ SystemParametersInfoA(UINT uiAction,
           }
         }
 
-        NtUserRedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
+        RedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
         return Ret;
       }
@@ -434,7 +434,7 @@ SystemParametersInfoW(UINT uiAction,
         }
       }
 
-      NtUserRedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
+      RedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
       return Ret;
     }
@@ -618,7 +618,7 @@ OpenDesktopW(
 BOOL WINAPI
 SetShellWindow(HWND hwndShell)
 {
-	return NtUserSetShellWindowEx(hwndShell, hwndShell);
+	return SetShellWindowEx(hwndShell, hwndShell);
 }
 
 

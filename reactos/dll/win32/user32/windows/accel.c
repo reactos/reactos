@@ -280,7 +280,7 @@ int WINAPI CopyAcceleratorTableA
 {
    int i;
 
-   cAccelEntries = NtUserCopyAcceleratorTable(hAccelSrc, lpAccelDst, cAccelEntries);
+   cAccelEntries = CopyAcceleratorTableW(hAccelSrc, lpAccelDst, cAccelEntries);
 
    if (lpAccelDst == NULL) return cAccelEntries;
 
@@ -326,7 +326,7 @@ HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccl, int cEntries)
    if(!NT_SUCCESS(nErrCode)) lpaccl[i].key = -1;
   }
 
- return NtUserCreateAcceleratorTable(lpaccl, cEntries);
+ return CreateAcceleratorTableW(lpaccl, cEntries);
 }
 
 

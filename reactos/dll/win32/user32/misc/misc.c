@@ -249,7 +249,7 @@ EndTask(
     if (IsWindow(hWnd))
     {
         if (fForce)
-            return NtUserDestroyWindow(hWnd);
+            return DestroyWindow(hWnd);
         else
             return FALSE;
     }

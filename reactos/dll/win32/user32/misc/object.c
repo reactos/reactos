@@ -54,7 +54,7 @@ GetUserObjectInformationA(
          pvInfo, nLength, lpnLengthNeeded);
 
   if (nIndex != UOI_NAME && nIndex != UOI_TYPE)
-    return NtUserGetObjectInformation(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
+    return GetUserObjectInformationW(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
 
   /* allocate unicode buffer */
   buffer = HeapAlloc(GetProcessHeap(), 0, nLength*2);
@@ -65,7 +65,7 @@ GetUserObjectInformationA(
   }
 
   /* get unicode string */
-  if (!NtUserGetObjectInformation(hObj, nIndex, buffer, nLength*2, lpnLengthNeeded))
+  if (!GetUserObjectInformationW(hObj, nIndex, buffer, nLength*2, lpnLengthNeeded))
     ret = FALSE;
   *lpnLengthNeeded /= 2;
 

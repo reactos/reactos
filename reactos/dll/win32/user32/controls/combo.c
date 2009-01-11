@@ -198,7 +198,7 @@ static LRESULT COMBO_NCDestroy( LPHEADCOMBO lphc )
        TRACE("[%p]: freeing storage\n", lphc->self);
 
        if( (CB_GETTYPE(lphc) != CBS_SIMPLE) && lphc->hWndLBox )
-   	   NtUserDestroyWindow( lphc->hWndLBox );
+   	   DestroyWindow( lphc->hWndLBox );
 
        SetWindowLongPtrW( lphc->self, 0, 0 );
        HeapFree( GetProcessHeap(), 0, lphc );
@@ -231,7 +231,7 @@ static INT CBGetTextAreaHeight(
   else
   {
     TEXTMETRICW tm;
-    HDC         hDC       = NtUserGetDC(hwnd);
+    HDC         hDC       = GetDC(hwnd);
     HFONT       hPrevFont = 0;
     INT         baseUnitY;
 
@@ -331,7 +331,7 @@ static void CBForceDummyResize(
    * this will cancel-out in the processing of the WM_WINDOWPOSCHANGING
    * message.
    */
-  NtUserSetWindowPos( lphc->self,
+  SetWindowPos( lphc->self,
 		NULL,
 		0, 0,
 		windowRect.right  - windowRect.left,
@@ -662,7 +662,7 @@ static LRESULT COMBO_Create( HWND hwnd, LPHEADCOMBO lphc, HWND hwndParent, LONG 
 	    if( CB_GETTYPE(lphc) != CBS_SIMPLE )
 	    {
               /* Now do the trick with parent */
-	      NtUserSetParent(lphc->hWndLBox, HWND_DESKTOP);
+	      SetParent(lphc->hWndLBox, HWND_DESKTOP);
               /*
                * If the combo is a dropdown, we must resize the control
 	       * to fit only the text area and button. To do this,
@@ -929,7 +929,7 @@ static LRESULT COMBO_Paint(LPHEADCOMBO lphc, HDC hParamDC)
   HDC 	hDC;
 
   hDC = (hParamDC) ? hParamDC
-		   : NtUserBeginPaint( lphc->self, &ps);
+		   : BeginPaint( lphc->self, &ps);
 
   TRACE("hdc=%p\n", hDC);
 
@@ -975,7 +975,7 @@ static LRESULT COMBO_Paint(LPHEADCOMBO lphc, HDC hParamDC)
   }
 
   if( !hParamDC )
-    NtUserEndPaint(lphc->self, &ps);
+    EndPaint(lphc->self, &ps);
 
   return 0;
 }
@@ -1141,19 +1141,19 @@ static void CBDropDown( LPHEADCOMBO lphc )
    if( (rect.bottom + nDroppedHeight) >= mon_info.rcWork.bottom )
       rect.bottom = rect.top - nDroppedHeight;
 
-   NtUserSetWindowPos( lphc->hWndLBox, HWND_TOP, rect.left, rect.bottom,
+   SetWindowPos( lphc->hWndLBox, HWND_TOP, rect.left, rect.bottom,
 		 lphc->droppedRect.right - lphc->droppedRect.left,
 		 nDroppedHeight,
 		 SWP_NOACTIVATE | SWP_SHOWWINDOW);
 
 
    if( !(lphc->wState & CBF_NOREDRAW) )
-     NtUserRedrawWindow( lphc->self, NULL, 0, RDW_INVALIDATE |
-			             RDW_ERASE | RDW_UPDATENOW | RDW_NOCHILDREN );
+     RedrawWindow( lphc->self, NULL, 0, RDW_INVALIDATE |
+			   RDW_ERASE | RDW_UPDATENOW | RDW_NOCHILDREN );
 
    EnableWindow( lphc->hWndLBox, TRUE );
    if (GetCapture() != lphc->self)
-      NtUserSetCapture(lphc->hWndLBox);
+      SetCapture(lphc->hWndLBox);
 }
 
 /***********************************************************************
@@ -1178,7 +1178,7 @@ static void CBRollUp( LPHEADCOMBO lphc, BOOL ok, BOOL bButton )
 	   RECT	rect;
 
 	   lphc->wState &= ~CBF_DROPPED;
-	   NtUserShowWindow( lphc->hWndLBox, SW_HIDE );
+	   ShowWindow( lphc->hWndLBox, SW_HIDE );
 
            if(GetCapture() == lphc->hWndLBox)
            {
@@ -1204,8 +1204,8 @@ static void CBRollUp( LPHEADCOMBO lphc, BOOL ok, BOOL bButton )
 	   }
 
 	   if( bButton && !(lphc->wState & CBF_NOREDRAW) )
-	       NtUserRedrawWindow( hWnd, &rect, 0, RDW_INVALIDATE |
-			                   RDW_ERASE | RDW_UPDATENOW | RDW_NOCHILDREN );
+	       RedrawWindow( hWnd, &rect, 0, RDW_INVALIDATE |
+			       RDW_ERASE | RDW_UPDATENOW | RDW_NOCHILDREN );
 	   CB_NOTIFY( lphc, CBN_CLOSEUP );
        }
    }
@@ -1567,13 +1567,13 @@ static void CBResetPos(
     * sizing messages */
 
    if( lphc->wState & CBF_EDIT )
-     NtUserSetWindowPos( lphc->hWndEdit, 0,
+     SetWindowPos( lphc->hWndEdit, 0,
 		   rectEdit->left, rectEdit->top,
 		   rectEdit->right - rectEdit->left,
 		   rectEdit->bottom - rectEdit->top,
                        SWP_NOZORDER | SWP_NOACTIVATE | ((bDrop) ? SWP_NOREDRAW : 0) );
 
-   NtUserSetWindowPos( lphc->hWndLBox, 0,
+   SetWindowPos( lphc->hWndLBox, 0,
 		 rectLB->left, rectLB->top,
                  rectLB->right - rectLB->left,
 		 rectLB->bottom - rectLB->top,
@@ -1584,12 +1584,12 @@ static void CBResetPos(
        if( lphc->wState & CBF_DROPPED )
        {
            lphc->wState &= ~CBF_DROPPED;
-           NtUserShowWindow( lphc->hWndLBox, SW_HIDE );
+           ShowWindow( lphc->hWndLBox, SW_HIDE );
        }
 
        if( bRedraw && !(lphc->wState & CBF_NOREDRAW) )
-           NtUserRedrawWindow( lphc->self, NULL, 0,
-                               RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW );
+           RedrawWindow( lphc->self, NULL, 0,
+                           RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW );
    }
 }
 
@@ -1741,7 +1741,7 @@ static void COMBO_LButtonDown( LPHEADCOMBO lphc, LPARAM lParam )
 	   /* drop down the listbox and start tracking */
 
            lphc->wState |= CBF_CAPTURE;
-           NtUserSetCapture( hWnd );
+           SetCapture( hWnd );
            CBDropDown( lphc );
        }
        if( bButton ) CBRepaintButton( lphc );
@@ -1770,7 +1770,7 @@ static void COMBO_LButtonUp( LPHEADCOMBO lphc )
 	   }
        }
        ReleaseCapture();
-       NtUserSetCapture(lphc->hWndLBox);
+       SetCapture(lphc->hWndLBox);
    }
 
    if( lphc->wState & CBF_BUTTONDOWN )
@@ -1943,7 +1943,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		return  (LRESULT)lphc->hFont;
 	case WM_SETFOCUS:
 		if( lphc->wState & CBF_EDIT )
-		    NtUserSetFocus( lphc->hWndEdit );
+		    SetFocus( lphc->hWndEdit );
 		else
 		    COMBO_SetFocus( lphc );
 		return  TRUE;
@@ -2054,7 +2054,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 				 SendMessageA(hwndTarget, message, wParam, lParam);
 	}
 	case WM_LBUTTONDOWN:
-		if( !(lphc->wState & CBF_FOCUSED) ) NtUserSetFocus( lphc->self );
+		if( !(lphc->wState & CBF_FOCUSED) ) SetFocus( lphc->self );
 		if( lphc->wState & CBF_FOCUSED ) COMBO_LButtonDown( lphc, lParam );
 		return  TRUE;
 	case WM_LBUTTONUP:

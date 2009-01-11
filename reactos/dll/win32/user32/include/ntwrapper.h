@@ -437,3 +437,64 @@ SetActiveWindow(HWND hWnd)
 {
     return NtUserSetActiveWindow(hWnd);
 }
+
+EXTINLINE DWORD WINAPI
+GetListBoxInfo(HWND hwnd)
+{
+    return NtUserGetListBoxInfo(hwnd); // Do it right! Have the message org from kmode!
+}
+
+EXTINLINE BOOL WINAPI
+DeleteMenu(HMENU hMenu, UINT uPosition, UINT uFlags)
+{
+    return NtUserDeleteMenu(hMenu, uPosition, uFlags);
+}
+
+EXTINLINE BOOL WINAPI
+DestroyMenu(HMENU hMenu)
+{
+    return NtUserDestroyMenu(hMenu);
+}
+
+EXTINLINE BOOL WINAPI
+GetMenuBarInfo(HWND hwnd, LONG idObject, LONG idItem, PMENUBARINFO pmbi)
+{
+    return NtUserGetMenuBarInfo(hwnd, idObject, idItem, pmbi);
+}
+
+EXTINLINE BOOL WINAPI
+GetMenuItemRect(HWND hWnd, HMENU hMenu, UINT uItem, LPRECT lprcItem)
+{
+    return NtUserGetMenuItemRect(hWnd, hMenu, uItem, lprcItem);
+}
+
+EXTINLINE BOOL WINAPI
+HiliteMenuItem(HWND hwnd, HMENU hmenu, UINT uItemHilite, UINT uHilite)
+{
+    return NtUserHiliteMenuItem(hwnd, hmenu, uItemHilite, uHilite);
+}
+
+EXTINLINE BOOL WINAPI
+RemoveMenu(HMENU hMenu, UINT uPosition, UINT uFlags)
+{
+    return NtUserRemoveMenu(hMenu, uPosition, uFlags);
+}
+
+EXTINLINE BOOL WINAPI
+SetMenuDefaultItem(HMENU hMenu, UINT uItem, UINT fByPos)
+{
+  return NtUserSetMenuDefaultItem(hMenu, uItem, fByPos);
+}
+
+EXTINLINE BOOL WINAPI
+SetMenuContextHelpId(HMENU hmenu, DWORD dwContextHelpId)
+{
+    return NtUserSetMenuContextHelpId(hmenu, dwContextHelpId);
+}
+
+EXTINLINE HWND WINAPI
+SetCapture(HWND hWnd)
+{
+    return(NtUserSetCapture(hWnd));
+}
+

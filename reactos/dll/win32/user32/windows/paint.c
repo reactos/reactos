@@ -154,7 +154,7 @@ WINAPI
 UpdateWindow(
   HWND hWnd)
 {
-  return NtUserRedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
+  return RedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
 }
 
 
@@ -169,7 +169,7 @@ ValidateRect(
 {
   /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
      but Wine dont so i removed it... */
-  return NtUserRedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
+  return RedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
 }
 
 
@@ -184,7 +184,7 @@ ValidateRgn(
 {
   /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
      but Wine dont so i removed it... */
-  return NtUserRedrawWindow( hWnd, NULL, hRgn, RDW_VALIDATE );
+  return RedrawWindow( hWnd, NULL, hRgn, RDW_VALIDATE );
 }
 
 

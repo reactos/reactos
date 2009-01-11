@@ -211,8 +211,8 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
         }
         else */
         {
-             NtUserSetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
-                                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+             SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
+                           SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
     }
     return prevIcon;
@@ -248,8 +248,8 @@ static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
         }
         else */
         {
-            NtUserSetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
-                                SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+            SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
+                          SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
     }
     return hOldBitmap;
@@ -384,7 +384,7 @@ static VOID STATIC_TryPaintFcn(HWND hwnd, LONG full_style)
 	HDC hdc;
         HRGN hOrigClipping;
          
-	hdc = NtUserGetDC( hwnd );
+	hdc = GetDC( hwnd );
         setup_clipping(hwnd, hdc, &hOrigClipping);
 	(staticPaintFunc[style])( hwnd, hdc, full_style );
 	restore_clipping(hdc, hOrigClipping);
@@ -483,7 +483,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            HDC hdc = wParam ? (HDC)wParam : NtUserBeginPaint(hwnd, &ps);
+            HDC hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
             if (staticPaintFunc[style])
             {
                 HRGN hOrigClipping;
@@ -491,7 +491,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
                 (staticPaintFunc[style])( hwnd, hdc, full_style );
                 restore_clipping(hdc, hOrigClipping);
             }
-            if (!wParam) NtUserEndPaint(hwnd, &ps);
+            if (!wParam) EndPaint(hwnd, &ps);
         }
         break;
 
@@ -581,7 +581,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         {
             SetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET, wParam );
         if (LOWORD(lParam))
-            NtUserRedrawWindow( hwnd, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN );
+            RedrawWindow( hwnd, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN );
         }
         break;
 
@@ -654,7 +654,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
 
         if (STATIC_update_uistate(hwnd, unicode) && hasTextStyle( full_style ))
         {
-            NtUserRedrawWindow( hwnd, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN );
+            RedrawWindow( hwnd, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN );
         }
         break;
 

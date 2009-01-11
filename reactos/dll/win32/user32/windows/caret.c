@@ -39,7 +39,7 @@ DrawCaret(HWND hWnd,
 {
     HDC hDC, hComp;
 
-    hDC = NtUserGetDC(hWnd);
+    hDC = GetDC(hWnd);
     if(hDC)
     {
         if(CaretInfo->Bitmap && GetBitmapDimensionEx(CaretInfo->Bitmap, &CaretInfo->Size))

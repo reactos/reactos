@@ -72,6 +72,7 @@ HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 static LRESULT WINAPI ScrollBarWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
+UINT WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 
 /*********************************************************************
@@ -815,7 +816,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         {
           case WM_LBUTTONDOWN:  /* Initialise mouse tracking */
             HideCaret(Wnd);  /* hide caret while holding down LBUTTON */
-            NtUserSetCapture(Wnd);
+            SetCapture(Wnd);
             PrevPt = Pt;
             ScrollTrackHitTest = HitTest = SCROLL_THUMB;
             break;
@@ -838,7 +839,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
       return;
     }
 
-  Dc = NtUserGetDCEx(Wnd, 0, DCX_CACHE | ((SB_CTL == SBType) ? 0 : DCX_WINDOW));
+  Dc = GetDCEx(Wnd, 0, DCX_CACHE | ((SB_CTL == SBType) ? 0 : DCX_WINDOW));
   if (SB_VERT == SBType)
     {
       Vertical = TRUE;
@@ -867,9 +868,9 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         PrevPt = Pt;
         if (SB_CTL == SBType && 0 != (GetWindowLongW(Wnd, GWL_STYLE) & WS_TABSTOP))
           {
-            NtUserSetFocus(Wnd);
+            SetFocus(Wnd);
           }
-        NtUserSetCapture(Wnd);
+        SetCapture(Wnd);
         ScrollBarInfo.rgstate[ScrollTrackHitTest] |= STATE_SYSTEM_PRESSED;
         NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
         NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
@@ -915,9 +916,9 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
                 SendMessageW(WndOwner, Vertical ? WM_VSCROLL : WM_HSCROLL,
                              SB_LINEUP, (LPARAM) WndCtl);
               }
-	    NtUserSetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
-                             SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
-                             (TIMERPROC) NULL);
+	    SetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
+                           SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
+                           (TIMERPROC) NULL);
           }
         else
           {
@@ -933,9 +934,9 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
                 SendMessageW(WndOwner, Vertical ? WM_VSCROLL : WM_HSCROLL,
                              SB_PAGEUP, (LPARAM) WndCtl);
               }
-            NtUserSetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
-                                 SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
-                                 (TIMERPROC) NULL);
+            SetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
+                           SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
+                           (TIMERPROC) NULL);
           }
         else
           {
@@ -999,9 +1000,9 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
                 SendMessageW(WndOwner, Vertical ? WM_VSCROLL : WM_HSCROLL,
                              SB_PAGEDOWN, (LPARAM) WndCtl);
               }
-            NtUserSetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
-                                 SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
-                                 (TIMERPROC) NULL);
+            SetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
+                           SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
+                           (TIMERPROC) NULL);
           }
         else
           {
@@ -1017,9 +1018,9 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
                 SendMessageW(WndOwner, Vertical ? WM_VSCROLL : WM_HSCROLL,
                              SB_LINEDOWN, (LPARAM) WndCtl);
               }
-	    NtUserSetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
-                             SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
-                             (TIMERPROC) NULL);
+	    SetSystemTimer(Wnd, SCROLL_TIMER, (WM_LBUTTONDOWN == Msg) ?
+                           SCROLL_FIRST_DELAY : SCROLL_REPEAT_DELAY,
+                           (TIMERPROC) NULL);
           }
         else
           {
@@ -1093,45 +1094,45 @@ static void IntScrollCreateScrollBar(
     {
       if (0 != (lpCreate->style & SBS_SIZEBOXTOPLEFTALIGN))
         {
-          NtUserMoveWindow(Wnd, lpCreate->x, lpCreate->y, GetSystemMetrics(SM_CXVSCROLL) + 1,
-                           GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
+          MoveWindow(Wnd, lpCreate->x, lpCreate->y, GetSystemMetrics(SM_CXVSCROLL) + 1,
+                     GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
         }
       else if (0 != (lpCreate->style & SBS_SIZEBOXBOTTOMRIGHTALIGN))
         {
-          NtUserMoveWindow(Wnd, lpCreate->x + lpCreate->cx - GetSystemMetrics(SM_CXVSCROLL) - 1,
-                           lpCreate->y + lpCreate->cy - GetSystemMetrics(SM_CYHSCROLL) - 1,
-                           GetSystemMetrics(SM_CXVSCROLL) + 1,
-                           GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
+          MoveWindow(Wnd, lpCreate->x + lpCreate->cx - GetSystemMetrics(SM_CXVSCROLL) - 1,
+                     lpCreate->y + lpCreate->cy - GetSystemMetrics(SM_CYHSCROLL) - 1,
+                     GetSystemMetrics(SM_CXVSCROLL) + 1,
+                     GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
         }
     }
   else if (0 != (lpCreate->style & SBS_VERT))
     {
       if (0 != (lpCreate->style & SBS_LEFTALIGN))
         {
-          NtUserMoveWindow(Wnd, lpCreate->x, lpCreate->y,
-                           GetSystemMetrics(SM_CXVSCROLL) + 1, lpCreate->cy, FALSE);
+          MoveWindow(Wnd, lpCreate->x, lpCreate->y,
+                     GetSystemMetrics(SM_CXVSCROLL) + 1, lpCreate->cy, FALSE);
         }
       else if (0 != (lpCreate->style & SBS_RIGHTALIGN))
         {
-          NtUserMoveWindow(Wnd,
-                           lpCreate->x + lpCreate->cx - GetSystemMetrics(SM_CXVSCROLL) - 1,
-                           lpCreate->y,
-                           GetSystemMetrics(SM_CXVSCROLL) + 1, lpCreate->cy, FALSE);
+          MoveWindow(Wnd,
+                     lpCreate->x + lpCreate->cx - GetSystemMetrics(SM_CXVSCROLL) - 1,
+                     lpCreate->y,
+                      GetSystemMetrics(SM_CXVSCROLL) + 1, lpCreate->cy, FALSE);
         }
     }
   else  /* SBS_HORZ */
     {
       if (0 != (lpCreate->style & SBS_TOPALIGN))
         {
-          NtUserMoveWindow(Wnd, lpCreate->x, lpCreate->y,
-                           lpCreate->cx, GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
+          MoveWindow(Wnd, lpCreate->x, lpCreate->y,
+                     lpCreate->cx, GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
         }
       else if (0 != (lpCreate->style & SBS_BOTTOMALIGN))
         {
-          NtUserMoveWindow(Wnd,
-                           lpCreate->x,
-                           lpCreate->y + lpCreate->cy - GetSystemMetrics(SM_CYHSCROLL) - 1,
-                           lpCreate->cx, GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
+          MoveWindow(Wnd,
+                     lpCreate->x,
+                     lpCreate->y + lpCreate->cy - GetSystemMetrics(SM_CYHSCROLL) - 1,
+                     lpCreate->cx, GetSystemMetrics(SM_CYHSCROLL) + 1, FALSE);
         }
     }
 }
@@ -1278,7 +1279,7 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
           DbgPrint("ScrollBarWndProc WM_ENABLE\n");
           NtUserEnableScrollBar(Wnd,SB_CTL,(wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH));
           /* Refresh Scrollbars. */
-          hdc = NtUserGetDCEx( Wnd, 0, DCX_CACHE );
+          hdc = GetDCEx( Wnd, 0, DCX_CACHE );
           if (!hdc) return 1;
           IntDrawScrollBar( Wnd, hdc, SB_CTL);
           ReleaseDC( Wnd, hdc );
@@ -1327,12 +1328,12 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
                                                &ArrowSize, &ThumbSize, &ThumbPos);
           if (! Vertical)
             {
-              NtUserCreateCaret(Wnd, (HBITMAP) 1, ThumbSize - 2, Rect.bottom - Rect.top - 2);
+              CreateCaret(Wnd, (HBITMAP) 1, ThumbSize - 2, Rect.bottom - Rect.top - 2);
               SetCaretPos(ThumbPos + 1, Rect.top + 1);
             }
           else
             {
-              NtUserCreateCaret(Wnd, (HBITMAP) 1, Rect.right - Rect.left - 2, ThumbSize - 2);
+              CreateCaret(Wnd, (HBITMAP) 1, Rect.right - Rect.left - 2, ThumbSize - 2);
               SetCaretPos(Rect.top + 1, ThumbPos + 1);
             }
           ShowCaret(Wnd);
@@ -1373,7 +1374,7 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
           PAINTSTRUCT Ps;
           HDC Dc;
 
-          Dc = (0 != wParam ? (HDC) wParam : NtUserBeginPaint(Wnd, &Ps));
+          Dc = (0 != wParam ? (HDC) wParam : BeginPaint(Wnd, &Ps));
 
           if (GetWindowLongW(Wnd, GWL_STYLE) & SBS_SIZEGRIP)
             {
@@ -1392,7 +1393,7 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
 
           if (0 == wParam)
             {
-              NtUserEndPaint(Wnd, &Ps);
+              EndPaint(Wnd, &Ps);
             }
         }
         break;
@@ -1418,7 +1419,7 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
         return IntScrollGetScrollRange(Wnd, SB_CTL, (LPINT) wParam, (LPINT) lParam);
 
       case SBM_ENABLE_ARROWS:
-        return NtUserEnableScrollBar(Wnd, SB_CTL, wParam);
+        return EnableScrollBar(Wnd, SB_CTL, wParam);
 
       case SBM_SETRANGEREDRAW:
         {

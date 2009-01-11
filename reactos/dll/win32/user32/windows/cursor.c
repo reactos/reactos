@@ -53,13 +53,13 @@ User32SetupDefaultCursors(PVOID Arguments,
     if(*DefaultCursor)
     {
         /* set default cursor */
-        NtUserSetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+        SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
     }
     else
     {
         /* FIXME load system cursor scheme */
-        NtUserSetCursor(0);
-        NtUserSetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+        SetCursor(0);
+        SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
     }
 
     return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));

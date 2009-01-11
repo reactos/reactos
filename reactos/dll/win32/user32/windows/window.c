@@ -99,7 +99,7 @@ BringWindowToTop(HWND hWnd)
 VOID WINAPI
 SwitchToThisWindow(HWND hwnd, BOOL fUnknown)
 {
-    NtUserShowWindow(hwnd, SW_SHOW);
+    ShowWindow(hwnd, SW_SHOW);
 }
 
 
@@ -327,7 +327,7 @@ CreateWindowExA(DWORD dwExStyle,
             {
                 TRACE("Restoring current maximized child %p\n", top_child);
                 SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
-                NtUserShowWindow(top_child, SW_RESTORE);
+                ShowWindow(top_child, SW_RESTORE);
                 SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
             }
         }
@@ -433,7 +433,7 @@ CreateWindowExW(DWORD dwExStyle,
             {
                 TRACE("Restoring current maximized child %p\n", top_child);
                 SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
-                NtUserShowWindow(top_child, SW_RESTORE);
+                ShowWindow(top_child, SW_RESTORE);
                 SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
             }
         }
@@ -488,7 +488,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 #if 0
     return NtUserDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
 #else
-    NtUserSetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+    SetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
     return hWinPosInfo;
 #endif
 }
@@ -1482,7 +1482,7 @@ AnimateWindow(HWND hwnd,
         return FALSE;
     }
 
-    NtUserShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
+    ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
 
     return TRUE;
 }
@@ -1497,7 +1497,7 @@ OpenIcon(HWND hWnd)
     if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
         return FALSE;
 
-    NtUserShowWindow(hWnd,SW_RESTORE);
+    ShowWindow(hWnd,SW_RESTORE);
     return TRUE;
 }
 

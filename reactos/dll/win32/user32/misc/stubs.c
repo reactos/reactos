@@ -113,7 +113,7 @@ GetInternalWindowPos(
 {
     WINDOWPLACEMENT wndpl;
 
-    if (NtUserGetWindowPlacement(hwnd, &wndpl))
+    if (GetWindowPlacement(hwnd, &wndpl))
     {
 		if (rectWnd) *rectWnd = wndpl.rcNormalPosition;
 		if (ptIcon)  *ptIcon = wndpl.ptMinPosition;
