@@ -13,12 +13,12 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
+NTSTATUS VfatQueryInformation(PFAT_IRP_CONTEXT IrpContext)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
+NTSTATUS VfatSetInformation(PFAT_IRP_CONTEXT IrpContext)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

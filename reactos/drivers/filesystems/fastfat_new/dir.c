@@ -14,7 +14,7 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-VfatDirectoryControl(PVFAT_IRP_CONTEXT IrpContext)
+VfatDirectoryControl(PFAT_IRP_CONTEXT IrpContext)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

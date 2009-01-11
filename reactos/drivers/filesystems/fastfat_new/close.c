@@ -14,7 +14,7 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-VfatClose(PVFAT_IRP_CONTEXT IrpContext)
+VfatClose(PFAT_IRP_CONTEXT IrpContext)
 {
     DPRINT("VfatClose(DeviceObject %p, Irp %p)\n", IrpContext->DeviceObject, IrpContext->Irp);
 

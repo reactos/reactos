@@ -14,7 +14,7 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-VfatCreate(PVFAT_IRP_CONTEXT IrpContext)
+VfatCreate(PFAT_IRP_CONTEXT IrpContext)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

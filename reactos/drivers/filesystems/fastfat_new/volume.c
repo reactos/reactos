@@ -14,13 +14,13 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-VfatQueryVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
+VfatQueryVolumeInformation(PFAT_IRP_CONTEXT IrpContext)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
-VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
+VfatSetVolumeInformation(PFAT_IRP_CONTEXT IrpContext)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

@@ -14,13 +14,13 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-VfatRead(PVFAT_IRP_CONTEXT IrpContext)
+VfatRead(PFAT_IRP_CONTEXT IrpContext)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
-VfatWrite(PVFAT_IRP_CONTEXT IrpContext)
+VfatWrite(PFAT_IRP_CONTEXT IrpContext)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

@@ -14,7 +14,7 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-VfatCleanup(PVFAT_IRP_CONTEXT IrpContext)
+VfatCleanup(PFAT_IRP_CONTEXT IrpContext)
 {
     DPRINT("VfatCleanup(DeviceObject %p, Irp %p)\n", IrpContext->DeviceObject, IrpContext->Irp);
 

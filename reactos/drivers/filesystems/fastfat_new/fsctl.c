@@ -14,7 +14,7 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
+VfatFileSystemControl(PFAT_IRP_CONTEXT IrpContext)
 {
     DPRINT("VfatFileSystemControl(IrpContext %p)\n", IrpContext);
 

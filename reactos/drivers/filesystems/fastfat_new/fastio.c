@@ -326,8 +326,9 @@ VfatReleaseForCcFlush(IN PFILE_OBJECT FileObject,
    return STATUS_SUCCESS;
 }
 
-BOOLEAN NTAPI
-VfatAcquireForLazyWrite(IN PVOID Context,
+BOOLEAN
+NTAPI
+FatAcquireForLazyWrite(IN PVOID Context,
                         IN BOOLEAN Wait)
 {
 	PVFATFCB Fcb = (PVFATFCB)Context;
@@ -342,8 +343,9 @@ VfatAcquireForLazyWrite(IN PVOID Context,
 	return TRUE;
 }
 
-VOID NTAPI
-VfatReleaseFromLazyWrite(IN PVOID Context)
+VOID
+NTAPI
+FatReleaseFromLazyWrite(IN PVOID Context)
 {
 	PVFATFCB Fcb = (PVFATFCB)Context;
 	ASSERT(Fcb);
@@ -352,8 +354,9 @@ VfatReleaseFromLazyWrite(IN PVOID Context)
 	ExReleaseResourceLite(&(Fcb->MainResource));
 }
 
-BOOLEAN NTAPI
-VfatAcquireForReadAhead(IN PVOID Context,
+BOOLEAN
+NTAPI
+FatAcquireForReadAhead(IN PVOID Context,
                         IN BOOLEAN Wait)
 {
 	PVFATFCB Fcb = (PVFATFCB)Context;
@@ -368,8 +371,9 @@ VfatAcquireForReadAhead(IN PVOID Context,
 	return TRUE;
 }
 
-VOID NTAPI
-VfatReleaseFromReadAhead(IN PVOID Context)
+VOID
+NTAPI
+FatReleaseFromReadAhead(IN PVOID Context)
 {
 	PVFATFCB Fcb = (PVFATFCB)Context;
 	ASSERT(Fcb);
@@ -378,8 +382,23 @@ VfatReleaseFromReadAhead(IN PVOID Context)
 	ExReleaseResourceLite(&(Fcb->MainResource));
 }
 
+BOOLEAN
+NTAPI
+FatNoopAcquire(IN PVOID Context,
+               IN BOOLEAN Wait)
+{
+    return TRUE;
+}
+
 VOID
-VfatInitFastIoRoutines(PFAST_IO_DISPATCH FastIoDispatch)
+NTAPI
+FatNoopRelease(IN PVOID Context)
+{
+}
+
+
+VOID
+FatInitFastIoRoutines(PFAST_IO_DISPATCH FastIoDispatch)
 {
    FastIoDispatch->SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
    FastIoDispatch->FastIoCheckIfPossible = VfatFastIoCheckIfPossible;

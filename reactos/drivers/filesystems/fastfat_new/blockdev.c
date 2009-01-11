@@ -24,7 +24,7 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 }
 
 NTSTATUS
-VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
+VfatReadDiskPartial (IN PFAT_IRP_CONTEXT IrpContext,
 		     IN PLARGE_INTEGER ReadOffset,
 		     IN ULONG ReadLength,
 		     ULONG BufferOffset,
@@ -35,7 +35,7 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 
 
 NTSTATUS
-VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
+VfatWriteDiskPartial (IN PFAT_IRP_CONTEXT IrpContext,
 		      IN PLARGE_INTEGER WriteOffset,
 		      IN ULONG WriteLength,
 		      IN ULONG BufferOffset,

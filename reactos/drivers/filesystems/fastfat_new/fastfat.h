@@ -296,19 +296,17 @@ typedef struct DEVICE_EXTENSION
 
 typedef struct
 {
-  PDRIVER_OBJECT DriverObject;
-  PDEVICE_OBJECT DeviceObject;
-  ULONG Flags;
-  ERESOURCE VolumeListLock;
-  LIST_ENTRY VolumeListHead;
-  NPAGED_LOOKASIDE_LIST FcbLookasideList;
-  NPAGED_LOOKASIDE_LIST CcbLookasideList;
-  NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
-  FAST_IO_DISPATCH FastIoDispatch;
-  CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
-} VFAT_GLOBAL_DATA, *PVFAT_GLOBAL_DATA;
+    PDRIVER_OBJECT DriverObject;
+    PDEVICE_OBJECT DiskDeviceObject;
+    NPAGED_LOOKASIDE_LIST NonPagedFcbList;
+    NPAGED_LOOKASIDE_LIST ResourceList;
+    NPAGED_LOOKASIDE_LIST IrpContextList;
+    FAST_IO_DISPATCH FastIoDispatch;
+    CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
+    CACHE_MANAGER_CALLBACKS CacheMgrNoopCallbacks;
+} FAT_GLOBAL_DATA, *VFAT_GLOBAL_DATA;
 
-extern PVFAT_GLOBAL_DATA VfatGlobalData;
+extern VFAT_GLOBAL_DATA VfatGlobalData;
 
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_DELETE_PENDING      0x0002
@@ -449,7 +447,7 @@ typedef struct
    PFILE_OBJECT FileObject;
    ULONG RefCount;
    KEVENT Event;
-} VFAT_IRP_CONTEXT, *PVFAT_IRP_CONTEXT;
+} FAT_IRP_CONTEXT, *PFAT_IRP_CONTEXT;
 
 typedef struct _VFAT_DIRENTRY_CONTEXT
 {
@@ -469,9 +467,9 @@ NTSTATUS NTAPI VfatShutdown (PDEVICE_OBJECT DeviceObject,
 
 /*  --------------------------------------------------------  volume.c  */
 
-NTSTATUS VfatQueryVolumeInformation (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatQueryVolumeInformation (PFAT_IRP_CONTEXT IrpContext);
 
-NTSTATUS VfatSetVolumeInformation (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatSetVolumeInformation (PFAT_IRP_CONTEXT IrpContext);
 
 /*  ------------------------------------------------------  blockdev.c  */
 
@@ -481,13 +479,13 @@ NTSTATUS VfatReadDisk(IN PDEVICE_OBJECT pDeviceObject,
                       IN PUCHAR Buffer,
                       IN BOOLEAN Override);
 
-NTSTATUS VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
+NTSTATUS VfatReadDiskPartial (IN PFAT_IRP_CONTEXT IrpContext,
 			      IN PLARGE_INTEGER ReadOffset,
 			      IN ULONG ReadLength,
 			      IN ULONG BufferOffset,
 			      IN BOOLEAN Wait);
 
-NTSTATUS VfatWriteDiskPartial(IN PVFAT_IRP_CONTEXT IrpContext,
+NTSTATUS VfatWriteDiskPartial(IN PFAT_IRP_CONTEXT IrpContext,
 			      IN PLARGE_INTEGER WriteOffset,
 			      IN ULONG WriteLength,
 			      IN ULONG BufferOffset,
@@ -503,7 +501,7 @@ NTSTATUS VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
 /*  -----------------------------------------------------------  dir.c  */
 
-NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT);
+NTSTATUS VfatDirectoryControl (PFAT_IRP_CONTEXT);
 
 BOOLEAN FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt,
                                     USHORT DosDate,
@@ -517,7 +515,7 @@ BOOLEAN FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt,
 
 /*  --------------------------------------------------------  create.c  */
 
-NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatCreate (PFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS FindFile (PDEVICE_EXTENSION DeviceExt,
                    PVFATFCB Parent,
@@ -533,43 +531,51 @@ NTSTATUS ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt,
 
 /*  ---------------------------------------------------------  close.c  */
 
-NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatClose (PFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS VfatCloseFile(PDEVICE_EXTENSION DeviceExt,
                        PFILE_OBJECT FileObject);
 
 /*  -------------------------------------------------------  cleanup.c  */
 
-NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatCleanup (PFAT_IRP_CONTEXT IrpContext);
 
 /*  ---------------------------------------------------------  fastio.c  */
 
 VOID
-VfatInitFastIoRoutines(PFAST_IO_DISPATCH FastIoDispatch);
+FatInitFastIoRoutines(PFAST_IO_DISPATCH FastIoDispatch);
 
 BOOLEAN NTAPI
-VfatAcquireForLazyWrite(IN PVOID Context,
+FatAcquireForLazyWrite(IN PVOID Context,
                         IN BOOLEAN Wait);
 
 VOID NTAPI
-VfatReleaseFromLazyWrite(IN PVOID Context);
+FatReleaseFromLazyWrite(IN PVOID Context);
 
 BOOLEAN NTAPI
-VfatAcquireForReadAhead(IN PVOID Context,
+FatAcquireForReadAhead(IN PVOID Context,
                         IN BOOLEAN Wait);
 
 VOID NTAPI
-VfatReleaseFromReadAhead(IN PVOID Context);
+FatReleaseFromReadAhead(IN PVOID Context);
+
+BOOLEAN NTAPI
+FatNoopAcquire(IN PVOID Context,
+               IN BOOLEAN Wait);
+
+VOID NTAPI
+FatNoopRelease(IN PVOID Context);
+
 
 /*  ---------------------------------------------------------  fsctl.c  */
 
-NTSTATUS VfatFileSystemControl (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatFileSystemControl (PFAT_IRP_CONTEXT IrpContext);
 
 /*  ---------------------------------------------------------  finfo.c  */
 
-NTSTATUS VfatQueryInformation (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatQueryInformation (PFAT_IRP_CONTEXT IrpContext);
 
-NTSTATUS VfatSetInformation (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatSetInformation (PFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
@@ -745,9 +751,9 @@ NTSTATUS vfatMakeFCBFromDirEntry (PVCB  vcb,
 
 /*  ------------------------------------------------------------  rw.c  */
 
-NTSTATUS VfatRead (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatRead (PFAT_IRP_CONTEXT IrpContext);
 
-NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatWrite (PFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS NextCluster(PDEVICE_EXTENSION DeviceExt,
                      ULONG FirstCluster,
@@ -756,12 +762,12 @@ NTSTATUS NextCluster(PDEVICE_EXTENSION DeviceExt,
 
 /*  -----------------------------------------------------------  misc.c  */
 
-NTSTATUS VfatQueueRequest(PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatQueueRequest(PFAT_IRP_CONTEXT IrpContext);
 
-PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
+PFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
                                          PIRP Irp);
 
-VOID VfatFreeIrpContext(PVFAT_IRP_CONTEXT IrpContext);
+VOID VfatFreeIrpContext(PFAT_IRP_CONTEXT IrpContext);
 
 DRIVER_DISPATCH VfatBuildRequest;
 NTSTATUS NTAPI VfatBuildRequest (PDEVICE_OBJECT DeviceObject,
@@ -778,7 +784,7 @@ VfatSetExtendedAttributes(PFILE_OBJECT FileObject,
 			  ULONG EaLength);
 /*  ------------------------------------------------------------- flush.c  */
 
-NTSTATUS VfatFlush(PVFAT_IRP_CONTEXT IrpContext);
+NTSTATUS VfatFlush(PFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb);
 
