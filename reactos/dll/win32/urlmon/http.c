@@ -330,7 +330,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         goto done;
     }
 
-    if (lstrlenW(szUrl) < sizeof(wszHttp)/sizeof(WCHAR)
+    if (strlenW(szUrl) < sizeof(wszHttp)/sizeof(WCHAR)
         || memcmp(szUrl, wszHttp, sizeof(wszHttp)))
     {
         hres = MK_E_SYNTAX;
@@ -397,7 +397,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     InternetSetStatusCallbackW(This->internet, HTTPPROTOCOL_InternetStatusCallback);
 
     This->connect = InternetConnectW(This->internet, host, url.nPort, user,
-                                     pass, INTERNET_SERVICE_HTTP, 0, (DWORD)This);
+                                     pass, INTERNET_SERVICE_HTTP, 0, (DWORD_PTR)This);
     if (!This->connect)
     {
         WARN("InternetConnect failed: %d\n", GetLastError());
@@ -425,7 +425,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
                                      wszBindVerb[This->bind_info.dwBindVerb] :
                                      This->bind_info.szCustomVerb,
                                      path, NULL, NULL, (LPCWSTR *)accept_mimes,
-                                     request_flags, (DWORD)This);
+                                     request_flags, (DWORD_PTR)This);
     if (!This->request)
     {
         WARN("HttpOpenRequest failed: %d\n", GetLastError());

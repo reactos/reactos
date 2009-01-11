@@ -511,7 +511,8 @@ HRESULT WINAPI RegisterBindStatusCallback(IBindCtx *pbc, IBindStatusCallback *pb
     hres = IBindCtx_RegisterObjectParam(pbc, BSCBHolder, (IUnknown*)bsc);
     IBindStatusCallback_Release(bsc);
     if(FAILED(hres)) {
-        IBindStatusCallback_Release(prev);
+        if(prev)
+            IBindStatusCallback_Release(prev);
         return hres;
     }
 

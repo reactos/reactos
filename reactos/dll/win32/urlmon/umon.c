@@ -237,7 +237,7 @@ static void Binding_FinishedDownload(Binding *This, HRESULT hr)
     IBindStatusCallback_OnProgress(This->pbscb, This->total_read, This->expected_size,
                                    BINDSTATUS_ENDDOWNLOADDATA, This->URLName);
     IBindStatusCallback_OnDataAvailable(This->pbscb, BSCF_LASTDATANOTIFICATION, This->total_read, &fmt, &stg);
-    if (hr)
+    if (hr != S_OK)
     {
 	WCHAR *pwchError = 0;
 
@@ -606,7 +606,7 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
                     }
 
                     bind->hconnect = InternetConnectW(bind->hinternet, host, url.nPort, user, pass,
-                                                      dwService, 0, (DWORD)bind);
+                                                      dwService, 0, (DWORD_PTR)bind);
                     if (!bind->hconnect)
                     {
                             hres = HRESULT_FROM_WIN32(GetLastError());
@@ -650,7 +650,7 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
                         break;
 
                     case INTERNET_SERVICE_HTTP:
-                        bind->hrequest = HttpOpenRequestW(bind->hconnect, NULL, path, NULL, NULL, NULL, 0, (DWORD)bind);
+                        bind->hrequest = HttpOpenRequestW(bind->hconnect, NULL, path, NULL, NULL, NULL, 0, (DWORD_PTR)bind);
                         if (!bind->hrequest)
                         {
                                 hres = HRESULT_FROM_WIN32(GetLastError());
@@ -1273,7 +1273,7 @@ HRESULT WINAPI URLDownloadToCacheFileW(LPUNKNOWN lpUnkCaller, LPCWSTR szURL, LPW
                               header, sizeof(header), NULL, NULL))
         return E_FAIL;
 
-    if (lstrlenW(cache_path) > dwBufLength)
+    if (strlenW(cache_path) > dwBufLength)
         return E_OUTOFMEMORY;
 
     lstrcpyW(szFileName, cache_path);
