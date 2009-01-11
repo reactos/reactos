@@ -79,7 +79,7 @@ abstract class HTML_User extends HTML
           <li><a href="'.$config->pathRosCMS().'?page=my">My Profile</a></li>
           <li><a href="'.$config->pathRosCMS().'?page=search">User Search</a></li>
           <li><a href="'.$config->pathGenerated().'peoplemap/">User Map</a></li>');
-      if ($thisuser->securityLevel() > 0) {
+      if ($thisuser->hasAccess('CMS')) {
         echo '<li><a href="'.$config->pathRosCMS().'?page=data&amp;branch=welcome">RosCMS Interface</a></li>';
       }
       echo_strip('

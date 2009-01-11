@@ -87,6 +87,27 @@ function submitDelete( subject )
 
 
 
+/**
+ * @FILLME
+ */
+function showAreaProtection( )
+{
+  makeRequest('?page=data_out&d_f=admin&d_u=system&action=apl', 'GET');
+}
+
+
+
+/**
+ * @FILLME
+ */
+function submitAreaProtection( )
+{
+  makeRequest('?page=data_out&d_f=admin&d_u=system&action=apl&submit=true', 'POST');
+  return false;
+}
+
+
+
 
 function getFormData( )
 {

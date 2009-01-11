@@ -290,7 +290,7 @@ class Export_XML extends Export
               }
               break;
             case 'Rights':
-              $column_list_row .= Security::rightsOverview($row['id']);
+              $column_list_row .= 'Depracted';
               break;
             case 'Version':
               $column_list_row .= $row['version'] ;
@@ -664,18 +664,8 @@ class Export_XML extends Export
     // if no filter is set, construct a new one
     if ($entries_private <= 0 && $entries_system <= 0 && $entries_public <= 0) { 
 
-      // everything except draft
-      if ($thisuser->securityLevel() == 3) { 
-        $this->sql_where .= " AND (t.name = 'status' AND t.value != 'draft') ";
-      }
-
-      // new, stable and unknown (if more than translator)
-      if ($thisuser->securityLevel() == 2) { 
-        $this->sql_where .= " AND (t.name = 'status' AND (t.value = 'new' OR t.value = 'stable' OR t.value = 'unknown')) ";
-      }
-      else {
-        $this->sql_where .= " AND (t.name = 'status' AND (t.value = 'new' OR t.value = 'stable')) ";
-      }
+      // new, stable
+      $this->sql_where .= " AND (t.name = 'status' AND (t.value = 'new' OR t.value = 'stable')) ";
 
       // set additional needed sql
       $this->sql_select .= ", t.name AS tag_name, t.value AS tag_value ";
@@ -685,7 +675,7 @@ class Export_XML extends Export
 
     // construct additioanl sql for tag-usage from filter
     if ($tag_counter > 0) {
-        $this->sql_select .= ", ".$tag_counter." AS tag_count";
+      $this->sql_select .= ", ".$tag_counter." AS tag_count";
       for ($i = 1; $i <= $tag_counter; $i++) {
         $this->sql_select .= ", t".$i.".name AS tag_name".$i.", t".$i.".value AS tag_value".$i." ";
         $this->sql_from .= " JOIN ".ROSCMST_TAGS." t".$i." ON t".$i.".rev_id = r.id ";
@@ -694,12 +684,12 @@ class Export_XML extends Export
     }
 
     // make sure only private drafts are visible
-    if ($thisuser->securityLevel() < 3 && $entries_private > 0) {
+    if (!$thisuser->hasAccess('other_drafts') && $entries_private > 0) {
       $this->sql_where .= " AND r.user_id = '".$thisuser->id()."' ";
     }
 
     // either show draft (private) OR stable & new (public) entries,   private AND public entries together are NOT allowed => block 
-    if ($thisuser->securityLevel() < 2 && (($entries_private > 0 && $entries_public > 0) || $entries_system > 0)) {
+    if (($entries_private > 0 && $entries_public > 0 && $thisuser->hasAccess('mix_priv_pub')) || ($thisuser->hasAccess('show_sys_entry') && $entries_system > 0)) {
       $this->sql_select = "";
       $this->sql_from   = "";
       $this->sql_where  = " FALSE ";

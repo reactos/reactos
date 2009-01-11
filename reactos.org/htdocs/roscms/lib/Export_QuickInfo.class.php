@@ -78,7 +78,7 @@ class Export_QuickInfo extends Export
     }
 
     // show additional data for security level > 1
-    if (ThisUser::getInstance()->securityLevel() > 1) {
+    if (ThisUser::getInstance()->hasAccess('entry_details')) {
       echo $t_s.'Rev-ID'.$t_e.$revision['id'].$t_lb;
       echo $t_s.'Data-ID'.$t_e.$revision['data_id'].$t_lb;
       echo $t_s.'ACL'.$t_e.$revision['acl'].$t_lb;

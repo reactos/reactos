@@ -53,7 +53,7 @@ class HTML_CMS_User extends HTML_CMS
   {
     $thisuser = &ThisUser::getInstance();
 
-    if (!$thisuser->isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
+    if (!$thisuser->hasAccess('user')) {
       return;
     }
 
@@ -63,18 +63,12 @@ class HTML_CMS_User extends HTML_CMS
       <p style="font-weight: bold;">User Account Management Interface</p>
       <br />');
       
-    if ($thisuser->isMemberOfGroup('ros_admin','ros_sadmin')) {
-      echo '<h3>Administrator</h3>';
+    if ($thisuser->hasAccess('more_lang')) {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0 GROUP BY u.name ORDER BY editcounter DESC, u.name");
     }
-    elseif ($thisuser->isMemberOfGroup('transmaint')) {
-      echo '<h3>Language Maintainer</h3>';
+    else {
       $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0  AND r.lang_id = :lang GROUP BY u.name ORDER BY editcounter DESC, u.name");
       $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
-    }
-
-    // for non language maintainers
-    if (!isset($stmt)) {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0 GROUP BY u.name ORDER BY editcounter DESC, u.name");
     }
 
     echo_strip('
@@ -83,8 +77,8 @@ class HTML_CMS_User extends HTML_CMS
         <input name="searchopt" type="radio" id="searchopt1" value="accountname" checked="checked" onclick="getUser()" /><label>account name</label>
         <input name="searchopt" type="radio" id="searchopt2" value="fullname" onclick="getUser()" /><label>full name </label>
         <input name="searchopt" type="radio" id="searchopt3" value="email" onclick="getUser()" /><label>email address</label>
-        <input name="searchopt" type="radio" id="searchopt4" value="website" onclick="getUser()" /><label>website</label>
-        <input name="searchopt" type="radio" id="searchopt5" value="language" onclick="getUser()" /><label>language</label>
+        <input name="searchopt" type="radio" id="searchopt4" value="website" onclick="getUser()" /><label>website</label>'.($thisuser->hasAccess('more_lang') ? '
+        <input name="searchopt" type="radio" id="searchopt5" value="language" onclick="getUser()" /><label>language</label>' : '').'
         <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" /><br />
         <br />
       </div>

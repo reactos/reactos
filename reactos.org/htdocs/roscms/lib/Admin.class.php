@@ -33,7 +33,7 @@ abstract class Admin
   
     // check if user has enough rights
     Login::required();
-    if (ThisUser::getInstance()->securityLevel() < 3) {
+    if (!ThisUser::getInstance()->hasAccess('admin')) {
       die('Not enough rights to access this Area.');
     }
 

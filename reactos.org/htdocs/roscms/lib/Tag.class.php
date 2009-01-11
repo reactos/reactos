@@ -102,7 +102,7 @@ class Tag
     $tag = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
     // @unimplemented: account group membership check
-    if ($tag['user_id'] == ThisUser::getInstance()->id() || ThisUser::getInstance()->securityLevel() > 1) {
+    if ($tag['user_id'] == ThisUser::getInstance()->id() || ThisUser::getInstance()->hasAccess('deltag')) {
 
       // finally delete tag
       $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE id = :tag_id LIMIT 1");
@@ -166,7 +166,7 @@ class Tag
     $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TAGS." WHERE tag_id = :tag_id AND user_id IN(-1, 0, :user_id) LIMIT 1");
     $stmt->bindParam('tag_id',$tag_id,PDO::PARAM_INT);
     $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
-    if ($stmt->fetchColumn() || ThisUser::getInstance()->securityLevel() == 3) {
+    if ($stmt->fetchColumn() || ThisUser::getInstance()->hasAccess('updatetag')) {
 
       // update value
       $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TAGS." SET value = :new_value WHERE id=:tag_id");

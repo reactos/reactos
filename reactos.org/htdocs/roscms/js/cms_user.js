@@ -8,14 +8,18 @@ function getUser( )
 {
   var soptckd = '';
 
-  // get request type
-  if (document.getElementById('searchopt1').checked) soptckd = 'accountname';
-  if (document.getElementById('searchopt2').checked) soptckd = 'fullname';
-  if (document.getElementById('searchopt3').checked) soptckd = 'email';
-  if (document.getElementById('searchopt4').checked) soptckd = 'website';
-  if (document.getElementById('searchopt5').checked) soptckd = 'language';
+  // only start with more than two chars
+  if (document.getElementById('textfield').value.length > 2) {
 
-  makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=list&d_val='+encodeURIComponent(document.getElementById('textfield').value)+'&d_val2='+encodeURIComponent(soptckd));
+    // get request type
+    if (document.getElementById('searchopt1').checked) soptckd = 'accountname';
+    if (document.getElementById('searchopt2').checked) soptckd = 'fullname';
+    if (document.getElementById('searchopt3').checked) soptckd = 'email';
+    if (document.getElementById('searchopt4').checked) soptckd = 'website';
+    if (document.getElementById('searchopt5').checked) soptckd = 'language';
+
+    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=list&d_val='+encodeURIComponent(document.getElementById('textfield').value)+'&d_val2='+encodeURIComponent(soptckd));
+  }
 }
 
 

@@ -97,8 +97,8 @@ class HTML_CMS_Website extends HTML_CMS
         var roscms_intern_webserver_roscms = '".RosCMS::getInstance()->pathRosCMS()."';
         var roscms_intern_page_link = '".RosCMS::getInstance()->pathRosCMS()."?page=';
         var roscms_get_edit = '".(isset($_GET['edit']) ? $_GET['edit'] : '')."';
-        var roscms_access_level = ".$thisuser->securityLevel().";
-        var roscms_cbm_hide = '".(($thisuser->securityLevel() > 1) ? '' : ' disabled="disabled" style="color:#CCCCCC;"')."'; // disable combobox entries for novice user
+        var roscms_access_level = 3"./*$thisuser->securityLevel().*/";
+        var roscms_cbm_hide = '"./*(($thisuser->securityLevel() > 1) ? '' : ' disabled="disabled" style="color:#CCCCCC;"').*/"'; // disable combobox entries for novice user
 
         // favorite user language
         ";
@@ -137,7 +137,7 @@ class HTML_CMS_Website extends HTML_CMS
 
       <div id="roscms_container">
         <div class="leftMenu" style="position: absolute; top: 0px; width: 150px; left: 0px; border: 0px; z-index:1;">
-          <div id="smenutab1" class="submb" style="margin-bottom: 1.5em;" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab1" class="submb" style="margin-bottom: 1.5em;" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('new_entry') ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc1" class="subm2" style="font-weight: bold;">New Entry</div>
             </div>
@@ -149,12 +149,12 @@ class HTML_CMS_Website extends HTML_CMS
             </div>
           </div>
 
-          <div id="smenutab3" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab3" class="submb" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('pages') ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc3" class="subm2">Page</div>
             </div>
           </div>
-          <div id="smenutab13" class="submb" onclick="loadMenu(this.id)"'.((!$thisuser->isMemberOfGroup('ros_sadmin')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab13" class="submb" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('dynamic_pages') ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc13" class="subm2">Dynamic&nbsp;Page</div>
             </div>
@@ -164,12 +164,12 @@ class HTML_CMS_Website extends HTML_CMS
               <div id="smenutabc4" class="subm2">Content</div>
             </div>
           </div>
-          <div id="smenutab5" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab5" class="submb" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('templates') ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc5" class="subm2">Template</div>
             </div>
           </div>
-          <div id="smenutab6" class="submb" onclick="loadMenu(this.id)"'.(($thisuser->securityLevel() == 1 || $thisuser->isMemberOfGroup('transmaint')) ? ' style="display:none;"' : '').'>
+          <div id="smenutab6" class="submb" onclick="loadMenu(this.id)"'.(!$thisuser->hasAccess('scripts') ? ' style="display:none;"' : '').'>
             <div class="subm1">
               <div id="smenutabc6" class="subm2">Script</div>
             </div>

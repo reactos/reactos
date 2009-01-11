@@ -32,7 +32,6 @@ if (get_magic_quotes_gpc()) {
 require_once('config.php');
 
 require_once('lib/RosCMS_Autoloader.class.php');
-require_once('lib/DBConnection.class.php');
 
 // strips whitespace from sourcecode
 function echo_strip( $text ) {
@@ -172,6 +171,9 @@ switch (@$_GET['page']) {
             break;
           case 'lang':
             new Admin_Languages();
+            break;
+          case 'system':
+            new Admin_System();
             break;
           default:
             die('');

@@ -53,7 +53,7 @@ class Export_Maintain extends Export
   {
     switch ($_GET['d_u']) {
       case 'optimize':
-        $stmt=&DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_ACCESS.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_ACL.",".ROSCMST_DEPENCIES.",".ROSCMST_TIMEZONES);
+        $stmt=&DBConnection::getInstance()->prepare("OPTIMIZE TABLE ".ROSCMST_ACCESS.",".ROSCMST_USERS.",".ROSCMST_FORBIDDEN.",".ROSCMST_SESSIONS.",".ROSCMST_COUNTRIES.",".ROSCMST_ENTRIES.",".ROSCMST_REVISIONS.",".ROSCMST_STEXT.",".ROSCMST_TAGS.",".ROSCMST_TEXT.",".ROSCMST_FILTER.",".ROSCMST_GROUPS.",".ROSCMST_JOBS.",".ROSCMST_LANGUAGES.",".ROSCMST_SUBSYS.",".ROSCMST_MEMBERSHIPS.",".ROSCMST_ENTRY_AREA.",".ROSCMST_DEPENCIES.",".ROSCMST_TIMEZONES);
         $stmt->execute();
         Log::writeHigh('optimize database tables: done by '.ThisUser::getInstance()->id().' {data_maintain_out}');
         break;

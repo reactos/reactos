@@ -52,7 +52,7 @@ class HTML_CMS_Maintain extends HTML_CMS
   protected function body( )
   {
     // check if user has rights for this area
-    if (ThisUser::getInstance()->securityLevel() < 3) {
+    if (!ThisUser::getInstance()->hasAccess('maintain')) {
       return;
     }
 
@@ -96,7 +96,7 @@ class HTML_CMS_Maintain extends HTML_CMS
       <img id="ajaxloading" style="display:none;" src="images/ajax_loading.gif" width="13" height="13" alt="" />
       <br />');
 
-    if (ThisUser::getInstance()->isMemberOfGroup('ros_sadmin')) {
+    if (ThisUser::getInstance()->hasAccess('logs')) {
 
       // display logs
       echo_strip('

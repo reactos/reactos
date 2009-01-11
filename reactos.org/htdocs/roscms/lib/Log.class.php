@@ -44,7 +44,7 @@ class Log
    */
   public static function prepareInfo( $data_id = 'unknown', $rev_id = 'unknown' )
   {
-    return ' [dataid: '.$data_id.'; revid: '.$rev_id.'; userid: '.ThisUser::getInstance()->id().'; security: '.Security::rightsOverview($rev_id).'] ';
+    return ' [dataid: '.$data_id.'; revid: '.$rev_id.'; userid: '.ThisUser::getInstance()->id();
   } // end of member function prepare_info
 
 
@@ -285,7 +285,7 @@ class Log
    * @access private
    */
   public static function read($level = 'medium', $log = '' ) {
-    return Data::getContent('log_website_'.($log!=''?$log.'_':'').date('Y-W'), 'system',  Language::getStandardId(), $level.'_security_log', 'text', 'archive');
+    return Data::getContent('log_website_'.($log!=''?$log.'_':'').date('Y-W'), 'system',  Language::getStandardId(), $level.'_security_log', 'text');
   }
 
 

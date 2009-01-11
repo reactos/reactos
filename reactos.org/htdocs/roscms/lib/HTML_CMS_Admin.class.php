@@ -39,7 +39,7 @@ class HTML_CMS_Admin extends HTML_CMS
     $this->register_css('cms_admin.css');
 
     parent::__construct( $page_title, $page_css);
-    if (ThisUser::getInstance()->securityLevel() < 3) {
+    if (!ThisUser::getInstance()->hasAccess('admin')) {
       die('Not enough rights to get into this area');
     }
   }
@@ -54,7 +54,7 @@ class HTML_CMS_Admin extends HTML_CMS
   {
     echo_strip('
       <ul>
-        <li>Access Control Lists
+        <li>Entry Access Control Lists
           <ul>
             <li><a href="#" onclick="'."showNew('acl')".'">new</a></li>
             <li><a href="#" onclick="'."showSearch('acl','edit')".'">edit</a></li>
@@ -72,6 +72,11 @@ class HTML_CMS_Admin extends HTML_CMS
           <ul>
             <li><a href="#" onclick="'."showNew('lang')".'">new</a></li>
             <li><a href="#" onclick="'."showSearch('lang','edit')".'">edit</a></li>
+          </ul>
+        </li>
+        <li>System Settings
+          <ul>
+            <li><a href="#" onclick="'."showAreaProtection()".'">Area Protection</a></li>
           </ul>
         </li>
       </ul>

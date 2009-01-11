@@ -78,7 +78,7 @@ class Editor_Website extends Editor
       case 'newentry':
 
         // add a new entry only with higher security level
-        if ($thisuser->securityLevel() > 1) {
+        if ($thisuser->hasAccess('new_entry')) {
           switch ($_GET['d_val']) {
             case 'dynamic':
               $this->showAddEntry(self::DYNAMIC);
@@ -466,7 +466,7 @@ class Editor_Website extends Editor
             <option value="page">Page</option>
             <option value="content">Content</option>
             <option value="template">Template</option>
-            <option value="script">Script</option>'.(ThisUser::getInstance()->isMemberOfGroup('ros_sadmin') ? '
+            <option value="script">Script</option>'.(ThisUser::getInstance()->hasAccess('dynamic_pages') ? '
             <option value="dynamic">Dynamic Page Type</option>' : '').'
           </select>
           <br />
@@ -615,7 +615,7 @@ class Editor_Website extends Editor
     }
 
     // allowed only for someone with "add" rights
-    if (Security::hasRight($this->data_id, 'add')) { 
+    if ($thisuser->hasAccess('entry_fields')) {
       echo '&nbsp;|&nbsp;';
 
       // Fields
@@ -625,6 +625,9 @@ class Editor_Website extends Editor
       else {
         echo '<span class="detailmenu" onclick="'."showEditorTabFields(".$this->rev_id.")".'">Fields</span>';
       }
+    }
+
+    if ($thisuser->hasAccess('entry_revs')) {
       echo '&nbsp;|&nbsp;';
 
       if ($mode == self::REVISION) {
@@ -636,7 +639,7 @@ class Editor_Website extends Editor
     }
 
     // allowed only for related super administrators
-    if ($thisuser->isMemberOfGroup('ros_sadmin') || (Security::hasRight($this->data_id, 'add') && $thisuser->isMemberOfGroup('ros_admin'))) { 
+    if ($thisuser->hasAccess('entry_security')) { 
       echo '&nbsp;|&nbsp;';
 
       // Security
@@ -689,7 +692,7 @@ class Editor_Website extends Editor
     // helper vars
     $last_user = null; // used in first while, to recognize the last type
 
-    if ($thisuser->securityLevel() > 1) {
+    if ($thisuser->hasAccess('system_tags')) {
       $stmt=&DBConnection::getInstance()->prepare("SELECT id, user_id, name, value FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id AND user_id IN(-1, 0,:user_id) ORDER BY user_id ASC, name ASC");
     }
     else {
@@ -726,7 +729,7 @@ class Editor_Website extends Editor
         // allow to delete label if SecLev > 1
         // allow to delete sys metadata if user has the rights
         // allow someone to delete his metadata he set and the user-id > 0
-      if (($thisuser->securityLevel() > 1 && $tag['user_id'] == 0) || (Security::hasRight($this->data_id, 'add') && $tag['user_id'] == -1) || ($tag['user_id'] == $thisuser->id() && $tag['user_id'] > 0)) {
+      if (($thisuser->hasAccess('system_tags') && $tag['user_id'] == -1) || $tag['user_id'] == $thisuser->id()) {
         echo_strip('&nbsp;&nbsp;
           <span class="frmeditbutton" onclick="'."delLabelOrTag('".$tag['id']."')".'">
             <img src="images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
@@ -746,10 +749,10 @@ class Editor_Website extends Editor
       <button type="button" onclick="'."addLabelOrTag(".$this->rev_id.",'tag','addtagn', '".$thisuser->id()."')".'">Add</button>
       <br />');
 
-    if ($thisuser->securityLevel() > 1) {
+    if ($thisuser->hasAccess('system_tags')) {
       echo_strip('
         <br />
-        <h3>Add Label'.(Security::hasRight($this->data_id, 'add') ? ' or System Metadata' : '').'</h3>
+        <h3>Add Label'.(Security::hasAccess($this->data_id, 'add') ? ' or System Metadata' : '').'</h3>
         <label for="addtags1" class="normal">Name:</label>&nbsp;
         <input type="text" id="addtags1" size="15" maxlength="100" value="" />&nbsp;
         <label for="addtags2" class="normal">Value:</label>&nbsp;
@@ -1163,7 +1166,7 @@ class Editor_Website extends Editor
               <li>Type: '.$revision1['type'].'</li>
               <li>Language: '.$revision1['language'].'</li>
               <li>User: '.$revision1['user_name'].'</li>');
-    if (ThisUser::getInstance()->securityLevel() > 1) {
+    if (ThisUser::getInstance()->hasAccess('entry_details')) {
       echo '<li>Rev-ID: '.$revision1['id'].'</li>';
     }
     echo_strip('
@@ -1175,7 +1178,7 @@ class Editor_Website extends Editor
               <li>Type: '.$revision2['type'].'</li>
               <li>Language: '.$revision2['language'].'</li>
               <li>User: '.$revision2['user_name'].'</li>');
-    if (ThisUser::getInstance()->securityLevel() > 1) {
+    if (ThisUser::getInstance()->hasAccess('entry_details')) {
       echo '<li>ID: '.$revision2['id'].'</li>';
     }
     echo_strip('

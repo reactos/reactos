@@ -124,7 +124,7 @@ CREATE TABLE roscms_rel_revisions_depencies (
 -- --------------------------------------------------------
 -- create and convert access lists (allowed groups are stored in rel_groups_access)
 -- --------------------------------------------------------
-CREATE TABLE roscms_access (
+CREATE TABLE roscms_entries_access (
   id bigint(20) unsigned NOT NULL auto_increment,
   name varchar(100) collate utf8_unicode_ci NOT NULL,
   name_short varchar(50) collate utf8_unicode_ci NOT NULL,
@@ -134,7 +134,7 @@ CREATE TABLE roscms_access (
   UNIQUE KEY name_short (name_short)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-INSERT INTO roscms_access
+INSERT INTO roscms_entries_access
 SELECT
   NULL,
   sec_fullname,
@@ -146,7 +146,7 @@ ORDER BY sec_name;
 
 
 -- --------------------------------------------------------
--- create access lists (need to run seperate script)
+-- create access lists
 -- --------------------------------------------------------
 CREATE TABLE roscms_rel_groups_access (
   acl_id bigint(20) unsigned NOT NULL COMMENT '->access(id)',
@@ -170,7 +170,7 @@ SELECT
   s.sec_lev1_add,
   s.sec_lev1_pub,
   s.sec_lev1_trans
-FROM roscms_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 1
+FROM roscms_entries_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 1
 UNION
 SELECT
   a.id,
@@ -181,7 +181,7 @@ SELECT
   s.sec_lev2_add,
   s.sec_lev2_pub,
   s.sec_lev2_trans
-FROM roscms_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 2
+FROM roscms_entries_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 2
 UNION
 SELECT
   a.id,
@@ -192,14 +192,97 @@ SELECT
   s.sec_lev3_add,
   s.sec_lev3_pub,
   s.sec_lev3_trans
-FROM roscms_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 3;
+FROM roscms_entries_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 3;
 
-UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
+UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_entries_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
 SET ga.can_read=TRUE, ga.can_write=TRUE, ga.can_add=TRUE, ga.can_delete=TRUE, ga.can_publish=TRUE, ga.can_translate=TRUE WHERE s.sec_allow LIKE CONCAT('%',g.name_short,'%');
 
-UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
+UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_entries_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
 SET ga.can_read=FALSE, ga.can_write=FALSE, ga.can_add=FALSE, ga.can_delete=FALSE, ga.can_publish=FALSE, ga.can_translate=FALSE WHERE s.sec_deny LIKE CONCAT('%',g.name_short,'%');
 
+
+
+-- --------------------------------------------------------
+-- create areas
+-- --------------------------------------------------------
+CREATE TABLE roscms_area (
+  id bigint(20) NOT NULL auto_increment,
+  `name` varchar(30) NOT NULL,
+  name_short varchar(15) NOT NULL,
+  description varchar(255) NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY name_short (name_short)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+INSERT INTO roscms_area VALUES
+(1, 'System Tags', 'system_tags', 'Can the user modify/see system tags'),
+(2, 'Content Management System', 'CMS', 'RosCMS Interface itself'),
+(3, 'Entry Details', 'entry_details', 'Shows Entry Details such as Rev-ID'),
+(4, 'New Entries', 'new_entry', 'Be able to create new entries'),
+(5, 'Admin Branch', 'admin', 'Can Access Admin Branch'),
+(6, 'Delete Files', 'delete_file', 'Able to delete files from generated content'),
+(7, 'User Branch', 'user', 'Access user branch'),
+(8, 'Add Translator', 'addtransl', 'add someone to translator group'),
+(9, 'Add new membership', 'addmembership', 'add someone to new group'),
+(10, 'Delete Membership', 'delmembership', 'removes someones membership to a group'),
+(11, 'Disable Account', 'disableaccount', 'disable/enable user accounts'),
+(12, 'User Details', 'user_details', 'Access to user details, such as user groups, user-id and contact data'),
+(13, 'Foreign Drafts', 'other_drafts', 'beein able to view drafts of other people'),
+(14, 'Maintain Branch', 'maintain', 'Access to Maintain branch'),
+(15, 'Statistics Branch', 'stats', 'Access to Statistics branch'),
+(16, 'Website Branch', 'website', 'Access to Website branch'),
+(17, 'Pages', 'pages', 'View Pages'),
+(18, 'Dynamic Pages', 'dynamic_pages', 'View Dynamic Pages'),
+(19, 'Templates', 'templates', 'View Page Templates'),
+(20, 'Scripts', 'scripts', 'View Scripts'),
+(21, 'Delete Tags', 'deltag', 'Delete System Tags from entries'),
+(22, 'Update Tags', 'updatetag', 'Update Tag value'),
+(23, 'More Languages', 'more_lang', 'Can change things in more languages than the user has set in his profile'),
+(24, 'Logs', 'logs', 'Can view Logs'),
+(25, 'Delete Entries', 'del_entry', 'Delete Entries'),
+(26, 'Delete without archiv', 'del_wo_archiv', 'delete entries without moving them to archiv'),
+(27, 'add level 0 group', 'addlvl0group', 'Add memberships with group security level 0'),
+(28, 'add level 1 groups', 'addlvl1group', 'Add memberships with group security level 1'),
+(29, 'add level 2 groups', 'addlvl2group', 'Add memberships with group security level 2'),
+(30, 'add level 3 groups', 'addlvl3group', 'Add memberships with group security level 3'),
+(31, 'Mix private & public entries', 'mix_priv_pub', 'show private and public type entries together'),
+(32, 'show system entries', 'show_sys_entry', 'show entries of type ''system''');
+
+
+
+-- --------------------------------------------------------
+-- create area protection list
+-- --------------------------------------------------------
+CREATE TABLE roscms_rel_groups_area (
+  group_id bigint(20) NOT NULL,
+  area_id bigint(20) NOT NULL,
+  PRIMARY KEY  (group_id,area_id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO roscms_rel_groups_area
+SELECT g.id, a.id
+FROM roscms_area a JOIN roscms_groups g
+WHERE ((a.name_short = 'system_tags' OR a.name_short = 'entry_details' OR a.name_short = 'new_entry' OR a.name_short = 'deltag' OR a.name_short = 'del_entry' OR a.name_short = 'mix_priv_pub' OR a.name_short = 'show_sys_entry' OR a.name_short = 'addlvl1group')
+AND g.security_level > 1)
+
+OR ((a.name_short = 'delete_file' OR a.name_short = 'delmembership' OR a.name_short = 'disableaccount' OR a.name_short = 'user_details' OR a.name_short = 'other_drafts' OR a.name_short = 'stats' OR a.name_short = 'dynamic_pages' OR a.name_short = 'updatetag' OR a.name_short = 'del_wo_archiv' OR a.name_short = 'addlvl2group' OR a.name_short = 'user' OR a.name_short = 'addmembership' OR a.name_short = 'maintain')
+AND g.security_level = 3)
+
+OR ((a.name_short = 'admin' OR a.name_short = 'logs' OR a.name_short = 'addlvl3group')
+AND g.name_short = 'ros_sadmin')
+
+OR ((a.name_short='pages' OR a.name_short = 'templates' OR a.name_short = 'scripts')
+AND g.security_level > 1 AND g.name_short != 'transmaint')
+
+OR ((a.name_short = 'CMS' OR a.name_short = 'website' OR a.name_short = 'addlvl0group')
+AND g.security_level > 0)
+
+OR ((a.name_short = 'maintain' OR a.name_short = 'user' OR a.name_short = 'addmembership' OR a.name_short = 'addtransl' OR a.name_short = 'addlvl0group')
+AND g.name_short = 'transmaint')
+
+OR ((a.name_short = 'more_lang')
+AND g.name_short != 'translator' AND g.name_short != 'transmaint' AND g.security_level > 0);
 
 
 -- --------------------------------------------------------
@@ -227,7 +310,7 @@ SELECT
   s.id,
   d.data_id,
   1
-FROM data_a d JOIN roscms_access s ON d.data_acl=s.name_short
+FROM data_a d JOIN roscms_entries_access s ON d.data_acl=s.name_short
 UNION
 SELECT
   NULL,
@@ -236,7 +319,7 @@ SELECT
   s.id,
   d.data_id,
   0
-FROM data_ d JOIN roscms_access s ON d.data_acl=s.name_short;
+FROM data_ d JOIN roscms_entries_access s ON d.data_acl=s.name_short;
 
 
 
@@ -577,7 +660,6 @@ CREATE TABLE roscms_jobs (
   PRIMARY KEY  (id),
   KEY name (name)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
 
 
 

@@ -162,6 +162,7 @@ class Login
    */
   public static function required( )
   {
+    $thisuser=&ThisUser::getInstance();
 
     // check if user wants to logout
     if (isset($_POST['logout'])) {
@@ -195,15 +196,14 @@ class Login
     }
 
     // collect memberships for current user
-    $stmt=&DBConnection::getInstance()->prepare("SELECT g.name_short, g.security_level FROM ".ROSCMST_MEMBERSHIPS." m JOIN ".ROSCMST_GROUPS." g ON m.group_id = g.id WHERE user_id = :user_id");
+    $stmt=&DBConnection::getInstance()->prepare(" SELECT a.name_short FROM ".ROSCMST_AREA." a JOIN ".ROSCMST_AREA_ACCESS." r ON r.area_id = a.id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id = r.group_id WHERE m.user_id =:user_id");
     $stmt->bindparam('user_id',$user['id'],PDO::PARAM_INT);
     $stmt->execute();
-    $memberships = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    foreach($memberships as $membership) {
-      ThisUser::getInstance()->addGroup($membership);
+    while ($area = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $thisuser->addAccess($area['name_short']);
     }
 
-    ThisUser::getInstance()->setData($user);
+    $thisuser->setData($user);
   } // end of member function require
 
 } // end of Login

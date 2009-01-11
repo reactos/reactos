@@ -40,7 +40,6 @@ class Data
     $stmt->bindParam('type',$data_type,PDO::PARAM_STR);
     $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
     $stmt->bindValue('archive',($mode == 'archive'),PDO::PARAM_BOOL);
-    echo ($mode == 'archive');
     $stmt->execute();
     $rev_id = $stmt->fetchColumn();
 
@@ -187,7 +186,7 @@ class Data
   public static function deleteFile( $rev_id )
   {
     // only for admins
-    if (ThisUser::getInstance()->securityLevel() < 3) {
+    if (!ThisUser::getInstance()->hasAccess('delete_file')) {
       return;
     }
 
@@ -634,7 +633,7 @@ class Data
 
           // mark as stable
           case 'ms':
-            if ($thisuser->securityLevel() > 1 && $thisuser->isMemberOfGroup('transmaint')) {
+            if (!$thisuser->hasAccess('more_lang')) {
 
               // check for user language
               if ($user_lang == '') {
@@ -706,7 +705,7 @@ class Data
 
           // mark as new
           case 'mn':
-            if ($thisuser->securityLevel() > 1 && $thisuser->isMemberOfGroup('transmaint')) {
+            if (!$thisuser->hasAccess('more_lang')) {
 
               // check for user language
               if ($user_lang == 0) {
@@ -745,10 +744,10 @@ class Data
 
           // delete entry
           case 'xe':
-            if ($thisuser->securityLevel() > 1 || $revision['user_id'] == $thisuser->id()) {
+            if ($thisuser->hasAccess('del_entry') || $revision['user_id'] == $thisuser->id()) {
 
               // copy to Archive if no admin
-              if ($thisuser->securityLevel() < 3) {
+              if (!$thisuser->hasAccess('del_wo_archiv')) {
                 Data::copy($revision['id'], 0, $lang_id);
               }
               //Data::deleteFile($revision['id']);

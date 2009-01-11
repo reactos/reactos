@@ -116,7 +116,7 @@ class Admin_ACL extends Admin
       if ($access_id !== false) {
 
         // prepare for usage in loop
-        $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ACL." (acl_id, group_id, can_read, can_write, can_add, can_delete, can_publish, can_translate) VALUES (:acl_id, :group_id, :read, :write, :add, :delete, :publish, :translate)");
+        $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRY_AREA." (acl_id, group_id, can_read, can_write, can_add, can_delete, can_publish, can_translate) VALUES (:acl_id, :group_id, :read, :write, :add, :delete, :publish, :translate)");
         $stmt_ins->bindParam('acl_id',$access_id,PDO::PARAM_INT);
 
         // insert access rights for each group
@@ -249,7 +249,7 @@ class Admin_ACL extends Admin
               <th title="translate">T</th>
             </tr>');
 
-    $stmt=&DBConnection::getInstance()->prepare("SELECT g.id, g.name, g.security_level, g.description, a.can_read, a.can_write, a.can_add, a.can_delete, a.can_publish, a.can_translate FROM ".ROSCMST_ACL." a JOIN ".ROSCMST_GROUPS." g ON g.id=a.group_id WHERE a.acl_id=:acl_id ORDER BY g.security_level ASC, g.name ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT g.id, g.name, g.security_level, g.description, a.can_read, a.can_write, a.can_add, a.can_delete, a.can_publish, a.can_translate FROM ".ROSCMST_ENTRY_AREA." a JOIN ".ROSCMST_GROUPS." g ON g.id=a.group_id WHERE a.acl_id=:acl_id ORDER BY g.security_level ASC, g.name ASC");
     $stmt->bindParam('acl_id',$access['id'],PDO::PARAM_INT);
     $stmt->execute();
     while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -294,7 +294,7 @@ class Admin_ACL extends Admin
     $success = $success && $stmt->execute();
 
     // prepare for usage in loop
-    $stmt_ins=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ACL." SET can_read=:read, can_write=:write, can_add=:add, can_delete=:delete, can_publish=:publish, can_translate=:translate WHERE acl_id=:acl_id AND group_id=:group_id");
+    $stmt_ins=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRY_AREA." SET can_read=:read, can_write=:write, can_add=:add, can_delete=:delete, can_publish=:publish, can_translate=:translate WHERE acl_id=:acl_id AND group_id=:group_id");
     $stmt_ins->bindParam('acl_id',$_POST['acl_id'],PDO::PARAM_INT);
 
     // insert access rights for each group
@@ -385,7 +385,7 @@ class Admin_ACL extends Admin
 
       // delete rights list
       if ($success) {
-        $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_ACL." WHERE acl_id=:acl_id");
+        $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_ENTRY_AREA." WHERE acl_id=:acl_id");
         $stmt->bindParam('acl_id',$_POST['acl_id'],PDO::PARAM_INT);
         $success = $success && $stmt->execute();
       }

@@ -27,60 +27,36 @@ class ThisUser
   private $security_level = 0;
   private $user = array('id'=>0,'name'=>'');
   private $groups = array();
+  private $access = array();
 
 
   /**
-   * adds a new membership for this user and registers maximum security level
+   * adds a access area to the allowed list of this user
    *
    * @access public
    */
-  public function addGroup( $group )
+  public function addAccess( $access_area )
   {
-    $this->groups[$group['name_short']] = $group['security_level'];
-    if ($group['security_level'] > $this->security_level) $this->security_level = $group['security_level'];
+    $this->access[$access_area] = true;
   } // end of member function setId
 
 
-  /**
-   * adds a new membership for this user
-   *
-   * @return array
-   * @access public
-   */
-  public function getGroups( )
-  {
-    return $this->groups;
-  } // end of member function setId
-
 
   /**
-   * checks if the user is member of at least in one of the groups
+   * checks if the user has access to a requested area
    *
-   * @param string group_name 
-   * @param string group_name2 
-   * @param string group_name3 
+   * @param string access_area name of the area
    * @return bool
    * @access public
    */
-  public function isMemberOfGroup( $group_name, $group_name2 = null, $group_name3 = null )
+  public function hasAccess( $access_area )
   {
-    if (@$this->groups[$group_name] > -1 || @$this->groups[$group_name2] > -1 || @$this->groups[$group_name3] > -1) {
-      return true;
+    if (isset($this->access[$access_area])) {
+      return $this->access[$access_area];
     }
     return false;
   } // end of member isGroupMember
 
-
-  /**
-   * returns highest security level of users group memberships
-   *
-   * @return int
-   * @access public
-   */
-  public function securityLevel( )
-  {
-    return $this->security_level;
-  } // end of member function securityLevel
 
 
   /**

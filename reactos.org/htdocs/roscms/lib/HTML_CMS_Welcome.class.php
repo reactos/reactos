@@ -62,30 +62,27 @@ class HTML_CMS_Welcome extends HTML_CMS
       <p style="font-weight: bold;">');echo Data::getContent('web_news', 'system', Language::getStandardId(), 'heading', 'stext').'</p>'.
       Data::getContent('web_news', 'system', Language::getStandardId(), 'content', 'text').'<br />';
 
-      if (ThisUser::getInstance()->isMemberOfGroup('translator', 'transmaint')) {
-    
-        $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
-        $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
-        $stmt->execute();
-        $user_lang = $stmt->fetchColumn();
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+      $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
+      $stmt->execute();
+      $user_lang = $stmt->fetchColumn();
 
-        if ($user_lang !== false) {
-          echo_strip('
-            <a name="web_news_langgroup"></a>
-            <h3>Translator Information</h3>');
+      if ($user_lang !== false) {
+        echo_strip('
+          <a name="web_news_langgroup"></a>
+          <h3>Translator Information</h3>');
 
-          // try to get content in local language, otherwise use standard language
-          $content = Data::getContent('web_news_langgroup', 'system',  $user_lang, 'content', 'text');
-          if ($content == '') {
-            $content = Data::getContent('web_news_langgroup', 'system',  Language::getStandardId(), 'content', 'text');
-          }
-          echo $content;
+        // try to get content in local language, otherwise use standard language
+        $content = Data::getContent('web_news_langgroup', 'system',  $user_lang, 'content', 'text');
+        if ($content == '') {
+          $content = Data::getContent('web_news_langgroup', 'system',  Language::getStandardId(), 'content', 'text');
         }
-        else {
-          echo_strip('
-            <h2>Please set your favorite language in the '.RosCMS::siteName().' profile settings.</h2>
-            <p>This language will also be the default language to that you can translate content.</p>');
-        }
+        echo $content;
+      }
+      else {
+        echo_strip('
+          <h2>Please set your favorite language in the '.RosCMS::siteName().' profile settings.</h2>
+          <p>This language will also be the default language to that you can translate content.</p>');
       }
     echo '<br />';
   }

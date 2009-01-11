@@ -187,7 +187,7 @@ class HTML_User_Profile extends HTML_User
     }
 
     // email only for the user itself or admins
-    if ($profile['id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
+    if ($profile['id'] == $thisuser->id() || $thisuser->hasAccess('user_details')) {
       echo_strip('
         <div class="field">
           <div class="key">E-Mail Address </div>
@@ -231,7 +231,7 @@ class HTML_User_Profile extends HTML_User
     }
 
     // Groups (only for user itself) and admins
-    if ($profile['id'] == $thisuser->id() || $thisuser->securityLevel() == 3) {
+    if ($profile['id'] == $thisuser->id() || $thisuser->hasAccess('user_details')) {
       echo_strip('
         <div class="field">
           <div class="key">User Groups</div>

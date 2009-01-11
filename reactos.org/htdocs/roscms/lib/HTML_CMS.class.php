@@ -38,7 +38,7 @@ abstract class HTML_CMS extends HTML
   {
     // need to have a logged in user with minimum security level 1
     Login::required();
-    if (ThisUser::getInstance()->securityLevel() == 0) {
+    if (!ThisUser::getInstance()->hasAccess('CMS')) {
       header('location:?page=nopermission');
     }
 
@@ -76,14 +76,10 @@ abstract class HTML_CMS extends HTML
       $group_list .= ($group_list!=''?',':'').$group['name'];
     }
 
-    // get security level
-    $security_level = $thisuser->securityLevel();
-
     // get selected navigation entry
     echo_strip('
       <div id="myReactOS">
-        <strong>'.$thisuser->name().'</strong>
-        '.(($security_level > 1) ? '| SecLev: '.$security_level.' ('. $group_list .')' : '').'
+        <strong>'.$thisuser->name().'</strong> ('. $group_list .')
         |
         <span onclick="refreshPage()" style="color:#006090; cursor:pointer;">
           <img src="images/reload.gif" alt="reload page" width="16" height="16" />
@@ -103,8 +99,10 @@ abstract class HTML_CMS extends HTML
                   </div>
                 </div>
               </th>
-              <td>&nbsp;&nbsp;</td>
+              <td>&nbsp;&nbsp;</td>');
 
+    if ($thisuser->hasAccess('website')) {
+      echo_strip('
               <th class="int'.(($this->branch == 'website') ? '2' : '1').'" onclick="'."loadBranch('website')".'">
                 <div class="tcL">
                   <div class="tcR">
@@ -113,8 +111,9 @@ abstract class HTML_CMS extends HTML
                 </div>
               </th>
               <td>&nbsp;&nbsp;</td>');
+    }
 
-    if ($thisuser->isMemberOfGroup('transmaint','ros_admin','ros_sadmin')) {
+    if ($thisuser->hasAccess('user')) {
       echo_strip('
         <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."loadBranch('user')".'">
           <div class="tcL">
@@ -122,12 +121,11 @@ abstract class HTML_CMS extends HTML
               <div class="text">User</div>
             </div>
           </div>
-
         </th>
         <td>&nbsp;&nbsp;</td>');
     }
 
-    if ($thisuser->isMemberOfGroup('transmaint') || $thisuser->securityLevel() == 3) {
+    if ($thisuser->hasAccess('maintain')) {
       echo_strip('
         <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."loadBranch('maintain')".'">
           <div class="tcL">
@@ -137,27 +135,30 @@ abstract class HTML_CMS extends HTML
           </div>
         </th>
         <td>&nbsp;&nbsp;</td>');
+    }
 
-      if ($thisuser->securityLevel() == 3) {
-        echo_strip('
-          <th class="int'.(($this->branch == 'admin') ? '2' : '1').'" onclick="'."loadBranch('admin')".'">
-            <div class="tcL">
-              <div class="tcR">
-                <div class="text">Administration</div>
-              </div>
+    if ($thisuser->hasAccess('admin')) {
+      echo_strip('
+        <th class="int'.(($this->branch == 'admin') ? '2' : '1').'" onclick="'."loadBranch('admin')".'">
+          <div class="tcL">
+            <div class="tcR">
+              <div class="text">Administration</div>
             </div>
-          </th>
-          <td>&nbsp;&nbsp;</td>
+          </div>
+        </th>
+        <td>&nbsp;&nbsp;</td>');
+    }
 
-          <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."loadBranch('stats')".'">
-            <div class="tcL">
-              <div class="tcR">
-                <div class="text">Statistics</div>
-              </div>
+    if ($thisuser->hasAccess('stats')) {
+      echo_strip('
+        <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."loadBranch('stats')".'">
+          <div class="tcL">
+            <div class="tcR">
+              <div class="text">Statistics</div>
             </div>
-          </th>
-          <td>&nbsp;&nbsp;</td>');
-      }
+          </div>
+        </th>
+        <td>&nbsp;&nbsp;</td>');
     }
 
     echo_strip('

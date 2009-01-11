@@ -48,25 +48,21 @@ class Security
     $acl = '';
     $sec_access = false;  // security access already granted ?
 
-    // only if user has rights to access the interface
-    if ($thisuser->securityLevel() > 0) {
+    // go through acl's
+    $stmt=&DBConnection::getInstance()->prepare("SELECT a.id, b.can_read, b.can_add, b.can_write, b.can_delete, b.can_publish, b.can_translate FROM ".ROSCMST_ACCESS." a JOIN ".ROSCMST_ENTRY_AREA." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id = b.group_id WHERE m.user_id = :user_id");
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+    $stmt->execute();
+    while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-      // go through acl's
-      $stmt=&DBConnection::getInstance()->prepare("SELECT a.id, b.can_read, b.can_add, b.can_write, b.can_delete, b.can_publish, b.can_translate FROM ".ROSCMST_ACCESS." a JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id = b.group_id WHERE m.user_id = :user_id");
-      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-      $stmt->execute();
-      while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
-
-        // add entries, remove them if they're on the deny list
-        if ($access['can_'.$kind] == true) {
-          if ($sec_access) {
-            $acl .= " , ";
-          }
-          $acl .= DBConnection::getInstance()->quote($access['id'],PDO::PARAM_INT);
-          $sec_access = true;
+      // add entries, remove them if they're on the deny list
+      if ($access['can_'.$kind] == true) {
+        if ($sec_access) {
+          $acl .= " , ";
         }
-      } // while
-    }
+        $acl .= DBConnection::getInstance()->quote($access['id'],PDO::PARAM_INT);
+        $sec_access = true;
+      }
+    } // while
 
     // group our acl list, or fail because no rights to access
     if ($sec_access > 0) {
@@ -82,49 +78,20 @@ class Security
 
 
   /**
-   *
-   *
-   * @access public
-   */
-  public static function getAccessId( $name_short )
-  {
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ACCESS." WHERE name_short=:name_short LIMIT 1");
-    $stmt->bindParam('name_short',$name_short,PDO::PARAM_STR);
-    $stmt->execute();
-    return $stmt->fetchColumn();
-  }
-
-
-  /**
    * Constructs a list of things the user can do
    *
    * @param int data_id 
    * @return rights list
    * @access private
    */
-  private function getRightsList( $rev_id, $is_rev = true )
+  private function getRightsList( $data_id )
   {
     $thisuser = &ThisUser::getInstance();
 
-    // roscms interface access ?
-    if ($thisuser->securityLevel() < 1) {
-      return;
-    }
-
-    // contains list with granted rights
-    $rights = array('read'=>false,'write'=>false,'add'=>false,'delete'=>false,'publish'=>false,'translate'=>false,);
-
     // get rights
-    if ($is_rev) {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE r.id = :rev_id AND m.user_id=:user_id");
-      $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
-      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-    }
-    else {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT b.can_read, b.can_add, b.can_delete, b.can_translate, b.can_publish, b.can_write FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ACL." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE d.id = :data_id AND m.user_id=:user_id");
-      $stmt->bindParam('data_id',$rev_id,PDO::PARAM_INT);
-      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-    }
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name_short FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACCESS." a ON d.acl_id=a.id JOIN ".ROSCMST_ENTRY_AREA." b ON a.id=b.acl_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=b.group_id WHERE d.id = :data_id AND m.user_id=:user_id");
+    $stmt->bindParam('data_id',$rev_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
     $stmt->execute() or die('Rev-Entry "'.$rev_id.'" not found [usergroups].');
 
     // create a list with rights
@@ -151,49 +118,16 @@ class Security
    * @return 
    * @access public
    */
-  public function hasRight( $data_id, $kind )
+  public function hasRight( $data_id, $area )
   {
-    // only if roscms interface access is granted
-    if (ThisUser::getInstance()->securityLevel() < 1) {
-      return false;
-    }
-
-    // return if the requested kind of right is in the rights list for the user
-    $rights = self::getRightsList($data_id, false);
-    return $rights[$kind];
+return true;
+    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACL." a ON a.acl_id=d.acl_id JOIN ".ROSCMST_ENTRY_AREA." e ON e.acl_id=a.id JOIN ".ROSCMST_RIGHTS." r ON r.id=e.right_id JOIN ".ROSCMST_GROUPS." g ON g.id=e.group_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE r.name_short=:area AND m.user_id=:user_id AND d.id=:data_id LIMIT 1");
+    $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+    $stmt->bindParam('area',$area,PDO::PARAM_STR);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
+    return $stmt->execute();
   } // end of member function hasRight
 
-
-  /**
-   * gives a short overview about user rights
-   *
-   * @param int data_id 
-   * @return explanation
-   * @access public
-   */
-  public function rightsOverview( $data_id )
-  {
-    // only if roscms interface access is granted
-    if (ThisUser::getInstance()->securityLevel() < 1) {
-      return;
-    }
-
-    $rights = self::getRightsList($data_id, false);  // so we don't need to call the same function several times
-    $explanation = ''; // contains abbreviations for each right or a - (if missing) symbol instead
-
-    // start to construct list
-    $explanation .= $rights['read'] ? '-' : 'r';
-    $explanation .= $rights['write'] ? '-' : 'w';
-    $explanation .= $rights['add'] ? '-' : 'a';
-    $explanation .= $rights['delete'] ? '-' : 'd';
-    $explanation .= $rights['publish'] ? '-' : 'p';
-    $explanation .= $rights['translate'] ? '-' : 't';
-
-    // add also security level
-    $explanation .= ' '.ThisUser::getInstance()->securityLevel();
-
-    return $explanation;
-  } // end of member function rightsOverview
 
 
 } // end of Security
