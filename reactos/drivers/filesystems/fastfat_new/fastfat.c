@@ -84,7 +84,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    VfatGlobalData->DeviceObject = DeviceObject;
 
    DeviceObject->Flags |= DO_DIRECT_IO;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
+   /*DriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_READ] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_WRITE] = VfatBuildRequest;
@@ -95,11 +95,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
      VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-     VfatBuildRequest;
+     VfatBuildRequest;*/
    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
-   DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
+   /*DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
-   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
+   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;*/
 
    DriverObject->DriverUnload = NULL;
 

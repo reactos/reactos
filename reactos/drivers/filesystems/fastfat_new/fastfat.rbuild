@@ -11,19 +11,16 @@
 	<file>create.c</file>
 	<file>dir.c</file>
 	<file>direntry.c</file>
-	<file>dirwr.c</file>
 	<file>ea.c</file>
+	<file>fastfat.c</file>
 	<file>fat.c</file>
 	<file>fastio.c</file>
 	<file>fcb.c</file>
 	<file>finfo.c</file>
 	<file>flush.c</file>
 	<file>fsctl.c</file>
-	<file>iface.c</file>
-	<file>misc.c</file>
 	<file>rw.c</file>
 	<file>shutdown.c</file>
-	<file>string.c</file>
 	<file>volume.c</file>
 	<file>fastfat.rc</file>
 	<pch>fastfat.h</pch>
