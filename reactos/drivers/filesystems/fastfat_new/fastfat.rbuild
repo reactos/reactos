@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="fastfat" type="kernelmodedriver" installbase="system32/drivers" installname="fastfat.sys">
+<module name="fastfatn" type="kernelmodedriver" installbase="system32/drivers" installname="fastfatn.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<include base="fastfat">.</include>
+	<include base="fastfatn">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>blockdev.c</file>
@@ -25,6 +25,6 @@
 	<file>shutdown.c</file>
 	<file>string.c</file>
 	<file>volume.c</file>
-	<file>vfatfs.rc</file>
-	<pch>vfat.h</pch>
+	<file>fastfat.rc</file>
+	<pch>fastfat.h</pch>
 </module>

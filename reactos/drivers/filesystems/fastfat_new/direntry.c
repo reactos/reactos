@@ -11,7 +11,7 @@
 /*  -------------------------------------------------------  INCLUDES  */
 
 #define NDEBUG
-#include "vfat.h"
+#include "fastfat.h"
 
 ULONG
 vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,

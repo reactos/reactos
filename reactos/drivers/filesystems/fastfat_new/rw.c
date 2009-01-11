@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #define NDEBUG
-#include "vfat.h"
+#include "fastfat.h"
 
 /*
  * Uncomment to enable strict verification of cluster/offset pair

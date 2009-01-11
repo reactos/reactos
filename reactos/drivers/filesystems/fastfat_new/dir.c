@@ -9,7 +9,7 @@
 */
 
 #define NDEBUG
-#include "vfat.h"
+#include "fastfat.h"
 
 
 // function like DosDateTimeToFileTime

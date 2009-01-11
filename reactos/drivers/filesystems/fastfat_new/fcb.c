@@ -15,7 +15,7 @@
 #endif
 
 #define NDEBUG
-#include "vfat.h"
+#include "fastfat.h"
 
 /*  --------------------------------------------------------  DEFINES  */
 

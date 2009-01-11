@@ -9,7 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #define NDEBUG
-#include "vfat.h"
+#include "fastfat.h"
 
 /*
  * update an existing FAT entry
