@@ -40,4 +40,10 @@ IDB_CERT_WARNING BITMAP LOADONCALL DISCARDABLE certwarning.bmp
 /* @makedep: checks.bmp */
 IDB_CHECKS BITMAP LOADONCALL DISCARDABLE checks.bmp
 
+/* @makedep: certwatermark.bmp */
+IDB_CERT_WATERMARK BITMAP LOADONCALL DISCARDABLE certwatermark.bmp
+
+/* @makedep: certheader.bmp */
+IDB_CERT_HEADER BITMAP LOADONCALL DISCARDABLE certheader.bmp
+
 #include "cryptui_En.rc"

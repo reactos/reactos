@@ -5,8 +5,8 @@
 5 stub CryptUIDlgSelectCertificateA
 6 stub CryptUIDlgSelectCertificateFromStore
 7 stub CryptUIDlgSelectCertificateW
-8 stub CryptUIDlgSelectStoreA
-9 stub CryptUIDlgSelectStoreW
+8 stdcall CryptUIDlgSelectStoreA(ptr)
+9 stdcall CryptUIDlgSelectStoreW(ptr)
 10 stub CryptUIDlgViewCRLA
 11 stub CryptUIDlgViewCRLW
 12 stub CryptUIDlgViewCTLA
