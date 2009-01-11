@@ -415,10 +415,7 @@ static BOOL NetBTFindNameAnswerCallback(void *pVoid, WORD answerCount,
             if (queryData->cacheEntry)
                 queryData->cacheEntry->numAddresses = 0;
             else
-            {
-                ret = FALSE;
                 queryData->ret = NRC_OSRESNOTAV;
-            }
         }
         if (rLen == 6 && queryData->cacheEntry &&
          queryData->cacheEntry->numAddresses < answerCount)
@@ -850,8 +847,8 @@ static UCHAR NetBTAstat(void *adapt, PNCB ncb)
             astat->max_sess_pkt_size = 0xffff;
             astat->xmit_success = adapter->xmit_success;
             astat->recv_success = adapter->recv_success;
+            ret = NRC_GOODRET;
         }
-        ret = NRC_GOODRET;
     }
     else
         ret = NetBTAstatRemote(adapter, ncb);
@@ -1183,6 +1180,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                  * message header. */
                 NetBIOSHangupSession(ncb);
                 ret = NRC_SABORT;
+                goto error;
             }
             else if (buffer[0] != NBSS_MSG)
             {
@@ -1190,6 +1188,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                 FIXME("Received unexpected session msg type %d\n", buffer[0]);
                 NetBIOSHangupSession(ncb);
                 ret = NRC_SABORT;
+                goto error;
             }
             else
             {
@@ -1199,6 +1198,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                     FIXME("Received a message that's too long for my taste\n");
                     NetBIOSHangupSession(ncb);
                     ret = NRC_SABORT;
+                    goto error;
                 }
                 else
                 {
@@ -1226,6 +1226,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
             adapter->recv_success++;
         }
     }
+error:
     TRACE("returning 0x%02x\n", ret);
     return ret;
 }

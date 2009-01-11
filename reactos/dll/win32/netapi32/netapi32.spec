@@ -98,7 +98,7 @@
 @ stub NetGroupAddUser
 @ stub NetGroupDel
 @ stub NetGroupDelUser
-@ stub NetGroupEnum
+@ stdcall NetGroupEnum(wstr long ptr long ptr ptr ptr)
 @ stub NetGroupGetInfo
 @ stub NetGroupGetUsers
 @ stub NetGroupSetInfo
@@ -188,13 +188,13 @@
 @ stub NetSessionDel
 @ stdcall NetSessionEnum(wstr wstr wstr long ptr long ptr ptr ptr)
 @ stub NetSessionGetInfo
-@ stub NetShareAdd
+@ stdcall NetShareAdd(wstr long ptr ptr)
 @ stub NetShareCheck
 @ stdcall NetShareDel(wstr wstr long)
 @ stub NetShareDelSticky
 @ stdcall NetShareEnum(wstr long ptr long ptr ptr ptr)
 @ stub NetShareEnumSticky
-@ stub NetShareGetInfo
+@ stdcall NetShareGetInfo(wstr wstr long ptr)
 @ stub NetShareSetInfo
 @ stdcall NetStatisticsGet(wstr wstr long long ptr)
 @ stdcall NetUseAdd(wstr long ptr ptr)
@@ -217,7 +217,7 @@
 @ stub NetWkstaTransportAdd
 @ stub NetWkstaTransportDel
 @ stdcall NetWkstaTransportEnum (wstr long ptr long ptr ptr ptr)
-@ stub NetWkstaUserEnum
+@ stdcall NetWkstaUserEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserGetInfo(wstr long ptr)
 @ stub NetWkstaUserSetInfo
 @ stdcall NetapipBufferAllocate(long ptr) NetApiBufferAllocate
