@@ -1,0 +1,97 @@
+A Faire :
+	finir FsdDirectoryControl.
+	tester les écritures.
+	FsdCreate doit créer le fichier s'il n'existe pas et que le répertoire parent existe,
+         et que les options d'appel lee demandent.
+
+
+fichiers sources :
+
+iface.c
+dir.c
+blockdev.c
+vfat.h
+
+
+
+fonctions visibles de l'extérieur (appelées par IoCallDriver):
+  DriverEntry : iface.c
+    initialisation du driver
+    rend visibles les fonctions suivantes :
+  FsdFileSystemControl
+    répond aux demandes IRP_MJ_FILE_SYSTEM_CONTROL
+    monte les filesystems qu'il reconnait
+    appelle FsdHasFileSystem pour voir si le driver reconnait le filesystem.
+    puis appelle FsdMount.
+ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+    répond aux demandes IRP_MJ_CREATE :
+	appelle FsdOpenFile, qui remplit IoGetCurrentIrpStackLocation(Irp)->FileObject->Fcb
+	remplit Irp->IoStatus
+	appelle IoCompleteRequest
+  FsdClose
+    répond aux demandes IRP_MJ_CLOSE
+	appelle FsdCloseFile, qui ne fait rien actuellement.
+	remplit Irp->IoStatus
+	appelle IoCompleteRequest
+  FsdRead
+    répond aux demandes IRP_MJ_READ
+  FsdWrite
+    répond aux demandes IRP_MJ_WRITE
+  FsdQueryInformation
+    répond aux demandes IRP_MJ_QUERY_INFORMATION
+  FsdDirectoryControl
+    répond aux demandes IRP_MJ_DIRECTORY_CONTROL
+
+
+fonctions strictement internes dans iface.c :
+ ULONG Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ ULONG GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ ULONG FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
+ void  FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
+                        ULONG NewValue)
+ void  WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
+                   ULONG NewValue)
+ ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ unsigned long ClusterToSector(PDEVICE_EXTENSION DeviceExt, 
+			      unsigned long Cluster)
+ void RtlAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length)
+ void vfat_initstr(wchar_t *wstr, ULONG wsize)
+ wchar_t * vfat_wcsncat(wchar_t * dest, const wchar_t * src,size_t wstart, size_t wcount)
+ wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount)
+ wchar_t * vfat_movstr(wchar_t * dest, const wchar_t *src, ULONG dpos,
+                      ULONG spos, ULONG len)
+ BOOLEAN IsLastEntry(PVOID Block, ULONG Offset)
+ BOOLEAN IsDeletedEntry(PVOID Block, ULONG Offset)
+ BOOLEAN GetEntryName(PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
+  PDEVICE_EXTENSION DeviceExt, PULONG _StartingSector)
+ BOOLEAN wstrcmpi(PWSTR s1, PWSTR s2)
+ BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
+ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
+		  PFCB Parent, PWSTR FileToFind)
+	parcourt le répertoire décrit par Parent pour trouver un fichier dans le filesystem
+	décrit par DeviceExt.Si Parent==NULL : part de la racine du filesystem.
+	remplit Fcb si trouve elle le fichier, et renvoie STATUS_SUCCESS.
+	renvoie STATUS_UNSUCCESSFUL sinon.
+ NTSTATUS FsdCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
+	ne fait rien, renvoie STATUS_SUCCESS.
+ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
+		     PWSTR FileName)
+	parcourt l'arborescence pour trouver le fichier(appelle FindFile à chaque niveau)
+	si trouvé : FileObject->FsContext = Fcb du fichier, renvoie STATUS_SUCCESS
+	sinon : renvoie STATUS_UNSUCCESSFULL
+ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
+ NTSTATUS FsdMountDevice(PDEVICE_EXTENSION DeviceExt,
+			PDEVICE_OBJECT DeviceToMount)
+ void VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
+ void VFATWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
+ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+		     PVOID Buffer, ULONG Length, ULONG ReadOffset)
+	lit Length octets d'un fichier
+ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+                      PVOID Buffer, ULONG Length, ULONG WriteOffset)
+ NTSTATUS FsdMount(PDEVICE_OBJECT DeviceToMount)
+ NTSTATUS FsdGetStandardInformation(PFCB FCB, PDEVICE_OBJECT DeviceObject,
+                                   PFILE_STANDARD_INFORMATION StandardInfo);
+	
