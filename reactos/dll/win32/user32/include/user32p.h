@@ -243,5 +243,11 @@ PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 # endif
 #endif
 
+#ifdef _MSC_VER
+#ifndef inline
+#define inline __inline
+#endif
+#endif
+
 #endif
 /* EOF */
