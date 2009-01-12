@@ -22,11 +22,11 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 3, 2004, by Dimitrie O. Paun.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- *
+ * 
  * TODO
  *  Styles
  *  - BS_NOTIFY: is it complete?
@@ -43,7 +43,7 @@
  *  - BCM_GETTEXTMARGIN
  *  - BCM_SETIMAGELIST
  *  - BCM_SETTEXTMARGIN
- *
+ *  
  *  Notifications
  *  - BCN_HOTITEMCHANGE
  *  - BN_DISABLE
@@ -148,9 +148,10 @@ static WORD checkBoxWidth = 0, checkBoxHeight = 0;
 /*********************************************************************
  * button class descriptor
  */
+static const WCHAR buttonW[] = {'B','u','t','t','o','n',0};
 const struct builtin_class_descr BUTTON_builtin_class =
 {
-    L"Button",           /* name */
+    buttonW,             /* name */
     CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
     ButtonWndProcA,      /* procA */
     ButtonWndProcW,      /* procW */
@@ -160,12 +161,12 @@ const struct builtin_class_descr BUTTON_builtin_class =
 };
 
 
-__inline static LONG get_button_state( HWND hwnd )
+static inline LONG get_button_state( HWND hwnd )
 {
     return GetWindowLongW( hwnd, STATE_GWL_OFFSET );
 }
 
-__inline static void set_button_state( HWND hwnd, LONG state )
+static inline void set_button_state( HWND hwnd, LONG state )
 {
     SetWindowLongW( hwnd, STATE_GWL_OFFSET, state );
 }
@@ -185,18 +186,18 @@ __inline static HFONT get_button_font( HWND hwnd )
     return (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
 }
 
-__inline static void set_button_font( HWND hwnd, HFONT font )
+static inline void set_button_font( HWND hwnd, HFONT font )
 {
     SetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET, (LONG_PTR)font );
 }
 
-__inline static UINT get_button_type( LONG window_style )
+static inline UINT get_button_type( LONG window_style )
 {
     return (window_style & 0x0f);
 }
 
 /* paint a button of any type */
-__inline static void paint_button( HWND hwnd, LONG style, UINT action )
+static inline void paint_button( HWND hwnd, LONG style, UINT action )
 {
     if (btnPaintFunc[style] && IsWindowVisible(hwnd))
     {
@@ -207,12 +208,21 @@ __inline static void paint_button( HWND hwnd, LONG style, UINT action )
 }
 
 /* retrieve the button text; returned buffer must be freed by caller */
-__inline static WCHAR *get_button_text( HWND hwnd )
+static inline WCHAR *get_button_text( HWND hwnd )
 {
     INT len = 512;
     WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
     if (buffer) InternalGetWindowText( hwnd, buffer, len + 1 );
     return buffer;
+}
+
+static void setup_clipping( HWND hwnd, HDC hdc )
+{
+    RECT rc;
+
+    GetClientRect( hwnd, &rc );
+    DPtoLP( hdc, (POINT *)&rc, 2 );
+    IntersectClipRect( hdc, rc.left, rc.top, rc.right, rc.bottom );
 }
 
 /* Retrieve the UI state for the control */
@@ -239,8 +249,8 @@ static BOOL button_update_uistate(HWND hwnd, BOOL unicode)
 /***********************************************************************
  *           ButtonWndProc_common
  */
-static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
-                                           WPARAM wParam, LPARAM lParam, BOOL unicode )
+static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
+                                    WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
     RECT rect;
     POINT pt;
@@ -431,7 +441,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 
     case WM_SETFONT:
         set_button_font( hWnd, (HFONT)wParam );
-        if (lParam) paint_button( hWnd, btn_type, ODA_DRAWENTIRE );
+        if (lParam) InvalidateRect(hWnd, NULL, TRUE);
         break;
 
     case WM_GETFONT:
@@ -598,9 +608,8 @@ static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 
 /**********************************************************************
  * Convert button styles to flags used by DrawText.
- * TODO: handle WS_EX_RIGHT extended style.
  */
-static UINT BUTTON_BStoDT(DWORD style)
+static UINT BUTTON_BStoDT( DWORD style, DWORD ex_style )
 {
    UINT dtStyle = DT_NOCLIP;  /* We use SelectClipRgn to limit output */
 
@@ -624,8 +633,10 @@ static UINT BUTTON_BStoDT(DWORD style)
          /* all other flavours have left aligned text */
    }
 
+   if (ex_style & WS_EX_RIGHT) dtStyle = DT_RIGHT | (dtStyle & ~(DT_LEFT | DT_CENTER));
+
    /* DrawText ignores vertical alignment for multiline text,
-    * but we use these flags to align label manualy.
+    * but we use these flags to align label manually.
     */
    if (get_button_type(style) != BS_GROUPBOX)
    {
@@ -657,10 +668,11 @@ static UINT BUTTON_BStoDT(DWORD style)
 static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 {
    LONG style = GetWindowLongW( hwnd, GWL_STYLE );
+   LONG ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
    WCHAR *text;
    ICONINFO    iconInfo;
    BITMAP      bm;
-   UINT        dtStyle = BUTTON_BStoDT(style);
+   UINT        dtStyle = BUTTON_BStoDT( style, ex_style );
    RECT        r = *rc;
    INT         n;
 
@@ -706,7 +718,7 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
       empty_rect:
          rc->right = r.left;
          rc->bottom = r.top;
-         return (UINT)(LONG)-1;
+         return (UINT)-1;
    }
 
    /* Position label inside bounding rectangle according to
@@ -766,7 +778,7 @@ static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int 
  *
  *   Common function for drawing button label.
  */
-static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
+static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
 {
    DRAWSTATEPROC lpOutputProc = NULL;
    LPARAM lp;
@@ -844,8 +856,11 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
     SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
-    hOldPen = (HPEN)SelectObject(hDC, SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
-    hOldBrush =(HBRUSH)SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
+
+    setup_clipping( hwnd, hDC );
+
+    hOldPen = SelectObject(hDC, SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
+    hOldBrush = SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
     oldBkMode = SetBkMode(hDC, TRANSPARENT);
 
     if (get_button_type(style) == BS_DEFPUSHBUTTON)
@@ -940,6 +955,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     if (!hBrush) /* did the app forget to call defwindowproc ? */
         hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
 					(WPARAM)hDC, (LPARAM)hwnd );
+    setup_clipping( hwnd, hDC );
 
     if (style & BS_LEFTTEXT)
     {
@@ -961,7 +977,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     /* Draw label */
     client = rtext;
     dtFlags = BUTTON_CalcLabelRect(hwnd, hDC, &rtext);
-
+    
     /* Only adjust rbox when rtext is valid */
     if (dtFlags != (UINT)-1L)
     {
@@ -986,11 +1002,11 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 
 	/* rbox must have the correct height */
 	delta = rbox.bottom - rbox.top - checkBoxHeight;
-
+	
 	if (style & BS_TOP) {
 	    if (delta > 0) {
 		rbox.bottom = rbox.top + checkBoxHeight;
-	    } else {
+	    } else { 
 		rbox.top -= -delta/2 + 1;
 		rbox.bottom = rbox.top + checkBoxHeight;
 	    }
@@ -1018,8 +1034,6 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     if (dtFlags == (UINT)-1L) /* Noting to draw */
 	return;
-
-    IntersectClipRect(hDC, client.left, client.top, client.right, client.bottom);
 
     if (action == ODA_DRAWENTIRE)
 	BUTTON_DrawLabel(hwnd, hDC, dtFlags, &rtext);
@@ -1084,6 +1098,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
     if (!hbr) /* did the app forget to call defwindowproc ? */
         hbr = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
 				     (WPARAM)hDC, (LPARAM)hwnd);
+    setup_clipping( hwnd, hDC );
 
     GetClientRect( hwnd, &rc);
     rcFrame = rc;
@@ -1103,7 +1118,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
      * But Windows doesn't clip label's rect, so do I.
      */
 
-    /* There is 1-pixel marging at the left, right, and bottom */
+    /* There is 1-pixel margin at the left, right, and bottom */
     rc.left--; rc.right++; rc.bottom++;
     FillRect(hDC, &rc, hbr);
     rc.left++; rc.right--; rc.bottom--;
@@ -1155,8 +1170,6 @@ static void OB_Paint( HWND hwnd, HDC hDC, UINT action )
 {
     LONG state = get_button_state( hwnd );
     DRAWITEMSTRUCT dis;
-    HRGN clipRegion;
-    RECT clipRect;
     LONG_PTR id = GetWindowLongPtrW( hwnd, GWLP_ID );
     HWND parent;
     HFONT hFont, hPrevFont = 0;
@@ -1173,21 +1186,13 @@ static void OB_Paint( HWND hwnd, HDC hDC, UINT action )
     dis.itemData   = 0;
     GetClientRect( hwnd, &dis.rcItem );
 
-    clipRegion = CreateRectRgnIndirect(&dis.rcItem);
-    if (GetClipRgn(hDC, clipRegion) != 1)
-    {
-	DeleteObject(clipRegion);
-	clipRegion=NULL;
-    }
-    clipRect = dis.rcItem;
-    DPtoLP(hDC, (LPPOINT) &clipRect, 2);
-    IntersectClipRect(hDC, clipRect.left,  clipRect.top, clipRect.right, clipRect.bottom);
-
     if ((hFont = get_button_font( hwnd ))) hPrevFont = SelectObject( hDC, hFont );
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
     SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
+
+    setup_clipping( hwnd, hDC );
+
     SendMessageW( GetParent(hwnd), WM_DRAWITEM, id, (LPARAM)&dis );
     if (hPrevFont) SelectObject(hDC, hPrevFont);
-    SelectClipRgn(hDC, clipRegion);
 }
