@@ -229,6 +229,7 @@ PUSER_HANDLE_ENTRY FASTCALL GetUser32Handle(HANDLE);
 PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 
 #define SYSCOLOR_GetPen(index) GetSysColorPen(index)
+#define WIN_GetFullHandle(h) ((HWND)(h))
 
 #endif
 /* EOF */
