@@ -149,23 +149,13 @@ static LRESULT LISTBOX_GetItemRect( const LB_DESCR *descr, INT index, RECT *rect
  */
 const struct builtin_class_descr LISTBOX_builtin_class =
 {
-#ifdef __REACTOS__
     L"ListBox",            /* name */
-    CS_DBLCLKS /*| CS_PARENTDC*/,  /* style */
-    (WNDPROC)ListBoxWndProcW,      /* procW */
-    (WNDPROC)ListBoxWndProcA,      /* procA */
-    sizeof(LB_DESCR *),   /* extra */
-    (LPCWSTR) IDC_ARROW,           /* cursor */
-    0                     /* brush */
-#else
-    "ListBox",            /* name */
     CS_DBLCLKS /*| CS_PARENTDC*/,  /* style */
     ListBoxWndProcA,      /* procA */
     ListBoxWndProcW,      /* procW */
     sizeof(LB_DESCR *),   /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */
-#endif
 };
 
 
@@ -174,23 +164,13 @@ const struct builtin_class_descr LISTBOX_builtin_class =
  */
 const struct builtin_class_descr COMBOLBOX_builtin_class =
 {
-#ifdef __REACTOS__
     L"ComboLBox",          /* name */
-    CS_DBLCLKS | CS_SAVEBITS,  /* style */
-    (WNDPROC)ListBoxWndProcW,      /* procW */
-    (WNDPROC)ListBoxWndProcA,      /* procA */
-    sizeof(LB_DESCR *),   /* extra */
-    (LPCWSTR) IDC_ARROW,           /* cursor */
-    0                     /* brush */
-#else
-    "ComboLBox",          /* name */
     CS_DBLCLKS | CS_SAVEBITS,  /* style */
     ListBoxWndProcA,      /* procA */
     ListBoxWndProcW,      /* procW */
     sizeof(LB_DESCR *),   /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */
-#endif
 };
 
 #ifndef __REACTOS__

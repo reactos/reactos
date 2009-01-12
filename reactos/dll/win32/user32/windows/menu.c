@@ -80,8 +80,8 @@ const struct builtin_class_descr POPUPMENU_builtin_class =
 {
     POPUPMENU_CLASS_ATOMW,                     /* name */
     CS_SAVEBITS | CS_DBLCLKS,                  /* style  */
-    (WNDPROC) PopupMenuWndProcW,               /* FIXME - procW */
     (WNDPROC) NULL,                            /* FIXME - procA */
+    (WNDPROC) PopupMenuWndProcW,               /* FIXME - procW */
     sizeof(MENUINFO *),                        /* extra */
     (LPCWSTR) IDC_ARROW,                       /* cursor */
     (HBRUSH)(COLOR_MENU + 1)                   /* brush */

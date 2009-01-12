@@ -203,8 +203,8 @@ const struct builtin_class_descr MDICLIENT_builtin_class =
 {
     L"MDIClient",            /* name */
     0,                      /* style */
-    MDIClientWndProcW,      /* procW */
     MDIClientWndProcA,      /* procA */
+    MDIClientWndProcW,      /* procW */
     sizeof(MDICLIENTINFO),  /* extra */
     IDC_ARROW,              /* cursor */
     (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */

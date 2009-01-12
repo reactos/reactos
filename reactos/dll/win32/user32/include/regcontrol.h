@@ -19,8 +19,8 @@ struct builtin_class_descr
 {
     LPCWSTR name;    /* class name */
     UINT    style;   /* class style */
-    WNDPROC procW;   /* Unicode window procedure */
     WNDPROC procA;   /* Ansi window procedure */
+    WNDPROC procW;   /* Unicode window procedure */
     INT     extra;   /* window extra bytes */
     LPCWSTR cursor;  /* cursor name */
     HBRUSH  brush;   /* brush or system color */

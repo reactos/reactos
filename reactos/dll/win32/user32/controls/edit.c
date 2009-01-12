@@ -295,23 +295,13 @@ LRESULT WINAPI EditWndProcW(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
  */
 const struct builtin_class_descr EDIT_builtin_class =
 {
-#ifdef __REACTOS__
     L"Edit",               /* name */
-    CS_DBLCLKS | CS_PARENTDC, /* style */
-    (WNDPROC)EditWndProcW, /* procW */
-    (WNDPROC)EditWndProcA, /* procA */
-    sizeof(EDITSTATE *),   /* extra */
-    (LPWSTR)IDC_IBEAM,     /* cursor */
-    0                      /* brush */
-#else
-    "Edit",               /* name */
     CS_DBLCLKS | CS_PARENTDC,   /* style */
     EditWndProcA,         /* procA */
     EditWndProcW,         /* procW */
     sizeof(EDITSTATE *),  /* extra */
     IDC_IBEAM,            /* cursor */
     0                     /* brush */
-#endif
 };
 
 

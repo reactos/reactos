@@ -150,23 +150,13 @@ static WORD checkBoxWidth = 0, checkBoxHeight = 0;
  */
 const struct builtin_class_descr BUTTON_builtin_class =
 {
-#ifdef __REACTOS__
     L"Button",           /* name */
-    CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
-    ButtonWndProcW,      /* procW */
-    ButtonWndProcA,      /* procA */
-    NB_EXTRA_BYTES,      /* extra */
-    (LPWSTR)IDC_ARROW,   /* cursor */
-    0                    /* brush */
-#else
-    "Button",            /* name */
     CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
     ButtonWndProcA,      /* procA */
     ButtonWndProcW,      /* procW */
     NB_EXTRA_BYTES,      /* extra */
     IDC_ARROW,           /* cursor */
     0                    /* brush */
-#endif
 };
 
 

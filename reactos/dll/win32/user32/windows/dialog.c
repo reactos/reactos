@@ -128,8 +128,8 @@ const struct builtin_class_descr DIALOG_builtin_class =
 {
     DIALOG_CLASS_ATOMW,       /* name */
     CS_SAVEBITS | CS_DBLCLKS, /* style  */
-    (WNDPROC) DefDlgProcW,    /* procW */
     (WNDPROC) DefDlgProcA,    /* procA */
+    (WNDPROC) DefDlgProcW,    /* procW */
     DLGWINDOWEXTRA,           /* extra */
     (LPCWSTR) IDC_ARROW,      /* cursor */
     0                         /* brush */
