@@ -104,6 +104,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
                                     TAG_IRP,
                                     0);
 
+    /* Initialize synchronization resource for the global data */
+    ExInitializeResourceLite(&FatGlobalData.Resource);
+
     /* Register and reference our filesystem */
     IoRegisterFileSystem(DeviceObject);
     ObReferenceObject(DeviceObject);
