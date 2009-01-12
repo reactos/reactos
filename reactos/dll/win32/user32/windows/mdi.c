@@ -1188,11 +1188,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
         return 0;
 
       case WM_MDIDESTROY:
-#ifndef __REACTOS__
-          return MDIDestroyChild( hwnd, ci, WIN_GetFullHandle( (HWND)wParam ), TRUE );
-#else
           return MDIDestroyChild( hwnd, ci, (HWND)wParam, TRUE );
-#endif
       case WM_MDIGETACTIVE:
           if (lParam) *(BOOL *)lParam = IsZoomed(ci->hwndActiveChild);
           return (LRESULT)ci->hwndActiveChild;
@@ -1210,11 +1206,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 
       case WM_MDINEXT: /* lParam != 0 means previous window */
       {
-#ifndef __REACTOS__
-        HWND next = MDI_GetWindow( ci, WIN_GetFullHandle( (HWND)wParam ), !lParam, 0 );
-#else
         HWND next = MDI_GetWindow( ci, (HWND)wParam, !lParam, 0 );
-#endif
         MDI_SwitchActiveChild( ci, next, TRUE );
 	break;
       }
@@ -1483,9 +1475,7 @@ LRESULT WINAPI DefMDIChildProcA( HWND hwnd, UINT message,
     MDICLIENTINFO *ci = get_client_info( client );
 
     TRACE("%p %04x (%s) %08lx %08lx\n", hwnd, message, SPY_GetMsgName(message, hwnd), wParam, lParam);
-#ifndef __REACTOS__
     hwnd = WIN_GetFullHandle( hwnd );
-#endif
     if (!ci) return DefWindowProcA( hwnd, message, wParam, lParam );
 
     switch (message)
@@ -1526,9 +1516,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
     MDICLIENTINFO *ci = get_client_info( client );
 
     TRACE("%p %04x (%s) %08lx %08lx\n", hwnd, message, SPY_GetMsgName(message, hwnd), wParam, lParam);
-#ifndef __REACTOS__
     hwnd = WIN_GetFullHandle( hwnd );
-#endif
     if (!ci) return DefWindowProcW( hwnd, message, wParam, lParam );
 
     switch (message)
