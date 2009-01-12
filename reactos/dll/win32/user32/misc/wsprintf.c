@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE:
  * This code is duplicated in shlwapi. If you change something here make sure
@@ -33,6 +33,7 @@
 
 #include <user32.h>
 
+#define WINE_NO_TRACE_MSGS
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(string);
@@ -282,7 +283,7 @@ static UINT WPRINTF_GetLen( WPRINTF_FORMAT *format, WPRINTF_DATA *arg,
 /***********************************************************************
  *           wvsnprintfA   (internal)
  */
-static INT wvsnprintfA( LPSTR buffer, UINT maxlen, LPCSTR spec, va_list args )
+static INT wvsnprintfA( LPSTR buffer, UINT maxlen, LPCSTR spec, __ms_va_list args )
 {
     WPRINTF_FORMAT format;
     LPSTR p = buffer;
@@ -290,7 +291,7 @@ static INT wvsnprintfA( LPSTR buffer, UINT maxlen, LPCSTR spec, va_list args )
     CHAR number[20];
     WPRINTF_DATA argData;
 
-    //TRACE("%p %u %s\n", buffer, maxlen, debugstr_a(spec));
+    TRACE("%p %u %s\n", buffer, maxlen, debugstr_a(spec));
 
     while (*spec && (maxlen > 1))
     {
@@ -377,7 +378,7 @@ static INT wvsnprintfA( LPSTR buffer, UINT maxlen, LPCSTR spec, va_list args )
         maxlen -= len;
     }
     *p = 0;
-    //TRACE("%s\n",debugstr_a(buffer));
+    TRACE("%s\n",debugstr_a(buffer));
     return (maxlen > 1) ? (INT)(p - buffer) : -1;
 }
 
@@ -385,7 +386,7 @@ static INT wvsnprintfA( LPSTR buffer, UINT maxlen, LPCSTR spec, va_list args )
 /***********************************************************************
  *           wvsnprintfW   (internal)
  */
-static INT wvsnprintfW( LPWSTR buffer, UINT maxlen, LPCWSTR spec, va_list args )
+static INT wvsnprintfW( LPWSTR buffer, UINT maxlen, LPCWSTR spec, __ms_va_list args )
 {
     WPRINTF_FORMAT format;
     LPWSTR p = buffer;
@@ -393,7 +394,7 @@ static INT wvsnprintfW( LPWSTR buffer, UINT maxlen, LPCWSTR spec, va_list args )
     CHAR number[20];
     WPRINTF_DATA argData;
 
-    //TRACE("%p %u %s\n", buffer, maxlen, debugstr_w(spec));
+    TRACE("%p %u %s\n", buffer, maxlen, debugstr_w(spec));
 
     while (*spec && (maxlen > 1))
     {
@@ -479,15 +480,14 @@ static INT wvsnprintfW( LPWSTR buffer, UINT maxlen, LPCWSTR spec, va_list args )
         maxlen -= len;
     }
     *p = 0;
-    //TRACE("%s\n",debugstr_w(buffer));
+    TRACE("%s\n",debugstr_w(buffer));
     return (maxlen > 1) ? (INT)(p - buffer) : -1;
 }
 
 /***********************************************************************
  *           wvsprintfA   (USER32.@)
- * @implemented
  */
-INT WINAPI wvsprintfA( LPSTR buffer, LPCSTR spec, va_list args )
+INT WINAPI wvsprintfA( LPSTR buffer, LPCSTR spec, __ms_va_list args )
 {
     INT res = wvsnprintfA( buffer, 1024, spec, args );
     return ( res == -1 ) ? 1024 : res;
@@ -496,9 +496,8 @@ INT WINAPI wvsprintfA( LPSTR buffer, LPCSTR spec, va_list args )
 
 /***********************************************************************
  *           wvsprintfW   (USER32.@)
- * @implemented
  */
-INT WINAPI wvsprintfW( LPWSTR buffer, LPCWSTR spec, va_list args )
+INT WINAPI wvsprintfW( LPWSTR buffer, LPCWSTR spec, __ms_va_list args )
 {
     INT res = wvsnprintfW( buffer, 1024, spec, args );
     return ( res == -1 ) ? 1024 : res;
@@ -506,101 +505,28 @@ INT WINAPI wvsprintfW( LPWSTR buffer, LPCWSTR spec, va_list args )
 
 /***********************************************************************
  *           wsprintfA   (USER32.@)
- * @implemented
  */
 INT WINAPIV wsprintfA( LPSTR buffer, LPCSTR spec, ... )
 {
-    va_list valist;
+    __ms_va_list valist;
     INT res;
 
-    va_start( valist, spec );
+    __ms_va_start( valist, spec );
     res = wvsnprintfA( buffer, 1024, spec, valist );
-    va_end( valist );
+    __ms_va_end( valist );
     return ( res == -1 ) ? 1024 : res;
 }
 
 /***********************************************************************
  *           wsprintfW   (USER32.@)
- * @implemented
  */
 INT WINAPIV wsprintfW( LPWSTR buffer, LPCWSTR spec, ... )
 {
-    va_list valist;
+    __ms_va_list valist;
     INT res;
 
-    va_start( valist, spec );
+    __ms_va_start( valist, spec );
     res = wvsnprintfW( buffer, 1024, spec, valist );
-    va_end( valist );
+    __ms_va_end( valist );
     return ( res == -1 ) ? 1024 : res;
-}
-/*
- * @implemented
- */
-DWORD WINAPI WCSToMBEx(WORD CodePage,LPWSTR UnicodeString,LONG UnicodeSize,LPSTR *MBString,LONG MBSize,BOOL Allocate)
-{
-	DWORD Size;
-	if (UnicodeSize == -1)
-	{
-		UnicodeSize = wcslen(UnicodeString)+1;
-	}
-	if (MBSize == -1)
-	{
-		if (!Allocate)
-		{
-			return 0;
-		}
-		MBSize = UnicodeSize * 2;
-	}
-	if (Allocate)
-	{
-		LPSTR SafeString = RtlAllocateHeap(GetProcessHeap(), 0, MBSize);
-        if (SafeString == NULL)
-            return 0;
-        *MBString = SafeString;
-	}
-	if (CodePage == 0)
-	{
-		RtlUnicodeToMultiByteN(*MBString,MBSize,&Size,UnicodeString,UnicodeSize);
-	}
-	else
-	{
-		WideCharToMultiByte(CodePage,0,UnicodeString,UnicodeSize,*MBString,MBSize,0,0);
-	}
-	return UnicodeSize;
-}
-/*
- * @implemented
- */
-DWORD WINAPI MBToWCSEx(WORD CodePage,LPSTR MBString,LONG MBSize,LPWSTR *UnicodeString,LONG UnicodeSize,BOOL Allocate)
-{
-	DWORD Size;
-	if (MBSize == -1)
-	{
-		MBSize = strlen(MBString)+1;
-	}
-	if (UnicodeSize == -1)
-	{
-		if (!Allocate)
-		{
-			return 0;
-		}
-		UnicodeSize = MBSize;
-	}
-	if (Allocate)
-	{
-		LPWSTR SafeString = RtlAllocateHeap(GetProcessHeap(), 0, UnicodeSize);
-        if (SafeString == NULL)
-            return 0;
-        *UnicodeString = SafeString;
-	}
-	UnicodeSize *= sizeof(WCHAR);
-	if (CodePage == 0)
-	{
-		RtlMultiByteToUnicodeN(*UnicodeString,UnicodeSize,&Size,MBString,MBSize);
-	}
-	else
-	{
-		Size = MultiByteToWideChar(CodePage,0,MBString,MBSize,*UnicodeString,UnicodeSize);
-	}
-	return Size;
 }
