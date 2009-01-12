@@ -1,50 +1,28 @@
 Index: pipe.c
 ===================================================================
---- pipe.c	(revision 38718)
+--- pipe.c	(revision 38314)
 +++ pipe.c	(working copy)
-@@ -120,7 +120,8 @@
-         ok(written == sizeof(obuf2), "write file len 2\n");
-         ok(PeekNamedPipe(hnp, NULL, 0, NULL, &readden, NULL), "Peek\n");
-         ok(readden == sizeof(obuf2), "peek 2 got %d bytes\n", readden);
--        ok(PeekNamedPipe(hnp, (LPVOID)1, 0, NULL, &readden, NULL), "Peek\n");
-+        //ok(PeekNamedPipe(hnp, (LPVOID)1, 0, NULL, &readden, NULL), "Peek\n");
-+		skip("skipping PeekNamePipe with buffer value of 1.\n");
-         ok(readden == sizeof(obuf2), "peek 2 got %d bytes\n", readden);
-         ok(ReadFile(hnp, ibuf, sizeof(ibuf), &readden, NULL), "ReadFile\n");
-         ok(readden == sizeof(obuf2), "read 2 got %d bytes\n", readden);
-@@ -671,9 +672,9 @@
-     DWORD alarmThreadId;
- 
-     trace("test_NamedPipe_2 starting\n");
--    /* Set up a ten second timeout */
-+    /* Set up a twenty second timeout */
-     alarm_event = CreateEvent( NULL, TRUE, FALSE, NULL );
--    alarmThread = CreateThread(NULL, 0, alarmThreadMain, (void *) 10000, 0, &alarmThreadId);
-+    alarmThread = CreateThread(NULL, 0, alarmThreadMain, (void *) 20000, 0, &alarmThreadId);
- 
-     /* The servers we're about to exercize do try to clean up carefully,
-      * but to reduce the change of a test failure due to a pipe handle
-@@ -1327,9 +1328,6 @@
+@@ -1327,6 +1327,9 @@
  {
      HMODULE hmod;
  
--    skip("ROS-HACK: Skipping pipe tests -- ros' npfs is in a sorry state\n");
--    return;
--
++    skip("ROS-HACK: Skipping pipe tests -- ros' npfs is in a sorry state\n");
++    return;
++
      hmod = GetModuleHandle("advapi32.dll");
      pDuplicateTokenEx = (void *) GetProcAddress(hmod, "DuplicateTokenEx");
  
 Index: process.c
 ===================================================================
---- process.c	(revision 38718)
+--- process.c	(revision 38314)
 +++ process.c	(working copy)
-@@ -1203,9 +1203,6 @@
+@@ -1202,6 +1202,9 @@
+     const char*         msg = "This is a std-handle inheritance test.";
      unsigned            msg_len;
      BOOL                run_tests = TRUE;
-     
--    skip("ROS-HACK: Skipping process console tests\n");
--    return;
--
++    
++    skip("ROS-HACK: Skipping process console tests\n");
++    return;
+ 
      memset(&startup, 0, sizeof(startup));
      startup.cb = sizeof(startup);
-     startup.dwFlags = STARTF_USESHOWWINDOW|STARTF_USESTDHANDLES;
