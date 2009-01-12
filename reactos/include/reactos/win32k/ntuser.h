@@ -1207,17 +1207,9 @@ NTAPI
 NtUserDisableThreadIme(
     DWORD dwUnknown1);
 
-typedef struct tagNTUSERDISPATCHMESSAGEINFO
-{
-  BOOL HandledByKernel;
-  BOOL Ansi;
-  WNDPROC Proc;
-  MSG Msg;
-} NTUSERDISPATCHMESSAGEINFO, *PNTUSERDISPATCHMESSAGEINFO;
-
 LRESULT
 NTAPI
-NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo);
+NtUserDispatchMessage(PMSG pMsg);
 
 BOOL
 NTAPI

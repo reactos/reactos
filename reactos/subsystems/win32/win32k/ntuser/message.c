@@ -405,92 +405,10 @@ CLEANUP:
 }
 
 LRESULT APIENTRY
-NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
+NtUserDispatchMessage(PMSG UnsafeMsgInfo)
 {
-   NTSTATUS Status;
-   NTUSERDISPATCHMESSAGEINFO MsgInfo;
-   LRESULT Result = TRUE;
-   DECLARE_RETURN(LRESULT);
-
-   DPRINT("Enter NtUserDispatchMessage\n");
-   UserEnterExclusive();
-
-   Status = MmCopyFromCaller(&MsgInfo, UnsafeMsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
-   if (! NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( 0);
-   }
-
-   /* Process timer messages. */
-   if (WM_TIMER == MsgInfo.Msg.message && 0 != MsgInfo.Msg.lParam)
-   {
-      LARGE_INTEGER LargeTickCount;
-      /* FIXME: Call hooks. */
-
-      /* FIXME: Check for continuing validity of timer. */
-
-      MsgInfo.HandledByKernel = FALSE;
-      KeQueryTickCount(&LargeTickCount);
-      MsgInfo.Proc = (WNDPROC) MsgInfo.Msg.lParam;
-      MsgInfo.Msg.lParam = (LPARAM)LargeTickCount.u.LowPart;
-   }
-   else if (NULL == MsgInfo.Msg.hwnd)
-   {
-      MsgInfo.HandledByKernel = TRUE;
-      Result = 0;
-   }
-   else
-   {
-      PWINDOW_OBJECT Window;
-
-      /* Get the window object. */
-      Window = UserGetWindowObject(MsgInfo.Msg.hwnd);
-      if (NULL == Window)
-      {
-         MsgInfo.HandledByKernel = TRUE;
-         Result = 0;
-      }
-      else
-      {
-         if (Window->OwnerThread != PsGetCurrentThread())
-         {
-            DPRINT1("Window doesn't belong to the calling thread!\n");
-            MsgInfo.HandledByKernel = TRUE;
-            Result = 0;
-         }
-         else
-         {
-            /* FIXME: Call hook procedures. */
-
-            MsgInfo.HandledByKernel = FALSE;
-            Result = 0;
-
-            if (Window->Wnd->IsSystem)
-            {
-                MsgInfo.Proc = (!MsgInfo.Ansi ? Window->Wnd->WndProc : Window->Wnd->WndProcExtra);
-            }
-            else
-            {
-                MsgInfo.Ansi = !Window->Wnd->Unicode;
-                MsgInfo.Proc = Window->Wnd->WndProc;
-            }
-         }
-      }
-   }
-   Status = MmCopyToCaller(UnsafeMsgInfo, &MsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
-   if (! NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( 0);
-   }
-
-   RETURN( Result);
-
-CLEANUP:
-   DPRINT("Leave NtUserDispatchMessage. ret=%i\n", _ret_);
-   UserLeave();
-   END_CLEANUP;
+   UNIMPLEMENTED;
+   return 0;
 }
 
 
