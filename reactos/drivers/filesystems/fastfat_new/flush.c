@@ -14,14 +14,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb)
-{
-    DPRINT("VfatFlushVolume(DeviceExt %p, FatFcb %p)\n", DeviceExt, VolumeFcb);
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS VfatFlush(PFAT_IRP_CONTEXT IrpContext)
+NTSTATUS
+NTAPI
+FatFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

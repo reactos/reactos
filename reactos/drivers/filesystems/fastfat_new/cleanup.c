@@ -14,9 +14,10 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-VfatCleanup(PFAT_IRP_CONTEXT IrpContext)
+NTAPI
+FatCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-    DPRINT("VfatCleanup(DeviceObject %p, Irp %p)\n", IrpContext->DeviceObject, IrpContext->Irp);
+    DPRINT("FatCleanup(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
     return STATUS_NOT_IMPLEMENTED;
 }

@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS FAT file system driver
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/filesystems/fastfat/fsctl.c
- * PURPOSE:         Filesystem control
+ * FILE:            drivers/filesystems/fastfat/device.c
+ * PURPOSE:         Device control
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */
 
@@ -15,9 +15,9 @@
 
 NTSTATUS
 NTAPI
-FatFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+FatDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-    DPRINT("VfatFileSystemControl(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
-
     return STATUS_NOT_IMPLEMENTED;
 }
+
+/* EOF */

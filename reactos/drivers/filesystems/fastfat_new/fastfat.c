@@ -42,25 +42,25 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     FatGlobalData.DriverObject = DriverObject;
     FatGlobalData.DiskDeviceObject = DeviceObject;
 
-    // TODO: Fill major function handlers
-#if 0
-    DriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_READ] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_WRITE] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-    VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-    VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
-    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
-    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
-#endif
+    /* Fill major function handlers */
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = FatClose;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = FatCreate;
+    DriverObject->MajorFunction[IRP_MJ_READ] = FatRead;
+    DriverObject->MajorFunction[IRP_MJ_WRITE] = FatWrite;
+    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = FatFileSystemControl;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = FatQueryInformation;
+    DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] = FatSetInformation;
+    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = FatDirectoryControl;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = FatQueryVolumeInfo;
+    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = FatSetVolumeInfo;
+    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = FatShutdown;
+    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = FatLockControl;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = FatDeviceControl;
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = FatCleanup;
+    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = FatFlushBuffers;
+    //DriverObject->MajorFunction[IRP_MJ_QUERY_EA]
+    //DriverObject->MajorFunction[IRP_MJ_SET_EA]
+    //DriverObject->MajorFunction[IRP_MJ_PNP]
 
     DriverObject->DriverUnload = NULL;
 

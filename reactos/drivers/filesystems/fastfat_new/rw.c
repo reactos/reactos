@@ -14,13 +14,15 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-VfatRead(PFAT_IRP_CONTEXT IrpContext)
+NTAPI
+FatRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
-VfatWrite(PFAT_IRP_CONTEXT IrpContext)
+NTAPI
+FatWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

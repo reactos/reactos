@@ -14,9 +14,10 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-VfatClose(PFAT_IRP_CONTEXT IrpContext)
+NTAPI
+FatClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-    DPRINT("VfatClose(DeviceObject %p, Irp %p)\n", IrpContext->DeviceObject, IrpContext->Irp);
+    DPRINT("FatClose(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
     return STATUS_NOT_IMPLEMENTED;
 }

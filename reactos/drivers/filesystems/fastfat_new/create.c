@@ -14,7 +14,8 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-VfatCreate(PFAT_IRP_CONTEXT IrpContext)
+NTAPI
+FatCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

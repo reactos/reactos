@@ -14,13 +14,15 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-VfatQueryVolumeInformation(PFAT_IRP_CONTEXT IrpContext)
+NTAPI
+FatQueryVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
-VfatSetVolumeInformation(PFAT_IRP_CONTEXT IrpContext)
+NTAPI
+FatSetVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     return STATUS_NOT_IMPLEMENTED;
 }

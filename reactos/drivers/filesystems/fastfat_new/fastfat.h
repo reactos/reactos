@@ -457,27 +457,33 @@ FatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  --------------------------------------------------------  volume.c  */
 
-NTSTATUS VfatQueryVolumeInformation (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatQueryVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS VfatSetVolumeInformation (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatSetVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  ------------------------------------------------------  blockdev.c  */
 
 /*  -----------------------------------------------------------  dir.c  */
 
-NTSTATUS VfatDirectoryControl (PFAT_IRP_CONTEXT);
+NTSTATUS NTAPI
+FatDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  --------------------------------------------------------  create.c  */
 
-NTSTATUS VfatCreate (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  ---------------------------------------------------------  close.c  */
 
-NTSTATUS VfatClose (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  -------------------------------------------------------  cleanup.c  */
 
-NTSTATUS VfatCleanup (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  ---------------------------------------------------------  fastio.c  */
 
@@ -505,16 +511,20 @@ FatNoopAcquire(IN PVOID Context,
 VOID NTAPI
 FatNoopRelease(IN PVOID Context);
 
+/* ---------------------------------------------------------  lock.c */
+
+NTSTATUS NTAPI
+FatLockControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  ---------------------------------------------------------  fsctl.c  */
 
-NTSTATUS VfatFileSystemControl (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  ---------------------------------------------------------  finfo.c  */
 
-NTSTATUS VfatQueryInformation (PFAT_IRP_CONTEXT IrpContext);
-
-NTSTATUS VfatSetInformation (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI FatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI FatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  ---------------------------------------------------------  iface.c  */
 
@@ -524,19 +534,27 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
 /*  -----------------------------------------------------------  fat.c  */
 
+/*  ------------------------------------------------------  device.c  */
+
+NTSTATUS NTAPI
+FatDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
 /*  ------------------------------------------------------  direntry.c  */
 
 /*  -----------------------------------------------------------  fcb.c  */
 
 /*  ------------------------------------------------------------  rw.c  */
 
-NTSTATUS VfatRead (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS VfatWrite (PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*  ------------------------------------------------------------- flush.c  */
 
-NTSTATUS VfatFlush(PFAT_IRP_CONTEXT IrpContext);
+NTSTATUS NTAPI
+FatFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 
 /* EOF */
