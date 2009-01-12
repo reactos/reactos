@@ -187,7 +187,15 @@ IPortTopology_fnNewRegistryKey(
         DPRINT("IPortWaveCyclic_fnNewRegistryKey called w/o initialized\n");
         return STATUS_UNSUCCESSFUL;
     }
-    return STATUS_UNSUCCESSFUL;
+    return PcNewRegistryKey(OutRegistryKey, 
+                            OuterUnknown,
+                            RegistryKeyType,
+                            DesiredAccess,
+                            This->pDeviceObject,
+                            NULL,//FIXME
+                            ObjectAttributes,
+                            CreateOptions,
+                            Disposition);
 }
 
 static IPortTopologyVtbl vt_IPortTopology =
