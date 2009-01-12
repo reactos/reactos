@@ -147,7 +147,8 @@ VOID IPDispatchProtocol(
         TI_DbgPrint(MIN_TRACE, ("IPv6 datagram discarded.\n"));
         return;
     default:
-        Protocol = 0;
+        TI_DbgPrint(MIN_TRACE, ("Unrecognized datagram discarded.\n"));
+        return;
     }
 
     if (Protocol < IP_PROTOCOL_TABLE_SIZE &&
