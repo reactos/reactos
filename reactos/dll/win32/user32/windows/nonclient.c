@@ -265,8 +265,6 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
    will cause clipRgn to be deleted after ReleaseDC().
    Now, how is the "system" supposed to tell what happened?
  */
-#define DCX_USESTYLE     0x00010000
-#define DCX_KEEPCLIPRGN  0x00040000 // <-- You do this!
 /*
  * FIXME:
  * - Drawing of WS_BORDER after scrollbars

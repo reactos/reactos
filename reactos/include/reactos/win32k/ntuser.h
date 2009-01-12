@@ -496,6 +496,11 @@ typedef struct _USERCONNECT
 #define WM_SYSTIMER 280
 #define WM_POPUPSYSTEMMENU 787
 
+//
+// Non SDK DCE types.
+//
+#define DCX_USESTYLE     0x00010000
+#define DCX_KEEPCLIPRGN  0x00040000
 
 DWORD
 NTAPI
