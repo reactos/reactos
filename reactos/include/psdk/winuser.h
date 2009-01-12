@@ -1642,7 +1642,10 @@ extern "C" {
 #if(_WIN32_WINNT >= 0x0501)
 #define WM_UNICHAR 0x0109
 #define WM_KEYLAST WM_UNICHAR
+/* FIXME: HACK! */
+#ifndef UNICODE_NOCHAR
 #define UNICODE_NOCHAR 0xffff
+#endif
 #else
 #define WM_KEYLAST 264
 #endif
