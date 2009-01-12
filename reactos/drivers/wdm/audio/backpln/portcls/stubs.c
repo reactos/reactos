@@ -12,29 +12,6 @@
 #include "private.h"
 #include <portcls.h>
 
-/*
-    Factory Stubs
-*/
-
-
-
-/* ===============================================================
-    Power Management
-*/
-
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-PcRequestNewPowerState(
-    IN  PDEVICE_OBJECT pDeviceObject,
-    IN  DEVICE_POWER_STATE RequestedNewState)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-
 /* ===============================================================
     Properties
 */
