@@ -162,8 +162,8 @@ msvcrt -
   reactos/lib/sdk/crt/thread/thread.c           # Synced at 20080604
 
 User32 -
-  reactos/dll/win32/user32/controls/button.c    # Synced at 20071022
-  reactos/dll/win32/user32/controls/combo.c     # Synced at 20071022
+  reactos/dll/win32/user32/controls/button.c    # Synced at Wine-1_1_12
+  reactos/dll/win32/user32/controls/combo.c     # Synced at Wine-1_1_12
   reactos/dll/win32/user32/controls/edit.c      # Synced at 20071022
   reactos/dll/win32/user32/controls/icontitle.c # Synced at 20060617
   reactos/dll/win32/user32/controls/listbox.c   # Synced at 20071023
@@ -176,7 +176,7 @@ User32 -
   reactos/dll/win32/user32/misc/exticon.c       # Last sync date unknown
   reactos/dll/win32/user32/misc/resources.c     # Forked?
   reactos/dll/win32/user32/misc/winhelp.c       # Last sync date unknown
-  reactos/dll/win32/user32/misc/wsprintf.c      # Synced at 20060623
+  reactos/dll/win32/user32/misc/wsprintf.c      # Synced at Wine-1_1_12
 
   reactos/dll/win32/user32/windows/defwnd.c     # Forked
   reactos/dll/win32/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
