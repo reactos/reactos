@@ -11,7 +11,6 @@
 	<library>rtl</library>
 	<library>hal</library>
 	<file>api.c</file>
-	<file>connection.c</file>
 	<file>dll.c</file>
 	<file>dma_slave.c</file>
 	<file>drm_port.c</file>

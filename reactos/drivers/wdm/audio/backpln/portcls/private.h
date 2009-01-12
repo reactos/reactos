@@ -15,7 +15,6 @@
 #include <dmusicks.h>
 
 #include "interfaces.h"
-#include <ks.h>
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_PORTCLASS TAG('P', 'C', 'L', 'S')
@@ -87,17 +86,6 @@ typedef struct
     KSOBJECT_HEADER ObjectHeader;
 }SUBDEVICE_ENTRY;
 
-typedef struct
-{
-    LIST_ENTRY Entry;
-    ISubdevice * FromSubDevice;
-    LPWSTR FromUnicodeString;
-    ULONG FromPin;
-    ISubdevice * ToSubDevice;
-    LPWSTR ToUnicodeString;
-    ULONG ToPin;
-}PHYSICAL_CONNECTION;
-
 
 typedef struct
 {
@@ -108,7 +96,6 @@ typedef struct
 
     IResourceList* resources;
     LIST_ENTRY SubDeviceList;
-    LIST_ENTRY PhysicalConnectionList;
 
 } PCExtension;
 

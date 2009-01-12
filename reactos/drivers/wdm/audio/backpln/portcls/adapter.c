@@ -168,8 +168,7 @@ PcAddAdapterDevice(
     RtlZeroMemory(portcls_ext, sizeof(PCExtension));
     portcls_ext->PhysicalDeviceObject = PhysicalDeviceObject;
     portcls_ext->StartDevice = StartDevice;
-    InitializeListHead(&portcls_ext->SubDeviceList);
-    InitializeListHead(&portcls_ext->PhysicalConnectionList);
+	InitializeListHead(&portcls_ext->SubDeviceList);
 
     status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, 0, NULL);
     if (!NT_SUCCESS(status))

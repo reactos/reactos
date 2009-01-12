@@ -247,23 +247,7 @@ IPortWavePci_fnNewRegistryKey(
     IN ULONG  CreateOptions  OPTIONAL,
     OUT PULONG  Disposition  OPTIONAL)
 {
-    IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
-
-    if (!This->bInitialized)
-    {
-        DPRINT("IPortWaveCyclic_fnNewRegistryKey called w/o initiazed\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    return PcNewRegistryKey(OutRegistryKey, 
-                            OuterUnknown,
-                            RegistryKeyType,
-                            DesiredAccess,
-                            This->pDeviceObject,
-                            NULL,//FIXME
-                            ObjectAttributes,
-                            CreateOptions,
-                            Disposition);
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
