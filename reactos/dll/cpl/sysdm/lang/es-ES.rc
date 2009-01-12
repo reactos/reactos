@@ -1,7 +1,7 @@
 // Spanish language resource file
 // React Operating System 2005
 // Samuel Serapión Vega
-// Actualizado (Javier Remacha 2008/01/19)
+// Actualizado (Javier Remacha 2009/01/13)
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -262,10 +262,10 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistema"
     IDS_CPLSYSTEMDESCRIPTION "Muestra información sobre el sistema de su equipo y cambia la configuración del hardware, rendimiento y actualizaciones automáticas."
-    IDS_MEGABYTE "MB of RAM"
-    IDS_GIGABYTE "GB of RAM"
-    IDS_TERABYTE "TB of RAM"
-    IDS_PETABYTE "PB of RAM"
+    IDS_MEGABYTE "MB de RAM"
+    IDS_GIGABYTE "GB de RAM"
+    IDS_TERABYTE "TB de RAM"
+    IDS_PETABYTE "PB de RAM"
     IDS_VARIABLE "Variable"
     IDS_VALUE    "Valor"
     IDS_NO_DUMP "(Ninguno)"
