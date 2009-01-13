@@ -1156,6 +1156,11 @@ NtUserSetWindowsHookEx(
    ClientInfo->phkCurrent = 0;
    
    UserDereferenceObject(Hook);
+
+   if (NULL != Thread)
+   {
+      ObDereferenceObject(Thread);
+   }
    ObDereferenceObject(WinStaObj);
 
    RETURN( Handle);
