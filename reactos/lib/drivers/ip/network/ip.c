@@ -147,7 +147,8 @@ VOID IPDispatchProtocol(
         TI_DbgPrint(MIN_TRACE, ("IPv6 datagram discarded.\n"));
         return;
     default:
-        Protocol = 0;
+        TI_DbgPrint(MIN_TRACE, ("Unrecognized datagram discarded.\n"));
+        return;
     }
 
     if (Protocol < IP_PROTOCOL_TABLE_SIZE)
@@ -308,22 +309,20 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS GeneralRoute;
 
-    TCPDisposeInterfaceData( IF->TCPContext );
-    IF->TCPContext = NULL;
-
-    TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
-    TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
-
-    AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
-
-    RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
-
-    /* Remove permanent NCE, but first we have to find it */
     NCE = NBLocateNeighbor(&IF->Unicast);
     if (NCE)
-	NBRemoveNeighbor(NCE);
-    else
-	TI_DbgPrint(DEBUG_IP, ("Could not delete IF route (0x%X)\n", IF));
+    {
+       TCPDisposeInterfaceData( IF->TCPContext );
+
+       TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
+       TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
+
+       AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
+
+       RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
+
+       NBRemoveNeighbor(NCE);
+    }
 }
 
 VOID IPUnregisterInterface(
