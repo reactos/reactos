@@ -55,6 +55,54 @@ static ULONG          HintIndex = 0;
 
 /* FUNCTIONS *****************************************************************/
 
+PTIMER
+FASTCALL
+FindSystemTimer(PMSG pMsg)
+{
+  PTIMER pTmr = FirstpTmr;
+  KeEnterCriticalRegion();
+  do
+  {
+    if (!pTmr) break;
+
+    if ( pMsg->lParam == (LPARAM)pTmr->pfn &&
+         (pTmr->flags & TMRF_SYSTEM) )
+       break;
+
+    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+  KeLeaveCriticalRegion();
+
+  return pTmr;
+}
+
+BOOL
+FASTCALL
+ValidateTimerCallback(PW32THREADINFO pti,
+                      PWINDOW_OBJECT Window,
+                      WPARAM wParam,
+                      LPARAM lParam)
+{
+  PTIMER pTmr = FirstpTmr;
+
+  if (!pTmr) return FALSE;
+
+  KeEnterCriticalRegion();
+  do
+  {
+    if ( (lParam == (LPARAM)pTmr->pfn) &&
+         (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) &&
+         (pTmr->pti->pi == pti->pi) )
+       break;
+
+    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+  KeLeaveCriticalRegion();
+
+  if (!pTmr) return FALSE;
+
+  return TRUE;
+}
 
 UINT_PTR FASTCALL
 IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
@@ -228,7 +276,6 @@ InitTimerImpl(VOID)
 
    return STATUS_SUCCESS;
 }
-
 
 UINT_PTR
 APIENTRY

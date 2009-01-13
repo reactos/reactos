@@ -85,7 +85,7 @@ IntGdiExtCreatePen(
 
    // If nWidth is zero, the pen is a single pixel wide, regardless of the current transformation.
    if ((bOldStylePen) && (!dwWidth) && (dwPenStyle & PS_STYLE_MASK) != PS_SOLID)
-   dwWidth = 1;
+      dwWidth = 1;
 
    PenObject->ptPenWidth.x = dwWidth;
    PenObject->ptPenWidth.y = 0;

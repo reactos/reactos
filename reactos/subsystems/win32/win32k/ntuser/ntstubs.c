@@ -1098,15 +1098,30 @@ NtUserValidateRect(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserValidateTimerCallback(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    HWND hWnd,
+    WPARAM wParam,
+    LPARAM lParam)
 {
-    UNIMPLEMENTED;
-    return 0;
+  BOOL Ret = FALSE;
+  PWINDOW_OBJECT Window = NULL;
+
+  UserEnterShared();
+
+  if (hWnd)
+  {
+     Window = UserGetWindowObject(hWnd);
+     if (!Window || !Window->Wnd)
+        goto Exit;
+  }
+
+  Ret = ValidateTimerCallback(GetW32ThreadInfo(), Window, wParam, lParam);
+
+Exit:
+  UserLeave();
+  return Ret;
 }
 
 DWORD

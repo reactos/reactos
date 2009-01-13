@@ -2679,12 +2679,12 @@ NtUserValidateRect(
     HWND hWnd,
     CONST RECT *lpRect);
 
-DWORD
-NTAPI
+BOOL
+APIENTRY
 NtUserValidateTimerCallback(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3);
+    HWND hWnd,
+    WPARAM wParam,
+    LPARAM lParam);
 
 DWORD
 NTAPI

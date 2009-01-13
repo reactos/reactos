@@ -341,6 +341,62 @@ IntCallWndProcRet
    }
 }
 
+LRESULT
+FASTCALL
+IntDispatchMessage(PMSG pMsg)
+{
+  LRESULT retval;
+  PWINDOW_OBJECT Window = NULL;
+
+  if (pMsg->hwnd)
+  {
+     Window = UserGetWindowObject(pMsg->hwnd);
+     if (!Window || !Window->Wnd) return 0;
+  }
+
+  if (((pMsg->message == WM_SYSTIMER) ||
+       (pMsg->message == WM_TIMER)) &&
+      (pMsg->lParam) )
+  {
+     if (pMsg->message == WM_TIMER)
+     {
+        if (ValidateTimerCallback(GetW32ThreadInfo(),Window,pMsg->wParam,pMsg->lParam))
+        {
+           return co_IntCallWindowProc((WNDPROC)pMsg->lParam,
+                                        TRUE,
+                                        pMsg->hwnd,
+                                        WM_TIMER,
+                                        pMsg->wParam,
+                                        (LPARAM)EngGetTickCount(),
+                                        sizeof(LPARAM));
+        }
+        return 0;        
+     }
+     else
+     {
+        PTIMER pTimer = FindSystemTimer(pMsg);
+        if (pTimer && pTimer->pfn)
+        {
+           pTimer->pfn(pMsg->hwnd, WM_SYSTIMER, (UINT)pMsg->wParam, (DWORD)EngGetTickCount());
+        }
+        return 0;
+     }
+  }
+  // Need a window!
+  if (!Window) return 0;
+
+  retval = co_IntPostOrSendMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
+
+  if (pMsg->message == WM_PAINT)
+  {
+  /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
+     HRGN hrgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
+     co_UserGetUpdateRgn( Window, hrgn, TRUE );
+     NtGdiDeleteObject( hrgn );
+  }
+  return retval;
+}
+
 
 BOOL
 APIENTRY
@@ -407,8 +463,27 @@ CLEANUP:
 LRESULT APIENTRY
 NtUserDispatchMessage(PMSG UnsafeMsgInfo)
 {
-   UNIMPLEMENTED;
-   return 0;
+  LRESULT Res = 0;
+  BOOL Hit = FALSE;
+  MSG SafeMsg;
+
+  UserEnterExclusive();  
+  _SEH2_TRY
+  {
+    ProbeForRead(UnsafeMsgInfo, sizeof(MSG), 1);
+    RtlCopyMemory(&SafeMsg, UnsafeMsgInfo, sizeof(MSG));
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+    SetLastNtError(_SEH2_GetExceptionCode());
+    Hit = TRUE;
+  }
+  _SEH2_END;
+  
+  if (!Hit) Res = IntDispatchMessage(&SafeMsg);
+
+  UserLeave();
+  return Res;
 }
 
 
