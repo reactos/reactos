@@ -46,7 +46,7 @@ class Export_QuickInfo extends Export
   private function getInfo( )
   {
     // get current revision
-    $stmt=&DBConnection::getInstance()->prepare("SELECT u.name AS user_name, l.name AS language, r.data_id, d.name, d.type, a.name AS acl, r.id, r.version, datetime FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id=u.id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id JOIN ".ROSCMST_ACCESS." a ON a.id=d.acl_id WHERE r.id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT u.name AS user_name, l.name AS language, r.data_id, d.name, d.type, a.name AS acl, r.id, r.version, datetime FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id=u.id JOIN ".ROSCMST_LANGUAGES." l ON l.id=r.lang_id JOIN ".ROSCMST_ACCESS." a ON a.id=d.access_id WHERE r.id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$_GET['d_r_id'],PDO::PARAM_INT);
     $stmt->execute();
     $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);

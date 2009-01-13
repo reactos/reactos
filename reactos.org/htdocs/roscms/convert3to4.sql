@@ -146,59 +146,81 @@ ORDER BY sec_name;
 
 
 -- --------------------------------------------------------
--- create access lists
+-- table for entry areas
 -- --------------------------------------------------------
-CREATE TABLE roscms_rel_groups_access (
-  acl_id bigint(20) unsigned NOT NULL COMMENT '->access(id)',
+CREATE TABLE roscms_entries_areas (
+  id bigint(20) unsigned NOT NULL auto_increment,
+  name varchar(30) NOT NULL,
+  name_short varchar(15) NOT NULL,
+  description varchar(255) NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY name_short (name_short),
+  UNIQUE KEY `name` (name)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO roscms_entries_areas VALUES
+(1, 'Translate', 'translate', 'user can translate this entry to the lang he has set in his profile'),
+(2, 'Edit', 'edit', 'modify content of this entry'),
+(3, 'View Metadata', 'metadata', 'view Metadata tab '),
+(4, 'View History', 'history', 'view History tab'),
+(5, 'View Fields', 'fields', 'view fields tab'),
+(6, 'View Entry Tab', 'entry', 'view entry tab'),
+(7, 'View Security', 'security', 'view security tab'),
+(8, 'View Depencies', 'depencies', 'view depencies tab'),
+(9, 'System metadata', 'system_meta', 'modify System metadata'),
+(10, 'Change ACL', 'acl', 'modify ACL for this entry'),
+(11, 'Add Fields', 'add_fields', 'add new text fields'),
+(12, 'Read', 'read', 'can view this entry');
+
+
+
+-- --------------------------------------------------------
+-- table for acl
+-- --------------------------------------------------------
+CREATE TABLE roscms_rel_acl (
+  id bigint(20) unsigned NOT NULL auto_increment,
+  right_id bigint(20) unsigned NOT NULL COMMENT '->entries_areas(id)',
+  access_id bigint(20) unsigned NOT NULL COMMENT '->entries_access(id)',
   group_id bigint(20) unsigned NOT NULL COMMENT '->groups(id)',
-  can_read tinyint(1) NOT NULL default '0',
-  can_write tinyint(1) NOT NULL default '0',
-  can_add tinyint(1) NOT NULL default '0',
-  can_delete tinyint(1) NOT NULL default '0',
-  can_publish tinyint(1) NOT NULL default '0',
-  can_translate tinyint(1) NOT NULL default '0',
-  PRIMARY KEY  (acl_id,group_id)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  PRIMARY KEY  (id),
+  UNIQUE KEY right_id (right_id,access_id,group_id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO roscms_rel_groups_access
-SELECT
+-- convert table
+INSERT INTO roscms_rel_acl
+SELECT DISTINCT
+  NULL,
   a.id,
-  g.id,
-  s.sec_lev1_read,
-  s.sec_lev1_write,
-  s.sec_lev1_add,
-  s.sec_lev1_add,
-  s.sec_lev1_pub,
-  s.sec_lev1_trans
-FROM roscms_entries_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 1
-UNION
-SELECT
-  a.id,
-  g.id,
-  s.sec_lev2_read,
-  s.sec_lev2_write,
-  s.sec_lev2_add,
-  s.sec_lev2_add,
-  s.sec_lev2_pub,
-  s.sec_lev2_trans
-FROM roscms_entries_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 2
-UNION
-SELECT
-  a.id,
-  g.id,
-  s.sec_lev3_read,
-  s.sec_lev3_write,
-  s.sec_lev3_add,
-  s.sec_lev3_add,
-  s.sec_lev3_pub,
-  s.sec_lev3_trans
-FROM roscms_entries_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g WHERE g.security_level = 3;
+  r.id,
+  g.id
+FROM roscms_entries_access a JOIN data_security s ON a.name_short=s.sec_name JOIN roscms_groups g JOIN roscms_entries_areas r WHERE (((
+   (g.security_level = 1 AND s.sec_lev1_read = 1 AND r.name_short='read')
+OR (g.security_level = 1 AND s.sec_lev1_write = 1 AND r.name_short='edit')
+OR (g.security_level = 1 AND s.sec_lev1_add = 1 AND r.name_short='add_fields')
+OR (g.security_level = 1 AND s.sec_lev1_trans = 1 AND r.name_short='translate')
 
-UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_entries_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
-SET ga.can_read=TRUE, ga.can_write=TRUE, ga.can_add=TRUE, ga.can_delete=TRUE, ga.can_publish=TRUE, ga.can_translate=TRUE WHERE s.sec_allow LIKE CONCAT('%',g.name_short,'%');
+OR (g.security_level = 2 AND s.sec_lev2_read = 1 AND r.name_short='read')
+OR (g.security_level = 2 AND s.sec_lev2_write = 1 AND r.name_short='edit')
+OR (g.security_level = 2 AND s.sec_lev2_add = 1 AND r.name_short='add_fields')
+OR (g.security_level = 2 AND s.sec_lev2_trans = 1 AND r.name_short='translate')
 
-UPDATE roscms_rel_groups_access ga JOIN roscms_groups g ON ga.group_id=g.id JOIN roscms_entries_access a ON ga.acl_id=a.id JOIN data_security s ON a.name_short=s.sec_name
-SET ga.can_read=FALSE, ga.can_write=FALSE, ga.can_add=FALSE, ga.can_delete=FALSE, ga.can_publish=FALSE, ga.can_translate=FALSE WHERE s.sec_deny LIKE CONCAT('%',g.name_short,'%');
+OR (g.security_level = 3 AND s.sec_lev3_read = 1 AND r.name_short='read')
+OR (g.security_level = 3 AND s.sec_lev3_write = 1 AND r.name_short='edit')
+OR (g.security_level = 3 AND s.sec_lev3_add = 1 AND (r.name_short='add_fields' OR r.name_short='fields' OR r.name_short='security' OR r.name_short='acl' OR r.name_short='entry'))
+OR (g.security_level = 3 AND s.sec_lev3_trans = 1 AND r.name_short='translate')
+
+OR (s.sec_allow LIKE CONCAT('%',s.sec_allow,'%') AND r.name_short='read')
+OR (s.sec_allow LIKE CONCAT('%',s.sec_allow,'%') AND r.name_short='edit')
+OR (s.sec_allow LIKE CONCAT('%',s.sec_allow,'%') AND r.name_short='add_fields')
+OR (s.sec_allow LIKE CONCAT('%',s.sec_allow,'%') AND r.name_short='translate')
+
+OR (g.security_level = 3 AND r.name_short='system_meta')
+OR (g.security_level > 1 AND r.name_short='depencies')
+
+OR r.name_short = 'metadata'
+OR r.name_short = 'history')
+AND NOT s.sec_deny LIKE CONCAT('%',g.name_short,'%'))
+OR s.sec_allow LIKE CONCAT('%',g.name_short,'%'));
 
 
 
@@ -292,11 +314,11 @@ CREATE TABLE roscms_entries (
   id bigint(20) unsigned NOT NULL auto_increment,
   type enum('page','content','dynamic','script','template','system') collate utf8_unicode_ci NOT NULL,
   name varchar(64) collate utf8_unicode_ci NOT NULL,
-  acl_id bigint(20) unsigned COMMENT '->access(id)',
+  access_id bigint(20) unsigned COMMENT '->access(id)',
   old_id int(11) NOT NULL,
   old_archive tinyint(1) NOT NULL,
   PRIMARY KEY  (id),
-  KEY acl_id (acl_id),
+  KEY access_id (access_id),
   KEY type (type),
   KEY name (name)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -668,11 +690,11 @@ CREATE TABLE roscms_jobs (
 -- --------------------------------------------------------
 UPDATE roscms_entries SET type = 'dynamic' WHERE type='page' AND (name='news_page' OR name='newsletter' OR name='interview');
 
-INSERT INTO roscms_entries (type, name, acl_id)
+INSERT INTO roscms_entries (type, name, access_id)
 SELECT DISTINCT
   'content',
   CONCAT(d.name,'_',t.value),
-  d.acl_id
+  d.access_id
 FROM roscms_entries d JOIN roscms_entries_revisions r ON r.data_id=d.id JOIN roscms_entries_tags t ON t.rev_id=r.id
 WHERE t.name='number' AND d.type='content';
 

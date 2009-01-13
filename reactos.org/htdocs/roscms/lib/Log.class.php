@@ -176,7 +176,7 @@ class Log
 
     // if no log is started yet, create a new log id
     if ($log_id === false) {
-      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id, name, type, acl_id ) VALUES ( NULL, :data_name, 'system', NULL )");
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRIES." ( id, name, type, access_id ) VALUES ( NULL, :data_name, 'system', NULL )");
       $stmt->bindParam('data_name',$log_entry,PDO::PARAM_STR);
       $stmt->execute();
 

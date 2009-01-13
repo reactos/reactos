@@ -233,7 +233,7 @@ class Editor_Website extends Editor
       $revision = $stmt->fetchOnce();
 
       // check if user has translator access
-      if (Security::hasRight($revision['data_id'], 'translate')) {
+      if (Data::hasAccess($revision['data_id'], 'translate')) {
 
         // copy existing entry to new language
         if (Data::copy($revision['id'], 1 /* copy mode */, $_GET['d_r_lang'])) {
@@ -330,7 +330,7 @@ class Editor_Website extends Editor
       echo '<span id="elmcount" class="'.$text_num.'">&nbsp;</span>';
     }
 
-    if (Security::hasRight($this->data_id, 'write')) {
+    if (Data::hasAccess($this->data_id, 'edit')) {
       echo_strip('
         <button type="button" id="bsavedraft" onclick="'."saveAsDraft(".$this->data_id.",".$this->rev_id.")".'">Save as Draft</button> &nbsp;
         <input name="editautosavemode" type="hidden" value="true" />');
@@ -752,7 +752,7 @@ class Editor_Website extends Editor
     if ($thisuser->hasAccess('system_tags')) {
       echo_strip('
         <br />
-        <h3>Add Label'.(Security::hasAccess($this->data_id, 'add') ? ' or System Metadata' : '').'</h3>
+        <h3>Add Label'.(Data::hasAccess($this->data_id, 'system_meta') ? ' or System Metadata' : '').'</h3>
         <label for="addtags1" class="normal">Name:</label>&nbsp;
         <input type="text" id="addtags1" size="15" maxlength="100" value="" />&nbsp;
         <label for="addtags2" class="normal">Value:</label>&nbsp;
@@ -760,7 +760,7 @@ class Editor_Website extends Editor
         <button type="button" onclick="'."addLabelOrTag(".$this->rev_id.",'addtags1','addtags2','0')".'">Add Label</button>&nbsp;');
 
       // add new system tags
-      if (Security::hasRight($this->data_id, 'add')) { 
+      if (Data::hasAccess($this->data_id, 'system_meta')) { 
         echo '<button type="button" onclick="'."addLabelOrTag(".$this->rev_id.",'addtags1','addtags2',-1)".'">Add Sys</button>';
       }
     }
@@ -887,7 +887,7 @@ class Editor_Website extends Editor
    */
   private function showEntryDetailsSecurity( )
   {
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, type, acl_id FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, type, access_id FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
     $stmt->bindParam('data_id',$this->data_id,PDO::PARAM_INT);
     $stmt->execute();
     $data = $stmt->fetchOnce();
@@ -917,7 +917,7 @@ class Editor_Website extends Editor
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
     $stmt->execute();
     while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      echo '<option value="'.$access['id'].'"'.(($access['id'] == $data['acl_id']) ? ' selected="selected"' : '').'>'.$access['name'].'</option>';
+      echo '<option value="'.$access['id'].'"'.(($access['id'] == $data['access_id']) ? ' selected="selected"' : '').'>'.$access['name'].'</option>';
     }
     echo_strip('
       </select>

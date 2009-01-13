@@ -363,7 +363,7 @@ class Data
    */
   public static function update( $data_id, $data_name, $data_type, $data_acl, $update_links )
   {
-    $stmt=&DBConnection::getInstance()->prepare("SELECT name, type, acl_id FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, type, access_id FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
     $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
     $stmt->execute();
     $data = $stmt->fetchOnce(PDO::FETCH_ASSOC);
@@ -446,12 +446,12 @@ class Data
     } // end data_name changes
 
     // change ACL
-    if ($data_acl != '' && $data_acl != $data['acl_id']) {
-      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRIES." SET acl_id = :acl_new WHERE id = :data_id LIMIT 1");
+    if ($data_acl != '' && $data_acl != $data['access_id']) {
+      $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRIES." SET access_id = :acl_new WHERE id = :data_id LIMIT 1");
       $stmt->bindParam('acl_new',$data_acl);
       $stmt->bindParam('data_id',$data_id);
       $stmt->execute();
-      Log::writeMedium('data-acl changed: '.$data['acl_id'].' =&gt; '.$data_acl.Log::prepareInfo($data_id).'{altersecurityfields}');
+      Log::writeMedium('data-acl changed: '.$data['access_id'].' =&gt; '.$data_acl.Log::prepareInfo($data_id).'{altersecurityfields}');
     } 
 
   } // end of member function getCookieDomain
@@ -794,6 +794,48 @@ class Data
   /**
    *
    *
+   * @param int rev_id
+   * @return bool
+   * @access public
+   */
+  public static function hasAccess( $data_id, $area )
+  {
+    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_ACL." a ON d.access_id=a.access_id JOIN ".ROSCMST_GROUPS." g ON g.id=a.group_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id JOIN ".ROSCMST_RIGHTS." r ON r.id=a.right_id WHERE d.id=:data_id AND m.user_id =:user_id AND r.name_short=:area LIMIT 1");
+    $stmt->bindParam('data_id',$data_id,PDO::PARAM_INT);
+    $stmt->bindParam('area',$area,PDO::PARAM_STR);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
+    $stmt->execute();
+    return ($stmt->fetchColumn()!==false);
+  }
+
+
+
+  /**
+   *
+   *
+   * @param int rev_id
+   * @return bool
+   * @access public
+   */
+  public static function hasAccessAsList( $area )
+  {
+    $acl = 'NULL,';
+    $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT a.access_id FROM ".ROSCMST_ACL." a JOIN ".ROSCMST_GROUPS." g ON g.id=a.group_id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id JOIN ".ROSCMST_RIGHTS." r ON r.id=a.right_id WHERE m.user_id =:user_id AND r.name_short=:area");
+    $stmt->bindParam('area',$area,PDO::PARAM_STR);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
+    $stmt->execute();
+    while ($list = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      if ($acl != 'NULL,') $acl .= ',';
+      $acl .= $list['access_id'];
+    }
+    return $acl;
+  }
+
+
+
+  /**
+   *
+   *
    * @param int data_id
    * @param int rev_id
    * @param bool archive_mode
@@ -825,7 +867,7 @@ class Data
     }
 
     // data_revision
-    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.acl_id, r.version, r.user_id, r.lang_id, r.datetime FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id WHERE r.id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.access_id, r.version, r.user_id, r.lang_id, r.datetime FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id WHERE r.id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
     $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);

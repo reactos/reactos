@@ -131,9 +131,8 @@ class Export_XML extends Export
     }
 
     // check if there are entries which are found by filter settings
-    $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id ".$this->sql_from." WHERE r.version >= 0 AND r.archive = :archive ".Security::getACL('read')." ".$this->sql_where);
+    $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id ".$this->sql_from." WHERE r.version >= 0 AND r.archive = :archive AND d.access_id IN(".Data::hasAccessAsList('read').") ".$this->sql_where);
     $stmt->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
-
     $stmt->execute();
     $ptm_entries = $stmt->fetchColumn();
 
@@ -155,7 +154,7 @@ class Export_XML extends Export
       $stmt_stext=&DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_STEXT." WHERE rev_id = :rev_id AND name = 'title' LIMIT 1");
       $stmt_lang=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang LIMIT 1");
       $stmt_user=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
-      $stmt_acl=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_ACCESS." WHERE id = :acl_id LIMIT 1");
+      $stmt_acl=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_ACCESS." WHERE id = :access_id LIMIT 1");
 
       // make the order command ready for usage
       if ($this->sql_order == '') {
@@ -166,7 +165,7 @@ class Export_XML extends Export
       }
 
       // proceed entries
-      $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.acl_id, r.id, r.version, r.lang_id, r.datetime, r.user_id ".$this->sql_select." FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id ".$this->sql_from." WHERE r.version >= 0 AND r.archive = :archive ".Security::getACL('read')." ".$this->sql_where." ".$this->sql_order." LIMIT :limit OFFSET :offset");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.access_id, r.id, r.version, r.lang_id, r.datetime, r.user_id ".$this->sql_select." FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id = d.id ".$this->sql_from." WHERE r.version >= 0 AND r.archive = :archive AND d.access_id IN(".Data::hasAccessAsList('read').") ".$this->sql_where." ".$this->sql_order." LIMIT :limit OFFSET :offset");
       $stmt->bindParam('archive',$this->archive_mode,PDO::PARAM_BOOL);
       $stmt->bindValue('limit',0+$this->page_limit,PDO::PARAM_INT);
       $stmt->bindValue('offset',0+$page_offset,PDO::PARAM_INT);
@@ -208,7 +207,7 @@ class Export_XML extends Export
             $line_status = 'transb';
 
             // figure out if user can translate things
-            if (Security::hasRight($row['data_id'], 'translate')) {
+            if (Data::hasAccess($row['data_id'], 'translate')) {
               $row['data_id2'] = 'tr'.$row['data_id'];
               $row['id'] = 'tr'.$row['id'];
               $row['datetime'] = 'translate!';
@@ -279,7 +278,7 @@ class Export_XML extends Export
               $column_list_row .= $row['type'];
               break;
             case 'Security':
-              $stmt_acl->bindParam('acl_id',$row['acl_id'],PDO::PARAM_INT);
+              $stmt_acl->bindParam('access_id',$row['access_id'],PDO::PARAM_INT);
               $stmt_acl->execute();
               $acl = $stmt_acl->fetchColumn();
               if ($acl != '') {
@@ -303,7 +302,7 @@ class Export_XML extends Export
         $column_list_row .= '|';
 
         // has person right to write / edit entries ?
-        if (Security::hasRight($row['data_id'], 'write')) {
+        if (Data::hasAccess($row['data_id'], 'edit')) {
           $security = 'write';
         }
 
@@ -427,7 +426,7 @@ class Export_XML extends Export
                 $this->sql_order .= "d.type ";
                 break;
               case 'security': // security (ACL)
-                $this->sql_order .= "d.acl_id ";
+                $this->sql_order .= "d.access_id ";
                 break;
               case 'revid': // revision-id
                 $this->sql_order .= "r.id ";
@@ -592,7 +591,7 @@ class Export_XML extends Export
 
           // security (ACL)
           case 'i': 
-            $this->sql_where .= "d.acl_id".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
+            $this->sql_where .= "d.access_id".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
             break;
 
           // metadata
