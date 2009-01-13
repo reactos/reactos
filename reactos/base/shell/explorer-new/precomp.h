@@ -16,8 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define USE_API_SHCREATEDESKTOP 1 /* Use SHCreateDesktop() */
-
 #include "resource.h"
 #include "comcsup.h"
 #include "todo.h"
