@@ -106,7 +106,7 @@ IResourceList_fnNumberOfEntriesOfType(
     for (Index = 0; Index < This->TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
     {
         PartialDescriptor = &This->TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
-
+        DPRINT1("Descriptor Type %u\n", PartialDescriptor->Type);
         if (PartialDescriptor->Type == Type)
         {
             /* Yay! Finally found one that matches! */
@@ -114,7 +114,7 @@ IResourceList_fnNumberOfEntriesOfType(
         }
     }
 
-    DPRINT("Found %d\n", Count);
+    DPRINT("Found %d type %d\n", Count, Type);
     return Count;
 }
 
@@ -299,9 +299,11 @@ PcNewResourceList(
     OUT PRESOURCELIST* OutResourceList,
     IN  PUNKNOWN OuterUnknown OPTIONAL,
     IN  POOL_TYPE PoolType,
-    IN  PCM_RESOURCE_LIST TranslatedResources,
-    IN  PCM_RESOURCE_LIST UntranslatedResources)
+    IN  PCM_RESOURCE_LIST TranslatedResourceList,
+    IN  PCM_RESOURCE_LIST UntranslatedResourceList)
 {
+    PCM_RESOURCE_LIST NewUntranslatedResources, NewTranslatedResources;
+    ULONG NewTranslatedSize, NewUntranslatedSize;
     IResourceListImpl* NewList;
 
     /* TODO: Validate parameters */
@@ -317,11 +319,32 @@ PcNewResourceList(
     }
 
     /* Initialize */
+
+    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + (TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    NewTranslatedResources = ExAllocatePoolWithTag(PoolType, NewTranslatedSize, TAG_PORTCLASS);
+    if (!NewTranslatedResources)
+    {
+        ExFreePoolWithTag(NewList, TAG_PORTCLASS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) + (UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    NewUntranslatedResources = ExAllocatePoolWithTag(PoolType, NewUntranslatedSize, TAG_PORTCLASS);
+    if (!NewUntranslatedResources)
+    {
+        ExFreePoolWithTag(NewList, TAG_PORTCLASS);
+        ExFreePoolWithTag(NewTranslatedResources, TAG_PORTCLASS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlCopyMemory(NewTranslatedResources, TranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+    RtlCopyMemory(NewUntranslatedResources, UntranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+
     NewList->lpVtbl = (IResourceListVtbl*)&vt_ResourceListVtbl;
     NewList->ref = 1;
     NewList->OuterUnknown = OuterUnknown;
-    NewList->TranslatedResourceList= TranslatedResources;
-    NewList->UntranslatedResourceList = UntranslatedResources;
+    NewList->TranslatedResourceList= NewTranslatedResources;
+    NewList->UntranslatedResourceList = NewUntranslatedResources;
     NewList->PoolType = PoolType;
 
     /* Increment our usage count and set the pointer to this object */
