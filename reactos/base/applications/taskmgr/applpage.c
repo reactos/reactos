@@ -429,16 +429,23 @@ void ApplicationPageUpdate(void)
     if (ListView_GetSelectedCount(hApplicationPageListCtrl))
     {
         EnableWindow(hApplicationPageEndTaskButton, TRUE);
-        EnableWindow(hApplicationPageSwitchToButton, TRUE);
     }
     else
     {
         EnableWindow(hApplicationPageEndTaskButton, FALSE);
-        EnableWindow(hApplicationPageSwitchToButton, FALSE);
+    }
+    /* Enable "Switch To" button only if one app is selected */
+    if (ListView_GetSelectedCount(hApplicationPageListCtrl) == 1 )
+    {
+        EnableWindow(hApplicationPageSwitchToButton, TRUE);
+    }
+    else
+    {
+    EnableWindow(hApplicationPageSwitchToButton, FALSE);
     }
 
-    /* If we are on the applications tab the the windows menu will */
-    /* be present on the menu bar so enable & disable the menu items */
+    /* If we are on the applications tab the windows menu will be */
+    /* present on the menu bar so enable & disable the menu items */
     if (TabCtrl_GetCurSel(hTabWnd) == 0)
     {
         HMENU  hMenu;
