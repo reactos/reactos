@@ -103,7 +103,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
             iMonitor++;
             break;
            case otTimer:
-            iMonitor++;
+            iTimer++;
             break;
            default:
             break;
