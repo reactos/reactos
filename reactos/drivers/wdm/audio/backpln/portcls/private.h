@@ -9,6 +9,7 @@
 
 #include <ntddk.h>
 #include <portcls.h>
+#define YDEBUG
 #include <debug.h>
 
 #include <portcls.h>
@@ -102,9 +103,13 @@ typedef struct
 typedef struct
 {
     PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT PrevDeviceObject;
     PCPFNSTARTDEVICE StartDevice;
     KSDEVICE_HEADER KsDeviceHeader;
     IAdapterPowerManagement * AdapterPowerManagement;
+    ULONG MaxSubDevices;
+    KSOBJECT_CREATE_ITEM * CreateItems;
+
 
     IResourceList* resources;
     LIST_ENTRY SubDeviceList;
