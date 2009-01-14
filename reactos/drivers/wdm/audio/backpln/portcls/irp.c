@@ -119,7 +119,7 @@ PortClsPnp(
         if ( ! NT_SUCCESS(status) )
         {
             DPRINT("StartDevice returned a failure code [0x%8x]\n", status);
-            //resource_list->lpVtbl->Release(resource_list);
+            resource_list->lpVtbl->Release(resource_list);
 
             Irp->IoStatus.Status = status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -261,50 +261,14 @@ PcCompleteIrp(
     return STATUS_UNSUCCESSFUL;
 }
 
-static
-NTSTATUS
-NTAPI
-IrpCompletionRoutine(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
-{
-    KeSetEvent((PRKEVENT)Context, IO_NO_INCREMENT, FALSE);
-    return STATUS_SUCCESS;
-}
-
-
 /*
- * @implemented
+ * @unimplemented
  */
 NTSTATUS NTAPI
 PcForwardIrpSynchronous(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    KEVENT Event;
-    PCExtension* DeviceExt;
-    NTSTATUS Status;
-
-    DPRINT1("PcRegisterSubdevice\n");
-
-    DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
-
-    /* initialize the notification event */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* setup a completion routine */
-    IoSetCompletionRoutine(Irp, IrpCompletionRoutine, (PVOID)&Event, TRUE, FALSE, FALSE);
-
-    /* now call the driver */
-    Status = IoCallDriver(DeviceExt->PrevDeviceObject, Irp);
-    /* did the request complete yet */
-    if (Status == STATUS_PENDING)
-    {
-        /* not yet, lets wait a bit */
-        KeWaitForSingleObject(&Event, Executive, FALSE, FALSE, NULL);
-        Status = STATUS_SUCCESS;
-    }
-
-    return Status;
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
 }
