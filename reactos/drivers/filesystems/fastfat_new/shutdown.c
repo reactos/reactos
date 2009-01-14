@@ -17,7 +17,7 @@ NTSTATUS
 NTAPI
 FatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-    DPRINT("FatShutdown(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
+    DPRINT1("FatShutdown(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
     return STATUS_NOT_IMPLEMENTED;
 }

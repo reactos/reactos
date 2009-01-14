@@ -17,7 +17,7 @@ NTSTATUS
 NTAPI
 FatCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-    DPRINT("FatCleanup(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
+    DPRINT1("FatCleanup(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
     return STATUS_NOT_IMPLEMENTED;
 }

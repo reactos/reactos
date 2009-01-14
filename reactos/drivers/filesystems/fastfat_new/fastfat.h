@@ -3,6 +3,7 @@
 #include <reactos/helper.h>
 #include <debug.h>
 
+/* FAT on-disk data structures */
 #include <pshpack1.h>
 struct _BootSector
 {
@@ -164,46 +165,15 @@ typedef struct _slot slot;
 
 #include <poppack.h>
 
-#define VFAT_CASE_LOWER_BASE	8  		// base is lower case
-#define VFAT_CASE_LOWER_EXT 	16 		// extension is lower case
 
-#define LONGNAME_MAX_LENGTH 	256		// max length for a long filename
-
-#define ENTRY_DELETED(DeviceExt, DirEntry) ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_DELETED(&((DirEntry)->FatX)) : FAT_ENTRY_DELETED(&((DirEntry)->Fat)))
-#define ENTRY_VOLUME(DeviceExt, DirEntry)  ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
-#define ENTRY_END(DeviceExt, DirEntry)     ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_END(&((DirEntry)->FatX)) : FAT_ENTRY_END(&((DirEntry)->Fat)))
-
-#define FAT_ENTRY_DELETED(DirEntry)  ((DirEntry)->Filename[0] == 0xe5)
-#define FAT_ENTRY_END(DirEntry)      ((DirEntry)->Filename[0] == 0)
-#define FAT_ENTRY_LONG(DirEntry)     (((DirEntry)->Attrib & 0x3f) == 0x0f)
-#define FAT_ENTRY_VOLUME(DirEntry)   (((DirEntry)->Attrib & 0x1f) == 0x08)
-
-#define FATX_ENTRY_DELETED(DirEntry) ((DirEntry)->FilenameLength == 0xe5)
-#define FATX_ENTRY_END(DirEntry)     ((DirEntry)->FilenameLength == 0xff)
-#define FATX_ENTRY_LONG(DirEntry)    (FALSE)
-#define FATX_ENTRY_VOLUME(DirEntry)  (((DirEntry)->Attrib & 0x1f) == 0x08)
-
-#define FAT_ENTRIES_PER_PAGE   (PAGE_SIZE / sizeof (FAT_DIR_ENTRY))
-#define FATX_ENTRIES_PER_PAGE  (PAGE_SIZE / sizeof (FATX_DIR_ENTRY))
-
-typedef struct _FATXDirEntry FATX_DIR_ENTRY, *PFATX_DIR_ENTRY;
-
-union _DIR_ENTRY
-{
-   FAT_DIR_ENTRY Fat;
-   FATX_DIR_ENTRY FatX;
-};
-
-typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
-
-#define BLOCKSIZE 512
-
+/* File system types */
 #define FAT16  (1)
 #define FAT12  (2)
 #define FAT32  (3)
 #define FATX16 (4)
 #define FATX32 (5)
 
+/* VCB Flags */
 #define VCB_VOLUME_LOCKED       0x0001
 #define VCB_DISMOUNT_PENDING    0x0002
 #define VCB_IS_FATX             0x0004
@@ -232,23 +202,7 @@ typedef struct
 struct _VFATFCB;
 struct _VFAT_DIRENTRY_CONTEXT;
 
-typedef struct _HASHENTRY
-{
-  ULONG Hash;
-  struct _VFATFCB* self;
-  struct _HASHENTRY* next;
-}
-HASHENTRY;
-
-#define FCB_HASH_TABLE_SIZE 65536
-
 typedef struct DEVICE_EXTENSION *PDEVICE_EXTENSION;
-
-typedef NTSTATUS (*PGET_NEXT_CLUSTER)(PDEVICE_EXTENSION,ULONG,PULONG);
-typedef NTSTATUS (*PFIND_AND_MARK_AVAILABLE_CLUSTER)(PDEVICE_EXTENSION,PULONG);
-typedef NTSTATUS (*PWRITE_CLUSTER)(PDEVICE_EXTENSION,ULONG,ULONG,PULONG);
-
-typedef NTSTATUS (*PGET_NEXT_DIR_ENTRY)(PVOID*,PVOID*,struct _VFATFCB*,struct _VFAT_DIRENTRY_CONTEXT*,BOOLEAN);
 
 typedef struct _DEVICE_EXTENSION
 {
@@ -269,19 +223,10 @@ typedef struct _DEVICE_EXTENSION
   ULONG Flags;
   struct _VFATFCB * VolumeFcb;
 
-  /* Pointers to functions for manipulating FAT. */
-  PGET_NEXT_CLUSTER GetNextCluster;
-  PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
-  PWRITE_CLUSTER WriteCluster;
-  ULONG CleanShutBitMask;
-
-  /* Pointers to functions for manipulating directory entries. */
-  PGET_NEXT_DIR_ENTRY GetNextDirEntry;
-
   ULONG BaseDateYear;
 
   LIST_ENTRY VolumeListEntry;
-} DEVICE_EXTENSION, VCB, *PVCB;
+} DEVICE_EXTENSION;
 
 typedef struct _FAT_GLOBAL_DATA
 {
@@ -298,6 +243,7 @@ typedef struct _FAT_GLOBAL_DATA
 
 extern VFAT_GLOBAL_DATA VfatGlobalData;
 
+/* FCB flags */
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_DELETE_PENDING      0x0002
 #define FCB_IS_FAT              0x0004
@@ -314,9 +260,6 @@ typedef struct _VFATFCB
   ERESOURCE MainResource;
   ERESOURCE PagingIoResource;
   /* end FCB header required by ROS/NT */
-
-  /* directory entry for this file or directory */
-  DIR_ENTRY entry;
 
   /* Pointer to attributes in entry */
   PUCHAR Attributes;
@@ -366,12 +309,6 @@ typedef struct _VFATFCB
   /* Incremented on IRP_MJ_CREATE, decremented on IRP_MJ_CLEANUP */
   ULONG OpenHandleCount;
 
-  /* Entry into the hash table for the path + long name */
-  HASHENTRY Hash;
-
-  /* Entry into the hash table for the path + short name */
-  HASHENTRY ShortHash;
-
   /* List of byte-range locks for this file */
   FILE_LOCK FileLock;
 
@@ -394,6 +331,21 @@ typedef struct _VFATCCB
   UNICODE_STRING SearchPattern;
 } VFATCCB, *PVFATCCB;
 
+/* Volume Control Block */
+typedef struct _VCB
+{
+    FSRTL_ADVANCED_FCB_HEADER VolumeFileHeader;
+} VCB, *PVCB;
+
+/* Volume Device Object */
+typedef struct _VOLUME_DEVICE_OBJECT
+{
+    DEVICE_OBJECT DeviceObject;
+    FSRTL_COMMON_FCB_HEADER VolumeHeader;
+    VCB Vcb; /* Must be the last entry! */
+} VOLUME_DEVICE_OBJECT, *PVOLUME_DEVICE_OBJECT;
+
+
 #ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #endif
@@ -402,8 +354,6 @@ typedef struct _VFATCCB
 #define TAG_FCB TAG('V', 'F', 'C', 'B')
 #define TAG_IRP TAG('V', 'I', 'R', 'P')
 #define TAG_VFAT TAG('V', 'F', 'A', 'T')
-
-#define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
 
 typedef struct __DOSTIME
 {
@@ -421,33 +371,32 @@ typedef struct __DOSDATE
 }
 DOSDATE, *PDOSDATE;
 
-#define IRPCONTEXT_CANWAIT	    0x0001
+#define IRPCONTEXT_CANWAIT          0x0001
 #define IRPCONTEXT_PENDINGRETURNED  0x0002
+#define IRPCONTEXT_STACK_IO_CONTEXT 0x0004
 
 typedef struct _FAT_IRP_CONTEXT
 {
    PIRP Irp;
    PDEVICE_OBJECT DeviceObject;
-   PDEVICE_EXTENSION DeviceExt;
-   ULONG Flags;
-   WORK_QUEUE_ITEM WorkQueueItem;
-   PIO_STACK_LOCATION Stack;
    UCHAR MajorFunction;
    UCHAR MinorFunction;
    PFILE_OBJECT FileObject;
-   ULONG RefCount;
+   ULONG Flags;
+   PVCB Vcb;
+   ULONG PinCount;
+   struct _FAT_IO_CONTEXT *FatIoContext;
+
+   PDEVICE_EXTENSION DeviceExt;
+   WORK_QUEUE_ITEM WorkQueueItem;
+   PIO_STACK_LOCATION Stack;
    KEVENT Event;
 } FAT_IRP_CONTEXT, *PFAT_IRP_CONTEXT;
 
-typedef struct _VFAT_DIRENTRY_CONTEXT
+typedef struct _FAT_IO_CONTEXT
 {
-  ULONG StartIndex;
-  ULONG DirIndex;
-  DIR_ENTRY DirEntry;
-  UNICODE_STRING LongNameU;
-  UNICODE_STRING ShortNameU;
-} VFAT_DIRENTRY_CONTEXT, *PVFAT_DIRENTRY_CONTEXT;
-
+    PMDL ZeroMdl;
+} _FAT_IO_CONTEXT, *PFAT_IO_CONTEXT;
 
 /*  ------------------------------------------------------  shutdown.c  */
 
@@ -510,6 +459,20 @@ FatNoopAcquire(IN PVOID Context,
 
 VOID NTAPI
 FatNoopRelease(IN PVOID Context);
+
+/* ---------------------------------------------------------  fastfat.c */
+
+PFAT_IRP_CONTEXT NTAPI
+FatBuildIrpContext(PIRP Irp, BOOLEAN CanWait);
+
+VOID NTAPI
+FatDestroyIrpContext(PFAT_IRP_CONTEXT IrpContext);
+
+VOID NTAPI
+FatCompleteRequest(PFAT_IRP_CONTEXT IrpContext OPTIONAL,
+                   PIRP Irp OPTIONAL,
+                   NTSTATUS Status);
+
 
 /* ---------------------------------------------------------  lock.c */
 

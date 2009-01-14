@@ -17,6 +17,7 @@ NTSTATUS
 NTAPI
 FatDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
+    DPRINT1("FatDeviceControl()\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 

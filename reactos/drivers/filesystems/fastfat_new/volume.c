@@ -17,6 +17,7 @@ NTSTATUS
 NTAPI
 FatQueryVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
+    DPRINT1("FatQueryVolumeInfo()\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -24,6 +25,7 @@ NTSTATUS
 NTAPI
 FatSetVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
+    DPRINT1("FatSetVolumeInfo()\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 

@@ -114,5 +114,112 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     return STATUS_SUCCESS;
 }
 
-/* EOF */
+PFAT_IRP_CONTEXT
+NTAPI
+FatBuildIrpContext(PIRP Irp,
+                   BOOLEAN CanWait)
+{
+    PIO_STACK_LOCATION IrpSp;
+    PFAT_IRP_CONTEXT IrpContext;
+    PVOLUME_DEVICE_OBJECT VolumeObject;
 
+    /* Get current IRP stack location */
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Allocate memory for the Irp context */
+    IrpContext = ExAllocateFromNPagedLookasideList(&FatGlobalData.IrpContextList);
+
+    /* Zero init memory */
+    RtlZeroMemory(IrpContext, sizeof(FAT_IRP_CONTEXT));
+
+    /* Save IRP, MJ and MN */
+    IrpContext->Irp = Irp;
+    IrpContext->MajorFunction = IrpSp->MajorFunction;
+    IrpContext->MinorFunction = IrpSp->MinorFunction;
+
+    /* Set DeviceObject */
+    if (IrpSp->FileObject)
+    {
+        IrpContext->DeviceObject = IrpSp->FileObject->DeviceObject;
+
+        /* Save VCB pointer */
+        VolumeObject = (PVOLUME_DEVICE_OBJECT)IrpSp->DeviceObject;
+        IrpContext->Vcb = &VolumeObject->Vcb;
+
+        /* TODO: Handle write-through */
+    }
+    else if (IrpContext->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL)
+    {
+        /* Handle FSCTRL case */
+        IrpContext->DeviceObject = IrpSp->Parameters.MountVolume.Vpb->RealDevice;
+    }
+
+    /* Set Wait flag */
+    if (CanWait) IrpContext->Flags |= IRPCONTEXT_CANWAIT;
+
+    /* Return prepared context */
+    return IrpContext;
+}
+
+VOID
+NTAPI
+FatDestroyIrpContext(PFAT_IRP_CONTEXT IrpContext)
+{
+    PAGED_CODE();
+
+    /* Make sure it has no pinned stuff */
+    ASSERT(IrpContext->PinCount == 0);
+
+    /* If there is a FatIo context associated with it - free it */
+    if (IrpContext->FatIoContext)
+    {
+        if (!(IrpContext->Flags & IRPCONTEXT_STACK_IO_CONTEXT))
+        {
+            /* If a zero mdl was allocated - free it */
+            if (IrpContext->FatIoContext->ZeroMdl)
+                IoFreeMdl(IrpContext->FatIoContext->ZeroMdl);
+
+            /* Free memory of FatIo context */
+            ExFreePool(IrpContext->FatIoContext);
+        }
+    }
+
+    /* Free memory */
+    ExFreeToNPagedLookasideList(&FatGlobalData.IrpContextList, IrpContext);
+}
+
+VOID
+NTAPI
+FatCompleteRequest(PFAT_IRP_CONTEXT IrpContext OPTIONAL,
+                   PIRP Irp OPTIONAL,
+                   NTSTATUS Status)
+{
+    PAGED_CODE();
+
+    if (IrpContext)
+    {
+        /* TODO: Unpin repinned BCBs */
+        //ASSERT(IrpContext->Repinned.Bcb[0] == NULL);
+        //FatUnpinRepinnedBcbs( IrpContext );
+
+        /* Destroy IRP context */
+        FatDestroyIrpContext(IrpContext);
+    }
+
+    /* Complete the IRP */
+    if (Irp)
+    {
+        /* Cleanup IoStatus.Information in case of error input operation */
+        if (NT_ERROR(Status) && (Irp->Flags & IRP_INPUT_OPERATION))
+        {
+            Irp->IoStatus.Information = 0;
+        }
+
+        /* Save status and complete this IRP */
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest( Irp, IO_DISK_INCREMENT );
+    }
+}
+
+
+/* EOF */

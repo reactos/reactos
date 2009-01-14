@@ -18,6 +18,7 @@ NTSTATUS
 NTAPI
 FatFlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
+    DPRINT1("FatFlushBuffers()\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
