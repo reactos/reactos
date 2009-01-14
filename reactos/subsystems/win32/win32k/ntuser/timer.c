@@ -54,6 +54,72 @@ static ULONG          HintIndex = 0;
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Mutex)
 
 /* FUNCTIONS *****************************************************************/
+PTIMER
+FASTCALL
+CreateTimer(VOID)
+{
+  HANDLE Handle;
+  PTIMER Ret = NULL;
+
+  if (!FirstpTmr)
+  {
+      FirstpTmr = UserCreateObject(gHandleTable, &Handle, otTimer, sizeof(TIMER));
+      if (FirstpTmr) InitializeListHead(&FirstpTmr->ptmrList);
+      Ret = FirstpTmr;
+  }
+  else
+  {
+      Ret = UserCreateObject(gHandleTable, &Handle, otTimer, sizeof(TIMER));
+      if (Ret) InsertTailList(&FirstpTmr->ptmrList, &Ret->ptmrList);
+  } 
+  return Ret;
+}
+
+static
+BOOL
+FASTCALL
+RemoveTimer(PTIMER pTmr)
+{
+  if (pTmr)
+  {
+     RemoveEntryList(&pTmr->ptmrList);
+     UserDeleteObject( USER_BODY_TO_HEADER(pTmr)->hSelf, otTimer);
+     return TRUE;
+  }
+  return FALSE;
+}
+
+PTIMER
+FASTCALL
+FindTimer(PWINDOW_OBJECT Window,
+          UINT_PTR nID,
+          UINT flags,
+          BOOL Distroy)
+{
+  PTIMER pTmr = FirstpTmr;
+  KeEnterCriticalRegion();
+  do
+  {
+    if (!pTmr) break;
+
+    if ( pTmr->nID == nID &&
+         pTmr->pWnd == Window &&
+        (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) == (flags & (TMRF_SYSTEM|TMRF_RIT)))
+    {
+       if (Distroy)
+       {
+          RemoveTimer(pTmr);
+          pTmr = (PTIMER)1; // We are here to remove the timer.
+       }
+       break;
+    }
+
+    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+  KeLeaveCriticalRegion();
+
+  return pTmr;
+}
 
 PTIMER
 FASTCALL
@@ -104,6 +170,41 @@ ValidateTimerCallback(PW32THREADINFO pti,
   return TRUE;
 }
 
+// Rename it to IntSetTimer after move.
+UINT_PTR FASTCALL
+InternalSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
+{
+  return 0;
+}
+
+//
+// Process system timers.
+//
+VOID
+CALLBACK
+SystemTimerProc(HWND hwnd,
+                UINT uMsg,
+         UINT_PTR idEvent,
+             DWORD dwTime)
+{
+}
+
+UINT_PTR
+FASTCALL
+SetSystemTimer( HWND hWnd,
+                UINT_PTR nIDEvent,
+                UINT uElapse,
+                TIMERPROC lpTimerFunc) 
+{
+  return 0;
+}
+
+
+//
+//
+// Old Timer Queueing
+//
+//
 UINT_PTR FASTCALL
 IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
 {
@@ -268,12 +369,6 @@ InitTimerImpl(VOID)
    /* yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
 
-   if (!FirstpTmr)
-   {
-      FirstpTmr = ExAllocatePoolWithTag(PagedPool, sizeof(TIMER), TAG_TIMERBMP);
-      if (FirstpTmr) InitializeListHead(&FirstpTmr->ptmrList);
-   }
-
    return STATUS_SUCCESS;
 }
 
@@ -337,6 +432,7 @@ NtUserSetSystemTimer(
    DPRINT("Enter NtUserSetSystemTimer\n");
    UserEnterExclusive();
 
+   // This is wrong, lpTimerFunc is NULL!
    RETURN(IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, TRUE));
 
 CLEANUP:

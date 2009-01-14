@@ -70,7 +70,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
    {
 /**/
       int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0,
-          iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0;
+          iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0, iTimer = 0;
  /**/
       DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", usedHandles, ht->nb_handles);
 //#if 0
@@ -102,12 +102,15 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
            case otMonitor:
             iMonitor++;
             break;
+           case otTimer:
+            iMonitor++;
+            break;
            default:
             break;
          }
       }
-      DPRINT1("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d\n",
-      iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor );
+      DPRINT1("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d Timer = %d\n",
+      iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor, iTimer );
 //#endif
       return NULL;
 #if 0
