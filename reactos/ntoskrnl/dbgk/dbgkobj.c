@@ -53,7 +53,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
               Process, Thread, Message, Flags);
 
     /* Check if we have to allocate a debug event */
-    NewEvent = (Flags & 2) ? TRUE : FALSE;
+    NewEvent = (Flags & DEBUG_EVENT_NOWAIT) ? TRUE : FALSE;
     if (NewEvent)
     {
         /* Allocate it */
@@ -63,7 +63,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
         if (!DebugEvent) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Set flags */
-        DebugEvent->Flags = Flags | 4;
+        DebugEvent->Flags = Flags | DEBUG_EVENT_INACTIVE;
 
         /* Reference the thread and process */
         ObReferenceObject(Thread);
@@ -428,17 +428,17 @@ DbgkpWakeTarget(IN PDEBUG_EVENT DebugEvent)
     DBGKTRACE(DBGK_OBJECT_DEBUG, "DebugEvent: %p\n", DebugEvent);
 
     /* Check if we have to wake the thread */
-    if (DebugEvent->Flags & 0x20) PsResumeThread(Thread, NULL);
+    if (DebugEvent->Flags & DEBUG_EVENT_SUSPEND) PsResumeThread(Thread, NULL);
 
     /* Check if we had locked the thread */
-    if (DebugEvent->Flags & 8)
+    if (DebugEvent->Flags & DEBUG_EVENT_RELEASE)
     {
         /* Unlock it */
         ExReleaseRundownProtection(&Thread->RundownProtect);
     }
 
     /* Check if we have to wake up the event */
-    if (DebugEvent->Flags & 2)
+    if (DebugEvent->Flags & DEBUG_EVENT_NOWAIT)
     {
         /* Otherwise, free the debug event */
         DbgkpFreeDebugEvent(DebugEvent);
@@ -552,7 +552,7 @@ DbgkpPostFakeModuleMessages(IN PEPROCESS Process,
         Status = DbgkpQueueMessage(Process,
                                    Thread,
                                    &ApiMessage,
-                                   2,
+                                   DEBUG_EVENT_NOWAIT,
                                    DebugObject);
         if (!NT_SUCCESS(Status))
         {
@@ -621,7 +621,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
         if (ExAcquireRundownProtection(&ThisThread->RundownProtect))
         {
             /* Acquire worked, set flags */
-            Flags = 0x8 | 0x2;
+            Flags = DEBUG_EVENT_RELEASE | DEBUG_EVENT_NOWAIT;
 
             /* Check if this is a user thread */
             if (!ThisThread->SystemThread)
@@ -630,14 +630,14 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
                 if (NT_SUCCESS(PsSuspendThread(ThisThread, NULL)))
                 {
                     /* Remember this */
-                    Flags = 0x8 | 0x2 | 0x20;
+                    Flags |= DEBUG_EVENT_SUSPEND;
                 }
             }
         }
         else
         {
             /* Couldn't acquire rundown */
-            Flags = 0x10 | 0x2;
+            Flags = DEBUG_EVENT_PROTECT_FAILED | DEBUG_EVENT_NOWAIT;
         }
 
         /* Clear the API Message */
@@ -645,7 +645,7 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
 
         /* Check if this is the first thread */
         if ((IsFirstThread) &&
-            !(Flags & 0x10) &&
+            !(Flags & DEBUG_EVENT_PROTECT_FAILED) &&
             !(ThisThread->SystemThread) &&
             (ThisThread->GrantedAccess))
         {
@@ -1279,7 +1279,7 @@ ThreadScan:
                   DebugEvent->BackoutThread, PsGetCurrentThread());
 
         /* Check for if the debug event queue needs flushing */
-        if ((DebugEvent->Flags & 4) &&
+        if ((DebugEvent->Flags & DEBUG_EVENT_INACTIVE) &&
             (DebugEvent->BackoutThread == PsGetCurrentThread()))
         {
             /* Get the event's thread */
@@ -1293,7 +1293,7 @@ ThreadScan:
                 (!EventThread->SystemThread))
             {
                 /* Check if we couldn't acquire rundown for it */
-                if (DebugEvent->Flags & 0x10)
+                if (DebugEvent->Flags & DEBUG_EVENT_PROTECT_FAILED)
                 {
                     /* Set the skip termination flag */
                     PspSetCrossThreadFlag(EventThread, CT_SKIP_CREATION_MSG_BIT);
@@ -1308,7 +1308,7 @@ ThreadScan:
                     if (DoSetEvent)
                     {
                         /* Do it */
-                        DebugEvent->Flags &= ~4;
+                        DebugEvent->Flags &= ~DEBUG_EVENT_INACTIVE;
                         KeSetEvent(&DebugObject->EventsPresent,
                                    IO_NO_INCREMENT,
                                    FALSE);
@@ -1330,10 +1330,10 @@ ThreadScan:
             }
 
             /* Check if the lock is held */
-            if (DebugEvent->Flags & 8)
+            if (DebugEvent->Flags & DEBUG_EVENT_RELEASE)
             {
                 /* Release it */
-                DebugEvent->Flags &= ~8;
+                DebugEvent->Flags &= ~DEBUG_EVENT_RELEASE;
                 ExReleaseRundownProtection(&EventThread->RundownProtect);
             }
         }
@@ -1569,7 +1569,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
                     if (NeedsWake)
                     {
                         /* Wake it up and break out */
-                        DebugEvent->Flags &= ~4;
+                        DebugEvent->Flags &= ~DEBUG_EVENT_INACTIVE;
                         KeSetEvent(&DebugEvent->ContinueEvent,
                                    IO_NO_INCREMENT,
                                    FALSE);
@@ -1578,7 +1578,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
 
                     /* Compare thread ID and flag */
                     if ((DebugEvent->ClientId.UniqueThread ==
-                        AppClientId->UniqueThread) && (DebugEvent->Flags & 1))
+                        AppClientId->UniqueThread) && (DebugEvent->Flags & DEBUG_EVENT_READ))
                     {
                         /* Remove the event from the list */
                         RemoveEntryList(NextEntry);
@@ -1931,7 +1931,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                           DebugEvent, DebugEvent->Flags);
 
                 /* Check flags */
-                if (!(DebugEvent->Flags & (4 | 1)))
+                if (!(DebugEvent->Flags & (DEBUG_EVENT_INACTIVE | DEBUG_EVENT_READ)))
                 {
                     /* We got an event */
                     GotEvent = TRUE;
@@ -1950,7 +1950,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                             DebugEvent->ClientId.UniqueProcess)
                         {
                             /* Found it, break out */
-                            DebugEvent->Flags |= 4;
+                            DebugEvent->Flags |= DEBUG_EVENT_INACTIVE;
                             DebugEvent->BackoutThread = NULL;
                             GotEvent = FALSE;
                             break;
@@ -1982,7 +1982,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                                                     DebugEvent);
 
                 /* Set flag */
-                DebugEvent->Flags |= 1;
+                DebugEvent->Flags |= DEBUG_EVENT_READ;
             }
             else
             {
@@ -2049,5 +2049,3 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     /* Return status */
     return Status;
 }
-
-/* EOF */
