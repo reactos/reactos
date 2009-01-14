@@ -1090,6 +1090,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
    PLIST_ENTRY Entry;
    PETHREAD Thread = NULL;
    PEPROCESS Process = NULL;
+   BOOLEAN ReferencedThread = FALSE, ReferencedProcess = FALSE;
    PULONG Esp;
    PULONG Ebp;
    ULONG Eip;
@@ -1118,6 +1119,9 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
             KdbpPrint("thread: Invalid process id!\n");
             return TRUE;
          }
+         
+         /* Remember our reference */
+         ReferencedProcess = TRUE;
       }
 
       Entry = Process->ThreadListHead.Flink;
@@ -1127,6 +1131,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
             KdbpPrint("No threads in process 0x%08x!\n", ul);
          else
             KdbpPrint("No threads in current process!\n");
+         if (ReferencedProcess) ObDereferenceObject(Process);
          return TRUE;
       }
 
@@ -1181,6 +1186,9 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
          Entry = Entry->Flink;
       }
       while (Entry != &Process->ThreadListHead);
+
+      /* Release our reference, if any */
+      if (ReferencedProcess) ObDereferenceObject(Process);
    }
    else if (Argc >= 2 && _stricmp(Argv[1], "attach") == 0)
    {
@@ -1219,6 +1227,9 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
             KdbpPrint("thread: Invalid thread id!\n");
             return TRUE;
          }
+         
+         /* Remember our reference */
+         ReferencedThread = TRUE;
       }
 
       if (Thread->Tcb.State < (DeferredReady + 1))
@@ -1248,6 +1259,8 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
                 Thread->Tcb.TrapFrame,
                 NPX_STATE_TO_STRING(Thread->Tcb.NpxState), Thread->Tcb.NpxState);
 
+        /* Release our reference if we had one */
+        if (ReferencedThread) ObDereferenceObject(Thread);
    }
 
    return TRUE;
@@ -1260,6 +1273,7 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
 {
    PLIST_ENTRY Entry;
    PEPROCESS Process;
+   BOOLEAN ReferencedProcess = FALSE;
    PCHAR State, pend, str1, str2;
    ULONG ul;
    extern LIST_ENTRY PsActiveProcessHead;
@@ -1341,6 +1355,9 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
             KdbpPrint("proc: Invalid process id!\n");
             return TRUE;
          }
+         
+         /* Remember our reference */
+         ReferencedProcess = TRUE;
       }
 
       State = ((Process->Pcb.State == ProcessInMemory) ? "In Memory" :
@@ -1353,6 +1370,9 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
                 Process->UniqueProcessId,
                 State, Process->Pcb.State,
                 Process->ImageFileName);
+
+        /* Release our reference, if any */
+        if (ReferencedProcess) ObDereferenceObject(Process);
    }
 
    return TRUE;
