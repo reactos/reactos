@@ -19,6 +19,21 @@
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
   DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtGetDevicePowerState(
+    IN HANDLE Device,
+    IN PDEVICE_POWER_STATE PowerState
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtRequestWakeupLatency(
+    IN LATENCY_TIME latency
+);
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
