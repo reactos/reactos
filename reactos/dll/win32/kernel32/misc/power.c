@@ -91,14 +91,30 @@ SetSystemPowerState(BOOL fSuspend, BOOL fForce)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GetDevicePowerState(HANDLE hDevice, BOOL *pfOn)
 {
-    STUB;
-    return 0;
+    DEVICE_POWER_STATE DevicePowerState;
+    NTSTATUS Status;
+
+    Status = NtGetDevicePowerState(hDevice, &DevicePowerState);
+
+    if (NT_SUCCESS(Status))
+    {
+        if ((DevicePowerState != PowerDeviceUnspecified) &&
+            (DevicePowerState != PowerDeviceD0))
+            *pfOn = FALSE;
+        else
+            *pfOn = TRUE;
+
+        return TRUE;
+    }
+
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
 /*
@@ -113,14 +129,23 @@ RequestDeviceWakeup(HANDLE hDevice)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 RequestWakeupLatency(LATENCY_TIME latency)
 {
-    STUB;
-    return 0;
+    NTSTATUS Status;
+
+    Status = NtRequestWakeupLatency(latency);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*

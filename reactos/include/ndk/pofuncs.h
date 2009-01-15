@@ -86,4 +86,20 @@ ZwSetSystemPowerState(
     IN SYSTEM_POWER_STATE MinSystemState,
     IN ULONG Flags
 );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtGetDevicePowerState(
+    IN HANDLE Device,
+    IN PDEVICE_POWER_STATE PowerState
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtRequestWakeupLatency(
+    IN LATENCY_TIME latency
+);
+
 #endif
