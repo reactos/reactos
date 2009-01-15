@@ -13,6 +13,7 @@
 	<file>server.c</file>
 	<file>typegen.c</file>
 	<file>typelib.c</file>
+	<file>typetree.c</file>
 	<file>utils.c</file>
 	<file>widl.c</file>
 	<file>write_msft.c</file>

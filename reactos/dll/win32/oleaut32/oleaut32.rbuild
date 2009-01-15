@@ -8,6 +8,12 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<define name="_WIN32_WINNT">0x600</define>
+	<define name="PROXY_CLSID">CLSID_PSDispatch</define>
+	<define name="COM_NO_WINDOWS_H"/>
+	<define name="_OLEAUT32_"/>
+	<define name="PROXY_DELEGATION"/>
+	<define name="REGISTER_PROXY_DLL"/>
+	<define name="ENTRY_PREFIX">OLEAUTPS_</define>
 	<file>connpt.c</file>
 	<file>dispatch.c</file>
 	<file>hash.c</file>
@@ -44,6 +50,12 @@
 	<library>pseh</library>
 </module>
 <module name="oleaut32_proxy" type="rpcproxy" allowwarnings="true">
+	<define name="COM_NO_WINDOWS_H"/>
+	<define name="PROXY_CLSID">CLSID_PSDispatch</define>
+	<define name="_OLEAUT32_"/>
+	<define name="PROXY_DELEGATION"/>
+	<define name="REGISTER_PROXY_DLL"/>
+	<define name="ENTRY_PREFIX">OLEAUTPS_</define>
 	<file>oleaut32_oaidl.idl</file>
 	<file>oleaut32_ocidl.idl</file>
 </module>

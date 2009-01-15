@@ -6606,7 +6606,7 @@ static HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM
 
 	if(hRes == S_OK)
 	{
-		/* Get the TypeID...more info needed for this field */
+		/* Get the TypeID... more info needed for this field */
 		dwSize = pOleStream->lpstbl->Get(pOleStream, (void *)&(pData->dwTypeID), sizeof(pData->dwTypeID));
 		if(dwSize != sizeof(pData->dwTypeID))
 		{

@@ -78,7 +78,9 @@
 
 #include "storage32.h"
 
-#define HANDLE_ERROR(err) { hr = err; TRACE("(HRESULT=%x)\n", (HRESULT)err); goto CLEANUP; }
+#include "compobj_private.h"
+
+#define HANDLE_ERROR(err) do { hr = err; TRACE("(HRESULT=%x)\n", (HRESULT)err); goto CLEANUP; } while (0)
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -313,12 +315,19 @@ HRESULT WINAPI OleSetClipboard(IDataObject* pDataObj)
   IEnumFORMATETC* penumFormatetc = NULL;
   FORMATETC rgelt;
   BOOL bClipboardOpen = FALSE;
+  struct oletls *info = COM_CurrentInfo();
 /*
   HGLOBAL hDataObject = 0;
   OLEClipbrd **ppDataObject;
 */
 
   TRACE("(%p)\n", pDataObj);
+
+  if(!info)
+    WARN("Could not allocate tls\n");
+  else
+    if(!info->ole_inits)
+      return CO_E_NOTINITIALIZED;
 
   /*
    * Make sure we have a clipboard object
@@ -414,7 +423,7 @@ HRESULT WINAPI OleSetClipboard(IDataObject* pDataObj)
    if (hDataObject==0)
      HANDLE_ERROR( E_OUTOFMEMORY );
 
-   ppDataObject = (OLEClipbrd**)GlobalLock(hDataObject);
+   ppDataObject = GlobalLock(hDataObject);
    *ppDataObject = theOleClipboard;
    GlobalUnlock(hDataObject);
 
@@ -958,7 +967,7 @@ static HRESULT OLEClipbrd_RenderFormat(IDataObject *pIDataObject, LPFORMATETC pF
 
       if (SUCCEEDED(hr = IDataObject_GetData(theOleClipboard->pIDataObjectSrc, &fmt2, &std2)))
       {
-        mfp = (METAFILEPICT *)GlobalLock(std2.u.hGlobal);
+        mfp = GlobalLock(std2.u.hGlobal);
       }
 
       if (mfp)
@@ -1237,7 +1246,8 @@ static HRESULT WINAPI OLEClipbrd_IDataObject_GetData(
   }
 
   if ( pformatetcIn->lindex != -1 )
-    return DV_E_LINDEX;
+    return DV_E_FORMATETC;
+
   if ( (pformatetcIn->tymed & TYMED_HGLOBAL) != TYMED_HGLOBAL )
     return DV_E_TYMED;
 /*

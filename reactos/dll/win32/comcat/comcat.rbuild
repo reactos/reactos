@@ -15,10 +15,5 @@
 	<library>uuid</library>
 	<library>ntdll</library>
 	<file>comcat_main.c</file>
-	<file>factory.c</file>
-	<file>information.c</file>
-	<file>manager.c</file>
-	<file>register.c</file>
-	<file>regsvr.c</file>
 	<file>version.rc</file>
 </module>

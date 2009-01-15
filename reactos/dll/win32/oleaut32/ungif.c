@@ -148,16 +148,16 @@ MakeMapObject(int ColorCount,
     /*** FIXME: Our ColorCount has to be a power of two.  Is it necessary to
      * make the user know that or should we automatically round up instead? */
     if (ColorCount != (1 << BitSize(ColorCount))) {
-        return ((ColorMapObject *) NULL);
+        return NULL;
     }
 
     Object = ungif_alloc(sizeof(ColorMapObject));
-    if (Object == (ColorMapObject *) NULL) {
-        return ((ColorMapObject *) NULL);
+    if (Object == NULL) {
+        return NULL;
     }
 
     Object->Colors = ungif_calloc(ColorCount, sizeof(GifColorType));
-    if (Object->Colors == (GifColorType *) NULL) {
+    if (Object->Colors == NULL) {
         return NULL;
     }
 
@@ -413,9 +413,9 @@ DGifGetImageDesc(GifFileType * GifFile) {
             return GIF_ERROR;
         }
     }
-    sp->RasterBits = (unsigned char *)NULL;
+    sp->RasterBits = NULL;
     sp->ExtensionBlockCount = 0;
-    sp->ExtensionBlocks = (ExtensionBlock *) NULL;
+    sp->ExtensionBlocks = NULL;
 
     GifFile->ImageCount++;
 

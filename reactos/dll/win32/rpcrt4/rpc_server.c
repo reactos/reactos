@@ -1061,6 +1061,8 @@ RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
 
   LeaveCriticalSection(&listen_cs);
 
+  FIXME("not waiting for server calls to finish\n");
+
   return RPC_S_OK;
 }
 

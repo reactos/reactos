@@ -725,7 +725,7 @@ static DWORD BIGBLOCKFILE_GetProtectMode(DWORD openFlags)
  *
  * See the documentation of ILockBytes for more info.
  */
-static HRESULT WINAPI ImplBIGBLOCKFILE_ReadAt(
+static HRESULT ImplBIGBLOCKFILE_ReadAt(
       BigBlockFile* const This,
       ULARGE_INTEGER ulOffset,  /* [in] */
       void*          pv,        /* [length_is][size_is][out] */
@@ -812,7 +812,7 @@ static HRESULT WINAPI ImplBIGBLOCKFILE_ReadAt(
  *
  * See the documentation of ILockBytes for more info.
  */
-static HRESULT WINAPI ImplBIGBLOCKFILE_WriteAt(
+static HRESULT ImplBIGBLOCKFILE_WriteAt(
       BigBlockFile* const This,
       ULARGE_INTEGER ulOffset,    /* [in] */
       const void*    pv,          /* [size_is][in] */

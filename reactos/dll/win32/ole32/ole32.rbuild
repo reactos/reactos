@@ -9,6 +9,9 @@
 	<define name="__WINESRC__" />
 	<define name="_WIN32_WINNT">0x600</define>
 	<define name="_OLE32_" />
+	<define name="ENTRY_PREFIX">OLE32_</define>
+	<define name="PROXY_CLSID">CLSID_PSFactoryBuffer</define>
+	<define name="REGISTER_PROXY_DLL" />
 	<define name="COM_NO_WINDOWS_H" />
 	<library>wine</library>
 	<library>advapi32</library>
@@ -74,6 +77,9 @@
 	<define name="_OLE32_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<define name="__WINESRC__" />
+	<define name="ENTRY_PREFIX">OLE32_</define>
+	<define name="PROXY_CLSID">CLSID_PSFactoryBuffer</define>
+	<define name="REGISTER_PROXY_DLL"/>
 	<file>dcom.idl</file>
 	<file>ole32_unknwn.idl</file>
 	<file>ole32_objidl.idl</file>

@@ -47,18 +47,6 @@ extern int need_proxy_file(const statement_list_t *stmts);
 extern const var_t *is_callas(const attr_list_t *list);
 extern void write_args(FILE *h, const var_list_t *arg, const char *name, int obj, int do_indent);
 extern void write_array(FILE *h, array_dims_t *v, int field);
-extern void write_import(const char *fname);
-extern void write_forward(type_t *iface);
-extern void write_interface(type_t *iface);
-extern void write_locals(FILE *fp, const type_t *iface, int body);
-extern void write_coclass(type_t *cocl);
-extern void write_coclass_forward(type_t *cocl);
-extern void write_typedef(type_t *type);
-extern void write_declaration(const var_t *v, int is_in_interface);
-extern void write_library(const typelib_t *typelib);
-extern void write_user_types(void);
-extern void write_context_handle_rundowns(void);
-extern void write_generic_handle_routines(void);
 extern const var_t* get_explicit_handle_var(const func_t* func);
 extern const type_t* get_explicit_generic_handle_type(const var_t* var);
 extern const var_t* get_explicit_generic_handle_var(const func_t* func);
@@ -86,19 +74,11 @@ static inline int is_string_type(const attr_list_t *attrs, const type_t *type)
 
 static inline int is_context_handle(const type_t *type)
 {
-    if (is_attr(type->attrs, ATTR_CONTEXTHANDLE))
-        return 1;
-
-    for (;;)
-    {
-        if (is_attr(type->attrs, ATTR_CONTEXTHANDLE))
+    const type_t *t;
+    for (t = type; is_ptr(t); t = t->ref)
+        if (is_attr(t->attrs, ATTR_CONTEXTHANDLE))
             return 1;
-        else if (type->kind == TKIND_ALIAS)
-            type = type->orig;
-        else if (is_ptr(type))
-            type = type->ref;
-        else return 0;
-    }
+    return 0;
 }
 
 #endif

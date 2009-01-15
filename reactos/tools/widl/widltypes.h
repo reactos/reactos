@@ -29,6 +29,7 @@
 #define max(a, b) ((a) > (b) ? a : b)
 
 #include <stdarg.h>
+#include <assert.h>
 #include "guiddef.h"
 #include "wine/rpcfc.h"
 #include "wine/list.h"
@@ -268,14 +269,42 @@ struct _expr_t {
   struct list entry;
 };
 
+struct struct_details
+{
+  var_list_t *fields;
+};
+
+struct enumeration_details
+{
+  var_list_t *enums;
+};
+
+struct func_details
+{
+  var_list_t *args;
+};
+
+struct iface_details
+{
+  func_list_t *disp_methods;
+  var_list_t *disp_props;
+};
+
 struct _type_t {
   const char *name;
   enum type_kind kind;
   unsigned char type;
   struct _type_t *ref;
   attr_list_t *attrs;
+  union
+  {
+    struct struct_details *structure;
+    struct enumeration_details *enumeration;
+    struct func_details *function;
+    struct iface_details *iface;
+  } details;
   func_list_t *funcs;             /* interfaces and modules */
-  var_list_t *fields_or_args;     /* interfaces, structures, enumerations and functions (for args) */
+  statement_list_t *stmts;        /* interfaces and modules */
   ifref_list_t *ifaces;           /* coclasses */
   unsigned long dim;              /* array dimension */
   expr_t *size_is, *length_is;
@@ -320,7 +349,7 @@ struct _declarator_t {
 struct _func_t {
   var_t *def;
   var_list_t *args;
-  int ignore, idx;
+  int idx;
 
   /* parser-internal */
   struct list entry;
@@ -368,7 +397,6 @@ struct _typelib_t {
     char *name;
     char *filename;
     const attr_list_t *attrs;
-    struct list entries;
     struct list importlibs;
     statement_list_t *stmts;
 };
@@ -405,6 +433,7 @@ void check_for_additional_prototype_types(const var_list_t *list);
 void init_types(void);
 type_t *alloc_type(void);
 void set_all_tfswrite(int val);
+void clear_all_offsets(void);
 
 type_t *duptype(type_t *t, int dupname);
 type_t *alias(type_t *t, const char *name);

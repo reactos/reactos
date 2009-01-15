@@ -1420,8 +1420,8 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	TRACE_(olerelay)("(");
     }
 
-    if (iname) SysFreeString(iname);
-    if (fname) SysFreeString(fname);
+    SysFreeString(iname);
+    SysFreeString(fname);
 
     memset(&buf,0,sizeof(buf));
 
@@ -2080,7 +2080,7 @@ TMStubImpl_Invoke(
         goto exit;
     }
 
-    if (iname) SysFreeString (iname);
+    SysFreeString (iname);
 
     /* Need them for hack below */
     memset(names,0,sizeof(names));

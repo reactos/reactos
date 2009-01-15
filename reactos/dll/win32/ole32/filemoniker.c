@@ -63,8 +63,8 @@ static inline IMoniker *impl_from_IROTData( IROTData *iface )
 }
 
 /* Local function used by filemoniker implementation */
-static HRESULT WINAPI FileMonikerImpl_Construct(FileMonikerImpl* iface, LPCOLESTR lpszPathName);
-static HRESULT WINAPI FileMonikerImpl_Destroy(FileMonikerImpl* iface);
+static HRESULT FileMonikerImpl_Construct(FileMonikerImpl* iface, LPCOLESTR lpszPathName);
+static HRESULT FileMonikerImpl_Destroy(FileMonikerImpl* iface);
 
 /*******************************************************************************
  *        FileMoniker_QueryInterface
@@ -456,7 +456,7 @@ FileMonikerImpl_GetSizeMax(IMoniker* iface, ULARGE_INTEGER* pcbSize)
 /******************************************************************************
  *        FileMoniker_Destroy (local function)
  *******************************************************************************/
-HRESULT WINAPI FileMonikerImpl_Destroy(FileMonikerImpl* This)
+HRESULT FileMonikerImpl_Destroy(FileMonikerImpl* This)
 {
     TRACE("(%p)\n",This);
 
@@ -1333,8 +1333,7 @@ static const IROTDataVtbl VT_ROTDataImpl =
 /******************************************************************************
  *         FileMoniker_Construct (local function)
  */
-static HRESULT WINAPI
-FileMonikerImpl_Construct(FileMonikerImpl* This, LPCOLESTR lpszPathName)
+static HRESULT FileMonikerImpl_Construct(FileMonikerImpl* This, LPCOLESTR lpszPathName)
 {
     int nb=0,i;
     int sizeStr=lstrlenW(lpszPathName);

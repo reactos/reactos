@@ -57,6 +57,7 @@
 @ stub CoQueryReleaseObject
 @ stdcall CoRegisterChannelHook(ptr ptr)
 @ stdcall CoRegisterClassObject(ptr ptr long long ptr)
+@ stdcall CoRegisterInitializeSpy(ptr ptr)
 @ stdcall CoRegisterMallocSpy (ptr)
 @ stdcall CoRegisterMessageFilter(ptr ptr)
 @ stdcall CoRegisterPSClsid(ptr ptr)
@@ -67,6 +68,7 @@
 @ stdcall CoResumeClassObjects()
 @ stdcall CoRevertToSelf()
 @ stdcall CoRevokeClassObject(long)
+@ stdcall CoRevokeInitializeSpy(double)
 @ stdcall CoRevokeMallocSpy()
 @ stdcall CoSetProxyBlanket(ptr long long wstr long long ptr long)
 @ stdcall CoSetState(ptr)

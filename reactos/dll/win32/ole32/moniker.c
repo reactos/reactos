@@ -93,7 +93,7 @@ typedef struct EnumMonikerImpl
 
 
 /* IEnumMoniker Local functions*/
-static HRESULT WINAPI EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
+static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
     ULONG pos, IEnumMoniker **ppenumMoniker);
 
 static IrotHandle get_irot_handle(void)
@@ -342,7 +342,7 @@ RunningObjectTableImpl_AddRef(IRunningObjectTable* iface)
 /***********************************************************************
  *        RunningObjectTable_Initialize
  */
-static HRESULT WINAPI
+static HRESULT
 RunningObjectTableImpl_Destroy(void)
 {
     struct list *cursor, *cursor2;
@@ -1463,7 +1463,7 @@ static const IEnumMonikerVtbl VT_EnumMonikerImpl =
  *        Used by EnumRunning to create the structure and EnumClone
  *	  to copy the structure
  */
-static HRESULT WINAPI EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
+static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
                                                  ULONG current_pos,
                                                  IEnumMoniker **ppenumMoniker)
 {

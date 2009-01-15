@@ -22,75 +22,76 @@ cpp_quote("#define IROT_PROTSEQ {'n','c','a','l','r','p','c',0}")
 cpp_quote("#define IROT_ENDPOINT {'i','r','o','t',0}")
 
 typedef struct tagMonikerComparisonData {
-        ULONG ulCntData;
-        [size_is(ulCntData)] BYTE abData[];
+	ULONG ulCntData;
+	[size_is(ulCntData)] BYTE abData[];
 } MonikerComparisonData;
 
 [
     uuid(7a98c254-6808-11cf-b73b-00aa00b677a8),
-    version(0.2)
+    version(0.2),
+    strict_context_handle
 ]
 interface Irot
 {
-        typedef struct tagInterfaceData
-        {
-                ULONG ulCntData;
-                [size_is(ulCntData)] BYTE abData[];
-        } InterfaceData;
+	typedef struct tagInterfaceData
+	{
+		ULONG ulCntData;
+		[size_is(ulCntData)] BYTE abData[];
+	} InterfaceData;
 
-        typedef [unique] InterfaceData *PInterfaceData;
+	typedef [unique] InterfaceData *PInterfaceData;
 
-        typedef struct tagInterfaceList
-        {
-                ULONG size;
-                [size_is(size)] PInterfaceData interfaces[];
-        } InterfaceList;
+	typedef struct tagInterfaceList
+	{
+		ULONG size;
+		[size_is(size)] PInterfaceData interfaces[];
+	} InterfaceList;
 
-        typedef [unique] InterfaceList *PInterfaceList;
+	typedef [unique] InterfaceList *PInterfaceList;
 
-        typedef DWORD IrotCookie;
+	typedef DWORD IrotCookie;
 
-        typedef handle_t IrotHandle;
-        typedef [context_handle] void *IrotContextHandle;
+	typedef handle_t IrotHandle;
+	typedef [context_handle] void *IrotContextHandle;
 
-        HRESULT IrotRegister(
-                [in]  IrotHandle h,
-                [in]  const MonikerComparisonData *moniker_data,
-                [in]  const InterfaceData *object,
-                [in]  const InterfaceData *moniker,
-                [in]  const FILETIME *time,
-                [in]  DWORD grfFlags,
-                [out] IrotCookie *cookie,
-                [out] IrotContextHandle *ctxt_handle);
+	HRESULT IrotRegister(
+		[in]  IrotHandle h,
+		[in]  const MonikerComparisonData *moniker_data,
+		[in]  const InterfaceData *object,
+		[in]  const InterfaceData *moniker,
+		[in]  const FILETIME *time,
+		[in]  DWORD grfFlags,
+		[out] IrotCookie *cookie,
+		[out] IrotContextHandle *ctxt_handle);
 
-        HRESULT IrotRevoke(
-                [in]  IrotHandle h,
-                [in]  IrotCookie cookie,
-                [in, out] IrotContextHandle *ctxt_handle,
-                [out] PInterfaceData *object,
-                [out] PInterfaceData *moniker);
+	HRESULT IrotRevoke(
+		[in]  IrotHandle h,
+		[in]  IrotCookie cookie,
+		[in, out] IrotContextHandle *ctxt_handle,
+		[out] PInterfaceData *object,
+		[out] PInterfaceData *moniker);
 
-        HRESULT IrotIsRunning(
-                [in]  IrotHandle h,
-                [in]  const MonikerComparisonData *moniker_data);
+	HRESULT IrotIsRunning(
+		[in]  IrotHandle h,
+		[in]  const MonikerComparisonData *moniker_data);
 
-        HRESULT IrotGetObject(
-                [in]  IrotHandle h,
-                [in]  const MonikerComparisonData *moniker_data,
-                [out] PInterfaceData *obj,
-                [out] IrotCookie *cookie);
+	HRESULT IrotGetObject(
+		[in]  IrotHandle h,
+		[in]  const MonikerComparisonData *moniker_data,
+		[out] PInterfaceData *obj,
+		[out] IrotCookie *cookie);
 
-        HRESULT IrotNoteChangeTime(
-                [in]  IrotHandle h,
-                [in]  IrotCookie cookie,
-                [in]  const FILETIME *time);
+	HRESULT IrotNoteChangeTime(
+		[in]  IrotHandle h,
+		[in]  IrotCookie cookie,
+		[in]  const FILETIME *time);
 
-        HRESULT IrotGetTimeOfLastChange(
-                [in]  IrotHandle h,
-                [in]  const MonikerComparisonData *moniker_data,
-                [out] FILETIME *time);
+	HRESULT IrotGetTimeOfLastChange(
+		[in]  IrotHandle h,
+		[in]  const MonikerComparisonData *moniker_data,
+		[out] FILETIME *time);
 
-        HRESULT IrotEnumRunning(
-                [in]  IrotHandle h,
-                [out] PInterfaceList *list);
+	HRESULT IrotEnumRunning(
+		[in]  IrotHandle h,
+		[out] PInterfaceList *list);
 }

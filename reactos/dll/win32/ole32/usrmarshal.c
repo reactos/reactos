@@ -260,7 +260,7 @@ void __RPC_USER CLIPFORMAT_UserFree(ULONG *pFlags, CLIPFORMAT *pCF)
      * so nothing to do */
 }
 
-static ULONG __RPC_USER handle_UserSize(ULONG *pFlags, ULONG StartingSize, HANDLE *handle)
+static ULONG handle_UserSize(ULONG *pFlags, ULONG StartingSize, HANDLE *handle)
 {
     if (LOWORD(*pFlags) == MSHCTX_DIFFERENTMACHINE)
     {
@@ -271,7 +271,7 @@ static ULONG __RPC_USER handle_UserSize(ULONG *pFlags, ULONG StartingSize, HANDL
     return StartingSize + sizeof(RemotableHandle);
 }
 
-static unsigned char * __RPC_USER handle_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, HANDLE *handle)
+static unsigned char * handle_UserMarshal(ULONG *pFlags, unsigned char *pBuffer, HANDLE *handle)
 {
     RemotableHandle *remhandle = (RemotableHandle *)pBuffer;
     if (LOWORD(*pFlags) == MSHCTX_DIFFERENTMACHINE)
@@ -285,7 +285,7 @@ static unsigned char * __RPC_USER handle_UserMarshal(ULONG *pFlags, unsigned cha
     return pBuffer + sizeof(RemotableHandle);
 }
 
-static unsigned char * __RPC_USER handle_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, HANDLE *handle)
+static unsigned char * handle_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, HANDLE *handle)
 {
     RemotableHandle *remhandle = (RemotableHandle *)pBuffer;
     if (remhandle->fContext != WDT_INPROC_CALL)
@@ -294,7 +294,7 @@ static unsigned char * __RPC_USER handle_UserUnmarshal(ULONG *pFlags, unsigned c
     return pBuffer + sizeof(RemotableHandle);
 }
 
-static void __RPC_USER handle_UserFree(ULONG *pFlags, HANDLE *phMenu)
+static void handle_UserFree(ULONG *pFlags, HANDLE *phMenu)
 {
     /* nothing to do */
 }
@@ -1891,25 +1891,26 @@ void __RPC_USER STGMEDIUM_UserFree(ULONG *pFlags, STGMEDIUM *pStgMedium)
 
 ULONG __RPC_USER ASYNC_STGMEDIUM_UserSize(ULONG *pFlags, ULONG StartingSize, ASYNC_STGMEDIUM *pStgMedium)
 {
-    FIXME(":stub\n");
-    return StartingSize;
+    TRACE("\n");
+    return STGMEDIUM_UserSize(pFlags, StartingSize, pStgMedium);
 }
 
 unsigned char * __RPC_USER ASYNC_STGMEDIUM_UserMarshal(  ULONG *pFlags, unsigned char *pBuffer, ASYNC_STGMEDIUM *pStgMedium)
 {
-    FIXME(":stub\n");
-    return pBuffer;
+    TRACE("\n");
+    return STGMEDIUM_UserMarshal(pFlags, pBuffer, pStgMedium);
 }
 
 unsigned char * __RPC_USER ASYNC_STGMEDIUM_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffer, ASYNC_STGMEDIUM *pStgMedium)
 {
-    FIXME(":stub\n");
-    return pBuffer;
+    TRACE("\n");
+    return STGMEDIUM_UserUnmarshal(pFlags, pBuffer, pStgMedium);
 }
 
 void __RPC_USER ASYNC_STGMEDIUM_UserFree(ULONG *pFlags, ASYNC_STGMEDIUM *pStgMedium)
 {
-    FIXME(":stub\n");
+    TRACE("\n");
+    STGMEDIUM_UserFree(pFlags, pStgMedium);
 }
 
 ULONG __RPC_USER FLAG_STGMEDIUM_UserSize(ULONG *pFlags, ULONG StartingSize, FLAG_STGMEDIUM *pStgMedium)

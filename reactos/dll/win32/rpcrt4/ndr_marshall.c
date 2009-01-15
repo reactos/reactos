@@ -391,7 +391,7 @@ void * WINAPI NdrAllocate(MIDL_STUB_MESSAGE *pStubMsg, SIZE_T len)
     return p;
 }
 
-static void WINAPI NdrFree(MIDL_STUB_MESSAGE *pStubMsg, unsigned char *Pointer)
+static void NdrFree(MIDL_STUB_MESSAGE *pStubMsg, unsigned char *Pointer)
 {
     TRACE("(%p, %p)\n", pStubMsg, Pointer);
 

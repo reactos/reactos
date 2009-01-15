@@ -34,7 +34,6 @@
 
 #include "ole2.h"
 #include "oleauto.h"
-#include "rpcproxy.h"
 #include "typelib.h"
 #include "ocidl.h"
 #include "wine/debug.h"
@@ -45,25 +44,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 #define ALIGNED_POINTER(_Ptr, _Align) ((LPVOID)ALIGNED_LENGTH((ULONG_PTR)(_Ptr), _Align))
 #define ALIGN_LENGTH(_Len, _Align) _Len = ALIGNED_LENGTH(_Len, _Align)
 #define ALIGN_POINTER(_Ptr, _Align) _Ptr = ALIGNED_POINTER(_Ptr, _Align)
-
-static CStdPSFactoryBuffer PSFactoryBuffer;
-
-CSTDSTUBBUFFERRELEASE(&PSFactoryBuffer)
-
-extern const ExtendedProxyFileInfo oleaut32_oaidl_ProxyFileInfo;
-extern const ExtendedProxyFileInfo oleaut32_ocidl_ProxyFileInfo;
-
-static const ProxyFileInfo *OLEAUT32_ProxyFileList[] = {
-  &oleaut32_oaidl_ProxyFileInfo,
-  &oleaut32_ocidl_ProxyFileInfo,
-  NULL
-};
-
-HRESULT OLEAUTPS_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-{
-  return NdrDllGetClassObject(rclsid, riid, ppv, OLEAUT32_ProxyFileList,
-                              &CLSID_PSDispatch, &PSFactoryBuffer);
-}
 
 static void dump_user_flags(const ULONG *pFlags)
 {
@@ -186,12 +166,9 @@ unsigned char * WINAPI BSTR_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, 
     header = (bstr_wire_t*)Buffer;
     if(header->len != header->len2)
         FIXME("len %08x != len2 %08x\n", header->len, header->len2);
-    
-    if(*pstr)
-    {
-        SysFreeString(*pstr);
-        *pstr = NULL;
-    }
+
+    SysFreeString(*pstr);
+    *pstr = NULL;
 
     if(header->byte_len != 0xffffffff)
         *pstr = SysAllocStringByteLen((char*)(header + 1), header->byte_len);
@@ -203,11 +180,8 @@ unsigned char * WINAPI BSTR_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, 
 void WINAPI BSTR_UserFree(ULONG *pFlags, BSTR *pstr)
 {
     TRACE("(%x,%p) => %p\n", *pFlags, pstr, *pstr);
-    if (*pstr)
-    {
-        SysFreeString(*pstr);
-        *pstr = NULL;
-    }
+    SysFreeString(*pstr);
+    *pstr = NULL;
 }
 
 /* VARIANT */

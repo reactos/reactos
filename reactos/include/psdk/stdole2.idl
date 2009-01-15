@@ -191,12 +191,9 @@ library stdole
     typedef [uuid(BF030645-9069-101B-AE2D-08002B2EC713), public]
         VARIANT_BOOL OLE_ENABLEDEFAULTBOOL;
 
-    /* FIXME: widl can't cope with enum attributes yet */
-    /*
     [
      uuid(6650430A-BE0F-101A-8BBB-00AA00300CAB)
     ]
-    */
     enum OLE_TRISTATE {
         Unchecked = 0,
         Checked = 1,
@@ -380,12 +377,9 @@ library stdole
         interface IPicture;
     };
 
-    /* FIXME: widl can't cope with enum attributes yet */
-    /*
     [
      uuid(E6C8FA08-BD9F-11D0-985E-00C04FC29993)
     ]
-    */
     enum LoadPictureConstants {
         Default = 0,
         Monochrome = 1,

@@ -78,7 +78,7 @@ static CRITICAL_SECTION_DEBUG threaddata_cs_debug =
 };
 static CRITICAL_SECTION threaddata_cs = { &threaddata_cs_debug, -1, 0, 0, 0, 0 };
 
-struct list threaddata_list = LIST_INIT(threaddata_list);
+static struct list threaddata_list = LIST_INIT(threaddata_list);
 
 struct context_handle_list
 {

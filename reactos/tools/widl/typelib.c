@@ -45,8 +45,6 @@
 #include "widltypes.h"
 #include "typelib_struct.h"
 
-int in_typelib = 0;
-
 static typelib_t *typelib;
 
 type_t *duptype(type_t *t, int dupname)
@@ -245,7 +243,6 @@ unsigned short get_type_vt(type_t *t)
 
 void start_typelib(typelib_t *typelib_type)
 {
-    in_typelib++;
     if (!do_typelib) return;
 
     typelib = typelib_type;
@@ -254,21 +251,9 @@ void start_typelib(typelib_t *typelib_type)
 
 void end_typelib(void)
 {
-    in_typelib--;
     if (!typelib) return;
 
     create_msft_typelib(typelib);
-}
-
-void add_typelib_entry(type_t *t)
-{
-    typelib_entry_t *entry;
-    if (!typelib) return;
-
-    chat("add kind %i: %s\n", t->kind, t->name);
-    entry = xmalloc(sizeof(*entry));
-    entry->type = t;
-    list_add_tail( &typelib->entries, &entry->entry );
 }
 
 static void tlb_read(int fd, void *buf, int count)
@@ -353,10 +338,10 @@ static void read_importlib(importlib_t *importlib)
 
     file_name = wpp_find_include(importlib->name, NULL);
     if(file_name) {
-        fd = open(file_name, O_RDONLY | O_BINARY);
+        fd = open(file_name, O_RDONLY | O_BINARY );
         free(file_name);
     }else {
-        fd = open(importlib->name, O_RDONLY | O_BINARY);
+        fd = open(importlib->name, O_RDONLY | O_BINARY );
     }
 
     if(fd < 0)

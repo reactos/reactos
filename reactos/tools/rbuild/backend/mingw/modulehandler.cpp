@@ -1011,6 +1011,31 @@ MingwModuleHandler::GenerateObjectMacros (
 
 		delete stubs_file;
 	}
+
+	if ( module.type == RpcProxy )
+	{
+		const FileLocation *dlldata_file = GetDlldataFilename();
+
+		fprintf (
+			fMakefile,
+			"%s += %s\n",
+			objectsMacro.c_str(),
+			ReplaceExtension ( backend->GetFullName ( *dlldata_file ), ".o" ).c_str() );
+
+		delete dlldata_file;
+	}
+}
+
+const FileLocation*
+MingwModuleHandler::GetDlldataFilename() const
+{
+	std::string dlldata_path = "";
+	size_t dlldata_path_len = module.xmlbuildFile.find_last_of(cSep);
+
+	if ( dlldata_path_len != std::string::npos && dlldata_path_len != 0 )
+		dlldata_path = module.xmlbuildFile.substr(0, dlldata_path_len);
+
+	return new FileLocation( IntermediateDirectory, dlldata_path, module.name + ".dlldata.c" );
 }
 
 /* caller needs to delete the returned object */
@@ -1139,6 +1164,13 @@ Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule widlDlldataRule ( "$(source): $(dependencies) ${$(module_name)_precondition} $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "\t$(ECHO_WIDL)\n"
+                     "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) --dlldata-only --dlldata=$(source) $(bare_dependencies)\n"
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(ECHO_CC)\n"
+					  "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
+                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).o", NULL );
 Rule widlTlbRule ( "$(source): ${$(module_name)_precondition}\n"
                    "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
                    "\t$(ECHO_WIDL)\n"
@@ -1641,6 +1673,16 @@ MingwModuleHandler::GenerateObjectFileTargets ( const IfableData& data )
 			defRule = &winebuildRule;
 
 		defRule->Execute ( fMakefile, backend, module, module.importLibrary->source, clean_files );
+	}
+
+	if ( module.type == RpcProxy )
+	{
+		widlDlldataRule.Execute ( fMakefile,
+								  backend,
+								  module,
+								  GetDlldataFilename(),
+								  clean_files,
+								  ssprintf ( "$(%s_SOURCES)", module.name.c_str ()) );
 	}
 }
 

@@ -116,7 +116,7 @@ static ULONG WINAPI ClassMoniker_AddRef(IMoniker* iface)
 /******************************************************************************
  *        ClassMoniker_Destroy (local function)
  *******************************************************************************/
-static HRESULT WINAPI ClassMoniker_Destroy(ClassMoniker* This)
+static HRESULT ClassMoniker_Destroy(ClassMoniker* This)
 {
     TRACE("(%p)\n",This);
 
@@ -693,7 +693,7 @@ static const IROTDataVtbl ROTDataVtbl =
 /******************************************************************************
  *         ClassMoniker_Construct (local function)
  *******************************************************************************/
-static HRESULT WINAPI ClassMoniker_Construct(ClassMoniker* This, REFCLSID rclsid)
+static HRESULT ClassMoniker_Construct(ClassMoniker* This, REFCLSID rclsid)
 {
     TRACE("(%p,%s)\n",This,debugstr_guid(rclsid));
 

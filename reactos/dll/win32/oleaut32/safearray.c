@@ -207,7 +207,7 @@ static void SAFEARRAY_SetFeatures(VARTYPE vt, SAFEARRAY *psa)
 static SAFEARRAY* SAFEARRAY_Create(VARTYPE vt, UINT cDims, const SAFEARRAYBOUND *rgsabound, ULONG ulSize)
 {
   SAFEARRAY *psa = NULL;
-  int i;
+  unsigned int i;
 
   if (!rgsabound)
     return NULL;
@@ -314,8 +314,7 @@ static HRESULT SAFEARRAY_DestroyData(SAFEARRAY *psa, ULONG ulStartCell)
 
       while(ulCellCount--)
       {
-        if (*lpBstr)
-          SysFreeString(*lpBstr);
+        SysFreeString(*lpBstr);
         lpBstr++;
       }
     }
@@ -865,8 +864,7 @@ HRESULT WINAPI SafeArrayPutElement(SAFEARRAY *psa, LONG *rgIndices, void *pvData
         BSTR  lpBstr = (BSTR)pvData;
         BSTR* lpDest = (BSTR*)lpvDest;
 
-        if (*lpDest)
-         SysFreeString(*lpDest);
+        SysFreeString(*lpDest);
 
         *lpDest = SysAllocStringByteLen((char*)lpBstr, SysStringByteLen(lpBstr));
         if (!*lpDest)
