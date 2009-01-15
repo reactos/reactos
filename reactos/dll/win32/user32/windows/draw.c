@@ -1797,13 +1797,20 @@ FrameRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 FlashWindow(HWND hWnd, BOOL bInvert)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    FLASHWINFO FlashWndInfo;
+
+    FlashWndInfo.cbSize = sizeof(FLASHWINFO);
+    FlashWndInfo.hwnd = hWnd;
+    FlashWndInfo.dwFlags = !bInvert ? 0 : (FLASHW_TRAY | FLASHW_CAPTION);
+    FlashWndInfo.uCount = 1;
+    FlashWndInfo.dwTimeout = 0;
+
+    return NtUserFlashWindowEx(&FlashWndInfo);
 }
 
 /*
