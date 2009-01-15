@@ -34,6 +34,19 @@ NtRequestWakeupLatency(
     IN LATENCY_TIME latency
 );
 
+NTSYSAPI
+BOOLEAN
+NTAPI
+NtIsSystemResumeAutomatic(VOID);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtSetThreadExecutionState(
+    IN EXECUTION_STATE esFlags,
+    OUT EXECUTION_STATE *PreviousFlags
+);
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -181,8 +194,7 @@ BOOL
 WINAPI
 IsSystemResumeAutomatic(VOID)
 {
-    STUB;
-    return 0;
+    return NtIsSystemResumeAutomatic();
 }
 
 /*
@@ -195,4 +207,25 @@ SetMessageWaitingIndicator(HANDLE hMsgIndicator,
 {
     STUB;
     return 0;
+}
+
+/*
+ * @implemented
+ */
+EXECUTION_STATE
+WINAPI
+SetThreadExecutionState(EXECUTION_STATE esFlags)
+{
+    EXECUTION_STATE OldFlags;
+    NTSTATUS Status;
+
+    Status = NtSetThreadExecutionState(esFlags, &OldFlags);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+
+    return OldFlags;
 }

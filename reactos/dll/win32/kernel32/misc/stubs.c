@@ -562,26 +562,6 @@ RestoreLastError(
 }
 
 /*
- * @unimplemented
- */
-EXECUTION_STATE
-WINAPI
-SetThreadExecutionState(
-    EXECUTION_STATE esFlags
-    )
-{
-    static EXECUTION_STATE current =
-        ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED | ES_USER_PRESENT;
-    EXECUTION_STATE old = current;
-
-    DPRINT1("(0x%x): stub, harmless.\n", esFlags);
-
-    if (!(current & ES_CONTINUOUS) || (esFlags & ES_CONTINUOUS))
-        current = esFlags;
-    return old;
-}
-
-/*
  * @implemented
  */
 BOOL
