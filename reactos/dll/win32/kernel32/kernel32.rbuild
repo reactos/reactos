@@ -80,6 +80,7 @@
 			<file>muldiv.c</file>
 			<file>nls.c</file>
 			<file>perfcnt.c</file>
+			<file>power.c</file>
 			<file>recovery.c</file>
 			<file>res.c</file>
 			<file>sortkey.c</file>

@@ -156,26 +156,6 @@ GetNextVDMCommand (
 /*
  * @unimplemented
  */
-BOOL
-WINAPI
-GetSystemPowerStatus (
-    LPSYSTEM_POWER_STATUS PowerStatus
-    )
-{
-    STUB;
-    PowerStatus->ACLineStatus = 1;
-    PowerStatus->BatteryFlag = 128;
-    PowerStatus->BatteryLifePercent = 255;
-    PowerStatus->Reserved1 = 0;
-    PowerStatus->BatteryLifeTime = -1;
-    PowerStatus->BatteryFullLifeTime = -1;
-    return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
 DWORD
 WINAPI
 GetVDMCurrentDirectories (
@@ -233,20 +213,6 @@ BOOL
 WINAPI
 RegisterWowExec (
     DWORD   Unknown0
-    )
-{
-    STUB;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-SetSystemPowerState (
-    BOOL fSuspend,
-    BOOL fForce
     )
 {
     STUB;
@@ -372,19 +338,6 @@ BindIoCompletionCallback(HANDLE FileHandle,
  */
 BOOL
 WINAPI
-CancelDeviceWakeupRequest(
-    HANDLE hDevice
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
 CreateJobSet (
     ULONG NumJob,
     PJOB_SET_ARRAY UserJobSet,
@@ -416,20 +369,6 @@ FreeUserPhysicalPages(
     HANDLE hProcess,
     PULONG_PTR NumberOfPages,
     PULONG_PTR PageArray
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-GetDevicePowerState(
-    HANDLE hDevice,
-    BOOL *pfOn
     )
 {
     STUB;
@@ -505,19 +444,6 @@ HeapSetInformation (
     HEAP_INFORMATION_CLASS HeapInformationClass,
     PVOID HeapInformation OPTIONAL,
     SIZE_T HeapInformationLength OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-IsSystemResumeAutomatic(
-    VOID
     )
 {
     STUB;
@@ -612,32 +538,6 @@ RemoveVectoredExceptionHandler(
 /*
  * @unimplemented
  */
-BOOL
-WINAPI
-RequestDeviceWakeup(
-    HANDLE hDevice
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-RequestWakeupLatency(
-    LATENCY_TIME latency
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 UINT
 WINAPI
 ResetWriteWatch(
@@ -659,20 +559,6 @@ RestoreLastError(
     )
 {
     STUB;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-SetMessageWaitingIndicator(
-    HANDLE hMsgIndicator,
-    ULONG ulMsgCount
-    )
-{
-    STUB;
-    return 0;
 }
 
 /*
