@@ -360,7 +360,7 @@ IntDispatchMessage(PMSG pMsg)
   {
      if (pMsg->message == WM_TIMER)
      {
-        if (ValidateTimerCallback(GetW32ThreadInfo(),Window,pMsg->wParam,pMsg->lParam))
+        if (ValidateTimerCallback(PsGetCurrentThreadWin32Thread(),Window,pMsg->wParam,pMsg->lParam))
         {
            return co_IntCallWindowProc((WNDPROC)pMsg->lParam,
                                         TRUE,
@@ -829,6 +829,11 @@ CheckMessages:
       goto MsgExit;
    }
 
+   if (ThreadQueue->WakeMask & QS_TIMER)
+      if (PostTimerMessages(hWnd)) // If there are timers ready,
+         goto CheckMessages;       // go back and process them.
+
+   // LOL! Polling Timer Queue? How much time is spent doing this?
    /* Check for WM_(SYS)TIMER messages */
    Present = MsqGetTimerMessage(ThreadQueue, hWnd, MsgFilterMin, MsgFilterMax,
                                 &Msg->Msg, RemoveMessages);

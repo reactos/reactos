@@ -1117,7 +1117,7 @@ NtUserValidateTimerCallback(
         goto Exit;
   }
 
-  Ret = ValidateTimerCallback(GetW32ThreadInfo(), Window, wParam, lParam);
+  Ret = ValidateTimerCallback(PsGetCurrentThreadWin32Thread(), Window, wParam, lParam);
 
 Exit:
   UserLeave();

@@ -37,6 +37,9 @@
 /* GLOBALS *******************************************************************/
 
 static PTIMER FirstpTmr = NULL;
+static LONG TimeLast = 0;
+
+#define MAX_ELAPSE_TIME 0x7FFFFFFF
 
 /* Windows 2000 has room for 32768 window-less timers */
 #define NUM_WINDOW_LESS_TIMERS   1024
@@ -54,6 +57,7 @@ static ULONG          HintIndex = 0;
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Mutex)
 
 /* FUNCTIONS *****************************************************************/
+static
 PTIMER
 FASTCALL
 CreateTimer(VOID)
@@ -144,7 +148,7 @@ FindSystemTimer(PMSG pMsg)
 
 BOOL
 FASTCALL
-ValidateTimerCallback(PW32THREADINFO pti,
+ValidateTimerCallback(PTHREADINFO pti,
                       PWINDOW_OBJECT Window,
                       WPARAM wParam,
                       LPARAM lParam)
@@ -158,7 +162,7 @@ ValidateTimerCallback(PW32THREADINFO pti,
   {
     if ( (lParam == (LPARAM)pTmr->pfn) &&
          (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) &&
-         (pTmr->pti->pi == pti->pi) )
+         (pTmr->pti->ThreadInfo->kpi == pti->ThreadInfo->kpi) )
        break;
 
     pTmr = (PTIMER)pTmr->ptmrList.Flink;
@@ -172,13 +176,73 @@ ValidateTimerCallback(PW32THREADINFO pti,
 
 // Rename it to IntSetTimer after move.
 UINT_PTR FASTCALL
-InternalSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
+InternalSetTimer( PWINDOW_OBJECT Window,
+                  UINT_PTR IDEvent,
+                  UINT Elapse,
+                  TIMERPROC TimerFunc,
+                  INT Type)
 {
-  return 0;
+  PTIMER pTmr;
+  LARGE_INTEGER DueTime;
+  DueTime.QuadPart = (LONGLONG)(-10000000);
+
+#if 0
+  /* Windows NT/2k/XP behaviour */
+  if (Elapse > MAX_ELAPSE_TIME)
+  {
+     DPRINT("Adjusting uElapse\n");
+     Elapse = 1;
+  }
+#else
+  /* Windows XP SP2 and Windows Server 2003 behaviour */
+  if (Elapse > MAX_ELAPSE_TIME)
+  {
+     DPRINT("Adjusting uElapse\n");
+     Elapse = MAX_ELAPSE_TIME;
+  }
+#endif
+
+  /* Windows 2k/XP and Windows Server 2003 SP1 behaviour */
+  if (Elapse < 10)
+  {
+     DPRINT("Adjusting uElapse\n");
+     Elapse = 10;
+  }
+
+  pTmr = FindTimer(Window, IDEvent, Type, FALSE);
+  if (!pTmr)
+  {
+     pTmr = CreateTimer();
+     if (!pTmr) return 0;
+
+    if (Window && (Type & TMRF_TIFROMWND))
+       pTmr->pti = Window->OwnerThread->Tcb.Win32Thread;
+    else
+    {
+       if (Type & TMRF_RIT)
+          pTmr->pti = ptiRawInput;
+       else
+          pTmr->pti = PsGetCurrentThreadWin32Thread();
+     }
+     pTmr->pWnd    = Window;
+     pTmr->cmsCountdown = Elapse;
+     pTmr->cmsRate = Elapse;
+     pTmr->flags   = Type|TMRF_INIT; // Set timer to Init mode.
+     pTmr->pfn     = TimerFunc;
+     pTmr->nID     = IDEvent;
+
+     InsertTailList(&FirstpTmr->ptmrList, &pTmr->ptmrList);
+  }
+
+  // Start the timer thread!
+  KeSetTimer(MasterTimer, DueTime, NULL);
+
+  if (!pTmr->nID) return 1;
+  return pTmr->nID;
 }
 
 //
-// Process system timers.
+// Process win32k system timers.
 //
 VOID
 CALLBACK
@@ -187,18 +251,147 @@ SystemTimerProc(HWND hwnd,
          UINT_PTR idEvent,
              DWORD dwTime)
 {
+  DPRINT( "Timer Running!\n" );
+}
+
+VOID
+FASTCALL
+StartTheTimers(VOID)
+{
+  // Need to start gdi syncro timers then start timer with Hang App proc
+  // that calles Idle process so the screen savers will know to run......    
+  InternalSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
 }
 
 UINT_PTR
 FASTCALL
-SetSystemTimer( HWND hWnd,
+SetSystemTimer( PWINDOW_OBJECT Window,
                 UINT_PTR nIDEvent,
                 UINT uElapse,
                 TIMERPROC lpTimerFunc) 
 {
-  return 0;
+  if (Window && Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+  {
+     SetLastWin32Error(ERROR_ACCESS_DENIED);
+     return 0;
+  }
+  return InternalSetTimer( Window, nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM);
 }
 
+BOOL
+FASTCALL
+PostTimerMessages(HWND hWnd)
+{
+  PUSER_MESSAGE_QUEUE ThreadQueue;
+  MSG Msg;
+  PTHREADINFO pti;
+  PWINDOW_OBJECT pWnd = NULL;
+  BOOL Hit = FALSE;
+  PTIMER pTmr = FirstpTmr;
+
+  if (!pTmr) return FALSE;
+
+  if (hWnd)
+  {
+     pWnd = UserGetWindowObject(hWnd);
+     if (!pWnd || !pWnd->Wnd) return FALSE;
+  }
+
+  pti = PsGetCurrentThreadWin32Thread();
+  ThreadQueue = pti->MessageQueue;
+
+  KeEnterCriticalRegion();
+  do
+  {
+     if ( (pTmr->flags & TMRF_READY) &&
+          (pTmr->pti == pti) &&
+          (pTmr->pWnd == pWnd))
+        {
+           Msg.hwnd    = hWnd;
+           Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
+           Msg.wParam  = (WPARAM) pTmr->nID;
+           Msg.lParam  = (LPARAM) pTmr->pfn;
+           MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_POSTMESSAGE);
+
+           pTmr->flags &= ~TMRF_READY;
+           ThreadQueue->WakeMask = ~QS_TIMER;
+           Hit = TRUE;
+        }
+
+     pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+  KeLeaveCriticalRegion();
+
+  return Hit;
+}
+
+VOID
+FASTCALL
+ProcessTimers(VOID)
+{
+  LARGE_INTEGER TickCount, DueTime;
+  LONG Time;
+  PTIMER pTmr = FirstpTmr;
+
+  if (!pTmr) return;
+
+  UserEnterExclusive();
+
+  KeQueryTickCount(&TickCount);
+  Time = MsqCalculateMessageTime(&TickCount);
+
+  DueTime.QuadPart = (LONGLONG)(-10000000);
+
+  do
+  {
+    if (pTmr->flags & TMRF_WAITING)
+    {
+       pTmr = (PTIMER)pTmr->ptmrList.Flink;
+       continue;
+    }
+
+    if (pTmr->flags & TMRF_INIT)  
+       pTmr->flags &= ~TMRF_INIT; // Skip this run.
+    else
+    {
+       if (pTmr->cmsCountdown < 0)
+       {
+          if (!(pTmr->flags & TMRF_READY))
+          {
+             if (pTmr->flags & TMRF_ONESHOT)
+                pTmr->flags |= TMRF_WAITING;
+
+             if (pTmr->flags & TMRF_RIT)
+             {
+                // Hard coded call here, inside raw input thread.
+                pTmr->pfn(NULL, WM_SYSTIMER, pTmr->nID, (LPARAM)pTmr);
+             }
+             else
+             {
+                pTmr->flags |= TMRF_READY; // Set timer ready to be ran.
+                // Set thread message queue for this timer.
+                if (pTmr->pti->MessageQueue)
+                {  // Wakeup thread
+                   pTmr->pti->MessageQueue->WakeMask |= QS_TIMER;
+                   KeSetEvent(pTmr->pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+                }
+             }
+          }
+          pTmr->cmsCountdown = pTmr->cmsRate;
+       }
+       else
+          pTmr->cmsCountdown -= Time - TimeLast;
+    }
+    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+  } while (pTmr != FirstpTmr);
+
+  // Restart the timer thread!
+  KeSetTimer(MasterTimer, DueTime, NULL);
+
+  TimeLast = Time;
+
+  UserLeave();
+}
 
 //
 //
