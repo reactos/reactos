@@ -23,8 +23,6 @@
 #ifndef __NTPOAPI_H
 #define __NTPOAPI_H
 
-#include "batclass.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
