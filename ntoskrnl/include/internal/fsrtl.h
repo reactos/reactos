@@ -50,6 +50,11 @@
 #define MAXIMUM_PAIR_COUNT  15
 
 //
+// Notifications flags
+//
+#define CLEANUP_IN_PROCESS 4
+
+//
 // Internal structure for NOTIFY_SYNC
 //
 typedef struct _REAL_NOTIFY_SYNC

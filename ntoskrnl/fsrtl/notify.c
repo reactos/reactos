@@ -12,6 +12,95 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+PNOTIFY_CHANGE
+FsRtlIsNotifyOnList(IN PLIST_ENTRY NotifyList,
+                    IN PVOID FsContext)
+{
+    PLIST_ENTRY NextEntry;
+    PNOTIFY_CHANGE NotifyChange;
+
+    if (!IsListEmpty(NotifyList))
+    {
+        /* Browse the notifications list to find the matching entry */
+        for (NextEntry = NotifyList->Flink;
+             NextEntry != NotifyList;
+             NextEntry = NextEntry->Flink)
+        {
+            NotifyChange = CONTAINING_RECORD(NextEntry, NOTIFY_CHANGE, NotifyList);
+            /* If the current record matches with the given context, it's the good one */
+            if (NotifyChange->FsContext == FsContext)
+            {
+                return NotifyChange;
+            }
+        }
+    }
+    return NULL;
+}
+
+VOID
+FORCEINLINE
+FsRtlNotifyAcquireFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
+{
+    /* Only acquire fast mutex if it's not already acquired by the current thread */
+    if (RealNotifySync->OwningThread != (ULONG_PTR)KeGetCurrentThread())
+    {
+        ExAcquireFastMutexUnsafe(&(RealNotifySync->FastMutex));
+        RealNotifySync->OwningThread = (ULONG_PTR)KeGetCurrentThread();
+    }
+    /* Whatever the case, keep trace of the attempt to acquire fast mutex */
+    RealNotifySync->OwnerCount++;
+}
+
+VOID
+FsRtlNotifyCompleteIrpList(IN PNOTIFY_CHANGE NotifyChange,
+                           IN NTSTATUS Status)
+{
+}
+
+VOID
+FORCEINLINE
+FsRtlNotifyReleaseFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
+{
+    RealNotifySync->OwnerCount--;
+    /* Release the fast mutex only if no other instance needs it */
+    if (!RealNotifySync->OwnerCount)
+    {
+        ExReleaseFastMutexUnsafe(&(RealNotifySync->FastMutex));
+        RealNotifySync->OwningThread = (ULONG_PTR)0;
+    }
+}
+
+/* PSEH FUNCTIONS ************************************************************/
+
+VOID
+FsRtlNotifyCleanupFinal(PREAL_NOTIFY_SYNC RealNotifySync,
+                        PSECURITY_SUBJECT_CONTEXT SubjectContext)
+{
+    /* Release fast mutex */
+    FsRtlNotifyReleaseFastMutex(RealNotifySync);
+
+    /* If the subject security context was captured, release and free it */
+    if (SubjectContext)
+    {
+        SeReleaseSubjectContext(SubjectContext);
+        ExFreePool(SubjectContext);
+    }
+}
+
+_SEH_DEFINE_LOCALS(FsRtlNotifyCleanupFinal)
+{
+    PREAL_NOTIFY_SYNC RealNotifySync;
+    PSECURITY_SUBJECT_CONTEXT SubjectContext;
+};
+
+_SEH_FINALLYFUNC(FsRtlNotifyCleanupFinal_PSEH)
+{
+    _SEH_ACCESS_LOCALS(FsRtlNotifyCleanupFinal);
+    FsRtlNotifyCleanupFinal(_SEH_VAR(RealNotifySync), _SEH_VAR(SubjectContext));
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
@@ -72,18 +161,18 @@ FsRtlNotifyChangeDirectory(IN PNOTIFY_SYNC NotifySync,
 
 /*++
  * @name FsRtlNotifyCleanup
- * @unimplemented
+ * @implemented
  *
  * Called by FSD when all handles to FileObject (identified by FsContext) are closed
  *
  * @param NotifySync
- *        FILLME
+ *        Synchronization object pointer
  *
  * @param NotifyList
- *        FILLME
+ *        Notify list pointer (to head) 
  *
  * @param FsContext
- *        FILLME
+ *        Used to identify the notify structure
  *
  * @return None
  *
@@ -96,7 +185,59 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
                    IN PLIST_ENTRY NotifyList,
                    IN PVOID FsContext)
 {
-    KEBUGCHECK(0);
+    PNOTIFY_CHANGE NotifyChange;
+    PREAL_NOTIFY_SYNC RealNotifySync;
+
+    /* Get real structure hidden behind the opaque pointer */
+    RealNotifySync = (PREAL_NOTIFY_SYNC)NotifySync;
+
+    /* Acquire the fast mutex */
+    FsRtlNotifyAcquireFastMutex(RealNotifySync);
+
+    _SEH_TRY
+    {
+        _SEH_DECLARE_LOCALS(FsRtlNotifyCleanupFinal);
+        _SEH_VAR(RealNotifySync) = RealNotifySync;
+        _SEH_VAR(SubjectContext) = NULL;
+
+        /* Find if there's a matching notification with the FsContext */
+        NotifyChange = FsRtlIsNotifyOnList(NotifyList, FsContext);
+        if (NotifyChange)
+        {
+            /* Mark it as to know that cleanup is in process */
+            NotifyChange->Flags |= CLEANUP_IN_PROCESS;
+
+            /* If there are pending IRPs, complete them using the STATUS_NOTIFY_CLEANUP status */
+            if (!IsListEmpty(NotifyChange->NotifyIrps))
+            {
+                FsRtlNotifyCompleteIrpList(NotifyChange, STATUS_NOTIFY_CLEANUP);
+            }
+            /* Remove from the list */
+            RemoveEntryList(NotifyChange->NotifyList);
+
+            /* Downcrease reference number and if 0 is reached, it's time to do total cleanup */
+            if (!InterlockedDecrement((PLONG)&(NotifyChange->ReferenceCount)))
+            {
+                /* In case there was an allocated buffer, free it */
+                if (NotifyChange->AllocatedBuffer)
+                {
+                    PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NotifyChange->ThisBufferLength);
+                    ExFreePool(NotifyChange->AllocatedBuffer);
+                }
+
+                /* In case there the string was set, get the captured subject security context */
+                if (NotifyChange->FullDirectoryName)
+                {
+                    _SEH_VAR(SubjectContext) = NotifyChange->SubjectContext;
+                }
+
+                /* Finally, free the notification, as it's not needed anymore */
+                ExFreePool(NotifyChange);
+            }
+        }
+    }
+    _SEH_FINALLY(FsRtlNotifyCleanupFinal_PSEH)
+    _SEH_END;
 }
 
 /*++
