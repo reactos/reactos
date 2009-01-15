@@ -219,7 +219,7 @@ DbgkpSendApiMessageLpc(IN OUT PDBGKM_MSG Message,
     Message->ReturnedStatus = STATUS_PENDING;
 
     /* Set create process reported state */
-    PsGetCurrentProcess()->CreateReported = TRUE;
+    PspSetProcessFlag(PsGetCurrentProcess(), PSF_CREATE_REPORTED_BIT);
 
     /* Send the LPC command */
     Status = LpcRequestWaitReplyPort(Port,
@@ -254,7 +254,7 @@ DbgkpSendApiMessage(IN OUT PDBGKM_MSG ApiMsg,
     ApiMsg->ReturnedStatus = STATUS_PENDING;
 
     /* Set create process reported state */
-    PsGetCurrentProcess()->CreateReported = TRUE;
+    PspSetProcessFlag(PsGetCurrentProcess(), PSF_CREATE_REPORTED_BIT);
 
     /* Send the LPC command */
     Status = DbgkpQueueMessage(PsGetCurrentProcess(),
@@ -1081,6 +1081,7 @@ DbgkpCloseObject(IN PEPROCESS OwnerProcess OPTIONAL,
     BOOLEAN DebugPortCleared = FALSE;
     PLIST_ENTRY DebugEventList;
     PDEBUG_EVENT DebugEvent;
+    PAGED_CODE();
     DBGKTRACE(DBGK_OBJECT_DEBUG, "OwnerProcess: %p DebugObject: %p\n",
               OwnerProcess, DebugObject);
 
@@ -1260,8 +1261,9 @@ ThreadScan:
         else
         {
             /* Set the process flags */
-            InterlockedOr((PLONG)&Process->Flags,
-                          PSF_NO_DEBUG_INHERIT_BIT | PSF_CREATE_REPORTED_BIT);
+            PspSetProcessFlag(Process,
+                              PSF_NO_DEBUG_INHERIT_BIT |
+                              PSF_CREATE_REPORTED_BIT);
 
             /* Reference the debug object */
             ObReferenceObject(DebugObject);
@@ -1474,12 +1476,15 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                                  &hDebug);
         if (NT_SUCCESS(Status))
         {
+            /* Enter SEH to protect the write */
             _SEH2_TRY
             {
+                /* Return the handle */
                 *DebugHandle = hDebug;
             }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
+                /* Get the exception code */
                 Status = _SEH2_GetExceptionCode();
             } _SEH2_END;
         }
@@ -1570,7 +1575,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
                     {
                         /* Wake it up and break out */
                         DebugEvent->Flags &= ~DEBUG_EVENT_INACTIVE;
-                        KeSetEvent(&DebugEvent->ContinueEvent,
+                        KeSetEvent(&DebugObject->EventsPresent,
                                    IO_NO_INCREMENT,
                                    FALSE);
                         break;
@@ -1603,11 +1608,11 @@ NtDebugContinue(IN HANDLE DebugHandle,
             if (NeedsWake)
             {
                 /* Set the continue status */
-                DebugEvent->ApiMsg.ReturnedStatus = ContinueStatus;
-                DebugEvent->Status = STATUS_SUCCESS;
+                DebugEventToWake->ApiMsg.ReturnedStatus = ContinueStatus;
+                DebugEventToWake->Status = STATUS_SUCCESS;
 
                 /* Wake the target */
-                DbgkpWakeTarget(DebugEvent);
+                DbgkpWakeTarget(DebugEventToWake);
             }
             else
             {
@@ -1628,7 +1633,7 @@ NtDebugActiveProcess(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     PDEBUG_OBJECT DebugObject;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PETHREAD LastThread;
     NTSTATUS Status;
     PAGED_CODE();
@@ -1644,8 +1649,9 @@ NtDebugActiveProcess(IN HANDLE ProcessHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Don't allow debugging the initial system process */
-    if (Process == PsInitialSystemProcess)
+    /* Don't allow debugging the current process or the system process */
+    if ((Process == PsGetCurrentProcess()) ||
+         (Process == PsInitialSystemProcess))
     {
         /* Dereference and fail */
         ObDereferenceObject(Process);
@@ -1700,7 +1706,7 @@ NtRemoveProcessDebug(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     PDEBUG_OBJECT DebugObject;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     PAGED_CODE();
     DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p Handle: %p\n",
@@ -1823,7 +1829,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
                     OUT PDBGUI_WAIT_STATE_CHANGE StateChange)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    LARGE_INTEGER SafeTimeOut;
+    LARGE_INTEGER LocalTimeOut;
     PEPROCESS Process;
     LARGE_INTEGER StartTime;
     PETHREAD Thread;
@@ -1837,44 +1843,46 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     PAGED_CODE();
     DBGKTRACE(DBGK_OBJECT_DEBUG, "Handle: %p\n", DebugHandle);
 
-    /* Clear the initial wait state change structure */
+    /* Clear the initial wait state change structure and the timeout */
     RtlZeroMemory(&WaitStateChange, sizeof(WaitStateChange));
+    LocalTimeOut.QuadPart = 0;
 
-    /* Protect probe in SEH */
-    _SEH2_TRY
+    /* Check if we were called from user mode */
+    if (PreviousMode != KernelMode)
     {
-        /* Check if we came with a timeout */
-        if (Timeout)
+        /* Protect probe in SEH */
+        _SEH2_TRY
         {
-            /* Check if the call was from user mode */
-            if (PreviousMode != KernelMode)
+            /* Check if we came with a timeout */
+            if (Timeout)
             {
                 /* Probe it */
                 ProbeForReadLargeInteger(Timeout);
+
+                /* Make a local copy */
+                LocalTimeOut = *Timeout;
+                Timeout = &LocalTimeOut;
             }
 
-            /* Make a local copy */
-            SafeTimeOut = *Timeout;
-            Timeout = &SafeTimeOut;
-
-            /* Query the current time */
-            KeQuerySystemTime(&StartTime);
-        }
-
-        /* Check if the call was from user mode */
-        if (PreviousMode != KernelMode)
-        {
             /* Probe the state change structure */
             ProbeForWrite(StateChange, sizeof(*StateChange), sizeof(ULONG));
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Get the exception code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+        if (!NT_SUCCESS(Status)) return Status;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        /* Get the exception code */
-        Status = _SEH2_GetExceptionCode();
+        /* Copy directly */
+        if (Timeout) LocalTimeOut = *Timeout;
     }
-    _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
+
+    /* If we were passed a timeout, query the current time */
+    if (Timeout) KeQuerySystemTime(&StartTime);
 
     /* Get the debug object */
     Status = ObReferenceObjectByHandle(DebugHandle,
@@ -1892,7 +1900,7 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
     /* Wait on the debug object given to us */
     while (TRUE)
     {
-        Status = KeWaitForSingleObject(DebugObject,
+        Status = KeWaitForSingleObject(&DebugObject->EventsPresent,
                                        Executive,
                                        PreviousMode,
                                        Alertable,
@@ -2002,17 +2010,17 @@ NtWaitForDebugEvent(IN HANDLE DebugHandle,
         if (!GotEvent)
         {
             /* Check if we can wait again */
-            if (SafeTimeOut.QuadPart < 0)
+            if (LocalTimeOut.QuadPart < 0)
             {
                 /* Query the new time */
                 KeQuerySystemTime(&NewTime);
 
                 /* Substract times */
-                SafeTimeOut.QuadPart += (NewTime.QuadPart - StartTime.QuadPart);
+                LocalTimeOut.QuadPart += (NewTime.QuadPart - StartTime.QuadPart);
                 StartTime = NewTime;
 
                 /* Check if we've timed out */
-                if (SafeTimeOut.QuadPart >= 0)
+                if (LocalTimeOut.QuadPart >= 0)
                 {
                     /* We have, break out of the loop */
                     Status = STATUS_TIMEOUT;

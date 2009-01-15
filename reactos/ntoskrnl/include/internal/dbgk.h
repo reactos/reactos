@@ -56,6 +56,7 @@ DbgkInitialize(
 VOID
 NTAPI
 DbgkCreateThread(
+    IN PETHREAD Thread,
     IN PVOID StartAddress
 );
 
@@ -133,6 +134,7 @@ DbgkClearProcessDebugObject(
     IN PDEBUG_OBJECT SourceDebugObject
 );
 
+extern ULONG DbgkpTraceLevel;
 extern POBJECT_TYPE DbgkDebugObjectType;
 
 /* EOF */
