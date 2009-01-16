@@ -16,7 +16,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-#ifndef NDEBUG
 VOID HexDump(PUCHAR Buffer, ULONG Length)
 {
 	CHAR Line[65];
@@ -42,7 +41,6 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
 	}
 	DbgPrint("---------------\n");
 }
-#endif
 
 static DRIVER_CANCEL NpfsReadWriteCancelRoutine;
 static VOID NTAPI
@@ -360,7 +358,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 				Irp->RequestorMode,
 				FALSE,
 				NULL);
-
 			if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
 			{
 				Status = STATUS_CANCELLED;
@@ -449,7 +446,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 						Irp->RequestorMode,
 						FALSE,
 						NULL);
-					DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Fcb->PipeName, Status);					
+					DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Fcb->PipeName, Status);
 
 					if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
 					{
@@ -480,9 +477,11 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 				}
 			}
 			ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
-			if (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
+
+			/* If the pipe type and read mode are both byte stream */
+			if ((Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_MODE) && (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE))
 			{
-				DPRINT("Byte stream mode\n");
+				DPRINT("Byte stream mode: Ccb->Data %x\n", Ccb->Data);
 				/* Byte stream mode */
 				while (Length > 0 && Ccb->ReadDataAvailable > 0)
 				{
@@ -522,115 +521,135 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 					break;
 				}
 			}
-			else
+			else if (Ccb->Fcb->PipeType == FILE_PIPE_MESSAGE_MODE)
 			{
-				DPRINT("Message mode\n");
+				ULONG ThisCopyLength = 0;
+				ULONG TotalLengthNeeded = min(Length, Ccb->ReadDataAvailable);
 
-				/* For Message mode, the Message length will be stored in the buffer preceeding the Message. */
-				if (Ccb->ReadDataAvailable)
+				DPRINT("Message mode: Ccb>Data %x\n", Ccb->Data);
+
+				do
 				{
-					ULONG NextMessageLength=0;
-					//HexDump(Ccb->Data, (ULONG)Ccb->WritePtr - (ULONG)Ccb->Data);
-					/*First get the size of the message */
-					memcpy(&NextMessageLength, Ccb->Data, sizeof(NextMessageLength));
-					if ((NextMessageLength == 0) || (NextMessageLength > Ccb->ReadDataAvailable))
+					Buffer = (PVOID)((ULONG_PTR)Buffer + ThisCopyLength);
+
+					/* For Message mode, the Message length will be stored in the buffer preceeding the Message. */
+					if (Ccb->ReadDataAvailable)
 					{
-						DPRINT1("This should never happen! Possible memory corruption.\n");
-#ifndef NDEBUG
-						HexDump(Ccb->Data, (ULONG)Ccb->WritePtr - (ULONG)Ccb->Data);
-#endif
-						ASSERT(FALSE);
-					}
+						ULONG NextMessageLength = 0;
 
-					/* Use the smaller value */
+						/*First get the size of the message */
+						memcpy(&NextMessageLength, Ccb->Data, sizeof(NextMessageLength));
 
-					CopyLength = min(NextMessageLength, Length);
-
-					/* retrieve the message from the buffer */
-					memcpy(Buffer, (PVOID)((ULONG)Ccb->Data + sizeof(NextMessageLength)), CopyLength);
-
-
-					if (Ccb->ReadDataAvailable > CopyLength)
-					{
-						if (CopyLength < NextMessageLength)
+						if ((NextMessageLength == 0) || (NextMessageLength > Ccb->ReadDataAvailable))
 						{
-							/* Client only requested part of the message */
+							DPRINT("Possible memory corruption.\n");
+							HexDump(Ccb->Data, (ULONG_PTR)Ccb->WritePtr - (ULONG_PTR)Ccb->Data);
+							ASSERT(FALSE);
+						}
 
-							/* Calculate the remaining message new size */
-							ULONG NewMessageSize = NextMessageLength-CopyLength;
+						/* Use the smaller value */
+						ThisCopyLength = min(NextMessageLength, Length);
 
-							/* Write a new Message size to buffer for the part of the message still there */
-							memcpy(Ccb->Data, &NewMessageSize, sizeof(NewMessageSize));
+						/* retrieve the message from the buffer */
+						memcpy(Buffer, (PVOID)((ULONG_PTR)Ccb->Data + sizeof(NextMessageLength)), ThisCopyLength);
 
-							/* Move the memory starting from end of partial Message just retrieved */
-							memmove((PVOID)((ULONG_PTR)Ccb->Data + sizeof(NewMessageSize)), 
-								(PVOID)((ULONG_PTR) Ccb->Data + CopyLength + sizeof(NewMessageSize)), 
-								(ULONG)Ccb->WritePtr - ((ULONG)Ccb->Data + sizeof(NewMessageSize)) - CopyLength);
+						if (Ccb->ReadDataAvailable > ThisCopyLength)
+						{
+							if (ThisCopyLength < NextMessageLength)
+							{
+								/* Client only requested part of the message */
 
-							/* Update the write pointer */
-							Ccb->WritePtr = (PVOID)((ULONG)Ccb->WritePtr - CopyLength);
+								/* Calculate the remaining message new size */
+								ULONG NewMessageSize = NextMessageLength-ThisCopyLength;
 
-							/* Add CopyLength only to WriteQuotaAvailable as the 
-							   Message Size was replaced in the buffer */
-							Ccb->WriteQuotaAvailable += CopyLength;
+								/* Write a new Message size to buffer for the part of the message still there */
+								memcpy(Ccb->Data, &NewMessageSize, sizeof(NewMessageSize));
+
+								/* Move the memory starting from end of partial Message just retrieved */
+								memmove((PVOID)((ULONG_PTR)Ccb->Data + sizeof(NewMessageSize)),
+									(PVOID)((ULONG_PTR)Ccb->Data + ThisCopyLength + sizeof(NewMessageSize)),
+									(ULONG_PTR)Ccb->WritePtr - ((ULONG_PTR)Ccb->Data + sizeof(NewMessageSize)) -
+									ThisCopyLength);
+
+								/* Update the write pointer */
+								Ccb->WritePtr = (PVOID)((ULONG_PTR)Ccb->WritePtr - ThisCopyLength);
+
+								/* Add ThisCopyLength only to WriteQuotaAvailable as the 
+							   	Message Size was replaced in the buffer */
+								Ccb->WriteQuotaAvailable += ThisCopyLength;
+							}
+							else
+							{
+								/* Client wanted the entire message */
+
+								/* Move the memory starting from the next Message just retrieved */
+								memmove(Ccb->Data, 
+									(PVOID)((ULONG_PTR) Ccb->Data + NextMessageLength + sizeof(NextMessageLength)),
+									 (ULONG_PTR)Ccb->WritePtr - (ULONG_PTR)Ccb->Data - NextMessageLength -
+									 sizeof(NextMessageLength));
+
+								/* Update the write pointer */
+								Ccb->WritePtr = (PVOID)((ULONG_PTR)Ccb->WritePtr - ThisCopyLength -
+								sizeof(NextMessageLength));
+
+								/* Add both the message length and the header to the WriteQuotaAvailable
+								   as they both were removed */
+								Ccb->WriteQuotaAvailable += (ThisCopyLength + sizeof(NextMessageLength));
+							}
 						}
 						else
 						{
-							/* Client wanted the entire message */
+							/* This was the last Message, so just zero this messages for safety sake */
+							memset(Ccb->Data, 0, NextMessageLength + sizeof(NextMessageLength));
 
-							/* Move the memory starting from the next Message just retrieved */
-							memmove(Ccb->Data, 
-								(PVOID)((ULONG_PTR) Ccb->Data + NextMessageLength + sizeof(NextMessageLength)),
-								 (ULONG)Ccb->WritePtr - (ULONG)Ccb->Data - NextMessageLength - sizeof(NextMessageLength));
-
-							/* Update the write pointer */
-							Ccb->WritePtr = (PVOID)((ULONG)Ccb->WritePtr - NextMessageLength);
+							/* reset the write pointer to beginning of buffer */
+							Ccb->WritePtr = Ccb->Data;
 
 							/* Add both the message length and the header to the WriteQuotaAvailable
 							   as they both were removed */
-							Ccb->WriteQuotaAvailable += (CopyLength + sizeof(NextMessageLength));
+							Ccb->WriteQuotaAvailable += (ThisCopyLength + sizeof(ULONG));
+
+							KeResetEvent(&Ccb->ReadEvent);
+							if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
+							{
+								KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
+							}
 						}
-					}
-					else
-					{
-						/* This was the last Message, so just zero this messages for safety sake */
-						memset(Ccb->Data,0,NextMessageLength + sizeof(NextMessageLength));
-
-						/* reset the write pointer to beginning of buffer */
-						Ccb->WritePtr = Ccb->Data;
-
-						/* Add both the message length and the header to the WriteQuotaAvailable
-						   as they both were removed */
-						Ccb->WriteQuotaAvailable += (CopyLength + sizeof(ULONG));
-
-						KeResetEvent(&Ccb->ReadEvent);
-						if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
-						{
-							KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
-						}
-					}
 #ifndef NDEBUG
-					DPRINT("Length %d Buffer %x\n",CopyLength,Buffer);
-					HexDump((PUCHAR)Buffer, CopyLength);
+						DPRINT("Length %d Buffer %x\n",ThisCopyLength,Buffer);
+						HexDump((PUCHAR)Buffer, ThisCopyLength);
 #endif
 
-					Information += CopyLength;
+						Information += ThisCopyLength;
 
-					Ccb->ReadDataAvailable -= CopyLength;
+						Ccb->ReadDataAvailable -= ThisCopyLength;
 
-					if ((ULONG)Ccb->WriteQuotaAvailable > (ULONG)Ccb->MaxDataLength) ASSERT(FALSE);
-				}
+						if ((ULONG)Ccb->WriteQuotaAvailable > (ULONG)Ccb->MaxDataLength) ASSERT(FALSE);
+					}
+
+				}while ((ThisCopyLength < TotalLengthNeeded) 
+					&& (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE) 
+					&& (Ccb->ReadDataAvailable));
+
 
 				if (Information > 0)
 				{
 					break;
 				}
 			}
+			else
+			{
+				DPRINT1("Unhandled Pipe Mode with Read Mode!\n");
+				ASSERT(FALSE);
+			}
 		}
 		Irp->IoStatus.Information = Information;
 		Irp->IoStatus.Status = Status;
 
 		ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
+
+		if (Status == STATUS_CANCELLED)
+			goto done;
 
 		if (IoIsOperationSynchronous(Irp))
 		{
@@ -718,15 +737,15 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
 	if (Irp->MdlAddress == NULL)
 	{
-		DPRINT1("Irp->MdlAddress == NULL\n");
+		DPRINT("Irp->MdlAddress == NULL\n");
 		Status = STATUS_UNSUCCESSFUL;
 		Length = 0;
 		goto done;
 	}
 
-	if (ReaderCcb == NULL)
+	if ((ReaderCcb == NULL) || (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE))
 	{
-		DPRINT1("Pipe is NOT connected!\n");
+		DPRINT("Pipe is NOT connected!\n");
 		if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
 			Status = STATUS_PIPE_LISTENING;
 		else if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
@@ -739,7 +758,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
 	if (ReaderCcb->Data == NULL)
 	{
-		DPRINT1("Pipe is NOT writable!\n");
+		DPRINT("Pipe is NOT writable!\n");
 		Status = STATUS_UNSUCCESSFUL;
 		Length = 0;
 		goto done;
@@ -749,6 +768,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
 
 	ExAcquireFastMutex(&ReaderCcb->DataListLock);
+
 #ifndef NDEBUG
 	DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
 	HexDump(Buffer, Length);
@@ -774,7 +794,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				FALSE,
 				NULL);
 			DPRINT("Write Finished waiting (%S)! Status: %x\n", Fcb->PipeName.Buffer, Status);
-			ExAcquireFastMutex(&ReaderCcb->DataListLock);
+			
 			if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC))
 			{
 				Status = STATUS_CANCELLED;
@@ -792,14 +812,14 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 			{
 				DPRINT("PipeState: %x\n", Ccb->PipeState);
 				Status = STATUS_PIPE_BROKEN;
-				// ExReleaseFastMutex(&ReaderCcb->DataListLock);
 				goto done;
 			}
+			ExAcquireFastMutex(&ReaderCcb->DataListLock);
 		}
 
-		if (Fcb->WriteMode == FILE_PIPE_BYTE_STREAM_MODE)
+		if ((Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_MODE) && (Ccb->Fcb->WriteMode == FILE_PIPE_BYTE_STREAM_MODE))
 		{
-			DPRINT("Byte stream mode\n");
+			DPRINT("Byte stream mode: Ccb->Data %x, Ccb->WritePtr %x\n", ReaderCcb->Data, ReaderCcb->WritePtr);
 
 			while (Length > 0 && ReaderCcb->WriteQuotaAvailable > 0)
 			{
@@ -816,7 +836,10 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				}
 				else
 				{
-					TempLength = (ULONG)((ULONG_PTR)ReaderCcb->Data + ReaderCcb->MaxDataLength - (ULONG_PTR)ReaderCcb->WritePtr);
+
+					TempLength = (ULONG)((ULONG_PTR)ReaderCcb->Data + ReaderCcb->MaxDataLength -
+							(ULONG_PTR)ReaderCcb->WritePtr);
+
 					memcpy(ReaderCcb->WritePtr, Buffer, TempLength);
 					memcpy(ReaderCcb->Data, Buffer + TempLength, CopyLength - TempLength);
 					ReaderCcb->WritePtr = (PVOID)((ULONG_PTR)ReaderCcb->Data + CopyLength - TempLength);
@@ -837,33 +860,38 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				break;
 			}
 		}
-		else
+		else if ((Ccb->Fcb->PipeType == FILE_PIPE_MESSAGE_MODE) && (Ccb->Fcb->WriteMode == FILE_PIPE_MESSAGE_MODE))
 		{
 			/* For Message Type Pipe, the Pipes memory will be used to store the size of each message */
-                        /* FIXME: Check and verify ReadMode ByteStream */
-
+			DPRINT("Message mode: Ccb->Data %x, Ccb->WritePtr %x\n",ReaderCcb->Data, ReaderCcb->WritePtr);
 			if (Length > 0)
 			{
 				/* Verify the WritePtr is still inside the buffer */
-				if (((ULONG)ReaderCcb->WritePtr > ((ULONG)ReaderCcb->Data + (ULONG)ReaderCcb->MaxDataLength)) ||
-				((ULONG)ReaderCcb->WritePtr < (ULONG)ReaderCcb->Data))
+				if (((ULONG_PTR)ReaderCcb->WritePtr > ((ULONG_PTR)ReaderCcb->Data + (ULONG_PTR)ReaderCcb->MaxDataLength)) ||
+				((ULONG_PTR)ReaderCcb->WritePtr < (ULONG_PTR)ReaderCcb->Data))
 				{
 					DPRINT1("NPFS is writing out of its buffer. Report to developer!\n");
-					DPRINT1("ReaderCcb->WritePtr %x, ReaderCcb->Data %x, ReaderCcb->MaxDataLength%d\n",
-						ReaderCcb->WritePtr,ReaderCcb->Data,ReaderCcb->MaxDataLength);
+					DPRINT1("ReaderCcb->WritePtr %x, ReaderCcb->Data %x, ReaderCcb->MaxDataLength %lu\n",
+						ReaderCcb->WritePtr, ReaderCcb->Data, ReaderCcb->MaxDataLength);
 					ASSERT(FALSE);
 				}
 
 				CopyLength = min(Length, ReaderCcb->WriteQuotaAvailable - sizeof(ULONG));
+				if (CopyLength > ReaderCcb->WriteQuotaAvailable)
+				{
+					DPRINT1("Writing %lu byte to pipe would overflow as only %lu bytes are available\n",
+						CopyLength, ReaderCcb->ReadDataAvailable);
+					ASSERT(FALSE);
+				}
 
 				/* First Copy the Length of the message into the pipes buffer */
 				memcpy(ReaderCcb->WritePtr, &CopyLength, sizeof(CopyLength));
 
 				/* Now the user buffer itself */
-				memcpy((PVOID)((ULONG)ReaderCcb->WritePtr+ sizeof(CopyLength)), Buffer, CopyLength);
+				memcpy((PVOID)((ULONG_PTR)ReaderCcb->WritePtr + sizeof(CopyLength)), Buffer, CopyLength);
 
 				/* Update the write pointer */
-				ReaderCcb->WritePtr = (PVOID)((ULONG)ReaderCcb->WritePtr + sizeof(CopyLength) + CopyLength);
+				ReaderCcb->WritePtr = (PVOID)((ULONG_PTR)ReaderCcb->WritePtr + sizeof(CopyLength) + CopyLength);
 
 				Information += CopyLength;
 
@@ -871,7 +899,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
 				ReaderCcb->WriteQuotaAvailable -= (CopyLength + sizeof(ULONG));
 
-				if ((ULONG)ReaderCcb->WriteQuotaAvailable > (ULONG)ReaderCcb->MaxDataLength)
+				if ((ULONG_PTR)ReaderCcb->WriteQuotaAvailable > (ULONG)ReaderCcb->MaxDataLength)
 				{
 					DPRINT1("QuotaAvailable is greater than buffer size!\n");
 					ASSERT(FALSE);
@@ -884,6 +912,11 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				KeResetEvent(&Ccb->WriteEvent);
 				break;
 			}
+		}
+		else
+		{
+			DPRINT1("Unhandled Pipe Type Mode and Read Write Mode!\n");
+			ASSERT(FALSE);
 		}
 	}
 

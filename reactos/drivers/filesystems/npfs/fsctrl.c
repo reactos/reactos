@@ -202,7 +202,7 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
 	{
 		Server = (Ccb->PipeEnd == FILE_PIPE_SERVER_END);
 		OtherSide = Ccb->OtherSide;
-		Ccb->OtherSide = NULL;
+		//Ccb->OtherSide = NULL;
 		Ccb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
 		/* Lock the server first */
 		if (Server)
@@ -216,7 +216,7 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
 			ExAcquireFastMutex(&Ccb->DataListLock);
 		}
 		OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-		OtherSide->OtherSide = NULL;
+		//OtherSide->OtherSide = NULL;
 		/*
 		* Signaling the write event. If is possible that an other
 		* thread waits for an empty buffer.
@@ -365,6 +365,7 @@ NpfsPeekPipe(PIRP Irp,
 			 PIO_STACK_LOCATION IoStack)
 {
 	ULONG OutputBufferLength;
+	ULONG ReturnLength = 0;
 	PFILE_PIPE_PEEK_BUFFER Reply;
 	PNPFS_FCB Fcb;
 	PNPFS_CCB Ccb;
@@ -396,11 +397,21 @@ NpfsPeekPipe(PIRP Irp,
 	Reply->ReadDataAvailable = Ccb->ReadDataAvailable;
 	DPRINT("ReadDataAvailable: %lu\n", Ccb->ReadDataAvailable);
 
-	if (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
+	ExAcquireFastMutex(&Ccb->DataListLock);
+	BufferPtr = Ccb->Data;
+	DPRINT("BufferPtr = %x\n", BufferPtr);
+	if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_MODE)
 	{
 		DPRINT("Byte Stream Mode\n");
 		Reply->MessageLength = Ccb->ReadDataAvailable;
-		DPRINT("Reply->MessageLength  %d\n",Reply->MessageLength );
+		DPRINT("Reply->MessageLength  %lu\n",Reply->MessageLength );
+		MessageCount = 1;
+		ReturnLength = Ccb->ReadDataAvailable;
+
+		if (Reply->Data[0] && (OutputBufferLength >= ReturnLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0])))
+		{
+			memcpy(&Reply->Data[0], (PVOID)BufferPtr, Ccb->ReadDataAvailable);
+		}
 	}
 	else
 	{
@@ -410,7 +421,7 @@ NpfsPeekPipe(PIRP Irp,
 		if (ReadDataAvailable > 0)
 		{
 			memcpy(&Reply->MessageLength,Ccb->Data,sizeof(ULONG));
-			BufferPtr = Ccb->Data;
+
 			/* NOTE: Modifying the structure in header file to keep track of NumberOfMessage would be better */
 			while ((ReadDataAvailable > 0) && (BufferPtr < Ccb->WritePtr))
 			{
@@ -418,34 +429,37 @@ NpfsPeekPipe(PIRP Irp,
 
 				ASSERT(MessageLength > 0);
 
-				DPRINT("MessageLength = %d\n",MessageLength);
+				DPRINT("MessageLength = %lu\n",MessageLength);
 				MessageCount++;
 				ReadDataAvailable -= MessageLength;
 
 				/* If its the first message, copy the Message if the size of buffer is large enough */
-				if ((MessageCount==1) && (Reply->Data[0]) 
-					&& (OutputBufferLength >= (sizeof(FILE_PIPE_PEEK_BUFFER) + MessageLength)))
+				if (MessageCount==1)
 				{
-					memcpy(&Reply->Data[0], (PVOID)((ULONG)BufferPtr + sizeof(MessageLength)), MessageLength);
+					ReturnLength = MessageLength;
+					if ((Reply->Data[0])
+					&& (OutputBufferLength >= (MessageLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
+					{
+						memcpy(&Reply->Data[0], (PVOID)((ULONG)BufferPtr + sizeof(MessageLength)), MessageLength);
+					}
 				}
 				BufferPtr =(PVOID)((ULONG)BufferPtr + MessageLength + sizeof(MessageLength));
-				DPRINT("Message %d\n",MessageCount);
+				DPRINT("BufferPtr = %x\n", BufferPtr);
 				DPRINT("ReadDataAvailable: %lu\n", ReadDataAvailable);
 			}
 
 			if (ReadDataAvailable != 0)
 			{
-				DPRINT1("This should never happen! Possible memory corruption.\n");
-				return STATUS_UNSUCCESSFUL;
+				DPRINT1("Possible memory corruption.\n");
+				ASSERT(FALSE);
 			}
 		}
 	}
+	ExReleaseFastMutex(&Ccb->DataListLock);
 
 	Reply->NumberOfMessages = MessageCount;
-	if (MessageCount > 0)
-		Reply->Data[0] = 0;
 
-	Irp->IoStatus.Information = OutputBufferLength;
+	Irp->IoStatus.Information = ReturnLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]);
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 
 	Status = STATUS_SUCCESS;

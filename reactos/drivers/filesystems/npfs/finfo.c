@@ -30,6 +30,12 @@ NpfsSetPipeInformation(PDEVICE_OBJECT DeviceObject,
 	Fcb = Ccb->Fcb;
 	Request = (PFILE_PIPE_INFORMATION)Info;
 
+	if ((Fcb->PipeType == FILE_PIPE_BYTE_STREAM_MODE) && (Request->ReadMode == FILE_PIPE_MESSAGE_MODE))
+	{
+		DPRINT("Cannot change readmode to message type on a byte type pipe!\n");
+		return STATUS_ACCESS_DENIED;
+	}
+
 	/* Set Pipe Data */
 	Fcb->ReadMode = Request->ReadMode;
 	Fcb->CompletionMode =  Request->CompletionMode;
