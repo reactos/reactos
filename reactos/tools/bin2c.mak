@@ -23,11 +23,11 @@ BIN2C_HOST_LFLAGS = $(TOOLS_LFLAGS)
 bin2c: $(BIN2C_TARGET)
 
 $(BIN2C_TARGET): $(BIN2C_OBJECTS) | $(BIN2C_OUT)
-	$(ECHO_LD)
+	$(ECHO_HOSTLD)
 	${host_gcc} $(BIN2C_OBJECTS) $(BIN2C_HOST_LFLAGS) -o $@
 
 $(BIN2C_INT_)bin2c.o: $(BIN2C_BASE_)bin2c.c | $(BIN2C_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(BIN2C_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: bin2c_clean

@@ -29,11 +29,11 @@ NCI_HOST_CFLAGS = -Iinclude $(TOOLS_CFLAGS)
 NCI_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
 $(NCI_TARGET): $(NCI_OBJECTS) | $(NCI_OUT)
-	$(ECHO_LD)
+	$(ECHO_HOSTLD)
 	${host_gcc} $(NCI_OBJECTS) $(NCI_HOST_LFLAGS) -o $@
 
 $(NCI_INT_)ncitool.o: $(NCI_BASE_)ncitool.c | $(NCI_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(NCI_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: nci

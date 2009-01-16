@@ -35,11 +35,11 @@ BUILDNO_VERSION = include$(SEP)reactos$(SEP)version.h
 buildno: $(BUILDNO_TARGET)
 
 $(BUILDNO_TARGET): $(BUILDNO_OBJECTS) $(XML_SSPRINTF_OBJECTS) | $(BUILDNO_OUT)
-	$(ECHO_LD)
+	$(ECHO_HOSTLD)
 	${host_gpp} $^ $(BUILDNO_HOST_LFLAGS) -o $@
 
 $(BUILDNO_INT_)buildno.o: $(BUILDNO_BASE_)buildno.cpp $(BUILDNO_VERSION) | $(BUILDNO_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gpp} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
 
 .PHONY: buildno_clean

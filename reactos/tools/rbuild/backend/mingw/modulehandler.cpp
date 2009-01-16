@@ -1055,7 +1055,7 @@ Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: 
 Rule arRule2 ( "\t$(ECHO_AR)\n"
               "\t${ar} -rc $@ $($(module_name)_OBJS)\n",
               NULL );
-Rule arHostRule2 ( "\t$(ECHO_AR)\n"
+Rule arHostRule2 ( "\t$(ECHO_HOSTAR)\n"
                    "\t${host_ar} -rc $@ $($(module_name)_OBJS)\n",
                    NULL );
 Rule gasRule ( "$(source): ${$(module_name)_precondition}\n"
