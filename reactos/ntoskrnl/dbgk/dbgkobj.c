@@ -712,9 +712,27 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
                                    DebugObject);
         if (!NT_SUCCESS(Status))
         {
-            /* We failed. FIXME: Handle this */
-            DPRINT1("Unhandled Dbgk codepath!\n");
-            ASSERT(FALSE);
+            /* Resume the thread if it was suspended */
+            if (Flags & DEBUG_EVENT_SUSPEND) PsResumeThread(ThisThread, NULL);
+
+            /* Check if we acquired rundown */
+            if (Flags & DEBUG_EVENT_RELEASE)
+            {
+                /* Release it */
+                ExReleaseRundownProtection(&ThisThread->RundownProtect);
+            }
+
+            /* If this was a process create, check if we got a handle */
+            if ((ApiMessage.ApiNumber == DbgKmCreateProcessApi) &&
+                 (CreateProcess->FileHandle))
+            {
+                /* Close it */
+                ObCloseHandle(CreateProcess->FileHandle, KernelMode);
+            }
+
+            /* Release our reference and break out */
+            ObDereferenceObject(ThisThread);
+            break;
         }
 
         /* Check if this was the first message */
@@ -736,9 +754,10 @@ DbgkpPostFakeThreadMessages(IN PEPROCESS Process,
     /* Check the API status */
     if (!NT_SUCCESS(Status))
     {
-        /* We failed. FIXME: Handle this */
-        DPRINT1("Unhandled Dbgk codepath!\n");
-        ASSERT(FALSE);
+        /* Dereference and fail */
+        if (pFirstThread) ObDereferenceObject(pFirstThread);
+        if (pLastThread) ObDereferenceObject(pLastThread);
+        return Status;
     }
 
     /* Make sure we have a first thread */
@@ -1274,8 +1293,9 @@ ThreadScan:
     NextEntry = DebugObject->EventList.Flink;
     while (NextEntry != &DebugObject->EventList)
     {
-        /* Get the debug event */
+        /* Get the debug event and go to the next entry */
         DebugEvent = CONTAINING_RECORD(NextEntry, DEBUG_EVENT, EventList);
+        NextEntry = NextEntry->Flink;
         DBGKTRACE(DBGK_PROCESS_DEBUG, "DebugEvent: %p Flags: %lx TH: %p/%p\n",
                   DebugEvent, DebugEvent->Flags,
                   DebugEvent->BackoutThread, PsGetCurrentThread());
@@ -1339,9 +1359,6 @@ ThreadScan:
                 ExReleaseRundownProtection(&EventThread->RundownProtect);
             }
         }
-
-        /* Go to the next entry */
-        NextEntry = NextEntry->Flink;
     }
 
     /* Release the debug object */
@@ -1358,7 +1375,7 @@ ThreadScan:
     {
         /* Remove the event */
         NextEntry = RemoveHeadList(&TempList);
-        DebugEvent = CONTAINING_RECORD (NextEntry, DEBUG_EVENT, EventList);
+        DebugEvent = CONTAINING_RECORD(NextEntry, DEBUG_EVENT, EventList);
 
         /* Wake it */
         DbgkpWakeTarget(DebugEvent);
@@ -1372,12 +1389,88 @@ ThreadScan:
 NTSTATUS
 NTAPI
 DbgkClearProcessDebugObject(IN PEPROCESS Process,
-                            IN PDEBUG_OBJECT SourceDebugObject)
+                            IN PDEBUG_OBJECT SourceDebugObject OPTIONAL)
 {
-    /* FIXME: TODO */
-    DBGKTRACE(DBGK_PROCESS_DEBUG, "Process: %p DebugObject: %p\n",
+    PDEBUG_OBJECT DebugObject;
+    PDEBUG_EVENT DebugEvent;
+    LIST_ENTRY TempList;
+    PLIST_ENTRY NextEntry;
+    PAGED_CODE();
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "Process: %p DebugObject: %p\n",
               Process, SourceDebugObject);
-    return STATUS_UNSUCCESSFUL;
+
+    /* Acquire the port lock */
+    ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
+
+    /* Get the Process Debug Object */
+    DebugObject = Process->DebugPort;
+
+    /* 
+     * Check if the process had an object and it matches,
+     * or if the process had an object but none was specified
+     * (in which we are called from NtTerminateProcess)
+     */
+    if ((DebugObject) &&
+        ((DebugObject == SourceDebugObject) ||
+         (SourceDebugObject == NULL)))
+    {
+        /* Clear the debug port */
+        Process->DebugPort = NULL;
+
+        /* Release the port lock and remove the PEB flag */
+        ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
+        DbgkpMarkProcessPeb(Process);
+    }
+    else
+    {
+        /* Release the port lock and fail */
+        ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
+        return STATUS_PORT_NOT_SET;
+    }
+
+    /* Initialize the temporary list */
+    InitializeListHead(&TempList);
+
+    /* Acquire the Object */
+    ExAcquireFastMutex(&DebugObject->Mutex);
+
+    /* Loop the events */
+    NextEntry = DebugObject->EventList.Flink;
+    while (NextEntry != &DebugObject->EventList)
+    {
+        /* Get the Event and go to the next entry */
+        DebugEvent = CONTAINING_RECORD(NextEntry, DEBUG_EVENT, EventList);
+        NextEntry = NextEntry->Flink;
+
+        /* Check that it belongs to the specified process */
+        if (DebugEvent->Process == Process)
+        {
+            /* Insert it into the temporary list */
+            RemoveEntryList(&DebugEvent->EventList);
+            InsertTailList(&TempList, &DebugEvent->EventList);
+        }
+    }
+
+    /* Release the Object */
+    ExReleaseFastMutex(&DebugObject->Mutex);
+
+    /* Release the initial reference */
+    ObDereferenceObject(DebugObject);
+
+    /* Loop our temporary list */
+    while (!IsListEmpty(&TempList))
+    {
+        /* Remove the event */
+        NextEntry = RemoveHeadList(&TempList);
+        DebugEvent = CONTAINING_RECORD(NextEntry, DEBUG_EVENT, EventList);
+
+        /* Wake it up */
+        DebugEvent->Status = STATUS_DEBUGGER_INACTIVE;
+        DbgkpWakeTarget(DebugEvent);
+    }
+
+    /* Return Success */
+    return STATUS_SUCCESS;
 }
 
 VOID
