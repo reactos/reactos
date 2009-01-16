@@ -15,9 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define STUB \
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
-  DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
 
 NTSYSAPI
 NTSTATUS
@@ -45,6 +42,16 @@ NTAPI
 NtSetThreadExecutionState(
     IN EXECUTION_STATE esFlags,
     OUT EXECUTION_STATE *PreviousFlags
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtInitiatePowerAction(
+    IN POWER_ACTION SystemAction,
+    IN SYSTEM_POWER_STATE MinSystemState,
+    IN ULONG Flags,
+    IN BOOLEAN Asynchronous
 );
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -109,13 +116,27 @@ GetSystemPowerStatus(LPSYSTEM_POWER_STATUS PowerStatus)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 SetSystemPowerState(BOOL fSuspend, BOOL fForce)
 {
-    STUB;
-    return FALSE;
+    SYSTEM_POWER_STATE MinSystemState = (!fSuspend ? PowerSystemHibernate : PowerSystemSleeping1);
+    ULONG Flags = (!fForce ? POWER_ACTION_QUERY_ALLOWED : 0);
+    NTSTATUS Status;
+
+    Status = NtInitiatePowerAction(PowerActionSleep,
+                                   MinSystemState,
+                                   Flags,
+                                   FALSE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -152,7 +173,8 @@ BOOL
 WINAPI
 RequestDeviceWakeup(HANDLE hDevice)
 {
-    STUB;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    DPRINT1("RequestDeviceWakeup is UNIMPLEMENTED!\n");
     return 0;
 }
 
@@ -183,7 +205,8 @@ BOOL
 WINAPI
 CancelDeviceWakeupRequest(HANDLE hDevice)
 {
-    STUB;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    DPRINT1("CancelDeviceWakeupRequest is UNIMPLEMENTED!\n");
     return 0;
 }
 
@@ -205,7 +228,8 @@ WINAPI
 SetMessageWaitingIndicator(HANDLE hMsgIndicator,
                            ULONG ulMsgCount)
 {
-    STUB;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    DPRINT1("SetMessageWaitingIndicator is UNIMPLEMENTED!\n");
     return 0;
 }
 
