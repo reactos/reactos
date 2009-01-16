@@ -199,6 +199,7 @@ NDIS_STATUS LoopRegisterAdapter(
   AddrInitIPv4(&Loopback->Broadcast, LOOPBACK_BCASTADDR_IPv4);
 
   IPRegisterInterface(Loopback);
+  IPAddInterfaceRoute(Loopback);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 

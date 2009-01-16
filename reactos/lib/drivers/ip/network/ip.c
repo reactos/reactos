@@ -293,8 +293,6 @@ BOOLEAN IPRegisterInterface(
 
     IF->Index = ChosenIndex;
 
-    IPAddInterfaceRoute( IF );
-
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead,
 				   &IF->ListEntry,
@@ -345,6 +343,21 @@ VOID IPUnregisterInterface(
 }
 
 
+VOID DefaultProtocolHandler(
+    PIP_INTERFACE Interface,
+    PIP_PACKET IPPacket)
+/*
+ * FUNCTION: Default handler for Internet protocols
+ * ARGUMENTS:
+ *     NTE      = Pointer to net table entry which the packet was received on
+ *     IPPacket = Pointer to an IP packet that was received
+ */
+{
+    TI_DbgPrint(MID_TRACE, ("[IF %x] Packet of unknown Internet protocol "
+			    "discarded.\n", Interface));
+}
+
+
 VOID IPRegisterProtocol(
     UINT ProtocolNumber,
     IP_PROTOCOL_HANDLER Handler)
@@ -362,22 +375,7 @@ VOID IPRegisterProtocol(
         return;
     }
 
-    ProtocolTable[ProtocolNumber] = Handler;
-}
-
-
-VOID DefaultProtocolHandler(
-    PIP_INTERFACE Interface,
-    PIP_PACKET IPPacket)
-/*
- * FUNCTION: Default handler for Internet protocols
- * ARGUMENTS:
- *     NTE      = Pointer to net table entry which the packet was received on
- *     IPPacket = Pointer to an IP packet that was received
- */
-{
-    TI_DbgPrint(MID_TRACE, ("[IF %x] Packet of unknown Internet protocol "
-			    "discarded.\n", Interface));
+    ProtocolTable[ProtocolNumber] = Handler ? Handler : DefaultProtocolHandler;
 }
 
 
