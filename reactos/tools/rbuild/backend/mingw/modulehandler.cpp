@@ -1713,11 +1713,12 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		          backend->GetFullPath ( *pchFilename ).c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
-		          "\t%s -o %s %s %s -gstabs+ %s\n\n",
-		          module.cplusplus ? cppc.c_str() : cc.c_str(),
+		          "\t%s -o %s %s %s -gstabs+ -x %s %s\n\n",
+		          cc.c_str(),
 		          backend->GetFullName ( *pchFilename ).c_str(),
 		          module.cplusplus ? cxxflagsMacro.c_str() : cflagsMacro.c_str(),
 				  GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, module.cplusplus ? CompilerTypeCPP : CompilerTypeCC ).c_str(),
+				  module.cplusplus ? "c++-header" : "c-header",
 		          backend->GetFullName ( baseHeaderFile ).c_str() );
 		delete pchFilename;
 	}
