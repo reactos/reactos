@@ -1504,6 +1504,9 @@ DbgkInitialize(VOID)
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 NtCreateDebugObject(OUT PHANDLE DebugHandle,
@@ -1589,6 +1592,9 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 NtDebugContinue(IN HANDLE DebugHandle,
@@ -1719,6 +1725,9 @@ NtDebugContinue(IN HANDLE DebugHandle,
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 NtDebugActiveProcess(IN HANDLE ProcessHandle,
@@ -1792,6 +1801,9 @@ NtDebugActiveProcess(IN HANDLE ProcessHandle,
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 NtRemoveProcessDebug(IN HANDLE ProcessHandle,
@@ -1837,6 +1849,9 @@ NtRemoveProcessDebug(IN HANDLE ProcessHandle,
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 NtSetInformationDebugObject(IN HANDLE DebugHandle,
@@ -1914,6 +1929,9 @@ NtSetInformationDebugObject(IN HANDLE DebugHandle,
     return Status;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 NtWaitForDebugEvent(IN HANDLE DebugHandle,
