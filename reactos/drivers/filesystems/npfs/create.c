@@ -373,9 +373,9 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 			return STATUS_INSTANCE_NOT_AVAILABLE;
 		}
 
-		/* FIXME: Check pipe modes also! */
 		if (Fcb->MaximumInstances != Buffer->MaximumInstances ||
-			Fcb->TimeOut.QuadPart != Buffer->DefaultTimeout.QuadPart)
+			Fcb->TimeOut.QuadPart != Buffer->DefaultTimeout.QuadPart ||
+			Fcb->PipeType != Buffer->NamedPipeType)
 		{
 			DPRINT("Asked for invalid pipe mode.\n");
 			ExFreePool(Ccb);
@@ -420,8 +420,11 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 		KeInitializeMutex(&Fcb->CcbListLock, 0);
 
 		Fcb->PipeType = Buffer->NamedPipeType;
-		Fcb->WriteMode = Buffer->ReadMode;
-		Fcb->ReadMode = Buffer->ReadMode;
+		/* FIXME: Verify which is correct */
+		Fcb->WriteMode = Buffer->ReadMode;//Buffer->NamedPipeType;
+		/* MSDN documentation reads that clients always start off in byte mode */
+		Fcb->ReadMode = FILE_PIPE_BYTE_STREAM_MODE;
+
 		Fcb->CompletionMode = Buffer->CompletionMode;
 		switch (IoStack->Parameters.CreatePipe.ShareAccess & (FILE_SHARE_READ|FILE_SHARE_WRITE))
 		{
@@ -736,6 +739,10 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
 	{
 		DPRINT("Client\n");
 	}
+
+	/* Disconnect the pipes */
+	if (Ccb->OtherSide) Ccb->OtherSide->OtherSide = NULL;
+	if (Ccb) Ccb->OtherSide = NULL;
 
 	ASSERT(Ccb->PipeState == FILE_PIPE_CLOSING_STATE);
 
