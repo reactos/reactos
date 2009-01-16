@@ -294,8 +294,6 @@ BOOLEAN IPRegisterInterface(
 
     IF->Index = ChosenIndex;
 
-    IPAddInterfaceRoute( IF );
-
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead,
 				   &IF->ListEntry,
