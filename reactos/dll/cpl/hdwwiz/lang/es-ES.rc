@@ -143,4 +143,5 @@ BEGIN
 	IDS_PROBELISTTITLE "El siguiente hardware ya está instalado en su equipo"
 	IDS_ADDNEWDEVICE "Añadir un nuevo dispositivo hardware"
 	IDS_SELECTWAYTITLE "El asistente puede ayudarle a instalar otro hardware"
+	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
 END

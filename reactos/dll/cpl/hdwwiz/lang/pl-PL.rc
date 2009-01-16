@@ -148,4 +148,5 @@ BEGIN
 	IDS_PROBELISTTITLE "Poni¿sze urz¹dzenia s¹ ju¿ zainstalowane na tym komputerze"
 	IDS_ADDNEWDEVICE "Dodaj nowe urz¹dzenie sprzêtowe"
 	IDS_SELECTWAYTITLE "Kreator mo¿e pomóc Tobie zainstalowaæ inne urz¹dzenie"
+	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
 END

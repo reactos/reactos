@@ -487,6 +487,35 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static INT_PTR CALLBACK
 SelectWayPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    switch (uMsg)
+    {
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
+                    SendDlgItemMessage(hwndDlg, IDC_AUTOINSTALL, BM_SETCHECK, 1, 1);
+                }
+                break;
+
+                case PSN_WIZNEXT:
+                {
+                    if (SendDlgItemMessage(hwndDlg, IDC_AUTOINSTALL, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_PROGRESSPAGE);
+                    else
+                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_HWTYPESPAGE);
+
+                    return TRUE;
+                }
+            }
+        }
+        break;
+    }
+
     return FALSE;
 }
 
@@ -529,10 +558,70 @@ DevStatusPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
+static INT_PTR CALLBACK
+HdTypesPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                }
+                break;
+
+                case PSN_WIZBACK:
+                {
+                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
+                    return TRUE;
+                }
+            }
+        }
+        break;
+    }
+
+    return FALSE;
+}
+
+static INT_PTR CALLBACK
+ProgressPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                {
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+                }
+                break;
+
+                case PSN_WIZBACK:
+                {
+                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
+                    return TRUE;
+                }
+            }
+        }
+        break;
+    }
+
+    return FALSE;
+}
+
 static VOID
 HardwareWizardInit(HWND hwnd)
 {
-    HPROPSHEETPAGE ahpsp[8];
+    HPROPSHEETPAGE ahpsp[10];
     PROPSHEETPAGE psp = {0};
     PROPSHEETHEADER psh;
     UINT nPages = 0;
@@ -597,6 +686,28 @@ HardwareWizardInit(HWND hwnd)
     psp.lParam = 0;
     psp.pfnDlgProc = DevStatusPageDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_HWSTATUSPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create hardware types page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_HDTYPESTITLE);
+    psp.pszHeaderSubTitle = NULL;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = HdTypesPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_HWTYPESPAGE);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create progress page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SEARCHTITLE);
+    psp.pszHeaderSubTitle = NULL;
+    psp.hInstance = hApplet;
+    psp.lParam = 0;
+    psp.pfnDlgProc = ProgressPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_PROGRESSPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
     /* Create finish page */

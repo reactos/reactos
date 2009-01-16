@@ -148,4 +148,5 @@ BEGIN
 	IDS_PROBELISTTITLE "Následující hardware již je nainstalován na tomto poèítaèi"
 	IDS_ADDNEWDEVICE "Pøidat nové hardwarové zaøízení"
 	IDS_SELECTWAYTITLE "Prùvodce vám mùže pomoci nainstalovat jiný hardware"
+	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
 END

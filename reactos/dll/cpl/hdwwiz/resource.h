@@ -17,6 +17,7 @@
 #define IDS_SEARCHTEXT            1020
 #define IDS_SEARCHTITLE           1025
 #define IDS_SELECTWAYTITLE        1027
+#define IDS_HDTYPESTITLE          1061
 #define IDS_ADDNEWDEVICE          1081
 #define IDS_ISCONNECTED           1113
 

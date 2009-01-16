@@ -143,4 +143,5 @@ BEGIN
 	IDS_PROBELISTTITLE "Følgende maskinvare har blitt installert på din datamaskin"
 	IDS_ADDNEWDEVICE "Legg til en ny maskinvare enhet"
 	IDS_SELECTWAYTITLE "Veiviseren kan hjelpe deg å installere andre maskinvare"
+	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
 END
