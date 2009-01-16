@@ -43,11 +43,13 @@ VOID
 FORCEINLINE
 FsRtlNotifyAcquireFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
 {
+    ULONG_PTR CurrentThread = (ULONG_PTR)KeGetCurrentThread();
+
     /* Only acquire fast mutex if it's not already acquired by the current thread */
-    if (RealNotifySync->OwningThread != (ULONG_PTR)KeGetCurrentThread())
+    if (RealNotifySync->OwningThread != CurrentThread)
     {
         ExAcquireFastMutexUnsafe(&(RealNotifySync->FastMutex));
-        RealNotifySync->OwningThread = (ULONG_PTR)KeGetCurrentThread();
+        RealNotifySync->OwningThread = CurrentThread;
     }
     /* Whatever the case, keep trace of the attempt to acquire fast mutex */
     RealNotifySync->OwnerCount++;
@@ -215,7 +217,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
             /* Remove from the list */
             RemoveEntryList(NotifyChange->NotifyList);
 
-            /* Downcrease reference number and if 0 is reached, it's time to do total cleanup */
+            /* Downcrease reference number and if 0 is reached, it's time to do complete cleanup */
             if (!InterlockedDecrement((PLONG)&(NotifyChange->ReferenceCount)))
             {
                 /* In case there was an allocated buffer, free it */
