@@ -310,12 +310,10 @@ InitProbeListPage(HWND hwndDlg)
     LoadString(hApplet, IDS_ADDNEWDEVICE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
 
     Item.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-    Item.pszText    = (LPTSTR) szBuffer;
-    Item.iItem      = 0;
+    Item.pszText    = (LPWSTR) szBuffer;
+    Item.iItem      = (INT) ListView_GetItemCount(hList);
     Item.iImage     = -1;
     (VOID) ListView_InsertItem(hList, &Item);
-
-    (VOID) ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT);
 
     hDevInfo = SetupDiGetClassDevsEx(NULL, NULL, NULL, DIGCF_ALLCLASSES | DIGCF_PRESENT, NULL, NULL, 0);
 
@@ -328,6 +326,8 @@ InitProbeListPage(HWND hwndDlg)
     DevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
     for (Index = 0; TRUE; Index++)
     {
+        szBuffer[0] = L'\0';
+
         if (!SetupDiEnumDeviceInfo(hDevInfo, Index, &DevInfoData)) break;
 
         if (CM_Get_DevNode_Status_Ex(&ulStatus, &ulProblemNumber, DevInfoData.DevInst, 0, NULL) == CR_SUCCESS)
@@ -378,17 +378,21 @@ InitProbeListPage(HWND hwndDlg)
         pstrStatusText = (PWSTR)HeapAlloc(hProcessHeap, 0, sizeof(szStatusText));
         lstrcpy(pstrStatusText, szStatusText);
 
-        /* Set device name */
-        Item.pszText = (LPWSTR) szBuffer;
-        Item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
-        Item.lParam = (LPARAM) pstrStatusText;
-        Item.iItem = (INT) ListView_GetItemCount(hList);
-        (VOID) ListView_InsertItem(hList, &Item);
+        if (szBuffer[0] != L'\0')
+        {
+            /* Set device name */
+            Item.pszText = (LPWSTR) szBuffer;
+            Item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+            Item.lParam = (LPARAM) pstrStatusText;
+            Item.iItem = (INT) ListView_GetItemCount(hList);
+            (VOID) ListView_InsertItem(hList, &Item);
+        }
 
         DevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
     }
 
     (VOID) ListView_SetImageList(hList, ImageListData.ImageList, LVSIL_SMALL);
+    (VOID) ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT);
     SetupDiDestroyDeviceInfoList(hDevInfo);
 }
 
@@ -406,12 +410,6 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         break;
 
-        case WM_COMMAND:
-        {
-
-        }
-        break;
-
         case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -420,43 +418,32 @@ ProbeListPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case PSN_SETACTIVE:
                 {
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
-                }
-                break;
-
-                case NM_CLICK:
-                {
-                    Index = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_PROBELIST), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-                    if (Index != -1)
-                    {
-                        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
-                    }
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                 }
                 break;
 
                 case PSN_WIZNEXT:
                 {
                     Index = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_PROBELIST), LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
-                    if (Index != -1)
+                    if (Index == -1) Index = 0;
+
+                    if (Index == 0)
                     {
-                        if (Index == 0)
-                        {
-                            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
-                        }
-                        else
-                        {
-                            LVITEM Item;
-                            PWSTR pts;
+                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTWAYPAGE);
+                    }
+                    else
+                    {
+                        LVITEM Item;
+                        PWSTR pts;
 
-                            ZeroMemory(&Item, sizeof(LV_ITEM));
-                            Item.mask = LVIF_PARAM;
-                            Item.iItem = Index;
-                            (VOID) ListView_GetItem(GetDlgItem(hwndDlg, IDC_PROBELIST), &Item);
-                            pts = (PWSTR) Item.lParam;
-                            wcscpy(pDeviceStatusText, pts);
+                        ZeroMemory(&Item, sizeof(LV_ITEM));
+                        Item.mask = LVIF_PARAM;
+                        Item.iItem = Index;
+                        (VOID) ListView_GetItem(GetDlgItem(hwndDlg, IDC_PROBELIST), &Item);
+                        pts = (PWSTR) Item.lParam;
+                        wcscpy(pDeviceStatusText, pts);
 
-                            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_HWSTATUSPAGE);
-                        }
+                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_HWSTATUSPAGE);
                     }
                     return TRUE;
                 }
@@ -535,8 +522,6 @@ DevStatusPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             /* Set title font */
             SendDlgItemMessage(hwndDlg, IDC_FINISHTITLE, WM_SETFONT, (WPARAM)hTitleFont, (LPARAM)TRUE);
-            /* Set status text */
-            SetWindowText(GetDlgItem(hwndDlg, IDC_HWSTATUSEDIT), pDeviceStatusText);
         }
         break;
 
@@ -548,6 +533,9 @@ DevStatusPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case PSN_SETACTIVE:
                 {
+                    /* Set status text */
+                    SetWindowText(GetDlgItem(hwndDlg, IDC_HWSTATUSEDIT), pDeviceStatusText);
+
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH | PSWIZB_BACK);
                 }
                 break;
