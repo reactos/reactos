@@ -2519,7 +2519,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ()
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str (),
 	          backend->GetFullPath ( *target_file ).c_str () );
-	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
+	fprintf ( fMakefile, "\t$(ECHO_HOSTLD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s %s -o $@ %s %s\n\n",
 	          linker.c_str (),
