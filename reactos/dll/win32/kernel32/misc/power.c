@@ -54,6 +54,20 @@ NtInitiatePowerAction(
     IN BOOLEAN Asynchronous
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtRequestDeviceWakeup(
+    IN HANDLE Device
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtCancelDeviceWakeupRequest(
+    IN HANDLE Device
+);
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -167,15 +181,23 @@ GetDevicePowerState(HANDLE hDevice, BOOL *pfOn)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 RequestDeviceWakeup(HANDLE hDevice)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    DPRINT1("RequestDeviceWakeup is UNIMPLEMENTED!\n");
-    return 0;
+    NTSTATUS Status;
+
+    Status = NtRequestDeviceWakeup(hDevice);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -199,19 +221,27 @@ RequestWakeupLatency(LATENCY_TIME latency)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 CancelDeviceWakeupRequest(HANDLE hDevice)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    DPRINT1("CancelDeviceWakeupRequest is UNIMPLEMENTED!\n");
-    return 0;
+    NTSTATUS Status;
+
+    Status = NtCancelDeviceWakeupRequest(hDevice);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
