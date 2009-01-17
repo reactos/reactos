@@ -1058,7 +1058,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","Cou
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\998","Name",0x00000000,"Uzbekistan"
 
 ;Cursors Schemes
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,"\",,,,,,,,,,,,,\""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,""",,,,,,,,,,,,,"""
 
 ;PowerCfg
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\PowerCfg","LastID",0x00000002,"0"
