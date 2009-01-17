@@ -139,6 +139,8 @@ IPortWaveCyclic_fnInit(
     PPOWERNOTIFY PowerNotify;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
 
+    DPRINT1("IPortWaveCyclic_Init entered\n");
+
     if (This->bInitialized)
     {
         DPRINT("IPortWaveCyclic_Init called again\n");
@@ -152,11 +154,21 @@ IPortWaveCyclic_fnInit(
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Initialize port object */
+    This->pMiniport = Miniport;
+    This->pDeviceObject = DeviceObject;
+    This->bInitialized = TRUE;
+    This->pResourceList = ResourceList;
+
+    /* increment reference on miniport adapter */
+    Miniport->lpVtbl->AddRef(Miniport);
+
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IMiniportWaveCyclic_Init failed with %x\n", Status);
         Miniport->lpVtbl->Release(Miniport);
+        This->bInitialized = FALSE;
         return Status;
     }
 
@@ -172,6 +184,7 @@ IPortWaveCyclic_fnInit(
         Status = Miniport->lpVtbl->GetDescription(Miniport, &This->pDescriptor);
         if (!NT_SUCCESS(Status))
         {
+            DPRINT1("failed to get description\n");
             Miniport->lpVtbl->Release(Miniport);
             return Status;
         }
@@ -188,18 +201,11 @@ IPortWaveCyclic_fnInit(
         This->pPowerNotify = NULL;
     }
 
-
-    /* Initialize port object */
-    This->pMiniport = Miniport;
-    This->pDeviceObject = DeviceObject;
-    This->bInitialized = TRUE;
-    This->pResourceList = ResourceList;
-
-    /* increment reference on miniport adapter */
-    Miniport->lpVtbl->AddRef(Miniport);
     /* increment reference on resource list */
     ResourceList->lpVtbl->AddRef(ResourceList);
 
+
+    DPRINT1("IPortWaveCyclic successfully initialized\n");
     return STATUS_SUCCESS;
 }
 
@@ -314,7 +320,7 @@ IPortWaveCyclic_fnNotify(
     ServiceGroup->lpVtbl->RequestService (ServiceGroup);
 }
 
-static const IPortWaveCyclicVtbl vt_IPortWaveCyclicVtbl =
+static IPortWaveCyclicVtbl vt_IPortWaveCyclicVtbl =
 {
     IPortWaveCyclic_fnQueryInterface,
     IPortWaveCyclic_fnAddRef,
@@ -506,8 +512,8 @@ NewPortWaveCyclic(
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    This->lpVtbl = (IPortWaveCyclicVtbl*)&vt_IPortWaveCyclicVtbl;
-    This->lpVtblSubDevice = (ISubdeviceVtbl*)&vt_ISubdeviceVtbl;
+    This->lpVtbl = &vt_IPortWaveCyclicVtbl;
+    This->lpVtblSubDevice = &vt_ISubdeviceVtbl;
     This->ref = 1;
     *OutPort = (PPORT)(&This->lpVtbl);
 

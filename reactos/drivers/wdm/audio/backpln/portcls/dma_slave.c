@@ -484,8 +484,12 @@ PcNewDmaChannel(
     ULONG MapRegisters;
     INTERFACE_TYPE BusType;
     ULONG ResultLength;
+    PCExtension* DeviceExt;
 
     IDmaChannelSlaveImpl * This;
+
+    DPRINT1("OutDmaChannel %p OuterUnknown %p PoolType %p DeviceDescription %p DeviceObject %p\n",
+            OutDmaChannel, OuterUnknown, PoolType, DeviceDescription, DeviceObject);
 
     This = AllocateItem(PoolType, sizeof(IDmaChannelSlaveImpl), TAG_PORTCLASS);
     if (!This)
@@ -493,6 +497,7 @@ PcNewDmaChannel(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    DeviceExt = (PCExtension*) DeviceObject->DeviceExtension;
 
     Status = IoGetDeviceProperty(DeviceObject, DevicePropertyLegacyBusType, sizeof(BusType), (PVOID)&BusType, &ResultLength);
     if (NT_SUCCESS(Status))
@@ -500,7 +505,9 @@ PcNewDmaChannel(
         DeviceDescription->InterfaceType = BusType;
     }
 
-    Adapter = IoGetDmaAdapter(DeviceObject, DeviceDescription, &MapRegisters);
+    DPRINT1("Calling IoGetDmaAdapter\n");
+
+    Adapter = IoGetDmaAdapter(DeviceExt->PhysicalDeviceObject, DeviceDescription, &MapRegisters);
     if (!Adapter)
     {
         FreeItem(This, TAG_PORTCLASS);
@@ -516,7 +523,7 @@ PcNewDmaChannel(
     This->MaxMapRegisters = MapRegisters;
 
     *OutDmaChannel = (PVOID)(&This->lpVtbl);
-
+    DPRINT1("PcNewDmaChannel result %p\n", *OutDmaChannel);
     return STATUS_SUCCESS;
 
 }
