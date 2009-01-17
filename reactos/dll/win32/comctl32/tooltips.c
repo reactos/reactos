@@ -368,7 +368,7 @@ static void TOOLTIPS_GetDispInfoA(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     ttnmdi.hdr.hwndFrom = hwnd;
     ttnmdi.hdr.idFrom = toolPtr->uId;
     ttnmdi.hdr.code = TTN_GETDISPINFOA; /* == TTN_NEEDTEXTA */
-    ttnmdi.lpszText = (LPSTR)&ttnmdi.szText;
+    ttnmdi.lpszText = (LPSTR)ttnmdi.szText;
     ttnmdi.uFlags = toolPtr->uFlags;
     ttnmdi.lParam = toolPtr->lParam;
 
@@ -424,7 +424,7 @@ static void TOOLTIPS_GetDispInfoW(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     ttnmdi.hdr.hwndFrom = hwnd;
     ttnmdi.hdr.idFrom = toolPtr->uId;
     ttnmdi.hdr.code = TTN_GETDISPINFOW; /* == TTN_NEEDTEXTW */
-    ttnmdi.lpszText = (LPWSTR)&ttnmdi.szText;
+    ttnmdi.lpszText = (LPWSTR)ttnmdi.szText;
     ttnmdi.uFlags = toolPtr->uFlags;
     ttnmdi.lParam = toolPtr->lParam;
 
@@ -1574,6 +1574,9 @@ TOOLTIPS_GetTextW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     nTool = TOOLTIPS_GetToolFromInfoW (infoPtr, lpToolInfo);
     if (nTool == -1) return 0;
 
+    if (infoPtr->tools[nTool].lpszText == NULL)
+	return 0;
+
     strcpyW (lpToolInfo->lpszText, infoPtr->tools[nTool].lpszText);
 
     return 0;
@@ -2348,7 +2351,7 @@ TOOLTIPS_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     TOOLTIPS_INFO *infoPtr;
 
     /* allocate memory for info structure */
-    infoPtr = (TOOLTIPS_INFO *)Alloc (sizeof(TOOLTIPS_INFO));
+    infoPtr = Alloc (sizeof(TOOLTIPS_INFO));
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* initialize info structure */
@@ -2486,34 +2489,7 @@ static LRESULT
 TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
-    TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
-    TTTOOL_INFO *toolPtr = infoPtr->tools;
-    INT nResult;
 
-    if (lParam == NF_QUERY)
-    {
-        if (toolPtr->bNotifyUnicode)
-        {
-            return NFR_UNICODE;
-        } else {
-            return NFR_ANSI;
-        }
-    }
-    else if (lParam == NF_REQUERY)
-    {
-        nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
-                    (WPARAM)hwnd, (LPARAM)NF_QUERY);
-        if (nResult == NFR_ANSI) {
-            toolPtr->bNotifyUnicode = FALSE;
-        TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
-        } else if (nResult == NFR_UNICODE) {
-            toolPtr->bNotifyUnicode = TRUE;
-        TRACE(" -- WM_NOTIFYFORMAT returns: NFR_UNICODE\n");
-        } else {
-            TRACE (" -- WM_NOTIFYFORMAT returns: error!\n");
-        }
-        return nResult;
-    }
     return 0;
 }
 
@@ -2870,7 +2846,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_WinIniChange (hwnd, wParam, lParam);
 
 	default:
-	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
 		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
 		     uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);

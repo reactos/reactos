@@ -249,7 +249,7 @@ HEADER_SetItemBounds (HWND hwnd)
 }
 
 static LRESULT
-HEADER_Size (HWND hwnd, WPARAM wParam)
+HEADER_Size (HWND hwnd)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
 
@@ -577,7 +577,7 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
 
 
 static void
-HEADER_RefreshItem (HWND hwnd, HDC hdc, INT iItem)
+HEADER_RefreshItem (HWND hwnd, INT iItem)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
 
@@ -1073,7 +1073,7 @@ HEADER_DeleteItem (HWND hwnd, WPARAM wParam)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr(hwnd);
     INT iItem = (INT)wParam;
     INT iOrder;
-    INT i;
+    UINT i;
 
     TRACE("[iItem=%d]\n", iItem);
 
@@ -1250,7 +1250,7 @@ HEADER_GetUnicodeFormat (HWND hwnd)
 
 
 static LRESULT
-HEADER_HitTest (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_HitTest (HWND hwnd, LPARAM lParam)
 {
     LPHDHITTESTINFO phti = (LPHDHITTESTINFO)lParam;
 
@@ -1332,7 +1332,7 @@ HEADER_InsertItemT (HWND hwnd, INT nItem, const HDITEMW *phdi, BOOL bUnicode)
 
 
 static LRESULT
-HEADER_Layout (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_Layout (HWND hwnd, LPARAM lParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     LPHDLAYOUT lpLayout = (LPHDLAYOUT)lParam;
@@ -1447,14 +1447,14 @@ HEADER_SetUnicodeFormat (HWND hwnd, WPARAM wParam)
 
 
 static LRESULT
-HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_Create (HWND hwnd, LPARAM lParam)
 {
     HEADER_INFO *infoPtr;
     TEXTMETRICW tm;
     HFONT hOldFont;
     HDC   hdc;
 
-    infoPtr = (HEADER_INFO *)Alloc (sizeof(HEADER_INFO));
+    infoPtr = Alloc (sizeof(HEADER_INFO));
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     infoPtr->hwndNotify = ((LPCREATESTRUCTA)lParam)->hwndParent;
@@ -1490,7 +1490,7 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HEADER_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_Destroy (HWND hwnd)
 {
     HTHEME theme = GetWindowTheme(hwnd);
     CloseThemeData(theme);
@@ -1498,7 +1498,7 @@ HEADER_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 static LRESULT
-HEADER_NCDestroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_NCDestroy (HWND hwnd)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HEADER_ITEM *lpItem;
@@ -1544,7 +1544,7 @@ HEADER_IsDragDistance(const HEADER_INFO *infoPtr, const POINT *pt)
 }
 
 static LRESULT
-HEADER_LButtonDblClk (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_LButtonDblClk (HWND hwnd, LPARAM lParam)
 {
     POINT pt;
     UINT  flags;
@@ -1564,7 +1564,7 @@ HEADER_LButtonDblClk (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HEADER_LButtonDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_LButtonDown (HWND hwnd, LPARAM lParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
@@ -1589,7 +1589,7 @@ HEADER_LButtonDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 	/* Send WM_CUSTOMDRAW */
 	hdc = GetDC (hwnd);
-	HEADER_RefreshItem (hwnd, hdc, nItem);
+	HEADER_RefreshItem (hwnd, nItem);
 	ReleaseDC (hwnd, hdc);
 
 	TRACE("Pressed item %d!\n", nItem);
@@ -1620,7 +1620,7 @@ HEADER_LButtonDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HEADER_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_LButtonUp (HWND hwnd, LPARAM lParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
@@ -1670,7 +1670,7 @@ HEADER_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	{
 	    infoPtr->items[infoPtr->iMoveItem].bDown = FALSE;
 	    hdc = GetDC (hwnd);
-	    HEADER_RefreshItem (hwnd, hdc, infoPtr->iMoveItem);
+	    HEADER_RefreshItem (hwnd, infoPtr->iMoveItem);
 	    ReleaseDC (hwnd, hdc);
 
 	    HEADER_SendNotifyWithHDItemT(hwnd, HDN_ITEMCLICKW, infoPtr->iMoveItem, NULL);
@@ -1735,7 +1735,7 @@ HEADER_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 static LRESULT
-HEADER_MouseLeave (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_MouseLeave (HWND hwnd)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     /* Reset hot-tracked item when mouse leaves control. */
@@ -1743,7 +1743,7 @@ HEADER_MouseLeave (HWND hwnd, WPARAM wParam, LPARAM lParam)
     HDC hdc = GetDC (hwnd);
 
     infoPtr->iHotItem = -1;
-    if (oldHotItem != -1) HEADER_RefreshItem (hwnd, hdc, oldHotItem);
+    if (oldHotItem != -1) HEADER_RefreshItem (hwnd, oldHotItem);
     ReleaseDC (hwnd, hdc);
 
     return 0;
@@ -1751,7 +1751,7 @@ HEADER_MouseLeave (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_MouseMove (HWND hwnd, LPARAM lParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
@@ -1814,7 +1814,7 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 		infoPtr->items[infoPtr->iMoveItem].bDown = FALSE;
             if (oldState != infoPtr->items[infoPtr->iMoveItem].bDown) {
                 hdc = GetDC (hwnd);
-	        HEADER_RefreshItem (hwnd, hdc, infoPtr->iMoveItem);
+	        HEADER_RefreshItem (hwnd, infoPtr->iMoveItem);
 	        ReleaseDC (hwnd, hdc);
             }
 
@@ -1866,8 +1866,8 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
         TRACKMOUSEEVENT tme;
         if (oldHotItem != infoPtr->iHotItem && !infoPtr->bDragging) {
 	    hdc = GetDC (hwnd);
-	    if (oldHotItem != -1) HEADER_RefreshItem (hwnd, hdc, oldHotItem);
-	    if (infoPtr->iHotItem != -1) HEADER_RefreshItem (hwnd, hdc, infoPtr->iHotItem);
+	    if (oldHotItem != -1) HEADER_RefreshItem (hwnd, oldHotItem);
+	    if (infoPtr->iHotItem != -1) HEADER_RefreshItem (hwnd, infoPtr->iHotItem);
 	    ReleaseDC (hwnd, hdc);
         }
         tme.cbSize = sizeof( tme );
@@ -1895,7 +1895,7 @@ HEADER_Paint (HWND hwnd, WPARAM wParam)
 
 
 static LRESULT
-HEADER_RButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_RButtonUp (HWND hwnd, LPARAM lParam)
 {
     BOOL bRet;
     POINT pt;
@@ -1917,7 +1917,7 @@ HEADER_RButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-HEADER_SetCursor (HWND hwnd, WPARAM wParam, LPARAM lParam)
+HEADER_SetCursor (HWND hwnd, LPARAM lParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     POINT pt;
@@ -2033,14 +2033,14 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    return HEADER_GetUnicodeFormat (hwnd);
 
 	case HDM_HITTEST:
-	    return HEADER_HitTest (hwnd, wParam, lParam);
+	    return HEADER_HitTest (hwnd, lParam);
 
 	case HDM_INSERTITEMA:
 	case HDM_INSERTITEMW:
 	    return HEADER_InsertItemT (hwnd, (INT)wParam, (LPHDITEMW)lParam, msg == HDM_INSERTITEMW);
 
 	case HDM_LAYOUT:
-	    return HEADER_Layout (hwnd, wParam, lParam);
+	    return HEADER_Layout (hwnd, lParam);
 
 	case HDM_ORDERTOINDEX:
 	    return HEADER_OrderToIndex(hwnd, wParam);
@@ -2067,13 +2067,13 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    return HEADER_SetUnicodeFormat (hwnd, wParam);
 
         case WM_CREATE:
-            return HEADER_Create (hwnd, wParam, lParam);
+            return HEADER_Create (hwnd, lParam);
 
         case WM_DESTROY:
-            return HEADER_Destroy (hwnd, wParam, lParam);
+            return HEADER_Destroy (hwnd);
 
         case WM_NCDESTROY:
-            return HEADER_NCDestroy (hwnd, wParam, lParam);
+            return HEADER_NCDestroy (hwnd);
 
         case WM_ERASEBKGND:
             return 1;
@@ -2085,25 +2085,25 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return HEADER_GetFont (hwnd);
 
         case WM_LBUTTONDBLCLK:
-            return HEADER_LButtonDblClk (hwnd, wParam, lParam);
+            return HEADER_LButtonDblClk (hwnd, lParam);
 
         case WM_LBUTTONDOWN:
-            return HEADER_LButtonDown (hwnd, wParam, lParam);
+            return HEADER_LButtonDown (hwnd, lParam);
 
         case WM_LBUTTONUP:
-            return HEADER_LButtonUp (hwnd, wParam, lParam);
+            return HEADER_LButtonUp (hwnd, lParam);
 
         case WM_MOUSELEAVE:
-            return HEADER_MouseLeave (hwnd, wParam, lParam);
+            return HEADER_MouseLeave (hwnd);
 
         case WM_MOUSEMOVE:
-            return HEADER_MouseMove (hwnd, wParam, lParam);
+            return HEADER_MouseMove (hwnd, lParam);
 
 	case WM_NOTIFYFORMAT:
             return HEADER_NotifyFormat (hwnd, wParam, lParam);
 
 	case WM_SIZE:
-	    return HEADER_Size (hwnd, wParam);
+	    return HEADER_Size (hwnd);
 
         case WM_THEMECHANGED:
             return HEADER_ThemeChanged (hwnd);
@@ -2113,10 +2113,10 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return HEADER_Paint (hwnd, wParam);
 
         case WM_RBUTTONUP:
-            return HEADER_RButtonUp (hwnd, wParam, lParam);
+            return HEADER_RButtonUp (hwnd, lParam);
 
         case WM_SETCURSOR:
-            return HEADER_SetCursor (hwnd, wParam, lParam);
+            return HEADER_SetCursor (hwnd, lParam);
 
         case WM_SETFONT:
             return HEADER_SetFont (hwnd, wParam, lParam);
@@ -2125,7 +2125,7 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return HEADER_SetRedraw(hwnd, wParam, lParam);
 
         default:
-            if ((msg >= WM_USER) && (msg < WM_APP))
+            if ((msg >= WM_USER) && (msg < WM_APP) && !COMCTL32_IsReflectedMessage(msg))
 		ERR("unknown msg %04x wp=%04lx lp=%08lx\n",
 		     msg, wParam, lParam );
 	    return DefWindowProcW(hwnd, msg, wParam, lParam);

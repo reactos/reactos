@@ -142,7 +142,6 @@ typedef struct
 #define BUTTON_SPACINGY         3
 #define FLAT_BTN_SPACINGX       8
 #define DEFAULT_MIN_TAB_WIDTH   54
-#define DEFAULT_TAB_WIDTH_FIXED 96
 #define DEFAULT_PADDING_X       6
 #define EXTRA_ICON_PADDING      3
 
@@ -460,7 +459,7 @@ static BOOL TAB_InternalGetItemRect(
 static inline BOOL
 TAB_GetItemRect(const TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-  return TAB_InternalGetItemRect(infoPtr, (INT)wParam, (LPRECT)lParam, (LPRECT)NULL);
+  return TAB_InternalGetItemRect(infoPtr, wParam, (LPRECT)lParam, NULL);
 }
 
 /******************************************************************************
@@ -863,6 +862,8 @@ static LRESULT TAB_AdjustRect(const TAB_INFO *infoPtr, WPARAM fLarger, LPRECT pr
 
     TRACE ("hwnd=%p fLarger=%ld (%s)\n", infoPtr->hwnd, fLarger,
            wine_dbgstr_rect(prc));
+
+    if (!prc) return -1;
 
     if(lStyle & TCS_VERTICAL)
     {
@@ -2661,7 +2662,10 @@ static inline LRESULT TAB_SetMinTabWidth (TAB_INFO *infoPtr, INT cx)
 
   TRACE("(%p,%d)\n", infoPtr, cx);
 
-  oldcx = infoPtr->tabMinWidth;
+  if (infoPtr->tabMinWidth < 0)
+    oldcx = DEFAULT_MIN_TAB_WIDTH;
+  else
+    oldcx = infoPtr->tabMinWidth;
   infoPtr->tabMinWidth = cx;
   TAB_SetItemBounds(infoPtr);
   return oldcx;
@@ -2940,7 +2944,7 @@ static LRESULT TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
   HFONT hOldFont;
   DWORD dwStyle;
 
-  infoPtr = (TAB_INFO *)Alloc (sizeof(TAB_INFO));
+  infoPtr = Alloc (sizeof(TAB_INFO));
 
   SetWindowLongPtrW(hwnd, 0, (DWORD_PTR)infoPtr);
 
@@ -3019,7 +3023,7 @@ static LRESULT TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   /* Initialize the width of a tab. */
   if (dwStyle & TCS_FIXEDWIDTH)
-    infoPtr->tabWidth = DEFAULT_TAB_WIDTH_FIXED;
+    infoPtr->tabWidth = GetDeviceCaps(hdc, LOGPIXELSX);
 
   infoPtr->tabMinWidth = -1;
 
@@ -3269,7 +3273,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_NCCalcSize(hwnd, wParam, lParam);
 
     default:
-      if (uMsg >= WM_USER && uMsg < WM_APP)
+      if (uMsg >= WM_USER && uMsg < WM_APP && !COMCTL32_IsReflectedMessage(uMsg))
 	WARN("unknown msg %04x wp=%08lx lp=%08lx\n",
 	     uMsg, wParam, lParam);
       break;

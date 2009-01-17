@@ -817,7 +817,6 @@ static void UPDOWN_HandleMouseEvent (UPDOWN_INFO *infoPtr, UINT msg, INT x, INT 
 static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UPDOWN_INFO *infoPtr = UPDOWN_GetInfoPtr (hwnd);
-    int temp;
     static const WCHAR themeClass[] = {'S','p','i','n',0};
     HTHEME theme;
 
@@ -829,7 +828,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
     switch(message)
     {
         case WM_CREATE:
-            infoPtr = (UPDOWN_INFO*)Alloc (sizeof(UPDOWN_INFO));
+            infoPtr = Alloc (sizeof(UPDOWN_INFO));
 	    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
 	    /* initialize the info struct */
@@ -903,6 +902,8 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 
 	   /* if initial timer, kill it and start the repeat timer */
   	   if(wParam == TIMER_AUTOREPEAT) {
+		int temp;
+
 		KillTimer(hwnd, TIMER_AUTOREPEAT);
 		/* if no accel info given, used default timer */
 		if(infoPtr->AccelCount==0 || infoPtr->AccelVect==0) {
@@ -917,6 +918,8 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 
 	    /* now, if the mouse is above us, do the thing...*/
 	    if(infoPtr->Flags & FLAG_MOUSEIN) {
+		int temp;
+
 		temp = infoPtr->AccelIndex == -1 ? 1 : infoPtr->AccelVect[infoPtr->AccelIndex].nInc;
 		UPDOWN_DoAction(infoPtr, temp, infoPtr->Flags & FLAG_ARROW);
 
@@ -972,13 +975,16 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	case UDM_GETACCEL:
 	    if (wParam==0 && lParam==0) return infoPtr->AccelCount;
 	    if (wParam && lParam) {
-	        temp = min(infoPtr->AccelCount, wParam);
+		int temp = min(infoPtr->AccelCount, wParam);
 	        memcpy((void *)lParam, infoPtr->AccelVect, temp*sizeof(UDACCEL));
 	        return temp;
       	    }
 	    return 0;
 
 	case UDM_SETACCEL:
+	{
+	    unsigned temp;
+
 	    TRACE("UDM_SETACCEL\n");
 
 	    if(infoPtr->AccelVect) {
@@ -996,14 +1002,14 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
                 TRACE("%d: nSec %u nInc %u\n", temp, infoPtr->AccelVect[temp].nSec, infoPtr->AccelVect[temp].nInc);
 
     	    return TRUE;
-
+	}
 	case UDM_GETBASE:
 	    return infoPtr->Base;
 
 	case UDM_SETBASE:
 	    TRACE("UpDown Ctrl new base(%ld), hwnd=%p\n", wParam, hwnd);
 	    if (wParam==10 || wParam==16) {
-		temp = infoPtr->Base;
+		WPARAM temp = infoPtr->Base;
 		infoPtr->Base = wParam;
 		return temp;
 	    }
@@ -1016,11 +1022,14 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    return (LRESULT)UPDOWN_SetBuddy (infoPtr, (HWND)wParam);
 
 	case UDM_GETPOS:
-	    temp = UPDOWN_GetBuddyInt (infoPtr);
+	{
+	    int temp = UPDOWN_GetBuddyInt (infoPtr);
 	    return MAKELONG(infoPtr->CurVal, temp ? 0 : 1);
-
+	}
 	case UDM_SETPOS:
-	    temp = (short)LOWORD(lParam);
+	{
+	    int temp = (short)LOWORD(lParam);
+
 	    TRACE("UpDown Ctrl new value(%d), hwnd=%p\n", temp, hwnd);
 	    if(!UPDOWN_InBounds(infoPtr, temp)) {
 		if(temp < infoPtr->MinVal) temp = infoPtr->MinVal;
@@ -1030,7 +1039,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    infoPtr->CurVal = temp;
 	    UPDOWN_SetBuddyInt (infoPtr);
 	    return wParam;            /* return prev value */
-
+	}
 	case UDM_GETRANGE:
 	    return MAKELONG(infoPtr->MaxVal, infoPtr->MinVal);
 
@@ -1062,6 +1071,9 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    return infoPtr->CurVal;
 
 	case UDM_SETPOS32:
+	{
+	    int temp;
+
 	    if(!UPDOWN_InBounds(infoPtr, (int)lParam)) {
 		if((int)lParam < infoPtr->MinVal) lParam = infoPtr->MinVal;
 		if((int)lParam > infoPtr->MaxVal) lParam = infoPtr->MaxVal;
@@ -1070,19 +1082,20 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    infoPtr->CurVal = (int)lParam;  /* set the new value */
 	    UPDOWN_SetBuddyInt (infoPtr);
 	    return temp;                    /* return prev value */
-
+	}
 	case UDM_GETUNICODEFORMAT:
 	    /* we lie a bit here, we're always using Unicode internally */
 	    return infoPtr->UnicodeFormat;
 
 	case UDM_SETUNICODEFORMAT:
+	{
 	    /* do we really need to honour this flag? */
-	    temp = infoPtr->UnicodeFormat;
+	    int temp = infoPtr->UnicodeFormat;
 	    infoPtr->UnicodeFormat = (BOOL)wParam;
 	    return temp;
-
+	}
 	default:
-	    if ((message >= WM_USER) && (message < WM_APP))
+	    if ((message >= WM_USER) && (message < WM_APP) && !COMCTL32_IsReflectedMessage(message))
 		ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam);
 	    return DefWindowProcW (hwnd, message, wParam, lParam);
     }

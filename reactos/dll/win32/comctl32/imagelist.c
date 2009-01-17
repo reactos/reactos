@@ -598,7 +598,7 @@ ImageList_Create (INT cx, INT cy, UINT flags,
 
     TRACE("(%d %d 0x%x %d %d)\n", cx, cy, flags, cInitial, cGrow);
 
-    himl = (HIMAGELIST)Alloc (sizeof(struct _IMAGELIST));
+    himl = Alloc (sizeof(struct _IMAGELIST));
     if (!himl)
         return NULL;
 
@@ -658,11 +658,11 @@ ImageList_Create (INT cx, INT cy, UINT flags,
         himl->hbmMask = 0;
 
     /* create blending brushes */
-    hbmTemp = CreateBitmap (8, 8, 1, 1, &aBitBlend25);
+    hbmTemp = CreateBitmap (8, 8, 1, 1, aBitBlend25);
     himl->hbrBlend25 = CreatePatternBrush (hbmTemp);
     DeleteObject (hbmTemp);
 
-    hbmTemp = CreateBitmap (8, 8, 1, 1, &aBitBlend50);
+    hbmTemp = CreateBitmap (8, 8, 1, 1, aBitBlend50);
     himl->hbrBlend50 = CreatePatternBrush (hbmTemp);
     DeleteObject (hbmTemp);
 
@@ -1212,7 +1212,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 	/* Create the blend Mask */
     	hOldBitmap = SelectObject(hBlendMaskDC, hBlendMaskBmp);
 	hBlendBrush = fStyle & ILD_BLEND50 ? himl->hbrBlend50 : himl->hbrBlend25;
-    	hOldBrush = (HBRUSH) SelectObject(hBlendMaskDC, hBlendBrush);
+        hOldBrush = SelectObject(hBlendMaskDC, hBlendBrush);
     	PatBlt(hBlendMaskDC, 0, 0, cx, cy, PATCOPY);
     	SelectObject(hBlendMaskDC, hOldBrush);
 
@@ -1225,7 +1225,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 	/* now apply blend to the current image given the BlendMask */
         if (clrBlend == CLR_DEFAULT) clrBlend = GetSysColor (COLOR_HIGHLIGHT);
         else if (clrBlend == CLR_NONE) clrBlend = GetTextColor (pimldp->hdcDst);
-	hOldBrush = (HBRUSH) SelectObject (hImageDC, CreateSolidBrush(clrBlend));
+	hOldBrush = SelectObject (hImageDC, CreateSolidBrush(clrBlend));
 	BitBlt (hImageDC, 0, 0, cx, cy, hBlendMaskDC, 0, 0, 0xB8074A); /* PSDPxax */
 	DeleteObject(SelectObject(hImageDC, hOldBrush));
 	SelectObject(hBlendMaskDC, hOldBitmap);
@@ -1899,7 +1899,7 @@ static int DIB_GetDIBImageBytes( int width, int height, int depth )
 
 
 /* helper for ImageList_Read, see comments below */
-static BOOL _read_bitmap(HIMAGELIST himl, HDC hdcIml, LPSTREAM pstm)
+static BOOL _read_bitmap(HDC hdcIml, LPSTREAM pstm)
 {
     BITMAPFILEHEADER	bmfh;
     int bitsperpixel, palspace;
@@ -1908,13 +1908,13 @@ static BOOL _read_bitmap(HIMAGELIST himl, HDC hdcIml, LPSTREAM pstm)
     int                result = FALSE;
     LPBYTE             bits = NULL;
 
-    if (!SUCCEEDED(IStream_Read ( pstm, &bmfh, sizeof(bmfh), NULL)))
+    if (FAILED(IStream_Read ( pstm, &bmfh, sizeof(bmfh), NULL)))
         return FALSE;
 
     if (bmfh.bfType != (('M'<<8)|'B'))
         return FALSE;
 
-    if (!SUCCEEDED(IStream_Read ( pstm, &bmi->bmiHeader, sizeof(bmi->bmiHeader), NULL)))
+    if (FAILED(IStream_Read ( pstm, &bmi->bmiHeader, sizeof(bmi->bmiHeader), NULL)))
         return FALSE;
 
     if ((bmi->bmiHeader.biSize != sizeof(bmi->bmiHeader)))
@@ -1933,13 +1933,13 @@ static BOOL _read_bitmap(HIMAGELIST himl, HDC hdcIml, LPSTREAM pstm)
     bmi->bmiHeader.biSizeImage = DIB_GetDIBImageBytes(bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, bitsperpixel);
 
     /* read the palette right after the end of the bitmapinfoheader */
-    if (palspace && !SUCCEEDED(IStream_Read(pstm, bmi->bmiColors, palspace, NULL)))
+    if (palspace && FAILED(IStream_Read(pstm, bmi->bmiColors, palspace, NULL)))
 	goto error;
 
     bits = Alloc(bmi->bmiHeader.biSizeImage);
     if (!bits)
         goto error;
-    if (!SUCCEEDED(IStream_Read(pstm, bits, bmi->bmiHeader.biSizeImage, NULL)))
+    if (FAILED(IStream_Read(pstm, bits, bmi->bmiHeader.biSizeImage, NULL)))
         goto error;
 
     if (!StretchDIBits(hdcIml, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight,
@@ -1992,7 +1992,7 @@ HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
 
     TRACE("%p\n", pstm);
 
-    if (!SUCCEEDED(IStream_Read (pstm, &ilHead, sizeof(ILHEAD), NULL)))
+    if (FAILED(IStream_Read (pstm, &ilHead, sizeof(ILHEAD), NULL)))
 	return NULL;
     if (ilHead.usMagic != (('L' << 8) | 'I'))
 	return NULL;
@@ -2006,14 +2006,14 @@ HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
     if (!himl)
 	return NULL;
 
-    if (!_read_bitmap(himl, himl->hdcImage, pstm))
+    if (!_read_bitmap(himl->hdcImage, pstm))
     {
 	WARN("failed to read bitmap from stream\n");
 	return NULL;
     }
     if (ilHead.flags & ILC_MASK)
     {
-        if (!_read_bitmap(himl, himl->hdcMask, pstm))
+        if (!_read_bitmap(himl->hdcMask, pstm))
         {
             WARN("failed to read mask bitmap from stream\n");
 	    return NULL;
@@ -2740,7 +2740,7 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm)
 	inf->bmiColors[1].rgbRed = inf->bmiColors[1].rgbGreen = inf->bmiColors[1].rgbBlue = 0xff;
     }
 
-    if(!SUCCEEDED(IStream_Write(pstm, data, totalSize, NULL)))
+    if(FAILED(IStream_Write(pstm, data, totalSize, NULL)))
 	goto failed;
 
     result = TRUE;
@@ -2796,7 +2796,7 @@ ImageList_Write (HIMAGELIST himl, LPSTREAM pstm)
     TRACE("cx %u, cy %u, flags 0x04%x, cCurImage %u, cMaxImage %u\n",
           ilHead.cx, ilHead.cy, ilHead.flags, ilHead.cCurImage, ilHead.cMaxImage);
 
-    if(!SUCCEEDED(IStream_Write(pstm, &ilHead, sizeof(ILHEAD), NULL)))
+    if(FAILED(IStream_Write(pstm, &ilHead, sizeof(ILHEAD), NULL)))
 	return FALSE;
 
     /* write the bitmap */

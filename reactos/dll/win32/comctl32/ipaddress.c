@@ -178,7 +178,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
     SetWindowLongW (hwnd, GWL_STYLE,
 		    GetWindowLongW(hwnd, GWL_STYLE) & ~WS_BORDER);
 
-    infoPtr = (IPADDRESS_INFO *)Alloc (sizeof(IPADDRESS_INFO));
+    infoPtr = Alloc (sizeof(IPADDRESS_INFO));
     if (!infoPtr) return -1;
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
@@ -193,7 +193,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
     infoPtr->Enabled = TRUE;
     infoPtr->Notify = lpCreate->hwndParent;
 
-    hSysFont = (HFONT) GetStockObject(ANSI_VAR_FONT);
+    hSysFont = GetStockObject(ANSI_VAR_FONT);
     GetObjectW(hSysFont, sizeof(LOGFONTW), &logSysFont);
     SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
     strcpyW(logFont.lfFaceName, logSysFont.lfFaceName);
@@ -454,7 +454,7 @@ static BOOL IPADDRESS_GotoNextField (const IPADDRESS_INFO *infoPtr, int cur, int
 LRESULT CALLBACK
 IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HWND Self = (HWND)GetPropW (hwnd, IP_SUBCLASS_PROP);
+    HWND Self = GetPropW (hwnd, IP_SUBCLASS_PROP);
     IPADDRESS_INFO *infoPtr = (IPADDRESS_INFO *)GetWindowLongPtrW (Self, 0);
     CHAR c = (CHAR)wParam;
     INT index, len = 0, startsel, endsel;
@@ -590,7 +590,7 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return IPADDRESS_IsBlank (infoPtr);
 
 	default:
-	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
 		ERR("unknown msg %04x wp=%08lx lp=%08lx\n", uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
