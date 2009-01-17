@@ -48,7 +48,10 @@ static const struct message create_parent_wnd_seq[] = {
     { WM_CREATE,            sent },
     { WM_SHOWWINDOW,        sent|wparam, 1 },
     { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
+    { WM_QUERYNEWPALETTE,   sent|optional },
     { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
+    { WM_WINDOWPOSCHANGED,  sent|optional },
+    { WM_NCCALCSIZE,        sent|wparam|optional, 1 },
     { WM_ACTIVATEAPP,       sent|wparam, 1 },
     { WM_NCACTIVATE,        sent|wparam, 1 },
     { WM_ACTIVATE,          sent|wparam, 1 },
@@ -75,9 +78,9 @@ static const struct message redraw_listview_seq[] = {
 };
 
 static const struct message listview_icon_spacing_seq[] = {
-    { LVM_SETICONSPACING, sent|lparam, 0, (LPARAM) MAKELONG(20, 30) },
-    { LVM_SETICONSPACING, sent|lparam, 0, (LPARAM) MAKELONG(25, 35) },
-    { LVM_SETICONSPACING, sent|lparam, 0, (LPARAM) MAKELONG(-1, -1) },
+    { LVM_SETICONSPACING, sent|lparam, 0, MAKELPARAM(20, 30) },
+    { LVM_SETICONSPACING, sent|lparam, 0, MAKELPARAM(25, 35) },
+    { LVM_SETICONSPACING, sent|lparam, 0, MAKELPARAM(-1, -1) },
     { 0 }
 };
 
@@ -154,8 +157,9 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
     LRESULT ret;
     struct message msg;
 
-    /* do not log painting messages */
-    if (message != WM_PAINT &&
+    /* log system messages, except for painting */
+    if (message < WM_USER &&
+        message != WM_PAINT &&
         message != WM_ERASEBKGND &&
         message != WM_NCPAINT &&
         message != WM_NCHITTEST &&
@@ -190,7 +194,7 @@ static BOOL register_parent_wnd_class(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(NULL);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "Listview test parent class";
@@ -732,7 +736,9 @@ static void test_columns(void)
 
     /* Check its width */
     rc = ListView_GetColumnWidth(hwnd, 0);
-    ok(rc==10, "Inserting column with no mask failed to set width to 10 with %d\n", rc);
+    ok(rc==10 ||
+       broken(rc==0), /* win9x */
+       "Inserting column with no mask failed to set width to 10 with %d\n", rc);
 
     DestroyWindow(hwnd);
 }
@@ -859,21 +865,27 @@ static void test_icon_spacing(void)
     r = SendMessage(hwnd, WM_NOTIFYFORMAT, (WPARAM)hwndparent, (LPARAM)NF_REQUERY);
     expect(NFR_ANSI, r);
 
-    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(-1, -1));
+    /* reset the icon spacing to defaults */
+    SendMessage(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(-1, -1));
+
+    /* now we can request what the defaults are */
+    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(-1, -1));
     w = LOWORD(r);
-    h = LOWORD(r);
+    h = HIWORD(r);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     trace("test icon spacing\n");
 
-    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(20, 30));
-    expect(MAKELONG(w,h), r);
+    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(20, 30));
+    ok(r == MAKELONG(w, h) ||
+       broken(r == MAKELONG(w, w)), /* win98 */
+       "Expected %d, got %d\n", MAKELONG(w, h), r);
 
-    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(25, 35));
+    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(25, 35));
     expect(MAKELONG(20,30), r);
 
-    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, (LPARAM) MAKELONG(-1,-1));
+    r = SendMessage(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(-1,-1));
     expect(MAKELONG(25,35), r);
 
     ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_icon_spacing_seq, "test icon spacing seq", FALSE);
@@ -977,7 +989,7 @@ static void test_item_count(void)
     expect(3, r);
 
     /* [item0, item1] */
-    r = SendMessage(hwnd, LVM_DELETEITEM, (WPARAM) 2, 0);
+    r = SendMessage(hwnd, LVM_DELETEITEM, 2, 0);
     expect(TRUE, r);
 
     r = SendMessage(hwnd, LVM_GETITEMCOUNT, 0, 0);

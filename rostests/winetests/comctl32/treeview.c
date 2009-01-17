@@ -64,6 +64,13 @@ static const struct message DoTest2Seq[] = {
     { 0 }
 };
 
+static const struct message DoTest3Seq[] = {
+    { TVM_INSERTITEM, sent },
+    { TVM_GETITEM, sent },
+    { TVM_DELETEITEM, sent },
+    { 0 }
+};
+
 static const struct message DoFocusTestSeq[] = {
     { TVM_INSERTITEM, sent },
     { TVM_INSERTITEM, sent },
@@ -75,10 +82,10 @@ static const struct message DoFocusTestSeq[] = {
     { WM_NCCALCSIZE, sent|wparam, 0x00000001 },
     { WM_WINDOWPOSCHANGED, sent },
     { WM_SIZE, sent|defwinproc },
-    { WM_WINDOWPOSCHANGING, sent|defwinproc },
-    { WM_NCCALCSIZE, sent|wparam|defwinproc, 0x00000001 },
-    { WM_WINDOWPOSCHANGED, sent|defwinproc },
-    { WM_SIZE, sent|defwinproc },
+    { WM_WINDOWPOSCHANGING, sent|defwinproc|optional },
+    { WM_NCCALCSIZE, sent|wparam|defwinproc|optional, 0x00000001 },
+    { WM_WINDOWPOSCHANGED, sent|defwinproc|optional },
+    { WM_SIZE, sent|defwinproc|optional },
     { TVM_SELECTITEM, sent|wparam, 0x00000009 },
     /* The following end up out of order in wine */
     { WM_PAINT, sent|defwinproc },
@@ -104,7 +111,7 @@ static const struct message TestGetSetBkColorSeq[] = {
     { TVM_GETBKCOLOR, sent|wparam|lparam, 0x00000000, 0x00000000 },
     { TVM_SETBKCOLOR, sent|wparam|lparam, 0x00000000, 0x00ffffff },
     { TVM_GETBKCOLOR, sent|wparam|lparam, 0x00000000, 0x00000000 },
-    { TVM_SETBKCOLOR, sent|wparam|lparam, 0x00000000, 0xffffffff },
+    { TVM_SETBKCOLOR, sent|wparam|lparam, 0x00000000, -1 },
     { 0 }
 };
 
@@ -139,11 +146,11 @@ static const struct message TestGetSetItemSeq[] = {
 
 static const struct message TestGetSetItemHeightSeq[] = {
     { TVM_GETITEMHEIGHT, sent|wparam|lparam, 0x00000000, 0x00000000 },
-    { TVM_SETITEMHEIGHT, sent|wparam|lparam, 0xffffffff, 0x00000000 },
+    { TVM_SETITEMHEIGHT, sent|wparam|lparam, -1, 0x00000000 },
     { TVM_GETITEMHEIGHT, sent|wparam|lparam, 0x00000000, 0x00000000 },
     { TVM_SETITEMHEIGHT, sent|lparam, 0xcccccccc, 0x00000000 },
-    { TVM_GETITEMHEIGHT, sent|wparam|lparam, 0x00000000, 0x00000000 },
-    { TVM_SETITEMHEIGHT, sent|wparam|lparam, 0x00000009, 0x00000000 },
+    { TVM_GETITEMHEIGHT, sent|wparam|lparam|optional, 0x00000000, 0x00000000 },
+    { TVM_SETITEMHEIGHT, sent|wparam|lparam|optional, 0x00000009, 0x00000000 },
     { WM_WINDOWPOSCHANGING, sent|defwinproc },
     { WM_NCCALCSIZE, sent|wparam|defwinproc, 0x00000001 },
     { WM_WINDOWPOSCHANGED, sent|defwinproc },
@@ -164,7 +171,7 @@ static const struct message TestGetSetTextColorSeq[] = {
     { TVM_GETTEXTCOLOR, sent|wparam|lparam, 0x00000000, 0x00000000 },
     { TVM_SETTEXTCOLOR, sent|wparam|lparam, 0x00000000, 0x00ffffff },
     { TVM_GETTEXTCOLOR, sent|wparam|lparam, 0x00000000, 0x00000000 },
-    { TVM_SETTEXTCOLOR, sent|wparam|lparam, 0x00000000, 0xffffffff },
+    { TVM_SETTEXTCOLOR, sent|wparam|lparam, 0x00000000, -1 },
     { 0 }
 };
 
@@ -293,6 +300,35 @@ static void DoTest2(void)
     r = TreeView_SelectItem(hTree, hRoot);
     AddItem('.');
     ok(!strcmp(sequence, "1(nR)nR23(RC)RC45(CR)CR."), "root-child select test\n");
+}
+
+static void DoTest3(void)
+{
+    TVINSERTSTRUCTA ins;
+    HTREEITEM hChild;
+    TVITEM tvi;
+
+    int nBufferSize = 80;
+    CHAR szBuffer[80] = "Blah";
+
+    /* add an item without TVIF_TEXT mask and pszText == NULL */
+    ins.hParent = hRoot;
+    ins.hInsertAfter = TVI_ROOT;
+    U(ins).item.mask = 0;
+    U(ins).item.pszText = NULL;
+    U(ins).item.cchTextMax = 0;
+    hChild = TreeView_InsertItem(hTree, &ins);
+    assert(hChild);
+
+    /* retrieve it with TVIF_TEXT mask */
+    tvi.hItem = hChild;
+    tvi.mask = TVIF_TEXT;
+    tvi.cchTextMax = nBufferSize;
+    tvi.pszText = szBuffer;
+
+    SendMessageA( hTree, TVM_GETITEM, 0, (LPARAM)&tvi );
+    ok(!strcmp(szBuffer, ""), "szBuffer=\"%s\", expected \"\"\n", szBuffer);
+    ok(SendMessageA(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild), "DeleteItem failed\n");
 }
 
 static void DoFocusTest(void)
@@ -698,6 +734,10 @@ START_TEST(treeview)
     flush_sequences(MsgSequences, NUM_MSG_SEQUENCES);
     DoTest2();
     ok_sequence(MsgSequences, LISTVIEW_SEQ_INDEX, DoTest2Seq, "DoTest2", FALSE);
+
+    flush_sequences(MsgSequences, NUM_MSG_SEQUENCES);
+    DoTest3();
+    ok_sequence(MsgSequences, LISTVIEW_SEQ_INDEX, DoTest3Seq, "DoTest3", FALSE);
 
     flush_sequences(MsgSequences, NUM_MSG_SEQUENCES);
     DoFocusTest();

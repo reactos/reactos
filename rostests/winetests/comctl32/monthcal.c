@@ -23,7 +23,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wingdi.h"
 #include "winuser.h"
 
 #include "commctrl.h"
@@ -53,6 +52,7 @@ static const struct message create_parent_window_seq[] = {
     { WM_CREATE, sent },
     { WM_SHOWWINDOW, sent|wparam, 1 },
     { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
+    { WM_QUERYNEWPALETTE, sent|optional },
     { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
     { WM_ACTIVATEAPP, sent|wparam, 1 },
     { WM_NCACTIVATE, sent|wparam, 1 },
@@ -70,7 +70,7 @@ static const struct message create_parent_window_seq[] = {
 
 static const struct message create_monthcal_control_seq[] = {
     { WM_NOTIFYFORMAT, sent|lparam, 0, NF_QUERY },
-    { WM_QUERYUISTATE, sent },
+    { WM_QUERYUISTATE, sent|optional },
     { WM_GETFONT, sent },
     { WM_PARENTNOTIFY, sent|wparam, WM_CREATE},
     { 0 }
@@ -78,7 +78,7 @@ static const struct message create_monthcal_control_seq[] = {
 
 static const struct message create_monthcal_multi_sel_style_seq[] = {
     { WM_NOTIFYFORMAT, sent|lparam, 0, NF_QUERY },
-    { WM_QUERYUISTATE, sent },
+    { WM_QUERYUISTATE, sent|optional },
     { WM_GETFONT, sent },
     { 0 }
 };
@@ -215,10 +215,6 @@ static const struct message monthcal_hit_test_seq[] = {
     { MCM_HITTEST, sent|wparam, 0},
     { MCM_HITTEST, sent|wparam, 0},
     { MCM_HITTEST, sent|wparam, 0},
-    { MCM_HITTEST, sent|wparam, 0},
-    { MCM_HITTEST, sent|wparam, 0},
-    { MCM_HITTEST, sent|wparam, 0},
-    { MCM_HITTEST, sent|wparam, 0},
     { 0 }
 };
 
@@ -302,8 +298,10 @@ static const struct message destroy_parent_seq[] = {
     { 0x0090, sent|optional }, /* Vista */
     { WM_WINDOWPOSCHANGING, sent|wparam, 0},
     { WM_WINDOWPOSCHANGED, sent|wparam, 0},
-    { WM_NCACTIVATE, sent|wparam|lparam, 0, 0},
-    { WM_ACTIVATE, sent|wparam|lparam, 0, 0},
+    { WM_NCACTIVATE, sent|wparam, 0},
+    { WM_ACTIVATE, sent|wparam, 0},
+    { WM_NCACTIVATE, sent|wparam|lparam|optional, 0, 0},
+    { WM_ACTIVATE, sent|wparam|lparam|optional, 0, 0},
     { WM_ACTIVATEAPP, sent|wparam, 0},
     { WM_KILLFOCUS, sent|wparam|lparam, 0, 0},
     { WM_IME_SETCONTEXT, sent|wparam|optional, 0},
@@ -383,8 +381,9 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
     LRESULT ret;
     struct message msg;
 
-    /* do not log painting messages */
-    if (message != WM_PAINT &&
+    /* log system messages, except for painting */
+    if (message < WM_USER &&
+        message != WM_PAINT &&
         message != WM_ERASEBKGND &&
         message != WM_NCPAINT &&
         message != WM_NCHITTEST &&
@@ -419,7 +418,7 @@ static BOOL register_parent_wnd_class(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(NULL);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "Month-Cal test parent class";
@@ -459,8 +458,6 @@ static LRESULT WINAPI monthcal_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     static long defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
-
-    trace("monthcal: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
@@ -636,7 +633,7 @@ static void test_monthcal_currDate(HWND hwnd)
     expect(st_original.wSecond, st_new.wSecond);
 
     /* lparam cannot be NULL */
-    res = SendMessage(hwnd, MCM_GETCURSEL, 0, (LPARAM) NULL);
+    res = SendMessage(hwnd, MCM_GETCURSEL, 0, 0);
     expect(0, res);
 
     ok_sequence(sequences, MONTHCAL_SEQ_INDEX, monthcal_curr_date_seq, "monthcal currDate", TRUE);
@@ -654,6 +651,7 @@ static void test_monthcal_firstDay(HWND hwnd)
     /* check for locale first day */
     if(GetLocaleInfo(lcid, LOCALE_IFIRSTDAYOFWEEK, b, 128)){
         fday = atoi(b);
+        trace("fday: %d\n", fday);
         res = SendMessage(hwnd, MCM_GETFIRSTDAYOFWEEK, 0, 0);
         expect(fday, res);
         prev = fday;
@@ -669,7 +667,8 @@ static void test_monthcal_firstDay(HWND hwnd)
             if (i == -1){
                 expect(MAKELONG(fday, FALSE), res);
             }else if (i >= 7){
-                expect(MAKELONG(fday, TRUE), res);
+                /* out of range sets max first day of week, locale is ignored */
+                expect(MAKELONG(6, TRUE), res);
             }else{
                 expect(MAKELONG(i, TRUE), res);
             }
@@ -722,6 +721,12 @@ static void test_monthcal_HitTest(HWND hwnd)
     MCHITTESTINFO mchit;
     UINT res;
     SYSTEMTIME st;
+    LONG x;
+    UINT title_index;
+    static const UINT title_hits[] =
+        { MCHT_NOWHERE, MCHT_TITLEBK, MCHT_TITLEBTNPREV, MCHT_TITLEBK,
+          MCHT_TITLEMONTH, MCHT_TITLEBK, MCHT_TITLEYEAR, MCHT_TITLEBK,
+          MCHT_TITLEBTNNEXT, MCHT_TITLEBK, MCHT_NOWHERE };
 
     memset(&mchit, 0, sizeof(MCHITTESTINFO));
 
@@ -775,42 +780,6 @@ static void test_monthcal_HitTest(HWND hwnd)
     expect(180, mchit.pt.y);
     expect(mchit.uHit, res);
     expect(MCHT_CALENDARBK, res);
-
-    /* (50, 40) is in active area - previous month button */
-    mchit.pt.x = 50;
-    mchit.pt.y = 40;
-    res = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM) & mchit);
-    expect(50, mchit.pt.x);
-    expect(40, mchit.pt.y);
-    expect(mchit.uHit, res);
-    todo_wine {expect(MCHT_TITLEBTNPREV, res);}
-
-    /* (90, 40) is in active area - background section of the title */
-    mchit.pt.x = 90;
-    mchit.pt.y = 40;
-    res = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM) & mchit);
-    expect(90, mchit.pt.x);
-    expect(40, mchit.pt.y);
-    expect(mchit.uHit, res);
-    todo_wine {expect(MCHT_TITLE, res);}
-
-    /* (140, 40) is in active area - month section of the title */
-    mchit.pt.x = 140;
-    mchit.pt.y = 40;
-    res = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM) & mchit);
-    expect(140, mchit.pt.x);
-    expect(40, mchit.pt.y);
-    expect(mchit.uHit, res);
-    todo_wine {expect(MCHT_TITLEMONTH, res);}
-
-    /* (250, 40) is in active area - next month button */
-    mchit.pt.x = 250;
-    mchit.pt.y = 40;
-    res = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM) & mchit);
-    expect(250, mchit.pt.x);
-    expect(40, mchit.pt.y);
-    expect(mchit.uHit, res);
-    todo_wine {expect(MCHT_TITLEBTNNEXT, res);}
 
     /* (70, 70) is in active area - day of the week */
     mchit.pt.x = 70;
@@ -905,6 +874,27 @@ static void test_monthcal_HitTest(HWND hwnd)
     todo_wine {expect(MCHT_TODAYLINK, res);}
 
     ok_sequence(sequences, MONTHCAL_SEQ_INDEX, monthcal_hit_test_seq, "monthcal hit test", TRUE);
+
+    /* The horizontal position of title bar elements depends on locale (y pos
+       is constant), so we sample across a horizontal line and make sure we
+       find all elements. */
+    mchit.pt.y = 40;
+    title_index = 0;
+    for (x = 0; x < 300; x++){
+        mchit.pt.x = x;
+        res = SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM) & mchit);
+        expect(x, mchit.pt.x);
+        expect(40, mchit.pt.y);
+        expect(mchit.uHit, res);
+        if (res != title_hits[title_index]){
+            title_index++;
+            if (sizeof(title_hits) / sizeof(title_hits[0]) <= title_index)
+                break;
+            todo_wine {expect(title_hits[title_index], res);}
+        }
+    }
+    todo_wine {ok(300 <= x && title_index + 1 == sizeof(title_hits) / sizeof(title_hits[0]),
+        "Wrong title layout\n");}
 }
 
 static void test_monthcal_todaylink(HWND hwnd)
@@ -1107,6 +1097,34 @@ static void test_monthcal_MaxSelDay(HWND hwnd)
     ok_sequence(sequences, MONTHCAL_SEQ_INDEX, monthcal_max_sel_day_seq, "monthcal MaxSelDay", FALSE);
 }
 
+static void test_monthcal_size(HWND hwnd)
+{
+    int res;
+    RECT r1, r2;
+    HFONT hFont1, hFont2;
+    LOGFONTA logfont;
+
+    lstrcpyA(logfont.lfFaceName, "Arial");
+    memset(&logfont, 0, sizeof(logfont));
+    logfont.lfHeight = 12;
+    hFont1 = CreateFontIndirectA(&logfont);
+
+    logfont.lfHeight = 24;
+    hFont2 = CreateFontIndirectA(&logfont);
+
+    /* initialize to a font we can compare against */
+    SendMessage(hwnd, WM_SETFONT, (WPARAM)hFont1, 0);
+    res = SendMessage(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&r1);
+
+    /* check that setting a larger font results in an larger rect */
+    SendMessage(hwnd, WM_SETFONT, (WPARAM)hFont2, 0);
+    res = SendMessage(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&r2);
+
+    OffsetRect(&r1, -r1.left, -r1.top);
+    OffsetRect(&r2, -r2.left, -r2.top);
+
+    ok(r1.bottom < r2.bottom, "Failed to get larger rect with larger font\n");
+}
 
 START_TEST(monthcal)
 {
@@ -1148,6 +1166,7 @@ START_TEST(monthcal)
     test_monthcal_monthrange(hwnd);
     test_monthcal_HitTest(hwnd);
     test_monthcal_todaylink(hwnd);
+    test_monthcal_size(hwnd);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     DestroyWindow(hwnd);

@@ -197,7 +197,7 @@ static void test_dtm_set_format(HWND hWndDateTime)
     SYSTEMTIME systime;
     LRESULT r;
 
-    r = SendMessage(hWndDateTime, DTM_SETFORMAT, 0, (LPARAM)NULL);
+    r = SendMessage(hWndDateTime, DTM_SETFORMAT, 0, 0);
     expect(1, r);
 
     r = SendMessage(hWndDateTime, DTM_SETFORMAT, 0,
@@ -256,7 +256,7 @@ static void test_dtm_set_and_get_mcfont(HWND hWndDateTime)
 {
     HFONT hFontOrig, hFontNew;
 
-    hFontOrig = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    hFontOrig = GetStockObject(DEFAULT_GUI_FONT);
     SendMessage(hWndDateTime, DTM_SETMCFONT, (WPARAM)hFontOrig, TRUE);
     hFontNew = (HFONT)SendMessage(hWndDateTime, DTM_GETMCFONT, 0, 0);
     ok(hFontOrig == hFontNew, "Expected hFontOrig==hFontNew, hFontOrig=%p, hFontNew=%p\n", hFontOrig, hFontNew);
@@ -271,7 +271,7 @@ static void test_dtm_get_monthcal(HWND hWndDateTime)
 
     todo_wine {
         r = SendMessage(hWndDateTime, DTM_GETMONTHCAL, 0, 0);
-        ok(r == (LPARAM)NULL, "Expected NULL(no child month calendar control), got %ld\n", r);
+        ok(r == 0, "Expected NULL(no child month calendar control), got %ld\n", r);
     }
 
     ok_sequence(sequences, DATETIME_SEQ_INDEX, test_dtm_get_monthcal_seq, "test_dtm_get_monthcal", FALSE);

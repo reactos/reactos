@@ -1,4 +1,4 @@
-/* Unit tests for treeview.
+/* Unit tests for toolbar.
  *
  * Copyright 2005 Krzysztof Foltman
  * Copyright 2007 Mikolaj Zalewski
@@ -114,7 +114,7 @@ static void basic_test(void)
         WS_VISIBLE | WS_CLIPCHILDREN | CCS_TOP |
         WS_CHILD | TBSTYLE_LIST,
         100,
-        0, NULL, (UINT)0,
+        0, NULL, 0,
         buttons, sizeof(buttons)/sizeof(buttons[0]),
         0, 0, 20, 16, sizeof(TBBUTTON));
     ok(hToolbar != NULL, "Toolbar creation\n");
@@ -168,7 +168,7 @@ static void rebuild_toolbar(HWND *hToolbar)
     *hToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
         hMainWnd, (HMENU)5, GetModuleHandle(NULL), NULL);
     ok(*hToolbar != NULL, "Toolbar creation problem\n");
-    ok(SendMessage(*hToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0) == 0, "TB_BUTTONSTRUCTSIZE failed\n");
+    ok(SendMessage(*hToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0) == 0, "TB_BUTTONSTRUCTSIZE failed\n");
     ok(SendMessage(*hToolbar, TB_AUTOSIZE, 0, 0) == 0, "TB_AUTOSIZE failed\n");
     ok(SendMessage(*hToolbar, WM_SETFONT, (WPARAM)GetStockObject(SYSTEM_FONT), 0)==1, "WM_SETFONT\n");
 }
@@ -203,6 +203,13 @@ static void rebuild_toolbar_with_buttons(HWND *hToolbar)
     ok(SendMessage(*hToolbar, TB_AUTOSIZE, 0, 0) == 0, "TB_AUTOSIZE failed\n");
 }
 
+static void add_128x15_bitmap(HWND hToolbar, int nCmds)
+{
+    TBADDBITMAP bmp128;
+    bmp128.hInst = GetModuleHandle(NULL);
+    bmp128.nID = IDB_BITMAP_128x15;
+    ok(SendMessageA(hToolbar, TB_ADDBITMAP, nCmds, (LPARAM)&bmp128) == 0, "TB_ADDBITMAP - unexpected return\n");
+}
 
 #define CHECK_IMAGELIST(count, dx, dy) { \
     int cx, cy; \
@@ -711,6 +718,18 @@ static tbsize_result_t tbsize_results[] =
     {  0,   0, 163,  38}, {163,   0, 326,  38}, {326,   0, 489,  38},
     {489,   0, 652,  38}, {652,   0, 819,  38}, {819,   0, 850,  38},
   }, },
+  { {0, 0, 672, 100}, {239, 102}, 3, {
+    {  0,   2, 100,  102}, {100,   2, 139,  102}, {139, 2, 239,  102},
+  }, },
+  { {0, 0, 672, 42}, {185, 40}, 3, {
+      {  0,   2,  75,  40}, {75,   2, 118, 40}, {118, 2, 185, 40},
+  }, },
+  { {0, 0, 672, 42}, {67, 40}, 1, {
+      {  0,   2,  67,  40},
+  }, },
+  { {0, 0, 672, 42}, {67, 41}, 2, {
+      {  0,   2,  672,  41}, {  0,   41,  672,  80},
+  }, },
 };
 
 static int tbsize_numtests = 0;
@@ -759,6 +778,7 @@ static void test_sizes(void)
 {
     HWND hToolbar = NULL;
     HIMAGELIST himl;
+    TBBUTTONINFO tbinfo;
     int style;
     int i;
 
@@ -854,6 +874,18 @@ static void test_sizes(void)
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 22), "Unexpected button size\n");
     SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELONG(16, 15));
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(23, 21), "Unexpected button size\n");
+    /* -1 in TB_SETBITMAPSIZE is a special code meaning that the coordinate shouldn't be changed */
+    add_128x15_bitmap(hToolbar, 16);
+    ok(SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELONG(14, -1)), "TB_SETBITMAPSIZE failed\n");
+    compare((int)SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0), MAKELONG(21, 21), "%x");
+    ok(SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELONG(-1, 12)), "TB_SETBITMAPSIZE failed\n");
+    compare((int)SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0), MAKELONG(21, 18), "%x");
+    ok(SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELONG(-1, -1)), "TB_SETBITMAPSIZE failed\n");
+    compare((int)SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0), MAKELONG(21, 18), "%x");
+    /* check the imagelist */
+    InvalidateRect(hToolbar, NULL, TRUE);
+    UpdateWindow(hToolbar);
+    CHECK_IMAGELIST(16, 14, 12);
 
     rebuild_toolbar(&hToolbar);
     SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)"A\0MMMMMMMMMMMMM\0");
@@ -923,6 +955,46 @@ static void test_sizes(void)
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 39), "Unexpected button size\n");
     SendMessageA(hToolbar, TB_DELETEBUTTON, 0, 0);
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 39), "Unexpected button size\n");
+
+    rebuild_toolbar(&hToolbar);
+
+    ok(SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(32, 32)) == 1, "TB_SETBITMAPSIZE failed\n");
+    ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(100, 100)) == 1, "TB_SETBUTTONSIZE failed\n");
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons2[0]) == 1, "TB_ADDBUTTONS failed\n");
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[2]) == 1, "TB_ADDBUTTONS failed\n");
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[0]) == 1, "TB_ADDBUTTONS failed\n");
+    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );
+    check_sizes();
+
+    rebuild_toolbar(&hToolbar);
+    SetWindowLong(hToolbar, GWL_STYLE, TBSTYLE_LIST | GetWindowLong(hToolbar, GWL_STYLE));
+    ok(SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(32, 32)) == 1, "TB_SETBITMAPSIZE failed\n");
+    ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(100, 100)) == 1, "TB_SETBUTTONSIZE failed\n");
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons2[0]) == 1, "TB_ADDBUTTONS failed\n");
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[2]) == 1, "TB_ADDBUTTONS failed\n");
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[3]) == 1, "TB_ADDBUTTONS failed\n");
+    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );
+    check_sizes_todo(0xff);
+
+    rebuild_toolbar(&hToolbar);
+    SetWindowLong(hToolbar, GWL_STYLE, TBSTYLE_LIST | GetWindowLong(hToolbar, GWL_STYLE));
+    ok(SendMessageA(hToolbar, TB_SETBITMAPSIZE, 0, MAKELPARAM(32, 32)) == 1, "TB_SETBITMAPSIZE failed\n");
+    ok(SendMessageA(hToolbar, TB_SETBUTTONSIZE, 0, MAKELPARAM(100, 100)) == 1, "TB_SETBUTTONSIZE failed\n");
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[3]) == 1, "TB_ADDBUTTONS failed\n");
+    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0 );
+    check_sizes();
+
+    rebuild_toolbar(&hToolbar);
+    SetWindowLong(hToolbar, GWL_STYLE, TBSTYLE_WRAPABLE | GetWindowLong(hToolbar, GWL_STYLE));
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[3]) == 1, "TB_ADDBUTTONS failed\n");
+    ok(SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[3]) == 1, "TB_ADDBUTTONS failed\n");
+    tbinfo.cx = 672;
+    tbinfo.cbSize = sizeof(TBBUTTONINFO);
+    tbinfo.dwMask = TBIF_SIZE | TBIF_BYINDEX;
+    ok(SendMessageA(hToolbar, TB_SETBUTTONINFO, 0, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFO failed\n");
+    ok(SendMessageA(hToolbar, TB_SETBUTTONINFO, 1, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFO failed\n");
+    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0);
+    check_sizes();
 
     DestroyWindow(hToolbar);
 }
@@ -1065,7 +1137,7 @@ static void test_setrows(void)
         WS_VISIBLE | WS_CLIPCHILDREN | WS_CHILD | CCS_NORESIZE | CCS_NOPARENTALIGN
         | CCS_NOMOVEY | CCS_TOP,
         0,
-        0, NULL, (UINT)0,
+        0, NULL, 0,
         buttons, sizeof(buttons)/sizeof(buttons[0]),
         20, 20, 0, 0, sizeof(TBBUTTON));
     ok(hToolbar != NULL, "Toolbar creation\n");
@@ -1079,7 +1151,7 @@ static void test_setrows(void)
         memset(&rc, 0xCC, sizeof(rc));
         SendMessageA(hToolbar, TB_SETROWS,
                      MAKELONG(tbrows_results[i].nRows, tbrows_results[i].bLarger),
-                     (LONG) &rc);
+                     (LPARAM) &rc);
 
         rows = SendMessageA(hToolbar, TB_GETROWS, MAKELONG(0,0), MAKELONG(0,0));
         ok(rows == tbrows_results[i].expectedRows,
@@ -1102,15 +1174,15 @@ static void test_getstring(void)
     hToolbar = CreateWindowExA(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hMainWnd, (HMENU)5, GetModuleHandle(NULL), NULL);
     ok(hToolbar != NULL, "Toolbar creation problem\n");
 
-    r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(0, 0), (LPARAM)NULL);
+    r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(0, 0), 0);
     expect(-1, r);
-    r = SendMessage(hToolbar, TB_GETSTRINGW, MAKEWPARAM(0, 0), (LPARAM)NULL);
+    r = SendMessage(hToolbar, TB_GETSTRINGW, MAKEWPARAM(0, 0), 0);
     expect(-1, r);
     r = SendMessage(hToolbar, TB_ADDSTRING, 0, (LPARAM)answer);
     expect(0, r);
-    r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(0, 0), (LPARAM)NULL);
+    r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(0, 0), 0);
     expect(lstrlenA(answer), r);
-    r = SendMessage(hToolbar, TB_GETSTRINGW, MAKEWPARAM(0, 0), (LPARAM)NULL);
+    r = SendMessage(hToolbar, TB_GETSTRINGW, MAKEWPARAM(0, 0), 0);
     expect(lstrlenA(answer), r);
     r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(sizeof(str), 0), (LPARAM)str);
     expect(lstrlenA(answer), r);

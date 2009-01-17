@@ -101,8 +101,8 @@ static LRESULT CALLBACK CustomDrawWndProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     case WM_NOTIFY:
         if (((NMHDR *)lParam)->code == NM_CUSTOMDRAW) {
             NMTTCUSTOMDRAW *ttcd = (NMTTCUSTOMDRAW*) lParam;
-            ok(ttcd->nmcd.hdr.hwndFrom == g_hwnd, "Unexpected hwnd source %x (%x)\n",
-                 (int)ttcd->nmcd.hdr.hwndFrom, (int) g_hwnd);
+            ok(ttcd->nmcd.hdr.hwndFrom == g_hwnd, "Unexpected hwnd source %p (%p)\n",
+                 ttcd->nmcd.hdr.hwndFrom, g_hwnd);
             ok(ttcd->nmcd.hdr.idFrom == 0x1234ABCD, "Unexpected id %x\n", (int)ttcd->nmcd.hdr.idFrom);
 
             switch (ttcd->nmcd.dwDrawStage) {
@@ -205,7 +205,7 @@ static void test_customdraw(void) {
        toolInfo.hwnd = parent;
        toolInfo.hinst = GetModuleHandleA(NULL);
        toolInfo.uFlags = TTF_SUBCLASS;
-       toolInfo.uId = (UINT_PTR)0x1234ABCD;
+       toolInfo.uId = 0x1234ABCD;
        toolInfo.lpszText = (LPSTR)"This is a test tooltip";
        toolInfo.lParam = 0xdeadbeef;
        GetClientRect (parent, &toolInfo.rect);
@@ -213,7 +213,7 @@ static void test_customdraw(void) {
        ok(lResult, "Adding the tool to the tooltip failed\n");
 
        /* Make tooltip appear quickly */
-       SendMessage(hwndTip, TTM_SETDELAYTIME, (WPARAM)TTDT_INITIAL, (LPARAM)MAKELONG(1,0));
+       SendMessage(hwndTip, TTM_SETDELAYTIME, TTDT_INITIAL, MAKELPARAM(1,0));
 
        /* Put cursor inside window, tooltip will appear immediately */
        SetCursorPos(100, 100);
@@ -232,10 +232,79 @@ static void test_customdraw(void) {
 
 }
 
+static void test_gettext(void)
+{
+    HWND hwnd;
+    TTTOOLINFOA toolinfoA;
+    TTTOOLINFOW toolinfoW;
+    LRESULT r;
+    char bufA[10] = "";
+    WCHAR bufW[10] = { 0 };
+
+    /* For bug 14790 - lpszText is NULL */
+    hwnd = CreateWindowExA(0, TOOLTIPS_CLASSA, NULL, 0,
+                           10, 10, 300, 100,
+                           NULL, NULL, NULL, 0);
+    assert(hwnd);
+
+    toolinfoA.cbSize = sizeof(TTTOOLINFOA);
+    toolinfoA.hwnd = NULL;
+    toolinfoA.hinst = GetModuleHandleA(NULL);
+    toolinfoA.uFlags = 0;
+    toolinfoA.uId = 0x1234ABCD;
+    toolinfoA.lpszText = NULL;
+    toolinfoA.lParam = 0xdeadbeef;
+    GetClientRect(hwnd, &toolinfoA.rect);
+    r = SendMessageA(hwnd, TTM_ADDTOOL, 0, (LPARAM)&toolinfoA);
+    ok(r, "Adding the tool to the tooltip failed\n");
+    if (r)
+    {
+        toolinfoA.hwnd = NULL;
+        toolinfoA.uId = 0x1234ABCD;
+        toolinfoA.lpszText = bufA;
+        SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+        ok(strcmp(toolinfoA.lpszText, "") == 0, "lpszText should be an empty string\n");
+    }
+
+    DestroyWindow(hwnd);
+
+    SetLastError(0xdeadbeef);
+    hwnd = CreateWindowExW(0, TOOLTIPS_CLASSW, NULL, 0,
+                           10, 10, 300, 100,
+                           NULL, NULL, NULL, 0);
+
+    if (!hwnd && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
+        win_skip("CreateWindowExW is not implemented\n");
+        return;
+    }
+
+    assert(hwnd);
+
+    toolinfoW.cbSize = sizeof(TTTOOLINFOW);
+    toolinfoW.hwnd = NULL;
+    toolinfoW.hinst = GetModuleHandleA(NULL);
+    toolinfoW.uFlags = 0;
+    toolinfoW.uId = 0x1234ABCD;
+    toolinfoW.lpszText = NULL;
+    toolinfoW.lParam = 0xdeadbeef;
+    GetClientRect(hwnd, &toolinfoW.rect);
+    r = SendMessageW(hwnd, TTM_ADDTOOL, 0, (LPARAM)&toolinfoW);
+    ok(r, "Adding the tool to the tooltip failed\n");
+
+    toolinfoW.hwnd = NULL;
+    toolinfoW.uId = 0x1234ABCD;
+    toolinfoW.lpszText = bufW;
+    SendMessageW(hwnd, TTM_GETTEXTW, 0, (LPARAM)&toolinfoW);
+    ok(toolinfoW.lpszText[0] == 0, "lpszText should be an empty string\n");
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(tooltips)
 {
     InitCommonControls();
 
     test_create_tooltip();
     test_customdraw();
+    test_gettext();
 }

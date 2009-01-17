@@ -25,7 +25,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wingdi.h"
 #include "winuser.h"
 #include "commctrl.h"
 #include "objidl.h"
@@ -183,7 +182,7 @@ static BOOL CheckDPA(HDPA dpa, DWORD dwIn, PDWORD pdwOut)
         
         do
         {
-            pDPA_InsertPtr(dpa, 0, (PVOID)(dwIn & 0xf));
+            pDPA_InsertPtr(dpa, 0, (PVOID)(ULONG_PTR)(dwIn & 0xf));
             dwIn >>= 4;
         }
         while(dwIn);
@@ -243,9 +242,9 @@ static void test_dpa(void)
     for(i = 1; i <= 6; i++)
     {
         INT j, k;
-        k = pDPA_GetPtrIndex(dpa, (PVOID)i);
+        k = pDPA_GetPtrIndex(dpa, (PVOID)(INT_PTR)i);
         /* Linear searches should work on unsorted DPAs */
-        j = pDPA_Search(dpa, (PVOID)i, 0, CB_CmpLT, 0xdeadbeef, 0);
+        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpLT, 0xdeadbeef, 0);
         ok(j == k, "j=%d k=%d\n", j, k);
     }
 
@@ -280,16 +279,16 @@ static void test_dpa(void)
         INT j;
 
         /* The array is in order so ptr == index+1 */
-        j = pDPA_GetPtrIndex(dpa, (PVOID)i);
+        j = pDPA_GetPtrIndex(dpa, (PVOID)(INT_PTR)i);
         ok(j+1 == i, "j=%d i=%d\n", j, i);
-        j = pDPA_Search(dpa, (PVOID)i, 0, CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
+        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
         ok(j+1 == i, "j=%d i=%d\n", j, i);
 
         /* Linear searches respect iStart ... */
-        j = pDPA_Search(dpa, (PVOID)i, i+1, CB_CmpLT, 0xdeadbeef, 0);
+        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, i+1, CB_CmpLT, 0xdeadbeef, 0);
         ok(j == DPA_ERR, "j=%d\n", j);
         /* ... but for a binary search it's ignored */
-        j = pDPA_Search(dpa, (PVOID)i, i+1, CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
+        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, i+1, CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
         todo_wine ok(j+1 == i, "j=%d i=%d\n", j, i);
     }
     
@@ -332,7 +331,7 @@ static void test_dpa(void)
      * should be bogus */
     for(i = 0; i < 6; i++)
     {
-        INT j = pDPA_Search(dpa, (PVOID)i, 0, CB_CmpGT, 0xdeadbeef,
+        INT j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpGT, 0xdeadbeef,
                             DPAS_SORTED|DPAS_INSERTBEFORE);
         ok(j != i, "i=%d\n", i);
     }
@@ -364,7 +363,9 @@ static void test_dpa(void)
         rc=CheckDPA(dpa,  0x123456, &dw);
         ok(rc, "dw=0x%x\n",  dw);
         rc=CheckDPA(dpa2, 0x123456, &dw2);
-        ok(rc, "dw2=0x%x\n", dw2);
+        ok(rc ||
+           broken(!rc), /* win98 */
+           "dw2=0x%x\n", dw2);
         rc=CheckDPA(dpa3, 0x123456, &dw3);
         ok(rc, "dw3=0x%x\n", dw3);
     }
@@ -453,5 +454,5 @@ START_TEST(dpa)
     if(InitFunctionPtrs(hcomctl32))
         test_dpa();
     else
-        trace("skipping tests\n");
+        win_skip("Needed functions are not available\n");
 }

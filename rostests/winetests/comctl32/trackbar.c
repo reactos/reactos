@@ -40,6 +40,7 @@ static const struct message create_parent_wnd_seq[] = {
     { WM_CREATE, sent },
     { WM_SHOWWINDOW, sent|wparam, 1 },
     { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
+    { WM_QUERYNEWPALETTE, sent|optional },
     { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
     { WM_ACTIVATEAPP, sent|wparam, 1 },
     { WM_NCACTIVATE, sent|wparam, 1 },
@@ -65,7 +66,7 @@ static const struct message parent_empty_test_seq[] = {
 
 static const struct message parent_create_trackbar_wnd_seq[] = {
     { WM_NOTIFYFORMAT, sent},
-    { 0x0129, sent}, /* should be WM_QUERYUISTATE instead of 0x0129 */
+    { WM_QUERYUISTATE, sent|optional},
     { WM_WINDOWPOSCHANGING, sent},
     { WM_NCACTIVATE, sent},
     { PBT_APMRESUMECRITICAL, sent},
@@ -79,6 +80,7 @@ static const struct message parent_create_trackbar_wnd_seq[] = {
 };
 
 static const struct message parent_new_window_test_seq[] = {
+    { WM_QUERYNEWPALETTE, sent|optional },
     { WM_WINDOWPOSCHANGING, sent},
     { WM_NCACTIVATE, sent},
     { PBT_APMRESUMECRITICAL, sent},
@@ -86,7 +88,7 @@ static const struct message parent_new_window_test_seq[] = {
     { WM_IME_NOTIFY, sent|defwinproc|optional},
     { WM_SETFOCUS, sent|defwinproc},
     { WM_NOTIFYFORMAT, sent},
-    { 0x0129, sent}, /* should be WM_QUERYUISTATE instead of 0x0129*/
+    { WM_QUERYUISTATE, sent|optional},
     {0}
 };
 
@@ -139,11 +141,13 @@ static const struct message position_test_seq[] = {
     { TBM_SETPOS, sent|wparam|lparam, TRUE, 5},
     { WM_PAINT, sent|defwinproc},
     { TBM_GETPOS, sent},
+    { TBM_SETPOS, sent|wparam|lparam, TRUE, 5},
     { TBM_SETPOS, sent|wparam|lparam, TRUE, 1000},
     { WM_PAINT, sent|defwinproc},
     { TBM_GETPOS, sent},
     { TBM_SETPOS, sent|wparam|lparam, FALSE, 20},
     { TBM_GETPOS, sent},
+    { TBM_SETPOS, sent|wparam|lparam, TRUE, 20},
     { TBM_GETPOS, sent},
     {0}
 };
@@ -331,10 +335,10 @@ static const struct message parent_thumb_length_test_seq[] = {
 static const struct message tic_placement_test_seq[] = {
     { TBM_GETPTICS, sent},
     { TBM_GETTIC, sent|wparam, 0},
+    { TBM_GETTIC, sent|wparam, 2},
     { TBM_GETTIC, sent|wparam, 4},
-    { TBM_GETTIC, sent|wparam, 11},
     { TBM_GETTICPOS, sent|wparam, 0},
-    { TBM_GETTICPOS, sent|wparam, 4},
+    { TBM_GETTICPOS, sent|wparam, 2},
     {0}
 };
 
@@ -392,8 +396,9 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
     LRESULT ret;
     struct message msg;
 
-    /* do not log painting messages */
-    if (message != WM_PAINT &&
+    /* log system messages, except for painting */
+    if (message < WM_USER &&
+        message != WM_PAINT &&
         message != WM_ERASEBKGND &&
         message != WM_NCPAINT &&
         message != WM_NCHITTEST &&
@@ -401,6 +406,8 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         message != WM_GETICON &&
         message != WM_DEVICECHANGE)
     {
+        trace("parent: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
+
         msg.message = message;
         msg.flags = sent|wparam|lparam;
         if (defwndproc_counter) msg.flags |= defwinproc;
@@ -425,7 +432,7 @@ static BOOL register_parent_wnd_class(void){
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(NULL);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "Trackbar test parent class";
@@ -449,6 +456,8 @@ static LRESULT WINAPI trackbar_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     static long defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
+
+    trace("trackbar: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
@@ -598,12 +607,14 @@ static void test_position(HWND hWndTrackbar){
     SendMessage(hWndTrackbar, TBM_SETPOS, TRUE, 5);
     r = SendMessage(hWndTrackbar, TBM_GETPOS, 0,0);
     expect(5, r);
+    SendMessage(hWndTrackbar, TBM_SETPOS, TRUE, 5);
     SendMessage(hWndTrackbar, TBM_SETPOS, TRUE, 1000);
     r = SendMessage(hWndTrackbar, TBM_GETPOS, 0,0);
     expect(100, r);
     SendMessage(hWndTrackbar, TBM_SETPOS, FALSE, 20);
     r = SendMessage(hWndTrackbar, TBM_GETPOS, 0,0);
     expect(20, r);
+    SendMessage(hWndTrackbar, TBM_SETPOS, TRUE, 20);
 
     /* test TBM_GETPOS */
     r = SendMessage(hWndTrackbar, TBM_GETPOS, 0,0);
@@ -799,34 +810,37 @@ static void test_tic_settings(HWND hWndTrackbar){
 static void test_tic_placement(HWND hWndTrackbar){
     int r;
     DWORD *rPTics;
+    DWORD numtics;
+
+    SendMessage(hWndTrackbar, TBM_SETRANGE, TRUE, MAKELONG(1, 6));
+    SendMessage(hWndTrackbar, TBM_SETTICFREQ, 1, 0);
+
+    numtics = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
+    ok(numtics == 6, "Expected 6, got %d\n", numtics);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
     /* test TBM_GETPTICS */
     rPTics = (DWORD *) SendMessage(hWndTrackbar, TBM_GETPTICS, 0,0);
-    todo_wine{
-        expect(1, rPTics[0]);
-        expect(2, rPTics[1]);
-        expect(3, rPTics[2]);
-        expect(4, rPTics[3]);
-    }
+    expect(2, rPTics[0]);
+    expect(3, rPTics[1]);
+    expect(4, rPTics[2]);
+    expect(5, rPTics[3]);
 
     /* test TBM_GETTIC */
     r = SendMessage(hWndTrackbar, TBM_GETTIC, 0,0);
+    expect(2, r);
+    r = SendMessage(hWndTrackbar, TBM_GETTIC, 2,0);
+    expect(4, r);
+    r = SendMessage(hWndTrackbar, TBM_GETTIC, 4,0);
     todo_wine{
-        expect(1, r);
-        r = SendMessage(hWndTrackbar, TBM_GETTIC, 4,0);
-        expect(5, r);
+        expect(-1, r);
     }
-    r = SendMessage(hWndTrackbar, TBM_GETTIC, 11,0);
-    expect(-1, r);
 
     /* test TBM_GETTICPIC */
     r = SendMessage(hWndTrackbar, TBM_GETTICPOS, 0, 0);
-    todo_wine{
-        ok(r > 0, "Expected r > 0, got %d\n", r);
-        r = SendMessage(hWndTrackbar, TBM_GETTICPOS, 4, 0);
-        ok(r > 0, "Expected r > 0, got %d\n", r);
-    }
+    ok(r > 0, "Expected r > 0, got %d\n", r);
+    r = SendMessage(hWndTrackbar, TBM_GETTICPOS, 2, 0);
+    ok(r > 0, "Expected r > 0, got %d\n", r);
 
     ok_sequence(sequences, TRACKBAR_SEQ_INDEX, tic_placement_test_seq, "get tic placement test sequence", FALSE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_empty_test_seq, "parent get tic placement test sequence", FALSE);
@@ -861,7 +875,7 @@ static void test_tool_tips(HWND hWndTrackbar){
         SendMessage(hWndTrackbar, TBM_SETTOOLTIPS, (LPARAM) hWndTooltip, 0);
         rTest = (HWND) SendMessage(hWndTrackbar, TBM_GETTOOLTIPS, 0,0);
         ok(rTest == hWndTooltip, "Expected hWndToolTip, got\n");
-        SendMessage(hWndTrackbar, TBM_SETTOOLTIPS, (LPARAM) NULL, 0);
+        SendMessage(hWndTrackbar, TBM_SETTOOLTIPS, 0, 0);
         rTest = (HWND) SendMessage(hWndTrackbar, TBM_GETTOOLTIPS, 0,0);
         ok(rTest == NULL, "Expected NULL\n");
         SendMessage(hWndTrackbar, TBM_SETTOOLTIPS, (LPARAM) hWndTooltip, 5);
