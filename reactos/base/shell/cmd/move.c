@@ -137,7 +137,7 @@ INT cmd_move (LPTSTR param)
 	}
 
 	nErrorLevel = 0;
-	arg = split (param, &argc, FALSE);
+	arg = splitspace(param, &argc);
 	nFiles = argc;
 
 	/* read options */
