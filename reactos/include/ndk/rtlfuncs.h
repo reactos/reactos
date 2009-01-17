@@ -428,10 +428,10 @@ RtlRaiseException(
     IN PEXCEPTION_RECORD ExceptionRecord
 );
 
+DECLSPEC_NORETURN
 NTSYSAPI
 VOID
 NTAPI
-__declspec(noreturn)
 RtlRaiseStatus(
     IN NTSTATUS Status
 );
