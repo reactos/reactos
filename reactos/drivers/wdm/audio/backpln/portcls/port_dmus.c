@@ -66,7 +66,7 @@ IPortDMus_fnRelease(
         {
             This->pMiniport->lpVtbl->Release(This->pMiniport);
         }
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */

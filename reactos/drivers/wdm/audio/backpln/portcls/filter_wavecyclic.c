@@ -59,7 +59,7 @@ IPortFilterWaveCyclic_fnRelease(
 
     if (This->ref == 0)
     {
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     return This->ref;
@@ -260,7 +260,7 @@ NTSTATUS NewPortFilterWaveCyclic(
 {
     IPortFilterWaveCyclicImpl * This;
 
-    This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IPortFilterWaveCyclicImpl), TAG_PORTCLASS);
+    This = AllocateItem(NonPagedPool, sizeof(IPortFilterWaveCyclicImpl), TAG_PORTCLASS);
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 

@@ -8,7 +8,7 @@ typedef struct
 
 }IMiniportDMusImpl;
 
-const GUID IID_IMiniportDMus;
+
 
 /* IUnknown methods */
 
@@ -51,7 +51,7 @@ IMiniportDMust_fnRelease(
 
     if (This->ref == 0)
     {
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */
@@ -148,7 +148,7 @@ NewMiniportDMusUART(
 {
     IMiniportDMusImpl * This;
 
-    This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IMiniportDMusImpl), TAG_PORTCLASS);
+    This = AllocateItem(NonPagedPool, sizeof(IMiniportDMusImpl), TAG_PORTCLASS);
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 

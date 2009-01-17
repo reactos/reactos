@@ -205,7 +205,7 @@ PcDispatchIrp(
 {
     PIO_STACK_LOCATION irp_stack;
 
-    DPRINT("PcDispatchIrp called - handling IRP in PortCls\n");
+    DPRINT1("PcDispatchIrp called - handling IRP in PortCls\n");
 
     irp_stack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -289,9 +289,12 @@ PcForwardIrpSynchronous(
     DPRINT1("PcForwardIrpSynchronous\n");
 
     DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
-
+return STATUS_SUCCESS;
     /* initialize the notification event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* copy the current stack location */
+    IoCopyCurrentIrpStackLocationToNext(Irp);
 
     /* setup a completion routine */
     IoSetCompletionRoutine(Irp, IrpCompletionRoutine, (PVOID)&Event, TRUE, FALSE, FALSE);

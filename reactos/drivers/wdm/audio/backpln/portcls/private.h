@@ -17,6 +17,7 @@
 
 #include "interfaces.h"
 #include <ks.h>
+#include <stdio.h>
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_PORTCLASS TAG('P', 'C', 'L', 'S')
@@ -81,6 +82,18 @@ NTSTATUS NewPortClsVersion(
 
 NTSTATUS NewPortFilterWaveCyclic(
     OUT IPortFilterWaveCyclic ** OutFilter);
+
+PVOID AllocateItem(IN POOL_TYPE PoolType, IN SIZE_T NumberOfBytes, IN ULONG Tag);
+
+VOID
+FreeItem(
+    IN PVOID Item,
+    IN ULONG Tag);
+
+NTSTATUS StringFromCLSID(
+    const CLSID *id,
+    LPWSTR idstr);
+
 
 typedef struct
 {

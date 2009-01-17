@@ -59,7 +59,7 @@ RegisterConnection(
         goto cleanup;
     }
 
-    NewConnection = ExAllocatePoolWithTag(NonPagedPool, sizeof(PHYSICAL_CONNECTION), TAG_PORTCLASS);
+    NewConnection = AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION), TAG_PORTCLASS);
     if (!NewConnection)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -107,6 +107,9 @@ PcRegisterPhysicalConnection(
     IN  PUNKNOWN ToUnknown,
     IN  ULONG ToPin)
 {
+
+    DPRINT1("PcRegisterPhysicalConnection\n");
+
     if (!DeviceObject || !FromUnknown || !ToUnknown)
         return STATUS_INVALID_PARAMETER;
 

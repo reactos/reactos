@@ -20,13 +20,6 @@ typedef struct
 
 }IPortWaveCyclicImpl;
 
-const GUID IID_IMiniportWaveCyclic;
-const GUID IID_IPortWaveCyclic;
-const GUID IID_IUnknown;
-const GUID IID_IIrpTarget;
-const GUID IID_IPinCount;
-const GUID IID_IPowerNotify;
-const GUID IID_IDmaChannelSlave;
 
 const GUID GUID_DEVCLASS_SOUND; //FIXME
 //---------------------------------------------------------------
@@ -98,7 +91,7 @@ IPortWaveCyclic_fnRelease(
         if (This->pPowerNotify)
             This->pPowerNotify->lpVtbl->Release(This->pPowerNotify);
 
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */
@@ -509,15 +502,16 @@ NewPortWaveCyclic(
 {
     IPortWaveCyclicImpl * This;
 
-    This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IPortWaveCyclicImpl), TAG_PORTCLASS);
+    This = AllocateItem(NonPagedPool, sizeof(IPortWaveCyclicImpl), TAG_PORTCLASS);
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    RtlZeroMemory(This, sizeof(IPortWaveCyclicImpl));
     This->lpVtbl = (IPortWaveCyclicVtbl*)&vt_IPortWaveCyclicVtbl;
     This->lpVtblSubDevice = (ISubdeviceVtbl*)&vt_ISubdeviceVtbl;
     This->ref = 1;
     *OutPort = (PPORT)(&This->lpVtbl);
+
+    DPRINT1("NewPortWaveCyclic %p\n", *OutPort);
 
     return STATUS_SUCCESS;
 }

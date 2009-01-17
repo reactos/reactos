@@ -7,7 +7,7 @@ typedef struct
     LONG ref;
 }IPortClsVersionImpl;
 
-const GUID IID_IPortClsVersion;
+
 
 //---------------------------------------------------------------
 // IPortClsVersion interface functions
@@ -53,7 +53,7 @@ IPortClsVersion_fnRelease(
 
     if (This->ref == 0)
     {
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */
@@ -80,7 +80,7 @@ static IPortClsVersionVtbl vt_PortClsVersion =
 NTSTATUS NewPortClsVersion(
     OUT PPORTCLSVERSION * OutVersion)
 {
-    IPortClsVersionImpl * This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IPortClsVersionImpl), TAG_PORTCLASS);
+    IPortClsVersionImpl * This = AllocateItem(NonPagedPool, sizeof(IPortClsVersionImpl), TAG_PORTCLASS);
 
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;

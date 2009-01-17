@@ -24,7 +24,7 @@ typedef struct CResourceList
     PCM_RESOURCE_LIST UntranslatedResourceList;
 } IResourceListImpl;
 
-const GUID IID_IResourceList;
+
 
 /*
     Basic IUnknown methods
@@ -41,7 +41,7 @@ IResourceList_fnQueryInterface(
     if (IsEqualGUIDAligned(refiid, &IID_IResourceList))
     {
         *Output = &This->lpVtbl;
-        _InterlockedIncrement(&This->ref);
+        InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
     return STATUS_UNSUCCESSFUL;
@@ -54,7 +54,7 @@ IResourceList_fnAddRef(
 {
     IResourceListImpl * This = (IResourceListImpl*)iface;
 
-    return _InterlockedIncrement(&This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 ULONG
@@ -64,13 +64,15 @@ IResourceList_fnRelease(
 {
     IResourceListImpl * This = (IResourceListImpl*)iface;
 
-    _InterlockedDecrement(&This->ref);
+    InterlockedDecrement(&This->ref);
+
+    DPRINT("IResourceList_fnRelease %p ref %x\n", This, This->ref);
 
     if (This->ref == 0)
     {
-        ExFreePool(This->TranslatedResourceList);
-        ExFreePool(This->UntranslatedResourceList);
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This->TranslatedResourceList, TAG_PORTCLASS);
+        FreeItem(This->UntranslatedResourceList, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */
@@ -187,15 +189,15 @@ IResourceList_fnAddEntry(
     IResourceListImpl * This = (IResourceListImpl*)iface;
 
     NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + This->TranslatedResourceList[0].List->PartialResourceList.Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    NewTranslatedResources = ExAllocatePoolWithTag(This->PoolType, NewTranslatedSize, TAG_PORTCLASS);
+    NewTranslatedResources = AllocateItem(This->PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) + This->UntranslatedResourceList[0].List->PartialResourceList.Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    NewUntranslatedResources = ExAllocatePoolWithTag(This->PoolType, NewUntranslatedSize, TAG_PORTCLASS);
+    NewUntranslatedResources = AllocateItem(This->PoolType, NewUntranslatedSize, TAG_PORTCLASS);
     if (!NewUntranslatedResources)
     {
-        ExFreePoolWithTag(NewTranslatedResources, TAG_PORTCLASS);
+        FreeItem(NewTranslatedResources, TAG_PORTCLASS);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -205,8 +207,8 @@ IResourceList_fnAddEntry(
     RtlCopyMemory(NewUntranslatedResources, This->UntranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (This->UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
     RtlCopyMemory(&NewUntranslatedResources->List[0].PartialResourceList.PartialDescriptors[This->UntranslatedResourceList[0].List->PartialResourceList.Count], Untranslated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
-    ExFreePoolWithTag(This->TranslatedResourceList, TAG_PORTCLASS);
-    ExFreePoolWithTag(This->UntranslatedResourceList, TAG_PORTCLASS);
+    FreeItem(This->TranslatedResourceList, TAG_PORTCLASS);
+    FreeItem(This->UntranslatedResourceList, TAG_PORTCLASS);
 
     This->UntranslatedResourceList = NewUntranslatedResources;
     This->TranslatedResourceList = NewTranslatedResources;
@@ -235,14 +237,14 @@ IResourceList_fnAddEntryFromParent(
         return STATUS_INVALID_PARAMETER;
 
     NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + This->TranslatedResourceList[0].List->PartialResourceList.Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    NewTranslatedResources = ExAllocatePoolWithTag(This->PoolType, NewTranslatedSize, TAG_PORTCLASS);
+    NewTranslatedResources = AllocateItem(This->PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlCopyMemory(NewTranslatedResources, This->TranslatedResourceList, sizeof(CM_RESOURCE_LIST) + (This->TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
     RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[This->TranslatedResourceList[0].List->PartialResourceList.Count], Translated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
-    ExFreePoolWithTag(This->TranslatedResourceList, TAG_PORTCLASS);
+    FreeItem(This->TranslatedResourceList, TAG_PORTCLASS);
     This->TranslatedResourceList = NewTranslatedResources;
     NewTranslatedResources->List[0].PartialResourceList.Count++;
 
@@ -308,32 +310,32 @@ PcNewResourceList(
 
     /* TODO: Validate parameters */
 
-    DPRINT("PcNewResourceList\n");
+    DPRINT1("PcNewResourceList\n");
 
-    NewList = ExAllocatePoolWithTag(PoolType, sizeof(IResourceListImpl), TAG_PORTCLASS);
+    NewList = AllocateItem(PoolType, sizeof(IResourceListImpl), TAG_PORTCLASS);
 
     if (!NewList)
     {
-        DPRINT("ExAllocatePoolWithTag failed\n");
+        DPRINT("AllocateItem failed\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Initialize */
 
     NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + (TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    NewTranslatedResources = ExAllocatePoolWithTag(PoolType, NewTranslatedSize, TAG_PORTCLASS);
+    NewTranslatedResources = AllocateItem(PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
     {
-        ExFreePoolWithTag(NewList, TAG_PORTCLASS);
+        FreeItem(NewList, TAG_PORTCLASS);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) + (UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    NewUntranslatedResources = ExAllocatePoolWithTag(PoolType, NewUntranslatedSize, TAG_PORTCLASS);
+    NewUntranslatedResources = AllocateItem(PoolType, NewUntranslatedSize, TAG_PORTCLASS);
     if (!NewUntranslatedResources)
     {
-        ExFreePoolWithTag(NewList, TAG_PORTCLASS);
-        ExFreePoolWithTag(NewTranslatedResources, TAG_PORTCLASS);
+        FreeItem(NewList, TAG_PORTCLASS);
+        FreeItem(NewTranslatedResources, TAG_PORTCLASS);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -363,11 +365,12 @@ PcNewResourceSublist(
 {
     IResourceListImpl* NewList, *Parent;
 
-    if (!OuterUnknown || !ParentList || !MaximumEntries)
+    if (!OutResourceList || !ParentList || !MaximumEntries)
         return STATUS_INVALID_PARAMETER;
 
     Parent = (IResourceListImpl*)ParentList;
 
+    DPRINT1("PcNewResourceSublist entered\n");
 
     if (!Parent->TranslatedResourceList->List->PartialResourceList.Count ||
         !Parent->UntranslatedResourceList->List->PartialResourceList.Count)
@@ -376,22 +379,22 @@ PcNewResourceSublist(
         return STATUS_INVALID_PARAMETER;
     }
 
-    NewList = ExAllocatePoolWithTag(PoolType, sizeof(IResourceListImpl), TAG_PORTCLASS);
+    NewList = AllocateItem(PoolType, sizeof(IResourceListImpl), TAG_PORTCLASS);
     if (!NewList)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    NewList->TranslatedResourceList = ExAllocatePoolWithTag(PoolType, sizeof(CM_RESOURCE_LIST), TAG_PORTCLASS);
+    NewList->TranslatedResourceList = AllocateItem(PoolType, sizeof(CM_RESOURCE_LIST), TAG_PORTCLASS);
     if (!NewList->TranslatedResourceList)
     {
-        ExFreePoolWithTag(NewList, TAG_PORTCLASS);
+        FreeItem(NewList, TAG_PORTCLASS);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    NewList->UntranslatedResourceList = ExAllocatePoolWithTag(PoolType, sizeof(CM_RESOURCE_LIST), TAG_PORTCLASS);
+    NewList->UntranslatedResourceList = AllocateItem(PoolType, sizeof(CM_RESOURCE_LIST), TAG_PORTCLASS);
     if (!NewList->UntranslatedResourceList)
     {
-        ExFreePoolWithTag(NewList->TranslatedResourceList, TAG_PORTCLASS);
-        ExFreePoolWithTag(NewList, TAG_PORTCLASS);
+        FreeItem(NewList->TranslatedResourceList, TAG_PORTCLASS);
+        FreeItem(NewList, TAG_PORTCLASS);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -409,5 +412,6 @@ PcNewResourceSublist(
 
     *OutResourceList = (IResourceList*)&NewList->lpVtbl;
 
+    DPRINT1("PcNewResourceSublist OutResourceList %p OuterUnknown %p ParentList %p\n", *OutResourceList, OuterUnknown, ParentList);
     return STATUS_SUCCESS;
 }

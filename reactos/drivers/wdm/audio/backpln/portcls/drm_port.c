@@ -1,8 +1,7 @@
 #include "private.h"
 
 
-const GUID IID_IDrmPort;
-const GUID IID_IDrmPort2;
+
 
 typedef struct
 {
@@ -33,7 +32,7 @@ IDrmPort2_fnRelease(
 
     if (This->ref == 0)
     {
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */
@@ -154,7 +153,7 @@ NTSTATUS
 NewIDrmPort(
     OUT PDRMPORT2 *OutPort)
 {
-    IDrmPort2Impl * This = ExAllocatePoolWithTag(NonPagedPool, sizeof(IDrmPort2Impl), TAG_PORTCLASS);
+    IDrmPort2Impl * This = AllocateItem(NonPagedPool, sizeof(IDrmPort2Impl), TAG_PORTCLASS);
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 

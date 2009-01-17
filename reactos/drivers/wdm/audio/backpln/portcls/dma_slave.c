@@ -85,7 +85,7 @@ IDmaChannelSlave_fnRelease(
     if (This->ref == 0)
     {
         This->pAdapter->DmaOperations->PutDmaAdapter(This->pAdapter);
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
     /* Return new reference count */
@@ -487,7 +487,7 @@ PcNewDmaChannel(
 
     IDmaChannelSlaveImpl * This;
 
-    This = ExAllocatePoolWithTag(PoolType, sizeof(IDmaChannelSlaveImpl), TAG_PORTCLASS);
+    This = AllocateItem(PoolType, sizeof(IDmaChannelSlaveImpl), TAG_PORTCLASS);
     if (!This)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -503,12 +503,11 @@ PcNewDmaChannel(
     Adapter = IoGetDmaAdapter(DeviceObject, DeviceDescription, &MapRegisters);
     if (!Adapter)
     {
-        ExFreePoolWithTag(This, TAG_PORTCLASS);
+        FreeItem(This, TAG_PORTCLASS);
         return STATUS_DEVICE_CONFIGURATION_ERROR;
     }
 
-    RtlZeroMemory(This, sizeof(IDmaChannelSlaveImpl));
-
+    /* initialize object */
     This->ref = 1;
     This->lpVtbl = &vt_IDmaChannelSlaveVtbl;
     This->pAdapter = Adapter;

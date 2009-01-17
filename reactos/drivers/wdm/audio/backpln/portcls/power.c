@@ -1,6 +1,6 @@
 #include "private.h"
 
-const GUID IID_IAdapterPowerManagement;
+
 
 /*
  * @implemented
@@ -17,23 +17,25 @@ PcRegisterAdapterPowerManagement(
     PCExtension* DeviceExt;
     IAdapterPowerManagement * pPower;
 
+    DPRINT1("PcRegisterAdapterPowerManagement pUnknown %p pvContext %p\n", pUnknown, pvContext);
+
     if (!pUnknown || !pvContext)
         return STATUS_INVALID_PARAMETER;
 
-    Status = pUnknown->lpVtbl->QueryInterface(pUnknown, &IID_IAdapterPowerManagement, (PVOID*)&pPower);
-    if (!NT_SUCCESS(Status))
-        return Status;
 
     pDeviceObject = (PDEVICE_OBJECT)pvContext;
     DeviceExt = (PCExtension*)pDeviceObject->DeviceExtension;
 
-    if (DeviceExt->AdapterPowerManagement)
+    Status = pUnknown->lpVtbl->QueryInterface(pUnknown, &IID_IAdapterPowerManagement, (PVOID*)&pPower);
+    if (!NT_SUCCESS(Status))
     {
-        pPower->lpVtbl->Release(pPower);
-        return STATUS_UNSUCCESSFUL;
+        DPRINT1("PcRegisterAdapterPowerManagement no IAdapterPowerManagement interface %x\n", Status);
+        DeviceExt->AdapterPowerManagement = NULL;
+        return STATUS_SUCCESS;
     }
 
     DeviceExt->AdapterPowerManagement = pPower;
+    DPRINT1("PcRegisterAdapterPowerManagement success %x\n", Status);
     return STATUS_SUCCESS;
 }
 
