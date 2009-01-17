@@ -141,7 +141,16 @@ PortClsPnp(
         /* Do not complete? */
         Irp->IoStatus.Status = STATUS_SUCCESS;
     }
+    else if ( irp_stack->MinorFunction == IRP_MN_QUERY_INTERFACE )
+    {
+        //FIXME
+        // call next lower device object
+        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+        return Irp->IoStatus.Status;
+    }
+ 
 
+    DPRINT1("unhandled function %u\n", irp_stack->MinorFunction);
     return STATUS_SUCCESS;
 }
 
