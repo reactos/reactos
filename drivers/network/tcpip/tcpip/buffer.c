@@ -365,7 +365,6 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
     NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewData, Len );
     if( Status != NDIS_STATUS_SUCCESS ) {
 	exFreePool( NewData );
-	UntrackFL( File, Line, Packet, NDIS_PACKET_TAG );
 	FreeNdisPacket( Packet );
 	return Status;
     }
