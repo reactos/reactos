@@ -118,7 +118,9 @@ IntMsqClearWakeMask(VOID)
       return FALSE;
 
    MessageQueue = Win32Thread->MessageQueue;
+// HACK!!!!!!! Newbies that wrote this should hold your head down in shame! (jt)
    MessageQueue->WakeMask = ~0;
+   MessageQueue->WakeMask &= ~QS_TIMER;
 
    return TRUE;
 }
@@ -1432,7 +1434,9 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
    MessageQueue->FocusWindow = NULL;
    MessageQueue->PaintCount = 0;
+// HACK!!!!!!! Newbies that wrote this should hold your head down in shame! (jt)
    MessageQueue->WakeMask = ~0;
+   MessageQueue->WakeMask &= ~QS_TIMER;
    MessageQueue->NewMessagesHandle = NULL;
 
    Status = ZwCreateEvent(&MessageQueue->NewMessagesHandle, EVENT_ALL_ACCESS,
