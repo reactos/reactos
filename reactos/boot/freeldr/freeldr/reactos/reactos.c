@@ -574,6 +574,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	CHAR name[255];
 	CHAR value[255];
 	CHAR SystemPath[255];
+    CHAR LivePath[255];
 	CHAR szKernelName[255];
 	CHAR szFileName[255];
 	CHAR  MsgBuffer[256];
@@ -704,11 +705,13 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Special case for Live CD.
 	 */
-	if (!_stricmp(SystemPath, "LiveCD"))
+	if (!_strnicmp(SystemPath, "LiveCD", strlen("LiveCD")))
 	{
+		/* Use everything following the "LiveCD" string as the path */
+        strcpy(LivePath, SystemPath + strlen("LiveCD"));
 		/* Normalize */
 		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
-		strcat(SystemPath, "\\reactos");
+		strcat(SystemPath, LivePath);
 		strcat(strcpy(reactos_kernel_cmdline, SystemPath),
 		       " /MININT");
 	}
