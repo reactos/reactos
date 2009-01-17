@@ -707,12 +707,12 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 */
 	if (!_strnicmp(SystemPath, "LiveCD", strlen("LiveCD")))
 	{
-		/* Use everything following the "LiveCD" string as the path */
+        /* Use everything following the "LiveCD" string as the path */
         strcpy(LivePath, SystemPath + strlen("LiveCD"));
-		/* Normalize */
-		MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
-		strcat(SystemPath, LivePath);
-		strcat(strcpy(reactos_kernel_cmdline, SystemPath),
+        /* Normalize */
+        MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
+        strcat(SystemPath, LivePath);
+        strcat(strcpy(reactos_kernel_cmdline, SystemPath),
 		       " /MININT");
 	}
 	else
