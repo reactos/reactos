@@ -42,6 +42,27 @@ void ME_Remove(ME_DisplayItem *diWhere)
   diNext->prev = diPrev;
 }
 
+static BOOL ME_DITypesEqual(ME_DIType type, ME_DIType nTypeOrClass)
+{
+  if (type==nTypeOrClass)
+    return TRUE;
+  if (nTypeOrClass==diRunOrParagraph && (type==diRun || type==diParagraph))
+    return TRUE;
+  if (nTypeOrClass==diRunOrStartRow && (type==diRun || type==diStartRow))
+    return TRUE;
+  if (nTypeOrClass==diParagraphOrEnd && (type==diTextEnd || type==diParagraph))
+    return TRUE;
+  if (nTypeOrClass==diStartRowOrParagraph && (type==diStartRow || type==diParagraph))
+    return TRUE;
+  if (nTypeOrClass==diStartRowOrParagraphOrEnd
+    && (type==diStartRow || type==diParagraph || type==diTextEnd))
+    return TRUE;
+  if (nTypeOrClass==diRunOrParagraphOrEnd
+    && (type==diRun || type==diParagraph || type==diTextEnd))
+    return TRUE;
+  return FALSE;
+}
+
 ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass)
 {
   if (!di)
@@ -85,27 +106,6 @@ ME_DisplayItem *ME_FindItemFwdOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass)
     di = di->next;
   }
   return NULL;
-}
-
-BOOL ME_DITypesEqual(ME_DIType type, ME_DIType nTypeOrClass)
-{
-  if (type==nTypeOrClass)
-    return TRUE;
-  if (nTypeOrClass==diRunOrParagraph && (type==diRun || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diRunOrStartRow && (type==diRun || type==diStartRow))
-    return TRUE;
-  if (nTypeOrClass==diParagraphOrEnd && (type==diTextEnd || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diStartRowOrParagraph && (type==diStartRow || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diStartRowOrParagraphOrEnd 
-    && (type==diStartRow || type==diParagraph || type==diTextEnd))
-    return TRUE;
-  if (nTypeOrClass==diRunOrParagraphOrEnd 
-    && (type==diRun || type==diParagraph || type==diTextEnd))
-    return TRUE;
-  return FALSE;
 }
 
 void ME_DestroyDisplayItem(ME_DisplayItem *item) {

@@ -147,25 +147,6 @@ DECLARE_INTERFACE_(ITextServices,IUnknown)
 #define ITextServices_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define ITextServices_AddRef(p) (p)->lpVtbl->AddRef(p)
 #define ITextServices_Release(p) (p)->lpVtbl->Release(p)
-/*** ITextServices methods ***/
-#define ITextServices_TxSendMessage(p,a,b,c,d) (p)->lpVtbl->TxSendMessage(p,a,b,c,d)
-#define ITextServices_TxDraw(p,a,b,c,d,e,f,g,h,i,j,k,l) (p)->lpVtbl->TxDraw(p,a,b,c,d,e,f,g,h,i,j,k,l)
-#define ITextServices_TxGetHScroll(p,a,b,c,d,e) (p)->lpVtbl->TxGetHScroll(p,a,b,c,d,e)
-#define ITextServices_TxGetVScroll(p,a,b,c,d,e) (p)->lpVtbl->TxGetVScroll(p,a,b,c,d,e)
-#define ITextServices_OnTxSetCursor(p,a,b,c,d,e,f,g,h,i) (p)->lpVtbl->OnTxSetCursor(p,a,b,c,d,e,f,g,h,i)
-#define ITextServices_TxQueryHitPoint(p,a,b,c,d,e,f,g,h,i,j) (p)->lpVtbl->TxQueryHitPoint(p,a,b,c,d,e,f,g,h,i,j)
-#define ITextServices_OnTxInplaceActivate(p,a) (p)->lpVtbl->OnTxInplaceActivate(p,a)
-#define ITextServices_OnTxInplaceDeactivate(p) (p)->lpVtbl->OnTxInplaceDeactivate(p)
-#define ITextServices_OnTxUIActivate(p) (p)->lpVtbl->OnTxUIActivate(p)
-#define ITextServices_OnTxUIDeactivate(p) (p)->lpVtbl->OnTxUIDeactivate(p)
-#define ITextServices_TxGetText(p,a) (p)->lpVtbl->TxGetText(p,a)
-#define ITextServices_TxSetText(p,a) (p)->lpVtbl->TxSetText(p,a)
-#define ITextServices_TxGetCurrentTargetX(p,a) (p)->lpVtbl->TxGetCurrentTargetX(p,a)
-#define ITextServices_TxGetBaseLinePos(p,a) (p)->lpVtbl->TxGetBaseLinePos(p,a)
-#define ITextServices_TxGetNaturalSize(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->TxGetNaturalSize(p,a,b,c,d,e,f,g,h)
-#define ITextServices_TxGetDropTarget(p,a) (p)->lpVtbl->TxGetDropTarget(p,a)
-#define ITextServices_OnTxPropertyBitsChange(p,a,b) (p)->lpVtbl->OnTxPropertyBitsChange(p,a,b)
-#define ITextServices_TxGetCachedSize(p,a,b) (p)->lpVtbl->TxGetCachedSize(p,a,b)
 #endif
 
 #undef INTERFACE
@@ -271,7 +252,7 @@ DECLARE_INTERFACE_(ITextHost,IUnknown)
     STDMETHOD_(BOOL,TxShowCaret)( THIS_
         BOOL fShow) PURE;
 
-    STDMETHOD_(BOOL,TxSetCarentPos)( THIS_
+    STDMETHOD_(BOOL,TxSetCaretPos)( THIS_
         INT x,
         INT y) PURE;
 
@@ -334,7 +315,7 @@ DECLARE_INTERFACE_(ITextHost,IUnknown)
     STDMETHOD(TxGetMaxLength)( THIS_
         DWORD* plength) PURE;
 
-    STDMETHOD(TxGetScrollbars)( THIS_
+    STDMETHOD(TxGetScrollBars)( THIS_
         DWORD* pdwScrollBar) PURE;
 
     STDMETHOD(TxGetPasswordChar)( THIS_
@@ -405,7 +386,7 @@ DECLARE_INTERFACE_(ITextHost,IUnknown)
 #define ITextHost_TxGetSysColor(p,a) (p)->lpVtbl->TxGetSysColor(p,a)
 #define ITextHost_TxGetBackStyle(p,a) (p)->lpVtbl->TxGetBackStyle(p,a)
 #define ITextHost_TxGetMaxLength(p,a) (p)->lpVtbl->TxGetMaxLength(p,a)
-#define ITextHost_TxGetScrollbars(p,a) (p)->lpVtbl->TxGetScrollbars(p,a)
+#define ITextHost_TxGetScrollBars(p,a) (p)->lpVtbl->TxGetScrollBars(p,a)
 #define ITextHost_TxGetPasswordChar(p,a) (p)->lpVtbl->TxGetPasswordChar(p,a)
 #define ITextHost_TxGetAcceleratorPos(p,a) (p)->lpVtbl->TxGetAcceleratorPos(p,a)
 #define ITextHost_TxGetExtent(p,a) (p)->lpVtbl->TxGetExtent(p,a)

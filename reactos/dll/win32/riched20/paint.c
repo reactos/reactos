@@ -23,23 +23,33 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
+static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph);
+
 void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *rcUpdate)
 {
   ME_DisplayItem *item;
   ME_Context c;
-  int yoffset;
   int ys, ye;
+  HRGN oldRgn;
+
+  oldRgn = CreateRectRgn(0, 0, 0, 0);
+  if (!GetClipRgn(hDC, oldRgn))
+  {
+    DeleteObject(oldRgn);
+    oldRgn = NULL;
+  }
+  IntersectClipRect(hDC, rcUpdate->left, rcUpdate->top,
+                     rcUpdate->right, rcUpdate->bottom);
 
   editor->nSequence++;
-  yoffset = ME_GetYScrollPos(editor);
   ME_InitContext(&c, editor, hDC);
   SetBkMode(hDC, TRANSPARENT);
   ME_MoveCaret(editor); /* Calls ME_WrapMarkedParagraphs */
   item = editor->pBuffer->pFirst->next;
   /* This context point is an offset for the paragraph positions stored
    * during wrapping. It shouldn't be modified during painting. */
-  c.pt.x = c.rcView.left;
-  c.pt.y = c.rcView.top - yoffset;
+  c.pt.x = c.rcView.left - editor->horz_si.nPos;
+  c.pt.y = c.rcView.top - editor->vert_si.nPos;
   while(item != editor->pBuffer->pLast)
   {
     assert(item->type == diParagraph);
@@ -101,10 +111,16 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
     if (!IsRectEmpty(&rc))
       FillRect(hDC, &rc, c.editor->hbrBackground);
   }
-  if (editor->nTotalLength != editor->nLastTotalLength)
+  if (editor->nTotalLength != editor->nLastTotalLength ||
+      editor->nTotalWidth != editor->nLastTotalWidth)
     ME_SendRequestResize(editor, FALSE);
   editor->nLastTotalLength = editor->nTotalLength;
+  editor->nLastTotalWidth = editor->nTotalWidth;
   ME_DestroyContext(&c, NULL);
+
+  SelectClipRgn(hDC, oldRgn);
+  if (oldRgn)
+    DeleteObject(oldRgn);
 }
 
 void ME_Repaint(ME_TextEditor *editor)
@@ -130,11 +146,11 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
   wrappedParagraphs = ME_WrapMarkedParagraphs(editor);
   if (wrappedParagraphs)
     ME_UpdateScrollBar(editor);
-  
+
   /* Ensure that the cursor is visible */
   pCursor = &editor->pCursors[0];
-  ME_EnsureVisible(editor, pCursor->pRun);
-  
+  ME_EnsureVisible(editor, pCursor);
+
   /* send EN_CHANGE if the event mask asks for it */
   if(editor->nEventMask & ENM_CHANGE)
   {
@@ -148,7 +164,7 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
 
 void
 ME_RewrapRepaint(ME_TextEditor *editor)
-{ 
+{
   /* RewrapRepaint should be called whenever the control has changed in
    * looks, but not content. Like resizing. */
   
@@ -603,7 +619,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
   /* Native richedit doesn't support paragraph borders in v1.0 - 4.1,
    * but might support it in later versions. */
   if (hasParaBorder) {
-    int         pen_width;
+    int         pen_width, rightEdge;
     COLORREF    pencr;
     HPEN        pen = NULL, oldpen = NULL;
     POINT       pt;
@@ -612,6 +628,9 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
       pencr = GetSysColor(COLOR_WINDOWTEXT);
     else
       pencr = pen_colors[(para->pFmt->wBorders >> 12) & 0xF];
+
+    rightEdge = c->pt.x + max(c->editor->sizeWindow.cx,
+                              c->editor->nTotalWidth);
 
     pen_width = ME_GetBorderPenWidth(c->editor, idx);
     pen = CreatePen(border_details[idx].pen_style, pen_width, pencr);
@@ -625,51 +644,51 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
 
     if (para->pFmt->wBorders & 1)
     {
-      MoveToEx(c->hDC, c->rcView.left, y + bounds->top, NULL);
-      LineTo(c->hDC, c->rcView.left, y + para->nHeight - bounds->bottom);
+      MoveToEx(c->hDC, c->pt.x, y + bounds->top, NULL);
+      LineTo(c->hDC, c->pt.x, y + para->nHeight - bounds->bottom);
       if (border_details[idx].dble) {
-        rc.left = c->rcView.left + 1;
+        rc.left = c->pt.x + 1;
         rc.right = rc.left + border_width;
         rc.top = y + bounds->top;
         rc.bottom = y + para->nHeight - bounds->bottom;
         FillRect(c->hDC, &rc, c->editor->hbrBackground);
-        MoveToEx(c->hDC, c->rcView.left + pen_width + 1, y + bounds->top + DD(4), NULL);
-        LineTo(c->hDC, c->rcView.left + pen_width + 1, y + para->nHeight - bounds->bottom - DD(8));
+        MoveToEx(c->hDC, c->pt.x + pen_width + 1, y + bounds->top + DD(4), NULL);
+        LineTo(c->hDC, c->pt.x + pen_width + 1, y + para->nHeight - bounds->bottom - DD(8));
       }
       bounds->left += border_width;
     }
     if (para->pFmt->wBorders & 2)
     {
-      MoveToEx(c->hDC, c->rcView.right - 1, y + bounds->top, NULL);
-      LineTo(c->hDC, c->rcView.right - 1, y + para->nHeight - bounds->bottom);
+      MoveToEx(c->hDC, rightEdge - 1, y + bounds->top, NULL);
+      LineTo(c->hDC, rightEdge - 1, y + para->nHeight - bounds->bottom);
       if (border_details[idx].dble) {
-        rc.left = c->rcView.right - pen_width - 1;
-        rc.right = c->rcView.right - 1;
+        rc.left = rightEdge - pen_width - 1;
+        rc.right = rc.left + pen_width;
         rc.top = y + bounds->top;
         rc.bottom = y + para->nHeight - bounds->bottom;
         FillRect(c->hDC, &rc, c->editor->hbrBackground);
-        MoveToEx(c->hDC, c->rcView.right - 1 - pen_width - 1, y + bounds->top + DD(4), NULL);
-        LineTo(c->hDC, c->rcView.right - 1 - pen_width - 1, y + para->nHeight - bounds->bottom - DD(8));
+        MoveToEx(c->hDC, rightEdge - 1 - pen_width - 1, y + bounds->top + DD(4), NULL);
+        LineTo(c->hDC, rightEdge - 1 - pen_width - 1, y + para->nHeight - bounds->bottom - DD(8));
       }
       bounds->right += border_width;
     }
     if (para->pFmt->wBorders & 4)
     {
-      MoveToEx(c->hDC, c->rcView.left, y + bounds->top, NULL);
-      LineTo(c->hDC, c->rcView.right, y + bounds->top);
+      MoveToEx(c->hDC, c->pt.x, y + bounds->top, NULL);
+      LineTo(c->hDC, rightEdge, y + bounds->top);
       if (border_details[idx].dble) {
-        MoveToEx(c->hDC, c->rcView.left + DD(1), y + bounds->top + pen_width + 1, NULL);
-        LineTo(c->hDC, c->rcView.right - DD(2), y + bounds->top + pen_width + 1);
+        MoveToEx(c->hDC, c->pt.x + DD(1), y + bounds->top + pen_width + 1, NULL);
+        LineTo(c->hDC, rightEdge - DD(2), y + bounds->top + pen_width + 1);
       }
       bounds->top += border_width;
     }
     if (para->pFmt->wBorders & 8)
     {
-      MoveToEx(c->hDC, c->rcView.left, y + para->nHeight - bounds->bottom - 1, NULL);
-      LineTo(c->hDC, c->rcView.right, y + para->nHeight - bounds->bottom - 1);
+      MoveToEx(c->hDC, c->pt.x, y + para->nHeight - bounds->bottom - 1, NULL);
+      LineTo(c->hDC, rightEdge, y + para->nHeight - bounds->bottom - 1);
       if (border_details[idx].dble) {
-        MoveToEx(c->hDC, c->rcView.left + DD(1), y + para->nHeight - bounds->bottom - 1 - pen_width - 1, NULL);
-        LineTo(c->hDC, c->rcView.right - DD(2), y + para->nHeight - bounds->bottom - 1 - pen_width - 1);
+        MoveToEx(c->hDC, c->pt.x + DD(1), y + para->nHeight - bounds->bottom - 1 - pen_width - 1, NULL);
+        LineTo(c->hDC, rightEdge - DD(2), y + para->nHeight - bounds->bottom - 1 - pen_width - 1);
       }
       bounds->bottom += border_width;
     }
@@ -878,7 +897,7 @@ static void ME_DrawTableBorders(ME_Context *c, ME_DisplayItem *paragraph)
   }
 }
 
-void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
+static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
 {
   int align = SetTextAlign(c->hDC, TA_BASELINE);
   ME_DisplayItem *p;
@@ -910,8 +929,12 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
   }
   ME_DrawParaDecoration(c, para, y, &bounds);
   y += bounds.top;
-  rc.left += bounds.left;
-  rc.right -= bounds.right;
+  if (bounds.left || bounds.right) {
+    rc.left = max(rc.left, c->pt.x + bounds.left);
+    rc.right = min(rc.right, c->pt.x - bounds.right
+                             + max(c->editor->sizeWindow.cx,
+                                   c->editor->nTotalWidth));
+  }
 
   for (p = paragraph->next; p != para->next_para; p = p->next)
   {
@@ -930,6 +953,16 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
         visible = RectVisible(c->hDC, &rc);
         if (visible) {
           FillRect(c->hDC, &rc, c->editor->hbrBackground);
+        }
+        if (bounds.right)
+        {
+          /* If scrolled to the right past the end of the text, then
+           * there may be space to the right of the paragraph border. */
+          RECT rcAfterBrdr = rc;
+          rcAfterBrdr.left = rc.right + bounds.right;
+          rcAfterBrdr.right = c->rcView.right;
+          if (RectVisible(c->hDC, &rcAfterBrdr))
+            FillRect(c->hDC, &rcAfterBrdr, c->editor->hbrBackground);
         }
         if (me_debug)
         {
@@ -997,162 +1030,192 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
   SetTextAlign(c->hDC, align);
 }
 
-void ME_ScrollAbs(ME_TextEditor *editor, int absY)
+void ME_ScrollAbs(ME_TextEditor *editor, int x, int y)
 {
-  ME_Scroll(editor, absY, 1);
+  LONG winStyle;
+  BOOL bScrollBarIsVisible, bScrollBarWillBeVisible;
+  int scrollX = 0, scrollY = 0;
+
+  if (editor->horz_si.nPos != x) {
+    x = min(x, editor->horz_si.nMax);
+    x = max(x, editor->horz_si.nMin);
+    SetScrollPos(editor->hWnd, SB_HORZ, x, TRUE);
+    scrollX = editor->horz_si.nPos - x;
+    editor->horz_si.nPos = x;
+  }
+
+  if (editor->vert_si.nPos != y) {
+    y = min(y, editor->vert_si.nMax - (int)editor->vert_si.nPage);
+    y = max(y, editor->vert_si.nMin);
+    SetScrollPos(editor->hWnd, SB_VERT, y, TRUE);
+    scrollY = editor->vert_si.nPos - y;
+    editor->vert_si.nPos = y;
+  }
+
+  if (abs(scrollX) > editor->sizeWindow.cx ||
+      abs(scrollY) > editor->sizeWindow.cy)
+    InvalidateRect(editor->hWnd, NULL, TRUE);
+  else
+    ScrollWindowEx(editor->hWnd, scrollX, scrollY, &editor->rcFormat,
+                   &editor->rcFormat, NULL, NULL, SW_INVALIDATE);
+  ME_Repaint(editor);
+
+  winStyle = GetWindowLongW(editor->hWnd, GWL_STYLE);
+  bScrollBarIsVisible = (winStyle & WS_HSCROLL) != 0;
+  bScrollBarWillBeVisible = (editor->nTotalWidth > editor->sizeWindow.cx)
+                            || (editor->styleFlags & ES_DISABLENOSCROLL);
+  if (bScrollBarIsVisible != bScrollBarWillBeVisible)
+    ShowScrollBar(editor->hWnd, SB_HORZ, bScrollBarWillBeVisible);
+
+  bScrollBarIsVisible = (winStyle & WS_VSCROLL) != 0;
+  bScrollBarWillBeVisible = (editor->nTotalLength > editor->sizeWindow.cy)
+                            || (editor->styleFlags & ES_DISABLENOSCROLL);
+  if (bScrollBarIsVisible != bScrollBarWillBeVisible)
+    ShowScrollBar(editor->hWnd, SB_VERT, bScrollBarWillBeVisible);
+
+  ME_UpdateScrollBar(editor);
+}
+
+void ME_HScrollAbs(ME_TextEditor *editor, int x)
+{
+  ME_ScrollAbs(editor, x, editor->vert_si.nPos);
+}
+
+void ME_VScrollAbs(ME_TextEditor *editor, int y)
+{
+  ME_ScrollAbs(editor, editor->horz_si.nPos, y);
 }
 
 void ME_ScrollUp(ME_TextEditor *editor, int cy)
 {
-  ME_Scroll(editor, cy, 2);
+  ME_VScrollAbs(editor, editor->vert_si.nPos - cy);
 }
 
 void ME_ScrollDown(ME_TextEditor *editor, int cy)
-{ 
-  ME_Scroll(editor, cy, 3);
-}
-
-void ME_Scroll(ME_TextEditor *editor, int value, int type)
 {
-  SCROLLINFO si;
-  int nOrigPos, nNewPos, nActualScroll;
-  HWND hWnd;
-  LONG winStyle;
-  BOOL bScrollBarIsVisible, bScrollBarWillBeVisible;
-
-  nOrigPos = ME_GetYScrollPos(editor);
-  
-  si.cbSize = sizeof(SCROLLINFO);
-  si.fMask = SIF_POS;
-  
-  switch (type)
-  {
-    case 1:
-      /*Scroll absolutely*/
-      si.nPos = value;
-      break;
-    case 2:
-      /* Scroll up - towards the beginning of the document */
-      si.nPos = nOrigPos - value;
-      break;
-    case 3:
-      /* Scroll down - towards the end of the document */
-      si.nPos = nOrigPos + value;
-      break;
-    default:
-      FIXME("ME_Scroll called incorrectly\n");
-      si.nPos = 0;
-  }
-  
-  nNewPos = SetScrollInfo(editor->hWnd, SB_VERT, &si, TRUE);
-  editor->vert_si.nPos = nNewPos;
-  nActualScroll = nOrigPos - nNewPos;
-  if (abs(nActualScroll) > editor->sizeWindow.cy)
-    InvalidateRect(editor->hWnd, NULL, TRUE);
-  else
-    ScrollWindowEx(editor->hWnd, 0, nActualScroll, NULL, NULL, NULL, NULL, SW_INVALIDATE);
-  ME_Repaint(editor);
-  
-  hWnd = editor->hWnd;
-  winStyle = GetWindowLongW(hWnd, GWL_STYLE);
-  bScrollBarIsVisible = (winStyle & WS_VSCROLL) != 0;
-  bScrollBarWillBeVisible = (editor->nTotalLength > editor->sizeWindow.cy)
-                            || (winStyle & ES_DISABLENOSCROLL);
-  if (bScrollBarIsVisible != bScrollBarWillBeVisible)
-  {
-    ShowScrollBar(hWnd, SB_VERT, bScrollBarWillBeVisible);
-  }
-  ME_UpdateScrollBar(editor);
+  ME_VScrollAbs(editor, editor->vert_si.nPos + cy);
 }
 
- 
+void ME_ScrollLeft(ME_TextEditor *editor, int cx)
+{
+  ME_HScrollAbs(editor, editor->horz_si.nPos - cx);
+}
+
+void ME_ScrollRight(ME_TextEditor *editor, int cx)
+{
+  ME_HScrollAbs(editor, editor->horz_si.nPos + cx);
+}
+
 void ME_UpdateScrollBar(ME_TextEditor *editor)
-{ 
-  /* Note that this is the only function that should ever call SetScrolLInfo
-   * with SIF_PAGE or SIF_RANGE. SetScrollPos and SetScrollRange should never
-   * be used at all. */
-  
-  HWND hWnd;
+{
+  /* Note that this is the only function that should ever call
+   * SetScrollInfo with SIF_PAGE or SIF_RANGE. */
+
   SCROLLINFO si;
-  BOOL bScrollBarWasVisible,bScrollBarWillBeVisible;
-  
+  BOOL bScrollBarWasVisible, bScrollBarWillBeVisible;
+
   if (ME_WrapMarkedParagraphs(editor))
     FIXME("ME_UpdateScrollBar had to call ME_WrapMarkedParagraphs\n");
-  
-  hWnd = editor->hWnd;
+
   si.cbSize = sizeof(si);
-  bScrollBarWasVisible = ME_GetYScrollVisible(editor);
-  bScrollBarWillBeVisible = editor->nTotalLength > editor->sizeWindow.cy;
-  
   si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
-  if (GetWindowLongW(hWnd, GWL_STYLE) & ES_DISABLENOSCROLL)
-  {
+  if (editor->styleFlags & ES_DISABLENOSCROLL)
     si.fMask |= SIF_DISABLENOSCROLL;
-    bScrollBarWillBeVisible = TRUE;
+
+  /* Update horizontal scrollbar */
+  bScrollBarWasVisible = editor->horz_si.nMax > editor->horz_si.nPage;
+  bScrollBarWillBeVisible = editor->nTotalWidth > editor->sizeWindow.cx;
+  if (editor->horz_si.nPos && !bScrollBarWillBeVisible)
+  {
+    ME_HScrollAbs(editor, 0);
+    /* ME_HScrollAbs will call this function,
+     * so nothing else needs to be done here. */
+    return;
   }
 
-  if (bScrollBarWasVisible != bScrollBarWillBeVisible)
+  si.nMin = 0;
+  si.nMax = editor->nTotalWidth;
+  si.nPos = editor->horz_si.nPos;
+  si.nPage = editor->sizeWindow.cx;
+
+  if (si.nMin != editor->horz_si.nMin ||
+      si.nMax != editor->horz_si.nMax ||
+      si.nPage != editor->horz_si.nPage)
   {
-    ShowScrollBar(hWnd, SB_VERT, bScrollBarWillBeVisible);
-    ME_MarkAllForWrapping(editor);
-    ME_WrapMarkedParagraphs(editor);
+    TRACE("min=%d max=%d page=%d\n", si.nMin, si.nMax, si.nPage);
+    editor->horz_si.nMin = si.nMin;
+    editor->horz_si.nMax = si.nMax;
+    editor->horz_si.nPage = si.nPage;
+    if (bScrollBarWillBeVisible || bScrollBarWasVisible)
+      SetScrollInfo(editor->hWnd, SB_HORZ, &si, TRUE);
   }
-  
-  si.nMin = 0;  
+
+  if (si.fMask & SIF_DISABLENOSCROLL)
+    bScrollBarWillBeVisible = TRUE;
+
+  if (bScrollBarWasVisible != bScrollBarWillBeVisible)
+    ShowScrollBar(editor->hWnd, SB_HORZ, bScrollBarWillBeVisible);
+
+  /* Update vertical scrollbar */
+  bScrollBarWasVisible = editor->vert_si.nMax > editor->vert_si.nPage;
+  bScrollBarWillBeVisible = editor->nTotalLength > editor->sizeWindow.cy;
+
+  if (editor->vert_si.nPos && !bScrollBarWillBeVisible)
+  {
+    ME_VScrollAbs(editor, 0);
+    /* ME_VScrollAbs will call this function,
+     * so nothing else needs to be done here. */
+    return;
+  }
+
   si.nMax = editor->nTotalLength;
   si.nPos = editor->vert_si.nPos;
   si.nPage = editor->sizeWindow.cy;
-     
-  if (!(si.nMin == editor->vert_si.nMin && si.nMax == editor->vert_si.nMax && si.nPage == editor->vert_si.nPage))
+
+  if (si.nMin != editor->vert_si.nMin ||
+      si.nMax != editor->vert_si.nMax ||
+      si.nPage != editor->vert_si.nPage)
   {
     TRACE("min=%d max=%d page=%d\n", si.nMin, si.nMax, si.nPage);
     editor->vert_si.nMin = si.nMin;
     editor->vert_si.nMax = si.nMax;
     editor->vert_si.nPage = si.nPage;
-    if (bScrollBarWillBeVisible)
-    {
-      SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
-    }
-    else
-    {
-      if (bScrollBarWasVisible && !(si.fMask & SIF_DISABLENOSCROLL))
-      {
-        SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
-        ShowScrollBar(hWnd, SB_VERT, FALSE);
-        ME_ScrollAbs(editor, 0);
-      }
-    }
+    if (bScrollBarWillBeVisible || bScrollBarWasVisible)
+      SetScrollInfo(editor->hWnd, SB_VERT, &si, TRUE);
   }
+
+  if (si.fMask & SIF_DISABLENOSCROLL)
+    bScrollBarWillBeVisible = TRUE;
+
+  if (bScrollBarWasVisible != bScrollBarWillBeVisible)
+    ShowScrollBar(editor->hWnd, SB_VERT, bScrollBarWillBeVisible);
 }
 
-int ME_GetYScrollPos(ME_TextEditor *editor)
+void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor)
 {
-  return editor->vert_si.nPos;
-}
+  ME_Run *pRun = &pCursor->pRun->member.run;
+  ME_DisplayItem *pRow = ME_FindItemBack(pCursor->pRun, diStartRow);
+  ME_DisplayItem *pPara = ME_FindItemBack(pCursor->pRun, diParagraph);
+  int x, y, yheight;
 
-BOOL ME_GetYScrollVisible(ME_TextEditor *editor)
-{ /* Returns true if the scrollbar is visible */
-  return (editor->vert_si.nMax - editor->vert_si.nMin >= max(editor->vert_si.nPage - 1, 0));
-}
-
-void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun)
-{
-  ME_DisplayItem *pRow = ME_FindItemBack(pRun, diStartRow);
-  ME_DisplayItem *pPara = ME_FindItemBack(pRun, diParagraph);
-  int y, yrel, yheight, yold;
-  
   assert(pRow);
   assert(pPara);
-  
-  y = pPara->member.para.pt.y+pRow->member.row.pt.y;
+
+  x = pRun->pt.x + ME_PointFromChar(editor, pRun, pCursor->nOffset);
+  if (x > editor->horz_si.nPos + editor->sizeWindow.cx)
+    x = x + 1 - editor->sizeWindow.cx;
+  else if (x > editor->horz_si.nPos)
+    x = editor->horz_si.nPos;
+
+  y = pPara->member.para.pt.y + pRow->member.row.pt.y;
   yheight = pRow->member.row.nHeight;
-  yold = ME_GetYScrollPos(editor);
-  yrel = y - yold;
-  
-  if (y < yold)
-    ME_ScrollAbs(editor,y);
-  else if (yrel + yheight > editor->sizeWindow.cy) 
-    ME_ScrollAbs(editor,y+yheight-editor->sizeWindow.cy);
+
+  if (y < editor->vert_si.nPos)
+    ME_ScrollAbs(editor, x, y);
+  else if (y + yheight > editor->vert_si.nPos + editor->sizeWindow.cy)
+    ME_ScrollAbs(editor, x, y + yheight - editor->sizeWindow.cy);
+  else if (x != editor->horz_si.nPos)
+    ME_ScrollAbs(editor, x, editor->vert_si.nPos);
 }
 
 
@@ -1234,18 +1297,19 @@ ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator)
 {
   /* TODO: Zoom images and objects */
 
-  if (numerator != 0)
+  if (numerator == 0 && denominator == 0)
   {
-    if (denominator == 0)
-      return FALSE;
-    if (1.0 / 64.0 > (float)numerator / (float)denominator
-        || (float)numerator / (float)denominator > 64.0)
-      return FALSE;
+    editor->nZoomNumerator = editor->nZoomDenominator = 0;
+    return TRUE;
   }
-  
+  if (numerator <= 0 || denominator <= 0)
+    return FALSE;
+  if (numerator * 64 <= denominator || numerator / denominator >= 64)
+    return FALSE;
+
   editor->nZoomNumerator = numerator;
   editor->nZoomDenominator = denominator;
-  
+
   ME_RewrapRepaint(editor);
   return TRUE;
 }

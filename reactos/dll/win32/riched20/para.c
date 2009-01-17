@@ -67,7 +67,7 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   run = ME_MakeRun(style, ME_MakeString(wszParagraphSign), MERF_ENDPARA);
   run->member.run.nCharOfs = 0;
   run->member.run.nCR = 1;
-  run->member.run.nLF = (editor->bEmulateVersion10) ? 1 : 0;
+  run->member.run.nLF = editor->bEmulateVersion10 ? 1 : 0;
 
   ME_InsertBefore(text->pLast, para);
   ME_InsertBefore(text->pLast, run);
@@ -76,23 +76,23 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   text->pFirst->member.para.next_para = para;
   text->pLast->member.para.prev_para = para;
 
-  text->pLast->member.para.nCharOfs = 1;
+  text->pLast->member.para.nCharOfs = editor->bEmulateVersion10 ? 2 : 1;
 
   ME_DestroyContext(&c, editor->hWnd);
 }
- 
-void ME_MarkAllForWrapping(ME_TextEditor *editor)
-{
-  ME_MarkForWrapping(editor, editor->pBuffer->pFirst->member.para.next_para, editor->pBuffer->pLast);
-}
 
-void ME_MarkForWrapping(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last)
+static void ME_MarkForWrapping(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last)
 {
   while(first != last)
   {
     first->member.para.nFlags |= MEPF_REWRAP;
     first = first->member.para.next_para;
   }
+}
+
+void ME_MarkAllForWrapping(ME_TextEditor *editor)
+{
+  ME_MarkForWrapping(editor, editor->pBuffer->pFirst->member.para.next_para, editor->pBuffer->pLast);
 }
 
 void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last)
@@ -121,6 +121,82 @@ static void ME_UpdateTableFlags(ME_DisplayItem *para)
     para->member.para.pFmt->wEffects |= PFE_TABLE;
   else
     para->member.para.pFmt->wEffects &= ~PFE_TABLE;
+}
+
+static BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const PARAFORMAT2 *pFmt)
+{
+  PARAFORMAT2 copy;
+  DWORD dwMask;
+
+  assert(para->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
+  dwMask = pFmt->dwMask;
+  if (pFmt->cbSize < sizeof(PARAFORMAT))
+    return FALSE;
+  else if (pFmt->cbSize < sizeof(PARAFORMAT2))
+    dwMask &= PFM_ALL;
+  else
+    dwMask &= PFM_ALL2;
+
+  ME_AddUndoItem(editor, diUndoSetParagraphFormat, para);
+
+  copy = *para->member.para.pFmt;
+
+#define COPY_FIELD(m, f) \
+  if (dwMask & (m)) {                           \
+    para->member.para.pFmt->dwMask |= m;        \
+    para->member.para.pFmt->f = pFmt->f;        \
+  }
+
+  COPY_FIELD(PFM_NUMBERING, wNumbering);
+  COPY_FIELD(PFM_STARTINDENT, dxStartIndent);
+  if (dwMask & PFM_OFFSETINDENT)
+    para->member.para.pFmt->dxStartIndent += pFmt->dxStartIndent;
+  COPY_FIELD(PFM_RIGHTINDENT, dxRightIndent);
+  COPY_FIELD(PFM_OFFSET, dxOffset);
+  COPY_FIELD(PFM_ALIGNMENT, wAlignment);
+  if (dwMask & PFM_TABSTOPS)
+  {
+    para->member.para.pFmt->cTabCount = pFmt->cTabCount;
+    memcpy(para->member.para.pFmt->rgxTabs, pFmt->rgxTabs, pFmt->cTabCount*sizeof(LONG));
+  }
+
+  if (dwMask & (PFM_ALL2 & ~PFM_ALL))
+  {
+    /* PARAFORMAT2 fields */
+
+#define EFFECTS_MASK (PFM_RTLPARA|PFM_KEEP|PFM_KEEPNEXT|PFM_PAGEBREAKBEFORE| \
+                      PFM_NOLINENUMBER|PFM_NOWIDOWCONTROL|PFM_DONOTHYPHEN|PFM_SIDEBYSIDE| \
+                      PFM_TABLE)
+    /* we take for granted that PFE_xxx is the hiword of the corresponding PFM_xxx */
+    if (dwMask & EFFECTS_MASK) {
+      para->member.para.pFmt->dwMask |= dwMask & EFFECTS_MASK;
+      para->member.para.pFmt->wEffects &= ~HIWORD(dwMask);
+      para->member.para.pFmt->wEffects |= pFmt->wEffects & HIWORD(dwMask);
+    }
+#undef EFFECTS_MASK
+
+    COPY_FIELD(PFM_SPACEBEFORE, dySpaceBefore);
+    COPY_FIELD(PFM_SPACEAFTER, dySpaceAfter);
+    COPY_FIELD(PFM_LINESPACING, dyLineSpacing);
+    COPY_FIELD(PFM_STYLE, sStyle);
+    COPY_FIELD(PFM_LINESPACING, bLineSpacingRule);
+    COPY_FIELD(PFM_SHADING, wShadingWeight);
+    COPY_FIELD(PFM_SHADING, wShadingStyle);
+    COPY_FIELD(PFM_NUMBERINGSTART, wNumberingStart);
+    COPY_FIELD(PFM_NUMBERINGSTYLE, wNumberingStyle);
+    COPY_FIELD(PFM_NUMBERINGTAB, wNumberingTab);
+    COPY_FIELD(PFM_BORDER, wBorderSpace);
+    COPY_FIELD(PFM_BORDER, wBorderWidth);
+    COPY_FIELD(PFM_BORDER, wBorders);
+  }
+
+  para->member.para.pFmt->dwMask |= dwMask;
+#undef COPY_FIELD
+
+  if (memcmp(&copy, para->member.para.pFmt, sizeof(PARAFORMAT2)))
+    para->member.para.nFlags |= MEPF_REWRAP;
+
+  return TRUE;
 }
 
 /* split paragraph at the beginning of the run */
@@ -439,68 +515,6 @@ void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048])
 #undef DUMP_EFFECT
 }
 
-BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const PARAFORMAT2 *pFmt)
-{
-  PARAFORMAT2 copy;
-  assert(sizeof(*para->member.para.pFmt) == sizeof(PARAFORMAT2));
-  ME_AddUndoItem(editor, diUndoSetParagraphFormat, para);
-  
-  copy = *para->member.para.pFmt;
-
-#define COPY_FIELD(m, f) \
-  if (pFmt->dwMask & (m)) {                     \
-    para->member.para.pFmt->dwMask |= m;        \
-    para->member.para.pFmt->f = pFmt->f;        \
-  }
-
-  COPY_FIELD(PFM_NUMBERING, wNumbering);
-#define EFFECTS_MASK (PFM_RTLPARA|PFM_KEEP|PFM_KEEPNEXT|PFM_PAGEBREAKBEFORE| \
-                      PFM_NOLINENUMBER|PFM_NOWIDOWCONTROL|PFM_DONOTHYPHEN|PFM_SIDEBYSIDE| \
-                      PFM_TABLE)
-  /* we take for granted that PFE_xxx is the hiword of the corresponding PFM_xxx */
-  if (pFmt->dwMask & EFFECTS_MASK) {
-    para->member.para.pFmt->dwMask |= pFmt->dwMask & EFFECTS_MASK;
-    para->member.para.pFmt->wEffects &= ~HIWORD(pFmt->dwMask);
-    para->member.para.pFmt->wEffects |= pFmt->wEffects & HIWORD(pFmt->dwMask);
-  }
-#undef EFFECTS_MASK
-
-  COPY_FIELD(PFM_STARTINDENT, dxStartIndent);
-  if (pFmt->dwMask & PFM_OFFSETINDENT)
-    para->member.para.pFmt->dxStartIndent += pFmt->dxStartIndent;
-  COPY_FIELD(PFM_RIGHTINDENT, dxRightIndent);
-  COPY_FIELD(PFM_OFFSET, dxOffset);
-  COPY_FIELD(PFM_ALIGNMENT, wAlignment);
-
-  if (pFmt->dwMask & PFM_TABSTOPS)
-  {
-    para->member.para.pFmt->cTabCount = pFmt->cTabCount;
-    memcpy(para->member.para.pFmt->rgxTabs, pFmt->rgxTabs, pFmt->cTabCount*sizeof(LONG));
-  }
-  COPY_FIELD(PFM_SPACEBEFORE, dySpaceBefore);
-  COPY_FIELD(PFM_SPACEAFTER, dySpaceAfter);
-  COPY_FIELD(PFM_LINESPACING, dyLineSpacing);
-  COPY_FIELD(PFM_STYLE, sStyle);
-  COPY_FIELD(PFM_LINESPACING, bLineSpacingRule);
-  COPY_FIELD(PFM_SHADING, wShadingWeight);
-  COPY_FIELD(PFM_SHADING, wShadingStyle);
-  COPY_FIELD(PFM_NUMBERINGSTART, wNumberingStart);
-  COPY_FIELD(PFM_NUMBERINGSTYLE, wNumberingStyle);
-  COPY_FIELD(PFM_NUMBERINGTAB, wNumberingTab);
-  COPY_FIELD(PFM_BORDER, wBorderSpace);
-  COPY_FIELD(PFM_BORDER, wBorderWidth);
-  COPY_FIELD(PFM_BORDER, wBorders);
-
-  para->member.para.pFmt->dwMask |= pFmt->dwMask;
-#undef COPY_FIELD
-
-  if (memcmp(&copy, para->member.para.pFmt, sizeof(PARAFORMAT2)))
-    para->member.para.nFlags |= MEPF_REWRAP;
-
-  return TRUE;
-}
-
-
 void
 ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end)
 {
@@ -541,74 +555,73 @@ BOOL ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt)
   return TRUE;
 }
 
-void ME_GetParaFormat(ME_TextEditor *editor, const ME_DisplayItem *para, PARAFORMAT2 *pFmt)
+static void ME_GetParaFormat(ME_TextEditor *editor,
+                             const ME_DisplayItem *para,
+                             PARAFORMAT2 *pFmt)
 {
-  if (pFmt->cbSize >= sizeof(PARAFORMAT2))
-  {
+  UINT cbSize = pFmt->cbSize;
+  if (pFmt->cbSize >= sizeof(PARAFORMAT2)) {
     *pFmt = *para->member.para.pFmt;
-    return;
+  } else {
+    CopyMemory(pFmt, para->member.para.pFmt, pFmt->cbSize);
+    pFmt->dwMask &= PFM_ALL;
   }
-  CopyMemory(pFmt, para->member.para.pFmt, pFmt->cbSize);  
+  pFmt->cbSize = cbSize;
 }
 
 void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
 {
   ME_DisplayItem *para, *para_end;
-  PARAFORMAT2 tmp;
-  
+  PARAFORMAT2 *curFmt;
+
+  if (pFmt->cbSize < sizeof(PARAFORMAT)) {
+    pFmt->dwMask = 0;
+    return;
+  }
+
   ME_GetSelectionParas(editor, &para, &para_end);
-  
+
   ME_GetParaFormat(editor, para, pFmt);
-  if (para == para_end) return;
-  
+
   /* Invalidate values that change across the selected paragraphs. */
-  do {
-    ZeroMemory(&tmp, sizeof(tmp));
-    tmp.cbSize = sizeof(tmp);
-    ME_GetParaFormat(editor, para, &tmp);
+  while (para != para_end)
+  {
+    para = para->member.para.next_para;
+    curFmt = para->member.para.pFmt;
 
 #define CHECK_FIELD(m, f) \
-    if (pFmt->f != tmp.f) pFmt->dwMask &= ~(m);
+    if (pFmt->f != curFmt->f) pFmt->dwMask &= ~(m);
 
-    pFmt->dwMask &= ~((pFmt->wEffects ^ tmp.wEffects) << 16);
     CHECK_FIELD(PFM_NUMBERING, wNumbering);
-    assert(tmp.dwMask & PFM_ALIGNMENT);
-    CHECK_FIELD(PFM_NUMBERING, wNumbering);
-    assert(tmp.dwMask & PFM_STARTINDENT);
     CHECK_FIELD(PFM_STARTINDENT, dxStartIndent);
-    assert(tmp.dwMask & PFM_RIGHTINDENT);
     CHECK_FIELD(PFM_RIGHTINDENT, dxRightIndent);
-    assert(tmp.dwMask & PFM_OFFSET);
     CHECK_FIELD(PFM_OFFSET, dxOffset);
     CHECK_FIELD(PFM_ALIGNMENT, wAlignment);
-
-    assert(tmp.dwMask & PFM_TABSTOPS);
     if (pFmt->dwMask & PFM_TABSTOPS) {
-      if (pFmt->cTabCount != tmp.cTabCount ||
-          memcmp(pFmt->rgxTabs, tmp.rgxTabs, tmp.cTabCount*sizeof(int)))
+      if (pFmt->cTabCount != para->member.para.pFmt->cTabCount ||
+          memcmp(pFmt->rgxTabs, curFmt->rgxTabs, curFmt->cTabCount*sizeof(int)))
         pFmt->dwMask &= ~PFM_TABSTOPS;
     }
 
-    CHECK_FIELD(PFM_SPACEBEFORE, dySpaceBefore);
-    CHECK_FIELD(PFM_SPACEAFTER, dySpaceAfter);
-    CHECK_FIELD(PFM_LINESPACING, dyLineSpacing);
-    CHECK_FIELD(PFM_STYLE, sStyle);
-    CHECK_FIELD(PFM_SPACEAFTER, bLineSpacingRule);
-    CHECK_FIELD(PFM_SHADING, wShadingWeight);
-    CHECK_FIELD(PFM_SHADING, wShadingStyle);
-    CHECK_FIELD(PFM_NUMBERINGSTART, wNumberingStart);
-    CHECK_FIELD(PFM_NUMBERINGSTYLE, wNumberingStyle);
-    CHECK_FIELD(PFM_NUMBERINGTAB, wNumberingTab);
-    CHECK_FIELD(PFM_BORDER, wBorderSpace);
-    CHECK_FIELD(PFM_BORDER, wBorderWidth);
-    CHECK_FIELD(PFM_BORDER, wBorders);
-
+    if (pFmt->dwMask >= sizeof(PARAFORMAT2))
+    {
+      pFmt->dwMask &= ~((pFmt->wEffects ^ curFmt->wEffects) << 16);
+      CHECK_FIELD(PFM_SPACEBEFORE, dySpaceBefore);
+      CHECK_FIELD(PFM_SPACEAFTER, dySpaceAfter);
+      CHECK_FIELD(PFM_LINESPACING, dyLineSpacing);
+      CHECK_FIELD(PFM_STYLE, sStyle);
+      CHECK_FIELD(PFM_SPACEAFTER, bLineSpacingRule);
+      CHECK_FIELD(PFM_SHADING, wShadingWeight);
+      CHECK_FIELD(PFM_SHADING, wShadingStyle);
+      CHECK_FIELD(PFM_NUMBERINGSTART, wNumberingStart);
+      CHECK_FIELD(PFM_NUMBERINGSTYLE, wNumberingStyle);
+      CHECK_FIELD(PFM_NUMBERINGTAB, wNumberingTab);
+      CHECK_FIELD(PFM_BORDER, wBorderSpace);
+      CHECK_FIELD(PFM_BORDER, wBorderWidth);
+      CHECK_FIELD(PFM_BORDER, wBorders);
+    }
 #undef CHECK_FIELD
-
-    if (para == para_end)
-      return;
-    para = para->member.para.next_para;
-  } while(1);
+  }
 }
 
 void ME_SetDefaultParaFormat(PARAFORMAT2 *pFmt)
