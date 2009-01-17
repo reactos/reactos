@@ -69,17 +69,17 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 
 /* FDI callback functions */
 
-static void *mem_alloc(ULONG cb)
+static void * CDECL mem_alloc(ULONG cb)
 {
     return HeapAlloc(GetProcessHeap(), 0, cb);
 }
 
-static void mem_free(void *memory)
+static void CDECL mem_free(void *memory)
 {
     HeapFree(GetProcessHeap(), 0, memory);
 }
 
-static INT_PTR fdi_open(char *pszFile, int oflag, int pmode)
+static INT_PTR CDECL fdi_open(char *pszFile, int oflag, int pmode)
 {
     HANDLE handle;
     DWORD dwAccess = 0;
@@ -120,7 +120,7 @@ static INT_PTR fdi_open(char *pszFile, int oflag, int pmode)
     return (INT_PTR) handle;
 }
 
-static UINT fdi_read(INT_PTR hf, void *pv, UINT cb)
+static UINT CDECL fdi_read(INT_PTR hf, void *pv, UINT cb)
 {
     HANDLE handle = (HANDLE) hf;
     DWORD dwRead;
@@ -131,7 +131,7 @@ static UINT fdi_read(INT_PTR hf, void *pv, UINT cb)
     return 0;
 }
 
-static UINT fdi_write(INT_PTR hf, void *pv, UINT cb)
+static UINT CDECL fdi_write(INT_PTR hf, void *pv, UINT cb)
 {
     HANDLE handle = (HANDLE) hf;
     DWORD dwWritten;
@@ -142,13 +142,13 @@ static UINT fdi_write(INT_PTR hf, void *pv, UINT cb)
     return 0;
 }
 
-static int fdi_close(INT_PTR hf)
+static int CDECL fdi_close(INT_PTR hf)
 {
     HANDLE handle = (HANDLE) hf;
     return CloseHandle(handle) ? 0 : -1;
 }
 
-static long fdi_seek(INT_PTR hf, long dist, int seektype)
+static LONG CDECL fdi_seek(INT_PTR hf, LONG dist, int seektype)
 {
     HANDLE handle = (HANDLE) hf;
     return SetFilePointer(handle, dist, NULL, seektype);
@@ -182,7 +182,7 @@ static BOOL file_in_list(struct FILELIST *pNode, LPCSTR szFilename,
     return FALSE;
 }
 
-static INT_PTR fdi_notify_extract(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
+static INT_PTR CDECL fdi_notify_extract(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
 {
     switch (fdint)
     {

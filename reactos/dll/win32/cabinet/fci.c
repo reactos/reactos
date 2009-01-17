@@ -1949,7 +1949,7 @@ static BOOL fci_flush_cabinet(
   /* TODO error handling of err */
 
   /* while not all CFFILE structures have been copied to the cabinet do */
-  while(!FALSE) {
+  if (p_fci_internal->data_out) while(!FALSE) {
     /* REUSE the variable read_result */
     /* REUSE the buffer p_fci_internal->data_out AGAIN */
     /* read a block from p_fci_internal->handleCFFILE2 */
@@ -2005,7 +2005,7 @@ static BOOL fci_flush_cabinet(
   p_fci_internal->cFiles=0;
 
   /* while not all CFDATA structures have been copied to the cabinet do */
-  while(!FALSE) {
+  if (p_fci_internal->data_out) while(!FALSE) {
     /* REUSE the variable read_result AGAIN */
     /* REUSE the buffer p_fci_internal->data_out AGAIN */
     /* read a block from p_fci_internal->handleCFDATA2 */
