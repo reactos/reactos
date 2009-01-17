@@ -48,7 +48,7 @@
 static LPWSTR strdup_AtoW(LPCSTR str)
 {
     int size = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-    LPWSTR wstr = (LPWSTR)CoTaskMemAlloc((size + 1)*sizeof(WCHAR));
+    LPWSTR wstr = CoTaskMemAlloc((size + 1)*sizeof(WCHAR));
     MultiByteToWideChar(CP_ACP, 0, str, -1, wstr, size+1);
     return wstr;
 }
