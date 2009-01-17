@@ -52,6 +52,9 @@
 	<directory name="kbdcr">
 		<xi:include href="kbdcr/kbdcr.rbuild" />
 	</directory>
+	<directory name="kbdcz">
+		<xi:include href="kbdcz/kbdcz.rbuild" />
+	</directory>
 	<directory name="kbdcz1">
 		<xi:include href="kbdcz1/kbdcz1.rbuild" />
 	</directory>
