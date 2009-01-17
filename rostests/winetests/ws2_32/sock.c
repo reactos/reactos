@@ -225,16 +225,16 @@ static void fill_buffer ( char *buf, int chunk_size, int n_chunks )
         memset ( p, c, chunk_size );
 }
 
-static char* test_buffer ( char *buf, int chunk_size, int n_chunks )
+static int test_buffer ( char *buf, int chunk_size, int n_chunks )
 {
     char c, *p;
     int i;
     for ( c = FIRST_CHAR, p = buf; c < FIRST_CHAR + n_chunks; c++, p += chunk_size )
     {
         for ( i = 0; i < chunk_size; i++ )
-            if ( p[i] != c ) return p + i;
+            if ( p[i] != c ) return i;
     }
-    return NULL;
+    return -1;
 }
 
 /*
@@ -403,9 +403,8 @@ static VOID WINAPI simple_server ( server_params *par )
 {
     test_params *gen = par->general;
     server_memory *mem;
-    int n_recvd, n_sent, n_expected = gen->n_chunks * gen->chunk_size, tmp, i,
+    int pos, n_recvd, n_sent, n_expected = gen->n_chunks * gen->chunk_size, tmp, i,
         id = GetCurrentThreadId();
-    char *p;
 
     trace ( "simple_server (%x) starting\n", id );
 
@@ -435,8 +434,8 @@ static VOID WINAPI simple_server ( server_params *par )
         n_recvd = do_synchronous_recv ( mem->sock[0].s, mem->sock[0].buf, n_expected, par->buflen );
         ok ( n_recvd == n_expected,
              "simple_server (%x): received less data than expected: %d of %d\n", id, n_recvd, n_expected );
-        p = test_buffer ( mem->sock[0].buf, gen->chunk_size, gen->n_chunks );
-        ok ( p == NULL, "simple_server (%x): test pattern error: %d\n", id, p - mem->sock[0].buf);
+        pos = test_buffer ( mem->sock[0].buf, gen->chunk_size, gen->n_chunks );
+        ok ( pos == -1, "simple_server (%x): test pattern error: %d\n", id, pos);
 
         /* Echo data back */
         n_sent = do_synchronous_send ( mem->sock[0].s, mem->sock[0].buf, n_expected, par->buflen );
@@ -463,7 +462,6 @@ static VOID WINAPI select_server ( server_params *par )
     int n_expected = gen->n_chunks * gen->chunk_size, tmp, i,
         id = GetCurrentThreadId(), n_connections = 0, n_sent, n_recvd,
         n_set, delta, n_ready;
-    char *p;
     struct timeval timeout = {0,10}; /* wait for 10 milliseconds */
     fd_set fds_recv, fds_send, fds_openrecv, fds_opensend;
 
@@ -531,8 +529,8 @@ static VOID WINAPI select_server ( server_params *par )
                     mem->sock[i].n_recvd += n_recvd;
 
                     if ( mem->sock[i].n_recvd == n_expected ) {
-                        p = test_buffer ( mem->sock[i].buf, gen->chunk_size, gen->n_chunks );
-                        ok ( p == NULL, "select_server (%x): test pattern error: %d\n", id, p - mem->sock[i].buf );
+                        int pos = test_buffer ( mem->sock[i].buf, gen->chunk_size, gen->n_chunks );
+                        ok ( pos == -1, "select_server (%x): test pattern error: %d\n", id, pos );
                         FD_CLR ( mem->sock[i].s, &fds_openrecv );
                     }
 
@@ -593,8 +591,7 @@ static VOID WINAPI simple_client ( client_params *par )
 {
     test_params *gen = par->general;
     client_memory *mem;
-    int n_sent, n_recvd, n_expected = gen->n_chunks * gen->chunk_size, id;
-    char *p;
+    int pos, n_sent, n_recvd, n_expected = gen->n_chunks * gen->chunk_size, id;
 
     id = GetCurrentThreadId();
     trace ( "simple_client (%x): starting\n", id );
@@ -628,8 +625,8 @@ static VOID WINAPI simple_client ( client_params *par )
          "simple_client (%x): received less data than expected: %d of %d\n", id, n_recvd, n_expected );
 
     /* check data */
-    p = test_buffer ( mem->recv_buf, gen->chunk_size, gen->n_chunks );
-    ok ( p == NULL, "simple_client (%x): test pattern error: %d\n", id, p - mem->recv_buf);
+    pos = test_buffer ( mem->recv_buf, gen->chunk_size, gen->n_chunks );
+    ok ( pos == -1, "simple_client (%x): test pattern error: %d\n", id, pos);
 
     /* cleanup */
     read_zero_bytes ( mem->s );
@@ -644,8 +641,7 @@ static VOID WINAPI simple_mixed_client ( client_params *par )
 {
     test_params *gen = par->general;
     client_memory *mem;
-    int n_sent, n_recvd, n_expected = gen->n_chunks * gen->chunk_size, id;
-    char *p;
+    int pos, n_sent, n_recvd, n_expected = gen->n_chunks * gen->chunk_size, id;
     socklen_t fromLen = sizeof(mem->addr);
     struct sockaddr test;
 
@@ -698,8 +694,8 @@ static VOID WINAPI simple_mixed_client ( client_params *par )
 	      "0.0.0.0"), "lpFrom shouldn't be updated on connection oriented sockets\n");
 
     /* check data */
-    p = test_buffer ( mem->recv_buf, gen->chunk_size, gen->n_chunks );
-    ok ( p == NULL, "simple_client (%x): test pattern error: %d\n", id, p - mem->recv_buf);
+    pos = test_buffer ( mem->recv_buf, gen->chunk_size, gen->n_chunks );
+    ok ( pos == -1, "simple_client (%x): test pattern error: %d\n", id, pos);
 
     /* cleanup */
     read_zero_bytes ( mem->s );
@@ -821,14 +817,14 @@ static void WINAPI event_client ( client_params *par )
         }
     }
 
+    n = send_p - mem->send_buf;
     ok ( send_p == send_last,
-         "simple_client (%x): sent less data than expected: %d of %d\n",
-         id, send_p - mem->send_buf, n_expected );
+         "simple_client (%x): sent less data than expected: %d of %d\n", id, n, n_expected );
+    n = recv_p - mem->recv_buf;
     ok ( recv_p == recv_last,
-         "simple_client (%x): received less data than expected: %d of %d\n",
-         id, recv_p - mem->recv_buf, n_expected );
-    recv_p = test_buffer ( mem->recv_buf, gen->chunk_size, gen->n_chunks );
-    ok ( recv_p == NULL, "event_client (%x): test pattern error: %d\n", id, recv_p - mem->recv_buf);
+         "simple_client (%x): received less data than expected: %d of %d\n", id, n, n_expected );
+    n = test_buffer ( mem->recv_buf, gen->chunk_size, gen->n_chunks );
+    ok ( n == -1, "event_client (%x): test pattern error: %d\n", id, n);
 
 out:
     WSACloseEvent ( event );
