@@ -11,6 +11,7 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>
+	<library>oleaut32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>kernel32</library>

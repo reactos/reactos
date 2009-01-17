@@ -621,12 +621,9 @@ static void test_EM_POSFROMCHAR(void)
   SendMessage(hwndRichEdit, WM_HSCROLL, SB_LINERIGHT, 0);
   result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, 0, 0);
   ok(HIWORD(result) == 0, "EM_POSFROMCHAR reports y=%d, expected 0\n", HIWORD(result));
-  todo_wine {
-  /* Fails on builtin because horizontal scrollbar is not being shown */
   ok((signed short)(LOWORD(result)) < xpos,
         "EM_POSFROMCHAR reports x=%hd, expected value less than %d\n",
         (signed short)(LOWORD(result)), xpos);
-  }
   SendMessage(hwndRichEdit, WM_HSCROLL, SB_LINELEFT, 0);
 
   /* Test around end of text that doesn't end in a newline. */
@@ -1455,9 +1452,34 @@ static void test_EM_GETSELTEXT(void)
 /* FIXME: need to test unimplemented options and robustly test wparam */
 static void test_EM_SETOPTIONS(void)
 {
-    HWND hwndRichEdit = new_richedit(NULL);
+    HWND hwndRichEdit;
     static const char text[] = "Hello. My name is RichEdit!";
     char buffer[1024] = {0};
+    DWORD dwStyle, options, oldOptions;
+    DWORD optionStyles = ES_AUTOVSCROLL|ES_AUTOHSCROLL|ES_NOHIDESEL|
+                         ES_READONLY|ES_WANTRETURN|ES_SAVESEL|
+                         ES_SELECTIONBAR|ES_VERTICAL;
+
+    /* Test initial options. */
+    hwndRichEdit = CreateWindow(RICHEDIT_CLASS, NULL, WS_POPUP,
+                                0, 0, 200, 60, NULL, NULL,
+                                hmoduleRichEdit, NULL);
+    ok(hwndRichEdit != NULL, "class: %s, error: %d\n",
+       RICHEDIT_CLASS, (int) GetLastError());
+    options = SendMessage(hwndRichEdit, EM_GETOPTIONS, 0, 0);
+    ok(options == 0, "Incorrect initial options %x\n", options);
+    DestroyWindow(hwndRichEdit);
+
+    hwndRichEdit = CreateWindow(RICHEDIT_CLASS, NULL,
+                                WS_POPUP|WS_HSCROLL|WS_VSCROLL,
+                                0, 0, 200, 60, NULL, NULL,
+                                hmoduleRichEdit, NULL);
+    ok(hwndRichEdit != NULL, "class: %s, error: %d\n",
+       RICHEDIT_CLASS, (int) GetLastError());
+    options = SendMessage(hwndRichEdit, EM_GETOPTIONS, 0, 0);
+    /* WS_[VH]SCROLL cause the ECO_AUTO[VH]SCROLL options to be set */
+    ok(options == (ECO_AUTOVSCROLL|ECO_AUTOHSCROLL),
+       "Incorrect initial options %x\n", options);
 
     /* NEGATIVE TESTING - NO OPTIONS SET */
     SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) text);
@@ -1479,6 +1501,25 @@ static void test_EM_SETOPTIONS(void)
     SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buffer);
     ok(buffer[0]==text[0], 
        "EM_SETOPTIONS: Text changed! s1:%s s2:%s\n", text, buffer); 
+
+    /* EM_SETOPTIONS changes the window style, but changing the
+     * window style does not change the options. */
+    dwStyle = GetWindowLong(hwndRichEdit, GWL_STYLE);
+    ok(dwStyle & ES_READONLY, "Readonly style not set by EM_SETOPTIONS\n");
+    SetWindowLong(hwndRichEdit, GWL_STYLE, dwStyle & ~ES_READONLY);
+    options = SendMessage(hwndRichEdit, EM_GETOPTIONS, 0, 0);
+    ok(options & ES_READONLY, "Readonly option set by SetWindowLong\n");
+    /* Confirm that the text is still read only. */
+    SendMessage(hwndRichEdit, WM_CHAR, 'a', ('a' << 16) | 0x0001);
+    SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buffer);
+    ok(buffer[0]==text[0],
+       "EM_SETOPTIONS: Text changed! s1:%s s2:%s\n", text, buffer);
+
+    oldOptions = options;
+    SetWindowLong(hwndRichEdit, GWL_STYLE, dwStyle|optionStyles);
+    options = SendMessage(hwndRichEdit, EM_GETOPTIONS, 0, 0);
+    ok(options == oldOptions,
+       "Options set by SetWindowLong (%x -> %x)\n", oldOptions, options);
 
     DestroyWindow(hwndRichEdit);
 }
@@ -5692,17 +5733,51 @@ static void test_EM_CHARFROMPOS(void)
 {
     HWND hwnd;
     int result;
+    RECT rcClient;
     POINTL point;
     point.x = 0;
-    point.y = 50;
+    point.y = 40;
 
     /* multi-line control inserts CR normally */
     hwnd = new_richedit(NULL);
     result = SendMessageA(hwnd, WM_SETTEXT, 0,
-                          (LPARAM)"one two three four five six seven");
+                          (LPARAM)"one two three four five six seven\reight");
+
+    GetClientRect(hwnd, &rcClient);
 
     result = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM)&point);
-    ok(result == 0, "expected character index of 0 but got %d\n", result);
+    ok(result == 34, "expected character index of 34 but got %d\n", result);
+
+    /* Test with points outside the bounds of the richedit control. */
+    point.x = -1;
+    point.y = 40;
+    result = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM)&point);
+    todo_wine ok(result == 34, "expected character index of 34 but got %d\n", result);
+
+    point.x = 1000;
+    point.y = 0;
+    result = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM)&point);
+    todo_wine ok(result == 33, "expected character index of 33 but got %d\n", result);
+
+    point.x = 1000;
+    point.y = 40;
+    result = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM)&point);
+    todo_wine ok(result == 39, "expected character index of 39 but got %d\n", result);
+
+    point.x = 1000;
+    point.y = -1;
+    result = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM)&point);
+    todo_wine ok(result == 0, "expected character index of 0 but got %d\n", result);
+
+    point.x = 1000;
+    point.y = rcClient.bottom + 1;
+    result = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM)&point);
+    todo_wine ok(result == 34, "expected character index of 34 but got %d\n", result);
+
+    point.x = 1000;
+    point.y = rcClient.bottom;
+    result = SendMessage(hwnd, EM_CHARFROMPOS, 0, (LPARAM)&point);
+    todo_wine ok(result == 39, "expected character index of 39 but got %d\n", result);
 
     DestroyWindow(hwnd);
 }
@@ -5803,7 +5878,7 @@ static void test_word_wrap(void)
     DestroyWindow(hwnd);
 }
 
-static void test_auto_yscroll(void)
+static void test_autoscroll(void)
 {
     HWND hwnd = new_richedit(NULL);
     int lines, ret, redraw;
@@ -5832,6 +5907,32 @@ static void test_auto_yscroll(void)
     }
 
     SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+    DestroyWindow(hwnd);
+
+    /* The WS_VSCROLL and WS_HSCROLL styles implicitly set
+     * auto vertical/horizontal scrolling options. */
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          WS_POPUP|ES_MULTILINE|WS_VSCROLL|WS_HSCROLL,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    ret = SendMessage(hwnd, EM_GETOPTIONS, 0, 0);
+    ok(ret & ECO_AUTOVSCROLL, "ECO_AUTOVSCROLL isn't set.\n");
+    ok(ret & ECO_AUTOHSCROLL, "ECO_AUTOHSCROLL isn't set.\n");
+    ret = GetWindowLong(hwnd, GWL_STYLE);
+    ok(!(ret & ES_AUTOVSCROLL), "ES_AUTOVSCROLL is set.\n");
+    ok(!(ret & ES_AUTOHSCROLL), "ES_AUTOHSCROLL is set.\n");
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          WS_POPUP|ES_MULTILINE,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    ret = SendMessage(hwnd, EM_GETOPTIONS, 0, 0);
+    ok(!(ret & ECO_AUTOVSCROLL), "ECO_AUTOVSCROLL is set.\n");
+    ok(!(ret & ECO_AUTOHSCROLL), "ECO_AUTOHSCROLL is set.\n");
+    ret = GetWindowLong(hwnd, GWL_STYLE);
+    ok(!(ret & ES_AUTOVSCROLL), "ES_AUTOVSCROLL is set.\n");
+    ok(!(ret & ES_AUTOHSCROLL), "ES_AUTOHSCROLL is set.\n");
     DestroyWindow(hwnd);
 }
 
@@ -6010,6 +6111,319 @@ static void test_format_rect(void)
     DestroyWindow(hwnd);
 }
 
+static void test_WM_GETDLGCODE(void)
+{
+    HWND hwnd;
+    UINT res, expected;
+    MSG msg;
+
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL|DLGC_WANTMESSAGE;
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          ES_MULTILINE|ES_WANTRETURN|WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, 0);
+    expected = expected | DLGC_WANTMESSAGE;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    msg.message = WM_KEYDOWN;
+    msg.wParam = VK_RETURN;
+    msg.lParam = MapVirtualKey(VK_RETURN, MAPVK_VK_TO_VSC) | 0x0001;
+    msg.pt.x = 0;
+    msg.pt.y = 0;
+    msg.time = GetTickCount();
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          ES_MULTILINE|ES_WANTRETURN|WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = expected | DLGC_WANTMESSAGE;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          ES_MULTILINE|WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL|DLGC_WANTMESSAGE;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          ES_WANTRETURN|WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    msg.wParam = VK_TAB;
+    msg.lParam = MapVirtualKey(VK_TAB, MAPVK_VK_TO_VSC) | 0x0001;
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          ES_MULTILINE|WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL|DLGC_WANTMESSAGE;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    hold_key(VK_CONTROL);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          ES_MULTILINE|WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL|DLGC_WANTMESSAGE;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    release_key(VK_CONTROL);
+
+    msg.wParam = 'a';
+    msg.lParam = MapVirtualKey('a', MAPVK_VK_TO_VSC) | 0x0001;
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          ES_MULTILINE|WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL|DLGC_WANTMESSAGE;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    msg.message = WM_CHAR;
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          ES_MULTILINE|WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL|DLGC_WANTMESSAGE;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+
+    hwnd = CreateWindowEx(0, RICHEDIT_CLASS, NULL,
+                          WS_POPUP,
+                          0, 0, 200, 60, NULL, NULL, hmoduleRichEdit, NULL);
+    ok(hwnd != NULL, "class: %s, error: %d\n", RICHEDIT_CLASS, (int) GetLastError());
+    msg.hwnd = hwnd;
+    res = SendMessage(hwnd, WM_GETDLGCODE, VK_RETURN, (LPARAM)&msg);
+    expected = DLGC_WANTCHARS|DLGC_WANTTAB|DLGC_WANTARROWS|DLGC_HASSETSEL;
+    ok(res == expected, "WM_GETDLGCODE returned %x but expected %x\n",
+       res, expected);
+    DestroyWindow(hwnd);
+}
+
+static void test_zoom(void)
+{
+    HWND hwnd;
+    UINT ret;
+    RECT rc;
+    POINT pt;
+    int numerator, denominator;
+
+    hwnd = new_richedit(NULL);
+    GetClientRect(hwnd, &rc);
+    pt.x = (rc.right - rc.left) / 2;
+    pt.y = (rc.bottom - rc.top) / 2;
+    ClientToScreen(hwnd, &pt);
+
+    /* Test initial zoom value */
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 0, "Numerator should be initialized to 0 (got %d).\n", numerator);
+    ok(denominator == 0, "Denominator should be initialized to 0 (got %d).\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    /* test scroll wheel */
+    hold_key(VK_CONTROL);
+    ret = SendMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(MK_CONTROL, WHEEL_DELTA),
+                      MAKELPARAM(pt.x, pt.y));
+    ok(!ret, "WM_MOUSEWHEEL failed (%d).\n", ret);
+    release_key(VK_CONTROL);
+
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 110, "incorrect numerator is %d\n", numerator);
+    ok(denominator == 100, "incorrect denominator is %d\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    /* Test how much the mouse wheel can zoom in and out. */
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)490, (LPARAM)100);
+    ok(ret == TRUE, "EM_SETZOOM failed (%d).\n", ret);
+
+    hold_key(VK_CONTROL);
+    ret = SendMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(MK_CONTROL, WHEEL_DELTA),
+                      MAKELPARAM(pt.x, pt.y));
+    ok(!ret, "WM_MOUSEWHEEL failed (%d).\n", ret);
+    release_key(VK_CONTROL);
+
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 500, "incorrect numerator is %d\n", numerator);
+    ok(denominator == 100, "incorrect denominator is %d\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)491, (LPARAM)100);
+    ok(ret == TRUE, "EM_SETZOOM failed (%d).\n", ret);
+
+    hold_key(VK_CONTROL);
+    ret = SendMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(MK_CONTROL, WHEEL_DELTA),
+                      MAKELPARAM(pt.x, pt.y));
+    ok(!ret, "WM_MOUSEWHEEL failed (%d).\n", ret);
+    release_key(VK_CONTROL);
+
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 491, "incorrect numerator is %d\n", numerator);
+    ok(denominator == 100, "incorrect denominator is %d\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)20, (LPARAM)100);
+    ok(ret == TRUE, "EM_SETZOOM failed (%d).\n", ret);
+
+    hold_key(VK_CONTROL);
+    ret = SendMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(MK_CONTROL, -WHEEL_DELTA),
+                      MAKELPARAM(pt.x, pt.y));
+    ok(!ret, "WM_MOUSEWHEEL failed (%d).\n", ret);
+    release_key(VK_CONTROL);
+
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 10, "incorrect numerator is %d\n", numerator);
+    ok(denominator == 100, "incorrect denominator is %d\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)19, (LPARAM)100);
+    ok(ret == TRUE, "EM_SETZOOM failed (%d).\n", ret);
+
+    hold_key(VK_CONTROL);
+    ret = SendMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(MK_CONTROL, -WHEEL_DELTA),
+                      MAKELPARAM(pt.x, pt.y));
+    ok(!ret, "WM_MOUSEWHEEL failed (%d).\n", ret);
+    release_key(VK_CONTROL);
+
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 19, "incorrect numerator is %d\n", numerator);
+    ok(denominator == 100, "incorrect denominator is %d\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    /* Test how WM_SCROLLWHEEL treats our custom denominator. */
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)50, (LPARAM)13);
+    ok(ret == TRUE, "EM_SETZOOM failed (%d).\n", ret);
+
+    hold_key(VK_CONTROL);
+    ret = SendMessage(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(MK_CONTROL, WHEEL_DELTA),
+                      MAKELPARAM(pt.x, pt.y));
+    ok(!ret, "WM_MOUSEWHEEL failed (%d).\n", ret);
+    release_key(VK_CONTROL);
+
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 394, "incorrect numerator is %d\n", numerator);
+    ok(denominator == 100, "incorrect denominator is %d\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    /* Test bounds checking on EM_SETZOOM */
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)2, (LPARAM)127);
+    ok(ret == TRUE, "EM_SETZOOM rejected valid values (%d).\n", ret);
+
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)127, (LPARAM)2);
+    ok(ret == TRUE, "EM_SETZOOM rejected valid values (%d).\n", ret);
+
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)2, (LPARAM)128);
+    ok(ret == FALSE, "EM_SETZOOM accepted invalid values (%d).\n", ret);
+
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 127, "incorrect numerator is %d\n", numerator);
+    ok(denominator == 2, "incorrect denominator is %d\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)128, (LPARAM)2);
+    ok(ret == FALSE, "EM_SETZOOM accepted invalid values (%d).\n", ret);
+
+    /* See if negative numbers are accepted. */
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)-100, (LPARAM)-100);
+    ok(ret == FALSE, "EM_SETZOOM accepted invalid values (%d).\n", ret);
+
+    /* See if negative numbers are accepted. */
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)0, (LPARAM)100);
+    ok(ret == FALSE, "EM_SETZOOM failed (%d).\n", ret);
+
+    ret = SendMessage(hwnd, EM_GETZOOM, (WPARAM)&numerator, (LPARAM)&denominator);
+    ok(numerator == 127, "incorrect numerator is %d\n", numerator);
+    ok(denominator == 2, "incorrect denominator is %d\n", denominator);
+    ok(ret == TRUE, "EM_GETZOOM failed (%d).\n", ret);
+
+    /* Reset the zoom value */
+    ret = SendMessage(hwnd, EM_SETZOOM, (WPARAM)0, (LPARAM)0);
+    ok(ret == TRUE, "EM_SETZOOM failed (%d).\n", ret);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST( editor )
 {
   /* Must explicitly LoadLibrary(). The test has no references to functions in
@@ -6061,8 +6475,10 @@ START_TEST( editor )
   test_EM_CHARFROMPOS();
   test_SETPARAFORMAT();
   test_word_wrap();
-  test_auto_yscroll();
+  test_autoscroll();
   test_format_rect();
+  test_WM_GETDLGCODE();
+  test_zoom();
 
   /* Set the environment variable WINETEST_RICHED20 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.

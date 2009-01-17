@@ -31,6 +31,7 @@
 #include <initguid.h>
 #include <textserv.h>
 #include <wine/test.h>
+#include <oleauto.h>
 
 static HMODULE hmoduleRichEdit;
 
@@ -39,6 +40,7 @@ static HMODULE hmoduleRichEdit;
 /* Use a special table for x86 machines to convert the thiscall
  * calling convention.  This isn't needed on other platforms. */
 #ifdef __i386__
+static ITextServicesVtbl itextServicesStdcallVtbl;
 #define TXTSERV_VTABLE(This) (&itextServicesStdcallVtbl)
 #else /* __i386__ */
 #define TXTSERV_VTABLE(This) (This)->lpVtbl
@@ -441,8 +443,6 @@ static HRESULT WINAPI ITextHostImpl_TxGetSelectionBarWidth(ITextHost *iface,
     return E_NOTIMPL;
 }
 
-static ITextServicesVtbl itextServicesStdcallVtbl;
-
 static ITextHostVtbl itextHostVtbl = {
     ITextHostImpl_QueryInterface,
     ITextHostImpl_AddRef,
@@ -642,6 +642,30 @@ static void test_TxGetText(void)
     CoTaskMemFree(dummyTextHost);
 }
 
+static void test_TxSetText(void)
+{
+    HRESULT hres;
+    BSTR rettext;
+    WCHAR settext[] = {'T','e','s','t',0};
+
+    if (!init_texthost())
+        return;
+
+    hres = ITextServices_TxSetText(txtserv, settext);
+    todo_wine ok(hres == S_OK, "ITextServices_TxSetText failed\n");
+
+    hres = ITextServices_TxGetText(txtserv, &rettext);
+    todo_wine ok(hres == S_OK, "ITextServices_TxGetText failed\n");
+
+    todo_wine ok(SysStringLen(rettext) == 4,
+                 "String returned of wrong length\n");
+    todo_wine ok(memcmp(rettext,settext,SysStringByteLen(rettext)) == 0,
+                 "String returned differs\n");
+
+    IUnknown_Release(txtserv);
+    CoTaskMemFree(dummyTextHost);
+}
+
 START_TEST( txtsrv )
 {
     setup_thiscall_wrappers();
@@ -657,6 +681,7 @@ START_TEST( txtsrv )
         CoTaskMemFree(dummyTextHost);
 
         test_TxGetText();
+        test_TxSetText();
     }
     if (wrapperCodeMem) VirtualFree(wrapperCodeMem, 0, MEM_RELEASE);
 }
