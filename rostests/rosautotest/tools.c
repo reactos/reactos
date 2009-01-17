@@ -38,13 +38,15 @@ EscapeString(PCHAR Output, PCHAR Input)
             *Output++ = HexCharacters[((UCHAR)*Input >> 4) % 16];
             *Output++ = HexCharacters[(UCHAR)*Input % 16];
         }
-    } while(*++Input);
+    }
+    while(*++Input);
 
     *Output = 0;
 }
 
 /**
  * Outputs a string through the standard output and the debug output.
+ * The string may have LF or CRLF line endings.
  *
  * @param String
  * The string to output
@@ -52,6 +54,41 @@ EscapeString(PCHAR Output, PCHAR Input)
 VOID
 StringOut(PCHAR String)
 {
-    printf(String);
-    OutputDebugStringA(String);
+    PCHAR NewString;
+    PCHAR pNewString;
+    size_t Length;
+
+    /* The piped output of the tests may use CRLF line endings, so convert them to LF.
+       As both printf and OutputDebugStringA operate in text mode, the line-endings will be properly converted again later. */
+    Length = strlen(String);
+    NewString = HeapAlloc(hProcessHeap, 0, Length + 1);
+    pNewString = NewString;
+
+    do
+    {
+        /* If this is a CRLF line-ending, only copy a \n to the new string and skip the next character */
+        if(*String == '\r' && *(String + 1) == '\n')
+        {
+            *pNewString = '\n';
+            ++String;
+        }
+        else
+        {
+            /* Otherwise copy the string */
+            *pNewString = *String;
+        }
+
+        ++pNewString;
+    }
+    while(*++String);
+
+    /* Null-terminate it */
+    *pNewString = 0;
+
+    /* Output it */
+    printf(NewString);
+    OutputDebugStringA(NewString);
+
+    /* Cleanup */
+    HeapFree(hProcessHeap, 0, NewString);
 }
