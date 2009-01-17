@@ -20,8 +20,7 @@
 #define IDC_USERNAME        101
 #define IDC_PASSWORD        102
 #define IDC_MESSAGE         103
-#define IDC_STATIC          104
-#define IDC_SAVE            105
+#define IDC_SAVE            104
 
 #define IDB_BANNER          200
 
