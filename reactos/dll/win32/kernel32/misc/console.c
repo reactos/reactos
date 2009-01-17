@@ -2850,6 +2850,12 @@ GetConsoleCursorInfo(
 
    NTSTATUS Status;
 
+   if (!lpConsoleCursorInfo)
+   {
+       SetLastError(ERROR_INVALID_ACCESS);
+       return FALSE;
+   }
+
    CsrRequest = MAKE_CSR_API(GET_CURSOR_INFO, CSR_CONSOLE);
    Request.Data.GetCursorInfoRequest.ConsoleHandle = hConsoleOutput;
    Status = CsrClientCallServer( &Request, NULL, CsrRequest, sizeof( CSR_API_MESSAGE ) );
