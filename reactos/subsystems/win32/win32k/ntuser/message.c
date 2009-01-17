@@ -345,6 +345,8 @@ LRESULT
 FASTCALL
 IntDispatchMessage(PMSG pMsg)
 {
+  LARGE_INTEGER TickCount;
+  LONG Time;
   LRESULT retval;
   PWINDOW_OBJECT Window = NULL;
 
@@ -362,12 +364,14 @@ IntDispatchMessage(PMSG pMsg)
      {
         if (ValidateTimerCallback(PsGetCurrentThreadWin32Thread(),Window,pMsg->wParam,pMsg->lParam))
         {
+           KeQueryTickCount(&TickCount);
+           Time = MsqCalculateMessageTime(&TickCount);
            return co_IntCallWindowProc((WNDPROC)pMsg->lParam,
                                         TRUE,
                                         pMsg->hwnd,
                                         WM_TIMER,
                                         pMsg->wParam,
-                                        (LPARAM)EngGetTickCount(),
+                                        (LPARAM)Time,
                                         sizeof(LPARAM));
         }
         return 0;        
@@ -377,7 +381,9 @@ IntDispatchMessage(PMSG pMsg)
         PTIMER pTimer = FindSystemTimer(pMsg);
         if (pTimer && pTimer->pfn)
         {
-           pTimer->pfn(pMsg->hwnd, WM_SYSTIMER, (UINT)pMsg->wParam, (DWORD)EngGetTickCount());
+           KeQueryTickCount(&TickCount);
+           Time = MsqCalculateMessageTime(&TickCount);
+           pTimer->pfn(pMsg->hwnd, WM_SYSTIMER, (UINT)pMsg->wParam, Time);
         }
         return 0;
      }

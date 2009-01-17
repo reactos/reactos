@@ -136,6 +136,10 @@ typedef struct _WINDOWCLASS
     UINT NotUsed : 27;
 } WINDOWCLASS, *PWINDOWCLASS;
 
+
+// Flags !Not Implemented!
+#define WNDF_CALLPROC 0x0004 // Call proc inside win32k.
+
 typedef struct _WINDOW
 {
     USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
