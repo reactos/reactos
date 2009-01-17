@@ -293,21 +293,6 @@ VirtualBufferExceptionHandler (
 }
 
 /*
- * @unimplemented
- */
-BOOL
-WINAPI
-AllocateUserPhysicalPages(
-    HANDLE hProcess,
-    PULONG_PTR NumberOfPages,
-    PULONG_PTR UserPfnArray
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
  * @implemented
  */
 BOOL
@@ -359,22 +344,6 @@ FindVolumeMountPointClose(
     STUB;
     return 0;
 }
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-FreeUserPhysicalPages(
-    HANDLE hProcess,
-    PULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray
-    )
-{
-    STUB;
-    return 0;
-}
-
 
 /*
  * @unimplemented
@@ -451,36 +420,6 @@ HeapSetInformation (
 }
 
 /*
- * @unimplemented
- */
-BOOL
-WINAPI
-MapUserPhysicalPages(
-    PVOID VirtualAddress,
-    ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray  OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-MapUserPhysicalPagesScatter(
-    PVOID *VirtualAddresses,
-    ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray  OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
  * @implemented
  */
 BOOL
@@ -529,20 +468,6 @@ ULONG
 WINAPI
 RemoveVectoredExceptionHandler(
     PVOID VectoredHandlerHandle
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-WINAPI
-ResetWriteWatch(
-    LPVOID lpBaseAddress,
-    SIZE_T dwRegionSize
     )
 {
     STUB;
@@ -935,7 +860,7 @@ DWORD WINAPI GetHandleContext(HANDLE hnd)
 HANDLE WINAPI CreateSocketHandle(VOID)
 {
     STUB;
-    return 0;
+    return INVALID_HANDLE_VALUE;
 }
 
 /*
@@ -970,14 +895,10 @@ VOID WINAPI UTUnRegister( HMODULE hModule )
 /*
  * @unimplemented
  */
-#if 0
-FARPROC WINAPI DelayLoadFailureHook(unsigned int dliNotify, PDelayLoadInfo pdli)
-#else
-FARPROC WINAPI DelayLoadFailureHook(unsigned int dliNotify, PVOID pdli)
-#endif
+FARPROC WINAPI DelayLoadFailureHook(LPCSTR pszDllName, LPCSTR pszProcName)
 {
     STUB;
-    return 0;
+    return NULL;
 }
 
 /*
