@@ -255,6 +255,7 @@
  660 stdcall -noname FileIconInit(long)
  680 stdcall IsUserAnAdmin()
  701 stdcall CDefFolderMenu_Create2(ptr ptr long ptr ptr ptr long ptr ptr)
+ 704 stdcall -noname GUIDFromStringW(wstr ptr)
  714 stdcall @(ptr) SHELL32_714 # PathIsTemporaryW
  730 stdcall RestartDialogEx(long wstr long long)
 

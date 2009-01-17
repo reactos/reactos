@@ -33,6 +33,7 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "winnls.h"
+#include "winternl.h"
 
 #include "shellapi.h"
 #include "objbase.h"
@@ -1573,6 +1574,17 @@ DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
 BOOL WINAPI shell32_243(DWORD a, DWORD b)
 {
   return FALSE;
+}
+
+/*************************************************************************
+ *      GUIDFromStringW   [SHELL32.704]
+ */
+BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
+{
+    UNICODE_STRING guid_str;
+
+    RtlInitUnicodeString(&guid_str, str);
+    return !RtlGUIDFromString(&guid_str, guid);
 }
 
 /*************************************************************************
