@@ -109,7 +109,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Date et heure"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Formats disponibles",0,3,2,100,15
+    LTEXT        "Formats disponibles",-1,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "&OK",IDOK,87,12,40,12
     PUSHBUTTON   "&Annuler",IDCANCEL,87,26,40,12
@@ -120,7 +120,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Nouveau"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT        "Nouveau type de document",0,3,2,100,15
+    LTEXT        "Nouveau type de document",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "&OK",IDOK,97,12,40,12
     PUSHBUTTON   "&Annuler",IDCANCEL,97,26,40,12
@@ -131,14 +131,14 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Format de paragraphe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Indentation", 0, 10, 10, 120, 68
-    LTEXT "Gauche", 0, 15, 22, 40, 13
+    GROUPBOX "Indentation", -1, 10, 10, 120, 68
+    LTEXT "Gauche", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Droite", 0, 15, 40, 40, 13
+    LTEXT "Droite", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Première ligne", 0, 15, 58, 40, 18
+    LTEXT "Première ligne", -1, 15, 58, 40, 18
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Alignement", 0, 15, 87, 40, 13
+    LTEXT "Alignement", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "&Annuler", IDCANCEL, 137, 33, 50, 15
@@ -149,7 +149,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabulations"
 FONT 8, "MS SHell DLg"
 BEGIN
-    GROUPBOX "Arrêts de tabulation", 0, 10, 10, 120, 90
+    GROUPBOX "Arrêts de tabulation", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON "&Ajouter", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Supprimer", ID_TAB_DEL, 72, 80, 45, 15
@@ -163,11 +163,11 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Enveloppement de ligne", 0, 10, 10, 170, 85
+    GROUPBOX "Enveloppement de ligne", -1, 10, 10, 170, 85
     RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 145, 15
     RADIOBUTTON "Enveloppe le texte à partir de la bordure de fenêtre", IDC_PAGEFMT_WW, 18, 45, 145, 15
     RADIOBUTTON "Enveloppe le texte à partir de la &marge", IDC_PAGEFMT_WM, 18, 65, 145, 15
-    GROUPBOX "Barres d'outils", 0, 170, 10, 120, 85
+    GROUPBOX "Barres d'outils", -1, 170, 10, 120, 85
     CHECKBOX "&Barre d'outils", IDC_PAGEFMT_TB, 180, 20, 80, 15
     CHECKBOX "Barre de &format", IDC_PAGEFMT_FB, 180, 38, 80, 15
     CHECKBOX "&Règle", IDC_PAGEFMT_RU, 180, 56, 80, 15

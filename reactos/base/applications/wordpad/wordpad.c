@@ -1314,7 +1314,7 @@ static void number_with_units(LPWSTR buffer, int number)
     static const WCHAR fmt[] = {'%','.','2','f',' ','%','s','\0'};
     float converted = (float)number / (float)TWIPS_PER_INCH *(float)CENTMM_PER_INCH / 1000.0;
 
-    wsprintfW(buffer, fmt, converted, units_cmW);
+    sprintfW(buffer, fmt, converted, units_cmW);
 }
 
 static BOOL get_comboexlist_selection(HWND hComboEx, LPWSTR wszBuffer, UINT bufferLength)
@@ -1341,7 +1341,7 @@ static BOOL get_comboexlist_selection(HWND hComboEx, LPWSTR wszBuffer, UINT buff
     cbItem.iItem = idx;
     cbItem.pszText = wszBuffer;
     cbItem.cchTextMax = bufferLength-1;
-    result = SendMessageW(hComboEx, CBEM_GETITEM, 0, (LPARAM)&cbItem);
+    result = SendMessageW(hComboEx, CBEM_GETITEMW, 0, (LPARAM)&cbItem);
 
     return result != 0;
 }
