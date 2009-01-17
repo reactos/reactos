@@ -148,15 +148,15 @@ CAPTION "General"
 STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
-  CONTROL "", IDC_STATIC, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
+  CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
   CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W",
     ES_READONLY|WS_DISABLED,8,11,26,26
   CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W",
     ES_READONLY|WS_DISABLED,34,11,212,26
-  CONTROL "", IDC_STATIC, "Static", SS_BLACKFRAME, 16,37,222,1
+  CONTROL "", -1, "Static", SS_BLACKFRAME, 16,37,222,1
   CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W",
     ES_READONLY|ES_MULTILINE,8,38,238,78
-  CONTROL "", IDC_STATIC, "Static", SS_BLACKFRAME, 16,116,222,1
+  CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
   CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
     ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
   PUSHBUTTON "&Install Certificate...", IDC_ADDTOSTORE,103,216,70,14
@@ -168,7 +168,7 @@ CAPTION "Details"
 STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Show:", stc1, 6,12,40,14
+  LTEXT "&Show:", -1, 6,12,40,14
   COMBOBOX IDC_DETAIL_SELECT, 28,10,100,14,
     CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_DETAIL_LIST, "SysListView32",
@@ -185,7 +185,7 @@ CAPTION "Certification Path"
 STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Certification &path", grp1,6,10,245,165, BS_GROUPBOX
+  GROUPBOX "Certification &path", -1,6,10,245,165, BS_GROUPBOX
   CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
     13,22,231,130
   PUSHBUTTON "&View Certificate", IDC_VIEWCERTIFICATE,175,156,70,14
@@ -210,11 +210,11 @@ CAPTION "General"
 STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Friendly name:", stc1, 6,14,60,14
+  LTEXT "&Friendly name:", -1, 6,14,60,14
   EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
-  LTEXT "&Description:", stc2, 6,32,60,14
+  LTEXT "&Description:", -1, 6,32,60,14
   EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Certificate purposes", grp1,6,48,245,165, BS_GROUPBOX
+  GROUPBOX "Certificate purposes", -1,6,48,245,165, BS_GROUPBOX
   AUTORADIOBUTTON "&Enable all purposes for this certificate",
     IDC_ENABLE_ALL_PURPOSES, 12,58,180,14, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "D&isable all purposes for this certificate",
@@ -232,7 +232,7 @@ CAPTION "Add Purpose"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Add the object identifier (OID) for the certificate purpose you wish to add:",
-    stc1, 6,6,190,28
+    -1, 6,6,190,28
   EDITTEXT IDC_NEW_PURPOSE, 6,28,190,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
   PUSHBUTTON "OK", IDOK, 33,48,60,14
   PUSHBUTTON "Cancel", IDCANCEL, 100,48,60,14
@@ -258,34 +258,36 @@ BEGIN
   LTEXT "Welcome to the Certificate Import Wizard", IDC_IMPORT_TITLE,
     115,1,195,40
   LTEXT "This wizard helps you import certificates, certificate revocation lists, and certificate trust lists from a file to a certificate store.",
-    stc1, 115,33,195,16
+    -1, 115,33,195,16
   LTEXT "A certificate can be used to identify you or the computer with which you are communicating.  It can also be used for authentication, and to sign messages.  Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists.",
-    stc2, 115,56,195,40
+    -1, 115,56,195,40
   LTEXT "To continue, click Next.",
-    stc3, 115,103,195,8
+    -1, 115,103,195,8
 END
 
 IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,143
 CAPTION "Certificate Import Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&File name:", stc1, 21,1,195,10
+  LTEXT "&File name:", -1, 21,1,195,10
   EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "B&rowse...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
-  LTEXT "Note:  The following file formats may contain more than one certificate, certificate revocation list, or certificate trust list:", stc2, 21,26,265,16
+  LTEXT "Note:  The following file formats may contain more than one certificate, certificate revocation list, or certificate trust list:",
+    -1, 21,26,265,16
   LTEXT "Cryptographic Message Syntax Standard/PKCS #7 Messages (.p7b)",
-    stc3, 31,49,265,10
+    -1, 31,49,265,10
   LTEXT "Personal Information Exchange/PKCS #12 (.pfx, .p12)",
-    stc3, 31,64,265,10
+    -1, 31,64,265,10
   LTEXT "Microsoft Serialized Certificate Store (.sst)",
-    stc3, 31,79,265,10
+    -1, 31,79,265,10
 END
 
 IDD_IMPORT_STORE DIALOG DISCARDABLE 0,0,317,143
 CAPTION "Certificate Import Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Wine can automatically select the certificate store, or you can specify a location for the certificates.", stc1, 21,1,195,20
+  LTEXT "Wine can automatically select the certificate store, or you can specify a location for the certificates.",
+    -1, 21,1,195,20
   AUTORADIOBUTTON "&Automatically select certificate store",
     IDC_IMPORT_AUTO_STORE, 31,18,180,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "&Place all certificates in the following store:",
@@ -301,9 +303,9 @@ BEGIN
   LTEXT "Completing the Certificate Import Wizard", IDC_IMPORT_TITLE,
     115,1,195,40
   LTEXT "You have successfully completed the Certificate Import Wizard.",
-    stc1, 115,33,195,24
+    -1, 115,33,195,24
   LTEXT "You have specified the following settings:",
-    stc2, 115,57,195,12
+    -1, 115,57,195,12
   CONTROL "", IDC_IMPORT_SETTINGS, "SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     115,67,174,100
@@ -313,7 +315,7 @@ IDD_CERT_MGR DIALOG DISCARDABLE 0,0,335,270
 CAPTION "Certificates"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "I&ntended purpose:", IDC_STATIC, 7,9,100,12
+  LTEXT "I&ntended purpose:", -1, 7,9,100,12
   COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14,
     CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_MGR_STORES, "SysTabControl32",
@@ -324,7 +326,7 @@ BEGIN
   PUSHBUTTON "&Export...", IDC_MGR_EXPORT, 62,172,51,14, WS_DISABLED
   PUSHBUTTON "&Remove", IDC_MGR_REMOVE, 117,172,51,14, WS_DISABLED
   PUSHBUTTON "&Advanced...", IDC_MGR_ADVANCED, 277,172,51,14
-  GROUPBOX "Certificate intended purposes", grp1,7,194,321,47, BS_GROUPBOX
+  GROUPBOX "Certificate intended purposes", -1,7,194,321,47, BS_GROUPBOX
   LTEXT "", IDC_MGR_PURPOSES, 13,208,252,30
   PUSHBUTTON "&View...", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
   PUSHBUTTON "&Close", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
@@ -334,10 +336,10 @@ IDD_CERT_MGR_ADVANCED DIALOG DISCARDABLE 0,0,248,176
 CAPTION "Advanced Options"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Certificate purpose", grp1, 7,7,234,141, BS_GROUPBOX
+  GROUPBOX "Certificate purpose", -1, 7,7,234,141, BS_GROUPBOX
   LTEXT "Select one or more purposes to be listed when Advanced Purposes is selected.",
-    IDC_STATIC, 14,18,220,16
-  LTEXT "&Certificate purposes:", IDC_STATIC, 14,41,90,12, WS_TABSTOP
+    -1, 14,18,220,16
+  LTEXT "&Certificate purposes:", -1, 14,41,90,12, WS_TABSTOP
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     14,51,220,90
