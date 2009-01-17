@@ -10,7 +10,6 @@ typedef struct
 
     PMINIPORTTOPOLOGY pMiniport;
     PDEVICE_OBJECT pDeviceObject;
-    PRESOURCELIST pResourceList;
     PPINCOUNT pPinCount;
     PPOWERNOTIFY pPowerNotify;
 
@@ -148,7 +147,8 @@ IPortTopology_fnInit(
     NTSTATUS Status;
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
 
-    DPRINT1("IPortTopology_fnInit entered\n");
+    DPRINT1("IPortTopology_fnInit entered This %p DeviceObject %p Irp %p UnknownMiniport %p UnknownAdapter %p ResourceList %p\n",
+            This, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
 
     if (This->bInitialized)
     {
@@ -163,22 +163,18 @@ IPortTopology_fnInit(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* increment reference on resource list */
-    //HACK
-    //ResourceList->lpVtbl->AddRef(ResourceList);
+    /* Initialize port object */
+    This->pMiniport = Miniport;
+    This->pDeviceObject = DeviceObject;
+    This->bInitialized = TRUE;
 
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IPortTopology_Init failed with %x\n", Status);
+        This->bInitialized = FALSE;
         return Status;
     }
-
-    /* Initialize port object */
-    This->pMiniport = Miniport;
-    This->pDeviceObject = DeviceObject;
-    This->bInitialized = TRUE;
-    This->pResourceList = ResourceList;
 
     /* increment reference on miniport adapter */
     Miniport->lpVtbl->AddRef(Miniport);
