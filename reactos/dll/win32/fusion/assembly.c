@@ -153,7 +153,7 @@ static BYTE *GetData(BYTE *pData, ULONG *pLength)
 
 static VOID *assembly_data_offset(ASSEMBLY *assembly, ULONG offset)
 {
-    return (VOID *)&assembly->data[offset];
+    return &assembly->data[offset];
 }
 
 #define MAX_TABLES_WORD 0xFFFF
