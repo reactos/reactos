@@ -398,7 +398,7 @@ NpfsPeekPipe(PIRP Irp,
 	DPRINT("ReadDataAvailable: %lu\n", Ccb->ReadDataAvailable);
 
 	ExAcquireFastMutex(&Ccb->DataListLock);
-	BufferPtr = Ccb->Data;
+	BufferPtr = Ccb->ReadPtr;
 	DPRINT("BufferPtr = %x\n", BufferPtr);
 	if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
 	{
@@ -420,9 +420,8 @@ NpfsPeekPipe(PIRP Irp,
 
 		if (ReadDataAvailable > 0)
 		{
-			memcpy(&Reply->MessageLength,Ccb->Data,sizeof(ULONG));
+			memcpy(&Reply->MessageLength, BufferPtr, sizeof(ULONG));
 
-			/* NOTE: Modifying the structure in header file to keep track of NumberOfMessage would be better */
 			while ((ReadDataAvailable > 0) && (BufferPtr < Ccb->WritePtr))
 			{
 				memcpy(&MessageLength, BufferPtr, sizeof(MessageLength));
@@ -430,20 +429,34 @@ NpfsPeekPipe(PIRP Irp,
 				ASSERT(MessageLength > 0);
 
 				DPRINT("MessageLength = %lu\n",MessageLength);
-				MessageCount++;
 				ReadDataAvailable -= MessageLength;
+				MessageCount++;
 
-				/* If its the first message, copy the Message if the size of buffer is large enough */
-				if (MessageCount==1)
+				if (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
 				{
-					
 					if ((Reply->Data[0])
-					&& (OutputBufferLength >= (MessageLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
+						&& (OutputBufferLength >= (MessageLength + ReturnLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
 					{
-						ReturnLength = MessageLength;
-						memcpy(&Reply->Data[0], (PVOID)((ULONG)BufferPtr + sizeof(MessageLength)), MessageLength);
+						memcpy((PVOID)((ULONG_PTR)&Reply->Data[0] + ReturnLength),
+							(PVOID)((ULONG)BufferPtr + sizeof(MessageLength)),
+							MessageLength);
+						ReturnLength += MessageLength;
 					}
 				}
+				else
+				{
+					/* If its the first message, copy the Message if the size of buffer is large enough */
+					if (MessageCount==1)
+					{	
+						if ((Reply->Data[0])
+							&& (OutputBufferLength >= (MessageLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
+						{							
+							memcpy(&Reply->Data[0], (PVOID)((ULONG)BufferPtr + sizeof(MessageLength)), MessageLength);
+							ReturnLength = MessageLength;
+						}
+					}
+				}
+
 				BufferPtr =(PVOID)((ULONG)BufferPtr + MessageLength + sizeof(MessageLength));
 				DPRINT("BufferPtr = %x\n", BufferPtr);
 				DPRINT("ReadDataAvailable: %lu\n", ReadDataAvailable);
