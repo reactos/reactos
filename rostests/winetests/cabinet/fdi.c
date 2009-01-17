@@ -32,22 +32,22 @@ CHAR CURR_DIR[MAX_PATH];
 
 /* FDI callbacks */
 
-static void *fdi_alloc(ULONG cb)
+static void * CDECL fdi_alloc(ULONG cb)
 {
     return HeapAlloc(GetProcessHeap(), 0, cb);
 }
 
-static void *fdi_alloc_bad(ULONG cb)
+static void * CDECL fdi_alloc_bad(ULONG cb)
 {
     return NULL;
 }
 
-static void fdi_free(void *pv)
+static void CDECL fdi_free(void *pv)
 {
     HeapFree(GetProcessHeap(), 0, pv);
 }
 
-static INT_PTR fdi_open(char *pszFile, int oflag, int pmode)
+static INT_PTR CDECL fdi_open(char *pszFile, int oflag, int pmode)
 {
     HANDLE handle;
     handle = CreateFileA(pszFile, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
@@ -57,7 +57,7 @@ static INT_PTR fdi_open(char *pszFile, int oflag, int pmode)
     return (INT_PTR) handle;
 }
 
-static UINT fdi_read(INT_PTR hf, void *pv, UINT cb)
+static UINT CDECL fdi_read(INT_PTR hf, void *pv, UINT cb)
 {
     HANDLE handle = (HANDLE) hf;
     DWORD dwRead;
@@ -66,7 +66,7 @@ static UINT fdi_read(INT_PTR hf, void *pv, UINT cb)
     return 0;
 }
 
-static UINT fdi_write(INT_PTR hf, void *pv, UINT cb)
+static UINT CDECL fdi_write(INT_PTR hf, void *pv, UINT cb)
 {
     HANDLE handle = (HANDLE) hf;
     DWORD dwWritten;
@@ -75,13 +75,13 @@ static UINT fdi_write(INT_PTR hf, void *pv, UINT cb)
     return 0;
 }
 
-static int fdi_close(INT_PTR hf)
+static int CDECL fdi_close(INT_PTR hf)
 {
     HANDLE handle = (HANDLE) hf;
     return CloseHandle(handle) ? 0 : -1;
 }
 
-static long fdi_seek(INT_PTR hf, long dist, int seektype)
+static LONG CDECL fdi_seek(INT_PTR hf, LONG dist, int seektype)
 {
     HANDLE handle = (HANDLE) hf;
     return SetFilePointer(handle, dist, NULL, seektype);
@@ -315,33 +315,33 @@ static void delete_test_files(void)
 
 /* FCI callbacks */
 
-static void *mem_alloc(ULONG cb)
+static void * CDECL mem_alloc(ULONG cb)
 {
     return HeapAlloc(GetProcessHeap(), 0, cb);
 }
 
-static void mem_free(void *memory)
+static void CDECL mem_free(void *memory)
 {
     HeapFree(GetProcessHeap(), 0, memory);
 }
 
-static BOOL get_next_cabinet(PCCAB pccab, ULONG  cbPrevCab, void *pv)
+static BOOL CDECL get_next_cabinet(PCCAB pccab, ULONG  cbPrevCab, void *pv)
 {
     return TRUE;
 }
 
-static long progress(UINT typeStatus, ULONG cb1, ULONG cb2, void *pv)
+static LONG CDECL progress(UINT typeStatus, ULONG cb1, ULONG cb2, void *pv)
 {
     return 0;
 }
 
-static int file_placed(PCCAB pccab, char *pszFile, long cbFile,
-                       BOOL fContinuation, void *pv)
+static int CDECL file_placed(PCCAB pccab, char *pszFile, LONG cbFile,
+                             BOOL fContinuation, void *pv)
 {
     return 0;
 }
 
-static INT_PTR fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
+static INT_PTR CDECL fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
 {
     HANDLE handle;
     DWORD dwAccess = 0;
@@ -365,7 +365,7 @@ static INT_PTR fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
     return (INT_PTR)handle;
 }
 
-static UINT fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
+static UINT CDECL fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     DWORD dwRead;
@@ -377,7 +377,7 @@ static UINT fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
     return dwRead;
 }
 
-static UINT fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
+static UINT CDECL fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     DWORD dwWritten;
@@ -389,7 +389,7 @@ static UINT fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
     return dwWritten;
 }
 
-static int fci_close(INT_PTR hf, int *err, void *pv)
+static int CDECL fci_close(INT_PTR hf, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     ok(CloseHandle(handle), "Failed to CloseHandle\n");
@@ -397,7 +397,7 @@ static int fci_close(INT_PTR hf, int *err, void *pv)
     return 0;
 }
 
-static long fci_seek(INT_PTR hf, long dist, int seektype, int *err, void *pv)
+static LONG CDECL fci_seek(INT_PTR hf, LONG dist, int seektype, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     DWORD ret;
@@ -408,7 +408,7 @@ static long fci_seek(INT_PTR hf, long dist, int seektype, int *err, void *pv)
     return ret;
 }
 
-static int fci_delete(char *pszFile, int *err, void *pv)
+static int CDECL fci_delete(char *pszFile, int *err, void *pv)
 {
     BOOL ret = DeleteFileA(pszFile);
     ok(ret, "Failed to DeleteFile %s\n", pszFile);
@@ -416,7 +416,7 @@ static int fci_delete(char *pszFile, int *err, void *pv)
     return 0;
 }
 
-static BOOL get_temp_file(char *pszTempName, int cbTempName, void *pv)
+static BOOL CDECL get_temp_file(char *pszTempName, int cbTempName, void *pv)
 {
     LPSTR tempname;
 
@@ -435,8 +435,8 @@ static BOOL get_temp_file(char *pszTempName, int cbTempName, void *pv)
     return FALSE;
 }
 
-static INT_PTR get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
-                             USHORT *pattribs, int *err, void *pv)
+static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
+                                   USHORT *pattribs, int *err, void *pv)
 {
     BY_HANDLE_FILE_INFORMATION finfo;
     FILETIME filetime;
@@ -544,11 +544,11 @@ static void test_FDIIsCabinet(void)
     /* invalid file handle */
     ZeroMemory(&cabinfo, sizeof(FDICABINETINFO));
     SetLastError(0xdeadbeef);
-    ret = FDIIsCabinet(hfdi, (int)INVALID_HANDLE_VALUE, &cabinfo);
+    ret = FDIIsCabinet(hfdi, -1, &cabinfo);
     ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_HANDLE,
        "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
-    ok(cabinfo.cbCabinet == 0, "Expected 0, got %ld\n", cabinfo.cbCabinet);
+    ok(cabinfo.cbCabinet == 0, "Expected 0, got %d\n", cabinfo.cbCabinet);
     ok(cabinfo.cFiles == 0, "Expected 0, got %d\n", cabinfo.cFiles);
     ok(cabinfo.cFolders == 0, "Expected 0, got %d\n", cabinfo.cFolders);
     ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
@@ -563,7 +563,7 @@ static void test_FDIIsCabinet(void)
     ret = FDIIsCabinet(hfdi, fd, &cabinfo);
     ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(cabinfo.cbCabinet == 0, "Expected 0, got %ld\n", cabinfo.cbCabinet);
+    ok(cabinfo.cbCabinet == 0, "Expected 0, got %d\n", cabinfo.cbCabinet);
     ok(cabinfo.cFiles == 0, "Expected 0, got %d\n", cabinfo.cFiles);
     ok(cabinfo.cFolders == 0, "Expected 0, got %d\n", cabinfo.cFolders);
     ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
@@ -584,7 +584,7 @@ static void test_FDIIsCabinet(void)
     ok(cabinfo.setID == 0xbeef, "Expected 0xbeef, got %d\n", cabinfo.setID);
     todo_wine
     {
-        ok(cabinfo.cbCabinet == 182, "Expected 182, got %ld\n", cabinfo.cbCabinet);
+        ok(cabinfo.cbCabinet == 182, "Expected 182, got %d\n", cabinfo.cbCabinet);
         ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
     }
 
