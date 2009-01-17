@@ -1182,29 +1182,35 @@ RtlOemStringToCountedUnicodeString(
 
     PAGED_CODE_RTL();
 
+    /* Calculate size of the string */
     Length = RtlOemStringToCountedUnicodeSize(OemSource);
 
+    /* If it's 0 then zero out dest string and return */
     if (!Length)
     {
         RtlZeroMemory(UniDest, sizeof(UNICODE_STRING));
         return STATUS_SUCCESS;
     }
 
+    /* Check if length is a sane value */
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
 
+    /* Store it in dest string */
     UniDest->Length = (USHORT)Length;
 
+    /* If we're asked to alloc the string - do so */
     if (AllocateDestinationString)
     {
         UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
         UniDest->MaximumLength = Length;
         if (!UniDest->Buffer) return STATUS_NO_MEMORY;
     }
-    else if (UniDest->Length >= UniDest->MaximumLength)
+    else if (UniDest->Length > UniDest->MaximumLength)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
 
+    /* Do the conversion */
     Status = RtlOemToUnicodeN(UniDest->Buffer,
                               UniDest->Length,
                               &Index,
@@ -1213,6 +1219,7 @@ RtlOemStringToCountedUnicodeString(
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
+        /* Conversion failed, free dest string and return status code */
         RtlpFreeStringMemory(UniDest->Buffer, TAG_USTR);
         UniDest->Buffer = NULL;
         return Status;
