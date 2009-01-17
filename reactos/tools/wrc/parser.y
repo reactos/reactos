@@ -1966,6 +1966,14 @@ static control_t *ins_ctrl(int type, int special_style, control_t *ctrl, control
 	if(prev)
 		prev->next = ctrl;
 
+	/* Check for duplicate identifiers */
+	while (prev)
+	{
+		if (ctrl->id != -1 && ctrl->id == prev->id)
+                        parser_warning("Duplicate dialog control id %d\n", ctrl->id);
+		prev = prev->prev;
+	}
+
 	if(type != -1)
 	{
 		ctrl->ctlclass = new_name_id();
