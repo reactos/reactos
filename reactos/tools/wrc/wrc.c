@@ -266,7 +266,7 @@ int main(int argc,char *argv[])
 	cmdlen = 4; /* for "wrc " */
 	for(i = 1; i < argc; i++)
 		cmdlen += strlen(argv[i]) + 1;
-	cmdline = (char *)xmalloc(cmdlen);
+	cmdline = xmalloc(cmdlen);
 	strcpy(cmdline, "wrc ");
 	for(i = 1; i < argc; i++)
 	{

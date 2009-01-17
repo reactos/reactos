@@ -902,7 +902,7 @@ static unsigned long xstrtoul(const char *nptr, char **endptr, int base)
     errno = 0;
     l = strtoul(nptr, endptr, base);
     if (l == ULONG_MAX && errno == ERANGE)
-        parser_error("integer constant %s is too large\n", nptr);
+        parser_error("integer constant %s is too large", nptr);
     return l;
 }
 
