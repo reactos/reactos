@@ -74,7 +74,7 @@ static void test_DialogCancel(void)
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ENABLEHOOK;
     ofn.lpstrDefExt = "txt";
-    ofn.lpfnHook = (LPOFNHOOKPROC) OFNHookProc;
+    ofn.lpfnHook = OFNHookProc;
     ofn.lpstrInitialDir = szInitialDir;
 
     PrintDlgA(NULL);
