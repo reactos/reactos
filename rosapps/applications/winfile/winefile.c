@@ -3781,8 +3781,15 @@ static void refresh_child(ChildWnd* child)
 	scan_entry(child, &child->root.entry, 0, child->hwnd);
 
 #ifdef _SHELL_FOLDERS
+
 	if (child->root.entry.etype == ET_SHELL)
-		entry = read_tree(&child->root, NULL, get_path_pidl(path,child->hwnd), drv, child->sortOrder, child->hwnd);
+	{
+		LPITEMIDLIST local_pidl = get_path_pidl(path,child->hwnd);
+		if (local_pidl)
+			entry = read_tree(&child->root, NULL, local_pidl , drv, child->sortOrder, child->hwnd);
+		else
+			entry = NULL;
+	}
 	else
 #endif
 		entry = read_tree(&child->root, path, NULL, drv, child->sortOrder, child->hwnd);
