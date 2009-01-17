@@ -1327,7 +1327,7 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
             break;
         case MNID_OPTS_FONTS_NORMAL:
         case MNID_CTXT_FONTS_NORMAL:
-            win = (WINHELP_WINDOW*) GetWindowLong(hWnd, 0);
+            win = (WINHELP_WINDOW*) GetWindowLongPtr(hWnd, 0);
             if (win->font_scale != 1)
             {
                 win->font_scale = 1;
@@ -1336,7 +1336,7 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
             break;
         case MNID_OPTS_FONTS_LARGE:
         case MNID_CTXT_FONTS_LARGE:
-            win = (WINHELP_WINDOW*) GetWindowLong(hWnd, 0);
+            win = (WINHELP_WINDOW*) GetWindowLongPtr(hWnd, 0);
             if (win->font_scale != 2)
             {
                 win->font_scale = 2;
@@ -1443,7 +1443,7 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
                         HMENU       hMenu;
                         POINT       pt;
 
-                        win = (WINHELP_WINDOW*) GetWindowLong(hWnd, 0);
+                        win = (WINHELP_WINDOW*) GetWindowLongPtr(hWnd, 0);
                         hMenu = LoadMenu(Globals.hInstance, (LPSTR)CONTEXT_MENU);
                         switch (win->font_scale)
                         {
@@ -1479,7 +1479,7 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
 
             case EN_REQUESTRESIZE:
                 rc = ((REQRESIZE*)lParam)->rc;
-                win = (WINHELP_WINDOW*) GetWindowLong(hWnd, 0);
+                win = (WINHELP_WINDOW*) GetWindowLongPtr(hWnd, 0);
                 AdjustWindowRect(&rc, GetWindowLong(win->hMainWnd, GWL_STYLE),
                                  FALSE);
                 SetWindowPos(win->hMainWnd, HWND_TOP, 0, 0,
@@ -1492,7 +1492,7 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
         break;
 
     case WM_INITMENUPOPUP:
-        win = (WINHELP_WINDOW*) GetWindowLong(hWnd, 0);
+        win = (WINHELP_WINDOW*) GetWindowLongPtr(hWnd, 0);
         CheckMenuItem((HMENU)wParam, MNID_OPTS_FONTS_SMALL,
                       MF_BYCOMMAND | (win->font_scale == 0) ? MF_CHECKED : 0);
         CheckMenuItem((HMENU)wParam, MNID_OPTS_FONTS_NORMAL,
@@ -1594,7 +1594,7 @@ static BOOL WINHELP_RegisterWinClasses(void)
     class_main.style               = CS_HREDRAW | CS_VREDRAW;
     class_main.lpfnWndProc         = WINHELP_MainWndProc;
     class_main.cbClsExtra          = 0;
-    class_main.cbWndExtra          = sizeof(LONG);
+    class_main.cbWndExtra          = sizeof(WINHELP_WINDOW *);
     class_main.hInstance           = Globals.hInstance;
     class_main.hIcon               = LoadIcon(Globals.hInstance, MAKEINTRESOURCE(IDI_WINHELP));
     class_main.hCursor             = LoadCursor(0, IDC_ARROW);
