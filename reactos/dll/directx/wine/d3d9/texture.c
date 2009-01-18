@@ -339,7 +339,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9EX iface, U
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DTexture9Impl));
 
     if (NULL == object) {
-        FIXME("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
+        ERR("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
         return D3DERR_OUTOFVIDEOMEMORY;
     }
 
@@ -347,13 +347,12 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateTexture(LPDIRECT3DDEVICE9EX iface, U
     object->ref = 1;
     EnterCriticalSection(&d3d9_cs);
     hrc = IWineD3DDevice_CreateTexture(This->WineD3DDevice, Width, Height, Levels, Usage & WINED3DUSAGE_MASK,
-                                 (WINED3DFORMAT)Format, (WINED3DPOOL) Pool, &object->wineD3DTexture, pSharedHandle, (IUnknown *)object, D3D9CB_CreateSurface);
+            Format, Pool, &object->wineD3DTexture, pSharedHandle, (IUnknown *)object);
     LeaveCriticalSection(&d3d9_cs);
-
     if (FAILED(hrc)) {
 
         /* free up object */
-        FIXME("(%p) call to IWineD3DDevice_CreateTexture failed\n", This);
+        WARN("(%p) call to IWineD3DDevice_CreateTexture failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
    } else {
         IDirect3DDevice9Ex_AddRef(iface);

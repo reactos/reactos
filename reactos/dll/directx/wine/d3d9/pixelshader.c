@@ -170,11 +170,21 @@ HRESULT WINAPI IDirect3DDevice9Impl_GetPixelShader(LPDIRECT3DDEVICE9EX iface, ID
 
     EnterCriticalSection(&d3d9_cs);
     hrc = IWineD3DDevice_GetPixelShader(This->WineD3DDevice, &object);
-    if (hrc == D3D_OK && object != NULL) {
-       hrc = IWineD3DPixelShader_GetParent(object, (IUnknown **)ppShader);
-       IWineD3DPixelShader_Release(object);
-    } else {
-        *ppShader = NULL;
+    if (SUCCEEDED(hrc))
+    {
+        if (object)
+        {
+            hrc = IWineD3DPixelShader_GetParent(object, (IUnknown **)ppShader);
+            IWineD3DPixelShader_Release(object);
+        }
+        else
+        {
+            *ppShader = NULL;
+        }
+    }
+    else
+    {
+        WARN("(%p) : Call to IWineD3DDevice_GetPixelShader failed %u (device %p)\n", This, hrc, This->WineD3DDevice);
     }
     LeaveCriticalSection(&d3d9_cs);
 

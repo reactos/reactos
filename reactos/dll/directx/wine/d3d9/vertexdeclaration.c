@@ -96,6 +96,10 @@ HRESULT vdecl_convert_fvf(
             elements[idx].Type = D3DDECLTYPE_FLOAT4;
             elements[idx].Usage = D3DDECLUSAGE_POSITIONT;
         }
+        else if (!has_blend && (fvf & D3DFVF_XYZW) == D3DFVF_XYZW) {
+            elements[idx].Type = D3DDECLTYPE_FLOAT4;
+            elements[idx].Usage = D3DDECLUSAGE_POSITION;
+        }
         else {
             elements[idx].Type = D3DDECLTYPE_FLOAT3;
             elements[idx].Usage = D3DDECLUSAGE_POSITION;

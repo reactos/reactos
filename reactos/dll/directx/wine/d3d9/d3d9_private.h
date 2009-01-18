@@ -167,6 +167,7 @@ void filter_caps(D3DCAPS9* pCaps);
  * Predeclare the interface implementation structures
  */
 extern const IDirect3DDevice9ExVtbl Direct3DDevice9_Vtbl;
+extern const IWineD3DDeviceParentVtbl d3d9_wined3d_device_parent_vtbl;
 
 /*****************************************************************************
  * IDirect3DDevice9 implementation structure
@@ -175,6 +176,7 @@ typedef struct IDirect3DDevice9Impl
 {
     /* IUnknown fields */
     const IDirect3DDevice9ExVtbl   *lpVtbl;
+    const IWineD3DDeviceParentVtbl *device_parent_vtbl;
     LONG                          ref;
 
     /* IDirect3DDevice9 fields */
@@ -233,6 +235,7 @@ extern HRESULT  WINAPI  IDirect3DDevice9Impl_CreateQuery(LPDIRECT3DDEVICE9EX ifa
 /*****************************************************************************
  * IDirect3DVolume9 implementation structure
  */
+extern const IDirect3DVolume9Vtbl Direct3DVolume9_Vtbl;
 typedef struct IDirect3DVolume9Impl
 {
     /* IUnknown fields */
@@ -551,34 +554,10 @@ typedef struct IDirect3DQuery9Impl {
 
 
 /* Callbacks */
-extern HRESULT WINAPI D3D9CB_CreateSurface(IUnknown *device, IUnknown *pSuperior, UINT Width, UINT Height,
-                                         WINED3DFORMAT Format, DWORD Usage, WINED3DPOOL Pool, UINT Level,
-                                         WINED3DCUBEMAP_FACES Face, IWineD3DSurface** ppSurface,
-                                         HANDLE* pSharedHandle);
-
-extern HRESULT WINAPI D3D9CB_CreateVolume(IUnknown  *pDevice, IUnknown *pSuperior, UINT Width, UINT Height, UINT Depth,
-                                          WINED3DFORMAT  Format, WINED3DPOOL Pool, DWORD Usage,
-                                          IWineD3DVolume **ppVolume,
-                                          HANDLE   * pSharedHandle);
-
-extern HRESULT WINAPI D3D9CB_CreateDepthStencilSurface(IUnknown *device, IUnknown *pSuperior, UINT Width, UINT Height,
-                                         WINED3DFORMAT Format, WINED3DMULTISAMPLE_TYPE MultiSample,
-                                         DWORD MultisampleQuality, BOOL Discard,
-                                         IWineD3DSurface** ppSurface, HANDLE* pSharedHandle);
-
-extern HRESULT WINAPI D3D9CB_CreateRenderTarget(IUnknown *device, IUnknown *pSuperior, UINT Width, UINT Height,
-                                         WINED3DFORMAT Format, WINED3DMULTISAMPLE_TYPE MultiSample,
-                                         DWORD MultisampleQuality, BOOL Lockable,
-                                         IWineD3DSurface** ppSurface, HANDLE* pSharedHandle);
-
 extern ULONG WINAPI D3D9CB_DestroySwapChain (IWineD3DSwapChain *pSwapChain);
-
 extern ULONG WINAPI D3D9CB_DestroyDepthStencilSurface (IWineD3DSurface *pSurface);
-
 extern ULONG WINAPI D3D9CB_DestroyRenderTarget (IWineD3DSurface *pSurface);
-
 extern ULONG WINAPI D3D9CB_DestroySurface(IWineD3DSurface *pSurface);
-
 extern ULONG WINAPI D3D9CB_DestroyVolume(IWineD3DVolume *pVolume);
 
 #endif /* __WINE_D3D9_PRIVATE_H */
