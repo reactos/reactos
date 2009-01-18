@@ -505,7 +505,7 @@ static void create_test_guid(LPSTR prodcode, LPSTR squashed)
     hr = CoCreateGuid(&guid);
     ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
 
-    size = StringFromGUID2(&guid, (LPOLESTR)guidW, MAX_PATH);
+    size = StringFromGUID2(&guid, guidW, MAX_PATH);
     ok(size == 39, "Expected 39, got %d\n", hr);
 
     WideCharToMultiByte(CP_ACP, 0, guidW, size, prodcode, MAX_PATH, NULL, NULL);
@@ -522,7 +522,7 @@ static void get_user_sid(LPSTR *usersid)
 
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     size = sizeof(buf);
-    GetTokenInformation(token, TokenUser, (void *)buf, size, &size);
+    GetTokenInformation(token, TokenUser, buf, size, &size);
     user = (PTOKEN_USER)buf;
     pConvertSidToStringSidA(user->User.Sid, usersid);
 }
@@ -794,7 +794,7 @@ static void compose_base85_guid(LPSTR component, LPSTR comp_base85, LPSTR squash
     hr = CoCreateGuid(&guid);
     ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
 
-    size = StringFromGUID2(&guid, (LPOLESTR)guidW, MAX_PATH);
+    size = StringFromGUID2(&guid, guidW, MAX_PATH);
     ok(size == 39, "Expected 39, got %d\n", hr);
 
     WideCharToMultiByte(CP_ACP, 0, guidW, size, component, MAX_PATH, NULL, NULL);
@@ -1760,7 +1760,6 @@ static void test_MsiGetComponentPath(void)
     RegDeleteKeyA(compkey, "");
     RegCloseKey(prodkey);
     RegCloseKey(compkey);
-    RegCloseKey(installprop);
     DeleteFileA("C:\\imapath");
 
     lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
@@ -1919,9 +1918,6 @@ static void test_MsiGetProductCode(void)
     r = MsiGetProductCodeA(component, product);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(product, prodcode), "Expected %s, got %s\n", prodcode, product);
-
-    RegDeleteKeyA(prodkey, "");
-    RegCloseKey(prodkey);
 
     RegDeleteKeyA(prodkey, "");
     RegCloseKey(prodkey);
@@ -7368,9 +7364,12 @@ static void test_MsiOpenProduct(void)
     /* LocalPackage has just the package name */
     hprod = 0xdeadbeef;
     r = MsiOpenProductA(prodcode, &hprod);
-    ok(r == ERROR_INSTALL_PACKAGE_OPEN_FAILED,
-       "Expected ERROR_INSTALL_PACKAGE_OPEN_FAILED, got %d\n", r);
-    ok(hprod == 0xdeadbeef, "Expected hprod to be unchanged\n");
+    ok(r == ERROR_INSTALL_PACKAGE_OPEN_FAILED || r == ERROR_SUCCESS,
+       "Expected ERROR_INSTALL_PACKAGE_OPEN_FAILED or ERROR_SUCCESS, got %d\n", r);
+    if (r == ERROR_SUCCESS)
+        MsiCloseHandle(hprod);
+    else
+        ok(hprod == 0xdeadbeef, "Expected hprod to be unchanged\n");
 
     lstrcpyA(val, path);
     lstrcatA(val, "\\winetest.msi");

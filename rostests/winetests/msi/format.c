@@ -228,7 +228,7 @@ static MSIHANDLE package_from_db(MSIHANDLE hdb)
     CHAR szPackage[10];
     MSIHANDLE hPackage;
 
-    sprintf(szPackage,"#%li",hdb);
+    sprintf(szPackage,"#%i",hdb);
     res = MsiOpenPackage(szPackage,&hPackage);
     ok( res == ERROR_SUCCESS , "Failed to open package\n" );
 
@@ -303,7 +303,7 @@ static MSIHANDLE helper_createpackage( const char *szName )
     res = MsiCloseHandle( suminfo);
     ok( res == ERROR_SUCCESS , "Failed to close suminfo\n" );
 
-    sprintf(szPackage,"#%li",hdb);
+    sprintf(szPackage,"#%i",hdb);
     res = MsiOpenPackage(szPackage,&hPackage);
     ok( res == ERROR_SUCCESS , "Failed to open package\n" );
 

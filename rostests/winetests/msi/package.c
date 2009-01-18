@@ -48,7 +48,7 @@ static void get_user_sid(LPSTR *usersid)
 
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     size = sizeof(buf);
-    GetTokenInformation(token, TokenUser, (void *)buf, size, &size);
+    GetTokenInformation(token, TokenUser, buf, size, &size);
     user = (PTOKEN_USER)buf;
     pConvertSidToStringSidA(user->User.Sid, usersid);
 }
@@ -160,7 +160,7 @@ static void create_test_guid(LPSTR prodcode, LPSTR squashed)
     hr = CoCreateGuid(&guid);
     ok(hr == S_OK, "Expected S_OK, got %d\n", hr);
 
-    size = StringFromGUID2(&guid, (LPOLESTR)guidW, MAX_PATH);
+    size = StringFromGUID2(&guid, guidW, MAX_PATH);
     ok(size == 39, "Expected 39, got %d\n", hr);
 
     WideCharToMultiByte(CP_ACP, 0, guidW, size, prodcode, MAX_PATH, NULL, NULL);
@@ -665,7 +665,7 @@ static MSIHANDLE package_from_db(MSIHANDLE hdb)
     CHAR szPackage[10];
     MSIHANDLE hPackage;
 
-    sprintf(szPackage,"#%li",hdb);
+    sprintf(szPackage,"#%i",hdb);
     res = MsiOpenPackage(szPackage,&hPackage);
     if (res != ERROR_SUCCESS)
         return 0;
@@ -2116,7 +2116,7 @@ static void test_msipackage(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     /* database exists, but is emtpy */
-    sprintf(name, "#%ld", hdb);
+    sprintf(name, "#%d", hdb);
     r = MsiOpenPackage(name, &hpack);
     ok(r == ERROR_INSTALL_PACKAGE_INVALID,
        "Expected ERROR_INSTALL_PACKAGE_INVALID, got %d\n", r);
@@ -2134,7 +2134,7 @@ static void test_msipackage(void)
     ok(r == ERROR_SUCCESS, "failed to create InstallExecuteSequence table\n");
 
     /* a few key tables exist */
-    sprintf(name, "#%ld", hdb);
+    sprintf(name, "#%d", hdb);
     r = MsiOpenPackage(name, &hpack);
     ok(r == ERROR_INSTALL_PACKAGE_INVALID,
        "Expected ERROR_INSTALL_PACKAGE_INVALID, got %d\n", r);
@@ -2146,7 +2146,7 @@ static void test_msipackage(void)
     r = MsiOpenDatabase(msifile, MSIDBOPEN_CREATE, &hdb);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    sprintf(name, "#%ld", hdb);
+    sprintf(name, "#%d", hdb);
 
     /* The following summary information props must exist:
      *  - PID_REVNUMBER
@@ -8888,7 +8888,7 @@ static void test_sourcedir(void)
     r = add_directory_entry(hdb, "'TARGETDIR', '', 'SourceDir'");
     ok(r == S_OK, "failed\n");
 
-    sprintf(package, "#%li", hdb);
+    sprintf(package, "#%i", hdb);
     r = MsiOpenPackage(package, &hpkg);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
@@ -8997,7 +8997,7 @@ static void test_sourcedir(void)
     MsiCloseHandle(hpkg);
 
     /* reset the package state */
-    sprintf(package, "#%li", hdb);
+    sprintf(package, "#%i", hdb);
     r = MsiOpenPackage(package, &hpkg);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
@@ -9585,6 +9585,13 @@ static void test_MsiGetProductProperty(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &userkey);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough rights to perform tests\n");
+        RegDeleteKeyA(prodkey, "");
+        RegCloseKey(prodkey);
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     res = RegCreateKeyA(userkey, "InstallProperties", &props);

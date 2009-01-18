@@ -1211,34 +1211,34 @@ static const msi_table pc_tables[] =
 
 /* the FCI callbacks */
 
-static void *mem_alloc(ULONG cb)
+static void * CDECL mem_alloc(ULONG cb)
 {
     return HeapAlloc(GetProcessHeap(), 0, cb);
 }
 
-static void mem_free(void *memory)
+static void CDECL mem_free(void *memory)
 {
     HeapFree(GetProcessHeap(), 0, memory);
 }
 
-static BOOL get_next_cabinet(PCCAB pccab, ULONG  cbPrevCab, void *pv)
+static BOOL CDECL get_next_cabinet(PCCAB pccab, ULONG  cbPrevCab, void *pv)
 {
     sprintf(pccab->szCab, pv, pccab->iCab);
     return TRUE;
 }
 
-static long progress(UINT typeStatus, ULONG cb1, ULONG cb2, void *pv)
+static LONG CDECL progress(UINT typeStatus, ULONG cb1, ULONG cb2, void *pv)
 {
     return 0;
 }
 
-static int file_placed(PCCAB pccab, char *pszFile, long cbFile,
-                       BOOL fContinuation, void *pv)
+static int CDECL file_placed(PCCAB pccab, char *pszFile, LONG cbFile,
+                             BOOL fContinuation, void *pv)
 {
     return 0;
 }
 
-static INT_PTR fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
+static INT_PTR CDECL fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
 {
     HANDLE handle;
     DWORD dwAccess = 0;
@@ -1262,7 +1262,7 @@ static INT_PTR fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
     return (INT_PTR)handle;
 }
 
-static UINT fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
+static UINT CDECL fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     DWORD dwRead;
@@ -1274,7 +1274,7 @@ static UINT fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
     return dwRead;
 }
 
-static UINT fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
+static UINT CDECL fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     DWORD dwWritten;
@@ -1286,7 +1286,7 @@ static UINT fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
     return dwWritten;
 }
 
-static int fci_close(INT_PTR hf, int *err, void *pv)
+static int CDECL fci_close(INT_PTR hf, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     ok(CloseHandle(handle), "Failed to CloseHandle\n");
@@ -1294,7 +1294,7 @@ static int fci_close(INT_PTR hf, int *err, void *pv)
     return 0;
 }
 
-static long fci_seek(INT_PTR hf, long dist, int seektype, int *err, void *pv)
+static LONG CDECL fci_seek(INT_PTR hf, LONG dist, int seektype, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     DWORD ret;
@@ -1305,7 +1305,7 @@ static long fci_seek(INT_PTR hf, long dist, int seektype, int *err, void *pv)
     return ret;
 }
 
-static int fci_delete(char *pszFile, int *err, void *pv)
+static int CDECL fci_delete(char *pszFile, int *err, void *pv)
 {
     BOOL ret = DeleteFileA(pszFile);
     ok(ret, "Failed to DeleteFile %s\n", pszFile);
@@ -1362,7 +1362,7 @@ static void get_user_sid(LPSTR *usersid)
 
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     size = sizeof(buf);
-    GetTokenInformation(token, TokenUser, (void *)buf, size, &size);
+    GetTokenInformation(token, TokenUser, buf, size, &size);
     user = (PTOKEN_USER)buf;
     pConvertSidToStringSidA(user->User.Sid, usersid);
 }
@@ -1378,7 +1378,7 @@ static BOOL check_record(MSIHANDLE rec, UINT field, LPCSTR val)
     return (r == ERROR_SUCCESS ) && !strcmp(val, buffer);
 }
 
-static BOOL get_temp_file(char *pszTempName, int cbTempName, void *pv)
+static BOOL CDECL get_temp_file(char *pszTempName, int cbTempName, void *pv)
 {
     LPSTR tempname;
 
@@ -1397,8 +1397,8 @@ static BOOL get_temp_file(char *pszTempName, int cbTempName, void *pv)
     return FALSE;
 }
 
-static INT_PTR get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
-                             USHORT *pattribs, int *err, void *pv)
+static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
+                                   USHORT *pattribs, int *err, void *pv)
 {
     BY_HANDLE_FILE_INFORMATION finfo;
     FILETIME filetime;
