@@ -5505,7 +5505,7 @@ typedef struct _CONTEXT {
 } CONTEXT;
 
 //
-// Types to use to contain PFNs and their counts.
+// Used to contain PFNs and PFN counts
 //
 typedef ULONG PFN_COUNT;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
@@ -5615,7 +5615,7 @@ KeGetCurrentThread(
 #elif defined(__x86_64__)
 
 //
-// Types to use to contain PFNs and their counts.
+// Used to contain PFNs and PFN counts
 //
 typedef ULONG PFN_COUNT;
 typedef ULONG64 PFN_NUMBER, *PPFN_NUMBER;
@@ -5735,7 +5735,7 @@ KeGetCurrentProcessorNumber(VOID)
 #elif defined(__PowerPC__)
 
 //
-// Types to use to contain PFNs and their counts.
+// Used to contain PFNs and PFN counts
 //
 typedef ULONG PFN_COUNT;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
@@ -5813,7 +5813,7 @@ KeGetCurrentProcessorNumber(VOID)
 #error MIPS Headers are totally incorrect
 
 //
-// Types to use to contain PFNs and their counts.
+// Used to contain PFNs and PFN counts
 //
 typedef ULONG PFN_COUNT;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;

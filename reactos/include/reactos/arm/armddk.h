@@ -44,7 +44,7 @@
 
 
 //
-// Types to use to contain PFNs and their counts.
+// Used to contain PFNs and PFN counts
 //
 typedef ULONG PFN_COUNT;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
