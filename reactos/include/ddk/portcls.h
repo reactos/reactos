@@ -1117,50 +1117,12 @@ DEFINE_GUID(CLSID_PortWaveCyclic,
 
 DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-        ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    DEFINE_ABSTRACT_UNKNOWN()
 
-
-    STDMETHOD_(NTSTATUS,Init)(THIS_
-        IN      PDEVICE_OBJECT  DeviceObject,
-        IN      PIRP            Irp,
-        IN      PUNKNOWN        UnknownMiniport,
-        IN      PUNKNOWN        UnknownAdapter      OPTIONAL,
-        IN      PRESOURCELIST   ResourceList 
-    )   PURE;
-    STDMETHOD_(NTSTATUS,GetDeviceProperty)(THIS_
-        IN      DEVICE_REGISTRY_PROPERTY    DeviceProperty,
-        IN      ULONG                       BufferLength,
-        OUT     PVOID                       PropertyBuffer,
-        OUT     PULONG                      ResultLength
-    )   PURE;
-    STDMETHOD_(NTSTATUS,NewRegistryKey)(THIS_
-        OUT     PREGISTRYKEY *      OutRegistryKey,
-        IN      PUNKNOWN            OuterUnknown,
-        IN      ULONG               RegistryKeyType,
-        IN      ACCESS_MASK         DesiredAccess,
-        IN      POBJECT_ATTRIBUTES  ObjectAttributes    OPTIONAL,
-        IN      ULONG               CreateOptions       OPTIONAL,
-        OUT     PULONG              Disposition         OPTIONAL 
-    )   PURE;
+    DEFINE_ABSTRACT_PORT()
 
     STDMETHOD_(VOID, Notify)(THIS_
         IN  PSERVICEGROUP ServiceGroup) PURE;
-
-
-    STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
-        OUT PDMACHANNEL* DmaChannel,
-        IN  PUNKNOWN OuterUnknown,
-        IN  PRESOURCELIST ResourceList OPTIONAL,
-        IN  ULONG MaximumLength,
-        IN  BOOL Dma32BitAddresses,
-        IN  BOOL Dma64BitAddresses,
-        IN  DMA_WIDTH DmaWidth,
-        IN  DMA_SPEED DmaSpeed) PURE;
 
     STDMETHOD_(NTSTATUS, NewSlaveDmaChannel)(THIS_
         OUT PDMACHANNELSLAVE* DmaChannel,
@@ -1171,6 +1133,15 @@ DECLARE_INTERFACE_(IPortWaveCyclic, IPort)
         IN  BOOL DemandMode,
         IN  DMA_SPEED DmaSpeed) PURE;
 
+    STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
+        OUT PDMACHANNEL* DmaChannel,
+        IN  PUNKNOWN OuterUnknown,
+        IN  PRESOURCELIST ResourceList OPTIONAL,
+        IN  ULONG MaximumLength,
+        IN  BOOL Dma32BitAddresses,
+        IN  BOOL Dma64BitAddresses,
+        IN  DMA_WIDTH DmaWidth,
+        IN  DMA_SPEED DmaSpeed) PURE;
 
 };
 
