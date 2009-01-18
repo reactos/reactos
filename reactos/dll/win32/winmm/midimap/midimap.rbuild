@@ -1,4 +1,4 @@
-<module name="midimap" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MIDIMAP}" installbase="system32" installname="midimap.dll" allowwarnings="true" unicode="yes">
+<module name="midimap" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MIDIMAP}" installbase="system32" installname="midimap.dll" unicode="yes">
 	<importlibrary definition="midimap.spec" />
 	<include base="midimap">.</include>
 	<include base="ReactOS">include/wine</include>

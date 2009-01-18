@@ -824,7 +824,7 @@ static inline void proxy_manager_set_context(struct proxy_manager *This, MSHCTX 
     } while (new_dest_context != old_dest_context);
 
     if (dest_context_data)
-        InterlockedExchangePointer(&This->dest_context_data, dest_context_data);
+        (void)InterlockedExchangePointer(&This->dest_context_data, dest_context_data);
 }
 
 static HRESULT proxy_manager_query_local_interface(struct proxy_manager * This, REFIID riid, void ** ppv)

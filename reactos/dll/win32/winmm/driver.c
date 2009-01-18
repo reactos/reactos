@@ -586,7 +586,7 @@ BOOL WINAPI DriverCallback(DWORD dwCallBack, UINT uFlags, HDRVR hDev,
 
 	    TRACE("mmThread (%04x, %p) !\n", LOWORD(dwCallBack), lpMMThd);
 	    /* same as mmThreadSignal16 */
-	    InterlockedIncrement(&lpMMThd->dwSignalCount);
+	    InterlockedIncrement((PLONG)&lpMMThd->dwSignalCount);
 	    SetEvent(lpMMThd->hEvent);
 	    /* some other stuff on lpMMThd->hVxD */
 	}
