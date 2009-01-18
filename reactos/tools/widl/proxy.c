@@ -122,10 +122,12 @@ static void init_proxy(const statement_list_t *stmts)
   print_proxy( "    void             *This;\n");
   print_proxy( "};\n");
   print_proxy( "\n");
+  print_proxy("#ifndef USE_COMPILER_EXCEPTIONS\n");
   print_proxy("static int __proxy_filter( struct __proxy_frame *__frame )\n");
   print_proxy( "{\n");
   print_proxy( "    return (__frame->_StubMsg.dwStubPhase != PROXY_SENDRECEIVE);\n");
   print_proxy( "}\n");
+  print_proxy("#endif /* USE_COMPILER_EXCEPTIONS */\n");
   print_proxy( "\n");
 }
 

@@ -391,10 +391,12 @@ static void init_server(void)
     print_server("    MIDL_STUB_MESSAGE _StubMsg;\n");
     print_server("};\n");
     print_server("\n");
+	print_server("#ifndef USE_COMPILER_EXCEPTIONS\n");
     print_server("static int __server_filter( struct __server_frame *__frame )\n");
     print_server( "{\n");
     print_server( "    return RPC_BAD_STUB_DATA_EXCEPTION_FILTER;\n");
     print_server( "}\n");
+	print_server( "#endif /* USE_COMPILER_EXCEPTIONS */\n");
     print_server( "\n");
 }
 
