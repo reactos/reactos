@@ -101,7 +101,7 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
 
 static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     WCHAR product[GUID_SIZE];
     DWORD index = 0;
     DWORD attributes = 0;

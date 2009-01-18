@@ -1443,7 +1443,7 @@ UINT WINAPI MsiEnumComponentCostsW(MSIHANDLE hInstall, LPCWSTR szComponent,
                                    LPWSTR lpDriveBuf, DWORD *pcchDriveBuf,
                                    int *piCost, int *pTempCost)
 {
-    FIXME("(%ld, %s, %d, %d, %p, %p, %p %p): stub!\n", hInstall,
+    FIXME("(%d, %s, %d, %d, %p, %p, %p %p): stub!\n", hInstall,
           debugstr_w(szComponent), dwIndex, iState, lpDriveBuf,
           pcchDriveBuf, piCost, pTempCost);
 
@@ -1743,10 +1743,10 @@ LANGID WINAPI MsiLoadStringW( MSIHANDLE handle, UINT id, LPWSTR lpBuffer,
     LPWSTR p;
     DWORD i, len;
 
-    TRACE("%ld %u %p %d %d\n", handle, id, lpBuffer, nBufferMax, lang);
+    TRACE("%d %u %p %d %d\n", handle, id, lpBuffer, nBufferMax, lang);
 
     if( handle != -1 )
-        FIXME("don't know how to deal with handle = %08lx\n", handle);
+        FIXME("don't know how to deal with handle = %08x\n", handle);
 
     if( !lang )
         lang = GetUserDefaultLangID();
@@ -1903,7 +1903,7 @@ UINT WINAPI MsiGetProductPropertyA(MSIHANDLE hProduct, LPCSTR szProperty,
     DWORD len;
     UINT r;
 
-    TRACE("(%ld, %s, %p, %p)\n", hProduct, debugstr_a(szProperty),
+    TRACE("(%d, %s, %p, %p)\n", hProduct, debugstr_a(szProperty),
           szValue, pccbValue);
 
     if (szValue && !pccbValue)
@@ -1972,7 +1972,7 @@ UINT WINAPI MsiGetProductPropertyW(MSIHANDLE hProduct, LPCWSTR szProperty,
        '`','P','r','o','p','e','r','t','y','`',' ','W','H','E','R','E',' ',
        '`','P','r','o','p','e','r','t','y','`','=','\'','%','s','\'',0};
 
-    TRACE("(%ld, %s, %p, %p)\n", hProduct, debugstr_w(szProperty),
+    TRACE("(%d, %s, %p, %p)\n", hProduct, debugstr_w(szProperty),
           szValue, pccbValue);
 
     if (!szProperty)

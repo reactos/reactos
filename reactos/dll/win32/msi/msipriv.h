@@ -656,10 +656,8 @@ enum StringPersistence
 
 extern BOOL msi_addstringW( string_table *st, UINT string_no, const WCHAR *data, int len, UINT refcount, enum StringPersistence persistence );
 extern UINT msi_id2stringW( const string_table *st, UINT string_no, LPWSTR buffer, UINT *sz );
-extern UINT msi_id2stringA( const string_table *st, UINT string_no, LPSTR buffer, UINT *sz );
 
 extern UINT msi_string2idW( const string_table *st, LPCWSTR buffer, UINT *id );
-extern UINT msi_string2idA( const string_table *st, LPCSTR str, UINT *id );
 extern VOID msi_destroy_stringtable( string_table *st );
 extern UINT msi_strcmp( const string_table *st, UINT lval, UINT rval, UINT *res );
 extern const WCHAR *msi_string_lookup_id( const string_table *st, UINT id );
@@ -700,15 +698,12 @@ extern const WCHAR *MSI_RecordGetString( const MSIRECORD *, UINT );
 extern MSIRECORD *MSI_CreateRecord( UINT );
 extern UINT MSI_RecordSetInteger( MSIRECORD *, UINT, int );
 extern UINT MSI_RecordSetStringW( MSIRECORD *, UINT, LPCWSTR );
-extern UINT MSI_RecordSetStringA( MSIRECORD *, UINT, LPCSTR );
 extern BOOL MSI_RecordIsNull( MSIRECORD *, UINT );
 extern UINT MSI_RecordGetStringW( MSIRECORD * , UINT, LPWSTR, LPDWORD);
 extern UINT MSI_RecordGetStringA( MSIRECORD *, UINT, LPSTR, LPDWORD);
 extern int MSI_RecordGetInteger( MSIRECORD *, UINT );
 extern UINT MSI_RecordReadStream( MSIRECORD *, UINT, char *, LPDWORD);
 extern UINT MSI_RecordGetFieldCount( const MSIRECORD *rec );
-extern UINT MSI_RecordSetStream( MSIRECORD *, UINT, IStream * );
-extern UINT MSI_RecordDataSize( MSIRECORD *, UINT );
 extern UINT MSI_RecordStreamToFile( MSIRECORD *, UINT, LPCWSTR );
 extern UINT MSI_RecordCopyField( MSIRECORD *, UINT, MSIRECORD *, UINT );
 extern MSIRECORD *MSI_CloneRecord( MSIRECORD * );
@@ -716,10 +711,8 @@ extern BOOL MSI_RecordsAreEqual( MSIRECORD *, MSIRECORD * );
 
 /* stream internals */
 extern UINT get_raw_stream( MSIHANDLE hdb, LPCWSTR stname, IStream **stm );
-extern UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm );
 extern void enum_stream_names( IStorage *stg );
 extern BOOL decode_streamname(LPCWSTR in, LPWSTR out);
-extern LPWSTR encode_streamname(BOOL bTable, LPCWSTR in);
 
 /* database internals */
 extern UINT MSI_OpenDatabaseW( LPCWSTR, LPCWSTR, MSIDATABASE ** );
@@ -728,8 +721,6 @@ extern UINT MSI_OpenQuery( MSIDATABASE *, MSIQUERY **, LPCWSTR, ... );
 typedef UINT (*record_func)( MSIRECORD *, LPVOID );
 extern UINT MSI_IterateRecords( MSIQUERY *, LPDWORD, record_func, LPVOID );
 extern MSIRECORD *MSI_QueryGetRecord( MSIDATABASE *db, LPCWSTR query, ... );
-extern UINT MSI_DatabaseImport( MSIDATABASE *, LPCWSTR, LPCWSTR );
-extern UINT MSI_DatabaseExport( MSIDATABASE *, LPCWSTR, LPCWSTR, LPCWSTR );
 extern UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *, LPCWSTR, MSIRECORD ** );
 
 /* view internals */
@@ -776,7 +767,6 @@ extern UINT MSIREG_OpenProductKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
 extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
                                    HKEY *key, BOOL create);
 extern UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
-extern UINT MSIREG_OpenInstallerFeaturesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
                                     HKEY *key, BOOL create);
 extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create);
@@ -820,7 +810,6 @@ extern void msi_dialog_end_dialog( msi_dialog* );
 extern void msi_dialog_check_messages( HANDLE );
 extern void msi_dialog_do_preview( msi_dialog* );
 extern void msi_dialog_destroy( msi_dialog* );
-extern BOOL msi_dialog_register_class( void );
 extern void msi_dialog_unregister_class( void );
 extern void msi_dialog_handle_event( msi_dialog*, LPCWSTR, LPCWSTR, MSIRECORD * );
 extern UINT msi_dialog_reset( msi_dialog *dialog );
@@ -828,10 +817,6 @@ extern UINT msi_dialog_directorylist_up( msi_dialog *dialog );
 extern msi_dialog *msi_dialog_get_parent( msi_dialog *dialog );
 extern LPWSTR msi_dialog_get_name( msi_dialog *dialog );
 extern UINT msi_spawn_error_dialog( MSIPACKAGE*, LPWSTR, LPWSTR );
-
-/* preview */
-extern MSIPREVIEW *MSI_EnableUIPreview( MSIDATABASE * );
-extern UINT MSI_PreviewDialogW( MSIPREVIEW *, LPCWSTR );
 
 /* summary information */
 extern MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount );
@@ -1016,10 +1001,8 @@ typedef struct
 } MSICABDATA;
 
 extern UINT ready_media(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi);
-extern UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi);
 extern void msi_free_media_info(MSIMEDIAINFO *mi);
 extern BOOL msi_cabextract(MSIPACKAGE* package, MSIMEDIAINFO *mi, LPVOID data);
-extern UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi);
 
 /* control event stuff */
 extern VOID ControlEvent_FireSubscribedEvent(MSIPACKAGE *package, LPCWSTR event,

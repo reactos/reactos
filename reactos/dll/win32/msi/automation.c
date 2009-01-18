@@ -1731,9 +1731,9 @@ static HRESULT WINAPI InstallerImpl_Invoke(
 
                 if (V_I4(&varg0) >= REG_INDEX_CLASSES_ROOT &&
                     V_I4(&varg0) <= REG_INDEX_DYN_DATA)
-                    V_I4(&varg0) |= (UINT)HKEY_CLASSES_ROOT;
+                    V_I4(&varg0) |= (UINT_PTR)HKEY_CLASSES_ROOT;
 
-                ret = RegOpenKeyW((HKEY)V_I4(&varg0), V_BSTR(&varg1), &hkey);
+                ret = RegOpenKeyW((HKEY)(UINT_PTR)V_I4(&varg0), V_BSTR(&varg1), &hkey);
 
                 /* Third parameter can be VT_EMPTY, VT_I4, or VT_BSTR */
                 switch (V_VT(&varg2))

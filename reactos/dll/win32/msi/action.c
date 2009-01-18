@@ -887,7 +887,7 @@ typedef struct {
 
 static UINT ITERATE_Actions(MSIRECORD *row, LPVOID param)
 {
-    iterate_action_param *iap= (iterate_action_param*)param;
+    iterate_action_param *iap = param;
     UINT rc;
     LPCWSTR cond, action;
 
@@ -1125,7 +1125,7 @@ UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action, UINT scrip
 
 static UINT ITERATE_CreateFolders(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPCWSTR dir;
     LPWSTR full_path;
     MSIRECORD *uirow;
@@ -1307,7 +1307,7 @@ static UINT add_feature_child( MSIFEATURE *parent, MSIFEATURE *child )
 
 static UINT iterate_load_featurecomponents(MSIRECORD *row, LPVOID param)
 {
-    _ilfs* ilfs= (_ilfs*)param;
+    _ilfs* ilfs = param;
     LPCWSTR component;
     MSICOMPONENT *comp;
 
@@ -1345,7 +1345,7 @@ static MSIFEATURE *find_feature_by_name( MSIPACKAGE *package, LPCWSTR name )
 
 static UINT load_feature(MSIRECORD * row, LPVOID param)
 {
-    MSIPACKAGE* package = (MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     MSIFEATURE* feature;
     static const WCHAR Query1[] = 
         {'S','E','L','E','C','T',' ',
@@ -1404,7 +1404,7 @@ static UINT load_feature(MSIRECORD * row, LPVOID param)
 
 static UINT find_feature_children(MSIRECORD * row, LPVOID param)
 {
-    MSIPACKAGE* package = (MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     MSIFEATURE *parent, *child;
 
     child = find_feature_by_name( package, MSI_RecordGetString( row, 1 ) );
@@ -1497,7 +1497,7 @@ done:
 
 static UINT load_file(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE* package = (MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     LPCWSTR component;
     MSIFILE *file;
 
@@ -2033,7 +2033,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
 
 static UINT ITERATE_CostFinalizeDirectories(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPCWSTR name;
     LPWSTR path;
     MSIFOLDER *f;
@@ -2058,7 +2058,7 @@ static UINT ITERATE_CostFinalizeDirectories(MSIRECORD *row, LPVOID param)
 
 static UINT ITERATE_CostFinalizeConditions(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPCWSTR name;
     MSIFEATURE *feature;
 
@@ -2391,7 +2391,7 @@ static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type,
 
 static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     static const WCHAR szHCR[] = 
         {'H','K','E','Y','_','C','L','A','S','S','E','S','_',
          'R','O','O','T','\\',0};
@@ -2640,7 +2640,7 @@ static UINT ACTION_InstallValidate(MSIPACKAGE *package)
 
 static UINT ITERATE_LaunchConditions(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE* package = (MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     LPCWSTR cond = NULL; 
     LPCWSTR message = NULL;
     UINT r;
@@ -3052,7 +3052,7 @@ static BOOL CALLBACK Typelib_EnumResNameProc( HMODULE hModule, LPCWSTR lpszType,
 
 static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE* package = (MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     LPCWSTR component;
     MSICOMPONENT *comp;
     MSIFILE *file;
@@ -3168,7 +3168,7 @@ static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
 
 static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPWSTR target_file, target_folder, filename;
     LPCWSTR buffer, extension;
     MSICOMPONENT *comp;
@@ -3338,7 +3338,7 @@ static UINT ACTION_CreateShortcuts(MSIPACKAGE *package)
 
 static UINT ITERATE_PublishIcon(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE* package = (MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     HANDLE the_file;
     LPWSTR FilePath;
     LPCWSTR FileName;
@@ -3708,7 +3708,7 @@ end:
 
 static UINT ITERATE_WriteIniValues(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPCWSTR component, section, key, value, identifier, dirproperty;
     LPWSTR deformated_section, deformated_key, deformated_value;
     LPWSTR folder, filename, fullname = NULL;
@@ -3834,7 +3834,7 @@ static UINT ACTION_WriteIniValues(MSIPACKAGE *package)
 
 static UINT ITERATE_SelfRegModules(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPCWSTR filename;
     LPWSTR FullName;
     MSIFILE *file;
@@ -4544,7 +4544,7 @@ static UINT ACTION_ExecuteAction(MSIPACKAGE *package)
 
 static UINT ITERATE_PublishComponent(MSIRECORD *rec, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPCWSTR compgroupid=NULL;
     LPCWSTR feature=NULL;
     LPCWSTR text = NULL;
@@ -4640,7 +4640,7 @@ static UINT ACTION_PublishComponents(MSIPACKAGE *package)
 
 static UINT ITERATE_InstallService(MSIRECORD *rec, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     MSIRECORD *row;
     MSIFILE *file;
     SC_HANDLE hscm, service = NULL;
@@ -4781,7 +4781,7 @@ static LPCWSTR *msi_service_args_to_vector(LPWSTR args, DWORD *numargs)
 
 static UINT ITERATE_StartService(MSIRECORD *rec, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE *)param;
+    MSIPACKAGE *package = param;
     MSICOMPONENT *comp;
     SC_HANDLE scm, service = NULL;
     LPCWSTR name, *vector = NULL;
@@ -4894,7 +4894,7 @@ error:
 
 static UINT ITERATE_StopService(MSIRECORD *rec, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE *)param;
+    MSIPACKAGE *package = param;
     MSICOMPONENT *comp;
     SERVICE_STATUS status;
     SERVICE_STATUS_PROCESS ssp;
@@ -4991,7 +4991,7 @@ static MSIFILE *msi_find_file( MSIPACKAGE *package, LPCWSTR filename )
 
 static UINT ITERATE_InstallODBCDriver( MSIRECORD *rec, LPVOID param )
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPWSTR driver, driver_path, ptr;
     WCHAR outpath[MAX_PATH];
     MSIFILE *driver_file, *setup_file;
@@ -5057,7 +5057,7 @@ static UINT ITERATE_InstallODBCDriver( MSIRECORD *rec, LPVOID param )
 
 static UINT ITERATE_InstallODBCTranslator( MSIRECORD *rec, LPVOID param )
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPWSTR translator, translator_path, ptr;
     WCHAR outpath[MAX_PATH];
     MSIFILE *translator_file, *setup_file;
@@ -5606,7 +5606,7 @@ static BOOL move_files_wildcard(LPWSTR source, LPWSTR dest, int options)
     {
         file = LIST_ENTRY(list_head(&files.entry), FILE_LIST, entry);
 
-        msi_move_file((LPCWSTR)file->source, (LPCWSTR)file->dest, options);
+        msi_move_file(file->source, file->dest, options);
 
         list_remove(&file->entry);
         free_file_entry(file);
@@ -5866,7 +5866,7 @@ typedef struct tagASSEMBLY_NAME
 
 static UINT parse_assembly_name(MSIRECORD *rec, LPVOID param)
 {
-    ASSEMBLY_NAME *asmname = (ASSEMBLY_NAME *)param;
+    ASSEMBLY_NAME *asmname = param;
     LPCWSTR name = MSI_RecordGetString(rec, 2);
     LPWSTR val = msi_dup_record_field(rec, 3);
 
@@ -5986,7 +5986,7 @@ done:
 
 static UINT load_assembly(MSIRECORD *rec, LPVOID param)
 {
-    ASSEMBLY_LIST *list = (ASSEMBLY_LIST *)param;
+    ASSEMBLY_LIST *list = param;
     MSIASSEMBLY *assembly;
 
     assembly = msi_alloc_zero(sizeof(MSIASSEMBLY));
@@ -6091,7 +6091,7 @@ static BOOL installassembly_cb(MSIPACKAGE *package, LPCWSTR file, DWORD action,
 {
     MSIASSEMBLY *assembly;
     WCHAR temppath[MAX_PATH];
-    struct list *assemblies = (struct list *)user;
+    struct list *assemblies = user;
     UINT r;
 
     if (!find_assembly(assemblies, file, &assembly))

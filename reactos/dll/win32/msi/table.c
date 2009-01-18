@@ -148,7 +148,7 @@ static int utf2mime(int x)
     return -1;
 }
 
-LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
+static LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
 {
     DWORD count = MAX_STREAM_NAME;
     DWORD ch, next;
@@ -326,7 +326,7 @@ end:
     return ret;
 }
 
-UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
+static UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 {
     LPWSTR encname;
     HRESULT r;

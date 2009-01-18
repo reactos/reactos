@@ -598,7 +598,7 @@ done:
     return r;
 }
 
-UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
+static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
 {
     UINT r;
     DWORD len, i;
@@ -692,7 +692,7 @@ UINT WINAPI MsiDatabaseImportW(MSIHANDLE handle, LPCWSTR szFolder, LPCWSTR szFil
     MSIDATABASE *db;
     UINT r;
 
-    TRACE("%lx %s %s\n",handle,debugstr_w(szFolder), debugstr_w(szFilename));
+    TRACE("%x %s %s\n",handle,debugstr_w(szFolder), debugstr_w(szFilename));
 
     db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
     if( !db )
@@ -720,7 +720,7 @@ UINT WINAPI MsiDatabaseImportA( MSIHANDLE handle,
     LPWSTR path = NULL, file = NULL;
     UINT r = ERROR_OUTOFMEMORY;
 
-    TRACE("%lx %s %s\n", handle, debugstr_a(szFolder), debugstr_a(szFilename));
+    TRACE("%x %s %s\n", handle, debugstr_a(szFolder), debugstr_a(szFilename));
 
     if( szFolder )
     {
@@ -812,7 +812,7 @@ static UINT msi_export_forcecodepage( HANDLE handle )
     return ERROR_SUCCESS;
 }
 
-UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
+static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
                LPCWSTR folder, LPCWSTR file )
 {
     static const WCHAR query[] = {
@@ -912,7 +912,7 @@ UINT WINAPI MsiDatabaseExportW( MSIHANDLE handle, LPCWSTR szTable,
     MSIDATABASE *db;
     UINT r;
 
-    TRACE("%lx %s %s %s\n", handle, debugstr_w(szTable),
+    TRACE("%x %s %s %s\n", handle, debugstr_w(szTable),
           debugstr_w(szFolder), debugstr_w(szFilename));
 
     db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
@@ -941,7 +941,7 @@ UINT WINAPI MsiDatabaseExportA( MSIHANDLE handle, LPCSTR szTable,
     LPWSTR path = NULL, file = NULL, table = NULL;
     UINT r = ERROR_OUTOFMEMORY;
 
-    TRACE("%lx %s %s %s\n", handle, debugstr_a(szTable),
+    TRACE("%x %s %s %s\n", handle, debugstr_a(szTable),
           debugstr_a(szFolder), debugstr_a(szFilename));
 
     if( szTable )
@@ -981,7 +981,7 @@ UINT WINAPI MsiDatabaseMergeA(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge,
     UINT r;
     LPWSTR table;
 
-    TRACE("(%ld, %ld, %s)\n", hDatabase, hDatabaseMerge,
+    TRACE("(%d, %d, %s)\n", hDatabase, hDatabaseMerge,
           debugstr_a(szTableName));
 
     table = strdupAtoW(szTableName);
@@ -1202,7 +1202,7 @@ done:
 
 static UINT merge_diff_row(MSIRECORD *rec, LPVOID param)
 {
-    MERGEDATA *data = (MERGEDATA *)param;
+    MERGEDATA *data = param;
     MERGETABLE *table = data->curtable;
     MERGEROW *mergerow;
     MSIQUERY *dbview;
@@ -1257,7 +1257,7 @@ done:
 
 static UINT merge_diff_tables(MSIRECORD *rec, LPVOID param)
 {
-    MERGEDATA *data = (MERGEDATA *)param;
+    MERGEDATA *data = param;
     MERGETABLE *table;
     MSIQUERY *dbview;
     MSIQUERY *mergeview = NULL;
@@ -1426,7 +1426,7 @@ UINT WINAPI MsiDatabaseMergeW(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge,
     BOOL conflicts;
     UINT r;
 
-    TRACE("(%ld, %ld, %s)\n", hDatabase, hDatabaseMerge,
+    TRACE("(%d, %d, %s)\n", hDatabase, hDatabaseMerge,
           debugstr_w(szTableName));
 
     if (szTableName && !*szTableName)
@@ -1488,7 +1488,7 @@ MSIDBSTATE WINAPI MsiGetDatabaseState( MSIHANDLE handle )
     MSIDBSTATE ret = MSIDBSTATE_READ;
     MSIDATABASE *db;
 
-    TRACE("%ld\n", handle);
+    TRACE("%d\n", handle);
 
     db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
     if( !db )
@@ -1562,7 +1562,7 @@ static HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
                                              BSTR table, MSICONDITION *persistent )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
-    *persistent = MsiDatabaseIsTablePersistentW(This->database, (LPWSTR)table);
+    *persistent = MsiDatabaseIsTablePersistentW(This->database, table);
     return S_OK;
 }
 
@@ -1570,7 +1570,7 @@ static HRESULT WINAPI mrd_GetPrimaryKeys( IWineMsiRemoteDatabase *iface,
                                           BSTR table, MSIHANDLE *keys )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
-    UINT r = MsiDatabaseGetPrimaryKeysW(This->database, (LPWSTR)table, keys);
+    UINT r = MsiDatabaseGetPrimaryKeysW(This->database, table, keys);
     return HRESULT_FROM_WIN32(r);
 }
 
@@ -1586,7 +1586,7 @@ static HRESULT WINAPI mrd_OpenView( IWineMsiRemoteDatabase *iface,
                                     BSTR query, MSIHANDLE *view )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
-    UINT r = MsiDatabaseOpenViewW(This->database, (LPWSTR)query, view);
+    UINT r = MsiDatabaseOpenViewW(This->database, query, view);
     return HRESULT_FROM_WIN32(r);
 }
 

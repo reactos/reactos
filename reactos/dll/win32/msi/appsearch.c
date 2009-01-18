@@ -639,8 +639,7 @@ static UINT ACTION_FileVersionMatches(const MSISIGNATURE *sig, LPCWSTR filePath,
                     VerQueryValueW(buf, rootW, &subBlock, &versionLen);
                 if (subBlock)
                 {
-                    VS_FIXEDFILEINFO *info =
-                     (VS_FIXEDFILEINFO *)subBlock;
+                    VS_FIXEDFILEINFO *info = subBlock;
 
                     TRACE("Comparing file version %d.%d.%d.%d:\n",
                      HIWORD(info->dwFileVersionMS),

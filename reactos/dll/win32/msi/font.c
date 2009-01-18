@@ -170,7 +170,7 @@ end:
 
 static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE *package = (MSIPACKAGE*)param;
+    MSIPACKAGE *package = param;
     LPWSTR name;
     LPCWSTR filename;
     MSIFILE *file;

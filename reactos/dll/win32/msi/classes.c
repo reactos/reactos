@@ -486,7 +486,7 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
 
 static UINT iterate_load_verb(MSIRECORD *row, LPVOID param)
 {
-    MSIPACKAGE* package = (MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     MSIVERB *verb;
     LPCWSTR buffer;
     MSIEXTENSION *extension;
@@ -527,7 +527,7 @@ static UINT iterate_all_classes(MSIRECORD *rec, LPVOID param)
     LPCWSTR clsid;
     LPCWSTR context;
     LPCWSTR buffer;
-    MSIPACKAGE* package =(MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     MSICLASS *cls;
     BOOL match = FALSE;
 
@@ -577,7 +577,7 @@ static UINT iterate_all_extensions(MSIRECORD *rec, LPVOID param)
     MSICOMPONENT *comp;
     LPCWSTR buffer;
     LPCWSTR extension;
-    MSIPACKAGE* package =(MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
     BOOL match = FALSE;
     MSIEXTENSION *ext;
 
@@ -622,7 +622,7 @@ static VOID load_all_extensions(MSIPACKAGE *package)
 static UINT iterate_all_progids(MSIRECORD *rec, LPVOID param)
 {
     LPCWSTR buffer;
-    MSIPACKAGE* package =(MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
 
     buffer = MSI_RecordGetString(rec,1);
     load_given_progid(package,buffer);
@@ -666,7 +666,7 @@ static VOID load_all_verbs(MSIPACKAGE *package)
 static UINT iterate_all_mimes(MSIRECORD *rec, LPVOID param)
 {
     LPCWSTR buffer;
-    MSIPACKAGE* package =(MSIPACKAGE*)param;
+    MSIPACKAGE* package = param;
 
     buffer = MSI_RecordGetString(rec,1);
     load_given_mime(package,buffer);
