@@ -1606,10 +1606,24 @@ typedef IPinCount *PPINCOUNT;
     IPortEvents Interface
 */
 
+#undef INTERFACE
+#define INTERFACE IPortEvents
+
+DEFINE_GUID(IID_IPortEvents, 0xA80F29C4L, 0x5498, 0x11D2, 0x95, 0xD9, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3);
 DECLARE_INTERFACE_(IPortEvents, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
-    /* TODO */
+
+    STDMETHOD_(void,AddEventToEventList)(THIS_
+        IN  PKSEVENT_ENTRY EventEntry)PURE;
+
+    STDMETHOD_(void,GenerateEventList)(THIS_
+        IN  GUID* Set OPTIONAL,
+        IN  ULONG EventId,
+        IN  BOOL PinEvent,
+        IN  ULONG PinId,
+        IN  BOOL NodeEvent,
+        IN  ULONG NodeId)PURE;
 };
 
 typedef IPortEvents *PPORTEVENTS;
