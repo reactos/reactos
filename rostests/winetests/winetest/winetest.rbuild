@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="winetest" type="win32gui" installbase="system32" allowwarnings="true">
 	<include base="winetest">.</include>
+    <define name="__ROS_LONG64__" />
 	<library>comctl32</library>
 	<library>version</library>
 	<library>user32</library>

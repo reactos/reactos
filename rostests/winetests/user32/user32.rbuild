@@ -6,6 +6,7 @@
     <include base="user32_winetest">.</include>
     <include base="ReactOS">include/reactos/wine</include>
     <define name="__USE_W32API" />
+    <define name="__ROS_LONG64__" />
     <library>ntdll</library>
     <library>user32</library>
     <library>gdi32</library>

@@ -4,6 +4,7 @@
 <module name="riched20_winetest" type="win32cui" installbase="bin" installname="riched20_winetest.exe" allowwarnings="true">
 	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="riched20_winetest">.</include>
+    <define name="__ROS_LONG64__" />
 	<file>editor.c</file>
 	<file>richole.c</file>
 	<file>testlist.c</file>

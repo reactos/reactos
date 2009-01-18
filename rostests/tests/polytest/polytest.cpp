@@ -794,7 +794,7 @@ Polygon ( CONST PPOINT UnsafePoints, int Count, int polyFillMode )
 	  To = Points[CurrentPoint + 1];
 	}
 
-      DPRINT1("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
+      DPRINT1("Polygon Making line from (%ld,%ld) to (%ld,%ld)\n", From.x, From.y, To.x, To.y );
       IntEngLineTo(SurfObj,
 	           dc.CombinedClip,
 	           OutBrushObj,
@@ -863,6 +863,6 @@ int main()
     printf("\n");
   }
   DPRINT1("Done!\n");
-  (void)getch();
+  (void)_getch();
 }
 /* EOF */

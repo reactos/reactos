@@ -4,6 +4,7 @@
 <module name="comctl32_winetest" type="win32cui" installbase="bin" installname="comctl32_winetest.exe" allowwarnings="true">
 	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="comctl32_winetest">.</include>
+    <define name="__ROS_LONG64__" />
 	<file>comboex.c</file>
 	<file>datetime.c</file>
 	<file>dpa.c</file>

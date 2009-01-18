@@ -5,6 +5,7 @@
 	<compilerflag compiler="cc">-Wno-format</compilerflag>
     <include base="icmp_winetest">.</include>
     <define name="__USE_W32API" />
+    <define name="__ROS_LONG64__" />
     <library>kernel32</library>
     <library>ntdll</library>
     <library>icmp</library>

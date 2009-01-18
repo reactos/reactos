@@ -4,6 +4,7 @@
 	<include base="GUI">.</include>
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
+    <define name="__ROS_LONG64__" />
 	<library>gdi32</library>
 	<library>kernel32</library>
 	<library>user32</library>

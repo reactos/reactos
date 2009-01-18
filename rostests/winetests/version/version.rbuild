@@ -4,6 +4,7 @@
 <module name="version_winetest" type="win32cui" installbase="bin" installname="version_winetest.exe" allowwarnings="true">
 	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="version_winetest">.</include>
+    <define name="__ROS_LONG64__" />
 	<file>info.c</file>
 	<file>install.c</file>
 	<file>version.rc</file>

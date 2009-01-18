@@ -4,6 +4,7 @@
 <module name="gdi32_winetest" type="win32cui" installbase="bin" installname="gdi32_winetest.exe" allowwarnings="true">
 	<compilerflag compiler="cc">-Wno-format</compilerflag>
     <include base="gdi32_winetest">.</include>
+    <define name="__ROS_LONG64__" />
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <library>gdi32</library>
