@@ -64,8 +64,7 @@ static void test_IMalloc(void)
 
     /* Prove that native mapi uses LocalAlloc/LocalFree */
     lpMem = IMalloc_Alloc(lpMalloc, 61);
-    ok (lpMem && IMalloc_GetSize(lpMalloc, lpMem) ==
-        LocalSize((HANDLE)lpMem),
+    ok (lpMem && IMalloc_GetSize(lpMalloc, lpMem) == LocalSize(lpMem),
         "Expected non-null, same size, got %p, %s size\n", lpMem,
         lpMem ? "different" : "same");
 

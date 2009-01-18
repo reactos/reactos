@@ -93,11 +93,11 @@ static void test_PropCopyMore(void)
     if (!pPropCopyMore)
         return;
 
-    scode = pMAPIAllocateBuffer(sizeof(LPSPropValue), (LPVOID *)lpDest);
+    scode = pMAPIAllocateBuffer(sizeof(LPSPropValue), lpDest);
     if (FAILED(scode))
         return;
 
-    scode = pMAPIAllocateMore(sizeof(LPSPropValue), lpDest, (LPVOID *)lpSrc);
+    scode = pMAPIAllocateMore(sizeof(LPSPropValue), lpDest, lpSrc);
     if (FAILED(scode))
         return;
 
