@@ -1616,7 +1616,7 @@ static BOOL TrimGuidString(PCWSTR szString, LPWSTR szNewString)
             return TRUE;
         }
     }
-    wcscpy(szNewString, L"\0");
+    szNewString[0] = L'\0';
     return FALSE;
 }
 
@@ -1668,7 +1668,7 @@ pSetupStringFromGuid(LPGUID lpGUID, PWSTR pString, DWORD dwStringLen)
 
     wcscpy(szBuffer, L"{");
     wcscat(szBuffer, rpcBuffer);
-    wcscat(szBuffer, L"}\0");
+    wcscat(szBuffer, L"}");
 
     wcscpy(pString, szBuffer);
 
