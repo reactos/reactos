@@ -18,9 +18,9 @@
 	<file>irot.idl</file>
 	<file>rpcss.rc</file>
 </module>
-<module name="rpcss_epm_server" type="rpcserver" allowwarnings="true">
+<module name="rpcss_epm_server" type="rpcserver">
 	<file>epm.idl</file>
 </module>
-<module name="rpcss_irot_server" type="rpcserver" allowwarnings="true">
+<module name="rpcss_irot_server" type="rpcserver">
 	<file>irot.idl</file>
 </module>
