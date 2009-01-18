@@ -12,17 +12,15 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
+static NTSTATUS SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
                            PIRP Irp,
                            PFILE_OBJECT NewFileObject,
 		                   PAFD_TDI_OBJECT_QELT Qelt ) {
     PAFD_FCB FCB = NewFileObject->FsContext;
     NTSTATUS Status;
 
-    if( !SocketAcquireStateLock( FCB ) ) { 
-        LostSocket( Irp );
-        return;
-    }
+    if( !SocketAcquireStateLock( FCB ) )
+        return LostSocket( Irp );
 
     /* Transfer the connection to the new socket, launch the opening read */
     AFD_DbgPrint(MID_TRACE,("Completing a real accept (FCB %x)\n", FCB));
@@ -50,9 +48,11 @@ static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 
     SocketStateUnlock( FCB );
+
+    return Status;
 }
 
-static VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
+static NTSTATUS SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
     PAFD_RECEIVED_ACCEPT_DATA ListenReceive =
 	(PAFD_RECEIVED_ACCEPT_DATA)Irp->AssociatedIrp.SystemBuffer;
     PTA_IP_ADDRESS IPAddr;
@@ -74,6 +74,7 @@ static VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+        return STATUS_NO_MEMORY;
     }
 
     AFD_DbgPrint(MID_TRACE,("IPAddr->TAAddressCount %d\n",
@@ -92,6 +93,7 @@ static VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
     Irp->IoStatus.Information = ((PCHAR)&IPAddr[1]) - ((PCHAR)ListenReceive);
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS NTAPI ListenComplete
@@ -244,6 +246,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			   PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
+    NTSTATUS Status;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
@@ -253,7 +256,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	PLIST_ENTRY PendingConn = FCB->PendingConnections.Flink;
 
 	/* We have a pending connection ... complete this irp right away */
-	SatisfyPreAccept
+	Status = SatisfyPreAccept
 	    ( Irp,
 	      CONTAINING_RECORD
 	      ( PendingConn, AFD_TDI_OBJECT_QELT, ListEntry ) );
@@ -264,7 +267,7 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
         PollReeval( FCB->DeviceExt, FCB->FileObject );
 
 	SocketStateUnlock( FCB );
-	return Irp->IoStatus.Status;
+	return Status;
     } else {
 	AFD_DbgPrint(MID_TRACE,("Holding\n"));
 
@@ -341,7 +344,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             ASSERT(NewFileObject->FsContext != FCB);
 
 	    /* We have a pending connection ... complete this irp right away */
-	    SatisfyAccept( DeviceExt, Irp, NewFileObject, PendingConnObj );
+	    Status = SatisfyAccept( DeviceExt, Irp, NewFileObject, PendingConnObj );
 
 	    ObDereferenceObject( NewFileObject );
 
@@ -355,7 +358,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    }
 
 	    SocketStateUnlock( FCB );
-	    return Irp->IoStatus.Status;
+	    return Status;
 	}
     }
 
