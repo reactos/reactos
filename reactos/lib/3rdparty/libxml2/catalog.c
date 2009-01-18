@@ -3250,7 +3250,7 @@ xmlLoadCatalogs(const char *pathss) {
 		cur++;
 	    path = xmlStrndup((const xmlChar *)paths, cur - paths);
 #ifdef _WIN32
-        iLen = strlen(path);
+        iLen = strlen((const char *)path);
         for(i = 0; i < iLen; i++) {
             if(path[i] == '\\') {
                 path[i] = '/';

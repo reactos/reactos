@@ -453,7 +453,7 @@ __xmlGlobalInitMutexLock(void)
 
         /* Swap it into the global_init_lock */
 #ifdef InterlockedCompareExchangePointer
-        InterlockedCompareExchangePointer(&global_init_lock, cs, NULL);
+        (void)InterlockedCompareExchangePointer(&global_init_lock, cs, NULL);
 #else /* Use older void* version */
         InterlockedCompareExchange((void **) &global_init_lock,
                                    (void *) cs, NULL);
@@ -936,7 +936,7 @@ xmlOnceInit(void)
 
 #if defined(HAVE_WIN32_THREADS)
     if (!run_once.done) {
-        if (InterlockedIncrement(&run_once.control) == 1) {
+        if (InterlockedIncrement((PLONG)&run_once.control) == 1) {
 #if !defined(HAVE_COMPILER_TLS)
             globalkey = TlsAlloc();
 #endif

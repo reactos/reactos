@@ -241,8 +241,6 @@ CmiAddSubKey(
 	HSTORAGE_TYPE Storage;
 	ULONG i;
 
-	DPRINT("CmiAddSubKey(%p '%wZ')\n", RegistryHive, SubKeyName);
-
 	VERIFY_KEY_CELL(ParentKeyCell);
 
 	/* Skip leading backslash */
@@ -522,8 +520,6 @@ CmiScanForSubKey(
 	ULONG i;
 
 	VERIFY_KEY_CELL(KeyCell);
-
-	DPRINT("CmiScanForSubKey('%wZ')\n", SubKeyName);
 
 	ASSERT(RegistryHive);
 

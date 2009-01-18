@@ -15,7 +15,7 @@
 	</directory>
 </module>
 
-<module name="crt" type="staticlibrary" allowwarnings="true">
+<module name="crt" type="staticlibrary">
 	<library>chkstk</library>
 	<include base="crt">.</include>
 	<include base="crt">include</include>
