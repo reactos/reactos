@@ -82,14 +82,14 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
 	if( ThingInList->Thing == Thing ) {
 	    RemoveEntryList(Entry);
 
-	    TrackDumpFL( FileName, LineNo );
-
-            //DbgPrint("TRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing);
+            TI_DbgPrint(MAX_TRACE,("TRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing));
             ShowTrackedThing( "Double Alloc (Item in list)", ThingInList, FALSE );
             ShowTrackedThing( "Double Alloc (Item not in list)", TrackedThing, FALSE );
 
             ExFreeToNPagedLookasideList( &AllocatedObjectsLookasideList,
 	                                 ThingInList );
+
+            break;
 	}
 	Entry = Entry->Flink;
     }
@@ -97,8 +97,6 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
     InsertHeadList( &AllocatedObjectsList, &TrackedThing->Entry );
 
     TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
-
-    /*TrackDumpFL( FileName, LineNo );*/
 }
 
 BOOL ShowTag( DWORD Tag ) {
