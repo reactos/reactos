@@ -237,7 +237,7 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
 {
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
 
-    if (NCE->State == NUD_INCOMPLETE)
+    if (NCE->State & NUD_INCOMPLETE)
     {
 	/* This is the first solicitation of this neighbor. Broadcast
 	   a request for the neighbor */
