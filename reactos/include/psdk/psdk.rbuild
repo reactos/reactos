@@ -5,6 +5,7 @@
 	<file>activdbg.idl</file>
 	<file>activscp.idl</file>
 	<file>control.idl</file>
+	<file>ctxtcall.idl</file>
 	<file>dimm.idl</file>
 	<file>dispex.idl</file>
 	<file>docobj.idl</file>
