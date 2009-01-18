@@ -4,6 +4,7 @@
 <module name="mingw_common" type="staticlibrary" isstartuplib="true" underscoresymbols="true" crt="dll">
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="mingw_common">include</include>
+	<library>kernel32</library>
 	<file>_newmode.c</file>
 	<file>_wgetopt.c</file>
 	<file>atonexit.c</file>
@@ -30,14 +31,12 @@
 </module>
 <module name="mingw_main" type="staticlibrary" isstartuplib="true" crt="dll">
 	<include base="mingw_common">include</include>
-	<library>mingw_common</library>
 	<file>crt0_c.c</file>
 	<file>crtexe.c</file>
 	<file>dllargv.c</file>
 </module>
 <module name="mingw_wmain" type="staticlibrary" isstartuplib="true" unicode="yes" crt="dll">
 	<include base="mingw_common">include</include>
-	<library>mingw_common</library>
 	<define name="WPRFLAG"/>
 	<file>crt0_w.c</file>
 	<file>crtexe.c</file>
@@ -45,7 +44,6 @@
 </module>
 <module name="mingw_dllmain" type="staticlibrary" isstartuplib="true" crt="dll">
 	<include base="mingw_common">include</include>
-	<library>mingw_common</library>
 	<file>dllargv.c</file>
 	<file>crtdll.c</file>
 </module>
