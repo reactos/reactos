@@ -1090,7 +1090,13 @@ typedef void(CALLBACK *PTIMERAPCROUTINE)(PVOID,DWORD,DWORD);
 #if (_WIN32_WINNT >= 0x0600)
 typedef DWORD (WINAPI *APPLICATION_RECOVERY_CALLBACK)(PVOID);
 #endif
+
+#ifdef WINE_NO_UNICODE_MACROS /* force using a cast */
+#define MAKEINTATOM(atom)   ((ULONG_PTR)((WORD)(atom)))
+#else
 #define MAKEINTATOM(i) (LPTSTR)((ULONG_PTR)((WORD)(i)))
+#endif
+
 /* Functions */
 #ifndef UNDER_CE
 int APIENTRY WinMain(HINSTANCE,HINSTANCE,LPSTR,int);

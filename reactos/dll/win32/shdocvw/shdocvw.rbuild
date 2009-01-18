@@ -1,4 +1,4 @@
-<module name="shdocvw" type="win32dll" baseaddress="${BASEADDRESS_SHDOCVW}" installbase="system32" installname="shdocvw.dll" allowwarnings="true">
+<module name="shdocvw" type="win32dll" baseaddress="${BASEADDRESS_SHDOCVW}" installbase="system32" installname="shdocvw.dll">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="shdocvw.spec" />
 	<include base="shdocvw">.</include>

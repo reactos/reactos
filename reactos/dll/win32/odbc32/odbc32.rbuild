@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="odbc32" type="win32dll" baseaddress="${BASEADDRESS_ODBC32}" installbase="system32" installname="odbc32.dll" allowwarnings="true" crt="msvcrt">
+<module name="odbc32" type="win32dll" baseaddress="${BASEADDRESS_ODBC32}" installbase="system32" installname="odbc32.dll" crt="msvcrt">
 	<importlibrary definition="odbc32.spec" />
 	<include base="odbc32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

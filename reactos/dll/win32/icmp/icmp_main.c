@@ -273,7 +273,7 @@ DWORD WINAPI IcmpSendEcho(
     if (RequestOptions!=NULL) {
         int val;
         if (icp->default_opts.OptionsSize==IP_OPTS_UNKNOWN) {
-            unsigned int len;
+            int len;
             /* Before we mess with the options, get the default values */
             len=sizeof(val);
             getsockopt(icp->sid,IPPROTO_IP,IP_TTL,(char *)&val,&len);
@@ -332,7 +332,7 @@ DWORD WINAPI IcmpSendEcho(
 #endif
 
     send_time = GetTickCount();
-    res=sendto(icp->sid, reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
+    res=sendto(icp->sid, (const char*)reqbuf, reqsize, 0, (struct sockaddr*)&addr, sizeof(addr));
     HeapFree(GetProcessHeap (), 0, reqbuf);
     if (res<0) {
         if (WSAGetLastError()==WSAEMSGSIZE)
@@ -357,7 +357,7 @@ DWORD WINAPI IcmpSendEcho(
     ip_header_len=0; /* because gcc was complaining */
     while ((res=select(icp->sid+1,&fdr,NULL,NULL,&timeout))>0) {
         recv_time = GetTickCount();
-        res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,&addrlen);
+        res=recvfrom(icp->sid, (char*)ip_header, maxlen, 0, (struct sockaddr*)&addr,(int*)&addrlen);
         TRACE("received %d bytes from %s\n",res, inet_ntoa(addr.sin_addr));
         ier->Status=IP_REQ_TIMED_OUT;
 

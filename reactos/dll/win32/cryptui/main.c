@@ -3277,6 +3277,9 @@ static void show_cert_usages(HWND hwnd, struct edit_cert_data *data)
     LVCOLUMNW column;
     PurposeSelection purposeSelection;
 
+    /* hack for retarded gcc  */
+    purposeSelection = 0;
+
     GetWindowRect(lv, &rc);
     column.mask = LVCF_WIDTH;
     column.cx = rc.right - rc.left;
