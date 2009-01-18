@@ -851,11 +851,11 @@ DWORD RSetServiceObjectSecurity(
         DesiredAccess |= WRITE_OWNER;
 
     if ((dwSecurityInformation & OWNER_SECURITY_INFORMATION) &&
-        (((PSECURITY_DESCRIPTOR)lpSecurityDescriptor)->Owner == NULL))
+        (((PISECURITY_DESCRIPTOR)lpSecurityDescriptor)->Owner == NULL))
         return ERROR_INVALID_PARAMETER;
 
     if ((dwSecurityInformation & GROUP_SECURITY_INFORMATION) &&
-        (((PSECURITY_DESCRIPTOR)lpSecurityDescriptor)->Group == NULL))
+        (((PISECURITY_DESCRIPTOR)lpSecurityDescriptor)->Group == NULL))
         return ERROR_INVALID_PARAMETER;
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,

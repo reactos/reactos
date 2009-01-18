@@ -1018,7 +1018,7 @@ RtlSelfRelativeToAbsoluteSD2(IN OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
  * @implemented
  */
 BOOLEAN NTAPI
-RtlValidRelativeSecurityDescriptor(IN PISECURITY_DESCRIPTOR SecurityDescriptorInput,
+RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
                                    IN ULONG SecurityDescriptorLength,
                                    IN SECURITY_INFORMATION RequiredInformation)
 {
@@ -1027,7 +1027,7 @@ RtlValidRelativeSecurityDescriptor(IN PISECURITY_DESCRIPTOR SecurityDescriptorIn
    PAGED_CODE_RTL();
 
    if (SecurityDescriptorLength < sizeof(SECURITY_DESCRIPTOR_RELATIVE) ||
-       SecurityDescriptorInput->Revision != SECURITY_DESCRIPTOR_REVISION1 ||
+       pSD->Revision != SECURITY_DESCRIPTOR_REVISION1 ||
        !(pSD->Control & SE_SELF_RELATIVE))
    {
       return FALSE;

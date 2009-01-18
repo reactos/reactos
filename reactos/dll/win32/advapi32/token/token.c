@@ -339,7 +339,7 @@ CheckTokenMembership(IN HANDLE ExistingTokenHandle,
                      IN PSID SidToCheck,
                      OUT PBOOL IsMember)
 {
-    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+    PISECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     ACCESS_MASK GrantedAccess;
     struct
     {
