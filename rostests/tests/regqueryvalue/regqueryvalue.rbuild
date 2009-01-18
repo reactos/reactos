@@ -1,4 +1,4 @@
-<module name="regqueryvalue" type="win32gui" installbase="bin" installname="regqueryvalue.exe" allowwarnings="true">
+<module name="regqueryvalue" type="win32gui" installbase="bin" installname="regqueryvalue.exe">
 	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>user32</library>

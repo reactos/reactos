@@ -1,4 +1,4 @@
-<module name="subclass" type="win32gui" installbase="bin" installname="subclass.exe" allowwarnings="true">
+<module name="subclass" type="win32gui" installbase="bin" installname="subclass.exe">
 	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>user32</library>

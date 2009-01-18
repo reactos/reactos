@@ -1,4 +1,4 @@
-<module name="win32kdxtest" type="win32cui" installbase="bin" installname="win32kdxtest.exe" allowwarnings ="true" >
+<module name="win32kdxtest" type="win32cui" installbase="bin" installname="win32kdxtest.exe">
 	<include base="win32kdxtest">.</include>
 	<library>kernel32</library>
 	<library>user32</library>

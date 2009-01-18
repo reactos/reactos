@@ -77,7 +77,7 @@ void UpdatePalette(HBITMAP hBM){
 	DoBlt(hBM);
 }
 
-void InitBitmap(HANDLE *hBM){
+void InitBitmap(HBITMAP *hBM){
 	HPALETTE PalHan;
 	HWND ActiveWindow;
 	HDC hDC;
