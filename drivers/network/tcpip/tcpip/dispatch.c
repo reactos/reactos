@@ -256,7 +256,8 @@ VOID NTAPI DispCancelListenRequest(
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
-    DispDataRequestComplete(Irp, STATUS_CANCELLED, 0);
+    Irp->IoStatus.Information = 0;
+    IRPFinish(Irp, STATUS_CANCELLED);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
