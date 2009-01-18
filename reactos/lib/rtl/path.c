@@ -75,7 +75,7 @@ RtlDetermineDosPathNameType_U(PCWSTR Path)
    }
    else
    {
-      if (!Path[1] || Path[1] != L':') return RtlPathTypeRelative;       /* xxx     */
+      if (!Path[0] || Path[1] != L':') return RtlPathTypeRelative;       /* xxx     */
       if (IS_PATH_SEPARATOR(Path[2])) return RtlPathTypeDriveAbsolute;    /* x:\xxx  */
 
       return RtlPathTypeDriveRelative;                                    /* x:xxx   */
