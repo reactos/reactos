@@ -352,18 +352,18 @@ s_check_se2(se_t *s)
 }
 
 int
-s_sum_parr(int *a[3])
-{
-  return s_sum_pcarr(a, 3);
-}
-
-int
 s_sum_pcarr(int *a[], int n)
 {
   int i, s = 0;
   for (i = 0; i < n; ++i)
     s += *a[i];
   return s;
+}
+
+int
+s_sum_parr(int *a[3])
+{
+  return s_sum_pcarr(a, 3);
 }
 
 int
