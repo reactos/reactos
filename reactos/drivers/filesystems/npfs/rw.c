@@ -537,10 +537,10 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 				/* Check if buffer is full and the read pointer is not at the start of the buffer */
 				if ((Ccb->WriteQuotaAvailable == 0) && (Ccb->ReadPtr > Ccb->Data))
 				{
+					Ccb->WriteQuotaAvailable += (ULONG_PTR)Ccb->ReadPtr - (ULONG_PTR)Ccb->Data;
 					memcpy(Ccb->Data, Ccb->ReadPtr, (ULONG_PTR)Ccb->WritePtr - (ULONG_PTR)Ccb->ReadPtr);
-					Ccb->WritePtr = (PVOID)((ULONG_PTR)Ccb->WritePtr - ((ULONG_PTR)Ccb->WritePtr - (ULONG_PTR)Ccb->ReadPtr));
+					Ccb->WritePtr = (PVOID)((ULONG_PTR)Ccb->WritePtr - ((ULONG_PTR)Ccb->ReadPtr - (ULONG_PTR)Ccb->Data));
 					Ccb->ReadPtr = Ccb->Data;
-					Ccb->WriteQuotaAvailable += (ULONG_PTR)Ccb->WritePtr - (ULONG_PTR)Ccb->ReadPtr;
 				}
 
 				/* For Message mode, the Message length is stored in the buffer preceeding the Message. */
@@ -560,7 +560,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
 					/* Use the smaller value */
 					CopyLength = min(NextMessageLength, Length);
-
+					ASSERT(CopyLength > 0);
+					ASSERT(CopyLength <= Ccb->ReadDataAvailable);
 					/* retrieve the message from the buffer */
 					memcpy(Buffer, (PVOID)((ULONG_PTR)Ccb->ReadPtr + sizeof(NextMessageLength)), CopyLength);
 
@@ -571,6 +572,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 						{
 							/* Calculate the remaining message new size */
 							ULONG NewMessageSize = NextMessageLength-CopyLength;
+
 							/* Update ReadPtr to point to new Message size location */
 							Ccb->ReadPtr = (PVOID)((ULONG_PTR)Ccb->ReadPtr + CopyLength);
 
@@ -586,16 +588,16 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 					}
 					else
 					{
-						/* This was the last Message, so just zero this messages for safety sake */
+						/* This was the last Message, so just zero start of buffer for safety sake */
 						memset(Ccb->Data, 0, NextMessageLength + sizeof(NextMessageLength));
+
+						/* Reset to MaxDataLength as partial message retrievals dont
+						   give the length back to Quota */
+						Ccb->WriteQuotaAvailable = Ccb->MaxDataLength;
 
 						/* reset read and write pointer to beginning of buffer */
 						Ccb->WritePtr = Ccb->Data;
 						Ccb->ReadPtr = Ccb->Data;
-
-						/* Add both the message length and the header to the WriteQuotaAvailable
-						   as they both were removed */
-						Ccb->WriteQuotaAvailable += (CopyLength + sizeof(CopyLength));
 					}
 #ifndef NDEBUG
 					DPRINT("Length %d Buffer %x\n",CopyLength,Buffer);
@@ -619,7 +621,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 					else 
 					{
 						KeResetEvent(&Ccb->ReadEvent);
-						if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
+
+						if ((Ccb->PipeState == FILE_PIPE_CONNECTED_STATE) && (Ccb->WriteQuotaAvailable > 0))
 						{
 							KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
 						}
@@ -870,7 +873,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				if (CopyLength > ReaderCcb->WriteQuotaAvailable)
 				{
 					DPRINT1("Writing %lu byte to pipe would overflow as only %lu bytes are available\n",
-						CopyLength, ReaderCcb->ReadDataAvailable);
+						CopyLength, ReaderCcb->WriteQuotaAvailable);
 					ASSERT(FALSE);
 				}
 
