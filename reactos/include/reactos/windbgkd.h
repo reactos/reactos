@@ -200,7 +200,13 @@ typedef struct _DBGKD_ANY_CONTROL_SET
 } DBGKD_ANY_CONTROL_SET, *PDBGKD_ANY_CONTROL_SET;
 #include <poppack.h>
 
+#if defined(_M_X86)
 typedef X86_DBGKD_CONTROL_SET DBGKD_CONTROL_SET;
+#elif defined(_M_AMD64)
+typedef AMD64_DBGKD_CONTROL_SET DBGKD_CONTROL_SET;
+#else
+#error unsupported architecture
+#endif
 
 //
 // DBGKM Structure for Exceptions
@@ -214,6 +220,8 @@ typedef struct _DBGKM_EXCEPTION64
 //
 // DBGKD Structure for State Change
 //
+#ifdef defined(_M_X86)
+
 typedef struct _DBGKD_CONTROL_REPORT
 {
     ULONG Dr6;
@@ -227,6 +235,24 @@ typedef struct _DBGKD_CONTROL_REPORT
     USHORT SegFs;
     ULONG EFlags;
 } DBGKD_CONTROL_REPORT, *PDBGKD_CONTROL_REPORT;
+
+#elif defined(_M_AMD64)
+
+typedef struct _DBGKD_CONTROL_REPORT
+{
+    ULONG64 Dr6;
+    ULONG64 Dr7;
+    ULONG EFlags;
+    USHORT InstructionCount;
+    USHORT ReportFlags;
+    UCHAR InstructionStream[DBGKD_MAXSTREAM];
+    USHORT SegCs;
+    USHORT SegDs;
+    USHORT SegEs;
+    USHORT SegFs;
+} DBGKD_CONTROL_REPORT, *PDBGKD_CONTROL_REPORT;
+
+#endif
 
 //
 // DBGKD Structure for Debug I/O Type Print String
