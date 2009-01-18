@@ -106,7 +106,7 @@ VOID DispDataRequestComplete(
 			    Irp->IoStatus.Information));
     TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
 
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    IRPFinish(Irp, Status);
 
     TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
 }
@@ -212,7 +212,7 @@ VOID NTAPI DispCancelRequest(
     }
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IRPFinish(Irp, STATUS_CANCELLED);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }

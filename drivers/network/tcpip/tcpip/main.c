@@ -473,10 +473,6 @@ TiDispatchInternal(
 
   if( Complete )
       IRPFinish( Irp, Status );
-  else {
-      Irp->IoStatus.Status = Status;
-      UntrackFL(__FILE__, __LINE__, Irp, IRP_TAG);
-  }
 
   return Status;
 }
