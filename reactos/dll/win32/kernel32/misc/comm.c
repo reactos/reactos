@@ -354,13 +354,13 @@ GetCommState(HANDLE hFile, LPDCB lpDCB)
 	}
 
     if (!DeviceIoControl(hFile, IOCTL_SERIAL_GET_BAUD_RATE,
-                         NULL, 0, &BaudRate, sizeof(BaudRate), NULL, NULL) ||
+                         NULL, 0, &BaudRate, sizeof(BaudRate), &dwBytesReturned, NULL) ||
         !DeviceIoControl(hFile, IOCTL_SERIAL_GET_LINE_CONTROL,
-                         NULL, 0, &LineControl, sizeof(LineControl), NULL, NULL) ||
+                         NULL, 0, &LineControl, sizeof(LineControl), &dwBytesReturned, NULL) ||
         !DeviceIoControl(hFile, IOCTL_SERIAL_GET_HANDFLOW,
-                         NULL, 0, &HandFlow, sizeof(HandFlow), NULL, NULL) ||
+                         NULL, 0, &HandFlow, sizeof(HandFlow), &dwBytesReturned, NULL) ||
         !DeviceIoControl(hFile, IOCTL_SERIAL_GET_CHARS,
-                         NULL, 0, &SpecialChars, sizeof(SpecialChars), NULL, NULL))
+                         NULL, 0, &SpecialChars, sizeof(SpecialChars), &dwBytesReturned, NULL))
         return FALSE;
 
     memset(lpDCB, 0, sizeof(*lpDCB));
