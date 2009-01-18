@@ -1595,3 +1595,93 @@ DWORD WINAPI SetupDecompressOrCopyFileW( PCWSTR source, PCWSTR target, PUINT typ
     TRACE("%s -> %s %d\n", debugstr_w(source), debugstr_w(target), comp);
     return ret;
 }
+
+/*
+ * implemented (used by pSetupGuidFromString)
+ */
+static BOOL TrimGuidString(PCWSTR szString, LPWSTR szNewString)
+{
+    WCHAR szBuffer[39];
+    INT Index;
+
+    if (wcslen(szString) == 38)
+    {
+        if ((szString[0] == L'{') && (szString[37] == L'}'))
+        {
+            for (Index = 0; Index < wcslen(szString); Index++)
+                szBuffer[Index] = szString[Index + 1];
+
+            szBuffer[36] = L'\0';
+            wcscpy(szNewString, szBuffer);
+            return TRUE;
+        }
+    }
+    wcscpy(szNewString, L"\0");
+    return FALSE;
+}
+
+/*
+ * implemented
+ */
+DWORD
+WINAPI
+pSetupGuidFromString(PCWSTR pString, LPGUID lpGUID)
+{
+    RPC_STATUS Status;
+    WCHAR szBuffer[39];
+
+    if (!TrimGuidString(pString, szBuffer))
+    {
+        return RPC_S_INVALID_STRING_UUID;
+    }
+
+    Status = UuidFromStringW(szBuffer, lpGUID);
+    if (Status != RPC_S_OK)
+    {
+        return RPC_S_INVALID_STRING_UUID;
+    }
+
+    return NO_ERROR;
+}
+
+/*
+ * implemented
+ */
+DWORD
+WINAPI
+pSetupStringFromGuid(LPGUID lpGUID, PWSTR pString, DWORD dwStringLen)
+{
+    RPC_STATUS Status;
+    RPC_WSTR rpcBuffer;
+    WCHAR szBuffer[39];
+
+    if (dwStringLen < 39)
+    {
+        return ERROR_INSUFFICIENT_BUFFER;
+    }
+
+    Status = UuidToStringW(lpGUID, &rpcBuffer);
+    if (Status != RPC_S_OK)
+    {
+        return Status;
+    }
+
+    wcscpy(szBuffer, L"{");
+    wcscat(szBuffer, rpcBuffer);
+    wcscat(szBuffer, L"}\0");
+
+    wcscpy(pString, szBuffer);
+
+    RpcStringFreeW(&rpcBuffer);
+    return NO_ERROR;
+}
+
+/*
+ * implemented
+ */
+BOOL
+WINAPI
+pSetupIsGuidNull(LPGUID lpGUID)
+{
+    return IsEqualGUID(lpGUID, &GUID_NULL);
+}

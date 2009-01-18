@@ -557,11 +557,11 @@
 @ stub pSetupGetOsLoaderDriveAndPath
 @ stdcall pSetupGetQueueFlags(ptr)
 @ stub pSetupGetVersionDatum
-@ stub pSetupGuidFromString
-@ stub pSetupIsGuidNull
+@ stdcall pSetupGuidFromString(wstr ptr)
+@ stdcall pSetupIsGuidNull(ptr)
 @ stub pSetupMakeSurePathExists
 @ stdcall pSetupSetGlobalFlags(long)
 @ stdcall pSetupSetQueueFlags(ptr long)
 @ stub pSetupSetSystemSourceFlags
-@ stub pSetupStringFromGuid
+@ stdcall pSetupStringFromGuid(ptr wstr long)
 @ stub pSetupVerifyQueuedCatalogs
