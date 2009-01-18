@@ -41,10 +41,11 @@ IInterruptSync_fnQueryInterface(
 
     DPRINT1("IInterruptSync_fnQueryInterface: This %p\n", This);
 
-    if (IsEqualGUIDAligned(refiid, &IID_IInterruptSync))
+    if (IsEqualGUIDAligned(refiid, &IID_IInterruptSync) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
-        _InterlockedIncrement(&This->ref);
+       InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
     DPRINT1("IInterruptSync_fnQueryInterface: This %p UNKNOWN interface requested\n", This);
@@ -60,7 +61,7 @@ IInterruptSync_fnAddRef(
 
     DPRINT1("IInterruptSync_AddRef: This %p\n", This);
 
-    return _InterlockedIncrement(&This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 ULONG
@@ -72,7 +73,7 @@ IInterruptSync_fnRelease(
     PSYNC_ENTRY Entry;
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)iface;
 
-    _InterlockedDecrement(&This->ref);
+    InterlockedDecrement(&This->ref);
 
     DPRINT1("IInterruptSync_Release: This %p new ref %u\n", This, This->ref);
 
@@ -105,7 +106,7 @@ IInterruptSynchronizedRoutine(
     IN PVOID  ServiceContext)
 {
     IInterruptSyncImpl * This = (IInterruptSyncImpl*)ServiceContext;
-    DPRINT1("IInterruptSynchronizedRoutine This %p SyncRoutine%p\n", This, This->SyncRoutine);
+    DPRINT1("IInterruptSynchronizedRoutine This %p SyncRoutine %p Context %p\n", This, This->SyncRoutine, This->DynamicContext);
     return This->SyncRoutine((IInterruptSync*)&This->lpVtbl, This->DynamicContext);
 }
 
@@ -241,14 +242,16 @@ IInterruptSync_fnConnect(
     Status = IoConnectInterrupt(&This->Interrupt, 
                                 IInterruptServiceRoutine,
                                 (PVOID)This,
-                                &This->Lock, Descriptor->u.Interrupt.Vector, 
+                                &This->Lock,
+                                Descriptor->u.Interrupt.Vector, 
                                 Descriptor->u.Interrupt.Level,
                                 Descriptor->u.Interrupt.Level, //FIXME
                                 LevelSensitive, //FIXME
-                                TRUE, //FIXME
+                                TRUE,
                                 Descriptor->u.Interrupt.Affinity, 
                                 FALSE);
 
+    DPRINT1("IInterruptSync_fnConnect result %x\n", Status);
     return Status;
 }
 
@@ -314,7 +317,7 @@ static IInterruptSyncVtbl vt_IInterruptSyncVtbl =
 };
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS NTAPI
 PcNewInterruptSync(
@@ -326,7 +329,8 @@ PcNewInterruptSync(
 {
     IInterruptSyncImpl * This;
 
-    DPRINT1("PcNewInterruptSync entered\n");
+    DPRINT1("PcNewInterruptSync entered OutInterruptSync %p OuterUnknown %p ResourceList %p ResourceIndex %u Mode %d\n", 
+            OutInterruptSync, OuterUnknown, ResourceList, ResourceIndex, Mode);
 
     if (!OutInterruptSync || !ResourceList || Mode > InterruptSyncModeRepeat || Mode < 0)
         return STATUS_INVALID_PARAMETER;

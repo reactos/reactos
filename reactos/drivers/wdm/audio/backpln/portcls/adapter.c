@@ -260,8 +260,9 @@ PcRegisterSubdevice(
     PCExtension* DeviceExt;
     NTSTATUS Status;
     ISubdevice *SubDevice;
-    UNICODE_STRING ReferenceString;
     UNICODE_STRING SymbolicLinkName;
+    SUBDEVICE_DESCRIPTOR * SubDeviceDescriptor;
+    ULONG Index;
 
     DPRINT1("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
 
@@ -293,25 +294,26 @@ PcRegisterSubdevice(
     }
 #endif
 
-    /* FIXME retrieve guid from subdescriptor */
 
-    RtlInitUnicodeString(&ReferenceString, Name);
-    /* register device interface */
-    Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject, 
-                                       &GUID_DEVCLASS_SOUND, //FIXME
-                                       &ReferenceString, 
-                                       &SymbolicLinkName);
-    if (NT_SUCCESS(Status))
+    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &SubDeviceDescriptor);
+    if (!NT_SUCCESS(Status))
     {
-        Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-        RtlFreeUnicodeString(&SymbolicLinkName);
+        DPRINT1("Failed to get subdevice descriptor %x\n", Status);
+        SubDevice->lpVtbl->Release(SubDevice);
     }
 
-    DPRINT1("PcRegisterSubdevice Status %x\n", Status);
+    for(Index = 0; Index < SubDeviceDescriptor->InterfaceCount; Index++)
+    {
+        Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject,
+                                           &SubDeviceDescriptor->Interfaces[Index],
+                                           NULL,
+                                           &SymbolicLinkName);
+        if (NT_SUCCESS(Status))
+        {
+            IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+            RtlFreeUnicodeString(&SymbolicLinkName);
+        }
+    }
 
-    /// HACK
-    /// IoRegisterDeviceInterface fails with
-    /// STATUS_OBJECT_PATH_NOT_FOUND
-    /// return Status;
     return STATUS_SUCCESS;
 }

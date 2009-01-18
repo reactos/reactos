@@ -18,11 +18,40 @@ typedef struct
     PPINCOUNT pPinCount;
     PPOWERNOTIFY pPowerNotify;
     PPCFILTER_DESCRIPTOR pDescriptor;
-
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
 }IPortWaveCyclicImpl;
 
+static GUID InterfaceGuids[3] = 
+{
+    {
+        /// KSCATEGORY_RENDER
+        0x65E8773EL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        /// KSCATEGORY_CAPTURE
+        0x65E8773DL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        /// KS_CATEGORY_AUDIO
+        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    }
+};
 
-const GUID GUID_DEVCLASS_SOUND; //FIXME
+#if 0
+static const KSIDENTIFIER Identifiers[] = 
+{
+    {
+        &KSINTERFACESETID_Standard,
+        0,
+        0
+    },
+    {
+        &KSINTERFACESETID_Standard,
+        1,
+        0
+    }
+};
+#endif
 
 //---------------------------------------------------------------
 // IPortEvents
@@ -276,23 +305,47 @@ IPortWaveCyclic_fnInit(
         return Status;
     }
 
+
+    /* get the miniport device descriptor */
+    Status = Miniport->lpVtbl->GetDescription(Miniport, &This->pDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("failed to get description\n");
+        Miniport->lpVtbl->Release(Miniport);
+        This->bInitialized = FALSE;
+        return Status;
+    }
+
+    /* create the subdevice descriptor */
+    Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
+                                         3,
+                                         InterfaceGuids, 
+                                         0, 
+                                         NULL,
+                                         0, 
+                                         NULL,
+                                         0,
+                                         0,
+                                         0,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         This->pDescriptor);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("PcCreateSubdeviceDescriptor failed with %x\n", Status);
+        Miniport->lpVtbl->Release(Miniport);
+        This->bInitialized = FALSE;
+        return Status;
+    }
+
     /* check if it supports IPinCount interface */
     Status = UnknownMiniport->lpVtbl->QueryInterface(UnknownMiniport, &IID_IPinCount, (PVOID*)&PinCount);
     if (NT_SUCCESS(Status))
     {
         /* store IPinCount interface */
         This->pPinCount = PinCount;
-    }
-    else
-    {
-        /* check if the miniport adapter provides a valid device descriptor */
-        Status = Miniport->lpVtbl->GetDescription(Miniport, &This->pDescriptor);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("failed to get description\n");
-            Miniport->lpVtbl->Release(Miniport);
-            return Status;
-        }
     }
 
     /* does the Miniport adapter support IPowerNotify interface*/
@@ -510,12 +563,14 @@ NTSTATUS
 NTAPI
 ISubDevice_fnGetDescriptor(
     IN ISubdevice *iface,
-    IN struct SUBDEVICE_DESCRIPTOR ** Descriptor)
+    IN SUBDEVICE_DESCRIPTOR ** Descriptor)
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
+    *Descriptor = This->SubDeviceDescriptor;
+
     DPRINT1("ISubDevice_GetDescriptor this %p\n", This);
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_SUCCESS;
 }
 
 static

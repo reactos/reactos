@@ -96,8 +96,12 @@ DECLARE_INTERFACE_(IIrpTarget, IUnknown)
  */
 
 struct IIrpTargetFactory;
-struct SUBDEVICE_DESCRIPTOR;
 
+typedef struct
+{
+    ULONG InterfaceCount;
+    GUID *Interfaces;
+}SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
 #define INTERFACE ISubdevice
@@ -123,7 +127,7 @@ DECLARE_INTERFACE_(ISubdevice, IUnknown)
     STDMETHOD_(NTSTATUS, ReleaseChildren)(THIS) PURE;
 
     STDMETHOD_(NTSTATUS, GetDescriptor)(THIS_
-        IN struct SUBDEVICE_DESCRIPTOR **) PURE;
+        IN SUBDEVICE_DESCRIPTOR **) PURE;
 
     STDMETHOD_(NTSTATUS, DataRangeIntersection)(THIS_
         IN  ULONG PinId,

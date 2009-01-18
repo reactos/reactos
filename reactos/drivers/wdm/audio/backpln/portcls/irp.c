@@ -129,6 +129,7 @@ PortClsPnp(
 
         Irp->IoStatus.Status = STATUS_SUCCESS;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return status;
     }
     else if ( irp_stack->MinorFunction == IRP_MN_REMOVE_DEVICE )
     {
@@ -140,6 +141,7 @@ PortClsPnp(
 
         /* Do not complete? */
         Irp->IoStatus.Status = STATUS_SUCCESS;
+        return STATUS_SUCCESS;
     }
     else if ( irp_stack->MinorFunction == IRP_MN_QUERY_INTERFACE )
     {
@@ -148,7 +150,11 @@ PortClsPnp(
         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
         return Irp->IoStatus.Status;
     }
- 
+    else if ( irp_stack->MinorFunction == IRP_MN_QUERY_DEVICE_RELATIONS)
+    {
+        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+        return Irp->IoStatus.Status;
+    }
 
     DPRINT1("unhandled function %u\n", irp_stack->MinorFunction);
     return STATUS_SUCCESS;
@@ -302,11 +308,13 @@ return STATUS_SUCCESS;
     /* initialize the notification event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
+    /* setup a completion routine */
+    IoSetCompletionRoutine(Irp, IrpCompletionRoutine, (PVOID)&Event, TRUE, FALSE, FALSE);
+
     /* copy the current stack location */
     IoCopyCurrentIrpStackLocationToNext(Irp);
 
-    /* setup a completion routine */
-    IoSetCompletionRoutine(Irp, IrpCompletionRoutine, (PVOID)&Event, TRUE, FALSE, FALSE);
+    DPRINT1("PcForwardIrpSynchronous %p Irp %p\n", DeviceExt->PrevDeviceObject, Irp);
 
     /* now call the driver */
     Status = IoCallDriver(DeviceExt->PrevDeviceObject, Irp);

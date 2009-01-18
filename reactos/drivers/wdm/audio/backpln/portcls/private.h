@@ -157,6 +157,22 @@ PcDmaSlaveDescription(
     IN ULONG DmaPort,
     OUT PDEVICE_DESCRIPTION DeviceDescription);
 
-
+NTSTATUS
+NTAPI
+PcCreateSubdeviceDescriptor(
+    OUT SUBDEVICE_DESCRIPTOR ** OutSubdeviceDescriptor,
+    IN ULONG InterfaceCount,
+    IN GUID * InterfaceGuids,
+    IN ULONG IdentifierCount,
+    IN KSIDENTIFIER *Identifier,
+    IN ULONG FilterPropertiesCount,
+    IN KSPROPERTY_SET * FilterProperties,
+    IN ULONG Unknown1,
+    IN ULONG Unknown2,
+    IN ULONG PinPropertiesCount,
+    IN KSPROPERTY_SET * PinProperties,
+    IN ULONG EventSetCount,
+    IN KSEVENT_SET * EventSet,
+    IN PPCFILTER_DESCRIPTOR FilterDescription);
 
 #endif

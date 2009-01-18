@@ -5,6 +5,7 @@ typedef struct
     IPortWavePciVtbl *lpVtbl;
     IServiceSinkVtbl *lpVtblServiceSink;
     IPortEventsVtbl *lpVtblPortEvents;
+    ISubdeviceVtbl *lpVtblSubDevice;
 
 #if 0
     IUnregisterSubdevice *lpVtblUnregisterSubDevice;
@@ -17,7 +18,27 @@ typedef struct
     BOOL bInitialized;
     PRESOURCELIST pResourceList;
     PSERVICEGROUP ServiceGroup;
+    PPINCOUNT pPinCount;
+    PPOWERNOTIFY pPowerNotify;
+    PPCFILTER_DESCRIPTOR pDescriptor;
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
 }IPortWavePciImpl;
+
+static GUID InterfaceGuids[3] = 
+{
+    {
+        /// KSCATEGORY_RENDER
+        0x65E8773EL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        /// KSCATEGORY_CAPTURE
+        0x65E8773DL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        /// KS_CATEGORY_AUDIO
+        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    }
+};
 
 
 //---------------------------------------------------------------
@@ -225,6 +246,12 @@ IPortWavePci_fnQueryInterface(
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_ISubdevice))
+    {
+        *Output = &This->lpVtblSubDevice;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
     else if (IsEqualGUIDAligned(refiid, &IID_IPortClsVersion))
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
@@ -303,6 +330,8 @@ IPortWavePci_fnInit(
     IMiniportWavePci * Miniport;
     PSERVICEGROUP ServiceGroup;
     NTSTATUS Status;
+    PPINCOUNT PinCount;
+    PPOWERNOTIFY PowerNotify;
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
     DPRINT1("IPortWavePci_fnInit entered with This %p, DeviceObject %p Irp %p UnknownMiniport %p, UnknownAdapter %p ResourceList %p\n", 
@@ -348,17 +377,70 @@ IPortWavePci_fnInit(
         return Status;
     }
 
-    /* store service group */
-    This->ServiceGroup = ServiceGroup;
+    /* check if the miniport adapter provides a valid device descriptor */
+    Status = Miniport->lpVtbl->GetDescription(Miniport, &This->pDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("failed to get description\n");
+        Miniport->lpVtbl->Release(Miniport);
+        This->bInitialized = FALSE;
+        return Status;
+    }
 
-    /* add ourselves to service group which is called when miniport receives an isr */
-    ServiceGroup->lpVtbl->AddMember(ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
+    /* create the subdevice descriptor */
+    Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
+                                         3,
+                                         InterfaceGuids, 
+                                         0, 
+                                         NULL,
+                                         0, 
+                                         NULL,
+                                         0,
+                                         0,
+                                         0,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         This->pDescriptor);
 
-    /* increment reference on service group */
-    ServiceGroup->lpVtbl->AddRef(ServiceGroup);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("PcCreateSubdeviceDescriptor failed with %x\n", Status);
+        Miniport->lpVtbl->Release(Miniport);
+        This->bInitialized = FALSE;
+        return Status;
+    }
 
+    /* did we get a service group */
+    if (ServiceGroup)
+    {
+        /* store service group in context */
+        This->ServiceGroup = ServiceGroup;
 
-    DPRINT("IPortWaveCyclic_Init sucessfully initialized\n");
+        /* add ourselves to service group which is called when miniport receives an isr */
+        ServiceGroup->lpVtbl->AddMember(ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
+
+        /* increment reference on service group */
+        ServiceGroup->lpVtbl->AddRef(ServiceGroup);
+    }
+
+    /* check if it supports IPinCount interface */
+    Status = UnknownMiniport->lpVtbl->QueryInterface(UnknownMiniport, &IID_IPinCount, (PVOID*)&PinCount);
+    if (NT_SUCCESS(Status))
+    {
+        /* store IPinCount interface */
+        This->pPinCount = PinCount;
+    }
+
+    /* does the Miniport adapter support IPowerNotify interface*/
+    Status = UnknownMiniport->lpVtbl->QueryInterface(UnknownMiniport, &IID_IPowerNotify, (PVOID*)&PowerNotify);
+    if (NT_SUCCESS(Status))
+    {
+        /* store reference */
+        This->pPowerNotify = PowerNotify;
+    }
+
+    DPRINT("IPortWavePci_Init sucessfully initialized\n");
     return STATUS_SUCCESS;
 }
 
@@ -380,7 +462,7 @@ IPortWavePci_fnNewRegistryKey(
 
     if (!This->bInitialized)
     {
-        DPRINT("IPortWaveCyclic_fnNewRegistryKey called w/o initiazed\n");
+        DPRINT("IPortWavePci_fnNewRegistryKey called w/o initiazed\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -410,7 +492,7 @@ IPortWavePci_fnGetDeviceProperty(
 
     if (!This->bInitialized)
     {
-        DPRINT("IPortWaveCyclic_fnNewRegistryKey called w/o initiazed\n");
+        DPRINT("IPortWavePci_fnNewRegistryKey called w/o initiazed\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -483,6 +565,169 @@ static IPortWavePciVtbl vt_IPortWavePci =
     IPortWavePci_fnNewMasterDmaChannel,
 };
 
+//---------------------------------------------------------------
+// ISubdevice interface
+//
+
+static
+NTSTATUS
+NTAPI
+ISubDevice_fnQueryInterface(
+    IN ISubdevice *iface,
+    IN REFIID InterfaceId,
+    IN PVOID* Interface)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    return IPortWavePci_fnQueryInterface((IPortWavePci*)This, InterfaceId, Interface);
+}
+
+static
+ULONG
+NTAPI
+ISubDevice_fnAddRef(
+    IN ISubdevice *iface)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    return IPortWavePci_fnAddRef((IPortWavePci*)This);
+}
+
+static
+ULONG
+NTAPI
+ISubDevice_fnRelease(
+    IN ISubdevice *iface)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    return IPortWavePci_fnRelease((IPortWavePci*)This);
+}
+
+static
+NTSTATUS
+NTAPI
+ISubDevice_fnNewIrpTarget(
+    IN ISubdevice *iface,
+    OUT struct IIrpTarget **OutTarget,
+    IN WCHAR * Name,
+    IN PUNKNOWN Unknown,
+    IN POOL_TYPE PoolType,
+    IN PDEVICE_OBJECT * DeviceObject,
+    IN PIRP Irp, 
+    IN KSOBJECT_CREATE *CreateObject)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    DPRINT1("ISubDevice_NewIrpTarget this %p\n", This);
+    return STATUS_UNSUCCESSFUL;
+}
+
+static
+NTSTATUS
+NTAPI
+ISubDevice_fnReleaseChildren(
+    IN ISubdevice *iface)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    DPRINT1("ISubDevice_ReleaseChildren this %p\n", This);
+    return STATUS_UNSUCCESSFUL;
+}
+
+static
+NTSTATUS
+NTAPI
+ISubDevice_fnGetDescriptor(
+    IN ISubdevice *iface,
+    IN SUBDEVICE_DESCRIPTOR ** Descriptor)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    DPRINT1("ISubDevice_GetDescriptor this %p\n", This);
+    *Descriptor = This->SubDeviceDescriptor;
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+ISubDevice_fnDataRangeIntersection(
+    IN ISubdevice *iface,
+    IN  ULONG PinId,
+    IN  PKSDATARANGE DataRange,
+    IN  PKSDATARANGE MatchingDataRange,
+    IN  ULONG OutputBufferLength,
+    OUT PVOID ResultantFormat OPTIONAL,
+    OUT PULONG ResultantFormatLength)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    DPRINT("ISubDevice_DataRangeIntersection this %p\n", This);
+
+    if (This->Miniport)
+    {
+        return This->Miniport->lpVtbl->DataRangeIntersection (This->Miniport, PinId, DataRange, MatchingDataRange, OutputBufferLength, ResultantFormat, ResultantFormatLength);
+    }
+
+    return STATUS_UNSUCCESSFUL;
+}
+
+static
+NTSTATUS
+NTAPI
+ISubDevice_fnPowerChangeNotify(
+    IN ISubdevice *iface,
+    IN POWER_STATE PowerState)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    if (This->pPowerNotify)
+    {
+        This->pPowerNotify->lpVtbl->PowerChangeNotify(This->pPowerNotify, PowerState);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+NTAPI
+ISubDevice_fnPinCount(
+    IN ISubdevice *iface,
+    IN ULONG  PinId,
+    IN OUT PULONG  FilterNecessary,
+    IN OUT PULONG  FilterCurrent,
+    IN OUT PULONG  FilterPossible,
+    IN OUT PULONG  GlobalCurrent,
+    IN OUT PULONG  GlobalPossible)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
+
+    if (This->pPinCount)
+    {
+       This->pPinCount->lpVtbl->PinCount(This->pPinCount, PinId, FilterNecessary, FilterCurrent, FilterPossible, GlobalCurrent, GlobalPossible);
+       return STATUS_SUCCESS;
+    }
+
+    /* FIXME
+     * scan filter descriptor 
+     */
+    return STATUS_UNSUCCESSFUL;
+}
+
+static ISubdeviceVtbl vt_ISubdeviceVtbl = 
+{
+    ISubDevice_fnQueryInterface,
+    ISubDevice_fnAddRef,
+    ISubDevice_fnRelease,
+    ISubDevice_fnNewIrpTarget,
+    ISubDevice_fnReleaseChildren,
+    ISubDevice_fnGetDescriptor,
+    ISubDevice_fnDataRangeIntersection,
+    ISubDevice_fnPowerChangeNotify,
+    ISubDevice_fnPinCount
+};
 
 NTSTATUS
 NewPortWavePci(
@@ -496,6 +741,7 @@ NewPortWavePci(
 
     This->lpVtblServiceSink = &vt_IServiceSink;
     This->lpVtbl = &vt_IPortWavePci;
+    This->lpVtblSubDevice = &vt_ISubdeviceVtbl;
     This->lpVtblPortEvents = &vt_IPortEvents;
     This->ref = 1;
 

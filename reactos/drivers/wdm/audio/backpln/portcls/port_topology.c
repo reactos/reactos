@@ -13,8 +13,22 @@ typedef struct
     PPINCOUNT pPinCount;
     PPOWERNOTIFY pPowerNotify;
 
+    PPCFILTER_DESCRIPTOR pDescriptor;
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
 }IPortTopologyImpl;
 
+
+static GUID InterfaceGuids[3] = 
+{
+    {
+        /// KS_CATEGORY_TOPOLOGY
+        0xDDA54A40, 0x1E4C, 0x11D1, {0xA0, 0x50, 0x40, 0x57, 0x05, 0xC1, 0x00, 0x00}
+    },
+    {
+        /// KS_CATEGORY_AUDIO
+        0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    }
+};
 
 #if 0
 static
@@ -72,11 +86,10 @@ IPortTopology_fnQueryInterface(
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
     }
+
     StringFromCLSID(refiid, Buffer);
     DPRINT1("IPortTopology_fnQueryInterface no iface %S\n", Buffer);
-    StringFromCLSID(&IID_IUnknown, Buffer);
-    DPRINT1("IPortTopology_fnQueryInterface IUnknown %S\n", Buffer);
-
+    KeBugCheckEx(0, 0, 0, 0, 0);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -168,16 +181,43 @@ IPortTopology_fnInit(
     This->pDeviceObject = DeviceObject;
     This->bInitialized = TRUE;
 
+    /* increment reference on miniport adapter */
+    Miniport->lpVtbl->AddRef(Miniport);
+
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IPortTopology_Init failed with %x\n", Status);
         This->bInitialized = FALSE;
+        Miniport->lpVtbl->Release(Miniport);
         return Status;
     }
 
-    /* increment reference on miniport adapter */
-    Miniport->lpVtbl->AddRef(Miniport);
+    /* get the miniport device descriptor */
+    Status = Miniport->lpVtbl->GetDescription(Miniport, &This->pDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("failed to get description\n");
+        Miniport->lpVtbl->Release(Miniport);
+        This->bInitialized = FALSE;
+        return Status;
+    }
+
+    /* create the subdevice descriptor */
+    Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
+                                         2,
+                                         InterfaceGuids, 
+                                         0, 
+                                         NULL,
+                                         0, 
+                                         NULL,
+                                         0,
+                                         0,
+                                         0,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         This->pDescriptor);
 
 
     DPRINT1("IPortTopology_fnInit success\n");
@@ -302,12 +342,13 @@ NTSTATUS
 NTAPI
 ISubDevice_fnGetDescriptor(
     IN ISubdevice *iface,
-    IN struct SUBDEVICE_DESCRIPTOR ** Descriptor)
+    IN SUBDEVICE_DESCRIPTOR ** Descriptor)
 {
     IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
 
     DPRINT1("ISubDevice_GetDescriptor this %p\n", This);
-    return STATUS_UNSUCCESSFUL;
+    *Descriptor = This->SubDeviceDescriptor;
+    return STATUS_SUCCESS;
 }
 
 static

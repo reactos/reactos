@@ -22,7 +22,7 @@ IRegistryKey_fnAddRef(
 
     DPRINT("IRegistryKey_AddRef: This %p\n", This);
 
-    return _InterlockedIncrement(&This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 ULONG
@@ -32,7 +32,7 @@ IRegistryKey_fnRelease(
 {
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
 
-    _InterlockedDecrement(&This->ref);
+    InterlockedDecrement(&This->ref);
     DPRINT1("IRegistryKey_fnRelease ref %u this %p entered\n", This->ref, This);
     if (This->ref == 0)
     {
