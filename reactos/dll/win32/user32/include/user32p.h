@@ -249,5 +249,10 @@ PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 #endif
 #endif
 
+/* Hack away wine hack */
+#define __TRY if(1)
+#define __EXCEPT_PAGE_FAULT else
+#define __ENDTRY
+
 #endif
 /* EOF */
