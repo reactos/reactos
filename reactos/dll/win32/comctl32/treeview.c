@@ -2830,7 +2830,12 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, const RECT *rc)
 	}
     }
 
-    TREEVIEW_UpdateScrollBars(infoPtr);
+    //
+    // This is correct, but is causes and infinite loop of WM_PAINT messages, resulting
+    // in continuous painting of the scroll bar in reactos. Comment out until the real
+    // bug is found
+    // 
+    //TREEVIEW_UpdateScrollBars(infoPtr);
 
     if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
 	infoPtr->cdmode =

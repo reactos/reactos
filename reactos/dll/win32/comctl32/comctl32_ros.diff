@@ -1,8 +1,8 @@
 Index: propsheet.c
 ===================================================================
---- propsheet.c	(revision 25766)
+--- propsheet.c	(revision 38890)
 +++ propsheet.c	(working copy)
-@@ -2431,6 +2431,28 @@
+@@ -2417,6 +2417,29 @@
    return FALSE;
  }
  
@@ -28,10 +28,11 @@ Index: propsheet.c
 +    return TRUE;
 +}
 +
++
  /******************************************************************************
   *            PROPSHEET_SetWizButtons
   *
-@@ -2453,17 +2475,6 @@
+@@ -2438,17 +2461,6 @@
    EnableWindow(hwndNext, FALSE);
    EnableWindow(hwndFinish, FALSE);
  
@@ -49,7 +50,7 @@ Index: propsheet.c
    if (dwFlags & PSWIZB_BACK)
      EnableWindow(hwndBack, TRUE);
  
-@@ -2493,6 +2504,32 @@
+@@ -2478,6 +2490,31 @@
    }
    else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
      EnableWindow(hwndFinish, TRUE);
@@ -78,41 +79,40 @@ Index: propsheet.c
 +
 +  /* Now try to find an edit control that deserves focus */
 +  EnumChildWindows(PropSheet_GetCurrentPageHwnd(hwndDlg), EnumChildProc, 0);
-+  
  }
  
  /******************************************************************************
 Index: tooltips.c
 ===================================================================
---- tooltips.c	(revision 25790)
+--- tooltips.c	(revision 38890)
 +++ tooltips.c	(working copy)
-@@ -2486,7 +2486,34 @@
+@@ -2488,8 +2488,33 @@
+ static LRESULT
  TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
  {
-     FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
+-    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
 +    TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
 +    TTTOOL_INFO *toolPtr = infoPtr->tools;
 +    INT nResult;
  
-+    if (lParam == NF_QUERY)
-+    {
-+        if (toolPtr->bNotifyUnicode)
-+        {
++    TRACE("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
++
++    if (lParam == NF_QUERY) {
++        if (toolPtr->bNotifyUnicode) {
 +            return NFR_UNICODE;
 +        } else {
 +            return NFR_ANSI;
 +        }
 +    }
-+    else if (lParam == NF_REQUERY)
-+    {
++    else if (lParam == NF_REQUERY) {
 +        nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
 +                    (WPARAM)hwnd, (LPARAM)NF_QUERY);
 +        if (nResult == NFR_ANSI) {
 +            toolPtr->bNotifyUnicode = FALSE;
-+        TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
++            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
 +        } else if (nResult == NFR_UNICODE) {
 +            toolPtr->bNotifyUnicode = TRUE;
-+        TRACE(" -- WM_NOTIFYFORMAT returns: NFR_UNICODE\n");
++            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_UNICODE\n");
 +        } else {
 +            TRACE (" -- WM_NOTIFYFORMAT returns: error!\n");
 +        }
@@ -123,14 +123,19 @@ Index: tooltips.c
  
 Index: treeview.c
 ===================================================================
---- D:/Wine-CVS/wine/dlls/comctl32/treeview.c	Sun Jun 15 18:29:21 2008
-+++ D:/ReactOS-Trunk/reactos/dll/win32/comctl32/treeview.c	Sun Jun 15 18:27:14 2008
-@@ -2826,8 +2826,6 @@
+--- treeview.c	(revision 38890)
++++ treeview.c	(working copy)
+@@ -2830,7 +2830,12 @@
  	}
      }
  
 -    TREEVIEW_UpdateScrollBars(infoPtr);
--
++    //
++    // This is correct, but is causes and infinite loop of WM_PAINT messages, resulting
++    // in continuous painting of the scroll bar in reactos. Comment out until the real
++    // bug is found
++    // 
++    //TREEVIEW_UpdateScrollBars(infoPtr);
+ 
      if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
  	infoPtr->cdmode =
- 	    TREEVIEW_SendCustomDrawNotify(infoPtr, CDDS_POSTPAINT, hdc, rect);
