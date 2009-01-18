@@ -391,13 +391,13 @@ void winetest_wait_child_process( HANDLE process )
     {
         if (exit_code > 255)
         {
-            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, exit_code );
+            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, (unsigned int)exit_code );
             InterlockedIncrement( &failures );
         }
         else
         {
             fprintf( stdout, "%s: %u failures in child process\n",
-                     current_test->name, exit_code );
+                     current_test->name, (unsigned int)exit_code );
             while (exit_code-- > 0)
                 InterlockedIncrement(&failures);
         }
@@ -453,10 +453,10 @@ static int run_test( const char *name )
     if (winetest_debug)
     {
         fprintf( stdout, "%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
-                 test->name, successes + failures + todo_successes + todo_failures,
-                 todo_successes, failures + todo_failures,
+                 test->name, (int)(successes + failures + todo_successes + todo_failures),
+                 (int)todo_successes, (int)(failures + todo_failures),
                  (failures + todo_failures != 1) ? "failures" : "failure",
-                 skipped );
+                 (int)skipped );
     }
     status = (failures + todo_failures < 255) ? failures + todo_failures : 255;
     return status;
@@ -482,7 +482,7 @@ int main( int argc, char **argv )
     winetest_argc = argc;
     winetest_argv = argv;
 
-    if ((p = getenv( "WINETEST_PLATFORM" ))) winetest_platform = strdup(p);
+    if ((p = getenv( "WINETEST_PLATFORM" ))) winetest_platform = _strdup(p);
     if ((p = getenv( "WINETEST_DEBUG" ))) winetest_debug = atoi(p);
     if ((p = getenv( "WINETEST_INTERACTIVE" ))) winetest_interactive = atoi(p);
     if ((p = getenv( "WINETEST_REPORT_SUCCESS"))) report_success = atoi(p);

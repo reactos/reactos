@@ -11,6 +11,12 @@
 #ifndef _WINSOCK_H
 #define _WINSOCK_H
 
+#if !defined(__ROS_LONG64__)
+#ifdef __WINESRC__
+#define __ROS_LONG64__
+#endif
+#endif
+
 #define _GNU_H_WINDOWS32_SOCKETS
 #include <windows.h>
 
@@ -23,7 +29,11 @@ extern "C" {
 typedef unsigned char	u_char;
 typedef unsigned short	u_short;
 typedef unsigned int	u_int;
+#ifndef __ROS_LONG64__
 typedef unsigned long	u_long;
+#else
+typedef unsigned int	u_long;
+#endif
 #define _BSDTYPES_DEFINED
 #endif /* !defined  _BSDTYPES_DEFINED */
 typedef u_int	SOCKET;
@@ -83,8 +93,8 @@ for (__i = 0; __i < ((fd_set *)(set))->fd_count ; __i++) {\
 #ifndef _TIMEVAL_DEFINED /* also in sys/time.h */
 #define _TIMEVAL_DEFINED
 struct timeval {
-	long    tv_sec;
-	long    tv_usec;
+	LONG    tv_sec;
+	LONG    tv_usec;
 };
 #define timerisset(tvp)	 ((tvp)->tv_sec || (tvp)->tv_usec)
 #define timercmp(tvp, uvp, cmp) \
@@ -114,8 +124,8 @@ struct linger {
 
 #if !(defined (__INSIDE_CYGWIN__) || defined (__INSIDE_MSYS__))
 #define _IO(x,y)	(IOC_VOID|((x)<<8)|(y))
-#define _IOR(x,y,t)	(IOC_OUT|(((long)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
-#define _IOW(x,y,t)	(IOC_IN|(((long)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
+#define _IOR(x,y,t)	(IOC_OUT|(((LONG)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
+#define _IOW(x,y,t)	(IOC_IN|(((LONG)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
 #define FIONBIO	_IOW('f', 126, u_long)
 #endif /* ! (__INSIDE_CYGWIN__ || __INSIDE_MSYS__) */
 
@@ -199,17 +209,17 @@ struct in_addr {
 #define s_impno S_un.S_un_b.s_b4
 #define s_lh    S_un.S_un_b.s_b3
 };
-#define IN_CLASSA(i)	((long)(i)&0x80000000)
+#define IN_CLASSA(i)	((LONG)(i)&0x80000000)
 #define IN_CLASSA_NET	0xff000000
 #define IN_CLASSA_NSHIFT	24
 #define IN_CLASSA_HOST	0x00ffffff
 #define IN_CLASSA_MAX	128
-#define IN_CLASSB(i)	(((long)(i)&0xc0000000)==0x80000000)
+#define IN_CLASSB(i)	(((LONG)(i)&0xc0000000)==0x80000000)
 #define IN_CLASSB_NET	   0xffff0000
 #define IN_CLASSB_NSHIFT	16
 #define IN_CLASSB_HOST	  0x0000ffff
 #define IN_CLASSB_MAX	   65536
-#define IN_CLASSC(i)	(((long)(i)&0xe0000000)==0xc0000000)
+#define IN_CLASSC(i)	(((LONG)(i)&0xe0000000)==0xc0000000)
 #define IN_CLASSC_NET	   0xffffff00
 #define IN_CLASSC_NSHIFT	8
 #define IN_CLASSC_HOST	  0xff
@@ -431,11 +441,11 @@ SOCKET PASCAL accept(SOCKET,struct sockaddr*,int*);
 int PASCAL bind(SOCKET,const struct sockaddr*,int);
 int PASCAL closesocket(SOCKET);
 int PASCAL connect(SOCKET,const struct sockaddr*,int);
-int PASCAL ioctlsocket(SOCKET,long,u_long *);
+int PASCAL ioctlsocket(SOCKET,LONG,u_long *);
 int PASCAL getpeername(SOCKET,struct sockaddr*,int*);
 int PASCAL getsockname(SOCKET,struct sockaddr*,int*);
 int PASCAL getsockopt(SOCKET,int,int,char*,int*);
-unsigned long PASCAL inet_addr(const char*);
+u_long PASCAL inet_addr(const char*);
 DECLARE_STDCALL_P(char *) inet_ntoa(struct in_addr);
 int PASCAL listen(SOCKET,int);
 int PASCAL recv(SOCKET,char*,int,int);
@@ -466,7 +476,7 @@ HANDLE PASCAL WSAAsyncGetProtoByNumber(HWND,u_int,int,char*,int);
 HANDLE PASCAL WSAAsyncGetHostByName(HWND,u_int,const char*,char*,int);
 HANDLE PASCAL WSAAsyncGetHostByAddr(HWND,u_int,const char*,int,int,char*,int);
 int PASCAL WSACancelAsyncRequest(HANDLE);
-int PASCAL WSAAsyncSelect(SOCKET,HWND,u_int,long);
+int PASCAL WSAAsyncSelect(SOCKET,HWND,u_int,LONG);
 #if !(defined (__INSIDE_CYGWIN__) || defined (__INSIDE_MSYS__))
 u_long PASCAL htonl(u_long);
 u_long PASCAL ntohl(u_long);

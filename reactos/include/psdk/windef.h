@@ -1,6 +1,12 @@
 #ifndef _WINDEF_H
 #define _WINDEF_H
 
+#if !defined(__ROS_LONG64__)
+#ifdef __WINESRC__
+#define __ROS_LONG64__
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -258,7 +264,11 @@ extern "C" {
 
 #ifndef DWORD_DEFINED
 #define DWORD_DEFINED
+#ifndef __ROS_LONG64__
     typedef unsigned long DWORD;
+#else
+    typedef unsigned int DWORD;
+#endif
 #endif//DWORD_DEFINED
 
 typedef int WINBOOL,*PWINBOOL,*LPWINBOOL;
@@ -278,7 +288,11 @@ typedef FLOAT *PFLOAT;
 typedef BYTE *PBYTE,*LPBYTE;
 typedef int *PINT,*LPINT;
 typedef WORD *PWORD,*LPWORD;
+#ifndef __ROS_LONG64__
 typedef long *LPLONG;
+#else
+typedef int *LPLONG;
+#endif
 typedef DWORD *PDWORD,*LPDWORD;
 typedef CONST void *PCVOID,*LPCVOID;
 
@@ -291,7 +305,11 @@ typedef void *LPVOID;
 //
 #ifndef BASETYPES
 #define BASETYPES
+#ifndef __ROS_LONG64__
 typedef unsigned long ULONG, *PULONG;
+#else
+typedef unsigned int ULONG, *PULONG;
+#endif
 typedef unsigned short USHORT, *PUSHORT;
 typedef unsigned char UCHAR, *PUCHAR;
 typedef char *PSZ;

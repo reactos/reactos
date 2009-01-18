@@ -652,7 +652,7 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
  * @implemented
  */
 BOOL WINAPI
-StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
+StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA * lpServiceStartTable)
 {
     ULONG i;
     HANDLE hPipe;
@@ -742,7 +742,7 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
  * @implemented
  */
 BOOL WINAPI
-StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
+StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW * lpServiceStartTable)
 {
     ULONG i;
     HANDLE hPipe;

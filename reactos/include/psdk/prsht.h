@@ -289,8 +289,8 @@ typedef struct _PSHNOTIFY {
 HPROPSHEETPAGE WINAPI CreatePropertySheetPageA(LPCPROPSHEETPAGEA);
 HPROPSHEETPAGE WINAPI CreatePropertySheetPageW(LPCPROPSHEETPAGEW);
 BOOL WINAPI DestroyPropertySheetPage(HPROPSHEETPAGE);
-int WINAPI PropertySheetA(LPCPROPSHEETHEADERA);
-int WINAPI PropertySheetW(LPCPROPSHEETHEADERW);
+INT_PTR WINAPI PropertySheetA(LPCPROPSHEETHEADERA);
+INT_PTR WINAPI PropertySheetW(LPCPROPSHEETHEADERW);
 #define PropSheet_AddPage(d,p) SendMessage(d,PSM_ADDPAGE,0,(LPARAM)p)
 #define PropSheet_Apply(d) SendMessage(d,PSM_APPLY,0,0)
 #define PropSheet_CancelToClose(d) SendMessage(d,PSM_CANCELTOCLOSE,0,0)

@@ -258,7 +258,7 @@ int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chan
 static char *get_temp_buffer( size_t size )
 {
     static char *list[32];
-    static long pos;
+    static LONG pos;
     char *ret;
     int idx;
 
