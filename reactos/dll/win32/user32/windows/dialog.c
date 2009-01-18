@@ -1354,12 +1354,13 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
     BOOL ret;
     HWND listbox = GetDlgItem( hwnd, id );
 
-    TRACE("%p '%s' %d\n", hwnd, str, id );
+    TRACE("%p %s %d\n", hwnd, unicode ? debugstr_w(str) : debugstr_a((LPSTR)str), id );
     if (!listbox) return FALSE;
 
     item = SendMessageW(listbox, combo ? CB_GETCURSEL : LB_GETCURSEL, 0, 0 );
     if (item == LB_ERR) return FALSE;
-    size = SendMessageW(listbox, combo ? CB_GETLBTEXTLEN : LB_GETTEXTLEN, 0, 0 );
+
+    size = SendMessageW(listbox, combo ? CB_GETLBTEXTLEN : LB_GETTEXTLEN, item, 0 );
     if (size == LB_ERR) return FALSE;
 
     if (!(buffer = HeapAlloc( GetProcessHeap(), 0, (size+2) * sizeof(WCHAR) ))) return FALSE;
@@ -1396,11 +1397,9 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
         if (len > 0 && !WideCharToMultiByte( CP_ACP, 0, ptr, -1, (LPSTR)str, len, 0, 0 ))
             ((LPSTR)str)[len-1] = 0;
     }
-    else
-        lstrcpynW( str, ptr, len );
-
+    else lstrcpynW( str, ptr, len );
     HeapFree( GetProcessHeap(), 0, buffer );
-    TRACE("Returning %d '%s'\n", ret, str );
+    TRACE("Returning %d %s\n", ret, unicode ? debugstr_w(str) : debugstr_a((LPSTR)str) );
     return ret;
 }
 
