@@ -80,9 +80,10 @@
 
 #include "compobj_private.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(ole);
+
 #define HANDLE_ERROR(err) do { hr = err; TRACE("(HRESULT=%x)\n", (HRESULT)err); goto CLEANUP; } while (0)
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /****************************************************************************
  * OLEClipbrd

@@ -171,7 +171,7 @@ LPVOID CDECL IMalloc16_fnHeapMinimize(IMalloc16* iface) {
 /******************************************************************************
  * IMalloc16_Constructor [VTABLE]
  */
-LPMALLOC16
+static LPMALLOC16
 IMalloc16_Constructor(void)
 {
     static IMalloc16Vtbl vt16;

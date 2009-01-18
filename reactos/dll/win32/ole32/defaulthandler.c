@@ -909,7 +909,7 @@ static HRESULT WINAPI DefaultHandler_GetMiscStatus(
   if (FAILED(hres))
     *pdwStatus = 0;
 
-  return S_OK;
+  return hres;
 }
 
 /************************************************************************

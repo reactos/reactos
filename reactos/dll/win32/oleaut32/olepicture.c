@@ -519,22 +519,26 @@ static HRESULT WINAPI OLEPictureImpl_get_Handle(IPicture *iface,
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
   TRACE("(%p)->(%p)\n", This, phandle);
+
+  if(!phandle)
+    return E_POINTER;
+
   switch(This->desc.picType) {
   case PICTYPE_NONE:
   case PICTYPE_UNINITIALIZED:
     *phandle = 0;
     break;
   case PICTYPE_BITMAP:
-    *phandle = (OLE_HANDLE)This->desc.u.bmp.hbitmap;
+    *phandle = HandleToUlong(This->desc.u.bmp.hbitmap);
     break;
   case PICTYPE_METAFILE:
-    *phandle = (OLE_HANDLE)This->desc.u.wmf.hmeta;
+    *phandle = HandleToUlong(This->desc.u.wmf.hmeta);
     break;
   case PICTYPE_ICON:
-    *phandle = (OLE_HANDLE)This->desc.u.icon.hicon;
+    *phandle = HandleToUlong(This->desc.u.icon.hicon);
     break;
   case PICTYPE_ENHMETAFILE:
-    *phandle = (OLE_HANDLE)This->desc.u.emf.hemf;
+    *phandle = HandleToUlong(This->desc.u.emf.hemf);
     break;
   default:
     FIXME("Unimplemented type %d\n", This->desc.picType);
@@ -564,7 +568,7 @@ static HRESULT WINAPI OLEPictureImpl_get_hPal(IPicture *iface,
       hres = S_FALSE;
       break;
     case PICTYPE_BITMAP:
-      *phandle = (OLE_HANDLE)This->desc.u.bmp.hpal;
+      *phandle = HandleToUlong(This->desc.u.bmp.hpal);
       hres = S_OK;
       break;
     case PICTYPE_METAFILE:
@@ -591,6 +595,10 @@ static HRESULT WINAPI OLEPictureImpl_get_Type(IPicture *iface,
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
   TRACE("(%p)->(%p): type is %d\n", This, ptype, This->desc.picType);
+
+  if(!ptype)
+    return E_POINTER;
+
   *ptype = This->desc.picType;
   return S_OK;
 }
@@ -774,7 +782,7 @@ static HRESULT WINAPI OLEPictureImpl_SelectPicture(IPicture *iface,
 	  *phdcOut = This->hDCCur;
       This->hDCCur = hdcIn;
       if (phbmpOut)
-	  *phbmpOut = (OLE_HANDLE)This->desc.u.bmp.hbitmap;
+	  *phbmpOut = HandleToUlong(This->desc.u.bmp.hbitmap);
       return S_OK;
   } else {
       FIXME("Don't know how to select picture type %d\n",This->desc.picType);
@@ -842,8 +850,14 @@ static HRESULT WINAPI OLEPictureImpl_get_Attributes(IPicture *iface,
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
   TRACE("(%p)->(%p).\n", This, pdwAttr);
+
+  if(!pdwAttr)
+    return E_POINTER;
+
   *pdwAttr = 0;
   switch (This->desc.picType) {
+  case PICTYPE_UNINITIALIZED:
+  case PICTYPE_NONE: break;
   case PICTYPE_BITMAP: 	if (This->hbmMask) *pdwAttr = PICTURE_TRANSPARENT; break;	/* not 'truly' scalable, see MSDN. */
   case PICTYPE_ICON: *pdwAttr     = PICTURE_TRANSPARENT;break;
   case PICTYPE_ENHMETAFILE: /* fall through */

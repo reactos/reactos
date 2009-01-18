@@ -2214,6 +2214,8 @@ static ITypeInfoImpl * MSFT_DoTypeInfo(
        debugstr_w(ptiRet->Name),
        debugstr_guid(&ptiRet->TypeAttr.guid),
        typekind_desc[ptiRet->TypeAttr.typekind]);
+    if (TRACE_ON(typelib))
+      dump_TypeInfo(ptiRet);
 
     return ptiRet;
 }

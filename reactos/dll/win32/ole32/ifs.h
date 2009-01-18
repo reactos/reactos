@@ -59,10 +59,6 @@ DECLARE_INTERFACE_(IMalloc16,IUnknown)
 
 /**********************************************************************/
 
-extern LPMALLOC16 IMalloc16_Constructor(void);
-
-/**********************************************************************/
-
 typedef struct ILockBytes16 *LPLOCKBYTES16;
 
 #define INTERFACE ILockBytes16

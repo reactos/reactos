@@ -6281,6 +6281,9 @@ HRESULT WINAPI WriteClassStg(IStorage* pStg, REFCLSID rclsid)
   if(!pStg)
     return E_INVALIDARG;
 
+  if(!rclsid)
+    return STG_E_INVALIDPOINTER;
+
   hRes = IStorage_SetClass(pStg, rclsid);
 
   return hRes;

@@ -2017,8 +2017,35 @@ HRESULT CALLBACK IPropertyBag_Read_Proxy(
     VARIANT *pVar,
     IErrorLog *pErrorLog)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+  IUnknown *pUnk = NULL;
+  TRACE("(%p, %s, %p, %p)\n", This, debugstr_w(pszPropName), pVar, pErrorLog);
+
+  if(!pVar)
+    return E_POINTER;
+
+  if(V_VT(pVar) & (VT_BYREF | VT_ARRAY | VT_VECTOR))
+  {
+    FIXME("Variant type %x is byref, array or vector. Not implemented.\n", V_VT(pVar));
+    return E_NOTIMPL;
+  }
+
+  switch(V_VT(pVar))
+  {
+    case VT_DISPATCH:
+      pUnk = (IUnknown*)V_DISPATCH(pVar);
+      break;
+    case VT_UNKNOWN:
+      pUnk = V_UNKNOWN(pVar);
+      break;
+    case VT_SAFEARRAY:
+      FIXME("Safearray support not yet implemented.\n");
+      return E_NOTIMPL;
+    default:
+      break;
+  }
+
+  return IPropertyBag_RemoteRead_Proxy(This, pszPropName, pVar, pErrorLog,
+                                       V_VT(pVar), pUnk);
 }
 
 HRESULT __RPC_STUB IPropertyBag_Read_Stub(
@@ -2029,8 +2056,45 @@ HRESULT __RPC_STUB IPropertyBag_Read_Stub(
     DWORD varType,
     IUnknown *pUnkObj)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+  static const WCHAR emptyWstr[1] = {0};
+  IDispatch *disp;
+  HRESULT hr;
+  TRACE("(%p, %s, %p, %p, %x, %p)\n", This, debugstr_w(pszPropName), pVar,
+                                     pErrorLog, varType, pUnkObj);
+
+  if(varType & (VT_BYREF | VT_ARRAY | VT_VECTOR))
+  {
+    FIXME("Variant type %x is byref, array or vector. Not implemented.\n", V_VT(pVar));
+    return E_NOTIMPL;
+  }
+
+  V_VT(pVar) = varType;
+  switch(varType)
+  {
+    case VT_DISPATCH:
+      hr = IUnknown_QueryInterface(pUnkObj, &IID_IDispatch, (LPVOID*)&disp);
+      if(FAILED(hr))
+        return hr;
+      IUnknown_Release(pUnkObj);
+      V_DISPATCH(pVar) = disp;
+      break;
+    case VT_UNKNOWN:
+      V_UNKNOWN(pVar) = pUnkObj;
+      break;
+    case VT_BSTR:
+      V_BSTR(pVar) = SysAllocString(emptyWstr);
+      break;
+    case VT_SAFEARRAY:
+      FIXME("Safearray support not yet implemented.\n");
+      return E_NOTIMPL;
+    default:
+      break;
+  }
+  hr = IPropertyBag_Read(This, pszPropName, pVar, pErrorLog);
+  if(FAILED(hr))
+    VariantClear(pVar);
+
+  return hr;
 }
 
 /* call_as/local stubs for ocidl.idl */

@@ -55,6 +55,7 @@
 #include "objbase.h"
 #include "ole2.h"
 #include "ole2ver.h"
+#include "ctxtcall.h"
 
 #include "compobj_private.h"
 
@@ -3703,19 +3704,37 @@ HRESULT WINAPI CoRegisterChannelHook(REFGUID guidExtension, IChannelHook *pChann
 typedef struct Context
 {
     const IComThreadingInfoVtbl *lpVtbl;
+    const IContextCallbackVtbl  *lpCallbackVtbl;
     LONG refs;
     APTTYPE apttype;
 } Context;
 
-static HRESULT WINAPI Context_QueryInterface(IComThreadingInfo *iface, REFIID riid, LPVOID *ppv)
+static inline Context *impl_from_IComThreadingInfo( IComThreadingInfo *iface )
+{
+        return (Context *)((char*)iface - FIELD_OFFSET(Context, lpVtbl));
+}
+
+static inline Context *impl_from_IContextCallback( IContextCallback *iface )
+{
+        return (Context *)((char*)iface - FIELD_OFFSET(Context, lpCallbackVtbl));
+}
+
+static HRESULT Context_QueryInterface(Context *iface, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
 
     if (IsEqualIID(riid, &IID_IComThreadingInfo) ||
         IsEqualIID(riid, &IID_IUnknown))
     {
-        *ppv = iface;
-        IUnknown_AddRef(iface);
+        *ppv = &iface->lpVtbl;
+    } else if (IsEqualIID(riid, &IID_IContextCallback))
+    {
+        *ppv = &iface->lpCallbackVtbl;
+    }
+
+    if (*ppv)
+    {
+        IUnknown_AddRef((IUnknown*)*ppv);
         return S_OK;
     }
 
@@ -3723,24 +3742,40 @@ static HRESULT WINAPI Context_QueryInterface(IComThreadingInfo *iface, REFIID ri
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI Context_AddRef(IComThreadingInfo *iface)
+static ULONG Context_AddRef(Context *This)
 {
-    Context *This = (Context *)iface;
     return InterlockedIncrement(&This->refs);
 }
 
-static ULONG WINAPI Context_Release(IComThreadingInfo *iface)
+static ULONG Context_Release(Context *This)
 {
-    Context *This = (Context *)iface;
     ULONG refs = InterlockedDecrement(&This->refs);
     if (!refs)
         HeapFree(GetProcessHeap(), 0, This);
     return refs;
 }
 
-static HRESULT WINAPI Context_GetCurrentApartmentType(IComThreadingInfo *iface, APTTYPE *apttype)
+static HRESULT WINAPI Context_CTI_QueryInterface(IComThreadingInfo *iface, REFIID riid, LPVOID *ppv)
 {
-    Context *This = (Context *)iface;
+    Context *This = impl_from_IComThreadingInfo(iface);
+    return Context_QueryInterface(This, riid, ppv);
+}
+
+static ULONG WINAPI Context_CTI_AddRef(IComThreadingInfo *iface)
+{
+    Context *This = impl_from_IComThreadingInfo(iface);
+    return Context_AddRef(This);
+}
+
+static ULONG WINAPI Context_CTI_Release(IComThreadingInfo *iface)
+{
+    Context *This = impl_from_IComThreadingInfo(iface);
+    return Context_Release(This);
+}
+
+static HRESULT WINAPI Context_CTI_GetCurrentApartmentType(IComThreadingInfo *iface, APTTYPE *apttype)
+{
+    Context *This = impl_from_IComThreadingInfo(iface);
 
     TRACE("(%p)\n", apttype);
 
@@ -3748,9 +3783,9 @@ static HRESULT WINAPI Context_GetCurrentApartmentType(IComThreadingInfo *iface, 
     return S_OK;
 }
 
-static HRESULT WINAPI Context_GetCurrentThreadType(IComThreadingInfo *iface, THDTYPE *thdtype)
+static HRESULT WINAPI Context_CTI_GetCurrentThreadType(IComThreadingInfo *iface, THDTYPE *thdtype)
 {
-    Context *This = (Context *)iface;
+    Context *This = impl_from_IComThreadingInfo(iface);
 
     TRACE("(%p)\n", thdtype);
 
@@ -3767,13 +3802,13 @@ static HRESULT WINAPI Context_GetCurrentThreadType(IComThreadingInfo *iface, THD
     return S_OK;
 }
 
-static HRESULT WINAPI Context_GetCurrentLogicalThreadId(IComThreadingInfo *iface, GUID *logical_thread_id)
+static HRESULT WINAPI Context_CTI_GetCurrentLogicalThreadId(IComThreadingInfo *iface, GUID *logical_thread_id)
 {
     FIXME("(%p): stub\n", logical_thread_id);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI Context_SetCurrentLogicalThreadId(IComThreadingInfo *iface, REFGUID logical_thread_id)
+static HRESULT WINAPI Context_CTI_SetCurrentLogicalThreadId(IComThreadingInfo *iface, REFGUID logical_thread_id)
 {
     FIXME("(%s): stub\n", debugstr_guid(logical_thread_id));
     return E_NOTIMPL;
@@ -3781,14 +3816,50 @@ static HRESULT WINAPI Context_SetCurrentLogicalThreadId(IComThreadingInfo *iface
 
 static const IComThreadingInfoVtbl Context_Threading_Vtbl =
 {
-    Context_QueryInterface,
-    Context_AddRef,
-    Context_Release,
-    Context_GetCurrentApartmentType,
-    Context_GetCurrentThreadType,
-    Context_GetCurrentLogicalThreadId,
-    Context_SetCurrentLogicalThreadId
+    Context_CTI_QueryInterface,
+    Context_CTI_AddRef,
+    Context_CTI_Release,
+    Context_CTI_GetCurrentApartmentType,
+    Context_CTI_GetCurrentThreadType,
+    Context_CTI_GetCurrentLogicalThreadId,
+    Context_CTI_SetCurrentLogicalThreadId
 };
+
+static HRESULT WINAPI Context_CC_QueryInterface(IContextCallback *iface, REFIID riid, LPVOID *ppv)
+{
+    Context *This = impl_from_IContextCallback(iface);
+    return Context_QueryInterface(This, riid, ppv);
+}
+
+static ULONG WINAPI Context_CC_AddRef(IContextCallback *iface)
+{
+    Context *This = impl_from_IContextCallback(iface);
+    return Context_AddRef(This);
+}
+
+static ULONG WINAPI Context_CC_Release(IContextCallback *iface)
+{
+    Context *This = impl_from_IContextCallback(iface);
+    return Context_Release(This);
+}
+
+static HRESULT WINAPI Context_CC_ContextCallback(IContextCallback *iface, PFNCONTEXTCALL pCallback,
+                            ComCallData *param, REFIID riid, int method, IUnknown *punk)
+{
+    Context *This = impl_from_IContextCallback(iface);
+
+    FIXME("(%p/%p)->(%p, %p, %s, %d, %p)\n", This, iface, pCallback, param, debugstr_guid(riid), method, punk);
+    return E_NOTIMPL;
+}
+
+static const IContextCallbackVtbl Context_Callback_Vtbl =
+{
+    Context_CC_QueryInterface,
+    Context_CC_AddRef,
+    Context_CC_Release,
+    Context_CC_ContextCallback
+};
+
 
 /***********************************************************************
  *           CoGetObjectContext [OLE32.@]
@@ -3823,6 +3894,7 @@ HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
         return E_OUTOFMEMORY;
 
     context->lpVtbl = &Context_Threading_Vtbl;
+    context->lpCallbackVtbl = &Context_Callback_Vtbl;
     context->refs = 1;
     if (apt->multi_threaded)
         context->apttype = APTTYPE_MTA;
