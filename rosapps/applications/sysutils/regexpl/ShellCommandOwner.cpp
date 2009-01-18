@@ -132,7 +132,7 @@ CheckOwnerArgument:
     return 0;
   }
 
-  PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
+  PISECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
   TCHAR *pchName = NULL, *pchDomainName = NULL;
   try
   {
@@ -144,7 +144,7 @@ CheckOwnerArgument:
     dwError = Key.GetSecurityDescriptorLength(&dwSecurityDescriptorLength);
     if (dwError != ERROR_SUCCESS) throw dwError;
 
-    pSecurityDescriptor = (PSECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
+    pSecurityDescriptor = (PISECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
     DWORD dwSecurityDescriptorLength1 = dwSecurityDescriptorLength;
     dwError = Key.GetSecurityDescriptor((SECURITY_INFORMATION)OWNER_SECURITY_INFORMATION,pSecurityDescriptor,&dwSecurityDescriptorLength1);
     if (dwError != ERROR_SUCCESS) throw dwError;
