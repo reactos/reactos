@@ -6,6 +6,7 @@ typedef struct
     IPortEventsVtbl *lpVbtlPortEvents;
     IUnregisterSubdeviceVtbl *lpVtblUnregisterSubdevice;
     IUnregisterPhysicalConnectionVtbl *lpVtblPhysicalConnection;
+    IPortEventsVtbl *lpVtblPortEvents;
     ISubdeviceVtbl *lpVtblSubDevice;
 
     LONG ref;
@@ -22,6 +23,98 @@ typedef struct
 
 
 const GUID GUID_DEVCLASS_SOUND; //FIXME
+
+//---------------------------------------------------------------
+// IPortEvents
+//
+
+static
+NTSTATUS
+NTAPI
+IPortEvents_fnQueryInterface(
+    IPortEvents* iface,
+    IN  REFIID refiid,
+    OUT PVOID* Output)
+{
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblPortEvents);
+
+    DPRINT1("IPortEvents_fnQueryInterface entered\n");
+
+    if (IsEqualGUIDAligned(refiid, &IID_IPortEvents) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
+    {
+        *Output = &This->lpVbtlPortEvents;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
+static
+ULONG
+NTAPI
+IPortEvents_fnAddRef(
+    IPortEvents* iface)
+{
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblPortEvents);
+    DPRINT1("IPortEvents_fnQueryInterface entered\n");
+    return InterlockedIncrement(&This->ref);
+}
+
+static
+ULONG
+NTAPI
+IPortEvents_fnRelease(
+    IPortEvents* iface)
+{
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblPortEvents);
+    DPRINT1("IPortEvents_fnQueryInterface entered\n");
+    InterlockedDecrement(&This->ref);
+
+    if (This->ref == 0)
+    {
+        FreeItem(This, TAG_PORTCLASS);
+        return 0;
+    }
+    /* Return new reference count */
+    return This->ref;
+}
+
+static
+void
+NTAPI
+IPortEvents_fnAddEventToEventList(
+    IPortEvents* iface,
+    IN PKSEVENT_ENTRY EventEntry)
+{
+    DPRINT1("IPortEvents_fnAddEventToEventList stub\n");
+}
+
+
+static
+void
+NTAPI
+IPortEvents_fnGenerateEventList(
+    IPortEvents* iface,
+    IN  GUID* Set OPTIONAL,
+    IN  ULONG EventId,
+    IN  BOOL PinEvent,
+    IN  ULONG PinId,
+    IN  BOOL NodeEvent,
+    IN  ULONG NodeId)
+{
+    DPRINT1("IPortEvents_fnGenerateEventList stub\n");
+}
+
+static IPortEventsVtbl vt_IPortEvents = 
+{
+    IPortEvents_fnQueryInterface,
+    IPortEvents_fnAddRef,
+    IPortEvents_fnRelease,
+    IPortEvents_fnAddEventToEventList,
+    IPortEvents_fnGenerateEventList
+};
+
 //---------------------------------------------------------------
 // IUnknown interface functions
 //
@@ -33,11 +126,18 @@ IPortWaveCyclic_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    WCHAR Buffer[100];
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
     if (IsEqualGUIDAligned(refiid, &IID_IPortWaveCyclic) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(refiid, &IID_IPortEvents))
+    {
+        *Output = &This->lpVtblPortEvents;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
@@ -56,6 +156,10 @@ IPortWaveCyclic_fnQueryInterface(
     {
         return NewIDrmPort((PDRMPORT2*)Output);
     }
+
+    StringFromCLSID(refiid, Buffer);
+    DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", Buffer);
+    KeBugCheckEx(0, 0, 0, 0, 0);
 
     return STATUS_UNSUCCESSFUL;
 }
@@ -176,11 +280,12 @@ IPortWaveCyclic_fnInit(
     Status = UnknownMiniport->lpVtbl->QueryInterface(UnknownMiniport, &IID_IPinCount, (PVOID*)&PinCount);
     if (NT_SUCCESS(Status))
     {
+        /* store IPinCount interface */
         This->pPinCount = PinCount;
-        This->pDescriptor = NULL;
     }
     else
     {
+        /* check if the miniport adapter provides a valid device descriptor */
         Status = Miniport->lpVtbl->GetDescription(Miniport, &This->pDescriptor);
         if (!NT_SUCCESS(Status))
         {
@@ -188,17 +293,14 @@ IPortWaveCyclic_fnInit(
             Miniport->lpVtbl->Release(Miniport);
             return Status;
         }
-        This->pPinCount = NULL;
     }
 
+    /* does the Miniport adapter support IPowerNotify interface*/
     Status = UnknownMiniport->lpVtbl->QueryInterface(UnknownMiniport, &IID_IPowerNotify, (PVOID*)&PowerNotify);
     if (NT_SUCCESS(Status))
     {
+        /* store reference */
         This->pPowerNotify = PowerNotify;
-    }
-    else
-    {
-        This->pPowerNotify = NULL;
     }
 
     /* increment reference on resource list */
@@ -329,8 +431,8 @@ static IPortWaveCyclicVtbl vt_IPortWaveCyclicVtbl =
     IPortWaveCyclic_fnGetDeviceProperty,
     IPortWaveCyclic_fnNewRegistryKey,
     IPortWaveCyclic_fnNotify,
-    IPortWaveCyclic_fnNewMasterDmaChannel,
     IPortWaveCyclic_fnNewSlaveDmaChannel,
+    IPortWaveCyclic_fnNewMasterDmaChannel
 };
 
 //---------------------------------------------------------------
@@ -514,6 +616,7 @@ NewPortWaveCyclic(
 
     This->lpVtbl = &vt_IPortWaveCyclicVtbl;
     This->lpVtblSubDevice = &vt_ISubdeviceVtbl;
+    This->lpVtblPortEvents = &vt_IPortEvents;
     This->ref = 1;
     *OutPort = (PPORT)(&This->lpVtbl);
 
