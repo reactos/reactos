@@ -42,6 +42,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "olectl.h"
 
 #include "ocidl.h"
+#include "ctxtcall.h"
 
 #include "docobj.h"
 #include "exdisp.h"
