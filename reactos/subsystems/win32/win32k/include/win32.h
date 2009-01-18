@@ -37,11 +37,14 @@ typedef struct _THREADINFO
     struct _DESKTOP*    Desktop;
     PDESKTOPINFO        pDeskInfo;
     PCLIENTINFO         pClientInfo;
+    FLONG               TIF_flags;
+    HANDLE              hDesktop;
+    UINT                cPaintsReady;
+    UINT                cTimersReady;
     LIST_ENTRY          PtiLink;
 
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
-  HANDLE hDesktop;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
   ULONG Hooks;
