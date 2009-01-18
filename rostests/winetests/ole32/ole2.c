@@ -1384,7 +1384,6 @@ static void test_default_handler(void)
        hr);
 
     hr = IOleObject_GetMiscStatus(pObject, DVASPECT_CONTENT, &dwStatus);
-    todo_wine
     ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_GetMiscStatus should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
 
     hr = IOleObject_GetUserClassID(pObject, &clsid);

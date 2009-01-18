@@ -34,6 +34,17 @@ unsigned char * __RPC_USER HMETAFILE_UserMarshal(ULONG *, unsigned char *, HMETA
 unsigned char * __RPC_USER HMETAFILE_UserUnmarshal(ULONG *, unsigned char *, HMETAFILE *);
 void __RPC_USER HMETAFILE_UserFree(ULONG *, HMETAFILE *);
 
+ULONG __RPC_USER HENHMETAFILE_UserSize(ULONG *, ULONG, HENHMETAFILE *);
+unsigned char * __RPC_USER HENHMETAFILE_UserMarshal  (ULONG *, unsigned char *, HENHMETAFILE *);
+unsigned char * __RPC_USER HENHMETAFILE_UserUnmarshal(ULONG *, unsigned char *, HENHMETAFILE *);
+void  __RPC_USER HENHMETAFILE_UserFree(ULONG *, HENHMETAFILE *);
+
+ULONG __RPC_USER HMETAFILEPICT_UserSize(ULONG *, ULONG, HMETAFILEPICT *);
+unsigned char * __RPC_USER HMETAFILEPICT_UserMarshal  (ULONG *, unsigned char *, HMETAFILEPICT *);
+unsigned char * __RPC_USER HMETAFILEPICT_UserUnmarshal(ULONG *, unsigned char *, HMETAFILEPICT *);
+void __RPC_USER HMETAFILEPICT_UserFree(ULONG *, HMETAFILEPICT *);
+
+
 static const char cf_marshaled[] =
 {
     0x9, 0x0, 0x0, 0x0,

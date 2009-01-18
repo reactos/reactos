@@ -29,6 +29,9 @@
 #include "shlguid.h"
 #include "urlmon.h" /* for CLSID_FileProtocol */
 
+#include "initguid.h"
+#include "ctxtcall.h"
+
 #include "wine/test.h"
 
 /* functions that are not present on all versions of Windows */
@@ -887,7 +890,7 @@ static void test_registered_object_thread_affinity(void)
     ok(hr == S_OK, "CoGetClassObject on local server object registered in same "
        "thread should return S_OK instead of 0x%08x\n", hr);
 
-    thread = CreateThread(NULL, 0, revoke_class_object_thread, (LPVOID)cookie, 0, &tid);
+    thread = CreateThread(NULL, 0, revoke_class_object_thread, (LPVOID)(DWORD_PTR)cookie, 0, &tid);
     ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
     WaitForSingleObject(thread, INFINITE);
     GetExitCodeThread(thread, &exitcode);
@@ -931,7 +934,7 @@ static void test_CoFreeUnusedLibraries(void)
 
     ok(!is_module_loaded("urlmon.dll"), "urlmon.dll shouldn't be loaded\n");
 
-    hr = CoCreateInstance(&CLSID_FileProtocol, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&pUnk);
+    hr = CoCreateInstance(&CLSID_FileProtocol, NULL, CLSCTX_INPROC_SERVER, &IID_IInternetProtocol, (void **)&pUnk);
     if (hr == REGDB_E_CLASSNOTREG)
     {
         trace("IE not installed so can't run CoFreeUnusedLibraries test\n");
@@ -967,6 +970,7 @@ static void test_CoGetObjectContext(void)
     HRESULT hr;
     ULONG refs;
     IComThreadingInfo *pComThreadingInfo;
+    IContextCallback *pContextCallback;
     APTTYPE apttype;
     THDTYPE thdtype;
 
@@ -996,6 +1000,15 @@ static void test_CoGetObjectContext(void)
     refs = IComThreadingInfo_Release(pComThreadingInfo);
     ok(refs == 0, "pComThreadingInfo should have 0 refs instead of %d refs\n", refs);
 
+    hr = pCoGetObjectContext(&IID_IContextCallback, (void **)&pContextCallback);
+    ok_ole_success(hr, "CoGetObjectContext(ContextCallback)");
+
+    if (hr == S_OK)
+    {
+        refs = IContextCallback_Release(pContextCallback);
+        ok(refs == 0, "pContextCallback should have 0 refs instead of %d refs\n", refs);
+    }
+
     CoUninitialize();
 
     pCoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -1014,14 +1027,41 @@ static void test_CoGetObjectContext(void)
     refs = IComThreadingInfo_Release(pComThreadingInfo);
     ok(refs == 0, "pComThreadingInfo should have 0 refs instead of %d refs\n", refs);
 
+    hr = pCoGetObjectContext(&IID_IContextCallback, (void **)&pContextCallback);
+    ok_ole_success(hr, "CoGetObjectContext(ContextCallback)");
+
+    if (hr == S_OK)
+    {
+        refs = IContextCallback_Release(pContextCallback);
+        ok(refs == 0, "pContextCallback should have 0 refs instead of %d refs\n", refs);
+    }
+
     CoUninitialize();
+}
+
+static void test_CoInitializeEx(void)
+{
+    HRESULT hr;
+
+    hr = pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    ok(hr == S_OK, "CoInitializeEx failed with error 0x%08x\n", hr);
+
+    /* Calling OleInitialize for the first time should yield S_OK even with
+     * apartment already initialized by previous CoInitialize(Ex) calls. */
+    hr = OleInitialize(NULL);
+    todo_wine ok(hr == S_OK, "OleInitialize failed with error 0x%08x\n", hr);
+
+    /* Subsequent calls to OleInitialize should return S_FALSE */
+    hr = OleInitialize(NULL);
+    ok(hr == S_FALSE, "Expected S_FALSE, hr = 0x%08x\n", hr);
+
+    /* Cleanup */
+    CoUninitialize();
+    OleUninitialize();
 }
 
 START_TEST(compobj)
 {
-    skip("ROS-HACK: Skipping compobj tests\n");
-    return;
-
     HMODULE hOle32 = GetModuleHandle("ole32");
     pCoGetObjectContext = (void*)GetProcAddress(hOle32, "CoGetObjectContext");
     if (!(pCoInitializeEx = (void*)GetProcAddress(hOle32, "CoInitializeEx")))
@@ -1048,4 +1088,5 @@ START_TEST(compobj)
     test_registered_object_thread_affinity();
     test_CoFreeUnusedLibraries();
     test_CoGetObjectContext();
+    test_CoInitializeEx();
 }
