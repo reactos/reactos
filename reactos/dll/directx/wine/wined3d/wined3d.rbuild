@@ -26,6 +26,7 @@
 	<file>device.c</file>
 	<file>directx.c</file>
 	<file>drawprim.c</file>
+	<file>gl_compat.c</file>
 	<file>glsl_shader.c</file>
 	<file>indexbuffer.c</file>
 	<file>nvidia_texture_shader.c</file>

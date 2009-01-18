@@ -839,12 +839,6 @@ WineD3DContext *CreateContext(IWineD3DDeviceImpl *This, IWineD3DSurfaceImpl *tar
 
     checkGLcall("glClear");
 
-    glColor3f(1.0, 1.0, 1.0);
-    checkGLcall("glColor3f");
-
-    glEnable(GL_LIGHTING);
-    checkGLcall("glEnable");
-
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
     checkGLcall("glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);");
 
@@ -1053,7 +1047,7 @@ static inline void SetupForBlit(IWineD3DDeviceImpl *This, WineD3DContext *contex
     /* TODO: Use a display list */
 
     /* Disable shaders */
-    This->shader_backend->shader_cleanup((IWineD3DDevice *) This);
+    This->shader_backend->shader_select((IWineD3DDevice *)This, FALSE, FALSE);
     Context_MarkStateDirty(context, STATE_VSHADER, StateTable);
     Context_MarkStateDirty(context, STATE_PIXELSHADER, StateTable);
 
@@ -1066,42 +1060,40 @@ static inline void SetupForBlit(IWineD3DDeviceImpl *This, WineD3DContext *contex
 
     /* Disable all textures. The caller can then bind a texture it wants to blit
      * from
+     *
+     * The blitting code uses (for now) the fixed function pipeline, so make sure to reset all fixed
+     * function texture unit. No need to care for higher samplers
      */
-    if (GL_SUPPORT(ARB_MULTITEXTURE)) {
-        /* The blitting code uses (for now) the fixed function pipeline, so make sure to reset all fixed
-         * function texture unit. No need to care for higher samplers
-         */
-        for(i = GL_LIMITS(textures) - 1; i > 0 ; i--) {
-            sampler = This->rev_tex_unit_map[i];
-            GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB + i));
-            checkGLcall("glActiveTextureARB");
-
-            if(GL_SUPPORT(ARB_TEXTURE_CUBE_MAP)) {
-                glDisable(GL_TEXTURE_CUBE_MAP_ARB);
-                checkGLcall("glDisable GL_TEXTURE_CUBE_MAP_ARB");
-            }
-            glDisable(GL_TEXTURE_3D);
-            checkGLcall("glDisable GL_TEXTURE_3D");
-            if(GL_SUPPORT(ARB_TEXTURE_RECTANGLE)) {
-                glDisable(GL_TEXTURE_RECTANGLE_ARB);
-                checkGLcall("glDisable GL_TEXTURE_RECTANGLE_ARB");
-            }
-            glDisable(GL_TEXTURE_2D);
-            checkGLcall("glDisable GL_TEXTURE_2D");
-
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-            checkGLcall("glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);");
-
-            if (sampler != -1) {
-                if (sampler < MAX_TEXTURES) {
-                    Context_MarkStateDirty(context, STATE_TEXTURESTAGE(sampler, WINED3DTSS_COLOROP), StateTable);
-                }
-                Context_MarkStateDirty(context, STATE_SAMPLER(sampler), StateTable);
-            }
-        }
-        GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB));
+    for(i = GL_LIMITS(textures) - 1; i > 0 ; i--) {
+        sampler = This->rev_tex_unit_map[i];
+        GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB + i));
         checkGLcall("glActiveTextureARB");
+
+        if(GL_SUPPORT(ARB_TEXTURE_CUBE_MAP)) {
+            glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+            checkGLcall("glDisable GL_TEXTURE_CUBE_MAP_ARB");
+        }
+        glDisable(GL_TEXTURE_3D);
+        checkGLcall("glDisable GL_TEXTURE_3D");
+        if(GL_SUPPORT(ARB_TEXTURE_RECTANGLE)) {
+            glDisable(GL_TEXTURE_RECTANGLE_ARB);
+            checkGLcall("glDisable GL_TEXTURE_RECTANGLE_ARB");
+        }
+        glDisable(GL_TEXTURE_2D);
+        checkGLcall("glDisable GL_TEXTURE_2D");
+
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        checkGLcall("glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);");
+
+        if (sampler != -1) {
+            if (sampler < MAX_TEXTURES) {
+                Context_MarkStateDirty(context, STATE_TEXTURESTAGE(sampler, WINED3DTSS_COLOROP), StateTable);
+            }
+            Context_MarkStateDirty(context, STATE_SAMPLER(sampler), StateTable);
+        }
     }
+    GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB));
+    checkGLcall("glActiveTextureARB");
 
     sampler = This->rev_tex_unit_map[0];
 
@@ -1150,7 +1142,7 @@ static inline void SetupForBlit(IWineD3DDeviceImpl *This, WineD3DContext *contex
     glDisable(GL_DEPTH_TEST);
     checkGLcall("glDisable GL_DEPTH_TEST");
     Context_MarkStateDirty(context, STATE_RENDER(WINED3DRS_ZENABLE), StateTable);
-    glDisable(GL_FOG);
+    glDisableWINE(GL_FOG);
     checkGLcall("glDisable GL_FOG");
     Context_MarkStateDirty(context, STATE_RENDER(WINED3DRS_FOGENABLE), StateTable);
     glDisable(GL_BLEND);
@@ -1622,4 +1614,8 @@ void ActivateContext(IWineD3DDeviceImpl *This, IWineD3DSurface *target, ContextU
         default:
             FIXME("Unexpected context usage requested\n");
     }
+}
+
+WineD3DContext *getActiveContext(void) {
+    return last_device->activeContext;
 }

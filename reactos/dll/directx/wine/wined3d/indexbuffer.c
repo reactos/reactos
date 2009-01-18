@@ -108,7 +108,7 @@ static DWORD WINAPI IWineD3DIndexBufferImpl_GetPriority(IWineD3DIndexBuffer *ifa
 }
 
 static void WINAPI IWineD3DIndexBufferImpl_PreLoad(IWineD3DIndexBuffer *iface) {
-    FIXME("iface %p stub!\n", iface);
+    TRACE("iface %p.\n", iface);
 }
 
 static void WINAPI IWineD3DIndexBufferImpl_UnLoad(IWineD3DIndexBuffer *iface) {

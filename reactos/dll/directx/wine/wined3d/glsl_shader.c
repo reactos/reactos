@@ -29,6 +29,7 @@
  */
 
 #include "config.h"
+#include <limits.h>
 #include <stdio.h>
 #include "wined3d_private.h"
 
@@ -54,11 +55,35 @@ typedef struct {
     DWORD coord_mask;
 } glsl_sample_function_t;
 
+enum heap_node_op
+{
+    HEAP_NODE_TRAVERSE_LEFT,
+    HEAP_NODE_TRAVERSE_RIGHT,
+    HEAP_NODE_POP,
+};
+
+struct constant_entry
+{
+    unsigned int idx;
+    unsigned int version;
+};
+
+struct constant_heap
+{
+    struct constant_entry *entries;
+    unsigned int *positions;
+    unsigned int size;
+};
+
 /* GLSL shader private data */
 struct shader_glsl_priv {
     struct hash_table_t *glsl_program_lookup;
-    const struct glsl_shader_prog_link *glsl_program;
+    struct glsl_shader_prog_link *glsl_program;
+    struct constant_heap vconst_heap;
+    struct constant_heap pconst_heap;
+    unsigned char *stack;
     GLhandleARB depth_blt_program[tex_type_count];
+    UINT next_constant_version;
 };
 
 /* Struct to maintain data about a linked GLSL program */
@@ -79,6 +104,7 @@ struct glsl_shader_prog_link {
     GLhandleARB                 vshader;
     IWineD3DPixelShader         *pshader;
     struct ps_compile_args      ps_args;
+    UINT                        constant_version;
 };
 
 typedef struct {
@@ -96,18 +122,22 @@ static void print_glsl_info_log(const WineD3D_GL_Info *gl_info, GLhandleARB obj)
     unsigned int i;
     BOOL is_spam;
 
-    const char *spam[] = {
+    static const char * const spam[] =
+    {
         "Vertex shader was successfully compiled to run on hardware.\n",    /* fglrx          */
         "Fragment shader was successfully compiled to run on hardware.\n",  /* fglrx          */
         "Fragment shader(s) linked, vertex shader(s) linked. \n ",          /* fglrx, with \n */
         "Fragment shader(s) linked, vertex shader(s) linked.",              /* fglrx, no \n   */
         "Vertex shader(s) linked, no fragment shader(s) defined. \n ",      /* fglrx, with \n */
         "Vertex shader(s) linked, no fragment shader(s) defined.",          /* fglrx, no \n   */
-        "Fragment shader was successfully compiled to run on hardware.\nWARNING: 0:1: extension 'GL_ARB_draw_buffers' is not supported",
+        "Fragment shader was successfully compiled to run on hardware.\n"
+        "WARNING: 0:2: extension 'GL_ARB_draw_buffers' is not supported",
         "Fragment shader(s) linked, no vertex shader(s) defined.",          /* fglrx, no \n   */
         "Fragment shader(s) linked, no vertex shader(s) defined. \n ",      /* fglrx, with \n */
         "WARNING: 0:2: extension 'GL_ARB_draw_buffers' is not supported\n"  /* MacOS ati      */
     };
+
+    if (!TRACE_ON(d3d_shader) && !FIXME_ON(d3d_shader)) return;
 
     GL_EXTCALL(glGetObjectParameterivARB(obj,
                GL_OBJECT_INFO_LOG_LENGTH_ARB,
@@ -188,106 +218,166 @@ static void shader_glsl_load_vsamplers(const WineD3D_GL_Info *gl_info, IWineD3DS
     }
 }
 
-/** 
- * Loads floating point constants (aka uniforms) into the currently set GLSL program.
- * When constant_list == NULL, it will load all the constants.
- */
-static void shader_glsl_load_constantsF(IWineD3DBaseShaderImpl *This, const WineD3D_GL_Info *gl_info,
-        unsigned int max_constants, const float *constants, const GLhandleARB *constant_locations,
-        const struct list *constant_list)
+static inline void walk_constant_heap(const WineD3D_GL_Info *gl_info, const float *constants,
+        const GLhandleARB *constant_locations, const struct constant_heap *heap, unsigned char *stack, DWORD version)
 {
-    const constants_entry *constant;
-    const local_constant *lconst;
-    GLhandleARB tmp_loc;
-    DWORD i, j, k;
-    const DWORD *idx;
+    int stack_idx = 0;
+    unsigned int heap_idx = 1;
+    unsigned int idx;
 
-    if (TRACE_ON(d3d_shader)) {
-        LIST_FOR_EACH_ENTRY(constant, constant_list, constants_entry, entry) {
-            idx = constant->idx;
-            j = constant->count;
-            while (j--) {
-                i = *idx++;
-                tmp_loc = constant_locations[i];
-                if (tmp_loc != -1) {
-                    TRACE_(d3d_constants)("Loading constants %i: %f, %f, %f, %f\n", i,
-                            constants[i * 4 + 0], constants[i * 4 + 1],
-                            constants[i * 4 + 2], constants[i * 4 + 3]);
+    if (heap->entries[heap_idx].version <= version) return;
+
+    idx = heap->entries[heap_idx].idx;
+    if (constant_locations[idx] != -1) GL_EXTCALL(glUniform4fvARB(constant_locations[idx], 1, &constants[idx * 4]));
+    stack[stack_idx] = HEAP_NODE_TRAVERSE_LEFT;
+
+    while (stack_idx >= 0)
+    {
+        /* Note that we fall through to the next case statement. */
+        switch(stack[stack_idx])
+        {
+            case HEAP_NODE_TRAVERSE_LEFT:
+            {
+                unsigned int left_idx = heap_idx << 1;
+                if (left_idx < heap->size && heap->entries[left_idx].version > version)
+                {
+                    heap_idx = left_idx;
+                    idx = heap->entries[heap_idx].idx;
+                    if (constant_locations[idx] != -1)
+                        GL_EXTCALL(glUniform4fvARB(constant_locations[idx], 1, &constants[idx * 4]));
+
+                    stack[stack_idx++] = HEAP_NODE_TRAVERSE_RIGHT;
+                    stack[stack_idx] = HEAP_NODE_TRAVERSE_LEFT;
+                    break;
                 }
+            }
+
+            case HEAP_NODE_TRAVERSE_RIGHT:
+            {
+                unsigned int right_idx = (heap_idx << 1) + 1;
+                if (right_idx < heap->size && heap->entries[right_idx].version > version)
+                {
+                    heap_idx = right_idx;
+                    idx = heap->entries[heap_idx].idx;
+                    if (constant_locations[idx] != -1)
+                        GL_EXTCALL(glUniform4fvARB(constant_locations[idx], 1, &constants[idx * 4]));
+
+                    stack[stack_idx++] = HEAP_NODE_POP;
+                    stack[stack_idx] = HEAP_NODE_TRAVERSE_LEFT;
+                    break;
+                }
+            }
+
+            case HEAP_NODE_POP:
+            {
+                heap_idx >>= 1;
+                --stack_idx;
+                break;
             }
         }
     }
+    checkGLcall("walk_constant_heap()");
+}
+
+static inline void apply_clamped_constant(const WineD3D_GL_Info *gl_info, GLint location, const GLfloat *data)
+{
+    GLfloat clamped_constant[4];
+
+    if (location == -1) return;
+
+    clamped_constant[0] = data[0] < -1.0f ? -1.0f : data[0] > 1.0 ? 1.0 : data[0];
+    clamped_constant[1] = data[1] < -1.0f ? -1.0f : data[1] > 1.0 ? 1.0 : data[1];
+    clamped_constant[2] = data[2] < -1.0f ? -1.0f : data[2] > 1.0 ? 1.0 : data[2];
+    clamped_constant[3] = data[3] < -1.0f ? -1.0f : data[3] > 1.0 ? 1.0 : data[3];
+
+    GL_EXTCALL(glUniform4fvARB(location, 1, clamped_constant));
+}
+
+static inline void walk_constant_heap_clamped(const WineD3D_GL_Info *gl_info, const float *constants,
+        const GLhandleARB *constant_locations, const struct constant_heap *heap, unsigned char *stack, DWORD version)
+{
+    int stack_idx = 0;
+    unsigned int heap_idx = 1;
+    unsigned int idx;
+
+    if (heap->entries[heap_idx].version <= version) return;
+
+    idx = heap->entries[heap_idx].idx;
+    apply_clamped_constant(gl_info, constant_locations[idx], &constants[idx * 4]);
+    stack[stack_idx] = HEAP_NODE_TRAVERSE_LEFT;
+
+    while (stack_idx >= 0)
+    {
+        /* Note that we fall through to the next case statement. */
+        switch(stack[stack_idx])
+        {
+            case HEAP_NODE_TRAVERSE_LEFT:
+            {
+                unsigned int left_idx = heap_idx << 1;
+                if (left_idx < heap->size && heap->entries[left_idx].version > version)
+                {
+                    heap_idx = left_idx;
+                    idx = heap->entries[heap_idx].idx;
+                    apply_clamped_constant(gl_info, constant_locations[idx], &constants[idx * 4]);
+
+                    stack[stack_idx++] = HEAP_NODE_TRAVERSE_RIGHT;
+                    stack[stack_idx] = HEAP_NODE_TRAVERSE_LEFT;
+                    break;
+                }
+            }
+
+            case HEAP_NODE_TRAVERSE_RIGHT:
+            {
+                unsigned int right_idx = (heap_idx << 1) + 1;
+                if (right_idx < heap->size && heap->entries[right_idx].version > version)
+                {
+                    heap_idx = right_idx;
+                    idx = heap->entries[heap_idx].idx;
+                    apply_clamped_constant(gl_info, constant_locations[idx], &constants[idx * 4]);
+
+                    stack[stack_idx++] = HEAP_NODE_POP;
+                    stack[stack_idx] = HEAP_NODE_TRAVERSE_LEFT;
+                    break;
+                }
+            }
+
+            case HEAP_NODE_POP:
+            {
+                heap_idx >>= 1;
+                --stack_idx;
+                break;
+            }
+        }
+    }
+    checkGLcall("walk_constant_heap_clamped()");
+}
+
+/* Loads floating point constants (aka uniforms) into the currently set GLSL program. */
+static void shader_glsl_load_constantsF(IWineD3DBaseShaderImpl *This, const WineD3D_GL_Info *gl_info,
+        const float *constants, const GLhandleARB *constant_locations, const struct constant_heap *heap,
+        unsigned char *stack, UINT version)
+{
+    const local_constant *lconst;
 
     /* 1.X pshaders have the constants clamped to [-1;1] implicitly. */
-    if(WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 &&
-       shader_is_pshader_version(This->baseShader.hex_version)) {
-        float lcl_const[4];
+    if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.reg_maps.shader_version) == 1
+            && shader_is_pshader_version(This->baseShader.reg_maps.shader_version))
+        walk_constant_heap_clamped(gl_info, constants, constant_locations, heap, stack, version);
+    else
+        walk_constant_heap(gl_info, constants, constant_locations, heap, stack, version);
 
-        LIST_FOR_EACH_ENTRY(constant, constant_list, constants_entry, entry) {
-            idx = constant->idx;
-            j = constant->count;
-            while (j--) {
-                i = *idx++;
-                tmp_loc = constant_locations[i];
-                if (tmp_loc != -1) {
-                    /* We found this uniform name in the program - go ahead and send the data */
-                    k = i * 4;
-                    if(constants[k + 0] < -1.0) lcl_const[0] = -1.0;
-                    else if(constants[k + 0] > 1.0) lcl_const[0] = 1.0;
-                    else lcl_const[0] = constants[k + 0];
-                    if(constants[k + 1] < -1.0) lcl_const[1] = -1.0;
-                    else if(constants[k + 1] > 1.0) lcl_const[1] = 1.0;
-                    else lcl_const[1] = constants[k + 1];
-                    if(constants[k + 2] < -1.0) lcl_const[2] = -1.0;
-                    else if(constants[k + 2] > 1.0) lcl_const[2] = 1.0;
-                    else lcl_const[2] = constants[k + 2];
-                    if(constants[k + 3] < -1.0) lcl_const[3] = -1.0;
-                    else if(constants[k + 3] > 1.0) lcl_const[3] = 1.0;
-                    else lcl_const[3] = constants[k + 3];
-
-                    GL_EXTCALL(glUniform4fvARB(tmp_loc, 1, lcl_const));
-                }
-            }
-        }
-    } else {
-        LIST_FOR_EACH_ENTRY(constant, constant_list, constants_entry, entry) {
-            idx = constant->idx;
-            j = constant->count;
-            while (j--) {
-                i = *idx++;
-                tmp_loc = constant_locations[i];
-                if (tmp_loc != -1) {
-                    /* We found this uniform name in the program - go ahead and send the data */
-                    GL_EXTCALL(glUniform4fvARB(tmp_loc, 1, constants + (i * 4)));
-                }
-            }
-        }
-    }
-    checkGLcall("glUniform4fvARB()");
-
-    if(!This->baseShader.load_local_constsF) {
+    if (!This->baseShader.load_local_constsF)
+    {
         TRACE("No need to load local float constants for this shader\n");
         return;
     }
 
-    /* Load immediate constants */
-    if (TRACE_ON(d3d_shader)) {
-        LIST_FOR_EACH_ENTRY(lconst, &This->baseShader.constantsF, local_constant, entry) {
-            tmp_loc = constant_locations[lconst->idx];
-            if (tmp_loc != -1) {
-                const GLfloat *values = (const GLfloat *)lconst->value;
-                TRACE_(d3d_constants)("Loading local constants %i: %f, %f, %f, %f\n", lconst->idx,
-                        values[0], values[1], values[2], values[3]);
-            }
-        }
-    }
     /* Immediate constants are clamped to [-1;1] at shader creation time if needed */
-    LIST_FOR_EACH_ENTRY(lconst, &This->baseShader.constantsF, local_constant, entry) {
-        tmp_loc = constant_locations[lconst->idx];
-        if (tmp_loc != -1) {
-            /* We found this uniform name in the program - go ahead and send the data */
-            GL_EXTCALL(glUniform4fvARB(tmp_loc, 1, (const GLfloat *)lconst->value));
-        }
+    LIST_FOR_EACH_ENTRY(lconst, &This->baseShader.constantsF, local_constant, entry)
+    {
+        GLhandleARB location = constant_locations[lconst->idx];
+        /* We found this uniform name in the program - go ahead and send the data */
+        if (location != -1) GL_EXTCALL(glUniform4fvARB(location, 1, (const GLfloat *)lconst->value));
     }
     checkGLcall("glUniform4fvARB()");
 }
@@ -335,7 +425,7 @@ static void shader_glsl_load_constantsB(IWineD3DBaseShaderImpl *This, const Wine
     GLhandleARB tmp_loc;
     unsigned int i;
     char tmp_name[8];
-    char is_pshader = shader_is_pshader_version(This->baseShader.hex_version);
+    char is_pshader = shader_is_pshader_version(This->baseShader.reg_maps.shader_version);
     const char* prefix = is_pshader? "PB":"VB";
     struct list* ptr;
 
@@ -379,7 +469,11 @@ static void shader_glsl_load_constantsB(IWineD3DBaseShaderImpl *This, const Wine
     }
 }
 
-
+static void reset_program_constant_version(void *value, void *context)
+{
+    struct glsl_shader_prog_link *entry = (struct glsl_shader_prog_link *)value;
+    entry->constant_version = 0;
+}
 
 /**
  * Loads the app-supplied constants into the currently set GLSL program.
@@ -390,14 +484,13 @@ static void shader_glsl_load_constants(
     char useVertexShader) {
    
     IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) device;
-    const struct shader_glsl_priv *priv = (struct shader_glsl_priv *)deviceImpl->shader_priv;
+    struct shader_glsl_priv *priv = (struct shader_glsl_priv *)deviceImpl->shader_priv;
     IWineD3DStateBlockImpl* stateBlock = deviceImpl->stateBlock;
     const WineD3D_GL_Info *gl_info = &deviceImpl->adapter->gl_info;
 
-    const GLhandleARB *constant_locations;
-    const struct list *constant_list;
     GLhandleARB programId;
-    const struct glsl_shader_prog_link *prog = priv->glsl_program;
+    struct glsl_shader_prog_link *prog = priv->glsl_program;
+    UINT constant_version;
     int i;
 
     if (!prog) {
@@ -405,24 +498,26 @@ static void shader_glsl_load_constants(
         return;
     }
     programId = prog->programId;
+    constant_version = prog->constant_version;
 
     if (useVertexShader) {
         IWineD3DBaseShaderImpl* vshader = (IWineD3DBaseShaderImpl*) stateBlock->vertexShader;
 
-        constant_locations = prog->vuniformF_locations;
-        constant_list = &stateBlock->set_vconstantsF;
-
         /* Load DirectX 9 float constants/uniforms for vertex shader */
-        shader_glsl_load_constantsF(vshader, gl_info, GL_LIMITS(vshader_constantsF),
-                stateBlock->vertexShaderConstantF, constant_locations, constant_list);
+        shader_glsl_load_constantsF(vshader, gl_info, stateBlock->vertexShaderConstantF,
+                prog->vuniformF_locations, &priv->vconst_heap, priv->stack, constant_version);
 
         /* Load DirectX 9 integer constants/uniforms for vertex shader */
-        shader_glsl_load_constantsI(vshader, gl_info, prog->vuniformI_locations,
-                stateBlock->vertexShaderConstantI, stateBlock->changed.vertexShaderConstantsI);
+        if(vshader->baseShader.uses_int_consts) {
+            shader_glsl_load_constantsI(vshader, gl_info, prog->vuniformI_locations,
+                    stateBlock->vertexShaderConstantI, stateBlock->changed.vertexShaderConstantsI);
+        }
 
         /* Load DirectX 9 boolean constants/uniforms for vertex shader */
-        shader_glsl_load_constantsB(vshader, gl_info, programId,
-                stateBlock->vertexShaderConstantB, stateBlock->changed.vertexShaderConstantsB);
+        if(vshader->baseShader.uses_bool_consts) {
+            shader_glsl_load_constantsB(vshader, gl_info, programId,
+                    stateBlock->vertexShaderConstantB, stateBlock->changed.vertexShaderConstantsB);
+        }
 
         /* Upload the position fixup params */
         GL_EXTCALL(glUniform4fvARB(prog->posFixup_location, 1, &deviceImpl->posFixup[0]));
@@ -433,20 +528,21 @@ static void shader_glsl_load_constants(
 
         IWineD3DBaseShaderImpl* pshader = (IWineD3DBaseShaderImpl*) stateBlock->pixelShader;
 
-        constant_locations = prog->puniformF_locations;
-        constant_list = &stateBlock->set_pconstantsF;
-
         /* Load DirectX 9 float constants/uniforms for pixel shader */
-        shader_glsl_load_constantsF(pshader, gl_info, GL_LIMITS(pshader_constantsF),
-                stateBlock->pixelShaderConstantF, constant_locations, constant_list);
+        shader_glsl_load_constantsF(pshader, gl_info, stateBlock->pixelShaderConstantF,
+                prog->puniformF_locations, &priv->pconst_heap, priv->stack, constant_version);
 
         /* Load DirectX 9 integer constants/uniforms for pixel shader */
-        shader_glsl_load_constantsI(pshader, gl_info, prog->puniformI_locations,
-                stateBlock->pixelShaderConstantI, stateBlock->changed.pixelShaderConstantsI);
+        if(pshader->baseShader.uses_int_consts) {
+            shader_glsl_load_constantsI(pshader, gl_info, prog->puniformI_locations,
+                    stateBlock->pixelShaderConstantI, stateBlock->changed.pixelShaderConstantsI);
+        }
 
         /* Load DirectX 9 boolean constants/uniforms for pixel shader */
-        shader_glsl_load_constantsB(pshader, gl_info, programId,
-                stateBlock->pixelShaderConstantB, stateBlock->changed.pixelShaderConstantsB);
+        if(pshader->baseShader.uses_bool_consts) {
+            shader_glsl_load_constantsB(pshader, gl_info, programId,
+                    stateBlock->pixelShaderConstantB, stateBlock->changed.pixelShaderConstantsB);
+        }
 
         /* Upload the environment bump map matrix if needed. The needsbumpmat member specifies the texture stage to load the matrix from.
          * It can't be 0 for a valid texbem instruction.
@@ -486,19 +582,87 @@ static void shader_glsl_load_constants(
             GL_EXTCALL(glUniform4fvARB(prog->ycorrection_location, 1, correction_params));
         }
     }
+
+    if (priv->next_constant_version == UINT_MAX)
+    {
+        TRACE("Max constant version reached, resetting to 0.\n");
+        hash_table_for_each_entry(priv->glsl_program_lookup, reset_program_constant_version, NULL);
+        priv->next_constant_version = 1;
+    }
+    else
+    {
+        prog->constant_version = priv->next_constant_version++;
+    }
+}
+
+static inline void update_heap_entry(struct constant_heap *heap, unsigned int idx,
+        unsigned int heap_idx, DWORD new_version)
+{
+    struct constant_entry *entries = heap->entries;
+    unsigned int *positions = heap->positions;
+    unsigned int parent_idx;
+
+    while (heap_idx > 1)
+    {
+        parent_idx = heap_idx >> 1;
+
+        if (new_version <= entries[parent_idx].version) break;
+
+        entries[heap_idx] = entries[parent_idx];
+        positions[entries[parent_idx].idx] = heap_idx;
+        heap_idx = parent_idx;
+    }
+
+    entries[heap_idx].version = new_version;
+    entries[heap_idx].idx = idx;
+    positions[idx] = heap_idx;
+}
+
+static void shader_glsl_update_float_vertex_constants(IWineD3DDevice *iface, UINT start, UINT count)
+{
+    IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
+    struct shader_glsl_priv *priv = (struct shader_glsl_priv *)This->shader_priv;
+    struct constant_heap *heap = &priv->vconst_heap;
+    UINT i;
+
+    for (i = start; i < count + start; ++i)
+    {
+        if (!This->stateBlock->changed.vertexShaderConstantsF[i])
+            update_heap_entry(heap, i, heap->size++, priv->next_constant_version);
+        else
+            update_heap_entry(heap, i, heap->positions[i], priv->next_constant_version);
+    }
+}
+
+static void shader_glsl_update_float_pixel_constants(IWineD3DDevice *iface, UINT start, UINT count)
+{
+    IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
+    struct shader_glsl_priv *priv = (struct shader_glsl_priv *)This->shader_priv;
+    struct constant_heap *heap = &priv->pconst_heap;
+    UINT i;
+
+    for (i = start; i < count + start; ++i)
+    {
+        if (!This->stateBlock->changed.pixelShaderConstantsF[i])
+            update_heap_entry(heap, i, heap->size++, priv->next_constant_version);
+        else
+            update_heap_entry(heap, i, heap->positions[i], priv->next_constant_version);
+    }
 }
 
 /** Generate the variable & register declarations for the GLSL output target */
 static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const shader_reg_maps *reg_maps,
-        SHADER_BUFFER *buffer, const WineD3D_GL_Info *gl_info)
+        SHADER_BUFFER *buffer, const WineD3D_GL_Info *gl_info,
+        const struct ps_compile_args *ps_args)
 {
     IWineD3DBaseShaderImpl* This = (IWineD3DBaseShaderImpl*) iface;
     IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *) This->baseShader.device;
+    DWORD shader_version = reg_maps->shader_version;
     unsigned int i, extra_constants_needed = 0;
     const local_constant *lconst;
 
     /* There are some minor differences between pixel and vertex shaders */
-    char pshader = shader_is_pshader_version(This->baseShader.hex_version);
+    char pshader = shader_is_pshader_version(shader_version);
     char prefix = pshader ? 'P' : 'V';
 
     /* Prototype the subroutines */
@@ -532,7 +696,8 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
          * out. The nvidia driver only does that if the parameter is inout instead of out, hence the
          * inout.
          */
-        if(This->baseShader.hex_version >= WINED3DVS_VERSION(3, 0)) {
+        if (shader_version >= WINED3DVS_VERSION(3, 0))
+        {
             shader_addline(buffer, "void order_ps_input(in vec4[%u]);\n", MAX_REG_OUTPUT);
         } else {
             shader_addline(buffer, "void order_ps_input();\n");
@@ -562,7 +727,7 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
             ps_impl->numbumpenvmatconsts++;
         }
 
-        if(device->stateBlock->renderState[WINED3DRS_SRGBWRITEENABLE]) {
+        if(ps_args->srgb_correction) {
             shader_addline(buffer, "const vec4 srgb_mul_low = vec4(%f, %f, %f, %f);\n",
                             srgb_mul_low, srgb_mul_low, srgb_mul_low, srgb_mul_low);
             shader_addline(buffer, "const vec4 srgb_comparison = vec4(%f, %f, %f, %f);\n",
@@ -633,8 +798,10 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
     /* Declare input register varyings. Only pixel shader, vertex shaders have that declared in the
      * helper function shader that is linked in at link time
      */
-    if(pshader && This->baseShader.hex_version >= WINED3DPS_VERSION(3, 0)) {
-        if(use_vs(device)) {
+    if (pshader && shader_version >= WINED3DPS_VERSION(3, 0))
+    {
+        if (use_vs(device->stateBlock))
+        {
             shader_addline(buffer, "varying vec4 IN[%u];\n", GL_LIMITS(glsl_varyings) / 4);
         } else {
             /* TODO: Write a replacement shader for the fixed function vertex pipeline, so this isn't needed.
@@ -803,8 +970,8 @@ static void shader_glsl_get_register_name(const DWORD param, const DWORD addr_to
     IWineD3DBaseShaderImpl* This = (IWineD3DBaseShaderImpl*) arg->shader;
     IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) This->baseShader.device;
     const WineD3D_GL_Info* gl_info = &deviceImpl->adapter->gl_info;
-
-    char pshader = shader_is_pshader_version(This->baseShader.hex_version);
+    DWORD shader_version = This->baseShader.reg_maps.shader_version;
+    char pshader = shader_is_pshader_version(shader_version);
     char tmpStr[150];
 
     *is_color = FALSE;   
@@ -816,7 +983,8 @@ static void shader_glsl_get_register_name(const DWORD param, const DWORD addr_to
     case WINED3DSPR_INPUT:
         if (pshader) {
             /* Pixel shaders >= 3.0 */
-            if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) >= 3) {
+            if (WINED3DSHADER_VERSION_MAJOR(shader_version) >= 3)
+            {
                 DWORD in_count = GL_LIMITS(glsl_varyings) / 4;
 
                 if (param & WINED3DSHADER_ADDRMODE_RELATIVE) {
@@ -862,8 +1030,7 @@ static void shader_glsl_get_register_name(const DWORD param, const DWORD addr_to
                     strcpy(tmpStr, "gl_SecondaryColor");
             }
         } else {
-            if (vshader_input_is_color((IWineD3DVertexShader*) This, reg))
-               *is_color = TRUE;
+            if (((IWineD3DVertexShaderImpl *)This)->swizzle_map & (1 << reg)) *is_color = TRUE;
             sprintf(tmpStr, "attrib%u", reg);
         } 
         break;
@@ -876,7 +1043,8 @@ static void shader_glsl_get_register_name(const DWORD param, const DWORD addr_to
 
            /* Relative addressing on shaders 2.0+ have a relative address token, 
             * prior to that, it was hard-coded as "A0.x" because there's only 1 register */
-           if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) >= 2)  {
+           if (WINED3DSHADER_VERSION_MAJOR(shader_version) >= 2)
+           {
                glsl_src_param_t rel_param;
                shader_glsl_add_src_param(arg, addr_token, 0, WINED3DSP_WRITEMASK_0, &rel_param);
                if(reg) {
@@ -955,10 +1123,8 @@ static void shader_glsl_get_register_name(const DWORD param, const DWORD addr_to
     break;
     case WINED3DSPR_TEXCRDOUT:
         /* Vertex shaders >= 3.0: WINED3DSPR_OUTPUT */
-        if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) >= 3)
-            sprintf(tmpStr, "OUT[%u]", reg);
-        else
-            sprintf(tmpStr, "gl_TexCoord[%u]", reg);
+        if (WINED3DSHADER_VERSION_MAJOR(shader_version) >= 3) sprintf(tmpStr, "OUT[%u]", reg);
+        else sprintf(tmpStr, "gl_TexCoord[%u]", reg);
     break;
     case WINED3DSPR_MISCTYPE:
         if (reg == 0) {
@@ -1307,7 +1473,6 @@ static void shader_glsl_arith(const SHADER_OPCODE_ARG *arg)
 /* Process the WINED3DSIO_MOV opcode using GLSL (dst = src) */
 static void shader_glsl_mov(const SHADER_OPCODE_ARG *arg)
 {
-    IWineD3DBaseShaderImpl* shader = (IWineD3DBaseShaderImpl*) arg->shader;
     SHADER_BUFFER* buffer = arg->buffer;
     glsl_src_param_t src0_param;
     DWORD write_mask;
@@ -1317,9 +1482,10 @@ static void shader_glsl_mov(const SHADER_OPCODE_ARG *arg)
 
     /* In vs_1_1 WINED3DSIO_MOV can write to the address register. In later
      * shader versions WINED3DSIO_MOVA is used for this. */
-    if ((WINED3DSHADER_VERSION_MAJOR(shader->baseShader.hex_version) == 1 &&
-            !shader_is_pshader_version(shader->baseShader.hex_version) &&
-            shader_get_regtype(arg->dst) == WINED3DSPR_ADDR)) {
+    if ((WINED3DSHADER_VERSION_MAJOR(arg->reg_maps->shader_version) == 1
+            && !shader_is_pshader_version(arg->reg_maps->shader_version)
+            && shader_get_regtype(arg->dst) == WINED3DSPR_ADDR))
+    {
         /* This is a simple floor() */
         unsigned int mask_size = shader_glsl_get_write_mask_size(write_mask);
         if (mask_size > 1) {
@@ -1487,12 +1653,12 @@ static void shader_glsl_map2gl(const SHADER_OPCODE_ARG *arg)
  */
 static void shader_glsl_expp(const SHADER_OPCODE_ARG *arg)
 {
-    IWineD3DBaseShaderImpl *shader = (IWineD3DBaseShaderImpl *)arg->shader;
     glsl_src_param_t src_param;
 
     shader_glsl_add_src_param(arg, arg->src[0], arg->src_addr[0], WINED3DSP_WRITEMASK_0, &src_param);
 
-    if (shader->baseShader.hex_version < WINED3DPS_VERSION(2,0)) {
+    if (arg->reg_maps->shader_version < WINED3DPS_VERSION(2,0))
+    {
         char dst_mask[6];
 
         shader_addline(arg->buffer, "tmp0.x = exp2(floor(%s));\n", src_param.param_str);
@@ -1683,14 +1849,14 @@ static void shader_glsl_cmp(const SHADER_OPCODE_ARG *arg)
  * the compare is done per component of src0. */
 static void shader_glsl_cnd(const SHADER_OPCODE_ARG *arg)
 {
-    IWineD3DBaseShaderImpl* shader = (IWineD3DBaseShaderImpl*) arg->shader;
     glsl_src_param_t src0_param;
     glsl_src_param_t src1_param;
     glsl_src_param_t src2_param;
     DWORD write_mask, cmp_channel = 0;
     unsigned int i, j;
 
-    if (shader->baseShader.hex_version < WINED3DPS_VERSION(1, 4)) {
+    if (arg->reg_maps->shader_version < WINED3DPS_VERSION(1, 4))
+    {
         write_mask = shader_glsl_append_dst(arg->buffer, arg);
         shader_glsl_add_src_param(arg, arg->src[0], arg->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
         shader_glsl_add_src_param(arg, arg->src[1], arg->src_addr[1], write_mask, &src1_param);
@@ -1749,7 +1915,7 @@ static void shader_glsl_mnxn(const SHADER_OPCODE_ARG *arg)
 {
     IWineD3DBaseShaderImpl *shader = (IWineD3DBaseShaderImpl *)arg->shader;
     const SHADER_OPCODE *opcode_table = shader->baseShader.shader_ins;
-    DWORD shader_version = shader->baseShader.hex_version;
+    DWORD shader_version = arg->reg_maps->shader_version;
     int i;
     int nComponents = 0;
     SHADER_OPCODE_ARG tmpArg;
@@ -2085,7 +2251,7 @@ static void pshader_glsl_tex(const SHADER_OPCODE_ARG *arg)
 {
     IWineD3DPixelShaderImpl* This = (IWineD3DPixelShaderImpl*) arg->shader;
     IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) This->baseShader.device;
-    DWORD hex_version = This->baseShader.hex_version;
+    DWORD shader_version = arg->reg_maps->shader_version;
     char dst_swizzle[6];
     glsl_sample_function_t sample_function;
     DWORD sampler_type;
@@ -2098,14 +2264,12 @@ static void pshader_glsl_tex(const SHADER_OPCODE_ARG *arg)
 
     /* 1.0-1.4: Use destination register as sampler source.
      * 2.0+: Use provided sampler source. */
-    if (hex_version < WINED3DPS_VERSION(2,0)) {
-        sampler_idx = arg->dst & WINED3DSP_REGNUM_MASK;
-    } else {
-        sampler_idx = arg->src[1] & WINED3DSP_REGNUM_MASK;
-    }
+    if (shader_version < WINED3DPS_VERSION(2,0)) sampler_idx = arg->dst & WINED3DSP_REGNUM_MASK;
+    else sampler_idx = arg->src[1] & WINED3DSP_REGNUM_MASK;
     sampler_type = arg->reg_maps->samplers[sampler_idx] & WINED3DSP_TEXTURETYPE_MASK;
 
-    if (hex_version < WINED3DPS_VERSION(1,4)) {
+    if (shader_version < WINED3DPS_VERSION(1,4))
+    {
         DWORD flags = deviceImpl->stateBlock->textureState[sampler_idx][WINED3DTSS_TEXTURETRANSFORMFLAGS];
 
         /* Projected cube textures don't make a lot of sense, the resulting coordinates stay the same. */
@@ -2121,7 +2285,9 @@ static void pshader_glsl_tex(const SHADER_OPCODE_ARG *arg)
         } else {
             projected = FALSE;
         }
-    } else if (hex_version < WINED3DPS_VERSION(2,0)) {
+    }
+    else if (shader_version < WINED3DPS_VERSION(2,0))
+    {
         DWORD src_mod = arg->src[0] & WINED3DSP_SRCMOD_MASK;
 
         if (src_mod == WINED3DSPSM_DZ) {
@@ -2151,15 +2317,13 @@ static void pshader_glsl_tex(const SHADER_OPCODE_ARG *arg)
     shader_glsl_get_sample_function(sampler_type, projected, texrect, &sample_function);
     mask |= sample_function.coord_mask;
 
-    if (hex_version < WINED3DPS_VERSION(2,0)) {
-        shader_glsl_get_write_mask(arg->dst, dst_swizzle);
-    } else {
-        shader_glsl_get_swizzle(arg->src[1], FALSE, arg->dst, dst_swizzle);
-    }
+    if (shader_version < WINED3DPS_VERSION(2,0)) shader_glsl_get_write_mask(arg->dst, dst_swizzle);
+    else shader_glsl_get_swizzle(arg->src[1], FALSE, arg->dst, dst_swizzle);
 
     /* 1.0-1.3: Use destination register as coordinate source.
        1.4+: Use provided coordinate source register. */
-    if (hex_version < WINED3DPS_VERSION(1,4)) {
+    if (shader_version < WINED3DPS_VERSION(1,4))
+    {
         char coord_mask[6];
         shader_glsl_get_write_mask(mask, coord_mask);
         shader_addline(arg->buffer, "%s(Psampler%u, T%u%s)%s);\n",
@@ -2205,7 +2369,8 @@ static void shader_glsl_texldl(const SHADER_OPCODE_ARG *arg)
 
     shader_glsl_add_src_param(arg, arg->src[0], arg->src_addr[0], WINED3DSP_WRITEMASK_3, &lod_param);
 
-    if (shader_is_pshader_version(This->baseShader.hex_version)) {
+    if (shader_is_pshader_version(arg->reg_maps->shader_version))
+    {
         /* The GLSL spec claims the Lod sampling functions are only supported in vertex shaders.
          * However, they seem to work just fine in fragment shaders as well. */
         WARN("Using %sLod in fragment shader.\n", sample_function.name);
@@ -2220,17 +2385,15 @@ static void shader_glsl_texldl(const SHADER_OPCODE_ARG *arg)
 static void pshader_glsl_texcoord(const SHADER_OPCODE_ARG *arg)
 {
     /* FIXME: Make this work for more than just 2D textures */
-    
-    IWineD3DPixelShaderImpl* This = (IWineD3DPixelShaderImpl*) arg->shader;
     SHADER_BUFFER* buffer = arg->buffer;
-    DWORD hex_version = This->baseShader.hex_version;
     DWORD write_mask;
     char dst_mask[6];
 
     write_mask = shader_glsl_append_dst(arg->buffer, arg);
     shader_glsl_get_write_mask(write_mask, dst_mask);
 
-    if (hex_version != WINED3DPS_VERSION(1,4)) {
+    if (arg->reg_maps->shader_version != WINED3DPS_VERSION(1,4))
+    {
         DWORD reg = arg->dst & WINED3DSP_REGNUM_MASK;
         shader_addline(buffer, "clamp(gl_TexCoord[%u], 0.0, 1.0)%s);\n", reg, dst_mask);
     } else {
@@ -2654,13 +2817,12 @@ static void pshader_glsl_texreg2rgb(const SHADER_OPCODE_ARG *arg)
  * If any of the first 3 components are < 0, discard this pixel */
 static void pshader_glsl_texkill(const SHADER_OPCODE_ARG *arg)
 {
-    IWineD3DPixelShaderImpl* This = (IWineD3DPixelShaderImpl*) arg->shader;
-    DWORD hex_version = This->baseShader.hex_version;
     glsl_dst_param_t dst_param;
 
     /* The argument is a destination parameter, and no writemasks are allowed */
     shader_glsl_add_dst_param(arg, arg->dst, 0, &dst_param);
-    if((hex_version >= WINED3DPS_VERSION(2,0))) {
+    if ((arg->reg_maps->shader_version >= WINED3DPS_VERSION(2,0)))
+    {
         /* 2.0 shaders compare all 4 components in texkill */
         shader_addline(arg->buffer, "if (any(lessThan(%s.xyzw, vec4(0.0)))) discard;\n", dst_param.reg_name);
     } else {
@@ -2948,8 +3110,8 @@ static GLhandleARB generate_param_reorder_function(IWineD3DVertexShader *vertexs
     IWineD3DVertexShaderImpl *vs = (IWineD3DVertexShaderImpl *) vertexshader;
     IWineD3DPixelShaderImpl *ps = (IWineD3DPixelShaderImpl *) pixelshader;
     IWineD3DDeviceImpl *device;
-    DWORD vs_major = WINED3DSHADER_VERSION_MAJOR(vs->baseShader.hex_version);
-    DWORD ps_major = ps ? WINED3DSHADER_VERSION_MAJOR(ps->baseShader.hex_version) : 0;
+    DWORD vs_major = WINED3DSHADER_VERSION_MAJOR(vs->baseShader.reg_maps.shader_version);
+    DWORD ps_major = ps ? WINED3DSHADER_VERSION_MAJOR(ps->baseShader.reg_maps.shader_version) : 0;
     unsigned int i;
     SHADER_BUFFER buffer;
     DWORD usage_token;
@@ -2958,10 +3120,7 @@ static GLhandleARB generate_param_reorder_function(IWineD3DVertexShader *vertexs
     char reg_mask[6];
     const struct semantic *semantics_out, *semantics_in;
 
-    buffer.buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SHADER_PGMSIZE);
-    buffer.bsize = 0;
-    buffer.lineNo = 0;
-    buffer.newline = TRUE;
+    shader_buffer_init(&buffer);
 
     shader_addline(&buffer, "#version 120\n");
 
@@ -3093,7 +3252,7 @@ static GLhandleARB generate_param_reorder_function(IWineD3DVertexShader *vertexs
     GL_EXTCALL(glCompileShaderARB(ret));
     checkGLcall("glCompileShaderARB(ret)");
 
-    HeapFree(GetProcessHeap(), 0, buffer.buffer);
+    shader_buffer_free(&buffer);
     return ret;
 }
 
@@ -3164,6 +3323,7 @@ static void set_glsl_shader_program(IWineD3DDevice *iface, BOOL use_ps, BOOL use
     entry->vshader = vshader_id;
     entry->pshader = pshader;
     entry->ps_args = compile_args;
+    entry->constant_version = 0;
     /* Add the hash table entry */
     add_glsl_program_entry(priv, entry);
 
@@ -3264,8 +3424,10 @@ static void set_glsl_shader_program(IWineD3DDevice *iface, BOOL use_ps, BOOL use
     entry->ycorrection_location = GL_EXTCALL(glGetUniformLocationARB(programId, "ycorrection"));
     checkGLcall("Find glsl program uniform locations");
 
-    if (pshader && WINED3DSHADER_VERSION_MAJOR(((IWineD3DPixelShaderImpl *)pshader)->baseShader.hex_version) >= 3
-            && ((IWineD3DPixelShaderImpl *)pshader)->declared_in_count > GL_LIMITS(glsl_varyings) / 4) {
+    if (pshader
+            && WINED3DSHADER_VERSION_MAJOR(((IWineD3DPixelShaderImpl *)pshader)->baseShader.reg_maps.shader_version) >= 3
+            && ((IWineD3DPixelShaderImpl *)pshader)->declared_in_count > GL_LIMITS(glsl_varyings) / 4)
+    {
         TRACE("Shader %d needs vertex color clamping disabled\n", programId);
         entry->vertex_color_clamp = GL_FALSE;
     } else {
@@ -3309,7 +3471,8 @@ static GLhandleARB create_glsl_blt_shader(const WineD3D_GL_Info *gl_info, enum t
 {
     GLhandleARB program_id;
     GLhandleARB vshader_id, pshader_id;
-    const char *blt_vshader[] = {
+    static const char *blt_vshader[] =
+    {
         "#version 120\n"
         "void main(void)\n"
         "{\n"
@@ -3319,7 +3482,8 @@ static GLhandleARB create_glsl_blt_shader(const WineD3D_GL_Info *gl_info, enum t
         "}\n"
     };
 
-    const char *blt_pshaders[tex_type_count] = {
+    static const char *blt_pshaders[tex_type_count] =
+    {
         /* tex_1d */
         NULL,
         /* tex_2d */
@@ -3436,12 +3600,6 @@ static void shader_glsl_deselect_depth_blt(IWineD3DDevice *iface) {
     checkGLcall("glUseProgramObjectARB");
 }
 
-static void shader_glsl_cleanup(IWineD3DDevice *iface) {
-    IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    const WineD3D_GL_Info *gl_info = &This->adapter->gl_info;
-    GL_EXTCALL(glUseProgramObjectARB(0));
-}
-
 static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
     const struct list *linked_programs;
     IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *) iface;
@@ -3454,7 +3612,7 @@ static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
     /* Note: Do not use QueryInterface here to find out which shader type this is because this code
      * can be called from IWineD3DBaseShader::Release
      */
-    char pshader = shader_is_pshader_version(This->baseShader.hex_version);
+    char pshader = shader_is_pshader_version(This->baseShader.reg_maps.shader_version);
 
     if(pshader) {
         ps = (IWineD3DPixelShaderImpl *) This;
@@ -3529,10 +3687,64 @@ static BOOL glsl_program_key_compare(const void *keya, const void *keyb)
            (memcmp(&ka->ps_args, &kb->ps_args, sizeof(kb->ps_args)) == 0);
 }
 
+static BOOL constant_heap_init(struct constant_heap *heap, unsigned int constant_count)
+{
+    SIZE_T size = (constant_count + 1) * sizeof(*heap->entries) + constant_count * sizeof(*heap->positions);
+    void *mem = HeapAlloc(GetProcessHeap(), 0, size);
+
+    if (!mem)
+    {
+        ERR("Failed to allocate memory\n");
+        return FALSE;
+    }
+
+    heap->entries = mem;
+    heap->entries[1].version = 0;
+    heap->positions = (unsigned int *)(heap->entries + constant_count + 1);
+    heap->size = 1;
+
+    return TRUE;
+}
+
+static void constant_heap_free(struct constant_heap *heap)
+{
+    HeapFree(GetProcessHeap(), 0, heap->entries);
+}
+
 static HRESULT shader_glsl_alloc(IWineD3DDevice *iface) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
+    const WineD3D_GL_Info *gl_info = &This->adapter->gl_info;
     struct shader_glsl_priv *priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct shader_glsl_priv));
+    SIZE_T stack_size = wined3d_log2i(max(GL_LIMITS(vshader_constantsF), GL_LIMITS(pshader_constantsF))) + 1;
+
+    priv->stack = HeapAlloc(GetProcessHeap(), 0, stack_size * sizeof(*priv->stack));
+    if (!priv->stack)
+    {
+        ERR("Failed to allocate memory.\n");
+        HeapFree(GetProcessHeap(), 0, priv);
+        return E_OUTOFMEMORY;
+    }
+
+    if (!constant_heap_init(&priv->vconst_heap, GL_LIMITS(vshader_constantsF)))
+    {
+        ERR("Failed to initialize vertex shader constant heap\n");
+        HeapFree(GetProcessHeap(), 0, priv->stack);
+        HeapFree(GetProcessHeap(), 0, priv);
+        return E_OUTOFMEMORY;
+    }
+
+    if (!constant_heap_init(&priv->pconst_heap, GL_LIMITS(pshader_constantsF)))
+    {
+        ERR("Failed to initialize pixel shader constant heap\n");
+        constant_heap_free(&priv->vconst_heap);
+        HeapFree(GetProcessHeap(), 0, priv->stack);
+        HeapFree(GetProcessHeap(), 0, priv);
+        return E_OUTOFMEMORY;
+    }
+
     priv->glsl_program_lookup = hash_table_create(glsl_program_key_hash, glsl_program_key_compare);
+    priv->next_constant_version = 1;
+
     This->shader_priv = priv;
     return WINED3D_OK;
 }
@@ -3552,6 +3764,8 @@ static void shader_glsl_free(IWineD3DDevice *iface) {
     }
 
     hash_table_destroy(priv->glsl_program_lookup, NULL, NULL);
+    constant_heap_free(&priv->pconst_heap);
+    constant_heap_free(&priv->vconst_heap);
 
     HeapFree(GetProcessHeap(), 0, This->shader_priv);
     This->shader_priv = NULL;
@@ -3562,7 +3776,7 @@ static BOOL shader_glsl_dirty_const(IWineD3DDevice *iface) {
     return FALSE;
 }
 
-static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BUFFER *buffer) {
+static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BUFFER *buffer, const struct ps_compile_args *args) {
     IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)iface;
     const struct shader_reg_maps *reg_maps = &This->baseShader.reg_maps;
     CONST DWORD *function = This->baseShader.function;
@@ -3585,23 +3799,19 @@ static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BU
     }
 
     /* Base Declarations */
-    shader_generate_glsl_declarations( (IWineD3DBaseShader*) This, reg_maps, buffer, &GLINFO_LOCATION);
+    shader_generate_glsl_declarations( (IWineD3DBaseShader*) This, reg_maps, buffer, &GLINFO_LOCATION, args);
 
     /* Pack 3.0 inputs */
-    if (This->baseShader.hex_version >= WINED3DPS_VERSION(3,0)) {
-
-        if(((IWineD3DDeviceImpl *) This->baseShader.device)->strided_streams.u.s.position_transformed) {
-            pshader_glsl_input_pack(buffer, This->semantics_in, iface, pretransformed);
-        } else if(!use_vs((IWineD3DDeviceImpl *) This->baseShader.device)) {
-            pshader_glsl_input_pack(buffer, This->semantics_in, iface, fixedfunction);
-        }
+    if (reg_maps->shader_version >= WINED3DPS_VERSION(3,0) && args->vp_mode != vertexshader) {
+        pshader_glsl_input_pack(buffer, This->semantics_in, iface, args->vp_mode);
     }
 
     /* Base Shader Body */
     shader_generate_main( (IWineD3DBaseShader*) This, buffer, reg_maps, function);
 
     /* Pixel shaders < 2.0 place the resulting color in R0 implicitly */
-    if (This->baseShader.hex_version < WINED3DPS_VERSION(2,0)) {
+    if (reg_maps->shader_version < WINED3DPS_VERSION(2,0))
+    {
         /* Some older cards like GeforceFX ones don't support multiple buffers, so also not gl_FragData */
         if(GL_SUPPORT(ARB_DRAW_BUFFERS))
             shader_addline(buffer, "gl_FragData[0] = R0;\n");
@@ -3614,7 +3824,7 @@ static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BU
     } else {
         fragcolor = "gl_FragColor";
     }
-    if(((IWineD3DDeviceImpl *)This->baseShader.device)->stateBlock->renderState[WINED3DRS_SRGBWRITEENABLE]) {
+    if(args->srgb_correction) {
         shader_addline(buffer, "tmp0.xyz = pow(%s.xyz, vec3(%f, %f, %f)) * vec3(%f, %f, %f) - vec3(%f, %f, %f);\n",
                         fragcolor, srgb_pow, srgb_pow, srgb_pow, srgb_mul_high, srgb_mul_high, srgb_mul_high,
                         srgb_sub_high, srgb_sub_high, srgb_sub_high);
@@ -3630,9 +3840,22 @@ static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BU
      * NOTE: gl_Fog.start and gl_Fog.end don't hold fog start s and end e but
      * -1/(e-s) and e/(e-s) respectively.
      */
-    if(This->baseShader.hex_version < WINED3DPS_VERSION(3,0)) {
-        shader_addline(buffer, "float Fog = clamp(gl_FogFragCoord * gl_Fog.start + gl_Fog.end, 0.0, 1.0);\n");
-        shader_addline(buffer, "%s.xyz = mix(gl_Fog.color.xyz, %s.xyz, Fog);\n", fragcolor, fragcolor);
+    if(reg_maps->shader_version < WINED3DPS_VERSION(3,0)) {
+        switch(args->fog) {
+            case FOG_OFF: break;
+            case FOG_LINEAR:
+                shader_addline(buffer, "float fogstart = -1.0 / (gl_Fog.end - gl_Fog.start);\n");
+                shader_addline(buffer, "float fogend = gl_Fog.end * -fogstart;\n");
+                shader_addline(buffer, "float Fog = clamp(gl_FogFragCoord * fogstart + fogend, 0.0, 1.0);\n");
+                shader_addline(buffer, "%s.xyz = mix(gl_Fog.color.xyz, %s.xyz, Fog);\n", fragcolor, fragcolor);
+                break;
+            case FOG_EXP:
+                FIXME("Implement EXP fog in glsl\n");
+                break;
+            case FOG_EXP2:
+                FIXME("Implement EXP2 fog in glsl\n");
+                break;
+        }
     }
 
     shader_addline(buffer, "}\n");
@@ -3658,17 +3881,14 @@ static void shader_glsl_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUF
     shader_addline(buffer, "#version 120\n");
 
     /* Base Declarations */
-    shader_generate_glsl_declarations( (IWineD3DBaseShader*) This, reg_maps, buffer, &GLINFO_LOCATION);
+    shader_generate_glsl_declarations( (IWineD3DBaseShader*) This, reg_maps, buffer, &GLINFO_LOCATION, NULL);
 
     /* Base Shader Body */
     shader_generate_main( (IWineD3DBaseShader*) This, buffer, reg_maps, function);
 
     /* Unpack 3.0 outputs */
-    if (This->baseShader.hex_version >= WINED3DVS_VERSION(3,0)) {
-        shader_addline(buffer, "order_ps_input(OUT);\n");
-    } else {
-        shader_addline(buffer, "order_ps_input();\n");
-    }
+    if (reg_maps->shader_version >= WINED3DVS_VERSION(3,0)) shader_addline(buffer, "order_ps_input(OUT);\n");
+    else shader_addline(buffer, "order_ps_input();\n");
 
     /* If this shader doesn't use fog copy the z coord to the fog coord so that we can use table fog */
     if (!reg_maps->fog)
@@ -3863,8 +4083,9 @@ const shader_backend_t glsl_shader_backend = {
     shader_glsl_select,
     shader_glsl_select_depth_blt,
     shader_glsl_deselect_depth_blt,
+    shader_glsl_update_float_vertex_constants,
+    shader_glsl_update_float_pixel_constants,
     shader_glsl_load_constants,
-    shader_glsl_cleanup,
     shader_glsl_color_correction,
     shader_glsl_destroy,
     shader_glsl_alloc,

@@ -27,6 +27,50 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 #define GLINFO_LOCATION ((IWineD3DImpl *)(((IWineD3DDeviceImpl *)This->resource.wineD3DDevice)->wineD3D))->gl_info
 
+HRESULT resource_init(struct IWineD3DResourceClass *resource, WINED3DRESOURCETYPE resource_type,
+        IWineD3DDeviceImpl *device, UINT size, DWORD usage, WINED3DFORMAT format, WINED3DPOOL pool, IUnknown *parent)
+{
+    resource->wineD3DDevice = device;
+    resource->parent = parent;
+    resource->resourceType = resource_type;
+    resource->ref = 1;
+    resource->pool = pool;
+    resource->format = format;
+    resource->usage = usage;
+    resource->size = size;
+    resource->priority = 0;
+    list_init(&resource->privateData);
+
+    if (size)
+    {
+        resource->heapMemory = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + RESOURCE_ALIGNMENT);
+        if (!resource->heapMemory)
+        {
+            ERR("Out of memory!\n");
+            return WINED3DERR_OUTOFVIDEOMEMORY;
+        }
+    }
+    else
+    {
+        resource->heapMemory = NULL;
+    }
+    resource->allocatedMemory = (BYTE *)(((ULONG_PTR)resource->heapMemory + (RESOURCE_ALIGNMENT - 1)) & ~(RESOURCE_ALIGNMENT - 1));
+
+    /* Check that we have enough video ram left */
+    if (pool == WINED3DPOOL_DEFAULT)
+    {
+        if (size > IWineD3DDevice_GetAvailableTextureMem((IWineD3DDevice *)device))
+        {
+            ERR("Out of adapter memory\n");
+            HeapFree(GetProcessHeap(), 0, resource->heapMemory);
+            return WINED3DERR_OUTOFVIDEOMEMORY;
+        }
+        WineD3DAdapterChangeGLRam(device, size);
+    }
+
+    return WINED3D_OK;
+}
+
 void resource_cleanup(IWineD3DResource *iface)
 {
     IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;

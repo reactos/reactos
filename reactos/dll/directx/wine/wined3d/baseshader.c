@@ -40,6 +40,20 @@ static inline BOOL shader_is_version_token(DWORD token) {
            shader_is_vshader_version(token);
 }
 
+void shader_buffer_init(struct SHADER_BUFFER *buffer)
+{
+    buffer->buffer = HeapAlloc(GetProcessHeap(), 0, SHADER_PGMSIZE);
+    buffer->buffer[0] = '\0';
+    buffer->bsize = 0;
+    buffer->lineNo = 0;
+    buffer->newline = TRUE;
+}
+
+void shader_buffer_free(struct SHADER_BUFFER *buffer)
+{
+    HeapFree(GetProcessHeap(), 0, buffer->buffer);
+}
+
 int shader_addline(
     SHADER_BUFFER* buffer,  
     const char *format, ...) {
@@ -74,6 +88,15 @@ int shader_addline(
         buffer->newline = TRUE;
     }
     return 0;
+}
+
+void shader_init(struct IWineD3DBaseShaderClass *shader,
+        IWineD3DDevice *device, const SHADER_OPCODE *instruction_table)
+{
+    shader->ref = 1;
+    shader->device = device;
+    shader->shader_ins = instruction_table;
+    list_init(&shader->linked_programs);
 }
 
 const SHADER_OPCODE *shader_get_opcode(const SHADER_OPCODE *opcode_table, DWORD shader_version, DWORD code)
@@ -117,17 +140,12 @@ static int shader_get_param(const DWORD *pToken, DWORD shader_version, DWORD *pa
 }
 
 /* Return the number of parameters to skip for an opcode */
-static inline int shader_skip_opcode(
-    IWineD3DBaseShaderImpl* This,
-    const SHADER_OPCODE* curOpcode,
-    DWORD opcode_token) {
-
+static inline int shader_skip_opcode(const SHADER_OPCODE *curOpcode, DWORD opcode_token, DWORD shader_version)
+{
    /* Shaders >= 2.0 may contain address tokens, but fortunately they
     * have a useful length mask - use it here. Shaders 1.0 contain no such tokens */
-
-    return (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) >= 2)?
-        ((opcode_token & WINED3DSI_INSTLENGTH_MASK) >> WINED3DSI_INSTLENGTH_SHIFT):
-        curOpcode->num_params;
+    return (WINED3DSHADER_VERSION_MAJOR(shader_version) >= 2)
+            ? ((opcode_token & WINED3DSI_INSTLENGTH_MASK) >> WINED3DSI_INSTLENGTH_SHIFT) : curOpcode->num_params;
 }
 
 /* Read the parameters of an unrecognized opcode from the input stream
@@ -192,27 +210,20 @@ static void shader_delete_constant_list(struct list* clist) {
 /* Note that this does not count the loop register
  * as an address register. */
 
-HRESULT shader_get_registers_used(
-    IWineD3DBaseShader *iface,
-    shader_reg_maps* reg_maps,
-    semantic* semantics_in,
-    semantic* semantics_out,
-    CONST DWORD* pToken,
-    IWineD3DStateBlockImpl *stateBlock) {
-
+HRESULT shader_get_registers_used(IWineD3DBaseShader *iface, struct shader_reg_maps *reg_maps,
+        struct semantic *semantics_in, struct semantic *semantics_out, const DWORD *byte_code)
+{
     IWineD3DBaseShaderImpl* This = (IWineD3DBaseShaderImpl*) iface;
     const SHADER_OPCODE *shader_ins = This->baseShader.shader_ins;
-    DWORD shader_version = This->baseShader.hex_version;
+    DWORD shader_version;
     unsigned int cur_loop_depth = 0, max_loop_depth = 0;
+    const DWORD* pToken = byte_code;
+    char pshader;
 
     /* There are some minor differences between pixel and vertex shaders */
-    char pshader = shader_is_pshader_version(This->baseShader.hex_version);
 
     memset(reg_maps->bumpmat, 0, sizeof(reg_maps->bumpmat));
     memset(reg_maps->luminanceparams, 0, sizeof(reg_maps->luminanceparams));
-
-    if (pToken == NULL)
-        return WINED3D_OK;
 
     /* get_registers_used is called on every compile on some 1.x shaders, which can result
      * in stacking up a collection of local constants. Delete the old constants if existing
@@ -221,17 +232,22 @@ HRESULT shader_get_registers_used(
     shader_delete_constant_list(&This->baseShader.constantsB);
     shader_delete_constant_list(&This->baseShader.constantsI);
 
+    /* The version token is supposed to be the first token */
+    if (!shader_is_version_token(*pToken))
+    {
+        FIXME("First token is not a version token, invalid shader.\n");
+        return WINED3DERR_INVALIDCALL;
+    }
+    reg_maps->shader_version = shader_version = *pToken++;
+    pshader = shader_is_pshader_version(shader_version);
+
     while (WINED3DVS_END() != *pToken) {
         CONST SHADER_OPCODE* curOpcode;
         DWORD opcode_token;
 
-        /* Skip version */
-        if (shader_is_version_token(*pToken)) {
-             ++pToken;
-             continue;
-
         /* Skip comments */
-        } else if (shader_is_comment(*pToken)) {
+        if (shader_is_comment(*pToken))
+        {
              DWORD comment_len = (*pToken & WINED3DSI_COMMENTSIZE_MASK) >> WINED3DSI_COMMENTSIZE_SHIFT;
              ++pToken;
              pToken += comment_len;
@@ -287,7 +303,8 @@ HRESULT shader_get_registers_used(
             memcpy(lconst->value, pToken + 1, 4 * sizeof(DWORD));
 
             /* In pixel shader 1.X shaders, the constants are clamped between [-1;1] */
-            if(WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 && pshader) {
+            if (WINED3DSHADER_VERSION_MAJOR(shader_version) == 1 && pshader)
+            {
                 float *value = (float *) lconst->value;
                 if(value[0] < -1.0) value[0] = -1.0;
                 else if(value[0] >  1.0) value[0] =  1.0;
@@ -328,6 +345,8 @@ HRESULT shader_get_registers_used(
                 max_loop_depth = cur_loop_depth;
             pToken += curOpcode->num_params;
 
+            /* Rep and Loop always use an integer constant for the control parameters */
+            This->baseShader.uses_int_consts = TRUE;
         } else if (WINED3DSIO_ENDLOOP == curOpcode->opcode ||
                    WINED3DSIO_ENDREP == curOpcode->opcode) {
             cur_loop_depth--;
@@ -344,50 +363,25 @@ HRESULT shader_get_registers_used(
             int i, limit;
 
             /* Declare 1.X samplers implicitly, based on the destination reg. number */
-            if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 &&
-                pshader /* Filter different instructions with the same enum values in VS */ &&
-                (WINED3DSIO_TEX == curOpcode->opcode ||
-                 WINED3DSIO_TEXBEM == curOpcode->opcode ||
-                 WINED3DSIO_TEXBEML == curOpcode->opcode ||
-                 WINED3DSIO_TEXDP3TEX == curOpcode->opcode ||
-                 WINED3DSIO_TEXM3x2TEX == curOpcode->opcode ||
-                 WINED3DSIO_TEXM3x3SPEC == curOpcode->opcode ||
-                 WINED3DSIO_TEXM3x3TEX == curOpcode->opcode ||
-                 WINED3DSIO_TEXM3x3VSPEC == curOpcode->opcode ||
-                 WINED3DSIO_TEXREG2AR == curOpcode->opcode ||
-                 WINED3DSIO_TEXREG2GB == curOpcode->opcode ||
-                 WINED3DSIO_TEXREG2RGB == curOpcode->opcode)) {
-
+            if (WINED3DSHADER_VERSION_MAJOR(shader_version) == 1
+                    && pshader /* Filter different instructions with the same enum values in VS */
+                    && (WINED3DSIO_TEX == curOpcode->opcode
+                        || WINED3DSIO_TEXBEM == curOpcode->opcode
+                        || WINED3DSIO_TEXBEML == curOpcode->opcode
+                        || WINED3DSIO_TEXDP3TEX == curOpcode->opcode
+                        || WINED3DSIO_TEXM3x2TEX == curOpcode->opcode
+                        || WINED3DSIO_TEXM3x3SPEC == curOpcode->opcode
+                        || WINED3DSIO_TEXM3x3TEX == curOpcode->opcode
+                        || WINED3DSIO_TEXM3x3VSPEC == curOpcode->opcode
+                        || WINED3DSIO_TEXREG2AR == curOpcode->opcode
+                        || WINED3DSIO_TEXREG2GB == curOpcode->opcode
+                        || WINED3DSIO_TEXREG2RGB == curOpcode->opcode))
+            {
                 /* Fake sampler usage, only set reserved bit and ttype */
                 DWORD sampler_code = *pToken & WINED3DSP_REGNUM_MASK;
 
-                if(!stateBlock->textures[sampler_code]) {
-                    ERR("No texture bound to sampler %d\n", sampler_code);
-                    reg_maps->samplers[sampler_code] = (0x1 << 31) | WINED3DSTT_2D;
-                } else {
-                    int texType = IWineD3DBaseTexture_GetTextureDimensions(stateBlock->textures[sampler_code]);
-                    switch(texType) {
-                        /* We have to select between texture rectangles and 2D textures later because 2.0 and
-                         * 3.0 shaders only have WINED3DSTT_2D as well
-                         */
-                        case GL_TEXTURE_RECTANGLE_ARB:
-                        case GL_TEXTURE_2D:
-                            reg_maps->samplers[sampler_code] = (0x1 << 31) | WINED3DSTT_2D;
-                            break;
-
-                        case GL_TEXTURE_3D:
-                            reg_maps->samplers[sampler_code] = (0x1 << 31) | WINED3DSTT_VOLUME;
-                            break;
-
-                        case GL_TEXTURE_CUBE_MAP_ARB:
-                            reg_maps->samplers[sampler_code] = (0x1 << 31) | WINED3DSTT_CUBE;
-                            break;
-
-                        default:
-                            ERR("Unexpected gl texture type found: %d\n", texType);
-                            reg_maps->samplers[sampler_code] = (0x1 << 31) | WINED3DSTT_2D;
-                    }
-                }
+                TRACE("Setting fake 2D sampler for 1.x pixelshader\n");
+                reg_maps->samplers[sampler_code] = (0x1 << 31) | WINED3DSTT_2D;
 
                 /* texbem is only valid with < 1.4 pixel shaders */
                 if(WINED3DSIO_TEXBEM  == curOpcode->opcode ||
@@ -473,19 +467,29 @@ HRESULT shader_get_registers_used(
                         reg_maps->usesrelconstF = TRUE;
                     }
                 }
+                else if(WINED3DSPR_CONSTINT == regtype) {
+                    This->baseShader.uses_int_consts = TRUE;
+                }
+                else if(WINED3DSPR_CONSTBOOL == regtype) {
+                    This->baseShader.uses_bool_consts = TRUE;
+                }
 
                 /* WINED3DSPR_TEXCRDOUT is the same as WINED3DSPR_OUTPUT. _OUTPUT can be > MAX_REG_TEXCRD and is used
                  * in >= 3.0 shaders. Filter 3.0 shaders to prevent overflows, and also filter pixel shaders because TECRDOUT
                  * isn't used in them, but future register types might cause issues
                  */
-                else if(WINED3DSPR_TEXCRDOUT == regtype && i == 0 /* Only look at writes */ &&
-                        !pshader && WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) < 3) {
+                else if (WINED3DSPR_TEXCRDOUT == regtype && i == 0 /* Only look at writes */
+                        && !pshader && WINED3DSHADER_VERSION_MAJOR(shader_version) < 3)
+                {
                     reg_maps->texcoord_mask[reg] |= shader_get_writemask(param);
                 }
             }
         }
     }
+    ++pToken;
     reg_maps->loop_depth = max_loop_depth;
+
+    This->baseShader.functionLength = ((char *)pToken - (char *)byte_code);
 
     return WINED3D_OK;
 }
@@ -593,7 +597,7 @@ static void shader_dump_param(const DWORD param, const DWORD addr_token, int inp
 {
     static const char * const rastout_reg_names[] = { "oPos", "oFog", "oPts" };
     static const char * const misctype_reg_names[] = { "vPos", "vFace"};
-    char swizzle_reg_chars[4];
+    const char *swizzle_reg_chars = "xyzw";
 
     DWORD reg = param & WINED3DSP_REGNUM_MASK;
     DWORD regtype = shader_get_regtype(param);
@@ -601,14 +605,6 @@ static void shader_dump_param(const DWORD param, const DWORD addr_token, int inp
 
     /* There are some minor differences between pixel and vertex shaders */
     char pshader = shader_is_pshader_version(shader_version);
-
-    /* For one, we'd prefer color components to be shown for pshaders.
-     * FIXME: use the swizzle function for this */
-
-    swizzle_reg_chars[0] = pshader? 'r': 'x';
-    swizzle_reg_chars[1] = pshader? 'g': 'y';
-    swizzle_reg_chars[2] = pshader? 'b': 'z';
-    swizzle_reg_chars[3] = pshader? 'a': 'w';
 
     if (input) {
         if ( (modifier == WINED3DSPSM_NEG) ||
@@ -714,10 +710,10 @@ static void shader_dump_param(const DWORD param, const DWORD addr_token, int inp
    } else {
         /** operand input */
         DWORD swizzle = (param & WINED3DSP_SWIZZLE_MASK) >> WINED3DSP_SWIZZLE_SHIFT;
-        DWORD swizzle_r = swizzle & 0x03;
-        DWORD swizzle_g = (swizzle >> 2) & 0x03;
-        DWORD swizzle_b = (swizzle >> 4) & 0x03;
-        DWORD swizzle_a = (swizzle >> 6) & 0x03;
+        DWORD swizzle_x = swizzle & 0x03;
+        DWORD swizzle_y = (swizzle >> 2) & 0x03;
+        DWORD swizzle_z = (swizzle >> 4) & 0x03;
+        DWORD swizzle_w = (swizzle >> 6) & 0x03;
 
         if (0 != modifier) {
             switch (modifier) {
@@ -745,25 +741,24 @@ static void shader_dump_param(const DWORD param, const DWORD addr_token, int inp
         *  RRGGBBAA
         */
         if ((WINED3DVS_NOSWIZZLE >> WINED3DVS_SWIZZLE_SHIFT) != swizzle) {
-            if (swizzle_r == swizzle_g &&
-                swizzle_r == swizzle_b &&
-                swizzle_r == swizzle_a) {
-                    TRACE(".%c", swizzle_reg_chars[swizzle_r]);
+            if (swizzle_x == swizzle_y &&
+                swizzle_x == swizzle_z &&
+                swizzle_x == swizzle_w) {
+                    TRACE(".%c", swizzle_reg_chars[swizzle_x]);
             } else {
                 TRACE(".%c%c%c%c",
-                swizzle_reg_chars[swizzle_r],
-                swizzle_reg_chars[swizzle_g],
-                swizzle_reg_chars[swizzle_b],
-                swizzle_reg_chars[swizzle_a]);
+                swizzle_reg_chars[swizzle_x],
+                swizzle_reg_chars[swizzle_y],
+                swizzle_reg_chars[swizzle_z],
+                swizzle_reg_chars[swizzle_w]);
             }
         }
     }
 }
 
 static void shader_color_correction(IWineD3DBaseShaderImpl *shader,
-        IWineD3DDeviceImpl *device, const struct SHADER_OPCODE_ARG *arg)
+        IWineD3DDeviceImpl *device, const struct SHADER_OPCODE_ARG *arg, DWORD shader_version)
 {
-    DWORD hex_version = shader->baseShader.hex_version;
     IWineD3DBaseTextureImpl *texture;
     struct color_fixup_desc fixup;
     BOOL recorded = FALSE;
@@ -773,7 +768,7 @@ static void shader_color_correction(IWineD3DBaseShaderImpl *shader,
     switch(arg->opcode->opcode)
     {
         case WINED3DSIO_TEX:
-            if (hex_version < WINED3DPS_VERSION(2,0)) sampler_idx = arg->dst & WINED3DSP_REGNUM_MASK;
+            if (WINED3DSHADER_VERSION_MAJOR(shader_version) < 2) sampler_idx = arg->dst & WINED3DSP_REGNUM_MASK;
             else sampler_idx = arg->src[1] & WINED3DSP_REGNUM_MASK;
             break;
 
@@ -821,10 +816,8 @@ static void shader_color_correction(IWineD3DBaseShaderImpl *shader,
     device->shader_backend->shader_color_correction(arg, fixup);
 }
 
-/** Shared code in order to generate the bulk of the shader string.
-    Use the shader_header_fct & shader_footer_fct to add strings
-    that are specific to pixel or vertex functions
-    NOTE: A description of how to parse tokens can be found on msdn */
+/* Shared code in order to generate the bulk of the shader string.
+ * NOTE: A description of how to parse tokens can be found on msdn */
 void shader_generate_main(IWineD3DBaseShader *iface, SHADER_BUFFER* buffer,
         const shader_reg_maps* reg_maps, CONST DWORD* pFunction)
 {
@@ -832,10 +825,10 @@ void shader_generate_main(IWineD3DBaseShader *iface, SHADER_BUFFER* buffer,
     IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *) This->baseShader.device; /* To access shader backend callbacks */
     const SHADER_OPCODE *opcode_table = This->baseShader.shader_ins;
     const SHADER_HANDLER *handler_table = device->shader_backend->shader_instruction_handler_table;
-    DWORD shader_version = This->baseShader.hex_version;
+    DWORD shader_version = reg_maps->shader_version;
     const DWORD *pToken = pFunction;
-    const SHADER_OPCODE *curOpcode = NULL;
-    SHADER_HANDLER hw_fct = NULL;
+    const SHADER_OPCODE *curOpcode;
+    SHADER_HANDLER hw_fct;
     DWORD i;
     SHADER_OPCODE_ARG hw_arg;
 
@@ -845,99 +838,92 @@ void shader_generate_main(IWineD3DBaseShader *iface, SHADER_BUFFER* buffer,
     hw_arg.reg_maps = reg_maps;
     This->baseShader.parse_state.current_row = 0;
 
-    /* Second pass, process opcodes */
-    if (NULL != pToken) {
-        while (WINED3DPS_END() != *pToken) {
-
-            /* Skip version token */
-            if (shader_is_version_token(*pToken)) {
-                ++pToken;
-                continue;
-            }
-
-            /* Skip comment tokens */
-            if (shader_is_comment(*pToken)) {
-                DWORD comment_len = (*pToken & WINED3DSI_COMMENTSIZE_MASK) >> WINED3DSI_COMMENTSIZE_SHIFT;
-                ++pToken;
-                TRACE("#%s\n", (const char*)pToken);
-                pToken += comment_len;
-                continue;
-            }
-
-            /* Read opcode */
-            hw_arg.opcode_token = *pToken++;
-            curOpcode = shader_get_opcode(opcode_table, shader_version, hw_arg.opcode_token);
-
-            /* Select handler */
-            if (curOpcode == NULL)
-                hw_fct = NULL;
-            else
-                hw_fct = handler_table[curOpcode->handler_idx];
-
-            /* Unknown opcode and its parameters */
-            if (NULL == curOpcode) {
-                FIXME("Unrecognized opcode: token=0x%08x\n", hw_arg.opcode_token);
-                pToken += shader_skip_unrecognized(pToken, shader_version);
-
-            /* Nothing to do */
-            } else if (WINED3DSIO_DCL == curOpcode->opcode ||
-                       WINED3DSIO_NOP == curOpcode->opcode ||
-                       WINED3DSIO_DEF == curOpcode->opcode ||
-                       WINED3DSIO_DEFI == curOpcode->opcode ||
-                       WINED3DSIO_DEFB == curOpcode->opcode ||
-                       WINED3DSIO_PHASE == curOpcode->opcode ||
-                       WINED3DSIO_RET == curOpcode->opcode) {
-
-                pToken += shader_skip_opcode(This, curOpcode, hw_arg.opcode_token);
-
-            /* If a generator function is set for current shader target, use it */
-            } else if (hw_fct != NULL) {
-
-                hw_arg.opcode = curOpcode;
-
-                /* Destination token */
-                if (curOpcode->dst_token) {
-
-                    DWORD param, addr_token = 0;
-                    pToken += shader_get_param(pToken, shader_version, &param, &addr_token);
-                    hw_arg.dst = param;
-                    hw_arg.dst_addr = addr_token;
-                }
-
-                /* Predication token */
-                if (hw_arg.opcode_token & WINED3DSHADER_INSTRUCTION_PREDICATED) 
-                    hw_arg.predicate = *pToken++;
-
-                /* Other source tokens */
-                for (i = 0; i < (curOpcode->num_params - curOpcode->dst_token); i++) {
-
-                    DWORD param, addr_token = 0; 
-                    pToken += shader_get_param(pToken, shader_version, &param, &addr_token);
-                    hw_arg.src[i] = param;
-                    hw_arg.src_addr[i] = addr_token;
-                }
-
-                /* Call appropriate function for output target */
-                hw_fct(&hw_arg);
-
-                /* Add color correction if needed */
-                shader_color_correction(This, device, &hw_arg);
-
-                /* Process instruction modifiers for GLSL apps ( _sat, etc. ) */
-                /* FIXME: This should be internal to the shader backend.
-                 * Also, right now this is the only reason "shader_mode" exists. */
-                if (This->baseShader.shader_mode == SHADER_GLSL)
-                    shader_glsl_add_instruction_modifiers(&hw_arg);
-
-            /* Unhandled opcode */
-            } else {
-
-                FIXME("Can't handle opcode %s in hwShader\n", curOpcode->name);
-                pToken += shader_skip_opcode(This, curOpcode, hw_arg.opcode_token);
-            }
+    while (WINED3DPS_END() != *pToken)
+    {
+        /* Skip version token */
+        if (shader_is_version_token(*pToken))
+        {
+            ++pToken;
+            continue;
         }
-        /* TODO: What about result.depth? */
 
+        /* Skip comment tokens */
+        if (shader_is_comment(*pToken))
+        {
+            pToken += (*pToken & WINED3DSI_COMMENTSIZE_MASK) >> WINED3DSI_COMMENTSIZE_SHIFT;
+            ++pToken;
+            continue;
+        }
+
+        /* Read opcode */
+        hw_arg.opcode_token = *pToken++;
+        curOpcode = shader_get_opcode(opcode_table, shader_version, hw_arg.opcode_token);
+
+        /* Unknown opcode and its parameters */
+        if (!curOpcode)
+        {
+            FIXME("Unrecognized opcode: token=0x%08x\n", hw_arg.opcode_token);
+            pToken += shader_skip_unrecognized(pToken, shader_version);
+            continue;
+        }
+
+        /* Nothing to do */
+        if (WINED3DSIO_DCL == curOpcode->opcode
+                || WINED3DSIO_NOP == curOpcode->opcode
+                || WINED3DSIO_DEF == curOpcode->opcode
+                || WINED3DSIO_DEFI == curOpcode->opcode
+                || WINED3DSIO_DEFB == curOpcode->opcode
+                || WINED3DSIO_PHASE == curOpcode->opcode
+                || WINED3DSIO_RET == curOpcode->opcode)
+        {
+            pToken += shader_skip_opcode(curOpcode, hw_arg.opcode_token, shader_version);
+            continue;
+        }
+
+        /* Select handler */
+        hw_fct = handler_table[curOpcode->handler_idx];
+
+        /* Unhandled opcode */
+        if (!hw_fct)
+        {
+            FIXME("Can't handle opcode %s in hwShader\n", curOpcode->name);
+            pToken += shader_skip_opcode(curOpcode, hw_arg.opcode_token, shader_version);
+            continue;
+        }
+
+        hw_arg.opcode = curOpcode;
+
+        /* Destination token */
+        if (curOpcode->dst_token)
+        {
+            DWORD param, addr_token = 0;
+            pToken += shader_get_param(pToken, shader_version, &param, &addr_token);
+            hw_arg.dst = param;
+            hw_arg.dst_addr = addr_token;
+        }
+
+        /* Predication token */
+        if (hw_arg.opcode_token & WINED3DSHADER_INSTRUCTION_PREDICATED) hw_arg.predicate = *pToken++;
+
+        /* Other source tokens */
+        for (i = 0; i < (curOpcode->num_params - curOpcode->dst_token); ++i)
+        {
+            DWORD param, addr_token = 0;
+            pToken += shader_get_param(pToken, shader_version, &param, &addr_token);
+            hw_arg.src[i] = param;
+            hw_arg.src_addr[i] = addr_token;
+        }
+
+        /* Call appropriate function for output target */
+        hw_fct(&hw_arg);
+
+        /* Add color correction if needed */
+        shader_color_correction(This, device, &hw_arg, shader_version);
+
+        /* Process instruction modifiers for GLSL apps ( _sat, etc. ) */
+        /* FIXME: This should be internal to the shader backend.
+         * Also, right now this is the only reason "shader_mode" exists. */
+        if (This->baseShader.shader_mode == SHADER_GLSL) shader_glsl_add_instruction_modifiers(&hw_arg);
     }
 }
 
@@ -966,60 +952,45 @@ static void shader_dump_ins_modifiers(const DWORD output)
         FIXME("_unrecognized_modifier(%#x)", mmask >> WINED3DSP_DSTMOD_SHIFT);
 }
 
-/* First pass: trace shader, initialize length and version */
-void shader_trace_init(
-    IWineD3DBaseShader *iface,
-    const DWORD* pFunction) {
-
-    IWineD3DBaseShaderImpl *This =(IWineD3DBaseShaderImpl *)iface;
-
+void shader_trace_init(const DWORD *pFunction, const SHADER_OPCODE *opcode_table)
+{
     const DWORD* pToken = pFunction;
     const SHADER_OPCODE* curOpcode = NULL;
+    DWORD shader_version;
     DWORD opcode_token;
-    unsigned int len = 0;
     DWORD i;
 
-    TRACE("(%p) : Parsing program\n", This);
+    TRACE("Parsing %p\n", pFunction);
 
-    if (!pFunction)
+    /* The version token is supposed to be the first token */
+    if (!shader_is_version_token(*pToken))
     {
-        WARN("Got a NULL pFunction, returning.\n");
-        This->baseShader.functionLength = 1; /* no Function defined use fixed function vertex processing */
+        FIXME("First token is not a version token, invalid shader.\n");
         return;
     }
+    shader_version = *pToken++;
+    TRACE("%s_%u_%u\n", shader_is_pshader_version(shader_version) ? "ps": "vs",
+            WINED3DSHADER_VERSION_MAJOR(shader_version), WINED3DSHADER_VERSION_MINOR(shader_version));
 
     while (WINED3DVS_END() != *pToken)
     {
-        if (shader_is_version_token(*pToken)) /* version */
-        {
-            This->baseShader.hex_version = *pToken;
-            TRACE("%s_%u_%u\n", shader_is_pshader_version(This->baseShader.hex_version)? "ps": "vs",
-                WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version),
-                WINED3DSHADER_VERSION_MINOR(This->baseShader.hex_version));
-            ++pToken;
-            ++len;
-            continue;
-        }
         if (shader_is_comment(*pToken)) /* comment */
         {
             DWORD comment_len = (*pToken & WINED3DSI_COMMENTSIZE_MASK) >> WINED3DSI_COMMENTSIZE_SHIFT;
             ++pToken;
             TRACE("//%s\n", (const char*)pToken);
             pToken += comment_len;
-            len += comment_len + 1;
             continue;
         }
         opcode_token = *pToken++;
-        curOpcode = shader_get_opcode(This->baseShader.shader_ins, This->baseShader.hex_version, opcode_token);
-        len++;
+        curOpcode = shader_get_opcode(opcode_table, shader_version, opcode_token);
 
         if (!curOpcode)
         {
             int tokens_read;
             FIXME("Unrecognized opcode: token=0x%08x\n", opcode_token);
-            tokens_read = shader_skip_unrecognized(pToken, This->baseShader.hex_version);
+            tokens_read = shader_skip_unrecognized(pToken, shader_version);
             pToken += tokens_read;
-            len += tokens_read;
         }
         else
         {
@@ -1028,12 +999,11 @@ void shader_trace_init(
                 DWORD usage = *pToken;
                 DWORD param = *(pToken + 1);
 
-                shader_dump_decl_usage(usage, param, This->baseShader.hex_version);
+                shader_dump_decl_usage(usage, param, shader_version);
                 shader_dump_ins_modifiers(param);
                 TRACE(" ");
-                shader_dump_param(param, 0, 0, This->baseShader.hex_version);
+                shader_dump_param(param, 0, 0, shader_version);
                 pToken += 2;
-                len += 2;
             }
             else if (curOpcode->opcode == WINED3DSIO_DEF)
             {
@@ -1045,7 +1015,6 @@ void shader_trace_init(
                         *(const float *)(pToken + 3),
                         *(const float *)(pToken + 4));
                 pToken += 5;
-                len += 5;
             }
             else if (curOpcode->opcode == WINED3DSIO_DEFI)
             {
@@ -1055,14 +1024,12 @@ void shader_trace_init(
                         *(pToken + 3),
                         *(pToken + 4));
                 pToken += 5;
-                len += 5;
             }
             else if (curOpcode->opcode == WINED3DSIO_DEFB)
             {
                 TRACE("defb b%u = %s", *pToken & WINED3DSP_REGNUM_MASK,
                         *(pToken + 1)? "true": "false");
                 pToken += 2;
-                len += 2;
             }
             else
             {
@@ -1074,7 +1041,7 @@ void shader_trace_init(
                 if (opcode_token & WINED3DSHADER_INSTRUCTION_PREDICATED)
                 {
                     TRACE("(");
-                    shader_dump_param(*(pToken + 2), 0, 1, This->baseShader.hex_version);
+                    shader_dump_param(*(pToken + 2), 0, 1, shader_version);
                     TRACE(") ");
                 }
                 if (opcode_token & WINED3DSI_COISSUE)
@@ -1102,7 +1069,7 @@ void shader_trace_init(
                     }
                 }
                 else if (curOpcode->opcode == WINED3DSIO_TEX
-                        && This->baseShader.hex_version >= WINED3DPS_VERSION(2,0)
+                        && shader_version >= WINED3DPS_VERSION(2,0)
                         && (opcode_token & WINED3DSI_TEXLD_PROJECT))
                 {
                     TRACE("p");
@@ -1111,51 +1078,60 @@ void shader_trace_init(
                 /* Destination token */
                 if (curOpcode->dst_token)
                 {
-                    tokens_read = shader_get_param(pToken, This->baseShader.hex_version, &param, &addr_token);
+                    tokens_read = shader_get_param(pToken, shader_version, &param, &addr_token);
                     pToken += tokens_read;
-                    len += tokens_read;
 
                     shader_dump_ins_modifiers(param);
                     TRACE(" ");
-                    shader_dump_param(param, addr_token, 0, This->baseShader.hex_version);
+                    shader_dump_param(param, addr_token, 0, shader_version);
                 }
 
                 /* Predication token - already printed out, just skip it */
                 if (opcode_token & WINED3DSHADER_INSTRUCTION_PREDICATED)
                 {
                     pToken++;
-                    len++;
                 }
 
                 /* Other source tokens */
                 for (i = curOpcode->dst_token; i < curOpcode->num_params; ++i)
                 {
-                    tokens_read = shader_get_param(pToken, This->baseShader.hex_version, &param, &addr_token);
+                    tokens_read = shader_get_param(pToken, shader_version, &param, &addr_token);
                     pToken += tokens_read;
-                    len += tokens_read;
 
                     TRACE((i == 0)? " " : ", ");
-                    shader_dump_param(param, addr_token, 1, This->baseShader.hex_version);
+                    shader_dump_param(param, addr_token, 1, shader_version);
                 }
             }
             TRACE("\n");
         }
     }
-    This->baseShader.functionLength = (len + 1) * sizeof(DWORD);
+}
+
+void shader_cleanup(IWineD3DBaseShader *iface)
+{
+    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)iface;
+
+    ((IWineD3DDeviceImpl *)This->baseShader.device)->shader_backend->shader_destroy(iface);
+    HeapFree(GetProcessHeap(), 0, This->baseShader.function);
+    shader_delete_constant_list(&This->baseShader.constantsF);
+    shader_delete_constant_list(&This->baseShader.constantsB);
+    shader_delete_constant_list(&This->baseShader.constantsI);
+    list_remove(&This->baseShader.shader_list_entry);
 }
 
 static const SHADER_HANDLER shader_none_instruction_handler_table[WINED3DSIH_TABLE_SIZE] = {0};
 static void shader_none_select(IWineD3DDevice *iface, BOOL usePS, BOOL useVS) {}
 static void shader_none_select_depth_blt(IWineD3DDevice *iface, enum tex_types tex_type) {}
 static void shader_none_deselect_depth_blt(IWineD3DDevice *iface) {}
+static void shader_none_update_float_vertex_constants(IWineD3DDevice *iface, UINT start, UINT count) {}
+static void shader_none_update_float_pixel_constants(IWineD3DDevice *iface, UINT start, UINT count) {}
 static void shader_none_load_constants(IWineD3DDevice *iface, char usePS, char useVS) {}
-static void shader_none_cleanup(IWineD3DDevice *iface) {}
 static void shader_none_color_correction(const struct SHADER_OPCODE_ARG *arg, struct color_fixup_desc fixup) {}
 static void shader_none_destroy(IWineD3DBaseShader *iface) {}
 static HRESULT shader_none_alloc(IWineD3DDevice *iface) {return WINED3D_OK;}
 static void shader_none_free(IWineD3DDevice *iface) {}
 static BOOL shader_none_dirty_const(IWineD3DDevice *iface) {return FALSE;}
-static GLuint shader_none_generate_pshader(IWineD3DPixelShader *iface, SHADER_BUFFER *buffer) {
+static GLuint shader_none_generate_pshader(IWineD3DPixelShader *iface, SHADER_BUFFER *buffer, const struct ps_compile_args *args) {
     FIXME("NONE shader backend asked to generate a pixel shader\n");
     return 0;
 }
@@ -1196,8 +1172,9 @@ const shader_backend_t none_shader_backend = {
     shader_none_select,
     shader_none_select_depth_blt,
     shader_none_deselect_depth_blt,
+    shader_none_update_float_vertex_constants,
+    shader_none_update_float_pixel_constants,
     shader_none_load_constants,
-    shader_none_cleanup,
     shader_none_color_correction,
     shader_none_destroy,
     shader_none_alloc,
@@ -1208,46 +1185,3 @@ const shader_backend_t none_shader_backend = {
     shader_none_get_caps,
     shader_none_color_fixup_supported,
 };
-
-/* *******************************************
-   IWineD3DPixelShader IUnknown parts follow
-   ******************************************* */
-HRESULT  WINAPI IWineD3DBaseShaderImpl_QueryInterface(IWineD3DBaseShader *iface, REFIID riid, LPVOID *ppobj)
-{
-    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)iface;
-    TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IWineD3DBase)
-        || IsEqualGUID(riid, &IID_IWineD3DBaseShader)
-        || IsEqualGUID(riid, &IID_IWineD3DPixelShader)) {
-        IUnknown_AddRef(iface);
-        *ppobj = This;
-        return S_OK;
-    }
-    *ppobj = NULL;
-    return E_NOINTERFACE;
-}
-
-ULONG  WINAPI IWineD3DBaseShaderImpl_AddRef(IWineD3DBaseShader *iface) {
-    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)iface;
-    TRACE("(%p) : AddRef increasing from %d\n", This, This->baseShader.ref);
-    return InterlockedIncrement(&This->baseShader.ref);
-}
-
-ULONG  WINAPI IWineD3DBaseShaderImpl_Release(IWineD3DBaseShader *iface) {
-    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)iface;
-    IWineD3DDeviceImpl *deviceImpl = (IWineD3DDeviceImpl *) This->baseShader.device;
-    ULONG ref;
-    TRACE("(%p) : Releasing from %d\n", This, This->baseShader.ref);
-    ref = InterlockedDecrement(&This->baseShader.ref);
-    if (ref == 0) {
-        deviceImpl->shader_backend->shader_destroy(iface);
-        HeapFree(GetProcessHeap(), 0, This->baseShader.function);
-        shader_delete_constant_list(&This->baseShader.constantsF);
-        shader_delete_constant_list(&This->baseShader.constantsB);
-        shader_delete_constant_list(&This->baseShader.constantsI);
-        list_remove(&This->baseShader.shader_list_entry);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
-    return ref;
-}

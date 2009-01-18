@@ -64,6 +64,31 @@ static void volume_bind_and_dirtify(IWineD3DVolume *iface) {
     }
 }
 
+void volume_add_dirty_box(IWineD3DVolume *iface, const WINED3DBOX *dirty_box)
+{
+    IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
+
+    This->dirty = TRUE;
+    if (dirty_box)
+    {
+        This->lockedBox.Left = min(This->lockedBox.Left, dirty_box->Left);
+        This->lockedBox.Top = min(This->lockedBox.Top, dirty_box->Top);
+        This->lockedBox.Front = min(This->lockedBox.Front, dirty_box->Front);
+        This->lockedBox.Right = max(This->lockedBox.Right, dirty_box->Right);
+        This->lockedBox.Bottom = max(This->lockedBox.Bottom, dirty_box->Bottom);
+        This->lockedBox.Back = max(This->lockedBox.Back, dirty_box->Back);
+    }
+    else
+    {
+        This->lockedBox.Left = 0;
+        This->lockedBox.Top = 0;
+        This->lockedBox.Front = 0;
+        This->lockedBox.Right = This->currentDesc.Width;
+        This->lockedBox.Bottom = This->currentDesc.Height;
+        This->lockedBox.Back = This->currentDesc.Depth;
+    }
+}
+
 /* *******************************************
    IWineD3DVolume IUnknown parts follow
    ******************************************* */
@@ -225,7 +250,7 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LockBox(IWineD3DVolume *iface, WINED3DL
        * Dirtify on lock
        * as seen in msdn docs
        */
-      IWineD3DVolume_AddDirtyBox(iface, &This->lockedBox);
+      volume_add_dirty_box(iface, &This->lockedBox);
 
       /**  Dirtify Container if needed */
       if (NULL != This->container) {
@@ -260,39 +285,6 @@ static HRESULT WINAPI IWineD3DVolumeImpl_UnlockBox(IWineD3DVolume *iface) {
 }
 
 /* Internal use functions follow : */
-
-static HRESULT WINAPI IWineD3DVolumeImpl_CleanDirtyBox(IWineD3DVolume *iface) {
-  IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
-  This->dirty = FALSE;
-  This->lockedBox.Left   = This->currentDesc.Width;
-  This->lockedBox.Top    = This->currentDesc.Height;
-  This->lockedBox.Front  = This->currentDesc.Depth;
-  This->lockedBox.Right  = 0;
-  This->lockedBox.Bottom = 0;
-  This->lockedBox.Back   = 0;
-  return WINED3D_OK;
-}
-
-static HRESULT WINAPI IWineD3DVolumeImpl_AddDirtyBox(IWineD3DVolume *iface, CONST WINED3DBOX* pDirtyBox) {
-  IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
-  This->dirty = TRUE;
-   if (NULL != pDirtyBox) {
-    This->lockedBox.Left   = min(This->lockedBox.Left,   pDirtyBox->Left);
-    This->lockedBox.Top    = min(This->lockedBox.Top,    pDirtyBox->Top);
-    This->lockedBox.Front  = min(This->lockedBox.Front,  pDirtyBox->Front);
-    This->lockedBox.Right  = max(This->lockedBox.Right,  pDirtyBox->Right);
-    This->lockedBox.Bottom = max(This->lockedBox.Bottom, pDirtyBox->Bottom);
-    This->lockedBox.Back   = max(This->lockedBox.Back,   pDirtyBox->Back);
-  } else {
-    This->lockedBox.Left   = 0;
-    This->lockedBox.Top    = 0;
-    This->lockedBox.Front  = 0;
-    This->lockedBox.Right  = This->currentDesc.Width;
-    This->lockedBox.Bottom = This->currentDesc.Height;
-    This->lockedBox.Back   = This->currentDesc.Depth;
-  }
-  return WINED3D_OK;
-}
 
 static HRESULT WINAPI IWineD3DVolumeImpl_SetContainer(IWineD3DVolume *iface, IWineD3DBase* container) {
     IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
@@ -374,8 +366,6 @@ const IWineD3DVolumeVtbl IWineD3DVolume_Vtbl =
     IWineD3DVolumeImpl_LockBox,
     IWineD3DVolumeImpl_UnlockBox,
     /* Internal interface */
-    IWineD3DVolumeImpl_AddDirtyBox,
-    IWineD3DVolumeImpl_CleanDirtyBox,
     IWineD3DVolumeImpl_LoadTexture,
     IWineD3DVolumeImpl_SetContainer
 };
