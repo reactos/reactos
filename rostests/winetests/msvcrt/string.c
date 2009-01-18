@@ -28,8 +28,6 @@
 #include <locale.h>
 #include <errno.h>
 
-size_t _mbstrlen(const char*);
-
 static char *buf_to_string(const unsigned char *bin, int len, int nr)
 {
     static char buf[2][1024];
