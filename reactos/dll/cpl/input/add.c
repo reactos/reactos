@@ -106,14 +106,39 @@ AddNewLayout(HWND hwndDlg)
                 return;
             }
 
-            if (GetLayoutName(LangID, Layout))
+            if (_tcscmp(LangID, pts) != 0)
             {
-                if ((SendMessage(hLayoutList, CB_SELECTSTRING, (WPARAM) -1, (LPARAM)Layout) != CB_ERR)&&
-                    (GetLayoutCount(Lang) >= 1))
+                if (!GetLayoutName(pts, Layout))
                 {
-                    wsprintf(SubPath, _T("d%03d%s"), GetLayoutCount(Lang)-1, Lang);
+                    RegCloseKey(hKey);
+                    return;
+                }
+            }
+            else
+            {
+                if (!GetLayoutName(LangID, Layout))
+                {
+                    RegCloseKey(hKey);
+                    return;
+                }
+            }
+
+            if (SendMessage(hLayoutList, CB_SELECTSTRING, (WPARAM) -1, (LPARAM)Layout) != CB_ERR)
+            {
+                if (GetLayoutCount(Lang) >= 1)
+                {
+                    wsprintf(SubPath, _T("d%03d%s"), GetLayoutCount(Lang), Lang);
+                }
+                else if ((_tcscmp(LangID, pts) != 0) && (GetLayoutCount(Lang) == 0))
+                {
+                    wsprintf(SubPath, _T("d%03d%s"), 0, Lang);
                 }
                 else SubPath[0] = '\0';
+            }
+            else
+            {
+                RegCloseKey(hKey);
+                return;
             }
 
             if (_tcslen(SubPath) != 0)

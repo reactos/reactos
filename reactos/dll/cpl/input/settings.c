@@ -64,7 +64,10 @@ IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID)
             GetLocaleInfo(langid, LOCALE_ILANGUAGE, szTmp, sizeof(szTmp) / sizeof(TCHAR));
             wsprintf(szOldLangID, _T("0000%s"), szTmp);
 
-            if (_tcscmp(szOldLangID, szLangID) == 0) IsLangExists = TRUE;
+            if (_tcscmp(szOldLangID, szLangID) == 0)
+                IsLangExists = TRUE;
+            else
+                IsLangExists = FALSE;
 
             if (szPreload[0] == 'd')
             {
@@ -84,7 +87,7 @@ IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID)
             }
             else
             {
-                if (_tcscmp(szPreload, szLayoutID) == 0)
+                if ((_tcscmp(szPreload, szLayoutID) == 0) && (IsLangExists))
                 {
                     RegCloseKey(hKey);
                     return TRUE;
