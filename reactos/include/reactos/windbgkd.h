@@ -220,7 +220,7 @@ typedef struct _DBGKM_EXCEPTION64
 //
 // DBGKD Structure for State Change
 //
-#ifdef defined(_M_X86)
+#if defined(_M_X86)
 
 typedef struct _DBGKD_CONTROL_REPORT
 {
