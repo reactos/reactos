@@ -628,6 +628,8 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 	pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
+	TCHAR Message[1024], Title[256];
+
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
@@ -710,14 +712,16 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 							pGlobalData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
 							pGlobalData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
 							break;
-						case DISP_CHANGE_FAILED:
-							MessageBox(NULL, TEXT("Failed to apply new settings..."), TEXT("Display settings"), MB_OK | MB_ICONSTOP);
-							break;
 						case DISP_CHANGE_RESTART:
-							MessageBox(NULL, TEXT("You need to restart your computer to apply changes."), TEXT("Display settings"), MB_OK | MB_ICONINFORMATION);
+							LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+							LoadString(hApplet, IDS_APPLY_NEEDS_RESTART, Message, sizeof(Message) / sizeof (TCHAR));
+							MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONINFORMATION);
 							break;
+						case DISP_CHANGE_FAILED:
 						default:
-							MessageBox(NULL, TEXT("Unknown error when applying new settings..."), TEXT("Display settings"), MB_OK | MB_ICONSTOP);
+							LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+							LoadString(hApplet, IDS_APPLY_FAILED, Message, sizeof(Message) / sizeof (TCHAR));
+							MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONSTOP);
 							break;
 					}
 				}

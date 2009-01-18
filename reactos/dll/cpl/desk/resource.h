@@ -157,6 +157,11 @@
 #define IDS_UNKNOWNMONITOR              3301
 #define IDS_ADVANCEDTITLEFMT            3302
 
+#define IDS_DISPLAY_SETTINGS 		3400
+
+#define IDS_APPLY_FAILED 		3500
+#define IDS_APPLY_NEEDS_RESTART         3501
+
 /* Advanced General Dialog */
 #define IDC_FONTSIZE_COMBO              5000
 #define IDC_FONTSIZE_COSTOM             5001
