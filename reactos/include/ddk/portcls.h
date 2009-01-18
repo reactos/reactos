@@ -1193,6 +1193,9 @@ DECLARE_INTERFACE_(IPortWavePci, IPort)
     DEFINE_ABSTRACT_UNKNOWN()
     DEFINE_ABSTRACT_PORT()
 
+    STDMETHOD_(VOID, Notify)(THIS_
+        IN  PSERVICEGROUP ServiceGroup) PURE;
+
     STDMETHOD_(NTSTATUS, NewMasterDmaChannel)(THIS_
         OUT PDMACHANNEL* DmaChannel,
         IN  PUNKNOWN OuterUnknown,
@@ -1206,9 +1209,6 @@ DECLARE_INTERFACE_(IPortWavePci, IPort)
         IN  DMA_SPEED DmaSpeed,
         IN  ULONG MaximumLength,
         IN  ULONG DmaPort) PURE;
-
-    STDMETHOD_(VOID, Notify)(THIS_
-        IN  PSERVICEGROUP ServiceGroup) PURE;
 };
 
 typedef IPortWavePci *PPORTWAVEPCI;
