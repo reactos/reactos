@@ -445,13 +445,15 @@ FrLdrReadAndMapImage(IN FILE *Image,
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section;
     NTSTATUS Status = STATUS_SUCCESS;
+    PLOADER_MODULE pModule;
 
     /* Try to see, maybe it's loaded already */
-    if (LdrGetModuleObject(Name) != NULL)
+    if ((pModule = LdrGetModuleObject(Name)) != NULL)
     {
-        /* It's loaded, return NULL. It would be wise to return
-         correct LoadBase, but it seems to be ignored almost everywhere */
-        return NULL;
+        /* It's loaded, return LoadBase */
+        ImageBase = (PVOID)pModule->ModStart;
+        LoadBase = RVA(ImageBase, -KSEG0_BASE);
+        return LoadBase;
     }
 
     /* Set the virtual (image) and physical (load) addresses */
