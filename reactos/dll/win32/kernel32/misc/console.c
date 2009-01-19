@@ -29,7 +29,8 @@ extern BOOL WINAPI IsDebuggerPresent(VOID);
 
 static PHANDLER_ROUTINE* CtrlHandlers = NULL;
 static ULONG NrCtrlHandlers = 0;
-static WCHAR InputExeName[MAX_PATH + 1] = L"";
+#define INPUTEXENAME_BUFLEN 256
+static WCHAR InputExeName[INPUTEXENAME_BUFLEN] = L"";
 
 /* Default Console Control Handler *******************************************/
 
@@ -3755,187 +3756,172 @@ BOOL WINAPI SetConsoleIcon(HICON hicon)
 }
 
 
-/*--------------------------------------------------------------
- * 	SetConsoleInputExeNameW
- *
- * @implemented
+/******************************************************************************
+ * \name SetConsoleInputExeNameW
+ * \brief Sets the console input file name from a unicode string.
+ * \param lpInputExeName Pointer to a unicode string with the name.
+ * \return TRUE if successful, FALSE if unsuccsedful.
+ * \remarks If lpInputExeName is 0 or the string length is 0 or greater than 255,
+ *          the function fails and sets last error to ERROR_INVALID_PARAMETER.
  */
 BOOL WINAPI
 SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
 {
-  NTSTATUS Status = STATUS_SUCCESS;
-  int lenName = lstrlenW(lpInputExeName);
+    int lenName;
 
-  if(lenName < 1 ||
-     lenName > (int)(sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
-  {
-    /* Fail if string is empty or too long */
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    if (!lpInputExeName
+        || (lenName = lstrlenW(lpInputExeName)) == 0
+        || lenName > INPUTEXENAME_BUFLEN - 1)
+    {
+        /* Fail if string is empty or too long */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  RtlEnterCriticalSection(&ConsoleLock);
-  _SEH2_TRY
-  {
+    RtlEnterCriticalSection(&ConsoleLock);
     _SEH2_TRY
     {
-      RtlCopyMemory(InputExeName, lpInputExeName, lenName * sizeof(WCHAR));
-      InputExeName[lenName] = L'\0';
+        RtlCopyMemory(InputExeName, lpInputExeName, lenName * sizeof(WCHAR));
+        InputExeName[lenName] = L'\0';
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_FINALLY
     {
-      Status = _SEH2_GetExceptionCode();
+        RtlLeaveCriticalSection(&ConsoleLock);
     }
     _SEH2_END;
-  }
-  _SEH2_FINALLY
-  {
-    RtlLeaveCriticalSection(&ConsoleLock);
-  }
-  _SEH2_END;
 
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
-
-  return TRUE;
+    return TRUE;
 }
 
 
-/*--------------------------------------------------------------
- * 	SetConsoleInputExeNameA
- *
- * @implemented
+/******************************************************************************
+ * \name SetConsoleInputExeNameA
+ * \brief Sets the console input file name from an ansi string.
+ * \param lpInputExeName Pointer to an ansi string with the name.
+ * \return TRUE if successful, FALSE if unsuccsedful.
+ * \remarks If lpInputExeName is 0 or the string length is 0 or greater than 255,
+ *          the function fails and sets last error to ERROR_INVALID_PARAMETER.
  */
 BOOL WINAPI
 SetConsoleInputExeNameA(LPCSTR lpInputExeName)
 {
-  ANSI_STRING InputExeNameA;
-  UNICODE_STRING InputExeNameU;
-  NTSTATUS Status;
-  BOOL Ret;
+    WCHAR Buffer[INPUTEXENAME_BUFLEN];
+    ANSI_STRING InputExeNameA;
+    UNICODE_STRING InputExeNameU;
+    NTSTATUS Status;
+    BOOL Ret;
 
-  RtlInitAnsiString(&InputExeNameA, lpInputExeName);
+    RtlInitAnsiString(&InputExeNameA, lpInputExeName);
 
-  if(InputExeNameA.Length < sizeof(InputExeNameA.Buffer[0]) ||
-     InputExeNameA.Length >= (sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
-  {
-    /* Fail if string is empty or too long */
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    if(InputExeNameA.Length == 0 || 
+       InputExeNameA.Length > INPUTEXENAME_BUFLEN - 1)
+    {
+        /* Fail if string is empty or too long */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  Status = RtlAnsiStringToUnicodeString(&InputExeNameU, &InputExeNameA, TRUE);
-  if(NT_SUCCESS(Status))
-  {
-    Ret = SetConsoleInputExeNameW(InputExeNameU.Buffer);
-    RtlFreeUnicodeString(&InputExeNameU);
-  }
-  else
-  {
-    SetLastErrorByStatus(Status);
-    Ret = FALSE;
-  }
+    InputExeNameU.Buffer = Buffer;
+    InputExeNameU.MaximumLength = sizeof(Buffer);
+    InputExeNameU.Length = 0;
+    Status = RtlAnsiStringToUnicodeString(&InputExeNameU, &InputExeNameA, FALSE);
+    if(NT_SUCCESS(Status))
+    {
+        Ret = SetConsoleInputExeNameW(InputExeNameU.Buffer);
+    }
+    else
+    {
+        SetLastErrorByStatus(Status);
+        Ret = FALSE;
+    }
 
-  return Ret;
+    return Ret;
 }
 
 
-/*--------------------------------------------------------------
- * 	GetConsoleInputExeNameW
- *
- * @implemented
+/******************************************************************************
+ * \name GetConsoleInputExeNameW
+ * \brief Retrieves the console input file name as unicode string.
+ * \param nBufferLength Length of the buffer in WCHARs.
+ *        Specify 0 to recieve the needed buffer length.
+ * \param lpBuffer Pointer to a buffer that recieves the string.
+ * \return Needed buffer size if \p nBufferLength is 0.
+ *         Otherwise 1 if successful, 2 if buffer is too small.
+ * \remarks Sets last error value to ERROR_BUFFER_OVERFLOW if the buffer
+ *          is not big enough.
  */
 DWORD WINAPI
 GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
-  NTSTATUS Status = STATUS_SUCCESS;
-  int lenName = 0;
+    int lenName = lstrlenW(InputExeName);
 
-  RtlEnterCriticalSection(&ConsoleLock);
-  _SEH2_TRY
-  {
+    if (nBufferLength == 0)
+    {
+        /* Buffer size is requested, return it */
+        return lenName + 1;
+    }
+
+    if(lenName + 1 > nBufferLength)
+    {
+        /* Buffer is not large enough! */
+        SetLastError(ERROR_BUFFER_OVERFLOW);
+        return 2;
+    }
+
+    RtlEnterCriticalSection(&ConsoleLock);
     _SEH2_TRY
     {
-      lenName = lstrlenW(InputExeName);
-      if(lenName >= (int)nBufferLength)
-      {
-        /* buffer is not large enough, return the required size */
-        SetLastError(ERROR_BUFFER_OVERFLOW);
-        lenName += 1;
-      }
-      RtlCopyMemory(lpBuffer, InputExeName, (lenName + 1) * sizeof(WCHAR));
+        RtlCopyMemory(lpBuffer, InputExeName, lenName * sizeof(WCHAR));
+        lpBuffer[lenName] = '\0';
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    _SEH2_FINALLY
     {
-      Status = _SEH2_GetExceptionCode();
+        RtlLeaveCriticalSection(&ConsoleLock);
     }
     _SEH2_END;
-  }
-  _SEH2_FINALLY
-  {
-    RtlLeaveCriticalSection(&ConsoleLock);
-  }
-  _SEH2_END;
 
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastError(ERROR_BUFFER_OVERFLOW);
-    return lenName + 1;
-  }
-
-  return lenName;
+    /* Success, return 1 */
+    return 1;
 }
 
 
-/*--------------------------------------------------------------
- * 	GetConsoleInputExeNameA
- *
- * @implemented
+/******************************************************************************
+ * \name GetConsoleInputExeNameA
+ * \brief Retrieves the console input file name as ansi string.
+ * \param nBufferLength Length of the buffer in CHARs.
+ * \param lpBuffer Pointer to a buffer that recieves the string.
+ * \return 1 if successful, 2 if buffer is too small.
+ * \remarks Sets last error value to ERROR_BUFFER_OVERFLOW if the buffer
+ *          is not big enough. The buffer recieves as much characters as fit.
  */
 DWORD WINAPI
 GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
 {
-  WCHAR *Buffer;
-  DWORD Ret;
+    WCHAR Buffer[INPUTEXENAME_BUFLEN];
+    DWORD Ret;
+    UNICODE_STRING BufferU;
+    ANSI_STRING BufferA;
 
-  if(nBufferLength > 0)
-  {
-    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, nBufferLength * sizeof(WCHAR));
-    if(Buffer == NULL)
+    /* Get the unicode name */
+    Ret = GetConsoleInputExeNameW(sizeof(Buffer) / sizeof(Buffer[0]), Buffer);
+
+    /* Initialize strings for conversion */
+    RtlInitUnicodeString(&BufferU, Buffer);
+    BufferA.Length = 0;
+    BufferA.MaximumLength = nBufferLength;
+    BufferA.Buffer = lpBuffer;
+
+    /* Convert unicode name to ansi, copying as much chars as fit */
+    RtlUnicodeStringToAnsiString(&BufferA, &BufferU, FALSE);
+
+    /* Error handling */
+    if(nBufferLength <= BufferU.Length / sizeof(WCHAR))
     {
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return 0;
-    }
-  }
-  else
-  {
-    Buffer = NULL;
-  }
-
-  Ret = GetConsoleInputExeNameW(nBufferLength, Buffer);
-  if(nBufferLength > 0)
-  {
-    if(Ret > 0)
-    {
-      UNICODE_STRING BufferU;
-      ANSI_STRING BufferA;
-
-      RtlInitUnicodeString(&BufferU, Buffer);
-
-      BufferA.Length = 0;
-      BufferA.MaximumLength = (USHORT)nBufferLength;
-      BufferA.Buffer = lpBuffer;
-
-      RtlUnicodeStringToAnsiString(&BufferA, &BufferU, FALSE);
+        SetLastError(ERROR_BUFFER_OVERFLOW);
+        return 2;
     }
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-  }
-
-  return Ret;
+    return Ret;
 }
 
 
