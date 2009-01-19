@@ -551,7 +551,7 @@ static void testCertProperties(void)
     ok(ret, "CertSetCertificateContextProperty failed: %08x\n", GetLastError());
     /* Now that that's set, the key prov handle property is also gettable.
      */
-    size = sizeof(DWORD);
+    size = sizeof(keyContext.hCryptProv);
     ret = CertGetCertificateContextProperty(context,
      CERT_KEY_PROV_HANDLE_PROP_ID, &keyContext.hCryptProv, &size);
     ok(ret, "Expected to get the CERT_KEY_PROV_HANDLE_PROP_ID, got %08x\n",
@@ -1678,7 +1678,7 @@ static void testVerifyCertSig(HCRYPTPROV csp, const CRYPT_DATA_BLOB *toBeSigned,
     info.Signature.pbData = (BYTE *)sig;
     info.Signature.cUnusedBits = 0;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, X509_CERT, &info,
-     CRYPT_ENCODE_ALLOC_FLAG, NULL, (BYTE *)&cert, &size);
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &cert, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (cert)
     {
