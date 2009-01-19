@@ -840,6 +840,7 @@ extern "C" {
 #if (_WIN32_WINNT >= 0x0501)
 #define QS_ALLEVENTS 1215
 #define QS_ALLINPUT 1279
+#define QS_RAWINPUT 1024
 #else
 #define QS_ALLEVENTS 191
 #define QS_ALLINPUT 255
