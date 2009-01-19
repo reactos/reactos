@@ -569,7 +569,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
           Protect);
 
    /* Check for valid protection flags */
-   if ((Protect & PAGE_FLAGS_VALID_FROM_USER_MODE) != Protect)
+   if ((!Protect & PAGE_FLAGS_VALID_FROM_USER_MODE))
    {
       DPRINT1("Invalid page protection\n");
       return STATUS_INVALID_PAGE_PROTECTION;
@@ -943,6 +943,12 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
    DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *PBaseAddress %x, "
           "*PRegionSize %x, FreeType %x)\n",ProcessHandle,*PBaseAddress,
           *PRegionSize,FreeType);
+
+    if (!(FreeType & (MEM_RELEASE | MEM_DECOMMIT)))
+    {
+        DPRINT1("Invalid FreeType\n");
+        return STATUS_INVALID_PARAMETER_4;
+    }
 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
    RegionSize = PAGE_ROUND_UP((ULONG_PTR)(*PBaseAddress) + (*PRegionSize)) -
