@@ -1013,6 +1013,7 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
   WCHAR szNegBuff[8];
   const WCHAR *lpszNeg = NULL, *lpszNegStart, *szSrc;
   DWORD dwState = 0, dwDecimals = 0, dwGroupCount = 0, dwCurrentGroupCount = 0;
+  DWORD dwLeadingZeros = 0;
   INT iRet;
 
   TRACE("(0x%04lx,0x%08lx,%S,%p,%p,%d)\n", lcid, dwFlags, lpszValue,
@@ -1063,7 +1064,11 @@ GetNumberFormatW_Error:
   /* Check the number for validity */
   while (*szSrc)
   {
-    if (*szSrc >= '0' && *szSrc <= '9')
+    if (*szSrc == '0' && !(dwState & NF_DIGITS))
+    {
+      dwLeadingZeros++;
+    }
+    else if ((*szSrc >= '1' && *szSrc <= '9') || (*szSrc == '0' && (dwState & NF_DIGITS)))
     {
       dwState |= NF_DIGITS;
       if (dwState & NF_ISREAL)
@@ -1176,7 +1181,7 @@ GetNumberFormatW_Error:
   dwGroupCount = lpFormat->Grouping == 32 ? 3 : lpFormat->Grouping;
 
   /* Write the remaining whole number digits, including grouping chars */
-  while (szSrc >= lpszValue && *szSrc >= '0' && *szSrc <= '9')
+  while (szSrc >= (lpszValue + dwLeadingZeros) && *szSrc >= '0' && *szSrc <= '9')
   {
     if (dwState & NF_ROUND)
     {
@@ -1194,7 +1199,7 @@ GetNumberFormatW_Error:
 
     dwState |= NF_DIGITS_OUT;
     dwCurrentGroupCount++;
-    if (szSrc >= lpszValue && dwCurrentGroupCount == dwGroupCount && *szSrc != '-')
+    if (szSrc >= (lpszValue + dwLeadingZeros) && dwCurrentGroupCount == dwGroupCount && *szSrc != '-')
     {
       LPWSTR lpszGrp = lpFormat->lpThousandSep + strlenW(lpFormat->lpThousandSep) - 1;
 
