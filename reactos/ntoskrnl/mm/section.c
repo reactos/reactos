@@ -4538,13 +4538,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
    ASSERT(Process);
 
-   if (Protect != PAGE_READONLY &&
-       Protect != PAGE_READWRITE &&
-       Protect != PAGE_WRITECOPY &&
-       Protect != PAGE_EXECUTE &&
-       Protect != PAGE_EXECUTE_READ &&
-       Protect != PAGE_EXECUTE_READWRITE &&
-       Protect != PAGE_EXECUTE_WRITECOPY)
+   if (!(Protect & (PAGE_READONLY | PAGE_READWRITE | 
+                   PAGE_WRITECOPY | PAGE_EXECUTE |
+                   PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                   PAGE_EXECUTE_WRITECOPY | PAGE_NOACCESS)))
    {
       return STATUS_INVALID_PAGE_PROTECTION;
    }
