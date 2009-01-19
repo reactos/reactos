@@ -207,6 +207,7 @@
 #define IDS_PICK_ICON_FILTER              0x4125
 
 #define IDI_SHELL_DOCUMENT           1
+#define IDI_SHELL_RICH_TEXT          2
 #define IDI_SHELL_FOLDER             4
 #define IDI_SHELL_FOLDER_OPEN        5
 #define IDI_SHELL_5_12_FLOPPY        6
@@ -237,7 +238,15 @@
 #define IDI_SHELL_FONTS_FOLDER      39
 #define IDI_SHELL_OPEN_WITH        135
 #define IDI_SHELL_TRASH_FILE       142
+#define IDI_SHELL_INF_FILE         151
+#define IDI_SHELL_TEXT_FILE        152
+#define IDI_SHELL_BAT_FILE         153
+#define IDI_SHELL_SYSTEM_FILE      154
+#define IDI_SHELL_FONT_FILE        155
+#define IDI_SHELL_TT_FONT_FILE     156
+#define IDI_SHELL_RUN2             160
 #define IDI_SHELL_CONFIRM_DELETE   161
+#define IDI_SHELL_MUSIC_FILE       225
 #define IDI_SHELL_MY_DOCUMENTS     235
 #define IDI_SHELL_CONTROL_PANEL1   330
 #define IDI_SHELL_ADMINTOOLS       328
