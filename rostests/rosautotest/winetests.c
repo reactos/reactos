@@ -117,6 +117,10 @@ IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWIN
     }
     while(!BreakLoop);
 
+    /* Close the process handles */
+    CloseHandle(ProcessInfo.hProcess);
+    CloseHandle(ProcessInfo.hThread);
+
     if(AppOptions.Submit)
     {
         SubmitData->Log[LogLength - LogAvailable] = 0;
@@ -216,6 +220,10 @@ IntRunModuleTests(PWSTR File, PWSTR FilePath, HANDLE hReadPipe, LPSTARTUPINFOW S
         StringOut("WaitForSingleObject failed for the test list\n");
         return FALSE;
     }
+
+    /* Close the process handles */
+    CloseHandle(ProcessInfo.hProcess);
+    CloseHandle(ProcessInfo.hThread);
 
     /* Read the output data into a buffer */
     if(!PeekNamedPipe(hReadPipe, NULL, 0, NULL, &BytesAvailable, NULL))
