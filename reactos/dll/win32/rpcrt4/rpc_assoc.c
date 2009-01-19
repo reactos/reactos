@@ -240,7 +240,7 @@ static RPC_STATUS RpcAssoc_BindConnection(const RpcAssoc *assoc, RpcConnection *
     status = RPCRT4_ReceiveWithAuth(conn, &response_hdr, &msg, &auth_data, &auth_length);
     if (status != RPC_S_OK)
     {
-        ERR("receive failed with error %ld\n", status);
+        ERR("receive failed with error %d\n", status);
         return status;
     }
 

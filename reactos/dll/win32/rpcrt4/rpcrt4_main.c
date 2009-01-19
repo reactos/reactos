@@ -715,7 +715,7 @@ void WINAPI I_RpcFree(void *Object)
  */
 LONG WINAPI I_RpcMapWin32Status(RPC_STATUS status)
 {
-    TRACE("(%ld)\n", status);
+    TRACE("(%d)\n", status);
     switch (status)
     {
     case ERROR_ACCESS_DENIED: return STATUS_ACCESS_DENIED;

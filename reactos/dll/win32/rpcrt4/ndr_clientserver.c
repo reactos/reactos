@@ -232,7 +232,7 @@ RPC_STATUS RPC_ENTRY NdrMapCommAndFaultStatus( PMIDL_STUB_MESSAGE pStubMsg,
                                                ULONG *pFaultStatus,
                                                RPC_STATUS Status )
 {
-    TRACE("(%p, %p, %p, %ld)\n", pStubMsg, pCommStatus, pFaultStatus, Status);
+    TRACE("(%p, %p, %p, %d)\n", pStubMsg, pCommStatus, pFaultStatus, Status);
 
     switch (Status)
     {

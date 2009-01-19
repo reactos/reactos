@@ -335,7 +335,7 @@
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 177 "parser.y"
+#line 176 "parser.y"
 typedef union YYSTYPE {
 	attr_t *attr;
 	attr_list_t *attr_list;
@@ -372,5 +372,6 @@ typedef union YYSTYPE {
 #endif
 
 extern YYSTYPE parser_lval;
+
 
 

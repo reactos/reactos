@@ -70,8 +70,6 @@
 
 unsigned char pointer_default = RPC_FC_UP;
 static int is_object_interface = FALSE;
-/* are we inside a library block? */
-static int is_inside_library = FALSE;
 
 typedef struct list typelist_t;
 struct typenode {
@@ -140,6 +138,7 @@ static var_t *reg_const(var_t *var);
 
 static char *gen_name(void);
 static void check_arg(var_t *arg);
+static void check_statements(const statement_list_t *stmts, int is_inside_library);
 static void check_all_user_types(const statement_list_t *stmts);
 static attr_list_t *check_iface_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_function_attrs(const char *name, attr_list_t *attrs);
@@ -153,7 +152,7 @@ static attr_list_t *check_dispiface_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_module_attrs(const char *name, attr_list_t *attrs);
 static attr_list_t *check_coclass_attrs(const char *name, attr_list_t *attrs);
 const char *get_attr_display_name(enum attr_type type);
-static void add_explicit_handle_if_necessary(func_t *func);
+static void add_explicit_handle_if_necessary(var_t *func);
 static void check_def(const type_t *t);
 
 static statement_t *make_statement(enum statement_type type);
@@ -346,6 +345,7 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %%
 
 input:   gbl_statements				{ fix_incomplete();
+						  check_statements($1, FALSE);
 						  check_all_user_types($1);
 						  write_header($1);
 						  write_id_data($1);
@@ -433,14 +433,12 @@ libraryhdr: tLIBRARY aIDENTIFIER		{ $$ = $2; }
 	;
 library_start: attributes libraryhdr '{'	{ $$ = make_library($2, check_library_attrs($2, $1));
 						  if (!parse_only) start_typelib($$);
-						  is_inside_library = TRUE;
 						}
 	;
 librarydef: library_start imp_statements '}'
 	    semicolon_opt			{ $$ = $1;
 						  $$->stmts = $2;
 						  if (!parse_only) end_typelib();
-						  is_inside_library = FALSE;
 						}
 	;
 
@@ -787,7 +785,7 @@ base_type: tBYTE				{ $$ = make_builtin($<str>1); }
 						  case RPC_FC_HYPER:
 						    if ($$->name[0] == 'h') /* hyper, as opposed to __int64 */
                                                     {
-                                                      $$ = alias($$, "MIDL_uhyper");
+                                                      $$ = type_new_alias($$, "MIDL_uhyper");
                                                       $$->sign = 0;
                                                     }
 						    break;
@@ -818,7 +816,7 @@ int_std:  tINT					{ $$ = make_builtin($<str>1); }
 
 coclass:  tCOCLASS aIDENTIFIER			{ $$ = make_class($2); }
 	| tCOCLASS aKNOWNTYPE			{ $$ = find_type($2, 0);
-						  if ($$->kind != TKIND_COCLASS)
+						  if ($$->type != RPC_FC_COCLASS)
 						    error_loc("%s was not declared a coclass at %s:%d\n",
 							      $2, $$->loc_info.input_name,
 							      $$->loc_info.line_number);
@@ -832,10 +830,7 @@ coclasshdr: attributes coclass			{ $$ = $2;
 	;
 
 coclassdef: coclasshdr '{' coclass_ints '}' semicolon_opt
-						{ $$ = $1;
-						  $$->ifaces = $3;
-						  $$->defined = TRUE;
-						}
+						{ $$ = type_coclass_define($1, $3); }
 	;
 
 coclass_ints:					{ $$ = NULL; }
@@ -846,8 +841,8 @@ coclass_int:
 	  m_attributes interfacedec		{ $$ = make_ifref($2); $$->attrs = $1; }
 	;
 
-dispinterface: tDISPINTERFACE aIDENTIFIER	{ $$ = get_type(RPC_FC_IP, $2, 0); $$->kind = TKIND_DISPATCH; }
-	|      tDISPINTERFACE aKNOWNTYPE	{ $$ = get_type(RPC_FC_IP, $2, 0); $$->kind = TKIND_DISPATCH; }
+dispinterface: tDISPINTERFACE aIDENTIFIER	{ $$ = get_type(RPC_FC_IP, $2, 0); }
+	|      tDISPINTERFACE aKNOWNTYPE	{ $$ = get_type(RPC_FC_IP, $2, 0); }
 	;
 
 dispinterfacehdr: attributes dispinterface	{ attr_t *attrs;
@@ -884,8 +879,8 @@ inherit:					{ $$ = NULL; }
 	| ':' aKNOWNTYPE			{ $$ = find_type_or_error2($2, 0); }
 	;
 
-interface: tINTERFACE aIDENTIFIER		{ $$ = get_type(RPC_FC_IP, $2, 0); $$->kind = TKIND_INTERFACE; }
-	|  tINTERFACE aKNOWNTYPE		{ $$ = get_type(RPC_FC_IP, $2, 0); $$->kind = TKIND_INTERFACE; }
+interface: tINTERFACE aIDENTIFIER		{ $$ = get_type(RPC_FC_IP, $2, 0); }
+	|  tINTERFACE aKNOWNTYPE		{ $$ = get_type(RPC_FC_IP, $2, 0); }
 	;
 
 interfacehdr: attributes interface		{ $$.interface = $2;
@@ -920,8 +915,8 @@ interfacedec:
 	| dispinterface ';'			{ $$ = $1; }
 	;
 
-module:   tMODULE aIDENTIFIER			{ $$ = make_type(0, NULL); $$->name = $2; $$->kind = TKIND_MODULE; }
-	| tMODULE aKNOWNTYPE			{ $$ = make_type(0, NULL); $$->name = $2; $$->kind = TKIND_MODULE; }
+module:   tMODULE aIDENTIFIER			{ $$ = type_new_module($2); }
+	| tMODULE aKNOWNTYPE			{ $$ = type_new_module($2); }
 	;
 
 modulehdr: attributes module			{ $$ = $2;
@@ -931,8 +926,7 @@ modulehdr: attributes module			{ $$ = $2;
 
 moduledef: modulehdr '{' int_statements '}'
 	   semicolon_opt			{ $$ = $1;
-						  $$->stmts = $3;
-						  $$->funcs = gen_function_list($3);
+                                                  type_module_define($$, $3);
 						}
 	;
 
@@ -1296,17 +1290,11 @@ type_t *make_type(unsigned char type, type_t *ref)
 {
   type_t *t = alloc_type();
   t->name = NULL;
-  t->kind = TKIND_PRIMITIVE;
   t->type = type;
   t->ref = ref;
   t->attrs = NULL;
   t->orig = NULL;
-  t->funcs = NULL;
   memset(&t->details, 0, sizeof(t->details));
-  t->ifaces = NULL;
-  t->dim = 0;
-  t->size_is = NULL;
-  t->length_is = NULL;
   t->typestring_offset = 0;
   t->ptrdesc = 0;
   t->declarray = FALSE;
@@ -1317,6 +1305,7 @@ type_t *make_type(unsigned char type, type_t *ref)
   t->user_types_registered = FALSE;
   t->tfswrite = FALSE;
   t->checked = FALSE;
+  t->is_alias = FALSE;
   t->typelib_idx = -1;
   init_loc_info(&t->loc_info);
   return t;
@@ -1325,7 +1314,6 @@ type_t *make_type(unsigned char type, type_t *ref)
 static type_t *type_new_enum(char *name, var_list_t *enums)
 {
     type_t *t = get_type(RPC_FC_ENUM16, name, tsENUM);
-    t->kind = TKIND_ENUM;
     if (enums)
     {
         t->details.enumeration = xmalloc(sizeof(*t->details.enumeration));
@@ -1342,7 +1330,6 @@ static type_t *type_new_struct(char *name, int defined, var_list_t *fields)
   type_t *tag_type = name ? find_type(name, tsSTRUCT) : NULL;
   type_t *t = make_type(RPC_FC_STRUCT, NULL);
   t->name = name;
-  t->kind = TKIND_RECORD;
   if (defined || (tag_type && tag_type->details.structure))
   {
     if (tag_type && tag_type->details.structure)
@@ -1370,7 +1357,6 @@ static type_t *type_new_struct(char *name, int defined, var_list_t *fields)
 static type_t *type_new_nonencapsulated_union(char *name, var_list_t *fields)
 {
   type_t *t = get_type(RPC_FC_NON_ENCAPSULATED_UNION, name, tsUNION);
-  t->kind = TKIND_UNION;
   t->details.structure = xmalloc(sizeof(*t->details.structure));
   t->details.structure->fields = fields;
   t->defined = TRUE;
@@ -1380,10 +1366,8 @@ static type_t *type_new_nonencapsulated_union(char *name, var_list_t *fields)
 static type_t *type_new_encapsulated_union(char *name, var_t *switch_field, var_t *union_field, var_list_t *cases)
 {
   type_t *t = get_type(RPC_FC_ENCAPSULATED_UNION, name, tsUNION);
-  t->kind = TKIND_UNION;
   if (!union_field) union_field = make_var( xstrdup("tagged_union") );
   union_field->type = make_type(RPC_FC_NON_ENCAPSULATED_UNION, NULL);
-  union_field->type->kind = TKIND_UNION;
   union_field->type->details.structure = xmalloc(sizeof(*union_field->type->details.structure));
   union_field->type->details.structure->fields = cases;
   union_field->type->defined = TRUE;
@@ -1394,15 +1378,14 @@ static type_t *type_new_encapsulated_union(char *name, var_t *switch_field, var_
   return t;
 }
 
-static void function_add_head_arg(func_t *func, var_t *arg)
+static void type_function_add_head_arg(type_t *type, var_t *arg)
 {
-    if (!func->def->type->details.function->args)
+    if (!type->details.function->args)
     {
-        func->def->type->details.function->args = xmalloc( sizeof(*func->def->type->details.function->args) );
-        list_init( func->def->type->details.function->args );
+        type->details.function->args = xmalloc( sizeof(*type->details.function->args) );
+        list_init( type->details.function->args );
     }
-    list_add_head( func->def->type->details.function->args, &arg->entry );
-    func->args = func->def->type->details.function->args;
+    list_add_head( type->details.function->args, &arg->entry );
 }
 
 static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type)
@@ -1421,9 +1404,9 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
 {
   expr_list_t *sizes = get_attrp(v->attrs, ATTR_SIZEIS);
   expr_list_t *lengs = get_attrp(v->attrs, ATTR_LENGTHIS);
-  int sizeless, has_varconf;
+  int sizeless;
   expr_t *dim;
-  type_t *atype, **ptype;
+  type_t **ptype;
   array_dims_t *arr = decl ? decl->array : NULL;
   type_t *func_type = decl ? decl->func_type : NULL;
   type_t *type = decl_spec->type;
@@ -1436,7 +1419,7 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
     {
       type_t *t;
       /* move inline attribute from return type node to function node */
-      for (t = func_type; is_ptr(t); t = t->ref)
+      for (t = func_type; is_ptr(t); t = type_pointer_get_ref(t))
         ;
       t->attrs = move_attr(t->attrs, type->attrs, ATTR_INLINE);
     }
@@ -1459,7 +1442,7 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
     for (ptr = *pt; ptr && !ptr_attr; )
     {
       ptr_attr = get_attrv(ptr->attrs, ATTR_POINTERTYPE);
-      if (!ptr_attr && ptr->kind == TKIND_ALIAS)
+      if (!ptr_attr && type_is_alias(ptr))
         ptr = ptr->orig;
       else
         break;
@@ -1486,6 +1469,7 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
       error_loc("'%s': [v1_enum] attribute applied to non-enum type\n", v->name);
   }
 
+  ptype = &v->type;
   sizeless = FALSE;
   if (arr) LIST_FOR_EACH_ENTRY_REV(dim, arr, expr_t, entry)
   {
@@ -1494,35 +1478,46 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
 
     if (dim->is_const)
     {
-      v->type = make_type(RPC_FC_LGFARRAY, v->type);
+      if (dim->cval <= 0)
+        error_loc("%s: array dimension must be positive\n", v->name);
+
+      /* FIXME: should use a type_memsize that allows us to pass in a pointer size */
+      if (0)
+      {
+        unsigned int align = 0;
+        size_t size = type_memsize(v->type, &align);
+
+        if (0xffffffffuL / size < (unsigned long) dim->cval)
+          error_loc("%s: total array size is too large\n", v->name);
+      }
     }
     else
-    {
       sizeless = TRUE;
-      v->type = make_type(RPC_FC_CARRAY, v->type);
-    }
 
-    v->type->declarray = TRUE;
-    v->type->dim = dim->cval;
+    *ptype = type_new_array(NULL, *ptype, TRUE,
+                            dim->is_const ? dim->cval : 0,
+                            dim->is_const ? NULL : dim, NULL);
   }
 
   ptype = &v->type;
-  has_varconf = FALSE;
   if (sizes) LIST_FOR_EACH_ENTRY(dim, sizes, expr_t, entry)
   {
     if (dim->type != EXPR_VOID)
     {
-      has_varconf = TRUE;
-      atype = *ptype = duptype(*ptype, 0);
-
-      if (atype->type == RPC_FC_SMFARRAY || atype->type == RPC_FC_LGFARRAY)
-        error_loc("%s: cannot specify size_is for a fixed sized array\n", v->name);
-
-      if (atype->type != RPC_FC_CARRAY && !is_ptr(atype))
+      if (is_array(*ptype))
+      {
+        if (type_array_get_conformance(*ptype)->is_const)
+          error_loc("%s: cannot specify size_is for a fixed sized array\n", v->name);
+        else
+          *ptype = type_new_array((*ptype)->name,
+                                  type_array_get_element(*ptype), TRUE,
+                                  0, dim, NULL);
+      }
+      else if (is_ptr(*ptype))
+        *ptype = type_new_array((*ptype)->name, type_pointer_get_ref(*ptype), FALSE,
+                                0, dim, NULL);
+      else
         error_loc("%s: size_is attribute applied to illegal type\n", v->name);
-
-      atype->type = RPC_FC_CARRAY;
-      atype->size_is = dim;
     }
 
     ptype = &(*ptype)->ref;
@@ -1535,34 +1530,22 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
   {
     if (dim->type != EXPR_VOID)
     {
-      has_varconf = TRUE;
-      atype = *ptype = duptype(*ptype, 0);
-
-      if (atype->type == RPC_FC_SMFARRAY)
-        atype->type = RPC_FC_SMVARRAY;
-      else if (atype->type == RPC_FC_LGFARRAY)
-        atype->type = RPC_FC_LGVARRAY;
-      else if (atype->type == RPC_FC_CARRAY)
-        atype->type = RPC_FC_CVARRAY;
+      if (is_array(*ptype))
+      {
+        *ptype = type_new_array((*ptype)->name,
+                                type_array_get_element(*ptype),
+                                (*ptype)->declarray,
+                                type_array_get_dim(*ptype),
+                                type_array_get_conformance(*ptype),
+                                dim);
+      }
       else
         error_loc("%s: length_is attribute applied to illegal type\n", v->name);
-
-      atype->length_is = dim;
     }
 
     ptype = &(*ptype)->ref;
     if (*ptype == NULL)
       error_loc("%s: too many expressions in length_is attribute\n", v->name);
-  }
-
-  if (has_varconf && !last_array(v->type))
-  {
-    ptype = &v->type;
-    for (ptype = &v->type; is_array(*ptype); ptype = &(*ptype)->ref)
-    {
-      *ptype = duptype(*ptype, 0);
-      (*ptype)->type = RPC_FC_BOGUS_ARRAY;
-    }
   }
 
   /* v->type is currently pointing to the type on the left-side of the
@@ -1573,13 +1556,13 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
     type_t *ft, *t;
     type_t *return_type = v->type;
     v->type = func_type;
-    for (ft = v->type; is_ptr(ft); ft = ft->ref)
+    for (ft = v->type; is_ptr(ft); ft = type_pointer_get_ref(ft))
       ;
     assert(ft->type == RPC_FC_FUNCTION);
     ft->ref = return_type;
     /* move calling convention attribute, if present, from pointer nodes to
      * function node */
-    for (t = v->type; is_ptr(t); t = t->ref)
+    for (t = v->type; is_ptr(t); t = type_pointer_get_ref(t))
       ft->attrs = move_attr(ft->attrs, t->attrs, ATTR_CALLCONV);
     if (is_object_interface && !is_attr(ft->attrs, ATTR_CALLCONV))
     {
@@ -1591,7 +1574,7 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
   else
   {
     type_t *t;
-    for (t = v->type; is_ptr(t); t = t->ref)
+    for (t = v->type; is_ptr(t); t = type_pointer_get_ref(t))
       if (is_attr(t->attrs, ATTR_CALLCONV))
         error_loc("calling convention applied to non-function-pointer type\n");
   }
@@ -1707,8 +1690,6 @@ static func_t *make_func(var_t *def)
 {
   func_t *f = xmalloc(sizeof(func_t));
   f->def = def;
-  f->args = def->type->details.function->args;
-  f->idx = -1;
   return f;
 }
 
@@ -1716,7 +1697,6 @@ static type_t *make_class(char *name)
 {
   type_t *c = make_type(RPC_FC_COCLASS, NULL);
   c->name = name;
-  c->kind = TKIND_COCLASS;
   return c;
 }
 
@@ -1796,7 +1776,7 @@ static void add_incomplete(type_t *t)
 
 static void fix_type(type_t *t)
 {
-  if (t->kind == TKIND_ALIAS && is_incomplete(t)) {
+  if (type_is_alias(t) && is_incomplete(t)) {
     type_t *ot = t->orig;
     fix_type(ot);
     if (is_struct(ot->type) || is_union(ot->type))
@@ -1846,7 +1826,7 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
     unsigned char c;
 
     while (is_ptr(t))
-      t = t->ref;
+      t = type_pointer_get_ref(t);
 
     c = t->type;
     if (c != RPC_FC_CHAR && c != RPC_FC_BYTE && c != RPC_FC_WCHAR)
@@ -1860,8 +1840,9 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
   /* We must generate names for tagless enum, struct or union.
      Typedef-ing a tagless enum, struct or union means we want the typedef
      to be included in a library hence the public attribute.  */
-  if ((type->kind == TKIND_ENUM || type->kind == TKIND_RECORD
-       || type->kind == TKIND_UNION) && ! type->name && ! parse_only)
+  if ((type->type == RPC_FC_ENUM16 || type->type == RPC_FC_ENUM32 ||
+       is_struct(type->type) || is_union(type->type)) &&
+      !type->name && !parse_only)
   {
     if (! is_attr(attrs, ATTR_PUBLIC))
       attrs = append_attr( attrs, make_attr(ATTR_PUBLIC) );
@@ -1886,7 +1867,7 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
       /* set the attributes to allow set_type to do some checks on them */
       name->attrs = attrs;
       set_type(name, decl_spec, decl, 0);
-      cur = alias(name->type, name->name);
+      cur = type_new_alias(name->type, name->name);
       cur->attrs = attrs;
 
       if (is_incomplete(cur))
@@ -1980,25 +1961,6 @@ var_t *find_const(const char *name, int f)
     return NULL;
   }
   return cur->var;
-}
-
-func_list_t *gen_function_list(const statement_list_t *stmts)
-{
-  func_list_t *func_list = NULL;
-  const statement_t *stmt;
-  if (stmts) LIST_FOR_EACH_ENTRY( stmt, stmts, const statement_t, entry )
-  {
-    if (stmt->type == STMT_DECLARATION)
-    {
-      var_t *var = stmt->u.var;
-      if (var->stgclass == STG_NONE && var->type->type == RPC_FC_FUNCTION)
-      {
-        check_function_attrs(var->name, var->type->attrs);
-        func_list = append_func(func_list, make_func(var));
-      }
-    }
-  }
-  return func_list;
 }
 
 static char *gen_name(void)
@@ -2313,19 +2275,13 @@ static int is_allowed_conf_type(const type_t *type)
 static int is_ptr_guid_type(const type_t *type)
 {
     unsigned int align = 0;
-    for (;;)
-    {
-        if (type->kind == TKIND_ALIAS)
-            type = type->orig;
-        else if (is_ptr(type))
-        {
-            type = type->ref;
-            break;
-        }
-        else
-            return FALSE;
-    }
-    return (type_memsize(type, &align) == 16);
+
+    /* first, make sure it is a pointer to something */
+    if (!is_ptr(type)) return FALSE;
+
+    /* second, make sure it is a pointer to something of size sizeof(GUID),
+     * i.e. 16 bytes */
+    return (type_memsize(type_pointer_get_ref(type), &align) == 16);
 }
 
 static void check_conformance_expr_list(const char *attr_name, const var_t *arg, const type_t *container_type, expr_list_t *expr_list)
@@ -2423,10 +2379,12 @@ static void check_field_common(const type_t *container_type,
             is_context_handle = 1;
             break;
         }
-        if (type->kind == TKIND_ALIAS)
+        if (type_is_alias(type))
             type = type->orig;
-        else if (is_ptr(type) || is_array(type))
+        else if (is_ptr(type))
             type = type->ref;
+        else if (is_array(type))
+            type = type_array_get_element(type);
         else
             break;
     }
@@ -2444,9 +2402,7 @@ static void check_remoting_fields(const var_t *var, type_t *type)
     const var_t *field;
     const var_list_t *fields = NULL;
 
-    /* find the real type */
-    while (type->kind == TKIND_ALIAS)
-        type = type->orig;
+    type = type_get_real_type(type);
 
     if (type->checked)
         return;
@@ -2468,12 +2424,12 @@ static void check_remoting_fields(const var_t *var, type_t *type)
 }
 
 /* checks that arguments for a function make sense for marshalling and unmarshalling */
-static void check_remoting_args(const func_t *func)
+static void check_remoting_args(const var_t *func)
 {
-    const char *funcname = func->def->name;
+    const char *funcname = func->name;
     const var_t *arg;
 
-    if (func->args) LIST_FOR_EACH_ENTRY( arg, func->args, const var_t, entry )
+    if (func->type->details.function->args) LIST_FOR_EACH_ENTRY( arg, func->type->details.function->args, const var_t, entry )
     {
         int ptr_level = 0;
         const type_t *type = arg->type;
@@ -2485,12 +2441,12 @@ static void check_remoting_args(const func_t *func)
                 break;
             if (is_attr(type->attrs, ATTR_CONTEXTHANDLE))
                 break;
-            if (type->kind == TKIND_ALIAS)
+            if (type_is_alias(type))
                 type = type->orig;
             else if (is_ptr(type))
             {
                 ptr_level++;
-                type = type->ref;
+                type = type_pointer_get_ref(type);
             }
             else
                 break;
@@ -2508,11 +2464,11 @@ static void check_remoting_args(const func_t *func)
             }
         }
 
-        check_field_common(func->def->type, funcname, arg);
+        check_field_common(func->type, funcname, arg);
     }
 }
 
-static void add_explicit_handle_if_necessary(func_t *func)
+static void add_explicit_handle_if_necessary(var_t *func)
 {
     const var_t* explicit_handle_var;
     const var_t* explicit_generic_handle_var = NULL;
@@ -2534,28 +2490,44 @@ static void add_explicit_handle_if_necessary(func_t *func)
                 var_t *idl_handle = make_var(xstrdup("IDL_handle"));
                 idl_handle->attrs = append_attr(NULL, make_attr(ATTR_IN));
                 idl_handle->type = find_type_or_error("handle_t", 0);
-                function_add_head_arg(func, idl_handle);
+                type_function_add_head_arg(func->type, idl_handle);
             }
         }
     }
 }
 
-void check_functions(const type_t *iface)
+static void check_functions(const type_t *iface, int is_inside_library)
 {
-    if (is_attr(iface->attrs, ATTR_EXPLICIT_HANDLE) && iface->funcs)
+    const statement_t *stmt;
+    if (is_attr(iface->attrs, ATTR_EXPLICIT_HANDLE))
     {
-        func_t *func;
-        LIST_FOR_EACH_ENTRY( func, iface->funcs, func_t, entry )
+        STATEMENTS_FOR_EACH_FUNC( stmt, type_iface_get_stmts(iface) )
+        {
+            var_t *func = stmt->u.var;
             add_explicit_handle_if_necessary(func);
+        }
     }
     if (!is_inside_library && !is_attr(iface->attrs, ATTR_LOCAL))
     {
-        const func_t *func;
-        if (iface->funcs) LIST_FOR_EACH_ENTRY( func, iface->funcs, const func_t, entry )
+        STATEMENTS_FOR_EACH_FUNC( stmt, type_iface_get_stmts(iface) )
         {
-            if (!is_attr(func->def->attrs, ATTR_LOCAL))
+            const var_t *func = stmt->u.var;
+            if (!is_attr(func->attrs, ATTR_LOCAL))
                 check_remoting_args(func);
         }
+    }
+}
+
+static void check_statements(const statement_list_t *stmts, int is_inside_library)
+{
+    const statement_t *stmt;
+
+    if (stmts) LIST_FOR_EACH_ENTRY(stmt, stmts, const statement_t, entry)
+    {
+      if (stmt->type == STMT_LIBRARY)
+          check_statements(stmt->u.lib->stmts, TRUE);
+      else if (stmt->type == STMT_TYPE && stmt->u.type->type == RPC_FC_IP)
+          check_functions(stmt->u.type, is_inside_library);
     }
 }
 
@@ -2570,10 +2542,11 @@ static void check_all_user_types(const statement_list_t *stmts)
     else if (stmt->type == STMT_TYPE && stmt->u.type->type == RPC_FC_IP &&
              !is_local(stmt->u.type->attrs))
     {
-      const func_t *f;
-      const func_list_t *fs = stmt->u.type->funcs;
-      if (fs) LIST_FOR_EACH_ENTRY(f, fs, const func_t, entry)
-        check_for_additional_prototype_types(f->args);
+      const statement_t *stmt_func;
+      STATEMENTS_FOR_EACH_FUNC(stmt_func, type_iface_get_stmts(stmt->u.type)) {
+        const var_t *func = stmt_func->u.var;
+        check_for_additional_prototype_types(func->type->details.function->args);
+      }
     }
   }
 }

@@ -166,10 +166,10 @@ int cant_be_null(const var_t *v)
   if (is_user_type(type))
       return 0;
 
-  if (! attrs && type)
+  if (!attrs && is_ptr(type))
   {
     attrs = type->attrs;
-    type = type->ref;
+    type = type_pointer_get_ref(type);
   }
 
   while (attrs)
@@ -182,10 +182,10 @@ int cant_be_null(const var_t *v)
     if (t == RPC_FC_RP)
       return 1;
 
-    if (type)
+    if (is_ptr(type))
     {
       attrs = type->attrs;
-      type = type->ref;
+      type = type_pointer_get_ref(type);
     }
     else
       attrs = NULL;
@@ -196,17 +196,19 @@ int cant_be_null(const var_t *v)
 
 static int need_delegation(const type_t *iface)
 {
-    return iface->ref && iface->ref->ref && iface->ref->ignore;
+    return type_iface_get_inherit(iface) &&
+           type_iface_get_inherit(type_iface_get_inherit(iface)) &&
+           type_iface_get_inherit(iface)->ignore;
 }
 
 static int get_delegation_indirect(const type_t *iface, const type_t ** delegate_to)
 {
   const type_t * cur_iface;
-  for (cur_iface = iface; cur_iface != NULL; cur_iface = cur_iface->ref)
+  for (cur_iface = iface; cur_iface != NULL; cur_iface = type_iface_get_inherit(cur_iface))
     if (need_delegation(cur_iface))
     {
       if(delegate_to)
-        *delegate_to = cur_iface->ref;
+        *delegate_to = type_iface_get_inherit(cur_iface);
       return 1;
     }
   return 0;
@@ -297,29 +299,28 @@ static void proxy_free_variables( var_list_t *args, const char *local_var_prefix
     }
 }
 
-static void gen_proxy(type_t *iface, const func_t *cur, int idx,
+static void gen_proxy(type_t *iface, const var_t *func, int idx,
                       unsigned int proc_offset)
 {
-  var_t *def = cur->def;
-  int has_ret = !is_void(get_func_return_type(cur));
-  int has_full_pointer = is_full_pointer_function(cur);
-  const char *callconv = get_attrp(def->type->attrs, ATTR_CALLCONV);
+  int has_ret = !is_void(type_function_get_rettype(func->type));
+  int has_full_pointer = is_full_pointer_function(func);
+  const char *callconv = get_attrp(func->type->attrs, ATTR_CALLCONV);
   if (!callconv) callconv = "";
 
   indent = 0;
   print_proxy( "static void __finally_%s_%s_Proxy( struct __proxy_frame *__frame )\n",
-               iface->name, get_name(def) );
+               iface->name, get_name(func) );
   print_proxy( "{\n");
   indent++;
-  if (has_full_pointer) write_full_pointer_free(proxy, indent, cur);
+  if (has_full_pointer) write_full_pointer_free(proxy, indent, func);
   print_proxy( "NdrProxyFreeBuffer( __frame->This, &__frame->_StubMsg );\n" );
   indent--;
   print_proxy( "}\n");
   print_proxy( "\n");
 
-  write_type_decl_left(proxy, get_func_return_type(cur));
-  print_proxy( " %s %s_%s_Proxy(\n", callconv, iface->name, get_name(def));
-  write_args(proxy, cur->args, iface->name, 1, TRUE);
+  write_type_decl_left(proxy, type_function_get_rettype(func->type));
+  print_proxy( " %s %s_%s_Proxy(\n", callconv, iface->name, get_name(func));
+  write_args(proxy, type_get_function_args(func->type), iface->name, 1, TRUE);
   print_proxy( ")\n");
   print_proxy( "{\n");
   indent ++;
@@ -327,46 +328,46 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
   /* local variables */
   if (has_ret) {
     print_proxy( "" );
-    write_type_decl_left(proxy, get_func_return_type(cur));
+    write_type_decl_left(proxy, type_function_get_rettype(func->type));
 
     /* Initialize _RetVal properly in order to avoid compiler warnings */
-    if (is_ptr(get_func_return_type(cur)) || is_array(get_func_return_type(cur)))
+    if (is_ptr(type_function_get_rettype(func->type)) || is_array(type_function_get_rettype(func->type)))
       print_proxy(" _RetVal = NULL;\n");
     else
       print_proxy(" _RetVal = 0;\n");
   }
   print_proxy( "RPC_MESSAGE _RpcMessage;\n" );
   if (has_ret) {
-    if (decl_indirect(get_func_return_type(cur)))
+    if (decl_indirect(type_function_get_rettype(func->type)))
       print_proxy("void *_p_%s = &%s;\n",
                  "_RetVal", "_RetVal");
   }
   print_proxy( "\n");
 
-  print_proxy( "RpcExceptionInit( __proxy_filter, __finally_%s_%s_Proxy );\n", iface->name, get_name(def) );
+  print_proxy( "RpcExceptionInit( __proxy_filter, __finally_%s_%s_Proxy );\n", iface->name, get_name(func) );
   print_proxy( "__frame->This = This;\n" );
 
   if (has_full_pointer)
-    write_full_pointer_init(proxy, indent, cur, FALSE);
+    write_full_pointer_init(proxy, indent, func, FALSE);
 
   /* FIXME: trace */
-  clear_output_vars( cur->args );
+  clear_output_vars( type_get_function_args(func->type) );
 
   print_proxy( "RpcTryExcept\n" );
   print_proxy( "{\n" );
   indent++;
   print_proxy( "NdrProxyInitialize(This, &_RpcMessage, &__frame->_StubMsg, &Object_StubDesc, %d);\n", idx);
-  proxy_check_pointers( cur->args );
+  proxy_check_pointers( type_get_function_args(func->type) );
 
   print_proxy( "RpcTryFinally\n" );
   print_proxy( "{\n" );
   indent++;
 
-  write_remoting_arguments(proxy, indent, cur, "", PASS_IN, PHASE_BUFFERSIZE);
+  write_remoting_arguments(proxy, indent, func, "", PASS_IN, PHASE_BUFFERSIZE);
 
   print_proxy( "NdrProxyGetBuffer(This, &__frame->_StubMsg);\n" );
 
-  write_remoting_arguments(proxy, indent, cur, "", PASS_IN, PHASE_MARSHAL);
+  write_remoting_arguments(proxy, indent, func, "", PASS_IN, PHASE_MARSHAL);
 
   print_proxy( "NdrProxySendReceive(This, &__frame->_StubMsg);\n" );
   fprintf(proxy, "\n");
@@ -379,15 +380,16 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
   indent--;
   fprintf(proxy, "\n");
 
-  write_remoting_arguments(proxy, indent, cur, "", PASS_OUT, PHASE_UNMARSHAL);
+  write_remoting_arguments(proxy, indent, func, "", PASS_OUT, PHASE_UNMARSHAL);
 
   if (has_ret)
   {
-      if (decl_indirect(get_func_return_type(cur)))
+      if (decl_indirect(type_function_get_rettype(func->type)))
           print_proxy("MIDL_memset(&%s, 0, sizeof(%s));\n", "_RetVal", "_RetVal");
-      else if (is_ptr(get_func_return_type(cur)) || is_array(get_func_return_type(cur)))
+      else if (is_ptr(type_function_get_rettype(func->type)) ||
+               is_array(type_function_get_rettype(func->type)))
           print_proxy("%s = 0;\n", "_RetVal");
-      write_remoting_arguments(proxy, indent, cur, "", PASS_RETURN, PHASE_UNMARSHAL);
+      write_remoting_arguments(proxy, indent, func, "", PASS_RETURN, PHASE_UNMARSHAL);
   }
 
   indent--;
@@ -395,7 +397,7 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
   print_proxy( "RpcFinally\n" );
   print_proxy( "{\n" );
   indent++;
-  print_proxy( "__finally_%s_%s_Proxy( __frame );\n", iface->name, get_name(def) );
+  print_proxy( "__finally_%s_%s_Proxy( __frame );\n", iface->name, get_name(func) );
   indent--;
   print_proxy( "}\n");
   print_proxy( "RpcEndFinally\n" );
@@ -405,7 +407,7 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
   print_proxy( "{\n" );
   if (has_ret) {
     indent++;
-    proxy_free_variables( cur->args, "" );
+    proxy_free_variables( type_get_function_args(func->type), "" );
     print_proxy( "_RetVal = NdrProxyErrorHandler(RpcExceptionCode());\n" );
     indent--;
   }
@@ -420,34 +422,33 @@ static void gen_proxy(type_t *iface, const func_t *cur, int idx,
   print_proxy( "\n");
 }
 
-static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
+static void gen_stub(type_t *iface, const var_t *func, const char *cas,
                      unsigned int proc_offset)
 {
-  var_t *def = cur->def;
   const var_t *arg;
-  int has_ret = !is_void(get_func_return_type(cur));
-  int has_full_pointer = is_full_pointer_function(cur);
+  int has_ret = !is_void(type_function_get_rettype(func->type));
+  int has_full_pointer = is_full_pointer_function(func);
 
   indent = 0;
-  print_proxy( "struct __frame_%s_%s_Stub\n{\n", iface->name, get_name(def));
+  print_proxy( "struct __frame_%s_%s_Stub\n{\n", iface->name, get_name(func));
   indent++;
   print_proxy( "__DECL_EXCEPTION_FRAME\n" );
   print_proxy( "MIDL_STUB_MESSAGE _StubMsg;\n");
   print_proxy( "%s * _This;\n", iface->name );
-  declare_stub_args( proxy, indent, cur );
+  declare_stub_args( proxy, indent, func );
   indent--;
   print_proxy( "};\n\n" );
 
-  print_proxy( "static void __finally_%s_%s_Stub(", iface->name, get_name(def) );
-  print_proxy( " struct __frame_%s_%s_Stub *__frame )\n{\n", iface->name, get_name(def) );
+  print_proxy( "static void __finally_%s_%s_Stub(", iface->name, get_name(func) );
+  print_proxy( " struct __frame_%s_%s_Stub *__frame )\n{\n", iface->name, get_name(func) );
   indent++;
-  write_remoting_arguments(proxy, indent, cur, "__frame->", PASS_OUT, PHASE_FREE);
+  write_remoting_arguments(proxy, indent, func, "__frame->", PASS_OUT, PHASE_FREE);
   if (has_full_pointer)
-    write_full_pointer_free(proxy, indent, cur);
+    write_full_pointer_free(proxy, indent, func);
   indent--;
   print_proxy( "}\n\n" );
 
-  print_proxy( "void __RPC_STUB %s_%s_Stub(\n", iface->name, get_name(def));
+  print_proxy( "void __RPC_STUB %s_%s_Stub(\n", iface->name, get_name(func));
   indent++;
   print_proxy( "IRpcStubBuffer* This,\n");
   print_proxy( "IRpcChannelBuffer *_pRpcChannelBuffer,\n");
@@ -457,7 +458,7 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
   print_proxy( "{\n");
   indent++;
   print_proxy( "struct __frame_%s_%s_Stub __f, * const __frame = &__f;\n\n",
-               iface->name, get_name(def) );
+               iface->name, get_name(func) );
 
   print_proxy("__frame->_This = (%s*)((CStdStubBuffer*)This)->pvServerObject;\n\n", iface->name);
 
@@ -465,37 +466,37 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
 
   print_proxy("NdrStubInitialize(_pRpcMessage, &__frame->_StubMsg, &Object_StubDesc, _pRpcChannelBuffer);\n");
   fprintf(proxy, "\n");
-  print_proxy( "RpcExceptionInit( 0, __finally_%s_%s_Stub );\n", iface->name, get_name(def) );
+  print_proxy( "RpcExceptionInit( 0, __finally_%s_%s_Stub );\n", iface->name, get_name(func) );
 
-  write_parameters_init(proxy, indent, cur, "__frame->");
+  write_parameters_init(proxy, indent, func, "__frame->");
 
   print_proxy("RpcTryFinally\n");
   print_proxy("{\n");
   indent++;
   if (has_full_pointer)
-    write_full_pointer_init(proxy, indent, cur, TRUE);
+    write_full_pointer_init(proxy, indent, func, TRUE);
   print_proxy("if ((_pRpcMessage->DataRepresentation & 0xffff) != NDR_LOCAL_DATA_REPRESENTATION)\n");
   indent++;
   print_proxy("NdrConvert( &__frame->_StubMsg, &__MIDL_ProcFormatString.Format[%u]);\n", proc_offset );
   indent--;
   fprintf(proxy, "\n");
 
-  write_remoting_arguments(proxy, indent, cur, "__frame->", PASS_IN, PHASE_UNMARSHAL);
+  write_remoting_arguments(proxy, indent, func, "__frame->", PASS_IN, PHASE_UNMARSHAL);
   fprintf(proxy, "\n");
 
-  assign_stub_out_args( proxy, indent, cur, "__frame->" );
+  assign_stub_out_args( proxy, indent, func, "__frame->" );
 
   print_proxy("*_pdwStubPhase = STUB_CALL_SERVER;\n");
   fprintf(proxy, "\n");
   print_proxy("");
   if (has_ret) fprintf(proxy, "__frame->_RetVal = ");
   if (cas) fprintf(proxy, "%s_%s_Stub", iface->name, cas);
-  else fprintf(proxy, "__frame->_This->lpVtbl->%s", get_name(def));
+  else fprintf(proxy, "__frame->_This->lpVtbl->%s", get_name(func));
   fprintf(proxy, "(__frame->_This");
 
-  if (cur->args)
+  if (type_get_function_args(func->type))
   {
-      LIST_FOR_EACH_ENTRY( arg, cur->args, const var_t, entry )
+      LIST_FOR_EACH_ENTRY( arg, type_get_function_args(func->type), const var_t, entry )
           fprintf(proxy, ", %s__frame->%s", arg->type->declarray ? "*" : "", arg->name);
   }
   fprintf(proxy, ");\n");
@@ -503,26 +504,26 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
   print_proxy("*_pdwStubPhase = STUB_MARSHAL;\n");
   fprintf(proxy, "\n");
 
-  write_remoting_arguments(proxy, indent, cur, "__frame->", PASS_OUT, PHASE_BUFFERSIZE);
+  write_remoting_arguments(proxy, indent, func, "__frame->", PASS_OUT, PHASE_BUFFERSIZE);
 
-  if (!is_void(get_func_return_type(cur)))
-    write_remoting_arguments(proxy, indent, cur, "__frame->", PASS_RETURN, PHASE_BUFFERSIZE);
+  if (!is_void(type_function_get_rettype(func->type)))
+    write_remoting_arguments(proxy, indent, func, "__frame->", PASS_RETURN, PHASE_BUFFERSIZE);
 
   print_proxy("NdrStubGetBuffer(This, _pRpcChannelBuffer, &__frame->_StubMsg);\n");
 
-  write_remoting_arguments(proxy, indent, cur, "__frame->", PASS_OUT, PHASE_MARSHAL);
+  write_remoting_arguments(proxy, indent, func, "__frame->", PASS_OUT, PHASE_MARSHAL);
   fprintf(proxy, "\n");
 
   /* marshall the return value */
-  if (!is_void(get_func_return_type(cur)))
-    write_remoting_arguments(proxy, indent, cur, "__frame->", PASS_RETURN, PHASE_MARSHAL);
+  if (!is_void(type_function_get_rettype(func->type)))
+    write_remoting_arguments(proxy, indent, func, "__frame->", PASS_RETURN, PHASE_MARSHAL);
 
   indent--;
   print_proxy("}\n");
   print_proxy("RpcFinally\n");
   print_proxy("{\n");
   indent++;
-  print_proxy( "__finally_%s_%s_Stub( __frame );\n", iface->name, get_name(def) );
+  print_proxy( "__finally_%s_%s_Stub( __frame );\n", iface->name, get_name(func) );
   indent--;
   print_proxy("}\n");
   print_proxy("RpcEndFinally\n");
@@ -536,28 +537,47 @@ static void gen_stub(type_t *iface, const func_t *cur, const char *cas,
 
 static int count_methods(type_t *iface)
 {
-    const func_t *cur;
+    const statement_t *stmt;
     int count = 0;
 
-    if (iface->ref) count = count_methods(iface->ref);
-    if (iface->funcs)
-        LIST_FOR_EACH_ENTRY( cur, iface->funcs, const func_t, entry )
-            if (!is_callas(cur->def->attrs)) count++;
+    if (type_iface_get_inherit(iface))
+        count = count_methods(type_iface_get_inherit(iface));
+
+    STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface)) {
+        const var_t *func = stmt->u.var;
+        if (!is_callas(func->attrs)) count++;
+    }
     return count;
+}
+
+static const statement_t * get_callas_source(const type_t * iface, const var_t * def)
+{
+  const statement_t * source;
+  STATEMENTS_FOR_EACH_FUNC( source, type_iface_get_stmts(iface)) {
+    const var_t * cas = is_callas(source->u.var->attrs );
+    if (cas && !strcmp(def->name, cas->name))
+      return source;
+  }
+  return NULL;
 }
 
 static int write_proxy_methods(type_t *iface, int skip)
 {
-  const func_t *cur;
+  const statement_t *stmt;
   int i = 0;
 
-  if (iface->ref) i = write_proxy_methods(iface->ref, need_delegation(iface));
-  if (iface->funcs) LIST_FOR_EACH_ENTRY( cur, iface->funcs, const func_t, entry ) {
-    var_t *def = cur->def;
-    if (!is_callas(def->attrs)) {
+  if (type_iface_get_inherit(iface))
+    i = write_proxy_methods(type_iface_get_inherit(iface),
+                            need_delegation(iface));
+  STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface)) {
+    const var_t *func = stmt->u.var;
+    if (!is_callas(func->attrs)) {
+      if (i != func->type->details.function->idx )
+        error("widl internal error: method index mismatch\n");
       if (i) fprintf(proxy, ",\n");
-      if (skip) print_proxy( "0  /* %s_%s_Proxy */", iface->name, get_name(def));
-      else print_proxy( "%s_%s_Proxy", iface->name, get_name(def));
+      if (skip || (is_local(func->attrs) && !get_callas_source(iface, func)))
+           print_proxy( "0  /* %s_%s_Proxy */", iface->name, get_name(func));
+      else print_proxy( "%s_%s_Proxy", iface->name, get_name(func));
       i++;
     }
   }
@@ -566,18 +586,29 @@ static int write_proxy_methods(type_t *iface, int skip)
 
 static int write_stub_methods(type_t *iface, int skip)
 {
-  const func_t *cur;
+  const statement_t *stmt;
   int i = 0;
 
-  if (iface->ref) i = write_stub_methods(iface->ref, need_delegation(iface));
-  else return i; /* skip IUnknown */
+  if (type_iface_get_inherit(iface))
+    i = write_stub_methods(type_iface_get_inherit(iface), need_delegation(iface));
+  else
+    return i; /* skip IUnknown */
 
-  if (iface->funcs) LIST_FOR_EACH_ENTRY( cur, iface->funcs, const func_t, entry ) {
-    var_t *def = cur->def;
-    if (!is_local(def->attrs)) {
+  STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface)) {
+    const var_t *func = stmt->u.var;
+    if (!is_callas(func->attrs)) {
+      int missing = 0;
+      const char * fname = get_name(func);
+      if(is_local(func->attrs)) {
+        const statement_t * callas_source = get_callas_source(iface, func);
+        if(!callas_source)
+          missing = 1;
+        else
+          fname = get_name(callas_source->u.var);
+      }
       if (i) fprintf(proxy,",\n");
-      if (skip) print_proxy("STUB_FORWARDING_FUNCTION");
-      else print_proxy( "%s_%s_Stub", iface->name, get_name(def));
+      if (skip || missing) print_proxy("STUB_FORWARDING_FUNCTION");
+      else print_proxy( "%s_%s_Stub", iface->name, fname);
       i++;
     }
   }
@@ -586,41 +617,42 @@ static int write_stub_methods(type_t *iface, int skip)
 
 static void write_proxy(type_t *iface, unsigned int *proc_offset)
 {
-  int midx = -1, count;
-  const func_t *cur;
+  int count;
+  const statement_t *stmt;
+  int first_func = 1;
 
   /* FIXME: check for [oleautomation], shouldn't generate proxies/stubs if specified */
 
-  fprintf(proxy, "/*****************************************************************************\n");
-  fprintf(proxy, " * %s interface\n", iface->name);
-  fprintf(proxy, " */\n");
-  if (iface->funcs) LIST_FOR_EACH_ENTRY( cur, iface->funcs, const func_t, entry )
-  {
-    const var_t *def = cur->def;
-    if (!is_local(def->attrs)) {
-      const var_t *cas = is_callas(def->attrs);
+  STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface)) {
+    const var_t *func = stmt->u.var;
+    if (first_func) {
+      fprintf(proxy, "/*****************************************************************************\n");
+      fprintf(proxy, " * %s interface\n", iface->name);
+      fprintf(proxy, " */\n");
+      first_func = 0;
+    }
+    if (!is_local(func->attrs)) {
+      const var_t *cas = is_callas(func->attrs);
       const char *cname = cas ? cas->name : NULL;
-      int idx = cur->idx;
+      int idx = func->type->details.function->idx;
       if (cname) {
-          const func_t *m;
-          LIST_FOR_EACH_ENTRY( m, iface->funcs, const func_t, entry )
-              if (!strcmp(m->def->name, cname))
+          const statement_t *stmt2;
+          STATEMENTS_FOR_EACH_FUNC(stmt2, type_iface_get_stmts(iface)) {
+              const var_t *m = stmt2->u.var;
+              if (!strcmp(m->name, cname))
               {
-                  idx = m->idx;
+                  idx = m->type->details.function->idx;
                   break;
               }
+          }
       }
-      gen_proxy(iface, cur, idx, *proc_offset);
-      gen_stub(iface, cur, cname, *proc_offset);
-      *proc_offset += get_size_procformatstring_func( cur );
-      if (midx == -1) midx = idx;
-      else if (midx != idx) error("method index mismatch in write_proxy\n");
-      midx++;
+      gen_proxy(iface, func, idx, *proc_offset);
+      gen_stub(iface, func, cname, *proc_offset);
+      *proc_offset += get_size_procformatstring_func( func );
     }
   }
 
   count = count_methods(iface);
-  if (midx != -1 && midx != count) error("invalid count %u/%u\n", count, midx);
 
   /* proxy vtable */
   print_proxy( "static const CINTERFACE_PROXY_VTABLE(%d) _%sProxyVtbl =\n", count, iface->name);
@@ -750,7 +782,7 @@ static void build_iface_list( const statement_list_t *stmts, type_t **ifaces[], 
         else if (stmt->type == STMT_TYPE && stmt->u.type->type == RPC_FC_IP)
         {
             type_t *iface = stmt->u.type;
-            if (iface->ref && need_proxy(iface))
+            if (type_iface_get_inherit(iface) && need_proxy(iface))
             {
                 *ifaces = xrealloc( *ifaces, (*count + 1) * sizeof(*ifaces) );
                 (*ifaces)[(*count)++] = iface;

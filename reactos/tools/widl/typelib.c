@@ -44,33 +44,9 @@
 #include "typelib.h"
 #include "widltypes.h"
 #include "typelib_struct.h"
+#include "typetree.h"
 
 static typelib_t *typelib;
-
-type_t *duptype(type_t *t, int dupname)
-{
-  type_t *d = alloc_type();
-
-  *d = *t;
-  if (dupname && t->name)
-    d->name = xstrdup(t->name);
-
-  d->orig = t;
-  return d;
-}
-
-type_t *alias(type_t *t, const char *name)
-{
-  type_t *a = duptype(t, 0);
-
-  a->name = xstrdup(name);
-  a->kind = TKIND_ALIAS;
-  a->attrs = NULL;
-  a->declarray = FALSE;
-  init_loc_info(&a->loc_info);
-
-  return a;
-}
 
 int is_ptr(const type_t *t)
 {
@@ -147,12 +123,19 @@ static unsigned short builtin_vt(const type_t *t)
     return kwp->vt;
   }
   if (is_string_type (t->attrs, t))
-    switch (t->ref->type)
+  {
+    unsigned char fc;
+    if (is_array(t))
+      fc = type_array_get_element(t)->type;
+    else
+      fc = type_pointer_get_ref(t)->type;
+    switch (fc)
       {
       case RPC_FC_CHAR: return VT_LPSTR;
       case RPC_FC_WCHAR: return VT_LPWSTR;
       default: break;
       }
+  }
   return 0;
 }
 
@@ -172,7 +155,7 @@ unsigned short get_type_vt(type_t *t)
     if (vt) return vt;
   }
 
-  if (t->kind == TKIND_ALIAS && is_attr(t->attrs, ATTR_PUBLIC))
+  if (type_is_alias(t) && is_attr(t->attrs, ATTR_PUBLIC))
     return VT_USERDEFINED;
 
   switch (t->type) {
@@ -206,8 +189,13 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_UP:
   case RPC_FC_OP:
   case RPC_FC_FP:
+  case RPC_FC_SMFARRAY:
+  case RPC_FC_LGFARRAY:
+  case RPC_FC_SMVARRAY:
+  case RPC_FC_LGVARRAY:
   case RPC_FC_CARRAY:
   case RPC_FC_CVARRAY:
+  case RPC_FC_BOGUS_ARRAY:
     if(t->ref)
     {
       if (match(t->ref->name, "SAFEARRAY"))
@@ -232,9 +220,10 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_CVSTRUCT:
   case RPC_FC_BOGUS_STRUCT:
   case RPC_FC_COCLASS:
+  case RPC_FC_MODULE:
     return VT_USERDEFINED;
   case 0:
-    return t->kind == TKIND_PRIMITIVE ? VT_VOID : VT_USERDEFINED;
+    return VT_VOID;
   default:
     error("get_type_vt: unknown type: 0x%02x\n", t->type);
   }

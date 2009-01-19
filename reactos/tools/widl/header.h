@@ -21,7 +21,7 @@
 #ifndef __WIDL_HEADER_H
 #define __WIDL_HEADER_H
 
-#include "widltypes.h"
+#include "typetree.h"
 
 extern int is_ptrchain_attr(const var_t *var, enum attr_type t);
 extern int is_aliaschain_attr(const type_t *var, enum attr_type t);
@@ -47,23 +47,23 @@ extern int need_proxy_file(const statement_list_t *stmts);
 extern const var_t *is_callas(const attr_list_t *list);
 extern void write_args(FILE *h, const var_list_t *arg, const char *name, int obj, int do_indent);
 extern void write_array(FILE *h, array_dims_t *v, int field);
-extern const var_t* get_explicit_handle_var(const func_t* func);
+extern const var_t* get_explicit_handle_var(const var_t *func);
 extern const type_t* get_explicit_generic_handle_type(const var_t* var);
-extern const var_t* get_explicit_generic_handle_var(const func_t* func);
-extern const var_t* get_context_handle_var(const func_t* func);
-extern int has_out_arg_or_return(const func_t *func);
+extern const var_t* get_explicit_generic_handle_var(const var_t *func);
+extern const var_t* get_context_handle_var(const var_t *func);
+extern int has_out_arg_or_return(const var_t *func);
 extern void write_guid(FILE *f, const char *guid_prefix, const char *name,
                        const UUID *uuid);
 extern int is_const_decl(const var_t *var);
 
 static inline int last_ptr(const type_t *type)
 {
-    return is_ptr(type) && !is_declptr(type->ref);
+    return is_ptr(type) && !is_declptr(type_pointer_get_ref(type));
 }
 
 static inline int last_array(const type_t *type)
 {
-    return is_array(type) && !is_array(type->ref);
+    return is_array(type) && !is_array(type_array_get_element(type));
 }
 
 static inline int is_string_type(const attr_list_t *attrs, const type_t *type)
@@ -75,7 +75,7 @@ static inline int is_string_type(const attr_list_t *attrs, const type_t *type)
 static inline int is_context_handle(const type_t *type)
 {
     const type_t *t;
-    for (t = type; is_ptr(t); t = t->ref)
+    for (t = type; is_ptr(t); t = type_pointer_get_ref(t))
         if (is_attr(t->attrs, ATTR_CONTEXTHANDLE))
             return 1;
     return 0;
