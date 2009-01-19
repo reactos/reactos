@@ -117,8 +117,15 @@ HKCR,"ttffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.
 ; Help Files
 HKCR,".hlp","",0x00000000,"hlpfile"
 HKCR,"hlpfile","",0x00000000,"Help File"
-HKCR,"fonfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
+HKCR,"hlpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
 HKCR,"hlpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-24"
+HKCR,"hlpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\winhlp32.exe %1"
+
+HKCR,".chm","",0x00000000,"chm.file"
+HKCR,"chm.file","",0x00000000,"Help File"
+HKCR,"chm.file","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-168"
+HKCR,"chm.file\DefaultIcon","",0x00020000,"%SystemRoot%\hh.exe,0"
+HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe %1"
 
 ; set MIME type for .html and .htm because Tiny webserver needs it
 HKCR,".htm","",0x00000000,"html"

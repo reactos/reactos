@@ -44,7 +44,7 @@ base\applications\mscutils\devmgmt\devmgmt.exe          1
 base\applications\mscutils\eventvwr\eventvwr.exe        1
 base\applications\games\solitaire\sol.exe               1
 base\applications\games\winemine\winemine.exe           1
-base\applications\hh\hh.exe                             1
+base\applications\hh\hh.exe                             4
 base\applications\kbswitch\kbswitch.exe                 1
 base\applications\kbswitch\kbsdll\kbsdll.dll            1
 base\applications\logoff\logoff.exe                     1
