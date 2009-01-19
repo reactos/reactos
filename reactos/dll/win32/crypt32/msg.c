@@ -1169,6 +1169,7 @@ static BOOL CSignedMsgData_Update(CSignedMsgData *msg_data,
 typedef struct _CSignedEncodeMsg
 {
     CryptMsgBase    base;
+    LPSTR           innerOID;
     CRYPT_DATA_BLOB data;
     CSignedMsgData  msg_data;
 } CSignedEncodeMsg;
@@ -1178,6 +1179,7 @@ static void CSignedEncodeMsg_Close(HCRYPTMSG hCryptMsg)
     CSignedEncodeMsg *msg = (CSignedEncodeMsg *)hCryptMsg;
     DWORD i;
 
+    CryptMemFree(msg->innerOID);
     CryptMemFree(msg->data.pbData);
     CRYPT_FreeBlobArray((BlobArray *)&msg->msg_data.info->cCertEncoded);
     CRYPT_FreeBlobArray((BlobArray *)&msg->msg_data.info->cCrlEncoded);
@@ -1227,32 +1229,46 @@ static BOOL CSignedEncodeMsg_GetParam(HCRYPTMSG hCryptMsg, DWORD dwParamType,
     case CMSG_BARE_CONTENT_PARAM:
     {
         CRYPT_SIGNED_INFO info;
-        char oid_rsa_data[] = szOID_RSA_data;
+        BOOL freeContent = FALSE;
 
         info = *msg->msg_data.info;
-        /* Quirk:  OID is only encoded messages if an update has happened */
-        if (msg->base.state != MsgStateInit)
-            info.content.pszObjId = oid_rsa_data;
-        else
-            info.content.pszObjId = NULL;
-        if (msg->data.cbData)
+        if (!msg->innerOID || !strcmp(msg->innerOID, szOID_RSA_data))
         {
-            CRYPT_DATA_BLOB blob = { msg->data.cbData, msg->data.pbData };
+            char oid_rsa_data[] = szOID_RSA_data;
 
-            ret = CryptEncodeObjectEx(X509_ASN_ENCODING, X509_OCTET_STRING,
-             &blob, CRYPT_ENCODE_ALLOC_FLAG, NULL,
-             &info.content.Content.pbData, &info.content.Content.cbData);
+            /* Quirk:  OID is only encoded messages if an update has happened */
+            if (msg->base.state != MsgStateInit)
+                info.content.pszObjId = oid_rsa_data;
+            else
+                info.content.pszObjId = NULL;
+            if (msg->data.cbData)
+            {
+                CRYPT_DATA_BLOB blob = { msg->data.cbData, msg->data.pbData };
+
+                ret = CryptEncodeObjectEx(X509_ASN_ENCODING, X509_OCTET_STRING,
+                 &blob, CRYPT_ENCODE_ALLOC_FLAG, NULL,
+                 &info.content.Content.pbData, &info.content.Content.cbData);
+                freeContent = TRUE;
+            }
+            else
+            {
+                info.content.Content.cbData = 0;
+                info.content.Content.pbData = NULL;
+                ret = TRUE;
+            }
         }
         else
         {
-            info.content.Content.cbData = 0;
-            info.content.Content.pbData = NULL;
+            info.content.pszObjId = msg->innerOID;
+            info.content.Content.cbData = msg->data.cbData;
+            info.content.Content.pbData = msg->data.pbData;
             ret = TRUE;
         }
         if (ret)
         {
             ret = CRYPT_AsnEncodeCMSSignedInfo(&info, pvData, pcbData);
-            LocalFree(info.content.Content.pbData);
+            if (freeContent)
+                LocalFree(info.content.Content.pbData);
         }
         break;
     }
@@ -1357,9 +1373,22 @@ static HCRYPTMSG CSignedEncodeMsg_Open(DWORD dwFlags,
         CryptMsgBase_Init((CryptMsgBase *)msg, dwFlags, pStreamInfo,
          CSignedEncodeMsg_Close, CSignedEncodeMsg_GetParam,
          CSignedEncodeMsg_Update, CRYPT_DefaultMsgControl);
+        if (pszInnerContentObjID)
+        {
+            msg->innerOID = CryptMemAlloc(strlen(pszInnerContentObjID) + 1);
+            if (msg->innerOID)
+                strcpy(msg->innerOID, pszInnerContentObjID);
+            else
+                ret = FALSE;
+        }
+        else
+            msg->innerOID = NULL;
         msg->data.cbData = 0;
         msg->data.pbData = NULL;
-        msg->msg_data.info = CryptMemAlloc(sizeof(CRYPT_SIGNED_INFO));
+        if (ret)
+            msg->msg_data.info = CryptMemAlloc(sizeof(CRYPT_SIGNED_INFO));
+        else
+            msg->msg_data.info = NULL;
         if (msg->msg_data.info)
         {
             memset(msg->msg_data.info, 0, sizeof(CRYPT_SIGNED_INFO));
@@ -2895,4 +2924,61 @@ BOOL WINAPI CryptMsgVerifyCountersignatureEncodedEx(HCRYPTPROV_LEGACY hCryptProv
      dwEncodingType, pbSignerInfo, cbSignerInfo, pbSignerInfoCountersignature,
      cbSignerInfoCountersignature, dwSignerType, pvSigner, dwFlags, pvReserved);
     return FALSE;
+}
+
+BOOL WINAPI CryptMsgEncodeAndSignCTL(DWORD dwMsgEncodingType,
+ PCTL_INFO pCtlInfo, PCMSG_SIGNED_ENCODE_INFO pSignInfo, DWORD dwFlags,
+ BYTE *pbEncoded, DWORD *pcbEncoded)
+{
+    BOOL ret;
+    BYTE *pbCtlContent;
+    DWORD cbCtlContent;
+
+    TRACE("(%08x, %p, %p, %08x, %p, %p)\n", dwMsgEncodingType, pCtlInfo,
+     pSignInfo, dwFlags, pbEncoded, pcbEncoded);
+
+    if (dwFlags)
+    {
+        FIXME("unimplemented for flags %08x\n", dwFlags);
+        return FALSE;
+    }
+    if ((ret = CryptEncodeObjectEx(dwMsgEncodingType, PKCS_CTL, pCtlInfo,
+     CRYPT_ENCODE_ALLOC_FLAG, NULL, &pbCtlContent, &cbCtlContent)))
+    {
+        ret = CryptMsgSignCTL(dwMsgEncodingType, pbCtlContent, cbCtlContent,
+         pSignInfo, dwFlags, pbEncoded, pcbEncoded);
+        LocalFree(pbCtlContent);
+    }
+    return ret;
+}
+
+BOOL WINAPI CryptMsgSignCTL(DWORD dwMsgEncodingType, BYTE *pbCtlContent,
+ DWORD cbCtlContent, PCMSG_SIGNED_ENCODE_INFO pSignInfo, DWORD dwFlags,
+ BYTE *pbEncoded, DWORD *pcbEncoded)
+{
+    static char oid_ctl[] = szOID_CTL;
+    BOOL ret;
+    HCRYPTMSG msg;
+
+    TRACE("(%08x, %p, %d, %p, %08x, %p, %p)\n", dwMsgEncodingType,
+     pbCtlContent, cbCtlContent, pSignInfo, dwFlags, pbEncoded, pcbEncoded);
+
+    if (dwFlags)
+    {
+        FIXME("unimplemented for flags %08x\n", dwFlags);
+        return FALSE;
+    }
+    msg = CryptMsgOpenToEncode(dwMsgEncodingType, 0, CMSG_SIGNED, pSignInfo,
+     oid_ctl, NULL);
+    if (msg)
+    {
+        ret = CryptMsgUpdate(msg, pbCtlContent, cbCtlContent, TRUE);
+        if (ret)
+            ret = CryptMsgGetParam(msg, CMSG_CONTENT_PARAM, 0, pbEncoded,
+             pcbEncoded);
+        CryptMsgClose(msg);
+    }
+    else
+        ret = FALSE;
+    return ret;
 }

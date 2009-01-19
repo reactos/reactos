@@ -532,7 +532,7 @@ static BOOL WINAPI CRYPT_AsnEncodeOid(DWORD dwCertEncodingType,
         const char *ptr;
         int val1, val2;
 
-        if (sscanf(pszObjId, "%d.%d.%n", &val1, &val2, &firstPos) != 2)
+        if (sscanf(pszObjId, "%d.%d%n", &val1, &val2, &firstPos) != 2)
         {
             SetLastError(CRYPT_E_ASN1_ERROR);
             return FALSE;
@@ -540,6 +540,11 @@ static BOOL WINAPI CRYPT_AsnEncodeOid(DWORD dwCertEncodingType,
         bytesNeeded++;
         firstByte = val1 * 40 + val2;
         ptr = pszObjId + firstPos;
+        if (*ptr == '.')
+        {
+            ptr++;
+            firstPos++;
+        }
         while (ret && *ptr)
         {
             int pos;

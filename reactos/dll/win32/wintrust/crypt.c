@@ -30,6 +30,7 @@
 #include "mscat.h"
 #include "mssip.h"
 #include "imagehlp.h"
+#include "winternl.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -37,12 +38,26 @@
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 
 #define CATADMIN_MAGIC 0x43415441 /* 'CATA' */
+#define CRYPTCAT_MAGIC 0x43415443 /* 'CATC' */
 #define CATINFO_MAGIC  0x43415449 /* 'CATI' */
+
+struct cryptcat
+{
+    DWORD     magic;
+    HCRYPTMSG msg;
+    DWORD     encoding;
+    CTL_INFO *inner;
+    DWORD     inner_len;
+    GUID      subject;
+    DWORD     attr_count;
+    CRYPTCATATTRIBUTE *attr;
+};
 
 struct catadmin
 {
     DWORD magic;
     WCHAR path[MAX_PATH];
+    HANDLE find;
 };
 
 struct catinfo
@@ -50,6 +65,20 @@ struct catinfo
     DWORD magic;
     WCHAR file[MAX_PATH];
 };
+
+static HCATINFO create_catinfo(const WCHAR *filename)
+{
+    struct catinfo *ci;
+
+    if (!(ci = HeapAlloc(GetProcessHeap(), 0, sizeof(*ci))))
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return INVALID_HANDLE_VALUE;
+    }
+    strcpyW(ci->file, filename);
+    ci->magic = CATINFO_MAGIC;
+    return ci;
+}
 
 /***********************************************************************
  *      CryptCATAdminAcquireContext (WINTRUST.@)
@@ -111,6 +140,8 @@ BOOL WINAPI CryptCATAdminAcquireContext(HCATADMIN *catAdmin,
     CreateDirectoryW(ca->path, NULL);
 
     ca->magic = CATADMIN_MAGIC;
+    ca->find = INVALID_HANDLE_VALUE;
+
     *catAdmin = ca;
     return TRUE;
 }
@@ -134,19 +165,19 @@ HCATINFO WINAPI CryptCATAdminAddCatalog(HCATADMIN catAdmin, PWSTR catalogFile,
     {
         FIXME("NULL basename not handled\n");
         SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        return NULL;
     }
     if (!ca || ca->magic != CATADMIN_MAGIC || !catalogFile || flags)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        return NULL;
     }
 
     len = strlenW(ca->path) + strlenW(selectBaseName) + 2;
     if (!(target = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
     {
         SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        return NULL;
     }
     strcpyW(target, ca->path);
     strcatW(target, slashW);
@@ -161,10 +192,10 @@ HCATINFO WINAPI CryptCATAdminAddCatalog(HCATADMIN catAdmin, PWSTR catalogFile,
     {
         HeapFree(GetProcessHeap(), 0, target);
         SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        return NULL;
     }
     ci->magic = CATINFO_MAGIC;
-    strcpyW(ci->file, selectBaseName);
+    strcpyW(ci->file, target);
 
     HeapFree(GetProcessHeap(), 0, target);
     return ci;
@@ -234,13 +265,120 @@ BOOL WINAPI CryptCATAdminCalcHashFromFileHandle(HANDLE hFile, DWORD* pcbHash,
 /***********************************************************************
  *             CryptCATAdminEnumCatalogFromHash (WINTRUST.@)
  */
-HCATINFO WINAPI CryptCATAdminEnumCatalogFromHash(HCATADMIN hCatAdmin,
-                                                 BYTE* pbHash,
-                                                 DWORD cbHash,
-                                                 DWORD dwFlags,
+HCATINFO WINAPI CryptCATAdminEnumCatalogFromHash(HCATADMIN hCatAdmin, BYTE* pbHash,
+                                                 DWORD cbHash, DWORD dwFlags,
                                                  HCATINFO* phPrevCatInfo )
 {
-    FIXME("%p %p %d %d %p\n", hCatAdmin, pbHash, cbHash, dwFlags, phPrevCatInfo);
+    static const WCHAR slashW[] = {'\\',0};
+    static const WCHAR globW[]  = {'\\','*','.','c','a','t',0};
+
+    struct catadmin *ca = hCatAdmin;
+    WIN32_FIND_DATAW data;
+    HCATINFO prev = NULL;
+    HCRYPTPROV prov;
+    DWORD size;
+    BOOL ret;
+
+    TRACE("%p %p %d %x %p\n", hCatAdmin, pbHash, cbHash, dwFlags, phPrevCatInfo);
+
+    if (!ca || ca->magic != CATADMIN_MAGIC || !pbHash || cbHash != 20 || dwFlags)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+    if (phPrevCatInfo) prev = *phPrevCatInfo;
+
+    ret = CryptAcquireContextW(&prov, NULL, MS_DEF_PROV_W, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    if (!ret) return NULL;
+
+    if (!prev)
+    {
+        WCHAR *path;
+
+        size = strlenW(ca->path) * sizeof(WCHAR) + sizeof(globW);
+        if (!(path = HeapAlloc(GetProcessHeap(), 0, size)))
+        {
+            CryptReleaseContext(prov, 0);
+            SetLastError(ERROR_OUTOFMEMORY);
+            return NULL;
+        }
+        strcpyW(path, ca->path);
+        strcatW(path, globW);
+
+        FindClose(ca->find);
+        ca->find = FindFirstFileW(path, &data);
+
+        HeapFree(GetProcessHeap(), 0, path);
+        if (ca->find == INVALID_HANDLE_VALUE)
+        {
+            CryptReleaseContext(prov, 0);
+            return NULL;
+        }
+    }
+    else if (!FindNextFileW(ca->find, &data))
+    {
+        CryptCATAdminReleaseCatalogContext(hCatAdmin, prev, 0);
+        CryptReleaseContext(prov, 0);
+        return NULL;
+    }
+
+    while (1)
+    {
+        WCHAR *filename;
+        CRYPTCATMEMBER *member = NULL;
+        struct catinfo *ci;
+        HANDLE hcat;
+
+        size = (strlenW(ca->path) + strlenW(data.cFileName) + 2) * sizeof(WCHAR);
+        if (!(filename = HeapAlloc(GetProcessHeap(), 0, size)))
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return NULL;
+        }
+        strcpyW(filename, ca->path);
+        strcatW(filename, slashW);
+        strcatW(filename, data.cFileName);
+
+        hcat = CryptCATOpen(filename, CRYPTCAT_OPEN_EXISTING, prov, 0, 0);
+        if (hcat == INVALID_HANDLE_VALUE)
+        {
+            WARN("couldn't open %s (%u)\n", debugstr_w(filename), GetLastError());
+            continue;
+        }
+        while ((member = CryptCATEnumerateMember(hcat, member)))
+        {
+            if (member->pIndirectData->Digest.cbData != cbHash)
+            {
+                WARN("amount of hash bytes differs: %u/%u\n", member->pIndirectData->Digest.cbData, cbHash);
+                continue;
+            }
+            if (!memcmp(member->pIndirectData->Digest.pbData, pbHash, cbHash))
+            {
+                TRACE("file %s matches\n", debugstr_w(data.cFileName));
+
+                CryptCATClose(hcat);
+                CryptReleaseContext(prov, 0);
+                if (!phPrevCatInfo)
+                {
+                    FindClose(ca->find);
+                    ca->find = INVALID_HANDLE_VALUE;
+                }
+                ci = create_catinfo(filename);
+                HeapFree(GetProcessHeap(), 0, filename);
+                return ci;
+            }
+        }
+        CryptCATClose(hcat);
+        HeapFree(GetProcessHeap(), 0, filename);
+
+        if (!FindNextFileW(ca->find, &data))
+        {
+            FindClose(ca->find);
+            ca->find = INVALID_HANDLE_VALUE;
+            CryptReleaseContext(prov, 0);
+            return NULL;
+        }
+    }
     return NULL;
 }
 
@@ -302,6 +440,7 @@ BOOL WINAPI CryptCATAdminReleaseContext(HCATADMIN hCatAdmin, DWORD dwFlags )
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+    if (ca->find != INVALID_HANDLE_VALUE) FindClose(ca->find);
     ca->magic = 0;
     return HeapFree(GetProcessHeap(), 0, ca);
 }
@@ -332,7 +471,55 @@ BOOL WINAPI CryptCATAdminRemoveCatalog(HCATADMIN hCatAdmin, LPCWSTR pwszCatalogF
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    return DeleteFileW(pwszCatalogFile);
+
+    /* Only delete when there is a filename and no path */
+    if (pwszCatalogFile && pwszCatalogFile[0] != 0 &&
+        !strchrW(pwszCatalogFile, '\\') && !strchrW(pwszCatalogFile, '/') &&
+        !strchrW(pwszCatalogFile, ':'))
+    {
+        static const WCHAR slashW[] = {'\\',0};
+        WCHAR *target;
+        DWORD len;
+
+        len = strlenW(ca->path) + strlenW(pwszCatalogFile) + 2;
+        if (!(target = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+        strcpyW(target, ca->path);
+        strcatW(target, slashW);
+        strcatW(target, pwszCatalogFile);
+
+        DeleteFileW(target);
+
+        HeapFree(GetProcessHeap(), 0, target);
+    }
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *      CryptCATAdminResolveCatalogPath  (WINTRUST.@)
+ */
+BOOL WINAPI CryptCATAdminResolveCatalogPath(HCATADMIN hcatadmin, WCHAR *catalog_file,
+                                            CATALOG_INFO *info, DWORD flags)
+{
+    static const WCHAR slashW[] = {'\\',0};
+    struct catadmin *ca = hcatadmin;
+
+    TRACE("%p %s %p %x\n", hcatadmin, debugstr_w(catalog_file), info, flags);
+
+    if (!ca || ca->magic != CATADMIN_MAGIC || !info || info->cbStruct != sizeof(*info) || flags)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    strcpyW(info->wszCatalogFile, ca->path);
+    strcatW(info->wszCatalogFile, slashW);
+    strcatW(info->wszCatalogFile, catalog_file);
+
+    return TRUE;
 }
 
 /***********************************************************************
@@ -340,17 +527,313 @@ BOOL WINAPI CryptCATAdminRemoveCatalog(HCATADMIN hCatAdmin, LPCWSTR pwszCatalogF
  */
 BOOL WINAPI CryptCATClose(HANDLE hCatalog)
 {
-    FIXME("(%p) stub\n", hCatalog);
+    struct cryptcat *cc = hCatalog;
+
+    TRACE("(%p)\n", hCatalog);
+
+    if (!hCatalog || hCatalog == INVALID_HANDLE_VALUE || cc->magic != CRYPTCAT_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    HeapFree(GetProcessHeap(), 0, cc->attr);
+    HeapFree(GetProcessHeap(), 0, cc->inner);
+    CryptMsgClose(cc->msg);
+
+    cc->magic = 0;
+    HeapFree(GetProcessHeap(), 0, cc);
     return TRUE;
+}
+
+/***********************************************************************
+ *      CryptCATGetAttrInfo  (WINTRUST.@)
+ */
+CRYPTCATATTRIBUTE * WINAPI CryptCATGetAttrInfo(HANDLE hCatalog, CRYPTCATMEMBER *member, LPWSTR tag)
+{
+    struct cryptcat *cc = hCatalog;
+
+    FIXME("%p, %p, %s\n", hCatalog, member, debugstr_w(tag));
+
+    if (!hCatalog || hCatalog == INVALID_HANDLE_VALUE || cc->magic != CRYPTCAT_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+    SetLastError(CRYPT_E_NOT_FOUND);
+    return NULL;
+}
+
+/***********************************************************************
+ *      CryptCATGetCatAttrInfo  (WINTRUST.@)
+ */
+CRYPTCATATTRIBUTE * WINAPI CryptCATGetCatAttrInfo(HANDLE hCatalog, LPWSTR tag)
+{
+    struct cryptcat *cc = hCatalog;
+
+    FIXME("%p, %s\n", hCatalog, debugstr_w(tag));
+
+    if (!hCatalog || hCatalog == INVALID_HANDLE_VALUE || cc->magic != CRYPTCAT_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+    SetLastError(CRYPT_E_NOT_FOUND);
+    return NULL;
+}
+
+CRYPTCATMEMBER * WINAPI CryptCATGetMemberInfo(HANDLE hCatalog, LPWSTR tag)
+{
+    struct cryptcat *cc = hCatalog;
+
+    FIXME("%p, %s\n", hCatalog, debugstr_w(tag));
+
+    if (!hCatalog || hCatalog == INVALID_HANDLE_VALUE || cc->magic != CRYPTCAT_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+    SetLastError(CRYPT_E_NOT_FOUND);
+    return NULL;
+}
+
+/***********************************************************************
+ *      CryptCATEnumerateAttr  (WINTRUST.@)
+ */
+CRYPTCATATTRIBUTE * WINAPI CryptCATEnumerateAttr(HANDLE hCatalog, CRYPTCATMEMBER *member, CRYPTCATATTRIBUTE *prev)
+{
+    struct cryptcat *cc = hCatalog;
+
+    FIXME("%p, %p, %p\n", hCatalog, member, prev);
+
+    if (!hCatalog || hCatalog == INVALID_HANDLE_VALUE || cc->magic != CRYPTCAT_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+    SetLastError(CRYPT_E_NOT_FOUND);
+    return NULL;
+}
+
+/***********************************************************************
+ *      CryptCATEnumerateCatAttr  (WINTRUST.@)
+ */
+CRYPTCATATTRIBUTE * WINAPI CryptCATEnumerateCatAttr(HANDLE hCatalog, CRYPTCATATTRIBUTE *prev)
+{
+    struct cryptcat *cc = hCatalog;
+
+    FIXME("%p, %p\n", hCatalog, prev);
+
+    if (!hCatalog || hCatalog == INVALID_HANDLE_VALUE || cc->magic != CRYPTCAT_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+    SetLastError(CRYPT_E_NOT_FOUND);
+    return NULL;
 }
 
 /***********************************************************************
  *      CryptCATEnumerateMember  (WINTRUST.@)
  */
-CRYPTCATMEMBER *WINAPI CryptCATEnumerateMember(HANDLE hCatalog, CRYPTCATMEMBER* pPrevMember)
+CRYPTCATMEMBER * WINAPI CryptCATEnumerateMember(HANDLE hCatalog, CRYPTCATMEMBER *prev)
 {
-    FIXME("(%p, %p) stub\n", hCatalog, pPrevMember);
+    struct cryptcat *cc = hCatalog;
+    CRYPTCATMEMBER *member = prev;
+    CTL_ENTRY *entry;
+    DWORD size, i;
+
+    TRACE("%p, %p\n", hCatalog, prev);
+
+    if (!hCatalog || hCatalog == INVALID_HANDLE_VALUE || cc->magic != CRYPTCAT_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    /* dumping the contents makes me think that dwReserved is the iteration number */
+    if (!member)
+    {
+        if (!(member = HeapAlloc(GetProcessHeap(), 0, sizeof(*member))))
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return NULL;
+        }
+        member->cbStruct = sizeof(*member);
+        member->pwszFileName = member->pwszReferenceTag = NULL;
+        member->dwReserved = 0;
+        member->hReserved = NULL;
+        member->gSubjectType = cc->subject;
+        member->fdwMemberFlags = 0;
+        member->pIndirectData = NULL;
+        member->dwCertVersion = cc->inner->dwVersion;
+    }
+    else member->dwReserved++;
+
+    if (member->dwReserved >= cc->inner->cCTLEntry)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto error;
+    }
+
+    /* list them backwards, like native */
+    entry = &cc->inner->rgCTLEntry[cc->inner->cCTLEntry - member->dwReserved - 1];
+
+    member->sEncodedIndirectData.cbData = member->sEncodedMemberInfo.cbData = 0;
+    member->sEncodedIndirectData.pbData = member->sEncodedMemberInfo.pbData = NULL;
+    HeapFree(GetProcessHeap(), 0, member->pIndirectData);
+    member->pIndirectData = NULL;
+
+    for (i = 0; i < entry->cAttribute; i++)
+    {
+        CRYPT_ATTRIBUTE *attr = entry->rgAttribute + i;
+
+        if (attr->cValue != 1)
+        {
+            ERR("Can't handle attr->cValue of %u\n", attr->cValue);
+            continue;
+        }
+        if (!strcmp(attr->pszObjId, CAT_MEMBERINFO_OBJID))
+        {
+            CAT_MEMBERINFO *mi;
+            BOOL ret;
+
+            member->sEncodedMemberInfo.cbData = attr->rgValue->cbData;
+            member->sEncodedMemberInfo.pbData = attr->rgValue->pbData;
+
+            CryptDecodeObject(cc->encoding, CAT_MEMBERINFO_OBJID, attr->rgValue->pbData, attr->rgValue->cbData, 0, NULL, &size);
+
+            if (!(mi = HeapAlloc(GetProcessHeap(), 0, size)))
+            {
+                SetLastError(ERROR_OUTOFMEMORY);
+                goto error;
+            }
+            ret = CryptDecodeObject(cc->encoding, CAT_MEMBERINFO_OBJID, attr->rgValue->pbData, attr->rgValue->cbData, 0, mi, &size);
+            if (ret)
+            {
+                UNICODE_STRING guid;
+
+                member->dwCertVersion = mi->dwCertVersion;
+                RtlInitUnicodeString(&guid, mi->pwszSubjGuid);
+                if (RtlGUIDFromString(&guid, &member->gSubjectType))
+                {
+                    HeapFree(GetProcessHeap(), 0, mi);
+                    goto error;
+                }
+            }
+            HeapFree(GetProcessHeap(), 0, mi);
+            if (!ret) goto error;
+        }
+        else if (!strcmp(attr->pszObjId, SPC_INDIRECT_DATA_OBJID))
+        {
+            /* SPC_INDIRECT_DATA_CONTENT is equal to SIP_INDIRECT_DATA */
+
+            member->sEncodedIndirectData.cbData = attr->rgValue->cbData;
+            member->sEncodedIndirectData.pbData = attr->rgValue->pbData;
+
+            CryptDecodeObject(cc->encoding, SPC_INDIRECT_DATA_OBJID, attr->rgValue->pbData, attr->rgValue->cbData, 0, NULL, &size);
+
+            if (!(member->pIndirectData = HeapAlloc(GetProcessHeap(), 0, size)))
+            {
+                SetLastError(ERROR_OUTOFMEMORY);
+                goto error;
+            }
+            CryptDecodeObject(cc->encoding, SPC_INDIRECT_DATA_OBJID, attr->rgValue->pbData, attr->rgValue->cbData, 0, member->pIndirectData, &size);
+        }
+        else
+            /* this object id should probably be handled in CryptCATEnumerateAttr */
+            FIXME("unhandled object id \"%s\"\n", attr->pszObjId);
+    }
+
+    if (!member->sEncodedMemberInfo.cbData || !member->sEncodedIndirectData.cbData)
+    {
+        ERR("Corrupted catalog entry?\n");
+        SetLastError(CRYPT_E_ATTRIBUTES_MISSING);
+        goto error;
+    }
+    size = (2 * member->pIndirectData->Digest.cbData + 1) * sizeof(WCHAR);
+    if (member->pwszReferenceTag)
+        member->pwszReferenceTag = HeapReAlloc(GetProcessHeap(), 0, member->pwszReferenceTag, size);
+    else
+        member->pwszReferenceTag = HeapAlloc(GetProcessHeap(), 0, size);
+
+    if (!member->pwszReferenceTag)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        goto error;
+    }
+    /* FIXME: reference tag is usually the file hash but doesn't have to be */
+    for (i = 0; i < member->pIndirectData->Digest.cbData; i++)
+    {
+        DWORD sub;
+
+        sub = member->pIndirectData->Digest.pbData[i] >> 4;
+        member->pwszReferenceTag[i * 2] = (sub < 10 ? '0' + sub : 'A' + sub - 10);
+        sub = member->pIndirectData->Digest.pbData[i] & 0xf;
+        member->pwszReferenceTag[i * 2 + 1] = (sub < 10 ? '0' + sub : 'A' + sub - 10);
+    }
+    member->pwszReferenceTag[i * 2] = 0;
+    return member;
+
+error:
+    HeapFree(GetProcessHeap(), 0, member->pIndirectData);
+    HeapFree(GetProcessHeap(), 0, member->pwszReferenceTag);
+    HeapFree(GetProcessHeap(), 0, member);
     return NULL;
+}
+
+static CTL_INFO *decode_inner_content(HANDLE hmsg, DWORD encoding, DWORD *len)
+{
+    DWORD size;
+    LPSTR oid = NULL;
+    BYTE *buffer = NULL;
+    CTL_INFO *inner = NULL;
+
+    if (!CryptMsgGetParam(hmsg, CMSG_INNER_CONTENT_TYPE_PARAM, 0, NULL, &size)) return NULL;
+    if (!(oid = HeapAlloc(GetProcessHeap(), 0, size)))
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return NULL;
+    }
+    if (!CryptMsgGetParam(hmsg, CMSG_INNER_CONTENT_TYPE_PARAM, 0, oid, &size)) goto out;
+    if (!CryptMsgGetParam(hmsg, CMSG_CONTENT_PARAM, 0, NULL, &size)) goto out;
+    if (!(buffer = HeapAlloc(GetProcessHeap(), 0, size)))
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        goto out;
+    }
+    if (!CryptMsgGetParam(hmsg, CMSG_CONTENT_PARAM, 0, buffer, &size)) goto out;
+    if (!CryptDecodeObject(encoding, oid, buffer, size, 0, NULL, &size)) goto out;
+    if (!(inner = HeapAlloc(GetProcessHeap(), 0, size)))
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        goto out;
+    }
+    if (!CryptDecodeObject(encoding, oid, buffer, size, 0, inner, &size)) goto out;
+    *len = size;
+
+out:
+    HeapFree(GetProcessHeap(), 0, oid);
+    HeapFree(GetProcessHeap(), 0, buffer);
+    return inner;
+}
+
+/***********************************************************************
+ *      CryptCATCatalogInfoFromContext  (WINTRUST.@)
+ */
+BOOL WINAPI CryptCATCatalogInfoFromContext(HCATINFO hcatinfo, CATALOG_INFO *info, DWORD flags)
+{
+    struct catinfo *ci = hcatinfo;
+
+    TRACE("%p, %p, %x\n", hcatinfo, info, flags);
+
+    if (!hcatinfo || hcatinfo == INVALID_HANDLE_VALUE || ci->magic != CATINFO_MAGIC ||
+        flags || !info || info->cbStruct != sizeof(*info))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    strcpyW(info->wszCatalogFile, ci->file);
+    return TRUE;
 }
 
 /***********************************************************************
@@ -359,9 +842,112 @@ CRYPTCATMEMBER *WINAPI CryptCATEnumerateMember(HANDLE hCatalog, CRYPTCATMEMBER* 
 HANDLE WINAPI CryptCATOpen(LPWSTR pwszFileName, DWORD fdwOpenFlags, HCRYPTPROV hProv,
                            DWORD dwPublicVersion, DWORD dwEncodingType)
 {
-    FIXME("(%s, %d, %ld, %d, %d) stub\n", debugstr_w(pwszFileName), fdwOpenFlags,
+    HANDLE file, hmsg;
+    BYTE *buffer = NULL;
+    DWORD size, flags = OPEN_EXISTING;
+    struct cryptcat *cc;
+
+    TRACE("%s, %x, %lx, %x, %x\n", debugstr_w(pwszFileName), fdwOpenFlags,
           hProv, dwPublicVersion, dwEncodingType);
-    return 0;
+
+    if (!pwszFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    if (!dwPublicVersion) dwPublicVersion = 0x00000100;
+    if (!dwEncodingType)  dwEncodingType  = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
+
+    if (fdwOpenFlags & CRYPTCAT_OPEN_ALWAYS)    flags |= OPEN_ALWAYS;
+    if (fdwOpenFlags & CRYPTCAT_OPEN_CREATENEW) flags |= CREATE_NEW;
+
+    file = CreateFileW(pwszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, flags, 0, NULL);
+    if (file == INVALID_HANDLE_VALUE) return INVALID_HANDLE_VALUE;
+
+    size = GetFileSize(file, NULL);
+    if (!(buffer = HeapAlloc(GetProcessHeap(), 0, size)))
+    {
+        CloseHandle(file);
+        SetLastError(ERROR_OUTOFMEMORY);
+        return INVALID_HANDLE_VALUE;
+    }
+    if (!(hmsg = CryptMsgOpenToDecode(dwEncodingType, 0, 0, hProv, NULL, NULL)))
+    {
+        CloseHandle(file);
+        HeapFree(GetProcessHeap(), 0, buffer);
+        return INVALID_HANDLE_VALUE;
+    }
+    if (!ReadFile(file, buffer, size, &size, NULL) || !CryptMsgUpdate(hmsg, buffer, size, TRUE))
+    {
+        CloseHandle(file);
+        HeapFree(GetProcessHeap(), 0, buffer);
+        CryptMsgClose(hmsg);
+        return INVALID_HANDLE_VALUE;
+    }
+    HeapFree(GetProcessHeap(), 0, buffer);
+    CloseHandle(file);
+
+    size = sizeof(DWORD);
+    if (!(cc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*cc))))
+    {
+        CryptMsgClose(hmsg);
+        SetLastError(ERROR_OUTOFMEMORY);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    cc->msg = hmsg;
+    cc->encoding = dwEncodingType;
+    if (CryptMsgGetParam(hmsg, CMSG_ATTR_CERT_COUNT_PARAM, 0, &cc->attr_count, &size))
+    {
+        DWORD i, sum = 0;
+        BYTE *p;
+
+        for (i = 0; i < cc->attr_count; i++)
+        {
+            if (!CryptMsgGetParam(hmsg, CMSG_ATTR_CERT_PARAM, i, NULL, &size))
+            {
+                CryptMsgClose(hmsg);
+                return INVALID_HANDLE_VALUE;
+            }
+            sum += size;
+        }
+        if (!(cc->attr = HeapAlloc(GetProcessHeap(), 0, sizeof(*cc->attr) * cc->attr_count + sum)))
+        {
+            CryptMsgClose(hmsg);
+            SetLastError(ERROR_OUTOFMEMORY);
+            return INVALID_HANDLE_VALUE;
+        }
+        p = (BYTE *)(cc->attr + cc->attr_count);
+        for (i = 0; i < cc->attr_count; i++)
+        {
+            if (!CryptMsgGetParam(hmsg, CMSG_ATTR_CERT_PARAM, i, NULL, &size))
+            {
+                CryptMsgClose(hmsg);
+                HeapFree(GetProcessHeap(), 0, cc->attr);
+                return INVALID_HANDLE_VALUE;
+            }
+            if (!CryptMsgGetParam(hmsg, CMSG_ATTR_CERT_PARAM, i, p, &size))
+            {
+                CryptMsgClose(hmsg);
+                HeapFree(GetProcessHeap(), 0, cc->attr);
+                return INVALID_HANDLE_VALUE;
+            }
+            p += size;
+        }
+        cc->inner = decode_inner_content(hmsg, dwEncodingType, &cc->inner_len);
+        if (!cc->inner || !CryptSIPRetrieveSubjectGuid(pwszFileName, NULL, &cc->subject))
+        {
+            CryptMsgClose(hmsg);
+            HeapFree(GetProcessHeap(), 0, cc->attr);
+            HeapFree(GetProcessHeap(), 0, cc->inner);
+            HeapFree(GetProcessHeap(), 0, cc);
+            return INVALID_HANDLE_VALUE;
+        }
+        cc->magic = CRYPTCAT_MAGIC;
+        return cc;
+    }
+    return INVALID_HANDLE_VALUE;
 }
 
 /***********************************************************************

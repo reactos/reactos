@@ -893,6 +893,25 @@ BOOL WINAPI CertAddCertificateContextToStore(HCERTSTORE hCertStore,
         else
             toAdd = CertDuplicateCertificateContext(pCertContext);
         break;
+    case CERT_STORE_ADD_NEWER_INHERIT_PROPERTIES:
+        if (existing)
+        {
+            if (CompareFileTime(&existing->pCertInfo->NotBefore,
+             &pCertContext->pCertInfo->NotBefore) >= 0)
+            {
+                TRACE("existing certificate is newer, not adding\n");
+                SetLastError(CRYPT_E_EXISTS);
+                ret = FALSE;
+            }
+            else
+            {
+                toAdd = CertDuplicateCertificateContext(pCertContext);
+                CertContext_CopyProperties(toAdd, existing);
+            }
+        }
+        else
+            toAdd = CertDuplicateCertificateContext(pCertContext);
+        break;
     default:
         FIXME("Unimplemented add disposition %d\n", dwAddDisposition);
         SetLastError(E_INVALIDARG);
@@ -1006,6 +1025,27 @@ BOOL WINAPI CertAddCRLContextToStore(HCERTSTORE hCertStore,
 
             if (newer < 0)
                 toAdd = CertDuplicateCRLContext(pCrlContext);
+            else
+            {
+                TRACE("existing CRL is newer, not adding\n");
+                SetLastError(CRYPT_E_EXISTS);
+                ret = FALSE;
+            }
+        }
+        else
+            toAdd = CertDuplicateCRLContext(pCrlContext);
+        break;
+    case CERT_STORE_ADD_NEWER_INHERIT_PROPERTIES:
+        if (existing)
+        {
+            LONG newer = CompareFileTime(&existing->pCrlInfo->ThisUpdate,
+             &pCrlContext->pCrlInfo->ThisUpdate);
+
+            if (newer < 0)
+            {
+                toAdd = CertDuplicateCRLContext(pCrlContext);
+                CrlContext_CopyProperties(toAdd, existing);
+            }
             else
             {
                 TRACE("existing CRL is newer, not adding\n");

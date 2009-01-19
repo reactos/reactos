@@ -82,6 +82,27 @@ BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
         else
             toAdd = CertDuplicateCTLContext(pCtlContext);
         break;
+    case CERT_STORE_ADD_NEWER_INHERIT_PROPERTIES:
+        if (existing)
+        {
+            LONG newer = CompareFileTime(&existing->pCtlInfo->ThisUpdate,
+             &pCtlContext->pCtlInfo->ThisUpdate);
+
+            if (newer < 0)
+            {
+                toAdd = CertDuplicateCTLContext(pCtlContext);
+                CtlContext_CopyProperties(existing, pCtlContext);
+            }
+            else
+            {
+                TRACE("existing CTL is newer, not adding\n");
+                SetLastError(CRYPT_E_EXISTS);
+                ret = FALSE;
+            }
+        }
+        else
+            toAdd = CertDuplicateCTLContext(pCtlContext);
+        break;
     case CERT_STORE_ADD_REPLACE_EXISTING:
         toAdd = CertDuplicateCTLContext(pCtlContext);
         break;
@@ -484,7 +505,7 @@ static BOOL CTLContext_GetHashProp(PCCTL_CONTEXT context, DWORD dwPropId,
 {
     BOOL ret = CryptHashCertificate(0, algID, 0, toHash, toHashLen, pvData,
      pcbData);
-    if (ret)
+    if (ret && pvData)
     {
         CRYPT_DATA_BLOB blob = { *pcbData, pvData };
 
