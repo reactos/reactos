@@ -1,4 +1,4 @@
-<module name="syssetup" type="win32dll" baseaddress="${BASEADDRESS_SYSSETUP}" installbase="system32" installname="syssetup.dll" unicode="yes" allowwarnings="true" crt="msvcrt">
+<module name="syssetup" type="win32dll" baseaddress="${BASEADDRESS_SYSSETUP}" installbase="system32" installname="syssetup.dll" unicode="yes" crt="msvcrt">
 	<importlibrary definition="syssetup.def" />
 	<include base="syssetup">.</include>
 	<library>pseh</library>

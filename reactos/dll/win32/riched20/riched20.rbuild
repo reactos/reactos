@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="riched20" type="win32dll" baseaddress="${BASEADDRESS_RICHED20}" installbase="system32" installname="riched20.dll" allowwarnings="true">
+<module name="riched20" type="win32dll" baseaddress="${BASEADDRESS_RICHED20}" installbase="system32" installname="riched20.dll">
 	<importlibrary definition="riched20.spec" />
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="riched20">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="__ROS_LONG64__" />
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
 	<file>caret.c</file>
 	<file>clipboard.c</file>

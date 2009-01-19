@@ -1,4 +1,4 @@
-<module name="ntdsapi" type="win32dll" baseaddress="${BASEADDRESS_NTDSAPI}" installbase="system32" installname="ntdsapi.dll" allowwarnings="true" entrypoint="0">
+<module name="ntdsapi" type="win32dll" baseaddress="${BASEADDRESS_NTDSAPI}" installbase="system32" installname="ntdsapi.dll" entrypoint="0">
         <importlibrary definition="ntdsapi.spec" />
         <include base="ntdsapi">.</include>
         <include base="ReactOS">include/reactos/wine</include>

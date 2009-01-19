@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="ole32" type="win32dll" baseaddress="${BASEADDRESS_OLE32}" installbase="system32" installname="ole32.dll" allowwarnings="true">
+<module name="ole32" type="win32dll" baseaddress="${BASEADDRESS_OLE32}" installbase="system32" installname="ole32.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="ole32.spec" />
 	<include base="ole32">.</include>
@@ -73,7 +73,7 @@
 <module name="ole32_irot_client" type="rpcclient">
 	<file>irot.idl</file>
 </module>
-<module name="ole32_proxy" type="rpcproxy" allowwarnings="true">
+<module name="ole32_proxy" type="rpcproxy">
 	<define name="_OLE32_" />
 	<define name="COM_NO_WINDOWS_H" />
 	<define name="__WINESRC__" />

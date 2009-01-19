@@ -1,4 +1,4 @@
-<module name="sfc" type="win32dll" baseaddress="${BASEADDRESS_SFC}" installbase="system32" installname="sfc.dll" allowwarnings="yes">
+<module name="sfc" type="win32dll" baseaddress="${BASEADDRESS_SFC}" installbase="system32" installname="sfc.dll">
 	<importlibrary definition="sfc.spec" />
 	<include base="sfc">.</include>
 	<library>kernel32</library>

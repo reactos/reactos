@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="objsel" type="win32dll" baseaddress="${BASEADDRESS_OBJSEL}" installbase="system32" installname="objsel.dll" allowwarnings="true">
+<module name="objsel" type="win32dll" baseaddress="${BASEADDRESS_OBJSEL}" installbase="system32" installname="objsel.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="objsel.spec" />
 	<include base="objsel">.</include>

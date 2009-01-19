@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="spoolss" type="win32dll" baseaddress="${BASEADDRESS_SPOOLSS}" installbase="system32" installname="spoolss.dll" allowwarnings="true">
+<module name="spoolss" type="win32dll" baseaddress="${BASEADDRESS_SPOOLSS}" installbase="system32" installname="spoolss.dll">
 	<importlibrary definition="spoolss.spec" />
 	<include base="spoolss">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

@@ -1,4 +1,4 @@
-<module name="winfax" type="win32dll" baseaddress="${BASEADDRESS_WINFAX}" installbase="system32" installname="winfax.dll" allowwarnings="true" entrypoint="0">
+<module name="winfax" type="win32dll" baseaddress="${BASEADDRESS_WINFAX}" installbase="system32" installname="winfax.dll" entrypoint="0">
         <importlibrary definition="winfax.def" />
         <include base="winfax">.</include>
         <library>kernel32</library>

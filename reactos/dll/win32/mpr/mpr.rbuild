@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="mpr" type="win32dll" baseaddress="${BASEADDRESS_MPR}" installbase="system32" installname="mpr.dll" allowwarnings="true">
+<module name="mpr" type="win32dll" baseaddress="${BASEADDRESS_MPR}" installbase="system32" installname="mpr.dll">
 	<importlibrary definition="mpr.spec" />
 	<include base="mpr">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

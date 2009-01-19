@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="mshtml" type="win32dll" baseaddress="${BASEADDRESS_MSHTML}" installbase="system32" installname="mshtml.dll" allowwarnings="true">
+<module name="mshtml" type="win32dll" baseaddress="${BASEADDRESS_MSHTML}" installbase="system32" installname="mshtml.dll">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="mshtml.spec" />
 	<include base="mshtml">.</include>
@@ -71,7 +71,7 @@
 	<library>ntdll</library>
 	<dependency>mshtml_nsiface_header</dependency>
 </module>
-<module name="mshtml_nsiface_header" type="idlheader" allowwarnings="true">
+<module name="mshtml_nsiface_header" type="idlheader">
 	<file>nsiface.idl</file>
 </module>
 </group>

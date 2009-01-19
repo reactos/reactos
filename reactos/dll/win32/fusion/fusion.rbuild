@@ -1,4 +1,4 @@
-<module name="fusion" type="win32dll" baseaddress="${BASEADDRESS_FUSION}" installbase="system32" installname="fusion.dll" allowwarnings="true">
+<module name="fusion" type="win32dll" baseaddress="${BASEADDRESS_FUSION}" installbase="system32" installname="fusion.dll">
 	<importlibrary definition="fusion.spec" />
 	<include base="fusion">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

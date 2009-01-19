@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="version" type="win32dll" baseaddress="${BASEADDRESS_VERSION}" installbase="system32" installname="version.dll" allowwarnings="true" entrypoint="0">
+<module name="version" type="win32dll" baseaddress="${BASEADDRESS_VERSION}" installbase="system32" installname="version.dll" entrypoint="0">
 	<importlibrary definition="version.spec" />
 	<include base="version">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

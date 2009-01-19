@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="oleaut32" type="win32dll" baseaddress="${BASEADDRESS_OLEAUT32}" installbase="system32" installname="oleaut32.dll" allowwarnings="true" crt="msvcrt">
+<module name="oleaut32" type="win32dll" baseaddress="${BASEADDRESS_OLEAUT32}" installbase="system32" installname="oleaut32.dll" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="oleaut32.spec" />
 	<include base="oleaut32">.</include>
@@ -49,7 +49,7 @@
 	<library>uuid</library>
 	<library>pseh</library>
 </module>
-<module name="oleaut32_proxy" type="rpcproxy" allowwarnings="true">
+<module name="oleaut32_proxy" type="rpcproxy">
 	<define name="COM_NO_WINDOWS_H"/>
 	<define name="PROXY_CLSID">CLSID_PSDispatch</define>
 	<define name="_OLEAUT32_"/>

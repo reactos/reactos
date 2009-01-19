@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="tapi32" type="win32dll" baseaddress="${BASEADDRESS_TAPI32}" installbase="system32" installname="tapi32.dll" allowwarnings="true" entrypoint="0">
+<module name="tapi32" type="win32dll" baseaddress="${BASEADDRESS_TAPI32}" installbase="system32" installname="tapi32.dll" entrypoint="0">
 	<importlibrary definition="tapi32.spec" />
 	<include base="tapi32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

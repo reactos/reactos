@@ -1,5 +1,5 @@
 <group>
-<module name="msxml3" type="win32dll" baseaddress="${BASEADDRESS_MSXML3}" installbase="system32" installname="msxml3.dll" allowwarnings="true" crt="msvcrt">
+<module name="msxml3" type="win32dll" baseaddress="${BASEADDRESS_MSXML3}" installbase="system32" installname="msxml3.dll" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="msxml3.spec" />
 	<include base="msxml3">.</include>

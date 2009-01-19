@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="browseui" type="win32dll" baseaddress="${BASEADDRESS_BROWSEUI}" installbase="system32" installname="browseui.dll" allowwarnings="true">
+<module name="browseui" type="win32dll" baseaddress="${BASEADDRESS_BROWSEUI}" installbase="system32" installname="browseui.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="browseui.spec" />
 	<include base="browseui">.</include>

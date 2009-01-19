@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="msi" type="win32dll" baseaddress="${BASEADDRESS_MSI}" installbase="system32" installname="msi.dll" allowwarnings="true" crt="msvcrt">
+<module name="msi" type="win32dll" baseaddress="${BASEADDRESS_MSI}" installbase="system32" installname="msi.dll" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="msi.spec" />
 	<include base="msi">.</include>
@@ -75,7 +75,7 @@
 	<dependency>msiserver</dependency>
 	<dependency>msiheader</dependency>
 </module>
-<module name="msiserver" type="embeddedtypelib" allowwarnings="true">
+<module name="msiserver" type="embeddedtypelib">
 	<file>msiserver.idl</file>
 </module>
 <module name="msiheader" type="idlheader">

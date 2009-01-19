@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="lz32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LZ32}" installbase="system32" installname="lz32.dll" allowwarnings="true">
+<module name="lz32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LZ32}" installbase="system32" installname="lz32.dll">
 	<importlibrary definition="lz32.spec" />
 	<include base="lz32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
