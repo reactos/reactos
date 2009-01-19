@@ -241,7 +241,7 @@ typedef struct _FAT_GLOBAL_DATA
     CACHE_MANAGER_CALLBACKS CacheMgrNoopCallbacks;
 } FAT_GLOBAL_DATA, *VFAT_GLOBAL_DATA;
 
-extern VFAT_GLOBAL_DATA VfatGlobalData;
+extern FAT_GLOBAL_DATA FatGlobalData;
 
 /* FCB flags */
 #define FCB_CACHE_INITIALIZED   0x0001

@@ -31,6 +31,22 @@ FatVerifyVolume(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
     return STATUS_INVALID_DEVICE_REQUEST;
 }
 
+VOID
+NTAPI
+FatiCleanVcbs(PFAT_IRP_CONTEXT IrpContext)
+{
+    /* Make sure this IRP is waitable */
+    ASSERT(IrpContext->Flags & IRPCONTEXT_CANWAIT);
+
+    /* Acquire global resource */
+    ExAcquireResourceExclusiveLite(&FatGlobalData.Resource, TRUE);
+
+    /* TODO: Go through all VCBs and delete unmounted ones */
+
+    /* Release global resource */
+    ExReleaseResourceLite(&FatGlobalData.Resource);
+}
+
 NTSTATUS
 NTAPI
 FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
@@ -38,10 +54,55 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
                PVPB Vpb,
                PDEVICE_OBJECT FsDeviceObject)
 {
+    NTSTATUS Status;
+    PVOLUME_DEVICE_OBJECT VolumeDevice;
+
     DPRINT1("FatMountVolume()\n");
 
-    FatCompleteRequest(IrpContext, IrpContext->Irp, STATUS_INVALID_DEVICE_REQUEST);
-    return STATUS_INVALID_DEVICE_REQUEST;
+    /* Make sure this IRP is waitable */
+    ASSERT(IrpContext->Flags & IRPCONTEXT_CANWAIT);
+
+    /* TODO: IOCTL_DISK_CHECK_VERIFY */
+    /* TODO: Check if data-track present in case of a CD drive */
+    /* TODO: IOCTL_DISK_GET_PARTITION_INFO_EX */
+
+    /* Remove unmounted VCBs */
+    FatiCleanVcbs(IrpContext);
+
+    /* Create a new volume device object */
+    Status = IoCreateDevice(FatGlobalData.DriverObject,
+                            sizeof(VOLUME_DEVICE_OBJECT) - sizeof(DEVICE_OBJECT),
+                            NULL,
+                            FILE_DEVICE_DISK_FILE_SYSTEM,
+                            0,
+                            FALSE,
+                            (PDEVICE_OBJECT *)&VolumeDevice);
+
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Match alignment requirements */
+    if (TargetDeviceObject->AlignmentRequirement > VolumeDevice->DeviceObject.AlignmentRequirement)
+    {
+        VolumeDevice->DeviceObject.AlignmentRequirement = TargetDeviceObject->AlignmentRequirement;
+    }
+
+    /* Init stack size */
+    VolumeDevice->DeviceObject.StackSize = TargetDeviceObject->StackSize + 1;
+
+    /* TODO: IOCTL_DISK_GET_DRIVE_GEOMETRY to obtain BytesPerSector */
+    VolumeDevice->DeviceObject.SectorSize = 512;
+
+    /* Signal we're done with initializing */
+    VolumeDevice->DeviceObject.Flags &= ~DO_DEVICE_INITIALIZING;
+
+    /* Save device object in a VPB */
+    Vpb->DeviceObject = (PDEVICE_OBJECT)VolumeDevice;
+
+    /* TODO: Initialize VCB for this volume */
+
+    /* Complete the request and return success */
+    FatCompleteRequest(IrpContext, IrpContext->Irp, STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
