@@ -29,6 +29,8 @@
 
 static char selfname[MAX_PATH];
 static CHAR CURR_DIR[MAX_PATH];
+static CHAR catroot[MAX_PATH];
+static CHAR catroot2[MAX_PATH];
 
 /*
  * Minimalistic catalog file. To reconstruct, save text below as winetest.cdf,
@@ -48,7 +50,7 @@ CATATTR2=0x10010001:attr2:value2
 hashme=.\winetest.cdf
 */
 
-const BYTE test_catalog[] = {
+static const BYTE test_catalog[] = {
     0x30, 0x82, 0x01, 0xbc, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02, 0xa0,
     0x82, 0x01, 0xad, 0x30, 0x82, 0x01, 0xa9, 0x02, 0x01, 0x01, 0x31, 0x00, 0x30, 0x82, 0x01, 0x9e,
     0x06, 0x09, 0x2b, 0x06, 0x01, 0x04, 0x01, 0x82, 0x37, 0x0a, 0x01, 0xa0, 0x82, 0x01, 0x8f, 0x30,
@@ -85,6 +87,11 @@ static BOOL (WINAPI * pCryptCATAdminCalcHashFromFileHandle)(HANDLE hFile, DWORD*
 static HCATINFO (WINAPI * pCryptCATAdminAddCatalog)(HCATADMIN, PWSTR, PWSTR, DWORD);
 static BOOL (WINAPI * pCryptCATAdminRemoveCatalog)(HCATADMIN, LPCWSTR, DWORD);
 static BOOL (WINAPI * pCryptCATAdminReleaseCatalogContext)(HCATADMIN, HCATINFO, DWORD);
+static HANDLE (WINAPI * pCryptCATOpen)(LPWSTR, DWORD, HCRYPTPROV, DWORD, DWORD);
+static BOOL (WINAPI * pCryptCATCatalogInfoFromContext)(HCATINFO, CATALOG_INFO *, DWORD);
+static CRYPTCATMEMBER * (WINAPI * pCryptCATEnumerateMember)(HANDLE, CRYPTCATMEMBER *);
+static CRYPTCATATTRIBUTE * (WINAPI * pCryptCATEnumerateAttr)(HANDLE, CRYPTCATMEMBER *, CRYPTCATATTRIBUTE *);
+static BOOL (WINAPI * pCryptCATClose)(HANDLE);
 
 static void InitFunctionPtrs(void)
 {
@@ -102,6 +109,11 @@ static void InitFunctionPtrs(void)
     WINTRUST_GET_PROC(CryptCATAdminAddCatalog)
     WINTRUST_GET_PROC(CryptCATAdminRemoveCatalog)
     WINTRUST_GET_PROC(CryptCATAdminReleaseCatalogContext)
+    WINTRUST_GET_PROC(CryptCATOpen)
+    WINTRUST_GET_PROC(CryptCATCatalogInfoFromContext)
+    WINTRUST_GET_PROC(CryptCATEnumerateMember)
+    WINTRUST_GET_PROC(CryptCATEnumerateAttr)
+    WINTRUST_GET_PROC(CryptCATClose)
 
 #undef WINTRUST_GET_PROC
 }
@@ -113,7 +125,7 @@ static void test_context(void)
     BOOL ret;
     HCATADMIN hca;
     static GUID unknown = { 0xC689AABA, 0x8E78, 0x11D0, { 0x8C,0x47,0x00,0xC0,0x4F,0xC2,0x95,0xEE }}; /* WINTRUST.DLL */
-    CHAR windir[MAX_PATH], catroot[MAX_PATH], catroot2[MAX_PATH], dummydir[MAX_PATH];
+    CHAR dummydir[MAX_PATH];
     DWORD attrs;
 
     /* When CryptCATAdminAcquireContext is successful it will create
@@ -197,12 +209,6 @@ static void test_context(void)
     ret = pCryptCATAdminAcquireContext(&hca, &dummy, 0);
     ok(ret, "Expected success\n");
     ok(hca != NULL, "Expected a context handle, got NULL\n");
-
-    GetWindowsDirectoryA(windir, MAX_PATH);
-    lstrcpyA(catroot, windir);
-    lstrcatA(catroot, "\\system32\\CatRoot");
-    lstrcpyA(catroot2, windir);
-    lstrcatA(catroot2, "\\system32\\CatRoot2");
 
     attrs = GetFileAttributes(catroot);
     ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected the CatRoot directory to exist\n");
@@ -344,13 +350,18 @@ static void test_calchash(void)
 static void test_CryptCATAdminAddRemoveCatalog(void)
 {
     static WCHAR basenameW[] = {'w','i','n','e','t','e','s','t','.','c','a','t',0};
+    static CHAR basename[] = "winetest.cat";
     HCATADMIN hcatadmin;
     HCATINFO hcatinfo;
+    CATALOG_INFO info;
     WCHAR tmpfileW[MAX_PATH];
     char tmpfile[MAX_PATH];
+    char catfile[MAX_PATH], catfilepath[MAX_PATH], *p;
+    WCHAR catfileW[MAX_PATH];
     HANDLE file;
     DWORD error, written;
     BOOL ret;
+    DWORD attrs;
 
     if (!pCryptCATAdminRemoveCatalog)
     {
@@ -408,17 +419,60 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     WriteFile(file, test_catalog, sizeof(test_catalog), &written, NULL);
     CloseHandle(file);
 
+    /* Unique name will be created */
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, NULL, 0);
     todo_wine ok(hcatinfo != NULL, "CryptCATAdminAddCatalog failed %u\n", GetLastError());
 
+    info.cbStruct = sizeof(info);
+    info.wszCatalogFile[0] = 0;
+    ret = pCryptCATCatalogInfoFromContext(hcatinfo, &info, 0);
+    todo_wine
+    {
+    ok(ret, "CryptCATCatalogInfoFromContext failed %u\n", GetLastError());
+    ok(info.wszCatalogFile[0] != 0, "Expected a filename\n");
+    }
+    WideCharToMultiByte(CP_ACP, 0, info.wszCatalogFile, -1, catfile, MAX_PATH, 0, 0);
+    if ((p = strrchr(catfile, '\\'))) p++;
+    memset(catfileW, 0, sizeof(catfileW));
+    MultiByteToWideChar(0, 0, p, -1, catfileW, MAX_PATH);
+
+    /* winetest.cat will be created */
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, basenameW, 0);
     ok(hcatinfo != NULL, "CryptCATAdminAddCatalog failed %u\n", GetLastError());
+
+    lstrcpyA(catfilepath, catroot);
+    lstrcatA(catfilepath, "\\{DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF}\\winetest.cat");
+    attrs = GetFileAttributes(catfilepath);
+    ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected %s to exist\n", catfilepath);
+
+    info.cbStruct = sizeof(info);
+    info.wszCatalogFile[0] = 0;
+    ret = pCryptCATCatalogInfoFromContext(hcatinfo, &info, 0);
+    ok(ret, "CryptCATCatalogInfoFromContext failed %u\n", GetLastError());
+    ok(info.wszCatalogFile[0] != 0, "Expected a filename\n");
+    WideCharToMultiByte(CP_ACP, 0, info.wszCatalogFile, -1, catfile, MAX_PATH, 0, 0);
+    if ((p = strrchr(catfile, '\\'))) p++;
+    ok(!lstrcmpA(basename, p), "Expected %s, got %s\n", basename, p);
 
     ret = pCryptCATAdminReleaseCatalogContext(hcatadmin, hcatinfo, 0);
     ok(ret, "CryptCATAdminReleaseCatalogContext failed %u\n", GetLastError());
 
-    ret = pCryptCATAdminRemoveCatalog(hcatadmin, tmpfileW, 0);
+    /* Remove the catalog file with the unique name */
+    ret = pCryptCATAdminRemoveCatalog(hcatadmin, catfileW, 0);
     ok(ret, "CryptCATAdminRemoveCatalog failed %u\n", GetLastError());
+
+    /* Remove the winetest.cat catalog file, first with the full path. This should not succeed
+     * according to MSDN */
+    ret = pCryptCATAdminRemoveCatalog(hcatadmin, info.wszCatalogFile, 0);
+    ok(ret, "CryptCATAdminRemoveCatalog failed %u\n", GetLastError());
+    /* The call succeeded with the full path but the file is not removed */
+    attrs = GetFileAttributes(catfilepath);
+    ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected %s to exist\n", catfilepath);
+    /* Given only the filename the file is removed */
+    ret = pCryptCATAdminRemoveCatalog(hcatadmin, basenameW, 0);
+    ok(ret, "CryptCATAdminRemoveCatalog failed %u\n", GetLastError());
+    attrs = GetFileAttributes(catfilepath);
+    ok(attrs == INVALID_FILE_ATTRIBUTES, "Expected %s to be removed\n", catfilepath);
 
     ret = pCryptCATAdminReleaseContext(hcatadmin, 0);
     ok(ret, "CryptCATAdminReleaseContext failed %u\n", GetLastError());
@@ -426,10 +480,71 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     DeleteFileA(tmpfile);
 }
 
+static void test_catalog_properties(void)
+{
+    static const WCHAR hashmeW[] = {'h','a','s','h','m','e',0};
+    static const GUID subject = {0xde351a42,0x8e59,0x11d0,{0x8c,0x47,0x00,0xc0,0x4f,0xc2,0x95,0xee}};
+
+    HANDLE hcat;
+    CRYPTCATMEMBER *m;
+    CRYPTCATATTRIBUTE *attr;
+    char catalog[MAX_PATH];
+    WCHAR catalogW[MAX_PATH];
+    DWORD written;
+    HANDLE file;
+    BOOL ret;
+
+    if (!GetTempFileNameA(CURR_DIR, "cat", 0, catalog)) return;
+    file = CreateFileA(catalog, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %u\n", GetLastError());
+    WriteFile(file, test_catalog, sizeof(test_catalog), &written, NULL);
+    CloseHandle(file);
+
+    hcat = pCryptCATOpen(NULL, 0, 0, 0, 0);
+    ok(hcat == INVALID_HANDLE_VALUE, "CryptCATOpen succeeded\n");
+
+    MultiByteToWideChar(CP_ACP, 0, catalog, -1, catalogW, MAX_PATH);
+
+    hcat = pCryptCATOpen(catalogW, 0, 0, 0, 0);
+    ok(hcat != INVALID_HANDLE_VALUE, "CryptCATOpen failed %u\n", GetLastError());
+
+    m = pCryptCATEnumerateMember(NULL, NULL);
+    ok(m == NULL, "CryptCATEnumerateMember succeeded\n");
+
+    m = pCryptCATEnumerateMember(hcat, NULL);
+    ok(m != NULL, "CryptCATEnumerateMember failed %u\n", GetLastError());
+
+    ok(m->cbStruct == sizeof(CRYPTCATMEMBER), "unexpected size %u\n", m->cbStruct);
+    todo_wine ok(!lstrcmpW(m->pwszReferenceTag, hashmeW), "unexpected tag\n");
+    ok(!memcmp(&m->gSubjectType, &subject, sizeof(subject)), "guid differs\n");
+    ok(!m->fdwMemberFlags, "got %x expected 0\n", m->fdwMemberFlags);
+    ok(m->dwCertVersion == 0x200, "got %x expected 0x200\n", m->dwCertVersion);
+    ok(!m->dwReserved, "got %x expected 0\n", m->dwReserved);
+    ok(m->hReserved == NULL, "got %p expected NULL\n", m->hReserved);
+
+    attr = pCryptCATEnumerateAttr(NULL, NULL, NULL);
+    ok(attr == NULL, "CryptCATEnumerateAttr succeeded\n");
+
+    attr = pCryptCATEnumerateAttr(hcat, NULL, NULL);
+    ok(attr == NULL, "CryptCATEnumerateAttr succeeded\n");
+
+    attr = pCryptCATEnumerateAttr(hcat, m, NULL);
+    ok(attr == NULL, "CryptCATEnumerateAttr succeeded\n");
+
+    m = pCryptCATEnumerateMember(hcat, m);
+    ok(m == NULL, "CryptCATEnumerateMember succeeded\n");
+
+    ret = pCryptCATClose(hcat);
+    ok(ret, "CryptCATClose failed\n");
+
+    DeleteFileA(catalog);
+}
+
 START_TEST(crypt)
 {
     int myARGC;
     char** myARGV;
+    char windir[MAX_PATH];
 
     InitFunctionPtrs();
 
@@ -439,6 +554,12 @@ START_TEST(crypt)
         return;
     }
 
+    GetWindowsDirectoryA(windir, MAX_PATH);
+    lstrcpyA(catroot, windir);
+    lstrcatA(catroot, "\\system32\\CatRoot");
+    lstrcpyA(catroot2, windir);
+    lstrcatA(catroot2, "\\system32\\CatRoot2");
+
     myARGC = winetest_get_mainargs(&myARGV);
     strcpy(selfname, myARGV[0]);
 
@@ -447,4 +568,5 @@ START_TEST(crypt)
     test_context();
     test_calchash();
     test_CryptCATAdminAddRemoveCatalog();
+    test_catalog_properties();
 }

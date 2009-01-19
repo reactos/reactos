@@ -221,7 +221,7 @@ static void test_decodeSPCLink(void)
 
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_LINK_STRUCT,
      emptyURLSPCLink, sizeof(emptyURLSPCLink), CRYPT_DECODE_ALLOC_FLAG, NULL,
-     (BYTE *)&buf, &size);
+     &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -233,7 +233,7 @@ static void test_decodeSPCLink(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_LINK_STRUCT,
      urlSPCLink, sizeof(urlSPCLink), CRYPT_DECODE_ALLOC_FLAG, NULL,
-     (BYTE *)&buf, &size);
+     &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -245,7 +245,7 @@ static void test_decodeSPCLink(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_LINK_STRUCT,
      fileSPCLink, sizeof(fileSPCLink), CRYPT_DECODE_ALLOC_FLAG, NULL,
-     (BYTE *)&buf, &size);
+     &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -257,7 +257,7 @@ static void test_decodeSPCLink(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_LINK_STRUCT,
      emptyMonikerSPCLink, sizeof(emptyMonikerSPCLink), CRYPT_DECODE_ALLOC_FLAG,
-     NULL, (BYTE *)&buf, &size);
+     NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -274,7 +274,7 @@ static void test_decodeSPCLink(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_LINK_STRUCT,
      monikerSPCLink, sizeof(monikerSPCLink), CRYPT_DECODE_ALLOC_FLAG, NULL,
-     (BYTE *)&buf, &size);
+     &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -295,7 +295,7 @@ static void test_decodeSPCLink(void)
     SetLastError(0xdeadbeef);
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_LINK_STRUCT,
      badMonikerSPCLink, sizeof(badMonikerSPCLink), CRYPT_DECODE_ALLOC_FLAG,
-     NULL, (BYTE *)&buf, &size);
+     NULL, &buf, &size);
     ok(!ret &&
      (GetLastError() == CRYPT_E_BAD_ENCODE ||
      GetLastError() == OSS_DATA_ERROR /* Win9x */),
@@ -436,7 +436,7 @@ static void test_decodeSPCPEImage(void)
 
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_PE_IMAGE_DATA_STRUCT,
      emptySequence, sizeof(emptySequence),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -448,7 +448,7 @@ static void test_decodeSPCPEImage(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_PE_IMAGE_DATA_STRUCT,
      onlyFlagsPEImage, sizeof(onlyFlagsPEImage),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -463,7 +463,7 @@ static void test_decodeSPCPEImage(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_PE_IMAGE_DATA_STRUCT,
      onlyEmptyFilePEImage, sizeof(onlyEmptyFilePEImage),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -483,7 +483,7 @@ static void test_decodeSPCPEImage(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_PE_IMAGE_DATA_STRUCT,
      flagsAndEmptyFilePEImage, sizeof(flagsAndEmptyFilePEImage),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -506,7 +506,7 @@ static void test_decodeSPCPEImage(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, SPC_PE_IMAGE_DATA_STRUCT,
      flagsAndFilePEImage, sizeof(flagsAndFilePEImage),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -572,7 +572,7 @@ static void test_encodeCatMemberInfo(void)
     }
     info.pwszSubjGuid = foo;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, CAT_MEMBERINFO_STRUCT,
-     (LPBYTE)&info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -584,7 +584,7 @@ static void test_encodeCatMemberInfo(void)
     }
     info.pwszSubjGuid = guidStr;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, CAT_MEMBERINFO_STRUCT,
-     (LPBYTE)&info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -611,7 +611,7 @@ static void test_decodeCatMemberInfo(void)
 
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_MEMBERINFO_STRUCT,
      emptyCatMemberInfo, sizeof(emptyCatMemberInfo),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -624,7 +624,7 @@ static void test_decodeCatMemberInfo(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_MEMBERINFO_STRUCT,
      catMemberInfoWithSillyGuid, sizeof(catMemberInfoWithSillyGuid),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -637,7 +637,7 @@ static void test_decodeCatMemberInfo(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_MEMBERINFO_STRUCT,
      catMemberInfoWithGuid, sizeof(catMemberInfoWithGuid),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -671,7 +671,7 @@ static void test_encodeCatNameValue(void)
 
     memset(&value, 0, sizeof(value));
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
-     (LPBYTE)&value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -682,7 +682,7 @@ static void test_encodeCatNameValue(void)
     }
     value.pwszTag = foo;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
-     (LPBYTE)&value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -694,7 +694,7 @@ static void test_encodeCatNameValue(void)
     value.pwszTag = NULL;
     value.fdwFlags = 0xf00dd00d;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
-     (LPBYTE)&value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -707,7 +707,7 @@ static void test_encodeCatNameValue(void)
     value.Value.cbData = sizeof(aVal);
     value.Value.pbData = aVal;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
-     (LPBYTE)&value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &value, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -727,7 +727,7 @@ static void test_decodeCatNameValue(void)
 
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
      emptyCatNameValue, sizeof(emptyCatNameValue),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -741,7 +741,7 @@ static void test_decodeCatNameValue(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
      catNameValueWithTag, sizeof(catNameValueWithTag),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -756,7 +756,7 @@ static void test_decodeCatNameValue(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
      catNameValueWithFlags, sizeof(catNameValueWithFlags),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -770,7 +770,7 @@ static void test_decodeCatNameValue(void)
     }
     ret = pCryptDecodeObjectEx(X509_ASN_ENCODING, CAT_NAMEVALUE_STRUCT,
      catNameValueWithValue, sizeof(catNameValueWithValue),
-     CRYPT_DECODE_ALLOC_FLAG, NULL, (BYTE *)&buf, &size);
+     CRYPT_DECODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptDecodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -809,7 +809,7 @@ static void test_encodeSpOpusInfo(void)
 
     memset(&info, 0, sizeof(info));
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
-     (LPBYTE)&info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -819,7 +819,7 @@ static void test_encodeSpOpusInfo(void)
     }
     info.pwszProgramName = progName;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
-     (LPBYTE)&info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -834,13 +834,13 @@ static void test_encodeSpOpusInfo(void)
     info.pMoreInfo = &moreInfo;
     SetLastError(0xdeadbeef);
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
-     (LPBYTE)&info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(!ret && GetLastError() == E_INVALIDARG,
      "expected E_INVALIDARG, got %08x\n", GetLastError());
     moreInfo.dwLinkChoice = SPC_URL_LINK_CHOICE;
     moreInfo.pwszUrl = winehq;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
-     (LPBYTE)&info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
@@ -853,7 +853,7 @@ static void test_encodeSpOpusInfo(void)
     info.pMoreInfo = NULL;
     info.pPublisherInfo = &moreInfo;
     ret = pCryptEncodeObjectEx(X509_ASN_ENCODING, SPC_SP_OPUS_INFO_STRUCT,
-     (LPBYTE)&info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
+     &info, CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(ret, "CryptEncodeObjectEx failed: %08x\n", GetLastError());
     if (ret)
     {
