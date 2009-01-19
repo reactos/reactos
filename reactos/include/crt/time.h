@@ -114,8 +114,10 @@ extern "C" {
   _CRT_OBSOLETE(GetLocalTime) unsigned __cdecl _getsystime(struct tm *_Tm);
   _CRT_OBSOLETE(GetLocalTime) unsigned __cdecl _setsystime(struct tm *_Tm,unsigned _MilliSec);
 
+  _CRTIMP errno_t __cdecl asctime_s(char *_Buf,size_t _SizeInWords,const struct tm *_Tm);
   _CRTIMP errno_t __cdecl _ctime32_s(char *_Buf,size_t _SizeInBytes,const __time32_t *_Time);
   _CRTIMP errno_t __cdecl _gmtime32_s(struct tm *_Tm,const __time32_t *_Time);
+  _CRTIMP errno_t __cdecl localtime_s(struct tm *_Tm,const time_t *_Time);
   _CRTIMP errno_t __cdecl _localtime32_s(struct tm *_Tm,const __time32_t *_Time);
   _CRTIMP errno_t __cdecl _strdate_s(char *_Buf,size_t _SizeInBytes);
   _CRTIMP errno_t __cdecl _strtime_s(char *_Buf ,size_t _SizeInBytes);
@@ -213,8 +215,6 @@ __CRT_INLINE time_t __cdecl time(time_t *_Time) { return _time64(_Time); }
 #endif
 
 #pragma pack(pop)
-
-#include <sec_api/time_s.h>
 
 #endif /* End _TIME_H_ */
 

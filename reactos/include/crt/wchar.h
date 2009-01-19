@@ -733,26 +733,36 @@ extern "C" {
 
 #ifndef _WTIME_DEFINED
 #define _WTIME_DEFINED
-
-  _CRTIMP wchar_t *__cdecl _wasctime(const struct tm *_Tm);
-  _CRTIMP wchar_t *__cdecl _wctime32(const __time32_t *_Time);
-  size_t __cdecl wcsftime(wchar_t *_Buf,size_t _SizeInWords,const wchar_t *_Format,const struct tm *_Tm);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_wasctime_s) wchar_t *__cdecl _wasctime(const struct tm *_Tm);
+  _CRTIMP wchar_t *__cdecl _wctime(const time_t *_Time);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_wctime32_s) wchar_t *__cdecl _wctime32(const __time32_t *_Time);
+  _CRTIMP size_t __cdecl wcsftime(wchar_t *_Buf,size_t _SizeInWords,const wchar_t *_Format,const struct tm *_Tm);
   _CRTIMP size_t __cdecl _wcsftime_l(wchar_t *_Buf,size_t _SizeInWords,const wchar_t *_Format,const struct tm *_Tm,_locale_t _Locale);
   _CRTIMP wchar_t *__cdecl _wstrdate(wchar_t *_Buffer);
   _CRTIMP wchar_t *__cdecl _wstrtime(wchar_t *_Buffer);
+
+  _CRTIMP errno_t __cdecl _wasctime_s(wchar_t *_Buf,size_t _SizeInWords,const struct tm *_Tm);
+  _CRTIMP errno_t __cdecl _wctime32_s(wchar_t *_Buf,size_t _SizeInWords,const __time32_t *_Time);
+  _CRTIMP errno_t __cdecl _wstrdate_s(wchar_t *_Buf,size_t _SizeInWords);
+  _CRTIMP errno_t __cdecl _wstrtime_s(wchar_t *_Buf,size_t _SizeInWords);
 #if _INTEGRAL_MAX_BITS >= 64
-  _CRTIMP wchar_t *__cdecl _wctime64(const __time64_t *_Time);
+  _CRTIMP _CRT_INSECURE_DEPRECATE(_wctime64_s) wchar_t *__cdecl _wctime64(const __time64_t *_Time);
+  _CRTIMP errno_t __cdecl _wctime64_s(wchar_t *_Buf,size_t _SizeInWords,const __time64_t *_Time);
 #endif
 
 #if !defined (RC_INVOKED) && !defined (_INC_WTIME_INL)
 #define _INC_WTIME_INL
 #ifdef _USE_32BIT_TIME_T
-__CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime32(_Time); }
+/* Do it like this to be compatible to msvcrt.dll on 32 bit windows XP and before */
+__CRT_INLINE wchar_t *__cdecl _wctime32(const time_t *_Time) { return _wctime(_Time); }
+__CRT_INLINE errno_t _wctime32_s(wchar_t *_Buffer, size_t _SizeInWords,const __time32_t *_Time) { return _wctime32_s(_Buffer, _SizeInWords, _Time); }
 #else
 __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_Time); }
+__CRT_INLINE errno_t _wctime_s(wchar_t *_Buffer, size_t _SizeInWords,const time_t *_Time) { return _wctime64_s(_Buffer, _SizeInWords, _Time); }
 #endif
 #endif
-#endif
+
+#endif /* !_WTIME_DEFINED */
 
   typedef int mbstate_t;
   typedef wchar_t _Wint_t;
