@@ -36,7 +36,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 	PINI_SECTION		CurrentSection = NULL;
 	PINI_SECTION_ITEM	CurrentItem = NULL;
 
-	DbgPrint((DPRINT_INIFILE, "IniParseFile() IniFileSize: %d\n", IniFileSize));
+	DPRINTM(DPRINT_INIFILE, "IniParseFile() IniFileSize: %d\n", IniFileSize);
 
 	if (!IniFileSectionInitialized)
 	{
@@ -172,8 +172,8 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 		CurrentLineNumber++;
 	}
 
-	DbgPrint((DPRINT_INIFILE, "Parsed %d sections and %d settings.\n", IniFileSectionCount, IniFileSettingCount));
-	DbgPrint((DPRINT_INIFILE, "IniParseFile() done.\n"));
+	DPRINTM(DPRINT_INIFILE, "Parsed %d sections and %d settings.\n", IniFileSectionCount, IniFileSettingCount);
+	DPRINTM(DPRINT_INIFILE, "IniParseFile() done.\n");
 
 	return TRUE;
 }

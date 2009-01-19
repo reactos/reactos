@@ -22,7 +22,6 @@
 
 #define NDEBUG
 #include <debug.h>
-#undef DbgPrint
 
 /* Page Directory and Tables for non-PAE Systems */
 extern PAGE_DIRECTORY_X86 startup_pagedirectory;

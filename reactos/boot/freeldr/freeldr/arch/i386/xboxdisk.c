@@ -288,11 +288,11 @@ XboxDiskPolledRead(ULONG CommandPort,
         }
       StallExecutionProcessor(10);
     }
-  DbgPrint((DPRINT_DISK, "status=0x%x\n", Status));
-  DbgPrint((DPRINT_DISK, "waited %d usecs for busy to clear\n", RetryCount * 10));
+  DPRINTM((DPRINT_DISK, "status=0x%x\n", Status));
+  DPRINTM((DPRINT_DISK, "waited %d usecs for busy to clear\n", RetryCount * 10));
   if (RetryCount >= IDE_MAX_BUSY_RETRIES)
     {
-      DbgPrint((DPRINT_DISK, "Drive is BUSY for too long\n"));
+      DPRINTM((DPRINT_DISK, "Drive is BUSY for too long\n"));
       return FALSE;
     }
 
@@ -307,7 +307,7 @@ XboxDiskPolledRead(ULONG CommandPort,
   /*  Issue command to drive  */
   if (DrvHead & IDE_DH_LBA)
     {
-      DbgPrint((DPRINT_DISK, "READ:DRV=%d:LBA=1:BLK=%d:SC=0x%x:CM=0x%x\n",
+      DPRINTM((DPRINT_DISK, "READ:DRV=%d:LBA=1:BLK=%d:SC=0x%x:CM=0x%x\n",
                 DrvHead & IDE_DH_DRV1 ? 1 : 0,
                 ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
                 SectorCnt,
@@ -315,7 +315,7 @@ XboxDiskPolledRead(ULONG CommandPort,
     }
   else
     {
-      DbgPrint((DPRINT_DISK, "READ:DRV=%d:LBA=0:CH=0x%x:CL=0x%x:HD=0x%x:SN=0x%x:SC=0x%x:CM=0x%x\n",
+      DPRINTM((DPRINT_DISK, "READ:DRV=%d:LBA=0:CH=0x%x:CL=0x%x:HD=0x%x:SN=0x%x:SC=0x%x:CM=0x%x\n",
                 DrvHead & IDE_DH_DRV1 ? 1 : 0,
                 CylinderHigh,
                 CylinderLow,
@@ -411,7 +411,7 @@ XboxDiskPolledRead(ULONG CommandPort,
 		{
 		  if (SectorCount >= SectorCnt)
 		    {
-		      DbgPrint((DPRINT_DISK, "Buffer size exceeded!\n"));
+		      DPRINTM((DPRINT_DISK, "Buffer size exceeded!\n"));
 		      Junk = TRUE;
 		    }
 		  break;
@@ -420,7 +420,7 @@ XboxDiskPolledRead(ULONG CommandPort,
 		{
 		  if (SectorCount > SectorCnt)
 		    {
-		      DbgPrint((DPRINT_DISK, "Read %lu sectors of junk!\n",
+		      DPRINTM((DPRINT_DISK, "Read %lu sectors of junk!\n",
                                 SectorCount - SectorCnt));
 		    }
 		  IDEWriteDriveControl(ControlPort, 0);
@@ -443,13 +443,13 @@ XboxDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG Sect
   if (DriveNumber < 0x80 || 2 <= (DriveNumber & 0x0f))
     {
       /* Xbox has only 1 IDE controller and no floppy */
-      DbgPrint((DPRINT_DISK, "Invalid drive number\n"));
+      DPRINTM((DPRINT_DISK, "Invalid drive number\n"));
       return FALSE;
     }
 
   if (UINT64_C(0) != ((SectorNumber + SectorCount) & UINT64_C(0xfffffffff0000000)))
     {
-      DbgPrint((DPRINT_DISK, "48bit LBA required but not implemented\n"));
+      DPRINTM((DPRINT_DISK, "48bit LBA required but not implemented\n"));
       return FALSE;
     }
 
@@ -522,7 +522,7 @@ XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
                            (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
                            (PUCHAR) &DrvParms))
     {
-      DbgPrint((DPRINT_DISK, "XboxDiskPolledRead() failed\n"));
+      DPRINTM((DPRINT_DISK, "XboxDiskPolledRead() failed\n"));
       return FALSE;
     }
 
@@ -537,7 +537,7 @@ XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
     }
   else
     {
-      DbgPrint((DPRINT_DISK, "BytesPerSector %d\n", DrvParms.BytesPerSector));
+      DPRINTM((DPRINT_DISK, "BytesPerSector %d\n", DrvParms.BytesPerSector));
       if (DrvParms.BytesPerSector == 0)
         {
           Geometry->BytesPerSector = 512;
@@ -554,10 +554,10 @@ XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
             }
         }
     }
-  DbgPrint((DPRINT_DISK, "Cylinders %d\n", Geometry->Cylinders));
-  DbgPrint((DPRINT_DISK, "Heads %d\n", Geometry->Heads));
-  DbgPrint((DPRINT_DISK, "Sectors %d\n", Geometry->Sectors));
-  DbgPrint((DPRINT_DISK, "BytesPerSector %d\n", Geometry->BytesPerSector));
+  DPRINTM((DPRINT_DISK, "Cylinders %d\n", Geometry->Cylinders));
+  DPRINTM((DPRINT_DISK, "Heads %d\n", Geometry->Heads));
+  DPRINTM((DPRINT_DISK, "Sectors %d\n", Geometry->Sectors));
+  DPRINTM((DPRINT_DISK, "BytesPerSector %d\n", Geometry->BytesPerSector));
 
   return TRUE;
 }

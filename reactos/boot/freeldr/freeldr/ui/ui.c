@@ -94,8 +94,8 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 		return TRUE;
 	}
 
-	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
-	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
+	DPRINTM(DPRINT_UI, "Initializing User Interface.\n");
+	DPRINTM(DPRINT_UI, "Reading in UI settings from [Display] section.\n");
 
 	DisplayModeText[0] = '\0';
 	if (IniOpenSection("Display", &SectionId))
@@ -219,7 +219,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	// Draw the backdrop and fade it in if special effects are enabled
 	UiFadeInBackdrop();
 
-	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
+	DPRINTM(DPRINT_UI, "UiInitialize() returning TRUE.\n");
 	return TRUE;
 }
 
@@ -256,7 +256,7 @@ BOOLEAN SetupUiInitialize(VOID)
 	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
 	UiVtbl.DrawText(3, 2, DisplayModeText, ATTR(COLOR_GRAY, UiBackdropBgColor));
 
-	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
+	DPRINTM(DPRINT_UI, "UiInitialize() returning TRUE.\n");
 
 	return TRUE;
 }

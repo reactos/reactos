@@ -158,13 +158,13 @@ BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
-	DbgPrint((DPRINT_WINDOWS, "NLS data %s %s %s\n", AnsiName, OemName, LangName));
+	DPRINTM((DPRINT_WINDOWS, "NLS data %s %s %s\n", AnsiName, OemName, LangName));
 
 	// Load NLS data
 	strcpy(SearchPath, DirectoryPath);
 	strcat(SearchPath, "SYSTEM32\\");
 	Status = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-	DbgPrint((DPRINT_WINDOWS, "NLS data loaded with status %d\n", Status));
+	DPRINTM((DPRINT_WINDOWS, "NLS data loaded with status %d\n", Status));
 
 	/* TODO: Load OEM HAL font */
 
@@ -295,7 +295,7 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		goto Failure;
 
 	AnsiFileSize = FsGetFileSize(AnsiFileHandle);
-	DbgPrint((DPRINT_WINDOWS, "AnsiFileSize: %d\n", AnsiFileSize));
+	DPRINTM((DPRINT_WINDOWS, "AnsiFileSize: %d\n", AnsiFileSize));
 	FsCloseFile(AnsiFileHandle);
 
 	/* Open OEM file and store its length */
@@ -316,7 +316,7 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		OemFileSize = FsGetFileSize(OemFileHandle);
 		FsCloseFile(OemFileHandle);
 	}
-	DbgPrint((DPRINT_WINDOWS, "OemFileSize: %d\n", OemFileSize));
+	DPRINTM((DPRINT_WINDOWS, "OemFileSize: %d\n", OemFileSize));
 
 	/* And finally open the language codepage file and store its length */
 	//Print(L"Loading %s...\n", Filename);
@@ -329,7 +329,7 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	LanguageFileSize = FsGetFileSize(LanguageFileHandle);
 	FsCloseFile(LanguageFileHandle);
-	DbgPrint((DPRINT_WINDOWS, "LanguageFileSize: %d\n", LanguageFileSize));
+	DPRINTM((DPRINT_WINDOWS, "LanguageFileSize: %d\n", LanguageFileSize));
 
 	/* Sum up all three length, having in mind that every one of them
 	   must start at a page boundary => thus round up each file to a page */
@@ -455,7 +455,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		&hGroupKey);
 	if (rc != ERROR_SUCCESS) {
 
-		DbgPrint((DPRINT_REACTOS, "Failed to open the 'ServiceGroupOrder' key (rc %d)\n", (int)rc));
+		DPRINTM((DPRINT_REACTOS, "Failed to open the 'ServiceGroupOrder' key (rc %d)\n", (int)rc));
 		return;
 	}
 
@@ -465,7 +465,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		&hOrderKey);
 	if (rc != ERROR_SUCCESS) {
 
-		DbgPrint((DPRINT_REACTOS, "Failed to open the 'GroupOrderList' key (rc %d)\n", (int)rc));
+		DPRINTM((DPRINT_REACTOS, "Failed to open the 'GroupOrderList' key (rc %d)\n", (int)rc));
 		return;
 	}
 
@@ -475,7 +475,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		&hServiceKey);
 	if (rc != ERROR_SUCCESS)  {
 
-		DbgPrint((DPRINT_REACTOS, "Failed to open the 'Services' key (rc %d)\n", (int)rc));
+		DPRINTM((DPRINT_REACTOS, "Failed to open the 'Services' key (rc %d)\n", (int)rc));
 		return;
 	}
 
@@ -483,17 +483,17 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	BufferSize = 4096;
 	GroupNameBuffer = MmHeapAlloc(BufferSize);
 	rc = RegQueryValue(hGroupKey, L"List", NULL, (PUCHAR)GroupNameBuffer, &BufferSize);
-	DbgPrint((DPRINT_REACTOS, "RegQueryValue(): rc %d\n", (int)rc));
+	DPRINTM((DPRINT_REACTOS, "RegQueryValue(): rc %d\n", (int)rc));
 	if (rc != ERROR_SUCCESS)
 		return;
-	DbgPrint((DPRINT_REACTOS, "BufferSize: %d \n", (int)BufferSize));
-	DbgPrint((DPRINT_REACTOS, "GroupNameBuffer: '%S' \n", GroupNameBuffer));
+	DPRINTM((DPRINT_REACTOS, "BufferSize: %d \n", (int)BufferSize));
+	DPRINTM((DPRINT_REACTOS, "GroupNameBuffer: '%S' \n", GroupNameBuffer));
 
 	/* Loop through each group */
 	GroupName = GroupNameBuffer;
 	while (*GroupName)
 	{
-		DbgPrint((DPRINT_WINDOWS, "Driver group: '%S'\n", GroupName));
+		DPRINTM((DPRINT_WINDOWS, "Driver group: '%S'\n", GroupName));
 
 		/* Query the Order */
 		BufferSize = sizeof(OrderList);
@@ -510,7 +510,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 				/* Get the Driver's Name */
 				ValueSize = sizeof(ServiceName);
 				rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize);
-				//DbgPrint((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
+				//DPRINTM((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
 
 				/* Makre sure it's valid, and check if we're done */
 				if (rc == ERROR_NO_MORE_ITEMS)
@@ -520,7 +520,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 					MmHeapFree(GroupNameBuffer);
 					return;
 				}
-				//DbgPrint((DPRINT_REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName));
+				//DPRINTM((DPRINT_REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName));
 
 				/* open driver Key */
 				rc = RegOpenKey(hServiceKey, ServiceName, &hDriverKey);
@@ -530,18 +530,18 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 					ValueSize = sizeof(ULONG);
 					rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
 					if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
-					//DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
+					//DPRINTM((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
 					/* Read the Tag */
 					ValueSize = sizeof(ULONG);
 					rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
 					if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
-					//DbgPrint((DPRINT_REACTOS, "  Tag:   %x  \n", (int)TagValue));
+					//DPRINTM((DPRINT_REACTOS, "  Tag:   %x  \n", (int)TagValue));
 
 					/* Read the driver's group */
 					DriverGroupSize = sizeof(DriverGroup);
 					rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
-					//DbgPrint((DPRINT_REACTOS, "  Group: '%S'  \n", DriverGroup));
+					//DPRINTM((DPRINT_REACTOS, "  Group: '%S'  \n", DriverGroup));
 
 					/* Make sure it should be started */
 					if ((StartValue == 0) &&
@@ -554,17 +554,17 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 							/* Write the whole path if it suceeded, else prepare to fail */
 							if (rc != ERROR_SUCCESS) {
-								DbgPrint((DPRINT_REACTOS, "  ImagePath: not found\n"));
+								DPRINTM((DPRINT_REACTOS, "  ImagePath: not found\n"));
 								TempImagePath[0] = 0;
 								sprintf(ImagePath, "%s\\system32\\drivers\\%S.sys", DirectoryPath, ServiceName);
 							} else if (TempImagePath[0] != L'\\') {
 								sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
 							} else {
 								sprintf(ImagePath, "%S", TempImagePath);
-								DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
+								DPRINTM((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
 							}
 
-							DbgPrint((DPRINT_WINDOWS, "  Adding boot driver: '%s'\n", ImagePath));
+							DPRINTM((DPRINT_WINDOWS, "  Adding boot driver: '%s'\n", ImagePath));
 
 							Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
 								L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
@@ -572,10 +572,10 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 								ServiceName);
 
 							if (!Status)
-								DbgPrint((DPRINT_WINDOWS, " Failed to add boot driver\n"));
+								DPRINTM((DPRINT_WINDOWS, " Failed to add boot driver\n"));
 					} else
 					{
-						//DbgPrint((DPRINT_WINDOWS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current Tag %d, current group '%S')\n",
+						//DPRINTM((DPRINT_WINDOWS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current Tag %d, current group '%S')\n",
 						//	ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName));
 					}
 				}
@@ -591,7 +591,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 			ValueSize = sizeof(ServiceName);
 			rc = RegEnumKey(hServiceKey, Index, ServiceName, &ValueSize);
 
-			//DbgPrint((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
+			//DPRINTM((DPRINT_REACTOS, "RegEnumKey(): rc %d\n", (int)rc));
 			if (rc == ERROR_NO_MORE_ITEMS)
 				break;
 			if (rc != ERROR_SUCCESS)
@@ -599,7 +599,7 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 				MmHeapFree(GroupNameBuffer);
 				return;
 			}
-			//DbgPrint((DPRINT_REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName));
+			//DPRINTM((DPRINT_REACTOS, "Service %d: '%S'\n", (int)Index, ServiceName));
 
 			/* open driver Key */
 			rc = RegOpenKey(hServiceKey, ServiceName, &hDriverKey);
@@ -609,18 +609,18 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 				ValueSize = sizeof(ULONG);
 				rc = RegQueryValue(hDriverKey, L"Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
 				if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
-				//DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
+				//DPRINTM((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
 				/* Read the Tag */
 				ValueSize = sizeof(ULONG);
 				rc = RegQueryValue(hDriverKey, L"Tag", &ValueType, (PUCHAR)&TagValue, &ValueSize);
 				if (rc != ERROR_SUCCESS) TagValue = (ULONG)-1;
-				//DbgPrint((DPRINT_REACTOS, "  Tag:   %x  \n", (int)TagValue));
+				//DPRINTM((DPRINT_REACTOS, "  Tag:   %x  \n", (int)TagValue));
 
 				/* Read the driver's group */
 				DriverGroupSize = sizeof(DriverGroup);
 				rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
-				//DbgPrint((DPRINT_REACTOS, "  Group: '%S'  \n", DriverGroup));
+				//DPRINTM((DPRINT_REACTOS, "  Group: '%S'  \n", DriverGroup));
 
 				for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++) {
 					if (TagValue == OrderList[TagIndex]) break;
@@ -633,16 +633,16 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 						ValueSize = sizeof(TempImagePath);
 						rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
 						if (rc != ERROR_SUCCESS) {
-							DbgPrint((DPRINT_REACTOS, "  ImagePath: not found\n"));
+							DPRINTM((DPRINT_REACTOS, "  ImagePath: not found\n"));
 							TempImagePath[0] = 0;
 							sprintf(ImagePath, "%ssystem32\\drivers\\%S.sys", DirectoryPath, ServiceName);
 						} else if (TempImagePath[0] != L'\\') {
 							sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
 						} else {
 							sprintf(ImagePath, "%S", TempImagePath);
-							DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
+							DPRINTM((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
 						}
-						DbgPrint((DPRINT_WINDOWS, "  Adding boot driver: '%s'\n", ImagePath));
+						DPRINTM((DPRINT_WINDOWS, "  Adding boot driver: '%s'\n", ImagePath));
 
 						Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
 							L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
@@ -650,10 +650,10 @@ WinLdrScanRegistry(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 							ServiceName);
 
 						if (!Status)
-							DbgPrint((DPRINT_WINDOWS, " Failed to add boot driver\n"));
+							DPRINTM((DPRINT_WINDOWS, " Failed to add boot driver\n"));
 				} else
 				{
-					//DbgPrint((DPRINT_WINDOWS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current group '%S')\n",
+					//DPRINTM((DPRINT_WINDOWS, "  Skipping driver '%S' with Start %d, Tag %d and Group '%S' (Current group '%S')\n",
 					//	ServiceName, StartValue, TagValue, DriverGroup, GroupName));
 				}
 			}

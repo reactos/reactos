@@ -34,7 +34,7 @@
 BOOLEAN FsRecognizeVolume(ULONG DriveNumber, ULONG VolumeStartSector, UCHAR* VolumeType)
 {
 
-	DbgPrint((DPRINT_FILESYSTEM, "FsRecognizeVolume() DriveNumber: 0x%x VolumeStartSector: %d\n", DriveNumber, VolumeStartSector));
+	DPRINTM(DPRINT_FILESYSTEM, "FsRecognizeVolume() DriveNumber: 0x%x VolumeStartSector: %d\n", DriveNumber, VolumeStartSector);
 
 	if (FsRecIsExt2(DriveNumber, VolumeStartSector))
 	{

@@ -1,6 +1,5 @@
 #include <freeldr.h>
 #include <debug.h>
-#undef DbgPrint
 
 extern BOOLEAN FrLdrBootType;
 

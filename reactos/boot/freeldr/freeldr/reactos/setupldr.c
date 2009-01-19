@@ -303,7 +303,7 @@ VOID RunLoader(VOID)
                 {
                     if (!FrLdrLoadDriver((PCHAR)DriverName,0))
                     {
-                        DbgPrint((DPRINT_WARNING, "could not load %s, %s\n", SourcePath, DriverName));
+                        DPRINTM(DPRINT_WARNING, "could not load %s, %s\n", SourcePath, DriverName);
                         return;
                     }
                 }

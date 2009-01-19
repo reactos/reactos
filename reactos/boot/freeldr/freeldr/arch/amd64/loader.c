@@ -1,7 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *  Copyright (C) 2005       Alex Ionescu  <alex@relsoft.net>
+ *  Copyright (C) 2008 - 2009 Timo Kreuzer (timo.kreuzer@reactor.org)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +21,6 @@
 
 #define NDEBUG
 #include <debug.h>
-#undef DbgPrint
 
 /* Page Directory and Tables for non-PAE Systems */
 extern ULONG_PTR NextModuleBase;

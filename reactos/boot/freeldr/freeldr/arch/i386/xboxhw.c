@@ -45,7 +45,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
   PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
-      DbgPrint((DPRINT_HWDETECT,
+      DPRINTM((DPRINT_HWDETECT,
 		"Failed to allocate a full resource descriptor\n"));
       return;
     }
@@ -76,11 +76,11 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
     }
   else
     {
-      DbgPrint((DPRINT_HWDETECT, "Reading disk geometry failed\n"));
+      DPRINTM((DPRINT_HWDETECT, "Reading disk geometry failed\n"));
       MmHeapFree(PartialResourceList);
       return;
     }
-  DbgPrint((DPRINT_HWDETECT,
+  DPRINTM((DPRINT_HWDETECT,
 	   "Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
 	   DriveNumber,
 	   DiskGeometry->NumberOfCylinders,
@@ -108,7 +108,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   /* Read the MBR */
   if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
     {
-      DbgPrint((DPRINT_HWDETECT, "Reading MBR failed\n"));
+      DPRINTM((DPRINT_HWDETECT, "Reading MBR failed\n"));
       return;
     }
 
@@ -116,7 +116,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   Mbr = (PMASTER_BOOT_RECORD)DISKREADBUFFER;
 
   Signature =  Mbr->Signature;
-  DbgPrint((DPRINT_HWDETECT, "Signature: %x\n", Signature));
+  DPRINTM((DPRINT_HWDETECT, "Signature: %x\n", Signature));
 
   /* Calculate the MBR checksum */
   Checksum = 0;
@@ -125,7 +125,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
       Checksum += Buffer[i];
     }
   Checksum = ~Checksum + 1;
-  DbgPrint((DPRINT_HWDETECT, "Checksum: %x\n", Checksum));
+  DPRINTM((DPRINT_HWDETECT, "Checksum: %x\n", Checksum));
 
   /* Fill out the ARC disk block */
   reactos_arc_disk_info[reactos_disk_count].Signature = Signature;
@@ -157,7 +157,7 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   Identifier[17] = '-';
   Identifier[18] = 'A';
   Identifier[19] = 0;
-  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
+  DPRINTM((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
 
   /* Set identifier */
   FldrSetIdentifier(DiskKey, Identifier);
@@ -195,7 +195,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         }
         if (! Changed)
         {
-            DbgPrint((DPRINT_HWDETECT, "BIOS reports success for disk %d but data didn't change\n",
+            DPRINTM((DPRINT_HWDETECT, "BIOS reports success for disk %d but data didn't change\n",
                       (int)DiskCount));
             break;
         }
@@ -203,7 +203,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         memset((PVOID) DISKREADBUFFER, 0xcd, 512);
     }
     DiskReportError(TRUE);
-    DbgPrint((DPRINT_HWDETECT, "BIOS reports %d harddisk%s\n",
+    DPRINTM((DPRINT_HWDETECT, "BIOS reports %d harddisk%s\n",
               (int)DiskCount, (DiskCount == 1) ? "": "s"));
     
     FldrCreateComponentKey(BusKey,
@@ -212,7 +212,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                            ControllerClass,
                            DiskController,
                            &ControllerKey);
-    DbgPrint((DPRINT_HWDETECT, "Created key: DiskController\\0\n"));
+    DPRINTM((DPRINT_HWDETECT, "Created key: DiskController\\0\n"));
     
     /* Set 'ComponentInformation' value */
     FldrSetComponentInformation(ControllerKey,
@@ -228,7 +228,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     PartialResourceList = MmHeapAlloc(Size);
     if (PartialResourceList == NULL)
     {
-        DbgPrint((DPRINT_HWDETECT,
+        DPRINTM((DPRINT_HWDETECT,
                   "Failed to allocate resource descriptor\n"));
         return;
     }
@@ -256,7 +256,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
             Int13Drives[i].MaxHeads = Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
             
-            DbgPrint((DPRINT_HWDETECT,
+            DPRINTM((DPRINT_HWDETECT,
                       "Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
                       0x80 + i,
                       Geometry.Cylinders - 1,
@@ -326,7 +326,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   PartialResourceList = MmHeapAlloc(Size);
   if (PartialResourceList == NULL)
     {
-      DbgPrint((DPRINT_HWDETECT,
+      DPRINTM((DPRINT_HWDETECT,
 		"Failed to allocate resource descriptor\n"));
       return;
     }
@@ -355,7 +355,7 @@ XboxHwDetect(VOID)
   PCONFIGURATION_COMPONENT_DATA SystemKey;
   ULONG BusNumber = 0;
 
-  DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
+  DPRINTM((DPRINT_HWDETECT, "DetectHardware()\n"));
 
   /* Create the 'System' key */
   FldrCreateSystemKey(&SystemKey);
@@ -369,7 +369,7 @@ XboxHwDetect(VOID)
   /* TODO: Build actual xbox's hardware configuration tree */
   DetectIsaBios(SystemKey, &BusNumber);
 
-  DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
+  DPRINTM((DPRINT_HWDETECT, "DetectHardware() Done\n"));
   return SystemKey;
 }
 
