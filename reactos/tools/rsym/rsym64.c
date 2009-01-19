@@ -723,7 +723,7 @@ ParsePEHeaders(PFILE_INFO File)
 {
     DWORD OldChecksum, Checksum;
     ULONG Alignment, CurrentPos;
-    int i;
+    int i, j;
 
     /* Check if MZ header exists  */
     File->DosHeader = (PIMAGE_DOS_HEADER)File->FilePtr;
@@ -786,8 +786,6 @@ ParsePEHeaders(PFILE_INFO File)
     File->NewSectionHeaders = malloc((File->AllSections+2) * sizeof(IMAGE_SECTION_HEADER));
     File->UsedSections = 0;
     File->eh_frame.idx = -1;
-    CurrentPos = File->SectionHeaders[0].PointerToRawData;
-//    CurrentPos = ROUND_UP(File->HeaderSize, Alignment);
 
     /* Allocate array of chars, specifiying wheter to copy the section */
     File->UseSection = malloc(File->AllSections);
@@ -814,25 +812,36 @@ ParsePEHeaders(PFILE_INFO File)
             File->eh_frame.idx = i;
             File->eh_frame.p = File->FilePtr + File->eh_frame.psh->PointerToRawData;
         }
-
+        
+        /* Increase number of used sections */
         if (File->UseSection[i])
-        {
-            /* Copy section header */
-            File->NewSectionHeaders[File->UsedSections] =
-                    File->SectionHeaders[i];
-            /* Fix Offset into File */
-            File->NewSectionHeaders[File->UsedSections].PointerToRawData =
-                  File->SectionHeaders[i].PointerToRawData ? CurrentPos : 0;
-            CurrentPos += File->NewSectionHeaders[File->UsedSections].SizeOfRawData;
-
-            /* Increase number of used sections */
             File->UsedSections++;
-        }
+
     }
 
     /* This is the actual size of the new section headers */
     File->NewSectionHeaderSize = 
         (File->UsedSections+2) * sizeof(IMAGE_SECTION_HEADER);
+
+    /* Calculate the position to start writing the sections to */
+    CurrentPos = File->HeaderSize + File->NewSectionHeaderSize;
+    CurrentPos = ROUND_UP(CurrentPos, Alignment);
+
+    /* Create new section headers */
+    for (i = 0, j = 0; i < File->AllSections; i++)
+    {
+        if (File->UseSection[i])
+        {
+            /* Copy section header */
+            File->NewSectionHeaders[j] =
+                    File->SectionHeaders[i];
+            /* Fix Offset into File */
+            File->NewSectionHeaders[j].PointerToRawData =
+                  File->SectionHeaders[i].PointerToRawData ? CurrentPos : 0;
+            CurrentPos += File->NewSectionHeaders[j].SizeOfRawData;
+            j++;
+        }
+    }
 
     if (File->eh_frame.idx == -1)
     {
