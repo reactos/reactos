@@ -22,7 +22,6 @@
 #define __WMC_WMCTYPES_H
 
 #include <stdarg.h>
-#include <string.h>
 #include <host/typedefs.h>
 
 /* Byteordering defines */
