@@ -70,7 +70,7 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 	PCONFIGURATION_COMPONENT_DATA Child;
 	PCONFIGURATION_COMPONENT_DATA Sibling;
 
-	DPRINTM((DPRINT_WINDOWS, "ConvertConfigToVA(Start 0x%X)\n", Start));
+	DPRINTM(DPRINT_WINDOWS, "ConvertConfigToVA(Start 0x%X)\n", Start);
 	Child = Start;
 
 	while (Child != NULL)
@@ -90,8 +90,8 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 		if (Child->ComponentEntry.Identifier)
 			Child->ComponentEntry.Identifier = PaToVa(Child->ComponentEntry.Identifier);
 
-		DPRINTM((DPRINT_WINDOWS, "Device 0x%X class %d type %d id '%s', parent %p\n", Child,
-			Child->ComponentEntry.Class, Child->ComponentEntry.Type, VaToPa(Child->ComponentEntry.Identifier), Child->Parent));
+		DPRINTM(DPRINT_WINDOWS, "Device 0x%X class %d type %d id '%s', parent %p\n", Child,
+			Child->ComponentEntry.Class, Child->ComponentEntry.Type, VaToPa(Child->ComponentEntry.Identifier), Child->Parent);
 
 		// Go through siblings list
 		Sibling = VaToPa(Child->Sibling);
@@ -112,8 +112,8 @@ ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 			if (Sibling->ComponentEntry.Identifier)
 				Sibling->ComponentEntry.Identifier = PaToVa(Sibling->ComponentEntry.Identifier);
 
-			DPRINTM((DPRINT_WINDOWS, "Device 0x%X class %d type %d id '%s', parent %p\n", Sibling,
-				Sibling->ComponentEntry.Class, Sibling->ComponentEntry.Type, VaToPa(Sibling->ComponentEntry.Identifier), Sibling->Parent));
+			DPRINTM(DPRINT_WINDOWS, "Device 0x%X class %d type %d id '%s', parent %p\n", Sibling,
+				Sibling->ComponentEntry.Class, Sibling->ComponentEntry.Type, VaToPa(Sibling->ComponentEntry.Identifier), Sibling->Parent);
 
 			// Recurse into the Child tree
 			if (VaToPa(Sibling->Child) != NULL)

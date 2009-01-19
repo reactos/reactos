@@ -185,7 +185,11 @@ VOID RunLoader(VOID)
 
     /* Load the kernel */
     LoadBase = FrLdrLoadImage(FileName, 5, 1);
-    if (!LoadBase) return;
+    if (!LoadBase)
+    {
+        DPRINT1("Loading the kernel failed!\n");
+        return;
+    }
 
     /* Get the NT header, kernel base and kernel entry */
     NtHeader = RtlImageNtHeader(LoadBase);
