@@ -277,6 +277,8 @@
 
 /* Define if you have the libxml2 library */
 #define HAVE_LIBXML2
+#define HAVE_XMLNEWDOCPI
+#define HAVE_XMLREADMEMORY
 
 /* Define to 1 if you have the <libxml/parser.h> header file. */
 #define HAVE_LIBXML_PARSER_H
