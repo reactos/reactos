@@ -569,7 +569,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
           Protect);
 
    /* Check for valid protection flags */
-   if ((!Protect & PAGE_FLAGS_VALID_FROM_USER_MODE))
+   if (!(Protect & PAGE_FLAGS_VALID_FROM_USER_MODE))
    {
       DPRINT1("Invalid page protection\n");
       return STATUS_INVALID_PAGE_PROTECTION;
