@@ -313,9 +313,8 @@ done:
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln)
 {
   WCHAR wcBom;
-  BYTE bEoln[2];
-  LPBYTE pbEoln = NULL;
-  DWORD dwDummy, dwPos, dwNext, dwEolnSize = 0;
+  LPCWSTR pszLF = L"\n";
+  DWORD dwPos, dwNext;
 
   /* Write the proper byte order marks if not ANSI */
   if (iEncoding != ENCODING_ANSI)
@@ -323,29 +322,6 @@ BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, in
     wcBom = 0xFEFF;
     if (!WriteEncodedText(hFile, &wcBom, 1, iEncoding))
       return FALSE;
-  }
-
-  /* Identify the proper eoln to use */
-  switch(iEoln)
-  {
-      case EOLN_LF:
-        bEoln[0] = '\n';
-        pbEoln = (LPBYTE) &bEoln;
-        dwEolnSize = 1;
-        break;
-      case EOLN_CR:
-        bEoln[0] = '\r';
-        pbEoln = (LPBYTE) &bEoln;
-        dwEolnSize = 1;
-        break;
-      case EOLN_CRLF:
-        bEoln[0] = '\r';
-        bEoln[1] = '\n';
-        pbEoln = (LPBYTE) &bEoln;
-        dwEolnSize = 2;
-        break;
-      default:
-        return FALSE;
   }
 
   dwPos = 0;
@@ -363,14 +339,36 @@ BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, in
       dwNext++;
     }
 
-    /* Write text (without eoln) */
-    if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
-      return FALSE;
-
-    /* Write eoln */
     if (dwNext != dwTextLen)
     {
-      if (!WriteFile(hFile, pbEoln, dwEolnSize, &dwDummy, NULL))
+      switch (iEoln)
+      {
+      case EOLN_LF:
+        /* Write text (without eoln) */
+        if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
+          return FALSE;
+        /* Write eoln */
+        if (!WriteEncodedText(hFile, pszLF, 1, iEncoding))
+          return FALSE;
+        break;
+      case EOLN_CR:
+        /* Write text (including \r as eoln) */
+        if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos + 1, iEncoding))
+          return FALSE;
+        break;
+      case EOLN_CRLF:
+        /* Write text (including \r\n as eoln) */
+        if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos + 2, iEncoding))
+          return FALSE;
+        break;
+      default:
+        return FALSE;
+      }
+    }
+    else
+    {
+      /* Write text (without eoln, since this is the end of the file) */
+      if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
         return FALSE;
     }
 
