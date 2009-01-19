@@ -644,8 +644,8 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
 
     TM->tmWeight = pOS2->usWeightClass;
     TM->tmOverhang = 0;
-    TM->tmDigitizedAspectX = 300;
-    TM->tmDigitizedAspectY = 300;
+    TM->tmDigitizedAspectX = 96;
+    TM->tmDigitizedAspectY = 96;
     TM->tmFirstChar = pOS2->usFirstCharIndex;
     TM->tmLastChar = pOS2->usLastCharIndex;
     TM->tmDefaultChar = pOS2->usDefaultChar;
