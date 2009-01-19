@@ -42,7 +42,7 @@ extern BOOLEAN FrLdrLoadNlsFile(PCSTR szFileName, PCSTR szModuleName);
 
 #define USE_UI
 
-VOID RunLoader(VOID)
+VOID RunReactOSSetup(VOID)
 {
     ULONG i;
     LPCSTR SourcePath;
