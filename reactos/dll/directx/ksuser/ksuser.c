@@ -34,8 +34,39 @@ KsiCreateObjectType( HANDLE hHandle,
                      ACCESS_MASK DesiredAccess,
                      PHANDLE phHandle)
 {
-    UNIMPLEMENTED
-    return 0;
+    NTSTATUS Status;
+    ULONG Length;
+    ULONG TotalSize;
+    LPWSTR pStr;
+    UNICODE_STRING ObjectName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    Length = wcslen(IID);
+
+    TotalSize = (Length * sizeof(WCHAR)) + BufferSize + 2 * sizeof(WCHAR);
+
+    pStr = HeapAlloc(GetProcessHeap(), 0, TotalSize);
+    if (!pStr)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    wcscpy(pStr, (LPWSTR)IID);
+    pStr[Length] = L'\\';
+    memcpy(&pStr[Length+1], Buffer, BufferSize);
+    pStr[Length+1+BufferSize] = L'\0';
+
+    RtlInitUnicodeString(&ObjectName, pStr);
+
+    InitializeObjectAttributes(&ObjectAttributes, &ObjectName, OBJ_CASE_INSENSITIVE, hHandle, NULL);
+
+    Status = NtCreateFile(phHandle, DesiredAccess, &ObjectAttributes, &IoStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, 0, 1, 0, NULL, 0);
+    HeapFree(GetProcessHeap(), 0, pStr);
+    if (!NT_SUCCESS(Status))
+    {
+        *phHandle = INVALID_HANDLE_VALUE;
+        Status = RtlNtStatusToDosError(Status);
+    }
+    return Status;
 }
 
 /*++
