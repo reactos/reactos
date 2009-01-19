@@ -1028,11 +1028,20 @@ MmProtectAnonMem(PMM_AVL_TABLE AddressSpace,
    Region = MmFindRegion(MemoryArea->StartingAddress,
                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
                          BaseAddress, NULL);
-   *OldProtect = Region->Protect;
-   Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
-                          &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-                          BaseAddress, Length, Region->Type, Protect,
-                          MmModifyAttributes);
+   if (Region->Type == MEM_COMMIT)
+   {
+       /* FIXME: check if the whole range is committed 
+        * before altering the memory */
+       *OldProtect = Region->Protect;
+       Status = MmAlterRegion(AddressSpace, MemoryArea->StartingAddress,
+                              &MemoryArea->Data.VirtualMemoryData.RegionListHead,
+                              BaseAddress, Length, Region->Type, Protect,
+                              MmModifyAttributes);
+   }
+   else
+   {
+       Status = STATUS_NOT_COMMITTED;
+   }
    return(Status);
 }
 
