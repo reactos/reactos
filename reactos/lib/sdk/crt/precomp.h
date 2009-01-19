@@ -59,5 +59,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 #include <internal/rterror.h>
 #include <internal/tls.h>
 #include <internal/printf.h>
+#include <internal/time.h>
+#include <internal/safecrt.h>
 
 #endif /* _CRT_PRECOMP_H */

@@ -16,6 +16,10 @@ static void InitThreadData(PTHREADDATA ThreadData)
 
    ThreadData->tnext = 1;
 
+   memset(&ThreadData->tmbuf, sizeof(struct tm), 0);
+   memset(&ThreadData->asctimebuf, 26 * sizeof(char), 0);
+   memset(&ThreadData->wasctimebuf, 26 * sizeof(wchar_t), 0);
+
    /* FIXME: init more thread local data */
 
 }

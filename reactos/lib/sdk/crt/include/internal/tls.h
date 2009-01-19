@@ -28,6 +28,10 @@ typedef struct _ThreadData
   int fpecode;                  /* fp exception code */
 
   EXCEPTION_RECORD *exc_record; /* Head of exception record list */
+  
+  struct tm tmbuf;              /* Used by gmtime, mktime, mkgmtime, localtime */
+  char asctimebuf[26];          /* Buffer for asctime and ctime */
+  wchar_t wasctimebuf[26];      /* Buffer for wasctime and wctime */
 
 } THREADDATA, *PTHREADDATA;
 
