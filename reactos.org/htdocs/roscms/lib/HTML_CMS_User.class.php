@@ -62,14 +62,6 @@ class HTML_CMS_User extends HTML_CMS
       <h2>User</h2>
       <p style="font-weight: bold;">User Account Management Interface</p>
       <br />');
-      
-    if ($thisuser->hasAccess('more_lang')) {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0 GROUP BY u.name ORDER BY editcounter DESC, u.name");
-    }
-    else {
-      $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version  > 0  AND r.lang_id = :lang GROUP BY u.name ORDER BY editcounter DESC, u.name");
-      $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
-    }
 
     echo_strip('
       <div>
@@ -85,12 +77,30 @@ class HTML_CMS_User extends HTML_CMS
       <div id="userarea"></div>
       <br />
       <br />
-      <h4>Translators</h4>
-      <ul>');
+      <h4>Translators</h4>');
+    // get list of translators
+    if ($thisuser->hasAccess('more_lang')) {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, COUNT(r.id) as editcounter FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE r.version > 0 GROUP BY u.id ORDER BY l.level DESC, l.name ASC, editcounter DESC, u.name ASC");
+    }
 
+    // get list only for one language
+    else {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language, (SELECT COUNT(id) FROM ".ROSCMST_REVISIONS." WHERE user_id = u.id AND version > 0) as editcounter FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id JOIN ".ROSCMST_MEMBERSHIPS." m ON m.user_id=u.id JOIN ".ROSCMST_GROUPS." g ON g.id=m.group_id WHERE g.name_short='translator' AND u.lang_id = :lang ORDER BY editcounter DESC, u.name ASC");
+      $stmt->bindParam('lang',ROSUser::getLanguage($thisuser->id(),true),PDO::PARAM_INT);
+    }
+
+    // output list of translators
     $stmt->execute();
+    $oldlang = null;
     while ($translator = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      echo '<li>'.$translator['name'].' ('.$translator['fullname'].'; '.$translator['language'].') '.$translator['editcounter'].' stable edits</li>';
+      if ($oldlang != $translator['language']) {
+        if ($oldlang !== null) {
+          echo '</ul>';
+        }
+        echo '<h5>'.$translator['language'].'</h5><ul>';
+      }
+      $oldlang = $translator['language'];
+      echo '<li>'.$translator['name'].' ('.$translator['fullname'].') '.$translator['editcounter'].' stable edits</li>';
     }
 
     echo_strip('

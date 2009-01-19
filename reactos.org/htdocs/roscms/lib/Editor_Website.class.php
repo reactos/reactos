@@ -1,8 +1,8 @@
 <?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2007  Klemens Friedl <frik85@reactos.org>
-                  2008  Danny Götte <dangerground@web.de>
+    Copyright (C) 2007      Klemens Friedl <frik85@reactos.org>
+                  2008-2009 Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -342,18 +342,13 @@ class Editor_Website extends Editor
         <input name="editautosavemode" type="hidden" value="false" />');
     }
 
-    $stmt=&DBConnection::getInstance()->prepare("SELECT name, type FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(id) FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang ORDER BY datetime DESC");
     $stmt->bindParam('data_id',$this->data_id,PDO::PARAM_INT);
-    $stmt->execute();
-    $data = $stmt->fetchOnce();
-
-    $stmt=&DBConnection::getInstance()->prepare("SELECT COUNT(*) FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :name AND r.version > 0 AND r.lang_id = :lang ORDER BY r.id DESC");
-    $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
     $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
     $stmt->execute();
     $revisions_count = $stmt->fetchColumn();
 
-    if ($revisions_count <= 1) {
+    if ($revisions_count == 0) {
       $stmt=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id");
       $stmt->bindParam('lang_id',Language::getStandardId(),PDO::PARAM_INT);
       $stmt->execute();
@@ -366,27 +361,27 @@ class Editor_Website extends Editor
     else {
 
       if (isset($_GET['d_arch']) && $_GET['d_arch']) {
-        $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :name AND r.version > 0 AND r.lang_id = :lang AND r.archive IS TRUE ORDER BY r.id DESC LIMIT 2");
-        $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang AND archive IS TRUE ORDER BY datetime DESC LIMIT 2");
+        $stmt->bindParam('data_id',$this->data_id,PDO::PARAM_INT);
         $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
         $stmt->execute();
         $diff2 = $stmt->fetch();
-        $diff2 = 'ar'.$diff2['id'];
+        $diff2 = $diff2['id'];
         $diff1 = $stmt->fetchOnce();
-        $diff1 = 'ar'.$diff1['id'];
+        $diff1 = $diff1['id'];
       }
       else {
-        $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :name AND r.version > 0 AND r.lang_id = :lang AND r.archive IS FALSE ORDER BY r.id DESC LIMIT 1");
-        $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang AND archive IS FALSE ORDER BY datetime DESC LIMIT 1");
+        $stmt->bindParam('data_id',$this->data_id,PDO::PARAM_INT);
         $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
         $stmt->execute();
         $diff2 = $stmt->fetchColumn();
 
-        $stmt=&DBConnection::getInstance()->prepare("SELECT r.id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :name AND r.version > 0 AND r.lang_id = :lang AND r.archive IS TRUE ORDER BY r.id DESC LIMIT 1");
-        $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang AND archive IS TRUE ORDER BY datetime DESC LIMIT 1");
+        $stmt->bindParam('data_id',$this->data_id,PDO::PARAM_INT);
         $stmt->bindParam('lang',Language::getStandardId(),PDO::PARAM_INT);
         $stmt->execute();
-        $diff1 = 'ar'.$stmt->fetchColumn();
+        $diff1 = $stmt->fetchColumn();
       }
 
       echo_strip('
@@ -779,7 +774,12 @@ class Editor_Website extends Editor
     echo '<h3>Versions History</h3>';
 
     // get a perfect mixed entry set
-    $dataset = $this->helperHistory(Tag::getValueByUser($this->rev_id, 'number', -1));
+    if (ThisUser::getInstance()->hasAccess('more_lang')) {
+      $dataset = $this->helperHistory();
+    }
+    else {
+      $dataset = $this->helperHistory(RosUser::getLanguage(ThisUser::getInstance()->id(),true));
+    }
 
     $last_language = null;
     foreach ($dataset as $revision) {
@@ -1053,16 +1053,16 @@ class Editor_Website extends Editor
 
     $last_lang = null;
     foreach($dataset as $revision) {
-      if ($revision['rev_language'] != $last_lang) {
+      if ($revision['lang_id'] != $last_lang) {
         if ($last_lang !== null) {
           echo '</optgroup>';
         }
 
-        echo '<optgroup label="'.$revision['lang_name'].'">'; 
-        $last_lang = $revision['rev_language'];
+        echo '<optgroup label="'.$revision['language'].'">'; 
+        $last_lang = $revision['lang_id'];
       }
 
-      echo '<option value="'.($revision['archive'] ? 'ar' : '').$revision['rev_id'].'"'.(($revision['rev_id'] == $selected_rev) ? ' selected="selected"' : '').'>'.$revision['data_name'].' ('.$revision['rev_date'].') - v. '.$revision['rev_version'].'; '.$revision['user_name'].'</option>';
+      echo '<option value="'.$revision['id'].'"'.(($revision['id'] == $selected_rev) ? ' selected="selected"' : '').'>'.$revision['name'].' ('.$revision['date'].') - v. '.$revision['version'].'; '.$revision['user_name'].'</option>';
     }
     echo '</optgroup>';
   }
@@ -1075,62 +1075,25 @@ class Editor_Website extends Editor
    */
   private function showDifference( $rev_id1, $rev_id2 )
   {
-    // get archive mode for entry 1
-    if (substr($rev_id1, 0, 2) == 'ar') {
-      $h1_a = '_a';
-      $h1_a2 = 'a';
-      $rev_id1 = substr($rev_id1, 2);
-    }
-    else {
-      $h1_a = '';
-      $h1_a2 = '';
-    }
-
-    // get archive mode for entry 2
-    if (substr($rev_id2, 0, 2) == 'ar') {
-      $h2_a = '_a';
-      $h2_a2 = 'a';
-      $rev_id2 = substr($rev_id2, 2);
-    }
-    else {
-      $h2_a = '';
-      $h2_a2 = '';
-    }
-
     // @TODO: add short text and optional long text additional entries
     // diff source 1
-    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, l.name AS language, r.datetime, u.name AS user_name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id WHERE r.id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, l.name AS language, r.datetime, u.name AS user_name, t.content FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_TEXT." t ON t.rev_id=r.id WHERE r.id = :rev_id AND t.name='content' LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id1,PDO::PARAM_INT);
     $stmt->execute();
     $revision1 = $stmt->fetchOnce();
 
-    $stmt=&DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id AND name = 'content' ORDER BY name ASC");
-    $stmt->bindParam('rev_id',$rev_id1,PDO::PARAM_INT);
-    $stmt->execute();
-    $text1 = $stmt->fetchColumn();
-
     // diff source 2
-    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, l.name AS language, r.datetime, u.name AS user_name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id WHERE r.id = :rev_id LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, r.id, r.version, l.name AS language, r.datetime, u.name AS user_name, t.content FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_USERS." u ON r.user_id = u.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_TEXT." t ON t.rev_id=r.id WHERE r.id = :rev_id AND t.name='content' LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id2,PDO::PARAM_INT);
     $stmt->execute();
     $revision2 = $stmt->fetchOnce();
 
-    $stmt=&DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_TEXT." WHERE rev_id = :rev_id AND name = 'content' ORDER BY name ASC");
-    $stmt->bindParam('rev_id',$rev_id2,PDO::PARAM_INT);
-    $stmt->execute();
-    $text2 = $stmt->fetchColumn();
-
     // get data id from any stable revision
-    $this->data_id = $revision2['data_id'];
-    if ($h2_a2 != '') {
-      $this->data_id = $revision1['data_id'];
-    }
+    $this->data_id = $revision1['data_id'];
 
     echo_strip('
       <div style="display: block; border-bottom: 1px solid #bbb; border-right: 1px solid #bbb; background: white none repeat scroll 0%;">
-        <div style="margin:10px;">
-          <br />
-          <span>Compare</span>');
+        <div style="margin:10px;">');
 
     if ($rev_id1 == $rev_id2) {
       echo '<p>Please select two different entries to display the differences!</p>';
@@ -1144,18 +1107,18 @@ class Editor_Website extends Editor
         <tr>
           <td style="text-align:center;">
             <select name="cbmdiff1" id="cbmdiff1" onchange="'."getDiffEntries(this.value, document.getElementById('cbmdiff2').value)".'">');
-    // history
     $this->selectRevision($rev_id1);
+    // history
     echo_strip('
             </select>
           </td>
           <td style="width:50px;text-align:center;">
-            <input type="submit" name="switchdiff" id="switchdiff" value="switch" onclick="'."getDiffEntries(document.getElementById('cbmdiff2').value, document.getElementById('cbmdiff1').value)".'" />
+            <button name="switchdiff" id="switchdiff" onclick="'."getDiffEntries(document.getElementById('cbmdiff2').value, document.getElementById('cbmdiff1').value)".'">switch</button>
           </td>
           <td style="text-align:center;">
             <select name="cbmdiff2" id="cbmdiff2" onchange="'."getDiffEntries(document.getElementById('cbmdiff1').value, this.value)".'">');
-    // history
     $this->selectRevision($rev_id2);
+    // history
     echo_strip('
             </select>
           </td>
@@ -1179,15 +1142,15 @@ class Editor_Website extends Editor
               <li>Language: '.$revision2['language'].'</li>
               <li>User: '.$revision2['user_name'].'</li>');
     if (ThisUser::getInstance()->hasAccess('entry_details')) {
-      echo '<li>ID: '.$revision2['id'].'</li>';
+      echo '<li>Rev-ID: '.$revision2['id'].'</li>';
     }
     echo_strip('
             </ul>
           </td>
         </tr>
       </table>
-      <div><pre id="frmeditdiff1" style="display: none;">');echo $text1;echo_strip('</pre></div>
-      <div><pre id="frmeditdiff2" style="display: none;">');echo $text2;echo_strip('</pre></div>
+      <div id="frmeditdiff1" style="display: none;">');echo $revision1['content'];echo_strip('</div>
+      <div id="frmeditdiff2" style="display: none;">');echo $revision2['content'];echo_strip('</div>
       <div style="display: block;border-bottom: 1px solid #bbb;  border-right: 1px solid #bbb; border-top: 1px solid #e3e3e3; border-left: 1px solid #e3e3e3; background: #F2F2F2;">
         <pre style="margin:10px; font-size:9px; font-family:Arial, Helvetica, sans-serif;" id="frmeditdiff">&nbsp;</pre>
       </div>
@@ -1202,18 +1165,26 @@ class Editor_Website extends Editor
    * @param mixed data_normal should be already in right order 
    * @access private
    */
-  private function helperHistory( )
+  private function helperHistory( $lang_id = null )
   {
     // check stable entries
     $stmt=&DBConnection::getInstance()->prepare("SELECT name, type FROM ".ROSCMST_ENTRIES." WHERE id = :data_id LIMIT 1");
     $stmt->bindParam('data_id',$this->data_id,PDO::PARAM_INT);
     $stmt->execute();
-    $data = $stmt->fetchOnce();
+    $data = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
-    // select active entries
-    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, r.id, l.name AS language, r.version, r.datetime, u.name AS user_name FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.name = :name AND d.type = :type AND r.version > 0 ORDER BY l.name  ASC, r.datetime DESC");
-    $stmt->bindParam('name',$data['data_name'],PDO::PARAM_STR);
-    $stmt->bindParam('type',$data['data_type'],PDO::PARAM_STR);
+    // select all related entries
+    if ($lang_id === null) {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, r.id, r.lang_id, l.name AS language, r.version, DATE(r.datetime) as date, r.datetime, u.name AS user_name, r.archive FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.name = :name AND d.type = :type AND r.version > 0 ORDER BY l.name  ASC, r.datetime DESC");
+    }
+
+    // select only one language
+    else {
+      $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, r.id, r.lang_id, l.name AS language, r.version, DATE(r.datetime) as date, r.datetime, u.name AS user_name, r.archive FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON r.data_id = d.id JOIN ".ROSCMST_LANGUAGES." l ON r.lang_id = l.id JOIN ".ROSCMST_USERS." u ON u.id = r.user_id WHERE d.name = :name AND d.type = :type AND r.version > 0 AND r.lang_id=:lang_id ORDER BY l.name  ASC, r.datetime DESC");
+      $stmt->bindParam('lang_id',$lang_id,PDO::PARAM_INT);
+    }
+    $stmt->bindParam('name',$data['name'],PDO::PARAM_STR);
+    $stmt->bindParam('type',$data['type'],PDO::PARAM_STR);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   } // end of member function helperHistory

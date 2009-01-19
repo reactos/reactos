@@ -1029,6 +1029,9 @@ function getActiveFilters( )
       if (document.getElementById('sfv'+i).id && document.getElementById('sfv'+i).className == "filthidden") {
         filtstring2 += '_0';
       }
+      else {
+        filtstring2 += '_1';
+      }
 
       filtstring2 += '|';
     }
@@ -1962,14 +1965,15 @@ function applyToEditor( http_request, objid )
 
     case 'diff':
     case 'diff2': 
-      document.getElementById('editzone').innerHTML = '<div id="frmdiff">'+ http_request.responseText + '</div>';
+      document.getElementById('frmdiff').innerHTML = http_request.responseText;
       loadEditor('diffentry');
       document.getElementById('frmeditdiff').innerHTML = WDiffShortenOutput(WDiffString(document.getElementById('frmeditdiff1').innerHTML, document.getElementById('frmeditdiff2').innerHTML));
       break;
 
     case 'changetags':
       reloadEntryTableWithOffset(0);
-      alertbox('Action performed');
+      if (http_request.responseText == '') alertbox('Action performed');
+      else alertbox("Error while requested action:\n"+http_request.responseText);
       break;
 
     case 'changetags2':
@@ -2194,32 +2198,32 @@ function loadMenu( objid )
       break;
 
     case '2':
-      filtstring2 = 'k_is_new_0|c_is_type_0|l_is_'+getLang()+'_0|o_desc_datetime';
+      filtstring2 = 'k_is_new_0|c_is_type_0|l_is_'+getLang()+'_0|i_is_read_0|o_desc_datetime_0';
       loadEntryTable('new');
       break;
 
     case '3':
-      filtstring2 = 'y_is_page_0|k_is_stable_0|l_is_'+getLang()+'_0|o_asc_name';
+      filtstring2 = 'y_is_page_0|k_is_stable_0|l_is_'+getLang()+'_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('page');
       break;
 
     case '13':
-      filtstring2 = 'y_is_dynamic_0|k_is_stable_0|l_is_'+getLang()+'_0|o_asc_name';
+      filtstring2 = 'y_is_dynamic_0|k_is_stable_0|l_is_'+getLang()+'_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('dynamic');
       break;
 
     case '4':
-      filtstring2 = 'y_is_content_0|k_is_stable_0|l_is_'+getLang()+'_0|o_asc_name';
+      filtstring2 = 'y_is_content_0|k_is_stable_0|l_is_'+getLang()+'_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('content');
       break;
 
     case '5':
-        filtstring2 = 'y_is_template_0|k_is_stable_0|l_is_'+getLang()+'_0|o_asc_name';
+        filtstring2 = 'y_is_template_0|k_is_stable_0|l_is_'+getLang()+'_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('template');
       break;
 
     case '6':
-      filtstring2 = 'y_is_script_0|k_is_stable_0|l_is_'+getLang()+'_0|o_asc_name';
+      filtstring2 = 'y_is_script_0|k_is_stable_0|l_is_'+getLang()+'_0|i_is_read_0|o_asc_name_0';
       loadEntryTable('script');
       break;
 
@@ -2231,33 +2235,33 @@ function loadMenu( objid )
       else {
         translang = getLang();
       }
-      filtstring2 = 'y_is_content_0|k_is_stable_0|i_is_default_0|c_is_user_0|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'|o_desc_date';
+      filtstring2 = 'y_is_content_0|k_is_stable_0|i_is_translate_0|c_is_user_0|l_is_'+roscms_standard_language+'_0|r_is_'+translang+'_0|o_desc_datetime_0';
       loadEntryTable('translate');
       break;
 
     case '8':
     default:
-      filtstring2 = 'c_is_type_0|l_is_'+getLang()+'|o_desc_datetime';
+      filtstring2 = 'c_is_type_0|l_is_'+getLang()+'_0|i_is_read_0|o_desc_datetime_0';
       loadEntryTable('all');
       break;
 
     case '9':
-      filtstring2 = 's_is_true_0|c_is_type_0|l_is_'+getLang()+'_0|o_desc_datetime';
+      filtstring2 = 's_is_true_0|c_is_type_0|l_is_'+getLang()+'_0|i_is_read_0|o_desc_datetime_0';
       loadEntryTable('starred');
       break;
 
     case '10':
-      filtstring2 = 'k_is_draft_0|u_is_'+roscms_intern_login_check_username+'_0|c_is_type_0|o_desc_datetime';
+      filtstring2 = 'k_is_draft_0|u_is_'+roscms_intern_login_check_username+'_0|c_is_type_0|i_is_read_0|o_desc_datetime_0';
       loadEntryTable('draft');
       break;
 
     case '11':
-      filtstring2 = 'u_is_'+roscms_intern_login_check_username+'_0|c_is_type_0|o_desc_datetime';
+      filtstring2 = 'u_is_'+roscms_intern_login_check_username+'_0|c_is_type_0|i_is_read_0|o_desc_datetime_0';
       loadEntryTable('my');
       break;
 
     case '12':
-      filtstring2 = 'k_is_archive_0|c_is_version_0|c_is_type_0|l_is_'+getLang()+'_0|o_asc_name|o_desc_ver';
+      filtstring2 = 'k_is_archive_0|c_is_version_0|c_is_type_0|l_is_'+getLang()+'_0|o_asc_name_0|i_is_read_0|o_desc_ver_0';
       roscms_archive = true; /* activate archive mode*/
       loadEntryTable('archive');
       break;
@@ -2690,7 +2694,6 @@ function htmlFilterChoices( filtpopstr )
     var filtpopstr2 = filtpopstr.split('|');
 
     for (var i=0; i < filtpopstr2.length; i++) {
-      lstfilterstr2 = '';
       lstfilterstr2 = filtpopstr2[i].split('_');
 
       if (lstfilterstr2[3] == 0) {

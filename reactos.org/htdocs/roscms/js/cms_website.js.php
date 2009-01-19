@@ -167,10 +167,10 @@ foreach($languages as $language) {
         filtentryselstrs2 = '<select id="sfc'+filterid+'"><?php
 
 // ACL
-$stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
+$stmt=&DBConnection::getInstance()->prepare("SELECT id, name, name_short FROM ".ROSCMST_RIGHTS." ORDER BY name ASC");
 $stmt->execute();
 while($ACL=$stmt->fetch(PDO::FETCH_ASSOC)) {
-  echo '<option value="'. $ACL['id'] .'">'. $ACL['name'] .'</option>';
+  echo '<option value="'. $ACL['name_short'] .'">'. $ACL['name'] .'</option>';
 }
 
  ?></select>';

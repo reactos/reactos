@@ -20,11 +20,11 @@
 
 
 // Database:
-define('DB_HOST', "localhost");
-define('DB_USER', "lev-db");
-define('DB_PASS', "DangerGround");
-define('DB_NAME', "roscms");
+$db_host = 'localhost';
+$db_user = 'user';
+$db_pass = 'pass';
+$db_name = 'roscms';
 
-
+// vars are unset in DBConnection class
 
 ?>

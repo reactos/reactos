@@ -16,9 +16,9 @@ function getUser( )
     if (document.getElementById('searchopt2').checked) soptckd = 'fullname';
     if (document.getElementById('searchopt3').checked) soptckd = 'email';
     if (document.getElementById('searchopt4').checked) soptckd = 'website';
-    if (document.getElementById('searchopt5').checked) soptckd = 'language';
+    if (document.getElementById('searchopt5') && document.getElementById('searchopt5').checked) soptckd = 'language';
 
-    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=list&d_val='+encodeURIComponent(document.getElementById('textfield').value)+'&d_val2='+encodeURIComponent(soptckd));
+    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=list&phrase='+encodeURIComponent(document.getElementById('textfield').value)+'&option='+encodeURIComponent(soptckd));
   }
 }
 
@@ -31,7 +31,7 @@ function getUser( )
  */
 function getUserDetails( user_id )
 {
-  makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=detail&d_val='+encodeURIComponent(user_id));
+  makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=detail&user='+encodeURIComponent(user_id));
 }
 
 
@@ -44,7 +44,7 @@ function getUserDetails( user_id )
  */
 function addMembership( user_id, group_id )
 {
-  makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=addmembership&d_val='+encodeURIComponent(user_id)+'&d_val2='+encodeURIComponent(group_id));
+  makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=addmembership&user='+encodeURIComponent(user_id)+'&group='+encodeURIComponent(group_id));
 }
 
 
@@ -60,7 +60,7 @@ function delMembership( user_id, member_id )
   var uf_check = confirm("Be careful! \n\nDo you want to delete this membership?");
 
   if (uf_check == true) {
-    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=delmembership&d_val='+encodeURIComponent(user_id)+'&d_val2='+encodeURIComponent(member_id));
+    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=delmembership&user='+encodeURIComponent(user_id)+'&group='+encodeURIComponent(member_id));
   }
 }
 
@@ -77,7 +77,7 @@ function updateUserLang( user_id, language )
   var uf_check = confirm("Do you want to continue?");
 
   if (uf_check == true) {
-    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=updateusrlang&d_val='+encodeURIComponent(user_id)+'&d_val2='+encodeURIComponent(language));
+    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=updateusrlang&user='+encodeURIComponent(user_id)+'&lang='+encodeURIComponent(language));
   }
 }
 

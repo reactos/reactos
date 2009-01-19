@@ -52,13 +52,7 @@ class Export_User extends Export
   public function search( )
   {
     $thisuser = &ThisUser::getInstance();
-
     $display = ''; // list / user details
-    $user_id = $_GET['d_val'];
-    $search_string = $_GET['d_val'];
-    $group_id = @$_GET['d_val2'];
-    $new_lang = @$_GET['d_val2'];
-    $search_type = @$_GET['d_Val2'];
 
     if (!$thisuser->hasAccess('user')) {
       return;
@@ -79,27 +73,28 @@ class Export_User extends Export
     }
 
     if (isset($_GET['d_fl'])) {
-
       // do some actions
       switch ($_GET['d_fl']) {
         case 'addmembership':
           // check if user is already member, so we don't add him twice
           // also check that you don't give accounts a higher seclevel
-          $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_MEMBERSHIPS." m JOIN ".ROSCMST_GROUPS." g ON m.group_id = g.id WHERE m.user_id = :user_id AND m.group_id = :group_id LIMIT 1");
-          $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
-          $stmt->bindParam('group_id',$group_id,PDO::PARAM_STR);
+          $stmt=&DBConnection::getInstance()->prepare("SELECT DISTINCT g.security_level FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON m.group_id=g.id WHERE g.id = :group_id AND m.user_id != :user_id LIMIT 1");
+          $stmt->bindParam('group_id',$_GET['group'],PDO::PARAM_INT);
+          $stmt->bindParam('user_id',$_GET['user'],PDO::PARAM_INT);
           $stmt->execute();
-          if ($stmt->fetchColumn() === false) {
+          $level = $stmt->fetchColumn();
+
+          if ($level !== false && $thisuser->hasAccess('addlvl'.$level.'group')) {
 
             // insert new membership
             $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_MEMBERSHIPS." ( user_id , group_id ) VALUES ( :user_id, :group_id )");
-            $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
-            $stmt->bindParam('group_id',$group_id,PDO::PARAM_INT);
+            $stmt->bindParam('user_id',$_GET['user'],PDO::PARAM_INT);
+            $stmt->bindParam('group_id',$_GET['group'],PDO::PARAM_INT);
             $stmt->execute();
             if ($user_lang !== false) {
-              Log::writeLangMedium('add user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}', $user_lang);
+              Log::writeLangMedium('add user account membership: user-id='.$_GET['user'].', group-id='.$_GET['group'].' done by '.$thisuser->id().' {data_user_out}', $user_lang);
             }
-            Log::writeMedium('add user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}');
+            Log::writeMedium('add user account membership: user-id='.$_GET['user'].', group-id='.$_GET['group'].' done by '.$thisuser->id().' {data_user_out}');
           }
           // preselect displayed content
           $display = 'detail';
@@ -107,13 +102,13 @@ class Export_User extends Export
 
         case 'delmembership':
           $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_MEMBERSHIPS." WHERE user_id = :user_id AND group_id = :group_id LIMIT 1");
-          $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
-          $stmt->bindParam('group_id',$group_id,PDO::PARAM_INT);
+          $stmt->bindParam('user_id',$_GET['user'],PDO::PARAM_INT);
+          $stmt->bindParam('group_id',$_GET['group'],PDO::PARAM_INT);
           $stmt->execute();
           if ($user_lang !== false) {
-            Log::writeLangMedium('delete user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}', $user_lang);
+            Log::writeLangMedium('delete user account membership: user-id='.$_GET['user'].', group-id='.$_GET['group'].' done by '.$thisuser->id().' {data_user_out}', $user_lang);
           }
-          Log::writeMedium('delete user account membership: user-id='.$user_id.', group-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}');
+          Log::writeMedium('delete user account membership: user-id='.$_GET['user'].', group-id='.$_GET['group'].' done by '.$thisuser->id().' {data_user_out}');
           // preselect displayed content
           $display = 'detail';
           break;
@@ -122,7 +117,7 @@ class Export_User extends Export
           // only with admin rights
           if ($thisuser->hasAccess('disableaccount')) {
             $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET disabled = TRUE WHERE id = :user_id");
-            $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+            $stmt->bindParam('user_id',$_GET['user'],PDO::PARAM_INT);
             $stmt->execute();
           }
           // preselect displayed content
@@ -134,7 +129,7 @@ class Export_User extends Export
           if ($thisuser->hasAccess('disableaccount')) {
             // enable account only, if he has already activated his account
             $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET disabled = FALSE WHERE activation = '' AND id = :user_id");
-            $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+            $stmt->bindParam('user_id',$_GET['user'],PDO::PARAM_INT);
             $stmt->execute();
           }
           // preselect displayed content
@@ -143,13 +138,13 @@ class Export_User extends Export
 
         case 'upateusrlang':
           $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_USERS." SET lang_id = :lang WHERE id = :user_id");
-          $stmt->bindParam('lang',$group_id);
-          $stmt->bindParam('user_id',$user_id);
+          $stmt->bindParam('lang',$_GET['lang']);
+          $stmt->bindParam('user_id',$_GET['user']);
           $stmt->execute();
           if ($user_lang) {
-            Log::writeLangMedium('change user account language: user-id='.$user_id.', lang-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}', $user_lang);
+            Log::writeLangMedium('change user account language: user-id='.$_GET['user'].', lang-id='.$_GET['lang'].' done by '.$thisuser->id().' {data_user_out}', $user_lang);
           }
-          Log::writeMedium('change user account language: user-id='.$user_id.', lang-id='.$group_id.' done by '.$thisuser->id().' {data_user_out}');
+          Log::writeMedium('change user account language: user-id='.$_GET['user'].', lang-id='.$_GET['lang'].' done by '.$thisuser->id().' {data_user_out}');
           // preselect displayed content
           $display = 'detail';
           break;
@@ -162,13 +157,13 @@ class Export_User extends Export
 
     // list / details
     if($display == 'list') {
-      if (isset($_GET['d_val']) &&strlen($_GET['d_val']) > 2) {
+      if (isset($_GET['phrase']) && strlen($_GET['phrase']) > 2) {
         echo_strip('
           <fieldset>
             <legend>Results</legend>
             <ul>');
 
-        switch ($search_type) {
+        switch ($_GET['option']) {
           case 'fullname':
             $sql_search = "u.fullname";
             break;
@@ -179,8 +174,10 @@ class Export_User extends Export
             $sql_search = "u.homepage";
             break;
           case 'language':
-           $sql_search = "l.name";
-            break;
+            if ($thisuser->hasAccess('more_lang')) {
+              $sql_search = "l.name";
+              break;
+            }
           case 'accountname':
           default:
             $sql_search = "u.name";
@@ -191,13 +188,13 @@ class Export_User extends Export
           $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE ". $sql_search ." LIKE :value ORDER BY u.name ASC LIMIT 25");
         }
         else {
-          $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE ". $sql_search ." LIKE :value AND u.lang_id=:user_lang ORDER BY u.name ASC LIMIT 25");
+          $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.fullname, l.name AS language FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_LANGUAGES." l ON u.lang_id=l.id WHERE ". $sql_search ." LIKE :value AND l.id=:user_lang ORDER BY u.name ASC LIMIT 25");
           $stmt->bindValue('user_lang',$user_lang,PDO::PARAM_INT);
         }
-        $stmt->bindValue('value','%'.$search_string.'%',PDO::PARAM_INT);
+        $stmt->bindValue('value','%'.$_GET['phrase'].'%',PDO::PARAM_INT);
         $stmt->execute();
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ( $users as $user) {
+        foreach ($users as $user) {
           echo_strip('
             <li>
               <a href="'."javascript:getUserDetails('".$user['id']."')".'">'.$user['name'].'</a>
@@ -219,7 +216,7 @@ class Export_User extends Export
 
     elseif ($display == 'detail') {
       $stmt=&DBConnection::getInstance()->prepare("SELECT u.id, u.name, u.modified, u.logins, u.created, u.fullname, u.email, l.name AS language, u.disabled FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_LANGUAGES." l ON l.id=u.lang_id WHERE u.id = :user_id LIMIT 1");
-      $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$_GET['user'],PDO::PARAM_INT);
       $stmt->execute();
       $user = $stmt->fetchOnce();
 
@@ -245,7 +242,7 @@ class Export_User extends Export
             <ul>');
 
       $stmt=&DBConnection::getInstance()->prepare("SELECT g.name, m.group_id FROM ".ROSCMST_GROUPS." g JOIN ".ROSCMST_MEMBERSHIPS." m ON g.id=m.group_id WHERE m.user_id = :user_id ORDER BY g.name ASC");
-      $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+      $stmt->bindParam('user_id',$_GET['user'],PDO::PARAM_INT);
       $stmt->execute();
       while ($membership = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
@@ -253,7 +250,7 @@ class Export_User extends Export
         if ($thisuser->hasAccess('delmembership')) {
           echo_strip('
             &nbsp;
-            <span class="frmeditbutton" onclick="'."delMembership(".$user_id.", '".$membership['group_id']."')".'">
+            <span class="frmeditbutton" onclick="'."delMembership(".$_GET['user'].", '".$membership['group_id']."')".'">
               <img src="images/remove.gif" alt="" style="width:11px; height:11px; border:0px;" />
               &nbsp;Delete
             </span>');
@@ -264,18 +261,18 @@ class Export_User extends Export
 
       if ($thisuser->hasAccess('addmembership')) {
         echo '<select id="cbmmemb" name="cbmmemb">';
-        $stmt=&DBConnection::getInstance()->prepare("SELECT g.id, g.name FROM ".ROSCMST_MEMBERSHIPS." m JOIN ".ROSCMST_GROUPS." g ON g.id!=m.group_id WHERE m.user_id != :user-id ORDER BY g.name ASC");
-        $stmt->bindParam('user_id',$user_id,PDO::PARAM_INT);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, security_level FROM ".ROSCMST_GROUPS." WHERE id NOT IN(SELECT group_id FROM ".ROSCMST_MEMBERSHIPS." WHERE user_id=:user_id) ORDER BY name ASC");
+        $stmt->bindParam('user_id',$_GET['user'],PDO::PARAM_INT);
         $stmt->execute();
         while ($group = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
           // only super admin can give super admin rights
-          if ($group['usrgroup_name'] != 'sadmin' || $thisuser->hasAccess('addLvl')) {
+          if ($thisuser->hasAccess('addlvl'.$group['security_level'].'group')) {
             echo '<option value="'.$group['id'].'">'.$group['name'].'</option>';
           }
         }
         echo_strip('</select>
-          <input type="button" name="addmemb" id="addmemb" value="Add Membership" onclick="'."getUserDetails(".$user_id.", document.getElementById('cbmmemb').value)".'" />
+          <button name="addmemb" id="addmemb" onclick="'."addMembership(".$_GET['user'].", document.getElementById('cbmmemb').value)".'">Add Membership</button>
           <br />
           <br />
           <select id="cbmusrlang" name="cbmusrlang">');
@@ -285,20 +282,13 @@ class Export_User extends Export
           echo '<option value="'.$lang['id'].'">'.$lang['name'].'</option>';
         }
         echo_strip('</select>
-          <input type="button" name="addusrlang" id="addusrlang" value="Update User language" onclick="'."updateUserLang(".$user_id.", document.getElementById('cbmusrlang').value)".'" /><br />');
+          <input type="button" name="addusrlang" id="addusrlang" value="Update User language" onclick="'."updateUserLang(".$_GET['user'].", document.getElementById('cbmusrlang').value)".'" /><br />');
       }
       elseif ($thisuser->hasAccess('addtransl')) {
-        echo_strip('<input type="button" name="addmemb" id="addmemb" value="Make this User a Translator" onclick="'."getUserDetails(".$user_id.", 'translator')".'" />
-          <br />
-          <br />');
-        $stmt=&DBConnection::getInstance()->prepare("SELECT l.id, l.name  FROM ".ROSCMST_USERS." u JOIN ".ROSCMST_LANGUAGES." l ON l.id=u.lang_id WHERE id = :user_id LIMIT 1");
-        $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id FROm ".ROSCMST_GROUPS." WHERE name_short='translator'");
         $stmt->execute();
-        $lang = $stmt->fetchColumn();
 
-        if ($lang !== false) {
-          echo '<input type="button" name="addusrlang" id="addusrlang" value="Switch User language to \''.$lang['name'].'\'" onclick="'."updateUserLang(".$user_id.", '".$lang['id'].")".'" /><br />';
-        }
+        echo '<input type="button" name="addmemb" id="addmemb" value="Make this User a Translator" onclick="'."addMembership(".$_GET['user'].", '".$stmt->fetchColumn()."')".'" />';
 
       }
       echo '</fieldset><br />';

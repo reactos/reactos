@@ -163,10 +163,11 @@ class Tag
   public static function update( $tag_id, $new_value )
   {
     // tag already exists ?
-    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TAGS." WHERE tag_id = :tag_id AND user_id IN(-1, 0, :user_id) LIMIT 1");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_TAGS." WHERE id = :tag_id AND user_id IN(-1, 0, :user_id) LIMIT 1");
     $stmt->bindParam('tag_id',$tag_id,PDO::PARAM_INT);
     $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
-    if ($stmt->fetchColumn() || ThisUser::getInstance()->hasAccess('updatetag')) {
+    $stmt->execute();
+    if ($stmt->fetchColumn()) {
 
       // update value
       $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TAGS." SET value = :new_value WHERE id=:tag_id");

@@ -51,7 +51,6 @@ class CMSWebsiteSaveEntry
    */
   private function save( )
   {
-  
     $thisuser = &ThisUser::getInstance();
 
     $type = (isset($_GET['d_val3']) ? $_GET['d_val3'] : '');
@@ -59,7 +58,7 @@ class CMSWebsiteSaveEntry
 
     // detect if theres already a autosave-draft saved, and get rev_id
     if ($type == 'draft') { // draft
-      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id = :user_id AND lang_id = :lang ORDER BY id DESC LIMIT 1");
+      $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id = :user_id AND lang_id = :lang AND archive IS FALSE ORDER BY id DESC LIMIT 1");
       $stmt->bindParam('data_id',$_GET['d_id'],PDO::PARAM_INT);
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
       $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_INT);
@@ -106,7 +105,7 @@ class CMSWebsiteSaveEntry
       if ($type  == 'submit') {
         Tag::update(Tag::getIdByUser($rev_id, 'status', -1),'new');
       }
-      else if ($type  == 'draft') {
+      else {
         Tag::update(Tag::getIdByUser($rev_id, 'status', -1),'draft');
       }
     }

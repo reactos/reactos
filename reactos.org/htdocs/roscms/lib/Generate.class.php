@@ -18,10 +18,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
-    
-function getTagValueG($data_id, $rev_id, $user, $name) {
-  return Tag::getValue($rev_id, $name, $user);
-}
+
 
 /**
  * class Generate
@@ -59,10 +56,6 @@ class Generate
   {
     $this->output_type = $output_type;
     $this->begin = date('Y-m-d H:i:s');
-
-    //@DEPRACTED
-    mysql_connect(DB_HOST, DB_USER, DB_PASS);
-    mysql_select_db(DB_NAME);
 
     // try to force unlimited script runtime
     @set_time_limit(300);
@@ -191,7 +184,7 @@ class Generate
           $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
         }
         // eval
-        else {echo '[#inc_'.$depency['name'].']';
+        else {
           $content = str_replace('[#inc_'.$depency['name'].']', $this->evalTemplate(array(null,$depency['name'])), $content);
         }
       }
@@ -689,7 +682,7 @@ class Generate
       $roscms_lang_id = $this->lang_id;
 
       // execute code and return the output
-      eval($revision['content']);
+      eval('?>'.$revision['content']);
       $content = ob_get_contents(); 
       ob_end_clean(); 
     }

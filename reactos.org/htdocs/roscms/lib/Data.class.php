@@ -653,20 +653,23 @@ class Data
 
             if ($revision['version'] == 0) {
 
-              $stmt=&DBConnection::getInstance()->prepare("SELECT id, data_id, version, lang_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang AND archive IS FALSE ORDER BY version DESC, id DESC LIMIT 1");
+              // get next rev num
+              $stmt=&DBConnection::getInstance()->prepare("SELECT version FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang ORDER BY version DESC, id DESC LIMIT 1");
+              $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
+              $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
+              $stmt->execute();
+              $version_num = $stmt->fetchColumn()+1;
+
+              // get latest stable entry
+              $stmt=&DBConnection::getInstance()->prepare("SELECT id, data_id, lang_id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND version > 0 AND lang_id = :lang AND archive IS FALSE ORDER BY version DESC, id DESC LIMIT 1");
               $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
               $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
               $stmt->execute();
               $stable_revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
-              // setup a new version number
-              $version_num = 1;
 
               // no stable entry exist, so skip move-process
               if ($stable_revision !== false) {
-              
-                // stable entry exist, so increase the version number
-                $version_num = $stable_revision['version'] + 1;
 
                 // delete old tags
                 $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_TAGS." WHERE rev_id = :rev_id");
@@ -744,17 +747,27 @@ class Data
 
           // delete entry
           case 'xe':
-            if ($thisuser->hasAccess('del_entry') || $revision['user_id'] == $thisuser->id()) {
+            if ($thisuser->hasAccess('more_lang') || $revision['lang_id'] == RosUser::getLanguage($thisuser->id(),true)) {
+              if ($thisuser->hasAccess('del_entry') || $revision['user_id'] == $thisuser->id() && $revision['version']==0) {
 
-              // copy to Archive if no admin
-              if (!$thisuser->hasAccess('del_wo_archiv')) {
-                Data::copy($revision['id'], 0, $lang_id);
+                // copy to Archive if no admin
+                if ($revision['version']) {
+                  Data::deleteRevision($revision['id']);
+                }
+                elseif (!$thisuser->hasAccess('del_wo_archiv')) {
+                  Data::toArchive($revision['id']);
+                }
+                else {
+                  //Data::deleteFile($revision['id']);
+                  Data::deleteRevision($revision['id']);
+                }
               }
-              //Data::deleteFile($revision['id']);
-              Data::deleteRevision($revision['id']);
+              else {
+                echo 'Not enough rights for delete process.';
+              }
             }
             else {
-              echo 'Not enough rights for delete process.';
+              echo 'You have no rights to delete entries from other languages';
             }
             break;
 
@@ -778,11 +791,11 @@ class Data
    * @return bool
    * @access public
    */
-  public static function toArchive($rev_id )
+  public static function toArchive( $rev_id )
   {
     // remove depencies
     DataDepencies::removeRevision($rev_id);
-              
+
     // move into archive
     $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_REVISIONS." SET archive = TRUE WHERE id=:rev_id");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);

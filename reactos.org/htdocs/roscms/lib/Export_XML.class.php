@@ -157,7 +157,7 @@ class Export_XML extends Export
       $stmt_acl=&DBConnection::getInstance()->prepare("SELECT name FROM ".ROSCMST_ACCESS." WHERE id = :access_id LIMIT 1");
 
       // make the order command ready for usage
-      if ($this->sql_order == '') {
+      if ($this->sql_order == null) {
         $this->sql_order = " ORDER BY r.id DESC";
       }
       else {
@@ -591,7 +591,7 @@ class Export_XML extends Export
 
           // security (ACL)
           case 'i': 
-            $this->sql_where .= "d.access_id".($type_b=='is' ? '=':'!=').DBConnection::getInstance()->quote($type_c,PDO::PARAM_STR);
+            $this->sql_where .= "d.access_id ".($type_b=='is' ?'':"NOT ")."IN (".Data::hasAccessAsList($type_c).")";
             break;
 
           // metadata

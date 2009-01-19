@@ -28,11 +28,18 @@ class DBConnection extends PDO
 {
   public function __construct()
   {
+    global $db_host, $db_host, $db_user, $db_pass;
     include_once(ROSCMS_PATH.'connect.db.php');
 
     try {
-      parent::__construct('mysql:dbname='.DB_NAME.';host='.DB_HOST, DB_USER, DB_PASS);
-      
+      parent::__construct('mysql:dbname='.$db_name.';host='.$db_host, $db_user, $db_pass);
+
+      // unset loaded db config
+      unset($GLOBALS['db_name']);
+      unset($GLOBALS['db_host']);
+      unset($GLOBALS['db_user']);
+      unset($GLOBALS['db_pass']);
+
       $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
       $this->setAttribute(PDO::ATTR_STATEMENT_CLASS,array('DBStatement', array($this)));
     }
