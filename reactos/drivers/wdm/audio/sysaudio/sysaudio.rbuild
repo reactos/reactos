@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="sysaudio" type="kernelmodedriver" installbase="system32/drivers" installname="sysaudio.sys" allowwarnings="true">
+<module name="sysaudio" type="kernelmodedriver" installbase="system32/drivers" installname="sysaudio.sys">
 	<include base="sysaudio">.</include>
 	<library>ntoskrnl</library>
 	<define name="_NTDDK_" />

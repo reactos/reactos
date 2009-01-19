@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
-<module name="widl" type="buildtool" allowwarnings="true">
+<module name="widl" type="buildtool">
 	<define name="INT16">SHORT</define>
 	<define name="YYDEBUG">1</define>
 	<include base="wpp">.</include>

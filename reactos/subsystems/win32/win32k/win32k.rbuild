@@ -190,7 +190,7 @@
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
 	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true" crt="libcntpr">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
 	<importlibrary definition="win32k.pspec" />
 	<library>win32k_base</library>
 	<library>pseh</library>

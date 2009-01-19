@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="mstsc" type="win32gui" installbase="system32" installname="mstsc.exe" unicode="yes" allowwarnings="true">
+<module name="mstsc" type="win32gui" installbase="system32" installname="mstsc.exe" unicode="yes">
 	<include base="mstsc">.</include>
 	<library>kernel32</library>
 	<library>user32</library>

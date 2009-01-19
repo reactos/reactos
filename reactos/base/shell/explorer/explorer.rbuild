@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-<module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true" unicode="yes">
+<module name="explorer" type="win32gui" installname="explorer.exe" unicode="yes">
 	<include base="explorer">.</include>
 	<define name="WIN32" />
 	<define name="__WINDRES__" />
