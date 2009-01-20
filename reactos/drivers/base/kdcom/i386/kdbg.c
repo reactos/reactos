@@ -22,6 +22,13 @@
 #include <kddll.h>
 #include <ioaccess.h> /* port intrinsics */
 
+typedef enum _KD_RECV_CODE
+{
+	KD_RECV_CODE_OK       = 0,
+	KD_RECV_CODE_TIMEOUT  = 1,
+	KD_RECV_CODE_FAILED   = 2
+} KD_RECV_CODE, * PKD_RECV_CODE;
+
 typedef struct _KD_PORT_INFORMATION
 {
     ULONG ComPort;
@@ -133,6 +140,10 @@ static BOOLEAN PortInitialized = FALSE;
 
 ULONG KdpPort;
 ULONG KdpPortIrq;
+
+// HACK!!!
+typedef ULONG (*DBGRNT)(const char *Format, ...);
+DBGRNT FrLdrDbgPrint = 0;
 
 /* STATIC FUNCTIONS *********************************************************/
 
@@ -531,6 +542,46 @@ KdpSendBuffer(
 }
 
 /******************************************************************************
+ * \name KdpReceiveBuffer
+ * \brief Recieves data from the KD port and fills a buffer.
+ * \param Buffer Pointer to a buffer that receives the data.
+ * \param Size Size of data to receive in bytes.
+ * \return KD_RECV_CODE_OK if successful. 
+ *         KD_RECV_CODE_TIMEOUT if the receice timed out (10 seconds).
+ * \todo Handle timeout.
+ */
+KDSTATUS
+NTAPI
+KdpReceiveBuffer(
+    OUT PVOID Buffer,
+    IN  ULONG Size)
+{
+    ULONG i;
+    PUCHAR ByteBuffer = Buffer;
+    BOOLEAN Ret, TimeOut;
+
+    for (i = 0; i < Size; i++)
+    {
+        do
+        {
+            Ret = KdPortGetByteEx(&DefaultPort, &ByteBuffer[i]);
+            TimeOut = FALSE; // FIXME timeout after 10 Sec
+        }
+        while (!Ret | TimeOut);
+
+        if (TimeOut)
+        {
+            return KD_RECV_CODE_TIMEOUT;
+        }
+        FrLdrDbgPrint("Received byte: %x\n", ByteBuffer[i]);
+    }
+
+    return KD_RECV_CODE_OK;
+}
+
+/* NEW PUBLIC FUNCTIONS ******************************************************/
+
+/******************************************************************************
  * \name KdDebuggerInitialize0
  * \brief Phase 0 initialization.
  * \param [opt] LoaderBlock Pointer to the Loader parameter block. Can be NULL.
@@ -654,6 +705,8 @@ NTAPI
 KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
+    // HACK: misuse this function to get a pointer to FrLdrDbgPrint
+    FrLdrDbgPrint = (PVOID)LoaderBlock;
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
