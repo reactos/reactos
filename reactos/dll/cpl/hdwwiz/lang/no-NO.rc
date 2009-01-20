@@ -38,7 +38,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Veiviser for å legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Fra listen under, velg en installert maskinvare type, også trykk på Neste for å sjekke egenskaper eller feilsøke et problem som du har.", -1, 21, 8, 275, 22
+	LTEXT "Fra listen under, velg en installert maskinvare komponent, også trykk på Neste for å sjekke egenskaper eller feilsøke et problem som du har.", -1, 21, 8, 275, 22
 	LTEXT "For å legge til maskinvare som ikke er vist på listen, trykk ""Legg til ny maskinvare enhet.""", -1, 21, 32, 275, 24
 	LTEXT "I&nstallert maskinvare:", -1, 21, 62, 140, 8
 	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
@@ -143,5 +143,5 @@ BEGIN
 	IDS_PROBELISTTITLE "Følgende maskinvare har blitt installert på din datamaskin"
 	IDS_ADDNEWDEVICE "Legg til en ny maskinvare enhet"
 	IDS_SELECTWAYTITLE "Veiviseren kan hjelpe deg å installere andre maskinvare"
-	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
+	IDS_HDTYPESTITLE "Fra listen under, velg maskinvare komponenten som du vil installere"
 END

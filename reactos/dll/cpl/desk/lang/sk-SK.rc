@@ -3,7 +3,7 @@
  * PURPOSE:     Slovak Language File for desk
  * TRANSLATOR:  M·rio KaËm·r aka Kario <kario@szm.sk>
  * DATE OF TR.: 15-09-2007
- * LAST CHANGE: 05-10-2008
+ * LAST CHANGE: 19-01-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -232,7 +232,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Display settings"
-    IDS_APPLY_FAILED "Failed to apply new settings..."
-    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
+    IDS_DISPLAY_SETTINGS "Nastavenia zobrazenia" // obrazovky ?
+    IDS_APPLY_FAILED "Nepodarilo sa aplikovaù novÈ nastavenia..."
+    IDS_APPLY_NEEDS_RESTART "Je potrebnÈ reötartovaù poËÌtaË, aby sa prejavili zmeny."
 END
