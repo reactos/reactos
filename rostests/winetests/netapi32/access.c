@@ -70,7 +70,7 @@ static int init_access_tests(void)
     BOOL rc;
 
     user_name[0] = 0;
-    dwSize = sizeof(user_name);
+    dwSize = sizeof(user_name)/sizeof(WCHAR);
     rc=GetUserNameW(user_name, &dwSize);
     if (rc==FALSE && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
     {
@@ -80,7 +80,7 @@ static int init_access_tests(void)
     ok(rc, "User Name Retrieved\n");
 
     computer_name[0] = 0;
-    dwSize = sizeof(computer_name);
+    dwSize = sizeof(computer_name)/sizeof(WCHAR);
     ok(GetComputerNameW(computer_name, &dwSize), "Computer Name Retrieved\n");
     return 1;
 }
@@ -170,9 +170,7 @@ static void run_usergetinfo_tests(void)
         trace("Deleting the test user failed. You might have to manually delete it.\n");
 }
 
-/* checks Level 1 of NetQueryDisplayInformation
- * FIXME: Needs to be rewritten to not depend on the spelling of the users,
- * ideally based on the admin and guest user SIDs/RIDs.*/
+/* Checks Level 1 of NetQueryDisplayInformation */
 static void run_querydisplayinformation1_tests(void)
 {
     PNET_DISPLAY_USER Buffer, rec;
@@ -180,9 +178,6 @@ static void run_querydisplayinformation1_tests(void)
     DWORD i = 0;
     BOOL hasAdmin = FALSE;
     BOOL hasGuest = FALSE;
-    static const WCHAR sAdminUserName[] = {'A','d','m','i','n','i','s','t','r','a',
-        't','o','r',0};
-    static const WCHAR sGuestUserName[] = {'G','u','e','s','t',0};
 
     do
     {
@@ -195,14 +190,14 @@ static void run_querydisplayinformation1_tests(void)
         rec = Buffer;
         for(; EntryCount > 0; EntryCount--)
         {
-            if (!lstrcmpW(rec->usri1_name, sAdminUserName))
+            if (rec->usri1_user_id == DOMAIN_USER_RID_ADMIN)
             {
                 ok(!hasAdmin, "One admin user\n");
                 ok(rec->usri1_flags & UF_SCRIPT, "UF_SCRIPT flag is set\n");
                 ok(rec->usri1_flags & UF_NORMAL_ACCOUNT, "UF_NORMAL_ACCOUNT flag is set\n");
                 hasAdmin = TRUE;
             }
-            else if (!lstrcmpW(rec->usri1_name, sGuestUserName))
+            else if (rec->usri1_user_id == DOMAIN_USER_RID_GUEST)
             {
                 ok(!hasGuest, "One guest record\n");
                 ok(rec->usri1_flags & UF_SCRIPT, "UF_SCRIPT flag is set\n");
@@ -217,7 +212,7 @@ static void run_querydisplayinformation1_tests(void)
         pNetApiBufferFree(Buffer);
     } while (Result == ERROR_MORE_DATA);
 
-    ok(hasAdmin, "Has Administrator account\n");
+    ok(hasAdmin, "Doesn't have 'Administrator' account\n");
 }
 
 static void run_usermodalsget_tests(void)
@@ -257,7 +252,9 @@ static void run_userhandling_tests(void)
         ok(ret == NERR_Success, "Deleting the user failed : %d\n", ret);
     }
     else
-        ok(ret == NERR_BadUsername, "Adding user with too long username returned 0x%08x\n", ret);
+        ok(ret == NERR_BadUsername ||
+           broken(ret == NERR_PasswordTooShort), /* NT4 */
+           "Adding user with too long username returned 0x%08x\n", ret);
 
     usri.usri1_name = sTestUserName;
     usri.usri1_password = sTooLongPassword;
@@ -293,7 +290,9 @@ static void run_userhandling_tests(void)
         return;
     }
 
-    ok(ret == NERR_Success, "Adding user failed with error 0x%08x\n", ret);
+    ok(ret == NERR_Success ||
+       broken(ret == NERR_PasswordTooShort), /* NT4 */
+       "Adding user failed with error 0x%08x\n", ret);
     if(ret != NERR_Success)
         return;
 

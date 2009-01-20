@@ -74,13 +74,13 @@ static void run_apibuf_tests(void)
     /* NULL-Pointer */
     /* NT: ERROR_INVALID_PARAMETER, lasterror is untouched) */
     SetLastError(0xdeadbeef);
-    res = pNetApiBufferAllocate(0, (LPVOID *)NULL);
+    res = pNetApiBufferAllocate(0, NULL);
     ok( (res == ERROR_INVALID_PARAMETER) && (GetLastError() == 0xdeadbeef),
         "returned %d with 0x%x (expected ERROR_INVALID_PARAMETER with "
         "0xdeadbeef)\n", res, GetLastError());
 
     SetLastError(0xdeadbeef);
-    res = pNetApiBufferAllocate(1024, (LPVOID *)NULL);    
+    res = pNetApiBufferAllocate(1024, NULL);
     ok( (res == ERROR_INVALID_PARAMETER) && (GetLastError() == 0xdeadbeef),
         "returned %d with 0x%x (expected ERROR_INVALID_PARAMETER with "
         "0xdeadbeef)\n", res, GetLastError());
