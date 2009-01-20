@@ -368,7 +368,7 @@ GetCurrentDirectoryA@8
 GetCurrentDirectoryW@8
 GetCurrentProcess@0
 GetCurrentProcessId@0
-GetCurrentProcessorNumber@0=NTDLL.RtlGetCurrentProcessorNumber@0
+GetCurrentProcessorNumber@0=NTDLL.RtlGetCurrentProcessorNumber
 GetCurrentThread@0
 GetCurrentThreadId@0
 GetDateFormatA@24
@@ -603,7 +603,7 @@ InitializeCriticalSectionAndSpinCount@8
 InitializeSListHead@4=NTDLL.RtlInitializeSListHead
 InitializeSRWLock@4=NTDLL.RtlInitializeSRWLock
 InterlockedCompareExchange@12
-InterlockedCompareExchange64@20=NTDLL.RtlInterlockedCompareExchange64@20
+InterlockedCompareExchange64@20=NTDLL.RtlInterlockedCompareExchange64
 InterlockedDecrement@4
 InterlockedExchange@8
 InterlockedExchangeAdd@8
