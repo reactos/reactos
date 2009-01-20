@@ -753,7 +753,7 @@ ParsePEHeaders(PFILE_INFO File)
     File->OptionalHeader->CheckSum = 0;
     Checksum = CalculateChecksum(0, File->FilePtr, File->cbInFileSize);
     Checksum += File->cbInFileSize;
-    if (Checksum != OldChecksum)
+    if ((Checksum & 0xffff) != (OldChecksum & 0xffff))
     {
         fprintf(stderr, "Input file has incorrect PE checksum: 0x%lx (calculated: 0x%lx)\n",
             OldChecksum, Checksum);
