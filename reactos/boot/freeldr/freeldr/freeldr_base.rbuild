@@ -77,12 +77,6 @@
 	<file>version.c</file>
 	<file>cmdline.c</file>
 	<file>machine.c</file>
-	<file>drivemap.c</file>
-	<file>miscboot.c</file>
-	<file>options.c</file>
-	<file>linuxboot.c</file>
-	<file>oslist.c</file>
-	<file>custom.c</file>
 	<directory name="include">
 		<pch>freeldr.h</pch>
 	</directory>

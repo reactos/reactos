@@ -107,6 +107,5 @@
 
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);
-VOID RunReactOSSetup(VOID);
 
 #endif  // defined __FREELDR_H
