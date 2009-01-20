@@ -67,7 +67,6 @@ static const char * const FlagNames[] =
     "noname",      /* FLAG_NONAME */
     "ret16",       /* FLAG_RET16 */
     "ret64",       /* FLAG_RET64 */
-    "i386",        /* FLAG_I386 */
     "register",    /* FLAG_REGISTER */
     "private",     /* FLAG_PRIVATE */
     "ordinal",     /* FLAG_ORDINAL */
@@ -378,7 +377,7 @@ static int parse_spec_stub( ORDDEF *odp, DLLSPEC *spec )
 {
     odp->u.func.arg_types[0] = '\0';
     odp->link_name = xstrdup("");
-    odp->flags |= FLAG_I386;  /* don't bother generating stubs for Winelib */
+    odp->flags |= FLAG_CPU(CPU_x86) | FLAG_CPU(CPU_x86_64); /* don't bother generating stubs for Winelib */
     return 1;
 }
 
@@ -428,14 +427,38 @@ static const char *parse_spec_flags( ORDDEF *odp )
     do
     {
         if (!(token = GetToken(0))) break;
-        for (i = 0; FlagNames[i]; i++)
-            if (!strcmp( FlagNames[i], token )) break;
-        if (!FlagNames[i])
+        if (!strncmp( token, "arch=", 5))
         {
-            error( "Unknown flag '%s'\n", token );
-            return NULL;
+            char *args = xstrdup( token + 5 );
+            char *cpu_name = strtok( args, "," );
+            while (cpu_name)
+            {
+                enum target_cpu cpu = get_cpu_from_name( cpu_name );
+                if (cpu == -1)
+                {
+                    error( "Unknown architecture '%s'\n", cpu_name );
+                    return NULL;
+                }
+                odp->flags |= FLAG_CPU( cpu );
+                cpu_name = strtok( NULL, "," );
+            }
+            free( args );
         }
-        odp->flags |= 1 << i;
+        else if (!strcmp( token, "i386" ))  /* backwards compatibility */
+        {
+            odp->flags |= FLAG_CPU(CPU_x86);
+        }
+        else
+        {
+            for (i = 0; FlagNames[i]; i++)
+                if (!strcmp( FlagNames[i], token )) break;
+            if (!FlagNames[i])
+            {
+                error( "Unknown flag '%s'\n", token );
+                return NULL;
+            }
+            odp->flags |= 1 << i;
+        }
         token = GetToken(0);
     } while (token && *token == '-');
 
@@ -507,9 +530,9 @@ static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
         assert( 0 );
     }
 
-    if ((target_cpu != CPU_x86) && (odp->flags & FLAG_I386))
+    if ((odp->flags & FLAG_CPU_MASK) && !(odp->flags & FLAG_CPU(target_cpu)))
     {
-        /* ignore this entry point on non-Intel archs */
+        /* ignore this entry point */
         spec->nb_entry_points--;
         return 1;
     }

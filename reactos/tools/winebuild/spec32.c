@@ -52,7 +52,7 @@ int has_relays( DLLSPEC *spec )
 {
     int i;
 
-    if (target_cpu != CPU_x86) return 0;
+    if (target_cpu != CPU_x86 && target_cpu != CPU_x86_64) return 0;
 
     for (i = spec->base; i <= spec->limit; i++)
     {
@@ -146,36 +146,58 @@ static void output_relay_debug( DLLSPEC *spec )
         output( "\t.align %d\n", get_alignment(4) );
         output( ".L__wine_spec_relay_entry_point_%d:\n", i );
 
-        if (odp->flags & FLAG_REGISTER)
-            output( "\tpushl %%eax\n" );
-        else
-            output( "\tpushl %%esp\n" );
-
         args = strlen(odp->u.func.arg_types);
         flags = 0;
-        if (odp->flags & FLAG_RET64) flags |= 1;
-        if (odp->type == TYPE_STDCALL) flags |= 2;
-        output( "\tpushl $%u\n", (flags << 24) | (args << 16) | (i - spec->base) );
 
-        if (UsePIC)
+        switch (target_cpu)
         {
-            output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
-            output( "1:\tleal .L__wine_spec_relay_descr-1b(%%eax),%%eax\n" );
-        }
-        else output( "\tmovl $.L__wine_spec_relay_descr,%%eax\n" );
-        output( "\tpushl %%eax\n" );
-
-        if (odp->flags & FLAG_REGISTER)
-        {
-            output( "\tcall *8(%%eax)\n" );
-        }
-        else
-        {
-            output( "\tcall *4(%%eax)\n" );
-            if (odp->type == TYPE_STDCALL)
-                output( "\tret $%u\n", args * get_ptr_size() );
+        case CPU_x86:
+            if (odp->flags & FLAG_REGISTER)
+                output( "\tpushl %%eax\n" );
             else
-                output( "\tret\n" );
+                output( "\tpushl %%esp\n" );
+
+            if (odp->flags & FLAG_RET64) flags |= 1;
+            output( "\tpushl $%u\n", (flags << 24) | (args << 16) | (i - spec->base) );
+
+            if (UsePIC)
+            {
+                output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
+                output( "1:\tleal .L__wine_spec_relay_descr-1b(%%eax),%%eax\n" );
+            }
+            else output( "\tmovl $.L__wine_spec_relay_descr,%%eax\n" );
+            output( "\tpushl %%eax\n" );
+
+            if (odp->flags & FLAG_REGISTER)
+            {
+                output( "\tcall *8(%%eax)\n" );
+            }
+            else
+            {
+                output( "\tcall *4(%%eax)\n" );
+                if (odp->type == TYPE_STDCALL)
+                    output( "\tret $%u\n", args * get_ptr_size() );
+                else
+                    output( "\tret\n" );
+            }
+            break;
+
+        case CPU_x86_64:
+            output( "\tmovq %%rcx,8(%%rsp)\n" );
+            output( "\tmovq %%rdx,16(%%rsp)\n" );
+            output( "\tmovq %%r8,24(%%rsp)\n" );
+            output( "\tmovq %%r9,32(%%rsp)\n" );
+            output( "\tmovq %%rsp,%%r8\n" );
+            output( "\tmovq $%u,%%rdx\n", (flags << 24) | (args << 16) | (i - spec->base) );
+            output( "\tleaq .L__wine_spec_relay_descr(%%rip),%%rcx\n" );
+            output( "\tsubq $40,%%rsp\n" );
+            output( "\tcallq *%u(%%rcx)\n", (odp->flags & FLAG_REGISTER) ? 16 : 8 );
+            output( "\taddq $40,%%rsp\n" );
+            output( "\tret\n" );
+            break;
+
+        default:
+            assert(0);
         }
     }
 }
@@ -307,8 +329,8 @@ static void output_exports( DLLSPEC *spec )
 
     /* output relays */
 
-    /* we only support relay debugging on i386 */
-    if (target_cpu != CPU_x86)
+    /* we only support relay debugging on i386 and x86_64 */
+    if (target_cpu != CPU_x86 && target_cpu != CPU_x86_64)
     {
         output( "\t%s 0\n", get_asm_ptr_keyword() );
         return;
@@ -605,11 +627,8 @@ void BuildDef32File( DLLSPEC *spec )
         switch(odp->type)
         {
         case TYPE_EXTERN:
-            output( "  %s", name );
             is_data = 1;
-            if(strcmp(name, odp->link_name) || (odp->flags & FLAG_FORWARD))
-                output( "=%s", odp->link_name );
-            break;
+            /* fall through */
         case TYPE_VARARGS:
         case TYPE_CDECL:
             /* try to reduce output */
@@ -621,7 +640,7 @@ void BuildDef32File( DLLSPEC *spec )
         {
             int at_param = strlen(odp->u.func.arg_types) * get_ptr_size();
             output( "  %s", name );
-            if (!kill_at) output( "@%d", at_param );
+            if (!kill_at && target_cpu == CPU_x86) output( "@%d", at_param );
             if  (odp->flags & FLAG_FORWARD)
             {
                 output( "=%s", odp->link_name );
@@ -629,7 +648,7 @@ void BuildDef32File( DLLSPEC *spec )
             else if (strcmp(name, odp->link_name)) /* try to reduce output */
             {
                 output( "=%s", odp->link_name );
-                if (!kill_at) output( "@%d", at_param );
+                if (!kill_at && target_cpu == CPU_x86) output( "@%d", at_param );
             }
             break;
         }

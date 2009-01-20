@@ -128,13 +128,15 @@ extern enum target_platform target_platform;
 #define FLAG_NONAME    0x02  /* don't export function by name */
 #define FLAG_RET16     0x04  /* function returns a 16-bit value */
 #define FLAG_RET64     0x08  /* function returns a 64-bit value */
-#define FLAG_I386      0x10  /* function is i386 only */
-#define FLAG_REGISTER  0x20  /* use register calling convention */
-#define FLAG_PRIVATE   0x40  /* function is private (cannot be imported) */
-#define FLAG_ORDINAL   0x80  /* function should be imported by ordinal */
+#define FLAG_REGISTER  0x10  /* use register calling convention */
+#define FLAG_PRIVATE   0x20  /* function is private (cannot be imported) */
+#define FLAG_ORDINAL   0x40  /* function should be imported by ordinal */
 
 #define FLAG_FORWARD   0x100  /* function is a forwarded name */
 #define FLAG_EXT_LINK  0x200  /* function links to an external symbol */
+
+#define FLAG_CPU(cpu)  (0x01000 << (cpu))
+#define FLAG_CPU_MASK  0x1f000
 
 #define MAX_ORDINALS  65535
 
@@ -178,6 +180,7 @@ extern DLLSPEC *alloc_dll_spec(void);
 extern void free_dll_spec( DLLSPEC *spec );
 extern const char *make_c_identifier( const char *str );
 extern const char *get_stub_name( const ORDDEF *odp, const DLLSPEC *spec );
+extern enum target_cpu get_cpu_from_name( const char *name );
 extern unsigned int get_alignment(unsigned int align);
 extern unsigned int get_page_size(void);
 extern unsigned int get_ptr_size(void);
@@ -230,6 +233,7 @@ extern int kill_at;
 extern int verbose;
 extern int save_temps;
 extern int link_ext_symbols;
+extern int force_pointer_size;
 
 extern char *input_file_name;
 extern char *spec_file_name;

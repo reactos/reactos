@@ -47,6 +47,7 @@ int kill_at = 0;
 int verbose = 0;
 int save_temps = 0;
 int link_ext_symbols = 0;
+int force_pointer_size = 0;
 
 #if defined(TARGET_i386)
 enum target_cpu target_cpu = CPU_x86;
@@ -94,23 +95,6 @@ enum exec_mode_values
 };
 
 static enum exec_mode_values exec_mode = MODE_NONE;
-
-static const struct
-{
-    const char *name;
-    enum target_cpu cpu;
-} cpu_names[] =
-{
-    { "i386",    CPU_x86 },
-    { "i486",    CPU_x86 },
-    { "i586",    CPU_x86 },
-    { "i686",    CPU_x86 },
-    { "i786",    CPU_x86 },
-    { "x86_64",  CPU_x86_64 },
-    { "sparc",   CPU_SPARC },
-    { "alpha",   CPU_ALPHA },
-    { "powerpc", CPU_POWERPC }
-};
 
 static const struct
 {
@@ -176,13 +160,8 @@ static void set_target( const char *target )
 
     if (!(p = strchr( spec, '-' ))) fatal_error( "Invalid target specification '%s'\n", target );
     *p++ = 0;
-    for (i = 0; i < sizeof(cpu_names)/sizeof(cpu_names[0]); i++)
-    {
-        if (!strcmp( cpu_names[i].name, spec )) break;
-    }
-    if (i < sizeof(cpu_names)/sizeof(cpu_names[0])) target_cpu = cpu_names[i].cpu;
-    else fatal_error( "Unrecognized CPU '%s'\n", spec );
-
+    if ((target_cpu = get_cpu_from_name( spec )) == -1)
+        fatal_error( "Unrecognized CPU '%s'\n", spec );
     platform = p;
     if ((p = strrchr( p, '-' ))) platform = p + 1;
 
@@ -239,6 +218,7 @@ static const char usage_str[] =
 "Usage: winebuild [OPTIONS] [FILES]\n\n"
 "Options:\n"
 "       --as-cmd=AS          Command to use for assembling (default: as)\n"
+"   -b, --target=TARGET      Specify target CPU and platform for cross-compiling\n"
 "   -d, --delay-lib=LIB      Import the specified library in delayed mode\n"
 "   -D SYM                   Ignored for C flags compatibility\n"
 "   -e, --entry=FUNC         Set the DLL entry point function (default: DllMain)\n"
@@ -255,6 +235,7 @@ static const char usage_str[] =
 "       --ld-cmd=LD          Command to use for linking (default: ld)\n"
 "   -l, --library=LIB        Import the specified library\n"
 "   -L, --library-path=DIR   Look for imports libraries in DIR\n"
+"   -m32, -m64               Force building 32-bit resp. 64-bit code\n"
 "   -M, --main-module=MODULE Set the name of the main module for a Win16 dll\n"
 "       --nm-cmd=NM          Command to use to get undefined symbols (default: nm)\n"
 "       --nxcompat=y|n       Set the NX compatibility flag (default: yes)\n"
@@ -263,7 +244,6 @@ static const char usage_str[] =
 "   -r, --res=RSRC.RES       Load resources from RSRC.RES\n"
 "       --save-temps         Do not delete the generated intermediate files\n"
 "       --subsystem=SUBSYS   Set the subsystem (one of native, windows, console)\n"
-"       --target=TARGET      Specify target CPU and platform for cross-compiling\n"
 "   -u, --undefined=SYMBOL   Add an undefined reference to SYMBOL when linking\n"
 "   -v, --verbose            Display the programs invoked\n"
 "       --version            Print the version and exit\n"
@@ -291,12 +271,11 @@ enum long_options_values
     LONG_OPT_RELAY32,
     LONG_OPT_SAVE_TEMPS,
     LONG_OPT_SUBSYSTEM,
-    LONG_OPT_TARGET,
     LONG_OPT_VERSION,
     LONG_OPT_PEDLL
 };
 
-static const char short_options[] = "C:D:E:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:u:vw";
+static const char short_options[] = "C:D:E:F:H:I:K:L:M:N:b:d:e:f:hi:kl:m:o:r:u:vw";
 
 static const struct option long_options[] =
 {
@@ -312,10 +291,10 @@ static const struct option long_options[] =
     { "relay32",       0, 0, LONG_OPT_RELAY32 },
     { "save-temps",    0, 0, LONG_OPT_SAVE_TEMPS },
     { "subsystem",     1, 0, LONG_OPT_SUBSYSTEM },
-    { "target",        1, 0, LONG_OPT_TARGET },
     { "version",       0, 0, LONG_OPT_VERSION },
     { "pedll",         1, 0, LONG_OPT_PEDLL },
     /* aliases for short options */
+    { "target",        1, 0, 'b' },
     { "delay-lib",     1, 0, 'd' },
     { "export",        1, 0, 'E' },
     { "entry",         1, 0, 'e' },
@@ -385,11 +364,20 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             lib_path = xrealloc( lib_path, (nb_lib_paths+1) * sizeof(*lib_path) );
             lib_path[nb_lib_paths++] = xstrdup( optarg );
             break;
+        case 'm':
+            if (strcmp( optarg, "32" ) && strcmp( optarg, "64" ))
+                fatal_error( "Invalid -m option '%s', expected -m32 or -m64\n", optarg );
+            if (!strcmp( optarg, "32" )) force_pointer_size = 4;
+            else force_pointer_size = 8;
+            break;
         case 'M':
             spec->type = SPEC_WIN16;
             break;
         case 'N':
             spec->dll_name = xstrdup( optarg );
+            break;
+        case 'b':
+            set_target( optarg );
             break;
         case 'd':
             add_delayed_import( optarg );
@@ -495,9 +483,6 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
         case LONG_OPT_SUBSYSTEM:
             set_subsystem( optarg, spec );
             break;
-        case LONG_OPT_TARGET:
-            set_target( optarg );
-            break;
         case LONG_OPT_VERSION:
             printf( "winebuild version " PACKAGE_VERSION "\n" );
             exit(0);
@@ -514,6 +499,20 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
 
     if (spec->file_name && !strchr( spec->file_name, '.' ))
         strcat( spec->file_name, exec_mode == MODE_EXE ? ".exe" : ".dll" );
+
+    switch (target_cpu)
+    {
+    case CPU_x86:
+        if (force_pointer_size == 8) target_cpu = CPU_x86_64;
+        break;
+    case CPU_x86_64:
+        if (force_pointer_size == 4) target_cpu = CPU_x86;
+        break;
+    default:
+        if (force_pointer_size == 8)
+            fatal_error( "Cannot build 64-bit code for this CPU\n" );
+        break;
+    }
 
     return &argv[optind];
 }
