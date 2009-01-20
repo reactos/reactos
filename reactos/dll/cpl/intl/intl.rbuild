@@ -17,6 +17,7 @@
     <file>numbers.c</file>
     <file>time.c</file>
     <file>misc.c</file>
+	<file>kblayouts.c</file>
     <file>languages.c</file>
     <file>advanced.c</file>
     <file>sort.c</file>
