@@ -493,7 +493,10 @@ IntMultiByteToWideCharCP(UINT CodePage,
         }
 
         if (MultiByteString < MbsEnd)
+        {
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
+        }
 
         return Count;
     }
@@ -525,6 +528,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
         {
             MultiByteCount = WideCharCount;
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
         }
 
         for (TempLength = MultiByteCount;
