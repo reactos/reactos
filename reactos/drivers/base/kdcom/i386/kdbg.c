@@ -878,9 +878,9 @@ KdReceivePacket(
 
         /* Step 3 - Read ByteCount */
         RcvCode = KdpReceiveBuffer(&Packet.ByteCount, sizeof(USHORT));
-        if (RcvCode != KdPacketReceived)
+        if (RcvCode != KdPacketReceived || Packet.ByteCount > PACKET_MAX_SIZE)
         {
-            /* Didn't receive ByteCount. Start over. */
+            /* Didn't receive ByteCount or it's too big. Start over. */
             continue;
         }
 
@@ -912,6 +912,30 @@ KdReceivePacket(
         }
 
         FrLdrDbgPrint("KdReceivePacket 5, Checksum == 0x%x\n", Packet.Checksum);
+
+        /* Step 6 - Handle control packets */
+        if (Packet.PacketLeader == CONTROL_PACKET_LEADER)
+        {
+            switch (Packet.PacketType)
+            {
+                case PACKET_TYPE_KD_ACKNOWLEDGE:
+                    /* Remote acknowledges the last packet */
+                    return KdPacketReceived;
+
+                case PACKET_TYPE_KD_RESEND:
+                    /* Remote wants us to resend the last packet */
+                    return KdPacketNeedsResend;
+
+                case PACKET_TYPE_KD_RESET:
+                    FrLdrDbgPrint("KdReceivePacket - got a reset packet\n");
+                    // FIXME
+                    return KdPacketNeedsResend;
+
+                default:
+                    FrLdrDbgPrint("KdReceivePacket - got unknown control packet\n");
+                    return KdPacketNeedsResend;
+            }
+        }
 
 
 
