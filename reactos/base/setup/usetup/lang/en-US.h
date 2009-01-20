@@ -4,8 +4,6 @@
 MUI_LAYOUTS enUSLayouts[] =
 {
     { L"0409", L"00000409" },
-    { L"0410", L"00000410" },
-    { L"040A", L"0000040A" },
     { NULL, NULL }
 };
 
