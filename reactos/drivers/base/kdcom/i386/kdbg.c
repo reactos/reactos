@@ -575,6 +575,24 @@ KdpReceiveBuffer(
     return KdPacketReceived;
 }
 
+VOID
+NTAPI
+KdpSendControlPacket(
+    IN USHORT PacketType,
+    IN ULONG PacketId OPTIONAL)
+{
+    KD_PACKET Packet;
+
+    Packet.PacketLeader = CONTROL_PACKET_LEADER;
+    Packet.PacketId = PacketId;
+    Packet.ByteCount = 0;
+    Packet.Checksum = 0;
+    Packet.PacketType = PacketType;
+
+    KdpSendBuffer(&Packet, sizeof(KD_PACKET));
+}
+
+
 /* NEW PUBLIC FUNCTIONS ******************************************************/
 
 /******************************************************************************
@@ -928,7 +946,7 @@ KdReceivePacket(
 
                 case PACKET_TYPE_KD_RESET:
                     FrLdrDbgPrint("KdReceivePacket - got a reset packet\n");
-                    // FIXME
+                    KdpSendControlPacket(PACKET_TYPE_KD_RESET, INITIAL_PACKET_ID);
                     return KdPacketNeedsResend;
 
                 default:
