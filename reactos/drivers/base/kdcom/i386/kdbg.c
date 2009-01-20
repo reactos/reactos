@@ -5,6 +5,7 @@
  * PURPOSE:         Serial i/o functions for the kernel debugger.
  * PROGRAMMER:      Alex Ionescu
  *                  Hervé Poussineau
+ *                  Timo Kreuzer
  */
 
 /* INCLUDES *****************************************************************/
@@ -485,8 +486,55 @@ KdPortEnableInterrupts(VOID)
     return TRUE;
 }
 
-/*
- * @implemented
+/* NEW INTERNAL FUNCTIONS ****************************************************/
+
+/******************************************************************************
+ * \name KdpCalculateChecksum
+ * \brief Calculates the checksum for the packet data.
+ * \param Buffer Pointer to the packet data.
+ * \param Length Length of data in bytes.
+ * \return The calculated checksum.
+ * \sa http://www.vista-xp.co.uk/forums/technical-reference-library/2540-basics-debugging.html
+ */
+ULONG
+NTAPI
+KdpCalculateChecksum(
+    IN PVOID Buffer,
+    IN ULONG Length)
+{
+    ULONG i, Checksum = 0;
+
+    for (i = 0; i < Length; i++)
+    {
+        Checksum += ((PUCHAR)Buffer)[i];
+    }
+    return Checksum;
+}
+
+/******************************************************************************
+ * \name KdpSendBuffer
+ * \brief Sends a buffer of data to the KD port.
+ * \param Buffer Pointer to the data.
+ * \param Size Size of data in bytes.
+ */
+VOID
+NTAPI
+KdpSendBuffer(
+    IN PVOID Buffer,
+    IN ULONG Size)
+{
+    INT i;
+    for (i = 0; i < Size; i++)
+    {
+        KdPortPutByteEx(&DefaultPort, ((PUCHAR)Buffer)[i]);
+    }
+}
+
+/******************************************************************************
+ * \name KdDebuggerInitialize0
+ * \brief Phase 0 initialization.
+ * \param [opt] LoaderBlock Pointer to the Loader parameter block. Can be NULL.
+ * \return Status
  */
 NTSTATUS
 NTAPI
@@ -595,8 +643,11 @@ KdDebuggerInitialize0(
     return STATUS_SUCCESS;
 }
 
-/*
- * @unimplemented
+/******************************************************************************
+ * \name KdDebuggerInitialize0
+ * \brief Phase 0 initialization.
+ * \param [opt] LoaderBlock Pointer to the Loader parameter block. Can be NULL.
+ * \return Status
  */
 NTSTATUS
 NTAPI
