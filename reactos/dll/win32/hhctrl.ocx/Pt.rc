@@ -1,10 +1,9 @@
 /*
  * HTML Help resources
- * English Language Support
+ * Portuguese Language Support
  *
- * Copyright 2005 James Hawkins
- * Copyright 2005 YunSong Hwang
- 
+ * Copyright 2008 Ricardo Filipe
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -20,28 +19,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "¸ñ·Ï(&C)"
-    IDS_INDEX        "ÀÎµ¦½º(&N)"
-    IDS_SEARCH       "Ã£±â(&S)"
-    IDS_FAVORITES    "Áñ°ÜÃ£±â(&I)"
+    IDS_CONTENTS     "&Conteúdos"
+    IDS_INDEX        "&Índice"
+    IDS_SEARCH       "&Pesquisar"
+    IDS_FAVORITES    "&Favoritos"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "º¸¿©ÁÖ±â"
-    IDTB_CONTRACT    "¼û±â±â"
-    IDTB_STOP        "Á¤Áö"
-    IDTB_REFRESH     "»õ·Î °íÄ§"
-    IDTB_BACK        "µÚ·Î"
-    IDTB_HOME        "È¨"
-    IDTB_SYNC        "µ¿±âÈ­"
-    IDTB_PRINT       "ÀÎ¼â"
-    IDTB_OPTIONS     "¿É¼Ç"
-    IDTB_FORWARD     "¾ÕÀ¸·Î"
+    IDTB_EXPAND      "Mostrar"
+    IDTB_CONTRACT    "Esconder"
+    IDTB_STOP        "Parar"
+    IDTB_REFRESH     "Actualizar"
+    IDTB_BACK        "Retroceder"
+    IDTB_HOME        "Início"
+    IDTB_SYNC        "Sincronizar"
+    IDTB_PRINT       "Imprimir"
+    IDTB_OPTIONS     "Opções"
+    IDTB_FORWARD     "Avançar"
     IDTB_NOTES       "IDTB_NOTES"
     IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
     IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
@@ -52,8 +51,8 @@ BEGIN
     IDTB_FAVORITES   "IDTB_FAVORITES"
     IDTB_JUMP1       "Jump1"
     IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "»ç¿ëÀÚÁ¤ÀÇ"
-    IDTB_ZOOM        "È®´ë"
+    IDTB_CUSTOMIZE   "Personalizar"
+    IDTB_ZOOM        "Zoom"
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
     IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END
