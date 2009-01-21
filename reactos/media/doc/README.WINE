@@ -56,6 +56,8 @@ reactos/dll/win32/imagehlp        # Patches for BindImage need review and submis
 reactos/dll/win32/inetcomm        # Autosync
 reactos/dll/win32/inetmib1        # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
+reactos/dll/win32/itss            # Autosync
+reactos/dll/win32/jscript         # Autosync
 reactos/dll/win32/localui         # Autosync
 reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
@@ -66,6 +68,7 @@ reactos/dll/win32/mscoree         # Autosync
 reactos/dll/win32/mshtml          # Autosync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
+reactos/dll/win32/msimtf          # Autosync
 reactos/dll/win32/mstask          # Autosync
 reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync

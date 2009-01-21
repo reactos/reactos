@@ -133,6 +133,9 @@
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>
+<directory name="itss">
+	<xi:include href="itss/itss.rbuild" />
+</directory>
 <directory name="jscript">
 	<xi:include href="jscript/jscript.rbuild" />
 </directory>
@@ -192,6 +195,9 @@
 </directory>
 <directory name="msimg32">
 	<xi:include href="msimg32/msimg32.rbuild" />
+</directory>
+<directory name="msimtf">
+	<xi:include href="msimtf/msimtf.rbuild" />
 </directory>
 <directory name="mstask">
 	<xi:include href="mstask/mstask.rbuild" />
