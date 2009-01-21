@@ -142,6 +142,6 @@ BEGIN
 	IDS_ISCONNECTED "Подключено ли  устройство?"
 	IDS_PROBELISTTITLE "На этом компьютере уже установлено следующее оборудование"
 	IDS_ADDNEWDEVICE "Добавление нового устройства"
-	IDS_SELECTWAYTITLE "The wizard can help you install other hardware"
-	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
+	IDS_SELECTWAYTITLE "Этот мастер помогает установить новое оборудование"
+	IDS_HDTYPESTITLE "Выберите тип устанавливаемого оборудования из списка."
 END
