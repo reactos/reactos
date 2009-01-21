@@ -42,9 +42,9 @@ extern void wine_exec_wine_binary( const char *name, char **argv, char **envp, i
 
 typedef void (*load_dll_callback_t)( void *, const char * );
 
-extern void *wine_dlopen( const char *filename, int flag, char *error, int errorsize );
-extern void *wine_dlsym( void *handle, const char *symbol, char *error, int errorsize );
-extern int wine_dlclose( void *handle, char *error, int errorsize );
+extern void *wine_dlopen( const char *filename, int flag, char *error, size_t errorsize );
+extern void *wine_dlsym( void *handle, const char *symbol, char *error, size_t errorsize );
+extern int wine_dlclose( void *handle, char *error, size_t errorsize );
 extern void wine_dll_set_callback( load_dll_callback_t load );
 extern void *wine_dll_load( const char *filename, char *error, int errorsize, int *file_exists );
 extern void *wine_dll_load_main_exe( const char *name, char *error, int errorsize,

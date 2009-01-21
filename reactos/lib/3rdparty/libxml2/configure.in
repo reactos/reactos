@@ -5,7 +5,7 @@ AC_CANONICAL_HOST
 
 LIBXML_MAJOR_VERSION=2
 LIBXML_MINOR_VERSION=7
-LIBXML_MICRO_VERSION=2
+LIBXML_MICRO_VERSION=3
 LIBXML_MICRO_VERSION_SUFFIX=
 LIBXML_VERSION=$LIBXML_MAJOR_VERSION.$LIBXML_MINOR_VERSION.$LIBXML_MICRO_VERSION$LIBXML_MICRO_VERSION_SUFFIX
 LIBXML_VERSION_INFO=`expr $LIBXML_MAJOR_VERSION + $LIBXML_MINOR_VERSION`:$LIBXML_MICRO_VERSION:$LIBXML_MINOR_VERSION
@@ -165,6 +165,10 @@ AC_ARG_WITH(zlib,
 ])
 AC_ARG_WITH(coverage,
 [  --with-coverage         build for code coverage with GCC (off)])
+
+AC_ARG_ENABLE(rebuild-docs,
+[  --enable-rebuild-docs[[=yes/no]]  rebuild some generated docs [[default=yes]]])
+AM_CONDITIONAL([REBUILD_DOCS], [test "$enable_rebuild_docs" = "no"])
 
 dnl
 dnl hard dependancies on options

@@ -889,6 +889,8 @@ FFLAGS
 ac_ct_F77
 LIBTOOL
 HTML_DIR
+REBUILD_DOCS_TRUE
+REBUILD_DOCS_FALSE
 Z_CFLAGS
 Z_LIBS
 WITH_ZLIB
@@ -1585,6 +1587,7 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
+  --enable-rebuild-docs[=yes/no]  rebuild some generated docs [default=yes]
   --enable-ipv6[=yes/no]  enables compilation of IPv6 code [default=yes]
 
 Optional Packages:
@@ -2191,7 +2194,7 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 LIBXML_MAJOR_VERSION=2
 LIBXML_MINOR_VERSION=7
-LIBXML_MICRO_VERSION=2
+LIBXML_MICRO_VERSION=3
 LIBXML_MICRO_VERSION_SUFFIX=
 LIBXML_VERSION=$LIBXML_MAJOR_VERSION.$LIBXML_MINOR_VERSION.$LIBXML_MICRO_VERSION$LIBXML_MICRO_VERSION_SUFFIX
 LIBXML_VERSION_INFO=`expr $LIBXML_MAJOR_VERSION + $LIBXML_MINOR_VERSION`:$LIBXML_MICRO_VERSION:$LIBXML_MINOR_VERSION
@@ -5508,7 +5511,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5511 "configure"' > conftest.$ac_ext
+  echo '#line 5514 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8062,11 +8065,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8065: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8068: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8069: \$? = $ac_status" >&5
+   echo "$as_me:8072: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8352,11 +8355,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8355: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8358: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8359: \$? = $ac_status" >&5
+   echo "$as_me:8362: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8456,11 +8459,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8459: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8462: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8463: \$? = $ac_status" >&5
+   echo "$as_me:8466: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10807,7 +10810,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10810 "configure"
+#line 10813 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10907,7 +10910,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10910 "configure"
+#line 10913 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13327,11 +13330,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13330: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13333: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13334: \$? = $ac_status" >&5
+   echo "$as_me:13337: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13431,11 +13434,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13434: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13437: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13438: \$? = $ac_status" >&5
+   echo "$as_me:13441: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14995,11 +14998,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14998: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15001: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15002: \$? = $ac_status" >&5
+   echo "$as_me:15005: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15099,11 +15102,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15102: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15105: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15106: \$? = $ac_status" >&5
+   echo "$as_me:15109: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17288,11 +17291,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17291: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17294: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17295: \$? = $ac_status" >&5
+   echo "$as_me:17298: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17578,11 +17581,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17581: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17584: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17585: \$? = $ac_status" >&5
+   echo "$as_me:17588: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17682,11 +17685,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17685: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17688: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17689: \$? = $ac_status" >&5
+   echo "$as_me:17692: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -20585,6 +20588,20 @@ fi
 # Check whether --with-coverage was given.
 if test "${with_coverage+set}" = set; then
   withval=$with_coverage;
+fi
+
+
+# Check whether --enable-rebuild-docs was given.
+if test "${enable_rebuild_docs+set}" = set; then
+  enableval=$enable_rebuild_docs;
+fi
+
+ if test "$enable_rebuild_docs" = "no"; then
+  REBUILD_DOCS_TRUE=
+  REBUILD_DOCS_FALSE='#'
+else
+  REBUILD_DOCS_TRUE='#'
+  REBUILD_DOCS_FALSE=
 fi
 
 
@@ -26662,7 +26679,7 @@ fi
 { echo "$as_me:$LINENO: checking for type of socket length (socklen_t)" >&5
 echo $ECHO_N "checking for type of socket length (socklen_t)... $ECHO_C" >&6; }
 cat > conftest.$ac_ext <<EOF
-#line 26665 "configure"
+#line 26682 "configure"
 #include "confdefs.h"
 
 #include <stddef.h>
@@ -26673,7 +26690,7 @@ int main(void) {
 (void)getsockopt (1, 1, 1, NULL, (socklen_t *)NULL)
 ; return 0; }
 EOF
-if { (eval echo configure:26676: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
+if { (eval echo configure:26693: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
   rm -rf conftest*
 
   { echo "$as_me:$LINENO: result: socklen_t *" >&5
@@ -26685,7 +26702,7 @@ else
   rm -rf conftest*
 
   cat > conftest.$ac_ext <<EOF
-#line 26688 "configure"
+#line 26705 "configure"
 #include "confdefs.h"
 
 #include <stddef.h>
@@ -26696,7 +26713,7 @@ int main(void) {
 (void)getsockopt (1, 1, 1, NULL, (size_t *)NULL)
 ; return 0; }
 EOF
-if { (eval echo configure:26699: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
+if { (eval echo configure:26716: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
   rm -rf conftest*
 
     { echo "$as_me:$LINENO: result: size_t *" >&5
@@ -26708,7 +26725,7 @@ else
   rm -rf conftest*
 
     cat > conftest.$ac_ext <<EOF
-#line 26711 "configure"
+#line 26728 "configure"
 #include "confdefs.h"
 
 #include <stddef.h>
@@ -26719,7 +26736,7 @@ int main(void) {
 (void)getsockopt (1, 1, 1, NULL, (int *)NULL)
 ; return 0; }
 EOF
-if { (eval echo configure:26722: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
+if { (eval echo configure:26739: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
   rm -rf conftest*
 
       { echo "$as_me:$LINENO: result: int *" >&5
@@ -29703,6 +29720,13 @@ echo "$as_me: error: conditional \"am__fastdepCXX\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${REBUILD_DOCS_TRUE}" && test -z "${REBUILD_DOCS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"REBUILD_DOCS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"REBUILD_DOCS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${WITH_PYTHON_TRUE}" && test -z "${WITH_PYTHON_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"WITH_PYTHON\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -30427,6 +30451,8 @@ FFLAGS!$FFLAGS$ac_delim
 ac_ct_F77!$ac_ct_F77$ac_delim
 LIBTOOL!$LIBTOOL$ac_delim
 HTML_DIR!$HTML_DIR$ac_delim
+REBUILD_DOCS_TRUE!$REBUILD_DOCS_TRUE$ac_delim
+REBUILD_DOCS_FALSE!$REBUILD_DOCS_FALSE$ac_delim
 Z_CFLAGS!$Z_CFLAGS$ac_delim
 Z_LIBS!$Z_LIBS$ac_delim
 WITH_ZLIB!$WITH_ZLIB$ac_delim
@@ -30497,8 +30523,6 @@ WITH_SCHEMAS!$WITH_SCHEMAS$ac_delim
 TEST_SCHEMAS!$TEST_SCHEMAS$ac_delim
 WITH_REGEXPS!$WITH_REGEXPS$ac_delim
 TEST_REGEXPS!$TEST_REGEXPS$ac_delim
-WITH_DEBUG!$WITH_DEBUG$ac_delim
-DEBUG_OBJ!$DEBUG_OBJ$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -30540,6 +30564,8 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+WITH_DEBUG!$WITH_DEBUG$ac_delim
+DEBUG_OBJ!$DEBUG_OBJ$ac_delim
 TEST_DEBUG!$TEST_DEBUG$ac_delim
 WITH_MEM_DEBUG!$WITH_MEM_DEBUG$ac_delim
 WITH_RUN_DEBUG!$WITH_RUN_DEBUG$ac_delim
@@ -30566,7 +30592,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 24; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 26; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

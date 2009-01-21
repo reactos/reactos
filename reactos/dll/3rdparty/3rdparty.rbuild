@@ -7,6 +7,9 @@
 	<directory name="mesa32">
 		<xi:include href="mesa32/mesa32.rbuild" />
 	</directory>
+	<directory name="libxslt">
+		<xi:include href="libxslt/libxslt.rbuild" />
+	</directory>
 	<if property="NSWPAT" value="1">
 		<directory name="dxtn">
 			<xi:include href="dxtn/dxtn.rbuild" />

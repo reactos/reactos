@@ -3792,26 +3792,12 @@ xmlValidateNotationDecl(xmlValidCtxtPtr ctxt ATTRIBUTE_UNUSED, xmlDocPtr doc ATT
 }
 
 /**
- * xmlValidateAttributeValue:
+ * xmlValidateAttributeValueInternal:
+ * @doc: the document
  * @type:  an attribute type
  * @value:  an attribute value
  *
  * Validate that the given attribute value match  the proper production
- *
- * [ VC: ID ]
- * Values of type ID must match the Name production....
- *
- * [ VC: IDREF ]
- * Values of type IDREF must match the Name production, and values
- * of type IDREFS must match Names ...
- *
- * [ VC: Entity Name ]
- * Values of type ENTITY must match the Name production, values
- * of type ENTITIES must match Names ...
- *
- * [ VC: Name Token ]
- * Values of type NMTOKEN must match the Nmtoken production; values
- * of type NMTOKENS must match Nmtokens. 
  *
  * returns 1 if valid or 0 otherwise
  */
@@ -3839,6 +3825,30 @@ xmlValidateAttributeValueInternal(xmlDocPtr doc, xmlAttributeType type,
     return(1);
 }
 
+/**
+ * xmlValidateAttributeValue:
+ * @type:  an attribute type
+ * @value:  an attribute value
+ *
+ * Validate that the given attribute value match  the proper production
+ *
+ * [ VC: ID ]
+ * Values of type ID must match the Name production....
+ *
+ * [ VC: IDREF ]
+ * Values of type IDREF must match the Name production, and values
+ * of type IDREFS must match Names ...
+ *
+ * [ VC: Entity Name ]
+ * Values of type ENTITY must match the Name production, values
+ * of type ENTITIES must match Names ...
+ *
+ * [ VC: Name Token ]
+ * Values of type NMTOKEN must match the Nmtoken production; values
+ * of type NMTOKENS must match Nmtokens. 
+ *
+ * returns 1 if valid or 0 otherwise
+ */
 int
 xmlValidateAttributeValue(xmlAttributeType type, const xmlChar *value) {
     return(xmlValidateAttributeValueInternal(NULL, type, value));

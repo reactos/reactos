@@ -296,10 +296,10 @@
 /* #undef HAVE_LIBXSLT */
 
 /* Define to 1 if you have the <libxslt/pattern.h> header file. */
-/* #undef HAVE_LIBXSLT_PATTERN_H */
+#define HAVE_LIBXSLT_PATTERN_H
 
 /* Define to 1 if you have the <libxslt/transform.h> header file. */
-/* #undef HAVE_LIBXSLT_TRANSFORM_H */
+#define HAVE_LIBXSLT_TRANSFORM_H
 
 /* Define if you have the Xxf86dga library version 2 */
 /* #undef HAVE_LIBXXF86DGA2 */
@@ -951,6 +951,9 @@
 
 /* Define to the soname of the libXrender library. */
 /* #undef SONAME_LIBXRENDER */
+
+/* Define to the soname of the libxslt library. */
+#define SONAME_LIBXSLT "libxslt"
 
 /* Define if the struct statfs is defined by <sys/mount.h> */
 /* #undef STATFS_DEFINED_BY_SYS_MOUNT */

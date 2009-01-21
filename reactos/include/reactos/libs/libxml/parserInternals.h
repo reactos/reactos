@@ -24,18 +24,27 @@ extern "C" {
 /**
  * xmlParserMaxDepth:
  *
- * arbitrary depth limit for the XML documents that we allow to 
- * process. This is not a limitation of the parser but a safety 
- * boundary feature.
+ * arbitrary depth limit for the XML documents that we allow to
+ * process. This is not a limitation of the parser but a safety
+ * boundary feature, use XML_PARSE_HUGE option to override it.
  */
 XMLPUBVAR unsigned int xmlParserMaxDepth;
 
- /**
-  * XML_MAX_NAMELEN:
-  *
-  * Identifiers can be longer, but this will be more costly
-  * at runtime.
-  */
+/**
+ * XML_MAX_TEXT_LENGTH:
+ *
+ * Maximum size allowed for a single text node when building a tree.
+ * This is not a limitation of the parser but a safety boundary feature,
+ * use XML_PARSE_HUGE option to override it.
+ */
+#define XML_MAX_TEXT_LENGTH 10000000
+
+/**
+ * XML_MAX_NAMELEN:
+ *
+ * Identifiers can be longer, but this will be more costly
+ * at runtime.
+ */
 #define XML_MAX_NAMELEN 100
 
 /**

@@ -11,6 +11,7 @@
 #include "libxml.h"
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <libxml/xmlmemory.h>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
@@ -25,6 +26,11 @@
 #include <libxml/valid.h>
 #include <libxml/HTMLtree.h>
 #include <libxml/globals.h>
+
+/* Define SIZE_T_MAX unless defined through <limits.h>. */
+#ifndef SIZE_T_MAX
+# define SIZE_T_MAX     ((size_t)-1)
+#endif /* !SIZE_T_MAX */
 
 /* #define DEBUG_SAX2 */
 /* #define DEBUG_SAX2_TREE */
@@ -2455,9 +2461,19 @@ xmlSAX2Characters(void *ctx, const xmlChar *ch, int len)
 	               (xmlDictOwns(ctxt->dict, lastChild->content))) {
 		lastChild->content = xmlStrdup(lastChild->content);
 	    }
+            if (((size_t)ctxt->nodelen + (size_t)len > XML_MAX_TEXT_LENGTH) &&
+                ((ctxt->options & XML_PARSE_HUGE) == 0)) {
+                xmlSAX2ErrMemory(ctxt, "xmlSAX2Characters: huge text node");
+                return;
+            }
+	    if ((size_t)ctxt->nodelen > SIZE_T_MAX - (size_t)len || 
+	        (size_t)ctxt->nodemem + (size_t)len > SIZE_T_MAX / 2) {
+                xmlSAX2ErrMemory(ctxt, "xmlSAX2Characters overflow prevented");
+                return;
+	    }
 	    if (ctxt->nodelen + len >= ctxt->nodemem) {
 		xmlChar *newbuf;
-		int size;
+		size_t size;
 
 		size = ctxt->nodemem + len;
 		size *= 2;

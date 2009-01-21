@@ -63,6 +63,8 @@ extern int pthread_setspecific (pthread_key_t __key,
 extern int pthread_key_create (pthread_key_t *__key,
                                void (*__destr_function) (void *))
 	   __attribute((weak));
+extern int pthread_key_delete (pthread_key_t __key)
+	   __attribute((weak));
 extern int pthread_mutex_init ()
 	   __attribute((weak));
 extern int pthread_mutex_destroy ()
@@ -82,6 +84,8 @@ extern int pthread_equal ()
 extern pthread_t pthread_self ()
 	   __attribute((weak));
 extern int pthread_key_create ()
+	   __attribute((weak));
+extern int pthread_key_delete ()
 	   __attribute((weak));
 extern int pthread_cond_signal ()
 	   __attribute((weak));
@@ -698,6 +702,7 @@ xmlGetGlobalState(void)
 	if (p == NULL) {
             xmlGenericError(xmlGenericErrorContext,
                             "xmlGetGlobalState: out of memory\n");
+            xmlFreeGlobalState(tsd);
 	    return(NULL);
 	}
         p->memory = tsd;
@@ -859,6 +864,7 @@ xmlInitThreads(void)
             (pthread_getspecific != NULL) &&
             (pthread_setspecific != NULL) &&
             (pthread_key_create != NULL) &&
+            (pthread_key_delete != NULL) &&
             (pthread_mutex_init != NULL) &&
             (pthread_mutex_destroy != NULL) &&
             (pthread_mutex_lock != NULL) &&
@@ -912,6 +918,9 @@ xmlCleanupThreads(void)
         globalkey = TLS_OUT_OF_INDEXES;
     }
     DeleteCriticalSection(&cleanup_helpers_cs);
+#elif defined HAVE_PTHREAD_H
+    if ((libxml_is_threaded)  && (pthread_key_delete != NULL))
+        pthread_key_delete(globalkey);
 #endif
 }
 

@@ -2753,8 +2753,10 @@ static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
 #endif
 
 #ifdef LIBXML_DEBUG_ENABLED
+#if defined(LIBXML_HTML_ENABLED) || defined(LIBXML_VALID_ENABLED)
     if ((debugent) && (!html))
 	xmlDebugDumpEntities(stderr, doc);
+#endif
 #endif
 
     /*
