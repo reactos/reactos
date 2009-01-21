@@ -184,7 +184,9 @@ GetOverlappedResult (
     }
   }
 
-  *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
+
+  if (lpNumberOfBytesTransferred)
+    *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
 
   if (!NT_SUCCESS(lpOverlapped->Internal))
   {
