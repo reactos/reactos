@@ -1049,9 +1049,9 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 	                          module.pch->file->name + ".gch" );
 }
 
-Rule arRule1 ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a: $($(module_name)_OBJS) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).a",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+Rule arRule1 ( "$(intermediate_path_noext).a: $($(module_name)_OBJS) $(dependencies) | $(intermediate_dir)\n",
+               "$(intermediate_path_noext).a",
+               "$(intermediate_dir)$(SEP)", NULL );
 Rule arRule2 ( "\t$(ECHO_AR)\n"
               "\t${ar} -rc $@ $($(module_name)_OBJS)\n",
               NULL );
@@ -1059,143 +1059,143 @@ Rule arHostRule2 ( "\t$(ECHO_HOSTAR)\n"
                    "\t${host_ar} -rc $@ $($(module_name)_OBJS)\n",
                    NULL );
 Rule gasRule ( "$(source): ${$(module_name)_precondition}\n"
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+               "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
                "\t$(ECHO_GAS)\n"
                "\t${gcc} -x assembler-with-cpp -o $@ -D__ASM__ $($(module_name)_CFLAGS) -c $<\n",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+               "$(intermediate_path_unique).o",
+               "$(intermediate_dir)$(SEP)", NULL );
 Rule bootRule ( "$(source): ${$(module_name)_precondition}\n"
                 "$(module_output): $(source)$(dependencies) | $(OUTPUT)$(SEP)$(source_dir)\n"
                 "\t$(ECHO_NASM)\n"
                 "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
                 "$(OUTPUT)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule nasmRule ( "$(source): ${$(module_name)_precondition}\n"
-                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
                 "\t$(ECHO_NASM)\n"
                 "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
-                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o",
-                "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+                "$(intermediate_path_unique).o",
+                "$(intermediate_dir)$(SEP)", NULL );
 Rule windresRule ( "$(source): ${$(module_name)_precondition}\n"
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff: $(source)$(dependencies) $(WRC_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir) $(TEMPORARY)\n"
+                   "$(intermediate_path_unique).coff: $(source)$(dependencies) $(WRC_TARGET) | $(intermediate_dir) $(TEMPORARY)\n"
                    "\t$(ECHO_WRC)\n"
                    "\t${gcc} -xc -E -DRC_INVOKED ${$(module_name)_RCFLAGS} $(source) > $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp\n"
                    "\t$(Q)$(WRC_TARGET) ${$(module_name)_RCFLAGS} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp\n"
                    "\t-@${rm} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp 2>$(NUL)\n"
                    "\t${windres} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp -o $@\n"
                    "\t-@${rm} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp 2>$(NUL)\n",
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).coff",
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule wmcRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h: $(WMC_TARGET) $(source) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                   "$(intermediate_path_unique).coff",
+                   "$(intermediate_dir)$(SEP)", NULL );
+Rule wmcRule ( "$(intermediate_path_noext).rc $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h: $(WMC_TARGET) $(source) | $(intermediate_dir)\n"
                "\t$(ECHO_WMC)\n"
-               "\t$(Q)$(WMC_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc $(source)\n",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).rc",
+               "\t$(Q)$(WMC_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(intermediate_path_noext).rc $(source)\n",
+               "$(intermediate_path_noext).rc",
                "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildPDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+               "$(intermediate_dir)$(SEP)", NULL );
+Rule winebuildPDefRule ( "$(intermediate_path_unique).spec: $(source)$(dependencies) | $(intermediate_dir)\n"
                          "\t$(ECHO_CPP)\n"
-                         "\t${gcc} -xc -E ${$(module_name)_RCFLAGS} $(source) > $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec\n\n"
-						 "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                         "\t${gcc} -xc -E ${$(module_name)_RCFLAGS} $(source) > $(intermediate_path_unique).spec\n\n"
+						 "$(intermediate_path_unique).auto.def: $(intermediate_path_unique).spec $(WINEBUILD_TARGET) | $(intermediate_dir)\n"
                          "\t$(ECHO_WINEBLD)\n"
-                         "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec --filename $(module_dllname)\n\n",
-                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec",
-                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def",
-                         "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildPRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                         "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(intermediate_path_unique).auto.def --def -E $(intermediate_path_unique).spec --filename $(module_dllname)\n\n",
+                         "$(intermediate_path_unique).spec",
+                         "$(intermediate_path_unique).auto.def",
+                         "$(intermediate_dir)$(SEP)", NULL );
+Rule winebuildPRule ( "$(intermediate_path_unique).stubs.c: $(intermediate_path_unique).spec $(WINEBUILD_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WINEBLD)\n"
-                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $@ --pedll $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec --filename $(module_dllname)\n\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $@ --pedll $(intermediate_path_unique).spec --filename $(module_dllname)\n\n"
+                      "$(intermediate_path_unique).stubs.o: $(intermediate_path_unique).stubs.c | $(intermediate_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).spec",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildDefRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "$(intermediate_path_unique).spec",
+                      "$(intermediate_path_unique).stubs.c",
+                      "$(intermediate_path_unique).stubs.o",
+                      "$(intermediate_dir)$(SEP)", NULL );
+Rule winebuildDefRule ( "$(intermediate_path_unique).auto.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(intermediate_dir)\n"
                         "\t$(ECHO_WINEBLD)\n"
-                        "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(INTERMEDIATE)$(SEP)$(source_path)$(SEP)$(source_name_noext)_$(module_name).auto.def --def -E $(source) --filename $(module_dllname)\n\n",
-                        "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).spec",
-                        "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).auto.def",
-                        "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule winebuildRule ( "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c: $(source_path)$(SEP)$(source_name_noext).spec $(WINEBUILD_TARGET)\n"
+                        "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(intermediate_path_unique).auto.def --def -E $(source) --filename $(module_dllname)\n\n",
+                        "$(intermediate_path_noext).spec",
+                        "$(intermediate_path_unique).auto.def",
+                        "$(intermediate_dir)$(SEP)", NULL );
+Rule winebuildRule ( "$(intermediate_path_unique).stubs.c: $(source) $(WINEBUILD_TARGET)\n"
                      "\t$(ECHO_WINEBLD)\n"
-                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $@ --pedll $(source_path)$(SEP)$(source_name_noext).spec --filename $(module_dllname)\n"
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $@ --pedll $(source) --filename $(module_dllname)\n"
+                     "$(intermediate_path_unique).stubs.o: $(intermediate_path_unique).stubs.c$(dependencies) | $(intermediate_dir)\n"
                      "\t$(ECHO_CC)\n"
                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.c",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).stubs.o",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+                     "$(intermediate_path_unique).stubs.c",
+                     "$(intermediate_path_unique).stubs.o",
+                     "$(intermediate_dir)$(SEP)", NULL );
 Rule widlHeaderRule ( "$(source): ${$(module_name)_precondition}\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "$(intermediate_path_noext).h: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h $(source)\n",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).h",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext).h $(source)\n",
+                      "$(intermediate_path_noext).h",
+                      "$(intermediate_dir)$(SEP)", NULL );
 Rule widlServerRule ( "$(source): ${$(module_name)_precondition}\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "$(intermediate_path_noext)_s.c $(intermediate_path_noext)_s.h: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h -s -S $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(source)\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_s.h -s -S $(intermediate_path_noext)_s.c $(source)\n"
+                      "$(intermediate_path_noext)_s.o: $(intermediate_path_noext)_s.c $(intermediate_path_noext)_s.h$(dependencies) | $(intermediate_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.h",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.c",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_s.o",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+                      "$(intermediate_path_noext)_s.h",
+                      "$(intermediate_path_noext)_s.c",
+                      "$(intermediate_path_noext)_s.o",
+                      "$(intermediate_dir)$(SEP)", NULL );
 Rule widlClientRule ( "$(source): ${$(module_name)_precondition}\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "$(intermediate_path_noext)_c.c $(intermediate_path_noext)_c.h: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
-                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h -c -C $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(source)\n"
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_c.h -c -C $(intermediate_path_noext)_c.c $(source)\n"
+                      "$(intermediate_path_noext)_c.o: $(intermediate_path_noext)_c.c $(intermediate_path_noext)_c.h$(dependencies) | $(intermediate_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.h",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.c",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_c.o",
-                      "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+                      "$(intermediate_path_noext)_c.h",
+                      "$(intermediate_path_noext)_c.c",
+                      "$(intermediate_path_noext)_c.o",
+                      "$(intermediate_dir)$(SEP)", NULL );
 Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "$(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                      "\t$(ECHO_WIDL)\n"
-                     "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h -p -P $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(source)\n"
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o: $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_p.h -p -P $(intermediate_path_noext)_p.c $(source)\n"
+                     "$(intermediate_path_noext)_p.o: $(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h$(dependencies) | $(intermediate_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.h",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.c",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_p.o",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
-Rule widlDlldataRule ( "$(source): $(dependencies) ${$(module_name)_precondition} $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "$(intermediate_path_noext)_p.h",
+                     "$(intermediate_path_noext)_p.c",
+                     "$(intermediate_path_noext)_p.o",
+                     "$(intermediate_dir)$(SEP)", NULL );
+Rule widlDlldataRule ( "$(source): $(dependencies) ${$(module_name)_precondition} $(WIDL_TARGET) | $(intermediate_dir)\n"
                      "\t$(ECHO_WIDL)\n"
                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) --dlldata-only --dlldata=$(source) $(bare_dependencies)\n"
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).o: $(source) $(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                     "$(intermediate_path_noext).o: $(source) $(dependencies) | $(intermediate_dir)\n"
                       "\t$(ECHO_CC)\n"
 					  "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
-                     "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).o", NULL );
+                     "$(intermediate_path_noext).o", NULL );
 Rule widlTlbRule ( "$(source): ${$(module_name)_precondition}\n"
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(module_name).tlb: $(source)$(dependencies) $(WIDL_TARGET) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                   "$(intermediate_dir)$(SEP)$(module_name).tlb: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                    "\t$(ECHO_WIDL)\n"
-                   "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -t -T $(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext).tlb $(source)\n",
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)", NULL );
+                   "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -t -T $(intermediate_path_noext).tlb $(source)\n",
+                   "$(intermediate_dir)$(SEP)", NULL );
 Rule gccRule ( "$(source): ${$(module_name)_precondition}\n"
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+               "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
                "\t$(ECHO_CC)\n"
                "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
+               "$(intermediate_path_unique).o", NULL );
 Rule gccHostRule ( "$(source): ${$(module_name)_precondition}\n"
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                   "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
                    "\t$(ECHO_HOSTCC)\n"
                    "\t${host_gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
+                   "$(intermediate_path_unique).o", NULL );
 Rule gppRule ( "$(source): ${$(module_name)_precondition}\n"
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+               "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
                "\t$(ECHO_CC)\n"
                "\t${gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
-               "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
+               "$(intermediate_path_unique).o", NULL );
 Rule gppHostRule ( "$(source): ${$(module_name)_precondition}\n"
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o: $(source)$(dependencies) | $(INTERMEDIATE)$(SEP)$(source_dir)\n"
+                   "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
                    "\t$(ECHO_HOSTCC)\n"
                    "\t${host_gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
-                   "$(INTERMEDIATE)$(SEP)$(source_dir)$(SEP)$(source_name_noext)_$(module_name).o", NULL );
+                   "$(intermediate_path_unique).o", NULL );
 Rule emptyRule ( "", NULL );
 
 void

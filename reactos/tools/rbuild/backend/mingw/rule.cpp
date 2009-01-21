@@ -52,6 +52,9 @@ FixString ( const string& str, Backend *backend, const Module& module, const Fil
 		ReplaceVariable ( ret, "$(source_name)", source->name );
 		ReplaceVariable ( ret, "$(source_name_noext)", ReplaceExtension ( source->name , "" ) );
 		ReplaceVariable ( ret, "$(source_path)", backend->GetFullPath ( *source ) );
+		ReplaceVariable ( ret, "$(intermediate_dir)", backend->GetFullPath ( FileLocation ( IntermediateDirectory, source->relative_path, "" ) ) );
+		ReplaceVariable ( ret, "$(intermediate_path_noext)", ReplaceExtension ( backend->GetFullName ( FileLocation ( IntermediateDirectory, source->relative_path, source->name ) ), "" ) );
+		ReplaceVariable ( ret, "$(intermediate_path_unique)", ReplaceExtension ( backend->GetFullName ( FileLocation ( IntermediateDirectory, source->relative_path, source->name ) ), "" )  + "_" + module.name );
 	}
 	ReplaceVariable ( ret, "$(dependencies)", dep );
 	ReplaceVariable ( ret, "$(bare_dependencies)", additional_dependencies );
