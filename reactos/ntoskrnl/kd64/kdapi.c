@@ -101,7 +101,7 @@ KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-DumpTraceData(IN PSTRING TraceData)
+DumpTraceData(OUT PSTRING TraceData)
 {
     /* Update the buffer */
     TraceDataBuffer[0] = TraceDataBufferPosition;
@@ -162,7 +162,7 @@ VOID
 NTAPI
 KdpSetCommonState(IN ULONG NewState,
                   IN PCONTEXT Context,
-                  IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
+                  OUT PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
 {
     USHORT InstructionCount;
     BOOLEAN HadBreakpoints;
@@ -315,6 +315,38 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
         Length = PACKET_MAX_SIZE - sizeof(DBGKD_MANIPULATE_STATE64);
     }
 
+#if defined (_M_AMD64)
+    if ((ULONG)ReadMemory->TargetBaseAddress <= 2)
+    {
+        switch ((ULONG_PTR)ReadMemory->TargetBaseAddress)
+        {
+            case 1:
+                ControlStart = &KiProcessorBlock[State->Processor];
+                RealLength = sizeof(PVOID);
+                break;
+
+            case 2:
+                ControlStart = &KiProcessorBlock[State->Processor]->
+                                         ProcessorState.SpecialRegisters;
+                RealLength = sizeof(KSPECIAL_REGISTERS);
+                break;
+
+            default:
+                ControlStart = NULL;
+                ASSERT(FALSE);
+        }
+
+        if (RealLength < Length) Length = RealLength;
+
+        /* Copy the memory */
+        RtlCopyMemory(Data->Buffer, ControlStart, Length);
+        Data->Length = Length;
+
+        /* Finish up */
+        State->ReturnStatus = STATUS_SUCCESS;
+        ReadMemory->ActualBytesRead = Data->Length;
+    }
+#else
     /* Make sure that this is a valid request */
     if (((ULONG)ReadMemory->TargetBaseAddress < sizeof(KPROCESSOR_STATE)) &&
         (State->Processor < KeNumberProcessors))
@@ -337,6 +369,7 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
         State->ReturnStatus = STATUS_SUCCESS;
         ReadMemory->ActualBytesRead = Data->Length;
     }
+#endif
     else
     {
         /* Invalid request */
@@ -554,8 +587,7 @@ FrLdrDbgPrint("Enter KdpSendWaitContinue\n");
 
 SendPacket:
     /* Send the Packet */
-//    KdSendPacket(PacketType, SendHeader, SendData, &KdpContext);
-    KdSendPacket(PacketType, SendHeader, SendData, (PVOID)FrLdrDbgPrint);
+    KdSendPacket(PacketType, SendHeader, SendData, &KdpContext);
 
     /* If the debugger isn't present anymore, just return success */
     if (KdDebuggerNotPresent) return ContinueSuccess;
@@ -566,7 +598,6 @@ SendPacket:
         /* Receive Loop */
         do
         {
-            FrLdrDbgPrint("KdpSendWaitContinue 1\n");
             /* Wait to get a reply to our packet */
             RecvCode = KdReceivePacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                                        &Header,
@@ -965,7 +996,7 @@ FrLdrDbgPrint("Enter KdpReportExceptionStateChange, Rip = 0x%p\n", (PVOID)Contex
         KdpSetContextState(&WaitStateChange, Context);
 
         /* Setup the actual header to send to KD */
-        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
+        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64) - sizeof(CONTEXT);
         Header.Buffer = (PCHAR)&WaitStateChange;
 
         /* Setup the trace data */
