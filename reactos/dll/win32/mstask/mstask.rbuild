@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="mstask" type="win32dll" baseaddress="${BASEADDRESS_MSTASK}" installbase="system32" installname="mstask.dll">
+<module name="mstask" type="win32dll" baseaddress="${BASEADDRESS_MSTASK}" installbase="system32" installname="mstask.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="mstask.spec" />
 	<include base="mstask">.</include>

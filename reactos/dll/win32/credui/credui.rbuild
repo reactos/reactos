@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="credui" type="win32dll" baseaddress="${BASEADDRESS_CREDUI}" installbase="system32" installname="credui.dll">
+<module name="credui" type="win32dll" baseaddress="${BASEADDRESS_CREDUI}" installbase="system32" installname="credui.dll" allowwarnings="true">
 	<importlibrary definition="credui.spec" />
 	<include base="credui">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

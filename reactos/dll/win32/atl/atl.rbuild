@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="atl" type="win32dll" baseaddress="${BASEADDRESS_ATL}" installbase="system32" installname="atl.dll">
+<module name="atl" type="win32dll" baseaddress="${BASEADDRESS_ATL}" installbase="system32" installname="atl.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="atl.spec" />
 	<include base="atl">.</include>
@@ -24,7 +24,7 @@
 	<library>ntdll</library>
 	<dependency>atl_atliface_header</dependency>
 </module>
-<module name="atl_atliface_header" type="idlheader">
+<module name="atl_atliface_header" type="idlheader" allowwarnings="true">
 	<file>atliface.idl</file>
 </module>
 </group>

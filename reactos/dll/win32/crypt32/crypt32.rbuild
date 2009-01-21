@@ -1,4 +1,4 @@
-<module name="crypt32" type="win32dll" baseaddress="${BASEADDRESS_CRYPT32}" installbase="system32" installname="crypt32.dll" crt="msvcrt">
+<module name="crypt32" type="win32dll" baseaddress="${BASEADDRESS_CRYPT32}" installbase="system32" installname="crypt32.dll" allowwarnings="true" crt="msvcrt">
 	<importlibrary definition="crypt32.spec" />
 	<include base="crypt32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

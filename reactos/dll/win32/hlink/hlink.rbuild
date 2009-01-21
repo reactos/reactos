@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="hlink" type="win32dll" baseaddress="${BASEADDRESS_HLINK}" installbase="system32" installname="hlink.dll">
+<module name="hlink" type="win32dll" baseaddress="${BASEADDRESS_HLINK}" installbase="system32" installname="hlink.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="hlink.spec" />
 	<include base="hlink">.</include>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="advpack" type="win32dll" baseaddress="${BASEADDRESS_ADVPACK}" installbase="system32" installname="advpack.dll">
+<module name="advpack" type="win32dll" baseaddress="${BASEADDRESS_ADVPACK}" installbase="system32" installname="advpack.dll" allowwarnings="true">
 	<importlibrary definition="advpack.spec" />
 	<include base="advpack">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

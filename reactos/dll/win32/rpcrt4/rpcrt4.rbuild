@@ -1,4 +1,4 @@
-<module name="rpcrt4" type="win32dll" baseaddress="${BASEADDRESS_RPCRT4}" installbase="system32" installname="rpcrt4.dll" crt="msvcrt">
+<module name="rpcrt4" type="win32dll" baseaddress="${BASEADDRESS_RPCRT4}" installbase="system32" installname="rpcrt4.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="rpcrt4.spec" />
 	<include base="rpcrt4">.</include>

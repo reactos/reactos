@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="localui" type="win32dll" baseaddress="${BASEADDRESS_LOCALUI}" installbase="system32" installname="localui.dll">
+<module name="localui" type="win32dll" baseaddress="${BASEADDRESS_LOCALUI}" installbase="system32" installname="localui.dll" allowwarnings="true">
 	<importlibrary definition="localui.spec" />
 	<include base="localui">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

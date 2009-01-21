@@ -1,4 +1,4 @@
-<module name="twain_32" type="win32dll" baseaddress="${BASEADDRESS_TWAIN_32}" installbase="system32" installname="twain_32.dll" crt="msvcrt">
+<module name="twain_32" type="win32dll" baseaddress="${BASEADDRESS_TWAIN_32}" installbase="system32" installname="twain_32.dll" allowwarnings="true" crt="msvcrt">
 	<importlibrary definition="twain_32.def" />
 	<include base="twain_32">.</include>
 	<define name="_DISABLE_TIDENTS" />

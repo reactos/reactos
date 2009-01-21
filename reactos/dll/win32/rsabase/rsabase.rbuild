@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="rsabase" type="win32dll" baseaddress="${BASEADDRESS_RSABASE}" installbase="system32" installname="rsabase.dll" entrypoint="0">
+<module name="rsabase" type="win32dll" baseaddress="${BASEADDRESS_RSABASE}" installbase="system32" installname="rsabase.dll" allowwarnings="true" entrypoint="0">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="rsabase.spec" />
 	<include base="rsabase">.</include>

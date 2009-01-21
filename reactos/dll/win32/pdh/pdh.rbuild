@@ -1,4 +1,4 @@
-<module name="pdh" type="win32dll" baseaddress="${BASEADDRESS_PDH}" installbase="system32" installname="pdh.dll" entrypoint="0">
+<module name="pdh" type="win32dll" baseaddress="${BASEADDRESS_PDH}" installbase="system32" installname="pdh.dll" allowwarnings="true" entrypoint="0">
         <importlibrary definition="pdh.spec" />
         <include base="pdh">.</include>
         <include base="ReactOS">include/reactos/wine</include>

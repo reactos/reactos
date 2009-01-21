@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="comcat" type="win32dll" baseaddress="${BASEADDRESS_COMCAT}" installbase="system32" entrypoint="0" installname="comcat.dll">
+<module name="comcat" type="win32dll" baseaddress="${BASEADDRESS_COMCAT}" installbase="system32" entrypoint="0" installname="comcat.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="comcat.spec" />
 	<include base="comcat">.</include>
