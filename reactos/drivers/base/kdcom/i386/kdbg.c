@@ -903,8 +903,6 @@ KdReceivePacket(
 
     for (;;)
     {
-        FrLdrDbgPrint("KdReceivePacket 0\n");
-
         /* Step 1 - Read PacketLeader */
         RcvCode = KdpReceivePacketLeader(&Packet.PacketLeader);
         if (RcvCode != KdPacketReceived)
@@ -912,8 +910,6 @@ KdReceivePacket(
             /* Couldn't read a correct packet leader. Start over. */
             continue;
         }
-
-        FrLdrDbgPrint("KdReceivePacket 1, PacketLeader == 0x%x\n", Packet.PacketLeader);
 
         /* Step 2 - Read PacketType */
         RcvCode = KdpReceiveBuffer(&Packet.PacketType, sizeof(USHORT));
@@ -923,8 +919,6 @@ KdReceivePacket(
             continue;
         }
 
-        FrLdrDbgPrint("KdReceivePacket 2, PacketType == 0x%x\n", Packet.PacketType);
-
         /* Step 3 - Read ByteCount */
         RcvCode = KdpReceiveBuffer(&Packet.ByteCount, sizeof(USHORT));
         if (RcvCode != KdPacketReceived || Packet.ByteCount > PACKET_MAX_SIZE)
@@ -932,8 +926,6 @@ KdReceivePacket(
             /* Didn't receive ByteCount or it's too big. Start over. */
             continue;
         }
-
-        FrLdrDbgPrint("KdReceivePacket 3, ByteCount == 0x%x\n", Packet.ByteCount);
 
         /* Step 4 - Read PacketId */
         RcvCode = KdpReceiveBuffer(&Packet.PacketId, sizeof(ULONG));
@@ -943,7 +935,6 @@ KdReceivePacket(
             continue;
         }
 
-        FrLdrDbgPrint("KdReceivePacket 4, PacketId == 0x%x\n", Packet.PacketId);
 /*
         if (Packet.PacketId != ExpectedPacketId)
         {
@@ -960,8 +951,6 @@ KdReceivePacket(
             continue;
         }
 
-        FrLdrDbgPrint("KdReceivePacket 5, Checksum == 0x%x\n", Packet.Checksum);
-
         /* Step 6 - Handle control packets */
         if (Packet.PacketLeader == CONTROL_PACKET_LEADER)
         {
@@ -973,16 +962,17 @@ KdReceivePacket(
                         /* Remote acknowledges the last packet */
                         return KdPacketReceived;
                     }
+                    /* That's not what we were waiting for, start over. */
                     continue;
-
-                case PACKET_TYPE_KD_RESEND:
-                    /* Remote wants us to resend the last packet */
-                    return KdPacketNeedsResend;
 
                 case PACKET_TYPE_KD_RESET:
                     FrLdrDbgPrint("KdReceivePacket - got a reset packet\n");
                     KdpSendControlPacket(PACKET_TYPE_KD_RESET, 0);
                     CurrentPacketId = INITIAL_PACKET_ID;
+                    /* Fall through */
+
+                case PACKET_TYPE_KD_RESEND:
+                    /* Remote wants us to resend the last packet */
                     return KdPacketNeedsResend;
 
                 default:
@@ -1025,7 +1015,7 @@ KdReceivePacket(
                 return KdPacketNeedsResend;
         }
 
-FrLdrDbgPrint("KdReceivePacket - got normal PacketType\n");
+//FrLdrDbgPrint("KdReceivePacket - got normal PacketType\n");
 
         /* Packet smaller than expected? */
         if (MessageHeader->Length > Packet.ByteCount)
@@ -1035,7 +1025,7 @@ FrLdrDbgPrint("KdReceivePacket - got normal PacketType\n");
             MessageHeader->Length = Packet.ByteCount;
         }
 
-FrLdrDbgPrint("KdReceivePacket - got normal PacketType, Buffer = %p\n", MessageHeader->Buffer);
+//FrLdrDbgPrint("KdReceivePacket - got normal PacketType, Buffer = %p\n", MessageHeader->Buffer);
 
         /* Receive the message header data */
         RcvCode = KdpReceiveBuffer(MessageHeader->Buffer,
@@ -1047,38 +1037,43 @@ FrLdrDbgPrint("KdReceivePacket - got normal PacketType, Buffer = %p\n", MessageH
             continue;
         }
 
-FrLdrDbgPrint("KdReceivePacket - got normal PacketType 3\n");
+//FrLdrDbgPrint("KdReceivePacket - got normal PacketType 3\n");
 
         /* Calculate checksum for the header data */
         Checksum = KdpCalculateChecksum(MessageHeader->Buffer,
                                         MessageHeader->Length);
 
         /* Shall we receive messsage data? */
-        if (MessageData && Packet.ByteCount > MessageHeader->Length)
+        if (MessageData)
         {
-            FrLdrDbgPrint("KdReceivePacket - got normal PacketType 2b\n");
             /* Calculate the length of the message data */
             MessageData->Length = Packet.ByteCount - MessageHeader->Length;
 
-            /* Receive the message data */
-            RcvCode = KdpReceiveBuffer(MessageData->Buffer,
-                                       MessageData->Length);
-            if (RcvCode != KdPacketReceived)
+            /* Do we have data? */
+            if (MessageData->Length)
             {
-                /* Didn't receive data. Start over. */
-                FrLdrDbgPrint("KdReceivePacket - Didn't receive message data. Start over\n");
-                continue;
-            }
+                FrLdrDbgPrint("KdReceivePacket - got data\n");
 
-            /* Add cheksum for message data */
-            Checksum += KdpCalculateChecksum(MessageData->Buffer,
-                                             MessageData->Length);
+                /* Receive the message data */
+                RcvCode = KdpReceiveBuffer(MessageData->Buffer,
+                                           MessageData->Length);
+                if (RcvCode != KdPacketReceived)
+                {
+                    /* Didn't receive data. Start over. */
+                    FrLdrDbgPrint("KdReceivePacket - Didn't receive message data. Start over\n");
+                    continue;
+                }
+
+                /* Add cheksum for message data */
+                Checksum += KdpCalculateChecksum(MessageData->Buffer,
+                                                 MessageData->Length);
+            }
         }
 
         /* Compare checksum */
         if (Packet.Checksum != Checksum)
         {
-            // Send PACKET_TYPE_KD_RESEND
+            KdpSendControlPacket(PACKET_TYPE_KD_RESEND, CurrentPacketId);
             FrLdrDbgPrint("KdReceivePacket - wrong cheksum, got %x, calculated %x\n",
                           Packet.Checksum, Checksum);
             continue;
@@ -1091,12 +1086,9 @@ FrLdrDbgPrint("KdReceivePacket - got normal PacketType 3\n");
         KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, CurrentPacketId);
         CurrentPacketId ^= 1;
 
-FrLdrDbgPrint("KdReceivePacket - all ok\n");
+//FrLdrDbgPrint("KdReceivePacket - all ok\n");
 
         return KdPacketReceived;
-
-
-
     }
 
     return KdPacketReceived;
