@@ -45,6 +45,7 @@
   <property name="BASEADDRESS_APPWIZ" value="0x65100000" />
   <property name="BASEADDRESS_MLANG" value="0x65140000" />
   <property name="BASEADDRESS_ACCESS" value="0x65180000" />
+  <property name="BASEADDRESS_ITSS" value="0x66370000" />
   <property name="BASEADDRESS_INETMIB1" value="0x666f0000" />
   <property name="BASEADDRESS_WSHTCPIP" value="0x677b0000" />
   <property name="BASEADDRESS_CRYPT32" value="0x67ab0000" />
@@ -111,6 +112,7 @@
   <property name="BASEADDRESS_KSUSER" value="0x73ea0000" />
   <property name="BASEADDRESS_ICMP" value="0x741f0000" />
   <property name="BASEADDRESS_SPOOLSS" value="0x742a0000" />
+  <property name="BASEADDRESS_MSIMTF" value="0x746b0000" />
   <property name="BASEADDRESS_QUARTZ" value="0x747d0000" />
   <property name="BASEADDRESS_USERENV" value="0x74850000" />
   <property name="BASEADDRESS_WS2_32" value="0x74aa0000" />
