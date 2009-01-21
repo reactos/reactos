@@ -420,10 +420,9 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 		KeInitializeMutex(&Fcb->CcbListLock, 0);
 
 		Fcb->PipeType = Buffer->NamedPipeType;
-		/* FIXME: Verify which is correct */
-		Fcb->WriteMode = Buffer->ReadMode;//Buffer->NamedPipeType;
+		Fcb->ServerReadMode = Buffer->ReadMode;
 		/* MSDN documentation reads that clients always start off in byte mode */
-		Fcb->ReadMode = FILE_PIPE_BYTE_STREAM_MODE;
+		Fcb->ClientReadMode = FILE_PIPE_BYTE_STREAM_MODE;
 
 		Fcb->CompletionMode = Buffer->CompletionMode;
 		switch (IoStack->Parameters.CreatePipe.ShareAccess & (FILE_SHARE_READ|FILE_SHARE_WRITE))

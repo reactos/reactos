@@ -346,7 +346,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
 	if (Ccb->Data == NULL)
 	{
-		DPRINT1("Pipe is NOT readable!\n");
+		DPRINT("Pipe is NOT readable!\n");
 		Status = STATUS_UNSUCCESSFUL;
 		Irp->IoStatus.Information = 0;
 		goto done;
@@ -426,13 +426,18 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 		{
 			if (Ccb->ReadDataAvailable == 0)
 			{
+				ULONG ConnectionSideReadMode;
+
+				if (Ccb->PipeEnd == FILE_PIPE_CLIENT_END) ConnectionSideReadMode=Ccb->Fcb->ClientReadMode;
+				else ConnectionSideReadMode = Ccb->Fcb->ServerReadMode;
+
 				if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
 				{
 					ASSERT(Ccb->OtherSide != NULL);
 					KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
 				}
 				if (Information > 0 &&
-					(Ccb->Fcb->ReadMode != FILE_PIPE_BYTE_STREAM_MODE ||
+					(ConnectionSideReadMode != FILE_PIPE_BYTE_STREAM_MODE ||
 					Ccb->PipeState != FILE_PIPE_CONNECTED_STATE))
 				{
 					break;
@@ -473,7 +478,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 					Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
 
 					Context->WaitEvent = &Ccb->ReadEvent;
-
 					Status = NpfsAddWaitingReadWriteRequest(DeviceObject, Irp);
 
 					if (NT_SUCCESS(Status))
@@ -488,7 +492,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 			ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
 
 			/* If the pipe type and read mode are both byte stream */
-			if ((Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE) && (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE))
+			if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
 			{
 				DPRINT("Byte stream mode: Ccb->Data %x\n", Ccb->Data);
 				/* Byte stream mode */
@@ -613,7 +617,12 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
 				if (Information > 0)
 				{
-					if ((Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE) && (Ccb->ReadDataAvailable) && (Length > CopyLength))
+					ULONG ConnectionSideReadMode;
+
+					if (Ccb->PipeEnd == FILE_PIPE_CLIENT_END) ConnectionSideReadMode=Ccb->Fcb->ClientReadMode;
+					else ConnectionSideReadMode = Ccb->Fcb->ServerReadMode;
+
+					if ((ConnectionSideReadMode == FILE_PIPE_BYTE_STREAM_MODE) && (Ccb->ReadDataAvailable) && (Length > CopyLength))
 					{
 						Buffer = (PVOID)((ULONG_PTR)Buffer + CopyLength);
 						Length -= CopyLength;
@@ -660,6 +669,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 		}
 		else
 		{
+			KIRQL oldIrql;
+
 			if (IsOriginalRequest)
 			{
 				IsOriginalRequest = FALSE;
@@ -679,8 +690,23 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 				DPRINT("NpfsRead done (Status %lx)\n", OriginalStatus);
 				return OriginalStatus;
 			}
+			
+			IoAcquireCancelSpinLock(&oldIrql);
 			Context = CONTAINING_RECORD(Ccb->ReadRequestListHead.Flink, NPFS_CONTEXT, ListEntry);
+
 			Irp = CONTAINING_RECORD(Context, IRP, Tail.Overlay.DriverContext);
+			/* Verify the Irp wasnt cancelled */
+			if (Irp->Cancel)
+			{
+				IoReleaseCancelSpinLock(oldIrql);
+				RemoveEntryList(&Context->ListEntry);
+				ExReleaseFastMutex(&Ccb->DataListLock);
+				Status = STATUS_CANCELLED;
+				goto done;
+			}
+			/* The Irp will now be handled, so remove the CancelRoutine */
+			(void)IoSetCancelRoutine(Irp, NULL);
+			IoReleaseCancelSpinLock(oldIrql);
 		}
 	}
 
@@ -810,7 +836,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 			ExAcquireFastMutex(&ReaderCcb->DataListLock);
 		}
 
-		if ((Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE) && (Ccb->Fcb->WriteMode == FILE_PIPE_BYTE_STREAM_MODE))
+		if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
 		{
 			DPRINT("Byte stream mode: Ccb->Data %x, Ccb->WritePtr %x\n", ReaderCcb->Data, ReaderCcb->WritePtr);
 
@@ -853,7 +879,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 				break;
 			}
 		}
-		else if ((Ccb->Fcb->PipeType == FILE_PIPE_MESSAGE_TYPE) && (Ccb->Fcb->WriteMode == FILE_PIPE_MESSAGE_MODE))
+		else if (Ccb->Fcb->PipeType == FILE_PIPE_MESSAGE_TYPE)
 		{
 			/* For Message Type Pipe, the Pipes memory will be used to store the size of each message */
 			DPRINT("Message mode: Ccb->Data %x, Ccb->WritePtr %x\n",ReaderCcb->Data, ReaderCcb->WritePtr);

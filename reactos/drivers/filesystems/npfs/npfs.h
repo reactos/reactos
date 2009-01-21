@@ -26,8 +26,8 @@ typedef struct _NPFS_FCB
 	LIST_ENTRY WaiterListHead;
 	LIST_ENTRY EmptyBufferListHead;
 	ULONG PipeType;
-	ULONG ReadMode;
-	ULONG WriteMode;
+	ULONG ClientReadMode;
+	ULONG ServerReadMode;
 	ULONG CompletionMode;
 	ULONG PipeConfiguration;
 	ULONG MaximumInstances;

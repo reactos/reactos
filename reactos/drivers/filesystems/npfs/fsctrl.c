@@ -432,28 +432,14 @@ NpfsPeekPipe(PIRP Irp,
 				ReadDataAvailable -= MessageLength;
 				MessageCount++;
 
-				if (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
-				{
+				/* If its the first message, copy the Message if the size of buffer is large enough */
+				if (MessageCount==1)
+				{	
 					if ((Reply->Data[0])
-						&& (OutputBufferLength >= (MessageLength + ReturnLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
-					{
-						memcpy((PVOID)((ULONG_PTR)&Reply->Data[0] + ReturnLength),
-							(PVOID)((ULONG)BufferPtr + sizeof(MessageLength)),
-							MessageLength);
-						ReturnLength += MessageLength;
-					}
-				}
-				else
-				{
-					/* If its the first message, copy the Message if the size of buffer is large enough */
-					if (MessageCount==1)
-					{	
-						if ((Reply->Data[0])
-							&& (OutputBufferLength >= (MessageLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
-						{							
-							memcpy(&Reply->Data[0], (PVOID)((ULONG)BufferPtr + sizeof(MessageLength)), MessageLength);
-							ReturnLength = MessageLength;
-						}
+						&& (OutputBufferLength >= (MessageLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
+					{							
+						memcpy(&Reply->Data[0], (PVOID)((ULONG)BufferPtr + sizeof(MessageLength)), MessageLength);
+						ReturnLength = MessageLength;
 					}
 				}
 
