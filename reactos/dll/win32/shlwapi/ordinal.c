@@ -2,7 +2,7 @@
  * SHLWAPI ordinal functions
  *
  * Copyright 1997 Marcus Meissner
- *           1998 Jürgen Schmied
+ *           1998 JÃ¼rgen Schmied
  *           2001-2003 Jon Griffiths
  *
  * This library is free software; you can redistribute it and/or
@@ -76,10 +76,9 @@ BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
  *
  * Internal implemetation of SHLWAPI_11.
  */
-static
-HANDLE WINAPI SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
-                                       DWORD dwSrcProcId, DWORD dwAccess,
-                                       DWORD dwOptions)
+static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
+                                      DWORD dwSrcProcId, DWORD dwAccess,
+                                      DWORD dwOptions)
 {
   HANDLE hDst, hSrc;
   DWORD dwMyProcId = GetCurrentProcessId();
@@ -1251,11 +1250,11 @@ BOOL WINAPI SHIsSameObject(IUnknown* lpInt1, IUnknown* lpInt2)
   if (lpInt1 == lpInt2)
     return TRUE;
 
-  if (!SUCCEEDED(IUnknown_QueryInterface(lpInt1, &IID_IUnknown,
+  if (FAILED(IUnknown_QueryInterface(lpInt1, &IID_IUnknown,
                                        (LPVOID *)&lpUnknown1)))
     return FALSE;
 
-  if (!SUCCEEDED(IUnknown_QueryInterface(lpInt2, &IID_IUnknown,
+  if (FAILED(IUnknown_QueryInterface(lpInt2, &IID_IUnknown,
                                        (LPVOID *)&lpUnknown2)))
     return FALSE;
 
@@ -2261,6 +2260,25 @@ HRESULT WINAPI QISearch(
 }
 
 /*************************************************************************
+ * @ [SHLWAPI.220]
+ *
+ * Set the Font for a window and the "PropDlgFont" property of the parent window.
+ *
+ * PARAMS
+ *  hWnd [I] Parent Window to set the property
+ *  id   [I] Index of child Window to set the Font
+ *
+ * RETURNS
+ *  Success: S_OK
+ *
+ */
+HRESULT WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id)
+{
+    FIXME("(%p, %d) stub\n", hWnd, id);
+    return S_OK;
+}
+
+/*************************************************************************
  *      @	[SHLWAPI.221]
  *
  * Remove the "PropDlgFont" property from a window.
@@ -2798,7 +2816,7 @@ HRESULT WINAPI SHInvokeDefaultCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEM
  *
  * _SHPackDispParamsV
  */
-HRESULT WINAPI SHPackDispParamsV(DISPPARAMS *params, VARIANTARG *args, UINT cnt, va_list valist)
+HRESULT WINAPI SHPackDispParamsV(DISPPARAMS *params, VARIANTARG *args, UINT cnt, __ms_va_list valist)
 {
   VARIANTARG *iter;
 
@@ -2852,14 +2870,12 @@ HRESULT WINAPI SHPackDispParamsV(DISPPARAMS *params, VARIANTARG *args, UINT cnt,
  */
 HRESULT WINAPIV SHPackDispParams(DISPPARAMS *params, VARIANTARG *args, UINT cnt, ...)
 {
-  va_list valist;
+  __ms_va_list valist;
   HRESULT hres;
 
-  va_start(valist, cnt);
-
+  __ms_va_start(valist, cnt);
   hres = SHPackDispParamsV(params, args, cnt, valist);
-
-  va_end(valist);
+  __ms_va_end(valist);
   return hres;
 }
 
@@ -2985,7 +3001,7 @@ HRESULT WINAPIV IUnknown_CPContainerInvokeParam(
   IConnectionPoint *iCP;
   IConnectionPointContainer *iCPC;
   DISPPARAMS dispParams = {buffer, NULL, cParams, 0};
-  va_list valist;
+  __ms_va_list valist;
 
   if (!container)
     return E_NOINTERFACE;
@@ -2999,9 +3015,9 @@ HRESULT WINAPIV IUnknown_CPContainerInvokeParam(
   if(FAILED(result))
       return result;
 
-  va_start(valist, cParams);
+  __ms_va_start(valist, cParams);
   SHPackDispParamsV(&dispParams, buffer, cParams, valist);
-  va_end(valist);
+  __ms_va_end(valist);
 
   result = SHLWAPI_InvokeByIID(iCP, riid, dispId, &dispParams);
   IConnectionPoint_Release(iCP);
@@ -3527,7 +3543,7 @@ HRESULT WINAPI SHIShellFolder_EnumObjects(LPSHELLFOLDER lpFolder, HWND hwnd, SHC
 }
 
 /* INTERNAL: Map from HLS color space to RGB */
-static WORD WINAPI ConvertHue(int wHue, WORD wMid1, WORD wMid2)
+static WORD ConvertHue(int wHue, WORD wMid1, WORD wMid2)
 {
   wHue = wHue > 240 ? wHue - 240 : wHue < 0 ? wHue + 240 : wHue;
 
@@ -3673,9 +3689,33 @@ DWORD WINAPI MLClearMLHInstance(DWORD x)
 }
 
 /*************************************************************************
+ * @ [SHLWAPI.432]
+ *
+ * See SHSendMessageBroadcastW
+ *
+ */
+DWORD WINAPI SHSendMessageBroadcastA(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return SendMessageTimeoutA(HWND_BROADCAST, uMsg, wParam, lParam,
+                               SMTO_ABORTIFHUNG, 2000, NULL);
+}
+
+/*************************************************************************
+ * @ [SHLWAPI.433]
+ *
+ * A wrapper for sending Broadcast Messages to all top level Windows
+ *
+ */
+DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return SendMessageTimeoutW(HWND_BROADCAST, uMsg, wParam, lParam,
+                               SMTO_ABORTIFHUNG, 2000, NULL);
+}
+
+/*************************************************************************
  *      @	[SHLWAPI.436]
  *
- * Convert an Unicode string CLSID into a CLSID.
+ * Convert a Unicode string CLSID into a CLSID.
  *
  * PARAMS
  *  idstr      [I]   string containing a CLSID in text form
@@ -4269,10 +4309,10 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
     WCHAR szText[100], szTitle[100];
     LPCWSTR pszText = szText, pszTitle = szTitle;
     LPWSTR pszTemp;
-    va_list args;
+    __ms_va_list args;
     int ret;
 
-    va_start(args, uType);
+    __ms_va_start(args, uType);
 
     TRACE("(%p,%p,%p,%p,%08x)\n", hInstance, hWnd, lpText, lpCaption, uType);
 
@@ -4289,10 +4329,10 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
     FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
                    pszText, 0, 0, (LPWSTR)&pszTemp, 0, &args);
 
-    va_end(args);
+    __ms_va_end(args);
 
     ret = MessageBoxW(hWnd, pszTemp, pszTitle, uType);
-    LocalFree((HLOCAL)pszTemp);
+    LocalFree(pszTemp);
     return ret;
 }
 
