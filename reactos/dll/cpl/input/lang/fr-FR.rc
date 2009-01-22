@@ -2,17 +2,17 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Settings"
+CAPTION "Paramètres"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the services that you want for each input language shown in the list.\nUse the Add and Remove buttons to modify this list.", -1, 9, 6, 238, 25
+    LTEXT "Sélectionnez les service que vous désirez pour chaque langue de saisie affichée dans la liste.\nUtiliser les boutons Ajouter et Supprimer pour modifier la liste.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
     PUSHBUTTON "&Set Default", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "A&dd...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Remove...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Properties...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Preferences", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Key Settings...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON "Ajouter...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "Supp&rimer...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Propriétés...", IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX "Préférences", -1, 7, 185, 240, 36
+    PUSHBUTTON "Paramètres des touches...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -47,22 +47,22 @@ END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Key Sequence"
+CAPTION "Changer les séquences de touches"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
-    AUTOCHECKBOX "&Switch input languages", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
-    LTEXT "Shift", -1, 73, 37, 27, 12
+    AUTOCHECKBOX "Changer le&s langues de saisie", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
+    LTEXT "Maj", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&Ctrl", IDC_CTRL_LANG, 29, 31, 30, 11
-    AUTORADIOBUTTON "Left &ALT", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
-    AUTOCHECKBOX "S&witch keyboard layouts", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
-    LTEXT "Shift", -1, 74, 87, 27, 12
+    AUTORADIOBUTTON "&ALT Gauche", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
+    AUTOCHECKBOX "Changer les dispositions clavier", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
+    LTEXT "Maj", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
     AUTORADIOBUTTON "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
-    AUTORADIOBUTTON "Left A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
+    AUTORADIOBUTTON "A&LT Gauche", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
     DEFPUSHBUTTON "OK", IDOK, 172, 9, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 172, 27, 50, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 172, 27, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
@@ -87,15 +87,15 @@ BEGIN
 	IDS_UNKNOWN              "(Inconnu)"
 	IDS_RESTART              "Désirez-vous redémarrer votre ordinateur maintenant ?"
 	IDS_WHATS_THIS           "Qu'est-ce que c'est ?"
-	IDS_LANGUAGE             "Language"
-	IDS_LAYOUT               "Keyboard Layout"
-    IDS_REM_QUESTION         "Do you want to remove selected keyboard layout?"
+	IDS_LANGUAGE             "Langue"
+	IDS_LAYOUT               "Disposition du clavier"
+    IDS_REM_QUESTION         "Êtes-vous sûr de vouloir supprimer la disposition sélectionnée ?"
     IDS_CONFIRMATION         "Confirmation"
-	IDS_LAYOUT_EXISTS        "This layout already exists."
-	IDS_LAYOUT_EXISTS2       "This layout already exists and can not be added."
-	IDS_CTRL_SHIFT           "Ctrl+Shift"
-	IDS_LEFT_ALT_SHIFT       "Left Alt+Shift"
-	IDS_SWITCH_BET_INLANG    "Switch between input languages"
+	IDS_LAYOUT_EXISTS        "Cette disposition existe déjà."
+	IDS_LAYOUT_EXISTS2       "Cette disposition existe déjà et ne peut être ajoutée."
+	IDS_CTRL_SHIFT           "Ctrl+Maj"
+	IDS_LEFT_ALT_SHIFT       "Alt Gauche+Maj"
+	IDS_SWITCH_BET_INLANG    "Changer les langues de saisie"
 END
 
 /* FIXME : To improve/complete */
