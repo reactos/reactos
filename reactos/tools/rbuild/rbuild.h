@@ -237,6 +237,8 @@ public:
 	std::map<std::string, Module*> modules;
 	IfableData non_if_data;
 	IfableData host_non_if_data;
+	bool allowWarnings;
+	bool allowWarningsSet;
 
 	Project ( const Configuration& configuration,
 	          const std::string& filename,

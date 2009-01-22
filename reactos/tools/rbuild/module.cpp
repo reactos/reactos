@@ -452,6 +452,8 @@ Module::Module ( const Project& project,
 	}
 	if ( att != NULL )
 		allowWarnings = att->value == "true";
+	else if ( project.allowWarningsSet )
+		allowWarnings = project.allowWarnings;
 	else
 		allowWarnings = false;
 

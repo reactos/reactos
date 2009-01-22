@@ -298,6 +298,11 @@ Project::ProcessXML ( const string& path )
 	assert(att);
 	makefile = Environment::GetAutomakeFile ( att->value );
 
+	att = node->GetAttribute ( "allowwarnings", false );
+	allowWarningsSet = att != NULL;
+	if ( att != NULL )
+		allowWarnings = att->value == "true";
+
 	size_t i;
 	for ( i = 0; i < node->subElements.size (); i++ )
 	{

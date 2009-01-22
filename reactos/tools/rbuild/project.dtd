@@ -137,6 +137,7 @@
 <!ATTLIST project
 	name      (ReactOS|Project) #REQUIRED
 	makefile  %Text;  #REQUIRED
+	allowwarnings	(true|false) "false"
 	xmlns:xi  %Text;  #FIXED "http://www.w3.org/2001/XInclude"
 >
 
