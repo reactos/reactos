@@ -223,7 +223,7 @@ SerialPnpStartDevice(
 	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 
 	/* Test if we are trying to start the serial port used for debugging */
-    DPRINT("Comparing addresses: KdComPortInUse: %p, ComPortBase: %p\n", KdComPortInUse, ComPortBase);
+    INFO_(SERIAL, "Comparing addresses: KdComPortInUse: %p, ComPortBase: %p\n", KdComPortInUse, ComPortBase);
 	if (KdComPortInUse == ComPortBase)
 	{
 		INFO_(SERIAL, "Failing IRP_MN_START_DEVICE as this serial port is used for debugging\n");
