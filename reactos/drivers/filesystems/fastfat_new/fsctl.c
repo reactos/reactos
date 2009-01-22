@@ -129,8 +129,7 @@ FatiFileSystemControl(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
                                 IrpSp->Parameters.MountVolume.Vpb,
                                 IrpSp->DeviceObject);
 
-        if (!NT_SUCCESS(Status))
-            FatCompleteRequest(IrpContext, Irp, Status);
+        FatCompleteRequest(IrpContext, Irp, Status);
 
         break;
 
