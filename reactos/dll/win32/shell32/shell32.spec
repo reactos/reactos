@@ -331,6 +331,7 @@
 @ stdcall SHCreateDirectoryExA(long str ptr)
 @ stdcall SHCreateDirectoryExW(long wstr ptr)
 @ stub SHCreateProcessAsUserW
+@ stdcall SHCreateShellItem(ptr ptr ptr ptr)
 @ stdcall SHEmptyRecycleBinA(long str long)
 @ stdcall SHEmptyRecycleBinW(long wstr long)
 @ stub SHExtractIconsW
