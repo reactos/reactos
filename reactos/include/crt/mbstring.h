@@ -75,6 +75,7 @@ extern "C" {
   _CRTIMP size_t __cdecl _mbsnbcnt(const unsigned char *_Str,size_t _MaxCount);
   _CRTIMP size_t __cdecl _mbsnbcnt_l(const unsigned char *_Str,size_t _MaxCount,_locale_t _Locale);
   _CRTIMP unsigned char *__cdecl _mbsnbcpy(unsigned char *_Dest,const unsigned char *_Source,size_t _Count);
+  _CRTIMP int __cdecl _mbsnbcpy_s(unsigned char* dst, size_t size, const unsigned char* src, size_t n);
   _CRTIMP unsigned char *__cdecl _mbsnbcpy_l(unsigned char *_Dest,const unsigned char *_Source,size_t _Count,_locale_t _Locale);
   _CRTIMP int __cdecl _mbsnbicmp(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
   _CRTIMP int __cdecl _mbsnbicmp_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);

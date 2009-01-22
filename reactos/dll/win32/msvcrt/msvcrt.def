@@ -847,4 +847,6 @@ EXPORTS
   wprintf @841
   wscanf @842
 
+  _mbsnbcpy_s
+  
   _swprintf=swprintf
