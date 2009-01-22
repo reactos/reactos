@@ -1414,7 +1414,7 @@ HRESULT WINAPI SHLoadOLE(LPARAM lParam)
  *
  */
 HRESULT WINAPI DriveType(int DriveType)
-{	
+{
     WCHAR root[] = L"A:\\";
 	root[0] = L'A' + DriveType;
 	return GetDriveTypeW(root);
@@ -1452,8 +1452,8 @@ int WINAPI SHOutOfMemoryMessageBox(
  *
  */
 HRESULT WINAPI SHFlushClipboard(void)
-{	FIXME("stub\n");
-	return 1;
+{
+	return OleFlushClipboard();
 }
 
 /*************************************************************************
@@ -1547,8 +1547,21 @@ DWORD WINAPI DoEnvironmentSubstA(LPSTR pszString, UINT cchString)
  */
 DWORD WINAPI DoEnvironmentSubstW(LPWSTR pszString, UINT cchString)
 {
-	FIXME("(%s, %d): stub\n", debugstr_w(pszString), cchString);
-	return MAKELONG(FALSE,cchString);
+    LPWSTR dst;
+    BOOL res = FALSE;
+    FIXME("(%s, %d): stub\n", debugstr_w(pszString), cchString);
+    if ((dst = HeapAlloc(GetProcessHeap(), 0, cchString * sizeof(WCHAR))))
+    {
+        DWORD num = ExpandEnvironmentStringsW(pszString, dst, cchString);
+        if (num)
+        {
+            res = TRUE;
+            wcscpy(pszString, dst);
+        }
+        HeapFree(GetProcessHeap(), 0, dst);
+    }
+
+    return MAKELONG(res,cchString);
 }
 
 /************************************************************************
@@ -2108,6 +2121,12 @@ HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRB
 HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
 {
     FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
+
+    if (!(pszRootPath) || (pszRootPath[0] == 0) ||
+        !(pSHQueryRBInfo) || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
+    {
+        return E_INVALIDARG;
+    }
 
     pSHQueryRBInfo->i64Size = 0;
     pSHQueryRBInfo->i64NumItems = 0;
