@@ -208,6 +208,7 @@
 
 #define IDI_SHELL_DOCUMENT           1
 #define IDI_SHELL_RICH_TEXT          2
+#define IDI_SHELL_EXE                3
 #define IDI_SHELL_FOLDER             4
 #define IDI_SHELL_FOLDER_OPEN        5
 #define IDI_SHELL_5_12_FLOPPY        6
@@ -224,19 +225,37 @@
 #define IDI_SHELL_PRINTER           17
 #define IDI_SHELL_MY_NETWORK_PLACES 18
 #define IDI_SHELL_COMPUTERS_NEAR_ME 19
-#define IDI_SHELL_FOLDER_SMALL_XP   20
+#define IDI_SHELL_PROGRAMS_FOLDER   20
+#define IDI_SHELL_RECENT_DOCUMENTS  21
+#define IDI_SHELL_CONTROL_PANEL     22
 #define IDI_SHELL_SEARCH            23
 #define IDI_SHELL_HELP              24
-#define IDI_SHELL_FOLDER_OPEN_LARGE 29
+#define IDI_SHELL_RUN               25
+#define IDI_SHELL_SHUTDOWN          28
+#define IDI_SHELL_SHARE             29
 #define IDI_SHELL_SHORTCUT          30
-#define IDI_SHELL_FOLDER_OPEN_SMALL 31
+#define IDI_SHELL_FOLDER_OPEN_SMALL 31 /* ??? */
 #define IDI_SHELL_EMPTY_RECYCLE_BIN 32
 #define IDI_SHELL_FULL_RECYCLE_BIN  33
+/* TODO: 34.ico */
 #define IDI_SHELL_DESKTOP           35
-#define IDI_SHELL_CONTROL_PANEL     36
+#define IDI_SHELL_CONTROL_PANEL2    36
+#define IDI_SHELL_PROGRAMS_FOLDER2  37
 #define IDI_SHELL_PRINTERS_FOLDER   38
 #define IDI_SHELL_FONTS_FOLDER      39
+#define IDI_SHELL_TSKBAR_STARTMENU  40
+#define IDI_SHELL_CD_MUSIC          41
+/* TODO: 42.ico, 43.ico */
+#define IDI_SHELL_FAVORITES         44
+#define IDI_SHELL_LOGOFF            45
+#define IDI_SHELL_EXPLORER          46
+/* TODO: 47.ico */
+#define IDI_SHELL_LOCKED            48
+/* TODO: 54.ico */
+#define IDI_SHELL_FIND_IN_FILE     134
 #define IDI_SHELL_OPEN_WITH        135
+#define IDI_SHELL_CONTROL_PANEL3   137
+#define IDI_SHELL_PRINTER2         138
 #define IDI_SHELL_TRASH_FILE       142
 #define IDI_SHELL_INF_FILE         151
 #define IDI_SHELL_TEXT_FILE        152
@@ -244,12 +263,68 @@
 #define IDI_SHELL_SYSTEM_FILE      154
 #define IDI_SHELL_FONT_FILE        155
 #define IDI_SHELL_TT_FONT_FILE     156
+#define IDI_SHELL_FONT_FILE2       157
 #define IDI_SHELL_RUN2             160
 #define IDI_SHELL_CONFIRM_DELETE   161
+#define IDI_SHELL_NETWORK_FOLDER   172
+/* TODO: 173.ico */
+#define IDI_SHELL_EMPTY_RECYCLE_BIN1 191
+#define IDI_SHELL_FULL_RECYCLE_BIN1  192
+#define IDI_SHELL_FOLDER_OPTIONS   210
+#define IDI_SHELL_TURN_OFF         221
+#define IDI_SHELL_DVD_ROM          222
+#define IDI_SHELL_MOVIE_FILE       224
 #define IDI_SHELL_MUSIC_FILE       225
+#define IDI_SHELL_CD_MUSIC2        228
+#define IDI_SHELL_SEARCH1          232
 #define IDI_SHELL_MY_DOCUMENTS     235
+#define IDI_SHELL_MY_PICTURES      236
+#define IDI_SHELL_MY_MUSIC         237
+#define IDI_SHELL_MY_MOVIES        238
+#define IDI_SHELL_PRINTER3         245
+#define IDI_SHELL_CAMERA           248
+#define IDI_SHELL_SLIDE_SHOW       249
+#define IDI_SHELL_DISPLAY          250
+#define IDI_SHELL_PRINT_PICS       252
+#define IDI_SHELL_EMPTY_RECYCLE_BIN3 254
+#define IDI_SHELL_HELP1            263
+#define IDI_SHELL_SENDMAIL         265
+#define IDI_SHELL_ACCESSABILITY    268
+#define IDI_SHELL_USERS            269
+#define IDI_SHELL_SCREEN_COLORS    270
+#define IDI_SHELL_ADD_REM_PROGRAMS 271
+#define IDI_SHELL_TUNES            277
+#define IDI_SHELL_USER_ACCOUNTS    279
+#define IDI_SHELL_HELP_FILE        289
+#define IDI_SHELL_GO               290
+#define IDI_SHELL_DVD_DRIVE        291
+#define IDI_SHELL_CD_ADD_MUSIC     292
+#define IDI_SHELL_CD               293
+#define IDI_SHELL_CD_ROM           294
+#define IDI_SHELL_CDR              295
+#define IDI_SHELL_CDRW             296
+#define IDI_SHELL_DVD_RAM          297
+#define IDI_SHELL_DVDR_ROM         298
+#define IDI_SHELL_MP3_PLAYER       299
+#define IDI_SHELL_CD_ROM1          302
+#define IDI_SHELL_DVD_ROM1         304
+#define IDI_SHELL_CAMERA1          309
+#define IDI_SHELL_SCANNER          315
+#define IDI_SHELL_CAMCORDER        317
+#define IDI_SHELL_DVDRW_ROM        318
+#define IDI_SHELL_NEW_FOLDER       319
+#define IDI_SHELL_FAVOTITES        322
+#define IDI_SHELL_HELP2            324
+#define IDI_SHELL_LOGOFF1          325
+#define IDI_SHELL_PROGRAMS_FOLDER1 326
+#define IDI_SHELL_RECENT_DOCUMENTS1 327
+#define IDI_SHELL_RUN1             328
+#define IDI_SHELL_SHUTDOWN1        329
 #define IDI_SHELL_CONTROL_PANEL1   330
 #define IDI_SHELL_ADMINTOOLS       328
+#define IDI_SHELL_IDEA             1001
+#define IDI_SHELL_HELP_FILE1       1004
+#define IDI_SHELL_SHUTDOWN2        8240
 
 // Icons for Folder Options (ID's identical to Windows XP SP3)
 #define IDI_SHELL_SHOW_COMMON_TASKS    182
