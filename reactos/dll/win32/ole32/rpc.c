@@ -1861,6 +1861,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
     BOOL multi_use = lsp->multi_use;
     OVERLAPPED ovl;
     HANDLE pipe_event;
+    DWORD  bytes;
 
     TRACE("Starting threader for %s.\n",debugstr_guid(&lsp->clsid));
 
@@ -1929,7 +1930,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
         }
         
         WriteFile(hPipe,buffer,buflen,&res,&ovl);
-        GetOverlappedResult(hPipe, &ovl, NULL, TRUE);
+        GetOverlappedResult(hPipe, &ovl, &bytes, TRUE);
         HeapFree(GetProcessHeap(),0,buffer);
 
         FlushFileBuffers(hPipe);
