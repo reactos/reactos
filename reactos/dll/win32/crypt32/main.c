@@ -66,7 +66,7 @@ HCRYPTPROV CRYPT_GetDefaultProvider(void)
 
         CryptAcquireContextW(&prov, NULL, MS_ENHANCED_PROV_W, PROV_RSA_FULL,
          CRYPT_VERIFYCONTEXT);
-        (void)InterlockedCompareExchangePointer((PVOID *)&hDefProv, (PVOID)prov,
+        InterlockedCompareExchangePointer((PVOID *)&hDefProv, (PVOID)prov,
          NULL);
         if (hDefProv != prov)
             CryptReleaseContext(prov, 0);

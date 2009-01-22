@@ -205,7 +205,7 @@ static HCERTCHAINENGINE CRYPT_GetDefaultChainEngine(void)
 
         config.cbSize = sizeof(config);
         CertCreateCertificateChainEngine(&config, &engine);
-        (void)InterlockedCompareExchangePointer(&CRYPT_defaultChainEngine, engine,
+        InterlockedCompareExchangePointer(&CRYPT_defaultChainEngine, engine,
          NULL);
         if (CRYPT_defaultChainEngine != engine)
             CertFreeCertificateChainEngine(engine);

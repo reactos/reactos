@@ -759,7 +759,7 @@ PWINECRYPT_CERTSTORE CRYPT_RootOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags)
     {
         HCERTSTORE root = create_root_store();
 
-        (void)InterlockedCompareExchangePointer((PVOID *)&CRYPT_rootStore, root,
+        InterlockedCompareExchangePointer((PVOID *)&CRYPT_rootStore, root,
          NULL);
         if (CRYPT_rootStore != root)
             CertCloseStore(root, 0);
