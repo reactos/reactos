@@ -342,6 +342,15 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 NTSTATUS NTAPI
 FatDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+NTSTATUS
+FatPerformDevIoCtrl(PDEVICE_OBJECT DeviceObject,
+		            ULONG ControlCode,
+		            PVOID InputBuffer,
+		            ULONG InputBufferSize,
+		            PVOID OutputBuffer,
+		            ULONG OutputBufferSize,
+		            BOOLEAN Override);
+
 /*  ------------------------------------------------------  direntry.c  */
 
 /*  -----------------------------------------------------------  fcb.c  */

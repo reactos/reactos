@@ -55,6 +55,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
                PDEVICE_OBJECT FsDeviceObject)
 {
     NTSTATUS Status;
+    DISK_GEOMETRY DiskGeometry;
     PVOLUME_DEVICE_OBJECT VolumeDevice;
 
     DPRINT1("FatMountVolume()\n");
@@ -89,8 +90,18 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     /* Init stack size */
     VolumeDevice->DeviceObject.StackSize = TargetDeviceObject->StackSize + 1;
 
-    /* TODO: IOCTL_DISK_GET_DRIVE_GEOMETRY to obtain BytesPerSector */
-    VolumeDevice->DeviceObject.SectorSize = 512;
+    /* Get sector size */
+    Status = FatPerformDevIoCtrl(TargetDeviceObject,
+                                 IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                                 NULL,
+                                 0,
+                                 &DiskGeometry,
+                                 sizeof(DISK_GEOMETRY),
+                                 TRUE);
+
+    if (!NT_SUCCESS(Status)) return Status;
+
+    VolumeDevice->DeviceObject.SectorSize = DiskGeometry.BytesPerSector;
 
     /* Signal we're done with initializing */
     VolumeDevice->DeviceObject.Flags &= ~DO_DEVICE_INITIALIZING;
