@@ -923,7 +923,7 @@
 /* #undef SONAME_LIBJACK */
 
 /* Define to the soname of the libjpeg library. */
-/* #undef SONAME_LIBJPEG */
+#define SONAME_LIBJPEG "libjpeg"
 
 /* Define to the soname of the libncurses library. */
 /* #undef SONAME_LIBNCURSES */

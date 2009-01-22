@@ -5,6 +5,7 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="oleaut32.spec" />
 	<include base="oleaut32">.</include>
+	<include base="ReactOS">include/reactos/libs/libjpeg</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<define name="_WIN32_WINNT">0x600</define>
@@ -37,6 +38,8 @@
 	<include base="oleaut32" root="intermediate">.</include>
 	<library>oleaut32_proxy</library>
 	<library>wine</library>
+	<library>wineldr</library>
+	<library>libjpeg</library>
 	<library>ole32</library>
 	<library>rpcrt4</library>
 	<library>user32</library>
