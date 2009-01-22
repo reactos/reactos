@@ -11,7 +11,7 @@ IDI_SHELL_NETDRIVE          ICON "res/icons/10.ico"
 IDI_SHELL_NETDRIVE2         ICON "res/icons/11.ico"  //THIS SHOULD BE IDI_SHELL_NETDRIVE_OFF
 IDI_SHELL_CDROM             ICON "res/icons/12.ico"
 IDI_SHELL_RAMDISK           ICON "res/icons/13.ico"
-// "res/icons/14.ico"
+IDI_SHELL_ENTIRE_NETWORK    ICON "res/icons/14.ico"
 IDI_SHELL_NETWORK           ICON "res/icons/15.ico"
 IDI_SHELL_MY_COMPUTER       ICON "res/icons/16.ico"
 IDI_SHELL_PRINTER           ICON "res/icons/17.ico"
@@ -38,13 +38,14 @@ IDI_SHELL_CD_MUSIC          ICON "res/icons/41.ico"
 IDI_SHELL_FAVORITES         ICON "res/icons/44.ico"
 IDI_SHELL_LOGOFF            ICON "res/icons/45.ico"
 IDI_SHELL_EXPLORER          ICON "res/icons/46.ico"
-// "res/icons/47.ico"
+IDI_SHELL_UPDATE            ICON "res/icons/47.ico"
 IDI_SHELL_LOCKED            ICON "res/icons/48.ico"
-// "res/icons/54.ico"
+IDI_SHELL_NOT_CONNECTED_HDD ICON "res/icons/54.ico"
 IDI_SHELL_FIND_IN_FILE      ICON "res/icons/134.ico"
 IDI_SHELL_OPEN_WITH         ICON "res/icons/135.ico"
 IDI_SHELL_CONTROL_PANEL3    ICON "res/icons/137.ico"
 IDI_SHELL_PRINTER2          ICON "res/icons/138.ico"
+/* TODO: 139.ico, 140.ico, 141.ico, 142.ico, 143.ico, 144,ico, 145.ico, 146.ico, 147.ico, 148.ico */
 IDI_SHELL_INF_FILE          ICON "res/icons/151.ico"
 IDI_SHELL_TEXT_FILE         ICON "res/icons/152.ico"
 IDI_SHELL_BAT_FILE          ICON "res/icons/153.ico"
@@ -54,8 +55,10 @@ IDI_SHELL_TT_FONT_FILE      ICON "res/icons/156.ico"
 IDI_SHELL_FONT_FILE2        ICON "res/icons/157.ico"
 IDI_SHELL_RUN2              ICON "res/icons/160.ico"
 IDI_SHELL_CONFIRM_DELETE    ICON "res/icons/161.ico"
+/* TODO: 165.ico, 166.ico, 167.ico, 168.ico, 169.ico, 170.ico, 171.ico */
 IDI_SHELL_NETWORK_FOLDER    ICON "res/icons/172.ico"
-// "res/icons/173.ico"
+IDI_SHELL_FAVORITES2        ICON "res/icons/173.ico"
+/* TODO: 174.ico, 175.ico, 176.ico, 177.ico, 178.ico, 179.ico, 180.ico, 181.ico */
 
 // Folder Options, General dialog
 IDI_SHELL_SHOW_COMMON_TASKS    ICON "res/icons/182.ico"
@@ -65,38 +68,55 @@ IDI_SHELL_OPEN_IN_NEW_WINDOW   ICON "res/icons/185.ico"
 IDI_SHELL_SINGLE_CLICK_TO_OPEN ICON "res/icons/186.ico"
 IDI_SHELL_DOUBLE_CLICK_TO_OPEN ICON "res/icons/187.ico"
 
+/* TODO: 174.ico, 175.ico, 176.ico, 177.ico, 178.ico, 179.ico, 180.ico, 181.ico */
 IDI_SHELL_EMPTY_RECYCLE_BIN1 ICON "res/icons/191.ico"
 IDI_SHELL_FULL_RECYCLE_BIN1  ICON "res/icons/192.ico"
+/* TODO: 193.ico, 194.ico, 196.ico, 197.ico, 198.ico, 199.ico, 200.ico */
 IDI_SHELL_FOLDER_OPTIONS     ICON "res/icons/210.ico"
-// "res/icons/220.ico"
+IDI_SHELL_USERS2            ICON "res/icons/220.ico"
 IDI_SHELL_TURN_OFF          ICON "res/icons/221.ico"
+/* TODO: 223.ico */
 IDI_SHELL_DVD_ROM           ICON "res/icons/222.ico"
 IDI_SHELL_MOVIE_FILE        ICON "res/icons/224.ico"
 IDI_SHELL_MUSIC_FILE        ICON "res/icons/225.ico"
-// "res/icons/226.ico"
+IDI_SHELL_PICTURE_FILE      ICON "res/icons/226.ico"
+/* TODO: 227.ico */
 IDI_SHELL_CD_MUSIC2         ICON "res/icons/228.ico"
-// "res/icons/233.ico"
+/* TODO: 229.ico, 230.ico, 231.ico, 232.ico */
+IDI_SHELL_FDD               ICON "res/icons/233.ico"
+/* TODO: 234.ico */
 IDI_SHELL_MY_DOCUMENTS      ICON "res/icons/235.ico"
 IDI_SHELL_MY_PICTURES       ICON "res/icons/236.ico"
 IDI_SHELL_MY_MUSIC          ICON "res/icons/237.ico"
 IDI_SHELL_MY_MOVIES         ICON "res/icons/238.ico"
-// "res/icons/240.ico"
+/* TODO: 239.ico */
+IDI_SHELL_FULL_RECYCLE_BIN2 ICON "res/icons/240.ico"
+/* TODO: 241.ico, 242.ico, 243.ico, 244.ico */
 IDI_SHELL_PRINTER3          ICON "res/icons/245.ico"
-// "res/icons/246.ico"
+IDI_SHELL_ICON_246          ICON "res/icons/246.ico"
+/* TODO: 247.ico */
 IDI_SHELL_CAMERA            ICON "res/icons/248.ico"
 IDI_SHELL_SLIDE_SHOW        ICON "res/icons/249.ico"
 IDI_SHELL_DISPLAY           ICON "res/icons/250.ico"
+/* TODO: 251.ico */
 IDI_SHELL_PRINT_PICS        ICON "res/icons/252.ico"
+/* TODO: 253.ico */
 IDI_SHELL_EMPTY_RECYCLE_BIN3 ICON "res/icons/254.ico"
-// "res/icons/255.ico"
+IDI_SHELL_ICON_255          ICON "res/icons/255.ico"
+/* TODO: 256.ico, 257.ico, 258.ico, 259.ico, 260.ico, 261.ico, 262.ico */
 IDI_SHELL_HELP1             ICON "res/icons/263.ico"
+/* TODO: 264.ico */
 IDI_SHELL_SENDMAIL          ICON "res/icons/265.ico"
+/* TODO: 266.ico, 267.ico */
 IDI_SHELL_ACCESSABILITY     ICON "res/icons/268.ico"
 IDI_SHELL_USERS             ICON "res/icons/269.ico"
 IDI_SHELL_SCREEN_COLORS     ICON "res/icons/270.ico"
 IDI_SHELL_ADD_REM_PROGRAMS  ICON "res/icons/271.ico"
+/* TODO: 272.ico, 273.ico, 274.ico, 275.ico, 276.ico */
 IDI_SHELL_TUNES             ICON "res/icons/277.ico"
+/* TODO: 278.ico */
 IDI_SHELL_USER_ACCOUNTS     ICON "res/icons/279.ico"
+/* TODO: 281.ico, 282.ico, 283.ico, 284.ico */
 IDI_SHELL_HELP_FILE         ICON "res/icons/289.ico"
 IDI_SHELL_GO                ICON "res/icons/290.ico"
 IDI_SHELL_DVD_DRIVE         ICON "res/icons/291.ico"
@@ -108,14 +128,20 @@ IDI_SHELL_CDRW              ICON "res/icons/296.ico"
 IDI_SHELL_DVD_RAM           ICON "res/icons/297.ico"
 IDI_SHELL_DVDR_ROM          ICON "res/icons/298.ico"
 IDI_SHELL_MP3_PLAYER        ICON "res/icons/299.ico"
+/* TODO: 300.ico, 301.ico */
 IDI_SHELL_CD_ROM1           ICON "res/icons/302.ico"
+/* TODO: 303.ico */
 IDI_SHELL_DVD_ROM1          ICON "res/icons/304.ico"
-// "res/icons/305.ico"
+IDI_SHELL_FDD2              ICON "res/icons/305.ico"
+/* TODO: 306.ico, 307.ico, 308.ico */
 IDI_SHELL_CAMERA1           ICON "res/icons/309.ico"
+/* TODO: 310.ico, 311.ico, 312.ico, 313.ico, 314.ico */
 IDI_SHELL_SCANNER           ICON "res/icons/315.ico"
+/* TODO: 316.ico */
 IDI_SHELL_CAMCORDER         ICON "res/icons/317.ico"
 IDI_SHELL_DVDRW_ROM         ICON "res/icons/318.ico"
 IDI_SHELL_NEW_FOLDER        ICON "res/icons/319.ico"
+/* TODO: 320.ico, 321.ico */
 IDI_SHELL_FAVOTITES         ICON "res/icons/322.ico"
 IDI_SHELL_SEARCH1           ICON "res/icons/323.ico"
 IDI_SHELL_HELP2             ICON "res/icons/324.ico"
@@ -125,11 +151,16 @@ IDI_SHELL_RECENT_DOCUMENTS1 ICON "res/icons/327.ico"
 IDI_SHELL_RUN1              ICON "res/icons/328.ico"
 IDI_SHELL_SHUTDOWN1         ICON "res/icons/329.ico"
 IDI_SHELL_CONTROL_PANEL1    ICON "res/icons/330.ico"
+/* TODO: 331.ico, 337.ico, 338.ico, 512.ico */
 IDI_SHELL_IDEA              ICON "res/icons/1001.ico"
+/* TODO: 1002.ico, 1003.ico */
 IDI_SHELL_HELP_FILE1        ICON "res/icons/1004.ico"
+/* TODO: 1005.ico, 1006.ico, 1007.ico, 1008.ico, 1009.ico, 1010.ico, 1011.ico */
 IDI_SHELL_SHUTDOWN2         ICON "res/icons/8240.ico"
-// "res/icons/16710.ico"
-// "res/icons/16715.ico"
-// "res/icons/16717.ico"
-// "res/icons/16718.ico"
-// "res/icons/16721.ico"
+IDI_SHELL_DELETE1 ICON "res/icons/16710.ico"
+IDI_SHELL_DELETE2 ICON "res/icons/16715.ico"
+IDI_SHELL_DELETE3 ICON "res/icons/16717.ico"
+IDI_SHELL_DELETE4 ICON "res/icons/16718.ico"
+IDI_SHELL_DELETE5 ICON "res/icons/16721.ico"
+
+IDI_SHELL_ADMINTOOLS ICON "res/icons/1700.ico" /* FIXME */
