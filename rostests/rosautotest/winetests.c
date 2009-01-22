@@ -49,13 +49,14 @@ IntRunTest(PWSTR CommandLine, HANDLE hReadPipe, LPSTARTUPINFOW StartupInfo, PWIN
         LogLength = BUFFER_BLOCKSIZE;
     }
 
-    /* Execute the test */
-    StringOut("Running Wine Test, Module: ");
-    StringOut(GetSuiteIDData->Module);
-    StringOut(", Test: ");
-    StringOut(GetSuiteIDData->Test);
-    StringOut("\n");
+    /* Allocate a buffer with the exact size of the output string.
+       We have to output this string in one call to prevent a race condition, when another application also outputs a string over the debug line. */
+    Buffer = HeapAlloc(hProcessHeap, 0, 27 + strlen(GetSuiteIDData->Module) + 8 + strlen(GetSuiteIDData->Test) + 2);
+    sprintf(Buffer, "Running Wine Test, Module: %s, Test: %s\n", GetSuiteIDData->Module, GetSuiteIDData->Test);
+    StringOut(Buffer);
+    HeapFree(hProcessHeap, 0, Buffer);
 
+    /* Execute the test */
     if(!CreateProcessW(NULL, CommandLine, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, StartupInfo, &ProcessInfo))
     {
         StringOut("CreateProcessW for running the test failed\n");
