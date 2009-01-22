@@ -285,6 +285,7 @@ dll\win32\mpr\mpr.dll                               1
 dll\win32\mprapi\mprapi.dll                         1
 dll\win32\msacm32\msacm32.dll                       1
 dll\win32\msafd\msafd.dll                           1
+dll\win32\mscat32\mscat32.dll                       1
 dll\win32\mscoree\mscoree.dll                       1
 dll\win32\msgina\msgina.dll                         1
 dll\win32\mshtml\mshtml.dll                         1
@@ -307,6 +308,7 @@ dll\win32\netshell\netshell.dll                     1
 dll\win32\newdev\newdev.dll                         1
 dll\win32\ntdsapi\ntdsapi.dll                       1
 dll\win32\ntmarta\ntmarta.dll                       1
+dll\win32\ntprint\ntprint.dll                       1
 dll\win32\objsel\objsel.dll                         1
 dll\win32\odbc32\odbc32.dll                         1
 dll\win32\odbccp32\odbccp32.dll                     1
@@ -373,6 +375,7 @@ dll\win32\winspool\winspool.drv                     1
 dll\win32\winsta\winsta.dll                         1
 dll\win32\wintrust\wintrust.dll                     1
 dll\win32\wldap32\wldap32.dll                       1
+dll\win32\wmi\wmi.dll                               1
 dll\win32\ws2_32\ws2_32.dll                         1
 dll\win32\ws2help\ws2help.dll                       1
 dll\win32\wshirda\wshirda.dll                       1

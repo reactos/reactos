@@ -178,6 +178,9 @@
 <directory name="msafd">
 	<xi:include href="msafd/msafd.rbuild" />
 </directory>
+<directory name="mscat32">
+	<xi:include href="mscat32/mscat32.rbuild" />
+</directory>
 <directory name="mscoree">
 	<xi:include href="mscoree/mscoree.rbuild" />
 </directory>
@@ -243,6 +246,9 @@
 </directory>
 <directory name="ntmarta">
 	<xi:include href="ntmarta/ntmarta.rbuild" />
+</directory>
+<directory name="ntprint">
+	<xi:include href="ntprint/ntprint.rbuild" />
 </directory>
 <directory name="objsel">
 	<xi:include href="objsel/objsel.rbuild" />
@@ -444,6 +450,9 @@
 </directory>
 <directory name="wldap32">
 	<xi:include href="wldap32/wldap32.rbuild" />
+</directory>
+<directory name="wmi">
+	<xi:include href="wmi/wmi.rbuild" />
 </directory>
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.rbuild" />

@@ -30,6 +30,7 @@
   <property name="BASEADDRESS_INPUT" value ="0x5e400000" />
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />
   <property name="BASEADDRESS_NETID" value="0x5f660000" />
+  <property name="BASEADDRESS_NTPRINT" value="0x5f6a0000" />
   <property name="BASEADDRESS_QEDIT" value="0x611c0000" />
   <property name="BASEADDRESS_MODEMUI" value="0x61650000" />
   <property name="BASEADDRESS_MAPI32" value="0x62250000" />
@@ -103,6 +104,7 @@
   <property name="BASEADDRESS_DEVMGR" value="0x72a90000" />
   <property name="BASEADDRESS_WDMAUD" value="0x72d20000" />
   <property name="BASEADDRESS_WINSPOOL" value="0x72f50000" />
+  <property name="BASEADDRESS_MSCAT32" value="0x732b0000" />
   <property name="BASEADDRESS_MSTASK" value="0x73520000" />
   <property name="BASEADDRESS_MSDMO" value="0x73670000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
@@ -164,6 +166,7 @@
   <property name="BASEADDRESS_WINTRUST" value="0x76c30000" />
   <property name="BASEADDRESS_IMAGEHLP" value="0x76c90000" />
   <property name="BASEADDRESS_CLUSAPI" value="0x76d10000" />
+  <property name="BASEADDRESS_WMI" value="0x76d20000" />
   <property name="BASEADDRESS_DHCPCSVC" value="0x76d80000" />
   <property name="BASEADDRESS_FMIFS" value="0x76df0000" />
   <property name="BASEADDRESS_OLEAUT32" value="0x76e00000" />
