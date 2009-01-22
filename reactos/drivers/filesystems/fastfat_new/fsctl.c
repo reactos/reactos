@@ -100,8 +100,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
 
     /* TODO: Initialize VCB for this volume */
 
-    /* Complete the request and return success */
-    FatCompleteRequest(IrpContext, IrpContext->Irp, STATUS_SUCCESS);
+    /* Return success */
     return STATUS_SUCCESS;
 }
 
@@ -129,6 +128,10 @@ FatiFileSystemControl(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
                                 IrpSp->Parameters.MountVolume.DeviceObject,
                                 IrpSp->Parameters.MountVolume.Vpb,
                                 IrpSp->DeviceObject);
+
+        if (!NT_SUCCESS(Status))
+            FatCompleteRequest(IrpContext, Irp, Status);
+
         break;
 
     case IRP_MN_VERIFY_VOLUME:
