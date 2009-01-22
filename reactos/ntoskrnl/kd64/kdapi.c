@@ -172,7 +172,7 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->ProcessorLevel = KeProcessorLevel;
     WaitStateChange->Processor = (USHORT)KeGetCurrentPrcb()->Number;
     WaitStateChange->NumberProcessors = (ULONG)KeNumberProcessors;
-    WaitStateChange->Thread = (ULONG)(LONG_PTR)KeGetCurrentThread();
+    WaitStateChange->Thread = (LONG_PTR)KeGetCurrentThread();
 #if defined(_M_X86_)
     WaitStateChange->ProgramCounter = (ULONG)(LONG_PTR)Context->Eip;
 #elif defined(_M_AMD64)
@@ -332,6 +332,7 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                 break;
 
             default:
+                RealLength = 0;
                 ControlStart = NULL;
                 ASSERT(FALSE);
         }
@@ -980,7 +981,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
     STRING Header, Data;
     DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
     BOOLEAN Status;
-FrLdrDbgPrint("Enter KdpReportExceptionStateChange, Rip = 0x%p\n", (PVOID)Context->Rip);
+
     /* Start report loop */
     do
     {
@@ -1001,14 +1002,14 @@ FrLdrDbgPrint("Enter KdpReportExceptionStateChange, Rip = 0x%p\n", (PVOID)Contex
 
         /* Setup the trace data */
         DumpTraceData(&Data);
-FrLdrDbgPrint("KdpReportExceptionStateChange 5\n");
+
         /* Send State Change packet and wait for a reply */
         Status = KdpSendWaitContinue(PACKET_TYPE_KD_STATE_CHANGE64,
                                      &Header,
                                      &Data,
                                      Context);
     } while (Status == KdPacketNeedsResend);
-FrLdrDbgPrint("Leave KdpReportExceptionStateChange, Status = 0x%x\n", Status);
+
     /* Return */
     return Status;
 }
