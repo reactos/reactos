@@ -134,7 +134,7 @@ DeviceIoControl(IN HANDLE hDevice,
                 completed) */
             if (!lpBytesReturned)
             {
-                ERR("Bad caller: lpBytesReturned must not be NULL");
+                ERR("Bad caller: lpBytesReturned must not be NULL\n");
             }
              *lpBytesReturned = Iosb.Information;
           }
@@ -190,7 +190,7 @@ GetOverlappedResult (
 
   if (!lpNumberOfBytesTransferred)
   {
-      ERR("Bad caller: lpNumberOfBytesTransferred must not be NULL");
+      ERR("Bad caller: lpNumberOfBytesTransferred must not be NULL\n");
   }
   *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
 
