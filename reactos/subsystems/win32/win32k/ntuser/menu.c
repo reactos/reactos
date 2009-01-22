@@ -1566,15 +1566,14 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
           return (HMENU)0;
        }
        Menu = IntCreateMenu(&Handle, !PopupMenu);
-       UserDereferenceObject(Menu);
        ObDereferenceObject(WinStaObject);
    }
    else
    {
        Menu = IntCreateMenu(&Handle, !PopupMenu);
-       UserDereferenceObject(Menu);
    }
 
+   if (Menu) UserDereferenceObject(Menu);
    return (HMENU)Handle;
 }
 
