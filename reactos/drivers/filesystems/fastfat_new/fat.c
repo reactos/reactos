@@ -593,6 +593,10 @@ FatInitializeVcb(IN PVCB Vcb,
         goto FatInitializeVcbCleanup;
     }
 
+    /* Set up notifications */
+    FsRtlNotifyInitializeSync(&Vcb->NotifySync);
+    InitializeListHead(&Vcb->NotifyList);
+
     /* Call helper function */
     FatiInitializeVcb(Vcb);
 
@@ -622,6 +626,9 @@ FatUninitializeVcb(IN PVCB Vcb)
         ObDereferenceObject(Vcb->VolumeFileObject);
         Vcb->VolumeFileObject = NULL;
     }
+
+    /* Free notifications stuff */
+    FsRtlNotifyUninitializeSync(&Vcb->NotifySync);
 
     /* Unlink from global Vcb list. */
     RemoveEntryList(&Vcb->VcbLinks);

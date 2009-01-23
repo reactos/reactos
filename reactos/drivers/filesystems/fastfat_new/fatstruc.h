@@ -91,6 +91,10 @@ typedef struct _VCB
     PDEVICE_OBJECT TargetDeviceObject;
     LIST_ENTRY VcbLinks;
 
+    /* Notifications support */
+    PNOTIFY_SYNC NotifySync;
+    LIST_ENTRY NotifyList;
+
     /*  Volume Characteristics: */
     ULONG SerialNumber;
     BIOS_PARAMETER_BLOCK Bpb;
