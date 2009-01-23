@@ -107,7 +107,7 @@ typedef struct _VCB
     ULONG IndexDepth;
     ULONG RootDirent;
     ULONG RootDirentSectors;
-    LONGLONG BeyoundLastClusterInFat;
+    LONGLONG BeyondLastClusterInFat;
     FAT_METHODS Methods;
     /*  Root Directory Fcb: */
     struct _FCB *RootFcb;

@@ -22,7 +22,7 @@ typedef struct _FAT_ENUM_DIR_CONTEXT
 {
     PFILE_OBJECT FileObject;
     LARGE_INTEGER PageOffset;
-    LONGLONG BeyoundLastEntryOffset;
+    LONGLONG BeyondLastEntryOffset;
     PVOID PageBuffer;
     PBCB PageBcb;
 
@@ -512,9 +512,9 @@ FatEnumerateDirents(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
     Entry = Add2Ptr(Context->PageBuffer, OffsetWithinPage, PUCHAR);
    /* Next Page Offset */
     PageOffset = Context->PageOffset.QuadPart + PAGE_SIZE;
-    if (PageOffset > Context->BeyoundLastEntryOffset)
+    if (PageOffset > Context->BeyondLastEntryOffset)
     {
-        PageValidLength = (SIZE_T) (Context->BeyoundLastEntryOffset
+        PageValidLength = (SIZE_T) (Context->BeyondLastEntryOffset
             - Context->PageOffset.QuadPart);
     }
     BeyondLastEntry = Add2Ptr(Context->PageBuffer, PageValidLength, PUCHAR);
@@ -545,7 +545,7 @@ FatEnumerateDirents(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
         /* Check if this is the last available entry */
         if (PageValidLength < PAGE_SIZE)
             break;
-        /* We are getting beyound current page and
+        /* We are getting beyond current page and
          * are still in the continous run, map the next page.
          */
         Context->PageOffset.QuadPart = PageOffset;
@@ -564,9 +564,9 @@ FatEnumerateDirents(IN OUT PFAT_ENUM_DIR_CONTEXT Context,
         Entry = (PUCHAR) Context->PageBuffer;
        /* Next Page Offset */
         PageOffset = Context->PageOffset.QuadPart + PAGE_SIZE;
-        if (PageOffset > Context->BeyoundLastEntryOffset)
+        if (PageOffset > Context->BeyondLastEntryOffset)
         {
-            PageValidLength = (SIZE_T) (Context->BeyoundLastEntryOffset
+            PageValidLength = (SIZE_T) (Context->BeyondLastEntryOffset
                 - Context->PageOffset.QuadPart);
         }
         BeyondLastEntry = Add2Ptr(Context->PageBuffer, PageValidLength, PUCHAR);

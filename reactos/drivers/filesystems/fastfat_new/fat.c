@@ -16,7 +16,7 @@ typedef struct _FAT_SCAN_CONTEXT
 {
     PFILE_OBJECT FileObject;
     LARGE_INTEGER PageOffset;
-    LONGLONG BeyoundLastEntryOffset;
+    LONGLONG BeyondLastEntryOffset;
     PVOID PageBuffer;
     PBCB PageBcb;
 } FAT_SCAN_CONTEXT;
@@ -127,12 +127,14 @@ FAT_METHODS Fat32Methods = {
 
 /* FUNCTIONS ****************************************************************/
 
-/*
- * FUNCTION:
- *      Determines the index of the set bit.
- * ARGUMENTS:
- *      Number = Number having a single bit set.
- * RETURNS: Index of the set bit.
+/**
+ * Determines the index of the set bit.
+ *
+ * @param Number
+ * Number having a single bit set.
+ *
+ * @return
+ * Index of the set bit.
  */
 FORCEINLINE
 ULONG
@@ -218,17 +220,25 @@ FatSetFat16ValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
-/*
- * FUNCTION:
- *       Scans FAT32 for continous chain of clusters
- * ARGUMENTS:
- *       Context = Pointer to FAT_SCAN_CONTEXT.
- *       Index = Supplies the Index of the first cluster
- *          and receves the last index after the last
- *          cluster in the chain.
- *       CanWait = Indicates if the context allows blocking.
- * RETURNS: Value of the last claster terminated the scan.
- * NOTES: Raises STATUS_CANT_WAIT race condition.
+/**
+ * Scans FAT32 for continous chain of clusters
+ *
+ * @param Context
+ * Pointer to FAT_SCAN_CONTEXT.
+ *
+ * @param Index
+ * Supplies the Index of the first cluster
+ * and receves the last index after the last
+ * cluster in the chain.
+ *
+ * @param CanWait
+ * Indicates if the context allows blocking.
+ *
+ * @return
+ * Value of the last claster terminated the scan.
+ *
+ * @note
+ * Raises STATUS_CANT_WAIT race condition.
  */
 ULONG
 FatScanFat32ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
@@ -270,8 +280,8 @@ FatScanFat32ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
     Entry = Add2Ptr(Context->PageBuffer, OffsetWithinPage, PULONG);
     /* Next Page Offset */
     PageOffset = Context->PageOffset.QuadPart + PAGE_SIZE;
-    if (PageOffset > Context->BeyoundLastEntryOffset)
-        PageValidLength = (SIZE_T) (Context->BeyoundLastEntryOffset
+    if (PageOffset > Context->BeyondLastEntryOffset)
+        PageValidLength = (SIZE_T) (Context->BeyondLastEntryOffset
             - Context->PageOffset.QuadPart);
     BeyoudLastEntry = Add2Ptr(Context->PageBuffer, PageValidLength, PULONG);
     while (TRUE)
@@ -284,7 +294,7 @@ FatScanFat32ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
         /* Check if this is the last available entry */
         if (PageValidLength < PAGE_SIZE)
             break;
-        /* We are getting beyound current page and
+        /* We are getting beyond current page and
          * are still in the continous run, map the next page.
          */
         Context->PageOffset.QuadPart = PageOffset;
@@ -300,8 +310,8 @@ FatScanFat32ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
         Entry = (PULONG) Context->PageBuffer;
         /* Next Page Offset */
         PageOffset = Context->PageOffset.QuadPart + PAGE_SIZE;
-        if (PageOffset > Context->BeyoundLastEntryOffset)
-            PageValidLength = (SIZE_T) (Context->BeyoundLastEntryOffset
+        if (PageOffset > Context->BeyondLastEntryOffset)
+            PageValidLength = (SIZE_T) (Context->BeyondLastEntryOffset
                 - Context->PageOffset.QuadPart);
         BeyoudLastEntry = Add2Ptr(Context->PageBuffer, PageValidLength, PULONG);
     }
@@ -336,25 +346,37 @@ FatSetFat32ValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
-/*
- * FUNCTION:
- *      Queries file MCB for the specified region [Vbo, Vbo + Length],
- *      returns the number of runs in the region as well as the first
- *      run of the range itself.
- *      If the specified region is not fully cached in MCB the routine
- *      scans FAT for the file and fills the MCB until the file offset
- *      (defined as Vbo + Length) is reached.
- * ARGUMENTS:
- *      Fcb = Pointer to FCB structure for the file.
- *      Vbo = Virtual Byte Offset in the file.
- *      Lbo = Receives the Value of Logical Byte offset corresponding
- *            to supplied Vbo Value.
- *      Length = Supplies file range length to be examined and recieves
- *            the length of first run.
- *      OutIndex = Recieves the index (in MCB cache) of first run.
- * RETURNS: Incremented index of the last run (+1).
- * NOTES: Should be called by I/O routines to split the I/O operation
- *      into sequential or parallel I/O operations.
+/**
+ * Queries file MCB for the specified region [Vbo, Vbo + Length],
+ * returns the number of runs in the region as well as the first
+ * run of the range itself.
+ * If the specified region is not fully cached in MCB the routine
+ * scans FAT for the file and fills the MCB until the file offset
+ * (defined as Vbo + Length) is reached.
+ *
+ * @param Fcb
+ * Pointer to FCB structure for the file.
+ *
+ * @param Vbo
+ * Virtual Byte Offset in the file.
+ *
+ * @param Lbo
+ * Receives the Value of Logical Byte offset corresponding
+ * to supplied Vbo Value.
+ *
+ * @param Length
+ * Supplies file range length to be examined and receives
+ * the length of first run.
+ *
+ * @param OutIndex
+ * Receives the index (in MCB cache) of first run.
+ *
+ * @return
+ * Incremented index of the last run (+1).
+ *
+ * @note
+ * Should be called by I/O routines to split the I/O operation
+ * into sequential or parallel I/O operations.
  */
 ULONG
 FatScanFat(IN PFCB Fcb,
@@ -364,7 +386,7 @@ FatScanFat(IN PFCB Fcb,
            OUT PULONG Index,
            IN BOOLEAN CanWait)
 {
-    LONGLONG CurrentLbo, CurrentVbo, BeyoundLastVbo, CurrentLength;
+    LONGLONG CurrentLbo, CurrentVbo, BeyondLastVbo, CurrentLength;
     ULONG Entry, NextEntry, NumberOfEntries, CurrentIndex;
     FAT_SCAN_CONTEXT Context;
     PVCB Vcb;
@@ -372,15 +394,15 @@ FatScanFat(IN PFCB Fcb,
     /* Some often used values */
     Vcb = Fcb->Vcb;
     CurrentIndex = 0;
-    BeyoundLastVbo = Vbo + *Length;
+    BeyondLastVbo = Vbo + *Length;
     CurrentLength = ((LONGLONG) Vcb->Clusters) << Vcb->BytesPerClusterLog;
-    if (BeyoundLastVbo > CurrentLength) 
-        BeyoundLastVbo = CurrentLength;
+    if (BeyondLastVbo > CurrentLength) 
+        BeyondLastVbo = CurrentLength;
     /* Try to locate first run */
     if (FsRtlLookupLargeMcbEntry(&Fcb->Mcb, Vbo, Lbo, Length, NULL, NULL, Index))
     {
         /* Check if we have a single mapped run */
-        if (Vbo >= BeyoundLastVbo)
+        if (Vbo >= BeyondLastVbo)
             goto FatScanFcbFatExit;
     } else {
         *Length = 0L;
@@ -401,14 +423,14 @@ FatScanFat(IN PFCB Fcb,
         {
             if (Entry < FAT_CLUSTER_LAST)
                 ExRaiseStatus(STATUS_FILE_CORRUPT_ERROR);
-                BeyoundLastVbo = 0LL;
+                BeyondLastVbo = 0LL;
         }
         CurrentIndex = 0L;
         CurrentVbo = 0LL;
     }
     RtlZeroMemory(&Context, sizeof(Context));
     Context.FileObject = Vcb->VolumeFileObject;
-    while (CurrentVbo < BeyoundLastVbo)
+    while (CurrentVbo < BeyondLastVbo)
     {
         /* Locate Continous run starting with the current entry */
         NumberOfEntries = Entry;
@@ -509,7 +531,7 @@ FatiInitializeVcb(PVCB Vcb)
         Vcb->Clusters = ClustersCapacity;
     Vcb->BytesPerCluster = SectorsToBytes(Vcb, Vcb->Bpb.SectorsPerCluster);
     Vcb->BytesPerClusterLog = FatPowerOfTwo(Vcb->BytesPerCluster);
-    Vcb->BeyoundLastClusterInFat = ((LONGLONG) Vcb->Clusters) * Vcb->IndexDepth / 0x8;
+    Vcb->BeyondLastClusterInFat = ((LONGLONG) Vcb->Clusters) * Vcb->IndexDepth / 0x8;
 }
 
 NTSTATUS
