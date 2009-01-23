@@ -28,93 +28,80 @@ typedef struct _FAT_SCAN_CONTEXT
     ((ULONG) ((xOffset - (xVcb)->DataArea) >> (xVcb)->BytesPerClusterLog) + 0x02)
 
 ULONG
-FatScanFat12ForContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN BOOLEAN CanWait);
+FatScanFat12ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                            IN OUT PULONG Index,
+                            IN BOOLEAN CanWait);
 
 ULONG
-FatSetFat12ContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN BOOLEAN CanWait);
+FatSetFat12ContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN ULONG Index,
+                        IN ULONG Length,
+                        IN BOOLEAN CanWait);
 
 ULONG
-FatScanFat12ForValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait);
+FatScanFat12ForValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN OUT PULONG Index,
+                        IN ULONG IndexValue,
+                        IN BOOLEAN CanWait);
 
 ULONG
-FatSetFat12ValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait);
+FatSetFat12ValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                    IN ULONG Index,
+                    IN ULONG Length,
+                    IN ULONG IndexValue,
+                    IN BOOLEAN CanWait);
 
 ULONG
-FatScanFat16ForContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN BOOLEAN CanWait);
+FatScanFat16ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                            IN OUT PULONG Index,
+                            IN BOOLEAN CanWait);
 
 ULONG
-FatSetFat16ContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN BOOLEAN CanWait);
+FatSetFat16ContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN ULONG Index,
+                        IN ULONG Length,
+                        IN BOOLEAN CanWait);
 
 ULONG
-FatScanFat16ForValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait);
+FatScanFat16ForValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN OUT PULONG Index,
+                        IN ULONG IndexValue,
+                        IN BOOLEAN CanWait);
 
 ULONG
-FatSetFat16ValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait);
+FatSetFat16ValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                    IN ULONG Index,
+                    IN ULONG Length,
+                    IN ULONG IndexValue,
+                    IN BOOLEAN CanWait);
 
 ULONG
-FatScanFat32ForContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN BOOLEAN CanWait);
+FatScanFat32ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                            IN OUT PULONG Index,
+                            IN BOOLEAN CanWait);
 
 ULONG
-FatSetFat32ContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN BOOLEAN CanWait);
+FatSetFat32ContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN ULONG Index,
+                        IN ULONG Length,
+                        IN BOOLEAN CanWait);
 
 ULONG
-FatScanFat32ForValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait);
+FatScanFat32ForValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN OUT PULONG Index,
+                        IN ULONG IndexValue,
+                        IN BOOLEAN CanWait);
 
 ULONG
-FatSetFat32ValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait);
+FatSetFat32ValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                    IN ULONG Index,
+                    IN ULONG Length,
+                    IN ULONG IndexValue,
+                    IN BOOLEAN CanWait);
 
 BOOLEAN
 NTAPI
-FatValidBpb(
-    IN PBIOS_PARAMETER_BLOCK Bpb);
+FatValidBpb(IN PBIOS_PARAMETER_BLOCK Bpb);
 
 /* VARIABLES ****************************************************************/
 FAT_METHODS Fat12Methods = {
@@ -139,10 +126,7 @@ FAT_METHODS Fat32Methods = {
 };
 
 /* FUNCTIONS ****************************************************************/
-FORCEINLINE
-ULONG
-FatPowerOfTwo(
-    ULONG Number)
+
 /*
  * FUNCTION:
  *      Determines the index of the set bit.
@@ -150,6 +134,10 @@ FatPowerOfTwo(
  *      Number = Number having a single bit set.
  * RETURNS: Index of the set bit.
  */
+FORCEINLINE
+ULONG
+FatPowerOfTwo(
+    ULONG Number)
 {
     ULONG Temp;
     Temp = Number
@@ -159,90 +147,77 @@ FatPowerOfTwo(
 }
 
 ULONG
-FatScanFat12ForContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN BOOLEAN CanWait)
+FatScanFat12ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                            IN OUT PULONG Index,
+                            IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatSetFat12ContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN BOOLEAN CanWait)
+FatSetFat12ContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN ULONG Index,
+                        IN ULONG Length,
+                        IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatScanFat12ForValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait)
+FatScanFat12ForValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN OUT PULONG Index,
+                        IN ULONG IndexValue,
+                        IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatSetFat12ValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait)
+FatSetFat12ValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                    IN ULONG Index,
+                    IN ULONG Length,
+                    IN ULONG IndexValue,
+                    IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatScanFat16ForContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN BOOLEAN CanWait)
+FatScanFat16ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                            IN OUT PULONG Index,
+                            IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatSetFat16ContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN BOOLEAN CanWait)
+FatSetFat16ContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN ULONG Index,
+                        IN ULONG Length,
+                        IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatScanFat16ForValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait)
+FatScanFat16ForValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN OUT PULONG Index,
+                        IN ULONG IndexValue,
+                        IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatSetFat16ValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait)
+FatSetFat16ValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                    IN ULONG Index,
+                    IN ULONG Length,
+                    IN ULONG IndexValue,
+                    IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
-ULONG
-FatScanFat32ForContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN BOOLEAN CanWait)
 /*
  * FUNCTION:
  *       Scans FAT32 for continous chain of clusters
@@ -255,22 +230,24 @@ FatScanFat32ForContinousRun(
  * RETURNS: Value of the last claster terminated the scan.
  * NOTES: Raises STATUS_CANT_WAIT race condition.
  */
+ULONG
+FatScanFat32ForContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                            IN OUT PULONG Index,
+                            IN BOOLEAN CanWait)
 {
     LONGLONG PageOffset;
     SIZE_T OffsetWithinPage, PageValidLength;
     PULONG Entry, BeyoudLastEntry;
-   /*
-    * Determine page offset and the offset within page
+   /* Determine page offset and the offset within page
     * for the first cluster.
     */
     PageValidLength = PAGE_SIZE;
     PageOffset = ((LONGLONG) *Index) << 0x2;
     OffsetWithinPage = (SIZE_T) (PageOffset & (PAGE_SIZE - 1));
     PageOffset -= OffsetWithinPage;
-   /*
-    * Check if the context already has the required page mapped.
-    * Map the first page is necessary.
-    */
+    /* Check if the context already has the required page mapped.
+     * Map the first page is necessary.
+     */
     if (PageOffset != Context->PageOffset.QuadPart)
     {
         Context->PageOffset.QuadPart = PageOffset;
@@ -279,17 +256,19 @@ FatScanFat32ForContinousRun(
             CcUnpinData(Context->PageBcb);
             Context->PageBcb = NULL;
         }
-        if (!CcMapData(Context->FileObject, &Context->PageOffset,
-            PAGE_SIZE, CanWait, &Context->PageBcb, &Context->PageBuffer))
-        {        
+        if (!CcMapData(Context->FileObject,
+                       &Context->PageOffset,
+                       PAGE_SIZE,
+                       CanWait,
+                       &Context->PageBcb,
+                       &Context->PageBuffer))
+        {
             Context->PageOffset.QuadPart = 0LL;
             ExRaiseStatus(STATUS_CANT_WAIT);
         }
     }
     Entry = Add2Ptr(Context->PageBuffer, OffsetWithinPage, PULONG);
-   /*
-    * Next Page Offset.
-    */
+    /* Next Page Offset */
     PageOffset = Context->PageOffset.QuadPart + PAGE_SIZE;
     if (PageOffset > Context->BeyoundLastEntryOffset)
         PageValidLength = (SIZE_T) (Context->BeyoundLastEntryOffset
@@ -299,19 +278,15 @@ FatScanFat32ForContinousRun(
     {
         do
         {
-            if ((*Entry & FAT_CLUSTER_LAST) != ++(*Index) )
+            if ((*Entry & FAT_CLUSTER_LAST) != ++(*Index))
                 return (*Entry & FAT_CLUSTER_LAST);
-        }
-        while (++Entry < BeyoudLastEntry);
-       /*
-        * Check if this is the last available entry.
-        */
+        } while (++Entry < BeyoudLastEntry);
+        /* Check if this is the last available entry */
         if (PageValidLength < PAGE_SIZE)
             break;
-       /*
-        * We are getting beyound current page and
-        * are still in the continous run, map the next page.
-        */
+        /* We are getting beyound current page and
+         * are still in the continous run, map the next page.
+         */
         Context->PageOffset.QuadPart = PageOffset;
         CcUnpinData(Context->PageBcb);
         if (!CcMapData(Context->FileObject,
@@ -323,9 +298,7 @@ FatScanFat32ForContinousRun(
             ExRaiseStatus(STATUS_CANT_WAIT);
         }
         Entry = (PULONG) Context->PageBuffer;
-       /*
-        * Next Page Offset.
-        */
+        /* Next Page Offset */
         PageOffset = Context->PageOffset.QuadPart + PAGE_SIZE;
         if (PageOffset > Context->BeyoundLastEntryOffset)
             PageValidLength = (SIZE_T) (Context->BeyoundLastEntryOffset
@@ -336,45 +309,33 @@ FatScanFat32ForContinousRun(
 }
 
 ULONG
-FatSetFat32ContinousRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN BOOLEAN CanWait)
+FatSetFat32ContinousRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN ULONG Index,
+                        IN ULONG Length,
+                        IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatScanFat32ForValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN OUT PULONG Index,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait)
+FatScanFat32ForValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                        IN OUT PULONG Index,
+                        IN ULONG IndexValue,
+                        IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 ULONG
-FatSetFat32ValueRun(
-    IN OUT PFAT_SCAN_CONTEXT Context,
-    IN ULONG Index,
-    IN ULONG Length,
-    IN ULONG IndexValue,
-    IN BOOLEAN CanWait)
+FatSetFat32ValueRun(IN OUT PFAT_SCAN_CONTEXT Context,
+                    IN ULONG Index,
+                    IN ULONG Length,
+                    IN ULONG IndexValue,
+                    IN BOOLEAN CanWait)
 {
     ExRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
-ULONG
-FatScanFat(
-    IN PFCB Fcb,
-    IN LONGLONG Vbo,
-    OUT PLONGLONG Lbo,
-    IN OUT PLONGLONG Length,
-    OUT PULONG Index,
-    IN BOOLEAN CanWait
-)
 /*
  * FUNCTION:
  *      Queries file MCB for the specified region [Vbo, Vbo + Length],
@@ -395,37 +356,36 @@ FatScanFat(
  * NOTES: Should be called by I/O routines to split the I/O operation
  *      into sequential or parallel I/O operations.
  */
+ULONG
+FatScanFat(IN PFCB Fcb,
+           IN LONGLONG Vbo,
+           OUT PLONGLONG Lbo,
+           IN OUT PLONGLONG Length,
+           OUT PULONG Index,
+           IN BOOLEAN CanWait)
 {
     LONGLONG CurrentLbo, CurrentVbo, BeyoundLastVbo, CurrentLength;
     ULONG Entry, NextEntry, NumberOfEntries, CurrentIndex;
     FAT_SCAN_CONTEXT Context;
     PVCB Vcb;
 
-   /*
-    * Some often used values
-    */
+    /* Some often used values */
     Vcb = Fcb->Vcb;
     CurrentIndex = 0;
     BeyoundLastVbo = Vbo + *Length;
     CurrentLength = ((LONGLONG) Vcb->Clusters) << Vcb->BytesPerClusterLog;
     if (BeyoundLastVbo > CurrentLength) 
         BeyoundLastVbo = CurrentLength;
-   /*
-    * Try to locate first run.
-    */
+    /* Try to locate first run */
     if (FsRtlLookupLargeMcbEntry(&Fcb->Mcb, Vbo, Lbo, Length, NULL, NULL, Index))
     {
-       /*
-        * Check if we have a single mapped run.
-        */
+        /* Check if we have a single mapped run */
         if (Vbo >= BeyoundLastVbo)
             goto FatScanFcbFatExit;
     } else {
         *Length = 0L;
     }
-   /*
-    * Get the first scan startup values.
-    */
+    /* Get the first scan startup values */
     if (FsRtlLookupLastLargeMcbEntryAndIndex(
         &Fcb->Mcb, &CurrentVbo, &CurrentLbo, &CurrentIndex))
     {
@@ -433,9 +393,7 @@ FatScanFat(
     }
     else
     {
-       /*
-        * Map is empty, set up initial values.
-        */
+        /* Map is empty, set up initial values */
         Entry = Fcb->FirstCluster;
         if (Entry <= 0x2)
             ExRaiseStatus(STATUS_FILE_CORRUPT_ERROR);
@@ -452,16 +410,12 @@ FatScanFat(
     Context.FileObject = Vcb->VolumeFileObject;
     while (CurrentVbo < BeyoundLastVbo)
     {
-       /*
-        * Locate Continous run starting with the current entry.
-        */
+        /* Locate Continous run starting with the current entry */
         NumberOfEntries = Entry;
         NextEntry = Vcb->Methods.ScanContinousRun(
         &Context, &NumberOfEntries, CanWait);
         NumberOfEntries -= Entry;
-       /*
-        * Check value that terminated the for being valid for FAT.
-        */
+        /* Check value that terminated the for being valid for FAT */
         if (NextEntry <= 0x2)
             ExRaiseStatus(STATUS_FILE_CORRUPT_ERROR);
         if (NextEntry >= Vcb->Clusters)
@@ -470,18 +424,14 @@ FatScanFat(
             ExRaiseStatus(STATUS_FILE_CORRUPT_ERROR);
             break;
         }
-       /*
-        * Add new run.
-        */
+       /* Add new run */
         CurrentLength = ((LONGLONG) NumberOfEntries) 
             << Vcb->BytesPerClusterLog;
         FsRtlAddLargeMcbEntry(&Fcb->Mcb,
             CurrentVbo,
             FatEntryToDataOffset(Entry, Vcb),
             CurrentLength);
-       /*
-        * Setup next iteration.
-        */
+        /* Setup next iteration */
         Entry = NextEntry;
         CurrentVbo += CurrentLength;
         CurrentIndex ++;
@@ -501,8 +451,7 @@ FatScanFcbFatExit:
 
 BOOLEAN
 NTAPI
-FatValidBpb(
-    IN PBIOS_PARAMETER_BLOCK Bpb)
+FatValidBpb(IN PBIOS_PARAMETER_BLOCK Bpb)
 {
     return (FatValidBytesPerSector(Bpb->BytesPerSector)
         && FatValidSectorsPerCluster(Bpb->SectorsPerCluster)
@@ -524,8 +473,7 @@ FatValidBpb(
 }
 
 VOID
-FatiInitializeVcb(
-    PVCB Vcb)
+FatiInitializeVcb(PVCB Vcb)
 {
     ULONG ClustersCapacity;
 
@@ -565,10 +513,9 @@ FatiInitializeVcb(
 }
 
 NTSTATUS
-FatInitializeVcb(
-    IN PVCB Vcb,
-    IN PDEVICE_OBJECT TargetDeviceObject,
-    IN PVPB Vpb)
+FatInitializeVcb(IN PVCB Vcb,
+                 IN PDEVICE_OBJECT TargetDeviceObject,
+                 IN PVPB Vpb)
 {
     NTSTATUS Status;
     PBCB Bcb;
@@ -577,13 +524,12 @@ FatInitializeVcb(
 
     RtlZeroMemory(Vcb, sizeof(*Vcb));
 
-    /*
-    * Initialize list head, so that it will
-    * not fail in cleanup.
-    */
+    /* Initialize list head, so that it will
+     * not fail in cleanup.
+     */
     InitializeListHead(&Vcb->VcbLinks);
 
-    /* Setup FCB Header. */
+    /* Setup FCB Header */
     Vcb->Header.NodeTypeCode = FAT_NTC_VCB;
     Vcb->Header.NodeByteSize = sizeof(*Vcb);
 
@@ -591,55 +537,54 @@ FatInitializeVcb(
     Vcb->TargetDeviceObject = TargetDeviceObject;
     ObReferenceObject(TargetDeviceObject);
 
-    /* Setup FCB Header. */
+    /* Setup FCB Header */
     ExInitializeFastMutex(&Vcb->HeaderMutex);
     FsRtlSetupAdvancedHeader(&Vcb->Header, &Vcb->HeaderMutex);
 
-    /* Create Volume File Object. */
+    /* Create Volume File Object */
     Vcb->VolumeFileObject = IoCreateStreamFileObject(NULL,
-        Vcb->TargetDeviceObject);
+                                                     Vcb->TargetDeviceObject);
 
-    /* We have to setup all FCB fields needed for CC. */
+    /* We have to setup all FCB fields needed for CC */
     Vcb->VolumeFileObject->FsContext = Vcb;
     Vcb->VolumeFileObject->SectionObjectPointer = &Vcb->SectionObjectPointers;
 
-
-    /* At least full boot sector should be available. */
+    /* At least full boot sector should be available */
     Vcb->Header.FileSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
     Vcb->Header.AllocationSize.QuadPart = sizeof(PACKED_BOOT_SECTOR);
     Vcb->Header.ValidDataLength.HighPart = MAXLONG;
     Vcb->Header.ValidDataLength.LowPart = MAXULONG;
 
-    /* Initialize CC. */
+    /* Initialize CC */
     CcInitializeCacheMap(Vcb->VolumeFileObject,
-        (PCC_FILE_SIZES) &Vcb->Header.AllocationSize,
-        FALSE,
-        &FatGlobalData.CacheMgrNoopCallbacks,
-        Vcb);
+                         (PCC_FILE_SIZES)&Vcb->Header.AllocationSize,
+                         FALSE,
+                         &FatGlobalData.CacheMgrNoopCallbacks,
+                         Vcb);
 
     /* Read boot sector */
-	Offset.QuadPart = 0;
-	Bcb = NULL;
-   /*
-    * Note: Volume Read path does not require
-    * any of the parameters set further
-    * in this routine.
-    */
+    Offset.QuadPart = 0;
+    Bcb = NULL;
+
+    /* Note: Volume Read path does not require
+     * any of the parameters set further
+     * in this routine.
+     */
     if (CcMapData(Vcb->VolumeFileObject,
-            &Offset,
-            sizeof(PACKED_BOOT_SECTOR),
-            TRUE,
-            &Bcb,
-            &Buffer))
+                  &Offset,
+                  sizeof(PACKED_BOOT_SECTOR),
+                  TRUE,
+                  &Bcb,
+                  &Buffer))
     {
         PPACKED_BOOT_SECTOR BootSector = (PPACKED_BOOT_SECTOR) Buffer;
         FatUnpackBios(&Vcb->Bpb, &BootSector->PackedBpb);
-        if (!(FatBootSectorJumpValid(BootSector->Jump)
-            && FatValidBpb(&Vcb->Bpb)))
+        if (!(FatBootSectorJumpValid(BootSector->Jump) &&
+            FatValidBpb(&Vcb->Bpb)))
         {
             Status = STATUS_UNRECOGNIZED_VOLUME;
         }
-        CopyUchar4( &Vpb->SerialNumber, BootSector->Id );
+        CopyUchar4(&Vpb->SerialNumber, BootSector->Id);
         CcUnpinData(Bcb);
     }
     else
@@ -647,7 +592,10 @@ FatInitializeVcb(
         Status = STATUS_UNRECOGNIZED_VOLUME;
         goto FatInitializeVcbCleanup;
     }
+
+    /* Call helper function */
     FatiInitializeVcb(Vcb);
+
     /* Add this Vcb to grobal Vcb list. */
     InsertTailList(&FatGlobalData.VcbListHead, &Vcb->VcbLinks);
     return STATUS_SUCCESS;
@@ -660,8 +608,7 @@ FatInitializeVcbCleanup:
 }
 
 VOID
-FatUninitializeVcb(
-    IN PVCB Vcb)
+FatUninitializeVcb(IN PVCB Vcb)
 {
     LARGE_INTEGER ZeroSize;
 
@@ -675,6 +622,7 @@ FatUninitializeVcb(
         ObDereferenceObject(Vcb->VolumeFileObject);
         Vcb->VolumeFileObject = NULL;
     }
+
     /* Unlink from global Vcb list. */
     RemoveEntryList(&Vcb->VcbLinks);
 
