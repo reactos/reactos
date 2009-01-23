@@ -112,9 +112,12 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     union
     {
         LIST_ENTRY HashLinks;
-        PVOID SectionPointer;
+        struct
+        {
+            PVOID SectionPointer;
+            ULONG CheckSum;
+        };
     };
-    ULONG CheckSum;
     union
     {
         ULONG TimeDateStamp;
@@ -122,6 +125,11 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     };
     PVOID EntryPointActivationContext;
     PVOID PatchInformation;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LIST_ENTRY ForwarderLinks;
+    LIST_ENTRY ServiceTagLinks;
+    LIST_ENTRY StaticLinks;
+#endif
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
 //
