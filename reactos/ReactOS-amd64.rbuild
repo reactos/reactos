@@ -254,9 +254,9 @@
 			<directory name="libxml2">
 				<xi:include href="lib/3rdparty/libxml2/libxml2.rbuild" />
 			</directory>
-			<!--directory name="mingw">
+			<directory name="mingw">
 				<xi:include href="lib/3rdparty/mingw/mingw.rbuild" />
-			</directory-->
+			</directory>
 			<directory name="zlib">
 				<xi:include href="lib/3rdparty/zlib/zlib.rbuild" />
 			</directory>
