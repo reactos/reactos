@@ -1721,7 +1721,7 @@ MingwModuleHandler::GenerateObjectFileTargets ()
 		vector<FileLocation> rpcDependencies;
 		GetRpcHeaderDependencies ( rpcDependencies );
 		if ( rpcDependencies.size () > 0 )
-			dependencies = v2s ( backend, rpcDependencies, 5 );
+			dependencies = " " + v2s ( backend, rpcDependencies, 5 );
 
 		pchRule.Execute ( fMakefile,
 						  backend,
