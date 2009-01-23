@@ -23,12 +23,12 @@ FatDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 NTSTATUS
 FatPerformDevIoCtrl(PDEVICE_OBJECT DeviceObject,
-		            ULONG ControlCode,
-		            PVOID InputBuffer,
-		            ULONG InputBufferSize,
-		            PVOID OutputBuffer,
-		            ULONG OutputBufferSize,
-		            BOOLEAN Override)
+                    ULONG ControlCode,
+                    PVOID InputBuffer,
+                    ULONG InputBufferSize,
+                    PVOID OutputBuffer,
+                    ULONG OutputBufferSize,
+                    BOOLEAN Override)
 {
     PIRP Irp;
     KEVENT Event;
@@ -36,32 +36,37 @@ FatPerformDevIoCtrl(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     IO_STATUS_BLOCK IoStatus;
 
+    /* Initialize the event for waiting */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
+    /* Build the device I/O control request */
     Irp = IoBuildDeviceIoControlRequest(ControlCode,
-				                        DeviceObject,
-				                        InputBuffer,
-				                        InputBufferSize,
-				                        OutputBuffer,
-				                        OutputBufferSize,
-				                        FALSE,
-				                        &Event,
-				                        &IoStatus);
-    if (Irp == NULL)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+                                        DeviceObject,
+                                        InputBuffer,
+                                        InputBufferSize,
+                                        OutputBuffer,
+                                        OutputBufferSize,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatus);
 
+    /* Fail if IRP hasn't been allocated */
+    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set verify override flag if requested */
     if (Override)
     {
         Stack = IoGetNextIrpStackLocation(Irp);
         Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
+    /* Call the driver */
     Status = IoCallDriver(DeviceObject, Irp);
+
+    /* Wait if needed */
     if (Status == STATUS_PENDING)
     {
-        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = IoStatus.Status;
     }
 
