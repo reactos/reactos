@@ -127,17 +127,19 @@
 	<include host="true">include/reactos</include>
 	<include host="true">include/reactos/wine</include>
 
-	<!-- directory name="base">
-		<xi:include href="base/base.rbuild" />
-	</directory -->
+	<if property="USERMODE" value="1">
+		<directory name="base">
+			<xi:include href="base/base.rbuild" />
+		</directory>
+
+		<directory name="dll">
+			<xi:include href="dll/dll.rbuild" />
+		</directory>
+	</if>
 
 	<directory name="boot">
 		<xi:include href="boot/boot.rbuild" />
 	</directory>
-
-	<!-- directory name="dll">
-		<xi:include href="dll/dll.rbuild" />
-	</directory -->
 
 	<directory name="drivers">
 		<directory name="bus">
@@ -254,9 +256,12 @@
 			<directory name="libxml2">
 				<xi:include href="lib/3rdparty/libxml2/libxml2.rbuild" />
 			</directory>
-			<directory name="mingw">
-				<xi:include href="lib/3rdparty/mingw/mingw.rbuild" />
-			</directory>
+
+			<if property="USERMODE" value="1">
+				<directory name="mingw">
+					<xi:include href="lib/3rdparty/mingw/mingw.rbuild" />
+				</directory>
+			</if>
 			<directory name="zlib">
 				<xi:include href="lib/3rdparty/zlib/zlib.rbuild" />
 			</directory>
