@@ -61,6 +61,9 @@
 <directory name="crypt32">
 	<xi:include href="crypt32/crypt32.rbuild" />
 </directory>
+<directory name="cryptdlg">
+	<xi:include href="cryptdlg/cryptdlg.rbuild" />
+</directory>
 <directory name="cryptdll">
 	<xi:include href="cryptdll/cryptdll.rbuild" />
 </directory>

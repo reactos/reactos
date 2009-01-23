@@ -248,6 +248,7 @@ dll\win32\compstui\compstui.dll                     1
 dll\win32\credui\credui.dll                         1
 dll\win32\crtdll\crtdll.dll                         1
 dll\win32\crypt32\crypt32.dll                       1
+dll\win32\cryptdlg\cryptdlg.dll                     1
 dll\win32\cryptdll\cryptdll.dll                     1
 dll\win32\cryptnet\cryptnet.dll                     1
 dll\win32\cryptui\cryptui.dll                       1
