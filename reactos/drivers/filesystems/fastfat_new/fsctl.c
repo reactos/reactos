@@ -109,10 +109,20 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     /* Save device object in a VPB */
     Vpb->DeviceObject = (PDEVICE_OBJECT)VolumeDevice;
 
-    /* TODO: Initialize VCB for this volume */
+    /* Initialize VCB for this volume */
+    Status = FatInitializeVcb(&VolumeDevice->Vcb, TargetDeviceObject, Vpb);
+    if (!NT_SUCCESS(Status))
+        goto FatMountVolumeCleanup;
 
     /* Return success */
     return STATUS_SUCCESS;
+
+
+FatMountVolumeCleanup:
+
+    /* Unwind the routine actions */
+    IoDeleteDevice((PDEVICE_OBJECT)VolumeDevice);
+    return Status;
 }
 
 
