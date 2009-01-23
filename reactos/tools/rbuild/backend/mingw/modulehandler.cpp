@@ -1158,14 +1158,14 @@ Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
                      "\t$(ECHO_WIDL)\n"
                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_p.h -p -P $(intermediate_path_noext)_p.c $(source)\n"
                      "$(intermediate_path_noext)_p.o: $(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h$(dependencies) | $(intermediate_dir)\n"
-                      "\t$(ECHO_CC)\n"
-                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
+                     "\t$(ECHO_CC)\n"
+                     "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
                      "$(intermediate_path_noext)_p.h",
                      "$(intermediate_path_noext)_p.c",
                      "$(intermediate_path_noext)_p.o",
                      "$(intermediate_dir)$(SEP)", NULL );
 Rule widlDlldataRule ( "$(source): $(dependencies) ${$(module_name)_precondition} $(WIDL_TARGET) | $(intermediate_dir)\n"
-                     "\t$(ECHO_WIDL)\n"
+                   "\t$(ECHO_WIDL)\n"
                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) --dlldata-only --dlldata=$(source) $(bare_dependencies)\n"
                      "$(intermediate_path_noext).o: $(source) $(dependencies) | $(intermediate_dir)\n"
                       "\t$(ECHO_CC)\n"
@@ -1196,6 +1196,10 @@ Rule gppHostRule ( "$(source): ${$(module_name)_precondition}\n"
                    "\t$(ECHO_HOSTCC)\n"
                    "\t${host_gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
                    "$(intermediate_path_unique).o", NULL );
+Rule pchRule ( "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch: $(source)$(dependencies) | $(intermediate_dir)$(SEP).gch_$(module_name)\n"
+			   "\t$(ECHO_PCH)\n"
+			   "\t$(pch_cc) -o $@ $(pch_ccflags)$(compiler_flags) -x $(pch_language) -c $<\n",
+			   "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch", NULL );
 Rule emptyRule ( "", NULL );
 
 void
@@ -1689,38 +1693,45 @@ MingwModuleHandler::GenerateObjectFileTargets ( const IfableData& data )
 void
 MingwModuleHandler::GenerateObjectFileTargets ()
 {
-	const FileLocation *pchFilename = GetPrecompiledHeaderFilename ();
-
 	fprintf ( fMakefile, "# OBJECT FILE TARGETS\n" );
 
-	if ( pchFilename )
+	if ( module.pch && use_pch )
 	{
-		string cc = ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue ? "${host_gcc}" : "${gcc}" );
-		string cppc = ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue ? "${host_gpp}" : "${gpp}" );
 
-		const FileLocation& baseHeaderFile = *module.pch->file;
-		CLEAN_FILE ( *pchFilename );
-		string dependencies = backend->GetFullName ( baseHeaderFile );
+		std::map<string, string> vars;
+
+		if ( ModuleHandlerInformations[module.type].DefaultHost == HostTrue )
+			vars["pch_cc"] = "${host_gcc}";
+		else
+			vars["pch_cc"] = "${gcc}";
+
+		if ( module.cplusplus )
+		{
+			vars["pch_language"] = "c++-header";
+			vars["pch_ccflags"] = cxxflagsMacro.c_str();
+		}
+		else
+		{
+			vars["pch_language"] = "c-header";
+			vars["pch_ccflags"] = cflagsMacro.c_str();
+		}
+
 		/* WIDL generated headers may be used */
+		string dependencies;
 		vector<FileLocation> rpcDependencies;
 		GetRpcHeaderDependencies ( rpcDependencies );
 		if ( rpcDependencies.size () > 0 )
-			dependencies += " " + v2s ( backend, rpcDependencies, 5 );
-		fprintf ( fMakefile,
-		          "%s: %s | %s\n",
-		          backend->GetFullName ( *pchFilename ).c_str(),
-		          dependencies.c_str(),
-		          backend->GetFullPath ( *pchFilename ).c_str() );
-		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
-		fprintf ( fMakefile,
-		          "\t%s -o %s %s %s -gstabs+ -x %s %s\n\n",
-		          cc.c_str(),
-		          backend->GetFullName ( *pchFilename ).c_str(),
-		          module.cplusplus ? cxxflagsMacro.c_str() : cflagsMacro.c_str(),
-				  GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, module.cplusplus ? CompilerTypeCPP : CompilerTypeCC ).c_str(),
-				  module.cplusplus ? "c++-header" : "c-header",
-		          backend->GetFullName ( baseHeaderFile ).c_str() );
-		delete pchFilename;
+			dependencies = v2s ( backend, rpcDependencies, 5 );
+
+		pchRule.Execute ( fMakefile,
+						  backend,
+						  module,
+						  module.pch->file,
+						  clean_files,
+						  dependencies,
+						  GenerateCompilerParametersFromVector ( module.non_if_data.compilerFlags, module.cplusplus ? CompilerTypeCPP : CompilerTypeCC ).c_str(),
+						  vars );
+		fprintf ( fMakefile, "\n" );
 	}
 
 	GenerateObjectFileTargets ( module.non_if_data );

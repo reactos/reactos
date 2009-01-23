@@ -37,9 +37,16 @@ ReplaceVariable( string& str,
 
 static std::string
 FixString ( const string& str, Backend *backend, const Module& module, const FileLocation *source,
-            const std::string& additional_dependencies, const std::string& compiler_flags )
+            const std::string& additional_dependencies, const std::string& compiler_flags,
+			const std::map<std::string, std::string>& custom_variables )
 {
 	string ret = str;
+
+	for ( std::map<std::string, std::string>::const_iterator p = custom_variables.begin(); p != custom_variables.end(); ++ p )
+	{
+		ReplaceVariable ( ret, "$(" + p->first + ")", p->second );
+	}
+
 	string dep = additional_dependencies;
 
 	dep += " " + module.xmlbuildFile;
@@ -91,15 +98,16 @@ void Rule::Execute ( FILE *outputFile,
                      const FileLocation *source,
                      string_list& clean_files,
                      const std::string& additional_dependencies,
-                     const std::string& compiler_flags ) const
+                     const std::string& compiler_flags,
+                     const std::map<std::string, std::string>& custom_variables ) const
 {
-	string cmd = FixString ( command, backend, module, source, additional_dependencies, compiler_flags );
+	string cmd = FixString ( command, backend, module, source, additional_dependencies, compiler_flags, custom_variables );
 
 	fprintf ( outputFile, "%s", cmd.c_str () );
 
 	for ( size_t i = 0; i < generatedFiles.size (); i++ )
 	{
-		string file = FixString ( generatedFiles[i], backend, module, source, "", "" );
+		string file = FixString ( generatedFiles[i], backend, module, source, "", "", custom_variables );
 		if ( file[file.length () - 1] != cSep )
 		{
 			clean_files.push_back ( file );
@@ -127,4 +135,23 @@ void Rule::Execute ( FILE *outputFile,
 			                                  "Invalid directory %s.",
 			                                  dir.c_str () );
 	}
+}
+
+
+void Rule::Execute ( FILE *outputFile,
+                     MingwBackend *backend,
+                     const Module& module,
+                     const FileLocation *source,
+                     string_list& clean_files,
+                     const std::string& additional_dependencies,
+                     const std::string& compiler_flags ) const
+{
+	this->Execute ( outputFile,
+					backend,
+					module,
+					source,
+					clean_files,
+					additional_dependencies,
+					compiler_flags,
+					std::map<std::string, std::string>() );
 }
