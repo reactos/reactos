@@ -2580,9 +2580,9 @@ RegEnumKeyExA(HKEY hKey,
     }
 
     /*TRACE("Key Namea0 Length %d\n", StringU.Length);*/ /* BUGBUG could be uninitialized */
-    TRACE("Key Namea1 Length %d\n", NameLength);
-    TRACE("Key Namea Length %d\n", *lpcbName);
-    TRACE("Key Namea %s\n", lpName);
+    TRACE("Key Name1 Length %d\n", NameLength);
+    TRACE("Key Name Length %d\n", *lpcbName);
+    TRACE("Key Name %s\n", lpName);
 
     RtlFreeHeap(ProcessHeap,
                 0,
