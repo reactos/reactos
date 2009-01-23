@@ -132,7 +132,7 @@ typedef struct BIOS_PARAMETER_BLOCK
     (!((xBytes) & ((xBytes)-1)) && (xBytes)>=0x80 && (xBytes)<=0x1000)
 
 #define FatValidSectorsPerCluster(xSectors) \
-    (!((xSectors) & ((xSectors)-1)) && (xSectors)>=0 && (xSectors)<=0x80)
+    (!((xSectors) & ((xSectors)-1)) && (xSectors)>0 && (xSectors)<=0x80)
 
 typedef struct _PACKED_BOOT_SECTOR
 {
