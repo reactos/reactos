@@ -39,7 +39,6 @@
 	<library>oleaut32_proxy</library>
 	<library>wine</library>
 	<library>wineldr</library>
-	<library>libjpeg</library>
 	<library>ole32</library>
 	<library>rpcrt4</library>
 	<library>user32</library>
