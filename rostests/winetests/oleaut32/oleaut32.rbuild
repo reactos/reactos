@@ -30,15 +30,17 @@
 	<dependency>tmarshal_header</dependency>
 	<dependency>tmarshal</dependency>
 	<dependency>test_tlb</dependency>
-	<dependency>stdole2.tlb</dependency>
 </module>
 <module name="tmarshal_header" type="idlheader">
+	<dependency>stdole2</dependency>
 	<file>tmarshal.idl</file>
 </module>
 <module name="test_tlb" type="embeddedtypelib" allowwarnings="true">
+	<dependency>stdole2</dependency>
 	<file>test_tlb.idl</file>
 </module>
 <module name="tmarshal" type="embeddedtypelib" allowwarnings="true">
+	<dependency>stdole2</dependency>
 	<file>tmarshal.idl</file>
 </module>
 </group>
