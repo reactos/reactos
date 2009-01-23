@@ -84,7 +84,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
                                     NULL,
                                     NULL,
                                     0,
-                                    sizeof(VFATFCB),
+                                    sizeof(FCB),
                                     TAG_FCB,
                                     0);
 

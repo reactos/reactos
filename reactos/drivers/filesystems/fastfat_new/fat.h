@@ -283,15 +283,4 @@ typedef struct _LONG_FILE_NAME_ENTRY {
                                           FAT_DIRENT_ATTR_SYSTEM |    \
                                           FAT_DIRENT_ATTR_VOLUME_ID)
 
-typedef struct _PACKED_LFN_DIRENT {
-    UCHAR Ordinal;    //  offset =  0
-    UCHAR Name1[10];  //  offset =  1 (Really 5 chars, but not WCHAR aligned)
-    UCHAR Attributes; //  offset = 11
-    UCHAR Type;       //  offset = 12
-    UCHAR Checksum;   //  offset = 13
-    WCHAR Name2[6];   //  offset = 14
-    USHORT MustBeZero; //  offset = 26
-    WCHAR Name3[2];   //  offset = 28
-} PACKED_LFN_DIRENT;      //  sizeof = 32
-
 #endif//__FAT_H__
