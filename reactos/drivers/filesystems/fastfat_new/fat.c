@@ -627,7 +627,7 @@ FatUninitializeVcb(IN PVCB Vcb)
     RemoveEntryList(&Vcb->VcbLinks);
 
     /* Release Target Device */
-    ObReferenceObject(Vcb->TargetDeviceObject);
+    ObDereferenceObject(Vcb->TargetDeviceObject);
     Vcb->TargetDeviceObject = NULL;
 }
 
