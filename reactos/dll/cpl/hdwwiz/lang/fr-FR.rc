@@ -89,7 +89,7 @@ END
 
 IDD_FINISHPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-+CAPTION "Assistant Ajout de matériel"
+CAPTION "Assistant Ajout de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Fin de l'Assistant Ajout de matériel", IDC_FINISHTITLE, 114, 8, 203, 24
