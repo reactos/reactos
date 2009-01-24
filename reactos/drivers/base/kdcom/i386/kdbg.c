@@ -257,7 +257,7 @@ KdPortInitialize(
         return FALSE;
 
     /* set global info */
-    *KdComPortInUse = (PUCHAR)DefaultPort.BaseAddress;
+    KdComPortInUse = (PUCHAR)DefaultPort.BaseAddress;
 
     return TRUE;
 }

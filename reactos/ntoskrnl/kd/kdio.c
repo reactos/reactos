@@ -97,7 +97,7 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 
     if (BootPhase == 0)
     {
-        *KdComPortInUse = NULL;
+        KdComPortInUse = NULL;
 
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpInitDebugLog;
@@ -182,7 +182,7 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
             KdpDebugMode.Serial = FALSE;
             return;
         }
-        *KdComPortInUse = (PUCHAR)(ULONG_PTR)SerialPortInfo.BaseAddress;
+        KdComPortInUse = (PUCHAR)(ULONG_PTR)SerialPortInfo.BaseAddress;
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);

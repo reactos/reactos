@@ -75,7 +75,7 @@ IoMapTransfer
 IoReadPartitionTable
 IoSetPartitionInformation
 IoWritePartitionTable
-KdComPortInUse=_KdComPortInUse DATA
+KdComPortInUse DATA
 KeFlushWriteBuffer
 KeQueryPerformanceCounter
 KeStallExecutionProcessor

@@ -402,7 +402,7 @@ AcpiCheckIfIsSerialDebugPort(
       case io:
       {
         IO_RESOURCE *io_data = (IO_RESOURCE*) &resource->data;
-        if (*KdComPortInUse == ULongToPtr(io_data->min_base_address))
+        if (KdComPortInUse == (PUCHAR)io_data->min_base_address)
         {
           ExFreePool(Buffer.pointer);
           return TRUE;

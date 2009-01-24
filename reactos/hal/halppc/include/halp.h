@@ -8,9 +8,6 @@
 /* Temporary hack */
 #define KPCR_BASE   0xFF000000
 
-/* WDK Hack */
-#define KdComPortInUse          _KdComPortInUse
-
 #define HAL_APC_REQUEST         0
 #define HAL_DPC_REQUEST         1
 

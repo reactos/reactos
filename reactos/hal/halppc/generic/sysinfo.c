@@ -12,8 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define KdComPortInUse _KdComPortInUse
-ULONG KdComPortInUse = 0;
+PUCHAR KdComPortInUse;
 
 /* FUNCTIONS *****************************************************************/
 
