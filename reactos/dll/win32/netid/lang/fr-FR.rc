@@ -66,9 +66,9 @@ BEGIN
     6 "Domaine :"
     22 "Bienvenue dans le groupe de travail %1."
     23 "Bienvenue dans le domaine %1."
-    24 "Vous devez redémarrer votre ordinateur pour que les changements soient prises en compte."
+    24 "Vous devez redémarrer votre ordinateur pour que les changements soient pris en compte."
     1021 "Note : Seuls les administrateurs peuvent modifier l'identification de cet ordinateur."
-    1022 "Note : L'identification de l'ordinateur ne peut pas être modifié car :"
+    1022 "Note : L'identification de l'ordinateur ne peut pas être modifiée car :"
     3210 "&Détails >>"
     3220 "<< &Détails"
 END
