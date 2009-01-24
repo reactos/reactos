@@ -609,7 +609,7 @@ IntGetMenuItemByFlag(PMENU_OBJECT Menu, UINT uSearchBy, UINT fFlag,
             if(CurItem->fType & MF_POPUP)
             {
                PMENU_OBJECT NewMenu = UserGetMenuObject(CurItem->hSubMenu);
-               if(Menu)
+               if(NewMenu)
                {
                    ret = IntGetMenuItemByFlag(NewMenu, uSearchBy, fFlag,
                                               SubMenu, MenuItem, PrevMenuItem);
