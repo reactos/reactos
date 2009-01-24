@@ -802,7 +802,8 @@ ParsePEHeaders(PFILE_INFO File)
             pName = File->Strings + index;
             
             // Hack, simply remove all sections with long names
-            File->UseSection[i] = 0;
+            if (strcmp(pName, ".eh_frame") != 0)
+                File->UseSection[i] = 0;
         }
 
         /* Chek if we have the eh_frame section */
@@ -830,7 +831,7 @@ ParsePEHeaders(PFILE_INFO File)
     /* Create new section headers */
     for (i = 0, j = 0; i < File->AllSections; i++)
     {
-        if (File->UseSection[i])
+        if (1+File->UseSection[i])
         {
             /* Copy section header */
             File->NewSectionHeaders[j] =
