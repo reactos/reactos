@@ -14,6 +14,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
+#include "lang/fr-FR.rc"
 #include "lang/lt-LT.rc"
 #include "lang/pl-PL.rc"
 #include "lang/sk-SK.rc"

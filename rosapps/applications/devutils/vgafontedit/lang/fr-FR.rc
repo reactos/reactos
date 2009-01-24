@@ -89,6 +89,6 @@ BEGIN
     IDS_TOOLTIP_OPEN, "Ouvrir"
     IDS_TOOLTIP_SAVE, "Enregistrer"
     IDS_TOOLTIP_EDIT_GLYPH, "Éditer le glyphe"
-    IDS_TOOLTIP_COPY, "Copy"
-    IDS_TOOLTIP_PASTE, "Paste"
+    IDS_TOOLTIP_COPY, "Copier"
+    IDS_TOOLTIP_PASTE, "Coller"
 END
