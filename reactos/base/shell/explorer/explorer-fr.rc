@@ -380,9 +380,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "Paramètres du bureau"
     IDS_DESKTOP             "Bureau"
     IDS_TASKBAR             "Barre de tâches"
-    IDS_NAMECOLUMN          "Name"
-    IDS_PATHCOLUMN          "Path"
-    IDS_MENUCOLUMN          "Menu path"
+    IDS_NAMECOLUMN          "Nom"
+    IDS_PATHCOLUMN          "Chemin"
+    IDS_MENUCOLUMN          "Chemin du menu"
 END
 
 #endif    // French (France) resources
