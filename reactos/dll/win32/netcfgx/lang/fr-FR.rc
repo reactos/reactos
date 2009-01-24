@@ -36,7 +36,7 @@ BEGIN
     CONTROL "Utili&sateur configuré", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 55, 70, 12
     LTEXT "Adresse &IP :", -1, 14, 75, 135, 8
     CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP, 150, 75, 80, 12
-    LTEXT "Masque de so&us-réseau :", -1, 14, 95, 135, 
+    LTEXT "Masque de so&us-réseau :", -1, 14, 95, 135, 8
     CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP, 150, 95, 80, 12    
     LTEXT "Passerelle par &défaut :", -1, 14, 115, 135, 8
     CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP, 150, 115, 80, 12

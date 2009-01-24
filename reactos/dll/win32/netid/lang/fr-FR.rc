@@ -22,7 +22,7 @@ END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-+CAPTION "Changement du nom d'ordinateur"
+CAPTION "Changement du nom d'ordinateur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "(le message vient ici)", 1017, 7, 5, 218, 30
@@ -58,17 +58,17 @@ END
 
 STRINGTABLE
 BEGIN
-+    1 "* Inconnu *"
-+    2 "Groupe de travail"
-+    3 "L'erreur suivante s'est produite lors de la tentative de lecture des informations de domaine :"
-+    4 "Changement du nom de l'ordinateur"
-+    5 "Groupe de travail :"
-+    6 "Domaine :"
-+    22 "Bienvenue dans le groupe de travail %1."
-+    23 "Bienvenue dans le domaine %1."
-+    24 "Vous devez redémarrer votre ordinateur pour que les changements soient prises en compte."
-+    1021 "Note : Seuls les administrateurs peuvent modifier l'identification de cet ordinateur."
-+    1022 "Note : L'identification de l'ordinateur ne peut pas être modifié car :"
-+    3210 "&Détails >>"
-+    3220 "<< &Détails"
+    1 "* Inconnu *"
+    2 "Groupe de travail"
+    3 "L'erreur suivante s'est produite lors de la tentative de lecture des informations de domaine :"
+    4 "Changement du nom de l'ordinateur"
+    5 "Groupe de travail :"
+    6 "Domaine :"
+    22 "Bienvenue dans le groupe de travail %1."
+    23 "Bienvenue dans le domaine %1."
+    24 "Vous devez redémarrer votre ordinateur pour que les changements soient prises en compte."
+    1021 "Note : Seuls les administrateurs peuvent modifier l'identification de cet ordinateur."
+    1022 "Note : L'identification de l'ordinateur ne peut pas être modifié car :"
+    3210 "&Détails >>"
+    3220 "<< &Détails"
 END
