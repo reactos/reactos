@@ -865,4 +865,12 @@ ExceptionRecord32To64(IN PEXCEPTION_RECORD32 Ex32,
     }
 }
 
+#ifdef _WIN64
+#define ExceptionRecordTo64(Ex, Ex64) \
+            (*(Ex64)) = (*(PEXCEPTION_RECORD64)(Ex))
+#else
+#define ExceptionRecordTo64(Ex, Ex64) \
+            ExceptionRecord32To64((PEXCEPTION_RECORD32)Ex, Ex64)
+#endif
+
 #endif
