@@ -382,7 +382,7 @@ BEGIN
     IDS_TASKBAR             "Barre de tâches"
     IDS_NAMECOLUMN          "Nom"
     IDS_PATHCOLUMN          "Chemin"
-    IDS_MENUCOLUMN          "Chemin du menu"
+    IDS_MENUCOLUMN          "Chemin dans le menu"
 END
 
 #endif    // French (France) resources
