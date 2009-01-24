@@ -90,7 +90,7 @@ BEGIN
     LTEXT   "Couleur :", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
     CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "G", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX   "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
 
     PUSHBUTTON "Annuler", IDCANCEL, 191, 220, 50, 14
@@ -225,7 +225,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Display settings"
-    IDS_APPLY_FAILED "Failed to apply new settings..."
-    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
+    IDS_DISPLAY_SETTINGS "Paramètres d'affichage"
+    IDS_APPLY_FAILED "Echec lors de l'application des nouveaux paramètres..."
+    IDS_APPLY_NEEDS_RESTART "Vous devez redémarrer votre ordinateur pour appliquer les modifications."
 END

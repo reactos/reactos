@@ -25,4 +25,7 @@
 <directory name="fastfat">
 	<xi:include href="fastfat/vfatfs.rbuild" />
 </directory>
+<directory name="fastfat_new">
+    <xi:include href="fastfat_new/fastfat.rbuild" />
+</directory>
 </group>
