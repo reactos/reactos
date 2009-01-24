@@ -1556,7 +1556,7 @@ ssvprintf ( const char *fmt, va_list args )
 				flags |= ZEROPAD;
 			}
 			result = number(f,
-				        (unsigned long) va_arg(args, void *), 16,
+				        (size_t) va_arg(args, void *), 16,
 					field_width, precision, flags);
 			if (result < 0)
 			{
@@ -1880,7 +1880,7 @@ sswvprintf ( const wchar_t* fmt, va_list args )
 				flags |= ZEROPAD;
 			}
 			result = wnumber(f,
-				        (unsigned long) va_arg(args, void *), 16,
+				        (size_t) va_arg(args, void *), 16,
 					field_width, precision, flags);
 			if (result < 0)
 			{
