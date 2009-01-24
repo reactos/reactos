@@ -2968,7 +2968,7 @@ ftGdiGetKerningPairs( PFONTGDI Font,
 
         char_previous = char_code = FT_Get_First_Char(face, &glyph_index);
 
-        IntUnLockFreeType;
+        IntLockFreeType;
 
         while (glyph_index)
         {
