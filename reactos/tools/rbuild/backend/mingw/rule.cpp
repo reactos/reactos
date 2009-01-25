@@ -63,7 +63,6 @@ FixString ( const string& str, Backend *backend, const Module& module, const Fil
 		ReplaceVariable ( ret, "$(intermediate_path_noext)", ReplaceExtension ( backend->GetFullName ( FileLocation ( IntermediateDirectory, source->relative_path, source->name ) ), "" ) );
 		ReplaceVariable ( ret, "$(intermediate_path_unique)", ReplaceExtension ( backend->GetFullName ( FileLocation ( IntermediateDirectory, source->relative_path, source->name ) ), "" )  + "_" + module.name );
 	}
-	ReplaceVariable ( ret, "$(buildfile)", module.xmlbuildFile );
 	ReplaceVariable ( ret, "$(dependencies)", dep );
 	ReplaceVariable ( ret, "$(bare_dependencies)", additional_dependencies );
 	ReplaceVariable ( ret, "$(module_name)", module.name );
