@@ -1,6 +1,5 @@
 #include <ntifs.h>
 #include <ntdddisk.h>
-#include <reactos/helper.h>
 #include <debug.h>
 
 #ifndef TAG

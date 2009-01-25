@@ -12,6 +12,10 @@
 #include <k32.h>
 #include <wine/debug.h>
 
+#define NANOS_TO_100NS(nanos) (((LONGLONG)(nanos)) / 100)
+#define MICROS_TO_100NS(micros) (((LONGLONG)(micros)) * NANOS_TO_100NS(1000))
+#define MILLIS_TO_100NS(milli) (((LONGLONG)(milli)) * MICROS_TO_100NS(1000))
+
 WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /*
@@ -110,7 +114,7 @@ GetQueuedCompletionStatus(
 
    if (dwMilliseconds != INFINITE)
    {
-      Interval.QuadPart = RELATIVE_TIME(MILLIS_TO_100NS(dwMilliseconds));
+      Interval.QuadPart = (-(MILLIS_TO_100NS(dwMilliseconds)));
    }
 
    errCode = NtRemoveIoCompletion(CompletionHandle,

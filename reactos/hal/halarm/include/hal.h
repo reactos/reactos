@@ -37,7 +37,4 @@
 /* Internal HAL Headers */
 #include "halp.h"
 
-/* Helper Header */
-#include <reactos/helper.h>
-
 /* EOF */

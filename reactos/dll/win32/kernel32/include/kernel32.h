@@ -21,6 +21,12 @@
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))
 
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+
 #ifndef FIELD_OFFSET
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif

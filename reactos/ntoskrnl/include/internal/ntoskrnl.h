@@ -24,6 +24,8 @@
 #undef  PsGetCurrentProcess
 #define PsGetCurrentProcess _PsGetCurrentProcess
 
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
+
 //
 // We are very lazy on ARM -- we just import intrinsics
 // Question: Why wasn't this done for x86 too? (see fastintrlck.asm)

@@ -22,6 +22,7 @@
 #include <debug.h>
 
 #define LDRP_PROCESS_CREATION_TIME 0x8000000
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
 /* GLOBALS *******************************************************************/
 

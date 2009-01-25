@@ -3,7 +3,6 @@
 #include <ddk/ntifs.h>
 #include <ddk/ntdddisk.h>
 #include <ndk/ntndk.h>
-#include <reactos/helper.h>
 #include <ccros.h>
 #include <limits.h>
 #include <debug.h>

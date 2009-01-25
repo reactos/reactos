@@ -24,6 +24,12 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define SWAPW(x) x
 #endif
 
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+
 VOID
 NTAPI
 RtlpGetStackLimits(PULONG_PTR StackBase,

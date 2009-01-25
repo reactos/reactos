@@ -9,7 +9,6 @@
 
 
 #include <ks.h>
-#include <reactos/helper.h>
 
 LPVOID
 __stdcall
@@ -18,5 +17,11 @@ HeapAlloc(
   DWORD dwFlags,
   DWORD dwBytes
 );
+
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 #endif

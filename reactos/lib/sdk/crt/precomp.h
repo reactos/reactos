@@ -28,7 +28,6 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <ndk/ntndk.h>
-#include <reactos/helper.h>
 
 #if !defined(_MSC_VER)
   #include <stdint.h>

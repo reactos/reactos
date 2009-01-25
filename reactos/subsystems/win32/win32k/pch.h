@@ -43,9 +43,6 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* CSRSS Header */
 #include <csrss/csrss.h>
 
-/* Helper Header */
-#include <reactos/helper.h>
-
 /* Public Win32K Headers */
 #include <win32k/callback.h>
 #include <win32k/ntusrtyp.h>
@@ -138,5 +135,23 @@ UserHeapAddressToUser(PVOID lpMem)
     return (PVOID)(((ULONG_PTR)lpMem - (ULONG_PTR)GlobalUserHeap) +
                    (ULONG_PTR)W32Process->HeapMappings.UserMapping);
 }
+
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+
+#define LIST_FOR_EACH(elem, list, type, field) \
+    for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
+         &(elem)->field != (list) || (elem == NULL); \
+         (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
+
+#define LIST_FOR_EACH_SAFE(cursor, cursor2, list, type, field) \
+    for ((cursor) = CONTAINING_RECORD((list)->Flink, type, field), \
+         (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field); \
+         &(cursor)->field != (list) || (cursor == NULL); \
+         (cursor) = (cursor2), \
+         (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field))
 
 #endif /* __W32K_H */
