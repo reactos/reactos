@@ -107,14 +107,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
 
     /* Set the context flags */
-    Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
-
-    /* Check if User Mode or if the debugger is enabled */
-    if ((PreviousMode == UserMode) || (KdDebuggerEnabled))
-    {
-        /* Add the FPU Flag */
-        Context.ContextFlags |= CONTEXT_FLOATING_POINT;
-    }
+    Context.ContextFlags = CONTEXT_ALL;
 
     /* Get a Context */
     KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
@@ -126,7 +119,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         case STATUS_BREAKPOINT:
 
             /* Decrement RIP by one */
-            Context.Rip--;
+            // FIXME: that doesn't work, why?
+//            Context.Rip--;
             break;
 
         /* Internal exception */

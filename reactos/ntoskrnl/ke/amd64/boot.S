@@ -49,6 +49,8 @@ _KiSetupStackAndInitializeKernel:
     mov rsi, rsp
 
     /* Setup the new stack */
+    mov ax, 0x18
+    mov ss, ax
     mov rsp, r8
     sub rsp, 0x300 // FIXME
 
