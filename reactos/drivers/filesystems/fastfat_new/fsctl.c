@@ -99,7 +99,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
                                  sizeof(DISK_GEOMETRY),
                                  TRUE);
 
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status)) goto FatMountVolumeCleanup;
 
     VolumeDevice->DeviceObject.SectorSize = DiskGeometry.BytesPerSector;
 
@@ -111,8 +111,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
 
     /* Initialize VCB for this volume */
     Status = FatInitializeVcb(&VolumeDevice->Vcb, TargetDeviceObject, Vpb);
-    if (!NT_SUCCESS(Status))
-        goto FatMountVolumeCleanup;
+    if (!NT_SUCCESS(Status)) goto FatMountVolumeCleanup;
 
     /* Return success */
     return STATUS_SUCCESS;
