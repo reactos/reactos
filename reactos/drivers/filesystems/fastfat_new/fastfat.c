@@ -70,10 +70,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     FatGlobalData.CacheMgrCallbacks.AcquireForReadAhead = FatAcquireForReadAhead;
     FatGlobalData.CacheMgrCallbacks.ReleaseFromReadAhead = FatReleaseFromReadAhead;
 
-    FatGlobalData.CacheMgrCallbacks.AcquireForLazyWrite = FatNoopAcquire;
-    FatGlobalData.CacheMgrCallbacks.ReleaseFromLazyWrite = FatNoopRelease;
-    FatGlobalData.CacheMgrCallbacks.AcquireForReadAhead = FatNoopAcquire;
-    FatGlobalData.CacheMgrCallbacks.ReleaseFromReadAhead = FatNoopRelease;
+    FatGlobalData.CacheMgrNoopCallbacks.AcquireForLazyWrite = FatNoopAcquire;
+    FatGlobalData.CacheMgrNoopCallbacks.ReleaseFromLazyWrite = FatNoopRelease;
+    FatGlobalData.CacheMgrNoopCallbacks.AcquireForReadAhead = FatNoopAcquire;
+    FatGlobalData.CacheMgrNoopCallbacks.ReleaseFromReadAhead = FatNoopRelease;
 
     /* Initialize Fast I/O dispatchers */
     FatInitFastIoRoutines(&FatGlobalData.FastIoDispatch);
