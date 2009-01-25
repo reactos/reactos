@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="joy" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_JOY}"  installbase="system32" installname="joy.cpl" unicode="yes">
-	<importlibrary definition="joy.def" />
+	<importlibrary definition="joy.spec" />
 	<include base="joy">.</include>
 	<library>kernel32</library>
 	<library>advapi32</library>

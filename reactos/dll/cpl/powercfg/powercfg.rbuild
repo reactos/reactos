@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="powercfg" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_PWRCFG}" installbase="system32" installname="powercfg.cpl" unicode="yes">
-	<importlibrary definition="powercfg.def" />
+	<importlibrary definition="powercfg.spec" />
 	<include base="powercfg">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>kernel32</library>

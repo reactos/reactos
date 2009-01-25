@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="timedate" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_TIMEDATE}" installbase="system32" installname="timedate.cpl" unicode="yes">
-	<importlibrary definition="timedate.def" />
+	<importlibrary definition="timedate.spec" />
 	<include base="timedate">.</include>
 	<library>kernel32</library>
 	<library>advapi32</library>

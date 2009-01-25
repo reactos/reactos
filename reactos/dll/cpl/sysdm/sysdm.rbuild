@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" unicode="yes">
-	<importlibrary definition="sysdm.def" />
+	<importlibrary definition="sysdm.spec" />
 	<include base="sysdm">.</include>
 	<library>kernel32</library>
 	<library>advapi32</library>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="usrmgr" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_USRMGR}" installbase="system32" installname="usrmgr.cpl" unicode="yes" crt="msvcrt">
-	<importlibrary definition="usrmgr.def" />
+	<importlibrary definition="usrmgr.spec" />
 	<include base="usrmgr">.</include>
 	<library>kernel32</library>
 	<library>advapi32</library>
