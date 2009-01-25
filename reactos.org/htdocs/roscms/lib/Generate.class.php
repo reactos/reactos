@@ -43,6 +43,9 @@ class Generate
   private $lang = null;
 
   private $short = array('template'=>'templ', 'content'=>'cont', 'script'=>'inc');
+  
+  //@DEBUG
+  private $base_rev = 0;
 
 
 
@@ -65,6 +68,52 @@ class Generate
 
   /**
    * 
+   * @param int rev_id
+   * @return 
+   * @access public
+   */
+  public function preview( $rev_id )
+  {
+    $this->rev_id=$rev_id;
+  
+    $stmt=&DBConnection::getInstance()->prepare("SELECT lang_id FROM ".ROSCMST_REVISIONS." WHERE id=:rev_id");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    $this->lang_id = $stmt->fetchColumn();
+  
+    $stmt=&DBConnection::getInstance()->prepare("SELECT content FROM ".ROSCMST_TEXT." WHERE rev_id=:rev_id AND name='content'");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    $content = $stmt->fetchColumn();
+
+    // replace depencies
+    $stmt=&DBConnection::getInstance()->prepare("SELECT d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
+    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+      // replace
+      if ($depency['type'] != 'script') {
+        $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
+      }
+    }
+
+    // execute scripts
+    $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalTemplate'),$content);
+
+    // replace roscms vars
+    $content = $this->replaceRoscmsPlaceholder($content);
+
+    // replace links
+    $content = preg_replace_callback('/\[#link_([^][#[:space:]]+)\]/', array($this, 'replaceWithHyperlink'), $content);
+
+    echo $content;
+  }
+
+
+
+  /**
+   * 
    *
    * @return 
    * @access public
@@ -77,6 +126,7 @@ class Generate
     // caching
     $this->cacheFiles();
 
+    // we need to reset this, as cacheFiles() overwrites this setting
     $this->base_dir = $this->destination_folder;
 
     // build all entries
@@ -170,7 +220,6 @@ class Generate
       // file content
       $content = $revision['content'];
       $content = str_replace('[#%NAME%]', $data_name, $content);
-      $content = str_replace('[#cont_%NAME%]', '[#cont_'.$data_name.']', $content);
 
       // replace depencies
       $stmt_more=&DBConnection::getInstance()->prepare("SELECT d.id, d.type, d.name FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_ENTRIES." d ON w.child_id=d.id WHERE w.rev_id=:rev_id AND w.include IS TRUE");
@@ -183,11 +232,10 @@ class Generate
         if ($depency['type'] != 'script') {
           $content = str_replace('[#'.$this->short[$depency['type']].'_'.$depency['name'].']', $this->getCached(array(null, $this->short[$depency['type']].'_'.$depency['name'])), $content);
         }
-        // eval
-        else {
-          $content = str_replace('[#inc_'.$depency['name'].']', $this->evalTemplate(array(null,$depency['name'])), $content);
-        }
       }
+
+      // execute scripts
+      $content = preg_replace_callback('/\[#inc_([^][#[:space:]]+)\]/', array($this,'evalTemplate'),$content);
 
       // replace roscms vars
       $content = $this->replaceRoscmsPlaceholder($content);
@@ -274,14 +322,19 @@ class Generate
    * @return 
    * @access private
    */
-  public function update( $rev_id )
+  public function update( $rev_id, $from = null )
   {
+    // exclude the base ref to avoid circles
+    if ($this->base_rev === 0) {
+      $this->base_rev = $rev_id;
+    }
 
     $stmt=&DBConnection::getInstance()->prepare("SELECT data_id, lang_id FROM ".ROSCMST_REVISIONS." WHERE id=:rev_id");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
     $revision=$stmt->fetchOnce(PDO::FETCH_ASSOC);
 
+    // set language for cache
     $this->lang_id = $revision['lang_id'];
 
     // cache data
@@ -289,46 +342,58 @@ class Generate
 
     // set generating dir again
     $this->base_dir = $this->destination_folder;
-
-    // update entries which depends on this one
-    $stmt=&DBConnection::getInstance()->prepare("SELECT r.lang_id, d.name, d.type, r.id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND w.rev_id != :rev_id AND r.archive IS FALSE AND w.include IS TRUE");
-    $stmt->bindParam('depency_id',$revision['data_id'],PDO::PARAM_INT);
-    $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
-    $stmt->execute();
-    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
-
+    
+    // for usage in loop
       // in standard language we may have depencies to other languages, so better generate them all
       if ($revision['lang_id'] == Language::getStandardId()){
-        $stmt_lang=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." ORDER BY level DESC");
+        $stmt_lang=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." ORDER BY level DESC, name ASC");
       }
       else {
         $stmt_lang=&DBConnection::getInstance()->prepare("SELECT id, name_short FROM ".ROSCMST_LANGUAGES." WHERE id=:lang_id");
         $stmt_lang->bindParam('lang_id',$revision['lang_id'],PDO::PARAM_INT);
       }
-      $stmt_lang->execute();
-      while ($language = $stmt_lang->fetch(PDO::FETCH_ASSOC)) {
 
-      // language settings for generating process
-      $this->lang_id=$language['id'];
-      $this->lang=$language['name_short'];
+    // get list of entries which depend on this one and handle their types
+    $stmt=&DBConnection::getInstance()->prepare("SELECT r.lang_id, d.name, d.type, r.id FROM ".ROSCMST_DEPENCIES." w JOIN ".ROSCMST_REVISIONS." r ON r.id=w.rev_id JOIN ".ROSCMST_ENTRIES." d ON d.id=r.data_id WHERE w.child_id=:depency_id AND w.rev_id NOT IN(:rev_id,:rev_id2) AND r.archive IS FALSE AND w.include IS TRUE");
+    $stmt->bindParam('depency_id',$revision['data_id'],PDO::PARAM_INT);
+    $stmt->bindParam('rev_id',$this->base_rev,PDO::PARAM_INT);
+    $stmt->bindParam('rev_id2',$rev_id,PDO::PARAM_INT);
+    $stmt->execute();
+    while ($depency = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-        // cache recursivly or generate page
-        switch ($depency['type']) {
-          case 'page':
-            $this->oneEntry($depency['name'], $language['id']);
-            break;
-          case 'dynamic':
-            $this->makeDynamic($depency['name'], $language['id']);
-            break;
-          case 'script':
-            // scripts are only executed by in pages
-            break;
-          default:
-            $this->update($depency['id']);
-            break;
-        }
-      }
-    }
+
+      // cache recursivly or generate page
+      switch ($depency['type']) {
+        case 'page':
+        case 'dynamic':
+        
+          // generate pages for all languages, if standard lang, otherwise only once
+          $stmt_lang->execute();
+          while ($language = $stmt_lang->fetch(PDO::FETCH_ASSOC)) {
+
+            // language settings for generating process
+            $this->lang_id=$language['id'];
+            $this->lang=$language['name_short'];
+
+            // seperate functions for pages & dynamic pages (in that order)
+            if($depency['type'] == 'page') {
+              $this->oneEntry($depency['name'], $language['id']);
+            }
+            else {
+              $this->makeDynamic($depency['name'], $language['id']);
+            }
+          } // end while language
+          break;
+
+        case 'script':
+          // scripts are only executed by in pages
+          break;
+        default:
+          // only run update once per $rev_id
+          $this->update($depency['id']);
+          break;
+      } // end switch
+    } // end while depency
   }
 
 
@@ -566,7 +631,6 @@ class Generate
 
     // check if depency not available
     if (count($results) === 0){
-      //echo '<p>* <strong>Not found ('.$type.': '.$name.')</strong></p>';
       return false;
     }
 
@@ -672,7 +736,7 @@ class Generate
   {
     $revision = $this->getFrom('script',$matches[1]);
   
-    if( Tag::getValue($revision['id'], 'kind',-1) == 'php') {
+    if( Tag::getValueByUser($revision['id'], 'kind',-1) == 'php') {
 
       // catch output
       ob_start();

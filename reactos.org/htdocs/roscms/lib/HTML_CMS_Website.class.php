@@ -295,17 +295,17 @@ class HTML_CMS_Website extends HTML_CMS
                   </select>
                 </div>
                 <div id="tablecmdbar" style="padding-top: 5px;"></div>
-                  <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
-                    <span id="mtblnav">&nbsp;</span>
-                  </div>
-                  <div class="tabselect">Select: <span id="tabselect1"></span></div>
-                  <div id="tablist">&nbsp;</div>
-                  <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
-                    <span id="mtbl2nav">&nbsp;</span>
-                  </div>
-                  <div class="tabselect">Select: <span id="tabselect2"></span></div>
+                <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
+                  <span id="mtblnav">&nbsp;</span>
                 </div>
-                <div id="frameedit" style="display: block; border: 0px dashed red; ">
+                <div class="tabselect">Select: <span id="tabselect1"></span></div>
+                <div id="tablist">&nbsp;</div>
+                <div style="border: 0px dashed red; position: absolute; right: 10px; text-align:right; white-space: nowrap;">
+                  <span id="mtbl2nav">&nbsp;</span>
+                </div>
+                <div class="tabselect">Select: <span id="tabselect2"></span></div>
+              </div>
+              <div id="frameedit" style="display: block; border: 0px dashed red; ">
 
                 <div id="frmedithead" style="padding-bottom: 10px;">&nbsp;</div>
                 <div style="width:100%;">
@@ -313,6 +313,11 @@ class HTML_CMS_Website extends HTML_CMS
                   <div id="frmdiff"></div>
                 </div>
               </div>
+              <div id="previewarea" style="display:none;">
+                <div id="previewhead" style="padding-bottom: 10px;">&nbsp;</div>
+                <div id="previewzone">&nbsp;</div>
+              </div>
+
             </div>
             <div class="corner_BL">
               <div class="corner_BR"></div>
@@ -334,7 +339,7 @@ class HTML_CMS_Website extends HTML_CMS
             <tr>
               <td class="lbox" style="background-color:#eeeeee">&nbsp;</td>
               <td class="lbox" style="background-color:#A3EDB4">&nbsp;</td>
-              <td>Translation  up to date</td>
+              <td>Translation up to date</td>
             </tr>
             <tr>
               <td class="lbox" style="background-color:#B5EDA3">&nbsp;</td>

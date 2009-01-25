@@ -442,7 +442,7 @@ function addUserFilter( uf_str )
   }
 
   if (uf_name != '' && uf_name.length < 50) {
-    makeRequest('?page=data_out&d_f=text&d_u=ufs&d_val=add&d_val2='+encodeURIComponent(uf_type)+'&d_val3='+encodeURIComponent(uf_name)+'&d_val4='+encodeURIComponent(uf_str), 'ufs', uf_objid, 'html', 'GET', '');
+    makeRequest('?page=data_out&d_f=text&d_u=ufs&action=add&title='+encodeURIComponent(uf_name)+'&setting='+encodeURIComponent(uf_str), 'ufs', uf_objid, 'html', 'GET', '');
   }
 }
 
@@ -461,7 +461,7 @@ function deleteUserFilter( uf_id, uf_type, uf_name )
   uf_objid = 'labtitel2c';
 
   if (uf_check == true) {
-    makeRequest('?page=data_out&d_f=text&d_u=ufs&d_val=del&d_val2='+encodeURIComponent(uf_type)+'&d_val3='+encodeURIComponent(uf_id), 'ufs', uf_objid, 'html', 'GET', '');
+    makeRequest('?page=data_out&d_f=text&d_u=ufs&action=del&id='+encodeURIComponent(uf_id), 'ufs', uf_objid, 'html', 'GET', '');
   }
 }
 
@@ -685,6 +685,7 @@ function loadEntryTable( objevent )
   if (document.getElementById('frametable').style.display != 'block') {
     document.getElementById('frametable').style.display = 'block';
     document.getElementById('frameedit').style.display = 'none';
+    document.getElementById('previewarea').style.display = 'none';
 
     // deactivate alert-timer
     window.clearTimeout(alertactiv); 
@@ -778,6 +779,7 @@ function loadEntryTableWithOffset( offset )
   if (document.getElementById('frametable').style.display != 'block') {
     document.getElementById('frametable').style.display = 'block';
     document.getElementById('frameedit').style.display = 'none';
+    document.getElementById('previewarea').style.display = 'none';
   }
 
   reloadEntryTableWithOffset( offset );
@@ -793,6 +795,7 @@ function reloadEntryTable( )
   if (document.getElementById('frametable').style.display != 'block') {
     document.getElementById('frametable').style.display = 'block';
     document.getElementById('frameedit').style.display = 'none';
+    document.getElementById('previewarea').style.display = 'none';
   }
 
   // deactivate alert-timer
@@ -815,6 +818,7 @@ function showEditor( )
 {
   if (document.getElementById('frameedit').style.display != 'block') {
     document.getElementById('frametable').style.display = 'none';
+    document.getElementById('previewarea').style.display = 'none';
     document.getElementById('frameedit').style.display = 'block';
   }
 
@@ -876,7 +880,7 @@ function loadEditor( objevent, entryid )
         roscms_prev_page = roscms_current_page;
         roscms_current_page = objevent;
 
-        document.getElementById('frmedithead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <b>Edit Entry</b>';
+        document.getElementById('frmedithead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Edit Entry</strong>';
 
         // enable autosave
         autosave_timer = window.setTimeout("tryAutosave()", autosave_coundown);
@@ -1789,6 +1793,11 @@ function alertContents( http_request, action, objid )
             updateQuickinfo(http_request, objid);
             break;
 
+            // preview
+          case 'prv': 
+            showPreview(http_request, objid);
+            break;
+
           default:
             alert('Unknown-AJAX-LoadAction: '+ action);
             break;
@@ -2378,13 +2387,31 @@ function previewPage( )
   var tentrs2 = tentrs[1].split("_");
 
   if (tentrs[0] == 1) {
-    window.open(roscms_intern_page_link+"data_out&d_f=page&d_u=show&d_val="+tentrs2[1]+"&d_val2="+userlang+"&d_val3=", "RosCMSPagePreview");
+    makeRequest('?page=data_out&d_f=text&d_u=prv&rev_id='+tentrs2[1], 'prv', 'previewarea', 'html', 'GET', '');
   }
   else {
     alertbox("Select one entry to preview a page!");
   }
+}
 
-  document.getElementById('extraopt').value = 'sel';
+
+
+/**
+ * put the previewed page into an iframe and hide other elements like entry table and editor
+ *
+ * @param object http_request
+ * @param string objid
+ */
+function showPreview( http_request, objid )
+{
+  if (document.getElementById('previewarea').style.display != 'block') {
+    document.getElementById('frametable').style.display = 'none';
+    document.getElementById('frameedit').style.display = 'none';
+    document.getElementById('previewarea').style.display = 'block';
+  }
+
+  document.getElementById('previewzone').innerHTML = http_request.responseText;
+  document.getElementById('previewhead').innerHTML = '<span class="button" onclick="loadEntryTableWithOffset(roscms_current_tbl_position)"><strong>&laquo; Back</strong></span> &nbsp; <strong>Preview</strong>';
 }
 
 

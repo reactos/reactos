@@ -35,6 +35,10 @@ class Admin_Groups extends Admin
    */
   protected function showNew( )
   {
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_RIGHTS." ORDER BY name ASC");
+    $stmt->execute();
+    $rights=$stmt->fetchAll(PDO::FETCH_ASSOC);
+
     echo_strip('
       <h2>Create new Group</h2>
       <form onsubmit="return false;">
@@ -42,10 +46,10 @@ class Admin_Groups extends Admin
           <legend>Group Data</legend>
           <label for="group_sec">Security Level</label>
           <select id="group_sec" name="group_sec">
-            <option value="0">0 (no access to CMS, only that myRosCMS stuff)</option>
-            <option value="1">1 (simple users (e.g. translator))</option>
-            <option value="2">2 (advanced rights, e.g. developers)</option>
-            <option value="3">3 (some admin functions)</option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
           </select>
           <br />
 
@@ -65,32 +69,47 @@ class Admin_Groups extends Admin
           <legend>configure group access rights</legend>
           <table>
             <tr>
-              <th>ACL Name</th>
-              <th title="read">R</th>
-              <th title="write">W</th>
-              <th title="add">A</th>
-              <th title="delete">D</th>
-              <th title="publish">P</th>
-              <th title="translate">T</th>
-            </tr>');
+              <th>ACL Name</th>');
+    foreach ($rights as $right) {
+      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
+    }
+    echo '</tr>';
 
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
     $stmt->execute();
-    while ($acl = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo_strip('
-        <tr title="'.htmlspecialchars($acl['description']).'">
-          <td>'.htmlspecialchars($acl['name']).'</td>
-          <td title="read entries"><input type="checkbox" name="read'.$acl['id'].'" id="read'.$acl['id'].'" value="1" /></td>
-          <td title="edit entries"><input type="checkbox" name="write'.$acl['id'].'" id="write'.$acl['id'].'" value="1" /></td>
-          <td title="add new entries"><input type="checkbox" name="add'.$acl['id'].'" id="add'.$acl['id'].'" value="1" /></td>
-          <td title="delete entries"><input type="checkbox" name="del'.$acl['id'].'" id="del'.$acl['id'].'" value="1" /></td>
-          <td title="make entries stable"><input type="checkbox" name="pub'.$acl['id'].'" id="pub'.$acl['id'].'" value="1" /></td>
-          <td title="translate entries"><input type="checkbox" name="trans'.$acl['id'].'" id="trans'.$acl['id'].'" value="1" /></td>
-        </tr>');
+        <tr title="'.htmlspecialchars($access['description']).'">
+          <td>'.htmlspecialchars($access['name']).'</td>');
+
+      foreach ($rights as $right) {
+        echo '<td title="'.$access['name'].'--'.$access['name'].': '.$access['description'].'"><input type="checkbox" value="1" name="valid'.$access['id'].'_'.$right['id'].'" /></td>';
+      }
+      echo '</tr>';
     }
 
     echo_strip('
           </table>
+        </fieldset>
+        <br />
+        <fieldset>
+          <legend>Area Protection List (APL)</legend>
+          <table>
+            <tr>
+              <th>ACL Name</th>
+              <th>Status</th>');
+
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_AREA." ORDER BY name ASC");
+    $stmt->execute();
+    while ($area = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      echo_strip('
+        <tr>
+          <td title="'.$area['description'].'"><label for="area'.$area['id'].'">'.$area['name'].'</label></td>
+          <td><input type="checkbox" value="1" name="area'.$area['id'].'" id="area'.$area['id'].'" /></td>
+        </tr>');
+    }
+
+    echo_strip('
         </fieldset>
         <button onclick="'."submitNew('group')".'">Create new Group</button>
       </form>
@@ -123,23 +142,36 @@ class Admin_Groups extends Admin
       $group_id = $stmt->fetchColumn();
       if ($group_id !== false) {
 
-        // prepare for usage in loop
-        $stmt_ins=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ENTRY_AREA." (acl_id, group_id, can_read, can_write, can_add, can_delete, can_publish, can_translate) VALUES (:acl_id, :group_id, :read, :write, :add, :delete, :publish, :translate)");
-        $stmt_ins->bindParam('group_id',$group_id,PDO::PARAM_INT);
-
-        // insert access rights for each group
-        $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ACCESS);
+        $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_RIGHTS." ORDER BY name ASC");
         $stmt->execute();
-        while ($acl = $stmt->fetch(PDO::FETCH_ASSOC)) {
-          $stmt_ins->bindParam('acl_id',$acl['id'],PDO::PARAM_INT);
-          $stmt_ins->bindValue('read',$_POST['read'.$acl['id']]=='true',PDO::PARAM_BOOL);
-          $stmt_ins->bindValue('write',$_POST['write'.$acl['id']]=='true',PDO::PARAM_BOOL);
-          $stmt_ins->bindValue('add',$_POST['add'.$acl['id']]=='true',PDO::PARAM_BOOL);
-          $stmt_ins->bindValue('delete',$_POST['del'.$acl['id']]=='true',PDO::PARAM_BOOL);
-          $stmt_ins->bindValue('publish',$_POST['pub'.$acl['id']]=='true',PDO::PARAM_BOOL);
-          $stmt_ins->bindValue('translate',$_POST['trans'.$acl['id']]=='true',PDO::PARAM_BOOL);
-          $success = $success && $stmt_ins->execute();
-        }
+        $rights=$stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt_acl=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ACL." (access_id, group_id, right_id) VALUES (:access_id,:group_id,:right_id)");
+        $stmt_acl->bindParam('group_id',$group_id,PDO::PARAM_INT);
+        $stmt_apl=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_AREA_ACCESS." (area_id, group_id) VALUES (:area_id,:group_id)");
+        $stmt_apl->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+        foreach ($_POST as $item=>$val) {
+        
+          // insert ACL
+          if (strpos($item,'valid')===0) {
+            $item = substr($item, 5);
+            $id = explode('_',$item);
+            if($id[0] > 0 && $id[1] > 0 && $val=='true') {
+              $stmt_acl->bindParam('right_id',$id[1],PDO::PARAM_INT);
+              $stmt_acl->bindParam('access_id',$id[0],PDO::PARAM_INT);
+              $success = $success && $stmt_acl->execute();
+            }
+          }
+
+          // insert APL
+          elseif (strpos($item,'area')===0 && $val=='true') {
+            $id = substr($item, 4);
+            if($id > 0) {
+              $stmt_apl->bindParam('area_id',$id,PDO::PARAM_INT);
+              $success = $success && $stmt_apl->execute();
+            }
+          }
+        } // end foreach
       } // end got list id
       else {
         $success = false;
@@ -219,6 +251,10 @@ class Admin_Groups extends Admin
    */
   protected function showEdit( )
   {
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_RIGHTS." ORDER BY name ASC");
+    $stmt->execute();
+    $rights=$stmt->fetchAll(PDO::FETCH_ASSOC);
+
     $stmt=&DBConnection::getInstance()->prepare("SELECT name, name_short, description, id, security_level FROM ".ROSCMST_GROUPS." WHERE id=:acl_id");
     $stmt->bindParam('acl_id',$_POST['group'],PDO::PARAM_INT);
     $stmt->execute();
@@ -233,10 +269,10 @@ class Admin_Groups extends Admin
 
           <label for="group_sec">Security Level</label>
           <select id="group_sec" name="group_sec">
-            <option value="0"'.($group['security_level'] == 0 ? ' selected="selected"' : '').'>0 (no access to CMS, only that myRosCMS stuff)</option>
-            <option value="1"'.($group['security_level'] == 1 ? ' selected="selected"' : '').'>1 (simple users (e.g. translator))</option>
-            <option value="2"'.($group['security_level'] == 2 ? ' selected="selected"' : '').'>2 (advanced rights, e.g. developers)</option>
-            <option value="3"'.($group['security_level'] == 3 ? ' selected="selected"' : '').'>3 (some admin functions)</option>
+            <option value="0"'.($group['security_level'] == 0 ? ' selected="selected"' : '').'>0</option>
+            <option value="1"'.($group['security_level'] == 1 ? ' selected="selected"' : '').'>1</option>
+            <option value="2"'.($group['security_level'] == 2 ? ' selected="selected"' : '').'>2</option>
+            <option value="3"'.($group['security_level'] == 3 ? ' selected="selected"' : '').'>3</option>
           </select>
           <br />
 
@@ -256,33 +292,63 @@ class Admin_Groups extends Admin
           <legend>configure group access rights</legend>
           <table>
             <tr>
-              <th>ACL Name</th>
-              <th title="read">R</th>
-              <th title="write">W</th>
-              <th title="add">A</th>
-              <th title="delete">D</th>
-              <th title="publish">P</th>
-              <th title="translate">T</th>
-            </tr>');
+              <th>ACL Name</th>');
+    foreach ($rights as $right) {
+      echo '<th style="vertical-align:bottom;" title="'.$right['name'].': '.$right['description'].'"><img src="?page=presentation&amp;type=vtext&amp;text='.$right['name'].'" alt="'.$right['name'].'" /></th>';
+    }
+    echo '</tr>';
 
-    $stmt=&DBConnection::getInstance()->prepare("SELECT s.id, s.name, s.description, a.can_read, a.can_write, a.can_add, a.can_delete, a.can_publish, a.can_translate FROM ".ROSCMST_ACCESS." s JOIN ".ROSCMST_ENTRY_AREA." a ON a.acl_id=s.id WHERE a.group_id=:group_id ORDER BY name ASC");
-    $stmt->bindParam('group_id',$group['id'],PDO::PARAM_INT);
+    // for usage in loop
+    $stmt_is=&DBConnection::getInstance()->prepare("SELECT TRUE FROM ".ROSCMST_ACL." WHERE group_id=:group_id AND right_id=:right_id AND access_id=:access_id LIMIT 1");
+    $stmt_is->bindParam('group_id',$group['id'],PDO::PARAM_INT);
+
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_ACCESS." ORDER BY name ASC");
     $stmt->execute();
-    while ($acl = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $stmt_is->bindParam('access_id',$access['id'],PDO::PARAM_INT);
       echo_strip('
-        <tr title="'.htmlspecialchars($acl['description']).'">
-          <td>'.htmlspecialchars($acl['name']).'</td>
-          <td title="read entries"><input type="checkbox" name="read'.$acl['id'].'" id="read'.$acl['id'].'" '.($acl['can_read'] == true ? 'checked="checked"' : '').' value="1" /></td>
-          <td title="edit entries"><input type="checkbox" name="write'.$acl['id'].'" id="write'.$acl['id'].'" '.($acl['can_write'] == true ? 'checked="checked"' : '').' value="1" /></td>
-          <td title="add new entries"><input type="checkbox" name="add'.$acl['id'].'" id="add'.$acl['id'].'" '.($acl['can_add'] == true ? 'checked="checked"' : '').' value="1" /></td>
-          <td title="delete entries"><input type="checkbox" name="del'.$acl['id'].'" id="del'.$acl['id'].'" '.($acl['can_delete'] == true ? 'checked="checked"' : '').' value="1" /></td>
-          <td title="make entries stable"><input type="checkbox" name="pub'.$acl['id'].'" id="pub'.$acl['id'].'" '.($acl['can_publish'] == true ? 'checked="checked"' : '').' value="1" /></td>
-          <td title="translate entries"><input type="checkbox" name="trans'.$acl['id'].'" id="trans'.$acl['id'].'" '.($acl['can_translate'] == true ? 'checked="checked"' : '').' value="1" /></td>
-        </tr>');
+        <tr title="'.htmlspecialchars($access['description']).'">
+          <td>'.htmlspecialchars($access['name']).'</td>');
+      foreach ($rights as $right) {
+        $stmt_is->bindParam('right_id',$right['id'],PDO::PARAM_INT);
+        $stmt_is->execute();
+        $is = $stmt_is->fetchColumn();
+
+        echo '<td title="'.$access['name'].'--'.$right['name'].': '.$right['description'].'"><input type="checkbox" value="1" name="valid'.$access['id'].'_'.$right['id'].'" '.($is ? 'checked="checked"' : '').' /></td>';
+      }
+      echo '</tr>';
     }
 
     echo_strip('
           </table>
+        </fieldset>
+        <br />
+        <fieldset>
+          <legend>Area Protection List (APL)</legend>
+          <table>
+            <tr>
+              <th>ACL Name</th>
+              <th>Status</th>');
+              
+    // for usage in loop
+      $stmt_is=&DBConnection::getInstance()->prepare("SELECT TRUE FROM ".ROSCMST_AREA_ACCESS." WHERE group_id=:group_id AND area_id=:area_id LIMIT 1");
+      $stmt_is->bindParam('group_id',$group['id'],PDO::PARAM_INT);
+
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_AREA." ORDER BY name ASC");
+    $stmt->execute();
+    while ($area = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $stmt_is->bindParam('area_id',$area['id'],PDO::PARAM_INT);
+      $stmt_is->execute();
+      $is = $stmt_is->fetchColumn();
+
+      echo_strip('
+        <tr>
+          <td title="'.$area['description'].'"><label for="area'.$area['id'].'">'.$area['name'].'</label></td>
+          <td><input type="checkbox" value="1" name="area'.$area['id'].'" id="area'.$area['id'].'"'.($is ? ' checked="checked"' : '').' /></td>
+        </tr>');
+    }
+
+    echo_strip('
         </fieldset>
         <button onclick="'."submitEdit('group')".'">Edit Group</button>
       </form>
@@ -309,22 +375,41 @@ class Admin_Groups extends Admin
     $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
     $success = $success && $stmt->execute();
 
-    // prepare for usage in loop
-    $stmt_ins=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_ENTRY_AREA." SET can_read=:read, can_write=:write, can_add=:add, can_delete=:delete, can_publish=:publish, can_translate=:translate WHERE acl_id=:acl_id AND group_id=:group_id");
-    $stmt_ins->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
-
-    // insert access rights for each group
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_ACCESS);
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_ACL." WHERE group_id=:group_id");
+    $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
     $success = $success && $stmt->execute();
-    while ($access = $stmt->fetch(PDO::FETCH_ASSOC)) {
-      $stmt_ins->bindParam('acl_id',$access['id'],PDO::PARAM_INT);
-      $stmt_ins->bindValue('read',$_POST['read'.$access['id']]=='true',PDO::PARAM_BOOL);
-      $stmt_ins->bindValue('write',$_POST['write'.$access['id']]=='true',PDO::PARAM_BOOL);
-      $stmt_ins->bindValue('add',$_POST['add'.$access['id']]=='true',PDO::PARAM_BOOL);
-      $stmt_ins->bindValue('delete',$_POST['del'.$access['id']]=='true',PDO::PARAM_BOOL);
-      $stmt_ins->bindValue('publish',$_POST['pub'.$access['id']]=='true',PDO::PARAM_BOOL);
-      $stmt_ins->bindValue('translate',$_POST['trans'.$access['id']]=='true',PDO::PARAM_BOOL);
-      $success = $success && $stmt_ins->execute();
+
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_AREA_ACCESS." WHERE group_id=:group_id");
+    $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+    $success = $success && $stmt->execute();
+
+    if ($success) {
+      $stmt_acl=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_ACL." (access_id, group_id, right_id) VALUES (:access_id,:group_id,:right_id)");
+      $stmt_acl->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+      $stmt_apl=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_AREA_ACCESS." (area_id, group_id) VALUES (:area_id,:group_id)");
+      $stmt_apl->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+      foreach ($_POST as $item=>$val) {
+
+        // insert ACL
+        if (strpos($item,'valid')===0) {
+          $item = substr($item, 5);
+          $id = explode('_',$item);
+          if($id[0] > 0 && $id[1] > 0 && $val=='true') {
+            $stmt_acl->bindParam('right_id',$id[1],PDO::PARAM_INT);
+            $stmt_acl->bindParam('access_id',$id[0],PDO::PARAM_INT);
+            $success = $success && $stmt_acl->execute();
+          }
+        }
+
+        // insert APL
+        elseif (strpos($item,'area')===0 && $val=='true') {
+          $id = substr($item, 4);
+          if($id > 0) {
+            $stmt_apl->bindParam('area_id',$id,PDO::PARAM_INT);
+            $success = $success && $stmt_apl->execute();
+          }
+        }
+      }
     }
 
     // give the user a success or failure message
@@ -380,7 +465,11 @@ class Admin_Groups extends Admin
 
     // delete rights list
     if ($success) {
-      $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_ENTRY_AREA." WHERE group_id=:group_id");
+      $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_ACL." WHERE group_id=:group_id");
+      $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
+      $success = $success && $stmt->execute();
+
+      $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_ACL." WHERE group_id=:group_id");
       $stmt->bindParam('group_id',$_POST['group_id'],PDO::PARAM_INT);
       $success = $success && $stmt->execute();
     }

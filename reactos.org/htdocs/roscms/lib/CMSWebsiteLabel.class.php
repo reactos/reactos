@@ -30,21 +30,16 @@ class CMSWebsiteLabel
   {
     Login::required();
 
-    $this->output();
+    $this->show();
   } // end of member function __construct
 
 
   /**
    * cares about filter management: adding, deleting, listing
    *
-   * @param string _GET['d_value']  action 'add' or 'del'
-   * @param string _GET['d_value2'] type 'label' or not
-   * @param string _GET['d_value3'] filter_title if adding its the filter name, if del it's the filter id
-   * @param string _GET['d_value4'] filter_string filter content
-   * @return 
    * @access private
    */
-  private function output( )
+  private function show( )
   {
     $thisuser = &ThisUser::getInstance();
 

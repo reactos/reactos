@@ -3,7 +3,7 @@
     RosCMS - ReactOS Content Management System
     Copyright (C) 2005-2008  Klemens Friedl <frik85@reactos.org>
                   2005       Ge van Geldorp <gvg@reactos.org>
-                  2008       Danny Götte <dangerground@web.de>
+                  2008-2009  Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,10 +19,6 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
-
-//@MOVEME to config
-error_reporting(E_ALL);
-ini_set('error_reporting', E_ALL);
 
 if (get_magic_quotes_gpc()) {
   ini_set('magic_quotes', 'off');
@@ -146,6 +142,9 @@ switch (@$_GET['page']) {
           case 'uqi': // User Quick Info
             new Export_QuickInfo();
             break;
+          case 'prv': // Preview
+            new CMSWebsitePreview();
+            break;
           default:
             die('');
             break;
@@ -180,8 +179,16 @@ switch (@$_GET['page']) {
             break;
         } // end $_GET['d_u']
         break;
-        break;
     } // end switch
+    break;
+
+  // presentation
+  case 'presentation':
+    switch ($_GET['type']) {
+      case 'vtext': // vertical text
+        Presentation::verticalText($_GET['text']);
+        break;
+    } // end type
     break;
 
   // No permission

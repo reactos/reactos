@@ -126,7 +126,6 @@ class Tag
    */
   public static function add( $rev_id, $tag_name, $tag_value, $user_id )
   {
-    //@ADD group membership check
     if ($user_id != ThisUser::getInstance()->id() && $user_id != 0 && $user_id != -1) {
       die('ERROR: no rights to access this function');
     }

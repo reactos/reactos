@@ -25,12 +25,6 @@
 class Export_Page extends Export
 {
 
-  /** Aggregations: */
-
-  /** Compositions: */
-
-   /*** Attributes: ***/
-
 
   /**
    *
@@ -40,61 +34,22 @@ class Export_Page extends Export
   public function __construct( )
   {
     parent::__construct();
-    $this->page();
+
+
+    // remove "tr" so that it also work in translation view
+    $this->show(str_replace('tr', '', $_GET['d_val']));
   }
 
 
   /**
    *
-   * @return 
-   * @access public
+   * @access private
    */
-  public function page( )
+  private function show( $rev_id )
   {
-    switch (@$_GET['d_u']) {
-      case 'output':
-        // @TODO
-        break;
-
-      case 'show':
-      default:
-        if (empty($_GET['d_r_id']) || strpos($_GET['d_r_id'], 'tr') >= 0) {
-          // translation mode (contains "tr")
-          $lang = @$_GET['d_r_lang'];
-        }
-        else {
-          $lang = $_GET['d_val2'];
-        }
-
-        // remove "tr" so that it also work in translation view
-        $data = str_replace('tr', '', $_GET['d_val']);
-
-        if ( is_numeric($data) ) {
-          $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE r.id = :rev_id  ORDER BY r.version DESC LIMIT 1");
-          $stmt->bindParam('rev_id',$data,PDO::PARAM_INT);
-        }
-        else {
-          $stmt=&DBConnection::getInstance()->prepare("SELECT d.name, r.id, r.lang_id FROM ".ROSCMST_ENTRIES." d JOIN ".ROSCMST_REVISIONS." r ON d.id = r.data_id WHERE d.name = :data_name AND r.lang_id IN(:lang_one, :lang_two) ORDER BY r.version DESC LIMIT 1");
-          $stmt->bindParam('data_name',$data,PDO::PARAM_STR);
-          $stmt->bindParam('lang_one',$lang,PDO::PARAM_INT);
-          $stmt->bindParam('lang_two',Language::getStandardId(),PDO::PARAM_INT);
-        }
-
-        $stmt->execute();
-        $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
-        if (empty($_GET['d_val3'])) {
-          $dynamic_num = Tag::getValueByUser($revision['id'], 'number', -1);
-        }
-        else {
-          $dynamic_num = $_GET['d_val3'];
-        }
-
-        Log::writeGenerateLow('preview page: generate_page('.$revision['name'].', '.$revision['lang_id'].', '.$dynamic_num.', '.$_GET['d_u'].')');
-
-        $export_html = new Export_HTML();
-        echo $export_html->processText($revision['id'], $_GET['d_u']);
-        break;
-    }
+    // output a preview of the selected content
+    $generate = new Generate();
+    $generate->preview($rev_id);
   }
 
 

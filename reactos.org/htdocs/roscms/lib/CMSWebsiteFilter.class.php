@@ -25,59 +25,85 @@
 class CMSWebsiteFilter
 {
 
-  private $type_num = 1;
-
 
   public function __construct(  )
   {
     Login::required();
 
-    $this->manage();
+    // manage actions for adding / deleting filters
+    if ($_GET['d_val'] == 'add') {
+      $this->add($_GET['title'], $_GET['setting']);
+    }
+    elseif ($_GET['d_val'] == 'del') {
+      $this->del($_GET['id']);
+    }
+
+    // show updated filter list
+    $this->show();
+
   } // end of member function __construct
 
 
+
   /**
-   * cares about filter management: adding, deleting, listing
+   * adds a new filter to users smart filters
    *
-   * @param string _GET['d_value']  action 'add' or 'del'
-   * @param string _GET['d_value3'] filter_title if adding its the filter name, if del it's the filter id
-   * @param string _GET['d_value4'] filter_string filter content
+   * @param string title the filter name
+   * @param string setting filter settings
    * @return 
    * @access private
    */
-  private function manage( )
+  private function add( $title, $setting )
   {
     $thisuser = &ThisUser::getInstance();
 
-    // add a new label
-    if ($_GET['d_val'] == 'add') {
+    // check if filter already exists
+    $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_FILTER." WHERE user_id = :user_id AND name = :title LIMIT 1");
+    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+    $stmt->bindParam('title',$title,PDO::PARAM_STR);
+    $stmt->execute();
+    if ($stmt->fetchColumn() === false) {
 
-      // check if filter already exists
-      $stmt=&DBConnection::getInstance()->prepare("SELECT 1 FROM ".ROSCMST_FILTER." WHERE user_id = :user_id AND name = :title LIMIT 1");
+      // insert new filter
+      $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_FILTER." ( id, user_id, name, setting ) VALUES ( NULL, :user_id, :title, :setting )");
       $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-      $stmt->bindParam('title',$_GET['d_val3'],PDO::PARAM_STR);
-      $stmt->execute();
-      if ($stmt->fetchColumn() === false) {
-
-        // insert new filter
-        $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_FILTER." ( id, user_id, name, setting ) VALUES ( NULL, :user_id, :title, :string )");
-        $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
-        $stmt->bindParam('title',$_GET['d_val3'],PDO::PARAM_STR); 
-        $stmt->bindParam('string',$_GET['d_val4'],PDO::PARAM_STR);
-        $stmt->execute();
-      }
-    }
-    elseif ($_GET['d_val'] == 'del') {
-      // delete a label
-      $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_FILTER." WHERE id = :filter_id AND user_id = :user_id LIMIT 1");
-      $stmt->bindParam('filter_id',$_GET['d_val3'],PDO::PARAM_INT);
-      $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+      $stmt->bindParam('title',$title,PDO::PARAM_STR); 
+      $stmt->bindParam('setting',$setting,PDO::PARAM_STR);
       $stmt->execute();
     }
+  }
 
+
+
+  /**
+   * deletes a smart filter
+   *
+   * @param string _GET['d_val3'] filter_title if adding its the filter name, if del it's the filter id
+   * @param string _GET['d_val4'] filter_string filter content
+   * @return 
+   * @access private
+   */
+  private function del( $filter_id )
+  {
+    // delete a label
+    $stmt=&DBConnection::getInstance()->prepare("DELETE FROM ".ROSCMST_FILTER." WHERE id = :filter_id AND user_id = :user_id LIMIT 1");
+    $stmt->bindParam('filter_id',$filter_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
+    $stmt->execute();
+  }
+
+
+
+  /**
+   * deletes a smart filter
+   *
+   * @access private
+   */
+  private function show( )
+  {
     // echo current list of filters
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, setting FROM ".ROSCMST_FILTER." WHERE user_id = :user_id ORDER BY name ASC");
-    $stmt->bindParam('user_id',$thisuser->id(),PDO::PARAM_INT);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
     while ($filter = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo_strip('
@@ -90,10 +116,9 @@ class CMSWebsiteFilter
 
     // give standard text, if no filters are found
     if ($filter === false) {
-      echo '<span>Compose your favorite filter combinations and afterwards use the "save" function.</span>';
+      echo '<span>Compose your favorite filter combinations and afterwards use the &quot;save&quot; function.</span>';
     }
-
-  } // end of member function manage
+  }
 
 
 

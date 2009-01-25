@@ -431,7 +431,6 @@ class Data
         }
 
         // update text content with new name
-        //@ADD check, for only updating dependent entries
         $stmt=&DBConnection::getInstance()->prepare("UPDATE ".ROSCMST_TEXT." SET content = REPLACE(REPLACE(content, :old_type_name, :new_type_name), :old_link, :new_link) WHERE content LIKE :search1 OR content LIKE :search2");
         $stmt->bindParam('search1','%[#'.$old_type_short.'_'.$data['name'].']%',PDO::PARAM_STR);
         $stmt->bindParam('search2','%[#link_'.$data['name'].']%',PDO::PARAM_STR);
@@ -566,7 +565,6 @@ class Data
 
         // add Tags
         Tag::add($rev_id, 'number', $next_number, -1);
-        Tag::add($rev_id, 'number_sort', str_pad($next_number, 5, '0', STR_PAD_LEFT), -1); // padding with '0'
         Tag::add($rev_id, 'pub_date', date('Y-m-d'), -1);
         Tag::add($rev_id, 'pub_user', $thisuser->id(), -1);
 
@@ -640,7 +638,7 @@ class Data
                 die('Set a valid language in your account settings!');
               }
               elseif ($user_lang != $revision['lang_id']) {
-                echo 'As Language Maintainer you can only mark entries of "'.$user_lang.'" language as stable!';
+                echo 'As Language Maintainer you can\'t mark entries of other languages as stable!';
                 continue;
               }
             }
@@ -773,9 +771,8 @@ class Data
 
           // move to archiv
           case 'va':
-            Data::copy($revision['id'], 0, $lang_id);
+            Data::toArchive($revision['id']);
             Data::deleteFile($revision['id']);
-            Data::deleteRevision($revision['id']);
             break;
         } // switch
       } // for
@@ -847,93 +844,67 @@ class Data
 
 
   /**
+   * creates a new revision suitable for a new translation
    *
-   *
-   * @param int data_id
-   * @param int rev_id
-   * @param bool archive_mode
-   * @param string lang
+   * @param int rev_id the revision id which has to be translated
+   * @param int lang_id translated to this language
    * @return bool
    * @access public
    */
-  public static function copy($rev_id, $archive_mode, $lang_id = 0 )
+  public static function newTranslation($rev_id, $lang_id = 0 )
   {
-    // set archive mode dependent vars
-    if ($archive_mode == 0) {
-      // copy to archive
-      $archive_mode = true;
-    }
-    elseif ($archive_mode == 1) {
-      // create copy
-      $archive_mode = false;
-    }
-    else {
-      die('move_to_archive: wrong param');
-    }
-
-    // Log something
-    if ($archive_mode === false) {
-      Log::writeLow('copy entire entry (e.g. translate): rev-id '.$rev_id.Log::prepareInfo(null, $rev_id).'{move_to_archive}');
-    }
-    else {
-      Log::writeMedium('move entire entry to archive: rev-id '.$rev_id.Log::prepareInfo(null, $rev_id).'{move_to_archive}');
-    }
-
-    // data_revision
-    $stmt=&DBConnection::getInstance()->prepare("SELECT r.data_id, d.name, d.type, d.access_id, r.version, r.user_id, r.lang_id, r.datetime FROM ".ROSCMST_REVISIONS." r JOIN ".ROSCMST_ENTRIES." d ON r.data_id=d.id WHERE r.id = :rev_id LIMIT 1");
+    // original_revision
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, data_id, lang_id FROM ".ROSCMST_REVISIONS." WHERE id = :rev_id LIMIT 1");
     $stmt->bindParam('rev_id',$rev_id,PDO::PARAM_INT);
     $stmt->execute();
     $revision = $stmt->fetchOnce(PDO::FETCH_ASSOC);
 
-    if ($archive_mode === false) {
-      $revision = array(
-        'data_id' => $revision['data_id'],
-        'version' => '0',
-        'user_id' => ThisUser::getInstance()->id(),
-        'lang_id' => $lang_id,
-        'datetime' => date('Y-m-d H:i:s'));
+    // check if we can translate to the selected language
+    if ($lang_id == $revision['lang_id'] || $lang_id == Language::getStandardId()) {
+      die ('Can\'t translate to your language language');
     }
-    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, :version, :lang, :user_id, :datetime )");
+
+    // insert translated revision
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_REVISIONS." ( id , data_id , version , lang_id , user_id , datetime ) VALUES ( NULL, :data_id, :version, :lang, :user_id, NOW() )");
     $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
-    $stmt->bindValue('version',$revision['version'],PDO::PARAM_INT);
-    $stmt->bindParam('lang',$revision['lang_id'],PDO::PARAM_INT);
-    $stmt->bindParam('user_id',$revision['user_id'],PDO::PARAM_INT);
-    $stmt->bindParam('datetime',$revision['datetime'],PDO::PARAM_STR);
+    $stmt->bindValue('version',0,PDO::PARAM_INT);
+    $stmt->bindParam('lang',$lang_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
 
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id=:user_id ORDER BY id DESC LIMIT 1");
+    // get new revision id
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id=:user_id AND lang_id=:lang_id ORDER BY id DESC LIMIT 1");
     $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_INT);
-    $stmt->bindParam('user_id',$revision['user_id'],PDO::PARAM_INT);
+    $stmt->bindParam('lang_id',$lang_id,PDO::PARAM_INT);
+    $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
     $stmt->execute();
     $new_rev_id = $stmt->fetchColumn();
 
+    // check if copy process was successfull
     if ($new_rev_id === false) {
       die('copy-process of data_revision not successful');
     }
+    echo $new_rev_id.'--'.$revision['id'];
 
-    // copy stext
-    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) SELECT NULL, :new_rev_id AS rev_id, name, content FROM ".ROSCMST_STEXT." WHERE rev_id = :old_rev_id");
+    // copy short text
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_STEXT." ( id , rev_id , name , content ) SELECT NULL, :new_rev_id, name, content FROM ".ROSCMST_STEXT." WHERE rev_id = :old_rev_id");
     $stmt->bindParam('new_rev_id',$new_rev_id,PDO::PARAM_INT);
-    $stmt->bindParam('old_rev_id',$old_rev_id,PDO::PARAM_INT);
+    $stmt->bindParam('old_rev_id',$revision['id'],PDO::PARAM_INT);
     $stmt->execute();
 
     // copy_text
-    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) SELECT NULL, :new_rev_id AS rev_id, name, content FROM ".ROSCMST_TEXT." WHERE rev_id = :old_rev_id");
+    $stmt=&DBConnection::getInstance()->prepare("INSERT INTO ".ROSCMST_TEXT." ( id , rev_id , name , content ) SELECT NULL, :new_rev_id, name, content FROM ".ROSCMST_TEXT." WHERE rev_id = :old_rev_id");
     $stmt->bindParam('new_rev_id',$new_rev_id,PDO::PARAM_INT);
-    $stmt->bindParam('old_rev_id',$old_rev_id,PDO::PARAM_INT);
+    $stmt->bindParam('old_rev_id',$revision['id'],PDO::PARAM_INT);
     $stmt->execute();
 
 
-    // data_tag
-    Tag::copyFromData($rev_id, $new_rev_id);
-    if ($archive_mode === false) {
-      // change status to draft
-      $tag_id = Tag::getIdByUser($new_rev_id, 'status', -1);
-      Tag::update($tag_id, 'draft');
-    }
+    // copy data tags and update status
+    Tag::copyFromData($revision['id'], $new_rev_id);
+    Tag::update(Tag::getIdByUser($new_rev_id, 'status', -1), 'draft');
 
     return true;
-  } // end of member function compareGregorianDate
+  } // end of member function newTranslation
 
 
 

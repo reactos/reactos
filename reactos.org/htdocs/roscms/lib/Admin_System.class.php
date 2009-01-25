@@ -74,7 +74,7 @@ class Admin_System
    */
   protected function showAPL( )
   {
-    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name_short, description FROM ".ROSCMST_AREA." ORDER BY name_short ASC");
+    $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, description FROM ".ROSCMST_AREA." ORDER BY name ASC");
     $stmt->execute();
     $areas=$stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -88,15 +88,11 @@ class Admin_System
               <th style="vertical-align:bottom;" title="Security Level">SecLvl</th>
               <th style="vertical-align:bottom;">Group Name</th>');
     foreach ($areas as $area) {
-      echo '<th style="width: 1em;font-family:monospace;vertical-align:bottom;line-height: 0.8em;" title="'.$area['name_short'].': '.$area['description'].'">';
-      for ($i=0; $i<strlen($area['name_short']);$i++) {
-        echo substr($area['name_short'], $i, 1).'<br />';
-      }
-      echo '</th>';
+      echo '<th style="vertical-align:bottom;" title="'.$area['name'].': '.$area['description'].'"><img src="?page=presentation&amp;type=vtext&amp;text='.$area['name'].'" alt="'.$area['name'].'" /></th>';
     }
     echo '</tr>';
 
-    $stmt_is=&DBConnection::getInstance()->prepare("SELECT TRUE FROM ".ROSCMST_AREA." a JOIN ".ROSCMST_AREA_ACCESS." b ON a.id=b.area_id WHERE b.group_id=:group_id AND a.id=:area_id ORDER BY a.name_short LIMIT 1");
+    $stmt_is=&DBConnection::getInstance()->prepare("SELECT TRUE FROM ".ROSCMST_AREA." a JOIN ".ROSCMST_AREA_ACCESS." b ON a.id=b.area_id WHERE b.group_id=:group_id AND a.id=:area_id LIMIT 1");
 
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name, security_level, description FROM ".ROSCMST_GROUPS." ORDER BY security_level ASC, name ASC");
     $stmt->execute();
@@ -111,7 +107,7 @@ class Admin_System
         $stmt_is->execute();
         $is = $stmt_is->fetchColumn();
 
-        echo '<td title="'.$group['name'].'--'.$area['name_short'].': '.$area['description'].'"><input type="checkbox" value="1" name="valid'.$group['id'].'_'.$area['id'].'" '.($is ? 'checked="checked"' : '').' /></td>';
+        echo '<td title="'.$group['name'].'--'.$area['name'].': '.$area['description'].'"><input type="checkbox" value="1" name="valid'.$group['id'].'_'.$area['id'].'" '.($is ? 'checked="checked"' : '').' /></td>';
       }
       echo '</tr>';
     }

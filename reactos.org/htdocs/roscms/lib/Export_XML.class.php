@@ -320,7 +320,7 @@ class Export_XML extends Export
         $tdata .= ' status="'. $line_status .'"'; /* status (odd/even (=stable), new, draft, etc.) */
         $tdata .= ' security="'. $security .'"'; /* security (read, write, add, pub, trans) */
         $tdata .= ' xtrcol="'.$column_list_row.'"';
-        $tdata .= '><![CDATA['.urlencode(substr($stext_content, 30)).']]></row>';
+        $tdata .= '><![CDATA['.urlencode(substr($stext_content, 0, 30)).']]></row>';
 
         $row_counter++;
       } // while
@@ -419,8 +419,8 @@ class Export_XML extends Export
                 break;
               case 'nbr': // number ("dynamic" entry)
                 $tag_counter++;
-                $this->sql_order .= " t".$tag_counter.".value";
-                $this->sql_where .= " AND t".$tag_counter.".name = 'number_sort' ";
+                $this->sql_order .= " CAST(t".$tag_counter.".value AS INT)";
+                $this->sql_where .= " AND t".$tag_counter.".name = 'number' ";
                 break;
               case 'type': // type
                 $this->sql_order .= "d.type ";

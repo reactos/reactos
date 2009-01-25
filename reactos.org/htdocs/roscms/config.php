@@ -18,6 +18,10 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
+// How much debug by php itself should be showed
+error_reporting(E_ALL);
+ini_set('error_reporting', E_ALL);
+
 if (!defined('ROSCMS_PATH')) {
   define('ROSCMS_PATH',''); // relative path to roscms
 }

@@ -1,7 +1,8 @@
 <?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2005  Klemens Friedl <frik85@reactos.org>
+    Copyright (C) 2007      Klemens Friedl <frik85@reactos.org>
+                  2008-2009 Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,14 +19,36 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     */
 
+/**
+ * class CMSWebsitePreview
+ * 
+ */
+class CMSWebsitePreview
+{
 
-// Database:
-$db_host = 'localhost';
-$db_user = 'user';
-$db_pass = 'pass';
-$db_name = 'roscms';
 
-// vars are unset in DBConnection class
-// !!! so be sure to use DBConnection or unset(..) yourself
+  /**
+   *
+   * @access public
+   */
+  public function __construct( )
+  {
+    Login::required();
 
+    $this->show($_GET['rev_id']);
+  }
+
+
+  /**
+   *
+   *
+   * @access private
+   */
+  private function show( $rev_id )
+  {  
+    echo_strip('
+      <iframe style="width:100%;height:600px;background-color: white;border: 1px solid black;" src="?page=data_out&amp;d_f=page&amp;d_val='.$rev_id.'"></iframe>');
+  } // end of member function show
+
+} // end of CMSWebsitePreview
 ?>

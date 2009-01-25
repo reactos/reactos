@@ -26,7 +26,7 @@ ADDRESS P { margin: 0;}
 /* left menu */
 #leftNav { padding: 0px 10px 10px 10px; }
 #leftNav UL { margin: 0px 0px 1.5em 0px; padding: 0px; list-style-type: none; background-color: #EEEEEE; border-top: #3F3849 0px solid; border-right: #3F3849 1px solid; border-left: #3F3849 1px solid; }
-#leftNav UL LI { font-size: 13px; font-weight: bold; border-bottom: 1px solid #3f3849; }
+#leftNav UL LI { font-size: 12px; font-weight: bold; border-bottom: 1px solid #3f3849; }
 #leftNav UL LI A { display: block; padding: 2px 4px; color: #3F3849; text-decoration: none; }
 #leftNav UL LI A:hover { color: black; background-color: #FFCC33; }
 #leftNav H2 { margin: 0px; padding-left: 12px; border: #3F3849 1px solid; font-weight: bold; font-size: 14px; color: white; background-color: #5984c3; }

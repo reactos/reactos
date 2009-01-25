@@ -236,15 +236,14 @@ class Editor_Website extends Editor
       if (Data::hasAccess($revision['data_id'], 'translate')) {
 
         // copy existing entry to new language
-        if (Data::copy($revision['id'], 1 /* copy mode */, $_GET['d_r_lang'])) {
+        if (Data::newTranslation($revision['id'], $_GET['d_r_lang'])) {
           $stmt=&DBConnection::getInstance()->prepare("SELECT id FROM ".ROSCMST_REVISIONS." WHERE data_id = :data_id AND user_id = :user_id AND version = 0 AND lang_id = :lang ORDER BY id DESC LIMIT 1");
           $stmt->bindParam('data_id',$revision['data_id'],PDO::PARAM_STR);
           $stmt->bindParam('user_id',ThisUser::getInstance()->id(),PDO::PARAM_INT);
           $stmt->bindParam('lang',$_GET['d_r_lang'],PDO::PARAM_STR);
           $stmt->execute();
-          $translation = $stmt->fetchOnce(PDO::FETCH_ASSOC);
-          
-          $this->setRevision($translation['id']);
+
+          $this->setRevision($stmt->fetchColumn());
           $this->show();
         }
         else {
