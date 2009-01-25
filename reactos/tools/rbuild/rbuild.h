@@ -148,6 +148,12 @@ private:
 	                    bool verbose );
 };
 
+enum DependenciesType
+{
+	NoDependencies,
+	AutomaticDependencies,
+	FullDependencies
+};
 
 class Configuration
 {
@@ -156,7 +162,7 @@ public:
 	~Configuration ();
 	bool Verbose;
 	bool CleanAsYouGo;
-	bool AutomaticDependencies;
+	DependenciesType Dependencies;
 	bool CheckDependenciesForModuleOnly;
 	bool CompilationUnitsEnabled;
 	bool PrecompiledHeadersEnabled;

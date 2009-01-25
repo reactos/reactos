@@ -313,7 +313,7 @@ MingwBackend::Process ()
 void
 MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
 {
-	if ( configuration.AutomaticDependencies )
+	if ( configuration.Dependencies == AutomaticDependencies )
 	{
 		Module* module = ProjectNode.LocateModule ( configuration.CheckDependenciesForModuleOnlyModule );
 		if ( module == NULL )
@@ -519,6 +519,15 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
+	if ( configuration.Dependencies == FullDependencies )
+	{
+		fprintf ( fMakefile,
+				  "ifeq ($(ROS_BUILDDEPS),)\n"
+				  "ROS_BUILDDEPS:=%s\n"
+				  "endif\n",
+				  "full" );
+	}
+
 	fprintf ( fMakefile,
 	          "PREFIX := %s\n",
 	          compilerPrefix.c_str () );
@@ -715,7 +724,7 @@ MingwBackend::GenerateProxyMakefiles ()
 void
 MingwBackend::CheckAutomaticDependencies ()
 {
-	if ( configuration.AutomaticDependencies )
+	if ( configuration.Dependencies == AutomaticDependencies )
 	{
 		printf ( "Checking automatic dependencies..." );
 		AutomaticDependency automaticDependency ( ProjectNode );

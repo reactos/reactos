@@ -117,6 +117,8 @@
 #            -v           Be verbose.
 #            -c           Clean as you go. Delete generated files as soon as they are not needed anymore.
 #            -dd          Disable automatic dependencies.
+#            -da          Enable automatic dependencies.
+#            -df          Enable full dependencies.
 #            -dm{module}  Check only automatic dependencies for this module.
 #            -hd          Disable precompiled headers.
 #            -mi          Let make handle creation of install directories. Rbuild will not generate the directories.
@@ -244,6 +246,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_GENDIB  =@echo $(QUOTE)[GENDIB]   $@$(QUOTE)
   ECHO_STRIP   =@echo $(QUOTE)[STRIP]    $@$(QUOTE)
   ECHO_RGENSTAT=@echo $(QUOTE)[RGENSTAT] $@$(QUOTE)
+  ECHO_DEPENDS =@echo $(QUOTE)[DEPENDS]  $<$(QUOTE)
 else
   ECHO_CP      =
   ECHO_MKDIR   =
@@ -278,6 +281,7 @@ else
   ECHO_GENDIB  =
   ECHO_STRIP   =
   ECHO_RGENSTAT=
+  ECHO_DEPENDS =
 endif
 
 # Set host compiler/linker
