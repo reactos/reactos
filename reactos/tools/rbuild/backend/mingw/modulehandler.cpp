@@ -1049,7 +1049,7 @@ MingwModuleHandler::GetPrecompiledHeaderFilename () const
 	                          module.pch->file->name + ".gch" );
 }
 
-Rule arRule1 ( "$(intermediate_path_noext).a: $($(module_name)_OBJS) $(dependencies) | $(intermediate_dir)\n",
+Rule arRule1 ( "$(intermediate_path_noext).a: $($(module_name)_OBJS)  $(dependencies) | $(intermediate_dir)\n",
                "$(intermediate_path_noext).a",
                "$(intermediate_dir)$(SEP)", NULL );
 Rule arRule2 ( "\t$(ECHO_AR)\n"
@@ -1065,19 +1065,19 @@ Rule gasRule ( "$(source): ${$(module_name)_precondition}\n"
                "\t${gcc} -x assembler-with-cpp -MF $@ -D__ASM__ $($(module_name)_CFLAGS) -M -MP -MT $@ $<\n"
                "-include $(intermediate_path_unique).o.d\n"
                "endif\n"
-               "$(intermediate_path_unique).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).o.d)$(dependencies) | $(intermediate_dir)\n"
+               "$(intermediate_path_unique).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).o.d) $(dependencies) | $(intermediate_dir)\n"
                "\t$(ECHO_GAS)\n"
                "\t${gcc} -x assembler-with-cpp -o $@ -D__ASM__ $($(module_name)_CFLAGS) -c $<\n",
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d",
                "$(intermediate_dir)$(SEP)", NULL );
 Rule bootRule ( "$(source): ${$(module_name)_precondition}\n"
-                "$(module_output): $(source)$(dependencies) | $(OUTPUT)$(SEP)$(source_dir)\n"
+                "$(module_output): $(source) $(dependencies) | $(OUTPUT)$(SEP)$(source_dir)\n"
                 "\t$(ECHO_NASM)\n"
                 "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
                 "$(OUTPUT)$(SEP)$(source_dir)$(SEP)", NULL );
 Rule nasmRule ( "$(source): ${$(module_name)_precondition}\n"
-                "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
+                "$(intermediate_path_unique).o: $(source) $(dependencies) | $(intermediate_dir)\n"
                 "\t$(ECHO_NASM)\n"
                 "\t$(Q)${nasm} -f win32 $< -o $@ $($(module_name)_NASMFLAGS)\n",
                 "$(intermediate_path_unique).o",
@@ -1089,7 +1089,7 @@ Rule windresRule ( "$(source): ${$(module_name)_precondition}\n"
                    "\t${gcc} -xc -M -MP -MT $@ -DRC_INVOKED ${$(module_name)_RCFLAGS} $(source) -MF $@\n"
                    "-include $(intermediate_path_unique).coff.d\n"
                    "endif\n"
-                   "$(intermediate_path_unique).coff: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).coff.d)$(dependencies) $(WRC_TARGET) | $(intermediate_dir) $(TEMPORARY)\n"
+                   "$(intermediate_path_unique).coff: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).coff.d) $(dependencies) $(WRC_TARGET) | $(intermediate_dir) $(TEMPORARY)\n"
                    "\t$(ECHO_WRC)\n"
                    "\t${gcc} -xc -E -DRC_INVOKED ${$(module_name)_RCFLAGS} $(source) > $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp\n"
                    "\t$(Q)$(WRC_TARGET) ${$(module_name)_RCFLAGS} $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).rci.tmp $(TEMPORARY)$(SEP)$(module_name).$(source_name_noext).res.tmp\n"
@@ -1111,7 +1111,7 @@ Rule winebuildPDefRule ( "ifeq ($(ROS_BUILDDEPS),full)\n"
                          "\t${gcc} -xc -M -MP -MT $@ ${$(module_name)_RCFLAGS} $(source) -MF $@\n\n"
                          "-include $(intermediate_path_unique).spec.d\n"
                          "endif\n"
-                         "$(intermediate_path_unique).spec: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).spec.d)$(dependencies) | $(intermediate_dir)\n"
+                         "$(intermediate_path_unique).spec: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).spec.d) $(dependencies) | $(intermediate_dir)\n"
                          "\t$(ECHO_CPP)\n"
                          "\t${gcc} -xc -E ${$(module_name)_RCFLAGS} $(source) > $(intermediate_path_unique).spec\n\n"
 						 "$(intermediate_path_unique).auto.def: $(intermediate_path_unique).spec $(WINEBUILD_TARGET) | $(intermediate_dir)\n"
@@ -1138,7 +1138,7 @@ Rule winebuildPRule ( "$(intermediate_path_unique).stubs.c: $(intermediate_path_
                       "$(intermediate_path_unique).stubs.o",
                       "$(intermediate_path_unique).stubs.o.d",
                       "$(intermediate_dir)$(SEP)", NULL );
-Rule winebuildDefRule ( "$(intermediate_path_unique).auto.def: $(source)$(dependencies) $(WINEBUILD_TARGET) | $(intermediate_dir)\n"
+Rule winebuildDefRule ( "$(intermediate_path_unique).auto.def: $(source) $(dependencies) $(WINEBUILD_TARGET) | $(intermediate_dir)\n"
                         "\t$(ECHO_WINEBLD)\n"
                         "\t$(Q)$(WINEBUILD_TARGET) $(WINEBUILD_FLAGS) -o $(intermediate_path_unique).auto.def --def -E $(source) --filename $(module_dllname)\n\n",
                         "$(intermediate_path_noext).spec",
@@ -1153,7 +1153,7 @@ Rule winebuildRule ( "$(intermediate_path_unique).stubs.c: $(source) $(WINEBUILD
                      "\t${gcc} -MF $@ $($(module_name)_CFLAGS)$(compiler_flags) -M -MP -MT $@ $<\n"
                      "-include $(intermediate_path_unique).stubs.o.d\n"
                      "endif\n"
-                     "$(intermediate_path_unique).stubs.o: $(intermediate_path_unique).stubs.c$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).stubs.o.d)$(dependencies) | $(intermediate_dir)\n"
+                     "$(intermediate_path_unique).stubs.o: $(intermediate_path_unique).stubs.c$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).stubs.o.d) $(dependencies) | $(intermediate_dir)\n"
                      "\t$(ECHO_CC)\n"
                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                      "$(intermediate_path_unique).stubs.c",
@@ -1161,13 +1161,13 @@ Rule winebuildRule ( "$(intermediate_path_unique).stubs.c: $(source) $(WINEBUILD
                      "$(intermediate_path_unique).stubs.o.d",
                      "$(intermediate_dir)$(SEP)", NULL );
 Rule widlHeaderRule ( "$(source): ${$(module_name)_precondition}\n"
-					  "$(intermediate_path_noext).h: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+					  "$(intermediate_path_noext).h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext).h $(source)\n",
                       "$(intermediate_path_noext).h",
                       "$(intermediate_dir)$(SEP)", NULL );
 Rule widlServerRule ( "$(source): ${$(module_name)_precondition}\n"
-					  "$(intermediate_path_noext)_s.c $(intermediate_path_noext)_s.h: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+					  "$(intermediate_path_noext)_s.c $(intermediate_path_noext)_s.h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_s.h -s -S $(intermediate_path_noext)_s.c $(source)\n"
                       "ifeq ($(ROS_BUILDDEPS),full)\n"
@@ -1176,7 +1176,7 @@ Rule widlServerRule ( "$(source): ${$(module_name)_precondition}\n"
                       "\t${gcc} -MF $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -M -MP -MT $@ $<\n"
                       "-include $(intermediate_path_noext)_s.o.d\n"
                       "endif\n"
-                      "$(intermediate_path_noext)_s.o: $(intermediate_path_noext)_s.c $(intermediate_path_noext)_s.h$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_noext)_s.o.d)$(dependencies) | $(intermediate_dir)\n"
+                      "$(intermediate_path_noext)_s.o: $(intermediate_path_noext)_s.c $(intermediate_path_noext)_s.h$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_noext)_s.o.d) $(dependencies) | $(intermediate_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
                       "$(intermediate_path_noext)_s.h",
@@ -1185,7 +1185,7 @@ Rule widlServerRule ( "$(source): ${$(module_name)_precondition}\n"
                       "$(intermediate_path_noext)_s.o.d",
                       "$(intermediate_dir)$(SEP)", NULL );
 Rule widlClientRule ( "$(source): ${$(module_name)_precondition}\n"
-					  "$(intermediate_path_noext)_c.c $(intermediate_path_noext)_c.h: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+					  "$(intermediate_path_noext)_c.c $(intermediate_path_noext)_c.h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                       "\t$(ECHO_WIDL)\n"
                       "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_c.h -c -C $(intermediate_path_noext)_c.c $(source)\n"
                       "ifeq ($(ROS_BUILDDEPS),full)\n"
@@ -1194,7 +1194,7 @@ Rule widlClientRule ( "$(source): ${$(module_name)_precondition}\n"
                       "\t${gcc} -MF $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -M -MP -MT $@ $<\n"
                       "-include $(intermediate_path_noext)_c.o.d\n"
                       "endif\n"
-                      "$(intermediate_path_noext)_c.o: $(intermediate_path_noext)_c.c $(intermediate_path_noext)_c.h$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_noext)_c.o.d)$(dependencies) | $(intermediate_dir)\n"
+                      "$(intermediate_path_noext)_c.o: $(intermediate_path_noext)_c.c $(intermediate_path_noext)_c.h$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_noext)_c.o.d) $(dependencies) | $(intermediate_dir)\n"
                       "\t$(ECHO_CC)\n"
                       "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
                       "$(intermediate_path_noext)_c.h",
@@ -1203,7 +1203,7 @@ Rule widlClientRule ( "$(source): ${$(module_name)_precondition}\n"
                       "$(intermediate_path_noext)_c.o.d",
                       "$(intermediate_dir)$(SEP)", NULL );
 Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
-					 "$(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+					 "$(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                      "\t$(ECHO_WIDL)\n"
                      "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -h -H $(intermediate_path_noext)_p.h -p -P $(intermediate_path_noext)_p.c $(source)\n"
                      "ifeq ($(ROS_BUILDDEPS),full)\n"
@@ -1212,7 +1212,7 @@ Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
                      "\t${gcc} -MF $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -M -MP -MT $@ $<\n"
                      "-include $(intermediate_path_noext)_p.o.d\n"
                      "endif\n"
-                     "$(intermediate_path_noext)_p.o: $(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_noext)_p.o.d)$(dependencies) | $(intermediate_dir)\n"
+                     "$(intermediate_path_noext)_p.o: $(intermediate_path_noext)_p.c $(intermediate_path_noext)_p.h$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_noext)_p.o.d) $(dependencies) | $(intermediate_dir)\n"
                      "\t$(ECHO_CC)\n"
                      "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -fno-unit-at-a-time -c $<\n",
                      "$(intermediate_path_noext)_p.h",
@@ -1220,7 +1220,7 @@ Rule widlProxyRule ( "$(source): ${$(module_name)_precondition}\n"
                      "$(intermediate_path_noext)_p.o",
                      "$(intermediate_path_noext)_p.o.d",
                      "$(intermediate_dir)$(SEP)", NULL );
-Rule widlDlldataRule ( "$(source): $(dependencies) ${$(module_name)_precondition} $(WIDL_TARGET) | $(intermediate_dir)\n"
+Rule widlDlldataRule ( "$(source):  $(dependencies) ${$(module_name)_precondition} $(WIDL_TARGET) | $(intermediate_dir)\n"
                        "\t$(ECHO_WIDL)\n"
                        "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) --dlldata-only --dlldata=$(source) $(bare_dependencies)\n"
                        "ifeq ($(ROS_BUILDDEPS),full)\n"
@@ -1229,13 +1229,13 @@ Rule widlDlldataRule ( "$(source): $(dependencies) ${$(module_name)_precondition
                        "\t${gcc} -MF $@ $($(module_name)_CFLAGS)$(compiler_flags) -M -MP -MT $@ $<\n"
                        "-include $(intermediate_path_noext).o.d\n"
                        "endif\n"
-                       "$(intermediate_path_noext).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_noext).o.d)$(dependencies) | $(intermediate_dir)\n"
+                       "$(intermediate_path_noext).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_noext).o.d) $(dependencies) | $(intermediate_dir)\n"
                        "\t$(ECHO_CC)\n"
                        "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                        "$(intermediate_path_noext).o",
                        "$(intermediate_path_noext).o.d", NULL );
 Rule widlTlbRule ( "$(source): ${$(module_name)_precondition}\n"
-				   "$(intermediate_dir)$(SEP)$(module_name).tlb: $(source)$(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
+				   "$(intermediate_dir)$(SEP)$(module_name).tlb: $(source) $(dependencies) $(WIDL_TARGET) | $(intermediate_dir)\n"
                    "\t$(ECHO_WIDL)\n"
                    "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -t -T $(intermediate_path_noext).tlb $(source)\n",
                    "$(intermediate_dir)$(SEP)", NULL );
@@ -1246,13 +1246,13 @@ Rule gccRule ( "$(source): ${$(module_name)_precondition}\n"
                "\t${gcc} -MF $@ $($(module_name)_CFLAGS)$(compiler_flags) -M -MP -MT $@ $<\n"
                "-include $(intermediate_path_unique).o.d\n"
                "endif\n"
-               "$(intermediate_path_unique).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).o.d)$(dependencies) | $(intermediate_dir)\n"
+               "$(intermediate_path_unique).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).o.d) $(dependencies) | $(intermediate_dir)\n"
                "\t$(ECHO_CC)\n"
                "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d", NULL );
 Rule gccHostRule ( "$(source): ${$(module_name)_precondition}\n"
-				   "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
+				   "$(intermediate_path_unique).o: $(source) $(dependencies) | $(intermediate_dir)\n"
                    "\t$(ECHO_HOSTCC)\n"
                    "\t${host_gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                    "$(intermediate_path_unique).o", NULL );
@@ -1263,13 +1263,13 @@ Rule gppRule ( "$(source): ${$(module_name)_precondition}\n"
                "\t${gpp} -MF $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -M -MP -MT $@ $<\n"
                "-include $(intermediate_path_unique).o.d\n"
                "endif\n"
-               "$(intermediate_path_unique).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).o.d)$(dependencies) | $(intermediate_dir)\n"
+               "$(intermediate_path_unique).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).o.d) $(dependencies) | $(intermediate_dir)\n"
                "\t$(ECHO_CC)\n"
                "\t${gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d", NULL );
 Rule gppHostRule ( "$(source): ${$(module_name)_precondition}\n"
-				   "$(intermediate_path_unique).o: $(source)$(dependencies) | $(intermediate_dir)\n"
+				   "$(intermediate_path_unique).o: $(source) $(dependencies) | $(intermediate_dir)\n"
                    "\t$(ECHO_HOSTCC)\n"
                    "\t${host_gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
                    "$(intermediate_path_unique).o", NULL );
@@ -1280,7 +1280,7 @@ Rule pchRule ( "$(source): ${$(module_name)_precondition}\n"
 			   "\t$(pch_cc) -MF $@ $(pch_ccflags)$(compiler_flags) -x $(pch_language) -M -MP -MT $@ $<\n"
 			   "-include $(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch.d\n"
 			   "endif\n"
-			   "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch.d)$(dependencies) | $(intermediate_dir)$(SEP).gch_$(module_name)\n"
+			   "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch.d) $(dependencies) | $(intermediate_dir)$(SEP).gch_$(module_name)\n"
 			   "\t$(ECHO_PCH)\n"
 			   "\t$(pch_cc) -o $@ $(pch_ccflags)$(compiler_flags) -x $(pch_language) -c $<\n",
 			   "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch",
