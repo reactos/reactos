@@ -7,6 +7,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<file>assisted.c</file>
+	<file>internal.c</file>
 	<file>line.c</file>
 	<file>phone.c</file>
 	<library>wine</library>

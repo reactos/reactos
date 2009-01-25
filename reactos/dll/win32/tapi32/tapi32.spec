@@ -21,12 +21,12 @@
 @ stub NonAsyncEventThread
 @ stub TAPIWndProc
 @ stub TUISPIDLLCallback
-@ stub internalConfig
+@ stdcall internalConfig(ptr long ptr ptr)
 @ stub internalCreateDefLocation
-@ stub internalNewLocationW
+@ stdcall internalNewLocationW(wstr)
 @ stub internalPerformance
-@ stub internalRemoveLocation
-@ stub internalRenameLocationW
+@ stdcall internalRemoveLocation(long)
+@ stdcall internalRenameLocationW(wstr wstr)
 @ stdcall lineAccept(long str long)
 @ stdcall lineAddProvider(str long ptr) lineAddProviderA
 @ stdcall lineAddProviderA(str long ptr)
