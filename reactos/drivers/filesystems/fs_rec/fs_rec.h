@@ -13,11 +13,11 @@
 #include <ntifs.h>
 #include <ntdddisk.h>
 #include <ntddcdrm.h>
-#include "helper.h"
 
 //
 // Tag for memory allocations
 //
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define FSREC_TAG TAG('F', 's', 'R', 'c')
 
 //
@@ -25,6 +25,15 @@
 //
 #define UDFS_VRS_START_OFFSET  32768
 #define UDFS_AVDP_SECTOR       256
+
+//
+// Non-standard rounding macros
+//
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
 
 //
 // Conversion types and macros taken from internal ntifs headers

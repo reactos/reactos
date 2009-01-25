@@ -178,7 +178,7 @@ FsRecReadBlock(IN PDEVICE_OBJECT DeviceObject,
     {
         /* He didn't, allocate one */
         *Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                        PAGE_ROUND_UP(Length),
+                                        ROUND_TO_PAGES(Length),
                                         FSREC_TAG);
         if (!*Buffer) return FALSE;
     }
