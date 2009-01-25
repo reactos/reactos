@@ -2,7 +2,7 @@
  //
  // XML storage C++ classes version 1.3
  //
- // Copyright (c) 2004, 2005, 2006, 2007, 2008 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xmlstorage.cpp
@@ -37,12 +37,13 @@
 
 */
 
+#include <precomp.h>
+
 #ifndef XS_NO_COMMENT
-#define XS_NO_COMMENT	// no #pragma comment(lib, ...) statements in .lib files
+#define XS_NO_COMMENT	// no #pragma comment(lib, ...) statements in .lib files to enable static linking
 #endif
 
 //#include "xmlstorage.h"
-#include <precomp.h>
 
 
 namespace XMLStorage {
@@ -280,15 +281,17 @@ XMLNode* XMLNode::create_relative(const XPath& xpath)
 	XMLNode* node = this;
 
 	for(XPath::const_iterator it=xpath.begin(); it!=xpath.end(); ++it) {
-		XMLNode* child = it->find(this);
+		XMLNode* child = it->find(node);
 
 		if (!child) {
 			child = new XMLNode(it->_child_name);
-			add_child(child);
+			node->add_child(child);
 
 			if (!it->_attr_name.empty())
 				(*this)[it->_attr_name] = it->_attr_value;
 		}
+
+		node = child;
 	}
 
 	return node;
@@ -374,7 +377,7 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 
 	if (cdata) {
 		 // encode the whole string in a CDATA section
-		std::string ret = "<![CDATA[";
+		std::string ret = CDATA_START;
 
 #ifdef XS_STRING_UTF8
 		ret += str;
@@ -382,7 +385,7 @@ std::string EncodeXMLString(const XS_String& str, bool cdata)
 		ret += get_utf8(str);
 #endif
 
-		ret += "]]>";
+		ret += CDATA_END;
 
 		return ret;
 	} else if (l <= BUFFER_LEN) {
@@ -504,7 +507,7 @@ XS_String DecodeXMLString(const std::string& str)
 			} else	//@@ maybe decode "&#xx;" special characters
 				*o++ = *p;
 		} else if (*p=='<' && !XS_nicmp(p+1,XS_TEXT("![CDATA["),8)) {
-			LPCXSSTR e = XS_strstr(p+9, XS_TEXT("]]>"));
+			LPCXSSTR e = XS_strstr(p+9, XS_TEXT(CDATA_END));
 			if (e) {
 				p += 9;
 				size_t l = e - p;
@@ -532,7 +535,7 @@ void XMLNode::original_write_worker(std::ostream& out) const
 		out << '>';
 
 		if (_cdata_content)
-			out << EncodeXMLString(DecodeXMLString(_content), true);
+			out << CDATA_START << _content << CDATA_END;
 		else
 			out << _content;
 
@@ -632,7 +635,7 @@ void XMLNode::smart_write_worker(std::ostream& out, const XMLFormat& format, int
 		out << '>';
 
 		if (_cdata_content)
-			out << EncodeXMLString(DecodeXMLString(_content), true);
+			out << CDATA_START << _content << CDATA_END;
 		else if (!*content)
 			out << format._endl;
 		else
@@ -897,7 +900,7 @@ void XMLReaderBase::EndElementHandler()
 	const char* e = s + _content.length();
 	const char* p;
 
-	if (!strncmp(s,"<![CDATA[",9) && !strncmp(e-3,"]]>",3)) {
+	if (!strncmp(s,CDATA_START,9) && !strncmp(e-3,CDATA_END,3)) {
 		s += 9;
 		p = (e-=3);
 
