@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl" unicode="yes" crt="msvcrt">
-	<importlibrary definition="desk.def" />
+	<importlibrary definition="desk.spec" />
 	<include base="desk">.</include>
 	<define name="_WIN32" />
 	<library>kernel32</library>

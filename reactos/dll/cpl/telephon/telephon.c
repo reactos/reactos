@@ -13,7 +13,7 @@
 
 #include "resource.h"
 
-typedef UINT (CALLBACK* LPINTERNALCONFIG)(HWND, UINT, LPARAM, LPARAM);
+typedef LONG (CALLBACK* LPINTERNALCONFIG)(HWND, UINT, LPARAM, LPARAM);
 
 /* Control Panel Callback */
 LONG CALLBACK
@@ -45,7 +45,11 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             if (!hTapi32) return FALSE;
 
             lpInternalConfig = (LPINTERNALCONFIG) GetProcAddress(hTapi32, "internalConfig");
-            if (!lpInternalConfig) return FALSE;
+            if (!lpInternalConfig)
+            {
+                FreeLibrary(hTapi32);
+                return FALSE;
+            }
 
             lpInternalConfig(hwndCPl, 0, 0, 0);
             FreeLibrary(hTapi32);

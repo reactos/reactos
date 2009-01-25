@@ -55,7 +55,7 @@ CreateTitleFont(VOID)
 
     LogFont = ncm.lfMessageFont;
     LogFont.lfWeight = FW_BOLD;
-    _tcscpy(LogFont.lfFaceName, _T("MS Shell Dlg"));
+    wcscpy(LogFont.lfFaceName, L"MS Shell Dlg");
 
     hdc = GetDC(NULL);
     FontSize = 12;
