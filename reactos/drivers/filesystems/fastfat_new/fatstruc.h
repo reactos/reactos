@@ -111,6 +111,8 @@ typedef struct _VCB
     FAT_METHODS Methods;
     /*  Root Directory Fcb: */
     struct _FCB *RootFcb;
+
+    ULONG MediaChangeCount;
 } VCB, *PVCB;
 
 #define VcbToVolumeDeviceObject(xVcb) \

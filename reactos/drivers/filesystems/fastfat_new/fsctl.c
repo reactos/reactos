@@ -56,6 +56,7 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
 {
     NTSTATUS Status;
     DISK_GEOMETRY DiskGeometry;
+    ULONG MediaChangeCount = 0;
     PVOLUME_DEVICE_OBJECT VolumeDevice;
 
     DPRINT1("FatMountVolume()\n");
@@ -63,7 +64,17 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     /* Make sure this IRP is waitable */
     ASSERT(IrpContext->Flags & IRPCONTEXT_CANWAIT);
 
-    /* TODO: IOCTL_DISK_CHECK_VERIFY */
+    /* Request media changes count, mostly usefull for removable devices */
+    Status = FatPerformDevIoCtrl(TargetDeviceObject,
+                                 IOCTL_STORAGE_CHECK_VERIFY,
+                                 NULL,
+                                 0,
+                                 &MediaChangeCount,
+                                 sizeof(ULONG),
+                                 TRUE);
+
+    if (!NT_SUCCESS(Status)) return Status;
+
     /* TODO: Check if data-track present in case of a CD drive */
     /* TODO: IOCTL_DISK_GET_PARTITION_INFO_EX */
 
@@ -112,6 +123,12 @@ FatMountVolume(PFAT_IRP_CONTEXT IrpContext,
     /* Initialize VCB for this volume */
     Status = FatInitializeVcb(&VolumeDevice->Vcb, TargetDeviceObject, Vpb);
     if (!NT_SUCCESS(Status)) goto FatMountVolumeCleanup;
+
+    /* Keep trace of media changes */
+    VolumeDevice->Vcb.MediaChangeCount = MediaChangeCount;
+
+    /* Notify about volume mount */
+    FsRtlNotifyVolumeEvent(VolumeDevice->Vcb.VolumeFileObject, FSRTL_VOLUME_MOUNT);
 
     /* Return success */
     return STATUS_SUCCESS;
