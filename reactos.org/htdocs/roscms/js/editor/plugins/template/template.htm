@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>{#template_dlg.title}</title>
+	<script type="text/javascript" src="../../tiny_mce_popup.js"></script>
+	<script type="text/javascript" src="js/template.js"></script>
+	<link href="css/template.css" rel="stylesheet" type="text/css" />
+	<base target="_self" />
+</head>
+<body onresize="TemplateDialog.resize();"> 
+	<form onsubmit="TemplateDialog.insert();return false;">
+		<div id="frmbody">
+			<div class="title">{#template_dlg.desc}</div>
+			<div class="frmRow"><label for="tpath" title="{#template_dlg.select}">{#template_dlg.label}:</label>
+			<select id="tpath" name="tpath" onchange="TemplateDialog.selectTemplate(this.options[this.selectedIndex].value, this.options[this.selectedIndex].text);" class="mceFocus">
+				<option value="">{#template_dlg.select}...</option>
+			</select>
+			<span id="warning"></span></div>
+			<div class="frmRow"><label for="tdesc">{#template_dlg.desc_label}:</label>
+			<span id="tmpldesc"></span></div>
+			<fieldset>
+				<legend>{#template_dlg.preview}</legend>
+				<iframe id="templatesrc" name="templatesrc" src="blank.htm" width="690" height="400" frameborder="0"></iframe>
+			</fieldset>
+		</div>
+		
+		<div class="mceActionPanel">
+			<div style="float: left">
+				<input type="submit" id="insert" name="insert" value="{#insert}" />
+			</div>
+
+			<div style="float: right">
+				<input type="button" id="cancel" name="cancel" value="{#cancel}" onclick="tinyMCEPopup.close();" />
+			</div>
+
+			<br style="clear:both" />
+		</div>
+	</form>
+</body> 
+</html> 

@@ -43,8 +43,8 @@ class HTML_CMS_Website extends HTML_CMS
     $this->register_js('cms_website.js');
     $this->register_js('cms_website.js.php');
     $this->register_js('diff.js');
-    $this->register_js('../editor/jscripts/tiny_mce/tiny_mce_src.js');
-    $this->register_js('../editor/jscripts/mef.js');
+    $this->register_js('editor/tiny_mce_src.js');
+    $this->register_js('mef.js');
     parent::__construct( $page_title, $page_css);
   }
 

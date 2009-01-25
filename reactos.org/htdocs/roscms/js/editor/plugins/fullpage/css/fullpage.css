@@ -1,0 +1,182 @@
+/* Hide the advanced tab */
+#advanced_tab {
+	display: none;
+}
+
+#metatitle, #metakeywords, #metadescription, #metaauthor, #metacopyright {
+	width: 280px;
+}
+
+#doctype, #docencoding {
+	width: 200px;
+}
+
+#langcode {
+	width: 30px;
+}
+
+#bgimage {
+	width: 220px;	
+}
+
+#fontface {
+	width: 240px;
+}
+
+#leftmargin, #rightmargin, #topmargin, #bottommargin {
+	width: 50px;
+}
+
+.panel_wrapper div.current {
+	height: 400px;
+}
+
+#stylesheet, #style {
+	width: 240px;
+}
+
+/* Head list classes */
+
+.headlistwrapper {
+	width: 100%;
+}
+
+.addbutton, .removebutton, .moveupbutton, .movedownbutton {
+	border-top: 1px solid;
+	border-left: 1px solid;
+	border-bottom: 1px solid;
+	border-right: 1px solid;
+	border-color: #F0F0EE;
+	cursor: default;
+	display: block;
+	width: 20px;
+	height: 20px;
+}
+
+#doctypes {
+	width: 200px;
+}
+
+.addbutton:hover, .removebutton:hover, .moveupbutton:hover, .movedownbutton:hover {
+	border: 1px solid #0A246A;
+	background-color: #B6BDD2;
+}
+
+.addbutton {
+	background-image: url('../images/add.gif');
+	float: left;
+	margin-right: 3px;
+}
+
+.removebutton {
+	background-image: url('../images/remove.gif');
+	float: left;
+}
+
+.moveupbutton {
+	background-image: url('../images/move_up.gif');
+	float: left;
+	margin-right: 3px;
+}
+
+.movedownbutton {
+	background-image: url('../images/move_down.gif');
+	float: left;
+}
+
+.selected {
+	border: 1px solid #0A246A;
+	background-color: #B6BDD2;
+}
+
+.toolbar {
+	width: 100%;
+}
+
+#headlist {
+	width: 100%;
+	margin-top: 3px;
+	font-size: 11px;
+}
+
+#info, #title_element, #meta_element, #script_element, #style_element, #base_element, #link_element, #comment_element, #unknown_element {
+	display: none;
+}
+
+#addmenu {
+	position: absolute;
+	border: 1px solid gray;
+	display: none;
+	z-index: 100;
+	background-color: white;
+}
+
+#addmenu a {
+	display: block;
+	width: 100%;
+	line-height: 20px;
+	text-decoration: none;
+	background-color: white;
+}
+
+#addmenu a:hover {
+	background-color: #B6BDD2;
+	color: black;
+}
+
+#addmenu span {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+#updateElementPanel {
+	display: none;
+}
+
+#script_element .panel_wrapper div.current {
+	height: 108px;
+}
+
+#style_element .panel_wrapper div.current {
+	height: 108px;
+}
+
+#link_element  .panel_wrapper div.current {
+	height: 140px;
+}
+
+#element_script_value {
+	width: 100%;
+	height: 100px;
+}
+
+#element_comment_value {
+	width: 100%;
+	height: 120px;
+}
+
+#element_style_value {
+	width: 100%;
+	height: 100px;
+}
+
+#element_title, #element_script_src, #element_meta_name, #element_meta_content, #element_base_href, #element_link_href, #element_link_title {
+	width: 250px;
+}
+
+.updateElementButton {
+	margin-top: 3px;
+}
+
+/* MSIE specific styles */
+
+* html .addbutton, * html .removebutton, * html .moveupbutton, * html .movedownbutton {
+	width: 22px;
+	height: 22px;
+}
+
+textarea {
+	height: 55px;
+}
+
+.panel_wrapper div.current {height:420px;}

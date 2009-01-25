@@ -1,0 +1,13 @@
+#src_list, #over_list, #out_list {width:280px;}
+.mceActionPanel {margin-top:7px;}
+.alignPreview {border:1px solid #000; width:140px; height:140px; overflow:hidden; padding:5px;}
+.checkbox {border:0;}
+.panel_wrapper div.current {height:305px;}
+#prev {margin:0; border:1px solid #000; width:428px; height:150px; overflow:auto;}
+#align, #classlist {width:150px;}
+#width, #height {vertical-align:middle; width:50px; text-align:center;}
+#vspace, #hspace, #border {vertical-align:middle; width:30px; text-align:center;}
+#class_list {width:180px;}
+input {width: 280px;}
+#constrain, #onmousemovecheck {width:auto;}
+#id, #dir, #lang, #usemap, #longdesc {width:200px;}

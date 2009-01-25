@@ -1,0 +1,11 @@
+.panel_wrapper div.current {
+	height: 290px;
+}
+
+#id, #style, #title, #dir, #hreflang, #lang, #classlist, #tabindex, #accesskey {
+	width: 200px;
+}
+
+#events_panel input {
+	width: 200px;
+}
