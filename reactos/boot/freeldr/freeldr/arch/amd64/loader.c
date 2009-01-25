@@ -266,11 +266,23 @@ FrLdrSetupGdtIdt()
 
 	/* Setup KGDT_64_R0_CODE */
 	Entry = KiGetGdtEntry(pGdt, KGDT_64_R0_CODE);
-	*(PULONG64)Entry = 0x0020980000000000ULL;
+	*(PULONG64)Entry = 0x00209b0000000000ULL;
+
+	/* Setup KGDT_64_R0_SS */
+	Entry = KiGetGdtEntry(pGdt, KGDT_64_R0_SS);
+	*(PULONG64)Entry = 0x00cf93000000ffffULL;
 
 	/* Setup KGDT_64_DATA */
 	Entry = KiGetGdtEntry(pGdt, KGDT_64_DATA);
-	*(PULONG64)Entry = 0x0000F00000000000ULL;
+	*(PULONG64)Entry = 0x00cff3000000ffffULL;
+
+	/* Setup KGDT_64_R3_CODE */
+	Entry = KiGetGdtEntry(pGdt, KGDT_64_R3_CODE);
+	*(PULONG64)Entry = 0x0020fb0000000000ULL;
+
+	/* Setup KGDT_32_R3_TEB */
+	Entry = KiGetGdtEntry(pGdt, KGDT_32_R3_TEB);
+	*(PULONG64)Entry = 0xff40f3fd50003c00ULL;
 
 	/* Setup TSS entry */
 	Entry = KiGetGdtEntry(pGdt, KGDT_TSS);
