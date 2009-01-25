@@ -48,6 +48,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             if (!lpInternalConfig) return FALSE;
 
             lpInternalConfig(hwndCPl, 0, 0, 0);
+            FreeLibrary(hTapi32);
             return TRUE;
         }
     }
