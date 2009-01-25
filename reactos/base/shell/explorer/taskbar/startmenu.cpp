@@ -1557,7 +1557,8 @@ void StartMenuButton::DrawItem(LPDRAWITEMSTRUCT dis)
 
 
 StartMenuRoot::StartMenuRoot(HWND hwnd, const StartMenuRootCreateInfo& info)
- :	super(hwnd, info._icon_size)
+ :	super(hwnd, info._icon_size),
+	_hwndStartButton(0)
 {
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 	if (!g_Globals._SHRestricted || !SHRestricted(REST_NOCOMMONGROUPS))
@@ -1637,7 +1638,7 @@ void StartMenuRoot::TrackStartmenu()
 	 // recalculate start menu root position
 	RECT rect;
 
-	CalculateStartPos(_hwndParent, rect, _icon_size);
+	CalculateStartPos(_hwndStartButton, rect, _icon_size);
 
 	SetWindowPos(hwnd, 0, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
 
