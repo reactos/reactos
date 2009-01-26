@@ -1309,6 +1309,7 @@ typedef struct
 {
 } KSOBJECT_CREATE, *PKSOBJECT_CREATE;
 
+#if defined(__NTDDK_H)
 typedef struct
 {
     PDRIVER_DISPATCH       Create;
@@ -1318,8 +1319,11 @@ typedef struct
     ULONG                  Flags;
 } KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;
 
+
 typedef VOID (*PFNKSITEMFREECALLBACK)(
     IN  PKSOBJECT_CREATE_ITEM CreateItem);
+
+#endif
 
 typedef struct {
     ULONG    Size;
