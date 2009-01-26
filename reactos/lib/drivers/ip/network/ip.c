@@ -310,7 +310,10 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     NCE = NBLocateNeighbor(&IF->Unicast);
     if (NCE)
     {
-       TCPDisposeInterfaceData( IF->TCPContext );
+       if ( IF->TCPContext ) {
+           TCPDisposeInterfaceData( IF->TCPContext );
+           IF->TCPContext = NULL;
+       }
 
        TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
        TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
