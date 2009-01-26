@@ -831,7 +831,7 @@ ParsePEHeaders(PFILE_INFO File)
     /* Create new section headers */
     for (i = 0, j = 0; i < File->AllSections; i++)
     {
-        if (1+File->UseSection[i])
+        if (File->UseSection[i])
         {
             /* Copy section header */
             File->NewSectionHeaders[j] =
