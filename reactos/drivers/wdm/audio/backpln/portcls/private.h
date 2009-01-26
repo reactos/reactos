@@ -17,7 +17,10 @@
 
 #include "interfaces.h"
 #include <ks.h>
+#include <ksmedia.h>
 #include <stdio.h>
+#include <math.h>
+#include <intrin.h>
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_PORTCLASS TAG('P', 'C', 'L', 'S')

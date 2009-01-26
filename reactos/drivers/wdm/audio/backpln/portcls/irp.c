@@ -322,7 +322,7 @@ return STATUS_SUCCESS;
     if (Status == STATUS_PENDING)
     {
         /* not yet, lets wait a bit */
-        KeWaitForSingleObject(&Event, Executive, FALSE, FALSE, NULL);
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         Status = STATUS_SUCCESS;
     }
     DPRINT1("Returning status %x\n", Status);

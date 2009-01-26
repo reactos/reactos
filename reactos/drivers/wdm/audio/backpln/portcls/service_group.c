@@ -177,7 +177,7 @@ IServiceGroupDpc(
 {
     IServiceGroupImpl * This = (IServiceGroupImpl*)DeferredContext;
     IServiceGroup_fnRequestService((IServiceGroup*)DeferredContext);
-    KeSetEvent(&This->DpcEvent, 0, FALSE);
+    KeSetEvent(&This->DpcEvent, IO_SOUND_INCREMENT, FALSE);
 }
 
 
@@ -243,7 +243,7 @@ static IServiceGroupVtbl vt_IServiceGroup =
 };
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS NTAPI
 PcNewServiceGroup(

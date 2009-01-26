@@ -68,7 +68,7 @@ IDmaChannelSlave_fnAddRef(
 
     DPRINT("IDmaChannelSlave_AddRef: This %p\n", This);
 
-    return _InterlockedIncrement(&This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 ULONG
@@ -78,7 +78,7 @@ IDmaChannelSlave_fnRelease(
 {
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
-    _InterlockedDecrement(&This->ref);
+    InterlockedDecrement(&This->ref);
 
     DPRINT("IDmaChannelSlave_Release: This %p new ref %u\n", This, This->ref);
 
@@ -102,7 +102,7 @@ NTAPI
 IDmaChannelSlave_fnAllocateBuffer(
     IN IDmaChannelSlave * iface,
     IN ULONG BufferSize,
-    IN PPHYSICAL_ADDRESS  PhysicalAddressConstraint  OPTIONAL)
+    IN PPHYSICAL_ADDRESS  PhysicalAddressConstraint OPTIONAL)
 {
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
 
@@ -125,6 +125,8 @@ IDmaChannelSlave_fnAllocateBuffer(
 
     This->BufferSize = BufferSize;
     This->AllocatedBufferSize = BufferSize;
+    DPRINT1("IDmaChannelSlave_fnAllocateBuffer Success Buffer %u Address %ull\n", BufferSize, This->Address);
+
     return STATUS_SUCCESS;
 }
 
@@ -185,7 +187,7 @@ IDmaChannelSlave_fnFreeBuffer(
         return;
     }
 
-    This->pAdapter->DmaOperations->FreeCommonBuffer(This->pAdapter, This->AllocatedBufferSize, This->Address, This->Buffer, TRUE);
+    This->pAdapter->DmaOperations->FreeCommonBuffer(This->pAdapter, This->AllocatedBufferSize, This->Address, This->Buffer, FALSE);
     This->Buffer = NULL;
     This->AllocatedBufferSize = 0;
     This->Address.QuadPart = 0LL;
@@ -458,8 +460,8 @@ IDmaChannelSlaveVtbl vt_IDmaChannelSlaveVtbl =
     IDmaChannelSlave_fnSystemAddress,
     IDmaChannelSlave_fnPhysicalAdress,
     IDmaChannelSlave_fnGetAdapterObject,
-    IDmaChannelSlave_fnCopyFrom,
     IDmaChannelSlave_fnCopyTo,
+    IDmaChannelSlave_fnCopyFrom,
     /* IDmaChannelSlave methods */
     IDmaChannelSlave_fnStart,
     IDmaChannelSlave_fnStop,

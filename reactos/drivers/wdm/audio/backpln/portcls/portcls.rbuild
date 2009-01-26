@@ -10,6 +10,7 @@
 	<library>drmk</library>
 	<library>rtl</library>
 	<library>hal</library>
+	<library>libcntpr</library>
 	<file>api.c</file>
 	<file>connection.c</file>
 	<file>dll.c</file>

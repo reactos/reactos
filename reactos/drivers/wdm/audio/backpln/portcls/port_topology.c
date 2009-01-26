@@ -70,6 +70,7 @@ IPortTopology_fnQueryInterface(
     DPRINT1("IPortTopology_fnQueryInterface\n");
 
     if (IsEqualGUIDAligned(refiid, &IID_IPortTopology) ||
+        IsEqualGUIDAligned(refiid, &IID_IPort) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
         *Output = &This->lpVtbl;
