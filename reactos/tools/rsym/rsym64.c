@@ -802,8 +802,7 @@ ParsePEHeaders(PFILE_INFO File)
             pName = File->Strings + index;
             
             // Hack, simply remove all sections with long names
-            if (strcmp(pName, ".eh_frame") != 0)
-                File->UseSection[i] = 0;
+            File->UseSection[i] = 0;
         }
 
         /* Chek if we have the eh_frame section */
@@ -816,7 +815,7 @@ ParsePEHeaders(PFILE_INFO File)
         
         /* Increase number of used sections */
         if (File->UseSection[i])
-            File->UsedSections++;
+            File->UsedSections = i+1;
 
     }
 
@@ -829,19 +828,25 @@ ParsePEHeaders(PFILE_INFO File)
     CurrentPos = ROUND_UP(CurrentPos, Alignment);
 
     /* Create new section headers */
-    for (i = 0, j = 0; i < File->AllSections; i++)
+    for (i = 0, j = 0; i < File->UsedSections; i++)
     {
-        if (File->UseSection[i])
+        /* Copy section header */
+        File->NewSectionHeaders[j] = File->SectionHeaders[i];
+
+        /* Shall we strip the section? */
+        if (File->UseSection[i] == 0)
         {
-            /* Copy section header */
-            File->NewSectionHeaders[j] =
-                    File->SectionHeaders[i];
-            /* Fix Offset into File */
-            File->NewSectionHeaders[j].PointerToRawData =
-                  File->SectionHeaders[i].PointerToRawData ? CurrentPos : 0;
-            CurrentPos += File->NewSectionHeaders[j].SizeOfRawData;
-            j++;
+            /* Make it a bss section */
+            File->NewSectionHeaders[j].PointerToRawData = 0;
+            File->NewSectionHeaders[j].SizeOfRawData = 0;
+            File->NewSectionHeaders[j].Characteristics = 0xC0500080;
         }
+
+        /* Fix Offset into File */
+        File->NewSectionHeaders[j].PointerToRawData =
+              File->NewSectionHeaders[j].PointerToRawData ? CurrentPos : 0;
+        CurrentPos += File->NewSectionHeaders[j].SizeOfRawData;
+        j++;
     }
 
     if (File->eh_frame.idx == -1)
