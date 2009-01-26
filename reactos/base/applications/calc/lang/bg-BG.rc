@@ -9,14 +9,10 @@ MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,4,16,132,21
-    CONTROL         "Шстн",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,
-                    10
-    CONTROL         "Дстн",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,
-                    10
-    CONTROL         "Осм",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,
-                    10
-    CONTROL         "Двоич",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,
-                    26,10
+    CONTROL         "Шстн",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "Дстн",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "Осм",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "Двоич",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
     GROUPBOX        "",IDC_STATIC,4,36,76,21
     CONTROL         "Обр",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,8,44,26,10
@@ -341,38 +337,37 @@ BEGIN
                     SS_SUNKEN
 END
 
-
 // Menus
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCTRL-V",           IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN
-        MENUITEM "Обикновен",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Научен",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Преобразуване",                  IDM_VIEW_CONVERSION
+        MENUITEM "Обикновен",                   IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Научен",                      IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Преобразуване",               IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Шестнaдесетичен\tF5",                     IDM_VIEW_HEX, CHECKED
-        MENUITEM "Десетичен\tF6",                 IDM_VIEW_DEC, CHECKED
-        MENUITEM "Осмичен\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Двоичен\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "Шестнaдесетичен\tF5",         IDM_VIEW_HEX, CHECKED
+        MENUITEM "Десетичен\tF6",               IDM_VIEW_DEC, CHECKED
+        MENUITEM "Осмичен\tF7",                 IDM_VIEW_OCT, CHECKED
+        MENUITEM "Двоичен\tF8",                 IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Градуси\tF2",                 IDM_VIEW_DEG, CHECKED
         MENUITEM "Радиани\tF3",                 IDM_VIEW_RAD, CHECKED
-        MENUITEM "Градове\tF4",                   IDM_VIEW_GRAD, CHECKED
+        MENUITEM "Градове\tF4",                 IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Разделяне на хилядите",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Разделяне на хилядите",       IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Помощ"
     BEGIN
-        MENUITEM "Помощ",                 IDM_HELP_HELP
+        MENUITEM "Помощ",                       IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc",          IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calc",             IDM_HELP_ABOUT
     END
 END
 
@@ -380,32 +375,32 @@ IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCTRL-V",           IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN
-        MENUITEM "Стандартно",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Научен",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Преобразуване",                  IDM_VIEW_CONVERSION
+        MENUITEM "Стандартно",                  IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Научен",                      IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Преобразуване",               IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Шестнaдесетичен\tF5",                     IDM_VIEW_HEX, CHECKED
-        MENUITEM "Десетичен\tF6",                 IDM_VIEW_DEC, CHECKED
-        MENUITEM "Осмичен\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Двоичен\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "Шестнaдесетичен\tF5",         IDM_VIEW_HEX, CHECKED
+        MENUITEM "Десетичен\tF6",               IDM_VIEW_DEC, CHECKED
+        MENUITEM "Осмичен\tF7",                 IDM_VIEW_OCT, CHECKED
+        MENUITEM "Двоичен\tF8",                 IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Чдума\tF12",                  IDM_VIEW_QWORD, CHECKED
         MENUITEM "Ддума\tF2",                   IDM_VIEW_DWORD, CHECKED
         MENUITEM "Дума\tF3",                    IDM_VIEW_WORD, CHECKED
         MENUITEM "Байт\tF4",                    IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Разделяне на хилядите",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Разделяне на хилядите",       IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Помощ"
     BEGIN
-        MENUITEM "Помощ",                 IDM_HELP_HELP
+        MENUITEM "Помощ",                       IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc",          IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calc",             IDM_HELP_ABOUT
     END
 END
 
@@ -413,22 +408,22 @@ IDR_MENU_STANDARD MENU DISCARDABLE
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCTRL-C",           IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCTRL-V",           IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN
-        MENUITEM "Стандартно",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Научен",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Преобразуване",                  IDM_VIEW_CONVERSION
+        MENUITEM "Стандартно",                  IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Научен",                      IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Преобразуване",               IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Разделяне на хилядите",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Разделяне на хилядите",       IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Помощ"
     BEGIN
-        MENUITEM "Помощ",                 IDM_HELP_HELP
+        MENUITEM "Помощ",                       IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "За ReactOS Calc",          IDM_HELP_ABOUT
+        MENUITEM "За ReactOS Calc",             IDM_HELP_ABOUT
     END
 END
 
@@ -444,6 +439,7 @@ END
 // types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_CONV_ANGLE          "Ъгъл"
     IDS_CONV_AREA           "Площ"
     IDS_CONV_CONSUMPTION    "Потребление (двигатели)"
     IDS_CONV_CURRENCY       "Парични единици"
@@ -452,9 +448,18 @@ BEGIN
     IDS_CONV_POWER          "Мощност"
     IDS_CONV_PRESSURE       "Налягане"
     IDS_CONV_TEMPERATURE    "Температура"
+    IDS_CONV_TIME           "Време"
     IDS_CONV_VELOCITY       "Скорост"
     IDS_CONV_VOLUME         "Обем"
     IDS_CONV_WEIGHT         "Тегло"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "Градуси"
+    IDS_ANGLE_GRADIANS      "Гради"
+    IDS_ANGLE_RADIANS       "Радиани"
 END
 
 // TYPES OF AREAS
@@ -511,9 +516,10 @@ BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Austrian schilling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgian franc"
     IDS_CURRENCY_CYPRIOT_POUND      "Cypriot pound"
+    IDS_CURRENCY_CZECH_KORUNA       "Чешка крона"
     IDS_CURRENCY_DEUTSCHE_MARK      "Deutsche Mark"
     IDS_CURRENCY_DUTCH_GUILDER      "Dutch guilder"
-    IDS_CURRENCY_EURO               "Euro"
+    IDS_CURRENCY_EURO               "Евро"
     IDS_CURRENCY_FINNISH_MARKKA     "Finnish markka"
     IDS_CURRENCY_FRENCH_FRANC       "French franc"
     IDS_CURRENCY_GREEK_DRACHMA      "Greek Drachma"
@@ -530,12 +536,16 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C калории"
+    IDS_ENERGY_15_C_CALORIES        "15-градусни калории"
+    IDS_ENERGY_BTUS                 "Британски термални единици"
     IDS_ENERGY_ERGS                 "Ергове"
+    IDS_ENERGY_EVS                  "Електронволти"
+    IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_IT_CALORIES          "Международни таблични калории"
+    IDS_ENERGY_IT_KILOCALORIES      "Международни таблични килокалории"
     IDS_ENERGY_JOULES               "Джаули"
     IDS_ENERGY_KILOJOULES           "Килоджаули"
-    IDS_ENERGY_KILOWATT_HOURS       "Киловат/ часове"
+    IDS_ENERGY_KILOWATT_HOURS       "Киловатчасове"
     IDS_ENERGY_NUTRITION_CALORIES   "Хранителни калории"
     IDS_ENERGY_TH_CALORIES          "Топлинни калории"
 END
@@ -544,7 +554,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Ангстрьоми"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomila units"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Астрономическа единица"
     IDS_LENGTH_BARLEYCORNS          "Ечемичени зърна"
     IDS_LENGTH_CENTIMETERS          "Сантиметри"
     IDS_LENGTH_CHAINS_UK            "Вериги (ОК)"
@@ -570,6 +580,7 @@ BEGIN
     IDS_LENGTH_LIGHT_YEARS          "Светлинни години"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
     IDS_LENGTH_METERS               "Метри"
+    IDS_LENGTH_MICRONS              "Микрометри"
     IDS_LENGTH_MILES                "Мили"
     IDS_LENGTH_MILLIMETERS          "Милиметри"
     IDS_LENGTH_NAUTICAL_MILES       "Морски мили"
@@ -578,6 +589,7 @@ BEGIN
     IDS_LENGTH_PICAS                "Дванадесетки (пики)"
     IDS_LENGTH_RI_JAPAN             "Ri (японски)"
     IDS_LENGTH_RI_KOREA             "Ri (корейски)"
+    IDS_LENGTH_RODS                 "Rods"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -593,6 +605,8 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "British Thermal Units per minute"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-Pounds per minute"
     IDS_POWER_HORSEPOWER            "Конски сили"
     IDS_POWER_KILOWATTS             "Киловатове"
     IDS_POWER_MEGAWATTS             "Мегаватове"
@@ -604,6 +618,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Атмосфери"
     IDS_PRESSURE_BARS               "Барове"
+    IDS_PRESSURE_HECTOPASCALS       "Хектопаскали"
+    IDS_PRESSURE_KILOPASCALS        "Килопаскали"
     IDS_PRESSURE_MM_OF_MERCURY      "Милиметри живачен стълб"
     IDS_PRESSURE_PASCALS            "Паскали"
     IDS_PRESSURE_PSI                "Паундове на квадратен цол"
@@ -618,10 +634,25 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "Ранкин"
 END
 
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Дни"
+    IDS_TIME_HOURS        "Часи"
+    IDS_TIME_MICROSECONDS "Микросекунди"
+    IDS_TIME_MILISECONDS  "Милисекунди"
+    IDS_TIME_MINUTES      "Минути"
+    IDS_TIME_SECONDS      "Секунди"
+    IDS_TIME_WEEKS        "Седмици"
+    IDS_TIME_YEARS        "Години"
+END
+
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Сантиметри/час"
     IDS_VELOCITY_FEET_HOUR          "Стъпки/час"
+    IDS_VELOCITY_FEET_SECOND        "Стъпки/секунда"
     IDS_VELOCITY_KILOMETERS_HOUR    "Километри/час"
     IDS_VELOCITY_KNOTS              "Възли"
     IDS_VELOCITY_MACH               "Махове"

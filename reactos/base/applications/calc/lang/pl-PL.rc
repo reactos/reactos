@@ -551,7 +551,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angsztremów"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Jednostek Astronomicznych"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Jednostek Astronomicznych"
     IDS_LENGTH_BARLEYCORNS          "Palców"
     IDS_LENGTH_CENTIMETERS          "Centimetrów"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"

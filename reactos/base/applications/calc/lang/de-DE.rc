@@ -540,7 +540,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angströms"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Astronomische Einheiten"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomische Einheiten"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
     IDS_LENGTH_CHI                  "Chi"
     IDS_LENGTH_CHOU                 "Chou"
