@@ -114,8 +114,6 @@ IopApplyRosCdromArcHack(IN ULONG i)
     /* Return whether this is the CD or not */
     if ((InitIsWinPEMode) || (ExpInTextModeSetup))
     {
-        /* Hack until IoAssignDriveLetters is fixed */
-        swprintf(SharedUserData->NtSystemRoot, L"%c:\\%hs", 'C' + DeviceNumber, RosSysPath);
         return TRUE;
     }
 
