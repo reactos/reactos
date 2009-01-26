@@ -134,6 +134,10 @@ extern "C"
 
 #include <windef.h>
 
+#define NOBITMAP
+#include <mmreg.h>
+#undef NOBITMAP
+
 #include <ks.h>
 #include <ksmedia.h>
 #include <punknown.h>
@@ -793,9 +797,9 @@ DEFINE_GUID(IID_IDmaChannelSlave, 0x22C6AC62L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00,
 
 DECLARE_INTERFACE_(IDmaChannelSlave, IDmaChannel)
 {
-    DEFINE_ABSTRACT_UNKNOWN();
-    DEFINE_ABSTRACT_DMACHANNEL();
-    DEFINE_ABSTRACT_DMACHANNELSLAVE();
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_DMACHANNEL()
+    DEFINE_ABSTRACT_DMACHANNELSLAVE()
 };
 
 typedef IDmaChannelSlave *PDMACHANNELSLAVE;
@@ -1183,6 +1187,8 @@ DECLARE_INTERFACE_(IPortWavePci, IPort)
 };
 
 typedef IPortWavePci *PPORTWAVEPCI;
+#undef INTERFACE
+
 
 /* ===============================================================
     IMiniPort Interface
@@ -1227,21 +1233,44 @@ typedef IMiniport *PMINIPORT;
 /* ===============================================================
     IMiniportMidiStream Interface
 */
+#undef INTERFACE
+#define INTERFACE IMiniportMidiStream
 
 DECLARE_INTERFACE_(IMiniportMidiStream, IUnknown)
 {
-    /* TODO - Read, SetFormat, SetState, Write */
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS,SetFormat)(THIS_
+        IN PKSDATAFORMAT DataFormat)PURE;
+
+    STDMETHOD_(NTSTATUS,SetState)(THIS_
+        IN KSSTATE State)PURE;
+
+    STDMETHOD_(NTSTATUS,Read)(THIS_
+        IN PVOID BufferAddress,
+        IN ULONG BufferLength,
+        OUT PULONG BytesRead)PURE;
+
+    STDMETHOD_(NTSTATUS,Write)(THIS_
+        IN PVOID BufferAddress,
+        IN ULONG BytesToWrite,
+        OUT PULONG BytesWritten)PURE;
 };
 
 typedef IMiniportMidiStream* PMINIPORTMIDISTREAM;
-
+#undef INTERFACE
 
 /* ===============================================================
     IMiniportMidi Interface
 */
+#undef INTERFACE
+#define INTERFACE IMiniportMidi
 
 DECLARE_INTERFACE_(IMiniportMidi, IMiniport)
 {
+    DEFINE_ABSTRACT_UNKNOWN()
+    DEFINE_ABSTRACT_MINIPORT()
+
     STDMETHOD_(NTSTATUS, Init)(THIS_
     IN  PUNKNOWN UnknownAdapter,
     IN  PRESOURCELIST ResourceList,
@@ -1260,8 +1289,8 @@ DECLARE_INTERFACE_(IMiniportMidi, IMiniport)
     STDMETHOD_(void, Service)(THIS) PURE;
 };
 
-/* TODO ... */
-
+typedef IMiniportMidi *PMINIPORTMIDI;
+#undef INTERFACE
 
 /* ===============================================================
     IMiniportDriverUart Interface
@@ -1330,7 +1359,7 @@ typedef IMiniportTopology *PMINIPORTTOPOLOGY;
 
 DECLARE_INTERFACE_(IMiniportWaveCyclicStream,IUnknown)
 {
-    DEFINE_ABSTRACT_UNKNOWN()   //  For IUnknown
+    DEFINE_ABSTRACT_UNKNOWN()
 
     STDMETHOD_(NTSTATUS,SetFormat)(THIS_
         IN PKSDATAFORMAT DataFormat)PURE;
@@ -1367,14 +1396,7 @@ DEFINE_GUID(IID_IMiniportWaveCyclic,
 
 DECLARE_INTERFACE_(IMiniportWaveCyclic, IMiniport)
 {
-    STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-        REFIID InterfaceId,
-        PVOID* Interface
-        ) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-
-
+    DEFINE_ABSTRACT_UNKNOWN()
     DEFINE_ABSTRACT_MINIPORT()
 
     STDMETHOD_(NTSTATUS, Init)(THIS_

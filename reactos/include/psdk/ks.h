@@ -344,8 +344,11 @@ typedef enum
     Connection Properties/Methods/Events
 */
 
-#define KSPROPSETID_Connection \
-    0x1D58C920L, 0xAC9B, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+#define STATIC_KSPROPSETID_Connection \
+	0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
+DEFINE_GUIDSTRUCT("1D58C920-AC9B-11CF-A5D6-28DB04C10000", KSPROPSETID_Connection);
+#define KSPROPSETID_Connection DEFINE_GUIDNAMED(KSPROPSETID_Connection)
+
 
 typedef enum
 {
@@ -1308,6 +1311,11 @@ typedef struct
 
 typedef struct
 {
+    PDRIVER_DISPATCH       Create;
+    PVOID                  Context;
+    UNICODE_STRING         ObjectClass;
+    PSECURITY_DESCRIPTOR   SecurityDescriptor;
+    ULONG                  Flags;
 } KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;
 
 typedef VOID (*PFNKSITEMFREECALLBACK)(
@@ -2348,6 +2356,11 @@ KSDDKAPI NTSTATUS NTAPI
     IN  ULONG Key OPTIONAL,
     IN  KPROCESSOR_MODE RequestorMode);
 
+
+KSDDKAPI NTSTATUS NTAPI
+  KsDefaultForwardIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
 
 /* ===============================================================
     Worker Management Functions
