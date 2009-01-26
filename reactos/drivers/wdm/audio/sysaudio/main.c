@@ -10,100 +10,181 @@
  */
 
 #include <ntddk.h>
-/* #include <ks.h> */
+#include <ks.h>
 #include <debug.h>
+//#include <dxsdk/mediaobj.h>
+#include "sysaudio.h"
 
-NTSTATUS
-NTAPI
-SysAudio_Create(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    DPRINT("SysAudio_Create called\n");
-
-    /* TODO */
-
-    /* Complete the request */
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
-}
+const GUID KS_CATEGORY_AUDIO    = {0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 
 VOID
 NTAPI
 SysAudio_Unload(IN PDRIVER_OBJECT DriverObject)
 {
-    PDEVICE_OBJECT DeviceObject;
-
     DPRINT("SysAudio_Unload called\n");
-
-    /* Get DO and DE */
-    DeviceObject = DriverObject->DeviceObject;
-/*    DeviceExtension = DeviceObject->DeviceExtension;*/
-
-    /* Delete the object */
-    IoDeleteDevice(DeviceObject);
 }
 
-#if 0
-VOID
+NTSTATUS
 NTAPI
-SysAudio_StartIo(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
+SysAudio_Pnp(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
 {
-    /* TODO */
+    PIO_STACK_LOCATION IrpStack;
+    UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\DosDevices\\sysaudio");
+    SYSAUDIODEVEXT *DeviceExtension;
 
-    DPRINT("SysAudio_StartIo called\n");
+    DPRINT1("SysAudio_Pnp called\n");
 
-    /* Complete the request and start the next packet */
-    Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
-    IoStartNextPacket(DeviceObject, TRUE);
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    IrpStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DeviceExtension = (SYSAUDIODEVEXT*)DeviceObject->DeviceExtension;
+
+    if (IrpStack->MinorFunction == IRP_MN_REMOVE_DEVICE)
+    {
+        if (DeviceExtension->EchoCancelNotificationEntry)
+            IoUnregisterPlugPlayNotification(DeviceExtension->EchoCancelNotificationEntry);
+
+        if (DeviceExtension->KsAudioNotificationEntry)
+            IoUnregisterPlugPlayNotification(DeviceExtension->KsAudioNotificationEntry);
+
+        IoDeleteSymbolicLink(&SymlinkName);
+    }
+
+    return KsDefaultDispatchPnp(DeviceObject, Irp);
 }
-#endif
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
+DeviceInterfaceChangeCallback(
+    IN PVOID NotificationStructure,
+    IN PVOID Context)
+{
+    DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
+
+    DPRINT1("DeviceInterfaceChangeCallback called %p\n", Event);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+DispatchCreate(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT1("DispatchCreate\n");
+
+    return STATUS_SUCCESS;
+}
+NTSTATUS
+NTAPI
 SysAudio_AddDevice(
     IN  PDRIVER_OBJECT  DriverObject,
     IN  PDEVICE_OBJECT  PhysicalDeviceObject)
 {
-    NTSTATUS status;
+    NTSTATUS Status;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\sysaudio");
     UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\DosDevices\\sysaudio");
     PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT NextDeviceObject;
+    KSOBJECT_CREATE_ITEM CreateItem;
+    SYSAUDIODEVEXT *DeviceExtension;
 
     DPRINT("SysAudio_AddDevice called\n");
 
-    status = IoCreateDevice(DriverObject,
-                            0,  /* Extension size */
+    /* create the device */
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(SYSAUDIODEVEXT),
                             &DeviceName,
-                            FILE_DEVICE_SOUND,  /* is this right? */
-                            0,  /* Characteristics */
+                            FILE_DEVICE_KS,
+                            0,
                             FALSE,
                             &DeviceObject);
 
-    if ( ! NT_SUCCESS(status) )
+    /* check for success */
+    if (!NT_SUCCESS(Status))
     {
         DPRINT("Failed to create \\Device\\sysaudio !\n");
-        return status;
+        return Status;
     }
 
-    status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
-
-    if ( ! NT_SUCCESS(status) )
+    /* create the symbolic link */
+    Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+    if (!NT_SUCCESS(Status))
     {
         IoDeleteDevice(DeviceObject);
-
         DPRINT("Failed to create \\DosDevices\\sysaudio symlink!\n");
-        return status;
+        return Status;
     }
 
-    DPRINT("Device created successfully\n");
 
-    return STATUS_SUCCESS;
+    DeviceExtension = (SYSAUDIODEVEXT*)DeviceObject->DeviceExtension;
+    /* initialize device extension */
+    RtlZeroMemory(DeviceExtension, sizeof(SYSAUDIODEVEXT));
+
+    KeInitializeMutex(&DeviceExtension->Mutex, 0);
+
+    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+
+    /* initialize create item struct */
+    RtlZeroMemory(&CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
+    CreateItem.Create = DispatchCreate;
+
+    Status = KsAllocateDeviceHeader(&DeviceExtension->KsDeviceHeader,
+                                    1,
+                                    &CreateItem);
+
+    if (NT_SUCCESS(Status))
+    {
+        NextDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+        if (NextDeviceObject)
+        {
+            /// FIXME
+            /// KsSetDevicePnpAndBaseObject(DeviceExtension->KsDeviceHeader, NextDeviceObject, DeviceObject);
+            ///
+
+            DeviceExtension->NextDeviceObject = NextDeviceObject;
+
+            Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                                    PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                                    (PVOID)&KS_CATEGORY_AUDIO,
+                                                    DriverObject,
+                                                    DeviceInterfaceChangeCallback,
+                                                    (PVOID)DeviceExtension,
+                                                    (PVOID*)&DeviceExtension->KsAudioNotificationEntry);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("IoRegisterPlugPlayNotification failed with %x\n", Status);
+                return Status;
+            }
+#if 0
+            Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                                    PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                                    &DMOCATEGORY_ACOUSTIC_ECHO_CANCEL,
+                                                    DriverObject,
+                                                    DeviceInterfaceChangeCallback,
+                                                    (PVOID)DeviceExtension,
+                                                    &DeviceExtension->EchoCancelNotificationEntry);
+#endif
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("IoRegisterPlugPlayNotification failed with %x\n", Status);
+                return Status;
+            }
+
+            /* set io flags */
+            DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
+            /* clear initializing flag */
+            DeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;
+        }
+    }
+
+
+
+    DPRINT("Device SysAudio_AddDevice result %x\n", Status);
+
+    return Status;
 }
 
 NTSTATUS NTAPI
@@ -113,20 +194,19 @@ DriverEntry(
 {
     DPRINT("System audio graph builder (sysaudio) started\n");
 
-    DriverObject->DriverExtension->AddDevice = SysAudio_AddDevice;
 
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = SysAudio_Create;
 
-/* We'd want to handle this but does KS need to know? */
-/*    DriverObject->MajorFunction[IRP_MJ_PNP] = KsDefaultDispatchPnp;*/
+    DPRINT1("Setting KS function handlers\n");
+    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CREATE);
+    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
+    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_WRITE);
+    KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
 
-/* We don't want to handle this though - pass to KS */
-/*    DriverObject->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;*/
-
+    DriverObject->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = KsDefaultForwardIrp;
+    DriverObject->MajorFunction[IRP_MJ_PNP] = SysAudio_Pnp;
     DriverObject->DriverUnload = SysAudio_Unload;
-/*    DriverObject->DriverStartIo = SysAudio_StartIo; */
-
-    /* Hmm, shouldn't KS.SYS be involved in some way? */
+    DriverObject->DriverExtension->AddDevice = SysAudio_AddDevice;
 
     return STATUS_SUCCESS;
 }
