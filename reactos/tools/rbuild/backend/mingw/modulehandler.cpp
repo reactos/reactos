@@ -1239,16 +1239,7 @@ Rule widlTlbRule ( "$(source): ${$(module_name)_precondition}\n"
                    "\t$(ECHO_WIDL)\n"
                    "\t$(Q)$(WIDL_TARGET) $($(module_name)_WIDLFLAGS) -t -T $(intermediate_path_noext).tlb $(source)\n",
                    "$(intermediate_dir)$(SEP)", NULL );
-Rule gccRule ( "$(source): ${$(module_name)_precondition}\n"
-               "ifeq ($(ROS_BUILDDEPS),full)\n"
-               "$(intermediate_path_unique).o.d: $(source) | $(intermediate_dir)\n"
-               "\t$(ECHO_DEPENDS)\n"
-               "\t${gcc} -MF $@ $($(module_name)_CFLAGS)$(compiler_flags) -M -MP -MT $@ $<\n"
-               "-include $(intermediate_path_unique).o.d\n"
-               "endif\n"
-               "$(intermediate_path_unique).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).o.d) $(dependencies) | $(intermediate_dir)\n"
-               "\t$(ECHO_CC)\n"
-               "\t${gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
+Rule gccRule ( "$(eval $(call RBUILD_GCC_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d", NULL );
 Rule gccHostRule ( "$(source): ${$(module_name)_precondition}\n"
@@ -1256,16 +1247,7 @@ Rule gccHostRule ( "$(source): ${$(module_name)_precondition}\n"
                    "\t$(ECHO_HOSTCC)\n"
                    "\t${host_gcc} -o $@ $($(module_name)_CFLAGS)$(compiler_flags) -c $<\n",
                    "$(intermediate_path_unique).o", NULL );
-Rule gppRule ( "$(source): ${$(module_name)_precondition}\n"
-               "ifeq ($(ROS_BUILDDEPS),full)\n"
-               "$(intermediate_path_unique).o.d: $(source) | $(intermediate_dir)\n"
-               "\t$(ECHO_DEPENDS)\n"
-               "\t${gpp} -MF $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -M -MP -MT $@ $<\n"
-               "-include $(intermediate_path_unique).o.d\n"
-               "endif\n"
-               "$(intermediate_path_unique).o: $(source)$(if $(subst _full,,_$(ROS_BUILDDEPS)),, $(intermediate_path_unique).o.d) $(dependencies) | $(intermediate_dir)\n"
-               "\t$(ECHO_CC)\n"
-               "\t${gpp} -o $@ $($(module_name)_CXXFLAGS)$(compiler_flags) -c $<\n",
+Rule gppRule ( "$(eval $(call RBUILD_GPP_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d", NULL );
 Rule gppHostRule ( "$(source): ${$(module_name)_precondition}\n"
