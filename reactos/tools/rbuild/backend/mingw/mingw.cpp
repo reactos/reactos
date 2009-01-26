@@ -519,8 +519,6 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
-	fputs ( "include tools$(SEP)rbuild$(SEP)backend$(SEP)mingw$(SEP)rules.mak\n", fMakefile );
-
 	if ( configuration.Dependencies == FullDependencies )
 	{
 		fprintf ( fMakefile,
