@@ -25,57 +25,8 @@
 #ifndef SLANG_COMPILE_VARIABLE_H
 #define SLANG_COMPILE_VARIABLE_H
 
-#if defined __cplusplus
-extern "C" {
-#endif
 
-
-typedef enum slang_type_qualifier_
-{
-   SLANG_QUAL_NONE,
-   SLANG_QUAL_CONST,
-   SLANG_QUAL_ATTRIBUTE,
-   SLANG_QUAL_VARYING,
-   SLANG_QUAL_UNIFORM,
-   SLANG_QUAL_OUT,
-   SLANG_QUAL_INOUT,
-   SLANG_QUAL_FIXEDOUTPUT,      /* internal */
-   SLANG_QUAL_FIXEDINPUT        /* internal */
-} slang_type_qualifier;
-
-extern slang_type_specifier_type
-slang_type_specifier_type_from_string(const char *);
-
-extern const char *
-slang_type_specifier_type_to_string(slang_type_specifier_type);
-
-
-
-typedef enum slang_type_precision_
-{
-   SLANG_PREC_DEFAULT,
-   SLANG_PREC_LOW,
-   SLANG_PREC_MEDIUM,
-   SLANG_PREC_HIGH
-} slang_type_precision;
-
-
-typedef struct slang_fully_specified_type_
-{
-   slang_type_qualifier qualifier;
-   slang_type_specifier specifier;
-   slang_type_precision precision;
-} slang_fully_specified_type;
-
-extern int
-slang_fully_specified_type_construct(slang_fully_specified_type *);
-
-extern void
-slang_fully_specified_type_destruct(slang_fully_specified_type *);
-
-extern int
-slang_fully_specified_type_copy(slang_fully_specified_type *,
-				const slang_fully_specified_type *);
+struct slang_ir_storage_;
 
 
 /**
@@ -87,11 +38,10 @@ typedef struct slang_variable_
    slang_atom a_name;               /**< The variable's name (char *) */
    GLuint array_len;                /**< only if type == SLANG_SPEC_ARRAy */
    struct slang_operation_ *initializer; /**< Optional initializer code */
-   GLuint address;                  /**< Storage location */
    GLuint size;                     /**< Variable's size in bytes */
    GLboolean isTemp;                /**< a named temporary (__resultTmp) */
    GLboolean declared;              /**< for debug */
-   void *aux;                       /**< Used during code gen */
+   struct slang_ir_storage_ *store; /**< Storage for this var */
 } slang_variable;
 
 
@@ -132,12 +82,8 @@ extern int
 slang_variable_copy(slang_variable *, const slang_variable *);
 
 extern slang_variable *
-_slang_locate_variable(const slang_variable_scope *, const slang_atom a_name,
+_slang_variable_locate(const slang_variable_scope *, const slang_atom a_name,
                        GLboolean all);
 
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* SLANG_COMPILE_VARIABLE_H */

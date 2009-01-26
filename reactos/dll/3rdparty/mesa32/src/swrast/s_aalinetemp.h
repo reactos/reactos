@@ -76,7 +76,7 @@ NAME(plot)(GLcontext *ctx, struct LineInfo *line, int ix, int iy)
    ATTRIB_LOOP_BEGIN
       GLfloat (*attribArray)[4] = line->span.array->attribs[attr];
       if (attr >= FRAG_ATTRIB_TEX0 && attr < FRAG_ATTRIB_VAR0
-          && !ctx->FragmentProgram._Active) {
+          && !ctx->FragmentProgram._Current) {
          /* texcoord w/ divide by Q */
          const GLuint unit = attr - FRAG_ATTRIB_TEX0;
          const GLfloat invQ = solve_plane_recip(fx, fy, line->attrPlane[attr][3]);

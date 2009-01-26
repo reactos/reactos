@@ -78,6 +78,23 @@ max_buffer_index(GLcontext *ctx, GLuint count, GLenum type,
    return max;
 }
 
+static GLboolean
+check_valid_to_render(GLcontext *ctx, char *function)
+{
+   if (ctx->DrawBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
+                  "glDraw%s(incomplete framebuffer)", function);
+      return GL_FALSE;
+   }
+
+   /* Always need vertex positions, unless a vertex program is in use */
+   if (!ctx->VertexProgram._Current &&
+       !ctx->Array.ArrayObj->Vertex.Enabled &&
+       !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
+      return GL_FALSE;
+
+   return GL_TRUE;
+}
 
 GLboolean
 _mesa_validate_DrawElements(GLcontext *ctx,
@@ -108,10 +125,7 @@ _mesa_validate_DrawElements(GLcontext *ctx,
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   /* Always need vertex positions, unless a vertex program is in use */
-   if (!ctx->VertexProgram._Current &&
-       !ctx->Array.ArrayObj->Vertex.Enabled &&
-       !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
+   if (!check_valid_to_render(ctx, "Elements"))
       return GL_FALSE;
 
    /* Vertex buffer object tests */
@@ -131,7 +145,7 @@ _mesa_validate_DrawElements(GLcontext *ctx,
       }
 
       /* make sure count doesn't go outside buffer bounds */
-      if (indexBytes > ctx->Array.ElementArrayBufferObj->Size) {
+      if (indexBytes > (GLuint) ctx->Array.ElementArrayBufferObj->Size) {
          _mesa_warning(ctx, "glDrawElements index out of buffer bounds");
          return GL_FALSE;
       }
@@ -154,7 +168,6 @@ _mesa_validate_DrawElements(GLcontext *ctx,
 
    return GL_TRUE;
 }
-
 
 GLboolean
 _mesa_validate_DrawRangeElements(GLcontext *ctx, GLenum mode,
@@ -190,10 +203,7 @@ _mesa_validate_DrawRangeElements(GLcontext *ctx, GLenum mode,
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   /* Always need vertex positions, unless a vertex program is in use */
-   if (!ctx->VertexProgram._Current &&
-       !ctx->Array.ArrayObj->Vertex.Enabled &&
-       !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
+   if (!check_valid_to_render(ctx, "RangeElements"))
       return GL_FALSE;
 
    /* Vertex buffer object tests */
@@ -261,10 +271,7 @@ _mesa_validate_DrawArrays(GLcontext *ctx,
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   /* Always need vertex positions, unless a vertex program is in use */
-   if (!ctx->VertexProgram._Current &&
-       !ctx->Array.ArrayObj->Vertex.Enabled &&
-       !ctx->Array.ArrayObj->VertexAttrib[0].Enabled)
+   if (!check_valid_to_render(ctx, "Arrays"))
       return GL_FALSE;
 
    if (ctx->Const.CheckArrayBounds) {

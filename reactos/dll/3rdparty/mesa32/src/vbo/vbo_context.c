@@ -219,9 +219,10 @@ GLboolean _vbo_CreateContext( GLcontext *ctx )
     * vtxfmt mechanism can be removed now.
     */
    vbo_exec_init( ctx );
+#if FEATURE_dlist
    vbo_save_init( ctx );
+#endif
 
-   
    return GL_TRUE;
 }
 
@@ -240,7 +241,9 @@ void _vbo_DestroyContext( GLcontext *ctx )
    }
 
    vbo_exec_destroy(ctx);
+#if FEATURE_dlist
    vbo_save_destroy(ctx);
+#endif
    FREE(vbo_context(ctx));
    ctx->swtnl_im = NULL;
 }

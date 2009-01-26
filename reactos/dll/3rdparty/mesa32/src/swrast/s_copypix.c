@@ -23,15 +23,15 @@
  */
 
 
-#include "glheader.h"
-#include "context.h"
-#include "colormac.h"
-#include "convolve.h"
-#include "histogram.h"
-#include "image.h"
-#include "macros.h"
-#include "imports.h"
-#include "pixel.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/colormac.h"
+#include "main/convolve.h"
+#include "main/histogram.h"
+#include "main/image.h"
+#include "main/macros.h"
+#include "main/imports.h"
+#include "main/pixel.h"
 
 #include "s_context.h"
 #include "s_depth.h"

@@ -38,7 +38,11 @@
 #include <GL/gl.h>
 
 #ifndef GLAPIENTRY
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#define GLAPIENTRY __stdcall
+#else
 #define GLAPIENTRY
+#endif
 #endif
 
 #ifndef GLAPIENTRYP

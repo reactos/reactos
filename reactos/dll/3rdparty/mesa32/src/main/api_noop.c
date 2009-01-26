@@ -30,7 +30,9 @@
 #include "context.h"
 #include "light.h"
 #include "macros.h"
+#if FEATURE_dlist
 #include "dlist.h"
+#endif
 #include "glapi/dispatch.h"
 
 
@@ -621,6 +623,8 @@ static void GLAPIENTRY _mesa_noop_Vertex4f( GLfloat a, GLfloat b, GLfloat c, GLf
    (void) a; (void) b; (void) c; (void) d;
 }
 
+
+#if FEATURE_evaluators
 /* Similarly, these have no effect outside begin/end:
  */
 static void GLAPIENTRY _mesa_noop_EvalCoord1f( GLfloat a )
@@ -652,6 +656,7 @@ static void GLAPIENTRY _mesa_noop_EvalPoint2( GLint a, GLint b )
 {
    (void) a; (void) b;
 }
+#endif /* FEATURE_evaluators */
 
 
 /* Begin -- call into driver, should result in the vtxfmt being
@@ -904,20 +909,24 @@ _mesa_noop_vtxfmt_init( GLvertexformat *vfmt )
 {
    vfmt->ArrayElement = _ae_loopback_array_elt;	        /* generic helper */
    vfmt->Begin = _mesa_noop_Begin;
+#if FEATURE_dlist
    vfmt->CallList = _mesa_CallList;
    vfmt->CallLists = _mesa_CallLists;
+#endif
    vfmt->Color3f = _mesa_noop_Color3f;
    vfmt->Color3fv = _mesa_noop_Color3fv;
    vfmt->Color4f = _mesa_noop_Color4f;
    vfmt->Color4fv = _mesa_noop_Color4fv;
    vfmt->EdgeFlag = _mesa_noop_EdgeFlag;
    vfmt->End = _mesa_noop_End;
+#if FEATURE_evaluators
    vfmt->EvalCoord1f = _mesa_noop_EvalCoord1f;
    vfmt->EvalCoord1fv = _mesa_noop_EvalCoord1fv;
    vfmt->EvalCoord2f = _mesa_noop_EvalCoord2f;
    vfmt->EvalCoord2fv = _mesa_noop_EvalCoord2fv;
    vfmt->EvalPoint1 = _mesa_noop_EvalPoint1;
    vfmt->EvalPoint2 = _mesa_noop_EvalPoint2;
+#endif
    vfmt->FogCoordfEXT = _mesa_noop_FogCoordfEXT;
    vfmt->FogCoordfvEXT = _mesa_noop_FogCoordfvEXT;
    vfmt->Indexf = _mesa_noop_Indexf;

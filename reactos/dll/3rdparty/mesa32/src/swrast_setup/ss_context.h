@@ -28,7 +28,7 @@
 #ifndef SS_CONTEXT_H
 #define SS_CONTEXT_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 #include "swrast/swrast.h"
 #include "swrast_setup.h"
 #include "tnl/t_context.h"

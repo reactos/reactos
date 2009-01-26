@@ -26,7 +26,6 @@
  */
 
 #include "main/glheader.h"
-#include "main/api_eval.h"
 #include "main/context.h"
 #include "main/macros.h"
 #include "math/m_eval.h"

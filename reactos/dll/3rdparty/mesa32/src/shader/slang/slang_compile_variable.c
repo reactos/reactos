@@ -33,105 +33,6 @@
 #include "slang_mem.h"
 
 
-typedef struct
-{
-   const char *name;
-   slang_type_specifier_type type;
-} type_specifier_type_name;
-
-static const type_specifier_type_name type_specifier_type_names[] = {
-   {"void", SLANG_SPEC_VOID},
-   {"bool", SLANG_SPEC_BOOL},
-   {"bvec2", SLANG_SPEC_BVEC2},
-   {"bvec3", SLANG_SPEC_BVEC3},
-   {"bvec4", SLANG_SPEC_BVEC4},
-   {"int", SLANG_SPEC_INT},
-   {"ivec2", SLANG_SPEC_IVEC2},
-   {"ivec3", SLANG_SPEC_IVEC3},
-   {"ivec4", SLANG_SPEC_IVEC4},
-   {"float", SLANG_SPEC_FLOAT},
-   {"vec2", SLANG_SPEC_VEC2},
-   {"vec3", SLANG_SPEC_VEC3},
-   {"vec4", SLANG_SPEC_VEC4},
-   {"mat2", SLANG_SPEC_MAT2},
-   {"mat3", SLANG_SPEC_MAT3},
-   {"mat4", SLANG_SPEC_MAT4},
-   {"mat2x3", SLANG_SPEC_MAT23},
-   {"mat3x2", SLANG_SPEC_MAT32},
-   {"mat2x4", SLANG_SPEC_MAT24},
-   {"mat4x2", SLANG_SPEC_MAT42},
-   {"mat3x4", SLANG_SPEC_MAT34},
-   {"mat4x3", SLANG_SPEC_MAT43},
-   {"sampler1D", SLANG_SPEC_SAMPLER1D},
-   {"sampler2D", SLANG_SPEC_SAMPLER2D},
-   {"sampler3D", SLANG_SPEC_SAMPLER3D},
-   {"samplerCube", SLANG_SPEC_SAMPLERCUBE},
-   {"sampler1DShadow", SLANG_SPEC_SAMPLER1DSHADOW},
-   {"sampler2DShadow", SLANG_SPEC_SAMPLER2DSHADOW},
-   {"sampler2DRect", SLANG_SPEC_SAMPLER2DRECT},
-   {"sampler2DRectShadow", SLANG_SPEC_SAMPLER2DRECTSHADOW},
-   {NULL, SLANG_SPEC_VOID}
-};
-
-slang_type_specifier_type
-slang_type_specifier_type_from_string(const char *name)
-{
-   const type_specifier_type_name *p = type_specifier_type_names;
-   while (p->name != NULL) {
-      if (slang_string_compare(p->name, name) == 0)
-         break;
-      p++;
-   }
-   return p->type;
-}
-
-const char *
-slang_type_specifier_type_to_string(slang_type_specifier_type type)
-{
-   const type_specifier_type_name *p = type_specifier_type_names;
-   while (p->name != NULL) {
-      if (p->type == type)
-         break;
-      p++;
-   }
-   return p->name;
-}
-
-/* slang_fully_specified_type */
-
-int
-slang_fully_specified_type_construct(slang_fully_specified_type * type)
-{
-   type->qualifier = SLANG_QUAL_NONE;
-   slang_type_specifier_ctr(&type->specifier);
-   return 1;
-}
-
-void
-slang_fully_specified_type_destruct(slang_fully_specified_type * type)
-{
-   slang_type_specifier_dtr(&type->specifier);
-}
-
-int
-slang_fully_specified_type_copy(slang_fully_specified_type * x,
-                                const slang_fully_specified_type * y)
-{
-   slang_fully_specified_type z;
-
-   if (!slang_fully_specified_type_construct(&z))
-      return 0;
-   z.qualifier = y->qualifier;
-   if (!slang_type_specifier_copy(&z.specifier, &y->specifier)) {
-      slang_fully_specified_type_destruct(&z);
-      return 0;
-   }
-   slang_fully_specified_type_destruct(x);
-   *x = z;
-   return 1;
-}
-
-
 static slang_variable *
 slang_variable_new(void)
 {
@@ -263,10 +164,9 @@ slang_variable_construct(slang_variable * var)
    var->a_name = SLANG_ATOM_NULL;
    var->array_len = 0;
    var->initializer = NULL;
-   var->address = ~0;
    var->size = 0;
    var->isTemp = GL_FALSE;
-   var->aux = NULL;
+   var->store = NULL;
    var->declared = 0;
    return 1;
 }
@@ -318,7 +218,6 @@ slang_variable_copy(slang_variable * x, const slang_variable * y)
          return 0;
       }
    }
-   z.address = y->address;
    z.size = y->size;
    slang_variable_destruct(x);
    *x = z;
@@ -331,7 +230,7 @@ slang_variable_copy(slang_variable * x, const slang_variable * y)
  * \param all  if true, search parent scopes too.
  */
 slang_variable *
-_slang_locate_variable(const slang_variable_scope * scope,
+_slang_variable_locate(const slang_variable_scope * scope,
                        const slang_atom a_name, GLboolean all)
 {
    while (scope) {

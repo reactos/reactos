@@ -129,7 +129,7 @@ static GLuint vbo_copy_vertices( struct vbo_exec_context *exec )
       for (i = 0 ; i < ovf ; i++)
 	 _mesa_memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz * sizeof(GLfloat) );
       return i;
-   case GL_POLYGON+1:
+   case PRIM_OUTSIDE_BEGIN_END:
       return 0;
    default:
       assert(0);
@@ -182,13 +182,24 @@ static void vbo_exec_bind_arrays( GLcontext *ctx )
     * arrays of floats.
     */
    for (attr = 0; attr < VERT_ATTRIB_MAX ; attr++) {
-      GLuint src = map[attr];
+      const GLuint src = map[attr];
 
       if (exec->vtx.attrsz[src]) {
          /* override the default array set above */
          exec->vtx.inputs[attr] = &arrays[attr];
 
-	 arrays[attr].Ptr = (void *)data;
+         if (exec->vtx.bufferobj->Name) {
+            /* a real buffer obj: Ptr is an offset, not a pointer*/
+            int offset;
+            assert(exec->vtx.bufferobj->Pointer);  /* buf should be mapped */
+            offset = (GLbyte *) data - (GLbyte *) exec->vtx.bufferobj->Pointer;
+            assert(offset >= 0);
+            arrays[attr].Ptr = (void *) offset;
+         }
+         else {
+            /* Ptr into ordinary app memory */
+            arrays[attr].Ptr = (void *) data;
+         }
 	 arrays[attr].Size = exec->vtx.attrsz[src];
 	 arrays[attr].StrideB = exec->vtx.vertex_size * sizeof(GLfloat);
 	 arrays[attr].Stride = exec->vtx.vertex_size * sizeof(GLfloat);
@@ -222,7 +233,20 @@ void vbo_exec_vtx_flush( struct vbo_exec_context *exec )
       if (exec->vtx.copied.nr != exec->vtx.vert_count) {
 	 GLcontext *ctx = exec->ctx;
 
+	 GLenum target = GL_ARRAY_BUFFER_ARB;
+	 GLenum access = GL_READ_WRITE_ARB;
+	 GLenum usage = GL_STREAM_DRAW_ARB;
+	 GLsizei size = VBO_VERT_BUFFER_SIZE * sizeof(GLfloat);
+	 
+	 /* Before the unmap (why?)
+	  */
 	 vbo_exec_bind_arrays( ctx );
+
+         /* if using a real VBO, unmap it before drawing */
+         if (exec->vtx.bufferobj->Name) {
+            ctx->Driver.UnmapBuffer(ctx, target, exec->vtx.bufferobj);
+            exec->vtx.buffer_map = NULL;
+         }
 
 	 vbo_context(ctx)->draw_prims( ctx, 
 				       exec->vtx.inputs, 
@@ -231,6 +255,13 @@ void vbo_exec_vtx_flush( struct vbo_exec_context *exec )
 				       NULL,
 				       0,
 				       exec->vtx.vert_count - 1);
+
+	 /* If using a real VBO, get new storage */
+         if (exec->vtx.bufferobj->Name) {
+            ctx->Driver.BufferData(ctx, target, size, NULL, usage, exec->vtx.bufferobj);
+            exec->vtx.buffer_map = 
+               ctx->Driver.MapBuffer(ctx, target, access, exec->vtx.bufferobj);
+         }
       }
    }
 

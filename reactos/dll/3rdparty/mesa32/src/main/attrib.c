@@ -1,8 +1,9 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.2
+ * Version:  7.3
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2009  VMware, Inc.   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,6 +31,7 @@
 #include "blend.h"
 #include "buffers.h"
 #include "bufferobj.h"
+#include "clear.h"
 #include "colormac.h"
 #include "colortab.h"
 #include "context.h"
@@ -41,11 +43,16 @@
 #include "light.h"
 #include "lines.h"
 #include "matrix.h"
+#include "multisample.h"
 #include "points.h"
 #include "polygon.h"
+#include "scissor.h"
 #include "simple_list.h"
 #include "stencil.h"
+#include "texenv.h"
+#include "texgen.h"
 #include "texobj.h"
+#include "texparam.h"
 #include "texstate.h"
 #include "varray.h"
 #include "mtypes.h"
@@ -218,7 +225,7 @@ _mesa_PushAttrib(GLbitfield mask)
       attr->SampleAlphaToOne = ctx->Multisample.SampleAlphaToOne;
       attr->SampleCoverage = ctx->Multisample.SampleCoverage;
       attr->SampleCoverageInvert = ctx->Multisample.SampleCoverageInvert;
-      for (i=0; i<MAX_TEXTURE_UNITS; i++) {
+      for (i = 0; i < ctx->Const.MaxTextureUnits; i++) {
          attr->Texture[i] = ctx->Texture.Unit[i].Enabled;
          attr->TexGen[i] = ctx->Texture.Unit[i].TexGenEnabled;
          attr->TextureColorTable[i] = ctx->Texture.Unit[i].ColorTableEnabled;
@@ -1085,14 +1092,14 @@ _mesa_PopAttrib(void)
                _mesa_PointSize(point->Size);
                _mesa_set_enable(ctx, GL_POINT_SMOOTH, point->SmoothFlag);
                if (ctx->Extensions.EXT_point_parameters) {
-                  _mesa_PointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
-                                            point->Params);
-                  _mesa_PointParameterfEXT(GL_POINT_SIZE_MIN_EXT,
-                                           point->MinSize);
-                  _mesa_PointParameterfEXT(GL_POINT_SIZE_MAX_EXT,
-                                           point->MaxSize);
-                  _mesa_PointParameterfEXT(GL_POINT_FADE_THRESHOLD_SIZE_EXT,
-                                           point->Threshold);
+                  _mesa_PointParameterfv(GL_DISTANCE_ATTENUATION_EXT,
+                                         point->Params);
+                  _mesa_PointParameterf(GL_POINT_SIZE_MIN_EXT,
+                                        point->MinSize);
+                  _mesa_PointParameterf(GL_POINT_SIZE_MAX_EXT,
+                                        point->MaxSize);
+                  _mesa_PointParameterf(GL_POINT_FADE_THRESHOLD_SIZE_EXT,
+                                        point->Threshold);
                }
                if (ctx->Extensions.NV_point_sprite
 		   || ctx->Extensions.ARB_point_sprite) {
@@ -1103,10 +1110,10 @@ _mesa_PopAttrib(void)
                   }
                   _mesa_set_enable(ctx, GL_POINT_SPRITE_NV,point->PointSprite);
                   if (ctx->Extensions.NV_point_sprite)
-                     _mesa_PointParameteriNV(GL_POINT_SPRITE_R_MODE_NV,
-                                          ctx->Point.SpriteRMode);
-                  _mesa_PointParameterfEXT(GL_POINT_SPRITE_COORD_ORIGIN,
-                                           (GLfloat)ctx->Point.SpriteOrigin);
+                     _mesa_PointParameteri(GL_POINT_SPRITE_R_MODE_NV,
+                                           ctx->Point.SpriteRMode);
+                  _mesa_PointParameterf(GL_POINT_SPRITE_COORD_ORIGIN,
+                                        (GLfloat)ctx->Point.SpriteOrigin);
                }
             }
             break;

@@ -189,6 +189,18 @@ do {								\
 } while (0)
 
 
+/**
+ * Transform a direction by a matrix.
+ */
+#define TRANSFORM_DIRECTION( TO, DIR, MAT )			\
+do {								\
+   TO[0] = DIR[0] * MAT[0] + DIR[1] * MAT[4] + DIR[2] * MAT[8];	\
+   TO[1] = DIR[0] * MAT[1] + DIR[1] * MAT[5] + DIR[2] * MAT[9];	\
+   TO[2] = DIR[0] * MAT[2] + DIR[1] * MAT[6] + DIR[2] * MAT[10];\
+} while (0)
+
+
+
 /*@}*/
 
 

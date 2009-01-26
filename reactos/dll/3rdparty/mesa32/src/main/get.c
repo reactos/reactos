@@ -19,10 +19,6 @@
 
 #define INT_TO_BOOLEAN(I)     ( (I) ? GL_TRUE : GL_FALSE )
 
-#define ENUM_TO_BOOLEAN(E)    ( (E) ? GL_TRUE : GL_FALSE )
-#define ENUM_TO_INT(E)        ( (GLint) (E) )
-#define ENUM_TO_FLOAT(E)      ( (GLfloat) (E) )
-
 #define BOOLEAN_TO_INT(B)     ( (GLint) (B) )
 #define BOOLEAN_TO_FLOAT(B)   ( (B) ? 1.0F : 0.0F )
 
@@ -293,7 +289,7 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
          params[0] = INT_TO_BOOLEAN(ctx->DrawBuffer->Visual.depthBits);
          break;
       case GL_DEPTH_CLEAR_VALUE:
-         params[0] = FLOAT_TO_BOOLEAN(ctx->Depth.Clear);
+         params[0] = FLOAT_TO_BOOLEAN(((GLfloat) ctx->Depth.Clear));
          break;
       case GL_DEPTH_FUNC:
          params[0] = ENUM_TO_BOOLEAN(ctx->Depth.Func);
@@ -1096,7 +1092,7 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
          GLuint i, n = _mesa_get_compressed_formats(ctx, formats, GL_FALSE);
          ASSERT(n <= 100);
          for (i = 0; i < n; i++)
-            params[i] = ENUM_TO_INT(formats[i]);
+            params[i] = ENUM_TO_BOOLEAN(formats[i]);
          }
          break;
       case GL_ARRAY_ELEMENT_LOCK_FIRST_EXT:
@@ -2141,7 +2137,7 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
          params[0] = (GLfloat)(ctx->DrawBuffer->Visual.depthBits);
          break;
       case GL_DEPTH_CLEAR_VALUE:
-         params[0] = ctx->Depth.Clear;
+         params[0] = ((GLfloat) ctx->Depth.Clear);
          break;
       case GL_DEPTH_FUNC:
          params[0] = ENUM_TO_FLOAT(ctx->Depth.Func);
@@ -2944,7 +2940,7 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
          GLuint i, n = _mesa_get_compressed_formats(ctx, formats, GL_FALSE);
          ASSERT(n <= 100);
          for (i = 0; i < n; i++)
-            params[i] = ENUM_TO_INT(formats[i]);
+            params[i] = ENUM_TO_FLOAT(formats[i]);
          }
          break;
       case GL_ARRAY_ELEMENT_LOCK_FIRST_EXT:
@@ -3989,7 +3985,7 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
          params[0] = ctx->DrawBuffer->Visual.depthBits;
          break;
       case GL_DEPTH_CLEAR_VALUE:
-         params[0] = IROUND(ctx->Depth.Clear);
+         params[0] = FLOAT_TO_INT(((GLfloat) ctx->Depth.Clear));
          break;
       case GL_DEPTH_FUNC:
          params[0] = ENUM_TO_INT(ctx->Depth.Func);

@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  7.3
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,8 +30,8 @@
 #ifndef _M_VECTOR_H_
 #define _M_VECTOR_H_
 
-#include "glheader.h"
-#include "mtypes.h"		/* hack for GLchan */
+#include "main/glheader.h"
+#include "main/mtypes.h"		/* hack for GLchan */
 
 
 #define VEC_DIRTY_0        0x1

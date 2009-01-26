@@ -694,7 +694,7 @@ static void store_texel_argb8888_rev(struct gl_texture_image *texImage,
 {
    const GLubyte *rgba = (const GLubyte *) texel;
    GLuint *dst = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
-   *dst = PACK_COLOR_8888(rgba[ACOMP], rgba[RCOMP], rgba[GCOMP], rgba[BCOMP]);
+   *dst = PACK_COLOR_8888(rgba[BCOMP], rgba[GCOMP], rgba[RCOMP], rgba[ACOMP]);
 }
 #endif
 
@@ -803,6 +803,30 @@ static void store_texel_rgb565_rev(struct gl_texture_image *texImage,
 }
 #endif
 
+/* MESA_FORMAT_RGBA4444 ******************************************************/
+
+/* Fetch texel from 1D, 2D or 3D argb444 texture, return 4 GLchans */
+static void FETCH(rgba4444)( const struct gl_texture_image *texImage,
+			     GLint i, GLint j, GLint k, GLchan *texel )
+{
+   const GLushort *src = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
+   const GLushort s = *src;
+   texel[RCOMP] = UBYTE_TO_CHAN( ((s >> 12) & 0xf) | ((s >> 8) & 0xf0) );
+   texel[GCOMP] = UBYTE_TO_CHAN( ((s >>  8) & 0xf) | ((s >> 4) & 0xf0) );
+   texel[BCOMP] = UBYTE_TO_CHAN( ((s >>  4) & 0xf) | ((s     ) & 0xf0) );
+   texel[ACOMP] = UBYTE_TO_CHAN( ((s      ) & 0xf) | ((s << 4) & 0xf0) );
+}
+
+#if DIM == 3
+static void store_texel_rgba4444(struct gl_texture_image *texImage,
+                                 GLint i, GLint j, GLint k, const void *texel)
+{
+   const GLubyte *rgba = (const GLubyte *) texel;
+   GLushort *dst = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
+   *dst = PACK_COLOR_4444(rgba[RCOMP], rgba[GCOMP], rgba[BCOMP], rgba[ACOMP]);
+}
+#endif
+
 
 /* MESA_FORMAT_ARGB4444 ******************************************************/
 
@@ -824,7 +848,7 @@ static void store_texel_argb4444(struct gl_texture_image *texImage,
 {
    const GLubyte *rgba = (const GLubyte *) texel;
    GLushort *dst = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
-   *dst = PACK_COLOR_4444(rgba[RCOMP], rgba[GCOMP], rgba[BCOMP], rgba[ACOMP]);
+   *dst = PACK_COLOR_4444(rgba[ACOMP], rgba[RCOMP], rgba[GCOMP], rgba[BCOMP]);
 }
 #endif
 
@@ -852,6 +876,29 @@ static void store_texel_argb4444_rev(struct gl_texture_image *texImage,
 }
 #endif
 
+/* MESA_FORMAT_RGBA5551 ******************************************************/
+
+/* Fetch texel from 1D, 2D or 3D argb1555 texture, return 4 GLchans */
+static void FETCH(rgba5551)( const struct gl_texture_image *texImage,
+			     GLint i, GLint j, GLint k, GLchan *texel )
+{
+   const GLushort *src = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
+   const GLushort s = *src;
+   texel[RCOMP] = UBYTE_TO_CHAN( ((s >>  8) & 0xf8) | ((s >> 13) & 0x7) );
+   texel[GCOMP] = UBYTE_TO_CHAN( ((s >>  3) & 0xf8) | ((s >>  8) & 0x7) );
+   texel[BCOMP] = UBYTE_TO_CHAN( ((s <<  2) & 0xf8) | ((s >>  3) & 0x7) );
+   texel[ACOMP] = UBYTE_TO_CHAN( ((s) & 0x01) ? 255 : 0);
+}
+
+#if DIM == 3
+static void store_texel_rgba5551(struct gl_texture_image *texImage,
+                                 GLint i, GLint j, GLint k, const void *texel)
+{
+   const GLubyte *rgba = (const GLubyte *) texel;
+   GLushort *dst = TEXEL_ADDR(GLushort, texImage, i, j, k, 1);
+   *dst = PACK_COLOR_5551(rgba[RCOMP], rgba[GCOMP], rgba[BCOMP], rgba[ACOMP]);
+}
+#endif
 
 /* MESA_FORMAT_ARGB1555 ******************************************************/
 

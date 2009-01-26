@@ -383,7 +383,7 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
       return;
    }
 
-   if (width < 0 || (width != 0 && _mesa_bitcount(width) != 1)) {
+   if (width < 0 || (width != 0 && !_mesa_is_pow_two(width))) {
       /* error */
       if (proxy) {
          table->Size = 0;

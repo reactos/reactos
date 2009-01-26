@@ -10,17 +10,17 @@ void grammar_alloc_free (void *ptr)
     free (ptr);
 }
 
-void *grammar_alloc_malloc (unsigned int size)
+void *grammar_alloc_malloc (size_t size)
 {
     return malloc (size);
 }
 
-void *grammar_alloc_realloc (void *ptr, unsigned int old_size, unsigned int size)
+void *grammar_alloc_realloc (void *ptr, size_t old_size, size_t size)
 {
     return realloc (ptr, size);
 }
 
-void *grammar_memory_copy (void *dst, const void * src, unsigned int size)
+void *grammar_memory_copy (void *dst, const void * src, size_t size)
 {
     return memcpy (dst, src, size);
 }
@@ -30,7 +30,7 @@ int grammar_string_compare (const byte *str1, const byte *str2)
     return strcmp ((const char *) str1, (const char *) str2);
 }
 
-int grammar_string_compare_n (const byte *str1, const byte *str2, unsigned int n)
+int grammar_string_compare_n (const byte *str1, const byte *str2, size_t n)
 {
     return strncmp ((const char *) str1, (const char *) str2, n);
 }
@@ -40,7 +40,7 @@ byte *grammar_string_copy (byte *dst, const byte *src)
     return (byte *) strcpy ((char *) dst, (const char *) src);
 }
 
-byte *grammar_string_copy_n (byte *dst, const byte *src, unsigned int n)
+byte *grammar_string_copy_n (byte *dst, const byte *src, size_t n)
 {
     return (byte *) strncpy ((char *) dst, (const char *) src, n);
 }

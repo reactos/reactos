@@ -27,8 +27,8 @@
 #define SHADER_API_H
 
 
-#include "glheader.h"
-#include "mtypes.h"
+#include "main/glheader.h"
+#include "main/mtypes.h"
 
 
 /**
@@ -77,6 +77,10 @@ _mesa_reference_shader(GLcontext *ctx, struct gl_shader **ptr,
 
 extern struct gl_shader *
 _mesa_lookup_shader(GLcontext *ctx, GLuint name);
+
+
+extern void
+_mesa_update_shader_textures_used(struct gl_program *prog);
 
 
 extern void

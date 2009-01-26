@@ -53,11 +53,11 @@ mmDumpMemInfo(const struct mem_block *heap)
 }
 
 struct mem_block *
-mmInit(unsigned int ofs, int size)
+mmInit(unsigned ofs, unsigned size)
 {
    struct mem_block *heap, *block;
   
-   if (size <= 0) 
+   if (!size) 
       return NULL;
 
    heap = (struct mem_block *) _mesa_calloc(sizeof(struct mem_block));
@@ -91,8 +91,8 @@ mmInit(unsigned int ofs, int size)
 
 static struct mem_block *
 SliceBlock(struct mem_block *p, 
-           unsigned int startofs, int size, 
-           int reserved, int alignment)
+           unsigned startofs, unsigned size, 
+           unsigned reserved, unsigned alignment)
 {
    struct mem_block *newblock;
 
@@ -160,14 +160,14 @@ SliceBlock(struct mem_block *p,
 
 
 struct mem_block *
-mmAllocMem(struct mem_block *heap, int size, int align2, int startSearch)
+mmAllocMem(struct mem_block *heap, unsigned size, unsigned align2, unsigned startSearch)
 {
    struct mem_block *p;
-   const int mask = (1 << align2)-1;
-   unsigned int startofs = 0;
-   unsigned int endofs;
+   const unsigned mask = (1 << align2)-1;
+   unsigned startofs = 0;
+   unsigned endofs;
 
-   if (!heap || align2 < 0 || size <= 0)
+   if (!heap || !size)
       return NULL;
 
    for (p = heap->next_free; p != heap; p = p->next_free) {
@@ -193,7 +193,7 @@ mmAllocMem(struct mem_block *heap, int size, int align2, int startSearch)
 
 
 struct mem_block *
-mmFindBlock(struct mem_block *heap, int start)
+mmFindBlock(struct mem_block *heap, unsigned start)
 {
    struct mem_block *p;
 

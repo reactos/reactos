@@ -135,7 +135,7 @@ _slang_simplify(slang_operation *oper,
       /* look for user-defined constant */
       {
          slang_variable *var;
-         var = _slang_locate_variable(oper->locals, oper->a_id, GL_TRUE);
+         var = _slang_variable_locate(oper->locals, oper->a_id, GL_TRUE);
          if (var) {
             if (var->type.qualifier == SLANG_QUAL_CONST &&
                 var->initializer &&
@@ -380,7 +380,7 @@ _slang_cast_func_params(slang_operation *callOper, const slang_function *fun,
       /* Get type of arg[i] */
       if (!slang_typeinfo_construct(&argType))
          return GL_FALSE;
-      if (!_slang_typeof_operation_(&callOper->children[i], space,
+      if (!_slang_typeof_operation(&callOper->children[i], space,
                                     &argType, atoms, log)) {
          slang_typeinfo_destruct(&argType);
          return GL_FALSE;
@@ -464,7 +464,7 @@ _slang_adapt_call(slang_operation *callOper, const slang_function *fun,
          /* Get type of arg[i] */
          if (!slang_typeinfo_construct(&argType))
             return GL_FALSE;
-         if (!_slang_typeof_operation_(&callOper->children[i], space,
+         if (!_slang_typeof_operation(&callOper->children[i], space,
                                        &argType, atoms, log)) {
             slang_typeinfo_destruct(&argType);
             return GL_FALSE;

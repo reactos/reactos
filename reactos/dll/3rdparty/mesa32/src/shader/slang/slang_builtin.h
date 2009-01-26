@@ -33,7 +33,8 @@
 
 extern GLint
 _slang_alloc_statevar(slang_ir_node *n,
-                      struct gl_program_parameter_list *paramList);
+                      struct gl_program_parameter_list *paramList,
+                      GLboolean *direct);
 
 
 #endif /* SLANG_BUILTIN_H */

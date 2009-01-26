@@ -298,6 +298,10 @@ _glthread_GetTSD(_glthread_TSD *);
 extern void
 _glthread_SetTSD(_glthread_TSD *, void *);
 
+#if !defined __GNUC__ || __GNUC__ < 3
+#  define __builtin_expect(x, y) x
+#endif
+
 #if defined(GLX_USE_TLS)
 
 extern __thread struct _glapi_table * _glapi_tls_Dispatch

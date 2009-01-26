@@ -30,111 +30,8 @@
 #include "feedback.h"
 #include "framebuffer.h"
 #include "image.h"
+#include "readpix.h"
 #include "state.h"
-
-
-/**
- * Do error checking of the format/type parameters to glReadPixels and
- * glDrawPixels.
- * \param drawing if GL_TRUE do checking for DrawPixels, else do checking
- *                for ReadPixels.
- * \return GL_TRUE if error detected, GL_FALSE if no errors
- */
-static GLboolean
-error_check_format_type(GLcontext *ctx, GLenum format, GLenum type,
-                        GLboolean drawing)
-{
-   const char *readDraw = drawing ? "Draw" : "Read";
-
-   if (ctx->Extensions.EXT_packed_depth_stencil
-       && type == GL_UNSIGNED_INT_24_8_EXT
-       && format != GL_DEPTH_STENCIL_EXT) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "gl%sPixels(format is not GL_DEPTH_STENCIL_EXT)", readDraw);
-      return GL_TRUE;
-   }
-
-   /* basic combinations test */
-   if (!_mesa_is_legal_format_and_type(ctx, format, type)) {
-      _mesa_error(ctx, GL_INVALID_ENUM,
-                  "gl%sPixels(format or type)", readDraw);
-      return GL_TRUE;
-   }
-
-   /* additional checks */
-   switch (format) {
-   case GL_RED:
-   case GL_GREEN:
-   case GL_BLUE:
-   case GL_ALPHA:
-   case GL_LUMINANCE:
-   case GL_LUMINANCE_ALPHA:
-   case GL_RGB:
-   case GL_BGR:
-   case GL_RGBA:
-   case GL_BGRA:
-   case GL_ABGR_EXT:
-      if (drawing && !ctx->Visual.rgbMode) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                   "glDrawPixels(drawing RGB pixels into color index buffer)");
-         return GL_TRUE;
-      }
-      if (!drawing && !_mesa_dest_buffer_exists(ctx, GL_COLOR)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glReadPixels(no color buffer)");
-         return GL_TRUE;
-      }
-      break;
-   case GL_COLOR_INDEX:
-      if (!drawing && ctx->Visual.rgbMode) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                    "glReadPixels(reading color index format from RGB buffer)");
-         return GL_TRUE;
-      }
-      if (!drawing && !_mesa_dest_buffer_exists(ctx, GL_COLOR)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glReadPixels(no color buffer)");
-         return GL_TRUE;
-      }
-      break;
-   case GL_STENCIL_INDEX:
-      if ((drawing && !_mesa_dest_buffer_exists(ctx, format)) ||
-          (!drawing && !_mesa_source_buffer_exists(ctx, format))) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "gl%sPixels(no stencil buffer)", readDraw);
-         return GL_TRUE;
-      }
-      break;
-   case GL_DEPTH_COMPONENT:
-      if (!drawing && !_mesa_source_buffer_exists(ctx, format)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "gl%sPixels(no depth buffer)", readDraw);
-         return GL_TRUE;
-      }
-      break;
-   case GL_DEPTH_STENCIL_EXT:
-      if (!ctx->Extensions.EXT_packed_depth_stencil ||
-          type != GL_UNSIGNED_INT_24_8_EXT) {
-         _mesa_error(ctx, GL_INVALID_ENUM, "gl%sPixels(type)", readDraw);
-         return GL_TRUE;
-      }
-      if ((drawing && !_mesa_dest_buffer_exists(ctx, format)) ||
-          (!drawing && !_mesa_source_buffer_exists(ctx, format))) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "gl%sPixels(no depth or stencil buffer)", readDraw);
-         return GL_TRUE;
-      }
-      break;
-   default:
-      /* this should have been caught in _mesa_is_legal_format_type() */
-      _mesa_problem(ctx, "unexpected format in _mesa_%sPixels", readDraw);
-      return GL_TRUE;
-   }
-
-   /* no errors */
-   return GL_FALSE;
-}
-      
 
 
 #if _HAVE_FULL_GL
@@ -164,7 +61,7 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
       return;
    }
 
-   if (error_check_format_type(ctx, format, type, GL_TRUE)) {
+   if (_mesa_error_check_format_type(ctx, format, type, GL_TRUE)) {
       /* found an error */
       return;
    }
@@ -287,59 +184,6 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
 
 
 void GLAPIENTRY
-_mesa_ReadPixels( GLint x, GLint y, GLsizei width, GLsizei height,
-		  GLenum format, GLenum type, GLvoid *pixels )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   if (width < 0 || height < 0) {
-      _mesa_error( ctx, GL_INVALID_VALUE,
-                   "glReadPixels(width=%d height=%d)", width, height );
-      return;
-   }
-
-   if (ctx->NewState)
-      _mesa_update_state(ctx);
-
-   if (error_check_format_type(ctx, format, type, GL_FALSE)) {
-      /* found an error */
-      return;
-   }
-
-   if (ctx->ReadBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
-                  "glReadPixels(incomplete framebuffer)" );
-      return;
-   }
-
-   if (!_mesa_source_buffer_exists(ctx, format)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "glReadPixels(no readbuffer)");
-      return;
-   }
-
-   if (ctx->Pack.BufferObj->Name) {
-      if (!_mesa_validate_pbo_access(2, &ctx->Pack, width, height, 1,
-                                     format, type, pixels)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glReadPixels(invalid PBO access)");
-         return;
-      }
-
-      if (ctx->Pack.BufferObj->Pointer) {
-         /* buffer is mapped - that's an error */
-         _mesa_error(ctx, GL_INVALID_OPERATION, "glReadPixels(PBO is mapped)");
-         return;
-      }
-   }
-
-   ctx->Driver.ReadPixels(ctx, x, y, width, height,
-			  format, type, &ctx->Pack, pixels);
-}
-
-
-
-void GLAPIENTRY
 _mesa_Bitmap( GLsizei width, GLsizei height,
               GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove,
               const GLubyte *bitmap )
@@ -374,7 +218,7 @@ _mesa_Bitmap( GLsizei width, GLsizei height,
 
    if (ctx->RenderMode == GL_RENDER) {
       /* Truncate, to satisfy conformance tests (matches SGI's OpenGL). */
-      const GLfloat epsilon = 0.0001;
+      const GLfloat epsilon = (const GLfloat)0.0001;
       GLint x = IFLOOR(ctx->Current.RasterPos[0] + epsilon - xorig);
       GLint y = IFLOOR(ctx->Current.RasterPos[1] + epsilon - yorig);
 

@@ -35,7 +35,9 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/context.h"
 #include "main/macros.h"
 #include "main/vtxfmt.h"
+#if FEATURE_dlist
 #include "main/dlist.h"
+#endif
 #include "main/state.h"
 #include "main/light.h"
 #include "main/api_arrayelt.h"
@@ -66,7 +68,7 @@ static void vbo_exec_wrap_buffers( struct vbo_exec_context *exec )
       GLuint last_begin = exec->vtx.prim[exec->vtx.prim_count-1].begin;
       GLuint last_count;
 
-      if (exec->ctx->Driver.CurrentExecPrimitive != GL_POLYGON+1) {
+      if (exec->ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END) {
 	 GLint i = exec->vtx.prim_count - 1;
 	 assert(i >= 0);
 	 exec->vtx.prim[i].count = (exec->vtx.vert_count - 
@@ -88,7 +90,7 @@ static void vbo_exec_wrap_buffers( struct vbo_exec_context *exec )
        */
       assert(exec->vtx.prim_count == 0);
 
-      if (exec->ctx->Driver.CurrentExecPrimitive != GL_POLYGON+1) {
+      if (exec->ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END) {
 	 exec->vtx.prim[0].mode = exec->ctx->Driver.CurrentExecPrimitive;
 	 exec->vtx.prim[0].start = 0;
 	 exec->vtx.prim[0].count = 0;
@@ -502,7 +504,7 @@ static void GLAPIENTRY vbo_exec_Begin( GLenum mode )
 {
    GET_CURRENT_CONTEXT( ctx ); 
 
-   if (ctx->Driver.CurrentExecPrimitive == GL_POLYGON+1) {
+   if (ctx->Driver.CurrentExecPrimitive == PRIM_OUTSIDE_BEGIN_END) {
       struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
       int i;
 
@@ -546,7 +548,7 @@ static void GLAPIENTRY vbo_exec_End( void )
 {
    GET_CURRENT_CONTEXT( ctx ); 
 
-   if (ctx->Driver.CurrentExecPrimitive != GL_POLYGON+1) {
+   if (ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END) {
       struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
       int idx = exec->vtx.vert_count;
       int i = exec->vtx.prim_count - 1;
@@ -554,7 +556,7 @@ static void GLAPIENTRY vbo_exec_End( void )
       exec->vtx.prim[i].end = 1; 
       exec->vtx.prim[i].count = idx - exec->vtx.prim[i].start;
 
-      ctx->Driver.CurrentExecPrimitive = GL_POLYGON+1;
+      ctx->Driver.CurrentExecPrimitive = PRIM_OUTSIDE_BEGIN_END;
 
       if (exec->vtx.prim_count == VBO_MAX_PRIM)
 	 vbo_exec_vtx_flush( exec );	
@@ -570,8 +572,10 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
 
    vfmt->ArrayElement = _ae_loopback_array_elt;	        /* generic helper */
    vfmt->Begin = vbo_exec_Begin;
+#if FEATURE_dlist
    vfmt->CallList = _mesa_CallList;
    vfmt->CallLists = _mesa_CallLists;
+#endif
    vfmt->End = vbo_exec_End;
    vfmt->EvalCoord1f = vbo_exec_EvalCoord1f;
    vfmt->EvalCoord1fv = vbo_exec_EvalCoord1fv;
@@ -647,6 +651,41 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
 }
 
 
+/**
+ * Tell the VBO module to use a real OpenGL vertex buffer object to
+ * store accumulated immediate-mode vertex data.
+ * This replaces the malloced buffer which was created in
+ * vb_exec_vtx_init() below.
+ */
+void vbo_use_buffer_objects(GLcontext *ctx)
+{
+   struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
+   /* Any buffer name but 0 can be used here since this bufferobj won't
+    * go into the bufferobj hashtable.
+    */
+   GLuint bufName = 0xaabbccdd;
+   GLenum target = GL_ARRAY_BUFFER_ARB;
+   GLenum access = GL_READ_WRITE_ARB;
+   GLenum usage = GL_STREAM_DRAW_ARB;
+   GLsizei size = VBO_VERT_BUFFER_SIZE * sizeof(GLfloat);
+
+   /* Make sure this func is only used once */
+   assert(exec->vtx.bufferobj == ctx->Array.NullBufferObj);
+   if (exec->vtx.buffer_map) {
+      _mesa_align_free(exec->vtx.buffer_map);
+   }
+
+   /* Allocate a real buffer object now */
+   exec->vtx.bufferobj = ctx->Driver.NewBufferObject(ctx, bufName, target);
+   ctx->Driver.BufferData(ctx, target, size, NULL, usage, exec->vtx.bufferobj);
+
+   /* and map it */
+   exec->vtx.buffer_map
+      = ctx->Driver.MapBuffer(ctx, target, access, exec->vtx.bufferobj);
+}
+
+
+
 void vbo_exec_vtx_init( struct vbo_exec_context *exec )
 {
    GLcontext *ctx = exec->ctx;
@@ -660,8 +699,8 @@ void vbo_exec_vtx_init( struct vbo_exec_context *exec )
                                  &exec->vtx.bufferobj,
                                  ctx->Array.NullBufferObj);
 
+   ASSERT(!exec->vtx.buffer_map);
    exec->vtx.buffer_map = ALIGN_MALLOC(VBO_VERT_BUFFER_SIZE * sizeof(GLfloat), 64);
-
    vbo_exec_vtxfmt_init( exec );
 
    /* Hook our functions into the dispatch table.
@@ -686,9 +725,17 @@ void vbo_exec_vtx_init( struct vbo_exec_context *exec )
 
 void vbo_exec_vtx_destroy( struct vbo_exec_context *exec )
 {
-   if (exec->vtx.buffer_map) {
-      ALIGN_FREE(exec->vtx.buffer_map);
-      exec->vtx.buffer_map = NULL;
+   if (exec->vtx.bufferobj->Name) {
+      /* using a real VBO for vertex data */
+      GLcontext *ctx = exec->ctx;
+      _mesa_reference_buffer_object(ctx, &exec->vtx.bufferobj, NULL);
+   }
+   else {
+      /* just using malloc'd space for vertex data */
+      if (exec->vtx.buffer_map) {
+         ALIGN_FREE(exec->vtx.buffer_map);
+         exec->vtx.buffer_map = NULL;
+      }
    }
 }
 

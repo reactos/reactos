@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
  *
- * Copyright (C) 2005-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2005-2008  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2009  VMware, Inc.   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -83,6 +83,9 @@ typedef enum
    IR_DIV,
    IR_DOT4,
    IR_DOT3,
+   IR_DOT2,
+   IR_NRM4,
+   IR_NRM3,
    IR_CROSS,   /* vec3 cross product */
    IR_LRP,
    IR_CLAMP,
@@ -137,24 +140,54 @@ typedef enum
 
 
 /**
- * Describes where data storage is allocated.
+ * Describes where data/variables are stored in the various register files.
+ *
+ * In the simple case, the File, Index and Size fields indicate where
+ * a variable is stored.  For example, a vec3 variable may be stored
+ * as (File=PROGRAM_TEMPORARY, Index=6, Size=3).  Or, File[Index].
+ * Or, a program input like color may be stored as
+ * (File=PROGRAM_INPUT,Index=3,Size=4);
+ *
+ * For single-float values, the Swizzle field indicates which component
+ * of the vector contains the float.
+ *
+ * If IsIndirect is set, the storage is accessed through an indirect
+ * register lookup.  The value in question will be located at:
+ *   File[Index + IndirectFile[IndirectIndex]]
+ *
+ * This is primary used for indexing arrays.  For example, consider this
+ * GLSL code:
+ *   uniform int i;
+ *   float a[10];
+ *   float x = a[i];
+ *
+ * here, storage for a[i] would be described by (File=PROGRAM_TEMPORAY,
+ * Index=aPos, IndirectFile=PROGRAM_UNIFORM, IndirectIndex=iPos), which
+ * would mean TEMP[aPos + UNIFORM[iPos]]
  */
-struct _slang_ir_storage
+struct slang_ir_storage_
 {
    enum register_file File;  /**< PROGRAM_TEMPORARY, PROGRAM_INPUT, etc */
-   GLint Index;  /**< -1 means unallocated */
-   GLint Size;  /**< number of floats */
-   GLuint Swizzle;
+   GLint Index;    /**< -1 means unallocated */
+   GLint Size;     /**< number of floats or ints */
+   GLuint Swizzle; /**< Swizzle AND writemask info */
    GLint RefCount; /**< Used during IR tree delete */
-   GLboolean RelAddr;
+
+   GLboolean RelAddr; /* we'll remove this eventually */
+
+   GLboolean IsIndirect;
+   enum register_file IndirectFile;
+   GLint IndirectIndex;
+   GLuint IndirectSwizzle;
+   GLuint TexTarget;  /**< If File==PROGRAM_SAMPLER, one of TEXTURE_x_INDEX */
 
    /** If Parent is non-null, Index is relative to parent.
     * The other fields are ignored.
     */
-   struct _slang_ir_storage *Parent;
+   struct slang_ir_storage_ *Parent;
 };
 
-typedef struct _slang_ir_storage slang_ir_storage;
+typedef struct slang_ir_storage_ slang_ir_storage;
 
 
 /**
@@ -170,7 +203,6 @@ typedef struct slang_ir_node_
 
    /** special fields depending on Opcode: */
    const char *Field;  /**< If Opcode == IR_FIELD */
-   GLuint Writemask;  /**< If Opcode == IR_MOVE */
    GLfloat Value[4];    /**< If Opcode == IR_FLOAT */
    slang_variable *Var;  /**< If Opcode == IR_VAR or IR_VAR_DECL */
    struct slang_ir_node_ *List;  /**< For various linked lists */
@@ -197,6 +229,11 @@ extern const slang_ir_info *
 _slang_ir_info(slang_ir_opcode opcode);
 
 
+extern void
+_slang_init_ir_storage(slang_ir_storage *st,
+                       enum register_file file, GLint index, GLint size,
+                       GLuint swizzle);
+
 extern slang_ir_storage *
 _slang_new_ir_storage(enum register_file file, GLint index, GLint size);
 
@@ -209,6 +246,21 @@ extern slang_ir_storage *
 _slang_new_ir_storage_relative(GLint index, GLint size,
                                slang_ir_storage *parent);
 
+
+extern slang_ir_storage *
+_slang_new_ir_storage_indirect(enum register_file file,
+                               GLint index,
+                               GLint size,
+                               enum register_file indirectFile,
+                               GLint indirectIndex,
+                               GLuint indirectSwizzle);
+
+extern slang_ir_storage *
+_slang_new_ir_storage_sampler(GLint sampNum, GLuint texTarget, GLint size);
+
+
+extern void
+_slang_copy_ir_storage(slang_ir_storage *dst, const slang_ir_storage *src);
 
 
 extern void

@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/GL/dri/sarea.h,v 1.11 2002/10/30 12:52:03 alanh Exp $ */
 /**
  * \file sarea.h 
  * SAREA definitions.
@@ -34,7 +33,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/* $XFree86: xc/programs/Xserver/GL/dri/sarea.h,v 1.11 2002/10/30 12:52:03 alanh Exp $ */
 
 #ifndef _SAREA_H_
 #define _SAREA_H_

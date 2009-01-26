@@ -112,6 +112,10 @@ _mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
 
 
 extern void GLAPIENTRY
+_mesa_PointSizePointer(GLenum type, GLsizei stride, const GLvoid *ptr);
+
+
+extern void GLAPIENTRY
 _mesa_VertexAttribPointerNV(GLuint index, GLint size, GLenum type,
                             GLsizei stride, const GLvoid *pointer);
 

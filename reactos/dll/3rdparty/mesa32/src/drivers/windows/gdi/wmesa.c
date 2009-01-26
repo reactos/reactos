@@ -56,11 +56,13 @@ wmesa_free_framebuffer(HDC hdc)
 	prev = pwfb;
     }
     if (pwfb) {
+        struct gl_framebuffer *fb;
 	if (pwfb == FirstFramebuffer)
 	    FirstFramebuffer = pwfb->next;
 	else
 	    prev->next = pwfb->next;
-	free(pwfb);
+        fb = &pwfb->Base;
+        _mesa_unreference_framebuffer(&fb); 
     }
 }
 
@@ -1502,6 +1504,9 @@ WMesaContext WMesaCreateContext(HDC hDC,
     /* initialize the Mesa context data */
     ctx = &c->gl_ctx;
     _mesa_initialize_context(ctx, visual, NULL, &functions, (void *)c);
+
+    /* visual no longer needed - it was copied by _mesa_initialize_context() */
+    _mesa_destroy_visual(visual);
 
     _mesa_enable_sw_extensions(ctx);
     _mesa_enable_1_3_extensions(ctx);

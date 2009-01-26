@@ -1,6 +1,6 @@
 # Makefile for core library for VMS
 # contributed by Jouk Jansen  joukj@hrem.nano.tudelft.nl
-# Last revision : 27 May 2008
+# Last revision : 29 September 2008
 .first
 	define gl [---.include.gl]
 	define math [-.math]
@@ -34,6 +34,7 @@ SOURCES = \
 	prog_instruction.c \
 	prog_parameter.c \
 	prog_print.c \
+	prog_cache.c \
 	prog_statevars.c \
 	shader_api.c prog_uniform.c
 
@@ -52,7 +53,7 @@ OBJECTS = \
 	prog_parameter.obj,\
 	prog_print.obj,\
 	prog_statevars.obj,\
-	shader_api.obj,prog_uniform.obj
+	shader_api.obj,prog_uniform.obj,prog_cache.obj
 
 ##### RULES #####
 
@@ -91,3 +92,4 @@ prog_print.obj : prog_print.c
 prog_statevars.obj : prog_statevars.c
 shader_api.obj : shader_api.c
 prog_uniform.obj : prog_uniform.c
+prog_cache.obj : prog_cache.c

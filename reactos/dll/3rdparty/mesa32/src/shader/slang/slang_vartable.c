@@ -107,13 +107,18 @@ _slang_pop_var_table(slang_var_table *vt)
 
    /* free the storage allocated for each variable */
    for (i = 0; i < t->NumVars; i++) {
-      slang_ir_storage *store = (slang_ir_storage *) t->Vars[i]->aux;
+      slang_ir_storage *store = t->Vars[i]->store;
       GLint j;
       GLuint comp;
       if (dbg) printf("  Free var %s, size %d at %d.%s\n",
                       (char*) t->Vars[i]->a_name, store->Size,
                       store->Index,
                       _mesa_swizzle_string(store->Swizzle, 0, 0));
+
+      if (store->File == PROGRAM_SAMPLER) {
+         /* samplers have no storage */
+         continue;
+      }
 
       if (store->Size == 1)
          comp = GET_SWZ(store->Swizzle, 0);
@@ -160,7 +165,7 @@ _slang_add_variable(slang_var_table *vt, slang_variable *v)
    assert(vt);
    t = vt->Top;
    assert(t);
-   if (dbg) printf("Adding var %s, store %p\n", (char *) v->a_name, v->aux);
+   if (dbg) printf("Adding var %s, store %p\n", (char *) v->a_name, (void *) v->store);
    t->Vars = (slang_variable **)
       _slang_realloc(t->Vars,
                      t->NumVars * sizeof(slang_variable *),
@@ -241,7 +246,15 @@ GLboolean
 _slang_alloc_var(slang_var_table *vt, slang_ir_storage *store)
 {
    struct table *t = vt->Top;
-   const int i = alloc_reg(vt, store->Size, GL_FALSE);
+   int i;
+
+   if (store->File == PROGRAM_SAMPLER) {
+      /* don't really allocate storage */
+      store->Index = 0;
+      return GL_TRUE;
+   }
+
+   i = alloc_reg(vt, store->Size, GL_FALSE);
    if (i < 0)
       return GL_FALSE;
 

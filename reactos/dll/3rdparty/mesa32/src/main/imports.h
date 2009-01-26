@@ -333,7 +333,7 @@ static INLINE int iround(float f)
    return r;
 }
 #define IROUND(x)  iround(x)
-#elif defined(USE_X86_ASM) && defined(__MSC__) && defined(__WIN32__)
+#elif defined(USE_X86_ASM) && defined(_MSC_VER)
 static INLINE int iround(float f)
 {
    int r;
@@ -460,6 +460,16 @@ static INLINE int iceil(float f)
 }
 #define ICEIL(x)  iceil(x)
 #endif
+
+
+/**
+ * Is x a power of two?
+ */
+static INLINE int
+_mesa_is_pow_two(int x)
+{
+   return !(x & (x - 1));
+}
 
 
 /***
@@ -756,6 +766,9 @@ _mesa_strtod( const char *s, char **end );
 
 extern int
 _mesa_sprintf( char *str, const char *fmt, ... );
+
+extern int
+_mesa_snprintf( char *str, size_t size, const char *fmt, ... );
 
 extern void
 _mesa_printf( const char *fmtString, ... );

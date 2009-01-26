@@ -37,7 +37,6 @@
 # define GLAPIENTRYP GLAPIENTRY *
 #endif
 
-typedef void (*_glapi_proc)(void); /* generic function pointer */
 
 struct _glapi_table
 {

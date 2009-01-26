@@ -657,4 +657,11 @@ do {                        \
 #define LEN_SQUARED_2FV( V ) ((V)[0]*(V)[0]+(V)[1]*(V)[1])
 
 
+/** casts to silence warnings with some compilers */
+#define ENUM_TO_INT(E)     ((GLint)(E))
+#define ENUM_TO_FLOAT(E)   ((GLfloat)(GLint)(E))
+#define ENUM_TO_DOUBLE(E)  ((GLdouble)(GLint)(E))
+#define ENUM_TO_BOOLEAN(E) ((E) ? GL_TRUE : GL_FALSE)
+
+
 #endif

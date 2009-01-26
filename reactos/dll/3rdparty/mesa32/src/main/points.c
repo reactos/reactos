@@ -65,22 +65,17 @@ _mesa_PointSize( GLfloat size )
 
 #if _HAVE_FULL_GL
 
-/*
- * Added by GL_NV_point_sprite
- */
+
 void GLAPIENTRY
-_mesa_PointParameteriNV( GLenum pname, GLint param )
+_mesa_PointParameteri( GLenum pname, GLint param )
 {
    const GLfloat value = (GLfloat) param;
-   _mesa_PointParameterfvEXT(pname, &value);
+   _mesa_PointParameterfv(pname, &value);
 }
 
 
-/*
- * Added by GL_NV_point_sprite
- */
 void GLAPIENTRY
-_mesa_PointParameterivNV( GLenum pname, const GLint *params )
+_mesa_PointParameteriv( GLenum pname, const GLint *params )
 {
    GLfloat p[3];
    p[0] = (GLfloat) params[0];
@@ -88,27 +83,19 @@ _mesa_PointParameterivNV( GLenum pname, const GLint *params )
       p[1] = (GLfloat) params[1];
       p[2] = (GLfloat) params[2];
    }
-   _mesa_PointParameterfvEXT(pname, p);
+   _mesa_PointParameterfv(pname, p);
 }
 
 
-
-/*
- * Same for both GL_EXT_point_parameters and GL_ARB_point_parameters.
- */
 void GLAPIENTRY
-_mesa_PointParameterfEXT( GLenum pname, GLfloat param)
+_mesa_PointParameterf( GLenum pname, GLfloat param)
 {
-   _mesa_PointParameterfvEXT(pname, &param);
+   _mesa_PointParameterfv(pname, &param);
 }
 
 
-
-/*
- * Same for both GL_EXT_point_parameters and GL_ARB_point_parameters.
- */
 void GLAPIENTRY
-_mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params)
+_mesa_PointParameterfv( GLenum pname, const GLfloat *params)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
@@ -213,7 +200,7 @@ _mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params)
          }
          break;
       case GL_POINT_SPRITE_COORD_ORIGIN:
-         if (ctx->Extensions.ARB_point_sprite) {
+         if (ctx->Extensions.ARB_point_sprite || ctx->Extensions.NV_point_sprite) {
             GLenum value = (GLenum) params[0];
             if (value != GL_LOWER_LEFT && value != GL_UPPER_LEFT) {
                _mesa_error(ctx, GL_INVALID_VALUE,
@@ -270,7 +257,7 @@ _mesa_init_point(GLcontext *ctx)
    ctx->Point.PointSprite = GL_FALSE; /* GL_ARB/NV_point_sprite */
    ctx->Point.SpriteRMode = GL_ZERO; /* GL_NV_point_sprite (only!) */
    ctx->Point.SpriteOrigin = GL_UPPER_LEFT; /* GL_ARB_point_sprite */
-   for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
+   for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
       ctx->Point.CoordReplace[i] = GL_FALSE; /* GL_ARB/NV_point_sprite */
    }
 }

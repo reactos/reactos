@@ -23,17 +23,17 @@
  */
 
 
-#include "glheader.h"
-#include "bufferobj.h"
-#include "colormac.h"
-#include "convolve.h"
-#include "context.h"
-#include "feedback.h"
-#include "image.h"
-#include "macros.h"
-#include "imports.h"
-#include "pixel.h"
-#include "state.h"
+#include "main/glheader.h"
+#include "main/bufferobj.h"
+#include "main/colormac.h"
+#include "main/convolve.h"
+#include "main/context.h"
+#include "main/feedback.h"
+#include "main/image.h"
+#include "main/macros.h"
+#include "main/imports.h"
+#include "main/pixel.h"
+#include "main/state.h"
 
 #include "s_context.h"
 #include "s_depth.h"

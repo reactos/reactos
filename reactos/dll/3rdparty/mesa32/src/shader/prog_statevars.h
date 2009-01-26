@@ -25,7 +25,7 @@
 #ifndef PROG_STATEVARS_H
 #define PROG_STATEVARS_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 
 
 /**
@@ -79,10 +79,10 @@ typedef enum gl_state_index_ {
    STATE_SHININESS,
    STATE_HALF_VECTOR,
 
-   STATE_POSITION,
-   STATE_ATTENUATION,
-   STATE_SPOT_DIRECTION,
-   STATE_SPOT_CUTOFF,
+   STATE_POSITION,       /**< xyzw = position */
+   STATE_ATTENUATION,    /**< xyz = attenuation, w = spot exponent */
+   STATE_SPOT_DIRECTION, /**< xyz = direction, w = cos(cutoff) */
+   STATE_SPOT_CUTOFF,    /**< x = cutoff, yzw = undefined */
 
    STATE_TEXGEN_EYE_S,
    STATE_TEXGEN_EYE_T,
@@ -106,9 +106,11 @@ typedef enum gl_state_index_ {
    STATE_INTERNAL,		/* Mesa additions */
    STATE_NORMAL_SCALE,
    STATE_TEXRECT_SCALE,
-   STATE_POSITION_NORMALIZED,   /* normalized light position */
    STATE_FOG_PARAMS_OPTIMIZED,  /* for faster fog calc */
-   STATE_SPOT_DIR_NORMALIZED,   /* pre-normalized spot dir */
+   STATE_LIGHT_SPOT_DIR_NORMALIZED,   /* pre-normalized spot dir */
+   STATE_LIGHT_POSITION,              /* object vs eye space */
+   STATE_LIGHT_POSITION_NORMALIZED,   /* object vs eye space */
+   STATE_LIGHT_HALF_VECTOR,           /* object vs eye space */
    STATE_PT_SCALE,              /**< Pixel transfer RGBA scale */
    STATE_PT_BIAS,               /**< Pixel transfer RGBA bias */
    STATE_PCM_SCALE,             /**< Post color matrix RGBA scale */

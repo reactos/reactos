@@ -39,10 +39,10 @@ struct mem_block {
    struct mem_block *next, *prev;
    struct mem_block *next_free, *prev_free;
    struct mem_block *heap;
-   unsigned int ofs;
-   int size;
-   unsigned int free:1;
-   unsigned int reserved:1;
+   unsigned ofs;
+   unsigned size;
+   unsigned free:1;
+   unsigned reserved:1;
 };
 
 
@@ -51,7 +51,7 @@ struct mem_block {
  * input: total size in bytes
  * return: a heap pointer if OK, NULL if error
  */
-extern struct mem_block *mmInit(unsigned int ofs, int size);
+extern struct mem_block *mmInit(unsigned ofs, unsigned size);
 
 /**
  * Allocate 'size' bytes with 2^align2 bytes alignment,
@@ -63,8 +63,8 @@ extern struct mem_block *mmInit(unsigned int ofs, int size);
  *		startSearch = linear offset from start of heap to begin search
  * return: pointer to the allocated block, 0 if error
  */
-extern struct mem_block *mmAllocMem(struct mem_block *heap, int size, int align2, 
-                            int startSearch);
+extern struct mem_block *mmAllocMem(struct mem_block *heap, unsigned size, 
+                                    unsigned align2, unsigned startSearch);
 
 /**
  * Free block starts at offset
@@ -78,7 +78,7 @@ extern int mmFreeMem(struct mem_block *b);
  * input: pointer to a heap, start offset
  * return: pointer to a block
  */
-extern struct mem_block *mmFindBlock(struct mem_block *heap, int start);
+extern struct mem_block *mmFindBlock(struct mem_block *heap, unsigned start);
 
 /**
  * destroy MM

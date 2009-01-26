@@ -25,7 +25,6 @@
 
 
 #include "glheader.h"
-#include "colormac.h"
 #include "context.h"
 #include "get.h"
 #include "version.h"
