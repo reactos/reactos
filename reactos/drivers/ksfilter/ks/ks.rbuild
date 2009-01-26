@@ -12,6 +12,9 @@
 	<define name="_COMDDK_" />
 	<file>ks.rc</file>
 	<file>allocators.c</file>
+	<file>bag.c</file>
+	<file>device.c</file>
+	<file>driver.c</file>
 	<file>clocks.c</file>
 	<file>connectivity.c</file>
 	<file>events.c</file>

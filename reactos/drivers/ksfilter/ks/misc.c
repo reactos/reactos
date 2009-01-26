@@ -218,17 +218,5 @@ KsSynchronousIoControlDevice(
     return STATUS_UNSUCCESSFUL;
 }
 
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsInitializeDriver(
-    IN PDRIVER_OBJECT  DriverObject,
-    IN PUNICODE_STRING  RegistryPath,
-    IN const KSDEVICE_DESCRIPTOR  *Descriptor OPTIONAL
-)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
+
 

@@ -44,6 +44,7 @@
 @ stdcall KsHandleSizedListQuery(ptr long long ptr)
 
 @ stdcall KsAcquireResetValue(ptr ptr)
+@ stdcall KsDefaultForwardIrp(ptr ptr)
 @ stdcall KsAddIrpToCancelableQueue(ptr ptr ptr long ptr)
 @ stdcall KsAddObjectCreateItemToDeviceHeader(ptr ptr ptr wstr ptr)
 @ stdcall KsAddObjectCreateItemToObjectHeader(ptr ptr ptr wstr ptr)
