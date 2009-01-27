@@ -136,8 +136,8 @@
 	<directory name="kbdla">
 		<xi:include href="kbdla/kbdla.rbuild" />
 	</directory>
-	<directory name="kbdlt">
-		<xi:include href="kbdlt/kbdlt.rbuild" />
+	<directory name="kbdlt1">
+		<xi:include href="kbdlt1/kbdlt1.rbuild" />
 	</directory>
 	<directory name="kbdlv">
 		<xi:include href="kbdlv/kbdlv.rbuild" />
