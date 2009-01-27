@@ -37,6 +37,7 @@
 		<file>dllmain.c</file>
 		<file>exit.c</file>
 		<file>exticon.c</file>
+		<file>imm.c</file>
 		<file>misc.c</file>
 		<file>object.c</file>
 		<file>resources.c</file>
