@@ -119,11 +119,11 @@ KiReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     if ((OldValue) && !(OldValue & GM_LOCK_WAITER_WOKEN))
     {
         /* Update the Oldvalue to what it should be now */
-        OldValue |= GM_LOCK_BIT;
-        
+        OldValue += GM_LOCK_BIT;
+
         /* The mutex will be woken, minus one waiter */
-        NewValue = (OldValue | GM_LOCK_WAITER_WOKEN);
-        NewValue -= GM_LOCK_WAITER_INC;
+        NewValue = OldValue + GM_LOCK_WAITER_WOKEN -
+            GM_LOCK_WAITER_INC;
 
         /* Remove the Woken bit */
         if (InterlockedCompareExchange(&GuardedMutex->Count,
