@@ -131,6 +131,7 @@
 
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
+extern HINSTANCE hImmInstance;
 
 /* Critical Section*/
 extern RTL_CRITICAL_SECTION User32Crit;

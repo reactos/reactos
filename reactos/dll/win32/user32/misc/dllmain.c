@@ -310,6 +310,7 @@ DllMain(
          break;
 
       case DLL_PROCESS_DETACH:
+         if (hImmInstance) FreeLibrary(hImmInstance);
          CleanupThread();
          Cleanup();
          break;

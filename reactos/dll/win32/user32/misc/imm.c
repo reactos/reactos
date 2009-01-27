@@ -12,16 +12,75 @@
 
 #include <wine/debug.h>
 
-
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
+
+typedef struct
+{
+    BOOL (WINAPI* pImmIsIME) (HKL);
+    HIMC (WINAPI* pImmAssociateContext) (HWND, HIMC);
+} Imm32ApiTable;
+
+Imm32ApiTable *pImmApiTable = {0};
+HINSTANCE hImmInstance = NULL;
+
+
+static BOOL IsInitialized()
+{
+    return (hImmInstance != NULL) ? TRUE : FALSE;
+}
+
+/*
+ *  This function should not be implemented, it is used,
+ *  if you can not load function from imm32.dll
+ */
+BOOL WINAPI IMM_ImmIsIME(HKL hKL)
+{
+    return 0;
+}
+
+/* See comment for IMM_ImmIsIME */
+HIMC WINAPI IMM_ImmAssociateContext(HWND hwnd, HIMC himc)
+{
+    return 0;
+}
 
 /*
  * @unimplemented
  */
-DWORD WINAPI User32InitializeImmEntryTable(PVOID p)
+BOOL WINAPI User32InitializeImmEntryTable(DWORD dwUnknown)
 {
     UNIMPLEMENTED;
-    return 0;
+
+    if (dwUnknown != 0x19650412) /* FIXME */
+        return FALSE;
+
+    if (IsInitialized())
+        return TRUE;
+
+    hImmInstance = LoadLibraryW(L"imm32.dll");
+    if (!hImmInstance)
+        return FALSE;
+
+    ZeroMemory(pImmApiTable, sizeof(Imm32ApiTable));
+
+    pImmApiTable->pImmIsIME = (BOOL (WINAPI*)(HKL)) GetProcAddress(hImmInstance, "ImmIsIME");
+    if (!pImmApiTable->pImmIsIME)
+        pImmApiTable->pImmIsIME = IMM_ImmIsIME;
+
+    pImmApiTable->pImmAssociateContext = (HIMC (WINAPI*)(HWND, HIMC)) GetProcAddress(hImmInstance, "ImmAssociateContext");
+    if (!pImmApiTable->pImmAssociateContext)
+        pImmApiTable->pImmAssociateContext = IMM_ImmAssociateContext;
+
+    /*
+     *  TODO: Load more functions from imm32.dll
+     *  Function like IMPSetIMEW, IMPQueryIMEW etc. call functions
+     *  from imm32.dll through pointers in the structure pImmApiTable.
+     *  I do not know whether it is necessary to initialize a table
+     *  of functions to load user32 (DLL_PROCESS_ATTACH)
+     */
+
+    return TRUE;
 }
 
 /*
