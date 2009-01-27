@@ -153,7 +153,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
          if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
 
          if (Dc->w.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(hPalette, BrushObj->BrushAttr.lbColor, Dc_Attr->crBackgroundClr);
+            Result = IntEngCreateSrcMonoXlate(hPalette, Dc_Attr->crBackgroundClr, BrushObj->BrushAttr.lbColor);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
       {

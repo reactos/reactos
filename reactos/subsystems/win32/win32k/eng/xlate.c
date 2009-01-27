@@ -358,8 +358,8 @@ IntEngCreateMonoXlate(
 
 XLATEOBJ* FASTCALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
-                         ULONG ForegroundColor,
-                         ULONG BackgroundColor)
+                         ULONG Color0,
+                         ULONG Color1)
 {
    XLATEOBJ *XlateObj;
    XLATEGDI *XlateGDI;
@@ -404,8 +404,8 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    XlateGDI->BlueShift =  CalculateShift(RGB(0x00, 0x00, 0xFF)) - CalculateShift(XlateGDI->BlueMask);
 
    /* Yes, that's how Windows works, ... */
-   XlateObj->pulXlate[1] = ShiftAndMask(XlateGDI, BackgroundColor);
-   XlateObj->pulXlate[0] = ShiftAndMask(XlateGDI, ForegroundColor);
+   XlateObj->pulXlate[1] = ShiftAndMask(XlateGDI, Color1);
+   XlateObj->pulXlate[0] = ShiftAndMask(XlateGDI, Color0);
 
    if (XlateObj->iDstType == PAL_INDEXED)
    {

@@ -114,8 +114,8 @@ IntEngCreateMonoXlate(USHORT SourcePalType,
 
 XLATEOBJ* FASTCALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
-                         ULONG ForegroundColor,
-                         ULONG BackgroundColor);
+                         ULONG Color0,
+                         ULONG Color1);
 
 HPALETTE FASTCALL
 IntEngGetXlatePalette(XLATEOBJ *XlateObj,
