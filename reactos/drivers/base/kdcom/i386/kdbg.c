@@ -814,12 +814,6 @@ KdSendPacket(
                                                     MessageData->Length);
         }
 
-        // FIXME: this looks wrong, but makes dbgprints work
-        if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
-        {
-            CurrentPacketId |= SYNC_PACKET_ID;
-        }
-
         /* Set the packet id */
         Packet.PacketId = CurrentPacketId;
 
@@ -967,6 +961,7 @@ KdReceivePacket(
                     if (PacketType == PACKET_TYPE_KD_ACKNOWLEDGE)
                     {
                         /* Remote acknowledges the last packet */
+                        CurrentPacketId ^= 1;
                         return KdPacketReceived;
                     }
                     /* That's not what we were waiting for, start over. */
@@ -1091,7 +1086,6 @@ KdReceivePacket(
 
         /* Acknowledge the received packet */
         KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, Packet.PacketId);
-        CurrentPacketId ^= 1;
 
 //FrLdrDbgPrint("KdReceivePacket - all ok\n");
 
