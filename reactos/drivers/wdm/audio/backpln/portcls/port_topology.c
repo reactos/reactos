@@ -18,7 +18,7 @@ typedef struct
 }IPortTopologyImpl;
 
 
-static GUID InterfaceGuids[3] = 
+static GUID InterfaceGuids[2] = 
 {
     {
         /// KS_CATEGORY_TOPOLOGY

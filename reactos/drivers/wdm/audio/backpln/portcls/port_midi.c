@@ -18,16 +18,19 @@ typedef struct
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
 }IPortMidiImpl;
 
-
 static GUID InterfaceGuids[3] = 
 {
     {
-        /// KS_CATEGORY_TOPOLOGY
-        0xDDA54A40, 0x1E4C, 0x11D1, {0xA0, 0x50, 0x40, 0x57, 0x05, 0xC1, 0x00, 0x00}
-    },
-    {
         /// KS_CATEGORY_AUDIO
         0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        /// KS_CATEGORY_RENDER
+        0x65E8773E, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        /// KS_CATEGORY_CAPTURE
+        0x65E8773D, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     }
 };
 
@@ -64,6 +67,11 @@ IPortMidi_fnQueryInterface(
     else if (IsEqualGUIDAligned(refiid, &IID_IPortClsVersion))
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
+    }
+    else if (IsEqualGUIDAligned(refiid, &IID_IDrmPort) ||
+             IsEqualGUIDAligned(refiid, &IID_IDrmPort2))
+    {
+        return NewIDrmPort((PDRMPORT2*)Output);
     }
 
     StringFromCLSID(refiid, Buffer);
@@ -190,7 +198,7 @@ IPortMidi_fnInit(
 
     /* create the subdevice descriptor */
     Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
-                                         2,
+                                         3,
                                          InterfaceGuids, 
                                          0, 
                                          NULL,

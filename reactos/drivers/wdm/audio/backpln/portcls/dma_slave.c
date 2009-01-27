@@ -116,7 +116,7 @@ IDmaChannelSlave_fnAllocateBuffer(
     //FIXME
     // retry with different size on failure
 
-    This->Buffer = This->pAdapter->DmaOperations->AllocateCommonBuffer(This->pAdapter, BufferSize, &This->Address, TRUE);
+    This->Buffer = This->pAdapter->DmaOperations->AllocateCommonBuffer(This->pAdapter, BufferSize, &This->Address, FALSE);
     if (!This->Buffer)
     {
         DPRINT1("IDmaChannelSlave_AllocateBuffer fAllocateCommonBuffer failed \n");
@@ -125,7 +125,7 @@ IDmaChannelSlave_fnAllocateBuffer(
 
     This->BufferSize = BufferSize;
     This->AllocatedBufferSize = BufferSize;
-    DPRINT1("IDmaChannelSlave_fnAllocateBuffer Success Buffer %u Address %ull\n", BufferSize, This->Address);
+    DPRINT1("IDmaChannelSlave_fnAllocateBuffer Success Buffer %u Address %x %p\n", BufferSize, This->Address, PhysicalAddressConstraint);
 
     return STATUS_SUCCESS;
 }
@@ -226,10 +226,19 @@ NTAPI
 IDmaChannelSlave_fnPhysicalAdress(
     IN IDmaChannelSlave * iface)
 {
+    PHYSICAL_ADDRESS Address;
     IDmaChannelSlaveImpl * This = (IDmaChannelSlaveImpl*)iface;
+    DPRINT("IDmaChannelSlave_PhysicalAdress: This %p Virtuell %p Physical High %x Low %x%\n", This, This->Buffer, This->Address.HighPart, This->Address.LowPart);
 
-    DPRINT("IDmaChannelSlave_PhysicalAdress: This %p\n", This);
-    return This->Address;
+#if 1
+
+    /// HACK
+    /// Prevent ES1371 driver from crashing by returning the vaddr instead of physical address
+    Address.QuadPart = (ULONG_PTR)This->Buffer;
+#else
+    Address.QuadPart = This->Address.QuadPart;
+#endif
+    return Address;
 }
 
 VOID
