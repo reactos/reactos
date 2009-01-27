@@ -177,6 +177,7 @@ NTSTATUS
 NewPortDMus(
     OUT PPORT* OutPort)
 {
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
