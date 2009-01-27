@@ -506,15 +506,6 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     ProcessorState->SpecialRegisters.MsrSyscallMask = __readmsr(X86_MSR_SFMASK);
 }
 
-
-VOID
-NTAPI
-KiInitializeMachineType(VOID)
-{
-    /* Set the Machine Type we got from NTLDR */
-    KeI386MachineType = KeLoaderBlock->u.I386.MachineType & 0x000FF;
-}
-
 VOID
 NTAPI
 KeFlushEntireTb(IN BOOLEAN Invalid,

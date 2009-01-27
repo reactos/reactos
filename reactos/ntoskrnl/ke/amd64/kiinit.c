@@ -20,7 +20,6 @@
 
 /* Spinlocks used only on X86 */
 KSPIN_LOCK KiFreezeExecutionLock;
-KSPIN_LOCK Ki486CompatibilityLock;
 
 /* BIOS Memory Map. Not NTLDR-compliant yet */
 extern ULONG KeMemoryMapRangeCount;
@@ -337,6 +336,8 @@ KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKTHREAD IdleThread,
                 IN PVOID DpcStack)
 {
+    RtlZeroMemory(Pcr, PAGE_SIZE);
+
     /* Set the Current Thread */
     Pcr->Prcb.CurrentThread = IdleThread;
 
@@ -491,7 +492,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
         /* Initialize some spinlocks */
         KeInitializeSpinLock(&KiFreezeExecutionLock);
-        KeInitializeSpinLock(&Ki486CompatibilityLock);
 
         /* Initialize portable parts of the OS */
         KiInitSystem();
@@ -512,7 +512,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         /* FIXME */
         DPRINT1("SMP Boot support not yet present\n");
     }
-FrLdrDbgPrint("before KeInitializeThread\n");
 
     /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,
@@ -523,7 +522,7 @@ FrLdrDbgPrint("before KeInitializeThread\n");
                        NULL,
                        NULL,
                        IdleStack);
-FrLdrDbgPrint("after KeInitializeThread\n");
+
     InitThread->NextProcessor = Number;
     InitThread->Priority = HIGH_PRIORITY;
     InitThread->State = Running;
@@ -557,7 +556,7 @@ FrLdrDbgPrint("after KeInitializeThread\n");
     ExpInitializeExecutive(Number, LoaderBlock);
 
     /* Only do this on the boot CPU */
-    if (!Number)
+    if (Number == 0)
     {
         /* Calculate the time reciprocal */
         KiTimeIncrementReciprocal =
@@ -650,8 +649,6 @@ VOID
 NTAPI
 KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	FrLdrDbgPrint("Enter KiSystemStartupReal()\n");
-
     ULONG Cpu;
     PKTHREAD InitialThread;
     ULONG64 InitialStack;
@@ -664,85 +661,98 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Save the loader block and get the current CPU */
     KeLoaderBlock = LoaderBlock;
 
-    /* Get Pcr from loader block */
-//    Pcr = CONTAINING_RECORD(LoaderBlock->Prcb, KIPCR, Prcb);
-    Pcr = &KiInitialPcr;
-
+    /* Get the current CPU number */
     Cpu = KeNumberProcessors;
+
+    /* Set active processors */
+    KeActiveProcessors |= 1 << Cpu;
+    KeNumberProcessors++;
+
+    /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)
     {
-        /* If this is the boot CPU, set GS base and the CPU Number*/
-        __writemsr(X86_MSR_GSBASE, (ULONG64)Pcr);
-        __writemsr(X86_MSR_KERNEL_GSBASE, (ULONG64)Pcr);
-        Pcr->Prcb.Number = Cpu;
-
-        /* Set the initial stack and idle thread as well */
+        /* Set the initial stack, idle thread and process */
         LoaderBlock->KernelStack = (ULONG_PTR)P0BootStack;
         LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
+        LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
+        LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
     }
 
-    /* Save the initial thread and stack */
-    InitialStack = LoaderBlock->KernelStack; // Chekme
-    InitialThread = (PKTHREAD)LoaderBlock->Thread;
+    /* Get Pcr from loader block */
+    Pcr = CONTAINING_RECORD(LoaderBlock->Prcb, KIPCR, Prcb);
+
+    /* Set GS base */
+    __writemsr(X86_MSR_GSBASE, (ULONG64)Pcr);
+    __writemsr(X86_MSR_KERNEL_GSBASE, (ULONG64)Pcr);
+
+    /* Load Ring 3 selectors for DS/ES/FS */
+    Ke386SetDs(KGDT_64_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_64_DATA | RPL_MASK);
+    Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
+
+    /* LDT is unused */
+    __sldt(0);
 
     /* Align stack to 16 bytes */
-    InitialStack &= ~(16 - 1);
+    LoaderBlock->KernelStack &= ~(16 - 1);
+
+    /* Save the initial thread and stack */
+    InitialStack = LoaderBlock->KernelStack; // Checkme
+    InitialThread = (PKTHREAD)LoaderBlock->Thread;
 
     /* Clean the APC List Head */
     InitializeListHead(&InitialThread->ApcState.ApcListHead[KernelMode]);
 
-    /* Initialize the machine type */
-    KiInitializeMachineType();
+    /* Set us as the current process */
+    InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
+
+    /* Get GDT, IDT, PCR and TSS pointers */
+    KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
+
+    /* Initialize the PCR */
+    KiInitializePcr(Cpu,
+                    Pcr,
+                    Idt,
+                    Gdt,
+                    Tss,
+                    InitialThread,
+                    KiDoubleFaultStack);
 
     /* Skip initial setup if this isn't the Boot CPU */
     if (Cpu == 0)
     {
-        /* Get GDT, IDT, PCR and TSS pointers */
-        KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
-
-FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
-
         /* Setup the TSS descriptors and entries */
         Ki386InitializeTss(Tss, Idt, Gdt, InitialStack);
-
-        /* Initialize the PCR */
-        RtlZeroMemory(Pcr, PAGE_SIZE);
-        KiInitializePcr(Cpu,
-                        Pcr,
-                        Idt,
-                        Gdt,
-                        Tss,
-                        InitialThread,
-                        KiDoubleFaultStack);
-
-        /* Set us as the current process */
-        InitialThread->ApcState.Process = &KiInitialProcess.Pcb;
 
         /* Setup the IDT */
         KeInitExceptions();
 
-        /* Load Ring 3 selectors for DS/ES/FS */
-        Ke386SetDs(KGDT_64_DATA | RPL_MASK);
-        Ke386SetEs(KGDT_64_DATA | RPL_MASK);
-        Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
+        /* Initialize debugging system */
+        KdInitSystem(0, KeLoaderBlock);
 
-        /* LDT is unused */
-        __sldt(0);
+        /* Check for break-in */
+//        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
 
-        /* Save NMI and double fault traps */
-//        RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));
-//        RtlCopyMemory(&DoubleFaultEntry, &Idt[8], sizeof(KIDTENTRY));
+        /* HACK: misuse this function to pass a function pointer to kdcom */
+        KdDebuggerInitialize1((PVOID)FrLdrDbgPrint);
 
-        /* Copy kernel's trap handlers */
-//        RtlCopyMemory(Idt,
-//                      (PVOID)KiIdtDescriptor.Base,
-//                      KiIdtDescriptor.Limit + 1);
+        /* Hack! Wait for the debugger! */
+        while (!KdPollBreakIn());
 
-        /* Restore NMI and double fault */
-//        RtlCopyMemory(&Idt[2], &NmiEntry, sizeof(KIDTENTRY));
-//        RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
+        /* Display separator + ReactOS version at start of the debug log */
+        DPRINT1("-----------------------------------------------------\n");
+        DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+        DPRINT1("Command Line: %s\n", LoaderBlock->LoadOptions);
+        DPRINT1("ARC Paths: %s %s %s %s\n", LoaderBlock->ArcBootDeviceName,
+                                            LoaderBlock->NtHalPathName,
+                                            LoaderBlock->ArcHalDeviceName,
+                                            LoaderBlock->NtBootPathName);
     }
 
+    DPRINT1("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
+
+    /* Initialize the Processor with HAL */
+    HalInitializeProcessor(Cpu, KeLoaderBlock);
 
     /* Loop until we can release the freeze lock */
     do
@@ -750,44 +760,6 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
         /* Loop until execution can continue */
         while (*(volatile PKSPIN_LOCK*)&KiFreezeExecutionLock == (PVOID)1);
     } while(InterlockedBitTestAndSet64((PLONG64)&KiFreezeExecutionLock, 0));
-
-    /* Setup CPU-related fields */
-    Pcr->Prcb.Number = Cpu;
-    Pcr->Prcb.SetMember = 1 << Cpu;
-
-    /* Initialize the Processor with HAL */
-    HalInitializeProcessor(Cpu, KeLoaderBlock);
-
-    /* Set active processors */
-    KeActiveProcessors |= 1 << Cpu;
-    KeNumberProcessors++;
-
-    /* Check if this is the boot CPU */
-    if (Cpu == 0)
-    {
-        /* Initialize debugging system */
-        KdInitSystem(0, KeLoaderBlock);
-
-        /* Check for break-in */
-//        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
-    }
-
-    /* HACK: misuse this function to pass a function pointer to kdcom */
-    KdDebuggerInitialize1((PVOID)FrLdrDbgPrint);
-
-    /* Hack! Wait for the debugger! */
-    while (!KdPollBreakIn());
-
-    DbgBreakPointWithStatus(0);
-
-    /* Display separator + ReactOS version at start of the debug log */
-    DPRINT1("-----------------------------------------------------\n");
-    DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
-    DPRINT1("Command Line: %s\n", LoaderBlock->LoadOptions);
-    DPRINT1("ARC Paths: %s %s %s %s\n", LoaderBlock->ArcBootDeviceName,
-                                        LoaderBlock->NtHalPathName,
-                                        LoaderBlock->ArcHalDeviceName,
-                                        LoaderBlock->NtBootPathName);
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
@@ -811,6 +783,8 @@ KiInitializeKernelAndGotoIdleLoop(IN PKPROCESS InitProcess,
                                   IN CCHAR Number,
                                   IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+//    DbgBreakPointWithStatus(0);
+
     /* Initialize kernel */
     KiInitializeKernel(InitProcess,
                        InitThread,
