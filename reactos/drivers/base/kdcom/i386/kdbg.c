@@ -814,6 +814,12 @@ KdSendPacket(
                                                     MessageData->Length);
         }
 
+        // FIXME: this looks wrong, but makes dbgprints work
+        if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
+        {
+            CurrentPacketId |= SYNC_PACKET_ID;
+        }
+
         /* Set the packet id */
         Packet.PacketId = CurrentPacketId;
 
@@ -842,6 +848,7 @@ KdSendPacket(
         /* Did we succeed? */
         if (RcvCode == KdPacketReceived)
         {
+            CurrentPacketId &= ~SYNC_PACKET_ID;
             break;
         }
 
@@ -849,7 +856,7 @@ KdSendPacket(
         if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
         {
             /* No response, silently fail. */
-            return;
+//            return;
         }
 
         /* Packet timed out, send it again */
