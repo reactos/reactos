@@ -1186,6 +1186,54 @@ IntIsWindowInDestroy(PWINDOW_OBJECT Window)
    return ((Window->Status & WINDOWSTATUS_DESTROYING) == WINDOWSTATUS_DESTROYING);
 }
 
+
+BOOL
+FASTCALL
+IntGetWindowPlacement(PWINDOW_OBJECT Window, WINDOWPLACEMENT *lpwndpl)
+{
+   PWINDOW Wnd;
+   POINT Size;
+
+   Wnd = Window->Wnd;
+   if (!Wnd) return FALSE;
+
+   if(lpwndpl->length != sizeof(WINDOWPLACEMENT))
+   {
+      return FALSE;
+   }
+
+   lpwndpl->flags = 0;
+   if (0 == (Wnd->Style & WS_VISIBLE))
+   {
+      lpwndpl->showCmd = SW_HIDE;
+   }
+   else if (0 != (Window->Flags & WINDOWOBJECT_RESTOREMAX) ||
+            0 != (Wnd->Style & WS_MAXIMIZE))
+   {
+      lpwndpl->showCmd = SW_MAXIMIZE;
+   }
+   else if (0 != (Wnd->Style & WS_MINIMIZE))
+   {
+      lpwndpl->showCmd = SW_MINIMIZE;
+   }
+   else if (0 != (Wnd->Style & WS_VISIBLE))
+   {
+      lpwndpl->showCmd = SW_SHOWNORMAL;
+   }
+
+   Size.x = Wnd->WindowRect.left;
+   Size.y = Wnd->WindowRect.top;
+   WinPosInitInternalPos(Window, &Size,
+                         &Wnd->WindowRect);
+
+   lpwndpl->rcNormalPosition = Wnd->InternalPos.NormalRect;
+   lpwndpl->ptMinPosition = Wnd->InternalPos.IconPos;
+   lpwndpl->ptMaxPosition = Wnd->InternalPos.MaxPos;
+
+   return TRUE;
+}
+
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -2988,16 +3036,78 @@ CLEANUP:
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD APIENTRY
-NtUserGetInternalWindowPos( HWND hwnd,
+NtUserGetInternalWindowPos( HWND hWnd,
                             LPRECT rectWnd,
                             LPPOINT ptIcon)
 {
-   UNIMPLEMENTED
+   PWINDOW_OBJECT Window;
+   PWINDOW Wnd;
+   DWORD Ret = 0;
+   BOOL Hit = FALSE;
+   WINDOWPLACEMENT wndpl;
 
-   return 0;
+   UserEnterShared();
+
+   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+   {
+      Hit = FALSE;
+      goto Exit;
+   }
+   Wnd = Window->Wnd;
+
+   _SEH2_TRY
+   {
+       if(rectWnd)
+       {
+          ProbeForWrite(rectWnd,
+                        sizeof(RECT),
+                        1);
+       }
+       if(ptIcon)
+       {
+          ProbeForWrite(ptIcon,
+                        sizeof(POINT),
+                        1);
+       }
+       
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       SetLastNtError(_SEH2_GetExceptionCode());
+       Hit = TRUE;
+   }
+   _SEH2_END;
+
+   
+   if (IntGetWindowPlacement(Window, &wndpl) && !Hit)
+   {
+      _SEH2_TRY
+      {
+          if (rectWnd)
+          {
+             RtlCopyMemory(rectWnd, &wndpl.rcNormalPosition , sizeof(RECT));
+          }
+          if (ptIcon)
+          {
+             RtlCopyMemory(ptIcon, &wndpl.ptMinPosition, sizeof(POINT));
+          }
+       
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+          SetLastNtError(_SEH2_GetExceptionCode());
+          Hit = TRUE;
+      }
+      _SEH2_END;
+
+      if (!Hit) Ret = wndpl.showCmd;
+   }
+Exit:
+   UserLeave();
+   return Ret;
 }
 
 DWORD
