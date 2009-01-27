@@ -3081,7 +3081,8 @@ NtUserGetInternalWindowPos( HWND hWnd,
    }
    _SEH2_END;
 
-   
+   wndpl.length = sizeof(WINDOWPLACEMENT);   
+
    if (IntGetWindowPlacement(Window, &wndpl) && !Hit)
    {
       _SEH2_TRY
