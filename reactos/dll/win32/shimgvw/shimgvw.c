@@ -24,7 +24,8 @@
 
 HINSTANCE hInstance;
 SHIMGVW_SETTINGS shiSettings;
-WCHAR szOpenFileName[MAX_PATH];
+GpImage *image;
+WNDPROC PrevProc = NULL;
 
 HWND hDispWnd, hToolBar;
 
@@ -44,22 +45,30 @@ static const TBBUTTON Buttons [] =
     {TBICON_PRINT,  IDC_PRINT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
 };
 
-static VOID
-ImageView_DrawImage(HWND hwnd)
+static void pLoadImage(LPWSTR szOpenFileName)
 {
-    GpGraphics *graphics;
-    GpImage *image;
-    UINT uImgWidth, uImgHeight;
-    UINT height = 0, width = 0, x = 0, y = 0;
-    PAINTSTRUCT ps;
-    RECT rect;
-    HDC hdc;
-
     if (GetFileAttributesW(szOpenFileName) == 0xFFFFFFFF)
     {
         DPRINT1("File %s not found!\n", szOpenFileName);
         return;
     }
+
+    GdipLoadImageFromFile(szOpenFileName, &image);
+    if (!image)
+    {
+        DPRINT1("GdipLoadImageFromFile() failed\n");
+    }
+}
+
+static VOID
+ImageView_DrawImage(HWND hwnd)
+{
+    GpGraphics *graphics;
+    UINT uImgWidth, uImgHeight;
+    UINT height = 0, width = 0, x = 0, y = 0;
+    PAINTSTRUCT ps;
+    RECT rect;
+    HDC hdc;
 
     hdc = BeginPaint(hwnd, &ps);
     if (!hdc)
@@ -74,20 +83,13 @@ ImageView_DrawImage(HWND hwnd)
         DPRINT1("GdipCreateFromHDC() failed\n");
         return;
     }
-
-    GdipLoadImageFromFile(szOpenFileName, &image);
-    if (!image)
-    {
-        DPRINT1("GdipLoadImageFromFile() failed\n");
-        return;
-    }
-
+  
     GdipGetImageWidth(image, &uImgWidth);
     GdipGetImageHeight(image, &uImgHeight);
 
     if (GetClientRect(hwnd, &rect))
     {
-        FillRect(hdc, &rect, (HBRUSH)COLOR_WINDOW);
+        FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
 
         if ((rect.right == uImgWidth)&&(rect.bottom == uImgHeight))
         {
@@ -152,7 +154,7 @@ ImageView_DrawImage(HWND hwnd)
         DPRINT("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d\n", x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
         GdipDrawImageRect(graphics, image, x, y, width, height);
     }
-
+    GdipDeleteGraphics(graphics);
     EndPaint(hwnd, &ps);
 }
 
@@ -260,6 +262,20 @@ ImageView_CreateToolBar(HWND hwnd)
     return FALSE;
 }
 
+LRESULT CALLBACK
+ImageView_DispWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+    switch (Message)
+    {
+        case WM_PAINT:
+        {
+            ImageView_DrawImage(hwnd);
+            return 0L;
+        }
+	}
+    return CallWindowProc(PrevProc, hwnd, Message, wParam, lParam);
+}
+
 static VOID
 ImageView_InitControls(HWND hwnd)
 {
@@ -269,9 +285,12 @@ ImageView_InitControls(HWND hwnd)
 
     if (shiSettings.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
 
-    hDispWnd = CreateWindowEx(WS_EX_TRANSPARENT, _T("STATIC"), _T(""),
+    hDispWnd = CreateWindowEx(0, _T("STATIC"), _T(""),
                               WS_CHILD | WS_VISIBLE,
                               0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
+
+    SetClassLong(hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
+    PrevProc = (WNDPROC) SetWindowLong(hDispWnd, GWL_WNDPROC, (LPARAM) ImageView_DispWndProc);
 
     ImageView_CreateToolBar(hwnd);
 }
@@ -284,9 +303,8 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_CREATE:
         {
             ImageView_InitControls(hwnd);
+            return 0L;
         }
-        break;
-
         case WM_COMMAND:
         {
             switch (wParam)
@@ -362,15 +380,8 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     }
                 }
             }
+            break;
         }
-        break;
-
-        case WM_PAINT:
-        {
-            ImageView_DrawImage(hDispWnd);
-        }
-        break;
-
         case WM_SIZING:
         {
             LPRECT pRect = (LPRECT)lParam;
@@ -379,22 +390,21 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
             if (pRect->bottom-pRect->top < 290)
                 pRect->bottom = pRect->top + 290;
+            return TRUE;
         }
-        break;
-
         case WM_SIZE:
         {
             MoveWindow(hDispWnd, 1, 1, LOWORD(lParam)-1, HIWORD(lParam)-35, TRUE);
             SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
+            return 0L;
         }
-        break;
-
         case WM_DESTROY:
         {
             ImageView_SaveSettings(hwnd);
+            SetWindowLong(hDispWnd, GWL_WNDPROC, (LPARAM) PrevProc);
             PostQuitMessage(0);
+            break;
         }
-        break;
     }
 
     return DefWindowProc(hwnd, Message, wParam, lParam);
@@ -409,8 +419,6 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     TCHAR szBuf[512];
     HWND hMainWnd;
     MSG msg;
-
-    wcscpy(szOpenFileName, szFileName);
 
     if (!ImageView_LoadSettings())
     {
@@ -428,6 +436,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     gdiplusStartupInput.SuppressExternalCodecs      = 0;
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+    pLoadImage(szFileName);
 
     // Create the window
     WndClass.lpszClassName  = _T("shimgvw_window");
@@ -442,7 +451,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
 
     LoadString(hInstance, IDS_APPTITLE, szBuf, sizeof(szBuf) / sizeof(TCHAR));
     hMainWnd = CreateWindow(_T("shimgvw_window"), szBuf,
-                            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_VISIBLE | WS_CAPTION,
+                            WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             0, 0, NULL, NULL, hInstance, NULL); 
 
@@ -457,6 +466,8 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
         DispatchMessageW(&msg);
     }
 
+    if (image)
+        GdipDisposeImage(image);
     GdiplusShutdown(gdiplusToken);
     return -1;
 }
