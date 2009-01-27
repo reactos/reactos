@@ -34,6 +34,9 @@ _MsgUnexpectedInterrupt:
 
 #define TRAPFLAG_SYSTEMSERVICE 1
 
+/*
+ * ENTER_TRAP_FRAME - Allocate SIZE_KTRAP_FRAME and save registers to it
+ */
 .macro ENTER_TRAP_FRAME AllocSize Flags
 .set SIZE_INITIAL_FRAME, 7 * 8
 //.set SIZE_LOCAL_DATA, SIZE_EXCEPTION_RECORD + 0x28
@@ -133,6 +136,10 @@ _MsgUnexpectedInterrupt:
     cld
 .endm
 
+
+/*
+ *  LEAVE_TRAP_FRAME - Restore registers and free stack space
+ */
 .macro LEAVE_TRAP_FRAME
 
     /* Restore segment selectors */
@@ -178,6 +185,10 @@ _MsgUnexpectedInterrupt:
     add rsp, SIZE_TRAP_FRAME_ALLOC + 0x10
 .endm
 
+
+/*
+ *  DISPATCH_EXCEPTION - prepare EXCEPTION_RECORD and call KiDispatchException
+ */
 .macro DISPATCH_EXCEPTION Code, NumParams, p1, p2, p3
 
     /* rsp+0x28 points to EXCEPTION_RECORD, set it up */
@@ -253,9 +264,11 @@ _MsgUnexpectedInterrupt:
     ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
 
     lea rcx, _MsgBreakpointTrap[rip]
-    mov rdx, [rbp + KTRAP_FRAME_Rip]
-    lea rax, _FrLdrDbgPrint[rip]
-    call [rax]
+    mov rdx, rbp
+    call _FrLdrDbgPrint[rip]
+
+    /* Increase Rip to skip the int3 */
+    inc qword ptr [rbp + KTRAP_FRAME_Rip]
 
     DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
 
@@ -368,13 +381,18 @@ _MsgUnexpectedInterrupt:
     .pushframe 1
     /* We have an error code */
 
-    mov rdx, 0
-    mov dx, ss
-    lea rcx, _MsgGeneralProtFault[rip]
-    lea rax, _FrLdrDbgPrint[rip]
-    call [rax]
+    ENTER_TRAP_FRAME (SIZE_EXCEPTION_RECORD + 0x28), 0
 
+//    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
+
+    mov rdx, [rbp + KTRAP_FRAME_Rip]
+    lea rcx, _MsgGeneralProtFault[rip]
+    call _FrLdrDbgPrint[rip]
     jmp $
+
+    /* Return */
+    LEAVE_TRAP_FRAME
+    iretq
 .endproc
 
 
@@ -386,8 +404,7 @@ _MsgUnexpectedInterrupt:
     mov rdx, [rsp]
     mov r8, [rsp+8]
     mov r9, rsp
-    lea rax, _FrLdrDbgPrint[rip]
-    call [rax]
+    call _FrLdrDbgPrint[rip]
 
     jmp $
 
@@ -474,9 +491,9 @@ _MsgUnexpectedInterrupt:
     inc qword ptr [rbp + KTRAP_FRAME_Rip]
 
     /* Call KiDispatchException */
-    mov r8, [ebp+KTRAP_FRAME_Rax] // Service
-    mov rcx, [ebp+KTRAP_FRAME_Rcx] // Buffer
-    mov rdx, [ebp+KTRAP_FRAME_Rdx] // Length
+    mov r8, [rbp+KTRAP_FRAME_Rax] // Service
+    mov rcx, [rbp+KTRAP_FRAME_Rcx] // Buffer
+    mov rdx, [rbp+KTRAP_FRAME_Rdx] // Length
     DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, r8, rcx, rdx
 
     LEAVE_TRAP_FRAME;
@@ -502,8 +519,7 @@ _MsgUnexpectedInterrupt:
     .allocstack 0x8
 
     lea rcx, _MsgUnexpectedInterrupt[rip]
-    lea rax, _FrLdrDbgPrint[rip]
-    call [rax]
+    call _FrLdrDbgPrint[rip]
 
     jmp $
 .endproc

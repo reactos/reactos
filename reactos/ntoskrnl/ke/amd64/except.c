@@ -120,7 +120,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 
             /* Decrement RIP by one */
             // FIXME: that doesn't work, why?
-//            Context.Rip--;
+            Context.Rip--;
             break;
 
         /* Internal exception */

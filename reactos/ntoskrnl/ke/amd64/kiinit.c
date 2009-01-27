@@ -372,7 +372,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 //    Pcr->Irql = PASSIVE_LEVEL;
     KeSetCurrentIrql(PASSIVE_LEVEL);
 
-    /* Set the GDI, IDT, TSS and DPC Stack */
+    /* Set the GDT, IDT, TSS and DPC Stack */
     Pcr->GdtBase = (PVOID)Gdt;
     Pcr->IdtBase = Idt;
     Pcr->TssBase = Tss;
@@ -645,6 +645,7 @@ KiSystemStartup(IN ULONG_PTR Dummy,
     KiRosPrepareForSystemStartup(Dummy, LoaderBlock);
 }
 
+
 VOID
 NTAPI
 KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -723,7 +724,7 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
         /* Load Ring 3 selectors for DS/ES/FS */
         Ke386SetDs(KGDT_64_DATA | RPL_MASK);
         Ke386SetEs(KGDT_64_DATA | RPL_MASK);
-//        Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
+        Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
 
         /* LDT is unused */
         __sldt(0);
@@ -770,10 +771,13 @@ FrLdrDbgPrint("Gdt = %p, Idt = %p, Pcr = %p, Tss = %p\n", Gdt, Idt, Pcr, Tss);
         /* Check for break-in */
 //        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
     }
-FrLdrDbgPrint("after KdInitSystem\n");
+
+    /* HACK: misuse this function to pass a function pointer to kdcom */
+    KdDebuggerInitialize1((PVOID)FrLdrDbgPrint);
 
     /* Hack! Wait for the debugger! */
     while (!KdPollBreakIn());
+
     DbgBreakPointWithStatus(0);
 
     /* Display separator + ReactOS version at start of the debug log */
@@ -787,8 +791,6 @@ FrLdrDbgPrint("after KdInitSystem\n");
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
-
-FrLdrDbgPrint("before KiSetupStackAndInitializeKernel\n");
 
     /* Switch to new kernel stack and start kernel bootstrapping */
     KiSetupStackAndInitializeKernel(&KiInitialProcess.Pcb,
