@@ -174,7 +174,7 @@ void write_h_file(const char *fname)
 	}
 	cptr = ctime(&now);
 	killnl(cptr, 0);
-	fprintf(fp, str_header, input_name ? input_name : "<stdin>", cmdline, cptr);
+	fprintf(fp, str_header, input_name ? input_name : "<stdin>", cmdline/*, cptr*/);
 	fprintf(fp, "#ifndef __WMCGENERATED_%08lx_H\n", (long)now);
 	fprintf(fp, "#define __WMCGENERATED_%08lx_H\n", (long)now);
 	fprintf(fp, "\n");
@@ -499,7 +499,7 @@ void write_rc_file(const char *fname)
 	}
 	cptr = ctime(&now);
 	killnl(cptr, 0);
-	fprintf(fp, str_header, input_name ? input_name : "<stdin>", cmdline, cptr);
+	fprintf(fp, str_header, input_name ? input_name : "<stdin>", cmdline/*, cptr*/);
 
 	if(rcinline)
 		write_rcinline(fp);
