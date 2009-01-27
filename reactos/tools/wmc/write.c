@@ -91,7 +91,7 @@ static const char str_header[] =
 	"/* This file is generated with wmc version " PACKAGE_VERSION ". Do not edit! */\n"
 	"/* Source : %s */\n"
 	"/* Cmdline: %s */\n"
-	"/* Date   : %s */\n"
+    //	"/* Date   : %s */\n"
 	"\n"
         ;
 
