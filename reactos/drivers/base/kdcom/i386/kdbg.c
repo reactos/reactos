@@ -1090,7 +1090,7 @@ KdReceivePacket(
         RcvCode = KdpReceiveBuffer(&Byte, sizeof(UCHAR));
 
         /* Acknowledge the received packet */
-        KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, CurrentPacketId);
+        KdpSendControlPacket(PACKET_TYPE_KD_ACKNOWLEDGE, Packet.PacketId);
         CurrentPacketId ^= 1;
 
 //FrLdrDbgPrint("KdReceivePacket - all ok\n");
