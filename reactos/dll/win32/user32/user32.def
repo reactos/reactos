@@ -289,7 +289,7 @@ GetGuiResources@8=NtUserGetGuiResources@8
 GetIconInfo@8
 GetInputDesktop@0
 GetInputState@0
-GetInternalWindowPos@12
+GetInternalWindowPos@12 ; TODO: direct call NtUserGetInternalWindowPos
 GetKBCodePage@0
 GetKeyNameTextA@12
 GetKeyNameTextW@12
@@ -607,7 +607,7 @@ SetDlgItemTextW@12
 SetDoubleClickTime@4
 SetFocus@4=NtUserSetFocus@4
 SetForegroundWindow@4
-SetInternalWindowPos@16
+SetInternalWindowPos@16=NtUserSetInternalWindowPos@16
 SetKeyboardState@4=NtUserSetKeyboardState@4
 SetLastErrorEx@8
 SetLayeredWindowAttributes@16=NtUserSetLayeredWindowAttributes@16

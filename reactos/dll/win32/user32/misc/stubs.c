@@ -147,21 +147,6 @@ LoadRemoteFonts ( VOID )
  */
 VOID
 WINAPI
-SetInternalWindowPos(
-		     HWND    hwnd,
-		     UINT    showCmd,
-		     LPRECT  rect,
-		     LPPOINT pt
-		     )
-{
-  UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-WINAPI
 RegisterSystemThread ( DWORD flags, DWORD reserved )
 {
   UNIMPLEMENTED;
