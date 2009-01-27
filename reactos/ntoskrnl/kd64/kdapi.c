@@ -208,14 +208,6 @@ KdpSetCommonState(IN ULONG NewState,
 
 VOID
 NTAPI
-KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
-{
-    /* Copy the version block */
-    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
-}
-
-VOID
-NTAPI
 KdpGetVersion(IN PDBGKD_MANIPULATE_STATE64 State)
 {
     STRING Header;
@@ -226,8 +218,6 @@ KdpGetVersion(IN PDBGKD_MANIPULATE_STATE64 State)
 
     /* Get the version block */
     KdpSysGetVersion(&State->u.GetVersion64);
-
-//State->u.GetVersion64.PsLoadedModuleList = &KeLoaderBlock->LoadOrderListHead;
 
     /* Fill out the state */
     State->ApiNumber = DbgKdGetVersionApi;

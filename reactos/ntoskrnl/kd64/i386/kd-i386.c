@@ -16,6 +16,14 @@
 
 VOID
 NTAPI
+KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
+{
+    /* Copy the version block */
+    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
+}
+
+VOID
+NTAPI
 KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
                    IN PCONTEXT Context)
 {

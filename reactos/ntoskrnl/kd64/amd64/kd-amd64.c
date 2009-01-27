@@ -16,6 +16,20 @@
 
 VOID
 NTAPI
+KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
+{
+    /* Copy the version block */
+    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
+
+Version->PsLoadedModuleList = &KeLoaderBlock->LoadOrderListHead;
+
+    Version->Flags = DBGKD_VERS_FLAG_PTR64 | DBGKD_VERS_FLAG_DATA;
+    Version->KdSecondaryVersion = KD_SECONDARY_VERSION_AMD64_CONTEXT;
+
+}
+
+VOID
+NTAPI
 KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
                    IN PCONTEXT Context)
 {
@@ -149,7 +163,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                            PreviousMode,
                            SecondChanceException);
     }
-
+FrLdrDbgPrint("leave KdpTrap\n");
     /* Return TRUE or FALSE to caller */
     return Status;
 }
