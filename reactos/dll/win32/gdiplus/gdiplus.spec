@@ -96,7 +96,7 @@
 @ stdcall GdipCreateHBITMAPFromBitmap(ptr ptr long)
 @ stub GdipCreateHICONFromBitmap
 @ stdcall GdipCreateHalftonePalette()
-@ stub GdipCreateHatchBrush
+@ stdcall GdipCreateHatchBrush(long long long ptr)
 @ stdcall GdipCreateImageAttributes(ptr)
 @ stdcall GdipCreateLineBrush(ptr ptr long long long ptr)
 @ stdcall GdipCreateLineBrushFromRect(ptr long long long long ptr)
@@ -275,9 +275,9 @@
 @ stdcall GdipGetGenericFontFamilyMonospace(ptr)
 @ stdcall GdipGetGenericFontFamilySansSerif(ptr)
 @ stdcall GdipGetGenericFontFamilySerif(ptr)
-@ stub GdipGetHatchBackgroundColor
-@ stub GdipGetHatchForegroundColor
-@ stub GdipGetHatchStyle
+@ stdcall GdipGetHatchBackgroundColor(ptr ptr)
+@ stdcall GdipGetHatchForegroundColor(ptr ptr)
+@ stdcall GdipGetHatchStyle(ptr ptr)
 @ stub GdipGetHemfFromMetafile
 @ stub GdipGetImageAttributesAdjustedPalette
 @ stdcall GdipGetImageBounds(ptr ptr ptr)
@@ -480,12 +480,12 @@
 @ stub GdipResetPageTransform
 @ stdcall GdipResetPath(ptr)
 @ stub GdipResetPathGradientTransform
-@ stub GdipResetPenTransform
+@ stdcall GdipResetPenTransform(ptr)
 @ stdcall GdipResetTextureTransform(ptr)
 @ stdcall GdipResetWorldTransform(ptr)
 @ stdcall GdipRestoreGraphics(ptr long)
 @ stdcall GdipReversePath(ptr)
-@ stub GdipRotateLineTransform
+@ stdcall GdipRotateLineTransform(ptr long long)
 @ stdcall GdipRotateMatrix(ptr long long)
 @ stub GdipRotatePathGradientTransform
 @ stub GdipRotatePenTransform
@@ -499,7 +499,7 @@
 @ stub GdipScaleLineTransform
 @ stdcall GdipScaleMatrix(ptr long long long)
 @ stub GdipScalePathGradientTransform
-@ stub GdipScalePenTransform
+@ stdcall GdipScalePenTransform(ptr long long long)
 @ stdcall GdipScaleTextureTransform(ptr long long long)
 @ stdcall GdipScaleWorldTransform(ptr long long long)
 @ stdcall GdipSetAdjustableArrowCapFillState(ptr long)

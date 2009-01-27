@@ -111,6 +111,13 @@ struct GpBrush{
     LOGBRUSH lb;
 };
 
+struct GpHatch{
+    GpBrush brush;
+    HatchStyle hatchstyle;
+    ARGB forecol;
+    ARGB backcol;
+};
+
 struct GpSolidFill{
     GpBrush brush;
     ARGB color;

@@ -53,6 +53,14 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
 
             (*clone)->gdibrush = CreateBrushIndirect(&(*clone)->lb);
             break;
+        case BrushTypeHatchFill:
+            *clone = GdipAlloc(sizeof(GpHatch));
+            if (!*clone) return OutOfMemory;
+
+            memcpy(*clone, brush, sizeof(GpHatch));
+
+            (*clone)->gdibrush = CreateBrushIndirect(&(*clone)->lb);
+            break;
         case BrushTypePathGradient:{
             GpPathGradient *src, *dest;
             INT count;
@@ -120,6 +128,67 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             ERR("not implemented for brush type %d\n", brush->bt);
             return NotImplemented;
     }
+
+    return Ok;
+}
+
+static LONG HatchStyleToHatch(HatchStyle hatchstyle)
+{
+    switch (hatchstyle)
+    {
+        case HatchStyleHorizontal:        return HS_HORIZONTAL;
+        case HatchStyleVertical:          return HS_VERTICAL;
+        case HatchStyleForwardDiagonal:   return HS_FDIAGONAL;
+        case HatchStyleBackwardDiagonal:  return HS_BDIAGONAL;
+        case HatchStyleCross:             return HS_CROSS;
+        case HatchStyleDiagonalCross:     return HS_DIAGCROSS;
+        default:                          return 0;
+    }
+}
+
+/******************************************************************************
+ * GdipCreateHatchBrush [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipCreateHatchBrush(HatchStyle hatchstyle, ARGB forecol, ARGB backcol, GpHatch **brush)
+{
+    COLORREF fgcol = ARGB2COLORREF(forecol);
+
+    TRACE("(%d, %d, %d, %p)\n", hatchstyle, forecol, backcol, brush);
+
+    if(!brush)  return InvalidParameter;
+
+    *brush = GdipAlloc(sizeof(GpHatch));
+    if (!*brush) return OutOfMemory;
+
+    switch (hatchstyle)
+    {
+        case HatchStyleHorizontal:
+        case HatchStyleVertical:
+        case HatchStyleForwardDiagonal:
+        case HatchStyleBackwardDiagonal:
+        case HatchStyleCross:
+        case HatchStyleDiagonalCross:
+            /* Brushes that map to BS_HATCHED */
+            (*brush)->brush.lb.lbStyle = BS_HATCHED;
+            (*brush)->brush.lb.lbColor = fgcol;
+            (*brush)->brush.lb.lbHatch = HatchStyleToHatch(hatchstyle);
+            break;
+
+        default:
+            FIXME("Unimplemented hatch style %d\n", hatchstyle);
+
+            (*brush)->brush.lb.lbStyle = BS_SOLID;
+            (*brush)->brush.lb.lbColor = fgcol;
+            (*brush)->brush.lb.lbHatch = 0;
+            break;
+    }
+
+
+    (*brush)->brush.gdibrush = CreateBrushIndirect(&(*brush)->brush.lb);
+    (*brush)->brush.bt = BrushTypeHatchFill;
+    (*brush)->forecol = forecol;
+    (*brush)->backcol = backcol;
+    (*brush)->hatchstyle = hatchstyle;
 
     return Ok;
 }
@@ -644,6 +713,39 @@ GpStatus WINGDIPAPI GdipGetBrushType(GpBrush *brush, GpBrushType *type)
     if(!brush || !type)  return InvalidParameter;
 
     *type = brush->bt;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetHatchBackgroundColor(GpHatch *brush, ARGB *backcol)
+{
+    TRACE("(%p, %p)\n", brush, backcol);
+
+    if(!brush || !backcol)  return InvalidParameter;
+
+    *backcol = brush->backcol;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetHatchForegroundColor(GpHatch *brush, ARGB *forecol)
+{
+    TRACE("(%p, %p)\n", brush, forecol);
+
+    if(!brush || !forecol)  return InvalidParameter;
+
+    *forecol = brush->forecol;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetHatchStyle(GpHatch *brush, HatchStyle *hatchstyle)
+{
+    TRACE("(%p, %p)\n", brush, hatchstyle);
+
+    if(!brush || !hatchstyle)  return InvalidParameter;
+
+    *hatchstyle = brush->hatchstyle;
 
     return Ok;
 }
@@ -1330,4 +1432,18 @@ GpStatus WINGDIPAPI GdipGetLineRectI(GpLineGradient *brush, GpRect *rect)
     }
 
     return ret;
+}
+
+GpStatus WINGDIPAPI GdipRotateLineTransform(GpLineGradient* brush,
+    REAL angle, GpMatrixOrder order)
+{
+    static int calls;
+
+    if(!brush)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("(%p, %.2f, %d) stub\n", brush, angle, order);
+
+    return NotImplemented;
 }

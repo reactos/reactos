@@ -3229,7 +3229,7 @@ GpStatus WINGDIPAPI GdipMultiplyWorldTransform(GpGraphics *graphics, GDIPCONST G
 
     m = *(graphics->worldtrans);
 
-    ret = GdipMultiplyMatrix(&m, (GpMatrix*)matrix, order);
+    ret = GdipMultiplyMatrix(&m, matrix, order);
     if(ret == Ok)
         *(graphics->worldtrans) = m;
 
