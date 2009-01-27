@@ -1073,15 +1073,8 @@ typedef IPort *PPORT;
     IPortMidi Interface
 */
 
-#if 0
-#define STATIC_IID_IPortMidi \
-    0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44
-DEFINE_GUIDSTRUCT("0xB4C90A43-5791-11d0-86f9-00a0c911b544", IID_IPortMidi);
-#define IID_IPortMidi DEFINE_GUIDNAMED(IID_IPortMidi)
-#endif
-
 DEFINE_GUID(IID_IPortMidi,
-    0xb4c90a40L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+    0xb4c90a24L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44));
 DEFINE_GUID(CLSID_PortMidi,
     0xb4c90a43L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
 
@@ -1236,6 +1229,9 @@ typedef IMiniport *PMINIPORT;
 #undef INTERFACE
 #define INTERFACE IMiniportMidiStream
 
+DEFINE_GUID(IID_IMiniportMidiStream,
+    0xb4c90a42L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
 DECLARE_INTERFACE_(IMiniportMidiStream, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -1266,6 +1262,9 @@ typedef IMiniportMidiStream* PMINIPORTMIDISTREAM;
 #undef INTERFACE
 #define INTERFACE IMiniportMidi
 
+DEFINE_GUID(IID_IMiniportMidi,
+    0xb4c90a41L, 0x5791, 0x11d0, 0x86, 0xf9, 0x00, 0xa0, 0xc9, 0x11, 0xb5, 0x44);
+
 DECLARE_INTERFACE_(IMiniportMidi, IMiniport)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -1277,6 +1276,8 @@ DECLARE_INTERFACE_(IMiniportMidi, IMiniport)
     IN  PPORTMIDI Port,
     OUT PSERVICEGROUP* ServiceGroup) PURE;
 
+    STDMETHOD_(void, Service)(THIS) PURE;
+
     STDMETHOD_(NTSTATUS, NewStream)(THIS_
         OUT PMINIPORTMIDISTREAM Stream,
         IN  PUNKNOWN OuterUnknown OPTIONAL,
@@ -1286,7 +1287,6 @@ DECLARE_INTERFACE_(IMiniportMidi, IMiniport)
         IN  PKSDATAFORMAT DataFormat,
         OUT PSERVICEGROUP* ServiceGroup) PURE;
 
-    STDMETHOD_(void, Service)(THIS) PURE;
 };
 
 typedef IMiniportMidi *PMINIPORTMIDI;
