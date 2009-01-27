@@ -2,15 +2,15 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_END_NOW DIALOGEX DISCARDABLE  0, 0, 200, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Κλείσημο προγράμματος - "
+CAPTION "Κλείσιμο προγράμματος - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Κλείσημο προγράμματος... Παρακαλώ περιμένετε",IDC_STATIC,7,7,186,11
+    LTEXT           "Κλείσιμο προγράμματος... Παρακαλώ περιμένετε",IDC_STATIC,7,7,186,11
     CONTROL         "Πρόοδος",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
                     7,20,186,13
-    LTEXT           "Αν κλείσετε την εφαρμογή τώρα , θα χάσετε όλα τα μη αποθηκευμένα δεδομένα. Για να κλέισετε το πρόγραμμα τώρα, πατήστε στο Κλείσημο Τώρα.",
+    LTEXT           "Αν κλείσετε την εφαρμογή τώρα , θα χάσετε όλα τα μη αποθηκευμένα δεδομένα. Για να κλείσετε το πρόγραμμα τώρα, πατήστε 'Κλείσιμο Τώρα'.",
                     IDC_STATIC,7,40,186,26
-    DEFPUSHBUTTON   "&Κλείσημο Τώρα",IDC_END_NOW,150,71,43,17
+    DEFPUSHBUTTON   "&Κλείσιμο Τώρα",IDC_END_NOW,150,71,43,17
 END
 
 IDD_NOT_RESPONDING DIALOGEX DISCARDABLE 0, 0, 192, 122
@@ -19,11 +19,11 @@ CAPTION "Κλείσημο προγράμματος - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "’κυρο",IDCANCEL,142,98,43,17
-    PUSHBUTTON      "&Κλείσημο Τώρα",IDC_END_NOW,78,98,43,17
+    PUSHBUTTON      "&Κλείσιμο Τώρα",IDC_END_NOW,78,98,43,17
     LTEXT           "Το πρόγραμμα δεν αποκρίνεται",IDC_STATIC,7,7,178,8
-    LTEXT           "Για να επιστρέψετε στο ReactOS και να ελένξετε την κατάσταση το προγράμματος, πατήστε άκυρο",
+    LTEXT           "Για να επιστρέψετε στο ReactOS και να ελέγξετε την κατάσταση του προγράμματος, πατήστε '’κυρο'",
                     IDC_STATIC,7,26,178,16
-    LTEXT           "Αν κλείσετε την εφαρμογή τώρα , θα χάσετε όλα τα μη αποθηκευμένα δεδομένα. Για να κλέισετε το πρόγραμμα τώρα, πατήστε στο Κλείσημο Τώρα.",
+    LTEXT           "Αν κλείσετε την εφαρμογή τώρα , θα χάσετε όλα τα μη αποθηκευμένα δεδομένα. Για να κλείσετε το πρόγραμμα τώρα, πατήστε 'Κλείσιμο Τώρα'.",
                     IDC_STATIC,7,53,178,26
 END
 
@@ -40,17 +40,17 @@ BEGIN
   IDS_EDIT "Επεξεργασία"
   IDS_MARK "Μαρκάρισμα"
   IDS_COPY "Αντιγραφή\tEnter"
-  IDS_PASTE "Επικόληση"
+  IDS_PASTE "Επικόλληση"
   IDS_SELECTALL "Επιλογή όλων"
   IDS_SCROLL "Κύλιση"
   IDS_FIND "Εύρεση..."
   IDS_DEFAULTS "Προεπιλογή"
-  IDS_PROPERTIES "Ιδιοότητες"
+  IDS_PROPERTIES "Ιδιότητες"
   IDS_SCROLLHERE "Κύλιση εδώ"
   IDS_SCROLLTOP "Αρχή"
   IDS_SCROLLBOTTOM "Τέλος"
   IDS_SCROLLPAGE_UP "Προηγούμενη σελίδα"
   IDS_SCROLLPAGE_DOWN "Επόμενη σελίδα"
-  IDS_SCROLLUP "Κύλιση επάνω"
+  IDS_SCROLLUP "Κύλιση πάνω"
   IDS_SCROLLDOWN "Κύλιση κάτω"
 END

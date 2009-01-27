@@ -216,6 +216,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Ejecutar Administrador de dispositivos"
     IDS_CMT_SERVMAN     "Ejecutar Administrador de servicios"
     IDS_CMT_RDESKTOP    "Ejecutar Escritorio remoto"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 STRINGTABLE
@@ -266,10 +268,12 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitario.lnk"
     IDS_SHORT_WINEMINE   "Buscaminas.lnk"
-	IDS_SHORT_CHARMAP    "Mapa de caracteres.lnk"
-	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_CHARMAP    "Mapa de caracteres.lnk"
+    IDS_SHORT_MAGNIFY    "Magnify.lnk"
     IDS_SHORT_RDESKTOP   "Escritorio Remoto.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 STRINGTABLE

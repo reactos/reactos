@@ -136,8 +136,8 @@ BEGIN
     LTEXT "Completa", 8498, 214, 56, 21, 9
     LTEXT "Bueno", 8499, 128, 123, 21, 10
     LTEXT "Óptima", 8500, 214, 123, 23, 9
-    LTEXT "This string describes the hardware setting for the capture device", 5399, 13, 145, 227, 21
-    LTEXT "This string describes the hardware setting for the render device", 5398, 13, 78, 227, 22
+    LTEXT "Este valor describe la configuración del hardware para el dispositivo de captura", 5399, 13, 145, 227, 21
+    LTEXT "Este valor describe la configuración del hardware para el dispositivo de render", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
@@ -157,76 +157,76 @@ BEGIN
     LTEXT "Completa", 8498, 217, 46, 19, 9
     LTEXT "Bueno", 8499, 125, 103, 24, 10
     LTEXT "Óptima", 8500, 217, 103, 19, 9
-    LTEXT "This string describes the hardware setting for the capture device", 5399, 13, 125, 222, 21
-    LTEXT "This string describes the hardware setting for the render device", 5398, 13, 68, 218, 24
+    LTEXT "Este valor describe la configuración del hardware para el dispositivo de captura", 5399, 13, 125, 222, 21
+    LTEXT "Este valor describe la configuración del hardware para el dispositivo de render", 5398, 13, 68, 218, 24
 END
 
 IDD_SETUP1 DIALOG 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Setup"
+CAPTION "Instalación"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio ", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "This computer cannot play audio because the ReactOS Audio service is not enabled.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Enable ReactOS Audio", 10253, 60, 68, 150, 9
-    LTEXT "Notes", 10246, 58, 87, 150, 11
-    LTEXT "1. You must be an administrator to enable this service. If you are not logged on as administrator, you will be prompted for an administrator name and password.", 10247, 60, 100, 150, 40
-    LTEXT "2. After you enable ReactOS Audio you will have to restart the computer.", 10248, 60, 140, 150, 40
+    LTEXT "Este equipo no puede reproducir sonidos porque el servicio ReactOS Audio service no esta permitido.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Permitir ReactOS Audio", 10253, 60, 68, 150, 9
+    LTEXT "Notas", 10246, 58, 87, 150, 11
+    LTEXT "1. Debe tener privilegios de administrador para permitir este servicio. Si no está anotado como administrador, you will be prompted for an administrator name and password.", 10247, 60, 100, 150, 40
+    LTEXT "2. Despues de permitir ReactOS Audio necesita reiniciar su equipo.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Multichannel"
+CAPTION "Multicanal"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Description goes here.", 9506, 8, 4, 212, 24
-    LTEXT "Low", 9473, 65, 31, 14, 8
+    LTEXT "Bajo", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 29, 108, 17
-    LTEXT "High", 9474, 202, 31, 17, 8
-    LTEXT "Low", 9477, 65, 50, 14, 8
+    LTEXT "Alto", 9474, 202, 31, 17, 8
+    LTEXT "Bajo", 9477, 65, 50, 14, 8
     LTEXT "", 9476, 5, 50, 55, 8
     CONTROL "Slider1", 9479, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 48, 108, 17
-    LTEXT "High", 9478, 202, 50, 17, 8
-    LTEXT "Low", 9481, 65, 69, 14, 8
+    LTEXT "Alto", 9478, 202, 50, 17, 8
+    LTEXT "Bajo", 9481, 65, 69, 14, 8
     LTEXT "", 9480, 5, 69, 55, 8
     CONTROL "Slider1", 9483, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 67, 108, 17
-    LTEXT "High", 9482, 202, 69, 17, 8
-    LTEXT "Low", 9485, 65, 88, 14, 8
+    LTEXT "Alto", 9482, 202, 69, 17, 8
+    LTEXT "Bajo", 9485, 65, 88, 14, 8
     LTEXT "", 9484, 5, 88, 55, 8
     CONTROL "Slider1", 9487, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 86, 108, 17
-    LTEXT "High", 9486, 202, 88, 17, 8
-    LTEXT "Low", 9489, 65, 107, 14, 8
+    LTEXT "Alto", 9486, 202, 88, 17, 8
+    LTEXT "Bajo", 9489, 65, 107, 14, 8
     LTEXT "", 9488, 5, 107, 55, 8
     CONTROL "Slider1", 9491, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 105, 108, 17
-    LTEXT "High", 9490, 202, 107, 17, 8
-    LTEXT "Low", 9493, 65, 126, 14, 8
+    LTEXT "Alto", 9490, 202, 107, 17, 8
+    LTEXT "Bajo", 9493, 65, 126, 14, 8
     LTEXT "", 9492, 5, 126, 55, 8
     CONTROL "Slider1", 9495, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 124, 108, 17
-    LTEXT "High", 9494, 202, 126, 17, 8
-    LTEXT "Low", 9497, 65, 145, 14, 8
+    LTEXT "Alto", 9494, 202, 126, 17, 8
+    LTEXT "Bajo", 9497, 65, 145, 14, 8
     LTEXT "", 9496, 5, 145, 55, 8
     CONTROL "Slider1", 9499, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 143, 108, 17
-    LTEXT "High", 9498, 202, 145, 17, 8
-    LTEXT "Low", 9501, 65, 164, 14, 8
+    LTEXT "Alto", 9498, 202, 145, 17, 8
+    LTEXT "Bajo", 9501, 65, 164, 14, 8
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
-    LTEXT "High", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "&Move all slide indicators at the same time", 9504, 5, 185, 216, 9
-    PUSHBUTTON "Restore &Defaults", 9505, 110, 199, 110, 14
+    LTEXT "Alto", 9502, 202, 164, 17, 8
+    AUTOCHECKBOX "&Mover todos los indicadores al mismo tiempo", 9504, 5, 185, 216, 9
+    PUSHBUTTON "Restaurar &valores predeterminados", 9505, 110, 199, 150, 14
 END
 
 IDD_SETUP2 DIALOG 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Setup"
+CAPTION "Instalación"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio ", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "The ReactOS Audio service is now enabled. However, audio may not function properly until you restart ReactOS. If you want to restart now, first save your work and close all programs.", 10261, 60, 25, 150, 50
-    LTEXT "To restart ReactOS, click OK.", 10262, 60, 75, 150, 20
-    LTEXT "If you Cancel, you will need to restart later for ReactOS Audio to function properly.", 10263, 60, 100, 150, 40
+    LTEXT "El servicio ReactOS Audio está ahora disponible. Sin embargo, el sonido no funcionará correctamente hasta que reinicie. Si quiere reiniciar ahora, primero guarde su trabajo y cierre todos los programas.", 10261, 60, 25, 150, 50
+    LTEXT "Para reiniciar ReactOS, presione Aceptar.", 10262, 60, 75, 150, 20
+    LTEXT "Si presiona Cancelar, necesitará reiniciar su equipo más tarde para que ReactOS Audio funcione correctamente.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -237,31 +237,31 @@ BEGIN
 
     5825 "Program error"
     5826 "Cerrar programa"
-    5827 "Critical Battery Alarm"
-    5828 "Device Connect"
-    5829 "Device Disconnect"
-    5830 "Device Failed to Connect"
-    5831 "Empty Recycle Bin"
-    5832 "Low Battery Alarm"
-    5833 "Maximize"
-    5834 "Menu command"
-    5835 "Menu popup"
-    5836 "Minimize"
-    5837 "New Mail Notification"
-    5838 "Start Navigation"
-    5839 "Open program"
-    5840 "Print Complete"
-    5841 "Restore Down"
-    5842 "Restore Up"
+    5827 "Alarma de nivel crítico de carga de batería"
+    5828 "Conectar dispositivo"
+    5829 "Desconectar dispositivo"
+    5830 "No se puede conectar el dispositivo"
+    5831 "Vaciar Papelera de reciclaje"
+    5832 "Alarma de bajo nivel de batería"
+    5833 "Maximizar"
+    5834 "Comando de menú"
+    5835 "Menú emergente"
+    5836 "Minimizar"
+    5837 "Notificación de nuevo correo"
+    5838 "Comenzar navegación"
+    5839 "Abrir programa"
+    5840 "Impresión completa"
+    5841 "Restaurar minimizado"
+    5842 "Restaurar maximizado"
     5843 "Asterisco"
-    5844 "Default sound"
+    5844 "Sonido predeterminado"
     5845 "Exclamación"
-    5846 "Exit ReactOS"
-    5847 "Critical Stop"
-    5848 "System Notification"
-    5849 "Question"
-    5850 "Start ReactOS"
+    5846 "Salir de ReactOS"
+    5847 "Parada crítica"
+    5848 "Notificación del sistema"
+    5849 "Pregunta"
+    5850 "Iniciar ReactOS"
     5851 "Menu de Inicio"
-    5852 "ReactOS Logoff"
-    5853 "ReactOS Logon"
+    5852 "Cierre de sesión de ReactOS"
+    5853 "Inicio de sesión en ReactOS"
 END

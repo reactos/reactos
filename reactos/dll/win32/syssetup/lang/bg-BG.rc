@@ -210,6 +210,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Пускане на управителя на устройствата"
     IDS_CMT_SERVMAN     "Пускане на управителя на услугите"
     IDS_CMT_RDESKTOP    "Пускане на отдалечената работна площ"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 
@@ -264,6 +266,8 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Лупа.lnk"
     IDS_SHORT_RDESKTOP   "Далечна работна площ.lnk"
     IDS_SHORT_KBSWITCH   "Превключвател на клавиатурните подредби.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 

@@ -207,6 +207,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Launch Device Manager"
     IDS_CMT_SERVMAN     "Launch Service Manager"
     IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 STRINGTABLE
@@ -256,10 +258,12 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "CharMap.lnk"
-	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_CHARMAP    "CharMap.lnk"
+    IDS_SHORT_MAGNIFY    "Magnify.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 STRINGTABLE

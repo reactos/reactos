@@ -3,7 +3,7 @@
  * PURPOSE:     Slovak Language File for sysdm
  * TRANSLATOR:  M·rio KaËm·r aka Kario <kario@szm.sk>
  * DATE OF TR.: 20-09-2007
- * LAST CHANGE: 16-10-2009 
+ * LAST CHANGE: 23-01-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -17,7 +17,7 @@ BEGIN
     LTEXT       "SystÈm:", IDC_STATIC, 4, 132, 32, 9
     LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
     LTEXT       "Verzia ", IDC_STATIC, 10, 153, 25, 9
-    LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
+    LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 32, 153, 91, 9
     LTEXT       REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 60, 9
     LTEXT       "PoËÌtaË:", IDC_STATIC, 124, 132, 34, 9
     LTEXT       "", IDC_MACHINELINE1, 130, 144, 118, 9
@@ -38,17 +38,17 @@ BEGIN
     GROUPBOX    "Spr·vca zariadenÌ", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT       "Spr·vca zariadenÌ zobrazÌ zoznam vöetk˝ch hardvÈrov˝ch zariadenÌ, ktorÈ s˙ nainötalovanÈ na poËÌtaËi. MÙûete ho pouûiù na zmenu vlastnostÌ ktorÈhokoævek zariadenia.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON  "Spr·&vca zariadenÌ...", IDC_HARDWARE_DEVICE_MANAGER, 134, 48, 110, 14
+    PUSHBUTTON  "Spr·&vca zariadenÌ...", IDC_HARDWARE_DEVICE_MANAGER, 130, 48, 110, 14
 
     GROUPBOX    "Sprievodca pridanÌm hardvÈru", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT       "Sprievodca pridanÌm hardvÈru pom·ha pri inötal·cii, odinötalovanÌ, oprave, odpojenÌ, vysunutÌ, a konfigur·ciÌ hardvÈru.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON  "&Sprievodca pridanÌm hardvÈru...", IDC_HARDWARE_WIZARD, 134, 120, 110, 14
+    PUSHBUTTON  "&Sprievodca pridanÌm hardvÈru...", IDC_HARDWARE_WIZARD, 130, 120, 110, 14
 
     GROUPBOX    "HardvÈrovÈ profily", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT       "HardvÈrovÈ profily poskytuj˙ moûnosù nastavenia a uloûenia rÙznych konfigur·ciÌ hardvÈru.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON  "&HardvÈrovÈ profily...", IDC_HARDWARE_PROFILE, 134, 190, 110, 14
+    PUSHBUTTON  "&HardvÈrovÈ profily...", IDC_HARDWARE_PROFILE, 130, 190, 110, 14
 END
 
 
@@ -114,8 +114,8 @@ BEGIN
     LTEXT        "Na:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
 
-    DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
-    PUSHBUTTON   "Zruöiù", IDCANCEL, 196, 24, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
+    PUSHBUTTON   "Zruöiù", IDCANCEL, 199, 30, 50, 14
 END
 
 
@@ -157,7 +157,7 @@ BEGIN
     EDITTEXT    IDC_STRRECRECEDIT, 183, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "sek˙nd", IDC_STATIC, 215, 70, 25, 8
-    LTEXT       "Ak chcete manu·lne upraviù s˙bor s moûnosùami spustenia systÈmu, kliknite na tlaËidlo Upraviù.", IDC_STATIC, 14, 89, 187, 8
+    LTEXT       "Ak chcete manu·lne upraviù s˙bor s moûnosùami spustenia systÈmu, kliknite na tlaËidlo Upraviù.", IDC_STATIC, 14, 85, 173, 18
     PUSHBUTTON  "Upr&aviù", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Zlyhanie systÈmu", IDC_STATIC, 7, 111, 238, 140
@@ -189,22 +189,22 @@ BEGIN
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
     LTEXT       "DostupnÈ miesto:", IDC_STATIC, 20, 92, 56, 9
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT       "&PoËiatoËn· veækosù (v MB):", -1, 22, 118, 74, 9
-    LTEXT       "Ma&xim·lna veækosù (v MB):", -1, 22, 131, 74, 9
+    LTEXT       "&PoËiatoËn· veækosù (v MB):", -1, 22, 118, 88, 9
+    LTEXT       "Ma&xim·lna veækosù (v MB):", -1, 22, 131, 85, 9
     AUTORADIOBUTTON "&Vlastn· veækosù:", IDC_CUSTOM, 20, 105, 74, 9, WS_GROUP
-    AUTORADIOBUTTON "Veækosù urËovan· &systÈmom", IDC_SYSMANSIZE, 20, 145, 98, 9
+    AUTORADIOBUTTON "Veækosù urËovan· &systÈmom", IDC_SYSMANSIZE, 20, 145, 103, 9
     AUTORADIOBUTTON "N&epouûÌvaù str·nkovacÌ s˙bor", IDC_NOPAGEFILE, 20, 158, 108,9
-    EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT    IDC_INITIALSIZE, 111, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT    IDC_MAXSIZE, 111, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "&Nastaviù", IDC_SET, 158, 155, 50, 14
 
     GROUPBOX    "Celkov· veækosù str·nkovacieho s˙boru pre vöetky jednotky", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT       "Najmenöia povolen·:", IDC_STATIC, 18, 188, 78, 9
     LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT       "Odpor˙Ëan·:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
+    LTEXT       "", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT       "Aktu·lne vyhraden·:", IDC_STATIC, 18, 210, 76, 9
-    LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
+    LTEXT       "", IDC_CURRENT, 88, 210, 100, 9
 
     DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 14
     PUSHBUTTON  "Zruöiù", IDCANCEL, 168, 232, 48, 14

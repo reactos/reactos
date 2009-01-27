@@ -121,7 +121,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Display", -1, 7, 6, 237, 56, WS_GROUP
+    GROUPBOX "Monitor", -1, 7, 6, 237, 56, WS_GROUP
     LTEXT "Dimensione font:", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
@@ -214,15 +214,15 @@ BEGIN
     IDS_ELEMENT_16 "Controlli della barra di scorrimento"
     IDS_ELEMENT_17 "Sfondo della applicazione"
     IDS_ELEMENT_18 "Barra del titolo piccola"
-    IDS_ELEMENT_19 "Distanza tr i simboli (orizzontale)"
-    IDS_ELEMENT_20 "Distanza tr i simboli  (verticale)"
+    IDS_ELEMENT_19 "Distanza tra i simboli (orizzontale)"
+    IDS_ELEMENT_20 "Distanza tra i simboli  (verticale)"
     IDS_ELEMENT_21 "Informazioni rapide"
     IDS_ELEMENT_22 "Simbolo"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Display settings"
-    IDS_APPLY_FAILED "Failed to apply new settings..."
-    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
+    IDS_DISPLAY_SETTINGS "Impostazioni del monitor"
+    IDS_APPLY_FAILED "Impossibile applicare le uove impostazioni..."
+    IDS_APPLY_NEEDS_RESTART "E' necessario riavviare il computer per applicare le modifiche."
 END
