@@ -934,18 +934,18 @@ VOID HaliInitBSP(VOID)
    CommonBase = (PULONG)COMMON_AREA;
  
    /* Copy bootstrap code to common area */
-   memcpy((PVOID)((ULONG)CommonBase + PAGE_SIZE),
+   memcpy((PVOID)((ULONG_PTR)CommonBase + PAGE_SIZE),
 	  &APstart,
-	  (ULONG)&APend - (ULONG)&APstart + 1);
+	  (ULONG_PTR)&APend - (ULONG_PTR)&APstart + 1);
 
    /* Set shutdown code */
    CMOS_WRITE(0xF, 0xA);
 
    /* Set warm reset vector */
-   ps = (PUSHORT)((ULONG)BIOSBase + 0x467);
+   ps = (PUSHORT)((ULONG_PTR)BIOSBase + 0x467);
    *ps = (COMMON_AREA + PAGE_SIZE) & 0xF;
  
-   ps = (PUSHORT)((ULONG)BIOSBase + 0x469);
+   ps = (PUSHORT)((ULONG_PTR)BIOSBase + 0x469);
    *ps = (COMMON_AREA + PAGE_SIZE) >> 4;
 #endif
 
