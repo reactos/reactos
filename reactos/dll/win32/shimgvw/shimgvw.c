@@ -72,7 +72,6 @@ ImageView_DrawImage(HWND hwnd)
     if (!graphics)
     {
         DPRINT1("GdipCreateFromHDC() failed\n");
-        DeleteDC(hdc);
         return;
     }
 
@@ -80,7 +79,6 @@ ImageView_DrawImage(HWND hwnd)
     if (!image)
     {
         DPRINT1("GdipLoadImageFromFile() failed\n");
-        DeleteDC(hdc);
         return;
     }
 
@@ -151,11 +149,10 @@ ImageView_DrawImage(HWND hwnd)
             }
         }
 
-        DPRINT1("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d", x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
+        DPRINT("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d\n", x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
         GdipDrawImageRect(graphics, image, x, y, width, height);
     }
 
-    DeleteDC(hdc);
     EndPaint(hwnd, &ps);
 }
 
