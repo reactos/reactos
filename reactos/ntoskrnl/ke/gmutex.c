@@ -123,7 +123,7 @@ KiReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
         
         /* The mutex will be woken, minus one waiter */
         NewValue = (OldValue | GM_LOCK_WAITER_WOKEN);
-        NewValue &= ~GM_LOCK_WAITER_INC;
+        NewValue -= GM_LOCK_WAITER_INC;
 
         /* Remove the Woken bit */
         if (InterlockedCompareExchange(&GuardedMutex->Count,
