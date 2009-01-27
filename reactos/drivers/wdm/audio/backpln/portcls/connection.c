@@ -25,9 +25,9 @@ RegisterConnection(
     UNICODE_STRING ToUnicodeString  = {0, 0, 0};
     ISubdevice * FromSubDevice = NULL;
     ISubdevice * ToSubDevice = NULL;
-    PCExtension* DeviceExt;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
 
-    DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 
     NTSTATUS Status = STATUS_SUCCESS;

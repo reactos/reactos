@@ -102,7 +102,7 @@ PcAddAdapterDevice(
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     PDEVICE_OBJECT fdo = NULL;
     PDEVICE_OBJECT PrevDeviceObject;
-    PCExtension* portcls_ext;
+    PPCLASS_DEVICE_EXTENSION portcls_ext;
 
     DPRINT1("PcAddAdapterDevice called\n");
 
@@ -140,7 +140,7 @@ PcAddAdapterDevice(
     }
 
     /* Obtain the new device extension */
-    portcls_ext = (PCExtension*) fdo->DeviceExtension;
+    portcls_ext = (PPCLASS_DEVICE_EXTENSION) fdo->DeviceExtension;
     /* initialize the device extension */
     RtlZeroMemory(portcls_ext, DeviceExtensionSize);
     /* allocate create item */
@@ -208,14 +208,14 @@ PciDriverDispatch(
     NTSTATUS Status;
 
     ISubdevice * SubDevice;
-    PCExtension* DeviceExt;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
     SUBDEVICE_ENTRY * Entry;
     KSDISPATCH_TABLE DispatchTable;
 
     DPRINT1("PortClsSysControl called\n");
 
     SubDevice = (ISubdevice*)Irp->Tail.Overlay.DriverContext[3];
-    DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     if (!SubDevice || !DeviceExt)
     {
@@ -257,7 +257,7 @@ PcRegisterSubdevice(
     IN  PWCHAR Name,
     IN  PUNKNOWN Unknown)
 {
-    PCExtension* DeviceExt;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
     ISubdevice *SubDevice;
     UNICODE_STRING SymbolicLinkName;
@@ -272,7 +272,7 @@ PcRegisterSubdevice(
         return STATUS_INVALID_PARAMETER;
     }
 
-    DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     if (!DeviceExt)
         return STATUS_UNSUCCESSFUL;
 

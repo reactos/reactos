@@ -486,7 +486,7 @@ PcNewDmaChannel(
     ULONG MapRegisters;
     INTERFACE_TYPE BusType;
     ULONG ResultLength;
-    PCExtension* DeviceExt;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
 
     IDmaChannelSlaveImpl * This;
 
@@ -499,7 +499,7 @@ PcNewDmaChannel(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    DeviceExt = (PCExtension*) DeviceObject->DeviceExtension;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
     Status = IoGetDeviceProperty(DeviceObject, DevicePropertyLegacyBusType, sizeof(BusType), (PVOID)&BusType, &ResultLength);
     if (NT_SUCCESS(Status))

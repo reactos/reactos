@@ -51,7 +51,7 @@ PortClsCreate(
 
     /* TODO */
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
@@ -69,94 +69,89 @@ PortClsPnp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    NTSTATUS status;
-    PCExtension* portcls_ext;
-    PIO_STACK_LOCATION irp_stack;
+    NTSTATUS Status;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
+    PIO_STACK_LOCATION IoStack;
+    IResourceList* resource_list = NULL;
 
     DPRINT1("PortClsPnp called\n");
 
-    portcls_ext = (PCExtension*) DeviceObject->DeviceExtension;
-    irp_stack = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    ASSERT(portcls_ext);
+    ASSERT(DeviceExt);
 
     /*
         if IRP_MN_START_DEVICE, call the driver's customer start device routine.
         Before we do so, we must create a ResourceList to pass to the Start
         routine.
     */
-    if ( irp_stack->MinorFunction == IRP_MN_START_DEVICE )
+    switch (IoStack->MinorFunction)
     {
-        IResourceList* resource_list;
-        DPRINT("IRP_MN_START_DEVICE\n");
+        case IRP_MN_START_DEVICE:
+            DPRINT("IRP_MN_START_DEVICE\n");
 
-        /* Create the resource list */
-        status = PcNewResourceList(
-                    &resource_list,
-                    NULL,
-                    PagedPool,
-                    irp_stack->Parameters.StartDevice.AllocatedResourcesTranslated,
-                    irp_stack->Parameters.StartDevice.AllocatedResources);
+            /* Create the resource list */
+            Status = PcNewResourceList(
+                        &resource_list,
+                        NULL,
+                        PagedPool,
+                        IoStack->Parameters.StartDevice.AllocatedResourcesTranslated,
+                        IoStack->Parameters.StartDevice.AllocatedResources);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("PcNewResourceList failed [0x%8x]\n", Status);
+                Irp->IoStatus.Status = Status;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
+            }
 
-        if ( ! NT_SUCCESS(status) )
-        {
-            DPRINT("PcNewResourceList failed [0x%8x]\n", status);
-            Irp->IoStatus.Status = status;
+            /* Assign the resource list to our extension */
+            DeviceExt->resources = resource_list;
+
+            ASSERT(DeviceExt->StartDevice);
+
+            /* Call the StartDevice routine */
+            DPRINT("Calling StartDevice at 0x%8p\n", DeviceExt->StartDevice);
+            Status = DeviceExt->StartDevice(DeviceObject, Irp, resource_list);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("StartDevice returned a failure code [0x%8x]\n", Status);
+                //resource_list->lpVtbl->Release(resource_list);
+
+                Irp->IoStatus.Status = Status;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
+            }
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
 
-            return status;
-        }
+        case IRP_MN_REMOVE_DEVICE:
+            /* Clean up */
+            DPRINT("IRP_MN_REMOVE_DEVICE\n");
 
-        /* Assign the resource list to our extension */
-        portcls_ext->resources = resource_list;
+            DeviceExt->resources->lpVtbl->Release(DeviceExt->resources);
+            IoDeleteDevice(DeviceObject);
 
-        ASSERT(portcls_ext->StartDevice);
+            /* Do not complete? */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            return STATUS_SUCCESS;
 
-        /* Call the StartDevice routine */
-        DPRINT("Calling StartDevice at 0x%8p\n", portcls_ext->StartDevice);
-        status = portcls_ext->StartDevice(DeviceObject, Irp, resource_list);
+        case IRP_MN_QUERY_INTERFACE:
+            DPRINT1("FIXME: IRP_MN_QUERY_INTERFACE: call next lower device object\n");
+            /* FIXME
+             * call next lower device object */
+            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+            return Irp->IoStatus.Status;
 
-        if ( ! NT_SUCCESS(status) )
-        {
-            DPRINT("StartDevice returned a failure code [0x%8x]\n", status);
-            //resource_list->lpVtbl->Release(resource_list);
-
-            Irp->IoStatus.Status = status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-            return status;
-        }
-
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return status;
-    }
-    else if ( irp_stack->MinorFunction == IRP_MN_REMOVE_DEVICE )
-    {
-        DPRINT("IRP_MN_REMOVE_DEVICE\n");
-        /* Clean up */
-        portcls_ext->resources->lpVtbl->Release(portcls_ext->resources);
-
-        IoDeleteDevice(DeviceObject);
-
-        /* Do not complete? */
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        return STATUS_SUCCESS;
-    }
-    else if ( irp_stack->MinorFunction == IRP_MN_QUERY_INTERFACE )
-    {
-        //FIXME
-        // call next lower device object
-        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-        return Irp->IoStatus.Status;
-    }
-    else if ( irp_stack->MinorFunction == IRP_MN_QUERY_DEVICE_RELATIONS)
-    {
-        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-        return Irp->IoStatus.Status;
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+            return Irp->IoStatus.Status;
     }
 
-    DPRINT1("unhandled function %u\n", irp_stack->MinorFunction);
+    DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
     return STATUS_SUCCESS;
 }
 
@@ -218,13 +213,13 @@ PcDispatchIrp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    PIO_STACK_LOCATION irp_stack;
+    PIO_STACK_LOCATION IoStack;
 
     DPRINT1("PcDispatchIrp called - handling IRP in PortCls\n");
 
-    irp_stack = IoGetCurrentIrpStackLocation(Irp);
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    switch ( irp_stack->MajorFunction )
+    switch ( IoStack->MajorFunction )
     {
         /* PortCls */
         case IRP_MJ_CREATE :
@@ -298,12 +293,12 @@ PcForwardIrpSynchronous(
     IN  PIRP Irp)
 {
     KEVENT Event;
-    PCExtension* DeviceExt;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
     NTSTATUS Status;
 
     DPRINT1("PcForwardIrpSynchronous\n");
 
-    DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 return STATUS_SUCCESS;
     /* initialize the notification event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);

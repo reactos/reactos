@@ -14,7 +14,7 @@ PcRegisterAdapterPowerManagement(
 {
     NTSTATUS Status;
     PDEVICE_OBJECT pDeviceObject;
-    PCExtension* DeviceExt;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
     IAdapterPowerManagement * pPower;
 
     DPRINT1("PcRegisterAdapterPowerManagement pUnknown %p pvContext %p\n", pUnknown, pvContext);
@@ -24,7 +24,7 @@ PcRegisterAdapterPowerManagement(
 
 
     pDeviceObject = (PDEVICE_OBJECT)pvContext;
-    DeviceExt = (PCExtension*)pDeviceObject->DeviceExtension;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)pDeviceObject->DeviceExtension;
 
     Status = pUnknown->lpVtbl->QueryInterface(pUnknown, &IID_IAdapterPowerManagement, (PVOID*)&pPower);
     if (!NT_SUCCESS(Status))
@@ -64,12 +64,12 @@ PcRequestNewPowerState(
     KEVENT Event;
     NTSTATUS Status;
     POWER_STATE PowerState;
-    PCExtension* DeviceExt;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
 
     if (!DeviceObject || !RequestedNewState)
         return STATUS_INVALID_PARAMETER;
 
-    DeviceExt = (PCExtension*)DeviceObject->DeviceExtension;
+    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
     PowerState.DeviceState = RequestedNewState;

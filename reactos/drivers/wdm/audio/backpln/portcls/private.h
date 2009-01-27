@@ -131,7 +131,7 @@ typedef struct
     LIST_ENTRY SubDeviceList;
     LIST_ENTRY PhysicalConnectionList;
 
-} PCExtension;
+} PCLASS_DEVICE_EXTENSION, *PPCLASS_DEVICE_EXTENSION;
 
 
 NTSTATUS

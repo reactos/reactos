@@ -239,7 +239,7 @@ PcNewRegistryKey(
     HANDLE hHandle;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     IRegistryKeyImpl * This;
-    PCExtension* portcls_ext;
+    PPCLASS_DEVICE_EXTENSION DeviceExt;
 
     DPRINT1("PcNewRegistryKey entered\n");
 
@@ -279,9 +279,9 @@ PcNewRegistryKey(
         }
 
         /* obtain the new device extension */
-        portcls_ext = (PCExtension*) ((PDEVICE_OBJECT)DeviceObject)->DeviceExtension;
+        DeviceExt = (PPCLASS_DEVICE_EXTENSION) ((PDEVICE_OBJECT)DeviceObject)->DeviceExtension;
 
-        Status = IoOpenDeviceRegistryKey(portcls_ext->PhysicalDeviceObject, RegistryKeyType, DesiredAccess, &hHandle);
+        Status = IoOpenDeviceRegistryKey(DeviceExt->PhysicalDeviceObject, RegistryKeyType, DesiredAccess, &hHandle);
     }
     else if (RegistryKeyType == DeviceInterfaceRegistryKey)
     {
