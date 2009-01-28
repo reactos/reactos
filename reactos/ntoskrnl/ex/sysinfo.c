@@ -1953,7 +1953,7 @@ NtFlushInstructionCache (
 {
     PAGED_CODE();
 
-#if defined(_M_IX86)
+#if defined(_M_IX86) || defined(_M_AMD64)
     __wbinvd();
 #elif defined(_M_PPC)
     __asm__ __volatile__("tlbsync");
@@ -1962,10 +1962,7 @@ NtFlushInstructionCache (
     for (;;);
 #elif defined(_M_ARM)
     __asm__ __volatile__("mov r1, #0; mcr p15, 0, r1, c7, c5, 0");
-#elif defined(_M_AMD64)
-    DPRINT1("NtFlushInstructionCache() is not implemented\n");
-    for (;;);
-#else
+s#else
 #error Unknown architecture
 #endif
     return STATUS_SUCCESS;
