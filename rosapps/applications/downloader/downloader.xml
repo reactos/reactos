@@ -8,38 +8,31 @@
 			<location>http://svn.reactos.org/packages/Firefox%20Setup%201.5.0.12.exe</location>
 		</application>
 		<application name="Firefox 2.0">
-			<regname>Mozilla Firefox (2.0.0.17)</regname>
+			<regname>Mozilla Firefox (2.0.0.20)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>2.0.0.17</version>
+			<version>2.0.0.20</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.17/win32/en-US/Firefox%20Setup%202.0.0.17.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.20/win32/en-US/Firefox%20Setup%202.0.0.20.exe</location>
 		</application>
 		<application name="Opera">
 			<regname>Opera</regname>
 			<licence>Freeware</licence>
-			<version>9.26</version>
+			<version>9.63</version>
 			<description>The popular Opera Browser with many advanced features and including a Mail and BitTorrent client.</description>
-			<location>http://mirror.nwps.ws/opera/win/926/en/Opera_9.26_Classic_Setup.exe</location>
-		</application>
-		<application name="Thunderbird 1.5">
-			<regname>Mozilla Thunderbird (1.5)</regname>
-			<licence>MPL/GPL/LGPL</licence>
-			<version>1.5.0.14</version>
-			<description>The most popular and one of the best free Mail Clients out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/1.5.0.14/win32/en-US/Thunderbird%20Setup%201.5.0.14.exe</location>
+			<location>http://ftp.opera.com/pub/opera/win/963/en/Opera_963_classic_Setup.exe</location>
 		</application>
 		<application name="Thunderbird 2.0">
-			<regname>Mozilla Thunderbird (2.0.0.16)</regname>
+			<regname>Mozilla Thunderbird (2.0.0.19)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>2.0.0.16</version>
+			<version>2.0.0.19</version>
 			<description>The most popular and one of the best free Mail Clients out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.17/win32/en-US/Thunderbird%20Setup%202.0.0.17.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.19/win32/en-US/Thunderbird%20Setup%202.0.0.19.exe</location>
 		</application>
 		<application name="SeaMonkey">
-			<regname>SeaMonkey (1.1.9)</regname>
-			<version>1.1.9</version>
+			<regname>SeaMonkey (1.1.14)</regname>
+			<version>1.1.14</version>
 			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.12/seamonkey-1.1.12.en-US.win32.installer.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.14/seamonkey-1.1.14.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Mozilla ActiveX Control">
 			<regname>Mozilla ActiveX Control v1.7.12 (ReactOS special)</regname>
