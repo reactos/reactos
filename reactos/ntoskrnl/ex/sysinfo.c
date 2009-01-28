@@ -778,7 +778,7 @@ QSI_DEF(SystemProcessInformation)
             SpiCurrent->BasePriority = Process->Pcb.BasePriority;
             SpiCurrent->UniqueProcessId = Process->UniqueProcessId;
             SpiCurrent->InheritedFromUniqueProcessId = Process->InheritedFromUniqueProcessId;
-            SpiCurrent->HandleCount = (Process->ObjectTable ? ObpGetHandleCountByHandleTable(Process->ObjectTable) : 0);
+            SpiCurrent->HandleCount = ObGetProcessHandleCount(Process);
             SpiCurrent->PeakVirtualSize = Process->PeakVirtualSize;
             SpiCurrent->VirtualSize = Process->VirtualSize;
             SpiCurrent->PageFaultCount = Process->Vm.PageFaultCount;
@@ -1023,7 +1023,7 @@ QSI_DEF(SystemHandleInformation)
 
     do
     {
-        hCount = hCount + (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
+        hCount = hCount + ObGetProcessHandleCount(pr);
         pr = PsGetNextProcess(pr);
 
         if ((pr == syspr) || (pr == NULL)) break;
@@ -1059,7 +1059,7 @@ QSI_DEF(SystemHandleInformation)
     {
         int Count = 0, HandleCount;
 
-        HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
+        HandleCount = ObGetProcessHandleCount(pr);
 
         for (Count = 0; HandleCount > 0 ; HandleCount--)
         {

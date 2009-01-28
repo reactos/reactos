@@ -54,6 +54,35 @@ ObDereferenceProcessHandleTable(IN PEPROCESS Process)
     ExReleaseRundownProtection(&Process->RundownProtect);
 }
 
+ULONG
+NTAPI
+ObGetProcessHandleCount(IN PEPROCESS Process)
+{
+    ULONG HandleCount;
+    PHANDLE_TABLE HandleTable;
+
+    ASSERT(Process);
+
+    /* Ensure the handle table doesn't go away while we use it */
+    HandleTable = ObReferenceProcessHandleTable(Process);
+
+    if (HandleTable != NULL)
+    {
+        /* Count the number of handles the process has */
+        HandleCount = HandleTable->HandleCount;
+
+        /* Let the handle table go */
+        ObDereferenceProcessHandleTable(Process);
+    }
+    else
+    {
+        /* No handle table, no handles */
+        HandleCount = 0;
+    }
+
+    return HandleCount;
+}
+
 NTSTATUS
 NTAPI
 ObpReferenceProcessObjectByHandle(IN HANDLE Handle,

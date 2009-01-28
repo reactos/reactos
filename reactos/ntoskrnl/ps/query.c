@@ -237,7 +237,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             }
 
             /* Count the number of handles this process has */
-            HandleCount = ObpGetHandleCountByHandleTable(Process->ObjectTable);
+            HandleCount = ObGetProcessHandleCount(Process);
 
             /* Protect write in SEH */
             _SEH2_TRY
