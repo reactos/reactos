@@ -568,6 +568,68 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
                  &KdpContext);
 }
 
+VOID
+NTAPI
+KdpReadMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
+                               IN PSTRING Data,
+                               IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_READ_WRITE_MSR ReadMsr;
+    LARGE_INTEGER Value;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Get a shortcut */
+    ReadMsr = &State->u.ReadWriteMsr;
+
+    /* Read the msr */
+    Value.QuadPart = __readmsr(ReadMsr->Msr);
+
+    /* Set fields */
+    ReadMsr->DataValueLow = Value.LowPart;
+    ReadMsr->DataValueHigh = Value.HighPart;
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
+VOID
+NTAPI
+KdpWriteMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
+                                IN PSTRING Data,
+                                IN PCONTEXT Context)
+{
+    STRING Header;
+    PDBGKD_READ_WRITE_MSR WriteMsr;
+    LARGE_INTEGER Value;
+
+    /* Setup the header */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Get a shortcut */
+    WriteMsr = &State->u.ReadWriteMsr;
+
+    /* Set fields */
+    Value.LowPart = WriteMsr->DataValueLow;
+    Value.HighPart = WriteMsr->DataValueHigh;
+
+    /* Write the msr */
+     __writemsr(WriteMsr->Msr, Value.QuadPart);
+
+    /* Send the reply */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
+}
+
 KCONTINUE_STATUS
 NTAPI
 KdpSendWaitContinue(IN ULONG PacketType,
@@ -812,16 +874,14 @@ SendPacket:
 
             case DbgKdReadMachineSpecificRegister:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdReadMachineSpecificRegister);
-                while (TRUE);
+                /* Read the specified MSR */
+                KdpReadMachineSpecificRegister(&ManipulateState, &Data, Context);
                 break;
 
             case DbgKdWriteMachineSpecificRegister:
 
-                /* FIXME: TODO */
-                Ke386SetCr2(DbgKdWriteMachineSpecificRegister);
-                while (TRUE);
+                /* Write the specified MSR */
+                KdpWriteMachineSpecificRegister(&ManipulateState, &Data, Context);
                 break;
 
             case OldVlm1:
