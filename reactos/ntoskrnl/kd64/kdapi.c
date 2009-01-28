@@ -319,16 +319,26 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
 #if defined (_M_AMD64)
     if ((ULONG)ReadMemory->TargetBaseAddress <= 2)
     {
+        PKPRCB Prcb = KiProcessorBlock[State->Processor];
+        PKIPCR Pcr = CONTAINING_RECORD(Prcb, KIPCR, Prcb);
+
         switch ((ULONG_PTR)ReadMemory->TargetBaseAddress)
         {
+            case 0:
+                /* Copy a pointer to the Pcr */
+                ControlStart = &Pcr;
+                RealLength = sizeof(PVOID);
+                break;
+
             case 1:
-                ControlStart = &KiProcessorBlock[State->Processor];
+                /* Copy a pointer to the Prcb */
+                ControlStart = &Prcb;
                 RealLength = sizeof(PVOID);
                 break;
 
             case 2:
-                ControlStart = &KiProcessorBlock[State->Processor]->
-                                         ProcessorState.SpecialRegisters;
+                /* Copy SpecialRegisters */
+                ControlStart = &Prcb->ProcessorState.SpecialRegisters;
                 RealLength = sizeof(KSPECIAL_REGISTERS);
                 break;
 
