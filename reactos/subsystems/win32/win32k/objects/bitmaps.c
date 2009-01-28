@@ -834,7 +834,7 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
             /* Fill rest of DIBSECTION */
             PDIBSECTION pds = buffer;
 
-            pds->dsBmih.biSize = 
+            pds->dsBmih.biSize = sizeof(BITMAPINFOHEADER);
             pds->dsBmih.biWidth = pds->dsBm.bmWidth;
             pds->dsBmih.biHeight = pds->dsBm.bmHeight;
             pds->dsBmih.biPlanes = pds->dsBm.bmPlanes;
