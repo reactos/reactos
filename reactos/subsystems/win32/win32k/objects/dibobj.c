@@ -1476,15 +1476,6 @@ DIB_CreateDIBSection(
         NtGdiDeleteObject(bmp);
         return NULL;
     }
-    bmp->hDIBSection = section;
-    bmp->hSecure = hSecure;
-    bmp->dwOffset = offset;
-    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
-    bmp->dsBitfields[0] = dsBitfields[0];
-    bmp->dsBitfields[1] = dsBitfields[1];
-    bmp->dsBitfields[2] = dsBitfields[2];
-    bmp->biClrUsed = bi->biClrUsed;
-    bmp->biClrImportant = bi->biClrImportant;
 
     /* WINE NOTE: WINE makes use of a colormap, which is a color translation
                   table between the DIB and the X physical device. Obviously,
@@ -1495,6 +1486,16 @@ DIB_CreateDIBSection(
     if(bi->biBitCount == 1) { bi->biClrUsed = 2; } else
     if(bi->biBitCount == 4) { bi->biClrUsed = 16; } else
     if(bi->biBitCount == 8) { bi->biClrUsed = 256; }
+
+    bmp->hDIBSection = section;
+    bmp->hSecure = hSecure;
+    bmp->dwOffset = offset;
+    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+    bmp->dsBitfields[0] = dsBitfields[0];
+    bmp->dsBitfields[1] = dsBitfields[1];
+    bmp->dsBitfields[2] = dsBitfields[2];
+    bmp->biClrUsed = bi->biClrUsed;
+    bmp->biClrImportant = bi->biClrImportant;
 
     if (bi->biClrUsed != 0)
       bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(bi->biClrUsed, lpRGB);
