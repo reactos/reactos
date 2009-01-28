@@ -437,6 +437,8 @@ drivers\video\miniport\vga\vgamp.sys                2
 drivers\video\miniport\vbe\vbemp.sys                2
 drivers\video\videoprt\videoprt.sys                 2
 
+drivers\wdm\audio\sysaudio\sysaudio.sys             2
+drivers\wdm\audio\legacy\wdmaud\wdmaud.sys          2
 drivers\wdm\audio\backpln\portcls\portcls.sys       2
 drivers\wdm\audio\drm\drmk\drmk.sys                 2
 drivers\wmi\wmilib.sys                              2
@@ -692,3 +694,4 @@ modules\windows\vmx_svga.sys                                               2   o
 modules\windows\vmx_svga.inf                                               6   optional
 modules\windows\kvmnet.sys                                                 2   optional
 modules\windows\kvmnet.inf                                                 6   optional
+
