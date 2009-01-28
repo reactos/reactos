@@ -62,7 +62,7 @@ CheckMenuItem@12
 CheckMenuRadioItem@20
 CheckRadioButton@16
 ChildWindowFromPoint@12
-ChildWindowFromPointEx@16
+ChildWindowFromPointEx@16 ; TODO: Direct call NtUserChildWindowFromPointEx
 ;CliImmSetHotKey
 ClientThreadSetup@0
 ClientToScreen@8
@@ -121,7 +121,7 @@ DdeFreeDataHandle@4
 DdeFreeStringHandle@8
 DdeGetData@16
 DdeGetLastError@4
-DdeGetQualityOfService@12
+DdeGetQualityOfService@12 ; TODO: Direct call NtUserDdeGetQualityOfService
 DdeImpersonateClient@4
 DdeInitializeA@16
 DdeInitializeW@16
@@ -133,7 +133,7 @@ DdeQueryNextServer@8
 DdeQueryStringA@20
 DdeQueryStringW@20
 DdeReconnect@4
-DdeSetQualityOfService@12
+DdeSetQualityOfService@12 ; TODO: Direct call NtUserDdeSetQualityOfService
 DdeSetUserHandle@12
 DdeUnaccessData@4
 DdeUninitialize@4
@@ -146,7 +146,7 @@ DefMDIChildProcW@16
 DefRawInputProc@12
 DefWindowProcA@16
 DefWindowProcW@16
-DeferWindowPos@32
+DeferWindowPos@32 ; TODO: Direct call NtUserDeferWindowPos
 DeleteMenu@12=NtUserDeleteMenu@12
 DeregisterShellHookWindow@4
 DestroyAcceleratorTable@4
@@ -174,7 +174,7 @@ DlgDirSelectComboBoxExA@16
 DlgDirSelectComboBoxExW@16
 DlgDirSelectExA@16
 DlgDirSelectExW@16
-DragDetect@12
+DragDetect@12 ; TODO: Direct call NtUserDragDetect
 DragObject@20=NtUserDragObject@20
 DrawAnimatedRects@16=NtUserDrawAnimatedRects@16
 DrawCaption@16
@@ -212,7 +212,7 @@ EnumDesktopsA@12
 EnumDesktopsW@12
 EnumDisplayDevicesA@16
 EnumDisplayDevicesW@16
-EnumDisplayMonitors@16
+EnumDisplayMonitors@16 ; TODO: Direct call NtUserEnumDisplayMonitors
 EnumDisplaySettingsA@12
 EnumDisplaySettingsExA@16
 EnumDisplaySettingsExW@16
@@ -243,7 +243,7 @@ GetActiveWindow@0
 GetAltTabInfo=GetAltTabInfoA@20
 GetAltTabInfoA@20
 GetAltTabInfoW@20
-GetAncestor@8
+GetAncestor@8 ; TODO: Direct call NtUserGetAncestor
 GetAppCompatFlags@4
 GetAppCompatFlags2@4
 GetAsyncKeyState@4
@@ -267,7 +267,7 @@ GetClipboardFormatNameW@12
 GetClipboardOwner@0=NtUserGetClipboardOwner@0
 GetClipboardSequenceNumber@0=NtUserGetClipboardSequenceNumber@0
 GetClipboardViewer@0=NtUserGetClipboardViewer@0
-GetComboBoxInfo@8
+GetComboBoxInfo@8 ; TODO: Direct call NtUserGetComboBoxInfo
 GetCursor@0
 ;GetCursorFrameInfo
 GetCursorInfo@4=NtUserGetCursorInfo@4
@@ -325,7 +325,7 @@ GetMessageTime@0
 GetMessageW@16
 GetMonitorInfoA@8
 GetMonitorInfoW@8
-GetMouseMovePointsEx@20
+GetMouseMovePointsEx@20 ; TODO: Direct call NtUserGetMouseMovePointsEx
 GetNextDlgGroupItem@12
 GetNextDlgTabItem@12
 GetOpenClipboardWindow@0=NtUserGetOpenClipboardWindow@0
@@ -352,7 +352,7 @@ GetShellWindow@0
 GetSubMenu@8
 GetSysColor@4
 GetSysColorBrush@4
-GetSystemMenu@8
+GetSystemMenu@8 ; TODO: Direct call NtUserGetSystemMenu
 GetSystemMetrics@4
 GetTabbedTextExtentA@20
 GetTabbedTextExtentW@20
@@ -395,7 +395,7 @@ IMPQueryIMEA@4
 IMPQueryIMEW@4
 IMPSetIMEA@8
 IMPSetIMEW@8
-ImpersonateDdeClientWindow@8
+ImpersonateDdeClientWindow@8 ; TODO: Direct call NtUserImpersonateDdeClientWindow
 InSendMessage@0
 InSendMessageEx@4
 InflateRect@12
@@ -476,7 +476,7 @@ MapVirtualKeyExW@12
 MapVirtualKeyW@8
 MapWindowPoints@16
 MB_GetString@4
-MenuItemFromPoint@16
+MenuItemFromPoint@16 ; TODO: Direct call NtUserMenuItemFromPoint
 MenuWindowProcA@16
 MenuWindowProcW@16
 MessageBeep@4
@@ -532,8 +532,8 @@ PrivateExtractIconsW@32
 ;PrivateSetRipFlags
 PtInRect@12
 ;QuerySendMessage
-;QueryUserCounters
-RealChildWindowFromPoint@12
+;QueryUserCounters ; TODO: Direct call NtUserQueryUserCounters
+RealChildWindowFromPoint@12 ; TODO: Direct call NtUserRealChildWindowFromPoint
 RealGetWindowClass=RealGetWindowClassA@12
 RealGetWindowClassA@12
 RealGetWindowClassW@12
@@ -592,7 +592,7 @@ SetCaretBlinkTime@4
 SetCaretPos@8
 SetClassLongA@12
 SetClassLongW@12
-SetClassWord@12
+SetClassWord@12 ; TODO: Direct call NtUserSetClassWord
 SetClipboardData@8
 SetClipboardViewer@4=NtUserSetClipboardViewer@4
 ;SetConsoleReserveKeys
@@ -611,7 +611,7 @@ SetInternalWindowPos@16=NtUserSetInternalWindowPos@16
 SetKeyboardState@4=NtUserSetKeyboardState@4
 SetLastErrorEx@8
 SetLayeredWindowAttributes@16=NtUserSetLayeredWindowAttributes@16
-SetLogonNotifyWindow@8
+SetLogonNotifyWindow@8 ; TODO: Direct call NtUserSetLogonNotifyWindow
 SetMenu@8
 SetMenuContextHelpId@8=NtUserSetMenuContextHelpId@8
 SetMenuDefaultItem@12=NtUserSetMenuDefaultItem@12
@@ -629,7 +629,7 @@ SetPropA@12
 SetPropW@12
 SetRect@20
 SetRectEmpty@4
-SetScrollInfo@16
+SetScrollInfo@16 ; TODO: Direct call NtUserSetScrollInfo
 SetScrollPos@16
 SetScrollRange@20
 SetShellWindow@4
@@ -637,7 +637,7 @@ SetShellWindowEx@8=NtUserSetShellWindowEx@8
 SetSysColors@12
 SetSysColorsTemp@12
 SetSystemCursor@8
-SetSystemMenu@8
+SetSystemMenu@8 ; TODO: Direct call NtUserSetSystemMenu
 SetSystemTimer@16=NtUserSetSystemTimer@16
 SetTaskmanWindow@4
 SetThreadDesktop@4=NtUserSetThreadDesktop@4
@@ -655,7 +655,7 @@ SetWindowRgn@12
 SetWindowStationUser@16
 SetWindowTextA@8
 SetWindowTextW@8
-SetWindowWord@12
+SetWindowWord@12 ; TODO: Direct call NtUserSetWindowWord
 SetWindowsHookA@8
 SetWindowsHookExA@16
 SetWindowsHookExW@16
@@ -682,9 +682,9 @@ ToAscii@20
 ToAsciiEx@24
 ToUnicode@24
 ToUnicodeEx@28
-TrackMouseEvent@4
+TrackMouseEvent@4 ; TODO: Direct call NtUserTrackMouseEvent
 TrackPopupMenu@28
-TrackPopupMenuEx@24
+TrackPopupMenuEx@24 ; TODO: Direct call NtUserTrackPopupMenuEx
 TranslateAccelerator=TranslateAcceleratorA@12
 TranslateAcceleratorA@12
 TranslateAcceleratorW@12
@@ -717,7 +717,7 @@ UserRealizePalette@4
 ;UserRegisterWowHandlers
 ;VRipOutput
 ;VTagOutput
-ValidateRect@8
+ValidateRect@8 ; TODO: Direct call NtUserValidateRect
 ValidateRgn@8
 VkKeyScanA@4
 VkKeyScanExA@8
