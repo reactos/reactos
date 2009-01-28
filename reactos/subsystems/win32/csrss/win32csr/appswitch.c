@@ -7,8 +7,8 @@
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
  */
 
+#define NDEBUG
 #include "w32csr.h"
-//#define NDEBUG
 #include <debug.h>
 
 typedef struct APPSWITCH_ITEM
