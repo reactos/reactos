@@ -1962,7 +1962,7 @@ NtFlushInstructionCache (
     for (;;);
 #elif defined(_M_ARM)
     __asm__ __volatile__("mov r1, #0; mcr p15, 0, r1, c7, c5, 0");
-s#else
+#else
 #error Unknown architecture
 #endif
     return STATUS_SUCCESS;
