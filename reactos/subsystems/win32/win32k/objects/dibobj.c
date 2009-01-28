@@ -1132,23 +1132,23 @@ IntCreateDIBitmap(PDC Dc,
         // If the second color is white, create a monochrome bitmap
         fColor =  (col != RGB(0xff,0xff,0xff));
       }
-    else fColor = TRUE;
-  }
-  else if (data->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
-  {
-    RGBTRIPLE *rgb = ((BITMAPCOREINFO *)data)->bmciColors;
-    DWORD col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue);
-
-    if ((col == RGB(0,0,0)))
-    {
-      rgb++;
-      col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue );
-      fColor = (col != RGB(0xff,0xff,0xff));
+      else fColor = TRUE;
     }
-    else fColor = TRUE;
-  }
-  else
-  {
+    else if (data->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+      RGBTRIPLE *rgb = ((BITMAPCOREINFO *)data)->bmciColors;
+      DWORD col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue);
+
+      if ((col == RGB(0,0,0)))
+      {
+        rgb++;
+        col = RGB( rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue );
+        fColor = (col != RGB(0xff,0xff,0xff));
+      }
+      else fColor = TRUE;
+    }
+    else
+    {
       DPRINT("(%ld): wrong size for data\n", data->bmiHeader.biSize );
       return 0;
     }
