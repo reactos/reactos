@@ -63,7 +63,7 @@ int is_ptrchain_attr(const var_t *var, enum attr_type t)
             if (is_attr(type->attrs, t))
                 return 1;
             else if (type_is_alias(type))
-                type = type->orig;
+                type = type_alias_get_aliasee(type);
             else if (is_ptr(type))
                 type = type_pointer_get_ref(type);
             else return 0;
@@ -79,7 +79,7 @@ int is_aliaschain_attr(const type_t *type, enum attr_type attr)
         if (is_attr(t->attrs, attr))
             return 1;
         else if (type_is_alias(t))
-            t = t->orig;
+            t = type_alias_get_aliasee(t);
         else return 0;
     }
 }
@@ -110,8 +110,7 @@ unsigned long get_attrv(const attr_list_t *list, enum attr_type t)
 
 int is_void(const type_t *t)
 {
-  if (!t->type && !t->ref) return 1;
-  return 0;
+    return type_get_type(t) == TYPE_VOID;
 }
 
 int is_conformant_array(const type_t *t)
@@ -424,7 +423,7 @@ void check_for_additional_prototype_types(const var_list_t *list)
       }
 
       if (type_is_alias(type))
-        type = type->orig;
+        type = type_alias_get_aliasee(type);
       else if (is_ptr(type))
         type = type_pointer_get_ref(type);
       else if (is_array(type))
@@ -472,7 +471,7 @@ static void write_generic_handle_routines(FILE *header)
 static void write_typedef(FILE *header, type_t *type)
 {
   fprintf(header, "typedef ");
-  write_type_def_or_decl(header, type->orig, FALSE, "%s", type->name);
+  write_type_def_or_decl(header, type_alias_get_aliasee(type), FALSE, "%s", type->name);
   fprintf(header, ";\n");
 }
 

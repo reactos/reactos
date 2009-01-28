@@ -310,6 +310,23 @@ struct coclass_details
   ifref_list_t *ifaces;
 };
 
+enum type_type
+{
+    TYPE_VOID,
+    TYPE_BASIC, /* ints, floats and handles */
+    TYPE_ENUM,
+    TYPE_STRUCT,
+    TYPE_ENCAPSULATED_UNION,
+    TYPE_UNION,
+    TYPE_ALIAS,
+    TYPE_MODULE,
+    TYPE_COCLASS,
+    TYPE_FUNCTION,
+    TYPE_INTERFACE,
+    TYPE_POINTER,
+    TYPE_ARRAY,
+};
+
 struct _type_t {
   const char *name;
   unsigned char type;
@@ -469,10 +486,75 @@ static inline var_list_t *type_get_function_args(const type_t *func_type)
   return func_type->details.function->args;
 }
 
+static inline enum type_type type_get_type_detect_alias(const type_t *type)
+{
+    if (type->is_alias)
+        return TYPE_ALIAS;
+    switch (type->type)
+    {
+    case 0:
+        return TYPE_VOID;
+    case RPC_FC_BYTE:
+    case RPC_FC_CHAR:
+    case RPC_FC_USMALL:
+    case RPC_FC_SMALL:
+    case RPC_FC_WCHAR:
+    case RPC_FC_USHORT:
+    case RPC_FC_SHORT:
+    case RPC_FC_ULONG:
+    case RPC_FC_LONG:
+    case RPC_FC_HYPER:
+    case RPC_FC_IGNORE:
+    case RPC_FC_FLOAT:
+    case RPC_FC_DOUBLE:
+    case RPC_FC_ERROR_STATUS_T:
+    case RPC_FC_BIND_PRIMITIVE:
+        return TYPE_BASIC;
+    case RPC_FC_ENUM16:
+    case RPC_FC_ENUM32:
+        return TYPE_ENUM;
+    case RPC_FC_RP:
+    case RPC_FC_UP:
+    case RPC_FC_FP:
+    case RPC_FC_OP:
+        return TYPE_POINTER;
+    case RPC_FC_STRUCT:
+    case RPC_FC_PSTRUCT:
+    case RPC_FC_CSTRUCT:
+    case RPC_FC_CPSTRUCT:
+    case RPC_FC_CVSTRUCT:
+    case RPC_FC_BOGUS_STRUCT:
+        return TYPE_STRUCT;
+    case RPC_FC_ENCAPSULATED_UNION:
+        return TYPE_ENCAPSULATED_UNION;
+    case RPC_FC_NON_ENCAPSULATED_UNION:
+        return TYPE_UNION;
+    case RPC_FC_SMFARRAY:
+    case RPC_FC_LGFARRAY:
+    case RPC_FC_SMVARRAY:
+    case RPC_FC_LGVARRAY:
+    case RPC_FC_CARRAY:
+    case RPC_FC_CVARRAY:
+    case RPC_FC_BOGUS_ARRAY:
+        return TYPE_ARRAY;
+    case RPC_FC_FUNCTION:
+        return TYPE_FUNCTION;
+    case RPC_FC_COCLASS:
+        return TYPE_COCLASS;
+    case RPC_FC_IP:
+        return TYPE_INTERFACE;
+    case RPC_FC_MODULE:
+        return TYPE_MODULE;
+    default:
+        assert(0);
+        return 0;
+    }
+}
+
 #define STATEMENTS_FOR_EACH_FUNC(stmt, stmts) \
   if (stmts) LIST_FOR_EACH_ENTRY( stmt, stmts, statement_t, entry ) \
     if (stmt->type == STMT_DECLARATION && stmt->u.var->stgclass == STG_NONE && \
-        stmt->u.var->type->type == RPC_FC_FUNCTION)
+        type_get_type_detect_alias(stmt->u.var->type) == TYPE_FUNCTION)
 
 static inline int statements_has_func(const statement_list_t *stmts)
 {
