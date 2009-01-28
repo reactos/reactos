@@ -579,7 +579,7 @@ KdpSendWaitContinue(IN ULONG PacketType,
     DBGKD_MANIPULATE_STATE64 ManipulateState;
     ULONG Length;
     KDSTATUS RecvCode;
-FrLdrDbgPrint("Enter KdpSendWaitContinue\n");
+
     /* Setup the Manipulate State structure */
     Header.MaximumLength = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)&ManipulateState;
@@ -1107,7 +1107,7 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
                 IN PKEXCEPTION_FRAME ExceptionFrame)
 {
     BOOLEAN Entered;
-FrLdrDbgPrint("KdEnterDebugger!\n");
+
     /* Check if we have a trap frame */
     if (TrapFrame)
     {
@@ -1149,7 +1149,7 @@ FrLdrDbgPrint("KdEnterDebugger!\n");
 
     /* Make sure we acquired the port */
     if (!KdpPortLocked) DbgPrint("Port lock was not acquired!\n");
-FrLdrDbgPrint("KdEnterDebugger returns %d\n", Entered);
+
     /* Return enter state */
     return Entered;
 }
