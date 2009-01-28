@@ -40,6 +40,8 @@ WdmAudAddDevice(
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     RtlZeroMemory(DeviceExtension, sizeof(WDMAUD_DEVICE_EXTENSION));
 
+    InitializeListHead(&DeviceExtension->SysAudioDeviceList);
+
     Status = KsAllocateDeviceHeader(&DeviceExtension->DeviceHeader, 0, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -91,6 +93,37 @@ WdmAudPnp(
 }
 
 NTSTATUS
+WdmAudOpenSysAudioDevice(
+    IN LPWSTR DeviceName,
+    OUT PHANDLE Handle)
+{
+    UNICODE_STRING SymbolicLink;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&SymbolicLink, DeviceName);
+    InitializeObjectAttributes(&ObjectAttributes, &SymbolicLink, OBJ_OPENIF | OBJ_KERNEL_HANDLE, NULL, NULL);
+
+    Status = IoCreateFile(Handle,
+                          SYNCHRONIZE | GENERIC_READ | GENERIC_WRITE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          0,
+                          FILE_OPEN,
+                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0,
+                          CreateFileTypeNone,
+                          NULL,
+                          IO_NO_PARAMETER_CHECKING | IO_FORCE_ACCESS_CHECK);
+
+    return Status;
+}
+
+NTSTATUS
 NTAPI
 DeviceInterfaceChangeCallback(
     IN PVOID NotificationStructure,
@@ -102,6 +135,72 @@ DeviceInterfaceChangeCallback(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+WdmAudOpenSysAudioDeviceInterfaces(
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension,
+    IN LPWSTR SymbolicLinkList)
+{
+    NTSTATUS Status;
+    HANDLE Handle;
+    SYSAUDIO_ENTRY * Entry;
+    UINT Length;
+    PFILE_OBJECT FileObject;
+    ULONG Result;
+    ULONG BytesReturned;
+    KSPROPERTY KsPropset = {{STATIC_KSPROPSETID_Sysaudio}, KSPROPERTY_SYSAUDIO_DEVICE_DEFAULT, KSPROPERTY_TYPE_SET};
+
+    while(*SymbolicLinkList)
+    {
+        Length = wcslen(SymbolicLinkList) + 1;
+        Status = WdmAudOpenSysAudioDevice(SymbolicLinkList, &Handle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = ObReferenceObjectByHandle(Handle, 
+                                               FILE_READ_DATA | FILE_WRITE_DATA,
+                                               IoFileObjectType,
+                                               KernelMode,
+                                               (PVOID*)&FileObject,
+                                               NULL);
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
+                ZwClose(Handle);
+            }
+
+            Entry = (SYSAUDIO_ENTRY*)ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + Length * sizeof(WCHAR));
+            if (!Entry)
+            {
+                ZwClose(Handle);
+                ObDereferenceObject((PVOID)FileObject);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Entry->Handle = Handle;
+            Entry->SymbolicLink.Length = Length * sizeof(WCHAR);
+            Entry->SymbolicLink.MaximumLength = Length * sizeof(WCHAR);
+            Entry->SymbolicLink.Buffer = (LPWSTR) (Entry + 1);
+            Entry->FileObject = FileObject;
+            wcscpy(Entry->SymbolicLink.Buffer, SymbolicLinkList);
+
+            InsertTailList(&DeviceExtension->SysAudioDeviceList, &Entry->Entry);
+
+            /* set device as default device */
+            KsSynchronousIoControlDevice(FileObject, 
+                                         KernelMode,
+                                         IOCTL_KS_PROPERTY,
+                                         (PVOID)&KsPropset, 
+                                         sizeof(KSPROPERTY),
+                                         (PVOID)&Result,
+                                         sizeof(ULONG),
+                                         &BytesReturned);
+
+            DeviceExtension->NumSysAudioDevices++;
+        }
+        SymbolicLinkList += Length;
+    }
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 NTAPI
@@ -110,6 +209,7 @@ WdmAudCreate(
     IN  PIRP Irp)
 {
     NTSTATUS Status;
+    LPWSTR SymbolicLinkList;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
     DPRINT1("WdmAudCreate\n");
@@ -125,6 +225,18 @@ WdmAudCreate(
         return Status;
     }
 #endif
+
+    Status = IoGetDeviceInterfaces(&KSCATEGORY_SYSAUDIO,
+                                   NULL,
+                                   0,
+                                   &SymbolicLinkList);
+
+    if (NT_SUCCESS(Status))
+    {
+        WdmAudOpenSysAudioDeviceInterfaces(DeviceExtension, SymbolicLinkList);
+        ExFreePool(SymbolicLinkList);
+    }
+
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                             PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
