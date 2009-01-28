@@ -564,7 +564,7 @@ SystemFunction035(LPCSTR lpszDllFilePath)
  * RETURNS
  *  Always TRUE in my tests
  */
-BOOL
+BOOLEAN
 WINAPI
 SystemFunction036(PVOID pbBuffer, ULONG dwLen)
 {
