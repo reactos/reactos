@@ -152,6 +152,7 @@ ImageView_DrawImage(HWND hwnd)
         }
 
         DPRINT("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d\n", x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
+        Rectangle(hdc, x - 1, y - 1, x + width + 1, y + height + 1);
         GdipDrawImageRect(graphics, image, x, y, width, height);
     }
     GdipDeleteGraphics(graphics);
@@ -380,7 +381,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     }
                 }
             }
-            break;
+            return TRUE;
         }
         case WM_SIZING:
         {
@@ -432,8 +433,8 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     // Initialize GDI+
     gdiplusStartupInput.GdiplusVersion              = 1;
     gdiplusStartupInput.DebugEventCallback          = NULL;
-    gdiplusStartupInput.SuppressBackgroundThread    = 0;
-    gdiplusStartupInput.SuppressExternalCodecs      = 0;
+    gdiplusStartupInput.SuppressBackgroundThread    = FALSE;
+    gdiplusStartupInput.SuppressExternalCodecs      = FALSE;
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
     pLoadImage(szFileName);
