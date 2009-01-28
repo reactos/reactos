@@ -657,10 +657,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
           coreheader->bcWidth = psurf->SurfObj.sizlBitmap.cx;
           coreheader->bcPlanes = 1;
           coreheader->bcBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
-          /* Resulting height may be smaller than original height */
           coreheader->bcHeight = psurf->SurfObj.sizlBitmap.cy;
-          coreheader->bcSize = DIB_GetDIBWidthBytes(coreheader->bcWidth,
-                              coreheader->bcBitCount) * coreheader->bcHeight;
           if (psurf->SurfObj.lDelta > 0)
              coreheader->bcHeight = -coreheader->bcHeight;
        }
@@ -668,7 +665,6 @@ NtGdiGetDIBitsInternal(HDC hDC,
        if (Info->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
        {
           Info->bmiHeader.biWidth = psurf->SurfObj.sizlBitmap.cx;
-          /* Resulting height may be smaller than original height */
           Info->bmiHeader.biHeight = psurf->SurfObj.sizlBitmap.cy;
           Info->bmiHeader.biPlanes = 1;
           Info->bmiHeader.biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
@@ -890,9 +886,6 @@ NtGdiGetDIBitsInternal(HDC hDC,
           if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
           {
              BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
-             coreheader->bcSize = DIB_GetDIBWidthBytes(DestSize.cx,
-                                                       coreheader->bcBitCount) * DestSize.cy;
-
              hDestBitmap = EngCreateBitmap(DestSize,
                                            DIB_GetDIBWidthBytes(DestSize.cx, coreheader->bcBitCount),
                                            BitmapFormat(coreheader->bcBitCount, BI_RGB),
