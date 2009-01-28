@@ -379,9 +379,10 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_ROT_CLOCKW);
                         break;
                     }
+                    return TRUE;
                 }
             }
-            return TRUE;
+            break;
         }
         case WM_SIZING:
         {
@@ -395,8 +396,10 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         }
         case WM_SIZE:
         {
-            MoveWindow(hDispWnd, 1, 1, LOWORD(lParam)-1, HIWORD(lParam)-35, TRUE);
+            RECT rc;
             SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
+            SendMessage(hToolBar, TB_GETITEMRECT, 1, (LPARAM)&rc);
+            MoveWindow(hDispWnd, 1, 1, LOWORD(lParam)-1, HIWORD(lParam)-rc.bottom, TRUE);
             return 0L;
         }
         case WM_DESTROY:
