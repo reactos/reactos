@@ -39,7 +39,7 @@ CAPTION "Hardware Assistent"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Wählen Sie aus der Liste ein installiertes Gerät aus und klicken Sie auf ""Weiter"", um die Einstellungen zu überprüfen und mögliche Probleme zu lösen.", -1, 21, 8, 275, 22
-	LTEXT "Um Hardware zu installieren, die nicht in der Liste aufgelistet ist, klicken Sie ""Neue Hardware hinzufügen.""", -1, 21, 32, 275, 24
+	LTEXT "Um Hardware zu installieren, die nicht in der Liste aufgelistet ist, klicken Sie ""Ein neues Gerät hinzufügen.""", -1, 21, 32, 275, 24
 	LTEXT "I&nstallierte Hardware:", -1, 21, 62, 140, 8
 	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS  | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
@@ -95,7 +95,7 @@ BEGIN
 	LTEXT "Hardware Assistent wird vervollständigt", IDC_FINISHTITLE, 114, 8, 203, 24
 	LTEXT "Der Hardware Assistent wurde erfolgreich abgeschlossen.", -1, 114, 32, 193, 19
 	LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
-	LTEXT "Klicken Sie ""Beenden"", um den Assistenten zu schliessen.", -1, 114, 166, 192, 8
+	LTEXT "Klicken Sie ""Beenden"", um den Assistenten zu schließen.", -1, 114, 166, 192, 8
 END
 
 IDD_ISFOUNDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
@@ -105,7 +105,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Hardware Assistent wird vervollständigt", IDC_FINISHTITLE, 114, 8, 203, 24
 	LTEXT "Der Assistent fand folgende Hardware an ihrem Computer:", -1, 114, 32, 193, 19
-	LTEXT "Klicken Sie ""Beenden"", um den Assistenten zu schliessen.", -1, 114, 166, 132, 8
+	LTEXT "Klicken Sie ""Beenden"", um den Assistenten zu schließen.", -1, 114, 166, 132, 8
 	CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
@@ -118,7 +118,7 @@ BEGIN
 	LTEXT "Derzeitiger Status der ausgewählten Hardware:", -1, 114, 40, 193, 19
 	EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
 	LTEXT "Klicken Sie ""Beenden"", um Hilfe zum Lösen von möglichen Problemen zu erhalten.", -1, 114, 136, 193, 16
-	LTEXT "Klicken Sie ""Abbrechen"", um den Assistenden zu schliessen.", IDC_STATUSTEXT, 114, 166, 200, 8
+	LTEXT "Klicken Sie ""Abbrechen"", um den Assistenten zu schließen.", IDC_STATUSTEXT, 114, 166, 200, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
@@ -128,9 +128,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Hardware Assistent kann nicht fortgesetzt werden", IDC_FINISHTITLE, 114, 8, 203, 28
 	LTEXT "Um fortsetzen zu können, verbinden Sie folgende Hardware mit dem Computer.", -1, 114, 40, 193, 16
-	AUTOCHECKBOX "&Nach Beenden den Computer neustarten, um die Hardware anschliessen zu können.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Nach Beenden den Computer neustarten, um die Hardware anschließen zu können.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
 	LTEXT "In den meisten Fällen wird ReactOS die Hardware automatisch installieren, wenn Sie sie mit dem Computer verbinden. Andernfalls können Sie den Assistenten erneut starten, um die zu unterstützende Hardware zu installieren.", -1, 114, 98, 193, 32
-	LTEXT "Klicken Sie auf ""Beenden"", um den Assistenten zu schliessen.", IDC_STATUSTEXT, 114, 166, 200, 8
+	LTEXT "Klicken Sie auf ""Beenden"", um den Assistenten zu schließen.", IDC_STATUSTEXT, 114, 166, 200, 8
 END
 
 STRINGTABLE
@@ -143,5 +143,5 @@ BEGIN
 	IDS_PROBELISTTITLE "Folgende Hardware ist bereits auf Ihrem Computer installiert"
 	IDS_ADDNEWDEVICE "Ein neues Gerät hinzufügen"
 	IDS_SELECTWAYTITLE "Der Assistent kann Sie bei der Installation anderer Hardware unterstützen"
-	IDS_HDTYPESTITLE "From the list below, select the type of hardware you are installing"
+	IDS_HDTYPESTITLE "Wählen Sie die Hardware aus der Liste aus, die Sie installieren möchten."
 END
