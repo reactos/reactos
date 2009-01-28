@@ -654,8 +654,6 @@ NtGdiGetDIBitsInternal(HDC hDC,
        if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
        {
           BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
-
-          coreheader = (BITMAPCOREHEADER*) Info;
           coreheader->bcWidth = psurf->SurfObj.sizlBitmap.cx;
           coreheader->bcPlanes = 1;
           coreheader->bcBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
