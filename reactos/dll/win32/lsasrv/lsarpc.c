@@ -189,7 +189,10 @@ LsarClose(LSAPR_HANDLE *ObjectHandle)
 
     /* This is our fake handle, don't go too much long way */
     if (*ObjectHandle == (LSA_HANDLE)0xcafe)
+    {
+        *ObjectHandle = NULL;
         Status = STATUS_SUCCESS;
+    }
 
 
     TRACE("LsarClose done (Status: 0x%08lx)!\n", Status);
