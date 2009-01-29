@@ -675,43 +675,40 @@ IntGdiSetMapMode(PDC  dc,
         break;
 
       case MM_ISOTROPIC:
+        Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
+        /* Fall through */
+
+      case MM_LOMETRIC:
         Dc_Attr->szlWindowExt.cx = 3600;
         Dc_Attr->szlWindowExt.cy = 2700;
         Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
         Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
-      case MM_LOMETRIC:
-        Dc_Attr->szlWindowExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize * 10;
-        Dc_Attr->szlWindowExt.cy = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize * 10;
-        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
-        break;
-
       case MM_HIMETRIC:
-        Dc_Attr->szlWindowExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize * 100;
-        Dc_Attr->szlWindowExt.cy = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize * 100;
+        Dc_Attr->szlWindowExt.cx = 36000;
+        Dc_Attr->szlWindowExt.cy = 27000;
         Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
         Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
       case MM_LOENGLISH:
-        Dc_Attr->szlWindowExt.cx = EngMulDiv(1000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
-        Dc_Attr->szlWindowExt.cy = EngMulDiv(1000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
+        Dc_Attr->szlWindowExt.cx = 1417;
+        Dc_Attr->szlWindowExt.cy = 1063;
         Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
         Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
       case MM_HIENGLISH:
-        Dc_Attr->szlWindowExt.cx = EngMulDiv(10000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
-        Dc_Attr->szlWindowExt.cy = EngMulDiv(10000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
+        Dc_Attr->szlWindowExt.cx = 14173;
+        Dc_Attr->szlWindowExt.cy = 10630;
         Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
         Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
       case MM_TWIPS:
-        Dc_Attr->szlWindowExt.cx = EngMulDiv(14400, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
-        Dc_Attr->szlWindowExt.cy = EngMulDiv(14400, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
+        Dc_Attr->szlWindowExt.cx = 20409;
+        Dc_Attr->szlWindowExt.cy = 15307;
         Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
         Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
