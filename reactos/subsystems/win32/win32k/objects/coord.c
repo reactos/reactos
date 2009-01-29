@@ -37,30 +37,30 @@
 void FASTCALL
 IntFixIsotropicMapping(PDC dc)
 {
-  ULONG xdim;
-  ULONG ydim;
-  PDC_ATTR Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    ULONG xdim;
+    ULONG ydim;
+    PDC_ATTR Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-  xdim = EngMulDiv(Dc_Attr->szlViewportExt.cx,
-               ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize,
-               ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes) /
-                                Dc_Attr->szlWindowExt.cx;
-  ydim = EngMulDiv(Dc_Attr->szlViewportExt.cy,
-               ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize,
-               ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes) /
-                                Dc_Attr->szlWindowExt.cy;
+    xdim = EngMulDiv(Dc_Attr->szlViewportExt.cx,
+                     ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize,
+                     ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes) /
+                                         Dc_Attr->szlWindowExt.cx;
+    ydim = EngMulDiv(Dc_Attr->szlViewportExt.cy,
+                     ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize,
+                     ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes) /
+                                         Dc_Attr->szlWindowExt.cy;
 
-  if (xdim > ydim)
-  {
-    Dc_Attr->szlViewportExt.cx = Dc_Attr->szlViewportExt.cx * abs(ydim / xdim);
-    if (!Dc_Attr->szlViewportExt.cx) Dc_Attr->szlViewportExt.cx = 1;
-  }
-  else
-  {
-    Dc_Attr->szlViewportExt.cy = Dc_Attr->szlViewportExt.cy * abs(xdim / ydim);
-    if (!Dc_Attr->szlViewportExt.cy) Dc_Attr->szlViewportExt.cy = 1;
-  }
+    if (xdim > ydim)
+    {
+        Dc_Attr->szlViewportExt.cx = Dc_Attr->szlViewportExt.cx * abs(ydim / xdim);
+        if (!Dc_Attr->szlViewportExt.cx) Dc_Attr->szlViewportExt.cx = 1;
+    }
+    else
+    {
+        Dc_Attr->szlViewportExt.cy = Dc_Attr->szlViewportExt.cy * abs(xdim / ydim);
+        if (!Dc_Attr->szlViewportExt.cy) Dc_Attr->szlViewportExt.cy = 1;
+    }
 }
 
 BOOL FASTCALL
@@ -68,64 +68,60 @@ IntGdiCombineTransform(LPXFORM XFormResult,
                        LPXFORM xform1,
                        LPXFORM xform2)
 {
-  XFORM xformTemp;
-  /* Check for illegal parameters */
-  if (!XFormResult || !xform1 || !xform2)
-  {
-    return  FALSE;
-  }
+    XFORM xformTemp;
+    /* Check for illegal parameters */
+    if (!XFormResult || !xform1 || !xform2)
+    {
+        return  FALSE;
+    }
 
-  /* Create the result in a temporary XFORM, since xformResult may be
-   * equal to xform1 or xform2 */
-  xformTemp.eM11 = xform1->eM11 * xform2->eM11 + xform1->eM12 * xform2->eM21;
-  xformTemp.eM12 = xform1->eM11 * xform2->eM12 + xform1->eM12 * xform2->eM22;
-  xformTemp.eM21 = xform1->eM21 * xform2->eM11 + xform1->eM22 * xform2->eM21;
-  xformTemp.eM22 = xform1->eM21 * xform2->eM12 + xform1->eM22 * xform2->eM22;
-  xformTemp.eDx  = xform1->eDx  * xform2->eM11 + xform1->eDy  * xform2->eM21 + xform2->eDx;
-  xformTemp.eDy  = xform1->eDx  * xform2->eM12 + xform1->eDy  * xform2->eM22 + xform2->eDy;
-  *XFormResult = xformTemp;
+    /* Create the result in a temporary XFORM, since xformResult may be
+     * equal to xform1 or xform2 */
+    xformTemp.eM11 = xform1->eM11 * xform2->eM11 + xform1->eM12 * xform2->eM21;
+    xformTemp.eM12 = xform1->eM11 * xform2->eM12 + xform1->eM12 * xform2->eM22;
+    xformTemp.eM21 = xform1->eM21 * xform2->eM11 + xform1->eM22 * xform2->eM21;
+    xformTemp.eM22 = xform1->eM21 * xform2->eM12 + xform1->eM22 * xform2->eM22;
+    xformTemp.eDx  = xform1->eDx  * xform2->eM11 + xform1->eDy  * xform2->eM21 + xform2->eDx;
+    xformTemp.eDy  = xform1->eDx  * xform2->eM12 + xform1->eDy  * xform2->eM22 + xform2->eDy;
+    *XFormResult = xformTemp;
 
-  return TRUE;
+    return TRUE;
 }
 
 BOOL APIENTRY NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
-                                   LPXFORM  Unsafexform1,
-                                   LPXFORM  Unsafexform2)
+                                    LPXFORM  Unsafexform1,
+                                    LPXFORM  Unsafexform2)
 {
-  BOOL Ret;
+    BOOL Ret;
 
-  _SEH2_TRY
-  {
-    ProbeForWrite(UnsafeXFormResult,
-                  sizeof(XFORM),
-                  1);
-    ProbeForRead(Unsafexform1,
-                 sizeof(XFORM),
-                 1);
-    ProbeForRead(Unsafexform2,
-                 sizeof(XFORM),
-                 1);
-    Ret = IntGdiCombineTransform(UnsafeXFormResult, Unsafexform1, Unsafexform2);
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-    Ret = FALSE;
-  }
-  _SEH2_END;
+    _SEH2_TRY
+    {
+        ProbeForWrite(UnsafeXFormResult, sizeof(XFORM), 1);
+        ProbeForRead(Unsafexform1, sizeof(XFORM), 1);
+        ProbeForRead(Unsafexform2, sizeof(XFORM), 1);
+        Ret = IntGdiCombineTransform(UnsafeXFormResult,
+                                     Unsafexform1,
+                                     Unsafexform2);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Ret = FALSE;
+    }
+    _SEH2_END;
 
-  return Ret;
+    return Ret;
 }
 
 
 int
 FASTCALL
-IntGetGraphicsMode ( PDC dc )
+IntGetGraphicsMode(PDC dc)
 {
-  PDC_ATTR Dc_Attr;
-  ASSERT ( dc );
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  return Dc_Attr->iGraphicsMode;
+    PDC_ATTR Dc_Attr;
+    ASSERT(dc);
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    return Dc_Attr->iGraphicsMode;
 }
 
 BOOL
@@ -134,88 +130,86 @@ IntGdiModifyWorldTransform(PDC pDc,
                            CONST LPXFORM lpXForm,
                            DWORD Mode)
 {
-   ASSERT(pDc);
-   XFORM xformWorld2Wnd;
+    ASSERT(pDc);
+    XFORM xformWorld2Wnd;
 
-   switch(Mode)
-   {
-     case MWT_IDENTITY:
-       xformWorld2Wnd.eM11 = 1.0f;
-       xformWorld2Wnd.eM12 = 0.0f;
-       xformWorld2Wnd.eM21 = 0.0f;
-       xformWorld2Wnd.eM22 = 1.0f;
-       xformWorld2Wnd.eDx  = 0.0f;
-       xformWorld2Wnd.eDy  = 0.0f;
-       XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
-       break;
+    switch (Mode)
+    {
+        case MWT_IDENTITY:
+            xformWorld2Wnd.eM11 = 1.0f;
+            xformWorld2Wnd.eM12 = 0.0f;
+            xformWorld2Wnd.eM21 = 0.0f;
+            xformWorld2Wnd.eM22 = 1.0f;
+            xformWorld2Wnd.eDx  = 0.0f;
+            xformWorld2Wnd.eDy  = 0.0f;
+            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            break;
 
-     case MWT_LEFTMULTIPLY:
-       MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
-       IntGdiCombineTransform(&xformWorld2Wnd, lpXForm, &xformWorld2Wnd);
-       XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
-       break;
+        case MWT_LEFTMULTIPLY:
+            MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
+            IntGdiCombineTransform(&xformWorld2Wnd, lpXForm, &xformWorld2Wnd);
+            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            break;
 
-     case MWT_RIGHTMULTIPLY:
-       MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
-       IntGdiCombineTransform(&xformWorld2Wnd, &xformWorld2Wnd, lpXForm);
-       XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
-       break;
+        case MWT_RIGHTMULTIPLY:
+            MatrixS2XForm(&xformWorld2Wnd, &pDc->DcLevel.mxWorldToPage);
+            IntGdiCombineTransform(&xformWorld2Wnd, &xformWorld2Wnd, lpXForm);
+            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, &xformWorld2Wnd);
+            break;
 
-     case MWT_MAX+1: // Must be MWT_SET????
-       XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, lpXForm); // Do it like Wine.
-       break;
+        case MWT_MAX+1: // Must be MWT_SET????
+            XForm2MatrixS(&pDc->DcLevel.mxWorldToPage, lpXForm); // Do it like Wine.
+            break;
 
-     default:
-       return FALSE;
-  }
-  DC_UpdateXforms(pDc);
-  return TRUE;
+        default:
+            return FALSE;
+    }
+    DC_UpdateXforms(pDc);
+    return TRUE;
 }
 
 BOOL
 APIENTRY
 NtGdiGetTransform(HDC  hDC,
-               DWORD iXform,
-              LPXFORM  XForm)
+                  DWORD iXform,
+                  LPXFORM  XForm)
 {
-  PDC  dc;
-  NTSTATUS Status = STATUS_SUCCESS;
+    PDC  dc;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  dc = DC_LockDc ( hDC );
-  if (!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-  if (!XForm)
-  {
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (!XForm)
+    {
+        DC_UnlockDc(dc);
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(XForm, sizeof(XFORM), 1);
+        switch (iXform)
+        {
+            case GdiWorldSpaceToPageSpace:
+                MatrixS2XForm(XForm, &dc->DcLevel.mxWorldToPage);
+                break;
+            default:
+                break;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
     DC_UnlockDc(dc);
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  _SEH2_TRY
-  {
-    ProbeForWrite(XForm,
-                  sizeof(XFORM),
-                  1);
-   switch(iXform)
-   {
-     case GdiWorldSpaceToPageSpace:
-        MatrixS2XForm(XForm, &dc->DcLevel.mxWorldToPage);
-     break;
-     default:
-     break;
-   }
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-    Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END;
-
-  DC_UnlockDc(dc);
-  return NT_SUCCESS(Status);
+    return NT_SUCCESS(Status);
 }
 
 
@@ -229,111 +223,103 @@ NtGdiGetTransform(HDC  hDC,
 */
 BOOL
 APIENTRY
-NtGdiTransformPoints( HDC hDC,
-                      PPOINT UnsafePtsIn,
-                      PPOINT UnsafePtOut,
-                      INT Count,
-                      INT iMode )
+NtGdiTransformPoints(HDC hDC,
+                     PPOINT UnsafePtsIn,
+                     PPOINT UnsafePtOut,
+                     INT Count,
+                     INT iMode)
 {
-   PDC dc;
-   NTSTATUS Status = STATUS_SUCCESS;
-   LPPOINT Points;
-   ULONG Size;
+    PDC dc;
+    NTSTATUS Status = STATUS_SUCCESS;
+    LPPOINT Points;
+    ULONG Size;
 
-   dc = DC_LockDc(hDC);
-   if (!dc)
-   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return FALSE;
-   }
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
-   if (!UnsafePtsIn || !UnsafePtOut || Count <= 0)
-   {
-     DC_UnlockDc(dc);
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-     return FALSE;
-   }
-
-   Size = Count * sizeof(POINT);
-
-   Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
-   if(!Points)
-   {
-     DC_UnlockDc(dc);
-     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-     return FALSE;
-   }
-
-   _SEH2_TRY
-   {
-      ProbeForWrite(UnsafePtOut,
-                    Size,
-                    1);
-      ProbeForRead(UnsafePtsIn,
-                    Size,
-                    1);
-      RtlCopyMemory(Points,
-                    UnsafePtsIn,
-                    Size);
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      Status = _SEH2_GetExceptionCode();
-   }
-   _SEH2_END;
-
-   if(!NT_SUCCESS(Status))
-   {
-     DC_UnlockDc(dc);
-     ExFreePoolWithTag(Points, TAG_COORD);
-     SetLastNtError(Status);
-     return FALSE;
-   }
-
-   switch (iMode)
-   {
-      case GdiDpToLp:
-        IntDPtoLP(dc, Points, Count);
-        break;
-      case GdiLpToDp:
-        IntLPtoDP(dc, Points, Count);
-        break;
-      case 2: // Not supported yet. Need testing.
-      default:
-      {
+    if (!UnsafePtsIn || !UnsafePtOut || Count <= 0)
+    {
         DC_UnlockDc(dc);
-        ExFreePoolWithTag(Points, TAG_COORD);
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
-      }
-   }
+    }
 
-   _SEH2_TRY
-   {
-      /* pointer was already probed! */
-      RtlCopyMemory(UnsafePtOut,
-                    Points,
-                    Size);
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      Status = _SEH2_GetExceptionCode();
-   }
-   _SEH2_END;
+    Size = Count * sizeof(POINT);
 
-   if(!NT_SUCCESS(Status))
-   {
-     DC_UnlockDc(dc);
-     ExFreePoolWithTag(Points, TAG_COORD);
-     SetLastNtError(Status);
-     return FALSE;
-   }
+    Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
+    if (!Points)
+    {
+        DC_UnlockDc(dc);
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(UnsafePtOut, Size, 1);
+        ProbeForRead(UnsafePtsIn, Size, 1);
+        RtlCopyMemory(Points, UnsafePtsIn, Size);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DC_UnlockDc(dc);
+        ExFreePoolWithTag(Points, TAG_COORD);
+        SetLastNtError(Status);
+        return FALSE;
+    }
+
+    switch (iMode)
+    {
+        case GdiDpToLp:
+            IntDPtoLP(dc, Points, Count);
+            break;
+        case GdiLpToDp:
+            IntLPtoDP(dc, Points, Count);
+            break;
+        case 2: // Not supported yet. Need testing.
+        default:
+        {
+            DC_UnlockDc(dc);
+            ExFreePoolWithTag(Points, TAG_COORD);
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+    }
+
+    _SEH2_TRY
+    {
+        /* pointer was already probed! */
+        RtlCopyMemory(UnsafePtOut, Points, Size);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DC_UnlockDc(dc);
+        ExFreePoolWithTag(Points, TAG_COORD);
+        SetLastNtError(Status);
+        return FALSE;
+    }
 //
 // If we are getting called that means User XForms is a mess!
 //
-   DC_UnlockDc(dc);
-   ExFreePoolWithTag(Points, TAG_COORD);
-   return TRUE;
+    DC_UnlockDc(dc);
+    ExFreePoolWithTag(Points, TAG_COORD);
+    return TRUE;
 }
 
 BOOL
@@ -342,69 +328,70 @@ NtGdiModifyWorldTransform(HDC hDC,
                           LPXFORM  UnsafeXForm,
                           DWORD Mode)
 {
-   PDC dc;
-   XFORM SafeXForm;
-   BOOL Ret = TRUE;
+    PDC dc;
+    XFORM SafeXForm;
+    BOOL Ret = TRUE;
 
-   dc = DC_LockDc(hDC);
-   if (!dc)
-   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return FALSE;
-   }
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
-   // The xform is permitted to be NULL for MWT_IDENTITY.
-   // However, if it is not NULL, then it must be valid even though it is not used.
-   if (UnsafeXForm != NULL || Mode != MWT_IDENTITY)
-   {
-      _SEH2_TRY
-      {
-         ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
-         RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         Ret = FALSE;
-      }
-      _SEH2_END;
-   }
+    // The xform is permitted to be NULL for MWT_IDENTITY.
+    // However, if it is not NULL, then it must be valid even though it is not used.
+    if (UnsafeXForm != NULL || Mode != MWT_IDENTITY)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
+            RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Ret = FALSE;
+        }
+        _SEH2_END;
+    }
 
-   // Safe to handle kernel mode data.
-   if (Ret) Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
-   DC_UnlockDc(dc);
-   return Ret;
+    // Safe to handle kernel mode data.
+    if (Ret) Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
+    DC_UnlockDc(dc);
+    return Ret;
 }
 
 BOOL
 APIENTRY
 NtGdiOffsetViewportOrgEx(HDC hDC,
-                        int XOffset,
-                        int YOffset,
-                        LPPOINT UnsafePoint)
+                         int XOffset,
+                         int YOffset,
+                         LPPOINT UnsafePoint)
 {
-  PDC      dc;
-  PDC_ATTR Dc_Attr;
-  NTSTATUS Status = STATUS_SUCCESS;
+    PDC      dc;
+    PDC_ATTR Dc_Attr;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  dc = DC_LockDc ( hDC );
-  if(!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  
-  if (UnsafePoint)
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    if (UnsafePoint)
     {
         _SEH2_TRY
         {
-            ProbeForWrite(UnsafePoint,
-                          sizeof(POINT),
-                          1);
+            ProbeForWrite(UnsafePoint, sizeof(POINT), 1);
             UnsafePoint->x = Dc_Attr->ptlViewportOrg.x;
             UnsafePoint->y = Dc_Attr->ptlViewportOrg.y;
-            if ( Dc_Attr->dwLayout & LAYOUT_RTL ) UnsafePoint->x = -UnsafePoint->x;
+            if (Dc_Attr->dwLayout & LAYOUT_RTL)
+            {
+                UnsafePoint->x = -UnsafePoint->x;
+            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -412,318 +399,321 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
         }
         _SEH2_END;
 
-	if ( !NT_SUCCESS(Status) )
-	  {
-	    SetLastNtError(Status);
-	    DC_UnlockDc(dc);
-	    return FALSE;
-	  }
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DC_UnlockDc(dc);
+            return FALSE;
+        }
     }
 
-  if ( Dc_Attr->dwLayout & LAYOUT_RTL ) XOffset = -XOffset;
-  Dc_Attr->ptlViewportOrg.x += XOffset;
-  Dc_Attr->ptlViewportOrg.y += YOffset;
-  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
-  return TRUE;
+    if (Dc_Attr->dwLayout & LAYOUT_RTL)
+    {
+        XOffset = -XOffset;
+    }
+    Dc_Attr->ptlViewportOrg.x += XOffset;
+    Dc_Attr->ptlViewportOrg.y += YOffset;
+    DC_UpdateXforms(dc);
+    DC_UnlockDc(dc);
+
+    return TRUE;
 }
 
 BOOL
 APIENTRY
 NtGdiOffsetWindowOrgEx(HDC  hDC,
-                      int  XOffset,
-                      int  YOffset,
-                      LPPOINT  Point)
+                       int  XOffset,
+                       int  YOffset,
+                       LPPOINT  Point)
 {
-  PDC dc;
-  PDC_ATTR Dc_Attr;
-  
-  dc = DC_LockDc(hDC);
-  if (!dc)
+    PDC dc;
+    PDC_ATTR Dc_Attr;
+
+    dc = DC_LockDc(hDC);
+    if (!dc)
     {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  if (Point)
-    {
-      NTSTATUS Status = STATUS_SUCCESS;
-
-      _SEH2_TRY
-      {
-         ProbeForWrite(Point,
-                       sizeof(POINT),
-                       1);
-         Point->x = Dc_Attr->ptlWindowOrg.x;
-         Point->y = Dc_Attr->ptlWindowOrg.y;
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if(!NT_SUCCESS(Status))
-      {
-        SetLastNtError(Status);
-        DC_UnlockDc(dc);
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
-      }
+    }
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    if (Point)
+    {
+        NTSTATUS Status = STATUS_SUCCESS;
+
+        _SEH2_TRY
+        {
+            ProbeForWrite(Point, sizeof(POINT), 1);
+            Point->x = Dc_Attr->ptlWindowOrg.x;
+            Point->y = Dc_Attr->ptlWindowOrg.y;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DC_UnlockDc(dc);
+            return FALSE;
+        }
     }
 
-  Dc_Attr->ptlWindowOrg.x += XOffset;
-  Dc_Attr->ptlWindowOrg.y += YOffset;
+    Dc_Attr->ptlWindowOrg.x += XOffset;
+    Dc_Attr->ptlWindowOrg.y += YOffset;
 
-  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
+    DC_UpdateXforms(dc);
+    DC_UnlockDc(dc);
 
-  return TRUE;
+    return TRUE;
 }
 
 BOOL
 APIENTRY
 NtGdiScaleViewportExtEx(HDC  hDC,
-                       int  Xnum,
-                     int  Xdenom,
-                       int  Ynum,
-                     int  Ydenom,
-                    LPSIZE pSize)
+                        int  Xnum,
+                        int  Xdenom,
+                        int  Ynum,
+                        int  Ydenom,
+                        LPSIZE pSize)
 {
-  PDC pDC;
-  PDC_ATTR pDc_Attr;
-  BOOL Ret = FALSE;
-  LONG X, Y;
-  
-  pDC = DC_LockDc(hDC);
-  if (!pDC)
-  {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-  }
-  pDc_Attr = pDC->pDc_Attr;
-  if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+    PDC pDC;
+    PDC_ATTR pDc_Attr;
+    BOOL Ret = FALSE;
+    LONG X, Y;
 
-  if ( pSize )
-  {
-     NTSTATUS Status = STATUS_SUCCESS;
-
-     _SEH2_TRY
-     {
-       ProbeForWrite(pSize,
-            sizeof(LPSIZE),
-                         1);
-
-       pSize->cx = pDc_Attr->szlViewportExt.cx;
-       pSize->cy = pDc_Attr->szlViewportExt.cy;
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-         Status = _SEH2_GetExceptionCode();
-     }
-     _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-        SetLastNtError(Status);
-        DC_UnlockDc(pDC);
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
-     }
-  }
+    }
+    pDc_Attr = pDC->pDc_Attr;
+    if (!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
 
-  if (pDc_Attr->iMapMode > MM_TWIPS)
-  { 
-     if ( ( Xdenom ) && ( Ydenom ) )
-     {
-        X = Xnum * pDc_Attr->szlViewportExt.cx / Xdenom;
-        if ( X )
+    if (pSize)
+    {
+        NTSTATUS Status = STATUS_SUCCESS;
+
+        _SEH2_TRY
         {
-           Y = Ynum * pDc_Attr->szlViewportExt.cy / Ydenom;
-           if ( Y )
-           {
-              pDc_Attr->szlViewportExt.cx = X; 
-              pDc_Attr->szlViewportExt.cy = Y;
+            ProbeForWrite(pSize, sizeof(LPSIZE), 1);
 
-              IntMirrorWindowOrg(pDC);
-              
-              pDc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
-
-              if (pDc_Attr->iMapMode == MM_ISOTROPIC) IntFixIsotropicMapping(pDC);
-              DC_UpdateXforms(pDC);
-
-              Ret = TRUE;
-           }
+            pSize->cx = pDc_Attr->szlViewportExt.cx;
+            pSize->cy = pDc_Attr->szlViewportExt.cy;
         }
-     }
-  }
-  else
-    Ret = TRUE;
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
 
-  DC_UnlockDc(pDC);
-  return Ret;
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DC_UnlockDc(pDC);
+            return FALSE;
+        }
+    }
+
+    if (pDc_Attr->iMapMode > MM_TWIPS)
+    {
+        if (Xdenom && Ydenom)
+        {
+            X = Xnum * pDc_Attr->szlViewportExt.cx / Xdenom;
+            if (X)
+            {
+                Y = Ynum * pDc_Attr->szlViewportExt.cy / Ydenom;
+                if (Y)
+                {
+                    pDc_Attr->szlViewportExt.cx = X;
+                    pDc_Attr->szlViewportExt.cy = Y;
+
+                    IntMirrorWindowOrg(pDC);
+
+                    pDc_Attr->flXform |= (PAGE_EXTENTS_CHANGED |
+                                          INVALIDATE_ATTRIBUTES |
+                                          DEVICE_TO_WORLD_INVALID);
+
+                    if (pDc_Attr->iMapMode == MM_ISOTROPIC)
+                    {
+                        IntFixIsotropicMapping(pDC);
+                    }
+                    DC_UpdateXforms(pDC);
+
+                    Ret = TRUE;
+                }
+            }
+        }
+    }
+    else
+        Ret = TRUE;
+
+    DC_UnlockDc(pDC);
+    return Ret;
 }
 
 BOOL
 APIENTRY
 NtGdiScaleWindowExtEx(HDC  hDC,
-                     int  Xnum,
-                   int  Xdenom,
-                     int  Ynum,
-                   int  Ydenom,
-                  LPSIZE pSize)
+                      int  Xnum,
+                      int  Xdenom,
+                      int  Ynum,
+                      int  Ydenom,
+                      LPSIZE pSize)
 {
-  PDC pDC;
-  PDC_ATTR pDc_Attr;
-  BOOL Ret = FALSE;
-  LONG X, Y;
-  
-  pDC = DC_LockDc(hDC);
-  if (!pDC)
-  {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-  }
-  pDc_Attr = pDC->pDc_Attr;
-  if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+    PDC pDC;
+    PDC_ATTR pDc_Attr;
+    BOOL Ret = FALSE;
+    LONG X, Y;
 
-  if ( pSize )
-  {
-     NTSTATUS Status = STATUS_SUCCESS;
-
-     _SEH2_TRY
-     {
-       ProbeForWrite(pSize,
-            sizeof(LPSIZE),
-                         1);
-
-       X = pDc_Attr->szlWindowExt.cx;
-       if (pDc_Attr->dwLayout & LAYOUT_RTL) X = -X;
-       pSize->cx = X;
-       pSize->cy = pDc_Attr->szlWindowExt.cy;
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-         Status = _SEH2_GetExceptionCode();
-     }
-     _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-        SetLastNtError(Status);
-        DC_UnlockDc(pDC);
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
-     }
-  }
+    }
+    pDc_Attr = pDC->pDc_Attr;
+    if (!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
 
-  if (pDc_Attr->iMapMode > MM_TWIPS)
-  { 
-     if (( Xdenom ) && ( Ydenom ))
-     {
-        X = Xnum * pDc_Attr->szlWindowExt.cx / Xdenom;
-        if ( X )
+    if (pSize)
+    {
+        NTSTATUS Status = STATUS_SUCCESS;
+
+        _SEH2_TRY
         {
-           Y = Ynum * pDc_Attr->szlWindowExt.cy / Ydenom;
-           if ( Y )
-           {
-              pDc_Attr->szlWindowExt.cx = X;
-              pDc_Attr->szlWindowExt.cy = Y;
+            ProbeForWrite(pSize, sizeof(LPSIZE), 1);
 
-              IntMirrorWindowOrg(pDC);
-              
-              pDc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
-
-              if (pDc_Attr->iMapMode == MM_ISOTROPIC) IntFixIsotropicMapping(pDC);
-              DC_UpdateXforms(pDC);
-
-              Ret = TRUE;
-           }
+            X = pDc_Attr->szlWindowExt.cx;
+            if (pDc_Attr->dwLayout & LAYOUT_RTL) X = -X;
+            pSize->cx = X;
+            pSize->cy = pDc_Attr->szlWindowExt.cy;
         }
-     }
-  }
-  else
-    Ret = TRUE;
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
 
-  DC_UnlockDc(pDC);
-  return Ret;
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DC_UnlockDc(pDC);
+            return FALSE;
+        }
+    }
+
+    if (pDc_Attr->iMapMode > MM_TWIPS)
+    {
+        if (Xdenom && Ydenom)
+        {
+            X = Xnum * pDc_Attr->szlWindowExt.cx / Xdenom;
+            if (X)
+            {
+                Y = Ynum * pDc_Attr->szlWindowExt.cy / Ydenom;
+                if (Y)
+                {
+                    pDc_Attr->szlWindowExt.cx = X;
+                    pDc_Attr->szlWindowExt.cy = Y;
+
+                    IntMirrorWindowOrg(pDC);
+
+                    pDc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+
+                    if (pDc_Attr->iMapMode == MM_ISOTROPIC) IntFixIsotropicMapping(pDC);
+                    DC_UpdateXforms(pDC);
+
+                    Ret = TRUE;
+                }
+            }
+        }
+    }
+    else
+        Ret = TRUE;
+
+    DC_UnlockDc(pDC);
+    return Ret;
 }
 
 int
 APIENTRY
 IntGdiSetMapMode(PDC  dc,
-                int  MapMode)
+                 int  MapMode)
 {
-  int PrevMapMode;
-  PDC_ATTR Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    int PrevMapMode;
+    PDC_ATTR Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-  PrevMapMode = Dc_Attr->iMapMode;
+    PrevMapMode = Dc_Attr->iMapMode;
 
-  Dc_Attr->iMapMode = MapMode;
+    Dc_Attr->iMapMode = MapMode;
 
-  switch (MapMode)
-  {
-      case MM_TEXT:
-        Dc_Attr->szlWindowExt.cx = 1;
-        Dc_Attr->szlWindowExt.cy = 1;
-        Dc_Attr->szlViewportExt.cx = 1;
-        Dc_Attr->szlViewportExt.cy = 1;
-        Dc_Attr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
-                              PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP);
-        Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|PAGE_TO_DEVICE_SCALE_IDENTITY|
-                             INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
-        break;
+    switch (MapMode)
+    {
+        case MM_TEXT:
+            Dc_Attr->szlWindowExt.cx = 1;
+            Dc_Attr->szlWindowExt.cy = 1;
+            Dc_Attr->szlViewportExt.cx = 1;
+            Dc_Attr->szlViewportExt.cy = 1;
+            Dc_Attr->flXform &= ~(ISO_OR_ANISO_MAP_MODE|PTOD_EFM22_NEGATIVE|
+                                  PTOD_EFM11_NEGATIVE|POSITIVE_Y_IS_UP);
+            Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|PAGE_TO_DEVICE_SCALE_IDENTITY|
+                                 INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+            break;
 
-      case MM_ISOTROPIC:
-        Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
-        /* Fall through */
+        case MM_ISOTROPIC:
+            Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
+            /* Fall through */
 
-      case MM_LOMETRIC:
-        Dc_Attr->szlWindowExt.cx = 3600;
-        Dc_Attr->szlWindowExt.cy = 2700;
-        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
-        break;
+        case MM_LOMETRIC:
+            Dc_Attr->szlWindowExt.cx = 3600;
+            Dc_Attr->szlWindowExt.cy = 2700;
+            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            break;
 
-      case MM_HIMETRIC:
-        Dc_Attr->szlWindowExt.cx = 36000;
-        Dc_Attr->szlWindowExt.cy = 27000;
-        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
-        break;
+        case MM_HIMETRIC:
+            Dc_Attr->szlWindowExt.cx = 36000;
+            Dc_Attr->szlWindowExt.cy = 27000;
+            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            break;
 
-      case MM_LOENGLISH:
-        Dc_Attr->szlWindowExt.cx = 1417;
-        Dc_Attr->szlWindowExt.cy = 1063;
-        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
-        break;
+        case MM_LOENGLISH:
+            Dc_Attr->szlWindowExt.cx = 1417;
+            Dc_Attr->szlWindowExt.cy = 1063;
+            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            break;
 
-      case MM_HIENGLISH:
-        Dc_Attr->szlWindowExt.cx = 14173;
-        Dc_Attr->szlWindowExt.cy = 10630;
-        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
-        break;
+        case MM_HIENGLISH:
+            Dc_Attr->szlWindowExt.cx = 14173;
+            Dc_Attr->szlWindowExt.cy = 10630;
+            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            break;
 
-      case MM_TWIPS:
-        Dc_Attr->szlWindowExt.cx = 20409;
-        Dc_Attr->szlWindowExt.cy = 15307;
-        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
-        break;
+        case MM_TWIPS:
+            Dc_Attr->szlWindowExt.cx = 20409;
+            Dc_Attr->szlWindowExt.cy = 15307;
+            Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+            Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+            break;
 
-      case MM_ANISOTROPIC:
-        Dc_Attr->flXform &= ~(PAGE_TO_DEVICE_IDENTITY|POSITIVE_Y_IS_UP);
-        Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
-        break;
-      default:
-        Dc_Attr->iMapMode = PrevMapMode;
-        PrevMapMode = 0;
-  }
+        case MM_ANISOTROPIC:
+            Dc_Attr->flXform &= ~(PAGE_TO_DEVICE_IDENTITY|POSITIVE_Y_IS_UP);
+            Dc_Attr->flXform |= ISO_OR_ANISO_MAP_MODE;
+            break;
+        default:
+            Dc_Attr->iMapMode = PrevMapMode;
+            PrevMapMode = 0;
+    }
     DC_UpdateXforms(dc);
 
-  return PrevMapMode;
+    return PrevMapMode;
 }
 
 BOOL
@@ -733,246 +723,238 @@ NtGdiSetViewportExtEx(HDC  hDC,
                       int  YExtent,
                       LPSIZE  Size)
 {
-  PDC dc;
-  PDC_ATTR Dc_Attr;
+    PDC dc;
+    PDC_ATTR Dc_Attr;
 
-  dc = DC_LockDc(hDC);
-  if ( !dc )
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  switch (Dc_Attr->iMapMode)
+    dc = DC_LockDc(hDC);
+    if (!dc)
     {
-      case MM_HIENGLISH:
-      case MM_HIMETRIC:
-      case MM_LOENGLISH:
-      case MM_LOMETRIC:
-      case MM_TEXT:
-      case MM_TWIPS:
-	DC_UnlockDc(dc);
-	return FALSE;
-
-      case MM_ISOTROPIC:
-	// Here we should (probably) check that SetWindowExtEx *really* has
-	// been called
-	break;
-    }
-
-  if (Size)
-    {
-      NTSTATUS Status = STATUS_SUCCESS;
-
-      _SEH2_TRY
-      {
-         ProbeForWrite(Size,
-                       sizeof(SIZE),
-                       1);
-         Size->cx = Dc_Attr->szlViewportExt.cx;
-         Size->cy = Dc_Attr->szlViewportExt.cy;
-
-         Dc_Attr->szlViewportExt.cx = XExtent;
-         Dc_Attr->szlViewportExt.cy = YExtent;
-
-         if (Dc_Attr->iMapMode == MM_ISOTROPIC)
-             IntFixIsotropicMapping(dc);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if(!NT_SUCCESS(Status))
-      {
-        SetLastNtError(Status);
-        DC_UnlockDc(dc);
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
-      }
+    }
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    switch (Dc_Attr->iMapMode)
+    {
+        case MM_HIENGLISH:
+        case MM_HIMETRIC:
+        case MM_LOENGLISH:
+        case MM_LOMETRIC:
+        case MM_TEXT:
+        case MM_TWIPS:
+            DC_UnlockDc(dc);
+            return FALSE;
+
+        case MM_ISOTROPIC:
+            // Here we should (probably) check that SetWindowExtEx *really* has
+            // been called
+            break;
+    }
+
+    if (Size)
+    {
+        NTSTATUS Status = STATUS_SUCCESS;
+
+        _SEH2_TRY
+        {
+            ProbeForWrite(Size, sizeof(SIZE), 1);
+            Size->cx = Dc_Attr->szlViewportExt.cx;
+            Size->cy = Dc_Attr->szlViewportExt.cy;
+
+            Dc_Attr->szlViewportExt.cx = XExtent;
+            Dc_Attr->szlViewportExt.cy = YExtent;
+
+            if (Dc_Attr->iMapMode == MM_ISOTROPIC)
+                IntFixIsotropicMapping(dc);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DC_UnlockDc(dc);
+            return FALSE;
+        }
     }
 
 
-  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
+    DC_UpdateXforms(dc);
+    DC_UnlockDc(dc);
 
-  return TRUE;
+    return TRUE;
 }
 
 BOOL
 APIENTRY
 NtGdiSetViewportOrgEx(HDC  hDC,
-                     int  X,
-                     int  Y,
-                     LPPOINT  Point)
+                      int  X,
+                      int  Y,
+                      LPPOINT  Point)
 {
-  PDC dc;
-  PDC_ATTR Dc_Attr;
+    PDC dc;
+    PDC_ATTR Dc_Attr;
 
-  dc = DC_LockDc(hDC);
-  if (!dc)
+    dc = DC_LockDc(hDC);
+    if (!dc)
     {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  if (Point)
-    {
-      NTSTATUS Status = STATUS_SUCCESS;
-
-      _SEH2_TRY
-      {
-         ProbeForWrite(Point,
-                       sizeof(POINT),
-                       1);
-         Point->x = Dc_Attr->ptlViewportOrg.x;
-         Point->y = Dc_Attr->ptlViewportOrg.y;
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if(!NT_SUCCESS(Status))
-      {
-        SetLastNtError(Status);
-        DC_UnlockDc(dc);
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
-      }
+    }
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    if (Point)
+    {
+        NTSTATUS Status = STATUS_SUCCESS;
+
+        _SEH2_TRY
+        {
+            ProbeForWrite(Point, sizeof(POINT), 1);
+            Point->x = Dc_Attr->ptlViewportOrg.x;
+            Point->y = Dc_Attr->ptlViewportOrg.y;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DC_UnlockDc(dc);
+            return FALSE;
+        }
     }
 
-  Dc_Attr->ptlViewportOrg.x = X;
-  Dc_Attr->ptlViewportOrg.y = Y;
+    Dc_Attr->ptlViewportOrg.x = X;
+    Dc_Attr->ptlViewportOrg.y = Y;
 
-  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
+    DC_UpdateXforms(dc);
+    DC_UnlockDc(dc);
 
-  return TRUE;
+    return TRUE;
 }
 
 BOOL
 APIENTRY
 NtGdiSetWindowExtEx(HDC  hDC,
-                   int  XExtent,
-                   int  YExtent,
-                   LPSIZE  Size)
+                    int  XExtent,
+                    int  YExtent,
+                    LPSIZE  Size)
 {
-  PDC dc;
-  PDC_ATTR Dc_Attr;
+    PDC dc;
+    PDC_ATTR Dc_Attr;
 
-  dc = DC_LockDc(hDC);
-  if (!dc)
+    dc = DC_LockDc(hDC);
+    if (!dc)
     {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  switch (Dc_Attr->iMapMode)
-    {
-      case MM_HIENGLISH:
-      case MM_HIMETRIC:
-      case MM_LOENGLISH:
-      case MM_LOMETRIC:
-      case MM_TEXT:
-      case MM_TWIPS:
-	DC_UnlockDc(dc);
-	return FALSE;
-    }
-
-  if (Size)
-    {
-      NTSTATUS Status = STATUS_SUCCESS;
-
-      _SEH2_TRY
-      {
-         ProbeForWrite(Size,
-                       sizeof(SIZE),
-                       1);
-         Size->cx = Dc_Attr->szlWindowExt.cx;
-         Size->cy = Dc_Attr->szlWindowExt.cy;
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if(!NT_SUCCESS(Status))
-      {
-        SetLastNtError(Status);
-        DC_UnlockDc(dc);
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
-      }
+    }
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    switch (Dc_Attr->iMapMode)
+    {
+        case MM_HIENGLISH:
+        case MM_HIMETRIC:
+        case MM_LOENGLISH:
+        case MM_LOMETRIC:
+        case MM_TEXT:
+        case MM_TWIPS:
+            DC_UnlockDc(dc);
+            return FALSE;
     }
 
-  Dc_Attr->szlWindowExt.cx = XExtent;
-  Dc_Attr->szlWindowExt.cy = YExtent;
+    if (Size)
+    {
+        NTSTATUS Status = STATUS_SUCCESS;
 
-  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
+        _SEH2_TRY
+        {
+            ProbeForWrite(Size, sizeof(SIZE), 1);
+            Size->cx = Dc_Attr->szlWindowExt.cx;
+            Size->cy = Dc_Attr->szlWindowExt.cy;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
 
-  return TRUE;
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DC_UnlockDc(dc);
+            return FALSE;
+        }
+    }
+
+    Dc_Attr->szlWindowExt.cx = XExtent;
+    Dc_Attr->szlWindowExt.cy = YExtent;
+
+    DC_UpdateXforms(dc);
+    DC_UnlockDc(dc);
+
+    return TRUE;
 }
 
 BOOL
 APIENTRY
 NtGdiSetWindowOrgEx(HDC  hDC,
-                   int  X,
-                   int  Y,
-                   LPPOINT  Point)
+                    int  X,
+                    int  Y,
+                    LPPOINT  Point)
 {
-  PDC dc;
-  PDC_ATTR Dc_Attr;
+    PDC dc;
+    PDC_ATTR Dc_Attr;
 
-  dc = DC_LockDc(hDC);
-  if (!dc)
+    dc = DC_LockDc(hDC);
+    if (!dc)
     {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  if (Point)
-    {
-      NTSTATUS Status = STATUS_SUCCESS;
-
-      _SEH2_TRY
-      {
-         ProbeForWrite(Point,
-                       sizeof(POINT),
-                       1);
-         Point->x = Dc_Attr->ptlWindowOrg.x;
-         Point->y = Dc_Attr->ptlWindowOrg.y;
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if(!NT_SUCCESS(Status))
-      {
-        SetLastNtError(Status);
-        DC_UnlockDc(dc);
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
-      }
+    }
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+    if (Point)
+    {
+        NTSTATUS Status = STATUS_SUCCESS;
+
+        _SEH2_TRY
+        {
+            ProbeForWrite(Point, sizeof(POINT), 1);
+            Point->x = Dc_Attr->ptlWindowOrg.x;
+            Point->y = Dc_Attr->ptlWindowOrg.y;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            DC_UnlockDc(dc);
+            return FALSE;
+        }
     }
 
-  Dc_Attr->ptlWindowOrg.x = X;
-  Dc_Attr->ptlWindowOrg.y = Y;
+    Dc_Attr->ptlWindowOrg.x = X;
+    Dc_Attr->ptlWindowOrg.y = Y;
 
-  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
+    DC_UpdateXforms(dc);
+    DC_UnlockDc(dc);
 
-  return TRUE;
+    return TRUE;
 }
 
 //
@@ -982,32 +964,32 @@ VOID
 FASTCALL
 IntMirrorWindowOrg(PDC dc)
 {
-  PDC_ATTR Dc_Attr;
-  LONG X;
-  
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    PDC_ATTR Dc_Attr;
+    LONG X;
 
-  if (!(Dc_Attr->dwLayout & LAYOUT_RTL))
-  {
-     Dc_Attr->ptlWindowOrg.x = Dc_Attr->lWindowOrgx; // Flip it back.
-     return;
-  }
-  if (!Dc_Attr->szlViewportExt.cx) return;
-  // 
-  // WOrgx = wox - (Width - 1) * WExtx / VExtx
-  //
-  X = (dc->erclWindow.right - dc->erclWindow.left) - 1; // Get device width - 1
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-  X = ( X * Dc_Attr->szlWindowExt.cx) / Dc_Attr->szlViewportExt.cx;
+    if (!(Dc_Attr->dwLayout & LAYOUT_RTL))
+    {
+        Dc_Attr->ptlWindowOrg.x = Dc_Attr->lWindowOrgx; // Flip it back.
+        return;
+    }
+    if (!Dc_Attr->szlViewportExt.cx) return;
+    //
+    // WOrgx = wox - (Width - 1) * WExtx / VExtx
+    //
+    X = (dc->erclWindow.right - dc->erclWindow.left) - 1; // Get device width - 1
 
-  Dc_Attr->ptlWindowOrg.x = Dc_Attr->lWindowOrgx - X; // Now set the inverted win origion.
+    X = (X * Dc_Attr->szlWindowExt.cx) / Dc_Attr->szlViewportExt.cx;
 
-  return;
+    Dc_Attr->ptlWindowOrg.x = Dc_Attr->lWindowOrgx - X; // Now set the inverted win origion.
+
+    return;
 }
 
 // NtGdiSetLayout
-// 
+//
 // The default is left to right. This function changes it to right to left, which
 // is the standard in Arabic and Hebrew cultures.
 //
@@ -1021,50 +1003,55 @@ NtGdiSetLayout(
     IN LONG wox,
     IN DWORD dwLayout)
 {
-  PDC dc;
-  PDC_ATTR Dc_Attr;
-  DWORD oLayout;
+    PDC dc;
+    PDC_ATTR Dc_Attr;
+    DWORD oLayout;
 
-  dc = DC_LockDc(hdc);
-  if (!dc)
-  {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return GDI_ERROR;
-  }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    dc = DC_LockDc(hdc);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return GDI_ERROR;
+    }
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-  Dc_Attr->dwLayout = dwLayout;
-  oLayout = Dc_Attr->dwLayout;
+    Dc_Attr->dwLayout = dwLayout;
+    oLayout = Dc_Attr->dwLayout;
 
-  if (!(dwLayout & LAYOUT_ORIENTATIONMASK))
-  {
-     DC_UnlockDc(dc);
-     return oLayout;
-  }
+    if (!(dwLayout & LAYOUT_ORIENTATIONMASK))
+    {
+        DC_UnlockDc(dc);
+        return oLayout;
+    }
 
-  if (dwLayout & LAYOUT_RTL) Dc_Attr->iMapMode = MM_ANISOTROPIC;
+    if (dwLayout & LAYOUT_RTL)
+    {
+        Dc_Attr->iMapMode = MM_ANISOTROPIC;
+    }
 
-  Dc_Attr->szlWindowExt.cy = -Dc_Attr->szlWindowExt.cy;
-  Dc_Attr->ptlWindowOrg.x  = -Dc_Attr->ptlWindowOrg.x;
+    Dc_Attr->szlWindowExt.cy = -Dc_Attr->szlWindowExt.cy;
+    Dc_Attr->ptlWindowOrg.x  = -Dc_Attr->ptlWindowOrg.x;
 
-  if (wox == -1)
-     IntMirrorWindowOrg(dc);
-  else
-     Dc_Attr->ptlWindowOrg.x = wox - Dc_Attr->ptlWindowOrg.x;
+    if (wox == -1)
+        IntMirrorWindowOrg(dc);
+    else
+        Dc_Attr->ptlWindowOrg.x = wox - Dc_Attr->ptlWindowOrg.x;
 
-  if (!(Dc_Attr->flTextAlign & TA_CENTER)) Dc_Attr->flTextAlign |= TA_RIGHT;
+    if (!(Dc_Attr->flTextAlign & TA_CENTER)) Dc_Attr->flTextAlign |= TA_RIGHT;
 
-  if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
-      dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
-  else
-      dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
+    if (dc->DcLevel.flPath & DCPATH_CLOCKWISE)
+        dc->DcLevel.flPath &= ~DCPATH_CLOCKWISE;
+    else
+        dc->DcLevel.flPath |= DCPATH_CLOCKWISE;
 
-  Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+    Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED |
+                         INVALIDATE_ATTRIBUTES |
+                         DEVICE_TO_WORLD_INVALID);
 
 //  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
-  return oLayout;
+    DC_UnlockDc(dc);
+    return oLayout;
 }
 
 /*
@@ -1075,17 +1062,17 @@ APIENTRY
 NtGdiGetDeviceWidth(
     IN HDC hdc)
 {
-  PDC dc;
-  LONG Ret;
-  dc = DC_LockDc(hdc);
-  if (!dc)
-  {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return 0;
-  }
-  Ret = dc->erclWindow.right - dc->erclWindow.left;
-  DC_UnlockDc(dc);
-  return Ret;
+    PDC dc;
+    LONG Ret;
+    dc = DC_LockDc(hdc);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+    Ret = dc->erclWindow.right - dc->erclWindow.left;
+    DC_UnlockDc(dc);
+    return Ret;
 }
 
 /*
@@ -1096,16 +1083,16 @@ APIENTRY
 NtGdiMirrorWindowOrg(
     IN HDC hdc)
 {
-  PDC dc;
-  dc = DC_LockDc(hdc);
-  if (!dc)
-  {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return FALSE;
-  }
-  IntMirrorWindowOrg(dc);
-  DC_UnlockDc(dc);
-  return TRUE;
+    PDC dc;
+    dc = DC_LockDc(hdc);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    IntMirrorWindowOrg(dc);
+    DC_UnlockDc(dc);
+    return TRUE;
 }
 
 /*
@@ -1121,19 +1108,21 @@ NtGdiSetSizeDevice(
     PDC dc;
     PDC_ATTR pDc_Attr;
 
-    if (!cxVirtualDevice ||
-        !cyVirtualDevice  ) return FALSE;
+    if (!cxVirtualDevice || !cyVirtualDevice)
+    {
+        return FALSE;
+    }
 
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
-    
+
     pDc_Attr = dc->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+    if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
 
     pDc_Attr->szlVirtualDeviceSize.cx = cxVirtualDevice;
     pDc_Attr->szlVirtualDeviceSize.cy = cyVirtualDevice;
 
-//    DC_UpdateXforms(dc);    
+//    DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
 
     return TRUE;
@@ -1158,16 +1147,16 @@ NtGdiSetVirtualResolution(
 
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
-    
+
     pDc_Attr = dc->pDc_Attr;
-    if(!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
+    if (!pDc_Attr) pDc_Attr = &dc->Dc_Attr;
 
     pDc_Attr->szlVirtualDevicePixel.cx = cxVirtualDevicePixel;
     pDc_Attr->szlVirtualDevicePixel.cy = cyVirtualDevicePixel;
     pDc_Attr->szlVirtualDeviceMm.cx = cxVirtualDeviceMm;
     pDc_Attr->szlVirtualDeviceMm.cy = cyVirtualDeviceMm;
 
-//    DC_UpdateXforms(dc);    
+//    DC_UpdateXforms(dc);
     DC_UnlockDc(dc);
     return TRUE;
 }
