@@ -384,6 +384,7 @@ Ki386InitializeTss(IN PKTSS64 Tss,
     TssEntry->Bits.LongMode = 0;
     TssEntry->Bits.DefaultBig = 0;
     TssEntry->Bits.Granularity = 0;
+    TssEntry->MustBeZero = 0;
 
     /* Descriptor base is the TSS address */
     TssEntry->BaseLow = (ULONG64)Tss & 0xffff;
@@ -395,8 +396,11 @@ Ki386InitializeTss(IN PKTSS64 Tss,
     TssEntry->LimitLow = sizeof(KTSS64) -1;
     TssEntry->Bits.LimitHigh = 0;
 
+    /* Zero out the TSS */
+    RtlZeroMemory(Tss, sizeof(KTSS));
+
     /* FIXME: I/O Map? */
-    Tss->IoMapBase = 0;
+    Tss->IoMapBase = 0x68;
 
     /* Setup ring 0 stack pointer */
     Tss->Rsp0 = Stack;
