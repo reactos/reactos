@@ -17,6 +17,8 @@
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <tchar.h>
+
+#define NDEBUG
 #include <debug.h>
 
 #include "shimgvw.h"
