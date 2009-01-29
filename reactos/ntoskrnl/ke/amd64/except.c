@@ -17,6 +17,7 @@
 
 KIDT_INIT KiInterruptInitTable[] =
 {
+  /* Id,   Dpl,  IST,  ServiceRoutine */
     {0x00, 0x00, 0x00, KiDivideErrorFault},
     {0x01, 0x00, 0x00, KiDebugTrapOrFault},
     {0x02, 0x00, 0x03, KiNmiInterrupt},
@@ -119,7 +120,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         case STATUS_BREAKPOINT:
 
             /* Decrement RIP by one */
-            // FIXME: that doesn't work, why?
             Context.Rip--;
             break;
 
