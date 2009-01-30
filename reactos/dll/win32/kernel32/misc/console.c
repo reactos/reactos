@@ -2893,14 +2893,18 @@ GetConsoleCursorInfo(HANDLE hConsoleOutput,
 
     if (!lpConsoleCursorInfo)
     {
-        SetLastError(ERROR_INVALID_ACCESS);
+        if (!hConsoleOutput)
+            SetLastError(ERROR_INVALID_HANDLE);
+        else
+            SetLastError(ERROR_INVALID_ACCESS);
+
         return FALSE;
     }
 
     CsrRequest = MAKE_CSR_API(GET_CURSOR_INFO, CSR_CONSOLE);
     Request.Data.GetCursorInfoRequest.ConsoleHandle = hConsoleOutput;
 
-    Status = CsrClientCallServer( &Request, NULL, CsrRequest, sizeof( CSR_API_MESSAGE ) );
+    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
