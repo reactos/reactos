@@ -362,6 +362,13 @@ StartDirectDrawHel(LPDIRECTDRAW iface, BOOL reenable)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
+    if (This->lpLcl->lpGbl->lpDDCBtmp == NULL)
+    {
+        DxHeapMemAlloc(This->lpLcl->lpGbl->lpDDCBtmp, sizeof(DDHAL_CALLBACKS));
+        if (!This->lpLcl->lpGbl->lpDDCBtmp)
+            return DDERR_OUTOFMEMORY;
+    }
+
     This->lpLcl->lpGbl->lpDDCBtmp->HELDD.CanCreateSurface     = HelDdCanCreateSurface;
     This->lpLcl->lpGbl->lpDDCBtmp->HELDD.CreateSurface        = HelDdCreateSurface;
     This->lpLcl->lpGbl->lpDDCBtmp->HELDD.CreatePalette        = HelDdCreatePalette;
