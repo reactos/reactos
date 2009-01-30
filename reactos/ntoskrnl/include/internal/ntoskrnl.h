@@ -42,6 +42,24 @@
 #define InterlockedOr                _InterlockedOr
 #define InterlockedAnd               _InterlockedAnd
 
+//
+// Use inlined versions of fast/guarded mutex routines
+//
+#define ExEnterCriticalRegionAndAcquireFastMutexUnsafe _ExEnterCriticalRegionAndAcquireFastMutexUnsafe
+#define ExReleaseFastMutexUnsafeAndLeaveCriticalRegion _ExReleaseFastMutexUnsafeAndLeaveCriticalRegion
+#define ExAcquireFastMutex _ExAcquireFastMutex
+#define ExReleaseFastMutex _ExReleaseFastMutex
+#define ExAcquireFastMutexUnsafe _ExAcquireFastMutexUnsafe
+#define ExReleaseFastMutexUnsafe _ExReleaseFastMutexUnsafe
+#define ExTryToAcquireFastMutex _ExTryToAcquireFastMutex
+
+#define KeInitializeGuardedMutex _KeInitializeGuardedMutex
+#define KeAcquireGuardedMutex _KeAcquireGuardedMutex
+#define KeReleaseGuardedMutex _KeReleaseGuardedMutex
+#define KeAcquireGuardedMutexUnsafe _KeAcquireGuardedMutexUnsafe
+#define KeReleaseGuardedMutexUnsafe _KeReleaseGuardedMutexUnsafe
+#define KeTryToAcquireGuardedMutex _KeTryToAcquireGuardedMutex
+
 #include "ke.h"
 #include "ob.h"
 #include "mm.h"
