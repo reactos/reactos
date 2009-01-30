@@ -781,13 +781,10 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
     sy_max = DesSizeY;
     sy = SourceRect->top;
 
-    switch(SourceSurf->iBitmapFormat)
+    if (SourceSurf->iBitmapFormat != BMF_16BPP)
     {
-
-      case BMF_1BPP:
         /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
         /* This is a reference implementation, it hasn't been optimized for speed */
-
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
        {
             sx = SourceRect->left;
@@ -796,7 +793,8 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
             {
                 color = XLATEOBJ_iXlate(ColorTranslation,
-                                        DIB_1BPP_GetPixel(SourceSurf, sx, sy));
+                             DibFunctionsForBitmapFormat[SourceSurf->iBitmapFormat].
+                             DIB_GetPixel(SourceSurf, sx, sy));
 
                 DIB_16BPP_PutPixel(DestSurf, DesX, DesY, color);
 
@@ -817,162 +815,13 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                 sy_dec -= sy_max;
             }
        }
-       break;
-
-      case BMF_4BPP:
-        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-        /* This is a reference implementation, it hasn't been optimized for speed */
-
-        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-        {
-            sx = SourceRect->left;
-            sx_dec = 0;
-
-            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {
-                  color = XLATEOBJ_iXlate(ColorTranslation,
-                                          DIB_4BPP_GetPixel(SourceSurf, sx, sy));
-
-                  DIB_16BPP_PutPixel(DestSurf, DesX, DesY, color);
-
-                  sx += SrcZoomXHight;
-                  sx_dec += SrcZoomXLow;
-                  if (sx_dec >= sx_max)
-                  {
-                        sx++;
-                        sx_dec -= sx_max;
-                  }
-            }
-
-            sy += SrcZoomYHight;
-            sy_dec += SrcZoomYLow;
-            if (sy_dec >= sy_max)
-            {
-                sy++;
-                sy_dec -= sy_max;
-            }
-       }
-       break;
-
-      case BMF_8BPP:
-        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-        /* This is a reference implementation, it hasn't been optimized for speed */
-
-        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-        {
-            sx = SourceRect->left;
-            sx_dec = 0;
-
-            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {
-                   color = XLATEOBJ_iXlate(ColorTranslation,
-                                           DIB_8BPP_GetPixel(SourceSurf, sx, sy));
-
-                   DIB_16BPP_PutPixel(DestSurf, DesX, DesY, color);
-
-                   sx += SrcZoomXHight;
-                   sx_dec += SrcZoomXLow;
-                   if (sx_dec >= sx_max)
-                   {
-                        sx++;
-                        sx_dec -= sx_max;
-                   }
-            }
-
-            sy += SrcZoomYHight;
-            sy_dec += SrcZoomYLow;
-            if (sy_dec >= sy_max)
-            {
-                sy++;
-                sy_dec -= sy_max;
-            }
-       }
-       break;
-
-
-      case BMF_24BPP:
-        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-        /* This is a reference implementation, it hasn't been optimized for speed */
-
-        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-        {
-            sx = SourceRect->left;
-            sx_dec = 0;
-
-            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {
-                color = XLATEOBJ_iXlate(ColorTranslation,
-                                        DIB_24BPP_GetPixel(SourceSurf, sx, sy));
-
-                DIB_16BPP_PutPixel(DestSurf, DesX, DesY, color);
-
-                sx += SrcZoomXHight;
-                sx_dec += SrcZoomXLow;
-                if (sx_dec >= sx_max)
-                {
-                    sx++;
-                    sx_dec -= sx_max;
-                }
-            }
-
-            sy += SrcZoomYHight;
-            sy_dec += SrcZoomYLow;
-            if (sy_dec >= sy_max)
-            {
-                sy++;
-                sy_dec -= sy_max;
-            }
-       }
-       break;
-
-      case BMF_32BPP:
-        /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-        /* This is a reference implementation, it hasn't been optimized for speed */
-
-        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-        {
-            sx = SourceRect->left;
-            sx_dec = 0;
-
-            for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {
-                color = XLATEOBJ_iXlate(ColorTranslation,
-                                        DIB_32BPP_GetPixel(SourceSurf, sx, sy));
-
-                DIB_16BPP_PutPixel(DestSurf, DesX, DesY, color);
-
-                sx += SrcZoomXHight;
-                sx_dec += SrcZoomXLow;
-                if (sx_dec >= sx_max)
-                {
-                    sx++;
-                    sx_dec -= sx_max;
-                }
-            }
-
-            sy += SrcZoomYHight;
-            sy_dec += SrcZoomYLow;
-            if (sy_dec >= sy_max)
-            {
-                sy++;
-                sy_dec -= sy_max;
-            }
-        }
-        break;
-
-      case BMF_16BPP:
+    }
+    else
+    {
         return ScaleRectAvg16(DestSurf, SourceSurf, DestRect, SourceRect, MaskOrigin, BrushOrigin,
                               ClipRegion, ColorTranslation, Mode);
-      break;
-
-      default:
-         DPRINT1("DIB_16BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
-      return FALSE;
     }
-
-
-
-  return TRUE;
+    return TRUE;
 }
 
 BOOLEAN
