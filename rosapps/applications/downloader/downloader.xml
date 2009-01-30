@@ -81,20 +81,20 @@
 			<regname>OpenOffice.org 2.4</regname>
 			<version>2.4.0</version>
 			<description>THE Open Source Office Suite.</description>
-			<location>http://ftp.tu-chemnitz.de/pub/openoffice-extended/stable/2.4.0/OOo_2.4.0_Win32Intel_install_en-US.exe</location>
+			<location>http://ftp.tu-chemnitz.de/pub/openoffice/stable/3.0.1/OOo_3.0.1_Win32Intel_install_en-US.exe</location>
 		</application>
 	</category>
 	<category name="Graphics" icon="3">
 		<application name="IrfanView">
 			<regname>IrfanView (remove only)</regname>
-			<version>4.10</version>
+			<version>4.23</version>
 			<description>Viewer for all kinds of graphics/audio files/video files.</description>
-			<location>http://gd.tuwien.ac.at/graphics/irfanview/iview410_setup.exe</location>
+			<location>http://irfanview.tuwien.ac.at/iview423_setup.exe</location>
 		</application>
 		<application name="IrfanView Plugins">
-			<version>4.10</version>
+			<version>4.22</version>
 			<description>Additional Plugins for supporting more file types.</description>
-			<location>http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_410_setup.exe</location>
+			<location>http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_422_setup.exe</location>
 		</application>
 		<application name="TuxPaint">
 			<regname>Tux Paint 0.9.19</regname>
@@ -254,8 +254,8 @@
 		<application name="uTorrent">
 			<regname>&#181;Torrent</regname>
 			<version>1.8</version>
-			<description>Small and fast BitTorrent Client.</description>
-			<location>http://download.utorrent.com/1.8/utorrent.exe</location>
+			<description>Small and fast BitTorrent Client</description>
+			<location>http://download.utorrent.com/1.8.2/utorrent-1.8.2.upx.exe</location>
 		</application>
 		<application name="Audio Grabber">
 			<regname>Audiograbber 1.83 SE</regname>
