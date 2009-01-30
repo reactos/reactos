@@ -124,6 +124,7 @@ dll\cpl\mmsys\mmsys.cpl                             1
 dll\cpl\ncpa\ncpa.cpl                               1
 dll\cpl\powercfg\powercfg.cpl                       1
 dll\cpl\sysdm\sysdm.cpl                             1
+;dll\cpl\telephon\telephon.cpl                      1
 dll\cpl\timedate\timedate.cpl                       1
 dll\cpl\input\input.dll                             1
 dll\cpl\joy\joy.cpl                                 1
@@ -230,6 +231,7 @@ dll\ntdll\ntdll.dll                                 1
 
 dll\win32\acledit\acledit.dll                       1
 dll\win32\aclui\aclui.dll                           1
+dll\win32\activeds\activeds.dll                     1
 dll\win32\advapi32\advapi32.dll                     1
 dll\win32\advpack\advpack.dll                       1
 dll\win32\atl\atl.dll                               1

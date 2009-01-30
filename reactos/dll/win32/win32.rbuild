@@ -7,6 +7,9 @@
 <directory name="aclui">
 	<xi:include href="aclui/aclui.rbuild" />
 </directory>
+<directory name="activeds">
+	<xi:include href="activeds/activeds.rbuild" />
+</directory>
 <directory name="advapi32">
 	<xi:include href="advapi32/advapi32.rbuild" />
 </directory>

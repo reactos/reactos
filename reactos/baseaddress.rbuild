@@ -192,6 +192,7 @@
   <property name="BASEADDRESS_VERSION" value="0x77a40000" />
   <property name="BASEADDRESS_OLE32" value="0x77a50000" />
   <property name="BASEADDRESS_OLEPRO32" value="0x77b10000" />
+  <property name="BASEADDRESS_ACTIVEDS" value="0x77cb0000" />
   <property name="BASEADDRESS_ADVAPI32" value="0x77dc0000" />
   <property name="BASEADDRESS_USER32" value="0x77e30000" />
   <property name="BASEADDRESS_GDI32" value="0x77f70000" />
