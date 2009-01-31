@@ -58,6 +58,35 @@ static const char* WSEQ = " =\t\r\n";
 
 string working_directory;
 
+std::vector<char> vectorize(const std::string &str)
+{
+    std::vector<char> result( str.size() + 1 );
+    strcpy( &result[0], str.c_str() );
+    return result;
+}
+
+void vectappend(std::vector<char> &strvec, const char *str)
+{
+    if (*str) { strvec[strlen(&strvec[0])] = *str; str++; }
+    while (*str)
+    {
+    	strvec.push_back(*str);
+	str++;
+    }
+    strvec.push_back(0);
+}
+
+void vectappend(std::vector<char> &strvec, const std::string &str)
+{
+    vectappend(strvec, str.c_str());
+}
+
+void vectappend(std::vector<char> &strvec, char ch)
+{
+    strvec[strlen(&strvec[0])] = ch;
+    strvec.push_back(0);
+}
+
 XMLException::XMLException (
 	const std::string& location,
 	const char* format, ... )
@@ -158,7 +187,7 @@ Path::Fixup ( const string& file, bool include_filename ) const
 		return file;
 	}
 	vector<string> pathtmp ( path );
-	string tmp ( file );
+	vector<char> tmp = vectorize( file );
 	const char* prev = strtok ( &tmp[0], "/\\" );
 	const char* p = strtok ( NULL, "/\\" );
 	while ( p )
@@ -184,18 +213,18 @@ Path::Fixup ( const string& file, bool include_filename ) const
 		pathtmp.push_back ( prev );
 
 	// reuse tmp variable to return recombined path
-	tmp.resize(0);
+	tmp = vectorize("");
 	for ( size_t i = 0; i < pathtmp.size(); i++ )
 	{
 		// this squirreliness is b/c win32 has drive letters and *nix doesn't...
 #ifdef WIN32
-		if ( i ) tmp += "/";
+		if ( i ) vectappend(tmp, "/");
 #else
-		tmp += "/";
+		vectappend(tmp, "/");
 #endif
-		tmp += pathtmp[i];
+		vectappend(tmp, pathtmp[i]);
 	}
-	return tmp;
+	return &tmp[0];
 }
 
 string
