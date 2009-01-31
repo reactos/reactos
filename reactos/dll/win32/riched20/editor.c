@@ -4191,7 +4191,9 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_SendRequestResize(editor, TRUE);
     return 0;
   case WM_SETREDRAW:
-    goto do_default;
+    if (wParam)
+      ME_RewrapRepaint(editor);
+    return 0;
   case WM_SIZE:
   {
     RECT clientRect;
