@@ -455,6 +455,10 @@ static void test_domdoc( void )
     ok( b == VARIANT_FALSE, "failed to load XML string\n");
     SysFreeString( str );
 
+    r = IXMLDOMDocument_get_async( doc, &b );
+    ok( r == S_OK, "get_async failed (%08x)\n", r);
+    ok( b == VARIANT_TRUE, "Wrong default value\n");
+
     /* check that there's no document element */
     element = NULL;
     r = IXMLDOMDocument_get_documentElement( doc, &element );

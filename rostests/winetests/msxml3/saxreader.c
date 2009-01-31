@@ -546,7 +546,7 @@ static void test_saxreader(void)
     CreateStreamOnHGlobal(NULL, TRUE, &iStream);
     liSize.QuadPart = strlen(szTestXML);
     IStream_SetSize(iStream, liSize);
-    IStream_Write(iStream, (void const*)szTestXML, strlen(szTestXML), &bytesWritten);
+    IStream_Write(iStream, szTestXML, strlen(szTestXML), &bytesWritten);
     liPos.QuadPart = 0;
     IStream_Seek(iStream, liPos, STREAM_SEEK_SET, NULL);
     V_VT(&var) = VT_UNKNOWN|VT_DISPATCH;
