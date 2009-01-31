@@ -37,6 +37,7 @@ base\applications\cmdutils\dbgprint\dbgprint.exe        1
 base\applications\cmdutils\doskey\doskey.exe            1
 base\applications\cmdutils\find\find.exe                1
 base\applications\cmdutils\hostname\hostname.exe        1
+base\applications\cmdutils\lodctr\lodctr.exe            1
 base\applications\cmdutils\more\more.exe                1
 base\applications\cmdutils\xcopy\xcopy.exe              1
 base\applications\control\control.exe                   1
@@ -278,6 +279,7 @@ dll\win32\iphlpapi\iphlpapi.dll                     1
 dll\win32\itss\itss.dll                             1
 dll\win32\jscript\jscript.dll                       1
 dll\win32\kernel32\kernel32.dll                     1
+dll\win32\loadperf\loadperf.dll                     1
 dll\win32\localui\localui.dll                       1
 dll\win32\lsasrv\lsasrv.dll                         1
 dll\win32\lz32\lz32.dll                             1
