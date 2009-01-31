@@ -48,9 +48,9 @@
 		<application name="mIRC">
 			<regname>mIRC</regname>
 			<licence>Shareware</licence>
-			<version>6.33</version>
-			<description>The most popular client for the Internet Relay Chat (IRC).</description>
-			<location>http://mirc.bigchief.dk/mirc633.exe</location>
+			<version>6.35</version>
+			<description>The most popular client for the Internet Relay Chat (IRC)</description>
+			<location>http://mirc.bigchief.dk/mirc635.exe</location>
 		</application>
 		<application name="Samba TNG">
 			<description>This tool allows you to access your Windows shared folders/printers with ReactOS.</description>
