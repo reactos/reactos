@@ -24,6 +24,8 @@ import "objidl.idl";
 
 interface IOleInPlaceActiveObject;
 
+cpp_quote("#include <winuser.h>")
+
 /*****************************************************************************
  * IOleTypes interface
  */
