@@ -497,8 +497,8 @@ DWORD RCloseServiceHandle(
                    it is now safe to delete the service */
 
                 /* Delete the Service Key */
-                dwError = RegDeleteKey(hServicesKey,
-                                       lpService->lpServiceName);
+                dwError = RegDeleteKeyW(hServicesKey,
+                                        lpService->lpServiceName);
 
                 RegCloseKey(hServicesKey);
 

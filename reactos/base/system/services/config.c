@@ -108,9 +108,9 @@ ScmWriteDependencies(HKEY hServiceKey,
 
     if (*lpDependencies == 0)
     {
-        RegDeleteValue(hServiceKey,
+        RegDeleteValueW(hServiceKey,
                        L"DependOnService");
-        RegDeleteValue(hServiceKey,
+        RegDeleteValueW(hServiceKey,
                        L"DependOnGroup");
     }
     else
