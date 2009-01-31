@@ -595,7 +595,7 @@ static HRESULT WINAPI domcomment_appendData(
     if(p == NULL || SysStringLen(p) == 0)
         return S_OK;
 
-    pContent = xmlChar_from_wchar( (WCHAR*)p );
+    pContent = xmlChar_from_wchar( p );
     if(pContent)
     {
         /* Older versions of libxml < 2.6.27 didn't correctly support
@@ -675,7 +675,7 @@ static HRESULT WINAPI domcomment_insertData(
 
             sNewString[nLengthP + nLength] = 0;
 
-            str = xmlChar_from_wchar((WCHAR*)sNewString);
+            str = xmlChar_from_wchar(sNewString);
             if(str)
             {
                 xmlNodeSetContent(pDOMNode->node, str);

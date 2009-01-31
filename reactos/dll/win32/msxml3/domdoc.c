@@ -357,8 +357,26 @@ static HRESULT WINAPI xmldoc_IPersistStream_Load(
 static HRESULT WINAPI xmldoc_IPersistStream_Save(
     IPersistStream *iface, LPSTREAM pStm, BOOL fClearDirty)
 {
-    FIXME("(%p, %p, %d): stub!\n", iface, pStm, fClearDirty);
-    return E_NOTIMPL;
+    domdoc *This = impl_from_IPersistStream(iface);
+    HRESULT hr;
+    BSTR xmlString;
+
+    TRACE("(%p, %p, %d)\n", iface, pStm, fClearDirty);
+
+    hr = IXMLDOMNode_get_xml( This->node, &xmlString );
+    if(hr == S_OK)
+    {
+        DWORD count;
+        DWORD len = strlenW(xmlString) * sizeof(WCHAR);
+
+        hr = IStream_Write( pStm, xmlString, len, &count );
+
+        SysFreeString(xmlString);
+    }
+
+    TRACE("ret 0x%08x\n", hr);
+
+    return hr;
 }
 
 static HRESULT WINAPI xmldoc_IPersistStream_GetSizeMax(
@@ -441,11 +459,11 @@ static HRESULT WINAPI domdoc_QueryInterface( IXMLDOMDocument2 *iface, REFIID rii
     }
     else if (IsEqualGUID(&IID_IPersistStream, riid))
     {
-        *ppvObject = (IPersistStream*)&(This->lpvtblIPersistStream);
+        *ppvObject = &(This->lpvtblIPersistStream);
     }
     else if (IsEqualGUID(&IID_IObjectWithSite, riid))
     {
-        *ppvObject = (IObjectWithSite*)&(This->lpvtblIObjectWithSite);
+        *ppvObject = &(This->lpvtblIObjectWithSite);
     }
     else if( IsEqualGUID( riid, &IID_ISupportErrorInfo ))
     {
@@ -1023,7 +1041,7 @@ static HRESULT WINAPI domdoc_createElement(
 
     TRACE("%p->(%s,%p)\n", iface, debugstr_w(tagname), element);
 
-    xml_name = xmlChar_from_wchar((WCHAR*)tagname);
+    xml_name = xmlChar_from_wchar(tagname);
     xmlnode = xmlNewDocNode(get_doc(This), NULL, xml_name, NULL);
     xmldoc_add_orphan(xmlnode->doc, xmlnode);
 
@@ -1080,7 +1098,7 @@ static HRESULT WINAPI domdoc_createTextNode(
 
     *text = NULL;
 
-    xml_content = xmlChar_from_wchar((WCHAR*)data);
+    xml_content = xmlChar_from_wchar(data);
     xmlnode = xmlNewText(xml_content);
     HeapFree(GetProcessHeap(), 0, xml_content);
 
@@ -1112,7 +1130,7 @@ static HRESULT WINAPI domdoc_createComment(
 
     *comment = NULL;
 
-    xml_content = xmlChar_from_wchar((WCHAR*)data);
+    xml_content = xmlChar_from_wchar(data);
     xmlnode = xmlNewComment(xml_content);
     HeapFree(GetProcessHeap(), 0, xml_content);
 
@@ -1144,7 +1162,7 @@ static HRESULT WINAPI domdoc_createCDATASection(
 
     *cdata = NULL;
 
-    xml_content = xmlChar_from_wchar((WCHAR*)data);
+    xml_content = xmlChar_from_wchar(data);
     xmlnode = xmlNewCDataBlock(get_doc( This ), xml_content, strlen( (char*)xml_content) );
     HeapFree(GetProcessHeap(), 0, xml_content);
 
@@ -1179,8 +1197,8 @@ static HRESULT WINAPI domdoc_createProcessingInstruction(
     if(!target || lstrlenW(target) == 0)
         return E_FAIL;
 
-    xml_target = xmlChar_from_wchar((WCHAR*)target);
-    xml_content = xmlChar_from_wchar((WCHAR*)data);
+    xml_target = xmlChar_from_wchar(target);
+    xml_content = xmlChar_from_wchar(data);
 
     xmlnode = xmlNewDocPI(get_doc(This), xml_target, xml_content);
     xmldoc_add_orphan(xmlnode->doc, xmlnode);
@@ -1214,7 +1232,7 @@ static HRESULT WINAPI domdoc_createAttribute(
 
     *attribute = NULL;
 
-    xml_name = xmlChar_from_wchar((WCHAR*)name);
+    xml_name = xmlChar_from_wchar(name);
     xmlnode = (xmlNode *)xmlNewProp(NULL, xml_name, NULL);
     HeapFree(GetProcessHeap(), 0, xml_name);
 
@@ -1246,7 +1264,7 @@ static HRESULT WINAPI domdoc_createEntityReference(
 
     *entityRef = NULL;
 
-    xml_name = xmlChar_from_wchar((WCHAR*)name);
+    xml_name = xmlChar_from_wchar(name);
     xmlnode = xmlNewReference(get_doc( This ), xml_name );
     HeapFree(GetProcessHeap(), 0, xml_name);
 
@@ -1312,13 +1330,16 @@ static HRESULT WINAPI domdoc_createNode(
 
     TRACE("(%p)->(type,%s,%s,%p)\n", This, debugstr_w(name), debugstr_w(namespaceURI), node);
 
+    if(namespaceURI && namespaceURI[0])
+        FIXME("nodes with namespaces currently not supported.\n");
+
     hr = get_node_type(Type, &node_type);
     if(FAILED(hr))
         return hr;
 
     TRACE("node_type %d\n", node_type);
 
-    xml_name = xmlChar_from_wchar((WCHAR*)name);
+    xml_name = xmlChar_from_wchar(name);
 
     switch(node_type)
     {
@@ -2189,7 +2210,7 @@ HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **docu
     doc->lpvtblIObjectSafety = &domdocObjectSafetyVtbl;
     doc->lpvtblISupportErrorInfo = &support_error_vtbl;
     doc->ref = 1;
-    doc->async = 0;
+    doc->async = VARIANT_TRUE;
     doc->validating = 0;
     doc->resolving = 0;
     doc->preserving = 0;
@@ -2258,7 +2279,7 @@ IUnknown* create_domdoc( xmlNodePtr document )
     if (FAILED(hr))
         return NULL;
 
-    return (IUnknown*)pObj;
+    return pObj;
 }
 
 #else

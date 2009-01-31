@@ -345,7 +345,7 @@ static HRESULT WINAPI xmlnode_put_nodeValue(
     case XML_PI_NODE:
     case XML_TEXT_NODE:
       {
-        str = xmlChar_from_wchar((WCHAR*)V_BSTR(&string_value));
+        str = xmlChar_from_wchar(V_BSTR(&string_value));
         xmlNodeSetContent(This->node, str);
         HeapFree(GetProcessHeap(),0,str);
         hr = S_OK;
@@ -904,7 +904,7 @@ static HRESULT WINAPI xmlnode_put_text(
         break;
     }
 
-    str = xmlChar_from_wchar((WCHAR*)text);
+    str = xmlChar_from_wchar(text);
 
     /* Escape the string. */
     str2 = xmlEncodeEntitiesReentrant(This->node->doc, str);
@@ -1060,7 +1060,7 @@ static HRESULT WINAPI xmlnode_put_dataType(
     {
         xmlNsPtr pNS = NULL;
         xmlAttrPtr pAttr = NULL;
-        xmlChar* str = xmlChar_from_wchar((WCHAR*)dataTypeName);
+        xmlChar* str = xmlChar_from_wchar(dataTypeName);
 
         pAttr = xmlHasNsProp(This->node, (xmlChar*)"dt",
                             (xmlChar*)"urn:schemas-microsoft-com:datatypes");

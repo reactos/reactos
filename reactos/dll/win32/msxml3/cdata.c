@@ -520,7 +520,7 @@ static HRESULT WINAPI domcdata_get_length(
     long *len)
 {
     domcdata *This = impl_from_IXMLDOMCDATASection( iface );
-    xmlnode *pDOMNode = impl_from_IXMLDOMNode( (IXMLDOMNode*)This->node );
+    xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pContent;
     long nLength = 0;
 
@@ -546,7 +546,7 @@ static HRESULT WINAPI domcdata_substringData(
     long offset, long count, BSTR *p)
 {
     domcdata *This = impl_from_IXMLDOMCDATASection( iface );
-    xmlnode *pDOMNode = impl_from_IXMLDOMNode( (IXMLDOMNode*)This->node );
+    xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pContent;
     long nLength = 0;
     HRESULT hr = S_FALSE;
@@ -591,7 +591,7 @@ static HRESULT WINAPI domcdata_appendData(
     BSTR p)
 {
     domcdata *This = impl_from_IXMLDOMCDATASection( iface );
-    xmlnode *pDOMNode = impl_from_IXMLDOMNode( (IXMLDOMNode*)This->node );
+    xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pContent;
     HRESULT hr = S_FALSE;
 
@@ -601,7 +601,7 @@ static HRESULT WINAPI domcdata_appendData(
     if(p == NULL || SysStringLen(p) == 0)
         return S_OK;
 
-    pContent = xmlChar_from_wchar( (WCHAR*)p );
+    pContent = xmlChar_from_wchar( p );
     if(pContent)
     {
         if(xmlTextConcat(pDOMNode->node, pContent, SysStringLen(p) ) == 0)
@@ -621,7 +621,7 @@ static HRESULT WINAPI domcdata_insertData(
     long offset, BSTR p)
 {
     domcdata *This = impl_from_IXMLDOMCDATASection( iface );
-    xmlnode *pDOMNode = impl_from_IXMLDOMNode( (IXMLDOMNode*)This->node );
+    xmlnode *pDOMNode = impl_from_IXMLDOMNode( This->node );
     xmlChar *pXmlContent;
     BSTR sNewString;
     HRESULT hr = S_FALSE;
@@ -667,7 +667,7 @@ static HRESULT WINAPI domcdata_insertData(
 
             sNewString[nLengthP + nLength] = 0;
 
-            str = xmlChar_from_wchar((WCHAR*)sNewString);
+            str = xmlChar_from_wchar(sNewString);
             if(str)
             {
                 xmlNodeSetContent(pDOMNode->node, str);

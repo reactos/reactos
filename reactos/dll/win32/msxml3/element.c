@@ -644,6 +644,7 @@ static HRESULT WINAPI domelem_getElementsByTagName(
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
     LPWSTR szPattern;
+    xmlNodePtr element;
     HRESULT hr;
 
     TRACE("(%p)->(%s,%p)\n", This, debugstr_w(bstrName), resultList);
@@ -654,7 +655,11 @@ static HRESULT WINAPI domelem_getElementsByTagName(
     lstrcpyW(szPattern+3, bstrName);
     TRACE("%s\n", debugstr_w(szPattern));
 
-    hr = queryresult_create(get_element(This), szPattern, resultList);
+    element = get_element(This);
+    if (!element)
+        hr = E_FAIL;
+    else
+        hr = queryresult_create(element, szPattern, resultList);
     HeapFree(GetProcessHeap(), 0, szPattern);
 
     return hr;

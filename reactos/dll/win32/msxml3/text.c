@@ -603,7 +603,7 @@ static HRESULT WINAPI domtext_appendData(
     if(p == NULL || SysStringLen(p) == 0)
         return S_OK;
 
-    pContent = xmlChar_from_wchar( (WCHAR*)p );
+    pContent = xmlChar_from_wchar( p );
     if(pContent)
     {
         if(xmlTextConcat(pDOMNode->node, pContent, SysStringLen(p) ) == 0)
@@ -669,7 +669,7 @@ static HRESULT WINAPI domtext_insertData(
 
             sNewString[nLengthP + nLength] = 0;
 
-            str = xmlChar_from_wchar((WCHAR*)sNewString);
+            str = xmlChar_from_wchar(sNewString);
             if(str)
             {
                 xmlNodeSetContent(pDOMNode->node, str);
