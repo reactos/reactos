@@ -182,7 +182,7 @@ static void test_msg_get_param(void)
     ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, NULL, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     /* For this (empty) message, the type isn't set */
     ok(value == 0, "Expected type 0, got %d\n", value);
@@ -193,7 +193,7 @@ static void test_msg_get_param(void)
     ok(msg != NULL, "CryptMsgOpenToDecode failed: %x\n", GetLastError());
     /* For explicitly typed messages, the type is known. */
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_DATA, "Expected CMSG_DATA, got %d\n", value);
     for (i = CMSG_CONTENT_PARAM; i <= CMSG_CMS_SIGNER_INFO_PARAM; i++)
@@ -208,7 +208,7 @@ static void test_msg_get_param(void)
      NULL);
     ok(msg != NULL, "CryptMsgOpenToDecode failed: %x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_ENVELOPED, "Expected CMSG_ENVELOPED, got %d\n", value);
     for (i = CMSG_CONTENT_PARAM; i <= CMSG_CMS_SIGNER_INFO_PARAM; i++)
@@ -223,7 +223,7 @@ static void test_msg_get_param(void)
      NULL);
     ok(msg != NULL, "CryptMsgOpenToDecode failed: %x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_HASHED, "Expected CMSG_HASHED, got %d\n", value);
     for (i = CMSG_CONTENT_PARAM; i <= CMSG_CMS_SIGNER_INFO_PARAM; i++)
@@ -238,7 +238,7 @@ static void test_msg_get_param(void)
      NULL);
     ok(msg != NULL, "CryptMsgOpenToDecode failed: %x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_SIGNED, "Expected CMSG_SIGNED, got %d\n", value);
     for (i = CMSG_CONTENT_PARAM; i <= CMSG_CMS_SIGNER_INFO_PARAM; i++)
@@ -254,7 +254,7 @@ static void test_msg_get_param(void)
      NULL);
     ok(msg != NULL, "CryptMsgOpenToDecode failed: %x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == CMSG_ENCRYPTED, "Expected CMSG_ENCRYPTED, got %d\n", value);
     CryptMsgClose(msg);
@@ -262,7 +262,7 @@ static void test_msg_get_param(void)
     msg = CryptMsgOpenToDecode(PKCS_7_ASN_ENCODING, 0, 1000, 0, NULL, NULL);
     ok(msg != NULL, "CryptMsgOpenToDecode failed: %x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_TYPE_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %x\n", GetLastError());
     ok(value == 1000, "Expected 1000, got %d\n", value);
     CryptMsgClose(msg);
@@ -830,7 +830,7 @@ static void test_hash_msg_get_param(void)
     ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, NULL, &size);
     ok(ret, "CryptMsgGetParam failed: %08x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %08x\n", GetLastError());
     ok(value == 0, "Expected version 0, got %d\n", value);
     /* As usual, the type isn't available. */
@@ -1116,11 +1116,10 @@ static void test_signed_msg_open(void)
     signer.SignerId.dwIdChoice = CERT_ID_ISSUER_SERIAL_NUMBER;
     U(signer.SignerId).IssuerSerialNumber.Issuer.cbData =
      sizeof(encodedCommonName);
-    U(signer.SignerId).IssuerSerialNumber.Issuer.pbData =
-     (BYTE *)encodedCommonName;
+    U(signer.SignerId).IssuerSerialNumber.Issuer.pbData = encodedCommonName;
     U(signer.SignerId).IssuerSerialNumber.SerialNumber.cbData =
      sizeof(serialNum);
-    U(signer.SignerId).IssuerSerialNumber.SerialNumber.pbData = (BYTE *)serialNum;
+    U(signer.SignerId).IssuerSerialNumber.SerialNumber.pbData = serialNum;
     msg = CryptMsgOpenToEncode(PKCS_7_ASN_ENCODING, 0, CMSG_SIGNED, &signInfo,
      NULL, NULL);
     ok(msg != NULL, "CryptMsgOpenToEncode failed: %x\n", GetLastError());
@@ -1211,7 +1210,7 @@ static void test_signed_msg_update(void)
     ok(!ret && (GetLastError() == NTE_BAD_KEYSET ||
      GetLastError() == NTE_NO_KEY),
      "Expected NTE_BAD_KEYSET or NTE_NO_KEY, got %x\n", GetLastError());
-    ret = CryptImportKey(signer.hCryptProv, (LPBYTE)privKey, sizeof(privKey),
+    ret = CryptImportKey(signer.hCryptProv, privKey, sizeof(privKey),
      0, 0, &key);
     ok(ret, "CryptImportKey failed: %08x\n", GetLastError());
     /* The final update should be able to succeed now that a key exists, but
@@ -1630,7 +1629,7 @@ static void test_signed_msg_encoding(void)
         return;
     }
 
-    ret = CryptImportKey(signer.hCryptProv, (LPBYTE)privKey, sizeof(privKey),
+    ret = CryptImportKey(signer.hCryptProv, privKey, sizeof(privKey),
      0, 0, &key);
     ok(ret, "CryptImportKey failed: %08x\n", GetLastError());
 
@@ -1664,7 +1663,7 @@ static void test_signed_msg_encoding(void)
     certInfo.Issuer.cbData = 0;
     signer.SignerId.dwIdChoice = CERT_ID_KEY_IDENTIFIER;
     U(signer.SignerId).KeyId.cbData = sizeof(serialNum);
-    U(signer.SignerId).KeyId.pbData = (BYTE *)serialNum;
+    U(signer.SignerId).KeyId.pbData = serialNum;
     msg = CryptMsgOpenToEncode(PKCS_7_ASN_ENCODING, 0, CMSG_SIGNED, &signInfo,
      NULL, NULL);
     ok(msg != NULL, "CryptMsgOpenToEncode failed: %x\n", GetLastError());
@@ -1814,7 +1813,7 @@ static void test_signed_msg_get_param(void)
     ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, NULL, &size);
     ok(ret, "CryptMsgGetParam failed: %08x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %08x\n", GetLastError());
     ok(value == CMSG_SIGNED_DATA_V1, "Expected version 1, got %d\n", value);
     /* But for this message, with no signers, the hash and signer aren't
@@ -1892,11 +1891,10 @@ static void test_signed_msg_get_param(void)
     signer.SignerId.dwIdChoice = CERT_ID_ISSUER_SERIAL_NUMBER;
     U(signer.SignerId).IssuerSerialNumber.Issuer.cbData =
      sizeof(encodedCommonName);
-    U(signer.SignerId).IssuerSerialNumber.Issuer.pbData =
-     (BYTE *)encodedCommonName;
+    U(signer.SignerId).IssuerSerialNumber.Issuer.pbData = encodedCommonName;
     U(signer.SignerId).IssuerSerialNumber.SerialNumber.cbData =
      sizeof(serialNum);
-    U(signer.SignerId).IssuerSerialNumber.SerialNumber.pbData = (BYTE *)serialNum;
+    U(signer.SignerId).IssuerSerialNumber.SerialNumber.pbData = serialNum;
     ret = pCryptAcquireContextA(&signer.hCryptProv, cspNameA, NULL,
      PROV_RSA_FULL, CRYPT_NEWKEYSET);
     if (!ret && GetLastError() == NTE_EXISTS)
@@ -1910,7 +1908,7 @@ static void test_signed_msg_get_param(void)
      * are used and no additional CMS fields are used.
      */
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, &value, &size);
     ok(ret, "CryptMsgGetParam failed: %08x\n", GetLastError());
     ok(value == CMSG_SIGNED_DATA_V1, "expected version 1, got %d\n", value);
     /* Apparently the encoded signer can be retrieved.. */
@@ -1936,7 +1934,7 @@ static void test_signed_msg_get_param(void)
      */
     signer.SignerId.dwIdChoice = CERT_ID_KEY_IDENTIFIER;
     U(signer.SignerId).KeyId.cbData = sizeof(serialNum);
-    U(signer.SignerId).KeyId.pbData = (BYTE *)serialNum;
+    U(signer.SignerId).KeyId.pbData = serialNum;
     ret = pCryptAcquireContextA(&signer.hCryptProv, cspNameA, NULL,
      PROV_RSA_FULL, CRYPT_NEWKEYSET);
     if (!ret && GetLastError() == NTE_EXISTS)
@@ -1947,7 +1945,7 @@ static void test_signed_msg_get_param(void)
      CMSG_CRYPT_RELEASE_CONTEXT_FLAG, CMSG_SIGNED, &signInfo, NULL, NULL);
     ok(msg != NULL, "CryptMsgOpenToEncode failed: %x\n", GetLastError());
     size = sizeof(value);
-    ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, (LPBYTE)&value, &size);
+    ret = CryptMsgGetParam(msg, CMSG_VERSION_PARAM, 0, &value, &size);
     ok(value == CMSG_SIGNED_DATA_V3, "expected version 3, got %d\n", value);
     /* Even for a CMS message, the signer can be retrieved.. */
     ret = CryptMsgGetParam(msg, CMSG_ENCODED_SIGNER, 0, NULL, &size);
@@ -2528,7 +2526,7 @@ static void test_decode_msg_get_param(void)
         signer.dwVersion = CMSG_SIGNED_DATA_V3;
         signer.SignerId.dwIdChoice = CERT_ID_KEY_IDENTIFIER;
         U(signer.SignerId).KeyId.cbData = sizeof(serialNum);
-        U(signer.SignerId).KeyId.pbData = (BYTE *)serialNum;
+        U(signer.SignerId).KeyId.pbData = serialNum;
         signer.HashAlgorithm.pszObjId = oid_rsa_md5;
         CryptMsgGetParam(msg, CMSG_CMS_SIGNER_INFO_PARAM, 0, buf, &size);
         compare_cms_signer_info((CMSG_CMS_SIGNER_INFO *)buf, &signer);

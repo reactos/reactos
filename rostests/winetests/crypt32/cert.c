@@ -662,6 +662,10 @@ static void testDupCert(void)
         CertFreeCertificateContext(context);
     }
     CertCloseStore(store, 0);
+
+    SetLastError(0xdeadbeef);
+    context = CertDuplicateCertificateContext(NULL);
+    ok(context == NULL, "Expected context to be NULL\n");
 }
 
 static BYTE subjectName3[] = { 0x30, 0x15, 0x31, 0x13, 0x30, 0x11, 0x06,

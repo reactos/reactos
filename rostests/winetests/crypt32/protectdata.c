@@ -69,11 +69,16 @@ static void test_cryptprotectdata(void)
     /* without entropy */
     SetLastError(0xDEADBEEF);
     protected = pCryptProtectData(&plain,desc,NULL,NULL,NULL,0,&cipher);
-    ok(protected, "Encrypting without entropy.\n");
-    r = GetLastError();
-    ok(r == ERROR_SUCCESS ||
-       r == ERROR_IO_PENDING, /* win2k */
-       "Expected ERROR_SUCCESS or ERROR_IO_PENDING, got %d\n",r);
+    ok(protected ||
+     broken(!protected), /* Win9x/NT4 */
+     "Encrypting without entropy.\n");
+    if (protected)
+    {
+        r = GetLastError();
+        ok(r == ERROR_SUCCESS ||
+           r == ERROR_IO_PENDING, /* win2k */
+           "Expected ERROR_SUCCESS or ERROR_IO_PENDING, got %d\n",r);
+    }
 
     cipher_entropy.pbData=NULL;
     cipher_entropy.cbData=0;
@@ -81,7 +86,9 @@ static void test_cryptprotectdata(void)
     /* with entropy */
     SetLastError(0xDEADBEEF);
     protected = pCryptProtectData(&plain,desc,&entropy,NULL,NULL,0,&cipher_entropy);
-    ok(protected, "Encrypting with entropy.\n");
+    ok(protected ||
+     broken(!protected), /* Win9x/NT4 */
+     "Encrypting with entropy.\n");
 
     cipher_no_desc.pbData=NULL;
     cipher_no_desc.cbData=0;

@@ -808,7 +808,7 @@ static void test_encodeName(DWORD dwEncoding)
     attrs[0].pszObjId = "bogus";
     attrs[0].dwValueType = CERT_RDN_PRINTABLE_STRING;
     attrs[0].Value.cbData = sizeof(commonName);
-    attrs[0].Value.pbData = (BYTE *)commonName;
+    attrs[0].Value.pbData = commonName;
     rdn.cRDNAttr = 1;
     rdn.rgRDNAttr = attrs;
     ret = pCryptEncodeObjectEx(dwEncoding, X509_NAME, &info,
@@ -861,7 +861,7 @@ static void test_encodeName(DWORD dwEncoding)
      "Expected E_INVALIDARG, got %08x\n", GetLastError());
     /* Test a more complex name */
     rdn.cRDNAttr = sizeof(rdnAttrs) / sizeof(rdnAttrs[0]);
-    rdn.rgRDNAttr = (PCERT_RDN_ATTR)rdnAttrs;
+    rdn.rgRDNAttr = rdnAttrs;
     info.cRDN = 1;
     info.rgRDN = &rdn;
     buf = NULL;
@@ -993,6 +993,13 @@ static void test_encodeUnicodeName(DWORD dwEncoding)
 static void compareNameValues(const CERT_NAME_VALUE *expected,
  const CERT_NAME_VALUE *got)
 {
+    if (expected->dwValueType == CERT_RDN_UTF8_STRING &&
+        got->dwValueType == CERT_RDN_ENCODED_BLOB)
+    {
+        win_skip("Can't handle CERT_RDN_UTF8_STRING\n");
+        return;
+    }
+
     ok(got->dwValueType == expected->dwValueType,
      "Expected string type %d, got %d\n", expected->dwValueType,
      got->dwValueType);
@@ -1149,7 +1156,7 @@ static void test_decodeName(DWORD dwEncoding)
     if (ret)
     {
         rdn.cRDNAttr = sizeof(decodedRdnAttrs) / sizeof(decodedRdnAttrs[0]);
-        rdn.rgRDNAttr = (PCERT_RDN_ATTR)decodedRdnAttrs;
+        rdn.rgRDNAttr = decodedRdnAttrs;
         compareNames(&info, (CERT_NAME_INFO *)buf);
         LocalFree(buf);
     }
@@ -1977,10 +1984,10 @@ static void test_encodeBits(DWORD dwEncoding)
         if (buf)
         {
             ok(bufSize == bits[i].encoded[1] + 2,
-             "Got unexpected size %d, expected %d\n", bufSize,
+             "%d: Got unexpected size %d, expected %d\n", i, bufSize,
              bits[i].encoded[1] + 2);
             ok(!memcmp(buf, bits[i].encoded, bits[i].encoded[1] + 2),
-             "Unexpected value\n");
+             "%d: Unexpected value\n", i);
             LocalFree(buf);
         }
     }
@@ -2962,7 +2969,7 @@ static void test_encodeCertToBeSigned(DWORD dwEncoding)
     ext.pszObjId = oid_subject_key_identifier;
     ext.fCritical = FALSE;
     ext.Value.cbData = sizeof(octetCommonNameValue);
-    ext.Value.pbData = (BYTE *)octetCommonNameValue;
+    ext.Value.pbData = octetCommonNameValue;
     info.cExtension = 1;
     info.rgExtension = &ext;
     ret = pCryptEncodeObjectEx(dwEncoding, X509_CERT_TO_BE_SIGNED, &info,

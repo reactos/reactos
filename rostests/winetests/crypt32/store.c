@@ -1701,7 +1701,7 @@ struct EnumSystemStoreInfo
 static BOOL CALLBACK enumSystemStoreCB(const void *systemStore, DWORD dwFlags,
  PCERT_SYSTEM_STORE_INFO pStoreInfo, void *pvReserved, void *pvArg)
 {
-    struct EnumSystemStoreInfo *info = (struct EnumSystemStoreInfo *)pvArg;
+    struct EnumSystemStoreInfo *info = pvArg;
 
     info->storeCount++;
     return info->goOn;
