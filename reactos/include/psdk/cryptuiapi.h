@@ -271,6 +271,7 @@ typedef struct _CRYPTUI_WIZ_EXPORT_INFO
         PCCERT_CONTEXT pCertContext;
         PCCTL_CONTEXT  pCTLContext;
         PCCRL_CONTEXT  pCRLContext;
+        HCERTSTORE     hCertStore;
     } DUMMYUNIONNAME;
     DWORD       cStores;
     HCERTSTORE *rghStores;

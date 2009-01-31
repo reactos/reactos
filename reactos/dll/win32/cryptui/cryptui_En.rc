@@ -141,6 +141,26 @@ STRINGTABLE DISCARDABLE
     IDS_PURPOSE_CA_EXCHANGE "Private Key Archival"
     IDS_PURPOSE_KEY_RECOVERY_AGENT "Key Recovery Agent"
     IDS_PURPOSE_DS_EMAIL_REPLICATION "Directory Service Email Replication"
+    IDS_EXPORT_WIZARD "Certificate Export Wizard"
+    IDS_EXPORT_FORMAT_TITLE "Export Format"
+    IDS_EXPORT_FORMAT_SUBTITLE "Choose the format in which the content will be saved."
+    IDS_EXPORT_FILE_TITLE "Export Filename"
+    IDS_EXPORT_FILE_SUBTITLE "Specify the name of the file in which the content will be saved."
+    IDS_EXPORT_FILE_EXISTS "The specified file already exists.  Do you want to replace it?"
+    IDS_EXPORT_FILTER_CERT "DER-Encoded Binary X.509 (*.cer)"
+    IDS_EXPORT_FILTER_BASE64_CERT "Base64-Encoded X.509 (*.cer)"
+    IDS_EXPORT_FILTER_CRL "Certificate Revocation List (*.crl)"
+    IDS_EXPORT_FILTER_CTL "Certificate Trust List (*.stl)"
+    IDS_EXPORT_FILTER_CMS "CMS/PKCS #7 Messages (*.p7b)"
+    IDS_EXPORT_FILTER_PFX "Personal Information Exchange (*.pfx)"
+    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Serialized Certificate Store (*.sst)"
+    IDS_EXPORT_FORMAT "File Format"
+    IDS_EXPORT_INCLUDE_CHAIN "Include all certificates in certificate path"
+    IDS_EXPORT_KEYS "Export keys"
+    IDS_YES "Yes"
+    IDS_NO "No"
+    IDS_EXPORT_SUCCEEDED "The export was successful."
+    IDS_EXPORT_FAILED "The export failed."
 }
 
 IDD_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
@@ -345,4 +365,67 @@ BEGIN
     14,51,220,90
   PUSHBUTTON "OK", IDOK, 132,155,51,14, BS_DEFPUSHBUTTON
   PUSHBUTTON "Cancel", IDCANCEL, 190,155,51,14
+END
+
+IDD_EXPORT_WELCOME DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Welcome to the Certificate Export Wizard", IDC_EXPORT_TITLE,
+    115,1,195,40
+  LTEXT "This wizard helps you export certificates, certificate revocation lists, and certificate trust lists from a certificate store to a file.",
+    -1, 115,33,195,16
+  LTEXT "A certificate can be used to identify you or the computer with which you are communicating.  It can also be used for authentication, and to sign messages.  Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists.",
+    -1, 115,56,195,40
+  LTEXT "To continue, click Next.",
+    -1, 115,103,195,8
+END
+
+IDD_EXPORT_FORMAT DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Select the format you want to use:", -1, 21,1,195,10
+  AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
+    IDC_EXPORT_FORMAT_DER, 31,18,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
+    IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Cryptographic Message Syntax Standard/PKCS #7 Message (.p7b)",
+    IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
+  CHECKBOX "&Include all certificates in the certification path if possible",
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  AUTORADIOBUTTON "&Personal Information Exchange/PKCS #12 (.pfx)",
+    IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
+  CHECKBOX "Incl&ude all certificates in the certification path if possible",
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  CHECKBOX "&Enable strong encryption",
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,200,8,
+    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  CHECKBOX "Delete the private &key if the export is successful",
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,200,8,
+    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+END
+
+IDD_EXPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&File name:", -1, 21,1,195,10
+  EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  PUSHBUTTON "B&rowse...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
+END
+
+IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificate Export Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Completing the Certificate Export Wizard", IDC_EXPORT_TITLE,
+    115,1,195,40
+  LTEXT "You have successfully completed the Certificate Export Wizard.",
+    -1, 115,33,195,24
+  LTEXT "You have specified the following settings:",
+    -1, 115,57,195,12
+  CONTROL "", IDC_EXPORT_SETTINGS, "SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    115,67,174,100
 END
