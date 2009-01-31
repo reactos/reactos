@@ -5153,7 +5153,7 @@ static void test_viewmodify_delete_temporary(void)
     DeleteFileA(msifile);
 }
 
-static void test_deleterow()
+static void test_deleterow(void)
 {
     MSIHANDLE hdb, hview, hrec;
     const char *query;

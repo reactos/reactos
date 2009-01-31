@@ -51,6 +51,7 @@ static void get_user_sid(LPSTR *usersid)
     GetTokenInformation(token, TokenUser, buf, size, &size);
     user = (PTOKEN_USER)buf;
     pConvertSidToStringSidA(user->User.Sid, usersid);
+    CloseHandle(token);
 }
 
 /* RegDeleteTreeW from dlls/advapi32/registry.c */
