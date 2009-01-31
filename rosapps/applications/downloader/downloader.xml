@@ -78,8 +78,8 @@
 			<location>http://www.abiword.org/downloads/abiword/2.6.4/Windows/abiword-setup-2.6.4.exe</location>
 		</application>
 		<application name="OpenOffice">
-			<regname>OpenOffice.org 2.4</regname>
-			<version>2.4.0</version>
+			<regname>OpenOffice.org 3.0.1</regname>
+			<version>3.0.1</version>
 			<description>THE Open Source Office Suite.</description>
 			<location>http://ftp.tu-chemnitz.de/pub/openoffice/stable/3.0.1/OOo_3.0.1_Win32Intel_install_en-US.exe</location>
 		</application>
