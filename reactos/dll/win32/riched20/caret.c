@@ -151,8 +151,13 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
     return len;
   }
 
-  ME_RunOfsFromCharOfs(editor, from, &editor->pCursors[1].pRun, &editor->pCursors[1].nOffset);
-  ME_RunOfsFromCharOfs(editor, to, &editor->pCursors[0].pRun, &editor->pCursors[0].nOffset);
+  ME_CursorFromCharOfs(editor, from, &editor->pCursors[1]);
+  ME_CursorFromCharOfs(editor, to, &editor->pCursors[0]);
+  /* Selection is not allowed in the middle of an end paragraph run. */
+  if (editor->pCursors[1].pRun->member.run.nFlags & MERF_ENDPARA)
+    editor->pCursors[1].nOffset = 0;
+  if (editor->pCursors[0].pRun->member.run.nFlags & MERF_ENDPARA)
+    editor->pCursors[0].nOffset = 0;
   return to;
 }
 
@@ -173,7 +178,7 @@ ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
     ME_DisplayItem *row = ME_FindItemBack(pCursorRun, diStartRowOrParagraph);
 
     if (row) {
-      HDC hDC = GetDC(editor->hWnd);
+      HDC hDC = ITextHost_TxGetDC(editor->texthost);
       ME_Context c;
       ME_DisplayItem *run = pCursorRun;
       ME_DisplayItem *para = NULL;
@@ -217,7 +222,7 @@ ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
       *x = c.rcView.left + run->member.run.pt.x + sz.cx - editor->horz_si.nPos;
       *y = c.rcView.top + para->member.para.pt.y + row->member.row.nBaseline
            + run->member.run.pt.y - pSizeRun->member.run.nAscent - editor->vert_si.nPos;
-      ME_DestroyContext(&c, editor->hWnd);
+      ME_DestroyContext(&c);
       return;
     }
   }
@@ -238,8 +243,8 @@ ME_MoveCaret(ME_TextEditor *editor)
   if(editor->bHaveFocus && !ME_IsSelection(editor))
   {
     x = min(x, editor->rcFormat.right-1);
-    CreateCaret(editor->hWnd, NULL, 0, height);
-    SetCaretPos(x, y);
+    ITextHost_TxCreateCaret(editor->texthost, NULL, 0, height);
+    ITextHost_TxSetCaretPos(editor->texthost, x, y);
   }
 }
 
@@ -248,14 +253,14 @@ void ME_ShowCaret(ME_TextEditor *ed)
 {
   ME_MoveCaret(ed);
   if(ed->bHaveFocus && !ME_IsSelection(ed))
-    ShowCaret(ed->hWnd);
+    ITextHost_TxShowCaret(ed->texthost, TRUE);
 }
 
 void ME_HideCaret(ME_TextEditor *ed)
 {
   if(!ed->bHaveFocus || ME_IsSelection(ed))
   {
-    HideCaret(ed->hWnd);
+    ITextHost_TxShowCaret(ed->texthost, FALSE);
     DestroyCaret();
   }
 }
@@ -298,14 +303,11 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, int nChars,
       /* We aren't deleting anything in this run, so we will go back to the
        * last run we are deleting text in. */
       c.pRun = ME_FindItemBack(c.pRun, diRun);
-      if (c.pRun->member.run.nFlags & MERF_ENDPARA)
-        c.nOffset = c.pRun->member.run.nCR + c.pRun->member.run.nLF;
-      else
-        c.nOffset = c.pRun->member.run.strText->nLen;
+      c.nOffset = c.pRun->member.run.strText->nLen;
     }
     run = &c.pRun->member.run;
     if (run->nFlags & MERF_ENDPARA) {
-      int eollen = run->nCR + run->nLF;
+      int eollen = c.pRun->member.run.strText->nLen;
       BOOL keepFirstParaFormat;
 
       if (!ME_FindItemFwd(c.pRun, diParagraph))
@@ -517,107 +519,72 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
   if(editor->nTextLimit < oldLen +len)
     editor->nTextLimit = oldLen + len;
 
+  pos = str;
+
   while (len)
   {
-    pos = str;
     /* FIXME this sucks - no respect for unicode (what else can be a line separator in unicode?) */
-    while(pos-str < len && *pos != '\r' && *pos != '\n' && *pos != '\t')
+    while(pos - str < len && *pos != '\r' && *pos != '\n' && *pos != '\t')
       pos++;
-    if (pos-str < len && *pos == '\t') { /* handle tabs */
+
+    if (pos != str) { /* handle text */
+      ME_InternalInsertTextFromCursor(editor, nCursor, str, pos-str, style, 0);
+    } else if (*pos == '\t') { /* handle tabs */
       WCHAR tab = '\t';
-
-      if (pos!=str)
-        ME_InternalInsertTextFromCursor(editor, nCursor, str, pos-str, style, 0);
-    
       ME_InternalInsertTextFromCursor(editor, nCursor, &tab, 1, style, MERF_TAB);
- 
       pos++;
-      if(pos-str <= len) {
-        len -= pos - str;
-        str = pos;
-        continue;
-      }
-    }
-    /* handle special \r\r\n sequence (richedit 2.x and higher only) */
-    if (!editor->bEmulateVersion10 && pos-str < len-2 && pos[0] == '\r' && pos[1] == '\r' && pos[2] == '\n') {
-      WCHAR space = ' ';
-
-      if (pos!=str)
-        ME_InternalInsertTextFromCursor(editor, nCursor, str, pos-str, style, 0);
-
-      ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, style, 0);
-
-      pos+=3;
-      if(pos-str <= len) {
-        len -= pos - str;
-        str = pos;
-        continue;
-      }
-    }
-    if (pos-str < len) {   /* handle EOLs */
+    } else { /* handle EOLs */
       ME_DisplayItem *tp, *end_run;
       ME_Style *tmp_style;
-      int numCR, numLF;
+      int eol_len = 0;
 
-      if (pos!=str)
-        ME_InternalInsertTextFromCursor(editor, nCursor, str, pos-str, style, 0);
-      p = &editor->pCursors[nCursor];
-      if (p->nOffset) {
-        ME_SplitRunSimple(editor, p->pRun, p->nOffset);
-        p = &editor->pCursors[nCursor];
-      }
-      tmp_style = ME_GetInsertStyle(editor, nCursor);
-      /* ME_SplitParagraph increases style refcount */
-
-      /* Encode and fill number of CR and LF according to emulation mode */
-      if (editor->bEmulateVersion10) {
-        const WCHAR * tpos;
-
-        /* We have to find out how many consecutive \r are there, and if there
-           is a \n terminating the run of \r's. */
-        numCR = 0; numLF = 0;
-        tpos = pos;
-        while (tpos-str < len && *tpos == '\r') {
-          tpos++;
-          numCR++;
-        }
-        if (tpos-str >= len) {
-          /* Reached end of text without finding anything but '\r' */
-          if (tpos != pos) {
-            pos++;
-          }
-          numCR = 1; numLF = 0;
-        } else if (*tpos == '\n') {
-          /* The entire run of \r's plus the one \n is one single line break */
-          pos = tpos + 1;
-          numLF = 1;
-        } else {
-          /* Found some other content past the run of \r's */
-          pos++;
-          numCR = 1; numLF = 0;
-        }
+      /* Find number of CR and LF in end of paragraph run */
+      if (*pos =='\r')
+      {
+        if (len > 1 && pos[1] == '\n')
+          eol_len = 2;
+        else if (len > 2 && pos[1] == '\r' && pos[2] == '\n')
+          eol_len = 3;
+        else
+          eol_len = 1;
       } else {
-        if(pos-str < len && *pos =='\r')
-          pos++;
-        if(pos-str < len && *pos =='\n')
-          pos++;
-        numCR = 1; numLF = 0;
+        assert(*pos == '\n');
+        eol_len = 1;
       }
-      tp = ME_SplitParagraph(editor, p->pRun, p->pRun->member.run.style, numCR, numLF, 0);
-      p->pRun = ME_FindItemFwd(tp, diRun);
-      end_run = ME_FindItemBack(tp, diRun);
-      ME_ReleaseStyle(end_run->member.run.style);
-      end_run->member.run.style = tmp_style;
-      p->nOffset = 0;
+      pos += eol_len;
 
-      if(pos-str <= len) {
-        len -= pos - str;
-        str = pos;
-        continue;
+      if (!editor->bEmulateVersion10 && eol_len == 3)
+      {
+        /* handle special \r\r\n sequence (richedit 2.x and higher only) */
+        WCHAR space = ' ';
+        ME_InternalInsertTextFromCursor(editor, nCursor, &space, 1, style, 0);
+      } else {
+        ME_String *eol_str;
+
+        if (!editor->bEmulateVersion10) {
+          WCHAR cr = '\r';
+          eol_str = ME_MakeStringN(&cr, 1);
+        } else {
+          eol_str = ME_MakeStringN(str, eol_len);
+        }
+
+        p = &editor->pCursors[nCursor];
+        if (p->nOffset) {
+          ME_SplitRunSimple(editor, p->pRun, p->nOffset);
+          p = &editor->pCursors[nCursor];
+        }
+        tmp_style = ME_GetInsertStyle(editor, nCursor);
+        /* ME_SplitParagraph increases style refcount */
+        tp = ME_SplitParagraph(editor, p->pRun, p->pRun->member.run.style, eol_str, 0);
+        p->pRun = ME_FindItemFwd(tp, diRun);
+        end_run = ME_FindItemBack(tp, diRun);
+        ME_ReleaseStyle(end_run->member.run.style);
+        end_run->member.run.style = tmp_style;
+        p->nOffset = 0;
       }
     }
-    ME_InternalInsertTextFromCursor(editor, nCursor, str, len, style, 0);
-    len = 0;
+    len -= pos - str;
+    str = pos;
   }
 }
 
@@ -1020,7 +987,7 @@ int ME_CharFromPos(ME_TextEditor *editor, int x, int y, BOOL *isExact)
   RECT rc;
   BOOL bResult;
 
-  GetClientRect(editor->hWnd, &rc);
+  ITextHost_TxGetClientRect(editor->texthost, &rc);
   if (x < 0 || y < 0 || x >= rc.right || y >= rc.bottom) {
     if (isExact) *isExact = FALSE;
     return -1;
@@ -1154,7 +1121,7 @@ void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum)
     }
   }
   ME_InvalidateSelection(editor);
-  HideCaret(editor->hWnd);
+  ITextHost_TxShowCaret(editor->texthost, FALSE);
   ME_ShowCaret(editor);
   ME_ClearTempStyle(editor);
   ME_SendSelChange(editor);
@@ -1188,7 +1155,7 @@ void ME_MouseMove(ME_TextEditor *editor, int x, int y)
   }
 
   ME_InvalidateSelection(editor);
-  HideCaret(editor->hWnd);
+  ITextHost_TxShowCaret(editor->texthost, FALSE);
   ME_ShowCaret(editor);
   ME_SendSelChange(editor);
 }
@@ -1574,7 +1541,7 @@ void ME_SendSelChange(ME_TextEditor *editor)
     ME_ClearTempStyle(editor);
 
     editor->notified_cr = sc.chrg;
-    SendMessageW(GetParent(editor->hWnd), WM_NOTIFY, sc.nmhdr.idFrom, (LPARAM)&sc);
+    ITextHost_TxNotify(editor->texthost, sc.nmhdr.code, &sc);
   }
 }
 
@@ -1636,7 +1603,7 @@ ME_ArrowKey(ME_TextEditor *editor, int nVKey, BOOL extend, BOOL ctrl)
 
   ME_InvalidateSelection(editor);
   ME_Repaint(editor);
-  HideCaret(editor->hWnd);
+  ITextHost_TxShowCaret(editor->texthost, FALSE);
   ME_EnsureVisible(editor, &tmp_curs);
   ME_ShowCaret(editor);
   ME_SendSelChange(editor);

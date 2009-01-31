@@ -582,7 +582,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
   int yStart = -1;
   int totalWidth = 0;
 
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
   c.pt.x = 0;
   item = editor->pBuffer->pFirst->next;
   while(item != editor->pBuffer->pLast) {
@@ -723,7 +723,7 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
   editor->pBuffer->pLast->member.para.pt.x = 0;
   editor->pBuffer->pLast->member.para.pt.y = c.pt.y;
 
-  ME_DestroyContext(&c, editor->hWnd);
+  ME_DestroyContext(&c);
 
   if (bModified || editor->nTotalLength < editor->nLastTotalLength)
     ME_InvalidateMarkedParagraphs(editor);
@@ -737,7 +737,7 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
   int ofs;
   ME_DisplayItem *item;
 
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
   rc = c.rcView;
   ofs = editor->vert_si.nPos;
 
@@ -748,7 +748,7 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
       rc.bottom = max(c.rcView.top + item->member.para.pt.y
                       + item->member.para.nHeight - ofs,
                       c.rcView.bottom);
-      InvalidateRect(editor->hWnd, &rc, TRUE);
+      ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
     }
     item = item->member.para.next_para;
   }
@@ -756,9 +756,9 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor)
   {
     rc.top = c.rcView.top + editor->nTotalLength - ofs;
     rc.bottom = c.rcView.top + editor->nLastTotalLength - ofs;
-    InvalidateRect(editor->hWnd, &rc, TRUE);
+    ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
   }
-  ME_DestroyContext(&c, editor->hWnd);
+  ME_DestroyContext(&c);
 }
 
 
@@ -769,22 +769,19 @@ ME_SendRequestResize(ME_TextEditor *editor, BOOL force)
   {
     RECT rc;
 
-    GetClientRect(editor->hWnd, &rc);
+    ITextHost_TxGetClientRect(editor->texthost, &rc);
 
     if (force || rc.bottom != editor->nTotalLength)
     {
       REQRESIZE info;
 
-      info.nmhdr.hwndFrom = editor->hWnd;
-      info.nmhdr.idFrom = GetWindowLongW(editor->hWnd, GWLP_ID);
       info.nmhdr.code = EN_REQUESTRESIZE;
       info.rc = rc;
       info.rc.right = editor->nTotalWidth;
       info.rc.bottom = editor->nTotalLength;
 
       editor->nEventMask &= ~ENM_REQUESTRESIZE;
-      SendMessageW(GetParent(editor->hWnd), WM_NOTIFY,
-                   info.nmhdr.idFrom, (LPARAM)&info);
+      ITextHost_TxNotify(editor->texthost, info.nmhdr.code, &info);
       editor->nEventMask |= ENM_REQUESTRESIZE;
     }
   }

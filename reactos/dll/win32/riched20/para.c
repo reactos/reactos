@@ -23,8 +23,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
-static const WCHAR wszParagraphSign[] = {0xB6, 0};
-
 void ME_MakeFirstParagraph(ME_TextEditor *editor)
 {
   ME_Context c;
@@ -35,8 +33,10 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   ME_DisplayItem *para = ME_MakeDI(diParagraph);
   ME_DisplayItem *run;
   ME_Style *style;
+  ME_String *eol_str;
+  WCHAR cr_lf[] = {'\r','\n',0};
 
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
 
   hf = GetStockObject(SYSTEM_FONT);
   assert(hf);
@@ -63,11 +63,10 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
 
   style = ME_MakeStyle(&cf);
   text->pDefaultStyle = style;
-  
-  run = ME_MakeRun(style, ME_MakeString(wszParagraphSign), MERF_ENDPARA);
+
+  eol_str = ME_MakeStringN(cr_lf, editor->bEmulateVersion10 ? 2 : 1);
+  run = ME_MakeRun(style, eol_str, MERF_ENDPARA);
   run->member.run.nCharOfs = 0;
-  run->member.run.nCR = 1;
-  run->member.run.nLF = editor->bEmulateVersion10 ? 1 : 0;
 
   ME_InsertBefore(text->pLast, para);
   ME_InsertBefore(text->pLast, run);
@@ -78,7 +77,7 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
 
   text->pLast->member.para.nCharOfs = editor->bEmulateVersion10 ? 2 : 1;
 
-  ME_DestroyContext(&c, editor->hWnd);
+  ME_DestroyContext(&c);
 }
 
 static void ME_MarkForWrapping(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last)
@@ -201,7 +200,7 @@ static BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const 
 
 /* split paragraph at the beginning of the run */
 ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
-                                  ME_Style *style, int numCR, int numLF,
+                                  ME_Style *style, ME_String *eol_str,
                                   int paraFlags)
 {
   ME_DisplayItem *next_para = NULL;
@@ -211,8 +210,8 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   ME_UndoItem *undo = NULL;
   int ofs;
   ME_DisplayItem *pp;
-  int end_len = numCR + numLF;
   int run_flags = MERF_ENDPARA;
+
   if (!editor->bEmulateVersion10) { /* v4.1 */
     /* At most 1 of MEPF_CELL, MEPF_ROWSTART, or MEPF_ROWEND should be set. */
     assert(!(paraFlags & ~(MEPF_CELL|MEPF_ROWSTART|MEPF_ROWEND)));
@@ -224,12 +223,9 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   } else { /* v1.0 - v3.0 */
     assert(!(paraFlags & (MEPF_CELL|MEPF_ROWSTART|MEPF_ROWEND)));
   }
-  end_run = ME_MakeRun(style,ME_MakeString(wszParagraphSign), run_flags);
-  
-  assert(run->type == diRun);  
+  end_run = ME_MakeRun(style, eol_str, run_flags);
 
-  end_run->member.run.nCR = numCR;
-  end_run->member.run.nLF = numLF;
+  assert(run->type == diRun);
   run_para = ME_GetParagraph(run);
   assert(run_para->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
 
@@ -248,7 +244,7 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
     pp = ME_FindItemFwd(pp, diRunOrParagraphOrEnd);
   }
   new_para->member.para.nCharOfs = ME_GetParagraph(run)->member.para.nCharOfs+ofs;
-  new_para->member.para.nCharOfs += end_len;
+  new_para->member.para.nCharOfs += eol_str->nLen;
   new_para->member.para.nFlags = MEPF_REWRAP;
 
   /* FIXME initialize format style and call ME_SetParaFormat blah blah */
@@ -315,7 +311,7 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   new_para->member.para.prev_para->member.para.nFlags |= MEPF_REWRAP;
   
   /* we've added the end run, so we need to modify nCharOfs in the next paragraphs */
-  ME_PropagateCharOffset(next_para, end_len);
+  ME_PropagateCharOffset(next_para, eol_str->nLen);
   editor->nParagraphs++;
   
   return new_para;
@@ -344,7 +340,7 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
   assert(pRun->type == diRun);
   assert(pRun->member.run.nFlags & MERF_ENDPARA);
 
-  end_len = pRun->member.run.nCR + pRun->member.run.nLF;
+  end_len = pRun->member.run.strText->nLen;
 
   {
     /* null char format operation to store the original char format for the ENDPARA run */
@@ -356,8 +352,8 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
   if (undo)
   {
     undo->nStart = pNext->member.para.nCharOfs - end_len;
-    undo->nCR = pRun->member.run.nCR;
-    undo->nLF = pRun->member.run.nLF;
+    undo->eol_str = pRun->member.run.strText;
+    pRun->member.run.strText = NULL; /* Avoid freeing the string */
   }
   if (!keepFirstParaFormat)
   {

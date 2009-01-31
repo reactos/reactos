@@ -1195,17 +1195,11 @@ void		RTFSetInputName (RTF_Info *, const char *);
 char		*RTFGetInputName (const RTF_Info *);
 void		RTFSetOutputName (RTF_Info *, const char *);
 char		*RTFGetOutputName (const RTF_Info *);
-void		RTFSetClassCallback (RTF_Info *, int, RTFFuncPtr);
-RTFFuncPtr	RTFGetClassCallback (const RTF_Info *, int);
 void		RTFSetDestinationCallback (RTF_Info *, int, RTFFuncPtr);
-RTFFuncPtr	RTFGetDestinationCallback (const RTF_Info *, int);
 void		RTFRead (RTF_Info *);
 int		RTFGetToken (RTF_Info *);	/* writer should rarely need this */
-void		RTFUngetToken (RTF_Info *);
 int		RTFPeekToken (RTF_Info *);
-void		RTFSetToken (RTF_Info *, int, int, int, int, const char *);
 void		RTFSetReadHook (RTF_Info *, RTFFuncPtr);
-RTFFuncPtr	RTFGetReadHook (const RTF_Info *);
 void		RTFRouteToken (RTF_Info *);
 void		RTFSkipGroup (RTF_Info *);
 void		RTFReadGroup (RTF_Info *);
@@ -1215,7 +1209,6 @@ int		RTFCheckCMM (const RTF_Info *, int, int, int);
 int		RTFCheckMM (const RTF_Info *, int, int);
 RTFFont		*RTFGetFont (const RTF_Info *, int);
 RTFColor	*RTFGetColor (const RTF_Info *, int);
-RTFStyle	*RTFGetStyle (const RTF_Info *, int);
 int		RTFCharToHex ( char);
 int		RTFHexToChar ( int );
 

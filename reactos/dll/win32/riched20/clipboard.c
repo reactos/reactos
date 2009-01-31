@@ -54,7 +54,7 @@ static HRESULT WINAPI EnumFormatImpl_QueryInterface(IEnumFORMATETC *iface, REFII
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IEnumFORMATETC)) {
         IEnumFORMATETC_AddRef(iface);
-        *ppvObj = (LPVOID)This;
+        *ppvObj = This;
         return S_OK;
     }
     *ppvObj = NULL;
@@ -170,7 +170,7 @@ static HRESULT WINAPI DataObjectImpl_QueryInterface(IDataObject *iface, REFIID r
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IDataObject)) {
         IDataObject_AddRef(iface);
-        *ppvObj = (LPVOID)This;
+        *ppvObj = This;
         return S_OK;
     }
     *ppvObj = NULL;
