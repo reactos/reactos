@@ -5,6 +5,7 @@
 	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="shlwapi_winetest">.</include>
     <define name="__ROS_LONG64__" />
+	<file>assoc.c</file>
 	<file>clist.c</file>
 	<file>clsid.c</file>
 	<file>generated.c</file>

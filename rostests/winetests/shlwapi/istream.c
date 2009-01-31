@@ -209,8 +209,12 @@ static void test_SHCreateStreamOnFileA(DWORD mode, DWORD stgm)
     /* invalid arguments */
 
     stream = NULL;
+    /* NT: ERROR_PATH_NOT_FOUND, 9x: ERROR_BAD_PATHNAME */
     ret = (*pSHCreateStreamOnFileA)(NULL, mode | stgm, &stream);
-    ok(ret == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), "SHCreateStreamOnFileA: expected HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), got 0x%08x\n", ret);
+    ok(ret == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) ||
+        ret == HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME),
+        "SHCreateStreamOnFileA: expected HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)"
+        "or HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME), got 0x%08x\n", ret);
     ok(stream == NULL, "SHCreateStreamOnFileA: expected a NULL IStream object, got %p\n", stream);
 
 #if 0 /* This test crashes on WinXP SP2 */
@@ -290,27 +294,35 @@ static void test_SHCreateStreamOnFileW(DWORD mode, DWORD stgm)
     HRESULT ret;
     ULONG refcount;
     WCHAR test_file[MAX_PATH];
-    static const WCHAR testW_txt[] = { '\\', 't', 'e', 's', 't', 'W', '.', 't', 'x', 't', '\0' };
+    CHAR  test_fileA[MAX_PATH];
+    static const CHAR testW_txt[] = "\\testW.txt";
 
     trace("SHCreateStreamOnFileW: testing mode %d, STGM flags %08x\n", mode, stgm);
 
     /* Don't used a fixed path for the testW.txt file */
-    GetTempPathW(MAX_PATH, test_file);
-    lstrcatW(test_file, testW_txt);
+    GetTempPathA(MAX_PATH, test_fileA);
+    lstrcatA(test_fileA, testW_txt);
+    MultiByteToWideChar(CP_ACP, 0, test_fileA, -1, test_file, MAX_PATH);
 
     /* invalid arguments */
 
-    stream = NULL;
-    ret = (*pSHCreateStreamOnFileW)(NULL, mode | stgm, &stream);
-    ok(ret == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) || /* XP */
-       ret == E_INVALIDARG /* Vista */,
-      "SHCreateStreamOnFileW: expected HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) or E_INVALIDARG, got 0x%08x\n", ret);
-    ok(stream == NULL, "SHCreateStreamOnFileW: expected a NULL IStream object, got %p\n", stream);
+    if (0)
+    {
+        /* Crashes on NT4 */
+        stream = NULL;
+        ret = (*pSHCreateStreamOnFileW)(NULL, mode | stgm, &stream);
+        ok(ret == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) || /* XP */
+           ret == E_INVALIDARG /* Vista */,
+          "SHCreateStreamOnFileW: expected HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) or E_INVALIDARG, got 0x%08x\n", ret);
+        ok(stream == NULL, "SHCreateStreamOnFileW: expected a NULL IStream object, got %p\n", stream);
+    }
 
-#if 0 /* This test crashes on WinXP SP2 */
-    ret = (*pSHCreateStreamOnFileW)(test_file, mode | stgm, NULL);
-    ok(ret == E_INVALIDARG, "SHCreateStreamOnFileW: expected E_INVALIDARG, got 0x%08x\n", ret);
-#endif
+    if (0)
+    {
+        /* This test crashes on WinXP SP2 */
+            ret = (*pSHCreateStreamOnFileW)(test_file, mode | stgm, NULL);
+            ok(ret == E_INVALIDARG, "SHCreateStreamOnFileW: expected E_INVALIDARG, got 0x%08x\n", ret);
+    }
 
     stream = NULL;
     ret = (*pSHCreateStreamOnFileW)(test_file, mode | STGM_CONVERT | stgm, &stream);
@@ -373,7 +385,9 @@ static void test_SHCreateStreamOnFileW(DWORD mode, DWORD stgm)
         refcount = IStream_Release(stream);
         ok(refcount == 0, "SHCreateStreamOnFileW: expected 0, got %d\n", refcount);
 
-        ok(DeleteFileW(test_file), "SHCreateStreamOnFileW: could not delete the test file, got error %d\n", GetLastError());
+        ok(DeleteFileA(test_fileA),
+            "SHCreateStreamOnFileW: could not delete the test file, got error %d\n",
+            GetLastError());
     }
 }
 
@@ -385,32 +399,44 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
     HRESULT ret;
     ULONG refcount;
     WCHAR test_file[MAX_PATH];
-    static const WCHAR testEx_txt[] = { '\\', 't', 'e', 's', 't', 'E','x', '.', 't', 'x', 't', '\0' };
+    CHAR  test_fileA[MAX_PATH];
+    static const CHAR testEx_txt[] = "\\testEx.txt";
 
     trace("SHCreateStreamOnFileEx: testing mode %d, STGM flags %08x\n", mode, stgm);
 
     /* Don't used a fixed path for the testEx.txt file */
-    GetTempPathW(MAX_PATH, test_file);
-    lstrcatW(test_file, testEx_txt);
+    GetTempPathA(MAX_PATH, test_fileA);
+    lstrcatA(test_fileA, testEx_txt);
+    MultiByteToWideChar(CP_ACP, 0, test_fileA, -1, test_file, MAX_PATH);
 
     /* invalid arguments */
 
-    stream = NULL;
-    ret = (*pSHCreateStreamOnFileEx)(NULL, mode, 0, FALSE, NULL, &stream);
-    ok(ret == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) || /* XP */
-       ret == E_INVALIDARG /* Vista */,
-      "SHCreateStreamOnFileEx: expected HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) or E_INVALIDARG, got 0x%08x\n", ret);
-    ok(stream == NULL, "SHCreateStreamOnFileEx: expected a NULL IStream object, got %p\n", stream);
+    if (0)
+    {
+        /* Crashes on NT4 */
+        stream = NULL;
+        ret = (*pSHCreateStreamOnFileEx)(NULL, mode, 0, FALSE, NULL, &stream);
+        ok(ret == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) || /* XP */
+           ret == E_INVALIDARG /* Vista */,
+          "SHCreateStreamOnFileEx: expected HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND) or E_INVALIDARG, got 0x%08x\n", ret);
+        ok(stream == NULL, "SHCreateStreamOnFileEx: expected a NULL IStream object, got %p\n", stream);
+    }
 
     stream = NULL;
     ret = (*pSHCreateStreamOnFileEx)(test_file, mode, 0, FALSE, template, &stream);
-    ok(ret == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "SHCreateStreamOnFileEx: expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got 0x%08x\n", ret);
+    ok( ret == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+        ret == HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER),
+        "SHCreateStreamOnFileEx: expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) or "
+        "HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER), got 0x%08x\n", ret);
+
     ok(stream == NULL, "SHCreateStreamOnFileEx: expected a NULL IStream object, got %p\n", stream);
 
-#if 0 /* This test crashes on WinXP SP2 */
-    ret = (*pSHCreateStreamOnFileEx)(test_file, mode, 0, FALSE, NULL, NULL);
-    ok(ret == E_INVALIDARG, "SHCreateStreamOnFileEx: expected E_INVALIDARG, got 0x%08x\n", ret);
-#endif
+    if (0)
+    {
+        /* This test crashes on WinXP SP2 */
+        ret = (*pSHCreateStreamOnFileEx)(test_file, mode, 0, FALSE, NULL, NULL);
+        ok(ret == E_INVALIDARG, "SHCreateStreamOnFileEx: expected E_INVALIDARG, got 0x%08x\n", ret);
+    }
 
     /* file does not exist */
 
@@ -425,12 +451,22 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
             return;
         }
     } else {
-        ok(ret == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "SHCreateStreamOnFileEx: expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got 0x%08x\n", ret);
+        ok( ret == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+            ret == HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER),
+            "SHCreateStreamOnFileEx: expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) or "
+            "HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER), got 0x%08x\n", ret);
     }
     ok(stream == NULL, "SHCreateStreamOnFileEx: expected a NULL IStream object, got %p\n", stream);
 
     stream = NULL;
     ret = (*pSHCreateStreamOnFileEx)(test_file, mode | STGM_FAILIFTHERE | stgm, 0, TRUE, NULL, &stream);
+    /* not supported on win9x */
+    if (broken(ret == HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER) && stream == NULL)) {
+        skip("Not supported\n");
+        DeleteFileA(test_fileA);
+        return;
+    }
+
     ok(ret == S_OK, "SHCreateStreamOnFileEx: expected S_OK, got 0x%08x\n", ret);
     ok(stream != NULL, "SHCreateStreamOnFileEx: expected a valid IStream object, got NULL\n");
 
@@ -440,7 +476,9 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
         refcount = IStream_Release(stream);
         ok(refcount == 0, "SHCreateStreamOnFileEx: expected 0, got %d\n", refcount);
 
-        ok(DeleteFileW(test_file), "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n", GetLastError());
+        ok(DeleteFileA(test_fileA),
+            "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
+            GetLastError());
     }
 
     stream = NULL;
@@ -454,7 +492,9 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
         refcount = IStream_Release(stream);
         ok(refcount == 0, "SHCreateStreamOnFileEx: expected 0, got %d\n", refcount);
 
-        ok(DeleteFileW(test_file), "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n", GetLastError());
+        ok(DeleteFileA(test_fileA),
+            "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
+            GetLastError());
     }
 
     stream = NULL;
@@ -514,7 +554,9 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
         ok(refcount == 0, "SHCreateStreamOnFileEx: expected 0, got %d\n", refcount);
     }
 
-    ok(DeleteFileW(test_file), "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n", GetLastError());
+    ok(DeleteFileA(test_fileA),
+        "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
+        GetLastError());
 }
 
 

@@ -82,7 +82,26 @@ static struct {
     {"foo.bar", FALSE},
     {"bogusscheme:", TRUE},
     {"http:partial", TRUE},
-    {"www.winehq.org", FALSE}
+    {"www.winehq.org", FALSE},
+    /* More examples that the user might enter as the browser start page */
+    {"winehq.org", FALSE},
+    {"ftp.winehq.org", FALSE},
+    {"http://winehq.org", TRUE},
+    {"http://www.winehq.org", TRUE},
+    {"https://winehq.org", TRUE},
+    {"https://www.winehq.org", TRUE},
+    {"ftp://winehq.org", TRUE},
+    {"ftp://ftp.winehq.org", TRUE},
+    {"file://does_not_exist.txt", TRUE},
+    {"about:blank", TRUE},
+    {"about:home", TRUE},
+    {"about:mozilla", TRUE},
+    /* scheme is case independent */
+    {"HTTP://www.winehq.org", TRUE},
+    /* a space at the start is not allowed */
+    {" http://www.winehq.org", FALSE},
+    {"", FALSE},
+    {NULL, FALSE}
 };
 
 struct {
@@ -271,62 +290,34 @@ static void test_PathIsValidCharA(void)
     BOOL ret;
     unsigned int c;
 
-    ret = pPathIsValidCharA( 0x7f, 0 );
-    ok ( !ret, "PathIsValidCharA succeeded: 0x%08x\n", (DWORD)ret );
-
-    ret = pPathIsValidCharA( 0x7f, 1 );
-    ok ( !ret, "PathIsValidCharA succeeded: 0x%08x\n", (DWORD)ret );
-
     for (c = 0; c < 0x7f; c++)
     {
         ret = pPathIsValidCharA( c, ~0U );
-        ok ( ret == SHELL_charclass[c] || (ret == 1 && SHELL_charclass[c] == 0xffffffff),
-             "PathIsValidCharA failed: 0x%02x got 0x%08x expected 0x%08x\n",
-             c, (DWORD)ret, SHELL_charclass[c] );
+        ok ( ret || !SHELL_charclass[c], "PathIsValidCharA failed: 0x%02x got 0x%08x\n", c, ret );
     }
 
     for (c = 0x7f; c <= 0xff; c++)
     {
         ret = pPathIsValidCharA( c, ~0U );
-        ok ( ret == 0x00000100,
-             "PathIsValidCharA failed: 0x%02x got 0x%08x expected 0x00000100\n",
-             c, (DWORD)ret );
+        ok ( ret, "PathIsValidCharA failed: 0x%02x got 0x%08x\n", c, ret );
     }
 }
 
 static void test_PathIsValidCharW(void)
 {
     BOOL ret;
-    unsigned int c, err_count = 0;
-
-    ret = pPathIsValidCharW( 0x7f, 0 );
-    ok ( !ret, "PathIsValidCharW succeeded: 0x%08x\n", (DWORD)ret );
-
-    ret = pPathIsValidCharW( 0x7f, 1 );
-    ok ( !ret, "PathIsValidCharW succeeded: 0x%08x\n", (DWORD)ret );
+    unsigned int c;
 
     for (c = 0; c < 0x7f; c++)
     {
         ret = pPathIsValidCharW( c, ~0U );
-        ok ( ret == SHELL_charclass[c] || (ret == 1 && SHELL_charclass[c] == 0xffffffff),
-             "PathIsValidCharW failed: 0x%02x got 0x%08x expected 0x%08x\n",
-             c, (DWORD)ret, SHELL_charclass[c] );
+        ok ( ret || !SHELL_charclass[c], "PathIsValidCharW failed: 0x%02x got 0x%08x\n", c, ret );
     }
 
     for (c = 0x007f; c <= 0xffff; c++)
     {
         ret = pPathIsValidCharW( c, ~0U );
-        ok ( ret == 0x00000100,
-             "PathIsValidCharW failed: 0x%02x got 0x%08x expected 0x00000100\n",
-             c, (DWORD)ret );
-        if (ret != 0x00000100)
-        {
-            if(++err_count > 100 ) {
-                trace("skipping rest of PathIsValidCharW tests "
-                      "because of the current number of errors\n");
-                break;
-            }
-        }
+        ok ( ret, "PathIsValidCharW failed: 0x%02x got 0x%08x\n", c, ret );
     }
 }
 
@@ -799,7 +790,7 @@ static void test_PathAppendA(void)
 
 static void test_PathCanonicalizeA(void)
 {
-    char dest[MAX_PATH];
+    char dest[LONG_LEN + MAX_PATH];
     char too_long[LONG_LEN];
     BOOL res;
 
@@ -891,7 +882,9 @@ static void test_PathCanonicalizeA(void)
     res = PathCanonicalizeA(dest, "C:\\one/.\\two\\..");
     ok(res, "Expected success\n");
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(!lstrcmp(dest, "C:\\one/."), "Expected C:\\one/., got %s\n", dest);
+    ok(!lstrcmp(dest, "C:\\one/.") ||
+       !lstrcmp(dest, "C:\\one/"), /* Vista */
+       "Expected \"C:\\one/.\" or \"C:\\one/\", got \"%s\"\n", dest);
 
     /* try forward slashes with change dirs
      * NOTE: if there is a forward slash in between two backslashes,
@@ -913,7 +906,8 @@ static void test_PathCanonicalizeA(void)
     ok(!res, "Expected failure\n");
     todo_wine
     {
-        ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
+        ok(GetLastError() == 0xdeadbeef || GetLastError() == ERROR_FILENAME_EXCED_RANGE /* Vista */,
+        "Expected 0xdeadbeef or ERROR_FILENAME_EXCED_RANGE, got %d\n", GetLastError());
     }
     ok(lstrlen(too_long) == LONG_LEN - 1, "Expected length LONG_LEN - 1, got %i\n", lstrlen(too_long));
 }
@@ -1012,7 +1006,9 @@ static void test_PathBuildRootA(void)
     lstrcpy(path, "aaaaaaaaa");
     root = PathBuildRootA(path, -1);
     ok(root == path, "Expected root == path, got %p\n", root);
-    ok(!lstrcmp(path, "aaaaaaaaa"), "Expected aaaaaaaaa, got %s\n", path);
+    ok(!lstrcmp(path, "aaaaaaaaa") ||
+       lstrlenA(path) == 0, /* Vista */
+       "Expected aaaaaaaaa or empty string, got %s\n", path);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
     /* test a drive number greater than 25 */
@@ -1020,7 +1016,9 @@ static void test_PathBuildRootA(void)
     lstrcpy(path, "aaaaaaaaa");
     root = PathBuildRootA(path, 26);
     ok(root == path, "Expected root == path, got %p\n", root);
-    ok(!lstrcmp(path, "aaaaaaaaa"), "Expected aaaaaaaaa, got %s\n", path);
+    ok(!lstrcmp(path, "aaaaaaaaa") ||
+       lstrlenA(path) == 0, /* Vista */
+       "Expected aaaaaaaaa or empty string, got %s\n", path);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
     /* length of path is less than 4 */

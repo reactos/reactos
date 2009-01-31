@@ -35,6 +35,11 @@
     ok(ret == val, "Unexpected value of '" #expr "': " #fmt " instead of " #val "\n", ret); \
 } while (0);
 
+#define expect_eq2(expr, val1, val2, type, fmt) do { \
+    type ret = expr; \
+    ok(ret == val1 || ret == val2, "Unexpected value of '" #expr "': " #fmt " instead of " #val1 " or " #val2 "\n", ret); \
+} while (0);
+
 static BOOL    (WINAPI *pIntlStrEqWorkerA)(BOOL,LPCSTR,LPCSTR,int);
 static BOOL    (WINAPI *pIntlStrEqWorkerW)(BOOL,LPCWSTR,LPCWSTR,int);
 static DWORD   (WINAPI *pSHAnsiToAnsi)(LPCSTR,LPSTR,int);
@@ -198,9 +203,8 @@ static void test_StrChrA(void)
   for (count = 32; count < 128; count++)
   {
     LPSTR result = StrChrA(string+32, count);
-    ok(result - string == count,
-        "found char '%c' in wrong place: got %d, expected %d\n",
-        count, result - string, count);
+    INT pos = result - string;
+    ok(pos == count, "found char '%c' in wrong place: got %d, expected %d\n", count, pos, count);
   }
 
   for (count = 32; count < 128; count++)
@@ -335,9 +339,8 @@ static void test_StrRChrW(void)
   for (count = 32; count < 128; count++)
   {
     LPWSTR result = StrRChrW(string+32, NULL, count);
-    ok(result - string == count,
-        "found char %d in wrong place: got %d, expected %d\n",
-        count, result - string, count);
+    INT pos = result - string;
+    ok(pos == count, "found char %d in wrong place: got %d, expected %d\n", count, pos, count);
   }
 
   for (count = 32; count < 128; count++)
@@ -481,7 +484,7 @@ static void test_StrDupA(void)
     if (lpszStr)
     {
       ok(!strcmp(result->byte_size_64, lpszStr), "Copied string wrong\n");
-      LocalFree((HLOCAL)lpszStr);
+      LocalFree(lpszStr);
     }
     result++;
   }
@@ -491,7 +494,7 @@ static void test_StrDupA(void)
    */
   lpszStr = StrDupA(NULL);
   ok(lpszStr == NULL || *lpszStr == '\0', "NULL string returned %p\n", lpszStr);
-  LocalFree((HLOCAL)lpszStr);
+  LocalFree(lpszStr);
 }
 
 static void test_StrFormatByteSize64A(void)
@@ -659,16 +662,14 @@ static void test_StrRetToBSTR(void)
     ret = pStrRetToBSTR(&strret, NULL, &bstr);
     ok(ret == S_OK && bstr && !strcmpW(bstr, szTestW),
        "STRRET_WSTR: dup failed, ret=0x%08x, bstr %p\n", ret, bstr);
-    if (bstr)
-      SysFreeString(bstr);
+    SysFreeString(bstr);
 
     strret.uType = STRRET_CSTR;
     lstrcpyA(U(strret).cStr, "Test");
     ret = pStrRetToBSTR(&strret, NULL, &bstr);
     ok(ret == S_OK && bstr && !strcmpW(bstr, szTestW),
        "STRRET_CSTR: dup failed, ret=0x%08x, bstr %p\n", ret, bstr);
-    if (bstr)
-      SysFreeString(bstr);
+    SysFreeString(bstr);
 
     strret.uType = STRRET_OFFSET;
     U(strret).uOffset = 1;
@@ -676,8 +677,7 @@ static void test_StrRetToBSTR(void)
     ret = pStrRetToBSTR(&strret, iidl, &bstr);
     ok(ret == S_OK && bstr && !strcmpW(bstr, szTestW),
        "STRRET_OFFSET: dup failed, ret=0x%08x, bstr %p\n", ret, bstr);
-    if (bstr)
-      SysFreeString(bstr);
+    SysFreeString(bstr);
 
     /* Native crashes if str is NULL */
 }
@@ -850,7 +850,7 @@ static void test_StrXXX_overflows(void)
         memset(wbuf, 0xbf, sizeof(wbuf));
         strret.uType = STRRET_WSTR;
         U(strret).pOleStr = StrDupW(wstr1);
-        expect_eq(pStrRetToBufW(&strret, NULL, wbuf, 10), S_OK, HRESULT, "%x");
+        expect_eq2(pStrRetToBufW(&strret, NULL, wbuf, 10), S_OK, HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER) /* Vista */, HRESULT, "%x");
         expect_eq(wbuf[9], 0, WCHAR, "%x");
         expect_eq(wbuf[10], (WCHAR)0xbfbf, WCHAR, "%x");
     }
@@ -862,7 +862,7 @@ static void test_StrXXX_overflows(void)
         memset(buf, 0xbf, sizeof(buf));
         strret.uType = STRRET_CSTR;
         StrCpyN(U(strret).cStr, str1, MAX_PATH);
-        expect_eq(pStrRetToBufA(&strret, NULL, buf, 10), S_OK, HRESULT, "%x");
+        expect_eq2(pStrRetToBufA(&strret, NULL, buf, 10), S_OK, HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER) /* Vista */, HRESULT, "%x");
         expect_eq(buf[9], 0, CHAR, "%x");
         expect_eq(buf[10], (CHAR)0xbf, CHAR, "%x");
     }
@@ -873,7 +873,7 @@ static void test_StrXXX_overflows(void)
     {
         memset(buf, 0xbf, sizeof(buf));
         ret = pwnsprintfA(buf, 10, "%s", str1);
-        todo_wine ok(ret == 9, "Unexpected wsnprintfA return %d, expected 9\n", ret);
+        ok(broken(ret == 9) || ret == -1 /* Vista */, "Unexpected wsnprintfA return %d, expected 9 or -1\n", ret);
         expect_eq(buf[9], 0, CHAR, "%x");
         expect_eq(buf[10], (CHAR)0xbf, CHAR, "%x");
     }
@@ -884,7 +884,7 @@ static void test_StrXXX_overflows(void)
     {
         memset(wbuf, 0xbf, sizeof(wbuf));
         ret = pwnsprintfW(wbuf, 10, fmt, wstr1);
-        todo_wine ok(ret == 9, "Unexpected wsnprintfW return %d, expected 9\n", ret);
+        ok(broken(ret == 9) || ret == -1 /* Vista */, "Unexpected wsnprintfW return %d, expected 9 or -1\n", ret);
         expect_eq(wbuf[9], 0, WCHAR, "%x");
         expect_eq(wbuf[10], (WCHAR)0xbfbf, WCHAR, "%x");
     }

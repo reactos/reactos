@@ -42,13 +42,19 @@ static void test_GetAcceptLanguagesA(void)
     DWORD buffersize, buffersize2, exactsize;
     char buffer[100];
 
-    if (!pGetAcceptLanguagesA)
+    if (!pGetAcceptLanguagesA) {
+        win_skip("GetAcceptLanguagesA is not available\n");
 	return;
+    }
 
     buffersize = sizeof(buffer);
     memset(buffer, 0, sizeof(buffer));
     SetLastError(ERROR_SUCCESS);
     retval = pGetAcceptLanguagesA( buffer, &buffersize);
+    if (!retval && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
+        win_skip("GetAcceptLanguagesA is not implemented\n");
+        return;
+    }
     trace("GetAcceptLanguagesA: retval %08x, size %08x, buffer (%s),"
 	" last error %u\n", retval, buffersize, buffer, GetLastError());
     if(retval != S_OK) {
@@ -58,28 +64,31 @@ static void test_GetAcceptLanguagesA(void)
     ok( (ERROR_NO_IMPERSONATION_TOKEN == GetLastError()) || 
 	(ERROR_CLASS_DOES_NOT_EXIST == GetLastError()) ||
 	(ERROR_PROC_NOT_FOUND == GetLastError()) ||
-	(ERROR_CALL_NOT_IMPLEMENTED == GetLastError()) ||
 	(ERROR_SUCCESS == GetLastError()), "last error set to %u\n", GetLastError());
     exactsize = strlen(buffer);
 
     SetLastError(ERROR_SUCCESS);
     retval = pGetAcceptLanguagesA( NULL, NULL);
-    ok(retval == E_FAIL,
+    ok(retval == E_FAIL ||
+       retval == E_INVALIDARG, /* w2k8 */
        "function result wrong: got %08x; expected E_FAIL\n", retval);
     ok(ERROR_SUCCESS == GetLastError(), "last error set to %u\n", GetLastError());
 
     buffersize = sizeof(buffer);
     SetLastError(ERROR_SUCCESS);
     retval = pGetAcceptLanguagesA( NULL, &buffersize);
-    ok(retval == E_FAIL,
+    ok(retval == E_FAIL ||
+       retval == E_INVALIDARG, /* w2k8 */
        "function result wrong: got %08x; expected E_FAIL\n", retval);
-    ok(buffersize == sizeof(buffer),
-       "buffersize was changed (2nd parameter; not on Win2k)\n");
+    ok(buffersize == sizeof(buffer) ||
+       buffersize == 0, /* w2k8*/
+       "buffersize was changed and is not 0; size (%d))\n", buffersize);
     ok(ERROR_SUCCESS == GetLastError(), "last error set to %u\n", GetLastError());
 
     SetLastError(ERROR_SUCCESS);
     retval = pGetAcceptLanguagesA( buffer, NULL);
-    ok(retval == E_FAIL,
+    ok(retval == E_FAIL ||
+       retval == E_INVALIDARG, /* w2k8 */
        "function result wrong: got %08x; expected E_FAIL\n", retval);
     ok(ERROR_SUCCESS == GetLastError(), "last error set to %u\n", GetLastError());
 
@@ -87,7 +96,8 @@ static void test_GetAcceptLanguagesA(void)
     memset(buffer, 0, sizeof(buffer));
     SetLastError(ERROR_SUCCESS);
     retval = pGetAcceptLanguagesA( buffer, &buffersize);
-    ok(retval == E_FAIL,
+    ok(retval == E_FAIL ||
+       retval == E_INVALIDARG, /* w2k8 */
        "function result wrong: got %08x; expected E_FAIL\n", retval);
     ok(buffersize == 0,
        "buffersize wrong(changed) got %08x; expected 0 (2nd parameter; not on Win2k)\n", buffersize);
@@ -100,9 +110,9 @@ static void test_GetAcceptLanguagesA(void)
     switch(retval) {
 	case 0L:
             if(buffersize == exactsize) {
-            ok( (ERROR_SUCCESS == GetLastError()) || (ERROR_CALL_NOT_IMPLEMENTED == GetLastError()) ||
+            ok( (ERROR_SUCCESS == GetLastError()) ||
 		(ERROR_PROC_NOT_FOUND == GetLastError()) || (ERROR_NO_IMPERSONATION_TOKEN == GetLastError()),
-                "last error wrong: got %u; expected ERROR_SUCCESS(NT4)/ERROR_CALL_NOT_IMPLEMENTED(98/ME)/"
+                "last error wrong: got %u; expected ERROR_SUCCESS(NT4)/"
 		"ERROR_PROC_NOT_FOUND(NT4)/ERROR_NO_IMPERSONATION_TOKEN(XP)\n", GetLastError());
             ok(exactsize == strlen(buffer),
                  "buffer content (length) wrong: got %08x, expected %08x\n", lstrlenA(buffer), exactsize);
@@ -219,7 +229,7 @@ static void test_alloc_shared(void)
     hmem=pSHAllocShared(&val,4,procid);
     ok(hmem!=NULL,"SHAllocShared(NULL...) failed: %u\n", GetLastError());
 
-    p=(int*)pSHLockShared(hmem,procid);
+    p=pSHLockShared(hmem,procid);
     ok(p!=NULL,"SHLockShared failed: %u\n", GetLastError());
     if (p!=NULL)
         ok(*p==val,"Wrong value in shared memory: %d instead of %d\n",*p,val);
@@ -363,12 +373,25 @@ static void test_GetShellSecurityDescriptor(void)
 
     pGetShellSecurityDescriptor=(void*)GetProcAddress(hShlwapi,(char*)475);
 
+    if(!pGetShellSecurityDescriptor)
+    {
+        win_skip("GetShellSecurityDescriptor not available\n");
+        return;
+    }
+
     psd = pGetShellSecurityDescriptor(NULL, 2);
     ok(psd==NULL, "GetShellSecurityDescriptor should fail\n");
     psd = pGetShellSecurityDescriptor(rgsup, 0);
     ok(psd==NULL, "GetShellSecurityDescriptor should fail\n");
 
+    SetLastError(0xdeadbeef);
     psd = pGetShellSecurityDescriptor(rgsup, 2);
+    if (psd == NULL && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        /* The previous calls to GetShellSecurityDescriptor don't set the last error */
+        win_skip("GetShellSecurityDescriptor is not implemented\n");
+        return;
+    }
     ok(psd!=NULL, "GetShellSecurityDescriptor failed\n");
     if (psd!=NULL)
     {
