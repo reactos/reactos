@@ -250,8 +250,8 @@
 254 stub MsiDeterminePatchSequenceW
 255 stdcall MsiSourceListAddSourceExA(str str long long str long)
 256 stdcall MsiSourceListAddSourceExW(wstr wstr long long wstr long)
-257 stub MsiSourceListClearSourceA
-258 stub MsiSourceListClearSourceW
+257 stdcall MsiSourceListClearSourceA(str str long long str)
+258 stdcall MsiSourceListClearSourceW(wstr wstr long long wstr)
 259 stub MsiSourceListClearAllExA
 260 stub MsiSourceListClearAllExW
 261 stub MsiSourceListForceResolutionExA

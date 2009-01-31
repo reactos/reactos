@@ -1206,7 +1206,7 @@ static UINT merge_diff_row(MSIRECORD *rec, LPVOID param)
     MERGETABLE *table = data->curtable;
     MERGEROW *mergerow;
     MSIQUERY *dbview;
-    MSIRECORD *row;
+    MSIRECORD *row = NULL;
     LPWSTR query;
     UINT r;
 

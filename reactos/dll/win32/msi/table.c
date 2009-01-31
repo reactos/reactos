@@ -1818,7 +1818,7 @@ static UINT TABLE_remove_column(struct tagMSIVIEW *view, LPCWSTR table, UINT num
 
 done:
     msiobj_release(&rec->hdr);
-    if (columns) columns->ops->delete(columns);
+    columns->ops->delete(columns);
     return r;
 }
 

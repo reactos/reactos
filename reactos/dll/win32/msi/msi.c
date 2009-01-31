@@ -1553,7 +1553,7 @@ UINT WINAPI MsiQueryComponentStateW(LPCWSTR szProductCode,
     TRACE("(%s, %s, %d, %s, %p)\n", debugstr_w(szProductCode),
           debugstr_w(szUserSid), dwContext, debugstr_w(szComponent), pdwState);
 
-    if (!pdwState)
+    if (!pdwState || !szComponent)
         return ERROR_INVALID_PARAMETER;
 
     if (!szProductCode || !*szProductCode || lstrlenW(szProductCode) != GUID_SIZE - 1)

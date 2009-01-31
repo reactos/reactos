@@ -1894,7 +1894,7 @@ static UINT msi_enum_patches(LPCWSTR szProductCode, LPCWSTR szUserSid,
         MSIINSTALLCONTEXT *pdwTargetProductContext, LPWSTR szTargetUserSid,
         LPDWORD pcchTargetUserSid, LPWSTR *szTransforms)
 {
-    UINT r;
+    UINT r = ERROR_INVALID_PARAMETER;
 
     if (dwContext & MSIINSTALLCONTEXT_USERMANAGED)
     {
