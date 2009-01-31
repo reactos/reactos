@@ -1342,7 +1342,7 @@ HRESULT WINAPI StrRetToBufA (LPSTRRET src, const ITEMIDLIST *pidl, LPSTR dest, U
 	    break;
 
 	  case STRRET_CSTR:
-	    lstrcpynA((LPSTR)dest, src->u.cStr, len);
+            lstrcpynA(dest, src->u.cStr, len);
 	    break;
 
 	  case STRRET_OFFSET:
@@ -1381,7 +1381,7 @@ HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, 
 	switch (src->uType)
 	{
 	  case STRRET_WSTR:
-	    lstrcpynW((LPWSTR)dest, src->u.pOleStr, len);
+            lstrcpynW(dest, src->u.pOleStr, len);
 	    CoTaskMemFree(src->u.pOleStr);
 	    break;
 

@@ -190,7 +190,7 @@ LONG WINAPI SHRegOpenUSKeyW(LPCWSTR Path, REGSAM AccessType, HUSKEY hRelativeUSK
 LONG WINAPI SHRegCloseUSKey(
         HUSKEY hUSKey) /* [I] Key to close */
 {
-    LPSHUSKEY hKey = (LPSHUSKEY)hUSKey;
+    LPSHUSKEY hKey = hUSKey;
     LONG ret = ERROR_SUCCESS;
 
     if (hKey->HKCUkey)
@@ -393,8 +393,8 @@ LONG WINAPI SHRegQueryUSValueA(
 	if (ret != ERROR_SUCCESS) {
 	    if (pvDefaultData && (dwDefaultDataSize != 0)) {
 		maxmove = (dwDefaultDataSize >= *pcbData) ? *pcbData : dwDefaultDataSize;
-		src = (CHAR*)pvDefaultData;
-		dst = (CHAR*)pvData;
+                src = pvDefaultData;
+                dst = pvData;
 		for(i=0; i<maxmove; i++) *dst++ = *src++;
 		*pcbData = maxmove;
 		TRACE("setting default data\n");
@@ -444,8 +444,8 @@ LONG WINAPI SHRegQueryUSValueW(
 	if (ret != ERROR_SUCCESS) {
 	    if (pvDefaultData && (dwDefaultDataSize != 0)) {
 		maxmove = (dwDefaultDataSize >= *pcbData) ? *pcbData : dwDefaultDataSize;
-		src = (CHAR*)pvDefaultData;
-		dst = (CHAR*)pvData;
+                src = pvDefaultData;
+                dst = pvData;
 		for(i=0; i<maxmove; i++) *dst++ = *src++;
 		*pcbData = maxmove;
 		TRACE("setting default data\n");
@@ -934,7 +934,7 @@ LONG  WINAPI SHRegWriteUSValueW(HUSKEY hUSKey, LPCWSTR pszValue, DWORD dwType,
                                 LPVOID pvData, DWORD cbData, DWORD dwFlags)
 {
     DWORD dummy;
-    LPSHUSKEY hKey = (LPSHUSKEY)hUSKey;
+    LPSHUSKEY hKey = hUSKey;
     LONG ret = ERROR_SUCCESS;
 
     TRACE("(%p,%s,%d,%p,%d,%d)\n", hUSKey, debugstr_w(pszValue),
@@ -2242,7 +2242,7 @@ DWORD WINAPI SHCopyKeyW(HKEY hKeySrc, LPCWSTR lpszSrcSubKey, HKEY hKeyDst, DWORD
   DWORD dwKeyCount = 0, dwValueCount = 0, dwMaxKeyLen = 0;
   DWORD  dwMaxValueLen = 0, dwMaxDataLen = 0, i;
   BYTE buff[1024];
-  LPVOID lpBuff = (LPVOID)buff;
+  LPVOID lpBuff = buff;
   WCHAR szName[MAX_PATH], *lpszName = szName;
   DWORD dwRet = S_OK;
 

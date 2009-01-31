@@ -455,7 +455,7 @@ static HRESULT WINAPI IQueryAssociations_fnQueryInterface(
   if (IsEqualIID(riid, &IID_IUnknown) ||
       IsEqualIID(riid, &IID_IQueryAssociations))
   {
-    *ppvObj = (IQueryAssociations*)This;
+    *ppvObj = This;
 
     IQueryAssociations_AddRef((IQueryAssociations*)*ppvObj);
     TRACE("Returning IQueryAssociations (%p)\n", *ppvObj);
@@ -594,9 +594,8 @@ static HRESULT ASSOC_GetValue(HKEY hkey, WCHAR ** pszText)
   return S_OK;
 }
 
-static HRESULT ASSOC_GetExecutable(IQueryAssociationsImpl *This,
-                                   LPCWSTR pszExtra, LPWSTR path,
-                                   DWORD pathlen, DWORD *len)
+static HRESULT ASSOC_GetCommand(IQueryAssociationsImpl *This,
+                                LPCWSTR pszExtra, WCHAR **ppszCommand)
 {
   HKEY hkeyCommand;
   HKEY hkeyFile;
@@ -604,15 +603,10 @@ static HRESULT ASSOC_GetExecutable(IQueryAssociationsImpl *This,
   HKEY hkeyVerb;
   HRESULT hr;
   LONG ret;
-  WCHAR * pszCommand;
-  WCHAR * pszEnd;
   WCHAR * pszExtraFromReg = NULL;
   WCHAR * pszFileType;
-  WCHAR * pszStart;
   static const WCHAR commandW[] = { 'c','o','m','m','a','n','d',0 };
   static const WCHAR shellW[] = { 's','h','e','l','l',0 };
-
-  assert(len);
 
   hr = ASSOC_GetValue(This->hkeySource, &pszFileType);
   if (FAILED(hr))
@@ -672,8 +666,23 @@ static HRESULT ASSOC_GetExecutable(IQueryAssociationsImpl *This,
   RegCloseKey(hkeyVerb);
   if (ret != ERROR_SUCCESS)
     return HRESULT_FROM_WIN32(ret);
-  hr = ASSOC_GetValue(hkeyCommand, &pszCommand);
+  hr = ASSOC_GetValue(hkeyCommand, ppszCommand);
   RegCloseKey(hkeyCommand);
+  return hr;
+}
+
+static HRESULT ASSOC_GetExecutable(IQueryAssociationsImpl *This,
+                                   LPCWSTR pszExtra, LPWSTR path,
+                                   DWORD pathlen, DWORD *len)
+{
+  WCHAR *pszCommand;
+  WCHAR *pszStart;
+  WCHAR *pszEnd;
+  HRESULT hr;
+
+  assert(len);
+
+  hr = ASSOC_GetCommand(This, pszExtra, &pszCommand);
   if (FAILED(hr))
     return hr;
 
@@ -763,6 +772,18 @@ static HRESULT WINAPI IQueryAssociations_fnGetString(
 
   switch (str)
   {
+    case ASSOCSTR_COMMAND:
+    {
+      WCHAR *command;
+      hr = ASSOC_GetCommand(This, pszExtra, &command);
+      if (SUCCEEDED(hr))
+      {
+        hr = ASSOC_ReturnData(pszOut, pcchOut, command, strlenW(command) + 1);
+        HeapFree(GetProcessHeap(), 0, command);
+      }
+      return hr;
+    }
+
     case ASSOCSTR_EXECUTABLE:
     {
       hr = ASSOC_GetExecutable(This, pszExtra, path, MAX_PATH, &len);
@@ -770,6 +791,38 @@ static HRESULT WINAPI IQueryAssociations_fnGetString(
         return hr;
       len++;
       return ASSOC_ReturnData(pszOut, pcchOut, path, len);
+    }
+
+    case ASSOCSTR_FRIENDLYDOCNAME:
+    {
+      WCHAR *pszFileType;
+      DWORD ret;
+      DWORD size;
+
+      hr = ASSOC_GetValue(This->hkeySource, &pszFileType);
+      if (FAILED(hr))
+        return hr;
+      size = 0;
+      ret = RegGetValueW(HKEY_CLASSES_ROOT, pszFileType, NULL, RRF_RT_REG_SZ, NULL, NULL, &size);
+      if (ret == ERROR_SUCCESS)
+      {
+        WCHAR *docName = HeapAlloc(GetProcessHeap(), 0, size);
+        if (docName)
+        {
+          ret = RegGetValueW(HKEY_CLASSES_ROOT, pszFileType, NULL, RRF_RT_REG_SZ, NULL, docName, &size);
+          if (ret == ERROR_SUCCESS)
+            hr = ASSOC_ReturnData(pszOut, pcchOut, docName, strlenW(docName) + 1);
+          else
+            hr = HRESULT_FROM_WIN32(ret);
+          HeapFree(GetProcessHeap(), 0, docName);
+        }
+        else
+          hr = E_OUTOFMEMORY;
+      }
+      else
+        hr = HRESULT_FROM_WIN32(ret);
+      HeapFree(GetProcessHeap(), 0, pszFileType);
+      return hr;
     }
 
     case ASSOCSTR_FRIENDLYAPPNAME:
@@ -823,6 +876,73 @@ get_friendly_name_fail:
       PathStripPathW(path);
       TRACE("using filename: %s\n", debugstr_w(path));
       return ASSOC_ReturnData(pszOut, pcchOut, path, strlenW(path) + 1);
+    }
+
+    case ASSOCSTR_CONTENTTYPE:
+    {
+      static const WCHAR Content_TypeW[] = {'C','o','n','t','e','n','t',' ','T','y','p','e',0};
+      WCHAR *contentType;
+      DWORD ret;
+      DWORD size;
+
+      size = 0;
+      ret = RegGetValueW(This->hkeySource, NULL, Content_TypeW, RRF_RT_REG_SZ, NULL, NULL, &size);
+      if (ret != ERROR_SUCCESS)
+        return HRESULT_FROM_WIN32(ret);
+      contentType = HeapAlloc(GetProcessHeap(), 0, size);
+      if (contentType != NULL)
+      {
+        ret = RegGetValueW(This->hkeySource, NULL, Content_TypeW, RRF_RT_REG_SZ, NULL, contentType, &size);
+        if (ret == ERROR_SUCCESS)
+          hr = ASSOC_ReturnData(pszOut, pcchOut, contentType, strlenW(contentType) + 1);
+        else
+          hr = HRESULT_FROM_WIN32(ret);
+        HeapFree(GetProcessHeap(), 0, contentType);
+      }
+      else
+        hr = E_OUTOFMEMORY;
+      return hr;
+    }
+
+    case ASSOCSTR_DEFAULTICON:
+    {
+      static const WCHAR DefaultIconW[] = {'D','e','f','a','u','l','t','I','c','o','n',0};
+      WCHAR *pszFileType;
+      DWORD ret;
+      DWORD size;
+      HKEY hkeyFile;
+
+      hr = ASSOC_GetValue(This->hkeySource, &pszFileType);
+      if (FAILED(hr))
+        return hr;
+      ret = RegOpenKeyExW(HKEY_CLASSES_ROOT, pszFileType, 0, KEY_READ, &hkeyFile);
+      if (ret == ERROR_SUCCESS)
+      {
+        size = 0;
+        ret = RegGetValueW(hkeyFile, DefaultIconW, NULL, RRF_RT_REG_SZ, NULL, NULL, &size);
+        if (ret == ERROR_SUCCESS)
+        {
+          WCHAR *icon = HeapAlloc(GetProcessHeap(), 0, size);
+          if (icon)
+          {
+            ret = RegGetValueW(hkeyFile, DefaultIconW, NULL, RRF_RT_REG_SZ, NULL, icon, &size);
+            if (ret == ERROR_SUCCESS)
+              hr = ASSOC_ReturnData(pszOut, pcchOut, icon, strlenW(icon) + 1);
+            else
+              hr = HRESULT_FROM_WIN32(ret);
+            HeapFree(GetProcessHeap(), 0, icon);
+          }
+          else
+            hr = E_OUTOFMEMORY;
+        }
+        else
+          hr = HRESULT_FROM_WIN32(ret);
+        RegCloseKey(hkeyFile);
+      }
+      else
+        hr = HRESULT_FROM_WIN32(ret);
+      HeapFree(GetProcessHeap(), 0, pszFileType);
+      return hr;
     }
 
     default:

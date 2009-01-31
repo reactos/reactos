@@ -1250,12 +1250,10 @@ BOOL WINAPI SHIsSameObject(IUnknown* lpInt1, IUnknown* lpInt2)
   if (lpInt1 == lpInt2)
     return TRUE;
 
-  if (FAILED(IUnknown_QueryInterface(lpInt1, &IID_IUnknown,
-                                       (LPVOID *)&lpUnknown1)))
+  if (FAILED(IUnknown_QueryInterface(lpInt1, &IID_IUnknown, &lpUnknown1)))
     return FALSE;
 
-  if (FAILED(IUnknown_QueryInterface(lpInt2, &IID_IUnknown,
-                                       (LPVOID *)&lpUnknown2)))
+  if (FAILED(IUnknown_QueryInterface(lpInt2, &IID_IUnknown, &lpUnknown2)))
     return FALSE;
 
   if (lpUnknown1 == lpUnknown2)
@@ -2236,7 +2234,7 @@ HRESULT WINAPI QISearch(
 		if (IsEqualIID(riid, xmove->refid)) {
 		    a_vtbl = (IUnknown*)(xmove->indx + (LPBYTE)w);
 		    TRACE("matched, returning (%p)\n", a_vtbl);
-		    *ppv = (LPVOID)a_vtbl;
+                    *ppv = a_vtbl;
 		    IUnknown_AddRef(a_vtbl);
 		    return S_OK;
 		}
@@ -2246,7 +2244,7 @@ HRESULT WINAPI QISearch(
 	    if (IsEqualIID(riid, &IID_IUnknown)) {
 		a_vtbl = (IUnknown*)(x->indx + (LPBYTE)w);
 		TRACE("returning first for IUnknown (%p)\n", a_vtbl);
-		*ppv = (LPVOID)a_vtbl;
+                *ppv = a_vtbl;
 		IUnknown_AddRef(a_vtbl);
 		return S_OK;
 	    }
@@ -2539,7 +2537,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
 	if (retval != ERROR_SUCCESS)
 	  return 0;
 
-	SHGetValueW(hKey, lpSubName, lpValue, NULL, (LPBYTE)&retval, &datsize);
+        SHGetValueW(hKey, lpSubName, lpValue, NULL, &retval, &datsize);
 	RegCloseKey(hKey);
 	return retval;
 }
@@ -2618,7 +2616,7 @@ HRESULT WINAPI SHWeakQueryInterface(
 
 	*ppv = NULL;
 	if(pUnk && pInner) {
-	    hret = IUnknown_QueryInterface(pInner, riid, (LPVOID*)ppv);
+            hret = IUnknown_QueryInterface(pInner, riid, ppv);
 	    if (SUCCEEDED(hret)) IUnknown_Release(pUnk);
 	}
 	TRACE("-- 0x%08x\n", hret);
@@ -4167,7 +4165,7 @@ BOOL WINAPI SHSkipJunction(IBindCtx *pbc, const CLSID *pclsid)
   {
     IUnknown* lpUnk;
 
-    if (SUCCEEDED(IBindCtx_GetObjectParam(pbc, (LPOLESTR)szSkipBinding, &lpUnk)))
+    if (SUCCEEDED(IBindCtx_GetObjectParam(pbc, szSkipBinding, &lpUnk)))
     {
       CLSID clsid;
 
