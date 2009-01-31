@@ -301,6 +301,9 @@
 <directory name="pstorec">
 	<xi:include href="pstorec/pstorec.rbuild" />
 </directory>
+<!--directory name="qmgr">
+	<xi:include href="qmgr/qmgr.rbuild" />
+</directory-->
 <directory name="rasapi32">
 	<xi:include href="rasapi32/rasapi32.rbuild" />
 </directory>

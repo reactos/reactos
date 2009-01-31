@@ -4,6 +4,8 @@
 	<file>activaut.idl</file>
 	<file>activdbg.idl</file>
 	<file>activscp.idl</file>
+	<file>bits1_5.idl</file>
+	<file>bits.idl</file>
 	<file>control.idl</file>
 	<file>ctxtcall.idl</file>
 	<file>dimm.idl</file>
