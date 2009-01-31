@@ -492,47 +492,6 @@ DIB_1BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 return TRUE;
 }
 
-//NOTE: If you change something here, please do the same in other dibXXbpp.c files!
-
-BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
-                            RECTL* DestRect, RECTL *SourceRect,
-                            POINTL* MaskOrigin, POINTL BrushOrigin,
-                            CLIPOBJ *ClipRegion, XLATEOBJ *ColorTranslation,
-                            ULONG Mode)
-{
-   LONG SrcSizeY;
-   LONG SrcSizeX;
-   LONG DesSizeY;
-   LONG DesSizeX;
-   LONG sx;
-   LONG sy;
-   LONG DesX;
-   LONG DesY;
-   LONG color;
-
-   SrcSizeY = SourceRect->bottom - SourceRect->top;
-   SrcSizeX = SourceRect->right - SourceRect->left;
-
-   DesSizeY = DestRect->bottom - DestRect->top;
-   DesSizeX = DestRect->right - DestRect->left;
-
-    /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
-    /* This is a reference implementation, it hasn't been optimized for speed */
-    for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-    {
-        sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
-
-        for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-        {
-            sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
-            color = DibFunctionsForBitmapFormat[SourceSurf->iBitmapFormat].
-                        DIB_GetPixel(SourceSurf, sx, sy);
-            DIB_1BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
-        }
-    }
-    return TRUE;
-}
-
 BOOLEAN
 DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         RECTL*  DestRect,  POINTL  *SourcePoint,
