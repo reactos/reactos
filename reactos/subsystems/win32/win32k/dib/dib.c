@@ -39,37 +39,37 @@ DIB_FUNCTIONS DibFunctionsForBitmapFormat[] =
    /* BMF_1BPP */
    {
       DIB_1BPP_PutPixel, DIB_1BPP_GetPixel, DIB_1BPP_HLine, DIB_1BPP_VLine,
-      DIB_1BPP_BitBlt, DIB_1BPP_BitBltSrcCopy, DIB_1BPP_StretchBlt,
+      DIB_1BPP_BitBlt, DIB_1BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
       DIB_1BPP_TransparentBlt, DIB_1BPP_ColorFill, DIB_1BPP_AlphaBlend
    },
    /* BMF_4BPP */
    {
       DIB_4BPP_PutPixel, DIB_4BPP_GetPixel, DIB_4BPP_HLine, DIB_4BPP_VLine,
-      DIB_4BPP_BitBlt, DIB_4BPP_BitBltSrcCopy, DIB_4BPP_StretchBlt,
+      DIB_4BPP_BitBlt, DIB_4BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
       DIB_4BPP_TransparentBlt, DIB_4BPP_ColorFill, DIB_4BPP_AlphaBlend
    },
    /* BMF_8BPP */
    {
       DIB_8BPP_PutPixel, DIB_8BPP_GetPixel, DIB_8BPP_HLine, DIB_8BPP_VLine,
-      DIB_8BPP_BitBlt, DIB_8BPP_BitBltSrcCopy, DIB_8BPP_StretchBlt,
+      DIB_8BPP_BitBlt, DIB_8BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
       DIB_8BPP_TransparentBlt, DIB_8BPP_ColorFill, DIB_8BPP_AlphaBlend
    },
    /* BMF_16BPP */
    {
       DIB_16BPP_PutPixel, DIB_16BPP_GetPixel, DIB_16BPP_HLine, DIB_16BPP_VLine,
-      DIB_16BPP_BitBlt, DIB_16BPP_BitBltSrcCopy, DIB_16BPP_StretchBlt,
+      DIB_16BPP_BitBlt, DIB_16BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
       DIB_16BPP_TransparentBlt, DIB_16BPP_ColorFill, DIB_16BPP_AlphaBlend
    },
    /* BMF_24BPP */
    {
       DIB_24BPP_PutPixel, DIB_24BPP_GetPixel, DIB_24BPP_HLine, DIB_24BPP_VLine,
-      DIB_24BPP_BitBlt, DIB_24BPP_BitBltSrcCopy, DIB_24BPP_StretchBlt,
+      DIB_24BPP_BitBlt, DIB_24BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
       DIB_24BPP_TransparentBlt, DIB_24BPP_ColorFill, DIB_24BPP_AlphaBlend
    },
    /* BMF_32BPP */
    {
       DIB_32BPP_PutPixel, DIB_32BPP_GetPixel, DIB_32BPP_HLine, DIB_32BPP_VLine,
-      DIB_32BPP_BitBlt, DIB_32BPP_BitBltSrcCopy, DIB_32BPP_StretchBlt,
+      DIB_32BPP_BitBlt, DIB_32BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
       DIB_32BPP_TransparentBlt, DIB_32BPP_ColorFill, DIB_32BPP_AlphaBlend
    },
    /* BMF_4RLE */

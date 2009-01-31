@@ -28,6 +28,7 @@
 		<file>dib16bpp.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
+		<file>dibXXbpp.c</file>
 		<file>dib.c</file>
 
 		<if property="ARCH" value="i386">

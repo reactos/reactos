@@ -750,8 +750,8 @@ NtGdiStretchBlt(
 	BOOL Status = FALSE;
 	XLATEOBJ *XlateObj = NULL;
 	PGDIBRUSHOBJ BrushObj = NULL;
-	BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
-	BOOL UsesPattern = ((ROP & 0xF00000) >> 4) != (ROP & 0x0F0000);
+	BOOL UsesSource = ROP3_USES_SOURCE(ROP);
+	BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
 	if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
 	{
@@ -915,7 +915,7 @@ NtGdiStretchBlt(
 	Status = IntEngStretchBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
                                   NULL, DCDest->CombinedClip, XlateObj,
                                   &DestRect, &SourceRect, NULL, NULL, NULL,
-                                  COLORONCOLOR);
+                                  ROP3_TO_ROP4(ROP));
 
 failed:
 	if (XlateObj)

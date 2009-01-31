@@ -836,15 +836,19 @@ EngStretchBlt(
     PSTRETCHRECTFUNC   BltRectFunc;
     BOOLEAN            Ret;
     POINTL             AdjustedBrushOrigin;
+    BOOL               UsesSource = ROP4_USES_SOURCE(Mode);
 
     InputRect.left = prclSrc->left;
     InputRect.right = prclSrc->right;
     InputRect.top = prclSrc->top;
     InputRect.bottom = prclSrc->bottom;
 
-    if (! IntEngEnter(&EnterLeaveSource, psoSource, &InputRect, TRUE, &Translate, &psoInput))
+    if (UsesSource)
     {
-        return FALSE;
+        if (! IntEngEnter(&EnterLeaveSource, psoSource, &InputRect, TRUE, &Translate, &psoInput))
+        {
+            return FALSE;
+        }
     }
 
     InputPoint.x = InputRect.left + Translate.x;
@@ -856,13 +860,19 @@ EngStretchBlt(
        nothing to do */
     if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
     {
-        IntEngLeave(&EnterLeaveSource);
+        if (UsesSource)
+        {
+            IntEngLeave(&EnterLeaveSource);
+        }
         return TRUE;
     }
 
     if (! IntEngEnter(&EnterLeaveDest, psoDest, &OutputRect, FALSE, &Translate, &psoOutput))
     {
-        IntEngLeave(&EnterLeaveSource);
+        if (UsesSource)
+        {
+            IntEngLeave(&EnterLeaveSource);
+        }
         return FALSE;
     }
 
@@ -886,8 +896,10 @@ EngStretchBlt(
         //BltRectFunc = BltMask;
         DPRINT("EngStretchBlt isn't capable of handling mask yet.\n");
         IntEngLeave(&EnterLeaveDest);
-        IntEngLeave(&EnterLeaveSource);
-
+        if (UsesSource)
+        {
+            IntEngLeave(&EnterLeaveSource);
+        }
         return FALSE;
     }
     else
@@ -901,7 +913,10 @@ EngStretchBlt(
                          &AdjustedBrushOrigin, Mode);
 
     IntEngLeave(&EnterLeaveDest);
-    IntEngLeave(&EnterLeaveSource);
+    if (UsesSource)
+    {
+        IntEngLeave(&EnterLeaveSource);
+    }
 
     return Ret;
 }
@@ -917,13 +932,14 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                  POINTL *pMaskOrigin,
                  BRUSHOBJ *Brush,
                  POINTL *BrushOrigin,
-                 ULONG Mode)
+                 ROP4 ROP)
 {
     BOOLEAN ret;
     COLORADJUSTMENT ca;
     POINT MaskOrigin;
     SURFACE *psurfDest;
     SURFACE *psurfSource = NULL;
+    BOOL UsesSource = ROP4_USES_SOURCE(ROP);
 
     ASSERT(psoDest);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
@@ -941,7 +957,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     MouseSafetyOnDrawStart(psoDest, DestRect->left, DestRect->top,
                            DestRect->right, DestRect->bottom);
 
-    if (NULL != psoSource)
+    if (UsesSource)
     {
         psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
         ASSERT(SourceRect);
@@ -958,22 +974,21 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     /* Call the driver's DrvStretchBlt if available */
     if (psurfDest->flHooks & HOOK_STRETCHBLT)
     {
-        /* Drv->StretchBlt (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm )
-        SURFOBJ *psoMask // optional, if it exists, then rop4=0xCCAA, otherwise rop4=0xCCCC */
+        /* Drv->StretchBlt (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm ) */
         // FIXME: MaskOrigin is always NULL !
         ret = GDIDEVFUNCS(psoDest).StretchBlt(
-                  psoDest, psoSource, MaskSurf, ClipRegion, ColorTranslation,
-                  &ca, BrushOrigin, DestRect, SourceRect, NULL, Mode);
+                  psoDest, (UsesSource) ? psoSource : NULL, MaskSurf, ClipRegion, ColorTranslation,
+                  &ca, BrushOrigin, DestRect, SourceRect, NULL, ROP);
     }
 
     if (! ret)
     {
         // FIXME: see previous fixme
         ret = EngStretchBlt(psoDest, psoSource, MaskSurf, ClipRegion, ColorTranslation,
-                            &ca, BrushOrigin, DestRect, SourceRect, NULL, Mode);
+                            &ca, BrushOrigin, DestRect, SourceRect, NULL, ROP);
     }
 
-    if (NULL != psoSource)
+    if (UsesSource)
     {
         MouseSafetyOnDrawEnd(psoSource);
         if (psoSource != psoDest)
