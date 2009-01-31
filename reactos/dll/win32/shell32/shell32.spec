@@ -234,6 +234,7 @@
  523 stdcall SHFreeShared(long long)
  524 stdcall RealDriveType(long long)
  525 stub RealDriveTypeFlags
+ 526 stdcall SHFlushSFCache()
 
  640 stdcall -noname NTSHChangeNotifyRegister(long long long long long long)
  641 stdcall -noname NTSHChangeNotifyDeregister(long)
@@ -256,7 +257,9 @@
  680 stdcall IsUserAnAdmin()
  701 stdcall CDefFolderMenu_Create2(ptr ptr long ptr ptr ptr long ptr ptr)
  704 stdcall -noname GUIDFromStringW(wstr ptr)
+ 
  714 stdcall @(ptr) SHELL32_714 # PathIsTemporaryW
+ 727 stdcall SHGetImageList(long ptr ptr)
  730 stdcall RestartDialogEx(long wstr long long)
 
 1217 stub FOOBAR1217   # no joke! This is the real name!!
