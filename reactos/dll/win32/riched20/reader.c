@@ -178,6 +178,33 @@ RTFDestroy(RTF_Info *info)
 }
 
 
+
+/* ---------------------------------------------------------------------- */
+
+/*
+ * Callback table manipulation routines
+ */
+
+
+/*
+ * Install or return a writer callback for a token class
+ */
+
+static void RTFSetClassCallback(RTF_Info *info, int class, RTFFuncPtr callback)
+{
+	if (class >= 0 && class < rtfMaxClass)
+		info->ccb[class] = callback;
+}
+
+
+static RTFFuncPtr RTFGetClassCallback(const RTF_Info *info, int class)
+{
+	if (class >= 0 && class < rtfMaxClass)
+		return info->ccb[class];
+	return NULL;
+}
+
+
 /*
  * Initialize the reader.  This may be called multiple times,
  * to read multiple files.  The only thing not reset is the input
@@ -192,8 +219,10 @@ void RTFInit(RTF_Info *info)
 	{
 		info->rtfTextBuf = heap_alloc (rtfBufSiz);
 		info->pushedTextBuf = heap_alloc (rtfBufSiz);
-		if (info->rtfTextBuf == NULL || info->pushedTextBuf == NULL)
+		if (info->rtfTextBuf == NULL || info->pushedTextBuf == NULL) {
 			ERR ("Cannot allocate text buffers.\n");
+			return;
+		}
 		info->rtfTextBuf[0] = info->pushedTextBuf[0] = '\0';
 	}
 
@@ -281,33 +310,6 @@ char *RTFGetOutputName(const RTF_Info *info)
 }
 
 
-
-/* ---------------------------------------------------------------------- */
-
-/*
- * Callback table manipulation routines
- */
-
-
-/*
- * Install or return a writer callback for a token class
- */
-
-void RTFSetClassCallback(RTF_Info *info, int class, RTFFuncPtr callback)
-{
-	if (class >= 0 && class < rtfMaxClass)
-		info->ccb[class] = callback;
-}
-
-
-RTFFuncPtr RTFGetClassCallback(const RTF_Info *info, int class)
-{
-	if (class >= 0 && class < rtfMaxClass)
-		return info->ccb[class];
-	return NULL;
-}
-
-
 /*
  * Install or return a writer callback for a destination type
  */
@@ -319,7 +321,7 @@ void RTFSetDestinationCallback(RTF_Info *info, int dest, RTFFuncPtr callback)
 }
 
 
-RTFFuncPtr RTFGetDestinationCallback(const RTF_Info *info, int dest)
+static RTFFuncPtr RTFGetDestinationCallback(const RTF_Info *info, int dest)
 {
 	if (dest >= 0 && dest < rtfMaxDestination)
 		return info->dcb[dest];
@@ -416,6 +418,22 @@ void RTFReadGroup (RTF_Info *info)
 
 
 /*
+ * Install or return a token reader hook.
+ */
+
+void RTFSetReadHook(RTF_Info *info, RTFFuncPtr f)
+{
+	info->readHook = f;
+}
+
+
+static RTFFuncPtr RTFGetReadHook(const RTF_Info *info)
+{
+	return (info->readHook);
+}
+
+
+/*
  * Read one token.  Call the read hook if there is one.  The
  * token class is the return value.  Returns rtfEOF when there
  * are no more tokens.
@@ -446,23 +464,7 @@ int RTFGetToken(RTF_Info *info)
 }
 
 
-/*
- * Install or return a token reader hook.
- */
-
-void RTFSetReadHook(RTF_Info *info, RTFFuncPtr f)
-{
-	info->readHook = f;
-}
-
-
-RTFFuncPtr RTFGetReadHook(const RTF_Info *info)
-{
-	return (info->readHook);
-}
-
-
-void RTFUngetToken(RTF_Info *info)
+static void RTFUngetToken(RTF_Info *info)
 {
 	if (info->pushedClass >= 0)	/* there's already an ungotten token */
 		ERR ("cannot unget two tokens\n");
@@ -797,7 +799,7 @@ static int GetChar(RTF_Info *info)
  * part of the token text.
  */
 
-void RTFSetToken(RTF_Info *info, int class, int major, int minor, int param, const char *text)
+static void RTFSetToken(RTF_Info *info, int class, int major, int minor, int param, const char *text)
 {
 	info->rtfClass = class;
 	info->rtfMajor = major;
@@ -871,8 +873,10 @@ static void ReadFontTbl(RTF_Info *info)
 				break;
 		}
 		fp = New (RTFFont);
-		if (fp == NULL)
+		if (fp == NULL) {
 			ERR ( "%s: cannot allocate font entry\n", fn);
+			break;
+		}
 
 		fp->rtfNextFont = info->fontList;
 		info->fontList = fp;
@@ -992,7 +996,7 @@ static void ReadFontTbl(RTF_Info *info)
                         TRACE("default font codepage %d\n", info->codePage);
                 }
 	}
-	if (fp->rtfFNum == -1)
+	if (!fp || (fp->rtfFNum == -1))
 		ERR( "%s: missing font number\n", fn);
 /*
  * Could check other pieces of structure here, too, I suppose.
@@ -1044,8 +1048,10 @@ static void ReadColorTbl(RTF_Info *info)
                 }
 
 		cp = New (RTFColor);
-		if (cp == NULL)
+		if (cp == NULL) {
 			ERR ( "%s: cannot allocate color entry\n", fn);
+			break;
+		}
 		cp->rtfCNum = cnum++;
 		cp->rtfCRed = cp->rtfCGreen = cp->rtfCBlue = -1;
 		cp->rtfNextColor = info->colorList;
@@ -1090,8 +1096,10 @@ static void ReadStyleSheet(RTF_Info *info)
 		if (RTFCheckCM (info, rtfGroup, rtfEndGroup))
 			break;
 		sp = New (RTFStyle);
-		if (sp == NULL)
+		if (sp == NULL) {
 			ERR ( "%s: cannot allocate stylesheet entry\n", fn);
+			break;
+		}
 		sp->rtfSName = NULL;
 		sp->rtfSNum = -1;
 		sp->rtfSType = rtfParStyle;
@@ -1269,7 +1277,7 @@ static void ReadObjGroup(RTF_Info *info)
  */
 
 
-RTFStyle *RTFGetStyle(const RTF_Info *info, int num)
+static RTFStyle *RTFGetStyle(const RTF_Info *info, int num)
 {
 	RTFStyle	*s;
 
@@ -2719,7 +2727,7 @@ RTFFlushCPOutputBuffer(RTF_Info *info)
         info->dwCPOutputCount = 0;
 
         RTFPutUnicodeString(info, buffer, length);
-        heap_free((char *)buffer);
+        heap_free(buffer);
 }
 
 void

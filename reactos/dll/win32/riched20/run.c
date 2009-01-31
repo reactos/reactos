@@ -127,12 +127,8 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
           p->member.run.nFlags,
           p->member.run.style->fmt.dwMask & p->member.run.style->fmt.dwEffects);
         assert(ofs == p->member.run.nCharOfs);
-        if (p->member.run.nFlags & MERF_ENDPARA) {
-          assert(p->member.run.nCR + p->member.run.nLF > 0);
-          ofs += p->member.run.nCR + p->member.run.nLF;
-        }
-        else
-          ofs += ME_StrLen(p->member.run.strText);
+        assert(p->member.run.strText->nLen);
+        ofs += p->member.run.strText->nLen;
         break;
       case diCell:
         TRACE_(richedit_check)("cell\n");
@@ -166,11 +162,11 @@ int ME_CharOfsFromRunOfs(ME_TextEditor *editor, ME_DisplayItem *pRun, int nOfs)
 
 /******************************************************************************
  * ME_CursorFromCharOfs
- * 
+ *
  * Converts a character offset (relative to the start of the document) to
  * a cursor structure (which contains a run and a position relative to that 
- * run).   
- */      
+ * run).
+ */
 void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCursor)
 {
   ME_RunOfsFromCharOfs(editor, nCharOfs, &pCursor->pRun, &pCursor->nOffset);
@@ -178,57 +174,42 @@ void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCurso
 
 /******************************************************************************
  * ME_RunOfsFromCharOfs
- * 
+ *
  * Find a run and relative character offset given an absolute character offset
  * (absolute offset being an offset relative to the start of the document).
- * Kind of a "global to local" offset conversion.    
- */      
+ * Kind of a "global to local" offset conversion.
+ */
 void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppRun, int *pOfs)
 {
-  ME_DisplayItem *pPara;
-  int nParaOfs;
+  ME_DisplayItem *item, *next_item;
 
-  pPara = editor->pBuffer->pFirst->member.para.next_para;
-  assert(pPara);
   assert(ppRun);
   assert(pOfs);
-  while (pPara->type == diParagraph)
-  {
-    nParaOfs = pPara->member.para.nCharOfs;
-    assert(nCharOfs >= nParaOfs);
 
-    if (nCharOfs < pPara->member.para.next_para->member.para.nCharOfs)
-    {
-      int eollen = 1;
-      *ppRun = ME_FindItemFwd(pPara, diRun);
-      assert(*ppRun);
-      while (!((*ppRun)->member.run.nFlags & MERF_ENDPARA))
-      {
-        ME_DisplayItem *pNext = ME_FindItemFwd(*ppRun, diRun);
-        assert(pNext);
-        assert(pNext->type == diRun);
-        if (nCharOfs < nParaOfs + pNext->member.run.nCharOfs) {
-          *pOfs = ME_PosToVPos((*ppRun)->member.run.strText,
-            nCharOfs - nParaOfs - (*ppRun)->member.run.nCharOfs);
-          return;
-        }
-        *ppRun = pNext;
-      }
-      /* Recover proper character length of this line break */
-      eollen = (*ppRun)->member.run.nCR + (*ppRun)->member.run.nLF;
-      if (nCharOfs >= nParaOfs + (*ppRun)->member.run.nCharOfs &&
-        nCharOfs < nParaOfs + (*ppRun)->member.run.nCharOfs + eollen) {
-        /* FIXME: Might cause problems when actually requiring an offset in the
-           middle of a run that is considered a single line break */
-        *pOfs = 0;
-        return;
-      }
-    }
-    pPara = pPara->member.para.next_para;
-  }
-  *ppRun = ME_FindItemBack(editor->pBuffer->pLast, diRun);
-  *pOfs = 0;
-  assert((*ppRun)->member.run.nFlags & MERF_ENDPARA);
+  nCharOfs = max(nCharOfs, 0);
+  nCharOfs = min(nCharOfs, ME_GetTextLength(editor));
+
+  /* Find the paragraph at the offset. */
+  next_item = editor->pBuffer->pFirst->member.para.next_para;
+  do {
+    item = next_item;
+    next_item = item->member.para.next_para;
+  } while (next_item->member.para.nCharOfs <= nCharOfs);
+  assert(item->type == diParagraph);
+  nCharOfs -= item->member.para.nCharOfs;
+
+  /* Find the run at the offset. */
+  next_item = ME_FindItemFwd(item, diRun);
+  do {
+    item = next_item;
+    next_item = ME_FindItemFwd(item, diRunOrParagraphOrEnd);
+  } while (next_item->type == diRun &&
+           next_item->member.run.nCharOfs <= nCharOfs);
+  assert(item->type == diRun);
+  nCharOfs -= item->member.run.nCharOfs;
+
+  *ppRun = item;
+  *pOfs = nCharOfs;
 }
 
 /******************************************************************************
@@ -550,12 +531,12 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
       return 0;
     return 1;
   }
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
   if (run->nFlags & MERF_GRAPHICS)
   {
     SIZE sz;
     ME_GetOLEObjectSize(&c, run, &sz);
-    ME_DestroyContext(&c, editor->hWnd);
+    ME_DestroyContext(&c);
     if (cx < sz.cx/2)
       return 0;
     return 1;
@@ -584,7 +565,7 @@ int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run)
     ME_DestroyString(strRunText);
   
   ME_UnselectStyleFont(&c, run->style, hOldFont);
-  ME_DestroyContext(&c, editor->hWnd);
+  ME_DestroyContext(&c);
   return fit;
 }
 
@@ -614,22 +595,24 @@ int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset)
   ME_String *strRunText;
   /* This could point to either the run's real text, or it's masked form in a password control */
 
-  ME_InitContext(&c, editor, GetDC(editor->hWnd));
+  ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
   if (pRun->nFlags & MERF_GRAPHICS)
   {
     if (nOffset)
       ME_GetOLEObjectSize(&c, pRun, &size);
-    ReleaseDC(editor->hWnd, c.hDC);
+    ITextHost_TxReleaseDC(editor->texthost, c.hDC);
     return nOffset != 0;
+  } else if (pRun->nFlags & MERF_ENDPARA) {
+    nOffset = 0;
   }
-  
-   if (editor->cPasswordMask)
+
+  if (editor->cPasswordMask)
     strRunText = ME_MakeStringR(editor->cPasswordMask,ME_StrVLen(pRun->strText));
   else
     strRunText = pRun->strText;
 
   ME_GetTextExtent(&c,  strRunText->szData, nOffset, pRun->style, &size);
-  ReleaseDC(editor->hWnd, c.hDC);
+  ITextHost_TxReleaseDC(editor->texthost, c.hDC);
   if (editor->cPasswordMask)
     ME_DestroyString(strRunText);
   return size.cx;

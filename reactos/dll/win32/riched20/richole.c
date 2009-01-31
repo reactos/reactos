@@ -348,7 +348,7 @@ IRichEditOle_fnGetObjectCount(IRichEditOle *me)
 {
     IRichEditOleImpl *This = impl_from_IRichEditOle(me);
     FIXME("stub %p\n",This);
-    return E_NOTIMPL;
+    return 0;
 }
 
 static HRESULT WINAPI
@@ -1694,7 +1694,7 @@ LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *ppObj)
         return 0;
     }
     TRACE("Created %p\n",reo);
-    *ppObj = (LPVOID) reo;
+    *ppObj = reo;
 
     return 1;
 }

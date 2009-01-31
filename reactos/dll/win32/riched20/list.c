@@ -191,10 +191,8 @@ void ME_DumpDocument(ME_TextBuffer *buffer)
         TRACE(" - StartRow\n");
         break;
       case diRun:
-        TRACE(" - Run(\"%s\", %d)\n", debugstr_w(pItem->member.run.strText->szData), 
-          pItem->member.run.nCharOfs);
-        if (pItem->member.run.nFlags & MERF_ENDPARA)
-          TRACE(" - Paragraph end: %d CR, %d LF\n", pItem->member.run.nCR, pItem->member.run.nLF);
+        TRACE(" - Run(\"%s\", %d, flags=%x)\n", debugstr_w(pItem->member.run.strText->szData),
+          pItem->member.run.nCharOfs, pItem->member.run.nFlags);
         break;
       case diTextEnd:
         TRACE("End(ofs=%d)\n", pItem->member.para.nCharOfs);

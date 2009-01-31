@@ -22,6 +22,7 @@
 	<file>string.c</file>
 	<file>style.c</file>
 	<file>table.c</file>
+	<file>txthost.c</file>
 	<file>txtsrv.c</file>
 	<file>undo.c</file>
 	<file>wrap.c</file>
@@ -30,6 +31,7 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>
+	<library>oleaut32</library>
 	<library>imm32</library>
 	<library>user32</library>
 	<library>gdi32</library>

@@ -877,8 +877,7 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
               return FALSE;
           }
           /* Skip as many characters as required by current line break */
-          nChars -= (p->member.run.nCR <= nChars) ? p->member.run.nCR : nChars;
-          nChars -= (p->member.run.nLF <= nChars) ? p->member.run.nLF : nChars;
+          nChars = max(0, nChars - p->member.run.strText->nLen);
         } else if (p->member.run.nFlags & MERF_ENDROW) {
           if (!ME_StreamOutPrint(pStream, "\\line \r\n"))
             return FALSE;
@@ -916,63 +915,35 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
 static BOOL
 ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nChars, DWORD dwFormat)
 {
-  /* FIXME: use ME_RunOfsFromCharOfs */
-  ME_DisplayItem *item = ME_FindItemAtOffset(editor, diRun, nStart, &nStart);
+  ME_DisplayItem *item;
   int nLen;
   UINT nCodePage = CP_ACP;
   char *buffer = NULL;
   int nBufLen = 0;
   BOOL success = TRUE;
 
+  ME_RunOfsFromCharOfs(editor, nStart, &item, &nStart);
+
   if (!item)
     return FALSE;
-   
+
   if (dwFormat & SF_USECODEPAGE)
     nCodePage = HIWORD(dwFormat);
 
   /* TODO: Handle SF_TEXTIZED */
-  
+
   while (success && nChars && item) {
-    nLen = ME_StrLen(item->member.run.strText) - nStart;
-    if (nLen > nChars)
-      nLen = nChars;
+    nLen = min(nChars, ME_StrLen(item->member.run.strText) - nStart);
 
-    if (item->member.run.nFlags & MERF_ENDPARA) {
+    if (!editor->bEmulateVersion10 && item->member.run.nFlags & MERF_ENDPARA)
+    {
       static const WCHAR szEOL[2] = { '\r', '\n' };
-      
-      if (!editor->bEmulateVersion10) {
-        /* richedit 2.0 - all line breaks are \r\n */
-        if (dwFormat & SF_UNICODE)
-          success = ME_StreamOutMove(pStream, (const char *)szEOL, sizeof(szEOL));
-        else
-          success = ME_StreamOutMove(pStream, "\r\n", 2);
-        assert(nLen == 1);
-      } else {
-        int i; int tnLen;
 
-        /* richedit 1.0 - need to honor actual \r and \n amounts */
-        nLen = item->member.run.nCR + item->member.run.nLF;
-        if (nLen > nChars)
-          nLen = nChars;
-        tnLen = nLen;
-
-        i = 0;
-        while (tnLen > 0 && i < item->member.run.nCR) {
-          if (dwFormat & SF_UNICODE)
-            success = ME_StreamOutMove(pStream, (const char *)(&szEOL[0]), sizeof(WCHAR));
-          else
-            success = ME_StreamOutMove(pStream, "\r", 1);
-          tnLen--; i++;
-        }
-        i = 0;
-        while (tnLen > 0 && i < item->member.run.nLF) {
-          if (dwFormat & SF_UNICODE)
-            success = ME_StreamOutMove(pStream, (const char *)(&szEOL[1]), sizeof(WCHAR));
-          else
-            success = ME_StreamOutMove(pStream, "\n", 1);
-          tnLen--; i++;
-        }
-      }
+      /* richedit 2.0 - all line breaks are \r\n */
+      if (dwFormat & SF_UNICODE)
+        success = ME_StreamOutMove(pStream, (const char *)szEOL, sizeof(szEOL));
+      else
+        success = ME_StreamOutMove(pStream, "\r\n", 2);
     } else {
       if (dwFormat & SF_UNICODE)
         success = ME_StreamOutMove(pStream, (const char *)(item->member.run.strText->szData + nStart),
@@ -992,12 +963,12 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
         success = ME_StreamOutMove(pStream, buffer, nSize);
       }
     }
-    
+
     nChars -= nLen;
     nStart = 0;
     item = ME_FindItemFwd(item, diRun);
   }
-  
+
   FREE_OBJ(buffer);
   return success;
 }
