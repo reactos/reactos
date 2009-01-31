@@ -144,7 +144,7 @@ HCERTCHAINENGINE CRYPT_CreateChainEngine(HCERTSTORE root,
         else
             engine->CycleDetectionModulus = DEFAULT_CYCLE_MODULUS;
     }
-    return (HCERTCHAINENGINE)engine;
+    return engine;
 }
 
 BOOL WINAPI CertCreateCertificateChainEngine(PCERT_CHAIN_ENGINE_CONFIG pConfig,
@@ -383,7 +383,7 @@ static BOOL CRYPT_DecodeBasicConstraints(PCCERT_CONTEXT cert,
 
         ret = CryptDecodeObjectEx(X509_ASN_ENCODING, szOID_BASIC_CONSTRAINTS,
          ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_ALLOC_FLAG,
-         NULL, (LPBYTE)&info, &size);
+         NULL, &info, &size);
         if (ret)
         {
             if (info->SubjectType.cbData == 1)

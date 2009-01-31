@@ -319,7 +319,7 @@ static BOOL CRYPT_RegFlushStore(PWINE_REGSTOREINFO store, BOOL force)
 
 static void WINAPI CRYPT_RegCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 {
-    PWINE_REGSTOREINFO store = (PWINE_REGSTOREINFO)hCertStore;
+    PWINE_REGSTOREINFO store = hCertStore;
 
     TRACE("(%p, %08x)\n", store, dwFlags);
     if (dwFlags)
@@ -392,7 +392,7 @@ static BOOL CRYPT_RegDeleteContext(PWINE_REGSTOREINFO store,
 static BOOL WINAPI CRYPT_RegWriteCert(HCERTSTORE hCertStore,
  PCCERT_CONTEXT cert, DWORD dwFlags)
 {
-    PWINE_REGSTOREINFO store = (PWINE_REGSTOREINFO)hCertStore;
+    PWINE_REGSTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %d)\n", hCertStore, cert, dwFlags);
 
@@ -402,7 +402,7 @@ static BOOL WINAPI CRYPT_RegWriteCert(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_RegDeleteCert(HCERTSTORE hCertStore,
  PCCERT_CONTEXT pCertContext, DWORD dwFlags)
 {
-    PWINE_REGSTOREINFO store = (PWINE_REGSTOREINFO)hCertStore;
+    PWINE_REGSTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %08x)\n", store, pCertContext, dwFlags);
 
@@ -413,7 +413,7 @@ static BOOL WINAPI CRYPT_RegDeleteCert(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_RegWriteCRL(HCERTSTORE hCertStore,
  PCCRL_CONTEXT crl, DWORD dwFlags)
 {
-    PWINE_REGSTOREINFO store = (PWINE_REGSTOREINFO)hCertStore;
+    PWINE_REGSTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %d)\n", hCertStore, crl, dwFlags);
 
@@ -423,7 +423,7 @@ static BOOL WINAPI CRYPT_RegWriteCRL(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_RegDeleteCRL(HCERTSTORE hCertStore,
  PCCRL_CONTEXT pCrlContext, DWORD dwFlags)
 {
-    PWINE_REGSTOREINFO store = (PWINE_REGSTOREINFO)hCertStore;
+    PWINE_REGSTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %08x)\n", store, pCrlContext, dwFlags);
 
@@ -434,7 +434,7 @@ static BOOL WINAPI CRYPT_RegDeleteCRL(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_RegWriteCTL(HCERTSTORE hCertStore,
  PCCTL_CONTEXT ctl, DWORD dwFlags)
 {
-    PWINE_REGSTOREINFO store = (PWINE_REGSTOREINFO)hCertStore;
+    PWINE_REGSTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %d)\n", hCertStore, ctl, dwFlags);
 
@@ -444,7 +444,7 @@ static BOOL WINAPI CRYPT_RegWriteCTL(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_RegDeleteCTL(HCERTSTORE hCertStore,
  PCCTL_CONTEXT pCtlContext, DWORD dwFlags)
 {
-    PWINE_REGSTOREINFO store = (PWINE_REGSTOREINFO)hCertStore;
+    PWINE_REGSTOREINFO store = hCertStore;
 
     TRACE("(%p, %p, %08x)\n", store, pCtlContext, dwFlags);
 
@@ -455,7 +455,7 @@ static BOOL WINAPI CRYPT_RegDeleteCTL(HCERTSTORE hCertStore,
 static BOOL WINAPI CRYPT_RegControl(HCERTSTORE hCertStore, DWORD dwFlags,
  DWORD dwCtrlType, void const *pvCtrlPara)
 {
-    PWINE_REGSTOREINFO store = (PWINE_REGSTOREINFO)hCertStore;
+    PWINE_REGSTOREINFO store = hCertStore;
     BOOL ret;
 
     TRACE("(%p, %08x, %d, %p)\n", hCertStore, dwFlags, dwCtrlType,

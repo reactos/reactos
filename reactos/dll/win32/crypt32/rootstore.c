@@ -744,17 +744,6 @@ PWINECRYPT_CERTSTORE CRYPT_RootOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags)
         SetLastError(ERROR_ACCESS_DENIED);
         return NULL;
     }
-    switch (dwFlags & CERT_SYSTEM_STORE_LOCATION_MASK)
-    {
-    case CERT_SYSTEM_STORE_LOCAL_MACHINE:
-    case CERT_SYSTEM_STORE_CURRENT_USER:
-        break;
-    default:
-        TRACE("location %08x unsupported\n",
-         dwFlags & CERT_SYSTEM_STORE_LOCATION_MASK);
-        SetLastError(E_INVALIDARG);
-        return NULL;
-    }
     if (!CRYPT_rootStore)
     {
         HCERTSTORE root = create_root_store();

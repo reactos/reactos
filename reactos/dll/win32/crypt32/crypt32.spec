@@ -118,6 +118,7 @@
 @ stub CryptExportPKCS8
 @ stdcall CryptExportPublicKeyInfo(long long long ptr ptr)
 @ stdcall CryptExportPublicKeyInfoEx(long long long str long ptr ptr ptr)
+@ stdcall CryptFindCertificateKeyProvInfo(ptr long ptr)
 @ stdcall CryptFindLocalizedName(wstr)
 @ stdcall CryptFindOIDInfo(long ptr long)
 @ stdcall CryptFormatObject(long long long ptr str ptr long ptr ptr)
@@ -216,8 +217,10 @@
 @ stdcall I_CryptSetTls(long ptr)
 @ stdcall I_CryptUninstallAsn1Module(long)
 @ stub I_CryptUninstallOssGlobal
-@ stub PFXExportCertStore
-@ stub PFXImportCertStore
+@ stdcall PFXExportCertStore(ptr ptr ptr long)
+@ stdcall PFXExportCertStoreEx(ptr ptr ptr ptr long)
+@ stdcall PFXImportCertStore(ptr ptr long)
+@ stdcall PFXIsPFXBlob(ptr)
 @ stub RegCreateHKCUKeyExU
 @ stub RegCreateKeyExU
 @ stub RegDeleteValueU
