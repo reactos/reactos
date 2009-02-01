@@ -170,6 +170,9 @@ HandleLogon(
 {
 	PROFILEINFOW ProfileInfo;
 	LPVOID lpEnvironment = NULL;
+	LPWSTR lpFullEnv = NULL;
+	LPCWSTR wstr;
+	SIZE_T EnvBlockSize = 0, ProfileSize = 0;
 	BOOLEAN Old;
 	BOOL ret = FALSE;
 
@@ -215,7 +218,48 @@ HandleLogon(
 		WARN("WL: CreateEnvironmentBlock() failed\n");
 		goto cleanup;
 	}
-	/* FIXME: Append variables of Session->Profile->pszEnvironment */
+
+	if (Session->Profile->dwType == WLX_PROFILE_TYPE_V2_0 && Session->Profile->pszEnvironment)
+	{
+		/* Count required size for full environment */
+		wstr = (LPCWSTR)lpEnvironment;
+		while (*wstr != UNICODE_NULL)
+		{
+			SIZE_T size = wcslen(wstr) + 1;
+			wstr += size;
+			EnvBlockSize += size;
+		}
+		wstr = Session->Profile->pszEnvironment;
+		while (*wstr != UNICODE_NULL)
+		{
+			SIZE_T size = wcslen(wstr) + 1;
+			wstr += size;
+			ProfileSize += size;
+		}
+
+		/* Allocate enough memory */
+		lpFullEnv = HeapAlloc(GetProcessHeap, 0, (EnvBlockSize + ProfileSize + 1) * sizeof(WCHAR));
+		if (!lpFullEnv)
+		{
+			TRACE("HeapAlloc() failed\n");
+			goto cleanup;
+		}
+
+		/* Fill user environment block */
+		CopyMemory(
+			lpFullEnv,
+			lpEnvironment,
+			EnvBlockSize * sizeof(WCHAR));
+		CopyMemory(
+			&lpFullEnv[EnvBlockSize],
+			Session->Profile->pszEnvironment,
+			ProfileSize * sizeof(WCHAR));
+		lpFullEnv[EnvBlockSize + ProfileSize] = UNICODE_NULL;
+	}
+	else
+	{
+		lpFullEnv = (LPWSTR)lpEnvironment;
+	}
 
 	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
 	UpdatePerUserSystemParameters(0, TRUE);
@@ -236,7 +280,7 @@ HandleLogon(
 		Session->Gina.Context,
 		L"Default",
 		NULL, /* FIXME */
-		lpEnvironment))
+		lpFullEnv))
 	{
 		//WCHAR StatusMsg[256];
 		WARN("WL: WlxActivateUserShell() failed\n");
@@ -263,6 +307,8 @@ cleanup:
 	{
 		UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
 	}
+	if (lpFullEnv != lpEnvironment)
+		HeapFree(GetProcessHeap(), 0, lpFullEnv);
 	if (lpEnvironment)
 		DestroyEnvironmentBlock(lpEnvironment);
 	RemoveStatusMessage(Session);
