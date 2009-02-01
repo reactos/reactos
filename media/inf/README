@@ -1,7 +1,7 @@
 Internationalization of INF-files:
 
-For internationalization of INF-files each [Strings]-section need a language
-sepcific additional one. This section have the name [Strings.LanguageId] e.g.
+For internationalization of INF-files each [Strings]-section needs a language
+specific additional section. This section has the name [Strings.LanguageId] e.g.
 [Strings.0407] for German. During setup dependent on the system language the
 language dependent substitations will be applied and the result will be 
 stored in the registry. That's the way Microsoft described in MSDN:
@@ -37,9 +37,9 @@ that comes with INF-file we create a new key in the Strings.LanguageID manner:
 
 an_arbitrary_key.0407 = "deutsche version value_1"
 
-In the hope Windows will ignore that additional keys, we can use it to handle
-multiple languages at the same time with a default language as well not limited
-to english. Additional to Windows we have to implement/modify the 
+In the hope Micrsosft OS will ignore the additional keys, we can use it to 
+handle multiple languages at the same time with a default language as well not
+limited to english. Additional to Windows we have to implement/modify the 
 registry-related functions to consider the language specific keys, but that's
 a little effort and i think it doesn't lead into incompatibility.
 To prevent a bloated registry we could modify that way and add the translated 
@@ -48,6 +48,10 @@ strings to registry only if a user select new (still uninstalled) language.
 General issues of multiple (system) languages:
 
 We can translate the programm files and perhaps the registry entries in the 
-described above. But how to handle files/directories with translatabel names?
-If we intend to have a (native) language for each user, so the directory 
+described way above. But how to handle files/directories with translatabel
+names? If we intend to have a (native) language for each user, so the directory 
 structure may become confusing and may be hard to handle correctly.
+
+For the future I recommend a modified MUI-System, maybe we can include the
+advantages of gettext of Linux/Unix-systems and store the translations or
+language specific stuff at a central place instead of the programm directory.
