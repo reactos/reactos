@@ -184,7 +184,7 @@ static LONG WINTRUST_DefaultVerify(HWND hwnd, GUID *actionID,
         goto error;
     }
 
-    data->hWVTStateData = (HANDLE)provData;
+    data->hWVTStateData = provData;
     provData->pWintrustData = data;
     if (hwnd == INVALID_HANDLE_VALUE)
         provData->hWndParent = GetDesktopWindow();
@@ -215,7 +215,7 @@ static LONG WINTRUST_DefaultClose(HWND hwnd, GUID *actionID,
  WINTRUST_DATA *data)
 {
     DWORD err = ERROR_SUCCESS;
-    CRYPT_PROVIDER_DATA *provData = (CRYPT_PROVIDER_DATA *)data->hWVTStateData;
+    CRYPT_PROVIDER_DATA *provData = data->hWVTStateData;
 
     TRACE("(%p, %s, %p)\n", hwnd, debugstr_guid(actionID), data);
 
@@ -254,8 +254,7 @@ static LONG WINTRUST_PublishedSoftware(HWND hwnd, GUID *actionID,
     /* Undocumented: the published software action is passed a path,
      * and pSIPClientData points to a WIN_TRUST_SUBJECT_FILE.
      */
-    LPWIN_TRUST_SUBJECT_FILE subjectFile =
-     (LPWIN_TRUST_SUBJECT_FILE)data->pSIPClientData;
+    LPWIN_TRUST_SUBJECT_FILE subjectFile = data->pSIPClientData;
     WINTRUST_FILE_INFO fileInfo = { sizeof(fileInfo), 0 };
 
     TRACE("subjectFile->hFile: %p\n", subjectFile->hFile);
@@ -377,7 +376,7 @@ static LONG WINTRUST_CertVerify(HWND hwnd, GUID *actionID,
     /* Not sure why, but native skips the policy check */
     provData->psPfns->pfnCertCheckPolicy = NULL;
 
-    data->hWVTStateData = (HANDLE)provData;
+    data->hWVTStateData = provData;
     provData->pWintrustData = data;
     if (hwnd == INVALID_HANDLE_VALUE)
         provData->hWndParent = GetDesktopWindow();
@@ -584,7 +583,7 @@ LONG WINAPI WinVerifyTrust( HWND hwnd, GUID *ActionID, LPVOID ActionData )
     static const GUID generic_chain_verify = WINTRUST_ACTION_GENERIC_CHAIN_VERIFY;
     static const GUID cert_action_verify = CERT_CERTIFICATE_ACTION_VERIFY;
     LONG err = ERROR_SUCCESS;
-    WINTRUST_DATA *actionData = (WINTRUST_DATA *)ActionData;
+    WINTRUST_DATA *actionData = ActionData;
 
     TRACE("(%p, %s, %p)\n", hwnd, debugstr_guid(ActionID), ActionData);
     dump_wintrust_data(ActionData);
@@ -709,7 +708,7 @@ CRYPT_PROVIDER_PRIVDATA *WINAPI WTHelperGetProvPrivateDataFromChain(
 CRYPT_PROVIDER_DATA * WINAPI WTHelperProvDataFromStateData(HANDLE hStateData)
 {
     TRACE("%p\n", hStateData);
-    return (CRYPT_PROVIDER_DATA *)hStateData;
+    return hStateData;
 }
 
 /***********************************************************************
@@ -738,7 +737,7 @@ HANDLE WINAPI WTHelperGetFileHandle(WINTRUST_DATA *data)
 
 static BOOL WINAPI WINTRUST_enumUsages(PCCRYPT_OID_INFO pInfo, void *pvArg)
 {
-    PCCRYPT_OID_INFO **usages = (PCCRYPT_OID_INFO **)pvArg;
+    PCCRYPT_OID_INFO **usages = pvArg;
     DWORD cUsages;
     BOOL ret;
 
@@ -756,7 +755,7 @@ static BOOL WINAPI WINTRUST_enumUsages(PCCRYPT_OID_INFO pInfo, void *pvArg)
          */
         for (cUsages = 0, ptr = *usages; *ptr; ptr++, cUsages++)
             ;
-        *usages = WINTRUST_ReAlloc((CRYPT_OID_INFO *)*usages,
+        *usages = WINTRUST_ReAlloc(*usages,
          (cUsages + 2) * sizeof(PCCRYPT_OID_INFO));
     }
     if (*usages)
@@ -809,7 +808,7 @@ BOOL WINAPI WTHelperGetKnownUsages(DWORD action, PCCRYPT_OID_INFO **usages)
     }
     else if (action == 2)
     {
-        WINTRUST_Free((CRYPT_OID_INFO *)*usages);
+        WINTRUST_Free(*usages);
         *usages = NULL;
         ret = TRUE;
     }
