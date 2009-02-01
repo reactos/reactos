@@ -38,3 +38,15 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 	return TRUE;
 }
+
+BOOL WINAPI SslEmptyCacheA(LPSTR target, DWORD flags)
+{
+    FIXME("%s %x\n", debugstr_a(target), flags);
+    return TRUE;
+}
+
+BOOL WINAPI SslEmptyCacheW(LPWSTR target, DWORD flags)
+{
+    FIXME("%s %x\n", debugstr_w(target), flags);
+    return TRUE;
+}
