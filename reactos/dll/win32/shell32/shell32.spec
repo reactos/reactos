@@ -444,3 +444,5 @@
 @ stdcall StrStrIW(wstr wstr) shlwapi.StrStrIW
 @ stdcall StrStrW(wstr wstr) shlwapi.StrStrW
 @ stub WOWShellExecute
+@ stdcall SHOpenFolderAndSelectItems(ptr long ptr long)
+@ stdcall SHParseDisplayName(wstr ptr ptr long ptr)
