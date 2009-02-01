@@ -1059,3 +1059,31 @@ PDH_STATUS WINAPI PdhValidatePathExW( PDH_HLOG source, LPCWSTR path )
     }
     return PdhValidatePathW( path );
 }
+
+/***********************************************************************
+ *              PdhEnumObjectItemsA   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhEnumObjectItemsA(LPCSTR szDataSource, LPCSTR szMachineName, LPCSTR szObjectName,
+                                      LPSTR mszCounterList, LPDWORD pcchCounterListLength, LPSTR mszInstanceList,
+                                      LPDWORD pcchInstanceListLength, DWORD dwDetailLevel, DWORD dwFlags)
+{
+    FIXME("%s, %s, %s, %p, %p, %p, %p, %d, 0x%x: stub\n", debugstr_a(szDataSource), debugstr_a(szMachineName),
+         debugstr_a(szObjectName), mszCounterList, pcchCounterListLength, mszInstanceList,
+         pcchInstanceListLength, dwDetailLevel, dwFlags);
+
+    return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhEnumObjectItemsW   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhEnumObjectItemsW(LPCWSTR szDataSource, LPCWSTR szMachineName, LPCWSTR szObjectName,
+                                      LPWSTR mszCounterList, LPDWORD pcchCounterListLength, LPWSTR mszInstanceList,
+                                      LPDWORD pcchInstanceListLength, DWORD dwDetailLevel, DWORD dwFlags)
+{
+    FIXME("%s, %s, %s, %p, %p, %p, %p, %d, 0x%x: stub\n", debugstr_w(szDataSource), debugstr_w(szMachineName),
+         debugstr_w(szObjectName), mszCounterList, pcchCounterListLength, mszInstanceList,
+         pcchInstanceListLength, dwDetailLevel, dwFlags);
+
+    return PDH_NOT_IMPLEMENTED;
+}

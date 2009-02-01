@@ -33,6 +33,7 @@
 #define PDH_CSTATUS_BAD_COUNTERNAME     0xc0000bc0
 #define PDH_INSUFFICIENT_BUFFER         0xc0000bc2
 #define PDH_INVALID_DATA                0xc0000bc6
+#define PDH_NOT_IMPLEMENTED             0xc0000bd3
 #define PDH_STRING_NOT_FOUND            0xc0000bd4
 
 #endif /* _PDH_MSG_H_ */
