@@ -1,6 +1,5 @@
 
 #include <windows.h>
-#include <ndk/ntndk.h>
 #include <stdio.h>
 #include <dciman.h>
 #include <ddraw.h>
