@@ -1,7 +1,7 @@
 /*
- * cryptdlg dll resources
+ * cryptdlg dll Dutch resources
  *
- * Copyright 2008 Juan Lang
+ * Copyright 2009 Frans Kool
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,12 +17,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "cryptres.h"
 
-#include "cryptdlg_En.rc"
-#include "cryptdlg_Fr.rc"
-#include "cryptdlg_Ko.rc"
-#include "cryptdlg_Nl.rc"
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_CERT_POLICY "Certificaat beleid"
+    IDS_POLICY_ID "Beleid Identificatie: "
+    IDS_POLICY_QUALIFIER_INFO "Beleid kwalificator informatie"
+    IDS_POLICY_QUALIFIER_ID "Beleid kwalificator Id="
+    IDS_CPS "CPS"
+    IDS_USER_NOTICE "Gebruikers verklaring"
+    IDS_QUALIFIER "Kwalificator"
+    IDS_NOTICE_REF "Verklaring referentie"
+    IDS_ORGANIZATION "Organisatie="
+    IDS_NOTICE_NUM "Verklaring nummer="
+    IDS_NOTICE_TEXT "Verklaring tekst="
+}
