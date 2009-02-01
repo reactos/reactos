@@ -388,14 +388,14 @@ LsaOpenPolicy(
     NTSTATUS Status;
 
     TRACE("LsaOpenPolicy (%s,%p,0x%08x,%p)\n",
-          SystemName?debugstr_w(SystemName->Buffer):"(null)",
+          SystemName ? debugstr_w(SystemName->Buffer) : "(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
 
     RpcTryExcept
     {
         *PolicyHandle = NULL;
 
-        Status = LsarOpenPolicy(SystemName->Buffer,
+        Status = LsarOpenPolicy(SystemName ? SystemName->Buffer : NULL,
                                 (PLSAPR_OBJECT_ATTRIBUTES)ObjectAttributes,
                                 DesiredAccess,
                                 PolicyHandle);
