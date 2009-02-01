@@ -69,7 +69,7 @@ KiGetGdtEntry(PVOID pGdt, USHORT Index)
 
 VOID
 FORCEINLINE
-KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, UCHAR Type, UCHAR Dpl)
+KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, ULONG Limit, UCHAR Type, UCHAR Dpl)
 {
     Entry->Bits.Type = Type;
     Entry->Bits.Present = 1;
@@ -78,6 +78,9 @@ KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, UCHAR Type, UCHAR Dpl)
     Entry->Bytes.BaseMiddle = (UCHAR)(Base >> 16);
     Entry->Bytes.BaseHigh = (UCHAR)(Base >> 24);
     Entry->BaseUpper = (ULONG)(Base >> 32);
+    Entry->LimitLow = (USHORT)(Limit & 0xFFFF);
+    Entry->Bits.LimitHigh = (ULONG)((Limit >> 16) & 0xf);
+    Entry->MustBeZero = 0;
 }
 
 VOID FrLdrSetupGdtIdt();

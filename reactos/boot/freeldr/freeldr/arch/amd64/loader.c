@@ -286,7 +286,7 @@ FrLdrSetupGdtIdt()
 
 	/* Setup TSS entry */
 	Entry = KiGetGdtEntry(pGdt, KGDT_TSS);
-	KiInitGdtEntry(Entry, TssBase, I386_TSS, 0);
+	KiInitGdtEntry(Entry, TssBase, sizeof(KTSS), I386_TSS, 0);
 
 	/* Setup the gdt descriptor */
 	Desc.Limit = 12 * sizeof(ULONG64) - 1;
