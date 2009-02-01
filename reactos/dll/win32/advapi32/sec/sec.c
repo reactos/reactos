@@ -541,7 +541,6 @@ BuildSecurityDescriptorA(IN PTRUSTEE_A pOwner  OPTIONAL,
 BOOL WINAPI DecryptFileW(LPCWSTR lpFileName, DWORD dwReserved)
 {
     FIXME("%s(%S) not implemented!\n", __FUNCTION__, lpFileName);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return TRUE;
 }
 
@@ -578,7 +577,6 @@ BOOL WINAPI
 EncryptFileW(LPCWSTR lpFileName)
 {
     FIXME("%s() not implemented!\n", __FUNCTION__);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return TRUE;
 }
 
