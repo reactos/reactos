@@ -34,4 +34,6 @@
 	<file>volume.c</file>
 	<file>volumetexture.c</file>
 	<file>version.rc</file>
+
+	<dependency>wineheaders</dependency>
 </module>

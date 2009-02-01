@@ -29,8 +29,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 int num_lock = 0;
-void (*wine_tsx11_lock_ptr)(void) = NULL;
-void (*wine_tsx11_unlock_ptr)(void) = NULL;
+void (*CDECL wine_tsx11_lock_ptr)(void) = NULL;
+void (*CDECL wine_tsx11_unlock_ptr)(void) = NULL;
 
 
 /* When updating default value here, make sure to update winecfg as well,
@@ -43,6 +43,8 @@ wined3d_settings_t wined3d_settings =
     TRUE,           /* Use of GLSL enabled by default */
     ORM_BACKBUFFER, /* Use the backbuffer to do offscreen rendering */
     RTL_AUTO,       /* Automatically determine best locking method */
+    PCI_VENDOR_NONE,/* PCI Vendor ID */
+    PCI_DEVICE_NONE,/* PCI Device ID */
     0,              /* The default of memory is set in FillGLCaps */
     NULL,           /* No wine logo by default */
     FALSE           /* Disable multisampling for now due to Nvidia driver bugs which happens for some users */
@@ -77,7 +79,16 @@ static inline DWORD get_config_key(HKEY defkey, HKEY appkey, const char* name, c
     return ERROR_FILE_NOT_FOUND;
 }
 
-static void wined3d_do_nothing(void)
+static inline DWORD get_config_key_dword(HKEY defkey, HKEY appkey, const char* name, DWORD *data)
+{
+    DWORD type;
+    DWORD size = sizeof(DWORD);
+    if (0 != appkey && !RegQueryValueExA( appkey, name, 0, &type, (LPBYTE) data, &size ) && (type == REG_DWORD)) return 0;
+    if (0 != defkey && !RegQueryValueExA( defkey, name, 0, &type, (LPBYTE) data, &size ) && (type == REG_DWORD)) return 0;
+    return ERROR_FILE_NOT_FOUND;
+}
+
+static void CDECL wined3d_do_nothing(void)
 {
 }
 
@@ -92,7 +103,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
        DWORD size = sizeof(buffer);
        HKEY hkey = 0;
        HKEY appkey = 0;
-       DWORD len;
+       DWORD len, tmpvalue;
        WNDCLASSA wc;
 
        /* We need our own window class for a fake window which we use to retrieve GL capabilities */
@@ -236,6 +247,36 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
                 {
                     TRACE("Reading render targets via textures and writing via textures\n");
                     wined3d_settings.rendertargetlock_mode = RTL_TEXTEX;
+                }
+            }
+            if ( !get_config_key_dword( hkey, appkey, "VideoPciDeviceID", &tmpvalue) )
+            {
+                int pci_device_id = tmpvalue;
+
+                /* A pci device id is 16-bit */
+                if(pci_device_id > 0xffff)
+                {
+                    ERR("Invalid value for VideoPciDeviceID. The value should be smaller or equal to 65535 or 0xffff\n");
+                }
+                else
+                {
+                    TRACE("Using PCI Device ID %04x\n", pci_device_id);
+                    wined3d_settings.pci_device_id = pci_device_id;
+                }
+            }
+            if ( !get_config_key_dword( hkey, appkey, "VideoPciVendorID", &tmpvalue) )
+            {
+                int pci_vendor_id = tmpvalue;
+
+                /* A pci device id is 16-bit */
+                if(pci_vendor_id > 0xffff)
+                {
+                    ERR("Invalid value for VideoPciVendorID. The value should be smaller or equal to 65535 or 0xffff\n");
+                }
+                else
+                {
+                    TRACE("Using PCI Vendor ID %04x\n", pci_vendor_id);
+                    wined3d_settings.pci_vendor_id = pci_vendor_id;
                 }
             }
             if ( !get_config_key( hkey, appkey, "VideoMemorySize", buffer, size) )

@@ -39,7 +39,7 @@ WINE_DECLARE_DEBUG_CHANNEL(fps);
 static void WINAPI IWineD3DSwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB_DESTROYSURFACEFN D3DCB_DestroyRenderTarget) {
     IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *)iface;
     WINED3DDISPLAYMODE mode;
-    int i;
+    unsigned int i;
 
     TRACE("Destroying swapchain %p\n", iface);
 
@@ -54,7 +54,7 @@ static void WINAPI IWineD3DSwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
     }
 
     if(This->backBuffer) {
-        int i;
+        UINT i;
         for(i = 0; i < This->presentParms.BackBufferCount; i++) {
             IWineD3DSurface_SetContainer(This->backBuffer[i], 0);
             if(D3DCB_DestroyRenderTarget(This->backBuffer[i]) > 0) {
@@ -138,7 +138,7 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
         IWineD3DSurface_BltFast(This->backBuffer[0], 0, 0, This->wineD3DDevice->logo_surface, NULL, WINEDDBLTFAST_SRCCOLORKEY);
     }
 
-    if (pSourceRect || pDestRect) FIXME("Unhandled present options %p/%p\n", pSourceRect, pDestRect);
+    if (pSourceRect || pDestRect) FIXME("Unhandled present rects %s/%s\n", wine_dbgstr_rect(pSourceRect), wine_dbgstr_rect(pDestRect));
     /* TODO: If only source rect or dest rect are supplied then clip the window to match */
     TRACE("presetting HDC %p\n", This->context[0]->hdc);
 

@@ -69,27 +69,27 @@ static ULONG WINAPI IWineD3DTextureImpl_Release(IWineD3DTexture *iface) {
    IWineD3DTexture IWineD3DResource parts follow
    **************************************************** */
 static HRESULT WINAPI IWineD3DTextureImpl_GetDevice(IWineD3DTexture *iface, IWineD3DDevice** ppDevice) {
-    return IWineD3DResourceImpl_GetDevice((IWineD3DResource *)iface, ppDevice);
+    return resource_get_device((IWineD3DResource *)iface, ppDevice);
 }
 
 static HRESULT WINAPI IWineD3DTextureImpl_SetPrivateData(IWineD3DTexture *iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
-    return IWineD3DResourceImpl_SetPrivateData((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
+    return resource_set_private_data((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
 }
 
 static HRESULT WINAPI IWineD3DTextureImpl_GetPrivateData(IWineD3DTexture *iface, REFGUID refguid, void* pData, DWORD* pSizeOfData) {
-    return IWineD3DResourceImpl_GetPrivateData((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
+    return resource_get_private_data((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
 }
 
 static HRESULT WINAPI IWineD3DTextureImpl_FreePrivateData(IWineD3DTexture *iface, REFGUID refguid) {
-    return IWineD3DResourceImpl_FreePrivateData((IWineD3DResource *)iface, refguid);
+    return resource_free_private_data((IWineD3DResource *)iface, refguid);
 }
 
 static DWORD WINAPI IWineD3DTextureImpl_SetPriority(IWineD3DTexture *iface, DWORD PriorityNew) {
-    return IWineD3DResourceImpl_SetPriority((IWineD3DResource *)iface, PriorityNew);
+    return resource_set_priority((IWineD3DResource *)iface, PriorityNew);
 }
 
 static DWORD WINAPI IWineD3DTextureImpl_GetPriority(IWineD3DTexture *iface) {
-    return IWineD3DResourceImpl_GetPriority((IWineD3DResource *)iface);
+    return resource_get_priority((IWineD3DResource *)iface);
 }
 
 static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
@@ -137,7 +137,7 @@ static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
             FIXME("Texture (%p) has been reloaded at least 20 times due to WINED3DSAMP_SRGBTEXTURE changes on it\'s sampler\n", This);
 
         for (i = 0; i < This->baseTexture.levels; i++) {
-            IWineD3DSurface_AddDirtyRect(This->surfaces[i], NULL);
+            surface_add_dirty_rect(This->surfaces[i], NULL);
             surface_force_reload(This->surfaces[i]);
             IWineD3DSurface_LoadTexture(This->surfaces[i], srgb_mode);
         }
@@ -165,51 +165,51 @@ static void WINAPI IWineD3DTextureImpl_UnLoad(IWineD3DTexture *iface) {
         surface_set_texture_name(This->surfaces[i], 0);
     }
 
-    IWineD3DBaseTextureImpl_UnLoad((IWineD3DBaseTexture *) iface);
+    basetexture_unload((IWineD3DBaseTexture *)iface);
 }
 
 static WINED3DRESOURCETYPE WINAPI IWineD3DTextureImpl_GetType(IWineD3DTexture *iface) {
-    return IWineD3DResourceImpl_GetType((IWineD3DResource *)iface);
+    return resource_get_type((IWineD3DResource *)iface);
 }
 
 static HRESULT WINAPI IWineD3DTextureImpl_GetParent(IWineD3DTexture *iface, IUnknown **pParent) {
-    return IWineD3DResourceImpl_GetParent((IWineD3DResource *)iface, pParent);
+    return resource_get_parent((IWineD3DResource *)iface, pParent);
 }
 
 /* ******************************************************
    IWineD3DTexture IWineD3DBaseTexture parts follow
    ****************************************************** */
 static DWORD WINAPI IWineD3DTextureImpl_SetLOD(IWineD3DTexture *iface, DWORD LODNew) {
-    return IWineD3DBaseTextureImpl_SetLOD((IWineD3DBaseTexture *)iface, LODNew);
+    return basetexture_set_lod((IWineD3DBaseTexture *)iface, LODNew);
 }
 
 static DWORD WINAPI IWineD3DTextureImpl_GetLOD(IWineD3DTexture *iface) {
-    return IWineD3DBaseTextureImpl_GetLOD((IWineD3DBaseTexture *)iface);
+    return basetexture_get_lod((IWineD3DBaseTexture *)iface);
 }
 
 static DWORD WINAPI IWineD3DTextureImpl_GetLevelCount(IWineD3DTexture *iface) {
-    return IWineD3DBaseTextureImpl_GetLevelCount((IWineD3DBaseTexture *)iface);
+    return basetexture_get_level_count((IWineD3DBaseTexture *)iface);
 }
 
 static HRESULT WINAPI IWineD3DTextureImpl_SetAutoGenFilterType(IWineD3DTexture *iface, WINED3DTEXTUREFILTERTYPE FilterType) {
-  return IWineD3DBaseTextureImpl_SetAutoGenFilterType((IWineD3DBaseTexture *)iface, FilterType);
+  return basetexture_set_autogen_filter_type((IWineD3DBaseTexture *)iface, FilterType);
 }
 
 static WINED3DTEXTUREFILTERTYPE WINAPI IWineD3DTextureImpl_GetAutoGenFilterType(IWineD3DTexture *iface) {
-  return IWineD3DBaseTextureImpl_GetAutoGenFilterType((IWineD3DBaseTexture *)iface);
+  return basetexture_get_autogen_filter_type((IWineD3DBaseTexture *)iface);
 }
 
 static void WINAPI IWineD3DTextureImpl_GenerateMipSubLevels(IWineD3DTexture *iface) {
-    IWineD3DBaseTextureImpl_GenerateMipSubLevels((IWineD3DBaseTexture *)iface);
+    basetexture_generate_mipmaps((IWineD3DBaseTexture *)iface);
 }
 
 /* Internal function, No d3d mapping */
 static BOOL WINAPI IWineD3DTextureImpl_SetDirty(IWineD3DTexture *iface, BOOL dirty) {
-    return IWineD3DBaseTextureImpl_SetDirty((IWineD3DBaseTexture *)iface, dirty);
+    return basetexture_set_dirty((IWineD3DBaseTexture *)iface, dirty);
 }
 
 static BOOL WINAPI IWineD3DTextureImpl_GetDirty(IWineD3DTexture *iface) {
-    return IWineD3DBaseTextureImpl_GetDirty((IWineD3DBaseTexture *)iface);
+    return basetexture_get_dirty((IWineD3DBaseTexture *)iface);
 }
 
 static HRESULT WINAPI IWineD3DTextureImpl_BindTexture(IWineD3DTexture *iface) {
@@ -219,7 +219,7 @@ static HRESULT WINAPI IWineD3DTextureImpl_BindTexture(IWineD3DTexture *iface) {
 
     TRACE("(%p) : relay to BaseTexture\n", This);
 
-    hr = IWineD3DBaseTextureImpl_BindTexture((IWineD3DBaseTexture *)iface);
+    hr = basetexture_bind((IWineD3DBaseTexture *)iface);
     if (set_gl_texture_desc && SUCCEEDED(hr)) {
         UINT i;
         for (i = 0; i < This->baseTexture.levels; ++i) {
@@ -270,7 +270,7 @@ static void WINAPI IWineD3DTextureImpl_ApplyStateChanges(IWineD3DTexture *iface,
                                                    const DWORD textureStates[WINED3D_HIGHEST_TEXTURE_STATE + 1],
                                                    const DWORD samplerStates[WINED3D_HIGHEST_SAMPLER_STATE + 1]) {
     TRACE("(%p) : relay to BaseTexture\n", iface);
-    IWineD3DBaseTextureImpl_ApplyStateChanges((IWineD3DBaseTexture *)iface, textureStates, samplerStates);
+    basetexture_apply_state_changes((IWineD3DBaseTexture *)iface, textureStates, samplerStates);
 }
 
 /* *******************************************
@@ -291,7 +291,7 @@ static void WINAPI IWineD3DTextureImpl_Destroy(IWineD3DTexture *iface, D3DCB_DES
         }
     }
     TRACE("(%p) : cleaning up base texture\n", This);
-    IWineD3DBaseTextureImpl_CleanUp((IWineD3DBaseTexture *)iface);
+    basetexture_cleanup((IWineD3DBaseTexture *)iface);
     /* free the object */
     HeapFree(GetProcessHeap(), 0, This);
 }
@@ -303,7 +303,7 @@ static HRESULT WINAPI IWineD3DTextureImpl_GetLevelDesc(IWineD3DTexture *iface, U
         TRACE("(%p) Level (%d)\n", This, Level);
         return IWineD3DSurface_GetDesc(This->surfaces[Level], pDesc);
     }
-    FIXME("(%p) level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
+    WARN("(%p) level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
     return WINED3DERR_INVALIDCALL;
 }
 
@@ -360,7 +360,9 @@ static HRESULT WINAPI IWineD3DTextureImpl_AddDirtyRect(IWineD3DTexture *iface, C
     IWineD3DTextureImpl *This = (IWineD3DTextureImpl *)iface;
     This->baseTexture.dirty = TRUE;
     TRACE("(%p) : dirtyfication of surface Level (0)\n", This);
-    return IWineD3DSurface_AddDirtyRect(This->surfaces[0], pDirtyRect);
+    surface_add_dirty_rect(This->surfaces[0], pDirtyRect);
+
+    return WINED3D_OK;
 }
 
 const IWineD3DTextureVtbl IWineD3DTexture_Vtbl =

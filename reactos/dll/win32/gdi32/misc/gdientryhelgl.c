@@ -24,10 +24,11 @@
 #define USE_WIN32_OPENGL
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+#define COBJMACROS
 #define D3DADAPTER_DEFAULT 0
 #define D3D_SDK_VERSION 220
 #include "wine/config.h"
-#include "wine/wined3d_interface.h"
+#include "wine/wined3d.h"
 
 
 
@@ -1624,7 +1625,7 @@ CreateWineD3DDevice(LPDDRAWI_DIRECTDRAW_GBL hDirectDraw)
         return FALSE;
     }
 
-    hr = IWineD3D_CreateDevice(pWineD3D, 0, WINED3DDEVTYPE_HAL, NULL, 0, &WineD3DDevice, NULL);
+    hr = IWineD3D_CreateDevice(pWineD3D, 0, WINED3DDEVTYPE_HAL, NULL, 0, NULL, NULL, &WineD3DDevice);
 
     if ( hr != D3D_OK )
     {

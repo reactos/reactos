@@ -142,29 +142,30 @@ void primitiveDeclarationConvertToStridedData(
 
      /* We need to deal with frequency data!*/
 
-    BYTE  *data    = NULL;
+    const BYTE *data = NULL;
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
     IWineD3DVertexDeclarationImpl* vertexDeclaration = (IWineD3DVertexDeclarationImpl *)This->stateBlock->vertexDecl;
-    int i;
-    WINED3DVERTEXELEMENT *element;
+    unsigned int i;
+    const WINED3DVERTEXELEMENT *element;
     DWORD stride;
     DWORD numPreloadStreams = This->stateBlock->streamIsUP ? 0 : vertexDeclaration->num_streams;
-    DWORD *streams = vertexDeclaration->streams;
+    const DWORD *streams = vertexDeclaration->streams;
 
     /* Check for transformed vertices, disable vertex shader if present */
-    strided->u.s.position_transformed = vertexDeclaration->position_transformed;
+    strided->position_transformed = vertexDeclaration->position_transformed;
     if(vertexDeclaration->position_transformed) {
         useVertexShaderFunction = FALSE;
     }
 
     /* Translate the declaration into strided data */
+    strided->swizzle_map = 0;
     for (i = 0 ; i < vertexDeclaration->declarationWNumElements - 1; ++i) {
         GLint streamVBO = 0;
         BOOL stride_used;
         unsigned int idx;
 
         element = vertexDeclaration->pDeclarationWine + i;
-        TRACE("%p Element %p (%d of %d)\n", vertexDeclaration->pDeclarationWine,
+        TRACE("%p Element %p (%u of %u)\n", vertexDeclaration->pDeclarationWine,
             element,  i + 1, vertexDeclaration->declarationWNumElements - 1);
 
         if (This->stateBlock->streamSource[element->Stream] == NULL)
@@ -201,8 +202,8 @@ void primitiveDeclarationConvertToStridedData(
                         element->Usage == WINED3DDECLUSAGE_POSITIONT)) {
                     static BOOL warned = FALSE;
                     if(!warned) {
-			/* This may be bad with the fixed function pipeline */
-			FIXME("Missing vbo streams with unfixed colors or transformed position, expect problems\n");
+                        /* This may be bad with the fixed function pipeline */
+                        FIXME("Missing vbo streams with unfixed colors or transformed position, expect problems\n");
                         warned = TRUE;
                     }
                 }
@@ -234,6 +235,11 @@ void primitiveDeclarationConvertToStridedData(
                 strided->u.input[idx].dwStride = stride;
                 strided->u.input[idx].VBO = streamVBO;
                 strided->u.input[idx].streamNo = element->Stream;
+                if (!GL_SUPPORT(EXT_VERTEX_ARRAY_BGRA) && element->Type == WINED3DDECLTYPE_D3DCOLOR)
+                {
+                    strided->swizzle_map |= 1 << idx;
+                }
+                strided->use_map |= 1 << idx;
             }
         }
     }
@@ -253,32 +259,35 @@ void primitiveDeclarationConvertToStridedData(
     }
 }
 
-static void drawStridedFast(IWineD3DDevice *iface,UINT numberOfVertices, GLenum glPrimitiveType,
-                     const void *idxData, short idxSize, ULONG minIndex, ULONG startIdx, ULONG startVertex) {
+static void drawStridedFast(IWineD3DDevice *iface, GLenum primitive_type,
+        UINT min_vertex_idx, UINT max_vertex_idx, UINT count, short idx_size,
+        const void *idx_data, UINT start_idx)
+{
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
 
-    if (idxSize != 0 /* This crashes sometimes!*/) {
-        TRACE("(%p) : glElements(%x, %d, %d, ...)\n", This, glPrimitiveType, numberOfVertices, minIndex);
-        idxData = idxData == (void *)-1 ? NULL : idxData;
-#if 1
-        glDrawElements(glPrimitiveType, numberOfVertices, idxSize == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-                     (const char *)idxData+(idxSize * startIdx));
-        checkGLcall("glDrawElements");
-#else /* using drawRangeElements may be faster */
+    if (idx_size)
+    {
+        TRACE("(%p) : glElements(%x, %d, %d, ...)\n", This, primitive_type, count, min_vertex_idx);
 
-        glDrawRangeElements(glPrimitiveType, minIndex, minIndex + numberOfVertices - 1, numberOfVertices,
-                      idxSize == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-                      (const char *)idxData+(idxSize * startIdx));
+#if 1
+        glDrawElements(primitive_type, count,
+                idx_size == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+                (const char *)idx_data + (idx_size * start_idx));
+        checkGLcall("glDrawElements");
+#else
+        glDrawRangeElements(primitive_type, min_vertex_idx, max_vertex_idx, count,
+                idx_size == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+                (const char *)idx_data + (idx_size * start_idx));
         checkGLcall("glDrawRangeElements");
 #endif
+    }
+    else
+    {
+        TRACE("(%p) : glDrawArrays(%#x, %d, %d)\n", This, primitive_type, start_idx, count);
 
-    } else {
-        TRACE("(%p) : glDrawArrays(%#x, %d, %d)\n", This, glPrimitiveType, startVertex, numberOfVertices);
-        glDrawArrays(glPrimitiveType, startVertex, numberOfVertices);
+        glDrawArrays(primitive_type, start_idx, count);
         checkGLcall("glDrawArrays");
     }
-
-    return;
 }
 
 /*
@@ -286,21 +295,22 @@ static void drawStridedFast(IWineD3DDevice *iface,UINT numberOfVertices, GLenum 
  * Slower GL version which extracts info about each vertex in turn
  */
 
-static void drawStridedSlow(IWineD3DDevice *iface, WineDirect3DVertexStridedData *sd,
-                     UINT NumVertexes, GLenum glPrimType,
-                     const void *idxData, short idxSize, ULONG minIndex, ULONG startIdx, ULONG startVertex) {
-
+static void drawStridedSlow(IWineD3DDevice *iface, const WineDirect3DVertexStridedData *sd, UINT NumVertexes,
+        GLenum glPrimType, const void *idxData, short idxSize, ULONG minIndex, ULONG startIdx)
+{
     unsigned int               textureNo    = 0;
     const WORD                *pIdxBufS     = NULL;
     const DWORD               *pIdxBufL     = NULL;
-    LONG                       vx_index;
+    ULONG                      vx_index;
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    UINT *streamOffset = This->stateBlock->streamOffset;
-    long                      SkipnStrides = startVertex + This->stateBlock->loadBaseVertexIndex;
-    BOOL                      pixelShader = use_ps(This);
-
-    BYTE *texCoords[WINED3DDP_MAXTEXCOORD];
-    BYTE *diffuse = NULL, *specular = NULL, *normal = NULL, *position = NULL;
+    const UINT *streamOffset = This->stateBlock->streamOffset;
+    long                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
+    BOOL                      pixelShader = use_ps(This->stateBlock);
+    BOOL specular_fog = FALSE;
+    UINT texture_stages = GL_LIMITS(texture_stages);
+    const BYTE *texCoords[WINED3DDP_MAXTEXCOORD];
+    const BYTE *diffuse = NULL, *specular = NULL, *normal = NULL, *position = NULL;
+    DWORD tex_mask = 0;
 
     TRACE("Using slow vertex array code\n");
 
@@ -321,56 +331,92 @@ static void drawStridedSlow(IWineD3DDevice *iface, WineDirect3DVertexStridedData
         return;
     }
 
-    /* Adding the stream offset once is cheaper than doing it every iteration. Do not modify the strided data, it is a pointer
-     * to the strided Data in the device and might be needed intact on the next draw
-     */
-    for (textureNo = 0; textureNo < GL_LIMITS(texture_stages); ++textureNo) {
-        if(sd->u.s.texCoords[textureNo].lpData) {
-            texCoords[textureNo] = sd->u.s.texCoords[textureNo].lpData + streamOffset[sd->u.s.texCoords[textureNo].streamNo];
-        } else {
-            texCoords[textureNo] = NULL;
-        }
-    }
-    if(sd->u.s.diffuse.lpData) {
-        diffuse = sd->u.s.diffuse.lpData + streamOffset[sd->u.s.diffuse.streamNo];
-    }
-    if(sd->u.s.specular.lpData) {
-        specular = sd->u.s.specular.lpData + streamOffset[sd->u.s.specular.streamNo];
-    }
-    if(sd->u.s.normal.lpData) {
-        normal = sd->u.s.normal.lpData + streamOffset[sd->u.s.normal.streamNo];
-    }
-    if(sd->u.s.position.lpData) {
-        position = sd->u.s.position.lpData + streamOffset[sd->u.s.position.streamNo];
-    }
-
-    if(FIXME_ON(d3d_draw)) {
-        if(specular && This->stateBlock->renderState[WINED3DRS_FOGENABLE] &&
-           (This->stateBlock->renderState[WINED3DRS_FOGVERTEXMODE] == WINED3DFOG_NONE || sd->u.s.position_transformed )&&
-           This->stateBlock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE) {
-            if(GL_SUPPORT(EXT_FOG_COORD) && sd->u.s.specular.dwType != WINED3DDECLTYPE_D3DCOLOR) {
-                FIXME("Implement fog coordinates from %s\n", debug_d3ddecltype(sd->u.s.specular.dwType));
-            }
-        }
-        if(This->activeContext->num_untracked_materials && sd->u.s.diffuse.dwType != WINED3DDECLTYPE_D3DCOLOR) {
-            FIXME("Implement diffuse color tracking from %s\n", debug_d3ddecltype(sd->u.s.diffuse.dwType));
-        }
-    }
-
     /* Start drawing in GL */
     VTRACE(("glBegin(%x)\n", glPrimType));
     glBegin(glPrimType);
 
-    /* Default settings for data that is not passed */
-    if (sd->u.s.normal.lpData == NULL) {
-        glNormal3f(0, 0, 0);
+    if (sd->u.s.position.lpData) position = sd->u.s.position.lpData + streamOffset[sd->u.s.position.streamNo];
+
+    if (sd->u.s.normal.lpData) normal = sd->u.s.normal.lpData + streamOffset[sd->u.s.normal.streamNo];
+    else glNormal3f(0, 0, 0);
+
+    if (sd->u.s.diffuse.lpData) diffuse = sd->u.s.diffuse.lpData + streamOffset[sd->u.s.diffuse.streamNo];
+    else glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    if (This->activeContext->num_untracked_materials && sd->u.s.diffuse.dwType != WINED3DDECLTYPE_D3DCOLOR)
+        FIXME("Implement diffuse color tracking from %s\n", debug_d3ddecltype(sd->u.s.diffuse.dwType));
+
+    if (sd->u.s.specular.lpData)
+    {
+        specular = sd->u.s.specular.lpData + streamOffset[sd->u.s.specular.streamNo];
+
+        /* special case where the fog density is stored in the specular alpha channel */
+        if (This->stateBlock->renderState[WINED3DRS_FOGENABLE]
+                && (This->stateBlock->renderState[WINED3DRS_FOGVERTEXMODE] == WINED3DFOG_NONE
+                    || sd->u.s.position.dwType == WINED3DDECLTYPE_FLOAT4)
+                && This->stateBlock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE)
+        {
+            if (GL_SUPPORT(EXT_FOG_COORD))
+            {
+                if (sd->u.s.specular.dwType == WINED3DDECLTYPE_D3DCOLOR) specular_fog = TRUE;
+                else FIXME("Implement fog coordinates from %s\n", debug_d3ddecltype(sd->u.s.specular.dwType));
+            }
+            else
+            {
+                static BOOL warned;
+
+                if (!warned)
+                {
+                    /* TODO: Use the fog table code from old ddraw */
+                    FIXME("Implement fog for transformed vertices in software\n");
+                    warned = TRUE;
+                }
+            }
+        }
     }
-    if(sd->u.s.diffuse.lpData == NULL) {
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    else if (GL_SUPPORT(EXT_SECONDARY_COLOR))
+    {
+        GL_EXTCALL(glSecondaryColor3fEXT)(0, 0, 0);
     }
-    if(sd->u.s.specular.lpData == NULL) {
-        if (GL_SUPPORT(EXT_SECONDARY_COLOR)) {
-            GL_EXTCALL(glSecondaryColor3fEXT)(0, 0, 0);
+
+    for (textureNo = 0; textureNo < texture_stages; ++textureNo)
+    {
+        int coordIdx = This->stateBlock->textureState[textureNo][WINED3DTSS_TEXCOORDINDEX];
+        int texture_idx = This->texUnitMap[textureNo];
+
+        if (!GL_SUPPORT(ARB_MULTITEXTURE) && textureNo > 0)
+        {
+            FIXME("Program using multiple concurrent textures which this opengl implementation doesn't support\n");
+            continue;
+        }
+
+        if (!pixelShader && !This->stateBlock->textures[textureNo]) continue;
+
+        if (texture_idx == -1) continue;
+
+        if (coordIdx > 7)
+        {
+            TRACE("tex: %d - Skip tex coords, as being system generated\n", textureNo);
+            continue;
+        }
+        else if (coordIdx < 0)
+        {
+            FIXME("tex: %d - Coord index %d is less than zero, expect a crash.\n", textureNo, coordIdx);
+            continue;
+        }
+
+        if(sd->u.s.texCoords[coordIdx].lpData)
+        {
+            texCoords[coordIdx] =
+                    sd->u.s.texCoords[coordIdx].lpData + streamOffset[sd->u.s.texCoords[coordIdx].streamNo];
+            tex_mask |= (1 << textureNo);
+        }
+        else
+        {
+            TRACE("tex: %d - Skipping tex coords, as no data supplied\n", textureNo);
+            if (GL_SUPPORT(ARB_MULTITEXTURE))
+                GL_EXTCALL(glMultiTexCoord4fARB(GL_TEXTURE0_ARB + texture_idx, 0, 0, 0, 1));
+            else
+                glTexCoord4f(0, 0, 0, 1);
         }
     }
 
@@ -380,6 +426,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, WineDirect3DVertexStridedData
 
     /* For each primitive */
     for (vx_index = 0; vx_index < NumVertexes; ++vx_index) {
+        UINT texture, tmp_tex_mask;
         /* Blending data and Point sizes are not supported by this function. They are not supported by the fixed
          * function pipeline at all. A Fixme for them is printed after decoding the vertex declaration
          */
@@ -389,63 +436,37 @@ static void drawStridedSlow(IWineD3DDevice *iface, WineDirect3DVertexStridedData
 
             /* Indexed so work out the number of strides to skip */
             if (idxSize == 2) {
-                VTRACE(("Idx for vertex %d = %d\n", vx_index, pIdxBufS[startIdx+vx_index]));
+                VTRACE(("Idx for vertex %u = %u\n", vx_index, pIdxBufS[startIdx+vx_index]));
                 SkipnStrides = pIdxBufS[startIdx + vx_index] + This->stateBlock->loadBaseVertexIndex;
             } else {
-                VTRACE(("Idx for vertex %d = %d\n", vx_index, pIdxBufL[startIdx+vx_index]));
+                VTRACE(("Idx for vertex %u = %u\n", vx_index, pIdxBufL[startIdx+vx_index]));
                 SkipnStrides = pIdxBufL[startIdx + vx_index] + This->stateBlock->loadBaseVertexIndex;
             }
         }
 
-        /* Texture coords --------------------------- */
-        for (textureNo = 0; textureNo < GL_LIMITS(texture_stages); ++textureNo) {
+        tmp_tex_mask = tex_mask;
+        for (texture = 0; tmp_tex_mask; tmp_tex_mask >>= 1, ++texture)
+        {
+            int coord_idx;
+            const void *ptr;
+            int texture_idx;
 
-            if (!GL_SUPPORT(ARB_MULTITEXTURE) && textureNo > 0) {
-                FIXME("Program using multiple concurrent textures which this opengl implementation doesn't support\n");
-                continue ;
-            }
+            if (!(tmp_tex_mask & 1)) continue;
 
-            /* Query tex coords */
-            if (This->stateBlock->textures[textureNo] != NULL || pixelShader) {
-                int    coordIdx = This->stateBlock->textureState[textureNo][WINED3DTSS_TEXCOORDINDEX];
-                int texture_idx = This->texUnitMap[textureNo];
-                void *ptrToCoords;
+            coord_idx = This->stateBlock->textureState[texture][WINED3DTSS_TEXCOORDINDEX];
+            ptr = texCoords[coord_idx] + (SkipnStrides * sd->u.s.texCoords[coord_idx].dwStride);
 
-                if (coordIdx > 7) {
-                    VTRACE(("tex: %d - Skip tex coords, as being system generated\n", textureNo));
-                    continue;
-                } else if (coordIdx < 0) {
-                    FIXME("tex: %d - Coord index %d is less than zero, expect a crash.\n", textureNo, coordIdx);
-                    continue;
-                }
-
-                if (texture_idx == -1) continue;
-
-                if (texCoords[coordIdx] == NULL) {
-                    TRACE("tex: %d - Skipping tex coords, as no data supplied\n", textureNo);
-                    if (GL_SUPPORT(ARB_MULTITEXTURE)) {
-                        GL_EXTCALL(glMultiTexCoord4fARB(GL_TEXTURE0_ARB + texture_idx, 0, 0, 0, 1));
-                    } else {
-                        glTexCoord4f(0, 0, 0, 1);
-                    }
-                    continue;
-                }
-
-                ptrToCoords = texCoords[coordIdx] + (SkipnStrides * sd->u.s.texCoords[coordIdx].dwStride);
-                if (GL_SUPPORT(ARB_MULTITEXTURE))
-                    multi_texcoord_funcs[sd->u.s.texCoords[coordIdx].dwType](GL_TEXTURE0_ARB + texture_idx, ptrToCoords);
-                else
-                    texcoord_funcs[sd->u.s.texCoords[coordIdx].dwType](ptrToCoords);
-            }
-        } /* End of textures */
+            texture_idx = This->texUnitMap[texture];
+            multi_texcoord_funcs[sd->u.s.texCoords[coord_idx].dwType](GL_TEXTURE0_ARB + texture_idx, ptr);
+        }
 
         /* Diffuse -------------------------------- */
         if (diffuse) {
-            DWORD *ptrToCoords = (DWORD *)(diffuse + (SkipnStrides * sd->u.s.diffuse.dwStride));
+            const void *ptrToCoords = diffuse + SkipnStrides * sd->u.s.diffuse.dwStride;
 
-            diffuse_funcs[sd->u.s.diffuse.dwType]((void *) ptrToCoords);
+            diffuse_funcs[sd->u.s.diffuse.dwType](ptrToCoords);
             if(This->activeContext->num_untracked_materials) {
-                DWORD diffuseColor = ptrToCoords[0];
+                DWORD diffuseColor = ((const DWORD *)ptrToCoords)[0];
                 unsigned char i;
                 float color[4];
 
@@ -462,37 +483,26 @@ static void drawStridedSlow(IWineD3DDevice *iface, WineDirect3DVertexStridedData
 
         /* Specular ------------------------------- */
         if (specular) {
-            DWORD *ptrToCoords = (DWORD *)(specular + (SkipnStrides * sd->u.s.specular.dwStride));
+            const void *ptrToCoords = specular + SkipnStrides * sd->u.s.specular.dwStride;
 
-            /* special case where the fog density is stored in the specular alpha channel */
-            if(This->stateBlock->renderState[WINED3DRS_FOGENABLE] &&
-              (This->stateBlock->renderState[WINED3DRS_FOGVERTEXMODE] == WINED3DFOG_NONE || sd->u.s.position.dwType == WINED3DDECLTYPE_FLOAT4 )&&
-              This->stateBlock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE) {
-                if(GL_SUPPORT(EXT_FOG_COORD)) {
-                    DWORD specularColor = ptrToCoords[0];
-                    GL_EXTCALL(glFogCoordfEXT(specularColor >> 24));
-                } else {
-                    static BOOL warned = FALSE;
-                    if(!warned) {
-                        /* TODO: Use the fog table code from old ddraw */
-                        FIXME("Implement fog for transformed vertices in software\n");
-                        warned = TRUE;
-                    }
-                }
+            specular_funcs[sd->u.s.specular.dwType](ptrToCoords);
+
+            if (specular_fog)
+            {
+                DWORD specularColor = *(const DWORD *)ptrToCoords;
+                GL_EXTCALL(glFogCoordfEXT(specularColor >> 24));
             }
-
-            specular_funcs[sd->u.s.specular.dwType]((void *) ptrToCoords);
         }
 
         /* Normal -------------------------------- */
         if (normal != NULL) {
-            float *ptrToCoords = (float *)(normal + (SkipnStrides * sd->u.s.normal.dwStride));
+            const void *ptrToCoords = normal + SkipnStrides * sd->u.s.normal.dwStride;
             normal_funcs[sd->u.s.normal.dwType](ptrToCoords);
         }
 
         /* Position -------------------------------- */
         if (position) {
-            float *ptrToCoords = (float *)(position + (SkipnStrides * sd->u.s.position.dwStride));
+            const void *ptrToCoords = position + SkipnStrides * sd->u.s.position.dwStride;
             position_funcs[sd->u.s.position.dwType](ptrToCoords);
         }
 
@@ -509,16 +519,16 @@ static void drawStridedSlow(IWineD3DDevice *iface, WineDirect3DVertexStridedData
 static inline void send_attribute(IWineD3DDeviceImpl *This, const DWORD type, const UINT index, const void *ptr) {
     switch(type) {
         case WINED3DDECLTYPE_FLOAT1:
-            GL_EXTCALL(glVertexAttrib1fvARB(index, (float *) ptr));
+            GL_EXTCALL(glVertexAttrib1fvARB(index, (const float *)ptr));
             break;
         case WINED3DDECLTYPE_FLOAT2:
-            GL_EXTCALL(glVertexAttrib2fvARB(index, (float *) ptr));
+            GL_EXTCALL(glVertexAttrib2fvARB(index, (const float *)ptr));
             break;
         case WINED3DDECLTYPE_FLOAT3:
-            GL_EXTCALL(glVertexAttrib3fvARB(index, (float *) ptr));
+            GL_EXTCALL(glVertexAttrib3fvARB(index, (const float *)ptr));
             break;
         case WINED3DDECLTYPE_FLOAT4:
-            GL_EXTCALL(glVertexAttrib4fvARB(index, (float *) ptr));
+            GL_EXTCALL(glVertexAttrib4fvARB(index, (const float *)ptr));
             break;
 
         case WINED3DDECLTYPE_UBYTE4:
@@ -530,29 +540,29 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, const DWORD type, co
             break;
 
         case WINED3DDECLTYPE_SHORT2:
-            GL_EXTCALL(glVertexAttrib4svARB(index, (GLshort *) ptr));
+            GL_EXTCALL(glVertexAttrib4svARB(index, (const GLshort *)ptr));
             break;
         case WINED3DDECLTYPE_SHORT4:
-            GL_EXTCALL(glVertexAttrib4svARB(index, (GLshort *) ptr));
+            GL_EXTCALL(glVertexAttrib4svARB(index, (const GLshort *)ptr));
             break;
 
         case WINED3DDECLTYPE_SHORT2N:
         {
-            GLshort s[4] = {((short *) ptr)[0], ((short *) ptr)[1], 0, 1};
+            GLshort s[4] = {((const GLshort *)ptr)[0], ((const GLshort *)ptr)[1], 0, 1};
             GL_EXTCALL(glVertexAttrib4NsvARB(index, s));
             break;
         }
         case WINED3DDECLTYPE_USHORT2N:
         {
-            GLushort s[4] = {((unsigned short *) ptr)[0], ((unsigned short *) ptr)[1], 0, 1};
+            GLushort s[4] = {((const GLushort *)ptr)[0], ((const GLushort *)ptr)[1], 0, 1};
             GL_EXTCALL(glVertexAttrib4NusvARB(index, s));
             break;
         }
         case WINED3DDECLTYPE_SHORT4N:
-            GL_EXTCALL(glVertexAttrib4NsvARB(index, (GLshort *) ptr));
+            GL_EXTCALL(glVertexAttrib4NsvARB(index, (const GLshort *)ptr));
             break;
         case WINED3DDECLTYPE_USHORT4N:
-            GL_EXTCALL(glVertexAttrib4NusvARB(index, (GLushort *) ptr));
+            GL_EXTCALL(glVertexAttrib4NusvARB(index, (const GLushort *)ptr));
             break;
 
         case WINED3DDECLTYPE_UDEC3:
@@ -569,21 +579,21 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, const DWORD type, co
              * byte float according to the IEEE standard
              */
             if (GL_SUPPORT(NV_HALF_FLOAT)) {
-                GL_EXTCALL(glVertexAttrib2hvNV(index, (GLhalfNV *)ptr));
+                GL_EXTCALL(glVertexAttrib2hvNV(index, (const GLhalfNV *)ptr));
             } else {
-                float x = float_16_to_32(((unsigned short *) ptr) + 0);
-                float y = float_16_to_32(((unsigned short *) ptr) + 1);
+                float x = float_16_to_32(((const unsigned short *)ptr) + 0);
+                float y = float_16_to_32(((const unsigned short *)ptr) + 1);
                 GL_EXTCALL(glVertexAttrib2fARB(index, x, y));
             }
             break;
         case WINED3DDECLTYPE_FLOAT16_4:
             if (GL_SUPPORT(NV_HALF_FLOAT)) {
-                GL_EXTCALL(glVertexAttrib4hvNV(index, (GLhalfNV *)ptr));
+                GL_EXTCALL(glVertexAttrib4hvNV(index, (const GLhalfNV *)ptr));
             } else {
-                float x = float_16_to_32(((unsigned short *) ptr) + 0);
-                float y = float_16_to_32(((unsigned short *) ptr) + 1);
-                float z = float_16_to_32(((unsigned short *) ptr) + 2);
-                float w = float_16_to_32(((unsigned short *) ptr) + 3);
+                float x = float_16_to_32(((const unsigned short *)ptr) + 0);
+                float y = float_16_to_32(((const unsigned short *)ptr) + 1);
+                float z = float_16_to_32(((const unsigned short *)ptr) + 2);
+                float w = float_16_to_32(((const unsigned short *)ptr) + 3);
                 GL_EXTCALL(glVertexAttrib4fARB(index, x, y, z, w));
             }
             break;
@@ -595,18 +605,17 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, const DWORD type, co
     }
 }
 
-static void drawStridedSlowVs(IWineD3DDevice *iface, WineDirect3DVertexStridedData *sd, UINT numberOfVertices,
-                              GLenum glPrimitiveType, const void *idxData, short idxSize, ULONG minIndex, ULONG startIdx,
-                              ULONG startVertex) {
-
+static void drawStridedSlowVs(IWineD3DDevice *iface, const WineDirect3DVertexStridedData *sd, UINT numberOfVertices,
+        GLenum glPrimitiveType, const void *idxData, short idxSize, ULONG minIndex, ULONG startIdx)
+{
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *) iface;
-    long                      SkipnStrides = startVertex + This->stateBlock->loadBaseVertexIndex;
+    long                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
     const WORD                *pIdxBufS     = NULL;
     const DWORD               *pIdxBufL     = NULL;
-    LONG                       vx_index;
+    ULONG                      vx_index;
     int i;
     IWineD3DStateBlockImpl *stateblock = This->stateBlock;
-    BYTE *ptr;
+    const BYTE *ptr;
 
     if (idxSize != 0) {
         /* Immediate mode drawing can't make use of indices in a vbo - get the data from the index buffer.
@@ -656,11 +665,12 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, WineDirect3DVertexStridedDa
     glEnd();
 }
 
-static inline void drawStridedInstanced(IWineD3DDevice *iface, WineDirect3DVertexStridedData *sd, UINT numberOfVertices,
-                                 GLenum glPrimitiveType, const void *idxData, short idxSize, ULONG minIndex,
-                                 ULONG startIdx, ULONG startVertex) {
-    UINT numInstances = 0;
-    int numInstancedAttribs = 0, i, j;
+static inline void drawStridedInstanced(IWineD3DDevice *iface, const WineDirect3DVertexStridedData *sd,
+        UINT numberOfVertices, GLenum glPrimitiveType, const void *idxData, short idxSize, ULONG minIndex,
+        ULONG startIdx)
+{
+    UINT numInstances = 0, i;
+    int numInstancedAttribs = 0, j;
     UINT instancedData[sizeof(sd->u.input) / sizeof(sd->u.input[0]) /* 16 */];
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *) iface;
     IWineD3DStateBlockImpl *stateblock = This->stateBlock;
@@ -677,7 +687,6 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, WineDirect3DVerte
     }
 
     TRACE("(%p) : glElements(%x, %d, %d, ...)\n", This, glPrimitiveType, numberOfVertices, minIndex);
-    idxData = idxData == (void *)-1 ? NULL : idxData;
 
     /* First, figure out how many instances we have to draw */
     for(i = 0; i < MAX_STREAMS; i++) {
@@ -704,7 +713,7 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, WineDirect3DVerte
     for(i = 0; i < numInstances; i++) {
         /* Specify the instanced attributes using immediate mode calls */
         for(j = 0; j < numInstancedAttribs; j++) {
-            BYTE *ptr = sd->u.input[instancedData[j]].lpData +
+            const BYTE *ptr = sd->u.input[instancedData[j]].lpData +
                         sd->u.input[instancedData[j]].dwStride * i +
                         stateblock->streamOffset[sd->u.input[instancedData[j]].streamNo];
             if(sd->u.input[instancedData[j]].VBO) {
@@ -810,20 +819,13 @@ static inline void remove_vbos(IWineD3DDeviceImpl *This, WineDirect3DVertexStrid
 }
 
 /* Routine common to the draw primitive and draw indexed primitive routines */
-void drawPrimitive(IWineD3DDevice *iface,
-                   int PrimitiveType,
-                   long NumPrimitives,
-                   /* for Indexed: */
-                   long  StartVertexIndex,
-                   UINT  numberOfVertices,
-                   long  StartIdx,
-                   short idxSize,
-                   const void *idxData,
-                   int   minIndex) {
+void drawPrimitive(IWineD3DDevice *iface, int PrimitiveType, long NumPrimitives,
+        UINT numberOfVertices, long StartIdx, short idxSize, const void *idxData, int minIndex)
+{
 
     IWineD3DDeviceImpl           *This = (IWineD3DDeviceImpl *)iface;
     IWineD3DSurfaceImpl          *target;
-    int i;
+    unsigned int i;
 
     if (NumPrimitives == 0) return;
 
@@ -854,7 +856,7 @@ void drawPrimitive(IWineD3DDevice *iface,
     {
         GLenum glPrimType;
         BOOL emulation = FALSE;
-        WineDirect3DVertexStridedData *strided = &This->strided_streams;
+        const WineDirect3DVertexStridedData *strided = &This->strided_streams;
         WineDirect3DVertexStridedData stridedlcl;
         /* Ok, Work out which primitive is requested and how many vertexes that
            will be                                                              */
@@ -862,13 +864,15 @@ void drawPrimitive(IWineD3DDevice *iface,
         if (numberOfVertices == 0 )
             numberOfVertices = calculatedNumberOfindices;
 
-        if(!use_vs(This)) {
-            if(!This->strided_streams.u.s.position_transformed && This->activeContext->num_untracked_materials &&
-                This->stateBlock->renderState[WINED3DRS_LIGHTING]) {
-                static BOOL first = TRUE;
-                if(first) {
+        if (!use_vs(This->stateBlock))
+        {
+            if (!This->strided_streams.position_transformed && This->activeContext->num_untracked_materials
+                    && This->stateBlock->renderState[WINED3DRS_LIGHTING])
+            {
+                static BOOL warned;
+                if (!warned) {
                     FIXME("Using software emulation because not all material properties could be tracked\n");
-                    first = FALSE;
+                    warned = TRUE;
                 } else {
                     TRACE("Using software emulation because not all material properties could be tracked\n");
                 }
@@ -878,10 +882,10 @@ void drawPrimitive(IWineD3DDevice *iface,
                 /* Either write a pipeline replacement shader or convert the specular alpha from unsigned byte
                  * to a float in the vertex buffer
                  */
-                static BOOL first = TRUE;
-                if(first) {
+                static BOOL warned;
+                if (!warned) {
                     FIXME("Using software emulation because manual fog coordinates are provided\n");
-                    first = FALSE;
+                    warned = TRUE;
                 } else {
                     TRACE("Using software emulation because manual fog coordinates are provided\n");
                 }
@@ -897,27 +901,28 @@ void drawPrimitive(IWineD3DDevice *iface,
 
         if (This->useDrawStridedSlow || emulation) {
             /* Immediate mode drawing */
-            if(use_vs(This)) {
-                static BOOL first = TRUE;
-                if(first) {
+            if (use_vs(This->stateBlock))
+            {
+                static BOOL warned;
+                if (!warned) {
                     FIXME("Using immediate mode with vertex shaders for half float emulation\n");
-                    first = FALSE;
+                    warned = TRUE;
                 } else {
                     TRACE("Using immediate mode with vertex shaders for half float emulation\n");
                 }
-                drawStridedSlowVs(iface, strided, calculatedNumberOfindices, glPrimType,
-                                  idxData, idxSize, minIndex, StartIdx, StartVertexIndex);
+                drawStridedSlowVs(iface, strided, calculatedNumberOfindices,
+                        glPrimType, idxData, idxSize, minIndex, StartIdx);
             } else {
                 drawStridedSlow(iface, strided, calculatedNumberOfindices,
-                                glPrimType, idxData, idxSize, minIndex, StartIdx, StartVertexIndex);
+                        glPrimType, idxData, idxSize, minIndex, StartIdx);
             }
         } else if(This->instancedDraw) {
             /* Instancing emulation with mixing immediate mode and arrays */
             drawStridedInstanced(iface, &This->strided_streams, calculatedNumberOfindices, glPrimType,
-                            idxData, idxSize, minIndex, StartIdx, StartVertexIndex);
+                            idxData, idxSize, minIndex, StartIdx);
         } else {
-            drawStridedFast(iface, calculatedNumberOfindices, glPrimType,
-                            idxData, idxSize, minIndex, StartIdx, StartVertexIndex);
+            drawStridedFast(iface, glPrimType, minIndex, minIndex + numberOfVertices - 1,
+                    calculatedNumberOfindices, idxSize, idxData, StartIdx);
         }
     }
 
@@ -1005,8 +1010,8 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     unsigned int i, j, num_quads, out_vertex_size, buffer_size, d3d_out_vertex_size;
     float max_x = 0.0, max_y = 0.0, max_z = 0.0, neg_z = 0.0;
     WineDirect3DVertexStridedData strided;
-    BYTE *data;
-    WINED3DRECTPATCH_INFO *info = &patch->RectPatchInfo;
+    const BYTE *data;
+    const WINED3DRECTPATCH_INFO *info = &patch->RectPatchInfo;
     DWORD vtxStride;
     GLenum feedback_type;
     GLfloat *feedbuffer;
@@ -1028,9 +1033,8 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
            vtxStride * info->StartVertexOffsetWidth;
 
     /* Not entirely sure about what happens with transformed vertices */
-    if(strided.u.s.position_transformed) {
-        FIXME("Transformed position in rectpatch generation\n");
-    }
+    if (strided.position_transformed) FIXME("Transformed position in rectpatch generation\n");
+
     if(vtxStride % sizeof(GLfloat)) {
         /* glMap2f reads vertex sizes in GLfloats, the d3d stride is in bytes.
          * I don't see how the stride could not be a multiple of 4, but make sure
@@ -1048,7 +1052,7 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     /* First, get the boundary cube of the input data */
     for(j = 0; j < info->Height; j++) {
         for(i = 0; i < info->Width; i++) {
-            float *v = (float *) (data + vtxStride * i + vtxStride * info->Stride * j);
+            const float *v = (const float *)(data + vtxStride * i + vtxStride * info->Stride * j);
             if(fabs(v[0]) > max_x) max_x = fabs(v[0]);
             if(fabs(v[1]) > max_y) max_y = fabs(v[1]);
             if(fabs(v[2]) > max_z) max_z = fabs(v[2]);
@@ -1085,11 +1089,11 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     checkGLcall("glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)");
     IWineD3DDeviceImpl_MarkStateDirty(This, STATE_RENDER(WINED3DRS_FILLMODE));
     if(patch->has_normals) {
-        float black[4] = {0, 0, 0, 0};
-        float red[4]   = {1, 0, 0, 0};
-        float green[4] = {0, 1, 0, 0};
-        float blue[4]  = {0, 0, 1, 0};
-        float white[4] = {1, 1, 1, 1};
+        static const GLfloat black[] = {0, 0, 0, 0};
+        static const GLfloat red[]   = {1, 0, 0, 0};
+        static const GLfloat green[] = {0, 1, 0, 0};
+        static const GLfloat blue[]  = {0, 0, 1, 0};
+        static const GLfloat white[] = {1, 1, 1, 1};
         glEnable(GL_LIGHTING);
         checkGLcall("glEnable(GL_LIGHTING)");
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, black);
@@ -1172,13 +1176,13 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     glMap2f(GL_MAP2_VERTEX_3,
             0, 1, vtxStride / sizeof(float), info->Width,
             0, 1, info->Stride * vtxStride / sizeof(float), info->Height,
-            (float *) data);
+            (const GLfloat *)data);
     checkGLcall("glMap2f");
     if(patch->has_texcoords) {
         glMap2f(GL_MAP2_TEXTURE_COORD_4,
                 0, 1, vtxStride / sizeof(float), info->Width,
                 0, 1, info->Stride * vtxStride / sizeof(float), info->Height,
-                (float *) data);
+                (const GLfloat *)data);
         checkGLcall("glMap2f");
     }
     glMapGrid2f(ceilf(patch->numSegs[0]), 0.0, 1.0, ceilf(patch->numSegs[1]), 0.0, 1.0);
@@ -1256,9 +1260,9 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
 
     if(patch->has_normals) {
         /* Now do the same with reverse light directions */
-        float x[4] = {-1,  0,  0, 0};
-        float y[4] = { 0, -1,  0, 0};
-        float z[4] = { 0,  0, -1, 0};
+        static const GLfloat x[] = {-1,  0,  0, 0};
+        static const GLfloat y[] = { 0, -1,  0, 0};
+        static const GLfloat z[] = { 0,  0, -1, 0};
         glLightfv(GL_LIGHT0, GL_POSITION, x);
         glLightfv(GL_LIGHT1, GL_POSITION, y);
         glLightfv(GL_LIGHT2, GL_POSITION, z);

@@ -160,7 +160,7 @@ static HRESULT WINAPI IDirect3DVolume9Impl_UnlockBox(LPDIRECT3DVOLUME9 iface) {
     return IWineD3DVolume_UnlockBox(This->wineD3DVolume);
 }
 
-static const IDirect3DVolume9Vtbl Direct3DVolume9_Vtbl =
+const IDirect3DVolume9Vtbl Direct3DVolume9_Vtbl =
 {
     /* IUnknown */
     IDirect3DVolume9Impl_QueryInterface,
@@ -176,42 +176,6 @@ static const IDirect3DVolume9Vtbl Direct3DVolume9_Vtbl =
     IDirect3DVolume9Impl_LockBox,
     IDirect3DVolume9Impl_UnlockBox
 };
-
-
-/* Internal function called back during the CreateVolumeTexture */
-HRESULT WINAPI D3D9CB_CreateVolume(IUnknown  *pDevice, IUnknown *pSuperior, UINT Width, UINT Height, UINT Depth,
-                                   WINED3DFORMAT  Format, WINED3DPOOL Pool, DWORD Usage,
-                                   IWineD3DVolume **ppVolume,
-                                   HANDLE   * pSharedHandle) {
-    IDirect3DVolume9Impl *object;
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)pDevice;
-    HRESULT hrc = D3D_OK;
-    
-    /* Allocate the storage for the device */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DVolume9Impl));
-    if (NULL == object) {
-        FIXME("Allocation of memory failed\n");
-        *ppVolume = NULL;
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
-
-    object->lpVtbl = &Direct3DVolume9_Vtbl;
-    object->ref = 1;
-    hrc = IWineD3DDevice_CreateVolume(This->WineD3DDevice, Width, Height, Depth, Usage & WINED3DUSAGE_MASK, Format, 
-                                       Pool, &object->wineD3DVolume, pSharedHandle, (IUnknown *)object);
-    if (hrc != D3D_OK) {
-        /* free up object */ 
-        FIXME("(%p) call to IWineD3DDevice_CreateVolume failed\n", This);
-        HeapFree(GetProcessHeap(), 0, object);
-        *ppVolume = NULL;
-    } else {
-        *ppVolume = object->wineD3DVolume;
-        object->container = pSuperior;
-        object->forwardReference = pSuperior;
-    }
-    TRACE("(%p) Created volume %p\n", This, *ppVolume);
-    return hrc;
-}
 
 ULONG WINAPI D3D9CB_DestroyVolume(IWineD3DVolume *pVolume) {
     IDirect3DVolume9Impl* volumeParent;

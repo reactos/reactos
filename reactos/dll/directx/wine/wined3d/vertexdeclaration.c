@@ -207,7 +207,7 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
         const WINED3DVERTEXELEMENT *elements, UINT element_count) {
     IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
     HRESULT hr = WINED3D_OK;
-    int i, j;
+    int i;
     char isPreLoaded[MAX_STREAMS];
 
     TRACE("(%p) : d3d version %d\n", This, ((IWineD3DImpl *)This->wineD3DDevice->wineD3D)->dxVersion);
@@ -263,39 +263,13 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
             isPreLoaded[This->pDeclarationWine[i].Stream] = 1;
         }
 
-        /* Create a sorted array containing the attribute declarations that are of type
-         * D3DCOLOR. D3DCOLOR requires swizzling of the r and b component, and if the
-         * declaration of one attribute changes the vertex shader needs recompilation.
-         * Having a sorted array of the attributes allows efficient comparison of the
-         * declaration against a shader
-         */
-        if(This->pDeclarationWine[i].Type == WINED3DDECLTYPE_D3DCOLOR) {
-            for(j = 0; j < This->num_swizzled_attribs; j++) {
-                if(This->swizzled_attribs[j].usage >  This->pDeclarationWine[i].Usage ||
-                  (This->swizzled_attribs[j].usage == This->pDeclarationWine[i].Usage &&
-                   This->swizzled_attribs[j].idx   >   This->pDeclarationWine[i].UsageIndex)) {
-                    memmove(&This->swizzled_attribs[j + 1], &This->swizzled_attribs[j],
-                             sizeof(This->swizzled_attribs) - (sizeof(This->swizzled_attribs[0]) * (j + 1)));
-                    break;
-                }
-            }
-
-            This->swizzled_attribs[j].usage = This->pDeclarationWine[i].Usage;
-            This->swizzled_attribs[j].idx = This->pDeclarationWine[i].UsageIndex;
-            This->num_swizzled_attribs++;
-        } else if(This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_2 ||
-                  This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_4) {
-            if(!GL_SUPPORT(NV_HALF_FLOAT)) {
-                This->half_float_conv_needed = TRUE;
-            }
+        if (This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_2
+                || This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_4)
+        {
+            if (!GL_SUPPORT(NV_HALF_FLOAT)) This->half_float_conv_needed = TRUE;
         }
     }
 
-    TRACE("Swizzled attributes found:\n");
-    for(i = 0; i < This->num_swizzled_attribs; i++) {
-        TRACE("%u: %s%d\n", i,
-              debug_d3ddeclusage(This->swizzled_attribs[i].usage), This->swizzled_attribs[i].idx);
-    }
     TRACE("Returning\n");
     return hr;
 }
