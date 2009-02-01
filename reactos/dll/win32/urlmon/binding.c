@@ -1183,6 +1183,8 @@ static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink 
     case BINDSTATUS_DIRECTBIND:
         This->report_mime = FALSE;
         break;
+    case BINDSTATUS_ACCEPTRANGES:
+        break;
     default:
         FIXME("Unhandled status code %d\n", ulStatusCode);
         return E_NOTIMPL;

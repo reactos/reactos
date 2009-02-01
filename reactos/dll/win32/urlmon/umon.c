@@ -532,7 +532,6 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
             if(SUCCEEDED(hres)) {
                 URL_COMPONENTSW url;
                 WCHAR *host, *path, *user, *pass;
-                DWORD lensz = sizeof(bind->expected_size);
                 DWORD dwService = 0;
                 BOOL bSuccess;
 
@@ -597,12 +596,6 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
                             url.nPort = INTERNET_DEFAULT_GOPHER_PORT;
                         dwService = INTERNET_SERVICE_GOPHER;
                         break;
-
-                    case INTERNET_SCHEME_HTTPS:
-                        if (!url.nPort)
-                            url.nPort = INTERNET_DEFAULT_HTTPS_PORT;
-                        dwService = INTERNET_SERVICE_HTTP;
-                        break;
                     }
 
                     bind->hconnect = InternetConnectW(bind->hinternet, host, url.nPort, user, pass,
@@ -647,28 +640,6 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName, IBindCtx* pbc,
                                 bSuccess = TRUE;
                         else
                                 hres = HRESULT_FROM_WIN32(GetLastError());
-                        break;
-
-                    case INTERNET_SERVICE_HTTP:
-                        bind->hrequest = HttpOpenRequestW(bind->hconnect, NULL, path, NULL, NULL, NULL, 0, (DWORD_PTR)bind);
-                        if (!bind->hrequest)
-                        {
-                                hres = HRESULT_FROM_WIN32(GetLastError());
-                        }
-                        else if (!HttpSendRequestW(bind->hrequest, NULL, 0, NULL, 0))
-                        {
-                                hres = HRESULT_FROM_WIN32(GetLastError());
-                                InternetCloseHandle(bind->hrequest);
-                        }
-                        else
-                        {
-                                HttpQueryInfoW(bind->hrequest,
-                                               HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
-                                               &bind->expected_size,
-                                               &lensz,
-                                               NULL);
-                                bSuccess = TRUE;
-                        }
                         break;
                     }
                     if(bSuccess)
@@ -734,8 +705,7 @@ static HRESULT WINAPI URLMonikerImpl_BindToStorage(IMoniker* iface,
     }
 
     if(IsEqualGUID(&IID_IStream, riid) &&
-       (  url.nScheme == INTERNET_SCHEME_HTTPS
-       || url.nScheme == INTERNET_SCHEME_FTP
+       (  url.nScheme == INTERNET_SCHEME_FTP
        || url.nScheme == INTERNET_SCHEME_GOPHER))
         return URLMonikerImpl_BindToStorage_hack(This->URLName, pbc, ppvObject);
 
@@ -1279,6 +1249,17 @@ HRESULT WINAPI URLDownloadToCacheFileW(LPUNKNOWN lpUnkCaller, LPCWSTR szURL, LPW
     lstrcpyW(szFileName, cache_path);
 
     return S_OK;
+}
+
+/***********************************************************************
+ *           HlinkSimpleNavigateToMoniker (URLMON.@)
+ */
+HRESULT WINAPI HlinkSimpleNavigateToMoniker(IMoniker *pmkTarget,
+    LPCWSTR szLocation, LPCWSTR szTargetFrameName, IUnknown *pUnk,
+    IBindCtx *pbc, IBindStatusCallback *pbsc, DWORD grfHLNF, DWORD dwReserved)
+{
+    FIXME("stub\n");
+    return E_NOTIMPL;
 }
 
 /***********************************************************************
