@@ -4714,8 +4714,31 @@ BOOLEAN NTAPI
 MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                       IN PLARGE_INTEGER   NewFileSize)
 {
+ 
+   /* Check whether an ImageSectionObject exists */
+   if (SectionObjectPointer->ImageSectionObject != NULL)
+   {
+      return FALSE;
+   }
+
+   if (SectionObjectPointer->DataSectionObject != NULL)
+   {
+      PMM_SECTION_SEGMENT Segment;
+
+      Segment = (PMM_SECTION_SEGMENT)SectionObjectPointer->
+                DataSectionObject;
+
+      if (Segment->ReferenceCount != 0)
+      {
+         /* FIXME: check if NewFileSize <= current file size */
+         return FALSE;
+      }
+   }
+
+   /* FIXME: check for outstanding write probes */
    UNIMPLEMENTED;
-   return (FALSE);
+
+   return FALSE;
 }
 
 
