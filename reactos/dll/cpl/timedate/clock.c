@@ -196,6 +196,8 @@ ClockWndProc(HWND hwnd,
                            PATCOPY);
 
                     oldMap = SetMapMode(hdcMem, MM_ISOTROPIC);
+                    SetWindowExtEx(hdcMem, 3600, 2700, NULL);
+                    SetViewportExtEx(hdcMem, 800, -600, NULL);
                     SetViewportOrgEx(hdcMem,
                                      pClockData->cxClient / 2,
                                      pClockData->cyClient / 2,
