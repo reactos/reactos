@@ -248,6 +248,12 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
 
+    /* HACK HACK HACK */
+    TdiCloseDevice( FCB->Connection.Handle,
+		    FCB->Connection.Object );
+    TdiCloseDevice( FCB->AddressFile.Handle,
+		    FCB->AddressFile.Object );
+
     FileObject->FsContext = NULL;
     DestroySocket( FCB );
 
