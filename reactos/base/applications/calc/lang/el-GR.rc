@@ -436,7 +436,7 @@ BEGIN
     IDS_QUICKHELP           "Quick help"
 END
 
-// types of conversion
+// Types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CONV_ANGLE          "Γωνία"
@@ -639,8 +639,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TIME_DAYS         "Μέρες"
     IDS_TIME_HOURS        "Ώρες"
-    IDS_TIME_MICROSECONDS "Microseconds"
-    IDS_TIME_MILISECONDS  "Miliseconds"
+    IDS_TIME_MICROSECONDS "Μικροδευτερόλεπτα"
+    IDS_TIME_MILLISECONDS "Μιλιδευτερόλεπτα"
     IDS_TIME_MINUTES      "Λεπτά"
     IDS_TIME_SECONDS      "Δευτερόλεπτα"
     IDS_TIME_WEEKS        "Εβδομάδες"
