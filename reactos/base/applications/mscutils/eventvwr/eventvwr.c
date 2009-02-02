@@ -503,7 +503,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     HWND hwndDlg;
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
-    DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords, dwCurrentRecord = 1, dwRecordsToRead = 0, dwFlags;
+    DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 1, dwRecordsToRead = 0, dwFlags;
     LPWSTR lpSourceName;
     LPWSTR lpComputerName;
     LPWSTR lpEventStr;
