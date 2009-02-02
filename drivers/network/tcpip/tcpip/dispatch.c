@@ -181,11 +181,11 @@ VOID NTAPI DispCancelRequest(
 
 	TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
 
+	IoReleaseCancelSpinLock(Irp->CancelIrql);
+
 	if( !ChewCreate( &WorkItem, sizeof(DISCONNECT_TYPE),
 			 DispDoDisconnect, &DisType ) )
 	    ASSERT(0);
-
-	IoReleaseCancelSpinLock(Irp->CancelIrql);
         return;
 
     case TDI_SEND_DATAGRAM:
