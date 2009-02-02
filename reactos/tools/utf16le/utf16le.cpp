@@ -169,7 +169,7 @@ class utf_converter
 	}
 	wchar_t get_wchar_t()
 	{
-		wchar_t ret = -1;
+		wchar_t ret = (wchar_t)-1;
 		switch (encoding)
 		{
 			case detect: // if still unknwon
