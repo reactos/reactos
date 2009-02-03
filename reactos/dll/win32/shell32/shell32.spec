@@ -62,7 +62,7 @@
 62  stdcall PickIconDlg(long long long long)
 63  stdcall GetFileNameFromBrowse(long long long long str str str)
 64  stdcall DriveType(long)
-65  stdcall -noname InvalidateDriveType(long) # Fixme
+65  stdcall -noname InvalidateDriveType(long)
 66  stdcall IsNetDrive(long)
 67  stdcall Shell_MergeMenus(long long long long long long)
 68  stdcall SHGetSetSettings(ptr long long)
@@ -88,7 +88,7 @@
 88  stdcall SHDoDragDrop(long ptr ptr long ptr)
 89  stdcall SHCloneSpecialIDList(long long long)
 90  stdcall SHFindFiles(ptr ptr)
-91  stub SHFindComputer # Fixme
+91  stdcall SHFindComputer(ptr ptr)
 92  stdcall PathGetShortPath(ptr) PathGetShortPathAW
 93  stdcall -noname Win32CreateDirectory(wstr ptr) Win32CreateDirectoryW
 94  stdcall -noname Win32RemoveDirectory(wstr) Win32RemoveDirectoryW
@@ -454,8 +454,8 @@
 743 stub SHCreateFileExtractIconW
 744 stub -noname Shell_744
 745 stub -noname Shell_745
-747 stub SHLimitInputEdit
-748 stub -noname Shell_748 # Fixme
+747 stdcall SHLimitInputEdit(ptr ptr)
+748 stdcall -noname SHLimitInputCombo(ptr ptr)
 749 stub SHGetShellStyleHInstance
 750 stub SHGetAttributesFromDataObject
 751 stub -noname Shell_751
@@ -469,35 +469,37 @@
 @ stdcall SHCreateDefaultContextMenu(ptr ptr ptr)
 @ stdcall SHCreateDefaultExtractIcon(ptr ptr)
 
-# Unknown functions. They need to be removed
-#@ stdcall FileMenu_DeleteAllItems(long)
-#@ stdcall FileMenu_DrawItem(long ptr)
-#@ stdcall FileMenu_FindSubMenuByPidl(long ptr)
-#@ stdcall FileMenu_GetLastSelectedItemPidls(long ptr ptr)
-#@ stdcall FileMenu_HandleMenuChar(long long)
-#@ stdcall FileMenu_InitMenuPopup(long)
-#@ stdcall FileMenu_InsertUsingPidl (long long ptr long long ptr)
-#@ stdcall FileMenu_Invalidate(long)
-#@ stdcall FileMenu_MeasureItem(long ptr)
-#@ stdcall FileMenu_ReplaceUsingPidl(long long ptr long ptr)
-#@ stdcall FileMenu_Create(long long long long long)
-#@ stdcall FileMenu_AppendItem(long ptr long long long long) FileMenu_AppendItemAW
-#@ stdcall FileMenu_TrackPopupMenuEx(long long long long long long)
-#@ stdcall FileMenu_DeleteItemByCmd(long long)
-#@ stdcall FileMenu_Destroy(long)
-#@ stdcall FileMenu_AbortInitMenu()
-#@ stdcall FileMenu_AppendFilesForPidl(long ptr long)
-#@ stdcall FileMenu_AddFilesForPidl(long long long ptr long long ptr)
-#@ stdcall FileMenu_DeleteItemByIndex(long long)
-#@ stdcall FileMenu_DeleteItemByFirstID(long long)
-#@ stdcall FileMenu_DeleteSeparator(long)
-#@ stdcall FileMenu_EnableItemByCmd(long long long)
-#@ stdcall FileMenu_GetItemExtent(long long)
-#@ stdcall SHRegCloseKey (long)
-#@ stdcall SHRegOpenKeyA (long str long)
-#@ stdcall SHRegOpenKeyW (long wstr long)
-#@ stdcall SHRegQueryValueA(long str ptr ptr)
-#@ stdcall SHRegQueryValueExA(long str ptr ptr ptr ptr)
-#@ stdcall SHRegQueryValueW (long long long long)
-#@ stdcall SHRegQueryValueExW (long wstr ptr ptr ptr ptr)
-#@ stdcall SHRegDeleteKeyW (long wstr)
+# Discontinued in version 6.0. Until retired in WinVista and higher
+@ stdcall FileMenu_DeleteAllItems(long)
+@ stdcall FileMenu_DrawItem(long ptr)
+@ stdcall FileMenu_FindSubMenuByPidl(long ptr)
+@ stdcall FileMenu_GetLastSelectedItemPidls(long ptr ptr)
+@ stdcall FileMenu_HandleMenuChar(long long)
+@ stdcall FileMenu_InitMenuPopup(long)
+@ stdcall FileMenu_InsertUsingPidl (long long ptr long long ptr)
+@ stdcall FileMenu_Invalidate(long)
+@ stdcall FileMenu_MeasureItem(long ptr)
+@ stdcall FileMenu_ReplaceUsingPidl(long long ptr long ptr)
+@ stdcall FileMenu_Create(long long long long long)
+@ stdcall FileMenu_AppendItem(long ptr long long long long) FileMenu_AppendItemAW
+@ stdcall FileMenu_TrackPopupMenuEx(long long long long long long)
+@ stdcall FileMenu_DeleteItemByCmd(long long)
+@ stdcall FileMenu_Destroy(long)
+@ stdcall FileMenu_AbortInitMenu()
+@ stdcall FileMenu_AppendFilesForPidl(long ptr long)
+@ stdcall FileMenu_AddFilesForPidl(long long long ptr long long ptr)
+@ stdcall FileMenu_DeleteItemByIndex(long long)
+@ stdcall FileMenu_DeleteItemByFirstID(long long)
+@ stdcall FileMenu_DeleteSeparator(long)
+@ stdcall FileMenu_EnableItemByCmd(long long long)
+@ stdcall FileMenu_GetItemExtent(long long)
+
+# 4.0 (NT) and higher. Until discontinued in 5.0
+@ stdcall SHRegCloseKey(long)
+@ stdcall SHRegOpenKeyA(long str long)
+@ stdcall SHRegOpenKeyW(long wstr long)
+@ stdcall SHRegQueryValueA(long str ptr ptr)
+@ stdcall SHRegQueryValueExA(long str ptr ptr ptr ptr)
+@ stdcall SHRegQueryValueW (long long long long)
+@ stdcall SHRegQueryValueExW (long wstr ptr ptr ptr ptr)
+@ stdcall SHRegDeleteKeyW(long wstr)

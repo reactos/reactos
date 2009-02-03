@@ -69,5 +69,39 @@ LPWSTR
 WINAPI
 ShortSizeFormatW(LONGLONG llNumber)
 {
+    FIXME("ShortSizeFormatW() stub\n");
     return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHFindComputer(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    FIXME("SHFindComputer() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHLimitInputEdit(HWND hWnd, LPVOID lpUnknown)
+{
+    FIXME("SHLimitInputEdit() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHLimitInputCombo(HWND hWnd, LPVOID lpUnknown)
+{
+    FIXME("SHLimitInputCombo() stub\n");
+    return FALSE;
 }
