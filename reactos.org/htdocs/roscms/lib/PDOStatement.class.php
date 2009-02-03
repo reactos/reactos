@@ -24,25 +24,18 @@ if (!class_exists('PDOStatement')) {
   class PDOStatement
   {
 
-    private $handle;
-    private $dbhandle;
-    private $statement;
-    private $params;
-    private $values;
-    private $attributes;
-    private $result;
-    
+    protected $pdo;
+    protected $params = array();
+    protected $values = array();
+    protected $result;
+    protected $handle;
+    protected $statement;
 
-    public function __construct( $handle, $dbhandle, $attributes, $statement )
+
+    public function __construct( $handle )
     {
       // inherit from PDO
-      $this->handle = $handle;
-      $this->dbhandle = $dbhandle;
-      $this->statement = $statement;
-      $this->attributes = $attributes;
-      
-      $this->params = array();
-      $this->values = array();
+      $this->pdo = $handle;
     }
     
     
@@ -50,12 +43,7 @@ if (!class_exists('PDOStatement')) {
     public function bindValue( $param, $data, $type = null )
     {
       $name = str_replace(':','',$param);
-      switch ($type) {
-        case PDO::PARAM_INT: $this->values[]=array('param'=>$name,'val'=>intval($data)); break;
-        case PDO::PARAM_BOOL: $this->values[]=array('param'=>$name,'val'=>($data!=null?'TRUE':'FALSE')); break;
-        default:
-        case PDO::PARAM_STR: $this->values[]=array('param'=>$name,'val'=>"'".mysql_real_escape_string($data,$this->handle)."'"); break;
-      }
+      $this->params[$name]=array($type,$data);
     }
 
 
@@ -63,30 +51,30 @@ if (!class_exists('PDOStatement')) {
     public function bindParam( $param, &$data, $type = null )
     {
       $name = str_replace(':','',$param);
-      switch ($type) {
-        case PDO::PARAM_INT: $this->params[]=array('param'=>$name,'val'=>intval($data)); break;
-        case PDO::PARAM_BOOL: $this->params[]=array('param'=>$name,'val'=>($data!=null?'TRUE':'FALSE')); break;
-        default:
-        case PDO::PARAM_STR: $this->params[]=array('param'=>$name,'val'=>"'".mysql_real_escape_string($data,$this->handle)."'"); break;
-      }
+      $this->params[$name]=array($type,&$data);
+      echo  "$param, $data, $type\n\n";
     }
    
     
     // executes the current query
     public function execute()
     {
-      $sql = $this->statement;
-      
-      foreach ($this->params as $pair){
-        $sql = str_replace(':'.$pair['param'],$pair['val'],$sql);
+      $sql = $this->pdo->statement;
+      if (count($this->params) > 0) {
+        foreach ($this->params as $name=>$val){
+          switch ($val[0]) {
+            case PDO::PARAM_INT: $value=intval($val[1]); break;
+            case PDO::PARAM_BOOL: $value=($val[1]!=null?'TRUE':'FALSE'); break;
+            default:
+            case PDO::PARAM_STR: $value="'".mysql_real_escape_string($val[1],$this->pdo->handle)."'"; break;
+          }
+          $sql = str_replace(':'.$name,$value,$sql);
+        }
       }
-      foreach ($this->values as $pair){
-        $sql = str_replace(':'.$pair['param'],$pair['val'],$sql);
-      }
-      $this->result=@mysql_query($sql,$this->handle);
-      
+      $this->result=mysql_query($sql);
+
       if (mysql_errno()) {
-        switch (@$this->attributes['errmode']) {
+        switch ($this->pdo->attributes['errmode']) {
           case 'warning':
             echo '<b>Warning</b>'.mysql_error().' in statement &quot;'.$sql.'&quot;<br/>';
             break;
@@ -97,14 +85,20 @@ if (!class_exists('PDOStatement')) {
     
     
     // fetches the results
-    public function fetch( $type=MYSQL_BOTH )
+    public function fetch( $type=PDO::FETCH_BOTH )
     {
-      return mysql_fetch_array($this->result,$type);
+      if ($this->result !== false) {
+        return mysql_fetch_array($this->result,$type);
+      }
+      return false;
     }
     
     public function closeCursor( )
     {
-      return mysql_free_result($this->result);
+      if ($this->result !== false) {
+        return mysql_free_result($this->result);
+      }
+      return false;
     }
     
     // fetches the results
@@ -124,7 +118,7 @@ if (!class_exists('PDOStatement')) {
       }
       return $list;
     }
-    
-  } // end of PDO
+
+  } // end of PDOStatement
 }
 ?>

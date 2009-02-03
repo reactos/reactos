@@ -22,44 +22,57 @@
 /**
  * class HTML_CMS
  * 
+ * @package html
+ * @subpackage cms
  */
 abstract class HTML_CMS extends HTML
 {
 
+
+
   protected $branch = 'website';
 
 
+
   /**
-   *
+   * check for access and register js & css
    *
    * @access public
    */
   public function __construct( $page_title = '' )
   {
-    // need to have a logged in user with minimum security level 1
+    // need to have a logged in user
     Login::required();
+
+    // because of security check for access to the CMS
     if (!ThisUser::getInstance()->hasAccess('CMS')) {
       header('location:?page=nopermission');
     }
 
     // register css & js files
     $this->register_css('cms_navigation.css');
-    $this->register_js('cms_navigation.js.php');
+    $this->register_js('cms_navigation.js');
 
     parent::__construct($page_title);
   }
-  
-  protected function build()
-  {
-    $this->header();
-    $this->navigation();
-    $this->body();
-    $this->footer();
-  }
+
 
 
   /**
+   * hook header function to include an navigation
    *
+   * @access private
+   */
+  protected function header()
+  {
+    parent::header();
+    $this->navigation();
+  }
+
+
+
+  /**
+   * navigation for our CMS branches
    *
    * @access private
    */
@@ -101,6 +114,7 @@ abstract class HTML_CMS extends HTML
               </th>
               <td>&nbsp;&nbsp;</td>');
 
+    // Website branch tab
     if ($thisuser->hasAccess('website')) {
       echo_strip('
               <th class="int'.(($this->branch == 'website') ? '2' : '1').'" onclick="'."loadBranch('website')".'">
@@ -113,6 +127,7 @@ abstract class HTML_CMS extends HTML
               <td>&nbsp;&nbsp;</td>');
     }
 
+    // User branch tab
     if ($thisuser->hasAccess('user')) {
       echo_strip('
         <th class="int'.(($this->branch == 'user') ? '2' : '1').'" onclick="'."loadBranch('user')".'">
@@ -125,6 +140,7 @@ abstract class HTML_CMS extends HTML
         <td>&nbsp;&nbsp;</td>');
     }
 
+    // Maintain branch tab
     if ($thisuser->hasAccess('maintain')) {
       echo_strip('
         <th class="int'.(($this->branch == 'maintain') ? '2' : '1').'" onclick="'."loadBranch('maintain')".'">
@@ -137,6 +153,7 @@ abstract class HTML_CMS extends HTML
         <td>&nbsp;&nbsp;</td>');
     }
 
+    // Administration branch tab
     if ($thisuser->hasAccess('admin')) {
       echo_strip('
         <th class="int'.(($this->branch == 'admin') ? '2' : '1').'" onclick="'."loadBranch('admin')".'">
@@ -149,6 +166,7 @@ abstract class HTML_CMS extends HTML
         <td>&nbsp;&nbsp;</td>');
     }
 
+    // Statistics branch tab
     if ($thisuser->hasAccess('stats')) {
       echo_strip('
         <th class="int'.(($this->branch == 'stats') ? '2' : '1').'" onclick="'."loadBranch('stats')".'">
@@ -174,6 +192,7 @@ abstract class HTML_CMS extends HTML
       <div class="tcR" style="background-color:#C9DAF8;">
         <div id="branchInfo">');
 
+    // Branch Info List (below branch tabs)
     switch ($this->branch) {
       case 'welcome';
         echo 'RosCMS v3 - Welcome page';
@@ -196,22 +215,27 @@ abstract class HTML_CMS extends HTML
       case 'stats':
         echo 'RosCMS Website Statistics';
         break;
-    }
+    } // end switch
+
     echo_strip('
         </div>
       </div>');
   } // end of member function navigation
 
 
+
   /**
-   *
+   * hook footer get get an additional element attached, needed by our navigation
    *
    * @access protected
    */
-  protected function footer() {
+  protected function footer( )
+  {
     echo '</div>';
     parent::footer();
-  }
+  } // end of member function footer
+
+
 
 } // end of HTML_CMS
 ?>

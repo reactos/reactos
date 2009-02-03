@@ -22,19 +22,18 @@
 /**
  * class Subsystem
  * 
+ * @package subsystems
  */
 abstract class Subsystem extends Login
 {
 
-   /*** Attributes: ***/
-   protected static $roscms_path;
    protected $name = '';          // name of subsystem
    protected $user_table = '';    // user table name
    protected $userid_column = ''; // user table id column name
 
 
   /**
-   *
+   * checks how many user accounts are not mapped into the subsystem
    *
    * @return int
    * @access protected
@@ -42,18 +41,19 @@ abstract class Subsystem extends Login
   protected function checkMapping( )
   {
     $inconsistencies = 0;
-  
+
     $stmt=&DBConnection::getInstance()->prepare("SELECT u.id FROM ".ROSCMST_USERS." u WHERE u.id NOT IN (SELECT m.user_id FROM ".ROSCMST_SUBSYS." m WHERE m.user_id = u.id AND m.subsys = :subsys_name)");
     $stmt->bindParam('subsys_name',$this->name,PDO::PARAM_STR);
     $stmt->execute() or die('DB error (subsys_utils #1)');
-  
+
     while ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo 'No mapping of RosCMS userid '.$user['id'].'<br />';
-      $inconsistencies++;
+      ++$inconsistencies;
     }
 
     return $inconsistencies;
   } // end of member function checkMapping
+
 
 
   /**
@@ -62,7 +62,6 @@ abstract class Subsystem extends Login
    * @param string subsys
    * @param string date if no datetime is set, current datetime is used
    * @param string date if no datetime is set, current datetime is used
-
    * @return int
    * @access protected
    */
@@ -76,7 +75,7 @@ abstract class Subsystem extends Login
     while ($mapping = $stmt->fetch(PDO::FETCH_ASSOC))
     {
       echo 'RosCMS userid '.$mapping['user_id'].' maps to subsys userid '.$mapping['subsys_user_id'].' but that subsys userid doesn\'t exist<br />';
-      $inconsistencies++;
+      ++$inconsistencies;
     }
 
     $stmt=&DBConnection::getInstance()->prepare("SELECT ss.".$this->userid_column." AS user_id FROM ".$this->user_table." ss WHERE ss.".$this->userid_column." NOT IN (SELECT m.subsys_user_id FROM ".ROSCMST_SUBSYS." m WHERE m.subsys_user_id = ss.".$this->userid_column." AND m.subsys = :subsys_name)");
@@ -84,15 +83,16 @@ abstract class Subsystem extends Login
     $stmt->execute() or die('DB error (subsys_utils #3)');
     while ($subsys = $stmt->fetch(PDO::FETCH_ASSOC)) {
       echo 'No RosCMS userid for subsys userid '.$subsys['user_id'].'<br />';
-      $inconsistencies++;
+      ++$inconsistencies;
     }
 
     return $inconsistencies;
   } // end of member function userIdExists
 
 
+
   /**
-   * 
+   * are there any inconstistencies to our subsystems ?
    *
    * @access protected
    */
@@ -121,6 +121,7 @@ abstract class Subsystem extends Login
   }  // end of member function check
 
 
+
   /**
    * add or updates (if already exists) the mapping of the given user id 
    *
@@ -140,7 +141,8 @@ abstract class Subsystem extends Login
     else {
       return $this->addMapping($user_id);
     }
-  } // end of member check
+  } // end of member addOrUpdateMapping
+
 
 
   /**
@@ -152,13 +154,51 @@ abstract class Subsystem extends Login
    */
   protected function updateUser( $user_id, $subsys_user )
   {
-    $user = ROSUser::getDetailsById( $user_id );
+    $user = ROSUser::getDetailsById($user_id);
     if ($user === false) {
       return false;
     }
 
     return $this->updateUserPrivate($user_id, $user['name'], $user['email'], $user['fullname'], $subsys_user);
   } // end of member function updateUser
+
+
+
+  /**
+   * returns an array with name, email, fullname, register timestamp
+   *
+   * @param int id
+   * @return mixed[]
+   * @access public
+   */
+  public static function getRoscmsUser( $id )
+  {
+
+    // get requested userdata
+    $stmt=&DBConnection::getInstance()->prepare("SELECT name, email, fullname, UNIX_TIMESTAMP(created) AS register FROM ".ROSCMST_USERS." WHERE id = :user_id LIMIT 1");
+    $stmt->bindParam('user_id',$id,PDO::PARAM_INT);
+    $stmt->execute() or die('DB error (subsys_utils #4)');
+
+    // check if a user was found
+    $user = $stmt->fetchOnce(PDO::FETCH_ASSOC);
+    if ($user === false) {
+      echo 'Can\'t find roscms user details for user id '.$id.'<br />';
+      return false;
+    }
+
+    // We need a valid username and email address in roscms
+    if ($user['name'] == '') {
+      echo 'No valid roscms user name found for user id '.$id.'<br />';
+      return false;
+    }
+    if ($user['email'] == '') {
+      echo 'No valid roscms email address found for user id '.$id.'<br />';
+      return false;
+    }
+
+    return $user;
+  } // end of member function getDetailsById
+
 
 
   /**
@@ -174,6 +214,7 @@ abstract class Subsystem extends Login
   abstract protected function updateUserPrivate( $user_id, $user_name, $user_email, $user_fullname, $subsys_user );
 
 
+
   /**
    * add a new user to the subsystem database
    *
@@ -186,6 +227,7 @@ abstract class Subsystem extends Login
   abstract protected function addUser( $user_id, $user_name, $user_email, $user_fullname );
 
 
+
   /**
    *
    *
@@ -195,6 +237,7 @@ abstract class Subsystem extends Login
   abstract protected function addMapping( $user_id );
 
 
+
   /**
    * checks if user Details are matching in roscms with subsystem
    *
@@ -202,5 +245,7 @@ abstract class Subsystem extends Login
    */
   abstract protected function checkUser( );
 
-} // end of Subsys
+
+
+} // end of Subsystem
 ?>

@@ -1,7 +1,7 @@
 <?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2008  Danny Götte <dangerground@web.de>
+    Copyright (C) 2008-2009 Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,8 +28,10 @@ if (!defined('ROSCMS_PATH')){
 class RosCMS_Autoloader
 {
 
+
+
   /**
-   *
+   * tries to load a class, by loading the lib/*.class.php file, that should contain the class
    *
    * @param string class name of class, which should be loaded
    * @access public
@@ -39,13 +41,24 @@ class RosCMS_Autoloader
     if (file_exists(ROSCMS_PATH.'lib/'.$class.'.class.php')) {
       require_once(ROSCMS_PATH.'lib/'.$class.'.class.php');
     }
-    elseif (file_exists(ROSCMS_PATH.'lib/'.$class.'.interface.php')) {
-      require_once(ROSCMS_PATH.'lib/'.$class.'.interface.php');
+    elseif (file_exists(ROSCMS_PATH.'lib/om/'.$class.'.class.php')) {
+      require_once(ROSCMS_PATH.'lib/om/'.$class.'.class.php');
+    }
+    elseif (file_exists(ROSCMS_PATH.'lib/view/'.$class.'.class.php')) {
+      require_once(ROSCMS_PATH.'lib/view/'.$class.'.class.php');
+    }
+    elseif (file_exists(ROSCMS_PATH.'lib/backend/'.$class.'.class.php')) {
+      require_once(ROSCMS_PATH.'lib/backend/'.$class.'.class.php');
+    }
+    elseif (file_exists(ROSCMS_PATH.'lib/subsystem/'.$class.'.class.php')) {
+      require_once(ROSCMS_PATH.'lib/subsystem/'.$class.'.class.php');
     }
   } // end of member function autoload
 
 
+
 } // end of RosCMS_Autoloader
+
 
 
 // do something to load RosCMS specific classes
@@ -65,21 +78,22 @@ elseif (!function_exists('__autoload')) {
 // load all needed classes for subsystems staticly
 else {
 
-  // DB
+  // Database
   require_once(ROSCMS_PATH.'lib/PDO.class.php');
   require_once(ROSCMS_PATH.'lib/DBConnection.class.php');
   require_once(ROSCMS_PATH.'lib/PDOStatement.class.php');
   require_once(ROSCMS_PATH.'lib/DBStatement.class.php');
 
   // needed by subsystems
-  require_once(ROSCMS_PATH.'lib/ROSUser.class.php');
-  require_once(ROSCMS_PATH.'lib/Tools.class.php');
-  require_once(ROSCMS_PATH.'lib/Login.class.php');
+  require_once(ROSCMS_PATH.'lib/om/ROSUser.class.php');
+  require_once(ROSCMS_PATH.'lib/om/Cookie.class.php');
+  require_once(ROSCMS_PATH.'lib/om/Login.class.php');
 
   // Subsystem related
   require_once(ROSCMS_PATH.'lib/Subsystem.class.php');
-  require_once(ROSCMS_PATH.'lib/Subsystem_Wiki.class.php');
-  require_once(ROSCMS_PATH.'lib/Subsystem_PHPBB.class.php');
+  require_once(ROSCMS_PATH.'lib/subsys/Wiki.class.php');
+  require_once(ROSCMS_PATH.'lib/subsys/PHPBB.class.php');
+  // bugzilla cares itself about login, so we don't need to include something for it
 }
 
 ?>

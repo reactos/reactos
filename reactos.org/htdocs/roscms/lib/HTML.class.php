@@ -21,6 +21,7 @@
 /**
  * class HTML
  * 
+ * @package html
  */
 abstract class HTML
 {
@@ -30,45 +31,59 @@ abstract class HTML
   protected $css_files=array(); 
   protected $js_files=array(); 
 
+
+
+  /**
+   * set page title, start generation time counter and get page output
+   *
+   * @access public
+   */
   public function __construct( $page_title = '' )
   {
     // get page title and register css files
     $this->title = $page_title;
     $this->register_css('style.css');
 
-    // this page was generated in ...
-    $roscms_gentime = explode(' ',microtime()); 
-    $this->page_start = $roscms_gentime[1] + $roscms_gentime[0]; 
-
+    // get output
     $this->build();
-  }
+  } // end of constructor
 
 
-  // build page
-  protected function build()
+
+  /**
+   * output of the whole site
+   *
+   * @access private
+   */
+  private function build( )
   {
     $this->header();
     $this->body();
     $this->footer();
-  }
+  } // end of member function build
+
+
 
   /**
+   * includes the page itself without header + footer
    *
-   *
-   * @access public
+   * @access protected
    */
   abstract protected function body( );
 
 
+
   /**
+   * output site header
    *
-   *
-   * @param string page_title
-   * @param string page_css
-   * @access public
+   * @access protected
    */
   protected function header( )
   {
+    // this page was generated in ...
+    $roscms_gentime = explode(' ',microtime()); 
+    $this->page_start = $roscms_gentime[1] + $roscms_gentime[0]; 
+
     // output header
     echo_strip( '
       <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -85,7 +100,7 @@ abstract class HTML
         <meta http-equiv="Content-Style-Type" content="text/css" />
         <link rel="SHORTCUT ICON" href="../favicon.ico" />');
 
-    // link css & js files (use register_* methods)
+    // link css files (use register_css method)
     foreach($this->css_files as $file) {
       if ($file['condition'] === false) {
         echo '<link href="'.RosCMS::getInstance()->pathRosCMS().'css/'.$file['name'].'" type="text/css" rel="stylesheet" />';
@@ -94,10 +109,13 @@ abstract class HTML
         echo '<!--[if '.$file['condition'].']<link href="'.RosCMS::getInstance()->pathRosCMS().'css/'.$file['name'].'" type="text/css" rel="stylesheet" /><![endif]-->';
       }
     }
+
+    // link js files (use register_js method)
     foreach($this->js_files as $file) {
       echo '<script src="'.RosCMS::getInstance()->pathRosCMS().'js/'.$file.'" type="text/javascript"></script>';
     }
 
+    //@TODO remove those static links from here
     echo_strip('
       </head>
       <body>
@@ -113,10 +131,11 @@ abstract class HTML
   } // end of member function header
 
 
+
   /**
+   * output site footer
    *
-   *
-   * @access public
+   * @access protected
    */
   protected function footer( )
   {
@@ -138,9 +157,12 @@ abstract class HTML
   } // end of member function footer
 
 
+
   /**
    * register a css file to be included in the header
    *
+   * @param string name path & filename to a css file
+   * @param bool|string condition conditional statement (used by IE) to e.g. include sheets only for specific IE versions
    * @access protected
    */
   protected function register_css( $name, $condition = false )
@@ -149,15 +171,19 @@ abstract class HTML
   } // end of member function register_css
 
 
+
   /**
    * register a javascript file to be included in the header
    *
+   * @param string name path & filename to a javascript file
    * @access protected
    */
   protected function register_js( $name )
   {
     $this->js_files[] = $name;
-  } // end of member function register_css
+  } // end of member function register_js
+
+
 
 } // end of HTML
 ?>

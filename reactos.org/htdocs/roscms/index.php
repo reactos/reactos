@@ -93,6 +93,7 @@ switch (@$_GET['page']) {
 
   // RosCMS Interface Frontend
   case 'data': 
+
     // select interface menu on top
     switch (@$_GET['branch']) {
       case 'welcome':
@@ -118,50 +119,56 @@ switch (@$_GET['page']) {
     break;
 
   // AJAX stuff (RosCMS Interface Backend)
-  case 'data_out':
+  case 'backend':
+
     // select returned item
-    switch ($_GET['d_f']) {
+    switch ($_GET['type']) {
       case 'xml':
-        new Export_XML(@$_GET['d_u']);
+        new Backend_ViewEntryTable();
         break;
       case 'text':
+
         // Website interface interaction
-        switch (@$_GET['d_u']) {
+        switch ($_GET['subtype']) {
           case 'mef': //  Main Edit Frame
-            new Editor_Website(@$_GET['d_id'], @$_GET['d_r_id'], @$_GET['d_fl']);
+            new Backend_ViewEditor();
+            break;
+          case 'ned': //  New Entry Dialog
+            new Backend_ViewAddEntry();
+            break;
+          case 'eta': //  Entry Table Actions
+            new Backend_EntryTable();
             break;
           case 'asi': // Auto Save Info
-            new CMSWebsiteSaveEntry();
+            new Backend_SaveDraft();
             break;
           case 'ufs': // User Filter Storage
-            new CMSWebsiteFilter();
+            new Backend_SmartFilter();
             break;
           case 'ut': // User Tags
-            new CMSWebsiteLabel();
+            new Backend_Label();
             break;
           case 'uqi': // User Quick Info
-            new Export_QuickInfo();
+            new Backend_QuickInfo();
             break;
           case 'prv': // Preview
-            new CMSWebsitePreview();
+            new Backend_Preview();
             break;
-          default:
-            die('');
-            break;
-        } // end $_GET['d_u']
+        } // end switch subtype
         break;
       case 'page':
-        new Export_Page();
+        new Backend_ViewPreview();
         break;
       case 'user':
-        new Export_User();
+        new Backend_User();
         break;
       case 'maintain':
-        new Export_Maintain();
+        new Backend_Maintain();
         break;
       case 'admin':
+
         // Admin interface interaction
-        switch (@$_GET['d_u']) {
+        switch ($_GET['subtype']) {
           case 'acl': // Access Control Lists
             new Admin_ACL();
             break;
@@ -174,21 +181,18 @@ switch (@$_GET['page']) {
           case 'system':
             new Admin_System();
             break;
-          default:
-            die('');
-            break;
-        } // end $_GET['d_u']
+        } // end switch subtype
         break;
-    } // end switch
+    } // end switch type
     break;
 
   // presentation
   case 'presentation':
-    switch ($_GET['type']) {
-      case 'vtext': // vertical text
+    //switch ($_GET['type']) {
+    //  case 'vtext': // vertical text
         Presentation::verticalText($_GET['text']);
-        break;
-    } // end type
+    //    break;
+    //} // end switch type
     break;
 
   // No permission
@@ -200,7 +204,7 @@ switch (@$_GET['page']) {
   case '404':
     new HTML_404();
     break;
-} // end top switch
+} // end switch page
 
 
 ?>

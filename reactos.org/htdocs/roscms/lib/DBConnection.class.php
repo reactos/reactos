@@ -21,11 +21,20 @@
 
 
 /**
- * class Language
+ * class DBConnection
  * 
  */
 class DBConnection extends PDO
 {
+
+
+
+  /**
+   * connects to database
+   *
+   * @return object
+   * @access public
+   */
   public function __construct()
   {
     global $db_host, $db_host, $db_user, $db_pass;
@@ -40,20 +49,20 @@ class DBConnection extends PDO
       unset($GLOBALS['db_user']);
       unset($GLOBALS['db_pass']);
 
+      // show errors as warning, and use our own statement class
       $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
       $this->setAttribute(PDO::ATTR_STATEMENT_CLASS,array('DBStatement', array($this)));
     }
     catch (PDOException $e) {
-    
-      echo '<div>Connection failed: <span style="color:red;">'.$e->getMessage().'</span></div>';
-      //print_debug_backtrace();
-      exit();
+
+      die('<div>Connection failed: <span style="color:red;">'.$e->getMessage().'</span></div>');
     }
-  }
+  } // end of constructor
+
 
 
   /**
-   * returns the instance to out DB Object
+   * returns the instance to our DB Object, so we can call it every time, without needing a variable to it
    *
    * @return object
    * @access public
@@ -67,7 +76,9 @@ class DBConnection extends PDO
     }
     
     return $instance;
-  } // end of member function check_lang
+  } // end of member function getInstance
+
+
 
 } // end of DBConnection
 ?>

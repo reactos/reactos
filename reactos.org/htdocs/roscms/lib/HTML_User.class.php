@@ -22,13 +22,20 @@
 /**
  * class HTML_User
  * 
+ * @package html
+ * @subpackage user
  */
 abstract class HTML_User extends HTML
 {
 
 
+
+  protected $error_message = null;
+
+
+
   /**
-   *
+   * register additional css needed by navigation
    *
    * @access public
    */
@@ -36,16 +43,21 @@ abstract class HTML_User extends HTML
   {
     $this->register_css('user.css');
     parent::__construct( $page_title );
-  }
-  
-  protected function build()
+  } // end of constructor
+
+
+
+  /**
+   * hook header function to include an navigation
+   *
+   * @access protected
+   */
+  protected function header()
   {
     parent::header();
     $this->navigation();
-    $this->body();
-    echo '</td></tr></table>';
-    parent::footer();
   }
+
 
 
   /**
@@ -58,6 +70,7 @@ abstract class HTML_User extends HTML
     $thisuser = &ThisUser::getInstance();
     $config = &RosCMS::getInstance();
 
+    // left menu 'Navigation'
     echo_strip('
       <table style="border:0" width="100%" cellpadding="0" cellspacing="0">
         <tr style="vertical-align: top;">
@@ -71,6 +84,7 @@ abstract class HTML_User extends HTML
               <li><a href="'.$config->pathRosCMS().'?page=user">myReactOS</a></li>
             </ul>');
 
+    // Menu for logged in user
     if ($thisuser->id() > 0) {
       echo_strip('
         <h2>Account</h2>
@@ -86,6 +100,8 @@ abstract class HTML_User extends HTML
           <li><a href="?page=logout">Logout</a></li>
         </ul>');
     }
+
+    // Menu for guest users
     else {
       echo_strip('
         <h2>Account</h2>
@@ -114,7 +130,8 @@ abstract class HTML_User extends HTML
           <div style="text-align:center;"> 
             <select id="select" size="1" name="select" class="selectbox" style="width:140px" onchange="'."window.location.href = '".$config->pathRosCMS().'?'.htmlentities($_SERVER['QUERY_STRING'])."&lang=' + this.options[this.selectedIndex].value".'">
               <optgroup label="current language">'); 
- 
+
+    // print current language
     $stmt=&DBConnection::getInstance()->prepare("SELECT id, name FROM ".ROSCMST_LANGUAGES." WHERE id = :lang_id");
     $stmt->bindParam('lang_id',$_GET['lang'],PDO::PARAM_INT);
     $stmt->execute();
@@ -124,7 +141,8 @@ abstract class HTML_User extends HTML
         <option value="#">'.$current_lang['name'].'</option>
       </optgroup>
       <optgroup label="all languages">');
-      
+
+    // print available languages
     $stmt=&DBConnection::getInstance()->prepare("SELECT name, id, name_original FROM ".ROSCMST_LANGUAGES." WHERE id != :lang ORDER BY name ASC");
     $stmt->bindParam('lang',$current_lang['id'],PDO::PARAM_INT);
     $stmt->execute();
@@ -139,6 +157,7 @@ abstract class HTML_User extends HTML
       }
     }
 
+    // close navigation and open content area
     echo_strip('
                 </optgroup>
               </select>
@@ -148,6 +167,36 @@ abstract class HTML_User extends HTML
       </td>
       <td id="content" style="vertical-align: top;">');
   } // end of member function navigation
+
+
+
+  /**
+   * hook footer get get an additional element attached, needed by our navigation
+   *
+   * @access protected
+   */
+  protected function footer( )
+  {
+    // print error message, if one is given
+    if ($this->error_message != null) {
+      echo_strip('
+        <div class="bubble message">
+          <div class="corner_TL">
+            <div class="corner_TR"></div>
+          </div>
+          <strong>');echo $this->err_message;echo_strip('</strong>
+          <div class="corner_BL">
+            <div class="corner_BR"></div>
+          </div>
+        </div>');
+    }
+
+    // close tags, opened by navigation
+    echo '</td></tr></table>';
+    parent::footer();
+  } // end of member function footer
+
+
 
 } // end of HTML_User
 ?>

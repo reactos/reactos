@@ -19,43 +19,68 @@
     */
 
 /**
- * class Language
+ * class DBStatement
  * 
  */
 class DBStatement extends PDOStatement
 {
-    public $dbh;
+    protected $pdo;
 
 
-    protected function __construct($handle) {
-        $this->dbh = $handle;
+  /**
+   * called by alternate statement function in PDO
+   *
+   * @param object handle
+   * @access private
+   */
+    private function __construct( $handle ) {
+      $this->pdo = $handle;
     }
+
+
+
+  /**
+   * bypass unbuffered query problem with mysql drivers, as some Webserver seems to have problems with that
+   *
+   * @param string fetch_mode is one of the PDO::FETCH_* constants
+   * @return mixed[]
+   * @access public
+   */
+  public function fetchOnce( $fetch_mode = null )
+  {
+    // because I've no idea what standard value is used, we'll protected the function from our standard value
+    if ($fetch_mode === null) {
+      $result = parent::fetch();
+    }
+    else {
+      $result = parent::fetch($fetch_mode);
+    }
+    
+    // thats important, to free our resources
+    parent::closeCursor();
+    return $result;
+  } // end of member function fetchOnce
+
 
 
   /**
    * bypass unbuffered query problem with mysql drivers
    *
-   * @param string fetch_mode is one of the PDO::FETCH_* constants
-
-   * @return 
+   * @param string offset field offset
+   * @return mixed
    * @access public
    */
-  public function fetchOnce( $fetch_mode = null )
+  public function fetchColumnOnce( $offset = 0)
   {
-    
-    if ($fetch_mode == null) $result = parent::fetch();
-    else $result = parent::fetch($fetch_mode);
-    parent::closeCursor();
-    return $result;
-  } // end of member function check_lang
-  
-  public function fetchColumn( $offset = 0)
-  {
-    
+    // use original version
     $result = parent::fetchColumn( $offset );
+
+    // free result
     parent::closeCursor();
     return $result;
   } // end of member function check_lang
 
-} // end of Language
+
+
+} // end of DBStatement
 ?>

@@ -9,7 +9,7 @@
  */ 
 function showNew( subject )
 {
-  makeRequest('?page=data_out&d_f=admin&d_u=' + subject + '&action=new', 'GET');
+  makeRequest('?page=backend&type=admin&subtype=' + subject + '&action=new', 'GET');
 }
 
 
@@ -19,7 +19,7 @@ function showNew( subject )
  */
 function submitNew( subject )
 {
-  makeRequest('?page=data_out&d_f=admin&d_u=' + subject + '&action=new&submit=true', 'POST');
+  makeRequest('?page=backend&type=admin&subtype=' + subject + '&action=new&submit=true', 'POST');
   return false;
 }
 
@@ -33,7 +33,7 @@ function submitNew( subject )
  */ 
 function showSearch( subject, type )
 {
-  makeRequest('?page=data_out&d_f=admin&d_u=' + subject + '&action=search&for='+type, 'GET');
+  makeRequest('?page=backend&type=admin&subtype=' + subject + '&action=search&for='+type, 'GET');
 }
 
 
@@ -46,7 +46,7 @@ function showSearch( subject, type )
  */ 
 function submitSearch( subject, type )
 {
-  makeRequest('?page=data_out&d_f=admin&d_u=' + subject + '&action=search&submit=true&for='+type, 'POST');
+  makeRequest('?page=backend&type=admin&subtype=' + subject + '&action=search&submit=true&for='+type, 'POST');
 }
 
 
@@ -57,7 +57,7 @@ function submitSearch( subject, type )
  */ 
 function showEdit( subject )
 {
-  makeRequest('?page=data_out&d_f=admin&d_u=' + subject + '&action=edit', 'GET');
+  makeRequest('?page=backend&type=admin&subtype=' + subject + '&action=edit', 'GET');
 }
 
 
@@ -67,7 +67,7 @@ function showEdit( subject )
  */
 function submitEdit( subject )
 {
-  makeRequest('?page=data_out&d_f=admin&d_u=' + subject + '&action=edit&submit=true', 'POST');
+  makeRequest('?page=backend&type=admin&subtype=' + subject + '&action=edit&submit=true', 'POST');
   return false;
 }
 
@@ -80,7 +80,7 @@ function submitDelete( subject )
 {
   var uf = confirm("Do you really want delete this entry ?");
   if (uf==true) {
-    makeRequest('?page=data_out&d_f=admin&d_u=' + subject + '&action=delete&submit=true', 'POST');
+    makeRequest('?page=backend&type=admin&subtype=' + subject + '&action=delete&submit=true', 'POST');
   }
   return false;
 }
@@ -92,7 +92,7 @@ function submitDelete( subject )
  */
 function showAreaProtection( )
 {
-  makeRequest('?page=data_out&d_f=admin&d_u=system&action=apl', 'GET');
+  makeRequest('?page=backend&type=admin&subtype=system&action=apl', 'GET');
 }
 
 
@@ -102,7 +102,7 @@ function showAreaProtection( )
  */
 function submitAreaProtection( )
 {
-  makeRequest('?page=data_out&d_f=admin&d_u=system&action=apl&submit=true', 'POST');
+  makeRequest('?page=backend&type=admin&subtype=system&action=apl&submit=true', 'POST');
   return false;
 }
 

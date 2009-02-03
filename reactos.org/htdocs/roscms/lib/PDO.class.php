@@ -1,7 +1,7 @@
 <?php
     /*
     RosCMS - ReactOS Content Management System
-    Copyright (C) 2008  Danny Götte <dangerground@web.de>
+    Copyright (C) 2008, 2009 Danny Götte <dangerground@web.de>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,15 +39,15 @@ if (!class_exists('PDO')) {
     const ATTR_STATEMENT_CLASS = 16;
 
 
-    private $handle;
-    private $statement;
-    private $attributes = array();
-    
+    public $handle;
+    public $statement;
+    public $attributes = array('errmode'=>'warning');
 
-    public function __construct($params, $user, $pass)
+
+    public function __construct($dsn, $user, $pass)
     {
-      $params = preg_replace('/^([a-z0-9_\-]+):(.*)$/','$1%|%$2',$params);
-      $settings = explode('%|%',$params);
+      $dsn = preg_replace('/^([a-z0-9_\-]+):(.*)$/','$1%|%$2',$dsn);
+      $settings = explode('%|%',$dsn);
       if ($settings[0] != 'mysql') die('Unsupported DB Driver:'.$settings[0]);
       $params = explode(';',$settings[1]);
       foreach ($params as $param){
@@ -66,7 +66,16 @@ if (!class_exists('PDO')) {
     // store statement
     public function prepare($sql)
     {
-      return new DBStatement($this->handle, $this->dbhandle, $this->attributes, $sql);
+      $this->statement = $sql;
+      if (isset($this->attributes['statement_class']) && $this->attributes['statement_class'] != null) {
+        $name = $this->attributes['statement_class'][0];
+        $param = &$this->attributes['statement_class'][1][0];
+        eval("\$myobj = new $name(\$param);");
+        return $myobj;
+      }
+      else {
+        return new PDOStatement($this);
+      }
     }
 
     // store statement
@@ -85,13 +94,14 @@ if (!class_exists('PDO')) {
     {
       return mysql_insert_id($this->handle);
     }
-    
-    
+
     // executes statement without return value
     public function exec( $sql )
     {
-      $result=@mysql_query($sql,$this->handle);
-      mysql_free_result($this->handle);
+      $result=mysql_query($sql,$this->handle);
+      if($result !== false && $result !== true) {
+        mysql_free_result($result);
+      }
     }
 
     // set Attributes
@@ -101,13 +111,18 @@ if (!class_exists('PDO')) {
         case self::ATTR_ERRMODE:
           switch ($value){
             case self::ERRMODE_WARNING:
-              $this->attributes['errmode'] = 'warning';
+              return ($this->attributes['errmode'] = 'warning');
               break;
           }
           break;
+        case self::ATTR_STATEMENT_CLASS:
+          return ($this->attributes['statement_class'] = $value);
+          break;
       }
+      
+      return false;
     }
-    
+
   } // end of PDO
 }
 ?>

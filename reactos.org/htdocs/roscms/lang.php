@@ -6,7 +6,7 @@ if ($rpm_lang == '' && isset($_COOKIE['roscms_usrset_lang'])) {
 	if (substr($rpm_lang, -1) == '/') {
 		$rpm_lang = substr($rpm_lang, strlen($rpm_lang) - 1);
 	}
-	$rpm_lang = Language::checkStatic($rpm_lang);
+	$rpm_lang = Language::validate($rpm_lang);
 }
 
 if ($rpm_lang == '') {
@@ -26,7 +26,7 @@ if ($rpm_lang == '') {
 		$accept_language = @$matches[4];
 		if (preg_match('/^(([a-zA-Z]+)(-[a-zA-Z]+)?)(;q=([0-1](\.[0-9]{1,3})?))?/',
 		               $lang_range, $matches)) {
-			$lang = Language::checkStatic($matches[1]);
+			$lang = Language::validate($matches[1]);
 			if ($lang != '') {
 				$q = @$matches[5];
 				if ($q == "") {
@@ -45,7 +45,7 @@ if ($rpm_lang == '') {
 }
 if ($rpm_lang == '') {
 	/* If all else fails, use the default language */
-	$rpm_lang = Language::checkStatic('*');
+	$rpm_lang = Language::validate('*');
 }
 
 $roscms_page_lang = $rpm_lang . '/';
@@ -53,11 +53,10 @@ $rpm_lang_session = $rpm_lang . '/';
 
 if (isset($_COOKIE['roscms_usrset_lang']) || isset($_REQUEST['lang'])) {
 	/* Delete an existing cookie (if any) which uses the full hostname */
-	setcookie('roscms_usrset_lang', '', -3600);
+	Cookie::write('roscms_usrset_lang', '', -3600);
 	/* Add cookie using just the domain name */
   
-	setcookie('roscms_usrset_lang', $rpm_lang, time() + 5 * 30 * 24 * 3600,
-	          '/', Cookie::getDomain());
+	Cookie::write('roscms_usrset_lang', $rpm_lang, time() + 5 * 30 * 24 * 3600);
 }
 
 	//echo "<h1>".$rpm_lang."</h1>";

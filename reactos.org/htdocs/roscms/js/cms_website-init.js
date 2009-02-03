@@ -36,8 +36,13 @@ if (roscms_get_edit != "") {
   loadEditor('all', roscms_get_edit);
 }
 
-loadUserFilter();
-loadUserTags();
+// load user filter
+document.getElementById('labtitel2c').innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
+makeRequest('?page=backend&type=text&subtype=ufs&d_val=load', 'ufs', 'labtitel2c', 'html', 'GET', '');
+
+// load user labels
+document.getElementById('labtitel3c').innerHTML = '<div align="right"><img src="images/ajax_loading.gif" alt="loading ..." style="width:13px; height:13px;" /></div>';
+makeRequest('?page=backend&type=text&subtype=ut', 'ut', 'labtitel3c', 'html', 'GET', '');
 
 if (readCookie('labtitel1') == 0) TabOpenCloseEx('labtitel1');
 if (readCookie('labtitel2') == 0) TabOpenCloseEx('labtitel2');
@@ -46,7 +51,12 @@ if (readCookie('labtitel3') == 0) TabOpenCloseEx('labtitel3');
 roscms_page_load_finished = true;
 
 // window unload blocker
-window.onbeforeunload = unloadMessage;
+if (exitmsg !== '') {
+  window.onbeforeunload = exitmsg;
+}
+else {
+  window.onbeforeunload = false;
+}
 
 // initialise tinyMCE
 tinyMCE.init({
@@ -61,7 +71,7 @@ tinyMCE.init({
   theme_advanced_toolbar_align : "left",
   theme_advanced_statusbar_location : "bottom",
   theme_advanced_resizing : false,
-  
+
   plugi2n_insertdate_dateFormat : "%Y-%m-%d",
   plugi2n_insertdate_timeFormat : "%H:%M:%S",
   external_link_list_url : "example_link_list.js",

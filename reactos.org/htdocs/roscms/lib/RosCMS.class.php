@@ -69,7 +69,7 @@ class RosCMS
       $instance = new RosCMS();
     }
     return $instance;
-  }
+  } // end of member function getInstance
 
 
   /**
@@ -157,5 +157,5 @@ class RosCMS
   }
 
 
-} // end of ThisUser
+} // end of RosCMS
 ?>

@@ -18,7 +18,7 @@ function getUser( )
     if (document.getElementById('searchopt4').checked) soptckd = 'website';
     if (document.getElementById('searchopt5') && document.getElementById('searchopt5').checked) soptckd = 'language';
 
-    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=list&phrase='+encodeURIComponent(document.getElementById('textfield').value)+'&option='+encodeURIComponent(soptckd));
+    makeRequest('?page=backend&type=user&subtype=usrtbl&show=list&phrase='+encodeURIComponent(document.getElementById('textfield').value)+'&option='+encodeURIComponent(soptckd));
   }
 }
 
@@ -31,7 +31,7 @@ function getUser( )
  */
 function getUserDetails( user_id )
 {
-  makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=detail&user='+encodeURIComponent(user_id));
+  makeRequest('?page=backend&type=user&subtype=usrtbl&show=detail&user='+encodeURIComponent(user_id));
 }
 
 
@@ -44,7 +44,7 @@ function getUserDetails( user_id )
  */
 function addMembership( user_id, group_id )
 {
-  makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=addmembership&user='+encodeURIComponent(user_id)+'&group='+encodeURIComponent(group_id));
+  makeRequest('?page=backend&type=user&subtype=usrtbl&show=detail&action=addmembership&user='+encodeURIComponent(user_id)+'&group='+encodeURIComponent(group_id));
 }
 
 
@@ -60,7 +60,7 @@ function delMembership( user_id, member_id )
   var uf_check = confirm("Be careful! \n\nDo you want to delete this membership?");
 
   if (uf_check == true) {
-    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=delmembership&user='+encodeURIComponent(user_id)+'&group='+encodeURIComponent(member_id));
+    makeRequest('?page=backend&type=user&subtype=usrtbl&show=detail&action=delmembership&user='+encodeURIComponent(user_id)+'&group='+encodeURIComponent(member_id));
   }
 }
 
@@ -77,7 +77,7 @@ function updateUserLang( user_id, language )
   var uf_check = confirm("Do you want to continue?");
 
   if (uf_check == true) {
-    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=updateusrlang&user='+encodeURIComponent(user_id)+'&lang='+encodeURIComponent(language));
+    makeRequest('?page=backend&type=user&subtype=usrtbl&show=detail&action=updateusrlang&user='+encodeURIComponent(user_id)+'&lang='+encodeURIComponent(language));
   }
 }
 
@@ -115,39 +115,29 @@ function makeRequest( url )
   if (http_request.overrideMimeType) {
     http_request.overrideMimeType('text/html');
   }
-  http_request.onreadystatechange = function() { alertContents(http_request); };
+
+  // inserts request results
+  http_request.onreadystatechange = function()
+  {
+    try {
+      if (http_request.readyState == 4) {
+        if (http_request.status == 200) {
+          document.getElementById('ajaxloading').style.display = 'none';
+          document.getElementById('userarea').innerHTML = http_request.responseText;
+        }
+        else {
+          alert('There was a problem with the request ['+http_request.status+' / '+http_request.readyState+']. \n\nA client (browser) or server problem. Please check and try to update your browser. \n\nIf this error happens more than once or twice, contac the website admin.');
+        }
+      }
+    }
+    catch( e ) {
+      alert('Caught Exception: ' + e.description +'\n\nIf this error occur more than once or twice, please contact the website admin with the exact error message. \n\nIf you use the Safari browser, please make sure you run the latest version.');
+    }
+  };
   http_request.open('GET', url, true);
   http_request.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");	// Bypass the IE Cache
   http_request.send(null);
   return true;
-}
-
-
-
-/**
- * inserts request results
- *
- * @param object reference to AJAX-Object
- */
-function alertContents( http_request )
-{
-  try {
-    if (http_request.readyState == 4) {
-      if (http_request.status == 200) {
-        document.getElementById('ajaxloading').style.display = 'none';
-        document.getElementById('userarea').innerHTML = http_request.responseText;
-      }
-      else {
-        alert('There was a problem with the request ['+http_request.status+' / '+http_request.readyState+']. \n\nA client (browser) or server problem. Please check and try to update your browser. \n\nIf this error happens more than once or twice, contac the website admin.');
-      }
-    }
-  }
-  catch( e ) {
-    alert('Caught Exception: ' + e.description +'\n\nIf this error occur more than once or twice, please contact the website admin with the exact error message. \n\nIf you use the Safari browser, please make sure you run the latest version.');
-  }
-
-  // to prevent memory leak
-  http_request = null;
 }
 
 
@@ -163,6 +153,6 @@ function setAccount( user_id, enable )
   var uf_check = confirm("Do you want to "+enable+" this membership?");
 
   if (uf_check == true) {
-    makeRequest('?page=data_out&d_f=user&d_u=usrtbl&d_fl=account'+enable+'&d_val='+encodeURIComponent(user_id));
+    makeRequest('?page=backend&type=user&subtype=usrtbl&show=detail&action=account'+enable+'&d_val='+encodeURIComponent(user_id));
   }
 }

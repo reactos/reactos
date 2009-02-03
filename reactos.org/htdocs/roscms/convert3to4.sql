@@ -355,6 +355,7 @@ CREATE TABLE roscms_entries_revisions (
   user_id bigint(20) unsigned NOT NULL COMMENT '->accounts(id)',
   version int(10) unsigned NOT NULL,
   `datetime` datetime NOT NULL,
+  status varchar(10) NOT NULL default 'unknown',
   archive tinyint(1) NOT NULL default '0',
   old_id int(11) NOT NULL,
   PRIMARY KEY  (id),
@@ -374,6 +375,7 @@ SELECT
   r.rev_version,
   r.rev_datetime,
   1,
+  'unknown',
   r.rev_id
 FROM data_revision_a r JOIN roscms_languages l ON r.rev_language=l.name_short JOIN roscms_entries d ON (d.old_id=r.data_id AND d.old_archive IS TRUE)
 UNION
@@ -385,6 +387,7 @@ SELECT
   r.rev_version,
   r.rev_datetime,
   0,
+  'unknown',
   r.rev_id
 FROM data_revision r JOIN roscms_languages l ON r.rev_language=l.name_short JOIN roscms_entries d ON (d.old_id=r.data_id AND d.old_archive IS FALSE);
 
@@ -504,6 +507,24 @@ SELECT
   n.tn_name,
   v.tv_value
 FROM data_tag t JOIN data_tag_name n ON t.tag_name_id=n.tn_id JOIN data_tag_value v ON t.tag_value_id=v.tv_id JOIN roscms_entries_revisions r ON (t.data_rev_id=r.old_id AND r.archive IS FALSE);
+
+
+
+-- --------------------------------------------------------
+-- port status tags to revisions
+-- --------------------------------------------------------
+UPDATE roscms_entries_revisions r
+SET status = (SELECT value FROM roscms_entries_tags WHERE rev_id=r.id AND name='status' LIMIT 1);
+
+DELETE FROM roscms_entries_tags WHERE name='status';
+
+
+
+-- --------------------------------------------------------
+-- clean up unneeded tags
+-- --------------------------------------------------------
+DELETE FROM roscms_entries_tags WHERE name='visible';
+DELETE FROM roscms_entries_tags WHERE name='kind' AND value='default';
 
 
 

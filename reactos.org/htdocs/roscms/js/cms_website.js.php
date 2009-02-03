@@ -23,7 +23,7 @@ require('../lib/RosCMS_Autoloader.class.php');
 Login::required();
 
 // get user language
-$user_lang = ROSUser::getLanguage(ThisUser::getInstance()->id(), true);
+$user_lang = ThisUser::getInstance()->language();
 
 // prepare build languages
 $stmt=&DBConnection::getInstance()->prepare("SELECT id, level, name FROM ".ROSCMST_LANGUAGES." WHERE level > 0 ORDER BY name ASC");
