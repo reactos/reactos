@@ -34,6 +34,44 @@ extern "C" {
 #include <shtypes.h>
 #include <shobjidl.h>
 
+typedef struct
+{
+    DWORD         dwSize;
+    DWORD         dwMask;
+    SHELLVIEWID*  pvid;
+    LPSTR         pszWebViewTemplate;
+    DWORD         cchWebViewTemplate;
+    LPSTR         pszWebViewTemplateVersion;
+    LPSTR         pszInfoTip;
+    DWORD         cchInfoTip;
+    CLSID*        pclsid;
+    DWORD         dwFlags;
+    LPSTR         pszIconFile;
+    DWORD         cchIconFile;
+    int           iIconIndex;
+    LPSTR         pszLogo;
+    DWORD         cchLogo;
+} SHFOLDERCUSTOMSETTINGSA, *LPSHFOLDERCUSTOMSETTINGSA;
+
+typedef struct
+{
+    DWORD         dwSize;
+    DWORD         dwMask;
+    SHELLVIEWID*  pvid;
+    LPWSTR        pszWebViewTemplate;
+    DWORD         cchWebViewTemplate;
+    LPWSTR        pszWebViewTemplateVersion;
+    LPWSTR        pszInfoTip;
+    DWORD         cchInfoTip;
+    CLSID*        pclsid;
+    DWORD         dwFlags;
+    LPWSTR        pszIconFile;
+    DWORD         cchIconFile;
+    int           iIconIndex;
+    LPWSTR        pszLogo;
+    DWORD         cchLogo;
+} SHFOLDERCUSTOMSETTINGSW, *LPSHFOLDERCUSTOMSETTINGSW;
+
 #ifndef HPSXA_DEFINED
 #define HPSXA_DEFINED
 DECLARE_HANDLE(HPSXA);
