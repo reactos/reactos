@@ -254,18 +254,18 @@
 254 stub -noname DisconnectWindowsDialog
 255 stdcall Options_RunDLLA(ptr ptr str long)
 256 stdcall SHCreateShellFolderView(ptr ptr)
-257 stub -noname SHGetShellFolderViewCB # Fixme
+257 stdcall -noname SHGetShellFolderViewCB(ptr)
 258 stdcall -noname LinkWindow_RegisterClass()
 259 stdcall -noname LinkWindow_UnregisterClass()
 260 stdcall Options_RunDLLW(ptr ptr wstr long)
-261 stub PrintersGetCommand_RunDLL
-262 stub PrintersGetCommand_RunDLLA
-263 stub PrintersGetCommand_RunDLLW
-264 stub RealShellExecuteA
-265 stub RealShellExecuteExA
-266 stub RealShellExecuteExW
-267 stub RealShellExecuteW
-268 stub RegenerateUserEnvironment
+261 stdcall PrintersGetCommand_RunDLL(ptr ptr wstr long)
+262 stdcall PrintersGetCommand_RunDLLA(ptr ptr str long)
+263 stdcall PrintersGetCommand_RunDLLW(ptr ptr wstr long)
+264 stdcall RealShellExecuteA(ptr str str str str str str str long ptr)
+265 stdcall RealShellExecuteExA(ptr str str str str str str str long ptr long)
+266 stdcall RealShellExecuteExW(ptr str str str str str str str long ptr long)
+267 stdcall RealShellExecuteW(ptr wstr wstr wstr wstr wstr wstr wstr long ptr)
+268 stdcall RegenerateUserEnvironment(ptr long)
 269 stdcall SHAddToRecentDocs(long ptr)
 270 stdcall SHAppBarMessage(long ptr)
 271 stdcall SHBindToParent(ptr ptr ptr ptr)
@@ -273,18 +273,18 @@
 273 stdcall SHBrowseForFolderA(ptr)
 274 stdcall SHBrowseForFolderW(ptr)
 275 stdcall SHChangeNotify(long long ptr ptr)
-276 stub SHChangeNotifySuspendResume
+276 stdcall SHChangeNotifySuspendResume(long ptr long long)
 277 stdcall SHCreateDirectoryExA(long str ptr)
 278 stdcall SHCreateDirectoryExW(long wstr ptr)
 279 stub SHCreateLocalServerRunDll
-280 stub SHCreateProcessAsUserW
-281 stub SHCreateQueryCancelAutoPlayMoniker
+280 stdcall SHCreateProcessAsUserW(ptr)
+281 stdcall SHCreateQueryCancelAutoPlayMoniker(ptr)
 282 stdcall SHCreateShellItem(ptr ptr ptr ptr)
 283 stdcall SHEmptyRecycleBinA(long str long)
 284 stdcall SHEmptyRecycleBinW(long wstr long)
 285 stub SHEnableServiceObject
 286 stub SHEnumerateUnreadMailAccountsW
-287 stub SHExtractIconsW
+287 stdcall SHExtractIconsW(wstr long long long ptr ptr long long) user32.PrivateExtractIconsW
 288 stdcall SHFileOperation(ptr) SHFileOperationA
 289 stdcall SHFileOperationA(ptr)
 290 stdcall SHFileOperationW(ptr)
@@ -320,8 +320,8 @@
 320 stdcall SHHelpShortcuts_RunDLL(long long long long) SHHelpShortcuts_RunDLLA
 321 stdcall SHHelpShortcuts_RunDLLA(long long long long)
 322 stdcall SHHelpShortcuts_RunDLLW(long long long long)
-323 stub SHInvokePrinterCommandA
-324 stub SHInvokePrinterCommandW
+323 stdcall SHInvokePrinterCommandA(ptr long str str long)
+324 stdcall SHInvokePrinterCommandW(ptr long wstr wstr long)
 325 stdcall SHIsFileAvailableOffline(wstr ptr)
 326 stdcall SHLoadInProc(long)
 327 stdcall SHLoadNonloadedIconOverlayIdentifiers()
@@ -335,27 +335,27 @@
 335 stub SHSetUnreadMailCountW
 336 stdcall SHUpdateRecycleBinIcon()
 337 stdcall SheChangeDirA(str)
-338 stub SheChangeDirExA
-339 stub SheChangeDirExW
+338 stdcall SheChangeDirExA(str)
+339 stdcall SheChangeDirExW(wstr)
 340 stdcall SheChangeDirW(wstr)
-341 stub SheConvertPathW
-342 stub SheFullPathA
-343 stub SheFullPathW
-344 stub SheGetCurDrive
+341 stdcall SheConvertPathW(wstr wstr long)
+342 stdcall SheFullPathA(str long str)
+343 stdcall SheFullPathW(wstr long wstr)
+344 stdcall SheGetCurDrive()
 345 stdcall SheGetDirA(long long)
-346 stub SheGetDirExW
+346 stdcall SheGetDirExW(wstr ptr wstr)
 347 stdcall SheGetDirW(long long)
-348 stub SheGetPathOffsetW
-349 stub SheRemoveQuotesA
-350 stub SheRemoveQuotesW
-351 stub SheSetCurDrive
-352 stub SheShortenPathA
-353 stub SheShortenPathW
+348 stdcall SheGetPathOffsetW(wstr)
+349 stdcall SheRemoveQuotesA(str)
+350 stdcall SheRemoveQuotesW(wstr)
+351 stdcall SheSetCurDrive(long)
+352 stdcall SheShortenPathA(str long)
+353 stdcall SheShortenPathW(wstr long)
 354 stdcall ShellAboutA(long str str long)
 355 stdcall ShellAboutW(long wstr wstr long)
-356 stub ShellExec_RunDLL
-357 stub ShellExec_RunDLLA
-358 stub ShellExec_RunDLLW
+356 stdcall ShellExec_RunDLL(ptr ptr wstr long)
+357 stdcall ShellExec_RunDLLA(ptr ptr str long)
+358 stdcall ShellExec_RunDLLW(ptr ptr wstr long)
 359 stdcall ShellExecuteA(long str str str str long)
 360 stdcall ShellExecuteEx(long) ShellExecuteExA
 361 stdcall ShellExecuteExA (long)

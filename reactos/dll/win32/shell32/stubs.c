@@ -344,8 +344,8 @@ VOID
 WINAPI
 CDefFolderMenu_MergeMenu(HINSTANCE hInstance,
                          UINT uMainMerge,
-						 UINT uPopupMerge,
-						 LPQCMINFO lpQcmInfo)
+                         UINT uPopupMerge,
+                         LPQCMINFO lpQcmInfo)
 {
     FIXME("CDefFolderMenu_MergeMenu() stub\n");
 }
@@ -358,11 +358,11 @@ WINAPI
 CDefFolderMenu_Create(PCIDLIST_ABSOLUTE pidlFolder,
                       HWND hwnd,
                       UINT uidl,
-					  PCUITEMID_CHILD_ARRAY *apidl,
+                      PCUITEMID_CHILD_ARRAY *apidl,
                       IShellFolder *psf,
                       LPFNDFMCALLBACK lpfn,
                       HKEY hProgID,
-					  HKEY hBaseProgID,
+                      HKEY hBaseProgID,
                       IContextMenu **ppcm)
 {
     FIXME("CDefFolderMenu_Create() stub\n");
@@ -458,5 +458,399 @@ WINAPI
 ShellHookProc(INT iCode, WPARAM wParam, LPARAM lParam)
 {
     /* Unimplemented in WinXP SP3 */
+    TRACE("ShellHookProc() stub\n");
     return 0;
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+ShellExec_RunDLL(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
+{
+    FIXME("ShellExec_RunDLL() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+ShellExec_RunDLLA(HWND hwnd, HINSTANCE hInstance, LPSTR pszCmdLine, int nCmdShow)
+{
+    FIXME("ShellExec_RunDLLA() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+ShellExec_RunDLLW(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
+{
+    FIXME("ShellExec_RunDLLW() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SheShortenPathW(LPWSTR lpPath, BOOL bShorten)
+{
+    FIXME("SheShortenPathW() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SheShortenPathA(LPSTR lpPath, BOOL bShorten)
+{
+    FIXME("SheShortenPathA() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SheSetCurDrive(INT iIndex)
+{
+    FIXME("SheSetCurDrive() stub\n");
+    return 1;
+}
+
+/*
+ * Unimplemented
+ */
+LPWSTR
+WINAPI
+SheRemoveQuotesW(LPWSTR lpInput)
+{
+    FIXME("SheRemoveQuotesW() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+LPSTR
+WINAPI
+SheRemoveQuotesA(LPSTR lpInput)
+{
+    FIXME("SheRemoveQuotesA() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SheGetPathOffsetW(LPWSTR lpPath)
+{
+    FIXME("SheGetPathOffsetW() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SheGetDirExW(LPWSTR lpDrive,
+             LPDWORD lpCurDirLen,
+             LPWSTR lpCurDir)
+{
+    FIXME("SheGetDirExW() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SheGetCurDrive(VOID)
+{
+    FIXME("SheGetCurDrive() stub\n");
+    return 1;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SheFullPathW(LPWSTR lpFullName, DWORD dwPathSize, LPWSTR lpBuffer)
+{
+    FIXME("SheFullPathW() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SheFullPathA(LPSTR lpFullName, DWORD dwPathSize, LPSTR lpBuffer)
+{
+    FIXME("SheFullPathA() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SheConvertPathW(LPWSTR lpCmd, LPWSTR lpFileName, UINT uCmdLen)
+{
+    FIXME("SheConvertPathW() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SheChangeDirExW(LPWSTR lpDir)
+{
+    FIXME("SheChangeDirExW() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+INT
+WINAPI
+SheChangeDirExA(LPSTR lpDir)
+{
+    FIXME("SheChangeDirExA() stub\n");
+    return 0;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHInvokePrinterCommandW(HWND hwnd,
+                        UINT uAction,
+                        LPCWSTR lpBuf1,
+                        LPCWSTR lpBuf2,
+                        BOOL fModal)
+{
+    FIXME("SHInvokePrinterCommandW() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHInvokePrinterCommandA(HWND hwnd,
+                        UINT uAction,
+                        LPCSTR lpBuf1,
+                        LPCSTR lpBuf2,
+                        BOOL fModal)
+{
+    FIXME("SHInvokePrinterCommandA() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHCreateQueryCancelAutoPlayMoniker(IMoniker **ppmoniker)
+{
+    FIXME("SHCreateQueryCancelAutoPlayMoniker() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW pscpi)
+{
+    FIXME("SHCreateProcessAsUserW() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+SHChangeNotifySuspendResume(BOOL bSuspend, 
+                            LPITEMIDLIST pidl, 
+                            BOOL bRecursive, 
+                            DWORD dwReserved)
+{
+    FIXME("SHChangeNotifySuspendResume() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+BOOL
+WINAPI
+RegenerateUserEnvironment(LPVOID *lpUnknown, BOOL bUnknown)
+{
+    FIXME("RegenerateUserEnvironment() stub\n");
+    return FALSE;
+}
+
+/*
+ * Unimplemented
+ */
+HINSTANCE
+WINAPI
+RealShellExecuteExA(HWND hwnd,
+                    LPCSTR lpOperation,
+                    LPCSTR lpFile,
+                    LPCSTR lpParameters,
+                    LPCSTR lpDirectory,
+                    LPSTR lpReturn,
+                    LPCSTR lpTitle,
+                    LPSTR lpReserved,
+                    WORD nShowCmd,
+                    HANDLE *lpProcess,
+                    DWORD dwFlags)
+{
+    FIXME("RealShellExecuteExA() stub\n");
+    return NULL;
+}
+
+/*
+ * Unimplemented
+ */
+HINSTANCE
+WINAPI
+RealShellExecuteExW(HWND hwnd,
+                    LPCWSTR lpOperation,
+                    LPCWSTR lpFile,
+                    LPCWSTR lpParameters,
+                    LPCWSTR lpDirectory,
+                    LPWSTR lpReturn,
+                    LPCWSTR lpTitle,
+                    LPWSTR lpReserved,
+                    WORD nShowCmd,
+                    HANDLE *lpProcess,
+                    DWORD dwFlags)
+{
+    FIXME("RealShellExecuteExW() stub\n");
+    return NULL;
+}
+
+/*
+ * Implemented
+ */
+HINSTANCE
+WINAPI
+RealShellExecuteA(HWND hwnd,
+                  LPCSTR lpOperation,
+                  LPCSTR lpFile,
+                  LPCSTR lpParameters,
+                  LPCSTR lpDirectory,
+                  LPSTR lpReturn,
+                  LPCSTR lpTitle,
+                  LPSTR lpReserved,
+                  WORD nShowCmd,
+                  HANDLE *lpProcess)
+{
+    return RealShellExecuteExA(hwnd,
+                               lpOperation,
+                               lpFile,
+                               lpParameters,
+                               lpDirectory,
+                               lpReturn,
+                               lpTitle,
+                               lpReserved,
+                               nShowCmd,
+                               lpProcess,
+                               0);
+}
+
+/*
+ * Implemented
+ */
+HINSTANCE
+WINAPI
+RealShellExecuteW(HWND hwnd,
+                  LPCWSTR lpOperation,
+                  LPCWSTR lpFile,
+                  LPCWSTR lpParameters,
+                  LPCWSTR lpDirectory,
+                  LPWSTR lpReturn,
+                  LPCWSTR lpTitle,
+                  LPWSTR lpReserved,
+                  WORD nShowCmd,
+                  HANDLE *lpProcess)
+{
+    return RealShellExecuteExW(hwnd,
+                               lpOperation,
+                               lpFile,
+                               lpParameters,
+                               lpDirectory,
+                               lpReturn,
+                               lpTitle,
+                               lpReserved,
+                               nShowCmd,
+                               lpProcess,
+                               0);
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+PrintersGetCommand_RunDLL(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
+{
+    FIXME("PrintersGetCommand_RunDLL() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+PrintersGetCommand_RunDLLA(HWND hwnd, HINSTANCE hInstance, LPSTR pszCmdLine, int nCmdShow)
+{
+    FIXME("PrintersGetCommand_RunDLLA() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+VOID
+WINAPI
+PrintersGetCommand_RunDLLW(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
+{
+    FIXME("PrintersGetCommand_RunDLLW() stub\n");
+}
+
+/*
+ * Unimplemented
+ */
+IShellFolderViewCB*
+WINAPI
+SHGetShellFolderViewCB(HWND hwnd)
+{
+    FIXME("SHGetShellFolderViewCB() stub\n");
+    return NULL;
 }
